@@ -1,0 +1,40 @@
+// api/pacientes.js
+// Devuelve lista de pacientes para el panel del fisio
+
+const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
+const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
+const BASE_ID = 'appbK09V4X3pPIai3';
+const TABLE_ID = 'tbldBVgClS4HY2mOJ';
+
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const { pwd } = req.query;
+  if (pwd !== FISIO_PASSWORD) {
+    return res.status(401).json({ ok: false, error: 'Contraseña incorrecta' });
+  }
+
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?fields[]=FULL NAME&fields[]=NOMBRE&fields[]=PIN&fields[]=WHATSAPP&sort[0][field]=FULL NAME&sort[0][direction]=asc&pageSize=100`;
+
+    const atRes = await fetch(url, {
+      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+    });
+
+    const data = await atRes.json();
+
+    const pacientes = (data.records || []).map(r => ({
+      id: r.id,
+      nombre: r.fields['FULL NAME'] || r.fields['NOMBRE'] || '—',
+      pin: r.fields['PIN'] || '',
+      telefono: r.fields['WHATSAPP'] || ''
+    }));
+
+    return res.status(200).json({ ok: true, pacientes });
+
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: 'Error interno' });
+  }
+}

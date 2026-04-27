@@ -1,0 +1,68 @@
+// api/schedule.js
+// Devuelve los ejercicios asignados por día para un paciente
+
+const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
+const BASE_ID = 'appbK09V4X3pPIai3';
+
+// IMPORTANTE: Crea estas tablas en tu Airtable:
+// - EJERCICIOS: id(autoNumber), Nombre, Zona, Series, Reps, Duracion, Descanso, Descripcion, YouTubeURL
+// - PLAN_EJERCICIOS: PacienteID(texto), Fecha(date), Ejercicio(link a EJERCICIOS)
+
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const { patientId } = req.query;
+  if (!patientId) return res.status(400).json({ error: 'Falta patientId' });
+
+  try {
+    // Buscar ejercicios asignados a este paciente
+    // La tabla PLAN_EJERCICIOS tiene: PacienteID, Fecha, EjercicioNombre, Series, Reps, etc.
+    const url = `https://api.airtable.com/v0/${BASE_ID}/PLAN_EJERCICIOS?filterByFormula={PacienteID}="${patientId}"&sort[0][field]=Fecha&sort[0][direction]=asc`;
+
+    const atRes = await fetch(url, {
+      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+    });
+
+    if (!atRes.ok) {
+      // Si la tabla no existe todavía, devolvemos vacío
+      return res.status(200).json({ schedule: {} });
+    }
+
+    const data = await atRes.json();
+    const schedule = {};
+
+    if (data.records) {
+      for (const rec of data.records) {
+        const f = rec.fields;
+        const dateStr = f['Fecha']; // formato YYYY-MM-DD
+        if (!dateStr) continue;
+
+        if (!schedule[dateStr]) schedule[dateStr] = [];
+
+        // Extraer YouTube ID del URL
+        const ytUrl = f['YouTubeURL'] || '';
+        const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/)([^&\s]+)/);
+
+        schedule[dateStr].push({
+          id: rec.id,
+          name: f['EjercicioNombre'] || f['Nombre'] || 'Ejercicio',
+          zona: f['Zona'] || '',
+          series: parseInt(f['Series']) || 3,
+          reps: parseInt(f['Reps']) || 0,
+          dur: parseInt(f['Duracion']) || 30,
+          desc2: parseInt(f['Descanso']) || 60,
+          desc: f['Descripcion'] || '',
+          ytId: ytMatch ? ytMatch[1] : '',
+        });
+      }
+    }
+
+    return res.status(200).json({ schedule });
+
+  } catch (err) {
+    console.error('Schedule error:', err);
+    return res.status(200).json({ schedule: {} });
+  }
+}
