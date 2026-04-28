@@ -25,21 +25,23 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 
 #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem 1.5rem; background: #000; }
 .logo-wrap { text-align: center; margin-bottom: 3rem; }
-.logo-text { font-size: 48px; font-weight: 800; color: var(--cream); letter-spacing: -1px; }
-.login-card { width: 100%; max-width: 360px; }
-.login-title { font-size: 18px; font-weight: 600; color: var(--cream); margin-bottom: 4px; }
-.login-desc { font-size: 12px; color: rgba(245,242,238,0.8); margin-bottom: 1.5rem; line-height: 1.6; }
-.lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.9); display: block; margin-bottom: 6px; }
-.inp { width: 100%; font-family: var(--font); font-size: 14px; border: 1.5px solid rgba(245,242,238,0.6); border-radius: var(--r-sm); padding: 12px 14px; background: rgba(245,242,238,0.08); color: var(--cream); outline: none; margin-bottom: 12px; transition: border-color 0.15s; }
-.inp::placeholder { color: rgba(245,242,238,0.5); }
+.logo-text { font-size: 52px; font-weight: 800; color: var(--cream); letter-spacing: -2px; }
+.login-card { width: 100%; max-width: 360px; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(245,242,238,0.2); border-radius: 24px; padding: 36px 28px; }
+.login-title { font-size: 16px; font-weight: 600; color: var(--cream); margin-bottom: 4px; }
+.login-desc { font-size: 12px; color: rgba(245,242,238,0.6); margin-bottom: 28px; line-height: 1.6; }
+.lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.7); display: block; margin-bottom: 8px; }
+.inp { width: 100%; font-family: var(--font); font-size: 15px; border: 1.5px solid rgba(245,242,238,0.3); border-radius: var(--r-sm); padding: 13px 14px; background: rgba(245,242,238,0.06); color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color 0.15s; }
+.inp::placeholder { color: rgba(245,242,238,0.35); }
 .inp:focus { border-color: var(--cream); }
-.pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 1.5rem; }
-.pin-d { width: 60px; height: 64px; font-family: var(--font); font-weight: 700; font-size: 28px; text-align: center; border: 1.5px solid rgba(245,242,238,0.6); border-radius: 14px; background: rgba(245,242,238,0.08); color: var(--cream); outline: none; transition: border-color 0.15s; }
+.pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 28px; }
+.pin-d { width: 58px; height: 62px; font-family: var(--font); font-weight: 700; font-size: 26px; text-align: center; border: 1.5px solid rgba(245,242,238,0.3); border-radius: 12px; background: rgba(245,242,238,0.06); color: var(--cream); outline: none; transition: border-color 0.15s; }
 .pin-d:focus { border-color: var(--cream); }
-.btn-primary { width: 100%; font-family: var(--font); font-size: 14px; font-weight: 700; padding: 14px; background: var(--cream); color: var(--black); border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; }
+.btn-primary { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 700; padding: 15px; background: var(--cream); color: var(--black); border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; margin-bottom: 12px; }
 .btn-primary:hover { opacity: 0.9; }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-.login-err { font-size: 12px; color: #ff6b6b; text-align: center; margin-top: 10px; min-height: 18px; }
+.btn-install { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 600; padding: 15px; background: transparent; color: var(--cream); border: 1.5px solid rgba(245,242,238,0.4); border-radius: var(--r-sm); cursor: pointer; transition: border-color 0.2s; }
+.btn-install:hover { border-color: var(--cream); }
+.login-err { font-size: 12px; color: #ff6b6b; text-align: center; margin-top: 12px; min-height: 18px; }
 
 #appScreen { padding-bottom: 120px; background: var(--cream); }
 .topbar { position: sticky; top: 0; z-index: 50; background: var(--black); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
@@ -172,8 +174,8 @@ textarea:focus { border-color: var(--black); }
     </div>
     <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
     <div class="login-err" id="loginErr"></div>
-    <div style="text-align:center;margin-top:20px;">
-      <button onclick="mostrarInstall()" style="background:none;border:none;color:rgba(245,242,238,0.8);font-family:var(--font);font-size:13px;cursor:pointer;">¿Cómo instalo la app? 📱</button>
+    <div style="margin-top:20px;">
+      <button onclick="mostrarInstall()" style="width:100%;background:none;border:1.5px solid rgba(245,242,238,0.3);border-radius:var(--r-sm);color:rgba(245,242,238,0.9);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;padding:12px;">📱 ¿Cómo instalo la app?</button>
     </div>
   </div>
 </div>
@@ -238,16 +240,18 @@ textarea:focus { border-color: var(--black); }
             <button class="guia-os-btn" id="btnAndroid" onclick="showOS('android')">Android</button>
           </div>
           <div id="pasosIOS">
-            <div class="guia-paso"><div class="guia-num">1</div><div class="guia-txt">Abre la app en <strong>Safari</strong> (no en Chrome)</div></div>
-            <div class="guia-paso"><div class="guia-num">2</div><div class="guia-txt">Toca el botón <strong>Compartir</strong> ↑ abajo en el centro</div></div>
-            <div class="guia-paso"><div class="guia-num">3</div><div class="guia-txt">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
-            <div class="guia-paso"><div class="guia-num">4</div><div class="guia-txt">Toca <strong>"Añadir"</strong> y ¡listo! 🎉</div></div>
+            <div class="guia-paso"><div class="guia-num">1</div><div class="guia-txt">Cierra esta app y abre <strong>Safari</strong></div></div>
+            <div class="guia-paso"><div class="guia-num">2</div><div class="guia-txt">Ve a <strong>fisio365.vercel.app</strong></div></div>
+            <div class="guia-paso"><div class="guia-num">3</div><div class="guia-txt">Toca el botón <strong>Compartir ↑</strong> abajo en el centro</div></div>
+            <div class="guia-paso"><div class="guia-num">4</div><div class="guia-txt">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
+            <div class="guia-paso"><div class="guia-num">5</div><div class="guia-txt">Toca <strong>"Añadir"</strong> y ¡listo! 🎉</div></div>
           </div>
           <div id="pasosAndroid" style="display:none;">
-            <div class="guia-paso"><div class="guia-num">1</div><div class="guia-txt">Abre la app en <strong>Chrome</strong></div></div>
-            <div class="guia-paso"><div class="guia-num">2</div><div class="guia-txt">Toca los <strong>3 puntos</strong> ⋮ arriba a la derecha</div></div>
-            <div class="guia-paso"><div class="guia-num">3</div><div class="guia-txt">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
-            <div class="guia-paso"><div class="guia-num">4</div><div class="guia-txt">Toca <strong>"Añadir"</strong> y ¡listo! 🎉</div></div>
+            <div class="guia-paso"><div class="guia-num">1</div><div class="guia-txt">Cierra esta app y abre <strong>Chrome</strong></div></div>
+            <div class="guia-paso"><div class="guia-num">2</div><div class="guia-txt">Ve a <strong>fisio365.vercel.app</strong></div></div>
+            <div class="guia-paso"><div class="guia-num">3</div><div class="guia-txt">Toca los <strong>3 puntos ⋮</strong> arriba a la derecha</div></div>
+            <div class="guia-paso"><div class="guia-num">4</div><div class="guia-txt">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
+            <div class="guia-paso"><div class="guia-num">5</div><div class="guia-txt">Toca <strong>"Añadir"</strong> y ¡listo! 🎉</div></div>
           </div>
         </div>
         <div class="guia-card">
@@ -295,7 +299,7 @@ textarea:focus { border-color: var(--black); }
     <button class="popup-btn" onclick="cerrarPopup()">¡Entendido!</button>
   </div>
 </div>
-<nav class="bottom-nav" style="left:50%;transform:translateX(-50%);right:auto;width:100%;">
+<nav class="bottom-nav" id="bottomNav" style="display:none;" id="bottomNav" style="display:none;" style="left:50%;transform:translateX(-50%);right:auto;width:100%;">
   <button class="nav-btn active" id="navHoy" onclick="showSection('hoy')">
     <span class="nav-icon">🏋️</span>
     <span class="nav-label">Mi programa</span>
@@ -371,6 +375,8 @@ function initApp() {
   document.body.scrollTop = 0;
   setTimeout(() => { document.getElementById('appScreen').style.opacity = '1'; }, 10);
   document.getElementById('topbarName').textContent = patient.nombre.split(' ')[0];
+  document.getElementById('bottomNav').style.display = 'flex';
+  document.getElementById('bottomNav').style.display = 'flex';
   const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const hoy = new Date();
