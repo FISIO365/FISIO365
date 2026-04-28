@@ -4,11 +4,13 @@
     { "src": "api/*.js", "use": "@vercel/node" },
     { "src": "public/*.html", "use": "@vercel/static" },
     { "src": "public/manifest.json", "use": "@vercel/static" },
+    { "src": "public/manifest-fisio.json", "use": "@vercel/static" },
     { "src": "icono.png", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
     { "src": "/manifest.json", "dest": "/public/manifest.json" },
+    { "src": "/manifest-fisio.json", "dest": "/public/manifest-fisio.json" },
     { "src": "/icono.png", "dest": "/icono.png" },
     { "src": "/fisio", "dest": "/public/fisio.html" },
     { "src": "/", "dest": "/public/index.html" }
