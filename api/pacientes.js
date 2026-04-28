@@ -1,9 +1,7 @@
-// api/pacientes.js - Lista pacientes y fisios para el panel
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
 const BASE_ID = 'appbK09V4X3pPIai3';
 const PACIENTES_TABLE = 'tbldBVgClS4HY2mOJ';
-const FISIO_TABLE = 'tbl2mLUrnaKCFTs6g';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -12,7 +10,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const pwd = req.method === 'GET' ? req.query.pwd : req.body?.pwd;
-  if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'No autorizado' });
+  if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'Contraseña incorrecta' });
 
   if (req.method === 'GET') {
     try {
