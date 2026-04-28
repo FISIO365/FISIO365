@@ -28,13 +28,13 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 .logo-text { font-size: 48px; font-weight: 800; color: var(--cream); letter-spacing: -1px; }
 .login-card { width: 100%; max-width: 360px; }
 .login-title { font-size: 18px; font-weight: 600; color: var(--cream); margin-bottom: 4px; }
-.login-desc { font-size: 12px; color: rgba(245,242,238,0.5); margin-bottom: 1.5rem; line-height: 1.6; }
-.lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.5); display: block; margin-bottom: 6px; }
-.inp { width: 100%; font-family: var(--font); font-size: 14px; border: 1.5px solid rgba(245,242,238,0.25); border-radius: var(--r-sm); padding: 12px 14px; background: rgba(245,242,238,0.06); color: var(--cream); outline: none; margin-bottom: 12px; transition: border-color 0.15s; }
-.inp::placeholder { color: rgba(245,242,238,0.25); }
+.login-desc { font-size: 12px; color: rgba(245,242,238,0.8); margin-bottom: 1.5rem; line-height: 1.6; }
+.lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.9); display: block; margin-bottom: 6px; }
+.inp { width: 100%; font-family: var(--font); font-size: 14px; border: 1.5px solid rgba(245,242,238,0.6); border-radius: var(--r-sm); padding: 12px 14px; background: rgba(245,242,238,0.08); color: var(--cream); outline: none; margin-bottom: 12px; transition: border-color 0.15s; }
+.inp::placeholder { color: rgba(245,242,238,0.5); }
 .inp:focus { border-color: var(--cream); }
 .pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 1.5rem; }
-.pin-d { width: 60px; height: 64px; font-family: var(--font); font-weight: 700; font-size: 28px; text-align: center; border: 1.5px solid rgba(245,242,238,0.25); border-radius: 14px; background: rgba(245,242,238,0.04); color: var(--cream); outline: none; transition: border-color 0.15s; }
+.pin-d { width: 60px; height: 64px; font-family: var(--font); font-weight: 700; font-size: 28px; text-align: center; border: 1.5px solid rgba(245,242,238,0.6); border-radius: 14px; background: rgba(245,242,238,0.08); color: var(--cream); outline: none; transition: border-color 0.15s; }
 .pin-d:focus { border-color: var(--cream); }
 .btn-primary { width: 100%; font-family: var(--font); font-size: 14px; font-weight: 700; padding: 14px; background: var(--cream); color: var(--black); border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; }
 .btn-primary:hover { opacity: 0.9; }
@@ -129,17 +129,17 @@ textarea:focus { border-color: var(--black); }
 .nav-btn .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 
 /* GUIA */
-.guia-section { padding: 16px 0; }
-.guia-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 14px; display: block; width: 100%; }
-.guia-titulo { font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--black); }
-.guia-paso { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.guia-section { padding: 20px 0 40px; }
+.guia-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 24px; margin-bottom: 20px; display: block; width: 100%; }
+.guia-titulo { font-size: 17px; font-weight: 700; margin-bottom: 20px; color: var(--black); }
+.guia-paso { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
 .guia-num { width: 28px; height: 28px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
-.guia-txt { font-size: 14px; color: var(--black); line-height: 1.5; }
+.guia-txt { font-size: 14px; color: var(--black); line-height: 1.7; }
 .guia-txt strong { font-weight: 700; }
-.guia-os { display: flex; gap: 8px; margin-bottom: 14px; }
+.guia-os { display: flex; gap: 8px; margin-bottom: 20px; }
 .guia-os-btn { flex: 1; padding: 10px; border: 1.5px solid var(--border); border-radius: var(--r-sm); background: none; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
 .guia-os-btn.active { background: var(--black); color: var(--cream); border-color: var(--black); }
-.guia-feature { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+.guia-feature { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 22px; }
 .guia-feature-icon { font-size: 28px; flex-shrink: 0; }
 .guia-feature-titulo { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
 .guia-feature-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
@@ -172,6 +172,9 @@ textarea:focus { border-color: var(--black); }
     </div>
     <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
     <div class="login-err" id="loginErr"></div>
+    <div style="text-align:center;margin-top:20px;">
+      <button onclick="mostrarInstall()" style="background:none;border:none;color:rgba(245,242,238,0.8);font-family:var(--font);font-size:13px;cursor:pointer;">¿Cómo instalo la app? 📱</button>
+    </div>
   </div>
 </div>
 
@@ -206,9 +209,9 @@ textarea:focus { border-color: var(--black); }
         </div>
         <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
         <div id="diarioSection" style="display:none;">
-          <div class="sec-title">Tu informe de hoy</div>
+          <div class="sec-title">Seguimiento diario</div>
           <div class="diario-card">
-            <textarea id="diarioTxt" placeholder="¡Hola! ¿Cómo te has encontrado hoy? Cuéntame cualquier cosa que hayas notado, me ayuda mucho para tu seguimiento 💪"></textarea>
+            <textarea id="diarioTxt" placeholder="Anota tus avances y sensaciones..."></textarea>
             <button class="btn-diario" id="btnDiario" onclick="tareaHecha()">Tarea hecha ✓</button>
           </div>
         </div>
@@ -302,6 +305,30 @@ textarea:focus { border-color: var(--black); }
     <span class="nav-label">Guía</span>
   </button>
 </nav>
+<div id="installPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;align-items:flex-end;justify-content:center;">
+  <div style="background:white;border-radius:24px 24px 0 0;padding:28px 24px 48px;width:100%;max-width:500px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:18px;font-weight:800;color:#000">📱 Instalar la app</div>
+      <button onclick="cerrarInstall()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#888">×</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button id="btnInstIOS" onclick="showInstOS('ios')" style="flex:1;padding:10px;border:1.5px solid #000;border-radius:8px;background:#000;color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">iPhone</button>
+      <button id="btnInstAndroid" onclick="showInstOS('android')" style="flex:1;padding:10px;border:1.5px solid #ddd;border-radius:8px;background:none;color:#888;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Android</button>
+    </div>
+    <div id="instPasosIOS">
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div><div style="font-size:14px;line-height:1.6">Abre esta página en <strong>Safari</strong> (el navegador de Apple, no Chrome)</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div><div style="font-size:14px;line-height:1.6">Toca el botón <strong>Compartir ↑</strong> que hay abajo en el centro de la pantalla</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div><div style="font-size:14px;line-height:1.6">Busca y toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono en tu pantalla 🎉</div></div>
+    </div>
+    <div id="instPasosAndroid" style="display:none;">
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div><div style="font-size:14px;line-height:1.6">Abre esta página en <strong>Chrome</strong></div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div><div style="font-size:14px;line-height:1.6">Toca los <strong>3 puntos ⋮</strong> arriba a la derecha</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono en tu pantalla 🎉</div></div>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -553,6 +580,23 @@ function showOS(os) {
   document.getElementById('pasosAndroid').style.display = os === 'android' ? 'block' : 'none';
   document.getElementById('btnIOS').classList.toggle('active', os === 'ios');
   document.getElementById('btnAndroid').classList.toggle('active', os === 'android');
+}
+
+function mostrarInstall() {
+  document.getElementById('installPopup').style.display = 'flex';
+}
+function cerrarInstall() {
+  document.getElementById('installPopup').style.display = 'none';
+}
+function showInstOS(os) {
+  document.getElementById('instPasosIOS').style.display = os === 'ios' ? 'block' : 'none';
+  document.getElementById('instPasosAndroid').style.display = os === 'android' ? 'block' : 'none';
+  document.getElementById('btnInstIOS').style.background = os === 'ios' ? '#000' : 'none';
+  document.getElementById('btnInstIOS').style.color = os === 'ios' ? 'white' : '#888';
+  document.getElementById('btnInstIOS').style.borderColor = os === 'ios' ? '#000' : '#ddd';
+  document.getElementById('btnInstAndroid').style.background = os === 'android' ? '#000' : 'none';
+  document.getElementById('btnInstAndroid').style.color = os === 'android' ? 'white' : '#888';
+  document.getElementById('btnInstAndroid').style.borderColor = os === 'android' ? '#000' : '#ddd';
 }
 
 function toast(msg, ok=true) {
