@@ -2,7 +2,7 @@
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
 const BASE_ID = 'appbK09V4X3pPIai3';
-const TABLE_ID = 'tbl5VIIPMgXzVhG8r';
+const TABLE_ID = 'tbloqn3ts872ueJSE';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
