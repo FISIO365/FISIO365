@@ -1,68 +1,35 @@
-// api/schedule.js
-// Devuelve los ejercicios asignados por día para un paciente
-
+// api/pacientes.js - Lista pacientes y fisios para el panel
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
+const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
 const BASE_ID = 'appbK09V4X3pPIai3';
-
-// IMPORTANTE: Crea estas tablas en tu Airtable:
-// - EJERCICIOS: id(autoNumber), Nombre, Zona, Series, Reps, Duracion, Descanso, Descripcion, YouTubeURL
-// - PLAN_EJERCICIOS: PacienteID(texto), Fecha(date), Ejercicio(link a EJERCICIOS)
+const PACIENTES_TABLE = 'tbldBVgClS4HY2mOJ';
+const FISIO_TABLE = 'tbl2mLUrnaKCFTs6g';
+const BIBLIOTECA_TABLE = 'tbloqn3ts872ueJSE';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { patientId } = req.query;
-  if (!patientId) return res.status(400).json({ error: 'Falta patientId' });
+  const { pwd } = req.query;
+  if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'Contraseña incorrecta' });
 
   try {
-    // Buscar ejercicios asignados a este paciente
-    // La tabla PLAN_EJERCICIOS tiene: PacienteID, Fecha, EjercicioNombre, Series, Reps, etc.
-    const url = `https://api.airtable.com/v0/${BASE_ID}/PLAN_EJERCICIOS?filterByFormula={PacienteID}="${patientId}"&sort[0][field]=Fecha&sort[0][direction]=asc`;
+    const [pacRes, fisioRes, bibRes] = await Promise.all([
+      fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=EMAIL&fields[]=WHATSAPP&sort[0][field]=FULL NAME&sort[0][direction]=asc&pageSize=100`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }),
+      fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIO_TABLE}?fields[]=Name&fields[]=NºColegiado&fields[]=Foto`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }),
+      fetch(`https://api.airtable.com/v0/${BASE_ID}/${BIBLIOTECA_TABLE}?fields[]=Nombre&fields[]=Descripcion&fields[]=Zona&fields[]=YouTubeURL&fields[]=Imagenes&sort[0][field]=Nombre&sort[0][direction]=asc&pageSize=100`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })
+    ]);
 
-    const atRes = await fetch(url, {
-      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+    const [pacData, fisioData, bibData] = await Promise.all([pacRes.json(), fisioRes.json(), bibRes.json()]);
+
+    return res.status(200).json({
+      ok: true,
+      pacientes: (pacData.records || []).map(r => ({ id: r.id, nombre: r.fields['FULL NAME'] || r.fields['EMAIL'] || '—', email: r.fields['EMAIL'] || '', telefono: r.fields['WHATSAPP'] || '' })),
+      fisios: (fisioData.records || []).map(r => ({ id: r.id, nombre: r.fields['Name'] || '—', colegiado: r.fields['NºColegiado'] || '', foto: r.fields['Foto']?.[0]?.url || '' })),
+      biblioteca: (bibData.records || []).map(r => ({ id: r.id, nombre: r.fields['Nombre'] || '—', descripcion: r.fields['Descripcion'] || '', zona: r.fields['Zona'] || '', youtubeUrl: r.fields['YouTubeURL'] || '', imagen: r.fields['Imagenes']?.[0]?.url || '' }))
     });
-
-    if (!atRes.ok) {
-      // Si la tabla no existe todavía, devolvemos vacío
-      return res.status(200).json({ schedule: {} });
-    }
-
-    const data = await atRes.json();
-    const schedule = {};
-
-    if (data.records) {
-      for (const rec of data.records) {
-        const f = rec.fields;
-        const dateStr = f['Fecha']; // formato YYYY-MM-DD
-        if (!dateStr) continue;
-
-        if (!schedule[dateStr]) schedule[dateStr] = [];
-
-        // Extraer YouTube ID del URL
-        const ytUrl = f['YouTubeURL'] || '';
-        const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/)([^&\s]+)/);
-
-        schedule[dateStr].push({
-          id: rec.id,
-          name: f['EjercicioNombre'] || f['Nombre'] || 'Ejercicio',
-          zona: f['Zona'] || '',
-          series: parseInt(f['Series']) || 3,
-          reps: parseInt(f['Reps']) || 0,
-          dur: parseInt(f['Duracion']) || 30,
-          desc2: parseInt(f['Descanso']) || 60,
-          desc: f['Descripcion'] || '',
-          ytId: ytMatch ? ytMatch[1] : '',
-        });
-      }
-    }
-
-    return res.status(200).json({ schedule });
-
   } catch (err) {
-    console.error('Schedule error:', err);
-    return res.status(200).json({ schedule: {} });
+    return res.status(500).json({ ok: false, error: 'Error interno' });
   }
 }

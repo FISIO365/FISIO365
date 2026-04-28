@@ -1,78 +1,41 @@
-// api/programa.js
-// Guarda el programa de ejercicios de un paciente en PLAN_EJERCICIOS
-
+// api/done.js - Marcar ejercicio como hecho / desmarcar
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
 const BASE_ID = 'appbK09V4X3pPIai3';
-const PLAN_TABLE = 'tble6NDA3yIcAv5uN';
+const HECHOS_TABLE = 'tblSABQ4KLpDUsERy';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).end();
 
-  const { pwd, pacienteId, pacienteNombre, fechas, ejercicios } = req.body;
+  const { patientId, ejercicioNombre, hecho } = req.body;
+  const today = new Date().toISOString().split('T')[0];
 
-  if (pwd !== FISIO_PASSWORD) {
-    return res.status(401).json({ ok: false, error: 'Contraseña incorrecta' });
-  }
-
-  if (!pacienteId || !fechas?.length || !ejercicios?.length) {
-    return res.status(400).json({ ok: false, error: 'Faltan datos' });
-  }
-
-  // Construir todos los registros: 1 por ejercicio por día
-  const records = [];
-  for (const fecha of fechas) {
-    for (const ej of ejercicios) {
-      const fields = {
-        Name: `${pacienteNombre} - ${ej.nombre} - ${fecha}`,
-        PacienteID: pacienteId,
-        Fecha: fecha,
-        EjercicioNombre: ej.nombre,
-        Zona: ej.zona || '',
-        Series: parseInt(ej.series) || 0,
-        Reps: parseInt(ej.reps) || 0,
-        Duracion: parseInt(ej.duracion) || 0,
-        Descanso: parseInt(ej.descanso) || 0,
-        Descripcion: ej.descripcion || '',
-      };
-      if (ej.youtubeUrl) fields.YouTubeURL = ej.youtubeUrl;
-      records.push({ fields });
-    }
-  }
-
-  // Airtable permite máx 10 registros por petición, hacemos lotes
-  const BATCH = 10;
-  let creados = 0;
   try {
-    for (let i = 0; i < records.length; i += BATCH) {
-      const batch = records.slice(i, i + BATCH);
-      const atRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ records: batch })
+    // Buscar si ya existe registro para hoy
+    const searchUrl = `https://api.airtable.com/v0/${BASE_ID}/${HECHOS_TABLE}?filterByFormula=AND({PacienteID}="${patientId}",{EjercicioNombre}="${ejercicioNombre}",{Fecha}="${today}")`;
+    const searchRes = await fetch(searchUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+    const searchData = await searchRes.json();
+
+    if (searchData.records && searchData.records.length > 0) {
+      // Actualizar existente
+      const recordId = searchData.records[0].id;
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${HECHOS_TABLE}/${recordId}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { Hecho: hecho } })
       });
-
-      if (!atRes.ok) {
-        const err = await atRes.text();
-        console.error('Airtable error:', err);
-        return res.status(500).json({ ok: false, error: 'Error guardando en Airtable', detail: err });
-      }
-
-      const data = await atRes.json();
-      creados += data.records?.length || 0;
+    } else {
+      // Crear nuevo
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${HECHOS_TABLE}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ records: [{ fields: { Nombre: `${patientId}-${ejercicioNombre}-${today}`, PacienteID: patientId, EjercicioNombre: ejercicioNombre, Fecha: today, Hecho: hecho } }] })
+      });
     }
-
-    return res.status(200).json({ ok: true, creados });
-
+    return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('Programa error:', err);
-    return res.status(500).json({ ok: false, error: 'Error interno' });
+    return res.status(500).json({ ok: false });
   }
 }
