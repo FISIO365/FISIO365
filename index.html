@@ -2,415 +2,322 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FISIO365 — Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Fisio365</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f5f4f0;--card:#fff;--border:rgba(0,0,0,0.1);--text:#1a1a1a;--muted:#888;--accent:#1a6b3a;--accent-bg:#e8f5ee;--danger:#c0392b;--font:'Poppins',sans-serif;--r:14px;--r-sm:8px}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
-.screen{display:none}.screen.active{display:block}
+:root {
+  --bg: #0d0d0d; --card: #1a1a1a; --border: rgba(255,255,255,0.08);
+  --text: #f0f0f0; --muted: rgba(255,255,255,0.35);
+  --accent: #7EE8A2; --accent2: #5BC8F5; --danger: #FF6B6B;
+  --font: 'Poppins', sans-serif; --r: 16px; --r-sm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; }
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: block; }
 
 /* LOGIN */
-#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:#1a1a1a}
-.lb{background:#222;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:360px}
-.ll{font-size:26px;font-weight:800;color:white;margin-bottom:4px;letter-spacing:-0.5px}.ll span{color:#7EE8A2}
-.ls{font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:2rem}
-.llbl{font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
-.li{width:100%;font-family:var(--font);font-size:14px;padding:12px 14px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:var(--r-sm);color:white;outline:none;margin-bottom:16px;transition:border-color .15s}
-.li::placeholder{color:rgba(255,255,255,0.25)}.li:focus{border-color:#7EE8A2}
-.lbtn{width:100%;font-family:var(--font);font-size:14px;font-weight:700;padding:13px;background:#7EE8A2;color:#0d1a12;border:none;border-radius:var(--r-sm);cursor:pointer;transition:opacity .2s}
-.lbtn:hover{opacity:.9}.lbtn:disabled{opacity:.4}
-.lerr{font-size:12px;color:#FF6B6B;margin-top:10px;text-align:center;min-height:18px}
+#loginScreen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 2rem 1.5rem;
+  background: radial-gradient(ellipse at 50% 0%, rgba(126,232,162,0.1) 0%, transparent 65%), var(--bg);
+}
+.logo-wrap { text-align: center; margin-bottom: 2.5rem; }
+.logo-main { font-size: 36px; font-weight: 800; color: white; letter-spacing: -1px; }
+.logo-main span { color: var(--accent); }
+.logo-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+.login-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 2rem 1.5rem; width: 100%; max-width: 360px; }
+.login-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.login-desc { font-size: 12px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+.lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+.inp { width: 100%; font-family: var(--font); font-size: 14px; border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; background: rgba(255,255,255,0.05); color: var(--text); outline: none; margin-bottom: 12px; transition: border-color 0.15s; }
+.inp::placeholder { color: var(--muted); }
+.inp:focus { border-color: var(--accent); }
+.pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 1.5rem; }
+.pin-d { width: 60px; height: 64px; font-family: var(--font); font-weight: 700; font-size: 28px; text-align: center; border: 1.5px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.04); color: var(--text); outline: none; transition: border-color 0.15s; }
+.pin-d:focus { border-color: var(--accent); }
+.btn-primary { width: 100%; font-family: var(--font); font-size: 14px; font-weight: 700; padding: 14px; background: var(--accent); color: #0d1a12; border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.login-err { font-size: 12px; color: var(--danger); text-align: center; margin-top: 10px; min-height: 18px; }
 
-/* HEADER */
-header{background:white;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.hl{font-size:18px;font-weight:800;letter-spacing:-0.5px}.hl span{color:var(--accent)}
-.wrap{max-width:720px;margin:0 auto;padding:20px 16px 80px}
+/* APP */
+#appScreen { padding-bottom: 100px; }
+.topbar { position: sticky; top: 0; z-index: 50; background: rgba(13,13,13,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+.topbar-logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+.topbar-logo span { color: var(--accent); }
+.topbar-name { font-size: 12px; color: var(--muted); }
+.container { padding: 16px; max-width: 600px; margin: 0 auto; }
 
-/* TABS */
-.tabs{display:flex;gap:4px;background:rgba(0,0,0,0.06);border-radius:var(--r);padding:4px;margin-bottom:20px}
-.tab{flex:1;padding:9px;text-align:center;font-size:13px;font-weight:600;border:none;background:none;border-radius:var(--r-sm);cursor:pointer;color:var(--muted);font-family:var(--font);transition:all .15s}
-.tab.active{background:white;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+.fisio-card { background: linear-gradient(135deg, rgba(126,232,162,0.08), rgba(91,200,245,0.04)); border: 1px solid rgba(126,232,162,0.2); border-radius: var(--r); padding: 14px 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.fisio-av { width: 48px; height: 48px; border-radius: 50%; background: rgba(126,232,162,0.15); border: 2px solid rgba(126,232,162,0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: var(--accent); flex-shrink: 0; overflow: hidden; }
+.fisio-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.fisio-nombre { font-size: 14px; font-weight: 600; }
+.fisio-col { font-size: 11px; color: var(--accent); font-weight: 500; margin-top: 2px; }
 
-/* CARDS */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px}
-.ct{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.date-h { margin-bottom: 16px; }
+.date-today { font-size: 22px; font-weight: 700; }
+.date-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-/* FIELDS */
-.field{margin-bottom:12px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:500}
-input[type=text],input[type=email],input[type=tel],input[type=number],input[type=url],select{width:100%;font-family:var(--font);font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:white;color:var(--text);outline:none;transition:border-color .15s}
-input:focus,select:focus{border-color:var(--accent)}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-input[type=number]{text-align:center}
+.prog-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px; }
+.prog-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.prog-lbl { font-size: 12px; color: var(--muted); }
+.prog-cnt { font-size: 13px; font-weight: 600; color: var(--accent); }
+.prog-bg { height: 6px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+.prog-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.5s ease; }
 
-/* BUTTONS */
-.btn{font-family:var(--font);font-size:14px;font-weight:600;padding:11px 20px;border:none;border-radius:var(--r-sm);cursor:pointer;transition:opacity .15s,transform .1s}
-.btn:active{transform:scale(.98)}
-.btn-g{background:var(--accent);color:white;width:100%;padding:13px}.btn-g:hover{opacity:.9}.btn-g:disabled{opacity:.4;cursor:not-allowed}
-.btn-o{background:none;border:1px dashed var(--border);color:var(--muted);width:100%;margin-top:4px;font-family:var(--font);font-size:14px;font-weight:500;padding:11px;border-radius:var(--r-sm);cursor:pointer}
-.btn-o:hover{background:var(--bg)}
-.bdel{background:none;border:none;color:var(--danger);cursor:pointer;font-size:22px;padding:0 4px;line-height:1}
+.ej-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; transition: border-color 0.2s; }
+.ej-card.done { border-color: rgba(126,232,162,0.3); }
+.ej-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
+.ej-chk { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; border: 2px solid var(--border); background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.ej-chk.on { background: var(--accent); border-color: var(--accent); }
+.ej-chk svg { display: none; }
+.ej-chk.on svg { display: block; }
+.ej-info { flex: 1; min-width: 0; }
+.ej-nom { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ej-zona { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ej-pills { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.pill { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: rgba(255,255,255,0.06); color: var(--muted); }
+.ej-expand { padding: 0 16px 14px; display: none; }
+.ej-expand.open { display: block; }
+.ej-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+.ej-video { border-radius: var(--r-sm); overflow: hidden; margin-bottom: 12px; }
+.ej-video iframe { width: 100%; height: 200px; border: none; display: block; }
+.btn-done { width: 100%; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 11px; border: 1.5px solid var(--border); border-radius: var(--r-sm); background: none; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+.btn-done:hover { border-color: var(--accent); color: var(--accent); }
+.btn-done.on { background: rgba(126,232,162,0.1); border-color: var(--accent); color: var(--accent); }
 
-/* PACIENTE ITEMS */
-.pi{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s}
-.pi:hover{border-color:var(--accent);background:var(--accent-bg)}.pi.sel{border-color:var(--accent);background:var(--accent-bg)}
-.pav{width:36px;height:36px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
-.pnom{font-size:14px;font-weight:500}.pem{font-size:12px;color:var(--muted)}
-.ppin{font-size:11px;color:var(--accent);font-weight:600;margin-left:auto;background:var(--accent-bg);padding:3px 8px;border-radius:99px;white-space:nowrap}
+.empty { text-align: center; padding: 3rem 1rem; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.empty-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-/* EJERCICIO CARD */
-.ejc{background:#fafaf8;border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;margin-bottom:10px}
-.ejh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.ejn{font-size:13px;font-weight:700;color:var(--accent)}
+.sec-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; margin-top: 8px; }
+.diario-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
+textarea { width: 100%; font-family: var(--font); font-size: 13px; color: var(--text); background: rgba(255,255,255,0.04); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px; resize: none; outline: none; min-height: 90px; line-height: 1.6; transition: border-color 0.15s; margin-bottom: 10px; }
+textarea::placeholder { color: var(--muted); }
+textarea:focus { border-color: var(--accent); }
+.btn-diario { font-family: var(--font); font-size: 13px; font-weight: 600; padding: 10px 20px; background: var(--accent); color: #0d1a12; border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; float: right; }
+.btn-diario:disabled { opacity: 0.4; }
 
-/* EJERCICIO SELECT con preview */
-.ej-sel-wrap{position:relative;margin-bottom:14px}
-.ej-sel-wrap select{font-weight:600;border-color:rgba(26,107,58,0.3);background:#f8fdf9}
-.ej-preview{background:var(--accent-bg);border:1px solid rgba(26,107,58,0.15);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;display:none}
-.ej-preview-zona{font-size:11px;color:var(--accent);font-weight:600;margin-bottom:3px}
-.ej-preview-desc{font-size:12px;color:var(--muted);line-height:1.5}
-
-/* NUEVO PACIENTE PIN */
-.pin-box{background:var(--accent-bg);border:1px solid rgba(26,107,58,0.2);border-radius:var(--r);padding:20px;text-align:center;margin-top:14px}
-.pin-v{font-size:42px;font-weight:800;color:var(--accent);letter-spacing:12px;margin:8px 0}
-.pin-l{font-size:12px;color:var(--muted)}
-
-/* SEARCH */
-.si{position:relative;margin-bottom:12px}.si input{padding-left:36px}
-.si::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px}
-
-/* RESUMEN */
-#res{display:none;background:var(--accent-bg);border:1px solid rgba(26,107,58,0.2);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;color:var(--accent);margin-bottom:14px}
-
-/* TOAST */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 22px;border-radius:var(--r-sm);font-size:13px;font-weight:500;display:none;z-index:999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
-.toast.ok{background:var(--accent);color:white}.toast.err{background:var(--danger);color:white}
-.loading{display:flex;align-items:center;justify-content:center;padding:2rem;color:var(--muted);font-size:13px}
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 22px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; display: none; z-index: 999; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+.toast.ok { background: var(--accent); color: #0d1a12; }
+.toast.err { background: var(--danger); color: white; }
+.loading { display: flex; align-items: center; justify-content: center; padding: 3rem; }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen" class="screen active">
-  <div class="lb">
-    <div class="ll">FISIO<span>365</span></div>
-    <div class="ls">Panel del fisioterapeuta</div>
-    <label class="llbl">Contraseña</label>
-    <input class="li" type="password" id="pwdInp" placeholder="••••••••" />
-    <button class="lbtn" id="loginBtn" onclick="doLogin()">Entrar al panel</button>
-    <div class="lerr" id="loginErr"></div>
+  <div class="logo-wrap">
+    <div class="logo-main">FISIO<span>365</span></div>
+    <div class="logo-sub">Tu rehabilitación, cada día</div>
+  </div>
+  <div class="login-card">
+    <div class="login-title">Bienvenido</div>
+    <div class="login-desc">Introduce tu email y el PIN de 4 dígitos que te ha dado tu fisioterapeuta</div>
+    <label class="lbl">Email</label>
+    <input class="inp" type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" />
+    <label class="lbl">PIN</label>
+    <div class="pin-wrap">
+      <input class="pin-d" type="tel" id="p1" maxlength="1" />
+      <input class="pin-d" type="tel" id="p2" maxlength="1" />
+      <input class="pin-d" type="tel" id="p3" maxlength="1" />
+      <input class="pin-d" type="tel" id="p4" maxlength="1" />
+    </div>
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="loginErr"></div>
   </div>
 </div>
 
-<!-- PANEL -->
-<div id="panelScreen" class="screen">
-  <header>
-    <div class="hl">FISIO<span>365</span> <span style="font-size:13px;font-weight:400;color:var(--muted)">Panel</span></div>
-  </header>
-  <div class="wrap">
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('prog')">Asignar programa</button>
-      <button class="tab" onclick="showTab('pac')">Pacientes</button>
-    </div>
-
-    <!-- TAB PROGRAMA -->
-    <div id="tProg">
-
-      <!-- FISIO -->
-      <div class="card">
-        <div class="ct">Fisio que asigna</div>
-        <div class="field">
-          <label>Seleccionar fisio</label>
-          <select id="fisioSel" onchange="onFisio()"><option value="">Cargando...</option></select>
-        </div>
-        <div id="fprev" style="display:none;margin-top:10px;padding:12px;background:var(--accent-bg);border-radius:var(--r-sm)">
-          <div style="font-size:14px;font-weight:600" id="fpn"></div>
-          <div style="font-size:12px;color:var(--muted)" id="fpc"></div>
-        </div>
-      </div>
-
-      <!-- PACIENTE -->
-      <div class="card">
-        <div class="ct">Paciente</div>
-        <div class="si"><input type="text" id="ps1" placeholder="Buscar paciente..." oninput="fprog()" /></div>
-        <div id="plistProg"><div class="loading">Cargando...</div></div>
-      </div>
-
-      <!-- EJERCICIOS -->
-      <div class="card">
-        <div class="ct">Ejercicios del programa</div>
-        <div id="ejLista"></div>
-        <button class="btn-o" onclick="addEj()">+ Añadir ejercicio</button>
-      </div>
-
-      <div id="res"></div>
-      <button class="btn btn-g" id="btnG" onclick="guardar()">Guardar programa</button>
-    </div>
-
-    <!-- TAB PACIENTES -->
-    <div id="tPac" style="display:none">
-      <div class="card">
-        <div class="ct">Nuevo paciente</div>
-        <div class="g2">
-          <div class="field"><label>Nombre completo *</label><input type="text" id="npN" placeholder="Ana García López" /></div>
-          <div class="field"><label>Email *</label><input type="email" id="npE" placeholder="ana@email.com" /></div>
-        </div>
-        <div class="field"><label>Teléfono</label><input type="tel" id="npT" placeholder="+34 600 000 000" /></div>
-        <button class="btn btn-g" id="btnC" onclick="crearPac()">Crear paciente y generar PIN</button>
-        <div id="pinBox" style="display:none">
-          <div class="pin-box">
-            <div class="pin-l">PIN generado automáticamente</div>
-            <div class="pin-v" id="pinV"></div>
-            <div class="pin-l">Díselo al paciente en consulta</div>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="ct">Todos los pacientes</div>
-        <div class="si"><input type="text" id="ps2" placeholder="Buscar..." oninput="ftodos()" /></div>
-        <div id="plistAll"><div class="loading">Cargando...</div></div>
+<div id="appScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">FISIO<span>365</span></div>
+    <div class="topbar-name" id="topbarName"></div>
+  </div>
+  <div class="container">
+    <div id="fisioCard" class="fisio-card" style="display:none;">
+      <div class="fisio-av" id="fisioAv"></div>
+      <div>
+        <div class="fisio-nombre" id="fisioNombre"></div>
+        <div class="fisio-col" id="fisioColegiado"></div>
       </div>
     </div>
-
+    <div class="date-h">
+      <div class="date-today" id="dateToday"></div>
+      <div class="date-sub">Tu programa de ejercicios</div>
+    </div>
+    <div class="prog-wrap" id="progWrap" style="display:none;">
+      <div class="prog-row"><span class="prog-lbl">Progreso de hoy</span><span class="prog-cnt" id="progCnt">0/0</span></div>
+      <div class="prog-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+    </div>
+    <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
+    <div class="sec-title">Cómo me encuentro hoy</div>
+    <div class="diario-card">
+      <textarea id="diarioTxt" placeholder="Escribe aquí cómo te encuentras, si tienes dolor, qué tal ha ido el ejercicio..."></textarea>
+      <button class="btn-diario" id="btnDiario" onclick="guardarDiario()">Guardar</button>
+      <div style="clear:both"></div>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-let pwd='', fisios=[], pacs=[], biblio=[], pacSelId=null, pacSelN='', fisioSelId='', ejC=0;
+let patient = null, ejercicios = [], hechos = new Set();
+const TODAY = new Date().toISOString().split('T')[0];
 
-document.getElementById('pwdInp').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+// PIN inputs
+const pids = ['p1','p2','p3','p4'];
+pids.forEach((id, i) => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    const v = el.value.replace(/[^0-9]/g,'');
+    el.value = v.slice(-1);
+    if (v && i < 3) document.getElementById(pids[i+1]).focus();
+  });
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !el.value && i > 0) document.getElementById(pids[i-1]).focus();
+    if (e.key === 'Enter') doLogin();
+  });
+});
+document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('p1').focus(); });
 
 async function doLogin() {
-  const p = document.getElementById('pwdInp').value.trim();
-  if(!p) return;
+  const email = document.getElementById('emailInput').value.trim();
+  const pin = pids.map(id => document.getElementById(id).value).join('');
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = '';
+  if (!email) { errEl.textContent = 'Introduce tu email'; return; }
+  if (pin.length !== 4) { errEl.textContent = 'Introduce los 4 dígitos del PIN'; return; }
   const btn = document.getElementById('loginBtn');
-  btn.disabled=true; btn.textContent='Verificando...';
+  btn.disabled = true; btn.textContent = 'Entrando...';
   try {
-    const r = await fetch(`/api/pacientes?pwd=${encodeURIComponent(p)}`);
-    const d = await r.json();
-    if(d.ok) {
-      pwd=p; pacs=d.pacientes;
-      document.getElementById('loginScreen').classList.remove('active');
-      document.getElementById('panelScreen').classList.add('active');
-      await Promise.all([loadFisios(), loadBiblio()]);
-      rprog(); rtodos();
-    } else {
-      document.getElementById('loginErr').textContent='Contraseña incorrecta';
+    const res = await fetch(`/api/login?email=${encodeURIComponent(email)}&pin=${pin}`);
+    const data = await res.json();
+    if (data.ok) { patient = data.patient; initApp(); }
+    else errEl.textContent = data.error || 'Error al entrar';
+  } catch(e) { errEl.textContent = 'Error de conexión'; }
+  btn.disabled = false; btn.textContent = 'Entrar';
+}
+
+function initApp() {
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  document.getElementById('topbarName').textContent = patient.nombre.split(' ')[0];
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const hoy = new Date();
+  document.getElementById('dateToday').textContent = `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
+  loadEjercicios();
+}
+
+async function loadEjercicios() {
+  try {
+    const res = await fetch(`/api/schedule?patientId=${patient.id}`);
+    const data = await res.json();
+    ejercicios = data.ejercicios || [];
+    if (data.fisio) {
+      const f = data.fisio;
+      const av = document.getElementById('fisioAv');
+      if (f.foto) av.innerHTML = `<img src="${f.foto}" alt="${f.nombre}">`;
+      else av.textContent = f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+      document.getElementById('fisioNombre').textContent = `Tu fisio: ${f.nombre}`;
+      document.getElementById('fisioColegiado').textContent = `Nº Colegiado: ${f.colegiado}`;
+      document.getElementById('fisioCard').style.display = 'flex';
     }
-  } catch(e) { document.getElementById('loginErr').textContent='Error de conexión'; }
-  btn.disabled=false; btn.textContent='Entrar al panel';
+    const localKey = `hechos_${patient.id}_${TODAY}`;
+    const local = localStorage.getItem(localKey);
+    hechos = new Set(local ? JSON.parse(local) : []);
+    renderEjercicios();
+  } catch(e) {
+    document.getElementById('ejList').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div><div class="empty-desc">Comprueba tu conexión e inténtalo de nuevo</div></div>';
+  }
 }
 
-async function loadFisios() {
-  try {
-    const r = await fetch(`/api/fisios?pwd=${encodeURIComponent(pwd)}`);
-    const d = await r.json();
-    fisios = d.fisios || [];
-    const sel = document.getElementById('fisioSel');
-    sel.innerHTML = '<option value="">Seleccionar fisio...</option>' + fisios.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join('');
-  } catch(e) {}
-}
-
-async function loadBiblio() {
-  try {
-    const r = await fetch(`/api/ejercicios?pwd=${encodeURIComponent(pwd)}`);
-    const d = await r.json();
-    biblio = d.ejercicios || [];
-  } catch(e) {}
-}
-
-function onFisio() {
-  fisioSelId = document.getElementById('fisioSel').value;
-  const f = fisios.find(x=>x.id===fisioSelId);
-  const prev = document.getElementById('fprev');
-  if(f) {
-    document.getElementById('fpn').textContent = f.nombre;
-    document.getElementById('fpc').textContent = f.colegiado ? `Nº Colegiado: ${f.colegiado}` : 'Sin nº colegiado';
-    prev.style.display='block';
-  } else prev.style.display='none';
-}
-
-function showTab(t) {
-  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', (t==='prog'&&i===0)||(t==='pac'&&i===1)));
-  document.getElementById('tProg').style.display = t==='prog'?'block':'none';
-  document.getElementById('tPac').style.display = t==='pac'?'block':'none';
-}
-
-// ===== PACIENTES =====
-function ritem(p, sel=false, cb=null) {
-  const ini = p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  const div = document.createElement('div');
-  div.className = `pi${sel?' sel':''}`;
-  div.innerHTML = `<div class="pav">${ini}</div><div><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div><div class="ppin">PIN: ${p.pin||'—'}</div>`;
-  if(cb) div.onclick = () => cb(p);
-  return div;
-}
-
-function fprog() { const q=document.getElementById('ps1').value.toLowerCase(); rprog(q); }
-function ftodos() { const q=document.getElementById('ps2').value.toLowerCase(); rtodos(q); }
-
-function rprog(q='') {
-  const el = document.getElementById('plistProg');
-  const fl = pacs.filter(p=>!q||p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q));
-  if(!fl.length) { el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:10px">No encontrado</div>'; return; }
-  el.innerHTML='';
-  fl.forEach(p => {
-    el.appendChild(ritem(p, pacSelId===p.id, pac => {
-      pacSelId=pac.id; pacSelN=pac.nombre; rprog(q); upd();
-    }));
-  });
-}
-
-function rtodos(q='') {
-  const el = document.getElementById('plistAll');
-  const fl = pacs.filter(p=>!q||p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q));
-  if(!fl.length) { el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:10px">No encontrado</div>'; return; }
-  el.innerHTML=''; fl.forEach(p=>el.appendChild(ritem(p)));
-}
-
-async function crearPac() {
-  const n=document.getElementById('npN').value.trim(), e=document.getElementById('npE').value.trim(), t=document.getElementById('npT').value.trim();
-  if(!n||!e) { toast('Nombre y email son obligatorios', false); return; }
-  const btn=document.getElementById('btnC'); btn.disabled=true; btn.textContent='Creando...';
-  try {
-    const r = await fetch('/api/pacientes', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pwd, nombre:n, email:e, telefono:t}) });
-    const d = await r.json();
-    if(d.ok) {
-      pacs.unshift(d.paciente);
-      document.getElementById('pinV').textContent = d.paciente.pin;
-      document.getElementById('pinBox').style.display='block';
-      document.getElementById('npN').value=''; document.getElementById('npE').value=''; document.getElementById('npT').value='';
-      rtodos(); rprog();
-      toast('Paciente creado con éxito', true);
-    } else toast(d.error||'Error', false);
-  } catch(e) { toast('Error de conexión', false); }
-  btn.disabled=false; btn.textContent='Crear paciente y generar PIN';
-}
-
-// ===== EJERCICIOS =====
-function addEj() {
-  ejC++;
-  const n = ejC;
-  const lista = document.getElementById('ejLista');
-  const div = document.createElement('div');
-  div.className='ejc'; div.id=`ej${n}`;
-
-  // Opciones del desplegable
-  const opts = biblio.length
-    ? biblio.map(e=>`<option value="${e.id}" data-zona="${e.zona}" data-desc="${e.descripcion}" data-series="${e.series}" data-reps="${e.reps}" data-dur="${e.duracion}" data-desc2="${e.descanso}" data-url="${e.youtubeUrl}">${e.nombre}${e.zona?' — '+e.zona:''}</option>`).join('')
-    : '<option value="">No hay ejercicios en la biblioteca</option>';
-
-  div.innerHTML = `
-    <div class="ejh">
-      <span class="ejn">Ejercicio ${n}</span>
-      <button class="bdel" onclick="rmEj(${n})">×</button>
-    </div>
-
-    <div class="field">
-      <label>Seleccionar ejercicio</label>
-      <div class="ej-sel-wrap">
-        <select id="esel${n}" onchange="onEjSel(${n})">
-          <option value="">— Elige un ejercicio —</option>
-          ${opts}
-        </select>
-        <div class="ej-preview" id="eprev${n}">
-          <div class="ej-preview-zona" id="epzona${n}"></div>
-          <div class="ej-preview-desc" id="epdesc${n}"></div>
+function renderEjercicios() {
+  const lista = document.getElementById('ejList');
+  if (!ejercicios.length) {
+    lista.innerHTML = `<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios. ¡Pronto los tendrás aquí!</div></div>`;
+    return;
+  }
+  document.getElementById('progWrap').style.display = 'block';
+  updateProg();
+  lista.innerHTML = ejercicios.map((ej, i) => {
+    const done = hechos.has(ej.id);
+    const pills = [ej.series?`${ej.series} series`:null, ej.reps?`${ej.reps} reps`:null, ej.dur?`${ej.dur}s`:null, ej.descanso?`${ej.descanso}s descanso`:null].filter(Boolean);
+    return `<div class="ej-card ${done?'done':''}" id="ec${i}">
+      <div class="ej-header" onclick="toggleEx(${i})">
+        <button class="ej-chk ${done?'on':''}" id="ck${i}" onclick="event.stopPropagation();toggleHecho(${i})">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#0d1a12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="ej-info">
+          <div class="ej-nom">${ej.name}</div>
+          ${ej.zona?`<div class="ej-zona">${ej.zona}</div>`:''}
+          <div class="ej-pills">${pills.map(p=>`<span class="pill">${p}</span>`).join('')}</div>
         </div>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:var(--muted);transition:transform 0.2s" id="ar${i}"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-    </div>
-
-    <div class="g3">
-      <div class="field"><label>Series</label><input type="number" id="es${n}" value="3" min="1" /></div>
-      <div class="field"><label>Reps</label><input type="number" id="er${n}" value="10" min="0" /></div>
-      <div class="field"><label>Duración (seg)</label><input type="number" id="ed${n}" value="0" min="0" /></div>
-    </div>
-    <div class="g2">
-      <div class="field"><label>Descanso (seg)</label><input type="number" id="edes${n}" value="30" min="0" /></div>
-      <div class="field"><label>Zona corporal</label><input type="text" id="ez${n}" placeholder="Lumbar, Rodilla..." /></div>
-    </div>
-    <div class="field"><label>Indicaciones para el paciente</label><input type="text" id="edesc${n}" placeholder="Mantén la espalda recta..." /></div>
-  `;
-  lista.appendChild(div);
-  upd();
+      <div class="ej-expand" id="ex${i}">
+        ${ej.desc?`<div class="ej-desc">${ej.desc}</div>`:''}
+        ${ej.ytId?`<div class="ej-video"><iframe src="https://www.youtube.com/embed/${ej.ytId}" allowfullscreen loading="lazy"></iframe></div>`:''}
+        <button class="btn-done ${done?'on':''}" id="bd${i}" onclick="toggleHecho(${i})">${done?'✓ Completado':'Marcar como hecho'}</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function onEjSel(n) {
-  const sel = document.getElementById(`esel${n}`);
-  const opt = sel.options[sel.selectedIndex];
-  if(!sel.value) { document.getElementById(`eprev${n}`).style.display='none'; return; }
-
-  // Precargar valores de la biblioteca
-  document.getElementById(`es${n}`).value = opt.dataset.series || 3;
-  document.getElementById(`er${n}`).value = opt.dataset.reps || 10;
-  document.getElementById(`ed${n}`).value = opt.dataset.dur || 0;
-  document.getElementById(`edes${n}`).value = opt.dataset.desc2 || 30;
-  document.getElementById(`ez${n}`).value = opt.dataset.zona || '';
-
-  // Mostrar preview
-  const prev = document.getElementById(`eprev${n}`);
-  const zona = opt.dataset.zona;
-  const desc = opt.dataset.desc;
-  document.getElementById(`epzona${n}`).textContent = zona || '';
-  document.getElementById(`epdesc${n}`).textContent = desc || '';
-  prev.style.display = (zona||desc) ? 'block' : 'none';
-
-  upd();
+function toggleEx(i) {
+  const ex = document.getElementById(`ex${i}`), ar = document.getElementById(`ar${i}`);
+  const open = ex.classList.toggle('open');
+  ar.style.transform = open ? 'rotate(180deg)' : '';
 }
 
-function rmEj(n) { document.getElementById(`ej${n}`)?.remove(); upd(); }
-
-function getEjs() {
-  return [...document.querySelectorAll('.ejc')].map(card => {
-    const n = card.id.replace('ej','');
-    const sel = document.getElementById(`esel${n}`);
-    const nombre = sel?.options[sel.selectedIndex]?.text?.split(' — ')[0]?.trim();
-    if(!nombre || !sel?.value) return null;
-    return {
-      nombre,
-      series: +document.getElementById(`es${n}`)?.value || 0,
-      reps: +document.getElementById(`er${n}`)?.value || 0,
-      duracion: +document.getElementById(`ed${n}`)?.value || 0,
-      descanso: +document.getElementById(`edes${n}`)?.value || 0,
-      zona: document.getElementById(`ez${n}`)?.value?.trim() || '',
-      descripcion: document.getElementById(`edesc${n}`)?.value?.trim() || '',
-      youtubeUrl: biblio.find(e=>e.id===sel.value)?.youtubeUrl || ''
-    };
-  }).filter(Boolean);
-}
-
-function upd() {
-  const ejs=getEjs(), res=document.getElementById('res');
-  if(pacSelId && ejs.length) {
-    res.style.display='block';
-    res.textContent=`Se asignarán ${ejs.length} ejercicio${ejs.length>1?'s':''} a ${pacSelN}. El programa anterior se reemplazará.`;
-  } else res.style.display='none';
-}
-
-async function guardar() {
-  if(!fisioSelId) { toast('Selecciona el fisio que asigna', false); return; }
-  if(!pacSelId) { toast('Selecciona un paciente', false); return; }
-  const ejs = getEjs();
-  if(!ejs.length) { toast('Añade y selecciona al menos un ejercicio', false); return; }
-  const btn=document.getElementById('btnG'); btn.disabled=true; btn.textContent='Guardando...';
+async function toggleHecho(i) {
+  const ej = ejercicios[i];
+  if (hechos.has(ej.id)) hechos.delete(ej.id); else hechos.add(ej.id);
+  localStorage.setItem(`hechos_${patient.id}_${TODAY}`, JSON.stringify([...hechos]));
+  const done = hechos.has(ej.id);
+  document.getElementById(`ec${i}`).classList.toggle('done', done);
+  document.getElementById(`ck${i}`).classList.toggle('on', done);
+  document.getElementById(`bd${i}`).classList.toggle('on', done);
+  document.getElementById(`bd${i}`).textContent = done ? '✓ Completado' : 'Marcar como hecho';
+  updateProg();
   try {
-    const r = await fetch('/api/programa', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pwd, pacienteId:pacSelId, pacienteNombre:pacSelN, fisioId:fisioSelId, ejercicios:ejs}) });
-    const d = await r.json();
-    if(d.ok) toast(`✓ Programa guardado: ${d.creados} ejercicios asignados a ${pacSelN}`, true);
-    else toast(d.error||'Error al guardar', false);
+    await fetch('/api/done', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, ejercicioId: ej.id, fecha: TODAY, hecho: done }) });
+  } catch(e) {}
+}
+
+function updateProg() {
+  const total = ejercicios.length, done = ejercicios.filter(ej=>hechos.has(ej.id)).length;
+  document.getElementById('progCnt').textContent = `${done}/${total}`;
+  document.getElementById('progBar').style.width = total ? `${(done/total)*100}%` : '0%';
+}
+
+async function guardarDiario() {
+  const texto = document.getElementById('diarioTxt').value.trim();
+  if (!texto) return;
+  const btn = document.getElementById('btnDiario');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try {
+    const res = await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: texto }) });
+    const data = await res.json();
+    if (data.ok) { document.getElementById('diarioTxt').value = ''; toast('Anotado en tu diario ✓', true); }
+    else toast('Error al guardar', false);
   } catch(e) { toast('Error de conexión', false); }
-  btn.disabled=false; btn.textContent='Guardar programa';
+  btn.disabled = false; btn.textContent = 'Guardar';
 }
 
 function toast(msg, ok=true) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className=`toast ${ok?'ok':'err'}`; t.style.display='block';
-  setTimeout(()=>t.style.display='none', 3500);
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${ok?'ok':'err'}`; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
 }
 </script>
 </body>
