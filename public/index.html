@@ -190,7 +190,7 @@ async function doLogin() {
 function initApp() {
   document.getElementById('loginScreen').classList.remove('active');
   document.getElementById('appScreen').classList.add('active');
-  window.scrollTo(0, 0);
+  setTimeout(() => window.scrollTo(0, 0), 50);
   document.getElementById('topbarName').textContent = patient.nombre.split(' ')[0];
   const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
