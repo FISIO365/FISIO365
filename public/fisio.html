@@ -280,6 +280,7 @@ function onEjSel(n){
   document.getElementById(`ed${n}`).value=opt.dataset.dur||0;
   document.getElementById(`edes${n}`).value=opt.dataset.desc2||30;
   document.getElementById(`ez${n}`).value=opt.dataset.zona||'';
+  document.getElementById(`edesc${n}`).value=opt.dataset.desc||'';
   const prev=document.getElementById(`eprev${n}`);
   document.getElementById(`epzona${n}`).textContent=opt.dataset.zona||'';
   document.getElementById(`epdesc${n}`).textContent=opt.dataset.desc||'';
@@ -295,7 +296,7 @@ function getEjs(){
     const sel=document.getElementById(`esel${n}`);
     const nombre=sel?.options[sel.selectedIndex]?.text?.split(' — ')[0]?.trim();
     if(!nombre||!sel?.value)return null;
-    return{nombre,series:+document.getElementById(`es${n}`)?.value||0,reps:+document.getElementById(`er${n}`)?.value||0,duracion:+document.getElementById(`ed${n}`)?.value||0,descanso:+document.getElementById(`edes${n}`)?.value||0,zona:document.getElementById(`ez${n}`)?.value?.trim()||'',descripcion:document.getElementById(`edesc${n}`)?.value?.trim()||'',youtubeUrl:biblio.find(e=>e.id===sel.value)?.youtubeUrl||'',imagen:biblio.find(e=>e.id===sel.value)?.imagen||''};
+    return{nombre,series:+document.getElementById(`es${n}`)?.value||0,reps:+document.getElementById(`er${n}`)?.value||0,duracion:+document.getElementById(`ed${n}`)?.value||0,descanso:+document.getElementById(`edes${n}`)?.value||0,zona:document.getElementById(`ez${n}`)?.value?.trim()||'',descripcion:document.getElementById(`edesc${n}`)?.value?.trim()||document.getElementById(`esel${n}`)?.options[document.getElementById(`esel${n}`)?.selectedIndex]?.dataset?.desc||'',youtubeUrl:biblio.find(e=>e.id===sel.value)?.youtubeUrl||'',imagen:biblio.find(e=>e.id===sel.value)?.imagen||''};
   }).filter(Boolean);
 }
 
