@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FISIO365 — Panel</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icono.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="FISIO365 Panel">
+<meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -304,10 +310,9 @@ function getEjs(){
 function filtrarEj(n) {
   const q = document.getElementById(`ebusca${n}`).value.toLowerCase();
   const sel = document.getElementById(`esel${n}`);
-  Array.from(sel.options).forEach(opt => {
-    if (!opt.value) { opt.style.display = ''; return; }
-    opt.style.display = opt.text.toLowerCase().includes(q) ? '' : 'none';
-  });
+  const filtered = biblio.filter(e => !q || e.nombre.toLowerCase().includes(q));
+  sel.innerHTML = '<option value="">— Elige un ejercicio —</option>' +
+    filtered.map(e => `<option value="${e.id}" data-zona="${e.zona}" data-desc="${e.descripcion}" data-series="${e.series}" data-reps="${e.reps}" data-dur="${e.duracion}" data-desc2="${e.descanso}" data-url="${e.youtubeUrl}" data-img="${e.imagen||''}">${e.nombre}</option>`).join('');
 }
 
 function upd(){
