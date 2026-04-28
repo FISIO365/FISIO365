@@ -183,11 +183,11 @@ textarea:focus { border-color: var(--black); }
     <!-- VISTA COMPLETADO -->
     <div id="vistaCompletado" style="display:none;">
       <div class="completado-wrap">
-        <div class="completado-emoji">🎉</div>
-        <div class="completado-titulo">¡Sesión completada!</div>
-        <div class="completado-sub">Has terminado tu programa de hoy.<br>¡Sigue así, lo estás haciendo genial!</div>
+        <div class="completado-emoji" id="completadoEmoji">🎉</div>
+        <div class="completado-titulo" id="completadoTitulo">¡Sesión completada!</div>
+        <div class="completado-sub" id="completadoSub">Has terminado tu programa de hoy.<br>¡Sigue así, lo estás haciendo genial!</div>
         <div class="completado-card">
-          <p>💪 Vuelve mañana para continuar con tu recuperación</p>
+          <p id="completadoRacha">💪 Vuelve mañana para continuar con tu recuperación</p>
         </div>
       </div>
     </div>
@@ -348,10 +348,11 @@ async function tareaHecha() {
   btn.disabled = true; btn.textContent = 'Guardando...';
 
   try {
-    // Guardar diario si hay texto
-    if (texto) {
-      await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: texto }) });
-    }
+    // Guardar diario y actualizar racha
+    const diarioRes = await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: texto }) });
+    const diarioData = await diarioRes.json();
+    const racha = diarioData.racha || 1;
+    actualizarMensajeRacha(racha);
 
     // Marcar todos los ejercicios como hechos
     for (let i = 0; i < ejercicios.length; i++) {
@@ -373,6 +374,29 @@ async function tareaHecha() {
     toast('Error al guardar', false);
     btn.disabled = false; btn.textContent = 'Tarea hecha ✓';
   }
+}
+
+function actualizarMensajeRacha(racha) {
+  const mensajes = {
+    emoji: racha >= 30 ? '🎖️' : racha >= 10 ? '🏆' : racha >= 5 ? '🔥' : racha >= 2 ? '💪' : '🌱',
+    titulo: '¡Sesión completada!',
+    sub: racha === 1 
+      ? 'Primer día completado. ¡El cambio empieza hoy!' 
+      : racha < 5 
+      ? `¡Llevas ${racha} días seguidos! Sigue así, lo estás haciendo genial`
+      : racha < 10
+      ? `¡${racha} días seguidos! 🔥 Estás en racha`
+      : racha < 30
+      ? `¡${racha} días seguidos! 🏆 Eres una máquina`
+      : `¡${racha} días seguidos! 🎖️ Increíble constancia`,
+    racha: racha === 1 
+      ? '💪 Vuelve mañana para continuar con tu recuperación'
+      : `🗓️ Llevas ${racha} días consecutivos completando tu programa`
+  };
+  document.getElementById('completadoEmoji').textContent = mensajes.emoji;
+  document.getElementById('completadoTitulo').textContent = mensajes.titulo;
+  document.getElementById('completadoSub').textContent = mensajes.sub;
+  document.getElementById('completadoRacha').textContent = mensajes.racha;
 }
 
 function toast(msg, ok=true) {
