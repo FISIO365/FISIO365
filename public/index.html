@@ -98,6 +98,12 @@ textarea:focus { border-color: var(--black); }
 .completado-titulo { font-size: 24px; font-weight: 800; color: var(--black); margin-bottom: 8px; }
 .completado-sub { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
 .completado-card { background: var(--lila-light); border: 1.5px solid var(--lila); border-radius: var(--r); padding: 16px; }
+.mensaje-fisio { background: var(--black); border-radius: var(--r); padding: 16px 18px; margin-bottom: 16px; display: none; }
+.mensaje-fisio-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.4); margin-bottom: 6px; }
+.mensaje-fisio-texto { font-size: 14px; color: var(--cream); line-height: 1.6; font-style: italic; }
+.mensaje-fisio { background: var(--black); border-radius: var(--r); padding: 16px 18px; margin-bottom: 16px; display: none; }
+.mensaje-fisio-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.4); margin-bottom: 6px; }
+.mensaje-fisio-texto { font-size: 14px; color: var(--cream); line-height: 1.6; font-style: italic; }
 .completado-card p { font-size: 13px; color: var(--lila); font-weight: 500; }
 @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
 
@@ -145,6 +151,14 @@ textarea:focus { border-color: var(--black); }
         <div class="fisio-col" id="fisioColegiado"></div>
       </div>
     </div>
+    <div id="mensajeFisioCard" class="mensaje-fisio">
+      <div class="mensaje-fisio-label">Mensaje de tu fisio</div>
+      <div class="mensaje-fisio-texto" id="mensajeFisioTexto"></div>
+    </div>
+    <div id="mensajeFisioCard" class="mensaje-fisio">
+      <div class="mensaje-fisio-label">Mensaje de tu fisio 💬</div>
+      <div class="mensaje-fisio-texto" id="mensajeFisioTexto"></div>
+    </div>
     <div class="date-h">
       <div class="date-today" id="dateToday"></div>
       <div class="date-sub">Tu programa de ejercicios</div>
@@ -184,7 +198,7 @@ textarea:focus { border-color: var(--black); }
 <div class="toast" id="toast"></div>
 
 <script>
-let patient = null, ejercicios = [], hechos = new Set();
+let patient = null, ejercicios = [], hechos = new Set(), mensajeFisio = "";
 const TODAY = new Date().toISOString().split('T')[0];
 const COMPLETADO_KEY = () => `completado_${patient.id}_${TODAY}`;
 
@@ -254,6 +268,11 @@ async function loadEjercicios() {
       document.getElementById('fisioNombre').textContent = `Tu fisio: ${f.nombre}`;
       document.getElementById('fisioColegiado').textContent = f.colegiado ? `Nº Colegiado: ${f.colegiado}` : '';
       document.getElementById('fisioCard').style.display = 'flex';
+    }
+    mensajeFisio = data.mensajeFisio || '';
+    if (mensajeFisio) {
+      document.getElementById('mensajeFisioTexto').textContent = mensajeFisio;
+      document.getElementById('mensajeFisioCard').style.display = 'block';
     }
     const localKey = `hechos_${patient.id}_${TODAY}`;
     const local = localStorage.getItem(localKey);
