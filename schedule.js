@@ -1,41 +1,29 @@
-// api/done.js - Marcar ejercicio como hecho / desmarcar
+// api/fisios.js - Lista de fisios para el panel
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
+const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
 const BASE_ID = 'appbK09V4X3pPIai3';
-const HECHOS_TABLE = 'tblSABQ4KLpDUsERy';
+const FISIOS_TABLE = 'tbl2mLUrnaKCFTs6g';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { patientId, ejercicioNombre, hecho } = req.body;
-  const today = new Date().toISOString().split('T')[0];
+  const { pwd } = req.query;
+  if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'No autorizado' });
 
   try {
-    // Buscar si ya existe registro para hoy
-    const searchUrl = `https://api.airtable.com/v0/${BASE_ID}/${HECHOS_TABLE}?filterByFormula=AND({PacienteID}="${patientId}",{EjercicioNombre}="${ejercicioNombre}",{Fecha}="${today}")`;
-    const searchRes = await fetch(searchUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-    const searchData = await searchRes.json();
-
-    if (searchData.records && searchData.records.length > 0) {
-      // Actualizar existente
-      const recordId = searchData.records[0].id;
-      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${HECHOS_TABLE}/${recordId}`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: { Hecho: hecho } })
-      });
-    } else {
-      // Crear nuevo
-      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${HECHOS_TABLE}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ records: [{ fields: { Nombre: `${patientId}-${ejercicioNombre}-${today}`, PacienteID: patientId, EjercicioNombre: ejercicioNombre, Fecha: today, Hecho: hecho } }] })
-      });
-    }
-    return res.status(200).json({ ok: true });
-  } catch (err) {
-    return res.status(500).json({ ok: false });
+    const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?fields[]=Name&fields[]=NºColegiado&fields[]=Foto`;
+    const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+    const data = await r.json();
+    const fisios = (data.records || []).map(rec => ({
+      id: rec.id,
+      nombre: rec.fields['Name'] || '',
+      colegiado: rec.fields['NºColegiado'] || '',
+      foto: rec.fields['Foto']?.[0]?.url || ''
+    }));
+    return res.status(200).json({ ok: true, fisios });
+  } catch(e) {
+    return res.status(500).json({ ok: false, error: 'Error interno' });
   }
 }
