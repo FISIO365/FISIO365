@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FISIO365 — Panel</title>
 <link rel="manifest" href="/manifest-fisio.json">
 <link rel="apple-touch-icon" href="/icono.png">
@@ -287,7 +287,6 @@ function onEjSel(n){
   document.getElementById(`ed${n}`).value=opt.dataset.dur||0;
   document.getElementById(`edes${n}`).value=opt.dataset.desc2||30;
   document.getElementById(`ez${n}`).value=opt.dataset.zona||'';
-  document.getElementById(`edesc${n}`).value=opt.dataset.desc||'';
   const prev=document.getElementById(`eprev${n}`);
   document.getElementById(`epzona${n}`).textContent=opt.dataset.zona||'';
   document.getElementById(`epdesc${n}`).textContent=opt.dataset.desc||'';
