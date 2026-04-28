@@ -1,0 +1,21 @@
+{
+  "name": "FISIO365",
+  "short_name": "FISIO365",
+  "description": "Tu programa de rehabilitación",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/icono.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icono.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
