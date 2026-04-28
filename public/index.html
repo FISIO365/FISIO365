@@ -489,17 +489,8 @@ function cerrarPopup() {
 
 function showSection(section) {
   document.getElementById('vistaGuia').style.display = section === 'guia' ? 'block' : 'none';
-  const vistaEj = document.getElementById('vistaEjercicios');
-  const vistaComp = document.getElementById('vistaCompletado');
-  if (section === 'hoy') {
-    if (localStorage.getItem('completado_' + patient?.id + '_' + TODAY)) {
-      vistaComp.style.display = 'block'; vistaEj.style.display = 'none';
-    } else {
-      vistaEj.style.display = 'block'; vistaComp.style.display = 'none';
-    }
-  } else {
-    vistaEj.style.display = 'none'; vistaComp.style.display = 'none';
-  }
+  document.getElementById('vistaEjercicios').style.display = section === 'hoy' ? 'block' : 'none';
+  document.getElementById('vistaCompletado').style.display = 'none';
   document.getElementById('navHoy').classList.toggle('active', section === 'hoy');
   document.getElementById('navGuia').classList.toggle('active', section === 'guia');
   window.scrollTo(0, 0);
