@@ -488,9 +488,12 @@ function cerrarPopup() {
 }
 
 function showSection(section) {
-  document.getElementById('vistaGuia').style.display = section === 'guia' ? 'block' : 'none';
-  document.getElementById('vistaEjercicios').style.display = section === 'hoy' ? 'block' : 'none';
-  document.getElementById('vistaCompletado').style.display = 'none';
+  const guia = document.getElementById('vistaGuia');
+  const ej = document.getElementById('vistaEjercicios');
+  const comp = document.getElementById('vistaCompletado');
+  if (guia) guia.style.display = section === 'guia' ? 'block' : 'none';
+  if (ej) ej.style.display = section === 'hoy' ? 'block' : 'none';
+  if (comp) comp.style.display = 'none';
   document.getElementById('navHoy').classList.toggle('active', section === 'hoy');
   document.getElementById('navGuia').classList.toggle('active', section === 'guia');
   window.scrollTo(0, 0);
