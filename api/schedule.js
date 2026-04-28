@@ -24,7 +24,7 @@ export default async function handler(req, res) {
 
     ejercicios = ejercicios.map((ej, i) => {
       const ytUrl = ej.youtubeUrl || '';
-      const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/)([^&\s]+)/);
+      const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/|shorts\/)([^&\s?]+)/);
       return {
         id: `ej_${i}`,
         name: ej.nombre || '',
