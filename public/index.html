@@ -188,8 +188,13 @@ async function doLogin() {
 }
 
 function initApp() {
-  document.getElementById('loginScreen').classList.remove('active');
-  document.getElementById('appScreen').classList.add('active');
+document.getElementById('loginScreen').style.display = 'none';
+document.getElementById('appScreen').style.display = 'block';
+document.getElementById('appScreen').style.opacity = '0';
+window.scrollTo({top: 0, behavior: 'instant'});
+document.documentElement.scrollTop = 0;
+document.body.scrollTop = 0;
+setTimeout(() => { document.getElementById('appScreen').style.opacity = '1'; }, 10);
   window.scrollTo(0, 0);
   document.getElementById('topbarName').textContent = patient.nombre.split(' ')[0];
   const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
