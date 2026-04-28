@@ -17,7 +17,6 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 .screen { display: none; }
 .screen.active { display: block; min-height: 100vh; }
 
-/* LOGIN */
 #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem 1.5rem; background: #000; }
 .logo-wrap { text-align: center; margin-bottom: 3rem; }
 .logo-text { font-size: 48px; font-weight: 800; color: var(--cream); letter-spacing: -1px; }
@@ -36,8 +35,7 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 .login-err { font-size: 12px; color: #ff6b6b; text-align: center; margin-top: 10px; min-height: 18px; }
 
-/* APP */
-#appScreen { padding-bottom: 100px; background: var(--cream); min-height: 100vh; }
+#appScreen { padding-bottom: 100px; background: var(--cream); }
 .topbar { position: sticky; top: 0; z-index: 50; background: var(--black); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
 .topbar-logo { font-size: 20px; font-weight: 800; color: var(--cream); letter-spacing: -0.5px; }
 .topbar-name { font-size: 12px; color: rgba(245,242,238,0.5); }
@@ -91,8 +89,17 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 textarea { width: 100%; font-family: var(--font); font-size: 13px; color: var(--black); background: var(--cream); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px; resize: none; outline: none; min-height: 90px; line-height: 1.6; transition: border-color 0.15s; margin-bottom: 10px; }
 textarea::placeholder { color: var(--muted); }
 textarea:focus { border-color: var(--black); }
-.btn-diario { font-family: var(--font); font-size: 13px; font-weight: 700; padding: 10px 20px; background: var(--black); color: var(--cream); border: none; border-radius: var(--r-sm); cursor: pointer; float: right; }
+.btn-diario { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 700; padding: 14px; background: var(--black); color: var(--cream); border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; margin-top: 4px; }
 .btn-diario:disabled { opacity: 0.4; }
+
+/* COMPLETADO */
+.completado-wrap { text-align: center; padding: 3rem 1rem; }
+.completado-emoji { font-size: 64px; margin-bottom: 16px; animation: bounce 0.6s ease; }
+.completado-titulo { font-size: 24px; font-weight: 800; color: var(--black); margin-bottom: 8px; }
+.completado-sub { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+.completado-card { background: var(--lila-light); border: 1.5px solid var(--lila); border-radius: var(--r); padding: 16px; }
+.completado-card p { font-size: 13px; color: var(--lila); font-weight: 500; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
 
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 22px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; display: none; z-index: 999; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
 .toast.ok { background: var(--black); color: var(--cream); }
@@ -142,17 +149,35 @@ textarea:focus { border-color: var(--black); }
       <div class="date-today" id="dateToday"></div>
       <div class="date-sub">Tu programa de ejercicios</div>
     </div>
-    <div class="prog-wrap" id="progWrap" style="display:none;">
-      <div class="prog-row"><span class="prog-lbl">Progreso de hoy</span><span class="prog-cnt" id="progCnt">0/0</span></div>
-      <div class="prog-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+
+    <!-- VISTA NORMAL -->
+    <div id="vistaEjercicios">
+      <div class="prog-wrap" id="progWrap" style="display:none;">
+        <div class="prog-row"><span class="prog-lbl">Progreso de hoy</span><span class="prog-cnt" id="progCnt">0/0</span></div>
+        <div class="prog-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+      </div>
+      <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
+      <div id="diarioSection" style="display:none;">
+        <div class="sec-title">Tu informe de hoy</div>
+        <div class="diario-card">
+          <textarea id="diarioTxt" placeholder="¡Hola! ¿Cómo te has encontrado hoy? Cuéntame cualquier cosa que hayas notado, me ayuda mucho para tu seguimiento 💪"></textarea>
+          <button class="btn-diario" id="btnDiario" onclick="tareaHecha()">Tarea hecha ✓</button>
+        </div>
+      </div>
     </div>
-    <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
-    <div class="sec-title">Cómo me encuentro hoy</div>
-    <div class="diario-card">
-      <textarea id="diarioTxt" placeholder="Escribe aquí cómo te encuentras, si tienes dolor, qué tal ha ido el ejercicio..."></textarea>
-      <button class="btn-diario" id="btnDiario" onclick="guardarDiario()">Guardar</button>
-      <div style="clear:both"></div>
+
+    <!-- VISTA COMPLETADO -->
+    <div id="vistaCompletado" style="display:none;">
+      <div class="completado-wrap">
+        <div class="completado-emoji">🎉</div>
+        <div class="completado-titulo">¡Sesión completada!</div>
+        <div class="completado-sub">Has terminado tu programa de hoy.<br>¡Sigue así, lo estás haciendo genial!</div>
+        <div class="completado-card">
+          <p>💪 Vuelve mañana para continuar con tu recuperación</p>
+        </div>
+      </div>
     </div>
+
   </div>
 </div>
 
@@ -161,6 +186,8 @@ textarea:focus { border-color: var(--black); }
 <script>
 let patient = null, ejercicios = [], hechos = new Set();
 const TODAY = new Date().toISOString().split('T')[0];
+const COMPLETADO_KEY = () => `completado_${patient.id}_${TODAY}`;
+
 const pids = ['p1','p2','p3','p4'];
 pids.forEach((id, i) => {
   const el = document.getElementById(id);
@@ -188,20 +215,30 @@ async function doLogin() {
 }
 
 function initApp() {
-document.getElementById('loginScreen').style.display = 'none';
-document.getElementById('appScreen').style.display = 'block';
-document.getElementById('appScreen').style.opacity = '0';
-window.scrollTo({top: 0, behavior: 'instant'});
-document.documentElement.scrollTop = 0;
-document.body.scrollTop = 0;
-setTimeout(() => { document.getElementById('appScreen').style.opacity = '1'; }, 10);
-  window.scrollTo(0, 0);
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('appScreen').style.opacity = '0';
+  window.scrollTo({top: 0, behavior: 'instant'});
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  setTimeout(() => { document.getElementById('appScreen').style.opacity = '1'; }, 10);
   document.getElementById('topbarName').textContent = patient.nombre.split(' ')[0];
   const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const hoy = new Date();
   document.getElementById('dateToday').textContent = `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
+
+  // Comprobar si ya completó hoy
+  if (localStorage.getItem(COMPLETADO_KEY())) {
+    mostrarCompletado();
+    return;
+  }
   loadEjercicios();
+}
+
+function mostrarCompletado() {
+  document.getElementById('vistaEjercicios').style.display = 'none';
+  document.getElementById('vistaCompletado').style.display = 'block';
 }
 
 async function loadEjercicios() {
@@ -234,6 +271,7 @@ function renderEjercicios() {
     return;
   }
   document.getElementById('progWrap').style.display = 'block';
+  document.getElementById('diarioSection').style.display = 'block';
   updateProg();
   lista.innerHTML = ejercicios.map((ej, i) => {
     const done = hechos.has(ej.id);
@@ -252,7 +290,7 @@ function renderEjercicios() {
       </div>
       <div class="ej-expand" id="ex${i}">
         ${ej.desc?`<div class="ej-desc">${ej.desc}</div>`:''}
-        ${ej.imagen?`<div class="ej-video"><img src="${ej.imagen}" alt="${ej.name}" style="width:100%;border-radius:var(--r-sm);display:block;margin-bottom:12px"></div>`:''}
+        ${ej.imagen?`<img src="${ej.imagen}" alt="${ej.name}" style="width:100%;border-radius:var(--r-sm);display:block;margin-bottom:12px">`:''}
         ${ej.ytId?`<div class="ej-video"><iframe src="https://www.youtube.com/embed/${ej.ytId}" allowfullscreen loading="lazy"></iframe></div>`:''}
         <button class="btn-done ${done?'on':''}" id="bd${i}" onclick="toggleHecho(${i})">${done?'✓ Completado':'Marcar como hecho'}</button>
       </div>
@@ -285,18 +323,37 @@ function updateProg() {
   document.getElementById('progBar').style.width = total ? `${(done/total)*100}%` : '0%';
 }
 
-async function guardarDiario() {
+async function tareaHecha() {
   const texto = document.getElementById('diarioTxt').value.trim();
-  if (!texto) return;
   const btn = document.getElementById('btnDiario');
   btn.disabled = true; btn.textContent = 'Guardando...';
+
   try {
-    const res = await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: texto }) });
-    const data = await res.json();
-    if (data.ok) { document.getElementById('diarioTxt').value = ''; toast('Anotado en tu diario ✓', true); }
-    else toast('Error al guardar', false);
-  } catch(e) { toast('Error de conexión', false); }
-  btn.disabled = false; btn.textContent = 'Guardar';
+    // Guardar diario si hay texto
+    if (texto) {
+      await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: texto }) });
+    }
+
+    // Marcar todos los ejercicios como hechos
+    for (let i = 0; i < ejercicios.length; i++) {
+      const ej = ejercicios[i];
+      if (!hechos.has(ej.id)) {
+        hechos.add(ej.id);
+        await fetch('/api/done', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, ejercicioId: ej.id, fecha: TODAY, hecho: true }) });
+      }
+    }
+    localStorage.setItem(`hechos_${patient.id}_${TODAY}`, JSON.stringify([...hechos]));
+
+    // Guardar que completó hoy
+    localStorage.setItem(COMPLETADO_KEY(), '1');
+
+    // Mostrar pantalla de completado
+    mostrarCompletado();
+
+  } catch(e) {
+    toast('Error al guardar', false);
+    btn.disabled = false; btn.textContent = 'Tarea hecha ✓';
+  }
 }
 
 function toast(msg, ok=true) {
