@@ -211,7 +211,7 @@ textarea:focus { border-color: var(--black); }
       <div id="diarioSection" style="display:none;">
         <div class="sec-title">Tu informe de hoy</div>
         <div class="diario-card">
-          <textarea id="diarioTxt" placeholder="Cuéntame cómo te ha ido hoy con los ejercicios"></textarea>
+          <textarea id="diarioTxt" placeholder="¡Hola! ¿Cómo te has encontrado hoy? Cuéntame cualquier cosa que hayas notado, me ayuda mucho para tu seguimiento 💪"></textarea>
           <button class="btn-diario" id="btnDiario" onclick="tareaHecha()">Tarea hecha ✓</button>
         </div>
       </div>
@@ -491,11 +491,19 @@ function showSection(section) {
   const guia = document.getElementById('vistaGuia');
   const ej = document.getElementById('vistaEjercicios');
   const comp = document.getElementById('vistaCompletado');
-  if (guia) guia.style.display = section === 'guia' ? 'block' : 'none';
-  if (ej) ej.style.display = section === 'hoy' ? 'block' : 'none';
+  const fisioCard = document.getElementById('fisioCard');
+  const mensajeCard = document.getElementById('mensajeFisioCard');
+  const dateH = document.querySelector('.date-h');
+
+  const showHoy = section === 'hoy';
+  if (guia) guia.style.display = showHoy ? 'none' : 'block';
+  if (ej) ej.style.display = showHoy ? 'block' : 'none';
   if (comp) comp.style.display = 'none';
-  document.getElementById('navHoy').classList.toggle('active', section === 'hoy');
-  document.getElementById('navGuia').classList.toggle('active', section === 'guia');
+  if (fisioCard && fisioCard.style.display !== 'none') fisioCard.style.visibility = showHoy ? 'visible' : 'hidden';
+  if (mensajeCard) mensajeCard.style.display = showHoy && mensajeFisio ? 'block' : 'none';
+  if (dateH) dateH.style.display = showHoy ? 'block' : 'none';
+  document.getElementById('navHoy').classList.toggle('active', showHoy);
+  document.getElementById('navGuia').classList.toggle('active', !showHoy);
   window.scrollTo(0, 0);
 }
 
