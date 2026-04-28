@@ -1,0 +1,21 @@
+{
+  "name": "FISIO365 Panel",
+  "short_name": "Panel Fisio",
+  "description": "Panel del fisioterapeuta",
+  "start_url": "/fisio",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/icono.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icono.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
