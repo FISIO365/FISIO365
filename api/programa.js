@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Crear nuevo programa
+    // Crear nuevo programa con imagen y video incluidos
     const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
