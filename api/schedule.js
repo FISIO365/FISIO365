@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     const planRes = await fetch(planUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
     const planData = await planRes.json();
 
-    if (!planData.records?.length) return res.status(200).json({ ejercicios: [], fisio: null });
+    if (!planData.records?.length) return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '' });
 
     const plan = planData.records[0].fields;
     let ejercicios = [];
@@ -55,8 +55,8 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ ejercicios, fisio });
+    return res.status(200).json({ ejercicios, fisio, mensajeFisio: plan['MensajeFisio'] || '' });
   } catch(e) {
-    return res.status(200).json({ ejercicios: [], fisio: null });
+    return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '' });
   }
 }
