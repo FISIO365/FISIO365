@@ -1,12 +1,12 @@
 {
   "version": 2,
   "builds": [
-    { "src": "*.js", "use": "@vercel/node" },
-    { "src": "*.html", "use": "@vercel/static" }
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "public/**", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/$1" },
-    { "src": "/fisio", "dest": "/fisio.html" },
-    { "src": "/(.*)", "dest": "/$1" }
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/fisio", "dest": "/public/fisio.html" },
+    { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
