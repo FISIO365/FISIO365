@@ -118,6 +118,13 @@ input[type=number]{text-align:center}
         <div id="ejLista"></div>
         <button class="btn-o" onclick="addEj()">+ Añadir ejercicio</button>
       </div>
+      <div class="card">
+        <div class="ct">Mensaje para el paciente</div>
+        <div class="field">
+          <label>Nota motivadora (opcional)</label>
+          <textarea id="mensajeFisio" style="width:100%;font-family:var(--font);font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:white;color:var(--black);outline:none;resize:none;min-height:80px;line-height:1.6;transition:border-color .15s" placeholder="Ej: ¡Vas muy bien! Recuerda mantener la espalda recta en las sentadillas..."></textarea>
+        </div>
+      </div>
       <div id="res"></div>
       <button class="btn btn-g" id="btnG" onclick="guardar()">Guardar programa</button>
     </div>
@@ -305,7 +312,7 @@ async function guardar(){
   if(!ejs.length){toast('Añade y selecciona al menos un ejercicio',false);return;}
   const btn=document.getElementById('btnG');btn.disabled=true;btn.textContent='Guardando...';
   try{
-    const r=await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:pacSelId,pacienteNombre:pacSelN,fisioId:fisioSelId,ejercicios:ejs})});
+    const r=await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:pacSelId,pacienteNombre:pacSelN,fisioId:fisioSelId,ejercicios:ejs,mensajeFisio:document.getElementById('mensajeFisio')?.value?.trim()||''})});
     const d=await r.json();
     if(d.ok)toast(`✓ Programa guardado: ${d.creados} ejercicios para ${pacSelN}`,true);
     else toast(d.error||'Error al guardar',false);
