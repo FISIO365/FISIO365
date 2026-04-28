@@ -249,6 +249,7 @@ function addEj(){
     <div class="ejh"><span class="ejn">Ejercicio ${n}</span><button class="bdel" onclick="rmEj(${n})">×</button></div>
     <div class="field">
       <label>Seleccionar ejercicio</label>
+      <input type="text" id="ebusca${n}" placeholder="Buscar ejercicio..." oninput="filtrarEj(${n})" style="margin-bottom:8px;" />
       <div class="ej-sel-wrap">
         <select id="esel${n}" onchange="onEjSel(${n})"><option value="">— Elige un ejercicio —</option>${opts}</select>
         <div class="ej-preview" id="eprev${n}">
@@ -298,6 +299,15 @@ function getEjs(){
     if(!nombre||!sel?.value)return null;
     return{nombre,series:+document.getElementById(`es${n}`)?.value||0,reps:+document.getElementById(`er${n}`)?.value||0,duracion:+document.getElementById(`ed${n}`)?.value||0,descanso:+document.getElementById(`edes${n}`)?.value||0,zona:document.getElementById(`ez${n}`)?.value?.trim()||'',descripcion:document.getElementById(`edesc${n}`)?.value?.trim()||document.getElementById(`esel${n}`)?.options[document.getElementById(`esel${n}`)?.selectedIndex]?.dataset?.desc||'',youtubeUrl:biblio.find(e=>e.id===sel.value)?.youtubeUrl||'',imagen:biblio.find(e=>e.id===sel.value)?.imagen||''};
   }).filter(Boolean);
+}
+
+function filtrarEj(n) {
+  const q = document.getElementById(`ebusca${n}`).value.toLowerCase();
+  const sel = document.getElementById(`esel${n}`);
+  Array.from(sel.options).forEach(opt => {
+    if (!opt.value) { opt.style.display = ''; return; }
+    opt.style.display = opt.text.toLowerCase().includes(q) ? '' : 'none';
+  });
 }
 
 function upd(){
