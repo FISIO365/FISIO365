@@ -41,11 +41,11 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 .login-err { font-size: 12px; color: #ff6b6b; text-align: center; margin-top: 10px; min-height: 18px; }
 
-#appScreen { padding-bottom: 100px; background: var(--cream); }
+#appScreen { padding-bottom: 120px; background: var(--cream); }
 .topbar { position: sticky; top: 0; z-index: 50; background: var(--black); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
 .topbar-logo { font-size: 20px; font-weight: 800; color: var(--cream); letter-spacing: -0.5px; }
 .topbar-name { font-size: 12px; color: rgba(245,242,238,0.5); }
-.container { padding: 16px; max-width: 600px; margin: 0 auto; }
+.container { padding: 16px; max-width: 600px; margin: 0 auto; min-height: 50vh; }
 
 .fisio-card { background: var(--black); border: 1.5px solid rgba(245,242,238,0.15); border-radius: var(--r); padding: 14px 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .fisio-av { width: 44px; height: 44px; border-radius: 50%; background: rgba(245,242,238,0.1); border: 1.5px solid rgba(245,242,238,0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--cream); flex-shrink: 0; overflow: hidden; }
@@ -129,8 +129,8 @@ textarea:focus { border-color: var(--black); }
 .nav-btn .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 
 /* GUIA */
-.guia-section { padding: 0; }
-.guia-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 14px; }
+.guia-section { padding: 16px 0; }
+.guia-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 14px; display: block; width: 100%; }
 .guia-titulo { font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--black); }
 .guia-paso { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
 .guia-num { width: 28px; height: 28px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
@@ -181,50 +181,102 @@ textarea:focus { border-color: var(--black); }
     <div class="topbar-name" id="topbarName"></div>
   </div>
   <div class="container">
-    <div id="fisioCard" class="fisio-card" style="display:none;">
-      <div class="fisio-av" id="fisioAv"></div>
-      <div>
-        <div class="fisio-nombre" id="fisioNombre"></div>
-        <div class="fisio-col" id="fisioColegiado"></div>
-      </div>
-    </div>
-    <div id="mensajeFisioCard" class="mensaje-fisio">
-      <div class="mensaje-fisio-label">Mensaje de tu fisio</div>
-      <div class="mensaje-fisio-texto" id="mensajeFisioTexto"></div>
-    </div>
-    <div id="mensajeFisioCard" class="mensaje-fisio">
-      <div class="mensaje-fisio-label">Mensaje de tu fisio 💬</div>
-      <div class="mensaje-fisio-texto" id="mensajeFisioTexto"></div>
-    </div>
-    <div class="date-h">
-      <div class="date-today" id="dateToday"></div>
-      <div class="date-sub">Tu programa de ejercicios</div>
-    </div>
 
-    <!-- VISTA NORMAL -->
-    <div id="vistaEjercicios">
-      <div class="prog-wrap" id="progWrap" style="display:none;">
-        <div class="prog-row"><span class="prog-lbl">Progreso de hoy</span><span class="prog-cnt" id="progCnt">0/0</span></div>
-        <div class="prog-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+    <!-- VISTA HOY -->
+    <div id="vistaHoy">
+      <div id="fisioCard" class="fisio-card" style="display:none;">
+        <div class="fisio-av" id="fisioAv"></div>
+        <div>
+          <div class="fisio-nombre" id="fisioNombre"></div>
+          <div class="fisio-col" id="fisioColegiado"></div>
+        </div>
       </div>
-      <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
-      <div id="diarioSection" style="display:none;">
-        <div class="sec-title">Tu informe de hoy</div>
-        <div class="diario-card">
-          <textarea id="diarioTxt" placeholder="¡Hola! ¿Cómo te has encontrado hoy? Cuéntame cualquier cosa que hayas notado, me ayuda mucho para tu seguimiento 💪"></textarea>
-          <button class="btn-diario" id="btnDiario" onclick="tareaHecha()">Tarea hecha ✓</button>
+      <div id="mensajeFisioCard" class="mensaje-fisio" style="display:none;">
+        <div class="mensaje-fisio-label">Mensaje de tu fisio 💬</div>
+        <div class="mensaje-fisio-texto" id="mensajeFisioTexto"></div>
+      </div>
+      <div class="date-h">
+        <div class="date-today" id="dateToday"></div>
+        <div class="date-sub">Tu programa de ejercicios</div>
+      </div>
+      <div id="vistaEjercicios">
+        <div class="prog-wrap" id="progWrap" style="display:none;">
+          <div class="prog-row"><span class="prog-lbl">Progreso de hoy</span><span class="prog-cnt" id="progCnt">0/0</span></div>
+          <div class="prog-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+        </div>
+        <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
+        <div id="diarioSection" style="display:none;">
+          <div class="sec-title">Tu informe de hoy</div>
+          <div class="diario-card">
+            <textarea id="diarioTxt" placeholder="¡Hola! ¿Cómo te has encontrado hoy? Cuéntame cualquier cosa que hayas notado, me ayuda mucho para tu seguimiento 💪"></textarea>
+            <button class="btn-diario" id="btnDiario" onclick="tareaHecha()">Tarea hecha ✓</button>
+          </div>
+        </div>
+      </div>
+      <div id="vistaCompletado" style="display:none;">
+        <div class="completado-wrap">
+          <div class="completado-emoji" id="completadoEmoji">🎉</div>
+          <div class="completado-titulo" id="completadoTitulo">¡Sesión completada!</div>
+          <div class="completado-sub" id="completadoSub">Has terminado tu programa de hoy.<br>¡Sigue así, lo estás haciendo genial!</div>
+          <div class="completado-card">
+            <p id="completadoRacha">💪 Vuelve mañana para continuar con tu recuperación</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- VISTA COMPLETADO -->
-    <div id="vistaCompletado" style="display:none;">
-      <div class="completado-wrap">
-        <div class="completado-emoji" id="completadoEmoji">🎉</div>
-        <div class="completado-titulo" id="completadoTitulo">¡Sesión completada!</div>
-        <div class="completado-sub" id="completadoSub">Has terminado tu programa de hoy.<br>¡Sigue así, lo estás haciendo genial!</div>
-        <div class="completado-card">
-          <p id="completadoRacha">💪 Vuelve mañana para continuar con tu recuperación</p>
+    <!-- VISTA GUIA -->
+    <div id="vistaGuia" style="display:none;">
+      <div class="guia-section">
+        <div class="guia-card">
+          <div class="guia-titulo">📱 Instalar en tu móvil</div>
+          <div class="guia-os">
+            <button class="guia-os-btn active" id="btnIOS" onclick="showOS('ios')">iPhone</button>
+            <button class="guia-os-btn" id="btnAndroid" onclick="showOS('android')">Android</button>
+          </div>
+          <div id="pasosIOS">
+            <div class="guia-paso"><div class="guia-num">1</div><div class="guia-txt">Abre la app en <strong>Safari</strong> (no en Chrome)</div></div>
+            <div class="guia-paso"><div class="guia-num">2</div><div class="guia-txt">Toca el botón <strong>Compartir</strong> ↑ abajo en el centro</div></div>
+            <div class="guia-paso"><div class="guia-num">3</div><div class="guia-txt">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
+            <div class="guia-paso"><div class="guia-num">4</div><div class="guia-txt">Toca <strong>"Añadir"</strong> y ¡listo! 🎉</div></div>
+          </div>
+          <div id="pasosAndroid" style="display:none;">
+            <div class="guia-paso"><div class="guia-num">1</div><div class="guia-txt">Abre la app en <strong>Chrome</strong></div></div>
+            <div class="guia-paso"><div class="guia-num">2</div><div class="guia-txt">Toca los <strong>3 puntos</strong> ⋮ arriba a la derecha</div></div>
+            <div class="guia-paso"><div class="guia-num">3</div><div class="guia-txt">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
+            <div class="guia-paso"><div class="guia-num">4</div><div class="guia-txt">Toca <strong>"Añadir"</strong> y ¡listo! 🎉</div></div>
+          </div>
+        </div>
+        <div class="guia-card">
+          <div class="guia-titulo">✨ Cómo funciona la app</div>
+          <div class="guia-feature">
+            <div class="guia-feature-icon">🏋️</div>
+            <div>
+              <div class="guia-feature-titulo">Tu programa del día</div>
+              <div class="guia-feature-desc">Tu fisio te asigna ejercicios personalizados. Cada día verás tu programa con series, repeticiones y vídeos explicativos.</div>
+            </div>
+          </div>
+          <div class="guia-feature">
+            <div class="guia-feature-icon">✅</div>
+            <div>
+              <div class="guia-feature-titulo">Marca los ejercicios</div>
+              <div class="guia-feature-desc">Pulsa el círculo de cada ejercicio para marcarlo como hecho. Cuando termines, pulsa "Tarea hecha ✓".</div>
+            </div>
+          </div>
+          <div class="guia-feature">
+            <div class="guia-feature-icon">📝</div>
+            <div>
+              <div class="guia-feature-titulo">Tu informe diario</div>
+              <div class="guia-feature-desc">Escríbele a tu fisio cómo te has encontrado. Cualquier mejora o sensación que notes le ayuda a adaptar tu tratamiento.</div>
+            </div>
+          </div>
+          <div class="guia-feature">
+            <div class="guia-feature-icon">🔥</div>
+            <div>
+              <div class="guia-feature-titulo">Racha de días</div>
+              <div class="guia-feature-desc">Cada día que completas tu programa suma a tu racha. ¡Intenta no romperla!</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -243,7 +295,7 @@ textarea:focus { border-color: var(--black); }
 <nav class="bottom-nav" style="left:50%;transform:translateX(-50%);right:auto;width:100%;">
   <button class="nav-btn active" id="navHoy" onclick="showSection('hoy')">
     <span class="nav-icon">🏋️</span>
-    <span class="nav-label">Hoy</span>
+    <span class="nav-label">Mi programa</span>
   </button>
   <button class="nav-btn" id="navGuia" onclick="showSection('guia')">
     <span class="nav-icon">📋</span>
@@ -488,20 +540,9 @@ function cerrarPopup() {
 }
 
 function showSection(section) {
-  const guia = document.getElementById('vistaGuia');
-  const ej = document.getElementById('vistaEjercicios');
-  const comp = document.getElementById('vistaCompletado');
-  const fisioCard = document.getElementById('fisioCard');
-  const mensajeCard = document.getElementById('mensajeFisioCard');
-  const dateH = document.querySelector('.date-h');
-
   const showHoy = section === 'hoy';
-  if (guia) guia.style.display = showHoy ? 'none' : 'block';
-  if (ej) ej.style.display = showHoy ? 'block' : 'none';
-  if (comp) comp.style.display = 'none';
-  if (fisioCard && fisioCard.style.display !== 'none') fisioCard.style.visibility = showHoy ? 'visible' : 'hidden';
-  if (mensajeCard) mensajeCard.style.display = showHoy && mensajeFisio ? 'block' : 'none';
-  if (dateH) dateH.style.display = showHoy ? 'block' : 'none';
+  document.getElementById('vistaHoy').style.display = showHoy ? 'block' : 'none';
+  document.getElementById('vistaGuia').style.display = showHoy ? 'none' : 'block';
   document.getElementById('navHoy').classList.toggle('active', showHoy);
   document.getElementById('navGuia').classList.toggle('active', !showHoy);
   window.scrollTo(0, 0);
