@@ -9,87 +9,77 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0d0d0d; --card: #1a1a1a; --border: rgba(255,255,255,0.08);
-  --text: #f0f0f0; --muted: rgba(255,255,255,0.35);
-  --accent: #7EE8A2; --accent2: #5BC8F5; --danger: #FF6B6B;
-  --font: 'Poppins', sans-serif; --r: 16px; --r-sm: 10px;
+  --cream: #f5f2ee; --black: #000; --lila: #ada3da; --lila-light: #ede9f7;
+  --muted: #666; --border: rgba(0,0,0,0.18); --font: 'Poppins', sans-serif; --r: 16px; --r-sm: 10px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; }
+html, body { height: 100%; font-family: var(--font); background: var(--cream); color: var(--black); overflow-x: hidden; }
 .screen { display: none; min-height: 100vh; }
 .screen.active { display: block; }
 
 /* LOGIN */
-#loginScreen {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  min-height: 100vh; padding: 2rem 1.5rem;
-  background: radial-gradient(ellipse at 50% 0%, rgba(126,232,162,0.1) 0%, transparent 65%), var(--bg);
-}
-.logo-wrap { text-align: center; margin-bottom: 2.5rem; }
-.logo-main { font-size: 36px; font-weight: 800; color: white; letter-spacing: -1px; }
-.logo-main span { color: var(--accent); }
-.logo-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
-.login-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 2rem 1.5rem; width: 100%; max-width: 360px; }
-.login-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-.login-desc { font-size: 12px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
-.lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
-.inp { width: 100%; font-family: var(--font); font-size: 14px; border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; background: rgba(255,255,255,0.05); color: var(--text); outline: none; margin-bottom: 12px; transition: border-color 0.15s; }
-.inp::placeholder { color: var(--muted); }
-.inp:focus { border-color: var(--accent); }
+#loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem 1.5rem; background: #000; }
+.logo-wrap { text-align: center; margin-bottom: 3rem; }
+.logo-text { font-size: 48px; font-weight: 800; color: var(--cream); letter-spacing: -1px; }
+.login-card { width: 100%; max-width: 360px; }
+.login-title { font-size: 18px; font-weight: 600; color: var(--cream); margin-bottom: 4px; }
+.login-desc { font-size: 12px; color: rgba(245,242,238,0.5); margin-bottom: 1.5rem; line-height: 1.6; }
+.lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.5); display: block; margin-bottom: 6px; }
+.inp { width: 100%; font-family: var(--font); font-size: 14px; border: 1.5px solid rgba(245,242,238,0.25); border-radius: var(--r-sm); padding: 12px 14px; background: rgba(245,242,238,0.06); color: var(--cream); outline: none; margin-bottom: 12px; transition: border-color 0.15s; }
+.inp::placeholder { color: rgba(245,242,238,0.25); }
+.inp:focus { border-color: var(--cream); }
 .pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 1.5rem; }
-.pin-d { width: 60px; height: 64px; font-family: var(--font); font-weight: 700; font-size: 28px; text-align: center; border: 1.5px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.04); color: var(--text); outline: none; transition: border-color 0.15s; }
-.pin-d:focus { border-color: var(--accent); }
-.btn-primary { width: 100%; font-family: var(--font); font-size: 14px; font-weight: 700; padding: 14px; background: var(--accent); color: #0d1a12; border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+.pin-d { width: 60px; height: 64px; font-family: var(--font); font-weight: 700; font-size: 28px; text-align: center; border: 1.5px solid rgba(245,242,238,0.25); border-radius: 14px; background: rgba(245,242,238,0.04); color: var(--cream); outline: none; transition: border-color 0.15s; }
+.pin-d:focus { border-color: var(--cream); }
+.btn-primary { width: 100%; font-family: var(--font); font-size: 14px; font-weight: 700; padding: 14px; background: var(--cream); color: var(--black); border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; }
 .btn-primary:hover { opacity: 0.9; }
-.btn-primary:active { transform: scale(0.98); }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-.login-err { font-size: 12px; color: var(--danger); text-align: center; margin-top: 10px; min-height: 18px; }
+.login-err { font-size: 12px; color: #ff6b6b; text-align: center; margin-top: 10px; min-height: 18px; }
 
 /* APP */
-#appScreen { padding-bottom: 100px; }
-.topbar { position: sticky; top: 0; z-index: 50; background: rgba(13,13,13,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
-.topbar-logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
-.topbar-logo span { color: var(--accent); }
-.topbar-name { font-size: 12px; color: var(--muted); }
+#appScreen { padding-bottom: 100px; background: var(--cream); min-height: 100vh; }
+.topbar { position: sticky; top: 0; z-index: 50; background: var(--black); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+.topbar-logo { font-size: 20px; font-weight: 800; color: var(--cream); letter-spacing: -0.5px; }
+.topbar-name { font-size: 12px; color: rgba(245,242,238,0.5); }
 .container { padding: 16px; max-width: 600px; margin: 0 auto; }
 
-.fisio-card { background: linear-gradient(135deg, rgba(126,232,162,0.08), rgba(91,200,245,0.04)); border: 1px solid rgba(126,232,162,0.2); border-radius: var(--r); padding: 14px 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-.fisio-av { width: 48px; height: 48px; border-radius: 50%; background: rgba(126,232,162,0.15); border: 2px solid rgba(126,232,162,0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: var(--accent); flex-shrink: 0; overflow: hidden; }
+.fisio-card { background: var(--black); border: 1.5px solid rgba(245,242,238,0.15); border-radius: var(--r); padding: 14px 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.fisio-av { width: 44px; height: 44px; border-radius: 50%; background: rgba(245,242,238,0.1); border: 1.5px solid rgba(245,242,238,0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--cream); flex-shrink: 0; overflow: hidden; }
 .fisio-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-.fisio-nombre { font-size: 14px; font-weight: 600; }
-.fisio-col { font-size: 11px; color: var(--accent); font-weight: 500; margin-top: 2px; }
+.fisio-nombre { font-size: 13px; font-weight: 600; color: var(--cream); }
+.fisio-col { font-size: 11px; color: rgba(245,242,238,0.5); margin-top: 2px; }
 
-.date-h { margin-bottom: 16px; }
-.date-today { font-size: 22px; font-weight: 700; }
+.date-h { margin-bottom: 16px; padding-top: 4px; }
+.date-today { font-size: 24px; font-weight: 700; color: var(--black); }
 .date-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-.prog-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px; }
+.prog-wrap { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px; }
 .prog-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .prog-lbl { font-size: 12px; color: var(--muted); }
-.prog-cnt { font-size: 13px; font-weight: 600; color: var(--accent); }
-.prog-bg { height: 6px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
-.prog-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.5s ease; }
+.prog-cnt { font-size: 13px; font-weight: 700; color: var(--lila); }
+.prog-bg { height: 6px; background: var(--lila-light); border-radius: 99px; overflow: hidden; }
+.prog-bar { height: 100%; background: var(--lila); border-radius: 99px; transition: width 0.5s ease; }
 
-.ej-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; transition: border-color 0.2s; }
-.ej-card.done { border-color: rgba(126,232,162,0.3); }
+.ej-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; transition: border-color 0.2s; }
+.ej-card.done { border-color: var(--lila); }
 .ej-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
-.ej-chk { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; border: 2px solid var(--border); background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
-.ej-chk.on { background: var(--accent); border-color: var(--accent); }
+.ej-chk { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid var(--border); background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.ej-chk.on { background: var(--lila); border-color: var(--lila); }
 .ej-chk svg { display: none; }
 .ej-chk.on svg { display: block; }
 .ej-info { flex: 1; min-width: 0; }
-.ej-nom { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ej-nom { font-size: 15px; font-weight: 600; color: var(--black); }
 .ej-zona { font-size: 11px; color: var(--muted); margin-top: 2px; }
 .ej-pills { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-.pill { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: rgba(255,255,255,0.06); color: var(--muted); }
+.pill { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: var(--lila-light); color: var(--lila); }
 .ej-expand { padding: 0 16px 14px; display: none; }
 .ej-expand.open { display: block; }
 .ej-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
 .ej-video { border-radius: var(--r-sm); overflow: hidden; margin-bottom: 12px; }
 .ej-video iframe { width: 100%; height: 200px; border: none; display: block; }
 .btn-done { width: 100%; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 11px; border: 1.5px solid var(--border); border-radius: var(--r-sm); background: none; color: var(--muted); cursor: pointer; transition: all 0.2s; }
-.btn-done:hover { border-color: var(--accent); color: var(--accent); }
-.btn-done.on { background: rgba(126,232,162,0.1); border-color: var(--accent); color: var(--accent); }
+.btn-done:hover { border-color: var(--lila); color: var(--lila); }
+.btn-done.on { background: var(--lila-light); border-color: var(--lila); color: var(--lila); }
 
 .empty { text-align: center; padding: 3rem 1rem; }
 .empty-icon { font-size: 48px; margin-bottom: 12px; }
@@ -97,18 +87,18 @@ html, body { height: 100%; font-family: var(--font); background: var(--bg); colo
 .empty-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
 .sec-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; margin-top: 8px; }
-.diario-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
-textarea { width: 100%; font-family: var(--font); font-size: 13px; color: var(--text); background: rgba(255,255,255,0.04); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px; resize: none; outline: none; min-height: 90px; line-height: 1.6; transition: border-color 0.15s; margin-bottom: 10px; }
+.diario-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
+textarea { width: 100%; font-family: var(--font); font-size: 13px; color: var(--black); background: var(--cream); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px; resize: none; outline: none; min-height: 90px; line-height: 1.6; transition: border-color 0.15s; margin-bottom: 10px; }
 textarea::placeholder { color: var(--muted); }
-textarea:focus { border-color: var(--accent); }
-.btn-diario { font-family: var(--font); font-size: 13px; font-weight: 600; padding: 10px 20px; background: var(--accent); color: #0d1a12; border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; float: right; }
+textarea:focus { border-color: var(--black); }
+.btn-diario { font-family: var(--font); font-size: 13px; font-weight: 700; padding: 10px 20px; background: var(--black); color: var(--cream); border: none; border-radius: var(--r-sm); cursor: pointer; float: right; }
 .btn-diario:disabled { opacity: 0.4; }
 
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 22px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; display: none; z-index: 999; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-.toast.ok { background: var(--accent); color: #0d1a12; }
-.toast.err { background: var(--danger); color: white; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 22px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; display: none; z-index: 999; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+.toast.ok { background: var(--black); color: var(--cream); }
+.toast.err { background: #c0392b; color: white; }
 .loading { display: flex; align-items: center; justify-content: center; padding: 3rem; }
-.spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--lila-light); border-top-color: var(--lila); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
@@ -116,12 +106,11 @@ textarea:focus { border-color: var(--accent); }
 
 <div id="loginScreen" class="screen active">
   <div class="logo-wrap">
-    <div class="logo-main">FISIO<span>365</span></div>
-    <div class="logo-sub">Tu rehabilitación, cada día</div>
+    <div class="logo-text">FISIO365</div>
   </div>
   <div class="login-card">
     <div class="login-title">Bienvenido</div>
-    <div class="login-desc">Introduce tu email y el PIN de 4 dígitos que te ha dado tu fisioterapeuta</div>
+    <div class="login-desc">Introduce tu email y el PIN que te ha dado tu fisioterapeuta</div>
     <label class="lbl">Email</label>
     <input class="inp" type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" />
     <label class="lbl">PIN</label>
@@ -138,7 +127,7 @@ textarea:focus { border-color: var(--accent); }
 
 <div id="appScreen" class="screen">
   <div class="topbar">
-    <div class="topbar-logo">FISIO<span>365</span></div>
+    <div class="topbar-logo">FISIO365</div>
     <div class="topbar-name" id="topbarName"></div>
   </div>
   <div class="container">
@@ -172,20 +161,11 @@ textarea:focus { border-color: var(--accent); }
 <script>
 let patient = null, ejercicios = [], hechos = new Set();
 const TODAY = new Date().toISOString().split('T')[0];
-
-// PIN inputs
 const pids = ['p1','p2','p3','p4'];
 pids.forEach((id, i) => {
   const el = document.getElementById(id);
-  el.addEventListener('input', () => {
-    const v = el.value.replace(/[^0-9]/g,'');
-    el.value = v.slice(-1);
-    if (v && i < 3) document.getElementById(pids[i+1]).focus();
-  });
-  el.addEventListener('keydown', e => {
-    if (e.key === 'Backspace' && !el.value && i > 0) document.getElementById(pids[i-1]).focus();
-    if (e.key === 'Enter') doLogin();
-  });
+  el.addEventListener('input', () => { const v = el.value.replace(/[^0-9]/g,''); el.value = v.slice(-1); if (v && i < 3) document.getElementById(pids[i+1]).focus(); });
+  el.addEventListener('keydown', e => { if (e.key === 'Backspace' && !el.value && i > 0) document.getElementById(pids[i-1]).focus(); if (e.key === 'Enter') doLogin(); });
 });
 document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('p1').focus(); });
 
@@ -229,7 +209,7 @@ async function loadEjercicios() {
       if (f.foto) av.innerHTML = `<img src="${f.foto}" alt="${f.nombre}">`;
       else av.textContent = f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
       document.getElementById('fisioNombre').textContent = `Tu fisio: ${f.nombre}`;
-      document.getElementById('fisioColegiado').textContent = `Nº Colegiado: ${f.colegiado}`;
+      document.getElementById('fisioColegiado').textContent = f.colegiado ? `Nº Colegiado: ${f.colegiado}` : '';
       document.getElementById('fisioCard').style.display = 'flex';
     }
     const localKey = `hechos_${patient.id}_${TODAY}`;
@@ -237,14 +217,14 @@ async function loadEjercicios() {
     hechos = new Set(local ? JSON.parse(local) : []);
     renderEjercicios();
   } catch(e) {
-    document.getElementById('ejList').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div><div class="empty-desc">Comprueba tu conexión e inténtalo de nuevo</div></div>';
+    document.getElementById('ejList').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';
   }
 }
 
 function renderEjercicios() {
   const lista = document.getElementById('ejList');
   if (!ejercicios.length) {
-    lista.innerHTML = `<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios. ¡Pronto los tendrás aquí!</div></div>`;
+    lista.innerHTML = `<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios.</div></div>`;
     return;
   }
   document.getElementById('progWrap').style.display = 'block';
@@ -255,14 +235,14 @@ function renderEjercicios() {
     return `<div class="ej-card ${done?'done':''}" id="ec${i}">
       <div class="ej-header" onclick="toggleEx(${i})">
         <button class="ej-chk ${done?'on':''}" id="ck${i}" onclick="event.stopPropagation();toggleHecho(${i})">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#0d1a12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <div class="ej-info">
           <div class="ej-nom">${ej.name}</div>
           ${ej.zona?`<div class="ej-zona">${ej.zona}</div>`:''}
           <div class="ej-pills">${pills.map(p=>`<span class="pill">${p}</span>`).join('')}</div>
         </div>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:var(--muted);transition:transform 0.2s" id="ar${i}"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:#888;transition:transform 0.2s" id="ar${i}"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <div class="ej-expand" id="ex${i}">
         ${ej.desc?`<div class="ej-desc">${ej.desc}</div>`:''}
@@ -289,9 +269,7 @@ async function toggleHecho(i) {
   document.getElementById(`bd${i}`).classList.toggle('on', done);
   document.getElementById(`bd${i}`).textContent = done ? '✓ Completado' : 'Marcar como hecho';
   updateProg();
-  try {
-    await fetch('/api/done', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, ejercicioId: ej.id, fecha: TODAY, hecho: done }) });
-  } catch(e) {}
+  try { await fetch('/api/done', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, ejercicioId: ej.id, fecha: TODAY, hecho: done }) }); } catch(e) {}
 }
 
 function updateProg() {
