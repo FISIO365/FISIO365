@@ -84,14 +84,7 @@ input[type=number]{text-align:center}
 
 <div id="loginScreen" class="screen active">
   <div class="lb">
-    <div class="ll">
-      <svg style="width:200px" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
-        <text x="10" y="62" font-family="Poppins,sans-serif" font-weight="800" font-size="64" fill="white" letter-spacing="-2">FISIO</text>
-        <text x="178" y="62" font-family="Poppins,sans-serif" font-weight="800" font-size="64" fill="white" letter-spacing="-2">365</text>
-        <circle cx="168" cy="38" r="22" fill="none" stroke="white" stroke-width="5"/>
-        <circle cx="168" cy="44" r="5" fill="white"/>
-      </svg>
-    </div>
+    <div class="ll" style="font-size:48px;font-weight:800;color:#f5f2ee;letter-spacing:-1px;margin-bottom:2.5rem;text-align:center">FISIO365</div>
     <label class="llbl">Contraseña del panel</label>
     <input class="li" type="password" id="pwdInp" placeholder="••••••••" />
     <button class="lbtn" id="loginBtn" onclick="doLogin()">Entrar al panel</button>
@@ -180,8 +173,8 @@ async function doLogin(){
     const d=await r.json();
     if(d.ok){
       pwd=p;pacs=d.pacientes;
-      document.getElementById('loginScreen').classList.remove('active');
-      document.getElementById('panelScreen').classList.add('active');
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('panelScreen').style.display='block'; document.getElementById('panelScreen').style.opacity='0'; window.scrollTo({top:0,behavior:'instant'}); document.documentElement.scrollTop=0; document.body.scrollTop=0; setTimeout(()=>{document.getElementById('panelScreen').style.opacity='1';},10);
       await Promise.all([loadFisios(),loadBiblio()]);
       rprog();rtodos();
     } else document.getElementById('loginErr').textContent='Contraseña incorrecta';
