@@ -1,29 +1,331 @@
-// api/fisios.js - Lista de fisios
-const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
-const BASE_ID = 'appbK09V4X3pPIai3';
-const FISIOS_TABLE = 'tbl2mLUrnaKCFTs6g';
-
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-
-  const { pwd } = req.query;
-  if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'No autorizado' });
-
-  try {
-    const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?fields[]=Name&fields[]=NºColegiado&fields[]=Foto`;
-    const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-    const data = await r.json();
-    const fisios = (data.records || []).map(rec => ({
-      id: rec.id,
-      nombre: rec.fields['Name'] || '',
-      colegiado: rec.fields['NºColegiado'] || '',
-      foto: rec.fields['Foto']?.[0]?.url || ''
-    }));
-    return res.status(200).json({ ok: true, fisios });
-  } catch(e) {
-    return res.status(500).json({ ok: false, error: 'Error interno' });
-  }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FISIO365 — Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#f5f2ee;--black:#000;--white:#fff;--lila:#ada3da;--lila-light:#ede9f7;
+  --muted:#888;--border:rgba(0,0,0,0.1);--font:'Poppins',sans-serif;--r:14px;--r-sm:8px;
 }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--cream);color:var(--black);min-height:100vh}
+.screen{display:none}.screen.active{display:block}
+
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:#000}
+.lb{width:100%;max-width:360px}
+.ll{margin-bottom:2.5rem;text-align:center}
+.llbl{font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.li{width:100%;font-family:var(--font);font-size:14px;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:var(--r-sm);color:white;outline:none;margin-bottom:16px;transition:border-color .15s}
+.li::placeholder{color:rgba(255,255,255,0.25)}.li:focus{border-color:var(--lila)}
+.lbtn{width:100%;font-family:var(--font);font-size:14px;font-weight:700;padding:13px;background:white;color:black;border:none;border-radius:var(--r-sm);cursor:pointer;transition:opacity .2s}
+.lbtn:hover{opacity:.9}.lbtn:disabled{opacity:.4}
+.lerr{font-size:12px;color:#ff6b6b;margin-top:10px;text-align:center;min-height:18px}
+
+header{background:var(--black);padding:14px 20px;display:flex;align-items:center;position:sticky;top:0;z-index:100}
+.hl{width:90px}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 80px}
+
+.tabs{display:flex;gap:4px;background:rgba(0,0,0,0.06);border-radius:var(--r);padding:4px;margin-bottom:20px}
+.tab{flex:1;padding:9px;text-align:center;font-size:13px;font-weight:600;border:none;background:none;border-radius:var(--r-sm);cursor:pointer;color:var(--muted);font-family:var(--font);transition:all .15s}
+.tab.active{background:white;color:var(--black);box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+
+.card{background:white;border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.ct{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+
+.field{margin-bottom:12px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:500}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=url],select{width:100%;font-family:var(--font);font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:white;color:var(--black);outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:var(--lila)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+input[type=number]{text-align:center}
+
+.btn{font-family:var(--font);font-size:14px;font-weight:600;padding:11px 20px;border:none;border-radius:var(--r-sm);cursor:pointer;transition:opacity .15s}
+.btn-g{background:var(--black);color:white;width:100%;padding:13px}.btn-g:hover{opacity:.85}.btn-g:disabled{opacity:.4;cursor:not-allowed}
+.btn-o{background:none;border:1px dashed var(--border);color:var(--muted);width:100%;font-family:var(--font);font-size:14px;font-weight:500;padding:11px;border-radius:var(--r-sm);cursor:pointer}
+.btn-o:hover{background:var(--cream)}
+.bdel{background:none;border:none;color:#c0392b;cursor:pointer;font-size:22px;padding:0 4px;line-height:1}
+
+.pi{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s}
+.pi:hover{border-color:var(--lila);background:var(--lila-light)}.pi.sel{border-color:var(--lila);background:var(--lila-light)}
+.pav{width:36px;height:36px;border-radius:50%;background:var(--lila-light);color:var(--lila);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.pnom{font-size:14px;font-weight:500}.pem{font-size:12px;color:var(--muted)}
+.ppin{font-size:11px;color:var(--lila);font-weight:600;margin-left:auto;background:var(--lila-light);padding:3px 8px;border-radius:99px;white-space:nowrap}
+
+.ejc{background:var(--cream);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;margin-bottom:10px}
+.ejh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ejn{font-size:12px;font-weight:700;color:var(--lila)}
+
+.ej-sel-wrap select{font-weight:600;border-color:rgba(173,163,218,0.4);background:var(--lila-light)}
+.ej-preview{background:var(--lila-light);border:1px solid rgba(173,163,218,0.3);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;display:none}
+.ej-preview-zona{font-size:11px;color:var(--lila);font-weight:600;margin-bottom:3px}
+.ej-preview-desc{font-size:12px;color:var(--muted);line-height:1.5}
+
+.pin-box{background:var(--lila-light);border:1px solid rgba(173,163,218,0.3);border-radius:var(--r);padding:20px;text-align:center;margin-top:14px}
+.pin-v{font-size:42px;font-weight:800;color:var(--lila);letter-spacing:12px;margin:8px 0}
+.pin-l{font-size:12px;color:var(--muted)}
+
+.si{position:relative;margin-bottom:12px}.si input{padding-left:36px}
+.si::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px}
+
+#res{display:none;background:var(--lila-light);border:1px solid rgba(173,163,218,0.3);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;color:var(--lila);margin-bottom:14px}
+
+.fprev{display:none;margin-top:10px;padding:12px;background:var(--lila-light);border-radius:var(--r-sm)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 22px;border-radius:var(--r-sm);font-size:13px;font-weight:500;display:none;z-index:999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+.toast.ok{background:var(--black);color:white}.toast.err{background:#c0392b;color:white}
+.loading{display:flex;align-items:center;justify-content:center;padding:2rem;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen active">
+  <div class="lb">
+    <div class="ll" style="font-size:48px;font-weight:800;color:#f5f2ee;letter-spacing:-1px;margin-bottom:2.5rem;text-align:center">FISIO365</div>
+    <label class="llbl">Contraseña del panel</label>
+    <input class="li" type="password" id="pwdInp" placeholder="••••••••" />
+    <button class="lbtn" id="loginBtn" onclick="doLogin()">Entrar al panel</button>
+    <div class="lerr" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="panelScreen" class="screen">
+  <header>
+    <div style="font-size:20px;font-weight:800;color:#f5f2ee;letter-spacing:-0.5px">FISIO365</div>
+  </header>
+  <div class="wrap">
+    
+
+    <div id="tProg">
+      <div class="card">
+        <div class="ct">Fisio que asigna</div>
+        <div class="field"><label>Seleccionar fisio</label><select id="fisioSel" onchange="onFisio()"><option value="">Cargando...</option></select></div>
+        <div class="fprev" id="fprev">
+          <div style="font-size:14px;font-weight:600" id="fpn"></div>
+          <div style="font-size:12px;color:var(--muted)" id="fpc"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Paciente</div>
+        <div class="si"><input type="text" id="ps1" placeholder="Buscar paciente..." oninput="fprog()" /></div>
+        <div id="plistProg"><div class="loading">Cargando...</div></div>
+      </div>
+      <div class="card">
+        <div class="ct">Ejercicios del programa</div>
+        <div id="ejLista"></div>
+        <button class="btn-o" onclick="addEj()">+ Añadir ejercicio</button>
+      </div>
+      <div class="card">
+        <div class="ct">Mensaje para el paciente</div>
+        <div class="field">
+          <label>Nota motivadora (opcional)</label>
+          <textarea id="mensajeFisio" style="width:100%;font-family:var(--font);font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:white;color:var(--black);outline:none;resize:none;min-height:80px;line-height:1.6;transition:border-color .15s" placeholder="Ej: ¡Vas muy bien! Recuerda mantener la espalda recta en las sentadillas..."></textarea>
+        </div>
+      </div>
+      <div id="res"></div>
+      <button class="btn btn-g" id="btnG" onclick="guardar()">Guardar programa</button>
+    </div>
+
+    </div>
+  </div>
+</div>
+      <div class="card">
+        <div class="ct">Todos los pacientes</div>
+        <div class="si"><input type="text" id="ps2" placeholder="Buscar..." oninput="ftodos()" /></div>
+        <div id="plistAll"><div class="loading">Cargando...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let pwd='',fisios=[],pacs=[],biblio=[],pacSelId=null,pacSelN='',fisioSelId='',ejC=0;
+
+document.getElementById('pwdInp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+async function doLogin(){
+  const p=document.getElementById('pwdInp').value.trim();
+  if(!p)return;
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true;btn.textContent='Verificando...';
+  try{
+    const r=await fetch(`/api/pacientes?pwd=${encodeURIComponent(p)}`);
+    const d=await r.json();
+    if(d.ok){
+      pwd=p;pacs=d.pacientes;
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('panelScreen').style.display='block'; document.getElementById('panelScreen').style.opacity='0'; window.scrollTo({top:0,behavior:'instant'}); document.documentElement.scrollTop=0; document.body.scrollTop=0; setTimeout(()=>{document.getElementById('panelScreen').style.opacity='1';},10);
+      await Promise.all([loadFisios(),loadBiblio()]);
+      rprog();rtodos();
+    } else document.getElementById('loginErr').textContent='Contraseña incorrecta';
+  }catch(e){document.getElementById('loginErr').textContent='Error de conexión';}
+  btn.disabled=false;btn.textContent='Entrar al panel';
+}
+
+async function loadFisios(){
+  try{
+    const r=await fetch(`/api/fisios?pwd=${encodeURIComponent(pwd)}`);
+    const d=await r.json();fisios=d.fisios||[];
+    const sel=document.getElementById('fisioSel');
+    sel.innerHTML='<option value="">Seleccionar fisio...</option>'+fisios.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join('');
+  }catch(e){}
+}
+
+async function loadBiblio(){
+  try{
+    const r=await fetch(`/api/ejercicios?pwd=${encodeURIComponent(pwd)}`);
+    const d=await r.json();biblio=d.ejercicios||[];
+  }catch(e){}
+}
+
+function onFisio(){
+  fisioSelId=document.getElementById('fisioSel').value;
+  const f=fisios.find(x=>x.id===fisioSelId);
+  const prev=document.getElementById('fprev');
+  if(f){document.getElementById('fpn').textContent=f.nombre;document.getElementById('fpc').textContent=f.colegiado?`Nº Colegiado: ${f.colegiado}`:'Sin nº colegiado';prev.style.display='block';}
+  else prev.style.display='none';
+}
+
+
+
+function ritem(p,sel=false,cb=null){
+  const ini=p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const div=document.createElement('div');
+  div.className=`pi${sel?' sel':''}`;
+  div.innerHTML=`<div class="pav">${ini}</div><div><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div><div class="ppin">PIN: ${p.pin||'—'}</div>`;
+  if(cb)div.onclick=()=>cb(p);
+  return div;
+}
+
+function fprog(){const q=document.getElementById('ps1').value.toLowerCase();rprog(q);}
+function ftodos(){const q=document.getElementById('ps2').value.toLowerCase();rtodos(q);}
+
+function rprog(q=''){
+  const el=document.getElementById('plistProg');
+  const fl=pacs.filter(p=>!q||p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q));
+  if(!fl.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:10px">No encontrado</div>';return;}
+  el.innerHTML='';
+  fl.forEach(p=>{el.appendChild(ritem(p,pacSelId===p.id,pac=>{pacSelId=pac.id;pacSelN=pac.nombre;rprog(q);upd();}));});
+}
+
+function rtodos(q=''){
+  const el=document.getElementById('plistAll');
+  const fl=pacs.filter(p=>!q||p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q));
+  if(!fl.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:10px">No encontrado</div>';return;}
+  el.innerHTML='';fl.forEach(p=>el.appendChild(ritem(p)));
+}
+
+async function crearPac(){
+  const n=document.getElementById('npN').value.trim(),e=document.getElementById('npE').value.trim(),t=document.getElementById('npT').value.trim();
+  if(!n||!e){toast('Nombre y email son obligatorios',false);return;}
+  const btn=document.getElementById('btnC');btn.disabled=true;btn.textContent='Creando...';
+  try{
+    const r=await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,nombre:n,email:e,telefono:t})});
+    const d=await r.json();
+    if(d.ok){
+      pacs.unshift(d.paciente);
+      document.getElementById('pinV').textContent=d.paciente.pin;
+      document.getElementById('pinBox').style.display='block';
+      document.getElementById('npN').value='';document.getElementById('npE').value='';document.getElementById('npT').value='';
+      rtodos();rprog();toast('Paciente creado con éxito',true);
+    }else toast(d.error||'Error',false);
+  }catch(e){toast('Error de conexión',false);}
+  btn.disabled=false;btn.textContent='Crear paciente y generar PIN';
+}
+
+function addEj(){
+  ejC++;const n=ejC;
+  const lista=document.getElementById('ejLista');
+  const div=document.createElement('div');div.className='ejc';div.id=`ej${n}`;
+  const opts=biblio.length
+    ?biblio.map(e=>`<option value="${e.id}" data-zona="${e.zona}" data-desc="${e.descripcion}" data-series="${e.series}" data-reps="${e.reps}" data-dur="${e.duracion}" data-desc2="${e.descanso}" data-url="${e.youtubeUrl}" data-img="${e.imagen||''}">${e.nombre}${e.zona?' — '+e.zona:''}</option>`).join('')
+    :'<option value="">No hay ejercicios en la biblioteca</option>';
+  div.innerHTML=`
+    <div class="ejh"><span class="ejn">Ejercicio ${n}</span><button class="bdel" onclick="rmEj(${n})">×</button></div>
+    <div class="field">
+      <label>Seleccionar ejercicio</label>
+      <div class="ej-sel-wrap">
+        <select id="esel${n}" onchange="onEjSel(${n})"><option value="">— Elige un ejercicio —</option>${opts}</select>
+        <div class="ej-preview" id="eprev${n}">
+          <div class="ej-preview-zona" id="epzona${n}"></div>
+          <div class="ej-preview-desc" id="epdesc${n}"></div>
+        </div>
+      </div>
+    </div>
+    <div class="g3">
+      <div class="field"><label>Series</label><input type="number" id="es${n}" value="3" min="1"/></div>
+      <div class="field"><label>Reps</label><input type="number" id="er${n}" value="10" min="0"/></div>
+      <div class="field"><label>Duración (seg)</label><input type="number" id="ed${n}" value="0" min="0"/></div>
+    </div>
+    <div class="g2">
+      <div class="field"><label>Descanso (seg)</label><input type="number" id="edes${n}" value="30" min="0"/></div>
+      <div class="field"><label>Zona corporal</label><input type="text" id="ez${n}" placeholder="Lumbar, Rodilla..."/></div>
+    </div>
+    <div class="field"><label>Indicaciones para el paciente</label><input type="text" id="edesc${n}" placeholder="Mantén la espalda recta..."/></div>
+  `;
+  lista.appendChild(div);upd();
+}
+
+function onEjSel(n){
+  const sel=document.getElementById(`esel${n}`);
+  const opt=sel.options[sel.selectedIndex];
+  if(!sel.value){document.getElementById(`eprev${n}`).style.display='none';return;}
+  document.getElementById(`es${n}`).value=opt.dataset.series||3;
+  document.getElementById(`er${n}`).value=opt.dataset.reps||10;
+  document.getElementById(`ed${n}`).value=opt.dataset.dur||0;
+  document.getElementById(`edes${n}`).value=opt.dataset.desc2||30;
+  document.getElementById(`ez${n}`).value=opt.dataset.zona||'';
+  document.getElementById(`edesc${n}`).value=opt.dataset.desc||'';
+  const prev=document.getElementById(`eprev${n}`);
+  document.getElementById(`epzona${n}`).textContent=opt.dataset.zona||'';
+  document.getElementById(`epdesc${n}`).textContent=opt.dataset.desc||'';
+  prev.style.display=(opt.dataset.zona||opt.dataset.desc)?'block':'none';
+  upd();
+}
+
+function rmEj(n){document.getElementById(`ej${n}`)?.remove();upd();}
+
+function getEjs(){
+  return[...document.querySelectorAll('.ejc')].map(card=>{
+    const n=card.id.replace('ej','');
+    const sel=document.getElementById(`esel${n}`);
+    const nombre=sel?.options[sel.selectedIndex]?.text?.split(' — ')[0]?.trim();
+    if(!nombre||!sel?.value)return null;
+    return{nombre,series:+document.getElementById(`es${n}`)?.value||0,reps:+document.getElementById(`er${n}`)?.value||0,duracion:+document.getElementById(`ed${n}`)?.value||0,descanso:+document.getElementById(`edes${n}`)?.value||0,zona:document.getElementById(`ez${n}`)?.value?.trim()||'',descripcion:document.getElementById(`edesc${n}`)?.value?.trim()||'',youtubeUrl:biblio.find(e=>e.id===sel.value)?.youtubeUrl||'',imagen:biblio.find(e=>e.id===sel.value)?.imagen||''};
+  }).filter(Boolean);
+}
+
+function upd(){
+  const ejs=getEjs(),res=document.getElementById('res');
+  if(pacSelId&&ejs.length){res.style.display='block';res.textContent=`Se asignarán ${ejs.length} ejercicio${ejs.length>1?'s':''} a ${pacSelN}. El programa anterior se reemplazará.`;}
+  else res.style.display='none';
+}
+
+async function guardar(){
+  if(!fisioSelId){toast('Selecciona el fisio que asigna',false);return;}
+  if(!pacSelId){toast('Selecciona un paciente',false);return;}
+  const ejs=getEjs();
+  if(!ejs.length){toast('Añade y selecciona al menos un ejercicio',false);return;}
+  const btn=document.getElementById('btnG');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    const r=await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:pacSelId,pacienteNombre:pacSelN,fisioId:fisioSelId,ejercicios:ejs,mensajeFisio:document.getElementById('mensajeFisio')?.value?.trim()||''})});
+    const d=await r.json();
+    if(d.ok)toast(`✓ Programa guardado: ${d.creados} ejercicios para ${pacSelN}`,true);
+    else toast(d.error||'Error al guardar',false);
+  }catch(e){toast('Error de conexión',false);}
+  btn.disabled=false;btn.textContent='Guardar programa';
+}
+
+function toast(msg,ok=true){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`toast ${ok?'ok':'err'}`;t.style.display='block';
+  setTimeout(()=>t.style.display='none',3500);
+}
+</script>
+</body>
+</html>
