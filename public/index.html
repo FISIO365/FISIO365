@@ -113,6 +113,15 @@ textarea:focus { border-color: var(--black); }
 .completado-card p { font-size: 13px; color: var(--lila); font-weight: 500; }
 @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
 
+.popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; justify-content: center; padding: 0; }
+.popup-card { background: white; border-radius: 24px 24px 0 0; padding: 28px 24px 40px; width: 100%; max-width: 500px; }
+.popup-titulo { font-size: 20px; font-weight: 800; color: var(--black); margin-bottom: 6px; }
+.popup-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+.popup-paso { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.popup-num { width: 28px; height: 28px; border-radius: 50%; background: var(--black); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.popup-txt { font-size: 14px; color: var(--black); line-height: 1.5; }
+.popup-txt strong { font-weight: 700; }
+.popup-btn { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 700; padding: 14px; background: var(--black); color: var(--cream); border: none; border-radius: var(--r-sm); cursor: pointer; margin-top: 8px; }
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 22px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; display: none; z-index: 999; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
 .toast.ok { background: var(--black); color: var(--cream); }
 .toast.err { background: #c0392b; color: white; }
@@ -201,6 +210,14 @@ textarea:focus { border-color: var(--black); }
   </div>
 </div>
 
+<div id="popupInstall" class="popup-overlay" style="display:none;">
+  <div class="popup-card">
+    <div class="popup-titulo">📱 Instala la app</div>
+    <div class="popup-sub">Añade FISIO365 a tu pantalla de inicio para acceder más fácil</div>
+    <div id="popupPasos"></div>
+    <button class="popup-btn" onclick="cerrarPopup()">¡Entendido!</button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -254,6 +271,7 @@ function initApp() {
     return;
   }
   loadEjercicios();
+  setTimeout(mostrarPopupInstall, 2000);
 }
 
 function mostrarCompletado() {
@@ -403,6 +421,38 @@ function actualizarMensajeRacha(racha) {
   document.getElementById('completadoTitulo').textContent = mensajes.titulo;
   document.getElementById('completadoSub').textContent = mensajes.sub;
   document.getElementById('completadoRacha').textContent = mensajes.racha;
+}
+
+function mostrarPopupInstall() {
+  if (localStorage.getItem('installShown')) return;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid = /Android/.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isStandalone) return; // ya está instalada
+
+  const pasos = document.getElementById('popupPasos');
+  if (isIOS) {
+    pasos.innerHTML = `
+      <div class="popup-paso"><div class="popup-num">1</div><div class="popup-txt">Toca el botón <strong>Compartir</strong> (el cuadrado con flecha ↑) en Safari</div></div>
+      <div class="popup-paso"><div class="popup-num">2</div><div class="popup-txt">Busca y toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
+      <div class="popup-paso"><div class="popup-num">3</div><div class="popup-txt">Toca <strong>"Añadir"</strong> y listo 🎉</div></div>
+    `;
+  } else if (isAndroid) {
+    pasos.innerHTML = `
+      <div class="popup-paso"><div class="popup-num">1</div><div class="popup-txt">Toca los <strong>3 puntos</strong> ⋮ arriba a la derecha en Chrome</div></div>
+      <div class="popup-paso"><div class="popup-num">2</div><div class="popup-txt">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
+      <div class="popup-paso"><div class="popup-num">3</div><div class="popup-txt">Toca <strong>"Añadir"</strong> y listo 🎉</div></div>
+    `;
+  } else {
+    return; // escritorio, no mostrar
+  }
+
+  document.getElementById('popupInstall').style.display = 'flex';
+}
+
+function cerrarPopup() {
+  localStorage.setItem('installShown', '1');
+  document.getElementById('popupInstall').style.display = 'none';
 }
 
 function toast(msg, ok=true) {
