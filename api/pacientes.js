@@ -14,10 +14,17 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=EMAIL&fields[]=PIN&fields[]=WHATSAPP&sort[0][field]=FULL NAME&sort[0][direction]=asc&pageSize=100`;
-      const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-      const data = await r.json();
-      const pacientes = (data.records || []).map(rec => ({
+      let allRecords = [];
+      let offset = null;
+      do {
+        const pageUrl = `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=EMAIL&fields[]=PIN&fields[]=WHATSAPP&sort[0][field]=FULL NAME&sort[0][direction]=asc&pageSize=100${offset ? '&offset=' + offset : ''}`;
+        const pageRes = await fetch(pageUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        const pageData = await pageRes.json();
+        allRecords = allRecords.concat(pageData.records || []);
+        offset = pageData.offset;
+      } while (offset);
+
+      const pacientes = allRecords.map(rec => ({
         id: rec.id,
         nombre: rec.fields['FULL NAME'] || '—',
         email: rec.fields['EMAIL'] || '',
