@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Fisio365</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d0d; --card: #1a1a1a; --border: rgba(255,255,255,0.08);
+  --text: #f0f0f0; --muted: rgba(255,255,255,0.35);
+  --accent: #7EE8A2; --accent2: #5BC8F5; --danger: #FF6B6B;
+  --font: 'Poppins', sans-serif; --r: 16px; --r-sm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; }
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: block; }
+
+/* LOGIN */
+#loginScreen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 2rem 1.5rem;
+  background: radial-gradient(ellipse at 50% 0%, rgba(126,232,162,0.1) 0%, transparent 65%), var(--bg);
+}
+.logo-wrap { text-align: center; margin-bottom: 2.5rem; }
+.logo-main { font-size: 36px; font-weight: 800; color: white; letter-spacing: -1px; }
+.logo-main span { color: var(--accent); }
+.logo-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+.login-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 2rem 1.5rem; width: 100%; max-width: 360px; }
+.login-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.login-desc { font-size: 12px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+.lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+.inp { width: 100%; font-family: var(--font); font-size: 14px; border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; background: rgba(255,255,255,0.05); color: var(--text); outline: none; margin-bottom: 12px; transition: border-color 0.15s; }
+.inp::placeholder { color: var(--muted); }
+.inp:focus { border-color: var(--accent); }
+.pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 1.5rem; }
+.pin-d { width: 60px; height: 64px; font-family: var(--font); font-weight: 700; font-size: 28px; text-align: center; border: 1.5px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.04); color: var(--text); outline: none; transition: border-color 0.15s; }
+.pin-d:focus { border-color: var(--accent); }
+.btn-primary { width: 100%; font-family: var(--font); font-size: 14px; font-weight: 700; padding: 14px; background: var(--accent); color: #0d1a12; border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.login-err { font-size: 12px; color: var(--danger); text-align: center; margin-top: 10px; min-height: 18px; }
+
+/* APP */
+#appScreen { padding-bottom: 100px; }
+.topbar { position: sticky; top: 0; z-index: 50; background: rgba(13,13,13,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+.topbar-logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+.topbar-logo span { color: var(--accent); }
+.topbar-name { font-size: 12px; color: var(--muted); }
+.container { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+.fisio-card { background: linear-gradient(135deg, rgba(126,232,162,0.08), rgba(91,200,245,0.04)); border: 1px solid rgba(126,232,162,0.2); border-radius: var(--r); padding: 14px 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.fisio-av { width: 48px; height: 48px; border-radius: 50%; background: rgba(126,232,162,0.15); border: 2px solid rgba(126,232,162,0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: var(--accent); flex-shrink: 0; overflow: hidden; }
+.fisio-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.fisio-nombre { font-size: 14px; font-weight: 600; }
+.fisio-col { font-size: 11px; color: var(--accent); font-weight: 500; margin-top: 2px; }
+
+.date-h { margin-bottom: 16px; }
+.date-today { font-size: 22px; font-weight: 700; }
+.date-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.prog-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px; }
+.prog-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.prog-lbl { font-size: 12px; color: var(--muted); }
+.prog-cnt { font-size: 13px; font-weight: 600; color: var(--accent); }
+.prog-bg { height: 6px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+.prog-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.5s ease; }
+
+.ej-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; transition: border-color 0.2s; }
+.ej-card.done { border-color: rgba(126,232,162,0.3); }
+.ej-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
+.ej-chk { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; border: 2px solid var(--border); background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.ej-chk.on { background: var(--accent); border-color: var(--accent); }
+.ej-chk svg { display: none; }
+.ej-chk.on svg { display: block; }
+.ej-info { flex: 1; min-width: 0; }
+.ej-nom { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ej-zona { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ej-pills { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.pill { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: rgba(255,255,255,0.06); color: var(--muted); }
+.ej-expand { padding: 0 16px 14px; display: none; }
+.ej-expand.open { display: block; }
+.ej-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+.ej-video { border-radius: var(--r-sm); overflow: hidden; margin-bottom: 12px; }
+.ej-video iframe { width: 100%; height: 200px; border: none; display: block; }
+.btn-done { width: 100%; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 11px; border: 1.5px solid var(--border); border-radius: var(--r-sm); background: none; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+.btn-done:hover { border-color: var(--accent); color: var(--accent); }
+.btn-done.on { background: rgba(126,232,162,0.1); border-color: var(--accent); color: var(--accent); }
+
+.empty { text-align: center; padding: 3rem 1rem; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.empty-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+.sec-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; margin-top: 8px; }
+.diario-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
+textarea { width: 100%; font-family: var(--font); font-size: 13px; color: var(--text); background: rgba(255,255,255,0.04); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px; resize: none; outline: none; min-height: 90px; line-height: 1.6; transition: border-color 0.15s; margin-bottom: 10px; }
+textarea::placeholder { color: var(--muted); }
+textarea:focus { border-color: var(--accent); }
+.btn-diario { font-family: var(--font); font-size: 13px; font-weight: 600; padding: 10px 20px; background: var(--accent); color: #0d1a12; border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; float: right; }
+.btn-diario:disabled { opacity: 0.4; }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 22px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; display: none; z-index: 999; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+.toast.ok { background: var(--accent); color: #0d1a12; }
+.toast.err { background: var(--danger); color: white; }
+.loading { display: flex; align-items: center; justify-content: center; padding: 3rem; }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen active">
+  <div class="logo-wrap">
+    <div class="logo-main">FISIO<span>365</span></div>
+    <div class="logo-sub">Tu rehabilitación, cada día</div>
+  </div>
+  <div class="login-card">
+    <div class="login-title">Bienvenido</div>
+    <div class="login-desc">Introduce tu email y el PIN de 4 dígitos que te ha dado tu fisioterapeuta</div>
+    <label class="lbl">Email</label>
+    <input class="inp" type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" />
+    <label class="lbl">PIN</label>
+    <div class="pin-wrap">
+      <input class="pin-d" type="tel" id="p1" maxlength="1" />
+      <input class="pin-d" type="tel" id="p2" maxlength="1" />
+      <input class="pin-d" type="tel" id="p3" maxlength="1" />
+      <input class="pin-d" type="tel" id="p4" maxlength="1" />
+    </div>
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="appScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">FISIO<span>365</span></div>
+    <div class="topbar-name" id="topbarName"></div>
+  </div>
+  <div class="container">
+    <div id="fisioCard" class="fisio-card" style="display:none;">
+      <div class="fisio-av" id="fisioAv"></div>
+      <div>
+        <div class="fisio-nombre" id="fisioNombre"></div>
+        <div class="fisio-col" id="fisioColegiado"></div>
+      </div>
+    </div>
+    <div class="date-h">
+      <div class="date-today" id="dateToday"></div>
+      <div class="date-sub">Tu programa de ejercicios</div>
+    </div>
+    <div class="prog-wrap" id="progWrap" style="display:none;">
+      <div class="prog-row"><span class="prog-lbl">Progreso de hoy</span><span class="prog-cnt" id="progCnt">0/0</span></div>
+      <div class="prog-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+    </div>
+    <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
+    <div class="sec-title">Cómo me encuentro hoy</div>
+    <div class="diario-card">
+      <textarea id="diarioTxt" placeholder="Escribe aquí cómo te encuentras, si tienes dolor, qué tal ha ido el ejercicio..."></textarea>
+      <button class="btn-diario" id="btnDiario" onclick="guardarDiario()">Guardar</button>
+      <div style="clear:both"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let patient = null, ejercicios = [], hechos = new Set();
+const TODAY = new Date().toISOString().split('T')[0];
+
+// PIN inputs
+const pids = ['p1','p2','p3','p4'];
+pids.forEach((id, i) => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    const v = el.value.replace(/[^0-9]/g,'');
+    el.value = v.slice(-1);
+    if (v && i < 3) document.getElementById(pids[i+1]).focus();
+  });
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !el.value && i > 0) document.getElementById(pids[i-1]).focus();
+    if (e.key === 'Enter') doLogin();
+  });
+});
+document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('p1').focus(); });
+
+async function doLogin() {
+  const email = document.getElementById('emailInput').value.trim();
+  const pin = pids.map(id => document.getElementById(id).value).join('');
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = '';
+  if (!email) { errEl.textContent = 'Introduce tu email'; return; }
+  if (pin.length !== 4) { errEl.textContent = 'Introduce los 4 dígitos del PIN'; return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Entrando...';
+  try {
+    const res = await fetch(`/api/login?email=${encodeURIComponent(email)}&pin=${pin}`);
+    const data = await res.json();
+    if (data.ok) { patient = data.patient; initApp(); }
+    else errEl.textContent = data.error || 'Error al entrar';
+  } catch(e) { errEl.textContent = 'Error de conexión'; }
+  btn.disabled = false; btn.textContent = 'Entrar';
+}
+
+function initApp() {
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  document.getElementById('topbarName').textContent = patient.nombre.split(' ')[0];
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const hoy = new Date();
+  document.getElementById('dateToday').textContent = `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
+  loadEjercicios();
+}
+
+async function loadEjercicios() {
+  try {
+    const res = await fetch(`/api/schedule?patientId=${patient.id}`);
+    const data = await res.json();
+    ejercicios = data.ejercicios || [];
+    if (data.fisio) {
+      const f = data.fisio;
+      const av = document.getElementById('fisioAv');
+      if (f.foto) av.innerHTML = `<img src="${f.foto}" alt="${f.nombre}">`;
+      else av.textContent = f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+      document.getElementById('fisioNombre').textContent = `Tu fisio: ${f.nombre}`;
+      document.getElementById('fisioColegiado').textContent = `Nº Colegiado: ${f.colegiado}`;
+      document.getElementById('fisioCard').style.display = 'flex';
+    }
+    const localKey = `hechos_${patient.id}_${TODAY}`;
+    const local = localStorage.getItem(localKey);
+    hechos = new Set(local ? JSON.parse(local) : []);
+    renderEjercicios();
+  } catch(e) {
+    document.getElementById('ejList').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div><div class="empty-desc">Comprueba tu conexión e inténtalo de nuevo</div></div>';
+  }
+}
+
+function renderEjercicios() {
+  const lista = document.getElementById('ejList');
+  if (!ejercicios.length) {
+    lista.innerHTML = `<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios. ¡Pronto los tendrás aquí!</div></div>`;
+    return;
+  }
+  document.getElementById('progWrap').style.display = 'block';
+  updateProg();
+  lista.innerHTML = ejercicios.map((ej, i) => {
+    const done = hechos.has(ej.id);
+    const pills = [ej.series?`${ej.series} series`:null, ej.reps?`${ej.reps} reps`:null, ej.dur?`${ej.dur}s`:null, ej.descanso?`${ej.descanso}s descanso`:null].filter(Boolean);
+    return `<div class="ej-card ${done?'done':''}" id="ec${i}">
+      <div class="ej-header" onclick="toggleEx(${i})">
+        <button class="ej-chk ${done?'on':''}" id="ck${i}" onclick="event.stopPropagation();toggleHecho(${i})">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#0d1a12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="ej-info">
+          <div class="ej-nom">${ej.name}</div>
+          ${ej.zona?`<div class="ej-zona">${ej.zona}</div>`:''}
+          <div class="ej-pills">${pills.map(p=>`<span class="pill">${p}</span>`).join('')}</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:var(--muted);transition:transform 0.2s" id="ar${i}"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ej-expand" id="ex${i}">
+        ${ej.desc?`<div class="ej-desc">${ej.desc}</div>`:''}
+        ${ej.ytId?`<div class="ej-video"><iframe src="https://www.youtube.com/embed/${ej.ytId}" allowfullscreen loading="lazy"></iframe></div>`:''}
+        <button class="btn-done ${done?'on':''}" id="bd${i}" onclick="toggleHecho(${i})">${done?'✓ Completado':'Marcar como hecho'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleEx(i) {
+  const ex = document.getElementById(`ex${i}`), ar = document.getElementById(`ar${i}`);
+  const open = ex.classList.toggle('open');
+  ar.style.transform = open ? 'rotate(180deg)' : '';
+}
+
+async function toggleHecho(i) {
+  const ej = ejercicios[i];
+  if (hechos.has(ej.id)) hechos.delete(ej.id); else hechos.add(ej.id);
+  localStorage.setItem(`hechos_${patient.id}_${TODAY}`, JSON.stringify([...hechos]));
+  const done = hechos.has(ej.id);
+  document.getElementById(`ec${i}`).classList.toggle('done', done);
+  document.getElementById(`ck${i}`).classList.toggle('on', done);
+  document.getElementById(`bd${i}`).classList.toggle('on', done);
+  document.getElementById(`bd${i}`).textContent = done ? '✓ Completado' : 'Marcar como hecho';
+  updateProg();
+  try {
+    await fetch('/api/done', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, ejercicioId: ej.id, fecha: TODAY, hecho: done }) });
+  } catch(e) {}
+}
+
+function updateProg() {
+  const total = ejercicios.length, done = ejercicios.filter(ej=>hechos.has(ej.id)).length;
+  document.getElementById('progCnt').textContent = `${done}/${total}`;
+  document.getElementById('progBar').style.width = total ? `${(done/total)*100}%` : '0%';
+}
+
+async function guardarDiario() {
+  const texto = document.getElementById('diarioTxt').value.trim();
+  if (!texto) return;
+  const btn = document.getElementById('btnDiario');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try {
+    const res = await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: texto }) });
+    const data = await res.json();
+    if (data.ok) { document.getElementById('diarioTxt').value = ''; toast('Anotado en tu diario ✓', true); }
+    else toast('Error al guardar', false);
+  } catch(e) { toast('Error de conexión', false); }
+  btn.disabled = false; btn.textContent = 'Guardar';
+}
+
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${ok?'ok':'err'}`; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+</script>
+</body>
+</html>
