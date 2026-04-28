@@ -21,12 +21,13 @@ export default async function handler(req, res) {
       zona: rec.fields['Zona'] || '',
       descripcion: rec.fields['Descripcion'] || '',
       youtubeUrl: rec.fields['YouTubeURL'] || '',
+      imagen: rec.fields['Imagenes']?.[0]?.url || '',
       series: rec.fields['Series'] || 3,
       reps: rec.fields['Reps'] || 10,
       duracion: rec.fields['Duracion'] || 0,
       descanso: rec.fields['Descanso'] || 30,
     }));
-    return res.status(200).json({ ok: true, ejercicios, debug: data.records?.[0]?.fields });
+    return res.status(200).json({ ok: true, ejercicios });
   } catch(e) {
     return res.status(500).json({ ok: false, error: e.message });
   }
