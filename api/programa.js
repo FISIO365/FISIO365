@@ -10,14 +10,13 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { pwd, pacienteId, pacienteNombre, fisioId, ejercicios } = req.body;
+  const { pwd, pacienteId, pacienteNombre, fisioId, ejercicios, mensajeFisio } = req.body;
   if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'No autorizado' });
   if (!pacienteId || !ejercicios?.length) return res.status(400).json({ ok: false, error: 'Faltan datos' });
 
   const today = new Date().toISOString().split('T')[0];
 
   try {
-    // Borrar programa anterior
     const oldRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula={PacienteID}="${pacienteId}"&fields[]=PacienteID`, {
       headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
     });
@@ -27,33 +26,4 @@ export default async function handler(req, res) {
       for (let i = 0; i < ids.length; i += 10) {
         const batch = ids.slice(i, i + 10);
         await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?${batch.map(id=>`records[]=${id}`).join('&')}`, {
-          method: 'DELETE', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-        });
-      }
-    }
-
-    // Crear nuevo programa con imagen y video incluidos
-    const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        records: [{
-          fields: {
-            Nombre: `${pacienteNombre} - ${today}`,
-            PacienteID: pacienteId,
-            PacienteNombre: pacienteNombre,
-            FisioID: fisioId || '',
-            Ejercicios: JSON.stringify(ejercicios),
-            FechaAsignacion: today
-          }
-        }]
-      })
-    });
-
-    const d = await r.json();
-    if (d.error) return res.status(500).json({ ok: false, error: d.error.message });
-    return res.status(200).json({ ok: true, creados: ejercicios.length });
-  } catch(e) {
-    return res.status(500).json({ ok: false, error: e.message });
-  }
-}
+          method: 'DELETE', headers: { Authorization: `Be
