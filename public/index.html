@@ -97,6 +97,30 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 textarea { width: 100%; font-family: var(--font); font-size: 13px; color: var(--black); background: var(--cream); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px; resize: none; outline: none; min-height: 90px; line-height: 1.6; transition: border-color 0.15s; margin-bottom: 10px; }
 textarea::placeholder { color: var(--muted); }
 textarea:focus { border-color: var(--black); }
+.vas-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 14px; }
+.vas-question { font-size: 14px; font-weight: 600; color: var(--black); margin-bottom: 16px; }
+.vas-track { height: 8px; border-radius: 99px; background: linear-gradient(90deg, #7EE8A2 0%, #FFD166 50%, #EF476F 100%); margin-bottom: 10px; }
+.vas-nums { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.vas-num { font-size: 12px; color: #bbb; font-weight: 500; cursor: pointer; width: 24px; text-align: center; padding: 5px 0; border-radius: 6px; transition: all 0.15s; }
+.vas-num.on { color: white; background: var(--lila); font-weight: 700; }
+.vas-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.grafica-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 14px; }
+.grafica-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+.grafica-titulo { font-size: 13px; font-weight: 600; color: var(--black); }
+.periodos { display: flex; gap: 4px; flex-wrap: wrap; }
+.periodo { font-size: 11px; padding: 4px 10px; border-radius: 99px; border: 1.5px solid var(--border); color: var(--muted); font-weight: 500; cursor: pointer; font-family: var(--font); background: none; transition: all 0.15s; }
+.periodo.on { background: var(--black); color: var(--cream); border-color: var(--black); }
+.chart-area { display: flex; gap: 6px; height: 100px; }
+.eje-y { display: flex; flex-direction: column; justify-content: space-between; padding: 2px 0; }
+.eje-y span { font-size: 10px; color: #ccc; }
+.chart-svg { flex: 1; height: 100px; }
+.dias-row { display: flex; justify-content: space-between; margin-top: 6px; margin-left: 24px; }
+.dia-lbl { font-size: 10px; color: var(--muted); text-align: center; flex: 1; }
+.dia-lbl.hoy { color: var(--lila); font-weight: 600; }
+.vas-msg { font-size: 12px; font-weight: 600; margin-top: 12px; text-align: center; padding: 10px 14px; border-radius: var(--r-sm); line-height: 1.5; }
+.vas-msg.bien { color: var(--lila); background: var(--lila-light); }
+.vas-msg.neutro { color: var(--muted); background: var(--cream); }
+.vas-msg.animo { color: #666; background: #f0f0ec; }
 .btn-diario { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 700; padding: 14px; background: var(--black); color: var(--cream); border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; margin-top: 4px; }
 .btn-diario:disabled { opacity: 0.4; }
 
@@ -210,7 +234,34 @@ textarea:focus { border-color: var(--black); }
           <div class="prog-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
         </div>
         <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
-        <div id="diarioSection" style="display:none;">
+        <div id="vasSection" style="display:none;">
+        <div class="sec-title">Escala de dolor</div>
+        <div class="vas-card">
+          <div class="vas-question">¿Cuánto dolor tienes hoy?</div>
+          <div class="vas-track"></div>
+          <div class="vas-nums" id="vasNums"></div>
+          <div class="vas-labels"><span>Sin dolor</span><span>Dolor máximo</span></div>
+        </div>
+        <div class="grafica-card" id="graficaCard" style="display:none;">
+          <div class="grafica-header">
+            <div class="grafica-titulo">Evolución del dolor</div>
+            <div class="periodos" id="periodos">
+              <button class="periodo on" onclick="cambiarPeriodo(7,this)">7d</button>
+              <button class="periodo" onclick="cambiarPeriodo(15,this)">15d</button>
+              <button class="periodo" onclick="cambiarPeriodo(30,this)">30d</button>
+              <button class="periodo" onclick="cambiarPeriodo(60,this)">60d</button>
+              <button class="periodo" onclick="cambiarPeriodo(90,this)">90d</button>
+            </div>
+          </div>
+          <div class="chart-area">
+            <div class="eje-y"><span>10</span><span>5</span><span>0</span></div>
+            <svg class="chart-svg" id="chartSvg" viewBox="0 0 250 100" preserveAspectRatio="none"></svg>
+          </div>
+          <div class="dias-row" id="diasRow"></div>
+          <div class="vas-msg" id="vasMsg" style="display:none;"></div>
+        </div>
+      </div>
+      <div id="diarioSection" style="display:none;">
           <div class="sec-title">Seguimiento diario</div>
           <div class="diario-card">
             <textarea id="diarioTxt" placeholder="Anota tus avances y sensaciones..."></textarea>
@@ -431,7 +482,9 @@ function renderEjercicios() {
     return;
   }
   document.getElementById('progWrap').style.display = 'block';
+  document.getElementById('vasSection').style.display = 'block';
   document.getElementById('diarioSection').style.display = 'block';
+  initVAS();
   updateProg();
   lista.innerHTML = ejercicios.map((ej, i) => {
     const done = hechos.has(ej.id);
@@ -604,6 +657,136 @@ function showInstOS(os) {
   document.getElementById('btnInstAndroid').style.background = os === 'android' ? '#000' : 'none';
   document.getElementById('btnInstAndroid').style.color = os === 'android' ? 'white' : '#888';
   document.getElementById('btnInstAndroid').style.borderColor = os === 'android' ? '#000' : '#ddd';
+}
+
+let vasSeleccionado = null;
+let vasRegistros = [];
+let vasPeriodo = 7;
+
+function initVAS() {
+  const nums = document.getElementById('vasNums');
+  nums.innerHTML = '';
+  for (let i = 0; i <= 10; i++) {
+    const span = document.createElement('span');
+    span.className = 'vas-num';
+    span.textContent = i;
+    span.onclick = () => seleccionarVAS(i);
+    nums.appendChild(span);
+  }
+  cargarDatosVAS();
+}
+
+async function cargarDatosVAS() {
+  try {
+    const res = await fetch(`/api/dolor?patientId=${patient.id}`);
+    const data = await res.json();
+    vasRegistros = data.registros || [];
+    actualizarGrafica();
+  } catch(e) {}
+}
+
+function seleccionarVAS(valor) {
+  vasSeleccionado = valor;
+  document.querySelectorAll('.vas-num').forEach((el, i) => {
+    el.classList.toggle('on', i === valor);
+  });
+  guardarVAS(valor);
+}
+
+async function guardarVAS(valor) {
+  try {
+    await fetch('/api/dolor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patientId: patient.id, fecha: TODAY, valor })
+    });
+    await cargarDatosVAS();
+  } catch(e) {}
+}
+
+function cambiarPeriodo(dias, btn) {
+  vasPeriodo = dias;
+  document.querySelectorAll('.periodo').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  actualizarGrafica();
+}
+
+function actualizarGrafica() {
+  const hoy = new Date(TODAY);
+  const datos = [];
+  for (let i = vasPeriodo - 1; i >= 0; i--) {
+    const d = new Date(hoy);
+    d.setDate(hoy.getDate() - i);
+    const fechaStr = d.toISOString().split('T')[0];
+    const reg = vasRegistros.find(r => r.fecha === fechaStr);
+    datos.push({ fecha: fechaStr, valor: reg ? reg.valor : null, esHoy: i === 0 });
+  }
+
+  const conDatos = datos.filter(d => d.valor !== null);
+  if (conDatos.length < 2) {
+    document.getElementById('graficaCard').style.display = 'none';
+    return;
+  }
+  document.getElementById('graficaCard').style.display = 'block';
+
+  // Dibujar SVG
+  const svg = document.getElementById('chartSvg');
+  const W = 250, H = 100;
+  const puntos = conDatos.map((d, i) => {
+    const idx = datos.indexOf(d);
+    const x = (idx / (datos.length - 1)) * W;
+    const y = (d.valor / 10) * (H - 10) + 5;
+    return { x, y, valor: d.valor };
+  });
+
+  let path = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+  let area = path + ` L${puntos[puntos.length-1].x},${H} L${puntos[0].x},${H} Z`;
+
+  svg.innerHTML = `
+    <defs><linearGradient id="vg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ada3da" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#ada3da" stop-opacity="0"/>
+    </linearGradient></defs>
+    <line x1="0" y1="5" x2="${W}" y2="5" stroke="#f0f0f0" stroke-width="1"/>
+    <line x1="0" y1="52" x2="${W}" y2="52" stroke="#f0f0f0" stroke-width="1"/>
+    <line x1="0" y1="99" x2="${W}" y2="99" stroke="#f0f0f0" stroke-width="1"/>
+    <path d="${area}" fill="url(#vg)"/>
+    <path d="${path}" fill="none" stroke="#ada3da" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${puntos.map((p, i) => i === puntos.length - 1
+      ? `<circle cx="${p.x}" cy="${p.y}" r="5" fill="white" stroke="#ada3da" stroke-width="2"/>`
+      : `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#ada3da"/>`
+    ).join('')}
+  `;
+
+  // Etiquetas días
+  const diasRow = document.getElementById('diasRow');
+  const step = Math.max(1, Math.floor(datos.length / 7));
+  diasRow.innerHTML = datos.filter((_, i) => i % step === 0 || i === datos.length - 1).map(d => {
+    const date = new Date(d.fecha);
+    const label = d.esHoy ? 'Hoy' : `${date.getDate()}/${date.getMonth()+1}`;
+    return `<div class="dia-lbl ${d.esHoy?'hoy':''}">${label}</div>`;
+  }).join('');
+
+  // Mensaje
+  const primero = conDatos[0].valor;
+  const ultimo = conDatos[conDatos.length - 1].valor;
+  const msgEl = document.getElementById('vasMsg');
+  if (conDatos.length >= 2) {
+    msgEl.style.display = 'block';
+    if (ultimo < primero) {
+      const pct = Math.round(((primero - ultimo) / primero) * 100);
+      msgEl.className = 'vas-msg bien';
+      msgEl.textContent = `📉 Tu dolor ha bajado un ${pct}% en este periodo. ¡Vas por muy buen camino!`;
+    } else if (ultimo > primero) {
+      msgEl.className = 'vas-msg animo';
+      msgEl.textContent = '💪 No te preocupes, los altibajos son normales en la recuperación. ¡Sigue con tu programa!';
+    } else {
+      msgEl.className = 'vas-msg neutro';
+      msgEl.textContent = '🌱 Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!';
+    }
+  } else {
+    msgEl.style.display = 'none';
+  }
 }
 
 function toast(msg, ok=true) {
