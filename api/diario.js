@@ -18,14 +18,14 @@ module.exports = async function handler(req, res) {
   if (!patientId) return res.status(400).json({ ok: false, error: 'Falta patientId' });
 
   try {
-    const getRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}?fields[]=Diario&fields[]=UltimaSession`, {
+    const getRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}?fields[]=fld5O6xTbie3JkeO8&fields[]=UltimaSession`, {
       headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
     });
     const getData = await getRes.json();
     const fields = getData.fields || {};
 
     const today = new Date().toISOString().split('T')[0];
-    const diarioActual = fields['Diario'] || '';
+    const diarioActual = fields['fld5O6xTbie3JkeO8'] || fields['Diario'] || '';
     const fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
     const updateFields = { UltimaSession: today };
@@ -37,12 +37,4 @@ module.exports = async function handler(req, res) {
 
     await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}`, {
       method: 'PATCH',
-      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: updateFields })
-    });
-
-    return res.status(200).json({ ok: true });
-  } catch(e) {
-    return res.status(500).json({ ok: false, error: e.message });
-  }
-}
+      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': '
