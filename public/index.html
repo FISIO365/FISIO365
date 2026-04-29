@@ -433,11 +433,6 @@ function initApp() {
   const hoy = new Date();
   document.getElementById('dateToday').textContent = `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
 
-  // Comprobar si ya completó hoy
-  if (localStorage.getItem(COMPLETADO_KEY())) {
-    mostrarCompletado();
-    return;
-  }
   loadEjercicios();
   setTimeout(mostrarPopupInstall, 2000);
 }
@@ -466,6 +461,13 @@ async function loadEjercicios() {
       document.getElementById('mensajeFisioTexto').textContent = mensajeFisio;
       document.getElementById('mensajeFisioCard').style.display = 'block';
     }
+    // Comprobar si ya completó hoy usando Airtable
+    if (data.ultimaSession === TODAY) {
+      actualizarMensajeRacha(data.rachaDias || 1);
+      mostrarCompletado();
+      return;
+    }
+
     const localKey = `hechos_${patient.id}_${TODAY}`;
     const local = localStorage.getItem(localKey);
     hechos = new Set(local ? JSON.parse(local) : []);
@@ -547,7 +549,6 @@ async function tareaHecha() {
     const diarioRes = await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: texto }) });
     const diarioData = await diarioRes.json();
     const racha = diarioData.racha || 1;
-    actualizarMensajeRacha(racha);
 
     // Marcar todos los ejercicios como hechos
     for (let i = 0; i < ejercicios.length; i++) {
@@ -563,6 +564,7 @@ async function tareaHecha() {
     localStorage.setItem(COMPLETADO_KEY(), '1');
 
     // Mostrar pantalla de completado
+    actualizarMensajeRacha(racha);
     mostrarCompletado();
 
   } catch(e) {
