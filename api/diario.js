@@ -25,17 +25,22 @@ module.exports = async function handler(req, res) {
 
     let nuevaRacha = 1;
     if (ultimaSession) {
-      const ultima = new Date(ultimaSession);
-      const hoy = new Date(today);
-      const diffDias = Math.round((hoy - ultima) / (1000 * 60 * 60 * 24));
-      if (diffDias === 1) nuevaRacha = rachaActual + 1;
-      else if (diffDias === 0) nuevaRacha = rachaActual;
-      else nuevaRacha = 1;
+      if (ultimaSession === today) {
+        nuevaRacha = rachaActual;
+      } else {
+        const [ay, am, ad] = ultimaSession.split('-').map(Number);
+        const [by, bm, bd] = today.split('-').map(Number);
+        const dateA = new Date(ay, am-1, ad);
+        const dateB = new Date(by, bm-1, bd);
+        const diffDias = Math.round((dateB - dateA) / (1000 * 60 * 60 * 24));
+        if (diffDias === 1) nuevaRacha = rachaActual + 1;
+        else nuevaRacha = 1;
+      }
     }
 
     const diarioActual = fields['Diario'] || '';
     const fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    
+
     const updateFields = {
       UltimaSession: today,
       RachaDias: nuevaRacha
