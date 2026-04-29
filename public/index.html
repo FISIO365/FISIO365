@@ -271,7 +271,7 @@ textarea:focus { border-color: var(--black); }
             <canvas id="chartSvg" style="width:100%;height:100px;display:block;"></canvas>
           </div>
         </div>
-        <div style="position:relative;height:20px;margin-left:24px;" id="diasRow"></div>
+        <div style="position:relative;height:20px;margin-left:0px;" id="diasRow"></div>
         <div class="vas-msg" id="vasMsg" style="display:none;"></div>
       </div>
     </div>
@@ -626,8 +626,9 @@ function actualizarGrafica() {
   if (puntos.length === 0) return;
 
   // Recalcular posiciones con ancho real
+  const margen = 10;
   const pts = puntos.map((p, i) => ({
-    x: puntos.length > 1 ? 10 + (i / (puntos.length - 1)) * (CW - 20) : CW - 10,
+    x: puntos.length > 1 ? margen + (i / (puntos.length - 1)) * (CW - margen * 2) : CW - margen,
     y: p.y,
     esHoy: p.esHoy
   }));
@@ -670,12 +671,14 @@ function actualizarGrafica() {
       ctx.fill();
     }
   });
+  const ejeYAncho = 24;
   const diasHtml = pts.map((p, i) => {
     const date = new Date(puntos[i].fecha + 'T12:00:00');
     const label = puntos[i].esHoy ? 'Hoy' : `${date.getDate()}/${date.getMonth()+1}`;
     const color = puntos[i].esHoy ? 'var(--lila)' : 'var(--muted)';
     const fw = puntos[i].esHoy ? '600' : '400';
-    return `<div style="position:absolute;left:${p.x}px;transform:translateX(-50%);font-size:10px;color:${color};font-weight:${fw};white-space:nowrap;">${label}</div>`;
+    const xPos = ejeYAncho + p.x;
+    return `<div style="position:absolute;left:${xPos}px;transform:translateX(-50%);font-size:10px;color:${color};font-weight:${fw};white-space:nowrap;">${label}</div>`;
   }).join('');
   document.getElementById('diasRow').innerHTML = diasHtml;
   const msgEl = document.getElementById('vasMsg');
