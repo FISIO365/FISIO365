@@ -9,8 +9,18 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { patientId, comentario } = req.body;
-  if (!patientId) return res.status(400).json({ ok: false });
+  // Parsear body manualmente si no está parseado
+  let body = req.body;
+  if (!body || typeof body === 'string') {
+    try {
+      body = JSON.parse(req.body || '{}');
+    } catch(e) {
+      body = {};
+    }
+  }
+
+  const { patientId, comentario } = body;
+  if (!patientId) return res.status(400).json({ ok: false, error: 'Falta patientId' });
 
   try {
     const getRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}?fields[]=Diario&fields[]=UltimaSession&fields[]=RachaDias`, {
@@ -62,4 +72,3 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ ok: false, error: e.message });
   }
 }
-
