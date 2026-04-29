@@ -265,13 +265,15 @@ textarea:focus { border-color: var(--black); }
             <button class="periodo" onclick="cambiarPeriodo(90,this)">90d</button>
           </div>
         </div>
-        <div class="chart-area">
-          <div class="eje-y"><span>10</span><span>5</span><span>0</span></div>
-          <div style="flex:1;position:relative;" id="chartWrap">
-            <canvas id="chartSvg" style="width:100%;height:100px;display:block;"></canvas>
+        <div style="position:relative;padding-left:24px;" id="graficaInner">
+          <div style="position:absolute;left:0;top:0;bottom:20px;display:flex;flex-direction:column;justify-content:space-between;padding:2px 0;">
+            <span style="font-size:10px;color:#ccc;">10</span>
+            <span style="font-size:10px;color:#ccc;">5</span>
+            <span style="font-size:10px;color:#ccc;">0</span>
           </div>
+          <canvas id="chartSvg" style="width:100%;height:100px;display:block;"></canvas>
+          <div style="position:relative;height:20px;" id="diasRow"></div>
         </div>
-        <div style="position:relative;height:20px;margin-left:0px;" id="diasRow"></div>
         <div class="vas-msg" id="vasMsg" style="display:none;"></div>
       </div>
     </div>
@@ -589,7 +591,6 @@ function cambiarPeriodo(dias, btn) {
 }
 
 function actualizarGrafica() {
-  // Solo mostrar días con datos reales, dentro del periodo seleccionado
   const hoy = new Date(TODAY);
   const fechaInicio = new Date(hoy);
   fechaInicio.setDate(hoy.getDate() - (vasPeriodo - 1));
@@ -601,37 +602,36 @@ function actualizarGrafica() {
 
   if (conDatos.length < 1) { document.getElementById('graficaCard').style.display = 'none'; return; }
   document.getElementById('graficaCard').style.display = 'block';
-  const W = 250, H = 100;
-  const puntos = conDatos.map((d, i) => {
-    const x = conDatos.length > 1 ? 20 + (i / (conDatos.length - 1)) * (W - 40) : W - 20;
-    const y = ((10 - d.valor) / 10) * (H - 10) + 5;
-    return { x, y, valor: d.valor, fecha: d.fecha, esHoy: d.fecha === TODAY };
-  });
-  let path = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-  let area = path + ` L${puntos[puntos.length-1].x.toFixed(1)},${H} L${puntos[0].x.toFixed(1)},${H} Z`;
+
   const canvas = document.getElementById('chartSvg');
-  const wrap = document.getElementById('chartWrap');
-  const CW = wrap.offsetWidth || 250;
+  const inner = document.getElementById('graficaInner');
+  const CW = inner.offsetWidth - 24;
   const CH = 100;
-  canvas.width = CW;
-  canvas.height = CH;
+  canvas.width = CW * window.devicePixelRatio;
+  canvas.height = CH * window.devicePixelRatio;
+  canvas.style.width = CW + 'px';
+  canvas.style.height = CH + 'px';
   const ctx = canvas.getContext('2d');
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
   ctx.clearRect(0, 0, CW, CH);
 
-  // Líneas de guía
+  const PAD = 8;
+
+  // Calcular posiciones - N puntos distribuidos de izq a derecha
+  const pts = conDatos.map((d, i) => {
+    const x = conDatos.length === 1 
+      ? CW - PAD  // 1 punto: derecha del todo
+      : PAD + (i / (conDatos.length - 1)) * (CW - PAD * 2);
+    const y = PAD + ((10 - d.valor) / 10) * (CH - PAD * 2);
+    return { x, y, valor: d.valor, fecha: d.fecha, esHoy: d.fecha === TODAY };
+  });
+
+  // Líneas guía
   ctx.strokeStyle = '#f0f0f0';
   ctx.lineWidth = 1;
-  [5, 50, 95].forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke(); });
-
-  if (puntos.length === 0) return;
-
-  // Recalcular posiciones con ancho real
-  const margen = 10;
-  const pts = puntos.map((p, i) => ({
-    x: puntos.length > 1 ? margen + (i / (puntos.length - 1)) * (CW - margen * 2) : CW - margen,
-    y: p.y,
-    esHoy: p.esHoy
-  }));
+  [PAD, CH/2, CH-PAD].forEach(y => {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke();
+  });
 
   // Área relleno
   if (pts.length > 1) {
@@ -643,10 +643,6 @@ function actualizarGrafica() {
     ctx.closePath();
     ctx.fillStyle = 'rgba(173,163,218,0.15)';
     ctx.fill();
-  }
-
-  // Línea
-  if (pts.length > 1) {
     ctx.beginPath();
     ctx.moveTo(pts[0].x, pts[0].y);
     pts.forEach(p => ctx.lineTo(p.x, p.y));
@@ -658,43 +654,48 @@ function actualizarGrafica() {
 
   // Puntos
   pts.forEach((p, i) => {
+    const isLast = i === pts.length - 1;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, i === pts.length-1 ? 5 : 3, 0, Math.PI * 2);
-    if (i === pts.length-1) {
-      ctx.fillStyle = 'white';
-      ctx.fill();
-      ctx.strokeStyle = '#ada3da';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+    ctx.arc(p.x, p.y, isLast ? 5 : 3, 0, Math.PI * 2);
+    if (isLast) {
+      ctx.fillStyle = 'white'; ctx.fill();
+      ctx.strokeStyle = '#ada3da'; ctx.lineWidth = 2; ctx.stroke();
     } else {
-      ctx.fillStyle = '#ada3da';
-      ctx.fill();
+      ctx.fillStyle = '#ada3da'; ctx.fill();
     }
   });
-  const ejeYAncho = 24;
-  const diasHtml = pts.map((p, i) => {
-    const date = new Date(puntos[i].fecha + 'T12:00:00');
-    const label = puntos[i].esHoy ? 'Hoy' : `${date.getDate()}/${date.getMonth()+1}`;
-    const color = puntos[i].esHoy ? 'var(--lila)' : 'var(--muted)';
-    const fw = puntos[i].esHoy ? '600' : '400';
-    const xPos = ejeYAncho + p.x;
-    return `<div style="position:absolute;left:${xPos}px;transform:translateX(-50%);font-size:10px;color:${color};font-weight:${fw};white-space:nowrap;">${label}</div>`;
-  }).join('');
-  document.getElementById('diasRow').innerHTML = diasHtml;
+
+  // Etiquetas alineadas con los puntos
+  const diasRow = document.getElementById('diasRow');
+  diasRow.innerHTML = '';
+  pts.forEach(p => {
+    const date = new Date(p.fecha + 'T12:00:00');
+    const label = p.esHoy ? 'Hoy' : `${date.getDate()}/${date.getMonth()+1}`;
+    const el = document.createElement('div');
+    el.style.cssText = `position:absolute;left:${p.x}px;top:0;transform:translateX(-50%);font-size:10px;color:${p.esHoy?'#ada3da':'#888'};font-weight:${p.esHoy?'600':'400'};white-space:nowrap;`;
+    el.textContent = label;
+    diasRow.appendChild(el);
+  });
+
+  // Mensaje
   const msgEl = document.getElementById('vasMsg');
   if (conDatos.length >= 2) {
-    const primero = conDatos[0].valor, ultimo = conDatos[conDatos.length-1].valor;
+    const penultimo = conDatos[conDatos.length-2].valor;
+    const ultimo = conDatos[conDatos.length-1].valor;
     msgEl.style.display = 'block';
-    if (ultimo < primero) {
-      const pct = Math.round(((primero-ultimo)/primero)*100);
+    if (ultimo < penultimo) {
+      const pct = penultimo > 0 ? Math.round(((penultimo-ultimo)/penultimo)*100) : 0;
       msgEl.className = 'vas-msg bien';
-      msgEl.textContent = `📉 Tu dolor ha bajado un ${pct}% en este periodo. ¡Vas por muy buen camino!`;
-    } else if (ultimo > primero) {
+      msgEl.innerHTML = `📉 Tu dolor ha bajado${pct>0?' un '+pct+'%':''} respecto a ayer. ¡Vas por muy buen camino!`;
+    } else if (ultimo > penultimo) {
       msgEl.className = 'vas-msg animo';
-      msgEl.textContent = '💪 No te preocupes, los altibajos son normales en la recuperación. ¡Sigue con tu programa!';
+      msgEl.innerHTML = `<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#000;">😟 Tu dolor ha aumentado hoy</div>
+        <div style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6;">¿Qué has hecho diferente? ¿Has cambiado algo en tu rutina? Cuéntaselo a tu fisio:</div>
+        <textarea id="vasMsgTxt" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;resize:none;min-height:80px;outline:none;background:#f5f2ee;color:#000;margin-bottom:10px;" placeholder="Ej: He estado de pie muchas horas, he hecho más ejercicio..."></textarea>
+        <button onclick="guardarMsgDolor()" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:#000;color:#f5f2ee;border:none;border-radius:8px;cursor:pointer;">Enviar al fisio</button>`;
     } else {
       msgEl.className = 'vas-msg neutro';
-      msgEl.textContent = '🌱 Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!';
+      msgEl.innerHTML = '🌱 Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!';
     }
   } else { msgEl.style.display = 'none'; }
 }
