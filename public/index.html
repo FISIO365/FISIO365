@@ -267,9 +267,9 @@ textarea:focus { border-color: var(--black); }
         </div>
         <div style="position:relative;padding-left:24px;" id="graficaInner">
           <div style="position:absolute;left:0;top:0;bottom:20px;display:flex;flex-direction:column;justify-content:space-between;padding:2px 0;">
-            <span style="font-size:10px;color:#ccc;">10</span>
-            <span style="font-size:10px;color:#ccc;">5</span>
             <span style="font-size:10px;color:#ccc;">0</span>
+            <span style="font-size:10px;color:#ccc;">5</span>
+            <span style="font-size:10px;color:#ccc;">10</span>
           </div>
           <canvas id="chartSvg" style="width:100%;height:100px;display:block;"></canvas>
           <div style="position:relative;height:20px;" id="diasRow"></div>
@@ -622,7 +622,7 @@ function actualizarGrafica() {
     const x = conDatos.length === 1 
       ? CW - PAD  // 1 punto: derecha del todo
       : PAD + (i / (conDatos.length - 1)) * (CW - PAD * 2);
-    const y = PAD + ((10 - d.valor) / 10) * (CH - PAD * 2);
+    const y = PAD + (d.valor / 10) * (CH - PAD * 2);
     return { x, y, valor: d.valor, fecha: d.fecha, esHoy: d.fecha === TODAY };
   });
 
@@ -689,10 +689,10 @@ function actualizarGrafica() {
       msgEl.innerHTML = `📉 Tu dolor ha bajado${pct>0?' un '+pct+'%':''} respecto a ayer. ¡Vas por muy buen camino!`;
     } else if (ultimo > penultimo) {
       msgEl.className = 'vas-msg animo';
-      msgEl.innerHTML = `<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#000;">😟 Tu dolor ha aumentado hoy</div>
-        <div style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6;">¿Qué has hecho diferente? ¿Has cambiado algo en tu rutina? Cuéntaselo a tu fisio:</div>
-        <textarea id="vasMsgTxt" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;resize:none;min-height:80px;outline:none;background:#f5f2ee;color:#000;margin-bottom:10px;" placeholder="Ej: He estado de pie muchas horas, he hecho más ejercicio..."></textarea>
-        <button onclick="guardarMsgDolor()" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:#000;color:#f5f2ee;border:none;border-radius:8px;cursor:pointer;">Enviar al fisio</button>`;
+      msgEl.innerHTML = `<div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#000;">No te preocupes, los altibajos no significan que vayas por mal camino 💪</div>
+        <div style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6;">¿Has cambiado algo en tu rutina hoy? Cuéntaselo a tu fisio:</div>
+        <textarea id="vasMsgTxt" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;resize:none;min-height:80px;outline:none;background:#f5f2ee;color:#000;margin-bottom:10px;" placeholder="Ej: He estado de pie muchas horas, he dormido mal..."></textarea>
+        <button onclick="guardarMsgDolor()" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:#000;color:#f5f2ee;border:none;border-radius:8px;cursor:pointer;">Enviar a mi fisio</button>`;
     } else {
       msgEl.className = 'vas-msg neutro';
       msgEl.innerHTML = '🌱 Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!';
