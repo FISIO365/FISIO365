@@ -267,7 +267,9 @@ textarea:focus { border-color: var(--black); }
         </div>
         <div class="chart-area">
           <div class="eje-y"><span>10</span><span>5</span><span>0</span></div>
-          <svg class="chart-svg" id="chartSvg" viewBox="0 0 250 100" preserveAspectRatio="none"></svg>
+          <div style="flex:1;position:relative;" id="chartWrap">
+            <canvas id="chartSvg" style="width:100%;height:100px;display:block;"></canvas>
+          </div>
         </div>
         <div class="dias-row" id="diasRow"></div>
         <div class="vas-msg" id="vasMsg" style="display:none;"></div>
@@ -607,20 +609,69 @@ function actualizarGrafica() {
   });
   let path = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   let area = path + ` L${puntos[puntos.length-1].x.toFixed(1)},${H} L${puntos[0].x.toFixed(1)},${H} Z`;
-  document.getElementById('chartSvg').innerHTML = `
-    <defs><linearGradient id="vg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#ada3da" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="#ada3da" stop-opacity="0"/>
-    </linearGradient></defs>
-    <line x1="0" y1="5" x2="${W}" y2="5" stroke="#f0f0f0" stroke-width="1"/>
-    <line x1="0" y1="52" x2="${W}" y2="52" stroke="#f0f0f0" stroke-width="1"/>
-    <line x1="0" y1="99" x2="${W}" y2="99" stroke="#f0f0f0" stroke-width="1"/>
-    <path d="${area}" fill="url(#vg)"/>
-    <path d="${path}" fill="none" stroke="#ada3da" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    ${puntos.map((p, i) => i === puntos.length-1 ? `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="white" stroke="#ada3da" stroke-width="2"/>` : `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#ada3da"/>`).join('')}
-  `;
+  const canvas = document.getElementById('chartSvg');
+  const wrap = document.getElementById('chartWrap');
+  const CW = wrap.offsetWidth || 250;
+  const CH = 100;
+  canvas.width = CW;
+  canvas.height = CH;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, CW, CH);
+
+  // Líneas de guía
+  ctx.strokeStyle = '#f0f0f0';
+  ctx.lineWidth = 1;
+  [5, 50, 95].forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke(); });
+
+  if (puntos.length === 0) return;
+
+  // Recalcular posiciones con ancho real
+  const pts = puntos.map((p, i) => ({
+    x: puntos.length > 1 ? 10 + (i / (puntos.length - 1)) * (CW - 20) : CW - 10,
+    y: p.y,
+    esHoy: p.esHoy
+  }));
+
+  // Área relleno
+  if (pts.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    pts.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.lineTo(pts[pts.length-1].x, CH);
+    ctx.lineTo(pts[0].x, CH);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(173,163,218,0.15)';
+    ctx.fill();
+  }
+
+  // Línea
+  if (pts.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    pts.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle = '#ada3da';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+
+  // Puntos
+  pts.forEach((p, i) => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, i === pts.length-1 ? 5 : 3, 0, Math.PI * 2);
+    if (i === pts.length-1) {
+      ctx.fillStyle = 'white';
+      ctx.fill();
+      ctx.strokeStyle = '#ada3da';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = '#ada3da';
+      ctx.fill();
+    }
+  });
   document.getElementById('diasRow').innerHTML = puntos.map(p => {
-    const date = new Date(p.fecha);
+    const date = new Date(p.fecha + 'T12:00:00');
     const label = p.esHoy ? 'Hoy' : `${date.getDate()}/${date.getMonth()+1}`;
     return `<div class="dia-lbl ${p.esHoy?'hoy':''}">${label}</div>`;
   }).join('');
