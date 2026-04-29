@@ -644,6 +644,16 @@ function actualizarGrafica() {
   } else { msgEl.style.display = 'none'; }
 }
 
+async function guardarMsgDolor() {
+  const texto = document.getElementById('vasMsgTxt')?.value?.trim();
+  if (!texto) return;
+  try {
+    await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: `[Dolor aumentó] ${texto}` }) });
+    toast('Mensaje enviado al fisio ✓', true);
+    document.getElementById('vasMsgTxt').value = '';
+  } catch(e) { toast('Error al enviar', false); }
+}
+
 function showOS(os) {
   document.getElementById('pasosIOS').style.display = os === 'ios' ? 'block' : 'none';
   document.getElementById('pasosAndroid').style.display = os === 'android' ? 'block' : 'none';
