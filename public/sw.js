@@ -1,5 +1,5 @@
 self.addEventListener('push', function(event) {
-  let title = 'FISIO365 💪';
+  let title = ' ';
   let body = '¡Recuerda hacer tus ejercicios de hoy! Tu recuperación depende de la constancia.';
   
   if (event.data) {
