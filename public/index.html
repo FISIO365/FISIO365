@@ -587,24 +587,23 @@ function cambiarPeriodo(dias, btn) {
 }
 
 function actualizarGrafica() {
+  // Solo mostrar días con datos reales, dentro del periodo seleccionado
   const hoy = new Date(TODAY);
-  const datos = [];
-  for (let i = vasPeriodo - 1; i >= 0; i--) {
-    const d = new Date(hoy);
-    d.setDate(hoy.getDate() - i);
-    const fechaStr = d.toISOString().split('T')[0];
-    const reg = vasRegistros.find(r => r.fecha === fechaStr);
-    datos.push({ fecha: fechaStr, valor: reg ? reg.valor : null, esHoy: i === 0 });
-  }
-  const conDatos = datos.filter(d => d.valor !== null);
+  const fechaInicio = new Date(hoy);
+  fechaInicio.setDate(hoy.getDate() - (vasPeriodo - 1));
+  const fechaInicioStr = fechaInicio.toISOString().split('T')[0];
+  
+  const conDatos = vasRegistros
+    .filter(r => r.fecha >= fechaInicioStr && r.fecha <= TODAY)
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
   if (conDatos.length < 1) { document.getElementById('graficaCard').style.display = 'none'; return; }
   document.getElementById('graficaCard').style.display = 'block';
   const W = 250, H = 100;
-  const puntos = conDatos.map(d => {
-    const idx = datos.indexOf(d);
-    const x = datos.length > 1 ? (idx / (datos.length - 1)) * W : W/2;
+  const puntos = conDatos.map((d, i) => {
+    const x = conDatos.length > 1 ? 20 + (i / (conDatos.length - 1)) * (W - 40) : W - 20;
     const y = ((10 - d.valor) / 10) * (H - 10) + 5;
-    return { x, y, valor: d.valor, esHoy: d.esHoy };
+    return { x, y, valor: d.valor, fecha: d.fecha, esHoy: d.fecha === TODAY };
   });
   let path = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   let area = path + ` L${puntos[puntos.length-1].x.toFixed(1)},${H} L${puntos[0].x.toFixed(1)},${H} Z`;
@@ -620,11 +619,10 @@ function actualizarGrafica() {
     <path d="${path}" fill="none" stroke="#ada3da" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     ${puntos.map((p, i) => i === puntos.length-1 ? `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="white" stroke="#ada3da" stroke-width="2"/>` : `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#ada3da"/>`).join('')}
   `;
-  const step = Math.max(1, Math.floor(datos.length / 7));
-  document.getElementById('diasRow').innerHTML = datos.filter((_, i) => i % step === 0 || i === datos.length-1).map(d => {
-    const date = new Date(d.fecha);
-    const label = d.esHoy ? 'Hoy' : `${date.getDate()}/${date.getMonth()+1}`;
-    return `<div class="dia-lbl ${d.esHoy?'hoy':''}">${label}</div>`;
+  document.getElementById('diasRow').innerHTML = puntos.map(p => {
+    const date = new Date(p.fecha);
+    const label = p.esHoy ? 'Hoy' : `${date.getDate()}/${date.getMonth()+1}`;
+    return `<div class="dia-lbl ${p.esHoy?'hoy':''}">${label}</div>`;
   }).join('');
   const msgEl = document.getElementById('vasMsg');
   if (conDatos.length >= 2) {
