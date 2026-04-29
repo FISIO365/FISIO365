@@ -670,11 +670,13 @@ function actualizarGrafica() {
       ctx.fill();
     }
   });
-  document.getElementById('diasRow').innerHTML = puntos.map(p => {
+  const diasHtml = puntos.map((p, i) => {
     const date = new Date(p.fecha + 'T12:00:00');
     const label = p.esHoy ? 'Hoy' : `${date.getDate()}/${date.getMonth()+1}`;
-    return `<div class="dia-lbl ${p.esHoy?'hoy':''}">${label}</div>`;
+    const style = puntos.length === 1 ? 'margin-left:auto;' : '';
+    return `<div class="dia-lbl ${p.esHoy?'hoy':''}" style="${style}">${label}</div>`;
   }).join('');
+  document.getElementById('diasRow').innerHTML = diasHtml;
   const msgEl = document.getElementById('vasMsg');
   if (conDatos.length >= 2) {
     const primero = conDatos[0].valor, ultimo = conDatos[conDatos.length-1].valor;
