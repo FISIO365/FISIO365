@@ -15,26 +15,29 @@ module.exports = async function handler(req, res) {
   }
 
   const { patientId, comentario } = body;
-  if (!patientId) return res.status(400).json({ ok: false, error: 'Falta patientId' });
+  if (!patientId || !comentario?.trim()) return res.status(400).json({ ok: false, error: 'Faltan datos' });
 
   try {
-    const getRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}?fields[]=fld5O6xTbie3JkeO8&fields[]=UltimaSession`, {
+    const getRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}`, {
       headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
     });
     const getData = await getRes.json();
     const fields = getData.fields || {};
+    const diarioActual = fields['Diario'] || '';
 
     const today = new Date().toISOString().split('T')[0];
-    const diarioActual = fields['fld5O6xTbie3JkeO8'] || fields['Diario'] || '';
     const fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-    const updateFields = { UltimaSession: today };
-
-    if (comentario?.trim()) {
-      const nuevaEntrada = `${fechaHoy} — ${comentario.trim()}`;
-      updateFields['Diario'] = diarioActual ? `${nuevaEntrada}\n${diarioActual}` : nuevaEntrada;
-    }
+    const nuevaEntrada = `${fechaHoy} — ${comentario.trim()}`;
+    const nuevoDiario = diarioActual ? `${nuevaEntrada}\n${diarioActual}` : nuevaEntrada;
 
     await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}`, {
       method: 'PATCH',
-      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': '
+      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { Diario: nuevoDiario, UltimaSession: today } })
+    });
+
+    return res.status(200).json({ ok: true });
+  } catch(e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+}
