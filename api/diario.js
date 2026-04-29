@@ -1,74 +1,75 @@
-"use strict";
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const BASE_ID = 'appbK09V4X3pPIai3';
+const PLAN_TABLE = 'tblvgE0a4gsrj4Vhp';
+const FISIOS_TABLE = 'tbl2mLUrnaKCFTs6g';
 const PACIENTES_TABLE = 'tbldBVgClS4HY2mOJ';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Parsear body manualmente si no está parseado
-  let body = req.body;
-  if (!body || typeof body === 'string') {
-    try {
-      body = JSON.parse(req.body || '{}');
-    } catch(e) {
-      body = {};
-    }
-  }
-
-  const { patientId, comentario } = body;
-  if (!patientId) return res.status(400).json({ ok: false, error: 'Falta patientId' });
+  const { patientId } = req.query;
+  if (!patientId) return res.status(400).json({ error: 'Falta patientId' });
 
   try {
-    const getRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}?fields[]=Diario&fields[]=UltimaSession&fields[]=RachaDias`, {
-      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+    const planUrl = `https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula={PacienteID}="${patientId}"&sort[0][field]=FechaAsignacion&sort[0][direction]=desc&maxRecords=1`;
+    const planRes = await fetch(planUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+    const planData = await planRes.json();
+
+    if (!planData.records?.length) return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '' });
+
+    const plan = planData.records[0].fields;
+    let ejercicios = [];
+    try { ejercicios = JSON.parse(plan['Ejercicios'] || '[]'); } catch(e) { ejercicios = []; }
+
+    ejercicios = ejercicios.map((ej, i) => {
+      const ytUrl = ej.youtubeUrl || '';
+      const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/|shorts\/)([^&\s?]+)/);
+      return {
+        id: `ej_${i}`,
+        name: ej.nombre || '',
+        zona: ej.zona || '',
+        series: parseInt(ej.series) || 0,
+        reps: parseInt(ej.reps) || 0,
+        dur: parseInt(ej.duracion) || 0,
+        descanso: parseInt(ej.descanso) || 0,
+        desc: ej.descripcion || '',
+        ytId: ytMatch ? ytMatch[1] : '',
+        imagen: ej.imagen || '',
+      };
     });
-    const getData = await getRes.json();
-    const fields = getData.fields || {};
 
-    const today = new Date().toISOString().split('T')[0];
-    const ultimaSession = fields['UltimaSession'] || '';
-    const rachaActual = parseInt(fields['RachaDias']) || 0;
-
-    let nuevaRacha = 1;
-    if (ultimaSession) {
-      if (ultimaSession === today) {
-        nuevaRacha = rachaActual;
-      } else {
-        const [ay, am, ad] = ultimaSession.split('-').map(Number);
-        const [by, bm, bd] = today.split('-').map(Number);
-        const dateA = new Date(ay, am-1, ad);
-        const dateB = new Date(by, bm-1, bd);
-        const diffDias = Math.round((dateB - dateA) / (1000 * 60 * 60 * 24));
-        if (diffDias === 1) nuevaRacha = rachaActual + 1;
-        else nuevaRacha = 1;
+    let fisio = null;
+    const fisioId = plan['FisioID'];
+    if (fisioId) {
+      const fisioRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}/${fisioId}`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      if (fisioRes.ok) {
+        const fd = await fisioRes.json();
+        fisio = {
+          nombre: fd.fields['Name'] || '',
+          colegiado: fd.fields['NºColegiado'] || '',
+          foto: fd.fields['Foto']?.[0]?.url || ''
+        };
       }
     }
 
-    const diarioActual = fields['Diario'] || '';
-    const fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    // Obtener ultimaSession y racha del paciente
+    let ultimaSession = '';
+    let rachaDias = 0;
+    try {
+      const pacRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}?fields[]=UltimaSession&fields[]=RachaDias`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      const pacData = await pacRes.json();
+      ultimaSession = pacData.fields?.['UltimaSession'] || '';
+      rachaDias = parseInt(pacData.fields?.['RachaDias']) || 0;
+    } catch(e) {}
 
-    const updateFields = {
-      UltimaSession: today,
-      RachaDias: nuevaRacha
-    };
-
-    if (comentario?.trim()) {
-      const nuevaEntrada = `${fechaHoy} — ${comentario.trim()}`;
-      updateFields['Diario'] = diarioActual ? `${nuevaEntrada}\n${diarioActual}` : nuevaEntrada;
-    }
-
-    await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}`, {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: updateFields })
-    });
-
-    return res.status(200).json({ ok: true, racha: nuevaRacha });
+    return res.status(200).json({ ejercicios, fisio, mensajeFisio: plan['MensajeFisio'] || '', ultimaSession, rachaDias });
   } catch(e) {
-    return res.status(500).json({ ok: false, error: e.message });
+    return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '' });
   }
 }
