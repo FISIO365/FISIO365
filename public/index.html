@@ -194,7 +194,10 @@ textarea:focus { border-color: var(--black); }
 <div id="appScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">FISIO365</div>
-    <div class="topbar-name" id="topbarName"></div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="topbar-name" id="topbarName"></div>
+      <button onclick="cerrarSesion()" style="background:none;border:1px solid rgba(245,242,238,0.3);color:rgba(245,242,238,0.7);font-family:var(--font);font-size:11px;padding:5px 10px;border-radius:99px;cursor:pointer;">Salir</button>
+    </div>
   </div>
   <div class="container">
 
@@ -377,6 +380,19 @@ let patient = null, ejercicios = [], hechos = new Set(), mensajeFisio = '';
 let vasSeleccionado = null, vasRegistros = [], vasPeriodo = 7;
 const TODAY = new Date().toISOString().split('T')[0];
 
+// Comprobar sesión guardada al cargar
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('fisio365_patient');
+  if (saved) {
+    try {
+      patient = JSON.parse(saved);
+      initApp();
+    } catch(e) {
+      localStorage.removeItem('fisio365_patient');
+    }
+  }
+});
+
 // PIN inputs
 const pids = ['p1','p2','p3','p4'];
 pids.forEach((id, i) => {
@@ -398,7 +414,11 @@ async function doLogin() {
   try {
     const res = await fetch(`/api/login?email=${encodeURIComponent(email)}&pin=${pin}`);
     const data = await res.json();
-    if (data.ok) { patient = data.patient; initApp(); }
+    if (data.ok) { 
+      patient = data.patient; 
+      localStorage.setItem('fisio365_patient', JSON.stringify(data.patient));
+      initApp(); 
+    }
     else errEl.textContent = data.error || 'Error al entrar';
   } catch(e) { errEl.textContent = 'Error de conexión'; }
   btn.disabled = false; btn.textContent = 'Entrar';
@@ -727,6 +747,17 @@ function showInstOS(os) {
   document.getElementById('btnInstAndroid').style.background = os === 'android' ? '#000' : 'none';
   document.getElementById('btnInstAndroid').style.color = os === 'android' ? 'white' : '#888';
   document.getElementById('btnInstAndroid').style.borderColor = os === 'android' ? '#000' : '#ddd';
+}
+
+function cerrarSesion() {
+  localStorage.removeItem('fisio365_patient');
+  patient = null;
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('bottomNav').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('emailInput').value = '';
+  ['p1','p2','p3','p4'].forEach(id => document.getElementById(id).value = '');
+  window.scrollTo(0, 0);
 }
 
 function toast(msg, ok=true) {
