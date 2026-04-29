@@ -2,15 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>FISIO365</title>
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icono.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="FISIO365">
 <meta name="theme-color" content="#000000">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icono.png">
+<title>FISIO365</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -23,6 +22,7 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 .screen { display: none; }
 .screen.active { display: block; min-height: 100vh; }
 
+/* LOGIN */
 #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem 1.5rem; background: #000; }
 .logo-wrap { text-align: center; margin-bottom: 3rem; }
 .logo-text { font-size: 52px; font-weight: 800; color: var(--cream); letter-spacing: -2px; }
@@ -30,46 +30,48 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 .login-title { font-size: 16px; font-weight: 600; color: var(--cream); margin-bottom: 4px; }
 .login-desc { font-size: 12px; color: rgba(245,242,238,0.6); margin-bottom: 28px; line-height: 1.6; }
 .lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.7); display: block; margin-bottom: 8px; }
-.inp { width: 100%; font-family: var(--font); font-size: 15px; border: 1.5px solid rgba(245,242,238,0.3); border-radius: var(--r-sm); padding: 13px 14px; background: rgba(245,242,238,0.06); color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color 0.15s; }
+.inp { width: 100%; font-family: var(--font); font-size: 16px; border: 1.5px solid rgba(245,242,238,0.3); border-radius: var(--r-sm); padding: 13px 14px; background: rgba(245,242,238,0.06); color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color 0.15s; }
 .inp::placeholder { color: rgba(245,242,238,0.35); }
 .inp:focus { border-color: var(--cream); }
 .pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 28px; }
 .pin-d { width: 58px; height: 62px; font-family: var(--font); font-weight: 700; font-size: 26px; text-align: center; border: 1.5px solid rgba(245,242,238,0.3); border-radius: 12px; background: rgba(245,242,238,0.06); color: var(--cream); outline: none; transition: border-color 0.15s; }
 .pin-d:focus { border-color: var(--cream); }
-.btn-primary { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 700; padding: 15px; background: var(--cream); color: var(--black); border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; margin-bottom: 12px; }
-.btn-primary:hover { opacity: 0.9; }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-install { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 600; padding: 15px; background: transparent; color: var(--cream); border: 1.5px solid rgba(245,242,238,0.4); border-radius: var(--r-sm); cursor: pointer; transition: border-color 0.2s; }
-.btn-install:hover { border-color: var(--cream); }
+.btn-primary { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 700; padding: 15px; background: var(--cream); color: var(--black); border: none; border-radius: var(--r-sm); cursor: pointer; margin-bottom: 12px; }
+.btn-install { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 600; padding: 15px; background: transparent; color: var(--cream); border: 1.5px solid rgba(245,242,238,0.4); border-radius: var(--r-sm); cursor: pointer; }
 .login-err { font-size: 12px; color: #ff6b6b; text-align: center; margin-top: 12px; min-height: 18px; }
 
-#appScreen { padding-bottom: 120px; background: var(--cream); }
+/* APP */
+#appScreen { padding-bottom: 80px; background: var(--cream); }
 .topbar { position: sticky; top: 0; z-index: 50; background: var(--black); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
 .topbar-logo { font-size: 20px; font-weight: 800; color: var(--cream); letter-spacing: -0.5px; }
 .topbar-name { font-size: 12px; color: rgba(245,242,238,0.5); }
-.container { padding: 16px; max-width: 600px; margin: 0 auto; min-height: 50vh; }
+.container { padding: 16px; max-width: 600px; margin: 0 auto; }
 
+/* FISIO CARD */
 .fisio-card { background: var(--black); border: 1.5px solid rgba(245,242,238,0.15); border-radius: var(--r); padding: 14px 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .fisio-av { width: 44px; height: 44px; border-radius: 50%; background: rgba(245,242,238,0.1); border: 1.5px solid rgba(245,242,238,0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--cream); flex-shrink: 0; overflow: hidden; }
 .fisio-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .fisio-nombre { font-size: 13px; font-weight: 600; color: var(--cream); }
 .fisio-col { font-size: 11px; color: rgba(245,242,238,0.5); margin-top: 2px; }
+.mensaje-fisio { background: var(--black); border-radius: var(--r); padding: 14px 18px; margin-bottom: 16px; display: none; }
+.mensaje-fisio-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.4); margin-bottom: 6px; }
+.mensaje-fisio-texto { font-size: 14px; color: var(--cream); line-height: 1.6; font-style: italic; }
 
 .date-h { margin-bottom: 16px; padding-top: 4px; }
 .date-today { font-size: 24px; font-weight: 700; color: var(--black); }
 .date-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
+/* EJERCICIOS */
 .prog-wrap { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px; }
 .prog-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .prog-lbl { font-size: 12px; color: var(--muted); }
 .prog-cnt { font-size: 13px; font-weight: 700; color: var(--lila); }
 .prog-bg { height: 6px; background: var(--lila-light); border-radius: 99px; overflow: hidden; }
 .prog-bar { height: 100%; background: var(--lila); border-radius: 99px; transition: width 0.5s ease; }
-
 .ej-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); margin-bottom: 16px; overflow: hidden; transition: border-color 0.2s; }
 .ej-card.done { border-color: var(--lila); }
 .ej-header { display: flex; align-items: flex-start; gap: 14px; padding: 18px 16px 14px; cursor: pointer; }
-.ej-chk { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid var(--border); background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.ej-chk { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid var(--border); background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; margin-top: 2px; }
 .ej-chk.on { background: var(--lila); border-color: var(--lila); }
 .ej-chk svg { display: none; }
 .ej-chk.on svg { display: block; }
@@ -80,35 +82,40 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 .pill { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: var(--lila-light); color: var(--lila); }
 .ej-expand { padding: 0 16px 18px; display: none; }
 .ej-expand.open { display: block; }
-.ej-desc { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
 .ej-video { border-radius: var(--r-sm); overflow: hidden; margin-bottom: 12px; }
 .ej-video iframe { width: 100%; height: 200px; border: none; display: block; }
 .btn-done { width: 100%; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 11px; border: 1.5px solid var(--border); border-radius: var(--r-sm); background: none; color: var(--muted); cursor: pointer; transition: all 0.2s; }
-.btn-done:hover { border-color: var(--lila); color: var(--lila); }
 .btn-done.on { background: var(--lila-light); border-color: var(--lila); color: var(--lila); }
-
-.empty { text-align: center; padding: 3rem 1rem; }
-.empty-icon { font-size: 48px; margin-bottom: 12px; }
-.empty-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-.empty-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
-
 .sec-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; margin-top: 8px; }
 .diario-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
-textarea { width: 100%; font-family: var(--font); font-size: 13px; color: var(--black); background: var(--cream); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px; resize: none; outline: none; min-height: 90px; line-height: 1.6; transition: border-color 0.15s; margin-bottom: 10px; }
-textarea::placeholder { color: var(--muted); }
+textarea { width: 100%; font-family: var(--font); font-size: 16px; color: var(--black); background: var(--cream); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 12px; resize: none; outline: none; min-height: 90px; line-height: 1.6; transition: border-color 0.15s; margin-bottom: 10px; }
 textarea:focus { border-color: var(--black); }
-.vas-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 14px; }
+.btn-diario { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 700; padding: 14px; background: var(--black); color: var(--cream); border: none; border-radius: var(--r-sm); cursor: pointer; margin-top: 4px; }
+.btn-diario:disabled { opacity: 0.4; }
+
+/* COMPLETADO */
+.completado-wrap { text-align: center; padding: 3rem 1rem; }
+.completado-emoji { font-size: 64px; margin-bottom: 16px; }
+.completado-titulo { font-size: 24px; font-weight: 800; color: var(--black); margin-bottom: 8px; }
+.completado-sub { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+.completado-card { background: var(--lila-light); border: 1.5px solid var(--lila); border-radius: var(--r); padding: 16px; }
+.completado-card p { font-size: 13px; color: var(--lila); font-weight: 500; line-height: 1.6; }
+
+/* VAS */
+.vas-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
 .vas-question { font-size: 14px; font-weight: 600; color: var(--black); margin-bottom: 16px; }
-.vas-track { height: 8px; border-radius: 99px; background: linear-gradient(90deg, #7EE8A2 0%, #FFD166 50%, #EF476F 100%); margin-bottom: 10px; }
-.vas-nums { display: flex; justify-content: space-between; margin-bottom: 6px; }
-.vas-num { font-size: 12px; color: #bbb; font-weight: 500; cursor: pointer; width: 24px; text-align: center; padding: 5px 0; border-radius: 6px; transition: all 0.15s; }
+.vas-track { height: 8px; border-radius: 99px; background: linear-gradient(90deg, #7EE8A2 0%, #FFD166 50%, #EF476F 100%); margin-bottom: 12px; }
+.vas-nums { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.vas-num { font-size: 12px; color: #bbb; font-weight: 500; cursor: pointer; width: 26px; text-align: center; padding: 6px 0; border-radius: 8px; transition: all 0.15s; }
 .vas-num.on { color: white; background: var(--lila); font-weight: 700; }
-.vas-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
-.grafica-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 14px; }
+.vas-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+.btn-vas { width: 100%; font-family: var(--font); font-size: 14px; font-weight: 700; padding: 13px; background: var(--black); color: var(--cream); border: none; border-radius: var(--r-sm); cursor: pointer; display: none; }
+.btn-vas:disabled { opacity: 0.4; }
+.grafica-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 16px; }
 .grafica-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
 .grafica-titulo { font-size: 13px; font-weight: 600; color: var(--black); }
 .periodos { display: flex; gap: 4px; flex-wrap: wrap; }
-.periodo { font-size: 11px; padding: 4px 10px; border-radius: 99px; border: 1.5px solid var(--border); color: var(--muted); font-weight: 500; cursor: pointer; font-family: var(--font); background: none; transition: all 0.15s; }
+.periodo { font-size: 11px; padding: 4px 10px; border-radius: 99px; border: 1.5px solid var(--border); color: var(--muted); font-weight: 500; cursor: pointer; font-family: var(--font); background: none; }
 .periodo.on { background: var(--black); color: var(--cream); border-color: var(--black); }
 .chart-area { display: flex; gap: 6px; height: 100px; }
 .eje-y { display: flex; flex-direction: column; justify-content: space-between; padding: 2px 0; }
@@ -119,71 +126,53 @@ textarea:focus { border-color: var(--black); }
 .dia-lbl.hoy { color: var(--lila); font-weight: 600; }
 .vas-msg { font-size: 12px; font-weight: 600; margin-top: 12px; text-align: center; padding: 10px 14px; border-radius: var(--r-sm); line-height: 1.5; }
 .vas-msg.bien { color: var(--lila); background: var(--lila-light); }
-.vas-msg.neutro { color: var(--muted); background: var(--cream); }
+.vas-msg.neutro { color: var(--muted); background: var(--cream); border: 1px solid var(--border); }
 .vas-msg.animo { color: #666; background: #f0f0ec; }
-.btn-diario { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 700; padding: 14px; background: var(--black); color: var(--cream); border: none; border-radius: var(--r-sm); cursor: pointer; transition: opacity 0.2s; margin-top: 4px; }
-.btn-diario:disabled { opacity: 0.4; }
-
-/* COMPLETADO */
-.completado-wrap { text-align: center; padding: 3rem 1rem; }
-.completado-emoji { font-size: 64px; margin-bottom: 16px; animation: bounce 0.6s ease; }
-.completado-titulo { font-size: 24px; font-weight: 800; color: var(--black); margin-bottom: 8px; }
-.completado-sub { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
-.completado-card { background: var(--lila-light); border: 1.5px solid var(--lila); border-radius: var(--r); padding: 16px; }
-.mensaje-fisio { background: var(--black); border-radius: var(--r); padding: 16px 18px; margin-bottom: 16px; display: none; }
-.mensaje-fisio-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.4); margin-bottom: 6px; }
-.mensaje-fisio-texto { font-size: 14px; color: var(--cream); line-height: 1.6; font-style: italic; }
-.mensaje-fisio { background: var(--black); border-radius: var(--r); padding: 16px 18px; margin-bottom: 16px; display: none; }
-.mensaje-fisio-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,242,238,0.4); margin-bottom: 6px; }
-.mensaje-fisio-texto { font-size: 14px; color: var(--cream); line-height: 1.6; font-style: italic; }
-.completado-card p { font-size: 13px; color: var(--lila); font-weight: 500; }
-@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-
-.popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; justify-content: center; padding: 0; }
-.popup-card { background: white; border-radius: 24px 24px 0 0; padding: 28px 24px 40px; width: 100%; max-width: 500px; }
-.popup-titulo { font-size: 20px; font-weight: 800; color: var(--black); margin-bottom: 6px; }
-.popup-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
-.popup-paso { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
-.popup-num { width: 28px; height: 28px; border-radius: 50%; background: var(--black); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
-.popup-txt { font-size: 14px; color: var(--black); line-height: 1.5; }
-.popup-txt strong { font-weight: 700; }
-.popup-btn { width: 100%; font-family: var(--font); font-size: 15px; font-weight: 700; padding: 14px; background: var(--black); color: var(--cream); border: none; border-radius: var(--r-sm); cursor: pointer; margin-top: 8px; }
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1.5px solid var(--border); display: flex; z-index: 100; max-width: 600px; margin: 0 auto; }
-.nav-btn { flex: 1; padding: 12px 8px 16px; border: none; background: none; cursor: pointer; font-family: var(--font); display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); transition: color 0.15s; }
-.nav-btn.active { color: var(--black); }
-.nav-btn .nav-icon { font-size: 22px; }
-.nav-btn .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 
 /* GUIA */
 .guia-section { padding: 20px 0 40px; }
-.guia-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 24px; margin-bottom: 20px; display: block; width: 100%; }
+.guia-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 24px; margin-bottom: 20px; }
 .guia-titulo { font-size: 17px; font-weight: 700; margin-bottom: 20px; color: var(--black); }
+.guia-os { display: flex; gap: 8px; margin-bottom: 20px; }
+.guia-os-btn { flex: 1; padding: 10px; border: 1.5px solid var(--border); border-radius: var(--r-sm); background: none; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; }
+.guia-os-btn.active { background: var(--black); color: var(--cream); border-color: var(--black); }
 .guia-paso { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
 .guia-num { width: 28px; height: 28px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
 .guia-txt { font-size: 14px; color: var(--black); line-height: 1.7; }
 .guia-txt strong { font-weight: 700; }
-.guia-os { display: flex; gap: 8px; margin-bottom: 20px; }
-.guia-os-btn { flex: 1; padding: 10px; border: 1.5px solid var(--border); border-radius: var(--r-sm); background: none; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-.guia-os-btn.active { background: var(--black); color: var(--cream); border-color: var(--black); }
 .guia-feature { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 22px; }
 .guia-feature-icon { font-size: 28px; flex-shrink: 0; }
 .guia-feature-titulo { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
 .guia-feature-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 22px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; display: none; z-index: 999; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+/* BOTTOM NAV */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1.5px solid var(--border); display: none; z-index: 100; }
+.bottom-nav-inner { display: flex; max-width: 600px; margin: 0 auto; }
+.nav-btn { flex: 1; padding: 10px 8px 14px; border: none; background: none; cursor: pointer; font-family: var(--font); display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); transition: color 0.15s; }
+.nav-btn.active { color: var(--black); }
+.nav-icon { font-size: 20px; }
+.nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+
+/* POPUP */
+.popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; display: flex; align-items: flex-end; justify-content: center; }
+.popup-card { background: white; border-radius: 24px 24px 0 0; padding: 28px 24px 48px; width: 100%; max-width: 500px; }
+
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); padding: 12px 22px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; display: none; z-index: 999; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
 .toast.ok { background: var(--black); color: var(--cream); }
 .toast.err { background: #c0392b; color: white; }
 .loading { display: flex; align-items: center; justify-content: center; padding: 3rem; }
 .spinner { width: 32px; height: 32px; border: 3px solid var(--lila-light); border-top-color: var(--lila); border-radius: 50%; animation: spin 0.7s linear infinite; }
+.empty { text-align: center; padding: 3rem 1rem; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.empty-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
 <div id="loginScreen" class="screen active">
-  <div class="logo-wrap">
-    <div class="logo-text">FISIO365</div>
-  </div>
+  <div class="logo-wrap"><div class="logo-text">FISIO365</div></div>
   <div class="login-card">
     <div class="login-title">Bienvenido</div>
     <div class="login-desc">Introduce tu email y el PIN que te ha dado tu fisioterapeuta</div>
@@ -197,10 +186,8 @@ textarea:focus { border-color: var(--black); }
       <input class="pin-d" type="tel" id="p4" maxlength="1" />
     </div>
     <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
+    <button class="btn-install" onclick="mostrarInstall()">¿Cómo instalo la app? 📱</button>
     <div class="login-err" id="loginErr"></div>
-    <div style="margin-top:20px;">
-      <button onclick="mostrarInstall()" style="width:100%;background:none;border:1.5px solid rgba(245,242,238,0.3);border-radius:var(--r-sm);color:rgba(245,242,238,0.9);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;padding:12px;">📱 ¿Cómo instalo la app?</button>
-    </div>
   </div>
 </div>
 
@@ -220,7 +207,7 @@ textarea:focus { border-color: var(--black); }
           <div class="fisio-col" id="fisioColegiado"></div>
         </div>
       </div>
-      <div id="mensajeFisioCard" class="mensaje-fisio" style="display:none;">
+      <div id="mensajeFisioCard" class="mensaje-fisio">
         <div class="mensaje-fisio-label">Mensaje de tu fisio 💬</div>
         <div class="mensaje-fisio-texto" id="mensajeFisioTexto"></div>
       </div>
@@ -234,34 +221,7 @@ textarea:focus { border-color: var(--black); }
           <div class="prog-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
         </div>
         <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
-        <div id="vasSection" style="display:none;">
-        <div class="sec-title">Escala de dolor</div>
-        <div class="vas-card">
-          <div class="vas-question">¿Cuánto dolor tienes hoy?</div>
-          <div class="vas-track"></div>
-          <div class="vas-nums" id="vasNums"></div>
-          <div class="vas-labels"><span>Sin dolor</span><span>Dolor máximo</span></div>
-        </div>
-        <div class="grafica-card" id="graficaCard" style="display:none;">
-          <div class="grafica-header">
-            <div class="grafica-titulo">Evolución del dolor</div>
-            <div class="periodos" id="periodos">
-              <button class="periodo on" onclick="cambiarPeriodo(7,this)">7d</button>
-              <button class="periodo" onclick="cambiarPeriodo(15,this)">15d</button>
-              <button class="periodo" onclick="cambiarPeriodo(30,this)">30d</button>
-              <button class="periodo" onclick="cambiarPeriodo(60,this)">60d</button>
-              <button class="periodo" onclick="cambiarPeriodo(90,this)">90d</button>
-            </div>
-          </div>
-          <div class="chart-area">
-            <div class="eje-y"><span>10</span><span>5</span><span>0</span></div>
-            <svg class="chart-svg" id="chartSvg" viewBox="0 0 250 100" preserveAspectRatio="none"></svg>
-          </div>
-          <div class="dias-row" id="diasRow"></div>
-          <div class="vas-msg" id="vasMsg" style="display:none;"></div>
-        </div>
-      </div>
-      <div id="diarioSection" style="display:none;">
+        <div id="diarioSection" style="display:none;">
           <div class="sec-title">Seguimiento diario</div>
           <div class="diario-card">
             <textarea id="diarioTxt" placeholder="Anota tus avances y sensaciones..."></textarea>
@@ -271,13 +231,46 @@ textarea:focus { border-color: var(--black); }
       </div>
       <div id="vistaCompletado" style="display:none;">
         <div class="completado-wrap">
-          <div class="completado-emoji" id="completadoEmoji">🎉</div>
-          <div class="completado-titulo" id="completadoTitulo">¡Sesión completada!</div>
-          <div class="completado-sub" id="completadoSub">Has terminado tu programa de hoy.<br>¡Sigue así, lo estás haciendo genial!</div>
+          <div class="completado-emoji">🎉</div>
+          <div class="completado-titulo">¡Sesión completada!</div>
+          <div class="completado-sub">Has terminado tu programa de hoy.<br>¡Sigue así, lo estás haciendo genial!</div>
           <div class="completado-card">
-            <p id="completadoRacha">💪 Vuelve mañana para continuar con tu recuperación</p>
+            <p>💪 Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana y sigue sumando!</p>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- VISTA PROGRESO -->
+    <div id="vistaProgreso" style="display:none;">
+      <div class="date-h" style="margin-top:4px;">
+        <div class="date-today" style="font-size:20px;">Mi progreso</div>
+        <div class="date-sub">Evolución de tu dolor</div>
+      </div>
+      <div class="vas-card">
+        <div class="vas-question">¿Cuánto dolor tienes hoy?</div>
+        <div class="vas-track"></div>
+        <div class="vas-nums" id="vasNums"></div>
+        <div class="vas-labels"><span>Sin dolor</span><span>Dolor máximo</span></div>
+        <button class="btn-vas" id="btnVas" onclick="guardarVAS()">Guardar</button>
+      </div>
+      <div class="grafica-card" id="graficaCard" style="display:none;">
+        <div class="grafica-header">
+          <div class="grafica-titulo">Evolución del dolor</div>
+          <div class="periodos">
+            <button class="periodo on" onclick="cambiarPeriodo(7,this)">7d</button>
+            <button class="periodo" onclick="cambiarPeriodo(15,this)">15d</button>
+            <button class="periodo" onclick="cambiarPeriodo(30,this)">30d</button>
+            <button class="periodo" onclick="cambiarPeriodo(60,this)">60d</button>
+            <button class="periodo" onclick="cambiarPeriodo(90,this)">90d</button>
+          </div>
+        </div>
+        <div class="chart-area">
+          <div class="eje-y"><span>10</span><span>5</span><span>0</span></div>
+          <svg class="chart-svg" id="chartSvg" viewBox="0 0 250 100" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="dias-row" id="diasRow"></div>
+        <div class="vas-msg" id="vasMsg" style="display:none;"></div>
       </div>
     </div>
 
@@ -309,31 +302,19 @@ textarea:focus { border-color: var(--black); }
           <div class="guia-titulo">✨ Cómo funciona la app</div>
           <div class="guia-feature">
             <div class="guia-feature-icon">🏋️</div>
-            <div>
-              <div class="guia-feature-titulo">Tu programa del día</div>
-              <div class="guia-feature-desc">Tu fisio te asigna ejercicios personalizados. Cada día verás tu programa con series, repeticiones y vídeos explicativos.</div>
-            </div>
+            <div><div class="guia-feature-titulo">Tu programa del día</div><div class="guia-feature-desc">Tu fisio te asigna ejercicios personalizados con series, repeticiones y vídeos.</div></div>
           </div>
           <div class="guia-feature">
             <div class="guia-feature-icon">✅</div>
-            <div>
-              <div class="guia-feature-titulo">Marca los ejercicios</div>
-              <div class="guia-feature-desc">Pulsa el círculo de cada ejercicio para marcarlo como hecho. Cuando termines, pulsa "Tarea hecha ✓".</div>
-            </div>
+            <div><div class="guia-feature-titulo">Marca los ejercicios</div><div class="guia-feature-desc">Pulsa el círculo de cada ejercicio para marcarlo. Cuando termines pulsa "Tarea hecha ✓".</div></div>
           </div>
           <div class="guia-feature">
             <div class="guia-feature-icon">📝</div>
-            <div>
-              <div class="guia-feature-titulo">Tu informe diario</div>
-              <div class="guia-feature-desc">Escríbele a tu fisio cómo te has encontrado. Cualquier mejora o sensación que notes le ayuda a adaptar tu tratamiento.</div>
-            </div>
+            <div><div class="guia-feature-titulo">Seguimiento diario</div><div class="guia-feature-desc">Escríbele a tu fisio cómo te has encontrado. Le ayuda a adaptar tu tratamiento.</div></div>
           </div>
           <div class="guia-feature">
-            <div class="guia-feature-icon">🔥</div>
-            <div>
-              <div class="guia-feature-titulo">Racha de días</div>
-              <div class="guia-feature-desc">Cada día que completas tu programa suma a tu racha. ¡Intenta no romperla!</div>
-            </div>
+            <div class="guia-feature-icon">📈</div>
+            <div><div class="guia-feature-titulo">Mi progreso</div><div class="guia-feature-desc">Registra tu nivel de dolor cada día y ve cómo evoluciona en la gráfica.</div></div>
           </div>
         </div>
       </div>
@@ -342,24 +323,24 @@ textarea:focus { border-color: var(--black); }
   </div>
 </div>
 
-<div id="popupInstall" class="popup-overlay" style="display:none;">
-  <div class="popup-card">
-    <div class="popup-titulo">📱 Instala la app</div>
-    <div class="popup-sub">Añade FISIO365 a tu pantalla de inicio para acceder más fácil</div>
-    <div id="popupPasos"></div>
-    <button class="popup-btn" onclick="cerrarPopup()">¡Entendido!</button>
+<div class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-inner">
+    <button class="nav-btn active" id="navHoy" onclick="showSection('hoy')">
+      <span class="nav-icon">🏋️</span>
+      <span class="nav-label">Mi programa</span>
+    </button>
+    <button class="nav-btn" id="navProgreso" onclick="showSection('progreso')">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label">Mi progreso</span>
+    </button>
+    <button class="nav-btn" id="navGuia" onclick="showSection('guia')">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Guía</span>
+    </button>
   </div>
 </div>
-<nav class="bottom-nav" id="bottomNav" style="display:none;" id="bottomNav" style="display:none;" style="left:50%;transform:translateX(-50%);right:auto;width:100%;">
-  <button class="nav-btn active" id="navHoy" onclick="showSection('hoy')">
-    <span class="nav-icon">🏋️</span>
-    <span class="nav-label">Mi programa</span>
-  </button>
-  <button class="nav-btn" id="navGuia" onclick="showSection('guia')">
-    <span class="nav-icon">📋</span>
-    <span class="nav-label">Guía</span>
-  </button>
-</nav>
+
+<!-- POPUP INSTALACION -->
 <div id="installPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;align-items:flex-end;justify-content:center;">
   <div style="background:white;border-radius:24px 24px 0 0;padding:28px 24px 48px;width:100%;max-width:500px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -371,26 +352,28 @@ textarea:focus { border-color: var(--black); }
       <button id="btnInstAndroid" onclick="showInstOS('android')" style="flex:1;padding:10px;border:1.5px solid #ddd;border-radius:8px;background:none;color:#888;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Android</button>
     </div>
     <div id="instPasosIOS">
-      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div><div style="font-size:14px;line-height:1.6">Abre esta página en <strong>Safari</strong> (el navegador de Apple, no Chrome)</div></div>
-      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div><div style="font-size:14px;line-height:1.6">Toca el botón <strong>Compartir ↑</strong> que hay abajo en el centro de la pantalla</div></div>
-      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div><div style="font-size:14px;line-height:1.6">Busca y toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
-      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono en tu pantalla 🎉</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div><div style="font-size:14px;line-height:1.6">Abre esta página en <strong>Safari</strong></div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div><div style="font-size:14px;line-height:1.6">Toca el botón <strong>Compartir ↑</strong> abajo en el centro</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono 🎉</div></div>
     </div>
     <div id="instPasosAndroid" style="display:none;">
       <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div><div style="font-size:14px;line-height:1.6">Abre esta página en <strong>Chrome</strong></div></div>
       <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div><div style="font-size:14px;line-height:1.6">Toca los <strong>3 puntos ⋮</strong> arriba a la derecha</div></div>
       <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
-      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono en tu pantalla 🎉</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono 🎉</div></div>
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-let patient = null, ejercicios = [], hechos = new Set(), mensajeFisio = "";
+let patient = null, ejercicios = [], hechos = new Set(), mensajeFisio = '';
+let vasSeleccionado = null, vasRegistros = [], vasPeriodo = 7;
 const TODAY = new Date().toISOString().split('T')[0];
-const COMPLETADO_KEY = () => `completado_${patient.id}_${TODAY}`;
 
+// PIN inputs
 const pids = ['p1','p2','p3','p4'];
 pids.forEach((id, i) => {
   const el = document.getElementById(id);
@@ -421,25 +404,28 @@ function initApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appScreen').style.display = 'block';
   document.getElementById('appScreen').style.opacity = '0';
+  document.getElementById('bottomNav').style.display = 'block';
   window.scrollTo({top: 0, behavior: 'instant'});
   document.documentElement.scrollTop = 0;
   document.body.scrollTop = 0;
   setTimeout(() => { document.getElementById('appScreen').style.opacity = '1'; }, 10);
   document.getElementById('topbarName').textContent = patient.nombre.split(' ')[0];
-  document.getElementById('bottomNav').style.display = 'flex';
-  document.getElementById('bottomNav').style.display = 'flex';
   const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const hoy = new Date();
   document.getElementById('dateToday').textContent = `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
-
   loadEjercicios();
-  setTimeout(mostrarPopupInstall, 2000);
 }
 
-function mostrarCompletado() {
-  document.getElementById('vistaEjercicios').style.display = 'none';
-  document.getElementById('vistaCompletado').style.display = 'block';
+function showSection(section) {
+  document.getElementById('vistaHoy').style.display = section === 'hoy' ? 'block' : 'none';
+  document.getElementById('vistaProgreso').style.display = section === 'progreso' ? 'block' : 'none';
+  document.getElementById('vistaGuia').style.display = section === 'guia' ? 'block' : 'none';
+  document.getElementById('navHoy').classList.toggle('active', section === 'hoy');
+  document.getElementById('navProgreso').classList.toggle('active', section === 'progreso');
+  document.getElementById('navGuia').classList.toggle('active', section === 'guia');
+  if (section === 'progreso') initVAS();
+  window.scrollTo(0, 0);
 }
 
 async function loadEjercicios() {
@@ -461,13 +447,11 @@ async function loadEjercicios() {
       document.getElementById('mensajeFisioTexto').textContent = mensajeFisio;
       document.getElementById('mensajeFisioCard').style.display = 'block';
     }
-    // Comprobar si ya completó hoy usando Airtable
+    // Comprobar si ya completó hoy
     if (data.ultimaSession === TODAY) {
-      actualizarMensajeRacha(data.rachaDias || 1);
       mostrarCompletado();
       return;
     }
-
     const localKey = `hechos_${patient.id}_${TODAY}`;
     const local = localStorage.getItem(localKey);
     hechos = new Set(local ? JSON.parse(local) : []);
@@ -477,6 +461,11 @@ async function loadEjercicios() {
   }
 }
 
+function mostrarCompletado() {
+  document.getElementById('vistaEjercicios').style.display = 'none';
+  document.getElementById('vistaCompletado').style.display = 'block';
+}
+
 function renderEjercicios() {
   const lista = document.getElementById('ejList');
   if (!ejercicios.length) {
@@ -484,9 +473,7 @@ function renderEjercicios() {
     return;
   }
   document.getElementById('progWrap').style.display = 'block';
-  document.getElementById('vasSection').style.display = 'block';
   document.getElementById('diarioSection').style.display = 'block';
-  initVAS();
   updateProg();
   lista.innerHTML = ejercicios.map((ej, i) => {
     const done = hechos.has(ej.id);
@@ -502,10 +489,9 @@ function renderEjercicios() {
           ${ej.desc?`<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px;">${ej.desc}</div>`:''}
           <div class="ej-pills">${pills.map(p=>`<span class="pill">${p}</span>`).join('')}</div>
         </div>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:#888;transition:transform 0.2s" id="ar${i}"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:#888;transition:transform 0.2s;margin-top:4px" id="ar${i}"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <div class="ej-expand" id="ex${i}">
-
         ${ej.imagen?`<img src="${ej.imagen}" alt="${ej.name}" style="width:100%;border-radius:var(--r-sm);display:block;margin-bottom:12px">`:''}
         ${ej.ytId?`<div class="ej-video"><iframe src="https://www.youtube.com/embed/${ej.ytId}" allowfullscreen loading="lazy"></iframe></div>`:''}
         <button class="btn-done ${done?'on':''}" id="bd${i}" onclick="toggleHecho(${i})">${done?'✓ Completado':'Marcar como hecho'}</button>
@@ -530,7 +516,6 @@ async function toggleHecho(i) {
   document.getElementById(`bd${i}`).classList.toggle('on', done);
   document.getElementById(`bd${i}`).textContent = done ? '✓ Completado' : 'Marcar como hecho';
   updateProg();
-  try { await fetch('/api/done', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, ejercicioId: ej.id, fecha: TODAY, hecho: done }) }); } catch(e) {}
 }
 
 function updateProg() {
@@ -543,137 +528,31 @@ async function tareaHecha() {
   const texto = document.getElementById('diarioTxt').value.trim();
   const btn = document.getElementById('btnDiario');
   btn.disabled = true; btn.textContent = 'Guardando...';
-
   try {
-    // Guardar diario y actualizar racha
-    const diarioRes = await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: texto }) });
-    const diarioData = await diarioRes.json();
-    const racha = diarioData.racha || 1;
-
-    // Marcar todos los ejercicios como hechos
-    for (let i = 0; i < ejercicios.length; i++) {
-      const ej = ejercicios[i];
-      if (!hechos.has(ej.id)) {
-        hechos.add(ej.id);
-        await fetch('/api/done', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, ejercicioId: ej.id, fecha: TODAY, hecho: true }) });
-      }
-    }
-    localStorage.setItem(`hechos_${patient.id}_${TODAY}`, JSON.stringify([...hechos]));
-
-    // Guardar que completó hoy
-    localStorage.setItem(COMPLETADO_KEY(), '1');
-
-    // Mostrar pantalla de completado
-    actualizarMensajeRacha(racha);
+    await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: texto }) });
+    localStorage.setItem(`hechos_${patient.id}_${TODAY}`, JSON.stringify([...ejercicios.map(e=>e.id)]));
     mostrarCompletado();
-
   } catch(e) {
     toast('Error al guardar', false);
     btn.disabled = false; btn.textContent = 'Tarea hecha ✓';
   }
 }
 
-function actualizarMensajeRacha(racha) {
-  const mensajes = {
-    emoji: racha >= 30 ? '🎖️' : racha >= 10 ? '🏆' : racha >= 5 ? '🔥' : racha >= 2 ? '💪' : '🌱',
-    titulo: '¡Sesión completada!',
-    sub: racha === 1 
-      ? 'Primer día completado. ¡El cambio empieza hoy!' 
-      : racha < 5 
-      ? `¡Llevas ${racha} días seguidos! Sigue así, lo estás haciendo genial`
-      : racha < 10
-      ? `¡${racha} días seguidos! 🔥 Estás en racha`
-      : racha < 30
-      ? `¡${racha} días seguidos! 🏆 Eres una máquina`
-      : `¡${racha} días seguidos! 🎖️ Increíble constancia`,
-    racha: racha === 1 
-      ? '💪 Vuelve mañana para continuar con tu recuperación'
-      : `🗓️ Llevas ${racha} días consecutivos completando tu programa`
-  };
-  document.getElementById('completadoEmoji').textContent = mensajes.emoji;
-  document.getElementById('completadoTitulo').textContent = mensajes.titulo;
-  document.getElementById('completadoSub').textContent = mensajes.sub;
-  document.getElementById('completadoRacha').textContent = mensajes.racha;
-}
-
-function mostrarPopupInstall() {
-  if (localStorage.getItem('installShown')) return;
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isAndroid = /Android/.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-  if (isStandalone) return; // ya está instalada
-
-  const pasos = document.getElementById('popupPasos');
-  if (isIOS) {
-    pasos.innerHTML = `
-      <div class="popup-paso"><div class="popup-num">1</div><div class="popup-txt">Toca el botón <strong>Compartir</strong> (el cuadrado con flecha ↑) en Safari</div></div>
-      <div class="popup-paso"><div class="popup-num">2</div><div class="popup-txt">Busca y toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
-      <div class="popup-paso"><div class="popup-num">3</div><div class="popup-txt">Toca <strong>"Añadir"</strong> y listo 🎉</div></div>
-    `;
-  } else if (isAndroid) {
-    pasos.innerHTML = `
-      <div class="popup-paso"><div class="popup-num">1</div><div class="popup-txt">Toca los <strong>3 puntos</strong> ⋮ arriba a la derecha en Chrome</div></div>
-      <div class="popup-paso"><div class="popup-num">2</div><div class="popup-txt">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
-      <div class="popup-paso"><div class="popup-num">3</div><div class="popup-txt">Toca <strong>"Añadir"</strong> y listo 🎉</div></div>
-    `;
-  } else {
-    return; // escritorio, no mostrar
-  }
-
-  document.getElementById('popupInstall').style.display = 'flex';
-}
-
-function cerrarPopup() {
-  localStorage.setItem('installShown', '1');
-  document.getElementById('popupInstall').style.display = 'none';
-}
-
-function showSection(section) {
-  const showHoy = section === 'hoy';
-  document.getElementById('vistaHoy').style.display = showHoy ? 'block' : 'none';
-  document.getElementById('vistaGuia').style.display = showHoy ? 'none' : 'block';
-  document.getElementById('navHoy').classList.toggle('active', showHoy);
-  document.getElementById('navGuia').classList.toggle('active', !showHoy);
-  window.scrollTo(0, 0);
-}
-
-function showOS(os) {
-  document.getElementById('pasosIOS').style.display = os === 'ios' ? 'block' : 'none';
-  document.getElementById('pasosAndroid').style.display = os === 'android' ? 'block' : 'none';
-  document.getElementById('btnIOS').classList.toggle('active', os === 'ios');
-  document.getElementById('btnAndroid').classList.toggle('active', os === 'android');
-}
-
-function mostrarInstall() {
-  document.getElementById('installPopup').style.display = 'flex';
-}
-function cerrarInstall() {
-  document.getElementById('installPopup').style.display = 'none';
-}
-function showInstOS(os) {
-  document.getElementById('instPasosIOS').style.display = os === 'ios' ? 'block' : 'none';
-  document.getElementById('instPasosAndroid').style.display = os === 'android' ? 'block' : 'none';
-  document.getElementById('btnInstIOS').style.background = os === 'ios' ? '#000' : 'none';
-  document.getElementById('btnInstIOS').style.color = os === 'ios' ? 'white' : '#888';
-  document.getElementById('btnInstIOS').style.borderColor = os === 'ios' ? '#000' : '#ddd';
-  document.getElementById('btnInstAndroid').style.background = os === 'android' ? '#000' : 'none';
-  document.getElementById('btnInstAndroid').style.color = os === 'android' ? 'white' : '#888';
-  document.getElementById('btnInstAndroid').style.borderColor = os === 'android' ? '#000' : '#ddd';
-}
-
-let vasSeleccionado = null;
-let vasRegistros = [];
-let vasPeriodo = 7;
-
+// VAS
 function initVAS() {
   const nums = document.getElementById('vasNums');
-  nums.innerHTML = '';
-  for (let i = 0; i <= 10; i++) {
-    const span = document.createElement('span');
-    span.className = 'vas-num';
-    span.textContent = i;
-    span.onclick = () => seleccionarVAS(i);
-    nums.appendChild(span);
+  if (nums.children.length === 0) {
+    for (let i = 0; i <= 10; i++) {
+      const span = document.createElement('span');
+      span.className = 'vas-num';
+      span.textContent = i;
+      span.onclick = () => {
+        vasSeleccionado = i;
+        document.querySelectorAll('.vas-num').forEach((el, idx) => el.classList.toggle('on', idx === i));
+        document.getElementById('btnVas').style.display = 'block';
+      };
+      nums.appendChild(span);
+    }
   }
   cargarDatosVAS();
 }
@@ -687,23 +566,17 @@ async function cargarDatosVAS() {
   } catch(e) {}
 }
 
-function seleccionarVAS(valor) {
-  vasSeleccionado = valor;
-  document.querySelectorAll('.vas-num').forEach((el, i) => {
-    el.classList.toggle('on', i === valor);
-  });
-  guardarVAS(valor);
-}
-
-async function guardarVAS(valor) {
+async function guardarVAS() {
+  if (vasSeleccionado === null) return;
+  const btn = document.getElementById('btnVas');
+  btn.disabled = true; btn.textContent = 'Guardando...';
   try {
-    await fetch('/api/dolor', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ patientId: patient.id, fecha: TODAY, valor })
-    });
+    await fetch('/api/dolor', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, fecha: TODAY, valor: vasSeleccionado }) });
     await cargarDatosVAS();
-  } catch(e) {}
+    btn.style.display = 'none';
+    toast('Dolor registrado ✓', true);
+  } catch(e) { toast('Error al guardar', false); }
+  btn.disabled = false; btn.textContent = 'Guardar';
 }
 
 function cambiarPeriodo(dias, btn) {
@@ -723,28 +596,19 @@ function actualizarGrafica() {
     const reg = vasRegistros.find(r => r.fecha === fechaStr);
     datos.push({ fecha: fechaStr, valor: reg ? reg.valor : null, esHoy: i === 0 });
   }
-
   const conDatos = datos.filter(d => d.valor !== null);
-  if (conDatos.length < 2) {
-    document.getElementById('graficaCard').style.display = 'none';
-    return;
-  }
+  if (conDatos.length < 1) { document.getElementById('graficaCard').style.display = 'none'; return; }
   document.getElementById('graficaCard').style.display = 'block';
-
-  // Dibujar SVG
-  const svg = document.getElementById('chartSvg');
   const W = 250, H = 100;
-  const puntos = conDatos.map((d, i) => {
+  const puntos = conDatos.map(d => {
     const idx = datos.indexOf(d);
-    const x = (idx / (datos.length - 1)) * W;
+    const x = datos.length > 1 ? (idx / (datos.length - 1)) * W : W/2;
     const y = (d.valor / 10) * (H - 10) + 5;
-    return { x, y, valor: d.valor };
+    return { x, y, valor: d.valor, esHoy: d.esHoy };
   });
-
-  let path = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
-  let area = path + ` L${puntos[puntos.length-1].x},${H} L${puntos[0].x},${H} Z`;
-
-  svg.innerHTML = `
+  let path = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  let area = path + ` L${puntos[puntos.length-1].x.toFixed(1)},${H} L${puntos[0].x.toFixed(1)},${H} Z`;
+  document.getElementById('chartSvg').innerHTML = `
     <defs><linearGradient id="vg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#ada3da" stop-opacity="0.2"/>
       <stop offset="100%" stop-color="#ada3da" stop-opacity="0"/>
@@ -754,29 +618,20 @@ function actualizarGrafica() {
     <line x1="0" y1="99" x2="${W}" y2="99" stroke="#f0f0f0" stroke-width="1"/>
     <path d="${area}" fill="url(#vg)"/>
     <path d="${path}" fill="none" stroke="#ada3da" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    ${puntos.map((p, i) => i === puntos.length - 1
-      ? `<circle cx="${p.x}" cy="${p.y}" r="5" fill="white" stroke="#ada3da" stroke-width="2"/>`
-      : `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#ada3da"/>`
-    ).join('')}
+    ${puntos.map((p, i) => i === puntos.length-1 ? `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="white" stroke="#ada3da" stroke-width="2"/>` : `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#ada3da"/>`).join('')}
   `;
-
-  // Etiquetas días
-  const diasRow = document.getElementById('diasRow');
   const step = Math.max(1, Math.floor(datos.length / 7));
-  diasRow.innerHTML = datos.filter((_, i) => i % step === 0 || i === datos.length - 1).map(d => {
+  document.getElementById('diasRow').innerHTML = datos.filter((_, i) => i % step === 0 || i === datos.length-1).map(d => {
     const date = new Date(d.fecha);
     const label = d.esHoy ? 'Hoy' : `${date.getDate()}/${date.getMonth()+1}`;
     return `<div class="dia-lbl ${d.esHoy?'hoy':''}">${label}</div>`;
   }).join('');
-
-  // Mensaje
-  const primero = conDatos[0].valor;
-  const ultimo = conDatos[conDatos.length - 1].valor;
   const msgEl = document.getElementById('vasMsg');
   if (conDatos.length >= 2) {
+    const primero = conDatos[0].valor, ultimo = conDatos[conDatos.length-1].valor;
     msgEl.style.display = 'block';
     if (ultimo < primero) {
-      const pct = Math.round(((primero - ultimo) / primero) * 100);
+      const pct = Math.round(((primero-ultimo)/primero)*100);
       msgEl.className = 'vas-msg bien';
       msgEl.textContent = `📉 Tu dolor ha bajado un ${pct}% en este periodo. ¡Vas por muy buen camino!`;
     } else if (ultimo > primero) {
@@ -786,9 +641,27 @@ function actualizarGrafica() {
       msgEl.className = 'vas-msg neutro';
       msgEl.textContent = '🌱 Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!';
     }
-  } else {
-    msgEl.style.display = 'none';
-  }
+  } else { msgEl.style.display = 'none'; }
+}
+
+function showOS(os) {
+  document.getElementById('pasosIOS').style.display = os === 'ios' ? 'block' : 'none';
+  document.getElementById('pasosAndroid').style.display = os === 'android' ? 'block' : 'none';
+  document.getElementById('btnIOS').classList.toggle('active', os === 'ios');
+  document.getElementById('btnAndroid').classList.toggle('active', os === 'android');
+}
+
+function mostrarInstall() { document.getElementById('installPopup').style.display = 'flex'; }
+function cerrarInstall() { document.getElementById('installPopup').style.display = 'none'; }
+function showInstOS(os) {
+  document.getElementById('instPasosIOS').style.display = os === 'ios' ? 'block' : 'none';
+  document.getElementById('instPasosAndroid').style.display = os === 'android' ? 'block' : 'none';
+  document.getElementById('btnInstIOS').style.background = os === 'ios' ? '#000' : 'none';
+  document.getElementById('btnInstIOS').style.color = os === 'ios' ? 'white' : '#888';
+  document.getElementById('btnInstIOS').style.borderColor = os === 'ios' ? '#000' : '#ddd';
+  document.getElementById('btnInstAndroid').style.background = os === 'android' ? '#000' : 'none';
+  document.getElementById('btnInstAndroid').style.color = os === 'android' ? 'white' : '#888';
+  document.getElementById('btnInstAndroid').style.borderColor = os === 'android' ? '#000' : '#ddd';
 }
 
 function toast(msg, ok=true) {
