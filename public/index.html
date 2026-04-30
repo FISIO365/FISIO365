@@ -174,8 +174,13 @@ textarea:focus { border-color: var(--black); }
 <div id="loginScreen" class="screen active">
   <div class="logo-wrap"><div class="logo-text">FISIO365</div></div>
   <div class="login-card">
-    <div class="login-title">Bienvenido</div>
-    <div class="login-desc">Introduce tu email y el PIN que te ha dado tu fisioterapeuta</div>
+    <div style="display:flex;gap:6px;margin-bottom:24px;background:rgba(245,242,238,0.08);border-radius:99px;padding:4px;">
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')" style="flex:1;padding:7px 0;border-radius:99px;background:#f5f2ee;color:#000;font-family:var(--font);font-size:12px;font-weight:700;border:none;cursor:pointer;">ES</button>
+      <button class="lang-btn" data-lang="cat" onclick="setLang('cat')" style="flex:1;padding:7px 0;border-radius:99px;background:none;color:rgba(245,242,238,0.5);font-family:var(--font);font-size:12px;font-weight:600;border:none;cursor:pointer;">CAT</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="flex:1;padding:7px 0;border-radius:99px;background:none;color:rgba(245,242,238,0.5);font-family:var(--font);font-size:12px;font-weight:600;border:none;cursor:pointer;">EN</button>
+    </div>
+    <div class="login-title" id="loginTitle">Bienvenido</div>
+    <div class="login-desc" id="loginDesc">Introduce tu email y el PIN que te ha dado tu fisioterapeuta</div>
     <label class="lbl">Email</label>
     <input class="inp" type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" />
     <label class="lbl">PIN</label>
@@ -186,7 +191,7 @@ textarea:focus { border-color: var(--black); }
       <input class="pin-d" type="tel" id="p4" maxlength="1" />
     </div>
     <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
-    <button class="btn-install" onclick="mostrarInstall()">¿Cómo instalo la app? 📱</button>
+    <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app? 📱</button>
     <div class="login-err" id="loginErr"></div>
   </div>
 </div>
@@ -377,11 +382,193 @@ textarea:focus { border-color: var(--black); }
 
 <script>
 let patient = null, ejercicios = [], hechos = new Set(), mensajeFisio = '';
+let lang = localStorage.getItem('fisio365_lang') || 'es';
+
+const i18n = {
+  es: {
+    bienvenido: "Bienvenido",
+    loginDesc: "Introduce tu email y el PIN que encontrarás en tu correo electrónico",
+    entrar: "Entrar",
+    entrando: "Entrando...",
+    instalarApp: "¿Cómo instalo la app?",
+    emailLabel: "Email",
+    pinLabel: "PIN",
+    errorEmail: "Introduce tu email",
+    errorPin: "Introduce los 4 dígitos del PIN",
+    errorConexion: "Error de conexión",
+    programaHoy: "Tu programa de ejercicios",
+    progresoHoy: "Progreso de hoy",
+    marcarHecho: "Marcar como hecho",
+    completado: "✓ Completado",
+    tareaHecha: "Tarea hecha ✓",
+    guardando: "Guardando...",
+    seguimientoDiario: "Seguimiento diario",
+    diarioPlaceholder: "Anota tus avances y sensaciones...",
+    sesionCompletada: "¡Sesión completada!",
+    sesionSub: "Has terminado tu programa de hoy. ¡Sigue así, lo estás haciendo genial!",
+    sesionMsg: "💪 Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana y sigue sumando!",
+    miProgreso: "Mi progreso",
+    evolucionDolor: "Evolución de tu dolor",
+    cuantoDolor: "¿Cuánto dolor tienes hoy?",
+    sinDolor: "Sin dolor",
+    dolorMaximo: "Dolor máximo",
+    guardar: "Guardar",
+    evolucionGrafica: "Evolución del dolor",
+    navPrograma: "Mi programa",
+    navProgreso: "Mi progreso",
+    navGuia: "Guía",
+    guiaTitulo: "📱 Instalar en tu móvil",
+    guiaComoFunciona: "✨ Cómo funciona la app",
+    salir: "Salir",
+    sinPrograma: "Sin programa asignado",
+    sinProgramaDesc: "Tu fisioterapeuta todavía no ha asignado ejercicios.",
+    tuFisio: "Tu fisio",
+    nColegiado: "Nº Colegiado",
+    mensajeFisioLabel: "Mensaje de tu fisio 💬",
+    dolorBajo: function(pct) { return "📉 Tu dolor ha bajado un " + pct + "% respecto a ayer. ¡Vas por muy buen camino!"; },
+    dolorEstable: "🌱 Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!",
+    dolorSubio: "No te preocupes, los altibajos no significan que vayas por mal camino. ¿Has cambiado algo en tu rutina hoy?",
+    enviarFisio: "Enviar a mi fisio",
+    dolorRegistrado: "Dolor registrado ✓"
+  },
+  cat: {
+    bienvenido: "Benvingut",
+    loginDesc: "Introdueix el teu email i el PIN que trobaràs al teu correu electrònic",
+    entrar: "Entrar",
+    entrando: "Entrant...",
+    instalarApp: "Com instal·lo lapp?",
+    emailLabel: "Email",
+    pinLabel: "PIN",
+    errorEmail: "Introdueix el teu email",
+    errorPin: "Introdueix els 4 dígits del PIN",
+    errorConexion: "Error de connexió",
+    programaHoy: "El teu programa d'exercicis",
+    progresoHoy: "Progrés d'avui",
+    marcarHecho: "Marcar com a fet",
+    completado: "✓ Completat",
+    tareaHecha: "Tasca feta ✓",
+    guardando: "Guardant...",
+    seguimientoDiario: "Seguiment diari",
+    diarioPlaceholder: "Anota els teus avenços i sensacions...",
+    sesionCompletada: "Sessió completada!",
+    sesionSub: "Has acabat el teu programa d'avui. Continua així, ho estàs fent genial!",
+    sesionMsg: "💪 Cada dia que entrenes és un pas cap a la teva recuperació. Torna demà i segueix sumant!",
+    miProgreso: "El meu progrés",
+    evolucionDolor: "Evolució del teu dolor",
+    cuantoDolor: "Quant dolor tens avui?",
+    sinDolor: "Sense dolor",
+    dolorMaximo: "Dolor màxim",
+    guardar: "Guardar",
+    evolucionGrafica: "Evolució del dolor",
+    navPrograma: "El meu programa",
+    navProgreso: "El meu progrés",
+    navGuia: "Guia",
+    guiaTitulo: "📱 Instal·lar al mòbil",
+    guiaComoFunciona: "✨ Com funciona lapp",
+    salir: "Sortir",
+    sinPrograma: "Sense programa assignat",
+    sinProgramaDesc: "El teu fisioterapeuta encara no ha assignat exercicis.",
+    tuFisio: "El teu fisio",
+    nColegiado: "Núm. Col·legiat",
+    mensajeFisioLabel: "Missatge del teu fisio 💬",
+    dolorBajo: function(pct) { return "📉 El teu dolor ha baixat un " + pct + "% respecte a ahir. Vas per molt bon camí!"; },
+    dolorEstable: "🌱 El teu dolor es manté estable. Segueix amb els teus exercicis, la constància és la clau!",
+    dolorSubio: "No et preocupis, els alts i baixos no signifiquen que vagis per mal camí. Has canviat alguna cosa a la teva rutina avui?",
+    enviarFisio: "Enviar al meu fisio",
+    dolorRegistrado: "Dolor registrat ✓"
+  },
+  en: {
+    bienvenido: "Welcome",
+    loginDesc: "Enter your email and the PIN you will find in your email",
+    entrar: "Log in",
+    entrando: "Logging in...",
+    instalarApp: "How do I install the app?",
+    emailLabel: "Email",
+    pinLabel: "PIN",
+    errorEmail: "Please enter your email",
+    errorPin: "Please enter all 4 PIN digits",
+    errorConexion: "Connection error",
+    programaHoy: "Your exercise program",
+    progresoHoy: "Today's progress",
+    marcarHecho: "Mark as done",
+    completado: "✓ Completed",
+    tareaHecha: "Task done ✓",
+    guardando: "Saving...",
+    seguimientoDiario: "Daily tracking",
+    diarioPlaceholder: "Note your progress and how you feel...",
+    sesionCompletada: "Session completed!",
+    sesionSub: "You have finished today's program. Keep it up, you are doing great!",
+    sesionMsg: "💪 Every day you train is a step towards your recovery. Come back tomorrow and keep going!",
+    miProgreso: "My progress",
+    evolucionDolor: "Your pain evolution",
+    cuantoDolor: "How much pain do you have today?",
+    sinDolor: "No pain",
+    dolorMaximo: "Maximum pain",
+    guardar: "Save",
+    evolucionGrafica: "Pain evolution",
+    navPrograma: "My program",
+    navProgreso: "My progress",
+    navGuia: "Guide",
+    guiaTitulo: "📱 Install on your phone",
+    guiaComoFunciona: "✨ How the app works",
+    salir: "Log out",
+    sinPrograma: "No program assigned",
+    sinProgramaDesc: "Your physiotherapist has not yet assigned any exercises.",
+    tuFisio: "Your physio",
+    nColegiado: "Reg. No.",
+    mensajeFisioLabel: "Message from your physio 💬",
+    dolorBajo: function(pct) { return "📉 Your pain has decreased by " + pct + "% compared to yesterday. You are on the right track!"; },
+    dolorEstable: "🌱 Your pain is stable. Keep doing your exercises, consistency is key!",
+    dolorSubio: "Do not worry, ups and downs do not mean you are going in the wrong direction. Have you changed anything in your routine today?",
+    enviarFisio: "Send to my physio",
+    dolorRegistrado: "Pain recorded ✓"
+  }
+};
+
+function t(key, ...args) {
+  const val = i18n[lang][key];
+  return typeof val === 'function' ? val(...args) : (val || i18n.es[key] || key);
+}
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('fisio365_lang', l);
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.style.background = b.dataset.lang === l ? '#f5f2ee' : 'none';
+    b.style.color = b.dataset.lang === l ? '#000' : 'rgba(245,242,238,0.5)';
+  });
+  applyTranslations();
+}
+
+function applyTranslations() {
+  // Login
+  const lt = document.getElementById('loginTitle');
+  const ld = document.getElementById('loginDesc');
+  const lb = document.getElementById('loginBtn');
+  const li = document.getElementById('installBtn');
+  if (lt) lt.textContent = t('bienvenido');
+  if (ld) ld.textContent = t('loginDesc');
+  if (lb) lb.textContent = t('entrar');
+  if (li) li.textContent = t('instalarApp');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    el.textContent = t(key);
+  });
+}
 let vasSeleccionado = null, vasRegistros = [], vasPeriodo = 7;
 const TODAY = new Date().toISOString().split('T')[0];
 
 // Comprobar sesión guardada al cargar
 window.addEventListener('load', () => {
+  // Aplicar idioma guardado
+  const savedLang = localStorage.getItem('fisio365_lang');
+  if (savedLang) { lang = savedLang; }
+  applyTranslations();
+  // Marcar botón activo
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.style.background = b.dataset.lang === lang ? '#f5f2ee' : 'none';
+    b.style.color = b.dataset.lang === lang ? '#000' : 'rgba(245,242,238,0.5)';
+  });
   const saved = localStorage.getItem('fisio365_patient');
   if (saved) {
     try {
