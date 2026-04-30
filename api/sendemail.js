@@ -35,19 +35,16 @@ module.exports = async function handler(req, res) {
       <div style="background:white;border-radius:12px;padding:24px;margin-bottom:24px;">
         <p style="margin:0 0 16px;color:#999;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Tu acceso</p>
         <p style="margin:0 0 8px;color:#000;font-size:14px;"><strong>Email:</strong> ${email}</p>
-        <div style="display:flex;align-items:center;gap:12px;margin-top:12px;">
-          <span style="color:#000;font-size:14px;"><strong>PIN:</strong></span>
-          <span style="font-size:28px;font-weight:800;color:#ada3da;letter-spacing:6px;">${pin}</span>
-        </div>
+        <p style="margin:8px 0 0;color:#000;font-size:14px;"><strong>PIN:</strong> <span style="font-size:22px;font-weight:800;color:#ada3da;letter-spacing:6px;">${pin}</span></p>
       </div>
 
       <a href="https://fisio365.vercel.app" style="display:block;background:#000;color:#f5f2ee;text-align:center;padding:16px;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:32px;">Abrir FISIO365</a>
 
       <div style="background:white;border-radius:12px;padding:24px;margin-bottom:32px;">
         <p style="margin:0 0 16px;color:#999;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Instalar en tu móvil</p>
-        <p style="margin:0 0 6px;color:#000;font-size:14px;font-weight:600;">📱 iPhone</p>
+        <p style="margin:0 0 6px;color:#000;font-size:14px;font-weight:600;">iPhone</p>
         <p style="margin:0 0 16px;color:#666;font-size:13px;line-height:1.6;">Abre Safari → toca el botón Compartir ↑ → "Añadir a pantalla de inicio"</p>
-        <p style="margin:0 0 6px;color:#000;font-size:14px;font-weight:600;">🤖 Android</p>
+        <p style="margin:0 0 6px;color:#000;font-size:14px;font-weight:600;">Android</p>
         <p style="margin:0;color:#666;font-size:13px;line-height:1.6;">Abre Chrome → toca los 3 puntos ⋮ → "Añadir a pantalla de inicio"</p>
       </div>
 
@@ -68,7 +65,7 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' },
         to: [{ email, name: nombre }],
-        subject: 'Tu área de seguimiento y ejercicios 💪',
+        subject: 'Tu área de seguimiento y ejercicios',
         htmlContent
       })
     });
