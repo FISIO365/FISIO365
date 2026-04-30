@@ -386,6 +386,14 @@ window.addEventListener('load', () => {
   if (saved) {
     try {
       patient = JSON.parse(saved);
+      // Limpiar hechos de días anteriores
+      const lastDay = localStorage.getItem('fisio365_lastday');
+      if (lastDay !== TODAY) {
+        localStorage.setItem('fisio365_lastday', TODAY);
+        Object.keys(localStorage).forEach(k => {
+          if (k.startsWith('hechos_')) localStorage.removeItem(k);
+        });
+      }
       initApp();
     } catch(e) {
       localStorage.removeItem('fisio365_patient');
