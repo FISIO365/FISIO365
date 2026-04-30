@@ -16,37 +16,47 @@ module.exports = async function handler(req, res) {
   if (!nombre || !email || !pin) return res.status(400).json({ ok: false, error: 'Faltan datos' });
 
   const htmlContent = `
-    <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;background:#f5f2ee;padding:32px;border-radius:16px;">
-      <div style="background:#000;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px;">
-        <h1 style="color:#f5f2ee;font-size:28px;margin:0;letter-spacing:-1px;">FISIO365</h1>
-      </div>
-      <h2 style="color:#000;font-size:20px;">¡Hola, ${nombre}! 👋</h2>
-      <p style="color:#666;line-height:1.6;">Tu fisioterapeuta te ha dado acceso a la app FISIO365, donde podrás ver tu programa de ejercicios personalizado cada día.</p>
-      
-      <div style="background:white;border-radius:12px;padding:20px;margin:20px 0;border:1.5px solid rgba(0,0,0,0.1);">
-        <p style="margin:0 0 8px;color:#888;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Tu acceso</p>
-        <p style="margin:0 0 4px;color:#000;"><strong>Email:</strong> ${email}</p>
-        <p style="margin:0;color:#000;"><strong>PIN:</strong> <span style="font-size:24px;font-weight:800;color:#ada3da;letter-spacing:4px;">${pin}</span></p>
-      </div>
-
-      <div style="background:white;border-radius:12px;padding:20px;margin:20px 0;border:1.5px solid rgba(0,0,0,0.1);">
-        <p style="margin:0 0 12px;color:#888;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Cómo entrar</p>
-        <p style="margin:0 0 8px;color:#000;">1️⃣ Abre <a href="https://fisio365.vercel.app" style="color:#ada3da;font-weight:600;">fisio365.vercel.app</a> en tu móvil</p>
-        <p style="margin:0 0 8px;color:#000;">2️⃣ Introduce tu email y el PIN de arriba</p>
-        <p style="margin:0;color:#000;">3️⃣ ¡Listo! Ya puedes ver tu programa</p>
-      </div>
-
-      <div style="background:white;border-radius:12px;padding:20px;margin:20px 0;border:1.5px solid rgba(0,0,0,0.1);">
-        <p style="margin:0 0 12px;color:#888;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Instalar en tu móvil</p>
-        <p style="margin:0 0 6px;color:#000;font-weight:600;">iPhone:</p>
-        <p style="margin:0 0 12px;color:#666;font-size:13px;">Abre Safari → botón Compartir ↑ → "Añadir a pantalla de inicio"</p>
-        <p style="margin:0 0 6px;color:#000;font-weight:600;">Android:</p>
-        <p style="margin:0;color:#666;font-size:13px;">Abre Chrome → 3 puntos ⋮ → "Añadir a pantalla de inicio"</p>
-      </div>
-
-      <p style="color:#888;font-size:12px;text-align:center;margin-top:24px;">Si tienes alguna duda, contacta con tu fisioterapeuta.<br>FISIO365 — fisioterapia365.com</p>
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#e8e8e8;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <div style="max-width:480px;margin:0 auto;background:#f5f2ee;border-radius:16px;overflow:hidden;margin-top:24px;margin-bottom:24px;">
+    
+    <div style="background:#000;padding:32px;text-align:center;">
+      <div style="color:#f5f2ee;font-size:32px;font-weight:800;letter-spacing:-1px;font-family:'Helvetica Neue',Arial,sans-serif;">FISIO365</div>
     </div>
-  `;
+
+    <div style="padding:36px 32px;">
+      
+      <h2 style="font-size:22px;font-weight:700;color:#000;margin:0 0 20px;">Hola, ${nombre} 👋</h2>
+      
+      <p style="color:#555;line-height:1.7;font-size:15px;margin:0 0 32px;">Tu fisioterapeuta te ha dado acceso a la app de FISIO365, donde podrás ver tu programa de ejercicios personalizado cada día y registrar tu progreso.</p>
+
+      <div style="background:white;border-radius:12px;padding:24px;margin-bottom:24px;">
+        <p style="margin:0 0 16px;color:#999;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Tu acceso</p>
+        <p style="margin:0 0 8px;color:#000;font-size:14px;"><strong>Email:</strong> ${email}</p>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:12px;">
+          <span style="color:#000;font-size:14px;"><strong>PIN:</strong></span>
+          <span style="font-size:28px;font-weight:800;color:#ada3da;letter-spacing:6px;">${pin}</span>
+        </div>
+      </div>
+
+      <a href="https://fisio365.vercel.app" style="display:block;background:#000;color:#f5f2ee;text-align:center;padding:16px;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:32px;">Abrir FISIO365</a>
+
+      <div style="background:white;border-radius:12px;padding:24px;margin-bottom:32px;">
+        <p style="margin:0 0 16px;color:#999;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Instalar en tu móvil</p>
+        <p style="margin:0 0 6px;color:#000;font-size:14px;font-weight:600;">📱 iPhone</p>
+        <p style="margin:0 0 16px;color:#666;font-size:13px;line-height:1.6;">Abre Safari → toca el botón Compartir ↑ → "Añadir a pantalla de inicio"</p>
+        <p style="margin:0 0 6px;color:#000;font-size:14px;font-weight:600;">🤖 Android</p>
+        <p style="margin:0;color:#666;font-size:13px;line-height:1.6;">Abre Chrome → toca los 3 puntos ⋮ → "Añadir a pantalla de inicio"</p>
+      </div>
+
+      <p style="color:#aaa;font-size:12px;text-align:center;margin:0;line-height:1.6;">Si tienes alguna duda, contacta con tu fisioterapeuta.<br>FISIO365 — fisioterapia365.com</p>
+
+    </div>
+  </div>
+</body>
+</html>`;
 
   try {
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -58,7 +68,7 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' },
         to: [{ email, name: nombre }],
-        subject: `¡Bienvenido/a a FISIO365, ${nombre}! 🎉`,
+        subject: 'Tu área de seguimiento y ejercicios 💪',
         htmlContent
       })
     });
