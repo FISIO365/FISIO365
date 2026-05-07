@@ -60,16 +60,15 @@ export default async function handler(req, res) {
       const pacData = await pacRes.json();
       const pushSub = pacData.fields?.['PushSubscription'];
       if (pushSub) {
-        const webpush = require('web-push');
-        webpush.setVapidDetails(
-          'mailto:info@fisioterapia365.com',
-          process.env.VAPID_PUBLIC_KEY,
-          process.env.VAPID_PRIVATE_KEY
-        );
-        await webpush.sendNotification(JSON.parse(pushSub), JSON.stringify({
-          title: 'FISIO365',
-          body: 'Tu fisio ha actualizado tu programa de ejercicios 💪'
-        }));
+        await fetch('https://fisio365.vercel.app/api/notificar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription: JSON.parse(pushSub),
+            title: 'FISIO365',
+            message: 'Tu fisio ha actualizado tu programa de ejercicios 💪'
+          })
+        });
       }
     } catch(e) {}
 
