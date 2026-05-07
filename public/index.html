@@ -724,6 +724,8 @@ async function loadEjercicios() {
       mostrarCompletado();
       return;
     }
+    lastFechaAsignacion = (data.ejercicios?.length || 0) + '_' + (data.mensajeFisio || '');
+    startPolling();
     const localKey = `hechos_${patient.id}_${TODAY}`;
     const local = localStorage.getItem(localKey);
     hechos = new Set(local ? JSON.parse(local) : []);
@@ -1025,6 +1027,41 @@ function urlBase64ToUint8Array(base64String) {
   const outputArray = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
   return outputArray;
+}
+
+// Polling - comprobar cambios en el programa cada 5 minutos
+let lastFechaAsignacion = null;
+let pollingInterval = null;
+
+function startPolling() {
+  if (pollingInterval) clearInterval(pollingInterval);
+  pollingInterval = setInterval(async () => {
+    if (!patient) return;
+    try {
+      const res = await fetch(`/api/schedule?patientId=${patient.id}`);
+      const data = await res.json();
+      // Comprobar si hay ejercicios nuevos comparando cantidad
+      const newFecha = data.ejercicios?.length + '_' + (data.mensajeFisio || '');
+      if (lastFechaAsignacion && lastFechaAsignacion !== newFecha) {
+        // El programa cambió - recargar sin salir
+        ejercicios = data.ejercicios || [];
+        mensajeFisio = data.mensajeFisio || '';
+        if (mensajeFisio) {
+          document.getElementById('mensajeFisioTexto').textContent = mensajeFisio;
+          document.getElementById('mensajeFisioCard').style.display = 'block';
+        }
+        if (data.ultimaSession !== TODAY) {
+          hechos = new Set();
+          localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);
+          document.getElementById('vistaCompletado').style.display = 'none';
+          document.getElementById('vistaEjercicios').style.display = 'block';
+          renderEjercicios();
+          toast('Tu programa ha sido actualizado 💪', true);
+        }
+      }
+      lastFechaAsignacion = newFecha;
+    } catch(e) {}
+  }, 5 * 60 * 1000); // cada 5 minutos
 }
 
 function cerrarSesion() {
