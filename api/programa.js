@@ -1,10 +1,9 @@
-"use strict";
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
 const BASE_ID = 'appbK09V4X3pPIai3';
 const PLAN_TABLE = 'tblvgE0a4gsrj4Vhp';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -52,6 +51,28 @@ module.exports = async function handler(req, res) {
 
     const d = await r.json();
     if (d.error) return res.status(500).json({ ok: false, error: d.error.message });
+
+    // Enviar notificación push al paciente si tiene suscripción
+    try {
+      const pacRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/tbldBVgClS4HY2mOJ/${pacienteId}?fields[]=PushSubscription`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      const pacData = await pacRes.json();
+      const pushSub = pacData.fields?.['PushSubscription'];
+      if (pushSub) {
+        const webpush = require('web-push');
+        webpush.setVapidDetails(
+          'mailto:info@fisioterapia365.com',
+          process.env.VAPID_PUBLIC_KEY,
+          process.env.VAPID_PRIVATE_KEY
+        );
+        await webpush.sendNotification(JSON.parse(pushSub), JSON.stringify({
+          title: 'FISIO365',
+          body: 'Tu fisio ha actualizado tu programa de ejercicios 💪'
+        }));
+      }
+    } catch(e) {}
+
     return res.status(200).json({ ok: true, creados: ejercicios.length });
   } catch(e) {
     return res.status(500).json({ ok: false, error: e.message });
