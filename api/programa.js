@@ -1,21 +1,17 @@
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
-const BASE_ID = 'appbK09V4X3pPIai3';
+const BASE_ID = 'appsrGnHpFt8sVD5A';
 const PLAN_TABLE = 'tblvgE0a4gsrj4Vhp';
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
-
   const { pwd, pacienteId, pacienteNombre, fisioId, ejercicios, mensajeFisio } = req.body;
   if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'No autorizado' });
   if (!pacienteId || !ejercicios?.length) return res.status(400).json({ ok: false, error: 'Faltan datos' });
-
   const today = new Date().toISOString().split('T')[0];
-
   try {
     const oldRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula={PacienteID}="${pacienteId}"&fields[]=PacienteID`, {
       headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
@@ -30,7 +26,6 @@ export default async function handler(req, res) {
         });
       }
     }
-
     const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
@@ -48,11 +43,8 @@ export default async function handler(req, res) {
         }]
       })
     });
-
     const d = await r.json();
     if (d.error) return res.status(500).json({ ok: false, error: d.error.message });
-
-    // Enviar notificación push al paciente si tiene suscripción
     try {
       const pacRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/tbldBVgClS4HY2mOJ/${pacienteId}?fields[]=PushSubscription`, {
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
@@ -71,7 +63,6 @@ export default async function handler(req, res) {
         });
       }
     } catch(e) {}
-
     return res.status(200).json({ ok: true, creados: ejercicios.length });
   } catch(e) {
     return res.status(500).json({ ok: false, error: e.message });
