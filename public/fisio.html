@@ -1125,7 +1125,7 @@ async function generarInforme(){
 
   try{
     const fisioNom=fisios.find(f=>f.id===fisioSelId)?.nombre||'';
-    const r=await fetch('/api/anamnesis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,datos})});
+    const r=await fetch('/api/pacientes?action=anamnesis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,datos})});
     const d=await r.json();
     clearInterval(iv);loading.style.display='none';
     if(d.ok&&d.informe){
