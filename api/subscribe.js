@@ -1,22 +1,18 @@
 "use strict";
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const BASE_ID = 'appbK09V4X3pPIai3';
+const BASE_ID = 'appsrGnHpFt8sVD5A';
 const PACIENTES_TABLE = 'tbldBVgClS4HY2mOJ';
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-
   let body = req.body;
   if (!body || typeof body === 'string') {
     try { body = JSON.parse(req.body || '{}'); } catch(e) { body = {}; }
   }
-
   const { patientId, subscription } = body;
   if (!patientId || !subscription) return res.status(400).json({ ok: false });
-
   try {
     await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}`, {
       method: 'PATCH',
