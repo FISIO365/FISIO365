@@ -152,7 +152,6 @@ input[type=number]{text-align:center}
     <div class="panel-tabs">
       <button class="panel-tab active" id="tabProg" onclick="showTab('prog')">Programa</button>
       <button class="panel-tab" id="tabAnam" onclick="showTab('anam')">Anamnesis</button>
-      <button class="panel-tab" id="tabPacs" onclick="showTab('pacs')">Pacientes</button>
     </div>
 
     <!-- TAB PROGRAMA -->
@@ -168,7 +167,8 @@ input[type=number]{text-align:center}
       <div class="card">
         <div class="ct">Paciente</div>
         <div class="si"><input type="text" id="ps1" placeholder="Buscar paciente..." oninput="fprog()" /></div>
-        <div id="plistProg"><div class="loading">Cargando...</div></div>
+        <div id="plistProg"></div>
+        <div id="pacSelBox" style="display:none;margin-top:8px;padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--lila)"></div>
       </div>
       <div class="card">
         <div class="ct">Ejercicios del programa</div>
@@ -217,21 +217,12 @@ input[type=number]{text-align:center}
 
 <div class="card">
 <div class="ct">Pruebas de imagen</div>
-<div class="g3">
-<div class="field"><label>RM — hallazgos</label><input type="text" id="aRM" placeholder="..."></div>
+<div class="field"><label>RM — hallazgos</label><input type="text" id="aRM" placeholder="Describe hallazgos de la RM..." style="width:100%"></div>
 <div class="field"><label>RM — archivo</label><input type="file" id="aRMfile" accept="image/*,.pdf,.dcm" style="font-size:13px"></div>
-<div class="f"></div>
-</div>
-<div class="g3">
-<div class="field"><label>TAC — hallazgos</label><input type="text" id="aTAC" placeholder="..."></div>
+<div class="field"><label>TAC — hallazgos</label><input type="text" id="aTAC" placeholder="Describe hallazgos del TAC..." style="width:100%"></div>
 <div class="field"><label>TAC — archivo</label><input type="file" id="aTACfile" accept="image/*,.pdf,.dcm" style="font-size:13px"></div>
-<div class="f"></div>
-</div>
-<div class="g3">
-<div class="field"><label>RX — hallazgos</label><input type="text" id="aRX" placeholder="..."></div>
+<div class="field"><label>RX — hallazgos</label><input type="text" id="aRX" placeholder="Describe hallazgos de la RX..." style="width:100%"></div>
 <div class="field"><label>RX — archivo</label><input type="file" id="aRXfile" accept="image/*,.pdf,.dcm" style="font-size:13px"></div>
-<div class="f"></div>
-</div>
 </div>
 
 <!-- 2. MOTIVO DE CONSULTA -->
@@ -253,10 +244,7 @@ input[type=number]{text-align:center}
 </div>
 <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px"><span>Sin dolor</span><span>Dolor insoportable</span></div>
 </div>
-<div class="g2">
-<div class="field"><label>EVA máxima referida</label><input type="number" id="aEvaMax" min="0" max="10" placeholder="0-10"></div>
-<div class="field"><label>EVA mínima referida</label><input type="number" id="aEvaMin" min="0" max="10" placeholder="0-10"></div>
-</div>
+
 <div class="g2">
 <div class="field"><label>Irradiación</label><input type="text" id="aIrradiacion" placeholder="..."></div>
 <div class="field"><label>Hormigueo / adormecimiento</label><input type="text" id="aHormigueo" placeholder="..."></div>
@@ -794,11 +782,7 @@ input[type=number]{text-align:center}
 <!-- 18. PLAN -->
 <div class="anam-sec-title">18. Plan de tratamiento</div>
 <div class="card">
-<div class="ct">Terapia manual</div><div class="field"><textarea id="aPlanManual" class="anam-ta" rows="3" placeholder="Técnicas de terapia manual..."></textarea></div>
-<div class="ct" style="margin-top:14px">Ejercicio terapéutico</div><div class="field"><textarea id="aPlanEjercicio" class="anam-ta" rows="3" placeholder="Ejercicio terapéutico planificado..."></textarea></div>
-<div class="ct" style="margin-top:14px">Neurodinamia</div><div class="field"><textarea id="aPlanNeuro" class="anam-ta" rows="2" placeholder="Sliders, tensioners..."></textarea></div>
-<div class="ct" style="margin-top:14px">Educación</div><div class="field"><textarea id="aPlanEduc" class="anam-ta" rows="2" placeholder="Educación en dolor, ergonomía..."></textarea></div>
-<div class="ct" style="margin-top:14px">Tecnologías complementarias</div><div class="field"><textarea id="aPlanTec" class="anam-ta" rows="2" placeholder="Diatermia, TENS, ondas de choque..."></textarea></div>
+<div class="field"><textarea id="aPlanTotal" class="anam-ta" rows="8" placeholder="Describe el plan de tratamiento completo: terapia manual, ejercicio terapéutico, neurodinamia, educación, tecnologías complementarias..."></textarea></div>
 </div>
 
 <!-- 19. CONCLUSION -->
@@ -835,14 +819,7 @@ input[type=number]{text-align:center}
 </div>
 
 
-    <!-- TAB PACIENTES -->
-    <div id="tPacs" style="display:none">
-      <div class="card">
-        <div class="ct">Todos los pacientes</div>
-        <div class="si"><input type="text" id="ps2" placeholder="Buscar..." oninput="ftodos()" /></div>
-        <div id="plistAll"><div class="loading">Cargando...</div></div>
-      </div>
-    </div>
+
 
   </div>
 </div>
@@ -855,11 +832,8 @@ let pwd='',fisios=[],pacs=[],biblio=[],pacSelId=null,pacSelN='',fisioSelId='',ej
 function showTab(tab){
   document.getElementById('tProg').style.display=tab==='prog'?'block':'none';
   document.getElementById('tAnam').style.display=tab==='anam'?'block':'none';
-  document.getElementById('tPacs').style.display=tab==='pacs'?'block':'none';
   document.getElementById('tabProg').classList.toggle('active',tab==='prog');
   document.getElementById('tabAnam').classList.toggle('active',tab==='anam');
-  document.getElementById('tabPacs').classList.toggle('active',tab==='pacs');
-  if(tab==='pacs')rtodos();
 }
 
 document.getElementById('pwdInp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
@@ -920,14 +894,25 @@ function ritem(p,sel=false,cb=null){
 }
 
 function fprog(){const q=document.getElementById('ps1').value.toLowerCase();rprog(q);}
-function ftodos(){const q=document.getElementById('ps2').value.toLowerCase();rtodos(q);}
+function ftodos(){const q=document.getElementById('ps2')?document.getElementById('ps2').value.toLowerCase():'';rtodos(q);}
 
 function rprog(q=''){
   const el=document.getElementById('plistProg');
-  const fl=pacs.filter(p=>!q||p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q));
-  if(!fl.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:10px">No encontrado</div>';return;}
+  if(!q){el.innerHTML='';return;}
+  const fl=pacs.filter(p=>p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q)).slice(0,6);
+  if(!fl.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">No encontrado</div>';return;}
   el.innerHTML='';
-  fl.forEach(p=>{el.appendChild(ritem(p,pacSelId===p.id,pac=>{pacSelId=pac.id;pacSelN=pac.nombre;rprog(q);upd();}));});
+  fl.forEach(p=>{
+    const div=ritem(p,pacSelId===p.id,pac=>{
+      pacSelId=pac.id;pacSelN=pac.nombre;
+      document.getElementById('ps1').value=pac.nombre;
+      document.getElementById('plistProg').innerHTML='';
+      document.getElementById('pacSelBox').textContent='✓ '+pac.nombre;
+      document.getElementById('pacSelBox').style.display='block';
+      upd();
+    });
+    el.appendChild(div);
+  });
 }
 
 function rtodos(q=''){
@@ -1041,7 +1026,8 @@ const evaDescs=['Sin dolor','Dolor muy leve','Dolor leve','Dolor leve-moderado',
 function anamFiltrar(){
   const q=document.getElementById('anamPs').value.toLowerCase();
   const el=document.getElementById('anamPlist');
-  const fl=pacs.filter(p=>!q||p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q)).slice(0,8);
+  if(!q||q.length<2){el.innerHTML='';return;}
+  const fl=pacs.filter(p=>p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q)).slice(0,6);
   if(!fl.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">No encontrado</div>';return;}
   el.innerHTML='';
   fl.forEach(p=>{
@@ -1049,7 +1035,13 @@ function anamFiltrar(){
     div.className='pi'+(anamPacId===p.id?' sel':'');
     const ini=p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
     div.innerHTML=`<div class="pav">${ini}</div><div><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div>`;
-    div.onclick=()=>{anamPacId=p.id;anamPacNom=p.nombre;document.getElementById('anamPsel').textContent='✓ Paciente: '+p.nombre;document.getElementById('anamPsel').style.display='block';anamFiltrar();};
+    div.onclick=()=>{
+      anamPacId=p.id;anamPacNom=p.nombre;
+      document.getElementById('anamPs').value=p.nombre;
+      document.getElementById('anamPlist').innerHTML='';
+      document.getElementById('anamPsel').textContent='✓ Paciente: '+p.nombre;
+      document.getElementById('anamPsel').style.display='block';
+    };
     el.appendChild(div);
   });
 }
@@ -1123,11 +1115,11 @@ async function generarInforme(){
     objetivosCorto:document.getElementById('aObjCorto').value,
     objetivosMedio:document.getElementById('aObjMedio').value,
     objetivosLargo:document.getElementById('aObjLargo').value,
-    terapiaManual:document.getElementById('aPlanManual').value,
-    ejercicioTerapeutico:document.getElementById('aPlanEjercicio').value,
-    neurodinamia:document.getElementById('aPlanNeuro').value,
-    educacion:document.getElementById('aPlanEduc').value,
-    tecnologias:document.getElementById('aPlanTec').value,
+    terapiaManual:document.getElementById('aPlanTotal')?.value||'',
+    ejercicioTerapeutico:'',
+    neurodinamia:'',
+    educacion:'',
+    tecnologias:'',
     conclusion:document.getElementById('aConclusion').value,
   };
 
