@@ -70,8 +70,8 @@ module.exports = async function handler(req, res) {
     try { body = JSON.parse(body || '{}'); } catch(e) { body = {}; }
   }
 
-  const pwd = req.method === 'GET' ? req.query.pwd : body?.pwd;
-  if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'Contraseña incorrecta' });
+  const pwd = req.method === 'GET' ? req.query.pwd : (body?.pwd || req.query.pwd);
+  if (!pwd || pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'Contraseña incorrecta' });
 
   // ── ANAMNESIS ──
   if (req.query.action === 'anamnesis' || body?.action === 'anamnesis') {
