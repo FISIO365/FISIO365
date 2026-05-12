@@ -70,11 +70,16 @@ module.exports = async function handler(req, res) {
     try { body = JSON.parse(body || '{}'); } catch(e) { body = {}; }
   }
 
-  const pwd = req.method === 'GET' ? req.query.pwd : (body?.pwd || req.query.pwd);
-  if (!pwd || pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'Contraseña incorrecta' });
+  // Obtener pwd de query o body
+  const pwd = (req.query.pwd || body.pwd || '').trim();
+  const expectedPwd = (FISIO_PASSWORD || '').trim();
+
+  if (pwd !== expectedPwd) {
+    return res.status(401).json({ ok: false, error: 'Contraseña incorrecta' });
+  }
 
   // ── ANAMNESIS ──
-  if (req.query.action === 'anamnesis' || body?.action === 'anamnesis') {
+  if (req.query.action === 'anamnesis' || body.action === 'anamnesis') {
     if (req.method === 'GET') {
       try {
         const { pacienteId } = req.query;
@@ -85,16 +90,13 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ error: e.message });
       }
     }
-
     if (req.method === 'POST') {
       const { pacienteId, pacienteNombre, fisioNombre, datos } = body;
       if (!pacienteId || !datos) return res.status(400).json({ error: 'Faltan datos' });
-
       const prompt = construirPrompt(pacienteNombre, fisioNombre, datos);
       let informe = '';
       try { informe = await llamarClaude(prompt); }
       catch(e) { informe = 'Error al generar el informe.'; }
-
       try {
         const record = await airtableReq('POST', `/${ANAMNESIS_TABLE}`, {
           records: [{ fields: {
@@ -137,7 +139,7 @@ module.exports = async function handler(req, res) {
   }
 
   // ── PACIENTES POST ──
-  if (req.method === 'POST' && !body?.action) {
+  if (req.method === 'POST') {
     const { nombre, email, telefono } = body;
     if (!nombre || !email) return res.status(400).json({ ok: false, error: 'Nombre y email son obligatorios' });
     const pin = String(Math.floor(1000 + Math.random() * 9000));
@@ -166,32 +168,25 @@ function construirPrompt(pacienteNombre, fisioNombre, d) {
 El informe debe ser completamente PROFESIONAL usando terminología fisioterapéutica correcta, pero EXPLICADO para el paciente con términos técnicos entre paréntesis. En español, sin markdown, secciones en MAYÚSCULAS.
 
 Fisioterapeuta: ${fisioNombre || '-'} | Fecha: ${new Date().toLocaleDateString('es-ES')}
-
 Paciente: ${pacienteNombre || '-'} | Edad: ${d.edad || '-'} | Profesión: ${d.profesion || '-'} | Actividad: ${d.actividadFisica || '-'}
 Diagnóstico médico: ${d.diagnosticoMedico || '-'}
-Pruebas imagen: RM: ${d.rm || '-'}, TAC: ${d.tac || '-'}, RX: ${d.rx || '-'}
-
+RM: ${d.rm || '-'} | TAC: ${d.tac || '-'} | RX: ${d.rx || '-'}
 Dolor principal: ${d.dolorPrincipal || '-'}
 Inicio: ${d.inicioSintomas || '-'} | Mecanismo: ${d.mecanismoAparicion || '-'}
 Evolución: ${d.evolucion || '-'}
 EVA actual: ${d.evaActual || '-'}/10
 Irradiación: ${d.irradiacion || '-'} | Hormigueo: ${d.hormigueo || '-'} | Debilidad: ${d.debilidad || '-'}
-Limitaciones: ${d.limitaciones || '-'}
-Expectativas: ${d.expectativas || '-'}
-
+Limitaciones: ${d.limitaciones || '-'} | Expectativas: ${d.expectativas || '-'}
 Empeora con: ${fa(d.empeoraConArray)} | Mejora con: ${fa(d.mejoraConArray)}
-Patrón mecánico: ${fa(d.patronMecanico)} | Factores psicosociales: ${fa(d.factoresPsicosociales)}
+Patrón mecánico: ${fa(d.patronMecanico)} | Psicosocial: ${fa(d.factoresPsicosociales)}
 Postura: ${fa(d.postura)} | Marcha: ${fa(d.marcha)} | Control motor: ${fa(d.controlMotor)}
-Presentación dominante: ${fa(d.presentacionDominante)}
-
+Presentación: ${fa(d.presentacionDominante)}
 Diagnóstico fisioterapéutico: ${d.diagnosticoFisio || '-'}
 Plan: ${d.terapiaManual || '-'}
-Objetivos corto: ${d.objetivosCorto || '-'}
-Objetivos medio: ${d.objetivosMedio || '-'}
-Objetivos largo: ${d.objetivosLargo || '-'}
+Objetivos: corto: ${d.objetivosCorto || '-'} | medio: ${d.objetivosMedio || '-'} | largo: ${d.objetivosLargo || '-'}
 Conclusión: ${d.conclusion || '-'}
 
-Redacta el informe completo con estas secciones en MAYÚSCULAS:
+Redacta el informe con estas secciones en MAYÚSCULAS:
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
 VALORACIÓN NEUROLÓGICA
@@ -201,5 +196,5 @@ PLAN DE TRATAMIENTO
 RECOMENDACIONES PARA EL PACIENTE
 PRONÓSTICO
 
-Tono profesional pero empático. Explica los términos técnicos entre paréntesis. Párrafos, sin listas.`;
+Tono profesional pero empático. Explica términos técnicos entre paréntesis. En párrafos, sin listas.`;
 }
