@@ -1,14 +1,12 @@
 "use strict";
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const BASE_ID = 'appbK09V4X3pPIai3';
+const BASE_ID = 'appsrGnHpFt8sVD5A';
 const TABLE_ID = 'tblxJmnb7LHML2ZZh';
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-
   if (req.method === 'POST') {
     let body = req.body;
     if (!body || typeof body === 'string') {
@@ -38,7 +36,6 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ ok: false, error: e.message });
     }
   }
-
   if (req.method === 'GET') {
     const { patientId } = req.query;
     if (!patientId) return res.status(400).json({ ok: false });
