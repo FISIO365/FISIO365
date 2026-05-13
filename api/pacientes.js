@@ -21,22 +21,29 @@ export default async function handler(req) {
 
   const url = new URL(req.url);
   const action = url.searchParams.get('action');
+  const queryPwd = url.searchParams.get('pwd') || '';
 
   let body = {};
   if (req.method === 'POST') {
-    try { body = await req.json(); } catch(e) {}
+    try {
+      const text = await req.text();
+      body = text ? JSON.parse(text) : {};
+    } catch(e) {
+      body = {};
+    }
   }
 
-  const pwd = req.method === 'GET' ? url.searchParams.get('pwd') : (body.pwd || url.searchParams.get('pwd') || '');
+  const pwd = (body.pwd || queryPwd || '').trim();
+  const expected = (FISIO_PASSWORD || '').trim();
 
-  if (pwd !== FISIO_PASSWORD) {
+  if (pwd !== expected) {
     return new Response(JSON.stringify({ ok: false, error: 'Contraseña incorrecta' }), { status: 401, headers: corsHeaders });
   }
 
   // ── GENERAR INFORME ──
   if (action === 'informe' && req.method === 'POST') {
     try {
-      const { pacienteNombre, fisioNombre, datos } = body;
+      const { pacienteId, pacienteNombre, fisioNombre, datos } = body;
       const d = datos || {};
       const fa = arr => (!arr || !arr.length) ? '-' : arr.join(', ');
 
@@ -91,17 +98,17 @@ Tono profesional pero empático. Explica términos técnicos entre paréntesis. 
       const informe = data.content?.[0]?.text || '';
 
       if (!informe) {
-        return new Response(JSON.stringify({ ok: false, error: 'No se pudo generar el informe' }), { status: 500, headers: corsHeaders });
+        return new Response(JSON.stringify({ ok: false, error: 'Sin respuesta de IA: ' + JSON.stringify(data) }), { status: 500, headers: corsHeaders });
       }
 
-      // Guardar en Airtable
+      // Guardar en Airtable en segundo plano
       try {
         await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             records: [{ fields: {
-              PacienteID: body.pacienteId || '',
+              PacienteID: pacienteId || '',
               PacienteNombre: pacienteNombre || '',
               FisioNombre: fisioNombre || '',
               FechaValoracion: new Date().toISOString().split('T')[0],
@@ -113,6 +120,7 @@ Tono profesional pero empático. Explica términos técnicos entre paréntesis. 
       } catch(e) {}
 
       return new Response(JSON.stringify({ ok: true, informe }), { headers: corsHeaders });
+
     } catch(e) {
       return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
     }
@@ -138,7 +146,7 @@ Tono profesional pero empático. Explica términos técnicos entre paréntesis. 
       }));
       return new Response(JSON.stringify({ ok: true, pacientes }), { headers: corsHeaders });
     } catch(e) {
-      return new Response(JSON.stringify({ ok: false, error: 'Error interno' }), { status: 500, headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: false, error: 'Error interno: ' + e.message }), { status: 500, headers: corsHeaders });
     }
   }
 
@@ -159,7 +167,7 @@ Tono profesional pero empático. Explica términos técnicos entre paréntesis. 
       const rec = data.records?.[0];
       return new Response(JSON.stringify({ ok: true, paciente: { id: rec.id, nombre, email, pin } }), { headers: corsHeaders });
     } catch(e) {
-      return new Response(JSON.stringify({ ok: false, error: 'Error interno' }), { status: 500, headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: false, error: 'Error interno: ' + e.message }), { status: 500, headers: corsHeaders });
     }
   }
 
