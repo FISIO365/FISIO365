@@ -1077,11 +1077,9 @@ async function generarInforme(){
   const loading=document.getElementById('anamLoading');
   const infBox=document.getElementById('anamInformeBox');
   btn.style.display='none';loading.style.display='block';infBox.style.display='none';
-
   const msgs=['Analizando la exploración clínica...','Procesando hallazgos neurológicos...','Valorando fuerza y neurodinamia...','Redactando el diagnóstico...','Generando el informe completo...'];
   let mi=0;
   const iv=setInterval(()=>{mi=(mi+1)%msgs.length;document.getElementById('anamLoadingTxt').textContent=msgs[mi];},2500);
-
   const datos={
     edad:document.getElementById('aEdad').value,
     profesion:document.getElementById('aProfesion').value,
@@ -1095,8 +1093,6 @@ async function generarInforme(){
     mecanismoAparicion:document.getElementById('aMecanismo').value,
     evolucion:document.getElementById('aEvolucion').value,
     evaActual:document.getElementById('aEvaSlider').value,
-    evaMaxima:document.getElementById('aEvaMax').value,
-    evaMinima:document.getElementById('aEvaMin').value,
     irradiacion:document.getElementById('aIrradiacion').value,
     hormigueo:document.getElementById('aHormigueo').value,
     debilidad:document.getElementById('aDebilidad').value,
@@ -1116,28 +1112,39 @@ async function generarInforme(){
     objetivosMedio:document.getElementById('aObjMedio').value,
     objetivosLargo:document.getElementById('aObjLargo').value,
     terapiaManual:document.getElementById('aPlanTotal')?.value||'',
-    ejercicioTerapeutico:'',
-    neurodinamia:'',
-    educacion:'',
-    tecnologias:'',
     conclusion:document.getElementById('aConclusion').value,
   };
-
   try{
     const fisioNom=fisios.find(f=>f.id===fisioSelId)?.nombre||'';
-    const r=await fetch('/api/pacientes?action=anamnesis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,datos})});
+    const prompt=construirPromptCliente(anamPacNom,fisioNom,datos);
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'x-api-key':'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',
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true',
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+    });
     const d=await r.json();
     clearInterval(iv);loading.style.display='none';
-    if(d.ok&&d.informe){
-      informeGenerado=d.informe;
-      document.getElementById('anamInformeTxt').textContent=d.informe;
+    const informe=d.content?.[0]?.text||'';
+    if(informe){
+      informeGenerado=informe;
+      document.getElementById('anamInformeTxt').textContent=informe;
       infBox.style.display='block';
       infBox.scrollIntoView({behavior:'smooth'});
-    }else{btn.style.display='block';toast(d.error||'Error al generar el informe',false);}
+    }else{btn.style.display='block';toast('Error al generar el informe',false);}
   }catch(e){
     clearInterval(iv);loading.style.display='none';btn.style.display='block';
-    toast('Error de conexión',false);
+    toast('Error: '+e.message,false);
   }
+}
+
+function construirPromptCliente(pacienteNombre,fisioNom,d){
+  const fa=arr=>(!arr||!arr.length)?'-':arr.join(', ');
+  return `Eres un fisioterapeuta experto redactando un informe de valoración para el paciente ${pacienteNombre||'el paciente'}. El informe debe ser completamente PROFESIONAL usando terminología fisioterapéutica correcta, pero EXPLICADO para el paciente con términos técnicos entre paréntesis. En español, sin markdown, secciones en MAYÚSCULAS.\nFisioterapeuta: ${fisioNom||'-'} | Fecha: ${new Date().toLocaleDateString('es-ES')}\nPaciente: ${pacienteNombre||'-'} | Edad: ${d.edad||'-'} | Profesión: ${d.profesion||'-'} | Actividad: ${d.actividadFisica||'-'}\nDiagnóstico médico: ${d.diagnosticoMedico||'-'}\nRM: ${d.rm||'-'} | TAC: ${d.tac||'-'} | RX: ${d.rx||'-'}\nDolor principal: ${d.dolorPrincipal||'-'}\nInicio: ${d.inicioSintomas||'-'} | Mecanismo: ${d.mecanismoAparicion||'-'}\nEvolución: ${d.evolucion||'-'}\nEVA actual: ${d.evaActual||'-'}/10\nIrradiación: ${d.irradiacion||'-'} | Hormigueo: ${d.hormigueo||'-'} | Debilidad: ${d.debilidad||'-'}\nLimitaciones: ${d.limitaciones||'-'} | Expectativas: ${d.expectativas||'-'}\nEmpeora con: ${fa(d.empeoraConArray)} | Mejora con: ${fa(d.mejoraConArray)}\nPatrón mecánico: ${fa(d.patronMecanico)} | Psicosocial: ${fa(d.factoresPsicosociales)}\nPostura: ${fa(d.postura)} | Marcha: ${fa(d.marcha)} | Control motor: ${fa(d.controlMotor)}\nPresentación: ${fa(d.presentacionDominante)}\nDiagnóstico fisioterapéutico: ${d.diagnosticoFisio||'-'}\nPlan: ${d.terapiaManual||'-'}\nObjetivos: corto: ${d.objetivosCorto||'-'} | medio: ${d.objetivosMedio||'-'} | largo: ${d.objetivosLargo||'-'}\nConclusión: ${d.conclusion||'-'}\n\nRedacta el informe con estas secciones en MAYÚSCULAS:\nPRESENTACIÓN DEL CASO\nHALLAZGOS DE LA EXPLORACIÓN FÍSICA\nVALORACIÓN NEUROLÓGICA\nDIAGNÓSTICO FISIOTERAPÉUTICO\nOBJETIVOS DEL TRATAMIENTO\nPLAN DE TRATAMIENTO\nRECOMENDACIONES PARA EL PACIENTE\nPRONÓSTICO\n\nTono profesional pero empático. Explica términos técnicos entre paréntesis. En párrafos, sin listas.`;
 }
 
 function descargarInformePDF(){
