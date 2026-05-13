@@ -88,7 +88,7 @@ Tono profesional pero empático. Explica términos técnicos entre paréntesis. 
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5-20251001',
+          model: 'claude-sonnet-4-6',
           max_tokens: 4000,
           messages: [{ role: 'user', content: prompt }]
         })
@@ -102,7 +102,6 @@ Tono profesional pero empático. Explica términos técnicos entre paréntesis. 
         return new Response(JSON.stringify({ ok: false, error: 'Anthropic: ' + errorMsg }), { status: 500, headers: corsHeaders });
       }
 
-      // Guardar en Airtable en segundo plano
       try {
         await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}`, {
           method: 'POST',
