@@ -98,7 +98,8 @@ Tono profesional pero empático. Explica términos técnicos entre paréntesis. 
       const informe = data.content?.[0]?.text || '';
 
       if (!informe) {
-        return new Response(JSON.stringify({ ok: false, error: 'Sin respuesta de IA: ' + JSON.stringify(data) }), { status: 500, headers: corsHeaders });
+        const errorMsg = data.error?.message || data.error?.type || JSON.stringify(data).substring(0, 300);
+        return new Response(JSON.stringify({ ok: false, error: 'Anthropic: ' + errorMsg }), { status: 500, headers: corsHeaders });
       }
 
       // Guardar en Airtable en segundo plano
