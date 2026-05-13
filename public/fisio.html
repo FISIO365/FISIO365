@@ -894,7 +894,6 @@ function ritem(p,sel=false,cb=null){
 }
 
 function fprog(){const q=document.getElementById('ps1').value.toLowerCase();rprog(q);}
-function ftodos(){const q=document.getElementById('ps2')?document.getElementById('ps2').value.toLowerCase():'';rtodos(q);}
 
 function rprog(q=''){
   const el=document.getElementById('plistProg');
@@ -913,13 +912,6 @@ function rprog(q=''){
     });
     el.appendChild(div);
   });
-}
-
-function rtodos(q=''){
-  const el=document.getElementById('plistAll');
-  const fl=pacs.filter(p=>!q||p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q));
-  if(!fl.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:10px">No encontrado</div>';return;}
-  el.innerHTML='';fl.forEach(p=>el.appendChild(ritem(p)));
 }
 
 function addEj(){
@@ -1018,8 +1010,6 @@ function toast(msg,ok=true){
   setTimeout(()=>t.style.display='none',3500);
 }
 
-
-// ANAMNESIS
 let anamPacId=null,anamPacNom='',informeGenerado='';
 const evaDescs=['Sin dolor','Dolor muy leve','Dolor leve','Dolor leve-moderado','Dolor moderado','Dolor moderado','Dolor moderado-intenso','Dolor intenso','Dolor muy intenso','Dolor casi insoportable','Dolor insoportable'];
 
@@ -1116,25 +1106,24 @@ async function generarInforme(){
   };
   try{
     const fisioNom=fisios.find(f=>f.id===fisioSelId)?.nombre||'';
-    const prompt=construirPromptCliente(anamPacNom,fisioNom,datos);
     const r=await fetch('/api/pacientes?action=informe',{
-  method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,datos})
-});
-const d=await r.json();
-clearInterval(iv);loading.style.display='none';
-const informe=d.informe||'';
-if(informe){
-  informeGenerado=informe;
-  document.getElementById('anamInformeTxt').textContent=informe;
-  infBox.style.display='block';
-  infBox.scrollIntoView({behavior:'smooth'});
-}else{btn.style.display='block';toast(d.error||'Error al generar el informe',false);}
-
-function construirPromptCliente(pacienteNombre,fisioNom,d){
-  const fa=arr=>(!arr||!arr.length)?'-':arr.join(', ');
-  return `Eres un fisioterapeuta experto redactando un informe de valoración para el paciente ${pacienteNombre||'el paciente'}. El informe debe ser completamente PROFESIONAL usando terminología fisioterapéutica correcta, pero EXPLICADO para el paciente con términos técnicos entre paréntesis. En español, sin markdown, secciones en MAYÚSCULAS.\nFisioterapeuta: ${fisioNom||'-'} | Fecha: ${new Date().toLocaleDateString('es-ES')}\nPaciente: ${pacienteNombre||'-'} | Edad: ${d.edad||'-'} | Profesión: ${d.profesion||'-'} | Actividad: ${d.actividadFisica||'-'}\nDiagnóstico médico: ${d.diagnosticoMedico||'-'}\nRM: ${d.rm||'-'} | TAC: ${d.tac||'-'} | RX: ${d.rx||'-'}\nDolor principal: ${d.dolorPrincipal||'-'}\nInicio: ${d.inicioSintomas||'-'} | Mecanismo: ${d.mecanismoAparicion||'-'}\nEvolución: ${d.evolucion||'-'}\nEVA actual: ${d.evaActual||'-'}/10\nIrradiación: ${d.irradiacion||'-'} | Hormigueo: ${d.hormigueo||'-'} | Debilidad: ${d.debilidad||'-'}\nLimitaciones: ${d.limitaciones||'-'} | Expectativas: ${d.expectativas||'-'}\nEmpeora con: ${fa(d.empeoraConArray)} | Mejora con: ${fa(d.mejoraConArray)}\nPatrón mecánico: ${fa(d.patronMecanico)} | Psicosocial: ${fa(d.factoresPsicosociales)}\nPostura: ${fa(d.postura)} | Marcha: ${fa(d.marcha)} | Control motor: ${fa(d.controlMotor)}\nPresentación: ${fa(d.presentacionDominante)}\nDiagnóstico fisioterapéutico: ${d.diagnosticoFisio||'-'}\nPlan: ${d.terapiaManual||'-'}\nObjetivos: corto: ${d.objetivosCorto||'-'} | medio: ${d.objetivosMedio||'-'} | largo: ${d.objetivosLargo||'-'}\nConclusión: ${d.conclusion||'-'}\n\nRedacta el informe con estas secciones en MAYÚSCULAS:\nPRESENTACIÓN DEL CASO\nHALLAZGOS DE LA EXPLORACIÓN FÍSICA\nVALORACIÓN NEUROLÓGICA\nDIAGNÓSTICO FISIOTERAPÉUTICO\nOBJETIVOS DEL TRATAMIENTO\nPLAN DE TRATAMIENTO\nRECOMENDACIONES PARA EL PACIENTE\nPRONÓSTICO\n\nTono profesional pero empático. Explica términos técnicos entre paréntesis. En párrafos, sin listas.`;
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,datos})
+    });
+    const d=await r.json();
+    clearInterval(iv);loading.style.display='none';
+    const informe=d.informe||'';
+    if(informe){
+      informeGenerado=informe;
+      document.getElementById('anamInformeTxt').textContent=informe;
+      infBox.style.display='block';
+      infBox.scrollIntoView({behavior:'smooth'});
+    }else{btn.style.display='block';toast(d.error||'Error al generar el informe',false);}
+  }catch(e){
+    clearInterval(iv);loading.style.display='none';btn.style.display='block';
+    toast('Error: '+e.message,false);
+  }
 }
 
 function descargarInformePDF(){
@@ -1156,7 +1145,6 @@ function resetAnamnesis(){
   anamPacId=null;anamPacNom='';informeGenerado='';
   window.scrollTo({top:0,behavior:'smooth'});
 }
-
 </script>
 </body>
 </html>
