@@ -1117,30 +1117,20 @@ async function generarInforme(){
   try{
     const fisioNom=fisios.find(f=>f.id===fisioSelId)?.nombre||'';
     const prompt=construirPromptCliente(anamPacNom,fisioNom,datos);
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'x-api-key':'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',
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true',
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})
-    });
-    const d=await r.json();
-    clearInterval(iv);loading.style.display='none';
-    const informe=d.content?.[0]?.text||'';
-    if(informe){
-      informeGenerado=informe;
-      document.getElementById('anamInformeTxt').textContent=informe;
-      infBox.style.display='block';
-      infBox.scrollIntoView({behavior:'smooth'});
-    }else{btn.style.display='block';toast('Error al generar el informe',false);}
-  }catch(e){
-    clearInterval(iv);loading.style.display='none';btn.style.display='block';
-    toast('Error: '+e.message,false);
-  }
-}
+    const r=await fetch('/api/pacientes?action=informe',{
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,datos})
+});
+const d=await r.json();
+clearInterval(iv);loading.style.display='none';
+const informe=d.informe||'';
+if(informe){
+  informeGenerado=informe;
+  document.getElementById('anamInformeTxt').textContent=informe;
+  infBox.style.display='block';
+  infBox.scrollIntoView({behavior:'smooth'});
+}else{btn.style.display='block';toast(d.error||'Error al generar el informe',false);}
 
 function construirPromptCliente(pacienteNombre,fisioNom,d){
   const fa=arr=>(!arr||!arr.length)?'-':arr.join(', ');
