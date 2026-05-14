@@ -1082,13 +1082,6 @@ async function generarInforme(){
   let mi=0;
   const iv=setInterval(()=>{mi=(mi+1)%msgs.length;document.getElementById('anamLoadingTxt').textContent=msgs[mi];},2500);
 
-  const gRad=name=>{const el=document.querySelector('input[name="'+name+'"]:checked');return el?el.parentElement.textContent.trim():'';};
-  const sRow=r=>{const rows=document.querySelectorAll('.anam-tbl')[1]?.rows;return{d:rows?.[r]?.cells?.[2]?.querySelector('select')?.value||'-',i:rows?.[r]?.cells?.[3]?.querySelector('select')?.value||'-'};};
-  const fuRow=r=>{const rows=document.querySelectorAll('.anam-tbl')[2]?.rows;return{d:rows?.[r]?.cells?.[3]?.querySelector('select')?.value||'-',i:rows?.[r]?.cells?.[4]?.querySelector('select')?.value||'-'};};
-  const cadRow=r=>{const rows=document.querySelectorAll('.anam-tbl')[3]?.rows;return{d:rows?.[r]?.cells?.[1]?.querySelector('input')?.value||'-',i:rows?.[r]?.cells?.[2]?.querySelector('input')?.value||'-'};};
-  const monoRows=document.querySelectorAll('.anam-tbl')[0]?.rows;
-  const g2sels=document.querySelectorAll('#tAnam .g2 select');
-  const tcSelects=document.querySelectorAll('#tAnam .anam-test-card .field select, #tAnam .field select');
   const datos={
     edad:document.getElementById('aEdad').value,
     profesion:document.getElementById('aProfesion').value,
@@ -1102,6 +1095,8 @@ async function generarInforme(){
     mecanismoAparicion:document.getElementById('aMecanismo').value,
     evolucion:document.getElementById('aEvolucion').value,
     evaActual:document.getElementById('aEvaSlider').value,
+    evaMaxima:document.getElementById('aEvaMax').value,
+    evaMinima:document.getElementById('aEvaMin').value,
     irradiacion:document.getElementById('aIrradiacion').value,
     hormigueo:document.getElementById('aHormigueo').value,
     debilidad:document.getElementById('aDebilidad').value,
@@ -1115,87 +1110,35 @@ async function generarInforme(){
     postura:getChecked('postura'),
     marcha:getChecked('marcha'),
     controlMotor:getChecked('controlMotor'),
-    irritabilidad:gRad('irritabilidad'),
-    estadoFuncional:gRad('estadoFunc'),
-    hipHinge:gRad('hipHinge'),
-    monopodalEquD:monoRows?.[1]?.cells?.[1]?.querySelector('select')?.value||'-',
-    monopodalEquI:monoRows?.[1]?.cells?.[2]?.querySelector('select')?.value||'-',
-    monopodalTrendD:monoRows?.[2]?.cells?.[1]?.querySelector('select')?.value||'-',
-    monopodalTrendI:monoRows?.[2]?.cells?.[2]?.querySelector('select')?.value||'-',
-    monopodalDolorD:monoRows?.[3]?.cells?.[1]?.querySelector('input')?.value||'-',
-    monopodalDolorI:monoRows?.[3]?.cells?.[2]?.querySelector('input')?.value||'-',
-    thomasD:gRad('thomasD'), thomasI:gRad('thomasI'),
-    extCadDer:document.getElementById('aExtCadDer')?.value||'-',
-    extCadIzq:document.getElementById('aExtCadIzq')?.value||'-',
-    marchaTalones:tcSelects[0]?.value||'-',
-    marchaPuntillas:tcSelects[1]?.value||'-',
-    sensL1D:sRow(1).d, sensL1I:sRow(1).i, sensL2D:sRow(2).d, sensL2I:sRow(2).i,
-    sensL3D:sRow(3).d, sensL3I:sRow(3).i, sensL4D:sRow(4).d, sensL4I:sRow(4).i,
-    sensL5D:sRow(5).d, sensL5I:sRow(5).i, sensS1D:sRow(6).d, sensS1I:sRow(6).i,
-    sensS2D:sRow(7).d, sensS2I:sRow(7).i,
-    rotulD:g2sels[0]?.value||'-', rotulI:g2sels[1]?.value||'-',
-    aquilD:g2sels[2]?.value||'-', aquilI:g2sels[3]?.value||'-',
-    isquioD:g2sels[4]?.value||'-', isquioI:g2sels[5]?.value||'-',
-    fuerzaL1L2D:fuRow(1).d, fuerzaL1L2I:fuRow(1).i,
-    fuerzaL2L3D:fuRow(2).d, fuerzaL2L3I:fuRow(2).i,
-    fuerzaL3L4D:fuRow(3).d, fuerzaL3L4I:fuRow(3).i,
-    fuerzaL4D:fuRow(4).d, fuerzaL4I:fuRow(4).i,
-    fuerzaL5halluxD:fuRow(5).d, fuerzaL5halluxI:fuRow(5).i,
-    fuerzaL5abdD:fuRow(6).d, fuerzaL5abdI:fuRow(6).i,
-    fuerzaS1D:fuRow(7).d, fuerzaS1I:fuRow(7).i,
-    fuerzaS1S2D:fuRow(8).d, fuerzaS1S2I:fuRow(8).i,
-    fuerzaS2D:fuRow(9).d, fuerzaS2I:fuRow(9).i,
-    lasegueD:document.querySelectorAll('.anam-tbl')[0]?.rows?.[1]?.cells?.[1]?.querySelector('select')?.value||'-',
-    lasegueI:document.querySelectorAll('.anam-tbl')[0]?.rows?.[2]?.cells?.[1]?.querySelector('select')?.value||'-',
-    bragardD:gRad('bragardD'), bragardI:gRad('bragardI'),
-    slumpD:gRad('slumpD'), slumpI:gRad('slumpI'),
-    lasCruzD:gRad('lasCruzD'), lasCruzI:gRad('lasCruzI'),
-    kernigD:gRad('kernigD'), kernigI:gRad('kernigI'),
-    gaenslenD:gRad('gaenslenD'), gaenslenI:gRad('gaenslenI'),
-    mennellD:gRad('mennellD'), mennellI:gRad('mennellI'),
-    yeomanD:gRad('yeomanD'), yeomanI:gRad('yeomanI'),
-    comprSID:gRad('comprSID'), comprSII:gRad('comprSII'),
-    distrSID:gRad('distrSID'), distrSII:gRad('distrSII'),
-    faberD:gRad('faberD'), faberI:gRad('faberI'),
-    caderaFlexD:cadRow(1).d, caderaFlexI:cadRow(1).i,
-    caderaExtD:cadRow(2).d, caderaExtI:cadRow(2).i,
-    caderaRotIntD:cadRow(3).d, caderaRotIntI:cadRow(3).i,
-    caderaRotExtD:cadRow(4).d, caderaRotExtI:cadRow(4).i,
-    fadirD:gRad('fadirD'), fadirI:gRad('fadirI'),
-    faberCadD:gRad('faberCadD'), faberCadI:gRad('faberCadI'),
-    scourD:gRad('scourD'), scourI:gRad('scourI'),
     presentacionDominante:getChecked('clasif'),
     diagnosticoFisio:document.getElementById('aDiagFisio').value,
     objetivosCorto:document.getElementById('aObjCorto').value,
     objetivosMedio:document.getElementById('aObjMedio').value,
     objetivosLargo:document.getElementById('aObjLargo').value,
     terapiaManual:document.getElementById('aPlanTotal')?.value||'',
+    ejercicioTerapeutico:'',
+    neurodinamia:'',
+    educacion:'',
+    tecnologias:'',
     conclusion:document.getElementById('aConclusion').value,
   };
 
   try{
     const fisioNom=fisios.find(f=>f.id===fisioSelId)?.nombre||'';
-    const prompt=construirPromptCliente(anamPacNom,fisioNom,datos);
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
+    const r=await fetch('/api/pacientes?action=informe',{
       method:'POST',
-      headers:{
-        'x-api-key':'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',
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true',
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,datos})
     });
     const d=await r.json();
     clearInterval(iv);loading.style.display='none';
-    const informe=d.content?.[0]?.text||'';
+    const informe=d.informe||'';
     if(informe){
       informeGenerado=informe;
       document.getElementById('anamInformeTxt').textContent=informe;
       infBox.style.display='block';
       infBox.scrollIntoView({behavior:'smooth'});
-      fetch('/api/pacientes?action=anamnesis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,datos,informeGenerado:informe})}).catch(()=>{});
-    }else{btn.style.display='block';toast('Error al generar el informe',false);}
+    }else{btn.style.display='block';toast(d.error||'Error al generar el informe',false);}
   }catch(e){
     clearInterval(iv);loading.style.display='none';btn.style.display='block';
     toast('Error: '+e.message,false);
