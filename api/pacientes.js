@@ -46,39 +46,125 @@ export default async function handler(req) {
       const { pacienteId, pacienteNombre, fisioNombre, datos } = body;
       const d = datos || {};
       const fa = arr => (!arr || !arr.length) ? '-' : arr.join(', ');
+      const val = v => v || '-';
 
-      const prompt = `Eres un fisioterapeuta experto redactando un informe de valoración para el paciente ${pacienteNombre || 'el paciente'}.
-El informe debe ser completamente PROFESIONAL usando terminología fisioterapéutica correcta, pero EXPLICADO para el paciente con términos técnicos entre paréntesis. En español, sin markdown, secciones en MAYÚSCULAS.
-Fisioterapeuta: ${fisioNombre || '-'} | Fecha: ${new Date().toLocaleDateString('es-ES')}
-Paciente: ${pacienteNombre || '-'} | Edad: ${d.edad || '-'} | Profesión: ${d.profesion || '-'} | Actividad: ${d.actividadFisica || '-'}
-Diagnóstico médico: ${d.diagnosticoMedico || '-'}
-RM: ${d.rm || '-'} | TAC: ${d.tac || '-'} | RX: ${d.rx || '-'}
-Dolor principal: ${d.dolorPrincipal || '-'}
-Inicio: ${d.inicioSintomas || '-'} | Mecanismo: ${d.mecanismoAparicion || '-'}
-Evolución: ${d.evolucion || '-'}
-EVA actual: ${d.evaActual || '-'}/10
-Irradiación: ${d.irradiacion || '-'} | Hormigueo: ${d.hormigueo || '-'} | Debilidad: ${d.debilidad || '-'}
-Limitaciones: ${d.limitaciones || '-'} | Expectativas: ${d.expectativas || '-'}
+      const prompt = `Eres un fisioterapeuta experto clínico. Redacta un informe de valoración profesional y completo para el paciente ${pacienteNombre || 'el paciente'}.
+
+INSTRUCCIONES CLAVE:
+- Interpreta cada resultado de test de forma clínica
+- Correlaciona los hallazgos entre sí para construir un cuadro clínico coherente
+- Identifica el patrón radicular si existe (L4, L5, S1) basándote en la suma de hallazgos
+- Si hay disfunción sacroilíaca, identifícala y cuantifica (número de tests positivos)
+- Genera un protocolo de tratamiento específico y detallado según los hallazgos
+- Tono profesional pero comprensible para el paciente
+- En español, sin markdown, secciones en MAYÚSCULAS
+- En párrafos, sin listas ni guiones
+
+DATOS DEL PACIENTE:
+Fisioterapeuta: ${val(fisioNombre)} | Fecha: ${new Date().toLocaleDateString('es-ES')}
+Paciente: ${val(pacienteNombre)} | Edad: ${val(d.edad)} | Profesión: ${val(d.profesion)} | Actividad: ${val(d.actividadFisica)}
+Diagnóstico médico: ${val(d.diagnosticoMedico)}
+RM: ${val(d.rm)} | TAC: ${val(d.tac)} | RX: ${val(d.rx)}
+
+MOTIVO DE CONSULTA:
+Dolor principal: ${val(d.dolorPrincipal)}
+Inicio: ${val(d.inicioSintomas)} | Mecanismo: ${val(d.mecanismoAparicion)}
+Evolución: ${val(d.evolucion)}
+EVA actual: ${val(d.evaActual)}/10
+Irradiación: ${val(d.irradiacion)} | Hormigueo: ${val(d.hormigueo)} | Debilidad: ${val(d.debilidad)}
+Limitaciones: ${val(d.limitaciones)} | Expectativas: ${val(d.expectativas)}
 Empeora con: ${fa(d.empeoraConArray)} | Mejora con: ${fa(d.mejoraConArray)}
-Patrón mecánico: ${fa(d.patronMecanico)} | Psicosocial: ${fa(d.factoresPsicosociales)}
+Patrón mecánico: ${fa(d.patronMecanico)}
+Factores psicosociales: ${fa(d.factoresPsicosociales)}
+Banderas rojas: ${fa(d.banderas)}
+
+OBSERVACIÓN GLOBAL:
 Postura: ${fa(d.postura)} | Marcha: ${fa(d.marcha)} | Control motor: ${fa(d.controlMotor)}
+
+TEST FUNCIONALES:
+Hip hinge: ${val(d.hipHinge)}
+Monopodal D: ${val(d.monopodalEquD)} | Trendelenburg D: ${val(d.monopodalTrendD)} | Dolor D: ${val(d.monopodalDolorD)}
+Monopodal I: ${val(d.monopodalEquI)} | Trendelenburg I: ${val(d.monopodalTrendI)} | Dolor I: ${val(d.monopodalDolorI)}
+Thomas D: ${val(d.thomasD)} | Thomas I: ${val(d.thomasI)}
+Extensión cadera D (orden activación): ${val(d.extCadDer)}
+Extensión cadera I (orden activación): ${val(d.extCadIzq)}
+Marcha talones: ${val(d.marchaTalones)}
+Marcha puntillas: ${val(d.marchaPuntillas)}
+
+SENSIBILIDAD (dermatomas):
+L1 D/I: ${val(d.sensL1D)}/${val(d.sensL1I)} | L2 D/I: ${val(d.sensL2D)}/${val(d.sensL2I)} | L3 D/I: ${val(d.sensL3D)}/${val(d.sensL3I)}
+L4 D/I: ${val(d.sensL4D)}/${val(d.sensL4I)} | L5 D/I: ${val(d.sensL5D)}/${val(d.sensL5I)}
+S1 D/I: ${val(d.sensS1D)}/${val(d.sensS1I)} | S2 D/I: ${val(d.sensS2D)}/${val(d.sensS2I)}
+
+REFLEJOS OSTEOTENDINOSOS:
+Rotuliano D: ${val(d.rotulD)} / I: ${val(d.rotulI)} → (L3-L4: hipoactivo/ausente = lesión raíz)
+Aquíleo D: ${val(d.aquilD)} / I: ${val(d.aquilI)} → (S1-S2: hipoactivo/ausente = lesión raíz)
+Isquiotibial medial D: ${val(d.isquioD)} / I: ${val(d.isquioI)} → (L5: frecuente en afectación L5)
+
+FUERZA POR RAÍCES (Daniels 0-5):
+L1-L2 flexión cadera D: ${val(d.fuerzaL1L2D)} / I: ${val(d.fuerzaL1L2I)}
+L2-L3 aducción cadera D: ${val(d.fuerzaL2L3D)} / I: ${val(d.fuerzaL2L3I)}
+L3-L4 extensión rodilla D: ${val(d.fuerzaL3L4D)} / I: ${val(d.fuerzaL3L4I)}
+L4 dorsiflexión tobillo D: ${val(d.fuerzaL4D)} / I: ${val(d.fuerzaL4I)}
+L5 extensión hallux D: ${val(d.fuerzaL5halluxD)} / I: ${val(d.fuerzaL5halluxI)}
+L5 abducción cadera D: ${val(d.fuerzaL5abdD)} / I: ${val(d.fuerzaL5abdI)}
+S1 flexión plantar D: ${val(d.fuerzaS1D)} / I: ${val(d.fuerzaS1I)}
+S1-S2 eversión pie D: ${val(d.fuerzaS1S2D)} / I: ${val(d.fuerzaS1S2I)}
+S2 flexión rodilla D: ${val(d.fuerzaS2D)} / I: ${val(d.fuerzaS2I)}
+
+EXPLORACIÓN NEURODINÁMICA:
+Lasègue D: ${val(d.lasegueD)} / I: ${val(d.lasegueI)}
+Bragard D: ${val(d.bragardD)} / I: ${val(d.bragardI)}
+Slump D: ${val(d.slumpD)} / I: ${val(d.slumpI)}
+Lasègue cruzado D: ${val(d.lasCruzD)} / I: ${val(d.lasCruzI)}
+Kernig D: ${val(d.kernigD)} / I: ${val(d.kernigI)}
+
+EXPLORACIÓN SACROILÍACA:
+Gaenslen D: ${val(d.gaenslenD)} / I: ${val(d.gaenslenI)}
+Mennell D: ${val(d.mennellD)} / I: ${val(d.mennellI)}
+Yeoman D: ${val(d.yeomanD)} / I: ${val(d.yeomanI)}
+Compresión SI D: ${val(d.comprSID)} / I: ${val(d.comprSII)}
+Distracción SI D: ${val(d.distrSID)} / I: ${val(d.distrSII)}
+FABER/Patrick D: ${val(d.faberD)} / I: ${val(d.faberI)}
+
+EXPLORACIÓN DE CADERA:
+ROM cadera: Flexión D/I: ${val(d.caderaFlexD)}/${val(d.caderaFlexI)} | Extensión D/I: ${val(d.caderaExtD)}/${val(d.caderaExtI)}
+Rot. interna D/I: ${val(d.caderaRotIntD)}/${val(d.caderaRotIntI)} | Rot. externa D/I: ${val(d.caderaRotExtD)}/${val(d.caderaRotExtI)}
+FADIR D: ${val(d.fadirD)} / I: ${val(d.fadirI)}
+FABER cadera D: ${val(d.faberCadD)} / I: ${val(d.faberCadI)}
+Scour D: ${val(d.scourD)} / I: ${val(d.scourI)}
+
+CLASIFICACIÓN CLÍNICA:
 Presentación: ${fa(d.presentacionDominante)}
-Diagnóstico fisioterapéutico: ${d.diagnosticoFisio || '-'}
-Plan: ${d.terapiaManual || '-'}
-Objetivos: corto: ${d.objetivosCorto || '-'} | medio: ${d.objetivosMedio || '-'} | largo: ${d.objetivosLargo || '-'}
-Conclusión: ${d.conclusion || '-'}
+Irritabilidad: ${val(d.irritabilidad)} | Estado: ${val(d.estadoFuncional)}
+
+DIAGNÓSTICO Y PLAN DEL FISIOTERAPEUTA:
+Diagnóstico: ${val(d.diagnosticoFisio)}
+Plan: ${val(d.terapiaManual)}
+Objetivos corto: ${val(d.objetivosCorto)}
+Objetivos medio: ${val(d.objetivosMedio)}
+Objetivos largo: ${val(d.objetivosLargo)}
+Conclusión: ${val(d.conclusion)}
+
+GUÍA DE INTERPRETACIÓN Y CORRELACIÓN (usa esto para redactar el informe):
+- Lasègue + Bragard positivos = compresión radicular confirmada
+- Lasègue cruzado positivo = hernia medial (alta especificidad ~90%)
+- Reflejo aquíleo ↓/ausente + hipoestesia S1 + marcha puntillas alterada = radiculopatía S1
+- Reflejo rotuliano ↓/ausente + hipoestesia L4 + dorsiflexión débil = radiculopatía L4
+- Reflejo isquiotibial ↓ + hipoestesia L5 + extensión hallux débil + marcha talones alterada = radiculopatía L5
+- 3+ tests SI positivos = disfunción sacroilíaca confirmada
+- Thomas positivo + extensión cadera con erectores dominantes + Trendelenburg = patrón glúteo inhibido
+- Banderas rojas presentes = mencionar URGENCIA de derivación médica
 
 Redacta el informe con estas secciones en MAYÚSCULAS:
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
-VALORACIÓN NEUROLÓGICA
-DIAGNÓSTICO FISIOTERAPÉUTICO
+ANÁLISIS NEUROLÓGICO E INTERPRETACIÓN DE TESTS
+CORRELACIÓN CLÍNICA Y DIAGNÓSTICO FISIOTERAPÉUTICO
 OBJETIVOS DEL TRATAMIENTO
-PLAN DE TRATAMIENTO
+PROTOCOLO DE TRATAMIENTO
 RECOMENDACIONES PARA EL PACIENTE
-PRONÓSTICO
-
-Tono profesional pero empático. Explica términos técnicos entre paréntesis. En párrafos, sin listas.`;
+PRONÓSTICO`;
 
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
