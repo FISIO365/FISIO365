@@ -45,8 +45,144 @@ export default async function handler(req) {
     try {
       const { pacienteId, pacienteNombre, fisioNombre, datos } = body;
       const d = datos || {};
-      const fa = arr => (!arr || !arr.length) ? '-' : arr.join(', ');
-      const val = v => v || '-';
+      const fa = arr => (!arr || !arr.length) ? null : arr.join(', ');
+      const val = v => (v && v !== '-') ? v : null;
+      // Solo incluir en el prompt los campos que tienen valor
+      const line = (label, value) => value ? label + ': ' + value + '\n' : '';
+      const lineArr = (label, arr) => (arr && arr.length) ? label + ': ' + arr.join(', ') + '\n' : '';
+
+      const prompt = [
+        'Eres un fisioterapeuta experto. Redacta un informe de valoración profesional.',
+        'Interpreta cada resultado de test clínicamente. Correlaciona hallazgos para construir un cuadro clínico coherente.',
+        'Identifica el patrón radicular si existe (L4, L5, S1). Si hay disfunción sacroilíaca, identifícala.',
+        'En español, sin markdown, secciones en MAYÚSCULAS, en párrafos sin listas.',
+        '',
+        `Fisioterapeuta: ${fisioNombre||'-'} | Fecha: ${new Date().toLocaleDateString('es-ES')}`,
+        `Paciente: ${pacienteNombre||'-'} | Edad: ${d.edad||'-'} | Profesión: ${d.profesion||'-'} | Actividad: ${d.actividadFisica||'-'}`,
+        d.diagnosticoMedico ? `Diagnóstico médico: ${d.diagnosticoMedico}` : '',
+        d.rm ? `RM: ${d.rm}` : '',
+        d.dolorPrincipal ? `Dolor principal: ${d.dolorPrincipal}` : '',
+        d.inicioSintomas ? `Inicio: ${d.inicioSintomas}` : '',
+        d.evolucion ? `Evolución: ${d.evolucion}` : '',
+        `EVA: ${d.evaActual||'-'}/10`,
+        d.irradiacion ? `Irradiación: ${d.irradiacion}` : '',
+        d.hormigueo ? `Hormigueo: ${d.hormigueo}` : '',
+        d.debilidad ? `Debilidad: ${d.debilidad}` : '',
+        d.limitaciones ? `Limitaciones: ${d.limitaciones}` : '',
+        fa(d.banderas) ? `BANDERAS ROJAS: ${fa(d.banderas)}` : '',
+        fa(d.empeoraConArray) ? `Empeora con: ${fa(d.empeoraConArray)}` : '',
+        fa(d.mejoraConArray) ? `Mejora con: ${fa(d.mejoraConArray)}` : '',
+        fa(d.patronMecanico) ? `Patrón mecánico: ${fa(d.patronMecanico)}` : '',
+        fa(d.factoresPsicosociales) ? `Psicosocial: ${fa(d.factoresPsicosociales)}` : '',
+        fa(d.postura) ? `Postura: ${fa(d.postura)}` : '',
+        fa(d.marcha) ? `Marcha observación: ${fa(d.marcha)}` : '',
+        fa(d.controlMotor) ? `Control motor: ${fa(d.controlMotor)}` : '',
+        d.hipHinge ? `Hip hinge: ${d.hipHinge}` : '',
+        (d.thomasD && d.thomasD!=='-') ? `Thomas D/I: ${d.thomasD}/${d.thomasI||'-'}` : '',
+        (d.marchaTalones && d.marchaTalones!=='-') ? `Marcha talones (L4-L5): ${d.marchaTalones}` : '',
+        (d.marchaPuntillas && d.marchaPuntillas!=='-') ? `Marcha puntillas (S1): ${d.marchaPuntillas}` : '',
+        // Sensibilidad - solo mostrar las alteradas
+        ...[['L1',d.sensL1D,d.sensL1I],['L2',d.sensL2D,d.sensL2I],['L3',d.sensL3D,d.sensL3I],
+            ['L4',d.sensL4D,d.sensL4I],['L5',d.sensL5D,d.sensL5I],['S1',d.sensS1D,d.sensS1I],['S2',d.sensS2D,d.sensS2I]]
+          .filter(([r,dd,ii])=>(dd&&dd!=='Normal'&&dd!=='-')||(ii&&ii!=='Normal'&&ii!=='-'))
+          .map(([r,dd,ii])=>`Sensibilidad ${r}: D=${dd||'-'} I=${ii||'-'}`),
+        // Reflejos - solo mostrar los alterados
+        (d.rotulD && d.rotulD!=='Normal' && d.rotulD!=='-') ? `Reflejo rotuliano D: ${d.rotulD}` : '',
+        (d.rotulI && d.rotulI!=='Normal' && d.rotulI!=='-') ? `Reflejo rotuliano I: ${d.rotulI}` : '',
+        (d.aquilD && d.aquilD!=='Normal' && d.aquilD!=='-') ? `Reflejo aquíleo D: ${d.aquilD}` : '',
+        (d.aquilI && d.aquilI!=='Normal' && d.aquilI!=='-') ? `Reflejo aquíleo I: ${d.aquilI}` : '',
+        (d.isquioD && d.isquioD!=='Normal' && d.isquioD!=='-') ? `Reflejo isquiotibial D: ${d.isquioD}` : '',
+        // Fuerza - solo mostrar las deficitarias
+        ...[['L1-L2 flex cadera',d.fuerzaL1L2D,d.fuerzaL1L2I],['L3-L4 ext rodilla',d.fuerzaL3L4D,d.fuerzaL3L4I],
+            ['L4 dorsiflexión',d.fuerzaL4D,d.fuerzaL4I],['L5 ext hallux',d.fuerzaL5halluxD,d.fuerzaL5halluxI],
+            ['L5 abd cadera',d.fuerzaL5abdD,d.fuerzaL5abdI],['S1 flex plantar',d.fuerzaS1D,d.fuerzaS1I]]
+          .filter(([m,dd,ii])=>(dd&&dd!=='5'&&dd!=='-')||(ii&&ii!=='5'&&ii!=='-'))
+          .map(([m,dd,ii])=>`Fuerza ${m}: D=${dd||'-'}/5 I=${ii||'-'}/5`),
+        // Neurodinamia
+        (d.lasegueD && d.lasegueD!=='-') ? `Lasègue D: ${d.lasegueD}` : '',
+        (d.lasegueI && d.lasegueI!=='-') ? `Lasègue I: ${d.lasegueI}` : '',
+        (d.bragardD && d.bragardD!=='-') ? `Bragard D: ${d.bragardD}` : '',
+        (d.bragardI && d.bragardI!=='-') ? `Bragard I: ${d.bragardI}` : '',
+        (d.slumpD && d.slumpD!=='-') ? `Slump D: ${d.slumpD}` : '',
+        (d.lasCruzD && d.lasCruzD!=='-') ? `Lasègue cruzado D: ${d.lasCruzD}` : '',
+        (d.kernigD && d.kernigD!=='-') ? `Kernig D: ${d.kernigD}` : '',
+        // Sacroilíaca
+        (d.gaenslenD && d.gaenslenD!=='-') ? `Gaenslen D/I: ${d.gaenslenD}/${d.gaenslenI||'-'}` : '',
+        (d.mennellD && d.mennellD!=='-') ? `Mennell D/I: ${d.mennellD}/${d.mennellI||'-'}` : '',
+        (d.yeomanD && d.yeomanD!=='-') ? `Yeoman D/I: ${d.yeomanD}/${d.yeomanI||'-'}` : '',
+        (d.comprSID && d.comprSID!=='-') ? `Compresión SI D/I: ${d.comprSID}/${d.comprSII||'-'}` : '',
+        (d.distrSID && d.distrSID!=='-') ? `Distracción SI D/I: ${d.distrSID}/${d.distrSII||'-'}` : '',
+        (d.faberD && d.faberD!=='-') ? `FABER SI D/I: ${d.faberD}/${d.faberI||'-'}` : '',
+        // Cadera
+        (d.fadirD && d.fadirD!=='-') ? `FADIR D/I: ${d.fadirD}/${d.fadirI||'-'}` : '',
+        (d.faberCadD && d.faberCadD!=='-') ? `FABER cadera D/I: ${d.faberCadD}/${d.faberCadI||'-'}` : '',
+        (d.scourD && d.scourD!=='-') ? `Scour D/I: ${d.scourD}/${d.scourI||'-'}` : '',
+        fa(d.presentacionDominante) ? `Clasificación: ${fa(d.presentacionDominante)}` : '',
+        d.irritabilidad ? `Irritabilidad: ${d.irritabilidad}` : '',
+        d.estadoFuncional ? `Estado: ${d.estadoFuncional}` : '',
+        d.diagnosticoFisio ? `Diagnóstico fisio: ${d.diagnosticoFisio}` : '',
+        d.terapiaManual ? `Plan: ${d.terapiaManual}` : '',
+        d.objetivosCorto ? `Objetivos corto: ${d.objetivosCorto}` : '',
+        d.conclusion ? `Conclusión: ${d.conclusion}` : '',
+        '',
+        'Redacta el informe con estas secciones en MAYÚSCULAS:',
+        'PRESENTACIÓN DEL CASO',
+        'HALLAZGOS DE LA EXPLORACIÓN FÍSICA',
+        'ANÁLISIS NEUROLÓGICO E INTERPRETACIÓN DE TESTS',
+        'CORRELACIÓN CLÍNICA Y DIAGNÓSTICO FISIOTERAPÉUTICO',
+        'OBJETIVOS DEL TRATAMIENTO',
+        'PLAN DE TRATAMIENTO',
+        'RECOMENDACIONES PARA EL PACIENTE',
+        'PRONÓSTICO',
+      ].filter(Boolean).join('\n');FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
+const BASE_ID = 'appsrGnHpFt8sVD5A';
+const PACIENTES_TABLE = 'tbldBVgClS4HY2mOJ';
+const ANAMNESIS_TABLE = 'tblF4as0orW1b6KIw';
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
+export default async function handler(req) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
+  };
+
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  const url = new URL(req.url);
+  const action = url.searchParams.get('action');
+  const queryPwd = url.searchParams.get('pwd') || '';
+
+  let body = {};
+  if (req.method === 'POST') {
+    try {
+      const text = await req.text();
+      body = text ? JSON.parse(text) : {};
+    } catch(e) {
+      body = {};
+    }
+  }
+
+  const pwd = (body.pwd || queryPwd || '').trim();
+  const expected = (FISIO_PASSWORD || '').trim();
+
+  if (pwd !== expected) {
+    return new Response(JSON.stringify({ ok: false, error: 'Contraseña incorrecta' }), { status: 401, headers: corsHeaders });
+  }
+
+  // ── GENERAR INFORME ──
+  if (action === 'informe' && req.method === 'POST') {
+    try {
+      const { pacienteId, pacienteNombre, fisioNombre, datos } = body;
+      const d = datos || {};
+      const fa = arr => (!arr || !arr.length) ? null : arr.join(', ');
+      const val = v => (v && v !== '-') ? v : null;
+      // Solo incluir en el prompt los campos que tienen valor
+      const line = (label, value) => value ? label + ': ' + value + '\n' : '';
+      const lineArr = (label, arr) => (arr && arr.length) ? label + ': ' + arr.join(', ') + '\n' : '';
 
       const prompt = `Eres un fisioterapeuta experto clínico. Redacta un informe de valoración profesional y completo para el paciente ${pacienteNombre || 'el paciente'}.
 
@@ -175,7 +311,7 @@ PRONÓSTICO`;
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 2500,
+          max_tokens: 3000,
           messages: [{ role: 'user', content: prompt }]
         })
       });
