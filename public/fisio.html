@@ -1024,7 +1024,7 @@ let anamPacId=null,anamPacNom='',informeGenerado='';
 const evaDescs=['Sin dolor','Dolor muy leve','Dolor leve','Dolor leve-moderado','Dolor moderado','Dolor moderado','Dolor moderado-intenso','Dolor intenso','Dolor muy intenso','Dolor casi insoportable','Dolor insoportable'];
 
 function anamFiltrar(){
-  const q=document.getElementById('anamPs')?.value||''.toLowerCase();
+  const q=document.getElementById('anamPs').value.toLowerCase();
   const el=document.getElementById('anamPlist');
   if(!q||q.length<2){el.innerHTML='';return;}
   const fl=pacs.filter(p=>p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q)).slice(0,6);
@@ -1037,7 +1037,7 @@ function anamFiltrar(){
     div.innerHTML=`<div class="pav">${ini}</div><div><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div>`;
     div.onclick=()=>{
       anamPacId=p.id;anamPacNom=p.nombre;
-      document.getElementById('anamPs')?.value||''=p.nombre;
+      document.getElementById('anamPs').value=p.nombre;
       document.getElementById('anamPlist').innerHTML='';
       document.getElementById('anamPsel').textContent='✓ Paciente: '+p.nombre;
       document.getElementById('anamPsel').style.display='block';
@@ -1083,25 +1083,25 @@ async function generarInforme(){
   const iv=setInterval(()=>{mi=(mi+1)%msgs.length;document.getElementById('anamLoadingTxt').textContent=msgs[mi];},2500);
 
   const datos={
-    edad:document.getElementById('aEdad')?.value||'',
-    profesion:document.getElementById('aProfesion')?.value||'',
-    actividadFisica:document.getElementById('aActividad')?.value||'',
-    diagnosticoMedico:document.getElementById('aDiagnostico')?.value||'',
-    rm:document.getElementById('aRM')?.value||'',
-    tac:document.getElementById('aTAC')?.value||'',
-    rx:document.getElementById('aRX')?.value||'',
-    dolorPrincipal:document.getElementById('aDolorPrincipal')?.value||'',
-    inicioSintomas:document.getElementById('aInicio')?.value||'',
-    mecanismoAparicion:document.getElementById('aMecanismo')?.value||'',
-    evolucion:document.getElementById('aEvolucion')?.value||'',
-    evaActual:document.getElementById('aEvaSlider')?.value||'',
-    evaMaxima:document.getElementById('aEvaMax')?.value||'',
-    evaMinima:document.getElementById('aEvaMin')?.value||'',
-    irradiacion:document.getElementById('aIrradiacion')?.value||'',
-    hormigueo:document.getElementById('aHormigueo')?.value||'',
-    debilidad:document.getElementById('aDebilidad')?.value||'',
-    limitaciones:document.getElementById('aLimitaciones')?.value||'',
-    expectativas:document.getElementById('aExpectativas')?.value||'',
+    edad:document.getElementById('aEdad').value,
+    profesion:document.getElementById('aProfesion').value,
+    actividadFisica:document.getElementById('aActividad').value,
+    diagnosticoMedico:document.getElementById('aDiagnostico').value,
+    rm:document.getElementById('aRM').value,
+    tac:document.getElementById('aTAC').value,
+    rx:document.getElementById('aRX').value,
+    dolorPrincipal:document.getElementById('aDolorPrincipal').value,
+    inicioSintomas:document.getElementById('aInicio').value,
+    mecanismoAparicion:document.getElementById('aMecanismo').value,
+    evolucion:document.getElementById('aEvolucion').value,
+    evaActual:document.getElementById('aEvaSlider').value,
+    evaMaxima:document.getElementById('aEvaMax').value,
+    evaMinima:document.getElementById('aEvaMin').value,
+    irradiacion:document.getElementById('aIrradiacion').value,
+    hormigueo:document.getElementById('aHormigueo').value,
+    debilidad:document.getElementById('aDebilidad').value,
+    limitaciones:document.getElementById('aLimitaciones').value,
+    expectativas:document.getElementById('aExpectativas').value,
     banderas:getChecked('banderas'),
     empeoraConArray:getChecked('empeora'),
     mejoraConArray:getChecked('mejora'),
@@ -1111,16 +1111,16 @@ async function generarInforme(){
     marcha:getChecked('marcha'),
     controlMotor:getChecked('controlMotor'),
     presentacionDominante:getChecked('clasif'),
-    diagnosticoFisio:document.getElementById('aDiagFisio')?.value||'',
-    objetivosCorto:document.getElementById('aObjCorto')?.value||'',
-    objetivosMedio:document.getElementById('aObjMedio')?.value||'',
-    objetivosLargo:document.getElementById('aObjLargo')?.value||'',
+    diagnosticoFisio:document.getElementById('aDiagFisio').value,
+    objetivosCorto:document.getElementById('aObjCorto').value,
+    objetivosMedio:document.getElementById('aObjMedio').value,
+    objetivosLargo:document.getElementById('aObjLargo').value,
     terapiaManual:document.getElementById('aPlanTotal')?.value||'',
     ejercicioTerapeutico:'',
     neurodinamia:'',
     educacion:'',
     tecnologias:'',
-    conclusion:document.getElementById('aConclusion')?.value||'',
+    conclusion:document.getElementById('aConclusion').value,
   };
 
   try{
@@ -1156,7 +1156,7 @@ function resetAnamnesis(){
   document.getElementById('tAnam').querySelectorAll('input[type=text],input[type=number],input[type=date],textarea').forEach(e=>e.value='');
   document.getElementById('tAnam').querySelectorAll('input[type=checkbox],input[type=radio]').forEach(e=>e.checked=false);
   document.getElementById('tAnam').querySelectorAll('select').forEach(e=>e.selectedIndex=0);
-  document.getElementById('aEvaSlider')?.value||''=5;anamEva(5);
+  document.getElementById('aEvaSlider').value=5;anamEva(5);
   document.getElementById('anamPsel').style.display='none';
   document.getElementById('anamBanderaWarn').style.display='none';
   document.getElementById('anamInformeBox').style.display='none';
