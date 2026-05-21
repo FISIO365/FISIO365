@@ -35,78 +35,223 @@ export default async function handler(req) {
   const expected = (FISIO_PASSWORD || '').trim();
 
   if (pwd !== expected) {
-    return new Response(JSON.stringify({ ok: false, error: 'Contraseña incorrecta' }), { status: 401, headers: corsHeaders });
+    return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
   }
 
+  // ── LISTAR INFORMES ──────────────────────────────────────────────────────
+  if (action === 'listar-informes') {
+    try {
+      const fields = ['PacienteNombre','FisioNombre','FechaValoracion','InformeGenerado','Protocolo'];
+      const fieldParams = fields.map(f => `fields[]=${encodeURIComponent(f)}`).join('&');
+      const aUrl = `https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}?${fieldParams}&sort[0][field]=FechaValoracion&sort[0][direction]=desc&pageSize=50`;
+      const r = await fetch(aUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+      const data = await r.json();
+      const informes = (data.records || []).map(rec => ({
+        id: rec.id,
+        pacienteNombre: rec.fields['PacienteNombre'] || '—',
+        fisioNombre: rec.fields['FisioNombre'] || '—',
+        fecha: rec.fields['FechaValoracion'] || '—',
+        informe: rec.fields['InformeGenerado'] || '',
+        protocolo: rec.fields['Protocolo'] || 'hernia',
+      }));
+      return new Response(JSON.stringify({ ok: true, informes }), { headers: corsHeaders });
+    } catch(e) {
+      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
+    }
+  }
+
+  // ── GENERAR INFORME IA ───────────────────────────────────────────────────
   if (action === 'informe' && req.method === 'POST') {
     try {
-      const { pacienteId, pacienteNombre, fisioNombre, datos } = body;
+      const { pacienteId, pacienteNombre, fisioNombre, fisioColegiado, datos } = body;
+      const colNum = fisioColegiado ? `Colegiado nº ${fisioColegiado}` : '';
       const d = datos || {};
-      const fa = arr => (!arr || !arr.length) ? null : arr.join(', ');
+      const tipo = d.tipo || 'hernia';
+      const fa = arr => (!arr || !arr.length) ? '-' : arr.join(', ');
+      const fecha = new Date().toLocaleDateString('es-ES');
 
-      const lines = [
-        'Eres un fisioterapeuta experto. Redacta un informe de valoración profesional.',
-        'Interpreta los tests clínicamente y correlaciona hallazgos. Identifica patrón radicular (L4/L5/S1) si existe.',
-        'En español, sin markdown, secciones en MAYÚSCULAS, en párrafos sin listas.',
-        '',
-        `Fisioterapeuta: ${fisioNombre||'-'} | Fecha: ${new Date().toLocaleDateString('es-ES')}`,
-        `Paciente: ${pacienteNombre||'-'} | Edad: ${d.edad||'-'} | Profesión: ${d.profesion||'-'}`,
-        d.diagnosticoMedico ? `Diagnóstico médico: ${d.diagnosticoMedico}` : '',
-        d.rm ? `RM: ${d.rm}` : '',
-        d.dolorPrincipal ? `Dolor: ${d.dolorPrincipal}` : '',
-        d.inicioSintomas ? `Inicio: ${d.inicioSintomas}` : '',
-        d.evolucion ? `Evolución: ${d.evolucion}` : '',
-        `EVA: ${d.evaActual||'-'}/10`,
-        d.irradiacion ? `Irradiación: ${d.irradiacion}` : '',
-        d.hormigueo ? `Hormigueo: ${d.hormigueo}` : '',
-        d.debilidad ? `Debilidad: ${d.debilidad}` : '',
-        d.limitaciones ? `Limitaciones: ${d.limitaciones}` : '',
-        fa(d.banderas) ? `BANDERAS ROJAS: ${fa(d.banderas)}` : '',
-        fa(d.empeoraConArray) ? `Empeora: ${fa(d.empeoraConArray)}` : '',
-        fa(d.mejoraConArray) ? `Mejora: ${fa(d.mejoraConArray)}` : '',
-        fa(d.patronMecanico) ? `Patrón: ${fa(d.patronMecanico)}` : '',
-        fa(d.factoresPsicosociales) ? `Psicosocial: ${fa(d.factoresPsicosociales)}` : '',
-        fa(d.postura) ? `Postura: ${fa(d.postura)}` : '',
-        fa(d.marcha) ? `Marcha: ${fa(d.marcha)}` : '',
-        fa(d.controlMotor) ? `Control motor: ${fa(d.controlMotor)}` : '',
-        d.hipHinge ? `Hip hinge: ${d.hipHinge}` : '',
-        (d.thomasD && d.thomasD!=='-') ? `Thomas D/I: ${d.thomasD}/${d.thomasI||'-'}` : '',
-        (d.marchaTalones && d.marchaTalones!=='-') ? `Marcha talones: ${d.marchaTalones}` : '',
-        (d.marchaPuntillas && d.marchaPuntillas!=='-') ? `Marcha puntillas: ${d.marchaPuntillas}` : '',
-        ...[['L4',d.sensL4D,d.sensL4I],['L5',d.sensL5D,d.sensL5I],['S1',d.sensS1D,d.sensS1I]]
-          .filter(([r,dd,ii])=>(dd&&dd!=='Normal'&&dd!=='-')||(ii&&ii!=='Normal'&&ii!=='-'))
-          .map(([r,dd,ii])=>`Sensibilidad ${r}: D=${dd} I=${ii}`),
-        (d.rotulD && d.rotulD!=='Normal' && d.rotulD!=='-') ? `Rotuliano D: ${d.rotulD}` : '',
-        (d.rotulI && d.rotulI!=='Normal' && d.rotulI!=='-') ? `Rotuliano I: ${d.rotulI}` : '',
-        (d.aquilD && d.aquilD!=='Normal' && d.aquilD!=='-') ? `Aquíleo D: ${d.aquilD}` : '',
-        (d.aquilI && d.aquilI!=='Normal' && d.aquilI!=='-') ? `Aquíleo I: ${d.aquilI}` : '',
-        (d.isquioD && d.isquioD!=='Normal' && d.isquioD!=='-') ? `Isquiotibial D: ${d.isquioD}` : '',
-        ...[['L4 dorsiflexión',d.fuerzaL4D,d.fuerzaL4I],['L5 ext hallux',d.fuerzaL5halluxD,d.fuerzaL5halluxI],
-            ['L5 abd cadera',d.fuerzaL5abdD,d.fuerzaL5abdI],['S1 flex plantar',d.fuerzaS1D,d.fuerzaS1I]]
-          .filter(([m,dd,ii])=>(dd&&dd!=='5'&&dd!=='-')||(ii&&ii!=='5'&&ii!=='-'))
-          .map(([m,dd,ii])=>`Fuerza ${m}: D=${dd}/5 I=${ii}/5`),
-        (d.lasegueD && d.lasegueD!=='-') ? `Lasègue D: ${d.lasegueD}` : '',
-        (d.lasegueI && d.lasegueI!=='-') ? `Lasègue I: ${d.lasegueI}` : '',
-        (d.bragardD && d.bragardD!=='-') ? `Bragard D: ${d.bragardD}` : '',
-        (d.slumpD && d.slumpD!=='-') ? `Slump: ${d.slumpD}` : '',
-        (d.lasCruzD && d.lasCruzD!=='-') ? `Lasègue cruzado D: ${d.lasCruzD}` : '',
-        (d.gaenslenD && d.gaenslenD!=='-') ? `Gaenslen D/I: ${d.gaenslenD}/${d.gaenslenI||'-'}` : '',
-        (d.mennellD && d.mennellD!=='-') ? `Mennell D/I: ${d.mennellD}/${d.mennellI||'-'}` : '',
-        (d.yeomanD && d.yeomanD!=='-') ? `Yeoman D/I: ${d.yeomanD}/${d.yeomanI||'-'}` : '',
-        (d.comprSID && d.comprSID!=='-') ? `Compresión SI D/I: ${d.comprSID}/${d.comprSII||'-'}` : '',
-        (d.distrSID && d.distrSID!=='-') ? `Distracción SI D/I: ${d.distrSID}/${d.distrSII||'-'}` : '',
-        (d.faberD && d.faberD!=='-') ? `FABER SI D/I: ${d.faberD}/${d.faberI||'-'}` : '',
-        (d.fadirD && d.fadirD!=='-') ? `FADIR D/I: ${d.fadirD}/${d.fadirI||'-'}` : '',
-        (d.scourD && d.scourD!=='-') ? `Scour D/I: ${d.scourD}/${d.scourI||'-'}` : '',
-        fa(d.presentacionDominante) ? `Clasificación: ${fa(d.presentacionDominante)}` : '',
-        d.irritabilidad ? `Irritabilidad: ${d.irritabilidad}` : '',
-        d.estadoFuncional ? `Estado: ${d.estadoFuncional}` : '',
-        d.diagnosticoFisio ? `Diagnóstico fisio: ${d.diagnosticoFisio}` : '',
-        d.terapiaManual ? `Plan: ${d.terapiaManual}` : '',
-        d.conclusion ? `Conclusión: ${d.conclusion}` : '',
-        '',
-        'Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEUROLÓGICO / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS / PLAN DE TRATAMIENTO / RECOMENDACIONES / PRONÓSTICO',
-      ].filter(Boolean).join('\n');
+      // Datos comunes
+      const cabecera = `Fisioterapeuta: ${fisioNombre||'-'}${colNum?' | '+colNum:''} | Fecha: ${fecha}
+Paciente: ${pacienteNombre||'-'} | Edad: ${d.edad||'-'} años | Actividad: ${d.act||'-'} | Ocupación: ${d.ocu||'-'}
+IMC: ${d.peso && d.talla ? (d.peso/Math.pow(d.talla/100,2)).toFixed(1) : '-'}`;
+
+      // Prompts específicos por protocolo
+      const prompts = {
+
+        rodilla: `Eres fisioterapeuta experto en rodilla. Redacta un informe de valoración fisioterapéutica de RODILLA. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Rodilla ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'}
+DOLOR: EVA reposo ${d.evr??'-'}/10 | EVA actividad ${d.eva??'-'}/10 | EVA escaleras ${d.eve??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Inflamación: ${d.infl||'-'} | Inestabilidad: ${d.ines||'-'} | Bloqueo: ${d.bloq||'-'}
+EXPLORACIÓN: Flexión: ${d.flex||'-'} | Extensión: ${d.ext||'-'} | McMurray: ${d.mcm||'-'} | Lachman: ${d.lach||'-'} | Estrés colateral: ${d.est||'-'} | Patelofemoral: ${d.pat||'-'} | Fuerza cuádriceps: ${d.fcuad||'-'} | Propiocepción: ${d.prop||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
+Redacta el informe con estas secciones EXACTAS (sin añadir ni quitar):
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
+
+NO incluyas ninguna sección de análisis neurológico ni raíces nerviosas — esta es una valoración de rodilla, no de columna.`,
+
+        fascitis: `Eres fisioterapeuta experto en pie y tobillo. Redacta un informe de valoración fisioterapéutica de FASCITIS PLANTAR. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Pie ${d.pie||'-'} | Evolución: ${d.evol||'-'} | Desencadenante: ${d.ini||'-'} | Calzado: ${d.cal||'-'} | Episodios previos: ${d.epi||'-'}
+DOLOR: EVA primeros pasos ${d.evm??'-'}/10 | EVA actividad ${d.eva??'-'}/10 | EVA final día ${d.evn??'-'}/10 | Dolor matutino: ${d.mat||'-'} | Al calentar: ${d.cal2||'-'} | Reaparece en reposo: ${d.rep||'-'} | Nocturno: ${d.noc||'-'} | Localización: ${d.loc||'-'} | Parestesias: ${d.par||'-'}
+EXPLORACIÓN: Tipo de pie: ${d.tpie||'-'} | Dorsiflexión tobillo: ${d.dors||'-'} | Silfverskiöld: ${d.silf||'-'} | Windlass: ${d.wind||'-'} | Tinel: ${d.tin||'-'} | Heel raise: ${d.hr||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO
+POR QUÉ LE DUELE — explica el mecanismo específico de la fascitis plantar de este paciente
+FACTORES QUE MANTIENEN EL DOLOR
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
+
+NO incluyas ninguna sección neurológica ni de columna — esta es una valoración de pie.`,
+
+        cervical: `Eres fisioterapeuta experto en columna cervical. Redacta un informe de valoración fisioterapéutica CERVICAL. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Región: ${d.reg||'-'} | Diagnóstico previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'}
+DOLOR: EVA cuello ${d.evc??'-'}/10 | EVA brazo ${d.evb??'-'}/10 | EVA cefalea ${d.evh??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Rigidez matutina: ${d.rig||'-'} | Cefalea: ${d.cef||'-'} | Mareos: ${d.mar||'-'}
+NEUROLÓGICO: Dermatomas afectados: ${fa(d.derm)} | Parestesias: ${d.par||'-'} | Déficit motor: ${d.dm||'-'} | Reflejos: ${d.ref||'-'} | Spurling: ${d.spu||'-'} | Mielopatía: ${d.miel||'-'} | Autonómico: ${d.aut||'-'}
+EXPLORACIÓN: Movilidad flex-ext: ${d.mfx||'-'} | Rotación: ${d.mro||'-'} | Flexores profundos: ${d.ffp||'-'} | Fuerza MMSS: ${d.fms||'-'} | Tracción: ${d.tra||'-'} | Postura: ${d.pos||'-'} | Ergonomía: ${d.erg||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+VALORACIÓN NEUROLÓGICA — solo si hay afectación neurológica, si no omite esta sección
+DIAGNÓSTICO FISIOTERAPÉUTICO
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}`,
+
+        hombro: `Eres fisioterapeuta experto en hombro. Redacta un informe de valoración fisioterapéutica de HOMBRO. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Hombro ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'}
+DOLOR: EVA reposo ${d.evr??'-'}/10 | EVA movimiento ${d.evm2??'-'}/10 | EVA nocturno ${d.evn??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noch||'-'} | Arco doloroso: ${d.arc||'-'} | Rigidez: ${d.rig||'-'} | Inestabilidad: ${d.ines||'-'}
+EXPLORACIÓN: Abducción: ${d.abd||'-'} | Rot. externa: ${d.rex||'-'} | Rot. interna: ${d.rin||'-'} | Neer: ${d.neer||'-'} | Hawkins-Kennedy: ${d.hawk||'-'} | Jobe (supraespinoso): ${d.jobe||'-'} | Patte (infraespinoso): ${d.pat||'-'} | Lift-off (subescapular): ${d.lift||'-'} | Speed (bíceps): ${d.spd||'-'} | Fuerza abductores: ${d.fabd||'-'} | Escápula: ${d.esc||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO — diferencia claramente entre impingement, rotura de manguito y capsulitis según los hallazgos
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
+
+NO incluyas secciones de análisis neurológico de columna.`,
+
+        tobillo: `Eres fisioterapeuta experto en tobillo y pie. Redacta un informe de valoración fisioterapéutica de TOBILLO. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Tobillo ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Mecanismo: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Esguinces previos: ${d.eprev||'-'}
+DOLOR: EVA reposo ${d.evr??'-'}/10 | EVA en carga ${d.evc??'-'}/10 | EVA deporte ${d.evd??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Inflamación: ${d.infl||'-'} | Inestabilidad: ${d.ines||'-'}
+EXPLORACIÓN: Cajón anterior: ${d.caj||'-'} | Inversión forzada: ${d.invf||'-'} | Dorsiflexión: ${d.dors||'-'} | Thompson: ${d.thom||'-'} | Palpación peroneos: ${d.palp||'-'} | Palpación Aquiles: ${d.pala||'-'} | Heel raise: ${d.hr||'-'} | Propiocepción: ${d.prop||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
+
+NO incluyas análisis neurológico de columna.`,
+
+        cadera: `Eres fisioterapeuta experto en cadera. Redacta un informe de valoración fisioterapéutica de CADERA. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Cadera ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'}
+DOLOR: EVA reposo ${d.evr??'-'}/10 | EVA en carga ${d.evc??'-'}/10 | EVA actividad ${d.eva??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Rigidez: ${d.rig||'-'} | Marcha: ${d.mar||'-'}
+EXPLORACIÓN: Flexión cadera: ${d.flex||'-'} | Rotación interna: ${d.roti||'-'} | FADIR: ${d.fadir||'-'} | FABER: ${d.faber||'-'} | Trendelemburg: ${d.tren||'-'} | Fuerza abductores: ${d.fabd||'-'} | Fuerza extensores: ${d.fext||'-'} | Palpación trocánter: ${d.palp||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO — diferencia entre origen articular, tendinoso o bursitis según los hallazgos
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
+
+NO incluyas análisis neurológico de columna lumbar.`,
+
+        codo: `Eres fisioterapeuta experto en codo y extremidad superior. Redacta un informe de valoración fisioterapéutica de CODO. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Codo ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Mecanismo: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Actividad relacionada: ${d.actrel||'-'}
+DOLOR: EVA reposo ${d.evr??'-'}/10 | EVA actividad ${d.eva??'-'}/10 | EVA al hacer fuerza ${d.evf??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Parestesias: ${d.par||'-'} | Fuerza prensión: ${d.fpre||'-'}
+EXPLORACIÓN: Test Cozen: ${d.cozen||'-'} | Test Mill: ${d.mill||'-'} | Test Golfista: ${d.golf||'-'} | Tinel codo: ${d.tinel||'-'} | Movilidad codo: ${d.mob||'-'} | Pronosupinación: ${d.pron||'-'} | Fuerza ext. muñeca: ${d.fext||'-'} | Fuerza flex. muñeca: ${d.ffle||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO — diferencia claramente entre epicondilitis lateral, epitrocleitis medial y neuropatía cubital según los hallazgos
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}`,
+
+        hernia: `Eres fisioterapeuta experto en columna lumbar. Redacta un informe de valoración fisioterapéutica de HERNIA DISCAL LUMBAR. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+Diagnóstico médico: ${d.diagnosticoMedico||'-'} | RM: ${d.rm||'-'} | TAC: ${d.tac||'-'} | RX: ${d.rx||'-'}
+DOLOR: ${d.dolorPrincipal||'-'} | Inicio: ${d.inicioSintomas||'-'} | Evolución: ${d.evolucion||'-'} | EVA: ${d.evaActual||'-'}/10 | Irradiación: ${d.irradiacion||'-'} | Hormigueo: ${d.hormigueo||'-'} | Debilidad: ${d.debilidad||'-'}
+COMPORTAMIENTO: Empeora con: ${fa(d.empeoraConArray)} | Mejora con: ${fa(d.mejoraConArray)} | Patrón: ${fa(d.patronMecanico)}
+OBSERVACIÓN: Postura: ${fa(d.postura)} | Marcha: ${fa(d.marcha)} | Control motor: ${fa(d.controlMotor)}
+TESTS FUNCIONALES: Hip hinge: ${d.hipHinge||'-'} | Marcha talones (L4-L5): ${d.marchaTalones||'-'} | Marcha puntillas (S1): ${d.marchaPuntillas||'-'}
+NEURODINAMIA: Lasègue D: ${d.lasegueD||'-'} | Lasègue I: ${d.lasegueI||'-'} | Bragard D: ${d.bragardD||'-'} | Slump: ${d.slump||'-'} | Lasègue cruzado: ${d.lasCruz||'-'}
+SENSIBILIDAD: L4 D/I: ${d.sensL4D||'Normal'}/${d.sensL4I||'Normal'} | L5 D/I: ${d.sensL5D||'Normal'}/${d.sensL5I||'Normal'} | S1 D/I: ${d.sensS1D||'Normal'}/${d.sensS1I||'Normal'}
+REFLEJOS: Rotuliano D/I: ${d.rotulD||'-'}/${d.rotulI||'-'} | Aquíleo D/I: ${d.aquilD||'-'}/${d.aquilI||'-'}
+FUERZA: L4 dorsiflexión D/I: ${d.fuerzaL4D||'-'}/${d.fuerzaL4I||'-'} | L5 ext.hallux D/I: ${d.fuerzaL5halluxD||'-'}/${d.fuerzaL5halluxI||'-'} | S1 flex.plantar D/I: ${d.fuerzaS1D||'-'}/${d.fuerzaS1I||'-'}
+CLASIFICACIÓN: ${fa(d.presentacionDominante)} | Irritabilidad: ${d.irritabilidad||'-'} | Estado: ${d.estadoFuncional||'-'}
+Diagnóstico fisio: ${d.diagnosticoFisio||'-'} | Plan: ${d.terapiaManual||'-'} | Conclusión: ${d.conclusion||'-'}
+${d.banderas && d.banderas.length ? 'BANDERAS ROJAS: ' + fa(d.banderas) : ''}
+
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+ANÁLISIS NEUROLÓGICO — interpreta el patrón radicular (L4/L5/S1) según sensibilidad, reflejos y fuerza
+DIAGNÓSTICO FISIOTERAPÉUTICO
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.banderas && d.banderas.length ? 'ALERTAS IMPORTANTES' : ''}`
+      };
+
+      const prompt = prompts[tipo] || prompts['hernia'];
 
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -118,7 +263,7 @@ export default async function handler(req) {
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 2000,
-          messages: [{ role: 'user', content: lines }]
+          messages: [{ role: 'user', content: prompt }]
         })
       });
 
@@ -130,21 +275,6 @@ export default async function handler(req) {
         return new Response(JSON.stringify({ ok: false, error: 'Anthropic: ' + errorMsg }), { status: 500, headers: corsHeaders });
       }
 
-      try {
-        await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ records: [{ fields: {
-            PacienteID: pacienteId || '',
-            PacienteNombre: pacienteNombre || '',
-            FisioNombre: fisioNombre || '',
-            FechaValoracion: new Date().toISOString().split('T')[0],
-            DatosJSON: JSON.stringify(datos),
-            InformeGenerado: informe
-          }}]})
-        });
-      } catch(e) {}
-
       return new Response(JSON.stringify({ ok: true, informe }), { headers: corsHeaders });
 
     } catch(e) {
@@ -152,7 +282,9 @@ export default async function handler(req) {
     }
   }
 
-  if (req.method === 'GET') {
+
+  // ── GET PACIENTES ────────────────────────────────────────────────────────
+  if (req.method === 'GET' && !action) {
     try {
       let allRecords = [], offset = null;
       do {
@@ -175,7 +307,8 @@ export default async function handler(req) {
     }
   }
 
-  if (req.method === 'POST') {
+  // ── POST NUEVO PACIENTE ──────────────────────────────────────────────────
+  if (req.method === 'POST' && !action) {
     const { nombre, email, telefono } = body;
     if (!nombre || !email) {
       return new Response(JSON.stringify({ ok: false, error: 'Nombre y email obligatorios' }), { status: 400, headers: corsHeaders });
@@ -195,5 +328,5 @@ export default async function handler(req) {
     }
   }
 
-  return new Response(JSON.stringify({ error: 'Método no permitido' }), { status: 405, headers: corsHeaders });
+  return new Response(JSON.stringify({ ok: false, error: 'Ruta no encontrada' }), { status: 404, headers: corsHeaders });
 }
