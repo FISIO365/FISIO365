@@ -853,6 +853,7 @@ Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEU
       const d=await r.json();
       if(d.ok&&d.informe){
         informeGenerado=d.informe;
+        guardarInformeLocal(anamPacNom,anamPacId,fisioNom,'hernia',d.informe);
         res.textContent=d.informe;res.style.display='block';
         btn.className='gen-btn';btn.style.background='#2e7d32';
         btn.innerHTML='✅ Informe generado — Descargar PDF';
@@ -932,12 +933,13 @@ Máx 550 palabras. Profesional, empático y esperanzador.`;
       const d=await r.json();
       if(d.ok&&d.informe){
         informeGenerado=d.informe;
+        guardarInformeLocal(anamPacNom,anamPacId,fisioNom,tipo,d.informe);
         res.textContent=d.informe;res.style.display='block';
         btn.className='gen-btn';btn.style.background='#2e7d32';
         btn.innerHTML='✅ Informe generado — Descargar PDF';
         btn.onclick=()=>descargarPDF(anamPacNom,d.informe,tipo);
         res.scrollIntoView({behavior:'smooth'});
-        toast('✓ Informe generado y guardado',true);
+        toast('✓ Informe guardado en Informes',true);
       } else {toast(d.error||'Error al generar',false);btn.disabled=false;btn.innerHTML='✨ Generar informe';}
     }catch(e){toast('Error: '+e.message,false);btn.disabled=false;btn.innerHTML='✨ Generar informe';}
   };
@@ -960,35 +962,48 @@ function descargarPDF(pacNom,informe,tipo){
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION: INFORMES
 // ─────────────────────────────────────────────────────────────────────────────
-async function renderInformes(wrap){
-  wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Cargando informes...</div>';
+// ── STORAGE HELPERS ──────────────────────────────────────────────────────
+function guardarInformeLocal(pacNom,pacId,fisioNom,tipo,informe){
   try{
-    const r=await fetch(`/api/pacientes?action=listar-informes&pwd=${encodeURIComponent(pwd)}`);
-    const d=await r.json();
-    wrap.innerHTML='';
-    if(!d.ok||!d.informes||!d.informes.length){
-      wrap.innerHTML='<div style="text-align:center;padding:60px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📄</div><div style="font-size:14px;font-weight:600;color:var(--black);margin-bottom:4px">Sin informes todavía</div><div style="font-size:12px">Los informes generados en Anamnesis aparecerán aquí</div></div>';
-      return;
-    }
-    const h=ce('div','');h.innerHTML=`<p style="font-size:13px;color:var(--muted);margin-bottom:14px">${d.informes.length} informe${d.informes.length>1?'s':''} generado${d.informes.length>1?'s':''}</p>`;wrap.appendChild(h);
-    d.informes.forEach(inf=>{
-      const c=ce('div','inf-card');
-      const tipoLabel={rodilla:'Rodilla',fascitis:'Fascitis plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia discal'}[inf.protocolo]||inf.protocolo||'Hernia discal';
-      c.innerHTML=`<div class="inf-info">
-        <div class="inf-pac">${inf.pacienteNombre||'—'}</div>
-        <div class="inf-meta">${inf.fecha||'—'} · ${inf.fisioNombre||'—'}</div>
-        <span class="inf-proto">${tipoLabel}</span>
-      </div>`;
-      if(inf.informe){
-        const btn=ce('button','inf-btn');btn.textContent='Ver / PDF';
-        btn.onclick=()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia');
-        c.appendChild(btn);
-      }
-      wrap.appendChild(c);
-    });
-  }catch(e){
-    wrap.innerHTML='<div style="text-align:center;padding:40px;color:#c0392b;font-size:13px">Error al cargar informes</div>';
+    const arr=JSON.parse(localStorage.getItem('fisio365_informes')||'[]');
+    arr.unshift({id:Date.now(),pacienteNombre:pacNom,pacienteId:pacId,fisioNombre:fisioNom,protocolo:tipo,fecha:new Date().toLocaleDateString('es-ES'),informe:informe});
+    localStorage.setItem('fisio365_informes',JSON.stringify(arr.slice(0,100)));
+  }catch(e){}
+}
+function getInformesLocal(){try{return JSON.parse(localStorage.getItem('fisio365_informes')||'[]');}catch(e){return[];}}
+
+function renderInformes(wrap){
+  wrap.innerHTML='';
+  const todos=getInformesLocal();
+  const tipoLabel={rodilla:'Rodilla',fascitis:'Fascitis plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia discal'};
+  const hd=ce('div','');
+  hd.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <div class="si" style="flex:1;margin:0"><input type="text" id="infSearch" placeholder="Buscar por paciente..." style="padding:10px 10px 10px 36px;width:100%;font-size:14px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font)"></div>
+    <div style="font-size:12px;color:var(--muted);white-space:nowrap">${todos.length} informe${todos.length!==1?'s':''}</div>
+  </div>`;
+  wrap.appendChild(hd);
+  if(!todos.length){
+    const em=ce('div','');em.style.cssText='text-align:center;padding:60px 20px;color:var(--muted)';
+    em.innerHTML='<div style="font-size:40px;margin-bottom:12px">📄</div><div style="font-size:14px;font-weight:600;color:var(--black);margin-bottom:4px">Sin informes todavía</div><div style="font-size:12px">Los informes generados en Anamnesis aparecerán aquí automáticamente</div>';
+    wrap.appendChild(em);return;
   }
+  const lista=ce('div','');lista.id='infLista';wrap.appendChild(lista);
+  const pintar=(arr)=>{
+    lista.innerHTML='';
+    if(!arr.length){lista.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">No hay resultados</div>';return;}
+    arr.forEach(inf=>{
+      const c=ce('div','inf-card');
+      c.innerHTML=`<div class="inf-info"><div class="inf-pac">${inf.pacienteNombre||'—'}</div><div class="inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+inf.fisioNombre:''}</div><span class="inf-proto">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</span></div>`;
+      const btn=ce('button','inf-btn');btn.innerHTML='⬇ PDF';
+      btn.onclick=()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia');
+      c.appendChild(btn);lista.appendChild(c);
+    });
+  };
+  pintar(todos);
+  setTimeout(()=>{
+    const s=$('infSearch');
+    if(s)s.oninput=()=>{const q=s.value.toLowerCase().trim();pintar(q?todos.filter(i=>i.pacienteNombre.toLowerCase().includes(q)):todos);};
+  },50);
 }
 
 // LIGHTBOX
