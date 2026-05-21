@@ -1,1210 +1,332 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0">
-<title>FISIO365 — Panel</title>
-<link rel="manifest" href="/manifest-fisio.json">
-<link rel="apple-touch-icon" href="/icono.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="FISIO365 Panel">
-<meta name="theme-color" content="#000000">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{--cream:#f5f2ee;--black:#000;--white:#fff;--lila:#ada3da;--lila-light:#ede9f7;--muted:#888;--border:rgba(0,0,0,0.1);--font:'Poppins',sans-serif;--r:14px;--r-sm:8px}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--cream);color:var(--black);min-height:100vh}
+export const config = { runtime: 'edge' };
 
-/* LOGIN */
-#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:#000}
-.lb{width:100%;max-width:360px}
-.llbl{font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
-.li{width:100%;font-family:var(--font);font-size:16px;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:var(--r-sm);color:white;outline:none;margin-bottom:16px;transition:border-color .15s}
-.li::placeholder{color:rgba(255,255,255,0.25)}.li:focus{border-color:var(--lila)}
-.lbtn{width:100%;font-family:var(--font);font-size:14px;font-weight:700;padding:13px;background:white;color:black;border:none;border-radius:var(--r-sm);cursor:pointer;transition:opacity .2s}
-.lbtn:hover{opacity:.9}.lbtn:disabled{opacity:.4}
-.lerr{font-size:12px;color:#ff6b6b;margin-top:10px;text-align:center;min-height:18px}
+const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
+const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
+const BASE_ID = 'appsrGnHpFt8sVD5A';
+const PACIENTES_TABLE = 'tbldBVgClS4HY2mOJ';
+const ANAMNESIS_TABLE = 'tblF4as0orW1b6KIw';
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-/* PANEL LAYOUT */
-#panelScreen{display:none}
-.panel-wrap{display:flex;min-height:100vh}
+export default async function handler(req) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
+  };
 
-/* SIDEBAR */
-.sidebar{width:200px;background:#000;flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto}
-.sb-logo{padding:18px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08)}
-.sb-logo-t{font-size:19px;font-weight:800;color:#f5f2ee;letter-spacing:-0.5px}
-.sb-logo-t span{color:var(--lila)}
-.sb-nav{flex:1;padding:10px 0}
-.sb-item{display:flex;align-items:center;gap:10px;padding:11px 20px;font-size:13px;font-weight:500;color:rgba(255,255,255,0.45);cursor:pointer;transition:all .15s;border-left:3px solid transparent}
-.sb-item:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.05)}
-.sb-item.active{color:#fff;background:rgba(173,163,218,0.15);border-left-color:var(--lila)}
-.sb-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
-.sb-footer{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.08);font-size:10px;color:rgba(255,255,255,0.25)}
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
-/* MAIN */
-.main-area{margin-left:200px;flex:1}
-.topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 20px;position:sticky;top:0;z-index:50}
-.topbar-t{font-size:15px;font-weight:700}
-.topbar-s{font-size:11px;color:var(--muted);margin-top:1px}
-.wrap{max-width:720px;padding:20px 20px 80px}
+  const url = new URL(req.url);
+  const action = url.searchParams.get('action');
+  const queryPwd = url.searchParams.get('pwd') || '';
 
-/* CARDS */
-.card{background:white;border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px}
-.ct{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
-.field{margin-bottom:12px}
-.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:500}
-input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],select{width:100%;font-family:var(--font);font-size:16px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:white;color:var(--black);outline:none;transition:border-color .15s}
-input:focus,select:focus{border-color:var(--lila)}
-textarea{width:100%;font-family:var(--font);font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:white;color:var(--black);outline:none;resize:none;min-height:80px;line-height:1.6;transition:border-color .15s}
-textarea:focus{border-color:var(--lila)}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-input[type=number]{text-align:center}
+  let body = {};
+  if (req.method === 'POST') {
+    try {
+      const text = await req.text();
+      body = text ? JSON.parse(text) : {};
+    } catch(e) { body = {}; }
+  }
 
-/* BUTTONS */
-.btn{font-family:var(--font);font-size:14px;font-weight:600;padding:11px 20px;border:none;border-radius:var(--r-sm);cursor:pointer;transition:opacity .15s}
-.btn-g{background:var(--black);color:white;width:100%;padding:13px}.btn-g:hover{opacity:.85}.btn-g:disabled{opacity:.4;cursor:not-allowed}
-.btn-o{background:none;border:1px dashed var(--border);color:var(--muted);width:100%;font-family:var(--font);font-size:14px;font-weight:500;padding:11px;border-radius:var(--r-sm);cursor:pointer}
-.btn-o:hover{background:var(--cream)}
-.btn-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:13px;font-weight:500;padding:7px 14px;border-radius:var(--r-sm);cursor:pointer}
-.btn-back:hover{border-color:var(--lila);color:var(--lila)}
-.btn-img{font-family:var(--font);font-size:12px;font-weight:500;padding:7px 14px;border:1px solid var(--lila);border-radius:var(--r-sm);cursor:pointer;background:var(--lila-light);color:var(--lila);white-space:nowrap;flex-shrink:0;transition:all .15s}
-.btn-img:hover{background:var(--lila);color:white}
-.bdel{background:none;border:none;color:#c0392b;cursor:pointer;font-size:22px;padding:0 4px;line-height:1}
+  const pwd = (body.pwd || queryPwd || '').trim();
+  const expected = (FISIO_PASSWORD || '').trim();
 
-/* PATIENT LIST */
-.pi{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s}
-.pi:hover{border-color:var(--lila);background:var(--lila-light)}.pi.sel{border-color:var(--lila);background:var(--lila-light)}
-.pav{width:36px;height:36px;border-radius:50%;background:var(--lila-light);color:var(--lila);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
-.pnom{font-size:14px;font-weight:500}.pem{font-size:12px;color:var(--muted)}
-.ppin{font-size:11px;color:var(--lila);font-weight:600;margin-left:auto;background:var(--lila-light);padding:3px 8px;border-radius:99px;white-space:nowrap}
-.si{position:relative;margin-bottom:12px}.si input{padding-left:36px}
-.si::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px}
+  if (pwd !== expected) {
+    return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
+  }
 
-/* EJERCICIOS */
-.ejc{background:var(--cream);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;margin-bottom:10px}
-.ejh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.ejn{font-size:12px;font-weight:700;color:var(--lila)}
-.ej-preview{background:var(--lila-light);border:1px solid rgba(173,163,218,0.3);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;display:none}
-.ej-preview-zona{font-size:11px;color:var(--lila);font-weight:600;margin-bottom:3px}
-.ej-preview-desc{font-size:12px;color:var(--muted);line-height:1.5}
-#res{display:none;background:var(--lila-light);border:1px solid rgba(173,163,218,0.3);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;color:var(--lila);margin-bottom:14px}
-.fprev{display:none;margin-top:10px;padding:12px;background:var(--lila-light);border-radius:var(--r-sm)}
+  // ── LISTAR INFORMES ──────────────────────────────────────────────────────
+  if (action === 'listar-informes') {
+    try {
+      const fields = ['PacienteNombre','FisioNombre','FechaValoracion','InformeGenerado','Protocolo'];
+      const fieldParams = fields.map(f => `fields[]=${encodeURIComponent(f)}`).join('&');
+      const aUrl = `https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}?${fieldParams}&sort[0][field]=FechaValoracion&sort[0][direction]=desc&pageSize=50`;
+      const r = await fetch(aUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+      const data = await r.json();
+      const informes = (data.records || []).map(rec => ({
+        id: rec.id,
+        pacienteNombre: rec.fields['PacienteNombre'] || '—',
+        fisioNombre: rec.fields['FisioNombre'] || '—',
+        fecha: rec.fields['FechaValoracion'] || '—',
+        informe: rec.fields['InformeGenerado'] || '',
+        protocolo: rec.fields['Protocolo'] || 'hernia',
+      }));
+      return new Response(JSON.stringify({ ok: true, informes }), { headers: corsHeaders });
+    } catch(e) {
+      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
+    }
+  }
 
-/* TOAST */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 22px;border-radius:var(--r-sm);font-size:13px;font-weight:500;display:none;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
-.toast.ok{background:var(--black);color:white}.toast.err{background:#c0392b;color:white}
+  // ── GENERAR INFORME IA ───────────────────────────────────────────────────
+  if (action === 'informe' && req.method === 'POST') {
+    try {
+      const { pacienteId, pacienteNombre, fisioNombre, fisioColegiado, datos } = body;
+      const colNum = fisioColegiado ? `Colegiado nº ${fisioColegiado}` : '';
+      const d = datos || {};
+      const tipo = d.tipo || 'hernia';
+      const fa = arr => (!arr || !arr.length) ? '-' : arr.join(', ');
+      const fecha = new Date().toLocaleDateString('es-ES');
 
-/* ANAMNESIS */
-@keyframes spin365{to{transform:rotate(360deg)}}
-.anam-sec-title{font-size:13px;font-weight:700;color:var(--black);margin:20px 0 10px;padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);border-left:3px solid var(--lila)}
-.anam-ta{width:100%;font-family:var(--font);font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:white;color:var(--black);outline:none;resize:vertical;min-height:70px;line-height:1.6;transition:border-color .15s}
-.anam-ta:focus{border-color:var(--lila)}
-.anam-checks{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px}
-.anam-ck{display:flex;align-items:center;gap:7px;font-size:13px;color:#444;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .12s}
-.anam-ck:hover{background:var(--cream)}
-.anam-ck input[type=checkbox]{accent-color:var(--lila);width:14px;height:14px;flex-shrink:0}
-.anam-radio-group{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-.anam-radio{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:#444;padding:8px 14px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;flex:1;min-width:80px;transition:all .12s}
-.anam-radio:hover{background:var(--lila-light);border-color:var(--lila)}
-.anam-radio input{accent-color:var(--lila)}
-.anam-eva-wrap{background:var(--cream);border-radius:var(--r-sm);padding:14px;margin:10px 0}
-.anam-eva-val{text-align:center;font-size:36px;font-weight:800;color:var(--lila);margin:4px 0 2px}
-.anam-eva-desc{text-align:center;font-size:12px;color:var(--muted);margin-bottom:8px}
-.anam-mov-table{border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;font-size:13px}
-.anam-mov-header{display:grid;grid-template-columns:110px 70px 90px 100px 1fr;gap:4px;background:var(--cream);padding:8px 10px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.anam-mov-row{display:grid;grid-template-columns:110px 70px 90px 100px 1fr;gap:4px;padding:6px 10px;align-items:center;border-top:1px solid var(--border)}
-.anam-mov-row:nth-child(even){background:#fafafa}
-.anam-mov-label{font-size:12px;font-weight:600;color:#333}
-.anam-mov-row input,.anam-mov-row select{padding:6px 8px!important;font-size:12px!important}
-.anam-test-card{background:white;border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px}
-.anam-test-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px}
-.anam-test-title{font-size:14px;font-weight:600;color:var(--black);margin-bottom:4px}
-.anam-badge{display:inline-block;font-size:11px;background:var(--lila-light);color:var(--lila);padding:3px 10px;border-radius:99px;font-weight:500}
-.anam-test-info{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:12px}
-.anam-di{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
-.anam-di-label{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px}
-.anam-di-opts{display:flex;gap:6px}
-.anam-di-opts label{display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;flex:1;transition:all .12s}
-.anam-di-opts label:hover{background:var(--lila-light);border-color:var(--lila)}
-.anam-di-opts input{accent-color:var(--lila)}
-.anam-tbl{width:100%;border-collapse:collapse;font-size:12px}
-.anam-tbl th{background:var(--cream);padding:7px 10px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
-.anam-tbl td{padding:6px 10px;border-bottom:1px solid rgba(0,0,0,0.05)}
-.anam-tbl tr:nth-child(even) td{background:#fafafa}
-.anam-tbl td input,.anam-tbl td select{font-size:12px!important;padding:5px 8px!important}
-.anam-muscle-row{display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;margin-bottom:8px}
-.anam-muscle-row label{font-size:12px;font-weight:500;color:#444}
-.anam-muscle-row input{font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);width:100%}
+      // Datos comunes
+      const cabecera = `Fisioterapeuta: ${fisioNombre||'-'}${colNum?' | '+colNum:''} | Fecha: ${fecha}
+Paciente: ${pacienteNombre||'-'} | Edad: ${d.edad||'-'} años | Actividad: ${d.act||'-'} | Ocupación: ${d.ocu||'-'}
+IMC: ${d.peso && d.talla ? (d.peso/Math.pow(d.talla/100,2)).toFixed(1) : '-'}`;
 
-/* HUB PROTOCOLOS */
-.proto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
-.proto-card{background:white;border:1.5px solid var(--border);border-radius:var(--r);padding:14px 12px;display:flex;flex-direction:column;gap:4px;transition:all .15s}
-.proto-card.ready{cursor:pointer}
-.proto-card.ready:hover{border-color:var(--lila);background:var(--lila-light);transform:translateY(-1px);box-shadow:0 4px 12px rgba(173,163,218,.15)}
-.proto-card.soon{opacity:.5;cursor:default}
-.pc-title{font-size:13px;font-weight:700;color:var(--black)}
-.pc-sub{font-size:11px;color:var(--muted);line-height:1.5}
-.pc-badge{display:inline-block;margin-top:3px;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:600;width:fit-content}
-.pc-badge.ready{background:#e8f5e9;color:#2e7d32}
-.pc-badge.soon{background:var(--cream);color:var(--muted)}
+      // Prompts específicos por protocolo
+      const prompts = {
 
-/* STEPS */
-.steps-nav{display:flex;gap:4px;margin-bottom:16px;align-items:center}
-.sdot{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);background:white;transition:all .15s}
-.sdot.done{background:#e8f5e9;border-color:#2e7d32;color:#2e7d32}
-.sdot.active{background:var(--lila-light);border-color:var(--lila);color:var(--lila)}
-.sline{flex:1;height:1.5px;background:var(--border);min-width:5px}
-.bnav{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
-.bnav span{font-size:12px;color:var(--muted)}
-.bnav-r{display:flex;gap:8px}
-.nota{background:#eff6ff;border-left:3px solid #bfdbfe;padding:9px 13px;font-size:12px;color:#1e40af;margin-bottom:12px;border-radius:0 8px 8px 0;font-style:italic}
-.nota strong{font-style:normal}
-.derm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:5px;margin-top:5px}
-.dm{padding:6px 10px;border-radius:7px;border:1px solid var(--border);font-size:12px;cursor:pointer;text-align:center;user-select:none;color:var(--muted);transition:all .15s}
-.dm:hover{border-color:var(--lila)}
-.dm.on{background:var(--lila-light);border-color:var(--lila);color:var(--lila);font-weight:500}
-.dm.w.on{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
-.ck{padding:4px 10px;border-radius:99px;border:1px solid var(--border);font-size:12px;color:var(--muted);cursor:pointer;user-select:none;transition:all .15s}
-.ck:hover{border-color:var(--lila);color:var(--lila)}
-.ck.on{background:var(--lila-light);border-color:var(--lila);color:var(--lila);font-weight:500}
-.cks{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
-.ev{width:30px;height:28px;border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
-.ev.g{background:#dcfce7;border-color:#16a34a;color:#15803d}
-.ev.y{background:#fef9c3;border-color:#ca8a04;color:#92400e}
-.ev.r{background:#fee2e2;border-color:#dc2626;color:#991b1b}
-.er{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
-.f label{font-size:11px;font-weight:600;color:var(--muted);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
-.f select,.f input{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);background:white;color:var(--black)}
-.f select:focus,.f input:focus{outline:none;border-color:var(--lila)}
-.fase-tag{display:inline-block;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;margin:4px 0 10px}
-.fr{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)}
-.fr:last-child{border-bottom:none}
-.fnum{width:20px;height:20px;border-radius:50%;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.ftit{font-size:12px;font-weight:600;color:var(--black)}
-.fimp{font-size:11px;color:var(--muted);margin-top:1px}
-.rbody{background:#fafafa;border:1px solid var(--border);border-radius:10px;padding:16px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-top:12px;display:none;color:var(--black)}
-.abox{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#b91c1c}
-.gen-btn{width:100%;padding:12px;background:var(--lila);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
-.gen-btn:hover{background:#9b91cc}
-.gen-btn:disabled{opacity:.5;cursor:default}
-.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin365 .7s linear infinite}
+        rodilla: `Eres fisioterapeuta experto en rodilla. Redacta un informe de valoración fisioterapéutica de RODILLA. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Rodilla ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'}
+DOLOR: EVA reposo ${d.evr??'-'}/10 | EVA actividad ${d.eva??'-'}/10 | EVA escaleras ${d.eve??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Inflamación: ${d.infl||'-'} | Inestabilidad: ${d.ines||'-'} | Bloqueo: ${d.bloq||'-'}
+EXPLORACIÓN: Flexión: ${d.flex||'-'} | Extensión: ${d.ext||'-'} | McMurray: ${d.mcm||'-'} | Lachman: ${d.lach||'-'} | Estrés colateral: ${d.est||'-'} | Patelofemoral: ${d.pat||'-'} | Fuerza cuádriceps: ${d.fcuad||'-'} | Propiocepción: ${d.prop||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
 
-/* INFORMES */
-.inf-card{background:white;border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.inf-info{flex:1}
-.inf-pac{font-size:14px;font-weight:600}
-.inf-meta{font-size:12px;color:var(--muted);margin-top:2px}
-.inf-proto{font-size:11px;background:var(--lila-light);color:var(--lila);padding:2px 9px;border-radius:99px;font-weight:600;display:inline-block;margin-top:6px}
-.inf-btn{font-family:var(--font);font-size:12px;font-weight:500;padding:7px 14px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;background:white;color:var(--muted);white-space:nowrap;transition:all .15s;flex-shrink:0}
-.inf-btn:hover{border-color:var(--lila);color:var(--lila)}
+Redacta el informe con estas secciones EXACTAS (sin añadir ni quitar):
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
 
-/* LIGHTBOX */
-#lightbox{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column}
-#lb-close{position:absolute;top:16px;right:16px;background:none;border:none;color:white;font-size:32px;cursor:pointer;line-height:1}
-#lb-label{color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:12px;font-family:var(--font)}
-#lb-img{max-width:90vw;max-height:85vh;object-fit:contain;border-radius:8px}
-</style>
-</head>
-<body>
+NO incluyas ninguna sección de análisis neurológico ni raíces nerviosas — esta es una valoración de rodilla, no de columna.`,
 
-<!-- LOGIN -->
-<div id="loginScreen">
-  <div class="lb">
-    <div style="font-size:48px;font-weight:800;color:#f5f2ee;letter-spacing:-1px;margin-bottom:2.5rem;text-align:center">FISIO<span style="color:var(--lila)">365</span></div>
-    <label class="llbl">Contraseña del panel</label>
-    <input class="li" type="password" id="pwdInp" placeholder="••••••••">
-    <button class="lbtn" id="loginBtn" onclick="doLogin()">Entrar al panel</button>
-    <div class="lerr" id="loginErr"></div>
-  </div>
-</div>
+        fascitis: `Eres fisioterapeuta experto en pie y tobillo. Redacta un informe de valoración fisioterapéutica de FASCITIS PLANTAR. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Pie ${d.pie||'-'} | Evolución: ${d.evol||'-'} | Desencadenante: ${d.ini||'-'} | Calzado: ${d.cal||'-'} | Episodios previos: ${d.epi||'-'}
+DOLOR: EVA primeros pasos ${d.evm??'-'}/10 | EVA actividad ${d.eva??'-'}/10 | EVA final día ${d.evn??'-'}/10 | Dolor matutino: ${d.mat||'-'} | Al calentar: ${d.cal2||'-'} | Reaparece en reposo: ${d.rep||'-'} | Nocturno: ${d.noc||'-'} | Localización: ${d.loc||'-'} | Parestesias: ${d.par||'-'}
+EXPLORACIÓN: Tipo de pie: ${d.tpie||'-'} | Dorsiflexión tobillo: ${d.dors||'-'} | Silfverskiöld: ${d.silf||'-'} | Windlass: ${d.wind||'-'} | Tinel: ${d.tin||'-'} | Heel raise: ${d.hr||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
 
-<!-- PANEL -->
-<div id="panelScreen">
-  <div class="panel-wrap">
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO
+POR QUÉ LE DUELE — explica el mecanismo específico de la fascitis plantar de este paciente
+FACTORES QUE MANTIENEN EL DOLOR
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-      <div class="sb-logo"><div class="sb-logo-t"><span>FISIO</span>365</div></div>
-      <div class="sb-nav">
-        <div class="sb-item active" id="sb-prog" onclick="showSection('prog')">
-          <span class="sb-icon">📋</span> Programas
-        </div>
-        <div class="sb-item" id="sb-anam" onclick="showSection('anam')">
-          <span class="sb-icon">🩺</span> Anamnesis
-        </div>
-        <div class="sb-item" id="sb-inf" onclick="showSection('inf')">
-          <span class="sb-icon">📄</span> Informes
-        </div>
-      </div>
-      <div class="sb-footer">Panel fisioterapeuta</div>
-    </div>
+NO incluyas ninguna sección neurológica ni de columna — esta es una valoración de pie.`,
 
-    <!-- MAIN -->
-    <div class="main-area">
-      <div class="topbar">
-        <div class="topbar-t" id="topbar-t">Programas</div>
-        <div class="topbar-s" id="topbar-s">Asigna ejercicios a tus pacientes</div>
-      </div>
-      <div class="wrap" id="mainWrap"></div>
-    </div>
-  </div>
-</div>
+        cervical: `Eres fisioterapeuta experto en columna cervical. Redacta un informe de valoración fisioterapéutica CERVICAL. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Región: ${d.reg||'-'} | Diagnóstico previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'}
+DOLOR: EVA cuello ${d.evc??'-'}/10 | EVA brazo ${d.evb??'-'}/10 | EVA cefalea ${d.evh??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Rigidez matutina: ${d.rig||'-'} | Cefalea: ${d.cef||'-'} | Mareos: ${d.mar||'-'}
+NEUROLÓGICO: Dermatomas afectados: ${fa(d.derm)} | Parestesias: ${d.par||'-'} | Déficit motor: ${d.dm||'-'} | Reflejos: ${d.ref||'-'} | Spurling: ${d.spu||'-'} | Mielopatía: ${d.miel||'-'} | Autonómico: ${d.aut||'-'}
+EXPLORACIÓN: Movilidad flex-ext: ${d.mfx||'-'} | Rotación: ${d.mro||'-'} | Flexores profundos: ${d.ffp||'-'} | Fuerza MMSS: ${d.fms||'-'} | Tracción: ${d.tra||'-'} | Postura: ${d.pos||'-'} | Ergonomía: ${d.erg||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
 
-<!-- LIGHTBOX -->
-<div id="lightbox">
-  <button id="lb-close" onclick="cerrarLightbox()">×</button>
-  <div id="lb-label"></div>
-  <img id="lb-img" src="" alt="">
-</div>
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+VALORACIÓN NEUROLÓGICA — solo si hay afectación neurológica, si no omite esta sección
+DIAGNÓSTICO FISIOTERAPÉUTICO
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}`,
 
-<div class="toast" id="toast"></div>
-<script>
-// ── GLOBALS ──────────────────────────────────────────────────────────────────
-let pwd='', fisios=[], pacs=[], biblio=[];
-let pacSelId=null, pacSelN='', fisioSelId='', ejC=0;
-let anamPacId=null, anamPacNom='';
-let curProto=null, curStep=0, D={};
-let informeGenerado='';
+        hombro: `Eres fisioterapeuta experto en hombro. Redacta un informe de valoración fisioterapéutica de HOMBRO. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Hombro ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'}
+DOLOR: EVA reposo ${d.evr??'-'}/10 | EVA movimiento ${d.evm2??'-'}/10 | EVA nocturno ${d.evn??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noch||'-'} | Arco doloroso: ${d.arc||'-'} | Rigidez: ${d.rig||'-'} | Inestabilidad: ${d.ines||'-'}
+EXPLORACIÓN: Abducción: ${d.abd||'-'} | Rot. externa: ${d.rex||'-'} | Rot. interna: ${d.rin||'-'} | Neer: ${d.neer||'-'} | Hawkins-Kennedy: ${d.hawk||'-'} | Jobe (supraespinoso): ${d.jobe||'-'} | Patte (infraespinoso): ${d.pat||'-'} | Lift-off (subescapular): ${d.lift||'-'} | Speed (bíceps): ${d.spd||'-'} | Fuerza abductores: ${d.fabd||'-'} | Escápula: ${d.esc||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
 
-const $ = id => document.getElementById(id);
-const ce = (t,c) => { const e=document.createElement(t); if(c)e.className=c; return e; };
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO — diferencia claramente entre impingement, rotura de manguito y capsulitis según los hallazgos
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
 
-const TOPBAR = {
-  prog: ['Programas','Asigna ejercicios a tus pacientes'],
-  anam: ['Anamnesis clínica','Valoración y protocolos clínicos'],
-  inf:  ['Informes','Historial de informes generados']
-};
+NO incluyas secciones de análisis neurológico de columna.`,
 
-const CFG = {
-  rodilla:  {t:'Rodilla',       steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
-  fascitis: {t:'Fascitis plantar',steps:['Paciente','Lesión','Dolor','Factores','Informe']},
-  cervical: {t:'Cervical',       steps:['Paciente','Lesión','Dolor','Neurológico','Exploración','Informe']},
-  hombro:   {t:'Hombro',         steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
-  tobillo:  {t:'Tobillo',        steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
-  cadera:   {t:'Cadera',         steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
-  codo:     {t:'Codo',           steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
-  hernia:   {t:'Hernia discal',  steps:['Paciente','Datos','Consulta','Banderas','Comportamiento','Observación','Movimiento','Tests','Exploración','Informe']},
-};
+        tobillo: `Eres fisioterapeuta experto en tobillo y pie. Redacta un informe de valoración fisioterapéutica de TOBILLO. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Tobillo ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Mecanismo: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Esguinces previos: ${d.eprev||'-'}
+DOLOR: EVA reposo ${d.evr??'-'}/10 | EVA en carga ${d.evc??'-'}/10 | EVA deporte ${d.evd??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Inflamación: ${d.infl||'-'} | Inestabilidad: ${d.ines||'-'}
+EXPLORACIÓN: Cajón anterior: ${d.caj||'-'} | Inversión forzada: ${d.invf||'-'} | Dorsiflexión: ${d.dors||'-'} | Thompson: ${d.thom||'-'} | Palpación peroneos: ${d.palp||'-'} | Palpación Aquiles: ${d.pala||'-'} | Heel raise: ${d.hr||'-'} | Propiocepción: ${d.prop||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
 
-// ── LOGIN ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
-  $('pwdInp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarLightbox();});
-});
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
 
-async function doLogin(){
-  const p=$('pwdInp').value.trim(); if(!p)return;
-  const btn=$('loginBtn'); btn.disabled=true; btn.textContent='Verificando...';
-  try{
-    const r=await fetch(`/api/pacientes?pwd=${encodeURIComponent(p)}`);
-    const d=await r.json();
-    if(d.ok){
-      pwd=p; pacs=d.pacientes;
-      $('loginScreen').style.display='none';
-      $('panelScreen').style.display='block';
-      window.scrollTo({top:0,behavior:'instant'});
-      await Promise.all([loadFisios(),loadBiblio()]);
-      showSection('prog');
-    } else $('loginErr').textContent='Contraseña incorrecta';
-  }catch(e){$('loginErr').textContent='Error de conexión';}
-  btn.disabled=false; btn.textContent='Entrar al panel';
-}
+NO incluyas análisis neurológico de columna.`,
 
-async function loadFisios(){
-  try{
-    const r=await fetch(`/api/fisios?pwd=${encodeURIComponent(pwd)}`);
-    const d=await r.json(); fisios=d.fisios||[];
-  }catch(e){}
-}
-async function loadBiblio(){
-  try{
-    const r=await fetch(`/api/ejercicios?pwd=${encodeURIComponent(pwd)}`);
-    const d=await r.json(); biblio=d.ejercicios||[];
-  }catch(e){}
-}
+        cadera: `Eres fisioterapeuta experto en cadera. Redacta un informe de valoración fisioterapéutica de CADERA. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Cadera ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'}
+DOLOR: EVA reposo ${d.evr??'-'}/10 | EVA en carga ${d.evc??'-'}/10 | EVA actividad ${d.eva??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Rigidez: ${d.rig||'-'} | Marcha: ${d.mar||'-'}
+EXPLORACIÓN: Flexión cadera: ${d.flex||'-'} | Rotación interna: ${d.roti||'-'} | FADIR: ${d.fadir||'-'} | FABER: ${d.faber||'-'} | Trendelemburg: ${d.tren||'-'} | Fuerza abductores: ${d.fabd||'-'} | Fuerza extensores: ${d.fext||'-'} | Palpación trocánter: ${d.palp||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
 
-// ── NAVIGATION ────────────────────────────────────────────────────────────────
-function showSection(sec){
-  ['prog','anam','inf'].forEach(s=>{
-    $(`sb-${s}`).classList.toggle('active', s===sec);
-  });
-  const [t,s] = TOPBAR[sec];
-  $('topbar-t').textContent=t;
-  $('topbar-s').textContent=s;
-  const wrap=$('mainWrap');
-  wrap.innerHTML='';
-  if(sec==='prog') renderProg(wrap);
-  else if(sec==='anam') renderAnamHub(wrap);
-  else if(sec==='inf') renderInformes(wrap);
-}
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO — diferencia entre origen articular, tendinoso o bursitis según los hallazgos
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
 
-// ── TOAST ─────────────────────────────────────────────────────────────────────
-function toast(msg,ok=true){
-  const t=$('toast'); t.textContent=msg;
-  t.className=`toast ${ok?'ok':'err'}`; t.style.display='block';
-  setTimeout(()=>t.style.display='none',3500);
-}
+NO incluyas análisis neurológico de columna lumbar.`,
 
-// ── PATIENT SEARCH HELPER ─────────────────────────────────────────────────────
-function mkPacSearch(inputId, listId, selBoxId, onSelect){
-  $(inputId).oninput=()=>{
-    const q=$(inputId).value.toLowerCase();
-    const el=$(listId); el.innerHTML='';
-    if(!q||q.length<2) return;
-    const fl=pacs.filter(p=>p.nombre.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q)).slice(0,6);
-    if(!fl.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">No encontrado</div>';return;}
-    fl.forEach(p=>{
-      const ini=p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-      const div=ce('div','pi'); div.style.marginBottom='6px';
-      div.innerHTML=`<div class="pav">${ini}</div><div><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div><div class="ppin">PIN: ${p.pin||'—'}</div>`;
-      div.onclick=()=>{
-        $(inputId).value=p.nombre; el.innerHTML='';
-        if(selBoxId) {$(selBoxId).textContent='✓ '+p.nombre; $(selBoxId).style.display='block';}
-        onSelect(p);
+        codo: `Eres fisioterapeuta experto en codo y extremidad superior. Redacta un informe de valoración fisioterapéutica de CODO. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+LESIÓN: Codo ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Mecanismo: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Actividad relacionada: ${d.actrel||'-'}
+DOLOR: EVA reposo ${d.evr??'-'}/10 | EVA actividad ${d.eva??'-'}/10 | EVA al hacer fuerza ${d.evf??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Parestesias: ${d.par||'-'} | Fuerza prensión: ${d.fpre||'-'}
+EXPLORACIÓN: Test Cozen: ${d.cozen||'-'} | Test Mill: ${d.mill||'-'} | Test Golfista: ${d.golf||'-'} | Tinel codo: ${d.tinel||'-'} | Movilidad codo: ${d.mob||'-'} | Pronosupinación: ${d.pron||'-'} | Fuerza ext. muñeca: ${d.fext||'-'} | Fuerza flex. muñeca: ${d.ffle||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+DIAGNÓSTICO FISIOTERAPÉUTICO — diferencia claramente entre epicondilitis lateral, epitrocleitis medial y neuropatía cubital según los hallazgos
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}`,
+
+        hernia: `Eres fisioterapeuta experto en columna lumbar. Redacta un informe de valoración fisioterapéutica de HERNIA DISCAL LUMBAR. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
+${cabecera}
+Diagnóstico médico: ${d.diagnosticoMedico||'-'} | RM: ${d.rm||'-'} | TAC: ${d.tac||'-'} | RX: ${d.rx||'-'}
+DOLOR: ${d.dolorPrincipal||'-'} | Inicio: ${d.inicioSintomas||'-'} | Evolución: ${d.evolucion||'-'} | EVA: ${d.evaActual||'-'}/10 | Irradiación: ${d.irradiacion||'-'} | Hormigueo: ${d.hormigueo||'-'} | Debilidad: ${d.debilidad||'-'}
+COMPORTAMIENTO: Empeora con: ${fa(d.empeoraConArray)} | Mejora con: ${fa(d.mejoraConArray)} | Patrón: ${fa(d.patronMecanico)}
+OBSERVACIÓN: Postura: ${fa(d.postura)} | Marcha: ${fa(d.marcha)} | Control motor: ${fa(d.controlMotor)}
+TESTS FUNCIONALES: Hip hinge: ${d.hipHinge||'-'} | Marcha talones (L4-L5): ${d.marchaTalones||'-'} | Marcha puntillas (S1): ${d.marchaPuntillas||'-'}
+NEURODINAMIA: Lasègue D: ${d.lasegueD||'-'} | Lasègue I: ${d.lasegueI||'-'} | Bragard D: ${d.bragardD||'-'} | Slump: ${d.slump||'-'} | Lasègue cruzado: ${d.lasCruz||'-'}
+SENSIBILIDAD: L4 D/I: ${d.sensL4D||'Normal'}/${d.sensL4I||'Normal'} | L5 D/I: ${d.sensL5D||'Normal'}/${d.sensL5I||'Normal'} | S1 D/I: ${d.sensS1D||'Normal'}/${d.sensS1I||'Normal'}
+REFLEJOS: Rotuliano D/I: ${d.rotulD||'-'}/${d.rotulI||'-'} | Aquíleo D/I: ${d.aquilD||'-'}/${d.aquilI||'-'}
+FUERZA: L4 dorsiflexión D/I: ${d.fuerzaL4D||'-'}/${d.fuerzaL4I||'-'} | L5 ext.hallux D/I: ${d.fuerzaL5halluxD||'-'}/${d.fuerzaL5halluxI||'-'} | S1 flex.plantar D/I: ${d.fuerzaS1D||'-'}/${d.fuerzaS1I||'-'}
+CLASIFICACIÓN: ${fa(d.presentacionDominante)} | Irritabilidad: ${d.irritabilidad||'-'} | Estado: ${d.estadoFuncional||'-'}
+Diagnóstico fisio: ${d.diagnosticoFisio||'-'} | Plan: ${d.terapiaManual||'-'} | Conclusión: ${d.conclusion||'-'}
+${d.banderas && d.banderas.length ? 'BANDERAS ROJAS: ' + fa(d.banderas) : ''}
+
+Redacta el informe con estas secciones EXACTAS:
+PRESENTACIÓN DEL CASO
+HALLAZGOS DE LA EXPLORACIÓN FÍSICA
+ANÁLISIS NEUROLÓGICO — interpreta el patrón radicular (L4/L5/S1) según sensibilidad, reflejos y fuerza
+DIAGNÓSTICO FISIOTERAPÉUTICO
+OBJETIVOS DEL TRATAMIENTO
+PLAN DE TRATAMIENTO
+RECOMENDACIONES PARA EL PACIENTE
+PRONÓSTICO
+${d.banderas && d.banderas.length ? 'ALERTAS IMPORTANTES' : ''}`
       };
-      el.appendChild(div);
-    });
-  };
-}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SECTION: PROGRAMAS
-// ─────────────────────────────────────────────────────────────────────────────
-function renderProg(wrap){
-  pacSelId=null; pacSelN=''; fisioSelId=''; ejC=0;
+      const prompt = prompts[tipo] || prompts['hernia'];
 
-  // Fisio card
-  const fc=ce('div','card');
-  fc.innerHTML=`<div class="ct">Fisio que asigna</div>
-  <div class="field"><label>Seleccionar fisio</label>
-  <select id="fisioSel" onchange="onFisio()">
-  <option value="">Seleccionar fisio...</option>
-  ${fisios.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join('')}
-  </select></div>
-  <div class="fprev" id="fprev"><div style="font-size:14px;font-weight:600" id="fpn"></div><div style="font-size:12px;color:var(--muted)" id="fpc"></div></div>`;
-  wrap.appendChild(fc);
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 2000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
 
-  // Paciente
-  const pc=ce('div','card');
-  pc.innerHTML=`<div class="ct">Paciente</div>
-  <div class="si"><input type="text" id="ps1" placeholder="Buscar paciente..."></div>
-  <div id="plistProg"></div>
-  <div id="pacSelBox" style="display:none;margin-top:8px;padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--lila)"></div>`;
-  wrap.appendChild(pc);
-  mkPacSearch('ps1','plistProg','pacSelBox',p=>{pacSelId=p.id;pacSelN=p.nombre;updProg();});
+      const data = await r.json();
+      const informe = data.content?.[0]?.text || '';
 
-  // Ejercicios
-  const ec=ce('div','card');
-  ec.innerHTML=`<div class="ct">Ejercicios del programa</div><div id="ejLista"></div>`;
-  const addBtn=ce('button','btn-o'); addBtn.textContent='+ Añadir ejercicio'; addBtn.onclick=addEj;
-  ec.appendChild(addBtn); wrap.appendChild(ec);
+      if (!informe) {
+        const errorMsg = data.error?.message || JSON.stringify(data).substring(0, 200);
+        return new Response(JSON.stringify({ ok: false, error: 'Anthropic: ' + errorMsg }), { status: 500, headers: corsHeaders });
+      }
 
-  // Mensaje
-  const mc=ce('div','card');
-  mc.innerHTML=`<div class="ct">Mensaje para el paciente</div>
-  <div class="field"><label>Nota motivadora (opcional)</label>
-  <textarea id="mensajeFisio" rows="3" placeholder="Ej: ¡Vas muy bien! Recuerda mantener la espalda recta..."></textarea></div>`;
-  wrap.appendChild(mc);
+      return new Response(JSON.stringify({ ok: true, informe }), { headers: corsHeaders });
 
-  const resDiv=ce('div',''); resDiv.id='res'; resDiv.style.display='none'; wrap.appendChild(resDiv);
-  const saveBtn=ce('button','btn btn-g'); saveBtn.id='btnG'; saveBtn.textContent='Guardar programa'; saveBtn.onclick=guardar;
-  wrap.appendChild(saveBtn);
-}
-
-function onFisio(){
-  fisioSelId=$('fisioSel').value;
-  const f=fisios.find(x=>x.id===fisioSelId);
-  const prev=$('fprev');
-  if(f){$('fpn').textContent=f.nombre;$('fpc').textContent=f.colegiado?`Nº Colegiado: ${f.colegiado}`:'Sin nº colegiado';prev.style.display='block';}
-  else prev.style.display='none';
-}
-
-function addEj(){
-  ejC++; const n=ejC;
-  const lista=$('ejLista');
-  const opts=biblio.length
-    ?biblio.map(e=>`<option value="${e.id}" data-zona="${e.zona||''}" data-desc="${e.descripcion||''}" data-series="${e.series||3}" data-reps="${e.reps||10}" data-dur="${e.duracion||0}" data-desc2="${e.descanso||30}" data-url="${e.youtubeUrl||''}">${e.nombre}${e.zona?' — '+e.zona:''}</option>`).join('')
-    :'<option>No hay ejercicios</option>';
-  const div=ce('div','ejc'); div.id=`ej${n}`;
-  div.innerHTML=`<div class="ejh"><span class="ejn">Ejercicio ${n}</span><button class="bdel" onclick="rmEj(${n})">×</button></div>
-  <div class="field"><label>Seleccionar ejercicio</label>
-  <input type="text" id="ebusca${n}" placeholder="Buscar ejercicio..." oninput="filtrarEj(${n})" style="margin-bottom:8px">
-  <select id="esel${n}" onchange="onEjSel(${n})"><option value="">— Elige un ejercicio —</option>${opts}</select>
-  <div class="ej-preview" id="eprev${n}"><div class="ej-preview-zona" id="epzona${n}"></div><div class="ej-preview-desc" id="epdesc${n}"></div></div></div>
-  <div class="g3">
-  <div class="field"><label>Series</label><input type="number" id="es${n}" value="3" min="1"></div>
-  <div class="field"><label>Reps</label><input type="number" id="er${n}" value="10" min="0"></div>
-  <div class="field"><label>Duración (seg)</label><input type="number" id="ed${n}" value="0" min="0"></div>
-  </div>
-  <div class="g2">
-  <div class="field"><label>Descanso (seg)</label><input type="number" id="edes${n}" value="30" min="0"></div>
-  <div class="field"><label>Zona corporal</label><input type="text" id="ez${n}" placeholder="Lumbar, Rodilla..."></div>
-  </div>
-  <div class="field"><label>Indicaciones</label><input type="text" id="edesc${n}" placeholder="Mantén la espalda recta..."></div>`;
-  lista.appendChild(div); updProg();
-}
-
-function onEjSel(n){
-  const sel=$(`esel${n}`); const opt=sel.options[sel.selectedIndex];
-  if(!sel.value){$(`eprev${n}`).style.display='none';return;}
-  $(`es${n}`).value=opt.dataset.series||3;
-  $(`er${n}`).value=opt.dataset.reps||10;
-  $(`ed${n}`).value=opt.dataset.dur||0;
-  $(`edes${n}`).value=opt.dataset.desc2||30;
-  $(`ez${n}`).value=opt.dataset.zona||'';
-  $(`epzona${n}`).textContent=opt.dataset.zona||'';
-  $(`epdesc${n}`).textContent=opt.dataset.desc||'';
-  $(`eprev${n}`).style.display=(opt.dataset.zona||opt.dataset.desc)?'block':'none';
-  updProg();
-}
-
-function rmEj(n){$(`ej${n}`)?.remove();updProg();}
-
-function filtrarEj(n){
-  const q=$(`ebusca${n}`).value.toLowerCase();
-  const sel=$(`esel${n}`);
-  const fl=biblio.filter(e=>!q||e.nombre.toLowerCase().includes(q));
-  sel.innerHTML='<option value="">— Elige un ejercicio —</option>'+fl.map(e=>`<option value="${e.id}" data-zona="${e.zona||''}" data-desc="${e.descripcion||''}" data-series="${e.series||3}" data-reps="${e.reps||10}" data-dur="${e.duracion||0}" data-desc2="${e.descanso||30}" data-url="${e.youtubeUrl||''}">${e.nombre}</option>`).join('');
-}
-
-function getEjs(){
-  return [...document.querySelectorAll('.ejc')].map(card=>{
-    const n=card.id.replace('ej','');
-    const sel=$(`esel${n}`);
-    const nombre=sel?.options[sel.selectedIndex]?.text?.split(' — ')[0]?.trim();
-    if(!nombre||!sel?.value)return null;
-    return{nombre,series:+$(`es${n}`)?.value||0,reps:+$(`er${n}`)?.value||0,duracion:+$(`ed${n}`)?.value||0,descanso:+$(`edes${n}`)?.value||0,zona:$(`ez${n}`)?.value?.trim()||'',descripcion:$(`edesc${n}`)?.value?.trim()||'',youtubeUrl:biblio.find(e=>e.id===sel.value)?.youtubeUrl||'',imagen:biblio.find(e=>e.id===sel.value)?.imagen||''};
-  }).filter(Boolean);
-}
-
-function updProg(){
-  const ejs=getEjs(), res=$('res');
-  if(res&&pacSelId&&ejs.length){res.style.display='block';res.textContent=`Se asignarán ${ejs.length} ejercicio${ejs.length>1?'s':''} a ${pacSelN}. El programa anterior se reemplazará.`;}
-  else if(res) res.style.display='none';
-}
-
-async function guardar(){
-  if(!fisioSelId){toast('Selecciona el fisio que asigna',false);return;}
-  if(!pacSelId){toast('Selecciona un paciente',false);return;}
-  const ejs=getEjs();
-  if(!ejs.length){toast('Añade y selecciona al menos un ejercicio',false);return;}
-  const btn=$('btnG'); btn.disabled=true; btn.textContent='Guardando...';
-  try{
-    const r=await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:pacSelId,pacienteNombre:pacSelN,fisioId:fisioSelId,ejercicios:ejs,mensajeFisio:$('mensajeFisio')?.value?.trim()||''})});
-    const d=await r.json();
-    if(d.ok) toast(`✓ Programa guardado: ${d.creados} ejercicios para ${pacSelN}`,true);
-    else toast(d.error||'Error al guardar',false);
-  }catch(e){toast('Error de conexión',false);}
-  btn.disabled=false; btn.textContent='Guardar programa';
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SECTION: ANAMNESIS HUB
-// ─────────────────────────────────────────────────────────────────────────────
-const PROTOS_LIST = [
-  {id:'rodilla',  t:'Rodilla',         s:'Menisco · LCA · Condromalacia · Tendinopatía', r:1},
-  {id:'fascitis', t:'Fascitis plantar', s:'Razonamiento clínico · Factores causales',     r:1},
-  {id:'cervical', t:'Cervical',         s:'Cervicalgia · Cervicobraquialgia · Cefalea',   r:1},
-  {id:'hombro',   t:'Hombro',           s:'Manguito rotador · Impingement · Capsulitis',  r:1},
-  {id:'tobillo',  t:'Tobillo',          s:'Esguince · Inestabilidad · Tendinopatías',     r:1},
-  {id:'cadera',   t:'Cadera',           s:'Tendinopatías · Bursitis · Coxartrosis',       r:1},
-  {id:'codo',     t:'Codo',             s:'Epicondilitis · Epitrocleitis',                r:1},
-  {id:'hernia',   t:'Hernia discal',    s:'Lumbar · Radiculopatía · Tests neurológicos',  r:1},
-];
-
-function renderAnamHub(wrap){
-  curProto=null; curStep=0; D={}; anamPacId=null; anamPacNom='';
-
-  const h=ce('div','');
-  h.innerHTML=`<p style="font-size:13px;color:var(--muted);margin-bottom:14px">Selecciona el protocolo de valoración</p>`;
-  wrap.appendChild(h);
-
-  const pc=ce('div','card');
-  pc.innerHTML=`<div class="ct">Paciente</div>
-  <div class="si"><input type="text" id="anamPs" placeholder="Buscar paciente..."></div>
-  <div id="anamPlist"></div>
-  <div id="anamPsel" style="display:none;margin-top:10px;padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--lila)"></div>`;
-  wrap.appendChild(pc);
-  mkPacSearch('anamPs','anamPlist','anamPsel',p=>{anamPacId=p.id;anamPacNom=p.nombre;});
-
-  const grid=ce('div','proto-grid');
-  PROTOS_LIST.forEach(p=>{
-    const c=ce('div','proto-card '+(p.r?'ready':'soon'));
-    c.innerHTML=`<div class="pc-title">${p.t}</div><div class="pc-sub">${p.s}</div><div class="pc-badge ${p.r?'ready':'soon'}">${p.r?'✓ Disponible':'Próximamente'}</div>`;
-    if(p.r) c.onclick=()=>startProto(p.id);
-    grid.appendChild(c);
-  });
-  wrap.appendChild(grid);
-}
-
-function startProto(pid){
-  curProto=pid; curStep=0;
-  Object.keys(D).forEach(k=>{if(k!=='anamPacId'&&k!=='anamPacNom')delete D[k];});
-  renderProto();
-}
-
-function renderProto(){
-  const wrap=$('mainWrap'); wrap.innerHTML='';
-  const cfg=CFG[curProto];
-
-  // back + title
-  const hd=ce('div','');
-  hd.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-  <div><div style="font-size:15px;font-weight:700">${cfg.t}</div>
-  <div style="font-size:11px;color:var(--muted)">Protocolo clínico · Informe generado por IA</div></div>
-  <button class="btn-back" onclick="showSection('anam')">← Cambiar protocolo</button></div>`;
-  wrap.appendChild(hd);
-
-  // steps
-  const sn=ce('div','steps-nav');
-  cfg.steps.forEach((s,i)=>{
-    const d=ce('div','sdot'+(i===curStep?' active':i<curStep?' done':''));
-    d.title=s; d.textContent=i<curStep?'✓':(i+1);
-    if(i<curStep) d.onclick=()=>{curStep=i;renderProto();};
-    sn.appendChild(d);
-    if(i<cfg.steps.length-1){const l=ce('div','sline');sn.appendChild(l);}
-  });
-  wrap.appendChild(sn);
-
-  const stepFns = {
-    rodilla:  [stepP0,rS1,rS2,rS3,rSZ],
-    fascitis: [stepP0,fS1,fS2,fS3,fSZ],
-    cervical: [stepP0,cS1,cS2,cS3,cS4,cSZ],
-    hombro:   [stepP0,hS1,hS2,hS3,hSZ],
-    tobillo:  [stepP0,tS1,tS2,tS3,tSZ],
-    cadera:   [stepP0,caS1,caS2,caS3,caSZ],
-    codo:     [stepP0,coS1,coS2,coS3,coSZ],
-    hernia:   [stepP0,heS1,heS2,heS3,heS4,heS5,heS6,heS7,heS8,heSZ],
-  };
-  stepFns[curProto][curStep](wrap);
-}
-
-// ── HELPERS COMUNES ───────────────────────────────────────────────────────────
-function mkSel(l,o,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const s=document.createElement('select');s.innerHTML=`<option value="">—</option>`+o.map(([v,t])=>`<option value="${v}">${t}</option>`).join('');s.value=D[k]||'';s.onchange=()=>D[k]=s.value;w.appendChild(s);return w;}
-function mkInp(l,t,p,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const i=document.createElement('input');i.type=t;i.placeholder=p;i.value=D[k]||'';i.oninput=()=>D[k]=i.value;w.appendChild(i);return w;}
-function mkEva(l,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const r=ce('div','er');for(let i=0;i<=10;i++){const b=ce('div','ev');b.textContent=i;if(D[k]===i)b.className='ev '+(i<=3?'g':i<=6?'y':'r');b.onclick=()=>{r.querySelectorAll('.ev').forEach(x=>x.className='ev');b.className='ev '+(i<=3?'g':i<=6?'y':'r');D[k]=i;};r.appendChild(b);}w.appendChild(r);return w;}
-function mkCk(l,o,k,warn=[]){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const box=ce('div','cks');if(!D[k])D[k]=[];o.forEach(([v,t])=>{const p=ce('div','ck'+(warn.includes(v)?' w':'')+(D[k].includes(v)?' on':''));p.textContent=t;p.onclick=()=>{if(D[k].includes(v))D[k]=D[k].filter(x=>x!==v);else D[k].push(v);p.classList.toggle('on');};box.appendChild(p);});w.appendChild(box);return w;}
-function mkCard(title,icon,fields){const c=ce('div','card');c.innerHTML=`<div class="ct">${icon} ${title}</div>`;const g=ce('div','grid');g.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';fields.forEach(f=>g.appendChild(f));c.appendChild(g);return c;}
-function mkBnav(wrap,prev,lbl,fn,step){
-  const total=CFG[curProto].steps.length;
-  const row=ce('div','bnav');row.innerHTML=`<span>Paso ${step} de ${total}</span>`;
-  const r=ce('div','bnav-r');
-  if(prev){const pb=ce('button','btn-back');pb.textContent='← Anterior';pb.onclick=()=>{curStep--;renderProto();};r.appendChild(pb);}
-  const nb=ce('button','btn btn-g');nb.style.width='auto';nb.style.padding='10px 20px';nb.textContent=lbl;nb.onclick=fn;r.appendChild(nb);
-  row.appendChild(r);wrap.appendChild(row);
-}
-function mkNota(txt){const n=ce('div','nota');n.innerHTML=`<strong>Clave:</strong> ${txt}`;return n;}
-function mkDerm(o,k,warn=[]){const w=ce('div','f');w.innerHTML='<label>Distribución / parestesias</label>';const g=ce('div','derm-grid');if(!D[k])D[k]=[];o.forEach(([v,t])=>{const d=ce('div','dm'+(warn.includes(v)?' w':'')+(D[k].includes(v)?' on':''));d.textContent=t;d.onclick=()=>{if(D[k].includes(v))D[k]=D[k].filter(x=>x!==v);else D[k].push(v);d.classList.toggle('on');};g.appendChild(d);});w.appendChild(g);return w;}
-
-// ── PASO 0 COMPARTIDO (paciente) ──────────────────────────────────────────────
-function stepP0(wrap){
-  const total=CFG[curProto].steps.length;
-  const pc=ce('div','card');pc.innerHTML=`<div class="ct">Paciente</div>`;
-  const inp=document.createElement('input');inp.type='text';inp.placeholder='Buscar paciente...';
-  inp.style.cssText='width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:var(--font);margin-bottom:10px';
-  inp.value=anamPacNom||'';inp.oninput=()=>{
-    const q=inp.value.toLowerCase(); const el=$('p0list'); el.innerHTML='';
-    if(!q||q.length<2)return;
-    pacs.filter(p=>p.nombre.toLowerCase().includes(q)).slice(0,5).forEach(p=>{
-      const ini=p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-      const div=ce('div','pi');div.style.marginBottom='6px';
-      div.innerHTML=`<div class="pav">${ini}</div><div><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div>`;
-      div.onclick=()=>{anamPacId=p.id;anamPacNom=p.nombre;inp.value=p.nombre;el.innerHTML='';};
-      el.appendChild(div);
-    });
-  };
-  pc.appendChild(inp);
-  const listDiv=ce('div',''); listDiv.id='p0list'; pc.appendChild(listDiv);
-  wrap.appendChild(pc);
-  wrap.appendChild(mkCard('Datos básicos','👤',[
-    mkInp('Edad','number','años','edad'),
-    mkSel('Sexo',[['h','Hombre'],['m','Mujer'],['o','Otro']],'sexo'),
-    mkInp('Peso (kg)','number','kg','peso'),
-    mkInp('Talla (cm)','number','cm','talla'),
-    mkSel('Actividad',[['sed','Sedentario/a'],['lev','Leve'],['mod','Moderada'],['alt','Alta / deporte'],['comp','Competición']],'act'),
-    mkSel('Ocupación',[['sent','Trabajo sentado'],['cond','Conductor'],['bip','Bipedestación 4–8h'],['bip+','Bipedestación +8h'],['fis','Trabajo físico'],['dep','Deportista']],'ocu'),
-  ]));
-  mkBnav(wrap,false,'Siguiente →',()=>{curStep++;renderProto();},1);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PROTOCOLOS: RODILLA, FASCITIS, CERVICAL, HOMBRO, TOBILLO, CADERA, CODO
-// ─────────────────────────────────────────────────────────────────────────────
-
-// RODILLA
-function rS1(w){w.appendChild(mkNota('Traumatismo, sobrecarga o postquirúrgico?'));w.appendChild(mkCard('Historia','📋',[mkSel('Rodilla',[['d','Derecha'],['i','Izquierda'],['b','Ambas']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Inicio',[['td','Traumático directo'],['ti','Giro/torsión'],['gr','Gradual'],['pq','Postquirúrgico']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['men','Menisco'],['lca','LCA'],['lcm','LCM/LCL'],['cond','Condromalacia'],['ten','Tendinopatía rotuliana'],['it','IT band'],['art','Gonartrosis']],'dx'),mkSel('Cirugía',[['no','No'],['art','Artroscopia'],['lca_r','Rec. LCA'],['pro','Prótesis']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function rS2(w){w.appendChild(mkNota('Patrón mecánico o inflamatorio? Inestabilidad real o subjetiva?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">💢 Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['eva','EVA actividad'],['eve','EVA escaleras']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['ant','Anterior'],['med','Medial'],['lat','Lateral'],['pos','Posterior'],['dif','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Inflamación',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Derrame ⚠']],'infl'),mkSel('Inestabilidad',[['no','No'],['sub','Sensación'],['ced','Cedimiento real']],'ines'),mkSel('Bloqueo',[['no','No'],['ps','Pseudobloqueo'],['re','Real ⚠']],'bloq')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);w.appendChild(mkCard('Agravantes/aliviantes','±',[mkCk('AGRAVAN',[['ba','Bajar esc.'],['su','Subir esc.'],['cu','Cuclillas'],['co','Correr'],['gi','Giros'],['se','Sentado']],'agr'),mkCk('ALIVIAN',[['re','Reposo'],['fr','Frío'],['ca','Calor'],['ve','Vendaje'],['ai','AINEs']],'ali')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function rS3(w){w.appendChild(mkNota('McMurray y Lachman consistentes con la historia?'));w.appendChild(mkCard('Exploración','🔬',[mkSel('Flexión',[['com','Completa'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'flex'),mkSel('Extensión',[['com','Completa 0°'],['dl','Déficit leve'],['dm','Déficit mod ⚠'],['re','Recurvatum']],'ext'),mkSel('McMurray',[['no','No realiz.'],['neg','Negativo'],['pm','Positivo medial'],['pl','Positivo lateral']],'mcm'),mkSel('Lachman',[['no','No realiz.'],['neg','Negativo'],['pi','Positivo I'],['pii','Positivo II'],['piii','Positivo III ⚠']],'lach'),mkSel('Estrés colateral',[['no','No realiz.'],['neg','Negativo'],['val','Valgo (LCM)'],['var','Varo (LCL)']],'est'),mkSel('Patelofemoral',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'pat'),mkSel('Fuerza cuád',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fcuad'),mkSel('Propiocepción',[['nor','Normal'],['le','Alterado leve'],['mo','Moderado'],['np','No posible']],'prop'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['mov','Movilidad'],['cx','Evitar cx'],['pq','Postquirúrgico']],'obj')]));mkBnav(w,true,'Generar informe IA ✨',()=>{curStep++;renderProto();},4);}
-function rSZ(w){renderInformeHub(w,'rodilla',gFR(),gFRF(),getFase(D.evr,D.eva));}
-
-// FASCITIS
-function fS1(w){w.appendChild(mkNota('Qué cambió antes del dolor? Carga, calzado, trabajo, peso...'));w.appendChild(mkCard('Historia','📋',[mkSel('Pie',[['d','Pie derecho'],['i','Pie izquierdo'],['b','Ambos']],'pie'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Desencadenante',[['gr','Gradual'],['ac','Aumento carga'],['cal','Cambio calzado'],['pe','Aumento peso'],['bip','Bipedestación'],['tr','Cambio trabajo']],'ini'),mkSel('Calzado',[['sop','Con soporte'],['min','Minimalista'],['zap','Zapato trabajo'],['pla','Plano sin soporte'],['tac','Tacón >3cm'],['des','Descalzo en casa']],'cal'),mkSel('Episodios',[['pri','Primer ep.'],['mis','Recaída mismo pie'],['con','Pie contralateral'],['tto','Recaída tras tto']],'epi'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['pla','Plantillas'],['inf','Infiltración'],['ond','Ondas de choque']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function fS2(w){w.appendChild(mkNota('Patrón clásico — peor al levantarse, mejora al calentar? Si NO, replantear dx.'));const ec=ce('div','card');ec.innerHTML='<div class="ct">💢 Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evm','EVA primeros pasos'],['eva','EVA actividad'],['evn','EVA final día']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Dolor matutino',[['no','No'],['m5','<5 min'],['m30','5–30 min'],['M30','>30 min (atípico)']],'mat'),mkSel('Al calentar',[['des','Desaparece'],['mej','Mejora'],['nc','No cambia'],['emp','Empeora (atípico)']],'cal2'),mkSel('Reaparece reposo',[['no','No'],['si','Sí (clásico)']],'rep'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Localización',[['tm','Talón medial'],['ar','Arco plantar'],['di','Talón difuso'],['an','Antepié']],'loc'),mkSel('Parestesias',[['no','No'],['si','Sí ⚠']],'par')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function fS3(w){w.appendChild(mkNota('Factor PRINCIPAL? Sin identificarlo el tto recidivará.'));w.appendChild(mkCard('Exploración','🔬',[mkSel('Tipo de pie',[['neu','Neutro'],['pla','Plano/hiperpronador'],['cav','Cavo/supinador']],'tpie'),mkSel('Dorsiflexión',[['nor','Normal ≥10°'],['le','Leve 5–9°'],['mo','Moderada 0–4°'],['se','Severa <0°']],'dors'),mkSel('Silfverskiöld',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo (gastrocnemio)']],'silf'),mkSel('Windlass',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — reproduce dolor']],'wind'),mkSel('Tinel',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo ⚠']],'tin'),mkSel('Heel raise',[['nor','≥25 rep'],['re','10–24 rep'],['mr','<10 rep'],['im','No posible']],'hr'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['run','Volver a correr'],['tr','Trabajar sin dolor'],['cam','Caminar sin dolor']],'obj')]));mkBnav(w,true,'Generar informe IA ✨',()=>{curStep++;renderProto();},4);}
-function fSZ(w){renderInformeHub(w,'fascitis',gFF(),gFFF(),getFase(D.evm,D.eva));}
-
-// CERVICAL
-function cS1(w){w.appendChild(mkNota('Latigazo, postura laboral o inicio insidioso?'));w.appendChild(mkCard('Historia','📋',[mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m'],['re','Reagudización']],'evol'),mkSel('Inicio',[['tr','Traumático/latigazo'],['po','Postural'],['gr','Gradual'],['ma','Maniobra brusca'],['es','Espontáneo']],'ini'),mkSel('Región',[['ca','C1–C3 alta'],['cm','C3–C5 media'],['cb','C5–C7 baja'],['cd','Cervicotorácica'],['di','Difusa']],'reg'),mkSel('Dx previo',[['no','Sin dx'],['ar','Artrosis/espondilosis'],['he','Hernia discal'],['est','Estenosis canal'],['con','Contractura mecánica'],['lat','Sínd. latigazo']],'dx'),mkSel('Cirugía',[['no','No'],['dis','Discectomía'],['art','Artrodesis'],['ot','Otra']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['col','Collarín'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function cS2(w){w.appendChild(mkNota('Mecánico o inflamatorio? Irradiación que sugiera radiculopatía?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">💢 Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evc','EVA cuello'],['evb','EVA brazo'],['evh','EVA cefalea']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['pos','Cervical posterior'],['lat','Lateral cuello'],['sub','Suboccipital'],['hom','Hombro/trapecio'],['br','Irradiado brazo']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['neu','Neuropático'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Rigidez matutina',[['no','No'],['br','<30 min'],['pr','>30 min ⚠']],'rig'),mkSel('Cefalea',[['no','No'],['oc','Ocasional'],['fr','Frecuente'],['di','Diaria']],'cef'),mkSel('Mareos',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'mar')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function cS3(w){w.appendChild(mkNota('Patrón dermatomal consistente? Mielopatía → derivación urgente.'));const nc=ce('div','card');nc.innerHTML='<div class="ct">⚡ Afectación neurológica</div>';nc.appendChild(mkDerm([['c34','C3–C4 Hombro'],['c5','C5 Brazo lateral'],['c6','C6 Pulgar/índice'],['c7','C7 Dedo medio'],['c8','C8 Meñique'],['t1','T1 Cara interna'],['bi','Bilateral ⚠'],['sin','Sin irradiación']],'derm',['bi']));const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Parestesias',[['no','No'],['in','Intermitente'],['co','Constante ⚠']],'par'),mkSel('Déficit motor',[['no','No'],['le','Leve'],['mo','Moderado'],['se','Severo ⚠']],'dm'),mkSel('Reflejos',[['nor','Normales'],['bi','Hipoact. bicipital'],['tr','Hipoact. tricipital'],['ab','Abolidos ⚠']],'ref'),mkSel('Spurling',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'spu'),mkSel('Mielopatía',[['no','No'],['tor','Torpeza manos'],['ma','Marcha inestable'],['es','Espasticidad ⚠ URGENTE']],'miel'),mkSel('Autonómico',[['no','No'],['vi','Visual'],['ac','Acúfenos'],['dis','Disfagia ⚠']],'aut')].forEach(f=>g2.appendChild(f));nc.appendChild(g2);w.appendChild(nc);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},4);}
-function cS4(w){w.appendChild(mkNota('Movilidad y ergonomía son consistentes? La ergonomía es clave para el pronóstico.'));w.appendChild(mkCard('Exploración','🔬',[mkSel('Movilidad flex-ext',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'mfx'),mkSel('Rotación',[['nor','Normal simétrica'],['rd','Lim. derecha'],['ri','Lim. izquierda'],['bi','Bilateral']],'mro'),mkSel('Flexores profundos',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'ffp'),mkSel('Fuerza MMSS',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod ⚠'],['se','Déficit sev ⚠']],'fms'),mkSel('Tracción cervical',[['no','No realiz.'],['neg','Negativo'],['pa','Positivo alivia'],['pe','Positivo empeora ⚠']],'tra'),mkSel('Postura',[['nor','Normal'],['ade','Adelantamiento cabeza'],['hci','Hipercifosis dorsal'],['rec','Rectificación']],'pos'),mkSel('Ergonomía',[['ade','Adecuada'],['pb','Pantalla baja'],['pl','Pantalla lateral'],['sa','Sin apoyo'],['nv','No valorado']],'erg'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['tr','Trabajar sin dolor'],['dep','Deporte'],['cef','Controlar cefaleas']],'obj')]));mkBnav(w,true,'Generar informe IA ✨',()=>{curStep++;renderProto();},5);}
-function cSZ(w){renderInformeHub(w,'cervical',gFC(),gFCF(),getFase(D.evc,D.evb));}
-
-// HOMBRO
-function hS1(w){w.appendChild(mkNota('Sobrecarga, traumatismo o espontáneo? Espontáneo + rigidez severa → capsulitis.'));w.appendChild(mkCard('Historia','📋',[mkSel('Hombro',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Inicio',[['tr','Traumático'],['so','Sobrecarga repetitiva'],['gr','Gradual sin causa'],['pq','Postquirúrgico'],['es','Espontáneo (posible capsulitis)']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['im','Impingement'],['mrp','Rotura parcial manguito'],['mrt','Rotura total manguito'],['cap','Capsulitis adhesiva'],['ines','Inestabilidad/luxación'],['bic','Tendinopatía bíceps'],['art','Artrosis glenohumeral']],'dx'),mkSel('Cirugía',[['no','No'],['acr','Acromioplastia'],['rep','Reparación manguito'],['est','Estabilización']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function hS2(w){w.appendChild(mkNota('Arco doloroso 60–120°? Impingement. Rigidez severa + dolor constante? Capsulitis.'));const ec=ce('div','card');ec.innerHTML='<div class="ct">💢 Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evm2','EVA movimiento'],['evn','EVA nocturno']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['la','Lateral (deltoides)'],['an','Anterior/bíceps'],['po','Posterior'],['cer','Irradiado cuello'],['di','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['ap','Al apoyarse'],['es','Espontáneo'],['dsp','Me despierta ⚠']],'noch'),mkSel('Arco doloroso',[['no','Sin arco'],['6012','60–120° (impingement)'],['tod','Todo el arco'],['nv','No valorado']],'arc'),mkSel('Rigidez',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa — posible capsulitis']],'rig'),mkSel('Inestabilidad',[['no','No'],['sub','Sensación subjetiva'],['lux','Luxación previa']],'ines')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function hS3(w){w.appendChild(mkNota('Tests de manguito y arco son consistentes? Diferenciar impingement, rotura y capsulitis.'));w.appendChild(mkCard('Exploración','🔬',[mkSel('Abducción activa',[['com','Completa sin dolor'],['arc','Arco doloroso 60–120°'],['l90','Limitada <90°'],['l45','Muy limitada <45° — posible capsulitis']],'abd'),mkSel('Rotación externa',[['nor','Normal 60–90°'],['le','Leve lim.'],['mo','Moderada'],['se','Muy limitada ⚠']],'rex'),mkSel('Rotación interna',[['nor','Normal T7–T9'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'rin'),mkSel('Neer',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'neer'),mkSel('Hawkins-Kennedy',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'hawk'),mkSel('Jobe (supraespinoso)',[['no','No realiz.'],['neg','Negativo'],['do','Positivo — dolor'],['deb','Positivo — debilidad ⚠']],'jobe'),mkSel('Patte (infraespinoso)',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'pat'),mkSel('Lift-off (subescapular)',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'lift'),mkSel('Speed (bíceps)',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'spd'),mkSel('Fuerza abductores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo ⚠']],'fabd'),mkSel('Escápula',[['nor','Normal'],['dl','Discinesia leve'],['dm','Discinesia mod'],['al','Escápula alada']],'esc'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['tr','Trabajar sin dolor'],['cx','Evitar cx'],['pq','Postquirúrgico']],'obj')]));mkBnav(w,true,'Generar informe IA ✨',()=>{curStep++;renderProto();},4);}
-function hSZ(w){renderInformeHub(w,'hombro',gFH(),gFHF(),getFase(D.evr,D.evm2));}
-
-// TOBILLO
-function tS1(w){w.appendChild(mkNota('Inversión traumática, inestabilidad crónica o tendinopatía por sobrecarga?'));w.appendChild(mkCard('Historia','📋',[mkSel('Tobillo',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Mecanismo',[['inv','Inversión (esguince lateral)'],['eve','Eversión (esguince medial)'],['sob','Sobrecarga tendones'],['trd','Traumático directo'],['gr','Gradual']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['esl','Esguince lateral'],['esm','Esguince medial'],['ic','Inestabilidad crónica'],['aq','Tendinopatía aquílea'],['per','Tendinopatía peroneos'],['fra','Fractura (descartar)']],'dx'),mkSel('Esguinces previos',[['no','No, primer ep.'],['res','Sí, resuelto'],['rec','Sí, recurrente']],'eprev'),mkSel('Tto previo',[['no','Ninguno'],['inm','Inmovilización'],['fis','Fisioterapia'],['inf','Infiltración'],['cx','Cirugía']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function tS2(w){w.appendChild(mkNota('Dolor mecánico con la carga o inflamatorio? Cedimiento real o solo miedo a torcer?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">💢 Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evc','EVA en carga'],['evd','EVA deporte']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['la','Lateral — peroneos'],['me','Medial — deltoideo'],['an','Anterior — impingement'],['po','Posterior — Aquiles'],['di','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Inflamación',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa/hematoma']],'infl'),mkSel('Inestabilidad',[['no','No'],['sen','Sensación'],['ced','Cedimiento real']],'ines'),mkSel('Crepitación',[['no','No'],['sd','Sí sin dolor'],['cd','Sí con dolor']],'crep')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function tS3(w){w.appendChild(mkNota('Tests ligamentosos consistentes? La propiocepción es el factor pronóstico más importante.'));w.appendChild(mkCard('Exploración','🔬',[mkSel('Cajón anterior',[['no','No realiz.'],['neg','Negativo'],['ple','Positivo leve'],['pmo','Positivo mod'],['pse','Positivo severo ⚠']],'caj'),mkSel('Inversión forzada',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — laxitud LCF']],'invf'),mkSel('Dorsiflexión',[['nor','Normal ≥10°'],['le','Leve 5–9°'],['mo','Moderada 0–4°'],['se','Severa <0°']],'dors'),mkSel('Thompson (Aquiles)',[['no','No realiz.'],['neg','Negativo — íntegro'],['pos','Positivo ⚠ — posible rotura']],'thom'),mkSel('Palpación peroneos',[['nor','Sin hallazgos'],['sen','Sensible'],['eng','Engrosado']],'palp'),mkSel('Palpación Aquiles',[['nor','Sin hallazgos'],['sen','Sensible'],['eng','Engrosado']],'pala'),mkSel('Heel raise',[['nor','≥25 rep'],['re','10–24 rep'],['mr','<10 rep'],['im','No posible']],'hr'),mkSel('Propiocepción',[['nor','Normal'],['le','Alterado leve'],['mo','Moderado'],['se','Muy alterado']],'prop'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['est','Recuperar estabilidad'],['tr','Trabajar sin dolor']],'obj')]));mkBnav(w,true,'Generar informe IA ✨',()=>{curStep++;renderProto();},4);}
-function tSZ(w){renderInformeHub(w,'tobillo',gFT(),gFTF(),getFase(D.evr,D.evc));}
-
-// CADERA
-function caS1(w){w.appendChild(mkNota('Dolor inguinal (articular), trocantéreo (bursitis/glúteo) o irradiado desde lumbar?'));w.appendChild(mkCard('Historia','📋',[mkSel('Cadera',[['d','Derecha'],['i','Izquierda'],['b','Ambas']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Inicio',[['gs','Gradual sobrecarga'],['tr','Traumático'],['ru','Running'],['gr','Gradual sin causa'],['pq','Postquirúrgico']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['tg','Tendinopatía glúteo medio'],['bt','Bursitis trocantérea'],['cox','Coxartrosis'],['pir','Sínd. piriforme'],['imp','Impingement FAI'],['lab','Lesión labrum'],['art','Artritis cadera']],'dx'),mkSel('Cirugía',[['no','No'],['ar','Artroscopia'],['pp','Prótesis parcial'],['pt','Prótesis total']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function caS2(w){w.appendChild(mkNota('Dolor inguinal al sentarse (articular)? Trocantéreo en apoyo unipodal (tendinopatía glúteo)?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">💢 Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evc','EVA en carga'],['eva','EVA actividad']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['ing','Inguinal (articular)'],['tr','Trocantéreo (lateral)'],['gl','Glúteo/piriforme'],['lum','Lumbar irradiado'],['di','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['ap','Al apoyarse'],['es','Espontáneo'],['fr','Frecuente ⚠']],'noc'),mkSel('Rigidez matutina',[['no','No'],['br','<30 min'],['pr','>30 min ⚠']],'rig'),mkSel('Crepitación',[['no','No'],['cha','Chasquido'],['crep','Crepitación dolorosa']],'crep'),mkSel('Marcha',[['nor','Normal'],['ant','Antálgica'],['tre','Trendelemburg']],'mar')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function caS3(w){w.appendChild(mkNota('Exploración confirma origen articular o partes blandas? Fuerza abductores = factor pronóstico clave.'));w.appendChild(mkCard('Exploración','🔬',[mkSel('Flexión cadera',[['nor','Normal ≥120°'],['le','Leve 90–119°'],['mo','Moderada 60–89°'],['se','Severa <60°']],'flex'),mkSel('Rotación interna',[['nor','Normal ≥30°'],['le','Leve lim.'],['mo','Moderada'],['se','Severa ⚠']],'roti'),mkSel('FADIR',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — dolor inguinal']],'fadir'),mkSel('FABER',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — dolor inguinal/sacro']],'faber'),mkSel('Trendelemburg',[['neg','Negativo'],['le','Positivo leve'],['mo','Positivo mod']],'tren'),mkSel('Fuerza abductores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fabd'),mkSel('Fuerza extensores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fext'),mkSel('Palpación trocánter',[['nor','Sin dolor'],['sen','Sensible'],['muy','Muy doloroso — posible bursitis']],'palp'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['cam','Caminar sin dolor'],['cx','Evitar cx'],['pq','Postquirúrgico']],'obj')]));mkBnav(w,true,'Generar informe IA ✨',()=>{curStep++;renderProto();},4);}
-function caSZ(w){renderInformeHub(w,'cadera',gFCa(),gFCaF(),getFase(D.evr,D.evc));}
-
-// CODO
-function coS1(w){w.appendChild(mkNota('Epicondilitis (extensores) o epitrocleitis (flexores)? Parestesias que sugieran neuropatía cubital?'));w.appendChild(mkCard('Historia','📋',[mkSel('Codo',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Mecanismo',[['ext','Sobrecarga extensores — epicondilitis'],['fle','Sobrecarga flexores — epitrocleitis'],['tr','Traumático'],['gr','Gradual']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['epi','Epicondilitis lateral'],['epit','Epitrocleitis medial'],['neu','Neuropatía cubital'],['bur','Bursitis olecraneana']],'dx'),mkSel('Actividad',[['ten','Tenis/pádel'],['gol','Golf'],['inf','Informática/ratón'],['man','Trabajo manual'],['gym','Crossfit/gimnasio'],['mus','Instrumento musical']],'actrel'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['ban','Banda epicondílea'],['inf','Infiltración'],['ond','Ondas de choque']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function coS2(w){w.appendChild(mkNota('Dolor al resistir extensión muñeca (epicondilitis) o flexión (epitrocleitis)? Irradiación distal?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">💢 Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['eva','EVA actividad'],['evf','EVA al hacer fuerza']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['epi','Epicóndilo lateral'],['ept','Epitróclea medial'],['ole','Zona olecraneana'],['ant','Irradiado antebrazo'],['mun','Irradiado muñeca']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Parestesias mano',[['no','No'],['45','Dedos 4–5 (cubital)'],['123','Dedos 1–3 (mediano)'],['di','Difuso']],'par'),mkSel('Fuerza prensión',[['nor','Normal'],['le','Reducida leve'],['mo','Reducida mod'],['se','Muy reducida']],'fpre'),mkSel('Rigidez codo',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa']],'rig')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function coS3(w){w.appendChild(mkNota('Tests de resistencia confirman el tendón? Signos de neuropatía cubital?'));w.appendChild(mkCard('Exploración','🔬',[mkSel('Test Cozen',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — epicóndilo']],'cozen'),mkSel('Test Mill',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'mill'),mkSel('Test Golfista',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — epitróclea']],'golf'),mkSel('Tinel codo',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo ⚠ — neuropatía cubital']],'tinel'),mkSel('Movilidad codo',[['nor','Normal 0–145°'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'mob'),mkSel('Pronosupinación',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada']],'pron'),mkSel('Fuerza ext. muñeca',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fext'),mkSel('Fuerza flex. muñeca',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'ffle'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['tr','Trabajar sin dolor'],['pre','Recuperar prensión']],'obj')]));mkBnav(w,true,'Generar informe IA ✨',()=>{curStep++;renderProto();},4);}
-function coSZ(w){renderInformeHub(w,'codo',gFCo(),gFCoF(),getFase(D.evr,D.eva));}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HERNIA DISCAL — protocolo completo (existente, adaptado al hub)
-// ─────────────────────────────────────────────────────────────────────────────
-function heS1(w){
-  w.appendChild(mkCard('Datos del paciente','👤',[mkInp('Fecha nacimiento','date','','aFechaNac'),mkInp('Edad','number','años','aEdad'),mkSel('Actividad física',[['sedentario','Sedentario'],['leve','Actividad leve'],['moderada','Actividad moderada'],['intensa','Actividad intensa'],['profesional','Deportista profesional']],'aActividad'),mkInp('Profesión','text','','aProfesion'),mkInp('Médico derivante','text','','aMedico'),mkInp('Diagnóstico médico','text','Ej: Hernia discal L4-L5','aDiagnostico')]));
-  const ic=ce('div','card');ic.innerHTML='<div class="ct">Pruebas de imagen</div>';
-  [['aRM','RM — hallazgos'],['aTAC','TAC — hallazgos'],['aRX','RX — hallazgos']].forEach(([id,lbl])=>{
-    const d=ce('div','field');d.innerHTML=`<label>${lbl}</label>`;const inp=document.createElement('input');inp.type='text';inp.style.width='100%';inp.value=D[id]||'';inp.oninput=()=>D[id]=inp.value;d.appendChild(inp);ic.appendChild(d);
-  }); w.appendChild(ic);
-  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);
-}
-function heS2(w){
-  const ec=ce('div','card');ec.innerHTML='<div class="ct">💢 Motivo de consulta</div>';
-  [['aDolorPrincipal','Dolor principal','textarea'],['aInicio','Inicio de los síntomas','input'],['aMecanismo','Mecanismo de aparición','input'],['aEvolucion','Evolución','textarea'],['aIrradiacion','Irradiación','input'],['aHormigueo','Hormigueo / adormecimiento','input'],['aDebilidad','Sensación de debilidad','input'],['aLimitaciones','Limitaciones funcionales','textarea'],['aExpectativas','Expectativas del paciente','textarea']].forEach(([id,lbl,tipo])=>{
-    const d=ce('div','field');d.innerHTML=`<label>${lbl}</label>`;
-    const el=document.createElement(tipo==='textarea'?'textarea':'input');
-    if(tipo!=='textarea')el.type='text';
-    el.style.width='100%';el.value=D[id]||'';
-    el.oninput=()=>D[id]=el.value;
-    if(tipo==='textarea'){el.rows=3;el.style.resize='vertical';}
-    d.appendChild(el);ec.appendChild(d);
-  });
-  // EVA
-  const evaWrap=ce('div','anam-eva-wrap');
-  evaWrap.innerHTML=`<div class="ct" style="margin-bottom:8px">Escala EVA</div>
-  <div class="anam-eva-val" id="heEvaVal">5</div>
-  <div class="anam-eva-desc" id="heEvaDesc">Dolor moderado</div>
-  <input type="range" id="heEvaSlider" min="0" max="10" value="${D.aEvaActual||5}" step="1" style="width:100%;accent-color:var(--lila);margin:6px 0" oninput="heEvaUpd(this.value)">
-  <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>0 Sin dolor</span><span>10 Insoportable</span></div>`;
-  ec.appendChild(evaWrap);
-  w.appendChild(ec);
-  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);
-}
-function heEvaUpd(v){D.aEvaActual=v;const el=$('heEvaVal');if(el)el.textContent=v;const descs=['Sin dolor','Muy leve','Leve','Leve-moderado','Moderado','Moderado','Moderado-intenso','Intenso','Muy intenso','Casi insoportable','Insoportable'];const dd=$('heEvaDesc');if(dd)dd.textContent=descs[parseInt(v)];}
-function heS3(w){
-  const bc=ce('div','card');bc.innerHTML=`<div class="ct">🚩 Banderas rojas</div>
-  <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Marcar solo si están PRESENTES</p>
-  <div id="heBanderaWarn" style="display:none;background:#fde8e8;border:1px solid #f5c6c6;border-radius:var(--r-sm);padding:10px;font-size:12px;color:#c0392b;margin-bottom:12px">⚠️ Bandera roja — valorar derivación médica urgente</div>
-  <div class="anam-checks">
-  ${['Pérdida control esfínteres','Anestesia silla de montar','Debilidad progresiva severa','Fiebre','Pérdida peso inexplicada','Dolor nocturno constante','Antecedente oncológico','Traumatismo severo reciente','Historia infecciosa reciente','Uso prolongado corticoides','Osteoporosis severa'].map(b=>`<label class="anam-ck"><input type="checkbox" name="banderas" onchange="heCkBand()"> ${b}</label>`).join('')}
-  </div>`;
-  w.appendChild(bc);
-  const beh=ce('div','card');beh.innerHTML='<div class="ct">Comportamiento del dolor</div>';
-  [['empeora','Empeora con',['Flexión','Extensión','Sedestación','Bipedestación','Caminar','Tos/estornudo','Carga','Giros','Mañanas','Final del día']],['mejora','Mejora con',['Reposo','Movimiento','Caminar','Descarga','Decúbito','Flexión','Extensión']]].forEach(([name,lbl,opts])=>{
-    const d=ce('div','field');d.innerHTML=`<label>${lbl}</label><div class="anam-checks">${opts.map(o=>`<label class="anam-ck"><input type="checkbox" name="${name}"> ${o}</label>`).join('')}</div>`;beh.appendChild(d);
-  }); w.appendChild(beh);
-  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},4);
-}
-function heCkBand(){const any=Array.from(document.querySelectorAll('input[name="banderas"]:checked')).length>0;const el=$('heBanderaWarn');if(el)el.style.display=any?'block':'none';}
-function heS4(w){
-  const oc=ce('div','card');oc.innerHTML='<div class="ct">👁 Observación global</div>';
-  [['postura','Postura',['Anteversión pélvica','Retroversión pélvica','Hiperlordosis','Rectificación lumbar','Escoliosis','Shift antálgico','Asimetrías']],['marcha','Marcha',['Antálgica','Claudicación','Trendelenburg','Déficit propulsión','Arrastre del pie']],['controlMotor','Control motor',['Rigidez protectora','Estrategia lumbar dominante','Pérdida disociación lumbopélvica','Hipermovilidad','Inestabilidad visible']]].forEach(([name,lbl,opts])=>{
-    const d=ce('div','field');d.style.marginBottom='14px';d.innerHTML=`<label style="font-size:12px;font-weight:700;color:var(--black);display:block;margin-bottom:6px">${lbl}</label><div class="anam-checks">${opts.map(o=>`<label class="anam-ck"><input type="checkbox" name="${name}"> ${o}</label>`).join('')}</div>`;oc.appendChild(d);
-  }); w.appendChild(oc);
-  const ic=ce('div','card');ic.innerHTML='<div class="ct">⚡ Irritabilidad y patrón</div>';
-  const irr=ce('div','field');irr.innerHTML='<label>Irritabilidad</label><div class="anam-radio-group"><label class="anam-radio"><input type="radio" name="irritabilidad"> Baja</label><label class="anam-radio"><input type="radio" name="irritabilidad"> Moderada</label><label class="anam-radio"><input type="radio" name="irritabilidad"> Alta</label></div>';ic.appendChild(irr);
-  const pat=ce('div','field');pat.style.marginTop='12px';pat.innerHTML='<label>Patrón mecánico</label><div class="anam-checks"><label class="anam-ck"><input type="checkbox" name="patron"> Preferencia flexión</label><label class="anam-ck"><input type="checkbox" name="patron"> Preferencia extensión</label><label class="anam-ck"><input type="checkbox" name="patron"> Lateral shift</label><label class="anam-ck"><input type="checkbox" name="patron"> Dolor centralizado</label><label class="anam-ck"><input type="checkbox" name="patron"> Dolor periferizado</label></div>';ic.appendChild(pat);
-  const psi=ce('div','field');psi.style.marginTop='12px';psi.innerHTML='<label>Factores psicosociales</label><div class="anam-checks"><label class="anam-ck"><input type="checkbox" name="psico"> Miedo al movimiento</label><label class="anam-ck"><input type="checkbox" name="psico"> Catastrofización</label><label class="anam-ck"><input type="checkbox" name="psico"> Estrés elevado</label><label class="anam-ck"><input type="checkbox" name="psico"> Alteración del sueño</label><label class="anam-ck"><input type="checkbox" name="psico"> Kinesiofobia</label></div>';ic.appendChild(psi);
-  w.appendChild(ic);
-  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},5);
-}
-function heS5(w){
-  const mc=ce('div','card');mc.innerHTML=`<div class="ct">🏃 Movilidad lumbar activa</div>
-  <div class="anam-mov-table">
-  <div class="anam-mov-header"><span>Movimiento</span><span>Rango</span><span>Dolor</span><span>Calidad</span><span>Obs.</span></div>
-  ${['Flexión','Extensión','Incl. derecha','Incl. izquierda','Rot. derecha','Rot. izquierda'].map(m=>`<div class="anam-mov-row"><span class="anam-mov-label">${m}</span><input type="number" placeholder="°"><select><option value="">-</option><option>No</option><option>Leve</option><option>Moderado</option><option>Intenso</option></select><select><option value="">-</option><option>Normal</option><option>Alterada</option><option>Compensada</option></select><input type="text" placeholder="..."></div>`).join('')}
-  </div>`;
-  w.appendChild(mc);
-  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},6);
-}
-function heS6(w){
-  // Tests funcionales simplificados para no sobrecargar el HTML
-  const tc=ce('div','card');tc.innerHTML=`<div class="ct">🧪 Tests funcionales y neurodinámicos</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px">
-  ${[['Bisagra cadera (hip hinge)',['Correcta','Alterada — dominancia lumbar'],'hipHinge'],['Marcha talones (L4-L5)',['Normal — L4-L5 conservada','Alteración leve','Alteración severa','No realiza'],'marchaTalones'],['Marcha puntillas (S1)',['Normal — S1 conservada','Alteración leve','Alteración severa','No realiza'],'marchaPuntillas'],['Lasègue derecha',['Negativo','Positivo leve','Positivo moderado','Positivo severo'],'lasegueD'],['Lasègue izquierda',['Negativo','Positivo leve','Positivo moderado','Positivo severo'],'lasegueI'],['Bragard derecha',['Negativo','Positivo'],'bragardD'],['Bragard izquierda',['Negativo','Positivo'],'bragardI'],['Slump test',['Negativo','Positivo derecho','Positivo izquierdo','Bilateral'],'slump'],['Lasègue cruzado',['Negativo','Positivo — hernia medial'],'lasCruz']].map(([lbl,opts,k])=>`<div class="f"><label>${lbl}</label><select onchange="D['${k}']=this.value"><option value="">—</option>${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`).join('')}
-  </div>`;
-  w.appendChild(tc);
-  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},7);
-}
-function heS7(w){
-  const sc=ce('div','card');sc.innerHTML=`<div class="ct">⚡ Sensibilidad y reflejos</div>
-  <table class="anam-tbl" style="margin-bottom:16px">
-  <tr><th>Raíz</th><th>Zona</th><th>Derecha</th><th>Izquierda</th></tr>
-  ${[['L4','Cara medial pierna/maléolo'],['L5','Dorso pie/1° espacio interdigital'],['S1','Borde lateral pie/talón']].map(([r,z])=>`<tr><td><b>${r}</b></td><td>${z}</td><td><select onchange="D['sens${r}D']=this.value"><option>Normal</option><option>Hipoestesia</option><option>Anestesia</option><option>Hiperestesia</option></select></td><td><select onchange="D['sens${r}I']=this.value"><option>Normal</option><option>Hipoestesia</option><option>Anestesia</option><option>Hiperestesia</option></select></td></tr>`).join('')}
-  </table>
-  <table class="anam-tbl">
-  <tr><th>Reflejo</th><th>Raíz</th><th>Derecha</th><th>Izquierda</th></tr>
-  ${[['Rotuliano','L3-L4','rotul'],['Aquíleo','S1-S2','aquil'],['Isquiotibial medial','L5','isquio']].map(([n,r,k])=>`<tr><td>${n}</td><td>${r}</td><td><select onchange="D['${k}D']=this.value"><option value="">-</option><option>Normal</option><option>Hipoactivo</option><option>Ausente</option><option>Hiperactivo</option></select></td><td><select onchange="D['${k}I']=this.value"><option value="">-</option><option>Normal</option><option>Hipoactivo</option><option>Ausente</option><option>Hiperactivo</option></select></td></tr>`).join('')}
-  </table>`;
-  w.appendChild(sc);
-  const fc=ce('div','card');fc.innerHTML=`<div class="ct">💪 Fuerza (escala 0–5)</div>
-  <p style="font-size:11px;color:var(--muted);margin-bottom:10px">0=sin contracción · 3=contra gravedad · 4=resistencia parcial · 5=normal</p>
-  <table class="anam-tbl">
-  <tr><th>Raíz</th><th>Movimiento</th><th>D</th><th>I</th></tr>
-  ${[['L4','Dorsiflexión tobillo','fuerzaL4'],['L5','Extensión hallux','fuerzaL5hallux'],['L5','Abducción cadera','fuerzaL5abd'],['S1','Flexión plantar','fuerzaS1']].map(([r,m,k])=>`<tr><td><b>${r}</b></td><td>${m}</td><td><select onchange="D['${k}D']=this.value"><option value="">-</option><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option><option>0</option></select></td><td><select onchange="D['${k}I']=this.value"><option value="">-</option><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option><option>0</option></select></td></tr>`).join('')}
-  </table>`;
-  w.appendChild(fc);
-  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},8);
-}
-function heS8(w){
-  const cc=ce('div','card');cc.innerHTML=`<div class="ct">📊 Clasificación clínica</div>
-  <div class="anam-checks" style="margin-bottom:14px">
-  ${['Hernia discal aguda','Radiculopatía','Dolor discogénico','Síndrome facetario','Sensibilización neural','Inestabilidad lumbar','Rigidez lumbar','Disfunción lumbopélvica'].map(c=>`<label class="anam-ck"><input type="checkbox" name="clasif"> ${c}</label>`).join('')}
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-  <div><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">Estado</div><div class="anam-radio-group" style="flex-direction:column"><label class="anam-radio"><input type="radio" name="estadoFunc"> Agudo</label><label class="anam-radio"><input type="radio" name="estadoFunc"> Subagudo</label><label class="anam-radio"><input type="radio" name="estadoFunc"> Crónico</label><label class="anam-radio"><input type="radio" name="estadoFunc"> Reagudización</label></div></div>
-  <div><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">Irritabilidad</div><div class="anam-radio-group" style="flex-direction:column"><label class="anam-radio"><input type="radio" name="irritClasif"> Baja</label><label class="anam-radio"><input type="radio" name="irritClasif"> Moderada</label><label class="anam-radio"><input type="radio" name="irritClasif"> Alta</label></div></div>
-  </div>`;
-  w.appendChild(cc);
-  const dc=ce('div','card');dc.innerHTML='<div class="ct">📝 Diagnóstico y plan</div>';
-  [['aDiagFisio','Diagnóstico fisioterapéutico'],['aObjCorto','Objetivos corto plazo'],['aObjMedio','Objetivos medio plazo'],['aPlanTotal','Plan de tratamiento'],['aConclusion','Conclusión clínica']].forEach(([id,lbl])=>{
-    const d=ce('div','field');d.innerHTML=`<label>${lbl}</label>`;
-    const ta=document.createElement('textarea');ta.rows=3;ta.style.width='100%';ta.style.resize='vertical';
-    ta.value=D[id]||'';ta.oninput=()=>D[id]=ta.value;d.appendChild(ta);dc.appendChild(d);
-  }); w.appendChild(dc);
-  mkBnav(w,true,'Generar informe IA ✨',()=>{curStep++;renderProto();},9);
-}
-function heSZ(w){
-  // Build hernia datos
-  const getChk=name=>Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(e=>e.parentElement.textContent.trim());
-  const getRadio=name=>{const r=document.querySelector(`input[name="${name}"]:checked`);return r?r.parentElement.textContent.trim():null;};
-  const hd={
-    edad:D.aEdad||'',profesion:D.aProfesion||'',actividadFisica:D.aActividad||'',
-    diagnosticoMedico:D.aDiagnostico||'',rm:D.aRM||'',tac:D.aTAC||'',rx:D.aRX||'',
-    dolorPrincipal:D.aDolorPrincipal||'',inicioSintomas:D.aInicio||'',mecanismoAparicion:D.aMecanismo||'',
-    evolucion:D.aEvolucion||'',evaActual:D.aEvaActual||5,irradiacion:D.aIrradiacion||'',
-    hormigueo:D.aHormigueo||'',debilidad:D.aDebilidad||'',limitaciones:D.aLimitaciones||'',
-    expectativas:D.aExpectativas||'',
-    banderas:getChk('banderas'),empeoraConArray:getChk('empeora'),mejoraConArray:getChk('mejora'),
-    patronMecanico:getChk('patron'),factoresPsicosociales:getChk('psico'),
-    postura:getChk('postura'),marcha:getChk('marcha'),controlMotor:getChk('controlMotor'),
-    presentacionDominante:getChk('clasif'),
-    hipHinge:D.hipHinge||'',marchaTalones:D.marchaTalones||'',marchaPuntillas:D.marchaPuntillas||'',
-    lasegueD:D.lasegueD||'',lasegueI:D.lasegueI||'',bragardD:D.bragardD||'',
-    slump:D.slump||'',lasCruz:D.lasCruz||'',
-    sensL4D:D.sensL4D||'Normal',sensL4I:D.sensL4I||'Normal',
-    sensL5D:D.sensL5D||'Normal',sensL5I:D.sensL5I||'Normal',
-    sensS1D:D.sensS1D||'Normal',sensS1I:D.sensS1I||'Normal',
-    rotulD:D.rotulD||'',rotulI:D.rotulI||'',aquilD:D.aquilD||'',aquilI:D.aquilI||'',
-    isquioD:D.isquioD||'',
-    fuerzaL4D:D.fuerzaL4D||'',fuerzaL4I:D.fuerzaL4I||'',
-    fuerzaL5halluxD:D.fuerzaL5halluxD||'',fuerzaL5halluxI:D.fuerzaL5halluxI||'',
-    fuerzaL5abdD:D.fuerzaL5abdD||'',fuerzaL5abdI:D.fuerzaL5abdI||'',
-    fuerzaS1D:D.fuerzaS1D||'',fuerzaS1I:D.fuerzaS1I||'',
-    diagnosticoFisio:D.aDiagFisio||'',objetivosCorto:D.aObjCorto||'',
-    terapiaManual:D.aPlanTotal||'',conclusion:D.aConclusion||'',
-  };
-  renderInformeHernia(w,hd);
-}
-async function renderInformeHernia(w,datos){
-  if(!anamPacId){toast('Selecciona un paciente primero',false);return;}
-  const fisioObj=fisios.find(f=>f.id===fisioSelId)||{};
-  const fisioNom=fisioObj.nombre||'';
-  const fisioCol=fisioObj.colegiado||'';
-  const gc=ce('div','card');gc.innerHTML='<div class="ct">✨ Informe para el paciente — generado por IA</div>';
-  const btn=ce('button','gen-btn');btn.innerHTML='✨ Generar informe completo con IA';
-  const res=ce('div','rbody');
-  btn.onclick=async()=>{
-    btn.disabled=true;btn.innerHTML='<div class="spin"></div> Analizando datos clínicos...';
-    const fa=arr=>(!arr||!arr.length)?'-':arr.join(', ');
-    const prompt=`Eres un fisioterapeuta experto. Informe valoración hernia discal lumbar para ${anamPacNom}. Profesional pero explicado al paciente, términos técnicos entre paréntesis. En español, sin markdown, secciones en MAYÚSCULAS.
-Fisio: ${fisioNom} | Fecha: ${new Date().toLocaleDateString('es-ES')}
-Paciente: ${anamPacNom} | Edad: ${datos.edad||'-'} | Profesión: ${datos.profesion||'-'}
-Dx médico: ${datos.diagnosticoMedico||'-'} | RM: ${datos.rm||'-'}
-Dolor: ${datos.dolorPrincipal||'-'} | Inicio: ${datos.inicioSintomas||'-'} | Evolución: ${datos.evolucion||'-'}
-EVA: ${datos.evaActual}/10 | Irradiación: ${datos.irradiacion||'-'} | Hormigueo: ${datos.hormigueo||'-'}
-Empeora: ${fa(datos.empeoraConArray)} | Mejora: ${fa(datos.mejoraConArray)}
-Banderas: ${fa(datos.banderas)} | Patrón: ${fa(datos.patronMecanico)}
-Lasègue D: ${datos.lasegueD||'-'} I: ${datos.lasegueI||'-'} | Bragard D: ${datos.bragardD||'-'} | Slump: ${datos.slump||'-'}
-Sensibilidad L4 D/I: ${datos.sensL4D}/${datos.sensL4I} | L5: ${datos.sensL5D}/${datos.sensL5I} | S1: ${datos.sensS1D}/${datos.sensS1I}
-Fuerza L4 D/I: ${datos.fuerzaL4D||'-'}/${datos.fuerzaL4I||'-'} | L5 ext.hallux: ${datos.fuerzaL5halluxD||'-'}/${datos.fuerzaL5halluxI||'-'} | S1: ${datos.fuerzaS1D||'-'}/${datos.fuerzaS1I||'-'}
-Diagnóstico fisio: ${datos.diagnosticoFisio||'-'} | Plan: ${datos.terapiaManual||'-'}
-Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEUROLÓGICO / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS / PLAN DE TRATAMIENTO / RECOMENDACIONES / PRONÓSTICO`;
-    try{
-      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos})});
-      const d=await r.json();
-      if(d.ok&&d.informe){
-        informeGenerado=d.informe;
-        guardarInformeLocal(anamPacNom,anamPacId,fisioNom,'hernia',d.informe);
-        res.textContent=d.informe;res.style.display='block';
-        btn.className='gen-btn';btn.style.background='#2e7d32';
-        btn.innerHTML='✅ Informe generado — Descargar PDF';
-        btn.onclick=()=>descargarPDF(anamPacNom,d.informe,'hernia');
-        res.scrollIntoView({behavior:'smooth'});
-      } else {toast(d.error||'Error al generar',false);btn.disabled=false;btn.innerHTML='✨ Generar informe';}
-    }catch(e){toast('Error: '+e.message,false);btn.disabled=false;btn.innerHTML='✨ Generar informe';}
-  };
-  gc.appendChild(btn);gc.appendChild(res);w.appendChild(gc);
-  const bk=ce('div','bnav');bk.innerHTML='<span>Paso 10 de 10</span>';
-  const bb=ce('button','btn-back');bb.textContent='← Volver';bb.onclick=()=>{curStep--;renderProto();};bk.appendChild(bb);w.appendChild(bk);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// FACTORES ALGORITMO (7 protocolos)
-// ─────────────────────────────────────────────────────────────────────────────
-function gFR(){const f=[];if(['mo','se'].includes(D.fcuad))f.push({t:'Déficit fuerza cuádriceps',i:'Fortalecimiento es la base de la recuperación.'});if(D.ines==='ced')f.push({t:'Inestabilidad real',i:'Trabajo propioceptivo prioritario.'});if(['pii','piii'].includes(D.lach))f.push({t:'Lachman positivo — posible LCA',i:'Valorar derivación.'});if(D.mcm&&!['no','neg'].includes(D.mcm))f.push({t:'McMurray positivo — posible menisco',i:'Revisar imagen.'});if(D.evol==='cr')f.push({t:'Evolución crónica',i:'Carga progresiva como base.'});return f;}
-function gFRF(){const f=[];if(D.bloq==='re')f.push('Bloqueo articular real → valorar cirugía');if(D.noc==='fr')f.push('Dolor nocturno → descartar origen sistémico');if(D.lach==='piii')f.push('Lachman III → derivar traumatología');return f;}
-function gFF(){const f=[];if(['le','mo','se'].includes(D.dors))f.push({t:'Acortamiento cadena posterior',i:'Prioritario desde fase 1.'});if(['ac','bip','tr'].includes(D.ini))f.push({t:'Cambio brusco de carga',i:'Modificar actividad ES tratamiento.'});if(D.tpie==='pla')f.push({t:'Pie plano / hiperpronación',i:'Ortesis + ejercicio intrínseco.'});if(['pla','des','min'].includes(D.cal))f.push({t:'Calzado inadecuado',i:'Sin cambio de calzado el tto es insuficiente.'});if(['re','mr','im'].includes(D.hr))f.push({t:'Déficit sóleo / gemelo',i:'Excéntrico es la base de fase 2.'});return f;}
-function gFFF(){const f=[];if(D.noc==='fr')f.push('Dolor nocturno → descartar origen sistémico');if(D.par==='si')f.push('Parestesias → descartar túnel tarsal');if(D.tin==='pos')f.push('Tinel positivo → replantear diagnóstico');return f;}
-function gFC(){const f=[];if(['pb','pl','sa'].includes(D.erg))f.push({t:'Ergonomía laboral inadecuada',i:'Sin corrección postural el tratamiento recidivará.'});if(D.pos==='ade')f.push({t:'Adelantamiento de cabeza',i:'Flexores profundos son prioritarios.'});if(['mo','se'].includes(D.ffp))f.push({t:'Déficit flexores profundos',i:'Estabilización cervical es la base a largo plazo.'});if(D.ini==='tr')f.push({t:'Mecanismo traumático',i:'Educación en dolor importante.'});if(D.evol==='cr')f.push({t:'Evolución crónica',i:'Probable sensibilización central.'});if(['fr','di'].includes(D.cef))f.push({t:'Cefalea cervicogénica',i:'Trabajo suboccipital prioritario.'});return f;}
-function gFCF(){const f=[];if(D.miel==='es')f.push('Mielopatía → DERIVACIÓN URGENTE neurocirugía');if(D.dm==='se')f.push('Déficit motor severo → valorar derivación');if(D.derm&&D.derm.includes('bi'))f.push('Bilateral → compromiso canal cervical');if(D.mar==='fr')f.push('Mareos → valorar origen vertebrobasilar');return f;}
-function gFH(){const f=[];if(D.rig==='se')f.push({t:'Posible capsulitis adhesiva',i:'Movilización progresiva con calor previo.'});if(D.jobe==='deb')f.push({t:'Debilidad supraespinoso — posible rotura',i:'Confirmar con imagen.'});if(['mo','se'].includes(D.fabd))f.push({t:'Déficit manguito / deltoides',i:'Rotadores externos prioritarios.'});if(['dm','al'].includes(D.esc))f.push({t:'Discinesia escapular',i:'Estabilización escápula-tórax imprescindible.'});if(D.ines==='lux')f.push({t:'Antecedente luxación',i:'Trabajo estabilización glenohumeral activo.'});return f;}
-function gFHF(){const f=[];if(D.noch==='dsp')f.push('Dolor que despierta → posible rotura / capsulitis severa');if(D.jobe==='deb'&&D.fabd==='se')f.push('Debilidad severa → valorar imagen / cirugía');return f;}
-function gFT(){const f=[];if(D.eprev==='rec')f.push({t:'Inestabilidad crónica tobillo',i:'Trabajo propioceptivo y peroneal prioritario.'});if(D.caj==='pse')f.push({t:'Laxitud ligamentosa importante',i:'Progresión conservadora. Valorar imagen.'});if(['mo','se'].includes(D.prop))f.push({t:'Déficit propiocepción',i:'El trabajo de equilibrio es el eje del tratamiento.'});if(['le','mo','se'].includes(D.dors))f.push({t:'Limitación dorsiflexión',i:'Movilidad articular y elongación Aquiles.'});if(['re','mr','im'].includes(D.hr))f.push({t:'Déficit sóleo / gastrocnemio',i:'Ejercicio excéntrico es la base.'});return f;}
-function gFTF(){const f=[];if(D.thom==='pos')f.push('Thompson positivo → posible rotura Aquiles → URGENTE');if(D.caj==='pse')f.push('Cajón anterior severo → valorar imagen y cirugía');if(D.noc==='fr')f.push('Dolor nocturno → descartar fractura por estrés');return f;}
-function gFCa(){const f=[];if(['mo','se'].includes(D.fabd))f.push({t:'Déficit glúteo medio',i:'Factor causal más frecuente en tendinopatía trocantérea.'});if(D.tren&&D.tren!=='neg')f.push({t:'Trendelemburg positivo',i:'Debilidad abductores que sobrecarga la cadera.'});if(D.evol==='cr')f.push({t:'Evolución crónica',i:'Carga progresiva es la base.'});if(D.fadir==='pos')f.push({t:'FADIR positivo — posible impingement',i:'Valorar imagen.'});return f;}
-function gFCaF(){const f=[];if(D.noc==='fr')f.push('Dolor nocturno espontáneo → descartar necrosis avascular');if(D.roti==='se')f.push('Rotación interna muy limitada → posible coxartrosis avanzada');if(D.faber==='pos')f.push('FABER positivo → valorar origen sacroilíaco');return f;}
-function gFCo(){const f=[];if(D.evol==='cr')f.push({t:'Tendinopatía crónica',i:'Carga excéntrica progresiva es el tratamiento de elección.'});if(D.actrel)f.push({t:'Actividad relacionada: '+D.actrel,i:'Modificar técnica y carga específica.'});if(['mo','se'].includes(D.fext))f.push({t:'Déficit extensores muñeca',i:'Fortalecimiento excéntrico es el pilar.'});if(D.par&&D.par!=='no')f.push({t:'Parestesias mano/dedos',i:'Descartar neuropatía cubital o mediana.'});return f;}
-function gFCoF(){const f=[];if(D.tinel==='pos')f.push('Tinel codo → neuropatía cubital → valorar electromiografía');if(D.noc==='fr')f.push('Dolor nocturno → descartar origen articular / sistémico');return f;}
-
-function getFase(e1,e2){const a=e1||0,b=e2||0;if(a>=7||b>=7)return{l:'Fase 1 — control del dolor',fb:'#fef2f2',fc:'#b91c1c'};if(D.evol==='cr')return{l:'Fase 2 — recuperación funcional',fb:'#fffbeb',fc:'#b45309'};return{l:'Fase 1–2 — reducir dolor e iniciar función',fb:'#eff6ff',fc:'#1d4ed8'};}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// RENDER INFORME HUB (7 protocolos)
-// ─────────────────────────────────────────────────────────────────────────────
-function renderInformeHub(w,tipo,factores,flags,fase){
-  const total=CFG[curProto].steps.length;
-  // Flags
-  if(flags.length>0){const a=ce('div','abox');a.innerHTML='<strong>⚠ Red flags:</strong>'+flags.map(f=>`<div style="margin-top:3px">⚠ ${f}</div>`).join('');w.appendChild(a);}
-  // Análisis
-  const rc=ce('div','card');rc.innerHTML='<div class="ct">🧠 Análisis clínico</div>';
-  const fd=ce('div');fd.innerHTML='<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Fase de inicio</div>';
-  const tag=ce('span','fase-tag');tag.style.cssText=`background:${fase.fb};color:${fase.fc}`;tag.textContent=fase.l;fd.appendChild(tag);rc.appendChild(fd);
-  if(factores.length>0){const fl=ce('div');fl.innerHTML='<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 6px">Factores identificados</div>';factores.forEach((f,i)=>{const row=ce('div','fr');row.innerHTML=`<div class="fnum">${i+1}</div><div><div class="ftit">${f.t}</div><div class="fimp">${f.i}</div></div>`;fl.appendChild(row);});rc.appendChild(fl);}
-  w.appendChild(rc);
-  // Informe IA
-  const gc=ce('div','card');gc.innerHTML='<div class="ct">✨ Informe para el paciente — generado por IA</div>';
-  const btn=ce('button','gen-btn');btn.innerHTML='✨ Generar informe completo con IA';
-  const res=ce('div','rbody');
-  btn.onclick=async()=>{
-    if(!anamPacId){toast('Selecciona un paciente primero',false);return;}
-    btn.disabled=true;btn.innerHTML='<div class="spin"></div> Analizando datos clínicos...';
-    const imc=D.peso&&D.talla?(D.peso/Math.pow(D.talla/100,2)).toFixed(1):'nc';
-    const fisioObj=fisios.find(f=>f.id===fisioSelId)||{};
-    const fisioNom=fisioObj.nombre||'';
-    const fisioCol=fisioObj.colegiado||'';
-    const noms={rodilla:'rodilla',fascitis:'fascitis plantar',cervical:'columna cervical',hombro:'hombro',tobillo:'tobillo',cadera:'cadera',codo:'codo'};
-    const datos_txt={
-      rodilla:`Rodilla ${D.lado||'?'} | Evol ${D.evol||'?'} | Inicio ${D.ini||'?'} | Dx ${D.dx||'?'}\nDOLOR: EVA reposo ${D.evr??'?'}/10 | EVA actividad ${D.eva??'?'}/10 | Inflamación ${D.infl||'?'} | Inestabilidad ${D.ines||'?'}\nEXPLORACIÓN: McMurray ${D.mcm||'?'} | Lachman ${D.lach||'?'} | Fuerza cuád ${D.fcuad||'?'}`,
-      fascitis:`Pie ${D.pie||'?'} | Evol ${D.evol||'?'} | Desencadenante ${D.ini||'?'} | Calzado ${D.cal||'?'}\nDOLOR: EVA mañana ${D.evm??'?'}/10 | EVA actividad ${D.eva??'?'}/10 | Dolor matutino ${D.mat||'?'} | Al calentar ${D.cal2||'?'}\nEXPLORACIÓN: Tipo pie ${D.tpie||'?'} | Dorsiflexión ${D.dors||'?'} | Windlass ${D.wind||'?'} | Heel raise ${D.hr||'?'}`,
-      cervical:`Evol ${D.evol||'?'} | Inicio ${D.ini||'?'} | Región ${D.reg||'?'}\nDOLOR: EVA cuello ${D.evc??'?'}/10 | EVA brazo ${D.evb??'?'}/10 | Cefalea ${D.cef||'?'} | Mareos ${D.mar||'?'}\nNEURO: Dermatomas ${(D.derm||[]).join(', ')||'sin irradiación'} | Mielopatía ${D.miel||'no'}\nEXPLORACIÓN: Postura ${D.pos||'?'} | Ergonomía ${D.erg||'?'} | Flexores profundos ${D.ffp||'?'}`,
-      hombro:`Hombro ${D.lado||'?'} | Evol ${D.evol||'?'} | Inicio ${D.ini||'?'} | Dx ${D.dx||'?'}\nDOLOR: EVA reposo ${D.evr??'?'}/10 | EVA movimiento ${D.evm2??'?'}/10 | Arco ${D.arc||'?'} | Rigidez ${D.rig||'?'}\nEXPLORACIÓN: Neer ${D.neer||'?'} | Hawkins ${D.hawk||'?'} | Jobe ${D.jobe||'?'} | Abducción ${D.abd||'?'} | Escápula ${D.esc||'?'}`,
-      tobillo:`Tobillo ${D.lado||'?'} | Evol ${D.evol||'?'} | Mecanismo ${D.ini||'?'} | Esguinces previos ${D.eprev||'?'}\nDOLOR: EVA reposo ${D.evr??'?'}/10 | EVA carga ${D.evc??'?'}/10 | Inestabilidad ${D.ines||'?'}\nEXPLORACIÓN: Cajón ${D.caj||'?'} | Thompson ${D.thom||'?'} | Heel raise ${D.hr||'?'} | Propiocepción ${D.prop||'?'}`,
-      cadera:`Cadera ${D.lado||'?'} | Evol ${D.evol||'?'} | Inicio ${D.ini||'?'} | Dx ${D.dx||'?'}\nDOLOR: EVA reposo ${D.evr??'?'}/10 | EVA carga ${D.evc??'?'}/10 | Localización ${D.loc||'?'} | Marcha ${D.mar||'?'}\nEXPLORACIÓN: FADIR ${D.fadir||'?'} | FABER ${D.faber||'?'} | Trendelemburg ${D.tren||'?'} | Fuerza abd ${D.fabd||'?'}`,
-      codo:`Codo ${D.lado||'?'} | Evol ${D.evol||'?'} | Mecanismo ${D.ini||'?'} | Actividad ${D.actrel||'?'}\nDOLOR: EVA reposo ${D.evr??'?'}/10 | EVA actividad ${D.eva??'?'}/10 | Localización ${D.loc||'?'} | Parestesias ${D.par||'no'}\nEXPLORACIÓN: Cozen ${D.cozen||'?'} | Tinel ${D.tinel||'?'} | Fuerza ext muñeca ${D.fext||'?'}`,
-    };
-    const prompt=`Eres fisioterapeuta experto. Informe de valoración de ${noms[tipo]} para ${anamPacNom}. Profesional pero explicado al paciente, términos técnicos entre paréntesis. En español, sin markdown, secciones en MAYÚSCULAS.
-Fisio: ${fisioNom} | Fecha: ${new Date().toLocaleDateString('es-ES')}
-Paciente: ${anamPacNom} | Edad ${D.edad||'?'} | IMC ${imc} | Actividad ${D.act||'?'} | Ocupación ${D.ocu||'?'}
-${datos_txt[tipo]}
-ANÁLISIS: Factores — ${factores.map(f=>f.t).join(', ')||'pendiente'} | Fase: ${fase.l} ${flags.length?'| Red flags: '+flags.join(' / '):''}
-FUNCIONAL: Limitación ${D.lim||'?'} | Objetivo ${D.obj||'?'}
-Secciones: 1.RESUMEN 2.DIAGNÓSTICO FISIOTERAPÉUTICO 3.POR QUÉ LE DUELE 4.PLAN DE TRATAMIENTO 5.RECOMENDACIONES DÍA A DÍA${flags.length?' 6.ALERTAS':''}
-Máx 550 palabras. Profesional, empático y esperanzador.`;
-    const datos_obj={tipo,factores:factores.map(f=>f.t),flags,fase:fase.l,...D};
-    try{
-      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos_obj,dolorPrincipal:prompt,evaActual:D.evr||D.evm||D.evc||5}})});
-      const d=await r.json();
-      if(d.ok&&d.informe){
-        informeGenerado=d.informe;
-        guardarInformeLocal(anamPacNom,anamPacId,fisioNom,tipo,d.informe);
-        res.textContent=d.informe;res.style.display='block';
-        btn.className='gen-btn';btn.style.background='#2e7d32';
-        btn.innerHTML='✅ Informe generado — Descargar PDF';
-        btn.onclick=()=>descargarPDF(anamPacNom,d.informe,tipo);
-        res.scrollIntoView({behavior:'smooth'});
-        toast('✓ Informe guardado en Informes',true);
-      } else {toast(d.error||'Error al generar',false);btn.disabled=false;btn.innerHTML='✨ Generar informe';}
-    }catch(e){toast('Error: '+e.message,false);btn.disabled=false;btn.innerHTML='✨ Generar informe';}
-  };
-  gc.appendChild(btn);gc.appendChild(res);w.appendChild(gc);
-  const bk=ce('div','bnav');bk.innerHTML=`<span>Paso ${total} de ${total}</span>`;
-  const bb=ce('button','btn-back');bb.textContent='← Volver';bb.onclick=()=>{curStep--;renderProto();};bk.appendChild(bb);w.appendChild(bk);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DESCARGAR PDF
-// ─────────────────────────────────────────────────────────────────────────────
-function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
-  // Resolve fisio data if not passed directly
-  if(!fisioNom){const fo=fisios.find(f=>f.id===fisioSelId)||{};fisioNom=fo.nombre||'';fisioCol=fo.colegiado||'';}
-  const fecha=new Date().toLocaleDateString('es-ES');
-  const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia Discal Lumbar'};
-  const tipoLabel=tipos[tipo]||tipo||'Valoración Fisioterapéutica';
-  const colNum=fisioCol?`Colegiado nº ${fisioCol}`:'';
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Informe — ${pacNom}</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',Arial,sans-serif;background:#fff;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.page{max-width:794px;margin:0 auto;padding:0}
-/* HEADER */
-.header{background:#0a0a0a;padding:32px 48px;display:flex;align-items:center;justify-content:space-between}
-.header-logo{color:#fff}
-.logo-main{font-size:26px;font-weight:800;letter-spacing:-1px;color:#fff}
-.logo-main span{color:#ada3da}
-.logo-sub{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.12em;text-transform:uppercase;margin-top:3px}
-.header-right{text-align:right;color:rgba(255,255,255,0.6);font-size:11px;line-height:1.8}
-.header-right strong{color:#fff;font-weight:600}
-/* TIPO BANNER */
-.tipo-banner{background:#ada3da;padding:10px 48px;display:flex;align-items:center;justify-content:space-between}
-.tipo-text{font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#fff}
-.tipo-date{font-size:11px;color:rgba(255,255,255,0.8)}
-/* BODY */
-.body{padding:40px 48px 32px}
-/* PACIENTE CARD */
-.pac-card{background:#f8f7ff;border:1px solid #e8e4f5;border-radius:10px;padding:20px 24px;margin-bottom:32px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.pac-label{font-size:10px;font-weight:700;color:#ada3da;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px}
-.pac-val{font-size:14px;font-weight:600;color:#1a1a1a}
-.pac-sub{font-size:12px;color:#666;margin-top:1px}
-/* FISIO CARD */
-.fisio-card{background:#0a0a0a;border-radius:10px;padding:16px 24px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between}
-.fisio-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
-.fisio-nom{font-size:15px;font-weight:700;color:#fff}
-.fisio-col{font-size:11px;color:#ada3da;margin-top:2px}
-.fisio-badge{background:#ada3da;color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:99px;letter-spacing:0.06em;text-transform:uppercase}
-/* CONTENT */
-.content{font-size:13.5px;line-height:1.85;color:#2a2a2a}
-.content h2{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ada3da;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid #ede9f7}
-.content h2:first-child{margin-top:0}
-.content p{margin-bottom:10px}
-/* FOOTER */
-.footer{margin-top:48px;padding:24px 48px 40px;border-top:1px solid #e5e5e5;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:end;gap:20px}
-.footer-brand{font-size:11px;color:#999;line-height:1.6}
-.footer-brand strong{display:block;font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:2px}
-.footer-firma{text-align:center}
-.firma-line{width:160px;border-top:1.5px solid #1a1a1a;margin:0 auto 6px}
-.firma-label{font-size:10px;color:#666;text-align:center}
-.firma-col{font-size:11px;font-weight:600;color:#ada3da;text-align:center;margin-top:2px}
-.footer-legal{text-align:right;font-size:10px;color:#bbb;line-height:1.6}
-/* PRINT */
-@media print{
-  body{margin:0}
-  .page{max-width:100%;padding:0}
-  .header,.tipo-banner,.body,.footer{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-}
-</style>
-</head>
-<body>
-<div class="page">
-  <div class="header">
-    <div class="header-logo">
-      <div class="logo-main">FISIO<span>365</span></div>
-      <div class="logo-sub">Fisioterapia avanzada y readaptación funcional</div>
-    </div>
-    <div class="header-right">
-      <strong>INFORME DE VALORACIÓN</strong><br>
-      Fecha: ${fecha}<br>
-      Ref: INF-${Date.now().toString().slice(-6)}
-    </div>
-  </div>
-  <div class="tipo-banner">
-    <span class="tipo-text">Valoración fisioterapéutica — ${tipoLabel}</span>
-    <span class="tipo-date">${fecha}</span>
-  </div>
-  <div class="body">
-    <div class="pac-card">
-      <div>
-        <div class="pac-label">Paciente</div>
-        <div class="pac-val">${pacNom}</div>
-      </div>
-      <div>
-        <div class="pac-label">Tipo de valoración</div>
-        <div class="pac-val">${tipoLabel}</div>
-        <div class="pac-sub">Protocolo clínico FISIO365</div>
-      </div>
-    </div>
-    <div class="fisio-card">
-      <div>
-        <div class="fisio-label">Fisioterapeuta responsable</div>
-        <div class="fisio-nom">${fisioNom||'—'}</div>
-        ${colNum?`<div class="fisio-col">${colNum}</div>`:''}
-      </div>
-      <div class="fisio-badge">Fisioterapeuta</div>
-    </div>
-    <div class="content" id="infContent"></div>
-  </div>
-  <div class="footer">
-    <div class="footer-brand">
-      <strong>FISIO365</strong>
-      Fisioterapia avanzada<br>
-      y readaptación funcional
-    </div>
-    <div class="footer-firma">
-      <div class="firma-line"></div>
-      <div class="firma-label">${fisioNom||'Fisioterapeuta'}</div>
-      ${colNum?`<div class="firma-col">${colNum}</div>`:''}
-    </div>
-    <div class="footer-legal">
-      Documento generado el ${fecha}<br>
-      Este informe tiene validez clínica<br>
-      con la firma del profesional
-    </div>
-  </div>
-</div>
-<script>
-// Format content: detect SECTION HEADERS and wrap in h2
-const raw = ${JSON.stringify(''+informe)};
-const lines = raw.split('\n');
-let html2 = '';
-lines.forEach(line => {
-  const t = line.trim();
-  if(!t){html2+='<br>';return;}
-  // Detect all-caps section headers (at least 3 words or known patterns)
-  if(/^[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ\s\-\/]{8,}$/.test(t)){
-    html2+=\`<h2>\${t}<\/h2>\`;
-  } else {
-    html2+=\`<p>\${t}<\/p>\`;
+    } catch(e) {
+      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
+    }
   }
-});
-document.getElementById('infContent').innerHTML=html2;
-window.onload=function(){window.print();};
-<\/script>
-</body>
-</html>`);
-  w.document.close();
-}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SECTION: INFORMES
-// ─────────────────────────────────────────────────────────────────────────────
-// ── STORAGE HELPERS ──────────────────────────────────────────────────────
-function borrarInforme(id){
-  if(!confirm('¿Eliminar este informe? No se puede deshacer.')) return;
-  const arr=getInformesLocal().filter(i=>i.id!==id);
-  localStorage.setItem('fisio365_informes',JSON.stringify(arr));
-  showSection('inf');
-}
 
-function editarInforme(id,todos){
-  const arr=todos||getInformesLocal();
-  const inf=arr.find(i=>i.id===id);
-  if(!inf) return;
-  const wrap=$('mainWrap');wrap.innerHTML='';
-  // Header
-  const hd=ce('div','');
-  hd.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <div><div style="font-size:15px;font-weight:700">Editar informe</div>
-    <div style="font-size:12px;color:var(--muted)">${inf.pacienteNombre||'—'} · ${inf.fecha||'—'}</div></div>
-    <button class="btn-back" onclick="showSection('inf')">← Volver</button></div>`;
-  wrap.appendChild(hd);
-  // Editor card
-  const ec=ce('div','card');
-  ec.innerHTML='<div class="ct">✏️ Texto del informe</div>';
-  const ta=document.createElement('textarea');
-  ta.value=inf.informe||'';
-  ta.style.cssText='width:100%;font-family:Georgia,serif;font-size:13px;line-height:1.85;padding:16px;border:1px solid var(--border);border-radius:var(--r-sm);resize:vertical;min-height:480px;color:#2a2a2a;background:#fafafa;outline:none';
-  ta.onfocus=()=>ta.style.borderColor='var(--lila)';
-  ta.onblur=()=>ta.style.borderColor='var(--border)';
-  ec.appendChild(ta);wrap.appendChild(ec);
-  // Buttons
-  const br=ce('div','');br.style.cssText='display:flex;gap:10px;margin-top:4px';
-  const bSave=ce('button','btn btn-g');bSave.style.cssText='flex:1;padding:13px';bSave.textContent='Guardar cambios';
-  bSave.onclick=()=>{
-    const updated=getInformesLocal().map(i=>i.id===id?{...i,informe:ta.value}:i);
-    localStorage.setItem('fisio365_informes',JSON.stringify(updated));
-    inf.informe=ta.value;
-    toast('✓ Informe actualizado',true);
-  };
-  const bPdf=ce('button','btn btn-g');bPdf.style.cssText='flex:1;padding:13px;background:var(--lila);border-color:var(--lila)';
-  bPdf.innerHTML='⬇ Exportar PDF';
-  bPdf.onclick=()=>descargarPDF(inf.pacienteNombre,ta.value,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'');
-  br.appendChild(bSave);br.appendChild(bPdf);wrap.appendChild(br);
-}
-
-function guardarInformeLocal(pacNom,pacId,fisioNom,tipo,informe){
-  try{
-    const arr=JSON.parse(localStorage.getItem('fisio365_informes')||'[]');
-    const fo=fisios.find(f=>f.id===fisioSelId)||{};
-    arr.unshift({id:Date.now(),pacienteNombre:pacNom,pacienteId:pacId,fisioNombre:fisioNom,fisioCol:fo.colegiado||'',protocolo:tipo,fecha:new Date().toLocaleDateString('es-ES'),informe:informe});
-    localStorage.setItem('fisio365_informes',JSON.stringify(arr.slice(0,100)));
-  }catch(e){}
-}
-function getInformesLocal(){try{return JSON.parse(localStorage.getItem('fisio365_informes')||'[]');}catch(e){return[];}}
-
-function renderInformes(wrap){
-  wrap.innerHTML='';
-  const todos=getInformesLocal();
-  const tipoLabel={rodilla:'Rodilla',fascitis:'Fascitis plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia discal'};
-  const hd=ce('div','');
-  hd.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-    <div class="si" style="flex:1;margin:0"><input type="text" id="infSearch" placeholder="Buscar por paciente..." style="padding:10px 10px 10px 36px;width:100%;font-size:14px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font)"></div>
-    <div style="font-size:12px;color:var(--muted);white-space:nowrap">${todos.length} informe${todos.length!==1?'s':''}</div>
-  </div>`;
-  wrap.appendChild(hd);
-  if(!todos.length){
-    const em=ce('div','');em.style.cssText='text-align:center;padding:60px 20px;color:var(--muted)';
-    em.innerHTML='<div style="font-size:40px;margin-bottom:12px">📄</div><div style="font-size:14px;font-weight:600;color:var(--black);margin-bottom:4px">Sin informes todavía</div><div style="font-size:12px">Los informes generados en Anamnesis aparecerán aquí automáticamente</div>';
-    wrap.appendChild(em);return;
+  // ── GET PACIENTES ────────────────────────────────────────────────────────
+  if (req.method === 'GET' && !action) {
+    try {
+      let allRecords = [], offset = null;
+      do {
+        const pageUrl = `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=EMAIL&fields[]=PIN&fields[]=WHATSAPP&sort[0][field]=FULL NAME&sort[0][direction]=asc&pageSize=100${offset ? '&offset=' + offset : ''}`;
+        const pageRes = await fetch(pageUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        const pageData = await pageRes.json();
+        allRecords = allRecords.concat(pageData.records || []);
+        offset = pageData.offset;
+      } while (offset);
+      const pacientes = allRecords.map(rec => ({
+        id: rec.id,
+        nombre: rec.fields['FULL NAME'] || '—',
+        email: rec.fields['EMAIL'] || '',
+        pin: rec.fields['PIN'] || '',
+        telefono: rec.fields['WHATSAPP'] || ''
+      }));
+      return new Response(JSON.stringify({ ok: true, pacientes }), { headers: corsHeaders });
+    } catch(e) {
+      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
+    }
   }
-  const lista=ce('div','');lista.id='infLista';wrap.appendChild(lista);
-  const pintar=(arr)=>{
-    lista.innerHTML='';
-    if(!arr.length){lista.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">No hay resultados</div>';return;}
-    arr.forEach(inf=>{
-      const c=ce('div','inf-card');
-      c.innerHTML=`<div class="inf-info"><div class="inf-pac">${inf.pacienteNombre||'—'}</div><div class="inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+inf.fisioNombre:''}</div><span class="inf-proto">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</span></div>`;
-      const btns=ce('div','');btns.style.cssText='display:flex;gap:6px;flex-shrink:0';
-      const bEdit=ce('button','inf-btn');bEdit.innerHTML='✏️';bEdit.title='Editar';
-      bEdit.onclick=()=>editarInforme(inf.id,todos);
-      const bPdf=ce('button','inf-btn');bPdf.innerHTML='⬇ PDF';bPdf.style.cssText='border-color:var(--lila);color:var(--lila)';
-      bPdf.onclick=()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'');
-      const bDel=ce('button','inf-btn');bDel.innerHTML='🗑';bDel.style.cssText='border-color:#fca5a5;color:#b91c1c;padding:7px 10px';
-      bDel.onclick=()=>borrarInforme(inf.id);
-      btns.appendChild(bEdit);btns.appendChild(bPdf);btns.appendChild(bDel);
-      c.appendChild(btns);lista.appendChild(c);
-    });
-  };
-  pintar(todos);
-  setTimeout(()=>{
-    const s=$('infSearch');
-    if(s)s.oninput=()=>{const q=s.value.toLowerCase().trim();pintar(q?todos.filter(i=>i.pacienteNombre.toLowerCase().includes(q)):todos);};
-  },50);
-}
 
-// LIGHTBOX
-function verImg(url,label){
-  $('lb-img').src=url;$('lb-label').textContent=label;
-  $('lightbox').style.display='flex';
+  // ── POST NUEVO PACIENTE ──────────────────────────────────────────────────
+  if (req.method === 'POST' && !action) {
+    const { nombre, email, telefono } = body;
+    if (!nombre || !email) {
+      return new Response(JSON.stringify({ ok: false, error: 'Nombre y email obligatorios' }), { status: 400, headers: corsHeaders });
+    }
+    const pin = String(Math.floor(1000 + Math.random() * 9000));
+    try {
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ records: [{ fields: { 'FULL NAME': nombre, EMAIL: email, WHATSAPP: telefono || '', PIN: pin } }] })
+      });
+      const data = await r.json();
+      const rec = data.records?.[0];
+      return new Response(JSON.stringify({ ok: true, paciente: { id: rec.id, nombre, email, pin } }), { headers: corsHeaders });
+    } catch(e) {
+      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
+    }
+  }
+
+  return new Response(JSON.stringify({ ok: false, error: 'Ruta no encontrada' }), { status: 404, headers: corsHeaders });
 }
-function cerrarLightbox(){
-  $('lightbox').style.display='none';$('lb-img').src='';
-}
-</script>
-</body>
-</html>
