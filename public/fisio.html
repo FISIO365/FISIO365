@@ -522,6 +522,27 @@ function renderAnamHub(wrap){
   h.innerHTML=`<p style="font-size:13px;color:var(--muted);margin-bottom:14px">Selecciona el protocolo de valoración</p>`;
   wrap.appendChild(h);
 
+  // Fisio selector for anamnesis
+  const fc=ce('div','card');
+  fc.innerHTML=`<div class="ct">Fisioterapeuta</div>
+  <select id="anamFisioSel" style="width:100%;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font)">
+  <option value="">Seleccionar fisio...</option>
+  ${fisios.map(f=>`<option value="${f.id}">${f.nombre}${f.colegiado?' — Nº '+f.colegiado:''}</option>`).join('')}
+  </select>
+  <div id="anamFisioInfo" style="display:none;margin-top:8px;padding:8px 12px;background:var(--lila-light);border-radius:var(--r-sm);font-size:12px;color:var(--lila);font-weight:500"></div>`;
+  wrap.appendChild(fc);
+  $('anamFisioSel').onchange=()=>{
+    const f=fisios.find(x=>x.id===$('anamFisioSel').value);
+    const info=$('anamFisioInfo');
+    if(f){
+      fisioSelId=f.id;
+      info.textContent=f.nombre+(f.colegiado?' · Colegiado nº '+f.colegiado:'');
+      info.style.display='block';
+    } else {
+      info.style.display='none';
+    }
+  };
+
   const pc=ce('div','card');
   pc.innerHTML=`<div class="ct">Paciente</div>
   <div class="si"><input type="text" id="anamPs" placeholder="Buscar paciente..."></div>
@@ -960,18 +981,26 @@ function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
   const fecha=new Date().toLocaleDateString('es-ES');
   const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia Discal Lumbar'};
   const tipoLabel=tipos[tipo]||tipo||'Valoración Fisioterapéutica';
-  const colNum=fisioCol?`Colegiado n\u00ba ${fisioCol}`:'';
+  const colNum=fisioCol?'Colegiado n\u00ba '+fisioCol:'';
 
-  // Store informe text safely in sessionStorage to avoid escaping issues
-  const key='fisio365_pdf_tmp_'+Date.now();
-  sessionStorage.setItem(key, informe);
+  // Format informe text into HTML sections
+  const lines=(informe||'').split('\n');
+  let contentHtml='';
+  lines.forEach(function(line){
+    const t=line.trim();
+    if(!t)return;
+    if(/^[A-Z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1][A-Z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1\s\-\/\.]{7,}$/.test(t)){
+      contentHtml+='<div class="sec-title">'+t+'</div>';
+    } else {
+      contentHtml+='<p>'+t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</p>';
+    }
+  });
 
-  const w=window.open('','_blank','noopener=no');if(!w){alert('Activa las ventanas emergentes para este sitio');return;}
-  w.document.write(`<!DOCTYPE html>
+  const pdfHtml=`<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Informe \u2014 ${pacNom}</title>
+<title>Informe \u2014 `+pacNom+`</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -995,7 +1024,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#fff;color:#1a1a1a;-webkit-
 .fisio-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
 .fisio-nom{font-size:15px;font-weight:700;color:#fff}
 .fisio-col{font-size:11px;color:#ada3da;margin-top:2px}
-.fisio-badge{background:#ada3da;color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:99px;letter-spacing:0.06em;text-transform:uppercase}
+.fisio-badge{background:#ada3da;color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:99px;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap}
 .content{font-size:13.5px;line-height:1.85;color:#2a2a2a}
 .sec-title{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ada3da;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid #ede9f7}
 .sec-title:first-child{margin-top:0}
@@ -1011,7 +1040,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#fff;color:#1a1a1a;-webkit-
 @media print{body{margin:0}.page{max-width:100%}.header,.tipo-banner{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 </head>
-<body>
+<body onload="window.print()">
 <div class="page">
   <div class="header">
     <div>
@@ -1020,67 +1049,52 @@ body{font-family:'Inter',Arial,sans-serif;background:#fff;color:#1a1a1a;-webkit-
     </div>
     <div class="header-right">
       <strong>INFORME DE VALORACI\u00d3N</strong><br>
-      Fecha: ${fecha}<br>
-      Ref: INF-${Date.now().toString().slice(-6)}
+      Fecha: `+fecha+`<br>
+      Ref: INF-`+Date.now().toString().slice(-6)+`
     </div>
   </div>
   <div class="tipo-banner">
-    <span class="tipo-text">Valoraci\u00f3n fisioterapéutica \u2014 ${tipoLabel}</span>
-    <span class="tipo-date">${fecha}</span>
+    <span class="tipo-text">Valoraci\u00f3n fisioterapéutica \u2014 `+tipoLabel+`</span>
+    <span class="tipo-date">`+fecha+`</span>
   </div>
   <div class="body">
     <div class="pac-card">
-      <div><div class="pac-label">Paciente</div><div class="pac-val">${pacNom}</div></div>
-      <div><div class="pac-label">Tipo de valoraci\u00f3n</div><div class="pac-val">${tipoLabel}</div><div class="pac-sub">Protocolo cl\u00ednico FISIO365</div></div>
+      <div><div class="pac-label">Paciente</div><div class="pac-val">`+pacNom+`</div></div>
+      <div><div class="pac-label">Tipo de valoraci\u00f3n</div><div class="pac-val">`+tipoLabel+`</div><div class="pac-sub">Protocolo cl\u00ednico FISIO365</div></div>
     </div>
     <div class="fisio-card">
       <div>
         <div class="fisio-label">Fisioterapeuta responsable</div>
-        <div class="fisio-nom">${fisioNom||'\u2014'}</div>
-        ${colNum?`<div class="fisio-col">${colNum}</div>`:''}
+        <div class="fisio-nom">`+(fisioNom||'\u2014')+`</div>
+        `+(colNum?'<div class="fisio-col">'+colNum+'</div>':'')+`
       </div>
       <div class="fisio-badge">Fisioterapeuta</div>
     </div>
-    <div class="content" id="cnt"></div>
+    <div class="content">`+contentHtml+`</div>
   </div>
   <div class="footer">
     <div class="footer-brand"><strong>FISIO365</strong>Fisioterapia avanzada<br>y readaptaci\u00f3n funcional</div>
     <div class="footer-firma">
       <div class="firma-line"></div>
-      <div class="firma-label">${fisioNom||'Fisioterapeuta'}</div>
-      ${colNum?`<div class="firma-col">${colNum}</div>`:''}
+      <div class="firma-label">`+(fisioNom||'Fisioterapeuta')+`</div>
+      `+(colNum?'<div class="firma-col">'+colNum+'</div>':'')+`
     </div>
-    <div class="footer-legal">Documento generado el ${fecha}<br>Este informe tiene validez cl\u00ednica<br>con la firma del profesional</div>
+    <div class="footer-legal">Documento generado el `+fecha+`<br>Este informe tiene validez cl\u00ednica<br>con la firma del profesional</div>
   </div>
 </div>
-<script>
-(function(){
-  // Read informe from opener sessionStorage
-  var txt='';
-  try{txt=window.opener.sessionStorage.getItem('${key}')||'';}catch(e){}
-  if(!txt)try{txt=window.opener.sessionStorage.getItem(document.title)||'';}catch(e){}
-  // Format: detect ALL-CAPS section titles
-  var lines=txt.split('\\n');
-  var html='';
-  lines.forEach(function(line){
-    var t=line.trim();
-    if(!t){return;}
-    if(/^[A-Z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1][A-Z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1\\s\\-\\/\\.]{7,}$/.test(t)){
-      html+='<div class="sec-title">'+t+'</div>';
-    } else {
-      html+='<p>'+t.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</p>';
-    }
-  });
-  document.getElementById('cnt').innerHTML=html||'<p>Sin contenido</p>';
-  // Clean up
-  try{window.opener.sessionStorage.removeItem('${key}');}catch(e){}
-  window.onload=function(){window.print();};
-})();
-<\/script>
 </body>
-</html>`);
-  w.document.close();
-  setTimeout(()=>{try{window.focus();}catch(e){}},500);
+</html>`;
+
+  // Download directly — works on mobile and desktop, never blocked
+  const blob=new Blob([pdfHtml],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='Informe_'+pacNom.replace(/\s+/g,'_')+'_'+fecha.replace(/\//g,'-')+'.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
