@@ -966,7 +966,7 @@ function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
   const key='fisio365_pdf_tmp_'+Date.now();
   sessionStorage.setItem(key, informe);
 
-  const w=window.open('','_blank');
+  const w=window.open('','_blank','noopener=no');if(!w){alert('Activa las ventanas emergentes para este sitio');return;}
   w.document.write(`<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1080,6 +1080,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#fff;color:#1a1a1a;-webkit-
 </body>
 </html>`);
   w.document.close();
+  setTimeout(()=>{try{window.focus();}catch(e){}},500);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
