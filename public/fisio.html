@@ -981,120 +981,169 @@ function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
   const fecha=new Date().toLocaleDateString('es-ES');
   const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia Discal Lumbar'};
   const tipoLabel=tipos[tipo]||tipo||'Valoración Fisioterapéutica';
-  const colNum=fisioCol?'Colegiado n\u00ba '+fisioCol:'';
+  const colNum=fisioCol?'Colegiado nº '+fisioCol:'';
 
-  // Format informe text into HTML sections
-  const lines=(informe||'').split('\n');
-  let contentHtml='';
-  lines.forEach(function(line){
+  // Load jsPDF from CDN then generate
+  if(!window.jspdf){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=()=>_generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha);
+    s.onerror=()=>toast('Error al cargar librería PDF',false);
+    document.head.appendChild(s);
+  } else {
+    _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha);
+  }
+}
+
+function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210, ml=16, mr=16, tw=W-ml-mr;
+  let y=0;
+
+  // ── HEADER negro ──
+  doc.setFillColor(10,10,10);
+  doc.rect(0,0,W,28,'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18);
+  doc.setTextColor(255,255,255);
+  doc.text('FISIO365',ml,18);
+  doc.setFontSize(7);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(160,160,160);
+  doc.text('FISIOTERAPIA AVANZADA Y READAPTACIÓN FUNCIONAL',ml,23);
+  doc.setFontSize(8);
+  doc.setTextColor(200,200,200);
+  doc.text('INFORME DE VALORACIÓN',W-mr,12,{align:'right'});
+  doc.text('Fecha: '+fecha,W-mr,17,{align:'right'});
+  doc.text('Ref: INF-'+Date.now().toString().slice(-6),W-mr,22,{align:'right'});
+  y=28;
+
+  // ── BANNER LILA ──
+  doc.setFillColor(173,163,218);
+  doc.rect(0,y,W,10,'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(8);
+  doc.setTextColor(255,255,255);
+  doc.text(('VALORACIÓN FISIOTERAPÉUTICA — '+tipoLabel).toUpperCase(),ml,y+6.5);
+  doc.text(fecha,W-mr,y+6.5,{align:'right'});
+  y+=10;
+
+  // ── TARJETA PACIENTE ──
+  y+=8;
+  doc.setFillColor(248,247,255);
+  doc.setDrawColor(232,228,245);
+  doc.roundedRect(ml,y,tw,18,2,2,'FD');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(7);
+  doc.setTextColor(173,163,218);
+  doc.text('PACIENTE',ml+4,y+5);
+  doc.text('TIPO DE VALORACIÓN',ml+tw/2+4,y+5);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(26,26,26);
+  doc.text(pacNom,ml+4,y+12);
+  doc.setFontSize(9);
+  doc.text(tipoLabel,ml+tw/2+4,y+12);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(100,100,100);
+  doc.text('Protocolo clínico FISIO365',ml+tw/2+4,y+16);
+  y+=18;
+
+  // ── TARJETA FISIO ──
+  y+=4;
+  doc.setFillColor(10,10,10);
+  doc.roundedRect(ml,y,tw,fisioNom?16:12,2,2,'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(7);
+  doc.setTextColor(173,163,218);
+  doc.text('FISIOTERAPEUTA RESPONSABLE',ml+4,y+5);
+  doc.setFontSize(11);
+  doc.setTextColor(255,255,255);
+  doc.text(fisioNom||'—',ml+4,y+11);
+  if(colNum){
+    doc.setFontSize(8);
+    doc.setTextColor(173,163,218);
+    doc.text(colNum,ml+4,y+15);
+  }
+  // Badge
+  doc.setFillColor(173,163,218);
+  doc.roundedRect(W-mr-28,y+4,26,7,2,2,'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(255,255,255);
+  doc.text('FISIOTERAPEUTA',W-mr-15,y+8.5,{align:'center'});
+  y+=fisioNom?16:12;
+
+  // ── CONTENIDO ──
+  y+=8;
+  const lines=informe.split('\n');
+  doc.setFont('helvetica','normal');
+
+  lines.forEach(line=>{
     const t=line.trim();
-    if(!t)return;
-    if(/^[A-Z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1][A-Z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1\s\-\/\.]{7,}$/.test(t)){
-      contentHtml+='<div class="sec-title">'+t+'</div>';
+    if(!t){y+=2;return;}
+    // Detectar título de sección (todo mayúsculas)
+    const isTitle=/^[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ\s\-\/\.]{7,}$/.test(t);
+    if(isTitle){
+      if(y>270){doc.addPage();y=16;}
+      y+=4;
+      // Línea decorativa lila
+      doc.setDrawColor(173,163,218);
+      doc.setLineWidth(0.3);
+      doc.line(ml,y+1,ml+tw,y+1);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(8);
+      doc.setTextColor(173,163,218);
+      doc.text(t,ml,y-1);
+      y+=5;
     } else {
-      contentHtml+='<p>'+t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</p>';
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9.5);
+      doc.setTextColor(42,42,42);
+      const wrapped=doc.splitTextToSize(t,tw);
+      wrapped.forEach(wl=>{
+        if(y>277){doc.addPage();y=16;}
+        doc.text(wl,ml,y);
+        y+=5;
+      });
+      y+=1;
     }
   });
 
-  const pdfHtml=`<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Informe \u2014 `+pacNom+`</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',Arial,sans-serif;background:#fff;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.page{max-width:794px;margin:0 auto}
-.header{background:#0a0a0a;padding:32px 48px;display:flex;align-items:center;justify-content:space-between}
-.logo-main{font-size:26px;font-weight:800;letter-spacing:-1px;color:#fff}
-.logo-main span{color:#ada3da}
-.logo-sub{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.12em;text-transform:uppercase;margin-top:3px}
-.header-right{text-align:right;color:rgba(255,255,255,0.6);font-size:11px;line-height:1.8}
-.header-right strong{color:#fff;font-weight:600}
-.tipo-banner{background:#ada3da;padding:10px 48px;display:flex;align-items:center;justify-content:space-between}
-.tipo-text{font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#fff}
-.tipo-date{font-size:11px;color:rgba(255,255,255,0.85)}
-.body{padding:40px 48px 32px}
-.pac-card{background:#f8f7ff;border:1px solid #e8e4f5;border-radius:10px;padding:20px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.pac-label{font-size:10px;font-weight:700;color:#ada3da;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px}
-.pac-val{font-size:14px;font-weight:600;color:#1a1a1a}
-.pac-sub{font-size:12px;color:#666;margin-top:1px}
-.fisio-card{background:#0a0a0a;border-radius:10px;padding:16px 24px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between}
-.fisio-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
-.fisio-nom{font-size:15px;font-weight:700;color:#fff}
-.fisio-col{font-size:11px;color:#ada3da;margin-top:2px}
-.fisio-badge{background:#ada3da;color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:99px;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap}
-.content{font-size:13.5px;line-height:1.85;color:#2a2a2a}
-.sec-title{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ada3da;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid #ede9f7}
-.sec-title:first-child{margin-top:0}
-.content p{margin-bottom:10px}
-.footer{margin-top:48px;padding:24px 48px 40px;border-top:1px solid #e5e5e5;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:end;gap:20px}
-.footer-brand{font-size:11px;color:#999;line-height:1.6}
-.footer-brand strong{display:block;font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:2px}
-.footer-firma{text-align:center}
-.firma-line{width:160px;border-top:1.5px solid #1a1a1a;margin:0 auto 6px}
-.firma-label{font-size:10px;color:#666}
-.firma-col{font-size:11px;font-weight:600;color:#ada3da;margin-top:2px}
-.footer-legal{text-align:right;font-size:10px;color:#bbb;line-height:1.6}
-@media print{body{margin:0}.page{max-width:100%}.header,.tipo-banner{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-</style>
-</head>
-<body onload="window.print()">
-<div class="page">
-  <div class="header">
-    <div>
-      <div class="logo-main">FISIO<span>365</span></div>
-      <div class="logo-sub">Fisioterapia avanzada y readaptaci\u00f3n funcional</div>
-    </div>
-    <div class="header-right">
-      <strong>INFORME DE VALORACI\u00d3N</strong><br>
-      Fecha: `+fecha+`<br>
-      Ref: INF-`+Date.now().toString().slice(-6)+`
-    </div>
-  </div>
-  <div class="tipo-banner">
-    <span class="tipo-text">Valoraci\u00f3n fisioterapéutica \u2014 `+tipoLabel+`</span>
-    <span class="tipo-date">`+fecha+`</span>
-  </div>
-  <div class="body">
-    <div class="pac-card">
-      <div><div class="pac-label">Paciente</div><div class="pac-val">`+pacNom+`</div></div>
-      <div><div class="pac-label">Tipo de valoraci\u00f3n</div><div class="pac-val">`+tipoLabel+`</div><div class="pac-sub">Protocolo cl\u00ednico FISIO365</div></div>
-    </div>
-    <div class="fisio-card">
-      <div>
-        <div class="fisio-label">Fisioterapeuta responsable</div>
-        <div class="fisio-nom">`+(fisioNom||'\u2014')+`</div>
-        `+(colNum?'<div class="fisio-col">'+colNum+'</div>':'')+`
-      </div>
-      <div class="fisio-badge">Fisioterapeuta</div>
-    </div>
-    <div class="content">`+contentHtml+`</div>
-  </div>
-  <div class="footer">
-    <div class="footer-brand"><strong>FISIO365</strong>Fisioterapia avanzada<br>y readaptaci\u00f3n funcional</div>
-    <div class="footer-firma">
-      <div class="firma-line"></div>
-      <div class="firma-label">`+(fisioNom||'Fisioterapeuta')+`</div>
-      `+(colNum?'<div class="firma-col">'+colNum+'</div>':'')+`
-    </div>
-    <div class="footer-legal">Documento generado el `+fecha+`<br>Este informe tiene validez cl\u00ednica<br>con la firma del profesional</div>
-  </div>
-</div>
-</body>
-</html>`;
+  // ── PIE ──
+  const pageCount=doc.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    const py=290;
+    doc.setDrawColor(220,220,220);
+    doc.setLineWidth(0.3);
+    doc.line(ml,py-2,W-mr,py-2);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8);
+    doc.setTextColor(26,26,26);
+    doc.text('FISIO365',ml,py+3);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7);
+    doc.setTextColor(150,150,150);
+    doc.text('Fisioterapia avanzada y readaptación funcional',ml,py+7);
+    // Firma centrada
+    doc.setDrawColor(26,26,26);
+    doc.setLineWidth(0.4);
+    doc.line(W/2-20,py+1,W/2+20,py+1);
+    doc.setFontSize(7);
+    doc.setTextColor(100,100,100);
+    doc.text(fisioNom||'Fisioterapeuta',W/2,py+5,{align:'center'});
+    if(colNum){doc.setTextColor(173,163,218);doc.text(colNum,W/2,py+9,{align:'center'});}
+    // Legal derecha
+    doc.setTextColor(180,180,180);
+    doc.setFontSize(6.5);
+    doc.text('Documento generado el '+fecha,W-mr,py+3,{align:'right'});
+    doc.text('Página '+i+' de '+pageCount,W-mr,py+7,{align:'right'});
+  }
 
-  // Download directly — works on mobile and desktop, never blocked
-  const blob=new Blob([pdfHtml],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download='Informe_'+pacNom.replace(/\s+/g,'_')+'_'+fecha.replace(/\//g,'-')+'.html';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),5000);
+  doc.save('Informe_'+pacNom.replace(/\s+/g,'_')+'_'+fecha.replace(/\//g,'-')+'.pdf');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
