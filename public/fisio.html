@@ -1104,10 +1104,54 @@ window.onload=function(){window.print();};
 // SECTION: INFORMES
 // ─────────────────────────────────────────────────────────────────────────────
 // ── STORAGE HELPERS ──────────────────────────────────────────────────────
+function borrarInforme(id){
+  if(!confirm('¿Eliminar este informe? No se puede deshacer.')) return;
+  const arr=getInformesLocal().filter(i=>i.id!==id);
+  localStorage.setItem('fisio365_informes',JSON.stringify(arr));
+  showSection('inf');
+}
+
+function editarInforme(id,todos){
+  const arr=todos||getInformesLocal();
+  const inf=arr.find(i=>i.id===id);
+  if(!inf) return;
+  const wrap=$('mainWrap');wrap.innerHTML='';
+  // Header
+  const hd=ce('div','');
+  hd.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div><div style="font-size:15px;font-weight:700">Editar informe</div>
+    <div style="font-size:12px;color:var(--muted)">${inf.pacienteNombre||'—'} · ${inf.fecha||'—'}</div></div>
+    <button class="btn-back" onclick="showSection('inf')">← Volver</button></div>`;
+  wrap.appendChild(hd);
+  // Editor card
+  const ec=ce('div','card');
+  ec.innerHTML='<div class="ct">✏️ Texto del informe</div>';
+  const ta=document.createElement('textarea');
+  ta.value=inf.informe||'';
+  ta.style.cssText='width:100%;font-family:Georgia,serif;font-size:13px;line-height:1.85;padding:16px;border:1px solid var(--border);border-radius:var(--r-sm);resize:vertical;min-height:480px;color:#2a2a2a;background:#fafafa;outline:none';
+  ta.onfocus=()=>ta.style.borderColor='var(--lila)';
+  ta.onblur=()=>ta.style.borderColor='var(--border)';
+  ec.appendChild(ta);wrap.appendChild(ec);
+  // Buttons
+  const br=ce('div','');br.style.cssText='display:flex;gap:10px;margin-top:4px';
+  const bSave=ce('button','btn btn-g');bSave.style.cssText='flex:1;padding:13px';bSave.textContent='Guardar cambios';
+  bSave.onclick=()=>{
+    const updated=getInformesLocal().map(i=>i.id===id?{...i,informe:ta.value}:i);
+    localStorage.setItem('fisio365_informes',JSON.stringify(updated));
+    inf.informe=ta.value;
+    toast('✓ Informe actualizado',true);
+  };
+  const bPdf=ce('button','btn btn-g');bPdf.style.cssText='flex:1;padding:13px;background:var(--lila);border-color:var(--lila)';
+  bPdf.innerHTML='⬇ Exportar PDF';
+  bPdf.onclick=()=>descargarPDF(inf.pacienteNombre,ta.value,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'');
+  br.appendChild(bSave);br.appendChild(bPdf);wrap.appendChild(br);
+}
+
 function guardarInformeLocal(pacNom,pacId,fisioNom,tipo,informe){
   try{
     const arr=JSON.parse(localStorage.getItem('fisio365_informes')||'[]');
-    arr.unshift({id:Date.now(),pacienteNombre:pacNom,pacienteId:pacId,fisioNombre:fisioNom,protocolo:tipo,fecha:new Date().toLocaleDateString('es-ES'),informe:informe});
+    const fo=fisios.find(f=>f.id===fisioSelId)||{};
+    arr.unshift({id:Date.now(),pacienteNombre:pacNom,pacienteId:pacId,fisioNombre:fisioNom,fisioCol:fo.colegiado||'',protocolo:tipo,fecha:new Date().toLocaleDateString('es-ES'),informe:informe});
     localStorage.setItem('fisio365_informes',JSON.stringify(arr.slice(0,100)));
   }catch(e){}
 }
@@ -1135,9 +1179,15 @@ function renderInformes(wrap){
     arr.forEach(inf=>{
       const c=ce('div','inf-card');
       c.innerHTML=`<div class="inf-info"><div class="inf-pac">${inf.pacienteNombre||'—'}</div><div class="inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+inf.fisioNombre:''}</div><span class="inf-proto">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</span></div>`;
-      const btn=ce('button','inf-btn');btn.innerHTML='⬇ PDF';
-      btn.onclick=()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia');
-      c.appendChild(btn);lista.appendChild(c);
+      const btns=ce('div','');btns.style.cssText='display:flex;gap:6px;flex-shrink:0';
+      const bEdit=ce('button','inf-btn');bEdit.innerHTML='✏️';bEdit.title='Editar';
+      bEdit.onclick=()=>editarInforme(inf.id,todos);
+      const bPdf=ce('button','inf-btn');bPdf.innerHTML='⬇ PDF';bPdf.style.cssText='border-color:var(--lila);color:var(--lila)';
+      bPdf.onclick=()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'');
+      const bDel=ce('button','inf-btn');bDel.innerHTML='🗑';bDel.style.cssText='border-color:#fca5a5;color:#b91c1c;padding:7px 10px';
+      bDel.onclick=()=>borrarInforme(inf.id);
+      btns.appendChild(bEdit);btns.appendChild(bPdf);btns.appendChild(bDel);
+      c.appendChild(btns);lista.appendChild(c);
     });
   };
   pintar(todos);
