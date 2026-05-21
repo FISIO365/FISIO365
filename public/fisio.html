@@ -984,14 +984,19 @@ function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
   const colNum=fisioCol?'Colegiado nº '+fisioCol:'';
 
   // Load jsPDF from CDN then generate
-  if(!window.jspdf){
-    const s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    s.onload=()=>_generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha);
-    s.onerror=()=>toast('Error al cargar librería PDF',false);
-    document.head.appendChild(s);
+  const _run=()=>_generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha);
+  if(typeof window.jspdf!=='undefined'&&window.jspdf.jsPDF){
+    _run();
   } else {
-    _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha);
+    // Remove any previous failed script
+    const old=document.getElementById('jspdf-script');
+    if(old)old.remove();
+    const s=document.createElement('script');
+    s.id='jspdf-script';
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=()=>{if(window.jspdf&&window.jspdf.jsPDF){_run();}else{toast('Error: librería PDF no disponible',false);}};
+    s.onerror=()=>toast('Error al cargar librería PDF. Verifica tu conexión.',false);
+    document.head.appendChild(s);
   }
 }
 
