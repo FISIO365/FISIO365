@@ -828,7 +828,9 @@ function heSZ(w){
 }
 async function renderInformeHernia(w,datos){
   if(!anamPacId){toast('Selecciona un paciente primero',false);return;}
-  const fisioNom=fisios.find(f=>f.id===fisioSelId)?.nombre||'';
+  const fisioObj=fisios.find(f=>f.id===fisioSelId)||{};
+  const fisioNom=fisioObj.nombre||'';
+  const fisioCol=fisioObj.colegiado||'';
   const gc=ce('div','card');gc.innerHTML='<div class="ct">✨ Informe para el paciente — generado por IA</div>';
   const btn=ce('button','gen-btn');btn.innerHTML='✨ Generar informe completo con IA';
   const res=ce('div','rbody');
@@ -849,7 +851,7 @@ Fuerza L4 D/I: ${datos.fuerzaL4D||'-'}/${datos.fuerzaL4I||'-'} | L5 ext.hallux: 
 Diagnóstico fisio: ${datos.diagnosticoFisio||'-'} | Plan: ${datos.terapiaManual||'-'}
 Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEUROLÓGICO / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS / PLAN DE TRATAMIENTO / RECOMENDACIONES / PRONÓSTICO`;
     try{
-      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,datos})});
+      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos})});
       const d=await r.json();
       if(d.ok&&d.informe){
         informeGenerado=d.informe;
@@ -908,7 +910,9 @@ function renderInformeHub(w,tipo,factores,flags,fase){
     if(!anamPacId){toast('Selecciona un paciente primero',false);return;}
     btn.disabled=true;btn.innerHTML='<div class="spin"></div> Analizando datos clínicos...';
     const imc=D.peso&&D.talla?(D.peso/Math.pow(D.talla/100,2)).toFixed(1):'nc';
-    const fisioNom=fisios.find(f=>f.id===fisioSelId)?.nombre||'';
+    const fisioObj=fisios.find(f=>f.id===fisioSelId)||{};
+    const fisioNom=fisioObj.nombre||'';
+    const fisioCol=fisioObj.colegiado||'';
     const noms={rodilla:'rodilla',fascitis:'fascitis plantar',cervical:'columna cervical',hombro:'hombro',tobillo:'tobillo',cadera:'cadera',codo:'codo'};
     const datos_txt={
       rodilla:`Rodilla ${D.lado||'?'} | Evol ${D.evol||'?'} | Inicio ${D.ini||'?'} | Dx ${D.dx||'?'}\nDOLOR: EVA reposo ${D.evr??'?'}/10 | EVA actividad ${D.eva??'?'}/10 | Inflamación ${D.infl||'?'} | Inestabilidad ${D.ines||'?'}\nEXPLORACIÓN: McMurray ${D.mcm||'?'} | Lachman ${D.lach||'?'} | Fuerza cuád ${D.fcuad||'?'}`,
@@ -929,7 +933,7 @@ Secciones: 1.RESUMEN 2.DIAGNÓSTICO FISIOTERAPÉUTICO 3.POR QUÉ LE DUELE 4.PLAN
 Máx 550 palabras. Profesional, empático y esperanzador.`;
     const datos_obj={tipo,factores:factores.map(f=>f.t),flags,fase:fase.l,...D};
     try{
-      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,datos:{...datos_obj,dolorPrincipal:prompt,evaActual:D.evr||D.evm||D.evc||5}})});
+      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos_obj,dolorPrincipal:prompt,evaActual:D.evr||D.evm||D.evc||5}})});
       const d=await r.json();
       if(d.ok&&d.informe){
         informeGenerado=d.informe;
@@ -951,11 +955,148 @@ Máx 550 palabras. Profesional, empático y esperanzador.`;
 // ─────────────────────────────────────────────────────────────────────────────
 // DESCARGAR PDF
 // ─────────────────────────────────────────────────────────────────────────────
-function descargarPDF(pacNom,informe,tipo){
+function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
+  // Resolve fisio data if not passed directly
+  if(!fisioNom){const fo=fisios.find(f=>f.id===fisioSelId)||{};fisioNom=fo.nombre||'';fisioCol=fo.colegiado||'';}
   const fecha=new Date().toLocaleDateString('es-ES');
   const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia Discal Lumbar'};
+  const tipoLabel=tipos[tipo]||tipo||'Valoración Fisioterapéutica';
+  const colNum=fisioCol?`Colegiado nº ${fisioCol}`:'';
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe FISIO365 - ${pacNom}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Georgia,serif;color:#1a1a1a;background:#fff}.p{max-width:800px;margin:0 auto;padding:60px 70px}.cab{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:24px;margin-bottom:32px}.logo{font-family:Arial Black,Arial,sans-serif;font-size:28px;font-weight:900;letter-spacing:-1px}.logo-s{font-size:11px;color:#666;margin-top:4px;font-family:Arial,sans-serif}.cab-info{text-align:right;font-family:Arial,sans-serif;font-size:12px;color:#555;line-height:1.7}.tit{background:#000;color:#fff;padding:16px 24px;font-family:Arial Black,Arial,sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px}.meta{background:#f5f2ee;border-left:4px solid #ada3da;padding:16px 20px;margin-bottom:28px;font-family:Arial,sans-serif;font-size:13px;line-height:1.8}.con{font-size:13.5px;line-height:1.9;color:#222;white-space:pre-wrap}.pie{margin-top:60px;padding-top:24px;border-top:2px solid #000;display:flex;justify-content:space-between;font-family:Arial,sans-serif;font-size:11px;color:#666}.firma{text-align:center}.firma-l{width:180px;border-top:1.5px solid #333;margin:0 auto 6px}@media print{.p{padding:40px 50px}}</style></head><body><div class="p"><div class="cab"><div><div class="logo">FISIO365</div><div class="logo-s">Fisioterapia avanzada y readaptación funcional</div></div><div class="cab-info"><strong>INFORME DE VALORACIÓN</strong><br>Fecha: ${fecha}<br>Paciente: ${pacNom}</div></div><div class="tit">Informe de Valoración Fisioterapéutica — ${tipos[tipo]||tipo}</div><div class="meta"><strong>Paciente:</strong> ${pacNom} &nbsp;|&nbsp; <strong>Fecha:</strong> ${fecha}</div><div class="con">${informe.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="pie"><div><div>FISIO365 Fisioterapia</div><div>fisioterapia365.com</div></div><div class="firma"><div class="firma-l"></div><div>Firma y sello del fisioterapeuta</div></div></div></div><script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Informe — ${pacNom}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',Arial,sans-serif;background:#fff;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:794px;margin:0 auto;padding:0}
+/* HEADER */
+.header{background:#0a0a0a;padding:32px 48px;display:flex;align-items:center;justify-content:space-between}
+.header-logo{color:#fff}
+.logo-main{font-size:26px;font-weight:800;letter-spacing:-1px;color:#fff}
+.logo-main span{color:#ada3da}
+.logo-sub{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.12em;text-transform:uppercase;margin-top:3px}
+.header-right{text-align:right;color:rgba(255,255,255,0.6);font-size:11px;line-height:1.8}
+.header-right strong{color:#fff;font-weight:600}
+/* TIPO BANNER */
+.tipo-banner{background:#ada3da;padding:10px 48px;display:flex;align-items:center;justify-content:space-between}
+.tipo-text{font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#fff}
+.tipo-date{font-size:11px;color:rgba(255,255,255,0.8)}
+/* BODY */
+.body{padding:40px 48px 32px}
+/* PACIENTE CARD */
+.pac-card{background:#f8f7ff;border:1px solid #e8e4f5;border-radius:10px;padding:20px 24px;margin-bottom:32px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pac-label{font-size:10px;font-weight:700;color:#ada3da;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px}
+.pac-val{font-size:14px;font-weight:600;color:#1a1a1a}
+.pac-sub{font-size:12px;color:#666;margin-top:1px}
+/* FISIO CARD */
+.fisio-card{background:#0a0a0a;border-radius:10px;padding:16px 24px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between}
+.fisio-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
+.fisio-nom{font-size:15px;font-weight:700;color:#fff}
+.fisio-col{font-size:11px;color:#ada3da;margin-top:2px}
+.fisio-badge{background:#ada3da;color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:99px;letter-spacing:0.06em;text-transform:uppercase}
+/* CONTENT */
+.content{font-size:13.5px;line-height:1.85;color:#2a2a2a}
+.content h2{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ada3da;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid #ede9f7}
+.content h2:first-child{margin-top:0}
+.content p{margin-bottom:10px}
+/* FOOTER */
+.footer{margin-top:48px;padding:24px 48px 40px;border-top:1px solid #e5e5e5;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:end;gap:20px}
+.footer-brand{font-size:11px;color:#999;line-height:1.6}
+.footer-brand strong{display:block;font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:2px}
+.footer-firma{text-align:center}
+.firma-line{width:160px;border-top:1.5px solid #1a1a1a;margin:0 auto 6px}
+.firma-label{font-size:10px;color:#666;text-align:center}
+.firma-col{font-size:11px;font-weight:600;color:#ada3da;text-align:center;margin-top:2px}
+.footer-legal{text-align:right;font-size:10px;color:#bbb;line-height:1.6}
+/* PRINT */
+@media print{
+  body{margin:0}
+  .page{max-width:100%;padding:0}
+  .header,.tipo-banner,.body,.footer{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="header-logo">
+      <div class="logo-main">FISIO<span>365</span></div>
+      <div class="logo-sub">Fisioterapia avanzada y readaptación funcional</div>
+    </div>
+    <div class="header-right">
+      <strong>INFORME DE VALORACIÓN</strong><br>
+      Fecha: ${fecha}<br>
+      Ref: INF-${Date.now().toString().slice(-6)}
+    </div>
+  </div>
+  <div class="tipo-banner">
+    <span class="tipo-text">Valoración fisioterapéutica — ${tipoLabel}</span>
+    <span class="tipo-date">${fecha}</span>
+  </div>
+  <div class="body">
+    <div class="pac-card">
+      <div>
+        <div class="pac-label">Paciente</div>
+        <div class="pac-val">${pacNom}</div>
+      </div>
+      <div>
+        <div class="pac-label">Tipo de valoración</div>
+        <div class="pac-val">${tipoLabel}</div>
+        <div class="pac-sub">Protocolo clínico FISIO365</div>
+      </div>
+    </div>
+    <div class="fisio-card">
+      <div>
+        <div class="fisio-label">Fisioterapeuta responsable</div>
+        <div class="fisio-nom">${fisioNom||'—'}</div>
+        ${colNum?`<div class="fisio-col">${colNum}</div>`:''}
+      </div>
+      <div class="fisio-badge">Fisioterapeuta</div>
+    </div>
+    <div class="content" id="infContent"></div>
+  </div>
+  <div class="footer">
+    <div class="footer-brand">
+      <strong>FISIO365</strong>
+      Fisioterapia avanzada<br>
+      y readaptación funcional
+    </div>
+    <div class="footer-firma">
+      <div class="firma-line"></div>
+      <div class="firma-label">${fisioNom||'Fisioterapeuta'}</div>
+      ${colNum?`<div class="firma-col">${colNum}</div>`:''}
+    </div>
+    <div class="footer-legal">
+      Documento generado el ${fecha}<br>
+      Este informe tiene validez clínica<br>
+      con la firma del profesional
+    </div>
+  </div>
+</div>
+<script>
+// Format content: detect SECTION HEADERS and wrap in h2
+const raw = ${JSON.stringify(''+informe)};
+const lines = raw.split('\n');
+let html2 = '';
+lines.forEach(line => {
+  const t = line.trim();
+  if(!t){html2+='<br>';return;}
+  // Detect all-caps section headers (at least 3 words or known patterns)
+  if(/^[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ\s\-\/]{8,}$/.test(t)){
+    html2+=\`<h2>\${t}<\/h2>\`;
+  } else {
+    html2+=\`<p>\${t}<\/p>\`;
+  }
+});
+document.getElementById('infContent').innerHTML=html2;
+window.onload=function(){window.print();};
+<\/script>
+</body>
+</html>`);
   w.document.close();
 }
 
