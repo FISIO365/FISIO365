@@ -56,7 +56,7 @@ body{font-family:var(--font);background:var(--cream);color:var(--black);min-heig
   .topbar{padding:12px 14px;width:100%}
   .topbar-t{font-size:13px}
   .topbar-s{font-size:10px}
-  .wrap{width:100% !important;max-width:100% !important;padding:14px 14px 80px;box-sizing:border-box}
+  .wrap{padding:14px 14px 80px;box-sizing:border-box}
   .card{padding:14px;width:100%;box-sizing:border-box}
   .proto-grid{grid-template-columns:1fr 1fr;width:100%}
   .inf-card{flex-direction:column;gap:8px}
@@ -71,7 +71,7 @@ body{font-family:var(--font);background:var(--cream);color:var(--black);min-heig
 .topbar{background:#fff;border-bottom:1px solid var(--border);padding:16px 28px;position:sticky;top:0;z-index:50}
 .topbar-t{font-size:15px;font-weight:700}
 .topbar-s{font-size:11px;color:var(--muted);margin-top:1px}
-.wrap{max-width:860px;padding:28px 28px 80px;box-sizing:border-box}
+.wrap{width:100%;max-width:860px;margin:0;padding:28px 28px 80px;box-sizing:border-box}
 
 /* CARDS */
 .card{background:white;border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px}
@@ -229,6 +229,11 @@ input[type=number]{text-align:center}
 #lb-close{position:absolute;top:16px;right:16px;background:none;border:none;color:white;font-size:32px;cursor:pointer;line-height:1}
 #lb-label{color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:12px;font-family:var(--font)}
 #lb-img{max-width:90vw;max-height:85vh;object-fit:contain;border-radius:8px}
+
+@media(max-width:768px){
+  .wrap{max-width:100% !important;width:100% !important;padding:14px 14px 80px !important}
+  .main-area{width:calc(100vw - 72px) !important;overflow-x:hidden}
+}
 </style>
 </head>
 <body>
