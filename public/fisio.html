@@ -716,7 +716,7 @@ function mkTestOrtopedico(id, nombre, img, como, positivo, negativo, combinar, f
   const body=ce('div','');
   body.style.cssText='display:none;padding:14px;border-top:0.5px solid var(--border);background:#fff';
   // Image
-  if(img){const im=ce('img','');im.src=img;im.style.cssText='width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:12px';body.appendChild(im);}
+  if(img){const im=ce('img','');im.src=img;im.style.cssText='width:120px;height:120px;object-fit:contain;border-radius:8px;margin-bottom:12px;background:#f5f5f5;border:0.5px solid #eee;display:block';body.appendChild(im);}
   // How to do
   const s1=ce('div','');s1.style.cssText='margin-bottom:10px';
   const l1=ce('p','');l1.style.cssText='font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px';l1.textContent='Cómo se realiza';
