@@ -946,7 +946,93 @@ function cS5(w){
   mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},7);
 }
 
-function cSZ(w){renderInformeHub(w,'cervical',gFC(),gFCF(),getFase(D.evc,D.evb));}
+function cSZ(w){
+  // Detect red flags - only real clinical emergencies
+  const flags=[];
+
+  if(D.miel==='es') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Posible compresión de la médula espinal',
+    desc:'El paciente presenta rigidez en extremidades, lo que puede indicar que la médula espinal está siendo comprimida.',
+    accion:'No realizar manipulación cervical ni tracciones. Derivar a neurocirugía antes de iniciar tratamiento.'
+  });
+
+  if(D.miel==='ma') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Marcha inestable — valorar antes de tratar',
+    desc:'La inestabilidad al caminar puede indicar compresión de la médula espinal a nivel cervical.',
+    accion:'No manipular. Valorar con test de Romberg y marcha en tándem. Si se confirma, derivar a neurología antes de continuar.'
+  });
+
+  if(D.dm==='se') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Pérdida severa de fuerza en el brazo',
+    desc:'Un déficit motor severo indica compresión importante de una raíz nerviosa o de la médula espinal.',
+    accion:'Derivar a médico para valoración antes de iniciar tratamiento fisioterapéutico.'
+  });
+
+  if(D.ref==='ab') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Reflejos abolidos',
+    desc:'La ausencia de reflejos indica daño radicular significativo establecido.',
+    accion:'Tratamiento conservador posible con precaución. Si no mejora en 4-6 semanas, valorar derivación para resonancia magnética.'
+  });
+
+  if(D.aut==='dis') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Dificultad para tragar',
+    desc:'La disfagia puede indicar compromiso vascular o neurológico cervical grave.',
+    accion:'Derivar a médico. Contraindicadas las técnicas en extensión y la manipulación cervical.'
+  });
+
+  if(D.derm==='bi') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Síntomas en ambos brazos',
+    desc:'La irradiación bilateral obliga a descartar compresión medular antes de tratar.',
+    accion:'No manipular. Completar valoración neurológica. Si hay otros signos de mielopatía, derivar antes de iniciar tratamiento.'
+  });
+
+  if(flags.length > 0){
+    const flagCard = ce('div','card');
+    flagCard.style.cssText='border:1.5px solid #e74c3c;background:#fff8f7;margin-bottom:12px';
+    const fTitle = ce('div','');
+    fTitle.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px';
+    fTitle.innerHTML='<span style="font-size:18px">⚠️</span><span style="font-size:13px;font-weight:700;color:#c0392b;text-transform:uppercase;letter-spacing:.05em">'+flags.length+' señal'+(flags.length>1?'es':'')+' de alerta detectada'+(flags.length>1?'s':'')+'</span>';
+    flagCard.appendChild(fTitle);
+
+    flags.forEach(f=>{
+      const item = ce('div','');
+      item.style.cssText=`background:${f.bg};border:1px solid ${f.color}40;border-radius:8px;padding:10px 12px;margin-bottom:8px`;
+      item.innerHTML=`
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+          <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${f.color};color:#fff;letter-spacing:.05em">${f.nivel}</span>
+          <span style="font-size:12px;font-weight:600;color:${f.color}">${f.titulo}</span>
+        </div>
+        <p style="font-size:12px;color:#555;line-height:1.6;margin-bottom:6px">${f.desc}</p>
+        <div style="display:flex;align-items:flex-start;gap:6px">
+          <span style="font-size:11px;font-weight:700;color:${f.color};white-space:nowrap">Qué hacer:</span>
+          <span style="font-size:12px;color:#333;line-height:1.5">${f.accion}</span>
+        </div>
+      `;
+      flagCard.appendChild(item);
+    });
+    w.appendChild(flagCard);
+  }
+
+  renderInformeHub(w,'cervical',gFC(),gFCF(),getFase(D.evc,D.evb));
+}
 
 // HOMBRO
 function hS1(w){w.appendChild(mkNota('Sobrecarga, traumatismo o espontáneo? Espontáneo + rigidez severa → capsulitis.'));w.appendChild(mkCard('Historia','',[mkSel('Hombro',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Inicio',[['tr','Traumático'],['so','Sobrecarga repetitiva'],['gr','Gradual sin causa'],['pq','Postquirúrgico'],['es','Espontáneo (posible capsulitis)']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['im','Impingement'],['mrp','Rotura parcial manguito'],['mrt','Rotura total manguito'],['cap','Capsulitis adhesiva'],['ines','Inestabilidad/luxación'],['bic','Tendinopatía bíceps'],['art','Artrosis glenohumeral']],'dx'),mkSel('Cirugía',[['no','No'],['acr','Acromioplastia'],['rep','Reparación manguito'],['est','Estabilización']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
