@@ -121,27 +121,28 @@ ${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
 
 NO incluyas ninguna sección neurológica ni de columna — esta es una valoración de pie.`,
 
-        cervical: `Eres fisioterapeuta experto en columna cervical. Informe de valoración CERVICAL. Sin markdown. Secciones en MAYÚSCULAS. Párrafos fluidos. NO menciones técnicas ni ejercicios — solo qué hay, qué conseguir y qué tener en cuenta.
+        cervical: `Eres fisioterapeuta experto en columna cervical. Redacta un informe de valoración fisioterapéutica CERVICAL. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos. NO menciones técnicas ni ejercicios — solo qué hay, qué conseguir y qué tener en cuenta.
 ${cabecera}
-HISTORIA: Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Región: ${d.reg||'-'} | Dx previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'} | Tto previo: ${d.tto||'-'}
+LESIÓN: Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Región: ${d.reg||'-'} | Diagnóstico previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'}
 DOLOR: EVA cuello ${d.evc??'-'}/10 | EVA brazo ${d.evb??'-'}/10 | EVA cefalea ${d.evh??'-'}/10 | Localización: ${d.loc||'-'} | Tipo: ${d.tip||'-'} | Nocturno: ${d.noc||'-'} | Rigidez matutina: ${d.rig||'-'} | Cefalea: ${d.cef||'-'} | Mareos: ${d.mar||'-'}
-NEUROLÓGICO: Dermatoma: ${fa(d.derm)} | Parestesias: ${d.par||'-'} | Motor: ${d.dm||'-'} | Reflejos: ${d.ref||'-'} | Mielopatía: ${d.miel||'-'} | Autonómico: ${d.aut||'-'}
-TESTS: Compresión: ${d.test_compresion||'-'} | Spurling: ${d.test_spurling||'-'} | Distracción: ${d.test_distraccion||'-'}
-EXPLORACIÓN: Flex-ext: ${d.mfx||'-'} | Rotación: ${d.mro||'-'} | Flexores prof: ${d.ffp||'-'} | Fuerza MMSS: ${d.fms||'-'} | Postura: ${d.pos||'-'} | Ergonomía: ${d.erg||'-'}
-Limitación: ${d.lim||'-'} | Objetivo paciente: ${d.obj||'-'}
-${d.obs_cervical ? 'Observaciones: ' + d.obs_cervical : ''}
+NEUROLÓGICO: Dermatomas afectados: ${fa(d.derm)} | Parestesias: ${d.par||'-'} | Déficit motor: ${d.dm||'-'} | Reflejos: ${d.ref||'-'} | Mielopatía: ${d.miel||'-'} | Autonómico: ${d.aut||'-'}
+TESTS ORTOPÉDICOS: Compresión: ${d.test_compresion||'-'} | Spurling: ${d.test_spurling||'-'} | Distracción: ${d.test_distraccion||'-'}
+EXPLORACIÓN: Movilidad flex-ext: ${d.mfx||'-'} | Rotación: ${d.mro||'-'} | Flexores profundos: ${d.ffp||'-'} | Fuerza MMSS: ${d.fms||'-'} | Postura: ${d.pos||'-'} | Ergonomía: ${d.erg||'-'}
+FACTORES IDENTIFICADOS: ${fa(d.factores)}
+FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
+${d.obs_cervical ? 'OBSERVACIONES: ' + d.obs_cervical : ''}
 ${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
 
-Secciones EXACTAS (párrafo cada una):
+Redacta el informe con estas secciones EXACTAS en este orden:
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
-VALORACIÓN NEUROLÓGICA (solo si hay afectación — si no, omitir)
-DIAGNÓSTICO FISIOTERAPÉUTICO (estructura afectada, nivel, fase, origen discal/facetario/muscular/mixto)
-NIVEL DE IRRITABILIDAD (ALTA/MEDIA/BAJA — justificar brevemente)
-ESTRUCTURAS A ABORDAR (por orden de prioridad — qué conseguir con cada una)
-OBJETIVOS TERAPÉUTICOS (específicos y medibles para este paciente)
-FACTORES QUE CONDICIONAN EL PRONÓSTICO (favorables y desfavorables)
-PRECAUCIONES (consideraciones clínicas importantes para este caso)
+VALORACIÓN NEUROLÓGICA (solo si hay afectación neurológica — si no, omite esta sección)
+DIAGNÓSTICO FISIOTERAPÉUTICO (estructura afectada, nivel, fase clínica, origen discal/facetario/muscular/mixto)
+NIVEL DE IRRITABILIDAD (ALTA/MEDIA/BAJA — justifica en una frase)
+ESTRUCTURAS A ABORDAR (por orden de prioridad — qué hay que conseguir con cada una)
+OBJETIVOS TERAPÉUTICOS (específicos para este paciente)
+FACTORES QUE CONDICIONAN EL PRONÓSTICO
+PRECAUCIONES
 ${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}`,
 
         hombro: `Eres fisioterapeuta experto en hombro. Redacta un informe de valoración fisioterapéutica de HOMBRO. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
