@@ -1232,41 +1232,17 @@ Fuerza L4 D/I: ${datos.fuerzaL4D||'-'}/${datos.fuerzaL4I||'-'} | L5 ext.hallux: 
 Diagnóstico fisio: ${datos.diagnosticoFisio||'-'} | Plan: ${datos.terapiaManual||'-'}
 Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEUROLÓGICO / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS / PLAN DE TRATAMIENTO / RECOMENDACIONES / PRONÓSTICO`;
     try{
-      res.textContent='';res.style.display='block';
-      let fullText='';
       const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos})});
-      if(!r.ok){const err=await r.json();toast(err.error||'Error al generar',false);btn.disabled=false;btn.innerHTML='Generar informe';return;}
-      const reader=r.body.getReader();
-      const decoder=new TextDecoder();
-      btn.innerHTML='<div class="spin"></div> Generando...';
-      while(true){
-        const {done,value}=await reader.read();
-        if(done) break;
-        const chunk=decoder.decode(value,{stream:true});
-        const lines=chunk.split('\n');
-        for(const line of lines){
-          if(line.startsWith('data: ')){
-            const data=line.slice(6).trim();
-            if(data==='[DONE]') continue;
-            try{
-              const parsed=JSON.parse(data);
-              if(parsed.text){
-                fullText+=parsed.text;
-                res.textContent=fullText;
-                res.scrollIntoView({behavior:'smooth',block:'end'});
-              }
-              if(parsed.error){toast('Error: '+parsed.error,false);}
-            }catch(e){}
-          }
-        }
-      }
-      if(fullText){
-        informeGenerado=fullText;
-        guardarInformeLocal(anamPacNom,anamPacId,fisioNom,curProto||'hernia',fullText);
+      const d=await r.json();
+      if(d.ok&&d.informe){
+        informeGenerado=d.informe;
+        guardarInformeLocal(anamPacNom,anamPacId,fisioNom,curProto||'hernia',d.informe);
+        res.textContent=d.informe;res.style.display='block';
         btn.className='gen-btn';btn.style.background='#2e7d32';
         btn.innerHTML='Informe generado — Descargar PDF';
-        btn.onclick=()=>descargarPDF(anamPacNom,fullText,curProto||'hernia');
-      } else {toast('Error al generar el informe',false);btn.disabled=false;btn.innerHTML='Generar informe';}
+        btn.onclick=()=>descargarPDF(anamPacNom,d.informe,curProto||'hernia');
+        res.scrollIntoView({behavior:'smooth'});
+      } else {toast(d.error||'Error al generar',false);btn.disabled=false;btn.innerHTML='Generar informe';}
     }catch(e){toast('Error: '+e.message,false);btn.disabled=false;btn.innerHTML='Generar informe';}
   };
   gc.appendChild(btn);gc.appendChild(res);w.appendChild(gc);
