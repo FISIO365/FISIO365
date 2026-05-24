@@ -280,6 +280,11 @@ input[type=number]{text-align:center}
 
 /* SCHOOL ETIQUETAS */
 .school-etiqueta{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;margin-bottom:8px;background:var(--lila-light);color:var(--lila)}
+
+/* SCHOOL INFO */
+.school-info-btn{background:none;border:none;color:var(--lila);font-size:16px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;opacity:.7;transition:opacity .15s}
+.school-info-btn:hover{opacity:1}
+.school-info-box{background:var(--lila-light);border-left:3px solid var(--lila);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:12px 14px;font-size:12px;color:#333;line-height:1.7;margin:10px 0}
 </style>
 </head>
 <body>
@@ -385,6 +390,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('loginPwd').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarLightbox();});
 });
+
+function toggleInfo(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
 
 function togglePwd(){
   const inp = document.getElementById('loginPwd');
@@ -1940,6 +1951,7 @@ const WIKI_RUTAS = [
     titulo: 'Ruta primera visita',
     desc: 'Del primer contacto hasta que el paciente sale con su plan',
     etiqueta: 'Todo el equipo',
+    info: `<strong>¿Qué aprenderás aquí?</strong><br><br>Esta ruta te guía paso a paso por todo el proceso que vive un paciente desde que reserva su primera cita hasta que sale de la clínica. Cubre el rol de cada miembro del equipo — recepción y fisioterapeuta — en cada momento del proceso.<br><br><strong>¿Para qué sirve?</strong><br><br>Para que todos trabajemos de la misma forma, con el mismo protocolo y la misma calidad, independientemente de quién atienda al paciente.<br><br><strong>¿Cuánto dura?</strong><br><br>16 pasos. Puedes verlo en 10-15 minutos.`,
     pasos: 16,
     emoji: '',
     imgs: WIKI_IMGS,
@@ -1950,6 +1962,7 @@ const WIKI_RUTAS = [
     titulo: 'Ruta última visita',
     desc: 'Cierre del proceso terapéutico y alta del paciente',
     etiqueta: 'Todo el equipo',
+    info: '',
     pasos: 0,
     emoji: '',
     imgs: [],
@@ -1972,9 +1985,13 @@ function renderWiki(wrap){
     const secKey = 'wiki_' + ruta.id;
     const completada = progresoFisio[secKey]?.estado === 'completado';
     card.innerHTML = `
-      <div class="school-etiqueta">${ruta.etiqueta||''}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div class="school-etiqueta">${ruta.etiqueta||''}</div>
+        ${ruta.info ? `<button class="school-info-btn" onclick="event.stopPropagation();toggleInfo('info_${ruta.id}')">ⓘ</button>` : ''}
+      </div>
       <div class="wiki-ruta-titulo">${ruta.titulo}</div>
       <div class="wiki-ruta-desc">${ruta.desc}</div>
+      <div id="info_${ruta.id}" class="school-info-box" style="display:none">${ruta.info||''}</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
         <div class="wiki-ruta-meta">${ruta.pasos > 0 ? ruta.pasos + ' pasos' : 'Próximamente'}</div>
         ${completada ? '<span class="wiki-badge-hecho">✓ Completado</span>' : ''}
