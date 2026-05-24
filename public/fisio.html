@@ -352,6 +352,7 @@ let anamPacId=null, anamPacNom='';
 let curProto=null, curStep=0, D={};
 let informeGenerado='';
 let fisioActual=null; // { id, nombre, role, colegiado, foto }
+let apiPwd=''; // contraseña maestra API
 let progresoFisio={}; // { seccion: { estado, fecha } }
 
 const $ = id => document.getElementById(id);
@@ -411,7 +412,9 @@ async function doLogin(){
     const d=await r.json();
     if(d.ok){
       fisioActual=d.fisio;
+      fisioActual._pwd=password;
       pwd=password;
+      apiPwd=d.apiToken||'';
       $('loginScreen').style.display='none';
       $('panelScreen').style.display='block';
       window.scrollTo({top:0,behavior:'instant'});
@@ -428,7 +431,7 @@ async function doLogin(){
 
 async function loadPacientes(){
   try{
-    const r=await fetch(`/api/pacientes?pwd=${encodeURIComponent(pwd)}`);
+    const r=await fetch(`/api/pacientes?pwd=${encodeURIComponent(apiPwd)}`);
     const d=await r.json();
     if(d.ok) pacs=d.pacientes;
   }catch(e){}
@@ -478,13 +481,13 @@ function aplicarRole(){
 
 async function loadFisios(){
   try{
-    const r=await fetch(`/api/fisios?pwd=${encodeURIComponent(pwd)}`);
+    const r=await fetch(`/api/fisios?pwd=${encodeURIComponent(apiPwd)}`);
     const d=await r.json(); fisios=d.fisios||[];
   }catch(e){}
 }
 async function loadBiblio(){
   try{
-    const r=await fetch(`/api/ejercicios?pwd=${encodeURIComponent(pwd)}`);
+    const r=await fetch(`/api/ejercicios?pwd=${encodeURIComponent(apiPwd)}`);
     const d=await r.json(); biblio=d.ejercicios||[];
   }catch(e){}
 }
@@ -2098,7 +2101,7 @@ async function checkPermisos(){
     const r = await fetch('/api/fisios', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({nombre: fisioActual.nombre, password: pwd})
+      body: JSON.stringify({nombre: fisioActual.nombre, password: fisioActual._pwd})
     });
     const d = await r.json();
     if(!d.ok) return;
@@ -2129,7 +2132,7 @@ function iniciarAutoUpdate(){
 async function loadProgreso(){
   if(!fisioActual) return;
   try{
-    const r = await fetch(`/api/fisios?action=progreso&pwd=${encodeURIComponent(pwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
+    const r = await fetch(`/api/fisios?action=progreso&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
     const d = await r.json();
     if(d.ok) progresoFisio = d.progreso || {};
   }catch(e){}
@@ -2140,7 +2143,7 @@ async function marcarProgreso(seccion){
     const r = await fetch('/api/progreso', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ pwd, action: 'progreso', fisioId: fisioActual.id, seccion, estado: 'completado' })
+      body: JSON.stringify({ pwd: apiPwd, action: 'progreso', fisioId: fisioActual.id, seccion, estado: 'completado' })
     });
     const d = await r.json();
     if(d.ok){
