@@ -305,7 +305,7 @@ const CFG = {
   rodilla:  {t:'Rodilla',       steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
   fascitis: {t:'Fascitis plantar',steps:['Paciente','Lesión','Dolor','Factores','Informe']},
   cervical: {t:'Cervical',       steps:['Paciente','Lesión','Dolor','Neurológico','Exploración','Tests ortopédicos','Informe']},
-  hombro:   {t:'Hombro',         steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
+  hombro:   {t:'Hombro',         steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
   tobillo:  {t:'Tobillo',        steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
   cadera:   {t:'Cadera',         steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
   codo:     {t:'Codo',           steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
@@ -617,7 +617,7 @@ function renderProto(){
     rodilla:  [stepP0,rS1,rS2,rS3,rSZ],
     fascitis: [stepP0,fS1,fS2,fS3,fSZ],
     cervical: [stepP0,cS1,cS2,cS3,cS4,cS5,cSZ],
-    hombro:   [stepP0,hS1,hS2,hS3,hSZ],
+    hombro:   [stepP0,hS1,hS2,hS3,hS4,hSZ],
     tobillo:  [stepP0,tS1,tS2,tS3,tSZ],
     cadera:   [stepP0,caS1,caS2,caS3,caSZ],
     codo:     [stepP0,coS1,coS2,coS3,coSZ],
@@ -1035,10 +1035,166 @@ function cSZ(w){
 }
 
 // HOMBRO
-function hS1(w){w.appendChild(mkNota('Sobrecarga, traumatismo o espontáneo? Espontáneo + rigidez severa → capsulitis.'));w.appendChild(mkCard('Historia','',[mkSel('Hombro',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Inicio',[['tr','Traumático'],['so','Sobrecarga repetitiva'],['gr','Gradual sin causa'],['pq','Postquirúrgico'],['es','Espontáneo (posible capsulitis)']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['im','Impingement'],['mrp','Rotura parcial manguito'],['mrt','Rotura total manguito'],['cap','Capsulitis adhesiva'],['ines','Inestabilidad/luxación'],['bic','Tendinopatía bíceps'],['art','Artrosis glenohumeral']],'dx'),mkSel('Cirugía',[['no','No'],['acr','Acromioplastia'],['rep','Reparación manguito'],['est','Estabilización']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function hS2(w){w.appendChild(mkNota('Arco doloroso 60–120°? Impingement. Rigidez severa + dolor constante? Capsulitis.'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evm2','EVA movimiento'],['evn','EVA nocturno']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['la','Lateral (deltoides)'],['an','Anterior/bíceps'],['po','Posterior'],['cer','Irradiado cuello'],['di','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['ap','Al apoyarse'],['es','Espontáneo'],['dsp','Me despierta ⚠']],'noch'),mkSel('Arco doloroso',[['no','Sin arco'],['6012','60–120° (impingement)'],['tod','Todo el arco'],['nv','No valorado']],'arc'),mkSel('Rigidez',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa — posible capsulitis']],'rig'),mkSel('Inestabilidad',[['no','No'],['sub','Sensación subjetiva'],['lux','Luxación previa']],'ines')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function hS3(w){w.appendChild(mkNota('Tests de manguito y arco son consistentes? Diferenciar impingement, rotura y capsulitis.'));w.appendChild(mkCard('Exploración','',[mkSel('Abducción activa',[['com','Completa sin dolor'],['arc','Arco doloroso 60–120°'],['l90','Limitada <90°'],['l45','Muy limitada <45° — posible capsulitis']],'abd'),mkSel('Rotación externa',[['nor','Normal 60–90°'],['le','Leve lim.'],['mo','Moderada'],['se','Muy limitada ⚠']],'rex'),mkSel('Rotación interna',[['nor','Normal T7–T9'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'rin'),mkSel('Neer',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'neer'),mkSel('Hawkins-Kennedy',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'hawk'),mkSel('Jobe (supraespinoso)',[['no','No realiz.'],['neg','Negativo'],['do','Positivo — dolor'],['deb','Positivo — debilidad ⚠']],'jobe'),mkSel('Patte (infraespinoso)',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'pat'),mkSel('Lift-off (subescapular)',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'lift'),mkSel('Speed (bíceps)',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'spd'),mkSel('Fuerza abductores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo ⚠']],'fabd'),mkSel('Escápula',[['nor','Normal'],['dl','Discinesia leve'],['dm','Discinesia mod'],['al','Escápula alada']],'esc'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['tr','Trabajar sin dolor'],['cx','Evitar cx'],['pq','Postquirúrgico']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
-function hSZ(w){renderInformeHub(w,'hombro',gFH(),gFHF(),getFase(D.evr,D.evm2));}
+function hS1(w){w.appendChild(mkNota('Sobrecarga, traumatismo o espontáneo? Espontáneo + rigidez severa → capsulitis.'));w.appendChild(mkCard('Historia','',[mkCampoInfo('Hombro',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado','Identifica el lado dominante del paciente — una limitación en el hombro dominante tiene mayor impacto funcional y laboral.'),mkCampoInfo('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol','CÓMO INTERPRETARLO: Aguda → proceso inflamatorio activo, posible bursitis aguda o rotura reciente. Subaguda → ventana de oro para tratamiento conservador. Crónica → probable tendinopatía degenerativa o capsulitis establecida. En crónicos valorar siempre factores perpetuadores (postura, ergonomía, debilidad muscular).'),mkCampoInfo('Inicio',[['tr','Traumático'],['so','Sobrecarga repetitiva'],['gr','Gradual sin causa'],['pq','Postquirúrgico'],['es','Espontáneo (posible capsulitis)']],'ini','CÓMO INTERPRETARLO: Traumático → descartar rotura aguda de manguito o luxación. Sobrecarga → impingement por conflicto repetitivo, muy frecuente en trabajadores con brazos elevados o deportistas. Gradual sin causa → degenerativo o capsulitis incipiente. Espontáneo → alta sospecha de capsulitis adhesiva, especialmente si hay DM o patología tiroidea.'),mkCampoInfo('Dx previo',[['no','Sin dx'],['im','Impingement'],['mrp','Rotura parcial manguito'],['mrt','Rotura total manguito'],['cap','Capsulitis adhesiva'],['ines','Inestabilidad/luxación'],['bic','Tendinopatía bíceps'],['art','Artrosis glenohumeral']],'dx','CÓMO INTERPRETARLO: El diagnóstico previo orienta pero no determina el tratamiento — muchos impingement son en realidad tendinopatías sin conflicto real. La rotura total de manguito puede tratarse conservadoramente con buenos resultados en >60 años. La capsulitis tiene 3 fases: inflamatoria (6m), congelada (6-12m) y descongelación (6-12m) — el tratamiento varía en cada fase.'),mkCampoInfo('Cirugía',[['no','No'],['acr','Acromioplastia'],['rep','Reparación manguito'],['est','Estabilización']],'cx','La cirugía previa modifica los objetivos y el pronóstico. Acromioplastia → puede haber fibrosis subacromial. Reparación de manguito → respetar tiempos de cicatrización, no forzar rotación externa en primeras semanas. Estabilización → trabajo de estabilización activa prioritario sobre amplitud.'),mkCampoInfo('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto','Si ha habido fisioterapia previa sin mejoría, explorar qué se trabajó y por qué no funcionó. La infiltración con mejoría temporal confirma componente inflamatorio subacromial. El reposo prolongado perpetúa la debilidad muscular y la rigidez capsular.')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
+function hS2(w){w.appendChild(mkNota('Arco doloroso 60–120°? Impingement. Rigidez severa + dolor constante? Capsulitis.'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evm2','EVA movimiento'],['evn','EVA nocturno']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkCampoInfo('Localización',[['la','Lateral (deltoides)'],['an','Anterior/bíceps'],['po','Posterior'],['cer','Irradiado cuello'],['di','Difuso']],'loc','CÓMO EVALUARLO: Pide al paciente que señale con un dedo dónde le duele exactamente. CÓMO INTERPRETARLO: Lateral (deltoides) → clásico de impingement subacromial y tendinopatía de supraespinoso. Anterior/bíceps → tendinopatía de la porción larga del bíceps o lesión del labrum anterior. Posterior → contractura de cápsula posterior, lesión del infraespinoso o articulación acromioclavicular. Irradiado al cuello → posible origen cervical — descartar radiculopatía C5 antes de tratar el hombro. Difuso → capsulitis adhesiva o proceso inflamatorio generalizado.'),mkCampoInfo('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip','CÓMO EVALUARLO: Pregunta si el dolor mejora con el reposo y empeora con el movimiento (mecánico) o si hay dolor en reposo, rigidez matutina y empeora por la mañana (inflamatorio). CÓMO INTERPRETARLO: Mecánico → origen tendinoso, bursal o articular mecánico. Buen pronóstico con tratamiento activo. Inflamatorio → bursitis subacromial aguda, artritis, o fase inflamatoria de capsulitis. Puede necesitar tratamiento médico previo (AINEs, infiltración).'),mkCampoInfo('Nocturno',[['no','No'],['ap','Al apoyarse'],['es','Espontáneo'],['dsp','Me despierta ⚠']],'noch','CÓMO EVALUARLO: Pregunta si el dolor le molesta por la noche y si consigue dormir del lado afectado. CÓMO INTERPRETARLO: Al apoyarse → normal en tendinopatía de manguito, recomendar almohada de apoyo. Espontáneo → bursitis activa o capsulitis en fase inflamatoria. Me despierta → red flag — puede indicar rotura de manguito importante, capsulitis severa o proceso sistémico. Derivar para estudio de imagen.'),mkCampoInfo('Arco doloroso',[['no','Sin arco'],['6012','60–120° (impingement)'],['tod','Todo el arco'],['nv','No valorado']],'arc','CÓMO EVALUARLO: Observa durante la abducción activa en qué rango aparece y desaparece el dolor. CÓMO INTERPRETARLO: Sin arco → no hay conflicto subacromial activo. 60-120° → clásico de impingement subacromial: el tubérculo mayor choca con el acromion en ese rango. Todo el arco → puede indicar bursitis extensa, artrosis acromioclavicular o capsulitis. El arco doloroso en abducción + rotación interna = test de Hawkins positivo informal.'),mkCampoInfo('Rigidez',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa — posible capsulitis']],'rig','CÓMO EVALUARLO: Valora la limitación de movilidad pasiva comparando con el lado sano. La capsulitis se caracteriza por limitación de rotación externa + abducción + rotación interna (patrón capsular). CÓMO INTERPRETARLO: Leve → tensión capsular o muscular reactiva. Moderada → impingement avanzado o inicio de capsulitis. Severa con patrón capsular completo → capsulitis adhesiva establecida. La rigidez severa sin traumatismo en mujer de 40-60 años → alta sospecha de capsulitis idiopática.'),mkCampoInfo('Inestabilidad',[['no','No'],['sub','Sensación subjetiva'],['lux','Luxación previa']],'ines','CÓMO EVALUARLO: Pregunta si nota que el hombro se va o se suelta en alguna posición (sobre todo abducción + rotación externa). Historia de luxaciones previas y cuántas. CÓMO INTERPRETARLO: Sensación subjetiva → puede ser inestabilidad funcional por debilidad de manguito o laxitud capsular menor. Luxación previa → riesgo de recidiva aumentado. Si hay varias luxaciones → posible lesión de Bankart, valorar estabilización quirúrgica si falla el conservador.')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
+function hS3(w){
+  w.appendChild(mkNota('Tests de manguito y arco consistentes? Diferenciar impingement, rotura y capsulitis.'));
+  w.appendChild(mkCard('Exploración','',[
+    mkCampoInfo('Abducción activa',[['com','Completa sin dolor'],['arc','Arco doloroso 60–120°'],['l90','Limitada <90°'],['l45','Muy limitada <45° — posible capsulitis']],'abd',
+      'CÓMO EVALUARLO: Pide al paciente que eleve el brazo lateralmente lo máximo posible con el codo extendido. Observa el arco completo y dónde aparece el dolor. CÓMO INTERPRETARLO: Sin dolor → normal o fase de resolución. Arco doloroso 60-120° → clásico de impingement subacromial (el tendón queda atrapado bajo el acromion en ese rango). Limitada <90° → puede ser impingement severo, rotura parcial o inicio de capsulitis. Muy limitada <45° con rigidez → alta sospecha de capsulitis adhesiva — valorar también rotación externa.'),
+    mkCampoInfo('Rotación externa',[['nor','Normal 60–90°'],['le','Leve lim.'],['mo','Moderada'],['se','Muy limitada ⚠']],'rex',
+      'CÓMO EVALUARLO: Paciente sentado con el codo a 90° pegado al cuerpo. Lleva el antebrazo hacia fuera sin separar el codo. Normal: 60-90°. Compara ambos lados. CÓMO INTERPRETARLO: Leve limitación → tensión de cápsula posterior o rotadores internos cortos. Limitación moderada → impingement avanzado o inicio de capsulitis. Muy limitada (<30°) → capsulitis adhesiva en fase activa o artrosis glenohumeral avanzada. La limitación de rotación externa + abducción es el patrón más específico de capsulitis.'),
+    mkCampoInfo('Rotación interna',[['nor','Normal T7–T9'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'rin',
+      'CÓMO EVALUARLO: Pide al paciente que lleve el pulgar hacia la espalda lo máximo posible. Normal: alcanza T7-T9. Compara ambos lados. CÓMO INTERPRETARLO: Limitación leve → tensión cápsula posterior, frecuente en deportistas de lanzamiento. Limitación moderada-severa junto con limitación de rotación externa → patrón capsular completo = capsulitis adhesiva. La limitación aislada de rotación interna con rotación externa normal sugiere contractura de cápsula posterior.'),
+    mkCampoInfo('Fuerza abductores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo ⚠']],'fabd',
+      'CÓMO EVALUARLO: Pide al paciente que abduzca el hombro a 90° y resista tu presión hacia abajo. Compara ambos lados con la misma fuerza. Escala 0-5: 5=normal, 4=débil pero funcional, 3=solo contra gravedad, ≤2=urgente. CÓMO INTERPRETARLO: Déficit leve → dolor inhibitorio o inicio de lesión de manguito. Déficit moderado → posible rotura parcial de supraespinoso o neuropatía del supraescapular. Déficit severo → alta sospecha de rotura completa de manguito — confirmar con imagen.'),
+    mkCampoInfo('Escápula',[['nor','Normal'],['dl','Discinesia leve'],['dm','Discinesia mod'],['al','Escápula alada']],'esc',
+      'CÓMO EVALUARLO: Observa la escápula desde detrás mientras el paciente hace abducción activa. Normal: la escápula rota suavemente hacia arriba siguiendo al húmero. Discinesia: movimiento asimétrico, saltarín o con escápula alada (borde medial se separa de la parrilla costal). CÓMO INTERPRETARLO: Discinesia leve → frecuente en impingement crónico, debilidad de serrato anterior o trapecio inferior. Discinesia moderada → factor perpetuador importante — sin corregirla el impingement recidivará. Escápula alada → debilidad severa de serrato anterior, valorar neuropatía del nervio torácico largo.'),
+    mkCampoInfo('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim',
+      'CÓMO EVALUARLO: Pregunta qué actividades concretas no puede hacer: peinarse, abrocharse el sujetador, coger objetos de estantes altos, dormir del lado afecto, deporte. CÓMO INTERPRETARLO: Sin limitación → dolor leve, buen pronóstico. Leve → afecta a actividades específicas. Moderada → impacto significativo en AVD. Severa → limitación en actividades básicas, posible capsulitis o rotura de manguito importante.'),
+    mkCampoInfo('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['tr','Trabajar sin dolor'],['cx','Evitar cirugía'],['pq','Postquirúrgico']],'obj',
+      'CÓMO USARLO: El objetivo del paciente guía el plan de tratamiento. Preguntar: "¿Qué es lo que más le limita?" y "¿Qué querría poder hacer que ahora no puede?". Alinear las expectativas con lo clínicamente alcanzable en el tiempo previsto.')
+  ]));
+  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},4);
+}
+
+function hS4(w){
+  w.appendChild(mkNota('Realiza los tests según la sospecha clínica. No es obligatorio realizarlos todos.'));
+
+  const tc=ce('div','card');
+  tc.innerHTML='<div class="ct">Tests ortopédicos de hombro</div>';
+
+  const sec1=ce('p','');sec1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';sec1.textContent='Pinzamiento subacromial';
+  tc.appendChild(sec1);
+
+  tc.appendChild(mkTestOrtopedico(
+    'hawk','Test de Hawkins-Kennedy',null,
+    'Usuario de pie. El fisioterapeuta coloca el brazo en doble flexión de 90° (hombro y codo flexionados) y aplica una fuerza de rotación interna forzada.',
+    'Dolor en la región subacromial o deltoidea. Indica pinzamiento del tendón supraespinoso bajo el arco coracoacromial durante la rotación interna.',
+    'Sin dolor. No descarta completamente el impingement pero reduce la probabilidad.',
+    'Test de Neer. Si ambos son positivos, la sospecha de impingement subacromial es muy alta. Combinar con Jobe para valorar el estado del tendón.',
+    'alta'
+  ));
+
+  tc.appendChild(mkTestOrtopedico(
+    'emptycan','Test Empty Can (Supraespinoso)',null,
+    'Usuario de pie con brazos elevados a 90° en el plano escapular (30° hacia delante), pulgares apuntando hacia abajo (posición de "lata vacía"). El fisioterapeuta aplica presión hacia abajo y el usuario resiste.',
+    'Debilidad para mantener la posición o dolor. Indica lesión del tendón supraespinoso — diferencia entre dolor (tendinosis/bursitis) y debilidad (posible rotura).',
+    'Fuerza simétrica sin dolor. Buen indicador de integridad del supraespinoso.',
+    'Test de Hawkins-Kennedy y Test de Neer. Si Empty Can da debilidad + Hawkins positivo → alta sospecha de rotura parcial o completa de supraespinoso. Confirmar con ecografía o RMN.',
+    'alta'
+  ));
+
+  const sec2=ce('p','');sec2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec2.textContent='Inestabilidad glenohumeral';
+  tc.appendChild(sec2);
+
+  tc.appendChild(mkTestOrtopedico(
+    'aprehension','Test de Aprehensión anterior',null,
+    'Usuario en decúbito supino. El fisioterapeuta coloca el brazo en 90° de abducción, 90° de flexión de codo y lleva el hombro a rotación externa progresiva.',
+    'El paciente presenta sensación de inestabilidad o miedo a que el hombro se salga (aprehensión), o dolor anterior. Indica inestabilidad glenohumeral anterior — posible lesión de Bankart o laxitud capsular anterior.',
+    'Sin aprehensión ni dolor. No hay inestabilidad anterior significativa.',
+    'Test de Recolocación: si después de la aprehensión se aplica presión posterior sobre la cabeza humeral y los síntomas desaparecen, confirma inestabilidad anterior.',
+    'media'
+  ));
+
+  const sec3=ce('p','');sec3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec3.textContent='Tendón del bíceps';
+  tc.appendChild(sec3);
+
+  tc.appendChild(mkTestOrtopedico(
+    'yergason','Test de Yergason',null,
+    'Usuario sentado con el codo a 90° de flexión. Se pide que supine el antebrazo contra la resistencia del fisioterapeuta, que palpa simultáneamente la corredera bicipital.',
+    'Dolor localizado en la corredera bicipital (cara anterior del hombro) durante la supinación resistida. Indica tendinopatía de la porción larga del bíceps.',
+    'Sin dolor en la corredera bicipital. No hay tendinopatía del bíceps significativa.',
+    'Test de Speed: si ambos son positivos, la sospecha de tendinopatía de la porción larga del bíceps es alta. Palpar también la corredera bicipital en reposo — el dolor a la palpación es muy específico.',
+    'media'
+  ));
+
+  const sec4=ce('p','');sec4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec4.textContent='Valoración de fuerza muscular';
+  tc.appendChild(sec4);
+
+  // Strength assessment fields
+  const gf=ce('div','');gf.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px';
+  [
+    mkCampoInfo('Rot. externos',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod ⚠'],['se','Déficit severo ⚠']],'frot_ext',
+      'CÓMO EVALUARLO: Codo a 90° pegado al cuerpo. Resistencia a la rotación externa (llevar el antebrazo hacia fuera). Compara ambos lados. CÓMO INTERPRETARLO: Los rotadores externos (infraespinoso y redondo menor) son los estabilizadores dinámicos más importantes del hombro. Su déficit es universal en impingement crónico y rotura de manguito. Déficit moderado-severo → posible lesión del infraespinoso.'),
+    mkCampoInfo('Rot. internos',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'frot_int',
+      'CÓMO EVALUARLO: Codo a 90° pegado al cuerpo. Resistencia a la rotación interna (llevar el antebrazo hacia dentro). Compara ambos lados. CÓMO INTERPRETARLO: Los rotadores internos (subescapular principalmente) rara vez están débiles salvo en rotura del subescapular o lesión nerviosa. Déficit aislado de rotación interna con Lift-off positivo → sospecha de lesión subescapular.'),
+    mkCampoInfo('Serrato anterior',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fserrato',
+      'CÓMO EVALUARLO: Pide al paciente que empuje la pared con el brazo extendido (push-up contra pared). Observa si el borde medial de la escápula se separa de la parrilla costal (escápula alada). CÓMO INTERPRETARLO: El serrato anterior es el principal protractor de la escápula y responsable de la rotación escapular superior. Su déficit genera discinesia escapular y favorece el impingement. Puede haber lesión del nervio torácico largo en déficits severos.'),
+    mkCampoInfo('Trapecio inferior',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'ftrap_inf',
+      'CÓMO EVALUARLO: Paciente en decúbito prono con el brazo a 120° de abducción y el pulgar hacia arriba. Pide que eleve el brazo de la camilla resistiendo tu presión hacia abajo. CÓMO INTERPRETARLO: El trapecio inferior es el principal depresor y rotador externo de la escápula. Su déficit genera elevación y basculación anterior de la escápula, reduciendo el espacio subacromial y favoreciendo el impingement. Es uno de los músculos más frecuentemente inhibidos en dolor crónico de hombro.')
+  ].forEach(f=>gf.appendChild(f));
+  tc.appendChild(gf);
+  w.appendChild(tc);
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');
+  ta.placeholder='Añade cualquier observación clínica relevante antes de generar el informe...';
+  ta.style.cssText='width:100%;min-height:80px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_hombro=ta.value;};
+  obs.appendChild(ta);
+  w.appendChild(obs);
+
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+function hSZ(w){
+  const flags=[];
+
+  if(D.jobe==='deb'&&D.fabd==='se') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Posible rotura completa de manguito rotador',
+    desc:'La debilidad severa en abducción combinada con Jobe positivo por debilidad (no solo dolor) indica alta probabilidad de rotura completa del supraespinoso.',
+    accion:'Derivar para estudio de imagen (ecografía o RMN) antes de iniciar tratamiento activo. La rotura completa puede requerir valoración quirúrgica.'
+  });
+
+  if(D.noch==='dsp') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Dolor nocturno que despierta al paciente',
+    desc:'El dolor que despierta por la noche puede indicar rotura de manguito importante, capsulitis severa o proceso inflamatorio/infeccioso.',
+    accion:'Descartar rotura de manguito con imagen. Si hay fiebre o traumatismo reciente, derivar urgente para descartar artritis séptica.'
+  });
+
+  if(D.rex==='se'&&D.rin==='se') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Limitación severa en ambas rotaciones — posible capsulitis',
+    desc:'La limitación severa de rotación externa e interna es el patrón más específico de capsulitis adhesiva (hombro congelado).',
+    accion:'Confirmar el diagnóstico con valoración completa. La capsulitis tiene fases específicas que condicionan el tratamiento. Evitar movilizaciones agresivas en fase inflamatoria.'
+  });
+
+  if(D.ines==='lux') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Antecedente de luxación glenohumeral',
+    desc:'La luxación previa aumenta significativamente el riesgo de recidiva y puede asociarse a lesión de Bankart o Hill-Sachs.',
+    accion:'Valorar estabilidad activa y pasiva antes de iniciar ejercicios de amplitud máxima. Si hay inestabilidad funcional, priorizar estabilización neuromuscular.'
+  });
+
+  if(flags.length>0){
+    const flagCard=ce('div','card');
+    flagCard.style.cssText='border:1.5px solid #e74c3c;background:#fff8f7;margin-bottom:12px';
+    const fTitle=ce('div','');
+    fTitle.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px';
+    fTitle.innerHTML='<span style="font-size:18px">⚠️</span><span style="font-size:13px;font-weight:700;color:#c0392b;text-transform:uppercase;letter-spacing:.05em">'+flags.length+' señal'+(flags.length>1?'es':'')+' de alerta detectada'+(flags.length>1?'s':'')+'</span>';
+    flagCard.appendChild(fTitle);
+    flags.forEach(f=>{
+      const item=ce('div','');
+      item.style.cssText=`background:${f.bg};border:1px solid ${f.color}40;border-radius:8px;padding:10px 12px;margin-bottom:8px`;
+      item.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${f.color};color:#fff;letter-spacing:.05em">${f.nivel}</span><span style="font-size:12px;font-weight:600;color:${f.color}">${f.titulo}</span></div><p style="font-size:12px;color:#555;line-height:1.6;margin-bottom:6px">${f.desc}</p><div style="display:flex;align-items:flex-start;gap:6px"><span style="font-size:11px;font-weight:700;color:${f.color};white-space:nowrap">Qué hacer:</span><span style="font-size:12px;color:#333;line-height:1.5">${f.accion}</span></div>`;
+      flagCard.appendChild(item);
+    });
+    w.appendChild(flagCard);
+  }
+
+  renderInformeHub(w,'hombro',gFH(),gFHF(),getFase(D.evr,D.evm2));
+}
 
 // TOBILLO
 function tS1(w){w.appendChild(mkNota('Inversión traumática, inestabilidad crónica o tendinopatía por sobrecarga?'));w.appendChild(mkCard('Historia','',[mkSel('Tobillo',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Mecanismo',[['inv','Inversión (esguince lateral)'],['eve','Eversión (esguince medial)'],['sob','Sobrecarga tendones'],['trd','Traumático directo'],['gr','Gradual']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['esl','Esguince lateral'],['esm','Esguince medial'],['ic','Inestabilidad crónica'],['aq','Tendinopatía aquílea'],['per','Tendinopatía peroneos'],['fra','Fractura (descartar)']],'dx'),mkSel('Esguinces previos',[['no','No, primer ep.'],['res','Sí, resuelto'],['rec','Sí, recurrente']],'eprev'),mkSel('Tto previo',[['no','Ninguno'],['inm','Inmovilización'],['fis','Fisioterapia'],['inf','Infiltración'],['cx','Cirugía']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
