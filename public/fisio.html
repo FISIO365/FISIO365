@@ -269,8 +269,10 @@ input[type=number]{text-align:center}
 <div id="loginScreen">
   <div class="lb">
     <div style="font-size:48px;font-weight:800;color:#f5f2ee;letter-spacing:-1px;margin-bottom:2.5rem;text-align:center">FISIO<span style="color:var(--lila)">365</span></div>
-    <label class="llbl">Contraseña del panel</label>
-    <input class="li" type="password" id="pwdInp" placeholder="••••••••">
+    <label class="llbl">Nombre</label>
+    <input class="li" type="text" id="loginNombre" placeholder="Tu nombre" autocomplete="off" autocapitalize="words">
+    <label class="llbl">Contraseña</label>
+    <input class="li" type="password" id="loginPwd" placeholder="••••••••">
     <button class="lbtn" id="loginBtn" onclick="doLogin()">Entrar al panel</button>
     <div class="lerr" id="loginErr"></div>
   </div>
@@ -297,7 +299,7 @@ input[type=number]{text-align:center}
           WIKIFISIO
         </div>
       </div>
-      <div class="sb-footer">Panel fisioterapeuta</div>
+      <div class="sb-footer" id="sb-user">Panel fisioterapeuta</div>
     </div>
 
     <!-- MAIN -->
@@ -326,6 +328,7 @@ let pacSelId=null, pacSelN='', fisioSelId='', ejC=0;
 let anamPacId=null, anamPacNom='';
 let curProto=null, curStep=0, D={};
 let informeGenerado='';
+let fisioActual=null; // { id, nombre, role, colegiado, foto }
 
 const $ = id => document.getElementById(id);
 const ce = (t,c) => { const e=document.createElement(t); if(c)e.className=c; return e; };
@@ -350,26 +353,57 @@ const CFG = {
 
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  $('pwdInp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  $('loginNombre').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginPwd').focus();});
+  $('loginPwd').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarLightbox();});
 });
 
 async function doLogin(){
-  const p=$('pwdInp').value.trim(); if(!p)return;
+  const nombre=($('loginNombre').value||'').trim();
+  const password=($('loginPwd').value||'').trim();
+  if(!nombre||!password){ $('loginErr').textContent='Introduce tu nombre y contraseña'; return; }
   const btn=$('loginBtn'); btn.disabled=true; btn.textContent='Verificando...';
   try{
-    const r=await fetch(`/api/pacientes?pwd=${encodeURIComponent(p)}`);
+    const r=await fetch('/api/fisios',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombre,password})
+    });
     const d=await r.json();
     if(d.ok){
-      pwd=p; pacs=d.pacientes;
+      fisioActual=d.fisio;
+      pwd=password;
       $('loginScreen').style.display='none';
       $('panelScreen').style.display='block';
       window.scrollTo({top:0,behavior:'instant'});
-      await Promise.all([loadFisios(),loadBiblio()]);
+      await Promise.all([loadPacientes(),loadFisios(),loadBiblio()]);
+      aplicarRole();
       showSection('prog');
-    } else $('loginErr').textContent='Contraseña incorrecta';
+    } else {
+      $('loginErr').textContent=d.error||'Datos incorrectos';
+    }
   }catch(e){$('loginErr').textContent='Error de conexión';}
   btn.disabled=false; btn.textContent='Entrar al panel';
+}
+
+async function loadPacientes(){
+  try{
+    const r=await fetch(`/api/pacientes?pwd=${encodeURIComponent(pwd)}`);
+    const d=await r.json();
+    if(d.ok) pacs=d.pacientes;
+  }catch(e){}
+}
+
+function aplicarRole(){
+  if(!fisioActual) return;
+  const isAdmin = fisioActual.role==='admin';
+  // Mostrar/ocultar secciones según role
+  $('sb-prog').style.display = isAdmin ? '' : 'none';
+  $('sb-anam').style.display = isAdmin ? '' : 'none';
+  $('sb-inf').style.display  = isAdmin ? '' : 'none';
+  // sb-wiki y sb-school siempre visibles (cuando existan)
+  // Nombre en sidebar footer
+  $('sb-user').textContent = fisioActual.nombre + (isAdmin?' · Admin':'');
 }
 
 async function loadFisios(){
