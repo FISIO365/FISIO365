@@ -1806,10 +1806,159 @@ function caSZ(w){
 }
 
 // CODO
-function coS1(w){w.appendChild(mkNota('Epicondilitis (extensores) o epitrocleitis (flexores)? Parestesias que sugieran neuropatía cubital?'));w.appendChild(mkCard('Historia','',[mkSel('Codo',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Mecanismo',[['ext','Sobrecarga extensores — epicondilitis'],['fle','Sobrecarga flexores — epitrocleitis'],['tr','Traumático'],['gr','Gradual']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['epi','Epicondilitis lateral'],['epit','Epitrocleitis medial'],['neu','Neuropatía cubital'],['bur','Bursitis olecraneana']],'dx'),mkSel('Actividad',[['ten','Tenis/pádel'],['gol','Golf'],['inf','Informática/ratón'],['man','Trabajo manual'],['gym','Crossfit/gimnasio'],['mus','Instrumento musical']],'actrel'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['ban','Banda epicondílea'],['inf','Infiltración'],['ond','Ondas de choque']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function coS2(w){w.appendChild(mkNota('Dolor al resistir extensión muñeca (epicondilitis) o flexión (epitrocleitis)? Irradiación distal?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['eva','EVA actividad'],['evf','EVA al hacer fuerza']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['epi','Epicóndilo lateral'],['ept','Epitróclea medial'],['ole','Zona olecraneana'],['ant','Irradiado antebrazo'],['mun','Irradiado muñeca']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Parestesias mano',[['no','No'],['45','Dedos 4–5 (cubital)'],['123','Dedos 1–3 (mediano)'],['di','Difuso']],'par'),mkSel('Fuerza prensión',[['nor','Normal'],['le','Reducida leve'],['mo','Reducida mod'],['se','Muy reducida']],'fpre'),mkSel('Rigidez codo',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa']],'rig')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function coS3(w){w.appendChild(mkNota('Tests de resistencia confirman el tendón? Signos de neuropatía cubital?'));w.appendChild(mkCard('Exploración','',[mkSel('Test Cozen',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — epicóndilo']],'cozen'),mkSel('Test Mill',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'mill'),mkSel('Test Golfista',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — epitróclea']],'golf'),mkSel('Tinel codo',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo ⚠ — neuropatía cubital']],'tinel'),mkSel('Movilidad codo',[['nor','Normal 0–145°'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'mob'),mkSel('Pronosupinación',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada']],'pron'),mkSel('Fuerza ext. muñeca',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fext'),mkSel('Fuerza flex. muñeca',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'ffle'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['tr','Trabajar sin dolor'],['pre','Recuperar prensión']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
-function coSZ(w){renderInformeHub(w,'codo',gFCo(),gFCoF(),getFase(D.evr,D.eva));}
+function coS1(w){
+  w.appendChild(mkNota('Epicondilitis (extensores) o epitrocleitis (flexores)? Parestesias que sugieran neuropatía cubital?'));
+  w.appendChild(mkCard('Historia','',[
+    mkCampoInfo('Codo',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado','Identifica si es el codo dominante — mayor impacto funcional y mayor demanda en deportes de raqueta y trabajos manuales.'),
+    mkCampoInfo('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol','CÓMO INTERPRETARLO: Aguda → inflamación del tendón o peritenón. Responde bien al manejo del dolor y modificación de carga. Crónica >3m → tendinopatía degenerativa (angiofibroblástica). El reposo no es el tratamiento — la carga excéntrica progresiva es la base. Las ondas de choque tienen buena evidencia en crónicas.'),
+    mkCampoInfo('Mecanismo',[['ext','Sobrecarga extensores — epicondilitis'],['fle','Sobrecarga flexores — epitrocleitis'],['tr','Traumático directo'],['gr','Gradual sin causa clara']],'ini','CÓMO INTERPRETARLO: Sobrecarga extensores → epicondilitis lateral (codo de tenista). El extensor carpi radialis brevis (ECRB) es el tendón más afectado. Sobrecarga flexores → epitrocleitis medial (codo de golfista). Pronadores y flexores de muñeca. Traumático → descartar fractura de cabeza de radio o epicóndilo.'),
+    mkCampoInfo('Actividad relacionada',[['ten','Tenis/pádel'],['gol','Golf'],['inf','Informática/ratón'],['man','Trabajo manual repetitivo'],['gym','Crossfit/gimnasio'],['mus','Instrumento musical']],'actrel','La actividad es el factor perpetuador principal. Sin modificación de la técnica y la carga específica, el tratamiento tendrá efecto limitado. Tenis/pádel → epicondilitis. Golf → epitrocleitis. Informática → epicondilitis por uso del ratón. Crossfit → ambas por sobrecarga de agarre.'),
+    mkCampoInfo('Brazo dominante',[['si','Sí, es el dominante'],['no','No, es el contralateral']],'dom_co','El codo dominante tiene mayor demanda funcional. La lesión en el dominante tiene mayor impacto laboral y deportivo.'),
+    mkCampoInfo('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['ban','Banda epicondílea'],['inf','Infiltración cortisona'],['ond','Ondas de choque']],'tto','Infiltración de cortisona → mejoría a corto plazo pero peor resultado a largo plazo que el tratamiento conservador. Si han sido >2 infiltraciones, la tendinopatía es probablemente degenerativa. Ondas de choque → buena evidencia en crónicas. Banda epicondílea → reduce la carga en el epicóndilo durante la actividad.')
+  ]));
+  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);
+}
+function coS2(w){w.appendChild(mkNota('Dolor al resistir extensión muñeca (epicondilitis) o flexión (epitrocleitis)? Irradiación distal?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['eva','EVA actividad'],['evf','EVA al hacer fuerza']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkCampoInfo('Localización',[['epi','Epicóndilo lateral'],['ept','Epitróclea medial'],['ole','Zona olecraneana'],['ant','Irradiado al antebrazo'],['mun','Irradiado a la muñeca']],'loc','CÓMO INTERPRETARLO: Epicóndilo lateral → epicondilitis, puede irradiar al antebrazo dorsal. Epitróclea medial → epitrocleitis o neuropatía cubital (diferencial importante). Olecraneana → bursitis olecraneana o tendinopatía del tríceps. Irradiado al antebrazo → puede ser radiculopatía C6-C7 — hacer diagnóstico diferencial con exploración cervical.'),mkCampoInfo('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip','Mecánico → empeora con el uso y mejora con el reposo. Tendinopatía pura. Inflamatorio → dolor en reposo, inflamación visible. Puede indicar artritis del codo o bursitis aguda. Mixto → frecuente en fases reactivas de tendinopatía crónica.'),mkCampoInfo('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc','El dolor nocturno en el codo no es típico de tendinopatía. Frecuente → descartar neuropatía cubital (el nervio se comprime más en flexión nocturna), artritis o proceso sistémico. El hormigueo nocturno en dedos 4-5 es muy sugestivo de neuropatía cubital.'),mkCampoInfo('Parestesias en la mano',[['no','No'],['45','Dedos 4–5 — posible cubital'],['123','Dedos 1–3 — posible mediano'],['di','Difuso']],'par','CÓMO INTERPRETARLO: Dedos 4-5 → neuropatía del nervio cubital a nivel del codo (canal de Guyon o surco epitroclear). Confirmar con Tinel en epitróclea. Dedos 1-3 → puede indicar síndrome del túnel carpiano (a nivel de muñeca) o radiculopatía C6. Las parestesias cambian el diagnóstico — ya no es solo tendinopatía.'),mkCampoInfo('Fuerza de prensión',[['nor','Normal'],['le','Reducida leve'],['mo','Reducida mod'],['se','Muy reducida']],'fpre','CÓMO EVALUARLO: Pide al paciente que apriete tu mano o usa un dinamómetro. Compara ambos lados. CÓMO INTERPRETARLO: La fuerza de prensión reducida es casi universal en epicondilitis activa — el dolor inhibe la activación muscular. Es un buen marcador de progreso durante el tratamiento.'),mkCampoInfo('Rigidez de codo',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa']],'rig','La rigidez de codo es poco frecuente en tendinopatías puras. Si hay rigidez moderada-severa → descartar artritis, cuerpo libre articular o contractura capsular post-traumática.')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
+function coS3(w){
+  w.appendChild(mkNota('Tests de resistencia confirman el tendón? Signos de neuropatía cubital?'));
+  w.appendChild(mkCard('Exploración','',[
+    mkCampoInfo('Movilidad de codo',[['nor','Normal 0–145°'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'mob','CÓMO EVALUARLO: Flexión activa normal: 145°. Extensión completa: 0°. Compara con el lado sano. CÓMO INTERPRETARLO: La limitación de movilidad no es típica de epicondilitis — si hay rigidez moderada-severa descartar artritis, cuerpo libre o contractura capsular post-traumática.'),
+    mkCampoInfo('Pronosupinación',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada']],'pron','CÓMO EVALUARLO: Codo a 90° pegado al cuerpo. Rota el antebrazo hacia arriba (supinación, 90°) y hacia abajo (pronación, 90°). Compara ambos lados. CÓMO INTERPRETARLO: La limitación de pronosupinación sugiere patología de la articulación radiocubital proximal o de la cabeza del radio — no es típica de epicondilitis pura.'),
+    mkCampoInfo('Fuerza extensores muñeca',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fext','CÓMO EVALUARLO: Resistencia a la extensión de muñeca con el codo extendido. Compara ambos lados. CÓMO INTERPRETARLO: El déficit de extensores de muñeca es el marcador funcional principal de epicondilitis. Correlaciona con la gravedad y es el principal objetivo terapéutico.'),
+    mkCampoInfo('Fuerza flexores muñeca',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'ffle','CÓMO EVALUARLO: Resistencia a la flexión de muñeca con el codo extendido. Compara ambos lados. CÓMO INTERPRETARLO: El déficit de flexores de muñeca es el marcador principal de epitrocleitis. Si hay déficit combinado de flexores + parestesias en dedos 4-5 → valorar neuropatía cubital.'),
+    mkCampoInfo('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim','Pregunta por actividades concretas: apretar el ratón, abrir puertas, cargar bolsas, deporte específico.'),
+    mkCampoInfo('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['tr','Trabajar sin dolor'],['pre','Recuperar prensión']],'obj','El objetivo define el plan. Deporte de raqueta → trabajo específico del gesto deportivo y técnica. Trabajo manual → modificación ergonómica y carga progresiva.')
+  ]));
+
+  const tc=ce('div','card');tc.style.marginTop='12px';
+  tc.innerHTML='<div class="ct">Tests ortopédicos</div>';
+
+  const sec1=ce('p','');sec1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';sec1.textContent='Epicóndilo lateral';
+  tc.appendChild(sec1);
+
+  tc.appendChild(mkTestOrtopedico('cozen','Test de Cozen (epicondilitis)',null,
+    'Paciente con el codo a 90° y el antebrazo en pronación. Se pide extensión de muñeca con el puño cerrado contra resistencia del fisioterapeuta.',
+    'Dolor reproducido en el epicóndilo lateral. Indica tendinopatía del extensor carpi radialis brevis (ECRB) o los extensores comunes.',
+    'Sin dolor en el epicóndilo. No hay tendinopatía lateral significativa.',
+    'Test de Mill y palpación del epicóndilo. Cozen + Mill positivos + dolor a la palpación del epicóndilo = diagnóstico de epicondilitis muy probable.',
+    'alta'));
+
+  tc.appendChild(mkTestOrtopedico('mill_co','Test de Mill (epicondilitis)',null,
+    'Con el codo extendido, se realiza pronación del antebrazo y flexión de muñeca de forma pasiva mientras el fisioterapeuta estira los extensores.',
+    'Dolor en el epicóndilo lateral al estirar los extensores. Indica tendinopatía del origen de los extensores.',
+    'Sin dolor en el epicóndilo. Los extensores no están irritados.',
+    'Test de Cozen. Mill añade especificidad al combinar estiramiento con la palpación. Útil para confirmar cuando Cozen es dudoso.',
+    'media'));
+
+  const sec2=ce('p','');sec2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec2.textContent='Epitróclea medial';
+  tc.appendChild(sec2);
+
+  tc.appendChild(mkTestOrtopedico('golf_co','Test del Golfista (epitrocleitis)',null,
+    'Paciente con el codo extendido. Se pide flexión de muñeca contra resistencia o se realiza extensión pasiva de muñeca + supinación para estirar los flexores.',
+    'Dolor reproducido en la epitróclea medial. Indica tendinopatía del pronador redondo y flexores de muñeca en su origen.',
+    'Sin dolor en la epitróclea. No hay tendinopatía medial significativa.',
+    'Test de Tinel en epitróclea. Diferencial importante: la neuropatía cubital también da dolor en epitróclea pero con parestesias en dedos 4-5.',
+    'alta'));
+
+  const sec3=ce('p','');sec3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec3.textContent='Neuropatía cubital';
+  tc.appendChild(sec3);
+
+  tc.appendChild(mkTestOrtopedico('tinel_co','Test de Tinel en codo (nervio cubital)',null,
+    'Percute suavemente con el dedo o martillo neurológico sobre el surco epitroclear (surco entre la epitróclea y el olécranon donde discurre el nervio cubital).',
+    'Hormigueo o corriente eléctrica que irradia hacia los dedos 4º y 5º. Indica irritación o compresión del nervio cubital a nivel del codo (síndrome del túnel cubital).',
+    'Sin parestesias distales. No hay compromiso del nervio cubital a este nivel.',
+    'Valoración de sensibilidad en dedos 4-5 y fuerza de separación del meñique. Tinel positivo + parestesias + debilidad intrínseca = neuropatía cubital confirmada.',
+    'alta'));
+
+  tc.appendChild(mkTestOrtopedico('codo_flex','Test de flexión de codo (neuropatía cubital)',null,
+    'Paciente mantiene el codo en flexión máxima durante 1-3 minutos con el antebrazo supinado. Observar si aparecen parestesias en los dedos 4-5.',
+    'Aparición o aumento de parestesias en dedos 4-5 durante la flexión mantenida. Indica compresión del nervio cubital en el túnel cubital — el nervio se tensa más en flexión.',
+    'Sin parestesias durante la flexión mantenida. No hay compromiso del nervio cubital.',
+    'Test de Tinel. La combinación de ambos tests positivos es muy específica de síndrome del túnel cubital.',
+    'alta'));
+
+  w.appendChild(tc);
+
+  const palp=ce('div','card');palp.style.marginTop='12px';
+  palp.innerHTML='<div class="ct">Palpación</div>';
+  const gpalp=ce('div','');gpalp.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px';
+  [
+    mkCampoInfo('Epicóndilo lateral',[['no','Sin dolor'],['le','Sensible'],['pos','Muy doloroso']],'palp_epi','CÓMO EVALUARLO: Palpa directamente sobre el epicóndilo lateral con el codo a 90° relajado. Después palpa 1-2cm distal al epicóndilo (inserción del ECRB). CÓMO INTERPRETARLO: Dolor máximo sobre el epicóndilo → epicondilitis. El punto de mayor dolor suele estar ligeramente distal al epicóndilo en la inserción del ECRB. Es el signo más específico de epicondilitis.'),
+    mkCampoInfo('Epitróclea medial',[['no','Sin dolor'],['le','Sensible'],['pos','Muy doloroso']],'palp_ept','CÓMO EVALUARLO: Palpa la epitróclea medial con el codo ligeramente flexionado. Después palpa el surco epitroclear donde discurre el nervio cubital. CÓMO INTERPRETARLO: Dolor en epitróclea → epitrocleitis. Dolor en el surco epitroclear con parestesias → neuropatía cubital. Pueden coexistir.'),
+    mkCampoInfo('Inserción bíceps distal',[['no','Sin dolor'],['pos','Doloroso']],'palp_bic_d','CÓMO EVALUARLO: Palpa la tuberosidad del radio en la fosa antecubital con el antebrazo en supinación. El tendón distal del bíceps se inserta aquí. CÓMO INTERPRETARLO: Dolor en la inserción distal del bíceps → tendinopatía distal del bíceps. Menos frecuente que la epicondilitis pero importante no confundirla. Empeora con la supinación resistida.'),
+    mkCampoInfo('Nervio cubital en surco',[['no','Sin parestesias'],['pos','Tinel positivo — parestesias']],'palp_cub','CÓMO EVALUARLO: Desliza el dedo por el surco epitroclear con el codo a 90°. Nota si el nervio es más prominente o subluxante. CÓMO INTERPRETARLO: Nervio subluxante (salta del surco al flexionar) → mayor riesgo de neuropatía por rozamiento. Si Tinel es positivo aquí → neuropatía cubital en el codo, no en la muñeca.')
+  ].forEach(f=>gpalp.appendChild(f));
+  palp.appendChild(gpalp);
+  w.appendChild(palp);
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');
+  ta.placeholder='Añade cualquier observación clínica relevante antes de generar el informe...';
+  ta.style.cssText='width:100%;min-height:80px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_codo=ta.value;};
+  obs.appendChild(ta);
+  w.appendChild(obs);
+
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);
+}
+function coSZ(w){
+  const flags=[];
+
+  if(D.tinel==='pos'&&D.par==='45') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Neuropatía cubital — no es solo epicondilitis',
+    desc:'Tinel positivo en el surco epitroclear con parestesias en dedos 4-5 indica síndrome del túnel cubital. El diagnóstico y tratamiento son diferentes a la tendinopatía.',
+    accion:'El tratamiento conservador incluye evitar la flexión mantenida del codo (especialmente nocturna). Si no mejora en 6-8 semanas, derivar para electromiografía y valoración de descompresión quirúrgica.'
+  });
+
+  if(D.par==='123') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Parestesias en dedos 1-3 — descartar origen cervical o túnel carpiano',
+    desc:'Las parestesias en dedos 1-3 no corresponden al nervio cubital. Pueden indicar radiculopatía C6-C7 o síndrome del túnel carpiano.',
+    accion:'Valorar la columna cervical (Spurling, reflejos) y la muñeca (Tinel en túnel carpiano, Phalen) antes de centrar el tratamiento en el codo.'
+  });
+
+  if(D.noc==='fr'&&D.rig==='se') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Dolor nocturno frecuente con rigidez severa',
+    desc:'Esta combinación no es típica de tendinopatía. Puede indicar artritis del codo, cuerpo libre articular o proceso sistémico.',
+    accion:'Derivar a médico para valoración. Descartar artritis reumatoide, gota (frecuente en el codo) o proceso inflamatorio sistémico.'
+  });
+
+  if(D.evol==='cr'&&D.tto&&D.tto.includes('inf')) flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Tendinopatía crónica con infiltraciones previas',
+    desc:'Las infiltraciones repetidas de cortisona pueden debilitar el tendón y aumentar el riesgo de rotura. La tendinopatía crónica con múltiples infiltraciones requiere un abordaje diferente.',
+    accion:'Priorizar ejercicio excéntrico progresivo y ondas de choque. Evitar nuevas infiltraciones. Informar al paciente que la mejoría es gradual (semanas-meses) no inmediata.'
+  });
+
+  if(flags.length>0){
+    const flagCard=ce('div','card');
+    flagCard.style.cssText='border:1.5px solid #e74c3c;background:#fff8f7;margin-bottom:12px';
+    const fTitle=ce('div','');
+    fTitle.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px';
+    fTitle.innerHTML='<span style="font-size:18px">⚠️</span><span style="font-size:13px;font-weight:700;color:#c0392b;text-transform:uppercase;letter-spacing:.05em">'+flags.length+' señal'+(flags.length>1?'es':'')+' de alerta detectada'+(flags.length>1?'s':'')+'</span>';
+    flagCard.appendChild(fTitle);
+    flags.forEach(f=>{
+      const item=ce('div','');
+      item.style.cssText=`background:${f.bg};border:1px solid ${f.color}40;border-radius:8px;padding:10px 12px;margin-bottom:8px`;
+      item.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${f.color};color:#fff;letter-spacing:.05em">${f.nivel}</span><span style="font-size:12px;font-weight:600;color:${f.color}">${f.titulo}</span></div><p style="font-size:12px;color:#555;line-height:1.6;margin-bottom:6px">${f.desc}</p><div style="display:flex;align-items:flex-start;gap:6px"><span style="font-size:11px;font-weight:700;color:${f.color};white-space:nowrap">Qué hacer:</span><span style="font-size:12px;color:#333;line-height:1.5">${f.accion}</span></div>`;
+      flagCard.appendChild(item);
+    });
+    w.appendChild(flagCard);
+  }
+
+  renderInformeHub(w,'codo',gFCo(),gFCoF(),getFase(D.evr,D.eva));
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HERNIA DISCAL — protocolo completo (existente, adaptado al hub)
