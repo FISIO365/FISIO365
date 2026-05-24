@@ -2129,7 +2129,7 @@ function iniciarAutoUpdate(){
 async function loadProgreso(){
   if(!fisioActual) return;
   try{
-    const r = await fetch(`/api/progreso?pwd=${encodeURIComponent(pwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
+    const r = await fetch(`/api/fisios?action=progreso&pwd=${encodeURIComponent(pwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
     const d = await r.json();
     if(d.ok) progresoFisio = d.progreso || {};
   }catch(e){}
@@ -2140,7 +2140,7 @@ async function marcarProgreso(seccion){
     const r = await fetch('/api/progreso', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ pwd, fisioId: fisioActual.id, seccion, estado: 'completado' })
+      body: JSON.stringify({ pwd, action: 'progreso', fisioId: fisioActual.id, seccion, estado: 'completado' })
     });
     const d = await r.json();
     if(d.ok){
