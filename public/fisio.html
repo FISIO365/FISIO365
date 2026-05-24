@@ -21,8 +21,15 @@ body{font-family:var(--font);background:var(--cream);color:var(--black);min-heig
 #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:#000}
 .lb{width:100%;max-width:360px}
 .llbl{font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
-.li{width:100%;font-family:var(--font);font-size:16px;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:var(--r-sm);color:white;outline:none;margin-bottom:16px;transition:border-color .15s;-webkit-text-fill-color:white;caret-color:white}
-.li:-webkit-autofill,.li:-webkit-autofill:hover,.li:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px rgba(30,30,30,0.95) inset!important;-webkit-text-fill-color:white!important;border-color:rgba(255,255,255,0.12)!important}
+.li{width:100%;font-family:var(--font);font-size:16px;padding:12px 14px;background:transparent;border:1.5px solid rgba(255,255,255,0.35);border-radius:var(--r-sm);color:white;outline:none;margin-bottom:16px;transition:border-color .2s,box-shadow .2s;-webkit-text-fill-color:white;caret-color:var(--lila)}
+.li::placeholder{color:rgba(255,255,255,0.25)}
+.li:focus{border-color:var(--lila);box-shadow:0 0 0 3px rgba(173,163,218,0.15)}
+.li:-webkit-autofill,.li:-webkit-autofill:hover,.li:-webkit-autofill:focus,.li:-webkit-autofill:active{-webkit-box-shadow:0 0 0 1000px #000 inset!important;-webkit-text-fill-color:white!important;border-color:rgba(255,255,255,0.35)!important;caret-color:var(--lila)!important}
+.li[type=text]{background:transparent!important;color:white!important;-webkit-text-fill-color:white!important}
+.pwd-wrap{position:relative;margin-bottom:16px}
+.pwd-wrap .li{margin-bottom:0;padding-right:44px}
+.pwd-eye{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);font-size:18px;padding:0;line-height:1;transition:color .15s}
+.pwd-eye:hover{color:var(--lila)}
 .li::placeholder{color:rgba(255,255,255,0.25)}.li:focus{border-color:var(--lila)}
 .lbtn{width:100%;font-family:var(--font);font-size:14px;font-weight:700;padding:13px;background:white;color:black;border:none;border-radius:var(--r-sm);cursor:pointer;transition:opacity .2s}
 .lbtn:hover{opacity:.9}.lbtn:disabled{opacity:.4}
@@ -271,9 +278,16 @@ input[type=number]{text-align:center}
   <div class="lb">
     <div style="font-size:48px;font-weight:800;color:#f5f2ee;letter-spacing:-1px;margin-bottom:2.5rem;text-align:center">FISIO<span style="color:var(--lila)">365</span></div>
     <label class="llbl">Nombre</label>
-    <input class="li" type="text" id="loginNombre" placeholder="Tu nombre" autocomplete="off" autocapitalize="words" style="-webkit-text-fill-color:white;caret-color:white">
+    <input class="li" type="text" id="loginNombre" placeholder="" autocomplete="off" autocapitalize="words" style="background:transparent!important;color:white!important;-webkit-text-fill-color:white!important;border:1.5px solid rgba(255,255,255,0.35)!important">
     <label class="llbl">Contraseña</label>
-    <input class="li" type="password" id="loginPwd" placeholder="••••••••">
+    <div class="pwd-wrap">
+      <input class="li" type="password" id="loginPwd" placeholder="••••••••">
+      <button class="pwd-eye" type="button" onclick="togglePwd()" id="eyeBtn" tabindex="-1">
+  <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+  </svg>
+</button>
+    </div>
     <button class="lbtn" id="loginBtn" onclick="doLogin()">Entrar al panel</button>
     <div class="lerr" id="loginErr"></div>
   </div>
@@ -358,6 +372,21 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('loginPwd').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarLightbox();});
 });
+
+function togglePwd(){
+  const inp = document.getElementById('loginPwd');
+  const btn = document.getElementById('eyeBtn');
+  const icon = document.getElementById('eyeIcon');
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    btn.style.color = 'var(--lila)';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    btn.style.color = 'rgba(255,255,255,0.4)';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
 
 async function doLogin(){
   const nombre=($('loginNombre').value||'').trim();
