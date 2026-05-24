@@ -21,7 +21,8 @@ body{font-family:var(--font);background:var(--cream);color:var(--black);min-heig
 #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:#000}
 .lb{width:100%;max-width:360px}
 .llbl{font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
-.li{width:100%;font-family:var(--font);font-size:16px;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:var(--r-sm);color:white;outline:none;margin-bottom:16px;transition:border-color .15s}
+.li{width:100%;font-family:var(--font);font-size:16px;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:var(--r-sm);color:white;outline:none;margin-bottom:16px;transition:border-color .15s;-webkit-text-fill-color:white;caret-color:white}
+.li:-webkit-autofill,.li:-webkit-autofill:hover,.li:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px rgba(30,30,30,0.95) inset!important;-webkit-text-fill-color:white!important;border-color:rgba(255,255,255,0.12)!important}
 .li::placeholder{color:rgba(255,255,255,0.25)}.li:focus{border-color:var(--lila)}
 .lbtn{width:100%;font-family:var(--font);font-size:14px;font-weight:700;padding:13px;background:white;color:black;border:none;border-radius:var(--r-sm);cursor:pointer;transition:opacity .2s}
 .lbtn:hover{opacity:.9}.lbtn:disabled{opacity:.4}
@@ -270,7 +271,7 @@ input[type=number]{text-align:center}
   <div class="lb">
     <div style="font-size:48px;font-weight:800;color:#f5f2ee;letter-spacing:-1px;margin-bottom:2.5rem;text-align:center">FISIO<span style="color:var(--lila)">365</span></div>
     <label class="llbl">Nombre</label>
-    <input class="li" type="text" id="loginNombre" placeholder="Tu nombre" autocomplete="off" autocapitalize="words">
+    <input class="li" type="text" id="loginNombre" placeholder="Tu nombre" autocomplete="off" autocapitalize="words" style="-webkit-text-fill-color:white;caret-color:white">
     <label class="llbl">Contraseña</label>
     <input class="li" type="password" id="loginPwd" placeholder="••••••••">
     <button class="lbtn" id="loginBtn" onclick="doLogin()">Entrar al panel</button>
@@ -396,14 +397,44 @@ async function loadPacientes(){
 
 function aplicarRole(){
   if(!fisioActual) return;
-  const isAdmin = fisioActual.role==='admin';
-  // Mostrar/ocultar secciones según role
-  $('sb-prog').style.display = isAdmin ? '' : 'none';
-  $('sb-anam').style.display = isAdmin ? '' : 'none';
-  $('sb-inf').style.display  = isAdmin ? '' : 'none';
-  // sb-wiki y sb-school siempre visibles (cuando existan)
-  // Nombre en sidebar footer
-  $('sb-user').textContent = fisioActual.nombre + (isAdmin?' · Admin':'');
+
+  // Mapeo: nombre del acceso en Airtable -> id del botón en sidebar
+  // acc_programas -> sb-prog, acc_anamnesis -> sb-anam, etc.
+  const mapaIds = {
+    'programas':    'sb-prog',
+    'anamnesis':    'sb-anam',
+    'informes':     'sb-inf',
+    'wikifisio':    'sb-wiki',
+    'school':       'sb-school',
+    'checklist':    'sb-checklist',
+    'tareas':       'sb-tareas',
+    'comunicaciones': 'sb-comunicaciones',
+    'vacaciones':   'sb-vacaciones'
+  };
+
+  const accesos = fisioActual.accesos || {};
+
+  // Recorrer todos los acc_* que vengan de Airtable
+  // Si existe el botón en sidebar, mostrarlo u ocultarlo según el checkbox
+  Object.keys(accesos).forEach(seccion => {
+    // Intentar con el mapa primero, si no intentar sb-{seccion} directamente
+    const sbId = mapaIds[seccion] || ('sb-' + seccion);
+    const el = $(sbId);
+    if(el) el.style.display = accesos[seccion] ? '' : 'none';
+  });
+
+  // También ocultar cualquier sb- que NO esté en accesos
+  Object.values(mapaIds).forEach(sbId => {
+    const seccion = Object.keys(mapaIds).find(k => mapaIds[k] === sbId);
+    if(seccion && !(seccion in accesos)){
+      const el = $(sbId);
+      if(el) el.style.display = 'none';
+    }
+  });
+
+  // Nombre en footer
+  const isAdmin = fisioActual.role === 'admin';
+  $('sb-user').textContent = fisioActual.nombre + (isAdmin ? ' · Admin' : '');
 }
 
 async function loadFisios(){
