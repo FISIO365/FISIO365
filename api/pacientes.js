@@ -60,22 +60,48 @@ export default async function handler(req) {
     }
   }
 
-  // ── GUARDAR INFORME ──────────────────────────────────────────────────────
+  // ── GUARDAR INFORME EN PACIENTE ─────────────────────────────────────────
   if (action === 'guardar-informe' && req.method === 'POST') {
-    const { pacienteNombre, pacienteId, fisioNombre, protocolo, informe } = body;
+    const { pacienteId, fisioNombre, protocolo, informe, pacienteNombre } = body;
     try {
-      const fecha = new Date().toISOString().split('T')[0];
+      const fecha = new Date().toLocaleDateString('es-ES');
+      const entrada = `--- ${fecha} | ${fisioNombre||''} | ${protocolo||''} ---\n${informe||''}\n`;
+
+      // Leer el contenido actual de Anamnesis del paciente
+      let textoActual = '';
+      if (pacienteId) {
+        const rGet = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=Anamnesis`, {
+          headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+        });
+        const dGet = await rGet.json();
+        textoActual = dGet.fields?.['Anamnesis'] || '';
+      }
+
+      // Añadir nueva entrada al principio
+      const nuevoTexto = entrada + (textoActual ? '\n' + textoActual : '');
+
+      // Actualizar el paciente
+      if (pacienteId) {
+        await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: { Anamnesis: nuevoTexto } })
+        });
+      }
+
+      // También guardar en tabla Anamnesis para poder listarlos
       await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ records: [{ fields: {
           PacienteNombre: pacienteNombre || '',
           FisioNombre: fisioNombre || '',
-          FechaValoracion: fecha,
+          FechaValoracion: new Date().toISOString().split('T')[0],
           InformeGenerado: informe || '',
           Protocolo: protocolo || 'hernia'
         }}]})
       });
+
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch(e) {
       return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
