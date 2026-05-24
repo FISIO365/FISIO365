@@ -1645,10 +1645,165 @@ function tSZ(w){
 }
 
 // CADERA
-function caS1(w){w.appendChild(mkNota('Dolor inguinal (articular), trocantéreo (bursitis/glúteo) o irradiado desde lumbar?'));w.appendChild(mkCard('Historia','',[mkSel('Cadera',[['d','Derecha'],['i','Izquierda'],['b','Ambas']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Inicio',[['gs','Gradual sobrecarga'],['tr','Traumático'],['ru','Running'],['gr','Gradual sin causa'],['pq','Postquirúrgico']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['tg','Tendinopatía glúteo medio'],['bt','Bursitis trocantérea'],['cox','Coxartrosis'],['pir','Sínd. piriforme'],['imp','Impingement FAI'],['lab','Lesión labrum'],['art','Artritis cadera']],'dx'),mkSel('Cirugía',[['no','No'],['ar','Artroscopia'],['pp','Prótesis parcial'],['pt','Prótesis total']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function caS2(w){w.appendChild(mkNota('Dolor inguinal al sentarse (articular)? Trocantéreo en apoyo unipodal (tendinopatía glúteo)?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evc','EVA en carga'],['eva','EVA actividad']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['ing','Inguinal (articular)'],['tr','Trocantéreo (lateral)'],['gl','Glúteo/piriforme'],['lum','Lumbar irradiado'],['di','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['ap','Al apoyarse'],['es','Espontáneo'],['fr','Frecuente ⚠']],'noc'),mkSel('Rigidez matutina',[['no','No'],['br','<30 min'],['pr','>30 min ⚠']],'rig'),mkSel('Crepitación',[['no','No'],['cha','Chasquido'],['crep','Crepitación dolorosa']],'crep'),mkSel('Marcha',[['nor','Normal'],['ant','Antálgica'],['tre','Trendelemburg']],'mar')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function caS3(w){w.appendChild(mkNota('Exploración confirma origen articular o partes blandas? Fuerza abductores = factor pronóstico clave.'));w.appendChild(mkCard('Exploración','',[mkSel('Flexión cadera',[['nor','Normal ≥120°'],['le','Leve 90–119°'],['mo','Moderada 60–89°'],['se','Severa <60°']],'flex'),mkSel('Rotación interna',[['nor','Normal ≥30°'],['le','Leve lim.'],['mo','Moderada'],['se','Severa ⚠']],'roti'),mkSel('FADIR',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — dolor inguinal']],'fadir'),mkSel('FABER',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — dolor inguinal/sacro']],'faber'),mkSel('Trendelemburg',[['neg','Negativo'],['le','Positivo leve'],['mo','Positivo mod']],'tren'),mkSel('Fuerza abductores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fabd'),mkSel('Fuerza extensores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fext'),mkSel('Palpación trocánter',[['nor','Sin dolor'],['sen','Sensible'],['muy','Muy doloroso — posible bursitis']],'palp'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['cam','Caminar sin dolor'],['cx','Evitar cx'],['pq','Postquirúrgico']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
-function caSZ(w){renderInformeHub(w,'cadera',gFCa(),gFCaF(),getFase(D.evr,D.evc));}
+function caS1(w){
+  w.appendChild(mkNota('Dolor inguinal (articular), trocantéreo (bursitis/glúteo) o irradiado desde lumbar?'));
+  w.appendChild(mkCard('Historia','',[
+    mkCampoInfo('Cadera',[['d','Derecha'],['i','Izquierda'],['b','Ambas']],'lado','Si afecta a ambas caderas simultáneamente sin traumatismo, descartar causa sistémica (artritis reumatoide, espondiloartropatía, necrosis avascular bilateral).'),
+    mkCampoInfo('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol','CÓMO INTERPRETARLO: Aguda → proceso inflamatorio activo o lesión aguda. Gestionar el dolor antes de cargar. Subaguda → inicio del trabajo de fuerza y movilidad. Crónica → tendinopatía degenerativa, coxartrosis establecida o inestabilidad funcional. El ejercicio de carga progresiva es el tratamiento de elección en crónicos.'),
+    mkCampoInfo('Inicio',[['gs','Gradual por sobrecarga'],['tr','Traumático'],['ru','Running/deporte'],['gr','Gradual sin causa'],['pq','Postquirúrgico']],'ini','CÓMO INTERPRETARLO: Gradual por sobrecarga → tendinopatía de glúteo medio o iliopsoas, muy frecuente en runners y trabajadores con mucho caminar. Traumático → descartar fractura de cuello femoral (especialmente en >65 años con osteoporosis). Gradual sin causa → coxartrosis o necrosis avascular en etapa inicial.'),
+    mkCampoInfo('Dx previo',[['no','Sin dx'],['tg','Tendinopatía glúteo medio'],['bt','Bursitis trocantérea'],['cox','Coxartrosis'],['pir','Sínd. piriforme'],['imp','Impingement FAI'],['lab','Lesión labrum'],['art','Artritis cadera']],'dx','CÓMO INTERPRETARLO: Tendinopatía glúteo medio → ejercicio de carga progresiva es el tratamiento. Evitar reposo prolongado y estiramientos agresivos en fase reactiva. Coxartrosis → el ejercicio retrasa la cirugía. Impingement FAI → frecuente en jóvenes activos, puede asociarse a lesión de labrum. Artritis → tratamiento médico prioritario.'),
+    mkCampoInfo('Deporte',[['no','No practica'],['run','Running'],['fut','Fútbol'],['gym','Gimnasio/crossfit'],['ot','Otro deporte']],'dep_ca','Running → tendinopatía de glúteo medio y síndrome piriforme son frecuentes. Fútbol → lesiones musculares de isquiotibiales y aductores. Gimnasio → impingement por movimientos de sentadilla profunda.'),
+    mkCampoInfo('Cirugía',[['no','No'],['ar','Artroscopia'],['pp','Prótesis parcial'],['pt','Prótesis total']],'cx','Prótesis total → objetivos funcionales adaptados. Cuidado con movimientos de riesgo de luxación (flexión >90° + rotación interna + aducción) en las primeras semanas postquirúrgicas.'),
+    mkCampoInfo('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto','Infiltración con mejoría temporal → confirma componente inflamatorio (bursitis, sinovitis). El reposo prolongado en tendinopatía de glúteo empeora el pronóstico — la carga progresiva es el tratamiento.')
+  ]));
+  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);
+}
+function caS2(w){w.appendChild(mkNota('Dolor inguinal al sentarse (articular)? Trocantéreo en apoyo unipodal (tendinopatía glúteo)?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evc','EVA en carga'],['eva','EVA actividad']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkCampoInfo('Localización',[['ing','Inguinal — articular'],['tr','Trocantéreo — lateral'],['gl','Glúteo/piriforme'],['lum','Irradiado desde lumbar'],['di','Difuso']],'loc','CÓMO EVALUARLO: Pide al paciente que señale con un dedo dónde duele. CÓMO INTERPRETARLO: Inguinal → origen articular (coxartrosis, labrum, impingement FAI) o tendón del iliopsoas. Trocantéreo → tendinopatía de glúteo medio o bursitis trocantérea. Glúteo/piriforme → síndrome piriforme o radiculopatía L5-S1 (diferencial importante). Irradiado desde lumbar → la cadera puede ser la víctima, no la causa — valorar siempre la columna lumbar.'),
+    mkCampoInfo('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip','Mecánico → empeora con la carga y el movimiento. Origen tendinoso, articular o muscular. Inflamatorio → dolor en reposo y nocturno, rigidez >30 min. Descartar artritis reumatoide o espondiloartropatía.'),
+    mkCampoInfo('Nocturno',[['no','No'],['ap','Al apoyarse sobre ese lado'],['es','Espontáneo'],['fr','Frecuente ⚠']],'noc','Al apoyarse → típico de bursitis trocantérea y tendinopatía de glúteo — recomendar no dormir sobre ese lado. Espontáneo → proceso inflamatorio activo. Frecuente sin causa mecánica → RED FLAG: descartar necrosis avascular de cadera (especialmente en pacientes con corticoides o alcohol), fractura patológica o tumor.'),
+    mkCampoInfo('Rigidez matutina',[['no','No'],['br','<30 min'],['pr','>30 min ⚠']],'rig','<30 min → coxartrosis o tendinopatía. Mejora con el movimiento suave. >30 min → posible artritis inflamatoria (artritis reumatoide, espondilitis). Derivar a reumatología si se asocia a otros síntomas sistémicos.'),
+    mkCampoInfo('Crepitación',[['no','No'],['cha','Chasquido (snapping hip)'],['crep','Crepitación dolorosa']],'crep','Chasquido → snapping hip: puede ser externo (banda iliotibial sobre trocánter) o interno (iliopsoas sobre eminencia iliopectínea). Sin dolor suele ser benigno. Crepitación dolorosa → puede indicar coxartrosis con pérdida de cartílago o lesión condral.'),
+    mkCampoInfo('Marcha',[['nor','Normal'],['ant','Antálgica (evita apoyar)'],['tre','Trendelemburg (caída pelvis)']],'mar','CÓMO EVALUARLO: Observa la marcha desde atrás y de lado. Antálgica → acorta el tiempo de apoyo para reducir el dolor. Trendelemburg → la pelvis cae hacia el lado contrario al apoyar — indica debilidad del glúteo medio. Frecuente en tendinopatía de glúteo y coxartrosis.')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
+function caS3(w){
+  w.appendChild(mkNota('Exploración confirma origen articular o partes blandas? Fuerza abductores = factor pronóstico clave.'));
+  w.appendChild(mkCard('Exploración','',[
+    mkCampoInfo('Flexión cadera',[['nor','Normal ≥120°'],['le','Leve 90–119°'],['mo','Moderada 60–89°'],['se','Severa <60°']],'flex','CÓMO EVALUARLO: Paciente en decúbito supino. Flexiona pasivamente la cadera llevando la rodilla hacia el pecho. Normal ≥120°. CÓMO INTERPRETARLO: Leve limitación → tensión de cápsula posterior o musculatura flexora. Moderada-severa → patrón capsular de coxartrosis (limitación de flexión + rotación interna + abducción) o impingement FAI.'),
+    mkCampoInfo('Rotación interna',[['nor','Normal ≥30°'],['le','Leve lim.'],['mo','Moderada'],['se','Severa ⚠']],'roti','CÓMO EVALUARLO: Paciente en decúbito supino con cadera y rodilla a 90°. Lleva el pie hacia fuera (rotación interna de cadera). Normal ≥30°. CÓMO INTERPRETARLO: La limitación de rotación interna es el signo más sensible de coxartrosis y de impingement FAI. Severa → posible coxartrosis avanzada o impingement CAM/PINCER. Si reproduce dolor inguinal → confirma origen articular.'),
+    mkCampoInfo('Fuerza abductores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit moderado'],['se','Déficit severo']],'fabd','CÓMO EVALUARLO: Paciente en decúbito lateral sobre el lado sano. Abducción activa contra resistencia con la rodilla extendida. Compara ambos lados. CÓMO INTERPRETARLO: El glúteo medio es el abductor principal y el más frecuentemente débil en dolor de cadera. Su déficit genera Trendelemburg y sobrecarga la cinta iliotibial. El fortalecimiento de abductores es la base del tratamiento en tendinopatía de glúteo, coxartrosis y dolor lateral de cadera.'),
+    mkCampoInfo('Fuerza extensores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fext','CÓMO EVALUARLO: Paciente en decúbito prono. Extensión de cadera activa contra resistencia con la rodilla extendida (glúteo mayor). CÓMO INTERPRETARLO: El déficit de glúteo mayor es frecuente en dolor crónico de cadera y lumbar. Su fortalecimiento mejora la estabilidad del tronco y reduce la sobrecarga lumbar.'),
+    mkCampoInfo('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim','Pregunta por actividades concretas: caminar distancias largas, subir escaleras, ponerse los calcetines, entrar en el coche, deporte.'),
+    mkCampoInfo('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['cam','Caminar sin dolor'],['cx','Evitar cirugía'],['pq','Postquirúrgico']],'obj','El objetivo define el plan. Evitar cirugía → trabajo intensivo de fuerza y control motor. El ejercicio retrasa la prótesis en coxartrosis. Postquirúrgico → respetar precauciones de luxación en prótesis total.')
+  ]));
+
+  const tc=ce('div','card');tc.style.marginTop='12px';
+  tc.innerHTML='<div class="ct">Tests ortopédicos</div>';
+
+  const sec1=ce('p','');sec1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';sec1.textContent='Impingement y labrum';
+  tc.appendChild(sec1);
+
+  tc.appendChild(mkTestOrtopedico('fadir_t','FADIR — Test de impingement anterior',null,
+    'Paciente en decúbito supino. Lleva la cadera a flexión de 90°, aducción y rotación interna simultáneas (FADIR = Flexión, ADucción, Rotación Interna).',
+    'Dolor en la ingle (región inguinal). Indica impingement femoroacetabular (FAI) o lesión del labrum anterior. Es el test más sensible para estas patologías.',
+    'Sin dolor en la ingle. No descarta FAI completamente pero reduce la probabilidad.',
+    'FABER y valoración de rotación interna. Si FADIR es positivo + limitación de rotación interna + dolor inguinal → alta sospecha de FAI. Confirmar con RMN con artrografía.',
+    'alta'));
+
+  tc.appendChild(mkTestOrtopedico('faber_t','FABER — Test de cadera y sacroilíaca',null,
+    'Paciente en decúbito supino. Coloca el tobillo sobre la rodilla contralateral (posición en "4"). Presiona suavemente la rodilla flexionada hacia la camilla.',
+    'Dolor en la ingle → origen articular de cadera. Dolor en la región sacroilíaca posterior → disfunción de la articulación sacroilíaca.',
+    'Sin dolor. No hay patología articular de cadera ni sacroilíaca significativa.',
+    'FADIR. FABER positivo con dolor inguinal + FADIR positivo → alta sospecha de patología articular de cadera.',
+    'media'));
+
+  const sec2=ce('p','');sec2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec2.textContent='Longitud muscular';
+  tc.appendChild(sec2);
+
+  tc.appendChild(mkTestOrtopedico('thomas_t','Test de Thomas — Flexores de cadera',null,
+    'Paciente sentado al borde de la camilla, se tumba hacia atrás llevando ambas rodillas al pecho. Suelta lentamente la pierna a evaluar dejándola caer. Observa si la cadera desciende por debajo de la horizontal.',
+    'La pierna no desciende bajo la horizontal → contractura del psoas ilíaco. Si además la rodilla se extiende → contractura del recto anterior del cuádriceps.',
+    'La pierna desciende bajo la horizontal con la rodilla a 90°. Los flexores están en longitud normal.',
+    'Test de Ober (para banda iliotibial). Thomas + Ober + déficit de abductores → patrón completo de disfunción de cadera.',
+    'alta'));
+
+  tc.appendChild(mkTestOrtopedico('ober_t','Test de Ober — Banda iliotibial',null,
+    'Paciente en decúbito lateral sobre el lado sano. El fisio estabiliza la pelvis con una mano. Con la otra lleva la cadera superior a extensión y abducción. Suelta lentamente hacia la aducción.',
+    'La pierna no desciende hacia la aducción o desciende muy poco → contractura de la banda iliotibial o del tensor de la fascia lata.',
+    'La pierna desciende libremente hacia la aducción. La banda iliotibial tiene longitud normal.',
+    'Test de Thomas y Trendelemburg. Ober positivo + Trendelemburg → la banda iliotibial rígida limita la función del glúteo medio.',
+    'alta'));
+
+  const sec3=ce('p','');sec3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec3.textContent='Estabilidad y fuerza';
+  tc.appendChild(sec3);
+
+  tc.appendChild(mkTestOrtopedico('tren_t','Test de Trendelemburg',null,
+    'Paciente de pie. Pide que levante una pierna flexionando cadera y rodilla. Observa desde atrás si la pelvis se mantiene horizontal o cae hacia el lado elevado.',
+    'La pelvis cae hacia el lado de la pierna elevada → debilidad del glúteo medio del lado de apoyo. Indica déficit de abductores.',
+    'La pelvis se mantiene horizontal o se eleva ligeramente. El glúteo medio tiene fuerza suficiente.',
+    'Valoración de fuerza de abductores. Trendelemburg positivo + déficit de abductores → confirma la debilidad de glúteo medio como causa principal.',
+    'alta'));
+
+  w.appendChild(tc);
+
+  const palp=ce('div','card');palp.style.marginTop='12px';
+  palp.innerHTML='<div class="ct">Palpación</div>';
+  const gpalp=ce('div','');gpalp.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px';
+  [
+    mkCampoInfo('Trocánter mayor',[['no','Sin dolor'],['sen','Sensible'],['muy','Muy doloroso']],'palp_troc','CÓMO EVALUARLO: Palpa directamente sobre el trocánter mayor con el paciente en decúbito lateral. Presión directa. CÓMO INTERPRETARLO: Dolor en trocánter mayor → tendinopatía de glúteo medio/menor en su inserción o bursitis trocantérea. Es el signo más específico de síndrome doloroso trocantéreo.'),
+    mkCampoInfo('Región inguinal',[['no','Sin dolor'],['sen','Sensible'],['pos','Doloroso']],'palp_ing','CÓMO EVALUARLO: Palpa la región inguinal — tendón del iliopsoas en su inserción en el trocánter menor y la articulación coxofemoral. CÓMO INTERPRETARLO: Dolor en ingle con palpación profunda → origen articular (coxartrosis, impingement) o tendinopatía del iliopsoas.'),
+    mkCampoInfo('Glúteo medio',[['no','Sin dolor'],['sen','Sensible'],['pts','Puntos gatillo']],'palp_glut','CÓMO EVALUARLO: Palpa el músculo glúteo medio por encima del trocánter mayor. Busca contracturas y puntos gatillo (zonas hipersensibles que reproducen dolor referido). CÓMO INTERPRETARLO: Puntos gatillo en glúteo medio → pueden referir dolor a la región lateral del muslo y rodilla. Muy frecuentes en tendinopatía de glúteo y dolor lumbar crónico.'),
+    mkCampoInfo('Piriforme',[['no','Sin dolor'],['pos','Doloroso — posible sínd. piriforme']],'palp_pir','CÓMO EVALUARLO: Paciente en decúbito prono. Palpa profundamente en la región glútea media, entre el sacro y el trocánter mayor. CÓMO INTERPRETARLO: Dolor a la palpación profunda del piriforme → síndrome del piriforme. Puede comprimir el nervio ciático y simular ciática lumbar. Diferencial: si la RMN lumbar es normal y hay dolor glúteo con irradiación → valorar piriforme.')
+  ].forEach(f=>gpalp.appendChild(f));
+  palp.appendChild(gpalp);
+  w.appendChild(palp);
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');
+  ta.placeholder='Añade cualquier observación clínica relevante antes de generar el informe...';
+  ta.style.cssText='width:100%;min-height:80px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_cadera=ta.value;};
+  obs.appendChild(ta);
+  w.appendChild(obs);
+
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);
+}
+function caSZ(w){
+  const flags=[];
+
+  if(D.noc==='fr'&&D.ini==='gr') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Dolor nocturno frecuente sin causa clara',
+    desc:'El dolor nocturno frecuente en cadera sin traumatismo ni sobrecarga puede indicar necrosis avascular de cabeza femoral, fractura por insuficiencia o tumor óseo.',
+    accion:'Derivar a médico para RMN de cadera antes de iniciar tratamiento. La necrosis avascular es una urgencia relativa — el diagnóstico precoz cambia el pronóstico.'
+  });
+
+  if(D.roti==='se'&&D.loc==='ing') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Limitación severa de rotación interna con dolor inguinal',
+    desc:'Este patrón sugiere coxartrosis avanzada o impingement femoroacetabular severo con posible lesión de labrum.',
+    accion:'Derivar para RX de cadera (AP y Dunn) para valorar el grado de artrosis y morfología del fémur proximal. Puede ser candidato a artroscopia o prótesis.'
+  });
+
+  if(D.rig==='pr') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Rigidez matutina prolongada >30 minutos',
+    desc:'La rigidez matutina prolongada en cadera puede indicar artritis inflamatoria (artritis reumatoide, espondilitis anquilosante).',
+    accion:'Preguntar por otros síntomas sistémicos: afectación de otras articulaciones, fiebre, pérdida de peso. Si hay sospecha, derivar a reumatología antes de tratar.'
+  });
+
+  if(D.fadir==='pos'&&D.faber==='pos') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'FADIR y FABER positivos — sospecha de impingement o labrum',
+    desc:'La positividad de ambos tests aumenta significativamente la sospecha de impingement femoroacetabular o lesión del labrum.',
+    accion:'Valorar derivación para RMN con artrografía para confirmar lesión del labrum. El tratamiento conservador es la primera línea, pero si falla puede ser candidato a artroscopia.'
+  });
+
+  if(flags.length>0){
+    const flagCard=ce('div','card');
+    flagCard.style.cssText='border:1.5px solid #e74c3c;background:#fff8f7;margin-bottom:12px';
+    const fTitle=ce('div','');
+    fTitle.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px';
+    fTitle.innerHTML='<span style="font-size:18px">⚠️</span><span style="font-size:13px;font-weight:700;color:#c0392b;text-transform:uppercase;letter-spacing:.05em">'+flags.length+' señal'+(flags.length>1?'es':'')+' de alerta detectada'+(flags.length>1?'s':'')+'</span>';
+    flagCard.appendChild(fTitle);
+    flags.forEach(f=>{
+      const item=ce('div','');
+      item.style.cssText=`background:${f.bg};border:1px solid ${f.color}40;border-radius:8px;padding:10px 12px;margin-bottom:8px`;
+      item.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${f.color};color:#fff;letter-spacing:.05em">${f.nivel}</span><span style="font-size:12px;font-weight:600;color:${f.color}">${f.titulo}</span></div><p style="font-size:12px;color:#555;line-height:1.6;margin-bottom:6px">${f.desc}</p><div style="display:flex;align-items:flex-start;gap:6px"><span style="font-size:11px;font-weight:700;color:${f.color};white-space:nowrap">Qué hacer:</span><span style="font-size:12px;color:#333;line-height:1.5">${f.accion}</span></div>`;
+      flagCard.appendChild(item);
+    });
+    w.appendChild(flagCard);
+  }
+
+  renderInformeHub(w,'cadera',gFCa(),gFCaF(),getFase(D.evr,D.evc));
+}
 
 // CODO
 function coS1(w){w.appendChild(mkNota('Epicondilitis (extensores) o epitrocleitis (flexores)? Parestesias que sugieran neuropatía cubital?'));w.appendChild(mkCard('Historia','',[mkSel('Codo',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Mecanismo',[['ext','Sobrecarga extensores — epicondilitis'],['fle','Sobrecarga flexores — epitrocleitis'],['tr','Traumático'],['gr','Gradual']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['epi','Epicondilitis lateral'],['epit','Epitrocleitis medial'],['neu','Neuropatía cubital'],['bur','Bursitis olecraneana']],'dx'),mkSel('Actividad',[['ten','Tenis/pádel'],['gol','Golf'],['inf','Informática/ratón'],['man','Trabajo manual'],['gym','Crossfit/gimnasio'],['mus','Instrumento musical']],'actrel'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['ban','Banda epicondílea'],['inf','Infiltración'],['ond','Ondas de choque']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
