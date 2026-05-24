@@ -2072,22 +2072,18 @@ document.addEventListener('keydown',e=>{
 
 
 // ── AUTO-UPDATE ───────────────────────────────────────────────────────────────
-const VERCEL_PROJECT = 'fisio365';
-const VERCEL_TEAM = 'fisio365s-projects';
 let lastDeployId = null;
 let lastAccesos = null;
 
-// Comprobar versión de deploy cada 2 minutos
+// Comprobar versión via /api/fisios?action=version
 async function checkDeploy(){
   try{
-    const r = await fetch(`https://api.vercel.com/v6/deployments?projectId=${VERCEL_PROJECT}&teamId=${VERCEL_TEAM}&limit=1&state=READY`, {cache:'no-store'});
+    const r = await fetch(`/api/fisios?action=version&pwd=${encodeURIComponent(apiPwd)}`, {cache:'no-store'});
     const d = await r.json();
-    const latest = d.deployments?.[0];
-    if(!latest) return;
+    if(!d.version) return;
     if(lastDeployId === null){
-      lastDeployId = latest.uid;
-    } else if(latest.uid !== lastDeployId){
-      // Hay deploy nuevo — recargar silenciosamente
+      lastDeployId = d.version;
+    } else if(d.version !== lastDeployId){
       console.log('Nueva versión detectada, recargando...');
       window.location.reload();
     }
@@ -2140,7 +2136,7 @@ async function loadProgreso(){
 
 async function marcarProgreso(seccion){
   try{
-    const r = await fetch('/api/progreso', {
+    const r = await fetch('/api/fisios', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ pwd: apiPwd, action: 'progreso', fisioId: fisioActual.id, seccion, estado: 'completado' })
