@@ -1867,7 +1867,7 @@ function editarInforme(id,todos){
   // Buttons
   const br=ce('div','');br.style.cssText='display:flex;gap:10px;margin-top:4px';
   const bSave=ce('button','btn btn-g');bSave.style.cssText='flex:1;padding:13px';bSave.textContent='Guardar cambios';
-  bSave.onclick=()=>{
+  bSave.onclick=async()=>{
     try{
       await fetch('/api/pacientes?action=actualizar-informe',{
         method:'POST',
