@@ -231,7 +231,7 @@ input[type=number]{text-align:center}
 }
 
 /* WIKIFISIO */
-.wiki-outer{display:flex;flex-direction:column;align-items:center;width:100%}
+.wiki-outer{display:flex;flex-direction:column;align-items:center;width:100%;min-height:calc(100vh - 120px)}
 .wiki-header{text-align:center;margin-bottom:16px;width:100%}
 .wiki-header h2{font-size:18px;font-weight:800;color:var(--black)}
 .wiki-header p{font-size:11px;color:var(--muted);margin-top:3px}
@@ -1899,19 +1899,20 @@ function renderWikiRuta(wrap, ruta){
   const bPrev = ce('button','wiki-btn'); bPrev.id='wPrev';
   bPrev.innerHTML='&#8592;'; bPrev.disabled=true;
   bPrev.onclick=()=>wGo(wIdx-1);
+  bPrev.onmousedown=e=>e.preventDefault();
 
   const mid = ce('div','wiki-center');
-  const cnt = ce('div','wiki-counter'); cnt.id='wCnt';
   const dots = ce('div','wiki-dots'); dots.id='wDots';
   ruta.imgs.forEach((_,i)=>{
     const d=ce('div','wiki-dot'+(i===0?' active':''));
     d.onclick=()=>wGo(i); dots.appendChild(d);
   });
-  mid.appendChild(cnt); mid.appendChild(dots);
+  mid.appendChild(dots);
 
   const bNext = ce('button','wiki-btn'); bNext.id='wNext';
   bNext.innerHTML='&#8594;';
   bNext.onclick=()=>wGo(wIdx+1);
+  bNext.onmousedown=e=>e.preventDefault();
 
   ctrl.appendChild(bPrev); ctrl.appendChild(mid); ctrl.appendChild(bNext);
   outer.appendChild(ctrl);
@@ -1930,7 +1931,6 @@ function wGo(i){
 
 function wUpdate(ruta){
   const n=ruta.imgs.length;
-  const cnt=$('wCnt'); if(cnt) cnt.textContent=(wIdx+1)+' / '+n+' · '+ruta.tits[wIdx];
   const prev=$('wPrev'); if(prev) prev.disabled=wIdx===0;
   const next=$('wNext'); if(next) next.disabled=wIdx===n-1;
   document.querySelectorAll('.wiki-dot').forEach((d,i)=>d.classList.toggle('active',i===wIdx));
@@ -1939,6 +1939,7 @@ function wUpdate(ruta){
 
 document.addEventListener('keydown',e=>{
   if(!$('wCar')) return;
+  if(e.key==='ArrowRight'||e.key==='ArrowLeft') e.preventDefault();
   if(e.key==='ArrowRight') wGo(wIdx+1);
   if(e.key==='ArrowLeft') wGo(wIdx-1);
 });
