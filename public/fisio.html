@@ -282,7 +282,7 @@ input[type=number]{text-align:center}
 .wiki-ruta-card .wiki-badge-hecho{margin-left:0;margin-top:8px;display:inline-flex}
 
 /* SCHOOL ETIQUETAS */
-.school-etiqueta{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;margin-bottom:8px;background:var(--lila-light);color:var(--lila)}
+.school-etiqueta{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;margin-bottom:8px;background:#fde8fb;color:#f588e3}
 
 /* SCHOOL INFO */
 .school-info-btn{background:none;border:none;color:var(--lila);font-size:16px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;opacity:.7;transition:opacity .15s}
@@ -1996,7 +1996,7 @@ function renderWiki(wrap){
       <div class="wiki-ruta-desc">${ruta.desc}</div>
       <div id="info_${ruta.id}" class="school-info-box" style="display:none">${ruta.info||''}</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
-        <div class="wiki-ruta-meta">${ruta.pasos > 0 ? ruta.pasos + ' pasos' : 'Próximamente'}</div>
+        ${ruta.pasos === 0 ? '<div class="wiki-ruta-meta">Próximamente</div>' : ''}
         ${completada ? '<span class="wiki-badge-hecho">✓ Completado</span>' : ''}
       </div>`;
     if(ruta.pasos > 0) card.onclick = () => renderWikiRuta(wrap, ruta);
