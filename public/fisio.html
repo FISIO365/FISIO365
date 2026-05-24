@@ -847,10 +847,120 @@ function rSZ(w){
 }
 
 // FASCITIS
-function fS1(w){w.appendChild(mkNota('Qué cambió antes del dolor? Carga, calzado, trabajo, peso...'));w.appendChild(mkCard('Historia','',[mkSel('Pie',[['d','Pie derecho'],['i','Pie izquierdo'],['b','Ambos']],'pie'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Desencadenante',[['gr','Gradual'],['ac','Aumento carga'],['cal','Cambio calzado'],['pe','Aumento peso'],['bip','Bipedestación'],['tr','Cambio trabajo']],'ini'),mkSel('Calzado',[['sop','Con soporte'],['min','Minimalista'],['zap','Zapato trabajo'],['pla','Plano sin soporte'],['tac','Tacón >3cm'],['des','Descalzo en casa']],'cal'),mkSel('Episodios',[['pri','Primer ep.'],['mis','Recaída mismo pie'],['con','Pie contralateral'],['tto','Recaída tras tto']],'epi'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['pla','Plantillas'],['inf','Infiltración'],['ond','Ondas de choque']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function fS2(w){w.appendChild(mkNota('Patrón clásico — peor al levantarse, mejora al calentar? Si NO, replantear dx.'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evm','EVA primeros pasos'],['eva','EVA actividad'],['evn','EVA final día']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Dolor matutino',[['no','No'],['m5','<5 min'],['m30','5–30 min'],['M30','>30 min (atípico)']],'mat'),mkSel('Al calentar',[['des','Desaparece'],['mej','Mejora'],['nc','No cambia'],['emp','Empeora (atípico)']],'cal2'),mkSel('Reaparece reposo',[['no','No'],['si','Sí (clásico)']],'rep'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Localización',[['tm','Talón medial'],['ar','Arco plantar'],['di','Talón difuso'],['an','Antepié']],'loc'),mkSel('Parestesias',[['no','No'],['si','Sí ⚠']],'par')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function fS3(w){w.appendChild(mkNota('Factor PRINCIPAL? Sin identificarlo el tto recidivará.'));w.appendChild(mkCard('Exploración','',[mkSel('Tipo de pie',[['neu','Neutro'],['pla','Plano/hiperpronador'],['cav','Cavo/supinador']],'tpie'),mkSel('Dorsiflexión',[['nor','Normal ≥10°'],['le','Leve 5–9°'],['mo','Moderada 0–4°'],['se','Severa <0°']],'dors'),mkSel('Silfverskiöld',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo (gastrocnemio)']],'silf'),mkSel('Windlass',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — reproduce dolor']],'wind'),mkSel('Tinel',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo ⚠']],'tin'),mkSel('Heel raise',[['nor','≥25 rep'],['re','10–24 rep'],['mr','<10 rep'],['im','No posible']],'hr'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['run','Volver a correr'],['tr','Trabajar sin dolor'],['cam','Caminar sin dolor']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
-function fSZ(w){renderInformeHub(w,'fascitis',gFF(),gFFF(),getFase(D.evm,D.eva));}
+function fS1(w){
+  w.appendChild(mkNota('Qué cambió antes del dolor? Carga, calzado, trabajo, peso...'));
+  w.appendChild(mkCard('Historia','',[
+    mkCampoInfo('Pie',[['d','Pie derecho'],['i','Pie izquierdo'],['b','Ambos']],'pie','Si afecta a ambos pies simultáneamente, descartar causa sistémica (espondiloartropatía, artritis reactiva) antes de tratar como fascitis mecánica.'),
+    mkCampoInfo('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol','CÓMO INTERPRETARLO: Aguda → proceso inflamatorio activo, buena respuesta al tratamiento conservador. Subaguda → ventana óptima. Crónica >3m → proceso degenerativo (fasciosis más que fascitis), respuesta más lenta. Las ondas de choque tienen mejor evidencia en crónicas. La cronicidad suele indicar que el factor causal no se ha resuelto.'),
+    mkCampoInfo('Desencadenante',[['gr','Gradual sin causa'],['ac','Aumento brusco de carga'],['cal','Cambio de calzado'],['pe','Aumento de peso'],['bip','Trabajo en bipedestación'],['tr','Cambio de trabajo/actividad']],'ini','CÓMO INTERPRETARLO: Aumento brusco de carga → sobrecarga mecánica directa de la fascia. Es el factor más frecuente en corredores. Cambio de calzado → especialmente a minimalista o sin soporte. El pie no tiene tiempo de adaptarse. Trabajo en bipedestación → sobrecarga acumulativa diaria. Sin corrección de la causa, el tratamiento tendrá efecto limitado.'),
+    mkCampoInfo('Calzado',[['sop','Con buen soporte'],['min','Minimalista/zero drop'],['zap','Zapato de trabajo rígido'],['pla','Plano sin soporte'],['tac','Tacón >3cm'],['des','Descalzo en casa frecuente']],'cal','CÓMO INTERPRETARLO: Minimalista/zero drop → aumenta la tensión de la fascia plantar al requerir mayor dorsiflexión. Plano sin soporte → el pie hiperpronado sobrecarga el origen medial de la fascia. Tacón >3cm → acorta gastrocnemio y reduce la dorsiflexión disponible. Descalzo frecuente en casa → sin soporte plantar en superficies duras.'),
+    mkCampoInfo('Episodios',[['pri','Primer episodio'],['mis','Recaída mismo pie'],['con','Pie contralateral previo'],['tto','Recaída tras tratamiento']],'epi','Los episodios frecuentes indican que el factor causal no se ha resuelto. Recaída tras tratamiento → revisar si se corrigió la biomecánica, el calzado y se fortaleció adecuadamente el sóleo. El pie contralateral previo aumenta el riesgo de recurrencia.'),
+    mkCampoInfo('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['pla','Plantillas'],['inf','Infiltración cortisona'],['ond','Ondas de choque']],'tto','CÓMO INTERPRETARLO: Fisioterapia previa sin mejoría → explorar qué se trabajó. Plantillas con mejoría → confirma componente biomecánico. Infiltración de cortisona → puede debilitar la fascia a largo plazo, especialmente si son repetidas. Ondas de choque → mejor evidencia en crónicas >3m que no responden a conservador.')
+  ]));
+  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);
+}
+function fS2(w){w.appendChild(mkNota('Patrón clásico — peor al levantarse, mejora al calentar? Si NO, replantear dx.'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evm','EVA primeros pasos'],['eva','EVA actividad'],['evn','EVA final día']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkCampoInfo('Dolor matutino',[['no','No'],['m5','<5 min'],['m30','5–30 min'],['M30','>30 min (atípico)']],'mat','El patrón de dolor matutino es el signo más específico de fascitis plantar. CÓMO INTERPRETARLO: <5 min → fascitis leve o en resolución. 5-30 min → fascitis activa típica — la fascia está rígida tras el reposo nocturno y necesita tiempo para adaptarse. >30 min → fascitis severa o proceso inflamatorio importante. Si el dolor matutino no existe o es mínimo, replantear el diagnóstico.'),mkCampoInfo('Al calentar',[['des','Desaparece'],['mej','Mejora'],['nc','No cambia'],['emp','Empeora (atípico)']],'cal2','La mejoría con el calentamiento es característica de la fascitis plantar. CÓMO INTERPRETARLO: Desaparece → patrón clásico benigno, la fascia se adapta con el movimiento. Mejora → fascitis activa típica. No cambia → proceso más avanzado o componente neuropático. Empeora → ATÍPICO — descartar fractura por estrés del calcáneo, neuropatía del nervio plantar o artritis.'),mkCampoInfo('Reaparece en reposo',[['no','No'],['si','Sí — patrón clásico']],'rep','La reaparición del dolor después de un período de reposo (sentarse 30 min y levantarse) es el segundo signo más específico de fascitis. Indica que la fascia se vuelve a tensar en reposo y al cargar peso se vuelve a irritar.'),mkCampoInfo('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc','El dolor nocturno NO es típico de fascitis plantar. CÓMO INTERPRETARLO: Ocasional → puede ser postural. Frecuente → RED FLAG — descartar fractura por estrés del calcáneo (muy frecuente en corredores), neuropatía plantar o artritis. La fascitis plantar pura no debería despertar al paciente por la noche.'),mkCampoInfo('Localización',[['tm','Talón medial — inserción fascia'],['ar','Arco plantar medio'],['di','Talón difuso'],['an','Antepié']],'loc','CÓMO EVALUARLO: Pide al paciente que señale con un dedo dónde duele exactamente. CÓMO INTERPRETARLO: Talón medial (inserción fascia) → localización más frecuente y específica de fascitis plantar. Arco plantar → puede indicar fascitis del cuerpo de la fascia o tendinopatía del tibial posterior. Talón difuso → menos específico, puede incluir bursitis retrocalcánea. Antepié → no es fascitis plantar, valorar metatarsalgia o Morton.'),mkCampoInfo('Parestesias',[['no','No'],['si','Sí — valorar neuropatía ⚠']],'par','Las parestesias NO son típicas de fascitis plantar. Su presencia obliga a descartar síndrome del túnel tarsiano (atrapamiento del nervio tibial posterior bajo el retináculo flexor), neuropatía del nervio plantar medial o radiculopatía L5-S1. Test de Tinel en el túnel del tarso para confirmarlo.')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
+function fS3(w){
+  w.appendChild(mkNota('Factor PRINCIPAL? Sin identificarlo el tto recidivará.'));
+  w.appendChild(mkCard('Exploración','',[
+    mkCampoInfo('Tipo de pie',[['neu','Neutro'],['pla','Plano/hiperpronador'],['cav','Cavo/supinador']],'tpie','CÓMO EVALUARLO: Observa el arco plantar con el paciente en bipedestación. Pie plano → el arco plantar toca o casi toca el suelo. Pie cavo → arco muy elevado, el peso recae en talón y antepié. Navicular Drop Test: marca la tuberosidad del navicular en sedestación y en bipedestación — caída >10mm = hiperpronación. CÓMO INTERPRETARLO: Pie plano/hiperpronador → el arco cede y estira la fascia en cada paso, sobrecargando su inserción medial. Pie cavo → menor amortiguación, mayor tensión en fascia. Ambos son factores de riesgo de fascitis.'),
+    mkCampoInfo('Dorsiflexión de tobillo',[['nor','Normal ≥10°'],['le','Leve lim. 5–9°'],['mo','Moderada 0–4°'],['se','Severa <0°']],'dors','CÓMO EVALUARLO: Test de lunge (estocada): paciente de pie, pie a evaluar a ~10cm de la pared, dobla la rodilla intentando tocar la pared sin levantar el talón. Normal: la rodilla toca la pared con el talón en el suelo. Mide la distancia pie-pared donde ya no puede tocar. CÓMO INTERPRETARLO: La limitación de dorsiflexión es el factor biomecánico más importante en fascitis plantar. Con limitación, el pie compensa hiperpronando o levantando el talón, lo que aumenta la tensión en la fascia. Es el factor perpetuador número 1.'),
+    mkCampoInfo('Test de Silfverskiöld',[['no','No realizado'],['neg','Negativo'],['pos','Positivo — retracción gastrocnemio']],'silf','CÓMO EVALUARLO: Mide la dorsiflexión de tobillo con la rodilla extendida y luego con la rodilla flexionada a 90°. Si la dorsiflexión mejora significativamente con la rodilla flexionada → el gastrocnemio (que cruza la rodilla) es el responsable de la limitación. Si no mejora → el sóleo también está retraído. CÓMO INTERPRETARLO: Positivo (gastrocnemio) → el estiramiento debe hacerse con la rodilla extendida para ser efectivo. Negativo → la limitación es de todo el complejo aquíleo (gastro + sóleo).'),
+    mkCampoInfo('Test de Windlass',[['no','No realizado'],['neg','Negativo'],['pos','Positivo — reproduce dolor']],'wind','CÓMO EVALUARLO: Paciente en bipedestación. Dorsiflexiona pasivamente los dedos del pie (especialmente el 1º) mientras el fisio observa si se eleva el arco plantar y pregunta si reproduce el dolor. CÓMO INTERPRETARLO: Positivo → al tensar los dedos se tensa la fascia plantar (mecanismo de windlass), reproduciendo el dolor en la inserción. Es el test más específico de fascitis plantar. Un Windlass negativo obliga a replantear el diagnóstico.'),
+    mkCampoInfo('Heel raise (elevación de talón)',[['nor','≥25 repeticiones'],['re','10–24 rep'],['mr','<10 rep'],['im','No puede realizarlo']],'hr','CÓMO EVALUARLO: Paciente de pie apoyado en la pared para equilibrio. Pide que eleve el talón lo máximo posible de forma controlada. Cuenta cuántas repeticiones puede hacer de forma completa con buena calidad. Compara ambos lados. CÓMO INTERPRETARLO: El déficit de sóleo/gastrocnemio es universal en fascitis crónica. Sin fuerza excéntrica del complejo aquíleo, la fascia absorbe más carga y no puede recuperarse. El heel raise es el ejercicio terapéutico más importante y también es un marcador de recuperación.'),
+    mkCampoInfo('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim','Pregunta qué actividades no puede hacer: caminar distancias largas, correr, estar de pie, subir escaleras. La limitación funcional orienta los objetivos.'),
+    mkCampoInfo('Objetivo',[['do','Eliminar dolor'],['run','Volver a correr'],['tr','Trabajar sin dolor'],['cam','Caminar sin dolor']],'obj','El objetivo define el plan. Volver a correr → requiere trabajo progresivo de carga, fortalecimiento y análisis de la técnica de carrera. Trabajar sin dolor → plantillas y calzado son clave además del tratamiento.')
+  ]));
+
+  const palp=ce('div','card');palp.style.marginTop='12px';
+  palp.innerHTML='<div class="ct">Palpación</div>';
+  const gpalp=ce('div','');gpalp.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px';
+  [
+    mkCampoInfo('Inserción fascia (talón medial)',[['no','Sin dolor'],['le','Sensible'],['pos','Muy doloroso']],'palp_fas','CÓMO EVALUARLO: Con el paciente en decúbito supino, palpa con el pulgar la cara medial del calcáneo en la inserción de la fascia plantar — justo en el borde medial del talón, ligeramente anterior. Presión directa y firme. CÓMO INTERPRETARLO: Dolor reproducible en este punto exacto = signo más específico de fascitis plantar. Si el dolor es más posterior (centro del talón) → posible bursitis calcánea o fractura por estrés.'),
+    mkCampoInfo('Cuerpo de la fascia',[['no','Sin dolor'],['le','Sensible'],['pos','Doloroso']],'palp_cuerpo','CÓMO EVALUARLO: Palpa a lo largo del arco plantar desde el talón hasta los dedos, siguiendo la fascia. Dorsiflexiona los dedos para tensar la fascia y facilitar la palpación. CÓMO INTERPRETARLO: Dolor en el cuerpo de la fascia → puede indicar desgarro parcial o fascitis del cuerpo. Dolor difuso en todo el arco → componente neuropático o tendinopatía del tibial posterior asociada.'),
+    mkCampoInfo('Túnel del tarso',[['no','Sin dolor/parestesias'],['pos','Tinel positivo ⚠']],'palp_tunel','CÓMO EVALUARLO: Percute con el dedo o martillo neurológico el nervio tibial posterior en el retináculo flexor (por detrás y debajo del maléolo interno). CÓMO INTERPRETARLO: Positivo (hormigueo que irradia hacia la planta) → síndrome del túnel tarsiano. Puede coexistir con fascitis plantar (doble aplastamiento). Si hay parestesias, este test es prioritario.'),
+    mkCampoInfo('Tendón de Aquiles',[['no','Sin dolor'],['le','Sensible'],['pos','Doloroso']],'palp_aqui','CÓMO EVALUARLO: Palpa el tendón de Aquiles desde la inserción calcánea hasta la unión miotendinosa. También palpa la bursitis retrocalcánea (entre el tendón y el calcáneo). CÓMO INTERPRETARLO: Tendinopatía de Aquiles puede coexistir con fascitis plantar — ambas tienen como factor común la limitación de dorsiflexión y el déficit del complejo aquíleo.')
+  ].forEach(f=>gpalp.appendChild(f));
+  palp.appendChild(gpalp);
+  w.appendChild(palp);
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');
+  ta.placeholder='Añade cualquier observación clínica relevante antes de generar el informe...';
+  ta.style.cssText='width:100%;min-height:80px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_fascitis=ta.value;};
+  obs.appendChild(ta);
+  w.appendChild(obs);
+
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);
+}
+function fSZ(w){
+  const flags=[];
+
+  if(D.par==='si') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Parestesias en el pie — posible neuropatía',
+    desc:'Las parestesias no son típicas de fascitis plantar. Pueden indicar síndrome del túnel tarsiano (atrapamiento del nervio tibial posterior) o radiculopatía L5-S1.',
+    accion:'Realizar test de Tinel en el túnel del tarso. Si es positivo, el diagnóstico principal puede ser neuropatía, no fascitis. Valorar derivación para electromiografía si no mejora.'
+  });
+
+  if(D.noc==='fr') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Dolor nocturno frecuente — patrón atípico',
+    desc:'La fascitis plantar no suele despertar al paciente por la noche. El dolor nocturno frecuente obliga a descartar fractura por estrés del calcáneo, artritis o proceso sistémico.',
+    accion:'Preguntar por aumento reciente de carga (corredor). Si hay sospecha de fractura por estrés, derivar para RMN (la RX puede ser negativa en las primeras semanas).'
+  });
+
+  if(D.cal2==='emp') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'El dolor empeora al calentar — patrón atípico',
+    desc:'Si el dolor empeora con la actividad en lugar de mejorar, el diagnóstico de fascitis plantar debe revisarse. Puede indicar fractura por estrés, artritis o proceso inflamatorio sistémico.',
+    accion:'Replantear el diagnóstico. Descartar fractura por estrés con RMN. Preguntar por síntomas sistémicos (fiebre, afectación de otras articulaciones).'
+  });
+
+  if(D.loc==='an') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Dolor en antepié — no es fascitis plantar',
+    desc:'El dolor en antepié no corresponde al patrón de fascitis plantar. Puede indicar metatarsalgia, neuroma de Morton, fractura por estrés de metatarsiano o capsulitis.',
+    accion:'Replantear el diagnóstico. Palpar los espacios intermetatarsianos y las cabezas metatarsianas. Considerar derivación si el diagnóstico no está claro.'
+  });
+
+  if(D.pie==='b') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Fascitis bilateral simultánea',
+    desc:'La fascitis plantar bilateral simultánea (no secuencial) es poco frecuente y obliga a descartar causa sistémica: espondiloartropatía (espondilitis anquilosante, artritis reactiva, artritis psoriásica).',
+    accion:'Preguntar por dolor lumbar inflamatorio, rigidez matutina >30 min, uveítis o psoriasis. Si hay sospecha, derivar a reumatología antes de tratar.'
+  });
+
+  if(flags.length>0){
+    const flagCard=ce('div','card');
+    flagCard.style.cssText='border:1.5px solid #e74c3c;background:#fff8f7;margin-bottom:12px';
+    const fTitle=ce('div','');
+    fTitle.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px';
+    fTitle.innerHTML='<span style="font-size:18px">⚠️</span><span style="font-size:13px;font-weight:700;color:#c0392b;text-transform:uppercase;letter-spacing:.05em">'+flags.length+' señal'+(flags.length>1?'es':'')+' de alerta detectada'+(flags.length>1?'s':'')+'</span>';
+    flagCard.appendChild(fTitle);
+    flags.forEach(f=>{
+      const item=ce('div','');
+      item.style.cssText=`background:${f.bg};border:1px solid ${f.color}40;border-radius:8px;padding:10px 12px;margin-bottom:8px`;
+      item.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${f.color};color:#fff;letter-spacing:.05em">${f.nivel}</span><span style="font-size:12px;font-weight:600;color:${f.color}">${f.titulo}</span></div><p style="font-size:12px;color:#555;line-height:1.6;margin-bottom:6px">${f.desc}</p><div style="display:flex;align-items:flex-start;gap:6px"><span style="font-size:11px;font-weight:700;color:${f.color};white-space:nowrap">Qué hacer:</span><span style="font-size:12px;color:#333;line-height:1.5">${f.accion}</span></div>`;
+      flagCard.appendChild(item);
+    });
+    w.appendChild(flagCard);
+  }
+
+  renderInformeHub(w,'fascitis',gFF(),gFFF(),getFase(D.evm,D.eva));
+}
 
 // CERVICAL
 
