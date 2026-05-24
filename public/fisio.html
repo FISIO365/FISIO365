@@ -679,10 +679,172 @@ function stepP0(wrap){
 // ─────────────────────────────────────────────────────────────────────────────
 
 // RODILLA
-function rS1(w){w.appendChild(mkNota('Traumatismo, sobrecarga o postquirúrgico?'));w.appendChild(mkCard('Historia','',[mkSel('Rodilla',[['d','Derecha'],['i','Izquierda'],['b','Ambas']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Inicio',[['td','Traumático directo'],['ti','Giro/torsión'],['gr','Gradual'],['pq','Postquirúrgico']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['men','Menisco'],['lca','LCA'],['lcm','LCM/LCL'],['cond','Condromalacia'],['ten','Tendinopatía rotuliana'],['it','IT band'],['art','Gonartrosis']],'dx'),mkSel('Cirugía',[['no','No'],['art','Artroscopia'],['lca_r','Rec. LCA'],['pro','Prótesis']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function rS2(w){w.appendChild(mkNota('Patrón mecánico o inflamatorio? Inestabilidad real o subjetiva?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['eva','EVA actividad'],['eve','EVA escaleras']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['ant','Anterior'],['med','Medial'],['lat','Lateral'],['pos','Posterior'],['dif','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Inflamación',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Derrame ⚠']],'infl'),mkSel('Inestabilidad',[['no','No'],['sub','Sensación'],['ced','Cedimiento real']],'ines'),mkSel('Bloqueo',[['no','No'],['ps','Pseudobloqueo'],['re','Real ⚠']],'bloq')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);w.appendChild(mkCard('Agravantes/aliviantes','',[mkCk('AGRAVAN',[['ba','Bajar esc.'],['su','Subir esc.'],['cu','Cuclillas'],['co','Correr'],['gi','Giros'],['se','Sentado']],'agr'),mkCk('ALIVIAN',[['re','Reposo'],['fr','Frío'],['ca','Calor'],['ve','Vendaje'],['ai','AINEs']],'ali')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function rS3(w){w.appendChild(mkNota('McMurray y Lachman consistentes con la historia?'));w.appendChild(mkCard('Exploración','',[mkSel('Flexión',[['com','Completa'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'flex'),mkSel('Extensión',[['com','Completa 0°'],['dl','Déficit leve'],['dm','Déficit mod ⚠'],['re','Recurvatum']],'ext'),mkSel('McMurray',[['no','No realiz.'],['neg','Negativo'],['pm','Positivo medial'],['pl','Positivo lateral']],'mcm'),mkSel('Lachman',[['no','No realiz.'],['neg','Negativo'],['pi','Positivo I'],['pii','Positivo II'],['piii','Positivo III ⚠']],'lach'),mkSel('Estrés colateral',[['no','No realiz.'],['neg','Negativo'],['val','Valgo (LCM)'],['var','Varo (LCL)']],'est'),mkSel('Patelofemoral',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'pat'),mkSel('Fuerza cuád',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fcuad'),mkSel('Propiocepción',[['nor','Normal'],['le','Alterado leve'],['mo','Moderado'],['np','No posible']],'prop'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['mov','Movilidad'],['cx','Evitar cx'],['pq','Postquirúrgico']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
-function rSZ(w){renderInformeHub(w,'rodilla',gFR(),gFRF(),getFase(D.evr,D.eva));}
+function rS1(w){
+  w.appendChild(mkNota('Traumatismo, sobrecarga o postquirúrgico?'));
+  w.appendChild(mkCard('Historia','',[
+    mkCampoInfo('Rodilla',[['d','Derecha'],['i','Izquierda'],['b','Ambas']],'lado','Identifica si es la rodilla dominante del gesto deportivo o de la carga laboral — mayor impacto funcional.'),
+    mkCampoInfo('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol','CÓMO INTERPRETARLO: Aguda → proceso inflamatorio activo, posible rotura estructural reciente. Gestionar inflamación antes de movilizar. Subaguda → ventana ideal para tratamiento activo. Crónica → tendinopatía degenerativa, condromalacia o gonartrosis. Factores perpetuadores clave: déficit de cuádriceps, biomecánica alterada.'),
+    mkCampoInfo('Mecanismo',[['td','Traumático directo'],['ti','Giro/torsión en carga'],['hi','Hiperextensión'],['gr','Gradual/sobrecarga'],['pq','Postquirúrgico']],'ini','CÓMO INTERPRETARLO: Giro/torsión en carga → mecanismo clásico de rotura de LCA (sin contacto) y menisco. Traumático directo → puede afectar LCM, LCL o rótula. Hiperextensión → LCA y cápsula posterior. Gradual → tendinopatía rotuliana, condromalacia o IT band. El mecanismo orienta qué estructuras valorar prioritariamente.'),
+    mkCampoInfo('Episodios previos',[['no','Primera vez'],['oc','Ocasionales'],['fr','Frecuentes'],['cr','Problema crónico recurrente']],'eprev','Los episodios previos frecuentes sugieren inestabilidad crónica (LCA insuficiente, menisco inestable) o problema mecánico no resuelto. En crónicos recurrentes valorar siempre biomecánica de cadera y tobillo como factor perpetuador.'),
+    mkCampoInfo('Dx previo',[['no','Sin dx'],['men','Menisco'],['lca','LCA'],['lcm','LCM/LCL'],['cond','Condromalacia'],['ten','Tendinopatía rotuliana'],['it','IT band'],['art','Gonartrosis']],'dx','CÓMO INTERPRETARLO: LCA → el tratamiento conservador es válido en <45 años si hay buena musculatura y no hay inestabilidad funcional. Menisco → la mayoría se trata conservadoramente — solo derivar si hay bloqueo real o fallo del conservador. Gonartrosis → el ejercicio es el tratamiento de elección, no el reposo.'),
+    mkCampoInfo('Cirugía',[['no','No'],['art','Artroscopia'],['lca_r','Rec. LCA'],['men_r','Meniscectomía'],['pro','Prótesis']],'cx','La cirugía previa modifica los objetivos. Rec. LCA → respetar tiempos biológicos del injerto (mínimo 9-12 meses para deporte de contacto). Meniscectomía → mayor riesgo de artrosis a largo plazo, trabajo de carga protegida. Prótesis → objetivos funcionales adaptados a la edad y actividad.'),
+    mkCampoInfo('Deporte',[['no','No practica'],['fut','Fútbol/rugby'],['ba','Baloncesto/voleibol'],['run','Running'],['ski','Esquí'],['ot','Otro']],'deporte','El deporte practicado define los objetivos de vuelta a la actividad y los gestos específicos a trabajar. Fútbol/rugby → mayor riesgo LCA. Running → mayor riesgo tendinopatía y IT band. Esquí → LCA y LCM frecuentes.'),
+    mkCampoInfo('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto','Si fisioterapia previa sin mejoría, explorar qué se trabajó. La infiltración con mejoría temporal confirma componente inflamatorio. El reposo prolongado genera atrofia de cuádriceps que perpetúa el problema.')
+  ]));
+  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);
+}
+function rS2(w){w.appendChild(mkNota('Patrón mecánico o inflamatorio? Inestabilidad real o subjetiva?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['eva','EVA actividad'],['eve','EVA escaleras']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkCampoInfo('Localización',[['ant','Anterior'],['med','Medial'],['lat','Lateral'],['pos','Posterior'],['dif','Difuso']],'loc','CÓMO EVALUARLO: Pide al paciente que señale con un dedo dónde le duele exactamente. CÓMO INTERPRETARLO: Anterior → síndrome femoropatelar, tendinopatía rotuliana o bursitis prerrotuliana. Medial → lesión de menisco interno, LCM o plica medial. Lateral → lesión de menisco externo, LCL o síndrome de la cinta iliotibial (IT band). Posterior → quiste de Baker, lesión de cápsula posterior o isquiotibiales. Difuso → gonartrosis, derrame articular o proceso inflamatorio generalizado.'),mkCampoInfo('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip','CÓMO INTERPRETARLO: Mecánico → empeora con la actividad y mejora con el reposo. Origen tendinoso, meniscal, ligamentoso o articular mecánico. Inflamatorio → dolor en reposo, rigidez matutina, derrame recurrente. Descartar artritis reumatoide, gota o artritis reactiva. Mixto → frecuente en gonartrosis moderada-avanzada con componente inflamatorio periódico.'),mkCampoInfo('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc','Dolor nocturno ocasional → puede ser mecánico por posición. Frecuente que despierta → descartar causa no mecánica: tumor óseo (en jóvenes), artritis inflamatoria, infección articular. Si se asocia a fiebre, calor local intenso o traumatismo reciente → derivar urgente.'),mkCampoInfo('Inflamación',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Derrame ⚠']],'infl','CÓMO EVALUARLO: Observa la rodilla comparando con la contralateral. Palpa la zona suprarrotuliana y los fondos de saco. Signo del choque rotuliano: comprime el fondo de saco suprarrotuliano con una mano y presiona la rótula con el índice — si rebota hay derrame. CÓMO INTERPRETARLO: Leve → inflamación reactiva local. Moderada → bursitis, sinovitis o lesión meniscal activa. Derrame significativo → posible rotura ligamentosa, fractura oculta o artritis — derivar si es hemartros agudo.'),mkCampoInfo('Inestabilidad',[['no','No'],['sub','Sensación subjetiva'],['ced','Cedimiento real']],'ines','CÓMO EVALUARLO: Pregunta si la rodilla "cede" o "se va" en alguna actividad concreta (bajar escaleras, girar, correr). Diferencia entre sensación (puede ser dolor inhibitorio) y cedimiento real (la rodilla realmente cede). CÓMO INTERPRETARLO: Sensación subjetiva → frecuentemente por inhibición del cuádriceps por dolor, no necesariamente lesión ligamentosa. Cedimiento real → alta sospecha de insuficiencia de LCA, rotura meniscal con fragmento o inestabilidad rotuliana. Confirmar con tests ortopédicos.'),mkCampoInfo('Bloqueo',[['no','No'],['ps','Pseudobloqueo (dolor)'],['re','Bloqueo real ⚠']],'bloq','CÓMO EVALUARLO: Pregunta si la rodilla se ha quedado bloqueada sin poder extenderse completamente, y si se desbloqueó sola o necesitó maniobra. CÓMO INTERPRETARLO: Pseudobloqueo → limitación por dolor o espasmo muscular, no hay impedimento mecánico real. Bloqueo real → fragmento meniscal desplazado (asa de cubo) o cuerpo libre intraarticular. El bloqueo real que no se resuelve es indicación de valoración quirúrgica urgente.')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);w.appendChild(mkCard('Agravantes/aliviantes','',[mkCk('AGRAVAN',[['ba','Bajar esc.'],['su','Subir esc.'],['cu','Cuclillas'],['co','Correr'],['gi','Giros'],['se','Sentado']],'agr'),mkCk('ALIVIAN',[['re','Reposo'],['fr','Frío'],['ca','Calor'],['ve','Vendaje'],['ai','AINEs']],'ali')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
+function rS3(w){
+  w.appendChild(mkNota('McMurray y Lachman consistentes con la historia?'));
+  w.appendChild(mkCard('Exploración','',[
+    mkCampoInfo('Flexión',[['com','Completa'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'flex','CÓMO EVALUARLO: Paciente en decúbito supino. Flexión activa máxima y luego pasiva. Normal: 130-150°. Mide con goniómetro o estimación visual comparando con el lado sano. CÓMO INTERPRETARLO: Limitación leve → inflamación activa o derrame que limita mecánicamente. Moderada → derrame importante, contractura capsular o lesión meniscal que genera dolor al comprimir. Severa → gonartrosis avanzada, cuerpo libre o proceso post-quirúrgico.'),
+    mkCampoInfo('Extensión',[['com','Completa 0°'],['dl','Déficit leve 5-10°'],['dm','Déficit mod >10° ⚠'],['re','Recurvatum']],'ext','CÓMO EVALUARLO: Paciente en decúbito supino con la pierna relajada. Normal: extensión completa a 0°. Intenta llevar la rodilla al máximo de extensión. Compara con el lado sano. CÓMO INTERPRETARLO: Déficit leve → frecuente post-lesión por espasmo/dolor. Déficit moderado >10° → alta sospecha de rotura meniscal en asa de cubo o cuerpo libre — puede necesitar valoración quirúrgica. Recurvatum (hiperextensión) → laxitud ligamentosa o lesión de cápsula posterior.'),
+    mkCampoInfo('Fuerza cuádriceps',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit moderado'],['se','Déficit severo']],'fcuad','CÓMO EVALUARLO: Paciente sentado con la rodilla a 90°. Resistencia a la extensión de rodilla. Compara ambos lados con la misma fuerza. También observa atrofia del vasto medial (VMO) visualmente. CÓMO INTERPRETARLO: El déficit de cuádriceps es el factor pronóstico más importante en casi todas las patologías de rodilla. Déficit leve → inhibición por dolor. Déficit moderado-severo → atrofia real que requiere trabajo específico. Sin cuádriceps no hay recuperación funcional.'),
+    mkCampoInfo('Propiocepción',[['nor','Normal'],['le','Alterado leve'],['mo','Moderado'],['np','No valorado']],'prop','CÓMO EVALUARLO: Test de apoyo monopodal con ojos abiertos y cerrados. Normal: mantiene >30 segundos sin oscilaciones. Compara ambas piernas. También se puede valorar sobre superficie inestable. CÓMO INTERPRETARLO: Alteración propioceptiva → casi universal en lesiones ligamentosas y meniscales. Es un factor de riesgo de recaída. La recuperación propioceptiva es imprescindible para la vuelta al deporte.'),
+    mkCampoInfo('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim','CÓMO EVALUARLO: Pregunta qué actividades no puede hacer: subir/bajar escaleras, ponerse en cuclillas, correr, deporte específico. CÓMO INTERPRETARLO: La limitación funcional orienta los objetivos y el tiempo estimado de recuperación.'),
+    mkCampoInfo('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['mov','Movilidad completa'],['cx','Evitar cirugía'],['pq','Postquirúrgico']],'obj','El objetivo del paciente define el plan. Deporte → tiempo de recuperación más largo, trabajo de fuerza y propiocepción prioritarios. Evitar cirugía → valorar si es candidato a tratamiento conservador completo.')
+  ]));
+
+  // Palpación
+  const palp=ce('div','card');palp.style.marginTop='12px';
+  palp.innerHTML='<div class="ct">Palpación</div>';
+  const gpalp=ce('div','');gpalp.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px';
+  [
+    mkCampoInfo('Interlínea interna',[['no','Sin dolor'],['le','Sensible'],['pos','Doloroso']],'palp_int','CÓMO EVALUARLO: Palpa la interlínea articular medial con la rodilla a 90° de flexión. Desliza el dedo a lo largo de la interlínea. CÓMO INTERPRETARLO: Dolor en interlínea medial → signo más sensible de lesión de menisco interno. Combinar con McMurray medial para aumentar la especificidad.'),
+    mkCampoInfo('Interlínea externa',[['no','Sin dolor'],['le','Sensible'],['pos','Doloroso']],'palp_ext','CÓMO EVALUARLO: Palpa la interlínea articular lateral con la rodilla a 90° de flexión. CÓMO INTERPRETARLO: Dolor en interlínea lateral → sospecha de lesión de menisco externo. El menisco externo es más móvil y se lesiona menos frecuentemente que el interno.'),
+    mkCampoInfo('Tendón rotuliano',[['no','Sin dolor'],['le','Sensible'],['pos','Doloroso']],'palp_rot','CÓMO EVALUARLO: Palpa el tendón rotuliano desde el polo inferior de la rótula hasta la tuberosidad tibial anterior. Presión directa sobre el tendón. CÓMO INTERPRETARLO: Dolor en polo inferior de rótula → tendinopatía rotuliana (rodilla del saltador). Dolor en tuberosidad tibial → enfermedad de Osgood-Schlatter en adolescentes.'),
+    mkCampoInfo('LCM / LCL',[['no','Sin dolor'],['le','Sensible'],['pos','Doloroso']],'palp_col','CÓMO EVALUARLO: Palpa el LCM en la cara medial y el LCL en la cara lateral. El LCM va del cóndilo femoral medial al platillo tibial medial. El LCL va del cóndilo femoral lateral a la cabeza del peroné. CÓMO INTERPRETARLO: Dolor a la palpación del ligamento + estrés en valgo/varo positivo = lesión ligamentosa confirmada. Grado 1-2 → tratamiento conservador. Grado 3 (inestabilidad completa) → valoración ortopédica.')
+  ].forEach(f=>gpalp.appendChild(f));
+  palp.appendChild(gpalp);
+  w.appendChild(palp);
+
+  // Ortho tests
+  const tc=ce('div','card');tc.style.marginTop='12px';
+  tc.innerHTML='<div class="ct">Tests ortopédicos</div>';
+
+  const sec1=ce('p','');sec1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';sec1.textContent='Ligamentos';
+  tc.appendChild(sec1);
+
+  tc.appendChild(mkTestOrtopedico('lach','Test de Lachman',null,
+    'Paciente en decúbito supino con la rodilla a 15-30° de flexión. Una mano estabiliza el fémur y la otra desplaza la tibia hacia anterior.',
+    'Desplazamiento anterior de la tibia con final de movimiento blando o sin tope firme. Indica lesión del LCA. Grado I (<5mm), II (5-10mm), III (>10mm, sin tope).',
+    'No hay desplazamiento o hay tope firme. El LCA está probablemente íntegro.',
+    'Test de Cajón Anterior y Test de Cambio de Pivote. Lachman es el más sensible y específico para LCA — si es positivo, alta confianza en el diagnóstico.',
+    'alta'));
+
+  tc.appendChild(mkTestOrtopedico('est_valgo','Test de estrés en valgo (LCM)',null,
+    'Paciente en decúbito supino. Una mano en la cara lateral de la rodilla y la otra en el tobillo. Aplicar fuerza en valgo (llevar la tibia hacia fuera) a 0° y a 30° de flexión.',
+    'Apertura del compartimento interno (bostezo articular) con o sin dolor. A 30° indica lesión aislada del LCM. A 0° indica también afectación capsular o LCA.',
+    'No hay bostezo ni dolor. El LCM está íntegro.',
+    'Palpación del LCM y test de estrés en varo para valorar el lado contralateral. Si hay bostezo a 0° → sospecha de lesión combinada.',
+    'media'));
+
+  const sec2=ce('p','');sec2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec2.textContent='Meniscos';
+  tc.appendChild(sec2);
+
+  tc.appendChild(mkTestOrtopedico('mcm','Test de McMurray',null,
+    'Paciente en decúbito supino con rodilla y cadera completamente flexionadas. Sujeta la rodilla y el pie. Rotación externa del muslo + extensión hasta 90° para menisco interno. Rotación interna + extensión para menisco externo.',
+    'Dolor o chasquido durante la maniobra. Dolor en rotación externa → menisco interno. Dolor en rotación interna → menisco externo. Chasquido en flexión máxima → lesión del asta posterior.',
+    'Sin dolor ni chasquido. No descarta completamente lesión meniscal pero reduce la probabilidad.',
+    'Palpación de interlínea articular y Test de Apley. La combinación McMurray positivo + dolor en interlínea + historia de torsión = alta sospecha de rotura meniscal.',
+    'media'));
+
+  tc.appendChild(mkTestOrtopedico('apley','Test de Apley',null,
+    'Paciente en decúbito prono con rodilla a 90°. Fija el muslo con tu rodilla sobre su cara posterior. Comprime el pie hacia abajo mientras rotas en ambos sentidos.',
+    'Dolor con compresión y rotación en el compartimento correspondiente. Diferencia con el test de distracción (que alivia si es ligamentoso): si duele más con compresión → menisco.',
+    'Sin dolor con compresión. Si hay dolor con distracción pero no con compresión → origen ligamentoso, no meniscal.',
+    'Test de McMurray y palpación de interlínea. Apley permite diferenciar entre origen meniscal (compresión) y ligamentoso (distracción) en el mismo test.',
+    'media'));
+
+  const sec3=ce('p','');sec3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec3.textContent='Patelofemoral';
+  tc.appendChild(sec3);
+
+  tc.appendChild(mkTestOrtopedico('clarke','Signo de Clarke',null,
+    'Paciente en decúbito supino con rodilla extendida y cuádriceps relajado. Desplaza la rótula en sentido caudal con la primera comisura. Mantén la presión y pide una contracción del cuádriceps.',
+    'Dolor retrorrotuliano o incapacidad para completar la contracción. Indica síndrome femoropatelar o condromalacia rotuliana. Repetir a 30°, 60° y 90°.',
+    'Contracción completa sin dolor. No hay alteración condral femoropatelar significativa.',
+    'Test de inclinación rotuliana y Test Glide. Clarke es útil pero poco específico — combinar con la clínica (dolor anterior al subir escaleras, al sentarse mucho tiempo).',
+    'media'));
+
+  w.appendChild(tc);
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');
+  ta.placeholder='Añade cualquier observación clínica relevante antes de generar el informe...';
+  ta.style.cssText='width:100%;min-height:80px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_rodilla=ta.value;};
+  obs.appendChild(ta);
+  w.appendChild(obs);
+
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);
+}
+function rSZ(w){
+  const flags=[];
+
+  if(D.bloq==='re') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Bloqueo articular real',
+    desc:'La rodilla está bloqueada sin poder extenderse completamente por un impedimento mecánico — probable rotura meniscal en asa de cubo o cuerpo libre intraarticular.',
+    accion:'Derivar a traumatología para valoración quirúrgica. El bloqueo real que no se resuelve espontáneamente es indicación de artroscopia.'
+  });
+
+  if(D.lach==='piii') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Lachman grado III — inestabilidad severa de LCA',
+    desc:'Un Lachman grado III indica rotura completa del LCA con inestabilidad funcional severa.',
+    accion:'Derivar a traumatología. En paciente joven deportista valorar reconstrucción quirúrgica. En sedentario >45 años puede plantearse tratamiento conservador si no hay inestabilidad funcional.'
+  });
+
+  if(D.infl==='se') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Derrame articular importante',
+    desc:'Un derrame significativo agudo puede indicar hemartros por rotura ligamentosa completa, fractura oculta o lesión meniscal grave.',
+    accion:'Si el derrame es agudo y el paciente no puede cargar peso, derivar urgente para descartar fractura. Si es hemartros → valoración ortopédica.'
+  });
+
+  if(D.ext==='dm') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Déficit de extensión moderado',
+    desc:'Un déficit de extensión >10° puede indicar rotura meniscal en asa de cubo con fragmento que impide la extensión completa.',
+    accion:'Si el déficit de extensión no mejora en 2-3 semanas con tratamiento conservador, derivar para valoración de imagen (RMN).'
+  });
+
+  if(D.ines==='ced') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Cedimiento real de rodilla',
+    desc:'El cedimiento funcional real indica inestabilidad articular — posible insuficiencia de LCA, inestabilidad rotuliana o rotura meniscal con fragmento inestable.',
+    accion:'Valorar con Lachman y tests de inestabilidad rotuliana. Si hay inestabilidad confirmada en paciente joven activo, valorar derivación para imagen.'
+  });
+
+  if(flags.length>0){
+    const flagCard=ce('div','card');
+    flagCard.style.cssText='border:1.5px solid #e74c3c;background:#fff8f7;margin-bottom:12px';
+    const fTitle=ce('div','');
+    fTitle.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px';
+    fTitle.innerHTML='<span style="font-size:18px">⚠️</span><span style="font-size:13px;font-weight:700;color:#c0392b;text-transform:uppercase;letter-spacing:.05em">'+flags.length+' señal'+(flags.length>1?'es':'')+' de alerta detectada'+(flags.length>1?'s':'')+'</span>';
+    flagCard.appendChild(fTitle);
+    flags.forEach(f=>{
+      const item=ce('div','');
+      item.style.cssText=`background:${f.bg};border:1px solid ${f.color}40;border-radius:8px;padding:10px 12px;margin-bottom:8px`;
+      item.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${f.color};color:#fff;letter-spacing:.05em">${f.nivel}</span><span style="font-size:12px;font-weight:600;color:${f.color}">${f.titulo}</span></div><p style="font-size:12px;color:#555;line-height:1.6;margin-bottom:6px">${f.desc}</p><div style="display:flex;align-items:flex-start;gap:6px"><span style="font-size:11px;font-weight:700;color:${f.color};white-space:nowrap">Qué hacer:</span><span style="font-size:12px;color:#333;line-height:1.5">${f.accion}</span></div>`;
+      flagCard.appendChild(item);
+    });
+    w.appendChild(flagCard);
+  }
+
+  renderInformeHub(w,'rodilla',gFR(),gFRF(),getFase(D.evr,D.eva));
+}
 
 // FASCITIS
 function fS1(w){w.appendChild(mkNota('Qué cambió antes del dolor? Carga, calzado, trabajo, peso...'));w.appendChild(mkCard('Historia','',[mkSel('Pie',[['d','Pie derecho'],['i','Pie izquierdo'],['b','Ambos']],'pie'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Desencadenante',[['gr','Gradual'],['ac','Aumento carga'],['cal','Cambio calzado'],['pe','Aumento peso'],['bip','Bipedestación'],['tr','Cambio trabajo']],'ini'),mkSel('Calzado',[['sop','Con soporte'],['min','Minimalista'],['zap','Zapato trabajo'],['pla','Plano sin soporte'],['tac','Tacón >3cm'],['des','Descalzo en casa']],'cal'),mkSel('Episodios',[['pri','Primer ep.'],['mis','Recaída mismo pie'],['con','Pie contralateral'],['tto','Recaída tras tto']],'epi'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['pla','Plantillas'],['inf','Infiltración'],['ond','Ondas de choque']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
