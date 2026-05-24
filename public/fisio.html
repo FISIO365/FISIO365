@@ -446,16 +446,14 @@ function aplicarRole(){
   // Mapeo: nombre del acceso en Airtable -> id del botón en sidebar
   // acc_programas -> sb-prog, acc_anamnesis -> sb-anam, etc.
   const mapaIds = {
-    'programas':    'sb-prog',
-    'anamnesis':    'sb-anam',
-    'informes':     'sb-inf',
-    'wikifisio':    'sb-school',
-    'school':       'sb-school',
-    'school':       'sb-school',
-    'checklist':    'sb-checklist',
-    'tareas':       'sb-tareas',
+    'programas':      'sb-prog',
+    'anamnesis':      'sb-anam',
+    'informes':       'sb-inf',
+    'school':         'sb-school',
+    'checklist':      'sb-checklist',
+    'tareas':         'sb-tareas',
     'comunicaciones': 'sb-comunicaciones',
-    'vacaciones':   'sb-vacaciones'
+    'vacaciones':     'sb-vacaciones'
   };
 
   const accesos = fisioActual.accesos || {};
