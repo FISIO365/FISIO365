@@ -1871,7 +1871,10 @@ function editarInforme(id,todos){
   const bPdf=ce('button','btn btn-g');bPdf.style.cssText='flex:1;padding:13px;background:var(--lila);border-color:var(--lila)';
   bPdf.innerHTML='Exportar PDF';
   bPdf.onclick=()=>descargarPDF(inf.pacienteNombre,ta.value,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'');
-  br.appendChild(bSave);br.appendChild(bPdf);wrap.appendChild(br);
+  const bSend2=ce('button','btn btn-g');bSend2.style.cssText='flex:1;padding:13px;background:#34a853';
+  bSend2.innerHTML='📧 Enviar a recepción';
+  bSend2.onclick=()=>enviarRecepcion(inf.pacienteNombre,ta.value,inf.fecha||'',inf.fisioNombre||'');
+  br.appendChild(bSave);br.appendChild(bPdf);br.appendChild(bSend2);wrap.appendChild(br);
 }
 
 function guardarInformeLocal(pacNom,pacId,fisioNom,tipo,informe){
@@ -1911,9 +1914,11 @@ function renderInformes(wrap){
       bEdit.onclick=()=>editarInforme(inf.id,todos);
       const bPdf=ce('button','inf-btn');bPdf.innerHTML='PDF';bPdf.style.cssText='border-color:var(--lila);color:var(--lila)';
       bPdf.onclick=()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'');
+      const bSend=ce('button','inf-btn');bSend.innerHTML='📧 Recepción';bSend.style.cssText='border-color:#34a853;color:#34a853';
+      bSend.onclick=()=>enviarRecepcion(inf.pacienteNombre,inf.informe,inf.fecha||'',inf.fisioNombre||'');
       const bDel=ce('button','inf-btn');bDel.innerHTML='Borrar';bDel.style.cssText='border-color:#fca5a5;color:#b91c1c;padding:7px 10px';
       bDel.onclick=()=>borrarInforme(inf.id);
-      btns.appendChild(bEdit);btns.appendChild(bPdf);btns.appendChild(bDel);
+      btns.appendChild(bEdit);btns.appendChild(bPdf);btns.appendChild(bSend);btns.appendChild(bDel);
       c.appendChild(btns);lista.appendChild(c);
     });
   };
@@ -2181,6 +2186,23 @@ async function marcarProgreso(seccion){
       // Volver a abrir la ruta para mantener contexto visual
     }
   }catch(e){ toast('Error al guardar progreso', false); }
+}
+
+
+function enviarRecepcion(pacNom, informe, fecha, fisioNom){
+  const asunto = encodeURIComponent(`🖨️ Nuevo informe para imprimir — ${pacNom}`);
+  const cuerpo = encodeURIComponent(
+    `Hola,\n\nHay un nuevo informe listo para imprimir y entregar al paciente.\n\n` +
+    `Paciente: ${pacNom}\n` +
+    `Fisioterapeuta: ${fisioNom}\n` +
+    `Fecha: ${fecha}\n\n` +
+    `────────────────────────────────\n\n` +
+    `${informe}\n\n` +
+    `────────────────────────────────\n\n` +
+    `Por favor, imprímelo y tenlo listo para cuando el paciente pase por recepción.\n\n` +
+    `FISIO365`
+  );
+  window.open(`mailto:fisio365gestion@gmail.com?subject=${asunto}&body=${cuerpo}`, '_blank');
 }
 
 // LIGHTBOX
