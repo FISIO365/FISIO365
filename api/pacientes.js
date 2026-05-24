@@ -60,59 +60,6 @@ export default async function handler(req) {
     }
   }
 
-  // ── GUARDAR INFORME ──────────────────────────────────────────────────────
-  if (action === 'guardar-informe' && req.method === 'POST') {
-    const { pacienteNombre, pacienteId, fisioNombre, protocolo, informe } = body;
-    try {
-      const fecha = new Date().toISOString().split('T')[0];
-      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ records: [{ fields: {
-          PacienteNombre: pacienteNombre || '',
-          FisioNombre: fisioNombre || '',
-          FechaValoracion: fecha,
-          InformeGenerado: informe || '',
-          Protocolo: protocolo || 'hernia'
-        }}]})
-      });
-      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
-    } catch(e) {
-      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
-    }
-  }
-
-  // ── ACTUALIZAR INFORME ───────────────────────────────────────────────────
-  if (action === 'actualizar-informe' && req.method === 'POST') {
-    const { id, informe } = body;
-    if (!id) return new Response(JSON.stringify({ ok: false, error: 'Falta id' }), { status: 400, headers: corsHeaders });
-    try {
-      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}/${id}`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: { InformeGenerado: informe || '' } })
-      });
-      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
-    } catch(e) {
-      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
-    }
-  }
-
-  // ── BORRAR INFORME ───────────────────────────────────────────────────────
-  if (action === 'borrar-informe' && req.method === 'POST') {
-    const { id } = body;
-    if (!id) return new Response(JSON.stringify({ ok: false, error: 'Falta id' }), { status: 400, headers: corsHeaders });
-    try {
-      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-      });
-      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
-    } catch(e) {
-      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
-    }
-  }
-
   // ── GENERAR INFORME IA ───────────────────────────────────────────────────
   if (action === 'informe' && req.method === 'POST') {
     try {
@@ -121,16 +68,20 @@ export default async function handler(req) {
       const d = datos || {};
       const tipo = d.tipo || 'hernia';
       const fa = arr => (!arr || !arr.length) ? '-' : arr.join(', ');
+      // Only include fields that have real values (not '-' or empty)
       const fc = (label, val) => (val && val !== '-' && val !== '--') ? `${label}: ${val}` : '';
       const fca = (label, arr) => (arr && arr.length) ? `${label}: ${fa(arr)}` : '';
       const compact = (...fields) => fields.filter(Boolean).join(' | ') || '-';
       const fecha = new Date().toLocaleDateString('es-ES');
 
+      // Datos comunes
       const cabecera = `Fisioterapeuta: ${fisioNombre||'-'}${colNum?' | '+colNum:''} | Fecha: ${fecha}
 Paciente: ${pacienteNombre||'-'} | Edad: ${d.edad||'-'} años | Actividad: ${d.act||'-'} | Ocupación: ${d.ocu||'-'}
 IMC: ${d.peso && d.talla ? (d.peso/Math.pow(d.talla/100,2)).toFixed(1) : '-'}`;
 
+      // Prompts específicos por protocolo
       const prompts = {
+
         rodilla: `Eres fisioterapeuta experto en rodilla. Redacta un informe de valoración fisioterapéutica de RODILLA. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
 ${cabecera}
 LESIÓN: Rodilla ${d.lado||'-'} | Evolución: ${d.evol||'-'} | Inicio: ${d.ini||'-'} | Diagnóstico previo: ${d.dx||'-'} | Cirugía: ${d.cx||'-'}
@@ -139,6 +90,7 @@ EXPLORACIÓN: Flexión: ${d.flex||'-'} | Extensión: ${d.ext||'-'} | McMurray: $
 FACTORES IDENTIFICADOS: ${fa(d.factores)}
 FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
 ${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
 Redacta el informe con estas secciones EXACTAS (sin añadir ni quitar):
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
@@ -148,6 +100,7 @@ PLAN DE TRATAMIENTO
 RECOMENDACIONES PARA EL PACIENTE
 PRONÓSTICO
 ${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
+
 NO incluyas ninguna sección de análisis neurológico ni raíces nerviosas — esta es una valoración de rodilla, no de columna.`,
 
         fascitis: `Eres fisioterapeuta experto en pie y tobillo. Redacta un informe de valoración fisioterapéutica de FASCITIS PLANTAR. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
@@ -158,6 +111,7 @@ EXPLORACIÓN: Tipo de pie: ${d.tpie||'-'} | Dorsiflexión tobillo: ${d.dors||'-'
 FACTORES IDENTIFICADOS: ${fa(d.factores)}
 FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
 ${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
 Redacta el informe con estas secciones EXACTAS:
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
@@ -168,6 +122,7 @@ PLAN DE TRATAMIENTO
 RECOMENDACIONES PARA EL PACIENTE
 PRONÓSTICO
 ${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
+
 NO incluyas ninguna sección neurológica ni de columna — esta es una valoración de pie.`,
 
         cervical: `Eres fisioterapeuta experto en columna cervical. Redacta un informe de valoración fisioterapéutica CERVICAL. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos. NO menciones técnicas ni ejercicios — solo qué hay, qué conseguir y qué tener en cuenta.
@@ -181,6 +136,7 @@ ${compact(fc('Flex-ext',d.mfx),fc('Rotación',d.mro),fc('Flex.prof',d.ffp),fc('F
 ${compact(fca('Factores',d.factores),fc('Limitación',d.lim),fc('Objetivo',d.obj))}
 ${d.obs_cervical ? 'Obs: ' + d.obs_cervical : ''}
 ${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
 Redacta el informe con estas secciones EXACTAS en este orden:
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
@@ -201,6 +157,7 @@ EXPLORACIÓN: Abducción: ${d.abd||'-'} | Rot. externa: ${d.rex||'-'} | Rot. int
 FACTORES IDENTIFICADOS: ${fa(d.factores)}
 FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
 ${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
 Redacta el informe con estas secciones EXACTAS:
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
@@ -210,6 +167,7 @@ PLAN DE TRATAMIENTO
 RECOMENDACIONES PARA EL PACIENTE
 PRONÓSTICO
 ${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
+
 NO incluyas secciones de análisis neurológico de columna.`,
 
         tobillo: `Eres fisioterapeuta experto en tobillo y pie. Redacta un informe de valoración fisioterapéutica de TOBILLO. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
@@ -220,6 +178,7 @@ EXPLORACIÓN: Cajón anterior: ${d.caj||'-'} | Inversión forzada: ${d.invf||'-'
 FACTORES IDENTIFICADOS: ${fa(d.factores)}
 FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
 ${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
 Redacta el informe con estas secciones EXACTAS:
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
@@ -229,6 +188,7 @@ PLAN DE TRATAMIENTO
 RECOMENDACIONES PARA EL PACIENTE
 PRONÓSTICO
 ${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
+
 NO incluyas análisis neurológico de columna.`,
 
         cadera: `Eres fisioterapeuta experto en cadera. Redacta un informe de valoración fisioterapéutica de CADERA. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
@@ -239,6 +199,7 @@ EXPLORACIÓN: Flexión cadera: ${d.flex||'-'} | Rotación interna: ${d.roti||'-'
 FACTORES IDENTIFICADOS: ${fa(d.factores)}
 FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
 ${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
 Redacta el informe con estas secciones EXACTAS:
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
@@ -248,6 +209,7 @@ PLAN DE TRATAMIENTO
 RECOMENDACIONES PARA EL PACIENTE
 PRONÓSTICO
 ${d.flags && d.flags.length ? 'ALERTAS IMPORTANTES' : ''}
+
 NO incluyas análisis neurológico de columna lumbar.`,
 
         codo: `Eres fisioterapeuta experto en codo y extremidad superior. Redacta un informe de valoración fisioterapéutica de CODO. Términos técnicos explicados entre paréntesis. Sin markdown, secciones en MAYÚSCULAS, en párrafos.
@@ -258,6 +220,7 @@ EXPLORACIÓN: Test Cozen: ${d.cozen||'-'} | Test Mill: ${d.mill||'-'} | Test Gol
 FACTORES IDENTIFICADOS: ${fa(d.factores)}
 FASE: ${d.fase||'-'} | Limitación: ${d.lim||'-'} | Objetivo: ${d.obj||'-'}
 ${d.flags && d.flags.length ? 'RED FLAGS: ' + fa(d.flags) : ''}
+
 Redacta el informe con estas secciones EXACTAS:
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
@@ -282,6 +245,7 @@ FUERZA: L4 dorsiflexión D/I: ${d.fuerzaL4D||'-'}/${d.fuerzaL4I||'-'} | L5 ext.h
 CLASIFICACIÓN: ${fa(d.presentacionDominante)} | Irritabilidad: ${d.irritabilidad||'-'} | Estado: ${d.estadoFuncional||'-'}
 Diagnóstico fisio: ${d.diagnosticoFisio||'-'} | Plan: ${d.terapiaManual||'-'} | Conclusión: ${d.conclusion||'-'}
 ${d.banderas && d.banderas.length ? 'BANDERAS ROJAS: ' + fa(d.banderas) : ''}
+
 Redacta el informe con estas secciones EXACTAS:
 PRESENTACIÓN DEL CASO
 HALLAZGOS DE LA EXPLORACIÓN FÍSICA
@@ -324,6 +288,7 @@ ${d.banderas && d.banderas.length ? 'ALERTAS IMPORTANTES' : ''}`
       return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
     }
   }
+
 
   // ── GET PACIENTES ────────────────────────────────────────────────────────
   if (req.method === 'GET' && !action) {
