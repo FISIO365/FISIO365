@@ -277,6 +277,9 @@ input[type=number]{text-align:center}
 .wiki-completado-btn.hecho{background:#e8f5e9;color:#2e7d32;cursor:default}
 .wiki-badge-hecho{display:inline-flex;align-items:center;gap:6px;background:#e8f5e9;color:#2e7d32;font-size:12px;font-weight:600;padding:4px 12px;border-radius:99px;margin-left:10px}
 .wiki-ruta-card .wiki-badge-hecho{margin-left:0;margin-top:8px;display:inline-flex}
+
+/* SCHOOL ETIQUETAS */
+.school-etiqueta{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;margin-bottom:8px;background:var(--lila-light);color:var(--lila)}
 </style>
 </head>
 <body>
@@ -318,8 +321,8 @@ input[type=number]{text-align:center}
         <div class="sb-item" id="sb-inf" onclick="showSection('inf')">
           Informes
         </div>
-        <div class="sb-item" id="sb-wiki" onclick="showSection('wiki')" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px">
-          WIKIFISIO
+        <div class="sb-item" id="sb-school" onclick="showSection('school')" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px">
+          School
         </div>
       </div>
       <div class="sb-footer" id="sb-user">Panel fisioterapeuta</div>
@@ -362,7 +365,7 @@ const TOPBAR = {
   prog: ['Programas','Asigna ejercicios a tus pacientes'],
   anam: ['Anamnesis clínica','Valoración y protocolos clínicos'],
   inf:  ['Informes','Historial de informes generados'],
-  wiki: ['WIKIFISIO','Selecciona una ruta del paciente']
+  school: ['School','Formación y protocolos del equipo']
 };
 
 const CFG = {
@@ -446,7 +449,8 @@ function aplicarRole(){
     'programas':    'sb-prog',
     'anamnesis':    'sb-anam',
     'informes':     'sb-inf',
-    'wikifisio':    'sb-wiki',
+    'wikifisio':    'sb-school',
+    'school':       'sb-school',
     'school':       'sb-school',
     'checklist':    'sb-checklist',
     'tareas':       'sb-tareas',
@@ -494,7 +498,7 @@ async function loadBiblio(){
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function showSection(sec){
-  ['prog','anam','inf','wiki'].forEach(s=>{
+  ['prog','anam','inf','school'].forEach(s=>{
     $(`sb-${s}`).classList.toggle('active', s===sec);
   });
   const [t,s] = TOPBAR[sec];
@@ -505,7 +509,7 @@ function showSection(sec){
   if(sec==='prog') renderProg(wrap);
   else if(sec==='anam') renderAnamHub(wrap);
   else if(sec==='inf') renderInformes(wrap);
-  else if(sec==='wiki') renderWiki(wrap);
+  else if(sec==='school') renderWiki(wrap);
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
@@ -1937,6 +1941,7 @@ const WIKI_RUTAS = [
     id: 'primera',
     titulo: 'Ruta primera visita',
     desc: 'Del primer contacto hasta que el paciente sale con su plan',
+    etiqueta: 'Todo el equipo',
     pasos: 16,
     emoji: '',
     imgs: WIKI_IMGS,
@@ -1946,6 +1951,7 @@ const WIKI_RUTAS = [
     id: 'ultima',
     titulo: 'Ruta última visita',
     desc: 'Cierre del proceso terapéutico y alta del paciente',
+    etiqueta: 'Todo el equipo',
     pasos: 0,
     emoji: '',
     imgs: [],
@@ -1959,7 +1965,7 @@ function renderWiki(wrap){
   const outer = ce('div','wiki-outer');
 
   const hdr = ce('div','wiki-header');
-  hdr.innerHTML = '<h2>WIKIFISIO</h2><p>Selecciona una ruta para ver el protocolo</p>';
+  hdr.innerHTML = '<h2>SCHOOL</h2><p>Selecciona una ruta o formación</p>';
   outer.appendChild(hdr);
 
   const grid = ce('div','wiki-hub-grid');
@@ -1967,7 +1973,9 @@ function renderWiki(wrap){
     const card = ce('div', ruta.pasos > 0 ? 'wiki-ruta-card' : 'wiki-ruta-card wiki-ruta-soon');
     const secKey = 'wiki_' + ruta.id;
     const completada = progresoFisio[secKey]?.estado === 'completado';
-    card.innerHTML = `<div class="wiki-ruta-titulo">${ruta.titulo}</div>
+    card.innerHTML = `
+      <div class="school-etiqueta">${ruta.etiqueta||''}</div>
+      <div class="wiki-ruta-titulo">${ruta.titulo}</div>
       <div class="wiki-ruta-desc">${ruta.desc}</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
         <div class="wiki-ruta-meta">${ruta.pasos > 0 ? ruta.pasos + ' pasos' : 'Próximamente'}</div>
