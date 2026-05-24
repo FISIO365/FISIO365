@@ -408,6 +408,7 @@ async function doLogin(){
       window.scrollTo({top:0,behavior:'instant'});
       await Promise.all([loadPacientes(),loadFisios(),loadBiblio()]);
       aplicarRole();
+      iniciarAutoUpdate();
       showSection('prog');
     } else {
       $('loginErr').textContent=d.error||'Datos incorrectos';
@@ -2035,6 +2036,64 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight') wGo(wIdx+1);
   if(e.key==='ArrowLeft') wGo(wIdx-1);
 });
+
+
+// ── AUTO-UPDATE ───────────────────────────────────────────────────────────────
+const VERCEL_PROJECT = 'fisio365';
+const VERCEL_TEAM = 'fisio365s-projects';
+let lastDeployId = null;
+let lastAccesos = null;
+
+// Comprobar versión de deploy cada 2 minutos
+async function checkDeploy(){
+  try{
+    const r = await fetch(`https://api.vercel.com/v6/deployments?projectId=${VERCEL_PROJECT}&teamId=${VERCEL_TEAM}&limit=1&state=READY`, {cache:'no-store'});
+    const d = await r.json();
+    const latest = d.deployments?.[0];
+    if(!latest) return;
+    if(lastDeployId === null){
+      lastDeployId = latest.uid;
+    } else if(latest.uid !== lastDeployId){
+      // Hay deploy nuevo — recargar silenciosamente
+      console.log('Nueva versión detectada, recargando...');
+      window.location.reload();
+    }
+  }catch(e){}
+}
+
+// Comprobar permisos en Airtable cada 5 minutos
+async function checkPermisos(){
+  if(!fisioActual) return;
+  try{
+    const r = await fetch('/api/fisios', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({nombre: fisioActual.nombre, password: pwd})
+    });
+    const d = await r.json();
+    if(!d.ok) return;
+    const nuevosAccesos = JSON.stringify(d.fisio.accesos);
+    if(lastAccesos === null){
+      lastAccesos = nuevosAccesos;
+    } else if(nuevosAccesos !== lastAccesos){
+      // Permisos cambiaron — actualizar sidebar sin recargar
+      lastAccesos = nuevosAccesos;
+      fisioActual.accesos = d.fisio.accesos;
+      aplicarRole();
+      toast('Permisos actualizados', true);
+    }
+  }catch(e){}
+}
+
+// Arrancar los timers cuando el fisio está logueado
+function iniciarAutoUpdate(){
+  lastDeployId = null;
+  lastAccesos = null;
+  checkDeploy();
+  checkPermisos();
+  setInterval(checkDeploy, 2 * 60 * 1000);    // cada 2 min
+  setInterval(checkPermisos, 5 * 60 * 1000);  // cada 5 min
+}
 
 // LIGHTBOX
 function verImg(url,label){
