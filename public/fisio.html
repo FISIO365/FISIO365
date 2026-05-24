@@ -1499,10 +1499,150 @@ function hSZ(w){
 }
 
 // TOBILLO
-function tS1(w){w.appendChild(mkNota('Inversión traumática, inestabilidad crónica o tendinopatía por sobrecarga?'));w.appendChild(mkCard('Historia','',[mkSel('Tobillo',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Mecanismo',[['inv','Inversión (esguince lateral)'],['eve','Eversión (esguince medial)'],['sob','Sobrecarga tendones'],['trd','Traumático directo'],['gr','Gradual']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['esl','Esguince lateral'],['esm','Esguince medial'],['ic','Inestabilidad crónica'],['aq','Tendinopatía aquílea'],['per','Tendinopatía peroneos'],['fra','Fractura (descartar)']],'dx'),mkSel('Esguinces previos',[['no','No, primer ep.'],['res','Sí, resuelto'],['rec','Sí, recurrente']],'eprev'),mkSel('Tto previo',[['no','Ninguno'],['inm','Inmovilización'],['fis','Fisioterapia'],['inf','Infiltración'],['cx','Cirugía']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
-function tS2(w){w.appendChild(mkNota('Dolor mecánico con la carga o inflamatorio? Cedimiento real o solo miedo a torcer?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evc','EVA en carga'],['evd','EVA deporte']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['la','Lateral — peroneos'],['me','Medial — deltoideo'],['an','Anterior — impingement'],['po','Posterior — Aquiles'],['di','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Inflamación',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa/hematoma']],'infl'),mkSel('Inestabilidad',[['no','No'],['sen','Sensación'],['ced','Cedimiento real']],'ines'),mkSel('Crepitación',[['no','No'],['sd','Sí sin dolor'],['cd','Sí con dolor']],'crep')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function tS3(w){w.appendChild(mkNota('Tests ligamentosos consistentes? La propiocepción es el factor pronóstico más importante.'));w.appendChild(mkCard('Exploración','',[mkSel('Cajón anterior',[['no','No realiz.'],['neg','Negativo'],['ple','Positivo leve'],['pmo','Positivo mod'],['pse','Positivo severo ⚠']],'caj'),mkSel('Inversión forzada',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — laxitud LCF']],'invf'),mkSel('Dorsiflexión',[['nor','Normal ≥10°'],['le','Leve 5–9°'],['mo','Moderada 0–4°'],['se','Severa <0°']],'dors'),mkSel('Thompson (Aquiles)',[['no','No realiz.'],['neg','Negativo — íntegro'],['pos','Positivo ⚠ — posible rotura']],'thom'),mkSel('Palpación peroneos',[['nor','Sin hallazgos'],['sen','Sensible'],['eng','Engrosado']],'palp'),mkSel('Palpación Aquiles',[['nor','Sin hallazgos'],['sen','Sensible'],['eng','Engrosado']],'pala'),mkSel('Heel raise',[['nor','≥25 rep'],['re','10–24 rep'],['mr','<10 rep'],['im','No posible']],'hr'),mkSel('Propiocepción',[['nor','Normal'],['le','Alterado leve'],['mo','Moderado'],['se','Muy alterado']],'prop'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['est','Recuperar estabilidad'],['tr','Trabajar sin dolor']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
-function tSZ(w){renderInformeHub(w,'tobillo',gFT(),gFTF(),getFase(D.evr,D.evc));}
+function tS1(w){
+  w.appendChild(mkNota('Inversión traumática, inestabilidad crónica o tendinopatía por sobrecarga?'));
+  w.appendChild(mkCard('Historia','',[
+    mkCampoInfo('Tobillo',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado','Si afecta a ambos tobillos simultáneamente sin traumatismo, descartar causa sistémica o biomecánica general (pie plano bilateral, hiperlaxitud).'),
+    mkCampoInfo('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol','CÓMO INTERPRETARLO: Aguda → proceso inflamatorio activo post-traumático. Objetivo inicial: control del edema y recuperación de movilidad. Subaguda → trabajo propioceptivo y de fuerza. Crónica → tendinopatía degenerativa o inestabilidad crónica por déficit propioceptivo no resuelto. La cronicidad casi siempre indica que no se completó la rehabilitación.'),
+    mkCampoInfo('Mecanismo',[['inv','Inversión (esguince lateral)'],['eve','Eversión (esguince medial)'],['sob','Sobrecarga tendones'],['trd','Traumático directo'],['gr','Gradual sin causa']],'ini','CÓMO INTERPRETARLO: Inversión → lesiona los ligamentos laterales (peroneoastragalino anterior primero, luego calcaneoperoneal). El más frecuente con diferencia. Eversión → lesiona el ligamento deltoideo (medial), menos frecuente pero más grave. Sobrecarga → tendinopatía de peroneos, Aquiles o tibial posterior. Traumático directo → descartar fractura de peroné, maléolo o proceso lateral del astrágalo.'),
+    mkCampoInfo('Esguinces previos',[['no','Primer episodio'],['res','Sí, bien resuelto'],['rec','Sí, recurrente ⚠']],'eprev','Los esguinces recurrentes indican inestabilidad crónica de tobillo — déficit propioceptivo no resuelto y/o laxitud ligamentosa residual. Factor de riesgo principal de nueva lesión. El trabajo propioceptivo preventivo es imprescindible en deportistas con historia de esguinces.'),
+    mkCampoInfo('Dx previo',[['no','Sin dx'],['esl','Esguince lateral'],['esm','Esguince medial'],['ic','Inestabilidad crónica'],['aq','Tendinopatía aquílea'],['per','Tendinopatía peroneos'],['fra','Fractura']],'dx','Inestabilidad crónica → trabajo propioceptivo y de peroneos es el eje del tratamiento. Tendinopatía aquílea → ejercicio excéntrico es el tratamiento de elección. Fractura previa → puede haber limitación de movilidad residual por fibrosis articular.'),
+    mkCampoInfo('Deporte',[['no','No practica'],['run','Running'],['fut','Fútbol/rugby'],['bal','Baloncesto/voleibol'],['ot','Otro deporte']],'depttob','El deporte define el objetivo de vuelta a la actividad. Running → trabajo de dorsiflexión y excéntrico de sóleo. Fútbol/baloncesto → propiocepción y cambios de dirección son prioritarios.'),
+    mkCampoInfo('Tto previo',[['no','Ninguno'],['inm','Inmovilización'],['fis','Fisioterapia'],['inf','Infiltración'],['cx','Cirugía']],'tto','Inmovilización prolongada → atrofia de peroneos y déficit propioceptivo. Fisioterapia previa sin mejoría → revisar si se trabajó la propiocepción. Cirugía de estabilización → respetar tiempos de cicatrización y progresar la carga gradualmente.')
+  ]));
+  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);
+}
+function tS2(w){w.appendChild(mkNota('Dolor mecánico con la carga o inflamatorio? Cedimiento real o solo miedo a torcer?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evc','EVA en carga'],['evd','EVA deporte']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkCampoInfo('Localización',[['la','Lateral — peroneos/ligamentos'],['me','Medial — deltoideo'],['an','Anterior — impingement'],['po','Posterior — Aquiles'],['di','Difuso']],'loc','CÓMO INTERPRETARLO: Lateral → ligamentos laterales (LPAA, LCF) o tendones peroneos. El más frecuente. Medial → ligamento deltoideo, tendón tibial posterior. Menos frecuente pero más grave. Anterior → impingement anterior de tobillo (frecuente en futbolistas), síndrome del seno del tarso. Posterior → tendinopatía de Aquiles o bursitis retrocalcánea. Difuso → proceso inflamatorio generalizado o fractura.'),mkCampoInfo('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip','Mecánico → empeora con la carga y el movimiento, mejora con el reposo. Origen ligamentoso, tendinoso o articular mecánico. Inflamatorio → dolor en reposo, inflamación persistente, rigidez matutina. Puede indicar artritis reactiva o proceso sistémico.'),mkCampoInfo('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc','El dolor nocturno que no mejora con el reposo es atípico en patología de tobillo. Frecuente → descartar fractura por estrés, artritis o tumor óseo. En running: fractura por estrés de peroné o 5º metatarsiano.'),mkCampoInfo('Inflamación',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa/hematoma ⚠']],'infl','CÓMO EVALUARLO: Observa y compara con el tobillo contralateral. Palpa la temperatura. Evalúa si hay hematoma y su localización. CÓMO INTERPRETARLO: Leve → esguince grado I o tendinopatía activa. Moderada → esguince grado II o fractura oculta. Severa con hematoma → esguince grado III o fractura — aplicar criterios de Ottawa para decidir RX.'),mkCampoInfo('Inestabilidad',[['no','No'],['sen','Sensación subjetiva'],['ced','Cedimiento real']],'ines','CÓMO INTERPRETARLO: Sensación subjetiva → puede ser por inhibición muscular de peroneos o déficit propioceptivo, no necesariamente laxitud ligamentosa. Cedimiento real → el tobillo cede completamente, indica laxitud ligamentosa real — valorar con cajón anterior y tilt talar.'),mkCampoInfo('Crepitación',[['no','No'],['sd','Sí sin dolor'],['cd','Sí con dolor ⚠']],'crep','Crepitación sin dolor → frecuente en esguinces resueltos con fibrosis. Sin relevancia clínica. Crepitación con dolor → puede indicar lesión condral (osteocondritis), cuerpo libre articular o tendinitis con tenosinovitis. Valorar con imagen si persiste.')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
+function tS3(w){
+  w.appendChild(mkNota('Tests ligamentosos consistentes? La propiocepción es el factor pronóstico más importante.'));
+  w.appendChild(mkCard('Exploración','',[
+    mkCampoInfo('Dorsiflexión de tobillo',[['nor','Normal ≥10°'],['le','Leve 5–9°'],['mo','Moderada 0–4°'],['se','Severa <0°']],'dors','CÓMO EVALUARLO: Test de lunge: pie a ~10cm de la pared, dobla la rodilla intentando tocarla sin levantar el talón. Normal ≥10°. CÓMO INTERPRETARLO: La limitación de dorsiflexión es un factor de riesgo de esguince de tobillo y tendinopatía de Aquiles. Limita la absorción de impacto y fuerza al pie a compensar con hiperpronación.'),
+    mkCampoInfo('Heel raise',[['nor','≥25 repeticiones'],['re','10–24 rep'],['mr','<10 rep'],['im','No puede realizarlo']],'hr','CÓMO EVALUARLO: De pie, eleva el talón al máximo de forma controlada. Cuenta repeticiones completas. Compara ambos lados. CÓMO INTERPRETARLO: El déficit de sóleo/gastrocnemio indica debilidad del complejo aquíleo. Es el factor más importante para la tendinopatía de Aquiles y también relevante en esguinces crónicos. El heel raise excéntrico es el tratamiento principal.'),
+    mkCampoInfo('Propiocepción',[['nor','Normal'],['le','Alterado leve'],['mo','Moderado'],['se','Muy alterado']],'prop','CÓMO EVALUARLO: Test de apoyo monopodal con ojos abiertos y cerrados. Normal: >30 segundos sin oscilaciones. Comparar ambos lados. CÓMO INTERPRETARLO: El déficit propioceptivo es el principal factor de riesgo de recidiva de esguince. Es casi universal tras esguince. Sin recuperación propioceptiva, el riesgo de nuevo esguince es muy alto.'),
+    mkCampoInfo('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim','Pregunta por actividades concretas: caminar en terreno irregular, correr, deporte, subir/bajar escaleras.'),
+    mkCampoInfo('Objetivo',[['do','Eliminar dolor'],['dep','Volver al deporte'],['est','Recuperar estabilidad'],['tr','Trabajar sin dolor']],'obj','El objetivo define el nivel de recuperación necesario. Vuelta al deporte → trabajo propioceptivo avanzado y simulación de gestos deportivos específicos.')
+  ]));
+
+  const tc=ce('div','card');tc.style.marginTop='12px';
+  tc.innerHTML='<div class="ct">Tests ortopédicos</div>';
+
+  const sec1=ce('p','');sec1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';sec1.textContent='Ligamentos laterales';
+  tc.appendChild(sec1);
+
+  tc.appendChild(mkTestOrtopedico('caj_ant','Test de Cajón Anterior',null,
+    'Paciente en decúbito supino con el pie relajado. Una mano sujeta el calcáneo y la otra estabiliza la tibia. Se tracciona el pie hacia anterior.',
+    'Desplazamiento anterior del astrágalo bajo la mortaja tibioperoné. Indica lesión del ligamento peroneoastragalino anterior (LPAA). Grado: leve (<3mm), moderado (3-5mm), severo (>5mm sin tope).',
+    'No hay desplazamiento o hay tope firme. El LPAA está íntegro.',
+    'Test de Tilt Talar. Cajón anterior positivo + Tilt positivo = lesión combinada de LPAA + LCF (esguince grado II-III).',
+    'alta'));
+
+  tc.appendChild(mkTestOrtopedico('tilt','Test de Tilt Talar (Inversión forzada)',null,
+    'Paciente en supino o lateral con el pie relajado. Se realiza una inversión forzada del tobillo en flexión plantar ligera para evaluar el calcaneoperoneal (LCF).',
+    'Apertura del espacio articular lateral (bostezo) con o sin dolor. Indica lesión del ligamento calcaneoperoneal (LCF).',
+    'No hay apertura articular. El LCF está íntegro.',
+    'Test de Cajón Anterior. El LCF se lesiona tras el LPAA en esguinces más graves. Si ambos son positivos → esguince grado II-III.',
+    'media'));
+
+  const sec2=ce('p','');sec2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec2.textContent='Tendón de Aquiles';
+  tc.appendChild(sec2);
+
+  tc.appendChild(mkTestOrtopedico('thomson','Test de Thomson',null,
+    'Paciente en decúbito prono con las rodillas extendidas y los pies fuera de la camilla. Se comprime el tercio medio de la pantorrilla entre el pulgar y los dedos.',
+    'Ausencia de flexión plantar del pie al comprimir la pantorrilla. Indica rotura completa del tendón de Aquiles.',
+    'El pie realiza flexión plantar al comprimir la pantorrilla. El tendón de Aquiles está íntegro.',
+    'Palpación del tendón de Aquiles. Si Thomson es positivo → derivar urgente. La rotura completa de Aquiles requiere valoración ortopédica inmediata.',
+    'alta'));
+
+  const palp=ce('div','card');palp.style.marginTop='12px';
+  palp.innerHTML='<div class="ct">Palpación</div>';
+  const gpalp=ce('div','');gpalp.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px';
+  [
+    mkCampoInfo('Ligamentos laterales',[['no','Sin dolor'],['lpaa','LPAA doloroso'],['lcf','LCF doloroso'],['amb','Ambos']],'palp_lig','CÓMO EVALUARLO: LPAA: palpa entre el maléolo peroneo y el astrágalo, cara anterior del peroné. LCF: palpa entre el maléolo peroneo y el calcáneo, ligeramente posterior. CÓMO INTERPRETARLO: Dolor en LPAA → lesión del ligamento más frecuente en esguince de inversión. Dolor en LCF también → esguince más grave (grado II-III).'),
+    mkCampoInfo('Tendón de Aquiles',[['no','Sin dolor'],['ins','Doloroso en inserción'],['cue','Doloroso en cuerpo (2-6cm)'],['tot','Doloroso en todo']],'palp_aqui','CÓMO EVALUARLO: Palpa el tendón de Aquiles desde su inserción calcánea hasta la unión miotendinosa. La zona de mayor riesgo de rotura es 2-6cm proximal a la inserción (zona hipovascular). CÓMO INTERPRETARLO: Dolor en inserción → entesopatía aquílea o bursitis retrocalcánea. Dolor en cuerpo (2-6cm) → tendinopatía del cuerpo del Aquiles. Si hay defecto palpable en el tendón → posible rotura parcial o completa.'),
+    mkCampoInfo('Peroneos',[['no','Sin dolor'],['ret','Retroperoneo doloroso'],['eng','Engrosado/nódulo'],['sub','Subluxación']],'palp_per','CÓMO EVALUARLO: Palpa los tendones peroneos por detrás del maléolo peroneo y en su recorrido hacia el pie. Pide eversión resistida mientras palpas. CÓMO INTERPRETARLO: Dolor retroperoneal → tendinopatía de peroneos, frecuente en esguinces crónicos. Subluxación → si el tendón salta por delante del maléolo al hacer eversión activa → lesión del retináculo peroneo.'),
+    mkCampoInfo('Maléolo peroné',[['no','Sin dolor'],['pos','Doloroso a la presión']],'palp_mal','CÓMO EVALUARLO: Presión directa sobre el maléolo peroneo. Aplica los criterios de Ottawa: dolor en los últimos 6cm del peroné o en la punta del maléolo → indicación de RX para descartar fractura. CÓMO INTERPRETARLO: Si hay dolor óseo en el maléolo → aplicar Ottawa. Si el paciente no puede cargar peso → RX obligatoria.')
+  ].forEach(f=>gpalp.appendChild(f));
+  palp.appendChild(gpalp);
+  w.appendChild(tc);
+  w.appendChild(palp);
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');
+  ta.placeholder='Añade cualquier observación clínica relevante antes de generar el informe...';
+  ta.style.cssText='width:100%;min-height:80px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_tobillo=ta.value;};
+  obs.appendChild(ta);
+  w.appendChild(obs);
+
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);
+}
+function tSZ(w){
+  const flags=[];
+
+  if(D.thom==='pos') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Test de Thomson positivo — posible rotura de Aquiles',
+    desc:'La ausencia de flexión plantar al comprimir la pantorrilla indica rotura completa del tendón de Aquiles.',
+    accion:'Derivar a urgencias ortopédicas inmediatamente. La rotura completa de Aquiles requiere valoración para cirugía o inmovilización precoz. No cargar peso.'
+  });
+
+  if(D.caj==='pse') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Cajón anterior severo — inestabilidad ligamentosa grave',
+    desc:'Un cajón anterior severo indica rotura completa del LPAA con posible afectación del LCF — esguince grado III.',
+    accion:'Valorar imagen (RMN) para confirmar extensión de la lesión. Derivar a traumatología si hay inestabilidad funcional que no responde al conservador en 6-8 semanas.'
+  });
+
+  if(D.palp_mal==='pos'&&D.infl==='se') flags.push({
+    nivel:'URGENTE',
+    color:'#c0392b',
+    bg:'#fdf0ee',
+    titulo:'Dolor óseo en maléolo con inflamación severa — aplicar criterios de Ottawa',
+    desc:'La combinación de dolor óseo en el maléolo con inflamación severa obliga a descartar fractura.',
+    accion:'Aplicar criterios de Ottawa: si hay dolor en los últimos 6cm del peroné o el paciente no puede cargar peso → RX obligatoria antes de continuar el tratamiento.'
+  });
+
+  if(D.noc==='fr') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Dolor nocturno frecuente',
+    desc:'El dolor nocturno frecuente en tobillo puede indicar fractura por estrés (especialmente en corredores), artritis o proceso sistémico.',
+    accion:'Si hay historial de aumento de carga reciente, descartar fractura por estrés con RMN. La RX puede ser negativa en las primeras semanas.'
+  });
+
+  if(D.crep==='cd') flags.push({
+    nivel:'ATENCIÓN',
+    color:'#d35400',
+    bg:'#fef5ec',
+    titulo:'Crepitación dolorosa',
+    desc:'La crepitación con dolor puede indicar lesión condral, cuerpo libre articular o tenosinovitis activa.',
+    accion:'Si persiste después de 4-6 semanas de tratamiento, valorar imagen (RMN o ecografía) para descartar lesión condral del astrágalo.'
+  });
+
+  if(flags.length>0){
+    const flagCard=ce('div','card');
+    flagCard.style.cssText='border:1.5px solid #e74c3c;background:#fff8f7;margin-bottom:12px';
+    const fTitle=ce('div','');
+    fTitle.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px';
+    fTitle.innerHTML='<span style="font-size:18px">⚠️</span><span style="font-size:13px;font-weight:700;color:#c0392b;text-transform:uppercase;letter-spacing:.05em">'+flags.length+' señal'+(flags.length>1?'es':'')+' de alerta detectada'+(flags.length>1?'s':'')+'</span>';
+    flagCard.appendChild(fTitle);
+    flags.forEach(f=>{
+      const item=ce('div','');
+      item.style.cssText=`background:${f.bg};border:1px solid ${f.color}40;border-radius:8px;padding:10px 12px;margin-bottom:8px`;
+      item.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${f.color};color:#fff;letter-spacing:.05em">${f.nivel}</span><span style="font-size:12px;font-weight:600;color:${f.color}">${f.titulo}</span></div><p style="font-size:12px;color:#555;line-height:1.6;margin-bottom:6px">${f.desc}</p><div style="display:flex;align-items:flex-start;gap:6px"><span style="font-size:11px;font-weight:700;color:${f.color};white-space:nowrap">Qué hacer:</span><span style="font-size:12px;color:#333;line-height:1.5">${f.accion}</span></div>`;
+      flagCard.appendChild(item);
+    });
+    w.appendChild(flagCard);
+  }
+
+  renderInformeHub(w,'tobillo',gFT(),gFTF(),getFase(D.evr,D.evc));
+}
 
 // CADERA
 function caS1(w){w.appendChild(mkNota('Dolor inguinal (articular), trocantéreo (bursitis/glúteo) o irradiado desde lumbar?'));w.appendChild(mkCard('Historia','',[mkSel('Cadera',[['d','Derecha'],['i','Izquierda'],['b','Ambas']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Inicio',[['gs','Gradual sobrecarga'],['tr','Traumático'],['ru','Running'],['gr','Gradual sin causa'],['pq','Postquirúrgico']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['tg','Tendinopatía glúteo medio'],['bt','Bursitis trocantérea'],['cox','Coxartrosis'],['pir','Sínd. piriforme'],['imp','Impingement FAI'],['lab','Lesión labrum'],['art','Artritis cadera']],'dx'),mkSel('Cirugía',[['no','No'],['ar','Artroscopia'],['pp','Prótesis parcial'],['pt','Prótesis total']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
