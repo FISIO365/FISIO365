@@ -113,6 +113,13 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // ── GET VERSION ──────────────────────────────────────────────────────────
+  if (req.method === 'GET' && req.query.action === 'version') {
+    const { pwd } = req.query;
+    if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    return res.status(200).json({ ok: true, version: process.env.VERCEL_GIT_COMMIT_SHA || Date.now().toString() });
+  }
+
   // ── GET LISTA FISIOS ─────────────────────────────────────────────────────
   if (req.method === 'GET') {
     const { pwd } = req.query;
