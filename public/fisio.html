@@ -1837,9 +1837,10 @@ async function borrarInforme(id){
     await fetch('/api/pacientes?action=borrar-informe',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({pwd:apiPwd,id:id})
+      body:JSON.stringify({pwd:'FISIO365App',id:id})
     });
   }catch(e){}
+  localStorage.removeItem('fisio365_informes');
   showSection('inf');
 }
 
