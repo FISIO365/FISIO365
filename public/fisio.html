@@ -269,6 +269,14 @@ input[type=number]{text-align:center}
 .wiki-ruta-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px}
 .wiki-ruta-meta{font-size:11px;font-weight:600;color:var(--lila);background:var(--lila-light);display:inline-block;padding:3px 10px;border-radius:99px}
 .wiki-ruta-soon .wiki-ruta-meta{color:var(--muted);background:var(--cream)}
+
+/* PROGRESO WIKIFISIO */
+.wiki-completado-btn{width:100%;max-width:560px;margin-top:14px;padding:13px;font-family:var(--font);font-size:14px;font-weight:600;border-radius:var(--r-sm);cursor:pointer;transition:all .2s;border:none}
+.wiki-completado-btn.pendiente{background:var(--black);color:white}
+.wiki-completado-btn.pendiente:hover{opacity:.85}
+.wiki-completado-btn.hecho{background:#e8f5e9;color:#2e7d32;cursor:default}
+.wiki-badge-hecho{display:inline-flex;align-items:center;gap:6px;background:#e8f5e9;color:#2e7d32;font-size:12px;font-weight:600;padding:4px 12px;border-radius:99px;margin-left:10px}
+.wiki-ruta-card .wiki-badge-hecho{margin-left:0;margin-top:8px;display:inline-flex}
 </style>
 </head>
 <body>
@@ -344,6 +352,7 @@ let anamPacId=null, anamPacNom='';
 let curProto=null, curStep=0, D={};
 let informeGenerado='';
 let fisioActual=null; // { id, nombre, role, colegiado, foto }
+let progresoFisio={}; // { seccion: { estado, fecha } }
 
 const $ = id => document.getElementById(id);
 const ce = (t,c) => { const e=document.createElement(t); if(c)e.className=c; return e; };
@@ -406,7 +415,7 @@ async function doLogin(){
       $('loginScreen').style.display='none';
       $('panelScreen').style.display='block';
       window.scrollTo({top:0,behavior:'instant'});
-      await Promise.all([loadPacientes(),loadFisios(),loadBiblio()]);
+      await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso()]);
       aplicarRole();
       iniciarAutoUpdate();
       showSection('prog');
@@ -1953,9 +1962,14 @@ function renderWiki(wrap){
   const grid = ce('div','wiki-hub-grid');
   WIKI_RUTAS.forEach(ruta => {
     const card = ce('div', ruta.pasos > 0 ? 'wiki-ruta-card' : 'wiki-ruta-card wiki-ruta-soon');
+    const secKey = 'wiki_' + ruta.id;
+    const completada = progresoFisio[secKey]?.estado === 'completado';
     card.innerHTML = `<div class="wiki-ruta-titulo">${ruta.titulo}</div>
       <div class="wiki-ruta-desc">${ruta.desc}</div>
-      <div class="wiki-ruta-meta">${ruta.pasos > 0 ? ruta.pasos + ' pasos' : 'Próximamente'}</div>`;
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <div class="wiki-ruta-meta">${ruta.pasos > 0 ? ruta.pasos + ' pasos' : 'Próximamente'}</div>
+        ${completada ? '<span class="wiki-badge-hecho">✓ Completado</span>' : ''}
+      </div>`;
     if(ruta.pasos > 0) card.onclick = () => renderWikiRuta(wrap, ruta);
     grid.appendChild(card);
   });
@@ -2009,6 +2023,22 @@ function renderWikiRuta(wrap, ruta){
 
   ctrl.appendChild(bPrev); ctrl.appendChild(mid); ctrl.appendChild(bNext);
   outer.appendChild(ctrl);
+
+  // Botón marcar como completado
+  const seccionKey = 'wiki_' + ruta.id;
+  const yaHecho = progresoFisio[seccionKey]?.estado === 'completado';
+  const progresoBtn = ce('button', 'wiki-completado-btn ' + (yaHecho ? 'hecho' : 'pendiente'));
+  progresoBtn.id = 'wikiProgresoBtn';
+  progresoBtn.style.cssText = 'max-width:560px;width:100%;margin-top:14px';
+  if(yaHecho){
+    const fecha = progresoFisio[seccionKey]?.fecha || '';
+    progresoBtn.innerHTML = '✓ Completado' + (fecha ? ' · ' + fecha : '');
+  } else {
+    progresoBtn.innerHTML = 'Marcar como completado';
+    progresoBtn.onclick = () => marcarProgreso(seccionKey);
+  }
+  outer.appendChild(progresoBtn);
+
   wrap.appendChild(outer);
   wRutaActual = ruta;
   wUpdate(ruta);
@@ -2093,6 +2123,39 @@ function iniciarAutoUpdate(){
   checkPermisos();
   setInterval(checkDeploy, 2 * 60 * 1000);    // cada 2 min
   setInterval(checkPermisos, 5 * 60 * 1000);  // cada 5 min
+}
+
+
+async function loadProgreso(){
+  if(!fisioActual) return;
+  try{
+    const r = await fetch(`/api/progreso?pwd=${encodeURIComponent(pwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
+    const d = await r.json();
+    if(d.ok) progresoFisio = d.progreso || {};
+  }catch(e){}
+}
+
+async function marcarProgreso(seccion){
+  try{
+    const r = await fetch('/api/progreso', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ pwd, fisioId: fisioActual.id, seccion, estado: 'completado' })
+    });
+    const d = await r.json();
+    if(d.ok){
+      progresoFisio[seccion] = { estado: 'completado', fecha: new Date().toISOString().split('T')[0] };
+      // Actualizar botón
+      const btn = document.getElementById('wikiProgresoBtn');
+      if(btn){
+        btn.className = 'wiki-completado-btn hecho';
+        btn.innerHTML = '✓ Marcado como completado';
+      }
+      // Actualizar badge en hub si existe
+      renderWiki(document.getElementById('mainWrap'));
+      // Volver a abrir la ruta para mantener contexto visual
+    }
+  }catch(e){ toast('Error al guardar progreso', false); }
 }
 
 // LIGHTBOX
