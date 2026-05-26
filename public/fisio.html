@@ -2505,13 +2505,13 @@ function renderFormacion(wrap, ruta){
     MODS.forEach((mod,i)=>{
       const b=ce('button','');const isDone=scores[i].done;
       b.style.cssText=`font-family:var(--font);font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid;cursor:pointer;transition:all .15s;${i===curMod?'background:var(--lila);color:white;border-color:var(--lila)':isDone?'background:var(--lila-light);color:var(--lila);border-color:var(--lila)':'background:white;color:var(--muted);border-color:rgba(0,0,0,0.12)'}`;
-      b.textContent=isDone?'✓ '+(i+1):''+(i+1);b.title=mod.t;b.onclick=()=>{curMod=i;renderMod();};mn.appendChild(b);
+      b.textContent=isDone?'✓ '+(i+1):''+(i+1);b.title=mod.t;b.onclick=()=>{curMod=i;renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};mn.appendChild(b);
     });
     wrap.appendChild(mn);
 
     // Cards de contenido
     m.cards.forEach(card=>{
-      const c=ce('div','card');c.innerHTML=`<div class="ct">${card.icon} ${card.ti}</div>`;
+      const c=ce('div','card');c.innerHTML=`<div class="ct">${card.ti}</div>`;
       const body=buildGL(card.body);c.appendChild(body);wrap.appendChild(c);
     });
 
@@ -2560,7 +2560,7 @@ function renderFormacion(wrap, ruta){
     bprev.innerHTML='&#8592;';
     bprev.onmouseenter=()=>{bprev.style.color='var(--lila)';};
     bprev.onmouseleave=()=>{bprev.style.color='var(--muted)';};
-    bprev.onclick=()=>{curMod--;renderMod();};
+    bprev.onclick=()=>{curMod--;renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};
 
     const bctr=ce('div','');bctr.style.cssText='font-size:12px;color:var(--muted)';bctr.textContent=`Módulo ${curMod+1} de ${MODS.length}`;
 
@@ -2569,7 +2569,7 @@ function renderFormacion(wrap, ruta){
     bnext.innerHTML='&#8594;';
     bnext.onmouseenter=()=>{bnext.style.color='var(--lila)';};
     bnext.onmouseleave=()=>{bnext.style.color='var(--muted)';};
-    bnext.onclick=()=>{curMod++;renderMod();};
+    bnext.onclick=()=>{curMod++;renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};
 
     bnav.appendChild(bprev);bnav.appendChild(bctr);bnav.appendChild(bnext);wrap.appendChild(bnav);
 
@@ -2608,10 +2608,10 @@ function renderFormacion(wrap, ruta){
         btnRepetir.innerHTML='Repetir tests con fallos';
         btnRepetir.onclick=()=>{
           scores.forEach((s,i)=>{if(s.done && s.c < MODS[i].qs.length) scores[i]={c:0,done:false};});
-          // Ir al primer módulo fallado
           curMod=scores.findIndex(s=>!s.done);
           if(curMod<0)curMod=0;
           renderMod();
+          wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);
         };
         wrap.appendChild(progresoBtn);
         wrap.appendChild(btnRepetir);
