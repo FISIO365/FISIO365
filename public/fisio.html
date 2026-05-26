@@ -2586,21 +2586,23 @@ function renderFormacion(wrap, ruta){
       progresoBtn.id='wikiProgresoBtn';
       progresoBtn.style.cssText='width:100%;box-sizing:border-box;margin-top:18px';
 
+      const chipStyle='display:inline-block;margin-top:18px;padding:6px 14px;border-radius:99px;font-size:12px;font-weight:600;font-family:var(--font);border:none;cursor:default;';
+
       if(yaHecho){
         const fecha=progresoFisio[seccionKey]?.fecha||'';
         progresoBtn.innerHTML='✓ Completado'+(fecha?' · '+fecha:'');
+        wrap.appendChild(progresoBtn);
       } else if(hayIncompletos){
-        progresoBtn.innerHTML='Completa todos los tests para continuar';
-        progresoBtn.disabled=true;
-        progresoBtn.style.cssText='width:100%;box-sizing:border-box;margin-top:18px;opacity:0.45;font-size:12px;padding:9px 12px;white-space:normal;line-height:1.4;cursor:default;';
+        const chip=ce('div','');
+        chip.style.cssText=chipStyle+'background:#FEF3F2;color:#9B1C1C;';
+        chip.textContent='Responde todos los tests';
+        wrap.appendChild(chip);
       } else if(hayFallos){
-        // Hay fallos: mostrar botón para repetir tests fallados
-        progresoBtn.innerHTML='Tienes respuestas incorrectas — repite los tests para continuar';
-        progresoBtn.disabled=true;
-        progresoBtn.style.cssText='width:100%;box-sizing:border-box;margin-top:18px;opacity:0.45;font-size:12px;padding:9px 12px;white-space:normal;line-height:1.4;cursor:default;';
-        progresoBtn.style.cssText+='background:#FCEBEB;color:#791F1F;border-color:#F7C1C1;';
+        const chip=ce('div','');
+        chip.style.cssText=chipStyle+'background:#FDF2F8;color:#831843;';
+        chip.textContent='Hay respuestas incorrectas';
+        wrap.appendChild(chip);
 
-        // Botón de repetir: resetea solo los módulos fallados
         const btnRepetir=ce('button','wiki-completado-btn pendiente');
         btnRepetir.style.cssText='width:100%;box-sizing:border-box;margin-top:8px';
         btnRepetir.innerHTML='Repetir tests con fallos';
@@ -2611,14 +2613,12 @@ function renderFormacion(wrap, ruta){
           renderMod();
           wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);
         };
-        wrap.appendChild(progresoBtn);
         wrap.appendChild(btnRepetir);
-        return; // salir antes de append doble
       } else {
         progresoBtn.innerHTML='Marcar como completado';
         progresoBtn.onclick=()=>marcarProgreso(seccionKey);
+        wrap.appendChild(progresoBtn);
       }
-      wrap.appendChild(progresoBtn);
     }
   }
 
