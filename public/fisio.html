@@ -2552,36 +2552,75 @@ function renderFormacion(wrap, ruta){
       qb.appendChild(opts);qb.appendChild(fb);wrap.appendChild(qb);
     });
 
-    // Navegación inferior
+    // Navegación inferior con flechas finas
     const bnav=ce('div','');bnav.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)';
-    const bprev=ce('button','btn-back');bprev.textContent='← Anterior';bprev.style.visibility=curMod===0?'hidden':'visible';
+
+    const bprev=ce('button','');
+    bprev.style.cssText=`background:none;border:none;cursor:pointer;padding:6px 10px;font-size:20px;color:var(--muted);line-height:1;transition:color .15s;visibility:${curMod===0?'hidden':'visible'}`;
+    bprev.innerHTML='&#8592;';
+    bprev.onmouseenter=()=>{bprev.style.color='var(--lila)';};
+    bprev.onmouseleave=()=>{bprev.style.color='var(--muted)';};
     bprev.onclick=()=>{curMod--;renderMod();};
+
     const bctr=ce('div','');bctr.style.cssText='font-size:12px;color:var(--muted)';bctr.textContent=`Módulo ${curMod+1} de ${MODS.length}`;
-    const bnext=ce('button','btn btn-g');bnext.style.cssText='width:auto;padding:10px 20px';
 
+    const bnext=ce('button','');
+    bnext.style.cssText=`background:none;border:none;cursor:pointer;padding:6px 10px;font-size:20px;color:var(--muted);line-height:1;transition:color .15s;visibility:${curMod===MODS.length-1?'hidden':'visible'}`;
+    bnext.innerHTML='&#8594;';
+    bnext.onmouseenter=()=>{bnext.style.color='var(--lila)';};
+    bnext.onmouseleave=()=>{bnext.style.color='var(--muted)';};
+    bnext.onclick=()=>{curMod++;renderMod();};
+
+    bnav.appendChild(bprev);bnav.appendChild(bctr);bnav.appendChild(bnext);wrap.appendChild(bnav);
+
+    // Botón marcar como completado — solo en el último módulo
     if(curMod === MODS.length - 1){
-      // Último módulo: botón de completar curso
-      bnext.textContent='¡Curso completado!';
-      bnext.style.background='var(--lila)';
-      bnext.onclick=()=>{};
+      const todosDone = scores.every(s=>s.done);
+      const todosCorrecto = scores.every(s=>s.done && s.c === MODS[scores.indexOf(s)].qs.length);
 
-      // Botón marcar como completado (igual que renderWikiRuta)
+      // Calcular si hay algún fallo (módulo completado con respuesta incorrecta)
+      const hayFallos = scores.some((s,i)=>s.done && s.c < MODS[i].qs.length);
+      const hayIncompletos = scores.some(s=>!s.done);
+
       const progresoBtn=ce('button','wiki-completado-btn '+(yaHecho?'hecho':'pendiente'));
       progresoBtn.id='wikiProgresoBtn';
       progresoBtn.style.cssText='width:100%;margin-top:18px';
+
       if(yaHecho){
         const fecha=progresoFisio[seccionKey]?.fecha||'';
         progresoBtn.innerHTML='✓ Completado'+(fecha?' · '+fecha:'');
+      } else if(hayIncompletos){
+        progresoBtn.innerHTML='Completa todos los módulos para marcar como completado';
+        progresoBtn.disabled=true;
+        progresoBtn.style.opacity='0.45';
+        progresoBtn.style.cursor='default';
+      } else if(hayFallos){
+        // Hay fallos: mostrar botón para repetir tests fallados
+        progresoBtn.innerHTML='Tienes respuestas incorrectas — repite los tests para continuar';
+        progresoBtn.disabled=true;
+        progresoBtn.style.opacity='0.45';
+        progresoBtn.style.cursor='default';
+        progresoBtn.style.cssText+='background:#FCEBEB;color:#791F1F;border-color:#F7C1C1;';
+
+        // Botón de repetir: resetea solo los módulos fallados
+        const btnRepetir=ce('button','wiki-completado-btn pendiente');
+        btnRepetir.style.cssText='width:100%;margin-top:8px';
+        btnRepetir.innerHTML='Repetir tests con fallos';
+        btnRepetir.onclick=()=>{
+          scores.forEach((s,i)=>{if(s.done && s.c < MODS[i].qs.length) scores[i]={c:0,done:false};});
+          // Ir al primer módulo fallado
+          curMod=scores.findIndex(s=>!s.done);
+          if(curMod<0)curMod=0;
+          renderMod();
+        };
+        wrap.appendChild(progresoBtn);
+        wrap.appendChild(btnRepetir);
+        return; // salir antes de append doble
       } else {
         progresoBtn.innerHTML='Marcar como completado';
         progresoBtn.onclick=()=>marcarProgreso(seccionKey);
       }
-      bnav.appendChild(bprev);bnav.appendChild(bctr);bnav.appendChild(bnext);wrap.appendChild(bnav);
       wrap.appendChild(progresoBtn);
-    } else {
-      bnext.textContent='Siguiente →';
-      bnext.onclick=()=>{curMod++;renderMod();};
-      bnav.appendChild(bprev);bnav.appendChild(bctr);bnav.appendChild(bnext);wrap.appendChild(bnav);
     }
   }
 
