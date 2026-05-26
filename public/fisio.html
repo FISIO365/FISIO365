@@ -2030,6 +2030,18 @@ const WIKI_RUTAS = [
     emoji: '',
     imgs: [],
     tits: []
+  },
+  {
+    id: 'bomba',
+    titulo: 'Bomba diamagnética CTU Mega20',
+    desc: 'Fundamentos, mecanismos, patologías, contraindicaciones y FAQ',
+    etiqueta: 'Todo el equipo',
+    info: '<strong>¿Qué aprenderás aquí?</strong><br><br>8 módulos teóricos con test interactivo para entender cómo funciona la bomba diamagnética, qué patologías trata, cómo explicársela a los pacientes y cuáles son las contraindicaciones.<br><br><strong>¿Para quién?</strong><br><br>Todo el equipo — tanto fisioterapeutas como administración.<br><br><strong>¿Cuánto dura?</strong><br><br>8 módulos. Puedes completarlo a tu ritmo.',
+    pasos: 8,
+    emoji: '',
+    imgs: [],
+    tits: [],
+    tipo: 'formacion'
   }
 ];
 
@@ -2059,7 +2071,7 @@ function renderWiki(wrap){
         ${ruta.pasos === 0 ? '<div class="wiki-ruta-meta">Próximamente</div>' : ''}
         ${completada ? '<span class="wiki-badge-hecho">✓ Completado</span>' : ''}
       </div>`;
-    if(ruta.pasos > 0) card.onclick = () => renderWikiRuta(wrap, ruta);
+    if(ruta.pasos > 0) card.onclick = () => ruta.tipo === 'formacion' ? renderFormacion(wrap, ruta) : renderWikiRuta(wrap, ruta);
     grid.appendChild(card);
   });
   outer.appendChild(grid);
@@ -2275,6 +2287,313 @@ function enviarRecepcion(pacNom, informe, fecha, fisioNom){
     `FISIO365`
   );
   window.open(`mailto:fisio365gestion@gmail.com?subject=${asunto}&body=${cuerpo}`, '_blank');
+}
+
+// ── FORMACIÓN BOMBA DIAMAGNÉTICA ─────────────────────────────────────────────
+function renderFormacion(wrap, ruta){
+  const GLOSS={
+    'campo-magnetico':['Campo magnético','Zona de influencia invisible que puede ejercer fuerzas sobre materiales sensibles. La bomba genera un campo de 2 Tesla que interactúa con los líquidos del cuerpo.'],
+    'tesla':['Tesla (T)','Unidad de intensidad del campo magnético. 1 T = 10.000 gauss. La bomba trabaja a 2 Tesla.'],
+    'gauss':['Gauss','Unidad del campo magnético. La magnetoterapia convencional: 100-500 G. La bomba: 20.000 G.'],
+    'hz':['Hz (Hercios)','Ciclos por segundo. La bomba varía de 7 Hz (base) a más de 10.000 Hz según el tejido.'],
+    'frecuencia':['Frecuencia','Número de ciclos por segundo. Determina sobre qué tejido actúa la bomba.'],
+    'frecuencia-fisiologica':['Frecuencia fisiológica','Frecuencia natural de vibración de cada tejido biológico. La bomba se sincroniza con ella.'],
+    'diamagnetico':['Diamagnético','Material ligeramente repelido por un campo magnético. El agua es diamagnética — por eso la bomba mueve los fluidos corporales.'],
+    'tejidos':['Tejido biológico','Conjunto de células organizadas con función específica: músculo, hueso, tendón, nervio, etc.'],
+    'patologias':['Patología','Enfermedad, lesión o alteración del funcionamiento normal del cuerpo.'],
+    'residuos-metabolicos':['Residuos metabólicos','Desechos que producen las células al funcionar. Se acumulan en zonas inflamadas y perpetúan el dolor.'],
+    'toxinas':['Toxinas','Sustancias dañinas en tejidos lesionados provenientes de procesos inflamatorios.'],
+    'drenar':['Drenar','Eliminar líquido acumulado de una zona del cuerpo.'],
+    'cronificar':['Cronificar','Pasar de condición aguda a crónica (persistente). Una inflamación no tratada puede cronificarse.'],
+    'diatermia':['Diatermia','Técnica que genera calor profundo en tejidos. Combinada con la bomba produce el efecto Push and Pull.'],
+    'edema':['Edema','Acumulación anormal de líquido en tejidos, causando hinchazón.'],
+    'linfedema':['Linfedema','Acumulación de linfa por mal funcionamiento del sistema linfático. Hinchazón crónica en extremidades.'],
+    'bursitis':['Bursitis','Inflamación de la bursa (bolsa amortiguadora entre huesos y tendones). Frecuente en hombro, codo y cadera.'],
+    'pulsado':['Pulsado','Aplicado en pulsos rítmicos (no continuo). Los pulsos crean un efecto de bombeo sobre los líquidos.'],
+    'magnetotaxis':['Magnetotaxis','Movimiento dirigido de células y moléculas bajo la influencia de un campo magnético.'],
+    'iones':['Iones','Átomos con carga eléctrica. Esenciales en conducción nerviosa y contracción muscular.'],
+    'membrana-celular':['Membrana celular','Capa que rodea cada célula y controla qué entra y sale de ella.'],
+    'permeabilidad':['Permeabilidad','Capacidad de la membrana para dejar pasar sustancias. La bomba puede mejorarla.'],
+    'ciatica':['Ciática','Dolor que sigue el nervio ciático: espalda baja → glúteo → pierna → pie. Suele ser por hernia o estenosis.'],
+    'neuralgia':['Neuralgia','Dolor intenso que sigue el recorrido de un nervio. Por compresión o daño nervioso.'],
+    'puntos-gatillo':['Puntos gatillo','Zonas hipersensibles en el músculo que mantienen y amplifican el dolor.'],
+    'hernia-discal':['Hernia discal','El disco intervertebral se desplaza y presiona el nervio cercano, causando dolor irradiado.'],
+    'artrosis':['Artrosis','Desgaste progresivo del cartílago articular. Dolor y rigidez en rodilla, cadera, columna.'],
+    'marcapasos':['Marcapasos','Dispositivo electrónico implantado que regula el ritmo cardiaco. Contraindicación absoluta con la bomba.'],
+    'embarazo':['Embarazo','El primer trimestre es contraindicación absoluta por precaución en el desarrollo fetal.'],
+    'trombosis':['Trombosis venosa profunda','Coágulo en vena profunda. Emergencia médica — contraindicación absoluta en la zona afectada.'],
+    'tumor':['Tumor maligno activo','Cáncer activo en la zona a tratar. Contraindicación absoluta — podría aumentar vascularización local.'],
+    'ionizante':['Energía ionizante','Energía que daña el ADN (rayos X). La bomba NO es ionizante — su frecuencia es muy baja (7 Hz).'],
+    'consolidacion':['Consolidación ósea','Proceso de unión de los extremos de un hueso roto. La bomba puede acelerarlo.'],
+    'pie-diabetico':['Pie diabético','Complicación de la diabetes con mala circulación y heridas que no curan. Indicación específica de la bomba.'],
+    'ulcera':['Úlcera','Herida abierta que no cicatriza fácilmente. La bomba puede tratarla sin retirar el apósito.'],
+    'tendinitis':['Tendinitis','Inflamación de un tendón. Muy frecuente en deportistas. La bomba actúa a >10.000 Hz.'],
+    'contractura':['Contractura','Contracción involuntaria y persistente de un músculo que genera dolor y limita movimiento.'],
+    'magnetoterapia':['Magnetoterapia convencional','100-500 gauss en sesiones de 4 horas. La bomba es 40 veces más potente y trabaja 15-30 min.'],
+    'nociceptores':['Nociceptores','Receptores nerviosos especializados en detectar estímulos dañinos y enviar señales de dolor.'],
+    'endogena':['Endógena','Generada desde dentro del propio organismo. La bioestimulación endógena activa los mecanismos curativos naturales.'],
+    'iontoforesis':['Iontoforesis','Técnica que usa corriente eléctrica para introducir fármacos por la piel. La bomba es más eficaz y sin efectos de corriente.'],
+    'antiinflamatorios':['Antiinflamatorios','Fármacos que reducen la inflamación. Pueden aplicarse por implante molecular sin pasar por el sistema digestivo.'],
+    'corticoides':['Corticoides','Potentes antiinflamatorios. Su aplicación localizada por implante molecular evita efectos secundarios sistémicos.'],
+    'estenosis-canal':['Estenosis de canal','Estrechamiento del canal espinal que comprime nervios. Causa dolor irradiado bilateral y claudicación.'],
+    'parestesia':['Parestesias','Hormigueo, quemazón, pinchazos o entumecimiento. Indican nervio comprimido o dañado.'],
+    'varices':['Varices','Venas dilatadas por mal funcionamiento de válvulas venosas. Causan pesadez y dolor en piernas.'],
+    'ulcera-decubito':['Úlcera por decúbito','Heridas por presión continua en personas encamadas. La bomba trata sin contacto directo.'],
+    'protesis':['Prótesis','Pieza artificial que sustituye un hueso o articulación. Las de titanio/cerámica son compatibles con la bomba.'],
+    'epilepsia':['Epilepsia no controlada','Trastorno con convulsiones recurrentes. Contraindicación absoluta.'],
+    'implante-electronico':['Implante electrónico activo','Marcapasos, bomba de insulina, neuroestimulador. Todos son contraindicación absoluta.'],
+    'hemorragia':['Hemorragia activa','Sangrado activo. El aumento de flujo podría agravarlo.']
+  };
+  const MODS=[
+    {t:'¿Qué es la bomba diamagnética?',sub:'Fundamentos básicos · CTU Mega20',
+     cards:[
+      {ti:'La tecnología',icon:'⚡',body:`Es un dispositivo que genera un <gl k="campo-magnetico">campo magnético</gl> de <gl k="tesla">2 Tesla</gl> (<gl k="gauss">20.000 gauss</gl>) <gl k="pulsado">pulsado</gl> a <gl k="hz">7 Hz</gl>. Completamente no invasivo e indoloro. Se llama <em>tecnología antiquirófano</em> porque permite resolver <gl k="patologias">patologías</gl> que antes requerían cirugía.`},
+      {ti:'Por qué funciona: el agua',icon:'💧',body:`El cuerpo humano es un 60-80% agua. El agua es <gl k="diamagnetico">diamagnética</gl> — es ligeramente repelida por el campo magnético. Esto permite al dispositivo interactuar directamente con los fluidos de los <gl k="tejidos">tejidos</gl> corporales sin agujas ni contacto.`},
+      {ti:'Ventaja clave vs. otras terapias',icon:'🏆',body:`La <gl k="magnetoterapia">magnetoterapia</gl> convencional trabaja a 100-500 <gl k="gauss">gauss</gl>. La bomba trabaja a 20.000 <gl k="gauss">gauss</gl> — equivalente a 40 sesiones de <gl k="magnetoterapia">magnetoterapia</gl> al mismo tiempo. Penetra hasta 7 cm de profundidad y genera corriente dentro del propio cuerpo.`},
+      {ti:'Analogía para pacientes',icon:'💡',body:`"Los <gl k="tejidos">tejidos</gl> inflamados son como una esponja empapada de agua sucia. La bomba exprime esa esponja hacia fuera y atrae agua limpia y oxigenada para sustituirla."`}
+     ],
+     qs:[
+      {q:'¿Cuántos gauss genera la CTU Mega20?',opts:['100-500 gauss','20.000 gauss (2 Tesla)','5.000 gauss'],ok:1,fb:['No del todo — eso es la magnetoterapia convencional.','¡Correcto! 20.000 gauss = 2 Tesla.','No del todo — revisa el módulo.']},
+      {q:'¿Por qué el campo actúa directamente sobre el cuerpo?',opts:['Porque tenemos hierro en la sangre','Porque los huesos son conductores','Porque somos 60-80% agua, que es diamagnética'],ok:2,fb:['No del todo.','No del todo.','¡Correcto! El agua es diamagnética y por eso el campo actúa sobre nuestros tejidos.']},
+      {q:'¿Hasta qué profundidad penetra el tratamiento?',opts:['Hasta 7 cm','Hasta 2 cm','Solo en superficie'],ok:0,fb:['¡Correcto! Hasta 7 cm de profundidad.','No del todo.','No del todo — la bomba actúa también en tejidos profundos.']}
+     ]
+    },
+    {t:'Desplazamiento de líquidos',sub:'Mecanismo antiinflamatorio · Push and Pull',
+     cards:[
+      {ti:'¿Por qué es clave?',icon:'🌊',body:`Cuando hay una lesión, se acumulan <gl k="residuos-metabolicos">residuos metabólicos</gl>, <gl k="toxinas">toxinas</gl> y células muertas. Si no se <gl k="drenar">drena</gl>, la inflamación se <gl k="cronificar">cronifica</gl> y el dolor persiste. El desplazamiento de líquidos es el primer mecanismo que activa la bomba.`},
+      {ti:'Cómo actúa la bomba',icon:'↔️',body:`El <gl k="campo-magnetico">campo magnético</gl> repele el agua <gl k="diamagnetico">diamagnética</gl> de los <gl k="tejidos">tejidos</gl> de forma <gl k="pulsado">pulsada</gl>. Esto genera un bombeo que drena el líquido inflamatorio y facilita la entrada de nutrientes y oxígeno.`},
+      {ti:'Efecto Push and Pull',icon:'🔄',body:`Combinado con <gl k="diatermia">diatermia</gl>: la <gl k="diatermia">diatermia</gl> empuja sangre oxigenada (Push) mientras el impulso <gl k="diamagnetico">diamagnético</gl> expulsa los líquidos inflamatorios (Pull). Es el único dispositivo que consigue este doble efecto simultáneo.`},
+      {ti:'Aplicaciones principales',icon:'📌',body:`Especialmente potente en <gl k="edema">edemas</gl> postraumáticos, <gl k="linfedema">linfedemas</gl>, <gl k="bursitis">bursitis</gl> y cualquier inflamación aguda o crónica. Los resultados en <gl k="edema">edemas</gl> son a veces visibles en una sola sesión.`}
+     ],
+     qs:[
+      {q:'¿Qué ocurre si la inflamación no se drena bien?',opts:['Se cronifica y el dolor persiste','Desaparece sola','Se convierte en hematoma'],ok:0,fb:['¡Correcto! La inflamación no drenada se cronifica.','No del todo.','No del todo.']},
+      {q:'¿Qué es el efecto Push and Pull?',opts:['Frío y calor alternos','Masaje profundo manual','Sangre oxigenada entra (Push) y líquido inflamatorio sale (Pull) al mismo tiempo'],ok:2,fb:['No del todo.','No del todo.','¡Correcto!']},
+      {q:'¿Con qué tecnología se combina para el Push and Pull?',opts:['Ultrasonidos','Diatermia','Láser'],ok:1,fb:['No del todo.','¡Correcto! La diatermia + diamagnetoterapia = Push and Pull.','No del todo.']}
+     ]
+    },
+    {t:'Bioestimulación endógena',sub:'Regeneración tisular · Frecuencias selectivas',
+     cards:[
+      {ti:'¿Qué es?',icon:'🧬',body:`<gl k="endogena">Endógena</gl> = generada desde dentro. La bomba no introduce energía externa como la corriente eléctrica; activa y amplifica los propios mecanismos de reparación del organismo. Los <gl k="tejidos">tejidos</gl> reciben la señal para regenerarse más rápido.`},
+      {ti:'Frecuencias selectivas',icon:'🎚️',body:`La bomba varía su <gl k="frecuencia">frecuencia</gl> para sincronizarse con la <gl k="frecuencia-fisiologica">frecuencia fisiológica</gl> de cada tejido. Músculo liso: hasta 50 Hz. Músculo estriado: hasta 100 Hz. Fibras nerviosas lentas: hasta 1.000 Hz. Fibras rápidas: hasta 5.000 Hz. Nivel celular: hasta 7.500 Hz. Membrana celular: hasta 10.000 Hz. Tejido tendinoso: >10.000 Hz.`},
+      {ti:'Analogía',icon:'💡',body:`"Es como afinar una radio a la <gl k="frecuencia-fisiologica">frecuencia fisiológica</gl> exacta del tejido dañado para que el mensaje de reparación llegue exactamente donde debe."`}
+     ],
+     qs:[
+      {q:'¿Qué significa "bioestimulación endógena"?',opts:['Energía que viene de fuera','Activa los propios mecanismos curativos del cuerpo','Requiere medicación para funcionar'],ok:1,fb:['No del todo.','¡Correcto! Endógena = desde dentro del propio organismo.','No del todo.']},
+      {q:'¿A qué frecuencia se trabaja el tejido tendinoso?',opts:['Superior a 10.000 Hz','50 Hz','100 Hz'],ok:0,fb:['¡Correcto! >10.000 Hz para tejido tendinoso.','No del todo.','No del todo.']},
+      {q:'Un paciente tiene contractura muscular severa. ¿Hasta qué frecuencia trabajaría la bomba?',opts:['Hasta 50 Hz (músculo liso)','Hasta 10.000 Hz (membrana)','Hasta 100 Hz (músculo estriado)'],ok:2,fb:['No del todo — el músculo liso son órganos y vasos.','No del todo.','¡Correcto! El músculo estriado (voluntario) responde hasta 100 Hz.']}
+     ]
+    },
+    {t:'Control del dolor',sub:'Nociceptivo · Neuropático · Pain Control',
+     cards:[
+      {ti:'Dolor nociceptivo',icon:'📍',body:`El dolor "normal" por daño tisular real: lesión, inflamación, fractura. Los <gl k="nociceptores">nociceptores</gl> envían señales al cerebro. Ejemplos: <gl k="hernia-discal">hernia discal</gl>, <gl k="artrosis">artrosis</gl>, esguince. El más frecuente en fisioterapia y responde muy bien a la bomba.`},
+      {ti:'Dolor neuropático',icon:'🧠',body:`Causado por daño en el propio nervio. Las señales se generan en el nervio mismo. Ejemplos: <gl k="ciatica">ciática</gl>, <gl k="neuralgia">neuralgia</gl>, hormigueos, quemazón sin lesión muscular. Más difícil de tratar convencionalmente. La bomba actúa directamente sobre el tejido nervioso con frecuencias específicas.`},
+      {ti:'Pain Control — 215 kHz',icon:'🎯',body:`La bomba induce 215 kHz que actúa sobre los <gl k="nociceptores">receptores de dolor</gl> y <gl k="puntos-gatillo">puntos gatillo</gl>. Estos son zonas hipersensibles que mantienen el dolor. Al desactivarlos, el dolor disminuye desde las primeras sesiones, incluso antes de que el tejido esté curado.`},
+      {ti:'Clave para admin',icon:'⚠️',body:`Si un paciente dice "ya no me duele, ¿puedo dejar las sesiones?": el Pain Control puede eliminar el dolor ANTES de que el tejido esté curado. Es importante completar el tratamiento aunque no haya dolor.`}
+     ],
+     qs:[
+      {q:'Paciente con quemazón en la pierna y hormigueos sin lesión muscular. ¿Qué tipo de dolor es?',opts:['Nociceptivo por inflamación','Neuropático (daño en el nervio)','Psicosomático'],ok:1,fb:['No del todo.','¡Correcto! Es dolor neuropático — originado en el nervio, no en el tejido.','No del todo.']},
+      {q:'¿A qué frecuencia actúa el Pain Control?',opts:['7 Hz','10.000 Hz','215 kHz'],ok:2,fb:['No del todo.','No del todo.','¡Correcto! 215 kHz para desactivar receptores de dolor y puntos gatillo.']},
+      {q:'Un paciente ya no tiene dolor. ¿Puede dejar las sesiones?',opts:['No necesariamente — el tejido puede no estar curado todavía','Sí, sin dolor = curado','Hay que esperar 2 semanas más'],ok:0,fb:['¡Correcto! El Pain Control puede suprimir el dolor antes de la curación completa.','No del todo.','No del todo.']}
+     ]
+    },
+    {t:'Magnetotaxis e implante molecular',sub:'Membrana celular · Fármacos sin agujas',
+     cards:[
+      {ti:'¿Qué es la magnetotaxis?',icon:'🧲',body:`<gl k="magnetotaxis">Magnetotaxis</gl> = movimiento dirigido de células y moléculas bajo el <gl k="campo-magnetico">campo magnético</gl>. Permite orientar <gl k="iones">iones</gl>, células y fármacos hacia zonas específicas del tejido.`},
+      {ti:'Efecto sobre la membrana celular',icon:'🔬',body:`A frecuencias >10.000 Hz cambia la <gl k="permeabilidad">permeabilidad</gl> de la <gl k="membrana-celular">membrana celular</gl>. La célula absorbe mejor nutrientes y elimina <gl k="residuos-metabolicos">residuos metabólicos</gl>. Es el nivel de acción más profundo de la terapia.`},
+      {ti:'Implante molecular — sin agujas',icon:'💊',body:`Gracias a la <gl k="magnetotaxis">magnetotaxis</gl>, la bomba transporta fármacos a través de la piel hasta 7 cm de profundidad, sin agujas. Más eficaz que la <gl k="iontoforesis">iontoforesis</gl>. Los fármacos habituales son <gl k="antiinflamatorios">antiinflamatorios</gl>, <gl k="corticoides">corticoides</gl> o vitaminas.`},
+      {ti:'Analogía para pacientes',icon:'💡',body:`"Un sistema de mensajería de precisión: coge el fármaco de la piel y lo lleva exactamente donde hace falta — sin pinchazos."<br><br>Útil para pacientes con fobia a agujas y para evitar infiltraciones repetidas.`}
+     ],
+     qs:[
+      {q:'¿Qué es la magnetotaxis?',opts:['Atracción del dispositivo a metales','Movimiento dirigido de células y moléculas bajo el campo magnético','Medición de resistencia tisular'],ok:1,fb:['No del todo.','¡Correcto! La magnetotaxis permite dirigir sustancias hacia tejidos específicos.','No del todo.']},
+      {q:'¿A qué profundidad llega el implante molecular?',opts:['1 cm','3 cm','7 cm'],ok:2,fb:['No del todo.','No del todo.','¡Correcto! Hasta 7 cm de profundidad.']},
+      {q:'¿Qué ventaja tiene el implante molecular frente a las infiltraciones?',opts:['No requiere agujas y el fármaco llega directamente al tejido','Es más barato','Solo funciona para fármacos orales'],ok:0,fb:['¡Correcto! Sin agujas, localizado y profundo.','No del todo.','No del todo.']}
+     ]
+    },
+    {t:'Patologías tratables y sesiones',sub:'Indicaciones · Protocolos · Casos especiales',
+     cards:[
+      {ti:'Categorías tratables',icon:'📋',body:`<b>Musculo-tendinosas:</b> roturas, <gl k="contractura">contracturas</gl>, <gl k="tendinitis">tendinitis</gl>, epicondilitis, fascitis.<br><b>Degenerativas:</b> <gl k="hernia-discal">hernias discales</gl>, <gl k="artrosis">artrosis</gl>, <gl k="estenosis-canal">estenosis de canal</gl>.<br><b>Óseas:</b> fracturas (acelera <gl k="consolidacion">consolidación</gl>), edema óseo, fisuras — actúa sobre el yeso.<br><b>Neurológicas:</b> <gl k="ciatica">ciática</gl>, <gl k="neuralgia">neuralgias</gl>, <gl k="parestesia">parestesias</gl>.<br><b>Vasculares:</b> <gl k="edema">edemas</gl>, <gl k="linfedema">linfedemas</gl>, <gl k="varices">varices</gl>.<br><b>Piel:</b> <gl k="ulcera">úlceras</gl>, llagas, <gl k="pie-diabetico">pie diabético</gl>, <gl k="ulcera-decubito">úlceras por decúbito</gl>.`},
+      {ti:'Sesiones orientativas',icon:'📅',body:`Fracturas: ~15 · Artrosis: 15-18 · Hernia discal: 10-15 · Lumbociática: 10-15 · Tendinopatía calcificante: 10-12 · Epicondilitis: 7-10 · Fascitis plantar: 10-15 · Túnel carpiano: 10-12 · Contusión: 5-7 · Úlcera: 7-10. Media general: ~10 sesiones.`},
+      {ti:'Casos especiales — lo que NO es obstáculo',icon:'✅',body:`Con escayola: el campo atraviesa cualquier material. Úlceras y llagas: sin retirar el apósito. Postquirúrgico: ideal. <gl k="pie-diabetico">Pie diabético</gl> y <gl k="ulcera-decubito">úlceras por decúbito</gl>: sin contacto directo. Prótesis de titanio: compatible.`}
+     ],
+     qs:[
+      {q:'Un paciente lleva escayola. ¿Se puede aplicar la bomba?',opts:['No, hay que retirar la escayola','Solo si es material sintético','Sí, el campo magnético atraviesa cualquier material'],ok:2,fb:['No del todo.','No del todo.','¡Correcto! La escayola no es obstáculo.']},
+      {q:'¿Qué lesión suele necesitar más sesiones?',opts:['Contusión','Artrosis','Epicondilitis'],ok:1,fb:['No del todo.','¡Correcto! Artrosis: 15-18 sesiones.','No del todo.']},
+      {q:'¿Cuántas sesiones necesita una hernia discal grave?',opts:['10-15 sesiones','3-5 sesiones','25-30 sesiones'],ok:0,fb:['¡Correcto! 10-15 sesiones.','No del todo.','No del todo.']}
+     ]
+    },
+    {t:'FAQ · Respuestas para pacientes',sub:'Preguntas frecuentes · Guía de administración',
+     cards:[
+      {ti:'"¿Duele?"',icon:'❓',body:`No, completamente indoloro. Puede notar leve hormigueo o calor superficial — normal y sin daño.`},
+      {ti:'"¿Es peligrosa tanta potencia?"',icon:'❓',body:`No. A pesar de los 2 <gl k="tesla">Tesla</gl>, la <gl k="frecuencia">frecuencia</gl> es muy baja (7 <gl k="hz">Hz</gl>), por lo que la energía no es <gl k="ionizante">ionizante</gl> y no daña los <gl k="tejidos">tejidos</gl>. Una resonancia magnética hospitalaria trabaja a 1,5-3 Tesla sin problema.`},
+      {ti:'"¿Es lo mismo que la magnetoterapia?"',icon:'❓',body:`No. La <gl k="magnetoterapia">magnetoterapia</gl> convencional: 100-500 <gl k="gauss">gauss</gl>, 4 horas/sesión. La bomba: 20.000 <gl k="gauss">gauss</gl>, 15-30 min/sesión. Además actúa sobre líquidos corporales y puede tratar lesiones agudas.`},
+      {ti:'Cuándo derivar al fisioterapeuta',icon:'⚠️',body:`Siempre que la pregunta sea sobre diagnóstico, protocolo o efectos secundarios específicos. El rol de admin es explicar la tecnología y resolver dudas generales — no hacer valoraciones clínicas.`}
+     ],
+     qs:[
+      {q:'Paciente pregunta si es peligrosa tanta potencia. ¿Qué le dices?',opts:['Es experimental, hay que firmar un consentimiento','A pesar de los 2 Tesla, la energía no es ionizante porque la frecuencia es muy baja (7 Hz)','Que pregunte al fisio'],ok:1,fb:['No del todo.','¡Correcto! Frecuencia baja = energía no ionizante = seguro.','No del todo — este sí es un tema que admin puede explicar.']},
+      {q:'¿Cuándo derivar al fisioterapeuta?',opts:['Siempre','Cuando la pregunta es sobre su diagnóstico o protocolo específico','Solo si el paciente se muestra agresivo'],ok:1,fb:['No del todo — admin puede explicar la tecnología general.','¡Correcto! Las preguntas clínicas específicas siempre al fisioterapeuta.','No del todo.']},
+      {q:'Un paciente dice "probé magnetoterapia y no funcionó". ¿Qué le explicas?',opts:['Son tecnologías muy distintas: la bomba es 40 veces más potente y actúa sobre los líquidos corporales','La magnetoterapia es igualmente válida','Derivar sin explicación'],ok:0,fb:['¡Correcto! Clave explicar la diferencia de potencia y mecanismo.','No del todo.','No del todo.']}
+     ]
+    },
+    {t:'Contraindicaciones',sub:'Absolutas · Relativas · Lo que NO es contraindicación',
+     cards:[
+      {ti:'Contraindicaciones absolutas',icon:'🚫',body:`<b>NO aplicar en ningún caso:</b><br>· <gl k="marcapasos">Marcapasos</gl> u otros <gl k="implante-electronico">implantes electrónicos activos</gl><br>· <gl k="embarazo">Embarazo</gl> (especialmente primer trimestre)<br>· <gl k="epilepsia">Epilepsia no controlada</gl><br>· Implantes metálicos ferromagnéticos en la zona<br>· <gl k="tumor">Tumores malignos activos</gl> en la zona<br>· <gl k="trombosis">Trombosis venosa profunda</gl> activa`},
+      {ti:'Contraindicaciones relativas',icon:'⚠️',body:`Valorar con el fisioterapeuta antes de confirmar:<br>· Fiebre alta o infección activa generalizada<br>· <gl k="hemorragia">Hemorragia</gl> activa o tendencia hemorrágica severa<br>· Menstruación intensa (evitar zona abdominal)<br>· Hipotensión severa<br>· Niños menores de 6 años`},
+      {ti:'Lo que NO es contraindicación',icon:'✅',body:`<gl k="protesis">Prótesis</gl> de titanio o cerámica ✓ · Escayola ✓ · Diabetes ✓ · Edad avanzada ✓ · Haber probado otras terapias sin resultado ✓`},
+      {ti:'Protocolo de admin ante dudas',icon:'🔑',body:`Ante cualquier duda: "Voy a consultarlo con el fisioterapeuta para asegurarnos de que el tratamiento es adecuado para ti." <b>Nunca dar un veredicto de contraindicación tú solo.</b>`}
+     ],
+     qs:[
+      {q:'Un paciente menciona que lleva marcapasos. ¿Qué haces?',opts:['Decirle que no hay problema','Consultar al fisioterapeuta antes de confirmar','Cancelar la cita directamente'],ok:1,fb:['No del todo — el marcapasos es contraindicación absoluta.','¡Correcto! Siempre consultar al fisioterapeuta ante contraindicaciones potenciales.','No del todo.']},
+      {q:'¿Cuál es una contraindicación absoluta?',opts:['Prótesis de titanio','Diabetes tipo 2','Embarazo en primer trimestre'],ok:2,fb:['No del todo — el titanio es compatible.','No del todo — la diabetes no es contraindicación.','¡Correcto! El embarazo en primer trimestre es contraindicación absoluta.']},
+      {q:'Un paciente lleva prótesis de titanio. ¿Puede tratarse?',opts:['No, todas las prótesis metálicas están contraindicadas','El titanio no es ferromagnético y generalmente es compatible — el fisio hará la valoración final','Depende del fabricante'],ok:1,fb:['No del todo — solo los metales ferromagnéticos son contraindicación.','¡Correcto! El titanio es compatible, pero la valoración final la hace el fisioterapeuta.','No del todo.']}
+     ]
+    }
+  ];
+
+  let curMod=0, scores=new Array(MODS.length).fill(null).map(()=>({c:0,done:false}));
+  let ttEl=null;
+  const seccionKey = 'wiki_' + (ruta ? ruta.id : 'bomba');
+  const yaHecho = progresoFisio[seccionKey]?.estado === 'completado';
+
+  // Tooltip glosario
+  const tt=document.createElement('div');
+  tt.style.cssText='position:fixed;display:none;background:white;border:1px solid rgba(0,0,0,0.15);border-radius:10px;padding:10px 14px;max-width:270px;z-index:9999;font-size:12px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,0.1);pointer-events:none';
+  document.body.appendChild(tt);
+  function showTT(el,key){
+    const d=GLOSS[key];if(!d)return;
+    tt.innerHTML=`<div style="font-size:10px;font-weight:600;color:var(--lila);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">${d[0]}</div><div style="color:#444">${d[1]}</div><div style="font-size:10px;color:#aaa;margin-top:5px">toca fuera para cerrar</div>`;
+    const r=el.getBoundingClientRect();let left=r.left,top=r.bottom+6;
+    if(left+275>window.innerWidth-8)left=window.innerWidth-283;if(left<8)left=8;
+    if(top+130>window.innerHeight)top=r.top-140;
+    tt.style.left=left+'px';tt.style.top=top+'px';tt.style.display='block';ttEl=el;
+  }
+  function hideTT(){tt.style.display='none';ttEl=null;}
+  function buildGL(html){
+    const d=document.createElement('div');d.style.cssText='font-size:13px;color:#444;line-height:1.65';
+    d.innerHTML=html.replace(/<gl k="([^"]+)">([^<]+)<\/gl>/g,(_,k,t)=>`<em style="color:var(--lila);border-bottom:1.5px dotted var(--lila);cursor:pointer;font-style:normal" data-glk="${k}">${t}</em>`);
+    d.querySelectorAll('[data-glk]').forEach(el=>{
+      el.addEventListener('click',e=>{e.stopPropagation();ttEl===el?hideTT():showTT(el,el.dataset.glk);});
+    });
+    return d;
+  }
+  document.addEventListener('click',()=>hideTT());
+
+  function renderMod(){
+    wrap.innerHTML='';
+    const m=MODS[curMod];
+
+    // Cabecera con botón volver
+    const hd=ce('div','');
+    hd.innerHTML=`
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+        <button class="btn-back" id="formBtnVolver">← Volver</button>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">${m.t}</div>
+          <div style="font-size:11px;color:var(--muted)">${m.sub}</div>
+        </div>
+        <span style="font-size:11px;background:var(--lila-light);color:var(--lila);padding:3px 10px;border-radius:99px;font-weight:600;white-space:nowrap">${curMod+1}/${MODS.length}</span>
+      </div>`;
+    hd.querySelector('#formBtnVolver').onclick = () => {
+      tt.remove();
+      renderWiki(wrap);
+    };
+    const pb=ce('div','');pb.style.cssText='height:3px;background:#eee;border-radius:4px;margin-bottom:18px';
+    const pf=ce('div','');pf.style.cssText=`height:3px;background:var(--lila);border-radius:4px;width:${Math.round(((curMod+1)/MODS.length)*100)}%;transition:width .4s`;
+    pb.appendChild(pf);hd.appendChild(pb);wrap.appendChild(hd);
+
+    // Píldoras de navegación entre módulos
+    const mn=ce('div','');mn.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px';
+    MODS.forEach((mod,i)=>{
+      const b=ce('button','');const isDone=scores[i].done;
+      b.style.cssText=`font-family:var(--font);font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid;cursor:pointer;transition:all .15s;${i===curMod?'background:var(--lila);color:white;border-color:var(--lila)':isDone?'background:var(--lila-light);color:var(--lila);border-color:var(--lila)':'background:white;color:var(--muted);border-color:rgba(0,0,0,0.12)'}`;
+      b.textContent=isDone?'✓ '+(i+1):''+(i+1);b.title=mod.t;b.onclick=()=>{curMod=i;renderMod();};mn.appendChild(b);
+    });
+    wrap.appendChild(mn);
+
+    // Cards de contenido
+    m.cards.forEach(card=>{
+      const c=ce('div','card');c.innerHTML=`<div class="ct">${card.icon} ${card.ti}</div>`;
+      const body=buildGL(card.body);c.appendChild(body);wrap.appendChild(c);
+    });
+
+    // Test del módulo
+    const tHd=ce('div','');tHd.innerHTML='<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 10px">✓ Test del módulo</div>';
+    wrap.appendChild(tHd);
+    const qState=m.qs.map(()=>({answered:false,correct:false}));
+    m.qs.forEach((q,qi)=>{
+      const qb=ce('div','card');qb.style.marginBottom='10px';
+      const qt=ce('div','');qt.style.cssText='font-size:14px;font-weight:500;margin-bottom:10px';qt.textContent=q.q;qb.appendChild(qt);
+      const opts=ce('div','');opts.style.cssText='display:flex;flex-direction:column;gap:6px';
+      const fb=ce('div','');fb.style.cssText='font-size:12px;margin-top:8px;padding:8px 10px;border-radius:8px;display:none';
+      q.opts.forEach((opt,oi)=>{
+        const b=ce('button','');
+        b.style.cssText='text-align:left;font-family:var(--font);font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.12);background:#f9f9f9;color:var(--black);cursor:pointer;transition:all .15s';
+        b.textContent=opt;
+        b.onmouseenter=()=>{if(!qState[qi].answered)b.style.background='var(--lila-light)';};
+        b.onmouseleave=()=>{if(!qState[qi].answered)b.style.background='#f9f9f9';};
+        b.onclick=()=>{
+          if(qState[qi].answered)return;
+          qState[qi].answered=true;
+          opts.querySelectorAll('button').forEach(x=>x.style.cursor='default');
+          if(oi===q.ok){b.style.cssText='text-align:left;font-family:var(--font);font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid #9FE1CB;background:#E1F5EE;color:#085041;cursor:default';qState[qi].correct=true;}
+          else{b.style.cssText='text-align:left;font-family:var(--font);font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid #F7C1C1;background:#FCEBEB;color:#791F1F;cursor:default';opts.querySelectorAll('button')[q.ok].style.cssText='text-align:left;font-family:var(--font);font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid #9FE1CB;background:#E1F5EE;color:#085041;cursor:default';}
+          fb.textContent=(oi===q.ok?'✓ ':'✗ ')+q.fb[oi];
+          fb.style.cssText=`font-size:12px;margin-top:8px;padding:8px 10px;border-radius:8px;display:block;${oi===q.ok?'background:#E1F5EE;color:#085041':'background:#FCEBEB;color:#791F1F'}`;
+          if(qState.every(s=>s.answered)){
+            const corr=qState.filter(s=>s.correct).length;
+            scores[curMod]={c:corr,done:true};
+            const res=ce('div','card');res.style.cssText='text-align:center;background:var(--lila-light);border-color:var(--lila);margin-top:10px';
+            res.innerHTML=`<div style="font-size:28px;font-weight:700;color:var(--lila)">${corr}/${m.qs.length}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">${Math.round((corr/m.qs.length)*100)}% de aciertos</div>`;
+            qb.parentNode.appendChild(res);
+            renderNavPills(mn);
+          }
+        };
+        opts.appendChild(b);
+      });
+      qb.appendChild(opts);qb.appendChild(fb);wrap.appendChild(qb);
+    });
+
+    // Navegación inferior
+    const bnav=ce('div','');bnav.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)';
+    const bprev=ce('button','btn-back');bprev.textContent='← Anterior';bprev.style.visibility=curMod===0?'hidden':'visible';
+    bprev.onclick=()=>{curMod--;renderMod();};
+    const bctr=ce('div','');bctr.style.cssText='font-size:12px;color:var(--muted)';bctr.textContent=`Módulo ${curMod+1} de ${MODS.length}`;
+    const bnext=ce('button','btn btn-g');bnext.style.cssText='width:auto;padding:10px 20px';
+
+    if(curMod === MODS.length - 1){
+      // Último módulo: botón de completar curso
+      bnext.textContent='¡Curso completado!';
+      bnext.style.background='var(--lila)';
+      bnext.onclick=()=>{};
+
+      // Botón marcar como completado (igual que renderWikiRuta)
+      const progresoBtn=ce('button','wiki-completado-btn '+(yaHecho?'hecho':'pendiente'));
+      progresoBtn.id='wikiProgresoBtn';
+      progresoBtn.style.cssText='width:100%;margin-top:18px';
+      if(yaHecho){
+        const fecha=progresoFisio[seccionKey]?.fecha||'';
+        progresoBtn.innerHTML='✓ Completado'+(fecha?' · '+fecha:'');
+      } else {
+        progresoBtn.innerHTML='Marcar como completado';
+        progresoBtn.onclick=()=>marcarProgreso(seccionKey);
+      }
+      bnav.appendChild(bprev);bnav.appendChild(bctr);bnav.appendChild(bnext);wrap.appendChild(bnav);
+      wrap.appendChild(progresoBtn);
+    } else {
+      bnext.textContent='Siguiente →';
+      bnext.onclick=()=>{curMod++;renderMod();};
+      bnav.appendChild(bprev);bnav.appendChild(bctr);bnav.appendChild(bnext);wrap.appendChild(bnav);
+    }
+  }
+
+  function renderNavPills(mn){
+    mn.querySelectorAll('button').forEach((b,i)=>{
+      const isDone=scores[i].done;
+      b.style.cssText=`font-family:var(--font);font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid;cursor:pointer;transition:all .15s;${i===curMod?'background:var(--lila);color:white;border-color:var(--lila)':isDone?'background:var(--lila-light);color:var(--lila);border-color:var(--lila)':'background:white;color:var(--muted);border-color:rgba(0,0,0,0.12)'}`;
+      b.textContent=isDone?'✓ '+(i+1):''+(i+1);
+    });
+  }
+
+  renderMod();
 }
 
 // LIGHTBOX
