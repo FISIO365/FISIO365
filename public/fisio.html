@@ -274,7 +274,7 @@ input[type=number]{text-align:center}
 .wiki-ruta-soon .wiki-ruta-meta{color:var(--muted);background:var(--cream)}
 
 /* PROGRESO WIKIFISIO */
-.wiki-completado-btn{width:100%;max-width:560px;margin-top:14px;padding:13px;font-family:var(--font);font-size:14px;font-weight:600;border-radius:var(--r-sm);cursor:pointer;transition:all .2s;border:none}
+.wiki-completado-btn{width:100%;max-width:100%;box-sizing:border-box;margin-top:14px;padding:13px;font-family:var(--font);font-size:14px;font-weight:600;border-radius:var(--r-sm);cursor:pointer;transition:all .2s;border:none;white-space:normal;word-break:break-word}
 .wiki-completado-btn.pendiente{background:var(--black);color:white}
 .wiki-completado-btn.pendiente:hover{opacity:.85}
 .wiki-completado-btn.hecho{background:#e8f5e9;color:#2e7d32;cursor:default}
@@ -2584,7 +2584,7 @@ function renderFormacion(wrap, ruta){
 
       const progresoBtn=ce('button','wiki-completado-btn '+(yaHecho?'hecho':'pendiente'));
       progresoBtn.id='wikiProgresoBtn';
-      progresoBtn.style.cssText='width:100%;margin-top:18px';
+      progresoBtn.style.cssText='width:100%;box-sizing:border-box;margin-top:18px';
 
       if(yaHecho){
         const fecha=progresoFisio[seccionKey]?.fecha||'';
@@ -2592,19 +2592,17 @@ function renderFormacion(wrap, ruta){
       } else if(hayIncompletos){
         progresoBtn.innerHTML='Completa todos los tests para continuar';
         progresoBtn.disabled=true;
-        progresoBtn.style.cssText+='opacity:0.45;font-size:12px;padding:9px 12px;white-space:normal;line-height:1.4;';
-        progresoBtn.style.cursor='default';
+        progresoBtn.style.cssText='width:100%;box-sizing:border-box;margin-top:18px;opacity:0.45;font-size:12px;padding:9px 12px;white-space:normal;line-height:1.4;cursor:default;';
       } else if(hayFallos){
         // Hay fallos: mostrar botón para repetir tests fallados
         progresoBtn.innerHTML='Tienes respuestas incorrectas — repite los tests para continuar';
         progresoBtn.disabled=true;
-        progresoBtn.style.cssText+='opacity:0.45;font-size:12px;padding:9px 12px;white-space:normal;line-height:1.4;';
-        progresoBtn.style.cursor='default';
+        progresoBtn.style.cssText='width:100%;box-sizing:border-box;margin-top:18px;opacity:0.45;font-size:12px;padding:9px 12px;white-space:normal;line-height:1.4;cursor:default;';
         progresoBtn.style.cssText+='background:#FCEBEB;color:#791F1F;border-color:#F7C1C1;';
 
         // Botón de repetir: resetea solo los módulos fallados
         const btnRepetir=ce('button','wiki-completado-btn pendiente');
-        btnRepetir.style.cssText='width:100%;margin-top:8px';
+        btnRepetir.style.cssText='width:100%;box-sizing:border-box;margin-top:8px';
         btnRepetir.innerHTML='Repetir tests con fallos';
         btnRepetir.onclick=()=>{
           scores.forEach((s,i)=>{if(s.done && s.c < MODS[i].qs.length) scores[i]={c:0,done:false};});
