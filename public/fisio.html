@@ -2590,15 +2590,15 @@ function renderFormacion(wrap, ruta){
         const fecha=progresoFisio[seccionKey]?.fecha||'';
         progresoBtn.innerHTML='✓ Completado'+(fecha?' · '+fecha:'');
       } else if(hayIncompletos){
-        progresoBtn.innerHTML='Completa todos los módulos para marcar como completado';
+        progresoBtn.innerHTML='Completa todos los tests para continuar';
         progresoBtn.disabled=true;
-        progresoBtn.style.opacity='0.45';
+        progresoBtn.style.cssText+='opacity:0.45;font-size:12px;padding:9px 12px;white-space:normal;line-height:1.4;';
         progresoBtn.style.cursor='default';
       } else if(hayFallos){
         // Hay fallos: mostrar botón para repetir tests fallados
         progresoBtn.innerHTML='Tienes respuestas incorrectas — repite los tests para continuar';
         progresoBtn.disabled=true;
-        progresoBtn.style.opacity='0.45';
+        progresoBtn.style.cssText+='opacity:0.45;font-size:12px;padding:9px 12px;white-space:normal;line-height:1.4;';
         progresoBtn.style.cursor='default';
         progresoBtn.style.cssText+='background:#FCEBEB;color:#791F1F;border-color:#F7C1C1;';
 
