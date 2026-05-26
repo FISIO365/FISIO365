@@ -2042,6 +2042,30 @@ const WIKI_RUTAS = [
     imgs: [],
     tits: [],
     tipo: 'formacion'
+  },
+  {
+    id: 'ondas',
+    titulo: 'Ondas de Choque · Nivel Experto',
+    desc: 'Tecnología diamagnética, focalización, parámetros clínicos y protocolos',
+    etiqueta: 'Fisioterapeutas',
+    info: '<strong>¿Qué aprenderás aquí?</strong><br><br>8 módulos técnicos con test interactivo sobre el funcionamiento del CTU S Wave, la física de la onda de choque diamagnética, las lentes de Fresnel, los modos DIA/no DIA y los protocolos clínicos.<br><br><strong>¿Para quién?</strong><br><br>Fisioterapeutas del equipo.<br><br><strong>¿Cuánto dura?</strong><br><br>8 módulos. Puedes completarlo a tu ritmo.',
+    pasos: 8,
+    emoji: '',
+    imgs: [],
+    tits: [],
+    tipo: 'formacion'
+  },
+  {
+    id: 'ondas-basico',
+    titulo: 'Ondas de Choque · Nivel Básico',
+    desc: 'Qué es, para qué sirve, cómo explicarlo y qué preguntar al paciente',
+    etiqueta: 'Todo el equipo',
+    info: '<strong>¿Qué aprenderás aquí?</strong><br><br>7 módulos prácticos para entender qué son las ondas de choque, cómo se diferencian de los equipos tradicionales, cómo explicárselas a los pacientes, qué preguntas hacer en recepción y qué no decir nunca.<br><br><strong>¿Para quién?</strong><br><br>Todo el equipo — especialmente administración y recepción.<br><br><strong>¿Cuánto dura?</strong><br><br>7 módulos. Puedes completarlo a tu ritmo.',
+    pasos: 7,
+    emoji: '',
+    imgs: [],
+    tits: [],
+    tipo: 'formacion'
   }
 ];
 
@@ -2291,7 +2315,8 @@ function enviarRecepcion(pacNom, informe, fecha, fisioNom){
 
 // ── FORMACIÓN BOMBA DIAMAGNÉTICA ─────────────────────────────────────────────
 function renderFormacion(wrap, ruta){
-  const GLOSS={
+  // ── GLOSARIOS ────────────────────────────────────────────────
+  const GLOSS_BOMBA={
     'campo-magnetico':['Campo magnético','Zona de influencia invisible que puede ejercer fuerzas sobre materiales sensibles. La bomba genera un campo de 2 Tesla que interactúa con los líquidos del cuerpo.'],
     'tesla':['Tesla (T)','Unidad de intensidad del campo magnético. 1 T = 10.000 gauss. La bomba trabaja a 2 Tesla.'],
     'gauss':['Gauss','Unidad del campo magnético. La magnetoterapia convencional: 100-500 G. La bomba: 20.000 G.'],
@@ -2344,7 +2369,42 @@ function renderFormacion(wrap, ruta){
     'implante-electronico':['Implante electrónico activo','Marcapasos, bomba de insulina, neuroestimulador. Todos son contraindicación absoluta.'],
     'hemorragia':['Hemorragia activa','Sangrado activo. El aumento de flujo podría agravarlo.']
   };
-  const MODS=[
+
+  const GLOSS_ONDAS={
+    'onda-choque':['Onda de choque','Impulso acústico de brevísima duración generado por un aumento rápido de presión hasta valores muy elevados (pico de presión) que decrece hasta la presión negativa.'],
+    'diamagnetico':['Diamagnético','Material con magnetización negativa que, expuesto a un campo electromagnético, sufre un impulso repulsivo proporcional a la intensidad del campo.'],
+    'ctu-s-wave':['CTU S Wave','Primer generador de onda de choque con tecnología diamagnética de PERISO SA. Supera los límites de las máquinas tradicionales al permitir modular el gradiente espacio-temporal de la onda.'],
+    'lente-fresnel':['Lente de Fresnel','Lente plana con secciones concéntricas que producen diferentes profundidades de enfoque. En el CTU S Wave permiten variar la focalización espacial de la onda.'],
+    'focalizacion-temporal':['Focalización temporal','Variación de la cantidad de energía emitida por unidad de tiempo, adaptada a las características de impedancia acústica del tejido.'],
+    'focalizacion-espacial':['Focalización espacial','Variación de la energía en función de la distancia y la zona del tejido a tratar.'],
+    'semionda-positiva':['Semionda positiva','Fase de compresión de la onda de choque. Produce el estrés mecánico sobre las interfaces de tejidos con diferente densidad.'],
+    'semionda-negativa':['Semionda negativa','Fase de tracción de la onda de choque. Genera fuerzas de cavitación que también tienen efecto terapéutico.'],
+    'cavitacion':['Cavitación','Formación de burbujas de gas en los líquidos por la semionda negativa. En dosis controlada es terapéutica; en exceso, dañina.'],
+    'impedancia-acustica':['Impedancia acústica','Resistencia que ofrece un tejido al paso de una onda sonora. Varía según la densidad y elasticidad del tejido.'],
+    'rise-time':['Rise time','Tiempo de subida del impulso hasta el valor pico de presión. La CTU S Wave puede modificarlo para reducir el dolor.'],
+    'modo-dia':['Modo DIA','Modo diamagnético: la lente resulta transparente al campo magnético, añadiendo el efecto de drenaje diamagnético al efecto de onda de choque.'],
+    'modo-no-dia':['Modo no DIA','La lente es opaca al campo magnético, que solo se usa para generar la onda de choque acústica clásica.'],
+    'drenaje':['Drenaje (modo operativo)','La onda de choque combina el efecto antiinflamatorio con el drenaje de líquidos por efecto diamagnético. Indicado en edemas y fases agudas.'],
+    'estimulacion':['Estimulación (modo operativo)','La sinergia entre onda de choque y campo magnético activa la neoangiogénesis, la proliferación celular y la restauración metabólica.'],
+    'disgregacion':['Disgregación (modo operativo)','Adapta la envolvente temporal de la onda a las características del tejido. Especialmente eficaz en tendinopatías degenerativas y calcificaciones.'],
+    'neoangiogenesis':['Neoangiogénesis','Formación de nuevos vasos sanguíneos. Favorecida por la estimulación con ondas de choque para mejorar la vascularización de la zona.'],
+    'tendinopatia':['Tendinopatía','Degeneración o lesión del tendón, aguda o crónica. Las ondas de choque son la terapia de referencia en muchos casos.'],
+    'calcificacion':['Calcificación','Depósito de calcio en tejido blando (tendón, músculo). La onda de choque en modo disgregación puede romperlo y reabsorberlo.'],
+    'trigger-points':['Trigger points','Puntos gatillo: zonas hipersensibles del músculo que generan dolor local y referido. Indicación clásica de las ondas de choque.'],
+    'fasciitis-plantar':['Fasciitis plantar','Inflamación de la fascia plantar del pie. Uno de los tratamientos estrella de las ondas de choque, con o sin espina calcánea.'],
+    'epicondilitis':['Epicondilitis','Tendinopatía del codo por sobrecarga (codo de tenista/golfista). Responde muy bien a las ondas de choque.'],
+    'bursitis':['Bursitis','Inflamación de la bursa articular. Tratable con CTU S Wave, incluso en fase aguda con modo DIA.'],
+    'marcapasos':['Marcapasos','Dispositivo electrónico implantado. Contraindicación absoluta con ondas de choque y cualquier campo electromagnético.'],
+    'embarazo':['Embarazo','Contraindicación absoluta para las ondas de choque en la zona abdominal o pélvica.'],
+    'tumor':['Tumor maligno','Cáncer activo en la zona a tratar. Contraindicación absoluta.'],
+    'trombosis':['Trombosis venosa profunda','Coágulo en vena profunda. Contraindicación absoluta en la zona afectada.'],
+    'consolidacion':['Consolidación ósea','Proceso de unión del hueso roto. Las ondas de choque pueden acelerar fracturas con retraso en la consolidación.']
+  };
+
+  const GLOSS = ruta.id === 'ondas' ? GLOSS_ONDAS : GLOSS_BOMBA;
+
+  // ── MÓDULOS ─────────────────────────────────────────────────
+  const MODS_BOMBA=[
     {t:'¿Qué es la bomba diamagnética?',sub:'Fundamentos básicos · CTU Mega20',
      cards:[
       {ti:'La tecnología',icon:'⚡',body:`Es un dispositivo que genera un <gl k="campo-magnetico">campo magnético</gl> de <gl k="tesla">2 Tesla</gl> (<gl k="gauss">20.000 gauss</gl>) <gl k="pulsado">pulsado</gl> a <gl k="hz">7 Hz</gl>. Completamente no invasivo e indoloro. Se llama <em>tecnología antiquirófano</em> porque permite resolver <gl k="patologias">patologías</gl> que antes requerían cirugía.`},
@@ -2449,9 +2509,212 @@ function renderFormacion(wrap, ruta){
     }
   ];
 
+  const MODS_ONDAS=[
+    {t:'¿Qué es la onda de choque?',sub:'Física básica · Efecto terapéutico',
+     cards:[
+      {ti:'Definición',body:`Una <gl k="onda-choque">onda de choque</gl> es un impulso acústico de brevísima duración generado por un rápido aumento de presión hasta un pico máximo, que decrece hasta cruzar una fase de presión negativa. Esta alternancia somete a los tejidos a fuerzas de <b>compresión y tracción</b>.`},
+      {ti:'Efecto terapéutico',body:`El efecto terapéutico está ligado al estrés mecánico de la <gl k="semionda-positiva">semionda positiva</gl> y a las fuerzas de <gl k="cavitacion">cavitación</gl> de la <gl k="semionda-negativa">semionda negativa</gl>:<br><br>· Reducción de la inflamación local<br>· Formación de nuevos vasos sanguíneos (<gl k="neoangiogenesis">neoangiogénesis</gl>)<br>· Reactivación de los procesos de reparación<br>· Restauración de la movilidad articular`},
+      {ti:'El límite de las máquinas tradicionales',body:`Las máquinas tradicionales producen una única forma de onda fija. El profesional <b>NO puede</b> adaptar ni modular los gradientes temporales y espaciales de la presión según las necesidades del tejido. La eficacia depende principalmente de la focalización del impulso acústico, que tampoco se puede controlar.`},
+      {ti:'Analogía para pacientes',body:`"La onda de choque es como una piedra cayendo en el agua: crea una onda de presión que viaja por el tejido y activa sus mecanismos de reparación naturales. El <gl k="ctu-s-wave">CTU S Wave</gl> puede controlar exactamente cómo es esa onda según el tejido que necesita tratamiento."`}
+     ],
+     qs:[
+      {q:'¿Qué es una onda de choque?',opts:['Una corriente eléctrica aplicada al tejido','Un impulso acústico de brevísima duración con pico de presión y fase negativa','Un campo magnético pulsado'],ok:1,fb:['No del todo — la onda de choque es acústica, no eléctrica.','¡Correcto! Un impulso acústico con fase positiva y negativa.','No del todo — eso es la bomba diamagnética CTU Mega20.']},
+      {q:'¿Qué limitación tienen los generadores tradicionales?',opts:['Solo funcionan en patologías crónicas','No producen fase negativa','No pueden modular los gradientes temporales y espaciales de la onda'],ok:2,fb:['No del todo.','No del todo — sí tienen fase negativa.','¡Correcto! La forma de onda es fija y no se puede adaptar al tejido.']},
+      {q:'¿Cuáles son los 4 efectos terapéuticos principales de las ondas de choque?',opts:['Calentamiento, relajación, hidratación y drenaje','Reducción inflamación, neoangiogénesis, reparación y restauración de movilidad','Estimulación nerviosa, analgesia, contracción y relajación muscular'],ok:1,fb:['No del todo.','¡Correcto! Esos son los 4 efectos terapéuticos principales.','No del todo.']}
+     ]
+    },
+    {t:'El generador diamagnético CTU S Wave',sub:'Tecnología · Innovación · Funcionamiento',
+     cards:[
+      {ti:'Qué lo hace diferente',body:`El <gl k="ctu-s-wave">CTU S Wave</gl> es el <b>primer generador de onda de choque con tecnología diamagnética</b>. A diferencia de los equipos tradicionales, permite modificar los gradientes espacio-temporales de la onda — tanto la <gl k="focalizacion-temporal">focalización temporal</gl> como la <gl k="focalizacion-espacial">focalización espacial</gl> — según la necesidad del tratamiento.`},
+      {ti:'Cómo genera la onda',body:`La onda resulta de la interacción entre el flujo de campo de una <b>bobina electromagnética</b> y una lente acústica de <b>aleación fuertemente <gl k="diamagnetico">diamagnética</gl></b>. La lente sufre una fuerte aceleración generando un impulso acústico de casi <b>0,1 microsegundos</b>. Esta es la <em>Onda de Choque Diamagnética</em>.`},
+      {ti:'Ventaja del campo de alta intensidad',body:`El efecto diamagnético requiere un campo magnético de alta intensidad. Gracias a ello, con el CTU S Wave también es posible aprovechar los <b>efectos biológicos del campo eléctrico inducido</b> a alta intensidad de corriente de brevísima duración — un beneficio adicional que los equipos tradicionales no tienen.`},
+      {ti:'Componentes sin desgaste',body:`A diferencia de las máquinas tradicionales, el CTU S Wave está integrado por <b>componentes no sensibles al desgaste</b>. Además dispone de un par de manípulos adicionales configurables con dos focalizaciones distintas, diseñados para tratamientos estéticos.`}
+     ],
+     qs:[
+      {q:'¿Cómo genera la onda de choque el CTU S Wave?',opts:['Mediante un pistón neumático como los equipos radiales','Por la interacción entre la bobina electromagnética y una lente diamagnética','Con ultrasonidos de alta frecuencia'],ok:1,fb:['No del todo — ese es el mecanismo radial clásico.','¡Correcto! La bobina + lente diamagnética genera el impulso de 0,1 µsec.','No del todo.']},
+      {q:'¿Qué duración tiene el impulso acústico del CTU S Wave?',opts:['1 milisegundo','Casi 0,1 microsegundos','5 microsegundos'],ok:1,fb:['No del todo.','¡Correcto! Casi 0,1 µsec — una de las características que lo diferencia.','No del todo.']},
+      {q:'¿Qué ventaja tienen los componentes del CTU S Wave frente a los tradicionales?',opts:['Son más económicos','No son sensibles al desgaste','Son intercambiables entre modelos'],ok:1,fb:['No del todo.','¡Correcto! Componentes sin desgaste — menos mantenimiento.','No del todo.']}
+     ]
+    },
+    {t:'Focalización temporal y espacial',sub:'La innovación clave del generador diamagnético',
+     cards:[
+      {ti:'Focalización temporal',body:`Variación de la cantidad de energía emitida por unidad de tiempo, en función de las características de <gl k="impedancia-acustica">impedancia acústica</gl>, elasticidad y absorción de cada tejido. Permite generar el impulso exacto para cada tipo de tejido, favoreciendo la absorción energética y la bioestimulación celular.`},
+      {ti:'Cómo se controla: el rise time',body:`La modificación de los gradientes temporales viene dada por la posibilidad de regular el <b>frente de onda</b>, es decir, el <gl k="rise-time">rise time</gl> — el tiempo de subida del impulso hasta el valor pico. A mayor frente de onda seleccionado, mayor inclinación del impulso y mayor rigidez de la intervención sobre los tejidos.`},
+      {ti:'Focalización espacial',body:`Variación de la energía disponible en función de la <b>distancia y zona del tejido</b> a tratar. Permite energizar específicamente la sección elegida, aplicando la presión exacta sobre el área objetivo sin interferir con los tejidos sanos adyacentes.`},
+      {ti:'Por qué es importante para el profesional',body:`El <gl k="ctu-s-wave">CTU S Wave</gl> permite modificar <em>instantáneamente</em> el gradiente temporal de la onda para la misma energía administrada. Esto reduce el dolor durante el tratamiento manteniendo los valores de presión necesarios para el efecto terapéutico. <b>Más eficacia, menos dolor.</b>`}
+     ],
+     qs:[
+      {q:'¿Qué es la focalización temporal?',opts:['Regular la profundidad de penetración de la onda','Variar la energía emitida por unidad de tiempo según el tejido','Seleccionar el número de impulsos por sesión'],ok:1,fb:['No del todo — eso es más la focalización espacial.','¡Correcto! Energía por unidad de tiempo adaptada a cada tejido.','No del todo.']},
+      {q:'¿Qué es el rise time?',opts:['El tiempo total de la sesión','El tiempo de subida del impulso hasta el valor pico de presión','La frecuencia de repetición de los impulsos'],ok:1,fb:['No del todo.','¡Correcto! Es el gradiente temporal que el CTU S Wave puede controlar.','No del todo.']},
+      {q:'¿Qué permite la focalización espacial?',opts:['Aplicar energía solo en la piel','Tratar tejidos profundos sin afectar zonas sanas adyacentes','Seleccionar la frecuencia de la onda'],ok:1,fb:['No del todo — penetra en profundidad.','¡Correcto! Energía específica sobre el área objetivo sin dañar lo de alrededor.','No del todo.']}
+     ]
+    },
+    {t:'Las lentes de Fresnel',sub:'Focalización espacial · 5 tipos de lente',
+     cards:[
+      {ti:'Qué son y cómo funcionan',body:`Las <gl k="lente-fresnel">lentes de Fresnel</gl> son lentes planas con secciones anulares concéntricas que producen diferentes profundidades de enfoque, apertura y geometría espacial. Su poder dióptrico equivale al de una lente esférica convencional pero en formato plano, más eficiente. La focalización del impulso ocurre en un <b>área de energización tridimensional</b>.`},
+      {ti:'Los 5 tipos de lente del CTU S Wave',body:`El sistema dispone de <b>5 lentes de Fresnel intercambiables</b>:<br><br>· <b>Lente 65:</b> profundidad 5,5–7 cm<br>· <b>Lente 40:</b> profundidad 3,5–4,5 cm<br>· <b>Lente 30:</b> profundidad 2,5–3,5 cm<br>· <b>Lente 20:</b> profundidad 2 cm<br>· <b>Lente 00:</b> desenfocada (difusa)`},
+      {ti:'Cómo elegir la lente',body:`La selección de la lente depende de la <b>profundidad del tejido a tratar</b>. Para estructuras superficiales (piel, fascia, tendones superficiales) se usan lentes de menor número. Para tejidos profundos (articulaciones, músculo profundo, hueso) se usan lentes de mayor número. El fisioterapeuta decide la combinación óptima.`},
+      {ti:'Analogía para entenderlo',body:`"Es como el zoom de una cámara: con la lente 00 la energía se difunde en área amplia y superficial; con la 65 se concentra en un punto específico a 6 cm de profundidad. Diferente objetivo, diferente herramienta."`}
+     ],
+     qs:[
+      {q:'¿Cuántos tipos de lente de Fresnel tiene el CTU S Wave?',opts:['3','5','7'],ok:1,fb:['No del todo.','¡Correcto! 5 lentes: 00, 20, 30, 40 y 65.','No del todo.']},
+      {q:'¿Qué lente usarías para tratar un tejido a 6 cm de profundidad?',opts:['Lente 00 (desenfocada)','Lente 20 (2 cm)','Lente 65 (5,5–7 cm)'],ok:2,fb:['No del todo — la 00 es difusa.','No del todo — la 20 llega a 2 cm.','¡Correcto! La lente 65 focaliza a 5,5–7 cm.']},
+      {q:'¿Qué forma tiene el área de energización de las lentes de Fresnel?',opts:['Lineal','Tridimensional','Solo en superficie'],ok:1,fb:['No del todo.','¡Correcto! Crea un área de energización tridimensional.','No del todo.']}
+     ]
+    },
+    {t:'Terapia sin dolor',sub:'Ventajas del generador diamagnético',
+     cards:[
+      {ti:'El problema con las máquinas tradicionales',body:`En las máquinas tradicionales, la <gl k="semionda-negativa">semionda negativa</gl> puede causar efectos no deseados:<br><br>· <b>Cavitación excesiva:</b> burbujas de gas que dañan membranas celulares<br>· <b>Calentamiento:</b> fricción entre moléculas en los líquidos celulares<br>· <b>Microstreaming:</b> turbulencias que pueden dañar los tejidos<br><br>Estos efectos generan dolor durante el tratamiento.`},
+      {ti:'Cómo lo resuelve el CTU S Wave',body:`Con el CTU S Wave el profesional puede <b>controlar el frente de onda acústico</b>, reduciendo así la fase de presión negativa. Esto permite minimizar los efectos negativos y realizar el tratamiento en <b>ausencia total de dolor</b>, incluso en patologías en fase aguda.`},
+      {ti:'3 ventajas clave',body:`<b>1. Tratamientos en fase aguda:</b> en modo diamagnético se puede usar tanto en patologías crónicas como agudas, aprovechando el efecto repulsivo-drenante.<br><br><b>2. Control de la energía:</b> se modifica simultáneamente la cantidad y la velocidad de cesión de energía.<br><br><b>3. Ausencia de dolor:</b> se reduce el gradiente temporal sin perder la presión terapéutica.`},
+      {ti:'Clave para el equipo de admin',body:`Si un paciente pregunta si duele: <em>"No, el tratamiento con el CTU S Wave está diseñado para ser indoloro. El fisioterapeuta controla la intensidad para que sea completamente tolerable, incluso en lesiones recientes."</em>`}
+     ],
+     qs:[
+      {q:'¿Qué efecto negativo puede causar la cavitación excesiva?',opts:['Reducción de la inflamación demasiado rápida','Daño a la membrana celular y microlesiones','Calentamiento del tejido'],ok:1,fb:['No del todo.','¡Correcto! Burbujas de gas que aumentan la permeabilidad y pueden dañar estructuras celulares.','No del todo — el calentamiento es un efecto separado.']},
+      {q:'¿En qué tipo de patologías se puede usar el CTU S Wave gracias al modo diamagnético?',opts:['Solo patologías crónicas','Solo patologías agudas','Tanto crónicas como agudas'],ok:2,fb:['No del todo — supera esa limitación.','No del todo.','¡Correcto! A diferencia de los equipos tradicionales, puede usarse en fase aguda.']},
+      {q:'¿Cómo reduce el dolor el CTU S Wave sin perder eficacia?',opts:['Reduciendo la presión total aplicada','Controlando el gradiente temporal (rise time) para la misma presión administrada','Usando solo la semionda positiva'],ok:1,fb:['No del todo — no pierde eficacia.','¡Correcto! Mismo efecto terapéutico, menos dolor.','No del todo — ambas semiondas siguen presentes.']}
+     ]
+    },
+    {t:'Modos operativos: DIA y no DIA',sub:'Parámetros de uso · Frente de onda · PWR',
+     cards:[
+      {ti:'Modo no DIA',body:`En modo <gl k="modo-no-dia">no DIA</gl>, la lente es opaca al campo magnético. La energía electromagnética se usa <b>únicamente para generar la onda de choque acústica</b>. Es el modo equivalente a un generador de onda de choque convencional, pero con la ventaja de la modulación del CTU S Wave.`},
+      {ti:'Modo DIA',body:`En modo <gl k="modo-dia">DIA</gl>, la lente resulta transparente al campo magnético. Además del efecto de onda de choque, se añade el <b>efecto diamagnético terapéutico</b>: drenaje de líquidos, efecto analgésico y antiinflamatorio. Es la innovación exclusiva del CTU S Wave.`},
+      {ti:'Los 3 parámetros de uso',body:`<b>Frente de onda:</b> mayor frente = mayor inclinación del impulso = mayor rigidez sobre tejidos. Se combina con el modo operativo para adaptar la onda al tejido.<br><br><b>Modo operativo:</b> <gl k="disgregacion">Disgregante</gl> / <gl k="estimulacion">Estimulante</gl> / <gl k="drenaje">Drenante</gl>. Se selecciona según el efecto deseado, tipo de tejido y fase de la patología.<br><br><b>PWR (potencia):</b> el gradiente compresor a generar. Mayor potencia = mayor presión sobre tejidos. Se selecciona según patología y sección anatómica.`},
+      {ti:'Clave práctica',body:`La variabilidad de estos tres parámetros — frente de onda, modo operativo y PWR — garantiza tratamientos <b>indoloros y eficaces</b> adaptados a cada paciente. El fisioterapeuta configura la combinación óptima antes de cada sesión.`}
+     ],
+     qs:[
+      {q:'En modo no DIA, ¿qué hace el campo magnético?',opts:['Añade efecto de drenaje diamagnético','Solo se usa para generar la onda de choque acústica','Penetra más profundo que en modo DIA'],ok:1,fb:['No del todo — eso es el modo DIA.','¡Correcto! En no DIA el campo solo genera la onda acústica.','No del todo.']},
+      {q:'¿Cuáles son los 3 modos operativos del CTU S Wave?',opts:['Agudo, crónico y preventivo','Lento, medio y rápido','Disgregante, estimulante y drenante'],ok:2,fb:['No del todo.','No del todo.','¡Correcto! Los 3 modos según el efecto terapéutico deseado.']},
+      {q:'¿Qué añade el modo DIA respecto al no DIA?',opts:['Mayor potencia de onda acústica','El efecto diamagnético: drenaje, analgesia y antiinflamatorio','Una frecuencia más alta de impulsos'],ok:1,fb:['No del todo.','¡Correcto! El efecto diamagnético es la diferencia clave del modo DIA.','No del todo.']}
+     ]
+    },
+    {t:'Indicaciones terapéuticas',sub:'¿Qué patologías trata el CTU S Wave?',
+     cards:[
+      {ti:'Tendinopatías y problemas musculares',body:`· <gl k="tendinopatia">Tendinopatías agudas</gl> y crónicas<br>· Tendinitis calcificada y no calcificada<br>· Síndromes álgicos musculares<br>· <gl k="epicondilitis">Epicondilitis</gl> del húmero radial y cubital<br>· <gl k="trigger-points">Trigger points</gl><br>· Aquilodinia<br>· Periostitis tibial<br><br>Las ondas de choque son la <b>terapia de referencia</b> en muchas de estas patologías, con evidencia clínica sólida.`},
+      {ti:'Articulaciones y estructuras periarticulares',body:`· Artrosis en fases iniciales<br>· <gl k="bursitis">Bursitis</gl><br>· Síndrome del túnel carpiano<br>· Síndrome rotuliano<br>· <gl k="fasciitis-plantar">Fasciitis plantar</gl> con o sin espina calcánea<br><br>La tecnología diamagnética permite tratar también <b>fases agudas</b>, no solo crónicas, gracias al efecto drenante en modo DIA.`},
+      {ti:'Otras indicaciones',body:`· Retraso en la <gl k="consolidacion">consolidación de fracturas</gl><br>· Úlceras cutáneas y heridas difíciles<br>· Enteropatías<br><br>La capacidad de tratar tanto patologías crónicas como agudas, combinando ondas de choque con el efecto diamagnético, <b>amplía considerablemente el campo de aplicación</b> respecto a los equipos tradicionales.`},
+      {ti:'Protocolo general de tratamiento',body:`La acción disgregante forma parte de un protocolo más amplio:<br><br><b>1.</b> Estimulación preparatoria del tejido<br><b>2.</b> Acción disgregante (calcificaciones, tejido fibrótico)<br><b>3.</b> Acción drenante final<br><br>El número de sesiones varía según patología. El fisioterapeuta define el protocolo específico para cada paciente.`}
+     ],
+     qs:[
+      {q:'¿Cuál de estas patologías es una indicación del CTU S Wave?',opts:['Fractura aguda reciente','Tendinopatía calcificada','Tumor maligno activo'],ok:1,fb:['No del todo — las fracturas recientes no son indicación, sí el retraso en consolidación.','¡Correcto! La tendinitis calcificada es una de las indicaciones principales.','No del todo — eso es contraindicación absoluta.']},
+      {q:'¿Qué ventaja tiene el modo DIA en las indicaciones?',opts:['Permite tratar solo patologías crónicas','Permite tratar también fases agudas gracias al efecto drenante','Aumenta la profundidad de penetración'],ok:1,fb:['No del todo — es la limitación de los equipos tradicionales.','¡Correcto! El modo DIA abre las ondas de choque a las fases agudas.','No del todo — la profundidad la controlan las lentes.']},
+      {q:'¿En qué orden se aplican los modos en el protocolo general?',opts:['Drenante → disgregante → estimulante','Estimulante → disgregante → drenante','Disgregante → estimulante → drenante'],ok:1,fb:['No del todo.','¡Correcto! Primero preparar, luego disgregar, finalmente drenar.','No del todo.']}
+     ]
+    },
+    {t:'Contraindicaciones y protocolo ante dudas',sub:'Seguridad clínica · Rol del equipo',
+     cards:[
+      {ti:'Contraindicaciones absolutas',body:`<b>NO aplicar en ningún caso:</b><br>· <gl k="marcapasos">Marcapasos</gl> u otros implantes electrónicos activos<br>· <gl k="embarazo">Embarazo</gl> (en cualquier trimestre en zona abdominal/pélvica)<br>· <gl k="tumor">Tumores malignos activos</gl> en la zona a tratar<br>· <gl k="trombosis">Trombosis venosa profunda</gl> activa en la zona<br>· Infecciones activas en la zona`},
+      {ti:'Contraindicaciones relativas',body:`Valorar siempre con el fisioterapeuta antes de confirmar:<br>· Fiebre alta o infección generalizada<br>· Alteraciones de la coagulación o anticoagulantes<br>· Niños (valorar individualmente)<br>· Patologías articulares inflamatorias en fase muy aguda sin evaluación previa`},
+      {ti:'Lo que NO es contraindicación',body:`Prótesis de titanio ✓ (no ferromagnético)<br>Diabetes ✓<br>Edad avanzada ✓<br>Patologías crónicas con fracaso de otros tratamientos ✓<br><br>La tecnología diamagnética permite incluso tratar en <b>fases agudas</b> que para otros equipos serían limitantes.`},
+      {ti:'Protocolo del equipo ante dudas',body:`Ante cualquier consulta sobre si el tratamiento es adecuado: <em>"Voy a consultarlo con el fisioterapeuta para asegurarnos de que sea el tratamiento correcto para ti."</em><br><br><b>Nunca dar un veredicto clínico solo como personal de administración.</b> La valoración siempre la hace el fisioterapeuta.`}
+     ],
+     qs:[
+      {q:'Un paciente con marcapasos solicita una sesión de ondas de choque. ¿Qué haces?',opts:['Le informas de que es contraindicación absoluta y consultas al fisio antes de cualquier confirmación','Le confirmas la cita porque el CTU S Wave es diferente a los equipos tradicionales','Le pides que traiga un informe médico y decides tú'],ok:0,fb:['¡Correcto! El marcapasos es contraindicación absoluta — siempre consultar al fisioterapeuta.','No del todo — el marcapasos es contraindicación independientemente del equipo.','No del todo — la decisión clínica la toma el fisioterapeuta, no el equipo de admin.']},
+      {q:'¿Las prótesis de titanio son contraindicación para el CTU S Wave?',opts:['Sí, todo metal implantado está contraindicado','No, el titanio no es ferromagnético y es compatible','Depende del fabricante'],ok:1,fb:['No del todo — solo los metales ferromagnéticos son problemáticos.','¡Correcto! El titanio es compatible con el tratamiento.','No del todo.']},
+      {q:'¿Qué diferencia al CTU S Wave de los equipos tradicionales en cuanto a contraindicaciones?',opts:['Tiene más contraindicaciones por el campo magnético','Puede tratar fases agudas que para otros equipos serían limitantes','No hay ninguna diferencia en contraindicaciones'],ok:1,fb:['No del todo.','¡Correcto! La tecnología diamagnética abre el uso en fases agudas.','No del todo.']}
+     ]
+    }
+  ];
+
+  const MODS_ONDAS_BASICO=[
+    {t:'¿Qué son las ondas de choque?',sub:'Explicación sin tecnicismos',
+     cards:[
+      {ti:'En una frase',body:`Las ondas de choque son <b>impulsos de sonido de alta energía</b> que se aplican sobre la zona lesionada para activar la capacidad de curación natural del cuerpo. No cortan, no pinchan, no queman — simplemente estimulan.`},
+      {ti:'¿Qué noto durante el tratamiento?',body:`El paciente puede notar una <b>sensación de presión o vibración</b> sobre la zona. Con el CTU S Wave el tratamiento está diseñado para ser <b>indoloro o muy tolerable</b>. Si hay molestia, el fisioterapeuta ajusta la intensidad en el momento.`},
+      {ti:'¿Cuánto dura una sesión?',body:`Una sesión dura entre <b>10 y 20 minutos</b> según la zona y la patología. El número de sesiones recomendadas lo decide el fisioterapeuta, habitualmente entre 3 y 6 sesiones.`},
+      {ti:'Cómo explicárselo a un paciente',body:`<em>"Las ondas de choque son como pequeñas vibraciones de energía que el equipo envía a la zona lesionada. No duelen y ayudan al cuerpo a repararse solo. El fisio controla todo durante la sesión."</em>`}
+     ],
+     qs:[
+      {q:'¿Cómo son las ondas de choque en términos sencillos?',opts:['Corriente eléctrica que calienta el tejido','Impulsos de sonido de alta energía que estimulan la curación','Rayos X aplicados sobre la lesión'],ok:1,fb:['No del todo — no hay calor ni electricidad.','¡Correcto! Impulsos de sonido que activan la curación natural.','No del todo — las ondas de choque son acústicas, no ionizantes.']},
+      {q:'¿Cuánto dura aproximadamente una sesión?',opts:['45-60 minutos','5 minutos','10-20 minutos'],ok:2,fb:['No del todo — es más corta.','No del todo — es algo más larga.','¡Correcto! Entre 10 y 20 minutos según la zona.']},
+      {q:'¿Qué debe decirle al paciente si pregunta si duele?',opts:['"Sí, duele bastante pero es necesario"','"No sé, depende de cada persona"','"Está diseñado para ser indoloro — si hay molestia el fisio ajusta la intensidad"'],ok:2,fb:['No del todo — ese mensaje genera miedo innecesario.','No del todo — hay una respuesta mucho mejor.','¡Correcto! Mensaje tranquilizador y honesto.']}
+     ]
+    },
+    {t:'Para qué sirve · Patologías frecuentes',sub:'Lo que más verás en recepción',
+     cards:[
+      {ti:'Las consultas más habituales',body:`Los pacientes que vienen para ondas de choque suelen tener:<br><br>· <b>Tendinitis</b> (tendón de Aquiles, manguito rotador, rodilla)<br>· <b>Fasciitis plantar</b> — dolor en la planta del pie al levantarse<br>· <b>Epicondilitis</b> — "codo de tenista" o "codo de golfista"<br>· <b>Calcificaciones</b> en hombro u otras articulaciones<br>· <b>Contracturas</b> musculares crónicas`},
+      {ti:'¿Por qué les mandan ondas de choque?',body:`Muchos de estos pacientes llevan <b>meses o años con dolor</b> y han probado otras cosas sin éxito. Las ondas de choque tienen mucha evidencia científica en estas patologías y pueden conseguir resultados donde otros tratamientos no llegan.`},
+      {ti:'Qué no decir nunca',body:`❌ <em>"Eso lo cura seguro"</em> — nunca garantices resultados<br>❌ <em>"Es para lo más grave"</em> — genera alarma innecesaria<br>❌ <em>"Duele muchísimo"</em> — con el CTU S Wave no es así<br>❌ <em>"No sé si le servirá"</em> — transmite inseguridad<br><br>✅ Siempre deriva las dudas clínicas al fisioterapeuta.`},
+      {ti:'Frase útil para recepción',body:`<em>"Las ondas de choque son un tratamiento muy eficaz para problemas de tendones y articulaciones. Es rápido, sin dolor y muchos pacientes notan mejoría desde las primeras sesiones. El fisioterapeuta te explicará todo en detalle."</em>`}
+     ],
+     qs:[
+      {q:'Un paciente llega con fasciitis plantar. ¿Es indicación para ondas de choque?',opts:['No, eso se trata solo con plantillas','Sí, es una de las indicaciones más frecuentes','Solo si lleva menos de 3 meses con dolor'],ok:1,fb:['No del todo — las ondas de choque son muy eficaces en fasciitis plantar.','¡Correcto! La fasciitis plantar es una de las indicaciones estrella.','No del todo — funciona en crónico y agudo.']},
+      {q:'¿Qué debes decir si un paciente pregunta si le va a curar?',opts:['"Sí, este tratamiento cura seguro"','"Nunca se sabe, cada caso es diferente"','"Tiene muy buenos resultados — el fisio te explicará qué puedes esperar en tu caso"'],ok:2,fb:['No del todo — nunca garantices resultados.','No del todo — este mensaje genera inseguridad.','¡Correcto! Positivo, honesto y deriva la decisión clínica al fisio.']},
+      {q:'¿Cuál de estas frases NO debes decir a un paciente?',opts:['"El fisioterapeuta te explicará todo"','"Duele muchísimo, prepárate"','"Es un tratamiento rápido y sin dolor"'],ok:1,fb:['No del todo — esa es una frase correcta.','¡Correcto! Ese mensaje genera miedo y además no es preciso con el CTU S Wave.','No del todo — esa frase es adecuada.']}
+     ]
+    },
+    {t:'El check de recepción · Preguntas clave',sub:'Qué preguntar antes de confirmar una cita',
+     cards:[
+      {ti:'Por qué es importante el check previo',body:`Antes de confirmar una cita de ondas de choque, el equipo de recepción debe hacer un <b>check rápido de seguridad</b>. No se trata de hacer diagnóstico — se trata de <b>detectar señales de alerta</b> que el fisioterapeuta debe valorar antes de empezar.`},
+      {ti:'Las 4 preguntas del check',body:`<b>1.</b> ¿Lleva <b>marcapasos</b> u otro dispositivo electrónico implantado?<br><br><b>2.</b> ¿Está <b>embarazada</b>?<br><br><b>3.</b> ¿Tiene algún <b>tumor o cáncer activo</b> en la zona a tratar?<br><br><b>4.</b> ¿Tiene <b>trombosis</b> o coágulos en esa zona?<br><br>Si responde SÍ a cualquiera → <em>consultar al fisioterapeuta antes de confirmar.</em>`},
+      {ti:'Cómo hacer las preguntas',body:`Se pueden hacer de forma natural al confirmar la cita:<br><br><em>"Antes de confirmar, tengo que hacerte unas preguntas rápidas de seguridad. ¿Llevas marcapasos o algún implante electrónico? ¿Estás embarazada?"</em><br><br>Si el paciente pregunta por qué: <em>"Es para asegurarnos de que el tratamiento es el más adecuado para ti."</em>`},
+      {ti:'Lo que nunca debes hacer',body:`❌ Decidir tú solo si una contraindicación aplica o no<br>❌ Omitir el check porque "parece joven y sano"<br>❌ Confirmar la cita antes de consultar si hay alguna señal de alerta<br><br>✅ Ante cualquier duda: <b>consultar al fisioterapeuta antes de confirmar.</b>`}
+     ],
+     qs:[
+      {q:'¿Cuántas preguntas de seguridad debes hacer antes de confirmar una cita de ondas de choque?',opts:['Ninguna, eso lo hace el fisio en consulta','4 preguntas clave de seguridad','Solo si el paciente parece mayor'],ok:1,fb:['No del todo — recepción tiene un rol activo en la seguridad.','¡Correcto! 4 preguntas: marcapasos, embarazo, tumor activo y trombosis.','No del todo — el check se hace siempre, independientemente de la edad.']},
+      {q:'Un paciente dice que lleva marcapasos. ¿Qué haces?',opts:['Confirmas la cita igualmente','Consultas al fisioterapeuta antes de confirmar nada','Le dices que no puede tratarse y cancelas'],ok:1,fb:['No del todo — el marcapasos es señal de alerta que debe valorar el fisio.','¡Correcto! Siempre consultar al fisio antes de confirmar o cancelar.','No del todo — tú no puedes dar ese veredicto clínico.']},
+      {q:'¿Por qué hacemos el check en recepción y no esperamos a que lo haga el fisio?',opts:['Para ahorrar tiempo al fisioterapeuta en consulta','Para detectar señales de alerta antes de que el paciente venga innecesariamente','Las dos respuestas son correctas'],ok:2,fb:['No del todo — ese no es el objetivo principal.','No del todo — aunque es parte del motivo.','¡Correcto! Mejor detectarlo antes que hacer venir al paciente para nada.']}
+     ]
+    },
+    {t:'Contraindicaciones · Lo que debes saber',sub:'Señales de alerta en recepción',
+     cards:[
+      {ti:'Las 4 contraindicaciones absolutas',body:`Son situaciones en las que <b>nunca</b> se aplican ondas de choque sin valoración médica previa:<br><br>🚫 <b>Marcapasos</b> o implante electrónico activo<br>🚫 <b>Embarazo</b><br>🚫 <b>Tumor maligno activo</b> en la zona<br>🚫 <b>Trombosis venosa profunda</b> en la zona<br><br>Si detectas alguna → consulta al fisioterapeuta inmediatamente.`},
+      {ti:'Lo que SÍ es compatible',body:`Muchos pacientes tienen dudas sobre si su situación impide el tratamiento. Estos casos son <b>compatibles</b>:<br><br>✅ Prótesis de cadera o rodilla (titanio)<br>✅ Diabetes<br>✅ Edad avanzada<br>✅ Haber tomado antiinflamatorios<br>✅ Haber probado otros tratamientos sin resultado<br><br>En caso de duda, siempre consulta al fisio antes de confirmar.`},
+      {ti:'Cómo responder si el paciente insiste',body:`Si un paciente dice: <em>"Pero llevo marcapasos y mi médico dijo que podía"</em>:<br><br><em>"Perfecto, en ese caso lo que haré es comentárselo al fisioterapeuta para que lo valore él directamente contigo. Así nos aseguramos de hacerlo bien."</em><br><br>Nunca entres en debate clínico. El fisioterapeuta decide.`},
+      {ti:'Regla de oro',body:`<b>Tú detectas. El fisioterapeuta decide.</b><br><br>Tu rol en recepción no es saber si una contraindicación aplica o no — es detectar la señal de alerta y pasársela al fisioterapeuta para que él tome la decisión clínica. Eso te protege a ti y protege al paciente.`}
+     ],
+     qs:[
+      {q:'¿Cuáles son las 4 contraindicaciones absolutas que debes conocer?',opts:['Diabetes, artritis, artrosis y obesidad','Marcapasos, embarazo, tumor activo y trombosis','Fiebre, alergia, hipertensión y ansiedad'],ok:1,fb:['No del todo — ninguna de esas son contraindicaciones absolutas.','¡Correcto! Esas son las 4 señales de alerta clave que debes detectar.','No del todo.']},
+      {q:'Un paciente con prótesis de cadera de titanio pregunta si puede hacer ondas de choque. ¿Qué le dices?',opts:['"No, las prótesis metálicas están contraindicadas"','"El titanio es compatible — el fisioterapeuta lo valorará contigo"','"No lo sé, tendrá que traer un informe médico"'],ok:1,fb:['No del todo — el titanio no es contraindicación.','¡Correcto! El titanio es compatible y el fisio hace la valoración final.','No del todo — no necesita informe médico para esto.']},
+      {q:'¿Cuál es tu rol cuando detectas una señal de alerta?',opts:['Tomar la decisión clínica y cancelar si es necesario','Ignorarla si el paciente parece sano','Detectar y avisar al fisioterapeuta para que decida él'],ok:2,fb:['No del todo — la decisión clínica la toma el fisio.','No del todo — nunca ignores una señal de alerta.','¡Correcto! Tú detectas, el fisioterapeuta decide.']}
+     ]
+    },
+    {t:'CTU S Wave vs. ondas de choque tradicionales',sub:'Por qué nuestro equipo es diferente',
+     cards:[
+      {ti:'El problema con las máquinas tradicionales',body:`Las ondas de choque existen desde hace décadas, pero las máquinas tradicionales tienen una limitación importante: <b>la forma de onda es fija</b> y el profesional no puede adaptarla al tejido. Esto suele traducirse en <b>dolor durante el tratamiento</b> y limitación en patologías agudas.`},
+      {ti:'Qué cambia con el CTU S Wave',body:`El CTU S Wave es el <b>primer generador de onda de choque con tecnología diamagnética</b>. Esto permite al fisioterapeuta controlar exactamente cómo es la onda — adaptándola al tejido, a la fase de la lesión y a la tolerancia del paciente.<br><br>Resultado: <b>mismo efecto terapéutico, sin dolor</b>.`},
+      {ti:'Las 3 diferencias clave',body:`<b>1. Indoloro:</b> el fisioterapeuta puede reducir la fase de presión negativa que genera molestias sin perder eficacia terapéutica.<br><br><b>2. Fases agudas:</b> a diferencia de los equipos tradicionales, el CTU S Wave puede usarse en lesiones recientes gracias al modo diamagnético con efecto drenante.<br><br><b>3. Sin desgaste:</b> los componentes del equipo no se degradan con el uso, garantizando una calidad constante en cada sesión.`},
+      {ti:'Qué decirle al paciente que viene de otra clínica',body:`Si el paciente dice que en otro sitio le dolió mucho o no le funcionó:<br><br><em>"El CTU S Wave que usamos nosotros es un equipo de última generación que permite controlar la onda exactamente para cada persona. La experiencia puede ser bastante diferente a lo que conoces."</em><br><br>Sin criticar la competencia — simplemente diferenciamos.`}
+     ],
+     qs:[
+      {q:'¿Cuál es la principal limitación de las máquinas de ondas de choque tradicionales?',opts:['Son más caras que el CTU S Wave','La forma de onda es fija y no se puede adaptar al tejido ni al paciente','Solo funcionan en patologías crónicas de rodilla'],ok:1,fb:['No del todo — el precio no es la cuestión clave.','¡Correcto! Onda fija = no adaptable = más dolor y menos versatilidad.','No del todo — afecta a todas las patologías.']},
+      {q:'¿Por qué el CTU S Wave puede usarse en lesiones agudas (recientes) y los equipos tradicionales no?',opts:['Porque tiene más potencia','Porque gracias al modo diamagnético tiene efecto drenante que es compatible con la fase aguda','Porque es más pequeño y manejable'],ok:1,fb:['No del todo.','¡Correcto! El efecto drenante del modo diamagnético lo hace seguro en agudo.','No del todo.']},
+      {q:'Un paciente que viene de otra clínica dice que las ondas de choque le dolieron mucho. ¿Qué le explicas?',opts:['Que a todo el mundo le duele igual','Que con el CTU S Wave el fisio puede controlar la onda para que sea tolerable — puede ser muy diferente a lo que vivió','Que probablemente él tiene poca tolerancia al dolor'],ok:1,fb:['No del todo — con el CTU S Wave es diferente.','¡Correcto! Diferenciamos el equipo sin criticar a la competencia.','No del todo — ese mensaje es incorrecto y puede ofender al paciente.']}
+     ]
+    },
+    {t:'Sesiones, frecuencia y post-tratamiento',sub:'Lo que el paciente necesita saber antes de empezar',
+     cards:[
+      {ti:'¿Cuántas sesiones se necesitan?',body:`No hay un número fijo — depende de la patología y la respuesta de cada paciente. Como referencia orientativa:<br><br>· <b>Patologías agudas:</b> habitualmente 3-4 sesiones<br>· <b>Patologías crónicas:</b> habitualmente 4-6 sesiones<br>· <b>Calcificaciones:</b> pueden necesitar alguna sesión más<br><br><b>El fisioterapeuta decide</b> el número y lo ajusta según la evolución.`},
+      {ti:'¿Cada cuánto se hacen las sesiones?',body:`El intervalo habitual es <b>una sesión por semana</b>. Esto permite que el tejido reaccione al tratamiento y se inicie el proceso de reparación entre sesiones.<br><br>En algunos casos el fisioterapeuta puede indicar mayor separación. <b>Nunca debe hacerse antes de 5-7 días</b> entre sesiones en la misma zona.`},
+      {ti:'¿Qué pasa después de la sesión?',body:`Es normal que en las <b>primeras 24-48 horas</b> el paciente note algo más de sensibilidad o incluso leve aumento del dolor — es una respuesta inflamatoria normal que indica que el tejido está respondiendo.<br><br>A partir de la 2ª-3ª sesión la mayoría de pacientes empieza a notar mejoría. <b>Si la molestia es intensa o dura más de 48h</b>, debe comunicarlo al fisioterapeuta.`},
+      {ti:'¿Puede hacer vida normal?',body:`En general sí, pero con matices:<br><br>✅ Vida cotidiana normal<br>✅ Trabajo de oficina o sedentario<br>⚠️ Actividad física intensa: consultar con el fisio<br>⚠️ La zona tratada puede estar sensible las primeras horas<br><br><em>"En general podrás hacer vida normal. Si tienes dudas sobre alguna actividad concreta, el fisio te lo aclarará."</em>`}
+     ],
+     qs:[
+      {q:'¿Cuál es el intervalo mínimo recomendado entre sesiones en la misma zona?',opts:['24 horas','5-7 días','2 semanas'],ok:1,fb:['No del todo — el tejido necesita más tiempo para responder.','¡Correcto! Mínimo 5-7 días entre sesiones en la misma zona.','No del todo — no hace falta esperar tanto en la mayoría de casos.']},
+      {q:'Un paciente te llama al día siguiente de su primera sesión diciendo que tiene más dolor. ¿Qué le dices?',opts:['"Para el tratamiento inmediatamente"','"Es normal en las primeras 24-48h — si persiste más de 48h o es muy intenso, avísanos"','"No es normal, algo ha salido mal"'],ok:1,fb:['No del todo — es una reacción normal.','¡Correcto! Reacción inflamatoria normal las primeras 24-48h.','No del todo — ese mensaje genera alarma innecesaria.']},
+      {q:'Un paciente con tendinitis crónica de varios años pregunta cuántas sesiones necesitará. ¿Qué le dices?',opts:['"3 sesiones exactas"','"Nunca se sabe, puede que ninguna funcione"','"El fisioterapeuta te lo dirá — habitualmente entre 4 y 6 sesiones en casos crónicos, pero lo ajustará según tu evolución"'],ok:2,fb:['No del todo — no des un número exacto.','No del todo — ese mensaje es muy negativo.','¡Correcto! Orientativo, honesto y la decisión la toma el fisio.']}
+     ]
+    },
+    {t:'Gestión de expectativas · Qué decir y qué no',sub:'Comunicación con el paciente',
+     cards:[
+      {ti:'El paciente ansioso',body:`Algunos pacientes llegan con miedo, especialmente si han oído que "duele mucho" en otras clínicas.<br><br>✅ <em>"Con nuestro CTU S Wave el tratamiento está diseñado para ser indoloro. El fisioterapeuta controla la intensidad en cada momento."</em><br><br>✅ Transmite <b>calma y seguridad</b>. Si tiene dudas clínicas, deriva al fisio.`},
+      {ti:'El paciente escéptico',body:`Algunos pacientes dudan de que funcione, especialmente si llevan años con dolor y han probado de todo.<br><br>✅ <em>"Las ondas de choque tienen mucha evidencia científica en problemas de tendones y articulaciones. Muchos pacientes que llegaron con años de dolor han mejorado notablemente."</em><br><br>No entres en debate. Ofrece que el fisioterapeuta le explique en detalle.`},
+      {ti:'Frases que NUNCA debes decir',body:`❌ <em>"Esto te cura seguro"</em> — nunca garantices resultados<br>❌ <em>"Duele muchísimo"</em> — con el CTU S Wave no es así<br>❌ <em>"Necesitarás X sesiones"</em> — eso lo decide el fisio<br>❌ <em>"No sé si te servirá"</em> — transmite inseguridad<br>❌ <em>"Es para lo más grave"</em> — genera alarma innecesaria`},
+      {ti:'La frase perfecta para recepción',body:`<em>"Las ondas de choque son un tratamiento muy eficaz para problemas de tendones y articulaciones. Es rápido, sin dolor, y muchos pacientes notan mejoría desde las primeras sesiones. El fisioterapeuta te explicará exactamente qué puedes esperar en tu caso."</em>`}
+     ],
+     qs:[
+      {q:'Un paciente pregunta si las ondas de choque le van a curar. ¿Qué respondes?',opts:['"Sí, seguro que sí"','"No lo sé, depende"','"Tienen muy buenos resultados — el fisio te explicará qué puedes esperar en tu caso concreto"'],ok:2,fb:['No del todo — nunca garantices resultados.','No del todo — hay una respuesta mucho más útil y positiva.','¡Correcto! Positivo, honesto y deriva la expectativa concreta al fisio.']},
+      {q:'¿Cuál de estas frases NO debes decir nunca?',opts:['"El fisioterapeuta te lo explicará todo"','"Esto te cura seguro"','"Es un tratamiento rápido y sin dolor"'],ok:1,fb:['No del todo — esa frase está perfecta.','¡Correcto! Nunca garantices resultados — es una promesa que no puedes cumplir.','No del todo — esa frase es adecuada.']},
+      {q:'Un paciente escéptico dice que nada le ha funcionado nunca. ¿Cuál es la mejor respuesta?',opts:['"Entonces esto tampoco le funcionará"','"Tiene mucha evidencia científica y pacientes con años de dolor han mejorado — el fisio puede contarle más"','"Bueno, inténtelo a ver"'],ok:1,fb:['No del todo — ese mensaje es rendirse de antemano.','¡Correcto! Positivo, basado en evidencia y con el fisio como respaldo.','No del todo — esa respuesta no transmite confianza.']}
+     ]
+    }
+  ];
+
+  const MODS = ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : MODS_BOMBA;
+
   let curMod=0, scores=new Array(MODS.length).fill(null).map(()=>({c:0,done:false}));
   let ttEl=null;
-  const seccionKey = 'wiki_' + (ruta ? ruta.id : 'bomba');
+  const seccionKey = 'wiki_' + ruta.id;
   const yaHecho = progresoFisio[seccionKey]?.estado === 'completado';
 
   // Tooltip glosario
