@@ -1549,21 +1549,17 @@ async function renderInformeHernia(w,datos){
   btn.onclick=async()=>{
     btn.disabled=true;btn.innerHTML='<div class="spin"></div> Analizando...';
     const fa=arr=>(!arr||!arr.length)?'-':arr.join(', ');
-    const prompt=`Eres un fisioterapeuta experto. Informe valoración hernia discal lumbar para ${anamPacNom}. Profesional pero explicado al paciente, términos técnicos entre paréntesis. En español, sin markdown, secciones en MAYÚSCULAS.
-Fisio: ${fisioNom} | Fecha: ${new Date().toLocaleDateString('es-ES')}
-Paciente: ${anamPacNom} | Edad: ${datos.edad||'-'} | Profesión: ${datos.profesion||'-'}
-Dx médico: ${datos.diagnosticoMedico||'-'} | RM: ${datos.rm||'-'}
-Dolor: ${datos.dolorPrincipal||'-'} | Inicio: ${datos.inicioSintomas||'-'} | Evolución: ${datos.evolucion||'-'}
-EVA: ${datos.evaActual}/10 | Irradiación: ${datos.irradiacion||'-'} | Hormigueo: ${datos.hormigueo||'-'}
-Empeora: ${fa(datos.empeoraConArray)} | Mejora: ${fa(datos.mejoraConArray)}
-Banderas: ${fa(datos.banderas)} | Patrón: ${fa(datos.patronMecanico)}
-Lasègue D: ${datos.lasegueD||'-'} I: ${datos.lasegueI||'-'} | Bragard D: ${datos.bragardD||'-'} | Slump: ${datos.slump||'-'}
-Sensibilidad L4 D/I: ${datos.sensL4D}/${datos.sensL4I} | L5: ${datos.sensL5D}/${datos.sensL5I} | S1: ${datos.sensS1D}/${datos.sensS1I}
-Fuerza L4 D/I: ${datos.fuerzaL4D||'-'}/${datos.fuerzaL4I||'-'} | L5 ext.hallux: ${datos.fuerzaL5halluxD||'-'}/${datos.fuerzaL5halluxI||'-'} | S1: ${datos.fuerzaS1D||'-'}/${datos.fuerzaS1I||'-'}
-Diagnóstico fisio: ${datos.diagnosticoFisio||'-'} | Plan: ${datos.terapiaManual||'-'}
-Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEUROLÓGICO / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS / PLAN DE TRATAMIENTO / RECOMENDACIONES / PRONÓSTICO`;
+    const prompt=`Informe valoración fisioterapéutica hernia discal lumbar. Español, sin markdown, secciones MAYÚSCULAS, máx 300 palabras.
+Fisio: ${fisioNom} | ${new Date().toLocaleDateString('es-ES')} | Paciente: ${anamPacNom} | ${datos.edad||'?'}a | ${datos.profesion||''}
+Dx: ${datos.diagnosticoMedico||'-'} | RM: ${datos.rm||'-'} | Inicio: ${datos.inicioSintomas||'-'} | Evol: ${datos.evolucion||'-'}
+Dolor: ${datos.dolorPrincipal||'-'} | EVA: ${datos.evaActual}/10 | Irrad: ${datos.irradiacion||'-'} | Hormigueo: ${datos.hormigueo||'-'}
+Lasègue D/I: ${datos.lasegueD||'-'}/${datos.lasegueI||'-'} | Bragard: ${datos.bragardD||'-'} | Slump: ${datos.slump||'-'}
+SensL4 D/I: ${datos.sensL4D}/${datos.sensL4I} | L5: ${datos.sensL5D}/${datos.sensL5I} | S1: ${datos.sensS1D}/${datos.sensS1I}
+FuerzaL4 D/I: ${datos.fuerzaL4D||'-'}/${datos.fuerzaL4I||'-'} | L5hallux: ${datos.fuerzaL5halluxD||'-'}/${datos.fuerzaL5halluxI||'-'} | S1: ${datos.fuerzaS1D||'-'}/${datos.fuerzaS1I||'-'}
+Banderas: ${fa(datos.banderas)} | Patrón: ${fa(datos.patronMecanico)} | Dx fisio: ${datos.diagnosticoFisio||'-'}
+Secciones SOLO: MOTIVO DE CONSULTA / EXPLORACIÓN Y HALLAZGOS / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS TERAPÉUTICOS${fa(datos.banderas)!=='-'?' / ALERTAS':''}. Sin tratamiento, sin recomendaciones.`;
     try{
-      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos})});
+      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{dolorPrincipal:prompt,evaActual:datos.evaActual||5}})});
       const d=await r.json();
       if(d.ok&&d.informe){
         informeGenerado=d.informe;
@@ -1635,17 +1631,14 @@ function renderInformeHub(w,tipo,factores,flags,fase){
       cadera:`Cadera ${D.lado||'?'} | Evol ${D.evol||'?'} | Inicio ${D.ini||'?'} | Dx ${D.dx||'?'}\nDOLOR: EVA reposo ${D.evr??'?'}/10 | EVA carga ${D.evc??'?'}/10 | Localización ${D.loc||'?'} | Marcha ${D.mar||'?'}\nEXPLORACIÓN: FADIR ${D.fadir||'?'} | FABER ${D.faber||'?'} | Trendelemburg ${D.tren||'?'} | Fuerza abd ${D.fabd||'?'}`,
       codo:`Codo ${D.lado||'?'} | Evol ${D.evol||'?'} | Mecanismo ${D.ini||'?'} | Actividad ${D.actrel||'?'}\nDOLOR: EVA reposo ${D.evr??'?'}/10 | EVA actividad ${D.eva??'?'}/10 | Localización ${D.loc||'?'} | Parestesias ${D.par||'no'}\nEXPLORACIÓN: Cozen ${D.cozen||'?'} | Tinel ${D.tinel||'?'} | Fuerza ext muñeca ${D.fext||'?'}`,
     };
-    const prompt=`Eres fisioterapeuta experto. Informe de valoración de ${noms[tipo]} para ${anamPacNom}. Profesional pero explicado al paciente, términos técnicos entre paréntesis. En español, sin markdown, secciones en MAYÚSCULAS.
-Fisio: ${fisioNom} | Fecha: ${new Date().toLocaleDateString('es-ES')}
-Paciente: ${anamPacNom} | Edad ${D.edad||'?'} | IMC ${imc} | Actividad ${D.act||'?'} | Ocupación ${D.ocu||'?'}
+    const prompt=`Informe valoración fisioterapéutica. Español, sin markdown, secciones MAYÚSCULAS, máx 300 palabras.
+Fisio: ${fisioNom} | ${new Date().toLocaleDateString('es-ES')} | Paciente: ${anamPacNom} | ${D.edad||'?'}a | ${D.ocu||''}
 ${datos_txt[tipo]}
-ANÁLISIS: Factores — ${factores.map(f=>f.t).join(', ')||'pendiente'} | Fase: ${fase.l} ${flags.length?'| Red flags: '+flags.join(' / '):''}
-FUNCIONAL: Limitación ${D.lim||'?'} | Objetivo ${D.obj||'?'}
-Secciones: 1.RESUMEN 2.DIAGNÓSTICO FISIOTERAPÉUTICO 3.POR QUÉ LE DUELE 4.PLAN DE TRATAMIENTO 5.RECOMENDACIONES DÍA A DÍA${flags.length?' 6.ALERTAS':''}
-Máx 550 palabras. Profesional, empático y esperanzador.`;
+Factores: ${factores.map(f=>f.t).join(', ')||'-'} | Fase: ${fase.l} | Lim: ${D.lim||'?'} | Obj: ${D.obj||'?'}${flags.length?' | ALERTAS: '+flags.join(', '):''}
+Secciones SOLO: MOTIVO DE CONSULTA / EXPLORACIÓN Y HALLAZGOS / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS TERAPÉUTICOS${flags.length?' / ALERTAS':''}. Sin tratamiento, sin recomendaciones.`;
     const datos_obj={tipo,factores:factores.map(f=>f.t),flags,fase:fase.l,...D};
     try{
-      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos_obj,dolorPrincipal:prompt,evaActual:D.evr||D.evm||D.evc||5}})});
+      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{dolorPrincipal:prompt,evaActual:D.evr||D.evm||D.evc||5}})});
       const d=await r.json();
       if(d.ok&&d.informe){
         informeGenerado=d.informe;
