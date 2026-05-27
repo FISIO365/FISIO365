@@ -1559,7 +1559,7 @@ FuerzaL4 D/I: ${datos.fuerzaL4D||'-'}/${datos.fuerzaL4I||'-'} | L5hallux: ${dato
 Banderas: ${fa(datos.banderas)} | Patrón: ${fa(datos.patronMecanico)} | Dx fisio: ${datos.diagnosticoFisio||'-'}
 Secciones SOLO: MOTIVO DE CONSULTA / EXPLORACIÓN Y HALLAZGOS / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS TERAPÉUTICOS${fa(datos.banderas)!=='-'?' / ALERTAS':''}. Sin tratamiento, sin recomendaciones.`;
     try{
-      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{dolorPrincipal:prompt,evaActual:datos.evaActual||5}})});
+      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos,tipo:'hernia',evaActual:datos.evaActual||5}})});
       const d=await r.json();
       if(d.ok&&d.informe){
         informeGenerado=d.informe;
@@ -1638,7 +1638,7 @@ Factores: ${factores.map(f=>f.t).join(', ')||'-'} | Fase: ${fase.l} | Lim: ${D.l
 Secciones SOLO: MOTIVO DE CONSULTA / EXPLORACIÓN Y HALLAZGOS / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS TERAPÉUTICOS${flags.length?' / ALERTAS':''}. Sin tratamiento, sin recomendaciones.`;
     const datos_obj={tipo,factores:factores.map(f=>f.t),flags,fase:fase.l,...D};
     try{
-      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{dolorPrincipal:prompt,evaActual:D.evr||D.evm||D.evc||5}})});
+      const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...D,tipo,factores:factores.map(f=>f.t),flags,fase:fase.l,evaActual:D.evr||D.evm||D.evc||5}})});
       const d=await r.json();
       if(d.ok&&d.informe){
         informeGenerado=d.informe;
