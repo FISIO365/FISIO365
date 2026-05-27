@@ -1687,110 +1687,126 @@ function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
 function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
-  const W=210, ml=16, mr=16, tw=W-ml-mr;
+  const W=210, ml=18, mr=18, tw=W-ml-mr;
   let y=0;
 
-  // ── HEADER negro ──
-  doc.setFillColor(10,10,10);
-  doc.rect(0,0,W,28,'F');
+  // ── PALETA MONOCROMÁTICA (sin tinta de color) ──
+  const C={
+    negro:   [30,30,30],
+    oscuro:  [50,50,50],
+    medio:   [90,90,90],
+    claro:   [140,140,140],
+    suave:   [190,190,190],
+    linea:   [210,210,210],
+  };
+
+  // ── HEADER — solo texto, sin fondo ──
+  y=14;
   doc.setFont('helvetica','bold');
-  doc.setFontSize(18);
-  doc.setTextColor(255,255,255);
-  doc.text('FISIO365',ml,18);
-  doc.setFontSize(7);
+  doc.setFontSize(20);
+  doc.setTextColor(...C.negro);
+  doc.text('FISIO365',ml,y);
+
   doc.setFont('helvetica','normal');
-  doc.setTextColor(160,160,160);
-  doc.text('FISIOTERAPIA AVANZADA Y READAPTACIÓN FUNCIONAL',ml,23);
-  doc.setFontSize(8);
-  doc.setTextColor(200,200,200);
-  doc.text('INFORME DE VALORACIÓN',W-mr,12,{align:'right'});
-  doc.text('Fecha: '+fecha,W-mr,17,{align:'right'});
-  doc.text('Ref: INF-'+Date.now().toString().slice(-6),W-mr,22,{align:'right'});
-  y=28;
+  doc.setFontSize(7.5);
+  doc.setTextColor(...C.medio);
+  doc.text('FISIOTERAPIA AVANZADA · READAPTACIÓN FUNCIONAL',ml,y+5);
 
-  // ── BANNER LILA ──
-  doc.setFillColor(173,163,218);
-  doc.rect(0,y,W,10,'F');
-  doc.setFont('helvetica','bold');
+  // Info derecha
+  doc.setFont('helvetica','normal');
   doc.setFontSize(8);
-  doc.setTextColor(255,255,255);
-  doc.text(('VALORACIÓN FISIOTERAPÉUTICA — '+tipoLabel).toUpperCase(),ml,y+6.5);
-  doc.text(fecha,W-mr,y+6.5,{align:'right'});
-  y+=10;
+  doc.setTextColor(...C.oscuro);
+  doc.text('INFORME DE VALORACIÓN',W-mr,y,{align:'right'});
+  doc.setFontSize(7.5);
+  doc.setTextColor(...C.medio);
+  doc.text('Fecha: '+fecha,W-mr,y+5,{align:'right'});
+  doc.text('Ref: INF-'+Date.now().toString().slice(-6),W-mr,y+10,{align:'right'});
 
-  // ── TARJETA PACIENTE ──
+  y+=16;
+
+  // Línea separadora header — fina, gris medio
+  doc.setDrawColor(...C.oscuro);
+  doc.setLineWidth(0.6);
+  doc.line(ml,y,W-mr,y);
+  y+=1;
+  // Línea fina debajo
+  doc.setDrawColor(...C.linea);
+  doc.setLineWidth(0.2);
+  doc.line(ml,y,W-mr,y);
   y+=8;
-  doc.setFillColor(248,247,255);
-  doc.setDrawColor(232,228,245);
-  doc.roundedRect(ml,y,tw,18,2,2,'FD');
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(7);
-  doc.setTextColor(173,163,218);
+
+  // ── BLOQUE DATOS PACIENTE — recuadro con borde fino ──
+  const bh=fisioNom?22:18;
+  doc.setDrawColor(...C.suave);
+  doc.setLineWidth(0.3);
+  doc.rect(ml,y,tw,bh,'S');
+
+  // Línea vertical divisoria a la mitad
+  doc.line(ml+tw/2,y,ml+tw/2,y+bh);
+
+  // Etiquetas
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...C.claro);
   doc.text('PACIENTE',ml+4,y+5);
   doc.text('TIPO DE VALORACIÓN',ml+tw/2+4,y+5);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(11);
-  doc.setTextColor(26,26,26);
-  doc.text(pacNom,ml+4,y+12);
-  doc.setFontSize(9);
-  doc.text(tipoLabel,ml+tw/2+4,y+12);
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7);
-  doc.setTextColor(100,100,100);
-  doc.text('Protocolo clínico FISIO365',ml+tw/2+4,y+16);
-  y+=18;
 
-  // ── TARJETA FISIO ──
-  y+=4;
-  doc.setFillColor(10,10,10);
-  doc.roundedRect(ml,y,tw,fisioNom?16:12,2,2,'F');
+  // Valores
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(...C.negro);
+  doc.text(pacNom,ml+4,y+12);
+  doc.setFontSize(9.5);
+  doc.text(tipoLabel,ml+tw/2+4,y+12);
+
+  if(fisioNom){
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...C.medio);
+    doc.text('Fisioterapeuta: '+fisioNom+(colNum?' · '+colNum:''),ml+4,y+18);
+  }
+  y+=bh+8;
+
+  // ── ETIQUETA TIPO DOC ──
   doc.setFont('helvetica','bold');
   doc.setFontSize(7);
-  doc.setTextColor(173,163,218);
-  doc.text('FISIOTERAPEUTA RESPONSABLE',ml+4,y+5);
-  doc.setFontSize(11);
-  doc.setTextColor(255,255,255);
-  doc.text(fisioNom||'—',ml+4,y+11);
-  if(colNum){
-    doc.setFontSize(8);
-    doc.setTextColor(173,163,218);
-    doc.text(colNum,ml+4,y+15);
-  }
-  // Badge
-  doc.setFillColor(173,163,218);
-  doc.roundedRect(W-mr-28,y+4,26,7,2,2,'F');
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(6.5);
-  doc.setTextColor(255,255,255);
-  doc.text('FISIOTERAPEUTA',W-mr-15,y+8.5,{align:'center'});
-  y+=fisioNom?16:12;
+  doc.setTextColor(...C.medio);
+  doc.text(('VALORACIÓN FISIOTERAPÉUTICA — '+tipoLabel).toUpperCase(),ml,y);
+  y+=7;
+
+  // Línea separadora sección
+  doc.setDrawColor(...C.linea);
+  doc.setLineWidth(0.2);
+  doc.line(ml,y,W-mr,y);
+  y+=6;
 
   // ── CONTENIDO ──
-  y+=8;
   const lines=informe.split('\n');
-  doc.setFont('helvetica','normal');
 
   lines.forEach(line=>{
     const t=line.trim();
     if(!t){y+=2;return;}
-    // Detectar título de sección (todo mayúsculas)
+
+    // Detectar título de sección (todo mayúsculas, mínimo 8 chars)
     const isTitle=/^[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ\s\-\/\.]{7,}$/.test(t);
+
     if(isTitle){
-      if(y>270){doc.addPage();y=16;}
-      y+=4;
-      // Línea decorativa lila
-      doc.setDrawColor(173,163,218);
-      doc.setLineWidth(0.3);
-      doc.line(ml,y+1,ml+tw,y+1);
+      if(y>268){doc.addPage();y=16;}
+      y+=5;
+      // Título en gris oscuro con línea inferior fina
       doc.setFont('helvetica','bold');
       doc.setFontSize(8);
-      doc.setTextColor(173,163,218);
-      doc.text(t,ml,y-1);
-      y+=5;
+      doc.setTextColor(...C.oscuro);
+      doc.text(t,ml,y);
+      y+=2;
+      doc.setDrawColor(...C.suave);
+      doc.setLineWidth(0.25);
+      doc.line(ml,y,ml+tw,y);
+      y+=4;
     } else {
       doc.setFont('helvetica','normal');
       doc.setFontSize(9.5);
-      doc.setTextColor(42,42,42);
+      doc.setTextColor(...C.oscuro);
       const wrapped=doc.splitTextToSize(t,tw);
       wrapped.forEach(wl=>{
         if(y>277){doc.addPage();y=16;}
@@ -1805,31 +1821,41 @@ function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha){
   const pageCount=doc.getNumberOfPages();
   for(let i=1;i<=pageCount;i++){
     doc.setPage(i);
-    const py=290;
-    doc.setDrawColor(220,220,220);
+    const py=286;
+
+    // Línea pie
+    doc.setDrawColor(...C.suave);
     doc.setLineWidth(0.3);
-    doc.line(ml,py-2,W-mr,py-2);
+    doc.line(ml,py,W-mr,py);
+
+    // Izquierda: clínica
     doc.setFont('helvetica','bold');
     doc.setFontSize(8);
-    doc.setTextColor(26,26,26);
-    doc.text('FISIO365',ml,py+3);
+    doc.setTextColor(...C.oscuro);
+    doc.text('FISIO365',ml,py+5);
     doc.setFont('helvetica','normal');
-    doc.setFontSize(7);
-    doc.setTextColor(150,150,150);
-    doc.text('Fisioterapia avanzada y readaptación funcional',ml,py+7);
-    // Firma centrada
-    doc.setDrawColor(26,26,26);
-    doc.setLineWidth(0.4);
-    doc.line(W/2-20,py+1,W/2+20,py+1);
-    doc.setFontSize(7);
-    doc.setTextColor(100,100,100);
-    doc.text(fisioNom||'Fisioterapeuta',W/2,py+5,{align:'center'});
-    if(colNum){doc.setTextColor(173,163,218);doc.text(colNum,W/2,py+9,{align:'center'});}
-    // Legal derecha
-    doc.setTextColor(180,180,180);
     doc.setFontSize(6.5);
-    doc.text('Documento generado el '+fecha,W-mr,py+3,{align:'right'});
-    doc.text('Página '+i+' de '+pageCount,W-mr,py+7,{align:'right'});
+    doc.setTextColor(...C.claro);
+    doc.text('Fisioterapia avanzada y readaptación funcional',ml,py+9);
+
+    // Centro: firma
+    doc.setDrawColor(...C.medio);
+    doc.setLineWidth(0.3);
+    doc.line(W/2-22,py+5,W/2+22,py+5);
+    doc.setFontSize(7);
+    doc.setTextColor(...C.medio);
+    doc.text(fisioNom||'Fisioterapeuta',W/2,py+9,{align:'center'});
+    if(colNum){
+      doc.setFontSize(6.5);
+      doc.setTextColor(...C.claro);
+      doc.text(colNum,W/2,py+13,{align:'center'});
+    }
+
+    // Derecha: página + fecha
+    doc.setTextColor(...C.claro);
+    doc.setFontSize(6.5);
+    doc.text('Pág. '+i+' / '+pageCount,W-mr,py+5,{align:'right'});
+    doc.text(fecha,W-mr,py+9,{align:'right'});
   }
 
   doc.save('Informe_'+pacNom.replace(/\s+/g,'_')+'_'+fecha.replace(/\//g,'-')+'.pdf');
