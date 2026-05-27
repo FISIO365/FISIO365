@@ -2076,6 +2076,7 @@ let wRutaActual = null;
 const WIKI_RUTAS = [
   {
     id: 'primera',
+    categoria: 'centro',
     titulo: 'Ruta primera visita',
     desc: 'El protocolo completo de la primera visita, paso a paso',
     etiqueta: 'Todo el equipo',
@@ -2087,6 +2088,7 @@ const WIKI_RUTAS = [
   },
   {
     id: 'ultima',
+    categoria: 'centro',
     titulo: 'Ruta última visita',
     desc: 'Cierre del proceso terapéutico y alta del paciente',
     etiqueta: 'Todo el equipo',
@@ -2098,6 +2100,7 @@ const WIKI_RUTAS = [
   },
   {
     id: 'bomba',
+    categoria: 'clinico',
     titulo: 'Bomba diamagnética CTU Mega20',
     desc: 'Fundamentos, mecanismos, patologías, contraindicaciones y FAQ',
     etiqueta: 'Todo el equipo',
@@ -2110,6 +2113,7 @@ const WIKI_RUTAS = [
   },
   {
     id: 'ondas',
+    categoria: 'clinico',
     titulo: 'Ondas de Choque · Nivel Experto',
     desc: 'Tecnología diamagnética, focalización, parámetros clínicos y protocolos',
     etiqueta: 'Fisioterapeutas',
@@ -2122,11 +2126,25 @@ const WIKI_RUTAS = [
   },
   {
     id: 'ondas-basico',
+    categoria: 'clinico',
     titulo: 'Ondas de Choque · Nivel Básico',
     desc: 'Qué es, para qué sirve, cómo explicarlo y qué preguntar al paciente',
     etiqueta: 'Todo el equipo',
     info: '<strong>¿Qué aprenderás aquí?</strong><br><br>7 módulos prácticos para entender qué son las ondas de choque, cómo se diferencian de los equipos tradicionales, cómo explicárselas a los pacientes, qué preguntas hacer en recepción y qué no decir nunca.<br><br><strong>¿Para quién?</strong><br><br>Todo el equipo — especialmente administración y recepción.<br><br><strong>¿Cuánto dura?</strong><br><br>7 módulos. Puedes completarlo a tu ritmo.',
     pasos: 7,
+    emoji: '',
+    imgs: [],
+    tits: [],
+    tipo: 'formacion'
+  },
+  {
+    id: 'medkey',
+    categoria: 'clinico',
+    titulo: 'Medkey · Electroterapia Adaptativa',
+    desc: 'Fundamentos, modos de terapia, manejo, contraindicaciones y seguridad',
+    etiqueta: 'Fisioterapeutas',
+    info: '<strong>¿Qué aprenderás aquí?</strong><br><br>8 módulos interactivos con test para dominar el medkey: qué es, sus 3 modos terapéuticos (Key-foresis, Biorregulación y Diagnóstico), cómo manejarlo, contraindicaciones, limpieza y resolución de errores.<br><br><strong>¿Para quién?</strong><br><br>Fisioterapeutas del equipo.<br><br><strong>¿Cuánto dura?</strong><br><br>8 módulos. Puedes completarlo a tu ritmo.',
+    pasos: 8,
     emoji: '',
     imgs: [],
     tits: [],
@@ -2140,17 +2158,27 @@ function renderWiki(wrap){
   const outer = ce('div','wiki-outer');
 
   const hdr = ce('div','wiki-header');
-  hdr.innerHTML = '<h2>SCHOOL</h2><p>Selecciona una ruta o formación</p>';
+  hdr.innerHTML = '<h2>SCHOOL</h2><p>Selecciona una categoría y empieza</p>';
   outer.appendChild(hdr);
 
-  const grid = ce('div','wiki-hub-grid');
-  WIKI_RUTAS.forEach(ruta => {
+  const CATS = [
+    { key: 'clinico', label: '🔬 Clínico', sub: 'Equipos y terapias' },
+    { key: 'centro',  label: '🏥 Centro',  sub: 'Protocolos y funcionamiento' }
+  ];
+
+  function mkCard(ruta){
     const card = ce('div', ruta.pasos > 0 ? 'wiki-ruta-card' : 'wiki-ruta-card wiki-ruta-soon');
     const secKey = 'wiki_' + ruta.id;
     const completada = progresoFisio[secKey]?.estado === 'completado';
+    // Color de etiqueta según rol
+    const etqStyle = ruta.etiqueta === 'Fisioterapeutas'
+      ? 'background:#e8eeff;color:#4a6cf7'
+      : ruta.etiqueta === 'Recepción'
+      ? 'background:#fff3e0;color:#e07b00'
+      : 'background:#fde8fb;color:#f588e3';
     card.innerHTML = `
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-        <div class="school-etiqueta">${ruta.etiqueta||''}</div>
+        <div class="school-etiqueta" style="${etqStyle}">${ruta.etiqueta||''}</div>
         ${ruta.info ? `<button class="school-info-btn" onclick="event.stopPropagation();toggleInfo('info_${ruta.id}')" title="Más información"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>` : ''}
       </div>
       <div class="wiki-ruta-titulo">${ruta.titulo}</div>
@@ -2161,9 +2189,32 @@ function renderWiki(wrap){
         ${completada ? '<span class="wiki-badge-hecho">✓ Completado</span>' : ''}
       </div>`;
     if(ruta.pasos > 0) card.onclick = () => ruta.tipo === 'formacion' ? renderFormacion(wrap, ruta) : renderWikiRuta(wrap, ruta);
-    grid.appendChild(card);
+    return card;
+  }
+
+  CATS.forEach(cat => {
+    const rutas = WIKI_RUTAS.filter(r => r.categoria === cat.key);
+    if(!rutas.length) return;
+
+    // Cabecera de categoría
+    const catHdr = ce('div','');
+    catHdr.style.cssText = 'width:100%;max-width:560px;margin:18px 0 10px';
+    catHdr.innerHTML = `
+      <div style="font-size:15px;font-weight:800;color:var(--black);letter-spacing:-0.2px">${cat.label}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">${cat.sub}</div>`;
+    outer.appendChild(catHdr);
+
+    // Separador
+    const sep = ce('div','');
+    sep.style.cssText = 'width:100%;max-width:560px;height:1px;background:var(--border);margin-bottom:12px';
+    outer.appendChild(sep);
+
+    // Grid de cursos de esta categoría
+    const grid = ce('div','wiki-hub-grid');
+    rutas.forEach(ruta => grid.appendChild(mkCard(ruta)));
+    outer.appendChild(grid);
   });
-  outer.appendChild(grid);
+
   wrap.appendChild(outer);
 }
 
@@ -2774,7 +2825,115 @@ function renderFormacion(wrap, ruta){
     }
   ];
 
-  const MODS = ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : MODS_BOMBA;
+
+  const MODS_MEDKEY = [
+    {t:'¿Qué es el medkey?',sub:'Dispositivo de electroterapia con regulación adaptativa',
+     cards:[
+      {ti:'En una frase',body:`El <b>medkey</b> es un dispositivo de <b>electroterapia con regulación adaptativa</b> fabricado por Keytec. Combina estimulación nerviosa eléctrica no invasiva con una tecnología que adapta los impulsos a la respuesta del tejido en tiempo real.`},
+      {ti:'¿Qué genera?',body:`El medkey puede generar dos tipos de señal:<br><br><b>Impulso bipolar</b> — usado en Biorregulación y Diagnóstico. Sirve para indicaciones de dolor, disfunción muscular, circulación y más.<br><br><b>Corriente galvánica continua</b> — usada en Key-foresis. Permite introducir agentes externos bajo la piel mediante iontoforesis.`},
+      {ti:'¿Para quién?',body:`Puede ser utilizado por <b>personal médico profesional</b> y también por pacientes en el ámbito doméstico si han recibido formación de un profesional.<br><br>Válido para todas las edades. El uso en menores de 5 años se reserva a expertos con formación específica.<br><br>Tiempo de tratamiento: de unos minutos hasta un máximo de 1 hora.`},
+      {ti:'Componentes del equipo',body:`El medkey incluye:<br><br>· <b>Terminal</b> (pieza de aplicación) con cabezal intercambiable estándar<br>· <b>Estación base</b> para carga inductiva (con fuente de alimentación)<br>· <b>Instrucciones de uso</b><br>· Maletín de transporte<br><br>Componentes opcionales: cabezales intercambiables especiales, almohadillas adhesivas, cable Connector y <b>keypad</b> (tablet PC).`}
+     ],
+     qs:[
+      {q:'¿Qué tipo de señal usa el medkey en el modo Biorregulación?',opts:['Corriente galvánica continua','Impulso bipolar','Radiofrecuencia'],ok:1,fb:['No del todo — la corriente galvánica es para Key-foresis.','¡Correcto! El impulso bipolar es la base de Biorregulación y Diagnóstico.','No del todo.']},
+      {q:'¿Cuánto dura como máximo una sesión con medkey?',opts:['30 minutos','1 hora','2 horas'],ok:1,fb:['No del todo — puede durar más.','¡Correcto! El tiempo máximo recomendado es 1 hora.','No del todo — ese tiempo supera el límite recomendado.']},
+      {q:'¿Puede un paciente usar el medkey en casa?',opts:['No, solo personal médico','Sí, si ha recibido formación de un profesional sanitario','Sí, sin necesidad de formación previa'],ok:1,fb:['No del todo — puede usarse en casa con la formación adecuada.','¡Correcto! Con instrucción de un profesional, el paciente puede usarlo en casa.','No del todo — siempre se necesita formación previa de un profesional.']}
+     ]
+    },
+    {t:'Indicaciones y contraindicaciones',sub:'Cuándo usar el medkey y cuándo NO',
+     cards:[
+      {ti:'Indicaciones del medkey',body:`El medkey está indicado para:<br><br>· <b>Dolor agudo y crónico</b><br>· <b>Disfunciones musculares</b> y desequilibrios musculares<br>· <b>Disfunciones orgánicas</b> (en el sentido de limitaciones funcionales)<br>· <b>Trastornos de la microcirculación</b><br><br>Ámbitos de aplicación: sistema nervioso, sistema musculoesquelético, tracto digestivo y zona urogenital.`},
+      {ti:'Contraindicaciones absolutas',body:`<b>NO usar el medkey en:</b><br><br>🚫 <b>Heridas abiertas</b> o piel no curada<br>🚫 <b>Orificios corporales</b><br>🚫 <b>Implantes activos</b> (marcapasos, etc.)<br>🚫 <b>Útero de mujeres embarazadas</b><br>🚫 <b>Trastornos del ritmo cardíaco</b><br>🚫 <b>Enfermedades malignas</b> sin consulta médica previa<br>🚫 <b>Epilepsia</b>`},
+      {ti:'Efectos secundarios posibles',body:`El medkey tiene muy pocos efectos secundarios. Pueden aparecer:<br><br>· <b>Aumento transitorio de síntomas</b>: el cuerpo se «dinamiza». Puede haber más dolor, agujetas u otras reacciones temporales. Suelen remitir solas. Si persisten, interrumpir y consultar al médico.<br><br>· <b>Alergia al níquel</b>: los electrodos contienen trazas de níquel. Una alergia fuerte puede provocar irritación cutánea.`},
+      {ti:'Precauciones importantes',body:`· No usar en <b>unidades de cuidados intensivos</b><br>· Mantener equipos de radio HF a más de <b>30 cm</b> del dispositivo<br>· Si hay interferencias CEM intensas, puede apagarse el sistema — reiniciar para continuar<br>· Usar solo la fuente de alimentación del fabricante<br>· El medkey tiene una <b>vida útil de 10 años</b>`}
+     ],
+     qs:[
+      {q:'¿El medkey puede usarse en un paciente con marcapasos?',opts:['Sí, sin problema','No, es contraindicación absoluta','Solo en modo Key-foresis'],ok:1,fb:['No del todo — el marcapasos es contraindicación absoluta.','¡Correcto! Los implantes activos son contraindicación absoluta para el medkey.','No del todo — ningún modo del medkey es compatible con marcapasos.']},
+      {q:'Un paciente nota más dolor durante los primeros días de tratamiento. ¿Qué le explicas?',opts:['El dispositivo no funciona bien, hay que parar','Es normal — el cuerpo se está dinamizando y suele remitir','Hay que bajar siempre el nivel de energía al mínimo'],ok:1,fb:['No del todo — es una reacción esperada y transitoria.','¡Correcto! El aumento transitorio de síntomas es un efecto conocido que suele resolverse solo.','No del todo — bajar energía puede ser una opción pero no es la explicación correcta.']},
+      {q:'¿A qué distancia mínima deben estar los equipos de radio HF del medkey?',opts:['10 cm','30 cm','1 metro'],ok:1,fb:['No del todo — la distancia mínima es mayor.','¡Correcto! 30 cm es la distancia mínima de seguridad.','No del todo — la distancia recomendada es 30 cm.']}
+     ]
+    },
+    {t:'Modo Key-foresis',sub:'Iontoforesis galvánica para agentes externos',
+     cards:[
+      {ti:'¿Qué es la Key-foresis?',body:`La <b>Key-foresis</b> utiliza corriente continua galvánica para introducir <b>agentes externos bajo la piel</b> mediante iontoforesis. Es una forma de aplicación especial — no sirve para tratar dolor directamente, sino para facilitar la penetración de sustancias externas.<br><br><b>Por regla general, el paciente no siente nada durante la Key-foresis</b>, aunque el efecto se consigue igualmente.`},
+      {ti:'Cómo se aplica',body:`1. El <b>cabezal intercambiable</b> se coloca sobre la piel en la zona a tratar.<br>2. El <b>electrodo de mano</b> actúa como contraelectrodo — el paciente lo sostiene.<br>3. Para cerrar el circuito, debe haber contacto con la piel. Lo ideal es que la piel (incluida la mano) esté <b>ligeramente humedecida</b>.<br>4. También puede ser el propio paciente quien guíe el dispositivo.`},
+      {ti:'Configuración en pantalla',body:`Pasos para realizar la Key-foresis:<br><br>1. Seleccionar <b>«Foresis clave»</b> en el menú principal<br>2. Pulsar <b>«Más»</b> para aumentar el nivel de energía (1-99)<br>3. La energía apenas debe notarse o no notarse<br>4. Pulsar <b>«Inicio»</b> para arrancar — el temporizador se activa<br>5. Pulsar <b>«Finalizar»</b> para detener`},
+      {ti:'Dirección del flujo: ácida vs básica',body:`La Key-foresis permite <b>dos direcciones de flujo</b> según el pH del agente externo:<br><br>· <b>Externa ácida</b>: compensación de carga de − a + (para agentes ácidos)<br>· <b>Externa básica/alcalina</b>: compensación de carga de + a − (para agentes alcalinos)<br><br>Para cambiar: pulsar el símbolo de menú ≡ en pantalla. Siempre consultar el prospecto del agente externo para saber qué dirección aplicar.`}
+     ],
+     qs:[
+      {q:'¿Para qué sirve la Key-foresis?',opts:['Para tratar dolor agudo directamente','Para introducir agentes externos bajo la piel mediante iontoforesis','Para hacer diagnóstico de asimetrías'],ok:1,fb:['No del todo — eso es la Biorregulación.','¡Correcto! La Key-foresis usa corriente galvánica para introducir sustancias externas.','No del todo — eso es el modo Diagnóstico.']},
+      {q:'¿Qué elemento es imprescindible como contraelectrodo en la Key-foresis?',opts:['El cabezal intercambiable Matrix','El electrodo de mano','Las almohadillas adhesivas'],ok:1,fb:['No del todo — el cabezal va sobre la piel, no es el contraelectrodo.','¡Correcto! El electrodo de mano actúa siempre como contraelectrodo en la Key-foresis.','No del todo — las almohadillas no se usan como contraelectrodo en Key-foresis.']},
+      {q:'¿Qué dirección de flujo se usa con un agente externo de pH ácido?',opts:['Externa básica (de + a −)','Externa ácida (de − a +)','No importa el pH, siempre es la misma'],ok:1,fb:['No del todo — esa dirección es para agentes alcalinos.','¡Correcto! Agente ácido → flujo de − a +. Siempre consultar el prospecto del producto.','No del todo — la dirección depende del pH del agente externo.']}
+     ]
+    },
+    {t:'Modo Biorregulación',sub:'Estimulación nerviosa con impulso bipolar adaptativo',
+     cards:[
+      {ti:'¿Qué es la Biorregulación?',body:`El modo <b>Biorregulación</b> usa <b>impulsos bipolares</b> para estimulación nerviosa eléctrica no invasiva. Es el modo principal de tratamiento del medkey para dolor, disfunciones musculares y circulación.<br><br>Una vez encendido, el dispositivo empieza siempre en programa <b>«Base»</b> con nivel de energía 1.<br><br>El temporizador se pone en marcha al detectar <b>contacto con la piel</b>.`},
+      {ti:'Programas terapéuticos disponibles',body:`El medkey tiene una amplia gama de programas terapéuticos. Los principales:<br><br>· <b>Base</b>: Frecuencia estándar<br>· <b>Sedación</b>: Alta frecuencia + modulación de amplitud<br>· <b>Disparos</b>: Baja frecuencia, alta intensidad<br>· <b>Activación</b>: Baja frecuencia con amortiguación<br>· <b>Relajación</b>: Variación de frecuencia estándar<br>· <b>Armonización</b>: Frecuencia estándar + intervalo alto e intensidad baja<br>· <b>FM crónica / FM aguda / Individual / Reorganización / Dinámica</b><br><br>Más 3 programas <b>personalizados</b> via keypad.`},
+      {ti:'Cómo cambiar el programa',body:`1. Pulsar el símbolo de menú <b>≡</b> para abrir el submenú de programas<br>2. Desplazar la lista y pulsar el programa deseado<br>3. Al pulsar el <b>símbolo de flecha ↺</b> se activa el programa seleccionado<br>4. Volver a pulsar la flecha para regresar a la configuración básica<br><br>También se puede cambiar rápidamente entre modos con <b>uno o varios clics en la flecha</b>.`},
+      {ti:'Dinámica de impulsos',body:`En el modo Biorregulación, la pantalla muestra dos opciones de dinámica de impulsos:<br><br>· <b>Soft</b> (suave): impulso más gradual, indicado para pacientes sensibles<br>· <b>Int.</b> (intensiva): impulso más pronunciado, mayor efecto terapéutico<br><br>El nivel de energía va del 1 al 99 y debe ajustarse para que sea <b>agradable para el paciente</b>. En ese ajuste ya puede llevarse a cabo el tratamiento básico.`}
+     ],
+     qs:[
+      {q:'¿Con qué programa y nivel de energía arranca siempre el medkey en Biorregulación?',opts:['Activación nivel 10','Base nivel 1','Sedación nivel 5'],ok:1,fb:['No del todo.','¡Correcto! Siempre inicia en programa Base con nivel de energía 1.','No del todo.']},
+      {q:'¿Cuándo se pone en marcha el temporizador en Biorregulación?',opts:['Al pulsar el botón de inicio','Al detectar contacto con la piel','Al llegar al nivel de energía 10'],ok:1,fb:['No del todo — el botón de inicio solo enciende el dispositivo.','¡Correcto! El temporizador arranca automáticamente al detectar contacto con la piel.','No del todo.']},
+      {q:'¿Qué significa la dinámica «Soft» en pantalla?',opts:['Nivel de energía bajo','Impulso gradual, indicado para pacientes más sensibles','Modo de baja frecuencia'],ok:1,fb:['No del todo — Soft es el tipo de impulso, no el nivel de energía.','¡Correcto! Soft indica un impulso más gradual, recomendado para mayor sensibilidad.','No del todo.']}
+     ]
+    },
+    {t:'Modo Diagnóstico',sub:'Biorregulación con datos de medición en tiempo real',
+     cards:[
+      {ti:'¿Qué añade el modo Diagnóstico?',body:`El modo Diagnóstico <b>equivale a la Biorregulación</b> pero añade <b>datos de medición visibles en pantalla</b> en tiempo real. Esto permite:<br><br>· Identificar asimetrías de forma más precisa y objetiva<br>· Ver la dinámica de los valores durante el tratamiento<br>· Saber cuándo interrumpir la terapia<br><br>Al activarlo, puedes elegir entre <b>modo Interno</b> (solo el terminal) o <b>modo Keypad</b> (con la tablet conectada).`},
+      {ti:'Indicadores en pantalla',body:`El modo Diagnóstico muestra dos valores adicionales:<br><br>· <b>Reacción en curso</b> (izquierda): disposición del tejido a reaccionar<br>· <b>Coeficiente de la reacción</b> (derecha): «pasos a cero» en el paquete de ondas bipolares<br><br>El <b>círculo central</b> cambia de color para indicar el estado de la terapia:<br>🟢 <b>Verde</b>: objetivo de eficiencia alcanzado → lado izquierdo en verde permanente<br>🟠 <b>Naranja</b>: más terapia no añade dinámica → momento para interrumpir`},
+      {ti:'Cuándo parar la terapia',body:`El modo Diagnóstico te indica cuándo terminar:<br><br>1. El <b>círculo central se pone naranja</b><br>2. El lado derecho (coeficiente) también se pone <b>naranja permanente</b><br>3. En ese momento puede interrumpirse la terapia con seguridad<br><br>Consulta los contenidos de los seminarios para interpretar correctamente los valores en cada caso clínico.`},
+      {ti:'Modo Keypad y cribado en tiempo real',body:`Con el keypad conectado (Bluetooth activado en ambos):<br><br>· Los valores del diagnóstico se transfieren al keypad y se pueden <b>guardar en base de datos</b><br>· Usar <b>Diagnóstico → Modo Keypad</b> para activarlo<br>· Requiere el <b>cabezal intercambiable del escáner Highpro</b> conectado<br>· El keypad también permite programar <b>parámetros personalizados</b> (Personal 1, 2, 3)`}
+     ],
+     qs:[
+      {q:'¿Qué diferencia al modo Diagnóstico de la Biorregulación?',opts:['Usa una frecuencia diferente','Muestra datos de medición adicionales en pantalla en tiempo real','Solo puede usarse con el keypad'],ok:1,fb:['No del todo — la frecuencia base es la misma.','¡Correcto! El modo Diagnóstico añade datos de medición visibles que permiten objetivar la terapia.','No del todo — también funciona en modo Interno sin keypad.']},
+      {q:'¿Qué indica el círculo central en naranja?',opts:['Error del dispositivo','Hay que aumentar el nivel de energía','Más terapia no añadirá dinámica adicional — se puede interrumpir'],ok:2,fb:['No del todo — naranja no es un error.','No del todo — naranja indica lo contrario.','¡Correcto! Naranja = plateau terapéutico alcanzado → momento de parar.']},
+      {q:'¿Qué cabezal intercambiable necesitas para el cribado en tiempo real con el keypad?',opts:['Cabezal estándar','Cabezal intercambiable del escáner Highpro','Cabezal Trigger'],ok:1,fb:['No del todo — el estándar no es suficiente para el cribado en tiempo real.','¡Correcto! El escáner Highpro es necesario para transferir datos al keypad.','No del todo.']}
+     ]
+    },
+    {t:'Manejo del dispositivo',sub:'Encendido, pantalla táctil, bloqueo y cabezales',
+     cards:[
+      {ti:'Botón de inicio: 4 funciones',body:`El botón de inicio es el <b>único botón físico</b> del medkey y tiene 4 funciones:<br><br>1. <b>Encendido/apagado</b>: mantener 2 segundos. Esperar 15s antes de volver a encender.<br>2. <b>Activar pantalla</b>: pulsación breve cuando la pantalla está inactiva.<br>3. <b>Volver al menú principal</b>: pulsación breve desde cualquier modo de terapia.<br>4. <b>Reinicio/recalibrado</b>: en caso de pantalla azul.`},
+      {ti:'Panel táctil y bloqueo',body:`El medkey se maneja mediante una <b>elipse de control ovalada</b> táctil. Un toque ligero suele ser suficiente — se confirma con respuesta acústica y vibratoria (ajuste de fábrica).<br><br>Para <b>bloquear la pantalla</b> y evitar pulsaciones accidentales: arrastrar el símbolo del candado al centro.<br>Para <b>desbloquear</b>: pulsación breve del botón de inicio.<br><br>Volver siempre al menú principal con el botón de inicio antes de bloquear.`},
+      {ti:'Cabezales intercambiables',body:`Para cambiar el cabezal:<br><br>1. Pulsar el <b>botón de desbloqueo</b><br>2. Girar el cabezal <b>~60° a la izquierda o derecha</b> y levantar<br>3. Para colocar el nuevo: alinear la marca del cabezal con la marca del terminal<br>4. Girar hacia el cierre hasta que <b>encaje</b><br><br>Cada cabezal tiene un uso específico: estándar (todo), Trigger (estructuras pequeñas), Matrix (fascias), Highpro (diagnóstico), peine (zonas pilosas), Flow (fascias + puntos gatillo).`},
+      {ti:'Menú de ajustes',body:`Acceder desde el menú principal: icono de <b>rueda dentada</b> (esquina superior derecha).<br><br>Ajustes disponibles: Bluetooth on/off · Modo Low (reduce energía al 10-50% para hipersensibles) · Reconocimiento de pacientes (Alto/Medio/Bajo) · Sonido · Brillo · Vibración · Esquema de colores · Idioma · Información (firmware y nº de serie)`}
+     ],
+     qs:[
+      {q:'¿Cuántos segundos hay que mantener pulsado el botón de inicio para encender el medkey?',opts:['1 segundo','2 segundos','5 segundos'],ok:1,fb:['No del todo — hay que mantenerlo algo más.','¡Correcto! 2 segundos tanto para encender como para apagar.','No del todo — 5 segundos activa el recalibrado.']},
+      {q:'¿Para qué sirve el «Modo Low» en los ajustes?',opts:['Para reducir el brillo de la pantalla','Para reducir la escala de energía en pacientes hipersensibles','Para activar el modo de bajo consumo de batería'],ok:1,fb:['No del todo — el brillo tiene su propio ajuste.','¡Correcto! Modo Low ajusta la energía al 10-50% del valor normal, manteniendo la escala 1-99.','No del todo.']},
+      {q:'¿Cuántos grados hay que girar el cabezal intercambiable para desbloquearlo?',opts:['30°','60°','90°'],ok:1,fb:['No del todo.','¡Correcto! Aproximadamente 60° a la izquierda o a la derecha.','No del todo.']}
+     ]
+    },
+    {t:'Carga, cuidado y limpieza',sub:'Batería, estación base y mantenimiento del equipo',
+     cards:[
+      {ti:'Estación base y carga inductiva',body:`La estación base carga el terminal medkey por <b>inducción</b> (sin cables). Indicadores LED:<br><br>⚪ <b>Blanco</b>: estación conectada a la red<br>💙 <b>Azul intermitente</b>: cargando<br>💙 <b>Azul continuo</b>: carga completa<br><br>Colocar siempre el terminal en la base cuando no se está usando. Rango de temperatura para cargar: <b>0-30°C</b>. Usar siempre la fuente de alimentación original.`},
+      {ti:'Indicadores de batería en pantalla',body:`Barra de carga en pantalla:<br><br>· <b>Azul</b>: energía residual disponible<br>· <b>Naranja</b>: batería baja → cargar inmediatamente, no iniciar nuevos tratamientos<br><br>Si la batería se agota durante un tratamiento: sonido de aviso («pitido»). Se puede terminar ese tratamiento, pero hay que cargar antes del siguiente.<br><br>La batería está <b>instalada permanentemente</b> y no se puede quitar. La sustituye el fabricante (servicio de pago).`},
+      {ti:'Limpieza y desinfección',body:`Limpiar y desinfectar <b>después de cada sesión</b>:<br><br>1. Apagar el terminal<br>2. Aplicar limpiador y desinfectante con <b>paño de microfibra ligeramente humedecido</b><br>3. Retirar el cabezal intercambiable y limpiarlo<br>4. Limpiar la zona bajo el cabezal<br>5. Pasar paño húmedo sin productos<br>6. Desinfectante recomendado: <b>alcohol isopropílico</b><br><br>⚠️ El medkey <b>no es impermeable</b> — nunca sumergir ni mojar directamente.`},
+      {ti:'Almacenamiento y transporte',body:`· Guardar siempre en la <b>estación base</b> cuando no se use<br>· Usar el maletín solo para transporte<br>· En el maletín: depositar el terminal siempre con la <b>pantalla hacia abajo</b> (protege la pantalla y evita descarga)<br>· <b>Almohadillas adhesivas</b>: solo reutilizables con el mismo paciente — limpiar zona, asegurar que no queden arrugas, guardar en lámina hasta el próximo uso`}
+     ],
+     qs:[
+      {q:'¿Qué indica el LED azul intermitente en la estación base?',opts:['El medkey está totalmente cargado','El medkey se está cargando','Hay un error en la estación base'],ok:1,fb:['No del todo — cuando está cargado el LED es azul continuo.','¡Correcto! Azul intermitente = cargando. Azul continuo = carga completa.','No del todo.']},
+      {q:'¿Con qué producto se debe desinfectar el medkey?',opts:['Agua con jabón','Alcohol isopropílico','Lejía diluida'],ok:1,fb:['No del todo — el jabón no es suficiente para desinfectar.','¡Correcto! El alcohol isopropílico es el desinfectante recomendado.','No del todo — la lejía puede dañar los materiales.']},
+      {q:'¿Cómo debes colocar el terminal medkey en el maletín?',opts:['Con la pantalla hacia arriba','Con la pantalla hacia abajo','En posición vertical'],ok:1,fb:['No del todo — esa posición no protege la pantalla.','¡Correcto! Pantalla hacia abajo protege la pantalla y evita descargas accidentales.','No del todo.']}
+     ]
+    },
+    {t:'Mensajes de error y recalibrado',sub:'Resolución de incidencias y mantenimiento',
+     cards:[
+      {ti:'Principales errores y soluciones',body:`<b>Pantalla azul con error:</b> Recalibrar el dispositivo (ver abajo). El dispositivo se apaga solo tras 3 segundos.<br><br><b>No enciende / se apaga solo:</b> Batería descargada. Colocar en estación base. Si la batería tiene descarga profunda, solo el fabricante puede reactivarla (de pago).<br><br><b>Pantalla enciende brevemente:</b> Temperature Error — temperatura fuera de rango (0-30°C). Esperar a que se normalice y volver a encender.`},
+      {ti:'Problemas con el reconocimiento del paciente',body:`<b>Se inicia de forma aleatoria:</b> Ajustes → «Reconocimiento de pacientes» → seleccionar <b>«Bajo»</b>. Confirmar con flecha.<br><br><b>No se inicia:</b> Ajustes → «Reconocimiento de pacientes» → seleccionar <b>«Alto»</b>. Confirmar con flecha.<br><br>El ajuste recomendado para la mayoría de casos es <b>«Medio»</b>.`},
+      {ti:'Cómo recalibrar el medkey',body:`<b>Solo recalibrar con batería completamente cargada.</b><br><br>1. Reiniciar el dispositivo<br>2. Pulsar y mantener el botón de inicio <b>al menos 10 segundos</b> hasta señal acústica + pantalla azul<br>3. Soltar y esperar a que se apague<br>4. ⚠️ Asegurarse de que los electrodos no contactan con nada<br>5. Encender y esperar la calibración automática (puede llevar varios minutos)<br>6. El dispositivo pasará al menú de ajustes — configurar idioma y preferencias`},
+      {ti:'Pérdida de garantía',body:`La garantía se pierde si se intenta:<br><br>🚫 Abrir el medkey o sus componentes<br>🚫 Modificar el hardware interno o el firmware<br>🚫 Combinar con tecnología de otros fabricantes<br>🚫 Usar cargadores de terceros<br>🚫 Uso inadecuado o negligente (agua, caídas, etc.)<br><br>El medkey no requiere mantenimiento durante toda su vida útil, salvo los controles visuales y funcionales periódicos y el eventual cambio de batería.`}
+     ],
+     qs:[
+      {q:'¿Cuánto tiempo hay que mantener pulsado el botón de inicio para iniciar el recalibrado?',opts:['2 segundos','5 segundos','Al menos 10 segundos'],ok:2,fb:['No del todo — 2 segundos enciende o apaga el dispositivo.','No del todo — hay que mantenerlo más tiempo.','¡Correcto! Al menos 10 segundos hasta que aparece señal acústica y pantalla azul.']},
+      {q:'¿Qué debe hacerse antes de iniciar el recalibrado?',opts:['Asegurarse de que la batería está completamente cargada','Conectar el keypad por Bluetooth','Retirar el cabezal intercambiable'],ok:0,fb:['¡Correcto! El recalibrado siempre debe hacerse con la batería al 100%.','No del todo — el keypad no es necesario para recalibrar.','No del todo — el cabezal no necesita retirarse para el recalibrado.']},
+      {q:'¿Qué ajuste de «Reconocimiento de pacientes» se recomienda para la mayoría de casos?',opts:['Alto','Medio','Bajo'],ok:1,fb:['No del todo — Alto puede generar reconocimientos aleatorios en algunos pacientes.','¡Correcto! Medio es el ajuste recomendado para la mayoría de pacientes.','No del todo — Bajo se reserva para valores de medición excesivos.']}
+     ]
+    }
+  ];
+
+    const MODS = ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : MODS_BOMBA;
 
   let curMod=0, scores=new Array(MODS.length).fill(null).map(()=>({c:0,done:false}));
   let ttEl=null;
