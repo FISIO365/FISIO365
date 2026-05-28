@@ -848,8 +848,6 @@ async function guardar(){
   if(!fisioSelId){toast('Selecciona el fisio que asigna',false);return;}
   if(!pacSelId){toast('Selecciona un paciente',false);return;}
   const ejs=getEjs();
-  console.log('getEjs result:', JSON.stringify(ejs));
-  console.log('All .ejc divs:', [...document.querySelectorAll('.ejc')].map(c=>({id:c.id,nombre:document.getElementById('ebusca'+c.id.replace('ej',''))?.value})));
   if(!ejs.length){toast('Añade y selecciona al menos un ejercicio',false);return;}
   const btn=$('btnG'); btn.disabled=true; btn.textContent='Guardando...';
   try{
