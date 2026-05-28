@@ -383,13 +383,13 @@ const TOPBAR = {
 };
 
 const CFG = {
-  rodilla:  {t:'Rodilla',       steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
-  fascitis: {t:'Fascitis plantar',steps:['Paciente','Lesión','Dolor','Factores','Informe']},
+  rodilla:  {t:'Rodilla',       steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  fascitis: {t:'Fascitis plantar',steps:['Paciente','Lesión','Dolor','Factores','Tests ortopédicos','Informe']},
   cervical: {t:'Cervical',       steps:['Paciente','Lesión','Dolor','Neurológico','Exploración','Tests ortopédicos','Informe']},
   hombro:   {t:'Hombro',         steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
-  tobillo:  {t:'Tobillo',        steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
-  cadera:   {t:'Cadera',         steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
-  codo:     {t:'Codo',           steps:['Paciente','Lesión','Dolor','Exploración','Informe']},
+  tobillo:  {t:'Tobillo',        steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  cadera:   {t:'Cadera',         steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  codo:     {t:'Codo',           steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
   hernia:   {t:'Hernia discal',  steps:['Paciente','Datos','Consulta','Banderas','Comportamiento','Observación','Movimiento','Tests','Exploración','Informe']},
 };
 
@@ -789,13 +789,13 @@ function renderProto(){
   wrap.appendChild(sn);
 
   const stepFns = {
-    rodilla:  [stepP0,rS1,rS2,rS3,rSZ],
-    fascitis: [stepP0,fS1,fS2,fS3,fSZ],
+    rodilla:  [stepP0,rS1,rS2,rS3,rS4,rSZ],
+    fascitis: [stepP0,fS1,fS2,fS3,fS4,fSZ],
     cervical: [stepP0,cS1,cS2,cS3,cS4,cS5,cSZ],
     hombro:   [stepP0,hS1,hS2,hS3,hS4,hSZ],
-    tobillo:  [stepP0,tS1,tS2,tS3,tSZ],
-    cadera:   [stepP0,caS1,caS2,caS3,caSZ],
-    codo:     [stepP0,coS1,coS2,coS3,coSZ],
+    tobillo:  [stepP0,tS1,tS2,tS3,tS4,tSZ],
+    cadera:   [stepP0,caS1,caS2,caS3,caS4,caSZ],
+    codo:     [stepP0,coS1,coS2,coS3,coS4,coSZ],
     hernia:   [stepP0,heS1,heS2,heS3,heS4,heS5,heS6,heS7,heS8,heSZ],
   };
   stepFns[curProto][curStep](wrap);
@@ -856,13 +856,167 @@ function stepP0(wrap){
 // RODILLA
 function rS1(w){w.appendChild(mkNota('Traumatismo, sobrecarga o postquirúrgico?'));w.appendChild(mkCard('Historia','',[mkSel('Rodilla',[['d','Derecha'],['i','Izquierda'],['b','Ambas']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Inicio',[['td','Traumático directo'],['ti','Giro/torsión'],['gr','Gradual'],['pq','Postquirúrgico']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['men','Menisco'],['lca','LCA'],['lcm','LCM/LCL'],['cond','Condromalacia'],['ten','Tendinopatía rotuliana'],['it','IT band'],['art','Gonartrosis']],'dx'),mkSel('Cirugía',[['no','No'],['art','Artroscopia'],['lca_r','Rec. LCA'],['pro','Prótesis']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
 function rS2(w){w.appendChild(mkNota('Patrón mecánico o inflamatorio? Inestabilidad real o subjetiva?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['eva','EVA actividad'],['eve','EVA escaleras']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['ant','Anterior'],['med','Medial'],['lat','Lateral'],['pos','Posterior'],['dif','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Inflamación',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Derrame ⚠']],'infl'),mkSel('Inestabilidad',[['no','No'],['sub','Sensación'],['ced','Cedimiento real']],'ines'),mkSel('Bloqueo',[['no','No'],['ps','Pseudobloqueo'],['re','Real ⚠']],'bloq')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);w.appendChild(mkCard('Agravantes/aliviantes','',[mkCk('AGRAVAN',[['ba','Bajar esc.'],['su','Subir esc.'],['cu','Cuclillas'],['co','Correr'],['gi','Giros'],['se','Sentado']],'agr'),mkCk('ALIVIAN',[['re','Reposo'],['fr','Frío'],['ca','Calor'],['ve','Vendaje'],['ai','AINEs']],'ali')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function rS3(w){w.appendChild(mkNota('McMurray y Lachman consistentes con la historia?'));w.appendChild(mkCard('Exploración','',[mkSel('Flexión',[['com','Completa'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'flex'),mkSel('Extensión',[['com','Completa 0°'],['dl','Déficit leve'],['dm','Déficit mod ⚠'],['re','Recurvatum']],'ext'),mkSel('McMurray',[['no','No realiz.'],['neg','Negativo'],['pm','Positivo medial'],['pl','Positivo lateral']],'mcm'),mkSel('Lachman',[['no','No realiz.'],['neg','Negativo'],['pi','Positivo I'],['pii','Positivo II'],['piii','Positivo III ⚠']],'lach'),mkSel('Estrés colateral',[['no','No realiz.'],['neg','Negativo'],['val','Valgo (LCM)'],['var','Varo (LCL)']],'est'),mkSel('Patelofemoral',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'pat'),mkSel('Fuerza cuád',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fcuad'),mkSel('Propiocepción',[['nor','Normal'],['le','Alterado leve'],['mo','Moderado'],['np','No posible']],'prop'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['mov','Movilidad'],['cx','Evitar cx'],['pq','Postquirúrgico']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
+function rS3(w){w.appendChild(mkNota('Movilidad y fuerza. Los tests ortopédicos están en el paso siguiente.'));w.appendChild(mkCard('Exploración','',[mkSel('Flexión',[['com','Completa'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'flex'),mkSel('Extensión',[['com','Completa 0°'],['dl','Déficit leve'],['dm','Déficit mod ⚠'],['re','Recurvatum']],'ext'),mkSel('Fuerza cuád',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fcuad'),mkSel('Fuerza isquios',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fiso'),mkSel('Propiocepción',[['nor','Normal'],['le','Alterado leve'],['mo','Moderado'],['np','No posible']],'prop'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['mov','Movilidad'],['cx','Evitar cx'],['pq','Postquirúrgico']],'obj')]));mkBnav(w,true,'Tests ortopédicos →',()=>{curStep++;renderProto();},4);}
+
+// ── RODILLA — Tests ortopédicos (paso 4) ────────────────────────────────────
+function rS4(w){
+  w.appendChild(mkNota('Realiza los tests según la sospecha clínica. No es obligatorio hacerlos todos.'));
+
+  const tc=ce('div','card');
+  tc.innerHTML='<div class="ct">Tests ortopédicos — Rodilla</div>';
+
+  const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Ligamentos cruzados';tc.appendChild(s1);
+  tc.appendChild(mkTestOrtopedico('lachman','Test de Lachman',null,
+    'Decúbito supino. Rodilla en 15–30° de flexión. Una mano estabiliza el fémur y la otra desplaza la tibia hacia anterior. Los músculos deben permanecer relajados.',
+    'Desplazamiento anterior de la tibia >5mm con tope blando o ausente. Indica lesión del LCA. Se gradúa: leve (<5mm), moderado (5–10mm), severo (>10mm).',
+    'Tope firme y desplazamiento <3mm. Sugiere integridad del LCA.',
+    'Combinar con Test de Cajón Anterior. Si Lachman positivo + pivot shift positivo → alta probabilidad de rotura completa de LCA.',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('cajon_ant_rod','Test de Cajón Anterior',null,
+    'Decúbito supino. Caderas 45° y rodillas 90° de flexión. El fisio se sienta ligeramente sobre el pie del paciente para fijarlo. Abraza la epífisis proximal de la tibia con ambas manos y aplica tracción anterior.',
+    'Desplazamiento anterior excesivo de la tibia respecto a los cóndilos femorales. Positivo para lesión del LCA.',
+    'Sin desplazamiento significativo. LCA probablemente íntegro.',
+    'Test de Lachman tiene más sensibilidad. El cajón anterior es complementario; puede ser falsamente negativo si hay espasmo muscular.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('cajon_post','Test de Cajón Posterior',null,
+    'Misma posición que el cajón anterior. El fisio aplica un empuje posterior sobre la tibia. Repetir con tibia en rotación interna y externa.',
+    'Desplazamiento posterior excesivo de la tibia. Indica lesión del LCP.',
+    'Sin desplazamiento posterior significativo.',
+    'Test de Godfrey: en decúbito supino con caderas y rodillas a 90°, la caída de la tibia por gravedad ya indica rotura del LCP (LR+ 16.2).',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('pivot_shift','Test de Cambio de Pivote',null,
+    'Decúbito supino. Rodilla en 10–20° de flexión. El fisio rota la tibia internamente mientras aplica una fuerza en valgo y extiende lentamente la rodilla.',
+    'Subluxación anterior del platillo tibial con un "clic" o salto palpable. Indica rotura del LCA con inestabilidad rotacional.',
+    'Sin subluxación ni clic.',
+    'Muy específico (98%) para rotura de LCA. Combinar con Lachman. La inestabilidad rotacional es el principal factor que limita el regreso al deporte.',
+    'alta'));
+
+  const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Ligamentos colaterales';tc.appendChild(s2);
+  tc.appendChild(mkTestOrtopedico('inest_med','Test de Inestabilidad Medial (Valgo)',null,
+    'Decúbito supino. Rodilla en extensión completa y luego en 30° de flexión. El fisio aplica fuerza en valgo con una mano en la cara lateral de la rodilla y la otra estabiliza el tobillo.',
+    'Bostezo articular o apertura del compartimento interno. Indica lesión del LLI. En extensión completa → daño también a estructuras posteriores.',
+    'Sin apertura articular significativa.',
+    'Realizar siempre en extensión Y en 30° de flexión. Solo a 30° indica lesión aislada de LLI. En extensión completa → lesión combinada (LCA/cápsula posterior).',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('inest_lat','Test de Inestabilidad Lateral (Varo)',null,
+    'Decúbito supino. El fisio aplica fuerza varizante con una mano en la cara interna de la rodilla. Evaluar en extensión y en 30° de flexión.',
+    'Bostezo del compartimento lateral. Indica lesión del LLE. En extensión → posible daño también a LCA, LCP o cápsula postero-lateral.',
+    'Sin apertura lateral.',
+    'Menos frecuente que la lesión medial. Si varo exagerado en extensión completa: descartar lesión del ángulo postero-lateral.',
+    'media'));
+
+  const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Meniscos';tc.appendChild(s3);
+  tc.appendChild(mkTestOrtopedico('mcmurray','Test de McMurray',null,
+    'Decúbito supino. Rodilla y cadera en flexión máxima. El fisio sujeta la rodilla con una mano y el pie con la otra. Aplica rotación externa + extensión para menisco interno; rotación interna + extensión para menisco externo.',
+    'Dolor y/o chasquido durante la extensión en la zona meniscal correspondiente. Rotación externa → menisco interno; rotación interna → menisco externo.',
+    'Sin dolor ni chasquido. Reduce la probabilidad de lesión meniscal.',
+    'Combinar con Test de Apley. Si ambos positivos en el mismo lado → alta probabilidad de lesión meniscal.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('apley','Test de Apley',null,
+    'Decúbito prono. Rodilla a 90° de flexión. El fisio fija el muslo con su rodilla y aplica presión axial descendente + rotación en ambos sentidos.',
+    'Dolor y/o chasquido en el compartimento correspondiente durante la compresión + rotación. Indica lesión meniscal.',
+    'Sin dolor ni chasquido con compresión.',
+    'Alta especificidad (88%, LR+ 10.8). Un Apley positivo con alta especificidad es un hallazgo muy relevante. Diferenciar de lesión ligamentosa con la variante de distracción.',
+    'alta'));
+
+  const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Rótula / patelofemoral';tc.appendChild(s4);
+  tc.appendChild(mkTestOrtopedico('signo_clarke','Signo de Clarke',null,
+    'Decúbito supino con rodilla extendida. El fisio desplaza la rótula en sentido caudal y la mantiene. Pide al paciente una contracción isométrica del cuádriceps. Repetir a 30°, 60° y 90° de flexión.',
+    'Dolor o incapacidad de completar la contracción. Indica alteración condral o disfunción patelofemoral.',
+    'Contracción sin dolor. Comparar siempre con el lado contralateral.',
+    'Test de McConnell: si al corregir la rótula medialmente el dolor desaparece, confirma disfunción patelofemoral. Indicación directa de taping rotuliano.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('noble','Test de Noble (Banda IT)',null,
+    'Decúbito supino. El fisio flexiona la rodilla a 90° y la cadera a 50°. Aplica presión sobre el cóndilo femoral lateral con los dedos. Mantiene la presión y extiende lentamente la rodilla.',
+    'Dolor intenso al llegar a 30–40° de flexión en el cóndilo lateral. Indica síndrome de fricción de la banda iliotibial.',
+    'Sin dolor al pasar por los 30–40°.',
+    'El dolor a 30–40° es el ángulo donde la banda IT cruza el cóndilo femoral lateral. Frecuente en corredores. Valorar también la tensión de la banda con el test de Ober.',
+    'media'));
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');ta.placeholder='Anotaciones clínicas adicionales, hallazgos inusuales...';
+  ta.style.cssText='width:100%;min-height:70px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_rodilla=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+
+  w.appendChild(tc);
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+
 function rSZ(w){renderInformeHub(w,'rodilla',gFR(),gFRF(),getFase(D.evr,D.eva));}
 
 // FASCITIS
 function fS1(w){w.appendChild(mkNota('Qué cambió antes del dolor? Carga, calzado, trabajo, peso...'));w.appendChild(mkCard('Historia','',[mkSel('Pie',[['d','Pie derecho'],['i','Pie izquierdo'],['b','Ambos']],'pie'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Desencadenante',[['gr','Gradual'],['ac','Aumento carga'],['cal','Cambio calzado'],['pe','Aumento peso'],['bip','Bipedestación'],['tr','Cambio trabajo']],'ini'),mkSel('Calzado',[['sop','Con soporte'],['min','Minimalista'],['zap','Zapato trabajo'],['pla','Plano sin soporte'],['tac','Tacón >3cm'],['des','Descalzo en casa']],'cal'),mkSel('Episodios',[['pri','Primer ep.'],['mis','Recaída mismo pie'],['con','Pie contralateral'],['tto','Recaída tras tto']],'epi'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['pla','Plantillas'],['inf','Infiltración'],['ond','Ondas de choque']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
 function fS2(w){w.appendChild(mkNota('Patrón clásico — peor al levantarse, mejora al calentar? Si NO, replantear dx.'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evm','EVA primeros pasos'],['eva','EVA actividad'],['evn','EVA final día']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Dolor matutino',[['no','No'],['m5','<5 min'],['m30','5–30 min'],['M30','>30 min (atípico)']],'mat'),mkSel('Al calentar',[['des','Desaparece'],['mej','Mejora'],['nc','No cambia'],['emp','Empeora (atípico)']],'cal2'),mkSel('Reaparece reposo',[['no','No'],['si','Sí (clásico)']],'rep'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Localización',[['tm','Talón medial'],['ar','Arco plantar'],['di','Talón difuso'],['an','Antepié']],'loc'),mkSel('Parestesias',[['no','No'],['si','Sí ⚠']],'par')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function fS3(w){w.appendChild(mkNota('Factor PRINCIPAL? Sin identificarlo el tto recidivará.'));w.appendChild(mkCard('Exploración','',[mkSel('Tipo de pie',[['neu','Neutro'],['pla','Plano/hiperpronador'],['cav','Cavo/supinador']],'tpie'),mkSel('Dorsiflexión',[['nor','Normal ≥10°'],['le','Leve 5–9°'],['mo','Moderada 0–4°'],['se','Severa <0°']],'dors'),mkSel('Silfverskiöld',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo (gastrocnemio)']],'silf'),mkSel('Windlass',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — reproduce dolor']],'wind'),mkSel('Tinel',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo ⚠']],'tin'),mkSel('Heel raise',[['nor','≥25 rep'],['re','10–24 rep'],['mr','<10 rep'],['im','No posible']],'hr'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['run','Volver a correr'],['tr','Trabajar sin dolor'],['cam','Caminar sin dolor']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
+function fS3(w){w.appendChild(mkNota('Factor PRINCIPAL? Sin identificarlo el tto recidivará.'));w.appendChild(mkCard('Exploración','',[mkSel('Tipo de pie',[['neu','Neutro'],['pla','Plano/hiperpronador'],['cav','Cavo/supinador']],'tpie'),mkSel('Dorsiflexión',[['nor','Normal ≥10°'],['le','Leve 5–9°'],['mo','Moderada 0–4°'],['se','Severa <0°']],'dors'),mkSel('Heel raise',[['nor','≥25 rep'],['re','10–24 rep'],['mr','<10 rep'],['im','No posible']],'hr'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['run','Volver a correr'],['tr','Trabajar sin dolor'],['cam','Caminar sin dolor']],'obj')]));mkBnav(w,true,'Tests ortopédicos →',()=>{curStep++;renderProto();},4);}
+
+// ── FASCITIS PLANTAR — Tests ortopédicos (paso 4) ────────────────────────────
+function fS4(w){
+  w.appendChild(mkNota('Realiza los tests según la sospecha clínica. El Windlass y el Silfverskiöld son los más relevantes.'));
+
+  const tc=ce('div','card');
+  tc.innerHTML='<div class="ct">Tests ortopédicos — Fascitis plantar / Pie</div>';
+
+  const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Tests específicos de fascitis';tc.appendChild(s1);
+  tc.appendChild(mkTestOrtopedico('windlass','Test de Windlass',null,
+    'Usuario en bipedestación o sedente. El fisio extiende pasivamente el primer dedo del pie (dorsiflexión metatarsofalángica) para tensionar la fascia plantar mediante el mecanismo de cabrestante.',
+    'Reproducción del dolor en el talón o en el arco plantar. Indica tensión patológica de la fascia plantar. Positivo para fasciopatía plantar.',
+    'Sin dolor durante la extensión del primer dedo.',
+    'El mecanismo de Windlass es la base biomecánica de la fascia plantar. Si positivo en bipedestación → más específico. Combinar con palpación del tubérculo calcáneo medial.',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('silfverskiold','Test de Silfverskiöld',null,
+    'Usuario en decúbito supino. El fisio evalúa la dorsiflexión del tobillo primero con rodilla en extensión y luego con rodilla en flexión a 90°.',
+    'Dorsiflexión limitada con rodilla extendida pero normal con rodilla flexionada. Indica acortamiento específico del gastrocnemio (no del sóleo). Si limitada en ambas posiciones → acortamiento del complejo gastro-sóleo.',
+    'Dorsiflexión ≥10° en ambas posiciones. Flexibilidad del complejo aquíleo normal.',
+    'Clave para diferenciar si hay que estirar gastrocnemio (con rodilla extendida) o también sóleo (con rodilla flexionada). Guía directamente la pauta de estiramientos.',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('tinel_pie','Signo de Tinel (pie)',null,
+    'El fisio aplica golpecitos con los dedos sobre el nervio tibial en la zona del túnel del tarso (cara posteromedial del tobillo).',
+    'Parestesias (hormigueo, corriente) que se irradian hacia la planta del pie. Indica síndrome del túnel del tarso. Importante cuando hay parestesias asociadas a la fascitis.',
+    'Sin hormigueo ni parestesias.',
+    'Si hay fascitis más parestesias → descartar síndrome del túnel del tarso como componente añadido. El túnel del tarso y la fascitis pueden coexistir.',
+    'media'));
+
+  const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Pie plano / biomecánica';tc.appendChild(s2);
+  tc.appendChild(mkTestOrtopedico('navicular_drop','Test Navicular Drop (caída del navicular)',null,
+    'Usuario en sedente. El fisio marca la tuberosidad del navicular y mide su altura al suelo. Luego el usuario se pone de pie (con subastragalina en posición neutra) y se remide la distancia.',
+    'Caída del navicular >10mm al pasar de sedente a bípedo. Indica hiperpronación del pie (pie plano funcional). Normal: 6–8mm.',
+    'Caída ≤8mm. Biomecánica del pie dentro de la normalidad.',
+    'La hiperpronación es un factor de sobrecarga de la fascia plantar. Si navicular drop elevado + fascitis → valorar ortesis o ejercicio de control medial.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('feiss_line','Test Línea de Feiss',null,
+    'El fisio marca el ápex del maléolo medial y la cara medial de la primera articulación metatarsofalángica. Los une con una línea y palpa la tuberosidad navicular. Evaluar en descarga y en carga.',
+    'La tuberosidad navicular cae claramente por debajo de la línea en carga. 1/3 bajo = pie plano grado I; 2/3 = grado II; sobre el suelo = grado III.',
+    'Tuberosidad navicular sobre la línea o muy cerca en ambas posiciones.',
+    'Complementa el navicular drop. Útil para comunicar visualmente al paciente su tipo de pie.',
+    'baja'));
+  tc.appendChild(mkTestOrtopedico('paper_grip','Test Paper Grip',null,
+    'Usuario sentado con caderas, rodillas y tobillos a 90°. Se coloca un trozo de cartón bajo el pie. El fisio sujeta el cartón y el paciente intenta deslizarlo.',
+    'El usuario no puede deslizar el cartón. Indica activación funcional de los músculos intrínsecos del pie (windlass activo). Si falla → disfunción de intrínsecos.',
+    'El usuario desliza el cartón sin dificultad. Indica debilidad de intrínsecos.',
+    'Los músculos intrínsecos son el primer soporte dinámico del arco plantar. Su fortalecimiento es parte esencial del tratamiento conservador de la fascitis.',
+    'media'));
+
+  const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Tendón de Aquiles';tc.appendChild(s3);
+  tc.appendChild(mkTestOrtopedico('thomson_fascitis','Test de Thomson (Aquiles)',null,
+    'Decúbito prono, rodillas extendidas, pies fuera de la camilla. El fisio comprime el tercio medio de la pantorrilla entre pulgar y demás dedos.',
+    'Ausencia de flexión plantar. Indica rotura completa del tendón de Aquiles.',
+    'Flexión plantar presente. Tendón íntegro.',
+    'Alta sensibilidad (96%) y LR+ 13.7. Imprescindible si hay sospecha de rotura aquílea (dolor agudo en pantorrilla, gap palpable, imposibilidad de ponerse de puntillas).',
+    'alta'));
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');ta.placeholder='Anotaciones clínicas adicionales...';
+  ta.style.cssText='width:100%;min-height:70px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_fascitis=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+
+  w.appendChild(tc);
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+
 function fSZ(w){renderInformeHub(w,'fascitis',gFF(),gFFF(),getFase(D.evm,D.eva));}
 
 // CERVICAL
@@ -1109,6 +1263,60 @@ function cS5(w){
 
   w.appendChild(tc);
 
+
+  // Tests adicionales del PDF no incluidos anteriormente
+  const secA=ce('p','');secA.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secA.textContent='Inestabilidad cervical superior';tc.appendChild(secA);
+  tc.appendChild(mkTestOrtopedico('sharp_purser','Test de Sharp-Purser (Inestabilidad C1-C2)',null,
+    'Usuario sedente con el cuello en semiflexión. El fisio coloca la palma en la frente y el dedo índice sobre la apófisis espinosa de C2. Aplica presión anteroposterior a través de la frente.',
+    'Deslizamiento de la cabeza hacia posterior respecto al axis. Indica inestabilidad atlantoaxial (C1-C2).',
+    'Sin desplazamiento posterior de la cabeza. No hay inestabilidad atlantoaxial significativa.',
+    'Sensibilidad 69%, especificidad 96%, LR+ 17.25. CONTRAINDICADA la manipulación cervical si positivo. Derivar urgente. Frecuente en artritis reumatoide y síndrome de Down.',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('alar_flex','Test de Estrés Flexión Lateral (Ligamento Alar)',null,
+    'Usuario en supino con la cabeza en posición neutra. El fisio estabiliza el axis con agarre alrededor del proceso espinoso y lámina. Aplica flexión lateral forzada de la cabeza.',
+    'Movimiento lateral excesivo sin tope capsular firme. Indica lesión del ligamento alar del lado opuesto a la flexión.',
+    'Mínima flexión lateral con tope capsular firme y sólido. Ligamentos alares íntegros.',
+    'Si positivo en la misma dirección que el test rotacional → confirma lesión del ligamento alar. CONTRAINDICADA la manipulación cervical.',
+    'media'));
+
+  const secB=ce('p','');secB.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secB.textContent='Insuficiencia vertebrobasilar';tc.appendChild(secB);
+  tc.appendChild(mkTestOrtopedico('arteria_vertebral','Test Estático Arteria Vertebral',null,
+    'Usuario en supino o sedente. El fisio sostiene la cabeza y lleva pasivamente a extensión + rotación combinadas (la posición más provocadora). Mantener 30 segundos observando al paciente.',
+    'Nistagmo ocular, mareos, aturdimiento, visión borrosa o síntomas neurológicos. Indica posible compromiso de la arteria vertebral.',
+    'Sin síntomas durante la maniobra.',
+    'LR+ 0 (escasa sensibilidad), especificidad 67-86%. Si aparece nistagmo → CONTRAINDICADA manipulación cervical. Realizarlo SIEMPRE antes de técnicas de alta velocidad.',
+    'media'));
+
+  const secC=ce('p','');secC.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secC.textContent='Mielopatía cervical';tc.appendChild(secC);
+  tc.appendChild(mkTestOrtopedico('romberg_cerv','Test de Romberg (Mielopatía)',null,
+    'Usuario de pie, brazos al lado del cuerpo. Se le pide que cierre los ojos y mantenga la posición 20–30 segundos.',
+    'El cuerpo oscila en exceso o el usuario pierde el equilibrio. Indica posible lesión de motoneurona superior (mielopatía cervical).',
+    'El usuario mantiene el equilibrio con ojos cerrados.',
+    'Sensibilidad 39%, especificidad 81%, LR+ 43. Alta especificidad. Si positivo → alta sospecha de mielopatía. CONTRAINDICADA la manipulación cervical. Derivar a neurocirugía.',
+    'alta'));
+
+  const secD=ce('p','');secD.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secD.textContent='Síndrome del opérculo torácico (SOT)';tc.appendChild(secD);
+  tc.appendChild(mkTestOrtopedico('adson','Test / Maniobra de Adson (SOT)',null,
+    'El fisio localiza el pulso radial. Rota la cabeza del usuario hacia el lado ipsilateral. El usuario extiende la cabeza mientras el fisio rota externamente y extiende el hombro. El usuario realiza una inspiración profunda sostenida.',
+    'Desaparición o disminución del pulso radial durante la maniobra. Indica compresión vascular en el desfiladero torácico.',
+    'El pulso radial se mantiene durante toda la maniobra.',
+    'Frecuentemente positivo también en personas sin SOT (falsos positivos). Combinar con Test de Roos y Test de Allen para mayor precisión diagnóstica.',
+    'baja'));
+  tc.appendChild(mkTestOrtopedico('roos','Test de Roos / EAST (SOT)',null,
+    'Usuario de pie. Brazos en abducción a 90°, rotación lateral de hombro, codos a 90° (ligeramente por detrás del plano frontal). El usuario abre y cierra las manos lentamente durante 3 minutos.',
+    'El usuario es incapaz de mantener la posición 3 minutos, o aparece dolor isquémico, pesadez profunda del brazo, o entumecimiento/hormigueo en la mano.',
+    'El usuario completa 3 minutos con fatiga mínima y sin síntomas.',
+    'El test de Roos (EAST) es el más útil para SOT. La reproducción de síntomas típicos del paciente en esta posición es muy sugestiva de compromiso del desfiladero.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('bakody','Test de Bakody / Abducción del Hombro',null,
+    'Usuario sedente o supino. El fisio o el propio usuario eleva el brazo pasivamente con abducción para que la mano o antebrazo descansen sobre la cabeza.',
+    'Disminución o alivio de los síntomas radiculares (dolor, parestesias) al elevar el brazo. Indica compresión extradural cervical (hernia discal, raíz C4-C5 o C5-C6).',
+    'Los síntomas no cambian con la elevación del brazo.',
+    'Sensibilidad 36%, especificidad 100%, LR+ 36. Si positivo → prácticamente confirma compresión radicular cervical C4-C5/C5-C6. El alivio al elevar el brazo es muy específico.',
+    'alta'));
+
+  w.appendChild(tc);
+
   const obs=ce('div','card');obs.style.marginTop='12px';
   obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
   const ta=ce('textarea','');
@@ -1302,6 +1510,70 @@ function hS4(w){
   tc.appendChild(gf);
   w.appendChild(tc);
 
+
+  // Tests adicionales del PDF no incluidos anteriormente
+  const s5b=ce('p','');s5b.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5b.textContent='Pinzamiento subacromial (adicionales)';tc.appendChild(s5b);
+  tc.appendChild(mkTestOrtopedico('neer','Test de Neer',null,
+    'Usuario de pie o sentado. El fisio eleva el brazo en rotación interna hasta elevación máxima.',
+    'Dolor subacromial o en la cara anterior del hombro. Indica pinzamiento del tendón supraespinoso bajo el arco coracoacromial.',
+    'Sin dolor durante la elevación.',
+    'Sensibilidad 79%, especificidad 53%, LR+ 1.7. Combinar con Hawkins-Kennedy. Si ambos positivos → alta sospecha de impingement subacromial.',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('yocum','Test de Yocum',null,
+    'Usuario de pie o sentado. Lleva la mano ipsilateral al hombro contralateral. Eleva el codo.',
+    'Dolor en la región subacromial al elevar el codo.',
+    'Sin dolor durante la maniobra.',
+    'Sensibilidad 79%, especificidad 40%, LR+ 1.3. Fácil de realizar. Complementa Hawkins y Neer.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('aduccion_horiz','Test de Aducción Horizontal',null,
+    'El fisio fuerza el brazo del usuario en aducción horizontal con el codo flexionado y la mano apoyada en el hombro del mismo lado.',
+    'Dolor subacromial o acromioclavicular durante la aducción forzada.',
+    'Sin dolor.',
+    'Sensibilidad 82%, especificidad 28%. Útil también para detectar patología acromioclavicular. Alta sensibilidad para impingement.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('irrs','Test IRRS (Rotación Interna Resistida)',null,
+    'Usuario de pie. El fisio coloca el brazo en 90° de abducción y 80° de rotación externa. Aplica resistencia contra la rotación externa y luego contra la rotación interna en la misma posición.',
+    'Mayor debilidad en rotación interna que en externa → patología intra-articular. Mayor debilidad en rotación externa → síndrome de pinzamiento.',
+    'Fuerza simétrica en ambas rotaciones.',
+    'Sensibilidad 88%, especificidad 96%, LR+ 22.0. Excelente para diferenciar impingement vs patología intraarticular. Alta calidad diagnóstica.',
+    'alta'));
+
+  const s5c=ce('p','');s5c.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5c.textContent='Manguito rotador — rotura';tc.appendChild(s5c);
+  tc.appendChild(mkTestOrtopedico('drop_arm','Test Drop Arm',null,
+    'El usuario abduce activamente el hombro a 90° y luego desciende lentamente el brazo a la posición neutral.',
+    'El usuario no puede controlar el descenso (el brazo cae) debido al dolor o debilidad. Indica rotura del manguito rotador.',
+    'El usuario desciende el brazo de forma controlada hasta la posición neutral.',
+    'Sensibilidad 8%, especificidad 97%, LR+ 2.67. Muy específico pero poco sensible. Si positivo → alta probabilidad de rotura. Combinar con Empty Can.',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('hornblower','Signo de Hornblower (Redondo menor)',null,
+    'Usuario sedente. El fisio coloca el brazo en 90° de flexión en el plano escapular. El usuario rota externamente contra resistencia.',
+    'Incapacidad de rotar externamente el hombro. El usuario compensa elevando el brazo o abduciendo. Indica lesión del músculo redondo menor.',
+    'Rotación externa posible contra resistencia.',
+    'Sensibilidad 100%, especificidad 93%, LR+ 14.29. Si positivo → confirma lesión del redondo menor. Frecuente en roturas masivas del manguito.',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('liftoff','Test Lift-Off (Subescapular)',null,
+    'El usuario coloca la mano ipsilateral en la parte posterior de la columna lumbar media. Rota internamente el brazo para separar la mano de la espalda.',
+    'No puede separar la mano de la espalda, o compensa con elevación del hombro o extensión de codo. Indica lesión del subescapular.',
+    'El usuario separa la mano de la espalda sin compensaciones.',
+    'Especificidad 100%. Si positivo → alta probabilidad de lesión del subescapular. La rotura del subescapular es la más subestimada del manguito.',
+    'alta'));
+
+  const s5d=ce('p','');s5d.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5d.textContent='Labrum / SLAP';tc.appendChild(s5d);
+  tc.appendChild(mkTestOrtopedico('obrien','Test de O\'Brien (Compresión activa)',null,
+    'Usuario de pie. Flexiona el brazo a 90° con el codo en extensión. Aduce 10° y gira internamente el húmero (pulgar hacia abajo). El fisio aplica fuerza hacia abajo; el usuario resiste. Luego repetir con brazo en supinación (palma arriba).',
+    'Dolor con la primera maniobra (pronación/rotación interna) que disminuye o desaparece con la segunda (supinación). Indica lesión del labrum (SLAP).',
+    'Sin diferencia de dolor entre las dos posiciones.',
+    'Sensibilidad 94%, especificidad 28%, LR- 0.21. Alta sensibilidad. Un O&rsquo;Brien negativo prácticamente descarta lesión SLAP.',
+    'alta'));
+
+  const s5e=ce('p','');s5e.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5e.textContent='Articulación acromioclavicular';tc.appendChild(s5e);
+  tc.appendChild(mkTestOrtopedico('paxinos','Signo de Paxinos',null,
+    'Usuario sedente con el brazo relajado al costado. El fisio aplica presión anterosuperior sobre el acromion con el pulgar y contrafuerza inferior sobre la clavícula con los dedos índice y medio.',
+    'Aumento del dolor en el área de la articulación acromioclavicular.',
+    'Sin dolor con la presión.',
+    'Sensibilidad 50%, especificidad 79%, LR+ 1.58. Útil cuando hay sospecha de lesión acromioclavicular tras traumatismo directo en el hombro.',
+    'media'));
+
   const obs=ce('div','card');obs.style.marginTop='12px';
   obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
   const ta=ce('textarea','');
@@ -1374,19 +1646,240 @@ function hSZ(w){
 // TOBILLO
 function tS1(w){w.appendChild(mkNota('Inversión traumática, inestabilidad crónica o tendinopatía por sobrecarga?'));w.appendChild(mkCard('Historia','',[mkSel('Tobillo',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Mecanismo',[['inv','Inversión (esguince lateral)'],['eve','Eversión (esguince medial)'],['sob','Sobrecarga tendones'],['trd','Traumático directo'],['gr','Gradual']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['esl','Esguince lateral'],['esm','Esguince medial'],['ic','Inestabilidad crónica'],['aq','Tendinopatía aquílea'],['per','Tendinopatía peroneos'],['fra','Fractura (descartar)']],'dx'),mkSel('Esguinces previos',[['no','No, primer ep.'],['res','Sí, resuelto'],['rec','Sí, recurrente']],'eprev'),mkSel('Tto previo',[['no','Ninguno'],['inm','Inmovilización'],['fis','Fisioterapia'],['inf','Infiltración'],['cx','Cirugía']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
 function tS2(w){w.appendChild(mkNota('Dolor mecánico con la carga o inflamatorio? Cedimiento real o solo miedo a torcer?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evc','EVA en carga'],['evd','EVA deporte']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['la','Lateral — peroneos'],['me','Medial — deltoideo'],['an','Anterior — impingement'],['po','Posterior — Aquiles'],['di','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Inflamación',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa/hematoma']],'infl'),mkSel('Inestabilidad',[['no','No'],['sen','Sensación'],['ced','Cedimiento real']],'ines'),mkSel('Crepitación',[['no','No'],['sd','Sí sin dolor'],['cd','Sí con dolor']],'crep')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function tS3(w){w.appendChild(mkNota('Tests ligamentosos consistentes? La propiocepción es el factor pronóstico más importante.'));w.appendChild(mkCard('Exploración','',[mkSel('Cajón anterior',[['no','No realiz.'],['neg','Negativo'],['ple','Positivo leve'],['pmo','Positivo mod'],['pse','Positivo severo ⚠']],'caj'),mkSel('Inversión forzada',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — laxitud LCF']],'invf'),mkSel('Dorsiflexión',[['nor','Normal ≥10°'],['le','Leve 5–9°'],['mo','Moderada 0–4°'],['se','Severa <0°']],'dors'),mkSel('Thompson (Aquiles)',[['no','No realiz.'],['neg','Negativo — íntegro'],['pos','Positivo ⚠ — posible rotura']],'thom'),mkSel('Palpación peroneos',[['nor','Sin hallazgos'],['sen','Sensible'],['eng','Engrosado']],'palp'),mkSel('Palpación Aquiles',[['nor','Sin hallazgos'],['sen','Sensible'],['eng','Engrosado']],'pala'),mkSel('Heel raise',[['nor','≥25 rep'],['re','10–24 rep'],['mr','<10 rep'],['im','No posible']],'hr'),mkSel('Propiocepción',[['nor','Normal'],['le','Alterado leve'],['mo','Moderado'],['se','Muy alterado']],'prop'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['est','Recuperar estabilidad'],['tr','Trabajar sin dolor']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
+function tS3(w){w.appendChild(mkNota('Movilidad, propiocepción y palpación. Los tests ortopédicos están en el paso siguiente.'));w.appendChild(mkCard('Exploración','',[mkSel('Dorsiflexión',[['nor','Normal ≥10°'],['le','Leve 5–9°'],['mo','Moderada 0–4°'],['se','Severa <0°']],'dors'),mkSel('Palpación peroneos',[['nor','Sin hallazgos'],['sen','Sensible'],['eng','Engrosado']],'palp'),mkSel('Palpación Aquiles',[['nor','Sin hallazgos'],['sen','Sensible'],['eng','Engrosado']],'pala'),mkSel('Heel raise',[['nor','≥25 rep'],['re','10–24 rep'],['mr','<10 rep'],['im','No posible']],'hr'),mkSel('Propiocepción',[['nor','Normal'],['le','Alterado leve'],['mo','Moderado'],['se','Muy alterado']],'prop'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['est','Recuperar estabilidad'],['tr','Trabajar sin dolor']],'obj')]));mkBnav(w,true,'Tests ortopédicos →',()=>{curStep++;renderProto();},4);}
+
+// ── TOBILLO — Tests ortopédicos (paso 4) ────────────────────────────────────
+function tS4(w){
+  w.appendChild(mkNota('Realiza los tests según la sospecha. En esguince agudo: cajón anterior y tilt talar son prioritarios.'));
+
+  const tc=ce('div','card');
+  tc.innerHTML='<div class="ct">Tests ortopédicos — Tobillo y pie</div>';
+
+  const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Esguince de tobillo / ligamentos';tc.appendChild(s1);
+  tc.appendChild(mkTestOrtopedico('cajon_ant_tob','Test de Cajón Anterior de Tobillo',null,
+    'Decúbito supino con pie relajado. El fisio toma el calcáneo con una mano y el tobillo por los maléolos con la otra. Aplica tracción anterior del pie mientras la pierna queda fija.',
+    'Desplazamiento anterior excesivo del astrágalo (>3mm respecto al lado sano) o laxitud palpable. Indica lesión del ligamento peroneoastragalino anterior (LPAA). Se gradúa 0–3.',
+    'Sin desplazamiento significativo. LPAA íntegro.',
+    'Sensibilidad 96%, especificidad 84%, LR+ 6.0. El test más importante en esguince lateral. Siempre comparar con el lado sano.',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('tilt_talar','Tilt Talar (Inversión forzada)',null,
+    'Decúbito supino o lateral, pie relajado. El fisio aplica una inversión forzada del tobillo con flexión plantar para evaluar el LPAA y calcaneofibular.',
+    'Bostezo articular (inclinación del astrágalo) o dolor en el compartimento lateral. Indica lesión del ligamento calcáneo-fibular (LCF).',
+    'Sin bostezo ni dolor. LCF íntegro.',
+    'LR+ 6, LR- 0.05. Si cajón anterior + tilt talar positivos → lesión combinada LPAA + LCF. Indica esguince de mayor grado.',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('compresion_tobillo','Test de Compresión (Sindesmosis)',null,
+    'Decúbito supino. El fisio comprime tibia y peroné entre sí con las palmas ahuecadas sobre los maléolos, a la altura de la sindesmosis.',
+    'Dolor en la zona intermaleolar o en la sindesmosis. Indica lesión de la sindesmosis tibioperonea (esguince de alto grado).',
+    'Sin dolor con la compresión.',
+    'Un esguince de sindesmosis requiere un tiempo de recuperación mucho mayor (2–4 veces más) que un esguince lateral. Importante identificarlo precozmente.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('molloy','Test de Pinzamiento de Molloy',null,
+    'Usuario sentado. El fisio toma el calcáneo y el antepié y realiza flexión plantar. Presiona con el pulgar sobre el tobillo antero-lateral. Mueve el pie de plantiflexión a dorsiflexión manteniendo la presión.',
+    'El dolor con presión del pulgar es mayor en dorsiflexión que en flexión plantar. Indica pinzamiento antero-lateral de tobillo.',
+    'Sin diferencia de dolor entre posiciones.',
+    'Sensibilidad 95%, especificidad 88%, LR+ 7.91. Muy útil en esguinces de tobillo crónicos con dolor anterior persistente.',
+    'alta'));
+
+  const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Tendón de Aquiles';tc.appendChild(s2);
+  tc.appendChild(mkTestOrtopedico('thomson_tob','Test de Thomson (rotura Aquiles)',null,
+    'Decúbito prono, rodillas extendidas, pies fuera de la camilla. El fisio comprime el tercio medio de la pantorrilla entre pulgar y demás dedos en dirección cefálica.',
+    'Ausencia de flexión plantar refleja. Indica rotura completa del tendón de Aquiles.',
+    'Flexión plantar presente al comprimir la pantorrilla. Tendón íntegro.',
+    'Sensibilidad 96%, LR+ 13.7, LR- 0.04. Imprescindible si hay sospecha de rotura (chasquido, defecto palpable, incapacidad de ponerse de puntillas).',
+    'alta'));
+
+  const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Túnel del tarso / neuropatía';tc.appendChild(s3);
+  tc.appendChild(mkTestOrtopedico('tinel_tarso','Test de Tinel (Túnel del Tarso)',null,
+    'El fisio aplica golpecitos con los dedos sobre el nervio tibial en la cara posteromedial del tobillo (túnel del tarso).',
+    'Parestesias (hormigueo, corriente eléctrica) que se irradian hacia la planta del pie o los dedos. Indica síndrome del túnel del tarso.',
+    'Sin parestesias.',
+    'Valorar cuando hay dolor en la planta del pie con componente neuropático (hormigueo, ardor). Puede coexistir con fascitis plantar.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('dorsiflex_eversion','Test de Dorsiflexión y Eversión',null,
+    'Decúbito supino. El fisio realiza dorsiflexión + eversión del tobillo combinada con extensión de las articulaciones metatarsofalángicas durante 20 segundos.',
+    'Reproducción de parestesias o dolor en la planta del pie. Indica tensión del nervio tibial en el túnel del tarso.',
+    'Sin síntomas durante la maniobra.',
+    'Complementa el test de Tinel. La combinación de dorsiflexión + eversión incrementa la tensión sobre el nervio tibial en el túnel del tarso.',
+    'media'));
+
+  const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Trombosis venosa profunda (TVP)';tc.appendChild(s4);
+  tc.appendChild(mkTestOrtopedico('homan','Signo de Homan',null,
+    'Decúbito supino con rodilla extendida. El fisio aplica dorsiflexión pasiva forzada del tobillo mientras palpa la pantorrilla.',
+    'Dolor en la pantorrilla (gastrocnemios) o en la región poplítea durante la dorsiflexión. Signo de alerta para tromboflebitis venosa profunda.',
+    'Sin dolor en pantorrilla ni región poplítea.',
+    'Sensibilidad 48%, especificidad 41%. Valor diagnóstico limitado. Si positivo: usar Criterios de Wells para TVP para estratificar el riesgo y decidir derivación. No usar como prueba definitiva.',
+    'baja'));
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');ta.placeholder='Anotaciones clínicas adicionales...';
+  ta.style.cssText='width:100%;min-height:70px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_tobillo=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+
+  w.appendChild(tc);
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+
 function tSZ(w){renderInformeHub(w,'tobillo',gFT(),gFTF(),getFase(D.evr,D.evc));}
 
 // CADERA
 function caS1(w){w.appendChild(mkNota('Dolor inguinal (articular), trocantéreo (bursitis/glúteo) o irradiado desde lumbar?'));w.appendChild(mkCard('Historia','',[mkSel('Cadera',[['d','Derecha'],['i','Izquierda'],['b','Ambas']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Inicio',[['gs','Gradual sobrecarga'],['tr','Traumático'],['ru','Running'],['gr','Gradual sin causa'],['pq','Postquirúrgico']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['tg','Tendinopatía glúteo medio'],['bt','Bursitis trocantérea'],['cox','Coxartrosis'],['pir','Sínd. piriforme'],['imp','Impingement FAI'],['lab','Lesión labrum'],['art','Artritis cadera']],'dx'),mkSel('Cirugía',[['no','No'],['ar','Artroscopia'],['pp','Prótesis parcial'],['pt','Prótesis total']],'cx'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['inf','Infiltración']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
 function caS2(w){w.appendChild(mkNota('Dolor inguinal al sentarse (articular)? Trocantéreo en apoyo unipodal (tendinopatía glúteo)?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['evc','EVA en carga'],['eva','EVA actividad']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['ing','Inguinal (articular)'],['tr','Trocantéreo (lateral)'],['gl','Glúteo/piriforme'],['lum','Lumbar irradiado'],['di','Difuso']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['ap','Al apoyarse'],['es','Espontáneo'],['fr','Frecuente ⚠']],'noc'),mkSel('Rigidez matutina',[['no','No'],['br','<30 min'],['pr','>30 min ⚠']],'rig'),mkSel('Crepitación',[['no','No'],['cha','Chasquido'],['crep','Crepitación dolorosa']],'crep'),mkSel('Marcha',[['nor','Normal'],['ant','Antálgica'],['tre','Trendelemburg']],'mar')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function caS3(w){w.appendChild(mkNota('Exploración confirma origen articular o partes blandas? Fuerza abductores = factor pronóstico clave.'));w.appendChild(mkCard('Exploración','',[mkSel('Flexión cadera',[['nor','Normal ≥120°'],['le','Leve 90–119°'],['mo','Moderada 60–89°'],['se','Severa <60°']],'flex'),mkSel('Rotación interna',[['nor','Normal ≥30°'],['le','Leve lim.'],['mo','Moderada'],['se','Severa ⚠']],'roti'),mkSel('FADIR',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — dolor inguinal']],'fadir'),mkSel('FABER',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — dolor inguinal/sacro']],'faber'),mkSel('Trendelemburg',[['neg','Negativo'],['le','Positivo leve'],['mo','Positivo mod']],'tren'),mkSel('Fuerza abductores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fabd'),mkSel('Fuerza extensores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fext'),mkSel('Palpación trocánter',[['nor','Sin dolor'],['sen','Sensible'],['muy','Muy doloroso — posible bursitis']],'palp'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['cam','Caminar sin dolor'],['cx','Evitar cx'],['pq','Postquirúrgico']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
+function caS3(w){w.appendChild(mkNota('Movilidad y fuerza. Los tests ortopédicos específicos están en el paso siguiente.'));w.appendChild(mkCard('Exploración','',[mkSel('Flexión cadera',[['nor','Normal ≥120°'],['le','Leve 90–119°'],['mo','Moderada 60–89°'],['se','Severa <60°']],'flex'),mkSel('Rotación interna',[['nor','Normal ≥30°'],['le','Leve lim.'],['mo','Moderada'],['se','Severa ⚠']],'roti'),mkSel('Fuerza abductores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fabd'),mkSel('Fuerza extensores',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fext'),mkSel('Palpación trocánter',[['nor','Sin dolor'],['sen','Sensible'],['muy','Muy doloroso — posible bursitis']],'palp'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['cam','Caminar sin dolor'],['cx','Evitar cx'],['pq','Postquirúrgico']],'obj')]));mkBnav(w,true,'Tests ortopédicos →',()=>{curStep++;renderProto();},4);}
+
+// ── CADERA — Tests ortopédicos (paso 4) ────────────────────────────────────
+function caS4(w){
+  w.appendChild(mkNota('Realiza los tests según la sospecha. FADIR y FABER son los más relevantes.'));
+
+  const tc=ce('div','card');
+  tc.innerHTML='<div class="ct">Tests ortopédicos — Cadera y pelvis</div>';
+
+  const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Articulación de la cadera / labrum';tc.appendChild(s1);
+  tc.appendChild(mkTestOrtopedico('fadir','Test FADIR (Impingement FAI)',null,
+    'Decúbito supino. El fisio lleva la cadera a 90° de flexión + aducción + rotación interna máxima (FADIR). Forzar el movimiento para reproducir los síntomas.',
+    'Dolor inguinal o en la región anterior de la cadera. Indica impingement femoroacetabular (FAI) o lesión del labrum.',
+    'Sin dolor inguinal durante la maniobra.',
+    'Test más sensible para FAI. Combinarlo con FABER y el Test de Scour para mayor precisión diagnóstica. Dolor posterior → posible componente sacroilíaco.',
+    'alta'));
+  tc.appendChild(mkTestOrtopedico('faber','Test FABER / Patrick (Sacroilíaca y cadera)',null,
+    'Decúbito supino. El fisio coloca el pie ipsilateral sobre la rodilla contralateral (posición en 4). Estabiliza la EIAS contraria y aplica presión sobre la rodilla flexionada hacia abajo.',
+    'Dolor inguinal o en la ingle → lesión articular de cadera. Dolor posterior en glúteo/sacro → disfunción sacroilíaca.',
+    'Sin dolor en ninguna de las zonas.',
+    'LR+ 1.37. Útil para diferenciar origen articular de cadera vs sacroilíaco. También positivo en contractura del psoas (limitación del rango sin dolor).',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('mccarthy','Test de McCarthy (Labrum)',null,
+    'Decúbito supino. Para labrum anterior: el fisio lleva la cadera a flexión máxima + rotación interna + aducción y luego extiende. Para labrum posterior: flexión + rotación externa y luego extensión.',
+    'Reproducción de molestia o dolor en la ingle durante la maniobra. Indica lesión del labrum acetabular.',
+    'Sin dolor en ninguna de las maniobras.',
+    'Combinar con FADIR para aumentar la probabilidad diagnóstica de lesión de labrum. Si ambos positivos → alta sospecha de lesión labral.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('scour','Test de Scour (Osteoartritis / Labrum)',null,
+    'Decúbito supino. El fisio flexiona cadera y rodilla >90° en asa y comprime axialmente mientras rota el miembro hacia ambos lados.',
+    'Dolor durante la compresión + rotación. Indica osteoartritis de cadera o lesión de labrum.',
+    'Sin dolor con compresión + rotación.',
+    'LR+ 1.32. Complementa el FADIR. Si positivo + FADIR positivo → derivar para imagen (artroRM).',
+    'media'));
+
+  const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Músculo piriforme / síndrome piriforme';tc.appendChild(s2);
+  tc.appendChild(mkTestOrtopedico('fair','Test FAIR (Piriforme)',null,
+    'Decúbito lateral. El miembro superior en flexión 60° de cadera y 100° de rodilla, por fuera de la camilla. El fisio estabiliza la cadera y aplica presión vertical descendente sobre la rodilla.',
+    'Dolor en el cuerpo del músculo piriforme o glúteo profundo. Indica contractura o síndrome del piriforme.',
+    'Sin dolor en la zona del piriforme.',
+    'LR+ 5.2, LR- 0.14. Muy útil cuando hay dolor glúteo profundo con irradiación pseudo-ciática sin signos radiculares claros.',
+    'alta'));
+
+  const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Pelvis / función muscular';tc.appendChild(s3);
+  tc.appendChild(mkTestOrtopedico('trendelenburg','Test de Trendelenburg',null,
+    'Usuario en bípedo. Se le pide que levante una pierna con flexión de cadera y rodilla. El fisio observa desde atrás si la pelvis contralateral se eleva o cae.',
+    'La pelvis cae hacia el lado elevado (positivo). Indica debilidad del glúteo medio del lado de apoyo. Patrón de marcha compensado (marcha de Trendelenburg).',
+    'La pelvis se mantiene horizontal o se eleva ligeramente al lado no apoyado. Glúteo medio funcional.',
+    'Sensibilidad 23%, especificidad 94%, LR+ 3.64. Alta especificidad para debilidad de glúteo medio. Fundamental en tendinopatía glútea y osteoartritis de cadera.',
+    'alta'));
+
+  const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Longitud muscular / contracturas';tc.appendChild(s4);
+  tc.appendChild(mkTestOrtopedico('thomas_test','Test de Thomas (Psoas-ilíaco)',null,
+    'Usuario sentado al borde de la camilla. Abraza con ambas manos la rodilla contralateral llevándola al máximo de flexión e inclina el tronco atrás. La pierna a valorar cae libremente.',
+    'La pierna evaluada no cae bajo la horizontal → contractura del psoas. Si la rodilla tiende a extenderse → contractura del recto femoral.',
+    'La pierna cae bajo la horizontal con la rodilla flexionada. Psoas y recto femoral con longitud normal.',
+    'Diferenciar: si solo se eleva el muslo → psoas corto. Si el muslo cae pero la rodilla se extiende → recto anterior corto. Combinarlo con el test de Ely.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('ober_test','Test de Ober (Banda Iliotibial)',null,
+    'Decúbito lateral sobre el lado sano. El fisio extiende la cadera superior (misma línea que la pelvis) y la suelta desde esa posición. Observa si puede aducirse libremente.',
+    'La pierna no cae en aducción (queda suspendida) o cae pero con un movimiento de flexión-rotación. Indica acortamiento de la banda iliotibial.',
+    'La pierna cae libremente en aducción. Banda IT con longitud normal.',
+    'Fundamental en síndrome de fricción de banda IT y en tendinopatía glútea (la banda IT comprime el tendón glúteo medio en el trocánter). Incluir en valoración de corredores.',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('craig_test','Test de Craig (Anteversión femoral)',null,
+    'Decúbito prono, rodilla a 90° de flexión. El fisio palpa con una mano el trocánter mayor. Con la otra rota la cadera (interna/externa) hasta colocar el trocánter paralelo al plano de la camilla. Mide el ángulo entre el eje de la pierna y la vertical.',
+    'Ángulo >15°. Indica anteversión femoral aumentada. Relacionado con tendencia al valgo de rodilla y colapso medial en corredores.',
+    'Ángulo entre 10° y 15°. Anteversión femoral normal.',
+    'Útil cuando hay dolor anterior de cadera o rodilla en corredores. La anteversión aumentada favorece el síndrome de dolor patelofemoral y el FAI tipo CAM.',
+    'baja'));
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');ta.placeholder='Anotaciones clínicas adicionales...';
+  ta.style.cssText='width:100%;min-height:70px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_cadera=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+
+  w.appendChild(tc);
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+
 function caSZ(w){renderInformeHub(w,'cadera',gFCa(),gFCaF(),getFase(D.evr,D.evc));}
 
 // CODO
 function coS1(w){w.appendChild(mkNota('Epicondilitis (extensores) o epitrocleitis (flexores)? Parestesias que sugieran neuropatía cubital?'));w.appendChild(mkCard('Historia','',[mkSel('Codo',[['d','Derecho'],['i','Izquierdo'],['b','Ambos']],'lado'),mkSel('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m']],'evol'),mkSel('Mecanismo',[['ext','Sobrecarga extensores — epicondilitis'],['fle','Sobrecarga flexores — epitrocleitis'],['tr','Traumático'],['gr','Gradual']],'ini'),mkSel('Dx previo',[['no','Sin dx'],['epi','Epicondilitis lateral'],['epit','Epitrocleitis medial'],['neu','Neuropatía cubital'],['bur','Bursitis olecraneana']],'dx'),mkSel('Actividad',[['ten','Tenis/pádel'],['gol','Golf'],['inf','Informática/ratón'],['man','Trabajo manual'],['gym','Crossfit/gimnasio'],['mus','Instrumento musical']],'actrel'),mkSel('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['ban','Banda epicondílea'],['inf','Infiltración'],['ond','Ondas de choque']],'tto')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
 function coS2(w){w.appendChild(mkNota('Dolor al resistir extensión muñeca (epicondilitis) o flexión (epitrocleitis)? Irradiación distal?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evr','EVA reposo'],['eva','EVA actividad'],['evf','EVA al hacer fuerza']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkSel('Localización',[['epi','Epicóndilo lateral'],['ept','Epitróclea medial'],['ole','Zona olecraneana'],['ant','Irradiado antebrazo'],['mun','Irradiado muñeca']],'loc'),mkSel('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['mix','Mixto']],'tip'),mkSel('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc'),mkSel('Parestesias mano',[['no','No'],['45','Dedos 4–5 (cubital)'],['123','Dedos 1–3 (mediano)'],['di','Difuso']],'par'),mkSel('Fuerza prensión',[['nor','Normal'],['le','Reducida leve'],['mo','Reducida mod'],['se','Muy reducida']],'fpre'),mkSel('Rigidez codo',[['no','No'],['le','Leve'],['mo','Moderada'],['se','Severa']],'rig')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
-function coS3(w){w.appendChild(mkNota('Tests de resistencia confirman el tendón? Signos de neuropatía cubital?'));w.appendChild(mkCard('Exploración','',[mkSel('Test Cozen',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — epicóndilo']],'cozen'),mkSel('Test Mill',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo']],'mill'),mkSel('Test Golfista',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo — epitróclea']],'golf'),mkSel('Tinel codo',[['no','No realiz.'],['neg','Negativo'],['pos','Positivo ⚠ — neuropatía cubital']],'tinel'),mkSel('Movilidad codo',[['nor','Normal 0–145°'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'mob'),mkSel('Pronosupinación',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada']],'pron'),mkSel('Fuerza ext. muñeca',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fext'),mkSel('Fuerza flex. muñeca',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'ffle'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['tr','Trabajar sin dolor'],['pre','Recuperar prensión']],'obj')]));mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},4);}
+function coS3(w){w.appendChild(mkNota('Movilidad y fuerza. Los tests ortopédicos específicos están en el paso siguiente.'));w.appendChild(mkCard('Exploración','',[mkSel('Movilidad codo',[['nor','Normal 0–145°'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'mob'),mkSel('Pronosupinación',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada']],'pron'),mkSel('Fuerza ext. muñeca',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fext'),mkSel('Fuerza flex. muñeca',[['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'ffle'),mkSel('Fuerza prensión',[['nor','Normal'],['le','Reducida leve'],['mo','Reducida mod'],['se','Muy reducida']],'fpre'),mkSel('Limitación',[['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),mkSel('Objetivo',[['do','Eliminar dolor'],['dep','Deporte'],['tr','Trabajar sin dolor'],['pre','Recuperar prensión']],'obj')]));mkBnav(w,true,'Tests ortopédicos →',()=>{curStep++;renderProto();},4);}
+
+// ── CODO — Tests ortopédicos (paso 4) ────────────────────────────────────
+function coS4(w){
+  w.appendChild(mkNota('Realiza los tests según la sospecha. El Tennis elbow test y el Tinel son prioritarios.'));
+
+  const tc=ce('div','card');
+  tc.innerHTML='<div class="ct">Tests ortopédicos — Codo y antebrazo</div>';
+
+  const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Epicondilalgia lateral (codo de tenista)';tc.appendChild(s1);
+  tc.appendChild(mkTestOrtopedico('tennis_elbow','Test del Codo de Tenista (Tennis Elbow Test)',null,
+    'Usuario de pie, codo extendido, antebrazo en pronación. El fisio aplica resistencia contra la extensión isométrica de la muñeca mientras palpa el epicóndilo lateral.',
+    'Reproducción de dolor en la cara lateral del codo (epicóndilo). Indica lesión contráctil de los tendones extensores de la muñeca.',
+    'Sin dolor en el epicóndilo durante la extensión resistida de muñeca.',
+    'Combinar con Test de Mill. La contracción isométrica reproduce el dolor del tendón del extensor común (ECRB principalmente).',
+    'media'));
+  tc.appendChild(mkTestOrtopedico('mill_test','Test de Mill (Epicondilalgia lateral)',null,
+    'Usuario sedente o bípedo. Hombro abducido ~70°, codo a 90°, antebrazo en pronación, muñeca en flexión máxima. El fisio extiende lentamente el codo manteniendo esa posición.',
+    'Reproducción de dolor en los tendones extensores o en el epicóndilo lateral durante la extensión del codo. Indica epicondilalgia lateral.',
+    'Sin dolor durante la extensión del codo.',
+    'Esta prueba también estira el nervio radial. Si hay síntomas neuropáticos, reducir el grado de abducción de hombro para discriminar origen tendinoso vs nervioso.',
+    'media'));
+
+  const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Epicondilalgia medial (codo de golfista)';tc.appendChild(s2);
+  tc.appendChild(mkTestOrtopedico('golfer_elbow','Test del Codo de Golfista (Golfer&rsquo;s Elbow Test)',null,
+    'Usuario sedente o de pie, codo extendido, antebrazo en pronación. El fisio aplica resistencia contra la flexión isométrica de la muñeca. Palpa la epitróclea.',
+    'Reproducción de dolor en la cara medial del codo (epitróclea). Indica lesión de los tendones flexores de la muñeca (epitrocleitis).',
+    'Sin dolor en la epitróclea durante la flexión resistida de muñeca.',
+    'Test de Mill&rsquo;s Reverso: llevar pasivamente la muñeca en extensión + supinación del antebrazo y extender el codo lentamente. Si reproduce dolor medial → confirma epitrocleitis.',
+    'media'));
+
+  const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Neuropatía cubital / túnel cubital';tc.appendChild(s3);
+  tc.appendChild(mkTestOrtopedico('tinel_codo','Signo de Tinel (Codo)',null,
+    'El fisio aplica 4–6 golpecitos suaves con los dedos sobre el nervio cubital en la gotera epitrócleo-olecraneana (túnel cubital).',
+    'Sensación de hormigueo (corriente eléctrica) que se irradia por el recorrido del nervio cubital hacia dedos 4° y 5°. Indica síndrome del túnel cubital (neuropatía cubital).',
+    'Sin parestesias al golpetear el túnel cubital.',
+    'Sensibilidad 70%, especificidad 98%, LR+ 35. Excelente especificidad. Si positivo → alta probabilidad de neuropatía del nervio cubital a nivel del codo.',
+    'alta'));
+
+  const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Ligamento colateral medial';tc.appendChild(s4);
+  tc.appendChild(mkTestOrtopedico('valgo_stress','Test de Estrés en Valgo (Ligamento Colateral Medial)',null,
+    'Hombro abducido 90° con rotación externa máxima. El fisio flexiona el codo al máximo y aplica fuerza en valgo. Luego extiende rápidamente el codo hasta 30° de flexión.',
+    'Dolor máximo en la región medial del codo entre 120° y 70° de flexión. Indica lesión del ligamento colateral medial.',
+    'Sin dolor durante el movimiento en valgo.',
+    'Sensibilidad 100%, especificidad 75%, LR+ 4.0. Fundamental en lanzadores y deportistas. El dolor entre 120–70° es el arco donde el LCM está más solicitado en valgo dinámico.',
+    'alta'));
+
+  const s5=ce('p','');s5.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5.textContent='Tendón del bíceps (codo)';tc.appendChild(s5);
+  tc.appendChild(mkTestOrtopedico('yergason_codo','Test de Yergason',null,
+    'Usuario sedente con el codo a 90° de flexión. Se le pide que supine el antebrazo contra la resistencia del fisio, que palpa simultáneamente el tendón del bíceps distal.',
+    'Dolor en la cara anterior del codo o en el tendón distal del bíceps. Indica tendinopatía o lesión del bíceps distal.',
+    'Sin dolor durante la supinación resistida.',
+    'Combinarlo con la palpación directa del tendón del bíceps distal. La ruptura distal del bíceps cursa con pérdida de fuerza de supinación y signo del "lollipop" (bola en el brazo).',
+    'media'));
+
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');ta.placeholder='Anotaciones clínicas adicionales...';
+  ta.style.cssText='width:100%;min-height:70px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_codo=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+
+  w.appendChild(tc);
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+
 function coSZ(w){renderInformeHub(w,'codo',gFCo(),gFCoF(),getFase(D.evr,D.eva));}
 
 // ─────────────────────────────────────────────────────────────────────────────
