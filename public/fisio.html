@@ -779,7 +779,7 @@ async function cargarPrograma(pacId){
   ejC = 0;
 
   try{
-    const r = await fetch(`/api/pacientes?action=programa&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
+    const r = await fetch(`/api/programa?pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
     const d = await r.json();
 
     ejLista.innerHTML = '';
