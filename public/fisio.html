@@ -49,6 +49,19 @@ body{font-family:var(--font);background:var(--cream);color:var(--black);min-heig
 .sb-item:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.04)}
 .sb-item.active{color:#fff;background:rgba(173,163,218,0.12);border-left-color:var(--lila);letter-spacing:0.05em}
 .sb-icon{display:none}
+
+.ej-ac-wrap{position:relative;}
+.ej-ac-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:var(--font);background:var(--bg);color:var(--text);outline:none;transition:border .15s;}
+.ej-ac-input:focus{border-color:var(--lila);}
+.ej-ac-input.has-val{border-color:var(--lila);background:var(--lila-light);}
+.ej-ac-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg);border:1.5px solid var(--lila);border-radius:var(--r-sm);max-height:240px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.18);display:none;}
+.ej-ac-drop.open{display:block;}
+.ej-ac-item{padding:10px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text);transition:background .1s;}
+.ej-ac-item:last-child{border-bottom:none;}
+.ej-ac-item:hover,.ej-ac-item.selected{background:var(--lila-light);color:var(--lila);}
+.ej-ac-item strong{color:var(--lila);}
+.ej-ac-empty{padding:12px 14px;font-size:13px;color:var(--muted);font-style:italic;}
+.ej-ac-badge{font-size:11px;color:var(--muted);margin-left:6px;}
 .sb-footer{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.06);font-size:9px;color:rgba(255,255,255,0.2);letter-spacing:0.06em;text-transform:uppercase}
 
 
@@ -519,7 +532,7 @@ async function loadFisios(){
 async function loadBiblio(){
   try{
     const r=await fetch(`/api/ejercicios?pwd=${encodeURIComponent(apiPwd)}`);
-    const d=await r.json(); biblio=d.ejercicios||[];
+    const d=await r.json(); biblio=(d.ejercicios||[]).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
   }catch(e){}
 }
 
@@ -623,15 +636,16 @@ function onFisio(){
 function addEj(){
   ejC++; const n=ejC;
   const lista=$('ejLista');
-  const opts=biblio.length
-    ?biblio.map(e=>`<option value="${e.id}" data-zona="${e.zona||''}" data-desc="${e.descripcion||''}" data-series="${e.series||3}" data-reps="${e.reps||10}" data-dur="${e.duracion||0}" data-desc2="${e.descanso||30}" data-url="${e.youtubeUrl||''}">${e.nombre}${e.zona?' — '+e.zona:''}</option>`).join('')
-    :'<option>No hay ejercicios</option>';
   const div=ce('div','ejc'); div.id=`ej${n}`;
   div.innerHTML=`<div class="ejh"><span class="ejn">Ejercicio ${n}</span><button class="bdel" onclick="rmEj(${n})">×</button></div>
   <div class="field"><label>Seleccionar ejercicio</label>
-  <input type="text" id="ebusca${n}" placeholder="Buscar ejercicio..." oninput="filtrarEj(${n})" style="margin-bottom:8px">
-  <select id="esel${n}" onchange="onEjSel(${n})"><option value="">— Elige un ejercicio —</option>${opts}</select>
-  <div class="ej-preview" id="eprev${n}"><div class="ej-preview-zona" id="epzona${n}"></div><div class="ej-preview-desc" id="epdesc${n}"></div></div></div>
+  <div class="ej-ac-wrap" id="acwrap${n}">
+    <input type="text" class="ej-ac-input" id="ebusca${n}" placeholder="Escribe para buscar ejercicio..." autocomplete="off"
+      oninput="acFilter(${n})" onfocus="acOpen(${n})" onblur="acBlur(${n})">
+    <div class="ej-ac-drop" id="acdrop${n}"></div>
+    <input type="hidden" id="esel${n}" value="">
+  </div>
+  <div class="ej-preview" id="eprev${n}" style="display:none"><div class="ej-preview-zona" id="epzona${n}"></div><div class="ej-preview-desc" id="epdesc${n}"></div></div></div>
   <div class="g3">
   <div class="field"><label>Series</label><input type="number" id="es${n}" value="3" min="1"></div>
   <div class="field"><label>Reps</label><input type="number" id="er${n}" value="10" min="0"></div>
@@ -661,20 +675,91 @@ function onEjSel(n){
 
 function rmEj(n){$(`ej${n}`)?.remove();updProg();}
 
+// ── AUTOCOMPLETE EJERCICIOS ──────────────────────────────────────────────────
+let acActiveN = null;
+
+function acFilter(n){
+  const q = $(`ebusca${n}`).value.trim().toLowerCase();
+  const drop = $(`acdrop${n}`);
+  const results = biblio.filter(e => !q || e.nombre.toLowerCase().includes(q));
+  acRender(n, results, q);
+  drop.classList.add('open');
+  // Clear selection if user is typing again
+  $(`esel${n}`).value = '';
+  $(`ebusca${n}`).classList.remove('has-val');
+  $(`eprev${n}`).style.display = 'none';
+  updProg();
+}
+
+function acOpen(n){
+  const q = $(`ebusca${n}`).value.trim().toLowerCase();
+  const results = biblio.filter(e => !q || e.nombre.toLowerCase().includes(q));
+  acRender(n, results, q);
+  $(`acdrop${n}`).classList.add('open');
+  acActiveN = n;
+}
+
+function acBlur(n){
+  // Delay to allow click on item to register
+  setTimeout(() => {
+    $(`acdrop${n}`)?.classList.remove('open');
+  }, 180);
+}
+
+function acRender(n, results, q){
+  const drop = $(`acdrop${n}`);
+  if(!results.length){
+    drop.innerHTML = `<div class="ej-ac-empty">No se encontraron ejercicios</div>`;
+    return;
+  }
+  drop.innerHTML = results.map(e => {
+    // Highlight matching text
+    let nombre = e.nombre;
+    if(q){
+      const idx = nombre.toLowerCase().indexOf(q);
+      if(idx >= 0){
+        nombre = nombre.slice(0,idx) + '<strong>' + nombre.slice(idx, idx+q.length) + '</strong>' + nombre.slice(idx+q.length);
+      }
+    }
+    const zona = e.zona ? `<span class="ej-ac-badge">${e.zona}</span>` : '';
+    return `<div class="ej-ac-item" onmousedown="acSelect(${n},'${e.id}')">${nombre}${zona}</div>`;
+  }).join('');
+}
+
+function acSelect(n, id){
+  const e = biblio.find(x => x.id === id);
+  if(!e) return;
+  $(`ebusca${n}`).value = e.nombre;
+  $(`ebusca${n}`).classList.add('has-val');
+  $(`esel${n}`).value = id;
+  $(`acdrop${n}`).classList.remove('open');
+  // Fill in exercise details
+  $(`es${n}`).value = e.series || 3;
+  $(`er${n}`).value = e.reps || 10;
+  $(`ed${n}`).value = e.duracion || 0;
+  $(`edes${n}`).value = e.descanso || 30;
+  $(`ez${n}`).value = e.zona || '';
+  $(`edesc${n}`).value = '';
+  // Show preview
+  const prev = $(`eprev${n}`);
+  $(`epzona${n}`).textContent = e.zona || '';
+  $(`epdesc${n}`).textContent = e.descripcion || '';
+  prev.style.display = (e.zona || e.descripcion) ? 'block' : 'none';
+  updProg();
+}
+
 function filtrarEj(n){
-  const q=$(`ebusca${n}`).value.toLowerCase();
-  const sel=$(`esel${n}`);
-  const fl=biblio.filter(e=>!q||e.nombre.toLowerCase().includes(q));
-  sel.innerHTML='<option value="">— Elige un ejercicio —</option>'+fl.map(e=>`<option value="${e.id}" data-zona="${e.zona||''}" data-desc="${e.descripcion||''}" data-series="${e.series||3}" data-reps="${e.reps||10}" data-dur="${e.duracion||0}" data-desc2="${e.descanso||30}" data-url="${e.youtubeUrl||''}">${e.nombre}</option>`).join('');
+  // Legacy - kept for compatibility
+  acFilter(n);
 }
 
 function getEjs(){
   return [...document.querySelectorAll('.ejc')].map(card=>{
     const n=card.id.replace('ej','');
-    const sel=$(`esel${n}`);
-    const nombre=sel?.options[sel.selectedIndex]?.text?.split(' — ')[0]?.trim();
-    if(!nombre||!sel?.value)return null;
-    return{nombre,series:+$(`es${n}`)?.value||0,reps:+$(`er${n}`)?.value||0,duracion:+$(`ed${n}`)?.value||0,descanso:+$(`edes${n}`)?.value||0,zona:$(`ez${n}`)?.value?.trim()||'',descripcion:$(`edesc${n}`)?.value?.trim()||'',youtubeUrl:biblio.find(e=>e.id===sel.value)?.youtubeUrl||'',imagen:biblio.find(e=>e.id===sel.value)?.imagen||''};
+    const id=$(`esel${n}`)?.value;
+    const nombre=$(`ebusca${n}`)?.value?.trim();
+    if(!nombre||!id)return null;
+    return{nombre,series:+$(`es${n}`)?.value||0,reps:+$(`er${n}`)?.value||0,duracion:+$(`ed${n}`)?.value||0,descanso:+$(`edes${n}`)?.value||0,zona:$(`ez${n}`)?.value?.trim()||'',descripcion:$(`edesc${n}`)?.value?.trim()||'',youtubeUrl:biblio.find(e=>e.id===id)?.youtubeUrl||'',imagen:biblio.find(e=>e.id===id)?.imagen||''};
   }).filter(Boolean);
 }
 
