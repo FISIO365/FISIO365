@@ -1459,7 +1459,7 @@ function mkFiltroSospecha(region, contenedor) {
 }
 
 // Wrapper to add data-testid to test divs
-function mkTest(id, region, nombre, img, como, positivo, negativo, combinar, fiabilidad) {
+function mkTest(id, nombre, img, como, positivo, negativo, combinar, fiabilidad) {
   const div = mkTestOrtopedico(id, nombre, img, como, positivo, negativo, combinar, fiabilidad);
   div.dataset.testid = id;
   return div;
