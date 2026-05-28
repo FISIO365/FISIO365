@@ -1455,7 +1455,12 @@ function mkFiltroSospecha(region, contenedor) {
   countEl.id = 'filtro-count-' + region;
   wrap.appendChild(countEl);
 
-  contenedor.appendChild(wrap);
+  // Insert right after the title (first child of contenedor)
+  if(contenedor.children.length > 0) {
+    contenedor.insertBefore(wrap, contenedor.children[1] || null);
+  } else {
+    contenedor.appendChild(wrap);
+  }
 }
 
 // Wrapper to add data-testid to test divs
@@ -1567,7 +1572,6 @@ function cS5(w){
     'Sensibilidad 36%, especificidad 100%, LR+ 36. Si positivo → prácticamente confirma compresión radicular cervical C4-C5/C5-C6. El alivio al elevar el brazo es muy específico.',
     'alta'));
 
-  mkFiltroSospecha('cervical', tc);
   w.appendChild(tc);
 
   const obs=ce('div','card');obs.style.marginTop='12px';
