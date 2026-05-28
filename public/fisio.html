@@ -866,25 +866,25 @@ function rS4(w){
   tc.innerHTML='<div class="ct">Tests ortopédicos — Rodilla</div>';
 
   const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Ligamentos cruzados';tc.appendChild(s1);
-  tc.appendChild(mkTestOrtopedico('lachman','Test de Lachman',null,
+  tc.appendChild(mkTest('lachman','Test de Lachman',null,
     'Decúbito supino. Rodilla en 15–30° de flexión. Una mano estabiliza el fémur y la otra desplaza la tibia hacia anterior. Los músculos deben permanecer relajados.',
     'Desplazamiento anterior de la tibia >5mm con tope blando o ausente. Indica lesión del LCA. Se gradúa: leve (<5mm), moderado (5–10mm), severo (>10mm).',
     'Tope firme y desplazamiento <3mm. Sugiere integridad del LCA.',
     'Combinar con Test de Cajón Anterior. Si Lachman positivo + pivot shift positivo → alta probabilidad de rotura completa de LCA.',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('cajon_ant_rod','Test de Cajón Anterior',null,
+  tc.appendChild(mkTest('cajon_ant_rod','Test de Cajón Anterior',null,
     'Decúbito supino. Caderas 45° y rodillas 90° de flexión. El fisio se sienta ligeramente sobre el pie del paciente para fijarlo. Abraza la epífisis proximal de la tibia con ambas manos y aplica tracción anterior.',
     'Desplazamiento anterior excesivo de la tibia respecto a los cóndilos femorales. Positivo para lesión del LCA.',
     'Sin desplazamiento significativo. LCA probablemente íntegro.',
     'Test de Lachman tiene más sensibilidad. El cajón anterior es complementario; puede ser falsamente negativo si hay espasmo muscular.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('cajon_post','Test de Cajón Posterior',null,
+  tc.appendChild(mkTest('cajon_post','Test de Cajón Posterior',null,
     'Misma posición que el cajón anterior. El fisio aplica un empuje posterior sobre la tibia. Repetir con tibia en rotación interna y externa.',
     'Desplazamiento posterior excesivo de la tibia. Indica lesión del LCP.',
     'Sin desplazamiento posterior significativo.',
     'Test de Godfrey: en decúbito supino con caderas y rodillas a 90°, la caída de la tibia por gravedad ya indica rotura del LCP (LR+ 16.2).',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('pivot_shift','Test de Cambio de Pivote',null,
+  tc.appendChild(mkTest('pivot_shift','Test de Cambio de Pivote',null,
     'Decúbito supino. Rodilla en 10–20° de flexión. El fisio rota la tibia internamente mientras aplica una fuerza en valgo y extiende lentamente la rodilla.',
     'Subluxación anterior del platillo tibial con un "clic" o salto palpable. Indica rotura del LCA con inestabilidad rotacional.',
     'Sin subluxación ni clic.',
@@ -892,13 +892,13 @@ function rS4(w){
     'alta'));
 
   const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Ligamentos colaterales';tc.appendChild(s2);
-  tc.appendChild(mkTestOrtopedico('inest_med','Test de Inestabilidad Medial (Valgo)',null,
+  tc.appendChild(mkTest('inest_med','Test de Inestabilidad Medial (Valgo)',null,
     'Decúbito supino. Rodilla en extensión completa y luego en 30° de flexión. El fisio aplica fuerza en valgo con una mano en la cara lateral de la rodilla y la otra estabiliza el tobillo.',
     'Bostezo articular o apertura del compartimento interno. Indica lesión del LLI. En extensión completa → daño también a estructuras posteriores.',
     'Sin apertura articular significativa.',
     'Realizar siempre en extensión Y en 30° de flexión. Solo a 30° indica lesión aislada de LLI. En extensión completa → lesión combinada (LCA/cápsula posterior).',
     'media'));
-  tc.appendChild(mkTestOrtopedico('inest_lat','Test de Inestabilidad Lateral (Varo)',null,
+  tc.appendChild(mkTest('inest_lat','Test de Inestabilidad Lateral (Varo)',null,
     'Decúbito supino. El fisio aplica fuerza varizante con una mano en la cara interna de la rodilla. Evaluar en extensión y en 30° de flexión.',
     'Bostezo del compartimento lateral. Indica lesión del LLE. En extensión → posible daño también a LCA, LCP o cápsula postero-lateral.',
     'Sin apertura lateral.',
@@ -906,13 +906,13 @@ function rS4(w){
     'media'));
 
   const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Meniscos';tc.appendChild(s3);
-  tc.appendChild(mkTestOrtopedico('mcmurray','Test de McMurray',null,
+  tc.appendChild(mkTest('mcmurray','Test de McMurray',null,
     'Decúbito supino. Rodilla y cadera en flexión máxima. El fisio sujeta la rodilla con una mano y el pie con la otra. Aplica rotación externa + extensión para menisco interno; rotación interna + extensión para menisco externo.',
     'Dolor y/o chasquido durante la extensión en la zona meniscal correspondiente. Rotación externa → menisco interno; rotación interna → menisco externo.',
     'Sin dolor ni chasquido. Reduce la probabilidad de lesión meniscal.',
     'Combinar con Test de Apley. Si ambos positivos en el mismo lado → alta probabilidad de lesión meniscal.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('apley','Test de Apley',null,
+  tc.appendChild(mkTest('apley','Test de Apley',null,
     'Decúbito prono. Rodilla a 90° de flexión. El fisio fija el muslo con su rodilla y aplica presión axial descendente + rotación en ambos sentidos.',
     'Dolor y/o chasquido en el compartimento correspondiente durante la compresión + rotación. Indica lesión meniscal.',
     'Sin dolor ni chasquido con compresión.',
@@ -920,13 +920,13 @@ function rS4(w){
     'alta'));
 
   const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Rótula / patelofemoral';tc.appendChild(s4);
-  tc.appendChild(mkTestOrtopedico('signo_clarke','Signo de Clarke',null,
+  tc.appendChild(mkTest('signo_clarke','Signo de Clarke',null,
     'Decúbito supino con rodilla extendida. El fisio desplaza la rótula en sentido caudal y la mantiene. Pide al paciente una contracción isométrica del cuádriceps. Repetir a 30°, 60° y 90° de flexión.',
     'Dolor o incapacidad de completar la contracción. Indica alteración condral o disfunción patelofemoral.',
     'Contracción sin dolor. Comparar siempre con el lado contralateral.',
     'Test de McConnell: si al corregir la rótula medialmente el dolor desaparece, confirma disfunción patelofemoral. Indicación directa de taping rotuliano.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('noble','Test de Noble (Banda IT)',null,
+  tc.appendChild(mkTest('noble','Test de Noble (Banda IT)',null,
     'Decúbito supino. El fisio flexiona la rodilla a 90° y la cadera a 50°. Aplica presión sobre el cóndilo femoral lateral con los dedos. Mantiene la presión y extiende lentamente la rodilla.',
     'Dolor intenso al llegar a 30–40° de flexión en el cóndilo lateral. Indica síndrome de fricción de la banda iliotibial.',
     'Sin dolor al pasar por los 30–40°.',
@@ -940,6 +940,7 @@ function rS4(w){
   ta.oninput=()=>{D.obs_rodilla=ta.value;};
   obs.appendChild(ta);w.appendChild(obs);
 
+  mkFiltroSospecha('rodilla', tc);
   w.appendChild(tc);
   mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
 }
@@ -959,19 +960,19 @@ function fS4(w){
   tc.innerHTML='<div class="ct">Tests ortopédicos — Fascitis plantar / Pie</div>';
 
   const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Tests específicos de fascitis';tc.appendChild(s1);
-  tc.appendChild(mkTestOrtopedico('windlass','Test de Windlass',null,
+  tc.appendChild(mkTest('windlass','Test de Windlass',null,
     'Usuario en bipedestación o sedente. El fisio extiende pasivamente el primer dedo del pie (dorsiflexión metatarsofalángica) para tensionar la fascia plantar mediante el mecanismo de cabrestante.',
     'Reproducción del dolor en el talón o en el arco plantar. Indica tensión patológica de la fascia plantar. Positivo para fasciopatía plantar.',
     'Sin dolor durante la extensión del primer dedo.',
     'El mecanismo de Windlass es la base biomecánica de la fascia plantar. Si positivo en bipedestación → más específico. Combinar con palpación del tubérculo calcáneo medial.',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('silfverskiold','Test de Silfverskiöld',null,
+  tc.appendChild(mkTest('silfverskiold','Test de Silfverskiöld',null,
     'Usuario en decúbito supino. El fisio evalúa la dorsiflexión del tobillo primero con rodilla en extensión y luego con rodilla en flexión a 90°.',
     'Dorsiflexión limitada con rodilla extendida pero normal con rodilla flexionada. Indica acortamiento específico del gastrocnemio (no del sóleo). Si limitada en ambas posiciones → acortamiento del complejo gastro-sóleo.',
     'Dorsiflexión ≥10° en ambas posiciones. Flexibilidad del complejo aquíleo normal.',
     'Clave para diferenciar si hay que estirar gastrocnemio (con rodilla extendida) o también sóleo (con rodilla flexionada). Guía directamente la pauta de estiramientos.',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('tinel_pie','Signo de Tinel (pie)',null,
+  tc.appendChild(mkTest('tinel_pie','Signo de Tinel (pie)',null,
     'El fisio aplica golpecitos con los dedos sobre el nervio tibial en la zona del túnel del tarso (cara posteromedial del tobillo).',
     'Parestesias (hormigueo, corriente) que se irradian hacia la planta del pie. Indica síndrome del túnel del tarso. Importante cuando hay parestesias asociadas a la fascitis.',
     'Sin hormigueo ni parestesias.',
@@ -979,19 +980,19 @@ function fS4(w){
     'media'));
 
   const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Pie plano / biomecánica';tc.appendChild(s2);
-  tc.appendChild(mkTestOrtopedico('navicular_drop','Test Navicular Drop (caída del navicular)',null,
+  tc.appendChild(mkTest('navicular_drop','Test Navicular Drop (caída del navicular)',null,
     'Usuario en sedente. El fisio marca la tuberosidad del navicular y mide su altura al suelo. Luego el usuario se pone de pie (con subastragalina en posición neutra) y se remide la distancia.',
     'Caída del navicular >10mm al pasar de sedente a bípedo. Indica hiperpronación del pie (pie plano funcional). Normal: 6–8mm.',
     'Caída ≤8mm. Biomecánica del pie dentro de la normalidad.',
     'La hiperpronación es un factor de sobrecarga de la fascia plantar. Si navicular drop elevado + fascitis → valorar ortesis o ejercicio de control medial.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('feiss_line','Test Línea de Feiss',null,
+  tc.appendChild(mkTest('feiss_line','Test Línea de Feiss',null,
     'El fisio marca el ápex del maléolo medial y la cara medial de la primera articulación metatarsofalángica. Los une con una línea y palpa la tuberosidad navicular. Evaluar en descarga y en carga.',
     'La tuberosidad navicular cae claramente por debajo de la línea en carga. 1/3 bajo = pie plano grado I; 2/3 = grado II; sobre el suelo = grado III.',
     'Tuberosidad navicular sobre la línea o muy cerca en ambas posiciones.',
     'Complementa el navicular drop. Útil para comunicar visualmente al paciente su tipo de pie.',
     'baja'));
-  tc.appendChild(mkTestOrtopedico('paper_grip','Test Paper Grip',null,
+  tc.appendChild(mkTest('paper_grip','Test Paper Grip',null,
     'Usuario sentado con caderas, rodillas y tobillos a 90°. Se coloca un trozo de cartón bajo el pie. El fisio sujeta el cartón y el paciente intenta deslizarlo.',
     'El usuario no puede deslizar el cartón. Indica activación funcional de los músculos intrínsecos del pie (windlass activo). Si falla → disfunción de intrínsecos.',
     'El usuario desliza el cartón sin dificultad. Indica debilidad de intrínsecos.',
@@ -999,7 +1000,7 @@ function fS4(w){
     'media'));
 
   const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Tendón de Aquiles';tc.appendChild(s3);
-  tc.appendChild(mkTestOrtopedico('thomson_fascitis','Test de Thomson (Aquiles)',null,
+  tc.appendChild(mkTest('thomson_fascitis','Test de Thomson (Aquiles)',null,
     'Decúbito prono, rodillas extendidas, pies fuera de la camilla. El fisio comprime el tercio medio de la pantorrilla entre pulgar y demás dedos.',
     'Ausencia de flexión plantar. Indica rotura completa del tendón de Aquiles.',
     'Flexión plantar presente. Tendón íntegro.',
@@ -1013,6 +1014,7 @@ function fS4(w){
   ta.oninput=()=>{D.obs_fascitis=ta.value;};
   obs.appendChild(ta);w.appendChild(obs);
 
+  mkFiltroSospecha('fascitis', tc);
   w.appendChild(tc);
   mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
 }
@@ -1214,6 +1216,255 @@ function mkTestOrtopedico(id, nombre, img, como, positivo, negativo, combinar, f
   return div;
 }
 
+
+// ── FILTRO POR SOSPECHA ───────────────────────────────────────────────────────
+
+// Maps: test_id -> array of sospechas it belongs to
+const SOSPECHA_MAP = {
+  // RODILLA
+  lachman:       ['lca'],
+  cajon_ant_rod: ['lca'],
+  pivot_shift:   ['lca'],
+  cajon_post:    ['lcp'],
+  inest_med:     ['lcm'],
+  inest_lat:     ['lcl'],
+  mcmurray:      ['menisco_med','menisco_lat'],
+  apley:         ['menisco_med','menisco_lat'],
+  signo_clarke:  ['patelofemoral'],
+  noble:         ['banda_it','patelofemoral'],
+  // HOMBRO
+  hawk:          ['impingement'],
+  emptycan:      ['impingement','rotura_manguito'],
+  neer:          ['impingement'],
+  yocum:         ['impingement'],
+  aduccion_horiz:['impingement','acromioclavicular'],
+  irrs:          ['impingement','rotura_manguito'],
+  drop_arm:      ['rotura_manguito'],
+  hornblower:    ['rotura_manguito'],
+  liftoff:       ['rotura_manguito'],
+  aprehension:   ['inest_anterior'],
+  obrien:        ['labrum_slap'],
+  yergason:      ['biceps'],
+  paxinos:       ['acromioclavicular'],
+  // CERVICAL
+  compresion:    ['radiculopatia'],
+  spurling:      ['radiculopatia'],
+  distraccion:   ['radiculopatia'],
+  ultt:          ['radiculopatia','operculo'],
+  bakody:        ['radiculopatia'],
+  sharp_purser:  ['inest_c1c2'],
+  alar_flex:     ['inest_c1c2'],
+  arteria_vertebral: ['arteria_vertebral'],
+  romberg_cerv:  ['mielopatia'],
+  adson:         ['operculo'],
+  roos:          ['operculo'],
+  // TOBILLO
+  cajon_ant_tob: ['esguince_lateral'],
+  tilt_talar:    ['esguince_lateral'],
+  molloy:        ['pinzamiento_ant'],
+  compresion_tobillo: ['sindesmosis'],
+  thomson_tob:   ['aquiles'],
+  tinel_tarso:   ['tunel_tarso'],
+  dorsiflex_eversion: ['tunel_tarso'],
+  homan:         ['tvp'],
+  // FASCITIS
+  windlass:      ['fascitis_plantar'],
+  silfverskiold: ['fascitis_plantar','aquiles_fas'],
+  tinel_pie:     ['tunel_tarso_fas'],
+  navicular_drop:['pie_plano'],
+  feiss_line:    ['pie_plano'],
+  paper_grip:    ['fascitis_plantar','pie_plano'],
+  thomson_fascitis: ['aquiles_fas'],
+  // CADERA
+  fadir:         ['fai_labrum'],
+  faber:         ['fai_labrum','coxartrosis'],
+  mccarthy:      ['fai_labrum'],
+  scour:         ['fai_labrum','coxartrosis'],
+  fair:          ['piriforme'],
+  trendelenburg: ['tend_glutea','coxartrosis'],
+  thomas_test:   ['psoas'],
+  ober_test:     ['banda_it_cad'],
+  craig_test:    ['fai_labrum'],
+  // CODO
+  tennis_elbow:  ['epicondilitis'],
+  mill_test:     ['epicondilitis'],
+  golfer_elbow:  ['epitrocleitis'],
+  tinel_codo:    ['neuropatia_cubital'],
+  valgo_stress:  ['lcm_codo'],
+  yergason_codo: ['biceps_codo'],
+};
+
+// Sospechas por región
+const SOSPECHAS = {
+  rodilla: [
+    {id:'lca',          label:'LCA'},
+    {id:'lcp',          label:'LCP'},
+    {id:'lcm',          label:'LCM'},
+    {id:'lcl',          label:'LCL'},
+    {id:'menisco_med',  label:'Menisco medial'},
+    {id:'menisco_lat',  label:'Menisco lateral'},
+    {id:'patelofemoral',label:'Patelofemoral'},
+    {id:'banda_it',     label:'Banda IT'},
+    {id:'tend_rotuliana',label:'T. rotuliana'},
+  ],
+  hombro: [
+    {id:'impingement',     label:'Impingement'},
+    {id:'rotura_manguito', label:'Rotura manguito'},
+    {id:'inest_anterior',  label:'Inestabilidad ant.'},
+    {id:'inest_posterior', label:'Inestabilidad post.'},
+    {id:'capsulitis',      label:'Capsulitis'},
+    {id:'labrum_slap',     label:'Labrum / SLAP'},
+    {id:'biceps',          label:'Bíceps'},
+    {id:'acromioclavicular',label:'Acromioclavicular'},
+  ],
+  cervical: [
+    {id:'radiculopatia',    label:'Radiculopatía'},
+    {id:'inest_c1c2',       label:'Inestabilidad C1-C2'},
+    {id:'arteria_vertebral',label:'Arteria vertebral'},
+    {id:'mielopatia',       label:'Mielopatía'},
+    {id:'operculo',         label:'Opérculo torácico'},
+  ],
+  tobillo: [
+    {id:'esguince_lateral', label:'Esguince lateral'},
+    {id:'sindesmosis',      label:'Sindesmosis'},
+    {id:'aquiles',          label:'Aquiles'},
+    {id:'tunel_tarso',      label:'Túnel del tarso'},
+    {id:'pinzamiento_ant',  label:'Pinzamiento ant.'},
+    {id:'tvp',              label:'TVP'},
+  ],
+  fascitis: [
+    {id:'fascitis_plantar', label:'Fascitis plantar'},
+    {id:'tunel_tarso_fas',  label:'Túnel del tarso'},
+    {id:'pie_plano',        label:'Pie plano'},
+    {id:'aquiles_fas',      label:'Aquiles'},
+  ],
+  cadera: [
+    {id:'fai_labrum',   label:'FAI / Labrum'},
+    {id:'piriforme',    label:'Piriforme'},
+    {id:'coxartrosis',  label:'Coxartrosis'},
+    {id:'tend_glutea',  label:'T. glútea'},
+    {id:'psoas',        label:'Psoas'},
+    {id:'banda_it_cad', label:'Banda IT'},
+  ],
+  codo: [
+    {id:'epicondilitis',     label:'Epicondilitis lat.'},
+    {id:'epitrocleitis',     label:'Epitrocleitis med.'},
+    {id:'neuropatia_cubital',label:'N. cubital'},
+    {id:'lcm_codo',          label:'LCM codo'},
+    {id:'biceps_codo',       label:'Bíceps distal'},
+  ],
+};
+
+function mkFiltroSospecha(region, contenedor) {
+  const sospechas = SOSPECHAS[region] || [];
+  if (!sospechas.length) return;
+
+  const wrap = ce('div','');
+  wrap.style.cssText = 'margin-bottom:16px';
+
+  const label = ce('p','');
+  label.style.cssText = 'font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px';
+  label.textContent = '¿Qué sospechas?';
+  wrap.appendChild(label);
+
+  const chips = ce('div','');
+  chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px';
+
+  let selected = new Set();
+
+  // "No sé" chip — default active
+  const noseChip = ce('button','');
+  noseChip.textContent = '🤷 No sé / Ver todos';
+  noseChip.style.cssText = 'padding:6px 12px;border-radius:20px;border:1.5px solid var(--lila);background:var(--lila);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s';
+  noseChip.dataset.nose = '1';
+
+  function applyFilter() {
+    // Get all test divs in contenedor
+    const tests = contenedor.querySelectorAll('[data-testid]');
+    const noFiltro = selected.size === 0;
+    tests.forEach(t => {
+      const tid = t.dataset.testid;
+      const testSospechas = SOSPECHA_MAP[tid] || [];
+      const match = noFiltro || testSospechas.some(s => selected.has(s));
+      t.style.opacity = match ? '1' : '0.2';
+      t.style.pointerEvents = match ? '' : 'none';
+      t.style.transition = 'opacity .2s';
+      // Add/remove highlight border
+      if (match && !noFiltro) {
+        t.style.outline = '2px solid var(--lila)';
+        t.style.outlineOffset = '2px';
+        t.style.borderRadius = '10px';
+      } else {
+        t.style.outline = '';
+      }
+    });
+  }
+
+  noseChip.onclick = () => {
+    selected.clear();
+    // Reset all chips
+    chips.querySelectorAll('button:not([data-nose])').forEach(c => {
+      c.style.background = '#f5f5f5';
+      c.style.color = '#555';
+      c.style.borderColor = '#ddd';
+    });
+    noseChip.style.background = 'var(--lila)';
+    noseChip.style.color = '#fff';
+    noseChip.style.borderColor = 'var(--lila)';
+    applyFilter();
+  };
+  chips.appendChild(noseChip);
+
+  sospechas.forEach(s => {
+    const chip = ce('button','');
+    chip.textContent = s.label;
+    chip.dataset.sid = s.id;
+    chip.style.cssText = 'padding:6px 12px;border-radius:20px;border:1.5px solid #ddd;background:#f5f5f5;color:#555;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s';
+    chip.onclick = () => {
+      if (selected.has(s.id)) {
+        selected.delete(s.id);
+        chip.style.background = '#f5f5f5';
+        chip.style.color = '#555';
+        chip.style.borderColor = '#ddd';
+      } else {
+        selected.add(s.id);
+        chip.style.background = 'var(--lila-light)';
+        chip.style.color = 'var(--lila)';
+        chip.style.borderColor = 'var(--lila)';
+      }
+      // Update "No sé" chip appearance
+      if (selected.size > 0) {
+        noseChip.style.background = '#f5f5f5';
+        noseChip.style.color = '#888';
+        noseChip.style.borderColor = '#ddd';
+      } else {
+        noseChip.style.background = 'var(--lila)';
+        noseChip.style.color = '#fff';
+        noseChip.style.borderColor = 'var(--lila)';
+      }
+      applyFilter();
+    };
+    chips.appendChild(chip);
+  });
+
+  wrap.appendChild(chips);
+
+  // Count label
+  const countEl = ce('p','');
+  countEl.style.cssText = 'font-size:11px;color:#aaa;margin-top:6px';
+  countEl.id = 'filtro-count-' + region;
+  wrap.appendChild(countEl);
+
+  contenedor.appendChild(wrap);
+}
+
+// Wrapper to add data-testid to test divs
+function mkTest(id, region, nombre, img, como, positivo, negativo, combinar, fiabilidad) {
+  const div = mkTestOrtopedico(id, nombre, img, como, positivo, negativo, combinar, fiabilidad);
+  div.dataset.testid = id;
+  return div;
+}
+
 function cS1(w){w.appendChild(mkNota('Latigazo, postura laboral o inicio insidioso?'));w.appendChild(mkCard('Historia','',[mkCampoInfo('Evolución',[['ag','Aguda <4sem'],['sub','Subaguda'],['cr','Crónica >3m'],['re','Reagudización']],'evol','La fase aguda (<4 semanas) tiene buen pronóstico espontáneo en el 90% de casos. La subaguda es la ventana de oro para el tratamiento activo — el paciente está receptivo y la plasticidad es alta. La crónica (>3 meses) requiere abordar también factores psicosociales y creencias. La reagudización sobre crónica suele tener un desencadenante claro — identificarlo es clave.'),mkCampoInfo('Inicio',[['tr','Traumático/latigazo'],['po','Postural'],['gr','Gradual'],['ma','Maniobra brusca'],['es','Espontáneo']],'ini','El inicio traumático/latigazo requiere descartar inestabilidad ligamentosa (ligamentos alares, transverso del atlas) antes de movilizar. El inicio postural es el más frecuente y tiene mejor pronóstico con corrección ergonómica. El inicio gradual sin causa aparente obliga a descartar causas no mecánicas (infección, tumor, enfermedad sistémica) si hay red flags asociados.'),mkCampoInfo('Región',[['ca','C1–C3 alta'],['cm','C3–C5 media'],['cb','C5–C7 baja'],['cd','Cervicotorácica'],['di','Difusa']],'reg','C1-C3: cefalea cervicogénica, dolor suboccipital, mareos. Frecuente en disfunción ATM y latigazo. C3-C5: dolor de hombro y región escapular. Puede confundirse con patología de hombro. C5-C7: la región más frecuente. Radiculopatía con irradiación a brazo. Cervicotorácica: muy relacionada con postura laboral y ergonomía deficiente.'),mkCampoInfo('Dx previo',[['no','Sin dx'],['ar','Artrosis/espondilosis'],['he','Hernia discal'],['est','Estenosis canal'],['con','Contractura mecánica'],['lat','Sínd. latigazo']],'dx','La artrosis/espondilosis es frecuente en >50 años pero no siempre es la causa del dolor actual. La hernia discal con radiculopatía tiene buen pronóstico conservador (80% mejora en 6-12 semanas). La estenosis de canal requiere precaución con técnicas en extensión. El síndrome de latigazo puede cronificarse — los factores psicosociales son determinantes en el pronóstico.'),mkCampoInfo('Cirugía',[['no','No'],['dis','Discectomía'],['art','Artrodesis'],['ot','Otra']],'cx','La cirugía previa modifica la biomecánica cervical. La discectomía aumenta la carga en segmentos adyacentes. La artrodesis limita la movilidad y sobrecarga los segmentos vecinos — frecuente origen de nueva sintomatología años después. Adaptar el tratamiento evitando sobrecargar los niveles fusionados.'),mkCampoInfo('Tto previo',[['no','Ninguno'],['rep','Reposo/AINEs'],['fis','Fisioterapia'],['col','Collarín'],['inf','Infiltración']],'tto','El reposo prolongado y el collarín están desaconsejados en cervicalgia mecánica — perpetúan la hipotonía y la dependencia. Si ha habido fisioterapia previa sin mejoría, explorar qué se hizo y por qué no funcionó. La infiltración previa con mejoría temporal confirma componente inflamatorio o facetario.')]));mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);}
 function cS2(w){w.appendChild(mkNota('Mecánico o inflamatorio? Irradiación que sugiera radiculopatía?'));const ec=ce('div','card');ec.innerHTML='<div class="ct">Dolor</div>';const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';[['evc','EVA cuello'],['evb','EVA brazo'],['evh','EVA cefalea']].forEach(([k,l])=>g.appendChild(mkEva(l,k)));ec.appendChild(g);const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkCampoInfo('Localización',[['pos','Cervical posterior'],['lat','Lateral cuello'],['sub','Suboccipital'],['hom','Hombro/trapecio'],['br','Irradiado brazo']],'loc','CÓMO EVALUARLO: Pide al paciente que señale con un dedo dónde le duele exactamente. Después pregunta si el dolor se irradia y hasta dónde llega. CÓMO INTERPRETARLO: Cervical posterior → origen en facetas, músculos paravertebrales o ligamentos interespinosos. Lateral → posible implicación de escalenos, plexo braquial o articulación uncovertebal. Suboccipital → frecuente en disfunción C1-C2 y cefalea cervicogénica, también en tensión de suboccipitales por uso prolongado de pantalla. Hombro/trapecio → dolor referido de C3-C5, muy frecuente en postura laboral. Irradiado al brazo → sospecha de radiculopatía cervical, identificar dermatoma para localizar el nivel.'),mkCampoInfo('Tipo',[['mec','Mecánico'],['inf','Inflamatorio'],['neu','Neuropático'],['mix','Mixto']],'tip','CÓMO EVALUARLO: Pregunta cómo se comporta el dolor a lo largo del día: ¿Mejora con el reposo? ¿Empeora con el movimiento? ¿Hay rigidez matutina? ¿Nota quemazón o corriente eléctrica? CÓMO INTERPRETARLO: Mecánico → empeora con el movimiento y al final del día, mejora con reposo. Origen articular, muscular o discal. Buen pronóstico conservador. Inflamatorio → peor en reposo y por la noche, rigidez matutina >30 min, mejora con actividad. Descartar espondiloartropatía inflamatoria. Neuropático → quemazón, hormigueo, corriente eléctrica, alodinia. Indica afectación radicular o neuropatía periférica. Mixto → combinación habitual en dolor crónico.'),mkCampoInfo('Nocturno',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'noc','CÓMO EVALUARLO: Pregunta: "¿Le despierta el dolor por la noche?" y "¿Mejora al cambiar de postura o no mejora con nada?". CÓMO INTERPRETARLO: Sin dolor nocturno → patrón mecánico típico, buen pronóstico. Ocasional → puede ser postural, mejorar con almohada cervical adaptada. Frecuente que despierta y NO mejora al moverse → RED FLAG. Descartar: tumor cervical, metástasis ósea, infección vertebral (espondilodiscitis), fractura patológica. Derivar a médico urgente si se asocia a pérdida de peso, fiebre o antecedente oncológico.'),mkCampoInfo('Rigidez matutina',[['no','No'],['br','<30 min'],['pr','>30 min ⚠']],'rig','CÓMO EVALUARLO: Pregunta: "Al levantarse por la mañana, ¿nota rigidez en el cuello? ¿Cuánto tiempo tarda en desaparecer?". CÓMO INTERPRETARLO: Sin rigidez → patrón puramente mecánico. <30 minutos → habitual en artrosis cervical y patología discal degenerativa, el calor y el movimiento suave la resuelven. >30 minutos → criterio diagnóstico de enfermedad inflamatoria sistémica (espondilitis anquilosante, artritis reumatoide). Si se asocia a dolor en reposo y mejora clara con actividad → derivar a reumatología.'),mkCampoInfo('Cefalea',[['no','No'],['oc','Ocasional'],['fr','Frecuente'],['di','Diaria']],'cef','CÓMO EVALUARLO: Pregunta localización (¿unilateral o bilateral?), carácter (¿pulsátil, opresiva, en corriente?), desencadenantes (¿movimientos cervicales, postura, estrés?), y si se reproduce al palpar la zona suboccipital o C1-C3. CÓMO INTERPRETARLO: Cefalea cervicogénica → unilateral, irradia de nuca a frontal, empeora con movimientos cervicales, se reproduce con palpación de C1-C3. Tratar la disfunción cervical. Cefalea tensional → bilateral, opresiva, no pulsátil. Componente muscular importante. Migraña → pulsátil, náuseas, fotofobia. Puede tener desencadenante cervical pero el origen es central. Cefalea con rigidez de nuca + fiebre → URGENCIA (meningitis).'),mkCampoInfo('Mareos',[['no','No'],['oc','Ocasional'],['fr','Frecuente ⚠']],'mar','CÓMO EVALUARLO: Pregunta si los mareos aparecen con movimientos cervicales concretos (extensión, rotación). Realiza el test de la arteria vertebral: paciente en supino, lleva el cuello a extensión + rotación máxima y mantén 30 segundos — positivo si aparece nistagmo, mareo intenso o síntomas neurológicos (indica compromiso de arteria vertebral → CONTRAINDICADA la manipulación cervical). CÓMO INTERPRETARLO: Mareo cervicogénico → leve, se desencadena con movimiento cervical, sin nistagmo. Vértigo vestibular → sensación rotatoria intensa, nistagmo, náuseas intensas. Insuficiencia vertebrobasilar → mareos + diplopía + disfagia + drop attacks. Mareos frecuentes con síntomas neurológicos → derivar neurología urgente.')].forEach(f=>g2.appendChild(f));ec.appendChild(g2);w.appendChild(ec);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);}
 function cS3(w){w.appendChild(mkNota('Patrón dermatomal consistente? Mielopatía → derivación urgente.'));const nc=ce('div','card');nc.innerHTML='<div class="ct">Afectación neurológica</div>';nc.appendChild(mkDermMap());const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:12px';[mkCampoInfo('Parestesias',[['no','No'],['in','Intermitente'],['co','Constante ⚠']],'par','CÓMO EVALUARLO: Pregunta al paciente si nota hormigueo, adormecimiento o sensación eléctrica en brazo, mano o dedos. Identifica el dermatoma: C5 (brazo lateral), C6 (pulgar/índice), C7 (dedo medio), C8 (meñique), T1 (cara interna antebrazo). CÓMO INTERPRETARLO: Intermitente → compresión mecánica variable, buen pronóstico conservador. Constante → compresión radicular establecida o daño nervioso, el tratamiento es más lento. ALERTA: Parestesias bilaterales en manos + marcha inestable = posible mielopatía, derivar urgente.'),mkCampoInfo('Déficit motor',[['no','No'],['le','Leve'],['mo','Moderado'],['se','Severo ⚠']],'dm','CÓMO EVALUARLO: Pide al paciente que realice movimientos contra resistencia y compara ambos lados. C5: abducción de hombro (deltoides). C6: flexión de codo (bíceps) y extensión de muñeca. C7: extensión de codo (tríceps) y flexión de muñeca. C8: flexión de dedos. T1: separación de dedos (interóseos). Escala 0-5: 5=normal, 4=activo contra resistencia reducida, 3=activo contra gravedad, 2=activo sin gravedad, 1=contracción visible, 0=parálisis. CÓMO INTERPRETARLO: Leve (grado 4) → conservador. Moderado-severo (≤3) → valoración médica urgente.'),mkCampoInfo('Reflejos',[['nor','Normales'],['bi','Hipoact. bicipital'],['tr','Hipoact. tricipital'],['ab','Abolidos ⚠']],'ref','CÓMO EVALUARLO: Usa martillo de reflejos con el paciente relajado. Reflejo bicipital: golpea el tendón del bíceps con el codo a 90° → valora C5-C6. Reflejo tricipital: golpea el tendón del tríceps con el codo flexionado → valora C7. Reflejo estilorradial: golpea la apófisis estiloides del radio → valora C6. Compara siempre ambos lados. CÓMO INTERPRETARLO: Hiporreflexia unilateral → daño radicular en ese nivel. Arreflexia → daño radicular significativo, derivar. Hiperreflexia → posible mielopatía cervical, NO manipular, derivar neurología urgente.'),mkCampoInfo('Mielopatía',[['no','No'],['tor','Torpeza manos'],['ma','Marcha inestable'],['es','Espasticidad ⚠ URGENTE']],'miel','CÓMO EVALUARLO: Pregunta si nota torpeza al abrocharse botones, escribir o coger objetos pequeños (torpeza de manos). Observa la marcha — ¿es inestable o en tijera? Evalúa el tono muscular en extremidades. Test de Romberg: paciente de pie con ojos cerrados 20-30 segundos → positivo si oscila o cae (indica afectación de motoneurona superior). CÓMO INTERPRETARLO: Cualquier signo de mielopatía es una urgencia relativa. La compresión medular cervical puede progresar. Contraindicado el tratamiento con manipulación cervical. Derivar a neurocirugía urgente.'),mkCampoInfo('Autonómico',[['no','No'],['vi','Visual'],['ac','Acúfenos'],['dis','Disfagia ⚠']],'aut','CÓMO EVALUARLO: Pregunta específicamente por: visión borrosa o doble, acúfenos (pitidos en oídos), disfagia (dificultad para tragar), disfonía, síncope o drop attacks (caídas súbitas sin pérdida de conciencia). Estos síntomas pueden aparecer con movimientos cervicales en extensión o rotación. CÓMO INTERPRETARLO: Síntomas autonómicos leves y ocasionales → posible irritación simpática cervical, tratar con precaución. Disfagia, diplopía o drop attacks → sospecha de insuficiencia vertebrobasilar. CONTRAINDICADO manipulación cervical. Derivar urgente.')].forEach(f=>g2.appendChild(f));nc.appendChild(g2);w.appendChild(nc);mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},4);}
@@ -1228,7 +1479,7 @@ function cS5(w){
   const sec1=ce('p','');sec1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';sec1.textContent='Radiculopatía cervical';
   tc.appendChild(sec1);
   
-  tc.appendChild(mkTestOrtopedico(
+  tc.appendChild(mkTest(
     'compresion',
     'Test de Compresión',
     'data:image/png;base64,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',
@@ -1239,7 +1490,7 @@ function cS5(w){
     'media'
   ));
 
-  tc.appendChild(mkTestOrtopedico(
+  tc.appendChild(mkTest(
     'spurling',
     'Test de Spurling',
     'data:image/png;base64,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',
@@ -1250,7 +1501,7 @@ function cS5(w){
     'alta'
   ));
 
-  tc.appendChild(mkTestOrtopedico(
+  tc.appendChild(mkTest(
     'distraccion',
     'Test de Distracción cervical',
     'data:image/png;base64,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',
@@ -1261,18 +1512,19 @@ function cS5(w){
     'media'
   ));
 
+  mkFiltroSospecha('cervical', tc);
   w.appendChild(tc);
 
 
   // Tests adicionales del PDF no incluidos anteriormente
   const secA=ce('p','');secA.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secA.textContent='Inestabilidad cervical superior';tc.appendChild(secA);
-  tc.appendChild(mkTestOrtopedico('sharp_purser','Test de Sharp-Purser (Inestabilidad C1-C2)',null,
+  tc.appendChild(mkTest('sharp_purser','Test de Sharp-Purser (Inestabilidad C1-C2)',null,
     'Usuario sedente con el cuello en semiflexión. El fisio coloca la palma en la frente y el dedo índice sobre la apófisis espinosa de C2. Aplica presión anteroposterior a través de la frente.',
     'Deslizamiento de la cabeza hacia posterior respecto al axis. Indica inestabilidad atlantoaxial (C1-C2).',
     'Sin desplazamiento posterior de la cabeza. No hay inestabilidad atlantoaxial significativa.',
     'Sensibilidad 69%, especificidad 96%, LR+ 17.25. CONTRAINDICADA la manipulación cervical si positivo. Derivar urgente. Frecuente en artritis reumatoide y síndrome de Down.',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('alar_flex','Test de Estrés Flexión Lateral (Ligamento Alar)',null,
+  tc.appendChild(mkTest('alar_flex','Test de Estrés Flexión Lateral (Ligamento Alar)',null,
     'Usuario en supino con la cabeza en posición neutra. El fisio estabiliza el axis con agarre alrededor del proceso espinoso y lámina. Aplica flexión lateral forzada de la cabeza.',
     'Movimiento lateral excesivo sin tope capsular firme. Indica lesión del ligamento alar del lado opuesto a la flexión.',
     'Mínima flexión lateral con tope capsular firme y sólido. Ligamentos alares íntegros.',
@@ -1280,7 +1532,7 @@ function cS5(w){
     'media'));
 
   const secB=ce('p','');secB.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secB.textContent='Insuficiencia vertebrobasilar';tc.appendChild(secB);
-  tc.appendChild(mkTestOrtopedico('arteria_vertebral','Test Estático Arteria Vertebral',null,
+  tc.appendChild(mkTest('arteria_vertebral','Test Estático Arteria Vertebral',null,
     'Usuario en supino o sedente. El fisio sostiene la cabeza y lleva pasivamente a extensión + rotación combinadas (la posición más provocadora). Mantener 30 segundos observando al paciente.',
     'Nistagmo ocular, mareos, aturdimiento, visión borrosa o síntomas neurológicos. Indica posible compromiso de la arteria vertebral.',
     'Sin síntomas durante la maniobra.',
@@ -1288,7 +1540,7 @@ function cS5(w){
     'media'));
 
   const secC=ce('p','');secC.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secC.textContent='Mielopatía cervical';tc.appendChild(secC);
-  tc.appendChild(mkTestOrtopedico('romberg_cerv','Test de Romberg (Mielopatía)',null,
+  tc.appendChild(mkTest('romberg_cerv','Test de Romberg (Mielopatía)',null,
     'Usuario de pie, brazos al lado del cuerpo. Se le pide que cierre los ojos y mantenga la posición 20–30 segundos.',
     'El cuerpo oscila en exceso o el usuario pierde el equilibrio. Indica posible lesión de motoneurona superior (mielopatía cervical).',
     'El usuario mantiene el equilibrio con ojos cerrados.',
@@ -1296,25 +1548,26 @@ function cS5(w){
     'alta'));
 
   const secD=ce('p','');secD.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secD.textContent='Síndrome del opérculo torácico (SOT)';tc.appendChild(secD);
-  tc.appendChild(mkTestOrtopedico('adson','Test / Maniobra de Adson (SOT)',null,
+  tc.appendChild(mkTest('adson','Test / Maniobra de Adson (SOT)',null,
     'El fisio localiza el pulso radial. Rota la cabeza del usuario hacia el lado ipsilateral. El usuario extiende la cabeza mientras el fisio rota externamente y extiende el hombro. El usuario realiza una inspiración profunda sostenida.',
     'Desaparición o disminución del pulso radial durante la maniobra. Indica compresión vascular en el desfiladero torácico.',
     'El pulso radial se mantiene durante toda la maniobra.',
     'Frecuentemente positivo también en personas sin SOT (falsos positivos). Combinar con Test de Roos y Test de Allen para mayor precisión diagnóstica.',
     'baja'));
-  tc.appendChild(mkTestOrtopedico('roos','Test de Roos / EAST (SOT)',null,
+  tc.appendChild(mkTest('roos','Test de Roos / EAST (SOT)',null,
     'Usuario de pie. Brazos en abducción a 90°, rotación lateral de hombro, codos a 90° (ligeramente por detrás del plano frontal). El usuario abre y cierra las manos lentamente durante 3 minutos.',
     'El usuario es incapaz de mantener la posición 3 minutos, o aparece dolor isquémico, pesadez profunda del brazo, o entumecimiento/hormigueo en la mano.',
     'El usuario completa 3 minutos con fatiga mínima y sin síntomas.',
     'El test de Roos (EAST) es el más útil para SOT. La reproducción de síntomas típicos del paciente en esta posición es muy sugestiva de compromiso del desfiladero.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('bakody','Test de Bakody / Abducción del Hombro',null,
+  tc.appendChild(mkTest('bakody','Test de Bakody / Abducción del Hombro',null,
     'Usuario sedente o supino. El fisio o el propio usuario eleva el brazo pasivamente con abducción para que la mano o antebrazo descansen sobre la cabeza.',
     'Disminución o alivio de los síntomas radiculares (dolor, parestesias) al elevar el brazo. Indica compresión extradural cervical (hernia discal, raíz C4-C5 o C5-C6).',
     'Los síntomas no cambian con la elevación del brazo.',
     'Sensibilidad 36%, especificidad 100%, LR+ 36. Si positivo → prácticamente confirma compresión radicular cervical C4-C5/C5-C6. El alivio al elevar el brazo es muy específico.',
     'alta'));
 
+  mkFiltroSospecha('cervical', tc);
   w.appendChild(tc);
 
   const obs=ce('div','card');obs.style.marginTop='12px';
@@ -1450,7 +1703,7 @@ function hS4(w){
   const sec1=ce('p','');sec1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';sec1.textContent='Pinzamiento subacromial';
   tc.appendChild(sec1);
 
-  tc.appendChild(mkTestOrtopedico(
+  tc.appendChild(mkTest(
     'hawk','Test de Hawkins-Kennedy',null,
     'Usuario de pie. El fisioterapeuta coloca el brazo en doble flexión de 90° (hombro y codo flexionados) y aplica una fuerza de rotación interna forzada.',
     'Dolor en la región subacromial o deltoidea. Indica pinzamiento del tendón supraespinoso bajo el arco coracoacromial durante la rotación interna.',
@@ -1459,7 +1712,7 @@ function hS4(w){
     'alta'
   ));
 
-  tc.appendChild(mkTestOrtopedico(
+  tc.appendChild(mkTest(
     'emptycan','Test Empty Can (Supraespinoso)',null,
     'Usuario de pie con brazos elevados a 90° en el plano escapular (30° hacia delante), pulgares apuntando hacia abajo (posición de "lata vacía"). El fisioterapeuta aplica presión hacia abajo y el usuario resiste.',
     'Debilidad para mantener la posición o dolor. Indica lesión del tendón supraespinoso — diferencia entre dolor (tendinosis/bursitis) y debilidad (posible rotura).',
@@ -1471,7 +1724,7 @@ function hS4(w){
   const sec2=ce('p','');sec2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec2.textContent='Inestabilidad glenohumeral';
   tc.appendChild(sec2);
 
-  tc.appendChild(mkTestOrtopedico(
+  tc.appendChild(mkTest(
     'aprehension','Test de Aprehensión anterior',null,
     'Usuario en decúbito supino. El fisioterapeuta coloca el brazo en 90° de abducción, 90° de flexión de codo y lleva el hombro a rotación externa progresiva.',
     'El paciente presenta sensación de inestabilidad o miedo a que el hombro se salga (aprehensión), o dolor anterior. Indica inestabilidad glenohumeral anterior — posible lesión de Bankart o laxitud capsular anterior.',
@@ -1483,7 +1736,7 @@ function hS4(w){
   const sec3=ce('p','');sec3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sec3.textContent='Tendón del bíceps';
   tc.appendChild(sec3);
 
-  tc.appendChild(mkTestOrtopedico(
+  tc.appendChild(mkTest(
     'yergason','Test de Yergason',null,
     'Usuario sentado con el codo a 90° de flexión. Se pide que supine el antebrazo contra la resistencia del fisioterapeuta, que palpa simultáneamente la corredera bicipital.',
     'Dolor localizado en la corredera bicipital (cara anterior del hombro) durante la supinación resistida. Indica tendinopatía de la porción larga del bíceps.',
@@ -1508,30 +1761,31 @@ function hS4(w){
       'CÓMO EVALUARLO: Paciente en decúbito prono con el brazo a 120° de abducción y el pulgar hacia arriba. Pide que eleve el brazo de la camilla resistiendo tu presión hacia abajo. CÓMO INTERPRETARLO: El trapecio inferior es el principal depresor y rotador externo de la escápula. Su déficit genera elevación y basculación anterior de la escápula, reduciendo el espacio subacromial y favoreciendo el impingement. Es uno de los músculos más frecuentemente inhibidos en dolor crónico de hombro.')
   ].forEach(f=>gf.appendChild(f));
   tc.appendChild(gf);
+  mkFiltroSospecha('hombro', tc);
   w.appendChild(tc);
 
 
   // Tests adicionales del PDF no incluidos anteriormente
   const s5b=ce('p','');s5b.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5b.textContent='Pinzamiento subacromial (adicionales)';tc.appendChild(s5b);
-  tc.appendChild(mkTestOrtopedico('neer','Test de Neer',null,
+  tc.appendChild(mkTest('neer','Test de Neer',null,
     'Usuario de pie o sentado. El fisio eleva el brazo en rotación interna hasta elevación máxima.',
     'Dolor subacromial o en la cara anterior del hombro. Indica pinzamiento del tendón supraespinoso bajo el arco coracoacromial.',
     'Sin dolor durante la elevación.',
     'Sensibilidad 79%, especificidad 53%, LR+ 1.7. Combinar con Hawkins-Kennedy. Si ambos positivos → alta sospecha de impingement subacromial.',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('yocum','Test de Yocum',null,
+  tc.appendChild(mkTest('yocum','Test de Yocum',null,
     'Usuario de pie o sentado. Lleva la mano ipsilateral al hombro contralateral. Eleva el codo.',
     'Dolor en la región subacromial al elevar el codo.',
     'Sin dolor durante la maniobra.',
     'Sensibilidad 79%, especificidad 40%, LR+ 1.3. Fácil de realizar. Complementa Hawkins y Neer.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('aduccion_horiz','Test de Aducción Horizontal',null,
+  tc.appendChild(mkTest('aduccion_horiz','Test de Aducción Horizontal',null,
     'El fisio fuerza el brazo del usuario en aducción horizontal con el codo flexionado y la mano apoyada en el hombro del mismo lado.',
     'Dolor subacromial o acromioclavicular durante la aducción forzada.',
     'Sin dolor.',
     'Sensibilidad 82%, especificidad 28%. Útil también para detectar patología acromioclavicular. Alta sensibilidad para impingement.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('irrs','Test IRRS (Rotación Interna Resistida)',null,
+  tc.appendChild(mkTest('irrs','Test IRRS (Rotación Interna Resistida)',null,
     'Usuario de pie. El fisio coloca el brazo en 90° de abducción y 80° de rotación externa. Aplica resistencia contra la rotación externa y luego contra la rotación interna en la misma posición.',
     'Mayor debilidad en rotación interna que en externa → patología intra-articular. Mayor debilidad en rotación externa → síndrome de pinzamiento.',
     'Fuerza simétrica en ambas rotaciones.',
@@ -1539,19 +1793,19 @@ function hS4(w){
     'alta'));
 
   const s5c=ce('p','');s5c.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5c.textContent='Manguito rotador — rotura';tc.appendChild(s5c);
-  tc.appendChild(mkTestOrtopedico('drop_arm','Test Drop Arm',null,
+  tc.appendChild(mkTest('drop_arm','Test Drop Arm',null,
     'El usuario abduce activamente el hombro a 90° y luego desciende lentamente el brazo a la posición neutral.',
     'El usuario no puede controlar el descenso (el brazo cae) debido al dolor o debilidad. Indica rotura del manguito rotador.',
     'El usuario desciende el brazo de forma controlada hasta la posición neutral.',
     'Sensibilidad 8%, especificidad 97%, LR+ 2.67. Muy específico pero poco sensible. Si positivo → alta probabilidad de rotura. Combinar con Empty Can.',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('hornblower','Signo de Hornblower (Redondo menor)',null,
+  tc.appendChild(mkTest('hornblower','Signo de Hornblower (Redondo menor)',null,
     'Usuario sedente. El fisio coloca el brazo en 90° de flexión en el plano escapular. El usuario rota externamente contra resistencia.',
     'Incapacidad de rotar externamente el hombro. El usuario compensa elevando el brazo o abduciendo. Indica lesión del músculo redondo menor.',
     'Rotación externa posible contra resistencia.',
     'Sensibilidad 100%, especificidad 93%, LR+ 14.29. Si positivo → confirma lesión del redondo menor. Frecuente en roturas masivas del manguito.',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('liftoff','Test Lift-Off (Subescapular)',null,
+  tc.appendChild(mkTest('liftoff','Test Lift-Off (Subescapular)',null,
     'El usuario coloca la mano ipsilateral en la parte posterior de la columna lumbar media. Rota internamente el brazo para separar la mano de la espalda.',
     'No puede separar la mano de la espalda, o compensa con elevación del hombro o extensión de codo. Indica lesión del subescapular.',
     'El usuario separa la mano de la espalda sin compensaciones.',
@@ -1559,7 +1813,7 @@ function hS4(w){
     'alta'));
 
   const s5d=ce('p','');s5d.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5d.textContent='Labrum / SLAP';tc.appendChild(s5d);
-  tc.appendChild(mkTestOrtopedico('obrien','Test de O\'Brien (Compresión activa)',null,
+  tc.appendChild(mkTest('obrien','Test de O\'Brien (Compresión activa)',null,
     'Usuario de pie. Flexiona el brazo a 90° con el codo en extensión. Aduce 10° y gira internamente el húmero (pulgar hacia abajo). El fisio aplica fuerza hacia abajo; el usuario resiste. Luego repetir con brazo en supinación (palma arriba).',
     'Dolor con la primera maniobra (pronación/rotación interna) que disminuye o desaparece con la segunda (supinación). Indica lesión del labrum (SLAP).',
     'Sin diferencia de dolor entre las dos posiciones.',
@@ -1567,7 +1821,7 @@ function hS4(w){
     'alta'));
 
   const s5e=ce('p','');s5e.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5e.textContent='Articulación acromioclavicular';tc.appendChild(s5e);
-  tc.appendChild(mkTestOrtopedico('paxinos','Signo de Paxinos',null,
+  tc.appendChild(mkTest('paxinos','Signo de Paxinos',null,
     'Usuario sedente con el brazo relajado al costado. El fisio aplica presión anterosuperior sobre el acromion con el pulgar y contrafuerza inferior sobre la clavícula con los dedos índice y medio.',
     'Aumento del dolor en el área de la articulación acromioclavicular.',
     'Sin dolor con la presión.',
@@ -1656,25 +1910,25 @@ function tS4(w){
   tc.innerHTML='<div class="ct">Tests ortopédicos — Tobillo y pie</div>';
 
   const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Esguince de tobillo / ligamentos';tc.appendChild(s1);
-  tc.appendChild(mkTestOrtopedico('cajon_ant_tob','Test de Cajón Anterior de Tobillo',null,
+  tc.appendChild(mkTest('cajon_ant_tob','Test de Cajón Anterior de Tobillo',null,
     'Decúbito supino con pie relajado. El fisio toma el calcáneo con una mano y el tobillo por los maléolos con la otra. Aplica tracción anterior del pie mientras la pierna queda fija.',
     'Desplazamiento anterior excesivo del astrágalo (>3mm respecto al lado sano) o laxitud palpable. Indica lesión del ligamento peroneoastragalino anterior (LPAA). Se gradúa 0–3.',
     'Sin desplazamiento significativo. LPAA íntegro.',
     'Sensibilidad 96%, especificidad 84%, LR+ 6.0. El test más importante en esguince lateral. Siempre comparar con el lado sano.',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('tilt_talar','Tilt Talar (Inversión forzada)',null,
+  tc.appendChild(mkTest('tilt_talar','Tilt Talar (Inversión forzada)',null,
     'Decúbito supino o lateral, pie relajado. El fisio aplica una inversión forzada del tobillo con flexión plantar para evaluar el LPAA y calcaneofibular.',
     'Bostezo articular (inclinación del astrágalo) o dolor en el compartimento lateral. Indica lesión del ligamento calcáneo-fibular (LCF).',
     'Sin bostezo ni dolor. LCF íntegro.',
     'LR+ 6, LR- 0.05. Si cajón anterior + tilt talar positivos → lesión combinada LPAA + LCF. Indica esguince de mayor grado.',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('compresion_tobillo','Test de Compresión (Sindesmosis)',null,
+  tc.appendChild(mkTest('compresion_tobillo','Test de Compresión (Sindesmosis)',null,
     'Decúbito supino. El fisio comprime tibia y peroné entre sí con las palmas ahuecadas sobre los maléolos, a la altura de la sindesmosis.',
     'Dolor en la zona intermaleolar o en la sindesmosis. Indica lesión de la sindesmosis tibioperonea (esguince de alto grado).',
     'Sin dolor con la compresión.',
     'Un esguince de sindesmosis requiere un tiempo de recuperación mucho mayor (2–4 veces más) que un esguince lateral. Importante identificarlo precozmente.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('molloy','Test de Pinzamiento de Molloy',null,
+  tc.appendChild(mkTest('molloy','Test de Pinzamiento de Molloy',null,
     'Usuario sentado. El fisio toma el calcáneo y el antepié y realiza flexión plantar. Presiona con el pulgar sobre el tobillo antero-lateral. Mueve el pie de plantiflexión a dorsiflexión manteniendo la presión.',
     'El dolor con presión del pulgar es mayor en dorsiflexión que en flexión plantar. Indica pinzamiento antero-lateral de tobillo.',
     'Sin diferencia de dolor entre posiciones.',
@@ -1682,7 +1936,7 @@ function tS4(w){
     'alta'));
 
   const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Tendón de Aquiles';tc.appendChild(s2);
-  tc.appendChild(mkTestOrtopedico('thomson_tob','Test de Thomson (rotura Aquiles)',null,
+  tc.appendChild(mkTest('thomson_tob','Test de Thomson (rotura Aquiles)',null,
     'Decúbito prono, rodillas extendidas, pies fuera de la camilla. El fisio comprime el tercio medio de la pantorrilla entre pulgar y demás dedos en dirección cefálica.',
     'Ausencia de flexión plantar refleja. Indica rotura completa del tendón de Aquiles.',
     'Flexión plantar presente al comprimir la pantorrilla. Tendón íntegro.',
@@ -1690,13 +1944,13 @@ function tS4(w){
     'alta'));
 
   const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Túnel del tarso / neuropatía';tc.appendChild(s3);
-  tc.appendChild(mkTestOrtopedico('tinel_tarso','Test de Tinel (Túnel del Tarso)',null,
+  tc.appendChild(mkTest('tinel_tarso','Test de Tinel (Túnel del Tarso)',null,
     'El fisio aplica golpecitos con los dedos sobre el nervio tibial en la cara posteromedial del tobillo (túnel del tarso).',
     'Parestesias (hormigueo, corriente eléctrica) que se irradian hacia la planta del pie o los dedos. Indica síndrome del túnel del tarso.',
     'Sin parestesias.',
     'Valorar cuando hay dolor en la planta del pie con componente neuropático (hormigueo, ardor). Puede coexistir con fascitis plantar.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('dorsiflex_eversion','Test de Dorsiflexión y Eversión',null,
+  tc.appendChild(mkTest('dorsiflex_eversion','Test de Dorsiflexión y Eversión',null,
     'Decúbito supino. El fisio realiza dorsiflexión + eversión del tobillo combinada con extensión de las articulaciones metatarsofalángicas durante 20 segundos.',
     'Reproducción de parestesias o dolor en la planta del pie. Indica tensión del nervio tibial en el túnel del tarso.',
     'Sin síntomas durante la maniobra.',
@@ -1704,7 +1958,7 @@ function tS4(w){
     'media'));
 
   const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Trombosis venosa profunda (TVP)';tc.appendChild(s4);
-  tc.appendChild(mkTestOrtopedico('homan','Signo de Homan',null,
+  tc.appendChild(mkTest('homan','Signo de Homan',null,
     'Decúbito supino con rodilla extendida. El fisio aplica dorsiflexión pasiva forzada del tobillo mientras palpa la pantorrilla.',
     'Dolor en la pantorrilla (gastrocnemios) o en la región poplítea durante la dorsiflexión. Signo de alerta para tromboflebitis venosa profunda.',
     'Sin dolor en pantorrilla ni región poplítea.',
@@ -1718,6 +1972,7 @@ function tS4(w){
   ta.oninput=()=>{D.obs_tobillo=ta.value;};
   obs.appendChild(ta);w.appendChild(obs);
 
+  mkFiltroSospecha('tobillo', tc);
   w.appendChild(tc);
   mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
 }
@@ -1737,25 +1992,25 @@ function caS4(w){
   tc.innerHTML='<div class="ct">Tests ortopédicos — Cadera y pelvis</div>';
 
   const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Articulación de la cadera / labrum';tc.appendChild(s1);
-  tc.appendChild(mkTestOrtopedico('fadir','Test FADIR (Impingement FAI)',null,
+  tc.appendChild(mkTest('fadir','Test FADIR (Impingement FAI)',null,
     'Decúbito supino. El fisio lleva la cadera a 90° de flexión + aducción + rotación interna máxima (FADIR). Forzar el movimiento para reproducir los síntomas.',
     'Dolor inguinal o en la región anterior de la cadera. Indica impingement femoroacetabular (FAI) o lesión del labrum.',
     'Sin dolor inguinal durante la maniobra.',
     'Test más sensible para FAI. Combinarlo con FABER y el Test de Scour para mayor precisión diagnóstica. Dolor posterior → posible componente sacroilíaco.',
     'alta'));
-  tc.appendChild(mkTestOrtopedico('faber','Test FABER / Patrick (Sacroilíaca y cadera)',null,
+  tc.appendChild(mkTest('faber','Test FABER / Patrick (Sacroilíaca y cadera)',null,
     'Decúbito supino. El fisio coloca el pie ipsilateral sobre la rodilla contralateral (posición en 4). Estabiliza la EIAS contraria y aplica presión sobre la rodilla flexionada hacia abajo.',
     'Dolor inguinal o en la ingle → lesión articular de cadera. Dolor posterior en glúteo/sacro → disfunción sacroilíaca.',
     'Sin dolor en ninguna de las zonas.',
     'LR+ 1.37. Útil para diferenciar origen articular de cadera vs sacroilíaco. También positivo en contractura del psoas (limitación del rango sin dolor).',
     'media'));
-  tc.appendChild(mkTestOrtopedico('mccarthy','Test de McCarthy (Labrum)',null,
+  tc.appendChild(mkTest('mccarthy','Test de McCarthy (Labrum)',null,
     'Decúbito supino. Para labrum anterior: el fisio lleva la cadera a flexión máxima + rotación interna + aducción y luego extiende. Para labrum posterior: flexión + rotación externa y luego extensión.',
     'Reproducción de molestia o dolor en la ingle durante la maniobra. Indica lesión del labrum acetabular.',
     'Sin dolor en ninguna de las maniobras.',
     'Combinar con FADIR para aumentar la probabilidad diagnóstica de lesión de labrum. Si ambos positivos → alta sospecha de lesión labral.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('scour','Test de Scour (Osteoartritis / Labrum)',null,
+  tc.appendChild(mkTest('scour','Test de Scour (Osteoartritis / Labrum)',null,
     'Decúbito supino. El fisio flexiona cadera y rodilla >90° en asa y comprime axialmente mientras rota el miembro hacia ambos lados.',
     'Dolor durante la compresión + rotación. Indica osteoartritis de cadera o lesión de labrum.',
     'Sin dolor con compresión + rotación.',
@@ -1763,7 +2018,7 @@ function caS4(w){
     'media'));
 
   const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Músculo piriforme / síndrome piriforme';tc.appendChild(s2);
-  tc.appendChild(mkTestOrtopedico('fair','Test FAIR (Piriforme)',null,
+  tc.appendChild(mkTest('fair','Test FAIR (Piriforme)',null,
     'Decúbito lateral. El miembro superior en flexión 60° de cadera y 100° de rodilla, por fuera de la camilla. El fisio estabiliza la cadera y aplica presión vertical descendente sobre la rodilla.',
     'Dolor en el cuerpo del músculo piriforme o glúteo profundo. Indica contractura o síndrome del piriforme.',
     'Sin dolor en la zona del piriforme.',
@@ -1771,7 +2026,7 @@ function caS4(w){
     'alta'));
 
   const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Pelvis / función muscular';tc.appendChild(s3);
-  tc.appendChild(mkTestOrtopedico('trendelenburg','Test de Trendelenburg',null,
+  tc.appendChild(mkTest('trendelenburg','Test de Trendelenburg',null,
     'Usuario en bípedo. Se le pide que levante una pierna con flexión de cadera y rodilla. El fisio observa desde atrás si la pelvis contralateral se eleva o cae.',
     'La pelvis cae hacia el lado elevado (positivo). Indica debilidad del glúteo medio del lado de apoyo. Patrón de marcha compensado (marcha de Trendelenburg).',
     'La pelvis se mantiene horizontal o se eleva ligeramente al lado no apoyado. Glúteo medio funcional.',
@@ -1779,19 +2034,19 @@ function caS4(w){
     'alta'));
 
   const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Longitud muscular / contracturas';tc.appendChild(s4);
-  tc.appendChild(mkTestOrtopedico('thomas_test','Test de Thomas (Psoas-ilíaco)',null,
+  tc.appendChild(mkTest('thomas_test','Test de Thomas (Psoas-ilíaco)',null,
     'Usuario sentado al borde de la camilla. Abraza con ambas manos la rodilla contralateral llevándola al máximo de flexión e inclina el tronco atrás. La pierna a valorar cae libremente.',
     'La pierna evaluada no cae bajo la horizontal → contractura del psoas. Si la rodilla tiende a extenderse → contractura del recto femoral.',
     'La pierna cae bajo la horizontal con la rodilla flexionada. Psoas y recto femoral con longitud normal.',
     'Diferenciar: si solo se eleva el muslo → psoas corto. Si el muslo cae pero la rodilla se extiende → recto anterior corto. Combinarlo con el test de Ely.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('ober_test','Test de Ober (Banda Iliotibial)',null,
+  tc.appendChild(mkTest('ober_test','Test de Ober (Banda Iliotibial)',null,
     'Decúbito lateral sobre el lado sano. El fisio extiende la cadera superior (misma línea que la pelvis) y la suelta desde esa posición. Observa si puede aducirse libremente.',
     'La pierna no cae en aducción (queda suspendida) o cae pero con un movimiento de flexión-rotación. Indica acortamiento de la banda iliotibial.',
     'La pierna cae libremente en aducción. Banda IT con longitud normal.',
     'Fundamental en síndrome de fricción de banda IT y en tendinopatía glútea (la banda IT comprime el tendón glúteo medio en el trocánter). Incluir en valoración de corredores.',
     'media'));
-  tc.appendChild(mkTestOrtopedico('craig_test','Test de Craig (Anteversión femoral)',null,
+  tc.appendChild(mkTest('craig_test','Test de Craig (Anteversión femoral)',null,
     'Decúbito prono, rodilla a 90° de flexión. El fisio palpa con una mano el trocánter mayor. Con la otra rota la cadera (interna/externa) hasta colocar el trocánter paralelo al plano de la camilla. Mide el ángulo entre el eje de la pierna y la vertical.',
     'Ángulo >15°. Indica anteversión femoral aumentada. Relacionado con tendencia al valgo de rodilla y colapso medial en corredores.',
     'Ángulo entre 10° y 15°. Anteversión femoral normal.',
@@ -1805,6 +2060,7 @@ function caS4(w){
   ta.oninput=()=>{D.obs_cadera=ta.value;};
   obs.appendChild(ta);w.appendChild(obs);
 
+  mkFiltroSospecha('cadera', tc);
   w.appendChild(tc);
   mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
 }
@@ -1824,13 +2080,13 @@ function coS4(w){
   tc.innerHTML='<div class="ct">Tests ortopédicos — Codo y antebrazo</div>';
 
   const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Epicondilalgia lateral (codo de tenista)';tc.appendChild(s1);
-  tc.appendChild(mkTestOrtopedico('tennis_elbow','Test del Codo de Tenista (Tennis Elbow Test)',null,
+  tc.appendChild(mkTest('tennis_elbow','Test del Codo de Tenista (Tennis Elbow Test)',null,
     'Usuario de pie, codo extendido, antebrazo en pronación. El fisio aplica resistencia contra la extensión isométrica de la muñeca mientras palpa el epicóndilo lateral.',
     'Reproducción de dolor en la cara lateral del codo (epicóndilo). Indica lesión contráctil de los tendones extensores de la muñeca.',
     'Sin dolor en el epicóndilo durante la extensión resistida de muñeca.',
     'Combinar con Test de Mill. La contracción isométrica reproduce el dolor del tendón del extensor común (ECRB principalmente).',
     'media'));
-  tc.appendChild(mkTestOrtopedico('mill_test','Test de Mill (Epicondilalgia lateral)',null,
+  tc.appendChild(mkTest('mill_test','Test de Mill (Epicondilalgia lateral)',null,
     'Usuario sedente o bípedo. Hombro abducido ~70°, codo a 90°, antebrazo en pronación, muñeca en flexión máxima. El fisio extiende lentamente el codo manteniendo esa posición.',
     'Reproducción de dolor en los tendones extensores o en el epicóndilo lateral durante la extensión del codo. Indica epicondilalgia lateral.',
     'Sin dolor durante la extensión del codo.',
@@ -1838,7 +2094,7 @@ function coS4(w){
     'media'));
 
   const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Epicondilalgia medial (codo de golfista)';tc.appendChild(s2);
-  tc.appendChild(mkTestOrtopedico('golfer_elbow','Test del Codo de Golfista (Golfer&rsquo;s Elbow Test)',null,
+  tc.appendChild(mkTest('golfer_elbow','Test del Codo de Golfista (Golfer&rsquo;s Elbow Test)',null,
     'Usuario sedente o de pie, codo extendido, antebrazo en pronación. El fisio aplica resistencia contra la flexión isométrica de la muñeca. Palpa la epitróclea.',
     'Reproducción de dolor en la cara medial del codo (epitróclea). Indica lesión de los tendones flexores de la muñeca (epitrocleitis).',
     'Sin dolor en la epitróclea durante la flexión resistida de muñeca.',
@@ -1846,7 +2102,7 @@ function coS4(w){
     'media'));
 
   const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Neuropatía cubital / túnel cubital';tc.appendChild(s3);
-  tc.appendChild(mkTestOrtopedico('tinel_codo','Signo de Tinel (Codo)',null,
+  tc.appendChild(mkTest('tinel_codo','Signo de Tinel (Codo)',null,
     'El fisio aplica 4–6 golpecitos suaves con los dedos sobre el nervio cubital en la gotera epitrócleo-olecraneana (túnel cubital).',
     'Sensación de hormigueo (corriente eléctrica) que se irradia por el recorrido del nervio cubital hacia dedos 4° y 5°. Indica síndrome del túnel cubital (neuropatía cubital).',
     'Sin parestesias al golpetear el túnel cubital.',
@@ -1854,7 +2110,7 @@ function coS4(w){
     'alta'));
 
   const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Ligamento colateral medial';tc.appendChild(s4);
-  tc.appendChild(mkTestOrtopedico('valgo_stress','Test de Estrés en Valgo (Ligamento Colateral Medial)',null,
+  tc.appendChild(mkTest('valgo_stress','Test de Estrés en Valgo (Ligamento Colateral Medial)',null,
     'Hombro abducido 90° con rotación externa máxima. El fisio flexiona el codo al máximo y aplica fuerza en valgo. Luego extiende rápidamente el codo hasta 30° de flexión.',
     'Dolor máximo en la región medial del codo entre 120° y 70° de flexión. Indica lesión del ligamento colateral medial.',
     'Sin dolor durante el movimiento en valgo.',
@@ -1862,7 +2118,7 @@ function coS4(w){
     'alta'));
 
   const s5=ce('p','');s5.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5.textContent='Tendón del bíceps (codo)';tc.appendChild(s5);
-  tc.appendChild(mkTestOrtopedico('yergason_codo','Test de Yergason',null,
+  tc.appendChild(mkTest('yergason_codo','Test de Yergason',null,
     'Usuario sedente con el codo a 90° de flexión. Se le pide que supine el antebrazo contra la resistencia del fisio, que palpa simultáneamente el tendón del bíceps distal.',
     'Dolor en la cara anterior del codo o en el tendón distal del bíceps. Indica tendinopatía o lesión del bíceps distal.',
     'Sin dolor durante la supinación resistida.',
@@ -1876,6 +2132,7 @@ function coS4(w){
   ta.oninput=()=>{D.obs_codo=ta.value;};
   obs.appendChild(ta);w.appendChild(obs);
 
+  mkFiltroSospecha('codo', tc);
   w.appendChild(tc);
   mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
 }
