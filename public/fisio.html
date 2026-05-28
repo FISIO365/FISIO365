@@ -3737,7 +3737,7 @@ function renderFormacion(wrap, ruta){
     {t:'02 · Confirmación de cita',sub:'El mensaje de recordatorio',
      cards:[
       {img:WIKI_IMGS[1],ti:'02 · Confirmación de cita'},
-      {ti:'Nuestro mensaje de recordatorio',icon:'📩',body:`Enviamos un recordatorio <strong>24h antes de la cita</strong>. Simple, directo y sin opciones que inviten a cancelar o cambiar.<br><br><div style="background:var(--lila-light);border-left:3px solid var(--lila);border-radius:8px;padding:12px 16px;margin-top:10px;font-size:13px;line-height:1.7">Hola [nombre], recordatorio 🗓<br>Mañana tienes cita a las [hora] en FISIO365.<br>¡Te esperamos!</div>`},
+      {ti:'Nuestro mensaje de recordatorio',icon:'📩',body:`Enviamos el recordatorio <strong>el día anterior</strong> — excepto los lunes, que se envía el viernes. Simple, directo y sin opciones que inviten a cancelar o cambiar.<br><br><b>De martes a sábado — se envía el día anterior:</b><div style="background:var(--lila-light);border-left:3px solid var(--lila);border-radius:8px;padding:12px 16px;margin-top:10px;margin-bottom:12px;font-size:13px;line-height:2">Hola [nombre],<br><br>Recordatorio 📝<br><br>Mañana tienes cita a las [hora] en FISIO365<br><br>Nos vemos 😊</div><b>Para los lunes — se envía el viernes:</b><div style="background:var(--lila-light);border-left:3px solid var(--lila);border-radius:8px;padding:12px 16px;margin-top:10px;font-size:13px;line-height:2">Hola [nombre],<br><br>Recordatorio 📝<br><br>El lunes tienes cita a las [hora] en FISIO365<br><br>Nos vemos 😊</div>`},
       {ti:'Por qué tan sencillo',icon:'💡',body:`Cuanta menos información innecesaria, menos fricción. <strong>No incluimos enlace para cancelar ni preguntas de confirmación</strong> — cada opción que damos es una invitación a usarla.`},
       {ti:'La primera vez',icon:'🆕',body:`Si es la primera visita, el mensaje de confirmación inmediato tras la reserva añade la dirección de la clínica y una indicación breve: <em>«Trae ropa cómoda e informes previos si tienes.»</em>`},
       {ti:'Cancelaciones',icon:'📋',body:`Simplemente pedimos que <strong>avisen con al menos 24h de antelación</strong> si necesitan cancelar o cambiar la cita. Lo firmaron en el consentimiento y la mayoría lo sabe y lo respeta.<br><br>Si alguien pregunta, con total naturalidad: «Solo pedimos que avises con un día de antelación, nada más.»`}
@@ -3824,11 +3824,10 @@ function renderFormacion(wrap, ruta){
       {img:WIKI_IMGS[8],ti:'09 · Explicación al paciente'},
       {ti:'Cómo comunicar el diagnóstico',icon:'💬',body:`Explica qué has encontrado en términos que el paciente entienda. <strong>Usa imágenes, modelos anatómicos y recursos visuales</strong> — una imagen vale más que mil palabras. Si usas un término técnico, explícalo.<br><br>«Tienes una tendinopatía del supraespinoso — mira aquí, este es el tendón que está irritado.»`},
       {ti:'El plan de tratamiento',icon:'🗺',body:`Explica qué vas a hacer y por qué: cuántas sesiones estimas, con qué frecuencia, qué puede esperar sentir.<br><br><strong>El paciente que entiende su proceso cumple mejor.</strong> Gestiona expectativas con honestidad.`},
-      {ti:'La app de ejercicios de FISIO365',icon:'📲',body:`Si has asignado un programa de ejercicios al paciente a través de la <strong>app interna de FISIO365</strong>, indícaselo en este momento: «Te he preparado unos ejercicios en nuestra app — en recepción te ayudarán a descargártela y te explicarán cómo funciona.»`}
+
      ],
      qs:[
-      {q:'¿Qué recursos debes usar al explicar el diagnóstico?',opts:['Solo palabras técnicas para transmitir profesionalidad','Imágenes, modelos anatómicos y lenguaje sencillo','Solo el informe escrito'],ok:1,fb:['Los tecnicismos sin imagen generan confusión y ansiedad.','¡Correcto! Lo visual hace que el paciente entienda y confíe más.','El informe escrito es un complemento, no el principal recurso.']},
-      {q:'¿Cuándo le indicas al paciente que tiene ejercicios en la app?',opts:['Al final de la sesión, cuando ya tiene el móvil en la mano','En el paso 9, al explicar el plan de tratamiento','En recepción, que se lo expliquen ellos'],ok:1,fb:['Mejor anticiparlo en consulta para que llegue a recepción ya informado.','¡Correcto! El fisio lo presenta y recepción lo gestiona en el cierre.','Recepción gestiona la descarga — pero el fisio lo presenta primero.']}
+      {q:'¿Qué recursos debes usar al explicar el diagnóstico?',opts:['Solo palabras técnicas para transmitir profesionalidad','Imágenes, modelos anatómicos y lenguaje sencillo','Solo el informe escrito'],ok:1,fb:['Los tecnicismos sin imagen generan confusión y ansiedad.','¡Correcto! Lo visual hace que el paciente entienda y confíe más.','El informe escrito es un complemento, no el principal recurso.']}
      ]
     },
     {t:'10 · Tratamiento',sub:'La primera sesión terapéutica',
@@ -3850,6 +3849,7 @@ function renderFormacion(wrap, ruta){
       {ti:'Espacio para preguntas',icon:'💬',body:`Antes de levantarse, pregunta siempre: <strong>«¿Tienes alguna pregunta o hay algo que quieras decirme?»</strong><br><br>Resuelve cualquier duda que tenga y asegúrate de que se siente bien antes de terminar. El paciente debe irse sin nada pendiente en la cabeza.`},
       {ti:'Cómo cerrar la sesión',icon:'✅',body:`Haz un resumen breve de lo que has hecho y lo que has encontrado. Anticipa qué puede notar las próximas horas (molestia post-tratamiento normal) para que no se asuste.<br><br>Refuerza: «Has aguantado muy bien la sesión.»`},
       {ti:'Instrucciones para casa',icon:'🏠',body:`1-2 cosas concretas y fáciles de recordar:<br>• Qué puede y qué no puede hacer hoy<br>• Si debe aplicar frío o calor<br>• Los ejercicios de la app (si los tiene)<br><br><strong>Menos es más.</strong>`},
+      {ti:'App de ejercicios',icon:'📲',body:`Si has asignado un programa de ejercicios al paciente, indícaselo antes de salir de la sala: <strong>«Te he puesto unos ejercicios en nuestra app — en recepción te explican cómo descargártela y cómo funciona.»</strong><br><br>Así el paciente llega a recepción ya avisado y el proceso es fluido.`},
       {ti:'Hacia recepción',icon:'🔄',body:`Cierra con claridad: <strong>«Ahora vamos a recepción para coordinar los siguientes pasos.»</strong><br><br>El fisio acompaña al paciente — van juntos, no se le dice «pasa por recepción».`}
      ],
      qs:[
@@ -3885,14 +3885,15 @@ function renderFormacion(wrap, ruta){
       {img:WIKI_IMGS[13],ti:'14 · Transferencia clínica'},
       {ti:'El momento clave',icon:'🔑',body:`El fisio informa a recepción del <strong>plan de tratamiento con todos los detalles</strong> — delante del paciente. El paciente ya lo conoce (el fisio se lo ha explicado en consulta), así que <strong>no le pilla de nuevas</strong>. Este momento refuerza la coherencia y la confianza.`},
       {ti:'Qué comunica el fisio',icon:'📋',body:`• Número de sesiones necesarias y frecuencia<br>• Si tiene programa de ejercicios en la app<br>• Cualquier indicación especial para recepción<br><br>Claro, concreto y delante del paciente.`},
-      {ti:'La app de ejercicios',icon:'📲',body:`Si el fisio ha asignado un programa de ejercicios en la app de FISIO365, <strong>lo indica a recepción en este momento</strong>. Recepción ayuda al paciente a descargar la app, le da su usuario y contraseña y le explica cómo funciona.<br><br>También es el momento en que recepción <strong>entrega el informe de la anamnesis</strong> al paciente.`}
+      {ti:'La app de ejercicios',icon:'📲',body:`Si el fisio ha asignado un programa de ejercicios en la app de FISIO365, <strong>lo indica a recepción en este momento</strong>. Recepción ayuda al paciente a descargar la app, le da su usuario y contraseña y le explica cómo funciona.<br><br>También es el momento en que recepción <strong>entrega el informe de la anamnesis</strong> al paciente.`},
+      {ti:'¿Y ahora qué?',icon:'🔀',body:`A partir de aquí, la conversación va en una dirección u otra según lo que haya indicado el fisio. Cada situación tiene su propio protocolo — los verás en los módulos siguientes:<br><br>• <b>Opción 1:</b> El paciente no necesita más sesiones<br>• <b>Opción 2:</b> Necesita pocas sesiones (menos de 5)<br>• <b>Opción 3:</b> Necesita varias sesiones — pack<br>• <b>Opción 4:</b> Viene de mantenimiento<br>• <b>Opción 5:</b> Pendiente de valoración externa<br><br>Lo importante: <strong>recepción nunca improvisa</strong> — sigue el plan que ha indicado el fisio.`}
      ],
      qs:[
       {q:'¿Por qué el fisio informa el plan a recepción delante del paciente?',opts:['Por comodidad — así lo oye todo el mundo','Porque el paciente ya conoce el plan y refuerza la coherencia y confianza del equipo','Porque recepción no lee Airtable'],ok:1,fb:['No es comodidad — es un gesto deliberado de transparencia.','¡Correcto! El paciente lo confirma una vez más y ve que el equipo está coordinado.','Recepción sí usa Airtable — pero la comunicación directa añade contexto.']},
       {q:'Si el fisio ha asignado ejercicios en la app, ¿qué hace recepción?',opts:['Nada — el paciente ya lo sabe por el fisio','Ayuda al paciente a descargar la app, le da usuario y contraseña y explica cómo funciona','Le manda un email con el enlace'],ok:1,fb:['El fisio presenta la app — recepción gestiona la descarga y explica el uso.','¡Correcto! Recepción cierra el proceso de onboarding de la app.','El email no es suficiente — hay que acompañar al paciente en el proceso.']}
      ]
     },
-    {t:'14A · Sesión única',sub:'El paciente no necesita más sesiones',
+    {t:'Opción 1 · Sesión única',sub:'El paciente no necesita más sesiones',
      cards:[
       
       {ti:'La situación',icon:'✅',body:`El paciente ha respondido bien y no necesita más sesiones por ahora. <strong>Objetivo: que se vaya con la puerta abierta</strong> y, si es posible, con una sesión de mantenimiento agendada.`},
@@ -3903,7 +3904,7 @@ function renderFormacion(wrap, ruta){
       {q:'Un paciente que solo necesitó una sesión, ¿qué le proponemos?',opts:['Nada — ya volverá si nos necesita','Una sesión de mantenimiento preventiva','Un pack por si acaso'],ok:1,fb:['No proponerlo es perder una oportunidad de cuidar al paciente.','¡Correcto! El mantenimiento preventivo es el mejor servicio que podemos ofrecer.','Un pack no está justificado si no lo necesita.']}
      ]
     },
-    {t:'14B · Necesita menos de 5 sesiones',sub:'Tratamiento corto',
+    {t:'Opción 2 · Menos de 5 sesiones',sub:'Tratamiento corto',
      cards:[
       
       {ti:'La situación',icon:'📅',body:`El fisio ha indicado un número concreto de sesiones. <strong>Objetivo: agendar todas ahora</strong> y, si es posible, dejarlas pagadas.`},
@@ -3913,7 +3914,7 @@ function renderFormacion(wrap, ruta){
       {q:'¿Cuál es el objetivo cuando el fisio indica pocas sesiones?',opts:['Decírselo y que él llame cuando quiera','Agendar todas las sesiones ahora y ofrecer pago anticipado','Solo agendar la siguiente'],ok:1,fb:['Si no agendamos ahora, muchos pacientes no vuelven.','¡Correcto! Agendar todo de una y facilitar el pago.','Agendar solo la siguiente deja el resto en el aire.']}
      ]
     },
-    {t:'14C · Necesita varias sesiones',sub:'Pack de sesiones',
+    {t:'Opción 3 · Pack de sesiones',sub:'El paciente necesita 5 o más sesiones',
      cards:[
       
       {ti:'La situación',icon:'📦',body:`El paciente necesita tratamiento continuado. <strong>Objetivo: que contrate el pack</strong>, deje todas las citas agendadas y las pague.`},
@@ -3925,7 +3926,7 @@ function renderFormacion(wrap, ruta){
       {q:'¿Por qué el pack es la mejor opción para 5+ sesiones?',opts:['Porque nos conviene','Porque el paciente ahorra dinero y tiene todos los huecos reservados','Porque es obligatorio'],ok:1,fb:['El pack también beneficia al paciente — eso es lo que comunicamos.','¡Correcto! Ahorro + comodidad de tenerlo todo organizado.','No es obligatorio — es la opción más ventajosa.']}
      ]
     },
-    {t:'14D · Mantenimiento',sub:'Paciente que sigue viniendo',
+    {t:'Opción 4 · Mantenimiento',sub:'Paciente que sigue viniendo periódicamente',
      cards:[
       
       {ti:'La situación',icon:'🔄',body:`El paciente está bien y quiere seguir viniendo periódicamente. <strong>Objetivo: agendar la próxima sesión y ofrecerle dejarla pagada.</strong>`},
@@ -3936,7 +3937,7 @@ function renderFormacion(wrap, ruta){
       {q:'¿Cuál es el objetivo con un paciente de mantenimiento?',opts:['Decirle que nos llame cuando quiera','Agendar ya la próxima y ofrecer dejarla pagada','Preguntarle si quiere volver'],ok:1,fb:['Dejar la iniciativa al paciente hace que muchos no vuelvan.','¡Correcto! Facilitar la continuidad es nuestra responsabilidad.','Preguntar también deja la iniciativa al paciente.']}
      ]
     },
-    {t:'14E · Pendiente de valoración',sub:'Necesita ir a otro especialista',
+    {t:'Opción 5 · Pendiente de valoración',sub:'Necesita ir a otro especialista primero',
      cards:[
       
       {ti:'La situación',icon:'🏥',body:`El paciente tiene que ir a otro especialista o hacerse pruebas. <strong>Objetivo: quedar en un día concreto para hacer seguimiento</strong> — que no quede en el aire.`},
