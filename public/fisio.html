@@ -757,10 +757,10 @@ function filtrarEj(n){
 function getEjs(){
   return [...document.querySelectorAll('.ejc')].map(card=>{
     const n=card.id.replace('ej','');
-    const id=$(`esel${n}`)?.value;
+    const id=$(`esel${n}`)?.value||'';
     const nombre=$(`ebusca${n}`)?.value?.trim();
-    if(!nombre||!id)return null;
-    return{nombre,series:+$(`es${n}`)?.value||0,reps:+$(`er${n}`)?.value||0,duracion:+$(`ed${n}`)?.value||0,descanso:+$(`edes${n}`)?.value||0,zona:$(`ez${n}`)?.value?.trim()||'',descripcion:$(`edesc${n}`)?.value?.trim()||'',youtubeUrl:biblio.find(e=>e.id===id)?.youtubeUrl||'',imagen:biblio.find(e=>e.id===id)?.imagen||''};
+    if(!nombre)return null;
+    return{nombre,series:+$(`es${n}`)?.value||0,reps:+$(`er${n}`)?.value||0,duracion:+$(`ed${n}`)?.value||0,descanso:+$(`edes${n}`)?.value||0,zona:$(`ez${n}`)?.value?.trim()||'',descripcion:$(`edesc${n}`)?.value?.trim()||'',youtubeUrl:(biblio.find(e=>e.id===id)||biblio.find(e=>e.nombre===nombre))?.youtubeUrl||'',imagen:(biblio.find(e=>e.id===id)||biblio.find(e=>e.nombre===nombre))?.imagen||''};
   }).filter(Boolean);
 }
 
@@ -796,7 +796,11 @@ async function cargarPrograma(pacId){
         $('mensajeFisio').value = d.mensaje;
       }
 
-      // Load each ejercicio
+      // Load each ejercicio — start ejC from current max to avoid ID collisions
+      // Find existing max ejC in DOM first
+      const existingIds = [...document.querySelectorAll('.ejc')].map(c=>parseInt(c.id.replace('ej','')));
+      if(existingIds.length) ejC = Math.max(...existingIds);
+
       for(const ej of d.ejercicios){
         ejC++; const n = ejC;
         const div = ce('div','ejc'); div.id = `ej${n}`;
@@ -807,7 +811,7 @@ async function cargarPrograma(pacId){
             oninput="acFilter(${n})" onfocus="acOpen(${n})" onblur="acBlur(${n})"
             value="${(ej.nombre||'').replace(/"/g,'&quot;')}">
           <div class="ej-ac-drop" id="acdrop${n}"></div>
-          <input type="hidden" id="esel${n}" value="${ej.id||''}">
+          <input type="hidden" id="esel${n}" value="${biblio.find(e=>e.nombre===ej.nombre)?.id||ej.id||'__loaded__'}">
         </div>
         <div class="ej-preview" id="eprev${n}" style="${ej.zona||ej.descripcion?'display:block':'display:none'}">
           <div class="ej-preview-zona" id="epzona${n}">${ej.zona||''}</div>
@@ -844,6 +848,8 @@ async function guardar(){
   if(!fisioSelId){toast('Selecciona el fisio que asigna',false);return;}
   if(!pacSelId){toast('Selecciona un paciente',false);return;}
   const ejs=getEjs();
+  console.log('getEjs result:', JSON.stringify(ejs));
+  console.log('All .ejc divs:', [...document.querySelectorAll('.ejc')].map(c=>({id:c.id,nombre:document.getElementById('ebusca'+c.id.replace('ej',''))?.value})));
   if(!ejs.length){toast('Añade y selecciona al menos un ejercicio',false);return;}
   const btn=$('btnG'); btn.disabled=true; btn.textContent='Guardando...';
   try{
