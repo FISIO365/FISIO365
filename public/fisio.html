@@ -933,6 +933,20 @@ function rS4(w){
     'El dolor a 30–40° es el ángulo donde la banda IT cruza el cóndilo femoral lateral. Frecuente en corredores. Valorar también la tensión de la banda con el test de Ober.',
     'media'));
 
+  const s5r=ce('p','');s5r.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5r.textContent='Tendinopatía rotuliana';tc.appendChild(s5r);
+  tc.appendChild(mkTest('mcconnell_rot','Test de McConnell (T. rotuliana / patelofemoral)',null,
+    'Usuario sentado con cadera en rotación externa. Fisio coloca la rodilla en diferentes ángulos (0°, 30°, 60°, 90°, 120°) y solicita contracciones isométricas de 10 segundos. Si hay dolor, corrige la rótula medialmente con los dedos y repite en el mismo arco.',
+    'Dolor durante la contracción que desaparece o reduce al corregir la rótula medialmente. Indica disfunción patelofemoral o condromalacia rotuliana.',
+    'Sin dolor en ningún arco, o dolor que no cambia al corregir la rótula.',
+    'Combinar con Signo de Clarke. Si el dolor cede con la corrección manual → indicación directa de taping rotuliano.',
+    'media'));
+  tc.appendChild(mkTest('glide_rot','Test Glide Rotuliano',null,
+    'Decúbito supino, rodilla extendida y cuádriceps relajado. El fisio desliza la rótula hacia lateral y luego hacia medial con los pulgares e índices. Compara amplitud y dolor en ambas direcciones.',
+    'Deslizamiento lateral excesivo (>3/4 del ancho rotuliano) o dolor durante el deslizamiento. Indica laxitud del retináculo medial o tensión del lateral.',
+    'Deslizamiento simétrico y sin dolor en ambas direcciones.',
+    'Si deslizamiento lateral excesivo + dolor → tensión del retináculo lateral. Frecuente en síndrome patelofemoral y tendinopatía rotuliana crónica.',
+    'media'));
+
   const obs=ce('div','card');obs.style.marginTop='12px';
   obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
   const ta=ce('textarea','');ta.placeholder='Anotaciones clínicas adicionales, hallazgos inusuales...';
@@ -1230,8 +1244,10 @@ const SOSPECHA_MAP = {
   inest_lat:     ['lcl'],
   mcmurray:      ['menisco_med','menisco_lat'],
   apley:         ['menisco_med','menisco_lat'],
-  signo_clarke:  ['patelofemoral'],
+  signo_clarke:  ['patelofemoral','tend_rotuliana'],
   noble:         ['banda_it','patelofemoral'],
+  mcconnell_rot: ['tend_rotuliana','patelofemoral'],
+  glide_rot:     ['tend_rotuliana','patelofemoral'],
   // HOMBRO
   hawk:          ['impingement'],
   emptycan:      ['impingement','rotura_manguito'],
@@ -1243,6 +1259,11 @@ const SOSPECHA_MAP = {
   hornblower:    ['rotura_manguito'],
   liftoff:       ['rotura_manguito'],
   aprehension:   ['inest_anterior'],
+  recolocacion:  ['inest_anterior'],
+  cajon_ant_hom: ['inest_anterior'],
+  surco_sign:    ['inest_posterior','capsulitis'],
+  aprehension_post: ['inest_posterior'],
+  hawkins_cap:   ['capsulitis'],
   obrien:        ['labrum_slap'],
   yergason:      ['biceps'],
   paxinos:       ['acromioclavicular'],
@@ -1831,6 +1852,40 @@ function hS4(w){
     'Sin dolor con la presión.',
     'Sensibilidad 50%, especificidad 79%, LR+ 1.58. Útil cuando hay sospecha de lesión acromioclavicular tras traumatismo directo en el hombro.',
     'media'));
+
+  const s_inest_post=ce('p','');s_inest_post.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s_inest_post.textContent='Inestabilidad posterior';tc.appendChild(s_inest_post);
+  tc.appendChild(mkTest('aprehension_post','Test de Aprehensión Posterior',null,
+    'Decúbito supino. El fisio flexiona el hombro hacia anterior y lo rota hacia interno. Aplica una fuerza posterior sobre el codo. También con el brazo en abducción a 90°. El fisio palpa la cabeza del húmero con una mano mientras la empuja hacia atrás.',
+    'Signos de aprehensión o alarma en el paciente, resistencia a la movilidad o chasquido metálico. Si la cabeza humeral se desplaza >50% hacia atrás → inestabilidad posterior.',
+    'Sin aprehensión ni desplazamiento posterior significativo.',
+    'Sensibilidad 99%, especificidad 19%, LR+ 25.0. Muy sensible. Si negativo → prácticamente descarta inestabilidad posterior.',
+    'alta'));
+  tc.appendChild(mkTest('surco_sign','Signo del Surco (Inestabilidad inferior / MDI)',null,
+    'Usuario sedente, brazo relajado al costado. El fisio toma el brazo por encima del codo y aplica una distracción suave hacia abajo. Observa el espacio entre el acromion y la cabeza del húmero.',
+    'Aparece un surco profundo (>2cm) entre el borde lateral del acromion y el húmero. La piel suprayacente se tensa. Indica laxitud glenohumeral inferior — posible inestabilidad multidireccional (MDI).',
+    'Sin surco visible. Estabilidad inferior conservada.',
+    'Especificidad 97%, LR+ 9. Si surco ≥2cm → muy predictivo de inestabilidad multidireccional. Valorar siempre en pacientes con historia de luxaciones repetidas o sensación de inestabilidad difusa.',
+    'alta'));
+  tc.appendChild(mkTest('cajon_ant_hom','Test de Cajón Anterior (Hombro)',null,
+    'Usuario supino con la articulación glenohumeral en el borde de la mesa. Fisio coloca el brazo en 60–80° de abducción, rotación neutra. Desplaza la cabeza humeral hacia anterior.',
+    'Dolor o reproducción de síntomas de inestabilidad anterior. Indica inestabilidad glenohumeral anterior.',
+    'Sin desplazamiento anterior significativo ni dolor.',
+    'Sensibilidad 53%, especificidad 85%, LR+ 3.6. Combinar con Test de Aprehensión anterior y Recolocación para mayor precisión.',
+    'media'));
+  tc.appendChild(mkTest('recolocacion','Test de Recolocación',null,
+    'Misma posición que el Test de Aprehensión. Con el brazo en 90° de abducción y rotación externa máxima, el fisio aplica una fuerza posteroanterior sobre la cabeza del húmero.',
+    'El dolor o la aprehensión del paciente disminuyen con la fuerza aplicada. Confirma inestabilidad glenohumeral anterior.',
+    'Sin cambio en los síntomas con la fuerza de recolocación.',
+    'Combinar siempre con el Test de Aprehensión anterior. Si aprehensión positiva + recolocación reduce síntomas → confirma inestabilidad anterior. LR+ útil en combinación.',
+    'media'));
+
+  const s_caps=ce('p','');s_caps.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s_caps.textContent='Capsulitis adhesiva';tc.appendChild(s_caps);
+  tc.appendChild(mkTest('hawkins_cap','Patrón capsular (Capsulitis)',null,
+    'Valoración de la movilidad pasiva en tres planos: rotación externa (RE), abducción (ABD) y rotación interna (RI). Evaluar en ese orden de restricción. Comparar siempre con el lado sano.',
+    'Limitación severa de RE + ABD + RI en ese orden proporcional (patrón capsular). Indica capsulitis adhesiva. En fase inflamatoria: dolor intenso antes del límite. En fase congelada: limitación sin tanto dolor.',
+    'Movilidad libre en los tres planos o limitación no proporcional al patrón capsular.',
+    'No es un test único sino un patrón exploratorio. RE limitada <30° + ABD <90° + RI <T12 → capsulitis establecida. Combinar con Test de Hawkins-Kennedy para descartar impingement asociado.',
+    'alta'));
 
   const obs=ce('div','card');obs.style.marginTop='12px';
   obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
