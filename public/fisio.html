@@ -54,9 +54,9 @@ body{font-family:var(--font);background:var(--cream);color:var(--black);min-heig
 .ej-ac-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:var(--font);background:var(--bg);color:var(--text);outline:none;transition:border .15s;}
 .ej-ac-input:focus{border-color:var(--lila);}
 .ej-ac-input.has-val{border-color:var(--lila);background:var(--lila-light);}
-.ej-ac-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg);border:1.5px solid var(--lila);border-radius:var(--r-sm);max-height:240px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.18);display:none;}
+.ej-ac-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--lila);border-radius:var(--r-sm);max-height:240px;overflow-y:auto;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.22);display:none;}
 .ej-ac-drop.open{display:block;}
-.ej-ac-item{padding:10px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text);transition:background .1s;}
+.ej-ac-item{padding:10px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text);background:#fff;transition:background .1s;}
 .ej-ac-item:last-child{border-bottom:none;}
 .ej-ac-item:hover,.ej-ac-item.selected{background:var(--lila-light);color:var(--lila);}
 .ej-ac-item strong{color:var(--lila);}
@@ -605,7 +605,7 @@ function renderProg(wrap){
   <div id="plistProg"></div>
   <div id="pacSelBox" style="display:none;margin-top:8px;padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--lila)"></div>`;
   wrap.appendChild(pc);
-  mkPacSearch('ps1','plistProg','pacSelBox',p=>{pacSelId=p.id;pacSelN=p.nombre;updProg();});
+  mkPacSearch('ps1','plistProg','pacSelBox',p=>{pacSelId=p.id;pacSelN=p.nombre;updProg();cargarPrograma(p.id);});
 
   // Ejercicios
   const ec=ce('div','card');
@@ -693,7 +693,8 @@ function acFilter(n){
 
 function acOpen(n){
   const q = $(`ebusca${n}`).value.trim().toLowerCase();
-  const results = biblio.filter(e => !q || e.nombre.toLowerCase().includes(q));
+  if(!q) return; // Don't open if empty
+  const results = biblio.filter(e => e.nombre.toLowerCase().includes(q));
   acRender(n, results, q);
   $(`acdrop${n}`).classList.add('open');
   acActiveN = n;
@@ -767,6 +768,76 @@ function updProg(){
   const ejs=getEjs(), res=$('res');
   if(res&&pacSelId&&ejs.length){res.style.display='block';res.textContent=`Se asignarán ${ejs.length} ejercicio${ejs.length>1?'s':''} a ${pacSelN}. El programa anterior se reemplazará.`;}
   else if(res) res.style.display='none';
+}
+
+async function cargarPrograma(pacId){
+  // Show loading indicator
+  const ejLista = $('ejLista');
+  if(!ejLista) return;
+  ejLista.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">⏳ Cargando programa actual...</div>';
+  // Remove existing ejercicio blocks
+  ejC = 0;
+
+  try{
+    const r = await fetch(`/api/pacientes?action=programa&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
+    const d = await r.json();
+
+    ejLista.innerHTML = '';
+
+    if(d.ok && d.ejercicios && d.ejercicios.length){
+      // Show info banner
+      const banner = ce('div','');
+      banner.style.cssText = 'padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);font-size:13px;color:var(--lila);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px';
+      banner.innerHTML = `<span>✏️</span><span>Este paciente ya tiene un programa con ${d.ejercicios.length} ejercicio${d.ejercicios.length>1?'s':''}. Puedes modificarlo y guardar.</span>`;
+      ejLista.appendChild(banner);
+
+      // Load message if exists
+      if(d.mensaje && $('mensajeFisio')){
+        $('mensajeFisio').value = d.mensaje;
+      }
+
+      // Load each ejercicio
+      for(const ej of d.ejercicios){
+        ejC++; const n = ejC;
+        const div = ce('div','ejc'); div.id = `ej${n}`;
+        div.innerHTML = `<div class="ejh"><span class="ejn">Ejercicio ${n}</span><button class="bdel" onclick="rmEj(${n})">×</button></div>
+        <div class="field"><label>Seleccionar ejercicio</label>
+        <div class="ej-ac-wrap" id="acwrap${n}">
+          <input type="text" class="ej-ac-input has-val" id="ebusca${n}" placeholder="Escribe para buscar ejercicio..." autocomplete="off"
+            oninput="acFilter(${n})" onfocus="acOpen(${n})" onblur="acBlur(${n})"
+            value="${(ej.nombre||'').replace(/"/g,'&quot;')}">
+          <div class="ej-ac-drop" id="acdrop${n}"></div>
+          <input type="hidden" id="esel${n}" value="${ej.id||''}">
+        </div>
+        <div class="ej-preview" id="eprev${n}" style="${ej.zona||ej.descripcion?'display:block':'display:none'}">
+          <div class="ej-preview-zona" id="epzona${n}">${ej.zona||''}</div>
+          <div class="ej-preview-desc" id="epdesc${n}">${ej.descripcion||''}</div>
+        </div></div>
+        <div class="g3">
+        <div class="field"><label>Series</label><input type="number" id="es${n}" value="${ej.series||3}" min="1"></div>
+        <div class="field"><label>Reps</label><input type="number" id="er${n}" value="${ej.reps||10}" min="0"></div>
+        <div class="field"><label>Duración (seg)</label><input type="number" id="ed${n}" value="${ej.duracion||0}" min="0"></div>
+        </div>
+        <div class="g2">
+        <div class="field"><label>Descanso (seg)</label><input type="number" id="edes${n}" value="${ej.descanso||30}" min="0"></div>
+        <div class="field"><label>Zona corporal</label><input type="text" id="ez${n}" value="${(ej.zona||'').replace(/"/g,'&quot;')}" placeholder="Lumbar, Rodilla..."></div>
+        </div>
+        <div class="field"><label>Indicaciones</label><input type="text" id="edesc${n}" value="${(ej.descripcion||'').replace(/"/g,'&quot;')}" placeholder="Mantén la espalda recta..."></div>`;
+        ejLista.appendChild(div);
+      }
+      updProg();
+    } else {
+      // No existing program - show empty state
+      ejLista.innerHTML = '';
+      const empty = ce('div','');
+      empty.style.cssText = 'padding:10px 14px;background:#f8f8f8;border-radius:var(--r-sm);font-size:13px;color:var(--muted);margin-bottom:10px';
+      empty.textContent = 'Este paciente no tiene programa asignado todavía.';
+      ejLista.appendChild(empty);
+    }
+  } catch(e){
+    ejLista.innerHTML = '';
+    console.warn('No se pudo cargar el programa:', e);
+  }
 }
 
 async function guardar(){
