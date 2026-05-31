@@ -3069,6 +3069,19 @@ const WIKI_RUTAS = [
     tipo: 'formacion'
   },
   {
+    id: 'airtable',
+    categoria: 'centro',
+    titulo: 'Airtable — Gestión de la agenda',
+    desc: 'Todo lo que necesitas saber para gestionar la agenda de la clínica',
+    etiqueta: 'Recepción',
+    info: `<strong>¿Qué aprenderás aquí?</strong><br><br>Airtable es la herramienta central de la clínica. Aquí gestionamos toda la agenda, los pacientes y el seguimiento de cada cita.<br><br>Este curso te explica paso a paso cómo usarlo correctamente — desde crear un paciente hasta gestionar ausencias — con ejemplos reales de nuestra agenda.`,
+    pasos: 9,
+    emoji: '',
+    imgs: [],
+    tits: [],
+    tipo: 'formacion'
+  },
+  {
     id: 'bomba',
     categoria: 'clinico',
     titulo: 'Bomba diamagnética · Nivel Básico',
@@ -3976,6 +3989,113 @@ function renderFormacion(wrap, ruta){
   ];
 
 
+
+  // ── MÓDULOS AIRTABLE ─────────────────────────────────────────────────────
+  const MODS_AIRTABLE = [
+    {t:'¿Qué es Airtable?',sub:'La agenda central de FISIO365',
+     cards:[
+      {ti:'Para qué usamos Airtable',icon:'🗄',body:`Airtable es <strong>el sistema central de la clínica</strong>. Todo pasa por aquí: las citas, los pacientes, el estado de cada sesión y el seguimiento. Si no está en Airtable, no existe.<br><br>Hay dos tablas principales que usarás cada día:<br>• <b>CITAS</b> — la agenda, con todas las sesiones programadas<br>• <b>PACIENTES</b> — el registro de cada paciente con sus datos y historial`},
+      {ti:'Cómo está conectado con la web',icon:'🌐',body:`La web de reservas de FISIO365 está conectada con Airtable en tiempo real. Cuando una cita pasa de <b>CITA LIBRE</b> a cualquier otro estado, desaparece automáticamente de la web.<br><br><strong>Cualquier cambio que hagas en Airtable afecta a lo que el paciente ve en la web.</strong>`},
+      {ti:'La regla de oro',icon:'⭐',body:`<strong>Airtable siempre actualizado.</strong> Si hay un cambio en una cita, se registra en el momento. Si hay una nota importante, se escribe ya. Nunca dejar cosas «para luego» — Airtable es la memoria de la clínica.`}
+     ],
+     qs:[
+      {q:'Un paciente reserva online y tú no ves nada cambiado en Airtable. ¿Qué ha pasado?',opts:['La reserva online no está conectada con Airtable','Nada — Airtable y la web van por separado','Algo ha fallado — la web y Airtable están conectados en tiempo real y deberías ver el cambio'],ok:2,fb:['Sí están conectados — cualquier reserva online aparece en Airtable.','Van completamente sincronizados — si no hay cambio, hay un problema.','¡Correcto! Si no ves el cambio en Airtable, hay que revisar.']}
+     ]
+    },
+    {t:'Crear un paciente nuevo',sub:'El primer paso antes de crear la cita',
+     cards:[
+      {ti:'Cuándo crear un paciente nuevo',icon:'➕',body:`Cuando un paciente pide cita y <strong>no existe todavía en Airtable</strong>, primero hay que crear su ficha en la tabla PACIENTES. Solo después se puede asignar a una cita.<br><br>Si ya existe, búscalo directamente — no crees duplicados.`},
+      {ti:'Campos obligatorios',icon:'📋',body:`Los campos más importantes al crear un paciente nuevo son:<br><br>• <b>FULL NAME</b> — nombre completo<br>• <b>SMS</b> — teléfono en formato correcto<br>• <b>HISTORIAL CLÍNICO</b> — motivo de consulta brevemente`},
+      {ti:'El formato del teléfono — muy importante',icon:'📱',body:`El teléfono se escribe <strong>sin +34 y sin espacios</strong>. Ejemplo correcto: <code>675435187</code><br><br>¿Por qué importa tanto? Cuando el paciente rellena el formulario en el iPad, el sistema detecta ese teléfono en Airtable y completa automáticamente el email, DNI y fecha de nacimiento. <strong>Si el teléfono está mal escrito, la automatización no funciona.</strong>`},
+      {ti:'El historial clínico',icon:'🏥',body:`En el campo HISTORIAL CLÍNICO escribe brevemente el motivo de consulta: «dolor de rodilla», «cervicales», «post-operatorio tobillo»...<br><br>Esto ayuda al fisio a tener una primera idea antes de ver al paciente. Después de la anamnesis, el fisio añade toda la información clínica en ese mismo campo.`}
+     ],
+     qs:[
+      {q:'Un paciente nuevo llama y su teléfono es 612 345 678. ¿Cómo lo escribes en Airtable?',opts:['612 345 678','612345678','+34612345678'],ok:1,fb:['Sin espacios — el sistema no reconocerá el número con espacios.','¡Correcto! Sin +34 y sin espacios.','Sin +34 — solo los 9 dígitos.']},
+      {q:'¿Por qué es tan importante el formato del teléfono?',opts:['Por estética — queda más limpio','Porque el sistema lo usa para completar automáticamente el email, DNI y fecha de nacimiento del formulario','No es importante — es solo preferencia'],ok:1,fb:['No es estética — tiene una función técnica concreta.','¡Correcto! El teléfono es la clave que activa la automatización.','Es muy importante — sin el formato correcto la automatización falla.']}
+     ]
+    },
+    {t:'La vista de agenda — leer la tabla de citas',sub:'Entender lo que ves cada día',
+     cards:[
+      {ti:'Las columnas principales',icon:'📊',body:`La vista de agenda tiene estas columnas principales:<br><br>• <b>FECHA</b> — el día de la cita<br>• <b>HORA</b> — la hora de la cita<br>• <b>ESTADO</b> — en qué punto está la cita<br>• <b>PREF.</b> — el fisioterapeuta asignado (RAMI, JONY, SARA, PAOLA)<br>• <b>RELACIÓN-CITA</b> — el paciente asignado<br>• <b>TIPO DE CITA</b> — qué sesión es (1/5, 3/10, PRIMERA VISITA...)<br>• <b>CONFIR</b> — si está confirmada<br>• <b>NOTAS</b> — cualquier información relevante`},
+      {ti:'Los estados de la cita',icon:'🏷',body:`Cada cita tiene un estado que indica en qué punto está:<br><br>• <b style="color:#22c55e">CITA LIBRE</b> — hueco disponible, nadie asignado todavía<br>• <b style="color:#f59e0b">PENDIENTE</b> — cita reservada, sesión aún no realizada<br>• <b style="color:#86efac">REALIZADA</b> — sesión completada<br>• <b style="color:#f87171">CANCELADA</b> — el paciente ha cancelado<br>• <b style="color:#94a3b8">REPROGRAMADA</b> — se cambia a otro día<br>• <b style="color:#94a3b8">CITA BLOQUEADA</b> — el fisio no está disponible a esa hora`},
+      {ti:'El tipo de cita',icon:'📌',body:`El tipo de cita indica qué sesión es dentro del tratamiento:<br><br>• <b>PRIMERA VISITA</b> — primera vez que viene<br>• <b>MANTENIMIENTO</b> — sesión de mantenimiento periódico<br>• <b>1/5, 2/5, 3/5...</b> — sesión X de un pack de 5<br>• <b>1/10, 5/10, 10/10...</b> — sesión X de un pack de 10<br>• <b>1/20, 8/20...</b> — sesión X de un pack de 20<br><br>Se escribe manualmente y se actualiza en cada sesión.`}
+     ],
+     qs:[
+      {q:'Ves una cita con estado CITA BLOQUEADA y fisio RAMI. ¿Qué significa?',opts:['Rami tiene una cita muy importante que no se puede cancelar','Rami no está disponible a esa hora por algún motivo','El paciente ha bloqueado esa cita para que nadie la ocupe'],ok:1,fb:['No es sobre la importancia de la cita — es sobre disponibilidad.','¡Correcto! CITA BLOQUEADA significa que el fisio no está disponible.','El paciente no puede bloquear citas — eso lo hace recepción o el fisio.']},
+      {q:'Un paciente va a su 3ª sesión de un pack de 5. ¿Qué escribes en TIPO DE CITA?',opts:['3ª visita','Pack 5','3/5'],ok:2,fb:['Eso es para sesiones individuales, no para packs.','No es suficiente — hay que indicar en qué sesión va.','¡Correcto! Número de sesión / total del pack.']}
+     ]
+    },
+    {t:'Buscar citas disponibles',sub:'Encontrar el hueco perfecto para el paciente',
+     cards:[
+      {ti:'Cómo buscar un hueco',icon:'🔍',body:`Cuando un paciente pide cita, busca en la agenda huecos con estado <b>CITA LIBRE</b>. Estos son los huecos ya creados que todavía no tienen paciente asignado.<br><br>Antes de ofrecer opciones, fíjate en:<br>• <b>¿El paciente quiere un fisio concreto?</b> — filtra por PREF.<br>• <b>¿Quiere día u hora específica?</b> — filtra por FECHA u HORA<br>• <b>¿No tiene preferencia?</b> — ofrece las primeras opciones disponibles`},
+      {ti:'Qué ofrecer al paciente',icon:'💬',body:`Ofrece siempre <strong>2-3 opciones</strong> — no una sola. Da el día, la hora y el fisioterapeuta:<br><br>«Tenemos el lunes a las 9 con Rami, el martes a las 11 con Sara o el miércoles a las 10 con Jony. ¿Cuál te viene mejor?»<br><br>Si el paciente quiere continuar con su fisio habitual, prioriza los huecos de ese fisio.`},
+      {ti:'Cuando no hay hueco disponible',icon:'📅',body:`Si no hay CITA LIBRE en los días que el paciente quiere, tienes dos opciones:<br><br>• Ofrecerle el primer hueco disponible aunque sea más adelante<br>• Apuntar su nombre y preferencia y llamarle cuando se abra un hueco<br><br>En ese caso, anota en el weekly planner: «Llamar a [nombre] cuando haya hueco [día/hora preferida] con [fisio]».`}
+     ],
+     qs:[
+      {q:'¿Qué estado tienen los huecos disponibles para reservar?',opts:['PENDIENTE','CITA LIBRE','CONFIRMADA'],ok:1,fb:['PENDIENTE significa que ya tiene paciente asignado.','¡Correcto! CITA LIBRE es el hueco disponible.','CONFIRMADA es un campo diferente al estado.']},
+      {q:'Un paciente quiere cita con Sara pero no hay ningún hueco libre con ella esta semana. ¿Qué haces?',opts:['Le dices que no hay cita disponible y que llame más adelante','Le ofreces el primer hueco con Sara aunque sea la semana siguiente, o le preguntas si prefiere otro fisio','Le asignas con otro fisio sin preguntarle'],ok:1,fb:['Siempre ofrecemos una alternativa — nunca cerramos la puerta.','¡Correcto! Ofrecer opciones y dejar que el paciente decida.','Nunca cambiar el fisio sin preguntarle — puede ser importante para el paciente.']}
+     ]
+    },
+    {t:'Crear y completar una cita',sub:'Paso a paso',
+     cards:[
+      {ti:'Paso 1 — Abrir el hueco',icon:'1️⃣',body:`Entra en el registro de la CITA LIBRE que el paciente ha elegido. Verás que el campo RELACIÓN-CITA está vacío y el estado es CITA LIBRE.`},
+      {ti:'Paso 2 — Asignar el paciente',icon:'2️⃣',body:`En el campo <b>RELACIÓN-CITA</b> busca el nombre del paciente y selecciónalo. Si el paciente no existe todavía, primero créalo en la tabla PACIENTES y luego vuelve aquí a asignarlo.`},
+      {ti:'Paso 3 — Completar los campos',icon:'3️⃣',body:`Completa los campos necesarios:<br><br>• <b>TIPO DE CITA</b> — PRIMERA VISITA, MANTENIMIENTO o número de sesión (1/5, 2/10...)<br>• <b>CONFIR</b> — CONFIRMADA cuando el paciente haya confirmado<br>• <b>NOTAS</b> — cualquier información relevante si es necesario`},
+      {ti:'Paso 4 — Cambiar el estado',icon:'4️⃣',body:`Cambia el estado de <b>CITA LIBRE</b> a <b>PENDIENTE</b>.<br><br><strong>Este es el paso más importante</strong> — en ese momento la cita desaparece de la web y no puede ser reservada por otra persona. Si se te olvida, otra persona puede reservar ese mismo hueco.`},
+      {ti:'Confirmar al paciente',icon:'✅',body:`Si la cita se ha hecho por teléfono, WhatsApp o en persona, confirma siempre al paciente el día y la hora antes de terminar: «Perfecto, te quedas el martes 3 de junio a las 10 con Rami. ¡Hasta entonces!»`}
+     ],
+     qs:[
+      {q:'¿Cuál es el paso MÁS importante al crear una cita?',opts:['Escribir las notas','Cambiar el estado de CITA LIBRE a PENDIENTE','Confirmar al paciente por WhatsApp'],ok:1,fb:['Las notas son importantes pero no el paso crítico.','¡Correcto! Sin cambiar el estado, la cita sigue visible en la web y otro puede reservarla.','La confirmación es importante pero no tan crítica como cambiar el estado.']},
+      {q:'Un paciente nuevo llama para pedir cita pero no existe en Airtable. ¿Qué haces primero?',opts:['Crear la cita y luego el paciente','Crear primero el paciente en PACIENTES y luego asignarlo a la cita','Asignar la cita directamente aunque no exista'],ok:1,fb:['No puedes asignar un paciente que no existe — primero hay que crearlo.','¡Correcto! Primero el paciente, luego la cita.','No se puede asignar alguien que no existe en el sistema.']}
+     ]
+    },
+    {t:'Gestión durante y después de la sesión',sub:'Mantener la agenda actualizada en tiempo real',
+     cards:[
+      {ti:'Cuando el paciente entra a sesión',icon:'▶️',body:`En el momento en que el paciente entra a la sala con el fisio, cambia el estado de la cita de <b>PENDIENTE</b> a <b>REALIZADA</b>.<br><br>Aprovecha ese momento para revisar que todos los campos estén completos: tipo de cita, fisioterapeuta, notas si las hay.`},
+      {ti:'Cuando el paciente cancela',icon:'❌',body:`Si el paciente cancela:<br><br>• Cambia el estado a <b>CANCELADA</b><br>• Si reagenda → cambia a <b>REPROGRAMADA</b> y crea la nueva cita<br>• Si no reagenda → anota en <b>NOTAS</b> el motivo y cuándo llamarle<br>• Apunta en el <b>weekly planner</b> el día que hay que llamarle`},
+      {ti:'Si el fisio no puede',icon:'🔒',body:`Si el fisio no está disponible a una hora concreta (reunión, formación, asunto personal), cambia el estado de esa cita a <b>CITA BLOQUEADA</b>.<br><br>Así queda claro en la agenda que ese hueco no está disponible aunque no tenga paciente asignado.`}
+     ],
+     qs:[
+      {q:'El paciente acaba de entrar a sesión. ¿Qué cambias en Airtable?',opts:['Nada — lo cambio al final del día','El estado de PENDIENTE a REALIZADA','El estado de PENDIENTE a CONFIRMADA'],ok:1,fb:['Hay que actualizarlo en el momento — no al final del día.','¡Correcto! En cuanto entra, pasa a REALIZADA.','CONFIRMADA no es un estado de la cita — es un campo diferente.']},
+      {q:'Un paciente cancela y dice que te llame en dos semanas. ¿Qué haces?',opts:['Cambiar a CANCELADA y nada más','Cambiar a CANCELADA, anotar en NOTAS cuándo llamarle y apuntarlo en el weekly planner','Borrar la cita'],ok:1,fb:['Sin el seguimiento, el paciente se pierde.','¡Correcto! Estado + nota en Airtable + recordatorio en weekly planner.','Nunca se borran citas — se cambia el estado.']}
+     ]
+    },
+    {t:'Estados del paciente',sub:'El estado del paciente vs el estado de la cita',
+     cards:[
+      {ti:'Son dos cosas diferentes',icon:'⚠️',body:`No confundas el <b>estado de la CITA</b> (pendiente, realizada, cancelada...) con el <b>estado del PACIENTE</b> en su ficha.<br><br>El estado del paciente refleja su situación global en la clínica — no una cita concreta.`},
+      {ti:'Los estados del paciente',icon:'👤',body:`• <b>ACTIVO</b> — ha comprado un pack o sigue viniendo regularmente<br>• <b>SOLO VALORACIÓN</b> — vino a la valoración pero no empezó tratamiento ni pagó<br>• <b>NO ASISTIÓ</b> — no vino a la cita sin avisar<br>• <b>SESIÓN PUNTUAL</b> — vino una sola vez y no volvió a reservar<br>• <b>ALTA</b> — terminó el tratamiento y está bien<br>• <b>FIN PACK</b> — ha terminado todas las sesiones del pack`},
+      {ti:'Cuándo actualizarlo',icon:'🔄',body:`El estado del paciente se actualiza cuando cambia su situación global:<br><br>• Compra un pack → <b>ACTIVO</b><br>• Termina el pack → <b>FIN PACK</b><br>• Le dan el alta → <b>ALTA</b><br>• Solo vino una vez → <b>SESIÓN PUNTUAL</b><br>• No vino sin avisar → <b>NO ASISTIÓ</b>`}
+     ],
+     qs:[
+      {q:'Un paciente termina su pack de 10 sesiones y el fisio le da el alta. ¿Qué estado le pones?',opts:['FIN PACK','ALTA','ACTIVO'],ok:1,fb:['FIN PACK es cuando acaba el pack pero puede que necesite más sesiones.','¡Correcto! Si el fisio le da el alta, el estado es ALTA.','ACTIVO es mientras está en tratamiento.']},
+      {q:'Un paciente vino una sola vez y no ha vuelto a reservar. ¿Qué estado le pones?',opts:['ALTA','NO ASISTIÓ','SESIÓN PUNTUAL'],ok:2,fb:['ALTA es cuando el fisio le da el alta — no cuando simplemente no vuelve.','NO ASISTIÓ es cuando no vino a la cita — este paciente sí vino.','¡Correcto! Vino una vez y no volvió a reservar = SESIÓN PUNTUAL.']}
+     ]
+    },
+    {t:'Notas en Airtable',sub:'Dejar la información bien registrada',
+     cards:[
+      {ti:'Para qué sirven las notas',icon:'📝',body:`Las notas son la memoria escrita de todo lo que no cabe en los campos estructurados. <strong>Si hay algo importante que no está en los campos, va en NOTAS.</strong><br><br>Cualquier miembro del equipo que abra esa cita o ese paciente debe entender qué ha pasado solo leyendo las notas.`},
+      {ti:'Qué se anota',icon:'✅',body:`Ejemplos de lo que va en NOTAS:<br><br>• <em>«Va a pagar pack de 5 en varias partes — pagó 100€»</em><br>• <em>«Llamar y reprogramar»</em><br>• <em>«Cancela por prueba médica — llamar en 3 semanas»</em><br>• <em>«Paciente prefiere cita solo con Rami»</em><br>• <em>«No llamar antes de las 10»</em>`},
+      {ti:'Cómo redactarlas',icon:'✍️',body:`Las notas deben ser:<br><br>• <b>Claras</b> — cualquiera del equipo debe entenderlas<br>• <b>Concretas</b> — con fechas y datos específicos si es relevante<br>• <b>Breves</b> — lo justo para entender la situación<br><br>No hace falta escribir un párrafo. Una línea bien escrita es suficiente.`}
+     ],
+     qs:[
+      {q:'Un paciente cancela porque tiene una prueba médica y dice que le llamemos en 3 semanas. ¿Qué escribes en NOTAS?',opts:['Cancela','Cancela por prueba médica — llamar en 3 semanas','El paciente ha cancelado su cita por motivos médicos y ha solicitado que le contactemos aproximadamente en tres semanas'],ok:1,fb:['Demasiado vago — no da información útil.','¡Correcto! Conciso, claro y con la acción a tomar.','Demasiado largo — las notas deben ser breves y directas.']},
+      {q:'¿Quién puede leer las notas de Airtable?',opts:['Solo quien las ha escrito','Solo recepción','Todo el equipo que tenga acceso a Airtable'],ok:2,fb:['Las notas son compartidas — no son privadas.','Los fisios también tienen acceso y las leen.','¡Correcto! Las notas son para todo el equipo — escríbelas pensando en eso.']}
+     ]
+    },
+    {t:'Gestión de ausencias',sub:'Cuando el paciente cancela o no viene',
+     cards:[
+      {ti:'El paciente avisa y reagenda',icon:'🔄',body:`Si el paciente avisa con tiempo y quiere cambiar de día:<br><br>1. Cambia el estado de la cita a <b>REPROGRAMADA</b><br>2. Crea la nueva cita en el hueco que hayan acordado<br>3. Anota en NOTAS de la cita original: <em>«Reprogramada al [día] a las [hora]»</em>`},
+      {ti:'El paciente avisa pero no reagenda',icon:'📞',body:`Si el paciente cancela pero no sabe cuándo puede volver:<br><br>1. Cambia el estado a <b>CANCELADA</b><br>2. Anota en NOTAS el motivo y cuándo llamarle<br>3. Apunta en el <b>weekly planner</b> el día de la llamada<br><br>Ejemplo de nota: <em>«Cancela — de viaje hasta el 15. Llamar el 16.»</em>`},
+      {ti:'El paciente no viene sin avisar',icon:'❗',body:`Si el paciente no aparece:<br><br>1. Cambia el estado a <b>CANCELADA</b><br>2. Anota en NOTAS: <em>«No asistió sin avisar»</em><br>3. Apunta en el weekly planner para llamarle ese mismo día o el siguiente<br><br>No dejes pasar tiempo — cuanto antes contactes, más probable que vuelva.`},
+      {ti:'Weekly planner vs Airtable',icon:'📋',body:`<b>Airtable</b> → toda la información: qué pasó, por qué, qué se acordó, cuándo llamar.<br><b>Weekly planner</b> → solo el recordatorio de la llamada: «Llamar a [nombre] el [día]».<br><br>Son complementarios — uno sin el otro no funciona.`}
+     ],
+     qs:[
+      {q:'Un paciente no aparece a su cita sin avisar. ¿Qué haces?',opts:['Esperar a que él llame','Cambiar a CANCELADA, anotar en NOTAS y apuntar en weekly planner para llamarle hoy o mañana','Borrar la cita y ya está'],ok:1,fb:['Esperar pasivamente es la forma más segura de perder al paciente.','¡Correcto! Estado + nota + llamada rápida = paciente recuperado.','Nunca se borran citas — y sin llamada, el paciente se pierde.']},
+      {q:'¿Qué va en el weekly planner?',opts:['Toda la información sobre la cancelación','Solo el recordatorio de la llamada: «Llamar a [nombre] el [día]»','Las citas del día siguiente'],ok:1,fb:['Toda la info va en Airtable — el weekly planner es solo el recordatorio.','¡Correcto! El weekly planner es solo para las llamadas y seguimientos.','Las citas están en Airtable — el weekly planner es para llamadas.']}
+     ]
+    },
+  ];
+
   // ── MÓDULOS ÚLTIMA SESIÓN PAGADA ─────────────────────────────────────────
   const MODS_ULTIMA = [
     {t:'La última sesión pagada',sub:'Por qué este momento es clave',
@@ -4712,7 +4832,7 @@ function renderFormacion(wrap, ruta){
     }
   ];
 
-    const MODS = ruta.id === 'ultima' ? MODS_ULTIMA : ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : MODS_BOMBA;
+    const MODS = ruta.id === 'airtable' ? MODS_AIRTABLE : ruta.id === 'ultima' ? MODS_ULTIMA : ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : MODS_BOMBA;
 
   let curMod=0, scores=new Array(MODS.length).fill(null).map(()=>({c:0,done:false}));
   let ttEl=null;
