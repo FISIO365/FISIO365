@@ -396,14 +396,17 @@ const TOPBAR = {
 };
 
 const CFG = {
-  rodilla:  {t:'Rodilla',       steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
-  fascitis: {t:'Fascitis plantar',steps:['Paciente','Lesión','Dolor','Factores','Tests ortopédicos','Informe']},
-  cervical: {t:'Cervical',       steps:['Paciente','Lesión','Dolor','Neurológico','Exploración','Tests ortopédicos','Informe']},
-  hombro:   {t:'Hombro',         steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
-  tobillo:  {t:'Tobillo',        steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
-  cadera:   {t:'Cadera',         steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
-  codo:     {t:'Codo',           steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
-  hernia:   {t:'Hernia discal',  steps:['Paciente','Datos','Consulta','Banderas','Comportamiento','Observación','Movimiento','Tests','Exploración','Informe']},
+  rodilla:  {t:'Rodilla',          steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  hombro:   {t:'Hombro',           steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  cervical: {t:'Cervical',         steps:['Paciente','Lesión','Dolor','Neurológico','Exploración','Tests ortopédicos','Informe']},
+  codo:     {t:'Codo y antebrazo', steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  muneca:   {t:'Muñeca y mano',    steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  tobillo:  {t:'Tobillo y pie',    steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  cadera:   {t:'Cadera y pelvis',  steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  sacro:    {t:'Sacroilíaca',      steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  lumbar:   {t:'Columna lumbar',   steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  toracica: {t:'Columna torácica', steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+  libre:    {t:'Libre / Otros',    steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
 };
 
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
@@ -863,14 +866,17 @@ async function guardar(){
 // SECTION: ANAMNESIS HUB
 // ─────────────────────────────────────────────────────────────────────────────
 const PROTOS_LIST = [
-  {id:'rodilla',  t:'Rodilla',         s:'Menisco · LCA · Condromalacia · Tendinopatía', r:1},
-  {id:'fascitis', t:'Fascitis plantar', s:'Razonamiento clínico · Factores causales',     r:1},
-  {id:'cervical', t:'Cervical',         s:'Cervicalgia · Cervicobraquialgia · Cefalea',   r:1},
-  {id:'hombro',   t:'Hombro',           s:'Manguito rotador · Impingement · Capsulitis',  r:1},
-  {id:'tobillo',  t:'Tobillo',          s:'Esguince · Inestabilidad · Tendinopatías',     r:1},
-  {id:'cadera',   t:'Cadera',           s:'Tendinopatías · Bursitis · Coxartrosis',       r:1},
-  {id:'codo',     t:'Codo',             s:'Epicondilitis · Epitrocleitis',                r:1},
-  {id:'hernia',   t:'Hernia discal',    s:'Lumbar · Radiculopatía · Tests neurológicos',  r:1},
+  {id:'rodilla',  t:'Rodilla',              s:'LCA · LCP · Menisco · Patelofemoral · Banda IT',     r:1},
+  {id:'hombro',   t:'Hombro',               s:'Manguito · Impingement · Inestabilidad · Labrum',    r:1},
+  {id:'cervical', t:'Cervical',             s:'Radiculopatía · Mielopatía · Inestabilidad · SOT',   r:1},
+  {id:'codo',     t:'Codo y antebrazo',     s:'Epicondilitis · Epitrocleitis · N. cubital',         r:1},
+  {id:'muneca',   t:'Muñeca y mano',        s:'Túnel carpiano · De Quervain · Inestabilidad carpo', r:1},
+  {id:'tobillo',  t:'Tobillo y pie',        s:'Esguince · Aquiles · Fascitis · Pie plano · TVP',    r:1},
+  {id:'cadera',   t:'Cadera y pelvis',      s:'FAI · Labrum · Coxartrosis · Piriforme · Glúteo',    r:1},
+  {id:'sacro',    t:'Sacroilíaca',          s:'Disfunción sacroilíaca · SI joint',                  r:1},
+  {id:'lumbar',   t:'Columna lumbar',       s:'Hernia · Radiculopatía · Facetario · Inestabilidad', r:1},
+  {id:'toracica', t:'Columna torácica',     s:'Alteración mecánica · Neuritis · Escoliosis',        r:1},
+  {id:'libre',    t:'Libre / Otros',        s:'Valoración libre · Otras patologías',                r:1},
 ];
 
 function renderAnamHub(wrap){
@@ -950,13 +956,16 @@ function renderProto(){
 
   const stepFns = {
     rodilla:  [stepP0,rS1,rS2,rS3,rS4,rSZ],
-    fascitis: [stepP0,fS1,fS2,fS3,fS4,fSZ],
-    cervical: [stepP0,cS1,cS2,cS3,cS4,cS5,cSZ],
     hombro:   [stepP0,hS1,hS2,hS3,hS4,hSZ],
+    cervical: [stepP0,cS1,cS2,cS3,cS4,cS5,cSZ],
+    codo:     [stepP0,coS1,coS2,coS3,coS4,coSZ],
+    muneca:   [stepP0,muS1,muS2,muS3,muS4,muSZ],
     tobillo:  [stepP0,tS1,tS2,tS3,tS4,tSZ],
     cadera:   [stepP0,caS1,caS2,caS3,caS4,caSZ],
-    codo:     [stepP0,coS1,coS2,coS3,coS4,coSZ],
-    hernia:   [stepP0,heS1,heS2,heS3,heS4,heS5,heS6,heS7,heS8,heSZ],
+    sacro:    [stepP0,saS1,saS2,saS3,saS4,saSZ],
+    lumbar:   [stepP0,luS1,luS2,luS3,luS4,luSZ],
+    toracica: [stepP0,toS1,toS2,toS3,toS4,toSZ],
+    libre:    [stepP0,lbS1,lbS2,lbS3,lbS4,lbSZ],
   };
   stepFns[curProto][curStep](wrap);
 }
@@ -1026,25 +1035,25 @@ function rS4(w){
   tc.innerHTML='<div class="ct">Tests ortopédicos — Rodilla</div>';
 
   const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Ligamentos cruzados';tc.appendChild(s1);
-  tc.appendChild(mkTest('lachman','Test de Lachman',null,
+  tc.appendChild(mkTest('lachman','Test de Lachman','https://drive.google.com/uc?export=view&id=1pNcwD1kiPvgG0pDU--mxzyDw7xm0ycpq',
     'Decúbito supino. Rodilla en 15–30° de flexión. Una mano estabiliza el fémur y la otra desplaza la tibia hacia anterior. Los músculos deben permanecer relajados.',
     'Desplazamiento anterior de la tibia >5mm con tope blando o ausente. Indica lesión del LCA. Se gradúa: leve (<5mm), moderado (5–10mm), severo (>10mm).',
     'Tope firme y desplazamiento <3mm. Sugiere integridad del LCA.',
     'Combinar con Test de Cajón Anterior. Si Lachman positivo + pivot shift positivo → alta probabilidad de rotura completa de LCA.',
     'alta'));
-  tc.appendChild(mkTest('cajon_ant_rod','Test de Cajón Anterior',null,
+  tc.appendChild(mkTest('cajon_ant_rod','Test de Cajón Anterior','https://drive.google.com/uc?export=view&id=1WIyf-wp1BMf2RkiSgJhD0yzb9YNiLNIj',
     'Decúbito supino. Caderas 45° y rodillas 90° de flexión. El fisio se sienta ligeramente sobre el pie del paciente para fijarlo. Abraza la epífisis proximal de la tibia con ambas manos y aplica tracción anterior.',
     'Desplazamiento anterior excesivo de la tibia respecto a los cóndilos femorales. Positivo para lesión del LCA.',
     'Sin desplazamiento significativo. LCA probablemente íntegro.',
     'Test de Lachman tiene más sensibilidad. El cajón anterior es complementario; puede ser falsamente negativo si hay espasmo muscular.',
     'media'));
-  tc.appendChild(mkTest('cajon_post','Test de Cajón Posterior',null,
+  tc.appendChild(mkTest('cajon_post','Test de Cajón Posterior','https://drive.google.com/uc?export=view&id=1jSvAoDCRgJCr2q_69gMQameiVG0cXyOJ',
     'Misma posición que el cajón anterior. El fisio aplica un empuje posterior sobre la tibia. Repetir con tibia en rotación interna y externa.',
     'Desplazamiento posterior excesivo de la tibia. Indica lesión del LCP.',
     'Sin desplazamiento posterior significativo.',
     'Test de Godfrey: en decúbito supino con caderas y rodillas a 90°, la caída de la tibia por gravedad ya indica rotura del LCP (LR+ 16.2).',
     'alta'));
-  tc.appendChild(mkTest('pivot_shift','Test de Cambio de Pivote',null,
+  tc.appendChild(mkTest('pivot_shift','Test de Cambio de Pivote','https://drive.google.com/uc?export=view&id=1TllmZmrIVJeudTT3UbaOD0eGMpxcde8Z',
     'Decúbito supino. Rodilla en 10–20° de flexión. El fisio rota la tibia internamente mientras aplica una fuerza en valgo y extiende lentamente la rodilla.',
     'Subluxación anterior del platillo tibial con un "clic" o salto palpable. Indica rotura del LCA con inestabilidad rotacional.',
     'Sin subluxación ni clic.',
@@ -1052,13 +1061,13 @@ function rS4(w){
     'alta'));
 
   const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Ligamentos colaterales';tc.appendChild(s2);
-  tc.appendChild(mkTest('inest_med','Test de Inestabilidad Medial (Valgo)',null,
+  tc.appendChild(mkTest('inest_med','Test de Inestabilidad Medial (Valgo)','https://drive.google.com/uc?export=view&id=1T7o8HPVtbGr-qJx--f0cnowCklIfJu6t',
     'Decúbito supino. Rodilla en extensión completa y luego en 30° de flexión. El fisio aplica fuerza en valgo con una mano en la cara lateral de la rodilla y la otra estabiliza el tobillo.',
     'Bostezo articular o apertura del compartimento interno. Indica lesión del LLI. En extensión completa → daño también a estructuras posteriores.',
     'Sin apertura articular significativa.',
     'Realizar siempre en extensión Y en 30° de flexión. Solo a 30° indica lesión aislada de LLI. En extensión completa → lesión combinada (LCA/cápsula posterior).',
     'media'));
-  tc.appendChild(mkTest('inest_lat','Test de Inestabilidad Lateral (Varo)',null,
+  tc.appendChild(mkTest('inest_lat','Test de Inestabilidad Lateral (Varo)','https://drive.google.com/uc?export=view&id=15uP3OTBi2LCTgCCVavXu_prH1S2aX0i_',
     'Decúbito supino. El fisio aplica fuerza varizante con una mano en la cara interna de la rodilla. Evaluar en extensión y en 30° de flexión.',
     'Bostezo del compartimento lateral. Indica lesión del LLE. En extensión → posible daño también a LCA, LCP o cápsula postero-lateral.',
     'Sin apertura lateral.',
@@ -1066,13 +1075,13 @@ function rS4(w){
     'media'));
 
   const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Meniscos';tc.appendChild(s3);
-  tc.appendChild(mkTest('mcmurray','Test de McMurray',null,
+  tc.appendChild(mkTest('mcmurray','Test de McMurray','https://drive.google.com/uc?export=view&id=14Xsc0SwmbizsXz1UPrPP0hj7OLOD9AF5',
     'Decúbito supino. Rodilla y cadera en flexión máxima. El fisio sujeta la rodilla con una mano y el pie con la otra. Aplica rotación externa + extensión para menisco interno; rotación interna + extensión para menisco externo.',
     'Dolor y/o chasquido durante la extensión en la zona meniscal correspondiente. Rotación externa → menisco interno; rotación interna → menisco externo.',
     'Sin dolor ni chasquido. Reduce la probabilidad de lesión meniscal.',
     'Combinar con Test de Apley. Si ambos positivos en el mismo lado → alta probabilidad de lesión meniscal.',
     'media'));
-  tc.appendChild(mkTest('apley','Test de Apley',null,
+  tc.appendChild(mkTest('apley','Test de Apley','https://drive.google.com/uc?export=view&id=1FcP3oUo35Rn5uQvNysTFZiKAQUQpC7FL',
     'Decúbito prono. Rodilla a 90° de flexión. El fisio fija el muslo con su rodilla y aplica presión axial descendente + rotación en ambos sentidos.',
     'Dolor y/o chasquido en el compartimento correspondiente durante la compresión + rotación. Indica lesión meniscal.',
     'Sin dolor ni chasquido con compresión.',
@@ -1080,13 +1089,13 @@ function rS4(w){
     'alta'));
 
   const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Rótula / patelofemoral';tc.appendChild(s4);
-  tc.appendChild(mkTest('signo_clarke','Signo de Clarke',null,
+  tc.appendChild(mkTest('signo_clarke','Signo de Clarke','https://drive.google.com/uc?export=view&id=1T2IDsSU9DC6piCwIcrTpRGAt96pIn8DN',
     'Decúbito supino con rodilla extendida. El fisio desplaza la rótula en sentido caudal y la mantiene. Pide al paciente una contracción isométrica del cuádriceps. Repetir a 30°, 60° y 90° de flexión.',
     'Dolor o incapacidad de completar la contracción. Indica alteración condral o disfunción patelofemoral.',
     'Contracción sin dolor. Comparar siempre con el lado contralateral.',
     'Test de McConnell: si al corregir la rótula medialmente el dolor desaparece, confirma disfunción patelofemoral. Indicación directa de taping rotuliano.',
     'media'));
-  tc.appendChild(mkTest('noble','Test de Noble (Banda IT)',null,
+  tc.appendChild(mkTest('noble','Test de Noble (Banda IT)','https://drive.google.com/uc?export=view&id=1jX57fowYHetPNGloEiHMTM6QcvQn6lzD',
     'Decúbito supino. El fisio flexiona la rodilla a 90° y la cadera a 50°. Aplica presión sobre el cóndilo femoral lateral con los dedos. Mantiene la presión y extiende lentamente la rodilla.',
     'Dolor intenso al llegar a 30–40° de flexión en el cóndilo lateral. Indica síndrome de fricción de la banda iliotibial.',
     'Sin dolor al pasar por los 30–40°.',
@@ -1094,18 +1103,26 @@ function rS4(w){
     'media'));
 
   const s5r=ce('p','');s5r.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5r.textContent='Tendinopatía rotuliana';tc.appendChild(s5r);
-  tc.appendChild(mkTest('mcconnell_rot','Test de McConnell (T. rotuliana / patelofemoral)',null,
+  tc.appendChild(mkTest('mcconnell_rot','Test de McConnell (T. rotuliana / patelofemoral)','https://drive.google.com/uc?export=view&id=1yqx6QZ7HIQyXUho7-ju8FB6P4ISVM6Jl',
     'Usuario sentado con cadera en rotación externa. Fisio coloca la rodilla en diferentes ángulos (0°, 30°, 60°, 90°, 120°) y solicita contracciones isométricas de 10 segundos. Si hay dolor, corrige la rótula medialmente con los dedos y repite en el mismo arco.',
     'Dolor durante la contracción que desaparece o reduce al corregir la rótula medialmente. Indica disfunción patelofemoral o condromalacia rotuliana.',
     'Sin dolor en ningún arco, o dolor que no cambia al corregir la rótula.',
     'Combinar con Signo de Clarke. Si el dolor cede con la corrección manual → indicación directa de taping rotuliano.',
     'media'));
-  tc.appendChild(mkTest('glide_rot','Test Glide Rotuliano',null,
+  tc.appendChild(mkTest('glide_rot','Test Glide Rotuliano','https://drive.google.com/uc?export=view&id=1T2IDsSU9DC6piCwIcrTpRGAt96pIn8DN',
     'Decúbito supino, rodilla extendida y cuádriceps relajado. El fisio desliza la rótula hacia lateral y luego hacia medial con los pulgares e índices. Compara amplitud y dolor en ambas direcciones.',
     'Deslizamiento lateral excesivo (>3/4 del ancho rotuliano) o dolor durante el deslizamiento. Indica laxitud del retináculo medial o tensión del lateral.',
     'Deslizamiento simétrico y sin dolor en ambas direcciones.',
     'Si deslizamiento lateral excesivo + dolor → tensión del retináculo lateral. Frecuente en síndrome patelofemoral y tendinopatía rotuliana crónica.',
     'media'));
+
+
+  const s_lcp=ce('p','');s_lcp.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s_lcp.textContent='Ligamento cruzado posterior (adicional)';tc.appendChild(s_lcp);
+  tc.appendChild(mkTest('godfrey','Test de Godfrey&rsquo;s (LCP)','https://drive.google.com/uc?export=view&id=1etzP9yqa_eNMX9jHDVQbxhguZPaivPzj',
+    'Decúbito supino con caderas y rodillas a 90°. El fisio sostiene las piernas por los tobillos y observa la posición relativa de las rodillas desde el lateral.',
+    'La tibia cae hacia posterior por la gravedad — la rodilla afecta queda más baja que la sana. Indica rotura del LCP. LR+ 16.2.',
+    'Ambas rodillas al mismo nivel. LCP íntegro.',
+    'Test de gravedad muy específico para LCP. Si positivo → alta probabilidad de rotura. Combinar con cajón posterior.','alta'));
 
   const obs=ce('div','card');obs.style.marginTop='12px';
   obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
@@ -1118,6 +1135,466 @@ function rS4(w){
   w.appendChild(tc);
   mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
 }
+
+
+// ── MUÑECA Y MANO — Steps ──────────────────────────────────────────────────
+function muS1(w){
+  w.appendChild(mkNota('Muñeca o mano? Dominante o no dominante? Actividad laboral o deportiva?'));
+  w.appendChild(mkCard('Lesión','',[
+    mkSel('Lado',     [['der','Derecha'],['izq','Izquierda'],['bil','Bilateral']],'lado'),
+    mkSel('Evolución',[['ag','Aguda <2sem'],['sub','Subaguda 2-6sem'],['cro','Crónica >6sem']],'evol'),
+    mkSel('Inicio',   [['tra','Traumático'],['gra','Gradual'],['rep','Movimiento repetitivo'],['esp','Espontáneo']],'ini'),
+    mkSel('Dx previo',[['no','Sin diagnóstico'],['si','Sí — especificar en notas']],'dx'),
+  ]));
+  mkBnav(w,true,'Dolor →',()=>{curStep++;renderProto();},2);
+}
+function muS2(w){
+  w.appendChild(mkNota('Localización exacta: cara palmar, dorsal, radial o cubital?'));
+  w.appendChild(mkCard('Dolor','',[
+    mkSel('EVA reposo',   [['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']],'evr'),
+    mkSel('EVA actividad',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']],'eva'),
+    mkSel('Localización', [['pal','Palmar'],['dor','Dorsal'],['rad','Radial'],['cub','Cubital'],['dif','Difuso']],'loc'),
+    mkSel('Tipo',         [['mec','Mecánico'],['inf','Inflamatorio'],['neu','Neuropático'],['mix','Mixto']],'tip'),
+    mkSel('Parestesias',  [['no','No'],['ded1','Pulgar/índice/corazón'],['ded2','Anular/meñique'],['tod','Todos los dedos']],'par'),
+  ]));
+  mkBnav(w,true,'Exploración →',()=>{curStep++;renderProto();},3);
+}
+function muS3(w){
+  w.appendChild(mkNota('Valorar movilidad, fuerza y sensibilidad. Tests ortopédicos en el paso siguiente.'));
+  w.appendChild(mkCard('Exploración','',[
+    mkSel('Movilidad muñeca',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'mob'),
+    mkSel('Fuerza prensión', [['nor','Normal'],['le','Reducida leve'],['mo','Reducida mod.'],['se','Muy reducida']],'fpre'),
+    mkSel('Fuerza pinza',    [['nor','Normal'],['le','Reducida leve'],['mo','Reducida mod.']],'fpin'),
+    mkSel('Sensibilidad',    [['nor','Normal'],['alt','Alterada'],['per','Pérdida parcial']],'sens'),
+    mkSel('Edema',           [['no','No'],['le','Leve'],['mo','Moderado'],['se','Severo']],'edema'),
+    mkSel('Limitación',      [['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),
+    mkSel('Objetivo',        [['do','Eliminar dolor'],['fun','Recuperar función'],['pre','Recuperar prensión'],['dep','Deporte']],'obj'),
+  ]));
+  mkBnav(w,true,'Tests ortopédicos →',()=>{curStep++;renderProto();},4);
+}
+function muS4(w){
+  w.appendChild(mkNota('Realiza los tests según la sospecha clínica.'));
+  const tc=ce('div','card');
+  tc.innerHTML='<div class="ct">Tests ortopédicos — Muñeca y mano</div>';
+  const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Túnel carpiano';tc.appendChild(s1);
+  tc.appendChild(mkTest('tinel_muneca','Signo de Tinel (muñeca)','https://drive.google.com/uc?export=view&id=1SBr5SqJstEt5XtHjLBnvsEZTAyG22Pmr',
+    'El fisio aplica golpecitos con los dedos sobre el nervio mediano en el túnel carpiano (cara palmar de la muñeca).',
+    'Parestesias que se irradian al pulgar, índice y corazón. Indica síndrome del túnel carpiano.',
+    'Sin parestesias.',
+    'Combinar con Phalen y compresión del carpo. Si los tres son positivos, la probabilidad es muy alta.','media'));
+  tc.appendChild(mkTest('phalens','Test de Phalen&rsquo;s','https://drive.google.com/uc?export=view&id=11eFxUkGJ0sTfAQc6oxa2bIGfaiFgu6-f',
+    'Usuario con codos sobre la mesa. Flexión máxima de ambas muñecas durante 60 segundos manteniéndolas enfrentadas.',
+    'Hormigueo o adormecimiento en el territorio del nervio mediano (pulgar, índice, corazón) antes de 60 segundos. Indica túnel carpiano.',
+    'Sin síntomas en 60 segundos.',
+    'Sensibilidad 68%, especificidad 73%. Combinar con Tinel y compresión del carpo.','media'));
+  tc.appendChild(mkTest('compresion_carpo','Test de Compresión del Carpo','https://drive.google.com/uc?export=view&id=1SBr5SqJstEt5XtHjLBnvsEZTAyG22Pmr',
+    'El fisio aplica presión directa con los pulgares sobre el túnel carpiano durante 30 segundos.',
+    'Reproducción de parestesias en territorio del nervio mediano. Indica síndrome del túnel carpiano.',
+    'Sin síntomas con la compresión.',
+    'LR+ 1.7. Combinar con Tinel y Phalen para mayor fiabilidad.','media'));
+  const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='De Quervain';tc.appendChild(s2);
+  tc.appendChild(mkTest('finkelstein','Test de Finkelstein','https://drive.google.com/uc?export=view&id=1UnArW6eLpgRRI3g5RSit-8lK6YWHgbxo',
+    'Usuario con el pulgar dentro del puño cerrado. El fisio desvia la muñeca hacia cubital de forma pasiva.',
+    'Dolor intenso en la apófisis estiloides del radio o en el trayecto de los tendones abductor largo y extensor corto del pulgar. Indica tendinitis De Quervain.',
+    'Sin dolor o dolor leve en el trayecto tendinoso.',
+    'Muy sensible para De Quervain. Si positivo con historia compatible → diagnóstico prácticamente confirmado.','alta'));
+  const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Inestabilidad carpo';tc.appendChild(s3);
+  tc.appendChild(mkTest('inest_carpo','Test de Inestabilidad del Carpo (Test shift del escafoides)','https://drive.google.com/uc?export=view&id=1L404KB35zST7F-S_4S_Cq52S2QXt_OHu',
+    'El fisio sujeta el escafoides con el pulgar por palmar y el índice por dorsal. Con la otra mano desvía la muñeca de cubital a radial aplicando presión sobre el escafoides.',
+    'Clic doloroso o subluxación palpable del escafoides. Indica inestabilidad escafolunar.',
+    'Sin clic ni dolor. Carpo estable.',
+    'Combinar con radiografía en stress. La inestabilidad escafolunar no tratada puede evolucionar a artrosis carpiana.','media'));
+  const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Fibrocartílago triangular';tc.appendChild(s4);
+  tc.appendChild(mkTest('teclado_piano','Test de Teclado de Piano','https://drive.google.com/uc?export=view&id=1En2CEazbv_r2LV2E5aKhVjmYXkjOewTh',
+    'Usuario con el antebrazo en pronación. El fisio aplica presión vertical sobre la cabeza del cúbito.',
+    'Dolor en la cara cubital de la muñeca con la presión. Indica lesión del fibrocartílago triangular (FCT).',
+    'Sin dolor con la presión.',
+    'Combinar con el test de impactación ulnar. La lesión del FCT es frecuente en caídas sobre la mano extendida.','media'));
+  tc.appendChild(mkTest('impactacion_ulnar','Test de Impactación Ulnar','https://drive.google.com/uc?export=view&id=1cZIKqtKWe9k44c9BOVvZTxPYHSItoJc5',
+    'El fisio coloca la muñeca en desviación cubital y compresión axial, luego realiza pronación y supinación del antebrazo.',
+    'Dolor en la cara cubital de la muñeca durante la rotación. Indica síndrome de impactación ulnar o lesión FCT.',
+    'Sin dolor con la maniobra.',
+    'LR+ útil cuando hay dolor cubital crónico. Complementa el test de teclado de piano.','media'));
+  const s5=ce('p','');s5.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5.textContent='Edema';tc.appendChild(s5);
+  tc.appendChild(mkTest('figura8_mano','Test de la Figura del 8 (edema)','https://drive.google.com/uc?export=view&id=1QzejBahJ5Mnp1dxxWm9J55nGMluIN_SZ',
+    'Se mide el perímetro de la muñeca con una cinta métrica siguiendo el patrón de figura del 8 alrededor del carpo. Se compara con el lado sano.',
+    'Diferencia >0.7cm respecto al lado sano. Indica edema significativo.',
+    'Diferencia ≤0.7cm. Sin edema significativo.',
+    'Método objetivo y reproducible para cuantificar el edema de muñeca y mano. Útil para seguimiento de la evolución.','baja'));
+  mkFiltroSospecha('muneca', tc);
+  w.appendChild(tc);
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');ta.placeholder='Anotaciones clínicas adicionales...';
+  ta.style.cssText='width:100%;min-height:70px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_muneca=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+function muSZ(w){renderInformeHub(w,'muneca',[],[], getFase(D.evr,D.eva));}
+
+// ── SACROILÍACA — Steps ────────────────────────────────────────────────────
+function saS1(w){
+  w.appendChild(mkNota('Localización exacta del dolor: unilateral, bilateral, irradiación a glúteo o pierna?'));
+  w.appendChild(mkCard('Lesión','',[
+    mkSel('Lado',     [['der','Derecho'],['izq','Izquierdo'],['bil','Bilateral']],'lado'),
+    mkSel('Evolución',[['ag','Aguda <2sem'],['sub','Subaguda 2-6sem'],['cro','Crónica >6sem']],'evol'),
+    mkSel('Inicio',   [['tra','Traumático'],['gra','Gradual post-parto'],['ins','Insidioso'],['dep','Post-deporte']],'ini'),
+    mkSel('Embarazo/parto',[['no','No'],['si','Sí — relacionado']],'emb'),
+  ]));
+  mkBnav(w,true,'Dolor →',()=>{curStep++;renderProto();},2);
+}
+function saS2(w){
+  w.appendChild(mkNota('Diferenciar de dolor lumbar, ciático o de cadera.'));
+  w.appendChild(mkCard('Dolor','',[
+    mkSel('EVA reposo',   [['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']],'evr'),
+    mkSel('EVA actividad',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']],'eva'),
+    mkSel('Localización', [['uni','Unilateral sacro'],['bil','Bilateral sacro'],['glu','Irradiación glúteo'],['pie','Irradiación pierna']],'loc'),
+    mkSel('Empeora con',  [['rot','Rotación tronco'],['mon','Monopodal'],['est','Estar de pie'],['sed','Sedestación prolongada']],'emp'),
+    mkSel('Rigidez matutina',[['no','No'],['le','Leve <30min'],['mo','Moderada >30min']],'rig'),
+  ]));
+  mkBnav(w,true,'Exploración →',()=>{curStep++;renderProto();},3);
+}
+function saS3(w){
+  w.appendChild(mkNota('Valorar movilidad lumbar y cadera. Tests ortopédicos en el paso siguiente.'));
+  w.appendChild(mkCard('Exploración','',[
+    mkSel('Movilidad lumbar',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'mob'),
+    mkSel('Rotación cadera',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada']],'rot'),
+    mkSel('Marcha',         [['nor','Normal'],['ant','Antálgica'],['tren','Trendelenburg']],'mar'),
+    mkSel('Limitación',     [['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),
+    mkSel('Objetivo',       [['do','Eliminar dolor'],['fun','Recuperar función'],['dep','Deporte'],['lab','Laboral']],'obj'),
+  ]));
+  mkBnav(w,true,'Tests ortopédicos →',()=>{curStep++;renderProto();},4);
+}
+function saS4(w){
+  w.appendChild(mkNota('Realiza al menos 3 tests positivos para confirmar disfunción sacroilíaca.'));
+  const tc=ce('div','card');
+  tc.innerHTML='<div class="ct">Tests ortopédicos — Sacroilíaca</div>';
+  const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Disfunción sacroilíaca';tc.appendChild(s1);
+  tc.appendChild(mkTest('trendelenburg_sa','Test de Trendelenburg (SI)','https://drive.google.com/uc?export=view&id=1pBI9lXvmWK2vOH0TsOho0HVfq2nECkpe',
+    'Usuario de pie. Se le pide que levante una pierna. El fisio observa desde atrás si la pelvis contralateral cae.',
+    'La pelvis cae hacia el lado elevado. Indica debilidad del glúteo medio o disfunción de la articulación sacroilíaca.',
+    'La pelvis se mantiene horizontal.',
+    'En contexto sacroilíaco, valorar junto con otros tests. Positivo aislado no confirma disfunción SI.','media'));
+  tc.appendChild(mkTest('muelle','Test del Muelle','https://drive.google.com/uc?export=view&id=1WHVYI5BazL9Q0hptiZe_Qtgmn4Dj8oMR',
+    'Usuario en prono. El fisio aplica una presión rápida (muelle) sobre el sacro y sobre cada vértebra lumbar.',
+    'Dolor local o referido al glúteo/SI con la presión sobre el sacro. Indica disfunción sacroilíaca o hipomobilidad.',
+    'Sin dolor con la presión en sacro ni vértebras.',
+    'Simple y rápido. Positivo en sacro con negativo en vértebras orienta a origen sacroilíaco.','media'));
+  tc.appendChild(mkTest('yeoman','Test de Yeoman','https://drive.google.com/uc?export=view&id=1ilgprF5P_bObmPqUCJRBCrYA1kBpRBhd',
+    'Usuario en prono. El fisio flexiona la rodilla a 90° y extiende la cadera mientras aplica presión sobre el sacro con la otra mano.',
+    'Dolor en la articulación sacroilíaca ipsilateral. Indica disfunción de la SI.',
+    'Sin dolor en la SI con la maniobra.',
+    'Combinar con Gaenslen y FABER. 3 o más tests positivos aumentan la probabilidad de disfunción sacroilíaca.','media'));
+  tc.appendChild(mkTest('gaenslen','Test de Gaenslen','https://drive.google.com/uc?export=view&id=1bFGEG6YWnVVw8vARBgjZvf8-zRMXZmly',
+    'Usuario en decúbito supino con los glúteos al borde de la camilla. Una pierna cuelga en hiperextensión y la otra está en flexión máxima de cadera y rodilla. El fisio aplica presión simultánea en ambas direcciones.',
+    'Dolor en la articulación sacroilíaca del lado en hiperextensión. Indica disfunción de la SI.',
+    'Sin dolor sacroilíaco con la maniobra.',
+    'Sensibilidad 53%, especificidad 71%. Uno de los tests más específicos para SI junto con el de distracción.','media'));
+  tc.appendChild(mkTest('faber_sa','Test de Patrick-FABER (SI)','https://drive.google.com/uc?export=view&id=1O4VqYEToF4IUR2XYvA6sy0fLc6DyRRJS',
+    'Decúbito supino. Pie ipsilateral sobre rodilla contralateral. El fisio estabiliza la EIAS contraria y presiona la rodilla flexionada hacia abajo.',
+    'Dolor posterior en el glúteo o en la articulación sacroilíaca. Indica disfunción de la SI. Si dolor inguinal → origen en cadera.',
+    'Sin dolor sacroilíaco ni inguinal.',
+    'Diferencia entre dolor anterior (cadera) y posterior (sacroilíaca). Combinar con otros tests SI.','media'));
+  tc.appendChild(mkTest('gillet','Test de Gillet','https://drive.google.com/uc?export=view&id=1MVPMb9BbnmzmMe7FOE9MAX8qk0UB2QDs',
+    'Usuario de pie. El fisio palpa con un pulgar la EIPS y con el otro el sacro. El paciente flexiona la cadera ipsilateral levantando la rodilla.',
+    'La EIPS no desciende o asciende respecto al sacro. Indica hipomobilidad de la articulación sacroilíaca.',
+    'La EIPS desciende normalmente respecto al sacro al flexionar la cadera.',
+    'Baja fiabilidad inter-examinador. Útil como complemento. Comparar siempre con el lado contralateral.','baja'));
+  tc.appendChild(mkTest('long_sitting','Long Sitting Test','https://drive.google.com/uc?export=view&id=1pBI9lXvmWK2vOH0TsOho0HVfq2nECkpe',
+    'Usuario en decúbito supino. El fisio mide la longitud aparente de ambos miembros. Luego el usuario se sienta (long sitting) y se remide.',
+    'Cambio de longitud al pasar de supino a long sitting indica disfunción sacroilíaca (rotación anterior o posterior del ilíaco).',
+    'Sin cambio de longitud aparente entre las dos posiciones.',
+    'Interpretar junto con otros hallazgos. Baja evidencia aislada pero útil en combinación con test de Gillet y palpación.','baja'));
+  mkFiltroSospecha('sacro', tc);
+  w.appendChild(tc);
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');ta.placeholder='Anotaciones clínicas adicionales...';
+  ta.style.cssText='width:100%;min-height:70px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_sacro=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+function saSZ(w){renderInformeHub(w,'sacro',[],[], getFase(D.evr,D.eva));}
+
+// ── COLUMNA TORÁCICA — Steps ───────────────────────────────────────────────
+function toS1(w){
+  w.appendChild(mkNota('Nivel exacto de la lesión? Escoliosis conocida? Antecedente traumático?'));
+  w.appendChild(mkCard('Lesión','',[
+    mkSel('Región',   [['alt','Alta D1-D4'],['med','Media D5-D8'],['baj','Baja D9-D12']],'reg'),
+    mkSel('Evolución',[['ag','Aguda <2sem'],['sub','Subaguda 2-6sem'],['cro','Crónica >6sem']],'evol'),
+    mkSel('Inicio',   [['tra','Traumático'],['pos','Postural'],['ins','Insidioso'],['dep','Deportivo']],'ini'),
+    mkSel('Escoliosis conocida',[['no','No'],['si','Sí']],'esc'),
+  ]));
+  mkBnav(w,true,'Dolor →',()=>{curStep++;renderProto();},2);
+}
+function toS2(w){
+  w.appendChild(mkNota('Dolor intercostal? Irradiación en cinturón? Relación con la respiración?'));
+  w.appendChild(mkCard('Dolor','',[
+    mkSel('EVA reposo',   [['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']],'evr'),
+    mkSel('EVA actividad',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']],'eva'),
+    mkSel('Tipo',         [['mec','Mecánico'],['neu','Neuropático intercostal'],['mix','Mixto']],'tip'),
+    mkSel('Con respiración',[['no','No'],['si','Sí — empeora al inspirar']],'resp'),
+    mkSel('Irradiación',  [['no','No'],['cin','En cinturón'],['ant','Hacia anterior']],'irr'),
+  ]));
+  mkBnav(w,true,'Exploración →',()=>{curStep++;renderProto();},3);
+}
+function toS3(w){
+  w.appendChild(mkNota('Valorar movilidad torácica, postura y escápulas. Tests en el paso siguiente.'));
+  w.appendChild(mkCard('Exploración','',[
+    mkSel('Movilidad flexión',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada']],'flex'),
+    mkSel('Rotación',        [['nor','Normal'],['le','Leve lim.'],['mo','Moderada']],'rot'),
+    mkSel('Postura',         [['nor','Normal'],['cif','Hipercifosis'],['esc','Escoliosis visible']],'pos'),
+    mkSel('Escápulas',       [['nor','Normal'],['ala','Alada'],['asi','Asimétrica']],'esc_exp'),
+    mkSel('Limitación',      [['no','Sin lim.'],['le','Leve'],['mo','Moderada']],'lim'),
+    mkSel('Objetivo',        [['do','Eliminar dolor'],['pos','Mejorar postura'],['mob','Ganar movilidad']],'obj'),
+  ]));
+  mkBnav(w,true,'Tests ortopédicos →',()=>{curStep++;renderProto();},4);
+}
+function toS4(w){
+  w.appendChild(mkNota('Realiza los tests según la sospecha clínica.'));
+  const tc=ce('div','card');
+  tc.innerHTML='<div class="ct">Tests ortopédicos — Columna torácica</div>';
+  const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Alteración mecánica dorsal';tc.appendChild(s1);
+  tc.appendChild(mkTest('aprox_escap','Aproximación Escapular Pasiva','https://drive.google.com/uc?export=view&id=1YEDv_7NAzVhBFm7uYeHkzV6MWeQnbTZg',
+    'Usuario sentado. El fisio coloca las manos sobre los hombros del paciente y aproxima ambas escápulas pasivamente hacia la línea media.',
+    'Reproducción o aumento del dolor dorsal interescapular con la aproximación. Indica disfunción mecánica de la columna torácica media.',
+    'Sin dolor o alivio del dolor con la aproximación.',
+    'Si el dolor mejora al aproximar las escápulas → componente postural importante. Indicación de trabajo de retracción escapular y fortalecimiento de romboides.','media'));
+  const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Neuritis intercostal';tc.appendChild(s2);
+  tc.appendChild(mkTest('schepelmann','Signo de Schepelmann (neuritis intercostal)','https://drive.google.com/uc?export=view&id=1-THnDhra_lEVcAbkVldzvOcntTwOyl-J',
+    'Usuario de pie o sentado. El fisio le pide que haga una inclinación lateral del tronco hacia ambos lados.',
+    'Dolor que aumenta al inclinarse hacia el lado afecto (compresión intercostal) y mejora al inclinarse al lado contrario (apertura). Indica neuritis o irritación intercostal.',
+    'Sin diferencia de dolor entre ambas inclinaciones.',
+    'Si el dolor aumenta al abrir el espacio intercostal (inclinación contralateral) → orientar a origen pleural o pulmonar. Derivar.','media'));
+  const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Disfunción medular';tc.appendChild(s3);
+  tc.appendChild(mkTest('slump_tor','Slump Test (columna torácica)','https://drive.google.com/uc?export=view&id=1594wvKKCzeWKWhJVVzQTEPPiIv1HifGr',
+    'Usuario sentado al borde de la camilla. Se le pide que doble la columna en flexión total (slump), luego extiende la rodilla y hace dorsiflexión del pie. El fisio mantiene la posición y el paciente extiende el cuello.',
+    'Reproducción de síntomas neurológicos (dolor, parestesias) que se alivian al extender el cuello. Indica tensión neural o disfunción de la médula espinal.',
+    'Sin síntomas neurológicos o sin cambio al extender el cuello.',
+    'Si positivo en zona torácica → descartar mielopatía. Combinar con Romberg y reflejos. Derivar si hay signos de motoneurona superior.','alta'));
+  const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Escoliosis';tc.appendChild(s4);
+  tc.appendChild(mkTest('adams_tor','Test de Adams (escoliosis)','https://drive.google.com/uc?export=view&id=1dYgbYpyGH4_gi2ZaD6uu-7XNScDv0bWP',
+    'Usuario de pie. Se le pide que se incline hacia adelante con rodillas extendidas y brazos colgando. El fisio observa desde atrás la simetría del tronco.',
+    'Giba costal (elevación asimétrica de un hemitórax) o prominencia lumbar visible. Indica escoliosis estructural.',
+    'Tronco simétrico durante la flexión. Sin giba costal.',
+    'Si giba >5° → derivar a traumatología para valoración radiológica. En adolescentes en crecimiento es especialmente importante el seguimiento.','alta'));
+  mkFiltroSospecha('toracica', tc);
+  w.appendChild(tc);
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');ta.placeholder='Anotaciones clínicas adicionales...';
+  ta.style.cssText='width:100%;min-height:70px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_toracica=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+function toSZ(w){renderInformeHub(w,'toracica',[],[], getFase(D.evr,D.eva));}
+
+// ── COLUMNA LUMBAR — Steps ─────────────────────────────────────────────────
+function luS1(w){
+  w.appendChild(mkNota('Nivel? Irradiación? Diagnóstico previo por imagen?'));
+  w.appendChild(mkCard('Lesión','',[
+    mkSel('Evolución',[['ag','Aguda <2sem'],['sub','Subaguda 2-6sem'],['cro','Crónica >6sem'],['rec','Recurrente']],'evol'),
+    mkSel('Inicio',   [['esp','Espontáneo'],['ges','Gesto/esfuerzo'],['gra','Gradual'],['tra','Traumático']],'ini'),
+    mkSel('Dx previo',[['no','Sin diagnóstico'],['her','Hernia discal'],['est','Estenosis'],['fac','Sínd. facetario'],['esc','Escoliosis'],['lis','Espondilolistesis']],'dx'),
+    mkSel('Imagen',   [['no','Sin imagen'],['rx','RX'],['rm','RM'],['tc','TC']],'img'),
+    mkSel('Cirugía',  [['no','No'],['si','Sí — especificar en notas']],'cx'),
+  ]));
+  mkBnav(w,true,'Dolor →',()=>{curStep++;renderProto();},2);
+}
+function luS2(w){
+  w.appendChild(mkNota('Patrón del dolor: mecánico, inflamatorio o neuropático? Irradiación exacta?'));
+  w.appendChild(mkCard('Dolor','',[
+    mkSel('EVA reposo',   [['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']],'evr'),
+    mkSel('EVA actividad',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']],'eva'),
+    mkSel('Irradiación',  [['no','No'],['glu','Glúteo'],['mus','Muslo'],['rod','Rodilla'],['pie','Pie']],'irr'),
+    mkSel('Parestesias',  [['no','No'],['si','Sí — hormigueo/adormecimiento']],'par'),
+    mkSel('Debilidad',    [['no','No'],['si','Sí — especificar en notas']],'deb'),
+    mkSel('Empeora con',  [['fle','Flexión'],['ext','Extensión'],['cam','Caminar'],['ses','Sedestación']],'emp'),
+    mkSel('Nocturno',     [['no','No'],['si','Sí ⚠']],'noc'),
+  ]));
+  mkBnav(w,true,'Exploración →',()=>{curStep++;renderProto();},3);
+}
+function luS3(w){
+  w.appendChild(mkNota('Valorar movilidad lumbar, reflejos y sensibilidad. Tests ortopédicos en el paso siguiente.'));
+  w.appendChild(mkCard('Exploración','',[
+    mkSel('Flexión lumbar',  [['nor','Normal'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'flex'),
+    mkSel('Extensión lumbar',[['nor','Normal'],['le','Leve lim.'],['mo','Moderada']],'ext'),
+    mkSel('Reflejo rotuliano',[['nor','Normal'],['dis','Disminuido'],['aus','Ausente ⚠']],'rref'),
+    mkSel('Reflejo aquíleo', [['nor','Normal'],['dis','Disminuido'],['aus','Ausente ⚠']],'aref'),
+    mkSel('Fuerza EEII',     [['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod ⚠'],['se','Déficit severo ⚠']],'feeii'),
+    mkSel('Postura',         [['nor','Normal'],['ant','Antálgica'],['esc','Escoliosis visible']],'pos'),
+    mkSel('Limitación',      [['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),
+    mkSel('Objetivo',        [['do','Eliminar dolor'],['fun','Recuperar función'],['dep','Deporte'],['lab','Laboral'],['cx','Evitar cirugía']],'obj'),
+  ]));
+  mkBnav(w,true,'Tests ortopédicos →',()=>{curStep++;renderProto();},4);
+}
+function luS4(w){
+  w.appendChild(mkNota('Realiza los tests según la sospecha. SLR y Bragard son prioritarios si hay irradiación.'));
+  const tc=ce('div','card');
+  tc.innerHTML='<div class="ct">Tests ortopédicos — Columna lumbar</div>';
+  const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Lesión discal / Radiculopatía';tc.appendChild(s1);
+  tc.appendChild(mkTest('slr','Test SLR (Straight Leg Raise / Lasègue)','https://drive.google.com/uc?export=view&id=1KoL5qfX-gSxcy-CWt6uviU7vhZz0hane',
+    'Decúbito supino. El fisio eleva pasivamente la pierna extendida. Anotar el ángulo en el que aparecen los síntomas (normal >70°).',
+    'Dolor que se irradia por el miembro inferior siguiendo el trayecto del nervio ciático entre 30° y 70°. Indica compresión radicular (L4-L5-S1).',
+    'Sin irradiación hasta 70° de elevación.',
+    'Sensibilidad 91%, especificidad 26%. Alta sensibilidad para hernia discal. Combinar con Bragard para aumentar especificidad.','alta'));
+  tc.appendChild(mkTest('bragard','Test de Bragard','https://drive.google.com/uc?export=view&id=1NzYAc3W4_9V0PqO4Xfs44K7pDsCww69A',
+    'Con la pierna en el ángulo positivo del SLR, el fisio baja ligeramente la pierna hasta que el dolor cede y luego hace una dorsiflexión del pie.',
+    'Reaparición del dolor ciático con la dorsiflexión. Confirma origen radicular y no muscular del dolor.',
+    'Sin reaparición del dolor con la dorsiflexión.',
+    'Aumenta la especificidad del SLR. Si SLR+ y Bragard+ → alta probabilidad de compresión radicular.','alta'));
+  tc.appendChild(mkTest('slump_lum','Slump Test','https://drive.google.com/uc?export=view&id=1594wvKKCzeWKWhJVVzQTEPPiIv1HifGr',
+    'Usuario sentado al borde de la camilla en flexión de columna total. Extiende la rodilla y hace dorsiflexión. El fisio mantiene la posición y el paciente extiende el cuello.',
+    'Reproducción de síntomas que se alivian al extender el cuello. Indica tensión neural o compresión radicular.',
+    'Sin síntomas o sin cambio al extender el cuello.',
+    'Sensibilidad 84%, especificidad 83%. Especialmente útil cuando el SLR es negativo pero hay sospecha de patología discal.','alta'));
+  tc.appendChild(mkTest('lasegue','Test de Lasègue cruzado','https://drive.google.com/uc?export=view&id=1KoL5qfX-gSxcy-CWt6uviU7vhZz0hane',
+    'Igual que el SLR pero se eleva la pierna SANA. Positivo si reproduce dolor en la pierna AFECTA.',
+    'Dolor en la pierna contralateral (la afecta) al elevar la pierna sana. Indica hernia discal grande con compresión medial.',
+    'Sin dolor contralateral.',
+    'LR+ 4.39. Si positivo → hernia con gran componente medial. Alta especificidad para hernia discal central.','alta'));
+  tc.appendChild(mkTest('milgram','Test de Milgram','https://drive.google.com/uc?export=view&id=1NzYAc3W4_9V0PqO4Xfs44K7pDsCww69A',
+    'Decúbito supino. El paciente eleva ambas piernas extendidas a 5cm del suelo y mantiene 30 segundos.',
+    'El paciente no puede mantener la posición o aparece dolor lumbar/radicular. Indica aumento de presión intradiscal o patología intraraquídea.',
+    'El paciente mantiene 30 segundos sin dolor significativo.',
+    'Específico para patología intraraquídea. Si no puede mantener → confirma sobrecarga discal.','media'));
+  tc.appendChild(mkTest('kernig','Test de Kernig-Brudzinski','https://drive.google.com/uc?export=view&id=1d51QYwV8pvYg7YaPKpY7By3WT_nb3scB',
+    'Decúbito supino. El fisio flexiona la cadera a 90° y luego extiende la rodilla pasivamente. También observa si hay flexión refleja de la rodilla contralateral (Brudzinski).',
+    'Resistencia dolorosa a la extensión de rodilla con la cadera flexionada. Indica irritación meníngea o radiculopatía.',
+    'Extensión de rodilla completa sin dolor.',
+    'En fisioterapia: positivo en radiculopatía severa o meningismo. Si hay fiebre + rigidez de nuca + Kernig+ → derivar urgente.','alta'));
+  tc.appendChild(mkTest('nachlas','Test de Nachlas','https://drive.google.com/uc?export=view&id=1i-mVtuGNgJ9sQK_Ad1vKvCRrdvrlzxF7',
+    'Decúbito prono. El fisio flexiona la rodilla llevando el talón al glúteo. Observa si hay dolor lumbar o en el muslo.',
+    'Dolor en la zona lumbar o en la cara anterior del muslo. Indica compresión radicular alta (L2-L3-L4) o tensión del nervio femoral.',
+    'Sin dolor lumbar ni en el muslo anterior.',
+    'Complementa el SLR para raíces altas (L2-L3-L4). Si SLR negativo pero Nachlas positivo → pensar en radiculopatía alta.','media'));
+  const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Síndrome facetario';tc.appendChild(s2);
+  tc.appendChild(mkTest('kent_test','Test del Cuadrante (Kent Test)','https://drive.google.com/uc?export=view&id=1Ljc9JWr-hAcHTYpsTo9IbrAcpGfe2VeD',
+    'Usuario de pie. El fisio estabiliza la pelvis y le pide que extienda, rote e incline lateralmente el tronco hacia el mismo lado simultáneamente (cuadrante).',
+    'Dolor local en la zona lumbar o irradiación al glúteo sin patrón radicular claro. Indica disfunción facetaria o irritación de las articulaciones interapofisarias.',
+    'Sin dolor con el movimiento combinado.',
+    'La combinación extensión+rotación+inclinación homolateral carga al máximo las facetas articulares del mismo lado. Específico para síndrome facetario.','media'));
+  const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Inestabilidad lumbar';tc.appendChild(s3);
+  tc.appendChild(mkTest('inest_seg','Test de Inestabilidad Segmentaria','https://drive.google.com/uc?export=view&id=12nqI3ULZxMK_rLtgdHNXxFkhBWVylPW8',
+    'Decúbito prono con piernas colgando al borde de la camilla. El fisio aplica presión posteroanterior sobre cada vértebra lumbar. Luego el paciente levanta las piernas isométricamente y se repite.',
+    'Dolor con la presión en posición relajada que desaparece al contraer la musculatura (piernas levantadas). Indica inestabilidad segmentaria lumbar.',
+    'Mismo dolor en ambas posiciones o sin dolor.',
+    'LR+ 4.0. Si positivo → indicación directa de trabajo de estabilización lumbar profunda (transverso, multífido).','alta'));
+  const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Escoliosis';tc.appendChild(s4);
+  tc.appendChild(mkTest('adams','Test de Adams (escoliosis lumbar)','https://drive.google.com/uc?export=view&id=1dYgbYpyGH4_gi2ZaD6uu-7XNScDv0bWP',
+    'Usuario de pie. Se le pide que se incline hacia adelante con rodillas extendidas y brazos colgando. El fisio observa desde atrás la simetría del tronco.',
+    'Prominencia lumbar visible (giba lumbar) con la flexión. Indica escoliosis estructural lumbar.',
+    'Tronco simétrico durante la flexión.',
+    'Si giba >5° → derivar a traumatología. En adolescentes en crecimiento es especialmente importante el diagnóstico precoz.','alta'));
+  mkFiltroSospecha('lumbar', tc);
+  w.appendChild(tc);
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
+  const ta=ce('textarea','');ta.placeholder='Anotaciones clínicas adicionales...';
+  ta.style.cssText='width:100%;min-height:70px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.obs_lumbar=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+function luSZ(w){renderInformeHub(w,'lumbar',[],[], getFase(D.evr,D.eva));}
+
+// ── LIBRE / OTROS — Steps ──────────────────────────────────────────────────
+function lbS1(w){
+  w.appendChild(mkNota('Valoración libre. Rellena lo que aplique según el caso.'));
+  w.appendChild(mkCard('Datos del paciente y lesión','',[
+    mkSel('Zona',     [['rod','Rodilla'],['hom','Hombro'],['cer','Cervical'],['cod','Codo/antebrazo'],['mun','Muñeca/mano'],['tob','Tobillo/pie'],['cad','Cadera/pelvis'],['sac','Sacroilíaca'],['lum','Lumbar'],['tor','Torácica'],['ot','Otra zona']],'zona_lb'),
+    mkSel('Lado',     [['der','Derecho'],['izq','Izquierdo'],['bil','Bilateral'],['na','No aplica']],'lado'),
+    mkSel('Evolución',[['ag','Aguda <2sem'],['sub','Subaguda 2-6sem'],['cro','Crónica >6sem']],'evol'),
+    mkSel('Inicio',   [['tra','Traumático'],['gra','Gradual'],['rep','Movimiento repetitivo'],['esp','Espontáneo']],'ini'),
+  ]));
+  mkBnav(w,true,'Dolor →',()=>{curStep++;renderProto();},2);
+}
+function lbS2(w){
+  w.appendChild(mkCard('Dolor','',[
+    mkSel('EVA reposo',   [['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']],'evr'),
+    mkSel('EVA actividad',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']],'eva'),
+    mkSel('Tipo',         [['mec','Mecánico'],['inf','Inflamatorio'],['neu','Neuropático'],['mix','Mixto']],'tip'),
+    mkSel('Nocturno',     [['no','No'],['si','Sí ⚠']],'noc'),
+    mkSel('Parestesias',  [['no','No'],['si','Sí']],'par'),
+  ]));
+  mkBnav(w,true,'Exploración →',()=>{curStep++;renderProto();},3);
+}
+function lbS3(w){
+  w.appendChild(mkCard('Exploración','',[
+    mkSel('Movilidad',   [['nor','Normal'],['le','Leve lim.'],['mo','Moderada'],['se','Severa']],'mob'),
+    mkSel('Fuerza',      [['nor','Normal'],['le','Déficit leve'],['mo','Déficit mod'],['se','Déficit severo']],'fue'),
+    mkSel('Inflamación', [['no','No'],['le','Leve'],['mo','Moderada']],'infl'),
+    mkSel('Limitación',  [['no','Sin lim.'],['le','Leve'],['mo','Moderada'],['se','Severa']],'lim'),
+    mkSel('Objetivo',    [['do','Eliminar dolor'],['fun','Recuperar función'],['dep','Deporte'],['lab','Laboral']],'obj'),
+  ]));
+  const obs=ce('div','');obs.style.marginTop='12px';
+  obs.innerHTML='<label style="font-size:12px;font-weight:600;color:var(--muted)">Observaciones clínicas libres</label>';
+  const ta=ce('textarea','');ta.placeholder='Describe libremente los hallazgos de la exploración, tests realizados, impresión clínica...';
+  ta.style.cssText='width:100%;min-height:120px;font-size:13px;border-radius:8px;padding:10px;border:1.5px solid var(--border);resize:vertical;font-family:var(--font);margin-top:6px';
+  ta.oninput=()=>{D.obs_libre=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+  mkBnav(w,true,'Tests ortopédicos →',()=>{curStep++;renderProto();},4);
+}
+function lbS4(w){
+  w.appendChild(mkNota('Selecciona la zona para ver los tests disponibles, o usa el campo libre si no aplica ningún test.'));
+  
+  // Zone selector to show relevant tests
+  const zoneWrap=ce('div','card');
+  zoneWrap.innerHTML='<div class="ct">Tests por zona (opcional)</div>';
+  const zSel=document.createElement('select');
+  zSel.style.cssText='width:100%;padding:10px;font-size:13px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font);margin-bottom:12px';
+  zSel.innerHTML='<option value="">— Selecciona zona para ver tests —</option>'+
+    '<option value="rodilla">Rodilla</option>'+
+    '<option value="hombro">Hombro</option>'+
+    '<option value="cervical">Cervical</option>'+
+    '<option value="codo">Codo y antebrazo</option>'+
+    '<option value="muneca">Muñeca y mano</option>'+
+    '<option value="tobillo">Tobillo y pie</option>'+
+    '<option value="cadera">Cadera y pelvis</option>'+
+    '<option value="sacro">Sacroilíaca</option>'+
+    '<option value="lumbar">Columna lumbar</option>'+
+    '<option value="toracica">Columna torácica</option>';
+  
+  const testContainer=ce('div','');
+  testContainer.style.cssText='margin-top:8px;font-size:13px;color:var(--muted);font-style:italic;padding:10px';
+  testContainer.textContent='Selecciona una zona para ver los tests disponibles.';
+  
+  zSel.onchange=()=>{
+    const zone=zSel.value;
+    if(!zone){testContainer.innerHTML='<p style="font-size:13px;color:var(--muted);font-style:italic">Selecciona una zona para ver los tests disponibles.</p>';return;}
+    testContainer.innerHTML='';
+    const sosp=SOSPECHAS[zone]||[];
+    if(sosp.length){
+      const info=ce('p','');info.style.cssText='font-size:12px;color:var(--muted);margin-bottom:8px';
+      info.textContent='Filtra por sospecha para ver los tests relevantes:';
+      testContainer.appendChild(info);
+      mkFiltroSospecha(zone, testContainer);
+    }
+    // Show tests for this zone from SOSPECHA_MAP
+    const testsForZone=Object.entries(SOSPECHA_MAP).filter(([id,sospechas])=>sospechas.some(s=>sosp.map(x=>x.id).includes(s)));
+    testsForZone.forEach(([id])=>{
+      const existing=document.querySelector('[data-testid="'+id+'"]');
+      if(existing)testContainer.appendChild(existing.cloneNode(true));
+    });
+  };
+  
+  zoneWrap.appendChild(zSel);
+  zoneWrap.appendChild(testContainer);
+  w.appendChild(zoneWrap);
+  
+  // Free text observations
+  const obs=ce('div','card');obs.style.marginTop='12px';
+  obs.innerHTML='<div class="ct">Notas clínicas libres</div>';
+  const ta=ce('textarea','');ta.placeholder='Tests realizados, hallazgos, impresión diagnóstica...';
+  ta.style.cssText='width:100%;min-height:100px;font-size:13px;border-radius:8px;padding:10px;border:1px solid var(--border);resize:vertical;font-family:var(--font)';
+  ta.oninput=()=>{D.notas_libre=ta.value;};
+  obs.appendChild(ta);w.appendChild(obs);
+  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},5);
+}
+function lbSZ(w){renderInformeHub(w,'libre',[],[], getFase(D.evr,D.eva));}
 
 function rSZ(w){renderInformeHub(w,'rodilla',gFR(),gFRF(),getFase(D.evr,D.eva));}
 
@@ -1134,19 +1611,19 @@ function fS4(w){
   tc.innerHTML='<div class="ct">Tests ortopédicos — Fascitis plantar / Pie</div>';
 
   const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Tests específicos de fascitis';tc.appendChild(s1);
-  tc.appendChild(mkTest('windlass','Test de Windlass',null,
+  tc.appendChild(mkTest('windlass','Test de Windlass','https://drive.google.com/uc?export=view&id=1pRIHe17lZSxR2ib1IcUwMVRdgoKR-oGp',
     'Usuario en bipedestación o sedente. El fisio extiende pasivamente el primer dedo del pie (dorsiflexión metatarsofalángica) para tensionar la fascia plantar mediante el mecanismo de cabrestante.',
     'Reproducción del dolor en el talón o en el arco plantar. Indica tensión patológica de la fascia plantar. Positivo para fasciopatía plantar.',
     'Sin dolor durante la extensión del primer dedo.',
     'El mecanismo de Windlass es la base biomecánica de la fascia plantar. Si positivo en bipedestación → más específico. Combinar con palpación del tubérculo calcáneo medial.',
     'alta'));
-  tc.appendChild(mkTest('silfverskiold','Test de Silfverskiöld',null,
+  tc.appendChild(mkTest('silfverskiold','Test de Silfverskiöld','https://drive.google.com/uc?export=view&id=1vIYOXUAeKzUTz9h11ZxZQuLyoPgEJ2Si',
     'Usuario en decúbito supino. El fisio evalúa la dorsiflexión del tobillo primero con rodilla en extensión y luego con rodilla en flexión a 90°.',
     'Dorsiflexión limitada con rodilla extendida pero normal con rodilla flexionada. Indica acortamiento específico del gastrocnemio (no del sóleo). Si limitada en ambas posiciones → acortamiento del complejo gastro-sóleo.',
     'Dorsiflexión ≥10° en ambas posiciones. Flexibilidad del complejo aquíleo normal.',
     'Clave para diferenciar si hay que estirar gastrocnemio (con rodilla extendida) o también sóleo (con rodilla flexionada). Guía directamente la pauta de estiramientos.',
     'alta'));
-  tc.appendChild(mkTest('tinel_pie','Signo de Tinel (pie)',null,
+  tc.appendChild(mkTest('tinel_pie','Signo de Tinel (pie)','https://drive.google.com/uc?export=view&id=1pRIHe17lZSxR2ib1IcUwMVRdgoKR-oGp',
     'El fisio aplica golpecitos con los dedos sobre el nervio tibial en la zona del túnel del tarso (cara posteromedial del tobillo).',
     'Parestesias (hormigueo, corriente) que se irradian hacia la planta del pie. Indica síndrome del túnel del tarso. Importante cuando hay parestesias asociadas a la fascitis.',
     'Sin hormigueo ni parestesias.',
@@ -1154,19 +1631,19 @@ function fS4(w){
     'media'));
 
   const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Pie plano / biomecánica';tc.appendChild(s2);
-  tc.appendChild(mkTest('navicular_drop','Test Navicular Drop (caída del navicular)',null,
+  tc.appendChild(mkTest('navicular_drop','Test Navicular Drop (caída del navicular)','https://drive.google.com/uc?export=view&id=1pBI9lXvmWK2vOH0TsOho0HVfq2nECkpe',
     'Usuario en sedente. El fisio marca la tuberosidad del navicular y mide su altura al suelo. Luego el usuario se pone de pie (con subastragalina en posición neutra) y se remide la distancia.',
     'Caída del navicular >10mm al pasar de sedente a bípedo. Indica hiperpronación del pie (pie plano funcional). Normal: 6–8mm.',
     'Caída ≤8mm. Biomecánica del pie dentro de la normalidad.',
     'La hiperpronación es un factor de sobrecarga de la fascia plantar. Si navicular drop elevado + fascitis → valorar ortesis o ejercicio de control medial.',
     'media'));
-  tc.appendChild(mkTest('feiss_line','Test Línea de Feiss',null,
+  tc.appendChild(mkTest('feiss_line','Test Línea de Feiss','https://drive.google.com/uc?export=view&id=1_MJSTa4IjVjoIS6Zmenzhxc8hnr7KeVc',
     'El fisio marca el ápex del maléolo medial y la cara medial de la primera articulación metatarsofalángica. Los une con una línea y palpa la tuberosidad navicular. Evaluar en descarga y en carga.',
     'La tuberosidad navicular cae claramente por debajo de la línea en carga. 1/3 bajo = pie plano grado I; 2/3 = grado II; sobre el suelo = grado III.',
     'Tuberosidad navicular sobre la línea o muy cerca en ambas posiciones.',
     'Complementa el navicular drop. Útil para comunicar visualmente al paciente su tipo de pie.',
     'baja'));
-  tc.appendChild(mkTest('paper_grip','Test Paper Grip',null,
+  tc.appendChild(mkTest('paper_grip','Test Paper Grip','https://drive.google.com/uc?export=view&id=14W5NcP7BY_1FwZwaUwPJouj4u9iHhyTv',
     'Usuario sentado con caderas, rodillas y tobillos a 90°. Se coloca un trozo de cartón bajo el pie. El fisio sujeta el cartón y el paciente intenta deslizarlo.',
     'El usuario no puede deslizar el cartón. Indica activación funcional de los músculos intrínsecos del pie (windlass activo). Si falla → disfunción de intrínsecos.',
     'El usuario desliza el cartón sin dificultad. Indica debilidad de intrínsecos.',
@@ -1174,7 +1651,7 @@ function fS4(w){
     'media'));
 
   const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Tendón de Aquiles';tc.appendChild(s3);
-  tc.appendChild(mkTest('thomson_fascitis','Test de Thomson (Aquiles)',null,
+  tc.appendChild(mkTest('thomson_fascitis','Test de Thomson (Aquiles)','https://drive.google.com/uc?export=view&id=141JOry867_fBHWbQpJ4FmGdA9MzIFrMV',
     'Decúbito prono, rodillas extendidas, pies fuera de la camilla. El fisio comprime el tercio medio de la pantorrilla entre pulgar y demás dedos.',
     'Ausencia de flexión plantar. Indica rotura completa del tendón de Aquiles.',
     'Flexión plantar presente. Tendón íntegro.',
@@ -1400,14 +1877,15 @@ const SOSPECHA_MAP = {
   cajon_ant_rod: ['lca'],
   pivot_shift:   ['lca'],
   cajon_post:    ['lcp'],
+  godfrey:       ['lcp'],
   inest_med:     ['lcm'],
   inest_lat:     ['lcl'],
   mcmurray:      ['menisco_med','menisco_lat'],
-  apley:         ['menisco_med','menisco_lat'],
-  signo_clarke:  ['patelofemoral','tend_rotuliana'],
+  apley:         ['menisco_med','menisco_lat','osteo_rod'],
+  signo_clarke:  ['patelofemoral','tend_rotuliana','plica'],
+  glide_rot:     ['patelofemoral','tend_rotuliana'],
+  mcconnell_rot: ['patelofemoral','tend_rotuliana'],
   noble:         ['banda_it'],
-  mcconnell_rot: ['tend_rotuliana','patelofemoral'],
-  glide_rot:     ['tend_rotuliana','patelofemoral'],
   // HOMBRO
   hawk:          ['impingement','capsulitis'],
   emptycan:      ['impingement','rotura_manguito'],
@@ -1418,113 +1896,147 @@ const SOSPECHA_MAP = {
   drop_arm:      ['rotura_manguito'],
   hornblower:    ['rotura_manguito'],
   liftoff:       ['rotura_manguito'],
+  speeds:        ['rotura_manguito','biceps_hom'],
   aprehension:   ['inest_anterior','labrum_slap'],
   recolocacion:  ['inest_anterior','labrum_slap'],
   cajon_ant_hom: ['inest_anterior'],
-  surco_sign:    ['inest_posterior'],
+  surco_sign:    ['inest_posterior','inest_inferior'],
   aprehension_post: ['inest_posterior'],
   hawkins_cap:   ['capsulitis'],
   obrien:        ['labrum_slap'],
-  yergason:      ['biceps'],
+  crank:         ['labrum_slap'],
+  compresion_rot:['labrum_slap'],
+  kibler:        ['labrum_slap'],
+  yergason:      ['biceps_hom'],
   paxinos:       ['acromioclavicular'],
   // CERVICAL
-  compresion:    ['radiculopatia'],
-  spurling:      ['radiculopatia'],
+  compresion:    ['radiculopatia','facetario_cerv'],
+  spurling:      ['radiculopatia','facetario_cerv'],
+  jackson:       ['radiculopatia','facetario_cerv'],
   distraccion:   ['radiculopatia'],
+  traccion_cerv: ['radiculopatia'],
+  ultt:          ['radiculopatia','plexo_braquial','operculo'],
   bakody:        ['radiculopatia'],
   sharp_purser:  ['inest_c1c2'],
   alar_flex:     ['inest_c1c2'],
+  alar_rot:      ['inest_c1c2'],
   arteria_vertebral: ['arteria_vertebral'],
   romberg_cerv:  ['mielopatia'],
+  lhermitte:     ['mielopatia','discal_cerv'],
+  item_cluster:  ['mielopatia'],
   adson:         ['operculo'],
+  allen_cerv:    ['operculo'],
   roos:          ['operculo'],
-  // TOBILLO
+  wright:        ['operculo'],
+  // CODO Y ANTEBRAZO
+  tennis_elbow:  ['epicondilitis'],
+  mill_test:     ['epicondilitis'],
+  golfer_elbow:  ['epitrocleitis'],
+  mills_reverso: ['epitrocleitis'],
+  tinel_codo:    ['neuropatia_cubital'],
+  valgo_stress:  ['lcm_codo'],
+  yergason_codo: ['biceps_codo'],
+  // MUÑECA Y MANO
+  tinel_muneca:  ['tunel_carpiano'],
+  phalens:       ['tunel_carpiano'],
+  compresion_carpo: ['tunel_carpiano','fractura_esc'],
+  ultt_mun:      ['tunel_carpiano'],
+  inest_carpo:   ['inest_carpo_m'],
+  finkelstein:   ['dequervain'],
+  teclado_piano: ['fctp'],
+  impactacion_ulnar: ['fctp'],
+  figura8_mano:  ['edema_mano'],
+  // TOBILLO Y PIE
   cajon_ant_tob: ['esguince_lateral'],
   tilt_talar:    ['esguince_lateral'],
   molloy:        ['pinzamiento_ant'],
   compresion_tobillo: ['sindesmosis'],
-  thomson_tob:   ['aquiles'],
-  tinel_tarso:   ['tunel_tarso'],
-  dorsiflex_eversion: ['tunel_tarso'],
-  homan:         ['tvp'],
-  // FASCITIS
-  windlass:      ['fascitis_plantar'],
-  silfverskiold: ['fascitis_plantar','aquiles_fas'],
-  tinel_pie:     ['tunel_tarso_fas'],
-  navicular_drop:['pie_plano'],
+  thomson_tob:   ['aquiles_tob'],
+  tinel_tarso:   ['tunel_tarso_tob'],
+  dorsiflex_eversion: ['tunel_tarso_tob','neuropatia_tob'],
+  navicular_drop:['pie_plano','fascitis_tob'],
   feiss_line:    ['pie_plano'],
-  paper_grip:    ['fascitis_plantar','pie_plano'],
-  thomson_fascitis: ['aquiles_fas'],
-  // CADERA
-  fadir:         ['fai_labrum'],
-  faber:         ['fai_labrum','coxartrosis','psoas'],
-  mccarthy:      ['fai_labrum'],
-  scour:         ['fai_labrum','coxartrosis'],
+  paper_grip:    ['fascitis_tob','pie_plano','intrinsec'],
+  windlass:      ['fascitis_tob'],
+  silfverskiold: ['fascitis_tob','aquiles_tob'],
+  bump_test:     ['fractura_estres_pie'],
+  figura8_pie:   ['tvp_pie'],
+  homan:         ['tvp_pie'],
+  wells_tvp:     ['tvp_pie'],
+  // CADERA Y PELVIS
+  fadir:         ['fai','labrum_cad'],
+  faber:         ['fai','labrum_cad','coxartrosis','psoas_cad'],
+  mccarthy:      ['fai','labrum_cad'],
+  scour:         ['fai','labrum_cad','coxartrosis'],
   fair:          ['piriforme'],
-  trendelenburg: ['tend_glutea','coxartrosis','psoas'],
-  thomas_test:   ['psoas'],
-  ober_test:     ['banda_it_cad'],
-  craig_test:    ['fai_labrum'],
-  // CODO
-  tennis_elbow:  ['epicondilitis'],
-  mill_test:     ['epicondilitis'],
-  golfer_elbow:  ['epitrocleitis'],
-  tinel_codo:    ['neuropatia_cubital'],
-  valgo_stress:  ['lcm_codo'],
-  yergason_codo: ['biceps_codo'],
+  trendelenburg: ['tend_glutea','coxartrosis','psoas_cad'],
+  thomas_test:   ['psoas_cad','long_muscular'],
+  ober_test:     ['banda_it_cad','long_muscular'],
+  craig_test:    ['anteversion','fai'],
+  ely_test:      ['long_muscular'],
+  longitud_eeii: ['dismetria'],
+  // SACROILÍACA
+  trendelenburg_sa: ['disfuncion_si'],
+  muelle:        ['disfuncion_si'],
+  yeoman:        ['disfuncion_si'],
+  gaenslen:      ['disfuncion_si'],
+  faber_sa:      ['disfuncion_si'],
+  gillet:        ['disfuncion_si'],
+  long_sitting:  ['disfuncion_si'],
+  // COLUMNA LUMBAR
+  milgram:       ['discal_lum'],
+  kernig:        ['discal_lum'],
+  nachlas:       ['discal_lum'],
+  slr:           ['discal_lum','radiculopatia_lum','estenosis_lum'],
+  bragard:       ['discal_lum','radiculopatia_lum'],
+  slump_lum:     ['discal_lum','radiculopatia_lum','estenosis_lum'],
+  lasegue:       ['discal_lum','radiculopatia_lum'],
+  kent_test:     ['facetario_lum'],
+  inest_seg:     ['inest_lum'],
+  adams:         ['escoliosis_lum'],
+  // COLUMNA TORÁCICA
+  aprox_escap:   ['alt_mecanica_tor'],
+  schepelmann:   ['neuritis_int'],
+  slump_tor:     ['disfuncion_medular'],
+  adams_tor:     ['escoliosis_tor'],
 };
 
 // Sospechas por región
 const SOSPECHAS = {
   rodilla: [
-    {id:'lca',          label:'LCA'},
-    {id:'lcp',          label:'LCP'},
-    {id:'lcm',          label:'LCM'},
-    {id:'lcl',          label:'LCL'},
-    {id:'menisco_med',  label:'Menisco medial'},
-    {id:'menisco_lat',  label:'Menisco lateral'},
-    {id:'patelofemoral',label:'Patelofemoral'},
-    {id:'banda_it',     label:'Banda IT'},
+    {id:'lca',           label:'LCA'},
+    {id:'lcp',           label:'LCP'},
+    {id:'lcm',           label:'LCM'},
+    {id:'lcl',           label:'LCL'},
+    {id:'menisco_med',   label:'Menisco medial'},
+    {id:'menisco_lat',   label:'Menisco lateral'},
+    {id:'patelofemoral', label:'Patelofemoral'},
     {id:'tend_rotuliana',label:'T. rotuliana'},
+    {id:'banda_it',      label:'Banda IT'},
+    {id:'osteo_rod',     label:'Osteoartritis'},
+    {id:'plica',         label:'Plica sinovial'},
   ],
   hombro: [
     {id:'impingement',     label:'Impingement'},
     {id:'rotura_manguito', label:'Rotura manguito'},
     {id:'inest_anterior',  label:'Inestabilidad ant.'},
     {id:'inest_posterior', label:'Inestabilidad post.'},
+    {id:'inest_inferior',  label:'Inestabilidad inf./MDI'},
     {id:'capsulitis',      label:'Capsulitis'},
     {id:'labrum_slap',     label:'Labrum / SLAP'},
-    {id:'biceps',          label:'Bíceps'},
+    {id:'biceps_hom',      label:'Bíceps'},
     {id:'acromioclavicular',label:'Acromioclavicular'},
   ],
   cervical: [
     {id:'radiculopatia',    label:'Radiculopatía'},
+    {id:'facetario_cerv',   label:'Sínd. facetario'},
+    {id:'discal_cerv',      label:'Patología discal'},
     {id:'inest_c1c2',       label:'Inestabilidad C1-C2'},
-    {id:'arteria_vertebral',label:'Arteria vertebral'},
+    {id:'arteria_vertebral',label:'Insuf. vertebrobasilar'},
     {id:'mielopatia',       label:'Mielopatía'},
+    {id:'plexo_braquial',   label:'Plexo braquial'},
     {id:'operculo',         label:'Opérculo torácico'},
-  ],
-  tobillo: [
-    {id:'esguince_lateral', label:'Esguince lateral'},
-    {id:'sindesmosis',      label:'Sindesmosis'},
-    {id:'aquiles',          label:'Aquiles'},
-    {id:'tunel_tarso',      label:'Túnel del tarso'},
-    {id:'pinzamiento_ant',  label:'Pinzamiento ant.'},
-    {id:'tvp',              label:'TVP'},
-  ],
-  fascitis: [
-    {id:'fascitis_plantar', label:'Fascitis plantar'},
-    {id:'tunel_tarso_fas',  label:'Túnel del tarso'},
-    {id:'pie_plano',        label:'Pie plano'},
-    {id:'aquiles_fas',      label:'Aquiles'},
-  ],
-  cadera: [
-    {id:'fai_labrum',   label:'FAI / Labrum'},
-    {id:'piriforme',    label:'Piriforme'},
-    {id:'coxartrosis',  label:'Coxartrosis'},
-    {id:'tend_glutea',  label:'T. glútea'},
-    {id:'psoas',        label:'Psoas'},
-    {id:'banda_it_cad', label:'Banda IT'},
+    {id:'cefalea_cerv',     label:'Cefalea cervicogénica'},
   ],
   codo: [
     {id:'epicondilitis',     label:'Epicondilitis lat.'},
@@ -1532,7 +2044,59 @@ const SOSPECHAS = {
     {id:'neuropatia_cubital',label:'N. cubital'},
     {id:'lcm_codo',          label:'LCM codo'},
     {id:'biceps_codo',       label:'Bíceps distal'},
+    {id:'osteo_codo',        label:'Osteoartritis'},
   ],
+  muneca: [
+    {id:'tunel_carpiano',  label:'Túnel carpiano'},
+    {id:'dequervain',      label:'De Quervain'},
+    {id:'inest_carpo_m',   label:'Inestabilidad carpo'},
+    {id:'fractura_esc',    label:'Fractura escafoides'},
+    {id:'fctp',            label:'Lesión fibrocartílago'},
+    {id:'edema_mano',      label:'Edema muñeca/mano'},
+  ],
+  tobillo: [
+    {id:'esguince_lateral',  label:'Esguince lateral'},
+    {id:'sindesmosis',       label:'Sindesmosis'},
+    {id:'aquiles_tob',       label:'Aquiles'},
+    {id:'tunel_tarso_tob',   label:'Túnel del tarso'},
+    {id:'pinzamiento_ant',   label:'Pinzamiento ant.'},
+    {id:'pie_plano',         label:'Pie plano'},
+    {id:'fascitis_tob',      label:'Fascitis plantar'},
+    {id:'intrinsec',         label:'Intrínsecos pie'},
+    {id:'fractura_estres_pie',label:'Fractura por estrés'},
+    {id:'tvp_pie',           label:'TVP'},
+    {id:'neuropatia_tob',    label:'Neuropatía'},
+  ],
+  cadera: [
+    {id:'fai',          label:'FAI'},
+    {id:'labrum_cad',   label:'Labrum'},
+    {id:'coxartrosis',  label:'Coxartrosis'},
+    {id:'piriforme',    label:'Piriforme'},
+    {id:'psoas_cad',    label:'Psoas'},
+    {id:'tend_glutea',  label:'T. glútea'},
+    {id:'banda_it_cad', label:'Banda IT'},
+    {id:'anteversion',  label:'Anteversión femoral'},
+    {id:'dismetria',    label:'Dismetría EEII'},
+    {id:'long_muscular',label:'Longitud muscular'},
+  ],
+  sacro: [
+    {id:'disfuncion_si', label:'Disfunción sacroilíaca'},
+  ],
+  lumbar: [
+    {id:'discal_lum',       label:'Lesión discal'},
+    {id:'radiculopatia_lum',label:'Radiculopatía'},
+    {id:'facetario_lum',    label:'Sínd. facetario'},
+    {id:'inest_lum',        label:'Inestabilidad lumbar'},
+    {id:'estenosis_lum',    label:'Estenosis canal'},
+    {id:'escoliosis_lum',   label:'Escoliosis'},
+  ],
+  toracica: [
+    {id:'alt_mecanica_tor', label:'Alt. mecánica dorsal'},
+    {id:'neuritis_int',     label:'Neuritis intercostal'},
+    {id:'disfuncion_medular',label:'Disfunción medular'},
+    {id:'escoliosis_tor',   label:'Escoliosis'},
+  ],
+  libre: [],
 };
 
 function mkFiltroSospecha(region, contenedor) {
@@ -1703,13 +2267,13 @@ function cS5(w){
 
   // Tests adicionales del PDF no incluidos anteriormente
   const secA=ce('p','');secA.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secA.textContent='Inestabilidad cervical superior';tc.appendChild(secA);
-  tc.appendChild(mkTest('sharp_purser','Test de Sharp-Purser (Inestabilidad C1-C2)',null,
+  tc.appendChild(mkTest('sharp_purser','Test de Sharp-Purser (Inestabilidad C1-C2)','https://drive.google.com/uc?export=view&id=1bqOEd157leGr4Xvxlcf4r-_hsFg3INgm',
     'Usuario sedente con el cuello en semiflexión. El fisio coloca la palma en la frente y el dedo índice sobre la apófisis espinosa de C2. Aplica presión anteroposterior a través de la frente.',
     'Deslizamiento de la cabeza hacia posterior respecto al axis. Indica inestabilidad atlantoaxial (C1-C2).',
     'Sin desplazamiento posterior de la cabeza. No hay inestabilidad atlantoaxial significativa.',
     'Sensibilidad 69%, especificidad 96%, LR+ 17.25. CONTRAINDICADA la manipulación cervical si positivo. Derivar urgente. Frecuente en artritis reumatoide y síndrome de Down.',
     'alta'));
-  tc.appendChild(mkTest('alar_flex','Test de Estrés Flexión Lateral (Ligamento Alar)',null,
+  tc.appendChild(mkTest('alar_flex','Test de Estrés Flexión Lateral (Ligamento Alar)','https://drive.google.com/uc?export=view&id=1EDJMilimz11DPi6R0CgZ-5G4MDbzSEeN',
     'Usuario en supino con la cabeza en posición neutra. El fisio estabiliza el axis con agarre alrededor del proceso espinoso y lámina. Aplica flexión lateral forzada de la cabeza.',
     'Movimiento lateral excesivo sin tope capsular firme. Indica lesión del ligamento alar del lado opuesto a la flexión.',
     'Mínima flexión lateral con tope capsular firme y sólido. Ligamentos alares íntegros.',
@@ -1717,7 +2281,7 @@ function cS5(w){
     'media'));
 
   const secB=ce('p','');secB.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secB.textContent='Insuficiencia vertebrobasilar';tc.appendChild(secB);
-  tc.appendChild(mkTest('arteria_vertebral','Test Estático Arteria Vertebral',null,
+  tc.appendChild(mkTest('arteria_vertebral','Test Estático Arteria Vertebral','https://drive.google.com/uc?export=view&id=1PUhxH8tyMR7g2yfNQq_SrGIo4IBaPBqt',
     'Usuario en supino o sedente. El fisio sostiene la cabeza y lleva pasivamente a extensión + rotación combinadas (la posición más provocadora). Mantener 30 segundos observando al paciente.',
     'Nistagmo ocular, mareos, aturdimiento, visión borrosa o síntomas neurológicos. Indica posible compromiso de la arteria vertebral.',
     'Sin síntomas durante la maniobra.',
@@ -1725,7 +2289,7 @@ function cS5(w){
     'media'));
 
   const secC=ce('p','');secC.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secC.textContent='Mielopatía cervical';tc.appendChild(secC);
-  tc.appendChild(mkTest('romberg_cerv','Test de Romberg (Mielopatía)',null,
+  tc.appendChild(mkTest('romberg_cerv','Test de Romberg (Mielopatía)','https://drive.google.com/uc?export=view&id=1RByqAXg8Juv_biHIBReKbk03ur1wfxRm',
     'Usuario de pie, brazos al lado del cuerpo. Se le pide que cierre los ojos y mantenga la posición 20–30 segundos.',
     'El cuerpo oscila en exceso o el usuario pierde el equilibrio. Indica posible lesión de motoneurona superior (mielopatía cervical).',
     'El usuario mantiene el equilibrio con ojos cerrados.',
@@ -1733,19 +2297,19 @@ function cS5(w){
     'alta'));
 
   const secD=ce('p','');secD.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';secD.textContent='Síndrome del opérculo torácico (SOT)';tc.appendChild(secD);
-  tc.appendChild(mkTest('adson','Test / Maniobra de Adson (SOT)',null,
+  tc.appendChild(mkTest('adson','Test / Maniobra de Adson (SOT)','https://drive.google.com/uc?export=view&id=1pm7eresHuWy6bqbCfwaa7vgmZQwq2uS-',
     'El fisio localiza el pulso radial. Rota la cabeza del usuario hacia el lado ipsilateral. El usuario extiende la cabeza mientras el fisio rota externamente y extiende el hombro. El usuario realiza una inspiración profunda sostenida.',
     'Desaparición o disminución del pulso radial durante la maniobra. Indica compresión vascular en el desfiladero torácico.',
     'El pulso radial se mantiene durante toda la maniobra.',
     'Frecuentemente positivo también en personas sin SOT (falsos positivos). Combinar con Test de Roos y Test de Allen para mayor precisión diagnóstica.',
     'baja'));
-  tc.appendChild(mkTest('roos','Test de Roos / EAST (SOT)',null,
+  tc.appendChild(mkTest('roos','Test de Roos / EAST (SOT)','https://drive.google.com/uc?export=view&id=1-THnDhra_lEVcAbkVldzvOcntTwOyl-J',
     'Usuario de pie. Brazos en abducción a 90°, rotación lateral de hombro, codos a 90° (ligeramente por detrás del plano frontal). El usuario abre y cierra las manos lentamente durante 3 minutos.',
     'El usuario es incapaz de mantener la posición 3 minutos, o aparece dolor isquémico, pesadez profunda del brazo, o entumecimiento/hormigueo en la mano.',
     'El usuario completa 3 minutos con fatiga mínima y sin síntomas.',
     'El test de Roos (EAST) es el más útil para SOT. La reproducción de síntomas típicos del paciente en esta posición es muy sugestiva de compromiso del desfiladero.',
     'media'));
-  tc.appendChild(mkTest('bakody','Test de Bakody / Abducción del Hombro',null,
+  tc.appendChild(mkTest('bakody','Test de Bakody / Abducción del Hombro','https://drive.google.com/uc?export=view&id=1b1f2sGj-a5BKjRP4AodocirKusZNtha_',
     'Usuario sedente o supino. El fisio o el propio usuario eleva el brazo pasivamente con abducción para que la mano o antebrazo descansen sobre la cabeza.',
     'Disminución o alivio de los síntomas radiculares (dolor, parestesias) al elevar el brazo. Indica compresión extradural cervical (hernia discal, raíz C4-C5 o C5-C6).',
     'Los síntomas no cambian con la elevación del brazo.',
@@ -1753,6 +2317,51 @@ function cS5(w){
     'alta'));
 
   w.appendChild(tc);
+
+
+  const sc_rad2=ce('p','');sc_rad2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sc_rad2.textContent='Radiculopatía (adicionales)';tc.appendChild(sc_rad2);
+  tc.appendChild(mkTest('jackson','Test de Compresión de Jackson','https://drive.google.com/uc?export=view&id=1AtMoCzzSlf5YxcgX249IJmjJGrCEzKkG',
+    'Usuario sentado con el cuello en posición neutra. El fisio aplica una compresión axial sobre la cabeza con ambas manos.',
+    'Reproducción o aumento del dolor cervical o radicular. Indica compresión de las raíces nerviosas cervicales o síndrome facetario.',
+    'Sin dolor o molestia leve sin irradiación.',
+    'Combinar con Spurling. Si Jackson+ y Spurling+ → alta probabilidad de radiculopatía o síndrome facetario cervical.','media'));
+  tc.appendChild(mkTest('traccion_cerv','Test de Tracción Cervical','https://drive.google.com/uc?export=view&id=1b1f2sGj-a5BKjRP4AodocirKusZNtha_',
+    'Usuario sedente o supino. El fisio aplica una tracción suave y sostenida sobre la cabeza (5-10kg) durante 30 segundos.',
+    'Disminución o alivio del dolor cervical o radicular con la tracción. Indica compresión radicular o discal.',
+    'Sin cambio o aumento del dolor.',
+    'Si la tracción alivia → indicación directa de tracción como técnica terapéutica. LR+ 2.0 para radiculopatía cervical.','media'));
+  tc.appendChild(mkTest('ultt','Test de Tensión EESS / Upper Limb Tension Test (ULTT)','https://drive.google.com/uc?export=view&id=1594wvKKCzeWKWhJVVzQTEPPiIv1HifGr',
+    'Usuario supino. El fisio deprime el hombro, abduce a 110°, extiende el codo, supina el antebrazo y extiende muñeca y dedos. Luego inclina la cabeza al lado contrario.',
+    'Reproducción de parestesias o dolor en el miembro superior que aumentan al inclinar la cabeza al lado contrario. Indica tensión del nervio mediano y radiculopatía cervical.',
+    'Sin síntomas o sin cambio con la inclinación cervical.',
+    'Sensibilidad 97%, especificidad 22%. Muy sensible para radiculopatía cervical. Un ULTT negativo prácticamente la descarta.','alta'));
+  const sc_miel2=ce('p','');sc_miel2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sc_miel2.textContent='Mielopatía (adicionales)';tc.appendChild(sc_miel2);
+  tc.appendChild(mkTest('lhermitte','Signo de Lhermitte','https://drive.google.com/uc?export=view&id=1z1VCp7FSqikJ1_lcLvB5v3pP3QmPZCND',
+    'Usuario sedente. El fisio flexiona pasivamente el cuello del paciente de forma rápida.',
+    'Sensación eléctrica que se irradia por la columna o hacia los miembros con la flexión cervical. Indica desmielinización de la médula espinal cervical.',
+    'Sin sensación eléctrica con la flexión cervical.',
+    'Si positivo → CONTRAINDICADA la manipulación cervical. Derivar urgente a neurología. Frecuente en esclerosis múltiple y mielopatía compresiva.','alta'));
+  tc.appendChild(mkTest('item_cluster','Test Ítem Cluster (Mielopatía)','https://drive.google.com/uc?export=view&id=1bqOEd157leGr4Xvxlcf4r-_hsFg3INgm',
+    'Evalúa 5 signos: 1) Marcha espástica, 2) Signo de Hoffmann, 3) Hiperreflexia, 4) Test de inversión del reflejo radial, 5) Test de Romberg.',
+    '3 o más de los 5 signos positivos. Indica mielopatía cervical con alta especificidad.',
+    'Menos de 3 signos positivos.',
+    'LR+ 30.9 con 4+ signos positivos. Si 3 o más positivos → CONTRAINDICADA manipulación. Derivar a neurocirugía.','alta'));
+  const sc_sot2=ce('p','');sc_sot2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sc_sot2.textContent='Opérculo torácico (adicionales)';tc.appendChild(sc_sot2);
+  tc.appendChild(mkTest('alar_rot','Test de Estrés Rotacional Ligamento Alar','https://drive.google.com/uc?export=view&id=1MxXxB0SpMGPGngWciyhgprCOljOhI6Vq',
+    'Usuario en supino. El fisio estabiliza el axis con agarre alrededor del proceso espinoso. Aplica una rotación forzada de la cabeza hacia ambos lados.',
+    'Rotación excesiva sin tope capsular firme. Indica lesión del ligamento alar del lado hacia donde se rota.',
+    'Rotación con tope firme y sólido en ambos lados.',
+    'CONTRAINDICADA la manipulación si positivo. Complementa el test de estrés en flexión lateral.','media'));
+  tc.appendChild(mkTest('allen_cerv','Test de Allen (Opérculo torácico)','https://drive.google.com/uc?export=view&id=12I9nFe4u8hvGmHPzFovn5mDatnlwXCv0',
+    'El fisio localiza el pulso radial. Eleva el brazo a 90° de abducción y rotación externa. El paciente rota la cabeza hacia el lado contralateral.',
+    'Disminución o desaparición del pulso radial. Indica compresión vascular en el desfiladero torácico.',
+    'El pulso radial se mantiene durante la maniobra.',
+    'Combinar con Adson y Roos. La combinación de los tres aumenta la precisión diagnóstica del SOT.','baja'));
+  tc.appendChild(mkTest('wright','Test / Maniobra de Wright','https://drive.google.com/uc?export=view&id=1ruxq_0m8Wr95VLKWkY-uU_nW2RyldmOV',
+    'El fisio localiza el pulso radial. Eleva el brazo a 180° de abducción (brazo por encima de la cabeza) con rotación externa.',
+    'Disminución o desaparición del pulso radial con el brazo elevado. Indica compresión del paquete vasculonervioso en el espacio costoclavicular.',
+    'El pulso radial se mantiene con el brazo elevado.',
+    'Positivo en muchas personas sin SOT (alta tasa de falsos positivos). Interpretar siempre en contexto clínico.','baja'));
 
   const obs=ce('div','card');obs.style.marginTop='12px';
   obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
@@ -1888,7 +2497,7 @@ function hS4(w){
   tc.appendChild(sec1);
 
   tc.appendChild(mkTest(
-    'hawk','Test de Hawkins-Kennedy',null,
+    'hawk','Test de Hawkins-Kennedy','https://drive.google.com/uc?export=view&id=1YEDv_7NAzVhBFm7uYeHkzV6MWeQnbTZg',
     'Usuario de pie. El fisioterapeuta coloca el brazo en doble flexión de 90° (hombro y codo flexionados) y aplica una fuerza de rotación interna forzada.',
     'Dolor en la región subacromial o deltoidea. Indica pinzamiento del tendón supraespinoso bajo el arco coracoacromial durante la rotación interna.',
     'Sin dolor. No descarta completamente el impingement pero reduce la probabilidad.',
@@ -1897,7 +2506,7 @@ function hS4(w){
   ));
 
   tc.appendChild(mkTest(
-    'emptycan','Test Empty Can (Supraespinoso)',null,
+    'emptycan','Test Empty Can (Supraespinoso)','https://drive.google.com/uc?export=view&id=1WbK0ziVrrG0QKGIShdnIbcxHbEuY9YiL',
     'Usuario de pie con brazos elevados a 90° en el plano escapular (30° hacia delante), pulgares apuntando hacia abajo (posición de "lata vacía"). El fisioterapeuta aplica presión hacia abajo y el usuario resiste.',
     'Debilidad para mantener la posición o dolor. Indica lesión del tendón supraespinoso — diferencia entre dolor (tendinosis/bursitis) y debilidad (posible rotura).',
     'Fuerza simétrica sin dolor. Buen indicador de integridad del supraespinoso.',
@@ -1909,7 +2518,7 @@ function hS4(w){
   tc.appendChild(sec2);
 
   tc.appendChild(mkTest(
-    'aprehension','Test de Aprehensión anterior',null,
+    'aprehension','Test de Aprehensión anterior','https://drive.google.com/uc?export=view&id=1ydbKzSvFyFHSzeoLf5nFMzTNFMfwbKTV',
     'Usuario en decúbito supino. El fisioterapeuta coloca el brazo en 90° de abducción, 90° de flexión de codo y lleva el hombro a rotación externa progresiva.',
     'El paciente presenta sensación de inestabilidad o miedo a que el hombro se salga (aprehensión), o dolor anterior. Indica inestabilidad glenohumeral anterior — posible lesión de Bankart o laxitud capsular anterior.',
     'Sin aprehensión ni dolor. No hay inestabilidad anterior significativa.',
@@ -1921,7 +2530,7 @@ function hS4(w){
   tc.appendChild(sec3);
 
   tc.appendChild(mkTest(
-    'yergason','Test de Yergason',null,
+    'yergason','Test de Yergason','https://drive.google.com/uc?export=view&id=1h2ee1VT5v954lor6k6kS099io47XCMw3',
     'Usuario sentado con el codo a 90° de flexión. Se pide que supine el antebrazo contra la resistencia del fisioterapeuta, que palpa simultáneamente la corredera bicipital.',
     'Dolor localizado en la corredera bicipital (cara anterior del hombro) durante la supinación resistida. Indica tendinopatía de la porción larga del bíceps.',
     'Sin dolor en la corredera bicipital. No hay tendinopatía del bíceps significativa.',
@@ -1951,25 +2560,25 @@ function hS4(w){
 
   // Tests adicionales del PDF no incluidos anteriormente
   const s5b=ce('p','');s5b.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5b.textContent='Pinzamiento subacromial (adicionales)';tc.appendChild(s5b);
-  tc.appendChild(mkTest('neer','Test de Neer',null,
+  tc.appendChild(mkTest('neer','Test de Neer','https://drive.google.com/uc?export=view&id=1uQTsEVEB70xGAamkAZKF81HnHkxDD8wR',
     'Usuario de pie o sentado. El fisio eleva el brazo en rotación interna hasta elevación máxima.',
     'Dolor subacromial o en la cara anterior del hombro. Indica pinzamiento del tendón supraespinoso bajo el arco coracoacromial.',
     'Sin dolor durante la elevación.',
     'Sensibilidad 79%, especificidad 53%, LR+ 1.7. Combinar con Hawkins-Kennedy. Si ambos positivos → alta sospecha de impingement subacromial.',
     'alta'));
-  tc.appendChild(mkTest('yocum','Test de Yocum',null,
+  tc.appendChild(mkTest('yocum','Test de Yocum','https://drive.google.com/uc?export=view&id=1RLjCSs97ySZlHeTzGZGBe8HLvnQceb5T',
     'Usuario de pie o sentado. Lleva la mano ipsilateral al hombro contralateral. Eleva el codo.',
     'Dolor en la región subacromial al elevar el codo.',
     'Sin dolor durante la maniobra.',
     'Sensibilidad 79%, especificidad 40%, LR+ 1.3. Fácil de realizar. Complementa Hawkins y Neer.',
     'media'));
-  tc.appendChild(mkTest('aduccion_horiz','Test de Aducción Horizontal',null,
+  tc.appendChild(mkTest('aduccion_horiz','Test de Aducción Horizontal','https://drive.google.com/uc?export=view&id=1HcZYJbkQMIycmAeHZ_PWaDTm_mfpwLwW',
     'El fisio fuerza el brazo del usuario en aducción horizontal con el codo flexionado y la mano apoyada en el hombro del mismo lado.',
     'Dolor subacromial o acromioclavicular durante la aducción forzada.',
     'Sin dolor.',
     'Sensibilidad 82%, especificidad 28%. Útil también para detectar patología acromioclavicular. Alta sensibilidad para impingement.',
     'media'));
-  tc.appendChild(mkTest('irrs','Test IRRS (Rotación Interna Resistida)',null,
+  tc.appendChild(mkTest('irrs','Test IRRS (Rotación Interna Resistida)','https://drive.google.com/uc?export=view&id=1PdHyYkyU9HLGTbMkfUdT3YFB4qLNRc73',
     'Usuario de pie. El fisio coloca el brazo en 90° de abducción y 80° de rotación externa. Aplica resistencia contra la rotación externa y luego contra la rotación interna en la misma posición.',
     'Mayor debilidad en rotación interna que en externa → patología intra-articular. Mayor debilidad en rotación externa → síndrome de pinzamiento.',
     'Fuerza simétrica en ambas rotaciones.',
@@ -1977,19 +2586,19 @@ function hS4(w){
     'alta'));
 
   const s5c=ce('p','');s5c.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5c.textContent='Manguito rotador — rotura';tc.appendChild(s5c);
-  tc.appendChild(mkTest('drop_arm','Test Drop Arm',null,
+  tc.appendChild(mkTest('drop_arm','Test Drop Arm','https://drive.google.com/uc?export=view&id=1XleyM0jP4ECaNW5LNjcgB3HUB_ETInmi',
     'El usuario abduce activamente el hombro a 90° y luego desciende lentamente el brazo a la posición neutral.',
     'El usuario no puede controlar el descenso (el brazo cae) debido al dolor o debilidad. Indica rotura del manguito rotador.',
     'El usuario desciende el brazo de forma controlada hasta la posición neutral.',
     'Sensibilidad 8%, especificidad 97%, LR+ 2.67. Muy específico pero poco sensible. Si positivo → alta probabilidad de rotura. Combinar con Empty Can.',
     'alta'));
-  tc.appendChild(mkTest('hornblower','Signo de Hornblower (Redondo menor)',null,
+  tc.appendChild(mkTest('hornblower','Signo de Hornblower (Redondo menor)','https://drive.google.com/uc?export=view&id=1XleyM0jP4ECaNW5LNjcgB3HUB_ETInmi',
     'Usuario sedente. El fisio coloca el brazo en 90° de flexión en el plano escapular. El usuario rota externamente contra resistencia.',
     'Incapacidad de rotar externamente el hombro. El usuario compensa elevando el brazo o abduciendo. Indica lesión del músculo redondo menor.',
     'Rotación externa posible contra resistencia.',
     'Sensibilidad 100%, especificidad 93%, LR+ 14.29. Si positivo → confirma lesión del redondo menor. Frecuente en roturas masivas del manguito.',
     'alta'));
-  tc.appendChild(mkTest('liftoff','Test Lift-Off (Subescapular)',null,
+  tc.appendChild(mkTest('liftoff','Test Lift-Off (Subescapular)','https://drive.google.com/uc?export=view&id=1PSysh0sctkWhlK2RgtWmtlA-ymHLV8OJ',
     'El usuario coloca la mano ipsilateral en la parte posterior de la columna lumbar media. Rota internamente el brazo para separar la mano de la espalda.',
     'No puede separar la mano de la espalda, o compensa con elevación del hombro o extensión de codo. Indica lesión del subescapular.',
     'El usuario separa la mano de la espalda sin compensaciones.',
@@ -1997,7 +2606,7 @@ function hS4(w){
     'alta'));
 
   const s5d=ce('p','');s5d.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5d.textContent='Labrum / SLAP';tc.appendChild(s5d);
-  tc.appendChild(mkTest('obrien','Test de O\'Brien (Compresión activa)',null,
+  tc.appendChild(mkTest('obrien','Test de O\'Brien (Compresión activa)','https://drive.google.com/uc?export=view&id=1gtsEG_q59d_P7utE0Zb-tVBLxxKb6gDL',
     'Usuario de pie. Flexiona el brazo a 90° con el codo en extensión. Aduce 10° y gira internamente el húmero (pulgar hacia abajo). El fisio aplica fuerza hacia abajo; el usuario resiste. Luego repetir con brazo en supinación (palma arriba).',
     'Dolor con la primera maniobra (pronación/rotación interna) que disminuye o desaparece con la segunda (supinación). Indica lesión del labrum (SLAP).',
     'Sin diferencia de dolor entre las dos posiciones.',
@@ -2005,7 +2614,7 @@ function hS4(w){
     'alta'));
 
   const s5e=ce('p','');s5e.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5e.textContent='Articulación acromioclavicular';tc.appendChild(s5e);
-  tc.appendChild(mkTest('paxinos','Signo de Paxinos',null,
+  tc.appendChild(mkTest('paxinos','Signo de Paxinos','https://drive.google.com/uc?export=view&id=1uNuqeQ7uDDZxMVGvcU42yXImfezmuR8u',
     'Usuario sedente con el brazo relajado al costado. El fisio aplica presión anterosuperior sobre el acromion con el pulgar y contrafuerza inferior sobre la clavícula con los dedos índice y medio.',
     'Aumento del dolor en el área de la articulación acromioclavicular.',
     'Sin dolor con la presión.',
@@ -2013,25 +2622,25 @@ function hS4(w){
     'media'));
 
   const s_inest_post=ce('p','');s_inest_post.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s_inest_post.textContent='Inestabilidad posterior';tc.appendChild(s_inest_post);
-  tc.appendChild(mkTest('aprehension_post','Test de Aprehensión Posterior',null,
+  tc.appendChild(mkTest('aprehension_post','Test de Aprehensión Posterior','https://drive.google.com/uc?export=view&id=117Xaku4NQY3wttF_eX4XAsbJQPDExo7a',
     'Decúbito supino. El fisio flexiona el hombro hacia anterior y lo rota hacia interno. Aplica una fuerza posterior sobre el codo. También con el brazo en abducción a 90°. El fisio palpa la cabeza del húmero con una mano mientras la empuja hacia atrás.',
     'Signos de aprehensión o alarma en el paciente, resistencia a la movilidad o chasquido metálico. Si la cabeza humeral se desplaza >50% hacia atrás → inestabilidad posterior.',
     'Sin aprehensión ni desplazamiento posterior significativo.',
     'Sensibilidad 99%, especificidad 19%, LR+ 25.0. Muy sensible. Si negativo → prácticamente descarta inestabilidad posterior.',
     'alta'));
-  tc.appendChild(mkTest('surco_sign','Signo del Surco (Inestabilidad inferior / MDI)',null,
+  tc.appendChild(mkTest('surco_sign','Signo del Surco (Inestabilidad inferior / MDI)','https://drive.google.com/uc?export=view&id=1kin12JHRD46to2qHycvT07oDXNdoPk5c',
     'Usuario sedente, brazo relajado al costado. El fisio toma el brazo por encima del codo y aplica una distracción suave hacia abajo. Observa el espacio entre el acromion y la cabeza del húmero.',
     'Aparece un surco profundo (>2cm) entre el borde lateral del acromion y el húmero. La piel suprayacente se tensa. Indica laxitud glenohumeral inferior — posible inestabilidad multidireccional (MDI).',
     'Sin surco visible. Estabilidad inferior conservada.',
     'Especificidad 97%, LR+ 9. Si surco ≥2cm → muy predictivo de inestabilidad multidireccional. Valorar siempre en pacientes con historia de luxaciones repetidas o sensación de inestabilidad difusa.',
     'alta'));
-  tc.appendChild(mkTest('cajon_ant_hom','Test de Cajón Anterior (Hombro)',null,
+  tc.appendChild(mkTest('cajon_ant_hom','Test de Cajón Anterior (Hombro)','https://drive.google.com/uc?export=view&id=1kin12JHRD46to2qHycvT07oDXNdoPk5c',
     'Usuario supino con la articulación glenohumeral en el borde de la mesa. Fisio coloca el brazo en 60–80° de abducción, rotación neutra. Desplaza la cabeza humeral hacia anterior.',
     'Dolor o reproducción de síntomas de inestabilidad anterior. Indica inestabilidad glenohumeral anterior.',
     'Sin desplazamiento anterior significativo ni dolor.',
     'Sensibilidad 53%, especificidad 85%, LR+ 3.6. Combinar con Test de Aprehensión anterior y Recolocación para mayor precisión.',
     'media'));
-  tc.appendChild(mkTest('recolocacion','Test de Recolocación',null,
+  tc.appendChild(mkTest('recolocacion','Test de Recolocación','https://drive.google.com/uc?export=view&id=1GIiY-CTBLlxVKJSileazrpAAe7rP8tTU',
     'Misma posición que el Test de Aprehensión. Con el brazo en 90° de abducción y rotación externa máxima, el fisio aplica una fuerza posteroanterior sobre la cabeza del húmero.',
     'El dolor o la aprehensión del paciente disminuyen con la fuerza aplicada. Confirma inestabilidad glenohumeral anterior.',
     'Sin cambio en los síntomas con la fuerza de recolocación.',
@@ -2039,12 +2648,36 @@ function hS4(w){
     'media'));
 
   const s_caps=ce('p','');s_caps.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s_caps.textContent='Capsulitis adhesiva';tc.appendChild(s_caps);
-  tc.appendChild(mkTest('hawkins_cap','Patrón capsular (Capsulitis)',null,
+  tc.appendChild(mkTest('hawkins_cap','Patrón capsular (Capsulitis)','https://drive.google.com/uc?export=view&id=1YEDv_7NAzVhBFm7uYeHkzV6MWeQnbTZg',
     'Valoración de la movilidad pasiva en tres planos: rotación externa (RE), abducción (ABD) y rotación interna (RI). Evaluar en ese orden de restricción. Comparar siempre con el lado sano.',
     'Limitación severa de RE + ABD + RI en ese orden proporcional (patrón capsular). Indica capsulitis adhesiva. En fase inflamatoria: dolor intenso antes del límite. En fase congelada: limitación sin tanto dolor.',
     'Movilidad libre en los tres planos o limitación no proporcional al patrón capsular.',
     'No es un test único sino un patrón exploratorio. RE limitada <30° + ABD <90° + RI <T12 → capsulitis establecida. Combinar con Test de Hawkins-Kennedy para descartar impingement asociado.',
     'alta'));
+
+
+  const s_bic=ce('p','');s_bic.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s_bic.textContent='Bíceps (adicional)';tc.appendChild(s_bic);
+  tc.appendChild(mkTest('speeds','Test de Speed&rsquo;s (Bíceps / Labrum)','https://drive.google.com/uc?export=view&id=1yJwiKu63eE2PlZElFJg5YIyaV2-cJBtl',
+    'Usuario de pie. Brazo en flexión a 90° con el codo extendido y el antebrazo en supinación. El fisio aplica resistencia hacia abajo mientras el paciente mantiene la posición.',
+    'Dolor en la corredera bicipital o en la cara anterior del hombro. Indica tendinopatía del bíceps o lesión del labrum superior (SLAP).',
+    'Sin dolor durante la resistencia.',
+    'Sensibilidad 32%, especificidad 75%. Combinar con Yergason y O&rsquo;Brien para mayor precisión en labrum.','media'));
+  const s_lab2=ce('p','');s_lab2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s_lab2.textContent='Labrum (adicionales)';tc.appendChild(s_lab2);
+  tc.appendChild(mkTest('crank','Test Crank (Labrum)','https://drive.google.com/uc?export=view&id=1gtsEG_q59d_P7utE0Zb-tVBLxxKb6gDL',
+    'Decúbito lateral con el hombro afecto hacia arriba. El fisio eleva el brazo a 160° en el plano escapular y aplica una fuerza compresiva axial mientras rota el húmero interna y externamente.',
+    'Dolor o clic durante la rotación con compresión axial. Indica lesión del labrum glenoideo.',
+    'Sin dolor ni clic con la compresión + rotación.',
+    'Sensibilidad 91%, especificidad 93%, LR+ 13. Excelente para labrum. Si positivo → alta probabilidad de lesión labral.','alta'));
+  tc.appendChild(mkTest('compresion_rot','Test de Compresión y Rotación (Labrum)','https://drive.google.com/uc?export=view&id=1PdHyYkyU9HLGTbMkfUdT3YFB4qLNRc73',
+    'Decúbito lateral. El fisio eleva el brazo a 90° en abducción y aplica compresión axial mientras rota el hombro internamente y externamente.',
+    'Dolor o clic reproducible en el hombro. Indica lesión del labrum glenoideo.',
+    'Sin dolor ni clic.',
+    'Combinar con O&rsquo;Brien y Crank. Útil cuando el paciente refiere clic o bloqueo en el hombro.','media'));
+  tc.appendChild(mkTest('kibler','Test de Deslizamiento Anterior / Kibler Test (Labrum)','https://drive.google.com/uc?export=view&id=1BUPp2tuC_PgMf7msSUnSO0FOPgy4AfYp',
+    'Usuario de pie con la mano ipsilateral en la cadera. El fisio coloca una mano sobre la parte posterior del hombro y la otra en la cara anterior. Aplica una fuerza anterior-superior sobre el húmero mientras el paciente contrae isométricamente.',
+    'Dolor o clic en la cara anterior del hombro. Indica lesión del labrum anterior.',
+    'Sin dolor ni clic durante la maniobra.',
+    'LR+ 7.4. Especialmente útil en lesiones del labrum anterior-inferior. Combinar con Test de Aprehensión.','alta'));
 
   const obs=ce('div','card');obs.style.marginTop='12px';
   obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
@@ -2128,25 +2761,25 @@ function tS4(w){
   tc.innerHTML='<div class="ct">Tests ortopédicos — Tobillo y pie</div>';
 
   const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Esguince de tobillo / ligamentos';tc.appendChild(s1);
-  tc.appendChild(mkTest('cajon_ant_tob','Test de Cajón Anterior de Tobillo',null,
+  tc.appendChild(mkTest('cajon_ant_tob','Test de Cajón Anterior de Tobillo','https://drive.google.com/uc?export=view&id=1e-5iU0ujIYCpZVhhfbtu3j6kOhaQ4OGE',
     'Decúbito supino con pie relajado. El fisio toma el calcáneo con una mano y el tobillo por los maléolos con la otra. Aplica tracción anterior del pie mientras la pierna queda fija.',
     'Desplazamiento anterior excesivo del astrágalo (>3mm respecto al lado sano) o laxitud palpable. Indica lesión del ligamento peroneoastragalino anterior (LPAA). Se gradúa 0–3.',
     'Sin desplazamiento significativo. LPAA íntegro.',
     'Sensibilidad 96%, especificidad 84%, LR+ 6.0. El test más importante en esguince lateral. Siempre comparar con el lado sano.',
     'alta'));
-  tc.appendChild(mkTest('tilt_talar','Tilt Talar (Inversión forzada)',null,
+  tc.appendChild(mkTest('tilt_talar','Tilt Talar (Inversión forzada)','https://drive.google.com/uc?export=view&id=15Pv6uQA98FRBSM7LyuYpTxxVA1G2xn-9',
     'Decúbito supino o lateral, pie relajado. El fisio aplica una inversión forzada del tobillo con flexión plantar para evaluar el LPAA y calcaneofibular.',
     'Bostezo articular (inclinación del astrágalo) o dolor en el compartimento lateral. Indica lesión del ligamento calcáneo-fibular (LCF).',
     'Sin bostezo ni dolor. LCF íntegro.',
     'LR+ 6, LR- 0.05. Si cajón anterior + tilt talar positivos → lesión combinada LPAA + LCF. Indica esguince de mayor grado.',
     'alta'));
-  tc.appendChild(mkTest('compresion_tobillo','Test de Compresión (Sindesmosis)',null,
+  tc.appendChild(mkTest('compresion_tobillo','Test de Compresión (Sindesmosis)','https://drive.google.com/uc?export=view&id=1pRIHe17lZSxR2ib1IcUwMVRdgoKR-oGp',
     'Decúbito supino. El fisio comprime tibia y peroné entre sí con las palmas ahuecadas sobre los maléolos, a la altura de la sindesmosis.',
     'Dolor en la zona intermaleolar o en la sindesmosis. Indica lesión de la sindesmosis tibioperonea (esguince de alto grado).',
     'Sin dolor con la compresión.',
     'Un esguince de sindesmosis requiere un tiempo de recuperación mucho mayor (2–4 veces más) que un esguince lateral. Importante identificarlo precozmente.',
     'media'));
-  tc.appendChild(mkTest('molloy','Test de Pinzamiento de Molloy',null,
+  tc.appendChild(mkTest('molloy','Test de Pinzamiento de Molloy','https://drive.google.com/uc?export=view&id=1e-5iU0ujIYCpZVhhfbtu3j6kOhaQ4OGE',
     'Usuario sentado. El fisio toma el calcáneo y el antepié y realiza flexión plantar. Presiona con el pulgar sobre el tobillo antero-lateral. Mueve el pie de plantiflexión a dorsiflexión manteniendo la presión.',
     'El dolor con presión del pulgar es mayor en dorsiflexión que en flexión plantar. Indica pinzamiento antero-lateral de tobillo.',
     'Sin diferencia de dolor entre posiciones.',
@@ -2154,7 +2787,7 @@ function tS4(w){
     'alta'));
 
   const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Tendón de Aquiles';tc.appendChild(s2);
-  tc.appendChild(mkTest('thomson_tob','Test de Thomson (rotura Aquiles)',null,
+  tc.appendChild(mkTest('thomson_tob','Test de Thomson (rotura Aquiles)','https://drive.google.com/uc?export=view&id=141JOry867_fBHWbQpJ4FmGdA9MzIFrMV',
     'Decúbito prono, rodillas extendidas, pies fuera de la camilla. El fisio comprime el tercio medio de la pantorrilla entre pulgar y demás dedos en dirección cefálica.',
     'Ausencia de flexión plantar refleja. Indica rotura completa del tendón de Aquiles.',
     'Flexión plantar presente al comprimir la pantorrilla. Tendón íntegro.',
@@ -2162,13 +2795,13 @@ function tS4(w){
     'alta'));
 
   const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Túnel del tarso / neuropatía';tc.appendChild(s3);
-  tc.appendChild(mkTest('tinel_tarso','Test de Tinel (Túnel del Tarso)',null,
+  tc.appendChild(mkTest('tinel_tarso','Test de Tinel (Túnel del Tarso)','https://drive.google.com/uc?export=view&id=1wcRnj6DzEVRBqmdCvVC8-uPHFzxjf9Jn',
     'El fisio aplica golpecitos con los dedos sobre el nervio tibial en la cara posteromedial del tobillo (túnel del tarso).',
     'Parestesias (hormigueo, corriente eléctrica) que se irradian hacia la planta del pie o los dedos. Indica síndrome del túnel del tarso.',
     'Sin parestesias.',
     'Valorar cuando hay dolor en la planta del pie con componente neuropático (hormigueo, ardor). Puede coexistir con fascitis plantar.',
     'media'));
-  tc.appendChild(mkTest('dorsiflex_eversion','Test de Dorsiflexión y Eversión',null,
+  tc.appendChild(mkTest('dorsiflex_eversion','Test de Dorsiflexión y Eversión','https://drive.google.com/uc?export=view&id=1wcRnj6DzEVRBqmdCvVC8-uPHFzxjf9Jn',
     'Decúbito supino. El fisio realiza dorsiflexión + eversión del tobillo combinada con extensión de las articulaciones metatarsofalángicas durante 20 segundos.',
     'Reproducción de parestesias o dolor en la planta del pie. Indica tensión del nervio tibial en el túnel del tarso.',
     'Sin síntomas durante la maniobra.',
@@ -2176,12 +2809,57 @@ function tS4(w){
     'media'));
 
   const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Trombosis venosa profunda (TVP)';tc.appendChild(s4);
-  tc.appendChild(mkTest('homan','Signo de Homan',null,
+  tc.appendChild(mkTest('homan','Signo de Homan','https://drive.google.com/uc?export=view&id=1wcRnj6DzEVRBqmdCvVC8-uPHFzxjf9Jn',
     'Decúbito supino con rodilla extendida. El fisio aplica dorsiflexión pasiva forzada del tobillo mientras palpa la pantorrilla.',
     'Dolor en la pantorrilla (gastrocnemios) o en la región poplítea durante la dorsiflexión. Signo de alerta para tromboflebitis venosa profunda.',
     'Sin dolor en pantorrilla ni región poplítea.',
     'Sensibilidad 48%, especificidad 41%. Valor diagnóstico limitado. Si positivo: usar Criterios de Wells para TVP para estratificar el riesgo y decidir derivación. No usar como prueba definitiva.',
     'baja'));
+
+
+  const st_fas=ce('p','');st_fas.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';st_fas.textContent='Fascitis plantar / Pie plano';tc.appendChild(st_fas);
+  tc.appendChild(mkTest('windlass','Test de Windlass (Fascitis plantar)','https://drive.google.com/uc?export=view&id=1pRIHe17lZSxR2ib1IcUwMVRdgoKR-oGp',
+    'Usuario en bipedestación o sedente. El fisio extiende pasivamente el primer dedo del pie (dorsiflexión metatarsofalángica) para tensionar la fascia plantar.',
+    'Reproducción del dolor en el talón o en el arco plantar. Indica fasciopatía plantar.',
+    'Sin dolor durante la extensión del primer dedo.',
+    'Si positivo en bipedestación → más específico. Combinar con palpación del tubérculo calcáneo medial. Nota: si hay dolor muy localizado en el tubérculo calcáneo → valorar espolón calcáneo mediante RX o ecografía.','alta'));
+  tc.appendChild(mkTest('silfverskiold','Test de Silfverskiöld','https://drive.google.com/uc?export=view&id=1vIYOXUAeKzUTz9h11ZxZQuLyoPgEJ2Si',
+    'Decúbito supino. El fisio evalúa la dorsiflexión del tobillo con rodilla en extensión y luego en flexión a 90°.',
+    'Dorsiflexión limitada con rodilla extendida pero normal con rodilla flexionada → acortamiento específico del gastrocnemio. Si limitada en ambas posiciones → acortamiento del complejo gastro-sóleo.',
+    'Dorsiflexión ≥10° en ambas posiciones.',
+    'Clave para guiar el estiramiento: solo gastrocnemio (con rodilla extendida) o también sóleo (con rodilla flexionada).','alta'));
+  tc.appendChild(mkTest('navicular_drop','Test Navicular Drop','https://drive.google.com/uc?export=view&id=1pBI9lXvmWK2vOH0TsOho0HVfq2nECkpe',
+    'Usuario sentado. El fisio marca la tuberosidad del navicular y mide su altura al suelo. Luego el usuario se pone de pie y se remide.',
+    'Caída del navicular >10mm al pasar de sedente a bípedo. Indica hiperpronación del pie.',
+    'Caída ≤8mm. Biomecánica del pie dentro de la normalidad.',
+    'La hiperpronación es un factor de sobrecarga de la fascia plantar. Si elevado + fascitis → valorar ortesis.','media'));
+  tc.appendChild(mkTest('feiss_line','Test Línea de Feiss','https://drive.google.com/uc?export=view&id=1_MJSTa4IjVjoIS6Zmenzhxc8hnr7KeVc',
+    'El fisio marca el ápex del maléolo medial y la primera articulación metatarsofalángica. Une los puntos y palpa la tuberosidad navicular en descarga y en carga.',
+    'La tuberosidad navicular cae claramente por debajo de la línea en carga. Indica pie plano.',
+    'Tuberosidad navicular sobre la línea o muy cerca en ambas posiciones.',
+    'Complementa el navicular drop. Útil para comunicar visualmente el tipo de pie al paciente.','baja'));
+  tc.appendChild(mkTest('paper_grip','Test Paper Grip (intrínsecos pie)','https://drive.google.com/uc?export=view&id=14W5NcP7BY_1FwZwaUwPJouj4u9iHhyTv',
+    'Usuario sentado con caderas, rodillas y tobillos a 90°. Se coloca un cartón bajo el pie. El fisio sujeta el cartón y el paciente intenta deslizarlo.',
+    'El usuario no puede deslizar el cartón. Indica activación funcional de los músculos intrínsecos del pie.',
+    'El usuario desliza el cartón sin dificultad. Indica debilidad de intrínsecos.',
+    'Los intrínsecos son el primer soporte dinámico del arco plantar. Su fortalecimiento es parte esencial del tratamiento conservador.','media'));
+  const st_frac=ce('p','');st_frac.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';st_frac.textContent='Fractura por estrés';tc.appendChild(st_frac);
+  tc.appendChild(mkTest('bump_test','Test Bump / Percusión (fractura por estrés)','https://drive.google.com/uc?export=view&id=1e-5iU0ujIYCpZVhhfbtu3j6kOhaQ4OGE',
+    'El fisio aplica una percusión suave con el puño sobre el talón con el pie en posición neutra. Alternativamente, golpea sobre el hueso sospechoso.',
+    'Dolor agudo en el punto de sospecha de fractura. Indica fractura por estrés del pie o pierna distal.',
+    'Sin dolor con la percusión.',
+    'Útil en corredores o deportistas con dolor insidioso en pie o pierna. Si positivo → derivar para RX o RM para confirmar fractura por estrés.','media'));
+  const st_tvp=ce('p','');st_tvp.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';st_tvp.textContent='TVP (trombosis venosa profunda)';tc.appendChild(st_tvp);
+  tc.appendChild(mkTest('figura8_pie','Test de la Figura del 8 (edema pie/tobillo)','https://drive.google.com/uc?export=view&id=1QzejBahJ5Mnp1dxxWm9J55nGMluIN_SZ',
+    'Se mide el perímetro del tobillo con cinta métrica siguiendo el patrón de figura del 8. Se compara con el lado sano.',
+    'Diferencia >1cm respecto al lado sano. Indica edema significativo del tobillo.',
+    'Diferencia ≤1cm.',
+    'Método objetivo para cuantificar el edema. En TVP el edema es súbito, duro y acompañado de calor y rojez. Si sospecha TVP → aplicar Criterios de Wells.','baja'));
+  tc.appendChild(mkTest('wells_tvp','Criterios Clínicos de Wells (TVP)','https://drive.google.com/uc?export=view&id=1wcRnj6DzEVRBqmdCvVC8-uPHFzxjf9Jn',
+    'Valorar: 1) Cáncer activo, 2) Parálisis/inmovilización EEII, 3) Encamado >3 días o cirugía reciente, 4) Dolor a la palpación en trayecto venoso profundo, 5) Edema de toda la pierna, 6) Edema con fóvea, 7) Circulación colateral superficial, 8) TVP previa. Suma puntos.',
+    'Score ≥2 → alta probabilidad de TVP. Score 1 → probabilidad moderada. Score ≤0 → baja probabilidad.',
+    'Score ≤0 → baja probabilidad. Combinar con dímero D.',
+    'NO es un test físico — son criterios clínicos. Si score ≥2 → DERIVAR URGENTE para ecografía Doppler. No tratar como esguince.','alta'));
 
   const obs=ce('div','card');obs.style.marginTop='12px';
   obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
@@ -2210,25 +2888,25 @@ function caS4(w){
   tc.innerHTML='<div class="ct">Tests ortopédicos — Cadera y pelvis</div>';
 
   const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Articulación de la cadera / labrum';tc.appendChild(s1);
-  tc.appendChild(mkTest('fadir','Test FADIR (Impingement FAI)',null,
+  tc.appendChild(mkTest('fadir','Test FADIR (Impingement FAI)','https://drive.google.com/uc?export=view&id=1O4VqYEToF4IUR2XYvA6sy0fLc6DyRRJS',
     'Decúbito supino. El fisio lleva la cadera a 90° de flexión + aducción + rotación interna máxima (FADIR). Forzar el movimiento para reproducir los síntomas.',
     'Dolor inguinal o en la región anterior de la cadera. Indica impingement femoroacetabular (FAI) o lesión del labrum.',
     'Sin dolor inguinal durante la maniobra.',
     'Test más sensible para FAI. Combinarlo con FABER y el Test de Scour para mayor precisión diagnóstica. Dolor posterior → posible componente sacroilíaco.',
     'alta'));
-  tc.appendChild(mkTest('faber','Test FABER / Patrick (Sacroilíaca y cadera)',null,
+  tc.appendChild(mkTest('faber','Test FABER / Patrick (Sacroilíaca y cadera)','https://drive.google.com/uc?export=view&id=1O4VqYEToF4IUR2XYvA6sy0fLc6DyRRJS',
     'Decúbito supino. El fisio coloca el pie ipsilateral sobre la rodilla contralateral (posición en 4). Estabiliza la EIAS contraria y aplica presión sobre la rodilla flexionada hacia abajo.',
     'Dolor inguinal o en la ingle → lesión articular de cadera. Dolor posterior en glúteo/sacro → disfunción sacroilíaca.',
     'Sin dolor en ninguna de las zonas.',
     'LR+ 1.37. Útil para diferenciar origen articular de cadera vs sacroilíaco. También positivo en contractura del psoas (limitación del rango sin dolor).',
     'media'));
-  tc.appendChild(mkTest('mccarthy','Test de McCarthy (Labrum)',null,
+  tc.appendChild(mkTest('mccarthy','Test de McCarthy (Labrum)','https://drive.google.com/uc?export=view&id=11deK1xPQ_BHgZI05ORgpi57j27xxHQo9',
     'Decúbito supino. Para labrum anterior: el fisio lleva la cadera a flexión máxima + rotación interna + aducción y luego extiende. Para labrum posterior: flexión + rotación externa y luego extensión.',
     'Reproducción de molestia o dolor en la ingle durante la maniobra. Indica lesión del labrum acetabular.',
     'Sin dolor en ninguna de las maniobras.',
     'Combinar con FADIR para aumentar la probabilidad diagnóstica de lesión de labrum. Si ambos positivos → alta sospecha de lesión labral.',
     'media'));
-  tc.appendChild(mkTest('scour','Test de Scour (Osteoartritis / Labrum)',null,
+  tc.appendChild(mkTest('scour','Test de Scour (Osteoartritis / Labrum)','https://drive.google.com/uc?export=view&id=1mGIS-dAtBoYcT0U6JDWUaHxqJ536nsz_',
     'Decúbito supino. El fisio flexiona cadera y rodilla >90° en asa y comprime axialmente mientras rota el miembro hacia ambos lados.',
     'Dolor durante la compresión + rotación. Indica osteoartritis de cadera o lesión de labrum.',
     'Sin dolor con compresión + rotación.',
@@ -2236,7 +2914,7 @@ function caS4(w){
     'media'));
 
   const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Músculo piriforme / síndrome piriforme';tc.appendChild(s2);
-  tc.appendChild(mkTest('fair','Test FAIR (Piriforme)',null,
+  tc.appendChild(mkTest('fair','Test FAIR (Piriforme)','https://drive.google.com/uc?export=view&id=1yfPKreXKFMG3z-XBClmK95S5ABshq6JV',
     'Decúbito lateral. El miembro superior en flexión 60° de cadera y 100° de rodilla, por fuera de la camilla. El fisio estabiliza la cadera y aplica presión vertical descendente sobre la rodilla.',
     'Dolor en el cuerpo del músculo piriforme o glúteo profundo. Indica contractura o síndrome del piriforme.',
     'Sin dolor en la zona del piriforme.',
@@ -2244,7 +2922,7 @@ function caS4(w){
     'alta'));
 
   const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Pelvis / función muscular';tc.appendChild(s3);
-  tc.appendChild(mkTest('trendelenburg','Test de Trendelenburg',null,
+  tc.appendChild(mkTest('trendelenburg','Test de Trendelenburg','https://drive.google.com/uc?export=view&id=1HcZYJbkQMIycmAeHZ_PWaDTm_mfpwLwW',
     'Usuario en bípedo. Se le pide que levante una pierna con flexión de cadera y rodilla. El fisio observa desde atrás si la pelvis contralateral se eleva o cae.',
     'La pelvis cae hacia el lado elevado (positivo). Indica debilidad del glúteo medio del lado de apoyo. Patrón de marcha compensado (marcha de Trendelenburg).',
     'La pelvis se mantiene horizontal o se eleva ligeramente al lado no apoyado. Glúteo medio funcional.',
@@ -2252,24 +2930,37 @@ function caS4(w){
     'alta'));
 
   const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Longitud muscular / contracturas';tc.appendChild(s4);
-  tc.appendChild(mkTest('thomas_test','Test de Thomas (Psoas-ilíaco)',null,
+  tc.appendChild(mkTest('thomas_test','Test de Thomas (Psoas-ilíaco)','https://drive.google.com/uc?export=view&id=1s0Db3IOovlqpMxxxODDSnLVuhwtH5N65',
     'Usuario sentado al borde de la camilla. Abraza con ambas manos la rodilla contralateral llevándola al máximo de flexión e inclina el tronco atrás. La pierna a valorar cae libremente.',
     'La pierna evaluada no cae bajo la horizontal → contractura del psoas. Si la rodilla tiende a extenderse → contractura del recto femoral.',
     'La pierna cae bajo la horizontal con la rodilla flexionada. Psoas y recto femoral con longitud normal.',
     'Diferenciar: si solo se eleva el muslo → psoas corto. Si el muslo cae pero la rodilla se extiende → recto anterior corto. Combinarlo con el test de Ely.',
     'media'));
-  tc.appendChild(mkTest('ober_test','Test de Ober (Banda Iliotibial)',null,
+  tc.appendChild(mkTest('ober_test','Test de Ober (Banda Iliotibial)','https://drive.google.com/uc?export=view&id=1TAL1ekth6tNY-tn1FqBZYBCiYGI-Ty8s',
     'Decúbito lateral sobre el lado sano. El fisio extiende la cadera superior (misma línea que la pelvis) y la suelta desde esa posición. Observa si puede aducirse libremente.',
     'La pierna no cae en aducción (queda suspendida) o cae pero con un movimiento de flexión-rotación. Indica acortamiento de la banda iliotibial.',
     'La pierna cae libremente en aducción. Banda IT con longitud normal.',
     'Fundamental en síndrome de fricción de banda IT y en tendinopatía glútea (la banda IT comprime el tendón glúteo medio en el trocánter). Incluir en valoración de corredores.',
     'media'));
-  tc.appendChild(mkTest('craig_test','Test de Craig (Anteversión femoral)',null,
+  tc.appendChild(mkTest('craig_test','Test de Craig (Anteversión femoral)','https://drive.google.com/uc?export=view&id=1866HCzyVQcuMoMafFPTGHqVp5CZdrmM-',
     'Decúbito prono, rodilla a 90° de flexión. El fisio palpa con una mano el trocánter mayor. Con la otra rota la cadera (interna/externa) hasta colocar el trocánter paralelo al plano de la camilla. Mide el ángulo entre el eje de la pierna y la vertical.',
     'Ángulo >15°. Indica anteversión femoral aumentada. Relacionado con tendencia al valgo de rodilla y colapso medial en corredores.',
     'Ángulo entre 10° y 15°. Anteversión femoral normal.',
     'Útil cuando hay dolor anterior de cadera o rodilla en corredores. La anteversión aumentada favorece el síndrome de dolor patelofemoral y el FAI tipo CAM.',
     'baja'));
+
+
+  const sc_long=ce('p','');sc_long.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sc_long.textContent='Longitud muscular y dismetría';tc.appendChild(sc_long);
+  tc.appendChild(mkTest('ely_test','Test de Ely (Recto Femoral)','https://drive.google.com/uc?export=view&id=1s0Db3IOovlqpMxxxODDSnLVuhwtH5N65',
+    'Decúbito prono. El fisio flexiona la rodilla llevando el talón al glúteo pasivamente.',
+    'La cadera ipsilateral se eleva de la camilla antes de que el talón llegue al glúteo. Indica acortamiento del recto femoral.',
+    'El talón llega al glúteo sin que la cadera se eleve. Recto femoral con longitud normal.',
+    'Diferenciar de contractura del psoas (Thomas) y de la banda IT (Ober). Si Ely+ → estirar el recto femoral con rodilla flexionada.','media'));
+  tc.appendChild(mkTest('longitud_eeii','Test de Longitud de Extremidad Inferior','https://drive.google.com/uc?export=view&id=1pBI9lXvmWK2vOH0TsOho0HVfq2nECkpe',
+    'Decúbito supino con el paciente bien alineado. El fisio mide desde la EIAS hasta el maléolo medial en ambos miembros con cinta métrica.',
+    'Diferencia >1cm entre ambos miembros. Indica dismetría real de extremidades inferiores.',
+    'Diferencia ≤1cm. Longitud simétrica.',
+    'Diferencia real vs aparente: la real se mide desde EIAS. La aparente desde el ombligo — refleja oblicuidad pélvica. Siempre medir las dos para diferenciar.','media'));
 
   const obs=ce('div','card');obs.style.marginTop='12px';
   obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
@@ -2298,13 +2989,13 @@ function coS4(w){
   tc.innerHTML='<div class="ct">Tests ortopédicos — Codo y antebrazo</div>';
 
   const s1=ce('p','');s1.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px';s1.textContent='Epicondilalgia lateral (codo de tenista)';tc.appendChild(s1);
-  tc.appendChild(mkTest('tennis_elbow','Test del Codo de Tenista (Tennis Elbow Test)',null,
+  tc.appendChild(mkTest('tennis_elbow','Test del Codo de Tenista (Tennis Elbow Test)','https://drive.google.com/uc?export=view&id=1-BukbGSfErUDuZUSaJSZpv7FVxNvD7la',
     'Usuario de pie, codo extendido, antebrazo en pronación. El fisio aplica resistencia contra la extensión isométrica de la muñeca mientras palpa el epicóndilo lateral.',
     'Reproducción de dolor en la cara lateral del codo (epicóndilo). Indica lesión contráctil de los tendones extensores de la muñeca.',
     'Sin dolor en el epicóndilo durante la extensión resistida de muñeca.',
     'Combinar con Test de Mill. La contracción isométrica reproduce el dolor del tendón del extensor común (ECRB principalmente).',
     'media'));
-  tc.appendChild(mkTest('mill_test','Test de Mill (Epicondilalgia lateral)',null,
+  tc.appendChild(mkTest('mill_test','Test de Mill (Epicondilalgia lateral)','https://drive.google.com/uc?export=view&id=1OWEgwDUJq4zVa6tUwABw8Qd9VomHJ5VL',
     'Usuario sedente o bípedo. Hombro abducido ~70°, codo a 90°, antebrazo en pronación, muñeca en flexión máxima. El fisio extiende lentamente el codo manteniendo esa posición.',
     'Reproducción de dolor en los tendones extensores o en el epicóndilo lateral durante la extensión del codo. Indica epicondilalgia lateral.',
     'Sin dolor durante la extensión del codo.',
@@ -2312,7 +3003,7 @@ function coS4(w){
     'media'));
 
   const s2=ce('p','');s2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s2.textContent='Epicondilalgia medial (codo de golfista)';tc.appendChild(s2);
-  tc.appendChild(mkTest('golfer_elbow','Test del Codo de Golfista (Golfer&rsquo;s Elbow Test)',null,
+  tc.appendChild(mkTest('golfer_elbow','Test del Codo de Golfista (Golfer&rsquo;s Elbow Test)','https://drive.google.com/uc?export=view&id=1OWEgwDUJq4zVa6tUwABw8Qd9VomHJ5VL',
     'Usuario sedente o de pie, codo extendido, antebrazo en pronación. El fisio aplica resistencia contra la flexión isométrica de la muñeca. Palpa la epitróclea.',
     'Reproducción de dolor en la cara medial del codo (epitróclea). Indica lesión de los tendones flexores de la muñeca (epitrocleitis).',
     'Sin dolor en la epitróclea durante la flexión resistida de muñeca.',
@@ -2320,7 +3011,7 @@ function coS4(w){
     'media'));
 
   const s3=ce('p','');s3.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s3.textContent='Neuropatía cubital / túnel cubital';tc.appendChild(s3);
-  tc.appendChild(mkTest('tinel_codo','Signo de Tinel (Codo)',null,
+  tc.appendChild(mkTest('tinel_codo','Signo de Tinel (Codo)','https://drive.google.com/uc?export=view&id=1PdHyYkyU9HLGTbMkfUdT3YFB4qLNRc73',
     'El fisio aplica 4–6 golpecitos suaves con los dedos sobre el nervio cubital en la gotera epitrócleo-olecraneana (túnel cubital).',
     'Sensación de hormigueo (corriente eléctrica) que se irradia por el recorrido del nervio cubital hacia dedos 4° y 5°. Indica síndrome del túnel cubital (neuropatía cubital).',
     'Sin parestesias al golpetear el túnel cubital.',
@@ -2328,7 +3019,7 @@ function coS4(w){
     'alta'));
 
   const s4=ce('p','');s4.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s4.textContent='Ligamento colateral medial';tc.appendChild(s4);
-  tc.appendChild(mkTest('valgo_stress','Test de Estrés en Valgo (Ligamento Colateral Medial)',null,
+  tc.appendChild(mkTest('valgo_stress','Test de Estrés en Valgo (Ligamento Colateral Medial)','https://drive.google.com/uc?export=view&id=1-BukbGSfErUDuZUSaJSZpv7FVxNvD7la',
     'Hombro abducido 90° con rotación externa máxima. El fisio flexiona el codo al máximo y aplica fuerza en valgo. Luego extiende rápidamente el codo hasta 30° de flexión.',
     'Dolor máximo en la región medial del codo entre 120° y 70° de flexión. Indica lesión del ligamento colateral medial.',
     'Sin dolor durante el movimiento en valgo.',
@@ -2336,12 +3027,20 @@ function coS4(w){
     'alta'));
 
   const s5=ce('p','');s5.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';s5.textContent='Tendón del bíceps (codo)';tc.appendChild(s5);
-  tc.appendChild(mkTest('yergason_codo','Test de Yergason',null,
+  tc.appendChild(mkTest('yergason_codo','Test de Yergason','https://drive.google.com/uc?export=view&id=1h2ee1VT5v954lor6k6kS099io47XCMw3',
     'Usuario sedente con el codo a 90° de flexión. Se le pide que supine el antebrazo contra la resistencia del fisio, que palpa simultáneamente el tendón del bíceps distal.',
     'Dolor en la cara anterior del codo o en el tendón distal del bíceps. Indica tendinopatía o lesión del bíceps distal.',
     'Sin dolor durante la supinación resistida.',
     'Combinarlo con la palpación directa del tendón del bíceps distal. La ruptura distal del bíceps cursa con pérdida de fuerza de supinación y signo del "lollipop" (bola en el brazo).',
     'media'));
+
+
+  const sc_epi2=ce('p','');sc_epi2.style.cssText='font-size:11px;font-weight:700;color:#aad;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px';sc_epi2.textContent='Epitrocleitis (adicional)';tc.appendChild(sc_epi2);
+  tc.appendChild(mkTest('mills_reverso','Test de Mill&rsquo;s Reverso (Epitrocleitis)','https://drive.google.com/uc?export=view&id=1e2Mol7LSHNoe1Ftjr6mhpjRNRFfIWv9M',
+    'Usuario de pie, codo extendido, antebrazo en supinación. El fisio lleva pasivamente la muñeca a extensión máxima y luego extiende el codo lentamente.',
+    'Reproducción de dolor en la cara medial del codo (epitróclea) durante la extensión. Indica epitrocleitis medial.',
+    'Sin dolor medial durante la extensión del codo.',
+    'Combinar con el Test del codo de golfista (resistencia). La combinación de ambos aumenta la fiabilidad diagnóstica.','media'));
 
   const obs=ce('div','card');obs.style.marginTop='12px';
   obs.innerHTML='<div class="ct">Observaciones del fisioterapeuta</div>';
@@ -3994,104 +4693,104 @@ function renderFormacion(wrap, ruta){
   const MODS_AIRTABLE = [
     {t:'¿Qué es Airtable?',sub:'La agenda central de FISIO365',
      cards:[
-      {ti:'Para qué usamos Airtable',icon:'🗄',body:`Airtable es <strong>el sistema central de la clínica</strong>. Todo pasa por aquí: las citas, los pacientes, el estado de cada sesión y el seguimiento. Si no está en Airtable, no existe.<br><br>Hay dos tablas principales que usarás cada día:<br>• <b>CITAS</b> — la agenda, con todas las sesiones programadas<br>• <b>PACIENTES</b> — el registro de cada paciente con sus datos y historial`},
-      {ti:'Cómo está conectado con la web',icon:'🌐',body:`La web de reservas de FISIO365 está conectada con Airtable en tiempo real. Cuando una cita pasa de <b>CITA LIBRE</b> a cualquier otro estado, desaparece automáticamente de la web.<br><br><strong>Cualquier cambio que hagas en Airtable afecta a lo que el paciente ve en la web.</strong>`},
-      {ti:'La regla de oro',icon:'⭐',body:`<strong>Airtable siempre actualizado.</strong> Si hay un cambio en una cita, se registra en el momento. Si hay una nota importante, se escribe ya. Nunca dejar cosas «para luego» — Airtable es la memoria de la clínica.`}
+      {ti:'Para qué usamos Airtable',icon:'🗄',body:`Airtable es <strong>el sistema central de la clínica</strong>. Todo pasa por aquí: las citas, los pacientes, el historial y el seguimiento. <strong>Si no está en Airtable, no existe.</strong><br><br>Hay dos tablas que usarás cada día:<br>• <b>CITAS</b> — la agenda con todas las sesiones<br>• <b>PACIENTES</b> — el registro de cada paciente con sus datos, historial y notas`},
+      {ti:'Conectado con la web',icon:'🌐',body:`La web de reservas de FISIO365 está conectada con Airtable en tiempo real. Cuando una cita pasa de <b>CITA LIBRE</b> a cualquier otro estado, desaparece automáticamente de la web.<br><br><strong>Cualquier cambio que hagas en Airtable afecta a lo que el paciente ve en la web.</strong>`},
+      {ti:'La regla de oro',icon:'⭐',body:`<strong>Airtable siempre actualizado, en el momento.</strong><br><br>Si hay un cambio en una cita → se registra ya. Si hay una nota importante → se escribe ya. Nunca dejar cosas para luego. Airtable es la memoria de la clínica y todo el equipo depende de que esté al día.`}
      ],
      qs:[
-      {q:'Un paciente reserva online y tú no ves nada cambiado en Airtable. ¿Qué ha pasado?',opts:['La reserva online no está conectada con Airtable','Nada — Airtable y la web van por separado','Algo ha fallado — la web y Airtable están conectados en tiempo real y deberías ver el cambio'],ok:2,fb:['Sí están conectados — cualquier reserva online aparece en Airtable.','Van completamente sincronizados — si no hay cambio, hay un problema.','¡Correcto! Si no ves el cambio en Airtable, hay que revisar.']}
+      {q:'Un paciente reserva online y no ves ningún cambio en Airtable. ¿Qué ha pasado?',opts:['La web y Airtable van por separado','Algo ha fallado — están conectados en tiempo real y deberías ver el cambio','La reserva tarda en sincronizarse'],ok:1,fb:['Están completamente sincronizados.','¡Correcto! Si no ves el cambio, hay un problema que hay que revisar.','La sincronización es inmediata.']}
      ]
     },
     {t:'Crear un paciente nuevo',sub:'El primer paso antes de crear la cita',
      cards:[
-      {ti:'Cuándo crear un paciente nuevo',icon:'➕',body:`Cuando un paciente pide cita y <strong>no existe todavía en Airtable</strong>, primero hay que crear su ficha en la tabla PACIENTES. Solo después se puede asignar a una cita.<br><br>Si ya existe, búscalo directamente — no crees duplicados.`},
-      {ti:'Campos obligatorios',icon:'📋',body:`Los campos más importantes al crear un paciente nuevo son:<br><br>• <b>FULL NAME</b> — nombre completo<br>• <b>SMS</b> — teléfono en formato correcto<br>• <b>HISTORIAL CLÍNICO</b> — motivo de consulta brevemente`},
-      {ti:'El formato del teléfono — muy importante',icon:'📱',body:`El teléfono se escribe <strong>sin +34 y sin espacios</strong>. Ejemplo correcto: <code>675435187</code><br><br>¿Por qué importa tanto? Cuando el paciente rellena el formulario en el iPad, el sistema detecta ese teléfono en Airtable y completa automáticamente el email, DNI y fecha de nacimiento. <strong>Si el teléfono está mal escrito, la automatización no funciona.</strong>`},
-      {ti:'El historial clínico',icon:'🏥',body:`En el campo HISTORIAL CLÍNICO escribe brevemente el motivo de consulta: «dolor de rodilla», «cervicales», «post-operatorio tobillo»...<br><br>Esto ayuda al fisio a tener una primera idea antes de ver al paciente. Después de la anamnesis, el fisio añade toda la información clínica en ese mismo campo.`}
+      {ti:'Cuándo crear un paciente nuevo',icon:'➕',body:`Cuando un paciente pide cita y <strong>no existe todavía en Airtable</strong>, primero hay que crear su ficha en la tabla PACIENTES. Solo después se puede asignar a una cita.<br><br>Si ya existe, búscalo directamente — <strong>no crees duplicados.</strong>`},
+      {ti:'Campos obligatorios',icon:'📋',body:`• <b>FULL NAME</b> — nombre completo<br>• <b>SMS</b> — teléfono en formato correcto<br>• <b>HISTORIAL CLÍNICO</b> — motivo de consulta brevemente: «dolor de rodilla», «cervicales», «post-op tobillo»...<br><br>Esto ayuda al fisio a tener contexto antes de ver al paciente.`},
+      {ti:'El formato del teléfono — crítico',icon:'📱',body:`El teléfono se escribe <strong>sin +34 y sin espacios</strong>.<br><br>✅ Correcto: <code>675435187</code><br>❌ Incorrecto: <code>+34 675 435 187</code><br><br>¿Por qué importa? Cuando el paciente rellena el formulario en el iPad, el sistema detecta ese teléfono en Airtable y completa automáticamente email, DNI y fecha de nacimiento. <strong>Si el formato es incorrecto, la automatización falla.</strong>`}
      ],
      qs:[
-      {q:'Un paciente nuevo llama y su teléfono es 612 345 678. ¿Cómo lo escribes en Airtable?',opts:['612 345 678','612345678','+34612345678'],ok:1,fb:['Sin espacios — el sistema no reconocerá el número con espacios.','¡Correcto! Sin +34 y sin espacios.','Sin +34 — solo los 9 dígitos.']},
-      {q:'¿Por qué es tan importante el formato del teléfono?',opts:['Por estética — queda más limpio','Porque el sistema lo usa para completar automáticamente el email, DNI y fecha de nacimiento del formulario','No es importante — es solo preferencia'],ok:1,fb:['No es estética — tiene una función técnica concreta.','¡Correcto! El teléfono es la clave que activa la automatización.','Es muy importante — sin el formato correcto la automatización falla.']}
+      {q:'Un paciente nuevo llama. Su teléfono es 612 345 678. ¿Cómo lo escribes?',opts:['612 345 678','612345678','+34612345678'],ok:1,fb:['Sin espacios — el sistema no reconocerá el número.','¡Correcto! Sin +34 y sin espacios.','Sin +34 — solo los 9 dígitos.']},
+      {q:'El paciente ya existe en Airtable. ¿Qué haces?',opts:['Creo uno nuevo para esta cita','Lo busco y lo asigno directamente — no creo duplicados','Creo uno nuevo con un nombre ligeramente diferente'],ok:1,fb:['Los duplicados generan confusión y errores en el historial.','¡Correcto! Siempre buscar antes de crear.','Los duplicados son un problema grave — siempre buscar primero.']}
      ]
     },
-    {t:'La vista de agenda — leer la tabla de citas',sub:'Entender lo que ves cada día',
+    {t:'La vista de agenda',sub:'Entender lo que ves cada día',
      cards:[
-      {ti:'Las columnas principales',icon:'📊',body:`La vista de agenda tiene estas columnas principales:<br><br>• <b>FECHA</b> — el día de la cita<br>• <b>HORA</b> — la hora de la cita<br>• <b>ESTADO</b> — en qué punto está la cita<br>• <b>PREF.</b> — el fisioterapeuta asignado (RAMI, JONY, SARA, PAOLA)<br>• <b>RELACIÓN-CITA</b> — el paciente asignado<br>• <b>TIPO DE CITA</b> — qué sesión es (1/5, 3/10, PRIMERA VISITA...)<br>• <b>CONFIR</b> — si está confirmada<br>• <b>NOTAS</b> — cualquier información relevante`},
-      {ti:'Los estados de la cita',icon:'🏷',body:`Cada cita tiene un estado que indica en qué punto está:<br><br>• <b style="color:#22c55e">CITA LIBRE</b> — hueco disponible, nadie asignado todavía<br>• <b style="color:#f59e0b">PENDIENTE</b> — cita reservada, sesión aún no realizada<br>• <b style="color:#86efac">REALIZADA</b> — sesión completada<br>• <b style="color:#f87171">CANCELADA</b> — el paciente ha cancelado<br>• <b style="color:#94a3b8">REPROGRAMADA</b> — se cambia a otro día<br>• <b style="color:#94a3b8">CITA BLOQUEADA</b> — el fisio no está disponible a esa hora`},
-      {ti:'El tipo de cita',icon:'📌',body:`El tipo de cita indica qué sesión es dentro del tratamiento:<br><br>• <b>PRIMERA VISITA</b> — primera vez que viene<br>• <b>MANTENIMIENTO</b> — sesión de mantenimiento periódico<br>• <b>1/5, 2/5, 3/5...</b> — sesión X de un pack de 5<br>• <b>1/10, 5/10, 10/10...</b> — sesión X de un pack de 10<br>• <b>1/20, 8/20...</b> — sesión X de un pack de 20<br><br>Se escribe manualmente y se actualiza en cada sesión.`}
+      {ti:'Las columnas principales',icon:'📊',body:`• <b>FECHA</b> — día de la cita<br>• <b>HORA</b> — hora de la cita<br>• <b>ESTADO</b> — en qué punto está<br>• <b>PREF.</b> — fisioterapeuta asignado (RAMI, JONY, SARA, PAOLA)<br>• <b>RELACIÓN-CITA</b> — paciente asignado<br>• <b>TIPO DE CITA</b> — qué sesión es<br>• <b>CONFIR</b> — si está confirmada<br>• <b>NOTAS</b> — información relevante de esa cita`},
+      {ti:'Los estados de la cita',icon:'🏷',body:`• <b>CITA LIBRE</b> — hueco disponible, sin paciente<br>• <b>PENDIENTE</b> — reservada, sesión aún no realizada<br>• <b>REALIZADA</b> — sesión completada<br>• <b>CANCELADA</b> — el paciente ha cancelado<br>• <b>REPROGRAMADA</b> — se cambia a otro día<br>• <b>NO ASISTIÓ</b> — no vino sin avisar<br>• <b>CITA BLOQUEADA</b> — el fisio no está disponible a esa hora`},
+      {ti:'El tipo de cita',icon:'📌',body:`• <b>PRIMERA VISITA</b> — primera vez que viene<br>• <b>MANTENIMIENTO</b> — sesión periódica<br>• <b>1/5, 2/5, 3/5...</b> — sesión X de pack de 5<br>• <b>1/10, 5/10...</b> — sesión X de pack de 10<br>• <b>1/20, 8/20...</b> — sesión X de pack de 20<br><br>Se escribe manualmente y se actualiza en cada sesión.`}
      ],
      qs:[
-      {q:'Ves una cita con estado CITA BLOQUEADA y fisio RAMI. ¿Qué significa?',opts:['Rami tiene una cita muy importante que no se puede cancelar','Rami no está disponible a esa hora por algún motivo','El paciente ha bloqueado esa cita para que nadie la ocupe'],ok:1,fb:['No es sobre la importancia de la cita — es sobre disponibilidad.','¡Correcto! CITA BLOQUEADA significa que el fisio no está disponible.','El paciente no puede bloquear citas — eso lo hace recepción o el fisio.']},
-      {q:'Un paciente va a su 3ª sesión de un pack de 5. ¿Qué escribes en TIPO DE CITA?',opts:['3ª visita','Pack 5','3/5'],ok:2,fb:['Eso es para sesiones individuales, no para packs.','No es suficiente — hay que indicar en qué sesión va.','¡Correcto! Número de sesión / total del pack.']}
+      {q:'Ves CITA BLOQUEADA con fisio RAMI. ¿Qué significa?',opts:['Una cita muy importante','Rami no está disponible a esa hora','El paciente ha bloqueado la cita'],ok:1,fb:['No es sobre importancia — es disponibilidad.','¡Correcto! CITA BLOQUEADA = fisio no disponible.','El paciente no puede bloquear citas.']},
+      {q:'Un paciente va a su 3ª sesión de un pack de 10. ¿Qué escribes en TIPO DE CITA?',opts:['3ª visita','Pack 10','3/10'],ok:2,fb:['Eso es para sesiones individuales.','No indica en qué sesión va.','¡Correcto! Número de sesión / total del pack.']}
      ]
     },
-    {t:'Buscar citas disponibles',sub:'Encontrar el hueco perfecto para el paciente',
+    {t:'Buscar citas y lista de espera',sub:'Encontrar hueco o gestionar la espera',
      cards:[
-      {ti:'Cómo buscar un hueco',icon:'🔍',body:`Cuando un paciente pide cita, busca en la agenda huecos con estado <b>CITA LIBRE</b>. Estos son los huecos ya creados que todavía no tienen paciente asignado.<br><br>Antes de ofrecer opciones, fíjate en:<br>• <b>¿El paciente quiere un fisio concreto?</b> — filtra por PREF.<br>• <b>¿Quiere día u hora específica?</b> — filtra por FECHA u HORA<br>• <b>¿No tiene preferencia?</b> — ofrece las primeras opciones disponibles`},
-      {ti:'Qué ofrecer al paciente',icon:'💬',body:`Ofrece siempre <strong>2-3 opciones</strong> — no una sola. Da el día, la hora y el fisioterapeuta:<br><br>«Tenemos el lunes a las 9 con Rami, el martes a las 11 con Sara o el miércoles a las 10 con Jony. ¿Cuál te viene mejor?»<br><br>Si el paciente quiere continuar con su fisio habitual, prioriza los huecos de ese fisio.`},
-      {ti:'Cuando no hay hueco disponible',icon:'📅',body:`Si no hay CITA LIBRE en los días que el paciente quiere, tienes dos opciones:<br><br>• Ofrecerle el primer hueco disponible aunque sea más adelante<br>• Apuntar su nombre y preferencia y llamarle cuando se abra un hueco<br><br>En ese caso, anota en el weekly planner: «Llamar a [nombre] cuando haya hueco [día/hora preferida] con [fisio]».`}
+      {ti:'Buscar un hueco disponible',icon:'🔍',body:`Busca huecos con estado <b>CITA LIBRE</b>. Antes de ofrecer opciones fíjate en:<br><br>• ¿El paciente quiere un fisio concreto? → filtra por PREF.<br>• ¿Tiene preferencia de día u hora? → filtra por FECHA<br>• ¿Sin preferencia? → ofrece las primeras opciones disponibles<br><br>Ofrece siempre <strong>2-3 opciones</strong> con día, hora y fisio.`},
+      {ti:'Si no hay hueco disponible',icon:'⏳',body:`Si no hay CITA LIBRE cuando el paciente quiere venir, se añade a la <strong>tabla de Lista de Espera</strong> en Airtable.<br><br>Hay dos tipos:<br>• <b>Lista de espera — paciente</b>: ya ha venido antes<br>• <b>Lista de espera — no paciente</b>: nunca ha venido<br><br>En cuanto haya una cancelación, se le llama <strong>inmediatamente</strong> para ofrecerle el hueco.`},
+      {ti:'Cuando hay una cancelación',icon:'📞',body:`En el momento en que se cancela una cita, revisa la lista de espera. Si hay alguien que encaje con ese hueco (fisio, día, hora), <strong>llámale inmediatamente.</strong><br><br>Si nadie de la lista encaja → el hueco queda como CITA LIBRE disponible para reservas online o nuevas llamadas.`}
      ],
      qs:[
-      {q:'¿Qué estado tienen los huecos disponibles para reservar?',opts:['PENDIENTE','CITA LIBRE','CONFIRMADA'],ok:1,fb:['PENDIENTE significa que ya tiene paciente asignado.','¡Correcto! CITA LIBRE es el hueco disponible.','CONFIRMADA es un campo diferente al estado.']},
-      {q:'Un paciente quiere cita con Sara pero no hay ningún hueco libre con ella esta semana. ¿Qué haces?',opts:['Le dices que no hay cita disponible y que llame más adelante','Le ofreces el primer hueco con Sara aunque sea la semana siguiente, o le preguntas si prefiere otro fisio','Le asignas con otro fisio sin preguntarle'],ok:1,fb:['Siempre ofrecemos una alternativa — nunca cerramos la puerta.','¡Correcto! Ofrecer opciones y dejar que el paciente decida.','Nunca cambiar el fisio sin preguntarle — puede ser importante para el paciente.']}
+      {q:'No hay hueco para el paciente esta semana. ¿Qué haces?',opts:['Le dices que llame más adelante cuando haya hueco','Le añades a la tabla de Lista de Espera en Airtable y le llamas en cuanto haya una cancelación','Le apuntas en el weekly planner'],ok:1,fb:['Si esperas que él llame, probablemente no vuelva.','¡Correcto! Lista de Espera en Airtable + llamada inmediata cuando haya hueco.','El weekly planner es para llamadas programadas — esto es lista de espera activa.']},
+      {q:'Se cancela una cita para mañana a las 10 con Rami. ¿Qué haces primero?',opts:['Dejarlo como CITA LIBRE y esperar','Revisar la lista de espera y llamar inmediatamente a quien encaje','Apuntarlo en el weekly planner para mañana'],ok:1,fb:['Antes de dejarlo libre, revisa si alguien de la lista de espera lo necesita.','¡Correcto! La lista de espera tiene prioridad — llamada inmediata.','No es para mañana — es ahora.']}
      ]
     },
     {t:'Crear y completar una cita',sub:'Paso a paso',
      cards:[
-      {ti:'Paso 1 — Abrir el hueco',icon:'1️⃣',body:`Entra en el registro de la CITA LIBRE que el paciente ha elegido. Verás que el campo RELACIÓN-CITA está vacío y el estado es CITA LIBRE.`},
-      {ti:'Paso 2 — Asignar el paciente',icon:'2️⃣',body:`En el campo <b>RELACIÓN-CITA</b> busca el nombre del paciente y selecciónalo. Si el paciente no existe todavía, primero créalo en la tabla PACIENTES y luego vuelve aquí a asignarlo.`},
-      {ti:'Paso 3 — Completar los campos',icon:'3️⃣',body:`Completa los campos necesarios:<br><br>• <b>TIPO DE CITA</b> — PRIMERA VISITA, MANTENIMIENTO o número de sesión (1/5, 2/10...)<br>• <b>CONFIR</b> — CONFIRMADA cuando el paciente haya confirmado<br>• <b>NOTAS</b> — cualquier información relevante si es necesario`},
-      {ti:'Paso 4 — Cambiar el estado',icon:'4️⃣',body:`Cambia el estado de <b>CITA LIBRE</b> a <b>PENDIENTE</b>.<br><br><strong>Este es el paso más importante</strong> — en ese momento la cita desaparece de la web y no puede ser reservada por otra persona. Si se te olvida, otra persona puede reservar ese mismo hueco.`},
-      {ti:'Confirmar al paciente',icon:'✅',body:`Si la cita se ha hecho por teléfono, WhatsApp o en persona, confirma siempre al paciente el día y la hora antes de terminar: «Perfecto, te quedas el martes 3 de junio a las 10 con Rami. ¡Hasta entonces!»`}
+      {ti:'Paso 1 — Abrir el hueco',icon:'1️⃣',body:`Entra en el registro de la CITA LIBRE elegida. Verás RELACIÓN-CITA vacío y estado CITA LIBRE.`},
+      {ti:'Paso 2 — Asignar el paciente',icon:'2️⃣',body:`En <b>RELACIÓN-CITA</b> busca y selecciona al paciente. Si no existe todavía, créalo primero en PACIENTES y luego vuelve aquí.`},
+      {ti:'Paso 3 — Completar los campos',icon:'3️⃣',body:`• <b>TIPO DE CITA</b> — PRIMERA VISITA, MANTENIMIENTO o número de sesión (1/5, 3/10...)<br>• <b>CONFIR</b> — CONFIRMADA cuando el paciente haya confirmado<br>• <b>NOTAS</b> — cualquier info relevante de esta cita concreta`},
+      {ti:'Paso 4 — Cambiar el estado ⚠️',icon:'4️⃣',body:`Cambia el estado de <b>CITA LIBRE</b> a <b>PENDIENTE</b>.<br><br><strong>Este es el paso más importante.</strong> En ese momento desaparece de la web. Si lo olvidas, otro paciente puede reservar ese mismo hueco.`},
+      {ti:'Confirmar al paciente',icon:'✅',body:`Si la cita se ha hecho por teléfono, WhatsApp o en persona, confirma siempre el día y la hora antes de terminar: <em>«Te quedas el martes 3 a las 10 con Rami. ¡Hasta entonces!»</em>`}
      ],
      qs:[
-      {q:'¿Cuál es el paso MÁS importante al crear una cita?',opts:['Escribir las notas','Cambiar el estado de CITA LIBRE a PENDIENTE','Confirmar al paciente por WhatsApp'],ok:1,fb:['Las notas son importantes pero no el paso crítico.','¡Correcto! Sin cambiar el estado, la cita sigue visible en la web y otro puede reservarla.','La confirmación es importante pero no tan crítica como cambiar el estado.']},
-      {q:'Un paciente nuevo llama para pedir cita pero no existe en Airtable. ¿Qué haces primero?',opts:['Crear la cita y luego el paciente','Crear primero el paciente en PACIENTES y luego asignarlo a la cita','Asignar la cita directamente aunque no exista'],ok:1,fb:['No puedes asignar un paciente que no existe — primero hay que crearlo.','¡Correcto! Primero el paciente, luego la cita.','No se puede asignar alguien que no existe en el sistema.']}
+      {q:'¿Cuál es el paso MÁS importante al crear una cita?',opts:['Escribir las notas','Cambiar el estado de CITA LIBRE a PENDIENTE','Confirmar al paciente por WhatsApp'],ok:1,fb:['Las notas son importantes pero no el paso crítico.','¡Correcto! Sin cambiar el estado, otro puede reservar ese hueco.','La confirmación es importante pero no tan crítica.']},
+      {q:'Acabas de crear la cita. ¿Qué estado debe tener ahora?',opts:['CITA LIBRE','PENDIENTE','CONFIRMADA'],ok:1,fb:['CITA LIBRE es antes de asignar paciente.','¡Correcto! Una vez asignado el paciente, el estado es PENDIENTE.','CONFIRMADA es un campo diferente al estado.']}
      ]
     },
-    {t:'Gestión durante y después de la sesión',sub:'Mantener la agenda actualizada en tiempo real',
+    {t:'Gestión durante y después de la sesión',sub:'Mantener la agenda actualizada',
      cards:[
-      {ti:'Cuando el paciente entra a sesión',icon:'▶️',body:`En el momento en que el paciente entra a la sala con el fisio, cambia el estado de la cita de <b>PENDIENTE</b> a <b>REALIZADA</b>.<br><br>Aprovecha ese momento para revisar que todos los campos estén completos: tipo de cita, fisioterapeuta, notas si las hay.`},
-      {ti:'Cuando el paciente cancela',icon:'❌',body:`Si el paciente cancela:<br><br>• Cambia el estado a <b>CANCELADA</b><br>• Si reagenda → cambia a <b>REPROGRAMADA</b> y crea la nueva cita<br>• Si no reagenda → anota en <b>NOTAS</b> el motivo y cuándo llamarle<br>• Apunta en el <b>weekly planner</b> el día que hay que llamarle`},
-      {ti:'Si el fisio no puede',icon:'🔒',body:`Si el fisio no está disponible a una hora concreta (reunión, formación, asunto personal), cambia el estado de esa cita a <b>CITA BLOQUEADA</b>.<br><br>Así queda claro en la agenda que ese hueco no está disponible aunque no tenga paciente asignado.`}
+      {ti:'Cuando el paciente entra a sesión',icon:'▶️',body:`En el momento en que el paciente entra a la sala, cambia el estado de <b>PENDIENTE</b> a <b>REALIZADA</b>.<br><br>Aprovecha para revisar que todos los campos estén completos: tipo de cita, fisio, notas.`},
+      {ti:'Cuando el paciente cancela con aviso',icon:'📅',body:`1. Cambia el estado a <b>CANCELADA</b> o <b>REPROGRAMADA</b><br>2. <strong>Crea un nuevo hueco CITA LIBRE</strong> con el mismo fisio y hora — listo para otro paciente<br>3. Si reagenda → crea la nueva cita<br>4. Anota en NOTAS de la cita y en el perfil del paciente lo que corresponda`},
+      {ti:'Cuando el paciente no viene sin avisar',icon:'❗',body:`Cambia el estado a <b>NO ASISTIÓ</b> — no a CANCELADA.<br><br>Crea igualmente un <strong>nuevo hueco CITA LIBRE</strong> con el mismo fisio y hora.<br><br>Llámale ese mismo día o al siguiente para saber qué ha pasado y si quiere reprogramar.`},
+      {ti:'Si el fisio no puede',icon:'🔒',body:`Cambia el estado a <b>CITA BLOQUEADA</b>. Así queda claro que ese hueco no está disponible aunque no tenga paciente.`}
      ],
      qs:[
-      {q:'El paciente acaba de entrar a sesión. ¿Qué cambias en Airtable?',opts:['Nada — lo cambio al final del día','El estado de PENDIENTE a REALIZADA','El estado de PENDIENTE a CONFIRMADA'],ok:1,fb:['Hay que actualizarlo en el momento — no al final del día.','¡Correcto! En cuanto entra, pasa a REALIZADA.','CONFIRMADA no es un estado de la cita — es un campo diferente.']},
-      {q:'Un paciente cancela y dice que te llame en dos semanas. ¿Qué haces?',opts:['Cambiar a CANCELADA y nada más','Cambiar a CANCELADA, anotar en NOTAS cuándo llamarle y apuntarlo en el weekly planner','Borrar la cita'],ok:1,fb:['Sin el seguimiento, el paciente se pierde.','¡Correcto! Estado + nota en Airtable + recordatorio en weekly planner.','Nunca se borran citas — se cambia el estado.']}
+      {q:'El paciente cancela su cita. Además de cambiar el estado, ¿qué más hay que hacer?',opts:['Nada más','Crear un nuevo hueco CITA LIBRE con el mismo fisio y hora, listo para otro paciente','Borrar la cita'],ok:1,fb:['Hay que liberar ese hueco para que otro paciente pueda usarlo.','¡Correcto! El hueco liberado es una oportunidad — hay que dejarlo disponible.','Nunca se borran citas — se cambia el estado.']},
+      {q:'El paciente no aparece sin avisar. ¿Qué estado le pones?',opts:['CANCELADA','NO ASISTIÓ','REPROGRAMADA'],ok:1,fb:['CANCELADA es cuando el paciente avisa — sin aviso es NO ASISTIÓ.','¡Correcto! NO ASISTIÓ es específicamente para cuando no viene sin avisar.','No se ha reprogramado nada.']}
      ]
     },
-    {t:'Estados del paciente',sub:'El estado del paciente vs el estado de la cita',
+    {t:'Estados del paciente',sub:'Solo 3 — simples y suficientes',
      cards:[
-      {ti:'Son dos cosas diferentes',icon:'⚠️',body:`No confundas el <b>estado de la CITA</b> (pendiente, realizada, cancelada...) con el <b>estado del PACIENTE</b> en su ficha.<br><br>El estado del paciente refleja su situación global en la clínica — no una cita concreta.`},
-      {ti:'Los estados del paciente',icon:'👤',body:`• <b>ACTIVO</b> — ha comprado un pack o sigue viniendo regularmente<br>• <b>SOLO VALORACIÓN</b> — vino a la valoración pero no empezó tratamiento ni pagó<br>• <b>NO ASISTIÓ</b> — no vino a la cita sin avisar<br>• <b>SESIÓN PUNTUAL</b> — vino una sola vez y no volvió a reservar<br>• <b>ALTA</b> — terminó el tratamiento y está bien<br>• <b>FIN PACK</b> — ha terminado todas las sesiones del pack`},
-      {ti:'Cuándo actualizarlo',icon:'🔄',body:`El estado del paciente se actualiza cuando cambia su situación global:<br><br>• Compra un pack → <b>ACTIVO</b><br>• Termina el pack → <b>FIN PACK</b><br>• Le dan el alta → <b>ALTA</b><br>• Solo vino una vez → <b>SESIÓN PUNTUAL</b><br>• No vino sin avisar → <b>NO ASISTIÓ</b>`}
+      {ti:'Los 3 estados',icon:'👤',body:`En Airtable solo usamos 3 estados para los pacientes:<br><br>• <b>ACTIVO</b> — está viniendo a la clínica (pack, sesiones sueltas o mantenimiento)<br>• <b>ALTA</b> — terminó el tratamiento correctamente y está bien<br>• <b>INACTIVO</b> — dejó de venir por cualquier motivo (pausa, abandono, económico, no continuó...)<br><br><strong>El detalle de por qué está inactivo va siempre en las notas del perfil del paciente.</strong> Sin nota, el estado no tiene contexto.`},
+      {ti:'Cuándo actualizarlo',icon:'🔄',body:`• Empieza tratamiento o compra pack → <b>ACTIVO</b><br>• El fisio le da el alta → <b>ALTA</b><br>• Deja de venir por cualquier motivo → <b>INACTIVO</b><br><br>Siempre que cambies el estado escribe una nota en el perfil con la fecha y el motivo. Por ejemplo:<br><em>«15/06/2026 — pausa por viaje hasta septiembre»</em><br><em>«20/06/2026 — no quiso continuar el tratamiento»</em><br><em>«01/07/2026 — alta por el fisio, está al 100%»</em>`},
+      {ti:'Lo que ya NO usamos',icon:'🚫',body:`Antes teníamos más estados: SOLO VALORACIÓN, NO ASISTIÓ, SESIÓN PUNTUAL, FIN PACK... Generaban confusión y no aportaban valor real.<br><br>Ahora todo eso se gestiona con <strong>3 estados + notas en el perfil</strong>. Más simple, más claro y más útil para todo el equipo.`}
      ],
      qs:[
-      {q:'Un paciente termina su pack de 10 sesiones y el fisio le da el alta. ¿Qué estado le pones?',opts:['FIN PACK','ALTA','ACTIVO'],ok:1,fb:['FIN PACK es cuando acaba el pack pero puede que necesite más sesiones.','¡Correcto! Si el fisio le da el alta, el estado es ALTA.','ACTIVO es mientras está en tratamiento.']},
-      {q:'Un paciente vino una sola vez y no ha vuelto a reservar. ¿Qué estado le pones?',opts:['ALTA','NO ASISTIÓ','SESIÓN PUNTUAL'],ok:2,fb:['ALTA es cuando el fisio le da el alta — no cuando simplemente no vuelve.','NO ASISTIÓ es cuando no vino a la cita — este paciente sí vino.','¡Correcto! Vino una vez y no volvió a reservar = SESIÓN PUNTUAL.']}
+      {q:'Un paciente termina su pack y el fisio le da el alta. ¿Qué estado le pones?',opts:['ACTIVO','ALTA','INACTIVO'],ok:1,fb:['ACTIVO es mientras está en tratamiento.','¡Correcto! Alta del fisio = estado ALTA.','INACTIVO es para cuando deja de venir sin haber terminado bien.']},
+      {q:'Un paciente hace una pausa por motivos económicos. ¿Qué haces?',opts:['Lo dejo en ACTIVO por si vuelve','INACTIVO + nota en el perfil con fecha y motivo','ALTA porque ya no viene'],ok:1,fb:['Si no viene, no está activo.','¡Correcto! INACTIVO + nota clara. Así cualquier del equipo sabe la situación.','ALTA es solo cuando el fisio le da el alta clínica.']}
      ]
     },
-    {t:'Notas en Airtable',sub:'Dejar la información bien registrada',
+    {t:'Notas — dos tipos, dos funciones',sub:'Saber dónde poner cada cosa',
      cards:[
-      {ti:'Para qué sirven las notas',icon:'📝',body:`Las notas son la memoria escrita de todo lo que no cabe en los campos estructurados. <strong>Si hay algo importante que no está en los campos, va en NOTAS.</strong><br><br>Cualquier miembro del equipo que abra esa cita o ese paciente debe entender qué ha pasado solo leyendo las notas.`},
-      {ti:'Qué se anota',icon:'✅',body:`Ejemplos de lo que va en NOTAS:<br><br>• <em>«Va a pagar pack de 5 en varias partes — pagó 100€»</em><br>• <em>«Llamar y reprogramar»</em><br>• <em>«Cancela por prueba médica — llamar en 3 semanas»</em><br>• <em>«Paciente prefiere cita solo con Rami»</em><br>• <em>«No llamar antes de las 10»</em>`},
-      {ti:'Cómo redactarlas',icon:'✍️',body:`Las notas deben ser:<br><br>• <b>Claras</b> — cualquiera del equipo debe entenderlas<br>• <b>Concretas</b> — con fechas y datos específicos si es relevante<br>• <b>Breves</b> — lo justo para entender la situación<br><br>No hace falta escribir un párrafo. Una línea bien escrita es suficiente.`}
+      {ti:'Notas en la cita',icon:'📝',body:`Las notas dentro de una cita concreta son para información <strong>específica de esa sesión</strong>:<br><br>• <em>«Va a pagar pack en varias partes — pagó 100€»</em><br>• <em>«Llamar y reprogramar»</em><br>• <em>«Canceló por prueba médica»</em><br>• <em>«No asistió — sin avisar»</em><br><br>Son visibles cuando abres esa cita específica.`},
+      {ti:'Notas en el perfil del paciente',icon:'👤',body:`Las notas en el perfil son para información <strong>global del paciente</strong> — su historial, situación actual, preferencias, acuerdos:<br><br>• <em>«Solo quiere cita con Rami»</em><br>• <em>«Pausa hasta enero — de viaje»</em><br>• <em>«Alergia a AINE — ver medicación»</em><br>• <em>«Pagando el pack en varias partes»</em><br>• <em>«29/05/2026 — va al traumatólogo el 5/06, llamar el 6»</em><br><br><strong>Todo lo importante va en el perfil con fecha.</strong>`},
+      {ti:'La regla',icon:'💡',body:`<strong>Si es info de una sesión concreta → nota en la cita.</strong><br><strong>Si es info que necesitas saber siempre que abras al paciente → nota en el perfil.</strong><br><br>Cuando hay dudas, ponlo en el perfil — es mejor que se repita a que se pierda.`}
      ],
      qs:[
-      {q:'Un paciente cancela porque tiene una prueba médica y dice que le llamemos en 3 semanas. ¿Qué escribes en NOTAS?',opts:['Cancela','Cancela por prueba médica — llamar en 3 semanas','El paciente ha cancelado su cita por motivos médicos y ha solicitado que le contactemos aproximadamente en tres semanas'],ok:1,fb:['Demasiado vago — no da información útil.','¡Correcto! Conciso, claro y con la acción a tomar.','Demasiado largo — las notas deben ser breves y directas.']},
-      {q:'¿Quién puede leer las notas de Airtable?',opts:['Solo quien las ha escrito','Solo recepción','Todo el equipo que tenga acceso a Airtable'],ok:2,fb:['Las notas son compartidas — no son privadas.','Los fisios también tienen acceso y las leen.','¡Correcto! Las notas son para todo el equipo — escríbelas pensando en eso.']}
+      {q:'Un paciente dice que solo quiere cita con Rami. ¿Dónde lo anotas?',opts:['En la nota de la próxima cita','En el perfil del paciente — es info global','No hace falta anotarlo'],ok:1,fb:['En la cita solo se vería para esa sesión — la siguiente no lo sabrías.','¡Correcto! Info global = perfil del paciente.','Si no está escrito, se olvida.']},
+      {q:'El paciente cancela porque tiene una prueba médica la semana que viene. ¿Qué anotas y dónde?',opts:['Solo cambio el estado a CANCELADA','En la nota de la cita: motivo de cancelación. En el perfil: fecha de la prueba y cuándo llamarle','Solo en el perfil'],ok:1,fb:['Sin nota no hay contexto ni seguimiento.','¡Correcto! Cada cosa en su sitio — la cita con el motivo, el perfil con el seguimiento.','La nota de la cita también es importante para tener el contexto.']}
      ]
     },
     {t:'Gestión de ausencias',sub:'Cuando el paciente cancela o no viene',
      cards:[
-      {ti:'El paciente avisa y reagenda',icon:'🔄',body:`Si el paciente avisa con tiempo y quiere cambiar de día:<br><br>1. Cambia el estado de la cita a <b>REPROGRAMADA</b><br>2. Crea la nueva cita en el hueco que hayan acordado<br>3. Anota en NOTAS de la cita original: <em>«Reprogramada al [día] a las [hora]»</em>`},
-      {ti:'El paciente avisa pero no reagenda',icon:'📞',body:`Si el paciente cancela pero no sabe cuándo puede volver:<br><br>1. Cambia el estado a <b>CANCELADA</b><br>2. Anota en NOTAS el motivo y cuándo llamarle<br>3. Apunta en el <b>weekly planner</b> el día de la llamada<br><br>Ejemplo de nota: <em>«Cancela — de viaje hasta el 15. Llamar el 16.»</em>`},
-      {ti:'El paciente no viene sin avisar',icon:'❗',body:`Si el paciente no aparece:<br><br>1. Cambia el estado a <b>CANCELADA</b><br>2. Anota en NOTAS: <em>«No asistió sin avisar»</em><br>3. Apunta en el weekly planner para llamarle ese mismo día o el siguiente<br><br>No dejes pasar tiempo — cuanto antes contactes, más probable que vuelva.`},
-      {ti:'Weekly planner vs Airtable',icon:'📋',body:`<b>Airtable</b> → toda la información: qué pasó, por qué, qué se acordó, cuándo llamar.<br><b>Weekly planner</b> → solo el recordatorio de la llamada: «Llamar a [nombre] el [día]».<br><br>Son complementarios — uno sin el otro no funciona.`}
+      {ti:'El paciente cancela y reagenda',icon:'🔄',body:`1. Cambia el estado a <b>REPROGRAMADA</b><br>2. <strong>Crea un nuevo hueco CITA LIBRE</strong> con el mismo fisio y hora<br>3. Crea la nueva cita en el hueco acordado<br>4. Nota en la cita original: <em>«Reprogramada al [día] a las [hora]»</em>`},
+      {ti:'El paciente cancela sin reagendar',icon:'📞',body:`1. Cambia el estado a <b>CANCELADA</b><br>2. <strong>Crea un nuevo hueco CITA LIBRE</strong> con el mismo fisio y hora<br>3. Nota en la cita: motivo y cuándo llamarle<br>4. Nota en el perfil del paciente con fecha y contexto<br>5. <b>Weekly planner:</b> «Llamar a [nombre] el [día]»`},
+      {ti:'El paciente no viene sin avisar',icon:'❗',body:`1. Cambia el estado a <b>NO ASISTIÓ</b><br>2. <strong>Crea un nuevo hueco CITA LIBRE</strong> con el mismo fisio y hora<br>3. Llámale ese mismo día o el siguiente<br>4. Nota en el perfil con fecha<br><br>No dejes pasar tiempo — cuanto antes contactes, más probable que vuelva.`},
+      {ti:'Weekly planner vs Airtable',icon:'📋',body:`<b>Airtable</b> → toda la información: qué pasó, por qué, qué se acordó, cuándo llamar, historial completo.<br><br><b>Weekly planner</b> → <strong>solo el recordatorio de la llamada</strong>: «Llamar a [nombre] el [día]». Nada más.`}
      ],
      qs:[
-      {q:'Un paciente no aparece a su cita sin avisar. ¿Qué haces?',opts:['Esperar a que él llame','Cambiar a CANCELADA, anotar en NOTAS y apuntar en weekly planner para llamarle hoy o mañana','Borrar la cita y ya está'],ok:1,fb:['Esperar pasivamente es la forma más segura de perder al paciente.','¡Correcto! Estado + nota + llamada rápida = paciente recuperado.','Nunca se borran citas — y sin llamada, el paciente se pierde.']},
-      {q:'¿Qué va en el weekly planner?',opts:['Toda la información sobre la cancelación','Solo el recordatorio de la llamada: «Llamar a [nombre] el [día]»','Las citas del día siguiente'],ok:1,fb:['Toda la info va en Airtable — el weekly planner es solo el recordatorio.','¡Correcto! El weekly planner es solo para las llamadas y seguimientos.','Las citas están en Airtable — el weekly planner es para llamadas.']}
+      {q:'Un paciente cancela. Además de cambiar el estado, ¿qué hay que hacer siempre?',opts:['Nada más','Crear un nuevo hueco CITA LIBRE con el mismo fisio y hora','Llamarle inmediatamente'],ok:1,fb:['Hay que liberar el hueco para que otro paciente pueda usarlo.','¡Correcto! El hueco liberado es una oportunidad — siempre crear CITA LIBRE.','La llamada depende de la situación — el hueco siempre hay que crearlo.']},
+      {q:'¿Qué va en el weekly planner?',opts:['Todo el historial del paciente','Solo el recordatorio de la llamada: «Llamar a [nombre] el [día]»','Las citas del día siguiente'],ok:1,fb:['El historial va en el perfil del paciente en Airtable.','¡Correcto! El weekly planner es solo para recordatorios de llamadas.','Las citas están en Airtable.']}
      ]
     },
   ];
