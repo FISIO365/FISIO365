@@ -3058,14 +3058,15 @@ const WIKI_RUTAS = [
   {
     id: 'ultima',
     categoria: 'centro',
-    titulo: 'Ruta última visita',
-    desc: 'Cierre del proceso terapéutico y alta del paciente',
+    titulo: 'Última sesión pagada',
+    desc: 'Protocolo de cierre según la situación de cada paciente',
     etiqueta: 'Todo el equipo',
-    info: '',
-    pasos: 0,
+    info: `<strong>¿Qué aprenderás aquí?</strong><br><br>La última sesión pagada es uno de los momentos más importantes del proceso — define si el paciente vuelve, si se va bien atendido y si el equipo actúa de forma coordinada.<br><br>Este curso te guía por cada situación posible: alta, más sesiones, falta de mejora, pruebas, derivaciones y más. Con roles claros para el fisio y para recepción en cada caso.`,
+    pasos: 13,
     emoji: '',
     imgs: [],
-    tits: []
+    tits: [],
+    tipo: 'formacion'
   },
   {
     id: 'bomba',
@@ -3974,6 +3975,152 @@ function renderFormacion(wrap, ruta){
     },
   ];
 
+
+  // ── MÓDULOS ÚLTIMA SESIÓN PAGADA ─────────────────────────────────────────
+  const MODS_ULTIMA = [
+    {t:'La última sesión pagada',sub:'Por qué este momento es clave',
+     cards:[
+      {ti:'Un momento decisivo',icon:'🎯',body:`La última sesión pagada es uno de los momentos más importantes del proceso. <strong>Define si el paciente vuelve, si se va bien atendido y si el equipo actúa coordinado.</strong><br><br>No es el final — es una bifurcación. Cada paciente sale por un camino diferente y el equipo debe saber manejarlo con naturalidad.`},
+      {ti:'El flujo es siempre el mismo',icon:'🔄',body:`Independientemente de la situación, el cierre siempre empieza igual:<br><br>• El fisio avisa: <em>«Dentro de poco vamos a ir terminando»</em><br>• Pregunta si tiene dudas o algo que decir<br>• Se asegura de que se va bien<br>• <strong>Acompaña al paciente a recepción — van juntos</strong><br>• El fisio informa a recepción del plan <strong>delante del paciente</strong>`},
+      {ti:'Las situaciones posibles',icon:'🔀',body:`A partir del módulo siguiente verás cada situación con su protocolo completo. Las situaciones son:<br><br>• Alta total — está al 100%<br>• Alta con mantenimiento<br>• Necesita más sesiones<br>• No ha mejorado como se esperaba<br>• Ha empeorado<br>• Necesita prueba de imagen<br>• Derivación a especialista<br>• Pendiente de resultado<br>• Abandona voluntariamente<br>• Pausa larga<br>• Embarazo<br>• No puede económicamente`}
+     ],
+     qs:[
+      {q:'¿Cómo empieza siempre el cierre de última sesión, independientemente de la situación?',opts:['El fisio le dice al paciente que pase por recepción','El fisio avisa de que va a terminar, pregunta si tiene dudas y acompaña al paciente a recepción','Recepción llama al fisio cuando el paciente sale'],ok:1,fb:['«Pasa por recepción» es impersonal y rompe la coordinación de equipo.','¡Correcto! El flujo es siempre el mismo — solo cambia lo que pasa en recepción.','Recepción no sabe lo que ha pasado en la sesión — el fisio es quien informa.']}
+     ]
+    },
+    {t:'Situación 1 · Alta total',sub:'El paciente está al 100%',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'🏆',body:`Comunica el alta con claridad y con celebración. Refuerza el trabajo hecho por el paciente: <em>«Has trabajado muy bien y se nota.»</em><br><br>Menciona que puede volver cuando quiera y propone mantenimiento: <em>«Te recomendaría una revisión en 4-6 semanas por si acaso.»</em>`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`Delante del paciente: <em>«[Nombre] está dada de alta, está al 100%. Le he comentado que puede volver cuando quiera para mantenimiento.»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• Refuerza el alta con calidez: <em>«Qué buena noticia, nos alegramos mucho»</em><br>• Propone mantenimiento: <em>«¿Te gustaría dejar agendada una revisión en 4-6 semanas?»</em><br>• Si acepta → agendar y ofrecer pagada<br>• Si no → <em>«Cuando quieras, ya sabes dónde estamos»</em><br>• Despedida muy cálida`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota en el perfil — alta total, fecha, si ha agendado mantenimiento o no.<br><b>Weekly planner:</b> Solo si ha dicho que llamará — anotar el día de la llamada.`}
+     ],
+     qs:[
+      {q:'El paciente está al 100% y no quiere agendar mantenimiento. ¿Qué hace recepción?',opts:['Insistir hasta que acepte','«Cuando quieras, ya sabes dónde estamos» — y despedida cálida','Preguntarle por qué no quiere'],ok:1,fb:['Nunca presionamos — el paciente que se va bien siempre vuelve.','¡Correcto! Puerta abierta, sin presión y despedida cálida.','No necesitamos justificación — respetamos su decisión.']}
+     ]
+    },
+    {t:'Situación 2 · Alta con mantenimiento',sub:'Está bien, pero conviene revisión periódica',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'💬',body:`Explica que está bien pero que el mantenimiento previene recaídas: <em>«Estás muy bien, pero te recomiendo una revisión cada X semanas para que no vuelva a aparecer.»</em>`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`<em>«[Nombre] está muy bien, le he recomendado una sesión de mantenimiento en 4-6 semanas.»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• Agendar la sesión de mantenimiento antes de que salga<br>• Ofrecer dejarla pagada<br>• Despedida cálida`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota con fecha de la próxima sesión de mantenimiento.<br><b>Weekly planner:</b> No necesario si ya tiene cita agendada.`}
+     ],
+     qs:[
+      {q:'¿Por qué es importante agendar el mantenimiento antes de que salga?',opts:['Para asegurar el ingreso','Si no lo agenda ahora, muchos pacientes no vuelven aunque tengan intención de hacerlo','Para que recepción tenga trabajo'],ok:1,fb:['No es solo una cuestión económica — es cuidar al paciente.','¡Correcto! La intención no es suficiente — la cita agendada sí.',' La agenda es una consecuencia, no el objetivo.']}
+     ]
+    },
+    {t:'Situación 3 · Necesita más sesiones',sub:'Ha mejorado pero no está al 100%',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'📊',body:`Explica la evolución con honestidad: <em>«Vas muy bien, has mejorado mucho, pero necesitamos un poco más de trabajo para dejarlo bien cerrado.»</em><br><br>Concreta cuántas sesiones y con qué frecuencia.`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`Delante del paciente: <em>«[Nombre] va muy bien pero necesita X sesiones más, idealmente dos por semana.»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• Gestiona pack o sesiones sueltas según el número<br>• Agendar todas antes de que salga<br>• Ofrecer pago<br>• Despedida`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota con el plan — número de sesiones, frecuencia, fecha inicio.<br><b>Weekly planner:</b> No necesario si tiene citas agendadas.`}
+     ],
+     qs:[
+      {q:'¿Cuándo se gestiona el nuevo pack o sesiones?',opts:['El paciente llama cuando quiera para agendarlas','En recepción, antes de que salga — se agendan todas','En la próxima sesión'],ok:1,fb:['Si no lo hacemos ahora, muchos pacientes no llaman.','¡Correcto! Todo se gestiona en el momento — antes de que salga.','La próxima sesión es demasiado tarde.']}
+     ]
+    },
+    {t:'Situación 4 · No ha mejorado como se esperaba',sub:'Hay que replantear',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'🔍',body:`Honestidad total. Explica qué ha pasado y que hay que replantear antes de continuar. Propone el siguiente paso concreto — prueba de imagen, derivación o cambio de enfoque.<br><br><strong>No vender más sesiones del mismo hasta tener un plan claro.</strong>`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`<em>«[Nombre] vamos a hacer una pausa para ver qué está pasando antes de continuar. Ya le he explicado el motivo.»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• No vender más sesiones todavía<br>• Preguntar cuándo tiene la prueba o cita con el especialista<br>• <em>«Te llamamos nosotros el [día] para ver cómo ha ido»</em><br>• Despedida con mucho apoyo — esta situación puede generar angustia`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota detallada — qué pasó, qué se propone, cuándo hay que llamar.<br><b>Weekly planner:</b> Llamar a [nombre] el [día].`}
+     ],
+     qs:[
+      {q:'¿Se pueden vender más sesiones si el paciente no ha mejorado como se esperaba?',opts:['Sí, hay que intentarlo','No — primero hay que entender qué está pasando y replantear','Solo si el paciente lo pide'],ok:1,fb:['Vender más de lo mismo sin un plan claro no es honesto ni efectivo.','¡Correcto! Primero entender, luego actuar.','Aunque el paciente lo pida, nuestra responsabilidad es ser honestos.']}
+     ]
+    },
+    {t:'Situación 5 · Ha empeorado',sub:'Parar y actuar',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'🛑',body:`Parar. Explicar con calma que lo más responsable es no continuar sin saber el motivo. <strong>No generar alarma innecesaria</strong> pero sí claridad. Derivar con indicación concreta a quién y por qué.`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`<em>«[Nombre] vamos a pausar el tratamiento, necesita ver al [especialista] antes de continuar. Ya le he explicado todo.»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• No vender nada<br>• Mucho apoyo emocional — esta situación puede asustar al paciente<br>• <em>«Te llamamos en unos días para ver cómo estás»</em><br>• Despedida muy cálida`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota detallada — situación, derivación, fecha de seguimiento.<br><b>Weekly planner:</b> Llamar a [nombre] el [día].`}
+     ],
+     qs:[
+      {q:'Un paciente ha empeorado. ¿Qué hace recepción?',opts:['Intenta venderle más sesiones para recuperar la inversión','No vende nada, da mucho apoyo y queda en llamarle en unos días','Le pregunta qué ha hecho mal en casa'],ok:1,fb:['En esta situación lo último que hacemos es vender.','¡Correcto! Apoyo, seguimiento y cero presión.','El paciente no ha hecho nada mal — no es el momento de cuestionarle.']}
+     ]
+    },
+    {t:'Situación 6 · Prueba de imagen antes de continuar',sub:'RX, RM, eco...',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'🩻',body:`Explica por qué necesita la prueba y qué buscan. Dar claridad — no generar angustia innecesaria. El paciente debe entender que es un paso normal y necesario.`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`<em>«[Nombre] se va a hacer una [prueba] antes de continuar, cuando tenga resultado retomamos.»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• <em>«¿Cuándo crees que tendrás el resultado? Así te llamamos nosotros para no tener que estar tú pendiente»</em><br>• Despedida tranquilizadora`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota — qué prueba, cuándo la tiene, cuándo llamar.<br><b>Weekly planner:</b> Llamar a [nombre] el [día].`}
+     ],
+     qs:[
+      {q:'¿Quién hace el seguimiento cuando el paciente va a hacerse una prueba?',opts:['El paciente nos llama cuando tenga el resultado','Nosotros le llamamos — quedamos en un día concreto','Esperamos a que pida cita de nuevo'],ok:1,fb:['Si esperamos que llame él, muchos pacientes se pierden.','¡Correcto! Nosotros tomamos la iniciativa del seguimiento.','Esperar pasivamente es la forma más segura de perder al paciente.']}
+     ]
+    },
+    {t:'Situación 7 · Derivación a especialista',sub:'Traumatólogo, neurólogo, médico...',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'🏥',body:`Indicación concreta — a quién va, por qué y qué tiene que decirle. <strong>No vago: «Ve al médico»</strong> — sino: «Te recomiendo que vayas al traumatólogo y le cuentes específicamente esto.»`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`<em>«[Nombre] va a ver al [especialista] antes de continuar con nosotros.»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• <em>«¿Cuándo tienes la cita? Te llamamos después para ver cómo ha ido»</em><br>• Despedida de apoyo`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota — especialista, fecha cita si la sabe, cuándo llamar.<br><b>Weekly planner:</b> Llamar a [nombre] el [día].`}
+     ],
+     qs:[
+      {q:'¿Cómo debe ser la indicación de derivación del fisio?',opts:['Vaga — «Ve al médico a ver qué te dice»','Concreta — a quién va, por qué y qué tiene que decirle','Sin dar demasiada información para no asustar'],ok:1,fb:['Una indicación vaga no ayuda al paciente.','¡Correcto! Cuanto más concreto, mejor puede actuar el paciente.','La información clara tranquiliza — la vaguedad genera más angustia.']}
+     ]
+    },
+    {t:'Situación 8 · Pendiente de resultado ya hecho',sub:'La prueba ya está hecha, falta el resultado',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'⏳',body:`Recordar que en cuanto tenga el resultado nos lo manda o llama. Explicar qué harán con esa información.`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`<em>«[Nombre] está pendiente del resultado de [prueba], cuando lo tenga retomamos.»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• <em>«Nosotros te llamamos en [X días] por si ya tienes algo — así no tienes que estar tú pendiente»</em><br>• Despedida tranquila`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota — qué resultado espera, cuándo llamar.<br><b>Weekly planner:</b> Llamar a [nombre] el [día].`}
+     ],
+     qs:[
+      {q:'¿Qué anotamos en el weekly planner en esta situación?',opts:['Nada — el paciente llama cuando tenga el resultado','Llamar a [nombre] el [día] para ver si ya tiene el resultado','Apuntar la prueba que se ha hecho'],ok:1,fb:['Sin anotación en el weekly planner el seguimiento no ocurre.','¡Correcto! El día concreto de la llamada va en el weekly planner.','La prueba va en Airtable — el weekly planner es solo para llamadas.']}
+     ]
+    },
+    {t:'Situación 9 · Abandona voluntariamente',sub:'No quiere continuar aunque le falta',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'🚪',body:`No presionar nunca. Entender el motivo si lo comparte sin interrogarle. Dejar la puerta abierta con total calidez: <em>«Lo entiendo perfectamente. Si en algún momento quieres retomarlo aquí estamos.»</em>`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`<em>«[Nombre] por ahora lo deja aquí, ya volverá cuando lo necesite.»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• No presionar en absoluto<br>• <em>«Cuando quieras retomarlo aquí estamos»</em><br>• Despedida muy cálida — que no se vaya sintiéndose mal<br>• Sin seguimiento activo`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota — motivo si lo sabe, fecha, dejó el tratamiento voluntariamente.<br><b>Weekly planner:</b> Nada.`}
+     ],
+     qs:[
+      {q:'¿Por qué es importante que el paciente que abandona se vaya sintiéndose bien?',opts:['No importa — si se va, se va','Un paciente que se va bien tratado puede volver o recomendar — uno que se va presionado, no','Para que no hable mal de nosotros'],ok:1,fb:['La forma en que se va define si vuelve o nos recomienda.','¡Correcto! La calidez en el cierre es tan importante como en la apertura.','No es solo reputación — es respeto genuino por el paciente.']}
+     ]
+    },
+    {t:'Situación 10 · Pausa larga',sub:'Viaje, trabajo, motivo personal',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'✈️',body:`Entender cuánto tiempo dura la pausa. Dar indicaciones para ese período si corresponde — qué puede hacer, qué evitar.`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`<em>«[Nombre] hace una pausa hasta [fecha aproximada], retomamos cuando vuelva.»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• Si sabe la fecha → agendar ya la primera sesión después de la pausa<br>• Si no sabe → <em>«Cuando vuelvas llámanos y te buscamos hueco enseguida»</em><br>• Despedida cálida`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota — motivo pausa, hasta cuándo, si tiene cita agendada o no.<br><b>Weekly planner:</b> Si hay fecha → llamar a [nombre] unos días antes de que vuelva.`}
+     ],
+     qs:[
+      {q:'El paciente sabe que vuelve en 3 semanas. ¿Qué hace recepción?',opts:['Le dice que llame cuando vuelva','Agenda ya la primera sesión después de la pausa','Anota en el weekly planner que llame en 3 semanas'],ok:1,fb:['Si puede agendar ahora, mejor — asegura la vuelta.','¡Correcto! Si sabe la fecha, la cita se agenda en el momento.','El weekly planner es para cuando no hay fecha concreta.']}
+     ]
+    },
+    {t:'Situación 11 · Embarazo',sub:'Adaptar o pausar',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'🤱',body:`Valorar si puede continuar adaptando el tratamiento — muchas técnicas son compatibles con el embarazo. Si hay que pausar, explicar cuándo puede retomar y qué puede hacer mientras.`},
+      {ti:'En recepción — el fisio informa',icon:'🔄',body:`<em>«[Nombre] está embarazada, vamos a [continuar adaptado / hacer una pausa hasta después del parto].»</em>`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• Si continúa → agendar normalmente<br>• Si pausa → preguntar fecha aproximada de parto y cuándo querría retomar<br>• Despedida cálida`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota — embarazo, semanas aproximadas, si continúa o pausa, cuándo retomar.<br><b>Weekly planner:</b> Si pausa → llamar a [nombre] cuando corresponda después del parto.`}
+     ],
+     qs:[
+      {q:'Una paciente embarazada, ¿siempre tiene que pausar el tratamiento?',opts:['Sí, siempre','No — muchas técnicas son compatibles con el embarazo y se puede continuar adaptando','Solo en el primer trimestre'],ok:1,fb:['No es automático — depende de la técnica y el estado de la paciente.','¡Correcto! El fisio valora caso a caso qué es compatible.','No hay una regla por trimestre — depende de cada caso.']}
+     ]
+    },
+    {t:'Situación 12 · No puede económicamente',sub:'Con mucho tacto',
+     cards:[
+      {ti:'En la sala — el fisio',icon:'💙',body:`Si el paciente lo comenta en la sala, el fisio lo transmite discretamente a recepción <strong>antes de que lleguen al mostrador</strong> — para que recepción no lance el cierre de ventas habitual y no genere incomodidad.`},
+      {ti:'En recepción — recepción actúa',icon:'👋',body:`• Mucho tacto — no presionar en absoluto<br>• Si el paciente lo menciona: <em>«No te preocupes, cuando puedas aquí estamos»</em><br>• Si quiere espaciar: buscar opción de una sesión cada 2-3 semanas<br>• Despedida muy cálida — que no se vaya sintiéndose mal`},
+      {ti:'Registro',icon:'📋',body:`<b>Airtable:</b> Nota discreta — situación económica, sin detallar más de lo necesario.<br><b>Weekly planner:</b> Nada salvo que haya quedado en algo concreto.`}
+     ],
+     qs:[
+      {q:'¿Cómo avisa el fisio a recepción si el paciente no puede económicamente?',opts:['Delante del paciente, en voz alta','Discretamente antes de llegar al mostrador, para que recepción no haga el cierre de ventas habitual','No avisa — recepción lo gestiona sola'],ok:1,fb:['Decirlo delante del paciente genera incomodidad.','¡Correcto! El aviso discreto protege la dignidad del paciente.','Sin el aviso del fisio, recepción puede meter la pata sin querer.']}
+     ]
+    },
+  ];
+
   const MODS_BOMBA=[
     {t:'¿Qué es la bomba diamagnética?',sub:'Fundamentos básicos · CTU Mega20',
      cards:[
@@ -4565,7 +4712,7 @@ function renderFormacion(wrap, ruta){
     }
   ];
 
-    const MODS = ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : MODS_BOMBA;
+    const MODS = ruta.id === 'ultima' ? MODS_ULTIMA : ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : MODS_BOMBA;
 
   let curMod=0, scores=new Array(MODS.length).fill(null).map(()=>({c:0,done:false}));
   let ttEl=null;
