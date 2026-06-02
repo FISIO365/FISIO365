@@ -1799,7 +1799,20 @@ function mkTestOrtopedico(id, nombre, img, como, positivo, negativo, combinar, f
   const body=ce('div','');
   body.style.cssText='display:none;padding:14px;border-top:0.5px solid var(--border);background:#fff';
   // Image
-  if(img){const im=ce('img','');im.src=img;im.style.cssText='width:120px;height:120px;object-fit:contain;border-radius:8px;margin-bottom:12px;background:#f5f5f5;border:0.5px solid #eee;display:block';body.appendChild(im);}
+  if(img){
+    const imgWrap=ce('div','');
+    imgWrap.style.cssText='position:relative;display:inline-block;margin-bottom:12px;cursor:zoom-in';
+    const im=ce('img','');
+    im.src=img;
+    im.style.cssText='width:120px;height:120px;object-fit:contain;border-radius:8px;background:#f5f5f5;border:0.5px solid #eee;display:block';
+    const lupa=ce('div','');
+    lupa.style.cssText='position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.5);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;pointer-events:none';
+    lupa.textContent='🔍';
+    imgWrap.appendChild(im);
+    imgWrap.appendChild(lupa);
+    imgWrap.onclick=()=>verImg(img, nombre);
+    body.appendChild(imgWrap);
+  }
   // How to do
   const s1=ce('div','');s1.style.cssText='margin-bottom:10px';
   const l1=ce('p','');l1.style.cssText='font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px';l1.textContent='Cómo se realiza';
