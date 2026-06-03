@@ -1801,16 +1801,23 @@ function mkTestOrtopedico(id, nombre, img, como, positivo, negativo, combinar, f
   // Image
   if(img){
     const imgWrap=ce('div','');
-    imgWrap.style.cssText='position:relative;display:inline-block;margin-bottom:12px;cursor:zoom-in';
+    imgWrap.style.cssText='position:relative;margin-bottom:14px;cursor:pointer;border-radius:10px;overflow:hidden;background:#f5f5f5';
     const im=ce('img','');
     im.src=img;
-    im.style.cssText='width:120px;height:120px;object-fit:contain;border-radius:8px;background:#f5f5f5;border:0.5px solid #eee;display:block';
-    const lupa=ce('div','');
-    lupa.style.cssText='position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.5);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;pointer-events:none';
-    lupa.textContent='🔍';
+    im.style.cssText='width:100%;display:block;object-fit:cover;max-height:220px;transition:transform .3s';
+    const overlay=ce('div','');
+    overlay.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;transition:background .25s';
+    const expandIcon=ce('div','');
+    expandIcon.style.cssText='width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s;backdrop-filter:blur(4px)';
+    expandIcon.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
+    overlay.appendChild(expandIcon);
     imgWrap.appendChild(im);
-    imgWrap.appendChild(lupa);
-    imgWrap.onclick=()=>verImg(img, nombre);
+    imgWrap.appendChild(overlay);
+    imgWrap.addEventListener('mouseenter',()=>{overlay.style.background='rgba(0,0,0,0.25)';expandIcon.style.opacity='1';im.style.transform='scale(1.02)';});
+    imgWrap.addEventListener('mouseleave',()=>{overlay.style.background='rgba(0,0,0,0)';expandIcon.style.opacity='0';im.style.transform='scale(1)';});
+    imgWrap.addEventListener('click',()=>verImg(img,nombre));
+    imgWrap.addEventListener('touchstart',()=>{overlay.style.background='rgba(0,0,0,0.25)';expandIcon.style.opacity='1';},{passive:true});
+    imgWrap.addEventListener('touchend',()=>{overlay.style.background='rgba(0,0,0,0)';expandIcon.style.opacity='0';verImg(img,nombre);},{passive:true});
     body.appendChild(imgWrap);
   }
   // How to do
