@@ -710,6 +710,12 @@ function acBlur(n){
   }, 180);
 }
 
+function ytThumb(url){
+  if(!url) return '';
+  const m = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+  return m ? `https://img.youtube.com/vi/${m[1]}/mqdefault.jpg` : '';
+}
+
 function acRender(n, results, q){
   const drop = $(`acdrop${n}`);
   if(!results.length){
@@ -726,7 +732,9 @@ function acRender(n, results, q){
       }
     }
     const zona = e.zona ? `<span class="ej-ac-badge">${e.zona}</span>` : '';
-    return `<div class="ej-ac-item" onmousedown="acSelect(${n},'${e.id}')">${nombre}${zona}</div>`;
+    const thumb = ytThumb(e.youtubeUrl);
+    const thumbHtml = thumb ? `<img src="${thumb}" style="width:60px;height:45px;object-fit:cover;border-radius:4px;flex-shrink:0;background:#eee" onerror="this.style.display='none'">` : '';
+    return `<div class="ej-ac-item" style="display:flex;align-items:center;gap:10px;padding:8px 10px" onmousedown="acSelect(${n},'${e.id}')">${thumbHtml}<div><div>${nombre}</div>${zona}</div></div>`;
   }).join('');
 }
 
@@ -744,11 +752,24 @@ function acSelect(n, id){
   $(`edes${n}`).value = e.descanso || 30;
   $(`ez${n}`).value = e.zona || '';
   $(`edesc${n}`).value = '';
-  // Show preview
+  // Show preview with thumbnail
   const prev = $(`eprev${n}`);
   $(`epzona${n}`).textContent = e.zona || '';
   $(`epdesc${n}`).textContent = e.descripcion || '';
-  prev.style.display = (e.zona || e.descripcion) ? 'block' : 'none';
+  // Show YouTube thumbnail
+  let thumbEl = $(`epthumb${n}`);
+  if(!thumbEl){
+    thumbEl = ce('div','');
+    thumbEl.id = `epthumb${n}`;
+    prev.insertBefore(thumbEl, prev.firstChild);
+  }
+  const thumb = ytThumb(e.youtubeUrl);
+  if(thumb){
+    thumbEl.innerHTML = `<a href="${e.youtubeUrl}" target="_blank" rel="noopener" style="display:block;margin-bottom:8px"><img src="${thumb}" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;display:block" onerror="this.style.display='none'"></a>`;
+  } else {
+    thumbEl.innerHTML = '';
+  }
+  prev.style.display = (e.zona || e.descripcion || thumb) ? 'block' : 'none';
   updProg();
 }
 
