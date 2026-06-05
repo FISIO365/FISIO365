@@ -17,19 +17,21 @@ export default async function handler(req) {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // GET — lista de fisios
+  // GET — lista de fisios para selector
   if (req.method === 'GET') {
     try {
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?fields[]=Name&fields[]=Role&fields[]=N%C2%BAC olegiado&fields[]=Foto`;
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
-      const fisios = (data.records || []).map(rec => ({
-        id: rec.id,
-        nombre: rec.fields['Name'] || '',
-        role: rec.fields['Role'] || 'fisio',
-        colegiado: rec.fields['NºColegiado'] || rec.fields['Colegiado'] || rec.fields['NºColegiado'] || '',
-        foto: rec.fields['Foto']?.[0]?.url || ''
-      }));
+      const fisios = (data.records || [])
+        .filter(rec => rec.fields['Name'] && rec.fields['Password'])
+        .map(rec => ({
+          id: rec.id,
+          nombre: rec.fields['Name'] || '',
+          role: rec.fields['Role'] || 'fisio',
+          colegiado: rec.fields['NºColegiado'] || '',
+          foto: rec.fields['Foto']?.[0]?.url || ''
+        }));
       return new Response(JSON.stringify({ ok: true, fisios }), { headers: corsHeaders });
     } catch(e) {
       return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
@@ -51,7 +53,6 @@ export default async function handler(req) {
     }
 
     try {
-      // Traer todos los fisios y comparar en JS
       const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
@@ -82,7 +83,7 @@ export default async function handler(req) {
         id: rec.id,
         nombre: rec.fields['Name'] || '',
         role: rec.fields['Role'] || 'fisio',
-        colegiado: rec.fields['NºColegiado'] || rec.fields['Colegiado'] || '',
+        colegiado: rec.fields['NºColegiado'] || '',
         foto: rec.fields['Foto']?.[0]?.url || '',
         accesos
       };
