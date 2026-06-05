@@ -17,17 +17,17 @@ export default async function handler(req) {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // GET — lista de fisios (para selector en panel)
+  // GET — lista de fisios
   if (req.method === 'GET') {
     try {
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?fields[]=Name&fields[]=Role&fields[]=Colegiado&fields[]=Foto`;
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?fields[]=Name&fields[]=Role&fields[]=NºColegiado&fields[]=Foto`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
       const fisios = (data.records || []).map(rec => ({
         id: rec.id,
         nombre: rec.fields['Name'] || '',
         role: rec.fields['Role'] || 'fisio',
-        colegiado: rec.fields['Colegiado'] || '',
+        colegiado: rec.fields['NºColegiado'] || '',
         foto: rec.fields['Foto']?.[0]?.url || ''
       }));
       return new Response(JSON.stringify({ ok: true, fisios }), { headers: corsHeaders });
@@ -36,7 +36,7 @@ export default async function handler(req) {
     }
   }
 
-  // POST — login fisio con nombre + password
+  // POST — login fisio
   if (req.method === 'POST') {
     let body = {};
     try {
@@ -51,19 +51,20 @@ export default async function handler(req) {
     }
 
     try {
-      // Buscar fisio por nombre en Airtable
-      const formula = encodeURIComponent(`LOWER({Name})="${nombre.trim().toLowerCase()}"`);
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?filterByFormula=${formula}&fields[]=Name&fields[]=Password&fields[]=Role&fields[]=Colegiado&fields[]=Foto`;
+      // Traer todos los fisios y comparar en JS (evita problemas con acentos en Airtable)
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=Role&fields[]=NºColegiado&fields[]=Foto&fields[]=acc_programas&fields[]=acc_anamnesis&fields[]=acc_informes&fields[]=acc_school&fields[]=acc_checklist`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
 
-      if (!data.records?.length) {
+      const rec = (data.records || []).find(r =>
+        (r.fields['Name'] || '').trim().toLowerCase() === nombre.trim().toLowerCase()
+      );
+
+      if (!rec) {
         return new Response(JSON.stringify({ ok: false, error: 'Usuario no encontrado' }), { headers: corsHeaders });
       }
 
-      const rec = data.records[0];
       const pwdAirtable = (rec.fields['Password'] || '').trim();
-
       if (pwdAirtable !== password.trim()) {
         return new Response(JSON.stringify({ ok: false, error: 'Contraseña incorrecta' }), { headers: corsHeaders });
       }
@@ -72,8 +73,13 @@ export default async function handler(req) {
         id: rec.id,
         nombre: rec.fields['Name'] || '',
         role: rec.fields['Role'] || 'fisio',
-        colegiado: rec.fields['Colegiado'] || '',
-        foto: rec.fields['Foto']?.[0]?.url || ''
+        colegiado: rec.fields['NºColegiado'] || '',
+        foto: rec.fields['Foto']?.[0]?.url || '',
+        acc_programas: rec.fields['acc_programas'] || false,
+        acc_anamnesis: rec.fields['acc_anamnesis'] || false,
+        acc_informes: rec.fields['acc_informes'] || false,
+        acc_school: rec.fields['acc_school'] || false,
+        acc_checklist: rec.fields['acc_checklist'] || false,
       };
 
       return new Response(JSON.stringify({
