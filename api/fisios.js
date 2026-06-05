@@ -20,14 +20,14 @@ export default async function handler(req) {
   // GET — lista de fisios
   if (req.method === 'GET') {
     try {
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?fields[]=Name&fields[]=Role&fields[]=NºColegiado&fields[]=Foto`;
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?fields[]=Name&fields[]=Role&fields[]=N%C2%BAC olegiado&fields[]=Foto`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
       const fisios = (data.records || []).map(rec => ({
         id: rec.id,
         nombre: rec.fields['Name'] || '',
         role: rec.fields['Role'] || 'fisio',
-        colegiado: rec.fields['NºColegiado'] || '',
+        colegiado: rec.fields['NºColegiado'] || rec.fields['Colegiado'] || rec.fields['NºColegiado'] || '',
         foto: rec.fields['Foto']?.[0]?.url || ''
       }));
       return new Response(JSON.stringify({ ok: true, fisios }), { headers: corsHeaders });
@@ -51,8 +51,8 @@ export default async function handler(req) {
     }
 
     try {
-      // Traer todos los fisios y comparar en JS (evita problemas con acentos en Airtable)
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=Role&fields[]=NºColegiado&fields[]=Foto&fields[]=acc_programas&fields[]=acc_anamnesis&fields[]=acc_informes&fields[]=acc_school&fields[]=acc_checklist`;
+      // Traer todos los fisios y comparar en JS
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
 
@@ -69,17 +69,22 @@ export default async function handler(req) {
         return new Response(JSON.stringify({ ok: false, error: 'Contraseña incorrecta' }), { headers: corsHeaders });
       }
 
+      // Construir objeto accesos desde campos acc_*
+      const accesos = {};
+      Object.keys(rec.fields).forEach(key => {
+        if (key.startsWith('acc_')) {
+          const seccion = key.replace('acc_', '');
+          accesos[seccion] = !!rec.fields[key];
+        }
+      });
+
       const fisio = {
         id: rec.id,
         nombre: rec.fields['Name'] || '',
         role: rec.fields['Role'] || 'fisio',
-        colegiado: rec.fields['NºColegiado'] || '',
+        colegiado: rec.fields['NºColegiado'] || rec.fields['Colegiado'] || '',
         foto: rec.fields['Foto']?.[0]?.url || '',
-        acc_programas: rec.fields['acc_programas'] || false,
-        acc_anamnesis: rec.fields['acc_anamnesis'] || false,
-        acc_informes: rec.fields['acc_informes'] || false,
-        acc_school: rec.fields['acc_school'] || false,
-        acc_checklist: rec.fields['acc_checklist'] || false,
+        accesos
       };
 
       return new Response(JSON.stringify({
