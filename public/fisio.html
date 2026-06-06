@@ -3642,7 +3642,17 @@ async function renderInformes(wrap){
 
       const bDel=ce('button','inf-btn');bDel.innerHTML='Borrar';bDel.style.cssText='border-color:#fca5a5;color:#b91c1c;padding:7px 10px';
       bDel.onclick=()=>borrarInforme(inf.id);
-      btns.appendChild(bEdit);btns.appendChild(bPdf);btns.appendChild(bDel);
+      const bSave=ce('button','inf-btn');bSave.innerHTML='Guardar en app';bSave.style.cssText='border-color:var(--lila);color:var(--lila);background:var(--lila-light)';
+      bSave.onclick=async()=>{
+        bSave.disabled=true;bSave.textContent='Guardando...';
+        try{
+          const rs=await fetch('/api/pacientes?action=guardar-informe-panel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:inf.pacienteId||'',pacienteNombre:inf.pacienteNombre||'',fisioNombre:inf.fisioNombre||'',tipo:inf.protocolo||'hernia',contenido:inf.informe||'',fecha:inf.fecha||new Date().toLocaleDateString('es-ES')})});
+          const ds=await rs.json();
+          if(ds.ok){bSave.textContent='✓ Guardado';bSave.style.background='#f0fdf4';bSave.style.borderColor='#86efac';bSave.style.color='#166534';}
+          else{bSave.textContent='Error';bSave.disabled=false;}
+        }catch(e){bSave.textContent='Error';bSave.disabled=false;}
+      };
+      btns.appendChild(bEdit);btns.appendChild(bPdf);btns.appendChild(bSave);btns.appendChild(bDel);
       c.appendChild(btns);lista.appendChild(c);
     });
   };
