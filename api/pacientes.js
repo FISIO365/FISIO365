@@ -103,6 +103,27 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
+  // ── GUARDAR INFORME EN PERFIL PACIENTE ─────────────────────────────────
+  if (action === 'guardar-informe-panel' && req.method === 'POST') {
+    const { pacienteId, pacienteNombre, fisioNombre, tipo, contenido, fecha } = body;
+    const INFORMES_TABLE = 'tblq3cGGKnkRFKEu8';
+    try {
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ records: [{ fields: {
+          PacienteID: pacienteId || '',
+          PacienteNombre: pacienteNombre || '',
+          FisioNombre: fisioNombre || '',
+          Fecha: fecha || new Date().toLocaleDateString('es-ES'),
+          Tipo: tipo || 'hernia',
+          Contenido: contenido || ''
+        }}]})
+      });
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+  }
+
   // ── GET PACIENTES ────────────────────────────────────────────────────────
   if (req.method === 'GET' && !action) {
     try {
