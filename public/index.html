@@ -117,13 +117,6 @@ textarea:focus { border-color: var(--black); }
 .periodos { display: flex; gap: 4px; flex-wrap: wrap; }
 .periodo { font-size: 11px; padding: 4px 10px; border-radius: 99px; border: 1.5px solid var(--border); color: var(--muted); font-weight: 500; cursor: pointer; font-family: var(--font); background: none; }
 .periodo.on { background: var(--black); color: var(--cream); border-color: var(--black); }
-.chart-area { display: flex; gap: 6px; height: 100px; }
-.eje-y { display: flex; flex-direction: column; justify-content: space-between; padding: 2px 0; }
-.eje-y span { font-size: 10px; color: #ccc; }
-.chart-svg { flex: 1; height: 100px; }
-.dias-row { display: flex; justify-content: space-between; margin-top: 6px; margin-left: 24px; }
-.dia-lbl { font-size: 10px; color: var(--muted); text-align: center; flex: 1; }
-.dia-lbl.hoy { color: var(--lila); font-weight: 600; }
 .vas-msg { font-size: 12px; font-weight: 600; margin-top: 12px; text-align: center; padding: 10px 14px; border-radius: var(--r-sm); line-height: 1.5; }
 .vas-msg.bien { color: var(--lila); background: var(--lila-light); }
 .vas-msg.neutro { color: var(--muted); background: var(--cream); border: 1px solid var(--border); }
@@ -145,6 +138,16 @@ textarea:focus { border-color: var(--black); }
 .guia-feature-titulo { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
 .guia-feature-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
+/* INFORMES PACIENTE */
+.inf-pac-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 14px; }
+.inf-pac-fecha { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.inf-pac-tipo { font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
+.inf-pac-fisio { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+.inf-pac-contenido { font-size: 13px; color: var(--black); line-height: 1.8; white-space: pre-wrap; display: none; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+.inf-pac-contenido.open { display: block; }
+.btn-inf { font-family: var(--font); font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--border); background: none; cursor: pointer; color: var(--black); }
+.btn-inf.lila { border-color: var(--lila); color: var(--lila); background: var(--lila-light); }
+
 /* BOTTOM NAV */
 .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1.5px solid var(--border); display: none; z-index: 100; }
 .bottom-nav-inner { display: flex; max-width: 600px; margin: 0 auto; }
@@ -156,7 +159,6 @@ textarea:focus { border-color: var(--black); }
 /* POPUP */
 .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; display: flex; align-items: flex-end; justify-content: center; }
 .popup-card { background: white; border-radius: 24px 24px 0 0; padding: 28px 24px 48px; width: 100%; max-width: 500px; }
-
 .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); padding: 12px 22px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; display: none; z-index: 999; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
 .toast.ok { background: var(--black); color: var(--cream); }
 .toast.err { background: #c0392b; color: white; }
@@ -286,6 +288,15 @@ textarea:focus { border-color: var(--black); }
       </div>
     </div>
 
+    <!-- VISTA INFORMES -->
+    <div id="vistaInformes" style="display:none;">
+      <div class="date-h" style="margin-top:4px;">
+        <div class="date-today" style="font-size:20px;">Mis informes</div>
+        <div class="date-sub">Informes de tus valoraciones</div>
+      </div>
+      <div id="infPacList"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
     <!-- VISTA GUIA -->
     <div id="vistaGuia" style="display:none;">
       <div class="guia-section">
@@ -328,6 +339,10 @@ textarea:focus { border-color: var(--black); }
             <div class="guia-feature-icon">📈</div>
             <div><div class="guia-feature-titulo">Mi progreso</div><div class="guia-feature-desc">Registra tu nivel de dolor cada día y ve cómo evoluciona en la gráfica.</div></div>
           </div>
+          <div class="guia-feature">
+            <div class="guia-feature-icon">📄</div>
+            <div><div class="guia-feature-titulo">Mis informes</div><div class="guia-feature-desc">Consulta y descarga los informes de tus valoraciones fisioterapéuticas.</div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -344,6 +359,10 @@ textarea:focus { border-color: var(--black); }
     <button class="nav-btn" id="navProgreso" onclick="showSection('progreso')">
       <span class="nav-icon">📈</span>
       <span class="nav-label">Mi progreso</span>
+    </button>
+    <button class="nav-btn" id="navInformes" onclick="showSection('informes')">
+      <span class="nav-icon">📄</span>
+      <span class="nav-label">Informes</span>
     </button>
     <button class="nav-btn" id="navGuia" onclick="showSection('guia')">
       <span class="nav-icon">📋</span>
@@ -385,373 +404,102 @@ let patient = null, ejercicios = [], hechos = new Set(), mensajeFisio = '';
 let lang = localStorage.getItem('fisio365_lang') || 'es';
 
 const i18n = {
-  es: {
-    bienvenido: "Bienvenido",
-    loginDesc: "Introduce tu email y el PIN que encontrarás en tu correo electrónico",
-    entrar: "Entrar",
-    entrando: "Entrando...",
-    instalarApp: "¿Cómo instalo la app?",
-    emailLabel: "Email",
-    pinLabel: "PIN",
-    errorEmail: "Introduce tu email",
-    errorPin: "Introduce los 4 dígitos del PIN",
-    errorConexion: "Error de conexión",
-    programaHoy: "Tu programa de ejercicios",
-    progresoHoy: "Progreso de hoy",
-    marcarHecho: "Marcar como hecho",
-    completado: "✓ Completado",
-    tareaHecha: "Tarea hecha ✓",
-    guardando: "Guardando...",
-    seguimientoDiario: "Seguimiento diario",
-    diarioPlaceholder: "Anota tus avances y sensaciones...",
-    sesionCompletada: "¡Sesión completada!",
-    sesionSub: "Has terminado tu programa de hoy. ¡Sigue así, lo estás haciendo genial!",
-    sesionMsg: "💪 Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana y sigue sumando!",
-    miProgreso: "Mi progreso",
-    evolucionDolor: "Evolución de tu dolor",
-    cuantoDolor: "¿Cuánto dolor tienes hoy?",
-    sinDolor: "Sin dolor",
-    dolorMaximo: "Dolor máximo",
-    guardar: "Guardar",
-    evolucionGrafica: "Evolución del dolor",
-    navPrograma: "Mi programa",
-    navProgreso: "Mi progreso",
-    navGuia: "Guía",
-    guiaTitulo: "📱 Instalar en tu móvil",
-    guiaComoFunciona: "✨ Cómo funciona la app",
-    salir: "Salir",
-    sinPrograma: "Sin programa asignado",
-    sinProgramaDesc: "Tu fisioterapeuta todavía no ha asignado ejercicios.",
-    tuFisio: "Tu fisio",
-    nColegiado: "Nº Colegiado",
-    mensajeFisioLabel: "Mensaje de tu fisio 💬",
-    dolorBajo: function(pct) { return "📉 Tu dolor ha bajado un " + pct + "% respecto a ayer. ¡Vas por muy buen camino!"; },
-    dolorEstable: "🌱 Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!",
-    dolorSubio: "No te preocupes, los altibajos no significan que vayas por mal camino. ¿Has cambiado algo en tu rutina hoy?",
-    enviarFisio: "Enviar a mi fisio",
-    dolorRegistrado: "Dolor registrado ✓"
-  },
-  cat: {
-    bienvenido: "Benvingut",
-    loginDesc: "Introdueix el teu email i el PIN que trobaràs al teu correu electrònic",
-    entrar: "Entrar",
-    entrando: "Entrant...",
-    instalarApp: "Com instal·lo lapp?",
-    emailLabel: "Email",
-    pinLabel: "PIN",
-    errorEmail: "Introdueix el teu email",
-    errorPin: "Introdueix els 4 dígits del PIN",
-    errorConexion: "Error de connexió",
-    programaHoy: "El teu programa d'exercicis",
-    progresoHoy: "Progrés d'avui",
-    marcarHecho: "Marcar com a fet",
-    completado: "✓ Completat",
-    tareaHecha: "Tasca feta ✓",
-    guardando: "Guardant...",
-    seguimientoDiario: "Seguiment diari",
-    diarioPlaceholder: "Anota els teus avenços i sensacions...",
-    sesionCompletada: "Sessió completada!",
-    sesionSub: "Has acabat el teu programa d'avui. Continua així, ho estàs fent genial!",
-    sesionMsg: "💪 Cada dia que entrenes és un pas cap a la teva recuperació. Torna demà i segueix sumant!",
-    miProgreso: "El meu progrés",
-    evolucionDolor: "Evolució del teu dolor",
-    cuantoDolor: "Quant dolor tens avui?",
-    sinDolor: "Sense dolor",
-    dolorMaximo: "Dolor màxim",
-    guardar: "Guardar",
-    evolucionGrafica: "Evolució del dolor",
-    navPrograma: "El meu programa",
-    navProgreso: "El meu progrés",
-    navGuia: "Guia",
-    guiaTitulo: "📱 Instal·lar al mòbil",
-    guiaComoFunciona: "✨ Com funciona lapp",
-    salir: "Sortir",
-    sinPrograma: "Sense programa assignat",
-    sinProgramaDesc: "El teu fisioterapeuta encara no ha assignat exercicis.",
-    tuFisio: "El teu fisio",
-    nColegiado: "Núm. Col·legiat",
-    mensajeFisioLabel: "Missatge del teu fisio 💬",
-    dolorBajo: function(pct) { return "📉 El teu dolor ha baixat un " + pct + "% respecte a ahir. Vas per molt bon camí!"; },
-    dolorEstable: "🌱 El teu dolor es manté estable. Segueix amb els teus exercicis, la constància és la clau!",
-    dolorSubio: "No et preocupis, els alts i baixos no signifiquen que vagis per mal camí. Has canviat alguna cosa a la teva rutina avui?",
-    enviarFisio: "Enviar al meu fisio",
-    dolorRegistrado: "Dolor registrat ✓"
-  },
-  en: {
-    bienvenido: "Welcome",
-    loginDesc: "Enter your email and the PIN you will find in your email",
-    entrar: "Log in",
-    entrando: "Logging in...",
-    instalarApp: "How do I install the app?",
-    emailLabel: "Email",
-    pinLabel: "PIN",
-    errorEmail: "Please enter your email",
-    errorPin: "Please enter all 4 PIN digits",
-    errorConexion: "Connection error",
-    programaHoy: "Your exercise program",
-    progresoHoy: "Today's progress",
-    marcarHecho: "Mark as done",
-    completado: "✓ Completed",
-    tareaHecha: "Task done ✓",
-    guardando: "Saving...",
-    seguimientoDiario: "Daily tracking",
-    diarioPlaceholder: "Note your progress and how you feel...",
-    sesionCompletada: "Session completed!",
-    sesionSub: "You have finished today's program. Keep it up, you are doing great!",
-    sesionMsg: "💪 Every day you train is a step towards your recovery. Come back tomorrow and keep going!",
-    miProgreso: "My progress",
-    evolucionDolor: "Your pain evolution",
-    cuantoDolor: "How much pain do you have today?",
-    sinDolor: "No pain",
-    dolorMaximo: "Maximum pain",
-    guardar: "Save",
-    evolucionGrafica: "Pain evolution",
-    navPrograma: "My program",
-    navProgreso: "My progress",
-    navGuia: "Guide",
-    guiaTitulo: "📱 Install on your phone",
-    guiaComoFunciona: "✨ How the app works",
-    salir: "Log out",
-    sinPrograma: "No program assigned",
-    sinProgramaDesc: "Your physiotherapist has not yet assigned any exercises.",
-    tuFisio: "Your physio",
-    nColegiado: "Reg. No.",
-    mensajeFisioLabel: "Message from your physio 💬",
-    dolorBajo: function(pct) { return "📉 Your pain has decreased by " + pct + "% compared to yesterday. You are on the right track!"; },
-    dolorEstable: "🌱 Your pain is stable. Keep doing your exercises, consistency is key!",
-    dolorSubio: "Do not worry, ups and downs do not mean you are going in the wrong direction. Have you changed anything in your routine today?",
-    enviarFisio: "Send to my physio",
-    dolorRegistrado: "Pain recorded ✓"
-  }
+  es: { bienvenido:"Bienvenido", loginDesc:"Introduce tu email y el PIN que encontrarás en tu correo electrónico", entrar:"Entrar", entrando:"Entrando...", instalarApp:"¿Cómo instalo la app?", emailLabel:"Email", pinLabel:"PIN", errorEmail:"Introduce tu email", errorPin:"Introduce los 4 dígitos del PIN", errorConexion:"Error de conexión", programaHoy:"Tu programa de ejercicios", progresoHoy:"Progreso de hoy", marcarHecho:"Marcar como hecho", completado:"✓ Completado", tareaHecha:"Tarea hecha ✓", guardando:"Guardando...", seguimientoDiario:"Seguimiento diario", diarioPlaceholder:"Anota tus avances y sensaciones...", sesionCompletada:"¡Sesión completada!", sesionSub:"Has terminado tu programa de hoy. ¡Sigue así, lo estás haciendo genial!", sesionMsg:"💪 Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana y sigue sumando!", miProgreso:"Mi progreso", evolucionDolor:"Evolución de tu dolor", cuantoDolor:"¿Cuánto dolor tienes hoy?", sinDolor:"Sin dolor", dolorMaximo:"Dolor máximo", guardar:"Guardar", evolucionGrafica:"Evolución del dolor", navPrograma:"Mi programa", navProgreso:"Mi progreso", navGuia:"Guía", guiaTitulo:"📱 Instalar en tu móvil", guiaComoFunciona:"✨ Cómo funciona la app", salir:"Salir", sinPrograma:"Sin programa asignado", sinProgramaDesc:"Tu fisioterapeuta todavía no ha asignado ejercicios.", tuFisio:"Tu fisio", nColegiado:"Nº Colegiado", mensajeFisioLabel:"Mensaje de tu fisio 💬", dolorBajo:function(pct){return "📉 Tu dolor ha bajado un "+pct+"% respecto a ayer. ¡Vas por muy buen camino!";}, dolorEstable:"🌱 Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!", dolorSubio:"No te preocupes, los altibajos no significan que vayas por mal camino. ¿Has cambiado algo en tu rutina hoy?", enviarFisio:"Enviar a mi fisio", dolorRegistrado:"Dolor registrado ✓" },
+  cat: { bienvenido:"Benvingut", loginDesc:"Introdueix el teu email i el PIN que trobaràs al teu correu electrònic", entrar:"Entrar", entrando:"Entrant...", instalarApp:"Com instal·lo lapp?", emailLabel:"Email", pinLabel:"PIN", errorEmail:"Introdueix el teu email", errorPin:"Introdueix els 4 dígits del PIN", errorConexion:"Error de connexió", programaHoy:"El teu programa d'exercicis", progresoHoy:"Progrés d'avui", marcarHecho:"Marcar com a fet", completado:"✓ Completat", tareaHecha:"Tasca feta ✓", guardando:"Guardant...", seguimientoDiario:"Seguiment diari", diarioPlaceholder:"Anota els teus avenços i sensacions...", sesionCompletada:"Sessió completada!", sesionSub:"Has acabat el teu programa d'avui. Continua així, ho estàs fent genial!", sesionMsg:"💪 Cada dia que entrenes és un pas cap a la teva recuperació. Torna demà i segueix sumant!", miProgreso:"El meu progrés", evolucionDolor:"Evolució del teu dolor", cuantoDolor:"Quant dolor tens avui?", sinDolor:"Sense dolor", dolorMaximo:"Dolor màxim", guardar:"Guardar", evolucionGrafica:"Evolució del dolor", navPrograma:"El meu programa", navProgreso:"El meu progrés", navGuia:"Guia", guiaTitulo:"📱 Instal·lar al mòbil", guiaComoFunciona:"✨ Com funciona lapp", salir:"Sortir", sinPrograma:"Sense programa assignat", sinProgramaDesc:"El teu fisioterapeuta encara no ha assignat exercicis.", tuFisio:"El teu fisio", nColegiado:"Núm. Col·legiat", mensajeFisioLabel:"Missatge del teu fisio 💬", dolorBajo:function(pct){return "📉 El teu dolor ha baixat un "+pct+"% respecte a ahir. Vas per molt bon camí!";}, dolorEstable:"🌱 El teu dolor es manté estable. Segueix amb els teus exercicis, la constància és la clau!", dolorSubio:"No et preocupis, els alts i baixos no signifiquen que vagis per mal camí. Has canviat alguna cosa a la teva rutina avui?", enviarFisio:"Enviar al meu fisio", dolorRegistrado:"Dolor registrat ✓" },
+  en: { bienvenido:"Welcome", loginDesc:"Enter your email and the PIN you will find in your email", entrar:"Log in", entrando:"Logging in...", instalarApp:"How do I install the app?", emailLabel:"Email", pinLabel:"PIN", errorEmail:"Please enter your email", errorPin:"Please enter all 4 PIN digits", errorConexion:"Connection error", programaHoy:"Your exercise program", progresoHoy:"Today's progress", marcarHecho:"Mark as done", completado:"✓ Completed", tareaHecha:"Task done ✓", guardando:"Saving...", seguimientoDiario:"Daily tracking", diarioPlaceholder:"Note your progress and how you feel...", sesionCompletada:"Session completed!", sesionSub:"You have finished today's program. Keep it up, you are doing great!", sesionMsg:"💪 Every day you train is a step towards your recovery. Come back tomorrow and keep going!", miProgreso:"My progress", evolucionDolor:"Your pain evolution", cuantoDolor:"How much pain do you have today?", sinDolor:"No pain", dolorMaximo:"Maximum pain", guardar:"Save", evolucionGrafica:"Pain evolution", navPrograma:"My program", navProgreso:"My progress", navGuia:"Guide", guiaTitulo:"📱 Install on your phone", guiaComoFunciona:"✨ How the app works", salir:"Log out", sinPrograma:"No program assigned", sinProgramaDesc:"Your physiotherapist has not yet assigned any exercises.", tuFisio:"Your physio", nColegiado:"Reg. No.", mensajeFisioLabel:"Message from your physio 💬", dolorBajo:function(pct){return "📉 Your pain has decreased by "+pct+"% compared to yesterday. You are on the right track!";}, dolorEstable:"🌱 Your pain is stable. Keep doing your exercises, consistency is key!", dolorSubio:"Do not worry, ups and downs do not mean you are going in the wrong direction. Have you changed anything in your routine today?", enviarFisio:"Send to my physio", dolorRegistrado:"Pain recorded ✓" }
 };
 
-function t(key, ...args) {
-  const val = i18n[lang][key];
-  return typeof val === 'function' ? val(...args) : (val || i18n.es[key] || key);
-}
+function t(key,...args){const val=i18n[lang][key];return typeof val==='function'?val(...args):(val||i18n.es[key]||key);}
+function setLang(l){lang=l;localStorage.setItem('fisio365_lang',l);document.querySelectorAll('.lang-btn').forEach(b=>{b.style.background=b.dataset.lang===l?'#f5f2ee':'none';b.style.color=b.dataset.lang===l?'#000':'rgba(245,242,238,0.5)';});applyTranslations();}
+function applyTranslations(){const lt=document.getElementById('loginTitle');const ld=document.getElementById('loginDesc');const lb=document.getElementById('loginBtn');const li=document.getElementById('installBtn');if(lt)lt.textContent=t('bienvenido');if(ld)ld.textContent=t('loginDesc');if(lb&&!lb.disabled)lb.textContent=t('entrar');if(li)li.textContent=t('instalarApp');const navH=document.getElementById('navHoy');const navP=document.getElementById('navProgreso');const navG=document.getElementById('navGuia');if(navH)navH.querySelector('.nav-label').textContent=t('navPrograma');if(navP)navP.querySelector('.nav-label').textContent=t('navProgreso');if(navG)navG.querySelector('.nav-label').textContent=t('navGuia');const dateSub=document.querySelector('.date-sub');if(dateSub)dateSub.textContent=t('programaHoy');const progLbl=document.querySelector('.prog-lbl');if(progLbl)progLbl.textContent=t('progresoHoy');const secTitle=document.querySelector('.sec-title');if(secTitle)secTitle.textContent=t('seguimientoDiario');const diarioTxt=document.getElementById('diarioTxt');if(diarioTxt)diarioTxt.placeholder=t('diarioPlaceholder');const btnDiario=document.getElementById('btnDiario');if(btnDiario&&!btnDiario.disabled)btnDiario.textContent=t('tareaHecha');const vasQ=document.querySelector('.vas-question');if(vasQ)vasQ.textContent=t('cuantoDolor');const vasLabels=document.querySelectorAll('.vas-labels span');if(vasLabels.length>=2){vasLabels[0].textContent=t('sinDolor');vasLabels[1].textContent=t('dolorMaximo');}const btnVas=document.getElementById('btnVas');if(btnVas)btnVas.textContent=t('guardar');const grafTitulo=document.querySelector('.grafica-titulo');if(grafTitulo)grafTitulo.textContent=t('evolucionGrafica');const compTit=document.querySelector('.completado-titulo');if(compTit)compTit.textContent=t('sesionCompletada');const compSub=document.querySelector('.completado-sub');if(compSub)compSub.textContent=t('sesionSub');const compMsg=document.querySelector('.completado-card p');if(compMsg)compMsg.textContent=t('sesionMsg');const salirBtn=document.querySelector('[onclick="cerrarSesion()"]');if(salirBtn)salirBtn.textContent=t('salir');document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n;el.textContent=t(key);});}
 
-function setLang(l) {
-  lang = l;
-  localStorage.setItem('fisio365_lang', l);
-  document.querySelectorAll('.lang-btn').forEach(b => {
-    b.style.background = b.dataset.lang === l ? '#f5f2ee' : 'none';
-    b.style.color = b.dataset.lang === l ? '#000' : 'rgba(245,242,238,0.5)';
-  });
+let vasSeleccionado=null,vasRegistros=[],vasPeriodo=7;
+const TODAY=new Date().toISOString().split('T')[0];
+
+window.addEventListener('load',()=>{
+  const savedLang=localStorage.getItem('fisio365_lang');
+  if(savedLang){lang=savedLang;}
   applyTranslations();
-}
-
-function applyTranslations() {
-  // Login
-  const lt = document.getElementById('loginTitle');
-  const ld = document.getElementById('loginDesc');
-  const lb = document.getElementById('loginBtn');
-  const li = document.getElementById('installBtn');
-  if (lt) lt.textContent = t('bienvenido');
-  if (ld) ld.textContent = t('loginDesc');
-  if (lb && !lb.disabled) lb.textContent = t('entrar');
-  if (li) li.textContent = t('instalarApp');
-
-  // App - nav
-  const navH = document.getElementById('navHoy');
-  const navP = document.getElementById('navProgreso');
-  const navG = document.getElementById('navGuia');
-  if (navH) navH.querySelector('.nav-label').textContent = t('navPrograma');
-  if (navP) navP.querySelector('.nav-label').textContent = t('navProgreso');
-  if (navG) navG.querySelector('.nav-label').textContent = t('navGuia');
-
-  // App - textos generales
-  const dateSub = document.querySelector('.date-sub');
-  if (dateSub) dateSub.textContent = t('programaHoy');
-
-  const progLbl = document.querySelector('.prog-lbl');
-  if (progLbl) progLbl.textContent = t('progresoHoy');
-
-  const secTitle = document.querySelector('.sec-title');
-  if (secTitle) secTitle.textContent = t('seguimientoDiario');
-
-  const diarioTxt = document.getElementById('diarioTxt');
-  if (diarioTxt) diarioTxt.placeholder = t('diarioPlaceholder');
-
-  const btnDiario = document.getElementById('btnDiario');
-  if (btnDiario && !btnDiario.disabled) btnDiario.textContent = t('tareaHecha');
-
-  // Progreso
-  const vasQ = document.querySelector('.vas-question');
-  if (vasQ) vasQ.textContent = t('cuantoDolor');
-
-  const vasLabels = document.querySelectorAll('.vas-labels span');
-  if (vasLabels.length >= 2) { vasLabels[0].textContent = t('sinDolor'); vasLabels[1].textContent = t('dolorMaximo'); }
-
-  const btnVas = document.getElementById('btnVas');
-  if (btnVas) btnVas.textContent = t('guardar');
-
-  const grafTitulo = document.querySelector('.grafica-titulo');
-  if (grafTitulo) grafTitulo.textContent = t('evolucionGrafica');
-
-  // Completado
-  const compTit = document.querySelector('.completado-titulo');
-  if (compTit) compTit.textContent = t('sesionCompletada');
-  const compSub = document.querySelector('.completado-sub');
-  if (compSub) compSub.textContent = t('sesionSub');
-  const compMsg = document.querySelector('.completado-card p');
-  if (compMsg) compMsg.textContent = t('sesionMsg');
-
-  // Topbar salir
-  const salirBtn = document.querySelector('[onclick="cerrarSesion()"]');
-  if (salirBtn) salirBtn.textContent = t('salir');
-
-  // data-i18n genérico
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n;
-    el.textContent = t(key);
-  });
-}
-let vasSeleccionado = null, vasRegistros = [], vasPeriodo = 7;
-const TODAY = new Date().toISOString().split('T')[0];
-
-// Comprobar sesión guardada al cargar
-window.addEventListener('load', () => {
-  // Aplicar idioma guardado
-  const savedLang = localStorage.getItem('fisio365_lang');
-  if (savedLang) { lang = savedLang; }
-  applyTranslations();
-  // Marcar botón activo
-  document.querySelectorAll('.lang-btn').forEach(b => {
-    b.style.background = b.dataset.lang === lang ? '#f5f2ee' : 'none';
-    b.style.color = b.dataset.lang === lang ? '#000' : 'rgba(245,242,238,0.5)';
-  });
-  const saved = localStorage.getItem('fisio365_patient');
-  if (saved) {
-    try {
-      patient = JSON.parse(saved);
-      // Limpiar hechos de días anteriores
-      const lastDay = localStorage.getItem('fisio365_lastday');
-      if (lastDay !== TODAY) {
-        localStorage.setItem('fisio365_lastday', TODAY);
-        Object.keys(localStorage).forEach(k => {
-          if (k.startsWith('hechos_')) localStorage.removeItem(k);
-        });
-      }
-      initApp();
-    } catch(e) {
-      localStorage.removeItem('fisio365_patient');
-    }
-  }
+  document.querySelectorAll('.lang-btn').forEach(b=>{b.style.background=b.dataset.lang===lang?'#f5f2ee':'none';b.style.color=b.dataset.lang===lang?'#000':'rgba(245,242,238,0.5)';});
+  const saved=localStorage.getItem('fisio365_patient');
+  if(saved){try{patient=JSON.parse(saved);const lastDay=localStorage.getItem('fisio365_lastday');if(lastDay!==TODAY){localStorage.setItem('fisio365_lastday',TODAY);Object.keys(localStorage).forEach(k=>{if(k.startsWith('hechos_'))localStorage.removeItem(k);});}initApp();}catch(e){localStorage.removeItem('fisio365_patient');}}
 });
 
-// PIN inputs
-const pids = ['p1','p2','p3','p4'];
-pids.forEach((id, i) => {
-  const el = document.getElementById(id);
-  el.addEventListener('input', () => { const v = el.value.replace(/[^0-9]/g,''); el.value = v.slice(-1); if (v && i < 3) document.getElementById(pids[i+1]).focus(); });
-  el.addEventListener('keydown', e => { if (e.key === 'Backspace' && !el.value && i > 0) document.getElementById(pids[i-1]).focus(); if (e.key === 'Enter') doLogin(); });
-});
-document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('p1').focus(); });
+const pids=['p1','p2','p3','p4'];
+pids.forEach((id,i)=>{const el=document.getElementById(id);el.addEventListener('input',()=>{const v=el.value.replace(/[^0-9]/g,'');el.value=v.slice(-1);if(v&&i<3)document.getElementById(pids[i+1]).focus();});el.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!el.value&&i>0)document.getElementById(pids[i-1]).focus();if(e.key==='Enter')doLogin();});});
+document.getElementById('emailInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('p1').focus();});
 
-async function doLogin() {
-  const email = document.getElementById('emailInput').value.trim();
-  const pin = pids.map(id => document.getElementById(id).value).join('');
-  const errEl = document.getElementById('loginErr');
-  errEl.textContent = '';
-  if (!email) { errEl.textContent = 'Introduce tu email'; return; }
-  if (pin.length !== 4) { errEl.textContent = 'Introduce los 4 dígitos del PIN'; return; }
-  const btn = document.getElementById('loginBtn');
-  btn.disabled = true; btn.textContent = 'Entrando...';
-  try {
-    const res = await fetch(`/api/login?email=${encodeURIComponent(email)}&pin=${pin}`);
-    const data = await res.json();
-    if (data.ok) { 
-      patient = data.patient; 
-      localStorage.setItem('fisio365_patient', JSON.stringify(data.patient));
-      initApp(); 
-    }
-    else errEl.textContent = data.error || 'Error al entrar';
-  } catch(e) { errEl.textContent = 'Error de conexión'; }
-  btn.disabled = false; btn.textContent = 'Entrar';
+async function doLogin(){
+  const email=document.getElementById('emailInput').value.trim();
+  const pin=pids.map(id=>document.getElementById(id).value).join('');
+  const errEl=document.getElementById('loginErr');errEl.textContent='';
+  if(!email){errEl.textContent='Introduce tu email';return;}
+  if(pin.length!==4){errEl.textContent='Introduce los 4 dígitos del PIN';return;}
+  const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='Entrando...';
+  try{const res=await fetch(`/api/login?email=${encodeURIComponent(email)}&pin=${pin}`);const data=await res.json();if(data.ok){patient=data.patient;localStorage.setItem('fisio365_patient',JSON.stringify(data.patient));initApp();}else errEl.textContent=data.error||'Error al entrar';}catch(e){errEl.textContent='Error de conexión';}
+  btn.disabled=false;btn.textContent='Entrar';
 }
 
-function initApp() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appScreen').style.display = 'block';
-  document.getElementById('appScreen').style.opacity = '0';
-  document.getElementById('bottomNav').style.display = 'block';
-  window.scrollTo({top: 0, behavior: 'instant'});
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-  setTimeout(() => { document.getElementById('appScreen').style.opacity = '1'; }, 10);
-  document.getElementById('topbarName').textContent = patient.nombre.split(' ')[0];
+function initApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  document.getElementById('appScreen').style.opacity='0';
+  document.getElementById('bottomNav').style.display='block';
+  window.scrollTo({top:0,behavior:'instant'});
+  setTimeout(()=>{document.getElementById('appScreen').style.opacity='1';},10);
+  document.getElementById('topbarName').textContent=patient.nombre.split(' ')[0];
   applyTranslations();
-  setTimeout(initPushNotifications, 2000);
-  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  const hoy = new Date();
-  document.getElementById('dateToday').textContent = `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
+  setTimeout(initPushNotifications,2000);
+  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const hoy=new Date();
+  document.getElementById('dateToday').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
   loadEjercicios();
 }
 
-function showSection(section) {
-  document.getElementById('vistaHoy').style.display = section === 'hoy' ? 'block' : 'none';
-  document.getElementById('vistaProgreso').style.display = section === 'progreso' ? 'block' : 'none';
-  document.getElementById('vistaGuia').style.display = section === 'guia' ? 'block' : 'none';
-  document.getElementById('navHoy').classList.toggle('active', section === 'hoy');
-  document.getElementById('navProgreso').classList.toggle('active', section === 'progreso');
-  document.getElementById('navGuia').classList.toggle('active', section === 'guia');
-  if (section === 'progreso') initVAS();
-  window.scrollTo(0, 0);
+function showSection(section){
+  document.getElementById('vistaHoy').style.display=section==='hoy'?'block':'none';
+  document.getElementById('vistaProgreso').style.display=section==='progreso'?'block':'none';
+  document.getElementById('vistaInformes').style.display=section==='informes'?'block':'none';
+  document.getElementById('vistaGuia').style.display=section==='guia'?'block':'none';
+  document.getElementById('navHoy').classList.toggle('active',section==='hoy');
+  document.getElementById('navProgreso').classList.toggle('active',section==='progreso');
+  document.getElementById('navInformes').classList.toggle('active',section==='informes');
+  document.getElementById('navGuia').classList.toggle('active',section==='guia');
+  if(section==='progreso')initVAS();
+  if(section==='informes')loadInformes();
+  window.scrollTo(0,0);
 }
 
-async function loadEjercicios() {
-  try {
-    const res = await fetch(`/api/schedule?patientId=${patient.id}`);
-    const data = await res.json();
-    ejercicios = data.ejercicios || [];
-    if (data.fisio) {
-      const f = data.fisio;
-      const av = document.getElementById('fisioAv');
-      if (f.foto) av.innerHTML = `<img src="${f.foto}" alt="${f.nombre}">`;
-      else av.textContent = f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-      document.getElementById('fisioNombre').textContent = `Tu fisio: ${f.nombre}`;
-      document.getElementById('fisioColegiado').textContent = f.colegiado ? `Nº Colegiado: ${f.colegiado}` : '';
-      document.getElementById('fisioCard').style.display = 'flex';
-    }
-    mensajeFisio = data.mensajeFisio || '';
-    if (mensajeFisio) {
-      document.getElementById('mensajeFisioTexto').textContent = mensajeFisio;
-      document.getElementById('mensajeFisioCard').style.display = 'block';
-    }
-    // Comprobar si ya completó hoy
-    if (data.ultimaSession === TODAY) {
-      mostrarCompletado();
-      return;
-    }
-    lastFechaAsignacion = (data.ejercicios?.length || 0) + '_' + (data.mensajeFisio || '');
+async function loadEjercicios(){
+  try{
+    const res=await fetch(`/api/schedule?patientId=${patient.id}`);
+    const data=await res.json();
+    ejercicios=data.ejercicios||[];
+    if(data.fisio){const f=data.fisio;const av=document.getElementById('fisioAv');if(f.foto)av.innerHTML=`<img src="${f.foto}" alt="${f.nombre}">`;else av.textContent=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();document.getElementById('fisioNombre').textContent=`Tu fisio: ${f.nombre}`;document.getElementById('fisioColegiado').textContent=f.colegiado?`Nº Colegiado: ${f.colegiado}`:'';document.getElementById('fisioCard').style.display='flex';}
+    mensajeFisio=data.mensajeFisio||'';
+    if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('mensajeFisioCard').style.display='block';}
+    if(data.ultimaSession===TODAY){mostrarCompletado();return;}
+    lastFechaAsignacion=(data.ejercicios?.length||0)+'_'+(data.mensajeFisio||'');
     startPolling();
-    const localKey = `hechos_${patient.id}_${TODAY}`;
-    const local = localStorage.getItem(localKey);
-    hechos = new Set(local ? JSON.parse(local) : []);
+    const localKey=`hechos_${patient.id}_${TODAY}`;
+    const local=localStorage.getItem(localKey);
+    hechos=new Set(local?JSON.parse(local):[]);
     renderEjercicios();
-  } catch(e) {
-    document.getElementById('ejList').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';
-  }
+  }catch(e){document.getElementById('ejList').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
 }
 
-function mostrarCompletado() {
-  document.getElementById('vistaEjercicios').style.display = 'none';
-  document.getElementById('vistaCompletado').style.display = 'block';
-}
+function mostrarCompletado(){document.getElementById('vistaEjercicios').style.display='none';document.getElementById('vistaCompletado').style.display='block';}
 
-function renderEjercicios() {
-  const lista = document.getElementById('ejList');
-  if (!ejercicios.length) {
-    lista.innerHTML = `<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios.</div></div>`;
-    return;
-  }
-  document.getElementById('progWrap').style.display = 'block';
-  document.getElementById('diarioSection').style.display = 'block';
+function renderEjercicios(){
+  const lista=document.getElementById('ejList');
+  if(!ejercicios.length){lista.innerHTML=`<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios.</div></div>`;return;}
+  document.getElementById('progWrap').style.display='block';
+  document.getElementById('diarioSection').style.display='block';
   updateProg();
-  lista.innerHTML = ejercicios.map((ej, i) => {
-    const done = hechos.has(ej.id);
-    const pills = [ej.series?`${ej.series} series`:null, ej.reps?`${ej.reps} reps`:null, ej.dur?`${ej.dur}s`:null, ej.descanso?`${ej.descanso}s descanso`:null].filter(Boolean);
+  lista.innerHTML=ejercicios.map((ej,i)=>{
+    const done=hechos.has(ej.id);
+    const pills=[ej.series?`${ej.series} series`:null,ej.reps?`${ej.reps} reps`:null,ej.dur?`${ej.dur}s`:null,ej.descanso?`${ej.descanso}s descanso`:null].filter(Boolean);
     return `<div class="ej-card ${done?'done':''}" id="ec${i}">
       <div class="ej-header" onclick="toggleEx(${i})">
         <button class="ej-chk ${done?'on':''}" id="ck${i}" onclick="event.stopPropagation();toggleHecho(${i})">
@@ -774,312 +522,98 @@ function renderEjercicios() {
   }).join('');
 }
 
-function toggleEx(i) {
-  const ex = document.getElementById(`ex${i}`), ar = document.getElementById(`ar${i}`);
-  const open = ex.classList.toggle('open');
-  ar.style.transform = open ? 'rotate(180deg)' : '';
+function toggleEx(i){const ex=document.getElementById(`ex${i}`),ar=document.getElementById(`ar${i}`);const open=ex.classList.toggle('open');ar.style.transform=open?'rotate(180deg)':'';}
+async function toggleHecho(i){const ej=ejercicios[i];if(hechos.has(ej.id))hechos.delete(ej.id);else hechos.add(ej.id);localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...hechos]));const done=hechos.has(ej.id);document.getElementById(`ec${i}`).classList.toggle('done',done);document.getElementById(`ck${i}`).classList.toggle('on',done);document.getElementById(`bd${i}`).classList.toggle('on',done);document.getElementById(`bd${i}`).textContent=done?'✓ Completado':'Marcar como hecho';updateProg();}
+function updateProg(){const total=ejercicios.length,done=ejercicios.filter(ej=>hechos.has(ej.id)).length;document.getElementById('progCnt').textContent=`${done}/${total}`;document.getElementById('progBar').style.width=total?`${(done/total)*100}%`:'0%';}
+async function tareaHecha(){const texto=document.getElementById('diarioTxt').value.trim();const btn=document.getElementById('btnDiario');btn.disabled=true;btn.textContent='Guardando...';try{await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:texto})});localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();}catch(e){toast('Error al guardar',false);btn.disabled=false;btn.textContent='Tarea hecha ✓';}}
+
+// INFORMES PACIENTE
+async function loadInformes(){
+  const list=document.getElementById('infPacList');
+  if(!list)return;
+  list.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try{
+    const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);
+    const data=await res.json();
+    const informes=data.informes||[];
+    if(!informes.length){list.innerHTML='<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">Sin informes todavía</div><div class="empty-desc">Cuando tu fisio genere un informe de tu valoración aparecerá aquí.</div></div>';return;}
+    const tipoLabel={rodilla:'Rodilla',hombro:'Hombro',cervical:'Cervical',codo:'Codo y antebrazo',muneca:'Muñeca y mano',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',hernia:'Columna lumbar',libre:'Valoración libre'};
+    list.innerHTML=informes.map((inf,i)=>`
+      <div class="inf-pac-card">
+        <div class="inf-pac-fecha">${inf.fecha}</div>
+        <div class="inf-pac-tipo">${tipoLabel[inf.tipo]||inf.tipo||'Valoración'}</div>
+        <div class="inf-pac-fisio">Fisioterapeuta: ${inf.fisioNombre}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-inf" onclick="toggleInforme(${i})">Ver informe</button>
+          <button class="btn-inf lila" onclick="imprimirInforme(${i})">Descargar PDF</button>
+        </div>
+        <div class="inf-pac-contenido" id="infCont${i}">${inf.contenido}</div>
+      </div>
+    `).join('');
+    window._informesPac=informes;
+  }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
 }
 
-async function toggleHecho(i) {
-  const ej = ejercicios[i];
-  if (hechos.has(ej.id)) hechos.delete(ej.id); else hechos.add(ej.id);
-  localStorage.setItem(`hechos_${patient.id}_${TODAY}`, JSON.stringify([...hechos]));
-  const done = hechos.has(ej.id);
-  document.getElementById(`ec${i}`).classList.toggle('done', done);
-  document.getElementById(`ck${i}`).classList.toggle('on', done);
-  document.getElementById(`bd${i}`).classList.toggle('on', done);
-  document.getElementById(`bd${i}`).textContent = done ? '✓ Completado' : 'Marcar como hecho';
-  updateProg();
-}
+function toggleInforme(i){const el=document.getElementById(`infCont${i}`);el.classList.toggle('open');const btns=el.previousElementSibling.querySelectorAll('.btn-inf');if(btns[0])btns[0].textContent=el.classList.contains('open')?'Ocultar informe':'Ver informe';}
 
-function updateProg() {
-  const total = ejercicios.length, done = ejercicios.filter(ej=>hechos.has(ej.id)).length;
-  document.getElementById('progCnt').textContent = `${done}/${total}`;
-  document.getElementById('progBar').style.width = total ? `${(done/total)*100}%` : '0%';
-}
-
-async function tareaHecha() {
-  const texto = document.getElementById('diarioTxt').value.trim();
-  const btn = document.getElementById('btnDiario');
-  btn.disabled = true; btn.textContent = 'Guardando...';
-  try {
-    await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: texto }) });
-    localStorage.setItem(`hechos_${patient.id}_${TODAY}`, JSON.stringify([...ejercicios.map(e=>e.id)]));
-    mostrarCompletado();
-  } catch(e) {
-    toast('Error al guardar', false);
-    btn.disabled = false; btn.textContent = 'Tarea hecha ✓';
-  }
+function imprimirInforme(i){
+  const inf=window._informesPac?.[i];if(!inf)return;
+  const tipoLabel={rodilla:'Rodilla',hombro:'Hombro',cervical:'Cervical',codo:'Codo y antebrazo',muneca:'Muñeca y mano',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',hernia:'Columna lumbar',libre:'Valoración libre'};
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe FISIO365</title>
+  <style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#1a1a1a;}h1{font-size:22px;margin-bottom:4px;}.sub{font-size:13px;color:#666;margin-bottom:24px;}.sep{border:none;border-top:1px solid #eee;margin:20px 0;}pre{font-family:Arial,sans-serif;white-space:pre-wrap;font-size:14px;line-height:1.8;}@media print{body{margin:20px;}}</style>
+  </head><body>
+  <h1>Informe Fisioterapéutico — ${tipoLabel[inf.tipo]||inf.tipo}</h1>
+  <div class="sub">Fecha: ${inf.fecha} · Fisioterapeuta: ${inf.fisioNombre} · Paciente: ${patient.nombre}</div>
+  <hr class="sep">
+  <pre>${inf.contenido}</pre>
+  <hr class="sep">
+  <div style="font-size:11px;color:#aaa;text-align:center;">FISIO365 · Gran de Sant Andreu 163, Barcelona</div>
+  <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`);
+  win.document.close();
 }
 
 // VAS
-function initVAS() {
-  const nums = document.getElementById('vasNums');
-  if (nums.children.length === 0) {
-    for (let i = 0; i <= 10; i++) {
-      const span = document.createElement('span');
-      span.className = 'vas-num';
-      span.textContent = i;
-      span.onclick = () => {
-        vasSeleccionado = i;
-        document.querySelectorAll('.vas-num').forEach((el, idx) => el.classList.toggle('on', idx === i));
-        document.getElementById('btnVas').style.display = 'block';
-      };
-      nums.appendChild(span);
-    }
-  }
-  cargarDatosVAS();
+function initVAS(){const nums=document.getElementById('vasNums');if(nums.children.length===0){for(let i=0;i<=10;i++){const span=document.createElement('span');span.className='vas-num';span.textContent=i;span.onclick=()=>{vasSeleccionado=i;document.querySelectorAll('.vas-num').forEach((el,idx)=>el.classList.toggle('on',idx===i));document.getElementById('btnVas').style.display='block';};nums.appendChild(span);}}cargarDatosVAS();}
+async function cargarDatosVAS(){try{const res=await fetch(`/api/dolor?patientId=${patient.id}`);const data=await res.json();vasRegistros=data.registros||[];actualizarGrafica();}catch(e){}}
+async function guardarVAS(){if(vasSeleccionado===null)return;const btn=document.getElementById('btnVas');btn.disabled=true;btn.textContent='Guardando...';try{await fetch('/api/dolor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,fecha:TODAY,valor:vasSeleccionado})});await cargarDatosVAS();btn.style.display='none';toast('Dolor registrado ✓',true);}catch(e){toast('Error al guardar',false);}btn.disabled=false;btn.textContent='Guardar';}
+function cambiarPeriodo(dias,btn){vasPeriodo=dias;document.querySelectorAll('.periodo').forEach(b=>b.classList.remove('on'));btn.classList.add('on');actualizarGrafica();}
+
+function actualizarGrafica(){
+  const hoy=new Date(TODAY);const fechaInicio=new Date(hoy);fechaInicio.setDate(hoy.getDate()-(vasPeriodo-1));const fechaInicioStr=fechaInicio.toISOString().split('T')[0];
+  const conDatos=vasRegistros.filter(r=>r.fecha>=fechaInicioStr&&r.fecha<=TODAY).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  if(conDatos.length<1){document.getElementById('graficaCard').style.display='none';return;}
+  document.getElementById('graficaCard').style.display='block';
+  const canvas=document.getElementById('chartSvg');const inner=document.getElementById('graficaInner');const CW=inner.offsetWidth-24;const CH=100;
+  canvas.width=CW*window.devicePixelRatio;canvas.height=CH*window.devicePixelRatio;canvas.style.width=CW+'px';canvas.style.height=CH+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(window.devicePixelRatio,window.devicePixelRatio);ctx.clearRect(0,0,CW,CH);
+  const PAD=8;
+  const pts=conDatos.map((d,i)=>{const x=conDatos.length===1?CW-PAD:PAD+(i/(conDatos.length-1))*(CW-PAD*2);const y=PAD+((10-d.valor)/10)*(CH-PAD*2);return{x,y,valor:d.valor,fecha:d.fecha,esHoy:d.fecha===TODAY};});
+  ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;[PAD,CH/2,CH-PAD].forEach(y=>{ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();});
+  if(pts.length>1){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,CH);ctx.lineTo(pts[0].x,CH);ctx.closePath();ctx.fillStyle='rgba(173,163,218,0.15)';ctx.fill();ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.strokeStyle='#ada3da';ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();}
+  pts.forEach((p,i)=>{const isLast=i===pts.length-1;ctx.beginPath();ctx.arc(p.x,p.y,isLast?5:3,0,Math.PI*2);if(isLast){ctx.fillStyle='white';ctx.fill();ctx.strokeStyle='#ada3da';ctx.lineWidth=2;ctx.stroke();}else{ctx.fillStyle='#ada3da';ctx.fill();}});
+  const diasRow=document.getElementById('diasRow');diasRow.innerHTML='';pts.forEach(p=>{const date=new Date(p.fecha+'T12:00:00');const label=p.esHoy?'Hoy':`${date.getDate()}/${date.getMonth()+1}`;const el=document.createElement('div');el.style.cssText=`position:absolute;left:${p.x}px;top:0;transform:translateX(-50%);font-size:10px;color:${p.esHoy?'#ada3da':'#888'};font-weight:${p.esHoy?'600':'400'};white-space:nowrap;`;el.textContent=label;diasRow.appendChild(el);});
+  const msgEl=document.getElementById('vasMsg');
+  if(conDatos.length>=2){const penultimo=conDatos[conDatos.length-2].valor;const ultimo=conDatos[conDatos.length-1].valor;msgEl.style.display='block';if(ultimo<penultimo){const pct=penultimo>0?Math.round(((penultimo-ultimo)/penultimo)*100):0;msgEl.className='vas-msg bien';msgEl.innerHTML=`📉 Tu dolor ha bajado${pct>0?' un '+pct+'%':''} respecto a ayer. ¡Vas por muy buen camino!`;}else if(ultimo>penultimo){msgEl.className='vas-msg animo';msgEl.innerHTML=`<div style="font-size:13px;font-weight:600;margin-bottom:12px;color:#000;">No te preocupes, los altibajos no significan que vayas por mal camino. ¿Has cambiado algo en tu rutina hoy?</div><textarea id="vasMsgTxt" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;resize:none;min-height:80px;outline:none;background:#f5f2ee;color:#000;margin-bottom:10px;" placeholder="Ej: He estado de pie muchas horas, he dormido mal..."></textarea><button onclick="guardarMsgDolor()" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:#000;color:#f5f2ee;border:none;border-radius:8px;cursor:pointer;">Enviar a mi fisio</button>`;}else{msgEl.className='vas-msg neutro';msgEl.innerHTML='🌱 Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!';}}else{msgEl.style.display='none';}
 }
 
-async function cargarDatosVAS() {
-  try {
-    const res = await fetch(`/api/dolor?patientId=${patient.id}`);
-    const data = await res.json();
-    vasRegistros = data.registros || [];
-    actualizarGrafica();
-  } catch(e) {}
-}
+async function guardarMsgDolor(){const texto=document.getElementById('vasMsgTxt')?.value?.trim();if(!texto)return;try{await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:`[Dolor aumentó] ${texto}`})});toast('Mensaje enviado al fisio ✓',true);document.getElementById('vasMsgTxt').value='';}catch(e){toast('Error al enviar',false);}}
 
-async function guardarVAS() {
-  if (vasSeleccionado === null) return;
-  const btn = document.getElementById('btnVas');
-  btn.disabled = true; btn.textContent = 'Guardando...';
-  try {
-    await fetch('/api/dolor', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, fecha: TODAY, valor: vasSeleccionado }) });
-    await cargarDatosVAS();
-    btn.style.display = 'none';
-    toast('Dolor registrado ✓', true);
-  } catch(e) { toast('Error al guardar', false); }
-  btn.disabled = false; btn.textContent = 'Guardar';
-}
+function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('pasosAndroid').style.display=os==='android'?'block':'none';document.getElementById('btnIOS').classList.toggle('active',os==='ios');document.getElementById('btnAndroid').classList.toggle('active',os==='android');}
+function mostrarInstall(){document.getElementById('installPopup').style.display='flex';}
+function cerrarInstall(){document.getElementById('installPopup').style.display='none';}
+function showInstOS(os){document.getElementById('instPasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('instPasosAndroid').style.display=os==='android'?'block':'none';document.getElementById('btnInstIOS').style.background=os==='ios'?'#000':'none';document.getElementById('btnInstIOS').style.color=os==='ios'?'white':'#888';document.getElementById('btnInstIOS').style.borderColor=os==='ios'?'#000':'#ddd';document.getElementById('btnInstAndroid').style.background=os==='android'?'#000':'none';document.getElementById('btnInstAndroid').style.color=os==='android'?'white':'#888';document.getElementById('btnInstAndroid').style.borderColor=os==='android'?'#000':'#ddd';}
 
-function cambiarPeriodo(dias, btn) {
-  vasPeriodo = dias;
-  document.querySelectorAll('.periodo').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  actualizarGrafica();
-}
+const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
+async function initPushNotifications(){if(!('serviceWorker'in navigator)||!('PushManager'in window))return;try{const reg=await navigator.serviceWorker.register('/sw.js');const permission=await Notification.requestPermission();if(permission!=='granted')return;const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,subscription:sub})});}catch(e){}}
+function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const rawData=window.atob(base64);const outputArray=new Uint8Array(rawData.length);for(let i=0;i<rawData.length;++i)outputArray[i]=rawData.charCodeAt(i);return outputArray;}
 
-function actualizarGrafica() {
-  const hoy = new Date(TODAY);
-  const fechaInicio = new Date(hoy);
-  fechaInicio.setDate(hoy.getDate() - (vasPeriodo - 1));
-  const fechaInicioStr = fechaInicio.toISOString().split('T')[0];
-  
-  const conDatos = vasRegistros
-    .filter(r => r.fecha >= fechaInicioStr && r.fecha <= TODAY)
-    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+let lastFechaAsignacion=null,pollingInterval=null;
+function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejercicios=data.ejercicios||[];mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('mensajeFisioCard').style.display='block';}if(data.ultimaSession!==TODAY){hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado 💪',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
 
-  if (conDatos.length < 1) { document.getElementById('graficaCard').style.display = 'none'; return; }
-  document.getElementById('graficaCard').style.display = 'block';
-
-  const canvas = document.getElementById('chartSvg');
-  const inner = document.getElementById('graficaInner');
-  const CW = inner.offsetWidth - 24;
-  const CH = 100;
-  canvas.width = CW * window.devicePixelRatio;
-  canvas.height = CH * window.devicePixelRatio;
-  canvas.style.width = CW + 'px';
-  canvas.style.height = CH + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  ctx.clearRect(0, 0, CW, CH);
-
-  const PAD = 8;
-
-  // Calcular posiciones - N puntos distribuidos de izq a derecha
-  const pts = conDatos.map((d, i) => {
-    const x = conDatos.length === 1 
-      ? CW - PAD  // 1 punto: derecha del todo
-      : PAD + (i / (conDatos.length - 1)) * (CW - PAD * 2);
-    const y = PAD + ((10 - d.valor) / 10) * (CH - PAD * 2);
-    return { x, y, valor: d.valor, fecha: d.fecha, esHoy: d.fecha === TODAY };
-  });
-
-  // Líneas guía
-  ctx.strokeStyle = '#f0f0f0';
-  ctx.lineWidth = 1;
-  [PAD, CH/2, CH-PAD].forEach(y => {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke();
-  });
-
-  // Área relleno
-  if (pts.length > 1) {
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    pts.forEach(p => ctx.lineTo(p.x, p.y));
-    ctx.lineTo(pts[pts.length-1].x, CH);
-    ctx.lineTo(pts[0].x, CH);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(173,163,218,0.15)';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    pts.forEach(p => ctx.lineTo(p.x, p.y));
-    ctx.strokeStyle = '#ada3da';
-    ctx.lineWidth = 2;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-  }
-
-  // Puntos
-  pts.forEach((p, i) => {
-    const isLast = i === pts.length - 1;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, isLast ? 5 : 3, 0, Math.PI * 2);
-    if (isLast) {
-      ctx.fillStyle = 'white'; ctx.fill();
-      ctx.strokeStyle = '#ada3da'; ctx.lineWidth = 2; ctx.stroke();
-    } else {
-      ctx.fillStyle = '#ada3da'; ctx.fill();
-    }
-  });
-
-  // Etiquetas alineadas con los puntos
-  const diasRow = document.getElementById('diasRow');
-  diasRow.innerHTML = '';
-  pts.forEach(p => {
-    const date = new Date(p.fecha + 'T12:00:00');
-    const label = p.esHoy ? 'Hoy' : `${date.getDate()}/${date.getMonth()+1}`;
-    const el = document.createElement('div');
-    el.style.cssText = `position:absolute;left:${p.x}px;top:0;transform:translateX(-50%);font-size:10px;color:${p.esHoy?'#ada3da':'#888'};font-weight:${p.esHoy?'600':'400'};white-space:nowrap;`;
-    el.textContent = label;
-    diasRow.appendChild(el);
-  });
-
-  // Mensaje
-  const msgEl = document.getElementById('vasMsg');
-  if (conDatos.length >= 2) {
-    const penultimo = conDatos[conDatos.length-2].valor;
-    const ultimo = conDatos[conDatos.length-1].valor;
-    msgEl.style.display = 'block';
-    if (ultimo < penultimo) {
-      const pct = penultimo > 0 ? Math.round(((penultimo-ultimo)/penultimo)*100) : 0;
-      msgEl.className = 'vas-msg bien';
-      msgEl.innerHTML = `📉 Tu dolor ha bajado${pct>0?' un '+pct+'%':''} respecto a ayer. ¡Vas por muy buen camino!`;
-    } else if (ultimo > penultimo) {
-      msgEl.className = 'vas-msg animo';
-      msgEl.innerHTML = `<div style="font-size:13px;font-weight:600;margin-bottom:12px;color:#000;">No te preocupes, los altibajos no significan que vayas por mal camino. ¿Has cambiado algo en tu rutina hoy?</div>
-        <textarea id="vasMsgTxt" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;resize:none;min-height:80px;outline:none;background:#f5f2ee;color:#000;margin-bottom:10px;" placeholder="Ej: He estado de pie muchas horas, he dormido mal..."></textarea>
-        <button onclick="guardarMsgDolor()" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:#000;color:#f5f2ee;border:none;border-radius:8px;cursor:pointer;">Enviar a mi fisio</button>`;
-    } else {
-      msgEl.className = 'vas-msg neutro';
-      msgEl.innerHTML = '🌱 Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!';
-    }
-  } else { msgEl.style.display = 'none'; }
-}
-
-async function guardarMsgDolor() {
-  const texto = document.getElementById('vasMsgTxt')?.value?.trim();
-  if (!texto) return;
-  try {
-    await fetch('/api/diario', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patientId: patient.id, comentario: `[Dolor aumentó] ${texto}` }) });
-    toast('Mensaje enviado al fisio ✓', true);
-    document.getElementById('vasMsgTxt').value = '';
-  } catch(e) { toast('Error al enviar', false); }
-}
-
-function showOS(os) {
-  document.getElementById('pasosIOS').style.display = os === 'ios' ? 'block' : 'none';
-  document.getElementById('pasosAndroid').style.display = os === 'android' ? 'block' : 'none';
-  document.getElementById('btnIOS').classList.toggle('active', os === 'ios');
-  document.getElementById('btnAndroid').classList.toggle('active', os === 'android');
-}
-
-function mostrarInstall() { document.getElementById('installPopup').style.display = 'flex'; }
-function cerrarInstall() { document.getElementById('installPopup').style.display = 'none'; }
-function showInstOS(os) {
-  document.getElementById('instPasosIOS').style.display = os === 'ios' ? 'block' : 'none';
-  document.getElementById('instPasosAndroid').style.display = os === 'android' ? 'block' : 'none';
-  document.getElementById('btnInstIOS').style.background = os === 'ios' ? '#000' : 'none';
-  document.getElementById('btnInstIOS').style.color = os === 'ios' ? 'white' : '#888';
-  document.getElementById('btnInstIOS').style.borderColor = os === 'ios' ? '#000' : '#ddd';
-  document.getElementById('btnInstAndroid').style.background = os === 'android' ? '#000' : 'none';
-  document.getElementById('btnInstAndroid').style.color = os === 'android' ? 'white' : '#888';
-  document.getElementById('btnInstAndroid').style.borderColor = os === 'android' ? '#000' : '#ddd';
-}
-
-// PUSH NOTIFICATIONS
-const VAPID_PUBLIC = 'BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
-
-async function initPushNotifications() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-  try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return;
-    const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
-    });
-    await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ patientId: patient.id, subscription: sub })
-    });
-  } catch(e) {}
-}
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-  return outputArray;
-}
-
-// Polling - comprobar cambios en el programa cada 5 minutos
-let lastFechaAsignacion = null;
-let pollingInterval = null;
-
-function startPolling() {
-  if (pollingInterval) clearInterval(pollingInterval);
-  pollingInterval = setInterval(async () => {
-    if (!patient) return;
-    try {
-      const res = await fetch(`/api/schedule?patientId=${patient.id}`);
-      const data = await res.json();
-      // Comprobar si hay ejercicios nuevos comparando cantidad
-      const newFecha = data.ejercicios?.length + '_' + (data.mensajeFisio || '');
-      if (lastFechaAsignacion && lastFechaAsignacion !== newFecha) {
-        // El programa cambió - recargar sin salir
-        ejercicios = data.ejercicios || [];
-        mensajeFisio = data.mensajeFisio || '';
-        if (mensajeFisio) {
-          document.getElementById('mensajeFisioTexto').textContent = mensajeFisio;
-          document.getElementById('mensajeFisioCard').style.display = 'block';
-        }
-        if (data.ultimaSession !== TODAY) {
-          hechos = new Set();
-          localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);
-          document.getElementById('vistaCompletado').style.display = 'none';
-          document.getElementById('vistaEjercicios').style.display = 'block';
-          renderEjercicios();
-          toast('Tu programa ha sido actualizado 💪', true);
-        }
-      }
-      lastFechaAsignacion = newFecha;
-    } catch(e) {}
-  }, 5 * 60 * 1000); // cada 5 minutos
-}
-
-function cerrarSesion() {
-  localStorage.removeItem('fisio365_patient');
-  patient = null;
-  document.getElementById('appScreen').style.display = 'none';
-  document.getElementById('bottomNav').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('emailInput').value = '';
-  ['p1','p2','p3','p4'].forEach(id => document.getElementById(id).value = '');
-  window.scrollTo(0, 0);
-}
-
-function toast(msg, ok=true) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = `toast ${ok?'ok':'err'}`; t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 3000);
-}
+function cerrarSesion(){localStorage.removeItem('fisio365_patient');patient=null;document.getElementById('appScreen').style.display='none';document.getElementById('bottomNav').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('emailInput').value='';['p1','p2','p3','p4'].forEach(id=>document.getElementById(id).value='');window.scrollTo(0,0);}
+function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${ok?'ok':'err'}`;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
 </script>
 </body>
 </html>
