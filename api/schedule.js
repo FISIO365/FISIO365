@@ -2,12 +2,37 @@ const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const BASE_ID = 'appsrGnHpFt8sVD5A';
 const PLAN_TABLE = 'tblvgE0a4gsrj4Vhp';
 const FISIOS_TABLE = 'tbl2mLUrnaKCFTs6g';
+const INFORMES_TABLE = 'tblq3cGGKnkRFKEu8';
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  const { patientId } = req.query;
+
+  const { patientId, action } = req.query;
   if (!patientId) return res.status(400).json({ error: 'Falta patientId' });
+
+  // ── LISTAR INFORMES DEL PACIENTE ─────────────────────────────────────────
+  if (action === 'informes') {
+    try {
+      const formula = encodeURIComponent(`{PacienteID}="${patientId}"`);
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?filterByFormula=${formula}&sort[0][field]=Fecha&sort[0][direction]=desc`;
+      const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+      const data = await r.json();
+      const informes = (data.records || []).map(rec => ({
+        id: rec.id,
+        fecha: rec.fields['Fecha'] || '—',
+        tipo: rec.fields['Tipo'] || '—',
+        fisioNombre: rec.fields['FisioNombre'] || '—',
+        contenido: rec.fields['Contenido'] || ''
+      }));
+      return res.status(200).json({ ok: true, informes });
+    } catch(e) {
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  }
+
+  // ── GET PROGRAMA ─────────────────────────────────────────────────────────
   try {
     const planUrl = `https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula={PacienteID}="${patientId}"&sort[0][field]=FechaAsignacion&sort[0][direction]=desc&maxRecords=1`;
     const planRes = await fetch(planUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
@@ -47,7 +72,7 @@ module.exports = async function handler(req, res) {
         };
       }
     }
-    return res.status(200).json({ ejercicios, fisio, mensajeFisio: plan['MensajeFisio'] || '' });
+    return res.status(200).json({ ejercicios, fisio, mensajeFisio: plan['MensajeFisio'] || '', ultimaSession: plan['UltimaSession'] || '' });
   } catch(e) {
     return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '' });
   }
