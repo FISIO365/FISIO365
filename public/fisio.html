@@ -3170,6 +3170,24 @@ Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEU
         btn.className='gen-btn';btn.style.background='#2e7d32';
         btn.innerHTML='Informe generado — Descargar PDF';
         btn.onclick=()=>descargarPDF(anamPacNom,d.informe,curProto||'hernia');
+        // Botón guardar en perfil paciente
+        let saveBtn=$('btnGuardarInforme');
+        if(!saveBtn){
+          saveBtn=ce('button','btn');
+          saveBtn.id='btnGuardarInforme';
+          saveBtn.style.cssText='margin-top:10px;width:100%;background:var(--lila,#ada3da);color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer';
+          saveBtn.textContent='Guardar informe en perfil del paciente';
+          saveBtn.onclick=async()=>{
+            saveBtn.disabled=true;saveBtn.textContent='Guardando...';
+            try{
+              const rs=await fetch('/api/pacientes?action=guardar-informe-panel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,tipo:curProto||'hernia',contenido:d.informe,fecha:new Date().toLocaleDateString('es-ES')})});
+              const ds=await rs.json();
+              if(ds.ok){saveBtn.textContent='✓ Guardado en el perfil del paciente';saveBtn.style.background='#2e7d32';}
+              else{saveBtn.textContent='Error al guardar';saveBtn.disabled=false;}
+            }catch(e){saveBtn.textContent='Error al guardar';saveBtn.disabled=false;}
+          };
+          res.parentNode.appendChild(saveBtn);
+        }
         res.scrollIntoView({behavior:'smooth'});
       } else {toast(d.error||'Error al generar',false);btn.disabled=false;btn.innerHTML='Generar informe';}
     }catch(e){toast('Error: '+e.message,false);btn.disabled=false;btn.innerHTML='Generar informe';}
