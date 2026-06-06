@@ -15,17 +15,19 @@ module.exports = async function handler(req, res) {
   // ── LISTAR INFORMES DEL PACIENTE ─────────────────────────────────────────
   if (action === 'informes') {
     try {
-      const formula = encodeURIComponent(`{PacienteID}="${patientId}"`);
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?filterByFormula=${formula}&sort[0][field]=Fecha&sort[0][direction]=desc`;
+      // Fetch all informes and filter by patientId in JS to avoid formula issues
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=50`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
-      const informes = (data.records || []).map(rec => ({
-        id: rec.id,
-        fecha: rec.fields['Fecha'] || '—',
-        tipo: rec.fields['Tipo'] || '—',
-        fisioNombre: rec.fields['FisioNombre'] || '—',
-        contenido: rec.fields['Contenido'] || ''
-      }));
+      const informes = (data.records || [])
+        .filter(rec => (rec.fields['PacienteID'] || '') === patientId)
+        .map(rec => ({
+          id: rec.id,
+          fecha: rec.fields['Fecha'] || '—',
+          tipo: rec.fields['Tipo'] || '—',
+          fisioNombre: rec.fields['FisioNombre'] || '—',
+          contenido: rec.fields['Contenido'] || ''
+        }));
       return res.status(200).json({ ok: true, informes });
     } catch(e) {
       return res.status(500).json({ ok: false, error: e.message });
@@ -37,7 +39,7 @@ module.exports = async function handler(req, res) {
     const planUrl = `https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula={PacienteID}="${patientId}"&sort[0][field]=FechaAsignacion&sort[0][direction]=desc&maxRecords=1`;
     const planRes = await fetch(planUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
     const planData = await planRes.json();
-    if (!planData.records?.length) return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '' });
+    if (!planData.records?.length) return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '', ultimaSession: '' });
     const plan = planData.records[0].fields;
     let ejercicios = [];
     try { ejercicios = JSON.parse(plan['Ejercicios'] || '[]'); } catch(e) { ejercicios = []; }
@@ -72,8 +74,13 @@ module.exports = async function handler(req, res) {
         };
       }
     }
-    return res.status(200).json({ ejercicios, fisio, mensajeFisio: plan['MensajeFisio'] || '', ultimaSession: plan['UltimaSession'] || '' });
+    return res.status(200).json({
+      ejercicios,
+      fisio,
+      mensajeFisio: plan['MensajeFisio'] || '',
+      ultimaSession: plan['UltimaSession'] || ''
+    });
   } catch(e) {
-    return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '' });
+    return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '', ultimaSession: '' });
   }
 }
