@@ -3642,17 +3642,35 @@ async function renderInformes(wrap){
 
       const bDel=ce('button','inf-btn');bDel.innerHTML='Borrar';bDel.style.cssText='border-color:#fca5a5;color:#b91c1c;padding:7px 10px';
       bDel.onclick=()=>borrarInforme(inf.id);
-      const bSave=ce('button','inf-btn');bSave.innerHTML='Guardar en app';bSave.style.cssText='border-color:var(--lila);color:var(--lila);background:var(--lila-light)';
-      bSave.onclick=async()=>{
-        bSave.disabled=true;bSave.textContent='Guardando...';
+      // Menu 3 puntos
+      const bMenu=ce('button','inf-btn');bMenu.innerHTML='⋮';bMenu.style.cssText='padding:7px 12px;font-size:18px;line-height:1';
+      const menuDrop=ce('div','');menuDrop.style.cssText='display:none;position:absolute;right:0;top:100%;background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.1);z-index:100;min-width:180px;overflow:hidden';
+      const mkMenuItem=(label,color,fn)=>{const mi=ce('div','');mi.style.cssText=`padding:12px 16px;font-size:13px;font-weight:500;cursor:pointer;color:${color||'var(--black)'};border-bottom:1px solid var(--border)`;mi.textContent=label;mi.onclick=()=>{menuDrop.style.display='none';fn();};mi.onmouseenter=()=>mi.style.background='var(--cream)';mi.onmouseleave=()=>mi.style.background='white';return mi;};
+      const savedKey='inf_saved_'+inf.id;
+      const alreadySaved=localStorage.getItem(savedKey);
+      menuDrop.appendChild(mkMenuItem('Editar','',()=>editarInforme(inf.id,todos)));
+      menuDrop.appendChild(mkMenuItem('Descargar PDF','var(--lila)',()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'')));
+      const saveLabel=alreadySaved?'✓ Guardado en app paciente':'Guardar en app paciente';
+      const saveColor=alreadySaved?'#166534':'var(--black)';
+      const miSave=mkMenuItem(saveLabel,saveColor,async()=>{
+        miSave.textContent='Guardando...';
         try{
-          const rs=await fetch('/api/pacientes?action=guardar-informe-panel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:inf.pacienteId||'',pacienteNombre:inf.pacienteNombre||'',fisioNombre:inf.fisioNombre||'',tipo:inf.protocolo||'hernia',contenido:inf.informe||'',fecha:inf.fecha||new Date().toLocaleDateString('es-ES')})});
+          const pacId=inf.pacienteId||'';
+          const rs=await fetch('/api/pacientes?action=guardar-informe-panel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:pacId,pacienteNombre:inf.pacienteNombre||'',fisioNombre:inf.fisioNombre||'',tipo:inf.protocolo||'hernia',contenido:inf.informe||'',fecha:inf.fecha||new Date().toLocaleDateString('es-ES')})});
           const ds=await rs.json();
-          if(ds.ok){bSave.textContent='✓ Guardado';bSave.style.background='#f0fdf4';bSave.style.borderColor='#86efac';bSave.style.color='#166534';}
-          else{bSave.textContent='Error';bSave.disabled=false;}
-        }catch(e){bSave.textContent='Error';bSave.disabled=false;}
-      };
-      btns.appendChild(bEdit);btns.appendChild(bPdf);btns.appendChild(bSave);btns.appendChild(bDel);
+          if(ds.ok){localStorage.setItem(savedKey,'1');miSave.textContent='✓ Guardado en app paciente';miSave.style.color='#166534';toast('Guardado en la app del paciente ✓',true);}
+          else{miSave.textContent='Error al guardar';}
+        }catch(e){miSave.textContent='Error al guardar';}
+      });
+      menuDrop.appendChild(miSave);
+      const miDel=mkMenuItem('Borrar','#b91c1c',()=>borrarInforme(inf.id));miDel.style.borderBottom='none';
+      menuDrop.appendChild(miDel);
+      const menuWrap=ce('div','');menuWrap.style.cssText='position:relative;';
+      bMenu.onclick=(e)=>{e.stopPropagation();const open=menuDrop.style.display==='block';document.querySelectorAll('.inf-menu-drop').forEach(d=>d.style.display='none');menuDrop.style.display=open?'none':'block';};
+      menuDrop.className='inf-menu-drop';
+      menuWrap.appendChild(bMenu);menuWrap.appendChild(menuDrop);
+      document.addEventListener('click',()=>menuDrop.style.display='none',{once:false});
+      btns.appendChild(bEdit);btns.appendChild(bPdf);btns.appendChild(menuWrap);
       c.appendChild(btns);lista.appendChild(c);
     });
   };
