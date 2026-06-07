@@ -3672,18 +3672,35 @@ async function renderInformes(wrap){
   const todos=[...deAirtable,...soloLocales];
   wrap.innerHTML='';
   const tipoLabel={rodilla:'Rodilla',fascitis:'Fascitis plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia discal'};
+
+  // ── CABECERA CON BUSCADORES ──────────────────────────────────────────────────
+  // Extraer lista única de pacientes con informes
+  const pacientesUnicos=[...new Map(todos.filter(i=>i.pacienteNombre).map(i=>[i.pacienteNombre,i.pacienteNombre])).values()].sort();
+
   const hd=ce('div','');
-  hd.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-    <div class="si" style="flex:1;margin:0"><input type="text" id="infSearch" placeholder="Buscar por paciente..." style="padding:10px 10px 10px 36px;width:100%;font-size:14px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font)"></div>
-    <div style="font-size:12px;color:var(--muted);white-space:nowrap">${todos.length} informe${todos.length!==1?'s':''}</div>
-  </div>`;
+  hd.innerHTML=`
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Filtrar por paciente</div>
+      <div style="position:relative">
+        <input id="infPacSearch" autocomplete="off" placeholder="Buscar paciente..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:14px;outline:none;background:white;box-sizing:border-box">
+        <div id="infPacDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--lila);border-radius:var(--r-sm);box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:200;max-height:220px;overflow-y:auto;margin-top:2px"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--muted);flex:1" id="infContador">${todos.length} informe${todos.length!==1?'s':''}</div>
+      <button id="infLimpiarFiltro" style="display:none;font-size:11px;font-weight:600;color:var(--lila);border:1px solid var(--lila);border-radius:20px;padding:3px 10px;background:var(--lila-light);cursor:pointer;font-family:var(--font)">✕ Quitar filtro</button>
+    </div>`;
   wrap.appendChild(hd);
+
   if(!todos.length){
     const em=ce('div','');em.style.cssText='text-align:center;padding:60px 20px;color:var(--muted)';
     em.innerHTML='<div style="font-size:14px;font-weight:600;color:var(--black);margin-bottom:4px">Sin informes todavía</div><div style="font-size:12px">Los informes generados en Anamnesis aparecerán aquí automáticamente</div>';
     wrap.appendChild(em);return;
   }
   const lista=ce('div','');lista.id='infLista';wrap.appendChild(lista);
+
+  let filtroActivo=''; // nombre del paciente seleccionado o '' para todos
+
   const pintar=(arr)=>{
     lista.innerHTML='';
     if(!arr.length){lista.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">No hay resultados</div>';return;}
@@ -3695,48 +3712,23 @@ async function renderInformes(wrap){
       bEdit.onclick=()=>editarInforme(inf.id,todos);
       const bPdf=ce('button','inf-btn');bPdf.innerHTML='PDF';bPdf.style.cssText='border-color:var(--lila);color:var(--lila)';
       bPdf.onclick=()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'');
-
-      const bDel=ce('button','inf-btn');bDel.innerHTML='Borrar';bDel.style.cssText='border-color:#fca5a5;color:#b91c1c;padding:7px 10px';
-      bDel.onclick=()=>borrarInforme(inf.id);
-      // Menu 3 puntos
+      // Menu 3 puntos (sin opciones de borrar)
       const bMenu=ce('button','inf-btn');bMenu.innerHTML='⋮';bMenu.style.cssText='padding:7px 12px;font-size:18px;line-height:1';
       const menuDrop=ce('div','');menuDrop.style.cssText='display:none;position:absolute;right:0;top:100%;background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.1);z-index:100;min-width:180px;overflow:hidden';
       const mkMenuItem=(label,color,fn)=>{const mi=ce('div','');mi.style.cssText=`padding:12px 16px;font-size:13px;font-weight:500;cursor:pointer;color:${color||'var(--black)'};border-bottom:1px solid var(--border)`;mi.textContent=label;mi.onclick=()=>{menuDrop.style.display='none';fn();};mi.onmouseenter=()=>mi.style.background='var(--cream)';mi.onmouseleave=()=>mi.style.background='white';return mi;};
       const savedKey='inf_saved_'+inf.id;
       const alreadySaved=localStorage.getItem(savedKey);
-      menuDrop.appendChild(mkMenuItem('Editar','',()=>editarInforme(inf.id,todos)));
-      menuDrop.appendChild(mkMenuItem('Descargar PDF','var(--lila)',()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'')));
+      const mi1=mkMenuItem('Editar','',()=>editarInforme(inf.id,todos));
+      const mi2=mkMenuItem('Descargar PDF','var(--lila)',()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||''));
+      mi2.style.borderBottom='none';
       const saveLabel=alreadySaved?'✓ Guardado en app paciente':'Guardar en app paciente';
       const saveColor=alreadySaved?'#166534':'var(--black)';
       const miSave=mkMenuItem(saveLabel,saveColor,()=>{
         menuDrop.style.display='none';
         abrirSelectorPacienteInforme(inf, savedKey, miSave);
       });
-      menuDrop.appendChild(miSave);
-      const miDel1=mkMenuItem('Borrar solo del panel del fisio','#b91c1c',async()=>{
-        if(!confirm('¿Eliminar este informe del panel? El paciente seguirá teniéndolo en su app.')) return;
-        try{
-          const r=await fetch('/api/pacientes?action=borrar-informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:inf.id})});
-          const d=await r.json();
-          if(d.ok){toast('Informe eliminado del panel ✓',true);showSection('inf');}
-          else toast('Error: '+(d.error||''),false);
-        }catch(e){toast('Error: '+e.message,false);}
-      });
-      const miDel2=mkMenuItem('Borrar del panel y del perfil del paciente','#b91c1c',async()=>{
-        if(!confirm('¿Eliminar este informe del panel Y de la app del paciente? No se puede deshacer.')) return;
-        try{
-          // Borrar de ANAMNESIS (panel)
-          const r1=await fetch('/api/pacientes?action=borrar-informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:inf.id})});
-          // Borrar de INFORMES (app paciente) si tiene pacienteId
-          if(inf.pacienteId){
-            await fetch('/api/pacientes?action=borrar-informe-paciente',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:inf.pacienteId,fecha:inf.fecha})});
-          }
-          const d1=await r1.json();
-          if(d1.ok){toast('Informe eliminado del panel y del paciente ✓',true);showSection('inf');}
-          else toast('Error: '+(d1.error||''),false);
-        }catch(e){toast('Error: '+e.message,false);}
-      });miDel2.style.borderBottom='none';
-      menuDrop.appendChild(miDel1);menuDrop.appendChild(miDel2);
+      miSave.style.borderBottom='none';
+      menuDrop.appendChild(mi1);menuDrop.appendChild(mi2);menuDrop.appendChild(miSave);
       const menuWrap=ce('div','');menuWrap.style.cssText='position:relative;';
       bMenu.onclick=(e)=>{e.stopPropagation();const open=menuDrop.style.display==='block';document.querySelectorAll('.inf-menu-drop').forEach(d=>d.style.display='none');menuDrop.style.display=open?'none':'block';};
       menuDrop.className='inf-menu-drop';
@@ -3746,10 +3738,66 @@ async function renderInformes(wrap){
       c.appendChild(btns);lista.appendChild(c);
     });
   };
+
+  const aplicarFiltro=()=>{
+    const filtered=filtroActivo?todos.filter(i=>i.pacienteNombre===filtroActivo):todos;
+    pintar(filtered);
+    const cnt=$('infContador');
+    if(cnt) cnt.textContent=`${filtered.length} informe${filtered.length!==1?'s':''}${filtroActivo?' de '+filtroActivo:''}`;
+    const btnLimpiar=$('infLimpiarFiltro');
+    if(btnLimpiar) btnLimpiar.style.display=filtroActivo?'block':'none';
+  };
+
   pintar(todos);
+
+  // ── LÓGICA DEL BUSCADOR DE PACIENTES ────────────────────────────────────────
   setTimeout(()=>{
-    const s=$('infSearch');
-    if(s)s.oninput=()=>{const q=s.value.toLowerCase().trim();pintar(q?todos.filter(i=>i.pacienteNombre.toLowerCase().includes(q)):todos);};
+    const inp=$('infPacSearch');
+    const drop=$('infPacDrop');
+    const btnLimpiar=$('infLimpiarFiltro');
+    if(!inp||!drop) return;
+
+    const renderDrop=(lista)=>{
+      drop.innerHTML='';
+      if(!lista.length){drop.style.display='none';return;}
+      lista.forEach(nom=>{
+        const it=ce('div','');
+        it.textContent=nom;
+        it.style.cssText='padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)';
+        it.onmouseenter=()=>it.style.background='var(--lila-light)';
+        it.onmouseleave=()=>it.style.background='white';
+        it.onclick=()=>{
+          filtroActivo=nom;
+          inp.value=nom;
+          drop.style.display='none';
+          aplicarFiltro();
+        };
+        drop.appendChild(it);
+      });
+      drop.style.display='block';
+    };
+
+    inp.oninput=()=>{
+      const q=inp.value.toLowerCase().trim();
+      if(!q){filtroActivo='';aplicarFiltro();drop.style.display='none';return;}
+      const hits=pacientesUnicos.filter(n=>n.toLowerCase().includes(q));
+      renderDrop(hits);
+    };
+    inp.onfocus=()=>{
+      if(!inp.value.trim()) renderDrop(pacientesUnicos);
+    };
+    document.addEventListener('click',(e)=>{
+      if(!inp.contains(e.target)&&!drop.contains(e.target)) drop.style.display='none';
+    },{once:false});
+
+    if(btnLimpiar){
+      btnLimpiar.onclick=()=>{
+        filtroActivo='';
+        inp.value='';
+        drop.style.display='none';
+        aplicarFiltro();
+      };
+    }
   },50);
 }
 
