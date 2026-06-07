@@ -655,18 +655,17 @@ function renderPac(wrap){
   const input=document.getElementById('pacBuscar');
   const lista=document.getElementById('pacResultados');
 
-  // Mostrar todos al entrar
-  renderPacLista('', lista);
-
   input.oninput=()=>renderPacLista(input.value, lista);
   input.focus();
 }
 
 function renderPacLista(q, lista){
   lista.innerHTML='';
-  const fl=q.length>=1
-    ? (pacs||[]).filter(p=>p.nombre.toLowerCase().includes(q.toLowerCase())||(p.email||'').toLowerCase().includes(q.toLowerCase()))
-    : (pacs||[]);
+  if(!q||q.length<1){
+    lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Escribe para buscar...</div>';
+    return;
+  }
+  const fl=(pacs||[]).filter(p=>p.nombre.toLowerCase().includes(q.toLowerCase())||(p.email||'').toLowerCase().includes(q.toLowerCase()));
   if(!fl.length){
     lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Sin resultados</div>';
     return;
@@ -3869,19 +3868,29 @@ async function fpTabDiario(pacId, pacNombre, body){
   try{
     const r=await fetch(`/api/pacientes?action=get-diario&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
     const d=await r.json();
-    if(!d.ok||!d.diario||!d.diario.trim()){
-      body.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Sin entradas en el diario</div>';return;
+    // DEBUG temporal — muestra los campos disponibles
+    if(d.fieldNames){
+      const dbg=ce('div','');
+      dbg.style.cssText='background:#fff3cd;border-radius:8px;padding:10px 12px;font-size:11px;margin-bottom:10px;color:#856404';
+      dbg.textContent='Campos disponibles: '+d.fieldNames.join(', ');
+      body.innerHTML='';
+      body.appendChild(dbg);
     }
-    // Parsear entradas (separadas por ';' o '\n')
-    const entradas=d.diario.split(/[;\n]/).map(e=>e.trim()).filter(e=>e.length>0).reverse();
-    body.innerHTML='';
+    if(!d.ok||!d.diario||!d.diario.trim()){
+      const em=ce('div','');
+      em.style.cssText='text-align:center;padding:20px;color:var(--muted);font-size:13px';
+      em.textContent='Sin entradas en el diario';
+      body.appendChild(em);
+      return;
+    }
+    const entradas=d.diario.split(/\n/).map(e=>e.trim()).filter(e=>e.length>0).reverse();
     entradas.forEach(e=>{
       const row=ce('div','');
       row.style.cssText='background:white;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:8px;font-size:13px;line-height:1.6';
       row.textContent=e;
       body.appendChild(row);
     });
-  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar diario</div>';}
+  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar diario: '+e.message+'</div>';}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
