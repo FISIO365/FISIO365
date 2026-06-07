@@ -4597,12 +4597,12 @@ function renderFormacion(wrap, ruta){
     {t:'12 · Mientras se realiza el tratamiento',sub:'Recepción se prepara para el cierre',
      cards:[
       {img:WIKI_IMGS[11],ti:'12 · Recepción se prepara'},
-      {ti:'Imprimir y preparar el informe',icon:'🖨',body:`Durante la sesión, recepción <strong>imprime el informe de la anamnesis</strong> que el fisio ha completado al inicio. Lo prepara en un sobre con el nombre del paciente. Este informe se entregará al paciente en el cierre.`},
+      {ti:'Preparar la tarjeta de la app',icon:'📱',body:`Durante la sesión, recepción <strong>prepara la tarjeta de bienvenida a la app FISIO365</strong> con el nombre del paciente, su email y su PIN de acceso. Esta tarjeta se entregará al paciente en el cierre junto con las instrucciones para descargar la app.`},
       {ti:'No interrumpir la sesión',icon:'🔕',body:`Salvo emergencia real, <strong>no se interrumpe al fisio durante la sesión</strong>. La concentración del fisio durante el tratamiento forma parte de la calidad del servicio.`},
-      {ti:'Preparar el cierre',icon:'⚡',body:`Anticipar todo para que el cierre sea ágil y profesional:<br>• <b>TPV cargado</b> y listo<br>• <b>Precios a mano</b><br>• <b>Informe impreso y en sobre</b><br>• Lista para el <b>cierre de ventas</b> (siguiente cita, pack, etc.)`}
+      {ti:'Preparar el cierre',icon:'⚡',body:`Anticipar todo para que el cierre sea ágil y profesional:<br>• <b>TPV cargado</b> y listo<br>• <b>Precios a mano</b><br>• <b>Tarjeta de la app</b> preparada con email y PIN del paciente<br>• Lista para el <b>cierre de ventas</b> (siguiente cita, pack, etc.)`}
      ],
      qs:[
-      {q:'¿Qué imprime recepción durante la sesión?',opts:['La factura','El informe de la anamnesis que el fisio ha completado','La confirmación de cita'],ok:1,fb:['La factura se hace después — aquí se imprime el informe clínico.','¡Correcto! El informe va en un sobre y se entrega al paciente en el cierre.','La confirmación ya se envió antes — esto es el informe de valoración.']},
+      {q:'¿Qué prepara recepción durante la sesión?',opts:['La factura','La tarjeta de la app con email y PIN del paciente','La confirmación de cita'],ok:1,fb:['La factura se hace después.','¡Correcto! La tarjeta de la app se entrega al paciente en el cierre.','La confirmación ya se envió antes — esto es el informe de valoración.']},
       {q:'¿Qué debe tener preparado recepción antes de que el paciente llegue al mostrador?',opts:['Nada — se gestiona cuando llegue','TPV cargado, precios a mano, informe en sobre y lista para el cierre de ventas','Solo la factura'],ok:1,fb:['La improvisación al cierre transmite desorganización.','¡Correcto! La preparación hace que el cierre sea rápido y profesional.','La factura es solo una parte del cierre.']}
      ]
     },
@@ -4622,7 +4622,7 @@ function renderFormacion(wrap, ruta){
       {img:WIKI_IMGS[13],ti:'14 · Transferencia clínica'},
       {ti:'El momento clave',icon:'🔑',body:`El fisio informa a recepción del <strong>plan de tratamiento con todos los detalles</strong> — delante del paciente. El paciente ya lo conoce (el fisio se lo ha explicado en consulta), así que <strong>no le pilla de nuevas</strong>. Este momento refuerza la coherencia y la confianza.`},
       {ti:'Qué comunica el fisio',icon:'📋',body:`• Número de sesiones necesarias y frecuencia<br>• Si tiene programa de ejercicios en la app<br>• Cualquier indicación especial para recepción<br><br>Claro, concreto y delante del paciente.`},
-      {ti:'La app de ejercicios',icon:'📲',body:`Si el fisio ha asignado un programa de ejercicios en la app de FISIO365, <strong>lo indica a recepción en este momento</strong>. Recepción ayuda al paciente a descargar la app, le da su usuario y contraseña y le explica cómo funciona.<br><br>También es el momento en que recepción <strong>entrega el informe de la anamnesis</strong> al paciente.`},
+      {ti:'La app de ejercicios',icon:'📲',body:`Recepción <strong>entrega la tarjeta de bienvenida a la app FISIO365</strong> al paciente. En ella están sus datos de acceso (email y PIN) y las instrucciones para descargar la app.<br><br>En la app el paciente encontrará su <strong>informe de la anamnesis</strong> y su <strong>programa de ejercicios</strong>. Recepción le explica brevemente cómo funciona y se ofrece a ayudarle a descargarla si lo necesita.`},
       {ti:'¿Y ahora qué?',icon:'🔀',body:`A partir de aquí, la conversación va en una dirección u otra según lo que haya indicado el fisio. Cada situación tiene su propio protocolo — los verás en los módulos siguientes:<br><br>• <b>Opción 1:</b> El paciente no necesita más sesiones<br>• <b>Opción 2:</b> Necesita pocas sesiones (menos de 5)<br>• <b>Opción 3:</b> Necesita varias sesiones — pack<br>• <b>Opción 4:</b> Viene de mantenimiento<br>• <b>Opción 5:</b> Pendiente de valoración externa<br><br>Lo importante: <strong>recepción nunca improvisa</strong> — sigue el plan que ha indicado el fisio.`}
      ],
      qs:[
@@ -4700,7 +4700,7 @@ function renderFormacion(wrap, ruta){
     {t:'16 · El paciente sale con...',sub:'Resumen del protocolo completo',
      cards:[
       {img:WIKI_IMGS[20],ti:'16 · El paciente sale con...'},
-      {ti:'El paciente sale con todo',icon:'🎯',body:`Al final de la primera visita, el paciente se va con:<br>• <b>Diagnóstico claro</b> y explicado<br>• <b>Plan definido</b> (sesiones, frecuencia)<br>• <b>Próxima cita agendada</b><br>• <b>Informe de la anamnesis</b> en mano<br>• <b>App de ejercicios</b> descargada y explicada (si aplica)<br>• <b>Sensación de que ha tomado la decisión correcta</b>`},
+      {ti:'El paciente sale con todo',icon:'🎯',body:`Al final de la primera visita, el paciente se va con:<br>• <b>Diagnóstico claro</b> y explicado<br>• <b>Plan definido</b> (sesiones, frecuencia)<br>• <b>Próxima cita agendada</b><br>• <b>App FISIO365</b> con su informe y programa de ejercicios<br>• <b>Tarjeta de acceso</b> con email y PIN<br>• <b>Sensación de que ha tomado la decisión correcta</b>`},
       {ti:'El objetivo real',icon:'🌟',body:`Más allá del diagnóstico, el objetivo de la primera visita es que el paciente quiera volver.<br><br>Si sale pensando <em>«estoy en el sitio correcto, con los profesionales adecuados, y me están cuidando bien»</em> — la primera visita ha sido un éxito.`},
       {ti:'El equipo como sistema',icon:'🤝',body:`La primera visita es un esfuerzo de equipo: recepción, fisioterapeuta y la coordinación entre ambos. <strong>Un eslabón débil en cualquier punto arruina el conjunto.</strong><br><br>Por eso existe este protocolo.`}
      ],
