@@ -106,7 +106,7 @@ export default async function handler(req) {
   // ── GUARDAR INFORME EN PERFIL PACIENTE ─────────────────────────────────
   if (action === 'guardar-informe-panel' && req.method === 'POST') {
     const { pacienteId, pacienteNombre, fisioNombre, tipo, contenido, fecha } = body;
-    const INFORMES_TABLE = 'tblq3cGGKnkRFKEu8';
+    const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
     try {
       // Si no hay pacienteId, buscar por nombre
       let finalPacienteId = pacienteId || '';
