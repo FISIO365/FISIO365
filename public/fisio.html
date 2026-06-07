@@ -651,10 +651,9 @@ function renderPac(wrap){
     <div class="si"><input type="text" id="pacBuscar" placeholder="Escribe nombre o email..." autocomplete="off"></div>
     <div id="pacResultados" style="margin-top:8px"></div>`;
   wrap.appendChild(card);
-
   const input=document.getElementById('pacBuscar');
   const lista=document.getElementById('pacResultados');
-
+  lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Escribe para buscar...</div>';
   input.oninput=()=>renderPacLista(input.value, lista);
   input.focus();
 }
@@ -672,12 +671,84 @@ function renderPacLista(q, lista){
   }
   fl.forEach(p=>{
     const ini=p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    const row=ce('div','pi');
-    row.innerHTML=`<div class="pav">${ini}</div>
+    // Card del paciente
+    const card=ce('div','');
+    card.style.cssText='background:white;border:1.5px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden';
+
+    // Cabecera — clic abre/cierra el menú
+    const head=ce('div','');
+    head.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;transition:background .15s';
+    head.onmouseenter=()=>head.style.background='var(--lila-light)';
+    head.onmouseleave=()=>head.style.background='';
+    head.innerHTML=`<div class="pav">${ini}</div>
       <div style="flex:1;min-width:0"><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div>
-      <div class="ppin">PIN: ${p.pin||'—'}</div>`;
-    row.onclick=()=>abrirFichaPaciente(p.id, p.nombre);
-    lista.appendChild(row);
+      <div class="pac-chevron" style="font-size:16px;color:var(--muted);transition:transform .2s">›</div>`;
+
+    // Menú de subsecciones — oculto por defecto
+    const menu=ce('div','');
+    menu.style.cssText='display:none;border-top:1px solid var(--border)';
+
+    const opciones=[
+      {key:'programa', label:'Programa'},
+      {key:'informes', label:'Informes'},
+      {key:'eva',      label:'EVA'},
+      {key:'diario',   label:'Diario'},
+      {key:'pin',      label:'Nombre y contraseña'},
+    ];
+
+    // Panel de contenido
+    const panel=ce('div','');
+    panel.style.cssText='display:none;padding:14px 16px;border-top:1px solid var(--border);background:#fafafa';
+
+    opciones.forEach((op,i)=>{
+      const row=ce('div','');
+      row.style.cssText='padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--black);border-bottom:'+(i<opciones.length-1?'1px solid var(--border)':'none');
+      row.textContent=op.label;
+      row.onmouseenter=()=>row.style.background='var(--lila-light)';
+      row.onmouseleave=()=>row.style.background='';
+      row.dataset.active='0';
+      row.onclick=(e)=>{
+        e.stopPropagation();
+        // Si ya está activo, cierra
+        if(row.dataset.active==='1'){
+          row.dataset.active='0';
+          row.style.color='var(--black)';
+          panel.style.display='none';
+          panel.innerHTML='';
+          return;
+        }
+        // Desactivar otras filas
+        menu.querySelectorAll('[data-active]').forEach(r=>{r.dataset.active='0';r.style.color='var(--black)';});
+        row.dataset.active='1';
+        row.style.color='var(--lila)';
+        panel.style.display='block';
+        panel.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Cargando...</div>';
+        if(op.key==='pin'){
+          panel.innerHTML=`
+            <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Nombre</div><div style="font-size:15px;font-weight:700">${p.nombre}</div></div>
+            <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Email</div><div style="font-size:14px">${p.email||'—'}</div></div>
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Contraseña (PIN)</div><div style="font-size:28px;font-weight:800;color:var(--lila);letter-spacing:4px">${p.pin||'—'}</div></div>`;
+        } else if(op.key==='programa') fpTabPrograma(p.id, panel);
+        else if(op.key==='informes') fpTabInformes(p.id, panel);
+        else if(op.key==='eva') fpTabEva(p.id, panel);
+        else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel);
+      };
+      menu.appendChild(row);
+    });
+    menu.appendChild(panel);
+
+    // Toggle cabecera
+    let open=false;
+    head.onclick=()=>{
+      open=!open;
+      menu.style.display=open?'block':'none';
+      head.querySelector('.pac-chevron').style.transform=open?'rotate(90deg)':'';
+      if(!open){panel.style.display='none';panel.innerHTML='';menu.querySelectorAll('[data-active]').forEach(r=>{r.dataset.active='0';r.style.color='var(--black)';});}
+    };
+
+    card.appendChild(head);
+    card.appendChild(menu);
+    lista.appendChild(card);
   });
 }
 
@@ -3625,68 +3696,9 @@ function _addFooter(doc,W,ml,mr,py,fisioNom,colNum,fecha,pageNum,pageCount){
 // FICHA DE PACIENTE – modal con 4 pestañas
 // ─────────────────────────────────────────────────────────────────────────────
 function abrirFichaPaciente(pacId, pacNombre){
-  // --- overlay ---
-  const overlay=ce('div','');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:8000;display:flex;align-items:flex-end;justify-content:center';
-  overlay.onclick=(e)=>{if(e.target===overlay)overlay.remove();};
-  document.body.appendChild(overlay);
-
-  const modal=ce('div','');
-  modal.style.cssText='background:var(--cream);border-radius:20px 20px 0 0;width:100%;max-width:700px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden';
-  overlay.appendChild(modal);
-
-  // --- header ---
-  const header=ce('div','');
-  header.style.cssText='padding:16px 20px 0;background:var(--cream);border-bottom:1px solid var(--border)';
-  const ini=pacNombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  header.innerHTML=`
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <div style="width:40px;height:40px;border-radius:50%;background:var(--lila);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:700;flex-shrink:0">${ini}</div>
-      <div style="font-size:16px;font-weight:700;flex:1">${pacNombre}</div>
-      <button onclick="this.closest('[data-modal]').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1">×</button>
-    </div>
-    <div style="display:flex;gap:0" id="fpTabs">
-      <button class="fp-tab fp-tab-active" onclick="fpSwitch('programa')" id="fpTabPrograma">📋 Programa</button>
-      <button class="fp-tab" onclick="fpSwitch('informes')" id="fpTabInformes">📄 Informes</button>
-      <button class="fp-tab" onclick="fpSwitch('eva')" id="fpTabEva">📈 EVA</button>
-      <button class="fp-tab" onclick="fpSwitch('diario')" id="fpTabDiario">📓 Diario</button>
-    </div>`;
-  modal.setAttribute('data-modal','1');
-  modal.dataset.pacId=pacId;
-  modal.dataset.pacNombre=pacNombre;
-  modal.appendChild(header);
-
-  // --- body ---
-  const body=ce('div','');
-  body.id='fpBody';
-  body.style.cssText='flex:1;overflow-y:auto;padding:16px 20px';
-  modal.appendChild(body);
-
-  // Cargar primera pestaña
-  fpSwitch('programa');
-
-  // Estilos tabs (inyectar si no existen)
-  if(!document.getElementById('fpTabStyle')){
-    const st=document.createElement('style');
-    st.id='fpTabStyle';
-    st.textContent=`
-      .fp-tab{flex:1;padding:9px 4px;border:none;border-bottom:3px solid transparent;background:none;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s}
-      .fp-tab-active{color:var(--lila);border-bottom-color:var(--lila)!important}
-      .fp-tab:hover{color:var(--black)}
-      .fp-ficha-btn{background:var(--lila);color:white;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font);flex-shrink:0}
-      .fp-ficha-btn:hover{opacity:.85}
-      .fp-inf-card{background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px}
-      .fp-inf-meta{font-size:11px;color:var(--muted);margin-bottom:4px}
-      .fp-inf-tipo{font-size:14px;font-weight:700;margin-bottom:10px}
-      .fp-inf-btns{display:flex;gap:8px;flex-wrap:wrap}
-      .fp-btn{font-family:var(--font);font-size:12px;font-weight:600;padding:7px 13px;border-radius:99px;border:1.5px solid var(--border);background:none;cursor:pointer;color:var(--black)}
-      .fp-btn.lila{border-color:var(--lila);color:var(--lila);background:var(--lila-light)}
-      .fp-btn.green{border-color:#166534;color:#166534}
-    `;
-    document.head.appendChild(st);
-  }
+  // No longer used as modal - ficha is inline in Pacientes section
+  showSection('pac');
 }
-
 function fpSwitch(tab){
   // highlight tab
   ['programa','informes','eva','diario'].forEach(t=>{
