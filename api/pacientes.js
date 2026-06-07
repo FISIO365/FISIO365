@@ -86,7 +86,6 @@ export default async function handler(req) {
     const { pacienteId, fecha } = body;
     const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
     try {
-      // Buscar el informe por PacienteID y Fecha
       const url = `https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?pageSize=50`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
@@ -129,7 +128,6 @@ export default async function handler(req) {
     const { pacienteId, pacienteNombre, fisioNombre, tipo, contenido, fecha } = body;
     const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
     try {
-      // Si no hay pacienteId, buscar por nombre
       let finalPacienteId = pacienteId || '';
       if (!finalPacienteId && pacienteNombre) {
         const searchUrl = `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=PIN`;
@@ -157,6 +155,20 @@ export default async function handler(req) {
         return new Response(JSON.stringify({ ok: false, error: atData.error.message || JSON.stringify(atData.error), atData }), { headers: corsHeaders });
       }
       return new Response(JSON.stringify({ ok: true, pacienteId: finalPacienteId, recordId: atData.records?.[0]?.id }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+  }
+
+  // ── GET DIARIO PACIENTE ──────────────────────────────────────────────────
+  if (action === 'get-diario') {
+    const pacienteId = url.searchParams.get('pacienteId') || '';
+    if (!pacienteId) return new Response(JSON.stringify({ ok: false, error: 'Falta pacienteId' }), { status: 400, headers: corsHeaders });
+    try {
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=Diario`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      const data = await r.json();
+      const diario = data.fields?.['Diario'] || '';
+      return new Response(JSON.stringify({ ok: true, diario }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
