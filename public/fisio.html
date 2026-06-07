@@ -625,7 +625,7 @@ function mkPacSearch(inputId, listId, selBoxId, onSelect){
     fl.forEach(p=>{
       const ini=p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
       const div=ce('div','pi'); div.style.marginBottom='6px';
-      div.innerHTML=`<div class="pav">${ini}</div><div style="flex:1"><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div><div class="ppin">PIN: ${p.pin||'—'}</div><button class="fp-ficha-btn" onclick="event.stopPropagation();abrirFichaPaciente('${p.id.replace(/'/g,"\\'")}','${p.nombre.replace(/'/g,"\\'")}')">Ver ficha</button>`;
+      div.innerHTML=`<div class="pav">${ini}</div><div style="flex:1;min-width:0"><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div><button class="fp-ficha-btn" onclick="event.stopPropagation();abrirFichaPaciente('${p.id.replace(/'/g,"\\'")}','${p.nombre.replace(/'/g,"\\'")}')">Ver ficha</button>`;
       div.onclick=()=>{
         $(inputId).value=p.nombre; el.innerHTML='';
         if(selBoxId) {$(selBoxId).textContent='✓ '+p.nombre; $(selBoxId).style.display='block';}
