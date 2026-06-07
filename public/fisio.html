@@ -3703,7 +3703,7 @@ async function renderInformes(wrap){
 
   const pintar=(arr)=>{
     lista.innerHTML='';
-    if(!arr.length){lista.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">No hay resultados</div>';return;}
+    if(!arr.length){lista.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px">'+(filtroActivo?'No hay informes para este paciente':'Busca un paciente para ver sus informes')+'</div>';return;}
     arr.forEach(inf=>{
       const c=ce('div','inf-card');
       c.innerHTML=`<div class="inf-info"><div class="inf-pac">${inf.pacienteNombre||'—'}</div><div class="inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+inf.fisioNombre:''}</div><span class="inf-proto">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</span></div>`;
@@ -3748,7 +3748,7 @@ async function renderInformes(wrap){
     if(btnLimpiar) btnLimpiar.style.display=filtroActivo?'block':'none';
   };
 
-  pintar(todos);
+  pintar([]);
 
   // ── LÓGICA DEL BUSCADOR DE PACIENTES ────────────────────────────────────────
   setTimeout(()=>{
@@ -3786,9 +3786,9 @@ async function renderInformes(wrap){
     inp.onfocus=()=>{
       if(!inp.value.trim()) renderDrop(pacientesUnicos);
     };
-    document.addEventListener('click',(e)=>{
-      if(!inp.contains(e.target)&&!drop.contains(e.target)) drop.style.display='none';
-    },{once:false});
+    inp.addEventListener('click',(e)=>e.stopPropagation());
+    drop.addEventListener('click',(e)=>e.stopPropagation());
+    document.addEventListener('click',()=>drop.style.display='none');
 
     if(btnLimpiar){
       btnLimpiar.onclick=()=>{
