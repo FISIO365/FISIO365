@@ -108,11 +108,22 @@ export default async function handler(req) {
     const { pacienteId, pacienteNombre, fisioNombre, tipo, contenido, fecha } = body;
     const INFORMES_TABLE = 'tblq3cGGKnkRFKEu8';
     try {
+      // Si no hay pacienteId, buscar por nombre
+      let finalPacienteId = pacienteId || '';
+      if (!finalPacienteId && pacienteNombre) {
+        const searchUrl = `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=PIN`;
+        const searchRes = await fetch(searchUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        const searchData = await searchRes.json();
+        const found = (searchData.records || []).find(r =>
+          (r.fields['FULL NAME'] || '').trim().toLowerCase() === pacienteNombre.trim().toLowerCase()
+        );
+        if (found) finalPacienteId = found.id;
+      }
       await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ records: [{ fields: {
-          PacienteID: pacienteId || '',
+          PacienteID: finalPacienteId,
           PacienteNombre: pacienteNombre || '',
           FisioNombre: fisioNombre || '',
           Fecha: fecha || new Date().toLocaleDateString('es-ES'),
@@ -120,7 +131,7 @@ export default async function handler(req) {
           Contenido: contenido || ''
         }}]})
       });
-      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true, pacienteId: finalPacienteId }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
