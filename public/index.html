@@ -169,6 +169,12 @@ textarea:focus { border-color: var(--black); }
 .empty-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
 .empty-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
 @keyframes spin { to { transform: rotate(360deg); } }
+@media print {
+  body > *:not(#infModalPrint) { display: none !important; }
+  #infModalPrint { position: static !important; overflow: visible !important; }
+  #infModalPrint > div:first-child { display: none !important; }
+  #infModalPrint > div:last-child { overflow: visible !important; padding: 0 !important; }
+}
 </style>
 </head>
 <body>
@@ -563,6 +569,7 @@ function imprimirInforme(i){
   // Crear modal dentro de la app
   const overlay=document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;overflow:hidden';
+  overlay.id='infModalPrint';
   
   // Header con botones
   const header=document.createElement('div');
