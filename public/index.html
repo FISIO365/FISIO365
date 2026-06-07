@@ -565,38 +565,24 @@ function toggleInforme(i){const el=document.getElementById(`infCont${i}`);el.cla
 function imprimirInforme(i){
   const inf=window._informesPac?.[i];if(!inf)return;
   const tipoLabel={rodilla:'Rodilla',hombro:'Hombro',cervical:'Cervical',codo:'Codo y antebrazo',muneca:'Muñeca y mano',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',hernia:'Columna lumbar',libre:'Valoración libre'};
-  
-  // Crear modal dentro de la app
-  const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;overflow:hidden';
-  overlay.id='infModalPrint';
-  
-  // Header con botones
-  const header=document.createElement('div');
-  header.style.cssText='background:#000;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0';
-  header.innerHTML=`
-    <div style="color:#f5f2ee;font-size:14px;font-weight:600">${tipoLabel[inf.tipo]||inf.tipo}</div>
-    <div style="display:flex;gap:10px">
-      <button onclick="window.print()" style="background:#ada3da;color:white;border:none;padding:8px 14px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Imprimir / PDF</button>
-      <button id="cerrarInfModal" style="background:none;border:1.5px solid rgba(245,242,238,0.4);color:#f5f2ee;padding:8px 14px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Cerrar</button>
-    </div>`;
-  
-  // Contenido
-  const body=document.createElement('div');
-  body.style.cssText='flex:1;overflow-y:auto;padding:24px 20px;max-width:700px;margin:0 auto;width:100%';
-  body.innerHTML=`
-    <h2 style="font-size:18px;margin-bottom:4px;color:#1a1a1a">Informe Fisioterapéutico — ${tipoLabel[inf.tipo]||inf.tipo}</h2>
-    <p style="font-size:12px;color:#666;margin-bottom:20px">Fecha: ${inf.fecha} · Fisioterapeuta: ${inf.fisioNombre} · Paciente: ${patient.nombre}</p>
-    <hr style="border:none;border-top:1px solid #eee;margin:0 0 20px">
-    <pre style="font-family:'Poppins',sans-serif;white-space:pre-wrap;font-size:13px;line-height:1.9;color:#1a1a1a">${inf.contenido}</pre>
-    <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
-    <p style="font-size:11px;color:#aaa;text-align:center">FISIO365 · Gran de Sant Andreu 163, Barcelona</p>`;
-  
-  overlay.appendChild(header);
-  overlay.appendChild(body);
-  document.body.appendChild(overlay);
-  
-  document.getElementById('cerrarInfModal').onclick=()=>overlay.remove();
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe FISIO365</title>
+  <style>
+    body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#1a1a1a;}
+    h1{font-size:20px;margin-bottom:4px;}
+    .sub{font-size:12px;color:#666;margin-bottom:24px;}
+    hr{border:none;border-top:1px solid #eee;margin:20px 0;}
+    pre{font-family:Arial,sans-serif;white-space:pre-wrap;font-size:14px;line-height:1.9;}
+    .footer{font-size:11px;color:#aaa;text-align:center;}
+  </style></head><body>
+  <h1>Informe Fisioterapéutico — ${tipoLabel[inf.tipo]||inf.tipo}</h1>
+  <div class="sub">Fecha: ${inf.fecha} &middot; Fisioterapeuta: ${inf.fisioNombre} &middot; Paciente: ${patient.nombre}</div>
+  <hr>
+  <pre>${inf.contenido}</pre>
+  <hr>
+  <div class="footer">FISIO365 &middot; Gran de Sant Andreu 163, Barcelona</div>
+  </body></html>`);
+  win.document.close();
 }
 
 // VAS
