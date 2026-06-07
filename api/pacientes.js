@@ -71,12 +71,33 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── BORRAR INFORME ───────────────────────────────────────────────────────
+  // ── BORRAR INFORME (panel fisio) ────────────────────────────────────────
   if (action === 'borrar-informe' && req.method === 'POST') {
     const { id } = body;
     if (!id) return new Response(JSON.stringify({ ok: false, error: 'Falta id' }), { status: 400, headers: corsHeaders });
     try {
       await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+  }
+
+  // ── BORRAR INFORME DEL PACIENTE (tabla INFORMES) ─────────────────────────
+  if (action === 'borrar-informe-paciente' && req.method === 'POST') {
+    const { pacienteId, fecha } = body;
+    const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
+    try {
+      // Buscar el informe por PacienteID y Fecha
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?pageSize=50`;
+      const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+      const data = await r.json();
+      const record = (data.records || []).find(rec =>
+        rec.fields['PacienteID'] === pacienteId && rec.fields['Fecha'] === fecha
+      );
+      if (record) {
+        await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}/${record.id}`, {
+          method: 'DELETE', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+        });
+      }
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }

@@ -3583,12 +3583,15 @@ function _addFooter(doc,W,ml,mr,py,fisioNom,colNum,fecha,pageNum,pageCount){
 async function borrarInforme(id){
   if(!confirm('¿Eliminar este informe? No se puede deshacer.')) return;
   try{
-    await fetch('/api/pacientes?action=borrar-informe',{
+    const r=await fetch('/api/pacientes?action=borrar-informe',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({pwd:apiPwd,id:id})
     });
-  }catch(e){}
+    const d=await r.json();
+    if(d.ok){toast('Informe eliminado',true);}
+    else{toast('Error al eliminar: '+(d.error||''),false);}
+  }catch(e){toast('Error: '+e.message,false);}
   showSection('inf');
 }
 
@@ -3710,8 +3713,30 @@ async function renderInformes(wrap){
         abrirSelectorPacienteInforme(inf, savedKey, miSave);
       });
       menuDrop.appendChild(miSave);
-      const miDel=mkMenuItem('Borrar','#b91c1c',()=>borrarInforme(inf.id));miDel.style.borderBottom='none';
-      menuDrop.appendChild(miDel);
+      const miDel1=mkMenuItem('Borrar solo del panel del fisio','#b91c1c',async()=>{
+        if(!confirm('¿Eliminar este informe del panel? El paciente seguirá teniéndolo en su app.')) return;
+        try{
+          const r=await fetch('/api/pacientes?action=borrar-informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:inf.id})});
+          const d=await r.json();
+          if(d.ok){toast('Informe eliminado del panel ✓',true);showSection('inf');}
+          else toast('Error: '+(d.error||''),false);
+        }catch(e){toast('Error: '+e.message,false);}
+      });
+      const miDel2=mkMenuItem('Borrar del panel y del perfil del paciente','#b91c1c',async()=>{
+        if(!confirm('¿Eliminar este informe del panel Y de la app del paciente? No se puede deshacer.')) return;
+        try{
+          // Borrar de ANAMNESIS (panel)
+          const r1=await fetch('/api/pacientes?action=borrar-informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:inf.id})});
+          // Borrar de INFORMES (app paciente) si tiene pacienteId
+          if(inf.pacienteId){
+            await fetch('/api/pacientes?action=borrar-informe-paciente',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:inf.pacienteId,fecha:inf.fecha})});
+          }
+          const d1=await r1.json();
+          if(d1.ok){toast('Informe eliminado del panel y del paciente ✓',true);showSection('inf');}
+          else toast('Error: '+(d1.error||''),false);
+        }catch(e){toast('Error: '+e.message,false);}
+      });miDel2.style.borderBottom='none';
+      menuDrop.appendChild(miDel1);menuDrop.appendChild(miDel2);
       const menuWrap=ce('div','');menuWrap.style.cssText='position:relative;';
       bMenu.onclick=(e)=>{e.stopPropagation();const open=menuDrop.style.display==='block';document.querySelectorAll('.inf-menu-drop').forEach(d=>d.style.display='none');menuDrop.style.display=open?'none':'block';};
       menuDrop.className='inf-menu-drop';
