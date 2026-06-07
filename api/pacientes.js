@@ -119,7 +119,7 @@ export default async function handler(req) {
         );
         if (found) finalPacienteId = found.id;
       }
-      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}`, {
+      const atRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ records: [{ fields: {
@@ -131,7 +131,11 @@ export default async function handler(req) {
           Contenido: contenido || ''
         }}]})
       });
-      return new Response(JSON.stringify({ ok: true, pacienteId: finalPacienteId }), { headers: corsHeaders });
+      const atData = await atRes.json();
+      if (atData.error) {
+        return new Response(JSON.stringify({ ok: false, error: atData.error.message || JSON.stringify(atData.error), atData }), { headers: corsHeaders });
+      }
+      return new Response(JSON.stringify({ ok: true, pacienteId: finalPacienteId, recordId: atData.records?.[0]?.id }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
