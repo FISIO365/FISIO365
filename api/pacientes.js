@@ -163,12 +163,17 @@ export default async function handler(req) {
     const pacienteId = url.searchParams.get('pacienteId') || '';
     if (!pacienteId) return new Response(JSON.stringify({ ok: false, error: 'Falta pacienteId' }), { status: 400, headers: corsHeaders });
     try {
-      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=Diario`, {
+      // Traer todos los campos del registro para depurar nombre del campo
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`, {
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
       });
       const data = await r.json();
-      const diario = data.fields?.['Diario'] || '';
-      return new Response(JSON.stringify({ ok: true, diario }), { headers: corsHeaders });
+      const fields = data.fields || {};
+      // Buscar campo diario con varios nombres posibles
+      const diario = fields['Diario'] || fields['diario'] || fields['DIARIO'] || fields['Diary'] || '';
+      // Devolver también los nombres de campos disponibles para depurar
+      const fieldNames = Object.keys(fields);
+      return new Response(JSON.stringify({ ok: true, diario, fieldNames }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
