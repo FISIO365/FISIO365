@@ -556,6 +556,59 @@ function showSection(sec){
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
+function abrirSelectorPacienteInforme(inf, savedKey, miSave){
+  const overlay=ce('div','');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  overlay.dataset.overlay='1';
+  const card=ce('div','card');
+  card.style.cssText='width:100%;max-width:500px;border-radius:16px 16px 0 0;padding:20px;max-height:80vh;overflow-y:auto;background:var(--cream)';
+  card.innerHTML=`<div style="font-size:15px;font-weight:700;margin-bottom:4px">Selecciona el paciente</div>
+    <div style="font-size:12px;color:#888;margin-bottom:14px">¿A quién va dirigido este informe?</div>
+    <input id="pickerSearch" placeholder="Buscar paciente..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;margin-bottom:12px;outline:none;background:white;box-sizing:border-box">
+    <div id="pickerList" style="display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow-y:auto"></div>
+    <button id="pickerCancel" style="width:100%;margin-top:14px;padding:11px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--font);font-size:13px;cursor:pointer">Cancelar</button>`;
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  card.querySelector('#pickerCancel').onclick=()=>overlay.remove();
+  overlay.onclick=(e)=>{if(e.target===overlay)overlay.remove();};
+
+  const renderList=(query)=>{
+    const list=card.querySelector('#pickerList');
+    const filtered=(pacs||[]).filter(p=>!query||p.nombre.toLowerCase().includes(query.toLowerCase()));
+    list.innerHTML='';
+    filtered.slice(0,30).forEach(p=>{
+      const row=ce('div','');
+      row.style.cssText='padding:10px 12px;background:white;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;font-size:14px;font-weight:500';
+      row.textContent=p.nombre;
+      row.onclick=()=>{
+        overlay.remove();
+        seleccionarPacienteInforme(p.id,p.nombre,savedKey,inf.fisioNombre||'',inf.protocolo||'hernia',inf.informe||'',inf.fecha||'');
+      };
+      list.appendChild(row);
+    });
+  };
+  card.querySelector('#pickerSearch').oninput=(e)=>renderList(e.target.value);
+  renderList('');
+}
+
+async function seleccionarPacienteInforme(pacId,pacNombre,savedKey,fisioNombre,tipo,contenido,fecha){
+  toast('Guardando...',true);
+  try{
+    const rs=await fetch('/api/pacientes?action=guardar-informe-panel',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pwd:apiPwd,pacienteId:pacId,pacienteNombre:pacNombre,fisioNombre:fisioNombre,tipo:tipo,contenido:contenido,fecha:fecha||new Date().toLocaleDateString('es-ES')})
+    });
+    const ds=await rs.json();
+    if(ds.ok){
+      localStorage.setItem(savedKey,'1');
+      toast('Guardado en la app de '+pacNombre+' ✓',true);
+    }else{
+      toast('Error: '+(ds.error||'desconocido'),false);
+    }
+  }catch(e){toast('Error: '+e.message,false);}
+}
+
 function toast(msg,ok=true){
   const t=$('toast'); t.textContent=msg;
   t.className=`toast ${ok?'ok':'err'}`; t.style.display='block';
@@ -3652,15 +3705,9 @@ async function renderInformes(wrap){
       menuDrop.appendChild(mkMenuItem('Descargar PDF','var(--lila)',()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'')));
       const saveLabel=alreadySaved?'✓ Guardado en app paciente':'Guardar en app paciente';
       const saveColor=alreadySaved?'#166534':'var(--black)';
-      const miSave=mkMenuItem(saveLabel,saveColor,async()=>{
-        miSave.textContent='Guardando...';
-        try{
-          const pacId=inf.pacienteId||'';
-          const rs=await fetch('/api/pacientes?action=guardar-informe-panel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:pacId,pacienteNombre:inf.pacienteNombre||'',fisioNombre:inf.fisioNombre||'',tipo:inf.protocolo||'hernia',contenido:inf.informe||'',fecha:inf.fecha||new Date().toLocaleDateString('es-ES')})});
-          const ds=await rs.json();
-          if(ds.ok){localStorage.setItem(savedKey,'1');miSave.textContent='✓ Guardado en app paciente';miSave.style.color='#166534';toast('Guardado en la app del paciente ✓',true);}
-          else{miSave.textContent='Error al guardar';}
-        }catch(e){miSave.textContent='Error al guardar';}
+      const miSave=mkMenuItem(saveLabel,saveColor,()=>{
+        menuDrop.style.display='none';
+        abrirSelectorPacienteInforme(inf, savedKey, miSave);
       });
       menuDrop.appendChild(miSave);
       const miDel=mkMenuItem('Borrar','#b91c1c',()=>borrarInforme(inf.id));miDel.style.borderBottom='none';
