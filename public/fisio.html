@@ -4633,8 +4633,9 @@ function renderFormacion(wrap, ruta){
     {t:'Opción 1 · Sesión única',sub:'El paciente no necesita más sesiones',
      cards:[
       {ti:'La situación',icon:'✅',body:`El paciente ha respondido bien y no necesita más sesiones por ahora. <strong>Objetivo: que se vaya con la puerta abierta</strong> y, si es posible, con una sesión de mantenimiento agendada.`},
-      {ti:'Ideas de qué decir',icon:'💬',body:`«Me alegro de que estés mejor. ¿Te gustaría agendar una sesión de mantenimiento de aquí a dos semanas o un mes, por si acaso?»<br><br>Ofrece la opción sin presionar.`},
-      {ti:'Observa antes de hablar',icon:'👁',body:`Fíjate cómo sale el paciente. ¿Contento? ¿Aliviado? ¿Callado? ¿Frustrado? Eso te dice cómo enfocar la conversación.`}
+      {ti:'Observa antes de hablar',icon:'👁',body:`Fíjate cómo sale el paciente. ¿Contento? ¿Aliviado? ¿Callado? ¿Frustrado? Eso te dice cómo enfocar la conversación.`},
+      {ti:'El orden',icon:'🔢',body:`<b>1.</b> Cobro de la sesión<br><b>2.</b> Ofrecer sesión de mantenimiento preventiva<br><b>3.</b> Si acepta, agendarla`},
+      {ti:'Ideas de qué decir',icon:'💬',body:`«Son X€. ¿Tarjeta o efectivo?»<br><br>Una vez cobrado: «Me alegro de que estés mejor. ¿Te gustaría agendar una sesión de mantenimiento de aquí a un mes, por si acaso?»<br><br>Ofrece la opción sin presionar.`}
      ],
      qs:[
       {q:'Un paciente que solo necesitó una sesión, ¿qué le proponemos?',opts:['Nada — ya volverá si nos necesita','Una sesión de mantenimiento preventiva','Un pack por si acaso'],ok:1,fb:['No proponerlo es perder una oportunidad de cuidar al paciente.','¡Correcto! El mantenimiento preventivo es el mejor servicio que podemos ofrecer.','Un pack no está justificado si no lo necesita.']}
@@ -4642,8 +4643,9 @@ function renderFormacion(wrap, ruta){
     },
     {t:'Opción 2 · Menos de 5 sesiones',sub:'Tratamiento corto',
      cards:[
-      {ti:'La situación',icon:'📅',body:`El fisio ha indicado un número concreto de sesiones. <strong>Objetivo: agendar todas ahora</strong> y, si es posible, dejarlas pagadas.`},
-      {ti:'Ideas de qué decir',icon:'💬',body:`«El fisio me dice que necesitas dos sesiones más. Te las dejo agendadas ahora, ¿te viene bien?»<br>«Si quieres puedes dejarlas pagadas ya. Y si no puedes en este momento, también puedes dejar algo a cuenta.»`}
+      {ti:'La situación',icon:'📅',body:`El fisio ha indicado un número concreto de sesiones. <strong>Objetivo: cobrar la sesión de hoy, agendar las siguientes y ofrecer pago anticipado.</strong>`},
+      {ti:'El orden',icon:'🔢',body:`<b>1.</b> Cobro de la sesión de hoy<br><b>2.</b> Agendar todas las sesiones indicadas por el fisio<br><b>3.</b> Ofrecer pago anticipado`},
+      {ti:'Ideas de qué decir',icon:'💬',body:`«Son X€. ¿Tarjeta o efectivo?»<br><br>Una vez cobrado: «El fisio me dice que necesitas dos sesiones más. Te las dejo agendadas ahora, ¿te viene bien?»<br><br>«Si quieres puedes dejarlas pagadas ya para no tener que preocuparte.»`}
      ],
      qs:[
       {q:'¿Cuál es el objetivo cuando el fisio indica pocas sesiones?',opts:['Decírselo y que él llame cuando quiera','Agendar todas las sesiones ahora y ofrecer pago anticipado','Solo agendar la siguiente'],ok:1,fb:['Si no agendamos ahora, muchos pacientes no vuelven.','¡Correcto! Agendar todo de una y facilitar el pago.','Agendar solo la siguiente deja el resto en el aire.']}
@@ -4651,8 +4653,9 @@ function renderFormacion(wrap, ruta){
     },
     {t:'Opción 3 · Pack de sesiones',sub:'El paciente necesita 5 o más sesiones',
      cards:[
-      {ti:'La situación',icon:'📦',body:`El paciente necesita tratamiento continuado. <strong>Objetivo: que contrate el pack</strong>, deje todas las citas agendadas y las pague.`},
-      {ti:'Ideas de qué decir',icon:'💬',body:`«La recomendación son 5 sesiones así que la mejor opción es el pack de 5 — te ahorras dinero y te reservamos todos los huecos. ¿De acuerdo? ¿Tarjeta o efectivo?»`},
+      {ti:'La situación',icon:'📦',body:`El paciente necesita tratamiento continuado. <strong>Objetivo: que contrate el pack, lo pague y deje todas las citas agendadas.</strong>`},
+      {ti:'El orden',icon:'🔢',body:`<b>1.</b> Presentar el pack como la mejor opción<br><b>2.</b> Cobro del pack<br><b>3.</b> Agendar todas las sesiones`},
+      {ti:'Ideas de qué decir',icon:'💬',body:`«La recomendación son 5 sesiones. La mejor opción es el pack de 5 — te ahorras dinero y te reservamos todos los huecos desde ya. ¿Te parece bien? ¿Tarjeta o efectivo?»<br><br>Una vez cobrado, agendáis juntos todas las sesiones.`},
       {ti:'Cambio de fisio',icon:'⚠️',body:`«Por cierto, alguna sesión puede que la haga con otro fisioterapeuta de nuestro equipo. Te avisamos siempre con antelación, y si prefieres buscar otro hueco, lo miramos.»<br><br>Nunca un cambio de fisio sin aviso previo.`},
       {ti:'Cancelaciones en packs',icon:'📋',body:`Para packs ya pagados, igual que siempre: pedimos que avisen con <strong>al menos 24h de antelación</strong>. Lo firmaron en el consentimiento. Si preguntan, con naturalidad: «Solo pedimos que avises con un día de antelación.»`}
      ],
@@ -4662,8 +4665,9 @@ function renderFormacion(wrap, ruta){
     },
     {t:'Opción 4 · Mantenimiento',sub:'Paciente que sigue viniendo periódicamente',
      cards:[
-      {ti:'La situación',icon:'🔄',body:`El paciente está bien y quiere seguir viniendo periódicamente. <strong>Objetivo: agendar la próxima sesión y ofrecerle dejarla pagada.</strong>`},
-      {ti:'Ideas de qué decir',icon:'💬',body:`«Agendamos ya la próxima para que no se te olvide. ¿Un mes te parece bien?»<br>«Si quieres puedes dejarla pagada ahora para no tener que preocuparte.»`},
+      {ti:'La situación',icon:'🔄',body:`El paciente está bien y quiere seguir viniendo periódicamente. <strong>Objetivo: cobrar, agendar la próxima y ofrecerle dejarla pagada.</strong>`},
+      {ti:'El orden',icon:'🔢',body:`<b>1.</b> Cobro de la sesión de hoy<br><b>2.</b> Agendar la próxima sesión<br><b>3.</b> Ofrecer dejarla pagada`},
+      {ti:'Ideas de qué decir',icon:'💬',body:`«Son X€. ¿Tarjeta o efectivo?»<br><br>Una vez cobrado: «Agendamos ya la próxima para que no se te olvide. ¿Un mes te parece bien?»<br><br>«Si quieres puedes dejarla pagada ahora para no tener que preocuparte.»`},
       {ti:'El valor del paciente de mantenimiento',icon:'💡',body:`Los pacientes de mantenimiento son los más fieles y los mejores embajadores de la clínica. Cuidarlos bien es una prioridad.`}
      ],
      qs:[
@@ -4683,9 +4687,9 @@ function renderFormacion(wrap, ruta){
     {t:'15 · Cierre administrativo',sub:'Cobro y despedida',
      cards:[
       {img:WIKI_IMGS[19],ti:'15 · Cierre administrativo'},
-      {ti:'El cobro',icon:'💳',body:`Natural y sin rodeos: «Son X€. ¿Tarjeta o efectivo?»<br><br>Es simplemente la parte final del proceso — sin incomodidad.`},
+      {ti:'El orden siempre es el mismo',icon:'🔢',body:`Independientemente de si es sesión única, pack o mantenimiento, el orden en recepción es siempre:<br><br><b>1.</b> Presentar la opción más adecuada (pack, sesiones sueltas, mantenimiento)<br><b>2.</b> Cobro<br><b>3.</b> Agendar las sesiones<br><b>4.</b> Despedida`},
       {ti:'La factura',icon:'🧾',body:`Ya tenemos los datos fiscales del paciente. Solo necesitamos confirmación si quiere la factura <strong>a nombre de otra persona o empresa</strong>.<br><br>No trabajamos con mutuas ni convenios.`},
-      {ti:'La despedida',icon:'👋',body:`Cálida y cercana. «Ha sido un placer conocerte. Hasta la próxima.»<br><br>El paciente debe irse con la sensación de que ha tomado la decisión correcta.`}
+      {ti:'La despedida',icon:'👋',body:`Cálida y cercana: «Ha sido un placer conocerte. Hasta la próxima.»<br><br>El paciente debe irse con la sensación de que ha tomado la decisión correcta.`}
      ],
      qs:[
       {q:'¿Cómo se comunica el precio al paciente?',opts:['Con rodeos y mucha explicación','Natural y directo: «Son X€. ¿Tarjeta o efectivo?»','Solo si el paciente pregunta'],ok:1,fb:['Los rodeos generan incomodidad — la naturalidad la elimina.','¡Correcto! Natural, sin rodeos y sin disculpas.','El precio siempre se comunica — nunca esperamos a que pregunte.']}
