@@ -102,6 +102,8 @@ input[type=number]{text-align:center}
 .pav{width:36px;height:36px;border-radius:50%;background:var(--lila-light);color:var(--lila);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
 .pnom{font-size:14px;font-weight:500}.pem{font-size:12px;color:var(--muted)}
 .ppin{font-size:11px;color:var(--lila);font-weight:600;margin-left:auto;background:var(--lila-light);padding:3px 8px;border-radius:99px;white-space:nowrap}
+.fp-ficha-btn{background:var(--lila);color:white;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font);flex-shrink:0}
+.fp-ficha-btn:hover{opacity:.85}
 .si{position:relative;margin-bottom:12px}.si input{padding-left:36px}
 .si::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px}
 
@@ -623,14 +625,7 @@ function mkPacSearch(inputId, listId, selBoxId, onSelect){
     fl.forEach(p=>{
       const ini=p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
       const div=ce('div','pi'); div.style.marginBottom='6px';
-      div.innerHTML=`<div class="pav">${ini}</div><div><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div><div class="ppin">PIN: ${p.pin||'—'}</div>`;
-      const fichaBtn=ce('button','');
-      fichaBtn.title='Ver ficha del paciente';
-      fichaBtn.style.cssText='background:var(--lila);color:white;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font);flex-shrink:0';
-      fichaBtn.textContent='Ver ficha';
-      fichaBtn.onclick=(e)=>{e.stopPropagation();abrirFichaPaciente(p.id,p.nombre);};
-      div.style.display='flex'; div.style.alignItems='center'; div.style.gap='8px';
-      div.appendChild(fichaBtn);
+      div.innerHTML=`<div class="pav">${ini}</div><div style="flex:1"><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div><div class="ppin">PIN: ${p.pin||'—'}</div><button class="fp-ficha-btn" onclick="event.stopPropagation();abrirFichaPaciente('${p.id.replace(/'/g,"\\'")}','${p.nombre.replace(/'/g,"\\'")}')">Ver ficha</button>`;
       div.onclick=()=>{
         $(inputId).value=p.nombre; el.innerHTML='';
         if(selBoxId) {$(selBoxId).textContent='✓ '+p.nombre; $(selBoxId).style.display='block';}
@@ -3633,6 +3628,8 @@ function abrirFichaPaciente(pacId, pacNombre){
       .fp-tab{flex:1;padding:9px 4px;border:none;border-bottom:3px solid transparent;background:none;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s}
       .fp-tab-active{color:var(--lila);border-bottom-color:var(--lila)!important}
       .fp-tab:hover{color:var(--black)}
+      .fp-ficha-btn{background:var(--lila);color:white;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font);flex-shrink:0}
+      .fp-ficha-btn:hover{opacity:.85}
       .fp-inf-card{background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px}
       .fp-inf-meta{font-size:11px;color:var(--muted);margin-bottom:4px}
       .fp-inf-tipo{font-size:14px;font-weight:700;margin-bottom:10px}
