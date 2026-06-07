@@ -2,7 +2,7 @@ const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const BASE_ID = 'appsrGnHpFt8sVD5A';
 const PLAN_TABLE = 'tblvgE0a4gsrj4Vhp';
 const FISIOS_TABLE = 'tbl2mLUrnaKCFTs6g';
-const INFORMES_TABLE = 'tblq3cGGKnkRFKEu8';
+const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
