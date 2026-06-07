@@ -348,18 +348,14 @@ input[type=number]{text-align:center}
           Anamnesis
         </div>
 
+        <div class="sb-item" id="sb-pac" onclick="showSection('pac')">
+          Pacientes
+        </div>
         <div class="sb-item" id="sb-school" onclick="showSection('school')" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px">
           School
         </div>
       </div>
       <div class="sb-footer" id="sb-user">Panel fisioterapeuta</div>
-      <div style="padding:12px 14px;border-top:1px solid rgba(255,255,255,0.08)">
-        <div style="font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Pacientes</div>
-        <input id="sbPacSearch" type="text" placeholder="Buscar paciente..." autocomplete="off"
-          style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:#f5f2ee;font-family:var(--font);font-size:12px;outline:none"
-          oninput="sbPacFilter(this.value)">
-        <div id="sbPacList" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto"></div>
-      </div>
     </div>
 
     <!-- MAIN -->
@@ -398,6 +394,7 @@ const ce = (t,c) => { const e=document.createElement(t); if(c)e.className=c; ret
 const TOPBAR = {
   prog: ['Programas','Asigna ejercicios a tus pacientes'],
   anam: ['Anamnesis clínica','Valoración y protocolos clínicos'],
+  pac:  ['Pacientes','Busca y consulta la ficha de cada paciente'],
   inf:  ['Informes','Historial de informes generados'],
   school: ['School','Formación y protocolos del equipo']
 };
@@ -500,6 +497,7 @@ function aplicarRole(){
   const mapaIds = {
     'programas':      'sb-prog',
     'anamnesis':      'sb-anam',
+    'pacientes':      'sb-pac',
     'informes':       'sb-inf',
     'school':         'sb-school',
     'checklist':      'sb-checklist',
@@ -548,7 +546,7 @@ async function loadBiblio(){
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function showSection(sec){
-  ['prog','anam','school'].forEach(s=>{
+  ['prog','anam','pac','school'].forEach(s=>{
     const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
   });
   const [t,s] = TOPBAR[sec];
@@ -558,6 +556,7 @@ function showSection(sec){
   wrap.innerHTML='';
   if(sec==='prog') renderProg(wrap);
   else if(sec==='anam') renderAnamHub(wrap);
+  else if(sec==='pac') renderPac(wrap);
   else if(sec==='school') renderWiki(wrap);
 }
 
@@ -643,30 +642,43 @@ function mkPacSearch(inputId, listId, selBoxId, onSelect){
   };
 }
 
-// ── SIDEBAR PATIENT SEARCH ────────────────────────────────────────────────────
-function sbPacFilter(q){
-  const list=document.getElementById('sbPacList');
-  if(!list) return;
-  list.innerHTML='';
-  if(!q||q.length<2) return;
-  const fl=(pacs||[]).filter(p=>p.nombre.toLowerCase().includes(q.toLowerCase())||(p.email||'').toLowerCase().includes(q.toLowerCase())).slice(0,8);
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION: PACIENTES
+// ─────────────────────────────────────────────────────────────────────────────
+function renderPac(wrap){
+  const card=ce('div','card');
+  card.innerHTML=`<div class="ct">Buscar paciente</div>
+    <div class="si"><input type="text" id="pacBuscar" placeholder="Escribe nombre o email..." autocomplete="off"></div>
+    <div id="pacResultados" style="margin-top:8px"></div>`;
+  wrap.appendChild(card);
+
+  const input=document.getElementById('pacBuscar');
+  const lista=document.getElementById('pacResultados');
+
+  // Mostrar todos al entrar
+  renderPacLista('', lista);
+
+  input.oninput=()=>renderPacLista(input.value, lista);
+  input.focus();
+}
+
+function renderPacLista(q, lista){
+  lista.innerHTML='';
+  const fl=q.length>=1
+    ? (pacs||[]).filter(p=>p.nombre.toLowerCase().includes(q.toLowerCase())||(p.email||'').toLowerCase().includes(q.toLowerCase()))
+    : (pacs||[]);
   if(!fl.length){
-    list.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,0.3);padding:4px 6px">Sin resultados</div>';
+    lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Sin resultados</div>';
     return;
   }
   fl.forEach(p=>{
-    const row=document.createElement('div');
-    row.style.cssText='padding:8px 10px;background:rgba(255,255,255,0.07);border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;color:#f5f2ee;display:flex;align-items:center;gap:8px;transition:background .15s';
-    row.onmouseenter=()=>row.style.background='rgba(173,163,218,0.25)';
-    row.onmouseleave=()=>row.style.background='rgba(255,255,255,0.07)';
     const ini=p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    row.innerHTML=`<div style="width:26px;height:26px;border-radius:50%;background:var(--lila);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${ini}</div><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nombre}</span>`;
-    row.onclick=()=>{
-      document.getElementById('sbPacSearch').value='';
-      list.innerHTML='';
-      abrirFichaPaciente(p.id, p.nombre);
-    };
-    list.appendChild(row);
+    const row=ce('div','pi');
+    row.innerHTML=`<div class="pav">${ini}</div>
+      <div style="flex:1;min-width:0"><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div>
+      <div class="ppin">PIN: ${p.pin||'—'}</div>`;
+    row.onclick=()=>abrirFichaPaciente(p.id, p.nombre);
+    lista.appendChild(row);
   });
 }
 
