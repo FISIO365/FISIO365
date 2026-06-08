@@ -362,7 +362,7 @@ input[type=number]{text-align:center}
           School
         </div>
       </div>
-      <a href="/tutorial-fisio365" target="_blank" style="display:flex;align-items:center;padding:11px 20px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:rgba(173,163,218,0.5);text-decoration:none;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;transition:color .15s;" onmouseover="this.style.color='#ada3da'" onmouseout="this.style.color='rgba(173,163,218,0.5)'">Guía del panel ↗</a>
+      <div onclick="showGuia()" style="display:flex;align-items:center;padding:11px 20px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:rgba(173,163,218,0.5);cursor:pointer;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;transition:color .15s;" onmouseover="this.style.color='#ada3da'" onmouseout="this.style.color='rgba(173,163,218,0.5)'">Guía del panel</div>
       <div class="sb-footer" id="sb-user">Panel fisioterapeuta</div>
     </div>
 
@@ -5956,6 +5956,38 @@ function renderFormacion(wrap, ruta){
   renderMod();
 }
 
+
+function showGuia(){
+  const wrap=$('mainWrap');
+  wrap.innerHTML='';
+  // Header con volver
+  const hd=ce('div','');
+  hd.style.cssText='display:flex;align-items:center;gap:12px;margin-bottom:0;padding:0 0 14px 0';
+  const btn=ce('button','btn-back');
+  btn.textContent='← Volver';
+  btn.onclick=()=>showSection('school');
+  hd.appendChild(btn);
+  const t=ce('div','');
+  t.style.cssText='font-size:15px;font-weight:700';
+  t.textContent='Guía del panel';
+  hd.appendChild(t);
+  wrap.appendChild(hd);
+  // Iframe con el tutorial
+  const fr=document.createElement('iframe');
+  fr.src='/tutorial-fisio365';
+  fr.style.cssText='width:100%;border:none;border-radius:12px;height:calc(100vh - 120px);display:block';
+  fr.onload=()=>{fr.style.opacity='1';};
+  fr.style.opacity='0';
+  fr.style.transition='opacity .3s';
+  setTimeout(()=>fr.style.opacity='1',100);
+  wrap.appendChild(fr);
+  // Sidebar activo
+  ['prog','anam','pac','school'].forEach(s=>{
+    const el=$('sb-'+s);if(el)el.classList.remove('active');
+  });
+  $('topbar-t').textContent='Guía del panel';
+  $('topbar-s').textContent='';
+}
 // LIGHTBOX
 function verImg(url,label){
   $('lb-img').src=url;$('lb-label').textContent=label;
