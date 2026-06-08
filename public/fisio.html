@@ -4502,6 +4502,8 @@ async function marcarProgreso(seccion){
     const d = await r.json();
     if(d.ok){
       progresoFisio[seccion] = { estado: 'completado', fecha: new Date().toISOString().split('T')[0] };
+      // Borrar progreso guardado en localStorage al completar
+      try{ localStorage.removeItem('fisio365_school_'+seccion.replace('wiki_','')+'_'+(fisioActual?.id||'x')); }catch(e){}
       // Actualizar botón
       const btn = document.getElementById('wikiProgresoBtn');
       if(btn){
@@ -5671,7 +5673,29 @@ function renderFormacion(wrap, ruta){
 
     const MODS = ruta.id === 'airtable' ? MODS_AIRTABLE : ruta.id === 'ultima' ? MODS_ULTIMA : ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : MODS_BOMBA;
 
-  let curMod=0, scores=new Array(MODS.length).fill(null).map((_,i)=>({c:0,done:false,qs:new Array(MODS[i].qs.length).fill(null)}));
+  const lsKey = 'fisio365_school_' + ruta.id + '_' + (fisioActual?.id||'x');
+
+  // Cargar progreso guardado de localStorage (si no está ya completado en Airtable)
+  function loadScoresFromLS(){
+    try{
+      const saved = localStorage.getItem(lsKey);
+      if(!saved) return null;
+      return JSON.parse(saved); // {curMod, scores:[...]}
+    }catch(e){return null;}
+  }
+  function saveScoresToLS(){
+    try{ localStorage.setItem(lsKey, JSON.stringify({curMod, scores})); }catch(e){}
+  }
+  function clearScoresLS(){
+    try{ localStorage.removeItem(lsKey); }catch(e){}
+  }
+
+  const savedData = loadScoresFromLS();
+  let curMod = savedData ? (savedData.curMod||0) : 0;
+  let scores = savedData && savedData.scores
+    ? MODS.map((_,i)=> savedData.scores[i] || {c:0,done:false,qs:new Array(MODS[i].qs.length).fill(null)})
+    : new Array(MODS.length).fill(null).map((_,i)=>({c:0,done:false,qs:new Array(MODS[i].qs.length).fill(null)}));
+
   let ttEl=null;
   const seccionKey = 'wiki_' + ruta.id;
   const yaHecho = progresoFisio[seccionKey]?.estado === 'completado';
@@ -5727,7 +5751,7 @@ function renderFormacion(wrap, ruta){
     MODS.forEach((mod,i)=>{
       const b=ce('button','');const isDone=scores[i].done;
       b.style.cssText=`font-family:var(--font);font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid;cursor:pointer;transition:all .15s;${i===curMod?'background:var(--lila);color:white;border-color:var(--lila)':isDone?'background:var(--lila-light);color:var(--lila);border-color:var(--lila)':'background:white;color:var(--muted);border-color:rgba(0,0,0,0.12)'}`;
-      b.textContent=isDone?'✓ '+(i+1):''+(i+1);b.title=mod.t;b.onclick=()=>{curMod=i;renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};mn.appendChild(b);
+      b.textContent=isDone?'✓ '+(i+1):''+(i+1);b.title=mod.t;b.onclick=()=>{curMod=i;saveScoresToLS();renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};mn.appendChild(b);
     });
     wrap.appendChild(mn);
 
@@ -5767,6 +5791,8 @@ function renderFormacion(wrap, ruta){
       const allAnswered = savedQs.every(v=>v!==null);
       const corr=qState.filter(s=>s.correct).length;
       scores[curMod]={c:corr,done:allAnswered&&allCorrect,qs:savedQs};
+      // Guardar en localStorage para persistir entre sesiones
+      saveScoresToLS();
       renderNavPills(mn);
       // Actualizar o crear resumen
       if(allAnswered){
@@ -5856,7 +5882,7 @@ function renderFormacion(wrap, ruta){
     bprev.innerHTML='&#8592;';
     bprev.onmouseenter=()=>{bprev.style.color='var(--lila)';};
     bprev.onmouseleave=()=>{bprev.style.color='var(--muted)';};
-    bprev.onclick=()=>{curMod--;renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};
+    bprev.onclick=()=>{curMod--;saveScoresToLS();renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};
 
     const bctr=ce('div','');bctr.style.cssText='font-size:12px;color:var(--muted)';bctr.textContent=`Módulo ${curMod+1} de ${MODS.length}`;
 
@@ -5865,7 +5891,7 @@ function renderFormacion(wrap, ruta){
     bnext.innerHTML='&#8594;';
     bnext.onmouseenter=()=>{bnext.style.color='var(--lila)';};
     bnext.onmouseleave=()=>{bnext.style.color='var(--muted)';};
-    bnext.onclick=()=>{curMod++;renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};
+    bnext.onclick=()=>{curMod++;saveScoresToLS();renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};
 
     bnav.appendChild(bprev);bnav.appendChild(bctr);bnav.appendChild(bnext);wrap.appendChild(bnav);
 
