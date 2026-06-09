@@ -4269,53 +4269,93 @@ const WIKI_RUTAS = [
   }
 ];
 
-function renderWiki(wrap){
+function renderWiki(wrap, rutaForzada){
   wRutaActual = null;
   wrap.innerHTML = '';
   const outer = ce('div','wiki-outer');
 
-  // ── Determinar rol del fisio actual ────────────────────────────────────
-  const isRecepcion = fisioActual?.role === 'recepcion';
-  const isFisio = !isRecepcion;
+  const role = fisioActual?.role || 'fisio';
+  const isAdmin = role === 'admin';
 
-  // ── Calcular progreso global según rol ────────────────────────────────
-  function cursosParaRol(ruta){
-    if(ruta.pasos === 0) return false;
-    if(isRecepcion) return ruta.etiqueta === 'Todo el equipo' || ruta.etiqueta === 'Recepción';
-    return ruta.etiqueta === 'Todo el equipo' || ruta.etiqueta === 'Fisioterapeutas' || ruta.etiqueta === 'Recepción';
+  // ── Rutas por rol ──────────────────────────────────────────────────────
+  const RUTA_FISIO = ['manual','primera','ultima','bomba','bomba-experto','ondas-basico','ondas','medkey-basico','medkey','airtable'];
+  const RUTA_RECEPCION = ['airtable','manual','primera','ultima','bomba','ondas-basico','medkey-basico'];
+
+  function getRutaIds(r){ return r === 'recepcion' ? RUTA_RECEPCION : RUTA_FISIO; }
+
+  // Si admin no ha elegido ruta todavía, mostrar selector
+  if(isAdmin && !rutaForzada){
+    const hdr = ce('div','wiki-header');
+    hdr.style.cssText = 'text-align:left;width:100%;max-width:560px;margin-bottom:0';
+    hdr.innerHTML = `<h2 style="font-size:22px;font-weight:900;letter-spacing:-.4px;margin-bottom:4px">School</h2>
+      <p style="font-size:13px;color:var(--muted)">Elige la ruta que quieres seguir</p>`;
+    outer.appendChild(hdr);
+
+    const sel = ce('div','');
+    sel.style.cssText = 'width:100%;max-width:560px;display:flex;flex-direction:column;gap:12px;margin-top:20px';
+
+    [{r:'fisio',label:'Ruta Fisioterapeuta',desc:'Manual · Primera visita · Última sesión · Bomba · Ondas · Medkey · Airtable',emoji:'🩺',n:RUTA_FISIO.length},
+     {r:'recepcion',label:'Ruta Administración',desc:'Airtable · Manual · Primera visita · Última sesión · Aparatología básica',emoji:'💼',n:RUTA_RECEPCION.length}
+    ].forEach(({r,label,desc,emoji,n})=>{
+      const btn = ce('div','');
+      btn.style.cssText = 'background:white;border:1.5px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .15s';
+      btn.onmouseenter=()=>{btn.style.borderColor='var(--lila)';btn.style.background='var(--lila-light)'};
+      btn.onmouseleave=()=>{btn.style.borderColor='var(--border)';btn.style.background='white'};
+      btn.innerHTML=`
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:28px">${emoji}</div>
+          <div style="flex:1">
+            <div style="font-size:15px;font-weight:800;color:var(--black);margin-bottom:3px">${label}</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.5">${desc}</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:var(--lila);background:var(--lila-light);border-radius:99px;padding:4px 10px">${n} cursos</div>
+        </div>`;
+      btn.onclick=()=>renderWiki(wrap, r);
+      sel.appendChild(btn);
+    });
+    outer.appendChild(sel);
+    wrap.appendChild(outer);
+    return;
   }
-  const misRutas = WIKI_RUTAS.filter(cursosParaRol);
-  const completadas = misRutas.filter(r => progresoFisio['wiki_'+r.id]?.estado === 'completado').length;
-  const total = misRutas.length;
-  const pct = total > 0 ? Math.round((completadas/total)*100) : 0;
 
-  // ── Curso en progreso (localStorage) ─────────────────────────────────
+  const rutaRol = isAdmin ? rutaForzada : role;
+  const rutaIds = getRutaIds(rutaRol);
+  const rutaLabel = rutaRol === 'recepcion' ? 'Administración' : 'Fisioterapeuta';
+  const rutaEmoji = rutaRol === 'recepcion' ? '💼' : '🩺';
+
+  // Cursos en orden de la ruta
+  const misRutas = rutaIds.map(id=>WIKI_RUTAS.find(r=>r.id===id)).filter(Boolean);
+  const completadas = misRutas.filter(r=>progresoFisio['wiki_'+r.id]?.estado==='completado').length;
+  const total = misRutas.length;
+  const pct = total>0 ? Math.round((completadas/total)*100) : 0;
+
+  // Curso en progreso
   let cursoEnProgreso = null;
-  for(const ruta of WIKI_RUTAS){
-    if(ruta.pasos === 0) continue;
-    if(progresoFisio['wiki_'+ruta.id]?.estado === 'completado') continue;
-    const lsKey = 'fisio365_school_'+ruta.id+'_'+(fisioActual?.id||'x');
+  for(const ruta of misRutas){
+    if(progresoFisio['wiki_'+ruta.id]?.estado==='completado') continue;
+    const lsKey='fisio365_school_'+ruta.id+'_'+(fisioActual?.id||'x');
     try{
-      const saved = localStorage.getItem(lsKey);
+      const saved=localStorage.getItem(lsKey);
       if(saved){
-        const data = JSON.parse(saved);
-        const hasProgress = data.scores && data.scores.some(s=>s.qs&&s.qs.some(q=>q!==null));
-        if(hasProgress){ cursoEnProgreso = {ruta, data}; break; }
+        const data=JSON.parse(saved);
+        const hasProgress=data.scores&&data.scores.some(s=>s.qs&&s.qs.some(q=>q!==null));
+        if(hasProgress){cursoEnProgreso={ruta,data};break;}
       }
     }catch(e){}
   }
 
   // ── HEADER ─────────────────────────────────────────────────────────────
   const hdr = ce('div','wiki-header');
-  hdr.style.cssText = 'text-align:left;width:100%;max-width:560px;margin-bottom:0';
-  hdr.innerHTML = `<h2 style="font-size:22px;font-weight:900;letter-spacing:-.4px;margin-bottom:4px">School</h2>
+  hdr.style.cssText='text-align:left;width:100%;max-width:560px;margin-bottom:0';
+  const backBtn = isAdmin ? `<button onclick="renderWiki(document.getElementById('mainWrap'))" style="background:none;border:none;font-family:var(--font);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;padding:0;margin-bottom:8px;display:flex;align-items:center;gap:4px">← Cambiar ruta</button>` : '';
+  hdr.innerHTML=`${backBtn}<h2 style="font-size:22px;font-weight:900;letter-spacing:-.4px;margin-bottom:4px">${rutaEmoji} Ruta ${rutaLabel}</h2>
     <p style="font-size:13px;color:var(--muted)">Formación del equipo FISIO365</p>`;
   outer.appendChild(hdr);
 
-  // ── BARRA DE PROGRESO GLOBAL ───────────────────────────────────────────
-  const progWrap = ce('div','');
-  progWrap.style.cssText = 'width:100%;max-width:560px;background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin:14px 0 4px';
-  progWrap.innerHTML = `
+  // ── BARRA DE PROGRESO ─────────────────────────────────────────────────
+  const progWrap=ce('div','');
+  progWrap.style.cssText='width:100%;max-width:560px;background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin:14px 0 4px';
+  progWrap.innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="font-size:13px;font-weight:700;color:var(--black)">Tu progreso</div>
       <div style="font-size:13px;font-weight:800;color:var(--lila)">${completadas}<span style="font-weight:500;color:var(--muted);font-size:12px"> / ${total} cursos</span></div>
@@ -4323,108 +4363,78 @@ function renderWiki(wrap){
     <div style="height:8px;background:var(--lila-light);border-radius:99px;overflow:hidden">
       <div style="height:100%;width:${pct}%;background:var(--lila);border-radius:99px;transition:width .6s ease"></div>
     </div>
-    <div style="font-size:11px;color:var(--muted);margin-top:8px">${pct === 100 ? '🎉 ¡Todos los cursos completados!' : pct === 0 ? 'Empieza por el que más te interese' : `${pct}% completado`}</div>`;
+    <div style="font-size:11px;color:var(--muted);margin-top:8px">${pct===100?'🎉 ¡Ruta completada!':pct===0?'Empieza por el primer curso de tu ruta':`${pct}% completado`}</div>`;
   outer.appendChild(progWrap);
 
-  // ── CONTINÚA DONDE LO DEJASTE ─────────────────────────────────────────
+  // ── CONTINÚA DONDE LO DEJASTE ────────────────────────────────────────
   if(cursoEnProgreso){
-    const {ruta, data} = cursoEnProgreso;
-    const modIdx = data.curMod || 0;
-    const totalMods = ruta.pasos;
-    const respondidas = data.scores ? data.scores.reduce((acc,s)=>acc+(s.qs?s.qs.filter(q=>q!==null).length:0),0) : 0;
-    const totalPregs = data.scores ? data.scores.reduce((acc,s)=>acc+(s.qs?s.qs.length:0),0) : 0;
-
-    const cont = ce('div','');
-    cont.style.cssText = 'width:100%;max-width:560px;background:var(--lila);border-radius:12px;padding:14px 16px;margin:10px 0 4px;cursor:pointer;transition:opacity .15s';
-    cont.onmouseenter = ()=>cont.style.opacity='.9';
-    cont.onmouseleave = ()=>cont.style.opacity='1';
-    cont.innerHTML = `
+    const {ruta,data}=cursoEnProgreso;
+    const modIdx=data.curMod||0;
+    const respondidas=data.scores?data.scores.reduce((a,s)=>a+(s.qs?s.qs.filter(q=>q!==null).length:0),0):0;
+    const totalPregs=data.scores?data.scores.reduce((a,s)=>a+(s.qs?s.qs.length:0),0):0;
+    const cont=ce('div','');
+    cont.style.cssText='width:100%;max-width:560px;background:var(--lila);border-radius:12px;padding:14px 16px;margin:10px 0 4px;cursor:pointer;transition:opacity .15s';
+    cont.onmouseenter=()=>cont.style.opacity='.9';
+    cont.onmouseleave=()=>cont.style.opacity='1';
+    cont.innerHTML=`
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,0.7);margin-bottom:6px">Continúa donde lo dejaste</div>
       <div style="font-size:15px;font-weight:800;color:white;margin-bottom:4px">${ruta.titulo}</div>
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:12px;color:rgba(255,255,255,0.8)">Módulo ${modIdx+1} de ${totalMods} · ${respondidas}/${totalPregs} preguntas respondidas</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.8)">Módulo ${modIdx+1} de ${ruta.pasos} · ${respondidas}/${totalPregs} preguntas respondidas</div>
         <div style="font-size:18px;color:white">→</div>
       </div>`;
-    cont.onclick = ()=>renderFormacion(wrap, ruta);
+    cont.onclick=()=>renderFormacion(wrap,ruta);
     outer.appendChild(cont);
   }
 
-  // ── CURSOS POR CATEGORÍA ───────────────────────────────────────────────
-  const CATS = [
-    { key: 'centro',  label: 'Centro',  sub: 'Protocolos y funcionamiento', emoji: '🏥' },
-    { key: 'clinico', label: 'Clínico', sub: 'Equipos y terapias avanzadas', emoji: '🔬' }
-  ];
+  // ── LISTA DE CURSOS EN ORDEN ──────────────────────────────────────────
+  const listHdr=ce('div','');
+  listHdr.style.cssText='width:100%;max-width:560px;margin:20px 0 10px;display:flex;align-items:center;justify-content:space-between';
+  listHdr.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--black)">Cursos de la ruta</div>
+    <div style="font-size:11px;color:var(--muted)">${total} cursos en orden</div>`;
+  outer.appendChild(listHdr);
 
-  function mkCard(ruta){
-    const secKey = 'wiki_'+ruta.id;
-    const completada = progresoFisio[secKey]?.estado === 'completado';
-    const esObligatorio = cursosParaRol(ruta);
-    const lsKey = 'fisio365_school_'+ruta.id+'_'+(fisioActual?.id||'x');
-    let enProgreso = false;
+  misRutas.forEach((ruta,idx)=>{
+    const completada=progresoFisio['wiki_'+ruta.id]?.estado==='completado';
+    const lsKey='fisio365_school_'+ruta.id+'_'+(fisioActual?.id||'x');
+    let enProgreso=false;
     try{
-      const saved = localStorage.getItem(lsKey);
-      if(saved){
-        const data = JSON.parse(saved);
-        enProgreso = data.scores && data.scores.some(s=>s.qs&&s.qs.some(q=>q!==null));
-      }
+      const saved=localStorage.getItem(lsKey);
+      if(saved){const d=JSON.parse(saved);enProgreso=d.scores&&d.scores.some(s=>s.qs&&s.qs.some(q=>q!==null));}
     }catch(e){}
 
-    const card = ce('div', ruta.pasos > 0 ? 'wiki-ruta-card' : 'wiki-ruta-card wiki-ruta-soon');
-    if(completada) card.style.cssText += ';border-color:#9FE1CB;background:#f0fdf8';
+    // Bloqueado si el anterior no está completado (excepto el primero)
+    const anterior = idx>0 ? misRutas[idx-1] : null;
+    const bloqueado = anterior && progresoFisio['wiki_'+anterior.id]?.estado !== 'completado';
 
-    const etqStyle = ruta.etiqueta === 'Fisioterapeutas'
-      ? 'background:#e8eeff;color:#4a6cf7'
-      : ruta.etiqueta === 'Recepción'
-      ? 'background:#fff3e0;color:#e07b00'
-      : 'background:#fde8fb;color:#c040b0';
+    const row=ce('div','');
+    row.style.cssText=`width:100%;max-width:560px;background:${completada?'#f0fdf8':bloqueado?'#fafafa':'white'};border:1.5px solid ${completada?'#9FE1CB':bloqueado?'var(--border)':'var(--border)'};border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;${bloqueado?'opacity:.5':'cursor:pointer;transition:all .15s'}`;
+    if(!bloqueado) row.onmouseenter=()=>{if(!completada)row.style.borderColor='var(--lila)';};
+    if(!bloqueado) row.onmouseleave=()=>{if(!completada)row.style.borderColor='var(--border)';};
 
-    const badgeOblig = esObligatorio && !completada
-      ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:#fee;color:#c00;border-radius:99px;padding:2px 7px">Obligatorio</span>`
-      : '';
-    const badgeProgreso = enProgreso && !completada
-      ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:#ede9f7;color:var(--lila);border-radius:99px;padding:2px 7px">En progreso</span>`
-      : '';
-    const badgeHecho = completada
-      ? `<span class="wiki-badge-hecho">✓ Completado</span>`
-      : '';
+    // Número / check
+    const num=ce('div','');
+    num.style.cssText=`width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:${completada?'16px':'13px'};font-weight:800;${completada?'background:#E1F5EE;color:#085041':enProgreso?'background:var(--lila);color:white':'background:var(--lila-light);color:var(--lila)'}`;
+    num.textContent=completada?'✓':String(idx+1);
 
-    card.innerHTML = `
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
-        <div class="school-etiqueta" style="${etqStyle}">${ruta.etiqueta||''}</div>
-        ${ruta.info ? `<button class="school-info-btn" onclick="event.stopPropagation();toggleInfo('info_${ruta.id}')" title="Más información"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>` : ''}
-      </div>
-      <div class="wiki-ruta-titulo">${ruta.titulo}</div>
-      <div class="wiki-ruta-desc">${ruta.desc}</div>
-      <div id="info_${ruta.id}" class="school-info-box" style="display:none">${ruta.info||''}</div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px">
-        ${ruta.pasos === 0 ? '<div class="wiki-ruta-meta">Próximamente</div>' : ''}
-        ${badgeHecho}${badgeProgreso}${badgeOblig}
-      </div>`;
-    if(ruta.pasos > 0) card.onclick = ()=> ruta.tipo === 'formacion' ? renderFormacion(wrap, ruta) : renderWikiRuta(wrap, ruta);
-    return card;
-  }
+    const info=ce('div','');
+    info.style.cssText='flex:1;min-width:0';
+    info.innerHTML=`<div style="font-size:13px;font-weight:700;color:${bloqueado?'var(--muted)':'var(--black)'};margin-bottom:2px">${ruta.titulo}</div>
+      <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ruta.desc}</div>`;
 
-  CATS.forEach(cat => {
-    const rutas = WIKI_RUTAS.filter(r => r.categoria === cat.key);
-    if(!rutas.length) return;
+    const estado=ce('div','');
+    estado.style.cssText='flex-shrink:0;font-size:11px;font-weight:600';
+    if(completada) estado.innerHTML='<span style="color:#085041">Completado</span>';
+    else if(bloqueado) estado.innerHTML='<span style="color:var(--muted)">🔒</span>';
+    else if(enProgreso) estado.innerHTML='<span style="color:var(--lila)">En progreso</span>';
+    else estado.innerHTML=`<span style="color:var(--muted)">${ruta.pasos} mód.</span>`;
 
-    const catHdr = ce('div','');
-    catHdr.style.cssText = 'width:100%;max-width:560px;margin:22px 0 10px;display:flex;align-items:center;gap:8px';
-    catHdr.innerHTML = `
-      <div style="font-size:18px">${cat.emoji}</div>
-      <div>
-        <div style="font-size:15px;font-weight:800;color:var(--black);letter-spacing:-0.2px">${cat.label}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:1px">${cat.sub}</div>
-      </div>`;
-    outer.appendChild(catHdr);
+    row.appendChild(num);
+    row.appendChild(info);
+    row.appendChild(estado);
 
-    const sep = ce('div','');
-    sep.style.cssText = 'width:100%;max-width:560px;height:1px;background:var(--border);margin-bottom:12px';
-    outer.appendChild(sep);
-
-    const grid = ce('div','wiki-hub-grid');
-    rutas.forEach(ruta => grid.appendChild(mkCard(ruta)));
-    outer.appendChild(grid);
+    if(!bloqueado && ruta.pasos>0) row.onclick=()=>ruta.tipo==='formacion'?renderFormacion(wrap,ruta):renderWikiRuta(wrap,ruta);
+    outer.appendChild(row);
   });
 
   wrap.appendChild(outer);
