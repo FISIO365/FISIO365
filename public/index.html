@@ -183,16 +183,32 @@ textarea:focus { border-color: var(--black); }
 
 /* BOTTOM NAV */
 .bottom-nav { display: none; }
-.hamburger-btn { background: none; border: none; cursor: pointer; padding: 6px 8px; color: var(--cream); display: flex; flex-direction: column; gap: 5px; }
-.hamburger-btn span { display: block; width: 22px; height: 2px; background: var(--cream); border-radius: 2px; transition: all .2s; }
-.nav-menu { position: fixed; top: 0; left: 0; right: 0; background: var(--black); z-index: 200; transform: translateY(-100%); transition: transform .25s ease; padding-top: 56px; }
-.nav-menu.open { transform: translateY(0); }
-.nav-menu-inner { max-width: 600px; margin: 0 auto; padding: 8px 0 16px; }
-.nav-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; font-family: var(--font); font-size: 15px; font-weight: 600; color: rgba(245,242,238,0.6); cursor: pointer; border: none; background: none; width: 100%; text-align: left; transition: color .15s; }
+.hamburger-btn { background: none; border: none; cursor: pointer; padding: 6px 4px; color: var(--cream); display: flex; flex-direction: column; gap: 5px; }
+.hamburger-btn span { display: block; width: 20px; height: 1.5px; background: var(--cream); border-radius: 2px; transition: all .2s; }
+.nav-menu {
+  position: fixed;
+  top: 48px;
+  right: 16px;
+  width: 200px;
+  background: #1a1a1a;
+  z-index: 200;
+  border-radius: 14px;
+  transform: scale(0.92) translateY(-8px);
+  transform-origin: top right;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .2s ease, opacity .2s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+.nav-menu.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+.nav-menu-inner { padding: 6px 0; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-family: var(--font); font-size: 13px; font-weight: 600; color: rgba(245,242,238,0.55); cursor: pointer; border: none; background: none; width: 100%; text-align: left; transition: all .12s; }
+.nav-item:active { background: rgba(255,255,255,0.06); }
 .nav-item.active { color: var(--cream); }
-.nav-item.active::before { content: ''; display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--lila); margin-right: 12px; }
-.nav-item:not(.active)::before { content: ''; display: inline-block; width: 4px; height: 4px; margin-right: 12px; }
-.nav-item-dot { width: 8px; height: 8px; border-radius: 50%; background: #ee2155; display: none; }
+.nav-item.active .nav-item-icon { color: var(--lila); }
+.nav-item-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-item-dot { width: 7px; height: 7px; border-radius: 50%; background: #ee2155; display: none; margin-left: auto; }
 .nav-item-dot.show { display: block; }
 .nav-overlay { position: fixed; inset: 0; z-index: 190; display: none; }
 .nav-overlay.open { display: block; }
@@ -248,8 +264,9 @@ textarea:focus { border-color: var(--black); }
 <div id="appScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">FISIO365</div>
-    <div style="display:flex;align-items:center;gap:8px;">
+    <div style="display:flex;align-items:center;gap:10px;">
       <div class="topbar-name" id="topbarName"></div>
+      <button onclick="cerrarSesion()" id="cerrarBtn" style="display:none;background:none;border:1px solid rgba(245,242,238,0.25);color:rgba(245,242,238,0.6);font-family:var(--font);font-size:11px;padding:5px 10px;border-radius:99px;cursor:pointer;">Cerrar app</button>
       <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()" style="display:none;">
         <span></span><span></span><span></span>
       </button>
@@ -259,15 +276,11 @@ textarea:focus { border-color: var(--black); }
   <div class="nav-overlay" id="navOverlay" onclick="cerrarMenu()"></div>
   <div class="nav-menu" id="navMenu">
     <div class="nav-menu-inner">
-      <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()">Programa</button>
-      <button class="nav-item" id="navProgreso" onclick="showSection('progreso');cerrarMenu()">Progreso</button>
-      <button class="nav-item" id="navMensajes" onclick="showSection('mensajes');cerrarMenu()">
-        Mensajes <div class="nav-item-dot" id="navMensajesDot"></div>
-      </button>
-      <button class="nav-item" id="navInformes" onclick="showSection('informes');cerrarMenu()">Informes</button>
-      <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()">Guía</button>
-      <div style="height:1px;background:rgba(255,255,255,0.08);margin:8px 24px;"></div>
-      <button class="nav-item" onclick="cerrarSesion();cerrarMenu()" style="color:rgba(245,242,238,0.35);">Salir</button>
+      <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()"><span class="nav-item-icon">🏋️</span>Programa</button>
+      <button class="nav-item" id="navProgreso" onclick="showSection('progreso');cerrarMenu()"><span class="nav-item-icon">📈</span>Progreso</button>
+      <button class="nav-item" id="navMensajes" onclick="showSection('mensajes');cerrarMenu()"><span class="nav-item-icon">💬</span>Mensajes<div class="nav-item-dot" id="navMensajesDot"></div></button>
+      <button class="nav-item" id="navInformes" onclick="showSection('informes');cerrarMenu()"><span class="nav-item-icon">📄</span>Informes</button>
+      <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()"><span class="nav-item-icon">📱</span>Guía</button>
     </div>
   </div>
   <div class="container">
@@ -525,6 +538,7 @@ function initApp(){
   document.getElementById('appScreen').style.display='block';
   document.getElementById('appScreen').style.opacity='0';
   document.getElementById('hamburgerBtn').style.display='flex';
+  document.getElementById('cerrarBtn').style.display='block';
   window.scrollTo({top:0,behavior:'instant'});
   setTimeout(()=>{document.getElementById('appScreen').style.opacity='1';},10);
   document.getElementById('topbarName').textContent=patient.nombre.split(' ')[0];
@@ -868,6 +882,7 @@ function cerrarSesion(){
   patient=null;
   document.getElementById('appScreen').style.display='none';
   document.getElementById('hamburgerBtn').style.display='none';
+  document.getElementById('cerrarBtn').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('emailInput').value='';
   ['p1','p2','p3','p4'].forEach(id=>document.getElementById(id).value='');
