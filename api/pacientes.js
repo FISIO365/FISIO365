@@ -27,6 +27,32 @@ export default async function handler(req) {
     try { const text = await req.text(); body = text ? JSON.parse(text) : {}; } catch(e) { body = {}; }
   }
 
+  // ── ENDPOINTS PÚBLICOS (sin contraseña) ─────────────────────────────────
+  // get-mensajes — app paciente no tiene pwd
+  if (action === 'get-mensajes') {
+    const pacienteId = url.searchParams.get('pacienteId') || '';
+    try {
+      const formula = pacienteId ? `{PacienteId}="${pacienteId}"` : '';
+      const filterQ = formula ? `filterByFormula=${encodeURIComponent(formula)}&` : '';
+      const r = await fetch(
+        `https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}?${filterQ}sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=50`,
+        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+      );
+      const data = await r.json();
+      if (data.error) return new Response(JSON.stringify({ ok: true, mensajes: [] }), { headers: corsHeaders });
+      const mensajes = (data.records || []).map(rec => ({
+        id: rec.id,
+        texto: rec.fields['Texto'] || '',
+        fecha: rec.fields['Fecha'] || '',
+        fisioNombre: rec.fields['FisioNombre'] || '',
+        respuesta: rec.fields['Respuesta'] || '',
+        respuestaLeida: rec.fields['RespuestaLeida'] || false,
+        tipo: rec.fields['Tipo'] || 'diario'
+      }));
+      return new Response(JSON.stringify({ ok: true, mensajes }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: true, mensajes: [] }), { headers: corsHeaders }); }
+  }
+
   const pwd = (body.pwd || queryPwd || '').trim();
   const expected = (FISIO_PASSWORD || '').trim();
   if (pwd !== expected) return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
@@ -208,30 +234,7 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message, sinLeer: 0, mensajes: [] }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── GET MENSAJES PACIENTE ────────────────────────────────────────────────
-  if (action === 'get-mensajes') {
-    const pacienteId = url.searchParams.get('pacienteId') || '';
-    try {
-      const formula = pacienteId ? `{PacienteId}="${pacienteId}"` : '';
-      const filterQ = formula ? `filterByFormula=${encodeURIComponent(formula)}&` : '';
-      const r = await fetch(
-        `https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}?${filterQ}sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=50`,
-        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
-      );
-      const data = await r.json();
-      if (data.error) return new Response(JSON.stringify({ ok: true, mensajes: [] }), { headers: corsHeaders });
-      const mensajes = (data.records || []).map(rec => ({
-        id: rec.id,
-        texto: rec.fields['Texto'] || '',
-        fecha: rec.fields['Fecha'] || '',
-        fisioNombre: rec.fields['FisioNombre'] || '',
-        respuesta: rec.fields['Respuesta'] || '',
-        respuestaLeida: rec.fields['RespuestaLeida'] || false,
-        tipo: rec.fields['Tipo'] || 'diario'
-      }));
-      return new Response(JSON.stringify({ ok: true, mensajes }), { headers: corsHeaders });
-    } catch(e) { return new Response(JSON.stringify({ ok: true, mensajes: [] }), { headers: corsHeaders }); }
-  }
+
 
   // ── RESPONDER MENSAJE ────────────────────────────────────────────────────
   if (action === 'responder-mensaje' && req.method === 'POST') {
