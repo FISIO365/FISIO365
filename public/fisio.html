@@ -4846,33 +4846,34 @@ function renderFormacion(wrap, ruta){
 
   // ── MÓDULOS PRIMERA VISITA ──────────────────────────────────────────────
 
+
   const MODS_MANUAL = [
     // ═══════════════════════════════════════
-    // MÓDULO 1 — La sala
+    // MÓDULO 1 — Material y organización
     // ═══════════════════════════════════════
     {t:'La sala · Material y organización',sub:'Cada cosa en su sitio',
      cards:[
       {ti:'El material no se mueve',icon:'📦',body:`Cada sala tiene su propio material y debe permanecer siempre en su sitio. Mover material entre salas genera pérdidas de tiempo, confusión y puede dejar a un compañero sin lo que necesita en medio de una sesión.`},
-      {ti:'Si algo falta o está roto',icon:'🔧',body:`Si falta algún material, hay un aparato roto o cualquier elemento que no esté en buen estado — avisa a Nora lo antes posible. Ese aviso debe hacerse siempre <strong>por escrito</strong>: un mensaje que quede registrado y no se pierda en una conversación.`},
-      {ti:'Por qué importa',icon:'💡',body:`Una sala bien organizada permite trabajar con fluidez y transmite profesionalidad al paciente. El desorden no es solo un problema estético — afecta directamente a la calidad de la atención.`}
+      {ti:'Si algo falta o está roto',icon:'🔧',body:`Si falta algún material, hay un aparato roto o cualquier elemento que no esté en buen estado — avisa a Nora lo antes posible. Ese aviso debe hacerse siempre <strong>por escrito</strong> para que quede registrado y no se olvide.`},
+      {ti:'Por qué importa',icon:'💡',body:`Una sala bien organizada permite trabajar con fluidez y transmite profesionalidad. El desorden no es solo un problema estético — afecta directamente a la calidad de la atención y a la experiencia del paciente.`}
      ],
      qs:[
-      {q:'Si te falta material en tu sala, ¿qué haces?',opts:['Lo buscas en otra sala','Lo comentas de palabra a Ramiro','Avisas a Nora por escrito'],ok:2,fb:['Mover material entre salas genera problemas para todos.','De palabra puede olvidarse — siempre por escrito para que quede registrado.','¡Correcto! Siempre por escrito para que no quede en el aire.']},
-      {q:'¿El material de una sala puede moverse a otra?',opts:['Sí, si hace falta','No — cada sala tiene el suyo','Solo en urgencias'],ok:1,fb:['No — eso genera desorganización y pérdidas de tiempo.','¡Correcto! El material permanece en su sala.','Aunque sea urgente, avisar es siempre mejor que mover material.']}
+      {q:'Si falta material en tu sala, ¿qué haces?',opts:['Lo buscas en otra sala','Lo comentas de palabra','Avisas a Nora por escrito'],ok:2,fb:['Mover material entre salas genera problemas para todos.','De palabra puede olvidarse — siempre por escrito.','¡Correcto! Siempre por escrito para que quede registrado.']},
+      {q:'¿El material de una sala puede moverse a otra?',opts:['Sí, si hace falta','No — cada sala tiene el suyo','Solo en urgencias'],ok:1,fb:['No — eso genera desorganización.','¡Correcto! El material permanece en su sala.','Aunque sea urgente, avisar es siempre mejor que mover material.']}
      ]
     },
     // ═══════════════════════════════════════
     // MÓDULO 2 — Limpieza entre pacientes
     // ═══════════════════════════════════════
-    {t:'La sala · Limpieza entre pacientes',sub:'Cada paciente, sala nueva',
+    {t:'La sala · Limpieza entre pacientes',sub:'Cada paciente encuentra la sala nueva',
      cards:[
-      {ti:'El protocolo básico',icon:'🧹',body:`Después de cada paciente, antes de que entre el siguiente:<br><br>• Limpiar la camilla<br>• Limpiar el rulo si se ha utilizado<br>• Dejar la sala preparada y ordenada<br><br>No hay excepciones. No importa el tiempo que haya entre pacientes.`},
-      {ti:'Lo que el paciente percibe',icon:'👁️',body:`El paciente no sabe lo que ocurrió antes de su sesión — pero sí nota si la sala está limpia y ordenada. Una sala preparada transmite cuidado, profesionalidad y respeto. Una sala descuidada genera desconfianza aunque el tratamiento sea excelente.`},
-      {ti:'Toallas y residuos',icon:'🗑️',body:`Las toallas sucias van directamente al cubo de lavado — no se dejan sobre camillas, carros ni superficies. Los residuos (vasos, cremas vacías) se retiran en el momento. La papelera no debe estar llena cuando entra un paciente.`}
+      {ti:'El protocolo',icon:'🧹',body:`Después de cada paciente, antes de que entre el siguiente:<br><br>• Limpiar la camilla<br>• Limpiar el rulo si se ha utilizado<br>• Retirar residuos<br>• Dejar la sala preparada y ordenada<br><br>Sin excepciones, independientemente del tiempo que haya entre pacientes.`},
+      {ti:'Toallas y residuos',icon:'🗑️',body:`Las toallas sucias van directamente al cubo de lavado — nunca sobre camillas, carros ni superficies. Los residuos (vasos, cremas vacías) se retiran en el momento. Los vasos son de usar y tirar.<br><br>La papelera no debe estar llena cuando entra un paciente.`},
+      {ti:'Lo que el paciente percibe',icon:'👁️',body:`El paciente no sabe lo que ocurrió antes — pero sí nota si la sala está limpia y ordenada. Una sala preparada transmite cuidado y profesionalidad. Una sala descuidada genera desconfianza aunque el tratamiento sea excelente.`}
      ],
      qs:[
       {q:'¿Cuándo se limpia la camilla?',opts:['Al final del día','Después de cada paciente','Una vez por turno'],ok:1,fb:['Al final del día no es suficiente.','¡Correcto! Siempre después de cada paciente.','Una vez por turno no garantiza higiene entre pacientes.']},
-      {q:'¿Dónde van las toallas sucias?',opts:['Dobladas sobre la camilla','Al cubo de lavado directamente','En el cajón hasta el final del día'],ok:1,fb:['No — eso no es higiene.','¡Correcto! Directamente al cubo de lavado.','No — se llevan en el momento, no se acumulan.']}
+      {q:'¿Dónde van las toallas sucias?',opts:['Dobladas sobre la camilla','Al cubo de lavado directamente','En el cajón hasta el final del día'],ok:1,fb:['No — eso no es higiene.','¡Correcto! Directamente al cubo de lavado.','No — se llevan en el momento.']}
      ]
     },
     // ═══════════════════════════════════════
@@ -4880,14 +4881,14 @@ function renderFormacion(wrap, ruta){
     // ═══════════════════════════════════════
     {t:'La sala · Limpieza diaria y semanal',sub:'Cerrar bien el día',
      cards:[
-      {ti:'Al terminar el día',icon:'🌙',body:`Al final de cada jornada, la sala debe quedar lista para el día siguiente:<br><br>• Limpiar camilla y rulo<br>• Subir y limpiar el taburete<br>• Vaciar y limpiar la papelera<br>• Limpiar superficies — mesa y superficie del mueble incluidas<br>• Recoger <strong>todos los cables del suelo</strong> (para que el robot de limpieza pueda pasar sin enredarse)<br>• Limpiar el grifo<br>• Dejar la sala ordenada`},
-      {ti:'Cables en el suelo',icon:'🤖',body:`El robot de limpieza recorre la clínica cada noche. Si hay cables por el suelo, el robot se enreda y no puede hacer su recorrido completo. Recoger los cables no es solo orden — es parte del sistema de limpieza de la clínica.`},
-      {ti:'Limpieza semanal',icon:'📅',body:`Una vez a la semana se hace una limpieza más profunda:<br><br>• Rodapiés<br>• Esquinas y zonas menos visibles<br>• Grifo en profundidad<br>• Revisión general de la sala<br><br>Esta limpieza semanal complementa la diaria — no la sustituye.`},
-      {ti:'Cuidado de paredes y mobiliario',icon:'🏠',body:`La clínica está recién acondicionada y es responsabilidad de todos mantenerla así:<br><br>• No colocar camillas pegadas a la pared<br>• No tocar paredes con crema ni manos sucias<br>• No apoyarse en las paredes<br>• No rozarlas con camillas, taburetes ni aparatos<br><br>Las paredes limpias son parte de la imagen de la clínica.`}
+      {ti:'Al terminar el día',icon:'🌙',body:`Al final de cada jornada, la sala debe quedar lista para el día siguiente:<br><br>• Limpiar camilla y rulo<br>• Subir y limpiar el taburete<br>• Vaciar y limpiar la papelera<br>• Limpiar superficies — mesa y mueble incluidos<br>• Recoger <strong>todos los cables del suelo</strong><br>• Limpiar el grifo<br>• Dejar la sala ordenada`},
+      {ti:'Cables en el suelo',icon:'🤖',body:`El robot de limpieza recorre la clínica cada noche. Si hay cables por el suelo se enreda y no puede completar su recorrido. Recoger los cables es parte del sistema de limpieza de la clínica.`},
+      {ti:'Limpieza semanal',icon:'📅',body:`Una vez a la semana se hace una limpieza más profunda:<br><br>• Rodapiés<br>• Esquinas y zonas menos visibles<br>• Grifo en profundidad<br>• Revisión general de la sala<br><br>Esta limpieza complementa la diaria — no la sustituye.`},
+      {ti:'Paredes y mobiliario',icon:'🏠',body:`La clínica está recién acondicionada. Entre todos la cuidamos:<br><br>• Camillas nunca pegadas a la pared<br>• No tocar paredes con crema ni manos sucias<br>• No apoyarse en las paredes<br>• No rozarlas con camillas, taburetes ni aparatos`}
      ],
      qs:[
-      {q:'¿Por qué hay que recoger los cables del suelo al terminar el día?',opts:['Para que no se estropeen','Para que el robot de limpieza pueda pasar','Por estética'],ok:1,fb:['No es el motivo principal.','¡Correcto! El robot necesita el suelo despejado para hacer su recorrido.','No es solo estética — tiene una función práctica.']},
-      {q:'¿Qué se sube y se limpia al final del día?',opts:['Las sillas','El taburete','Todos los muebles'],ok:1,fb:['Las sillas no se suben.','¡Correcto! El taburete se sube y se limpia.','Solo el taburete — el resto se limpia en su sitio.']},
+      {q:'¿Por qué hay que recoger los cables del suelo al terminar el día?',opts:['Por estética','Para que el robot de limpieza pueda pasar','Para que no se estropeen'],ok:1,fb:['No es solo estética.','¡Correcto! El robot necesita el suelo despejado para funcionar.','No es el motivo principal.']},
+      {q:'¿Qué se sube y se limpia al final del día?',opts:['Las sillas','El taburete','Todos los muebles'],ok:1,fb:['Las sillas no se suben.','¡Correcto! El taburete se sube y se limpia.','Solo el taburete.']},
       {q:'¿Con qué frecuencia se limpian rodapiés y esquinas?',opts:['Cada día','Una vez a la semana','Una vez al mes'],ok:1,fb:['No hace falta cada día.','¡Correcto! Forman parte de la limpieza semanal.','Una vez al mes es insuficiente.']}
      ]
     },
@@ -4896,127 +4897,117 @@ function renderFormacion(wrap, ruta){
     // ═══════════════════════════════════════
     {t:'La sala · Speediance y sala de staff',sub:'Uso correcto del material',
      cards:[
-      {ti:'Speediance — protocolo de uso',icon:'🏋️',body:`La plataforma de entrenamiento tiene un protocolo claro:<br><br>• Siempre que sea posible, los pacientes trabajan <strong>descalzos sobre la esterilla</strong><br>• Si el paciente no puede o no quiere quitarse los zapatos, se retira la esterilla antes de usar la máquina`},
-      {ti:'Dónde va la esterilla',icon:'📍',body:`Si se retira la esterilla, se guarda <strong>debajo de la camilla</strong>.<br><br>No se deja apoyada en paredes ni en mobiliario. No se deja encima de la camilla. Siempre debajo.<br><br>Después de cada uso, la plataforma y la esterilla se limpian igual que cualquier otro material clínico.`},
-      {ti:'Sala de staff',icon:'🚪',body:`La puerta de la sala de staff debe permanecer <strong>siempre cerrada</strong>.<br><br>Esa zona debe estar separada de los espacios visibles para los pacientes. Es una cuestión de orden, privacidad e imagen profesional de la clínica.`}
+      {ti:'Speediance — protocolo de uso',icon:'🏋️',body:`Siempre que sea posible, los pacientes trabajan <strong>descalzos sobre la esterilla</strong>.<br><br>Si el paciente no puede o no quiere quitarse los zapatos, se retira la esterilla antes de usar la máquina. Después de cada uso, plataforma y esterilla se limpian igual que cualquier otro material clínico.`},
+      {ti:'Dónde va la esterilla',icon:'📍',body:`Si se retira la esterilla, se guarda <strong>debajo de la camilla</strong>. Nunca apoyada en paredes ni encima de la camilla. Siempre debajo.`},
+      {ti:'Sala de staff',icon:'🚪',body:`La puerta de la sala de staff debe permanecer <strong>siempre cerrada</strong>. Es una cuestión de orden, privacidad e imagen profesional — esa zona no es visible para los pacientes.`}
      ],
      qs:[
-      {q:'¿Dónde se guarda la esterilla de la Speediance cuando se retira?',opts:['Apoyada en la pared','Encima de la camilla','Debajo de la camilla'],ok:2,fb:['No — nunca apoyada en paredes.','No — nunca encima de la camilla.','¡Correcto! Siempre debajo de la camilla.']},
-      {q:'¿Cómo debe estar la puerta de la sala de staff?',opts:['Abierta para que circule el aire','Siempre cerrada','Abierta cuando hay pacientes'],ok:1,fb:['No — debe estar siempre cerrada.','¡Correcto! Siempre cerrada, sin excepciones.','Al contrario — especialmente cuando hay pacientes debe estar cerrada.']}
+      {q:'¿Dónde se guarda la esterilla de la Speediance cuando se retira?',opts:['Apoyada en la pared','Encima de la camilla','Debajo de la camilla'],ok:2,fb:['Nunca apoyada en paredes.','Nunca encima de la camilla.','¡Correcto! Siempre debajo de la camilla.']},
+      {q:'¿Cómo debe estar la puerta de la sala de staff?',opts:['Abierta para que circule el aire','Siempre cerrada','Abierta cuando hay pacientes'],ok:1,fb:['Debe estar siempre cerrada.','¡Correcto! Siempre cerrada, sin excepciones.','Al contrario — especialmente con pacientes debe estar cerrada.']}
      ]
     },
     // ═══════════════════════════════════════
-    // MÓDULO 5 — Imagen personal
+    // MÓDULO 5 — Imagen personal y puntualidad
     // ═══════════════════════════════════════
-    {t:'El equipo · Imagen personal',sub:'Profesionalidad desde el primer vistazo',
+    {t:'El equipo · Imagen personal y puntualidad',sub:'Cómo llegas importa',
      cards:[
-      {ti:'El uniforme',icon:'👕',body:`Cada fisioterapeuta es <strong>responsable de su uniforme</strong>: mantenerlo limpio, en buen estado y presentable.<br><br>El uniforme no es solo ropa — es parte de la imagen de la clínica y lo primero que ve el paciente.`},
-      {ti:'Perfumes y colonias',icon:'🌸',body:`Evitar perfumes fuertes o colonias intensas.<br><br>Muchos pacientes tienen sensibilidad a los olores, migrañas o simplemente se sienten incómodos con aromas fuertes en un espacio cerrado. Un olor neutro es siempre la opción más profesional.`},
-      {ti:'Aspecto general',icon:'✨',body:`Más allá del uniforme:<br><br>• Buena higiene personal<br>• Calzado limpio y en buen estado<br>• Aspecto general cuidado<br><br>La imagen del equipo forma parte de la experiencia del paciente — transmite profesionalidad, orden y cuidado.`}
+      {ti:'El uniforme',icon:'👕',body:`Cada fisioterapeuta es <strong>responsable de su uniforme</strong>: mantenerlo limpio y en buen estado. El uniforme es parte de la imagen de la clínica y lo primero que ve el paciente.`},
+      {ti:'Aspecto y perfume',icon:'✨',body:`Aspecto general cuidado, buena higiene personal y calzado limpio. Evitar perfumes fuertes o colonias intensas — muchos pacientes tienen sensibilidad a los olores o migrañas, y un espacio cerrado amplifica cualquier aroma.`},
+      {ti:'Llegar a tiempo',icon:'⏰',body:`Llegar a tiempo significa llegar con suficiente antelación para cambiarse, preparar la sala y estar listo antes de que llegue el primer paciente. Cuando el paciente tiene una cita, la sesión empieza a esa hora.`},
+      {ti:'Si hay un imprevisto',icon:'📱',body:`Si vas a llegar tarde, avisa siempre con la máxima antelación posible. Recepción necesita saberlo para gestionar al paciente. Un aviso a tiempo permite solucionar — sin aviso, solo genera mala experiencia.`}
      ],
      qs:[
-      {q:'¿Quién es responsable de mantener el uniforme limpio?',opts:['La clínica lo gestiona','Cada fisioterapeuta','Nora'],ok:1,fb:['No — es responsabilidad individual.','¡Correcto! Cada fisio es responsable de su uniforme.','Nora gestiona otras cosas — el uniforme es responsabilidad de cada uno.']},
-      {q:'¿Por qué se evitan los perfumes fuertes?',opts:['Por normativa sanitaria','Pueden molestar a pacientes con sensibilidades o migrañas','Solo en invierno'],ok:1,fb:['No hay normativa específica — es sentido común.','¡Correcto! Olores fuertes pueden generar malestar en un espacio cerrado.','No depende de la época del año.']}
+      {q:'¿Quién es responsable de mantener el uniforme limpio?',opts:['La clínica lo gestiona','Cada fisioterapeuta','Nora'],ok:1,fb:['Es responsabilidad individual.','¡Correcto! Cada fisio es responsable de su uniforme.','Nora gestiona otras cosas.']},
+      {q:'¿Cuándo empieza la sesión de un paciente?',opts:['Cuando el fisio está listo','A la hora de la cita','Cuando el paciente llega'],ok:1,fb:['El fisio debe estar listo antes de que llegue el paciente.','¡Correcto! A la hora acordada.','El paciente puede llegar puntual y no tiene que esperar.']},
+      {q:'¿Por qué se evitan los perfumes fuertes?',opts:['Por normativa sanitaria','Pueden molestar a pacientes sensibles en un espacio cerrado','Solo en verano'],ok:1,fb:['No hay normativa específica — es sentido común.','¡Correcto! Los olores fuertes pueden generar malestar.','No depende de la época del año.']}
      ]
     },
     // ═══════════════════════════════════════
-    // MÓDULO 6 — Puntualidad
+    // MÓDULO 6 — Móvil y confidencialidad
     // ═══════════════════════════════════════
-    {t:'El equipo · Puntualidad',sub:'El paciente no espera',
+    {t:'El equipo · Móvil y confidencialidad',sub:'Comportamiento profesional',
      cards:[
-      {ti:'Llegar a tiempo no es llegar a la hora',icon:'⏰',body:`Llegar a tiempo significa llegar con suficiente antelación para:<br><br>• Cambiarse y ponerse el uniforme<br>• Preparar la sala<br>• Revisar la agenda del día<br>• Estar listo antes de que llegue el primer paciente<br><br>Cuando el paciente tiene una cita, la sesión empieza a esa hora — no cuando el fisio termina de prepararse.`},
-      {ti:'Si hay un imprevisto',icon:'📱',body:`Si por cualquier motivo vas a llegar tarde, avisa siempre con la máxima antelación posible.<br><br>Recepción necesita saberlo para gestionar al paciente, explicarle la situación y evitar que espere sin información. Un aviso a tiempo permite solucionar — sin aviso, solo genera mala experiencia.`}
+      {ti:'El móvil durante la sesión',icon:'📵',body:`Durante las sesiones el móvil no se usa — salvo por motivo clínico directo: consultar FISIO365, ver el programa del paciente o registrar información clínica.<br><br>La diferencia es clara: ¿estás usando el móvil por el paciente o por ti?`},
+      {ti:'Confidencialidad de los pacientes',icon:'🔒',body:`Nunca se comentan casos de pacientes fuera de su contexto clínico. Ni nombres, ni diagnósticos, ni situaciones personales — con compañeros no implicados en el caso, y mucho menos fuera de la clínica.<br><br>Cada paciente confía en nosotros con información muy personal. Esa confianza es sagrada.`},
+      {ti:'Asuntos internos de la clínica',icon:'🏥',body:`Los problemas internos, conflictos o cambios de personal no se comentan con los pacientes. El paciente no necesita saber lo que ocurre entre bambalinas — solo necesita sentirse bien atendido.`}
      ],
      qs:[
-      {q:'¿Cuándo empieza la sesión de un paciente?',opts:['Cuando el fisio está listo','A la hora de la cita','Cuando el paciente llega'],ok:1,fb:['No — el fisio debe estar listo antes de que llegue el paciente.','¡Correcto! A la hora acordada, no cuando el fisio termina de prepararse.','El paciente puede llegar puntual y esperar si el fisio no está listo — eso no es aceptable.']},
-      {q:'Si vas a llegar tarde, ¿qué haces?',opts:['Intentas llegar lo antes posible sin decir nada','Avisas con la máxima antelación posible','Lo comentas al llegar'],ok:1,fb:['Sin aviso, recepción no puede gestionar la situación.','¡Correcto! Avisar a tiempo permite solucionar.','Al llegar ya es tarde para gestionar la espera del paciente.']}
+      {q:'¿Cuándo está permitido usar el móvil durante una sesión?',opts:['Nunca','Cuando es por motivo clínico relacionado con el paciente','Siempre que sea rápido'],ok:1,fb:['Sí puede usarse — pero solo por motivo clínico.','¡Correcto! Consultar FISIO365 o registrar información está permitido.','La duración no determina si está bien — el motivo sí.']},
+      {q:'Un paciente pregunta cómo está otro paciente conocido suyo. ¿Qué haces?',opts:['Le cuentas si está mejorando','Le explicas que no puedes comentar casos de otros pacientes','Le dices que no le conoces'],ok:1,fb:['Nunca — eso viola la confidencialidad.','¡Correcto! La confidencialidad se aplica siempre, sin excepciones.','Mentir no es la solución.']}
      ]
     },
     // ═══════════════════════════════════════
-    // MÓDULO 7 — Uso del móvil
+    // MÓDULO 7 — Bienvenida y documentación
     // ═══════════════════════════════════════
-    {t:'El equipo · Uso del móvil',sub:'El foco está en el paciente',
+    {t:'El paciente · Bienvenida y documentación',sub:'La primera impresión lo es todo',
      cards:[
-      {ti:'Durante la sesión',icon:'📵',body:`Durante las sesiones con pacientes, el móvil no se usa.<br><br>El paciente merece atención plena — revisar el teléfono mientras alguien está en la camilla transmite desinterés y falta de profesionalidad.`},
-      {ti:'Uso clínico del móvil',icon:'📱',body:`El móvil sí puede usarse durante la sesión si es por motivo clínico:<br><br>• Consultar el panel de FISIO365<br>• Ver el programa de ejercicios del paciente<br>• Registrar información clínica<br>• Cualquier uso directamente relacionado con la atención al paciente<br><br>La diferencia es clara: ¿estás usando el móvil por el paciente o por ti?`},
-      {ti:'Entre sesiones',icon:'☕',body:`Entre sesiones puedes usar el móvil con normalidad. El tiempo entre pacientes es tuyo. El tiempo con el paciente es del paciente.`}
+      {ti:'Los documentos legales',icon:'📋',body:`Cuando el paciente llega, recepción le entrega el iPad para firmar los documentos legales. <strong>Este paso es imprescindible antes de empezar cualquier tratamiento.</strong><br><br>No se trata a ningún paciente sin documentación firmada. Si no hay nadie en recepción, el fisioterapeuta gestiona este paso antes de comenzar.`},
+      {ti:'La bienvenida',icon:'🤝',body:`En las primeras visitas, el fisioterapeuta sale personalmente a buscar al paciente a recepción, se presenta y le da la bienvenida:<br><br><em>«Hola, ¿qué tal? Soy ___, voy a ser tu fisioterapeuta hoy y voy a ayudarte en todo lo posible.»</em><br><br>Ese momento establece la confianza. No se improvisa.`},
+      {ti:'Por qué importa',icon:'💡',body:`La experiencia del paciente empieza antes del tratamiento. Cómo es recibido, si alguien sale a buscarle con calidez — todo eso forma parte de la atención.<br><br>Un paciente que se siente bien recibido ya ha empezado a mejorar.`}
      ],
      qs:[
-      {q:'¿Cuándo está permitido usar el móvil durante una sesión?',opts:['Nunca','Siempre que sea rápido','Cuando es por motivo clínico relacionado con el paciente'],ok:2,fb:['Sí puede usarse — pero solo por motivo clínico.','La duración no es lo que determina si está bien — el motivo sí.','¡Correcto! Consultar FISIO365 o registrar información clínica está permitido.']},
-      {q:'¿Qué transmite revisar el móvil sin motivo clínico durante una sesión?',opts:['Que eres eficiente','Desinterés y falta de profesionalidad','Nada especial'],ok:1,fb:['No — no es una cuestión de eficiencia.','¡Correcto! El paciente percibe que no tiene tu atención plena.','El paciente sí lo nota.']}
+      {q:'¿Cuándo se puede tratar a un paciente sin los documentos firmados?',opts:['Si lleva prisa','Si ya es paciente habitual','Nunca — los documentos son imprescindibles siempre'],ok:2,fb:['La prisa no cambia la obligación legal.','Aunque sea habitual, los documentos deben estar firmados.','¡Correcto! Sin documentación firmada no se comienza ningún tratamiento.']},
+      {q:'¿Quién va a buscar al paciente a recepción en las primeras visitas?',opts:['El paciente entra solo','El fisioterapeuta sale personalmente','Recepción le acompaña'],ok:1,fb:['El paciente no sabe dónde ir.','¡Correcto! El fisio sale a buscarle y le da la bienvenida.','Recepción gestiona la llegada, pero el fisio sale a buscar al paciente.']}
      ]
     },
     // ═══════════════════════════════════════
-    // MÓDULO 8 — Confidencialidad y privacidad
+    // MÓDULO 8 — Conversación con el paciente
     // ═══════════════════════════════════════
-    {t:'El equipo · Confidencialidad y privacidad',sub:'Lo que ocurre en la clínica, queda en la clínica',
+    {t:'El paciente · Conversación con el paciente',sub:'La conversación es una herramienta terapéutica',
      cards:[
-      {ti:'Los pacientes',icon:'🔒',body:`Nunca se comentan casos de pacientes fuera de su contexto clínico. Ni nombres, ni diagnósticos, ni situaciones personales — con compañeros que no están implicados en el caso, y mucho menos fuera de la clínica.<br><br>Cada paciente confía en nosotros con información muy personal. Esa confianza es sagrada.`},
-      {ti:'La clínica',icon:'🏥',body:`Los problemas internos, conflictos, cambios de personal u opiniones sobre compañeros no se comentan con los pacientes.<br><br>El paciente no necesita saber lo que ocurre entre bambalinas — solo necesita sentirse bien atendido.`},
-      {ti:'Temas a evitar con pacientes',icon:'🚫',body:`En la conversación con el paciente evitamos:<br><br>• Política y religión<br>• Temas que puedan generar incomodidad o debate<br>• Vida personal del fisio más allá de lo superficial<br>• Diagnósticos fuera del ámbito fisioterápico<br><br>El foco está siempre en el paciente y en su recuperación.`}
+      {ti:'De qué sí se habla',icon:'✅',body:`La conversación con el paciente forma parte de la atención. Se habla de:<br><br>• Su lesión, síntomas y evolución<br>• El tratamiento que se realiza y por qué<br>• Ejercicios, hábitos y recomendaciones relacionadas con su salud<br>• Su trabajo o actividad física si es relevante<br>• Cosas cotidianas para generar confianza y comodidad<br><br>El trato cercano y humano es parte de la experiencia FISIO365.`},
+      {ti:'De qué no se habla',icon:'🚫',body:`Hay temas que no tienen cabida con los pacientes:<br><br>• Otros pacientes — ni nombres ni casos<br>• Problemas internos de la clínica<br>• Política o religión<br>• Vida personal del fisio más allá de lo superficial<br>• Diagnósticos fuera del ámbito fisioterápico<br><br>El paciente no tiene que cargar con lo que no le corresponde.`},
+      {ti:'La idea clave',icon:'💡',body:`El paciente debe salir sintiéndose escuchado, bien atendido y con confianza en el equipo.<br><br>Usa la conversación para conectar — pero mantén siempre el foco en él y en su recuperación.`}
      ],
      qs:[
-      {q:'Un paciente pregunta cómo está otro paciente conocido suyo. ¿Qué haces?',opts:['Le cuentas si el conocido está mejorando','Le explicas que no puedes comentar casos de otros pacientes','Le dices que no lo conoces'],ok:1,fb:['Nunca — eso viola la confidencialidad del otro paciente.','¡Correcto! La confidencialidad se aplica siempre, sin excepciones.','Mentir no es la solución — la respuesta correcta es explicar que no puedes comentarlo.']},
-      {q:'¿Se pueden comentar problemas internos de la clínica con los pacientes?',opts:['Sí, si el paciente pregunta directamente','Solo cosas menores','No — nunca'],ok:2,fb:['No, aunque pregunten.','Ningún asunto interno se comenta con pacientes.','¡Correcto! Los asuntos internos son internos.']}
+      {q:'Un paciente empieza a hablar de política. ¿Qué haces?',opts:['Participas en la conversación si compartes su opinión','Reconduces la conversación hacia su tratamiento con naturalidad','Le dices que ese tema no se puede tratar'],ok:1,fb:['Los temas polarizantes no tienen cabida en la sala.','¡Correcto! Redirigir con naturalidad es siempre la mejor opción.','No hace falta ser brusco — redirige con suavidad.']},
+      {q:'¿Puede el fisio comentar el caso de otro paciente para generar confianza?',opts:['Sí, si no dice el nombre','No — nunca se comentan casos de otros pacientes','Solo si el paciente pregunta'],ok:1,fb:['Aunque no diga el nombre, es información confidencial.','¡Correcto! Los casos de otros pacientes nunca se comentan.','Aunque pregunte, la respuesta es no.']}
      ]
     },
     // ═══════════════════════════════════════
-    // MÓDULO 9 — Bienvenida y recepción
+    // MÓDULO 9 — Orientación clínica
     // ═══════════════════════════════════════
-    {t:'El paciente · Bienvenida y recepción',sub:'La primera impresión lo es todo',
+    {t:'El paciente · Orientación clínica',sub:'El fisio orienta, recepción gestiona',
      cards:[
-      {ti:'Los documentos legales',icon:'📋',body:`Cuando el paciente llega, recepción le entrega el iPad para firmar los documentos legales. <strong>Este paso es imprescindible antes de empezar cualquier tratamiento.</strong><br><br>No se trata a ningún paciente sin documentación firmada. Si no hay nadie en recepción, el fisioterapeuta se encarga de gestionar este paso antes de comenzar la sesión.`},
-      {ti:'La bienvenida',icon:'🤝',body:`En las primeras visitas especialmente, el fisioterapeuta sale personalmente a buscar al paciente a recepción. Se presenta y le da la bienvenida:<br><br><em>«Hola, ¿qué tal? Soy ___, voy a ser tu fisioterapeuta hoy y voy a ayudarte en todo lo posible.»</em><br><br>Ese momento establece la confianza. No se improvisa.`},
-      {ti:'Por qué importa',icon:'💡',body:`La experiencia del paciente empieza mucho antes de que empiece el tratamiento. Cómo es recibido, cómo se siente al entrar, si alguien le da la bienvenida con calidez — todo eso forma parte de la atención.<br><br>Un paciente que se siente bien recibido ya ha empezado a mejorar.`}
+      {ti:'Es una responsabilidad clínica',icon:'🩺',body:`El fisioterapeuta <strong>debe</strong> orientar al paciente sobre cuántas sesiones necesita o recomendarle un pack. No es opcional — es parte del criterio clínico y de la responsabilidad del fisio.<br><br>El paciente necesita saber qué le espera para tomar una decisión informada.`},
+      {ti:'Cómo orientar',icon:'💬',body:`La orientación debe ser clara y concreta. Por ejemplo:<br><br>• <em>«Con una sesión debería ser suficiente para ver cómo evoluciona.»</em><br>• <em>«Te recomendaría un pack de 5 sesiones, dos por semana al principio.»</em><br>• <em>«Vamos a hacer unas sesiones más y vemos cómo vas.»</em><br>• <em>«Estás muy bien, creo que con esto cerramos.»</em>`},
+      {ti:'El límite del fisio',icon:'📋',body:`La orientación clínica es del fisio. La gestión del cobro, la agenda y las condiciones económicas las cierra siempre recepción.<br><br>En momentos puntuales sin recepción, el fisio puede gestionar el cobro con la misma profesionalidad y amabilidad.`}
      ],
      qs:[
-      {q:'¿Cuándo se puede tratar a un paciente sin los documentos firmados?',opts:['Si lleva prisa','Si ya es paciente habitual','Nunca — los documentos son imprescindibles siempre'],ok:2,fb:['La prisa del paciente no cambia la obligación legal.','Aunque sea habitual, los documentos deben estar firmados.','¡Correcto! Sin documentación firmada no se comienza ningún tratamiento.']},
-      {q:'¿Quién va a buscar al paciente a recepción en las primeras visitas?',opts:['El paciente entra solo cuando esté listo','El fisioterapeuta sale personalmente a buscarlo','Recepción le acompaña'],ok:1,fb:['El paciente no sabe dónde ir — siempre le acompañamos.','¡Correcto! El fisio sale a buscarle y le da la bienvenida en persona.','Recepción gestiona la llegada, pero el fisio sale a buscar al paciente.']}
+      {q:'¿Puede el fisio recomendar un pack de sesiones al paciente?',opts:['No — eso es solo de recepción','Puede hacerlo si quiere','Debe hacerlo — es su responsabilidad clínica'],ok:2,fb:['No — el criterio sobre el tratamiento es del fisio.','No es opcional — orientar al paciente es su responsabilidad.','¡Correcto! Es parte del criterio clínico del fisioterapeuta.']},
+      {q:'¿Quién cierra la gestión del cobro y la agenda?',opts:['El fisioterapeuta','Recepción','Cualquiera de los dos'],ok:1,fb:['El fisio orienta — recepción gestiona.','¡Correcto! La gestión económica y de agenda es de recepción.','Hay un rol claro para cada uno.']}
      ]
     },
     // ═══════════════════════════════════════
-    // MÓDULO 10 — De qué se habla con el paciente
-    // ═══════════════════════════════════════
-    {t:'El paciente · Conversación con el paciente',sub:'El foco siempre en el paciente',
-     cards:[
-      {ti:'De qué sí se habla',icon:'✅',body:`La conversación con el paciente es una herramienta terapéutica. Se habla de:<br><br>• Su lesión, síntomas y cómo evoluciona<br>• El tratamiento que se realiza y por qué<br>• Ejercicios, hábitos y recomendaciones relacionadas con su salud<br>• Su trabajo o actividad física si es relevante para el tratamiento<br>• Cosas cotidianas y conversación amable para generar confianza<br><br>El trato cercano y humano es parte de la experiencia.`},
-      {ti:'De qué no se habla',icon:'🚫',body:`Hay temas que no tienen cabida con los pacientes:<br><br>• Otros pacientes — ni nombres ni casos<br>• Problemas internos de la clínica<br>• Política o religión<br>• Vida personal del fisio más allá de lo superficial<br>• Diagnósticos fuera del ámbito fisioterápico<br><br>El paciente no tiene por qué cargar con lo que no le corresponde.`},
-      {ti:'Precios y sesiones',icon:'💬',body:`El fisioterapeuta <strong>debe</strong> orientar al paciente sobre cuántas sesiones necesita o recomendarle un pack — eso es criterio clínico y es su responsabilidad.<br><br>La gestión del cobro, la agenda y las condiciones las cierra siempre recepción.<br><br>En momentos sin recepción, el fisio puede gestionar el cobro con la misma profesionalidad. Si hay dudas sobre condiciones especiales, consulta con Ramiro.`}
-     ],
-     qs:[
-      {q:'¿Puede el fisio opinar sobre cuántas sesiones necesita el paciente?',opts:['No — eso es solo de recepción','Puede hacerlo si quiere','Debe hacerlo — es su responsabilidad clínica'],ok:2,fb:['No — el criterio clínico sobre el tratamiento es del fisio.','No es opcional — el fisio debe orientar sobre el plan de tratamiento.','¡Correcto! Orientar al paciente sobre su tratamiento es responsabilidad del fisio.']},
-      {q:'Un paciente pregunta por un descuento especial. ¿Qué haces?',opts:['Le ofreces el descuento si te parece razonable','Le derivas a recepción o consultas con Ramiro','Le dices que no hay descuentos'],ok:1,fb:['Los descuentos no los gestiona el fisio — son decisión de la dirección.','¡Correcto! Condiciones especiales se gestionan con recepción o con Ramiro.','No confirmes ni niegues — deriva a quien corresponde.']}
-     ]
-    },
-    // ═══════════════════════════════════════
-    // MÓDULO 11 — Comunicación fisio-recepción
+    // MÓDULO 10 — Comunicación con recepción
     // ═══════════════════════════════════════
     {t:'El paciente · Comunicación con recepción',sub:'Recepción siempre informada',
      cards:[
-      {ti:'Por qué es imprescindible',icon:'🔄',body:`Recepción gestiona cobros, citas y la continuidad del tratamiento. Para hacerlo bien necesita información clara y real de lo que ocurre en la sala.<br><br>Sin esa información, recepción improvisa — y la improvisación genera errores, pacientes mal atendidos y pérdida de ingresos.`},
-      {ti:'Cuándo acompañas al paciente a recepción',icon:'🚶',body:`El fisioterapeuta acompaña al paciente a recepción en:<br><br>• Primeras visitas<br>• Sesiones individuales<br>• Pacientes que necesiten agendar citas<br>• Última sesión de un pack<br>• Inicio o continuación de un tratamiento<br>• Cualquier situación donde recepción necesite contexto<br><br>No se deja al paciente en la sala ni se le indica simplemente «pasa por recepción».`},
-      {ti:'Qué le dices a recepción',icon:'💬',body:`Indicaciones claras y concretas. Por ejemplo:<br><br>• <em>«Hemos hecho una sesión individual, de momento con esto debería bastar.»</em><br>• <em>«Vamos a hacer 5 sesiones, dos por semana al principio.»</em><br>• <em>«Hemos terminado el pack, está mucho mejor.»</em><br>• <em>«Todavía queda algo, vamos a hacer unas sesiones más.»</em><br>• <em>«Por favor, agenda una sesión la semana que viene.»</em><br><br>Recepción necesita saber qué cobrar, qué agendar y qué explicar al paciente.`}
+      {ti:'Por qué es imprescindible',icon:'🔄',body:`Recepción gestiona cobros, citas y la continuidad del tratamiento. Para hacerlo bien necesita información clara de lo que ha ocurrido en la sala.<br><br>Sin esa información, recepción improvisa — y la improvisación genera errores y pacientes mal gestionados.`},
+      {ti:'Cuándo acompañas al paciente',icon:'🚶',body:`El fisioterapeuta acompaña al paciente a recepción siempre en:<br><br>• Primeras visitas<br>• Sesiones individuales<br>• Última sesión de un pack<br>• Inicio o continuación de un tratamiento<br>• Cualquier situación donde recepción necesite contexto<br><br>No se le indica simplemente «pasa por recepción».`},
+      {ti:'Qué le dices a recepción',icon:'💬',body:`Indicaciones claras y concretas. Por ejemplo:<br><br>• <em>«Sesión individual, de momento con esto debería bastar.»</em><br>• <em>«Empezamos un pack de 5, dos por semana.»</em><br>• <em>«Hemos terminado el pack, está muy bien.»</em><br>• <em>«Queda algo de molestia, vamos a hacer unas sesiones más.»</em><br>• <em>«Por favor, agenda para la semana que viene.»</em>`}
      ],
      qs:[
-      {q:'¿Qué haces al terminar una primera visita?',opts:['Le dices al paciente que pase por recepción','Acompañas personalmente al paciente a recepción y das contexto','Terminas la sesión y cada uno sigue su camino'],ok:1,fb:['Indicar que pase no es suficiente — el fisio acompaña y da contexto.','¡Correcto! Acompañar y dar información clara es parte del protocolo.','Recepción no sabe qué ha ocurrido en la sala si nadie se lo dice.']},
-      {q:'¿Qué necesita saber recepción al terminar una sesión?',opts:['Solo si el paciente ha pagado','Qué cobrar, qué agendar y cuál es el siguiente paso del tratamiento','Solo el nombre del paciente'],ok:1,fb:['No es suficiente — recepción necesita mucho más contexto.','¡Correcto! Recepción gestiona con la información que le da el fisio.','Con solo el nombre no puede gestionar nada.']}
+      {q:'¿Qué haces al terminar una primera visita?',opts:['Le dices al paciente que pase por recepción','Acompañas al paciente a recepción y das contexto claro','Terminas la sesión y cada uno sigue su camino'],ok:1,fb:['Indicar que pase no es suficiente — el fisio acompaña y da contexto.','¡Correcto! Acompañar y dar información clara es parte del protocolo.','Recepción no sabe qué ha ocurrido si nadie se lo dice.']},
+      {q:'¿Qué necesita saber recepción al terminar una sesión?',opts:['Solo si el paciente ha pagado','Qué cobrar, qué agendar y cuál es el siguiente paso','Solo el nombre del paciente'],ok:1,fb:['No es suficiente.','¡Correcto! Recepción gestiona con la información que le da el fisio.','Con solo el nombre no puede gestionar nada.']}
      ]
     },
     // ═══════════════════════════════════════
-    // MÓDULO 12 — Agenda y vacaciones
+    // MÓDULO 11 — Agenda y vacaciones
     // ═══════════════════════════════════════
     {t:'Operativa · Agenda y vacaciones',sub:'Organización con antelación',
      cards:[
-      {ti:'La agenda se llena con antelación',icon:'📅',body:`Las agendas de la clínica se organizan con bastante antelación. Avisar tarde sobre vacaciones, bloqueos o cambios de horario puede implicar tener que mover pacientes ya organizados — lo que genera problemas para ellos y para el equipo.`},
-      {ti:'Con cuánta antelación avisar',icon:'⏳',body:`Como referencia general, <strong>un mes de antelación</strong> suele ser suficiente para gestionar cambios sin afectar a pacientes ni generar reorganizaciones de última hora.<br><br>Cuanto antes se avise, más fácil es para todos.`},
-      {ti:'Imprevistos y emergencias',icon:'🚨',body:`Entendemos que pueden surgir emergencias o situaciones inesperadas. En esos casos, se avisa lo antes posible y el equipo se organiza entre todos de la mejor manera posible.<br><br>La clave es siempre comunicar — nunca dejar a alguien sin información.`}
+      {ti:'La agenda se llena con antelación',icon:'📅',body:`Las agendas de la clínica se organizan con bastante antelación. Avisar tarde sobre vacaciones, bloqueos o cambios de horario puede implicar mover pacientes ya organizados — lo que genera problemas para ellos y para el equipo.`},
+      {ti:'Con cuánta antelación avisar',icon:'⏳',body:`Como referencia general, <strong>un mes de antelación</strong> permite gestionar cualquier cambio sin afectar a pacientes ni generar reorganizaciones de última hora.<br><br>Cuanto antes se avise, más fácil es para todos.`},
+      {ti:'Imprevistos',icon:'🚨',body:`Entendemos que pueden surgir emergencias. En esos casos, avisa lo antes posible y el equipo se organiza entre todos.<br><br>La clave es siempre comunicar — nunca dejar a alguien sin información.`}
      ],
      qs:[
-      {q:'¿Con cuánta antelación se recomienda avisar de vacaciones?',opts:['Con una semana','Con un mes','Con tres días'],ok:1,fb:['Una semana puede ser insuficiente si la agenda está llena.','¡Correcto! Un mes permite reorganizar sin afectar pacientes.','Tres días es demasiado poco — genera problemas innecesarios.']},
-      {q:'Si surge una emergencia y no puedes venir, ¿qué haces?',opts:['Avisas lo antes posible para que el equipo pueda organizarse','Esperas a ver cómo evoluciona antes de avisar','Lo comentas al día siguiente'],ok:0,fb:['¡Correcto! Avisar cuanto antes permite gestionar la situación.','Cuanto más tarde se avise, peor para todos.','Al día siguiente ya es demasiado tarde.']}
+      {q:'¿Con cuánta antelación se recomienda avisar de vacaciones?',opts:['Con una semana','Con un mes','Con tres días'],ok:1,fb:['Una semana puede ser insuficiente si la agenda está llena.','¡Correcto! Un mes permite reorganizar sin afectar pacientes.','Tres días es demasiado poco.']},
+      {q:'Si surge una emergencia y no puedes venir, ¿qué haces?',opts:['Avisas lo antes posible','Esperas a ver cómo evoluciona antes de avisar','Lo comentas al día siguiente'],ok:0,fb:['¡Correcto! Avisar cuanto antes permite gestionar la situación.','Cuanto más tarde se avise, peor para todos.','Al día siguiente ya es demasiado tarde.']}
      ]
     }
   ];
+
 
   const MODS_PRIMERA_VISITA = [
     {t:'01 · Reserva de cita',sub:'El primer contacto con Fisio365',
