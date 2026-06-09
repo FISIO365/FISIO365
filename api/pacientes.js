@@ -5,6 +5,7 @@ const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
 const BASE_ID = 'appsrGnHpFt8sVD5A';
 const PACIENTES_TABLE = 'tbldBVgClS4HY2mOJ';
 const ANAMNESIS_TABLE = 'tblF4as0orW1b6KIw';
+const MENSAJES_TABLE = 'MENSAJES'; // ← crear en Airtable
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 export default async function handler(req) {
@@ -163,17 +164,100 @@ export default async function handler(req) {
     const pacienteId = url.searchParams.get('pacienteId') || '';
     if (!pacienteId) return new Response(JSON.stringify({ ok: false, error: 'Falta pacienteId' }), { status: 400, headers: corsHeaders });
     try {
-      // Traer todos los campos del registro para depurar nombre del campo
       const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`, {
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
       });
       const data = await r.json();
       const fields = data.fields || {};
-      // Buscar campo diario con varios nombres posibles
       const diario = fields['Diario'] || fields['diario'] || fields['DIARIO'] || fields['Diary'] || '';
-      // Devolver también los nombres de campos disponibles para depurar
       const fieldNames = Object.keys(fields);
       return new Response(JSON.stringify({ ok: true, diario, fieldNames }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+  }
+
+  // ── GET MENSAJES FISIO ───────────────────────────────────────────────────
+  if (action === 'get-mensajes-fisio') {
+    const fisioId = url.searchParams.get('fisioId') || '';
+    const soloCount = url.searchParams.get('soloCount') === '1';
+    try {
+      const formula = fisioId ? `{FisioId}="${fisioId}"` : '';
+      const sortQ = 'sort[0][field]=Fecha&sort[0][direction]=desc';
+      const filterQ = formula ? `filterByFormula=${encodeURIComponent(formula)}&` : '';
+      const r = await fetch(
+        `https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}?${filterQ}${sortQ}&pageSize=50`,
+        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+      );
+      const data = await r.json();
+      if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message, sinLeer: 0, mensajes: [] }), { headers: corsHeaders });
+      const mensajes = (data.records || []).map(rec => ({
+        id: rec.id,
+        pacienteId: rec.fields['PacienteId'] || '',
+        pacienteNombre: rec.fields['PacienteNombre'] || '',
+        fisioId: rec.fields['FisioId'] || '',
+        fisioNombre: rec.fields['FisioNombre'] || '',
+        texto: rec.fields['Texto'] || '',
+        fecha: rec.fields['Fecha'] || '',
+        tipo: rec.fields['Tipo'] || 'diario',
+        visto: rec.fields['Visto'] || false,
+        respuesta: rec.fields['Respuesta'] || '',
+        respuestaLeida: rec.fields['RespuestaLeida'] || false
+      }));
+      const sinLeer = mensajes.filter(m => !m.visto).length;
+      if (soloCount) return new Response(JSON.stringify({ ok: true, sinLeer }), { headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true, mensajes, sinLeer }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message, sinLeer: 0, mensajes: [] }), { status: 500, headers: corsHeaders }); }
+  }
+
+  // ── GET MENSAJES PACIENTE ────────────────────────────────────────────────
+  if (action === 'get-mensajes') {
+    const pacienteId = url.searchParams.get('pacienteId') || '';
+    try {
+      const formula = pacienteId ? `{PacienteId}="${pacienteId}"` : '';
+      const filterQ = formula ? `filterByFormula=${encodeURIComponent(formula)}&` : '';
+      const r = await fetch(
+        `https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}?${filterQ}sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=50`,
+        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+      );
+      const data = await r.json();
+      if (data.error) return new Response(JSON.stringify({ ok: true, mensajes: [] }), { headers: corsHeaders });
+      const mensajes = (data.records || []).map(rec => ({
+        id: rec.id,
+        texto: rec.fields['Texto'] || '',
+        fecha: rec.fields['Fecha'] || '',
+        fisioNombre: rec.fields['FisioNombre'] || '',
+        respuesta: rec.fields['Respuesta'] || '',
+        respuestaLeida: rec.fields['RespuestaLeida'] || false,
+        tipo: rec.fields['Tipo'] || 'diario'
+      }));
+      return new Response(JSON.stringify({ ok: true, mensajes }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: true, mensajes: [] }), { headers: corsHeaders }); }
+  }
+
+  // ── RESPONDER MENSAJE ────────────────────────────────────────────────────
+  if (action === 'responder-mensaje' && req.method === 'POST') {
+    const { mensajeId, respuesta, fisioNombre, pacienteId, pacienteNombre } = body;
+    if (!mensajeId || !respuesta) return new Response(JSON.stringify({ ok: false, error: 'Faltan datos' }), { status: 400, headers: corsHeaders });
+    try {
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}/${mensajeId}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { Respuesta: respuesta, Visto: true, RespuestaLeida: false } })
+      });
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+  }
+
+  // ── MARCAR VISTO ─────────────────────────────────────────────────────────
+  if (action === 'marcar-visto' && req.method === 'POST') {
+    const { mensajeId } = body;
+    if (!mensajeId) return new Response(JSON.stringify({ ok: false, error: 'Falta mensajeId' }), { status: 400, headers: corsHeaders });
+    try {
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}/${mensajeId}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { Visto: true } })
+      });
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
