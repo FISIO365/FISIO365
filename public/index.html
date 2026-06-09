@@ -656,6 +656,7 @@ function volverStep1(){
 
 async function guardarSolo(){
   const _tipo=modalTipo; const _texto=modalTexto;
+  console.log('guardarSolo called', {_tipo, _texto});
   cerrarModal();
   if(_tipo==='diario'){
     const btn=document.getElementById('btnDiario');
@@ -703,6 +704,7 @@ function renderFisiosList(fisios){
 
 async function enviarAFisio(fisioId, fisioNombre){
   const _tipo=modalTipo; const _texto=modalTexto;
+  console.log('enviarAFisio called', {fisioId, fisioNombre, _tipo, _texto});
   cerrarModal();
   const prefijo = _tipo==='dolor' ? '[Dolor aumentó] ' : '';
   const textoBase = _texto || (_tipo==='diario' ? 'Tarea hecha ✓' : '');
@@ -896,3 +898,4 @@ function toast(msg,ok=true){const t=document.getElementById('toast');t.textConte
 </script>
 </body>
 </html>
+
