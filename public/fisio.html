@@ -358,9 +358,8 @@ input[type=number]{text-align:center}
         <div class="sb-item" id="sb-pac" onclick="showSection('pac')">
           Pacientes
         </div>
-        <div class="sb-item" id="sb-msg" onclick="showSection('msg')" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>Mensajes</span>
-          <span id="sb-msg-badge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:2px 7px;min-width:18px;text-align:center"></span>
+        <div class="sb-item" id="sb-msg" onclick="showSection('msg')">
+          Mensajes <span id="sb-msg-badge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:middle"></span>
         </div>
         <div class="sb-item" id="sb-school" onclick="showSection('school')" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px">
           School
@@ -6854,10 +6853,6 @@ async function renderMensajes(wrap){
   wrap.appendChild(loading);
 
   try{
-    // Leer mensajes de Airtable filtrando por fisio actual
-    const url=`https://api.airtable.com/v0/appsrGnHpFt8sVD5A/${TABLE_MENSAJES}?filterByFormula=${encodeURIComponent(`{FisioId}="${fisioActual.id}"`)}&sort%5B0%5D%5Bfield%5D=Fecha&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=50`;
-    const r=await fetch(url,{headers:{Authorization:`Bearer ${process.env.AIRTABLE_KEY}`}});
-    // Como no podemos llamar a Airtable directo desde el cliente, usamos la API
     const res=await fetch(`/api/pacientes?action=get-mensajes-fisio&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
     const data=await res.json();
     loading.remove();
