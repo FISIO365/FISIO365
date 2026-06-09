@@ -41,7 +41,7 @@ html, body { height: 100%; font-family: var(--font); background: var(--cream); c
 .login-err { font-size: 12px; color: #ff6b6b; text-align: center; margin-top: 12px; min-height: 18px; }
 
 /* APP */
-#appScreen { padding-bottom: 80px; background: var(--cream); }
+#appScreen { padding-bottom: 20px; background: var(--cream); }
 .topbar { position: sticky; top: 0; z-index: 50; background: var(--black); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
 .topbar-logo { font-size: 20px; font-weight: 800; color: var(--cream); letter-spacing: -0.5px; }
 .topbar-name { font-size: 12px; color: rgba(245,242,238,0.5); }
@@ -181,13 +181,16 @@ textarea:focus { border-color: var(--black); }
 .msg-pending { display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-top:8px; }
 
 /* BOTTOM NAV */
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1.5px solid var(--border); display: none; z-index: 100; }
-.bottom-nav-inner { display: flex; max-width: 600px; margin: 0 auto; }
-.nav-btn { flex: 1; padding: 14px 2px 18px; border: none; background: none; cursor: pointer; font-family: var(--font); display: flex; flex-direction:column; align-items: center; justify-content: center; color: var(--muted); transition: color 0.15s; min-width: 0; gap:2px; }
-.nav-btn.active { color: var(--black); }
-.nav-label { font-size: 10px; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
-.nav-dot { width:6px;height:6px;border-radius:50%;background:#ee2155;display:none; }
-.nav-dot.show { display:block; }
+.bottom-nav { display: none; }
+.top-nav { background: var(--black); border-bottom: 1px solid rgba(255,255,255,0.08); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.top-nav::-webkit-scrollbar { display: none; }
+.top-nav-inner { display: flex; max-width: 600px; margin: 0 auto; padding: 0 8px; gap: 0; }
+.nav-btn { flex-shrink: 0; padding: 10px 14px; border: none; background: none; cursor: pointer; font-family: var(--font); display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(245,242,238,0.45); transition: color 0.15s; position: relative; }
+.nav-btn.active { color: var(--cream); }
+.nav-btn.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 2px; background: var(--lila); border-radius: 99px; }
+.nav-label { font-size: 10px; font-weight: 600; text-transform: uppercase; white-space: nowrap; letter-spacing: .04em; }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: #ee2155; display: none; position: absolute; top: 6px; right: 8px; }
+.nav-dot.show { display: block; }
 
 /* POPUP */
 .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; display: flex; align-items: flex-end; justify-content: center; }
@@ -239,10 +242,30 @@ textarea:focus { border-color: var(--black); }
 
 <div id="appScreen" class="screen">
   <div class="topbar">
-    <div class="topbar-logo">FISIO365 <span style="font-size:9px;opacity:.4;font-weight:400">v2</span></div>
+    <div class="topbar-logo">FISIO365</div>
     <div style="display:flex;align-items:center;gap:12px;">
       <div class="topbar-name" id="topbarName"></div>
       <button onclick="cerrarSesion()" style="background:none;border:1px solid rgba(245,242,238,0.3);color:rgba(245,242,238,0.7);font-family:var(--font);font-size:11px;padding:5px 10px;border-radius:99px;cursor:pointer;">Salir</button>
+    </div>
+  </div>
+  <div class="top-nav" id="topNav" style="display:none;">
+    <div class="top-nav-inner">
+      <button class="nav-btn active" id="navHoy" onclick="showSection('hoy')">
+        <span class="nav-label">Programa</span>
+      </button>
+      <button class="nav-btn" id="navProgreso" onclick="showSection('progreso')">
+        <span class="nav-label">Progreso</span>
+      </button>
+      <button class="nav-btn" id="navMensajes" onclick="showSection('mensajes')">
+        <div class="nav-dot" id="navMensajesDot"></div>
+        <span class="nav-label">Mensajes</span>
+      </button>
+      <button class="nav-btn" id="navInformes" onclick="showSection('informes')">
+        <span class="nav-label">Informes</span>
+      </button>
+      <button class="nav-btn" id="navGuia" onclick="showSection('guia')">
+        <span class="nav-label">Guía</span>
+      </button>
     </div>
   </div>
   <div class="container">
@@ -384,27 +407,7 @@ textarea:focus { border-color: var(--black); }
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
-<div class="bottom-nav" id="bottomNav">
-  <div class="bottom-nav-inner">
-    <button class="nav-btn active" id="navHoy" onclick="showSection('hoy')">
-      <span class="nav-label">Programa</span>
-    </button>
-    <button class="nav-btn" id="navProgreso" onclick="showSection('progreso')">
-      <span class="nav-label">Progreso</span>
-    </button>
-    <button class="nav-btn" id="navMensajes" onclick="showSection('mensajes')">
-      <div class="nav-dot" id="navMensajesDot"></div>
-      <span class="nav-label">Mensajes</span>
-    </button>
-    <button class="nav-btn" id="navInformes" onclick="showSection('informes')">
-      <span class="nav-label">Informes</span>
-    </button>
-    <button class="nav-btn" id="navGuia" onclick="showSection('guia')">
-      <span class="nav-label">Guía</span>
-    </button>
-  </div>
-</div>
+<!-- bottom nav moved to topbar -->
 
 <!-- MODAL GUARDAR/ENVIAR -->
 <div id="modalGuardar" style="display:none;" class="modal-overlay" onclick="if(event.target===this)cerrarModal()">
@@ -517,7 +520,7 @@ function initApp(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
   document.getElementById('appScreen').style.opacity='0';
-  document.getElementById('bottomNav').style.display='block';
+  document.getElementById('topNav').style.display='block';
   window.scrollTo({top:0,behavior:'instant'});
   setTimeout(()=>{document.getElementById('appScreen').style.opacity='1';},10);
   document.getElementById('topbarName').textContent=patient.nombre.split(' ')[0];
@@ -848,7 +851,7 @@ function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64S
 let lastFechaAsignacion=null,pollingInterval=null;
 function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejercicios=data.ejercicios||[];mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('mensajeFisioCard').style.display='block';}if(data.ultimaSession!==TODAY){hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado 💪',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
 
-function cerrarSesion(){localStorage.removeItem('fisio365_patient');patient=null;document.getElementById('appScreen').style.display='none';document.getElementById('bottomNav').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('emailInput').value='';['p1','p2','p3','p4'].forEach(id=>document.getElementById(id).value='');window.scrollTo(0,0);}
+function cerrarSesion(){localStorage.removeItem('fisio365_patient');patient=null;document.getElementById('appScreen').style.display='none';document.getElementById('topNav').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('emailInput').value='';['p1','p2','p3','p4'].forEach(id=>document.getElementById(id).value='');window.scrollTo(0,0);}
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${ok?'ok':'err'}`;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
 </script>
 </body>
