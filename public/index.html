@@ -658,19 +658,20 @@ function volverStep1(){
 }
 
 async function guardarSolo(){
+  const _tipo=modalTipo; const _texto=modalTexto;
   cerrarModal();
-  if(modalTipo==='diario'){
+  if(_tipo==='diario'){
     const btn=document.getElementById('btnDiario');
     btn.disabled=true;btn.textContent='Guardando...';
     try{
-      const textoGuardar=modalTexto||'Tarea hecha ✓';
+      const textoGuardar=_texto||'Tarea hecha ✓';
       await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:textoGuardar,enviarFisio:false})});
       localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));
       mostrarCompletado();
     }catch(e){toast('Error al guardar',false);btn.disabled=false;btn.textContent='Tarea hecha ✓';}
-  } else if(modalTipo==='dolor'){
+  } else if(_tipo==='dolor'){
     try{
-      await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:`[Dolor aumentó] ${modalTexto}`,enviarFisio:false})});
+      await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:`[Dolor aumentó] ${_texto}`,enviarFisio:false})});
       toast('Guardado en tu diario ✓',true);
       if(document.getElementById('vasMsgTxt'))document.getElementById('vasMsgTxt').value='';
     }catch(e){toast('Error al guardar',false);}
@@ -704,12 +705,13 @@ function renderFisiosList(fisios){
 }
 
 async function enviarAFisio(fisioId, fisioNombre){
+  const _tipo=modalTipo; const _texto=modalTexto;
   cerrarModal();
-  const prefijo = modalTipo==='dolor' ? '[Dolor aumentó] ' : '';
-  const textoBase = modalTexto || (modalTipo==='diario' ? 'Tarea hecha ✓' : '');
+  const prefijo = _tipo==='dolor' ? '[Dolor aumentó] ' : '';
+  const textoBase = _texto || (_tipo==='diario' ? 'Tarea hecha ✓' : '');
   const texto = prefijo + textoBase;
   try{
-    if(modalTipo==='diario'){
+    if(_tipo==='diario'){
       const btn=document.getElementById('btnDiario');
       btn.disabled=true;btn.textContent='Enviando...';
       await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
