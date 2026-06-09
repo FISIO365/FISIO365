@@ -4274,38 +4274,133 @@ function renderWiki(wrap){
   wrap.innerHTML = '';
   const outer = ce('div','wiki-outer');
 
+  // ── Determinar rol del fisio actual ────────────────────────────────────
+  const isRecepcion = fisioActual?.role === 'recepcion';
+  const isFisio = !isRecepcion;
+
+  // ── Calcular progreso global según rol ────────────────────────────────
+  function cursosParaRol(ruta){
+    if(ruta.pasos === 0) return false;
+    if(isRecepcion) return ruta.etiqueta === 'Todo el equipo' || ruta.etiqueta === 'Recepción';
+    return ruta.etiqueta === 'Todo el equipo' || ruta.etiqueta === 'Fisioterapeutas' || ruta.etiqueta === 'Recepción';
+  }
+  const misRutas = WIKI_RUTAS.filter(cursosParaRol);
+  const completadas = misRutas.filter(r => progresoFisio['wiki_'+r.id]?.estado === 'completado').length;
+  const total = misRutas.length;
+  const pct = total > 0 ? Math.round((completadas/total)*100) : 0;
+
+  // ── Curso en progreso (localStorage) ─────────────────────────────────
+  let cursoEnProgreso = null;
+  for(const ruta of WIKI_RUTAS){
+    if(ruta.pasos === 0) continue;
+    if(progresoFisio['wiki_'+ruta.id]?.estado === 'completado') continue;
+    const lsKey = 'fisio365_school_'+ruta.id+'_'+(fisioActual?.id||'x');
+    try{
+      const saved = localStorage.getItem(lsKey);
+      if(saved){
+        const data = JSON.parse(saved);
+        const hasProgress = data.scores && data.scores.some(s=>s.qs&&s.qs.some(q=>q!==null));
+        if(hasProgress){ cursoEnProgreso = {ruta, data}; break; }
+      }
+    }catch(e){}
+  }
+
+  // ── HEADER ─────────────────────────────────────────────────────────────
   const hdr = ce('div','wiki-header');
-  hdr.innerHTML = '<h2>SCHOOL</h2><p>Selecciona una categoría y empieza</p>';
+  hdr.style.cssText = 'text-align:left;width:100%;max-width:560px;margin-bottom:0';
+  hdr.innerHTML = `<h2 style="font-size:22px;font-weight:900;letter-spacing:-.4px;margin-bottom:4px">School</h2>
+    <p style="font-size:13px;color:var(--muted)">Formación del equipo FISIO365</p>`;
   outer.appendChild(hdr);
 
+  // ── BARRA DE PROGRESO GLOBAL ───────────────────────────────────────────
+  const progWrap = ce('div','');
+  progWrap.style.cssText = 'width:100%;max-width:560px;background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin:14px 0 4px';
+  progWrap.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;color:var(--black)">Tu progreso</div>
+      <div style="font-size:13px;font-weight:800;color:var(--lila)">${completadas}<span style="font-weight:500;color:var(--muted);font-size:12px"> / ${total} cursos</span></div>
+    </div>
+    <div style="height:8px;background:var(--lila-light);border-radius:99px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:var(--lila);border-radius:99px;transition:width .6s ease"></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px">${pct === 100 ? '🎉 ¡Todos los cursos completados!' : pct === 0 ? 'Empieza por el que más te interese' : `${pct}% completado`}</div>`;
+  outer.appendChild(progWrap);
+
+  // ── CONTINÚA DONDE LO DEJASTE ─────────────────────────────────────────
+  if(cursoEnProgreso){
+    const {ruta, data} = cursoEnProgreso;
+    const modIdx = data.curMod || 0;
+    const totalMods = ruta.pasos;
+    const respondidas = data.scores ? data.scores.reduce((acc,s)=>acc+(s.qs?s.qs.filter(q=>q!==null).length:0),0) : 0;
+    const totalPregs = data.scores ? data.scores.reduce((acc,s)=>acc+(s.qs?s.qs.length:0),0) : 0;
+
+    const cont = ce('div','');
+    cont.style.cssText = 'width:100%;max-width:560px;background:var(--lila);border-radius:12px;padding:14px 16px;margin:10px 0 4px;cursor:pointer;transition:opacity .15s';
+    cont.onmouseenter = ()=>cont.style.opacity='.9';
+    cont.onmouseleave = ()=>cont.style.opacity='1';
+    cont.innerHTML = `
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,0.7);margin-bottom:6px">Continúa donde lo dejaste</div>
+      <div style="font-size:15px;font-weight:800;color:white;margin-bottom:4px">${ruta.titulo}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:12px;color:rgba(255,255,255,0.8)">Módulo ${modIdx+1} de ${totalMods} · ${respondidas}/${totalPregs} preguntas respondidas</div>
+        <div style="font-size:18px;color:white">→</div>
+      </div>`;
+    cont.onclick = ()=>renderFormacion(wrap, ruta);
+    outer.appendChild(cont);
+  }
+
+  // ── CURSOS POR CATEGORÍA ───────────────────────────────────────────────
   const CATS = [
-    { key: 'clinico', label: '🔬 Clínico', sub: 'Equipos y terapias' },
-    { key: 'centro',  label: '🏥 Centro',  sub: 'Protocolos y funcionamiento' }
+    { key: 'centro',  label: 'Centro',  sub: 'Protocolos y funcionamiento', emoji: '🏥' },
+    { key: 'clinico', label: 'Clínico', sub: 'Equipos y terapias avanzadas', emoji: '🔬' }
   ];
 
   function mkCard(ruta){
-    const card = ce('div', ruta.pasos > 0 ? 'wiki-ruta-card' : 'wiki-ruta-card wiki-ruta-soon');
-    const secKey = 'wiki_' + ruta.id;
+    const secKey = 'wiki_'+ruta.id;
     const completada = progresoFisio[secKey]?.estado === 'completado';
-    // Color de etiqueta según rol
+    const esObligatorio = cursosParaRol(ruta);
+    const lsKey = 'fisio365_school_'+ruta.id+'_'+(fisioActual?.id||'x');
+    let enProgreso = false;
+    try{
+      const saved = localStorage.getItem(lsKey);
+      if(saved){
+        const data = JSON.parse(saved);
+        enProgreso = data.scores && data.scores.some(s=>s.qs&&s.qs.some(q=>q!==null));
+      }
+    }catch(e){}
+
+    const card = ce('div', ruta.pasos > 0 ? 'wiki-ruta-card' : 'wiki-ruta-card wiki-ruta-soon');
+    if(completada) card.style.cssText += ';border-color:#9FE1CB;background:#f0fdf8';
+
     const etqStyle = ruta.etiqueta === 'Fisioterapeutas'
       ? 'background:#e8eeff;color:#4a6cf7'
       : ruta.etiqueta === 'Recepción'
       ? 'background:#fff3e0;color:#e07b00'
-      : 'background:#fde8fb;color:#f588e3';
+      : 'background:#fde8fb;color:#c040b0';
+
+    const badgeOblig = esObligatorio && !completada
+      ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:#fee;color:#c00;border-radius:99px;padding:2px 7px">Obligatorio</span>`
+      : '';
+    const badgeProgreso = enProgreso && !completada
+      ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:#ede9f7;color:var(--lila);border-radius:99px;padding:2px 7px">En progreso</span>`
+      : '';
+    const badgeHecho = completada
+      ? `<span class="wiki-badge-hecho">✓ Completado</span>`
+      : '';
+
     card.innerHTML = `
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
         <div class="school-etiqueta" style="${etqStyle}">${ruta.etiqueta||''}</div>
         ${ruta.info ? `<button class="school-info-btn" onclick="event.stopPropagation();toggleInfo('info_${ruta.id}')" title="Más información"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>` : ''}
       </div>
       <div class="wiki-ruta-titulo">${ruta.titulo}</div>
       <div class="wiki-ruta-desc">${ruta.desc}</div>
       <div id="info_${ruta.id}" class="school-info-box" style="display:none">${ruta.info||''}</div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px">
         ${ruta.pasos === 0 ? '<div class="wiki-ruta-meta">Próximamente</div>' : ''}
-        ${completada ? '<span class="wiki-badge-hecho">✓ Completado</span>' : ''}
+        ${badgeHecho}${badgeProgreso}${badgeOblig}
       </div>`;
-    if(ruta.pasos > 0) card.onclick = () => ruta.tipo === 'formacion' ? renderFormacion(wrap, ruta) : renderWikiRuta(wrap, ruta);
+    if(ruta.pasos > 0) card.onclick = ()=> ruta.tipo === 'formacion' ? renderFormacion(wrap, ruta) : renderWikiRuta(wrap, ruta);
     return card;
   }
 
@@ -4313,20 +4408,20 @@ function renderWiki(wrap){
     const rutas = WIKI_RUTAS.filter(r => r.categoria === cat.key);
     if(!rutas.length) return;
 
-    // Cabecera de categoría
     const catHdr = ce('div','');
-    catHdr.style.cssText = 'width:100%;max-width:560px;margin:18px 0 10px';
+    catHdr.style.cssText = 'width:100%;max-width:560px;margin:22px 0 10px;display:flex;align-items:center;gap:8px';
     catHdr.innerHTML = `
-      <div style="font-size:15px;font-weight:800;color:var(--black);letter-spacing:-0.2px">${cat.label}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:2px">${cat.sub}</div>`;
+      <div style="font-size:18px">${cat.emoji}</div>
+      <div>
+        <div style="font-size:15px;font-weight:800;color:var(--black);letter-spacing:-0.2px">${cat.label}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px">${cat.sub}</div>
+      </div>`;
     outer.appendChild(catHdr);
 
-    // Separador
     const sep = ce('div','');
     sep.style.cssText = 'width:100%;max-width:560px;height:1px;background:var(--border);margin-bottom:12px';
     outer.appendChild(sep);
 
-    // Grid de cursos de esta categoría
     const grid = ce('div','wiki-hub-grid');
     rutas.forEach(ruta => grid.appendChild(mkCard(ruta)));
     outer.appendChild(grid);
@@ -4846,6 +4941,191 @@ function renderFormacion(wrap, ruta){
 
   // ── MÓDULOS PRIMERA VISITA ──────────────────────────────────────────────
 
+
+
+  // ── MÓDULOS AIRTABLE ─────────────────────────────────────────────────────
+  const MODS_AIRTABLE = [
+    {t:'¿Qué es Airtable?',sub:'La agenda central de FISIO365',
+     cards:[
+      {ti:'Para qué lo usamos',icon:'🗄️',body:`Airtable es <strong>el sistema central de la clínica</strong>. Todo pasa por aquí: las citas, los pacientes, el estado de cada sesión y el seguimiento.<br><br>Hay dos tablas principales:<br>• <strong>CITAS</strong> — la agenda con todas las sesiones programadas<br>• <strong>PACIENTES</strong> — el registro de cada paciente con sus datos e historial<br><br>Si no está en Airtable, no existe.`},
+      {ti:'Conexión con la web',icon:'🌐',body:`La web de reservas de FISIO365 está conectada con Airtable en tiempo real. Cuando un paciente reserva online, la cita aparece directamente en Airtable.<br><br>Del mismo modo, si bloqueas o liberas horas en Airtable, la web lo refleja automáticamente.`},
+      {ti:'La regla de oro',icon:'⭐',body:`<strong>Toda la información va siempre a Airtable.</strong><br><br>No en papel. No en WhatsApp. No en notas del móvil. En Airtable.<br><br>Solo así recepción, fisios y dirección trabajan con la misma información y no hay errores ni confusiones.`}
+     ],
+     qs:[
+      {q:'¿Dónde se registran todas las citas de la clínica?',opts:['En una hoja de papel en recepción','En Airtable','En el grupo de WhatsApp del equipo'],ok:1,fb:['El papel no está conectado con nada — no sirve.','¡Correcto! Airtable es el sistema central de la clínica.','WhatsApp es para comunicación — no es un sistema de gestión.']},
+      {q:'Si un paciente reserva online, ¿dónde aparece la cita?',opts:['Hay que crearla manualmente en Airtable','Aparece automáticamente en Airtable','Llega por email y hay que copiarla'],ok:1,fb:['No hace falta — la conexión es automática.','¡Correcto! La web y Airtable están conectados en tiempo real.','No — la integración es directa.']}
+     ]
+    },
+    {t:'Crear un paciente nuevo',sub:'Antes de la primera cita',
+     cards:[
+      {ti:'Cuándo se crea',icon:'👤',body:`Siempre que venga un paciente nuevo que no esté ya en Airtable, hay que crear su ficha en la tabla <strong>PACIENTES</strong> antes de programar la cita.<br><br>Sin ficha de paciente, no se puede asignar la cita correctamente.`},
+      {ti:'Campos obligatorios',icon:'📋',body:`Al crear un paciente nuevo, los campos imprescindibles son:<br><br>• <strong>Nombre completo</strong><br>• <strong>Teléfono</strong> — sin espacios, sin guiones (ej: 612345678)<br>• <strong>Email</strong> — si lo tiene<br>• <strong>Fecha de nacimiento</strong> — importante para el historial<br><br>Cuanta más información, mejor — pero estos cuatro son los mínimos.`},
+      {ti:'Formato del teléfono',icon:'📱',body:`El teléfono se escribe <strong>sin espacios ni guiones</strong>: 612345678.<br><br>Esto es importante porque Airtable usa el teléfono para conectar automáticamente los formularios de consentimiento y otras automatizaciones. Un teléfono mal escrito rompe esa conexión.`}
+     ],
+     qs:[
+      {q:'¿Qué hay que hacer antes de programar la cita de un paciente nuevo?',opts:['Programar la cita y ya se crea solo','Crear su ficha en la tabla PACIENTES','Anotarlo en papel y crearlo después'],ok:1,fb:['No se crea solo — hay que crearlo manualmente.','¡Correcto! Sin ficha no se puede asignar la cita correctamente.','En papel no sirve — todo va a Airtable.']},
+      {q:'¿Cómo se escribe el teléfono en Airtable?',opts:['Con espacios: 612 345 678','Con guiones: 612-345-678','Sin espacios ni guiones: 612345678'],ok:2,fb:['Sin espacios — las automatizaciones lo necesitan limpio.','Sin guiones — las automatizaciones lo necesitan limpio.','¡Correcto! Sin espacios ni guiones para que las automatizaciones funcionen.']}
+     ]
+    },
+    {t:'La vista de agenda',sub:'Cómo leer la agenda de un vistazo',
+     cards:[
+      {ti:'Las columnas principales',icon:'📊',body:`En la vista de agenda de CITAS verás estas columnas clave:<br><br>• <strong>FECHA y HORA</strong> — cuándo es la cita<br>• <strong>FISIO</strong> — quién atiende<br>• <strong>PACIENTE</strong> — vinculado a su ficha<br>• <strong>ESTADO</strong> — el estado actual de la cita<br>• <strong>TIPO</strong> — primera visita, sesión, pack...`},
+      {ti:'Los estados de la cita',icon:'🚦',body:`Cada cita tiene un estado que indica en qué punto está:<br><br>• <strong>CITA LIBRE</strong> — hueco disponible<br>• <strong>CITA BLOQUEADA</strong> — no disponible (vacaciones, formación...)<br>• <strong>PENDIENTE</strong> — cita confirmada, paciente por venir<br>• <strong>REALIZADA</strong> — sesión completada<br>• <strong>AUSENTE</strong> — el paciente no vino<br>• <strong>CANCELADA</strong> — cita cancelada`},
+      {ti:'Filtros y vistas',icon:'🔍',body:`Puedes filtrar por fisio, por fecha o por estado para ver exactamente lo que necesitas.<br><br>La vista de hoy es tu principal herramienta: muestra todas las citas del día con su estado actual. Revísala al empezar el día y actualízala a lo largo de la jornada.`}
+     ],
+     qs:[
+      {q:'¿Qué estado tiene una cita confirmada que el paciente todavía no ha venido?',opts:['CITA LIBRE','PENDIENTE','REALIZADA'],ok:1,fb:['LIBRE es un hueco disponible sin asignar.','¡Correcto! PENDIENTE significa cita confirmada, paciente por venir.','REALIZADA es cuando la sesión ya ha ocurrido.']},
+      {q:'¿Para qué sirve el estado CITA BLOQUEADA?',opts:['Para citas pendientes de confirmar','Para huecos no disponibles (vacaciones, formación, etc.)','Para citas canceladas por el paciente'],ok:1,fb:['Las citas pendientes de confirmar usan PENDIENTE.','¡Correcto! BLOQUEADA indica que ese hueco no está disponible para pacientes.','Las cancelaciones usan el estado CANCELADA.']}
+     ]
+    },
+    {t:'Buscar citas disponibles',sub:'Encontrar el hueco correcto rápido',
+     cards:[
+      {ti:'Cómo filtrar',icon:'🔎',body:`Para buscar huecos disponibles, filtra por:<br><br>1. <strong>Estado = CITA LIBRE</strong><br>2. <strong>Fecha</strong> — el rango que necesitas<br>3. <strong>Fisio</strong> — si el paciente tiene preferencia<br><br>Así ves de un vistazo todos los huecos disponibles sin revisar cita por cita.`},
+      {ti:'Qué ofrecer al paciente',icon:'💬',body:`Cuando el paciente pide cita, ofrece siempre <strong>dos o tres opciones</strong> — no una sola.<br><br>Si tienes su preferencia de horario (mañanas, tardes, días concretos), filtra primero por eso y luego ofrece las opciones más convenientes para él.`},
+      {ti:'Cuando no hay hueco',icon:'📅',body:`Si no hay huecos en el rango que pide el paciente:<br><br>• Amplía el rango de fechas<br>• Ofrece otro fisio si el paciente lo acepta<br>• Anota su nombre en una lista de espera si el equipo la mantiene<br><br>Nunca dejes a un paciente sin respuesta — siempre hay una alternativa que ofrecer.`}
+     ],
+     qs:[
+      {q:'¿Por qué estado filtras para ver los huecos disponibles?',opts:['PENDIENTE','CITA LIBRE','REALIZADA'],ok:1,fb:['PENDIENTE son citas ya ocupadas.','¡Correcto! CITA LIBRE muestra todos los huecos disponibles.','REALIZADA son sesiones ya completadas.']},
+      {q:'¿Cuántas opciones deberías ofrecer al paciente al buscar cita?',opts:['Solo la primera disponible','Dos o tres opciones','Todas las disponibles'],ok:1,fb:['Una sola opción no da flexibilidad al paciente.','¡Correcto! Dos o tres opciones es lo ideal.','Todas puede ser abrumador — dos o tres es suficiente.']}
+     ]
+    },
+    {t:'Crear y completar una cita',sub:'El proceso paso a paso',
+     cards:[
+      {ti:'Los 4 pasos',icon:'📝',body:`Para asignar una cita a un paciente:<br><br>1. Localiza el hueco en CITAS (estado CITA LIBRE)<br>2. Abre el registro y vincula el <strong>PACIENTE</strong><br>3. Selecciona el <strong>TIPO</strong> de cita (primera visita, sesión, pack...)<br>4. Cambia el estado a <strong>PENDIENTE</strong><br><br>Guarda el registro — la cita ya está asignada.`},
+      {ti:'El paso más importante',icon:'⚠️',body:`<strong>Cambiar el estado a PENDIENTE es el paso más crítico.</strong><br><br>Si el hueco queda en CITA LIBRE después de vincular al paciente, el sistema y el equipo lo siguen viendo como disponible — y puede asignarse a otro paciente.<br><br>Siempre verifica que el estado queda en PENDIENTE antes de cerrar el registro.`},
+      {ti:'El tipo de cita',icon:'🏷️',body:`El tipo de cita ayuda a recepción y al fisio a saber qué esperar:<br><br>• <strong>Primera visita</strong> — paciente nuevo, requiere anamnesis y valoración<br>• <strong>Sesión</strong> — continuación del tratamiento<br>• <strong>Pack</strong> — dentro de un bono de sesiones<br><br>Rellenarlo correctamente evita confusiones y mejora la atención.`}
+     ],
+     qs:[
+      {q:'¿Qué estado debe tener una cita después de asignársela a un paciente?',opts:['CITA LIBRE','REALIZADA','PENDIENTE'],ok:2,fb:['LIBRE significa que está disponible — nunca después de asignarla.','REALIZADA es cuando la sesión ya ocurrió.','¡Correcto! PENDIENTE confirma que la cita está asignada y el paciente por venir.']},
+      {q:'¿Cuál es el paso más crítico al crear una cita?',opts:['Anotar el teléfono del paciente','Cambiar el estado a PENDIENTE','Seleccionar el tipo de cita'],ok:1,fb:['El teléfono ya está en la ficha del paciente.','¡Correcto! Si no cambia a PENDIENTE, el hueco sigue visible como disponible.','El tipo es importante pero no tan crítico como el estado.']}
+     ]
+    },
+    {t:'Gestión durante y después de la sesión',sub:'Mantener la agenda actualizada',
+     cards:[
+      {ti:'Cuando el paciente llega',icon:'✅',body:`Cuando el paciente llega y entra a su sesión, no es necesario cambiar el estado — sigue en PENDIENTE hasta que termine.<br><br>Si el paciente no viene a la hora acordada y no hay contacto, puedes marcarlo como <strong>AUSENTE</strong> tras un tiempo razonable de espera.`},
+      {ti:'Al terminar la sesión',icon:'🏁',body:`Al terminar cada sesión, el estado debe actualizarse a <strong>REALIZADA</strong>.<br><br>Este es el momento también de añadir cualquier nota relevante: si el fisio ha indicado cuántas sesiones más, si el paciente necesita seguimiento especial, o cualquier información que recepción deba conocer.`},
+      {ti:'Cancelaciones',icon:'❌',body:`Si el paciente cancela con antelación:<br>• Cambia el estado a <strong>CANCELADA</strong><br>• Si el hueco puede volver a ofrecerse, crea un nuevo registro con estado CITA LIBRE en esa franja<br><br>Una cita cancelada no vuelve a CITA LIBRE automáticamente — hay que gestionarlo manualmente.`}
+     ],
+     qs:[
+      {q:'¿A qué estado pasa una cita cuando la sesión se ha completado?',opts:['PENDIENTE','CITA LIBRE','REALIZADA'],ok:2,fb:['PENDIENTE es antes de la sesión.','LIBRE es para huecos disponibles.','¡Correcto! REALIZADA indica que la sesión ya ha ocurrido.']},
+      {q:'Si un paciente no viene y no hay contacto, ¿qué estado usas?',opts:['CANCELADA','AUSENTE','CITA LIBRE'],ok:1,fb:['CANCELADA es cuando el paciente avisa que no viene.','¡Correcto! AUSENTE indica que no vino sin avisar.','LIBRE es para huecos disponibles — no para pacientes que no han venido.']}
+     ]
+    },
+    {t:'Estados del paciente',sub:'Saber en qué punto está cada paciente',
+     cards:[
+      {ti:'Por qué importa',icon:'📊',body:`El estado del paciente en su ficha indica en qué momento del tratamiento se encuentra. Recepción lo usa para saber qué gestionar y qué comunicar.<br><br>Un estado desactualizado genera confusión — siempre actualízalo cuando cambie la situación.`},
+      {ti:'Los estados principales',icon:'🚦',body:`• <strong>ACTIVO</strong> — paciente en tratamiento<br>• <strong>FIN PACK</strong> — ha terminado sus sesiones pagadas<br>• <strong>ALTA</strong> — tratamiento completado, sin continuidad prevista<br>• <strong>SESIÓN PUNTUAL</strong> — vino una sola vez, sin tratamiento continuado<br>• <strong>EN ESPERA</strong> — pendiente de confirmar continuidad`},
+      {ti:'Ejemplos reales',icon:'💡',body:`• Paciente termina pack de 10 → estado: <strong>FIN PACK</strong><br>• Fisio da el alta → estado: <strong>ALTA</strong><br>• Paciente vino una vez por un dolor puntual → estado: <strong>SESIÓN PUNTUAL</strong><br>• Paciente continúa con sesiones → estado: <strong>ACTIVO</strong><br><br>El fisio comunica el estado al acompañar al paciente a recepción — recepción lo actualiza.`}
+     ],
+     qs:[
+      {q:'Un paciente termina su pack de 5 sesiones. ¿Qué estado le pones?',opts:['ALTA','FIN PACK','ACTIVO'],ok:1,fb:['ALTA es cuando el fisio da por terminado el tratamiento.','¡Correcto! FIN PACK indica que terminó las sesiones pagadas — puede que continúe o no.','ACTIVO es mientras está en tratamiento.']},
+      {q:'¿Quién comunica el estado del paciente al terminar la sesión?',opts:['El paciente lo dice él mismo','El fisio al acompañar al paciente a recepción','Se actualiza automáticamente'],ok:1,fb:['El paciente no tiene por qué saberlo.','¡Correcto! El fisio da el contexto a recepción y recepción actualiza.','No es automático — requiere la indicación del fisio.']}
+     ]
+    },
+    {t:'Notas en Airtable',sub:'Información que no puede perderse',
+     cards:[
+      {ti:'Qué se anota',icon:'📝',body:`Las notas en la ficha del paciente sirven para dejar contexto que el equipo necesita saber:<br><br>• Indicaciones del fisio sobre el tratamiento<br>• Preferencias del paciente (horarios, fisio preferido)<br>• Situaciones especiales (lesión recurrente, sensibilidad a técnicas...)<br>• Cualquier información relevante para la próxima cita`},
+      {ti:'Cómo redactarlas',icon:'✍️',body:`Las notas deben ser <strong>breves, claras y útiles</strong>. No hace falta escribir un informe — solo lo que el siguiente en atender necesita saber.<br><br>Ejemplos:<br>• <em>«Prefiere tardes, no puede lunes»</em><br>• <em>«Fisio indica 3 sesiones más, 1 por semana»</em><br>• <em>«Muy sensible en zona lumbar — avisar al fisio»</em>`},
+      {ti:'Cuándo anotarlas',icon:'⏰',body:`Anota siempre <strong>en el momento</strong> — después se olvida.<br><br>Cuando el fisio acompaña al paciente a recepción y da indicaciones, recepción las apunta ahí mismo. No esperes a tener un momento tranquilo — ese momento no llega.`}
+     ],
+     qs:[
+      {q:'¿Cuándo es el mejor momento para añadir una nota en Airtable?',opts:['Al final del día cuando hay tiempo','En el momento, cuando te dan la información','Al día siguiente para no olvidarlo'],ok:1,fb:['Al final del día ya se habrán olvidado los detalles.','¡Correcto! En el momento es siempre lo más fiable.','Al día siguiente es demasiado tarde.']},
+      {q:'¿Cómo deben ser las notas en Airtable?',opts:['Largas y detalladas para que no falte nada','Breves, claras y útiles','Solo si es algo muy importante'],ok:1,fb:['Largas y difíciles de leer no ayudan.','¡Correcto! Breves y claras — solo lo que el equipo necesita saber.','Cualquier información relevante merece una nota.']}
+     ]
+    },
+    {t:'Gestión de ausencias y cambios',sub:'Cuando algo no sale como estaba previsto',
+     cards:[
+      {ti:'El paciente no viene',icon:'🚫',body:`Si el paciente no viene a su cita:<br><br>1. Cambia el estado a <strong>AUSENTE</strong><br>2. Intenta contactar por teléfono o WhatsApp<br>3. Si reagenda, crea nueva cita en estado PENDIENTE<br>4. Añade una nota si es un patrón repetido<br><br>Las ausencias repetidas son información útil para el fisio.`},
+      {ti:'Cancelaciones con antelación',icon:'📞',body:`Si el paciente avisa con antelación:<br><br>1. Cambia el estado a <strong>CANCELADA</strong><br>2. Pregunta si quiere reagendar<br>3. Si sí, busca nuevo hueco y crea la cita<br>4. Si no, deja anotado por si contacta más adelante<br><br>Una cancelación bien gestionada puede convertirse en una nueva cita.`},
+      {ti:'Cambios de horario y bloqueos',icon:'🔒',body:`Si un fisio necesita bloquear horas (formación, asuntos personales, vacaciones):<br><br>• Cambia esas franjas a estado <strong>CITA BLOQUEADA</strong><br>• Asegúrate de que no hay pacientes ya asignados en esas horas<br>• Si los hay, contacta con ellos para reagendar antes de bloquear<br><br>Los bloqueos se gestionan siempre con la máxima antelación posible.`}
+     ],
+     qs:[
+      {q:'Un paciente avisa que no puede venir. ¿Qué estado usas?',opts:['AUSENTE','CANCELADA','CITA LIBRE'],ok:1,fb:['AUSENTE es cuando no viene sin avisar.','¡Correcto! Si avisa, es CANCELADA.','LIBRE es para huecos disponibles.']},
+      {q:'Si hay que bloquear horas de un fisio, ¿qué debes hacer primero?',opts:['Bloquear directamente','Verificar que no hay pacientes asignados en esas horas y reagendar si los hay','Avisar al fisio'],ok:1,fb:['Bloquear sin verificar puede dejar a pacientes sin cita.','¡Correcto! Siempre verificar y reagendar antes de bloquear.','El fisio ya sabe — es quien lo ha pedido.']}
+     ]
+    }
+  ];
+
+  // ── MÓDULOS ÚLTIMA SESIÓN PAGADA ─────────────────────────────────────────
+  const MODS_ULTIMA = [
+    {t:'La última sesión pagada',sub:'El momento más importante del ciclo',
+     cards:[
+      {ti:'Por qué es tan importante',icon:'🎯',body:`La última sesión pagada es uno de los momentos más críticos del proceso. Define:<br><br>• Si el paciente vuelve<br>• Si se va bien atendido y con claridad sobre su situación<br>• Si el equipo actúa de forma coordinada<br><br>Una última sesión bien gestionada puede convertirse en el inicio de un nuevo ciclo. Una mal gestionada puede ser la última vez que ese paciente pisa la clínica.`},
+      {ti:'Dos roles, un objetivo',icon:'🤝',body:`En la última sesión intervienen dos partes con roles distintos pero complementarios:<br><br>• <strong>El fisio</strong> — evalúa la situación clínica y decide el siguiente paso<br>• <strong>Recepción</strong> — gestiona lo económico, la agenda y la comunicación con el paciente<br><br>Ninguno puede hacer bien su trabajo sin la información del otro.`},
+      {ti:'El error más común',icon:'⚠️',body:`El error más frecuente es que el fisio termina la sesión sin comunicar nada a recepción — o le dice algo tan vago que recepción no sabe qué hacer.<br><br><em>«Ya veremos»</em> o <em>«él ya sabe»</em> no son instrucciones. Recepción necesita indicaciones concretas.`}
+     ],
+     qs:[
+      {q:'¿Por qué es tan importante la última sesión pagada?',opts:['Porque es la más larga','Porque define si el paciente vuelve y cómo se cierra el ciclo','Porque hay que cobrar'],ok:1,fb:['La duración no es lo que importa.','¡Correcto! Es el momento que define la continuidad del paciente.','El cobro es parte del proceso, no el objetivo.']},
+      {q:'¿Qué necesita recepción del fisio al terminar la última sesión?',opts:['Solo saber si ha pagado','Instrucciones vagas para no presionar','Indicaciones concretas sobre el siguiente paso'],ok:2,fb:['Solo saber si ha pagado no es suficiente para gestionar la continuidad.','Las instrucciones vagas generan errores.','¡Correcto! Recepción necesita claridad para actuar bien.']}
+     ]
+    },
+    {t:'Alta clínica',sub:'Cuando el tratamiento ha terminado bien',
+     cards:[
+      {ti:'Cuándo dar el alta',icon:'✅',body:`El alta se da cuando el paciente ha alcanzado los objetivos del tratamiento:<br><br>• Dolor resuelto o controlado<br>• Movilidad recuperada<br>• El paciente puede hacer su vida con normalidad<br><br>El alta es una buena noticia — hay que comunicarla como tal.`},
+      {ti:'Cómo comunicarlo al paciente',icon:'💬',body:`El fisio comunica el alta en consulta con claridad y positividad:<br><br><em>«Has terminado el tratamiento, estás muy bien. No necesitas más sesiones por ahora — si vuelve el dolor o necesitas algo, ya sabes dónde estamos.»</em><br><br>El paciente debe salir sintiéndose bien atendido y con confianza en que puede volver si lo necesita.`},
+      {ti:'Qué le dice el fisio a recepción',icon:'📋',body:`Al acompañar al paciente a recepción:<br><br><em>«Alta clínica — ha terminado el tratamiento, está genial. Si pregunta por futuras sesiones, puede volver cuando quiera.»</em><br><br>Recepción actualiza el estado del paciente a <strong>ALTA</strong> y cierra el ciclo.`}
+     ],
+     qs:[
+      {q:'¿Qué estado se le pone al paciente en Airtable al dar el alta?',opts:['FIN PACK','ACTIVO','ALTA'],ok:2,fb:['FIN PACK es solo cuando acaba el bono de sesiones.','ACTIVO es mientras está en tratamiento.','¡Correcto! ALTA indica que el tratamiento ha concluido satisfactoriamente.']},
+      {q:'Al dar el alta, ¿qué debe sentir el paciente al salir?',opts:['Que ya no puede volver','Bien atendido y con confianza en que puede volver si lo necesita','Que todavía le queda algo por tratar'],ok:1,fb:['El alta no cierra la puerta — la deja abierta.','¡Correcto! El paciente debe salir con sensación positiva y la puerta abierta.','Si el alta está bien dada, el paciente sale resuelto.']}
+     ]
+    },
+    {t:'Más sesiones necesarias',sub:'Cuando el tratamiento debe continuar',
+     cards:[
+      {ti:'Cuándo continuar',icon:'➡️',body:`A veces al terminar el pack el paciente ha mejorado pero no ha llegado al objetivo final:<br><br>• Queda dolor residual<br>• La movilidad no está completa<br>• El proceso necesita más tiempo<br><br>En estos casos el fisio recomienda continuar — y debe decirlo claramente.`},
+      {ti:'Cómo recomendarlo',icon:'💬',body:`El fisio explica la situación con honestidad:<br><br><em>«Has mejorado mucho pero todavía queda algo. Te recomiendo que hagamos unas sesiones más para terminar de consolidar. Con 3-4 sesiones más deberías estar muy bien.»</em><br><br>El paciente necesita entender por qué se recomiendan más sesiones — no que sienta que se le está vendiendo algo.`},
+      {ti:'Qué le dice el fisio a recepción',icon:'📋',body:`Al acompañar al paciente:<br><br><em>«Queda algo de molestia — recomiendo 3-4 sesiones más, una por semana. Por favor, agenda la próxima.»</em><br><br>Recepción gestiona el cobro (sesiones sueltas o nuevo pack según convenga) y programa la siguiente cita.`}
+     ],
+     qs:[
+      {q:'¿Cómo debe explicar el fisio al paciente que necesita más sesiones?',opts:['Directamente: necesitas más sesiones','Con honestidad, explicando qué queda por tratar y cuántas sesiones estima','Sin decir nada y que recepción lo gestione'],ok:1,fb:['Sin contexto, puede parecer que solo quieren vender sesiones.','¡Correcto! El paciente entiende mejor si sabe el porqué.','El fisio debe dar el contexto clínico — recepción gestiona pero no explica el tratamiento.']},
+      {q:'¿Qué información concreta necesita recepción del fisio?',opts:['Solo que necesita más sesiones','Cuántas sesiones y con qué frecuencia','Solo el nombre del siguiente pack'],ok:1,fb:['Sin número ni frecuencia, recepción no sabe qué ofrecer.','¡Correcto! Cuántas y con qué frecuencia — así recepción puede gestionar.','El pack es la consecuencia — primero la indicación clínica.']}
+     ]
+    },
+    {t:'Falta de mejoría',sub:'Cuando los resultados no son los esperados',
+     cards:[
+      {ti:'Cuándo ocurre',icon:'🤔',body:`A veces después de un ciclo completo el paciente no ha mejorado como se esperaba. Puede ser por:<br><br>• La patología es más compleja de lo previsto<br>• El paciente no ha seguido las indicaciones<br>• Puede haber algo que requiere otra evaluación<br><br>Es una situación que hay que gestionar con honestidad y sin generar alarma innecesaria.`},
+      {ti:'Cómo comunicarlo',icon:'💬',body:`Con honestidad y sin minimizar:<br><br><em>«Hemos trabajado bien pero los resultados no han sido los que esperaba. Quiero reevaluar tu caso y plantear otro enfoque. Vamos a hacer una sesión de revisión para ver qué está pasando.»</em><br><br>El paciente valora la honestidad más que las respuestas vacías.`},
+      {ti:'Qué le dice el fisio a recepción',icon:'📋',body:`<em>«Necesito una sesión de reevaluación — los resultados no han sido los esperados. Por favor, agenda una sesión para la semana que viene.»</em><br><br>No es necesario dar muchos detalles a recepción sobre la situación clínica — solo la instrucción clara de qué hacer.`}
+     ],
+     qs:[
+      {q:'Si un paciente no ha mejorado como se esperaba, ¿qué hace el fisio?',opts:['Le dice que el tratamiento no funciona en su caso','Reevalúa y plantea otro enfoque con honestidad','Recomienda seguir con el mismo tratamiento'],ok:1,fb:['No es honesto ni constructivo.','¡Correcto! Reevaluar y ser honesto genera más confianza que esconder el problema.','Si no ha funcionado, cambiar el enfoque es lo correcto.']},
+      {q:'¿Cuánto detalle clínico necesita recepción en estos casos?',opts:['Todo el detalle para que pueda explicarlo al paciente','Solo la instrucción clara de qué hacer','Nada — el paciente ya lo sabe'],ok:1,fb:['Recepción no es quien da el contexto clínico — eso es el fisio.','¡Correcto! Recepción gestiona — el fisio ya ha hablado con el paciente.','Recepción sí necesita saber qué hacer.']}
+     ]
+    },
+    {t:'Derivaciones',sub:'Cuando el paciente necesita otro profesional',
+     cards:[
+      {ti:'Cuándo derivar',icon:'🏥',body:`A veces el fisio detecta que el paciente necesita ser valorado por otro profesional antes de continuar o en paralelo:<br><br>• Médico de cabecera o traumatólogo para pruebas de imagen<br>• Neurólogo si hay síntomas neurológicos que requieren valoración<br>• Otro especialista según la patología<br><br>Derivar es una muestra de profesionalidad — no un fracaso.`},
+      {ti:'Cómo comunicarlo al paciente',icon:'💬',body:`<em>«Te recomiendo que pidas una resonancia / vayas al traumatólogo / te vea el médico para descartar X. Una vez tengas los resultados, volvemos a evaluar y continuamos el tratamiento.»</em><br><br>La derivación no cierra el tratamiento — es un paso más dentro del proceso.`},
+      {ti:'Qué le dice el fisio a recepción',icon:'📋',body:`<em>«Vamos a hacer una pausa hasta que tenga los resultados de las pruebas. Cuando llame para continuar, agenda con normalidad.»</em><br><br>Recepción lo anota en la ficha del paciente para que el equipo tenga contexto cuando vuelva a contactar.`}
+     ],
+     qs:[
+      {q:'¿Qué significa derivar a un paciente?',opts:['Que el tratamiento ha fracasado','Que el paciente necesita valoración de otro profesional — es una muestra de profesionalidad','Que ya no es paciente de la clínica'],ok:1,fb:['Derivar no es fracasar — es hacer lo correcto para el paciente.','¡Correcto! Derivar cuando es necesario genera confianza y es lo más profesional.','La derivación no cierra la relación con el paciente.']},
+      {q:'¿Qué debe anotar recepción cuando hay una derivación?',opts:['Nada — el paciente ya lo sabe','El motivo de la pausa y que cuando contacte se agenda con normalidad','El diagnóstico completo'],ok:1,fb:['Recepción necesita contexto para cuando el paciente vuelva a contactar.','¡Correcto! Una nota breve para que el equipo sepa la situación cuando el paciente llame.','El diagnóstico no es necesario — solo la situación y qué hacer.']}
+     ]
+    },
+    {t:'Pack acabado, paciente satisfecho',sub:'Cerrar el ciclo y dejar la puerta abierta',
+     cards:[
+      {ti:'El cierre ideal',icon:'🌟',body:`Cuando el pack termina y el paciente está satisfecho, el objetivo es cerrar el ciclo dejando la puerta abierta:<br><br>• El paciente siente que ha recibido una atención excelente<br>• Sabe que puede volver cuando lo necesite<br>• Tiene confianza en el equipo<br><br>Este paciente satisfecho es el mejor canal de captación de nuevos pacientes.`},
+      {ti:'El papel de recepción',icon:'💼',body:`Recepción tiene un rol activo en este momento:<br><br>• Confirmar que el paciente ha recibido todo lo que necesitaba<br>• Informarle sobre cómo puede volver (sesión puntual, nuevo pack, revisión)<br>• Transmitir calidez y cierre positivo<br><br><em>«Ha sido un placer tenerte con nosotros — cuando quieras volver, ya sabes dónde estamos.»</em>`},
+      {ti:'Pedir reseña',icon:'⭐',body:`Un paciente satisfecho que acaba de terminar el tratamiento es el momento ideal para pedir una reseña en Google.<br><br>No hace falta que sea forzado — puede ser tan natural como:<br><br><em>«Si estás contento con el tratamiento, nos ayudarías muchísimo dejando una reseña en Google. Solo te lleva un minuto.»</em>`}
+     ],
+     qs:[
+      {q:'¿Cuándo es el mejor momento para pedir una reseña en Google?',opts:['Al inicio del tratamiento','Cuando el paciente termina satisfecho','Por WhatsApp unos días después'],ok:1,fb:['Al inicio el paciente no puede opinar sobre el resultado.','¡Correcto! Un paciente satisfecho que acaba de terminar es el momento ideal.','En persona es siempre más efectivo que por mensaje.']},
+      {q:'¿Qué debe sentir el paciente al salir tras el último pack?',opts:['Que ya no le queda nada y no tiene que volver','Que ha recibido una atención excelente y puede volver cuando lo necesite','Que debería haber hecho más sesiones'],ok:1,fb:['La puerta siempre queda abierta.','¡Correcto! Cierre positivo con sensación de atención excelente y puerta abierta.','Si el tratamiento fue bien, el paciente sale resuelto.']}
+     ]
+    },
+    {t:'Situaciones especiales',sub:'Casos que requieren atención extra',
+     cards:[
+      {ti:'Paciente que desaparece',icon:'👻',body:`A veces un paciente deja de venir sin avisar en medio del tratamiento. Protocolo:<br><br>1. Contactar por WhatsApp o teléfono<br>2. Si no responde, un segundo intento a los pocos días<br>3. Si no hay respuesta, anotar en la ficha y dejar el estado como corresponda<br><br>No insistir más de dos veces — respetar su decisión.`},
+      {ti:'Paciente insatisfecho',icon:'😟',body:`Si el paciente expresa insatisfacción con el tratamiento o el servicio:<br><br>• Escucha activa, sin ponerse a la defensiva<br>• Reconocer lo que ha ocurrido si ha habido un error<br>• Ofrecer soluciones concretas<br>• Escalar a dirección si la situación lo requiere<br><br>Una queja bien gestionada puede convertirse en un paciente fiel.`},
+      {ti:'Paciente que pregunta por el precio después',icon:'💰',body:`Si el paciente ya ha terminado y pregunta por continuar:<br><br>El fisio orienta clínicamente (cuántas sesiones necesita, con qué frecuencia). Recepción gestiona el precio, el pack y las condiciones.<br><br>El fisio nunca negocia precios — eso es siempre de recepción.`}
+     ],
+     qs:[
+      {q:'Si un paciente desaparece sin avisar, ¿cuántas veces contactas?',opts:['Una sola vez','Dos veces como máximo, respetando su decisión','Hasta que responda'],ok:1,fb:['Una puede no ser suficiente — dos es el estándar.','¡Correcto! Dos intentos y respeto a su decisión.','Insistir demasiado genera malestar.']},
+      {q:'¿Quién gestiona el precio si el paciente quiere continuar?',opts:['El fisio, que conoce el caso','Recepción','Cualquiera de los dos'],ok:1,fb:['El fisio orienta clínicamente — el precio es de recepción.','¡Correcto! El precio y las condiciones siempre los gestiona recepción.','Hay un rol claro — el fisio nunca negocia precios.']}
+     ]
+    }
+  ];
 
   const MODS_MANUAL = [
     // ═══════════════════════════════════════
@@ -5953,7 +6233,8 @@ function renderFormacion(wrap, ruta){
     });
 
     // Test del módulo
-    const tHd=ce('div','');tHd.innerHTML='<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 10px">✓ Test del módulo</div>';
+    const tSep=ce('div','');tSep.style.cssText='height:1px;background:var(--border);margin:28px 0 20px';wrap.appendChild(tSep);
+    const tHd=ce('div','');tHd.innerHTML='<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 14px">✓ Test del módulo</div>';
     wrap.appendChild(tHd);
     // qState: {answered:bool, correct:bool} — persistido en scores[curMod].qs[qi] (opción elegida o null)
     const savedQs = scores[curMod].qs;
