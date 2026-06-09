@@ -358,6 +358,10 @@ input[type=number]{text-align:center}
         <div class="sb-item" id="sb-pac" onclick="showSection('pac')">
           Pacientes
         </div>
+        <div class="sb-item" id="sb-msg" onclick="showSection('msg')" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Mensajes</span>
+          <span id="sb-msg-badge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:2px 7px;min-width:18px;text-align:center"></span>
+        </div>
         <div class="sb-item" id="sb-school" onclick="showSection('school')" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px">
           School
         </div>
@@ -479,6 +483,8 @@ async function doLogin(){
       $('panelScreen').style.display='block';
       window.scrollTo({top:0,behavior:'instant'});
       await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso()]);
+      checkMensajesBadge();
+      setInterval(checkMensajesBadge, 60000); // revisar cada minuto
       aplicarRole();
       iniciarAutoUpdate();
       showSection('prog');
@@ -554,7 +560,7 @@ async function loadBiblio(){
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function showSection(sec){
-  ['prog','anam','pac','school'].forEach(s=>{
+  ['prog','anam','pac','school','msg'].forEach(s=>{
     const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
   });
   const [t,s] = TOPBAR[sec];
@@ -569,6 +575,7 @@ function showSection(sec){
     else renderAnamHub(wrap);
   }
   else if(sec==='pac') renderPac(wrap);
+  else if(sec==='msg') renderMensajes(wrap);
   else if(sec==='school') renderWiki(wrap);
 }
 
@@ -6829,6 +6836,128 @@ footer{background:#0d0d0d;padding:40px 20px;text-align:center;margin-top:12px;}
   $('topbar-t').textContent='Guía del panel';
   $('topbar-s').textContent='';
 }
+
+// ── MENSAJES ─────────────────────────────────────────────────────────────────
+const TABLE_MENSAJES = 'tblMENSAJES'; // Crear en Airtable
+
+async function renderMensajes(wrap){
+  wrap.innerHTML='';
+  // Header
+  const hd=ce('div','');
+  hd.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:20px';
+  hd.innerHTML='<div><div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Mensajes</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Mensajes enviados por pacientes</div></div>';
+  wrap.appendChild(hd);
+
+  // Loading
+  const loading=ce('div','');
+  loading.innerHTML='<div style="text-align:center;padding:3rem"><div style="width:28px;height:28px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
+  wrap.appendChild(loading);
+
+  try{
+    // Leer mensajes de Airtable filtrando por fisio actual
+    const url=`https://api.airtable.com/v0/appsrGnHpFt8sVD5A/${TABLE_MENSAJES}?filterByFormula=${encodeURIComponent(`{FisioId}="${fisioActual.id}"`)}&sort%5B0%5D%5Bfield%5D=Fecha&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=50`;
+    const r=await fetch(url,{headers:{Authorization:`Bearer ${process.env.AIRTABLE_KEY}`}});
+    // Como no podemos llamar a Airtable directo desde el cliente, usamos la API
+    const res=await fetch(`/api/pacientes?action=get-mensajes-fisio&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
+    const data=await res.json();
+    loading.remove();
+
+    const mensajes=data.mensajes||[];
+
+    // Actualizar badge
+    const sinLeer=mensajes.filter(m=>!m.visto).length;
+    const badge=$('sb-msg-badge');
+    if(badge){badge.textContent=sinLeer>0?String(sinLeer):'';badge.style.display=sinLeer>0?'block':'none';}
+
+    if(!mensajes.length){
+      const em=ce('div','');
+      em.style.cssText='text-align:center;padding:3rem 1rem;color:var(--muted)';
+      em.innerHTML='<div style="font-size:48px;margin-bottom:12px">💬</div><div style="font-size:16px;font-weight:600;margin-bottom:8px">Sin mensajes todavía</div><div style="font-size:13px">Cuando un paciente te envíe algo desde su app, aparecerá aquí.</div>';
+      wrap.appendChild(em);
+      return;
+    }
+
+    mensajes.forEach(m=>{
+      const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');
+      const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
+      const tipoBadge=esDolorAumento
+        ?'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:#fff0f0;color:#c00;border-radius:99px;padding:2px 8px">😣 Dolor</span>'
+        :'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--lila-light);color:var(--lila);border-radius:99px;padding:2px 8px">📔 Diario</span>';
+      const noVistoBadge=!m.visto?'<span style="width:8px;height:8px;background:#ee2155;border-radius:50%;display:inline-block;margin-left:6px"></span>':'';
+
+      const card=ce('div','card');
+      card.style.cssText='margin-bottom:12px;'+(m.visto?'':'border-color:var(--lila);');
+      card.innerHTML=`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">${tipoBadge}${noVistoBadge}</div>
+          <div style="font-size:11px;color:var(--muted)">${m.fecha||''}</div>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:4px">${m.pacienteNombre||'Paciente'}</div>
+        <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:12px">${textoLimpio}</div>
+        ${m.respuesta
+          ?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lila);margin-bottom:4px">Tu respuesta</div><div style="font-size:13px;color:var(--black);line-height:1.5">${m.respuesta}</div></div>`
+          :`<div style="display:flex;gap:8px;align-items:flex-start">
+              <textarea id="reply_${m.id}" placeholder="Escribe tu respuesta..." style="flex:1;font-family:var(--font);font-size:13px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:70px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+              <button onclick="responderMensaje('${m.id}','${(m.pacienteId||'').replace(/'/g,"\'")}','${(m.pacienteNombre||'').replace(/'/g,"\'")}',this)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:10px 14px;background:var(--lila);color:white;border:none;border-radius:8px;cursor:pointer;flex-shrink:0;white-space:nowrap">Enviar</button>
+           </div>`
+        }`;
+
+      // Marcar como visto al renderizar
+      if(!m.visto) marcarMensajeVisto(m.id);
+      wrap.appendChild(card);
+    });
+
+  }catch(e){
+    loading.remove();
+    const err=ce('div','');
+    err.style.cssText='text-align:center;padding:2rem;color:var(--muted)';
+    err.textContent='Error al cargar mensajes: '+e.message;
+    wrap.appendChild(err);
+  }
+}
+
+async function responderMensaje(mensajeId, pacienteId, pacienteNombre, btn){
+  const ta=document.getElementById(`reply_${mensajeId}`);
+  const texto=ta?.value?.trim();
+  if(!texto)return;
+  btn.disabled=true;btn.textContent='Enviando...';
+  try{
+    const res=await fetch('/api/pacientes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pwd:apiPwd,action:'responder-mensaje',mensajeId,respuesta:texto,fisioNombre:fisioActual.nombre,pacienteId,pacienteNombre})
+    });
+    const d=await res.json();
+    if(d.ok){
+      toast('Respuesta enviada ✓',true);
+      renderMensajes($('mainWrap'));
+    } else {
+      toast('Error: '+(d.error||''),false);
+      btn.disabled=false;btn.textContent='Enviar';
+    }
+  }catch(e){toast('Error: '+e.message,false);btn.disabled=false;btn.textContent='Enviar';}
+}
+
+async function marcarMensajeVisto(mensajeId){
+  try{
+    await fetch('/api/pacientes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pwd:apiPwd,action:'marcar-visto',mensajeId})
+    });
+  }catch(e){}
+}
+
+async function checkMensajesBadge(){
+  try{
+    const res=await fetch(`/api/pacientes?action=get-mensajes-fisio&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}&soloCount=1`);
+    const data=await res.json();
+    const sinLeer=data.sinLeer||0;
+    const badge=$('sb-msg-badge');
+    if(badge){badge.textContent=sinLeer>0?String(sinLeer):'';badge.style.display=sinLeer>0?'block':'none';}
+  }catch(e){}
+}
+
 // LIGHTBOX
 function verImg(url,label){
   $('lb-img').src=url;$('lb-label').textContent=label;
