@@ -13,15 +13,37 @@ export default async function handler(req) {
     'Content-Type': 'application/json'
   };
 
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  const url2 = new URL(req.url);
+  const action = url2.searchParams.get('action') || '';
+
+  // GET lista-publica — solo fisios con role=fisio, sin contraseña
+  if (req.method === 'GET' && action === 'lista-publica') {
+    try {
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      const data = await r.json();
+      const fisios = (data.records || [])
+        .filter(rec => (rec.fields['Role'] || '').toLowerCase() === 'fisio')
+        .map(rec => ({
+          id: rec.id,
+          nombre: rec.fields['Name'] || '',
+          foto: rec.fields['Foto']?.[0]?.url || ''
+        }));
+      return new Response(JSON.stringify({ ok: true, fisios }), { headers: corsHeaders });
+    } catch(e) {
+      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
+    }
   }
 
-  // GET — lista de fisios para selector
+  // GET — lista completa de fisios para selector panel
   if (req.method === 'GET') {
     try {
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}`;
-      const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
       const data = await r.json();
       const fisios = (data.records || [])
         .filter(rec => rec.fields['Name'] && rec.fields['Password'])
@@ -41,44 +63,26 @@ export default async function handler(req) {
   // POST — login fisio
   if (req.method === 'POST') {
     let body = {};
-    try {
-      const text = await req.text();
-      body = text ? JSON.parse(text) : {};
-    } catch(e) { body = {}; }
+    try { const text = await req.text(); body = text ? JSON.parse(text) : {}; } catch(e) { body = {}; }
 
     const { nombre, password } = body;
-
-    if (!nombre || !password) {
-      return new Response(JSON.stringify({ ok: false, error: 'Introduce tu nombre y contraseña' }), { status: 400, headers: corsHeaders });
-    }
+    if (!nombre || !password) return new Response(JSON.stringify({ ok: false, error: 'Introduce tu nombre y contraseña' }), { status: 400, headers: corsHeaders });
 
     try {
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}`;
-      const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
       const data = await r.json();
-
       const rec = (data.records || []).find(r =>
         (r.fields['Name'] || '').trim().toLowerCase() === nombre.trim().toLowerCase()
       );
-
-      if (!rec) {
-        return new Response(JSON.stringify({ ok: false, error: 'Usuario no encontrado' }), { headers: corsHeaders });
-      }
-
+      if (!rec) return new Response(JSON.stringify({ ok: false, error: 'Usuario no encontrado' }), { headers: corsHeaders });
       const pwdAirtable = (rec.fields['Password'] || '').trim();
-      if (pwdAirtable !== password.trim()) {
-        return new Response(JSON.stringify({ ok: false, error: 'Contraseña incorrecta' }), { headers: corsHeaders });
-      }
-
-      // Construir objeto accesos desde campos acc_*
+      if (pwdAirtable !== password.trim()) return new Response(JSON.stringify({ ok: false, error: 'Contraseña incorrecta' }), { headers: corsHeaders });
       const accesos = {};
       Object.keys(rec.fields).forEach(key => {
-        if (key.startsWith('acc_')) {
-          const seccion = key.replace('acc_', '');
-          accesos[seccion] = !!rec.fields[key];
-        }
+        if (key.startsWith('acc_')) accesos[key.replace('acc_', '')] = !!rec.fields[key];
       });
-
       const fisio = {
         id: rec.id,
         nombre: rec.fields['Name'] || '',
@@ -87,13 +91,7 @@ export default async function handler(req) {
         foto: rec.fields['Foto']?.[0]?.url || '',
         accesos
       };
-
-      return new Response(JSON.stringify({
-        ok: true,
-        fisio,
-        apiToken: FISIO_PASSWORD
-      }), { headers: corsHeaders });
-
+      return new Response(JSON.stringify({ ok: true, fisio, apiToken: FISIO_PASSWORD }), { headers: corsHeaders });
     } catch(e) {
       return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
     }
