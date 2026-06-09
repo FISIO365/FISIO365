@@ -1,23 +1,20 @@
-// api/diario.js — Edge Runtime
-// Handles diary entries with optional fisio notification
-
 export const config = { runtime: 'edge' };
 
-const AIRTABLE_KEY = process.env.AIRTABLE_KEY;
+const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const BASE_ID = 'appsrGnHpFt8sVD5A';
 const TABLE_PACIENTES = 'tbldBVgClS4HY2mOJ';
-const TABLE_MENSAJES = 'tblMENSAJES'; // Crear esta tabla en Airtable
+const TABLE_MENSAJES = 'MENSAJES';
 
 async function airtableGet(table, formula) {
   const url = `https://api.airtable.com/v0/${BASE_ID}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100&sort%5B0%5D%5Bfield%5D=Fecha&sort%5B0%5D%5Bdirection%5D=desc`;
-  const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_KEY}` } });
+  const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
   return r.json();
 }
 
 async function airtablePatch(table, id, fields) {
   const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${table}/${id}`, {
     method: 'PATCH',
-    headers: { Authorization: `Bearer ${AIRTABLE_KEY}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ fields })
   });
   return r.json();
@@ -26,13 +23,20 @@ async function airtablePatch(table, id, fields) {
 async function airtableCreate(table, fields) {
   const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${table}`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${AIRTABLE_KEY}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ fields })
   });
   return r.json();
 }
 
 export default async function handler(req) {
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  };
+
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
   const url = new URL(req.url);
 
   // GET — leer mensajes del paciente
@@ -53,13 +57,9 @@ export default async function handler(req) {
           respuestaLeida: r.fields.RespuestaLeida || false,
           tipo: r.fields.Tipo || 'diario'
         }));
-        return new Response(JSON.stringify({ ok: true, mensajes }), {
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-        });
+        return new Response(JSON.stringify({ ok: true, mensajes }), { headers: corsHeaders });
       } catch (e) {
-        return new Response(JSON.stringify({ ok: false, error: e.message }), {
-          headers: { 'Content-Type': 'application/json' }
-        });
+        return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: corsHeaders });
       }
     }
   }
@@ -71,12 +71,10 @@ export default async function handler(req) {
       const { patientId, comentario, enviarFisio, fisioDestinatarioId, fisioDestinatarioNombre } = body;
 
       if (!patientId) {
-        return new Response(JSON.stringify({ ok: false, error: 'patientId requerido' }), {
-          headers: { 'Content-Type': 'application/json' }
-        });
+        return new Response(JSON.stringify({ ok: false, error: 'patientId requerido' }), { headers: corsHeaders });
       }
 
-      // 1. Guardar en el campo Diario del paciente (comportamiento original)
+      // 1. Siempre guardar en el campo Diario del paciente
       const pac = await airtableGet(TABLE_PACIENTES, `RECORD_ID()="${patientId}"`);
       if (pac.records && pac.records.length > 0) {
         const rec = pac.records[0];
@@ -85,10 +83,7 @@ export default async function handler(req) {
         const nuevaEntrada = comentario
           ? `${fecha}: ${comentario}`
           : `${fecha}: Tarea hecha ✓`;
-        const diarioNuevo = diarioActual
-          ? diarioActual + '\n' + nuevaEntrada
-          : nuevaEntrada;
-
+        const diarioNuevo = diarioActual ? diarioActual + '\n' + nuevaEntrada : nuevaEntrada;
         await airtablePatch(TABLE_PACIENTES, rec.id, { Diario: diarioNuevo });
       }
 
@@ -108,18 +103,14 @@ export default async function handler(req) {
         });
       }
 
-      return new Response(JSON.stringify({ ok: true }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch (e) {
-      return new Response(JSON.stringify({ ok: false, error: e.message }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: corsHeaders });
     }
   }
 
   return new Response(JSON.stringify({ ok: false, error: 'Method not allowed' }), {
     status: 405,
-    headers: { 'Content-Type': 'application/json' }
+    headers: corsHeaders
   });
 }
