@@ -334,6 +334,7 @@ textarea:focus { border-color: var(--black); }
         <div class="date-today" style="font-size:20px;">Mi progreso</div>
         <div class="date-sub">Evolución de tu dolor</div>
       </div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;">Registra tu nivel de dolor cada día y sigue cómo evoluciona tu recuperación. Si algo cambia, puedes avisarle directamente a tu fisio.</p>
       <div class="vas-card">
         <div class="vas-question">¿Cuánto dolor tienes hoy?</div>
         <div class="vas-track"></div>
@@ -371,6 +372,7 @@ textarea:focus { border-color: var(--black); }
         <div class="date-today" style="font-size:20px;">Mis informes</div>
         <div class="date-sub">Informes de tus valoraciones</div>
       </div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;">Consulta y descarga los informes de tus valoraciones fisioterapéuticas. Tu fisio los genera después de cada valoración.</p>
       <div id="infPacList"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
@@ -380,6 +382,7 @@ textarea:focus { border-color: var(--black); }
         <div class="date-today" style="font-size:20px;">Mensajes</div>
         <div class="date-sub">Lo que has enviado a tu fisio</div>
       </div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;">Aquí aparecen los mensajes que has enviado a tu fisio desde el diario o cuando tu dolor ha aumentado. Si tu fisio te responde, lo verás aquí.</p>
       <div id="msgList"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
@@ -660,7 +663,8 @@ async function guardarSolo(){
     const btn=document.getElementById('btnDiario');
     btn.disabled=true;btn.textContent='Guardando...';
     try{
-      await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:modalTexto,enviarFisio:false})});
+      const textoGuardar=modalTexto||'Tarea hecha ✓';
+      await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:textoGuardar,enviarFisio:false})});
       localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));
       mostrarCompletado();
     }catch(e){toast('Error al guardar',false);btn.disabled=false;btn.textContent='Tarea hecha ✓';}
@@ -702,7 +706,8 @@ function renderFisiosList(fisios){
 async function enviarAFisio(fisioId, fisioNombre){
   cerrarModal();
   const prefijo = modalTipo==='dolor' ? '[Dolor aumentó] ' : '';
-  const texto = prefijo + modalTexto;
+  const textoBase = modalTexto || (modalTipo==='diario' ? 'Tarea hecha ✓' : '');
+  const texto = prefijo + textoBase;
   try{
     if(modalTipo==='diario'){
       const btn=document.getElementById('btnDiario');
