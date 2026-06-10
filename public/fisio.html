@@ -7046,7 +7046,7 @@ async function renderMensajes(wrap, tab){
       <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Selecciona un paciente</div>
       <select id="msgNuevoPaciente" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;outline:none;background:var(--cream);color:var(--black);margin-bottom:12px;">
         <option value="">— Elige un paciente —</option>
-        ${[...pacientes].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(p=>`<option value="${p.id}" data-nombre="${p.nombre}">${p.nombre}</option>`).join('')}
+        ${[...pacs].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(p=>`<option value="${p.id}" data-nombre="${p.nombre}">${p.nombre}</option>`).join('')}
       </select>
       <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Mensaje</div>
       <textarea id="msgNuevoTexto" placeholder="Escribe tu mensaje al paciente..." style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:100px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s;margin-bottom:12px;" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
