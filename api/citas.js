@@ -45,7 +45,9 @@ export default async function handler(req) {
     const citas = allRecords
       .filter(rec => {
         const relacionados = rec.fields['RELACIÓN - CITA'] || [];
-        return Array.isArray(relacionados) && relacionados.includes(patientId);
+        const estado = (rec.fields['ESTADO'] || '').toUpperCase();
+        return Array.isArray(relacionados) && relacionados.includes(patientId)
+          && (estado === 'PENDIENTE' || estado === 'REALIZADA');
       })
       .map(rec => ({
         id: rec.id,
