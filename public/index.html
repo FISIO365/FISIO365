@@ -409,12 +409,11 @@ textarea:focus { border-color: var(--black); }
         </div>
         <div class="guia-card">
           <div class="guia-titulo">✨ Cómo funciona la app</div>
-          <div class="guia-feature"><div class="guia-feature-icon">🏋️</div><div><div class="guia-feature-titulo">Tu programa del día</div><div class="guia-feature-desc">Tu fisio te asigna ejercicios personalizados con series, repeticiones y vídeos.</div></div></div>
-          <div class="guia-feature"><div class="guia-feature-icon">✅</div><div><div class="guia-feature-titulo">Marca los ejercicios</div><div class="guia-feature-desc">Pulsa el círculo de cada ejercicio para marcarlo. Cuando termines pulsa "Tarea hecha ✓".</div></div></div>
-          <div class="guia-feature"><div class="guia-feature-icon">📝</div><div><div class="guia-feature-titulo">Seguimiento diario</div><div class="guia-feature-desc">Escríbele a tu fisio cómo te has encontrado. Le ayuda a adaptar tu tratamiento.</div></div></div>
-          <div class="guia-feature"><div class="guia-feature-icon">📈</div><div><div class="guia-feature-titulo">Mi progreso</div><div class="guia-feature-desc">Registra tu nivel de dolor cada día y ve cómo evoluciona en la gráfica.</div></div></div>
-          <div class="guia-feature"><div class="guia-feature-icon">📄</div><div><div class="guia-feature-titulo">Mis informes</div><div class="guia-feature-desc">Consulta y descarga los informes de tus valoraciones fisioterapéuticas.</div></div></div>
-          <div class="guia-feature"><div class="guia-feature-icon">💬</div><div><div class="guia-feature-titulo">Mensajes</div><div class="guia-feature-desc">Envía mensajes a tu fisio desde el diario o cuando tu dolor aumente. Verás aquí sus respuestas.</div></div></div>
+          <div class="guia-feature"><div class="guia-feature-icon">🏋️</div><div><div class="guia-feature-titulo">Tu programa del día</div><div class="guia-feature-desc">Tu fisio te asigna ejercicios personalizados con series, repeticiones y vídeos. Márcalos cuando los hagas.</div></div></div>
+          <div class="guia-feature"><div class="guia-feature-icon">✅</div><div><div class="guia-feature-titulo">Tarea hecha</div><div class="guia-feature-desc">Al terminar pulsa "Tarea hecha ✓". Puedes guardar una nota solo para ti o enviársela directamente a tu fisio — tú eliges.</div></div></div>
+          <div class="guia-feature"><div class="guia-feature-icon">📈</div><div><div class="guia-feature-titulo">Mi progreso</div><div class="guia-feature-desc">Registra tu nivel de dolor cada día. Si sube, puedes escribirle a tu fisio directamente desde ahí.</div></div></div>
+          <div class="guia-feature"><div class="guia-feature-icon">💬</div><div><div class="guia-feature-titulo">Mensajes</div><div class="guia-feature-desc">Aquí aparecen todos los mensajes que has enviado a tu fisio y sus respuestas. Puedes enviar mensajes desde el diario o desde la escala de dolor.</div></div></div>
+          <div class="guia-feature"><div class="guia-feature-icon">📄</div><div><div class="guia-feature-titulo">Mis informes</div><div class="guia-feature-desc">Consulta y descarga los informes de tus valoraciones fisioterapéuticas en PDF.</div></div></div>
         </div>
       </div>
     </div>
@@ -550,6 +549,7 @@ function initApp(){
   document.getElementById('dateToday').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
   loadEjercicios();
   checkMensajesNoLeidos();
+  setInterval(checkMensajesNoLeidos, 2*60*1000); // revisar cada 2 minutos
 }
 
 function showSection(section){
@@ -565,7 +565,7 @@ function showSection(section){
   document.getElementById('navGuia').classList.toggle('active',section==='guia');
   if(section==='progreso')initVAS();
   if(section==='informes')loadInformes();
-  if(section==='mensajes'){loadMensajes();document.getElementById('navMensajesDot').classList.remove('show');}
+  if(section==='mensajes'){loadMensajes();document.getElementById('navMensajesDot').classList.remove('show');marcarRespuestasLeidas();}
   window.scrollTo(0,0);
 }
 
@@ -756,6 +756,13 @@ async function loadMensajes(){
       </div>`;
     }).join('');
   }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
+}
+
+async function marcarRespuestasLeidas(){
+  if(!patient) return;
+  try{
+    await fetch(`/api/pacientes?action=marcar-respuesta-leida&pacienteId=${encodeURIComponent(patient.id)}`);
+  }catch(e){}
 }
 
 async function checkMensajesNoLeidos(){
