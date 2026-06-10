@@ -711,7 +711,6 @@ function renderPacLista(q, lista){
       {key:'informes', label:'Informes'},
       {key:'eva',      label:'EVA'},
       {key:'diario',   label:'Diario'},
-      {key:'mensaje',  label:'Enviar mensaje'},
       {key:'pin',      label:'Nombre y contraseña'},
     ];
 
@@ -751,7 +750,6 @@ function renderPacLista(q, lista){
         else if(op.key==='informes') fpTabInformes(p.id, panel);
         else if(op.key==='eva') fpTabEva(p.id, panel);
         else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel);
-        else if(op.key==='mensaje') fpTabMensaje(p.id, p.nombre, panel);
       };
       menu.appendChild(row);
     });
@@ -6928,77 +6926,134 @@ footer{background:#0d0d0d;padding:40px 20px;text-align:center;margin-top:12px;}
 // ── MENSAJES ─────────────────────────────────────────────────────────────────
 const TABLE_MENSAJES = 'tblMENSAJES'; // Crear en Airtable
 
-async function renderMensajes(wrap){
+async function renderMensajes(wrap, tab){
   wrap.innerHTML='';
+  const tabActiva = tab || 'recibidos';
+
   // Header
   const hd=ce('div','');
-  hd.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:20px';
-  hd.innerHTML='<div><div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Mensajes</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Mensajes enviados por pacientes</div></div>';
+  hd.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:16px';
+  hd.innerHTML='<div><div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Mensajes</div></div>';
   wrap.appendChild(hd);
 
-  // Loading
-  const loading=ce('div','');
-  loading.innerHTML='<div style="text-align:center;padding:3rem"><div style="width:28px;height:28px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
-  wrap.appendChild(loading);
+  // Tabs
+  const tabs=ce('div','');
+  tabs.style.cssText='display:flex;gap:6px;margin-bottom:18px;background:var(--cream);border-radius:10px;padding:4px;';
+  ['recibidos','nuevo'].forEach(t=>{
+    const btn=ce('button','');
+    btn.style.cssText=`flex:1;font-family:var(--font);font-size:12px;font-weight:600;padding:8px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;background:${t===tabActiva?'white':'none'};color:${t===tabActiva?'var(--black)':'var(--muted)'};box-shadow:${t===tabActiva?'0 1px 4px rgba(0,0,0,0.08)':'none'}`;
+    btn.textContent=t==='recibidos'?'Recibidos':'Nuevo mensaje';
+    btn.onclick=()=>renderMensajes(wrap,t);
+    tabs.appendChild(btn);
+  });
+  wrap.appendChild(tabs);
 
-  try{
-    const res=await fetch(`/api/pacientes?action=get-mensajes-fisio&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
-    const data=await res.json();
-    loading.remove();
+  if(tabActiva==='recibidos'){
+    // Loading
+    const loading=ce('div','');
+    loading.innerHTML='<div style="text-align:center;padding:3rem"><div style="width:28px;height:28px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
+    wrap.appendChild(loading);
 
-    const mensajes=data.mensajes||[];
+    try{
+      const res=await fetch(`/api/pacientes?action=get-mensajes-fisio&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
+      const data=await res.json();
+      loading.remove();
 
-    // Actualizar badge
-    const sinLeer=mensajes.filter(m=>!m.visto).length;
-    const badge=$('sb-msg-badge');
-    if(badge){badge.textContent=sinLeer>0?String(sinLeer):'';badge.style.display=sinLeer>0?'block':'none';}
+      const mensajes=data.mensajes||[];
+      const sinLeer=mensajes.filter(m=>!m.visto).length;
+      const badge=$('sb-msg-badge');
+      if(badge){badge.textContent=sinLeer>0?String(sinLeer):'';badge.style.display=sinLeer>0?'block':'none';}
 
-    if(!mensajes.length){
-      const em=ce('div','');
-      em.style.cssText='text-align:center;padding:3rem 1rem;color:var(--muted)';
-      em.innerHTML='<div style="font-size:48px;margin-bottom:12px">💬</div><div style="font-size:16px;font-weight:600;margin-bottom:8px">Sin mensajes todavía</div><div style="font-size:13px">Cuando un paciente te envíe algo desde su app, aparecerá aquí.</div>';
-      wrap.appendChild(em);
-      return;
+      if(!mensajes.length){
+        const em=ce('div','');
+        em.style.cssText='text-align:center;padding:3rem 1rem;color:var(--muted)';
+        em.innerHTML='<div style="font-size:48px;margin-bottom:12px">💬</div><div style="font-size:16px;font-weight:600;margin-bottom:8px">Sin mensajes</div><div style="font-size:13px">Cuando un paciente te escriba, aparecerá aquí.</div>';
+        wrap.appendChild(em);
+        return;
+      }
+
+      mensajes.forEach(m=>{
+        const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');
+        const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
+        const tipoBadge=esDolorAumento
+          ?'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:#fff0f0;color:#c00;border-radius:99px;padding:2px 8px">😣 Dolor</span>'
+          :m.tipo==='fisio'
+          ?'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--lila-light);color:var(--lila);border-radius:99px;padding:2px 8px">📤 Enviado</span>'
+          :'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--lila-light);color:var(--lila);border-radius:99px;padding:2px 8px">📔 Diario</span>';
+        const noVistoBadge=!m.visto?'<span style="width:8px;height:8px;background:#ee2155;border-radius:50%;display:inline-block;margin-left:6px"></span>':'';
+
+        const card=ce('div','card');
+        card.style.cssText='margin-bottom:12px;'+(m.visto?'':'border-color:var(--lila);');
+        card.innerHTML=`
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px">${tipoBadge}${noVistoBadge}</div>
+            <div style="font-size:11px;color:var(--muted)">${m.fecha||''}</div>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:4px">${m.pacienteNombre||'Paciente'}</div>
+          <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:12px">${textoLimpio}</div>
+          ${m.respuesta
+            ?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lila);margin-bottom:4px">Tu respuesta</div><div style="font-size:13px;color:var(--black);line-height:1.5">${m.respuesta}</div></div>`
+            :`<div style="display:flex;gap:8px;align-items:flex-start">
+                <textarea id="reply_${m.id}" placeholder="Escribe tu respuesta..." style="flex:1;font-family:var(--font);font-size:13px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:70px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+                <button onclick="responderMensaje('${m.id}','${(m.pacienteId||'').replace(/'/g,"\'")}','${(m.pacienteNombre||'').replace(/'/g,"\'")}',this)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:10px 14px;background:var(--lila);color:white;border:none;border-radius:8px;cursor:pointer;flex-shrink:0;white-space:nowrap">Enviar</button>
+             </div>`
+          }`;
+
+        if(!m.visto) marcarMensajeVisto(m.id);
+        wrap.appendChild(card);
+      });
+
+    }catch(e){
+      const err=ce('div','');
+      err.style.cssText='text-align:center;padding:2rem;color:var(--muted)';
+      err.textContent='Error al cargar mensajes';
+      wrap.appendChild(err);
     }
 
-    mensajes.forEach(m=>{
-      const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');
-      const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
-      const tipoBadge=esDolorAumento
-        ?'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:#fff0f0;color:#c00;border-radius:99px;padding:2px 8px">😣 Dolor</span>'
-        :'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--lila-light);color:var(--lila);border-radius:99px;padding:2px 8px">📔 Diario</span>';
-      const noVistoBadge=!m.visto?'<span style="width:8px;height:8px;background:#ee2155;border-radius:50%;display:inline-block;margin-left:6px"></span>':'';
-
-      const card=ce('div','card');
-      card.style.cssText='margin-bottom:12px;'+(m.visto?'':'border-color:var(--lila);');
-      card.innerHTML=`
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:8px">${tipoBadge}${noVistoBadge}</div>
-          <div style="font-size:11px;color:var(--muted)">${m.fecha||''}</div>
-        </div>
-        <div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:4px">${m.pacienteNombre||'Paciente'}</div>
-        <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:12px">${textoLimpio}</div>
-        ${m.respuesta
-          ?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lila);margin-bottom:4px">Tu respuesta</div><div style="font-size:13px;color:var(--black);line-height:1.5">${m.respuesta}</div></div>`
-          :`<div style="display:flex;gap:8px;align-items:flex-start">
-              <textarea id="reply_${m.id}" placeholder="Escribe tu respuesta..." style="flex:1;font-family:var(--font);font-size:13px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:70px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-              <button onclick="responderMensaje('${m.id}','${(m.pacienteId||'').replace(/'/g,"\'")}','${(m.pacienteNombre||'').replace(/'/g,"\'")}',this)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:10px 14px;background:var(--lila);color:white;border:none;border-radius:8px;cursor:pointer;flex-shrink:0;white-space:nowrap">Enviar</button>
-           </div>`
-        }`;
-
-      // Marcar como visto al renderizar
-      if(!m.visto) marcarMensajeVisto(m.id);
-      wrap.appendChild(card);
-    });
-
-  }catch(e){
-    loading.remove();
-    const err=ce('div','');
-    err.style.cssText='text-align:center;padding:2rem;color:var(--muted)';
-    err.textContent='Error al cargar mensajes: '+e.message;
-    wrap.appendChild(err);
+  } else {
+    // NUEVO MENSAJE
+    const nuevo=ce('div','');
+    nuevo.style.cssText='background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;';
+    nuevo.innerHTML=`
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Selecciona un paciente</div>
+      <select id="msgNuevoPaciente" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;outline:none;background:var(--cream);color:var(--black);margin-bottom:12px;">
+        <option value="">— Elige un paciente —</option>
+        ${[...pacientes].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(p=>`<option value="${p.id}" data-nombre="${p.nombre}">${p.nombre}</option>`).join('')}
+      </select>
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Mensaje</div>
+      <textarea id="msgNuevoTexto" placeholder="Escribe tu mensaje al paciente..." style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:100px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s;margin-bottom:12px;" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      <button onclick="enviarMensajeNuevo(this)" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:12px;background:var(--lila);color:white;border:none;border-radius:8px;cursor:pointer;">Enviar mensaje</button>`;
+    wrap.appendChild(nuevo);
   }
 }
+
+async function enviarMensajeNuevo(btn){
+  const sel=document.getElementById('msgNuevoPaciente');
+  const ta=document.getElementById('msgNuevoTexto');
+  const pacienteId=sel?.value;
+  const pacienteNombre=sel?.options[sel.selectedIndex]?.dataset?.nombre||'';
+  const texto=ta?.value?.trim();
+  if(!pacienteId){toast('Selecciona un paciente',false);return;}
+  if(!texto){toast('Escribe un mensaje',false);return;}
+  btn.disabled=true;btn.textContent='Enviando...';
+  try{
+    const res=await fetch('/api/pacientes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        pwd:apiPwd, action:'enviar-mensaje-fisio',
+        pacienteId, pacienteNombre,
+        fisioId:fisioActual.id, fisioNombre:fisioActual.nombre,
+        texto, fecha:new Date().toLocaleDateString('es-ES')
+      })
+    });
+    const d=await res.json();
+    if(d.ok){toast('Mensaje enviado ✓',true);ta.value='';sel.value='';}
+    else toast('Error: '+(d.error||''),false);
+  }catch(e){toast('Error al enviar',false);}
+  btn.disabled=false;btn.textContent='Enviar mensaje';
+}
+
 
 async function responderMensaje(mensajeId, pacienteId, pacienteNombre, btn){
   const ta=document.getElementById(`reply_${mensajeId}`);
