@@ -393,6 +393,25 @@ let pwd='', fisios=[], pacs=[], biblio=[];
 let pacSelId=null, pacSelN='', fisioSelId='', ejC=0;
 let anamPacId=null, anamPacNom='';
 let curProto=null, curStep=0, D={};
+
+function saveAnamD(){
+  if(curProto&&anamPacId){
+    try{localStorage.setItem('anam_d_'+anamPacId+'_'+curProto,JSON.stringify(D));}catch(e){}
+  }
+}
+function loadAnamD(){
+  if(curProto&&anamPacId){
+    try{
+      const saved=localStorage.getItem('anam_d_'+anamPacId+'_'+curProto);
+      if(saved)D=JSON.parse(saved);
+    }catch(e){}
+  }
+}
+function clearAnamD(){
+  if(curProto&&anamPacId){
+    try{localStorage.removeItem('anam_d_'+anamPacId+'_'+curProto);}catch(e){}
+  }
+}
 let informeGenerado='';
 let fisioActual=null; // { id, nombre, role, colegiado, foto }
 let apiPwd=''; // contraseña maestra API
@@ -1087,7 +1106,7 @@ const PROTOS_LIST = [
 ];
 
 function renderAnamHub(wrap){
-  curProto=null; curStep=0; D={}; anamPacId=null; anamPacNom='';
+  curProto=null; curStep=0; D={}; anamPacId=null; anamPacNom=''; // D loaded after proto/pacId set
 
   const h=ce('div','');
   h.innerHTML=`<p style="font-size:13px;color:var(--muted);margin-bottom:14px">Selecciona el protocolo de valoración</p>`;
@@ -1139,6 +1158,7 @@ function startProto(pid){
 }
 
 function renderProto(){
+  loadAnamD(); // restore saved data
   const wrap=$('mainWrap'); wrap.innerHTML='';
   const cfg=CFG[curProto];
 
@@ -1184,10 +1204,10 @@ function renderProto(){
 }
 
 // ── HELPERS COMUNES ───────────────────────────────────────────────────────────
-function mkSel(l,o,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const s=document.createElement('select');s.innerHTML=`<option value="">—</option>`+o.map(([v,t])=>`<option value="${v}">${t}</option>`).join('');s.value=D[k]||'';s.onchange=()=>D[k]=s.value;w.appendChild(s);return w;}
-function mkInp(l,t,p,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const i=document.createElement('input');i.type=t;i.placeholder=p;i.value=D[k]||'';i.oninput=()=>D[k]=i.value;w.appendChild(i);return w;}
-function mkEva(l,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const r=ce('div','er');for(let i=0;i<=10;i++){const b=ce('div','ev');b.textContent=i;if(D[k]===i)b.className='ev '+(i<=3?'g':i<=6?'y':'r');b.onclick=()=>{r.querySelectorAll('.ev').forEach(x=>x.className='ev');b.className='ev '+(i<=3?'g':i<=6?'y':'r');D[k]=i;};r.appendChild(b);}w.appendChild(r);return w;}
-function mkCk(l,o,k,warn=[]){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const box=ce('div','cks');if(!D[k])D[k]=[];o.forEach(([v,t])=>{const p=ce('div','ck'+(warn.includes(v)?' w':'')+(D[k].includes(v)?' on':''));p.textContent=t;p.onclick=()=>{if(D[k].includes(v))D[k]=D[k].filter(x=>x!==v);else D[k].push(v);p.classList.toggle('on');};box.appendChild(p);});w.appendChild(box);return w;}
+function mkSel(l,o,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const s=document.createElement('select');s.innerHTML=`<option value="">—</option>`+o.map(([v,t])=>`<option value="${v}">${t}</option>`).join('');s.value=D[k]||'';s.onchange=()=>{D[k]=s.value;saveAnamD();};w.appendChild(s);return w;}
+function mkInp(l,t,p,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const i=document.createElement('input');i.type=t;i.placeholder=p;i.value=D[k]||'';i.oninput=()=>{D[k]=i.value;saveAnamD();};w.appendChild(i);return w;}
+function mkEva(l,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const r=ce('div','er');for(let i=0;i<=10;i++){const b=ce('div','ev');b.textContent=i;if(D[k]===i)b.className='ev '+(i<=3?'g':i<=6?'y':'r');b.onclick=()=>{r.querySelectorAll('.ev').forEach(x=>x.className='ev');b.className='ev '+(i<=3?'g':i<=6?'y':'r');D[k]=i;saveAnamD();};r.appendChild(b);}w.appendChild(r);return w;}
+function mkCk(l,o,k,warn=[]){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const box=ce('div','cks');if(!D[k])D[k]=[];o.forEach(([v,t])=>{const p=ce('div','ck'+(warn.includes(v)?' w':'')+(D[k].includes(v)?' on':''));p.textContent=t;p.onclick=()=>{if(D[k].includes(v))D[k]=D[k].filter(x=>x!==v);else D[k].push(v);p.classList.toggle('on');saveAnamD();};box.appendChild(p);});w.appendChild(box);return w;}
 function mkCard(title,icon,fields){const c=ce('div','card');c.innerHTML=`<div class="ct">${icon} ${title}</div>`;const g=ce('div','grid');g.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';fields.forEach(f=>g.appendChild(f));c.appendChild(g);return c;}
 function mkBnav(wrap,prev,lbl,fn,step){
   const total=CFG[curProto].steps.length;
@@ -1198,7 +1218,7 @@ function mkBnav(wrap,prev,lbl,fn,step){
   row.appendChild(r);wrap.appendChild(row);
 }
 function mkNota(txt){const n=ce('div','nota');n.innerHTML=`<strong>Clave:</strong> ${txt}`;return n;}
-function mkDerm(o,k,warn=[]){const w=ce('div','f');w.innerHTML='<label>Distribución / parestesias</label>';const g=ce('div','derm-grid');if(!D[k])D[k]=[];o.forEach(([v,t])=>{const d=ce('div','dm'+(warn.includes(v)?' w':'')+(D[k].includes(v)?' on':''));d.textContent=t;d.onclick=()=>{if(D[k].includes(v))D[k]=D[k].filter(x=>x!==v);else D[k].push(v);d.classList.toggle('on');};g.appendChild(d);});w.appendChild(g);return w;}
+function mkDerm(o,k,warn=[]){const w=ce('div','f');w.innerHTML='<label>Distribución / parestesias</label>';const g=ce('div','derm-grid');if(!D[k])D[k]=[];o.forEach(([v,t])=>{const d=ce('div','dm'+(warn.includes(v)?' w':'')+(D[k].includes(v)?' on':''));d.textContent=t;d.onclick=()=>{if(D[k].includes(v))D[k]=D[k].filter(x=>x!==v);else D[k].push(v);d.classList.toggle('on');saveAnamD();};g.appendChild(d);});w.appendChild(g);return w;}
 
 // ── PASO 0 COMPARTIDO (paciente) ──────────────────────────────────────────────
 function stepP0(wrap){
@@ -2094,7 +2114,7 @@ function mkTestOrtopedico(id, nombre, img, como, positivo, negativo, combinar, f
       btn.style.background=bg;btn.style.color=tc;btn.style.borderColor=bc;
       const b2=document.getElementById('tbadge-'+id);
       if(b2){b2.textContent=lbl;b2.style.background=bg;b2.style.color=tc;b2.style.borderColor=bc;}
-      D['test_'+id]=val;
+      D['test_'+id]=val;saveAnamD();
     };
     rb.appendChild(btn);
   });
@@ -3357,6 +3377,7 @@ Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEU
       const d=await r.json();
       if(d.ok&&d.informe){
         informeGenerado=d.informe;
+        clearAnamD();
         guardarInformeLocal(anamPacNom,anamPacId,fisioNom,curProto||'hernia',d.informe);
         res.textContent=d.informe;res.style.display='block';
         btn.className='gen-btn';btn.style.background='#2e7d32';
@@ -3451,12 +3472,19 @@ ANÁLISIS: Factores — ${factores.map(f=>f.t).join(', ')||'pendiente'} | Fase: 
 FUNCIONAL: Limitación ${D.lim||'?'} | Objetivo ${D.obj||'?'}
 Secciones: 1.RESUMEN 2.DIAGNÓSTICO FISIOTERAPÉUTICO 3.POR QUÉ LE DUELE 4.PLAN DE TRATAMIENTO 5.RECOMENDACIONES DÍA A DÍA${flags.length?' 6.ALERTAS':''}
 Máx 550 palabras. Profesional, empático y esperanzador.`;
+    // Añadir resultados de tests ortopédicos al prompt
+    const testsRealizados=Object.entries(D)
+      .filter(([k,v])=>k.startsWith('test_')&&v&&v!=='nr')
+      .map(([k,v])=>`${k.replace('test_','')}:${v==='pos'?'POSITIVO':'negativo'}`)
+      .join(', ');
+    if(testsRealizados) datos_txt[tipo]=(datos_txt[tipo]||'')+'\nTESTS ORTOPÉDICOS: '+testsRealizados;
     const datos_obj={tipo,factores:factores.map(f=>f.t),flags,fase:fase.l,...D};
     try{
       const r=await fetch('/api/pacientes?action=informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos_obj,dolorPrincipal:prompt,evaActual:D.evr||D.evm||D.evc||5}})});
       const d=await r.json();
       if(d.ok&&d.informe){
         informeGenerado=d.informe;
+        clearAnamD();
         guardarInformeLocal(anamPacNom,anamPacId,fisioNom,tipo,d.informe);
         res.textContent=d.informe;res.style.display='block';
         btn.className='gen-btn';btn.style.background='#2e7d32';
