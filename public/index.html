@@ -937,13 +937,18 @@ function badgeEstado(estado){
 
 function parseFecha(str){
   if(!str) return null;
-  // Try DD/MM/YYYY or YYYY-MM-DD
-  const parts = str.includes('/') ? str.split('/') : null;
-  if(parts && parts.length===3){
-    return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+  // DD/MM/YYYY
+  if(str.includes('/')){
+    const p=str.split('/');
+    if(p.length===3) return new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
   }
-  const d = new Date(str);
-  return isNaN(d) ? null : d;
+  // YYYY-MM-DD (Airtable format)
+  if(/^\d{4}-\d{2}-\d{2}/.test(str)){
+    const p=str.substring(0,10).split('-');
+    return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
+  }
+  const d=new Date(str);
+  return isNaN(d)?null:d;
 }
 
 // ── MENSAJES ─────────────────────────────────────────────────────────────────
