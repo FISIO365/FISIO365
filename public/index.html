@@ -153,7 +153,7 @@ textarea:focus { border-color: var(--black); }
 .cita-estado.pendiente { background:#e8f5e9;color:#2e7d32; }
 .cita-estado.realizada { background:#f5f5f5;color:#888; }
 .cita-estado.cancelada { background:#fff3e0;color:#e65100; }
-.cita-estado.bloqueada { background:#fce4ec;color:#c62828; }
+.cita-estado.reagendada { background:#e8eaf6;color:#3949ab; }
 .citas-lista { margin-top:8px; }
 .cita-row { background:white;border:1.5px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s; }
 .cita-row:active { border-color:var(--lila); }
@@ -883,7 +883,7 @@ function renderProximasCitas(){
   const lista = document.getElementById('citasLista');
   const hoy = new Date(); hoy.setHours(0,0,0,0);
   const proximas = citasData
-    .filter(c=>{ const d=parseFecha(c.fecha); return d&&d>=hoy&&c.estado!=='CITA BLOQUEADA'&&c.estado!=='CANCELADA'; })
+    .filter(c=>{ const d=parseFecha(c.fecha); return d&&d>=hoy&&c.estado!=='CANCELADA'&&c.estado!=='REAGENDADA'; })
     .sort((a,b)=>parseFecha(a.fecha)-parseFecha(b.fecha))
     .slice(0,5);
   const pasadas = citasData
@@ -929,9 +929,9 @@ function badgeEstado(estado){
   if(!estado) return '';
   const e = estado.toUpperCase();
   if(e.includes('PENDIENTE')) return '<span class="cita-estado pendiente">✓ Confirmada</span>';
-  if(e.includes('REALIZADA')) return '<span class="cita-estado realizada">Realizada</span>';
-  if(e.includes('CANCELADA')) return '<span class="cita-estado cancelada">Cancelada</span>';
-  if(e.includes('BLOQUEADA')) return '<span class="cita-estado bloqueada">No disponible</span>';
+  if(e.includes('REALIZADA')) return '<span class="cita-estado realizada">✓ Realizada</span>';
+  if(e.includes('CANCELADA')) return '<span class="cita-estado cancelada">✗ Cancelada</span>';
+  if(e.includes('REAGENDADA')) return '<span class="cita-estado reagendada">↻ Reagendada</span>';
   return `<span class="cita-estado realizada">${estado}</span>`;
 }
 
