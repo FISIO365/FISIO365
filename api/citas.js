@@ -17,36 +17,42 @@ export default async function handler(req) {
   const url = new URL(req.url);
   const patientId = url.searchParams.get('patientId') || '';
 
-  if (!patientId) {
-    return new Response(JSON.stringify({ ok: false, error: 'patientId requerido' }), { headers: corsHeaders });
-  }
-
+  // Fetch ALL records, filter client-side
   try {
-    // Only fetch PENDIENTE and REALIZADA, sorted by date
-    const formula = `OR({ESTADO}="PENDIENTE",{ESTADO}="REALIZADA")`;
     const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','RELACIÓN - CITA'];
     const fp = fields.map(f=>`fields[]=${encodeURIComponent(f)}`).join('&');
-    const filterQ = `filterByFormula=${encodeURIComponent(formula)}`;
-    const sortQ = 'sort[0][field]=FECHA&sort[0][direction]=asc&sort[1][field]=HORA&sort[1][direction]=asc';
+    const sortQ = 'sort[0][field]=FECHA&sort[0][direction]=asc';
 
     let allRecords = [], offset = null;
     do {
       const offsetQ = offset ? `&offset=${offset}` : '';
       const r = await fetch(
-        `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${filterQ}&${fp}&${sortQ}&pageSize=100${offsetQ}`,
+        `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}&pageSize=100${offsetQ}`,
         { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
       );
       const data = await r.json();
-      if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: corsHeaders });
+      if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message, v: 3 }), { headers: corsHeaders });
       allRecords = allRecords.concat(data.records || []);
       offset = data.offset;
     } while(offset);
 
-    // Filter by patient linked record ID
-    const citas = allRecords
+    // Debug: all unique estados
+    const allEstados = [...new Set(allRecords.map(r => r.fields['ESTADO'] || ''))];
+
+    // Filter by patient
+    const pacienteCitas = patientId ? allRecords.filter(rec => {
+      const rel = rec.fields['RELACIÓN - CITA'];
+      return Array.isArray(rel) && rel.includes(patientId);
+    }) : allRecords;
+
+    // All estados for this patient
+    const pacienteEstados = [...new Set(pacienteCitas.map(r => r.fields['ESTADO'] || ''))];
+
+    // Filter PENDIENTE or REALIZADA (case insensitive)
+    const citas = pacienteCitas
       .filter(rec => {
-        const rel = rec.fields['RELACIÓN - CITA'];
-        return Array.isArray(rel) && rel.includes(patientId);
+        const e = (rec.fields['ESTADO'] || '').trim().toLowerCase();
+        return e === 'pendiente' || e === 'realizada';
       })
       .map(rec => ({
         id: rec.id,
@@ -67,7 +73,11 @@ export default async function handler(req) {
         })()
       }));
 
-    return new Response(JSON.stringify({ ok: true, citas }), { headers: corsHeaders });
+    return new Response(JSON.stringify({
+      ok: true, v: 3, citas,
+      debug: { allEstados, pacienteEstados, totalRecords: allRecords.length, patientRecords: pacienteCitas.length }
+    }), { headers: corsHeaders });
+
   } catch(e) {
     return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
   }
