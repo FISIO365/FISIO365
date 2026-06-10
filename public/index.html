@@ -713,11 +713,11 @@ async function enviarAFisio(fisioId, fisioNombre){
     if(_tipo==='diario'){
       const btn=document.getElementById('btnDiario');
       btn.disabled=true;btn.textContent='Enviando...';
-      await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
+      await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
       localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));
       mostrarCompletado();
     } else {
-      await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
+      await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
       toast(`Enviado a ${fisioNombre} ✓`,true);
       if(document.getElementById('vasMsgTxt'))document.getElementById('vasMsgTxt').value='';
     }
@@ -898,4 +898,3 @@ function toast(msg,ok=true){const t=document.getElementById('toast');t.textConte
 </script>
 </body>
 </html>
-
