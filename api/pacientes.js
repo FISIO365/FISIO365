@@ -19,13 +19,14 @@ export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   const url = new URL(req.url);
-  const action = url.searchParams.get('action') || '';
   const queryPwd = url.searchParams.get('pwd') || '';
 
   let body = {};
   if (req.method === 'POST') {
     try { const text = await req.text(); body = text ? JSON.parse(text) : {}; } catch(e) { body = {}; }
   }
+
+  const action = url.searchParams.get('action') || body.action || '';
 
   // ── ENDPOINTS PÚBLICOS (sin contraseña) ─────────────────────────────────
   // get-mensajes — app paciente no tiene pwd
