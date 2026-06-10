@@ -927,7 +927,7 @@ function renderProximasCitas(){
 
 function badgeEstado(estado){
   if(!estado) return '';
-  const e = estado.toUpperCase();
+  const e = estado.trim().toUpperCase();
   if(e.includes('PENDIENTE')) return '<span class="cita-estado pendiente">Pendiente</span>';
   if(e.includes('REALIZADA')) return '<span class="cita-estado realizada">Realizada</span>';
   if(e.includes('CANCELADA')) return '<span class="cita-estado cancelada">Cancelada</span>';
@@ -952,37 +952,74 @@ function parseFecha(str){
 }
 
 // ── MENSAJES ─────────────────────────────────────────────────────────────────
-async function loadMensajes(){
+async function loadMensajes(tab){
   const list=document.getElementById('msgList');
   if(!list)return;
-  list.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+
+  // Tabs UI
+  const tabActiva=tab||'recibidos';
+  list.innerHTML=`
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button onclick="loadMensajes('recibidos')" style="flex:1;font-family:var(--font);font-size:12px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='recibidos'?'var(--black)':'var(--border)'};background:${tabActiva==='recibidos'?'var(--black)':'none'};color:${tabActiva==='recibidos'?'var(--cream)':'var(--muted)'};cursor:pointer;">De mi fisio</button>
+      <button onclick="loadMensajes('enviados')" style="flex:1;font-family:var(--font);font-size:12px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='enviados'?'var(--black)':'var(--border)'};background:${tabActiva==='enviados'?'var(--black)':'none'};color:${tabActiva==='enviados'?'var(--cream)':'var(--muted)'};cursor:pointer;">Enviados</button>
+    </div>
+    <div id="msgListInner"><div class="loading"><div class="spinner"></div></div></div>`;
+
   try{
     const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);
     const data=await res.json();
-    const mensajes=data.mensajes||[];
+    const todos=data.mensajes||[];
+
+    // Recibidos = mensajes del fisio (tipo 'fisio')
+    // Enviados = mensajes del paciente (tipo 'diario' o 'dolor')
+    const recibidos=todos.filter(m=>m.tipo==='fisio');
+    const enviados=todos.filter(m=>m.tipo!=='fisio');
+    const mensajes=tabActiva==='recibidos'?recibidos:enviados;
+
+    const inner=document.getElementById('msgListInner');
+    if(!inner)return;
+
     if(!mensajes.length){
-      list.innerHTML='<div class="empty"><div class="empty-icon">💬</div><div class="empty-title">Sin mensajes todavía</div><div class="empty-desc">Cuando envíes algo a tu fisio desde el diario o la escala de dolor, aparecerá aquí con su respuesta.</div></div>';
+      const emptyText=tabActiva==='recibidos'
+        ?'Cuando tu fisio te envíe un mensaje, aparecerá aquí.'
+        :'Cuando envíes algo a tu fisio desde el diario o la escala de dolor, aparecerá aquí.';
+      inner.innerHTML=`<div class="empty"><div class="empty-icon">💬</div><div class="empty-title">Sin mensajes</div><div class="empty-desc">${emptyText}</div></div>`;
       return;
     }
-    list.innerHTML=mensajes.map(m=>{
-      const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');
-      const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
-      const tipoHtml=esDolorAumento
-        ?'<span class="msg-tipo msg-tipo-dolor">😣 Dolor</span>'
-        :'<span class="msg-tipo msg-tipo-diario">📔 Diario</span>';
-      const replyHtml=m.respuesta
-        ?`<div class="msg-reply"><div class="msg-reply-label">Respuesta de ${m.fisioNombre||'tu fisio'}</div><div class="msg-reply-texto">${m.respuesta}</div></div>`
-        :'<div class="msg-pending">⏳ Pendiente de respuesta</div>';
-      return `<div class="msg-card">
-        <div class="msg-card-header">
-          <div style="display:flex;align-items:center;gap:8px;">${tipoHtml}<span class="msg-fisio-badge">→ ${m.fisioNombre||'Fisio'}</span></div>
-          <div class="msg-card-fecha">${m.fecha||''}</div>
-        </div>
-        <div class="msg-card-texto">${textoLimpio}</div>
-        ${replyHtml}
-      </div>`;
-    }).join('');
-  }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
+
+    if(tabActiva==='recibidos'){
+      inner.innerHTML=mensajes.map(m=>`
+        <div class="msg-card">
+          <div class="msg-card-header">
+            <span class="msg-fisio-badge">${m.fisioNombre||'Tu fisio'}</span>
+            <div class="msg-card-fecha">${m.fecha||''}</div>
+          </div>
+          <div class="msg-card-texto">${m.texto||''}</div>
+        </div>`).join('');
+    } else {
+      inner.innerHTML=mensajes.map(m=>{
+        const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');
+        const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
+        const tipoHtml=esDolorAumento
+          ?'<span class="msg-tipo msg-tipo-dolor">😣 Dolor</span>'
+          :'<span class="msg-tipo msg-tipo-diario">📔 Diario</span>';
+        const replyHtml=m.respuesta
+          ?`<div class="msg-reply"><div class="msg-reply-label">Respuesta de ${m.fisioNombre||'tu fisio'}</div><div class="msg-reply-texto">${m.respuesta}</div></div>`
+          :'<div class="msg-pending">⏳ Pendiente de respuesta</div>';
+        return `<div class="msg-card">
+          <div class="msg-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">${tipoHtml}<span class="msg-fisio-badge">→ ${m.fisioNombre||'Fisio'}</span></div>
+            <div class="msg-card-fecha">${m.fecha||''}</div>
+          </div>
+          <div class="msg-card-texto">${textoLimpio}</div>
+          ${replyHtml}
+        </div>`;
+      }).join('');
+    }
+  }catch(e){
+    const inner=document.getElementById('msgListInner');
+    if(inner)inner.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';
+  }
 }
 
 async function marcarRespuestasLeidas(){
