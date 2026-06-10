@@ -1,4 +1,4 @@
-export const config = { runtime: 'nodejs', maxDuration: 60 };
+export const config = { runtime: 'edge' };
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
