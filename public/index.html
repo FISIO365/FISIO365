@@ -123,6 +123,48 @@ textarea:focus { border-color: var(--black); }
 .vas-msg.neutro { color: var(--muted); background: var(--cream); border: 1px solid var(--border); }
 .vas-msg.animo { color: #666; background: #f0f0ec; }
 
+/* CITAS CALENDARIO */
+.cal-wrap { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.cal-mes { font-size: 16px; font-weight: 700; color: var(--black); }
+.cal-nav { background: none; border: 1.5px solid var(--border); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--muted); transition: all .15s; }
+.cal-nav:active { background: var(--lila-light); border-color: var(--lila); }
+.cal-dias-semana { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 6px; }
+.cal-dia-lbl { font-size: 10px; font-weight: 600; text-align: center; color: var(--muted); text-transform: uppercase; padding: 4px 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+.cal-dia { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; position: relative; transition: all .15s; }
+.cal-dia:active { background: var(--lila-light); }
+.cal-dia-num { font-size: 13px; font-weight: 500; color: var(--black); line-height: 1; }
+.cal-dia.vacio .cal-dia-num { color: transparent; }
+.cal-dia.hoy { background: var(--black); }
+.cal-dia.hoy .cal-dia-num { color: var(--cream); font-weight: 700; }
+.cal-dia.tiene-cita .cal-dia-num { font-weight: 700; color: var(--lila); }
+.cal-dia.seleccionado { background: var(--lila); }
+.cal-dia.seleccionado .cal-dia-num { color: white; font-weight: 700; }
+.cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--lila); margin-top: 2px; }
+.cal-dia.seleccionado .cal-dot { background: white; }
+.cal-dia.hoy .cal-dot { background: var(--cream); }
+.cita-detalle { background: var(--lila-light); border: 1.5px solid var(--lila); border-radius: var(--r); padding: 16px; margin-bottom: 12px; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+.cita-detalle-fecha { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lila);margin-bottom:6px; }
+.cita-detalle-hora { font-size:22px;font-weight:800;color:var(--black);margin-bottom:4px; }
+.cita-detalle-fisio { font-size:13px;color:var(--muted);margin-bottom:10px; }
+.cita-estado { display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px; }
+.cita-estado.pendiente { background:#e8f5e9;color:#2e7d32; }
+.cita-estado.realizada { background:#f5f5f5;color:#888; }
+.cita-estado.cancelada { background:#fff3e0;color:#e65100; }
+.cita-estado.bloqueada { background:#fce4ec;color:#c62828; }
+.citas-lista { margin-top:8px; }
+.cita-row { background:white;border:1.5px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s; }
+.cita-row:active { border-color:var(--lila); }
+.cita-row-fecha { text-align:center;flex-shrink:0;width:40px; }
+.cita-row-dia { font-size:20px;font-weight:800;color:var(--black);line-height:1; }
+.cita-row-mes { font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase; }
+.cita-row-sep { width:1px;height:36px;background:var(--border);flex-shrink:0; }
+.cita-row-info { flex:1; }
+.cita-row-hora { font-size:13px;font-weight:700;color:var(--black); }
+.cita-row-fisio { font-size:12px;color:var(--muted);margin-top:1px; }
+
 /* GUIA */
 .guia-section { padding: 20px 0 40px; }
 .guia-card { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 24px; margin-bottom: 20px; }
@@ -278,6 +320,7 @@ textarea:focus { border-color: var(--black); }
     <div class="nav-menu-inner">
       <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()"><span class="nav-item-icon">🏋️</span>Programa</button>
       <button class="nav-item" id="navProgreso" onclick="showSection('progreso');cerrarMenu()"><span class="nav-item-icon">📈</span>Progreso</button>
+      <button class="nav-item" id="navCitas" onclick="showSection('citas');cerrarMenu()"><span class="nav-item-icon">📅</span>Citas</button>
       <button class="nav-item" id="navMensajes" onclick="showSection('mensajes');cerrarMenu()"><span class="nav-item-icon">💬</span>Mensajes<div class="nav-item-dot" id="navMensajesDot"></div></button>
       <button class="nav-item" id="navInformes" onclick="showSection('informes');cerrarMenu()"><span class="nav-item-icon">📄</span>Informes</button>
       <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()"><span class="nav-item-icon">📱</span>Guía</button>
@@ -372,6 +415,17 @@ textarea:focus { border-color: var(--black); }
         <div class="date-sub">Informes de tus valoraciones</div>
       </div>
       <div id="infPacList"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <!-- VISTA CITAS -->
+    <div id="vistaCitas" style="display:none;">
+      <div class="date-h" style="margin-top:4px;">
+        <div class="date-today" style="font-size:20px;">Mis citas</div>
+        <div class="date-sub">Tu agenda con el fisio</div>
+      </div>
+      <div id="calendarWrap"></div>
+      <div id="citaDetalle"></div>
+      <div id="citasLista"></div>
     </div>
 
     <!-- VISTA MENSAJES -->
@@ -554,6 +608,7 @@ function initApp(){
 
 function showSection(section){
   document.getElementById('vistaHoy').style.display=section==='hoy'?'block':'none';
+  document.getElementById('vistaCitas').style.display=section==='citas'?'block':'none';
   document.getElementById('vistaProgreso').style.display=section==='progreso'?'block':'none';
   document.getElementById('vistaInformes').style.display=section==='informes'?'block':'none';
   document.getElementById('vistaMensajes').style.display=section==='mensajes'?'block':'none';
@@ -561,9 +616,11 @@ function showSection(section){
   document.getElementById('navHoy').classList.toggle('active',section==='hoy');
   document.getElementById('navProgreso').classList.toggle('active',section==='progreso');
   document.getElementById('navInformes').classList.toggle('active',section==='informes');
+  document.getElementById('navCitas').classList.toggle('active',section==='citas');
   document.getElementById('navMensajes').classList.toggle('active',section==='mensajes');
   document.getElementById('navGuia').classList.toggle('active',section==='guia');
   if(section==='progreso')initVAS();
+  if(section==='citas')initCitas();
   if(section==='informes')loadInformes();
   if(section==='mensajes'){loadMensajes();document.getElementById('navMensajesDot').classList.remove('show');marcarRespuestasLeidas();}
   window.scrollTo(0,0);
@@ -722,6 +779,171 @@ async function enviarAFisio(fisioId, fisioNombre){
       if(document.getElementById('vasMsgTxt'))document.getElementById('vasMsgTxt').value='';
     }
   }catch(e){toast('Error al enviar',false);}
+}
+
+
+// ── CITAS ─────────────────────────────────────────────────────────────────────
+let citasData = [];
+let calMesActual = new Date();
+let diaSeleccionado = null;
+
+async function initCitas(){
+  const wrap = document.getElementById('calendarWrap');
+  const lista = document.getElementById('citasLista');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  lista.innerHTML = '';
+  document.getElementById('citaDetalle').innerHTML = '';
+  try{
+    const res = await fetch(`/api/citas?patientId=${encodeURIComponent(patient.id)}`);
+    const data = await res.json();
+    citasData = data.citas || [];
+    calMesActual = new Date();
+    renderCalendario();
+    renderProximasCitas();
+  }catch(e){
+    wrap.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';
+  }
+}
+
+function renderCalendario(){
+  const wrap = document.getElementById('calendarWrap');
+  const año = calMesActual.getFullYear();
+  const mes = calMesActual.getMonth();
+  const hoy = new Date();
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const dias = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+
+  // Días con cita este mes
+  const diasConCita = new Set(citasData
+    .filter(c => {
+      const d = parseFecha(c.fecha);
+      return d && d.getFullYear()===año && d.getMonth()===mes;
+    })
+    .map(c => parseFecha(c.fecha).getDate())
+  );
+
+  // Primer día del mes (ajustado lunes=0)
+  let primerDia = new Date(año, mes, 1).getDay();
+  primerDia = primerDia === 0 ? 6 : primerDia - 1;
+  const totalDias = new Date(año, mes+1, 0).getDate();
+
+  let cells = '';
+  for(let i=0;i<primerDia;i++) cells += '<div class="cal-dia vacio"><div class="cal-dia-num">·</div></div>';
+  for(let d=1;d<=totalDias;d++){
+    const esHoy = hoy.getDate()===d && hoy.getMonth()===mes && hoy.getFullYear()===año;
+    const tieneCita = diasConCita.has(d);
+    const esSel = diaSeleccionado && diaSeleccionado.getDate()===d && diaSeleccionado.getMonth()===mes && diaSeleccionado.getFullYear()===año;
+    const clases = ['cal-dia', esHoy?'hoy':'', tieneCita?'tiene-cita':'', esSel?'seleccionado':''].filter(Boolean).join(' ');
+    cells += `<div class="${clases}" onclick="selDia(${año},${mes},${d})">
+      <div class="cal-dia-num">${d}</div>
+      ${tieneCita?'<div class="cal-dot"></div>':''}
+    </div>`;
+  }
+
+  wrap.innerHTML = `
+    <div class="cal-wrap">
+      <div class="cal-header">
+        <button class="cal-nav" onclick="cambiarMes(-1)">‹</button>
+        <div class="cal-mes">${meses[mes]} ${año}</div>
+        <button class="cal-nav" onclick="cambiarMes(1)">›</button>
+      </div>
+      <div class="cal-dias-semana">${dias.map(d=>`<div class="cal-dia-lbl">${d}</div>`).join('')}</div>
+      <div class="cal-grid">${cells}</div>
+    </div>`;
+}
+
+function cambiarMes(dir){
+  calMesActual.setMonth(calMesActual.getMonth()+dir);
+  renderCalendario();
+}
+
+function selDia(año, mes, dia){
+  diaSeleccionado = new Date(año, mes, dia);
+  renderCalendario();
+  const citasDia = citasData.filter(c => {
+    const d = parseFecha(c.fecha);
+    return d && d.getDate()===dia && d.getMonth()===mes && d.getFullYear()===año;
+  });
+  const det = document.getElementById('citaDetalle');
+  if(!citasDia.length){ det.innerHTML=''; return; }
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const diasSem=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const fecha = new Date(año,mes,dia);
+  det.innerHTML = citasDia.map(c=>`
+    <div class="cita-detalle">
+      <div class="cita-detalle-fecha">${diasSem[fecha.getDay()]}, ${dia} de ${meses[mes]} de ${año}</div>
+      <div class="cita-detalle-hora">${c.hora||'--:--'}</div>
+      <div class="cita-detalle-fisio">Con ${c.fisio||'tu fisio'}</div>
+      ${badgeEstado(c.estado)}
+      ${c.tipo?`<div style="font-size:12px;color:var(--muted);margin-top:6px">${c.tipo}</div>`:''}
+    </div>`).join('');
+}
+
+function renderProximasCitas(){
+  const lista = document.getElementById('citasLista');
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const proximas = citasData
+    .filter(c=>{ const d=parseFecha(c.fecha); return d&&d>=hoy&&c.estado!=='CITA BLOQUEADA'&&c.estado!=='CANCELADA'; })
+    .sort((a,b)=>parseFecha(a.fecha)-parseFecha(b.fecha))
+    .slice(0,5);
+  const pasadas = citasData
+    .filter(c=>{ const d=parseFecha(c.fecha); return d&&d<hoy; })
+    .sort((a,b)=>parseFecha(b.fecha)-parseFecha(a.fecha))
+    .slice(0,3);
+
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const mesesL=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+  const renderRow = c => {
+    const d = parseFecha(c.fecha);
+    if(!d) return '';
+    return `<div class="cita-row" onclick="selDia(${d.getFullYear()},${d.getMonth()},${d.getDate()});document.getElementById('calendarWrap').scrollIntoView({behavior:'smooth'})">
+      <div class="cita-row-fecha">
+        <div class="cita-row-dia">${d.getDate()}</div>
+        <div class="cita-row-mes">${meses[d.getMonth()]}</div>
+      </div>
+      <div class="cita-row-sep"></div>
+      <div class="cita-row-info">
+        <div class="cita-row-hora">${c.hora||'--:--'} · ${c.fisio||'Fisio'}</div>
+        <div class="cita-row-fisio">${c.tipo||''}</div>
+      </div>
+      ${badgeEstado(c.estado)}
+    </div>`;
+  };
+
+  let html = '';
+  if(proximas.length){
+    html += '<div class="sec-title" style="margin-top:8px">Próximas citas</div>';
+    html += proximas.map(renderRow).join('');
+  } else {
+    html += '<div class="empty" style="padding:2rem 1rem"><div class="empty-icon">📅</div><div class="empty-title">Sin citas próximas</div><div class="empty-desc">Cuando tu fisio programe una cita, aparecerá aquí.</div></div>';
+  }
+  if(pasadas.length){
+    html += '<div class="sec-title" style="margin-top:16px;color:var(--muted)">Historial reciente</div>';
+    html += pasadas.map(renderRow).join('');
+  }
+  lista.innerHTML = html;
+}
+
+function badgeEstado(estado){
+  if(!estado) return '';
+  const e = estado.toUpperCase();
+  if(e.includes('PENDIENTE')) return '<span class="cita-estado pendiente">✓ Confirmada</span>';
+  if(e.includes('REALIZADA')) return '<span class="cita-estado realizada">Realizada</span>';
+  if(e.includes('CANCELADA')) return '<span class="cita-estado cancelada">Cancelada</span>';
+  if(e.includes('BLOQUEADA')) return '<span class="cita-estado bloqueada">No disponible</span>';
+  return `<span class="cita-estado realizada">${estado}</span>`;
+}
+
+function parseFecha(str){
+  if(!str) return null;
+  // Try DD/MM/YYYY or YYYY-MM-DD
+  const parts = str.includes('/') ? str.split('/') : null;
+  if(parts && parts.length===3){
+    return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+  }
+  const d = new Date(str);
+  return isNaN(d) ? null : d;
 }
 
 // ── MENSAJES ─────────────────────────────────────────────────────────────────
