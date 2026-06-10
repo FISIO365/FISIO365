@@ -22,34 +22,42 @@ export default async function handler(req) {
   }
 
   try {
-    // Filter by linked patient field
-    const formula = `FIND("${patientId}", ARRAYJOIN(RECORD_ID({RELACIÓN - CITA})))`;
-    const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','NOTAS'];
+    const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','NOTAS','RELACIÓN - CITA'];
     const fp = fields.map(f=>`fields[]=${encodeURIComponent(f)}`).join('&');
-    const filterQ = `filterByFormula=${encodeURIComponent(formula)}`;
     const sortQ = 'sort[0][field]=FECHA&sort[0][direction]=asc&sort[1][field]=HORA&sort[1][direction]=asc';
 
-    const r = await fetch(
-      `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${filterQ}&${fp}&${sortQ}&pageSize=50`,
-      { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
-    );
-    const data = await r.json();
+    // Get all citas and filter client-side by linked record ID
+    let allRecords = [];
+    let offset = null;
+    do {
+      const offsetQ = offset ? `&offset=${offset}` : '';
+      const r = await fetch(
+        `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}&pageSize=100${offsetQ}`,
+        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+      );
+      const data = await r.json();
+      if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: corsHeaders });
+      allRecords = allRecords.concat(data.records || []);
+      offset = data.offset;
+    } while(offset);
 
-    if (data.error) {
-      return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: corsHeaders });
-    }
+    // Filter by patient ID in linked record field
+    const citas = allRecords
+      .filter(rec => {
+        const relacionados = rec.fields['RELACIÓN - CITA'] || [];
+        return Array.isArray(relacionados) && relacionados.includes(patientId);
+      })
+      .map(rec => ({
+        id: rec.id,
+        fecha: rec.fields['FECHA'] || '',
+        hora: rec.fields['HORA'] || '',
+        estado: rec.fields['ESTADO'] || '',
+        fisio: Array.isArray(rec.fields['PREF.']) ? rec.fields['PREF.'].join(', ') : (rec.fields['PREF.'] || ''),
+        tipo: Array.isArray(rec.fields['TIPO DE CITA']) ? rec.fields['TIPO DE CITA'].join(', ') : (rec.fields['TIPO DE CITA'] || ''),
+        notas: rec.fields['NOTAS'] || ''
+      }));
 
-    const citas = (data.records || []).map(rec => ({
-      id: rec.id,
-      fecha: rec.fields['FECHA'] || '',
-      hora: rec.fields['HORA'] || '',
-      estado: rec.fields['ESTADO'] || '',
-      fisio: rec.fields['PREF.'] || '',
-      tipo: rec.fields['TIPO DE CITA'] || '',
-      notas: rec.fields['NOTAS'] || ''
-    }));
-
-    return new Response(JSON.stringify({ ok: true, citas }), { headers: corsHeaders });
+    return new Response(JSON.stringify({ ok: true, citas, total: allRecords.length }), { headers: corsHeaders });
   } catch(e) {
     return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
   }
