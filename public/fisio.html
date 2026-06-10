@@ -3382,7 +3382,8 @@ Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEU
  res.textContent=d.informe;res.style.display='block';
  btn.className='gen-btn';btn.style.background='#2e7d32';
  btn.innerHTML='Informe generado — Descargar PDF';
- btn.onclick=()=>descargarPDF(anamPacNom,d.informe,curProto||'hernia');
+ btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,curProto||'hernia');
+ let eb1=$('btnEdit1');if(!eb1){eb1=ce('button','btn');eb1.id='btnEdit1';eb1.style.cssText='margin-top:8px;width:100%;background:white;color:var(--black);border:1.5px solid var(--border);padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)';eb1.textContent='Editar informe';eb1.onclick=()=>editarInforme(res,eb1);res.parentNode.insertBefore(eb1,res.nextSibling);}
  // Botón guardar en perfil paciente
  let saveBtn=$('btnGuardarInforme');
  if(!saveBtn){
@@ -3489,7 +3490,8 @@ Máx 550 palabras. Profesional, empático y esperanzador.`;
  res.textContent=d.informe;res.style.display='block';
  btn.className='gen-btn';btn.style.background='#2e7d32';
  btn.innerHTML='Informe generado — Descargar PDF';
- btn.onclick=()=>descargarPDF(anamPacNom,d.informe,tipo);
+ btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,tipo);
+ let eb2=$('btnEdit2');if(!eb2){eb2=ce('button','btn');eb2.id='btnEdit2';eb2.style.cssText='margin-top:8px;width:100%;background:white;color:var(--black);border:1.5px solid var(--border);padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)';eb2.textContent='Editar informe';eb2.onclick=()=>editarInforme(res,eb2);res.parentNode.insertBefore(eb2,res.nextSibling);}
  res.scrollIntoView({behavior:'smooth'});
  toast('Informe guardado',true);
  } else {toast(d.error||'Error al generar',false);btn.disabled=false;btn.innerHTML='Generar informe';}
@@ -3857,6 +3859,9 @@ async function fpTabInformes(pacId, body){
  bVer.textContent='Ocultar';
  };
 
+ const bEdit=ce('button','fp-btn');bEdit.textContent='Editar';
+ bEdit.onclick=()=>editarInformeFicha(c,inf,bEdit);
+
  const bPdf=ce('button','fp-btn lila'); bPdf.textContent='PDF';
  bPdf.onclick=()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'');
 
@@ -3864,7 +3869,7 @@ async function fpTabInformes(pacId, body){
  bSave.textContent=alreadySaved?'✓ En app paciente':'Guardar en app paciente';
  bSave.onclick=()=>abrirSelectorPacienteInforme(inf, savedKey, bSave);
 
- btns.appendChild(bVer); btns.appendChild(bPdf); btns.appendChild(bSave);
+ btns.appendChild(bVer); btns.appendChild(bEdit); btns.appendChild(bPdf); btns.appendChild(bSave);
  c.appendChild(btns);
  body.appendChild(c);
  });
@@ -7123,6 +7128,74 @@ async function checkMensajesBadge(){
  const badge=$('sb-msg-badge');
  if(badge){badge.textContent=sinLeer>0?String(sinLeer):'';badge.style.display=sinLeer>0?'block':'none';}
  }catch(e){}
+}
+
+
+function editarInforme(resEl, btnEl){
+  const textoActual = informeGenerado || resEl.textContent;
+  const ta = ce('textarea','');
+  ta.style.cssText='width:100%;font-family:var(--font);font-size:13px;padding:12px;border:1.5px solid var(--lila);border-radius:8px;resize:vertical;min-height:300px;outline:none;background:var(--cream);color:var(--black);line-height:1.7';
+  ta.value=textoActual;
+  resEl.style.display='none';
+  resEl.parentNode.insertBefore(ta,resEl);
+  btnEl.textContent='Guardar cambios';
+  btnEl.style.background='var(--lila)';
+  btnEl.style.color='white';
+  btnEl.style.borderColor='var(--lila)';
+  btnEl.onclick=()=>{
+    const nuevoTexto=ta.value.trim();
+    if(!nuevoTexto)return;
+    informeGenerado=nuevoTexto;
+    resEl.textContent=nuevoTexto;
+    resEl.style.display='block';
+    ta.remove();
+    btnEl.textContent='Editar informe';
+    btnEl.style.background='white';
+    btnEl.style.color='var(--black)';
+    btnEl.style.borderColor='var(--border)';
+    btnEl.onclick=()=>editarInforme(resEl,btnEl);
+    toast('Informe actualizado',true);
+  };
+}
+
+
+async function editarInformeFicha(card, inf, btn){
+  // Remove existing editor if any
+  const existingTa=card.querySelector('textarea.edit-ta');
+  if(existingTa){existingTa.remove();btn.textContent='Editar';btn.style.background='';btn.style.color='';return;}
+  // Show content div
+  let cont=card.querySelector('.fp-inf-cont');
+  if(!cont){
+    cont=ce('div','fp-inf-cont');
+    cont.style.cssText='font-size:13px;white-space:pre-wrap;border-top:1px solid var(--border);padding-top:12px;margin-top:12px;line-height:1.7';
+    cont.textContent=inf.informe||'';
+    card.appendChild(cont);
+  }
+  const ta=ce('textarea','edit-ta');
+  ta.style.cssText='width:100%;font-family:var(--font);font-size:13px;padding:10px;border:1.5px solid var(--lila);border-radius:8px;resize:vertical;min-height:250px;outline:none;background:var(--cream);color:var(--black);line-height:1.7;margin-top:8px;display:block';
+  ta.value=inf.informe||'';
+  cont.style.display='none';
+  card.appendChild(ta);
+  btn.textContent='Guardar';
+  btn.style.background='var(--lila)';btn.style.color='white';
+  btn.onclick=async()=>{
+    const nuevoTexto=ta.value.trim();
+    if(!nuevoTexto)return;
+    inf.informe=nuevoTexto;
+    cont.textContent=nuevoTexto;
+    cont.style.display='';
+    ta.remove();
+    btn.textContent='Editar';btn.style.background='';btn.style.color='';
+    btn.onclick=()=>editarInformeFicha(card,inf,btn);
+    if(inf.id&&!inf.id.startsWith('local_')){
+      try{
+        await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,action:'actualizar-informe',id:inf.id,informe:nuevoTexto})});
+        toast('Informe actualizado',true);
+      }catch(e){toast('Error al guardar',false);}
+    } else {
+      toast('Informe actualizado localmente',true);
+    }
+  };
 }
 
 // LIGHTBOX
