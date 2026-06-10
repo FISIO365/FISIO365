@@ -226,6 +226,29 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
+  // ── ENVIAR MENSAJE FISIO → PACIENTE ─────────────────────────────────────
+  if (action === 'enviar-mensaje-fisio' && req.method === 'POST') {
+    const { pacienteId, pacienteNombre, fisioId, fisioNombre, texto, fecha } = body;
+    try {
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: {
+          PacienteId: pacienteId || '',
+          PacienteNombre: pacienteNombre || '',
+          FisioId: fisioId || '',
+          FisioNombre: fisioNombre || '',
+          Texto: texto || '',
+          Fecha: fecha || new Date().toLocaleDateString('es-ES'),
+          Tipo: 'fisio',
+          Visto: true,
+          RespuestaLeida: false
+        }})
+      });
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+  }
+
   // ── GET MENSAJES FISIO ───────────────────────────────────────────────────
   if (action === 'get-mensajes-fisio') {
     const fisioId = url.searchParams.get('fisioId') || '';
