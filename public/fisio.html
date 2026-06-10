@@ -711,6 +711,7 @@ function renderPacLista(q, lista){
       {key:'informes', label:'Informes'},
       {key:'eva',      label:'EVA'},
       {key:'diario',   label:'Diario'},
+      {key:'mensaje',  label:'Enviar mensaje'},
       {key:'pin',      label:'Nombre y contraseña'},
     ];
 
@@ -750,6 +751,7 @@ function renderPacLista(q, lista){
         else if(op.key==='informes') fpTabInformes(p.id, panel);
         else if(op.key==='eva') fpTabEva(p.id, panel);
         else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel);
+        else if(op.key==='mensaje') fpTabMensaje(p.id, p.nombre, panel);
       };
       menu.appendChild(row);
     });
@@ -3756,6 +3758,22 @@ async function fpTabPrograma(pacId, body){
       m.textContent='💬 '+d.mensaje;
       body.appendChild(m);
     }
+    // Estado de ejercicios hoy
+    const TODAY=new Date().toISOString().split('T')[0];
+    try{
+      const rEj=await fetch(`/api/schedule?patientId=${encodeURIComponent(pacId)}`);
+      const dEj=await rEj.json();
+      const ultimaSession=dEj.ultimaSession;
+      const ejTotal=dEj.ejercicios?.length||0;
+      if(ejTotal>0){
+        const badge=ce('div','');
+        const hecho=ultimaSession===TODAY;
+        badge.style.cssText=`display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px;font-weight:600;background:${hecho?'#e8f5e9':'#fff9e6'};color:${hecho?'#2e7d32':'#b45309'}`;
+        badge.innerHTML=`<span style="font-size:16px">${hecho?'🟢':'🟡'}</span>${hecho?'Ha completado los ejercicios hoy':'Ejercicios pendientes hoy'}`;
+        body.insertBefore(badge,body.firstChild);
+      }
+    }catch(e){}
+
     d.ejercicios.forEach((ej,i)=>{
       const c=ce('div','');
       c.style.cssText='background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px';
@@ -3933,6 +3951,64 @@ async function fpTabDiario(pacId, pacNombre, body){
 // SECTION: INFORMES
 // ─────────────────────────────────────────────────────────────────────────────
 // ── STORAGE HELPERS ──────────────────────────────────────────────────────
+async function fpTabMensaje(pacId, pacNombre, body){
+  body.innerHTML=`
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Escribe un mensaje a ${pacNombre}</div>
+      <textarea id="msgFisioPacTextarea" placeholder="Escribe aquí tu mensaje al paciente..." style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:100px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s;margin-bottom:10px;" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      <button onclick="enviarMensajeFisioAPaciente('${pacId}','${pacNombre.replace(/'/g,"\\'")}',this)" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:var(--lila);color:white;border:none;border-radius:8px;cursor:pointer;">Enviar mensaje</button>
+    </div>
+    <div id="msgFisioPacHistorial" style="margin-top:16px"></div>`;
+  // Load previous messages
+  try{
+    const r=await fetch(`/api/pacientes?action=get-mensajes-fisio&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
+    const d=await r.json();
+    const msgs=(d.mensajes||[]).filter(m=>m.pacienteId===pacId);
+    const hist=document.getElementById('msgFisioPacHistorial');
+    if(!hist)return;
+    if(!msgs.length){hist.innerHTML='<div style="font-size:12px;color:var(--muted)">Sin mensajes anteriores</div>';return;}
+    hist.innerHTML='<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">Mensajes anteriores</div>'+
+      msgs.map(m=>`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+        <div style="font-size:11px;color:var(--lila);margin-bottom:4px">${m.fecha||''}</div>
+        <div style="font-size:13px;color:var(--black)">${m.texto||''}</div>
+        ${m.respuesta?`<div style="font-size:12px;color:var(--muted);margin-top:6px;font-style:italic">Tu respuesta: ${m.respuesta}</div>`:''}
+      </div>`).join('');
+  }catch(e){}
+}
+
+async function enviarMensajeFisioAPaciente(pacId, pacNombre, btn){
+  const ta=document.getElementById('msgFisioPacTextarea');
+  const texto=ta?.value?.trim();
+  if(!texto){toast('Escribe un mensaje',false);return;}
+  btn.disabled=true;btn.textContent='Enviando...';
+  try{
+    const fecha=new Date().toLocaleDateString('es-ES');
+    const res=await fetch('/api/pacientes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        pwd:apiPwd,
+        action:'enviar-mensaje-fisio',
+        pacienteId:pacId,
+        pacienteNombre:pacNombre,
+        fisioId:fisioActual.id,
+        fisioNombre:fisioActual.nombre,
+        texto,
+        fecha
+      })
+    });
+    const d=await res.json();
+    if(d.ok){
+      toast('Mensaje enviado ✓',true);
+      ta.value='';
+    }else{
+      toast('Error: '+(d.error||''),false);
+    }
+  }catch(e){toast('Error al enviar',false);}
+  btn.disabled=false;btn.textContent='Enviar mensaje';
+}
+
+
 async function borrarInforme(id){
   if(!confirm('¿Eliminar este informe? No se puede deshacer.')) return;
   try{
