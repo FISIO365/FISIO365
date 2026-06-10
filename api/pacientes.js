@@ -165,9 +165,9 @@ export default async function handler(req) {
       const colNum = fisioColegiado ? ` | Colegiado nº ${fisioColegiado}` : '';
       const cabecera = `Fisioterapeuta: ${fisioNombre||'-'}${colNum} | Fecha: ${fecha}\nPaciente: ${pacienteNombre||'-'} | Edad: ${d.edad||'-'} | Actividad: ${d.act||'-'}`;
       const estructura = `\nRedacta con EXACTAMENTE estas secciones:\nMOTIVO DE CONSULTA\nEXPLORACIÓN Y HALLAZGOS\nDIAGNÓSTICO FISIOTERAPÉUTICO\nOBJETIVOS TERAPÉUTICOS${hayFlags?'\nALERTAS':''}\nNO incluyas otras secciones.`;
-      const datosCompactos = Object.entries(d).filter(([k,v])=>v&&v!=='-'&&!(Array.isArray(v)&&!v.length)).map(([k,v])=>`${k}: ${Array.isArray(v)?v.join(', '):v}`).join('\n');
+      const datosCompactos = Object.entries(d).filter(([k,v])=>v&&v!=='-'&&!(Array.isArray(v)&&!v.length)).map(([k,v])=>`${k}: ${Array.isArray(v)?v.join(', '):String(v).slice(0,300)}`).join('\n').slice(0,4000);
       const prompt = `Eres fisioterapeuta experto. Informe de valoración de ${tipo.toUpperCase()}. Sin markdown, párrafos, términos técnicos explicados entre paréntesis.\n${cabecera}\nDATOS:\n${datosCompactos}\n${hayFlags?'RED FLAGS: '+fa(d.flags||d.banderas):''}\n${estructura}`;
-      const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] }) });
+      const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 3000, messages: [{ role: 'user', content: prompt }] }) });
       const data = await r.json();
       const informe = data.content?.[0]?.text || '';
       if (!informe) return new Response(JSON.stringify({ ok: false, error: data.error?.message || 'Error Anthropic' }), { status: 500, headers: corsHeaders });
