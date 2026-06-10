@@ -68,7 +68,7 @@ export default async function handler(req) {
   if (req.method === 'POST') {
     try {
       const body = await req.json();
-      const { patientId, comentario, enviarFisio, fisioDestinatarioId, fisioDestinatarioNombre } = body;
+      const { patientId, pacienteNombre, comentario, enviarFisio, fisioDestinatarioId, fisioDestinatarioNombre } = body;
 
       if (!patientId) {
         return new Response(JSON.stringify({ ok: false, error: 'patientId requerido' }), { headers: corsHeaders });
@@ -93,6 +93,7 @@ export default async function handler(req) {
         const esDolorAumento = comentario && comentario.startsWith('[Dolor aumentó]');
         await airtableCreate(TABLE_MENSAJES, {
           PacienteId: patientId,
+          PacienteNombre: pacienteNombre || '',
           FisioId: fisioDestinatarioId,
           FisioNombre: fisioDestinatarioNombre || '',
           Texto: comentario || '',
