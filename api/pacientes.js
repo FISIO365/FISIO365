@@ -54,6 +54,30 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: true, mensajes: [] }), { headers: corsHeaders }); }
   }
 
+  // ── MARCAR RESPUESTA LEÍDA (paciente) ───────────────────────────────────────
+  if (action === 'marcar-respuesta-leida') {
+    const pacienteId = url.searchParams.get('pacienteId') || '';
+    try {
+      // Get all messages for this patient with unread responses
+      const formula = `AND({PacienteId}="${pacienteId}",{RespuestaLeida}=FALSE(),{Respuesta}!="")`;
+      const r = await fetch(
+        `https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}?filterByFormula=${encodeURIComponent(formula)}`,
+        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+      );
+      const data = await r.json();
+      const records = data.records || [];
+      // Mark all as read
+      for(const rec of records){
+        await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}/${rec.id}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: { RespuestaLeida: true } })
+        });
+      }
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders }); }
+  }
+
   const pwd = (body.pwd || queryPwd || '').trim();
   const expected = (FISIO_PASSWORD || '').trim();
   if (pwd !== expected) return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
