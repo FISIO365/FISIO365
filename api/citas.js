@@ -22,17 +22,18 @@ export default async function handler(req) {
   }
 
   try {
-    const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','NOTAS','RELACIÓN - CITA'];
+    // Only fetch PENDIENTE and REALIZADA, sorted by date
+    const formula = `OR({ESTADO}="PENDIENTE",{ESTADO}="REALIZADA")`;
+    const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','RELACIÓN - CITA'];
     const fp = fields.map(f=>`fields[]=${encodeURIComponent(f)}`).join('&');
+    const filterQ = `filterByFormula=${encodeURIComponent(formula)}`;
     const sortQ = 'sort[0][field]=FECHA&sort[0][direction]=asc&sort[1][field]=HORA&sort[1][direction]=asc';
 
-    // Get all citas and filter client-side by linked record ID
-    let allRecords = [];
-    let offset = null;
+    let allRecords = [], offset = null;
     do {
       const offsetQ = offset ? `&offset=${offset}` : '';
       const r = await fetch(
-        `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}&pageSize=100${offsetQ}`,
+        `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${filterQ}&${fp}&${sortQ}&pageSize=100${offsetQ}`,
         { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
       );
       const data = await r.json();
@@ -41,13 +42,11 @@ export default async function handler(req) {
       offset = data.offset;
     } while(offset);
 
-    // Filter by patient ID in linked record field
+    // Filter by patient linked record ID
     const citas = allRecords
       .filter(rec => {
-        const relacionados = rec.fields['RELACIÓN - CITA'] || [];
-        const estado = (rec.fields['ESTADO'] || '').toUpperCase();
-        return Array.isArray(relacionados) && relacionados.includes(patientId)
-          && (estado.includes('PENDIENTE') || estado.includes('REALIZADA'));
+        const rel = rec.fields['RELACIÓN - CITA'];
+        return Array.isArray(rel) && rel.includes(patientId);
       })
       .map(rec => ({
         id: rec.id,
@@ -57,19 +56,18 @@ export default async function handler(req) {
         fisio: (() => {
           const v = rec.fields['PREF.'];
           if(!v) return '';
-          if(Array.isArray(v)) return v.filter(x=>!x.startsWith('rec')).join(', ');
+          if(Array.isArray(v)) return v.filter(x=>!String(x).startsWith('rec')).join(', ');
           return String(v).startsWith('rec') ? '' : String(v);
         })(),
         tipo: (() => {
           const v = rec.fields['TIPO DE CITA'];
           if(!v) return '';
-          if(Array.isArray(v)) return v.filter(x=>!x.startsWith('rec')).join(', ');
+          if(Array.isArray(v)) return v.filter(x=>!String(x).startsWith('rec')).join(', ');
           return String(v).startsWith('rec') ? '' : String(v);
-        })(),
-        notas: rec.fields['NOTAS'] || ''
+        })()
       }));
 
-    return new Response(JSON.stringify({ ok: true, citas, total: allRecords.length }), { headers: corsHeaders });
+    return new Response(JSON.stringify({ ok: true, citas }), { headers: corsHeaders });
   } catch(e) {
     return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
   }
