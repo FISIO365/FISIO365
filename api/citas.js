@@ -47,15 +47,25 @@ export default async function handler(req) {
         const relacionados = rec.fields['RELACIÓN - CITA'] || [];
         const estado = (rec.fields['ESTADO'] || '').toUpperCase();
         return Array.isArray(relacionados) && relacionados.includes(patientId)
-          && (estado === 'PENDIENTE' || estado === 'REALIZADA');
+          && (estado.includes('PENDIENTE') || estado.includes('REALIZADA'));
       })
       .map(rec => ({
         id: rec.id,
         fecha: rec.fields['FECHA'] || '',
         hora: rec.fields['HORA'] || '',
         estado: rec.fields['ESTADO'] || '',
-        fisio: Array.isArray(rec.fields['PREF.']) ? rec.fields['PREF.'].join(', ') : (rec.fields['PREF.'] || ''),
-        tipo: Array.isArray(rec.fields['TIPO DE CITA']) ? rec.fields['TIPO DE CITA'].join(', ') : (rec.fields['TIPO DE CITA'] || ''),
+        fisio: (() => {
+          const v = rec.fields['PREF.'];
+          if(!v) return '';
+          if(Array.isArray(v)) return v.filter(x=>!x.startsWith('rec')).join(', ');
+          return String(v).startsWith('rec') ? '' : String(v);
+        })(),
+        tipo: (() => {
+          const v = rec.fields['TIPO DE CITA'];
+          if(!v) return '';
+          if(Array.isArray(v)) return v.filter(x=>!x.startsWith('rec')).join(', ');
+          return String(v).startsWith('rec') ? '' : String(v);
+        })(),
         notas: rec.fields['NOTAS'] || ''
       }));
 
