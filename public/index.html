@@ -928,10 +928,10 @@ function renderProximasCitas(){
 function badgeEstado(estado){
   if(!estado) return '';
   const e = estado.toUpperCase();
-  if(e.includes('PENDIENTE')) return '<span class="cita-estado pendiente">✓ Confirmada</span>';
-  if(e.includes('REALIZADA')) return '<span class="cita-estado realizada">✓ Realizada</span>';
-  if(e.includes('CANCELADA')) return '<span class="cita-estado cancelada">✗ Cancelada</span>';
-  if(e.includes('REAGENDADA')) return '<span class="cita-estado reagendada">↻ Reagendada</span>';
+  if(e.includes('PENDIENTE')) return '<span class="cita-estado pendiente">Pendiente</span>';
+  if(e.includes('REALIZADA')) return '<span class="cita-estado realizada">Realizada</span>';
+  if(e.includes('CANCELADA')) return '<span class="cita-estado cancelada">Cancelada</span>';
+  if(e.includes('REAGENDADA')) return '<span class="cita-estado reagendada">Reagendada</span>';
   return `<span class="cita-estado realizada">${estado}</span>`;
 }
 
