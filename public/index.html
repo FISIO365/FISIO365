@@ -604,6 +604,7 @@ function initApp(){
  loadEjercicios();
  checkMensajesNoLeidos();
  setInterval(checkMensajesNoLeidos, 2*60*1000); // revisar cada 2 minutos
+ clearBadge();setTimeout(()=>clearBadge(),1500);setTimeout(()=>clearBadge(),4000);
 }
 
 function showSection(section){
