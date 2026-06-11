@@ -4109,9 +4109,10 @@ async function enviarMensajeFisioAPaciente(pacId, pacNombre, btn){
  const d=await res.json();
  if(d.ok){
  toast('Mensaje enviado ✓',true);
+ const _pacId=pacienteId; const _texto=texto;
  ta.value='';limpiarPacienteMsg();
- notificarPaciente(pacienteId,`Mensaje de ${fisioActual.nombre}`,texto);
- crearNotificacion(pacienteId,`Mensaje de ${fisioActual.nombre}`,texto,'mensaje');
+ notificarPaciente(_pacId,`Mensaje de ${fisioActual.nombre}`,_texto);
+ crearNotificacion(_pacId,`Mensaje de ${fisioActual.nombre}`,_texto,'mensaje');
  }else{
  toast('Error: '+(d.error||''),false);
  }
