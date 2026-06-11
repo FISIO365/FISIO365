@@ -4012,12 +4012,12 @@ async function fpTabDiario(pacId, pacNombre, body){
     items.forEach(item=>{
       const card=ce('div','');
       const esFisio=item.origen==='fisio';
-      const esEnviado=item.origen==='paciente'&&item.tipo!=='diario';
-      const esDiario=item.tipo==='diario'&&item.origen==='paciente';
+      const tieneDestinatario=item.fisioNombre&&item.fisioNombre.trim()!=='';
+      const esDiario=item.origen==='paciente'&&!tieneDestinatario;
 
       let colorBg=esFisio?'var(--lila-light)':esDiario?'#f9f9f9':'#f0f7f0';
       let colorBorder=esFisio?'var(--lila)':esDiario?'var(--border)':'#b7dab7';
-      let label=esFisio?`De ${item.fisioNombre||'Fisio'}`:esDiario?'Diario personal':`Para ${item.fisioNombre||'Fisio'}`;
+      let label=esFisio?`De ${item.fisioNombre||'Fisio'}`:esDiario?'Diario personal':`Para ${item.fisioNombre}`;
 
       card.style.cssText=`background:${colorBg};border:1.5px solid ${colorBorder};border-radius:10px;padding:12px 14px;margin-bottom:10px;`;
       card.innerHTML=`
@@ -7027,10 +7027,11 @@ async function renderMensajes(wrap, tab){
 
  // Tabs
  const tabs=ce('div','');
- tabs.style.cssText='display:flex;gap:6px;margin-bottom:18px;background:var(--cream);border-radius:10px;padding:4px;';
+ tabs.style.cssText='display:flex;gap:8px;margin-bottom:18px;';
  ['recibidos','enviados','nuevo'].forEach(t=>{
  const btn=ce('button','');
- btn.style.cssText=`flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;background:${t===tabActiva?'white':'none'};color:${t===tabActiva?'var(--black)':'var(--muted)'};box-shadow:${t===tabActiva?'0 1px 4px rgba(0,0,0,0.08)':'none'}`;
+ const isActive=t===tabActiva;
+ btn.style.cssText=`flex:1;font-family:var(--font);font-size:12px;font-weight:600;padding:9px;border-radius:99px;border:1.5px solid ${isActive?'var(--black)':'var(--border)'};background:${isActive?'var(--black)':'none'};color:${isActive?'white':'var(--muted)'};cursor:pointer;transition:all .15s;`;
  btn.textContent=t==='recibidos'?'Recibidos':t==='enviados'?'Enviados':'Nuevo mensaje';
  btn.onclick=()=>renderMensajes(wrap,t);
  tabs.appendChild(btn);
