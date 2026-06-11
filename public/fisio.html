@@ -3972,9 +3972,10 @@ async function fpTabDiario(pacId, pacNombre, body){
     const diarioTxt = dDiario.diario || '';
     if(diarioTxt){
       diarioTxt.split('\n').filter(l=>l.trim()).forEach(linea=>{
-        const match = linea.match(/^(.*?): (.*)$/);
+        // Format: "29/04/2026, 10:30:00: texto" or "29/04/2026: texto"
+        const match = linea.match(/^(\d{1,2}\/\d{1,2}\/\d{4}(?:[,\s]+[\d:]+)?): (.*)$/);
         if(match){
-          items.push({ fecha: match[1], texto: match[2], tipo: 'diario', origen: 'paciente' });
+          items.push({ fecha: match[1].trim(), texto: match[2], tipo: 'diario', origen: 'paciente' });
         } else {
           items.push({ fecha: '', texto: linea, tipo: 'diario', origen: 'paciente' });
         }
