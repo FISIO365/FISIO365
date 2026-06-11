@@ -10,7 +10,6 @@ const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
 webpush.setVapidDetails('mailto:info@fisioterapia365.com', VAPID_PUBLIC, VAPID_PRIVATE);
 
 module.exports = async function handler(req, res) {
-  console.log('notificar called', req.method);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -38,12 +37,23 @@ module.exports = async function handler(req, res) {
 
   if (pacienteId && pwd === FISIO_PASSWORD) {
     try {
-      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=PushSubscription`, {
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`;
+      const r = await fetch(url, {
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
       });
       const d = await r.json();
-      const subStr = d.fields?.PushSubscription;
-      if (!subStr) return res.status(200).json({ ok: false, error: 'Sin suscripcion' });
+      // Get ALL fields to find PushSubscription
+      const fields = d.fields || {};
+      const subStr = fields['PushSubscription'] || fields['pushSubscription'] || fields['push_subscription'] || null;
+      
+      if (!subStr) {
+        return res.status(200).json({ 
+          ok: false, 
+          error: 'Sin suscripcion',
+          debug: { fieldKeys: Object.keys(fields), pacienteId }
+        });
+      }
+      
       await webpush.sendNotification(JSON.parse(subStr), JSON.stringify({
         title: title || 'FISIO365',
         body: message || 'Tu fisio te ha enviado un mensaje'
