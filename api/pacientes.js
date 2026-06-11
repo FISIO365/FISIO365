@@ -28,6 +28,20 @@ export default async function handler(req) {
 
   const action = url.searchParams.get('action') || body.action || '';
 
+  // ── GET PUSH SUBSCRIPTION (público) ─────────────────────────────────────
+  if (action === 'get-push-subscription') {
+    const pacienteId = url.searchParams.get('pacienteId') || '';
+    if (!pacienteId) return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders });
+    try {
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=PushSubscription`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      const d = await r.json();
+      const sub = d.fields?.PushSubscription || null;
+      return new Response(JSON.stringify({ ok: true, subscription: sub }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders }); }
+  }
+
   // ── ENDPOINTS PÚBLICOS (sin contraseña) ─────────────────────────────────
   // get-mensajes — app paciente no tiene pwd
   if (action === 'get-mensajes') {

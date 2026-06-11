@@ -7198,6 +7198,21 @@ async function editarInformeFicha(card, inf, btn){
   };
 }
 
+
+async function notificarPaciente(pacienteId, titulo, mensaje){
+  try{
+    const r=await fetch(`/api/pacientes?action=get-push-subscription&pacienteId=${encodeURIComponent(pacienteId)}`);
+    const d=await r.json();
+    if(d.ok&&d.subscription){
+      await fetch('/api/notificar',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({subscription:JSON.parse(d.subscription),title:titulo,message:mensaje})
+      });
+    }
+  }catch(e){}
+}
+
 // LIGHTBOX
 function verImg(url,label){
  $('lb-img').src=url;$('lb-label').textContent=label;
