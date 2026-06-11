@@ -73,7 +73,8 @@ export default async function handler(req) {
     const pacienteId = url.searchParams.get('pacienteId') || '';
     try {
       // Get all messages for this patient with unread responses
-      const formula = `AND({PacienteId}="${pacienteId}",{RespuestaLeida}=FALSE(),{Respuesta}!="")`;
+      // Mark as read: replies from fisio OR messages sent by fisio (tipo='fisio')
+      const formula = `AND({PacienteId}="${pacienteId}",{RespuestaLeida}=FALSE(),OR({Respuesta}!="",{Tipo}="fisio"))`;
       const r = await fetch(
         `https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}?filterByFormula=${encodeURIComponent(formula)}`,
         { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
