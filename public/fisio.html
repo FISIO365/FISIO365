@@ -7070,7 +7070,7 @@ async function enviarMensajeNuevo(btn){
  method:'POST',
  headers:{'Content-Type':'application/json'},
  body:JSON.stringify({
- pwd:apiPwd, tipo:'fisio',
+ pwd:apiPwd, action:'enviar-mensaje-fisio',
  pacienteId, pacienteNombre,
  fisioId:fisioActual.id, fisioNombre:fisioActual.nombre,
  texto, fecha:new Date().toLocaleDateString('es-ES')
