@@ -4014,7 +4014,7 @@ async function enviarMensajeFisioAPaciente(pacId, pacNombre, btn){
  btn.disabled=true;btn.textContent='Enviando...';
  try{
  const fecha=new Date().toLocaleDateString('es-ES');
- const res=await fetch('/api/notificar-mensaje',{
+ const res=await fetch('/api/pacientes',{
  method:'POST',
  headers:{'Content-Type':'application/json'},
  body:JSON.stringify({
@@ -7070,7 +7070,7 @@ async function enviarMensajeNuevo(btn){
  if(!texto){toast('Escribe un mensaje',false);return;}
  btn.disabled=true;btn.textContent='Enviando...';
  try{
- const res=await fetch('/api/notificar-mensaje',{
+ const res=await fetch('/api/pacientes',{
  method:'POST',
  headers:{'Content-Type':'application/json'},
  body:JSON.stringify({
