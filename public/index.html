@@ -309,6 +309,7 @@ textarea:focus { border-color: var(--black); }
  <div style="display:flex;align-items:center;gap:10px;">
  <div class="topbar-name" id="topbarName"></div>
  <button onclick="cerrarSesion()" id="cerrarBtn" style="display:none;background:none;border:1px solid rgba(245,242,238,0.25);color:rgba(245,242,238,0.6);font-family:var(--font);font-size:11px;padding:5px 10px;border-radius:99px;cursor:pointer;">Cerrar app</button>
+ <button id="notifBtn" onclick="toggleNotifPanel()" style="display:none;background:none;border:none;cursor:pointer;padding:4px 6px;position:relative;color:var(--cream);font-size:15px;">&#x1F514;<span id="notifBadge" style="display:none;position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;background:#ee2155;"></span></button>
  <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()" style="display:none;">
  <span></span><span></span><span></span>
  </button>
