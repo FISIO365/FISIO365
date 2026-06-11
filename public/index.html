@@ -123,23 +123,6 @@ textarea:focus { border-color: var(--black); }
 .vas-msg.neutro { color: var(--muted); background: var(--cream); border: 1px solid var(--border); }
 .vas-msg.animo { color: #666; background: #f0f0ec; }
 
-/* NOTIFICACIONES */
-.notif-btn { position:relative; background:none; border:none; cursor:pointer; padding:6px; color:var(--cream); display:none; }
-.notif-badge { position:absolute; top:2px; right:2px; width:8px; height:8px; border-radius:50%; background:#ee2155; display:none; }
-.notif-badge.show { display:block; }
-.notif-panel { display:none; position:fixed; top:48px; right:0; left:0; bottom:0; background:var(--cream); z-index:200; overflow-y:auto; }
-.notif-panel.open { display:block; }
-.notif-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); background:var(--black); }
-.notif-header-title { font-size:16px; font-weight:700; color:var(--cream); }
-.notif-close { background:none; border:none; color:var(--cream); font-size:20px; cursor:pointer; padding:4px; }
-.notif-item { padding:14px 20px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; }
-.notif-item:active { background:var(--lila-light); }
-.notif-item.unread { background:#f8f6ff; }
-.notif-item-title { font-size:13px; font-weight:700; color:var(--black); margin-bottom:3px; }
-.notif-item-texto { font-size:12px; color:var(--muted); line-height:1.5; }
-.notif-item-fecha { font-size:11px; color:var(--muted); margin-top:4px; }
-.notif-unread-dot { width:8px; height:8px; border-radius:50%; background:var(--lila); flex-shrink:0; }
-
 /* CITAS CALENDARIO */
 .cal-wrap { background: white; border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
 .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
@@ -326,15 +309,12 @@ textarea:focus { border-color: var(--black); }
  <div style="display:flex;align-items:center;gap:10px;">
  <div class="topbar-name" id="topbarName"></div>
  <button onclick="cerrarSesion()" id="cerrarBtn" style="display:none;background:none;border:1px solid rgba(245,242,238,0.25);color:rgba(245,242,238,0.6);font-family:var(--font);font-size:11px;padding:5px 10px;border-radius:99px;cursor:pointer;">Cerrar app</button>
- <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()" style="font-size:16px;position:relative;">&#128276;<div class="notif-badge" id="notifBadge"></div></button>
  <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()" style="display:none;">
  <span></span><span></span><span></span>
  </button>
  </div>
  </div>
  <!-- PANEL NOTIFICACIONES -->
-  <div class="notif-panel" id="notifPanel"><div class="notif-header"><div class="notif-header-title">Notificaciones</div><button class="notif-close" onclick="toggleNotifPanel()">×</button></div><div id="notifList"></div></div>
-
   <!-- NAV MENU DESPLEGABLE -->
  <div class="nav-overlay" id="navOverlay" onclick="cerrarMenu()"></div>
  <div class="nav-menu" id="navMenu">
@@ -612,9 +592,6 @@ function initApp(){
  document.getElementById('appScreen').style.display='block';
  document.getElementById('appScreen').style.opacity='0';
  document.getElementById('hamburgerBtn').style.display='flex';
-  document.getElementById('notifBtn').style.display='flex';
-  checkNotifBadge();
-  setInterval(checkNotifBadge, 2*60*1000);
  document.getElementById('cerrarBtn').style.display='block';
  window.scrollTo({top:0,behavior:'instant'});
  setTimeout(()=>{document.getElementById('appScreen').style.opacity='1';},10);
@@ -1276,7 +1253,6 @@ function cerrarSesion(){
  patient=null;
  document.getElementById('appScreen').style.display='none';
  document.getElementById('hamburgerBtn').style.display='none';
-  document.getElementById('notifBtn').style.display='none';
  document.getElementById('cerrarBtn').style.display='none';
  document.getElementById('loginScreen').style.display='flex';
  document.getElementById('emailInput').value='';
