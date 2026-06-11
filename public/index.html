@@ -1223,6 +1223,16 @@ function cerrarMenu(){
  document.getElementById('navMenu').classList.remove('open');
  document.getElementById('navOverlay').classList.remove('open');
 }
+
+function formatMensaje(texto){
+  if(!texto) return '';
+  let t=texto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  t=t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--lila);text-decoration:underline;word-break:break-all;">$1</a>');
+  t=t.replace(/\n/g,'<br>');
+  return t;
+}
+
 function cerrarSesion(){
  localStorage.removeItem('fisio365_patient');
  patient=null;
