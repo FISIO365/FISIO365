@@ -7098,6 +7098,7 @@ async function responderMensaje(mensajeId, pacienteId, pacienteNombre, btn){
  const d=await res.json();
  if(d.ok){
  toast('Respuesta enviada ✓',true);
+ notificarPaciente(pacienteId,`Respuesta de ${fisioActual.nombre}`,texto);
  renderMensajes($('mainWrap'));
  } else {
  toast('Error: '+(d.error||''),false);
