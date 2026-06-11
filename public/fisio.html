@@ -7077,7 +7077,7 @@ async function enviarMensajeNuevo(btn){
  })
  });
  const d=await res.json();
- if(d.ok){toast('Mensaje enviado ✓',true);ta.value='';sel.value='';}
+ if(d.ok){toast('Mensaje enviado ✓',true);ta.value='';limpiarPacienteMsg();notificarPaciente(pacienteId,`Mensaje de ${fisioActual.nombre}`,texto);}
  else toast('Error: '+(d.error||''),false);
  }catch(e){toast('Error al enviar',false);}
  btn.disabled=false;btn.textContent='Enviar mensaje';
