@@ -1083,11 +1083,25 @@ async function responderAlFisio(mensajeId, fisioId, btn){
   if(!texto){toast('Escribe una respuesta',false);return;}
   btn.disabled=true;btn.textContent='...';
   try{
-    await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({pwd:'',action:'responder-mensaje',mensajeId,respuesta:texto,fisioNombre:'',pacienteId:patient.id,pacienteNombre:patient.nombre})});
-    toast('Respuesta enviada ✓',true);
-    loadMensajes('recibidos');
-  }catch(e){toast('Error',false);}
+    const res=await fetch('/api/diario',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'responder-al-fisio',
+        mensajeId,
+        respuesta:texto,
+        pacienteId:patient.id
+      })
+    });
+    const d=await res.json();
+    if(d.ok){
+      toast('Respuesta enviada ✓',true);
+      loadMensajes('recibidos');
+    } else {
+      toast('Error al enviar',false);
+      btn.disabled=false;btn.textContent='Enviar';
+    }
+  }catch(e){toast('Error',false);btn.disabled=false;btn.textContent='Enviar';}
 }
 
 
