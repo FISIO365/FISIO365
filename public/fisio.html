@@ -4009,6 +4009,8 @@ async function fpTabDiario(pacId, pacNombre, body){
     hd.textContent='Comunicaciones';
     body.appendChild(hd);
 
+    // Debug: log fechas before sort
+    console.log('items fechas:', items.map(i=>({f:i.fecha,t:i.tipo})));
     // Sort by fecha
     items.sort((a,b)=>{
       const parseF=s=>{
@@ -4022,7 +4024,7 @@ async function fpTabDiario(pacId, pacNombre, body){
         }
         return 0;
       };
-      return parseF(a.fecha)-parseF(b.fecha);
+      return parseF(b.fecha)-parseF(a.fecha);
     });
 
     // Render items
