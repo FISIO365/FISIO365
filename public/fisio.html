@@ -3956,38 +3956,88 @@ async function fpTabEva(pacId, body){
 }
 
 async function fpTabDiario(pacId, pacNombre, body){
- try{
- const r=await fetch(`/api/pacientes?action=get-diario&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
- const d=await r.json();
- // DEBUG temporal — muestra los campos disponibles
- if(d.fieldNames){
- const dbg=ce('div','');
- dbg.style.cssText='background:#fff3cd;border-radius:8px;padding:10px 12px;font-size:11px;margin-bottom:10px;color:#856404';
- dbg.textContent='Campos disponibles: '+d.fieldNames.join(', ');
- body.innerHTML='';
- body.appendChild(dbg);
- }
- if(!d.ok||!d.diario||!d.diario.trim()){
- const em=ce('div','');
- em.style.cssText='text-align:center;padding:20px;color:var(--muted);font-size:13px';
- em.textContent='Sin entradas en el diario';
- body.appendChild(em);
- return;
- }
- const entradas=d.diario.split(/\n/).map(e=>e.trim()).filter(e=>e.length>0).reverse();
- entradas.forEach(e=>{
- const row=ce('div','');
- row.style.cssText='background:white;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:8px;font-size:13px;line-height:1.6';
- row.textContent=e;
- body.appendChild(row);
- });
- }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar diario: '+e.message+'</div>';}
+  body.innerHTML='<div style="text-align:center;padding:2rem"><div style="width:24px;height:24px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
+  try{
+    // Load both: diario text + mensajes
+    const [rDiario, rMensajes] = await Promise.all([
+      fetch(`/api/pacientes?action=get-diario&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`),
+      fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(pacId)}`)
+    ]);
+    const dDiario = await rDiario.json();
+    const dMensajes = await rMensajes.json();
+
+    const items = [];
+
+    // Parse diario text entries
+    const diarioTxt = dDiario.diario || '';
+    if(diarioTxt){
+      diarioTxt.split('\n').filter(l=>l.trim()).forEach(linea=>{
+        const match = linea.match(/^(.*?): (.*)$/);
+        if(match){
+          items.push({ fecha: match[1], texto: match[2], tipo: 'diario', origen: 'paciente' });
+        } else {
+          items.push({ fecha: '', texto: linea, tipo: 'diario', origen: 'paciente' });
+        }
+      });
+    }
+
+    // Add mensajes
+    (dMensajes.mensajes||[]).forEach(m=>{
+      items.push({
+        fecha: m.fecha||'',
+        texto: m.texto||'',
+        tipo: m.tipo||'diario',
+        origen: m.tipo==='fisio'?'fisio':'paciente',
+        fisioNombre: m.fisioNombre||'',
+        pacienteNombre: pacNombre,
+        respuesta: m.respuesta||'',
+        id: m.id
+      });
+    });
+
+    body.innerHTML='';
+
+    if(!items.length){
+      body.innerHTML='<div style="color:var(--muted);font-size:13px;padding:1rem 0">Sin comunicaciones registradas.</div>';
+      return;
+    }
+
+    // Header
+    const hd=ce('div','');
+    hd.style.cssText='font-size:16px;font-weight:700;margin-bottom:16px;';
+    hd.textContent='Comunicaciones';
+    body.appendChild(hd);
+
+    // Render items
+    items.forEach(item=>{
+      const card=ce('div','');
+      const esFisio=item.origen==='fisio';
+      const esEnviado=item.origen==='paciente'&&item.tipo!=='diario';
+      const esDiario=item.tipo==='diario'&&item.origen==='paciente';
+
+      let colorBg=esFisio?'var(--lila-light)':esDiario?'#f9f9f9':'#f0f7f0';
+      let colorBorder=esFisio?'var(--lila)':esDiario?'var(--border)':'#b7dab7';
+      let label=esFisio?`De ${item.fisioNombre||'Fisio'}`:esDiario?'Diario personal':`Para ${item.fisioNombre||'Fisio'}`;
+
+      card.style.cssText=`background:${colorBg};border:1.5px solid ${colorBorder};border-radius:10px;padding:12px 14px;margin-bottom:10px;`;
+      card.innerHTML=`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${esFisio?'var(--lila)':esDiario?'var(--muted)':'#2e7d32'}">${label}</span>
+          <span style="font-size:11px;color:var(--muted)">${item.fecha||''}</span>
+        </div>
+        <div style="font-size:13px;color:var(--black);line-height:1.6;white-space:pre-wrap">${formatMensaje(item.texto)}</div>
+        ${item.respuesta?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.08);">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Respuesta</div>
+          <div style="font-size:13px;color:var(--black);line-height:1.6;white-space:pre-wrap">${formatMensaje(item.respuesta)}</div>
+        </div>`:''}`;
+      body.appendChild(card);
+    });
+
+  }catch(e){
+    body.innerHTML=`<div style="color:var(--muted);font-size:13px;">Error al cargar: ${e.message}</div>`;
+  }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SECTION: INFORMES
-// ─────────────────────────────────────────────────────────────────────────────
-// ── STORAGE HELPERS ──────────────────────────────────────────────────────
 async function fpTabMensaje(pacId, pacNombre, body){
  body.innerHTML=`
  <div style="margin-bottom:12px">
