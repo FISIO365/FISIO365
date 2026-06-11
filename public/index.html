@@ -1022,6 +1022,15 @@ async function loadMensajes(tab){
  }
 }
 
+function clearBadge(){
+  try{
+    if(navigator.clearAppBadge) navigator.clearAppBadge();
+    if('serviceWorker' in navigator && navigator.serviceWorker.controller){
+      navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});
+    }
+  }catch(e){}
+}
+
 async function marcarRespuestasLeidas(){
  if(!patient) return;
  try{
@@ -1034,8 +1043,8 @@ async function checkMensajesNoLeidos(){
  const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);
  const data=await res.json();
  const mensajes=data.mensajes||[];
- const hayRespuestasNuevas=mensajes.some(m=>m.respuesta&&!m.respuestaLeida);
- document.getElementById('navMensajesDot').classList.toggle('show',hayRespuestasNuevas);
+ const hayNovedad=mensajes.some(m=>(m.respuesta&&!m.respuestaLeida)||(m.tipo==='fisio'&&!m.respuestaLeida));
+ document.getElementById('navMensajesDot').classList.toggle('show',hayNovedad);
  }catch(e){}
 }
 
