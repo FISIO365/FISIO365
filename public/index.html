@@ -1004,7 +1004,7 @@ async function loadMensajes(tab){
       const emptyText=tabActiva==='recibidos'
         ?'Cuando tu fisio te envíe un mensaje, aparecerá aquí.'
         :'Cuando envíes algo a tu fisio, aparecerá aquí.';
-      inner.innerHTML=`<div class="empty"><div class="empty-icon">💬</div><div class="empty-title">Sin mensajes</div><div class="empty-desc">${emptyText}</div></div>`;
+      inner.innerHTML=`<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin mensajes</div><div class="empty-desc">${emptyText}</div></div>`;
       return;
     }
 
