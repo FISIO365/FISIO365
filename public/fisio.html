@@ -7046,8 +7046,8 @@ async function renderMensajes(wrap, tab){
  ['recibidos','enviados','nuevo'].forEach(t=>{
  const btn=ce('button','');
  const isActive=t===tabActiva;
- btn.style.cssText=`flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:7px 10px;border-radius:99px;border:1.5px solid ${isActive?'var(--black)':'var(--border)'};background:${isActive?'var(--black)':'none'};color:${isActive?'white':'var(--muted)'};cursor:pointer;transition:all .15s;`;
- btn.textContent=t==='recibidos'?'Recibidos':t==='enviados'?'Enviados':'Nuevo mensaje';
+ btn.style.cssText=`flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:6px 12px;border-radius:99px;border:1.5px solid ${isActive?'var(--black)':'var(--border)'};background:${isActive?'var(--black)':'none'};color:${isActive?'white':'var(--muted)'};cursor:pointer;transition:all .15s;`;
+ btn.textContent=t==='recibidos'?'Recibidos':t==='enviados'?'Enviados':'Nuevo';
  btn.onclick=()=>renderMensajes(wrap,t);
  tabs.appendChild(btn);
  });
