@@ -7025,7 +7025,7 @@ async function renderMensajes(wrap, tab){
  <div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:4px">${m.pacienteNombre||'Paciente'}</div>
  <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:12px">${textoLimpio}</div>
  ${m.respuesta
- ?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lila);margin-bottom:4px">Tu respuesta</div><div style="font-size:13px;color:var(--black);line-height:1.5">${m.respuesta}</div></div>`
+ ?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lila);margin-bottom:4px">Tu respuesta</div><div style="font-size:13px;color:var(--black);line-height:1.5;white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`
  :`<div style="display:flex;gap:8px;align-items:flex-start">
  <textarea id="reply_${m.id}" placeholder="Escribe tu respuesta..." style="flex:1;font-family:var(--font);font-size:13px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:70px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
  <button onclick="responderMensaje('${m.id}','${(m.pacienteId||'').replace(/'/g,"\'")}','${(m.pacienteNombre||'').replace(/'/g,"\'")}',this)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:10px 14px;background:var(--lila);color:white;border:none;border-radius:8px;cursor:pointer;flex-shrink:0;white-space:nowrap">Enviar</button>
@@ -7059,7 +7059,7 @@ async function renderMensajes(wrap, tab){
       } else {
         enviados.forEach(m=>{
           const card=ce('div','card');card.style.cssText='margin-bottom:12px;';
-          card.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:14px;font-weight:700;color:var(--black)">${m.pacienteNombre||'Paciente'}</div><div style="font-size:11px;color:var(--muted)">${m.fecha||''}</div></div><div style="font-size:13px;color:#333;line-height:1.6">${m.texto||''}</div>${m.respuesta?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;margin-top:10px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--lila);margin-bottom:4px">Respuesta del paciente</div><div style="font-size:13px;color:var(--black)">${m.respuesta}</div></div>`:''}`;
+          card.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:14px;font-weight:700;color:var(--black)">${m.pacienteNombre||'Paciente'}</div><div style="font-size:11px;color:var(--muted)">${m.fecha||''}</div></div><div style="font-size:13px;color:#333;line-height:1.6;white-space:pre-wrap">${formatMensaje(m.texto||'')}</div>${m.respuesta?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;margin-top:10px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--lila);margin-bottom:4px">Respuesta del paciente</div><div style="font-size:13px;color:var(--black);white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`:''}`;
           wrap.appendChild(card);
         });
       }
@@ -7263,6 +7263,20 @@ function limpiarPacienteMsg(){
   const input=document.getElementById('msgBuscaPaciente');
   if(input){input.style.display='block';input.value='';}
   document.getElementById('msgPacientesResultados').style.display='none';
+}
+
+
+function formatMensaje(texto){
+  if(!texto) return '';
+  // Escape HTML first
+  let t = texto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Bold **texto**
+  t = t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  // Links
+  t = t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--lila);text-decoration:underline;">$1</a>');
+  // Line breaks
+  t = t.replace(/\n/g,'<br>');
+  return t;
 }
 
 // LIGHTBOX
