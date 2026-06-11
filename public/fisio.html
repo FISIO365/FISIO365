@@ -6992,7 +6992,7 @@ async function renderMensajes(wrap, tab){
  const data=await res.json();
  loading.remove();
 
- const mensajes=data.mensajes||[];
+ const mensajes=(data.mensajes||[]).filter(m=>m.tipo!=='fisio');
  const sinLeer=mensajes.filter(m=>!m.visto).length;
  const badge=$('sb-msg-badge');
  if(badge){badge.textContent=sinLeer>0?String(sinLeer):'';badge.style.display=sinLeer>0?'block':'none';}
