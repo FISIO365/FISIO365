@@ -6972,10 +6972,10 @@ async function renderMensajes(wrap, tab){
  // Tabs
  const tabs=ce('div','');
  tabs.style.cssText='display:flex;gap:6px;margin-bottom:18px;background:var(--cream);border-radius:10px;padding:4px;';
- ['recibidos','nuevo'].forEach(t=>{
+ ['recibidos','enviados','nuevo'].forEach(t=>{
  const btn=ce('button','');
- btn.style.cssText=`flex:1;font-family:var(--font);font-size:12px;font-weight:600;padding:8px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;background:${t===tabActiva?'white':'none'};color:${t===tabActiva?'var(--black)':'var(--muted)'};box-shadow:${t===tabActiva?'0 1px 4px rgba(0,0,0,0.08)':'none'}`;
- btn.textContent=t==='recibidos'?'Recibidos':'Nuevo mensaje';
+ btn.style.cssText=`flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;background:${t===tabActiva?'white':'none'};color:${t===tabActiva?'var(--black)':'var(--muted)'};box-shadow:${t===tabActiva?'0 1px 4px rgba(0,0,0,0.08)':'none'}`;
+ btn.textContent=t==='recibidos'?'Recibidos':t==='enviados'?'Enviados':'Nuevo mensaje';
  btn.onclick=()=>renderMensajes(wrap,t);
  tabs.appendChild(btn);
  });
@@ -7043,10 +7043,32 @@ async function renderMensajes(wrap, tab){
  wrap.appendChild(err);
  }
 
- } else {
- // NUEVO MENSAJE
- const nuevo=ce('div','');
- nuevo.style.cssText='background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;';
+  } else if(tabActiva==='enviados'){
+    const loading2=ce('div','');
+    loading2.innerHTML='<div style="text-align:center;padding:3rem"><div style="width:28px;height:28px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
+    wrap.appendChild(loading2);
+    try{
+      const res=await fetch(`/api/pacientes?action=get-mensajes-fisio&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
+      const data=await res.json();
+      loading2.remove();
+      const enviados=(data.mensajes||[]).filter(m=>m.tipo==='fisio');
+      if(!enviados.length){
+        const em=ce('div','');em.style.cssText='text-align:center;padding:3rem 1rem;color:var(--muted)';
+        em.innerHTML='<div style="font-size:16px;font-weight:600;margin-bottom:8px">Sin mensajes enviados</div><div style="font-size:13px">Los mensajes que envíes a los pacientes aparecerán aquí.</div>';
+        wrap.appendChild(em);
+      } else {
+        enviados.forEach(m=>{
+          const card=ce('div','card');card.style.cssText='margin-bottom:12px;';
+          card.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:14px;font-weight:700;color:var(--black)">${m.pacienteNombre||'Paciente'}</div><div style="font-size:11px;color:var(--muted)">${m.fecha||''}</div></div><div style="font-size:13px;color:#333;line-height:1.6">${m.texto||''}</div>${m.respuesta?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;margin-top:10px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--lila);margin-bottom:4px">Respuesta del paciente</div><div style="font-size:13px;color:var(--black)">${m.respuesta}</div></div>`:''}`;
+          wrap.appendChild(card);
+        });
+      }
+    }catch(e){loading2.remove();}
+
+  } else {
+    // NUEVO MENSAJE
+    const nuevo=ce('div','');
+    nuevo.style.cssText='background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;';
  nuevo.innerHTML=`
  <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Busca un paciente</div>
  <input id="msgBuscaPaciente" type="text" placeholder="Busca un paciente..." autocomplete="off" oninput="filtrarPacientesMsg(this.value)" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;outline:none;background:var(--cream);color:var(--black);margin-bottom:6px;"><div id="msgPacientesResultados" style="max-height:180px;overflow-y:auto;border:1.5px solid var(--border);border-radius:8px;margin-bottom:12px;display:none;background:white;"></div><div id="msgPacienteSeleccionado" style="display:none;background:var(--lila-light);border:1.5px solid var(--lila);border-radius:8px;padding:8px 12px;margin-bottom:12px;align-items:center;justify-content:space-between;"><span id="msgPacienteNombreLabel" style="font-size:13px;font-weight:600;color:var(--black)"></span><button onclick="limpiarPacienteMsg()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted)">×</button></div><input type="hidden" id="msgNuevoPaciente" value=""><input type="hidden" id="msgNuevoPacienteNombre" value="">
