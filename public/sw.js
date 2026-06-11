@@ -13,17 +13,30 @@ self.addEventListener('push', function(event) {
   }
 
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body: body,
-      icon: '/icono.png',
-      badge: '/icono.png',
-      vibrate: [200, 100, 200],
-      data: { url: '/' }
-    })
+    Promise.all([
+      self.registration.showNotification(title, {
+        body: body,
+        icon: '/icono.png',
+        badge: '/icono.png',
+        vibrate: [200, 100, 200],
+        data: { url: '/' }
+      }),
+      // Badge en el icono de la app
+      navigator.setAppBadge ? navigator.setAppBadge(1) : Promise.resolve()
+    ])
   );
 });
 
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
+  // Quitar badge al abrir la app
+  if (navigator.clearAppBadge) navigator.clearAppBadge();
   event.waitUntil(clients.openWindow(event.notification.data.url || '/'));
+});
+
+// Quitar badge cuando el paciente abre la app
+self.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'CLEAR_BADGE') {
+    if (navigator.clearAppBadge) navigator.clearAppBadge();
+  }
 });
