@@ -4008,6 +4008,21 @@ async function fpTabDiario(pacId, pacNombre, body){
     hd.textContent='Comunicaciones';
     body.appendChild(hd);
 
+    // Sort by fecha
+    items.sort((a,b)=>{
+      const parseF=s=>{
+        if(!s)return 0;
+        const p=s.split(/[\/\s:,]+/);
+        if(p.length>=3){
+          const d=parseInt(p[0]),mo=parseInt(p[1])-1,y=parseInt(p[2]);
+          const h=p[3]?parseInt(p[3]):0,mi=p[4]?parseInt(p[4]):0;
+          return new Date(y,mo,d,h,mi).getTime();
+        }
+        return new Date(s).getTime()||0;
+      };
+      return parseF(a.fecha)-parseF(b.fecha);
+    });
+
     // Render items
     items.forEach(item=>{
       const card=ce('div','');
@@ -7031,7 +7046,7 @@ async function renderMensajes(wrap, tab){
  ['recibidos','enviados','nuevo'].forEach(t=>{
  const btn=ce('button','');
  const isActive=t===tabActiva;
- btn.style.cssText=`flex:1;font-family:var(--font);font-size:12px;font-weight:600;padding:9px;border-radius:99px;border:1.5px solid ${isActive?'var(--black)':'var(--border)'};background:${isActive?'var(--black)':'none'};color:${isActive?'white':'var(--muted)'};cursor:pointer;transition:all .15s;`;
+ btn.style.cssText=`flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:7px 10px;border-radius:99px;border:1.5px solid ${isActive?'var(--black)':'var(--border)'};background:${isActive?'var(--black)':'none'};color:${isActive?'white':'var(--muted)'};cursor:pointer;transition:all .15s;`;
  btn.textContent=t==='recibidos'?'Recibidos':t==='enviados'?'Enviados':'Nuevo mensaje';
  btn.onclick=()=>renderMensajes(wrap,t);
  tabs.appendChild(btn);
