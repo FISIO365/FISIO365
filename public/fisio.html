@@ -7048,11 +7048,8 @@ async function renderMensajes(wrap, tab){
  const nuevo=ce('div','');
  nuevo.style.cssText='background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;';
  nuevo.innerHTML=`
- <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Selecciona un paciente</div>
- <select id="msgNuevoPaciente" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;outline:none;background:var(--cream);color:var(--black);margin-bottom:12px;">
- <option value="">— Elige un paciente —</option>
- ${[...pacs].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(p=>`<option value="${p.id}" data-nombre="${p.nombre}">${p.nombre}</option>`).join('')}
- </select>
+ <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Busca un paciente</div>
+ <input id="msgBuscaPaciente" type="text" placeholder="Busca un paciente..." autocomplete="off" oninput="filtrarPacientesMsg(this.value)" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;outline:none;background:var(--cream);color:var(--black);margin-bottom:6px;"><div id="msgPacientesResultados" style="max-height:180px;overflow-y:auto;border:1.5px solid var(--border);border-radius:8px;margin-bottom:12px;display:none;background:white;"></div><div id="msgPacienteSeleccionado" style="display:none;background:var(--lila-light);border:1.5px solid var(--lila);border-radius:8px;padding:8px 12px;margin-bottom:12px;align-items:center;justify-content:space-between;"><span id="msgPacienteNombreLabel" style="font-size:13px;font-weight:600;color:var(--black)"></span><button onclick="limpiarPacienteMsg()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted)">×</button></div><input type="hidden" id="msgNuevoPaciente" value=""><input type="hidden" id="msgNuevoPacienteNombre" value="">
  <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Mensaje</div>
  <textarea id="msgNuevoTexto" placeholder="Escribe tu mensaje al paciente..." style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:100px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s;margin-bottom:12px;" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
  <button onclick="enviarMensajeNuevo(this)" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:12px;background:var(--lila);color:white;border:none;border-radius:8px;cursor:pointer;">Enviar mensaje</button>`;
@@ -7207,6 +7204,43 @@ async function notificarPaciente(pacienteId, titulo, mensaje){
       body:JSON.stringify({pacienteId,pwd:apiPwd,title:titulo,message:mensaje})
     });
   }catch(e){}
+}
+
+
+function filtrarPacientesMsg(q){
+  const res=document.getElementById('msgPacientesResultados');
+  const sel=document.getElementById('msgPacienteSeleccionado');
+  if(!q.trim()){res.style.display='none';return;}
+  const filtrados=[...pacs]
+    .filter(p=>p.nombre.toLowerCase().includes(q.toLowerCase()))
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'))
+    .slice(0,8);
+  if(!filtrados.length){res.style.display='none';return;}
+  res.style.display='block';
+  res.innerHTML=filtrados.map(p=>`
+    <div onclick="seleccionarPacienteMsg('${p.id}','${p.nombre.replace(/'/g,"\\'")}',this)"
+      style="padding:10px 12px;cursor:pointer;font-size:13px;font-weight:500;border-bottom:1px solid var(--border);transition:background .1s;"
+      onmouseenter="this.style.background='var(--lila-light)'" onmouseleave="this.style.background=''">${p.nombre}</div>
+  `).join('');
+}
+
+function seleccionarPacienteMsg(id, nombre, el){
+  document.getElementById('msgNuevoPaciente').value=id;
+  document.getElementById('msgNuevoPacienteNombre').value=nombre;
+  document.getElementById('msgPacienteNombreLabel').textContent=nombre;
+  document.getElementById('msgPacienteSeleccionado').style.display='flex';
+  document.getElementById('msgPacientesResultados').style.display='none';
+  document.getElementById('msgBuscaPaciente').value='';
+  document.getElementById('msgBuscaPaciente').style.display='none';
+}
+
+function limpiarPacienteMsg(){
+  document.getElementById('msgNuevoPaciente').value='';
+  document.getElementById('msgNuevoPacienteNombre').value='';
+  document.getElementById('msgPacienteSeleccionado').style.display='none';
+  const input=document.getElementById('msgBuscaPaciente');
+  if(input){input.style.display='block';input.value='';}
+  document.getElementById('msgPacientesResultados').style.display='none';
 }
 
 // LIGHTBOX
