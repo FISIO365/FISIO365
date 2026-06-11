@@ -1088,8 +1088,10 @@ async function guardar(){
  try{
  const r=await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:pacSelId,pacienteNombre:pacSelN,fisioId:fisioSelId,ejercicios:ejs,mensajeFisio:$('mensajeFisio')?.value?.trim()||''})});
  const d=await r.json();
- if(d.ok) toast(`Programa guardado: ${d.creados} ejercicios para ${pacSelN}`,true);
- else toast(d.error||'Error al guardar',false);
+ if(d.ok){
+ toast(`Programa guardado: ${d.creados} ejercicios para ${pacSelN}`,true);
+ notificarPaciente(pacSelId,`Nuevo programa de ${fisioActual.nombre}`,`Tu fisio te ha asignado ${d.creados} ejercicio${d.creados!==1?'s':''} nuevos. Ábrelos en tu app.`);
+ } else toast(d.error||'Error al guardar',false);
  }catch(e){toast('Error de conexión',false);}
  btn.disabled=false; btn.textContent='Guardar programa';
 }
