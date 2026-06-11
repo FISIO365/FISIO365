@@ -1015,9 +1015,9 @@ async function loadMensajes(tab){
             <span class="msg-fisio-badge">${m.fisioNombre||'Tu fisio'}</span>
             <div class="msg-card-fecha">${m.fecha||''}</div>
           </div>
-          <div class="msg-card-texto">${m.texto||''}</div>
+          <div class="msg-card-texto" style="white-space:pre-wrap">${formatMensaje(m.texto||'')}</div>
           ${m.respuesta
-            ?`<div class="msg-reply"><div class="msg-reply-label">Tu respuesta</div><div class="msg-reply-texto">${m.respuesta}</div></div>`
+            ?`<div class="msg-reply"><div class="msg-reply-label">Tu respuesta</div><div class="msg-reply-texto" style="white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`
             :`<div style="margin-top:10px;display:flex;gap:8px;">
                 <textarea id="preply_${m.id}" placeholder="Escribe tu respuesta..." style="flex:1;font-family:var(--font);font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:60px;outline:none;background:var(--cream);color:var(--black);" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
                 <button onclick="responderAlFisio('${m.id}','${(m.fisioId||'').replace(/'/g,"\\'")}',this)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:10px 12px;background:var(--black);color:var(--cream);border:none;border-radius:8px;cursor:pointer;flex-shrink:0;">Enviar</button>
@@ -1030,14 +1030,14 @@ async function loadMensajes(tab){
         const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
         const tipoHtml=esDolorAumento?'<span class="msg-tipo msg-tipo-dolor">Dolor</span>':'<span class="msg-tipo msg-tipo-diario">Diario</span>';
         const replyHtml=m.respuesta
-          ?`<div class="msg-reply"><div class="msg-reply-label">Respuesta de ${m.fisioNombre||'tu fisio'}</div><div class="msg-reply-texto">${m.respuesta}</div></div>`
+          ?`<div class="msg-reply"><div class="msg-reply-label">Respuesta de ${m.fisioNombre||'tu fisio'}</div><div class="msg-reply-texto" style="white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`
           :'<div class="msg-pending">Pendiente de respuesta</div>';
         return `<div class="msg-card">
           <div class="msg-card-header">
             <div style="display:flex;align-items:center;gap:8px;">${tipoHtml}<span class="msg-fisio-badge">→ ${m.fisioNombre||'Fisio'}</span></div>
             <div class="msg-card-fecha">${m.fecha||''}</div>
           </div>
-          <div class="msg-card-texto">${textoLimpio}</div>
+          <div class="msg-card-texto" style="white-space:pre-wrap">${formatMensaje(textoLimpio)}</div>
           ${replyHtml}
         </div>`;
       }).join('');
