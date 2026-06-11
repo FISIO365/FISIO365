@@ -1256,6 +1256,42 @@ function formatMensaje(texto){
   return t;
 }
 
+
+function toggleNotifPanel(){showSection('notificaciones');}
+
+async function loadNotificaciones(){
+  const list=document.getElementById('notifListEl');
+  if(!list||!patient)return;
+  list.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try{
+    const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);
+    const data=await res.json();
+    const notifs=data.notificaciones||[];
+    const noLeidas=notifs.filter(n=>!n.leida).length;
+    const badge=document.getElementById('notifBadge');
+    if(badge) badge.style.display=noLeidas>0?'block':'none';
+    if(!notifs.length){list.innerHTML='<div class="empty"><div class="empty-title">Sin notificaciones</div></div>';return;}
+    list.innerHTML=notifs.map(n=>`<div onclick="abrirNotif('${n.id}','${n.tipo}')" style="padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;gap:12px;align-items:flex-start;"><div style="flex:1;"><div style="font-size:13px;font-weight:${n.leida?500:700};color:var(--black);margin-bottom:3px;">${n.titulo||''}</div><div style="font-size:12px;color:var(--muted);line-height:1.5;">${n.texto||''}</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">${n.fecha||''}</div></div>${n.leida?'':'<div style="width:8px;height:8px;border-radius:50%;background:var(--lila);flex-shrink:0;margin-top:4px;"></div>'}</div>`).join('');
+  }catch(e){list.innerHTML='<div class="empty"><div class="empty-title">Error</div></div>';}
+}
+
+async function abrirNotif(notifId,tipo){
+  try{await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'marcar-notificacion-leida',notifId})});}catch(e){}
+  if(tipo==='mensaje'||tipo==='respuesta')showSection('mensajes');
+  else showSection('hoy');
+  checkNotifBadge();
+}
+
+async function checkNotifBadge(){
+  if(!patient)return;
+  try{
+    const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);
+    const data=await res.json();
+    const badge=document.getElementById('notifBadge');
+    if(badge) badge.style.display=(data.notificaciones||[]).filter(n=>!n.leida).length>0?'block':'none';
+  }catch(e){}
+}
+
 function cerrarSesion(){
  localStorage.removeItem('fisio365_patient');
  patient=null;
