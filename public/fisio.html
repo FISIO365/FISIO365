@@ -316,6 +316,12 @@ input[type=number]{text-align:center}
 .wiki-slide-info-btn:hover{background:#f588e3;color:white}
 .wiki-slide-info-btn.active{background:#f588e3;color:white}
 .wiki-slide-info-box{margin-top:8px;border-radius:var(--r-sm)}
+
+.msg-toolbar { display:flex; gap:4px; padding:6px 8px; background:#f5f5f5; border:1.5px solid var(--border); border-bottom:none; border-radius:8px 8px 0 0; }
+.msg-toolbar button { background:none; border:none; cursor:pointer; font-size:13px; font-weight:700; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--muted); transition:all .12s; font-family:var(--font); }
+.msg-toolbar button:hover { background:var(--lila-light); color:var(--lila); }
+.msg-toolbar-sep { width:1px; background:var(--border); margin:4px 2px; }
+.msg-with-toolbar { border-radius:0 0 8px 8px !important; border-top:none !important; }
 </style>
 </head>
 <body>
@@ -4001,7 +4007,7 @@ async function fpTabMensaje(pacId, pacNombre, body){
  hist.innerHTML='<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">Mensajes anteriores</div>'+
  msgs.map(m=>`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;margin-bottom:8px;">
  <div style="font-size:11px;color:var(--lila);margin-bottom:4px">${m.fecha||''}</div>
- <div style="font-size:13px;color:var(--black)">${m.texto||''}</div>
+ <div style="font-size:13px;color:var(--black);white-space:pre-wrap">${formatMensaje(m.texto||'')}</div>
  ${m.respuesta?`<div style="font-size:12px;color:var(--muted);margin-top:6px;font-style:italic">Tu respuesta: ${m.respuesta}</div>`:''}
  </div>`).join('');
  }catch(e){}
@@ -7023,7 +7029,7 @@ async function renderMensajes(wrap, tab){
  <div style="font-size:11px;color:var(--muted)">${m.fecha||''}</div>
  </div>
  <div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:4px">${m.pacienteNombre||'Paciente'}</div>
- <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:12px">${textoLimpio}</div>
+ <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:12px;white-space:pre-wrap">${formatMensaje(textoLimpio)}</div>
  ${m.respuesta
  ?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lila);margin-bottom:4px">Tu respuesta</div><div style="font-size:13px;color:var(--black);line-height:1.5;white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`
  :`<div style="display:flex;gap:8px;align-items:flex-start">
@@ -7076,6 +7082,15 @@ async function renderMensajes(wrap, tab){
  <textarea id="msgNuevoTexto" placeholder="Escribe tu mensaje al paciente..." style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:100px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s;margin-bottom:12px;" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
  <button onclick="enviarMensajeNuevo(this)" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:12px;background:var(--lila);color:white;border:none;border-radius:8px;cursor:pointer;">Enviar mensaje</button>`;
  wrap.appendChild(nuevo);
+    // Add formatting toolbar to nuevo mensaje textarea
+    setTimeout(()=>{
+      const ta=document.getElementById('msgNuevoTexto');
+      if(ta&&!ta.previousElementSibling?.classList.contains('msg-toolbar')){
+        ta.parentNode.insertBefore(mkToolbar('msgNuevoTexto'),ta);
+        ta.style.borderRadius='0 0 8px 8px';
+        ta.style.borderTop='none';
+      }
+    },0);
  }
 }
 
@@ -7277,6 +7292,49 @@ function formatMensaje(texto){
   // Line breaks
   t = t.replace(/\n/g,'<br>');
   return t;
+}
+
+
+function insertFormato(taId, antes, despues){
+  const ta=document.getElementById(taId);
+  if(!ta)return;
+  const start=ta.selectionStart, end=ta.selectionEnd;
+  const sel=ta.value.substring(start,end);
+  const nuevo=antes+(sel||'texto')+despues;
+  ta.value=ta.value.substring(0,start)+nuevo+ta.value.substring(end);
+  ta.focus();
+  ta.selectionStart=start+antes.length;
+  ta.selectionEnd=start+antes.length+(sel||'texto').length;
+}
+
+function insertLink(taId){
+  const url=prompt('URL del enlace:','https://');
+  if(!url||url==='https://')return;
+  const ta=document.getElementById(taId);
+  if(!ta)return;
+  const start=ta.selectionStart, end=ta.selectionEnd;
+  const sel=ta.value.substring(start,end)||url;
+  ta.value=ta.value.substring(0,start)+url+ta.value.substring(end);
+  ta.focus();
+}
+
+function mkToolbar(taId){
+  const div=ce('div','msg-toolbar');
+  const btns=[
+    {label:'B',title:'Negrita',fn:()=>insertFormato(taId,'**','**')},
+    {label:'I',title:'Cursiva',fn:()=>insertFormato(taId,'_','_')},
+    {sep:true},
+    {label:'🔗',title:'Enlace',fn:()=>insertLink(taId)},
+  ];
+  btns.forEach(b=>{
+    if(b.sep){const s=ce('div','msg-toolbar-sep');div.appendChild(s);return;}
+    const btn=ce('button','');
+    btn.textContent=b.label;btn.title=b.title;
+    btn.style.fontStyle=b.label==='I'?'italic':'normal';
+    btn.onclick=(e)=>{e.preventDefault();b.fn();};
+    div.appendChild(btn);
+  });
+  return div;
 }
 
 // LIGHTBOX
