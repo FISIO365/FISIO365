@@ -954,83 +954,142 @@ function parseFecha(str){
 
 // ── MENSAJES ─────────────────────────────────────────────────────────────────
 async function loadMensajes(tab){
- const list=document.getElementById('msgList');
- if(!list)return;
+  const list=document.getElementById('msgList');
+  if(!list)return;
 
- // Tabs UI
- const tabActiva=tab||'recibidos';
- list.innerHTML=`
- <div style="display:flex;gap:6px;margin-bottom:14px;">
- <button onclick="loadMensajes('recibidos')" style="flex:1;font-family:var(--font);font-size:12px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='recibidos'?'var(--black)':'var(--border)'};background:${tabActiva==='recibidos'?'var(--black)':'none'};color:${tabActiva==='recibidos'?'var(--cream)':'var(--muted)'};cursor:pointer;">De mi fisio</button>
- <button onclick="loadMensajes('enviados')" style="flex:1;font-family:var(--font);font-size:12px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='enviados'?'var(--black)':'var(--border)'};background:${tabActiva==='enviados'?'var(--black)':'none'};color:${tabActiva==='enviados'?'var(--cream)':'var(--muted)'};cursor:pointer;">Enviados</button>
- </div>
- <div id="msgListInner"><div class="loading"><div class="spinner"></div></div></div>`;
+  const tabActiva=tab||'recibidos';
+  list.innerHTML=`
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button onclick="loadMensajes('recibidos')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='recibidos'?'var(--black)':'var(--border)'};background:${tabActiva==='recibidos'?'var(--black)':'none'};color:${tabActiva==='recibidos'?'var(--cream)':'var(--muted)'};cursor:pointer;">De mi fisio</button>
+      <button onclick="loadMensajes('enviados')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='enviados'?'var(--black)':'var(--border)'};background:${tabActiva==='enviados'?'var(--black)':'none'};color:${tabActiva==='enviados'?'var(--cream)':'var(--muted)'};cursor:pointer;">Enviados</button>
+      <button onclick="loadMensajes('nuevo')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='nuevo'?'var(--black)':'var(--border)'};background:${tabActiva==='nuevo'?'var(--black)':'none'};color:${tabActiva==='nuevo'?'var(--cream)':'var(--muted)'};cursor:pointer;">Nuevo</button>
+    </div>
+    <div id="msgListInner"><div class="loading"><div class="spinner"></div></div></div>`;
 
- try{
- const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);
- const data=await res.json();
- const todos=data.mensajes||[];
+  if(tabActiva==='nuevo'){
+    const inner=document.getElementById('msgListInner');
+    // Load fisios list
+    try{
+      const rf=await fetch('/api/fisios?action=lista-publica');
+      const df=await rf.json();
+      const fisios=(df.fisios||[]).filter(f=>f.nombre);
+      inner.innerHTML=`
+        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">¿A quién va dirigido?</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+          ${fisios.map(f=>`<button onclick="selFisioMsg('${f.id}','${f.nombre.replace(/'/g,"\\'")}',this)"
+            style="font-family:var(--font);font-size:13px;font-weight:600;padding:8px 14px;border-radius:99px;border:1.5px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;"
+            >${f.nombre}</button>`).join('')}
+        </div>
+        <input type="hidden" id="msgNuevoFisioId" value="">
+        <input type="hidden" id="msgNuevoFisioNombre" value="">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Mensaje</div>
+        <textarea id="msgNuevoTexto" placeholder="Escribe tu mensaje..." style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:100px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s;margin-bottom:12px;" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <button onclick="enviarMsgNuevoPaciente(this)" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:12px;background:var(--black);color:var(--cream);border:none;border-radius:8px;cursor:pointer;">Enviar mensaje</button>`;
+    }catch(e){inner.innerHTML='<div class="empty"><div class="empty-icon">⚠</div><div class="empty-title">Error de conexión</div></div>';}
+    return;
+  }
 
- // Recibidos = mensajes del fisio (tipo 'fisio')
- // Enviados = mensajes del paciente (tipo 'diario' o 'dolor')
- const recibidos=todos.filter(m=>m.tipo==='fisio');
- const enviados=todos.filter(m=>m.tipo!=='fisio');
- const mensajes=tabActiva==='recibidos'?recibidos:enviados;
-
- const inner=document.getElementById('msgListInner');
- if(!inner)return;
-
- if(!mensajes.length){
- const emptyText=tabActiva==='recibidos'
- ?'Cuando tu fisio te envíe un mensaje, aparecerá aquí.'
- :'Cuando envíes algo a tu fisio desde el diario o la escala de dolor, aparecerá aquí.';
- inner.innerHTML=`<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin mensajes</div><div class="empty-desc">${emptyText}</div></div>`;
- return;
- }
-
- if(tabActiva==='recibidos'){
- inner.innerHTML=mensajes.map(m=>`
- <div class="msg-card">
- <div class="msg-card-header">
- <span class="msg-fisio-badge">${m.fisioNombre||'Tu fisio'}</span>
- <div class="msg-card-fecha">${m.fecha||''}</div>
- </div>
- <div class="msg-card-texto">${m.texto||''}</div>
- </div>`).join('');
- } else {
- inner.innerHTML=mensajes.map(m=>{
- const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');
- const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
- const tipoHtml=esDolorAumento
- ?'<span class="msg-tipo msg-tipo-dolor"> Dolor</span>'
- :'<span class="msg-tipo msg-tipo-diario"> Diario</span>';
- const replyHtml=m.respuesta
- ?`<div class="msg-reply"><div class="msg-reply-label">Respuesta de ${m.fisioNombre||'tu fisio'}</div><div class="msg-reply-texto">${m.respuesta}</div></div>`
- :'<div class="msg-pending"> Pendiente de respuesta</div>';
- return `<div class="msg-card">
- <div class="msg-card-header">
- <div style="display:flex;align-items:center;gap:8px;">${tipoHtml}<span class="msg-fisio-badge">→ ${m.fisioNombre||'Fisio'}</span></div>
- <div class="msg-card-fecha">${m.fecha||''}</div>
- </div>
- <div class="msg-card-texto">${textoLimpio}</div>
- ${replyHtml}
- </div>`;
- }).join('');
- }
- }catch(e){
- const inner=document.getElementById('msgListInner');
- if(inner)inner.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';
- }
-}
-
-function clearBadge(){
   try{
-    if(navigator.clearAppBadge) navigator.clearAppBadge();
-    if('serviceWorker' in navigator && navigator.serviceWorker.controller){
-      navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});
+    const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);
+    const data=await res.json();
+    const todos=data.mensajes||[];
+    const recibidos=todos.filter(m=>m.tipo==='fisio');
+    const enviados=todos.filter(m=>m.tipo!=='fisio');
+    const mensajes=tabActiva==='recibidos'?recibidos:enviados;
+
+    const inner=document.getElementById('msgListInner');
+    if(!inner)return;
+
+    if(!mensajes.length){
+      const emptyText=tabActiva==='recibidos'
+        ?'Cuando tu fisio te envíe un mensaje, aparecerá aquí.'
+        :'Cuando envíes algo a tu fisio, aparecerá aquí.';
+      inner.innerHTML=`<div class="empty"><div class="empty-icon">💬</div><div class="empty-title">Sin mensajes</div><div class="empty-desc">${emptyText}</div></div>`;
+      return;
     }
-  }catch(e){}
+
+    if(tabActiva==='recibidos'){
+      inner.innerHTML=mensajes.map(m=>`
+        <div class="msg-card">
+          <div class="msg-card-header">
+            <span class="msg-fisio-badge">${m.fisioNombre||'Tu fisio'}</span>
+            <div class="msg-card-fecha">${m.fecha||''}</div>
+          </div>
+          <div class="msg-card-texto">${m.texto||''}</div>
+          ${m.respuesta
+            ?`<div class="msg-reply"><div class="msg-reply-label">Tu respuesta</div><div class="msg-reply-texto">${m.respuesta}</div></div>`
+            :`<div style="margin-top:10px;display:flex;gap:8px;">
+                <textarea id="preply_${m.id}" placeholder="Escribe tu respuesta..." style="flex:1;font-family:var(--font);font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:60px;outline:none;background:var(--cream);color:var(--black);" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+                <button onclick="responderAlFisio('${m.id}','${(m.fisioId||'').replace(/'/g,"\\'")}',this)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:10px 12px;background:var(--black);color:var(--cream);border:none;border-radius:8px;cursor:pointer;flex-shrink:0;">Enviar</button>
+             </div>`
+          }
+        </div>`).join('');
+    } else {
+      inner.innerHTML=mensajes.map(m=>{
+        const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');
+        const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
+        const tipoHtml=esDolorAumento?'<span class="msg-tipo msg-tipo-dolor">Dolor</span>':'<span class="msg-tipo msg-tipo-diario">Diario</span>';
+        const replyHtml=m.respuesta
+          ?`<div class="msg-reply"><div class="msg-reply-label">Respuesta de ${m.fisioNombre||'tu fisio'}</div><div class="msg-reply-texto">${m.respuesta}</div></div>`
+          :'<div class="msg-pending">Pendiente de respuesta</div>';
+        return `<div class="msg-card">
+          <div class="msg-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">${tipoHtml}<span class="msg-fisio-badge">→ ${m.fisioNombre||'Fisio'}</span></div>
+            <div class="msg-card-fecha">${m.fecha||''}</div>
+          </div>
+          <div class="msg-card-texto">${textoLimpio}</div>
+          ${replyHtml}
+        </div>`;
+      }).join('');
+    }
+  }catch(e){
+    const inner=document.getElementById('msgListInner');
+    if(inner)inner.innerHTML='<div class="empty"><div class="empty-icon">⚠</div><div class="empty-title">Error de conexión</div></div>';
+  }
 }
+
+function selFisioMsg(id, nombre, btn){
+  document.getElementById('msgNuevoFisioId').value=id;
+  document.getElementById('msgNuevoFisioNombre').value=nombre;
+  btn.closest('div').querySelectorAll('button').forEach(b=>{
+    b.style.background='none';b.style.color='var(--muted)';b.style.borderColor='var(--border)';
+  });
+  btn.style.background='var(--black)';btn.style.color='var(--cream)';btn.style.borderColor='var(--black)';
+}
+
+async function enviarMsgNuevoPaciente(btn){
+  const fisioId=document.getElementById('msgNuevoFisioId')?.value||'';
+  const fisioNombre=document.getElementById('msgNuevoFisioNombre')?.value||'';
+  const texto=document.getElementById('msgNuevoTexto')?.value?.trim()||'';
+  if(!fisioId){toast('Selecciona un fisio',false);return;}
+  if(!texto){toast('Escribe un mensaje',false);return;}
+  btn.disabled=true;btn.textContent='Enviando...';
+  try{
+    const fecha=new Date().toLocaleDateString('es-ES');
+    await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
+    toast('Mensaje enviado ✓',true);
+    document.getElementById('msgNuevoTexto').value='';
+    document.getElementById('msgNuevoFisioId').value='';
+    document.getElementById('msgNuevoFisioNombre').value='';
+    setTimeout(()=>loadMensajes('enviados'),500);
+  }catch(e){toast('Error al enviar',false);}
+  btn.disabled=false;btn.textContent='Enviar mensaje';
+}
+
+async function responderAlFisio(mensajeId, fisioId, btn){
+  const ta=document.getElementById(`preply_${mensajeId}`);
+  const texto=ta?.value?.trim();
+  if(!texto){toast('Escribe una respuesta',false);return;}
+  btn.disabled=true;btn.textContent='...';
+  try{
+    await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pwd:'',action:'responder-mensaje',mensajeId,respuesta:texto,fisioNombre:'',pacienteId:patient.id,pacienteNombre:patient.nombre})});
+    toast('Respuesta enviada ✓',true);
+    loadMensajes('recibidos');
+  }catch(e){toast('Error',false);}
+}
+
 
 async function marcarRespuestasLeidas(){
  if(!patient) return;
