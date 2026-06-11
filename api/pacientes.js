@@ -93,6 +93,66 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders }); }
   }
 
+  // ── NOTIFICACIONES ───────────────────────────────────────────────────────
+  const NOTIF_TABLE = 'tblgexkXJ4S36faPa';
+
+  // GET notificaciones del paciente (público)
+  if (action === 'get-notificaciones') {
+    const pacienteId = url.searchParams.get('pacienteId') || '';
+    if (!pacienteId) return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders });
+    try {
+      const formula = `{PacienteId}="${pacienteId}"`;
+      const r = await fetch(
+        `https://api.airtable.com/v0/${BASE_ID}/${NOTIF_TABLE}?filterByFormula=${encodeURIComponent(formula)}&sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=30`,
+        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+      );
+      const d = await r.json();
+      const notificaciones = (d.records||[]).map(rec=>({
+        id: rec.id,
+        titulo: rec.fields['Titulo']||'',
+        texto: rec.fields['Texto']||'',
+        fecha: rec.fields['Fecha']||'',
+        leida: rec.fields['Leida']||false,
+        tipo: rec.fields['Tipo']||''
+      }));
+      return new Response(JSON.stringify({ ok: true, notificaciones }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: corsHeaders }); }
+  }
+
+  // POST marcar-notificacion-leida (público)
+  if (action === 'marcar-notificacion-leida' && req.method === 'POST') {
+    const { notifId } = body;
+    if (!notifId) return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders });
+    try {
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${NOTIF_TABLE}/${notifId}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { Leida: true } })
+      });
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders }); }
+  }
+
+  // POST crear-notificacion (con pwd - desde fisio)
+  if (action === 'crear-notificacion' && req.method === 'POST') {
+    const { pacienteId, titulo, texto, tipo } = body;
+    try {
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${NOTIF_TABLE}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: {
+          PacienteId: pacienteId||'',
+          Titulo: titulo||'',
+          Texto: texto||'',
+          Fecha: new Date().toLocaleString('es-ES',{timeZone:'Europe/Madrid'}),
+          Leida: false,
+          Tipo: tipo||'mensaje'
+        }})
+      });
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders }); }
+  }
+
   const pwd = (body.pwd || queryPwd || '').trim();
   const expected = (FISIO_PASSWORD || '').trim();
   if (pwd !== expected) return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
