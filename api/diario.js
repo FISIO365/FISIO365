@@ -68,6 +68,19 @@ export default async function handler(req) {
   if (req.method === 'POST') {
     try {
       const body = await req.json();
+
+      // Acción: responder al fisio (sin contraseña, desde app paciente)
+      if (body.action === 'responder-al-fisio') {
+        const { mensajeId, respuesta } = body;
+        if (!mensajeId || !respuesta) return new Response(JSON.stringify({ ok: false, error: 'Faltan datos' }), { headers: corsHeaders });
+        await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_MENSAJES}/${mensajeId}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: { Respuesta: respuesta, RespuestaLeida: false } })
+        });
+        return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+      }
+
       const { patientId, pacienteNombre, comentario, enviarFisio, fisioDestinatarioId, fisioDestinatarioNombre } = body;
 
       if (!patientId) {
