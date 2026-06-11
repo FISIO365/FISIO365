@@ -1091,6 +1091,7 @@ async function guardar(){
  if(d.ok){
  toast(`Programa guardado: ${d.creados} ejercicios para ${pacSelN}`,true);
  notificarPaciente(pacSelId,`Nuevo programa de ${fisioActual.nombre}`,`Tu fisio te ha asignado ${d.creados} ejercicio${d.creados!==1?'s':''} nuevos. Ábrelos en tu app.`);
+ crearNotificacion(pacSelId,`Nuevo programa de ${fisioActual.nombre}`,`${d.creados} ejercicio${d.creados!==1?'s':''} nuevos asignados`,'programa');
  } else toast(d.error||'Error al guardar',false);
  }catch(e){toast('Error de conexión',false);}
  btn.disabled=false; btn.textContent='Guardar programa';
@@ -7208,6 +7209,7 @@ async function responderMensaje(mensajeId, pacienteId, pacienteNombre, btn){
  if(d.ok){
  toast('Respuesta enviada ✓',true);
  notificarPaciente(pacienteId,`Respuesta de ${fisioActual.nombre}`,texto);
+ crearNotificacion(pacienteId,`Respuesta de ${fisioActual.nombre}`,texto,'respuesta');
  renderMensajes($('mainWrap'));
  } else {
  toast('Error: '+(d.error||''),false);
@@ -7407,6 +7409,17 @@ function mkToolbar(taId){
     div.appendChild(btn);
   });
   return div;
+}
+
+
+async function crearNotificacion(pacienteId, titulo, texto, tipo){
+  try{
+    await fetch('/api/pacientes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pwd:apiPwd,action:'crear-notificacion',pacienteId,titulo,texto,tipo})
+    });
+  }catch(e){}
 }
 
 // LIGHTBOX
