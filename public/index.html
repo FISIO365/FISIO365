@@ -618,6 +618,7 @@ function initApp(){
 
 function showSection(section){
  document.getElementById('vistaHoy').style.display=section==='hoy'?'block':'none';
+ document.getElementById('vistaNotificaciones').style.display=section==='notificaciones'?'block':'none';
  document.getElementById('vistaCitas').style.display=section==='citas'?'block':'none';
  document.getElementById('vistaProgreso').style.display=section==='progreso'?'block':'none';
  document.getElementById('vistaInformes').style.display=section==='informes'?'block':'none';
@@ -631,6 +632,7 @@ function showSection(section){
  document.getElementById('navGuia').classList.toggle('active',section==='guia');
  if(section==='progreso')initVAS();
  if(section==='citas')initCitas();
+ if(section==='notificaciones')loadNotificaciones();
  if(section==='informes')loadInformes();
  if(section==='mensajes'){loadMensajes();document.getElementById('navMensajesDot').classList.remove('show');marcarRespuestasLeidas();}
  window.scrollTo(0,0);
