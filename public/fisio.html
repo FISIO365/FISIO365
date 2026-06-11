@@ -7324,7 +7324,7 @@ function mkToolbar(taId){
     {label:'B',title:'Negrita',fn:()=>insertFormato(taId,'**','**')},
     {label:'I',title:'Cursiva',fn:()=>insertFormato(taId,'_','_')},
     {sep:true},
-    {label:'🔗',title:'Enlace',fn:()=>insertLink(taId)},
+    {label:'url',title:'Enlace',fn:()=>insertLink(taId)},
   ];
   btns.forEach(b=>{
     if(b.sep){const s=ce('div','msg-toolbar-sep');div.appendChild(s);return;}
