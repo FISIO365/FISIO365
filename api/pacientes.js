@@ -247,28 +247,7 @@ export default async function handler(req) {
         }})
       });
 
-      // 2. Buscar suscripción push del paciente y notificar
-      if (pacienteId) {
-        try {
-          const rPac = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=PushSubscription`, {
-            headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-          });
-          const dPac = await rPac.json();
-          const subStr = dPac.fields?.PushSubscription;
-          if (subStr) {
-            const notifyUrl = url.origin + '/api/notificar';
-            await fetch(notifyUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                subscription: JSON.parse(subStr),
-                title: `Mensaje de ${fisioNombre || 'tu fisio'}`,
-                message: texto || 'Tu fisio te ha enviado un mensaje'
-              })
-            });
-          }
-        } catch(e) { /* notificación opcional, no bloquear */ }
-      }
+      // push: handled separately
 
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
@@ -319,27 +298,7 @@ export default async function handler(req) {
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: { Respuesta: respuesta, Visto: true, RespuestaLeida: false } })
       });
-      // Notificar al paciente
-      if (pacienteId) {
-        try {
-          const rPac = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=PushSubscription`, {
-            headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-          });
-          const dPac = await rPac.json();
-          const subStr = dPac.fields?.PushSubscription;
-          if (subStr) {
-            await fetch(url.origin + '/api/notificar', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                subscription: JSON.parse(subStr),
-                title: `Respuesta de ${fisioNombre || 'tu fisio'}`,
-                message: respuesta.slice(0, 100)
-              })
-            });
-          }
-        } catch(e) { /* notificación opcional */ }
-      }
+      // notificación push gestionada por api/notificar-mensajes
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
