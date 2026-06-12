@@ -7190,7 +7190,7 @@ async function enviarMensajeNuevo(btn){
  })
  });
  const d=await res.json();
- if(d.ok){toast('Mensaje enviado ✓',true);ta.value='';limpiarPacienteMsg();notificarPaciente(pacienteId,`Mensaje de ${fisioActual.nombre}`,texto);}
+ if(d.ok){const _pid=pacienteId,_txt=texto;toast('Mensaje enviado ✓',true);ta.value='';limpiarPacienteMsg();notificarPaciente(_pid,`Mensaje de ${fisioActual.nombre}`,_txt);crearNotificacion(_pid,`Mensaje de ${fisioActual.nombre}`,_txt,'mensaje');}
  else toast('Error: '+(d.error||''),false);
  }catch(e){toast('Error al enviar',false);}
  btn.disabled=false;btn.textContent='Enviar mensaje';
