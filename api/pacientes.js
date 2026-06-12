@@ -165,11 +165,11 @@ export default async function handler(req) {
       // Load from both ANAMNESIS and INFORMES tables
       const [r1, r2] = await Promise.all([
         fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}?fields[]=PacienteID&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=FechaValoracion&fields[]=InformeGenerado&fields[]=Protocolo&sort[0][field]=FechaValoracion&sort[0][direction]=desc&pageSize=50`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }),
-        fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE_ID}?fields[]=fldDR9XqkJ9oA3WK0&fields[]=fldHXAL8FC00biu1X&fields[]=fldL5BxsNuITe2He9&fields[]=fldqoUgXtf81ROqMy&fields[]=fldy5HGlff56RYrOa&sort[0][field]=fldHXAL8FC00biu1X&sort[0][direction]=desc&pageSize=50`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })
+        fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE_ID}?fields[]=fldDR9XqkJ9oA3WK0&fields[]=fldHXAL8FC00biu1X&fields[]=fldL5BxsNuITe2He9&fields[]=fldqoUgXtf81ROqMy&fields[]=fldy5HGlff56RYrOa&fields[]=fld3YeK9QbDKjdSAd&sort[0][field]=fldHXAL8FC00biu1X&sort[0][direction]=desc&pageSize=50`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })
       ]);
       const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
       const fromAnamnesis = (d1.records || []).map(rec => ({ id: rec.id, pacienteId: rec.fields['PacienteID'] || '', pacienteNombre: rec.fields['PacienteNombre'] || '—', fisioNombre: rec.fields['FisioNombre'] || '—', fecha: rec.fields['FechaValoracion'] || '—', informe: rec.fields['InformeGenerado'] || '', protocolo: rec.fields['Protocolo'] || 'hernia' }));
-      const fromInformes = (d2.records || []).map(rec => ({ id: rec.id, pacienteId: rec.fields['fldDR9XqkJ9oA3WK0'] || '', pacienteNombre: rec.fields['fldqoUgXtf81ROqMy'] || '—', fisioNombre: rec.fields['FisioNombre'] || '—', fecha: rec.fields['fldHXAL8FC00biu1X'] || '—', informe: rec.fields['fldL5BxsNuITe2He9'] || '', protocolo: rec.fields['fldy5HGlff56RYrOa'] || 'hernia' }));
+      const fromInformes = (d2.records || []).map(rec => ({ id: rec.id, pacienteId: rec.fields['fldDR9XqkJ9oA3WK0'] || '', pacienteNombre: rec.fields['fldqoUgXtf81ROqMy'] || '—', fisioNombre: rec.fields['fld3YeK9QbDKjdSAd'] || '—', fecha: rec.fields['fldHXAL8FC00biu1X'] || '—', informe: rec.fields['fldL5BxsNuITe2He9'] || '', protocolo: rec.fields['fldy5HGlff56RYrOa'] || 'hernia' }));
       let informes = [...fromAnamnesis, ...fromInformes];
       if (filterPacId) {
         informes = informes.filter(i => i.pacienteId === filterPacId);
