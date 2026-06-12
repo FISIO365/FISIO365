@@ -2,16 +2,18 @@ export const config = { runtime: 'nodejs', maxDuration: 60 };
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
+const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
+const BASE_ID = 'appsrGnHpFt8sVD5A';
+const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' });
 
-  const { pwd, pacienteNombre, fisioNombre, fisioColegiado, datos, prompt: customPrompt } = req.body || {};
+  const { pwd, pacienteId, pacienteNombre, fisioNombre, fisioColegiado, datos, prompt: customPrompt } = req.body || {};
 
   if ((pwd || '').trim() !== (FISIO_PASSWORD || '').trim()) {
     return res.status(401).json({ ok: false, error: 'Contraseña incorrecta' });
@@ -42,7 +44,29 @@ export default async function handler(req, res) {
     const data = await r.json();
     const informe = data.content?.[0]?.text || '';
     if (!informe) return res.status(500).json({ ok: false, error: data.error?.message || 'Error Anthropic' });
-    return res.status(200).json({ ok: true, informe });
+
+    // Guardar automáticamente en Airtable
+    let savedId = null;
+    try {
+      const atRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ records: [{ fields: {
+          fldDR9XqkJ9oA3WK0: pacienteId || '',
+          fldqoUgXtf81ROqMy: (pacienteNombre || '').toUpperCase(),
+          FisioNombre: fisioNombre || '',
+          fldHXAL8FC00biu1X: fecha,
+          fldy5HGlff56RYrOa: tipo,
+          fldL5BxsNuITe2He9: informe
+        }}]})
+      });
+      const atData = await atRes.json();
+      savedId = atData.records?.[0]?.id || null;
+    } catch(e) {
+      console.error('Error guardando en Airtable:', e.message);
+    }
+
+    return res.status(200).json({ ok: true, informe, savedId });
   } catch(e) {
     return res.status(500).json({ ok: false, error: e.message });
   }
