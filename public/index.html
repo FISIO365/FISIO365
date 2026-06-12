@@ -421,7 +421,9 @@ textarea:focus { border-color: var(--black); }
 
     <!-- VISTA NOTIFICACIONES -->
     <div id="vistaNotificaciones" style="display:none;">
-      <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Notificaciones</div><div class="date-sub">Actualizaciones de tu fisio</div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;margin-top:4px;">
+        <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--black)">Notificaciones</div>
+      </div>
       <div id="notifListEl"></div>
     </div>
 
@@ -1274,32 +1276,32 @@ async function loadNotificaciones(){
     if(badge) badge.style.display=noLeidas>0?'block':'none';
     if(!notifs.length){list.innerHTML='<div class="empty"><div class="empty-title">Sin notificaciones</div></div>';return;}
     list.innerHTML=notifs.map(n=>`
-      <div style="padding:14px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;background:${n.leida?'none':'#f8f6ff'};">
-        <div style="flex:1;cursor:pointer;" onclick="abrirNotif('${n.id}','${n.tipo}')">
-          <div style="font-size:13px;font-weight:${n.leida?500:700};color:var(--black);margin-bottom:3px;">${n.titulo||''}</div>
+      <div style="padding:16px 0;border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start;">
+        <div style="flex:1;cursor:pointer;opacity:${n.leida?'0.45':'1'};" onclick="abrirNotif('${n.id}','${n.tipo}')">
+          <div style="font-size:13px;font-weight:600;color:var(--black);margin-bottom:3px;">${n.titulo||''}</div>
           <div style="font-size:12px;color:var(--muted);line-height:1.5;">${n.texto||''}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">${n.fecha||''}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:5px;">${n.fecha||''}</div>
         </div>
-        <button onclick="marcarNotifLeida('${n.id}',this)" style="background:${n.leida?'#e8f5e9':'none'};border:1.5px solid ${n.leida?'#e8f5e9':'var(--border)'};border-radius:99px;font-family:var(--font);font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;color:${n.leida?'#2e7d32':'var(--muted)'};flex-shrink:0;white-space:nowrap;">${n.leida?'✓ Visto':'Listo'}</button>
+        <button onclick="marcarNotifLeida('${n.id}',this)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid ${n.leida?'var(--black)':'var(--border)'};background:${n.leida?'var(--black)':'none'};cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;padding:0;transition:all .15s;">
+          ${n.leida?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+        </button>
       </div>`).join('');
   }catch(e){list.innerHTML='<div class="empty"><div class="empty-title">Error</div></div>';}
 }
 
 async function marcarNotifLeida(notifId, btn){
-  btn.disabled=true;btn.textContent='...';
+  btn.disabled=true;
   try{
     await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'marcar-notificacion-leida',notifId})});
-    btn.textContent='✓ Visto';
-    btn.style.background='#e8f5e9';
-    btn.style.borderColor='#e8f5e9';
-    btn.style.color='#2e7d32';
+    btn.style.background='var(--black)';
+    btn.style.borderColor='var(--black)';
+    btn.innerHTML='<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     btn.disabled=false;
-    // Update the notification row background
     const row=btn.closest('div[style*="border-bottom"]');
-    if(row) row.style.background='none';
+    if(row){const content=row.querySelector('div[style*="flex:1"]');if(content)content.style.opacity='0.45';}
     checkNotifBadge();
-  }catch(e){btn.disabled=false;btn.textContent='Listo';}
+  }catch(e){btn.disabled=false;}
 }
 
 async function abrirNotif(notifId,tipo){
