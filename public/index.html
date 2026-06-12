@@ -27,21 +27,21 @@
 body { background: var(--cream); font-family: var(--font); color: var(--black); }
 
 /* LOGIN */
-.screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 20px; background: var(--black); }
-.logo-wrap { margin-bottom: 48px; text-align: center; }
+.screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; background: var(--black); }
+.logo-wrap { margin-bottom: 40px; text-align: center; }
 .logo-text { font-size: 52px; font-weight: 800; color: var(--cream); letter-spacing: -2px; }
-.login-card { width: 100%; max-width: 400px; }
-.lang-wrap { display: flex; gap: 6px; margin-bottom: 32px; background: rgba(255,255,255,0.06); border-radius: 99px; padding: 4px; }
+.login-card { width: 100%; max-width: 340px; }
+.lang-wrap { display: flex; gap: 6px; margin-bottom: 40px; background: rgba(255,255,255,0.06); border-radius: 99px; padding: 4px; }
 .lang-btn { flex: 1; padding: 8px; border-radius: 99px; background: none; color: rgba(245,242,238,0.5); font-family: var(--font); font-size: 12px; font-weight: 700; border: none; cursor: pointer; transition: all .15s; }
 .lang-btn.active { background: var(--cream); color: var(--black); }
-.login-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: rgba(245,242,238,0.5); margin-bottom: 8px; }
-.login-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 14px 16px; font-family: var(--font); font-size: 15px; color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color .15s; }
+.lbl,.login-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(245,242,238,0.35); margin-bottom: 10px; display: block; }
+.login-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 0 16px; height: 52px; margin-bottom: 28px; font-family: var(--font); font-size: 15px; color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color .15s; }
 .login-input:focus { border-color: rgba(255,255,255,0.4); }
 .login-input::placeholder { color: rgba(245,242,238,0.25); }
-.pin-wrap { display: flex; gap: 10px; justify-content: space-between; margin-bottom: 28px; width: 100%; }
-.pin-input { flex: 1; max-width: 70px; height: 56px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--cream); text-align: center; outline: none; transition: border-color .15s; }
+.pin-wrap { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 36px; width: 100%; }
+.pin-input { flex: 1; height: 52px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--cream); text-align: center; outline: none; transition: border-color .15s; }
 .pin-input:focus { border-color: rgba(255,255,255,0.4); }
-.btn-primary { width: 100%; padding: 15px; background: var(--cream); color: var(--black); font-family: var(--font); font-size: 14px; font-weight: 700; border: none; border-radius: var(--r); cursor: pointer; margin-bottom: 12px; transition: opacity .15s; }
+.btn-primary { width: 100%; padding: 0; height: 52px; background: var(--cream); color: var(--black); font-family: var(--font); font-size: 14px; font-weight: 700; border: none; border-radius: var(--r); cursor: pointer; margin-bottom: 12px; transition: opacity .15s; }
 .btn-primary:active { opacity: .8; }
 .btn-secondary { width: 100%; padding: 15px; background: none; color: rgba(245,242,238,0.5); font-family: var(--font); font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); cursor: pointer; }
 
@@ -209,12 +209,12 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 }
 
 .lbl { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: rgba(245,242,238,0.5); margin-bottom: 8px; }
-.inp { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 14px 16px; font-family: var(--font); font-size: 15px; color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color .15s; }
+.inp { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 0 16px; height: 52px; margin-bottom: 28px; font-family: var(--font); font-size: 15px; color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color .15s; }
 .inp:focus { border-color: rgba(255,255,255,0.4); }
 .inp::placeholder { color: rgba(245,242,238,0.25); }
 .pin-d { width: 52px; height: 56px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--cream); text-align: center; outline: none; transition: border-color .15s; }
 .pin-d:focus { border-color: rgba(255,255,255,0.4); }
-.btn-install { width: 100%; padding: 14px; background: none; color: rgba(245,242,238,0.4); font-family: var(--font); font-size: 13px; border: none; cursor: pointer; margin-top: 4px; }
+.btn-install { width: 100%; padding: 16px; background: none; color: rgba(245,242,238,0.3); font-family: var(--font); font-size: 12px; border: none; cursor: pointer; margin-top: 8px; letter-spacing: .02em; }
 .login-err { color: #ff6b6b; font-size: 13px; text-align: center; margin-top: 8px; min-height: 20px; }
 .login-title { font-size: 24px; font-weight: 800; color: var(--cream); margin-bottom: 8px; letter-spacing: -.5px; }
 .login-desc { font-size: 13px; color: rgba(245,242,238,0.5); margin-bottom: 28px; line-height: 1.5; }
@@ -286,6 +286,9 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .guia-num { width: 26px; height: 26px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
 .guia-txt { font-size: 14px; color: var(--black); line-height: 1.5; padding-top: 4px; }
 
+
+.login-title { display: none; }
+.login-desc { display: none; }
 </style>
 </head>
 <body>
@@ -293,12 +296,8 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 <div id="loginScreen" class="screen active">
  <div class="logo-wrap"><div style="font-size:42px;font-weight:800;color:var(--cream);letter-spacing:-2px;">FISIO<span style="opacity:.6">365</span></div></div>
  <div class="login-card">
- <div style="display:flex;gap:6px;margin-bottom:24px;background:rgba(245,242,238,0.08);border-radius:99px;padding:4px;">
- <button class="lang-btn" data-lang="es" onclick="setLang('es')" style="flex:1;padding:7px 0;border-radius:99px;background:#f5f2ee;color:#000;font-family:var(--font);font-size:12px;font-weight:700;border:none;cursor:pointer;">ES</button>
- <button class="lang-btn" data-lang="cat" onclick="setLang('cat')" style="flex:1;padding:7px 0;border-radius:99px;background:none;color:rgba(245,242,238,0.5);font-family:var(--font);font-size:12px;font-weight:600;border:none;cursor:pointer;">CAT</button>
- <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="flex:1;padding:7px 0;border-radius:99px;background:none;color:rgba(245,242,238,0.5);font-family:var(--font);font-size:12px;font-weight:600;border:none;cursor:pointer;">EN</button>
- </div>
- <div class="login-title" id="loginTitle">Bienvenido</div>
+
+ 
  <div class="login-desc" id="loginDesc">Introduce tu email y el PIN que te ha dado tu fisioterapeuta</div>
  <label class="lbl">Email</label>
  <input class="inp" type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" />
@@ -311,6 +310,9 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  </div>
  <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
  <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app? </button>
+ <div style="text-align:center;margin-top:10px;">
+ <button class="lang-btn" data-lang="es" onclick="setLang('es')" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:rgba(245,242,238,0.4);padding:0;">ES</button><span style="color:rgba(245,242,238,0.15);font-size:12px;font-family:var(--font);padding:0 4px;">/</span><button class="lang-btn" data-lang="cat" onclick="setLang('cat')" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:rgba(245,242,238,0.4);padding:0;">CAT</button><span style="color:rgba(245,242,238,0.15);font-size:12px;font-family:var(--font);padding:0 4px;">/</span><button class="lang-btn" data-lang="en" onclick="setLang('en')" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:rgba(245,242,238,0.4);padding:0;">EN</button>
+ </div>
  <div class="login-err" id="loginErr"></div>
  </div>
 </div>
@@ -576,8 +578,8 @@ const i18n = {
 };
 
 function t(key,...args){const val=i18n[lang][key];return typeof val==='function'?val(...args):(val||i18n.es[key]||key);}
-function setLang(l){lang=l;localStorage.setItem('fisio365_lang',l);document.querySelectorAll('.lang-btn').forEach(b=>{b.style.background=b.dataset.lang===l?'#f5f2ee':'none';b.style.color=b.dataset.lang===l?'#000':'rgba(245,242,238,0.5)';});applyTranslations();}
-function applyTranslations(){const lt=document.getElementById('loginTitle');const ld=document.getElementById('loginDesc');const lb=document.getElementById('loginBtn');const li=document.getElementById('installBtn');if(lt)lt.textContent=t('bienvenido');if(ld)ld.textContent=t('loginDesc');if(lb&&!lb.disabled)lb.textContent=t('entrar');if(li)li.textContent=t('instalarApp');const navH=document.getElementById('navHoy');const navP=document.getElementById('navProgreso');const navG=document.getElementById('navGuia');
+function setLang(l){lang=l;localStorage.setItem('fisio365_lang',l);document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===l?'rgba(245,242,238,0.9)':'rgba(245,242,238,0.35)';b.style.fontWeight=b.dataset.lang===l?'700':'400';});applyTranslations();}
+function applyTranslations(){const lt=document.getElementById('loginTitle');const ld=document.getElementById('loginDesc');const lb=document.getElementById('loginBtn');const li=document.getElementById('installBtn');if(lb&&!lb.disabled)lb.textContent=t('entrar');if(li)li.textContent=t('instalarApp');const navH=document.getElementById('navHoy');const navP=document.getElementById('navProgreso');const navG=document.getElementById('navGuia');
 const dateSub=document.querySelector('.date-sub');if(dateSub)dateSub.textContent=t('programaHoy');const progLbl=document.querySelector('.prog-lbl');if(progLbl)progLbl.textContent=t('progresoHoy');const secTitle=document.querySelector('.sec-title');if(secTitle)secTitle.textContent=t('seguimientoDiario');const diarioTxt=document.getElementById('diarioTxt');if(diarioTxt)diarioTxt.placeholder=t('diarioPlaceholder');const btnDiario=document.getElementById('btnDiario');if(btnDiario&&!btnDiario.disabled)btnDiario.textContent=t('tareaHecha');const vasQ=document.querySelector('.vas-question');if(vasQ)vasQ.textContent=t('cuantoDolor');const vasLabels=document.querySelectorAll('.vas-labels span');if(vasLabels.length>=2){vasLabels[0].textContent=t('sinDolor');vasLabels[1].textContent=t('dolorMaximo');}const btnVas=document.getElementById('btnVas');if(btnVas)btnVas.textContent=t('guardar');const grafTitulo=document.querySelector('.grafica-titulo');if(grafTitulo)grafTitulo.textContent=t('evolucionGrafica');const compTit=document.querySelector('.completado-titulo');if(compTit)compTit.textContent=t('sesionCompletada');const compSub=document.querySelector('.completado-sub');if(compSub)compSub.textContent=t('sesionSub');const compMsg=document.querySelector('.completado-card p');if(compMsg)compMsg.textContent=t('sesionMsg');
 document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n;el.textContent=t(key);});}
 
@@ -588,7 +590,7 @@ window.addEventListener('load',()=>{
  const savedLang=localStorage.getItem('fisio365_lang');
  if(savedLang){lang=savedLang;}
  applyTranslations();
- document.querySelectorAll('.lang-btn').forEach(b=>{b.style.background=b.dataset.lang===lang?'#f5f2ee':'none';b.style.color=b.dataset.lang===lang?'#000':'rgba(245,242,238,0.5)';});
+ document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===lang?'rgba(245,242,238,0.9)':'rgba(245,242,238,0.35)';b.style.fontWeight=b.dataset.lang===lang?'700':'400';});
  const saved=localStorage.getItem('fisio365_patient');
  if(saved){try{patient=JSON.parse(saved);const lastDay=localStorage.getItem('fisio365_lastday');if(lastDay!==TODAY){localStorage.setItem('fisio365_lastday',TODAY);Object.keys(localStorage).forEach(k=>{if(k.startsWith('hechos_'))localStorage.removeItem(k);});}initApp();}catch(e){localStorage.removeItem('fisio365_patient');}}
 });
