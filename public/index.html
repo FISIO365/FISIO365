@@ -38,8 +38,8 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .login-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 14px 16px; font-family: var(--font); font-size: 15px; color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color .15s; }
 .login-input:focus { border-color: rgba(255,255,255,0.4); }
 .login-input::placeholder { color: rgba(245,242,238,0.25); }
-.pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 28px; }
-.pin-input { width: 52px; height: 56px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--cream); text-align: center; outline: none; transition: border-color .15s; }
+.pin-wrap { display: flex; gap: 10px; justify-content: space-between; margin-bottom: 28px; width: 100%; }
+.pin-input { flex: 1; max-width: 70px; height: 56px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--cream); text-align: center; outline: none; transition: border-color .15s; }
 .pin-input:focus { border-color: rgba(255,255,255,0.4); }
 .btn-primary { width: 100%; padding: 15px; background: var(--cream); color: var(--black); font-family: var(--font); font-size: 14px; font-weight: 700; border: none; border-radius: var(--r); cursor: pointer; margin-bottom: 12px; transition: opacity .15s; }
 .btn-primary:active { opacity: .8; }
@@ -74,7 +74,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 12px; margin-top: 24px; }
 
 /* EJERCICIOS */
-.ej-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start; transition: border-color .15s; }
+.ej-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 8px; overflow: hidden; transition: border-color .15s; }
 .ej-card.done { opacity: .5; }
 .ej-check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
 .ej-card.done .ej-check { background: var(--black); border-color: var(--black); }
@@ -87,8 +87,10 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .date-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
 /* PROGRESO / EVA */
-.vas-num { font-size: 48px; font-weight: 800; color: var(--black); }
+.vas-num { flex: 1; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; color: white; border: none; transition: all .15s; opacity: 0.6; }
+.vas-num.on { opacity: 1; transform: scale(1.18); box-shadow: 0 2px 10px rgba(0,0,0,0.25); }
 .vas-label { font-size: 12px; color: var(--muted); }
+.vas-nums { display: flex; gap: 4px; margin: 12px 0 8px; }
 .vas-row { display: flex; gap: 6px; margin: 16px 0; flex-wrap: wrap; }
 .vas-btn { flex: 1; min-width: 28px; aspect-ratio: 1; border: 1px solid var(--border); background: none; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
 .vas-btn.sel { background: var(--black); color: var(--cream); border-color: var(--black); }
@@ -1200,7 +1202,10 @@ function _generarPDFPac(pacNom,informe,tipoLabel,fisioNom,colNum,fecha){
 }
 
 // VAS
-function initVAS(){const nums=document.getElementById('vasNums');if(nums.children.length===0){for(let i=0;i<=10;i++){const span=document.createElement('span');span.className='vas-num';span.textContent=i;span.onclick=()=>{vasSeleccionado=i;document.querySelectorAll('.vas-num').forEach((el,idx)=>el.classList.toggle('on',idx===i));document.getElementById('btnVas').style.display='block';};nums.appendChild(span);}}cargarDatosVAS();}
+function initVAS(){const nums=document.getElementById('vasNums');if(nums.children.length===0){
+  const colors=['#22c55e','#4ade80','#86efac','#bef264','#fde047','#fbbf24','#fb923c','#f97316','#ef4444','#dc2626','#b91c1c'];
+  for(let i=0;i<=10;i++){const span=document.createElement('span');span.className='vas-num';span.textContent=i;span.style.background=colors[i];span.onclick=()=>{vasSeleccionado=i;document.querySelectorAll('.vas-num').forEach((el,idx)=>el.classList.toggle('on',idx===i));document.getElementById('btnVas').style.display='block';};nums.appendChild(span);}
+}cargarDatosVAS();}
 async function cargarDatosVAS(){try{const res=await fetch(`/api/dolor?patientId=${patient.id}`);const data=await res.json();vasRegistros=data.registros||[];actualizarGrafica();}catch(e){}}
 async function guardarVAS(){if(vasSeleccionado===null)return;const btn=document.getElementById('btnVas');btn.disabled=true;btn.textContent='Guardando...';try{await fetch('/api/dolor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,fecha:TODAY,valor:vasSeleccionado})});await cargarDatosVAS();btn.style.display='none';toast('Dolor registrado ✓',true);}catch(e){toast('Error al guardar',false);}btn.disabled=false;btn.textContent='Guardar';}
 function cambiarPeriodo(dias,btn){vasPeriodo=dias;document.querySelectorAll('.periodo').forEach(b=>b.classList.remove('on'));btn.classList.add('on');actualizarGrafica();}
