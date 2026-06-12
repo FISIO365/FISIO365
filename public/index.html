@@ -87,9 +87,10 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .date-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
 /* PROGRESO / EVA */
-.vas-num { font-size: 48px; font-weight: 800; color: var(--black); }
+.vas-num { width: 9%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--black); border: 1px solid var(--border); transition: all .1s; }
+.vas-num.on { background: var(--black); color: var(--cream); border-color: var(--black); }
 .vas-label { font-size: 12px; color: var(--muted); }
-.vas-row { display: flex; gap: 6px; margin: 16px 0; flex-wrap: wrap; }
+.vas-nums { display: flex; gap: 2px; margin: 0 0 8px; justify-content: space-between; }
 .vas-btn { flex: 1; min-width: 28px; aspect-ratio: 1; border: 1px solid var(--border); background: none; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
 .vas-btn.sel { background: var(--black); color: var(--cream); border-color: var(--black); }
 .periodo { font-size: 11px; font-weight: 600; padding: 5px 12px; border: 1px solid var(--border); border-radius: 99px; background: none; cursor: pointer; color: var(--muted); font-family: var(--font); }
