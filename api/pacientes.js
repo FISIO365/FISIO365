@@ -160,6 +160,7 @@ export default async function handler(req) {
   // ── LISTAR INFORMES ──────────────────────────────────────────────────────
   if (action === 'listar-informes') {
     const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
+    const filterPacId = url.searchParams.get('pacienteId') || '';
     try {
       // Load from both ANAMNESIS and INFORMES tables
       const [r1, r2] = await Promise.all([
@@ -169,7 +170,10 @@ export default async function handler(req) {
       const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
       const fromAnamnesis = (d1.records || []).map(rec => ({ id: rec.id, pacienteId: rec.fields['PacienteID'] || '', pacienteNombre: rec.fields['PacienteNombre'] || '—', fisioNombre: rec.fields['FisioNombre'] || '—', fecha: rec.fields['FechaValoracion'] || '—', informe: rec.fields['InformeGenerado'] || '', protocolo: rec.fields['Protocolo'] || 'hernia' }));
       const fromInformes = (d2.records || []).map(rec => ({ id: rec.id, pacienteId: rec.fields['fldDR9XqkJ9oA3WK0'] || '', pacienteNombre: rec.fields['fldqoUgXtf81ROqMy'] || '—', fisioNombre: rec.fields['FisioNombre'] || '—', fecha: rec.fields['fldHXAL8FC00biu1X'] || '—', informe: rec.fields['fldL5BxsNuITe2He9'] || '', protocolo: rec.fields['fldy5HGlff56RYrOa'] || 'hernia' }));
-      const informes = [...fromAnamnesis, ...fromInformes];
+      let informes = [...fromAnamnesis, ...fromInformes];
+      if (filterPacId) {
+        informes = informes.filter(i => i.pacienteId === filterPacId);
+      }
       return new Response(JSON.stringify({ ok: true, informes }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
@@ -274,12 +278,12 @@ export default async function handler(req) {
         method: 'POST',
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ records: [{ fields: {
-          PacienteID: finalPacienteId,
-          PacienteNombre: pacienteNombre || '',
+          fldDR9XqkJ9oA3WK0: finalPacienteId,
+          fldqoUgXtf81ROqMy: (pacienteNombre || '').toUpperCase(),
           FisioNombre: fisioNombre || '',
-          Fecha: fecha || new Date().toLocaleDateString('es-ES'),
-          Tipo: tipo || 'hernia',
-          Contenido: contenido || ''
+          fldHXAL8FC00biu1X: fecha || new Date().toLocaleDateString('es-ES'),
+          fldy5HGlff56RYrOa: tipo || 'hernia',
+          fldL5BxsNuITe2He9: contenido || ''
         }}]})
       });
       const atData = await atRes.json();
