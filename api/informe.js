@@ -54,7 +54,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({ records: [{ fields: {
           fldDR9XqkJ9oA3WK0: pacienteId || '',
           fldqoUgXtf81ROqMy: (pacienteNombre || '').toUpperCase(),
-          FisioNombre: fisioNombre || '',
+          fld3YeK9QbDKjdSAd: fisioNombre || '',
           fldHXAL8FC00biu1X: fecha,
           fldy5HGlff56RYrOa: tipo,
           fldL5BxsNuITe2He9: informe
