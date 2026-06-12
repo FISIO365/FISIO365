@@ -205,6 +205,85 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
   #infModalPrint > div:first-child { display: none !important; }
   #infModalPrint > div:last-child { overflow: visible !important; padding: 0 !important; }
 }
+
+.lbl { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: rgba(245,242,238,0.5); margin-bottom: 8px; }
+.inp { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 14px 16px; font-family: var(--font); font-size: 15px; color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color .15s; }
+.inp:focus { border-color: rgba(255,255,255,0.4); }
+.inp::placeholder { color: rgba(245,242,238,0.25); }
+.pin-d { width: 52px; height: 56px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--cream); text-align: center; outline: none; transition: border-color .15s; }
+.pin-d:focus { border-color: rgba(255,255,255,0.4); }
+.btn-install { width: 100%; padding: 14px; background: none; color: rgba(245,242,238,0.4); font-family: var(--font); font-size: 13px; border: none; cursor: pointer; margin-top: 4px; }
+.login-err { color: #ff6b6b; font-size: 13px; text-align: center; margin-top: 8px; min-height: 20px; }
+.login-title { font-size: 24px; font-weight: 800; color: var(--cream); margin-bottom: 8px; letter-spacing: -.5px; }
+.login-desc { font-size: 13px; color: rgba(245,242,238,0.5); margin-bottom: 28px; line-height: 1.5; }
+.fisio-card { display: flex; align-items: center; gap: 12px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 16px; }
+.fisio-av { width: 40px; height: 40px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; overflow: hidden; flex-shrink: 0; }
+.fisio-av img { width: 100%; height: 100%; object-fit: cover; }
+.fisio-nombre { font-size: 14px; font-weight: 700; color: var(--black); }
+.fisio-col { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.mensaje-fisio { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 16px; display: none; }
+.mensaje-fisio-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 6px; }
+.mensaje-fisio-texto { font-size: 13px; color: var(--black); line-height: 1.6; }
+.prog-wrap { margin-bottom: 16px; }
+.prog-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.prog-lbl { font-size: 12px; font-weight: 600; color: var(--muted); }
+.prog-cnt { font-size: 12px; font-weight: 700; color: var(--black); }
+.prog-bg { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.prog-bar { height: 100%; background: var(--black); border-radius: 99px; transition: width .3s ease; }
+.ej-header { display: flex; align-items: flex-start; gap: 12px; padding: 14px; cursor: pointer; }
+.ej-chk { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; background: none; }
+.ej-chk.on { background: var(--black); border-color: var(--black); }
+.ej-info { flex: 1; }
+.ej-nom { font-size: 14px; font-weight: 600; color: var(--black); margin-bottom: 4px; }
+.ej-zona { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.ej-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill { font-size: 11px; font-weight: 600; padding: 3px 8px; background: var(--cream); border-radius: 99px; color: var(--black); }
+.ej-expand { display: none; padding: 0 14px 14px; }
+.ej-expand.open { display: block; }
+.ej-video { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--r); margin-bottom: 12px; }
+.ej-video iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+.btn-done { width: 100%; padding: 11px; background: var(--cream); color: var(--black); font-family: var(--font); font-size: 13px; font-weight: 700; border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; }
+.btn-done.on { background: var(--black); color: var(--cream); border-color: var(--black); }
+.completado-wrap { text-align: center; padding: 3rem 1rem; }
+.completado-emoji { font-size: 48px; margin-bottom: 16px; }
+.completado-titulo { font-size: 22px; font-weight: 800; color: var(--black); margin-bottom: 8px; }
+.completado-sub { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+.completado-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; font-size: 13px; color: var(--black); line-height: 1.6; }
+.modal-sheet { background: var(--white); border-radius: 16px 16px 0 0; padding: 24px 20px 48px; width: 100%; max-width: 600px; }
+.modal-cancel { width: 100%; padding: 14px; background: none; color: var(--muted); font-family: var(--font); font-size: 13px; border: none; cursor: pointer; margin-top: 4px; }
+.modal-opt-icon { font-size: 20px; width: 32px; flex-shrink: 0; }
+.modal-opt-title { font-size: 14px; font-weight: 700; color: var(--black); }
+.modal-opt-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.fisio-opt { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.fisio-opt-av { width: 36px; height: 36px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; overflow: hidden; flex-shrink: 0; }
+.fisio-opt-name { font-size: 14px; font-weight: 600; color: var(--black); }
+.vas-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
+.vas-question { font-size: 15px; font-weight: 700; color: var(--black); margin-bottom: 16px; }
+.vas-track { display: none; }
+.vas-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+.btn-vas { width: 100%; padding: 12px; background: var(--black); color: var(--cream); font-family: var(--font); font-size: 13px; font-weight: 700; border: none; border-radius: var(--r); cursor: pointer; display: none; }
+.grafica-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; }
+.grafica-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.grafica-titulo { font-size: 14px; font-weight: 700; color: var(--black); }
+.periodos { display: flex; gap: 4px; }
+.vas-msg { background: var(--cream); border-radius: var(--r); padding: 14px; margin-top: 16px; font-size: 13px; color: var(--black); line-height: 1.5; }
+.vas-msg.bien { background: #f0f7f0; }
+.vas-msg.animo { background: #fff8f0; }
+.inf-pac-fecha { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.inf-pac-tipo { font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
+.inf-pac-fisio { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.inf-pac-contenido { display: none; margin-top: 14px; font-size: 13px; color: var(--black); line-height: 1.7; white-space: pre-wrap; border-top: 1px solid var(--border); padding-top: 14px; }
+.inf-pac-contenido.open { display: block; }
+.guia-section { }
+.guia-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 12px; }
+.guia-titulo { font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 16px; }
+.guia-os { display: flex; gap: 8px; margin-bottom: 20px; }
+.guia-os-btn { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: none; font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.guia-os-btn.active { background: var(--black); color: var(--cream); border-color: var(--black); }
+.guia-paso { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.guia-num { width: 26px; height: 26px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.guia-txt { font-size: 14px; color: var(--black); line-height: 1.5; padding-top: 4px; }
+
 </style>
 </head>
 <body>
