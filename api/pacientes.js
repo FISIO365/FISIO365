@@ -184,7 +184,8 @@ export default async function handler(req) {
         protocolo:      rec.fields['fldy5HGlff56RYrOa'] || '',
       }));
 
-      if (pacId) informes = informes.filter(i => i.pacienteId === pacId);
+      // DEBUG: show all informes without filter
+      // if (pacId) informes = informes.filter(i => i.pacienteId === pacId);
       return new Response(JSON.stringify({ ok: true, informes }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
