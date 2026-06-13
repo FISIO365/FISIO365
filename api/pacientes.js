@@ -158,6 +158,37 @@ export default async function handler(req) {
   if (pwd !== expected) return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
 
   // ── LISTAR INFORMES ──────────────────────────────────────────────────────
+  if (action === 'get-informes') {
+    const pacId = url.searchParams.get('pacienteId') || '';
+    const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
+    try {
+      const fields = 'fields[]=fldDR9XqkJ9oA3WK0&fields[]=fldqoUgXtf81ROqMy&fields[]=fld3YeK9QbDKjdSAd&fields[]=fldHXAL8FC00biu1X&fields[]=fldL5BxsNuITe2He9&fields[]=fldy5HGlff56RYrOa';
+      let allRecords = [];
+      let offset = null;
+      do {
+        const off = offset ? '&offset='+offset : '';
+        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE_ID}?${fields}&pageSize=100${off}`,
+          { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        const d = await r.json();
+        allRecords = allRecords.concat(d.records || []);
+        offset = d.offset || null;
+      } while (offset);
+
+      let informes = allRecords.map(rec => ({
+        id: rec.id,
+        pacienteId:     rec.fields['fldDR9XqkJ9oA3WK0'] || '',
+        pacienteNombre: rec.fields['fldqoUgXtf81ROqMy'] || '',
+        fisioNombre:    rec.fields['fld3YeK9QbDKjdSAd'] || '',
+        fecha:          rec.fields['fldHXAL8FC00biu1X'] || '',
+        informe:        rec.fields['fldL5BxsNuITe2He9'] || '',
+        protocolo:      rec.fields['fldy5HGlff56RYrOa'] || '',
+      }));
+
+      if (pacId) informes = informes.filter(i => i.pacienteId === pacId);
+      return new Response(JSON.stringify({ ok: true, informes }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+  }
+
   if (action === 'listar-informes') {
     const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
     const filterPacId = url.searchParams.get('pacienteId') || '';
