@@ -20,14 +20,15 @@ module.exports = async function handler(req, res) {
       let offset = null;
       do {
         const off = offset ? '&offset='+offset : '';
-        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?${fields}&pageSize=100${off}`,
+        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?${fields}&sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=100${off}`,
           { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
         const data = await r.json();
+        console.log('Airtable response sample:', JSON.stringify(data.records?.[0]?.fields));
         allRecords = allRecords.concat(data.records || []);
         offset = data.offset || null;
       } while (offset);
       const informes = allRecords
-        .filter(rec => (rec.fields['PacienteId'] || '') === patientId)
+        .filter(rec => (rec.fields['PacienteId'] || rec.fields['fldDR9XqkJ9oA3WK0'] || '') === patientId)
         .map(rec => ({
           id: rec.id,
           fecha: rec.fields['Fecha'] || '—',
