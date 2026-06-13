@@ -20,13 +20,13 @@ module.exports = async function handler(req, res) {
       const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
       const informes = (data.records || [])
-        .filter(rec => (rec.fields['PacienteID'] || '') === patientId)
+        .filter(rec => (rec.fields['PacienteId'] || '') === patientId)
         .map(rec => ({
           id: rec.id,
           fecha: rec.fields['Fecha'] || '—',
-          tipo: rec.fields['Tipo'] || '—',
+          tipo: rec.fields['Protocolo'] || '—',
           fisioNombre: rec.fields['FisioNombre'] || '—',
-          contenido: rec.fields['Contenido'] || ''
+          contenido: rec.fields['Informe'] || ''
         }));
       return res.status(200).json({ ok: true, informes });
     } catch(e) {
