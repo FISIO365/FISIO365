@@ -289,6 +289,13 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 
 .login-title { display: none; }
 .login-desc { display: none; }
+
+/* BOTONES INFORME */
+.btn-inf { font-family: var(--font); font-size: 12px; font-weight: 700; padding: 10px 20px; border: none; border-radius: 99px; background: var(--black); color: var(--cream); cursor: pointer; margin-right: 8px; margin-bottom: 8px; transition: opacity .15s; letter-spacing: .02em; display: inline-block; }
+.btn-inf:active { opacity: .75; }
+.btn-inf.pdf { background: var(--cream); color: var(--black); border: 1.5px solid rgba(0,0,0,0.15); }
+.inf-pac-contenido { display: none; margin-top: 16px; font-size: 13px; color: var(--black); line-height: 1.8; white-space: pre-wrap; border-top: 1px solid var(--border); padding-top: 16px; }
+.inf-pac-contenido.open { display: block; }
 </style>
 </head>
 <body>
@@ -1157,6 +1164,8 @@ async function loadInformes(){
  const list=document.getElementById('infPacList');
  if(!list)return;
  list.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+ // Clear any cached content first
+ window._informesPac=[];
  try{
  const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);
  const data=await res.json();
@@ -1170,7 +1179,7 @@ async function loadInformes(){
  <div class="inf-pac-fisio">Fisioterapeuta: ${inf.fisioNombre}</div>
  <div style="display:flex;gap:8px;flex-wrap:wrap;">
  <button class="btn-inf" onclick="toggleInforme(${i})">Ver informe</button>
- <button class="btn-inf lila" onclick="imprimirInforme(${i})">Descargar PDF</button>
+ <button class="btn-inf pdf" onclick="imprimirInforme(${i})">Descargar PDF</button>
  </div>
  <div class="inf-pac-contenido" id="infCont${i}">${inf.contenido}</div>
  </div>
@@ -1341,6 +1350,7 @@ async function checkNotifBadge(){
 function cerrarSesion(){
  localStorage.removeItem('fisio365_patient');
  patient=null;
+ window._informesPac=[];
  document.getElementById('appScreen').style.display='none';
  document.getElementById('hamburgerBtn').style.display='none';
  document.getElementById('cerrarBtn').style.display='none';
