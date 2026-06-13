@@ -3831,7 +3831,7 @@ async function fpTabInformes(pacId, body, pacNombre){
  body.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Cargando...</div>';
  let todos=[];
  try{
- const r=await fetch(`/api/informes?pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
+ const r=await fetch(`/api/informe?pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
  const d=await r.json();
  if(d.ok){ todos=d.informes; }
  }catch(e){}
@@ -4198,7 +4198,7 @@ async function renderInformes(wrap){
  // Leer de Airtable (todos los dispositivos)
  let deAirtable=[];
  try{
- const r=await fetch(`/api/informes?pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
+ const r=await fetch(`/api/informe?pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
  const d=await r.json();
  if(d.ok) deAirtable=d.informes||[];
  }catch(e){}
