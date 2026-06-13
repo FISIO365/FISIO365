@@ -309,12 +309,12 @@ export default async function handler(req) {
         method: 'POST',
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ records: [{ fields: {
-          fldDR9XqkJ9oA3WK0: finalPacienteId,
-          fldqoUgXtf81ROqMy: (pacienteNombre || '').toUpperCase(),
+          PacienteId: finalPacienteId,
+          PacienteNombre: (pacienteNombre || '').toUpperCase(),
           FisioNombre: fisioNombre || '',
-          fldHXAL8FC00biu1X: fecha || new Date().toLocaleDateString('es-ES'),
-          fldy5HGlff56RYrOa: tipo || 'hernia',
-          fldL5BxsNuITe2He9: contenido || ''
+          Fecha: fecha || new Date().toLocaleDateString('es-ES'),
+          Protocolo: tipo || 'hernia',
+          Informe: contenido || ''
         }}]})
       });
       const atData = await atRes.json();
