@@ -7,6 +7,8 @@ const TABLE_ID = 'tblwvWQxXNJPdR0Iv';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
 
+const FIELDS = 'fields[]=fldDR9XqkJ9oA3WK0&fields[]=fldqoUgXtf81ROqMy&fields[]=fld3YeK9QbDKjdSAd&fields[]=fldHXAL8FC00biu1X&fields[]=fldL5BxsNuITe2He9&fields[]=fldy5HGlff56RYrOa';
+
 export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response('', { headers: cors });
 
@@ -17,26 +19,22 @@ export default async function handler(req) {
   if (pwd.trim() !== (FISIO_PASSWORD || '').trim())
     return new Response(JSON.stringify({ ok: false, error: 'Auth' }), { status: 401, headers: cors });
 
-  // GET - listar informes de un paciente
   if (req.method === 'GET') {
-    const filter = pacienteId
-      ? `&filterByFormula={fldDR9XqkJ9oA3WK0}="${pacienteId}"`
-      : '';
-    const fields = [
-      'fldDR9XqkJ9oA3WK0', // PacienteId
-      'fldqoUgXtf81ROqMy', // PacienteNombre
-      'fld3YeK9QbDKjdSAd', // FisioNombre
-      'fldHXAL8FC00biu1X', // Fecha
-      'fldL5BxsNuITe2He9', // Informe
-      'fldy5HGlff56RYrOa',  // Protocolo
-    ].map(f => `fields[]=${f}`).join('&');
+    // Fetch ALL records then filter in JS — avoids filterByFormula encoding issues
+    let allRecords = [];
+    let offset = null;
+    do {
+      const offsetParam = offset ? `&offset=${offset}` : '';
+      const r = await fetch(
+        `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?${FIELDS}&pageSize=100${offsetParam}`,
+        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+      );
+      const data = await r.json();
+      allRecords = allRecords.concat(data.records || []);
+      offset = data.offset || null;
+    } while (offset);
 
-    const r = await fetch(
-      `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?${fields}${filter}&sort[0][field]=fldHXAL8FC00biu1X&sort[0][direction]=desc`,
-      { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
-    );
-    const data = await r.json();
-    const informes = (data.records || []).map(rec => ({
+    let informes = allRecords.map(rec => ({
       id: rec.id,
       pacienteId:     rec.fields['fldDR9XqkJ9oA3WK0'] || '',
       pacienteNombre: rec.fields['fldqoUgXtf81ROqMy'] || '',
@@ -45,10 +43,15 @@ export default async function handler(req) {
       informe:        rec.fields['fldL5BxsNuITe2He9'] || '',
       protocolo:      rec.fields['fldy5HGlff56RYrOa'] || '',
     }));
+
+    // Filter by pacienteId if provided
+    if (pacienteId) {
+      informes = informes.filter(i => i.pacienteId === pacienteId);
+    }
+
     return new Response(JSON.stringify({ ok: true, informes }), { headers: cors });
   }
 
-  // POST - guardar informe
   if (req.method === 'POST') {
     const body = await req.json();
     const { pacienteId: pid, pacienteNombre, fisioNombre, fecha, informe, protocolo } = body;
