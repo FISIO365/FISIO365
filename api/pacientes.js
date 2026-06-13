@@ -162,7 +162,7 @@ export default async function handler(req) {
     const pacId = url.searchParams.get('pacienteId') || '';
     const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
     try {
-      const fields = 'fields[]=fldDR9XqkJ9oA3WK0&fields[]=fldqoUgXtf81ROqMy&fields[]=fld3YeK9QbDKjdSAd&fields[]=fldHXAL8FC00biu1X&fields[]=fldL5BxsNuITe2He9&fields[]=fldy5HGlff56RYrOa';
+      const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo';
       let allRecords = [];
       let offset = null;
       do {
@@ -176,12 +176,12 @@ export default async function handler(req) {
 
       let informes = allRecords.map(rec => ({
         id: rec.id,
-        pacienteId:     rec.fields['fldDR9XqkJ9oA3WK0'] || '',
-        pacienteNombre: rec.fields['fldqoUgXtf81ROqMy'] || '',
-        fisioNombre:    rec.fields['fld3YeK9QbDKjdSAd'] || '',
-        fecha:          rec.fields['fldHXAL8FC00biu1X'] || '',
-        informe:        rec.fields['fldL5BxsNuITe2He9'] || '',
-        protocolo:      rec.fields['fldy5HGlff56RYrOa'] || '',
+        pacienteId:     rec.fields['PacienteId'] || '',
+        pacienteNombre: rec.fields['PacienteNombre'] || '',
+        fisioNombre:    rec.fields['FisioNombre'] || '',
+        fecha:          rec.fields['Fecha'] || '',
+        informe:        rec.fields['Informe'] || '',
+        protocolo:      rec.fields['Protocolo'] || '',
       }));
 
       if (pacId) informes = informes.filter(i => i.pacienteId === pacId);
