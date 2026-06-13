@@ -15,11 +15,18 @@ module.exports = async function handler(req, res) {
   // ── LISTAR INFORMES DEL PACIENTE ─────────────────────────────────────────
   if (action === 'informes') {
     try {
-      // Fetch all informes and filter by patientId in JS to avoid formula issues
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=50`;
-      const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-      const data = await r.json();
-      const informes = (data.records || [])
+      const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo';
+      let allRecords = [];
+      let offset = null;
+      do {
+        const off = offset ? '&offset='+offset : '';
+        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?${fields}&pageSize=100${off}`,
+          { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        const data = await r.json();
+        allRecords = allRecords.concat(data.records || []);
+        offset = data.offset || null;
+      } while (offset);
+      const informes = allRecords
         .filter(rec => (rec.fields['PacienteId'] || '') === patientId)
         .map(rec => ({
           id: rec.id,
