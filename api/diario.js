@@ -69,6 +69,22 @@ export default async function handler(req) {
     try {
       const body = await req.json();
 
+      // Guardar tarea hecha en TAREAS
+      if (body.action === 'guardar-tarea') {
+        const TAREAS_TABLE = 'tblIXYE5ToRNY7MN4';
+        try {
+          await airtableCreate(TAREAS_TABLE, {
+            'fld9vav48MeCYpZXA': body.pacienteId || '',
+            'fldMVdTRZUzYsUhZg': (body.pacienteNombre || '').toUpperCase(),
+            'fldZsAjUSEegQk8Xq': body.fecha || new Date().toISOString().split('T')[0],
+            'fldOTlWCJgMl074Uo': body.nota || ''
+          });
+          return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+        } catch(e) {
+          return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
+        }
+      }
+
       // Acción: responder al fisio (sin contraseña, desde app paciente)
       if (body.action === 'responder-al-fisio') {
         const { mensajeId, respuesta } = body;
