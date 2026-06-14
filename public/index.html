@@ -647,6 +647,8 @@ function showSection(section){
  document.getElementById('vistaInformes').style.display=section==='informes'?'block':'none';
  document.getElementById('vistaMensajes').style.display=section==='mensajes'?'block':'none';
  document.getElementById('vistaGuia').style.display=section==='guia'?'block':'none';
+ // Pre-render empty calendar instantly when switching to citas
+ if(section==='citas'){calMesActual=new Date();citasData=[];renderCalendario();}
  document.getElementById('navHoy').classList.toggle('active',section==='hoy');
  document.getElementById('navProgreso').classList.toggle('active',section==='progreso');
  document.getElementById('navInformes').classList.toggle('active',section==='informes');
