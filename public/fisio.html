@@ -734,7 +734,7 @@ function renderPacLista(q, lista){
  const opciones=[
  {key:'programa', label:'Programa'},
  {key:'informes', label:'Informes'},
- {key:'eva', label:'EVA'},
+ {key:'racha', label:'🔥 Racha'},
  {key:'diario', label:'Comunicaciones'},
  {key:'pin', label:'Nombre y contraseña'},
  ];
@@ -773,7 +773,7 @@ function renderPacLista(q, lista){
  <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Contraseña (PIN)</div><div style="font-size:28px;font-weight:800;color:var(--lila);letter-spacing:4px">${p.pin||'—'}</div></div>`;
  } else if(op.key==='programa') fpTabPrograma(p.id, panel);
  else if(op.key==='informes') fpTabInformes(p.id, panel, p.nombre);
- else if(op.key==='eva') fpTabEva(p.id, panel);
+ else if(op.key==='racha') fpTabRacha(p.id, panel);
  else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel);
  };
  menu.appendChild(row);
@@ -3764,7 +3764,7 @@ function abrirFichaPaciente(pacId, pacNombre){
 }
 function fpSwitch(tab){
  // highlight tab
- ['programa','informes','eva','diario'].forEach(t=>{
+ ['programa','informes','racha','diario'].forEach(t=>{
  const btn=document.getElementById('fpTab'+t.charAt(0).toUpperCase()+t.slice(1));
  if(btn) btn.className='fp-tab'+(t===tab?' fp-tab-active':'');
  });
@@ -3777,7 +3777,7 @@ function fpSwitch(tab){
  body.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Cargando...</div>';
  if(tab==='programa') fpTabPrograma(pacId, body);
  else if(tab==='informes') fpTabInformes(pacId, body, pacNombre);
- else if(tab==='eva') fpTabEva(pacId, body);
+ else if(tab==='racha') fpTabRacha(pacId, body);
  else if(tab==='diario') fpTabDiario(pacId, pacNombre, body);
 }
 
@@ -3881,78 +3881,104 @@ async function fpTabInformes(pacId, body, pacNombre){
  });
 }
 
-async function fpTabEva(pacId, body){
+async function fpTabRacha(pacId, body){
+ body.innerHTML='<div style="text-align:center;padding:2rem"><div style="width:24px;height:24px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
  try{
- const r=await fetch(`/api/dolor?patientId=${encodeURIComponent(pacId)}`);
- const d=await r.json();
- const registros=(d.registros||[]).sort((a,b)=>a.fecha.localeCompare(b.fecha));
- if(!registros.length){body.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Sin registros de dolor</div>';return;}
- body.innerHTML='';
- const wrap=ce('div','');
- wrap.style.cssText='position:relative;padding-left:28px;';
- const canvas=document.createElement('canvas');
- canvas.style.cssText='width:100%;height:120px;display:block';
- wrap.appendChild(canvas);
- const diasRow=ce('div',''); diasRow.style.cssText='position:relative;height:22px;margin-top:2px';
- wrap.appendChild(diasRow);
- body.appendChild(wrap);
- // Eje Y
- const yAxis=ce('div','');
- yAxis.style.cssText='position:absolute;left:0;top:0;bottom:22px;display:flex;flex-direction:column;justify-content:space-between;padding:2px 0;font-size:10px;color:#bbb';
- yAxis.innerHTML='<span>10</span><span>5</span><span>0</span>';
- wrap.insertBefore(yAxis,canvas);
- // Dibujar
- setTimeout(()=>{
- const W=canvas.offsetWidth; const H=120;
- canvas.width=W*window.devicePixelRatio; canvas.height=H*window.devicePixelRatio;
- canvas.style.width=W+'px'; canvas.style.height=H+'px';
- const ctx=canvas.getContext('2d');
- ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
- ctx.clearRect(0,0,W,H);
- const PAD=8;
- const pts=registros.map((rec,i)=>({
- x:registros.length===1?W-PAD:PAD+(i/(registros.length-1))*(W-PAD*2),
- y:PAD+((10-rec.valor)/10)*(H-PAD*2),
- valor:rec.valor, fecha:rec.fecha, comentario:rec.comentario||''
- }));
- // área
- if(pts.length>1){
- ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
- pts.forEach(p=>ctx.lineTo(p.x,p.y));
- ctx.lineTo(pts[pts.length-1].x,H); ctx.lineTo(pts[0].x,H); ctx.closePath();
- ctx.fillStyle='rgba(173,163,218,0.15)'; ctx.fill();
- ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
- pts.forEach(p=>ctx.lineTo(p.x,p.y));
- ctx.strokeStyle='#ada3da'; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
- }
- pts.forEach((p,i)=>{
- ctx.beginPath(); ctx.arc(p.x,p.y,i===pts.length-1?5:3,0,Math.PI*2);
- ctx.fillStyle=i===pts.length-1?'white':'#ada3da'; ctx.fill();
- if(i===pts.length-1){ctx.strokeStyle='#ada3da';ctx.lineWidth=2;ctx.stroke();}
- });
- // etiquetas
- diasRow.innerHTML='';
- pts.forEach(p=>{
- const d2=new Date(p.fecha+'T12:00:00');
- const label=`${d2.getDate()}/${d2.getMonth()+1}`;
- const el=ce('div',''); el.style.cssText=`position:absolute;left:${p.x}px;top:0;transform:translateX(-50%);font-size:10px;color:#888;white-space:nowrap`;
- el.textContent=label; diasRow.appendChild(el);
- });
- },50);
+   const r=await fetch(`/api/pacientes?action=get-tareas&pacienteId=${encodeURIComponent(pacId)}`);
+   const data=await r.json();
+   const tareas=data.tareas||[];
+   const diasHechos=new Set(tareas.map(t=>t.fecha));
+   const hoy=new Date();
+   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+   const dias=['L','M','X','J','V','S','D'];
 
- // Lista de mensajes
- const mensajes=registros.filter(r=>r.comentario);
- if(mensajes.length){
- const mt=ce('div',''); mt.style.cssText='margin-top:16px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px';
- mt.textContent='Mensajes de dolor'; body.appendChild(mt);
- mensajes.forEach(r=>{
- const row=ce('div','');
- row.style.cssText='background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px';
- row.innerHTML=`<div style="font-size:11px;color:var(--muted);margin-bottom:2px">${r.fecha} · Dolor: ${r.valor}/10</div>${r.comentario}`;
- body.appendChild(row);
- });
- }
- }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar EVA</div>';}
+   // Build 4 weeks grid
+   let rows=[];
+   for(let i=27;i>=0;i--){
+     const d=new Date(hoy);d.setDate(hoy.getDate()-i);
+     const key=d.toISOString().split('T')[0];
+     rows.push({key,dia:d.getDate(),mes:d.getMonth(),hecho:diasHechos.has(key),esHoy:i===0});
+   }
+
+   // Month label
+   const mesInicio=meses[rows[0].mes];
+   const mesFin=meses[rows[rows.length-1].mes];
+   const mesLabel=mesInicio===mesFin?mesInicio:`${mesInicio} — ${mesFin}`;
+   const año=hoy.getFullYear();
+
+   // Stats
+   const totalDias=diasHechos.size;
+
+   // Racha actual — días consecutivos hasta hoy
+   let rachaActual=0;
+   for(let i=0;;i++){
+     const d=new Date(hoy);d.setDate(hoy.getDate()-i);
+     const key=d.toISOString().split('T')[0];
+     if(diasHechos.has(key)) rachaActual++;
+     else break;
+   }
+
+   // Mejor racha — max consecutive days
+   const fechasOrdenadas=[...tareas].map(t=>t.fecha).sort();
+   let mejorRacha=0,racha=0,prevDate=null;
+   fechasOrdenadas.forEach(f=>{
+     if(prevDate){
+       const prev=new Date(prevDate);prev.setDate(prev.getDate()+1);
+       if(prev.toISOString().split('T')[0]===f) racha++;
+       else racha=1;
+     } else racha=1;
+     if(racha>mejorRacha) mejorRacha=racha;
+     prevDate=f;
+   });
+
+   // Mensaje motivador
+   let msg='';
+   if(rachaActual===0) msg='Hoy es un buen día para empezar 💪';
+   else if(rachaActual===1) msg='¡Bien! Ha empezado su racha. ¡Vuelve mañana!';
+   else if(rachaActual<5) msg=`🔥 ¡${rachaActual} días seguidos! Sigue así.`;
+   else if(rachaActual<10) msg=`🔥 ¡${rachaActual} días seguidos! Está en racha.`;
+   else if(rachaActual<20) msg=`🏆 ¡${rachaActual} días seguidos! Increíble constancia.`;
+   else msg=`🏆 ¡${rachaActual} días seguidos! Es una máquina.`;
+
+   body.innerHTML=`
+   <div style="background:white;border-radius:16px;border:0.5px solid rgba(0,0,0,0.08);padding:20px;margin-bottom:12px;">
+     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+       <div>
+         <div style="font-size:14px;font-weight:700;color:#111;">Racha del paciente</div>
+         <div style="font-size:11px;color:#aaa;margin-top:2px;">${mesLabel} ${año}</div>
+       </div>
+       ${rachaActual>0?`<div style="text-align:right;"><div style="font-size:22px;font-weight:800;color:#111;">🔥 ${rachaActual}</div><div style="font-size:10px;color:#aaa;">días seguidos</div></div>`:''}
+     </div>
+     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
+       ${dias.map(d=>`<div style="font-size:9px;font-weight:600;color:#ccc;text-align:center;">${d}</div>`).join('')}
+     </div>
+     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;">
+       ${rows.map(d=>`<div style="aspect-ratio:1;border-radius:50%;background:${d.hecho?'#4ade80':'#f0ede8'};display:flex;align-items:center;justify-content:center;font-size:10px;color:${d.hecho?'white':'#bbb'};font-weight:${d.hecho?'600':'500'};${d.esHoy?'box-shadow:0 0 0 2px var(--lila);':''}">${d.dia}</div>`).join('')}
+     </div>
+     <div style="display:flex;gap:12px;font-size:11px;color:#aaa;align-items:center;">
+       <div style="display:flex;align-items:center;gap:5px;"><div style="width:9px;height:9px;border-radius:50%;background:#4ade80;"></div>Completado</div>
+       <div style="display:flex;align-items:center;gap:5px;"><div style="width:9px;height:9px;border-radius:50%;background:#f0ede8;"></div>Sin datos</div>
+     </div>
+   </div>
+
+   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+     <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;">
+       <div style="font-size:22px;font-weight:800;color:#111;">${totalDias}</div>
+       <div style="font-size:10px;color:#aaa;margin-top:2px;">Días totales</div>
+     </div>
+     <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;">
+       <div style="font-size:22px;font-weight:800;color:#4ade80;">${rachaActual>0?'🔥 ':''} ${rachaActual}</div>
+       <div style="font-size:10px;color:#aaa;margin-top:2px;">Racha actual</div>
+     </div>
+     <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;">
+       <div style="font-size:22px;font-weight:800;color:#111;">${mejorRacha}</div>
+       <div style="font-size:10px;color:#aaa;margin-top:2px;">Mejor racha</div>
+     </div>
+   </div>
+
+   <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:14px;font-size:13px;color:#111;line-height:1.5;">${msg}</div>`;
+
+ }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar la racha</div>';}
 }
 
 async function fpTabDiario(pacId, pacNombre, body){
