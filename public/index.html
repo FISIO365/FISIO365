@@ -828,11 +828,11 @@ function renderFisiosList(fisios){
 }
 
 async function enviarAFisio(fisioId, fisioNombre){
- const _tipo=modalTipo; const _texto=modalTexto;
- console.log('enviarAFisio called', {fisioId, fisioNombre, _tipo, _texto});
+ const _tipo=modalTipo;
+ const _texto=document.getElementById('modalNota')?.value?.trim()||modalTexto||'';
  cerrarModal();
  const prefijo = _tipo==='dolor' ? '[Dolor aumentó] ' : '';
- const textoBase = _texto || (_tipo==='diario' ? 'Tarea hecha ✓' : '');
+ const textoBase = _texto || (_tipo==='diario' ? 'Tarea hecha' : '');
  const texto = prefijo + textoBase;
  try{
  if(_tipo==='diario'){
