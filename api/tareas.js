@@ -1,4 +1,4 @@
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
@@ -13,15 +13,16 @@ const F_NOTA     = 'fldOTlWCJgMl074Uo';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
 
-export default async function handler(req) {
-  if (req.method === 'OPTIONS') return new Response('', { headers: cors });
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const url = new URL(req.url);
-  const pwd = url.searchParams.get('pwd') || '';
+  const pwd = req.query?.pwd || '';
 
   // GET - listar tareas de un paciente (sin pwd para app paciente)
   if (req.method === 'GET') {
-    const pacienteId = url.searchParams.get('pacienteId') || '';
+    const pacienteId = req.query?.pacienteId || '';
     try {
       const formula = pacienteId ? encodeURIComponent(`{${F_PAC_ID}}="${pacienteId}"`) : '';
       const filterQ = formula ? `&filterByFormula=${formula}` : '';
@@ -37,15 +38,15 @@ export default async function handler(req) {
         fecha: rec.fields[F_FECHA] || '',
         nota: rec.fields[F_NOTA] || ''
       }));
-      return new Response(JSON.stringify({ ok: true, tareas }), { headers: cors });
+      return res.status(200).json({ ok: true, tareas });
     } catch(e) {
-      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: cors });
+      return res.status(500).json({ ok: false, error: e.message });
     }
   }
 
   // POST - guardar tarea hecha
   if (req.method === 'POST') {
-    const body = await req.json();
+    const body = req.body || {};
     const { pacienteId, pacienteNombre, fecha, nota } = body;
     try {
       const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TAREAS_TABLE}`, {
@@ -59,12 +60,12 @@ export default async function handler(req) {
         }}]})
       });
       const data = await r.json();
-      if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: cors });
-      return new Response(JSON.stringify({ ok: true, id: data.records?.[0]?.id }), { headers: cors });
+      if (data.error) return res.status(400).json({ ok: false, error: data.error.message });
+      return res.status(200).json({ ok: true, id: data.records?.[0]?.id });
     } catch(e) {
-      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: cors });
+      return res.status(500).json({ ok: false, error: e.message });
     }
   }
 
-  return new Response(JSON.stringify({ ok: false }), { status: 405, headers: cors });
+  return res.status(405).json({ ok: false });
 }
