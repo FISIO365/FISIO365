@@ -158,6 +158,28 @@ export default async function handler(req) {
   if (pwd !== expected) return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
 
   // ── LISTAR INFORMES ──────────────────────────────────────────────────────
+  if (action === 'get-tareas') {
+    const pacId = url.searchParams.get('pacienteId') || '';
+    const TAREAS_TABLE = 'tblIXYE5ToRNY7MN4';
+    try {
+      let allRecords = [], offset = null;
+      do {
+        const off = offset ? '&offset='+offset : '';
+        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TAREAS_TABLE}?fields[]=fld9vav48MeCYpZXA&fields[]=fldZsAjUSEegQk8Xq&pageSize=100${off}`,
+          { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        const d = await r.json();
+        allRecords = allRecords.concat(d.records || []);
+        offset = d.offset || null;
+      } while(offset);
+      let tareas = allRecords.map(rec => ({
+        pacienteId: rec.fields['fld9vav48MeCYpZXA'] || '',
+        fecha: rec.fields['fldZsAjUSEegQk8Xq'] || ''
+      }));
+      if (pacId) tareas = tareas.filter(t => t.pacienteId === pacId);
+      return new Response(JSON.stringify({ ok: true, tareas }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+  }
+
   if (action === 'get-informes') {
     const pacId = url.searchParams.get('pacienteId') || '';
     const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
