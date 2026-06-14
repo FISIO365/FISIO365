@@ -728,12 +728,22 @@ function guardarSoloConNota(){
  .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
 }
 
-function mostrarFisiosConNota(){
+async function mostrarFisiosConNota(){
  const nota=document.getElementById('modalNota')?.value||'';
  modalTexto=nota||'Tarea hecha';
  modalTipo='diario';
- cerrarModal();
- mostrarFisios();
+ // Show fisios in step2
+ document.getElementById('modalStep1').style.display='none';
+ document.getElementById('modalStep2').style.display='block';
+ const lista=document.getElementById('fisiosList');
+ if(fisiosCache){renderFisiosList(fisiosCache);return;}
+ lista.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+ try{
+   const res=await fetch('/api/fisios?action=lista-publica');
+   const data=await res.json();
+   fisiosCache=data.fisios||[];
+   renderFisiosList(fisiosCache);
+ }catch(e){lista.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Error al cargar fisios</div>';}
 }
 
 function abrirModalDiario(){
