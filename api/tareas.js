@@ -20,24 +20,32 @@ export default async function handler(req, res) {
 
   const pwd = req.query?.pwd || '';
 
-  // GET - listar tareas de un paciente (sin pwd para app paciente)
+  // GET - listar tareas de un paciente
   if (req.method === 'GET') {
     const pacienteId = req.query?.pacienteId || '';
     try {
-      const formula = pacienteId ? encodeURIComponent(`{${F_PAC_ID}}="${pacienteId}"`) : '';
-      const filterQ = formula ? `&filterByFormula=${formula}` : '';
-      const r = await fetch(
-        `https://api.airtable.com/v0/${BASE_ID}/${TAREAS_TABLE}?fields[]=${F_PAC_ID}&fields[]=${F_PAC_NOM}&fields[]=${F_FECHA}&fields[]=${F_NOTA}&sort[0][field]=${F_FECHA}&sort[0][direction]=desc&pageSize=90${filterQ}`,
-        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
-      );
-      const data = await r.json();
-      const tareas = (data.records || []).map(rec => ({
+      // Load all and filter in JS — filterByFormula unreliable with field IDs
+      let allRecords = [], offset = null;
+      do {
+        const off = offset ? `&offset=${offset}` : '';
+        const r = await fetch(
+          `https://api.airtable.com/v0/${BASE_ID}/${TAREAS_TABLE}?fields[]=${F_PAC_ID}&fields[]=${F_PAC_NOM}&fields[]=${F_FECHA}&fields[]=${F_NOTA}&sort[0][field]=${F_FECHA}&sort[0][direction]=desc&pageSize=100${off}`,
+          { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+        );
+        const data = await r.json();
+        allRecords = allRecords.concat(data.records || []);
+        offset = data.offset || null;
+      } while(offset);
+
+      let tareas = allRecords.map(rec => ({
         id: rec.id,
         pacienteId: rec.fields[F_PAC_ID] || '',
         pacienteNombre: rec.fields[F_PAC_NOM] || '',
         fecha: rec.fields[F_FECHA] || '',
         nota: rec.fields[F_NOTA] || ''
       }));
+
+      if (pacienteId) tareas = tareas.filter(t => t.pacienteId === pacienteId);
       return res.status(200).json({ ok: true, tareas });
     } catch(e) {
       return res.status(500).json({ ok: false, error: e.message });
