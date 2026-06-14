@@ -3851,16 +3851,15 @@ async function fpTabPrograma(pacId, body){
    window.fpAcOpen=function(n){fpAcFilter(n);};
    window.fpAcBlur=function(n){setTimeout(()=>document.getElementById(`fpacdrop${n}`)?.classList.remove('open'),150);};
 
-   // Cargar ejercicios existentes
-   if(d.ok&&d.ejercicios&&d.ejercicios.length){
-     d.ejercicios.forEach(ej=>fpAddEj(ej));
-     if(d.mensaje){document.getElementById('fpMensaje')&&(document.getElementById('fpMensaje').value=d.mensaje);}
-   }
-
    const addBtn=ce('button','btn-o');addBtn.textContent='+ Añadir ejercicio';addBtn.style.marginTop='8px';
    addBtn.onclick=()=>fpAddEj(null);
    ec.appendChild(addBtn);
-   body.appendChild(ec);
+   body.appendChild(ec);  // ← insertar ANTES de cargar ejercicios
+
+   // Cargar ejercicios existentes
+   if(d.ok&&d.ejercicios&&d.ejercicios.length){
+     d.ejercicios.forEach(ej=>fpAddEj(ej));
+   }
 
    // — Mensaje —
    const mc=ce('div','card');mc.style.marginBottom='10px';
