@@ -153,11 +153,6 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders }); }
   }
 
-  const pwd = (body.pwd || queryPwd || '').trim();
-  const expected = (FISIO_PASSWORD || '').trim();
-  if (pwd !== expected) return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
-
-  // ── LISTAR INFORMES ──────────────────────────────────────────────────────
   if (action === 'get-tareas') {
     const pacId = url.searchParams.get('pacienteId') || '';
     const TAREAS_TABLE = 'tblIXYE5ToRNY7MN4';
@@ -180,6 +175,12 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
+
+  const pwd = (body.pwd || queryPwd || '').trim();
+  const expected = (FISIO_PASSWORD || '').trim();
+  if (pwd !== expected) return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
+
+  // ── LISTAR INFORMES ──────────────────────────────────────────────────────
   if (action === 'get-informes') {
     const pacId = url.searchParams.get('pacienteId') || '';
     const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
