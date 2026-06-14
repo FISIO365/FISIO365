@@ -758,6 +758,7 @@ function renderPacLista(q, lista){
  row.style.color='var(--black)';
  panel.style.display='none';
  panel.innerHTML='';
+ panel.dataset.token='';
  return;
  }
  // Desactivar otras filas
@@ -766,15 +767,16 @@ function renderPacLista(q, lista){
  row.style.color='var(--lila)';
  panel.style.display='block';
  panel.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Cargando...</div>';
+ const tok=Date.now()+'_'+op.key; panel.dataset.token=tok;
  if(op.key==='pin'){
  panel.innerHTML=`
  <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Nombre</div><div style="font-size:15px;font-weight:700">${p.nombre}</div></div>
  <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Email</div><div style="font-size:14px">${p.email||'—'}</div></div>
  <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Contraseña (PIN)</div><div style="font-size:28px;font-weight:800;color:var(--lila);letter-spacing:4px">${p.pin||'—'}</div></div>`;
- } else if(op.key==='programa') fpTabPrograma(p.id, panel);
- else if(op.key==='informes') fpTabInformes(p.id, panel, p.nombre);
- else if(op.key==='racha') fpTabRacha(p.id, panel);
- else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel);
+ } else if(op.key==='programa') fpTabPrograma(p.id, panel, tok);
+ else if(op.key==='informes') fpTabInformes(p.id, panel, p.nombre, tok);
+ else if(op.key==='racha') fpTabRacha(p.id, panel, tok);
+ else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel, tok);
  };
  menu.appendChild(row);
  });
@@ -3781,12 +3783,13 @@ function fpSwitch(tab){
  else if(tab==='diario') fpTabDiario(pacId, pacNombre, body);
 }
 
-async function fpTabPrograma(pacId, body){
+async function fpTabPrograma(pacId, body, tok){
  body.innerHTML='<div style="text-align:center;padding:2rem"><div style="width:24px;height:24px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
  try{
    // Cargar programa actual
    const r=await fetch(`/api/programa?pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
    const d=await r.json();
+   if(tok&&body.dataset.token!==tok)return;
    body.innerHTML='';
 
    // — Selector de fisio —
@@ -3912,12 +3915,13 @@ async function fpTabPrograma(pacId, body){
  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar</div>';}
 }
 
-async function fpTabInformes(pacId, body, pacNombre){
+async function fpTabInformes(pacId, body, pacNombre, tok){
  body.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Cargando...</div>';
  let todos=[];
  try{
  const r=await fetch(`/api/pacientes?action=get-informes&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
  const d=await r.json();
+ if(tok&&body.dataset.token!==tok)return;
  if(d.ok){ todos=d.informes; }
  }catch(e){}
  // También locales
@@ -3966,11 +3970,12 @@ async function fpTabInformes(pacId, body, pacNombre){
  });
 }
 
-async function fpTabRacha(pacId, body){
+async function fpTabRacha(pacId, body, tok){
  body.innerHTML='<div style="text-align:center;padding:2rem"><div style="width:24px;height:24px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
  try{
    const r=await fetch(`/api/pacientes?action=get-tareas&pacienteId=${encodeURIComponent(pacId)}`);
    const data=await r.json();
+   if(tok&&body.dataset.token!==tok)return;
    const tareas=data.tareas||[];
    const diasHechos=new Set(tareas.map(t=>t.fecha));
    const hoy=new Date();
@@ -4066,7 +4071,7 @@ async function fpTabRacha(pacId, body){
  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar la racha</div>';}
 }
 
-async function fpTabDiario(pacId, pacNombre, body){
+async function fpTabDiario(pacId, pacNombre, body, tok){
   body.innerHTML='<div style="text-align:center;padding:2rem"><div style="width:24px;height:24px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
   try{
     // Load both: diario text + mensajes
@@ -4075,6 +4080,7 @@ async function fpTabDiario(pacId, pacNombre, body){
       fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(pacId)}`)
     ]);
     const dDiario = await rDiario.json();
+    if(tok&&body.dataset.token!==tok)return;
     const dMensajes = await rMensajes.json();
 
     const items = [];
