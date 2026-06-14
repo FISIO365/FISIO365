@@ -1409,7 +1409,7 @@ async function loadAdherencia(containerId){
  const el=document.getElementById(containerId);
  if(!el||!patient)return;
  try{
-   const r=await fetch(`/api/tareas?pacienteId=${encodeURIComponent(patient.id)}`);
+   const r=await fetch(`/api/pacientes?action=get-tareas&pacienteId=${encodeURIComponent(patient.id)}`);
    const data=await r.json();
    console.log('tareas API response:', JSON.stringify(data).slice(0,200));
    const tareas=data.tareas||[];
@@ -1457,3 +1457,4 @@ function toast(msg,ok=true){const t=document.getElementById('toast');t.textConte
 </script>
 </body>
 </html>
+
