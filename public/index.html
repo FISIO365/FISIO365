@@ -173,9 +173,9 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .modal-close { width: 100%; padding: 14px; border: none; background: none; font-family: var(--font); font-size: 13px; color: var(--muted); cursor: pointer; }
 
 /* DIARIO */
-.diario-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
-.diario-card textarea { width: 100%; border: none; outline: none; font-family: var(--font); font-size: 13px; color: var(--black); resize: none; min-height: 80px; background: none; }
-.btn-diario { width: 100%; padding: 12px; background: var(--black); color: var(--cream); font-family: var(--font); font-size: 13px; font-weight: 700; border: none; border-radius: var(--r); cursor: pointer; margin-top: 10px; }
+.diario-card { background: transparent; border: none; padding: 0; }
+.diario-card textarea { display: none; }
+.btn-diario { width: 100%; padding: 14px; background: var(--black); color: var(--cream); font-family: var(--font); font-size: 14px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; margin-top: 0; }
 
 /* GUIA */
 .guia-feature { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px; }
@@ -368,8 +368,8 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div class="mensaje-fisio-texto" id="mensajeFisioTexto"></div>
 </div>
  <div class="date-h">
- <div class="date-today" id="dateToday"></div>
- <div class="date-sub">Tu programa de ejercicios</div>
+ <div class="date-today" id="dateToday">Tu programa de hoy</div>
+ <div class="date-sub" id="dateSub">Domingo, 14 de junio</div>
  </div>
  <div id="vistaEjercicios">
  <div class="prog-wrap" id="progWrap" style="display:none !important;">
@@ -515,21 +515,16 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 <div id="modalGuardar" style="display:none;" class="modal-overlay" onclick="if(event.target===this)cerrarModal()">
  <div class="modal-sheet">
  <div id="modalStep1">
- <div class="modal-title">Buen trabajo 🙂</div>
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+ <div class="modal-title" style="margin:0;">Buen trabajo 🙂</div>
+ <button onclick="cerrarModal()" style="background:none;border:none;cursor:pointer;color:#bbb;font-size:24px;line-height:1;padding:0;">×</button>
+ </div>
  
- <div class="modal-opt" onclick="guardarSolo()">
- <div class="modal-opt-icon"></div>
- <div>
- <div class="modal-opt-title">Guardar en diario</div>
+ <textarea id="modalNota" placeholder="¿Cómo te has sentido?" style="width:100%;border:0.5px solid rgba(0,0,0,0.12);border-radius:8px;outline:none;font-family:var(--font);font-size:13px;color:var(--black);resize:none;height:72px;background:#faf9f7;padding:10px 12px;box-sizing:border-box;margin-bottom:12px;display:block;"></textarea>
+ <div style="display:flex;gap:8px;">
+ <button onclick="guardarSoloConNota()" style="flex:1;padding:12px;background:white;color:var(--black);font-family:var(--font);font-size:12px;font-weight:600;border:0.5px solid rgba(0,0,0,0.15);border-radius:8px;cursor:pointer;">Guardar en diario</button>
+ <button onclick="mostrarFisiosConNota()" style="flex:1;padding:12px;background:var(--black);color:var(--cream);font-family:var(--font);font-size:12px;font-weight:600;border:none;border-radius:8px;cursor:pointer;">Enviar al fisio</button>
  </div>
- </div>
- <div class="modal-opt" onclick="mostrarFisios()">
- <div class="modal-opt-icon"></div>
- <div>
- <div class="modal-opt-title">Enviar al fisio</div>
- </div>
- </div>
- <button class="modal-cancel" onclick="cerrarModal()">Cancelar</button>
  </div>
  <div id="modalStep2" style="display:none;">
  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
@@ -633,7 +628,8 @@ function initApp(){
  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
  const hoy=new Date();
- document.getElementById('dateToday').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
+ document.getElementById('dateToday').textContent='Tu programa de hoy';
+document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
  loadEjercicios();
  checkMensajesNoLeidos();
  setInterval(checkMensajesNoLeidos, 2*60*1000); // revisar cada 2 minutos
@@ -720,6 +716,26 @@ async function toggleHecho(i){const ej=ejercicios[i];if(hechos.has(ej.id))hechos
 function updateProg(){const total=ejercicios.length,done=ejercicios.filter(ej=>hechos.has(ej.id)).length;document.getElementById('progCnt').textContent=`${done}/${total}`;document.getElementById('progBar').style.width=total?`${(done/total)*100}%`:'0%';}
 
 // ── MODAL GUARDAR / ENVIAR ───────────────────────────────────────────────────
+function guardarSoloConNota(){
+ const nota=document.getElementById('modalNota')?.value||'';
+ modalTexto=nota||'Tarea hecha';
+ modalTipo='diario';
+ cerrarModal();
+ const btn=document.getElementById('btnDiario');
+ btn.disabled=true;btn.textContent='Guardando...';
+ fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:modalTexto,enviarFisio:false})})
+ .then(()=>{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();})
+ .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
+}
+
+function mostrarFisiosConNota(){
+ const nota=document.getElementById('modalNota')?.value||'';
+ modalTexto=nota||'Tarea hecha';
+ modalTipo='diario';
+ cerrarModal();
+ mostrarFisios();
+}
+
 function abrirModalDiario(){
  const texto=document.getElementById('diarioTxt').value.trim();
  modalTipo='diario';
