@@ -83,8 +83,8 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 
 /* FECHA HEADER */
 .date-h { margin-bottom: 20px; }
-.date-today { font-size: 22px; font-weight: 800; color: var(--black); letter-spacing: -.5px; }
-.date-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.date-today { font-size: 16px; font-weight: 800; color: var(--black); letter-spacing: -.3px; }
+.date-sub { font-size: 12px; color: #aaa; margin-top: 2px; }
 
 /* PROGRESO / EVA */
 .vas-num { flex: 1; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; color: white; border: none; transition: all .15s; opacity: 0.6; }
@@ -239,7 +239,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .ej-nom { font-size: 14px; font-weight: 600; color: var(--black); margin-bottom: 4px; }
 .ej-zona { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
 .ej-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-.pill { font-size: 11px; font-weight: 600; padding: 3px 8px; background: var(--cream); border-radius: 99px; color: var(--black); }
+.pill { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px; background: #f0ede8; color: #666; }
 .ej-expand { display: none; padding: 0 14px 14px; }
 .ej-expand.open { display: block; }
 .ej-video { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--r); margin-bottom: 12px; }
@@ -360,10 +360,13 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div class="fisio-col" id="fisioColegiado"></div>
  </div>
  </div>
- <div id="mensajeFisioCard" class="mensaje-fisio">
- <div class="mensaje-fisio-label">Mensaje de tu fisio </div>
+ <div id="notaFisioBtn" style="display:none;margin-bottom:12px;">
+ <button onclick="toggleNotaFisio()" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:#aaa;display:flex;align-items:center;gap:5px;padding:0;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ver nota de tu fisio</button>
+</div>
+<div id="mensajeFisioCard" class="mensaje-fisio" style="display:none;">
+ <div class="mensaje-fisio-label" id="mensajeFisioLabel">Nota de tu fisio</div>
  <div class="mensaje-fisio-texto" id="mensajeFisioTexto"></div>
- </div>
+</div>
  <div class="date-h">
  <div class="date-today" id="dateToday"></div>
  <div class="date-sub">Tu programa de ejercicios</div>
@@ -378,7 +381,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div class="sec-title">Seguimiento diario</div>
  <div class="diario-card">
  <textarea id="diarioTxt" placeholder="Anota tus avances y sensaciones..."></textarea>
- <button class="btn-diario" id="btnDiario" onclick="abrirModalDiario()">Tarea hecha ✓</button>
+ <button class="btn-diario" id="btnDiario" onclick="abrirModalDiario()">Hecho</button>
  </div>
  </div>
  </div>
@@ -512,20 +515,18 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 <div id="modalGuardar" style="display:none;" class="modal-overlay" onclick="if(event.target===this)cerrarModal()">
  <div class="modal-sheet">
  <div id="modalStep1">
- <div class="modal-title">¿Qué quieres hacer?</div>
- <div class="modal-sub" id="modalSubtitle">Elige cómo guardar tu entrada</div>
+ <div class="modal-title">Buen trabajo 🙂</div>
+ 
  <div class="modal-opt" onclick="guardarSolo()">
  <div class="modal-opt-icon"></div>
  <div>
- <div class="modal-opt-title">Guardar en mi diario</div>
- <div class="modal-opt-desc">Solo para ti — lo repasáis en tu próxima sesión</div>
+ <div class="modal-opt-title">Guardar en diario</div>
  </div>
  </div>
  <div class="modal-opt" onclick="mostrarFisios()">
  <div class="modal-opt-icon"></div>
  <div>
- <div class="modal-opt-title">Enviar a mi fisio</div>
- <div class="modal-opt-desc">Tu fisio recibirá una notificación</div>
+ <div class="modal-opt-title">Enviar al fisio</div>
  </div>
  </div>
  <button class="modal-cancel" onclick="cerrarModal()">Cancelar</button>
@@ -670,7 +671,12 @@ async function loadEjercicios(){
  ejercicios=data.ejercicios||[];
  if(data.fisio){const f=data.fisio;const av=document.getElementById('fisioAv');if(f.foto)av.innerHTML=`<img src="${f.foto}" alt="${f.nombre}">`;else av.textContent=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();document.getElementById('fisioNombre').textContent=`Tu fisio: ${f.nombre}`;document.getElementById('fisioColegiado').textContent=f.colegiado?`Nº Colegiado: ${f.colegiado}`:'';document.getElementById('fisioCard').style.display='flex';}
  mensajeFisio=data.mensajeFisio||'';
- if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('mensajeFisioCard').style.display='block';}
+ if(mensajeFisio){
+   document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;
+   document.getElementById('notaFisioBtn').style.display='block';
+   // Update label with fisio name
+   if(data.fisio) document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];
+ }
  if(data.ultimaSession===TODAY){mostrarCompletado();return;}
  lastFechaAsignacion=(data.ejercicios?.length||0)+'_'+(data.mensajeFisio||'');
  startPolling();
@@ -1268,7 +1274,12 @@ async function initPushNotifications(){if(!('serviceWorker'in navigator)||!('Pus
 function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const rawData=window.atob(base64);const outputArray=new Uint8Array(rawData.length);for(let i=0;i<rawData.length;++i)outputArray[i]=rawData.charCodeAt(i);return outputArray;}
 
 let lastFechaAsignacion=null,pollingInterval=null;
-function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejercicios=data.ejercicios||[];mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('mensajeFisioCard').style.display='block';}if(data.ultimaSession!==TODAY){hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado ',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
+function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejercicios=data.ejercicios||[];mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){
+   document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;
+   document.getElementById('notaFisioBtn').style.display='block';
+   // Update label with fisio name
+   if(data.fisio) document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];
+ }if(data.ultimaSession!==TODAY){hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado ',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
 
 function toggleMenu(){
  const menu=document.getElementById('navMenu');
@@ -1363,6 +1374,15 @@ function cerrarSesion(){
  document.getElementById('emailInput').value='';
  ['p1','p2','p3','p4'].forEach(id=>document.getElementById(id).value='');
  window.scrollTo(0,0);
+}
+function toggleNotaFisio(){
+ const card=document.getElementById('mensajeFisioCard');
+ const btn=document.querySelector('#notaFisioBtn button');
+ const open=card.style.display==='block';
+ card.style.display=open?'none':'block';
+ btn.querySelector('svg+*')
+ if(open) btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ver nota de tu fisio';
+ else btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ocultar nota';
 }
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(ok?'ok':'err');t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
 </script>
