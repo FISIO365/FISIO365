@@ -22,42 +22,51 @@ export default async function handler(req) {
     const fp = fields.map(f=>`fields[]=${encodeURIComponent(f)}`).join('&');
     const sortQ = 'sort[0][field]=FECHA&sort[0][direction]=asc';
 
-    // Filter directly in Airtable — much faster than loading all records
+    // Filter by linked record using RECORD_ID() formula
     const formula = patientId
-      ? encodeURIComponent(`FIND("${patientId}", ARRAYJOIN({RELACIÓN - CITA}))`)
+      ? encodeURIComponent(`OR({ESTADO}="PENDIENTE ",{ESTADO}="REALIZADA")`)
       : '';
     const filterQ = formula ? `&filterByFormula=${formula}` : '';
 
-    const r = await fetch(
-      `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}${filterQ}&pageSize=100`,
-      { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
-    );
-    const data = await r.json();
-    if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: corsHeaders });
+    let allRecords = [], offset = null;
+    do {
+      const offsetQ = offset ? `&offset=${offset}` : '';
+      const r = await fetch(
+        `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}${filterQ}&pageSize=100${offsetQ}`,
+        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+      );
+      const data = await r.json();
+      if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: corsHeaders });
+      allRecords = allRecords.concat(data.records || []);
+      offset = data.offset;
+    } while(offset);
 
-    const citas = (data.records || [])
-      .filter(rec => {
-        const e = (rec.fields['ESTADO'] || '').trim().toLowerCase();
-        return e === 'pendiente' || e === 'realizada';
-      })
-      .map(rec => ({
-        id: rec.id,
-        fecha: rec.fields['FECHA'] || '',
-        hora: rec.fields['HORA'] || '',
-        estado: rec.fields['ESTADO'] || '',
-        fisio: (() => {
-          const v = rec.fields['PREF.'];
-          if(!v) return '';
-          if(Array.isArray(v)) return v.filter(x=>!String(x).startsWith('rec')).join(', ');
-          return String(v).startsWith('rec') ? '' : String(v);
-        })(),
-        tipo: (() => {
-          const v = rec.fields['TIPO DE CITA'];
-          if(!v) return '';
-          if(Array.isArray(v)) return v.filter(x=>!String(x).startsWith('rec')).join(', ');
-          return String(v).startsWith('rec') ? '' : String(v);
-        })()
-      }));
+    // Filter by patient in JS (linked records can't be filtered server-side easily)
+    const pacienteCitas = patientId
+      ? allRecords.filter(rec => {
+          const rel = rec.fields['RELACIÓN - CITA'];
+          return Array.isArray(rel) && rel.includes(patientId);
+        })
+      : allRecords;
+
+    const citas = pacienteCitas.map(rec => ({
+      id: rec.id,
+      fecha: rec.fields['FECHA'] || '',
+      hora: rec.fields['HORA'] || '',
+      estado: rec.fields['ESTADO'] || '',
+      fisio: (() => {
+        const v = rec.fields['PREF.'];
+        if(!v) return '';
+        if(Array.isArray(v)) return v.filter(x=>!String(x).startsWith('rec')).join(', ');
+        return String(v).startsWith('rec') ? '' : String(v);
+      })(),
+      tipo: (() => {
+        const v = rec.fields['TIPO DE CITA'];
+        if(!v) return '';
+        if(Array.isArray(v)) return v.filter(x=>!String(x).startsWith('rec')).join(', ');
+        return String(v).startsWith('rec') ? '' : String(v);
+      })()
+    }));
 
     return new Response(JSON.stringify({ ok: true, citas }), { headers: corsHeaders });
 
