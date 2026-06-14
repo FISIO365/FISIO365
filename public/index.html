@@ -388,10 +388,10 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div id="vistaCompletado" style="display:none;">
  <div class="completado-wrap">
  <div class="completado-emoji"></div>
- <div class="completado-titulo">¡Sesión completada!</div>
- <div class="completado-sub">Has terminado tu programa de hoy.<br>¡Sigue así, lo estás haciendo genial!</div>
+ <div class="completado-titulo">Buen trabajo 🙂</div>
+ <div class="completado-sub">Has completado tu sesión de hoy.</div>
  <div class="completado-card">
- <p> Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana y sigue sumando!</p>
+ <p>Cada día que te mueves es un paso hacia tu recuperación. ¡Vuelve mañana!</p>
  </div>
  </div>
  </div>
@@ -511,29 +511,24 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 
 <!-- bottom nav moved to topbar -->
 
-<!-- MODAL GUARDAR/ENVIAR -->
+<!-- MODAL NUEVO FLUJO -->
 <div id="modalGuardar" style="display:none;" class="modal-overlay" onclick="if(event.target===this)cerrarModal()">
  <div class="modal-sheet">
  <div id="modalStep1">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
- <div class="modal-title" style="margin:0;">Buen trabajo 🙂</div>
- <button onclick="cerrarModal()" style="background:none;border:none;cursor:pointer;color:#bbb;font-size:24px;line-height:1;padding:0;">×</button>
- </div>
- 
- <textarea id="modalNota" placeholder="¿Cómo te has sentido?" style="width:100%;border:0.5px solid rgba(0,0,0,0.12);border-radius:8px;outline:none;font-family:var(--font);font-size:13px;color:var(--black);resize:none;height:72px;background:#faf9f7;padding:10px 12px;box-sizing:border-box;margin-bottom:12px;display:block;"></textarea>
+ <div style="font-size:16px;font-weight:700;color:var(--black);margin-bottom:6px;">¿Quieres comunicar algo a tu fisio?</div>
+ <div style="font-size:13px;color:var(--muted);margin-bottom:24px;">Puedes enviarle una nota sobre cómo te has sentido.</div>
  <div style="display:flex;gap:8px;">
- <button onclick="guardarSoloConNota()" style="flex:1;padding:12px;background:white;color:var(--black);font-family:var(--font);font-size:12px;font-weight:600;border:0.5px solid rgba(0,0,0,0.15);border-radius:8px;cursor:pointer;">Guardar en diario</button>
- <button onclick="mostrarFisiosConNota()" style="flex:1;padding:12px;background:var(--black);color:var(--cream);font-family:var(--font);font-size:12px;font-weight:600;border:none;border-radius:8px;cursor:pointer;">Enviar al fisio</button>
+ <button onclick="modalRespuestaNo()" style="flex:1;padding:14px;background:white;color:var(--black);font-family:var(--font);font-size:14px;font-weight:600;border:0.5px solid rgba(0,0,0,0.15);border-radius:10px;cursor:pointer;">No</button>
+ <button onclick="modalRespuestaSi()" style="flex:1;padding:14px;background:var(--black);color:var(--cream);font-family:var(--font);font-size:14px;font-weight:700;border:none;border-radius:10px;cursor:pointer;">Sí</button>
  </div>
  </div>
  <div id="modalStep2" style="display:none;">
- <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+ <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
  <button onclick="volverStep1()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;">←</button>
- <div>
- <div class="modal-title">¿A quién se lo envías?</div>
- <div style="font-size:12px;color:var(--muted);">Elige el fisio que debe recibirlo</div>
+ <div style="font-size:15px;font-weight:700;color:var(--black);">Escríbele una nota</div>
  </div>
- </div>
+ <textarea id="modalNota" placeholder="¿Cómo te has sentido hoy?" style="width:100%;border:0.5px solid rgba(0,0,0,0.12);border-radius:8px;outline:none;font-family:var(--font);font-size:13px;color:var(--black);resize:none;height:80px;background:#faf9f7;padding:10px 12px;box-sizing:border-box;margin-bottom:14px;"></textarea>
+ <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;">¿A quién se lo envías?</div>
  <div id="fisiosList"><div class="loading"><div class="spinner"></div></div></div>
  </div>
  </div>
@@ -716,6 +711,15 @@ async function toggleHecho(i){const ej=ejercicios[i];if(hechos.has(ej.id))hechos
 function updateProg(){const total=ejercicios.length,done=ejercicios.filter(ej=>hechos.has(ej.id)).length;document.getElementById('progCnt').textContent=`${done}/${total}`;document.getElementById('progBar').style.width=total?`${(done/total)*100}%`:'0%';}
 
 // ── MODAL GUARDAR / ENVIAR ───────────────────────────────────────────────────
+function modalRespuestaNo(){
+ cerrarModal();
+ const btn=document.getElementById('btnDiario');
+ btn.disabled=true;btn.textContent='Guardando...';
+ fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:'Tarea hecha',enviarFisio:false})})
+ .then(()=>{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();})
+ .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
+}
+
 function guardarSoloConNota(){
  const nota=document.getElementById('modalNota')?.value||'';
  modalTexto=nota||'Tarea hecha';
@@ -728,11 +732,7 @@ function guardarSoloConNota(){
  .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
 }
 
-async function mostrarFisiosConNota(){
- const nota=document.getElementById('modalNota')?.value||'';
- modalTexto=nota||'Tarea hecha';
- modalTipo='diario';
- // Show fisios in step2
+async function modalRespuestaSi(){
  document.getElementById('modalStep1').style.display='none';
  document.getElementById('modalStep2').style.display='block';
  const lista=document.getElementById('fisiosList');
@@ -744,6 +744,10 @@ async function mostrarFisiosConNota(){
    fisiosCache=data.fisios||[];
    renderFisiosList(fisiosCache);
  }catch(e){lista.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Error al cargar fisios</div>';}
+}
+
+async function mostrarFisiosConNota(){
+ await modalRespuestaSi();
 }
 
 function abrirModalDiario(){
