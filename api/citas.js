@@ -18,38 +18,24 @@ export default async function handler(req) {
   const patientId = url.searchParams.get('patientId') || '';
 
   try {
-    const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','RELACIÓN - CITA'];
+    const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','fldJM6ZCclnLBsKxp'];
     const fp = fields.map(f=>`fields[]=${encodeURIComponent(f)}`).join('&');
     const sortQ = 'sort[0][field]=FECHA&sort[0][direction]=asc';
 
-    // Filter by linked record using RECORD_ID() formula
+    // Filter directly in Airtable by PacienteId formula field — fast!
     const formula = patientId
-      ? encodeURIComponent(`OR({ESTADO}="PENDIENTE ",{ESTADO}="REALIZADA")`)
+      ? encodeURIComponent(`AND({fldJM6ZCclnLBsKxp}="${patientId}",OR({ESTADO}="PENDIENTE ",{ESTADO}="REALIZADA"))`)
       : '';
     const filterQ = formula ? `&filterByFormula=${formula}` : '';
 
-    let allRecords = [], offset = null;
-    do {
-      const offsetQ = offset ? `&offset=${offset}` : '';
-      const r = await fetch(
-        `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}${filterQ}&pageSize=100${offsetQ}`,
-        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
-      );
-      const data = await r.json();
-      if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: corsHeaders });
-      allRecords = allRecords.concat(data.records || []);
-      offset = data.offset;
-    } while(offset);
+    const r = await fetch(
+      `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}${filterQ}&pageSize=100`,
+      { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+    );
+    const data = await r.json();
+    if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: corsHeaders });
 
-    // Filter by patient in JS (linked records can't be filtered server-side easily)
-    const pacienteCitas = patientId
-      ? allRecords.filter(rec => {
-          const rel = rec.fields['RELACIÓN - CITA'];
-          return Array.isArray(rel) && rel.includes(patientId);
-        })
-      : allRecords;
-
-    const citas = pacienteCitas.map(rec => ({
+    const citas = (data.records || []).map(rec => ({
       id: rec.id,
       fecha: rec.fields['FECHA'] || '',
       hora: rec.fields['HORA'] || '',
