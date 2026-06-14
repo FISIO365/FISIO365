@@ -369,7 +369,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div class="date-sub">Tu programa de ejercicios</div>
  </div>
  <div id="vistaEjercicios">
- <div class="prog-wrap" id="progWrap" style="display:none;">
+ <div class="prog-wrap" id="progWrap" style="display:none !important;">
  <div class="prog-row"><span class="prog-lbl">Progreso de hoy</span><span class="prog-cnt" id="progCnt">0/0</span></div>
  <div class="prog-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
  </div>
@@ -686,17 +686,13 @@ function mostrarCompletado(){document.getElementById('vistaEjercicios').style.di
 function renderEjercicios(){
  const lista=document.getElementById('ejList');
  if(!ejercicios.length){lista.innerHTML=`<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios.</div></div>`;return;}
- document.getElementById('progWrap').style.display='block';
+ // progWrap hidden
  document.getElementById('diarioSection').style.display='block';
  updateProg();
  lista.innerHTML=ejercicios.map((ej,i)=>{
- const done=hechos.has(ej.id);
  const pills=[ej.series?`${ej.series} series`:null,ej.reps?`${ej.reps} reps`:null,ej.dur?`${ej.dur}s`:null,ej.descanso?`${ej.descanso}s descanso`:null].filter(Boolean);
- return `<div class="ej-card ${done?'done':''}" id="ec${i}">
+ return `<div class="ej-card" id="ec${i}">
  <div class="ej-header" onclick="toggleEx(${i})">
- <button class="ej-chk ${done?'on':''}" id="ck${i}" onclick="event.stopPropagation();toggleHecho(${i})">
- <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
- </button>
  <div class="ej-info">
  <div class="ej-nom">${ej.name}</div>
  ${ej.zona?`<div class="ej-zona">${ej.zona}</div>`:''}
@@ -706,9 +702,8 @@ function renderEjercicios(){
  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:#888;transition:transform 0.2s;margin-top:4px" id="ar${i}"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
  </div>
  <div class="ej-expand" id="ex${i}">
- ${ej.imagen?`<img src="${ej.imagen}" alt="${ej.name}" style="width:100%;border-radius:var(--r-sm);display:block;margin-bottom:12px">`:''}
+ ${ej.imagen?`<img src="${ej.imagen}" alt="${ej.name}" style="width:100%;border-radius:var(--r);display:block;margin-bottom:12px">`:''}
  ${ej.ytId?`<div class="ej-video"><iframe src="https://www.youtube.com/embed/${ej.ytId}" allowfullscreen loading="lazy"></iframe></div>`:''}
- <button class="btn-done ${done?'on':''}" id="bd${i}" onclick="toggleHecho(${i})">${done?'✓ Completado':'Marcar como hecho'}</button>
  </div>
  </div>`;
  }).join('');
