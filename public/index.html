@@ -622,11 +622,11 @@ function initApp(){
  document.getElementById('appScreen').style.display='block';
  document.getElementById('appScreen').style.opacity='0';
  document.getElementById('hamburgerBtn').style.display='flex';
- document.getElementById('cerrarBtn').style.display='block';
+ // cerrarBtn moved to menu
  document.getElementById('notifBtn').style.display='inline-block';
  window.scrollTo({top:0,behavior:'instant'});
  setTimeout(()=>{document.getElementById('appScreen').style.opacity='1';},10);
- document.getElementById('topbarName').textContent=patient.nombre.split(' ')[0];
+ // name hidden from topbar
  applyTranslations();
  setTimeout(initPushNotifications,2000);
  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
