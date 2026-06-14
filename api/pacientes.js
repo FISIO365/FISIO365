@@ -232,8 +232,14 @@ export default async function handler(req) {
   if (action === 'actualizar-informe' && req.method === 'POST') {
     const { id, informe } = body;
     if (!id) return new Response(JSON.stringify({ ok: false, error: 'Falta id' }), { status: 400, headers: corsHeaders });
+    const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
     try {
-      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}/${id}`, { method: 'PATCH', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { InformeGenerado: informe || '' } }) });
+      // Update in INFORMES table (new system)
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE_ID}/${id}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { Informe: informe || '' } })
+      });
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
