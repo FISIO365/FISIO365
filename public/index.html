@@ -340,11 +340,11 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div class="nav-overlay" id="navOverlay" onclick="cerrarMenu()"></div>
  <div class="nav-menu" id="navMenu">
  <div class="nav-menu-inner">
- <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()">Programa</button>
+ <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()">Mis ejercicios</button>
  <button class="nav-item" id="navProgreso" onclick="showSection('progreso');cerrarMenu()">Racha</button>
- <button class="nav-item" id="navCitas" onclick="showSection('citas');cerrarMenu()">Citas</button>
- <button class="nav-item" id="navMensajes" onclick="showSection('mensajes');cerrarMenu()">Mensajes<div class="nav-item-dot" id="navMensajesDot"></div></button>
- <button class="nav-item" id="navInformes" onclick="showSection('informes');cerrarMenu()">Informes</button>
+ <button class="nav-item" id="navCitas" onclick="showSection('citas');cerrarMenu()">Mis citas</button>
+ <button class="nav-item" id="navMensajes" onclick="showSection('mensajes');cerrarMenu()">Chat<div class="nav-item-dot" id="navMensajesDot"></div></button>
+ <button class="nav-item" id="navInformes" onclick="showSection('informes');cerrarMenu()">Mis informes</button>
  <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()">Guía</button>
  <button class="nav-item" onclick="cerrarSesion()" style="color:rgba(245,242,238,0.4);margin-top:4px;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;">Salir</button>
  </div>
@@ -466,7 +466,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <!-- VISTA MENSAJES -->
  <div id="vistaMensajes" style="display:none;">
  <div class="date-h" style="margin-top:4px;">
- <div class="date-today" style="font-size:20px;">Mensajes</div>
+ <div class="date-today" style="font-size:20px;">Chat</div>
  <div class="date-sub">Lo que has enviado a tu fisio</div>
  </div>
  <div id="msgList"><div class="loading"><div class="spinner"></div></div></div>
@@ -501,7 +501,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Tu programa del día</div><div class="guia-feature-desc">Tu fisio te asigna ejercicios personalizados con series, repeticiones y vídeos. Márcalos cuando los hagas.</div></div></div>
  <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Tarea hecha</div><div class="guia-feature-desc">Al terminar pulsa "Tarea hecha ✓". Puedes guardar una nota solo para ti o enviársela directamente a tu fisio — tú eliges.</div></div></div>
  <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Mi progreso</div><div class="guia-feature-desc">Registra tu nivel de dolor cada día. Si sube, puedes escribirle a tu fisio directamente desde ahí.</div></div></div>
- <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Mensajes</div><div class="guia-feature-desc">Aquí aparecen todos los mensajes que has enviado a tu fisio y sus respuestas. Puedes enviar mensajes desde el diario o desde la escala de dolor.</div></div></div>
+ <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Chat</div><div class="guia-feature-desc">Aquí aparecen todos los mensajes que has enviado a tu fisio y sus respuestas. Puedes enviar mensajes desde el diario o desde la escala de dolor.</div></div></div>
  <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Mis informes</div><div class="guia-feature-desc">Consulta y descarga los informes de tus valoraciones fisioterapéuticas en PDF.</div></div></div>
  </div>
  </div>
@@ -1397,12 +1397,21 @@ function cerrarSesion(){
  patient=null;
  window._informesPac=[];
  try{Object.keys(localStorage).forEach(k=>{if(k.startsWith('fisio365_citas_'))localStorage.removeItem(k);});}catch(e){}
+ // Hide app elements
  document.getElementById('appScreen').style.display='none';
  document.getElementById('hamburgerBtn').style.display='none';
- document.getElementById('cerrarBtn').style.display='none';
- document.getElementById('loginScreen').style.display='flex';
- document.getElementById('emailInput').value='';
- ['p1','p2','p3','p4'].forEach(id=>document.getElementById(id).value='');
+ try{document.getElementById('cerrarBtn').style.display='none';}catch(e){}
+ try{document.getElementById('notifBtn').style.display='none';}catch(e){}
+ // Close menu if open
+ cerrarMenu();
+ // Show login
+ const login=document.getElementById('loginScreen');
+ login.style.display='flex';
+ login.style.opacity='1';
+ login.style.visibility='visible';
+ // Clear fields
+ try{document.getElementById('emailInput').value='';}catch(e){}
+ ['p1','p2','p3','p4'].forEach(id=>{try{document.getElementById(id).value='';}catch(e){}});
  window.scrollTo(0,0);
 }
 async function loadAdherencia(containerId){
