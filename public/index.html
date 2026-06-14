@@ -648,7 +648,24 @@ function showSection(section){
  document.getElementById('vistaMensajes').style.display=section==='mensajes'?'block':'none';
  document.getElementById('vistaGuia').style.display=section==='guia'?'block':'none';
  // Pre-render empty calendar instantly when switching to citas
- if(section==='citas'){calMesActual=new Date();citasData=[];renderCalendario();}
+ if(section==='citas'){
+   calMesActual=new Date();citasData=[];
+   // Show skeleton calendar instantly
+   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+   const hoy=new Date();
+   const dias=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+   let primerDia=new Date(hoy.getFullYear(),hoy.getMonth(),1).getDay();
+   primerDia=primerDia===0?6:primerDia-1;
+   const totalDias=new Date(hoy.getFullYear(),hoy.getMonth()+1,0).getDate();
+   let cells='';
+   for(let i=0;i<primerDia;i++)cells+='<div class="cal-dia vacio"><div class="cal-dia-num">·</div></div>';
+   for(let d=1;d<=totalDias;d++){
+     const esHoy=d===hoy.getDate();
+     cells+=`<div class="cal-dia ${esHoy?'hoy':''}"><div class="cal-dia-num">${d}</div></div>`;
+   }
+   document.getElementById('calendarWrap').innerHTML=`<div class="cal-wrap"><div class="cal-header"><button class="cal-nav" onclick="cambiarMes(-1)">‹</button><div class="cal-mes">${meses[hoy.getMonth()]} ${hoy.getFullYear()}</div><button class="cal-nav" onclick="cambiarMes(1)">›</button></div><div class="cal-dias-semana">${dias.map(d=>`<div class="cal-dia-lbl">${d}</div>`).join('')}</div><div class="cal-grid">${cells}</div></div>`;
+   document.getElementById('citasLista').innerHTML='<div style="text-align:center;padding:16px"><div class="spinner"></div></div>';
+ }
  document.getElementById('navHoy').classList.toggle('active',section==='hoy');
  document.getElementById('navProgreso').classList.toggle('active',section==='progreso');
  document.getElementById('navInformes').classList.toggle('active',section==='informes');
