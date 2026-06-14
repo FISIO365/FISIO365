@@ -18,13 +18,11 @@ export default async function handler(req) {
   const patientId = url.searchParams.get('patientId') || '';
 
   try {
-    const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','fldJM6ZCclnLBsKxp'];
+    const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','PacienteId'];
     const fp = fields.map(f=>`fields[]=${encodeURIComponent(f)}`).join('&');
     const sortQ = 'sort[0][field]=FECHA&sort[0][direction]=asc';
-
-    // Filter directly in Airtable by PacienteId formula field — fast!
     const formula = patientId
-      ? encodeURIComponent(`AND({fldJM6ZCclnLBsKxp}="${patientId}",OR({ESTADO}="PENDIENTE ",{ESTADO}="REALIZADA"))`)
+      ? encodeURIComponent(`{PacienteId}="${patientId}"`)
       : '';
     const filterQ = formula ? `&filterByFormula=${formula}` : '';
 
@@ -35,24 +33,29 @@ export default async function handler(req) {
     const data = await r.json();
     if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: corsHeaders });
 
-    const citas = (data.records || []).map(rec => ({
-      id: rec.id,
-      fecha: rec.fields['FECHA'] || '',
-      hora: rec.fields['HORA'] || '',
-      estado: rec.fields['ESTADO'] || '',
-      fisio: (() => {
-        const v = rec.fields['PREF.'];
-        if(!v) return '';
-        if(Array.isArray(v)) return v.filter(x=>!String(x).startsWith('rec')).join(', ');
-        return String(v).startsWith('rec') ? '' : String(v);
-      })(),
-      tipo: (() => {
-        const v = rec.fields['TIPO DE CITA'];
-        if(!v) return '';
-        if(Array.isArray(v)) return v.filter(x=>!String(x).startsWith('rec')).join(', ');
-        return String(v).startsWith('rec') ? '' : String(v);
-      })()
-    }));
+    const citas = (data.records || [])
+      .filter(rec => {
+        const e = (rec.fields['ESTADO'] || '').trim().toUpperCase();
+        return e.includes('PENDIENTE') || e.includes('REALIZADA');
+      })
+      .map(rec => ({
+        id: rec.id,
+        fecha: rec.fields['FECHA'] || '',
+        hora: rec.fields['HORA'] || '',
+        estado: rec.fields['ESTADO'] || '',
+        fisio: (() => {
+          const v = rec.fields['PREF.'];
+          if(!v) return '';
+          if(Array.isArray(v)) return v.filter(x=>!String(x).startsWith('rec')).join(', ');
+          return String(v).startsWith('rec') ? '' : String(v);
+        })(),
+        tipo: (() => {
+          const v = rec.fields['TIPO DE CITA'];
+          if(!v) return '';
+          if(Array.isArray(v)) return v.filter(x=>!String(x).startsWith('rec')).join(', ');
+          return String(v).startsWith('rec') ? '' : String(v);
+        })()
+      }));
 
     return new Response(JSON.stringify({ ok: true, citas }), { headers: corsHeaders });
 
