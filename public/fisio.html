@@ -734,7 +734,7 @@ function renderPacLista(q, lista){
  const opciones=[
  {key:'programa', label:'Programa'},
  {key:'informes', label:'Informes'},
- {key:'racha', label:'🔥 Racha'},
+ {key:'racha', label:'Racha'},
  {key:'diario', label:'Comunicaciones'},
  {key:'pin', label:'Nombre y contraseña'},
  ];
@@ -3782,48 +3782,134 @@ function fpSwitch(tab){
 }
 
 async function fpTabPrograma(pacId, body){
+ body.innerHTML='<div style="text-align:center;padding:2rem"><div style="width:24px;height:24px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
  try{
- const r=await fetch(`/api/programa?pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
- const d=await r.json();
- if(!d.ok||!d.ejercicios||!d.ejercicios.length){
- body.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Sin programa asignado</div>';return;
- }
- body.innerHTML='';
- if(d.mensaje){
- const m=ce('div','');
- m.style.cssText='background:var(--lila-light);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--lila);margin-bottom:12px';
- m.textContent=' '+d.mensaje;
- body.appendChild(m);
- }
- // Estado de ejercicios hoy
- const TODAY=new Date().toISOString().split('T')[0];
- try{
- const rEj=await fetch(`/api/schedule?patientId=${encodeURIComponent(pacId)}`);
- const dEj=await rEj.json();
- const ultimaSession=dEj.ultimaSession;
- const ejTotal=dEj.ejercicios?.length||0;
- if(ejTotal>0){
- const badge=ce('div','');
- const hecho=ultimaSession===TODAY;
- badge.style.cssText=`display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px;font-weight:600;background:${hecho?'#e8f5e9':'#fff9e6'};color:${hecho?'#2e7d32':'#b45309'}`;
- badge.innerHTML=`<span style="font-size:16px">${hecho?'🟢':'🟡'}</span>${hecho?'Ha completado los ejercicios hoy':'Ejercicios pendientes hoy'}`;
- body.insertBefore(badge,body.firstChild);
- }
- }catch(e){}
+   // Cargar programa actual
+   const r=await fetch(`/api/programa?pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
+   const d=await r.json();
+   body.innerHTML='';
 
- d.ejercicios.forEach((ej,i)=>{
- const c=ce('div','');
- c.style.cssText='background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px';
- c.innerHTML=`<div style="font-size:14px;font-weight:700;margin-bottom:4px">${i+1}. ${ej.nombre||'—'}</div>
- <div style="font-size:12px;color:var(--muted)">${ej.zona||''}</div>
- <div style="display:flex;gap:10px;margin-top:6px;font-size:12px;font-weight:600;color:var(--lila)">
- ${ej.series?`<span>${ej.series} series</span>`:''}
- ${ej.reps?`<span>${ej.reps} reps</span>`:''}
- ${ej.duracion?`<span>${ej.duracion}s</span>`:''}
- ${ej.descanso?`<span>${ej.descanso}s descanso</span>`:''}
- </div>`;
- body.appendChild(c);
- });
+   // — Selector de fisio —
+   const fc=ce('div','card');
+   fc.style.marginBottom='10px';
+   fc.innerHTML=`<div class="ct" style="margin-bottom:10px">Fisio que asigna</div>
+   <div class="field" style="margin:0"><label>Seleccionar fisio</label>
+   <select id="fpFisioSel" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--font)">
+   <option value="">Seleccionar fisio...</option>
+   ${fisios.map(f=>`<option value="${f.id}">${f.nombre}${f.colegiado?' — Nº '+f.colegiado:''}</option>`).join('')}
+   </select></div>`;
+   body.appendChild(fc);
+
+   // — Lista de ejercicios —
+   let fpEjC=0;
+   const ec=ce('div','card');
+   ec.style.marginBottom='10px';
+   ec.innerHTML=`<div class="ct" style="margin-bottom:10px">Ejercicios</div><div id="fpEjLista"></div>`;
+
+   function fpAddEj(ej){
+     fpEjC++;const n=fpEjC;
+     const lista=document.getElementById('fpEjLista');
+     const div=ce('div','ejc');div.id=`fpej${n}`;
+     const nomVal=ej?(ej.nombre||'').replace(/"/g,'&quot;'):'';
+     const hasVal=ej&&ej.nombre?'has-val':'';
+     div.innerHTML=`<div class="ejh"><span class="ejn">Ejercicio ${n}</span><button class="bdel" onclick="this.closest('.ejc').remove()">×</button></div>
+     <div class="field"><label>Ejercicio</label>
+     <div class="ej-ac-wrap" id="fpacwrap${n}">
+     <input type="text" class="ej-ac-input ${hasVal}" id="fpebusca${n}" placeholder="Escribe para buscar..." autocomplete="off"
+       oninput="fpAcFilter(${n})" onfocus="fpAcOpen(${n})" onblur="fpAcBlur(${n})" value="${nomVal}">
+     <div class="ej-ac-drop" id="fpacdrop${n}"></div>
+     <input type="hidden" id="fpesel${n}" value="${ej?(biblio.find(e=>e.nombre===ej.nombre)?.id||'__loaded__'):''}">
+     </div></div>
+     <div class="g3">
+     <div class="field"><label>Series</label><input type="number" id="fpes${n}" value="${ej?.series||3}" min="1"></div>
+     <div class="field"><label>Reps</label><input type="number" id="fper${n}" value="${ej?.reps||10}" min="0"></div>
+     <div class="field"><label>Duración (s)</label><input type="number" id="fped${n}" value="${ej?.duracion||0}" min="0"></div>
+     </div>
+     <div class="g2">
+     <div class="field"><label>Descanso (s)</label><input type="number" id="fpedes${n}" value="${ej?.descanso||30}" min="0"></div>
+     <div class="field"><label>Zona</label><input type="text" id="fpez${n}" value="${(ej?.zona||'').replace(/"/g,'&quot;')}" placeholder="Lumbar, Rodilla..."></div>
+     </div>
+     <div class="field"><label>Indicaciones</label><input type="text" id="fpedesc${n}" value="${(ej?.descripcion||'').replace(/"/g,'&quot;')}" placeholder="Mantén la espalda recta..."></div>`;
+     lista.appendChild(div);
+   }
+
+   // Autocomplete para fpTab
+   window.fpAcFilter=function(n){
+     const q=document.getElementById(`fpebusca${n}`).value.trim().toLowerCase();
+     const drop=document.getElementById(`fpacdrop${n}`);
+     const results=biblio.filter(e=>!q||e.nombre.toLowerCase().includes(q)).slice(0,20);
+     drop.innerHTML=results.map(e=>`<div class="ej-ac-item" data-id="${e.id}" data-nom="${(e.nombre||'').replace(/"/g,'&quot;')}" data-zona="${(e.zona||'').replace(/"/g,'&quot;')}">${e.nombre||'—'}<span style="color:#bbb;font-size:11px;margin-left:6px">${e.zona||''}</span></div>`).join('');
+     drop.classList.add('open');
+     drop.querySelectorAll('.ej-ac-item').forEach(it=>it.addEventListener('mousedown',e=>{
+       e.preventDefault();
+       document.getElementById(`fpebusca${n}`).value=it.dataset.nom;
+       document.getElementById(`fpesel${n}`).value=it.dataset.id;
+       document.getElementById(`fpez${n}`).value=it.dataset.zona||'';
+       drop.classList.remove('open');
+     }));
+   };
+   window.fpAcOpen=function(n){fpAcFilter(n);};
+   window.fpAcBlur=function(n){setTimeout(()=>document.getElementById(`fpacdrop${n}`)?.classList.remove('open'),150);};
+
+   // Cargar ejercicios existentes
+   if(d.ok&&d.ejercicios&&d.ejercicios.length){
+     d.ejercicios.forEach(ej=>fpAddEj(ej));
+     if(d.mensaje){document.getElementById('fpMensaje')&&(document.getElementById('fpMensaje').value=d.mensaje);}
+   }
+
+   const addBtn=ce('button','btn-o');addBtn.textContent='+ Añadir ejercicio';addBtn.style.marginTop='8px';
+   addBtn.onclick=()=>fpAddEj(null);
+   ec.appendChild(addBtn);
+   body.appendChild(ec);
+
+   // — Mensaje —
+   const mc=ce('div','card');mc.style.marginBottom='10px';
+   mc.innerHTML=`<div class="ct" style="margin-bottom:10px">Mensaje para el paciente</div>
+   <div class="field" style="margin:0"><textarea id="fpMensaje" rows="2" placeholder="Ej: ¡Vas muy bien! Recuerda mantener la espalda recta..." style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--font);resize:vertical">${d.mensaje||''}</textarea></div>`;
+   body.appendChild(mc);
+
+   // Cargar mensaje si había
+   if(d.mensaje){const tm=document.getElementById('fpMensaje');if(tm)tm.value=d.mensaje;}
+
+   // — Botón guardar —
+   const saveBtn=ce('button','btn btn-g');
+   saveBtn.textContent='Guardar programa';
+   saveBtn.style.width='100%';
+   saveBtn.onclick=async()=>{
+     const fisioId=document.getElementById('fpFisioSel').value;
+     if(!fisioId){toast('Selecciona el fisio que asigna',false);return;}
+     const ejDivs=[...document.getElementById('fpEjLista').querySelectorAll('.ejc')];
+     const ejs=ejDivs.map((div,i)=>{
+       const n=div.id.replace('fpej','');
+       return {
+         nombre:document.getElementById(`fpebusca${n}`)?.value?.trim()||'',
+         series:parseInt(document.getElementById(`fpes${n}`)?.value)||3,
+         reps:parseInt(document.getElementById(`fper${n}`)?.value)||0,
+         duracion:parseInt(document.getElementById(`fped${n}`)?.value)||0,
+         descanso:parseInt(document.getElementById(`fpedes${n}`)?.value)||30,
+         zona:document.getElementById(`fpez${n}`)?.value?.trim()||'',
+         descripcion:document.getElementById(`fpedesc${n}`)?.value?.trim()||''
+       };
+     }).filter(e=>e.nombre);
+     if(!ejs.length){toast('Añade al menos un ejercicio',false);return;}
+     const fisioObj=fisios.find(f=>f.id===fisioId)||{};
+     const pacNom=document.querySelector('#pacSelBox')?.textContent||'';
+     saveBtn.disabled=true;saveBtn.textContent='Guardando...';
+     try{
+       const rr=await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({pwd:apiPwd,pacienteId:pacId,pacienteNombre:pacNom,fisioId:fisioId,
+           ejercicios:ejs,mensajeFisio:document.getElementById('fpMensaje')?.value?.trim()||''})});
+       const dd=await rr.json();
+       if(dd.ok){
+         toast(`Programa guardado: ${dd.creados} ejercicios`,true);
+         notificarPaciente(pacId,`Nuevo programa de ${fisioObj.nombre||'tu fisio'}`,`Te han asignado ${dd.creados} ejercicio${dd.creados!==1?'s':''} nuevos.`);
+         crearNotificacion(pacId,`Nuevo programa de ${fisioObj.nombre||'tu fisio'}`,`${dd.creados} ejercicio${dd.creados!==1?'s':''} nuevos asignados`,'programa');
+       } else toast(dd.error||'Error al guardar',false);
+     }catch(e){toast('Error de conexión',false);}
+     saveBtn.disabled=false;saveBtn.textContent='Guardar programa';
+   };
+   body.appendChild(saveBtn);
+
  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar</div>';}
 }
 
