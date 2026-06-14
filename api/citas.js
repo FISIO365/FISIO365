@@ -18,25 +18,35 @@ export default async function handler(req) {
   const patientId = url.searchParams.get('patientId') || '';
 
   try {
-    const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','PacienteId'];
+    const fields = ['FECHA','HORA','ESTADO','PREF.','TIPO DE CITA','RELACIÓN - CITA'];
     const fp = fields.map(f=>`fields[]=${encodeURIComponent(f)}`).join('&');
     const sortQ = 'sort[0][field]=FECHA&sort[0][direction]=asc';
-    const formula = patientId
-      ? encodeURIComponent(`{PacienteId}="${patientId}"`)
-      : '';
-    const filterQ = formula ? `&filterByFormula=${formula}` : '';
 
-    const r = await fetch(
-      `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}${filterQ}&pageSize=100`,
-      { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
-    );
-    const data = await r.json();
-    if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: corsHeaders });
+    // Load all records and filter in JS — filterByFormula unreliable for linked records
+    let allRecords = [], offset = null;
+    do {
+      const offsetQ = offset ? `&offset=${offset}` : '';
+      const r = await fetch(
+        `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}&pageSize=100${offsetQ}`,
+        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+      );
+      const data = await r.json();
+      if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message }), { headers: corsHeaders });
+      allRecords = allRecords.concat(data.records || []);
+      offset = data.offset;
+    } while(offset);
 
-    const citas = (data.records || [])
+    const pacienteCitas = patientId
+      ? allRecords.filter(rec => {
+          const rel = rec.fields['RELACIÓN - CITA'];
+          return Array.isArray(rel) && rel.includes(patientId);
+        })
+      : allRecords;
+
+    const citas = pacienteCitas
       .filter(rec => {
-        const e = (rec.fields['ESTADO'] || '').trim().toUpperCase();
-        return e.includes('PENDIENTE') || e.includes('REALIZADA');
+        const e = (rec.fields['ESTADO'] || '').trim().toLowerCase();
+        return e === 'pendiente' || e === 'realizada';
       })
       .map(rec => ({
         id: rec.id,
