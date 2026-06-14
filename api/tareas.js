@@ -55,7 +55,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({ records: [{ fields: {
           [F_PAC_ID]:  pacienteId || '',
           [F_PAC_NOM]: (pacienteNombre || '').toUpperCase(),
-          [F_FECHA]:   fecha || new Date().toLocaleDateString('es-ES'),
+          [F_FECHA]:   fecha || new Date().toISOString().split('T')[0],
           [F_NOTA]:    nota || ''
         }}]})
       });
