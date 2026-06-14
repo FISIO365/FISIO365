@@ -1411,6 +1411,7 @@ async function loadAdherencia(containerId){
  try{
    const r=await fetch(`/api/tareas?pacienteId=${encodeURIComponent(patient.id)}`);
    const data=await r.json();
+   console.log('tareas API response:', JSON.stringify(data).slice(0,200));
    const tareas=data.tareas||[];
    // Dates stored as YYYY-MM-DD
    const diasHechos=new Set(tareas.map(t=>t.fecha));
@@ -1440,7 +1441,7 @@ async function loadAdherencia(containerId){
        <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(0,0,0,0.05);"></div>Sin datos</div>
      </div>
    </div>`;
- }catch(e){console.error('adherencia error',e);el.innerHTML='';}
+ }catch(e){console.error('adherencia error',e);el.innerHTML='<div style="color:red;font-size:11px;">Error: '+e.message+'</div>';}
 }
 
 function toggleNotaFisio(){
