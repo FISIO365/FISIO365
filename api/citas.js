@@ -23,11 +23,13 @@ export default async function handler(req) {
     const sortQ = 'sort[0][field]=FECHA&sort[0][direction]=asc';
 
     // Load all records and filter in JS — filterByFormula unreliable for linked records
+    // Pre-filter server-side to reduce records downloaded
+    const estadoFilter = encodeURIComponent('OR({ESTADO}="PENDIENTE ",{ESTADO}="REALIZADA")');
     let allRecords = [], offset = null;
     do {
       const offsetQ = offset ? `&offset=${offset}` : '';
       const r = await fetch(
-        `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}&pageSize=100${offsetQ}`,
+        `https://api.airtable.com/v0/${BASE_ID}/${CITAS_TABLE}?${fp}&${sortQ}&filterByFormula=${estadoFilter}&pageSize=100${offsetQ}`,
         { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
       );
       const data = await r.json();
