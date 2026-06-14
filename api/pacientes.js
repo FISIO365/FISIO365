@@ -160,15 +160,15 @@ export default async function handler(req) {
       let allRecords = [], offset = null;
       do {
         const off = offset ? '&offset='+offset : '';
-        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TAREAS_TABLE}?fields[]=fld9vav48MeCYpZXA&fields[]=fldZsAjUSEegQk8Xq&pageSize=100${off}`,
+        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TAREAS_TABLE}?fields[]=PacienteId&fields[]=Fecha&pageSize=100${off}`,
           { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
         const d = await r.json();
         allRecords = allRecords.concat(d.records || []);
         offset = d.offset || null;
       } while(offset);
       let tareas = allRecords.map(rec => ({
-        pacienteId: rec.fields['fld9vav48MeCYpZXA'] || '',
-        fecha: rec.fields['fldZsAjUSEegQk8Xq'] || ''
+        pacienteId: rec.fields['PacienteId'] || '',
+        fecha: rec.fields['Fecha'] || ''
       }));
       if (pacId) tareas = tareas.filter(t => t.pacienteId === pacId);
       return new Response(JSON.stringify({ ok: true, tareas }), { headers: corsHeaders });
