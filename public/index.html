@@ -717,12 +717,7 @@ function modalRespuestaNo(){
  const btn=document.getElementById('btnDiario');
  btn.disabled=true;btn.textContent='Guardando...';
  // Save to TAREAS table only — not to MENSAJES
- fetch('/api/tareas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-   pacienteId:patient.id,
-   pacienteNombre:patient.nombre,
-   fecha:TODAY,
-   nota:''
- })})
+ fetch('/api/tareas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pacienteId:patient.id,pacienteNombre:patient.nombre,fecha:TODAY,nota:''})})
  .then(()=>{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();})
  .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
 }
@@ -732,12 +727,7 @@ function guardarSoloConNota(){
  cerrarModal();
  const btn=document.getElementById('btnDiario');
  btn.disabled=true;btn.textContent='Guardando...';
- fetch('/api/tareas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-   pacienteId:patient.id,
-   pacienteNombre:patient.nombre,
-   fecha:TODAY,
-   nota:nota
- })})
+ fetch('/api/tareas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pacienteId:patient.id,pacienteNombre:patient.nombre,fecha:TODAY,nota:nota})})
  .then(()=>{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();})
  .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
 }
@@ -1422,28 +1412,35 @@ async function loadAdherencia(containerId){
    const r=await fetch(`/api/tareas?pacienteId=${encodeURIComponent(patient.id)}`);
    const data=await r.json();
    const tareas=data.tareas||[];
+   // Dates stored as YYYY-MM-DD
    const diasHechos=new Set(tareas.map(t=>t.fecha));
-   // Show last 30 days
    const hoy=new Date();
-   const dias=[];
-   for(let i=29;i>=0;i--){
-     const d=new Date(hoy);d.setDate(hoy.getDate()-i);
-     const fechaStr=`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+   const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+   const dias=['L','M','X','J','V','S','D'];
+   // Build 5 weeks grid
+   let rows=[];
+   for(let i=27;i>=0;i--){
+     const d=new Date(hoy);
+     d.setDate(hoy.getDate()-i);
+     const key=d.toISOString().split('T')[0];
      const esHoy=i===0;
-     dias.push({fecha:fechaStr,hecho:diasHechos.has(fechaStr),esHoy});
+     rows.push({key,dia:d.getDate(),mes:d.getMonth(),hecho:diasHechos.has(key),esHoy,diaSem:d.getDay()});
    }
-   el.innerHTML=`
-     <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:16px;">
-       <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:12px;">Adherencia — últimos 30 días</div>
-       <div style="display:flex;flex-wrap:wrap;gap:4px;">
-         ${dias.map(d=>`<div title="${d.fecha}" style="width:24px;height:24px;border-radius:5px;background:${d.hecho?'#22c55e':d.esHoy?'rgba(0,0,0,0.06)':'rgba(0,0,0,0.06)'};border:${d.esHoy?'2px solid #111':'none'};cursor:default;" title="${d.fecha}"></div>`).join('')}
-       </div>
-       <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;color:#888;">
-         <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:#22c55e;"></div>Hecho</div>
-         <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(0,0,0,0.06);"></div>Sin datos</div>
-       </div>
-     </div>`;
- }catch(e){el.innerHTML='';}
+   el.innerHTML=`<div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:16px;">
+     <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px;">Adherencia</div>
+     <div style="font-size:11px;color:#aaa;margin-bottom:12px;">Últimas 4 semanas</div>
+     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">
+       ${dias.map(d=>`<div style="font-size:9px;font-weight:600;color:#ccc;text-align:center;">${d}</div>`).join('')}
+     </div>
+     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">
+       ${rows.map(d=>`<div style="aspect-ratio:1;border-radius:5px;background:${d.hecho?'#22c55e':'rgba(0,0,0,0.05)'};border:${d.esHoy?'2px solid #111':'none'};display:flex;align-items:center;justify-content:center;font-size:9px;color:${d.hecho?'white':'#aaa'};font-weight:600;" title="${d.key}">${d.dia}</div>`).join('')}
+     </div>
+     <div style="display:flex;gap:12px;margin-top:12px;font-size:11px;color:#888;">
+       <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:#22c55e;"></div>Hecho</div>
+       <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(0,0,0,0.05);"></div>Sin datos</div>
+     </div>
+   </div>`;
+ }catch(e){console.error('adherencia error',e);el.innerHTML='';}
 }
 
 function toggleNotaFisio(){
