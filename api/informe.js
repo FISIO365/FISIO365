@@ -16,7 +16,8 @@ export default async function handler(req) {
   const pwd = url.searchParams.get('pwd') || '';
   const pacienteId = url.searchParams.get('pacienteId') || '';
 
-  if (pwd.trim() !== (FISIO_PASSWORD || '').trim())
+  // For GET requests, pwd is optional (patient app calls without pwd)
+  if (req.method !== 'GET' && pwd.trim() !== (FISIO_PASSWORD || '').trim())
     return new Response(JSON.stringify({ ok: false, error: 'Auth' }), { status: 401, headers: cors });
 
   if (req.method === 'GET') {
@@ -54,6 +55,10 @@ export default async function handler(req) {
 
   if (req.method === 'POST') {
     const body = await req.json();
+    // Auth check for POST (pwd comes in body)
+    const postPwd = (body.pwd || '').trim();
+    if (postPwd && postPwd !== (FISIO_PASSWORD || '').trim())
+      return new Response(JSON.stringify({ ok: false, error: 'Auth' }), { status: 401, headers: cors });
     const { pacienteId: pid, pacienteNombre, fisioNombre, fecha, informe, protocolo } = body;
     const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`, {
       method: 'POST',
