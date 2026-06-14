@@ -823,20 +823,24 @@ let calMesActual = new Date();
 let diaSeleccionado = null;
 
 async function initCitas(){
- const wrap = document.getElementById('calendarWrap');
- const lista = document.getElementById('citasLista');
- wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
- lista.innerHTML = '';
- document.getElementById('citaDetalle').innerHTML = '';
- try{
- const res = await fetch(`/api/citas?patientId=${encodeURIComponent(patient.id)}`);
- const data = await res.json();
- citasData = data.citas || [];
- calMesActual = new Date();
+ const wrap=document.getElementById('calendarWrap');
+ const lista=document.getElementById('citasLista');
+ document.getElementById('citaDetalle').innerHTML='';
+ calMesActual=new Date();
+
+ // Mostrar calendario vacío inmediatamente con spinner
+ citasData=[];
  renderCalendario();
- renderProximasCitas();
+ lista.innerHTML='<div style="text-align:center;padding:20px;"><div class="spinner"></div><div style="font-size:12px;color:var(--muted);margin-top:10px;">Cargando citas...</div></div>';
+
+ try{
+   const res=await fetch(`/api/citas?patientId=${encodeURIComponent(patient.id)}`);
+   const data=await res.json();
+   citasData=data.citas||[];
+   renderCalendario();
+   renderProximasCitas();
  }catch(e){
- wrap.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';
+   lista.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';
  }
 }
 
@@ -1351,6 +1355,7 @@ function cerrarSesion(){
  localStorage.removeItem('fisio365_patient');
  patient=null;
  window._informesPac=[];
+ try{Object.keys(localStorage).forEach(k=>{if(k.startsWith('fisio365_citas_'))localStorage.removeItem(k);});}catch(e){}
  document.getElementById('appScreen').style.display='none';
  document.getElementById('hamburgerBtn').style.display='none';
  document.getElementById('cerrarBtn').style.display='none';
