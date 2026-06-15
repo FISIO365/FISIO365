@@ -74,8 +74,8 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 12px; margin-top: 24px; }
 
 /* EJERCICIOS */
-.ej-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
-@media(min-width:600px){ .ej-grid { grid-template-columns: repeat(3,1fr); } }
+.ej-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media(min-width:600px){ .ej-grid { grid-template-columns: repeat(2,1fr); } }
 .ej-card { background: var(--white); border-radius: 18px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); cursor: pointer; transition: transform .18s cubic-bezier(.4,0,.2,1), box-shadow .18s; position: relative; }
 .ej-card:active { transform: scale(0.96); }
 .ej-card.playing { transform: scale(1.03); box-shadow: 0 8px 32px rgba(0,0,0,0.13); z-index: 2; }
