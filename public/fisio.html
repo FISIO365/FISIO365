@@ -7,6 +7,7 @@
 <link rel="manifest" href="/manifest-fisio.json">
 <link rel="apple-touch-icon" href="/icono.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="FISIO365 Panel">
 <meta name="theme-color" content="#000000">
@@ -5873,7 +5874,7 @@ function renderFormacion(wrap, ruta){
  {t:'Desplazamiento de líquidos',sub:'Mecanismo antiinflamatorio · Push and Pull',
  cards:[
  {ti:'¿Por qué es clave?',icon:'',body:`Cuando hay una lesión, se acumulan <gl k="residuos-metabolicos">residuos metabólicos</gl>, <gl k="toxinas">toxinas</gl> y células muertas. Si no se <gl k="drenar">drena</gl>, la inflamación se <gl k="cronificar">cronifica</gl> y el dolor persiste. El desplazamiento de líquidos es el primer mecanismo que activa la bomba.`},
- {ti:'Cómo actúa la bomba',icon:'↔️',body:`El <gl k="campo-magnetico">campo magnético</gl> repele el agua <gl k="diamagnetico">diamagnética</gl> de los <gl k="tejidos">tejidos</gl> de forma <gl k="pulsado">pulsada</gl>. Esto genera un bombeo que drena el líquido inflamatorio y facilita la entrada de nutrientes y oxígeno.`},
+ {ti:'Cómo actúa la bomba',icon:'↔',body:`El <gl k="campo-magnetico">campo magnético</gl> repele el agua <gl k="diamagnetico">diamagnética</gl> de los <gl k="tejidos">tejidos</gl> de forma <gl k="pulsado">pulsada</gl>. Esto genera un bombeo que drena el líquido inflamatorio y facilita la entrada de nutrientes y oxígeno.`},
  {ti:'Efecto Push and Pull',icon:'',body:`Combinado con <gl k="diatermia">diatermia</gl>: la <gl k="diatermia">diatermia</gl> empuja sangre oxigenada (Push) mientras el impulso <gl k="diamagnetico">diamagnético</gl> expulsa los líquidos inflamatorios (Pull). Es el único dispositivo que consigue este doble efecto simultáneo.`},
  {ti:'Aplicaciones principales',icon:'',body:`Especialmente potente en <gl k="edema">edemas</gl> postraumáticos, <gl k="linfedema">linfedemas</gl>, <gl k="bursitis">bursitis</gl> y cualquier inflamación aguda o crónica. Los resultados en <gl k="edema">edemas</gl> son a veces visibles en una sola sesión.`}
  ],
@@ -6749,6 +6750,7 @@ function renderFormacion(wrap, ruta){
  }
  }
 
+}
 
 function showGuia(){
  if(!document.getElementById('guia-style')){
