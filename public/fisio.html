@@ -6579,6 +6579,8 @@ function renderFormacion(wrap, ruta){
  }
  resRef.el.innerHTML=`<div style="font-size:28px;font-weight:700;color:var(--lila)">${corr}/${m.qs.length}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">${Math.round((corr/m.qs.length)*100)}% de aciertos</div>`;
  }
+ // Si estamos en el último módulo, re-renderizar el botón de completado
+ if(curMod === MODS.length - 1) actualizarBtnCompletado();
  }
 
  m.qs.forEach((q,qi)=>{
@@ -6681,47 +6683,10 @@ function renderFormacion(wrap, ruta){
  const correctasActuales = respsActuales.filter((r,qi)=>r===modActual.qs[qi].ok).length;
  if(correctasActuales === modActual.qs.length) scoresEval[curMod].done = true;
 
- const todosDone = scoresEval.every(s=>s.done);
- const hayFallos = scoresEval.some((s,i)=>s.done && s.c < MODS[i].qs.length);
- const hayIncompletos = scoresEval.some(s=>!s.done);
-
- const progresoBtn=ce('button','wiki-completado-btn '+(yaHecho?'hecho':'pendiente'));
- progresoBtn.id='wikiProgresoBtn';
- progresoBtn.style.cssText='width:100%;box-sizing:border-box;margin-top:18px';
-
- const chipStyle='display:inline-block;margin-top:18px;padding:6px 14px;border-radius:99px;font-size:12px;font-weight:600;font-family:var(--font);border:none;cursor:default;';
-
- if(yaHecho){
- const fecha=progresoFisio[seccionKey]?.fecha||'';
- progresoBtn.innerHTML='✓ Completado'+(fecha?' · '+fecha:'');
- wrap.appendChild(progresoBtn);
- } else if(hayIncompletos){
- const chip=ce('div','');
- chip.style.cssText=chipStyle+'background:#FEF3F2;color:#9B1C1C;';
- chip.textContent='Responde todos los tests';
- wrap.appendChild(chip);
- } else if(hayFallos){
- const chip=ce('div','');
- chip.style.cssText=chipStyle+'background:#FDF2F8;color:#831843;';
- chip.textContent='Hay respuestas incorrectas';
- wrap.appendChild(chip);
-
- const btnRepetir=ce('button','wiki-completado-btn pendiente');
- btnRepetir.style.cssText='width:100%;box-sizing:border-box;margin-top:8px';
- btnRepetir.innerHTML='Repetir tests con fallos';
- btnRepetir.onclick=()=>{
- scores.forEach((s,i)=>{if(s.done && s.c < MODS[i].qs.length) scores[i]={c:0,done:false,qs:new Array(MODS[i].qs.length).fill(null)};});
- curMod=scores.findIndex(s=>!s.done);
- if(curMod<0)curMod=0;
- renderMod();
- wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);
- };
- wrap.appendChild(btnRepetir);
- } else {
- progresoBtn.innerHTML='Marcar como completado';
- progresoBtn.onclick=()=>marcarProgreso(seccionKey);
- wrap.appendChild(progresoBtn);
- }
+ const contenedorBtn = ce('div','');
+ contenedorBtn.id='wikiProgresoWrap';
+ wrap.appendChild(contenedorBtn);
+ actualizarBtnCompletado();
  }
  }
 
@@ -6733,8 +6698,49 @@ function renderFormacion(wrap, ruta){
  });
  }
 
+ function actualizarBtnCompletado(){
+ const contenedor = document.getElementById('wikiProgresoWrap');
+ if(!contenedor) return;
+ contenedor.innerHTML='';
+ const chipStyle='display:inline-block;margin-top:18px;padding:6px 14px;border-radius:99px;font-size:12px;font-weight:600;font-family:var(--font);border:none;cursor:default;';
+ const hayFallosNow = scores.some((s,i)=>s.done && s.c < MODS[i].qs.length);
+ const hayIncompletosNow = scores.some(s=>!s.done);
+ if(yaHecho){
+ const btn=ce('button','wiki-completado-btn hecho');
+ btn.style.cssText='width:100%;box-sizing:border-box;margin-top:18px';
+ const fecha=progresoFisio[seccionKey]?.fecha||'';
+ btn.innerHTML='✓ Completado'+(fecha?' · '+fecha:'');
+ contenedor.appendChild(btn);
+ } else if(hayIncompletosNow){
+ const chip=ce('div','');
+ chip.style.cssText=chipStyle+'background:#FEF3F2;color:#9B1C1C;';
+ chip.textContent='Responde todos los tests';
+ contenedor.appendChild(chip);
+ } else if(hayFallosNow){
+ const chip=ce('div','');
+ chip.style.cssText=chipStyle+'background:#FDF2F8;color:#831843;';
+ chip.textContent='Hay respuestas incorrectas';
+ contenedor.appendChild(chip);
+ const btnRepetir=ce('button','wiki-completado-btn pendiente');
+ btnRepetir.style.cssText='width:100%;box-sizing:border-box;margin-top:8px';
+ btnRepetir.innerHTML='Repetir tests con fallos';
+ btnRepetir.onclick=()=>{
+ scores.forEach((s,i)=>{if(s.done && s.c < MODS[i].qs.length) scores[i]={c:0,done:false,qs:new Array(MODS[i].qs.length).fill(null)};});
+ curMod=scores.findIndex(s=>!s.done);
+ if(curMod<0)curMod=0;
  renderMod();
-}
+ wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);
+ };
+ contenedor.appendChild(btnRepetir);
+ } else {
+ const progresoBtn=ce('button','wiki-completado-btn pendiente');
+ progresoBtn.id='wikiProgresoBtn';
+ progresoBtn.style.cssText='width:100%;box-sizing:border-box;margin-top:18px';
+ progresoBtn.innerHTML='Marcar como completado';
+ progresoBtn.onclick=()=>marcarProgreso(seccionKey);
+ contenedor.appendChild(progresoBtn);
+ }
+ }
 
 
 function showGuia(){
