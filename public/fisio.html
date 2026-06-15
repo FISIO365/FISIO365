@@ -6469,7 +6469,14 @@ function renderFormacion(wrap, ruta){
  const savedData = loadScoresFromLS();
  let curMod = savedData ? (savedData.curMod||0) : 0;
  let scores = savedData && savedData.scores
- ? MODS.map((_,i)=> savedData.scores[i] || {c:0,done:false,qs:new Array(MODS[i].qs.length).fill(null)})
+ ? MODS.map((_,i)=>{
+ const s = savedData.scores[i] || {c:0,done:false,qs:new Array(MODS[i].qs.length).fill(null)};
+ // Recalcular done basándose en las respuestas guardadas
+ const allAnswered = s.qs && s.qs.every(v=>v!==null);
+ const allCorrect = s.qs && s.qs.every((v,qi)=>v===MODS[i].qs[qi].ok);
+ const corr = s.qs ? s.qs.filter((v,qi)=>v===MODS[i].qs[qi].ok).length : 0;
+ return {c:corr, done:allAnswered&&allCorrect, qs:s.qs||new Array(MODS[i].qs.length).fill(null)};
+ })
  : new Array(MODS.length).fill(null).map((_,i)=>({c:0,done:false,qs:new Array(MODS[i].qs.length).fill(null)}));
 
  let ttEl=null;
