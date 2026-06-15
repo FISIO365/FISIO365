@@ -74,8 +74,8 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 12px; margin-top: 24px; }
 
 /* EJERCICIOS */
-.ej-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-@media(min-width:600px){ .ej-grid { grid-template-columns: repeat(2,1fr); } }
+.ej-grid { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 0 20px; }
+@media(min-width:600px){ .ej-grid { grid-template-columns: repeat(2,1fr); padding: 0; } }
 .ej-card { background: var(--white); border-radius: 18px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); cursor: pointer; transition: transform .18s cubic-bezier(.4,0,.2,1), box-shadow .18s; position: relative; }
 .ej-card:active { transform: scale(0.96); }
 .ej-card.playing { transform: scale(1.03); box-shadow: 0 8px 32px rgba(0,0,0,0.13); z-index: 2; }
@@ -86,9 +86,9 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .ej-play-ring { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; transition: transform .15s; }
 .ej-card:hover .ej-play-ring { transform: scale(1.1); }
 .ej-no-video { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #ede9f7; }
-.ej-body { padding: 12px 12px 16px; }
+.ej-body { padding: 14px 14px 20px; }
 .ej-nom { font-size: 13px; font-weight: 700; color: var(--black); line-height: 1.3; margin-bottom: 3px; }
-.ej-zona { font-size: 10px; color: #bbb; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+.ej-zona { font-size: 10px; color: #bbb; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
 .ej-pills { display: flex; flex-wrap: wrap; gap: 5px; }
 .pill-s { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: var(--black); color: var(--white); }
 .pill-r { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: #ede9f7; color: #7b6fd4; border: 0.5px solid #d5d0f0; }
@@ -394,11 +394,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  </div>
  <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
  <div id="diarioSection" style="display:none;">
- <div class="sec-title">Seguimiento diario</div>
- <div class="diario-card">
- <textarea id="diarioTxt" placeholder="Anota tus avances y sensaciones..."></textarea>
  <button class="btn-diario" id="btnDiario" onclick="abrirModalDiario()">Hecho</button>
- </div>
  </div>
  </div>
  <div id="vistaCompletado" style="display:none;">
@@ -711,9 +707,9 @@ function renderEjercicios(){
  return `<div class="ej-card" id="ec${i}" onclick="tapEj(${i})">
  <div class="ej-thumb" id="tw${i}">
  ${hasVid
- ?`<div style="width:100%;height:100%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21" fill="rgba(255,255,255,0.08)"/></svg></div>
- <div class="ej-thumb-num">${i+1}</div>
- <div class="ej-play-overlay"><div class="ej-play-ring"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21"/></svg></div></div>`
+ ?`<img src="https://img.youtube.com/vi/${ej.ytId}/mqdefault.jpg" alt="${ej.name}" style="width:100%;height:100%;object-fit:cover;display:block;">
+            <div class="ej-thumb-num">${i+1}</div>
+            <div class="ej-play-overlay"><div class="ej-play-ring"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21"/></svg></div></div>`
  :`<div class="ej-no-video"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>
  <div class="ej-thumb-num">${i+1}</div>`
  }
