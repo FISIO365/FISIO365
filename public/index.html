@@ -74,12 +74,12 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 12px; margin-top: 24px; }
 
 /* EJERCICIOS */
-.ej-grid { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 0 20px; }
+.ej-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media(min-width:600px){ .ej-grid { grid-template-columns: repeat(2,1fr); padding: 0; } }
 .ej-card { background: var(--white); border-radius: 18px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); cursor: pointer; transition: transform .18s cubic-bezier(.4,0,.2,1), box-shadow .18s; position: relative; }
 .ej-card:active { transform: scale(0.96); }
 .ej-card.playing { transform: scale(1.03); box-shadow: 0 8px 32px rgba(0,0,0,0.13); z-index: 2; }
-.ej-thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; background: #1a1a1a; }
+.ej-thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; background: #000; }
 .ej-thumb iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
 .ej-thumb-num { position: absolute; top: 8px; left: 9px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.75); background: rgba(0,0,0,0.28); padding: 2px 7px; border-radius: 99px; }
 .ej-play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
@@ -393,7 +393,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div class="prog-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
  </div>
  <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
- <div id="diarioSection" style="display:none;">
+ <div id="diarioSection" style="display:none;margin-top:32px;">
  <button class="btn-diario" id="btnDiario" onclick="abrirModalDiario()">Hecho</button>
  </div>
  </div>
@@ -704,12 +704,11 @@ function renderEjercicios(){
  ej.reps?`<span class="pill-r">${ej.reps} reps</span>`:null,
  (ej.dur||ej.duracion)?`<span class="pill-d">${ej.dur||ej.duracion}s</span>`:null
  ].filter(Boolean).join('');
- return `<div class="ej-card" id="ec${i}" onclick="tapEj(${i})">
+ return `<div class="ej-card" id="ec${i}">
  <div class="ej-thumb" id="tw${i}">
  ${hasVid
- ?`<img src="https://img.youtube.com/vi/${ej.ytId}/mqdefault.jpg" alt="${ej.name}" style="width:100%;height:100%;object-fit:cover;display:block;">
-            <div class="ej-thumb-num">${i+1}</div>
-            <div class="ej-play-overlay"><div class="ej-play-ring"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21"/></svg></div></div>`
+ ?`<iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:none;"></iframe>
+            <div class="ej-thumb-num">${i+1}</div>`
  :`<div class="ej-no-video"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>
  <div class="ej-thumb-num">${i+1}</div>`
  }
