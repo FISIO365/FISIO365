@@ -707,10 +707,9 @@ function renderEjercicios(){
  return `<div class="ej-card" id="ec${i}">
  <div class="ej-thumb" id="tw${i}">
  ${hasVid
- ?`<iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:none;"></iframe>
-            <div class="ej-thumb-num">${i+1}</div>`
+ ?`<iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:none;"></iframe>`
  :`<div class="ej-no-video"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>
- <div class="ej-thumb-num">${i+1}</div>`
+`
  }
  </div>
  <div class="ej-body">
