@@ -707,13 +707,9 @@ function renderEjercicios(){
  <div class="ej-pills">${pills}</div>
  </div>
  ${hasVid
- ?`<div class="ej-thumb" id="th${i}" onclick="tapEj(${i})">
- <img src="https://img.youtube.com/vi/${ej.ytId}/mqdefault.jpg" alt="${ej.name}">
- <div class="ej-play-overlay"><div class="ej-play-ring"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="6 3 20 12 6 21"/></svg></div></div>
- </div>`
- :`<div class="ej-no-video"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>`
- }
- </div>`;
+        ?`<div class="ej-thumb"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen></iframe></div>`
+        :`<div class="ej-no-video"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>`
+        };
  }).join('')+'</div>';
 }
 function tapEj(i){
