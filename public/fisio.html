@@ -6674,12 +6674,16 @@ function renderFormacion(wrap, ruta){
 
  // Botón marcar como completado — solo en el último módulo
  if(curMod === MODS.length - 1){
- const todosDone = scores.every(s=>s.done);
- const todosCorrecto = scores.every(s=>s.done && s.c === MODS[scores.indexOf(s)].qs.length);
+ // Forzar actualización del score del módulo actual antes de evaluar
+ const scoresEval = scores.map((s,i)=>({...s}));
+ const modActual = MODS[curMod];
+ const respsActuales = scoresEval[curMod].qs;
+ const correctasActuales = respsActuales.filter((r,qi)=>r===modActual.qs[qi].ok).length;
+ if(correctasActuales === modActual.qs.length) scoresEval[curMod].done = true;
 
- // Calcular si hay algún fallo (módulo completado con respuesta incorrecta)
- const hayFallos = scores.some((s,i)=>s.done && s.c < MODS[i].qs.length);
- const hayIncompletos = scores.some(s=>!s.done);
+ const todosDone = scoresEval.every(s=>s.done);
+ const hayFallos = scoresEval.some((s,i)=>s.done && s.c < MODS[i].qs.length);
+ const hayIncompletos = scoresEval.some(s=>!s.done);
 
  const progresoBtn=ce('button','wiki-completado-btn '+(yaHecho?'hecho':'pendiente'));
  progresoBtn.id='wikiProgresoBtn';
