@@ -723,3 +723,823 @@ function tapEj(i){
  th.onclick=null;
  th.innerHTML=`<iframe src="https://www.youtube.com/embed/${ej.ytId}?autoplay=1&rel=0&modestbranding=1" allowfullscreen allow="autoplay"></iframe>`;
 }
+
+
+
+// ── MODAL GUARDAR / ENVIAR ───────────────────────────────────────────────────
+function modalRespuestaNo(){
+ cerrarModal();
+ const btn=document.getElementById('btnDiario');
+ btn.disabled=true;btn.textContent='Guardando...';
+ // Save to TAREAS table only — not to MENSAJES
+ fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guardar-tarea',pacienteId:patient.id,pacienteNombre:patient.nombre,fecha:TODAY,nota:''})})
+ .then(()=>{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();})
+ .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
+}
+
+function guardarSoloConNota(){
+ const nota=document.getElementById('modalNota')?.value?.trim()||'';
+ cerrarModal();
+ const btn=document.getElementById('btnDiario');
+ btn.disabled=true;btn.textContent='Guardando...';
+ fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guardar-tarea',pacienteId:patient.id,pacienteNombre:patient.nombre,fecha:TODAY,nota:nota})})
+ .then(()=>{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();})
+ .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
+}
+
+async function modalRespuestaSi(){
+ document.getElementById('modalStep1').style.display='none';
+ document.getElementById('modalStep2').style.display='block';
+ const lista=document.getElementById('fisiosList');
+ if(fisiosCache){renderFisiosList(fisiosCache);return;}
+ lista.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+ try{
+   const res=await fetch('/api/fisios?action=lista-publica');
+   const data=await res.json();
+   fisiosCache=data.fisios||[];
+   renderFisiosList(fisiosCache);
+ }catch(e){lista.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Error al cargar fisios</div>';}
+}
+
+async function mostrarFisiosConNota(){
+ await modalRespuestaSi();
+}
+
+function abrirModalDiario(){
+ modalTipo='diario';
+ modalTexto='';
+ const nota=document.getElementById('modalNota');
+ if(nota) nota.value='';
+ document.getElementById('modalStep1').style.display='block';
+ document.getElementById('modalStep2').style.display='none';
+ document.getElementById('modalGuardar').style.display='flex';
+}
+
+function abrirModalDolor(texto){
+ modalTipo='dolor';
+ modalTexto=texto;
+ document.getElementById('modalSubtitle').textContent='¿Quieres que tu fisio sepa que tu dolor ha aumentado?';
+ document.getElementById('modalStep1').style.display='block';
+ document.getElementById('modalStep2').style.display='none';
+ document.getElementById('modalGuardar').style.display='flex';
+}
+
+function cerrarModal(){
+ document.getElementById('modalGuardar').style.display='none';
+ modalTipo=null;modalTexto='';
+}
+
+function volverStep1(){
+ document.getElementById('modalStep1').style.display='block';
+ document.getElementById('modalStep2').style.display='none';
+}
+
+async function guardarSolo(){
+ const _tipo=modalTipo; const _texto=modalTexto;
+ console.log('guardarSolo called', {_tipo, _texto});
+ cerrarModal();
+ if(_tipo==='diario'){
+ const btn=document.getElementById('btnDiario');
+ btn.disabled=true;btn.textContent='Guardando...';
+ try{
+ const textoGuardar=_texto||'Tarea hecha ✓';
+ await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:textoGuardar,enviarFisio:false})});
+ localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));
+ mostrarCompletado();
+ }catch(e){toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';}
+ } else if(_tipo==='dolor'){
+ try{
+ await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:`[Dolor aumentó] ${_texto}`,enviarFisio:false})});
+ toast('Guardado en tu diario ✓',true);
+ if(document.getElementById('vasMsgTxt'))document.getElementById('vasMsgTxt').value='';
+ }catch(e){toast('Error al guardar',false);}
+ }
+}
+
+async function mostrarFisios(){
+ document.getElementById('modalStep1').style.display='none';
+ document.getElementById('modalStep2').style.display='block';
+ const lista=document.getElementById('fisiosList');
+ if(fisiosCache){renderFisiosList(fisiosCache);return;}
+ lista.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+ try{
+ const res=await fetch('/api/fisios?action=lista-publica');
+ const data=await res.json();
+ fisiosCache=data.fisios||[];
+ renderFisiosList(fisiosCache);
+ }catch(e){lista.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Error al cargar fisios</div>';}
+}
+
+function renderFisiosList(fisios){
+ const lista=document.getElementById('fisiosList');
+ lista.innerHTML=fisios.filter(f=>f.role!=='recepcion').map(f=>{
+ const initials=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+ const av=f.foto?`<img src="${f.foto}" alt="${f.nombre}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<span>${initials}</span>`;
+ return `<div class="fisio-opt" onclick="enviarAFisio('${f.id}','${f.nombre.replace(/'/g,"\\'")}')">
+ <div class="fisio-opt-av">${av}</div>
+ <div class="fisio-opt-name">${f.nombre}</div>
+ </div>`;
+ }).join('');
+}
+
+async function enviarAFisio(fisioId, fisioNombre){
+ const _tipo=modalTipo;
+ const _texto=document.getElementById('modalNota')?.value?.trim()||modalTexto||'';
+ cerrarModal();
+ const prefijo = _tipo==='dolor' ? '[Dolor aumentó] ' : '';
+ const textoBase = _texto || (_tipo==='diario' ? 'Tarea hecha' : '');
+ const texto = prefijo + textoBase;
+ try{
+ if(_tipo==='diario'){
+ const btn=document.getElementById('btnDiario');
+ btn.disabled=true;btn.textContent='Enviando...';
+ await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
+ localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));
+ mostrarCompletado();
+ } else {
+ await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
+ toast(`Enviado a ${fisioNombre} ✓`,true);
+ if(document.getElementById('vasMsgTxt'))document.getElementById('vasMsgTxt').value='';
+ }
+ }catch(e){toast('Error al enviar',false);}
+}
+
+
+// ── CITAS ─────────────────────────────────────────────────────────────────────
+let citasData = [];
+let calMesActual = new Date();
+let diaSeleccionado = null;
+
+async function initCitas(){
+ const wrap=document.getElementById('calendarWrap');
+ const lista=document.getElementById('citasLista');
+ document.getElementById('citaDetalle').innerHTML='';
+ calMesActual=new Date();
+ citasData=[];
+
+ // Paint calendar immediately
+ renderCalendario();
+ lista.innerHTML='<div style="text-align:center;padding:16px"><div class="spinner"></div><div style="font-size:12px;color:var(--muted);margin-top:8px">Cargando citas...</div></div>';
+
+ // Let browser paint, then fetch
+ await new Promise(r=>setTimeout(r,0));
+
+ try{
+   const res=await fetch(`/api/citas?patientId=${encodeURIComponent(patient.id)}`);
+   const data=await res.json();
+   citasData=data.citas||[];
+   renderCalendario();
+   renderProximasCitas();
+ }catch(e){
+   lista.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';
+ }
+}
+
+function renderCalendario(){
+ const wrap = document.getElementById('calendarWrap');
+ const año = calMesActual.getFullYear();
+ const mes = calMesActual.getMonth();
+ const hoy = new Date();
+ const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+ const dias = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+
+ // Días con cita este mes
+ const diasConCita = new Set(citasData
+ .filter(c => {
+ const d = parseFecha(c.fecha);
+ return d && d.getFullYear()===año && d.getMonth()===mes;
+ })
+ .map(c => parseFecha(c.fecha).getDate())
+ );
+
+ // Primer día del mes (ajustado lunes=0)
+ let primerDia = new Date(año, mes, 1).getDay();
+ primerDia = primerDia === 0 ? 6 : primerDia - 1;
+ const totalDias = new Date(año, mes+1, 0).getDate();
+
+ let cells = '';
+ for(let i=0;i<primerDia;i++) cells += '<div class="cal-dia vacio"><div class="cal-dia-num">·</div></div>';
+ for(let d=1;d<=totalDias;d++){
+ const esHoy = hoy.getDate()===d && hoy.getMonth()===mes && hoy.getFullYear()===año;
+ const tieneCita = diasConCita.has(d);
+ const esSel = diaSeleccionado && diaSeleccionado.getDate()===d && diaSeleccionado.getMonth()===mes && diaSeleccionado.getFullYear()===año;
+ const clases = ['cal-dia', esHoy?'hoy':'', tieneCita?'tiene-cita':'', esSel?'seleccionado':''].filter(Boolean).join(' ');
+ cells += `<div class="${clases}" onclick="selDia(${año},${mes},${d})">
+ <div class="cal-dia-num">${d}</div>
+ ${tieneCita?'<div class="cal-dot"></div>':''}
+ </div>`;
+ }
+
+ wrap.innerHTML = `
+ <div class="cal-wrap">
+ <div class="cal-header">
+ <button class="cal-nav" onclick="cambiarMes(-1)">‹</button>
+ <div class="cal-mes">${meses[mes]} ${año}</div>
+ <button class="cal-nav" onclick="cambiarMes(1)">›</button>
+ </div>
+ <div class="cal-dias-semana">${dias.map(d=>`<div class="cal-dia-lbl">${d}</div>`).join('')}</div>
+ <div class="cal-grid">${cells}</div>
+ </div>`;
+}
+
+function cambiarMes(dir){
+ calMesActual.setMonth(calMesActual.getMonth()+dir);
+ renderCalendario();
+}
+
+function selDia(año, mes, dia){
+ diaSeleccionado = new Date(año, mes, dia);
+ renderCalendario();
+ const citasDia = citasData.filter(c => {
+ const d = parseFecha(c.fecha);
+ return d && d.getDate()===dia && d.getMonth()===mes && d.getFullYear()===año;
+ });
+ const det = document.getElementById('citaDetalle');
+ if(!citasDia.length){ det.innerHTML=''; return; }
+ const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+ const diasSem=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+ const fecha = new Date(año,mes,dia);
+ det.innerHTML = citasDia.map(c=>`
+ <div class="cita-detalle">
+ <div class="cita-detalle-fecha">${diasSem[fecha.getDay()]}, ${dia} de ${meses[mes]} de ${año}</div>
+ <div class="cita-detalle-hora">${c.hora||'--:--'}</div>
+ <div class="cita-detalle-fisio">Con ${c.fisio||'tu fisio'}</div>
+ ${badgeEstado(c.estado)}
+ ${c.tipo?`<div style="font-size:12px;color:var(--muted);margin-top:6px">${c.tipo}</div>`:''}
+ </div>`).join('');
+}
+
+function renderProximasCitas(){
+ const lista = document.getElementById('citasLista');
+ const hoy = new Date(); hoy.setHours(0,0,0,0);
+ const proximas = citasData
+ .filter(c=>{ const d=parseFecha(c.fecha); return d&&d>=hoy&&c.estado!=='CANCELADA'&&c.estado!=='REAGENDADA'; })
+ .sort((a,b)=>parseFecha(a.fecha)-parseFecha(b.fecha))
+ .slice(0,5);
+ const pasadas = citasData
+ .filter(c=>{ const d=parseFecha(c.fecha); return d&&d<hoy; })
+ .sort((a,b)=>parseFecha(b.fecha)-parseFecha(a.fecha))
+ .slice(0,3);
+
+ const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+ const mesesL=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+ const renderRow = c => {
+ const d = parseFecha(c.fecha);
+ if(!d) return '';
+ return `<div class="cita-row" onclick="selDia(${d.getFullYear()},${d.getMonth()},${d.getDate()});document.getElementById('calendarWrap').scrollIntoView({behavior:'smooth'})">
+ <div class="cita-row-fecha">
+ <div class="cita-row-dia">${d.getDate()}</div>
+ <div class="cita-row-mes">${meses[d.getMonth()]}</div>
+ </div>
+ <div class="cita-row-sep"></div>
+ <div class="cita-row-info">
+ <div class="cita-row-hora">${c.hora||'--:--'} · ${c.fisio||'Fisio'}</div>
+ <div class="cita-row-fisio">${c.tipo||''}</div>
+ </div>
+ ${badgeEstado(c.estado)}
+ </div>`;
+ };
+
+ let html = '';
+ if(proximas.length){
+ html += '<div class="sec-title" style="margin-top:8px">Próximas citas</div>';
+ html += proximas.map(renderRow).join('');
+ } else {
+ html += '<div class="empty" style="padding:2rem 1rem"><div class="empty-icon"></div><div class="empty-title">Sin citas próximas</div><div class="empty-desc">Cuando tu fisio programe una cita, aparecerá aquí.</div></div>';
+ }
+ if(pasadas.length){
+ html += '<div class="sec-title" style="margin-top:16px;color:var(--muted)">Historial reciente</div>';
+ html += pasadas.map(renderRow).join('');
+ }
+ lista.innerHTML = html;
+}
+
+function badgeEstado(estado){
+ if(!estado) return '';
+ const e = estado.trim().toUpperCase();
+ if(e.includes('PENDIENTE')) return '<span class="cita-estado pendiente">Pendiente</span>';
+ if(e.includes('REALIZADA')) return '<span class="cita-estado realizada">Realizada</span>';
+ if(e.includes('CANCELADA')) return '<span class="cita-estado cancelada">Cancelada</span>';
+ if(e.includes('REAGENDADA')) return '<span class="cita-estado reagendada">Reagendada</span>';
+ return `<span class="cita-estado realizada">${estado}</span>`;
+}
+
+function parseFecha(str){
+ if(!str) return null;
+ // DD/MM/YYYY
+ if(str.includes('/')){
+ const p=str.split('/');
+ if(p.length===3) return new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
+ }
+ // YYYY-MM-DD (Airtable format)
+ if(/^\d{4}-\d{2}-\d{2}/.test(str)){
+ const p=str.substring(0,10).split('-');
+ return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
+ }
+ const d=new Date(str);
+ return isNaN(d)?null:d;
+}
+
+// ── MENSAJES ─────────────────────────────────────────────────────────────────
+async function loadMensajes(tab){
+  const list=document.getElementById('msgList');
+  if(!list)return;
+
+  const tabActiva=tab||'recibidos';
+  list.innerHTML=`
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button onclick="loadMensajes('recibidos')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1px solid ${tabActiva==='recibidos'?'var(--black)':'rgba(0,0,0,0.12)'};background:${tabActiva==='recibidos'?'var(--black)':'none'};color:${tabActiva==='recibidos'?'var(--cream)':'var(--muted)'};cursor:pointer;">De mi fisio</button>
+      <button onclick="loadMensajes('enviados')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='enviados'?'var(--black)':'var(--border)'};background:${tabActiva==='enviados'?'var(--black)':'none'};color:${tabActiva==='enviados'?'var(--cream)':'var(--muted)'};cursor:pointer;">Enviados</button>
+      <button onclick="loadMensajes('nuevo')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='nuevo'?'var(--black)':'var(--border)'};background:${tabActiva==='nuevo'?'var(--black)':'none'};color:${tabActiva==='nuevo'?'var(--cream)':'var(--muted)'};cursor:pointer;">Nuevo</button>
+    </div>
+    <div id="msgListInner"><div class="loading"><div class="spinner"></div></div></div>`;
+
+  if(tabActiva==='nuevo'){
+    const inner=document.getElementById('msgListInner');
+    // Load fisios list
+    try{
+      const rf=await fetch('/api/fisios?action=lista-publica');
+      const df=await rf.json();
+      const fisios=(df.fisios||[]).filter(f=>f.nombre);
+      inner.innerHTML=`
+        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">¿A quién va dirigido?</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+          ${fisios.map(f=>`<button onclick="selFisioMsg('${f.id}','${f.nombre.replace(/'/g,"\\'")}',this)"
+            style="font-family:var(--font);font-size:13px;font-weight:600;padding:8px 14px;border-radius:99px;border:1.5px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;"
+            >${f.nombre}</button>`).join('')}
+        </div>
+        <input type="hidden" id="msgNuevoFisioId" value="">
+        <input type="hidden" id="msgNuevoFisioNombre" value="">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Mensaje</div>
+        <textarea id="msgNuevoTexto" placeholder="Escribe tu mensaje..." style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:100px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s;margin-bottom:12px;" onfocus="this.style.borderColor='var(--black)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <button onclick="enviarMsgNuevoPaciente(this)" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:12px;background:var(--black);color:var(--cream);border:none;border-radius:8px;cursor:pointer;">Enviar mensaje</button>`;
+    }catch(e){inner.innerHTML='<div class="empty"><div class="empty-icon">⚠</div><div class="empty-title">Error de conexión</div></div>';}
+    return;
+  }
+
+  try{
+    const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);
+    const data=await res.json();
+    const todos=data.mensajes||[];
+    const recibidos=todos.filter(m=>m.tipo==='fisio');
+    const enviados=todos.filter(m=>m.tipo!=='fisio');
+    const mensajes=tabActiva==='recibidos'?recibidos:enviados;
+
+    const inner=document.getElementById('msgListInner');
+    if(!inner)return;
+
+    if(!mensajes.length){
+      const emptyText=tabActiva==='recibidos'
+        ?'Cuando tu fisio te envíe un mensaje, aparecerá aquí.'
+        :'Cuando envíes algo a tu fisio, aparecerá aquí.';
+      inner.innerHTML=`<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin mensajes</div><div class="empty-desc">${emptyText}</div></div>`;
+      return;
+    }
+
+    if(tabActiva==='recibidos'){
+      inner.innerHTML=mensajes.map(m=>`
+        <div class="msg-card">
+          <div class="msg-card-header">
+            <span class="msg-fisio-badge">${m.fisioNombre||'Tu fisio'}</span>
+            <div class="msg-card-fecha">${m.fecha||''}</div>
+          </div>
+          <div class="msg-card-texto" style="white-space:pre-wrap">${formatMensaje(m.texto||'')}</div>
+          ${m.respuesta
+            ?`<div class="msg-reply"><div class="msg-reply-label">Tu respuesta</div><div class="msg-reply-texto" style="white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`
+            :`<div style="margin-top:10px;display:flex;gap:8px;">
+                <textarea id="preply_${m.id}" placeholder="Escribe tu respuesta..." style="flex:1;font-family:var(--font);font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:60px;outline:none;background:var(--cream);color:var(--black);" onfocus="this.style.borderColor='var(--black)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+                <button onclick="responderAlFisio('${m.id}','${(m.fisioId||'').replace(/'/g,"\\'")}',this)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:10px 12px;background:var(--black);color:var(--cream);border:none;border-radius:8px;cursor:pointer;flex-shrink:0;">Enviar</button>
+             </div>`
+          }
+        </div>`).join('');
+    } else {
+      inner.innerHTML=mensajes.map(m=>{
+        const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');
+        const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
+        const tipoHtml=esDolorAumento?'<span class="msg-tipo msg-tipo-dolor">Dolor</span>':'<span class="msg-tipo msg-tipo-diario">Diario</span>';
+        const replyHtml=m.respuesta
+          ?`<div class="msg-reply"><div class="msg-reply-label">Respuesta de ${m.fisioNombre||'tu fisio'}</div><div class="msg-reply-texto" style="white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`
+          :'<div class="msg-pending">Pendiente de respuesta</div>';
+        return `<div class="msg-card">
+          <div class="msg-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">${tipoHtml}<span class="msg-fisio-badge">→ ${m.fisioNombre||'Fisio'}</span></div>
+            <div class="msg-card-fecha">${m.fecha||''}</div>
+          </div>
+          <div class="msg-card-texto" style="white-space:pre-wrap">${formatMensaje(textoLimpio)}</div>
+          ${replyHtml}
+        </div>`;
+      }).join('');
+    }
+  }catch(e){
+    const inner=document.getElementById('msgListInner');
+    if(inner)inner.innerHTML='<div class="empty"><div class="empty-icon">⚠</div><div class="empty-title">Error de conexión</div></div>';
+  }
+}
+
+function selFisioMsg(id, nombre, btn){
+  document.getElementById('msgNuevoFisioId').value=id;
+  document.getElementById('msgNuevoFisioNombre').value=nombre;
+  btn.closest('div').querySelectorAll('button').forEach(b=>{
+    b.style.background='none';b.style.color='var(--muted)';b.style.borderColor='var(--border)';
+  });
+  btn.style.background='var(--black)';btn.style.color='var(--cream)';btn.style.borderColor='var(--black)';
+}
+
+async function enviarMsgNuevoPaciente(btn){
+  const fisioId=document.getElementById('msgNuevoFisioId')?.value||'';
+  const fisioNombre=document.getElementById('msgNuevoFisioNombre')?.value||'';
+  const texto=document.getElementById('msgNuevoTexto')?.value?.trim()||'';
+  if(!fisioId){toast('Selecciona un fisio',false);return;}
+  if(!texto){toast('Escribe un mensaje',false);return;}
+  btn.disabled=true;btn.textContent='Enviando...';
+  try{
+    const fecha=new Date().toLocaleDateString('es-ES');
+    await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
+    toast('Mensaje enviado ✓',true);
+    document.getElementById('msgNuevoTexto').value='';
+    document.getElementById('msgNuevoFisioId').value='';
+    document.getElementById('msgNuevoFisioNombre').value='';
+    setTimeout(()=>loadMensajes('enviados'),500);
+  }catch(e){toast('Error al enviar',false);}
+  btn.disabled=false;btn.textContent='Enviar mensaje';
+}
+
+async function responderAlFisio(mensajeId, fisioId, btn){
+  const ta=document.getElementById(`preply_${mensajeId}`);
+  const texto=ta?.value?.trim();
+  if(!texto){toast('Escribe una respuesta',false);return;}
+  btn.disabled=true;btn.textContent='...';
+  try{
+    const res=await fetch('/api/diario',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'responder-al-fisio',
+        mensajeId,
+        respuesta:texto,
+        pacienteId:patient.id
+      })
+    });
+    const d=await res.json();
+    if(d.ok){
+      toast('Respuesta enviada ✓',true);
+      loadMensajes('recibidos');
+    } else {
+      toast('Error al enviar',false);
+      btn.disabled=false;btn.textContent='Enviar';
+    }
+  }catch(e){toast('Error',false);btn.disabled=false;btn.textContent='Enviar';}
+}
+
+
+async function marcarRespuestasLeidas(){
+ if(!patient) return;
+ try{
+ await fetch(`/api/pacientes?action=marcar-respuesta-leida&pacienteId=${encodeURIComponent(patient.id)}`);
+ }catch(e){}
+}
+
+async function checkMensajesNoLeidos(){
+ try{
+ const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);
+ const data=await res.json();
+ const mensajes=data.mensajes||[];
+ const hayNovedad=mensajes.some(m=>(m.respuesta&&!m.respuestaLeida)||(m.tipo==='fisio'&&!m.respuestaLeida));
+ document.getElementById('navMensajesDot').classList.toggle('show',hayNovedad);
+ }catch(e){}
+}
+
+// ── TAREA HECHA ───────────────────────────────────────────────────────────────
+// Ahora usa modal — ver abrirModalDiario()
+
+// INFORMES PACIENTE
+async function loadInformes(){
+ const list=document.getElementById('infPacList');
+ if(!list)return;
+ list.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+ // Clear any cached content first
+ window._informesPac=[];
+ try{
+ const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);
+ const data=await res.json();
+ const informes=data.informes||[];
+ if(!informes.length){list.innerHTML='<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin informes todavía</div><div class="empty-desc">Cuando tu fisio genere un informe de tu valoración aparecerá aquí.</div></div>';return;}
+ const tipoLabel={rodilla:'Rodilla',hombro:'Hombro',cervical:'Cervical',codo:'Codo y antebrazo',muneca:'Muñeca y mano',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',hernia:'Columna lumbar',libre:'Valoración libre'};
+ list.innerHTML=informes.map((inf,i)=>`
+ <div class="inf-pac-card">
+ <div class="inf-pac-fecha">${inf.fecha}</div>
+ <div class="inf-pac-tipo">${tipoLabel[inf.tipo]||inf.tipo||'Valoración'}</div>
+ <div class="inf-pac-fisio">Fisioterapeuta: ${inf.fisioNombre}</div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;">
+ <button class="btn-inf" onclick="toggleInforme(${i})">Ver informe</button>
+ <button class="btn-inf pdf" onclick="imprimirInforme(${i})">Descargar PDF</button>
+ </div>
+ <div class="inf-pac-contenido" id="infCont${i}">${inf.contenido}</div>
+ </div>
+ `).join('');
+ window._informesPac=informes;
+ }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
+}
+
+function toggleInforme(i){const el=document.getElementById(`infCont${i}`);el.classList.toggle('open');const btns=el.previousElementSibling.querySelectorAll('.btn-inf');if(btns[0])btns[0].textContent=el.classList.contains('open')?'Ocultar informe':'Ver informe';}
+
+function imprimirInforme(i){
+ const inf=window._informesPac?.[i];if(!inf)return;
+ const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia Discal Lumbar',muneca:'Muñeca y mano',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',libre:'Valoración libre'};
+ const tipoLabel=tipos[inf.tipo]||inf.tipo||'Valoración Fisioterapéutica';
+ const fecha=inf.fecha||new Date().toLocaleDateString('es-ES');
+ const fisioNom=inf.fisioNombre||'';
+ const colNum='';
+ const _run=()=>_generarPDFPac(patient.nombre,inf.contenido,tipoLabel,fisioNom,colNum,fecha);
+ if(typeof window.jspdf!=='undefined'&&window.jspdf.jsPDF){_run();}else{const old=document.getElementById('jspdf-script');if(old)old.remove();const s=document.createElement('script');s.id='jspdf-script';s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=()=>{if(window.jspdf&&window.jspdf.jsPDF){_run();}else{toast('Error: librería PDF no disponible',false);}};s.onerror=()=>toast('Error al cargar librería PDF',false);document.head.appendChild(s);}
+}
+
+function _generarPDFPac(pacNom,informe,tipoLabel,fisioNom,colNum,fecha){
+ const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});const W=210,ml=18,mr=18,tw=W-ml-mr;let y=0;
+ const C={negro:[30,30,30],oscuro:[50,50,50],medio:[90,90,90],claro:[140,140,140],suave:[190,190,190],linea:[210,210,210]};
+ y=14;doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(...C.negro);doc.text('FISIO365',ml,y);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...C.medio);doc.text('FISIOTERAPIA AVANZADA · READAPTACIÓN FUNCIONAL',ml,y+5);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...C.oscuro);doc.text('INFORME DE VALORACIÓN',W-mr,y,{align:'right'});doc.setFontSize(7.5);doc.setTextColor(...C.medio);doc.text('Fecha: '+fecha,W-mr,y+5,{align:'right'});doc.text('Ref: INF-'+Date.now().toString().slice(-6),W-mr,y+10,{align:'right'});y+=16;doc.setDrawColor(...C.oscuro);doc.setLineWidth(0.6);doc.line(ml,y,W-mr,y);y+=1;doc.setDrawColor(...C.linea);doc.setLineWidth(0.2);doc.line(ml,y,W-mr,y);y+=8;
+ const bh=fisioNom?22:18;doc.setDrawColor(...C.suave);doc.setLineWidth(0.3);doc.rect(ml,y,tw,bh,'S');doc.line(ml+tw/2,y,ml+tw/2,y+bh);doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...C.claro);doc.text('PACIENTE',ml+4,y+5);doc.text('TIPO DE VALORACIÓN',ml+tw/2+4,y+5);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...C.negro);doc.text(pacNom,ml+4,y+12);doc.setFontSize(9.5);doc.text(tipoLabel,ml+tw/2+4,y+12);if(fisioNom){doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...C.medio);doc.text('Fisioterapeuta: '+fisioNom+(colNum?' · '+colNum:''),ml+4,y+18);}y+=bh+8;
+ doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...C.medio);doc.text(('VALORACIÓN FISIOTERAPÉUTICA — '+tipoLabel).toUpperCase(),ml,y);y+=7;doc.setDrawColor(...C.linea);doc.setLineWidth(0.2);doc.line(ml,y,W-mr,y);y+=6;
+ const lines=informe.split('\n');lines.forEach(line=>{const t=line.trim();if(!t){y+=2;return;}const isTitle=/^[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ\s\-\/\.]{7,}$/.test(t);if(isTitle){if(y>268){doc.addPage();y=16;}y+=5;doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...C.oscuro);doc.text(t,ml,y);y+=2;doc.setDrawColor(...C.suave);doc.setLineWidth(0.25);doc.line(ml,y,ml+tw,y);y+=4;}else{doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...C.oscuro);const wrapped=doc.splitTextToSize(t,tw);wrapped.forEach(wl=>{if(y>277){doc.addPage();y=16;}doc.text(wl,ml,y);y+=5;});y+=1;}});
+ const pageCount=doc.getNumberOfPages();for(let i=1;i<=pageCount;i++){doc.setPage(i);const py=286;doc.setDrawColor(...C.suave);doc.setLineWidth(0.3);doc.line(ml,py,W-mr,py);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...C.oscuro);doc.text('FISIO365',ml,py+5);doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...C.claro);doc.text('Fisioterapia avanzada y readaptación funcional',ml,py+9);doc.setDrawColor(...C.medio);doc.setLineWidth(0.3);doc.line(W/2-22,py+5,W/2+22,py+5);doc.setFontSize(7);doc.setTextColor(...C.medio);doc.text(fisioNom||'Fisioterapeuta',W/2,py+9,{align:'center'});if(colNum){doc.setFontSize(6.5);doc.setTextColor(...C.claro);doc.text(colNum,W/2,py+13,{align:'center'});}doc.setTextColor(...C.claro);doc.setFontSize(6.5);doc.text('Pág. '+i+' / '+pageCount,W-mr,py+5,{align:'right'});doc.text(fecha,W-mr,py+9,{align:'right'});}
+ doc.save('Informe_'+pacNom.replace(/\s+/g,'_')+'_'+fecha.replace(/\//g,'-')+'.pdf');
+}
+
+// VAS
+function initVAS(){const nums=document.getElementById('vasNums');if(nums.children.length===0){
+  const colors=['#22c55e','#4ade80','#86efac','#bef264','#fde047','#fbbf24','#fb923c','#f97316','#ef4444','#dc2626','#b91c1c'];
+  for(let i=0;i<=10;i++){const span=document.createElement('span');span.className='vas-num';span.textContent=i;span.style.background=colors[i];span.onclick=()=>{vasSeleccionado=i;document.querySelectorAll('.vas-num').forEach((el,idx)=>el.classList.toggle('on',idx===i));document.getElementById('btnVas').style.display='block';};nums.appendChild(span);}
+}cargarDatosVAS();}
+async function cargarDatosVAS(){try{const res=await fetch(`/api/dolor?patientId=${patient.id}`);const data=await res.json();vasRegistros=data.registros||[];actualizarGrafica();}catch(e){}}
+async function guardarVAS(){if(vasSeleccionado===null)return;const btn=document.getElementById('btnVas');btn.disabled=true;btn.textContent='Guardando...';try{await fetch('/api/dolor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,fecha:TODAY,valor:vasSeleccionado})});await cargarDatosVAS();btn.style.display='none';toast('Dolor registrado ✓',true);}catch(e){toast('Error al guardar',false);}btn.disabled=false;btn.textContent='Guardar';}
+function cambiarPeriodo(dias,btn){vasPeriodo=dias;document.querySelectorAll('.periodo').forEach(b=>b.classList.remove('on'));btn.classList.add('on');actualizarGrafica();}
+
+function actualizarGrafica(){
+ const hoy=new Date(TODAY);const fechaInicio=new Date(hoy);fechaInicio.setDate(hoy.getDate()-(vasPeriodo-1));const fechaInicioStr=fechaInicio.toISOString().split('T')[0];
+ const conDatos=vasRegistros.filter(r=>r.fecha>=fechaInicioStr&&r.fecha<=TODAY).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+ if(conDatos.length<1){document.getElementById('graficaCard').style.display='none';return;}
+ // graficaCard hidden
+ const canvas=document.getElementById('chartSvg');const inner=document.getElementById('graficaInner');const CW=inner.offsetWidth-24;const CH=100;
+ canvas.width=CW*window.devicePixelRatio;canvas.height=CH*window.devicePixelRatio;canvas.style.width=CW+'px';canvas.style.height=CH+'px';
+ const ctx=canvas.getContext('2d');ctx.scale(window.devicePixelRatio,window.devicePixelRatio);ctx.clearRect(0,0,CW,CH);
+ const PAD=8;
+ const pts=conDatos.map((d,i)=>{const x=conDatos.length===1?CW-PAD:PAD+(i/(conDatos.length-1))*(CW-PAD*2);const y=PAD+((10-d.valor)/10)*(CH-PAD*2);return{x,y,valor:d.valor,fecha:d.fecha,esHoy:d.fecha===TODAY};});
+ ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;[PAD,CH/2,CH-PAD].forEach(y=>{ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();});
+ if(pts.length>1){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,CH);ctx.lineTo(pts[0].x,CH);ctx.closePath();ctx.fillStyle='rgba(173,163,218,0.15)';ctx.fill();ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.strokeStyle='#1a1a1a';ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();}
+ pts.forEach((p,i)=>{const isLast=i===pts.length-1;ctx.beginPath();ctx.arc(p.x,p.y,isLast?5:3,0,Math.PI*2);if(isLast){ctx.fillStyle='white';ctx.fill();ctx.strokeStyle='#1a1a1a';ctx.lineWidth=2;ctx.stroke();}else{ctx.fillStyle='#1a1a1a';ctx.fill();}});
+ const diasRow=document.getElementById('diasRow');diasRow.innerHTML='';pts.forEach(p=>{const date=new Date(p.fecha+'T12:00:00');const label=p.esHoy?'Hoy':`${date.getDate()}/${date.getMonth()+1}`;const el=document.createElement('div');el.style.cssText=`position:absolute;left:${p.x}px;top:0;transform:translateX(-50%);font-size:10px;color:${p.esHoy?'#1a1a1a':'#888'};font-weight:${p.esHoy?'600':'400'};white-space:nowrap;`;el.textContent=label;diasRow.appendChild(el);});
+ const msgEl=document.getElementById('vasMsg');
+ if(conDatos.length>=2){
+ const penultimo=conDatos[conDatos.length-2].valor;const ultimo=conDatos[conDatos.length-1].valor;
+ msgEl.style.display='block';
+ if(ultimo<penultimo){const pct=penultimo>0?Math.round(((penultimo-ultimo)/penultimo)*100):0;msgEl.className='vas-msg bien';msgEl.innerHTML=` Tu dolor ha bajado${pct>0?' un '+pct+'%':''} respecto a ayer. ¡Vas por muy buen camino!`;}
+ else if(ultimo>penultimo){
+ msgEl.className='vas-msg animo';
+ msgEl.innerHTML='<div style="font-size:13px;font-weight:600;margin-bottom:12px;color:#000;">No te preocupes, los altibajos no significan que vayas por mal camino. ¿Has cambiado algo en tu rutina hoy?</div><textarea id="vasMsgTxt" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;resize:none;min-height:80px;outline:none;background:#f5f2ee;color:#000;margin-bottom:10px;" placeholder="Ej: He estado de pie muchas horas, he dormido mal..."></textarea><button onclick=\'guardarMsgDolor()\' style=\'width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:#000;color:#f5f2ee;border:none;border-radius:8px;cursor:pointer;\'>Enviar a mi fisio</button>';
+ }
+ else{msgEl.className='vas-msg neutro';msgEl.innerHTML=' Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!';}
+ }else{msgEl.style.display='none';}
+}
+
+function guardarMsgDolor(){
+ const texto=document.getElementById('vasMsgTxt')?.value?.trim();
+ if(!texto)return;
+ abrirModalDolor(texto);
+}
+
+function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('pasosAndroid').style.display=os==='android'?'block':'none';document.getElementById('btnIOS').classList.toggle('active',os==='ios');document.getElementById('btnAndroid').classList.toggle('active',os==='android');}
+function mostrarInstall(){document.getElementById('installPopup').style.display='flex';}
+function cerrarInstall(){document.getElementById('installPopup').style.display='none';}
+function showInstOS(os){document.getElementById('instPasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('instPasosAndroid').style.display=os==='android'?'block':'none';document.getElementById('btnInstIOS').style.background=os==='ios'?'#000':'none';document.getElementById('btnInstIOS').style.color=os==='ios'?'white':'#888';document.getElementById('btnInstIOS').style.borderColor=os==='ios'?'#000':'#ddd';document.getElementById('btnInstAndroid').style.background=os==='android'?'#000':'none';document.getElementById('btnInstAndroid').style.color=os==='android'?'white':'#888';document.getElementById('btnInstAndroid').style.borderColor=os==='android'?'#000':'#ddd';}
+
+const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
+async function initPushNotifications(){if(!('serviceWorker'in navigator)||!('PushManager'in window))return;try{const reg=await navigator.serviceWorker.register('/sw.js');const permission=await Notification.requestPermission();if(permission!=='granted')return;const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,subscription:sub})});}catch(e){}}
+function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const rawData=window.atob(base64);const outputArray=new Uint8Array(rawData.length);for(let i=0;i<rawData.length;++i)outputArray[i]=rawData.charCodeAt(i);return outputArray;}
+
+let lastFechaAsignacion=null,pollingInterval=null;
+function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejercicios=data.ejercicios||[];mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){
+   document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;
+   document.getElementById('notaFisioBtn').style.display='block';
+   // Update label with fisio name
+   if(data.fisio) document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];
+ }if(data.ultimaSession!==TODAY){hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado ',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
+
+function toggleMenu(){
+ const menu=document.getElementById('navMenu');
+ const overlay=document.getElementById('navOverlay');
+ const isOpen=menu.classList.contains('open');
+ if(isOpen){cerrarMenu();}else{menu.classList.add('open');overlay.classList.add('open');}
+}
+function cerrarMenu(){
+ document.getElementById('navMenu').classList.remove('open');
+ document.getElementById('navOverlay').classList.remove('open');
+}
+
+function formatMensaje(texto){
+  if(!texto) return '';
+  let t=texto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  t=t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--black);text-decoration:underline;word-break:break-all;">$1</a>');
+  t=t.replace(/\n/g,'<br>');
+  return t;
+}
+
+
+function toggleNotifPanel(){showSection('notificaciones');}
+
+async function loadNotificaciones(){
+  const list=document.getElementById('notifListEl');
+  if(!list||!patient)return;
+  list.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try{
+    const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);
+    const data=await res.json();
+    const notifs=data.notificaciones||[];
+    const noLeidas=notifs.filter(n=>!n.leida).length;
+    const badge=document.getElementById('notifBadge');
+    if(badge) badge.style.display=noLeidas>0?'block':'none';
+    if(!notifs.length){list.innerHTML='<div class="empty"><div class="empty-title">Sin notificaciones</div></div>';return;}
+    list.innerHTML=notifs.map(n=>`
+      <div style="padding:16px 0;border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start;">
+        <div style="flex:1;cursor:pointer;opacity:${n.leida?'0.45':'1'};" onclick="abrirNotif('${n.id}','${n.tipo}')">
+          <div style="font-size:13px;font-weight:600;color:var(--black);margin-bottom:3px;">${n.titulo||''}</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5;">${n.texto||''}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:5px;">${n.fecha||''}</div>
+        </div>
+        <button onclick="marcarNotifLeida('${n.id}',this)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid ${n.leida?'var(--black)':'var(--border)'};background:${n.leida?'var(--black)':'none'};cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;padding:0;transition:all .15s;">
+          ${n.leida?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+        </button>
+      </div>`).join('');
+  }catch(e){list.innerHTML='<div class="empty"><div class="empty-title">Error</div></div>';}
+}
+
+async function marcarNotifLeida(notifId, btn){
+  btn.disabled=true;
+  try{
+    await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'marcar-notificacion-leida',notifId})});
+    btn.style.background='var(--black)';
+    btn.style.borderColor='var(--black)';
+    btn.innerHTML='<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    btn.disabled=false;
+    const row=btn.closest('div[style*="border-bottom"]');
+    if(row){const content=row.querySelector('div[style*="flex:1"]');if(content)content.style.opacity='0.45';}
+    checkNotifBadge();
+  }catch(e){btn.disabled=false;}
+}
+
+async function abrirNotif(notifId,tipo){
+  try{await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'marcar-notificacion-leida',notifId})});}catch(e){}
+  if(tipo==='mensaje'||tipo==='respuesta')showSection('mensajes');
+  else showSection('hoy');
+  checkNotifBadge();
+}
+
+async function checkNotifBadge(){
+  if(!patient)return;
+  try{
+    const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);
+    const data=await res.json();
+    const badge=document.getElementById('notifBadge');
+    if(badge) badge.style.display=(data.notificaciones||[]).filter(n=>!n.leida).length>0?'block':'none';
+  }catch(e){}
+}
+
+function cerrarSesion(){
+ localStorage.removeItem('fisio365_patient');
+ patient=null;
+ window._informesPac=[];
+ try{Object.keys(localStorage).forEach(k=>{if(k.startsWith('fisio365_citas_'))localStorage.removeItem(k);});}catch(e){}
+ // Hide app elements
+ document.getElementById('appScreen').style.display='none';
+ document.getElementById('hamburgerBtn').style.display='none';
+ try{document.getElementById('cerrarBtn').style.display='none';}catch(e){}
+ try{document.getElementById('notifBtn').style.display='none';}catch(e){}
+ // Close menu if open
+ cerrarMenu();
+ // Show login
+ const login=document.getElementById('loginScreen');
+ login.style.display='flex';
+ login.style.opacity='1';
+ login.style.visibility='visible';
+ // Clear fields
+ try{document.getElementById('emailInput').value='';}catch(e){}
+ ['p1','p2','p3','p4'].forEach(id=>{try{document.getElementById(id).value='';}catch(e){}});
+ window.scrollTo(0,0);
+}
+async function loadAdherencia(containerId){
+ const el=document.getElementById(containerId);
+ if(!el||!patient)return;
+ try{
+   const r=await fetch(`/api/pacientes?action=get-tareas&pacienteId=${encodeURIComponent(patient.id)}`);
+   const data=await r.json();
+   const tareas=data.tareas||[];
+   const diasHechos=new Set(tareas.map(t=>t.fecha));
+   const hoy=new Date();
+   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+   const dias=['L','M','X','J','V','S','D'];
+
+   // Build 4 weeks grid
+   let rows=[];
+   for(let i=27;i>=0;i--){
+     const d=new Date(hoy);d.setDate(hoy.getDate()-i);
+     const key=d.toISOString().split('T')[0];
+     rows.push({key,dia:d.getDate(),mes:d.getMonth(),hecho:diasHechos.has(key),esHoy:i===0});
+   }
+
+   // Month label
+   const mesInicio=meses[rows[0].mes];
+   const mesFin=meses[rows[rows.length-1].mes];
+   const mesLabel=mesInicio===mesFin?mesInicio:`${mesInicio} — ${mesFin}`;
+   const año=hoy.getFullYear();
+
+   // Stats
+   const totalDias=diasHechos.size;
+
+   // Racha actual — días consecutivos hasta hoy
+   let rachaActual=0;
+   for(let i=0;;i++){
+     const d=new Date(hoy);d.setDate(hoy.getDate()-i);
+     const key=d.toISOString().split('T')[0];
+     if(diasHechos.has(key)) rachaActual++;
+     else break;
+   }
+
+   // Mejor racha — max consecutive days
+   const fechasOrdenadas=[...tareas].map(t=>t.fecha).sort();
+   let mejorRacha=0,racha=0,prevDate=null;
+   fechasOrdenadas.forEach(f=>{
+     if(prevDate){
+       const prev=new Date(prevDate);prev.setDate(prev.getDate()+1);
+       if(prev.toISOString().split('T')[0]===f) racha++;
+       else racha=1;
+     } else racha=1;
+     if(racha>mejorRacha) mejorRacha=racha;
+     prevDate=f;
+   });
+
+   // Mensaje motivador
+   let msg='';
+   if(rachaActual===0) msg='Hoy es un buen día para empezar 💪';
+   else if(rachaActual===1) msg='¡Bien! Has empezado tu racha. ¡Vuelve mañana!';
+   else if(rachaActual<5) msg=`🔥 ¡${rachaActual} días seguidos! Sigue así.`;
+   else if(rachaActual<10) msg=`🔥 ¡${rachaActual} días seguidos! Estás en racha.`;
+   else if(rachaActual<20) msg=`🏆 ¡${rachaActual} días seguidos! Increíble constancia.`;
+   else msg=`🏆 ¡${rachaActual} días seguidos! Eres una máquina.`;
+
+   el.innerHTML=`
+   <div style="background:white;border-radius:16px;border:0.5px solid rgba(0,0,0,0.08);padding:20px;margin-bottom:12px;">
+     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+       <div>
+         <div style="font-size:14px;font-weight:700;color:#111;">Mi racha</div>
+         <div style="font-size:11px;color:#aaa;margin-top:2px;">${mesLabel} ${año}</div>
+       </div>
+       ${rachaActual>0?`<div style="text-align:right;"><div style="font-size:22px;font-weight:800;color:#111;">🔥 ${rachaActual}</div><div style="font-size:10px;color:#aaa;">días seguidos</div></div>`:''}
+     </div>
+     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
+       ${dias.map(d=>`<div style="font-size:9px;font-weight:600;color:#ccc;text-align:center;">${d}</div>`).join('')}
+     </div>
+     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;">
+       ${rows.map(d=>`<div style="aspect-ratio:1;border-radius:50%;background:${d.hecho?'#4ade80':'#f0ede8'};display:flex;align-items:center;justify-content:center;font-size:10px;color:${d.hecho?'white':'#bbb'};font-weight:${d.hecho?'600':'500'};">${d.dia}</div>`).join('')}
+     </div>
+     <div style="display:flex;gap:12px;font-size:11px;color:#aaa;align-items:center;">
+       <div style="display:flex;align-items:center;gap:5px;"><div style="width:9px;height:9px;border-radius:50%;background:#4ade80;"></div>Hecho</div>
+       <div style="display:flex;align-items:center;gap:5px;"><div style="width:9px;height:9px;border-radius:50%;background:#f0ede8;"></div>Sin datos</div>
+     </div>
+   </div>
+
+   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+     <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;">
+       <div style="font-size:22px;font-weight:800;color:#111;">${totalDias}</div>
+       <div style="font-size:10px;color:#aaa;margin-top:2px;">Días totales</div>
+     </div>
+     <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;">
+       <div style="font-size:22px;font-weight:800;color:#4ade80;">${rachaActual>0?'🔥 ':''} ${rachaActual}</div>
+       <div style="font-size:10px;color:#aaa;margin-top:2px;">Racha actual</div>
+     </div>
+     <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;">
+       <div style="font-size:22px;font-weight:800;color:#111;">${mejorRacha}</div>
+       <div style="font-size:10px;color:#aaa;margin-top:2px;">Mejor racha</div>
+     </div>
+   </div>
+
+   <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:14px;font-size:13px;color:#111;line-height:1.5;">${msg}</div>`;
+
+ }catch(e){el.innerHTML='';}
+}
+
+function toggleNotaFisio(){
+ const card=document.getElementById('mensajeFisioCard');
+ const btn=document.querySelector('#notaFisioBtn button');
+ const open=card.style.display==='block';
+ card.style.display=open?'none':'block';
+ btn.querySelector('svg+*')
+ if(open) btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ver nota de tu fisio';
+ else btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ocultar nota';
+}
+function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(ok?'ok':'err');t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+</script>
+</body>
+</html>
