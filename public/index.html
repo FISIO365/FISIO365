@@ -479,8 +479,10 @@ function invitarAmigo(){
   if(!patient)return;
   const nombre=patient.nombre||'un paciente';
   const tel='34672893949';
-  const msg=encodeURIComponent('Hola! Vengo recomendado/a por '+nombre+' y me gustaría pedir una cita en FISIO365 😊');
-  window.open('https://wa.me/'+tel+'?text='+msg,'_blank');
+  const msgAmigo=encodeURIComponent('Hola! Vengo recomendado/a por '+nombre+' y me gustaría pedir una cita en FISIO365 😊');
+  const linkClinica='https://wa.me/'+tel+'?text='+msgAmigo;
+  const msgBerta=encodeURIComponent('¡Te recomiendo FISIO365! Pide tu cita aquí 👉 '+linkClinica);
+  window.open('https://wa.me/?text='+msgBerta,'_blank');
 }
 
 function showSection(section){
