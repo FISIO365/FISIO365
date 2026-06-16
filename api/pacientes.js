@@ -195,8 +195,8 @@ export default async function handler(req) {
       });
       const d = await r.json();
       const puntos = d.fields?.puntos_referido || 0;
-      return new Response(JSON.stringify({ ok: true, puntos, id: d.id, fields: Object.keys(d.fields||{}) }), { headers: corsHeaders });
-    } catch(e) { return new Response(JSON.stringify({ ok: false, puntos: 0, error: e.message }), { headers: corsHeaders }); }
+      return new Response(JSON.stringify({ ok: true, puntos }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, puntos: 0 }), { headers: corsHeaders }); }
   }
 
   // ── CHECK CONTRASEÑA (a partir de aquí requiere pwd) ────────────────────
