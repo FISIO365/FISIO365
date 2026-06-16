@@ -246,7 +246,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <!-- ★ NUEVO: INVITAR AMIGO -->
  <button class="nav-item" onclick="invitarAmigo();cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;">
    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.29 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.18 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-   Invitar a un amigo
+   🎟️ Recomienda y gana
  </button>
  </div>
  <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;display:flex;flex-direction:column;gap:2px;">
@@ -301,47 +301,50 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  </div>
  </div>
 
- <!-- ★ NUEVA SECCIÓN: TU SORTEO -->
- <div id="vistaSorteo" style="display:none;">
- <div class="date-h" style="margin-top:4px;">
-   <div class="date-today" style="font-size:20px;">Tu sorteo 🎟️</div>
-   <div class="date-sub">Recomienda y gana números</div>
+ <!-- ★ SECCIÓN SORTEO -->
+ <div id="vistaSorteo" style="display:none;padding-top:8px;">
+
+ <div style="text-align:center;margin-bottom:28px;">
+   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:#ada3da;margin-bottom:10px;">Sorteo · 31 de julio 2025</div>
+   <div style="font-size:22px;font-weight:800;color:#1a1a1a;letter-spacing:-.5px;">Recomienda y gana</div>
  </div>
- <div style="background:#1a1a1a;border-radius:16px;padding:28px 20px;text-align:center;margin-bottom:16px;">
-   <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(245,242,238,0.45);margin-bottom:8px;">Tus números para el sorteo</div>
-   <div id="puntosNumero" style="font-size:64px;font-weight:800;color:#f5f2ee;line-height:1;margin-bottom:4px;">—</div>
-   <div style="font-size:12px;color:rgba(245,242,238,0.45);">Próximo sorteo: <strong style="color:rgba(245,242,238,0.8);">31 de julio</strong></div>
+
+ <div style="background:white;border:0.5px solid rgba(0,0,0,0.07);border-radius:20px;padding:22px;margin-bottom:10px;">
+   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#ccc;margin-bottom:10px;">Premio</div>
+   <div style="font-size:15px;font-weight:700;color:#1a1a1a;">Una sesión de fisioterapia gratis</div>
  </div>
- <div style="background:#ede9f7;border:1.5px solid #ada3da;border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
-   <div style="font-size:28px;flex-shrink:0;">🏆</div>
-   <div>
-     <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:2px;">Premio: sesión gratis</div>
-     <div style="font-size:12px;color:#7b6fd4;font-weight:500;">El ganador del sorteo consigue una sesión completa sin coste</div>
+
+ <div style="background:white;border:0.5px solid rgba(0,0,0,0.07);border-radius:20px;padding:22px;margin-bottom:10px;">
+   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#ccc;margin-bottom:18px;">Cómo participar</div>
+   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
+     <div style="font-size:13px;font-weight:400;color:#555;line-height:1.5;max-width:200px;">Recomiendas a un amigo<br><span style="font-size:11px;color:#ccc;">cada vez que compartes</span></div>
+     <div style="font-size:13px;font-weight:600;color:#ada3da;">+1 papeleta</div>
+   </div>
+   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+     <div style="font-size:13px;font-weight:400;color:#555;line-height:1.5;max-width:200px;">Tu amigo viene a su primera sesión<br><span style="font-size:11px;color:#ccc;">lo verificamos nosotros</span></div>
+     <div style="font-size:13px;font-weight:600;color:#ada3da;">+5 papeletas</div>
    </div>
  </div>
- <div style="background:white;border:1px solid rgba(0,0,0,0.12);border-radius:12px;padding:16px;margin-bottom:20px;">
-   <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:14px;">Cómo ganar números</div>
-   <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
-     <div style="width:36px;height:36px;border-radius:50%;background:#f5f2ee;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">📲</div>
-     <div style="flex:1;">
-       <div style="font-size:13px;font-weight:600;color:#1a1a1a;">Recomienda a un amigo</div>
-       <div style="font-size:12px;color:#888;margin-top:1px;">Cada vez que compartes → <strong style="color:#1a1a1a;">+1 número</strong></div>
+
+ <div style="background:white;border:0.5px solid rgba(0,0,0,0.07);border-radius:20px;padding:22px;margin-bottom:28px;">
+   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#ccc;margin-bottom:18px;">Tus papeletas</div>
+   <div style="display:flex;align-items:center;justify-content:space-between;">
+     <div style="font-size:13px;color:#bbb;line-height:1.6;max-width:140px;">Cuantas más papeletas, más posibilidades de ganar</div>
+     <div style="text-align:center;">
+       <div style="font-size:52px;font-weight:800;color:#1a1a1a;line-height:1;letter-spacing:-2px;" id="puntosNumero">0</div>
+       <div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#ccc;margin-top:4px;">papeletas</div>
      </div>
    </div>
-   <div style="display:flex;align-items:center;gap:14px;">
-     <div style="width:36px;height:36px;border-radius:50%;background:#f0f7f0;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">✅</div>
-     <div style="flex:1;">
-       <div style="font-size:13px;font-weight:600;color:#1a1a1a;">Tu amigo viene a su primera sesión</div>
-       <div style="font-size:12px;color:#888;margin-top:1px;">Si viene de verdad → <strong style="color:#1a1a1a;">+5 números más</strong></div>
-     </div>
-   </div>
  </div>
- <button onclick="compartirRecomendacion()" style="width:100%;padding:17px;background:#1a1a1a;color:#f5f2ee;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
-   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-   Recomendar a un amigo
+
+ <button onclick="compartirRecomendacion()" style="width:100%;padding:16px;background:#25D366;color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:.02em;">
+   <svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.025.507 3.934 1.395 5.608L0 24l6.554-1.371A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.002-1.366l-.359-.214-3.718.977.994-3.62-.234-.372A9.818 9.818 0 1112 21.818z"/></svg>
+   Recomendar por WhatsApp
  </button>
- <div style="text-align:center;margin-top:10px;font-size:11px;color:#888;">Cada recomendación que compartes suma +1 número</div>
+ <div style="text-align:center;margin-top:10px;font-size:11px;color:#ccc;letter-spacing:.01em;">Al compartir sumas +1 papeleta al instante</div>
+
  </div>
+
 
  <div id="vistaProgreso" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mi racha</div><div class="date-sub">Días que has hecho tus ejercicios</div></div>
@@ -707,21 +710,22 @@ async function loadPuntos(){
   if(!patient)return;
   const el=document.getElementById('puntosNumero');
   if(!el)return;
-  // Mostrar siempre el valor de localStorage primero
   const cached=patient.puntos_referido||0;
-  el.textContent=cached;
-  // Sincronizar con Airtable pero NUNCA bajar los puntos (por si hay latencia)
+  // Sincronizar con Airtable
   try{
     const res=await fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id));
     const data=await res.json();
     if(data.ok){
-      // Usar el mayor de los dos: lo que dice Airtable o lo que tenemos en local
-      const puntosFinal=Math.max(data.puntos, cached);
-      el.textContent=puntosFinal;
+      const puntosFinal=Math.max(data.puntos,cached);
       patient.puntos_referido=puntosFinal;
       localStorage.setItem('fisio365_patient',JSON.stringify(patient));
     }
   }catch(e){}
+  // Animar contador desde 0
+  const target=patient.puntos_referido||0;
+  let n=0;
+  const step=()=>{if(n<target){n++;el.textContent=n;setTimeout(step,160);}else{el.textContent=target;}};
+  step();
 }
 </script>
 </body>
