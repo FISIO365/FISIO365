@@ -529,17 +529,15 @@ async function compartirRecomendacion(){
   const msgAmigo=encodeURIComponent('Hola! Vengo recomendado/a por '+nombre+' y me gustaría pedir una cita en FISIO365 😊');
   const linkClinica='https://wa.me/'+tel+'?text='+msgAmigo;
   const texto='¡Te recomiendo FISIO365! Pide tu cita aquí 👉 '+linkClinica;
-  // Sumar +1 punto
-  try{
-    const res=await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sumar-punto-recomendacion',pacienteId:patient.id})});
-    const data=await res.json();
-    if(data.puntos!==undefined){
-      document.getElementById('puntosNumero').textContent=data.puntos;
-      patient.puntos_referido=data.puntos;
-      localStorage.setItem('fisio365_patient',JSON.stringify(patient));
-    }
-  }catch(e){}
-  // Compartir
+  // Sumar +1 localmente de forma inmediata (sin esperar a Airtable)
+  const puntosAhora=(patient.puntos_referido||0)+1;
+  patient.puntos_referido=puntosAhora;
+  localStorage.setItem('fisio365_patient',JSON.stringify(patient));
+  const el=document.getElementById('puntosNumero');
+  if(el)el.textContent=puntosAhora;
+  // Enviar a Airtable en background (no bloqueante)
+  fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sumar-punto-recomendacion',pacienteId:patient.id,puntos:puntosAhora})}).catch(()=>{});
+  // Compartir inmediatamente
   if(navigator.share){
     navigator.share({text:texto});
   }else{
