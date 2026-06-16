@@ -513,12 +513,11 @@ function initApp(){
   document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
   loadEjercicios();
   checkMensajesNoLeidos();
-  // Sincronizar puntos desde Airtable al arrancar
+  // Sincronizar puntos desde Airtable al arrancar (Airtable manda)
   fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id))
     .then(r=>r.json()).then(d=>{
       if(d.ok){
-        const puntosFinal=Math.max(d.puntos, patient.puntos_referido||0);
-        patient.puntos_referido=puntosFinal;
+        patient.puntos_referido=d.puntos;
         localStorage.setItem('fisio365_patient',JSON.stringify(patient));
       }
     }).catch(()=>{});
@@ -541,14 +540,21 @@ async function compartirRecomendacion(){
   const msgAmigo=encodeURIComponent('Hola! Vengo de parte de '+nombre+' y me gustaría pedir una cita.');
   const linkClinica='https://wa.me/'+tel+'?text='+msgAmigo;
   const texto=encodeURIComponent('Te recomiendo mi fisio 👉 ')+linkClinica;
-  // Sumar +1 localmente de forma inmediata (sin esperar a Airtable)
+  // Sumar +1 localmente de forma inmediata para feedback visual
   const puntosAhora=(patient.puntos_referido||0)+1;
   patient.puntos_referido=puntosAhora;
   localStorage.setItem('fisio365_patient',JSON.stringify(patient));
   const el=document.getElementById('puntosNumero');
   if(el)el.textContent=puntosAhora;
-  // Enviar a Airtable en background (no bloqueante)
-  fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sumar-punto-recomendacion',pacienteId:patient.id,puntos:puntosAhora})}).catch(()=>{});
+  // Enviar a Airtable y actualizar con el valor real que devuelve
+  fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sumar-punto-recomendacion',pacienteId:patient.id})})
+    .then(r=>r.json()).then(d=>{
+      if(d.ok&&d.puntos!==undefined){
+        patient.puntos_referido=d.puntos;
+        localStorage.setItem('fisio365_patient',JSON.stringify(patient));
+        if(el)el.textContent=d.puntos;
+      }
+    }).catch(()=>{});
   // Compartir inmediatamente
   const textoCompartir='Te recomiendo a mi fisio 😊\n\nEscríbeles por WhatsApp en este link y pide tu cita:\n\n'+linkClinica;
   if(navigator.share){
@@ -720,22 +726,26 @@ async function loadPuntos(){
   if(!patient)return;
   const el=document.getElementById('puntosNumero');
   if(!el)return;
-  const cached=patient.puntos_referido||0;
-  // Sincronizar con Airtable
+  // Mostrar cached mientras carga
+  el.textContent=patient.puntos_referido||0;
+  // Airtable es la fuente de verdad
   try{
     const res=await fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id));
     const data=await res.json();
     if(data.ok){
-      const puntosFinal=Math.max(data.puntos,cached);
-      patient.puntos_referido=puntosFinal;
+      patient.puntos_referido=data.puntos;
       localStorage.setItem('fisio365_patient',JSON.stringify(patient));
+      // Animar desde 0 hasta el valor real
+      let n=0;
+      const step=()=>{if(n<data.puntos){n++;el.textContent=n;setTimeout(step,160);}else{el.textContent=data.puntos;}};
+      step();
     }
-  }catch(e){}
-  // Animar contador desde 0
-  const target=patient.puntos_referido||0;
-  let n=0;
-  const step=()=>{if(n<target){n++;el.textContent=n;setTimeout(step,160);}else{el.textContent=target;}};
-  step();
+  }catch(e){
+    // Si falla, animar con lo que tenemos
+    let n=0,target=patient.puntos_referido||0;
+    const step=()=>{if(n<target){n++;el.textContent=n;setTimeout(step,160);}};
+    step();
+  }
 }
 </script>
 </body>
