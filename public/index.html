@@ -533,35 +533,39 @@ function invitarAmigo(){
 }
 
 // Función que realmente comparte (se llama desde el botón de la sección sorteo)
+let _compartiendo=false;
 async function compartirRecomendacion(){
-  if(!patient)return;
+  if(!patient||_compartiendo)return;
+  _compartiendo=true;
+  const btn=document.querySelector('button[onclick="compartirRecomendacion()"]');
+  if(btn){btn.disabled=true;btn.style.opacity='0.6';}
   const nombre=patient.nombre||'un paciente';
   const tel='34672893949';
   const msgAmigo=encodeURIComponent('Hola! Vengo de parte de '+nombre+' y me gustaría pedir una cita.');
   const linkClinica='https://wa.me/'+tel+'?text='+msgAmigo;
-  const texto=encodeURIComponent('Te recomiendo mi fisio 👉 ')+linkClinica;
-  // Sumar +1 localmente de forma inmediata para feedback visual
-  const puntosAhora=(patient.puntos_referido||0)+1;
-  patient.puntos_referido=puntosAhora;
-  localStorage.setItem('fisio365_patient',JSON.stringify(patient));
-  const el=document.getElementById('puntosNumero');
-  if(el)el.textContent=puntosAhora;
-  // Enviar a Airtable y actualizar con el valor real que devuelve
-  fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sumar-punto-recomendacion',pacienteId:patient.id})})
-    .then(r=>r.json()).then(d=>{
-      if(d.ok&&d.puntos!==undefined){
-        patient.puntos_referido=d.puntos;
-        localStorage.setItem('fisio365_patient',JSON.stringify(patient));
-        if(el)el.textContent=d.puntos;
-      }
-    }).catch(()=>{});
-  // Compartir inmediatamente
   const textoCompartir='Te recomiendo a mi fisio 😊\n\nEscríbeles por WhatsApp en este link y pide tu cita:\n\n'+linkClinica;
+  const el=document.getElementById('puntosNumero');
+  // Esperar respuesta de Airtable antes de compartir
+  try{
+    const res=await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sumar-punto-recomendacion',pacienteId:patient.id})});
+    const d=await res.json();
+    if(d.ok&&d.puntos!==undefined){
+      patient.puntos_referido=d.puntos;
+      localStorage.setItem('fisio365_patient',JSON.stringify(patient));
+      if(el)el.textContent=d.puntos;
+    }
+  }catch(e){}
+  // Compartir
   if(navigator.share){
     navigator.share({text:textoCompartir});
   }else{
     window.open('https://wa.me/?text='+encodeURIComponent(textoCompartir),'_blank');
   }
+  // Desbloquear tras 2s
+  setTimeout(()=>{
+    _compartiendo=false;
+    if(btn){btn.disabled=false;btn.style.opacity='1';}
+  },2000);
 }
 
 function showSection(section){
