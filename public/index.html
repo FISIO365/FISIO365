@@ -390,46 +390,131 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
    <div style="font-size:12px;color:#aaa;margin-top:3px;">Todo lo que puedes hacer</div>
  </div>
 
- <div class="guia-card" style="margin-bottom:10px;">
-   <div class="guia-titulo">Instalar en tu móvil</div>
-   <div class="guia-os"><button class="guia-os-btn active" id="btnIOS" onclick="showOS('ios')">iPhone</button><button class="guia-os-btn" id="btnAndroid" onclick="showOS('android')">Android</button></div>
+ <!-- INSTALAR -->
+ <div style="background:white;border:0.5px solid rgba(0,0,0,0.08);border-radius:18px;padding:20px;margin-bottom:10px;">
+   <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:#ccc;margin-bottom:14px;">Instalar en tu móvil</div>
+   <div style="display:flex;gap:6px;margin-bottom:18px;">
+     <button id="btnIOS" onclick="showOS('ios')" style="flex:1;padding:9px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;border-radius:10px;border:0.5px solid #1a1a1a;background:#1a1a1a;color:#f5f2ee;cursor:pointer;">iPhone</button>
+     <button id="btnAndroid" onclick="showOS('android')" style="flex:1;padding:9px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;border-radius:10px;border:0.5px solid rgba(0,0,0,0.1);background:none;color:#aaa;cursor:pointer;">Android</button>
+   </div>
    <div id="pasosIOS">
-     <div class="guia-paso"><div class="guia-num">1</div><div class="guia-txt">Abre esta página en <strong>Safari</strong></div></div>
-     <div class="guia-paso"><div class="guia-num">2</div><div class="guia-txt">Toca el botón <strong>Compartir ↑</strong> abajo en el centro</div></div>
-     <div class="guia-paso"><div class="guia-num">3</div><div class="guia-txt">Toca <strong>"Añadir a pantalla de inicio"</strong> y listo</div></div>
+     <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
+       <div style="width:28px;height:28px;border-radius:50%;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#1a1a1a;">1</div>
+       <div style="padding-top:5px;">
+         <div style="font-size:13px;font-weight:500;color:#1a1a1a;">Abre esta página en <strong>Safari</strong></div>
+         <div style="font-size:11px;color:#bbb;margin-top:2px;">No funciona desde Chrome en iPhone</div>
+       </div>
+     </div>
+     <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
+       <div style="width:28px;height:28px;border-radius:50%;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#1a1a1a;">2</div>
+       <div style="padding-top:5px;">
+         <div style="font-size:13px;font-weight:500;color:#1a1a1a;">Toca el botón <strong>Compartir ↑</strong></div>
+         <div style="font-size:11px;color:#bbb;margin-top:2px;">Está abajo en el centro de la pantalla</div>
+       </div>
+     </div>
+     <div style="display:flex;gap:12px;align-items:flex-start;">
+       <div style="width:28px;height:28px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#f5f2ee;">3</div>
+       <div style="padding-top:5px;">
+         <div style="font-size:13px;font-weight:500;color:#1a1a1a;">Toca <strong>"Añadir a pantalla de inicio"</strong></div>
+         <div style="font-size:11px;color:#ada3da;margin-top:2px;font-weight:600;">¡Ya tienes el icono en tu móvil!</div>
+       </div>
+     </div>
    </div>
    <div id="pasosAndroid" style="display:none;">
-     <div class="guia-paso"><div class="guia-num">1</div><div class="guia-txt">Abre esta página en <strong>Chrome</strong></div></div>
-     <div class="guia-paso"><div class="guia-num">2</div><div class="guia-txt">Toca los <strong>3 puntos ⋮</strong> arriba a la derecha</div></div>
-     <div class="guia-paso"><div class="guia-num">3</div><div class="guia-txt">Toca <strong>"Añadir a pantalla de inicio"</strong> y listo</div></div>
+     <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
+       <div style="width:28px;height:28px;border-radius:50%;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#1a1a1a;">1</div>
+       <div style="padding-top:5px;">
+         <div style="font-size:13px;font-weight:500;color:#1a1a1a;">Abre esta página en <strong>Chrome</strong></div>
+         <div style="font-size:11px;color:#bbb;margin-top:2px;">fisio365.vercel.app</div>
+       </div>
+     </div>
+     <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
+       <div style="width:28px;height:28px;border-radius:50%;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#1a1a1a;">2</div>
+       <div style="padding-top:5px;">
+         <div style="font-size:13px;font-weight:500;color:#1a1a1a;">Toca los <strong>3 puntos ⋮</strong></div>
+         <div style="font-size:11px;color:#bbb;margin-top:2px;">Arriba a la derecha de la pantalla</div>
+       </div>
+     </div>
+     <div style="display:flex;gap:12px;align-items:flex-start;">
+       <div style="width:28px;height:28px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#f5f2ee;">3</div>
+       <div style="padding-top:5px;">
+         <div style="font-size:13px;font-weight:500;color:#1a1a1a;">Toca <strong>"Añadir a pantalla de inicio"</strong></div>
+         <div style="font-size:11px;color:#ada3da;margin-top:2px;font-weight:600;">¡Ya tienes el icono en tu móvil!</div>
+       </div>
+     </div>
    </div>
  </div>
 
- <div class="guia-card" style="margin-bottom:10px;">
-   <div class="guia-titulo">Cómo funciona</div>
-   <div class="guia-feature">
-     <div class="guia-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
-     <div><div class="guia-feature-titulo">Mis ejercicios</div><div class="guia-feature-desc">Tu fisio te asigna ejercicios cada día con vídeos, series y repeticiones. Al terminar pulsa "Hecho" para registrarlo.</div></div>
+ <!-- SECCIONES -->
+ <div style="background:white;border:0.5px solid rgba(0,0,0,0.08);border-radius:18px;overflow:hidden;margin-bottom:10px;">
+   <div style="padding:20px 20px 0;">
+     <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:#ccc;margin-bottom:18px;">Cómo funciona</div>
    </div>
-   <div class="guia-feature">
-     <div class="guia-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H3V5h3M18 9h3V5h-3"/><path d="M6 5h12v7a6 6 0 0 1-12 0V5z"/><path d="M12 17v4M8 21h8"/></svg></div>
-     <div><div class="guia-feature-titulo">Mi racha</div><div class="guia-feature-desc">Lleva el control de los días que has hecho tus ejercicios y registra tu nivel de dolor diario.</div></div>
+   <div style="padding:0 20px 18px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
+     <div style="display:flex;gap:14px;align-items:flex-start;">
+       <div style="width:36px;height:36px;border-radius:10px;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+       </div>
+       <div>
+         <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Mis ejercicios</div>
+         <div style="font-size:12px;color:#aaa;line-height:1.5;">Tu fisio te asigna ejercicios con vídeos, series y repeticiones. Al terminar pulsa "Hecho".</div>
+       </div>
+     </div>
    </div>
-   <div class="guia-feature">
-     <div class="guia-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-     <div><div class="guia-feature-titulo">Mis citas</div><div class="guia-feature-desc">Consulta todas tus citas pasadas y próximas con tu fisioterapeuta.</div></div>
+   <div style="padding:18px 20px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
+     <div style="display:flex;gap:14px;align-items:flex-start;">
+       <div style="width:36px;height:36px;border-radius:10px;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H3V5h3M18 9h3V5h-3"/><path d="M6 5h12v7a6 6 0 0 1-12 0V5z"/><path d="M12 17v4M8 21h8"/></svg>
+       </div>
+       <div>
+         <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Mi racha</div>
+         <div style="font-size:12px;color:#aaa;line-height:1.5;">Lleva el control de los días que has hecho tus ejercicios. ¡A por la racha!</div>
+       </div>
+     </div>
    </div>
-   <div class="guia-feature">
-     <div class="guia-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
-     <div><div class="guia-feature-titulo">Mis informes</div><div class="guia-feature-desc">Aquí encontrarás los informes de tus valoraciones. Puedes descargarlos en PDF.</div></div>
+   <div style="padding:18px 20px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
+     <div style="display:flex;gap:14px;align-items:flex-start;">
+       <div style="width:36px;height:36px;border-radius:10px;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+       </div>
+       <div>
+         <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Mis citas</div>
+         <div style="font-size:12px;color:#aaa;line-height:1.5;">Consulta tus citas próximas y el historial con tu fisioterapeuta.</div>
+       </div>
+     </div>
    </div>
-   <div class="guia-feature">
-     <div class="guia-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-     <div><div class="guia-feature-titulo">Chat</div><div class="guia-feature-desc">Envía mensajes directamente a tu fisio y recibe sus respuestas aquí.</div></div>
+   <div style="padding:18px 20px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
+     <div style="display:flex;gap:14px;align-items:flex-start;">
+       <div style="width:36px;height:36px;border-radius:10px;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+       </div>
+       <div>
+         <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Mis informes</div>
+         <div style="font-size:12px;color:#aaa;line-height:1.5;">Aquí encontrarás los informes de tus valoraciones. Descárgalos en PDF.</div>
+       </div>
+     </div>
    </div>
-   <div class="guia-feature" style="margin-bottom:0;">
-     <div class="guia-feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-     <div><div class="guia-feature-titulo">Recomienda y gana</div><div class="guia-feature-desc">Recomienda FISIO365 a tus amigos y acumula papeletas para el sorteo mensual.</div></div>
+   <div style="padding:18px 20px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
+     <div style="display:flex;gap:14px;align-items:flex-start;">
+       <div style="width:36px;height:36px;border-radius:10px;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+       </div>
+       <div>
+         <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Chat</div>
+         <div style="font-size:12px;color:#aaa;line-height:1.5;">Envía mensajes a tu fisio y recibe sus respuestas directamente aquí.</div>
+       </div>
+     </div>
+   </div>
+   <div style="padding:18px 20px;">
+     <div style="display:flex;gap:14px;align-items:flex-start;">
+       <div style="width:36px;height:36px;border-radius:10px;background:#ede9f7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+       </div>
+       <div>
+         <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Recomienda y gana</div>
+         <div style="font-size:12px;color:#aaa;line-height:1.5;">Recomienda FISIO365 a tus amigos y acumula papeletas para el sorteo.</div>
+       </div>
+     </div>
    </div>
  </div>
 
