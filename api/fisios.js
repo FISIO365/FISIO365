@@ -38,6 +38,34 @@ export default async function handler(req) {
     }
   }
 
+  // GET progreso — obtener progreso de un fisio
+  if (req.method === 'GET' && action === 'progreso') {
+    const pwd = url2.searchParams.get('pwd') || '';
+    const fisioId = url2.searchParams.get('fisioId') || '';
+    if (pwd !== FISIO_PASSWORD) return new Response(JSON.stringify({ ok: false, error: 'No autorizado' }), { status: 401, headers: corsHeaders });
+    if (!fisioId) return new Response(JSON.stringify({ ok: false, error: 'fisioId requerido' }), { status: 400, headers: corsHeaders });
+    try {
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}/${fisioId}`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      const data = await r.json();
+      const progreso = {};
+      Object.keys(data.fields || {}).forEach(key => {
+        if (key.startsWith('wiki_')) {
+          try { progreso[key] = JSON.parse(data.fields[key]); } catch(e) { progreso[key] = data.fields[key]; }
+        }
+      });
+      return new Response(JSON.stringify({ ok: true, progreso }), { headers: corsHeaders });
+    } catch(e) {
+      return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
+    }
+  }
+
+  // GET version — check de versión
+  if (req.method === 'GET' && action === 'version') {
+    return new Response(JSON.stringify({ ok: true, version: '1.0' }), { headers: corsHeaders });
+  }
+
   // GET — lista completa de fisios para selector panel
   if (req.method === 'GET') {
     try {
@@ -60,11 +88,38 @@ export default async function handler(req) {
     }
   }
 
-  // POST — login fisio
+  // POST
   if (req.method === 'POST') {
     let body = {};
     try { const text = await req.text(); body = text ? JSON.parse(text) : {}; } catch(e) { body = {}; }
 
+    const postAction = body.action || '';
+
+    // POST progreso — guardar sección completada
+    if (postAction === 'progreso') {
+      const { pwd, fisioId, seccion, estado } = body;
+      if (pwd !== FISIO_PASSWORD) return new Response(JSON.stringify({ ok: false, error: 'No autorizado' }), { status: 401, headers: corsHeaders });
+      if (!fisioId || !seccion || !estado) return new Response(JSON.stringify({ ok: false, error: 'Faltan datos' }), { status: 400, headers: corsHeaders });
+      try {
+        const fecha = new Date().toISOString().split('T')[0];
+        const valor = JSON.stringify({ estado, fecha });
+        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}/${fisioId}`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ fields: { [seccion]: valor } })
+        });
+        const data = await r.json();
+        if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message || 'Error Airtable' }), { status: 400, headers: corsHeaders });
+        return new Response(JSON.stringify({ ok: true, fecha }), { headers: corsHeaders });
+      } catch(e) {
+        return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // POST login fisio
     const { nombre, password } = body;
     if (!nombre || !password) return new Response(JSON.stringify({ ok: false, error: 'Introduce tu nombre y contraseña' }), { status: 400, headers: corsHeaders });
 
