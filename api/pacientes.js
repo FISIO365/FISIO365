@@ -42,8 +42,7 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders }); }
   }
 
-  // ── ENDPOINTS PÚBLICOS (sin contraseña) ─────────────────────────────────
-  // get-mensajes — app paciente no tiene pwd
+  // ── GET MENSAJES (público) ───────────────────────────────────────────────
   if (action === 'get-mensajes') {
     const pacienteId = url.searchParams.get('pacienteId') || '';
     try {
@@ -68,21 +67,17 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: true, mensajes: [] }), { headers: corsHeaders }); }
   }
 
-  // ── MARCAR RESPUESTA LEÍDA (paciente) ───────────────────────────────────────
+  // ── MARCAR RESPUESTA LEÍDA (público) ────────────────────────────────────
   if (action === 'marcar-respuesta-leida') {
     const pacienteId = url.searchParams.get('pacienteId') || '';
     try {
-      // Get all messages for this patient with unread responses
-      // Mark as read: replies from fisio OR messages sent by fisio (tipo='fisio')
       const formula = `AND({PacienteId}="${pacienteId}",{RespuestaLeida}=FALSE(),OR({Respuesta}!="",{Tipo}="fisio"))`;
       const r = await fetch(
         `https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}?filterByFormula=${encodeURIComponent(formula)}`,
         { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
       );
       const data = await r.json();
-      const records = data.records || [];
-      // Mark all as read
-      for(const rec of records){
+      for(const rec of (data.records || [])){
         await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}/${rec.id}`, {
           method: 'PATCH',
           headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
@@ -96,7 +91,6 @@ export default async function handler(req) {
   // ── NOTIFICACIONES ───────────────────────────────────────────────────────
   const NOTIF_TABLE = 'tblgexkXJ4S36faPa';
 
-  // GET notificaciones del paciente (público)
   if (action === 'get-notificaciones') {
     const pacienteId = url.searchParams.get('pacienteId') || '';
     if (!pacienteId) return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders });
@@ -119,7 +113,6 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: corsHeaders }); }
   }
 
-  // POST marcar-notificacion-leida (público)
   if (action === 'marcar-notificacion-leida' && req.method === 'POST') {
     const { notifId } = body;
     if (!notifId) return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders });
@@ -133,7 +126,6 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders }); }
   }
 
-  // POST crear-notificacion (con pwd - desde fisio)
   if (action === 'crear-notificacion' && req.method === 'POST') {
     const { pacienteId, titulo, texto, tipo } = body;
     try {
@@ -153,6 +145,7 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders }); }
   }
 
+  // ── GET TAREAS ───────────────────────────────────────────────────────────
   if (action === 'get-tareas') {
     const pacId = url.searchParams.get('pacienteId') || '';
     const TAREAS_TABLE = 'tblIXYE5ToRNY7MN4';
@@ -175,10 +168,62 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
+  // ── SUMAR PUNTO POR RECOMENDAR (+1, público) ────────────────────────────
+  if (action === 'sumar-punto-recomendacion' && req.method === 'POST') {
+    const { pacienteId } = body;
+    if (!pacienteId) return new Response(JSON.stringify({ ok: false, error: 'Falta pacienteId' }), { headers: corsHeaders });
+    try {
+      const rGet = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=puntos_referido`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      const dGet = await rGet.json();
+      const puntosActuales = dGet.fields?.puntos_referido || 0;
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { puntos_referido: puntosActuales + 1 } })
+      });
+      return new Response(JSON.stringify({ ok: true, puntos: puntosActuales + 1 }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: corsHeaders }); }
+  }
 
+  // ── GET PUNTOS PACIENTE (público) ────────────────────────────────────────
+  if (action === 'get-puntos') {
+    const pacienteId = url.searchParams.get('pacienteId') || '';
+    if (!pacienteId) return new Response(JSON.stringify({ ok: false, puntos: 0 }), { headers: corsHeaders });
+    try {
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=puntos_referido`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      const d = await r.json();
+      const puntos = d.fields?.puntos_referido || 0;
+      return new Response(JSON.stringify({ ok: true, puntos }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, puntos: 0 }), { headers: corsHeaders }); }
+  }
+
+  // ── CHECK CONTRASEÑA (a partir de aquí requiere pwd) ────────────────────
   const pwd = (body.pwd || queryPwd || '').trim();
   const expected = (FISIO_PASSWORD || '').trim();
   if (pwd !== expected) return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
+
+  // ── COMPLETAR REFERIDO (+5 puntos al referidor, desde panel fisio) ───────
+  if (action === 'completar-referido' && req.method === 'POST') {
+    const { pacienteId } = body;
+    if (!pacienteId) return new Response(JSON.stringify({ ok: false, error: 'Falta pacienteId' }), { headers: corsHeaders });
+    try {
+      const rGet = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=puntos_referido`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      const dGet = await rGet.json();
+      const puntosActuales = dGet.fields?.puntos_referido || 0;
+      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { puntos_referido: puntosActuales + 5 } })
+      });
+      return new Response(JSON.stringify({ ok: true, puntos: puntosActuales + 5 }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: corsHeaders }); }
+  }
 
   // ── LISTAR INFORMES ──────────────────────────────────────────────────────
   if (action === 'get-informes') {
@@ -186,8 +231,7 @@ export default async function handler(req) {
     const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
     try {
       const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo';
-      let allRecords = [];
-      let offset = null;
+      let allRecords = [], offset = null;
       do {
         const off = offset ? '&offset='+offset : '';
         const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE_ID}?${fields}&pageSize=100${off}`,
@@ -196,17 +240,15 @@ export default async function handler(req) {
         allRecords = allRecords.concat(d.records || []);
         offset = d.offset || null;
       } while (offset);
-
       let informes = allRecords.map(rec => ({
         id: rec.id,
-        pacienteId:     rec.fields['PacienteId'] || '',
+        pacienteId: rec.fields['PacienteId'] || '',
         pacienteNombre: rec.fields['PacienteNombre'] || '',
-        fisioNombre:    rec.fields['FisioNombre'] || '',
-        fecha:          rec.fields['Fecha'] || '',
-        informe:        rec.fields['Informe'] || '',
-        protocolo:      rec.fields['Protocolo'] || '',
+        fisioNombre: rec.fields['FisioNombre'] || '',
+        fecha: rec.fields['Fecha'] || '',
+        informe: rec.fields['Informe'] || '',
+        protocolo: rec.fields['Protocolo'] || '',
       }));
-
       if (pacId) informes = informes.filter(i => i.pacienteId === pacId);
       return new Response(JSON.stringify({ ok: true, informes }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
@@ -216,7 +258,6 @@ export default async function handler(req) {
     const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
     const filterPacId = url.searchParams.get('pacienteId') || '';
     try {
-      // Load from both ANAMNESIS and INFORMES tables
       const [r1, r2] = await Promise.all([
         fetch(`https://api.airtable.com/v0/${BASE_ID}/${ANAMNESIS_TABLE}?fields[]=PacienteID&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=FechaValoracion&fields[]=InformeGenerado&fields[]=Protocolo&sort[0][field]=FechaValoracion&sort[0][direction]=desc&pageSize=50`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }),
         fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE_ID}?fields[]=fldDR9XqkJ9oA3WK0&fields[]=fldHXAL8FC00biu1X&fields[]=fldL5BxsNuITe2He9&fields[]=fldqoUgXtf81ROqMy&fields[]=fldy5HGlff56RYrOa&fields[]=fld3YeK9QbDKjdSAd&sort[0][field]=fldHXAL8FC00biu1X&sort[0][direction]=desc&pageSize=50`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })
@@ -225,14 +266,11 @@ export default async function handler(req) {
       const fromAnamnesis = (d1.records || []).map(rec => ({ id: rec.id, pacienteId: rec.fields['PacienteID'] || '', pacienteNombre: rec.fields['PacienteNombre'] || '—', fisioNombre: rec.fields['FisioNombre'] || '—', fecha: rec.fields['FechaValoracion'] || '—', informe: rec.fields['InformeGenerado'] || '', protocolo: rec.fields['Protocolo'] || 'hernia' }));
       const fromInformes = (d2.records || []).map(rec => ({ id: rec.id, pacienteId: rec.fields['fldDR9XqkJ9oA3WK0'] || '', pacienteNombre: rec.fields['fldqoUgXtf81ROqMy'] || '—', fisioNombre: rec.fields['fld3YeK9QbDKjdSAd'] || '—', fecha: rec.fields['fldHXAL8FC00biu1X'] || '—', informe: rec.fields['fldL5BxsNuITe2He9'] || '', protocolo: rec.fields['fldy5HGlff56RYrOa'] || 'hernia' }));
       let informes = [...fromAnamnesis, ...fromInformes];
-      if (filterPacId) {
-        informes = informes.filter(i => i.pacienteId === filterPacId);
-      }
+      if (filterPacId) informes = informes.filter(i => i.pacienteId === filterPacId);
       return new Response(JSON.stringify({ ok: true, informes }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── GUARDAR INFORME ──────────────────────────────────────────────────────
   if (action === 'guardar-informe' && req.method === 'POST') {
     const { pacienteId, fisioNombre, protocolo, informe, pacienteNombre } = body;
     try {
@@ -251,13 +289,11 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── ACTUALIZAR INFORME ───────────────────────────────────────────────────
   if (action === 'actualizar-informe' && req.method === 'POST') {
     const { id, informe } = body;
     if (!id) return new Response(JSON.stringify({ ok: false, error: 'Falta id' }), { status: 400, headers: corsHeaders });
     const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
     try {
-      // Update in INFORMES table (new system)
       await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE_ID}/${id}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
@@ -267,7 +303,6 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── BORRAR INFORME (panel fisio) ────────────────────────────────────────
   if (action === 'borrar-informe' && req.method === 'POST') {
     const { id } = body;
     if (!id) return new Response(JSON.stringify({ ok: false, error: 'Falta id' }), { status: 400, headers: corsHeaders });
@@ -277,27 +312,18 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── BORRAR INFORME DEL PACIENTE (tabla INFORMES) ─────────────────────────
   if (action === 'borrar-informe-paciente' && req.method === 'POST') {
     const { pacienteId, fecha } = body;
     const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
     try {
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?pageSize=50`;
-      const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?pageSize=50`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
-      const record = (data.records || []).find(rec =>
-        rec.fields['PacienteID'] === pacienteId && rec.fields['Fecha'] === fecha
-      );
-      if (record) {
-        await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}/${record.id}`, {
-          method: 'DELETE', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-        });
-      }
+      const record = (data.records || []).find(rec => rec.fields['PacienteID'] === pacienteId && rec.fields['Fecha'] === fecha);
+      if (record) await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}/${record.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── GENERAR INFORME IA ───────────────────────────────────────────────────
   if (action === 'informe' && req.method === 'POST') {
     try {
       const { pacienteNombre, fisioNombre, fisioColegiado, datos } = body;
@@ -319,110 +345,63 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── GUARDAR INFORME EN PERFIL PACIENTE ─────────────────────────────────
   if (action === 'guardar-informe-panel' && req.method === 'POST') {
     const { pacienteId, pacienteNombre, fisioNombre, tipo, contenido, fecha } = body;
     const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
     try {
       let finalPacienteId = pacienteId || '';
       if (!finalPacienteId && pacienteNombre) {
-        const searchUrl = `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=PIN`;
-        const searchRes = await fetch(searchUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        const searchRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=PIN`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
         const searchData = await searchRes.json();
-        const found = (searchData.records || []).find(r =>
-          (r.fields['FULL NAME'] || '').trim().toLowerCase() === pacienteNombre.trim().toLowerCase()
-        );
+        const found = (searchData.records || []).find(r => (r.fields['FULL NAME'] || '').trim().toLowerCase() === pacienteNombre.trim().toLowerCase());
         if (found) finalPacienteId = found.id;
       }
       const atRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ records: [{ fields: {
-          PacienteId: finalPacienteId,
-          PacienteNombre: (pacienteNombre || '').toUpperCase(),
-          FisioNombre: fisioNombre || '',
-          Fecha: fecha || new Date().toLocaleDateString('es-ES'),
-          Protocolo: tipo || 'hernia',
-          Informe: contenido || ''
-        }}]})
+        body: JSON.stringify({ records: [{ fields: { PacienteId: finalPacienteId, PacienteNombre: (pacienteNombre || '').toUpperCase(), FisioNombre: fisioNombre || '', Fecha: fecha || new Date().toLocaleDateString('es-ES'), Protocolo: tipo || 'hernia', Informe: contenido || '' } }]})
       });
       const atData = await atRes.json();
-      if (atData.error) {
-        return new Response(JSON.stringify({ ok: false, error: atData.error.message || JSON.stringify(atData.error), atData }), { headers: corsHeaders });
-      }
+      if (atData.error) return new Response(JSON.stringify({ ok: false, error: atData.error.message || JSON.stringify(atData.error) }), { headers: corsHeaders });
       return new Response(JSON.stringify({ ok: true, pacienteId: finalPacienteId, recordId: atData.records?.[0]?.id }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── GET DIARIO PACIENTE ──────────────────────────────────────────────────
   if (action === 'get-diario') {
     const pacienteId = url.searchParams.get('pacienteId') || '';
     if (!pacienteId) return new Response(JSON.stringify({ ok: false, error: 'Falta pacienteId' }), { status: 400, headers: corsHeaders });
     try {
-      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`, {
-        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-      });
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
       const fields = data.fields || {};
       const diario = fields['Diario'] || fields['diario'] || fields['DIARIO'] || fields['Diary'] || '';
-      const fieldNames = Object.keys(fields);
-      return new Response(JSON.stringify({ ok: true, diario, fieldNames }), { headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true, diario, fieldNames: Object.keys(fields) }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── ENVIAR MENSAJE FISIO → PACIENTE ─────────────────────────────────────
   if (action === 'enviar-mensaje-fisio' && req.method === 'POST') {
     const { pacienteId, pacienteNombre, fisioId, fisioNombre, texto, fecha } = body;
     try {
-      // 1. Guardar mensaje en MENSAJES
       await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: {
-          PacienteId: pacienteId || '',
-          PacienteNombre: pacienteNombre || '',
-          FisioId: fisioId || '',
-          FisioNombre: fisioNombre || '',
-          Texto: texto || '',
-          Fecha: fecha || new Date().toLocaleDateString('es-ES'),
-          Tipo: 'fisio',
-          Visto: true,
-          RespuestaLeida: false
-        }})
+        body: JSON.stringify({ fields: { PacienteId: pacienteId||'', PacienteNombre: pacienteNombre||'', FisioId: fisioId||'', FisioNombre: fisioNombre||'', Texto: texto||'', Fecha: fecha||new Date().toLocaleDateString('es-ES'), Tipo: 'fisio', Visto: true, RespuestaLeida: false } })
       });
-
-      // push: handled separately
-
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── GET MENSAJES FISIO ───────────────────────────────────────────────────
   if (action === 'get-mensajes-fisio') {
     const fisioId = url.searchParams.get('fisioId') || '';
     const soloCount = url.searchParams.get('soloCount') === '1';
     try {
       const formula = fisioId ? `{FisioId}="${fisioId}"` : '';
-      const sortQ = 'sort[0][field]=Fecha&sort[0][direction]=desc';
       const filterQ = formula ? `filterByFormula=${encodeURIComponent(formula)}&` : '';
-      const r = await fetch(
-        `https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}?${filterQ}${sortQ}&pageSize=50`,
-        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
-      );
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}?${filterQ}sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=50`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
-      if (data.error) return new Response(JSON.stringify({ ok: false, error: data.error.message, sinLeer: 0, mensajes: [] }), { headers: corsHeaders });
+      if (data.error) return new Response(JSON.stringify({ ok: false, sinLeer: 0, mensajes: [] }), { headers: corsHeaders });
       const mensajes = (data.records || []).map(rec => ({
-        id: rec.id,
-        pacienteId: rec.fields['PacienteId'] || '',
-        pacienteNombre: rec.fields['PacienteNombre'] || '',
-        fisioId: rec.fields['FisioId'] || '',
-        fisioNombre: rec.fields['FisioNombre'] || '',
-        texto: rec.fields['Texto'] || '',
-        fecha: rec.fields['Fecha'] || '',
-        tipo: rec.fields['Tipo'] || 'diario',
-        visto: rec.fields['Visto'] || false,
-        respuesta: rec.fields['Respuesta'] || '',
-        respuestaLeida: rec.fields['RespuestaLeida'] || false
+        id: rec.id, pacienteId: rec.fields['PacienteId']||'', pacienteNombre: rec.fields['PacienteNombre']||'', fisioId: rec.fields['FisioId']||'', fisioNombre: rec.fields['FisioNombre']||'', texto: rec.fields['Texto']||'', fecha: rec.fields['Fecha']||'', tipo: rec.fields['Tipo']||'diario', visto: rec.fields['Visto']||false, respuesta: rec.fields['Respuesta']||'', respuestaLeida: rec.fields['RespuestaLeida']||false
       }));
       const sinLeer = mensajes.filter(m => !m.visto).length;
       if (soloCount) return new Response(JSON.stringify({ ok: true, sinLeer }), { headers: corsHeaders });
@@ -430,11 +409,8 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message, sinLeer: 0, mensajes: [] }), { status: 500, headers: corsHeaders }); }
   }
 
-
-
-  // ── RESPONDER MENSAJE ────────────────────────────────────────────────────
   if (action === 'responder-mensaje' && req.method === 'POST') {
-    const { mensajeId, respuesta, fisioNombre, pacienteId, pacienteNombre } = body;
+    const { mensajeId, respuesta } = body;
     if (!mensajeId || !respuesta) return new Response(JSON.stringify({ ok: false, error: 'Faltan datos' }), { status: 400, headers: corsHeaders });
     try {
       await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}/${mensajeId}`, {
@@ -442,13 +418,10 @@ export default async function handler(req) {
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: { Respuesta: respuesta, Visto: true, RespuestaLeida: false } })
       });
-      // Crear notificación de respuesta
-      // notificación push gestionada por fisio.html
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── MARCAR VISTO ─────────────────────────────────────────────────────────
   if (action === 'marcar-visto' && req.method === 'POST') {
     const { mensajeId } = body;
     if (!mensajeId) return new Response(JSON.stringify({ ok: false, error: 'Falta mensajeId' }), { status: 400, headers: corsHeaders });
@@ -462,7 +435,6 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── GET PACIENTES ────────────────────────────────────────────────────────
   if (req.method === 'GET' && !action) {
     try {
       let allRecords = [], offset = null;
@@ -478,7 +450,6 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
-  // ── POST NUEVO PACIENTE ──────────────────────────────────────────────────
   if (req.method === 'POST' && !action) {
     const { nombre, email, telefono } = body;
     if (!nombre || !email) return new Response(JSON.stringify({ ok: false, error: 'Nombre y email obligatorios' }), { status: 400, headers: corsHeaders });
