@@ -728,19 +728,18 @@ async function loadPuntos(){
   if(!patient)return;
   const el=document.getElementById('puntosNumero');
   if(!el)return;
-  const cached=patient.puntos_referido||0;
-  // Mostrar el valor local inmediatamente sin animación
-  el.textContent=cached;
-  // Confirmar con Airtable en background
+  // Siempre leer de Airtable directamente
   try{
     const res=await fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id));
     const data=await res.json();
-    if(data.ok&&data.puntos!==cached){
+    if(data.ok){
       patient.puntos_referido=data.puntos;
       localStorage.setItem('fisio365_patient',JSON.stringify(patient));
       el.textContent=data.puntos;
     }
-  }catch(e){}
+  }catch(e){
+    el.textContent=patient.puntos_referido||0;
+  }
 }
 </script>
 </body>
