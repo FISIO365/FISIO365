@@ -56,7 +56,7 @@ export default async function handler(req) {
     if (pwd !== FISIO_PASSWORD) return new Response(JSON.stringify({ ok: false, error: 'No autorizado' }), { status: 401, headers: corsHeaders });
     if (!fisioId) return new Response(JSON.stringify({ ok: false, error: 'fisioId requerido' }), { status: 400, headers: corsHeaders });
     try {
-      const filter = encodeURIComponent(`{FisioID} = "${fisioId}"`);
+      const filter = encodeURIComponent(`{FisioId} = "${fisioId}"`);
       const r = await airtableFetch(`${PROGRESO_TABLE}?filterByFormula=${filter}`);
       const data = await r.json();
       const progreso = {};
@@ -113,7 +113,7 @@ export default async function handler(req) {
         const fecha = new Date().toISOString().split('T')[0];
 
         // Buscar si ya existe un registro para este fisio + sección
-        const filter = encodeURIComponent(`AND({FisioID} = "${fisioId}", {Seccion} = "${seccion}")`);
+        const filter = encodeURIComponent(`AND({FisioId} = "${fisioId}", {Seccion} = "${seccion}")`);
         const existing = await airtableFetch(`${PROGRESO_TABLE}?filterByFormula=${filter}`);
         const existingData = await existing.json();
         const existingRecord = (existingData.records || [])[0];
@@ -129,7 +129,7 @@ export default async function handler(req) {
           // Crear nuevo registro
           result = await airtableFetch(PROGRESO_TABLE, {
             method: 'POST',
-            body: JSON.stringify({ fields: { FisioID: fisioId, Seccion: seccion, Estado: estado, Fecha: fecha } })
+            body: JSON.stringify({ fields: { FisioId: fisioId, Seccion: seccion, Estado: estado, Fecha: fecha } })
           });
         }
 
