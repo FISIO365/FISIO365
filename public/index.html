@@ -22,58 +22,35 @@
   --border: rgba(0,0,0,0.12);
   --r: 12px;
   --font: 'Poppins', sans-serif;
+  --lila: #ada3da;
+  --lila-light: #ede9f7;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--cream); font-family: var(--font); color: var(--black); }
-
-/* LOGIN */
 .screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; background: var(--black); }
 .logo-wrap { margin-bottom: 44px; text-align: center; margin-top: 20px; }
-.logo-text { font-size: 52px; font-weight: 800; color: var(--cream); letter-spacing: -2px; }
 .login-card { width: 100%; max-width: 320px; }
-.lang-wrap { display: flex; gap: 6px; margin-bottom: 40px; background: rgba(255,255,255,0.06); border-radius: 99px; padding: 4px; }
 .lang-btn { flex: 1; padding: 8px; border-radius: 99px; background: none; color: rgba(245,242,238,0.5); font-family: var(--font); font-size: 12px; font-weight: 700; border: none; cursor: pointer; transition: all .15s; }
-.lang-btn.active { background: var(--cream); color: var(--black); }
 .lbl,.login-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(245,242,238,0.35); margin-bottom: 10px; display: block; }
-.login-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 0 16px; height: 52px; margin-bottom: 28px; font-family: var(--font); font-size: 15px; color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color .15s; }
-.login-input:focus { border-color: rgba(255,255,255,0.4); }
-.login-input::placeholder { color: rgba(245,242,238,0.25); }
 .pin-wrap { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 36px; width: 100%; }
-.pin-d { flex: 1; height: 52px; max-width: 64px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--cream); text-align: center; outline: none; transition: border-color .15s; }
-.pin-input:focus { border-color: rgba(255,255,255,0.4); }
 .btn-primary { width: 100%; padding: 0; height: 52px; background: var(--cream); color: var(--black); font-family: var(--font); font-size: 14px; font-weight: 700; border: none; border-radius: var(--r); cursor: pointer; margin-bottom: 12px; transition: opacity .15s; }
 .btn-primary:active { opacity: .8; }
-.btn-secondary { width: 100%; padding: 15px; background: none; color: rgba(245,242,238,0.5); font-family: var(--font); font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); cursor: pointer; }
-
-/* APP */
 #appScreen { display: none; }
 .topbar { background: var(--black); padding: 0 20px; height: 44px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
 .topbar-logo { font-size: 16px; font-weight: 600; color: var(--cream); letter-spacing: -0.3px; }
-.topbar-name { font-size: 12px; font-weight: 500; color: rgba(245,242,238,0.6); font-family: var(--font); letter-spacing: .01em; }
 .container { max-width: 600px; margin: 0 auto; padding: 20px 16px 40px; }
-
-/* HAMBURGER */
 .hamburger-btn { background: none; border: none; cursor: pointer; padding: 6px 4px; color: var(--cream); display: flex; flex-direction: column; gap: 5px; }
 .hamburger-btn span { display: block; width: 18px; height: 1.5px; background: var(--cream); border-radius: 1px; }
-.nav-menu { position: fixed; top: 44px; right: 16px; width: 190px; background: var(--black); z-index: 200; border-radius: 12px; transform: scale(0.92) translateY(-8px); transform-origin: top right; opacity: 0; pointer-events: none; transition: transform .2s ease, opacity .2s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow: hidden; }
+.nav-menu { position: fixed; top: 44px; right: 16px; width: 210px; background: var(--black); z-index: 200; border-radius: 12px; transform: scale(0.92) translateY(-8px); transform-origin: top right; opacity: 0; pointer-events: none; transition: transform .2s ease, opacity .2s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow: hidden; }
 .nav-menu.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
-.nav-menu-inner { padding: 6px 0; }
 .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; font-family: var(--font); font-size: 13px; font-weight: 600; color: rgba(245,242,238,0.55); cursor: pointer; border: none; background: none; width: 100%; text-align: left; transition: all .12s; }
 .nav-item.active { color: var(--cream); }
 .nav-item-dot { width: 7px; height: 7px; border-radius: 50%; background: #ee2155; display: none; margin-left: auto; }
 .nav-item-dot.show { display: block; }
 .nav-overlay { position: fixed; inset: 0; z-index: 190; display: none; }
 .nav-overlay.open { display: block; }
-
-/* BELL */
-.notif-btn { position: relative; background: none; border: none; cursor: pointer; padding: 4px 6px; color: var(--cream); }
-.notif-badge { display: none; position: absolute; top: 0; right: 0; width: 8px; height: 8px; border-radius: 50%; background: #ee2155; }
-
-/* CARDS */
 .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 10px; }
 .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 12px; margin-top: 24px; }
-
-/* EJERCICIOS */
 .ej-list { display: flex; flex-direction: column; }
 .ej-item { padding: 0 20px 28px; }
 .ej-item+.ej-item { padding-top: 28px; border-top: 1px solid rgba(0,0,0,0.06); }
@@ -84,30 +61,16 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .pill-r { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: #ede9f7; color: #7b6fd4; border: 0.5px solid #d5d0f0; white-space: nowrap; }
 .pill-d { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: #e8f5f0; color: #2a9d6e; border: 0.5px solid #b8e8d4; white-space: nowrap; }
 .ej-thumb { position: relative; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; background: #000; cursor: pointer; }
-.ej-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ej-thumb iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
-.ej-play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); transition: background .2s; }
-.ej-play-overlay:hover { background: rgba(0,0,0,0.35); }
-.ej-play-ring { width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; }
 .ej-no-video { aspect-ratio: 16/9; border-radius: 14px; background: #ede9f7; display: flex; align-items: center; justify-content: center; }
-
-/* FECHA HEADER */
 .date-h { margin-bottom: 20px; }
 .date-today { font-size: 16px; font-weight: 800; color: var(--black); letter-spacing: -.3px; }
 .date-sub { font-size: 12px; color: #aaa; margin-top: 2px; }
-
-/* PROGRESO / EVA */
 .vas-num { flex: 1; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; color: white; border: none; transition: all .15s; opacity: 0.6; }
 .vas-num.on { opacity: 1; transform: scale(1.18); box-shadow: 0 2px 10px rgba(0,0,0,0.25); }
-.vas-label { font-size: 12px; color: var(--muted); }
 .vas-nums { display: flex; gap: 4px; margin: 12px 0 8px; }
-.vas-row { display: flex; gap: 6px; margin: 16px 0; flex-wrap: wrap; }
-.vas-btn { flex: 1; min-width: 28px; aspect-ratio: 1; border: 1px solid var(--border); background: none; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
-.vas-btn.sel { background: var(--black); color: var(--cream); border-color: var(--black); }
 .periodo { font-size: 11px; font-weight: 600; padding: 5px 12px; border: 1px solid var(--border); border-radius: 99px; background: none; cursor: pointer; color: var(--muted); font-family: var(--font); }
-.periodo.activo { background: var(--black); color: var(--cream); border-color: var(--black); }
-
-/* MENSAJES */
+.periodo.on { background: var(--black); color: var(--cream); border-color: var(--black); }
 .msg-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
 .msg-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .msg-fisio-badge { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
@@ -120,13 +83,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .msg-tipo { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 3px 8px; border-radius: 99px; }
 .msg-tipo-diario { background: #f0f0f0; color: var(--muted); }
 .msg-tipo-dolor { background: #fff0f0; color: #c00; }
-
-/* INFORMES */
 .inf-pac-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 8px; }
-.fp-btn { font-family: var(--font); font-size: 12px; font-weight: 600; padding: 6px 14px; border: 1px solid var(--border); border-radius: 99px; background: none; color: var(--black); cursor: pointer; }
-.fp-btn:hover { background: var(--black); color: var(--cream); }
-
-/* CITAS */
 .cal-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
 .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .cal-mes { font-size: 15px; font-weight: 700; color: var(--black); }
@@ -143,8 +100,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .cal-dia.seleccionado { background: var(--black); }
 .cal-dia.seleccionado .cal-dia-num { color: var(--cream); font-weight: 700; }
 .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--black); margin-top: 2px; }
-.cal-dia.seleccionado .cal-dot { background: var(--cream); }
-.cal-dia.hoy .cal-dot { background: var(--cream); }
+.cal-dia.seleccionado .cal-dot,.cal-dia.hoy .cal-dot { background: var(--cream); }
 .cita-detalle { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 12px; }
 .cita-detalle-fecha { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px; }
 .cita-detalle-hora { font-size:22px;font-weight:800;color:var(--black);margin-bottom:4px; }
@@ -160,74 +116,41 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .cita-row-info { flex:1; }
 .cita-row-hora { font-size:13px;font-weight:700;color:var(--black); }
 .cita-row-fisio { font-size:12px;color:var(--muted);margin-top:1px; }
-
-/* COMPLETADO */
-.completado { text-align: center; padding: 3rem 1rem; }
-.completado-icon { font-size: 48px; margin-bottom: 16px; }
-.completado-title { font-size: 22px; font-weight: 800; color: var(--black); margin-bottom: 8px; }
-.completado-sub { font-size: 14px; color: var(--muted); }
-
-/* MODAL */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; display: flex; align-items: flex-end; justify-content: center; }
-.modal-box { background: var(--white); border-radius: 16px 16px 0 0; padding: 24px 20px 40px; width: 100%; max-width: 600px; }
-.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-.modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-.modal-opts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-.modal-opt { padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; display: flex; align-items: center; gap: 12px; background: none; width: 100%; font-family: var(--font); text-align: left; }
-.modal-opt:active { background: var(--cream); }
-.modal-opt-title { font-size: 13px; font-weight: 700; color: var(--black); }
-.modal-opt-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.modal-fisio-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-.modal-fisio-btn { padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; background: none; color: var(--black); text-align: left; }
-.modal-fisio-btn:active { background: var(--cream); }
-.modal-close { width: 100%; padding: 14px; border: none; background: none; font-family: var(--font); font-size: 13px; color: var(--muted); cursor: pointer; }
-
-/* DIARIO */
-.diario-card { background: transparent; border: none; padding: 0; }
-.diario-card textarea { display: none; }
+.modal-sheet { background: var(--white); border-radius: 16px 16px 0 0; padding: 24px 20px 48px; width: 100%; max-width: 600px; }
 .btn-diario { width: 100%; padding: 14px; background: var(--black); color: var(--cream); font-family: var(--font); font-size: 14px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; margin-top: 0; }
-
-/* GUIA */
+.guia-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 12px; }
+.guia-titulo { font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 16px; }
+.guia-os { display: flex; gap: 8px; margin-bottom: 20px; }
+.guia-os-btn { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: none; font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.guia-os-btn.active { background: var(--black); color: var(--cream); border-color: var(--black); }
+.guia-paso { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.guia-num { width: 26px; height: 26px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.guia-txt { font-size: 14px; color: var(--black); line-height: 1.5; padding-top: 4px; }
 .guia-feature { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px; }
 .guia-feature-icon { font-size: 20px; flex-shrink: 0; width: 36px; }
 .guia-feature-titulo { font-size: 14px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
 .guia-feature-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
-.guia-step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
-.guia-step-n { width: 24px; height: 24px; border-radius: 50%; background: var(--black); color: var(--cream); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-/* TOAST */
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--black); color: var(--cream); padding: 10px 20px; border-radius: 99px; font-size: 13px; font-weight: 600; z-index: 999; display: none; white-space: nowrap; }
 .toast.err { background: #c00; }
-
-/* EMPTY */
 .empty { text-align: center; padding: 3rem 1rem; }
 .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: .3; }
 .empty-title { font-size: 15px; font-weight: 700; color: var(--black); margin-bottom: 6px; }
 .empty-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
-/* LOADING */
 .loading { text-align: center; padding: 3rem; }
 .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border); border-top-color: var(--black); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* PRINT */
-@media print {
-  #appScreen > *:not(#infModalPrint) { display: none !important; }
-  #infModalPrint { display: block !important; position: static !important; }
-  #infModalPrint > div:first-child { display: none !important; }
-  #infModalPrint > div:last-child { overflow: visible !important; padding: 0 !important; }
-}
-
+@media print { #appScreen > *:not(#infModalPrint) { display: none !important; } }
 .lbl { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: rgba(245,242,238,0.5); margin-bottom: 8px; }
-.inp { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 0 16px; height: 52px; margin-bottom: 28px; font-family: var(--font); font-size: 15px; color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color .15s; }
+.inp { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 0 16px; height: 52px; font-family: var(--font); font-size: 15px; color: var(--cream); outline: none; margin-bottom: 20px; transition: border-color .15s; }
 .inp:focus { border-color: rgba(255,255,255,0.4); }
 .inp::placeholder { color: rgba(245,242,238,0.25); }
 .pin-d { width: 52px; height: 56px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--cream); text-align: center; outline: none; transition: border-color .15s; }
 .pin-d:focus { border-color: rgba(255,255,255,0.4); }
 .btn-install { width: 100%; padding: 16px; background: none; color: rgba(245,242,238,0.3); font-family: var(--font); font-size: 12px; border: none; cursor: pointer; margin-top: 8px; letter-spacing: .02em; }
 .login-err { color: #ff6b6b; font-size: 13px; text-align: center; margin-top: 8px; min-height: 20px; }
-.login-title { font-size: 24px; font-weight: 800; color: var(--cream); margin-bottom: 8px; letter-spacing: -.5px; }
-.login-desc { font-size: 13px; color: rgba(245,242,238,0.5); margin-bottom: 28px; line-height: 1.5; }
+.login-title { display: none; }
+.login-desc { display: none; }
 .fisio-card { display: flex; align-items: center; gap: 12px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 16px; }
 .fisio-av { width: 40px; height: 40px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; overflow: hidden; flex-shrink: 0; }
 .fisio-av img { width: 100%; height: 100%; object-fit: cover; }
@@ -242,27 +165,11 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .prog-cnt { font-size: 12px; font-weight: 700; color: var(--black); }
 .prog-bg { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
 .prog-bar { height: 100%; background: var(--black); border-radius: 99px; transition: width .3s ease; }
-
-.ej-chk { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; background: none; }
-.ej-chk.on { background: var(--black); border-color: var(--black); }
-.ej-info { flex: 1; }
-.ej-nom { font-size: 14px; font-weight: 600; color: var(--black); margin-bottom: 4px; }
-.ej-zona { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-.ej-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-.pill { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px; background: #f0ede8; color: #666; }
-
-.btn-done { width: 100%; padding: 11px; background: var(--cream); color: var(--black); font-family: var(--font); font-size: 13px; font-weight: 700; border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; }
-.btn-done.on { background: var(--black); color: var(--cream); border-color: var(--black); }
 .completado-wrap { text-align: center; padding: 3rem 1rem; }
 .completado-emoji { font-size: 48px; margin-bottom: 16px; }
 .completado-titulo { font-size: 22px; font-weight: 800; color: var(--black); margin-bottom: 8px; }
 .completado-sub { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
 .completado-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; font-size: 13px; color: var(--black); line-height: 1.6; }
-.modal-sheet { background: var(--white); border-radius: 16px 16px 0 0; padding: 24px 20px 48px; width: 100%; max-width: 600px; }
-.modal-cancel { width: 100%; padding: 14px; background: none; color: var(--muted); font-family: var(--font); font-size: 13px; border: none; cursor: pointer; margin-top: 4px; }
-.modal-opt-icon { font-size: 20px; width: 32px; flex-shrink: 0; }
-.modal-opt-title { font-size: 14px; font-weight: 700; color: var(--black); }
-.modal-opt-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .fisio-opt { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
 .fisio-opt-av { width: 36px; height: 36px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; overflow: hidden; flex-shrink: 0; }
 .fisio-opt-name { font-size: 14px; font-weight: 600; color: var(--black); }
@@ -283,36 +190,20 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .inf-pac-fisio { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
 .inf-pac-contenido { display: none; margin-top: 14px; font-size: 13px; color: var(--black); line-height: 1.7; white-space: pre-wrap; border-top: 1px solid var(--border); padding-top: 14px; }
 .inf-pac-contenido.open { display: block; }
-.guia-section { }
-.guia-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 12px; }
-.guia-titulo { font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 16px; }
-.guia-os { display: flex; gap: 8px; margin-bottom: 20px; }
-.guia-os-btn { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: none; font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
-.guia-os-btn.active { background: var(--black); color: var(--cream); border-color: var(--black); }
-.guia-paso { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
-.guia-num { width: 26px; height: 26px; border-radius: 50%; background: var(--black); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-.guia-txt { font-size: 14px; color: var(--black); line-height: 1.5; padding-top: 4px; }
-
-
-.login-title { display: none; }
-.login-desc { display: none; }
-
-/* BOTONES INFORME */
 .btn-inf { font-family: var(--font); font-size: 12px; font-weight: 700; padding: 10px 20px; border: none; border-radius: 99px; background: var(--black); color: var(--cream); cursor: pointer; margin-right: 8px; margin-bottom: 8px; transition: opacity .15s; letter-spacing: .02em; display: inline-block; }
 .btn-inf:active { opacity: .75; }
 .btn-inf.pdf { background: var(--cream); color: var(--black); border: 1.5px solid rgba(0,0,0,0.15); }
-.inf-pac-contenido { display: none; margin-top: 16px; font-size: 13px; color: var(--black); line-height: 1.8; white-space: pre-wrap; border-top: 1px solid var(--border); padding-top: 16px; }
-.inf-pac-contenido.open { display: block; }
+/* ── NUEVO: PREMIO REFERIDO ── */
+.premio-banner { background: var(--lila-light); border: 1.5px solid var(--lila); border-radius: var(--r); padding: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; }
+.premio-banner-icon { font-size: 28px; flex-shrink: 0; }
+.premio-banner-titulo { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+.premio-banner-sub { font-size: 12px; color: #7b6fd4; font-weight: 500; }
 </style>
 </head>
 <body>
-
 <div id="loginScreen" class="screen active">
  <div class="logo-wrap"><div style="font-size:42px;font-weight:800;color:var(--cream);letter-spacing:-2px;">FISIO<span style="opacity:.6">365</span></div></div>
  <div class="login-card">
-
- 
- <div class="login-desc" id="loginDesc">Introduce tu email y el PIN que te ha dado tu fisioterapeuta</div>
  <label class="lbl">Email</label>
  <input class="inp" type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" />
  <label class="lbl">PIN</label>
@@ -323,7 +214,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <input class="pin-d" type="tel" id="p4" maxlength="1" />
  </div>
  <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
- <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app? </button>
+ <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app?</button>
  <div style="text-align:center;margin-top:10px;">
  <button class="lang-btn" data-lang="es" onclick="setLang('es')" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:rgba(245,242,238,0.4);padding:0;">ES</button><span style="color:rgba(245,242,238,0.15);font-size:12px;font-family:var(--font);padding:0 4px;">/</span><button class="lang-btn" data-lang="cat" onclick="setLang('cat')" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:rgba(245,242,238,0.4);padding:0;">CAT</button><span style="color:rgba(245,242,238,0.15);font-size:12px;font-family:var(--font);padding:0 4px;">/</span><button class="lang-btn" data-lang="en" onclick="setLang('en')" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:rgba(245,242,238,0.4);padding:0;">EN</button>
  </div>
@@ -337,24 +228,26 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div style="display:flex;align-items:center;gap:12px;">
  <div class="topbar-name" id="topbarName" style="display:none"></div>
  <button id="notifBtn" onclick="toggleNotifPanel()" style="display:none;background:none;border:none;cursor:pointer;padding:4px 6px;position:relative;color:var(--cream);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span id="notifBadge" style="display:none;position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;background:#ee2155;"></span></button>
- <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()" style="display:none;">
- <span></span><span></span><span></span>
- </button>
+ <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()" style="display:none;"><span></span><span></span><span></span></button>
  </div>
  </div>
- <!-- PANEL NOTIFICACIONES -->
-  <!-- NAV MENU DESPLEGABLE -->
+
  <div class="nav-overlay" id="navOverlay" onclick="cerrarMenu()"></div>
  <div class="nav-menu" id="navMenu">
  <div class="nav-menu-inner" style="background:white;border-radius:16px;padding:16px;">
  <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:12px;">
- <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><polyline points="2 12 6 12 8 8 10 16 12 12 14 12"/></svg>Mis ejercicios</button>
+ <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Mis ejercicios</button>
  <button class="nav-item" id="navProgreso" onclick="showSection('progreso');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H3V5h3M18 9h3V5h-3"/><path d="M6 5h12v7a6 6 0 0 1-12 0V5z"/><path d="M12 17v4M8 21h8"/></svg>Mi racha</button>
  <button class="nav-item" id="navCitas" onclick="showSection('citas');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Mis citas</button>
  <button class="nav-item" id="navInformes" onclick="showSection('informes');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>Mis informes</button>
  </div>
  <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;margin-bottom:12px;">
  <button class="nav-item" id="navMensajes" onclick="showSection('mensajes');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat<div class="nav-item-dot" id="navMensajesDot"></div></button>
+ <!-- ★ NUEVO: INVITAR AMIGO -->
+ <button class="nav-item" onclick="invitarAmigo();cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;">
+   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.29 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.18 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+   Invitar a un amigo
+ </button>
  </div>
  <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;display:flex;flex-direction:column;gap:2px;">
  <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#bbb;font-size:14px;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Guía</button>
@@ -362,27 +255,31 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  </div>
  </div>
  </div>
- <div class="container">
 
- <!-- VISTA HOY -->
+ <div class="container">
  <div id="vistaHoy">
  <div id="fisioCard" class="fisio-card" style="display:none;">
  <div class="fisio-av" id="fisioAv"></div>
- <div>
- <div class="fisio-nombre" id="fisioNombre"></div>
- <div class="fisio-col" id="fisioColegiado"></div>
- </div>
+ <div><div class="fisio-nombre" id="fisioNombre"></div><div class="fisio-col" id="fisioColegiado"></div></div>
  </div>
  <div id="notaFisioBtn" style="display:none;margin-bottom:12px;">
  <button onclick="toggleNotaFisio()" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:#aaa;display:flex;align-items:center;gap:5px;padding:0;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ver nota de tu fisio</button>
-</div>
-<div id="mensajeFisioCard" class="mensaje-fisio" style="display:none;">
+ </div>
+ <div id="mensajeFisioCard" class="mensaje-fisio" style="display:none;">
  <div class="mensaje-fisio-label" id="mensajeFisioLabel">Nota de tu fisio</div>
  <div class="mensaje-fisio-texto" id="mensajeFisioTexto"></div>
-</div>
+ </div>
+ <!-- ★ NUEVO: BANNER PREMIO -->
+ <div id="premioBanner" class="premio-banner" style="display:none;">
+   <div class="premio-banner-icon">🎁</div>
+   <div>
+     <div class="premio-banner-titulo">¡Has ganado un premio!</div>
+     <div class="premio-banner-sub">-10€ en tu próxima sesión por recomendar FISIO365</div>
+   </div>
+ </div>
  <div class="date-h">
  <div class="date-today" id="dateToday">Tu programa de hoy</div>
- <div class="date-sub" id="dateSub">Domingo, 14 de junio</div>
+ <div class="date-sub" id="dateSub"></div>
  </div>
  <div id="vistaEjercicios">
  <div class="prog-wrap" id="progWrap" style="display:none !important;">
@@ -399,19 +296,13 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div class="completado-emoji"></div>
  <div class="completado-titulo">Buen trabajo 🙂</div>
  <div class="completado-sub">Has completado tu sesión de hoy.</div>
- <div class="completado-card">
- <p>Cada día que te mueves es un paso hacia tu recuperación. ¡Vuelve mañana!</p>
- </div>
+ <div class="completado-card"><p>Cada día que te mueves es un paso hacia tu recuperación. ¡Vuelve mañana!</p></div>
  </div>
  </div>
  </div>
 
- <!-- VISTA PROGRESO -->
  <div id="vistaProgreso" style="display:none;">
- <div class="date-h" style="margin-top:4px;">
- <div class="date-today" style="font-size:20px;">Mi racha</div>
- <div class="date-sub">Días que has hecho tus ejercicios</div>
- </div>
+ <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mi racha</div><div class="date-sub">Días que has hecho tus ejercicios</div></div>
  <div id="adherenciaSection" style="margin-bottom:20px;"></div>
  <div class="vas-card" style="display:none;">
  <div class="vas-question">¿Cuánto dolor tienes hoy?</div>
@@ -420,108 +311,64 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div class="vas-labels"><span>Sin dolor</span><span>Dolor máximo</span></div>
  <button class="btn-vas" id="btnVas" onclick="guardarVAS()">Guardar</button>
  </div>
- <div class="grafica-card" id="graficaCard" style="display:none !important;" style="display:none !important;">
- <div class="grafica-header">
- <div style="display:none;">Evolución del dolor</div>
- <div class="periodos">
- <button class="periodo on" onclick="cambiarPeriodo(7,this)">7d</button>
- <button class="periodo" onclick="cambiarPeriodo(15,this)">15d</button>
- <button class="periodo" onclick="cambiarPeriodo(30,this)">30d</button>
- <button class="periodo" onclick="cambiarPeriodo(60,this)">60d</button>
- <button class="periodo" onclick="cambiarPeriodo(90,this)">90d</button>
- </div>
- </div>
- <div style="position:relative;padding-left:24px;" id="graficaInner">
- <div style="position:absolute;left:0;top:0;bottom:20px;display:flex;flex-direction:column;justify-content:space-between;padding:2px 0;">
- <span style="font-size:10px;color:#ccc;">10</span>
- <span style="font-size:10px;color:#ccc;">5</span>
- <span style="font-size:10px;color:#ccc;">0</span>
- </div>
- <canvas id="chartSvg" style="width:100%;height:100px;display:block;"></canvas>
- <div style="position:relative;height:20px;" id="diasRow"></div>
- </div>
+ <div class="grafica-card" id="graficaCard" style="display:none !important;">
+ <div class="grafica-header"><div style="display:none;">Evolución del dolor</div><div class="periodos"><button class="periodo on" onclick="cambiarPeriodo(7,this)">7d</button><button class="periodo" onclick="cambiarPeriodo(15,this)">15d</button><button class="periodo" onclick="cambiarPeriodo(30,this)">30d</button><button class="periodo" onclick="cambiarPeriodo(60,this)">60d</button><button class="periodo" onclick="cambiarPeriodo(90,this)">90d</button></div></div>
+ <div style="position:relative;padding-left:24px;" id="graficaInner"><div style="position:absolute;left:0;top:0;bottom:20px;display:flex;flex-direction:column;justify-content:space-between;padding:2px 0;"><span style="font-size:10px;color:#ccc;">10</span><span style="font-size:10px;color:#ccc;">5</span><span style="font-size:10px;color:#ccc;">0</span></div><canvas id="chartSvg" style="width:100%;height:100px;display:block;"></canvas><div style="position:relative;height:20px;" id="diasRow"></div></div>
  <div class="vas-msg" id="vasMsg" style="display:none;"></div>
  </div>
  </div>
 
- <!-- VISTA INFORMES -->
  <div id="vistaInformes" style="display:none;">
- <div class="date-h" style="margin-top:4px;">
- <div class="date-today" style="font-size:20px;">Mis informes</div>
- <div class="date-sub">Informes de tus valoraciones</div>
- </div>
+ <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mis informes</div><div class="date-sub">Informes de tus valoraciones</div></div>
  <div id="infPacList"><div class="loading"><div class="spinner"></div></div></div>
  </div>
 
-    <!-- VISTA NOTIFICACIONES -->
-    <div id="vistaNotificaciones" style="display:none;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;margin-top:4px;">
-        <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--black)">Notificaciones</div>
-      </div>
-      <div id="notifListEl"></div>
-    </div>
+ <div id="vistaNotificaciones" style="display:none;">
+ <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;margin-top:4px;"><div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--black)">Notificaciones</div></div>
+ <div id="notifListEl"></div>
+ </div>
 
- <!-- VISTA CITAS -->
  <div id="vistaCitas" style="display:none;">
- <div class="date-h" style="margin-top:4px;">
- <div class="date-today" style="font-size:20px;">Mis citas</div>
- <div class="date-sub">Tu agenda con el fisio</div>
- </div>
- <div id="calendarWrap"></div>
- <div id="citaDetalle"></div>
- <div id="citasLista"></div>
+ <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mis citas</div><div class="date-sub">Tu agenda con el fisio</div></div>
+ <div id="calendarWrap"></div><div id="citaDetalle"></div><div id="citasLista"></div>
  </div>
 
- <!-- VISTA MENSAJES -->
  <div id="vistaMensajes" style="display:none;">
- <div class="date-h" style="margin-top:4px;">
- <div class="date-today" style="font-size:20px;">Chat</div>
- <div class="date-sub">Lo que has enviado a tu fisio</div>
- </div>
+ <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Chat</div><div class="date-sub">Lo que has enviado a tu fisio</div></div>
  <div id="msgList"><div class="loading"><div class="spinner"></div></div></div>
  </div>
 
- <!-- VISTA GUIA -->
  <div id="vistaGuia" style="display:none;">
- <div class="guia-section">
  <div class="guia-card">
- <div class="guia-titulo"> Instalar en tu móvil</div>
- <div class="guia-os">
- <button class="guia-os-btn active" id="btnIOS" onclick="showOS('ios')">iPhone</button>
- <button class="guia-os-btn" id="btnAndroid" onclick="showOS('android')">Android</button>
- </div>
+ <div class="guia-titulo">Instalar en tu móvil</div>
+ <div class="guia-os"><button class="guia-os-btn active" id="btnIOS" onclick="showOS('ios')">iPhone</button><button class="guia-os-btn" id="btnAndroid" onclick="showOS('android')">Android</button></div>
  <div id="pasosIOS">
  <div class="guia-paso"><div class="guia-num">1</div><div class="guia-txt">Cierra esta app y abre <strong>Safari</strong></div></div>
  <div class="guia-paso"><div class="guia-num">2</div><div class="guia-txt">Ve a <strong>fisio365.vercel.app</strong></div></div>
  <div class="guia-paso"><div class="guia-num">3</div><div class="guia-txt">Toca el botón <strong>Compartir ↑</strong> abajo en el centro</div></div>
  <div class="guia-paso"><div class="guia-num">4</div><div class="guia-txt">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
- <div class="guia-paso"><div class="guia-num">5</div><div class="guia-txt">Toca <strong>"Añadir"</strong> y ¡listo! </div></div>
+ <div class="guia-paso"><div class="guia-num">5</div><div class="guia-txt">Toca <strong>"Añadir"</strong> y ¡listo!</div></div>
  </div>
  <div id="pasosAndroid" style="display:none;">
  <div class="guia-paso"><div class="guia-num">1</div><div class="guia-txt">Cierra esta app y abre <strong>Chrome</strong></div></div>
  <div class="guia-paso"><div class="guia-num">2</div><div class="guia-txt">Ve a <strong>fisio365.vercel.app</strong></div></div>
  <div class="guia-paso"><div class="guia-num">3</div><div class="guia-txt">Toca los <strong>3 puntos ⋮</strong> arriba a la derecha</div></div>
  <div class="guia-paso"><div class="guia-num">4</div><div class="guia-txt">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
- <div class="guia-paso"><div class="guia-num">5</div><div class="guia-txt">Toca <strong>"Añadir"</strong> y ¡listo! </div></div>
+ <div class="guia-paso"><div class="guia-num">5</div><div class="guia-txt">Toca <strong>"Añadir"</strong> y ¡listo!</div></div>
  </div>
  </div>
  <div class="guia-card">
- <div class="guia-titulo"> Cómo funciona la app</div>
- <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Tu programa del día</div><div class="guia-feature-desc">Tu fisio te asigna ejercicios personalizados con series, repeticiones y vídeos. Márcalos cuando los hagas.</div></div></div>
- <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Tarea hecha</div><div class="guia-feature-desc">Al terminar pulsa "Tarea hecha ✓". Puedes guardar una nota solo para ti o enviársela directamente a tu fisio — tú eliges.</div></div></div>
- <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Mi progreso</div><div class="guia-feature-desc">Registra tu nivel de dolor cada día. Si sube, puedes escribirle a tu fisio directamente desde ahí.</div></div></div>
- <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Chat</div><div class="guia-feature-desc">Aquí aparecen todos los mensajes que has enviado a tu fisio y sus respuestas. Puedes enviar mensajes desde el diario o desde la escala de dolor.</div></div></div>
- <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Mis informes</div><div class="guia-feature-desc">Consulta y descarga los informes de tus valoraciones fisioterapéuticas en PDF.</div></div></div>
+ <div class="guia-titulo">Cómo funciona la app</div>
+ <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Tu programa del día</div><div class="guia-feature-desc">Tu fisio te asigna ejercicios personalizados con series, repeticiones y vídeos.</div></div></div>
+ <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Tarea hecha</div><div class="guia-feature-desc">Al terminar pulsa "Hecho". Puedes guardar una nota o enviársela a tu fisio.</div></div></div>
+ <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Mi racha</div><div class="guia-feature-desc">Registra tu nivel de dolor cada día. Si sube, puedes escribirle a tu fisio.</div></div></div>
+ <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Chat</div><div class="guia-feature-desc">Todos los mensajes que has enviado a tu fisio y sus respuestas.</div></div></div>
+ <div class="guia-feature"><div class="guia-feature-icon"></div><div><div class="guia-feature-titulo">Mis informes</div><div class="guia-feature-desc">Consulta y descarga los informes de tus valoraciones en PDF.</div></div></div>
  </div>
  </div>
- </div>
-
  </div>
 </div>
-
-<!-- bottom nav moved to topbar -->
-
-<!-- MODAL NUEVO FLUJO -->
+<!-- MODAL -->
 <div id="modalGuardar" style="display:none;" class="modal-overlay" onclick="if(event.target===this)cerrarModal()">
  <div class="modal-sheet">
  <div id="modalStep1">
@@ -548,7 +395,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 <div id="installPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;align-items:flex-end;justify-content:center;">
  <div style="background:white;border-radius:24px 24px 0 0;padding:28px 24px 48px;width:100%;max-width:500px;">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
- <div style="font-size:18px;font-weight:800;color:#000"> Instalar la app</div>
+ <div style="font-size:18px;font-weight:800;color:#000">Instalar la app</div>
  <button onclick="cerrarInstall()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#888">×</button>
  </div>
  <div style="display:flex;gap:8px;margin-bottom:20px;">
@@ -559,48 +406,37 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div><div style="font-size:14px;line-height:1.6">Abre esta página en <strong>Safari</strong></div></div>
  <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div><div style="font-size:14px;line-height:1.6">Toca el botón <strong>Compartir ↑</strong> abajo en el centro</div></div>
  <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
- <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono </div></div>
+ <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono</div></div>
  </div>
  <div id="instPasosAndroid" style="display:none;">
  <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div><div style="font-size:14px;line-height:1.6">Abre esta página en <strong>Chrome</strong></div></div>
  <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div><div style="font-size:14px;line-height:1.6">Toca los <strong>3 puntos ⋮</strong> arriba a la derecha</div></div>
  <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
- <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono </div></div>
+ <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono</div></div>
  </div>
  </div>
 </div>
 
 <div class="toast" id="toast"></div>
-
 <script>
-let patient = null, ejercicios = [], hechos = new Set(), mensajeFisio = '';
-let lang = localStorage.getItem('fisio365_lang') || 'es';
-let modalTipo = null; // 'diario' o 'dolor'
-let modalTexto = ''; // texto a guardar
-let fisiosCache = null;
+let patient=null,ejercicios=[],hechos=new Set(),mensajeFisio='';
+let lang=localStorage.getItem('fisio365_lang')||'es';
+let modalTipo=null,modalTexto='',fisiosCache=null;
+const i18n={es:{entrar:"Entrar",entrando:"Entrando...",instalarApp:"¿Cómo instalo la app?",errorEmail:"Introduce tu email",errorPin:"Introduce los 4 dígitos del PIN",errorConexion:"Error de conexión",programaHoy:"Tu programa de ejercicios",progresoHoy:"Progreso de hoy",sesionCompletada:"¡Sesión completada!",sesionSub:"Has terminado tu programa de hoy.",sesionMsg:"Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana!",miProgreso:"Mi progreso",cuantoDolor:"¿Cuánto dolor tienes hoy?",sinDolor:"Sin dolor",dolorMaximo:"Dolor máximo",guardar:"Guardar",salir:"Salir",sinPrograma:"Sin programa asignado",sinProgramaDesc:"Tu fisioterapeuta todavía no ha asignado ejercicios.",dolorBajo:function(pct){return "Tu dolor ha bajado un "+pct+"% respecto a ayer. ¡Vas por muy buen camino!";},dolorEstable:"Tu dolor se mantiene estable. ¡Sigue con tus ejercicios!",dolorSubio:"No te preocupes, los altibajos son normales. ¿Has cambiado algo en tu rutina?",dolorRegistrado:"Dolor registrado ✓"},cat:{entrar:"Entrar",entrando:"Entrant...",instalarApp:"Com instal·lo l'app?",errorEmail:"Introdueix el teu email",errorPin:"Introdueix els 4 dígits del PIN",errorConexion:"Error de connexió",programaHoy:"El teu programa d'exercicis",progresoHoy:"Progrés d'avui",sesionCompletada:"Sessió completada!",sesionSub:"Has acabat el teu programa d'avui.",sesionMsg:"Cada dia que entrenes és un pas cap a la teva recuperació. Torna demà!",miProgreso:"El meu progrés",cuantoDolor:"Quant dolor tens avui?",sinDolor:"Sense dolor",dolorMaximo:"Dolor màxim",guardar:"Guardar",salir:"Sortir",sinPrograma:"Sense programa assignat",sinProgramaDesc:"El teu fisioterapeuta encara no ha assignat exercicis.",dolorBajo:function(pct){return "El teu dolor ha baixat un "+pct+"% respecte a ahir.";},dolorEstable:"El teu dolor es manté estable. Segueix!",dolorSubio:"No et preocupis, els alts i baixos són normals.",dolorRegistrado:"Dolor registrat ✓"},en:{entrar:"Log in",entrando:"Logging in...",instalarApp:"How do I install the app?",errorEmail:"Please enter your email",errorPin:"Please enter all 4 PIN digits",errorConexion:"Connection error",programaHoy:"Your exercise program",progresoHoy:"Today's progress",sesionCompletada:"Session completed!",sesionSub:"You finished today's program.",sesionMsg:"Every day you train is a step towards your recovery. Come back tomorrow!",miProgreso:"My progress",cuantoDolor:"How much pain do you have today?",sinDolor:"No pain",dolorMaximo:"Maximum pain",guardar:"Save",salir:"Log out",sinPrograma:"No program assigned",sinProgramaDesc:"Your physiotherapist has not yet assigned any exercises.",dolorBajo:function(pct){return "Your pain decreased "+pct+"% since yesterday!";},dolorEstable:"Your pain is stable. Keep going!",dolorSubio:"Don't worry, ups and downs are normal.",dolorRegistrado:"Pain recorded ✓"}};
 
-const i18n = {
- es: { bienvenido:"Bienvenido", loginDesc:"Introduce tu email y el PIN que encontrarás en tu correo electrónico", entrar:"Entrar", entrando:"Entrando...", instalarApp:"¿Cómo instalo la app?", emailLabel:"Email", pinLabel:"PIN", errorEmail:"Introduce tu email", errorPin:"Introduce los 4 dígitos del PIN", errorConexion:"Error de conexión", programaHoy:"Tu programa de ejercicios", progresoHoy:"Progreso de hoy", marcarHecho:"Marcar como hecho", completado:"✓ Completado", tareaHecha:"Tarea hecha ✓", guardando:"Guardando...", seguimientoDiario:"Seguimiento diario", diarioPlaceholder:"Anota tus avances y sensaciones...", sesionCompletada:"¡Sesión completada!", sesionSub:"Has terminado tu programa de hoy. ¡Sigue así, lo estás haciendo genial!", sesionMsg:" Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana y sigue sumando!", miProgreso:"Mi progreso", evolucionDolor:"Evolución de tu dolor", cuantoDolor:"¿Cuánto dolor tienes hoy?", sinDolor:"Sin dolor", dolorMaximo:"Dolor máximo", guardar:"Guardar", evolucionGrafica:"Evolución del dolor", navPrograma:"Programa", navProgreso:"Progreso", navGuia:"Guía", guiaTitulo:" Instalar en tu móvil", guiaComoFunciona:" Cómo funciona la app", salir:"Salir", sinPrograma:"Sin programa asignado", sinProgramaDesc:"Tu fisioterapeuta todavía no ha asignado ejercicios.", tuFisio:"Tu fisio", nColegiado:"Nº Colegiado", mensajeFisioLabel:"Mensaje de tu fisio ", dolorBajo:function(pct){return " Tu dolor ha bajado un "+pct+"% respecto a ayer. ¡Vas por muy buen camino!";}, dolorEstable:" Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!", dolorSubio:"No te preocupes, los altibajos no significan que vayas por mal camino. ¿Has cambiado algo en tu rutina hoy?", enviarFisio:"Enviar a mi fisio", dolorRegistrado:"Dolor registrado ✓" },
- cat: { bienvenido:"Benvingut", loginDesc:"Introdueix el teu email i el PIN que trobaràs al teu correu electrònic", entrar:"Entrar", entrando:"Entrant...", instalarApp:"Com instal·lo lapp?", emailLabel:"Email", pinLabel:"PIN", errorEmail:"Introdueix el teu email", errorPin:"Introdueix els 4 dígits del PIN", errorConexion:"Error de connexió", programaHoy:"El teu programa d'exercicis", progresoHoy:"Progrés d'avui", marcarHecho:"Marcar com a fet", completado:"✓ Completat", tareaHecha:"Tasca feta ✓", guardando:"Guardant...", seguimientoDiario:"Seguiment diari", diarioPlaceholder:"Anota els teus avenços i sensacions...", sesionCompletada:"Sessió completada!", sesionSub:"Has acabat el teu programa d'avui. Continua així, ho estàs fent genial!", sesionMsg:" Cada dia que entrenes és un pas cap a la teva recuperació. Torna demà i segueix sumant!", miProgreso:"El meu progrés", evolucionDolor:"Evolució del teu dolor", cuantoDolor:"Quant dolor tens avui?", sinDolor:"Sense dolor", dolorMaximo:"Dolor màxim", guardar:"Guardar", evolucionGrafica:"Evolució del dolor", navPrograma:"Programa", navProgreso:"Progrés", navGuia:"Guia", guiaTitulo:" Instal·lar al mòbil", guiaComoFunciona:" Com funciona lapp", salir:"Sortir", sinPrograma:"Sense programa assignat", sinProgramaDesc:"El teu fisioterapeuta encara no ha assignat exercicis.", tuFisio:"El teu fisio", nColegiado:"Núm. Col·legiat", mensajeFisioLabel:"Missatge del teu fisio ", dolorBajo:function(pct){return " El teu dolor ha baixat un "+pct+"% respecte a ahir. Vas per molt bon camí!";}, dolorEstable:" El teu dolor es manté estable. Segueix amb els teus exercicis, la constància és la clau!", dolorSubio:"No et preocupis, els alts i baixos no signifiquen que vagis per mal camí. Has canviat alguna cosa a la teva rutina avui?", enviarFisio:"Enviar al meu fisio", dolorRegistrado:"Dolor registrat ✓" },
- en: { bienvenido:"Welcome", loginDesc:"Enter your email and the PIN you will find in your email", entrar:"Log in", entrando:"Logging in...", instalarApp:"How do I install the app?", emailLabel:"Email", pinLabel:"PIN", errorEmail:"Please enter your email", errorPin:"Please enter all 4 PIN digits", errorConexion:"Connection error", programaHoy:"Your exercise program", progresoHoy:"Today's progress", marcarHecho:"Mark as done", completado:"✓ Completed", tareaHecha:"Task done ✓", guardando:"Saving...", seguimientoDiario:"Daily tracking", diarioPlaceholder:"Note your progress and how you feel...", sesionCompletada:"Session completed!", sesionSub:"You have finished today's program. Keep it up, you are doing great!", sesionMsg:" Every day you train is a step towards your recovery. Come back tomorrow and keep going!", miProgreso:"My progress", evolucionDolor:"Your pain evolution", cuantoDolor:"How much pain do you have today?", sinDolor:"No pain", dolorMaximo:"Maximum pain", guardar:"Save", evolucionGrafica:"Pain evolution", navPrograma:"Program", navProgreso:"Progress", navGuia:"Guide", guiaTitulo:" Install on your phone", guiaComoFunciona:" How the app works", salir:"Log out", sinPrograma:"No program assigned", sinProgramaDesc:"Your physiotherapist has not yet assigned any exercises.", tuFisio:"Your physio", nColegiado:"Reg. No.", mensajeFisioLabel:"Message from your physio ", dolorBajo:function(pct){return " Your pain has decreased by "+pct+"% compared to yesterday. You are on the right track!";}, dolorEstable:" Your pain is stable. Keep doing your exercises, consistency is key!", dolorSubio:"Do not worry, ups and downs do not mean you are going in the wrong direction. Have you changed anything in your routine today?", enviarFisio:"Send to my physio", dolorRegistrado:"Pain recorded ✓" }
-};
-
-function t(key,...args){const val=i18n[lang][key];return typeof val==='function'?val(...args):(val||i18n.es[key]||key);}
+function t(key,...args){const val=i18n[lang]?.[key];return typeof val==='function'?val(...args):(val||i18n.es[key]||key);}
 function setLang(l){lang=l;localStorage.setItem('fisio365_lang',l);document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===l?'rgba(245,242,238,0.9)':'rgba(245,242,238,0.35)';b.style.fontWeight=b.dataset.lang===l?'700':'400';});applyTranslations();}
-function applyTranslations(){const lt=document.getElementById('loginTitle');const ld=document.getElementById('loginDesc');const lb=document.getElementById('loginBtn');const li=document.getElementById('installBtn');if(lb&&!lb.disabled)lb.textContent=t('entrar');if(li)li.textContent=t('instalarApp');const navH=document.getElementById('navHoy');const navP=document.getElementById('navProgreso');const navG=document.getElementById('navGuia');
-const dateSub=document.querySelector('.date-sub');if(dateSub)dateSub.textContent=t('programaHoy');const progLbl=document.querySelector('.prog-lbl');if(progLbl)progLbl.textContent=t('progresoHoy');const secTitle=document.querySelector('.sec-title');if(secTitle)secTitle.textContent=t('seguimientoDiario');const diarioTxt=document.getElementById('diarioTxt');if(diarioTxt)diarioTxt.placeholder=t('diarioPlaceholder');const vasQ=document.querySelector('.vas-question');if(vasQ)vasQ.textContent=t('cuantoDolor');const vasLabels=document.querySelectorAll('.vas-labels span');if(vasLabels.length>=2){vasLabels[0].textContent=t('sinDolor');vasLabels[1].textContent=t('dolorMaximo');}const btnVas=document.getElementById('btnVas');if(btnVas)btnVas.textContent=t('guardar');const grafTitulo=document.querySelector('.grafica-titulo');if(grafTitulo)grafTitulo.textContent=t('evolucionGrafica');const compTit=document.querySelector('.completado-titulo');if(compTit)compTit.textContent=t('sesionCompletada');const compSub=document.querySelector('.completado-sub');if(compSub)compSub.textContent=t('sesionSub');const compMsg=document.querySelector('.completado-card p');if(compMsg)compMsg.textContent=t('sesionMsg');
-document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n;el.textContent=t(key);});}
+function applyTranslations(){const lb=document.getElementById('loginBtn');const li=document.getElementById('installBtn');if(lb&&!lb.disabled)lb.textContent=t('entrar');if(li)li.textContent=t('instalarApp');const vasQ=document.querySelector('.vas-question');if(vasQ)vasQ.textContent=t('cuantoDolor');const vasLabels=document.querySelectorAll('.vas-labels span');if(vasLabels.length>=2){vasLabels[0].textContent=t('sinDolor');vasLabels[1].textContent=t('dolorMaximo');}const btnVas=document.getElementById('btnVas');if(btnVas)btnVas.textContent=t('guardar');document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});}
 
 let vasSeleccionado=null,vasRegistros=[],vasPeriodo=7;
 const TODAY=new Date().toISOString().split('T')[0];
 
 window.addEventListener('load',()=>{
- const savedLang=localStorage.getItem('fisio365_lang');
- if(savedLang){lang=savedLang;}
- applyTranslations();
- document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===lang?'rgba(245,242,238,0.9)':'rgba(245,242,238,0.35)';b.style.fontWeight=b.dataset.lang===lang?'700':'400';});
- const saved=localStorage.getItem('fisio365_patient');
- if(saved){try{patient=JSON.parse(saved);const lastDay=localStorage.getItem('fisio365_lastday');if(lastDay!==TODAY){localStorage.setItem('fisio365_lastday',TODAY);Object.keys(localStorage).forEach(k=>{if(k.startsWith('hechos_'))localStorage.removeItem(k);});}initApp();}catch(e){localStorage.removeItem('fisio365_patient');}}
+  const savedLang=localStorage.getItem('fisio365_lang');if(savedLang)lang=savedLang;
+  applyTranslations();
+  document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===lang?'rgba(245,242,238,0.9)':'rgba(245,242,238,0.35)';b.style.fontWeight=b.dataset.lang===lang?'700':'400';});
+  const saved=localStorage.getItem('fisio365_patient');
+  if(saved){try{patient=JSON.parse(saved);const lastDay=localStorage.getItem('fisio365_lastday');if(lastDay!==TODAY){localStorage.setItem('fisio365_lastday',TODAY);Object.keys(localStorage).forEach(k=>{if(k.startsWith('hechos_'))localStorage.removeItem(k);});}initApp();}catch(e){localStorage.removeItem('fisio365_patient');}}
 });
 
 const pids=['p1','p2','p3','p4'];
@@ -608,935 +444,201 @@ pids.forEach((id,i)=>{const el=document.getElementById(id);el.addEventListener('
 document.getElementById('emailInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('p1').focus();});
 
 async function doLogin(){
- const email=document.getElementById('emailInput').value.trim();
- const pin=pids.map(id=>document.getElementById(id).value).join('');
- const errEl=document.getElementById('loginErr');errEl.textContent='';
- if(!email){errEl.textContent='Introduce tu email';return;}
- if(pin.length!==4){errEl.textContent='Introduce los 4 dígitos del PIN';return;}
- const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='Entrando...';
- try{const res=await fetch(`/api/login?email=${encodeURIComponent(email)}&pin=${pin}`);const data=await res.json();if(data.ok){patient=data.patient;localStorage.setItem('fisio365_patient',JSON.stringify(data.patient));initApp();}else errEl.textContent=data.error||'Error al entrar';}catch(e){errEl.textContent='Error de conexión';}
- btn.disabled=false;btn.textContent='Entrar';
+  const email=document.getElementById('emailInput').value.trim();const pin=pids.map(id=>document.getElementById(id).value).join('');const errEl=document.getElementById('loginErr');errEl.textContent='';
+  if(!email){errEl.textContent='Introduce tu email';return;}if(pin.length!==4){errEl.textContent='Introduce los 4 dígitos del PIN';return;}
+  const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='Entrando...';
+  try{const res=await fetch(`/api/login?email=${encodeURIComponent(email)}&pin=${pin}`);const data=await res.json();if(data.ok){patient=data.patient;localStorage.setItem('fisio365_patient',JSON.stringify(data.patient));initApp();}else errEl.textContent=data.error||'Error al entrar';}catch(e){errEl.textContent='Error de conexión';}
+  btn.disabled=false;btn.textContent='Entrar';
 }
 
 function initApp(){
- document.getElementById('loginScreen').style.display='none';
- document.getElementById('appScreen').style.display='block';
- document.getElementById('appScreen').style.opacity='0';
- document.getElementById('hamburgerBtn').style.display='flex';
- // cerrarBtn moved to menu
- document.getElementById('notifBtn').style.display='inline-block';
- window.scrollTo({top:0,behavior:'instant'});
- setTimeout(()=>{document.getElementById('appScreen').style.opacity='1';},10);
- // name hidden from topbar
- applyTranslations();
- setTimeout(initPushNotifications,2000);
- const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
- const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
- const hoy=new Date();
- document.getElementById('dateToday').textContent='Tu programa de hoy';
-document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
- loadEjercicios();
- checkMensajesNoLeidos();
- setInterval(checkMensajesNoLeidos, 2*60*1000); // revisar cada 2 minutos
- clearBadge();setTimeout(()=>clearBadge(),1500);setTimeout(()=>clearBadge(),4000);
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  document.getElementById('appScreen').style.opacity='0';
+  document.getElementById('hamburgerBtn').style.display='flex';
+  document.getElementById('notifBtn').style.display='inline-block';
+  window.scrollTo({top:0,behavior:'instant'});
+  setTimeout(()=>{document.getElementById('appScreen').style.opacity='1';},10);
+  applyTranslations();
+  setTimeout(initPushNotifications,2000);
+  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const hoy=new Date();
+  document.getElementById('dateToday').textContent='Tu programa de hoy';
+  document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
+  loadEjercicios();
+  checkMensajesNoLeidos();
+  setInterval(checkMensajesNoLeidos,2*60*1000);
+  clearBadge();setTimeout(()=>clearBadge(),1500);setTimeout(()=>clearBadge(),4000);
+  // ★ NUEVO: mostrar banner si tiene premio pendiente
+  if(patient.premio_pendiente){document.getElementById('premioBanner').style.display='flex';}
+}
+
+// ★ NUEVO: función invitar amigo por WhatsApp
+function invitarAmigo(){
+  if(!patient)return;
+  const nombre=patient.nombre||'un paciente';
+  const tel='34672893949';
+  const msg=encodeURIComponent('Hola! Vengo recomendado/a por '+nombre+' y me gustaría pedir una cita en FISIO365 😊');
+  window.open('https://wa.me/'+tel+'?text='+msg,'_blank');
 }
 
 function showSection(section){
- document.getElementById('vistaHoy').style.display=section==='hoy'?'block':'none';
- document.getElementById('vistaNotificaciones').style.display=section==='notificaciones'?'block':'none';
- document.getElementById('vistaCitas').style.display=section==='citas'?'block':'none';
- document.getElementById('vistaProgreso').style.display=section==='progreso'?'block':'none';
- document.getElementById('vistaInformes').style.display=section==='informes'?'block':'none';
- document.getElementById('vistaMensajes').style.display=section==='mensajes'?'block':'none';
- document.getElementById('vistaGuia').style.display=section==='guia'?'block':'none';
- // Pre-render empty calendar instantly when switching to citas
- if(section==='citas'){requestAnimationFrame(()=>initCitas());}
- document.getElementById('navHoy').classList.toggle('active',section==='hoy');
- document.getElementById('navProgreso').classList.toggle('active',section==='progreso');
- document.getElementById('navInformes').classList.toggle('active',section==='informes');
- document.getElementById('navCitas').classList.toggle('active',section==='citas');
- document.getElementById('navMensajes').classList.toggle('active',section==='mensajes');
- document.getElementById('navGuia').classList.toggle('active',section==='guia');
- if(section==='progreso'){initVAS();loadAdherencia('adherenciaSection');}
- if(section==='citas')initCitas();
- if(section==='notificaciones')loadNotificaciones();
- if(section==='informes')loadInformes();
- if(section==='mensajes'){loadMensajes();document.getElementById('navMensajesDot').classList.remove('show');marcarRespuestasLeidas();}
- window.scrollTo(0,0);
+  ['hoy','notificaciones','citas','progreso','informes','mensajes','guia'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
+  ['navHoy','navProgreso','navInformes','navCitas','navMensajes','navGuia'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
+  const navMap={hoy:'navHoy',progreso:'navProgreso',informes:'navInformes',citas:'navCitas',mensajes:'navMensajes',guia:'navGuia'};
+  if(navMap[section]){const el=document.getElementById(navMap[section]);if(el)el.classList.add('active');}
+  if(section==='progreso'){initVAS();loadAdherencia('adherenciaSection');}
+  if(section==='citas')initCitas();
+  if(section==='notificaciones')loadNotificaciones();
+  if(section==='informes')loadInformes();
+  if(section==='mensajes'){loadMensajes();const dot=document.getElementById('navMensajesDot');if(dot)dot.classList.remove('show');marcarRespuestasLeidas();}
+  window.scrollTo(0,0);
 }
 
 async function loadEjercicios(){
- try{
- const res=await fetch(`/api/schedule?patientId=${patient.id}`);
- const data=await res.json();
- ejercicios=data.ejercicios||[];
- if(data.fisio){const f=data.fisio;const av=document.getElementById('fisioAv');if(f.foto)av.innerHTML=`<img src="${f.foto}" alt="${f.nombre}">`;else av.textContent=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();document.getElementById('fisioNombre').textContent=`Tu fisio: ${f.nombre}`;document.getElementById('fisioColegiado').textContent=f.colegiado?`Nº Colegiado: ${f.colegiado}`:'';document.getElementById('fisioCard').style.display='flex';}
- mensajeFisio=data.mensajeFisio||'';
- if(mensajeFisio){
-   document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;
-   document.getElementById('notaFisioBtn').style.display='block';
-   // Update label with fisio name
-   if(data.fisio) document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];
- }
- if(data.ultimaSession===TODAY){mostrarCompletado();return;}
- lastFechaAsignacion=(data.ejercicios?.length||0)+'_'+(data.mensajeFisio||'');
- startPolling();
- const localKey=`hechos_${patient.id}_${TODAY}`;
- const local=localStorage.getItem(localKey);
- hechos=new Set(local?JSON.parse(local):[]);
- renderEjercicios();
- }catch(e){document.getElementById('ejList').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
+  try{
+    const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();ejercicios=data.ejercicios||[];
+    if(data.fisio){const f=data.fisio;const av=document.getElementById('fisioAv');if(f.foto)av.innerHTML=`<img src="${f.foto}" alt="${f.nombre}">`;else av.textContent=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();document.getElementById('fisioNombre').textContent=`Tu fisio: ${f.nombre}`;document.getElementById('fisioColegiado').textContent=f.colegiado?`Nº Colegiado: ${f.colegiado}`:'';document.getElementById('fisioCard').style.display='flex';}
+    mensajeFisio=data.mensajeFisio||'';
+    if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';if(data.fisio)document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];}
+    if(data.ultimaSession===TODAY){mostrarCompletado();return;}
+    lastFechaAsignacion=(data.ejercicios?.length||0)+'_'+(data.mensajeFisio||'');startPolling();
+    const localKey=`hechos_${patient.id}_${TODAY}`;const local=localStorage.getItem(localKey);hechos=new Set(local?JSON.parse(local):[]);renderEjercicios();
+  }catch(e){document.getElementById('ejList').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
 }
 
 function mostrarCompletado(){document.getElementById('vistaEjercicios').style.display='none';document.getElementById('vistaCompletado').style.display='block';}
 
 function renderEjercicios(){
- const lista=document.getElementById('ejList');
- if(!ejercicios.length){lista.innerHTML=`<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios.</div></div>`;return;}
- document.getElementById('diarioSection').style.display='block';
- lista.innerHTML='<div class="ej-list">'+ejercicios.map((ej,i)=>{
- const pills=[
- ej.series?`<span class="pill-s">${ej.series}×</span>`:'',
- ej.reps?`<span class="pill-r">${ej.reps} reps</span>`:'',
- (ej.dur||ej.duracion)?`<span class="pill-d">${ej.dur||ej.duracion}s</span>`:''
- ].join('');
- const hasVid=!!ej.ytId;
- return `<div class="ej-item">
- <div class="ej-header">
- <div class="ej-nom">${ej.name}</div>
- <div class="ej-pills">${pills}</div>
- </div>
- ${hasVid
-        ?`<div class="ej-thumb"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen></iframe></div>`
-        :`<div class="ej-no-video"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>`
-        }
- </div>`;
- }).join('')+'</div>';
-}
-function tapEj(i){
- const ej=ejercicios[i];
- if(!ej.ytId)return;
- const th=document.getElementById(`th${i}`);
- th.onclick=null;
- th.innerHTML=`<iframe src="https://www.youtube.com/embed/${ej.ytId}?autoplay=1&rel=0&modestbranding=1" allowfullscreen allow="autoplay"></iframe>`;
+  const lista=document.getElementById('ejList');
+  if(!ejercicios.length){lista.innerHTML=`<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios.</div></div>`;return;}
+  document.getElementById('diarioSection').style.display='block';
+  lista.innerHTML='<div class="ej-list">'+ejercicios.map((ej,i)=>{
+    const pills=[ej.series?`<span class="pill-s">${ej.series}×</span>`:'',ej.reps?`<span class="pill-r">${ej.reps} reps</span>`:'',(ej.dur||ej.duracion)?`<span class="pill-d">${ej.dur||ej.duracion}s</span>`:''].join('');
+    const hasVid=!!ej.ytId;
+    return `<div class="ej-item"><div class="ej-header"><div class="ej-nom">${ej.name}</div><div class="ej-pills">${pills}</div></div>${hasVid?`<div class="ej-thumb"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen></iframe></div>`:`<div class="ej-no-video"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>`}</div>`;
+  }).join('')+'</div>';
 }
 
-
-
-// ── MODAL GUARDAR / ENVIAR ───────────────────────────────────────────────────
 function modalRespuestaNo(){
- cerrarModal();
- const btn=document.getElementById('btnDiario');
- btn.disabled=true;btn.textContent='Guardando...';
- // Save to TAREAS table only — not to MENSAJES
- fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guardar-tarea',pacienteId:patient.id,pacienteNombre:patient.nombre,fecha:TODAY,nota:''})})
- .then(()=>{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();})
- .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
-}
-
-function guardarSoloConNota(){
- const nota=document.getElementById('modalNota')?.value?.trim()||'';
- cerrarModal();
- const btn=document.getElementById('btnDiario');
- btn.disabled=true;btn.textContent='Guardando...';
- fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guardar-tarea',pacienteId:patient.id,pacienteNombre:patient.nombre,fecha:TODAY,nota:nota})})
- .then(()=>{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();})
- .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
+  cerrarModal();const btn=document.getElementById('btnDiario');btn.disabled=true;btn.textContent='Guardando...';
+  fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guardar-tarea',pacienteId:patient.id,pacienteNombre:patient.nombre,fecha:TODAY,nota:''})})
+  .then(()=>{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();})
+  .catch(()=>{toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';});
 }
 
 async function modalRespuestaSi(){
- document.getElementById('modalStep1').style.display='none';
- document.getElementById('modalStep2').style.display='block';
- const lista=document.getElementById('fisiosList');
- if(fisiosCache){renderFisiosList(fisiosCache);return;}
- lista.innerHTML='<div class="loading"><div class="spinner"></div></div>';
- try{
-   const res=await fetch('/api/fisios?action=lista-publica');
-   const data=await res.json();
-   fisiosCache=data.fisios||[];
-   renderFisiosList(fisiosCache);
- }catch(e){lista.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Error al cargar fisios</div>';}
+  document.getElementById('modalStep1').style.display='none';document.getElementById('modalStep2').style.display='block';
+  const lista=document.getElementById('fisiosList');if(fisiosCache){renderFisiosList(fisiosCache);return;}
+  lista.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try{const res=await fetch('/api/fisios?action=lista-publica');const data=await res.json();fisiosCache=data.fisios||[];renderFisiosList(fisiosCache);}catch(e){lista.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Error al cargar fisios</div>';}
 }
 
-async function mostrarFisiosConNota(){
- await modalRespuestaSi();
-}
-
-function abrirModalDiario(){
- modalTipo='diario';
- modalTexto='';
- const nota=document.getElementById('modalNota');
- if(nota) nota.value='';
- document.getElementById('modalStep1').style.display='block';
- document.getElementById('modalStep2').style.display='none';
- document.getElementById('modalGuardar').style.display='flex';
-}
-
-function abrirModalDolor(texto){
- modalTipo='dolor';
- modalTexto=texto;
- document.getElementById('modalSubtitle').textContent='¿Quieres que tu fisio sepa que tu dolor ha aumentado?';
- document.getElementById('modalStep1').style.display='block';
- document.getElementById('modalStep2').style.display='none';
- document.getElementById('modalGuardar').style.display='flex';
-}
-
-function cerrarModal(){
- document.getElementById('modalGuardar').style.display='none';
- modalTipo=null;modalTexto='';
-}
-
-function volverStep1(){
- document.getElementById('modalStep1').style.display='block';
- document.getElementById('modalStep2').style.display='none';
-}
-
-async function guardarSolo(){
- const _tipo=modalTipo; const _texto=modalTexto;
- console.log('guardarSolo called', {_tipo, _texto});
- cerrarModal();
- if(_tipo==='diario'){
- const btn=document.getElementById('btnDiario');
- btn.disabled=true;btn.textContent='Guardando...';
- try{
- const textoGuardar=_texto||'Tarea hecha ✓';
- await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:textoGuardar,enviarFisio:false})});
- localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));
- mostrarCompletado();
- }catch(e){toast('Error al guardar',false);btn.disabled=false;btn.textContent='Hecho';}
- } else if(_tipo==='dolor'){
- try{
- await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,comentario:`[Dolor aumentó] ${_texto}`,enviarFisio:false})});
- toast('Guardado en tu diario ✓',true);
- if(document.getElementById('vasMsgTxt'))document.getElementById('vasMsgTxt').value='';
- }catch(e){toast('Error al guardar',false);}
- }
-}
-
-async function mostrarFisios(){
- document.getElementById('modalStep1').style.display='none';
- document.getElementById('modalStep2').style.display='block';
- const lista=document.getElementById('fisiosList');
- if(fisiosCache){renderFisiosList(fisiosCache);return;}
- lista.innerHTML='<div class="loading"><div class="spinner"></div></div>';
- try{
- const res=await fetch('/api/fisios?action=lista-publica');
- const data=await res.json();
- fisiosCache=data.fisios||[];
- renderFisiosList(fisiosCache);
- }catch(e){lista.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Error al cargar fisios</div>';}
-}
+function abrirModalDiario(){modalTipo='diario';modalTexto='';const nota=document.getElementById('modalNota');if(nota)nota.value='';document.getElementById('modalStep1').style.display='block';document.getElementById('modalStep2').style.display='none';document.getElementById('modalGuardar').style.display='flex';}
+function abrirModalDolor(texto){modalTipo='dolor';modalTexto=texto;document.getElementById('modalStep1').style.display='block';document.getElementById('modalStep2').style.display='none';document.getElementById('modalGuardar').style.display='flex';}
+function cerrarModal(){document.getElementById('modalGuardar').style.display='none';modalTipo=null;modalTexto='';}
+function volverStep1(){document.getElementById('modalStep1').style.display='block';document.getElementById('modalStep2').style.display='none';}
 
 function renderFisiosList(fisios){
- const lista=document.getElementById('fisiosList');
- lista.innerHTML=fisios.filter(f=>f.role!=='recepcion').map(f=>{
- const initials=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
- const av=f.foto?`<img src="${f.foto}" alt="${f.nombre}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<span>${initials}</span>`;
- return `<div class="fisio-opt" onclick="enviarAFisio('${f.id}','${f.nombre.replace(/'/g,"\\'")}')">
- <div class="fisio-opt-av">${av}</div>
- <div class="fisio-opt-name">${f.nombre}</div>
- </div>`;
- }).join('');
+  const lista=document.getElementById('fisiosList');
+  lista.innerHTML=fisios.filter(f=>f.role!=='recepcion').map(f=>{const initials=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();const av=f.foto?`<img src="${f.foto}" alt="${f.nombre}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<span>${initials}</span>`;return `<div class="fisio-opt" onclick="enviarAFisio('${f.id}','${f.nombre.replace(/'/g,"\\'")}')"><div class="fisio-opt-av">${av}</div><div class="fisio-opt-name">${f.nombre}</div></div>`;}).join('');
 }
 
-async function enviarAFisio(fisioId, fisioNombre){
- const _tipo=modalTipo;
- const _texto=document.getElementById('modalNota')?.value?.trim()||modalTexto||'';
- cerrarModal();
- const prefijo = _tipo==='dolor' ? '[Dolor aumentó] ' : '';
- const textoBase = _texto || (_tipo==='diario' ? 'Tarea hecha' : '');
- const texto = prefijo + textoBase;
- try{
- if(_tipo==='diario'){
- const btn=document.getElementById('btnDiario');
- btn.disabled=true;btn.textContent='Enviando...';
- await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
- localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));
- mostrarCompletado();
- } else {
- await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
- toast(`Enviado a ${fisioNombre} ✓`,true);
- if(document.getElementById('vasMsgTxt'))document.getElementById('vasMsgTxt').value='';
- }
- }catch(e){toast('Error al enviar',false);}
-}
-
-
-// ── CITAS ─────────────────────────────────────────────────────────────────────
-let citasData = [];
-let calMesActual = new Date();
-let diaSeleccionado = null;
-
-async function initCitas(){
- const wrap=document.getElementById('calendarWrap');
- const lista=document.getElementById('citasLista');
- document.getElementById('citaDetalle').innerHTML='';
- calMesActual=new Date();
- citasData=[];
-
- // Paint calendar immediately
- renderCalendario();
- lista.innerHTML='<div style="text-align:center;padding:16px"><div class="spinner"></div><div style="font-size:12px;color:var(--muted);margin-top:8px">Cargando citas...</div></div>';
-
- // Let browser paint, then fetch
- await new Promise(r=>setTimeout(r,0));
-
- try{
-   const res=await fetch(`/api/citas?patientId=${encodeURIComponent(patient.id)}`);
-   const data=await res.json();
-   citasData=data.citas||[];
-   renderCalendario();
-   renderProximasCitas();
- }catch(e){
-   lista.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';
- }
-}
-
-function renderCalendario(){
- const wrap = document.getElementById('calendarWrap');
- const año = calMesActual.getFullYear();
- const mes = calMesActual.getMonth();
- const hoy = new Date();
- const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
- const dias = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
-
- // Días con cita este mes
- const diasConCita = new Set(citasData
- .filter(c => {
- const d = parseFecha(c.fecha);
- return d && d.getFullYear()===año && d.getMonth()===mes;
- })
- .map(c => parseFecha(c.fecha).getDate())
- );
-
- // Primer día del mes (ajustado lunes=0)
- let primerDia = new Date(año, mes, 1).getDay();
- primerDia = primerDia === 0 ? 6 : primerDia - 1;
- const totalDias = new Date(año, mes+1, 0).getDate();
-
- let cells = '';
- for(let i=0;i<primerDia;i++) cells += '<div class="cal-dia vacio"><div class="cal-dia-num">·</div></div>';
- for(let d=1;d<=totalDias;d++){
- const esHoy = hoy.getDate()===d && hoy.getMonth()===mes && hoy.getFullYear()===año;
- const tieneCita = diasConCita.has(d);
- const esSel = diaSeleccionado && diaSeleccionado.getDate()===d && diaSeleccionado.getMonth()===mes && diaSeleccionado.getFullYear()===año;
- const clases = ['cal-dia', esHoy?'hoy':'', tieneCita?'tiene-cita':'', esSel?'seleccionado':''].filter(Boolean).join(' ');
- cells += `<div class="${clases}" onclick="selDia(${año},${mes},${d})">
- <div class="cal-dia-num">${d}</div>
- ${tieneCita?'<div class="cal-dot"></div>':''}
- </div>`;
- }
-
- wrap.innerHTML = `
- <div class="cal-wrap">
- <div class="cal-header">
- <button class="cal-nav" onclick="cambiarMes(-1)">‹</button>
- <div class="cal-mes">${meses[mes]} ${año}</div>
- <button class="cal-nav" onclick="cambiarMes(1)">›</button>
- </div>
- <div class="cal-dias-semana">${dias.map(d=>`<div class="cal-dia-lbl">${d}</div>`).join('')}</div>
- <div class="cal-grid">${cells}</div>
- </div>`;
-}
-
-function cambiarMes(dir){
- calMesActual.setMonth(calMesActual.getMonth()+dir);
- renderCalendario();
-}
-
-function selDia(año, mes, dia){
- diaSeleccionado = new Date(año, mes, dia);
- renderCalendario();
- const citasDia = citasData.filter(c => {
- const d = parseFecha(c.fecha);
- return d && d.getDate()===dia && d.getMonth()===mes && d.getFullYear()===año;
- });
- const det = document.getElementById('citaDetalle');
- if(!citasDia.length){ det.innerHTML=''; return; }
- const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
- const diasSem=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
- const fecha = new Date(año,mes,dia);
- det.innerHTML = citasDia.map(c=>`
- <div class="cita-detalle">
- <div class="cita-detalle-fecha">${diasSem[fecha.getDay()]}, ${dia} de ${meses[mes]} de ${año}</div>
- <div class="cita-detalle-hora">${c.hora||'--:--'}</div>
- <div class="cita-detalle-fisio">Con ${c.fisio||'tu fisio'}</div>
- ${badgeEstado(c.estado)}
- ${c.tipo?`<div style="font-size:12px;color:var(--muted);margin-top:6px">${c.tipo}</div>`:''}
- </div>`).join('');
-}
-
-function renderProximasCitas(){
- const lista = document.getElementById('citasLista');
- const hoy = new Date(); hoy.setHours(0,0,0,0);
- const proximas = citasData
- .filter(c=>{ const d=parseFecha(c.fecha); return d&&d>=hoy&&c.estado!=='CANCELADA'&&c.estado!=='REAGENDADA'; })
- .sort((a,b)=>parseFecha(a.fecha)-parseFecha(b.fecha))
- .slice(0,5);
- const pasadas = citasData
- .filter(c=>{ const d=parseFecha(c.fecha); return d&&d<hoy; })
- .sort((a,b)=>parseFecha(b.fecha)-parseFecha(a.fecha))
- .slice(0,3);
-
- const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
- const mesesL=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-
- const renderRow = c => {
- const d = parseFecha(c.fecha);
- if(!d) return '';
- return `<div class="cita-row" onclick="selDia(${d.getFullYear()},${d.getMonth()},${d.getDate()});document.getElementById('calendarWrap').scrollIntoView({behavior:'smooth'})">
- <div class="cita-row-fecha">
- <div class="cita-row-dia">${d.getDate()}</div>
- <div class="cita-row-mes">${meses[d.getMonth()]}</div>
- </div>
- <div class="cita-row-sep"></div>
- <div class="cita-row-info">
- <div class="cita-row-hora">${c.hora||'--:--'} · ${c.fisio||'Fisio'}</div>
- <div class="cita-row-fisio">${c.tipo||''}</div>
- </div>
- ${badgeEstado(c.estado)}
- </div>`;
- };
-
- let html = '';
- if(proximas.length){
- html += '<div class="sec-title" style="margin-top:8px">Próximas citas</div>';
- html += proximas.map(renderRow).join('');
- } else {
- html += '<div class="empty" style="padding:2rem 1rem"><div class="empty-icon"></div><div class="empty-title">Sin citas próximas</div><div class="empty-desc">Cuando tu fisio programe una cita, aparecerá aquí.</div></div>';
- }
- if(pasadas.length){
- html += '<div class="sec-title" style="margin-top:16px;color:var(--muted)">Historial reciente</div>';
- html += pasadas.map(renderRow).join('');
- }
- lista.innerHTML = html;
-}
-
-function badgeEstado(estado){
- if(!estado) return '';
- const e = estado.trim().toUpperCase();
- if(e.includes('PENDIENTE')) return '<span class="cita-estado pendiente">Pendiente</span>';
- if(e.includes('REALIZADA')) return '<span class="cita-estado realizada">Realizada</span>';
- if(e.includes('CANCELADA')) return '<span class="cita-estado cancelada">Cancelada</span>';
- if(e.includes('REAGENDADA')) return '<span class="cita-estado reagendada">Reagendada</span>';
- return `<span class="cita-estado realizada">${estado}</span>`;
-}
-
-function parseFecha(str){
- if(!str) return null;
- // DD/MM/YYYY
- if(str.includes('/')){
- const p=str.split('/');
- if(p.length===3) return new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
- }
- // YYYY-MM-DD (Airtable format)
- if(/^\d{4}-\d{2}-\d{2}/.test(str)){
- const p=str.substring(0,10).split('-');
- return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
- }
- const d=new Date(str);
- return isNaN(d)?null:d;
-}
-
-// ── MENSAJES ─────────────────────────────────────────────────────────────────
-async function loadMensajes(tab){
-  const list=document.getElementById('msgList');
-  if(!list)return;
-
-  const tabActiva=tab||'recibidos';
-  list.innerHTML=`
-    <div style="display:flex;gap:6px;margin-bottom:14px;">
-      <button onclick="loadMensajes('recibidos')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1px solid ${tabActiva==='recibidos'?'var(--black)':'rgba(0,0,0,0.12)'};background:${tabActiva==='recibidos'?'var(--black)':'none'};color:${tabActiva==='recibidos'?'var(--cream)':'var(--muted)'};cursor:pointer;">De mi fisio</button>
-      <button onclick="loadMensajes('enviados')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='enviados'?'var(--black)':'var(--border)'};background:${tabActiva==='enviados'?'var(--black)':'none'};color:${tabActiva==='enviados'?'var(--cream)':'var(--muted)'};cursor:pointer;">Enviados</button>
-      <button onclick="loadMensajes('nuevo')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='nuevo'?'var(--black)':'var(--border)'};background:${tabActiva==='nuevo'?'var(--black)':'none'};color:${tabActiva==='nuevo'?'var(--cream)':'var(--muted)'};cursor:pointer;">Nuevo</button>
-    </div>
-    <div id="msgListInner"><div class="loading"><div class="spinner"></div></div></div>`;
-
-  if(tabActiva==='nuevo'){
-    const inner=document.getElementById('msgListInner');
-    // Load fisios list
-    try{
-      const rf=await fetch('/api/fisios?action=lista-publica');
-      const df=await rf.json();
-      const fisios=(df.fisios||[]).filter(f=>f.nombre);
-      inner.innerHTML=`
-        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">¿A quién va dirigido?</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-          ${fisios.map(f=>`<button onclick="selFisioMsg('${f.id}','${f.nombre.replace(/'/g,"\\'")}',this)"
-            style="font-family:var(--font);font-size:13px;font-weight:600;padding:8px 14px;border-radius:99px;border:1.5px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;"
-            >${f.nombre}</button>`).join('')}
-        </div>
-        <input type="hidden" id="msgNuevoFisioId" value="">
-        <input type="hidden" id="msgNuevoFisioNombre" value="">
-        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Mensaje</div>
-        <textarea id="msgNuevoTexto" placeholder="Escribe tu mensaje..." style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:100px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s;margin-bottom:12px;" onfocus="this.style.borderColor='var(--black)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-        <button onclick="enviarMsgNuevoPaciente(this)" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:12px;background:var(--black);color:var(--cream);border:none;border-radius:8px;cursor:pointer;">Enviar mensaje</button>`;
-    }catch(e){inner.innerHTML='<div class="empty"><div class="empty-icon">⚠</div><div class="empty-title">Error de conexión</div></div>';}
-    return;
-  }
-
+async function enviarAFisio(fisioId,fisioNombre){
+  const _tipo=modalTipo;const _texto=document.getElementById('modalNota')?.value?.trim()||modalTexto||'';cerrarModal();
+  const prefijo=_tipo==='dolor'?'[Dolor aumentó] ':'';const textoBase=_texto||(_tipo==='diario'?'Tarea hecha':'');const texto=prefijo+textoBase;
   try{
-    const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);
-    const data=await res.json();
-    const todos=data.mensajes||[];
-    const recibidos=todos.filter(m=>m.tipo==='fisio');
-    const enviados=todos.filter(m=>m.tipo!=='fisio');
-    const mensajes=tabActiva==='recibidos'?recibidos:enviados;
-
-    const inner=document.getElementById('msgListInner');
-    if(!inner)return;
-
-    if(!mensajes.length){
-      const emptyText=tabActiva==='recibidos'
-        ?'Cuando tu fisio te envíe un mensaje, aparecerá aquí.'
-        :'Cuando envíes algo a tu fisio, aparecerá aquí.';
-      inner.innerHTML=`<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin mensajes</div><div class="empty-desc">${emptyText}</div></div>`;
-      return;
-    }
-
-    if(tabActiva==='recibidos'){
-      inner.innerHTML=mensajes.map(m=>`
-        <div class="msg-card">
-          <div class="msg-card-header">
-            <span class="msg-fisio-badge">${m.fisioNombre||'Tu fisio'}</span>
-            <div class="msg-card-fecha">${m.fecha||''}</div>
-          </div>
-          <div class="msg-card-texto" style="white-space:pre-wrap">${formatMensaje(m.texto||'')}</div>
-          ${m.respuesta
-            ?`<div class="msg-reply"><div class="msg-reply-label">Tu respuesta</div><div class="msg-reply-texto" style="white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`
-            :`<div style="margin-top:10px;display:flex;gap:8px;">
-                <textarea id="preply_${m.id}" placeholder="Escribe tu respuesta..." style="flex:1;font-family:var(--font);font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:60px;outline:none;background:var(--cream);color:var(--black);" onfocus="this.style.borderColor='var(--black)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-                <button onclick="responderAlFisio('${m.id}','${(m.fisioId||'').replace(/'/g,"\\'")}',this)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:10px 12px;background:var(--black);color:var(--cream);border:none;border-radius:8px;cursor:pointer;flex-shrink:0;">Enviar</button>
-             </div>`
-          }
-        </div>`).join('');
-    } else {
-      inner.innerHTML=mensajes.map(m=>{
-        const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');
-        const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
-        const tipoHtml=esDolorAumento?'<span class="msg-tipo msg-tipo-dolor">Dolor</span>':'<span class="msg-tipo msg-tipo-diario">Diario</span>';
-        const replyHtml=m.respuesta
-          ?`<div class="msg-reply"><div class="msg-reply-label">Respuesta de ${m.fisioNombre||'tu fisio'}</div><div class="msg-reply-texto" style="white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`
-          :'<div class="msg-pending">Pendiente de respuesta</div>';
-        return `<div class="msg-card">
-          <div class="msg-card-header">
-            <div style="display:flex;align-items:center;gap:8px;">${tipoHtml}<span class="msg-fisio-badge">→ ${m.fisioNombre||'Fisio'}</span></div>
-            <div class="msg-card-fecha">${m.fecha||''}</div>
-          </div>
-          <div class="msg-card-texto" style="white-space:pre-wrap">${formatMensaje(textoLimpio)}</div>
-          ${replyHtml}
-        </div>`;
-      }).join('');
-    }
-  }catch(e){
-    const inner=document.getElementById('msgListInner');
-    if(inner)inner.innerHTML='<div class="empty"><div class="empty-icon">⚠</div><div class="empty-title">Error de conexión</div></div>';
-  }
-}
-
-function selFisioMsg(id, nombre, btn){
-  document.getElementById('msgNuevoFisioId').value=id;
-  document.getElementById('msgNuevoFisioNombre').value=nombre;
-  btn.closest('div').querySelectorAll('button').forEach(b=>{
-    b.style.background='none';b.style.color='var(--muted)';b.style.borderColor='var(--border)';
-  });
-  btn.style.background='var(--black)';btn.style.color='var(--cream)';btn.style.borderColor='var(--black)';
-}
-
-async function enviarMsgNuevoPaciente(btn){
-  const fisioId=document.getElementById('msgNuevoFisioId')?.value||'';
-  const fisioNombre=document.getElementById('msgNuevoFisioNombre')?.value||'';
-  const texto=document.getElementById('msgNuevoTexto')?.value?.trim()||'';
-  if(!fisioId){toast('Selecciona un fisio',false);return;}
-  if(!texto){toast('Escribe un mensaje',false);return;}
-  btn.disabled=true;btn.textContent='Enviando...';
-  try{
-    const fecha=new Date().toLocaleDateString('es-ES');
-    await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});
-    toast('Mensaje enviado ✓',true);
-    document.getElementById('msgNuevoTexto').value='';
-    document.getElementById('msgNuevoFisioId').value='';
-    document.getElementById('msgNuevoFisioNombre').value='';
-    setTimeout(()=>loadMensajes('enviados'),500);
+    if(_tipo==='diario'){const btn=document.getElementById('btnDiario');btn.disabled=true;btn.textContent='Enviando...';await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();}
+    else{await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});toast(`Enviado a ${fisioNombre} ✓`,true);if(document.getElementById('vasMsgTxt'))document.getElementById('vasMsgTxt').value='';}
   }catch(e){toast('Error al enviar',false);}
-  btn.disabled=false;btn.textContent='Enviar mensaje';
 }
 
-async function responderAlFisio(mensajeId, fisioId, btn){
-  const ta=document.getElementById(`preply_${mensajeId}`);
-  const texto=ta?.value?.trim();
-  if(!texto){toast('Escribe una respuesta',false);return;}
-  btn.disabled=true;btn.textContent='...';
-  try{
-    const res=await fetch('/api/diario',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        action:'responder-al-fisio',
-        mensajeId,
-        respuesta:texto,
-        pacienteId:patient.id
-      })
-    });
-    const d=await res.json();
-    if(d.ok){
-      toast('Respuesta enviada ✓',true);
-      loadMensajes('recibidos');
-    } else {
-      toast('Error al enviar',false);
-      btn.disabled=false;btn.textContent='Enviar';
-    }
-  }catch(e){toast('Error',false);btn.disabled=false;btn.textContent='Enviar';}
+// CITAS
+let citasData=[],calMesActual=new Date(),diaSeleccionado=null;
+async function initCitas(){const wrap=document.getElementById('calendarWrap');const lista=document.getElementById('citasLista');document.getElementById('citaDetalle').innerHTML='';calMesActual=new Date();citasData=[];renderCalendario();lista.innerHTML='<div style="text-align:center;padding:16px"><div class="spinner"></div></div>';await new Promise(r=>setTimeout(r,0));try{const res=await fetch(`/api/citas?patientId=${encodeURIComponent(patient.id)}`);const data=await res.json();citasData=data.citas||[];renderCalendario();renderProximasCitas();}catch(e){lista.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}}
+function renderCalendario(){const wrap=document.getElementById('calendarWrap');const año=calMesActual.getFullYear();const mes=calMesActual.getMonth();const hoy=new Date();const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];const dias=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];const diasConCita=new Set(citasData.filter(c=>{const d=parseFecha(c.fecha);return d&&d.getFullYear()===año&&d.getMonth()===mes;}).map(c=>parseFecha(c.fecha).getDate()));let primerDia=new Date(año,mes,1).getDay();primerDia=primerDia===0?6:primerDia-1;const totalDias=new Date(año,mes+1,0).getDate();let cells='';for(let i=0;i<primerDia;i++)cells+='<div class="cal-dia vacio"><div class="cal-dia-num">·</div></div>';for(let d=1;d<=totalDias;d++){const esHoy=hoy.getDate()===d&&hoy.getMonth()===mes&&hoy.getFullYear()===año;const tieneCita=diasConCita.has(d);const esSel=diaSeleccionado&&diaSeleccionado.getDate()===d&&diaSeleccionado.getMonth()===mes&&diaSeleccionado.getFullYear()===año;const clases=['cal-dia',esHoy?'hoy':'',tieneCita?'tiene-cita':'',esSel?'seleccionado':''].filter(Boolean).join(' ');cells+=`<div class="${clases}" onclick="selDia(${año},${mes},${d})"><div class="cal-dia-num">${d}</div>${tieneCita?'<div class="cal-dot"></div>':''}</div>`;}wrap.innerHTML=`<div class="cal-wrap"><div class="cal-header"><button class="cal-nav" onclick="cambiarMes(-1)">‹</button><div class="cal-mes">${meses[mes]} ${año}</div><button class="cal-nav" onclick="cambiarMes(1)">›</button></div><div class="cal-dias-semana">${dias.map(d=>`<div class="cal-dia-lbl">${d}</div>`).join('')}</div><div class="cal-grid">${cells}</div></div>`;}
+function cambiarMes(dir){calMesActual.setMonth(calMesActual.getMonth()+dir);renderCalendario();}
+function selDia(año,mes,dia){diaSeleccionado=new Date(año,mes,dia);renderCalendario();const citasDia=citasData.filter(c=>{const d=parseFecha(c.fecha);return d&&d.getDate()===dia&&d.getMonth()===mes&&d.getFullYear()===año;});const det=document.getElementById('citaDetalle');if(!citasDia.length){det.innerHTML='';return;}const mesesL=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];const diasSem=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];const fecha=new Date(año,mes,dia);det.innerHTML=citasDia.map(c=>`<div class="cita-detalle"><div class="cita-detalle-fecha">${diasSem[fecha.getDay()]}, ${dia} de ${mesesL[mes]} de ${año}</div><div class="cita-detalle-hora">${c.hora||'--:--'}</div><div class="cita-detalle-fisio">Con ${c.fisio||'tu fisio'}</div>${badgeEstado(c.estado)}${c.tipo?`<div style="font-size:12px;color:var(--muted);margin-top:6px">${c.tipo}</div>`:''}</div>`).join('');}
+function renderProximasCitas(){const lista=document.getElementById('citasLista');const hoy=new Date();hoy.setHours(0,0,0,0);const proximas=citasData.filter(c=>{const d=parseFecha(c.fecha);return d&&d>=hoy&&c.estado!=='CANCELADA'&&c.estado!=='REAGENDADA';}).sort((a,b)=>parseFecha(a.fecha)-parseFecha(b.fecha)).slice(0,5);const pasadas=citasData.filter(c=>{const d=parseFecha(c.fecha);return d&&d<hoy;}).sort((a,b)=>parseFecha(b.fecha)-parseFecha(a.fecha)).slice(0,3);const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];const renderRow=c=>{const d=parseFecha(c.fecha);if(!d)return '';return `<div class="cita-row" onclick="selDia(${d.getFullYear()},${d.getMonth()},${d.getDate()});document.getElementById('calendarWrap').scrollIntoView({behavior:'smooth'})"><div class="cita-row-fecha"><div class="cita-row-dia">${d.getDate()}</div><div class="cita-row-mes">${meses[d.getMonth()]}</div></div><div class="cita-row-sep"></div><div class="cita-row-info"><div class="cita-row-hora">${c.hora||'--:--'} · ${c.fisio||'Fisio'}</div><div class="cita-row-fisio">${c.tipo||''}</div></div>${badgeEstado(c.estado)}</div>`;};let html='';if(proximas.length){html+='<div class="sec-title" style="margin-top:8px">Próximas citas</div>';html+=proximas.map(renderRow).join('');}else{html+='<div class="empty" style="padding:2rem 1rem"><div class="empty-icon"></div><div class="empty-title">Sin citas próximas</div><div class="empty-desc">Cuando tu fisio programe una cita, aparecerá aquí.</div></div>';}if(pasadas.length){html+='<div class="sec-title" style="margin-top:16px;color:var(--muted)">Historial reciente</div>';html+=pasadas.map(renderRow).join('');}lista.innerHTML=html;}
+function badgeEstado(estado){if(!estado)return '';const e=estado.trim().toUpperCase();if(e.includes('PENDIENTE'))return '<span class="cita-estado pendiente">Pendiente</span>';if(e.includes('REALIZADA'))return '<span class="cita-estado realizada">Realizada</span>';if(e.includes('CANCELADA'))return '<span class="cita-estado cancelada">Cancelada</span>';return `<span class="cita-estado realizada">${estado}</span>`;}
+function parseFecha(str){if(!str)return null;if(str.includes('/')){const p=str.split('/');if(p.length===3)return new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));}if(/^\d{4}-\d{2}-\d{2}/.test(str)){const p=str.substring(0,10).split('-');return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));}const d=new Date(str);return isNaN(d)?null:d;}
+
+// MENSAJES
+async function loadMensajes(tab){
+  const list=document.getElementById('msgList');if(!list)return;
+  const tabActiva=tab||'recibidos';
+  list.innerHTML=`<div style="display:flex;gap:6px;margin-bottom:14px;"><button onclick="loadMensajes('recibidos')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1px solid ${tabActiva==='recibidos'?'var(--black)':'rgba(0,0,0,0.12)'};background:${tabActiva==='recibidos'?'var(--black)':'none'};color:${tabActiva==='recibidos'?'var(--cream)':'var(--muted)'};cursor:pointer;">De mi fisio</button><button onclick="loadMensajes('enviados')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='enviados'?'var(--black)':'var(--border)'};background:${tabActiva==='enviados'?'var(--black)':'none'};color:${tabActiva==='enviados'?'var(--cream)':'var(--muted)'};cursor:pointer;">Enviados</button><button onclick="loadMensajes('nuevo')" style="flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:8px;border-radius:99px;border:1.5px solid ${tabActiva==='nuevo'?'var(--black)':'var(--border)'};background:${tabActiva==='nuevo'?'var(--black)':'none'};color:${tabActiva==='nuevo'?'var(--cream)':'var(--muted)'};cursor:pointer;">Nuevo</button></div><div id="msgListInner"><div class="loading"><div class="spinner"></div></div></div>`;
+  if(tabActiva==='nuevo'){const inner=document.getElementById('msgListInner');try{const rf=await fetch('/api/fisios?action=lista-publica');const df=await rf.json();const fisios=(df.fisios||[]).filter(f=>f.nombre);inner.innerHTML=`<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">¿A quién va dirigido?</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">${fisios.map(f=>`<button onclick="selFisioMsg('${f.id}','${f.nombre.replace(/'/g,"\\'")}',this)" style="font-family:var(--font);font-size:13px;font-weight:600;padding:8px 14px;border-radius:99px;border:1.5px solid var(--border);background:none;color:var(--muted);cursor:pointer;">${f.nombre}</button>`).join('')}</div><input type="hidden" id="msgNuevoFisioId" value=""><input type="hidden" id="msgNuevoFisioNombre" value=""><div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Mensaje</div><textarea id="msgNuevoTexto" placeholder="Escribe tu mensaje..." style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:100px;outline:none;background:var(--cream);color:var(--black);margin-bottom:12px;"></textarea><button onclick="enviarMsgNuevoPaciente(this)" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:12px;background:var(--black);color:var(--cream);border:none;border-radius:8px;cursor:pointer;">Enviar mensaje</button>`;}catch(e){inner.innerHTML='<div class="empty"><div class="empty-icon">⚠</div><div class="empty-title">Error de conexión</div></div>';}return;}
+  try{const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);const data=await res.json();const todos=data.mensajes||[];const recibidos=todos.filter(m=>m.tipo==='fisio');const enviados=todos.filter(m=>m.tipo!=='fisio');const mensajes=tabActiva==='recibidos'?recibidos:enviados;const inner=document.getElementById('msgListInner');if(!inner)return;
+  if(!mensajes.length){inner.innerHTML=`<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin mensajes</div><div class="empty-desc">${tabActiva==='recibidos'?'Cuando tu fisio te envíe un mensaje, aparecerá aquí.':'Cuando envíes algo a tu fisio, aparecerá aquí.'}</div></div>`;return;}
+  if(tabActiva==='recibidos'){inner.innerHTML=mensajes.map(m=>`<div class="msg-card"><div class="msg-card-header"><span class="msg-fisio-badge">${m.fisioNombre||'Tu fisio'}</span><div class="msg-card-fecha">${m.fecha||''}</div></div><div class="msg-card-texto" style="white-space:pre-wrap">${formatMensaje(m.texto||'')}</div>${m.respuesta?`<div class="msg-reply"><div class="msg-reply-label">Tu respuesta</div><div class="msg-reply-texto" style="white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`:`<div style="margin-top:10px;display:flex;gap:8px;"><textarea id="preply_${m.id}" placeholder="Escribe tu respuesta..." style="flex:1;font-family:var(--font);font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:60px;outline:none;background:var(--cream);color:var(--black);"></textarea><button onclick="responderAlFisio('${m.id}','${(m.fisioId||'').replace(/'/g,"\\'")}',this)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:10px 12px;background:var(--black);color:var(--cream);border:none;border-radius:8px;cursor:pointer;flex-shrink:0;">Enviar</button></div>`}</div>`).join('');}
+  else{inner.innerHTML=mensajes.map(m=>{const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;const tipoHtml=esDolorAumento?'<span class="msg-tipo msg-tipo-dolor">Dolor</span>':'<span class="msg-tipo msg-tipo-diario">Diario</span>';const replyHtml=m.respuesta?`<div class="msg-reply"><div class="msg-reply-label">Respuesta de ${m.fisioNombre||'tu fisio'}</div><div class="msg-reply-texto" style="white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`:'<div class="msg-pending">Pendiente de respuesta</div>';return `<div class="msg-card"><div class="msg-card-header"><div style="display:flex;align-items:center;gap:8px;">${tipoHtml}<span class="msg-fisio-badge">→ ${m.fisioNombre||'Fisio'}</span></div><div class="msg-card-fecha">${m.fecha||''}</div></div><div class="msg-card-texto" style="white-space:pre-wrap">${formatMensaje(textoLimpio)}</div>${replyHtml}</div>`;}).join('');}
+  }catch(e){const inner=document.getElementById('msgListInner');if(inner)inner.innerHTML='<div class="empty"><div class="empty-icon">⚠</div><div class="empty-title">Error de conexión</div></div>';}
 }
 
+function selFisioMsg(id,nombre,btn){document.getElementById('msgNuevoFisioId').value=id;document.getElementById('msgNuevoFisioNombre').value=nombre;btn.closest('div').querySelectorAll('button').forEach(b=>{b.style.background='none';b.style.color='var(--muted)';b.style.borderColor='var(--border)';});btn.style.background='var(--black)';btn.style.color='var(--cream)';btn.style.borderColor='var(--black)';}
+async function enviarMsgNuevoPaciente(btn){const fisioId=document.getElementById('msgNuevoFisioId')?.value||'';const fisioNombre=document.getElementById('msgNuevoFisioNombre')?.value||'';const texto=document.getElementById('msgNuevoTexto')?.value?.trim()||'';if(!fisioId){toast('Selecciona un fisio',false);return;}if(!texto){toast('Escribe un mensaje',false);return;}btn.disabled=true;btn.textContent='Enviando...';try{await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});toast('Mensaje enviado ✓',true);document.getElementById('msgNuevoTexto').value='';document.getElementById('msgNuevoFisioId').value='';document.getElementById('msgNuevoFisioNombre').value='';setTimeout(()=>loadMensajes('enviados'),500);}catch(e){toast('Error al enviar',false);}btn.disabled=false;btn.textContent='Enviar mensaje';}
+async function responderAlFisio(mensajeId,fisioId,btn){const ta=document.getElementById(`preply_${mensajeId}`);const texto=ta?.value?.trim();if(!texto){toast('Escribe una respuesta',false);return;}btn.disabled=true;btn.textContent='...';try{const res=await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'responder-al-fisio',mensajeId,respuesta:texto,pacienteId:patient.id})});const d=await res.json();if(d.ok){toast('Respuesta enviada ✓',true);loadMensajes('recibidos');}else{toast('Error al enviar',false);btn.disabled=false;btn.textContent='Enviar';}}catch(e){toast('Error',false);btn.disabled=false;btn.textContent='Enviar';}}
+async function marcarRespuestasLeidas(){if(!patient)return;try{await fetch(`/api/pacientes?action=marcar-respuesta-leida&pacienteId=${encodeURIComponent(patient.id)}`);}catch(e){}}
+async function checkMensajesNoLeidos(){try{const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);const data=await res.json();const mensajes=data.mensajes||[];const hayNovedad=mensajes.some(m=>(m.respuesta&&!m.respuestaLeida)||(m.tipo==='fisio'&&!m.respuestaLeida));const dot=document.getElementById('navMensajesDot');if(dot)dot.classList.toggle('show',hayNovedad);}catch(e){}}
 
-async function marcarRespuestasLeidas(){
- if(!patient) return;
- try{
- await fetch(`/api/pacientes?action=marcar-respuesta-leida&pacienteId=${encodeURIComponent(patient.id)}`);
- }catch(e){}
-}
-
-async function checkMensajesNoLeidos(){
- try{
- const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);
- const data=await res.json();
- const mensajes=data.mensajes||[];
- const hayNovedad=mensajes.some(m=>(m.respuesta&&!m.respuestaLeida)||(m.tipo==='fisio'&&!m.respuestaLeida));
- document.getElementById('navMensajesDot').classList.toggle('show',hayNovedad);
- }catch(e){}
-}
-
-// ── TAREA HECHA ───────────────────────────────────────────────────────────────
-// Ahora usa modal — ver abrirModalDiario()
-
-// INFORMES PACIENTE
+// INFORMES
 async function loadInformes(){
- const list=document.getElementById('infPacList');
- if(!list)return;
- list.innerHTML='<div class="loading"><div class="spinner"></div></div>';
- // Clear any cached content first
- window._informesPac=[];
- try{
- const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);
- const data=await res.json();
- const informes=data.informes||[];
- if(!informes.length){list.innerHTML='<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin informes todavía</div><div class="empty-desc">Cuando tu fisio genere un informe de tu valoración aparecerá aquí.</div></div>';return;}
- const tipoLabel={rodilla:'Rodilla',hombro:'Hombro',cervical:'Cervical',codo:'Codo y antebrazo',muneca:'Muñeca y mano',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',hernia:'Columna lumbar',libre:'Valoración libre'};
- list.innerHTML=informes.map((inf,i)=>`
- <div class="inf-pac-card">
- <div class="inf-pac-fecha">${inf.fecha}</div>
- <div class="inf-pac-tipo">${tipoLabel[inf.tipo]||inf.tipo||'Valoración'}</div>
- <div class="inf-pac-fisio">Fisioterapeuta: ${inf.fisioNombre}</div>
- <div style="display:flex;gap:8px;flex-wrap:wrap;">
- <button class="btn-inf" onclick="toggleInforme(${i})">Ver informe</button>
- <button class="btn-inf pdf" onclick="imprimirInforme(${i})">Descargar PDF</button>
- </div>
- <div class="inf-pac-contenido" id="infCont${i}">${inf.contenido}</div>
- </div>
- `).join('');
- window._informesPac=informes;
- }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
+  const list=document.getElementById('infPacList');if(!list)return;list.innerHTML='<div class="loading"><div class="spinner"></div></div>';window._informesPac=[];
+  try{const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);const data=await res.json();const informes=data.informes||[];
+  if(!informes.length){list.innerHTML='<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin informes todavía</div><div class="empty-desc">Cuando tu fisio genere un informe aparecerá aquí.</div></div>';return;}
+  const tipoLabel={rodilla:'Rodilla',hombro:'Hombro',cervical:'Cervical',codo:'Codo y antebrazo',muneca:'Muñeca y mano',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',hernia:'Columna lumbar',libre:'Valoración libre'};
+  list.innerHTML=informes.map((inf,i)=>`<div class="inf-pac-card"><div class="inf-pac-fecha">${inf.fecha}</div><div class="inf-pac-tipo">${tipoLabel[inf.tipo]||inf.tipo||'Valoración'}</div><div class="inf-pac-fisio">Fisioterapeuta: ${inf.fisioNombre}</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-inf" onclick="toggleInforme(${i})">Ver informe</button><button class="btn-inf pdf" onclick="imprimirInforme(${i})">Descargar PDF</button></div><div class="inf-pac-contenido" id="infCont${i}">${inf.contenido}</div></div>`).join('');
+  window._informesPac=informes;}catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
 }
-
 function toggleInforme(i){const el=document.getElementById(`infCont${i}`);el.classList.toggle('open');const btns=el.previousElementSibling.querySelectorAll('.btn-inf');if(btns[0])btns[0].textContent=el.classList.contains('open')?'Ocultar informe':'Ver informe';}
-
-function imprimirInforme(i){
- const inf=window._informesPac?.[i];if(!inf)return;
- const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia Discal Lumbar',muneca:'Muñeca y mano',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',libre:'Valoración libre'};
- const tipoLabel=tipos[inf.tipo]||inf.tipo||'Valoración Fisioterapéutica';
- const fecha=inf.fecha||new Date().toLocaleDateString('es-ES');
- const fisioNom=inf.fisioNombre||'';
- const colNum='';
- const _run=()=>_generarPDFPac(patient.nombre,inf.contenido,tipoLabel,fisioNom,colNum,fecha);
- if(typeof window.jspdf!=='undefined'&&window.jspdf.jsPDF){_run();}else{const old=document.getElementById('jspdf-script');if(old)old.remove();const s=document.createElement('script');s.id='jspdf-script';s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=()=>{if(window.jspdf&&window.jspdf.jsPDF){_run();}else{toast('Error: librería PDF no disponible',false);}};s.onerror=()=>toast('Error al cargar librería PDF',false);document.head.appendChild(s);}
-}
-
-function _generarPDFPac(pacNom,informe,tipoLabel,fisioNom,colNum,fecha){
- const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});const W=210,ml=18,mr=18,tw=W-ml-mr;let y=0;
- const C={negro:[30,30,30],oscuro:[50,50,50],medio:[90,90,90],claro:[140,140,140],suave:[190,190,190],linea:[210,210,210]};
- y=14;doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(...C.negro);doc.text('FISIO365',ml,y);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...C.medio);doc.text('FISIOTERAPIA AVANZADA · READAPTACIÓN FUNCIONAL',ml,y+5);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...C.oscuro);doc.text('INFORME DE VALORACIÓN',W-mr,y,{align:'right'});doc.setFontSize(7.5);doc.setTextColor(...C.medio);doc.text('Fecha: '+fecha,W-mr,y+5,{align:'right'});doc.text('Ref: INF-'+Date.now().toString().slice(-6),W-mr,y+10,{align:'right'});y+=16;doc.setDrawColor(...C.oscuro);doc.setLineWidth(0.6);doc.line(ml,y,W-mr,y);y+=1;doc.setDrawColor(...C.linea);doc.setLineWidth(0.2);doc.line(ml,y,W-mr,y);y+=8;
- const bh=fisioNom?22:18;doc.setDrawColor(...C.suave);doc.setLineWidth(0.3);doc.rect(ml,y,tw,bh,'S');doc.line(ml+tw/2,y,ml+tw/2,y+bh);doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...C.claro);doc.text('PACIENTE',ml+4,y+5);doc.text('TIPO DE VALORACIÓN',ml+tw/2+4,y+5);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...C.negro);doc.text(pacNom,ml+4,y+12);doc.setFontSize(9.5);doc.text(tipoLabel,ml+tw/2+4,y+12);if(fisioNom){doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...C.medio);doc.text('Fisioterapeuta: '+fisioNom+(colNum?' · '+colNum:''),ml+4,y+18);}y+=bh+8;
- doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...C.medio);doc.text(('VALORACIÓN FISIOTERAPÉUTICA — '+tipoLabel).toUpperCase(),ml,y);y+=7;doc.setDrawColor(...C.linea);doc.setLineWidth(0.2);doc.line(ml,y,W-mr,y);y+=6;
- const lines=informe.split('\n');lines.forEach(line=>{const t=line.trim();if(!t){y+=2;return;}const isTitle=/^[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ\s\-\/\.]{7,}$/.test(t);if(isTitle){if(y>268){doc.addPage();y=16;}y+=5;doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...C.oscuro);doc.text(t,ml,y);y+=2;doc.setDrawColor(...C.suave);doc.setLineWidth(0.25);doc.line(ml,y,ml+tw,y);y+=4;}else{doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...C.oscuro);const wrapped=doc.splitTextToSize(t,tw);wrapped.forEach(wl=>{if(y>277){doc.addPage();y=16;}doc.text(wl,ml,y);y+=5;});y+=1;}});
- const pageCount=doc.getNumberOfPages();for(let i=1;i<=pageCount;i++){doc.setPage(i);const py=286;doc.setDrawColor(...C.suave);doc.setLineWidth(0.3);doc.line(ml,py,W-mr,py);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...C.oscuro);doc.text('FISIO365',ml,py+5);doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...C.claro);doc.text('Fisioterapia avanzada y readaptación funcional',ml,py+9);doc.setDrawColor(...C.medio);doc.setLineWidth(0.3);doc.line(W/2-22,py+5,W/2+22,py+5);doc.setFontSize(7);doc.setTextColor(...C.medio);doc.text(fisioNom||'Fisioterapeuta',W/2,py+9,{align:'center'});if(colNum){doc.setFontSize(6.5);doc.setTextColor(...C.claro);doc.text(colNum,W/2,py+13,{align:'center'});}doc.setTextColor(...C.claro);doc.setFontSize(6.5);doc.text('Pág. '+i+' / '+pageCount,W-mr,py+5,{align:'right'});doc.text(fecha,W-mr,py+9,{align:'right'});}
- doc.save('Informe_'+pacNom.replace(/\s+/g,'_')+'_'+fecha.replace(/\//g,'-')+'.pdf');
-}
+function imprimirInforme(i){const inf=window._informesPac?.[i];if(!inf)return;const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia Discal Lumbar',muneca:'Muñeca y mano',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',libre:'Valoración libre'};const tipoLabel=tipos[inf.tipo]||inf.tipo||'Valoración Fisioterapéutica';const fecha=inf.fecha||new Date().toLocaleDateString('es-ES');const fisioNom=inf.fisioNombre||'';const _run=()=>_generarPDFPac(patient.nombre,inf.contenido,tipoLabel,fisioNom,'',fecha);if(typeof window.jspdf!=='undefined'&&window.jspdf.jsPDF){_run();}else{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=()=>{if(window.jspdf&&window.jspdf.jsPDF)_run();else toast('Error: librería PDF no disponible',false);};s.onerror=()=>toast('Error al cargar librería PDF',false);document.head.appendChild(s);}}
+function _generarPDFPac(pacNom,informe,tipoLabel,fisioNom,colNum,fecha){const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});const W=210,ml=18,mr=18,tw=W-ml-mr;let y=0;const C={negro:[30,30,30],oscuro:[50,50,50],medio:[90,90,90],claro:[140,140,140],suave:[190,190,190],linea:[210,210,210]};y=14;doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(...C.negro);doc.text('FISIO365',ml,y);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...C.medio);doc.text('FISIOTERAPIA AVANZADA · READAPTACIÓN FUNCIONAL',ml,y+5);doc.setFontSize(8);doc.setTextColor(...C.oscuro);doc.text('INFORME DE VALORACIÓN',W-mr,y,{align:'right'});doc.setFontSize(7.5);doc.setTextColor(...C.medio);doc.text('Fecha: '+fecha,W-mr,y+5,{align:'right'});doc.text('Ref: INF-'+Date.now().toString().slice(-6),W-mr,y+10,{align:'right'});y+=16;doc.setDrawColor(...C.oscuro);doc.setLineWidth(0.6);doc.line(ml,y,W-mr,y);y+=8;const bh=fisioNom?22:18;doc.setDrawColor(...C.suave);doc.setLineWidth(0.3);doc.rect(ml,y,tw,bh,'S');doc.line(ml+tw/2,y,ml+tw/2,y+bh);doc.setFontSize(6.5);doc.setTextColor(...C.claro);doc.text('PACIENTE',ml+4,y+5);doc.text('TIPO DE VALORACIÓN',ml+tw/2+4,y+5);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...C.negro);doc.text(pacNom,ml+4,y+12);doc.setFontSize(9.5);doc.text(tipoLabel,ml+tw/2+4,y+12);if(fisioNom){doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...C.medio);doc.text('Fisioterapeuta: '+fisioNom,ml+4,y+18);}y+=bh+8;doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...C.medio);doc.text(('VALORACIÓN FISIOTERAPÉUTICA — '+tipoLabel).toUpperCase(),ml,y);y+=7;doc.setDrawColor(...C.linea);doc.setLineWidth(0.2);doc.line(ml,y,W-mr,y);y+=6;const lines=informe.split('\n');lines.forEach(line=>{const t=line.trim();if(!t){y+=2;return;}const isTitle=/^[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑ\s\-\/\.]{7,}$/.test(t);if(isTitle){if(y>268){doc.addPage();y=16;}y+=5;doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...C.oscuro);doc.text(t,ml,y);y+=2;doc.setDrawColor(...C.suave);doc.setLineWidth(0.25);doc.line(ml,y,ml+tw,y);y+=4;}else{doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...C.oscuro);const wrapped=doc.splitTextToSize(t,tw);wrapped.forEach(wl=>{if(y>277){doc.addPage();y=16;}doc.text(wl,ml,y);y+=5;});y+=1;}});const pageCount=doc.getNumberOfPages();for(let i=1;i<=pageCount;i++){doc.setPage(i);const py=286;doc.setDrawColor(...C.suave);doc.setLineWidth(0.3);doc.line(ml,py,W-mr,py);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...C.oscuro);doc.text('FISIO365',ml,py+5);doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...C.claro);doc.text('Fisioterapia avanzada y readaptación funcional',ml,py+9);doc.setFontSize(7);doc.setTextColor(...C.medio);doc.text(fisioNom||'Fisioterapeuta',W/2,py+9,{align:'center'});doc.setTextColor(...C.claro);doc.setFontSize(6.5);doc.text('Pág. '+i+' / '+pageCount,W-mr,py+5,{align:'right'});doc.text(fecha,W-mr,py+9,{align:'right'});}doc.save('Informe_'+pacNom.replace(/\s+/g,'_')+'_'+fecha.replace(/\//g,'-')+'.pdf');}
 
 // VAS
-function initVAS(){const nums=document.getElementById('vasNums');if(nums.children.length===0){
-  const colors=['#22c55e','#4ade80','#86efac','#bef264','#fde047','#fbbf24','#fb923c','#f97316','#ef4444','#dc2626','#b91c1c'];
-  for(let i=0;i<=10;i++){const span=document.createElement('span');span.className='vas-num';span.textContent=i;span.style.background=colors[i];span.onclick=()=>{vasSeleccionado=i;document.querySelectorAll('.vas-num').forEach((el,idx)=>el.classList.toggle('on',idx===i));document.getElementById('btnVas').style.display='block';};nums.appendChild(span);}
-}cargarDatosVAS();}
+function initVAS(){const nums=document.getElementById('vasNums');if(nums.children.length===0){const colors=['#22c55e','#4ade80','#86efac','#bef264','#fde047','#fbbf24','#fb923c','#f97316','#ef4444','#dc2626','#b91c1c'];for(let i=0;i<=10;i++){const span=document.createElement('span');span.className='vas-num';span.textContent=i;span.style.background=colors[i];span.onclick=()=>{vasSeleccionado=i;document.querySelectorAll('.vas-num').forEach((el,idx)=>el.classList.toggle('on',idx===i));document.getElementById('btnVas').style.display='block';};nums.appendChild(span);}}cargarDatosVAS();}
 async function cargarDatosVAS(){try{const res=await fetch(`/api/dolor?patientId=${patient.id}`);const data=await res.json();vasRegistros=data.registros||[];actualizarGrafica();}catch(e){}}
 async function guardarVAS(){if(vasSeleccionado===null)return;const btn=document.getElementById('btnVas');btn.disabled=true;btn.textContent='Guardando...';try{await fetch('/api/dolor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,fecha:TODAY,valor:vasSeleccionado})});await cargarDatosVAS();btn.style.display='none';toast('Dolor registrado ✓',true);}catch(e){toast('Error al guardar',false);}btn.disabled=false;btn.textContent='Guardar';}
 function cambiarPeriodo(dias,btn){vasPeriodo=dias;document.querySelectorAll('.periodo').forEach(b=>b.classList.remove('on'));btn.classList.add('on');actualizarGrafica();}
+function actualizarGrafica(){const hoy=new Date(TODAY);const fechaInicio=new Date(hoy);fechaInicio.setDate(hoy.getDate()-(vasPeriodo-1));const fechaInicioStr=fechaInicio.toISOString().split('T')[0];const conDatos=vasRegistros.filter(r=>r.fecha>=fechaInicioStr&&r.fecha<=TODAY).sort((a,b)=>a.fecha.localeCompare(b.fecha));if(conDatos.length<1){document.getElementById('graficaCard').style.display='none';return;}const canvas=document.getElementById('chartSvg');const inner=document.getElementById('graficaInner');const CW=inner.offsetWidth-24;const CH=100;canvas.width=CW*window.devicePixelRatio;canvas.height=CH*window.devicePixelRatio;canvas.style.width=CW+'px';canvas.style.height=CH+'px';const ctx=canvas.getContext('2d');ctx.scale(window.devicePixelRatio,window.devicePixelRatio);ctx.clearRect(0,0,CW,CH);const PAD=8;const pts=conDatos.map((d,i)=>{const x=conDatos.length===1?CW-PAD:PAD+(i/(conDatos.length-1))*(CW-PAD*2);const y=PAD+((10-d.valor)/10)*(CH-PAD*2);return{x,y,valor:d.valor,fecha:d.fecha,esHoy:d.fecha===TODAY};});ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;[PAD,CH/2,CH-PAD].forEach(y=>{ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();});if(pts.length>1){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,CH);ctx.lineTo(pts[0].x,CH);ctx.closePath();ctx.fillStyle='rgba(173,163,218,0.15)';ctx.fill();ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.strokeStyle='#1a1a1a';ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();}pts.forEach((p,i)=>{const isLast=i===pts.length-1;ctx.beginPath();ctx.arc(p.x,p.y,isLast?5:3,0,Math.PI*2);if(isLast){ctx.fillStyle='white';ctx.fill();ctx.strokeStyle='#1a1a1a';ctx.lineWidth=2;ctx.stroke();}else{ctx.fillStyle='#1a1a1a';ctx.fill();}});const diasRow=document.getElementById('diasRow');diasRow.innerHTML='';pts.forEach(p=>{const date=new Date(p.fecha+'T12:00:00');const label=p.esHoy?'Hoy':`${date.getDate()}/${date.getMonth()+1}`;const el=document.createElement('div');el.style.cssText=`position:absolute;left:${p.x}px;top:0;transform:translateX(-50%);font-size:10px;color:${p.esHoy?'#1a1a1a':'#888'};font-weight:${p.esHoy?'600':'400'};white-space:nowrap;`;el.textContent=label;diasRow.appendChild(el);});const msgEl=document.getElementById('vasMsg');if(conDatos.length>=2){const penultimo=conDatos[conDatos.length-2].valor;const ultimo=conDatos[conDatos.length-1].valor;msgEl.style.display='block';if(ultimo<penultimo){const pct=penultimo>0?Math.round(((penultimo-ultimo)/penultimo)*100):0;msgEl.className='vas-msg bien';msgEl.innerHTML=`Tu dolor ha bajado${pct>0?' un '+pct+'%':''} respecto a ayer. ¡Vas por muy buen camino!`;}else if(ultimo>penultimo){msgEl.className='vas-msg animo';msgEl.innerHTML='<div style="font-size:13px;font-weight:600;margin-bottom:12px;color:#000;">No te preocupes, los altibajos son normales. ¿Has cambiado algo en tu rutina hoy?</div><textarea id="vasMsgTxt" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;resize:none;min-height:80px;outline:none;background:#f5f2ee;color:#000;margin-bottom:10px;" placeholder="Ej: He estado de pie muchas horas, he dormido mal..."></textarea><button onclick=\'guardarMsgDolor()\' style=\'width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:#000;color:#f5f2ee;border:none;border-radius:8px;cursor:pointer;\'>Enviar a mi fisio</button>';}else{msgEl.className='vas-msg neutro';msgEl.innerHTML='Tu dolor se mantiene estable. ¡Sigue con tus ejercicios!';}  }else{msgEl.style.display='none';}}
+function guardarMsgDolor(){const texto=document.getElementById('vasMsgTxt')?.value?.trim();if(!texto)return;abrirModalDolor(texto);}
 
-function actualizarGrafica(){
- const hoy=new Date(TODAY);const fechaInicio=new Date(hoy);fechaInicio.setDate(hoy.getDate()-(vasPeriodo-1));const fechaInicioStr=fechaInicio.toISOString().split('T')[0];
- const conDatos=vasRegistros.filter(r=>r.fecha>=fechaInicioStr&&r.fecha<=TODAY).sort((a,b)=>a.fecha.localeCompare(b.fecha));
- if(conDatos.length<1){document.getElementById('graficaCard').style.display='none';return;}
- // graficaCard hidden
- const canvas=document.getElementById('chartSvg');const inner=document.getElementById('graficaInner');const CW=inner.offsetWidth-24;const CH=100;
- canvas.width=CW*window.devicePixelRatio;canvas.height=CH*window.devicePixelRatio;canvas.style.width=CW+'px';canvas.style.height=CH+'px';
- const ctx=canvas.getContext('2d');ctx.scale(window.devicePixelRatio,window.devicePixelRatio);ctx.clearRect(0,0,CW,CH);
- const PAD=8;
- const pts=conDatos.map((d,i)=>{const x=conDatos.length===1?CW-PAD:PAD+(i/(conDatos.length-1))*(CW-PAD*2);const y=PAD+((10-d.valor)/10)*(CH-PAD*2);return{x,y,valor:d.valor,fecha:d.fecha,esHoy:d.fecha===TODAY};});
- ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;[PAD,CH/2,CH-PAD].forEach(y=>{ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();});
- if(pts.length>1){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,CH);ctx.lineTo(pts[0].x,CH);ctx.closePath();ctx.fillStyle='rgba(173,163,218,0.15)';ctx.fill();ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.strokeStyle='#1a1a1a';ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();}
- pts.forEach((p,i)=>{const isLast=i===pts.length-1;ctx.beginPath();ctx.arc(p.x,p.y,isLast?5:3,0,Math.PI*2);if(isLast){ctx.fillStyle='white';ctx.fill();ctx.strokeStyle='#1a1a1a';ctx.lineWidth=2;ctx.stroke();}else{ctx.fillStyle='#1a1a1a';ctx.fill();}});
- const diasRow=document.getElementById('diasRow');diasRow.innerHTML='';pts.forEach(p=>{const date=new Date(p.fecha+'T12:00:00');const label=p.esHoy?'Hoy':`${date.getDate()}/${date.getMonth()+1}`;const el=document.createElement('div');el.style.cssText=`position:absolute;left:${p.x}px;top:0;transform:translateX(-50%);font-size:10px;color:${p.esHoy?'#1a1a1a':'#888'};font-weight:${p.esHoy?'600':'400'};white-space:nowrap;`;el.textContent=label;diasRow.appendChild(el);});
- const msgEl=document.getElementById('vasMsg');
- if(conDatos.length>=2){
- const penultimo=conDatos[conDatos.length-2].valor;const ultimo=conDatos[conDatos.length-1].valor;
- msgEl.style.display='block';
- if(ultimo<penultimo){const pct=penultimo>0?Math.round(((penultimo-ultimo)/penultimo)*100):0;msgEl.className='vas-msg bien';msgEl.innerHTML=` Tu dolor ha bajado${pct>0?' un '+pct+'%':''} respecto a ayer. ¡Vas por muy buen camino!`;}
- else if(ultimo>penultimo){
- msgEl.className='vas-msg animo';
- msgEl.innerHTML='<div style="font-size:13px;font-weight:600;margin-bottom:12px;color:#000;">No te preocupes, los altibajos no significan que vayas por mal camino. ¿Has cambiado algo en tu rutina hoy?</div><textarea id="vasMsgTxt" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;resize:none;min-height:80px;outline:none;background:#f5f2ee;color:#000;margin-bottom:10px;" placeholder="Ej: He estado de pie muchas horas, he dormido mal..."></textarea><button onclick=\'guardarMsgDolor()\' style=\'width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:#000;color:#f5f2ee;border:none;border-radius:8px;cursor:pointer;\'>Enviar a mi fisio</button>';
- }
- else{msgEl.className='vas-msg neutro';msgEl.innerHTML=' Tu dolor se mantiene estable. ¡Sigue con tus ejercicios, la constancia es la clave!';}
- }else{msgEl.style.display='none';}
-}
+// NOTIFICACIONES
+function toggleNotifPanel(){showSection('notificaciones');}
+async function loadNotificaciones(){const list=document.getElementById('notifListEl');if(!list||!patient)return;list.innerHTML='<div class="loading"><div class="spinner"></div></div>';try{const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);const data=await res.json();const notifs=data.notificaciones||[];const noLeidas=notifs.filter(n=>!n.leida).length;const badge=document.getElementById('notifBadge');if(badge)badge.style.display=noLeidas>0?'block':'none';if(!notifs.length){list.innerHTML='<div class="empty"><div class="empty-title">Sin notificaciones</div></div>';return;}list.innerHTML=notifs.map(n=>`<div style="padding:16px 0;border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start;"><div style="flex:1;cursor:pointer;opacity:${n.leida?'0.45':'1'};" onclick="abrirNotif('${n.id}','${n.tipo}')"><div style="font-size:13px;font-weight:600;color:var(--black);margin-bottom:3px;">${n.titulo||''}</div><div style="font-size:12px;color:var(--muted);line-height:1.5;">${n.texto||''}</div><div style="font-size:11px;color:var(--muted);margin-top:5px;">${n.fecha||''}</div></div><button onclick="marcarNotifLeida('${n.id}',this)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid ${n.leida?'var(--black)':'var(--border)'};background:${n.leida?'var(--black)':'none'};cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;padding:0;">${n.leida?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</button></div>`).join('');}catch(e){list.innerHTML='<div class="empty"><div class="empty-title">Error</div></div>';}}
+async function marcarNotifLeida(notifId,btn){btn.disabled=true;try{await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'marcar-notificacion-leida',notifId})});btn.style.background='var(--black)';btn.style.borderColor='var(--black)';btn.innerHTML='<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';btn.disabled=false;const row=btn.closest('div[style*="border-bottom"]');if(row){const content=row.querySelector('div[style*="flex:1"]');if(content)content.style.opacity='0.45';}checkNotifBadge();}catch(e){btn.disabled=false;}}
+async function abrirNotif(notifId,tipo){try{await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'marcar-notificacion-leida',notifId})});}catch(e){}if(tipo==='mensaje'||tipo==='respuesta')showSection('mensajes');else showSection('hoy');checkNotifBadge();}
+async function checkNotifBadge(){if(!patient)return;try{const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);const data=await res.json();const badge=document.getElementById('notifBadge');if(badge)badge.style.display=(data.notificaciones||[]).filter(n=>!n.leida).length>0?'block':'none';}catch(e){}}
 
-function guardarMsgDolor(){
- const texto=document.getElementById('vasMsgTxt')?.value?.trim();
- if(!texto)return;
- abrirModalDolor(texto);
-}
-
-function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('pasosAndroid').style.display=os==='android'?'block':'none';document.getElementById('btnIOS').classList.toggle('active',os==='ios');document.getElementById('btnAndroid').classList.toggle('active',os==='android');}
-function mostrarInstall(){document.getElementById('installPopup').style.display='flex';}
-function cerrarInstall(){document.getElementById('installPopup').style.display='none';}
-function showInstOS(os){document.getElementById('instPasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('instPasosAndroid').style.display=os==='android'?'block':'none';document.getElementById('btnInstIOS').style.background=os==='ios'?'#000':'none';document.getElementById('btnInstIOS').style.color=os==='ios'?'white':'#888';document.getElementById('btnInstIOS').style.borderColor=os==='ios'?'#000':'#ddd';document.getElementById('btnInstAndroid').style.background=os==='android'?'#000':'none';document.getElementById('btnInstAndroid').style.color=os==='android'?'white':'#888';document.getElementById('btnInstAndroid').style.borderColor=os==='android'?'#000':'#ddd';}
-
+// PUSH
 const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
 async function initPushNotifications(){if(!('serviceWorker'in navigator)||!('PushManager'in window))return;try{const reg=await navigator.serviceWorker.register('/sw.js');const permission=await Notification.requestPermission();if(permission!=='granted')return;const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,subscription:sub})});}catch(e){}}
 function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const rawData=window.atob(base64);const outputArray=new Uint8Array(rawData.length);for(let i=0;i<rawData.length;++i)outputArray[i]=rawData.charCodeAt(i);return outputArray;}
 
+// POLLING
 let lastFechaAsignacion=null,pollingInterval=null;
-function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejercicios=data.ejercicios||[];mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){
-   document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;
-   document.getElementById('notaFisioBtn').style.display='block';
-   // Update label with fisio name
-   if(data.fisio) document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];
- }if(data.ultimaSession!==TODAY){hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado ',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
+function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejercicios=data.ejercicios||[];mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';if(data.fisio)document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];}if(data.ultimaSession!==TODAY){hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
 
-function toggleMenu(){
- const menu=document.getElementById('navMenu');
- const overlay=document.getElementById('navOverlay');
- const isOpen=menu.classList.contains('open');
- if(isOpen){cerrarMenu();}else{menu.classList.add('open');overlay.classList.add('open');}
-}
-function cerrarMenu(){
- document.getElementById('navMenu').classList.remove('open');
- document.getElementById('navOverlay').classList.remove('open');
-}
+// MENÚ
+function toggleMenu(){const menu=document.getElementById('navMenu');const overlay=document.getElementById('navOverlay');menu.classList.contains('open')?cerrarMenu():(menu.classList.add('open'),overlay.classList.add('open'));}
+function cerrarMenu(){document.getElementById('navMenu').classList.remove('open');document.getElementById('navOverlay').classList.remove('open');}
 
-function formatMensaje(texto){
-  if(!texto) return '';
-  let t=texto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  t=t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-  t=t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--black);text-decoration:underline;word-break:break-all;">$1</a>');
-  t=t.replace(/\n/g,'<br>');
-  return t;
-}
+// ADHERENCIA
+async function loadAdherencia(containerId){const el=document.getElementById(containerId);if(!el||!patient)return;try{const r=await fetch(`/api/pacientes?action=get-tareas&pacienteId=${encodeURIComponent(patient.id)}`);const data=await r.json();const tareas=data.tareas||[];const diasHechos=new Set(tareas.map(t=>t.fecha));const hoy=new Date();const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];const dias=['L','M','X','J','V','S','D'];let rows=[];for(let i=27;i>=0;i--){const d=new Date(hoy);d.setDate(hoy.getDate()-i);const key=d.toISOString().split('T')[0];rows.push({key,dia:d.getDate(),mes:d.getMonth(),hecho:diasHechos.has(key),esHoy:i===0});}const mesInicio=meses[rows[0].mes];const mesFin=meses[rows[rows.length-1].mes];const mesLabel=mesInicio===mesFin?mesInicio:`${mesInicio} — ${mesFin}`;const año=hoy.getFullYear();const totalDias=diasHechos.size;let rachaActual=0;for(let i=0;;i++){const d=new Date(hoy);d.setDate(hoy.getDate()-i);const key=d.toISOString().split('T')[0];if(diasHechos.has(key))rachaActual++;else break;}const fechasOrdenadas=[...tareas].map(t=>t.fecha).sort();let mejorRacha=0,racha=0,prevDate=null;fechasOrdenadas.forEach(f=>{if(prevDate){const prev=new Date(prevDate);prev.setDate(prev.getDate()+1);if(prev.toISOString().split('T')[0]===f)racha++;else racha=1;}else racha=1;if(racha>mejorRacha)mejorRacha=racha;prevDate=f;});let msg='';if(rachaActual===0)msg='Hoy es un buen día para empezar 💪';else if(rachaActual===1)msg='¡Bien! Has empezado tu racha. ¡Vuelve mañana!';else if(rachaActual<5)msg=`🔥 ¡${rachaActual} días seguidos! Sigue así.`;else if(rachaActual<10)msg=`🔥 ¡${rachaActual} días seguidos! Estás en racha.`;else if(rachaActual<20)msg=`🏆 ¡${rachaActual} días seguidos! Increíble constancia.`;else msg=`🏆 ¡${rachaActual} días seguidos! Eres una máquina.`;el.innerHTML=`<div style="background:white;border-radius:16px;border:0.5px solid rgba(0,0,0,0.08);padding:20px;margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;"><div><div style="font-size:14px;font-weight:700;color:#111;">Mi racha</div><div style="font-size:11px;color:#aaa;margin-top:2px;">${mesLabel} ${año}</div></div>${rachaActual>0?`<div style="text-align:right;"><div style="font-size:22px;font-weight:800;color:#111;">🔥 ${rachaActual}</div><div style="font-size:10px;color:#aaa;">días seguidos</div></div>`:''}</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">${dias.map(d=>`<div style="font-size:9px;font-weight:600;color:#ccc;text-align:center;">${d}</div>`).join('')}</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;">${rows.map(d=>`<div style="aspect-ratio:1;border-radius:50%;background:${d.hecho?'#4ade80':'#f0ede8'};display:flex;align-items:center;justify-content:center;font-size:10px;color:${d.hecho?'white':'#bbb'};font-weight:${d.hecho?'600':'500'};">${d.dia}</div>`).join('')}</div><div style="display:flex;gap:12px;font-size:11px;color:#aaa;align-items:center;"><div style="display:flex;align-items:center;gap:5px;"><div style="width:9px;height:9px;border-radius:50%;background:#4ade80;"></div>Hecho</div><div style="display:flex;align-items:center;gap:5px;"><div style="width:9px;height:9px;border-radius:50%;background:#f0ede8;"></div>Sin datos</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;"><div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;"><div style="font-size:22px;font-weight:800;color:#111;">${totalDias}</div><div style="font-size:10px;color:#aaa;margin-top:2px;">Días totales</div></div><div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;"><div style="font-size:22px;font-weight:800;color:#4ade80;">${rachaActual>0?'🔥 ':''} ${rachaActual}</div><div style="font-size:10px;color:#aaa;margin-top:2px;">Racha actual</div></div><div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;"><div style="font-size:22px;font-weight:800;color:#111;">${mejorRacha}</div><div style="font-size:10px;color:#aaa;margin-top:2px;">Mejor racha</div></div></div><div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:14px;font-size:13px;color:#111;line-height:1.5;">${msg}</div>`;}catch(e){el.innerHTML='';}}
 
+// INSTALACION
+function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('pasosAndroid').style.display=os==='android'?'block':'none';document.getElementById('btnIOS').classList.toggle('active',os==='ios');document.getElementById('btnAndroid').classList.toggle('active',os==='android');}
+function mostrarInstall(){document.getElementById('installPopup').style.display='flex';}
+function cerrarInstall(){document.getElementById('installPopup').style.display='none';}
+function showInstOS(os){document.getElementById('instPasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('instPasosAndroid').style.display=os==='android'?'block':'none';['IOS','Android'].forEach(s=>{const btn=document.getElementById('btnInst'+s);const active=s.toLowerCase()===os;btn.style.background=active?'#000':'none';btn.style.color=active?'white':'#888';btn.style.borderColor=active?'#000':'#ddd';});}
 
-function toggleNotifPanel(){showSection('notificaciones');}
-
-async function loadNotificaciones(){
-  const list=document.getElementById('notifListEl');
-  if(!list||!patient)return;
-  list.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  try{
-    const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);
-    const data=await res.json();
-    const notifs=data.notificaciones||[];
-    const noLeidas=notifs.filter(n=>!n.leida).length;
-    const badge=document.getElementById('notifBadge');
-    if(badge) badge.style.display=noLeidas>0?'block':'none';
-    if(!notifs.length){list.innerHTML='<div class="empty"><div class="empty-title">Sin notificaciones</div></div>';return;}
-    list.innerHTML=notifs.map(n=>`
-      <div style="padding:16px 0;border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start;">
-        <div style="flex:1;cursor:pointer;opacity:${n.leida?'0.45':'1'};" onclick="abrirNotif('${n.id}','${n.tipo}')">
-          <div style="font-size:13px;font-weight:600;color:var(--black);margin-bottom:3px;">${n.titulo||''}</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.5;">${n.texto||''}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:5px;">${n.fecha||''}</div>
-        </div>
-        <button onclick="marcarNotifLeida('${n.id}',this)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid ${n.leida?'var(--black)':'var(--border)'};background:${n.leida?'var(--black)':'none'};cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;padding:0;transition:all .15s;">
-          ${n.leida?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
-        </button>
-      </div>`).join('');
-  }catch(e){list.innerHTML='<div class="empty"><div class="empty-title">Error</div></div>';}
-}
-
-async function marcarNotifLeida(notifId, btn){
-  btn.disabled=true;
-  try{
-    await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'marcar-notificacion-leida',notifId})});
-    btn.style.background='var(--black)';
-    btn.style.borderColor='var(--black)';
-    btn.innerHTML='<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    btn.disabled=false;
-    const row=btn.closest('div[style*="border-bottom"]');
-    if(row){const content=row.querySelector('div[style*="flex:1"]');if(content)content.style.opacity='0.45';}
-    checkNotifBadge();
-  }catch(e){btn.disabled=false;}
-}
-
-async function abrirNotif(notifId,tipo){
-  try{await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'marcar-notificacion-leida',notifId})});}catch(e){}
-  if(tipo==='mensaje'||tipo==='respuesta')showSection('mensajes');
-  else showSection('hoy');
-  checkNotifBadge();
-}
-
-async function checkNotifBadge(){
-  if(!patient)return;
-  try{
-    const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);
-    const data=await res.json();
-    const badge=document.getElementById('notifBadge');
-    if(badge) badge.style.display=(data.notificaciones||[]).filter(n=>!n.leida).length>0?'block':'none';
-  }catch(e){}
-}
-
-function cerrarSesion(){
- localStorage.removeItem('fisio365_patient');
- patient=null;
- window._informesPac=[];
- try{Object.keys(localStorage).forEach(k=>{if(k.startsWith('fisio365_citas_'))localStorage.removeItem(k);});}catch(e){}
- // Hide app elements
- document.getElementById('appScreen').style.display='none';
- document.getElementById('hamburgerBtn').style.display='none';
- try{document.getElementById('cerrarBtn').style.display='none';}catch(e){}
- try{document.getElementById('notifBtn').style.display='none';}catch(e){}
- // Close menu if open
- cerrarMenu();
- // Show login
- const login=document.getElementById('loginScreen');
- login.style.display='flex';
- login.style.opacity='1';
- login.style.visibility='visible';
- // Clear fields
- try{document.getElementById('emailInput').value='';}catch(e){}
- ['p1','p2','p3','p4'].forEach(id=>{try{document.getElementById(id).value='';}catch(e){}});
- window.scrollTo(0,0);
-}
-async function loadAdherencia(containerId){
- const el=document.getElementById(containerId);
- if(!el||!patient)return;
- try{
-   const r=await fetch(`/api/pacientes?action=get-tareas&pacienteId=${encodeURIComponent(patient.id)}`);
-   const data=await r.json();
-   const tareas=data.tareas||[];
-   const diasHechos=new Set(tareas.map(t=>t.fecha));
-   const hoy=new Date();
-   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-   const dias=['L','M','X','J','V','S','D'];
-
-   // Build 4 weeks grid
-   let rows=[];
-   for(let i=27;i>=0;i--){
-     const d=new Date(hoy);d.setDate(hoy.getDate()-i);
-     const key=d.toISOString().split('T')[0];
-     rows.push({key,dia:d.getDate(),mes:d.getMonth(),hecho:diasHechos.has(key),esHoy:i===0});
-   }
-
-   // Month label
-   const mesInicio=meses[rows[0].mes];
-   const mesFin=meses[rows[rows.length-1].mes];
-   const mesLabel=mesInicio===mesFin?mesInicio:`${mesInicio} — ${mesFin}`;
-   const año=hoy.getFullYear();
-
-   // Stats
-   const totalDias=diasHechos.size;
-
-   // Racha actual — días consecutivos hasta hoy
-   let rachaActual=0;
-   for(let i=0;;i++){
-     const d=new Date(hoy);d.setDate(hoy.getDate()-i);
-     const key=d.toISOString().split('T')[0];
-     if(diasHechos.has(key)) rachaActual++;
-     else break;
-   }
-
-   // Mejor racha — max consecutive days
-   const fechasOrdenadas=[...tareas].map(t=>t.fecha).sort();
-   let mejorRacha=0,racha=0,prevDate=null;
-   fechasOrdenadas.forEach(f=>{
-     if(prevDate){
-       const prev=new Date(prevDate);prev.setDate(prev.getDate()+1);
-       if(prev.toISOString().split('T')[0]===f) racha++;
-       else racha=1;
-     } else racha=1;
-     if(racha>mejorRacha) mejorRacha=racha;
-     prevDate=f;
-   });
-
-   // Mensaje motivador
-   let msg='';
-   if(rachaActual===0) msg='Hoy es un buen día para empezar 💪';
-   else if(rachaActual===1) msg='¡Bien! Has empezado tu racha. ¡Vuelve mañana!';
-   else if(rachaActual<5) msg=`🔥 ¡${rachaActual} días seguidos! Sigue así.`;
-   else if(rachaActual<10) msg=`🔥 ¡${rachaActual} días seguidos! Estás en racha.`;
-   else if(rachaActual<20) msg=`🏆 ¡${rachaActual} días seguidos! Increíble constancia.`;
-   else msg=`🏆 ¡${rachaActual} días seguidos! Eres una máquina.`;
-
-   el.innerHTML=`
-   <div style="background:white;border-radius:16px;border:0.5px solid rgba(0,0,0,0.08);padding:20px;margin-bottom:12px;">
-     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
-       <div>
-         <div style="font-size:14px;font-weight:700;color:#111;">Mi racha</div>
-         <div style="font-size:11px;color:#aaa;margin-top:2px;">${mesLabel} ${año}</div>
-       </div>
-       ${rachaActual>0?`<div style="text-align:right;"><div style="font-size:22px;font-weight:800;color:#111;">🔥 ${rachaActual}</div><div style="font-size:10px;color:#aaa;">días seguidos</div></div>`:''}
-     </div>
-     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
-       ${dias.map(d=>`<div style="font-size:9px;font-weight:600;color:#ccc;text-align:center;">${d}</div>`).join('')}
-     </div>
-     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;">
-       ${rows.map(d=>`<div style="aspect-ratio:1;border-radius:50%;background:${d.hecho?'#4ade80':'#f0ede8'};display:flex;align-items:center;justify-content:center;font-size:10px;color:${d.hecho?'white':'#bbb'};font-weight:${d.hecho?'600':'500'};">${d.dia}</div>`).join('')}
-     </div>
-     <div style="display:flex;gap:12px;font-size:11px;color:#aaa;align-items:center;">
-       <div style="display:flex;align-items:center;gap:5px;"><div style="width:9px;height:9px;border-radius:50%;background:#4ade80;"></div>Hecho</div>
-       <div style="display:flex;align-items:center;gap:5px;"><div style="width:9px;height:9px;border-radius:50%;background:#f0ede8;"></div>Sin datos</div>
-     </div>
-   </div>
-
-   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
-     <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;">
-       <div style="font-size:22px;font-weight:800;color:#111;">${totalDias}</div>
-       <div style="font-size:10px;color:#aaa;margin-top:2px;">Días totales</div>
-     </div>
-     <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;">
-       <div style="font-size:22px;font-weight:800;color:#4ade80;">${rachaActual>0?'🔥 ':''} ${rachaActual}</div>
-       <div style="font-size:10px;color:#aaa;margin-top:2px;">Racha actual</div>
-     </div>
-     <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:12px;text-align:center;">
-       <div style="font-size:22px;font-weight:800;color:#111;">${mejorRacha}</div>
-       <div style="font-size:10px;color:#aaa;margin-top:2px;">Mejor racha</div>
-     </div>
-   </div>
-
-   <div style="background:white;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:14px;font-size:13px;color:#111;line-height:1.5;">${msg}</div>`;
-
- }catch(e){el.innerHTML='';}
-}
-
-function toggleNotaFisio(){
- const card=document.getElementById('mensajeFisioCard');
- const btn=document.querySelector('#notaFisioBtn button');
- const open=card.style.display==='block';
- card.style.display=open?'none':'block';
- btn.querySelector('svg+*')
- if(open) btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ver nota de tu fisio';
- else btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ocultar nota';
-}
+// MISC
+function formatMensaje(texto){if(!texto)return '';let t=texto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');t=t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');t=t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--black);text-decoration:underline;word-break:break-all;">$1</a>');t=t.replace(/\n/g,'<br>');return t;}
+function toggleNotaFisio(){const card=document.getElementById('mensajeFisioCard');const btn=document.querySelector('#notaFisioBtn button');const open=card.style.display==='block';card.style.display=open?'none':'block';if(open)btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ver nota de tu fisio';else btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ocultar nota';}
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(ok?'ok':'err');t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+function cerrarSesion(){localStorage.removeItem('fisio365_patient');patient=null;window._informesPac=[];document.getElementById('appScreen').style.display='none';document.getElementById('hamburgerBtn').style.display='none';try{document.getElementById('notifBtn').style.display='none';}catch(e){}cerrarMenu();const login=document.getElementById('loginScreen');login.style.display='flex';login.style.opacity='1';login.style.visibility='visible';try{document.getElementById('emailInput').value='';}catch(e){}['p1','p2','p3','p4'].forEach(id=>{try{document.getElementById(id).value='';}catch(e){}});window.scrollTo(0,0);}
+function clearBadge(){}
 </script>
 </body>
 </html>
