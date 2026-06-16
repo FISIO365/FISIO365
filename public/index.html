@@ -728,26 +728,19 @@ async function loadPuntos(){
   if(!patient)return;
   const el=document.getElementById('puntosNumero');
   if(!el)return;
-  // Mostrar cached mientras carga
-  el.textContent=patient.puntos_referido||0;
-  // Airtable es la fuente de verdad
+  const cached=patient.puntos_referido||0;
+  // Mostrar el valor local inmediatamente sin animación
+  el.textContent=cached;
+  // Confirmar con Airtable en background
   try{
     const res=await fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id));
     const data=await res.json();
-    if(data.ok){
+    if(data.ok&&data.puntos!==cached){
       patient.puntos_referido=data.puntos;
       localStorage.setItem('fisio365_patient',JSON.stringify(patient));
-      // Animar desde 0 hasta el valor real
-      let n=0;
-      const step=()=>{if(n<data.puntos){n++;el.textContent=n;setTimeout(step,160);}else{el.textContent=data.puntos;}};
-      step();
+      el.textContent=data.puntos;
     }
-  }catch(e){
-    // Si falla, animar con lo que tenemos
-    let n=0,target=patient.puntos_referido||0;
-    const step=()=>{if(n<target){n++;el.textContent=n;setTimeout(step,160);}};
-    step();
-  }
+  }catch(e){}
 }
 </script>
 </body>
