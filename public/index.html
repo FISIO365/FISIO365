@@ -709,16 +709,18 @@ async function loadPuntos(){
   if(!patient)return;
   const el=document.getElementById('puntosNumero');
   if(!el)return;
-  // Primero mostrar lo que ya tenemos en cache
+  // Mostrar siempre el valor de localStorage primero
   const cached=patient.puntos_referido||0;
   el.textContent=cached;
-  // Luego actualizar desde Airtable
+  // Sincronizar con Airtable pero NUNCA bajar los puntos (por si hay latencia)
   try{
     const res=await fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id));
     const data=await res.json();
     if(data.ok){
-      el.textContent=data.puntos;
-      patient.puntos_referido=data.puntos;
+      // Usar el mayor de los dos: lo que dice Airtable o lo que tenemos en local
+      const puntosFinal=Math.max(data.puntos, cached);
+      el.textContent=puntosFinal;
+      patient.puntos_referido=puntosFinal;
       localStorage.setItem('fisio365_patient',JSON.stringify(patient));
     }
   }catch(e){}
