@@ -301,6 +301,48 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  </div>
  </div>
 
+ <!-- ★ NUEVA SECCIÓN: TU SORTEO -->
+ <div id="vistaSorteo" style="display:none;">
+ <div class="date-h" style="margin-top:4px;">
+   <div class="date-today" style="font-size:20px;">Tu sorteo 🎟️</div>
+   <div class="date-sub">Recomienda y gana números</div>
+ </div>
+ <div style="background:#1a1a1a;border-radius:16px;padding:28px 20px;text-align:center;margin-bottom:16px;">
+   <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(245,242,238,0.45);margin-bottom:8px;">Tus números para el sorteo</div>
+   <div id="puntosNumero" style="font-size:64px;font-weight:800;color:#f5f2ee;line-height:1;margin-bottom:4px;">—</div>
+   <div style="font-size:12px;color:rgba(245,242,238,0.45);">Próximo sorteo: <strong style="color:rgba(245,242,238,0.8);">31 de julio</strong></div>
+ </div>
+ <div style="background:#ede9f7;border:1.5px solid #ada3da;border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
+   <div style="font-size:28px;flex-shrink:0;">🏆</div>
+   <div>
+     <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:2px;">Premio: sesión gratis</div>
+     <div style="font-size:12px;color:#7b6fd4;font-weight:500;">El ganador del sorteo consigue una sesión completa sin coste</div>
+   </div>
+ </div>
+ <div style="background:white;border:1px solid rgba(0,0,0,0.12);border-radius:12px;padding:16px;margin-bottom:20px;">
+   <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:14px;">Cómo ganar números</div>
+   <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+     <div style="width:36px;height:36px;border-radius:50%;background:#f5f2ee;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">📲</div>
+     <div style="flex:1;">
+       <div style="font-size:13px;font-weight:600;color:#1a1a1a;">Recomienda a un amigo</div>
+       <div style="font-size:12px;color:#888;margin-top:1px;">Cada vez que compartes → <strong style="color:#1a1a1a;">+1 número</strong></div>
+     </div>
+   </div>
+   <div style="display:flex;align-items:center;gap:14px;">
+     <div style="width:36px;height:36px;border-radius:50%;background:#f0f7f0;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">✅</div>
+     <div style="flex:1;">
+       <div style="font-size:13px;font-weight:600;color:#1a1a1a;">Tu amigo viene a su primera sesión</div>
+       <div style="font-size:12px;color:#888;margin-top:1px;">Si viene de verdad → <strong style="color:#1a1a1a;">+5 números más</strong></div>
+     </div>
+   </div>
+ </div>
+ <button onclick="compartirRecomendacion()" style="width:100%;padding:17px;background:#1a1a1a;color:#f5f2ee;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+   Recomendar a un amigo
+ </button>
+ <div style="text-align:center;margin-top:10px;font-size:11px;color:#888;">Cada recomendación que compartes suma +1 número</div>
+ </div>
+
  <div id="vistaProgreso" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mi racha</div><div class="date-sub">Días que has hecho tus ejercicios</div></div>
  <div id="adherenciaSection" style="margin-bottom:20px;"></div>
@@ -474,14 +516,30 @@ function initApp(){
   if(patient.premio_pendiente){document.getElementById('premioBanner').style.display='flex';}
 }
 
-// ★ NUEVO: función invitar amigo por WhatsApp
+// ★ NUEVO: invitar amigo → abre la sección sorteo dentro de la app
 function invitarAmigo(){
+  showSection('sorteo');
+}
+
+// Función que realmente comparte (se llama desde el botón de la sección sorteo)
+async function compartirRecomendacion(){
   if(!patient)return;
   const nombre=patient.nombre||'un paciente';
   const tel='34672893949';
   const msgAmigo=encodeURIComponent('Hola! Vengo recomendado/a por '+nombre+' y me gustaría pedir una cita en FISIO365 😊');
   const linkClinica='https://wa.me/'+tel+'?text='+msgAmigo;
   const texto='¡Te recomiendo FISIO365! Pide tu cita aquí 👉 '+linkClinica;
+  // Sumar +1 punto
+  try{
+    const res=await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sumar-punto-recomendacion',pacienteId:patient.id})});
+    const data=await res.json();
+    if(data.puntos!==undefined){
+      document.getElementById('puntosNumero').textContent=data.puntos;
+      patient.puntos_referido=data.puntos;
+      localStorage.setItem('fisio365_patient',JSON.stringify(patient));
+    }
+  }catch(e){}
+  // Compartir
   if(navigator.share){
     navigator.share({text:texto});
   }else{
@@ -490,7 +548,7 @@ function invitarAmigo(){
 }
 
 function showSection(section){
-  ['hoy','notificaciones','citas','progreso','informes','mensajes','guia'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
+  ['hoy','notificaciones','citas','progreso','informes','mensajes','guia','sorteo'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
   ['navHoy','navProgreso','navInformes','navCitas','navMensajes','navGuia'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
   const navMap={hoy:'navHoy',progreso:'navProgreso',informes:'navInformes',citas:'navCitas',mensajes:'navMensajes',guia:'navGuia'};
   if(navMap[section]){const el=document.getElementById(navMap[section]);if(el)el.classList.add('active');}
@@ -498,6 +556,7 @@ function showSection(section){
   if(section==='citas')initCitas();
   if(section==='notificaciones')loadNotificaciones();
   if(section==='informes')loadInformes();
+  if(section==='sorteo')loadPuntos();
   if(section==='mensajes'){loadMensajes();const dot=document.getElementById('navMensajesDot');if(dot)dot.classList.remove('show');marcarRespuestasLeidas();}
   window.scrollTo(0,0);
 }
@@ -645,6 +704,25 @@ function toggleNotaFisio(){const card=document.getElementById('mensajeFisioCard'
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(ok?'ok':'err');t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
 function cerrarSesion(){localStorage.removeItem('fisio365_patient');patient=null;window._informesPac=[];document.getElementById('appScreen').style.display='none';document.getElementById('hamburgerBtn').style.display='none';try{document.getElementById('notifBtn').style.display='none';}catch(e){}cerrarMenu();const login=document.getElementById('loginScreen');login.style.display='flex';login.style.opacity='1';login.style.visibility='visible';try{document.getElementById('emailInput').value='';}catch(e){}['p1','p2','p3','p4'].forEach(id=>{try{document.getElementById(id).value='';}catch(e){}});window.scrollTo(0,0);}
 function clearBadge(){}
+
+async function loadPuntos(){
+  if(!patient)return;
+  const el=document.getElementById('puntosNumero');
+  if(!el)return;
+  // Primero mostrar lo que ya tenemos en cache
+  const cached=patient.puntos_referido||0;
+  el.textContent=cached;
+  // Luego actualizar desde Airtable
+  try{
+    const res=await fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id));
+    const data=await res.json();
+    if(data.ok){
+      el.textContent=data.puntos;
+      patient.puntos_referido=data.puntos;
+      localStorage.setItem('fisio365_patient',JSON.stringify(patient));
+    }
+  }catch(e){}
+}
 </script>
 </body>
 </html>
