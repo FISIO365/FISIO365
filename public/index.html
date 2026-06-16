@@ -541,7 +541,7 @@ async function compartirRecomendacion(){
   // Enviar a Airtable en background (no bloqueante)
   fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sumar-punto-recomendacion',pacienteId:patient.id,puntos:puntosAhora})}).catch(()=>{});
   // Compartir inmediatamente
-  const textoCompartir='Te recomiendo mi fisio 👉 '+linkClinica;
+  const textoCompartir='Te recomiendo a mi fisio 😊\n\nEscríbeles por WhatsApp en este link y pide tu cita:\n\n'+linkClinica;
   if(navigator.share){
     navigator.share({text:textoCompartir});
   }else{
