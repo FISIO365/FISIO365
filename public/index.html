@@ -513,6 +513,15 @@ function initApp(){
   document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
   loadEjercicios();
   checkMensajesNoLeidos();
+  // Sincronizar puntos desde Airtable al arrancar
+  fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id))
+    .then(r=>r.json()).then(d=>{
+      if(d.ok){
+        const puntosFinal=Math.max(d.puntos, patient.puntos_referido||0);
+        patient.puntos_referido=puntosFinal;
+        localStorage.setItem('fisio365_patient',JSON.stringify(patient));
+      }
+    }).catch(()=>{});
   setInterval(checkMensajesNoLeidos,2*60*1000);
   clearBadge();setTimeout(()=>clearBadge(),1500);setTimeout(()=>clearBadge(),4000);
   // ★ NUEVO: mostrar banner si tiene premio pendiente
