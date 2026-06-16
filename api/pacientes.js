@@ -190,13 +190,13 @@ export default async function handler(req) {
     const pacienteId = url.searchParams.get('pacienteId') || '';
     if (!pacienteId) return new Response(JSON.stringify({ ok: false, puntos: 0 }), { headers: corsHeaders });
     try {
-      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=puntos_referido`, {
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`, {
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
       });
       const d = await r.json();
       const puntos = d.fields?.puntos_referido || 0;
-      return new Response(JSON.stringify({ ok: true, puntos }), { headers: corsHeaders });
-    } catch(e) { return new Response(JSON.stringify({ ok: false, puntos: 0 }), { headers: corsHeaders }); }
+      return new Response(JSON.stringify({ ok: true, puntos, id: d.id, fields: Object.keys(d.fields||{}) }), { headers: corsHeaders });
+    } catch(e) { return new Response(JSON.stringify({ ok: false, puntos: 0, error: e.message }), { headers: corsHeaders }); }
   }
 
   // ── CHECK CONTRASEÑA (a partir de aquí requiere pwd) ────────────────────
