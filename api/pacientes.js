@@ -170,20 +170,18 @@ export default async function handler(req) {
 
   // ── SUMAR PUNTO POR RECOMENDAR (+1, público) ────────────────────────────
   if (action === 'sumar-punto-recomendacion' && req.method === 'POST') {
-    const { pacienteId } = body;
-    if (!pacienteId) return new Response(JSON.stringify({ ok: false, error: 'Falta pacienteId' }), { headers: corsHeaders });
+    const { pacienteId, puntos } = body;
+    if (!pacienteId || puntos === undefined) return new Response(JSON.stringify({ ok: false, error: 'Faltan datos', body }), { headers: corsHeaders });
     try {
-      const rGet = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}?fields[]=puntos_referido`, {
-        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-      });
-      const dGet = await rGet.json();
-      const puntosActuales = dGet.fields?.puntos_referido || 0;
-      await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`, {
+      const atRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${pacienteId}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: { puntos_referido: puntosActuales + 1 } })
+        body: JSON.stringify({ fields: { puntos_referido: puntos } })
       });
-      return new Response(JSON.stringify({ ok: true, puntos: puntosActuales + 1 }), { headers: corsHeaders });
+      const atData = await atRes.json();
+      // Devolver lo que realmente guardó Airtable
+      const puntosGuardados = atData.fields?.puntos_referido ?? puntos;
+      return new Response(JSON.stringify({ ok: true, puntos: puntosGuardados, atError: atData.error || null }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: corsHeaders }); }
   }
 
