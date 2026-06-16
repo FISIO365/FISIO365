@@ -545,15 +545,15 @@ async function compartirRecomendacion(){
   const linkClinica='https://wa.me/'+tel+'?text='+msgAmigo;
   const textoCompartir='Te recomiendo a mi fisio 😊\n\nEscríbeles por WhatsApp en este link y pide tu cita:\n\n'+linkClinica;
   const el=document.getElementById('puntosNumero');
-  // Esperar respuesta de Airtable antes de compartir
+  // Sumar +1 al valor que tenemos en local y mandar el TOTAL a Airtable
+  const nuevoTotal=(patient.puntos_referido||0)+1;
+  patient.puntos_referido=nuevoTotal;
+  localStorage.setItem('fisio365_patient',JSON.stringify(patient));
+  if(el)el.textContent=nuevoTotal;
+  // Mandar el total a Airtable (no leer, solo escribir)
   try{
-    const res=await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sumar-punto-recomendacion',pacienteId:patient.id})});
-    const d=await res.json();
-    if(d.ok&&d.puntos!==undefined){
-      patient.puntos_referido=d.puntos;
-      localStorage.setItem('fisio365_patient',JSON.stringify(patient));
-      if(el)el.textContent=d.puntos;
-    }
+    await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'sumar-punto-recomendacion',pacienteId:patient.id,puntos:nuevoTotal})});
   }catch(e){}
   // Compartir
   if(navigator.share){
@@ -561,13 +561,11 @@ async function compartirRecomendacion(){
   }else{
     window.open('https://wa.me/?text='+encodeURIComponent(textoCompartir),'_blank');
   }
-  // Desbloquear tras 2s
   setTimeout(()=>{
     _compartiendo=false;
     if(btn){btn.disabled=false;btn.style.opacity='1';}
   },2000);
 }
-
 function showSection(section){
   ['hoy','notificaciones','citas','progreso','informes','mensajes','guia','sorteo'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
   ['navHoy','navProgreso','navInformes','navCitas','navMensajes','navGuia'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
