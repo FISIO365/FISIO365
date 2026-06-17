@@ -52,8 +52,10 @@ module.exports = async function handler(req, res) {
     let ejercicios = [];
     try { ejercicios = JSON.parse(plan['Ejercicios'] || '[]'); } catch(e) { ejercicios = []; }
     ejercicios = ejercicios.map((ej, i) => {
-      const ytUrl = ej.youtubeUrl || '';
-      const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/|shorts\/)([^&\s?]+)/);
+      // Limpiar espacios/saltos de línea sueltos que a veces se cuelan al copiar el link de YouTube
+      const ytUrl = (ej.youtubeUrl || '').trim();
+      // Tolerante a espacios extra justo después de v=, youtu.be/ o shorts/
+      const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/|shorts\/)\s*([\w-]{6,})/);
       return {
         id: `ej_${i}`,
         name: ej.nombre || '',
@@ -63,7 +65,7 @@ module.exports = async function handler(req, res) {
         dur: parseInt(ej.duracion) || 0,
         descanso: parseInt(ej.descanso) || 0,
         desc: ej.descripcion || '',
-        ytId: ytMatch ? ytMatch[1] : '',
+        ytId: ytMatch ? ytMatch[1].trim() : '',
         imagen: ej.imagen || '',
       };
     });

@@ -25,7 +25,7 @@ export default async function handler(req) {
     const dd = String(mañana.getDate()).padStart(2, '0');
     const fechaMañana = `${yyyy}-${mm}-${dd}`;
 
-    // 1. Leer citas de mañana con estado PENDIENTE
+    // 1. Leer citas de mañana
     const fields = ['FECHA', 'HORA', 'ESTADO', 'PREF.', 'TIPO DE CITA', 'RELACIÓN - CITA'];
     const fp = fields.map(f => `fields[]=${encodeURIComponent(f)}`).join('&');
     const sortQ = 'sort[0][field]=HORA&sort[0][direction]=asc';
@@ -68,13 +68,13 @@ export default async function handler(req) {
       const batch = idsArray.slice(i, i + 10);
       const formula = `OR(${batch.map(id => `RECORD_ID()="${id}"`).join(',')})`;
       const r = await fetch(
-        `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?filterByFormula=${encodeURIComponent(formula)}&fields[]=Nombre&fields[]=SMS`,
+        `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?filterByFormula=${encodeURIComponent(formula)}&fields[]=Full%20Name&fields[]=SMS`,
         { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
       );
       const data = await r.json();
       (data.records || []).forEach(rec => {
         pacientesData[rec.id] = {
-          nombre: rec.fields['Nombre'] || '',
+          nombre: rec.fields['Full Name'] || '',
           telefono: rec.fields['SMS'] || ''
         };
       });
@@ -99,6 +99,7 @@ export default async function handler(req) {
       return {
         id: rec.id,
         hora: rec.fields['HORA'] || '',
+        estado: rec.fields['ESTADO'] || '',
         fisio,
         tipo,
         pacienteNombre: pacInfo ? pacInfo.nombre : 'Paciente',
