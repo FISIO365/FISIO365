@@ -54,6 +54,20 @@ export default async function handler(req) {
       return new Response(JSON.stringify({ ok: true, citas: [] }), { headers: corsHeaders });
     }
 
+    // DEBUG temporal: ver qué llega realmente en RELACIÓN - CITA
+    const url = new URL(req.url);
+    if (url.searchParams.get('debug') === '1') {
+      return new Response(JSON.stringify({
+        ok: true,
+        muestra: citasMañana.slice(0, 3).map(rec => ({
+          id: rec.id,
+          camposDisponibles: Object.keys(rec.fields),
+          relacionCitaRaw: rec.fields['RELACIÓN - CITA'],
+          tipoRaw: rec.fields['TIPO DE CITA']
+        }))
+      }), { headers: corsHeaders });
+    }
+
     // 2. Recoger los IDs de paciente vinculados
     const pacienteIds = new Set();
     citasMañana.forEach(rec => {
