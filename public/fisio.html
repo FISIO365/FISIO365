@@ -7221,6 +7221,8 @@ async function renderRecordatorios(wrap){
  citas.forEach(c=>{
  const card=ce('div','card');
  card.style.cssText='margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;';
+ const estadoTxt=(c.estado||'').trim();
+ const estadoBadge=estadoTxt?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:var(--lila-light);color:var(--lila);border-radius:99px;padding:2px 8px;margin-left:8px;">${estadoTxt}</span>`:'';
  card.innerHTML=`
  <div style="display:flex;align-items:center;gap:12px;">
  <div style="text-align:center;width:46px;flex-shrink:0;">
@@ -7228,7 +7230,7 @@ async function renderRecordatorios(wrap){
  </div>
  <div>
  <div style="font-size:14px;font-weight:600;">${c.pacienteNombre||'Paciente'}</div>
- <div style="font-size:12px;color:var(--muted);margin-top:1px;">${[c.tipo,c.fisio].filter(Boolean).join(' · ')}</div>
+ <div style="font-size:12px;color:var(--muted);margin-top:1px;">${[c.tipo,c.fisio].filter(Boolean).join(' · ')}${estadoBadge}</div>
  </div>
  </div>
  `;
