@@ -57,14 +57,23 @@ export default async function handler(req) {
     // DEBUG temporal: ver qué llega realmente en RELACIÓN - CITA
     const url = new URL(req.url);
     if (url.searchParams.get('debug') === '1') {
+      const idsDebug = citasMañana.slice(0, 3).map(rec => {
+        const rel = rec.fields['RELACIÓN - CITA'];
+        return Array.isArray(rel) && rel.length ? rel[0] : null;
+      }).filter(Boolean);
+
+      const formulaDebug = `OR(${idsDebug.map(id => `RECORD_ID()="${id}"`).join(',')})`;
+      const rDebug = await fetch(
+        `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?filterByFormula=${encodeURIComponent(formulaDebug)}&fields[]=Full%20Name&fields[]=SMS`,
+        { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }
+      );
+      const dataDebug = await rDebug.json();
+
       return new Response(JSON.stringify({
         ok: true,
-        muestra: citasMañana.slice(0, 3).map(rec => ({
-          id: rec.id,
-          camposDisponibles: Object.keys(rec.fields),
-          relacionCitaRaw: rec.fields['RELACIÓN - CITA'],
-          tipoRaw: rec.fields['TIPO DE CITA']
-        }))
+        idsBuscados: idsDebug,
+        formulaUsada: formulaDebug,
+        respuestaPacientesTable: dataDebug
       }), { headers: corsHeaders });
     }
 
