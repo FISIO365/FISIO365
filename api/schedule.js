@@ -31,9 +31,9 @@ module.exports = async function handler(req, res) {
         .filter(rec => (rec.fields['PacienteId'] || rec.fields['fldDR9XqkJ9oA3WK0'] || '') === patientId)
         .map(rec => ({
           id: rec.id,
-          fecha: rec.fields['Fecha'] || '—',
-          tipo: rec.fields['Protocolo'] || '—',
-          fisioNombre: rec.fields['FisioNombre'] || '—',
+          fecha: rec.fields['Fecha'] || '-',
+          tipo: rec.fields['Protocolo'] || '-',
+          fisioNombre: rec.fields['FisioNombre'] || '-',
           contenido: rec.fields['Informe'] || ''
         }));
       return res.status(200).json({ ok: true, informes });
@@ -52,10 +52,12 @@ module.exports = async function handler(req, res) {
     let ejercicios = [];
     try { ejercicios = JSON.parse(plan['Ejercicios'] || '[]'); } catch(e) { ejercicios = []; }
     ejercicios = ejercicios.map((ej, i) => {
-      // Limpiar espacios/saltos de línea sueltos que a veces se cuelan al copiar el link de YouTube
-      const ytUrl = (ej.youtubeUrl || '').trim();
-      // Tolerante a espacios extra justo después de v=, youtu.be/ o shorts/
-      const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/|shorts\/)\s*([\w-]{6,})/);
+      let ytId = '';
+      try {
+        const ytUrl = (ej.youtubeUrl || '').trim();
+        const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/|shorts\/)\s*([\w-]{6,})/);
+        if (ytMatch) ytId = ytMatch[1].trim();
+      } catch(e) { ytId = ''; }
       return {
         id: `ej_${i}`,
         name: ej.nombre || '',
@@ -65,25 +67,27 @@ module.exports = async function handler(req, res) {
         dur: parseInt(ej.duracion) || 0,
         descanso: parseInt(ej.descanso) || 0,
         desc: ej.descripcion || '',
-        ytId: ytMatch ? ytMatch[1].trim() : '',
+        ytId,
         imagen: ej.imagen || '',
       };
     });
     let fisio = null;
-    const fisioId = plan['FisioID'];
-    if (fisioId) {
-      const fisioRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}/${fisioId}`, {
-        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-      });
-      if (fisioRes.ok) {
-        const fd = await fisioRes.json();
-        fisio = {
-          nombre: fd.fields['Name'] || '',
-          colegiado: fd.fields['NºColegiado'] || '',
-          foto: fd.fields['Foto']?.[0]?.url || ''
-        };
+    try {
+      const fisioId = plan['FisioID'];
+      if (fisioId) {
+        const fisioRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}/${fisioId}`, {
+          headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+        });
+        if (fisioRes.ok) {
+          const fd = await fisioRes.json();
+          fisio = {
+            nombre: fd.fields['Name'] || '',
+            colegiado: fd.fields['NºColegiado'] || '',
+            foto: fd.fields['Foto']?.[0]?.url || ''
+          };
+        }
       }
-    }
+    } catch(e) { fisio = null; }
     return res.status(200).json({
       ejercicios,
       fisio,
