@@ -374,7 +374,6 @@ input[type=number]{text-align:center}
  School
  </div>
  </div>
- <div onclick="showGuia()" style="display:flex;align-items:center;padding:11px 20px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:rgba(173,163,218,0.5);cursor:pointer;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;transition:color .15s;" onmouseover="this.style.color='#ada3da'" onmouseout="this.style.color='rgba(173,163,218,0.5)'">Guía del panel</div>
  <div class="sb-footer" id="sb-user">Panel fisioterapeuta</div>
  </div>
 
@@ -4687,6 +4686,19 @@ let wRutaActual = null;
 
 const WIKI_RUTAS = [
  {
+ id: 'fisio365',
+ categoria: 'centro',
+ titulo: 'Cómo funciona FISIO365',
+ desc: 'La app del paciente y el panel del fisio — qué hace cada sección',
+ etiqueta: 'Todo el equipo',
+ info: `<strong>¿Qué aprenderás aquí?</strong><br><br>Cómo está montada la plataforma FISIO365: la app que usa el paciente desde su móvil y el panel que usáis vosotros en el día a día. Cubre las secciones reales de cada una — incluyendo los protocolos de anamnesis actuales (con Hernia discal lumbar y Suelo pélvico como protocolos propios), cómo se asignan ejercicios y cómo se gestionan informes y mensajes.<br><br><strong>¿Para qué sirve?</strong><br><br>Para que todo el equipo conozca tanto su propia herramienta como la experiencia del paciente, y pueda resolver dudas sin tener que preguntar.<br><br><strong>¿Cuánto dura?</strong><br><br>5 módulos con test interactivo. Puedes completarlo a tu ritmo.`,
+ pasos: 5,
+ emoji: '',
+ imgs: [],
+ tits: [],
+ tipo: 'formacion'
+ },
+ {
  id: 'primera',
  categoria: 'centro',
  titulo: 'Ruta primera visita',
@@ -4827,8 +4839,8 @@ function renderWiki(wrap, rutaForzada){
  const isAdmin = role === 'admin';
 
  // ── Rutas por rol ──────────────────────────────────────────────────────
- const RUTA_FISIO = ['manual','primera','ultima','bomba','bomba-experto','ondas-basico','ondas','medkey-basico','medkey','airtable'];
- const RUTA_RECEPCION = ['airtable','manual','primera','ultima','bomba','ondas-basico','medkey-basico'];
+ const RUTA_FISIO = ['fisio365','manual','primera','ultima','bomba','bomba-experto','ondas-basico','ondas','medkey-basico','medkey','airtable'];
+ const RUTA_RECEPCION = ['fisio365','airtable','manual','primera','ultima','bomba','ondas-basico','medkey-basico'];
 
  function getRutaIds(r){ return r === 'recepcion' ? RUTA_RECEPCION : RUTA_FISIO; }
 
@@ -6688,7 +6700,89 @@ function renderFormacion(wrap, ruta){
  }
  ];
 
- const MODS = ruta.id === 'airtable' ? MODS_AIRTABLE : ruta.id === 'manual' ? MODS_MANUAL : ruta.id === 'ultima' ? MODS_ULTIMA : ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : MODS_BOMBA;
+ const MODS_FISIO365 = [
+ // ═══════════════════════════════════════
+ // MÓDULO 1 — Qué es FISIO365
+ // ═══════════════════════════════════════
+ {t:'Qué es FISIO365',sub:'Dos herramientas conectadas en tiempo real',
+ cards:[
+ {ti:'Dos caras de la misma plataforma',icon:'',body:`FISIO365 tiene dos partes: el <b>panel del fisioterapeuta</b> (en el que estás ahora, en <b>fisio365.vercel.app/fisio</b>) y la <b>app del paciente</b> (en <b>fisio365.vercel.app</b>, sin "/fisio"). El paciente entra con email y un PIN de 4 dígitos.`},
+ {ti:'Conectados al instante',icon:'',body:`Todo lo que haces en el panel llega a la app del paciente sin esperas: si le asignas ejercicios, los ve al momento; si guardas un informe en su ficha, aparece en "Mis informes"; si le respondes un mensaje, le llega a su Chat. No hace falta refrescar nada — el paciente lo ve directamente.`},
+ {ti:'Por qué importa conocer ambos lados',icon:'',body:`Aunque tú solo uses el panel, los pacientes te preguntarán cosas de su app — cómo instalarla, dónde ven sus ejercicios, cómo suben puntos en el sorteo de referidos. Conocer la app del paciente te permite resolver esas dudas sin tener que buscar ayuda.`}
+ ],
+ qs:[
+ {q:'¿En qué dirección entra el paciente a su app?',opts:['fisio365.vercel.app/fisio','fisio365.vercel.app','fisio365.vercel.app/paciente'],ok:1,fb:['Esa es la dirección del panel del fisio, no de la app del paciente.','¡Correcto! Sin "/fisio" al final.','Esa ruta no existe.']},
+ {q:'Si guardas un informe en la ficha de un paciente, ¿cuándo lo ve en su app?',opts:['Al momento, sin que tenga que hacer nada especial','Solo si cierra sesión y vuelve a entrar','Al día siguiente'],ok:0,fb:['¡Correcto! La conexión es en tiempo real.','No es necesario — aparece directamente.','No — aparece al instante, no hay que esperar.']}
+ ]
+ },
+ // ═══════════════════════════════════════
+ // MÓDULO 2 — La app del paciente
+ // ═══════════════════════════════════════
+ {t:'La app del paciente',sub:'Las 6 secciones que ve cada paciente',
+ cards:[
+ {ti:'Mis ejercicios',icon:'',body:`Es la pantalla principal al entrar. Muestra el programa de ejercicios del día con vídeo embebido de YouTube, series, repeticiones y duración en pastillas junto al nombre. Al terminar, el paciente pulsa <b>"Hecho"</b> y puede opcionalmente añadir una nota para el fisio.`},
+ {ti:'Mi racha',icon:'',body:`Sustituye al antiguo registro diario de dolor (EVA). Ahora es un calendario tipo racha: muestra los días que el paciente ha completado sus ejercicios, la racha actual, la mejor racha y el total de días. Pensado para motivar la constancia, no para registrar dolor.`},
+ {ti:'Mis citas',icon:'',body:`Calendario con las citas del paciente marcadas con un punto. Al tocar un día con cita, se despliega el detalle (hora, fisio, tipo, estado). Debajo aparece también una lista de próximas citas y un historial reciente de citas pasadas.`},
+ {ti:'Mis informes',icon:'',body:`Lista de los informes que el fisio ha guardado en su perfil desde el panel. El paciente puede desplegar el texto completo o descargarlo en PDF con cabecera FISIO365, directamente desde su móvil.`},
+ {ti:'Chat',icon:'',body:`Conversación con el equipo. Tiene dos pestañas: "De mi fisio" (mensajes que ha recibido y puede responder) y "Enviados" (lo que el paciente ha mandado). También puede iniciar un mensaje nuevo eligiendo a qué fisio se lo envía.`},
+ {ti:'Recomienda y gana',icon:'',body:`Sistema de referidos gamificado. El paciente comparte un link de WhatsApp con un amigo y suma <b>+1 papeleta</b> al instante. Si ese amigo viene a su primera sesión, el equipo lo marca como completado desde el panel y se suman <b>+5 papeletas</b> más. Las papeletas entran en un sorteo con premio mensual.`}
+ ],
+ qs:[
+ {q:'¿Qué reemplazó a la antigua sección de registro de dolor (EVA) en la app del paciente?',opts:['Se eliminó sin sustituto','"Mi racha" — un calendario de constancia con los ejercicios','Se movió al Chat'],ok:1,fb:['No — hay una sección nueva en su lugar.','¡Correcto! Ahora se centra en la constancia, no en el dolor diario.','No, son secciones independientes.']},
+ {q:'¿Cuántas papeletas suma un paciente solo por compartir el link, sin que el amigo venga todavía?',opts:['+1','+5','Ninguna hasta que el amigo venga'],ok:0,fb:['¡Correcto! +1 al instante de compartir.','+5 es cuando el amigo viene a su primera sesión, no antes.','No — suma +1 inmediatamente al compartir.']},
+ {q:'¿Desde dónde puede el paciente descargar un informe en PDF?',opts:['Solo se lo puede pedir al fisio por Chat','Desde "Mis informes", directamente en su móvil','No puede descargarlo, solo verlo'],ok:1,fb:['No es necesario pedirlo — puede descargarlo él mismo.','¡Correcto! Botón de descarga directa en PDF.','Sí puede — tiene botón de descarga en PDF.']}
+ ]
+ },
+ // ═══════════════════════════════════════
+ // MÓDULO 3 — Anamnesis y protocolos clínicos
+ // ═══════════════════════════════════════
+ {t:'Anamnesis y protocolos',sub:'Valoración clínica guiada por zona, con informe generado por IA',
+ cards:[
+ {ti:'Cómo funciona',icon:'',body:`Eliges el protocolo según la zona o patología, seleccionas al paciente y rellenas los pasos guiados: datos, historia, dolor, exploración, tests ortopédicos. Al final, pulsas <b>"Generar informe"</b> y la IA redacta automáticamente un informe profesional con esos datos.`},
+ {ti:'Protocolos disponibles',icon:'',body:`Rodilla, Hombro, Cervical, Codo y antebrazo, Muñeca y mano, Tobillo y pie, Cadera y pelvis, Sacroilíaca, Columna lumbar (genérico), <b>Hernia discal lumbar</b> (protocolo específico con Lasègue, Bragard, Slump test y marcha en talones/puntillas), Columna torácica, <b>Suelo pélvico</b> y Libre/Otros.`},
+ {ti:'Hernia discal — protocolo específico',icon:'',body:`Es distinto del genérico de "Columna lumbar". Incluye tests neurodinámicos (Lasègue, Bragard, Slump), marcha en talones (L4-L5) y puntillas (S1), sensibilidad por dermatoma, reflejos (rotuliano, aquíleo) y fuerza por raíz nerviosa. Úsalo cuando la sospecha clínica sea específicamente hernia discal.`},
+ {ti:'Suelo pélvico — protocolo específico',icon:'',body:`Cubre antecedentes ginecológicos y obstétricos, síntomas urinarios e intestinales, síntomas sexuales (con opción de omitir esa sección si no procede), dolor pélvico, prolapsos, aspecto emocional y exploración de suelo pélvico (tono, fuerza Oxford, POP-Q). Cada apartado tiene una cajita de observaciones libres para el fisio.`},
+ {ti:'Los datos solo se guardan dentro de la anamnesis',icon:'',body:`Si sales a otra sección del panel antes de generar el informe, los datos introducidos se pierden. Termina la valoración de una sola vez, o al menos hasta haber generado el informe.`}
+ ],
+ qs:[
+ {q:'¿Qué diferencia al protocolo de "Hernia discal lumbar" del genérico de "Columna lumbar"?',opts:['No hay diferencia, son el mismo formulario','Incluye tests específicos como Lasègue, Bragard y Slump, marcha en talones/puntillas y valoración por raíz nerviosa','El de hernia es más corto'],ok:1,fb:['Sí hay diferencia — son protocolos independientes con distinto contenido.','¡Correcto! Es el protocolo más detallado para sospecha de hernia.','Al contrario, es más extenso y específico.']},
+ {q:'En el protocolo de Suelo pélvico, ¿qué puede hacer el fisio si la sección de síntomas sexuales no procede?',opts:['Tiene que rellenarla obligatoriamente','Puede omitirla con un botón visible, y reactivarla después si quiere','No existe esa sección'],ok:1,fb:['No es obligatoria.','¡Correcto! Hay un botón "Omitir esta sección" reversible.','Sí existe, como una sección más del protocolo.']},
+ {q:'Si sales del protocolo de anamnesis a media valoración sin generar el informe, ¿qué pasa con los datos?',opts:['Se guardan automáticamente para retomar más tarde','Se pierden','Se guardan solo si el paciente ya tenía ficha'],ok:1,fb:['No — los datos no persisten al salir.','¡Correcto! Hay que terminar la valoración antes de cambiar de sección.','No depende de eso — se pierden siempre que sales antes de generar el informe.']}
+ ]
+ },
+ // ═══════════════════════════════════════
+ // MÓDULO 4 — Programas y seguimiento
+ // ═══════════════════════════════════════
+ {t:'Programas y seguimiento',sub:'Asignar ejercicios y ver la evolución del paciente',
+ cards:[
+ {ti:'Asignar un programa',icon:'',body:`Seleccionas tu nombre como fisio, buscas al paciente (si ya tiene un programa, se carga para que puedas editarlo) y añades ejercicios desde la biblioteca. Si el ejercicio no existe, hay que grabarlo, subirlo a YouTube y añadirlo en Airtable para que esté disponible para todo el equipo.`},
+ {ti:'El programa nuevo reemplaza al anterior',icon:'',body:`Si guardas un programa nuevo sin haber cargado primero el actual, el anterior se pierde. Si quieres añadir ejercicios sin borrar los que ya había, carga primero el programa existente del paciente, añade los nuevos y guarda.`},
+ {ti:'Vídeo de cada ejercicio',icon:'',body:`Al seleccionar un ejercicio de la biblioteca, su link de YouTube y su imagen se asocian automáticamente. Si escribes el nombre a mano sin seleccionarlo del desplegable de autocompletado, puede que el vídeo no se vincule correctamente y el paciente no vea el vídeo en su app — selecciona siempre del desplegable.`},
+ {ti:'Cómo ve el seguimiento el fisio',icon:'',body:`Desde la ficha del paciente puedes consultar su racha de constancia con los ejercicios, sus citas, sus informes guardados y el historial del Chat. Ya no existe el registro EVA de dolor diario de versiones anteriores del panel.`}
+ ],
+ qs:[
+ {q:'¿Qué pasa si guardas un programa nuevo sin cargar primero el que ya tenía el paciente?',opts:['Se combinan automáticamente','El programa anterior se pierde, el nuevo lo reemplaza','Aparece un aviso y no se puede guardar'],ok:1,fb:['No se combinan solos.','¡Correcto! Por eso hay que cargar el actual antes de añadir.','No hay ese aviso — hay que tener cuidado manualmente.']},
+ {q:'¿Por qué es importante seleccionar el ejercicio del desplegable de autocompletado en vez de escribir el nombre a mano?',opts:['Por estética del formulario','Para que el vídeo de YouTube se vincule correctamente al ejercicio','No tiene ninguna importancia real'],ok:1,fb:['No es por estética.','¡Correcto! Si no coincide exactamente con la biblioteca, el vídeo puede no aparecer en la app del paciente.','Sí importa — afecta a si el paciente ve el vídeo o no.']}
+ ]
+ },
+ // ═══════════════════════════════════════
+ // MÓDULO 5 — Pacientes, informes y mensajes
+ // ═══════════════════════════════════════
+ {t:'Pacientes, informes y mensajes',sub:'La ficha completa y la comunicación con cada paciente',
+ cards:[
+ {ti:'Ficha de paciente',icon:'',body:`Buscas por nombre o email y accedes a su ficha completa: programa de ejercicios, informes generados, racha de constancia, y datos de contraseña/PIN. Todo centralizado en un solo lugar.`},
+ {ti:'Gestión de informes',icon:'',body:`Cada informe generado en una anamnesis queda guardado en la ficha del paciente. Desde ahí puedes verlo completo, descargarlo en PDF con cabecera FISIO365, o pulsar "Guardar en app" para que el paciente lo vea en su sección "Mis informes". Revisa siempre el contenido antes de guardarlo en la app — una vez hecho, el paciente ya puede verlo.`},
+ {ti:'Estructura del informe',icon:'',body:`Los informes siguen una estructura fija: MOTIVO DE CONSULTA, EXPLORACIÓN Y HALLAZGOS, DIAGNÓSTICO FISIOTERAPÉUTICO, OBJETIVOS TERAPÉUTICOS y, solo si hay señales de alerta clínica, una sección de ALERTAS.`},
+ {ti:'Mensajes con el paciente',icon:'',body:`Cuando un paciente te escribe desde su Chat, te llega a la sección Mensajes del panel con un punto rojo si no lo has leído. El punto desaparece automáticamente al entrar en la sección. Escribes tu respuesta y le llega al paciente al instante.`}
+ ],
+ qs:[
+ {q:'¿Qué debes hacer antes de pulsar "Guardar en app" en un informe?',opts:['Nada, se puede deshacer después','Revisar el contenido, porque el paciente lo verá en cuanto lo guardes','Esperar 24 horas por si hay cambios'],ok:1,fb:['No se puede deshacer fácilmente — revisa antes.','¡Correcto! Una vez guardado, el paciente ya tiene acceso.','No hay esa espera — revisa antes de guardar, no después.']},
+ {q:'¿Qué sección del informe aparece solo si hay señales de alerta clínica?',opts:['OBJETIVOS TERAPÉUTICOS','ALERTAS','MOTIVO DE CONSULTA'],ok:1,fb:['Esa sección aparece siempre.','¡Correcto! Solo se incluye si hay red flags detectadas.','Esa sección aparece siempre, no es condicional.']}
+ ]
+ }
+ ];
+
+ const MODS = ruta.id === 'airtable' ? MODS_AIRTABLE : ruta.id === 'manual' ? MODS_MANUAL : ruta.id === 'ultima' ? MODS_ULTIMA : ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : ruta.id === 'fisio365' ? MODS_FISIO365 : MODS_BOMBA;
 
  const lsKey = 'fisio365_school_' + ruta.id + '_' + (fisioActual?.id||'x');
 
@@ -6994,423 +7088,6 @@ function renderFormacion(wrap, ruta){
 
 }
 
-function showGuia(){
- if(!document.getElementById('guia-style')){
- const st=document.createElement('style');
- st.id='guia-style';
- st.textContent=`.guia-wrap{max-width:620px;margin:0 auto;padding:0 0 40px 0}.g-pills{display:flex;flex-wrap:wrap;gap:8px;}
-.g-pills a{padding:7px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.4);font-size:11px;text-decoration:none;}
-
-.g-sec{background:white;margin:12px;border-radius:14px;padding:32px 20px;}
-.g-sec-num{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#ada3da;margin-bottom:8px;}
-.g-sec-h{font-size:22px;font-weight:800;color:#111;letter-spacing:-.5px;margin-bottom:10px;}
-.g-sec-p{font-size:13px;color:#777;line-height:1.8;margin-bottom:28px;}
-
-.g-inst-cell{background:#f8f8f8;border-radius:10px;padding:18px;margin-bottom:10px;}
-.g-inst-os{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#ada3da;margin-bottom:3px;}
-.g-inst-dev{font-size:13px;font-weight:700;margin-bottom:12px;}
-.g-inst-step{display:flex;gap:8px;font-size:12px;color:#666;line-height:1.6;margin-bottom:8px;}
-.g-inst-step:last-child{margin-bottom:0;}
-.g-inst-n{font-size:9px;font-weight:700;color:#bbb;flex-shrink:0;margin-top:2px;}
-.g-inst-step strong{color:#111;font-weight:600;}
-
-.g-note{border-left:3px solid #ada3da;background:#ede9f7;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:12px;}
-.g-note-k{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8b7fc7;margin-bottom:4px;}
-.g-note-v{font-size:12px;color:#6b62a8;line-height:1.8;}
-.g-note-v strong{color:#4e4694;font-weight:600;}
-.g-note.g-dark{border-left-color:rgba(255,255,255,0.1);background:#1a1a1a;border-radius:10px;}
-.g-note.g-dark .g-note-k{color:#ada3da;}
-.g-note.g-dark .g-note-v{color:rgba(255,255,255,0.45);}
-.g-note.g-dark .g-note-v strong{color:#f5f2ee;}
-
-.g-step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #eee;}
-.g-step:first-child{border-top:1px solid #eee;}
-.g-step:last-child{border-bottom:none;padding-bottom:0;}
-.g-step-n{font-size:10px;font-weight:700;color:#ccc;flex-shrink:0;margin-top:2px;min-width:20px;}
-.g-step-t{font-size:13px;font-weight:700;margin-bottom:3px;}
-.g-step-d{font-size:12px;color:#777;line-height:1.75;}
-.g-step-d strong{color:#111;font-weight:600;}
-
-.g-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
-.g-card{background:#f8f8f8;border-radius:10px;padding:14px;}
-.g-card-k{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bbb;margin-bottom:5px;}
-.g-card-t{font-size:12px;font-weight:700;margin-bottom:3px;}
-.g-card-d{font-size:11px;color:#777;line-height:1.6;}
-
-.g-tbl-wrap{border:1px solid #eee;border-radius:10px;overflow:hidden;margin-bottom:16px;}
-.g-tbl{width:100%;border-collapse:collapse;}
-.g-tbl th{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#999;padding:10px 14px;border-bottom:1px solid #eee;text-align:left;background:#f8f8f8;}
-.g-tbl td{font-size:12px;color:#666;padding:11px 14px;border-bottom:1px solid #eee;line-height:1.6;vertical-align:top;}
-.g-tbl td:first-child{font-weight:700;color:#111;}
-.g-tbl tr:last-child td{border-bottom:none;}
-
-.g-ej{background:#f8f8f8;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;margin-bottom:6px;color:#111;}
-.g-ej .g-sub{color:#777;}
-.g-ej.g-pain{background:#fff3f3;}
-.g-ej-label{font-size:10px;font-weight:700;color:#c0392b;display:block;margin-bottom:3px;}
-
-.g-tag{display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border:1px solid #ddd;color:#888;margin-right:3px;margin-bottom:5px;border-radius:4px;}
-.g-tag.g-hl{border-color:rgba(173,163,218,0.4);color:#8b7fc7;}
-
-.g-warn{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #eee;align-items:flex-start;}
-.g-warn:first-child{border-top:1px solid #eee;}
-.g-warn:last-child{border-bottom:none;padding-bottom:0;}
-.g-warn-dot{width:6px;height:6px;border-radius:50%;background:#ada3da;flex-shrink:0;margin-top:5px;}
-.g-warn-t{font-size:13px;font-weight:700;margin-bottom:3px;}
-.g-warn-d{font-size:12px;color:#777;line-height:1.75;}
-.g-warn-d strong{color:#111;font-weight:600;}
-
-.g-mock{background:#0d0d0d;border-radius:10px;overflow:hidden;margin-bottom:24px;}
-.g-mock-bar{display:flex;align-items:center;gap:5px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);}
-.g-md{width:7px;height:7px;border-radius:50%;}
-.g-mock-url{font-size:9px;color:rgba(255,255,255,0.15);font-family:monospace;margin-left:4px;}
-.g-mock-
-.g-mock-sb{width:85px;flex-shrink:0;border-right:1px solid rgba(255,255,255,0.06);padding:10px 0;}
-.g-ms-logo{font-size:9px;font-weight:900;color:#f5f2ee;padding:0 10px 8px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:6px;}
-.g-ms-logo span{color:#ada3da;}
-
-
-
-.g-mock-main{flex:1;padding:12px;min-width:0;}
-.g-mm-h{font-size:11px;font-weight:700;color:#f5f2ee;margin-bottom:1px;}
-.g-mm-s{font-size:8px;color:rgba(255,255,255,0.2);margin-bottom:10px;}
-.g-mm-box{border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:8px;margin-bottom:6px;}
-.g-mm-t{font-size:9px;font-weight:600;color:#f5f2ee;margin-bottom:3px;}
-.g-mm-i{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:4px;padding:4px 7px;font-size:8px;color:rgba(255,255,255,0.2);}
-.g-mm-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
-.g-mm-av{width:16px;height:16px;border-radius:50%;background:rgba(173,163,218,0.3);display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;color:#ada3da;flex-shrink:0;}
-.g-mm-nm{font-size:9px;font-weight:600;color:#f5f2ee;}
-.g-mm-em{font-size:7px;color:rgba(255,255,255,0.2);}
-.g-mm-si{font-size:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:rgba(255,255,255,0.25);}
-.g-mm-si.g-on{color:#ada3da;}
-.g-mm-si:last-child{border-bottom:none;}
-.g-mm-ej{background:rgba(173,163,218,0.08);border:1px solid rgba(173,163,218,0.15);border-radius:4px;padding:5px 7px;margin-top:4px;}
-.g-mm-en{font-size:8px;font-weight:600;color:#f5f2ee;}
-.g-mm-ep{font-size:7px;color:#ada3da;}
-.g-mm-add{border:1px dashed rgba(255,255,255,0.08);border-radius:4px;padding:4px;text-align:center;font-size:7px;color:rgba(255,255,255,0.15);margin-top:4px;}
-
-.g-ej-label-wrap{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8b7fc7;margin-top:20px;margin-bottom:8px;}
-
-footer{background:#0d0d0d;padding:40px 20px;text-align:center;margin-top:12px;}
-.g-ft-logo{font-size:16px;font-weight:800;color:#f5f2ee;letter-spacing:-.4px;margin-bottom:6px;}
-.g-ft-logo span{color:#ada3da;}
-.g-ft-sub{font-size:11px;color:rgba(255,255,255,0.2);}`;
- document.head.appendChild(st);
- }
- const wrap=$('mainWrap');
- wrap.innerHTML='';
- const hd=ce('div','');
- hd.style.cssText='display:flex;align-items:center;gap:12px;margin-bottom:20px';
- const btn=ce('button','btn-back');
- btn.textContent='← Volver';
- btn.onclick=()=>showSection('school');
- hd.appendChild(btn);
- const t=ce('div','');
- t.style.cssText='font-size:15px;font-weight:700';
- t.textContent='Guía del panel';
- hd.appendChild(t);
- wrap.appendChild(hd);
- const cont=ce('div','guia-wrap');
- cont.innerHTML=`</div>
-
-<div class="g-sec" id="s0">
- <div class="g-sec-num">00 — Qué es esto</div>
- <h2 class="g-sec-h">Tu panel clínico</h2>
- <p class="g-sec-p">FISIO365 es la herramienta digital de la clínica. Todo en un solo lugar: pacientes, valoraciones, ejercicios, formación e informes generados por IA.</p>
- <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
- <div class="g-card"><div class="g-card-k">Tú usas</div><div class="g-card-t">Panel fisioterapeuta</div><div style="font-size:11px;color:#777;margin-top:3px">fisio365.vercel.app/fisio</div></div>
- <div class="g-card"><div class="g-card-k">El paciente usa</div><div class="g-card-t">App de paciente</div><div style="font-size:11px;color:#777;margin-top:3px">fisio365.vercel.app</div></div>
- </div>
- <div class="g-note">
- <div class="g-note-k">Conectados en tiempo real</div>
- <div class="g-note-v">Lo que haces en el panel llega al paciente al instante. Si le asignas ejercicios, aparecen en su app. Si generas un informe y lo guardas en su perfil, lo ve en su app. Si le mandas un mensaje de diario, lo recibe en su móvil.</div>
- </div>
- <div class="g-step"><div class="g-step-n">01</div><div><div class="g-step-t">Valoras al paciente</div><div class="g-step-d">Usas los protocolos de Anamnesis para recoger la historia clínica. La IA genera el informe automáticamente.</div></div></div>
- <div class="g-step"><div class="g-step-n">02</div><div><div class="g-step-t">Le asignas ejercicios</div><div class="g-step-d">Buscas ejercicios por zona o patología y los añades a su programa. El paciente los ve en su app con vídeo y descripción.</div></div></div>
- <div class="g-step"><div class="g-step-n">03</div><div><div class="g-step-t">Haces seguimiento</div><div class="g-step-d">Ves su diario de dolor (gráfica EVA), los ejercicios que ha completado y los informes de sesiones anteriores.</div></div></div>
- <div class="g-step"><div class="g-step-n">04</div><div><div class="g-step-t">Te formas</div><div class="g-step-d">School tiene los cursos del equipo — CTU, ondas de choque, medkey, protocolo de primera visita y más. Con tests para validar que has aprendido.</div></div></div>
-</div>
-
-<div class="g-sec" id="s1">
- <div class="g-sec-num">01 — Instalación</div>
- <h2 class="g-sec-h">Instálalo como app</h2>
- <p class="g-sec-p">Funciona en el navegador pero puedes instalarlo en cualquier dispositivo para abrirlo sin barras ni distracciones.</p>
- <div class="g-inst-cell">
- <div class="g-inst-os">Ordenador</div>
- <div class="g-inst-dev">Chrome o Edge</div>
- <div class="g-inst-step"><div class="g-inst-n">1</div><div>Abre <strong>fisio365.vercel.app</strong></div></div>
- <div class="g-inst-step"><div class="g-inst-n">2</div><div>Clic en <strong>instalar ⊕</strong> en la barra de direcciones</div></div>
- <div class="g-inst-step"><div class="g-inst-n">3</div><div>Confirma <strong>"Instalar"</strong> — aparece en el escritorio</div></div>
- </div>
- <div class="g-inst-cell">
- <div class="g-inst-os">iPhone / iPad</div>
- <div class="g-inst-dev">Safari</div>
- <div class="g-inst-step"><div class="g-inst-n">1</div><div>Abre <strong>fisio365.vercel.app</strong> en Safari</div></div>
- <div class="g-inst-step"><div class="g-inst-n">2</div><div>Pulsa <strong>Compartir ↑</strong> abajo en el centro</div></div>
- <div class="g-inst-step"><div class="g-inst-n">3</div><div>Toca <strong>"Añadir a pantalla de inicio"</strong> y confirma</div></div>
- </div>
- <div class="g-inst-cell">
- <div class="g-inst-os">Android</div>
- <div class="g-inst-dev">Chrome</div>
- <div class="g-inst-step"><div class="g-inst-n">1</div><div>Abre <strong>fisio365.vercel.app</strong> en Chrome</div></div>
- <div class="g-inst-step"><div class="g-inst-n">2</div><div>Pulsa los <strong>3 puntos ⋮</strong> arriba a la derecha</div></div>
- <div class="g-inst-step"><div class="g-inst-n">3</div><div>Toca <strong>"Añadir a pantalla de inicio"</strong> y confirma</div></div>
- </div>
- <div class="g-note">
- <div class="g-note-k">Una vez instalado</div>
- <div class="g-note-v">Se abre en pantalla completa, recuerda tu sesión y funciona igual que en el navegador. Puedes tenerlo instalado en el ordenador y el móvil a la vez.</div>
- </div>
-</div>
-
-<div class="g-sec" id="s2">
- <div class="g-sec-num">02 — Acceso</div>
- <h2 class="g-sec-h">Entrar al panel</h2>
- <p class="g-sec-p">Cada fisio tiene sus propias credenciales. El acceso determina qué secciones puedes ver.</p>
- <div class="g-step"><div class="g-step-n">01</div><div><div class="g-step-t">Abre fisio365.vercel.app o la app instalada</div><div class="g-step-d">Si ya la tienes instalada, ábrela desde el escritorio o pantalla de inicio.</div></div></div>
- <div class="g-step"><div class="g-step-n">02</div><div><div class="g-step-t">Introduce tu contraseña personal</div><div class="g-step-d">Cada fisio tiene la suya. Si no la tienes, pídela a <strong>Nora</strong>.</div></div></div>
- <div class="g-step"><div class="g-step-n">03</div><div><div class="g-step-t">El panel carga con tus permisos</div><div class="g-step-d">Según tu rol verás unas secciones u otras. Se actualizan automáticamente.</div></div></div>
-</div>
-
-<div class="g-sec" id="s3">
- <div class="g-sec-num">03 — Anamnesis</div>
- <h2 class="g-sec-h">Valoración clínica</h2>
- <p class="g-sec-p">Protocolos guiados por zona. Rellenas los datos y la IA genera el informe automáticamente.</p>
- <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
- <div class="g-card"><div style="margin-bottom:5px"><span class="g-tag g-hl">Rodilla</span></div><div class="g-card-t" style="font-size:11px;color:#777">LCA · LCP · Menisco · Patelofemoral</div></div>
- <div class="g-card"><div style="margin-bottom:5px"><span class="g-tag g-hl">Hombro</span></div><div class="g-card-t" style="font-size:11px;color:#777">Manguito · Impingement · Inestabilidad</div></div>
- <div class="g-card"><div style="margin-bottom:5px"><span class="g-tag g-hl">Cervical</span></div><div class="g-card-t" style="font-size:11px;color:#777">Radiculopatía · Mielopatía · SOT</div></div>
- <div class="g-card"><div style="margin-bottom:5px"><span class="g-tag g-hl">Codo</span></div><div class="g-card-t" style="font-size:11px;color:#777">Epicondilitis · Epitrocleitis · N. cubital</div></div>
- <div class="g-card"><div style="margin-bottom:5px"><span class="g-tag g-hl">Muñeca y mano</span></div><div class="g-card-t" style="font-size:11px;color:#777">Túnel carpiano · De Quervain</div></div>
- <div class="g-card"><div style="margin-bottom:5px"><span class="g-tag g-hl">Tobillo y pie</span></div><div class="g-card-t" style="font-size:11px;color:#777">Esguince · Aquiles · Fascitis plantar</div></div>
- <div class="g-card"><div style="margin-bottom:5px"><span class="g-tag g-hl">Cadera y pelvis</span></div><div class="g-card-t" style="font-size:11px;color:#777">FAI · Labrum · Coxartrosis · Piriforme</div></div>
- <div class="g-card"><div style="margin-bottom:5px"><span class="g-tag g-hl">Sacroilíaca</span></div><div class="g-card-t" style="font-size:11px;color:#777">Disfunción sacroilíaca · SI joint</div></div>
- <div class="g-card"><div style="margin-bottom:5px"><span class="g-tag g-hl">Columna lumbar</span></div><div class="g-card-t" style="font-size:11px;color:#777">Hernia · Radiculopatía · Facetario</div></div>
- <div class="g-card"><div style="margin-bottom:5px"><span class="g-tag g-hl">Columna torácica</span></div><div class="g-card-t" style="font-size:11px;color:#777">Mecánico · Neuritis · Escoliosis</div></div>
- <div class="g-card" style="grid-column:span 2"><div style="margin-bottom:5px"><span class="g-tag">Libre / Otros</span></div><div class="g-card-t" style="font-size:11px;color:#777">Valoración libre · Otras patologías</div></div>
- </div>
- <div class="g-step"><div class="g-step-n">01</div><div><div class="g-step-t">Selecciona fisio, protocolo y paciente</div><div class="g-step-d">Elige tu nombre, la zona a valorar y busca el nombre del paciente.</div></div></div>
- <div class="g-step"><div class="g-step-n">02</div><div><div class="g-step-t">Rellena los pasos</div><div class="g-step-d">Datos → lesión → dolor → exploración → tests → informe. Puedes avanzar y retroceder libremente — los datos se conservan mientras estés en la anamnesis.</div></div></div>
- <div class="g-step"><div class="g-step-n">03</div><div><div class="g-step-t">Termina la valoración sin salir</div><div class="g-step-d">Los datos solo se guardan mientras estás dentro de la anamnesis. Si sales a otra sección antes de generar el informe, se perderán.</div></div></div>
- <div class="g-step"><div class="g-step-n">04</div><div><div class="g-step-t">Genera el informe con IA</div><div class="g-step-d">Pulsa <strong>"Generar informe"</strong>. Se redacta automáticamente con todos los datos introducidos.</div></div></div>
- <div class="g-step"><div class="g-step-n">05</div><div><div class="g-step-t">El informe se guarda en la ficha del paciente</div><div class="g-step-d">Desde ahí puedes descargarlo en PDF o enviarlo a la app del paciente.</div></div></div>
-</div>
-
-<div class="g-sec" id="s6">
- <div class="g-sec-num">04 — Programas</div>
- <h2 class="g-sec-h">Asignar ejercicios</h2>
- <p class="g-sec-p">Crea programas personalizados desde la biblioteca. El paciente los ve al instante en su app.</p>
- <div class="g-mock">
- <div class="g-mock-bar">
- <div class="g-md" style="background:#ff5f57"></div>
- <div class="g-md" style="background:#febc2e"></div>
- <div class="g-md" style="background:#28c840"></div>
- <div class="g-mock-url">fisio365.vercel.app</div>
- </div>
- <div class="g-mock-body">
- <div class="g-mock-sb">
- <div class="g-ms-logo"><span>FISIO</span>365</div>
- <div class="g-ms-i g-on">Programas</div>
- <div class="g-ms-i">Anamnesis</div>
- <div class="g-ms-i">Pacientes</div>
- <div class="g-ms-i">School</div>
- </div>
- <div class="g-mock-main">
- <div class="g-mm-h">Programas</div>
- <div class="g-mm-s">Asigna ejercicios a tus pacientes</div>
- <div class="g-mm-box"><div class="g-mm-t">Fisio</div><div class="g-mm-i" style="margin-top:3px">Seleccionar...</div></div>
- <div class="g-mm-box"><div class="g-mm-t">Paciente</div><div class="g-mm-i" style="margin-top:3px">Buscar...</div></div>
- <div class="g-mm-box">
- <div class="g-mm-t">Ejercicios</div>
- <div class="g-mm-ej"><div class="g-mm-en">Sentadilla isométrica</div><div class="g-mm-ep">Rodilla · 3s · 15r</div></div>
- <div class="g-mm-add">+ Añadir ejercicio</div>
- </div>
- </div>
- </div>
- </div>
- <div class="g-step"><div class="g-step-n">01</div><div><div class="g-step-t">Selecciona tu nombre como fisio</div><div class="g-step-d">Queda registrado en el programa.</div></div></div>
- <div class="g-step"><div class="g-step-n">02</div><div><div class="g-step-t">Busca el paciente</div><div class="g-step-d">Al seleccionarlo carga su programa actual si tiene uno.</div></div></div>
- <div class="g-step"><div class="g-step-n">03</div><div><div class="g-step-t">Añade ejercicios de la biblioteca</div><div class="g-step-d">Pulsa <strong>"+ Añadir ejercicio"</strong>. Si no existe, hay que grabarlo, subirlo a YouTube y añadirlo en Airtable.</div></div></div>
- <div class="g-step"><div class="g-step-n">04</div><div><div class="g-step-t">Escribe un mensaje opcional</div><div class="g-step-d">Aparece destacado en la app del paciente.</div></div></div>
- <div class="g-step"><div class="g-step-n">05</div><div><div class="g-step-t">Guarda el programa</div><div class="g-step-d">El paciente lo ve al momento en su app.</div></div></div>
- <div class="g-note g-dark" style="margin-top:20px;">
- <div class="g-note-k">Importante</div>
- <div class="g-note-v"><strong>El programa nuevo reemplaza al anterior.</strong> Si quieres añadir ejercicios sin borrar los actuales, carga primero el programa del paciente, añade y guarda.</div>
- </div>
-</div>
-
-<div class="g-sec" id="s5">
- <div class="g-sec-num">05 — Pacientes</div>
- <h2 class="g-sec-h">Ficha de paciente</h2>
- <p class="g-sec-p">Toda la información de cada paciente en un solo lugar.</p>
- <div class="g-mock">
- <div class="g-mock-bar">
- <div class="g-md" style="background:#ff5f57"></div>
- <div class="g-md" style="background:#febc2e"></div>
- <div class="g-md" style="background:#28c840"></div>
- <div class="g-mock-url">fisio365.vercel.app</div>
- </div>
- <div class="g-mock-body">
- <div class="g-mock-sb">
- <div class="g-ms-logo"><span>FISIO</span>365</div>
- <div class="g-ms-i">Programas</div>
- <div class="g-ms-i">Anamnesis</div>
- <div class="g-ms-i g-on g-hl">Pacientes</div>
- <div class="g-ms-i">School</div>
- </div>
- <div class="g-mock-main">
- <div class="g-mm-h">Pacientes</div>
- <div class="g-mm-s">Busca la ficha de cada paciente</div>
- <div class="g-mm-i" style="margin-bottom:8px">Buscar paciente...</div>
- <div class="g-mm-box">
- <div class="g-mm-row">
- <div class="g-mm-av">JG</div>
- <div><div class="g-mm-nm">Jonathan G.</div><div class="g-mm-em">jonathan@email.com</div></div>
- </div>
- <div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:5px;margin-top:4px;">
- <div class="g-mm-si g-on">Programa</div>
- <div class="g-mm-si">Informes</div>
- <div class="g-mm-si">EVA</div>
- <div class="g-mm-si">Diario</div>
- <div class="g-mm-si">Nombre y contraseña</div>
- </div>
- </div>
- </div>
- </div>
- </div>
- <div class="g-step"><div class="g-step-n">01</div><div><div class="g-step-t">Escribe el nombre o email</div><div class="g-step-d">Los resultados aparecen al instante.</div></div></div>
- <div class="g-step"><div class="g-step-n">02</div><div><div class="g-step-t">Haz clic en el nombre</div><div class="g-step-d">Se despliega el menú con las 5 secciones.</div></div></div>
- <div class="g-step"><div class="g-step-n">03</div><div><div class="g-step-t">Selecciona la sección que quieres ver</div><div class="g-step-d">Solo una abierta a la vez. Clic de nuevo para cerrar.</div></div></div>
- <div class="g-cards" style="margin-top:24px;">
- <div class="g-card"><div class="g-card-k">Sección</div><div class="g-card-t">Programa</div><div class="g-card-d">Ejercicios con series, reps y zona.</div></div>
- <div class="g-card"><div class="g-card-k">Sección</div><div class="g-card-t">Informes</div><div class="g-card-d">Ver, PDF o enviar a la app.</div></div>
- <div class="g-card"><div class="g-card-k">Sección</div><div class="g-card-t">EVA</div><div class="g-card-d">Gráfica de evolución del dolor.</div></div>
- <div class="g-card"><div class="g-card-k">Sección</div><div class="g-card-t">Diario</div><div class="g-card-d">Entradas y mensajes del paciente.</div></div>
- <div class="g-card"><div class="g-card-k">Sección</div><div class="g-card-t">Contraseña</div><div class="g-card-d">Nombre, email y PIN.</div></div>
- </div>
- <div class="g-ej-label-wrap">Así se ve la EVA</div>
- <div style="background:#f8f8f8;border-radius:10px;padding:16px 16px 12px;max-width:340px;">
- <svg width="100%" height="70" viewBox="0 0 300 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
- <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ada3da" stop-opacity="0.2"/><stop offset="100%" stop-color="#ada3da" stop-opacity="0"/></linearGradient></defs>
- <path d="M0,35 L50,23 L100,35 L150,29 L200,41 L250,47 L300,53" fill="none" stroke="#ada3da" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
- <path d="M0,35 L50,23 L100,35 L150,29 L200,41 L250,47 L300,53 L300,70 L0,70Z" fill="url(#g)"/>
- <circle cx="0" cy="35" r="3" fill="#ada3da"/>
- <circle cx="50" cy="23" r="5" fill="white" stroke="#c0392b" stroke-width="2"/>
- <circle cx="100" cy="35" r="3" fill="#ada3da"/>
- <circle cx="150" cy="29" r="5" fill="white" stroke="#c0392b" stroke-width="2"/>
- <circle cx="200" cy="41" r="3" fill="#ada3da"/>
- <circle cx="250" cy="47" r="3" fill="#ada3da"/>
- <circle cx="300" cy="53" r="4" fill="white" stroke="#ada3da" stroke-width="2"/>
- </svg>
- <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-top:6px;margin-bottom:2px;">
- <span style="font-size:9px;color:#bbb;">31/5</span>
- <span style="font-size:9px;color:#c0392b;font-weight:700">1/6</span>
- <span style="font-size:9px;color:#bbb;">2/6</span>
- <span style="font-size:9px;color:#c0392b;font-weight:700">3/6</span>
- <span style="font-size:9px;color:#bbb;">4/6</span>
- <span style="font-size:9px;color:#bbb;">5/6</span>
- <span style="font-size:9px;color:#ada3da;font-weight:700">Hoy</span>
- </div>
- <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:14px;">
- <span style="font-size:10px;font-weight:700;color:#ada3da">5</span>
- <span style="font-size:10px;font-weight:700;color:#c0392b">7</span>
- <span style="font-size:10px;font-weight:700;color:#ada3da">5</span>
- <span style="font-size:10px;font-weight:700;color:#c0392b">6</span>
- <span style="font-size:10px;font-weight:700;color:#ada3da">4</span>
- <span style="font-size:10px;font-weight:700;color:#ada3da">3</span>
- <span style="font-size:10px;font-weight:700;color:#ada3da">2</span>
- </div>
- </div>
-
- <div class="g-ej-label-wrap" style="margin-top:20px;">Así se ve el Diario</div>
- <div class="g-note" style="margin-bottom:12px;">
- <div class="g-note-k">Cómo funciona</div>
- <div class="g-note-v">Todo lo que escribe el paciente se guarda en el Diario. Hay dos tipos de entradas: las que vienen de los <strong>ejercicios</strong> (cuando pulsa "Tarea hecha") y las que vienen de la <strong>escala EVA</strong> (cuando el dolor sube respecto al día anterior, la app le pregunta si cambió algo — lo que escriba se guarda automáticamente aquí).</div>
- </div>
- <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#ada3da;margin-bottom:6px;">De los ejercicios</div>
- <div class="g-ej" style="margin-bottom:6px;">✅ Tarea hecha · 06/06/2026 — <span class="g-sub">"Hoy me ha dolido menos, creo que voy mejorando"</span></div>
- <div class="g-ej" style="margin-bottom:14px;">✅ Tarea hecha · 05/06/2026</div>
- <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#c0392b;margin-bottom:6px;">De la escala EVA — cuando subió el dolor</div>
- <div class="g-ej g-pain" style="margin-bottom:6px;"><span class="g-ej-label">⚠ Dolor aumentó · 03/06/2026</span><span class="g-sub">"Dormí muy mal y estuve cargando peso por la mañana"</span></div>
- <div class="g-ej g-pain"><span class="g-ej-label">⚠ Dolor aumentó · 01/06/2026</span><span class="g-sub">"Estuve todo el día de pie en el trabajo y luego fui al gimnasio"</span></div>
-</div>
-
-<div class="g-sec" id="s4">
- <div class="g-sec-num">06 — Mensajes</div>
- <h2 class="g-sec-h">Mensajes de pacientes</h2>
- <p class="g-sec-p">Cuando un paciente te escribe desde su app — ya sea desde el diario o cuando su dolor aumenta — te llega directamente a la sección Mensajes del panel.</p>
- <div class="g-inst-cell">
- <div class="g-inst-os">Cómo funciona</div>
- <div class="g-inst-step"><span style="background:#ada3da;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</span><span>El paciente pulsa "Tarea hecha ✓" y elige <strong>Enviar a mi fisio</strong></span></div>
- <div class="g-inst-step"><span style="background:#ada3da;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</span><span>Selecciona a qué fisio enviárselo — puede elegir a cualquiera del equipo</span></div>
- <div class="g-inst-step"><span style="background:#ada3da;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</span><span>El mensaje aparece en tu sección <strong>Mensajes</strong> con un punto rojo si no lo has leído</span></div>
- <div class="g-inst-step"><span style="background:#ada3da;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">4</span><span>Escribe tu respuesta y pulsa <strong>Enviar</strong> — le llega al paciente al momento</span></div>
- </div>
- <div class="g-warn"><div class="g-warn-dot"></div><div><div class="g-warn-t">El punto rojo desaparece al abrir Mensajes</div><div class="g-warn-d">Los mensajes se marcan como vistos automáticamente cuando entras en la sección.</div></div></div>
- <div class="g-warn"><div class="g-warn-dot"></div><div><div class="g-warn-t">Los mensajes de dolor tienen etiqueta roja</div><div class="g-warn-d">Cuando el dolor del paciente sube, el mensaje aparece marcado con para que lo identifiques rápido.</div></div></div>
- <div class="g-sec-num">07 — School</div>
- <h2 class="g-sec-h">Formación del equipo</h2>
- <p class="g-sec-p">Cursos por categoría con contenido, vídeo y glosario de más de 400 términos clínicos.</p>
- <div class="g-cards" style="margin-bottom:20px;">
- <div class="g-card"><div class="g-card-k">Clínico</div><div class="g-card-t">Bomba Diamagnética</div></div>
- <div class="g-card"><div class="g-card-k">Clínico</div><div class="g-card-t">Ondas de Choque</div></div>
- <div class="g-card"><div class="g-card-k">Clínico</div><div class="g-card-t">Medkey</div></div>
- <div class="g-card"><div class="g-card-k">Centro</div><div class="g-card-t">Primera visita</div></div>
- <div class="g-card"><div class="g-card-k">Centro</div><div class="g-card-t">Última sesión</div></div>
- </div>
- <div class="g-step"><div class="g-step-n">01</div><div><div class="g-step-t">Entra en School y elige un curso</div><div class="g-step-d">Cada curso tiene varios módulos — cada uno incluye teoría, glosario y un test.</div></div></div>
- <div class="g-step"><div class="g-step-n">02</div><div><div class="g-step-t">Lee el contenido y responde el test</div><div class="g-step-d">Cada respuesta se guarda automáticamente. Si aciertas, queda bloqueada en verde. Si fallas, puedes volver a intentarlo — las incorrectas siguen disponibles hasta que aciertes.</div></div></div>
- <div class="g-step"><div class="g-step-n">03</div><div><div class="g-step-t">Navega libremente — tu progreso se guarda</div><div class="g-step-d">Puedes ir y volver entre módulos, cambiar de sección o incluso cerrar el panel y volver más tarde. Todo lo que hayas respondido se conserva hasta que marques el curso como completado.</div></div></div>
- <div class="g-step"><div class="g-step-n">04</div><div><div class="g-step-t">Marca el curso como completado</div><div class="g-step-d">Solo puedes marcarlo cuando hayas respondido <strong>correctamente todos los tests</strong> de todos los módulos. Si hay fallos, aparece el botón «Repetir tests con fallos».</div></div></div>
- <div class="g-step"><div class="g-step-n">05</div><div><div class="g-step-t">Usa el glosario</div><div class="g-step-d">Los términos subrayados tienen definición al pasar el ratón. Más de 400 términos clínicos.</div></div></div>
-</div>
-
-<div class="g-sec" id="s8">
- <div class="g-sec-num">08 — Informes</div>
- <h2 class="g-sec-h">Gestión de informes</h2>
- <p class="g-sec-p">Cada informe queda en la ficha del paciente. Accedes desde Pacientes → nombre → Informes.</p>
- <div class="g-tbl-wrap">
- <table class="g-tbl">
- <thead><tr><th>Acción</th><th>Qué hace</th></tr></thead>
- <tbody>
- <tr><td>Ver</td><td>Despliega el texto completo</td></tr>
- <tr><td>PDF</td><td>Descarga un PDF profesional con cabecera FISIO365</td></tr>
- <tr><td>Guardar en app</td><td>El paciente lo verá en "Mis informes"</td></tr>
- </tbody>
- </table>
- </div>
- <div class="g-note">
- <div class="g-note-k">Estructura del informe</div>
- <div class="g-note-v">
- <strong>MOTIVO DE CONSULTA</strong><br>
- <strong>EXPLORACIÓN Y HALLAZGOS</strong><br>
- <strong>DIAGNÓSTICO FISIOTERAPÉUTICO</strong><br>
- <strong>OBJETIVOS TERAPÉUTICOS</strong><br>
- <strong>ALERTAS</strong> — Solo si hay red flags
- </div>
- </div>
-</div>
-
-<div class="g-sec" id="s7">
-
- <div class="g-sec-num">09 — Consejos</div>
- <h2 class="g-sec-h">Lo que debes saber</h2>
- <p class="g-sec-p">Detalles importantes para el día a día.</p>
- <div class="g-warn"><div class="g-warn-dot"></div><div><div class="g-warn-t">El programa nuevo reemplaza al anterior</div><div class="g-warn-d">Carga el actual primero, añade los nuevos y guarda.</div></div></div>
- <div class="g-warn"><div class="g-warn-dot"></div><div><div class="g-warn-t">El paciente ve los cambios al momento</div><div class="g-warn-d">La app se actualiza automáticamente.</div></div></div>
- <div class="g-warn"><div class="g-warn-dot"></div><div><div class="g-warn-t">Revisa el informe antes de enviarlo</div><div class="g-warn-d">Una vez pulsas <strong>"Guardar en app"</strong> el paciente ya puede verlo.</div></div></div>
- <div class="g-warn"><div class="g-warn-dot"></div><div><div class="g-warn-t">El diario es solo lectura</div><div class="g-warn-d">Lo escribe el paciente. Tú lo ves pero no puedes modificarlo.</div></div></div>
- <div class="g-warn"><div class="g-warn-dot"></div><div><div class="g-warn-t">Ejercicio que no está en la biblioteca</div><div class="g-warn-d">Grábalo, súbelo a YouTube y añádelo en Airtable. Estará disponible para todo el equipo.</div></div></div>
-</div>
-
-<footer>
- <div class="g-ft-logo"><span>FISIO</span>365</div>
- <div class="g-ft-sub">Panel clínico · Uso exclusivo del equipo</div>
-</footer>`;
- wrap.appendChild(cont);
- ['prog','anam','pac','school'].forEach(s=>{const el=$('sb-'+s);if(el)el.classList.remove('active');});
- $('topbar-t').textContent='Guía del panel';
- $('topbar-s').textContent='';
-}
 
 // ── MENSAJES ─────────────────────────────────────────────────────────────────
 const TABLE_MENSAJES = 'tblMENSAJES'; // Crear en Airtable
