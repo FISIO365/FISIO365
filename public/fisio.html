@@ -450,8 +450,10 @@ const CFG = {
  cadera: {t:'Cadera y pelvis', steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
  sacro: {t:'Sacroilíaca', steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
  lumbar: {t:'Columna lumbar', steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+ hernia: {t:'Hernia discal lumbar', steps:['Paciente','Dolor','Banderas','Observación','Movilidad','Tests neurodinámicos','Sensibilidad/Fuerza','Clasificación','Informe']},
  toracica: {t:'Columna torácica', steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
  libre: {t:'Libre / Otros', steps:['Paciente','Lesión','Dolor','Exploración','Tests ortopédicos','Informe']},
+ sueloPelvico: {t:'Suelo pélvico', steps:['Datos generales','Antecedentes','Urinario/Intestinal','Sexual/Dolor pélvico','Prolapsos/Hábitos','Emocional/Banderas','Exploración','Informe']},
 };
 
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
@@ -1117,9 +1119,11 @@ const PROTOS_LIST = [
  {id:'tobillo', t:'Tobillo y pie', s:'Esguince · Aquiles · Fascitis · Pie plano · TVP', r:1},
  {id:'cadera', t:'Cadera y pelvis', s:'FAI · Labrum · Coxartrosis · Piriforme · Glúteo', r:1},
  {id:'sacro', t:'Sacroilíaca', s:'Disfunción sacroilíaca · SI joint', r:1},
- {id:'lumbar', t:'Columna lumbar', s:'Hernia · Radiculopatía · Facetario · Inestabilidad', r:1},
+ {id:'lumbar', t:'Columna lumbar', s:'Radiculopatía · Facetario · Inestabilidad', r:1},
+ {id:'hernia', t:'Hernia discal lumbar', s:'Lasègue · Bragard · Slump · Marcha talones/puntillas', r:1},
  {id:'toracica', t:'Columna torácica', s:'Alteración mecánica · Neuritis · Escoliosis', r:1},
  {id:'libre', t:'Libre / Otros', s:'Valoración libre · Otras patologías', r:1},
+ {id:'sueloPelvico', t:'Suelo pélvico', s:'Incontinencia · Prolapsos · Dolor pélvico · Disfunciones posparto', r:1},
 ];
 
 function renderAnamHub(wrap){
@@ -1208,8 +1212,10 @@ function renderProto(){
  cadera: [stepP0,caS1,caS2,caS3,caS4,caSZ],
  sacro: [stepP0,saS1,saS2,saS3,saS4,saSZ],
  lumbar: [stepP0,luS1,luS2,luS3,luS4,luSZ],
+ hernia: [heS1,heS2,heS3,heS4,heS5,heS6,heS7,heS8,heSZ],
  toracica: [stepP0,toS1,toS2,toS3,toS4,toSZ],
  libre: [stepP0,lbS1,lbS2,lbS3,lbS4,lbSZ],
+ sueloPelvico: [spS1,spS2,spS3,spS4,spS5,spS6,spS7,spSZ],
  };
  stepFns[curProto][curStep](wrap);
  // Restaurar valores de selects inline (los que usan onchange="D['x']=this.value")
@@ -3429,8 +3435,220 @@ Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEU
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FACTORES ALGORITMO (7 protocolos)
+// SUELO PÉLVICO — protocolo completo
 // ─────────────────────────────────────────────────────────────────────────────
+function spS1(w){
+ w.appendChild(mkCard('Datos generales','',[mkInp('Teléfono','tel','','spTelefono'),mkInp('Profesión','text','','spProfesion'),mkInp('Fecha de evaluación','date','','spFechaEval')]));
+ const mc=ce('div','card');mc.innerHTML='<div class="ct">Motivo de consulta</div>';
+ const ta=document.createElement('textarea');ta.rows=3;ta.style.width='100%';ta.style.resize='vertical';ta.placeholder='Motivo principal de consulta';
+ ta.value=D.spMotivo||'';ta.oninput=()=>D.spMotivo=ta.value;mc.appendChild(ta);w.appendChild(mc);
+ mkBnav(w,false,'Siguiente →',()=>{curStep++;renderProto();},1);
+}
+function spS2(w){
+ w.appendChild(mkCard('Antecedentes médicos','',[
+ mkSel('Hipertensión',[['no','No'],['si','Sí']],'spHta'),
+ mkSel('Diabetes',[['no','No'],['si','Sí']],'spDiabetes'),
+ mkSel('Enfermedades neurológicas',[['no','No'],['si','Sí']],'spNeuro'),
+ mkSel('Enfermedades reumatológicas',[['no','No'],['si','Sí']],'spReuma'),
+ mkSel('Enfermedades digestivas',[['no','No'],['si','Sí']],'spDigest'),
+ mkInp('Cirugías previas','text','','spCirugias'),
+ mkInp('Medicación habitual','text','','spMedicacion'),
+ mkInp('Alergias','text','','spAlergias'),
+ ]));
+ const gc2=ce('div','card');gc2.innerHTML='<div class="ct">Antecedentes ginecológicos</div>';
+ const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';
+ [mkInp('Edad de menarquia','number','años','spMenarquia'),mkSel('Regularidad menstrual',[['reg','Regular'],['irreg','Irregular'],['na','No aplica']],'spReglaReg'),mkSel('Dolor menstrual',[['no','No'],['leve','Leve'],['mod','Moderado'],['inten','Intenso']],'spDismenorrea'),mkSel('Menopausia',[['no','No'],['peri','Perimenopausia'],['si','Sí']],'spMenopausia'),mkSel('Terapia hormonal',[['no','No'],['si','Sí']],'spTerapiaHormonal'),mkSel('Infecciones ginecológicas',[['no','No'],['oca','Ocasionales'],['rec','Recurrentes']],'spInfeccionesGine')].forEach(f=>g.appendChild(f));
+ gc2.appendChild(g);w.appendChild(gc2);
+ const oc=ce('div','card');oc.innerHTML='<div class="ct">Antecedentes obstétricos</div>';
+ const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';
+ [mkInp('Número de embarazos','number','','spEmbarazos'),mkInp('Número de partos','number','','spPartos'),mkSel('Tipo de parto',[['vag','Vaginal'],['inst','Instrumentado'],['ces','Cesárea'],['mix','Varios tipos']],'spTipoParto'),mkSel('Episiotomía',[['no','No'],['si','Sí']],'spEpisiotomia'),mkSel('Desgarros',[['no','No'],['g1','Grado I'],['g2','Grado II'],['g3','Grado III'],['g4','Grado IV']],'spDesgarro'),mkInp('Complicaciones posparto','text','','spComplicPosparto'),mkInp('Disfunciones posparto','text','','spDisfuncPosparto')].forEach(f=>g2.appendChild(f));
+ oc.appendChild(g2);w.appendChild(oc);
+ mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);
+}
+function spS3(w){
+ w.appendChild(mkCard('Síntomas urinarios','',[
+ mkInp('Frecuencia miccional diurna','text','veces/día','spFrecMiccDiurna'),
+ mkInp('Nicturia','text','veces/noche','spNicturia'),
+ mkSel('Urgencia urinaria',[['no','No'],['oca','Ocasional'],['frec','Frecuente']],'spUrgenciaUrinaria'),
+ mkSel('Incontinencia urinaria',[['no','No'],['esf','De esfuerzo'],['urg','De urgencia'],['mix','Mixta']],'spIncontUrinaria'),
+ mkSel('Uso de absorbentes',[['no','No'],['oca','Ocasional'],['diario','Diario']],'spAbsorbentes'),
+ mkSel('Dolor o escozor al orinar',[['no','No'],['si','Sí']],'spDisuria'),
+ mkSel('Sensación de vaciado incompleto',[['no','No'],['si','Sí']],'spVaciadoIncompleto'),
+ ]));
+ w.appendChild(mkCard('Síntomas intestinales','',[
+ mkInp('Frecuencia de deposiciones','text','veces/semana','spFrecDeposiciones'),
+ mkSel('Estreñimiento',[['no','No'],['oca','Ocasional'],['frec','Frecuente']],'spEstrenimiento'),
+ mkSel('Esfuerzo defecatorio',[['no','No'],['si','Sí']],'spEsfuerzoDefecatorio'),
+ mkSel('Sensación de evacuación incompleta',[['no','No'],['si','Sí']],'spEvacIncompleta'),
+ mkSel('Incontinencia fecal',[['no','No'],['oca','Ocasional'],['frec','Frecuente']],'spIncontFecal'),
+ mkSel('Incontinencia de gases',[['no','No'],['oca','Ocasional'],['frec','Frecuente']],'spIncontGases'),
+ mkSel('Dolor al defecar',[['no','No'],['si','Sí']],'spDolorDefecar'),
+ ]));
+ mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);
+}
+function spOmitirSexual(){D.spOmitirSexual=true;renderProto();}
+function spS4(w){
+ if(D.spOmitirSexual){
+ const oc=ce('div','card');oc.innerHTML='<div class="ct">Síntomas sexuales</div><p style="font-size:13px;color:var(--muted)">Sección omitida.</p>';
+ const reactivar=ce('button','btn');reactivar.style.cssText='margin-top:8px;background:none;border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--font);color:var(--muted)';
+ reactivar.textContent='Mostrar esta sección';reactivar.onclick=()=>{D.spOmitirSexual=false;renderProto();};
+ oc.appendChild(reactivar);w.appendChild(oc);
+ }else{
+ const oc=ce('div','card');
+ oc.innerHTML='<div class="ct" style="display:flex;align-items:center;justify-content:space-between">Síntomas sexuales<button id="spOmitirBtn" style="background:none;border:1px solid var(--border);padding:6px 10px;border-radius:8px;font-size:11px;cursor:pointer;font-family:var(--font);color:var(--muted)">Omitir esta sección</button></div>';
+ w.appendChild(oc);
+ setTimeout(()=>{const b=$('spOmitirBtn');if(b)b.onclick=spOmitirSexual;},0);
+ const g=ce('div','grid');g.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';
+ [mkSel('Actividad sexual',[['si','Activa'],['no','No activa']],'spActividadSexual'),mkSel('Dolor durante relaciones',[['no','No'],['si','Sí']],'spDolorRelaciones'),mkSel('Dolor superficial',[['no','No'],['si','Sí']],'spDolorSuperficial'),mkSel('Dolor profundo',[['no','No'],['si','Sí']],'spDolorProfundo'),mkSel('Disminución del deseo',[['no','No'],['si','Sí']],'spDismDeseo'),mkSel('Dificultad para orgasmo',[['no','No'],['si','Sí']],'spDifOrgasmo'),mkSel('Sequedad vaginal',[['no','No'],['si','Sí']],'spSequedad'),mkSel('Dolor posterior a relaciones',[['no','No'],['si','Sí']],'spDolorPostRelacion')].forEach(f=>g.appendChild(f));
+ oc.appendChild(g);
+ }
+ const dp=ce('div','card');dp.innerHTML='<div class="ct">Dolor pélvico</div>';
+ const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';
+ [mkSel('Localización',[['ant','Anterior'],['post','Posterior'],['lat','Lateral'],['dif','Difuso']],'spDolorLoc'),mkInp('Inicio','text','','spDolorInicio'),mkInp('Factores agravantes','text','','spFactAgravantes'),mkInp('Factores que alivian','text','','spFactAlivian'),mkInp('Duración','text','','spDolorDuracion'),mkSel('Relación con',[['mens','Menstruación'],['micc','Micción'],['defec','Defecación'],['relac','Relaciones sexuales'],['ning','Ninguna']],'spDolorRelacionCon')].forEach(f=>g2.appendChild(f));
+ dp.appendChild(g2);
+ dp.appendChild(mkEva('EVA dolor pélvico (0-10)','spDolorEva'));
+ w.appendChild(dp);
+ mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},4);
+}
+function spS5(w){
+ w.appendChild(mkCard('Prolapsos','',[
+ mkSel('Sensación de peso vaginal',[['no','No'],['oca','Ocasional'],['frec','Frecuente']],'spPesoVaginal'),
+ mkSel('Sensación de bulto',[['no','No'],['si','Sí']],'spBulto'),
+ mkSel('Empeora al final del día',[['no','No'],['si','Sí']],'spEmpeoraFinalDia'),
+ mkSel('Necesidad de recolocación manual',[['no','No'],['si','Sí']],'spRecolocacionManual'),
+ ]));
+ w.appendChild(mkCard('Actividad física y hábitos','',[
+ mkInp('Tipo de ejercicio','text','','spTipoEjercicio'),
+ mkInp('Frecuencia semanal','text','días/semana','spFrecSemanal'),
+ mkSel('Deportes de impacto',[['no','No'],['si','Sí']],'spDeporteImpacto'),
+ mkInp('Horas sentado al día','number','h','spHorasSentado'),
+ mkInp('Consumo de agua','text','litros/día','spConsumoAgua'),
+ mkSel('Café',[['no','No'],['mod','Moderado'],['alto','Alto consumo']],'spCafe'),
+ mkSel('Tabaco',[['no','No'],['si','Sí']],'spTabaco'),
+ mkSel('Alcohol',[['no','No'],['oca','Ocasional'],['frec','Frecuente']],'spAlcohol'),
+ ]));
+ mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},5);
+}
+function spCkBand(){const any=Array.from(document.querySelectorAll('input[name="spBanderas"]:checked')).length>0;const el=$('spBanderaWarn');if(el)el.style.display=any?'block':'none';}
+function spS6(w){
+ w.appendChild(mkCard('Aspecto emocional','',[
+ mkSel('Estrés',[['no','No'],['leve','Leve'],['mod','Moderado'],['alto','Alto']],'spEstres'),
+ mkSel('Ansiedad',[['no','No'],['leve','Leve'],['mod','Moderada'],['alta','Alta']],'spAnsiedad'),
+ mkSel('Calidad del sueño',[['buena','Buena'],['regular','Regular'],['mala','Mala']],'spSueno'),
+ mkSel('Impacto en calidad de vida',[['bajo','Bajo'],['mod','Moderado'],['alto','Alto']],'spImpactoVida'),
+ ]));
+ const bc=ce('div','card');bc.innerHTML=`<div class="ct">Banderas rojas</div>
+ <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Marcar solo si están PRESENTES</p>
+ <div id="spBanderaWarn" style="display:none;background:#fde8e8;border:1px solid #f5c6c6;border-radius:var(--r-sm);padding:10px;font-size:12px;color:#c0392b;margin-bottom:12px">Bandera roja — valorar derivación médica urgente</div>
+ <div class="anam-checks">
+ ${['Sangrado vaginal inexplicado','Hematuria','Pérdida importante de peso','Dolor nocturno severo','Infecciones recurrentes','Síntomas neurológicos'].map(b=>`<label class="anam-ck"><input type="checkbox" name="spBanderas" onchange="spCkBand()"> ${b}</label>`).join('')}
+ </div>`;
+ w.appendChild(bc);
+ mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},6);
+}
+function spS7(w){
+ const oc=ce('div','card');oc.innerHTML='<div class="ct">Observación</div>';
+ const g=ce('div','');g.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';
+ [mkSel('Postura',[['nor','Normal'],['ante','Anteversión pélvica'],['retro','Retroversión pélvica'],['otra','Otra alteración']],'spPostura'),mkSel('Respiración',[['diafrag','Diafragmática'],['toracica','Torácica/costal'],['mixta','Mixta'],['parad','Paradójica']],'spRespiracion'),mkInp('Cicatrices (abdomen/perineo)','text','','spCicatricesObs')].forEach(f=>g.appendChild(f));
+ oc.appendChild(g);w.appendChild(oc);
+ const ac=ce('div','card');ac.innerHTML='<div class="ct">Abdomen</div>';
+ const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';
+ [mkSel('Diástasis',[['no','No'],['leve','Leve <2cm'],['mod','Moderada 2-3cm'],['sev','Severa >3cm']],'spDiastasis'),mkInp('Cicatrices abdominales','text','','spCicatricesAbd'),mkSel('Dolor a la palpación',[['no','No'],['si','Sí']],'spDolorAbdPalp')].forEach(f=>g2.appendChild(f));
+ ac.appendChild(g2);w.appendChild(ac);
+ const sc=ce('div','card');sc.innerHTML='<div class="ct">Suelo pélvico</div>';
+ const g3=ce('div','');g3.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';
+ [mkSel('Valoración externa',[['nor','Normal'],['alt','Alterada']],'spValExterna'),mkSel('Valoración interna',[['nr','No realizada'],['nor','Normal'],['alt','Alterada']],'spValInterna'),mkSel('Tono',[['hipo','Hipotónico'],['nor','Normotónico'],['hiper','Hipertónico']],'spTono'),mkSel('Fuerza (Oxford 0-5)',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5']],'spFuerzaOxford'),mkSel('Resistencia',[['baja','Baja'],['nor','Normal'],['buena','Buena']],'spResistencia'),mkSel('Coordinación',[['nor','Normal'],['alt','Alterada']],'spCoordinacion'),mkSel('Puntos gatillo',[['no','No'],['si','Sí']],'spPuntosGatillo'),mkSel('Prolapso (POP-Q simplificado)',[['no','Sin prolapso'],['g1','Grado I'],['g2','Grado II'],['g3','Grado III'],['g4','Grado IV']],'spProlapsoPopq')].forEach(f=>g3.appendChild(f));
+ sc.appendChild(g3);w.appendChild(sc);
+ mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},7);
+}
+function spSZ(w){
+ const getChk=name=>Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(e=>e.parentElement.textContent.trim());
+ const sd={
+ telefono:D.spTelefono||'',profesion:D.spProfesion||'',fechaEval:D.spFechaEval||'',motivoConsulta:D.spMotivo||'',
+ hta:D.spHta||'',diabetes:D.spDiabetes||'',neuro:D.spNeuro||'',reuma:D.spReuma||'',digest:D.spDigest||'',
+ cirugias:D.spCirugias||'',medicacion:D.spMedicacion||'',alergias:D.spAlergias||'',
+ menarquia:D.spMenarquia||'',reglaReg:D.spReglaReg||'',dismenorrea:D.spDismenorrea||'',menopausia:D.spMenopausia||'',terapiaHormonal:D.spTerapiaHormonal||'',infeccionesGine:D.spInfeccionesGine||'',
+ embarazos:D.spEmbarazos||'',partos:D.spPartos||'',tipoParto:D.spTipoParto||'',episiotomia:D.spEpisiotomia||'',desgarro:D.spDesgarro||'',complicPosparto:D.spComplicPosparto||'',disfuncPosparto:D.spDisfuncPosparto||'',
+ frecMiccDiurna:D.spFrecMiccDiurna||'',nicturia:D.spNicturia||'',urgenciaUrinaria:D.spUrgenciaUrinaria||'',incontUrinaria:D.spIncontUrinaria||'',absorbentes:D.spAbsorbentes||'',disuria:D.spDisuria||'',vaciadoIncompleto:D.spVaciadoIncompleto||'',
+ frecDeposiciones:D.spFrecDeposiciones||'',estrenimiento:D.spEstrenimiento||'',esfuerzoDefecatorio:D.spEsfuerzoDefecatorio||'',evacIncompleta:D.spEvacIncompleta||'',incontFecal:D.spIncontFecal||'',incontGases:D.spIncontGases||'',dolorDefecar:D.spDolorDefecar||'',
+ sexualOmitida:!!D.spOmitirSexual,
+ actividadSexual:D.spActividadSexual||'',dolorRelaciones:D.spDolorRelaciones||'',dolorSuperficial:D.spDolorSuperficial||'',dolorProfundo:D.spDolorProfundo||'',dismDeseo:D.spDismDeseo||'',difOrgasmo:D.spDifOrgasmo||'',sequedad:D.spSequedad||'',dolorPostRelacion:D.spDolorPostRelacion||'',
+ dolorLoc:D.spDolorLoc||'',dolorInicio:D.spDolorInicio||'',factAgravantes:D.spFactAgravantes||'',factAlivian:D.spFactAlivian||'',dolorEva:D.spDolorEva||0,dolorDuracion:D.spDolorDuracion||'',dolorRelacionCon:D.spDolorRelacionCon||'',
+ pesoVaginal:D.spPesoVaginal||'',bulto:D.spBulto||'',empeoraFinalDia:D.spEmpeoraFinalDia||'',recolocacionManual:D.spRecolocacionManual||'',
+ tipoEjercicio:D.spTipoEjercicio||'',frecSemanal:D.spFrecSemanal||'',deporteImpacto:D.spDeporteImpacto||'',horasSentado:D.spHorasSentado||'',consumoAgua:D.spConsumoAgua||'',cafe:D.spCafe||'',tabaco:D.spTabaco||'',alcohol:D.spAlcohol||'',
+ estres:D.spEstres||'',ansiedad:D.spAnsiedad||'',sueno:D.spSueno||'',impactoVida:D.spImpactoVida||'',
+ banderas:getChk('spBanderas'),
+ postura:D.spPostura||'',respiracion:D.spRespiracion||'',cicatricesObs:D.spCicatricesObs||'',
+ diastasis:D.spDiastasis||'',cicatricesAbd:D.spCicatricesAbd||'',dolorAbdPalp:D.spDolorAbdPalp||'',
+ valExterna:D.spValExterna||'',valInterna:D.spValInterna||'',tono:D.spTono||'',fuerzaOxford:D.spFuerzaOxford||'',resistencia:D.spResistencia||'',coordinacion:D.spCoordinacion||'',puntosGatillo:D.spPuntosGatillo||'',prolapsoPopq:D.spProlapsoPopq||'',
+ };
+ renderInformeSueloPelvico(w,sd);
+}
+async function renderInformeSueloPelvico(w,datos){
+ if(!anamPacId){toast('Selecciona un paciente primero',false);return;}
+ const fisioObj=fisios.find(f=>f.id===fisioSelId)||{};
+ const fisioNom=fisioObj.nombre||'';
+ const fisioCol=fisioObj.colegiado||'';
+ const gc=ce('div','card');gc.innerHTML='<div class="ct">Informe para el paciente — generado por IA</div>';
+ const btn=ce('button','gen-btn');btn.innerHTML='Generar informe con IA';
+ const res=ce('div','rbody');
+ btn.onclick=async()=>{
+ btn.disabled=true;btn.innerHTML='<div class="spin"></div> Analizando...';
+ const fa=arr=>(!arr||!arr.length)?'-':arr.join(', ');
+ const prompt=`Eres un fisioterapeuta especializado en suelo pélvico. Informe de valoración de suelo pélvico para ${anamPacNom}. Profesional pero explicado a la paciente, términos técnicos entre paréntesis. En español, sin markdown, secciones en MAYÚSCULAS. Trata el tema con la máxima sensibilidad y respeto.
+Fisio: ${fisioNom} | Fecha: ${datos.fechaEval||new Date().toLocaleDateString('es-ES')}
+Paciente: ${anamPacNom} | Profesión: ${datos.profesion||'-'}
+Motivo de consulta: ${datos.motivoConsulta||'-'}
+Antecedentes médicos: HTA ${datos.hta||'-'}, diabetes ${datos.diabetes||'-'}, neurológicas ${datos.neuro||'-'}, digestivas ${datos.digest||'-'} | Cirugías: ${datos.cirugias||'-'} | Medicación: ${datos.medicacion||'-'}
+Antecedentes obstétricos: Embarazos ${datos.embarazos||'-'} | Partos ${datos.partos||'-'} | Tipo parto: ${datos.tipoParto||'-'} | Episiotomía: ${datos.episiotomia||'-'} | Desgarro: ${datos.desgarro||'-'} | Complicaciones posparto: ${datos.complicPosparto||'-'}
+Síntomas urinarios: Frecuencia diurna ${datos.frecMiccDiurna||'-'} | Nicturia ${datos.nicturia||'-'} | Urgencia ${datos.urgenciaUrinaria||'-'} | Incontinencia ${datos.incontUrinaria||'-'} | Vaciado incompleto ${datos.vaciadoIncompleto||'-'}
+Síntomas intestinales: Estreñimiento ${datos.estrenimiento||'-'} | Incontinencia fecal ${datos.incontFecal||'-'} | Dolor al defecar ${datos.dolorDefecar||'-'}
+${datos.sexualOmitida?'Síntomas sexuales: sección omitida por la paciente.':'Síntomas sexuales: dolor en relaciones '+(datos.dolorRelaciones||'-')+', superficial '+(datos.dolorSuperficial||'-')+', profundo '+(datos.dolorProfundo||'-')+', sequedad '+(datos.sequedad||'-')}
+Dolor pélvico: Localización ${datos.dolorLoc||'-'} | EVA ${datos.dolorEva||0}/10 | Relación con ${datos.dolorRelacionCon||'-'} | Agravantes: ${datos.factAgravantes||'-'}
+Prolapsos: Peso vaginal ${datos.pesoVaginal||'-'} | Sensación de bulto ${datos.bulto||'-'} | Recolocación manual ${datos.recolocacionManual||'-'}
+Hábitos: Ejercicio ${datos.tipoEjercicio||'-'} | Horas sentada ${datos.horasSentado||'-'} | Tabaco ${datos.tabaco||'-'}
+Aspecto emocional: Estrés ${datos.estres||'-'} | Ansiedad ${datos.ansiedad||'-'} | Impacto en calidad de vida ${datos.impactoVida||'-'}
+Banderas rojas: ${fa(datos.banderas)}
+Exploración — Abdomen: Diástasis ${datos.diastasis||'-'} | Suelo pélvico: Tono ${datos.tono||'-'} | Fuerza Oxford ${datos.fuerzaOxford||'-'}/5 | Coordinación ${datos.coordinacion||'-'} | Puntos gatillo ${datos.puntosGatillo||'-'} | Prolapso POP-Q ${datos.prolapsoPopq||'-'}
+Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS / PLAN DE TRATAMIENTO / RECOMENDACIONES / PRONÓSTICO`;
+ try{
+ const r=await fetch('/api/informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos,dolorPrincipal:prompt,evaActual:datos.dolorEva||0}})});
+ const d=await r.json();
+ if(d.ok&&d.informe){
+ informeGenerado=d.informe;
+ clearAnamD();
+ guardarInformeLocal(anamPacNom,anamPacId,fisioNom,curProto||'sueloPelvico',d.informe);
+ res.textContent=d.informe;res.style.display='block';
+ btn.className='gen-btn';btn.style.background='#2e7d32';
+ btn.innerHTML='Informe generado — Descargar PDF';
+ btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,curProto||'sueloPelvico');
+ let eb1=$('btnEdit1');if(!eb1){eb1=ce('button','btn');eb1.id='btnEdit1';eb1.style.cssText='margin-top:8px;width:100%;background:white;color:var(--black);border:1.5px solid var(--border);padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)';eb1.textContent='Editar informe';eb1.onclick=()=>editarInforme(res,eb1);res.parentNode.insertBefore(eb1,res.nextSibling);}
+ let saveBtn=$('btnGuardarInforme');
+ if(!saveBtn){
+ saveBtn=ce('button','btn');
+ saveBtn.id='btnGuardarInforme';
+ saveBtn.style.cssText='margin-top:10px;width:100%;background:var(--lila,#ada3da);color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer';
+ saveBtn.textContent='Guardar informe en perfil del paciente';
+ saveBtn.onclick=async()=>{
+ saveBtn.disabled=true;saveBtn.textContent='Guardando...';
+ try{
+ const rs=await fetch('/api/pacientes?action=guardar-informe-panel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,tipo:curProto||'sueloPelvico',contenido:d.informe,fecha:new Date().toLocaleDateString('es-ES')})});
+ const ds=await rs.json();
+ if(ds.ok){saveBtn.textContent='✓ Guardado en el perfil del paciente';saveBtn.style.background='#2e7d32';}
+ else{saveBtn.textContent='Error al guardar';saveBtn.disabled=false;}
+ }catch(e){saveBtn.textContent='Error al guardar';saveBtn.disabled=false;}
+ };
+ res.parentNode.insertBefore(saveBtn,res.nextSibling);
+ }
+ }else{
+ toast(d.error||'Error al generar informe',false);
+ btn.disabled=false;btn.innerHTML='Generar informe con IA';
+ }
+ }catch(e){toast('Error de conexión',false);btn.disabled=false;btn.innerHTML='Generar informe con IA';}
+ };
+ gc.appendChild(btn);gc.appendChild(res);w.appendChild(gc);
+}
+
 function gFR(){const f=[];if(['mo','se'].includes(D.fcuad))f.push({t:'Déficit fuerza cuádriceps',i:'Fortalecimiento es la base de la recuperación.'});if(D.ines==='ced')f.push({t:'Inestabilidad real',i:'Trabajo propioceptivo prioritario.'});if(['pii','piii'].includes(D.lach))f.push({t:'Lachman positivo — posible LCA',i:'Valorar derivación.'});if(D.mcm&&!['no','neg'].includes(D.mcm))f.push({t:'McMurray positivo — posible menisco',i:'Revisar imagen.'});if(D.evol==='cr')f.push({t:'Evolución crónica',i:'Carga progresiva como base.'});return f;}
 function gFRF(){const f=[];if(D.bloq==='re')f.push('Bloqueo articular real → valorar cirugía');if(D.noc==='fr')f.push('Dolor nocturno → descartar origen sistémico');if(D.lach==='piii')f.push('Lachman III → derivar traumatología');return f;}
 function gFF(){const f=[];if(['le','mo','se'].includes(D.dors))f.push({t:'Acortamiento cadena posterior',i:'Prioritario desde fase 1.'});if(['ac','bip','tr'].includes(D.ini))f.push({t:'Cambio brusco de carga',i:'Modificar actividad ES tratamiento.'});if(D.tpie==='pla')f.push({t:'Pie plano / hiperpronación',i:'Ortesis + ejercicio intrínseco.'});if(['pla','des','min'].includes(D.cal))f.push({t:'Calzado inadecuado',i:'Sin cambio de calzado el tto es insuficiente.'});if(['re','mr','im'].includes(D.hr))f.push({t:'Déficit sóleo / gemelo',i:'Excéntrico es la base de fase 2.'});return f;}
