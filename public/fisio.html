@@ -3434,6 +3434,14 @@ Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEU
  const bb=ce('button','btn-back');bb.textContent='← Volver';bb.onclick=()=>{curStep--;renderProto();};bk.appendChild(bb);w.appendChild(bk);
 }
 
+function mkObs(key){
+ const oc=ce('div','card');oc.innerHTML='<div class="ct">Observaciones</div>';
+ const ta=document.createElement('textarea');ta.rows=3;ta.style.width='100%';ta.style.resize='vertical';
+ ta.placeholder='Anotaciones, matices o información adicional sobre este apartado...';
+ ta.value=D[key]||'';ta.oninput=()=>{D[key]=ta.value;saveAnamD();};
+ oc.appendChild(ta);return oc;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SUELO PÉLVICO — protocolo completo
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3442,6 +3450,7 @@ function spS1(w){
  const mc=ce('div','card');mc.innerHTML='<div class="ct">Motivo de consulta</div>';
  const ta=document.createElement('textarea');ta.rows=3;ta.style.width='100%';ta.style.resize='vertical';ta.placeholder='Motivo principal de consulta';
  ta.value=D.spMotivo||'';ta.oninput=()=>D.spMotivo=ta.value;mc.appendChild(ta);w.appendChild(mc);
+ w.appendChild(mkObs('spObs1'));
  mkBnav(w,false,'Siguiente →',()=>{curStep++;renderProto();},1);
 }
 function spS2(w){
@@ -3463,6 +3472,7 @@ function spS2(w){
  const g2=ce('div','');g2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';
  [mkInp('Número de embarazos','number','','spEmbarazos'),mkInp('Número de partos','number','','spPartos'),mkSel('Tipo de parto',[['vag','Vaginal'],['inst','Instrumentado'],['ces','Cesárea'],['mix','Varios tipos']],'spTipoParto'),mkSel('Episiotomía',[['no','No'],['si','Sí']],'spEpisiotomia'),mkSel('Desgarros',[['no','No'],['g1','Grado I'],['g2','Grado II'],['g3','Grado III'],['g4','Grado IV']],'spDesgarro'),mkInp('Complicaciones posparto','text','','spComplicPosparto'),mkInp('Disfunciones posparto','text','','spDisfuncPosparto')].forEach(f=>g2.appendChild(f));
  oc.appendChild(g2);w.appendChild(oc);
+ w.appendChild(mkObs('spObs2'));
  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},2);
 }
 function spS3(w){
@@ -3484,6 +3494,7 @@ function spS3(w){
  mkSel('Incontinencia de gases',[['no','No'],['oca','Ocasional'],['frec','Frecuente']],'spIncontGases'),
  mkSel('Dolor al defecar',[['no','No'],['si','Sí']],'spDolorDefecar'),
  ]));
+ w.appendChild(mkObs('spObs3'));
  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},3);
 }
 function spOmitirSexual(){D.spOmitirSexual=true;renderProto();}
@@ -3508,6 +3519,7 @@ function spS4(w){
  dp.appendChild(g2);
  dp.appendChild(mkEva('EVA dolor pélvico (0-10)','spDolorEva'));
  w.appendChild(dp);
+ w.appendChild(mkObs('spObs4'));
  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},4);
 }
 function spS5(w){
@@ -3527,6 +3539,7 @@ function spS5(w){
  mkSel('Tabaco',[['no','No'],['si','Sí']],'spTabaco'),
  mkSel('Alcohol',[['no','No'],['oca','Ocasional'],['frec','Frecuente']],'spAlcohol'),
  ]));
+ w.appendChild(mkObs('spObs5'));
  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},5);
 }
 function spCkBand(){const any=Array.from(document.querySelectorAll('input[name="spBanderas"]:checked')).length>0;const el=$('spBanderaWarn');if(el)el.style.display=any?'block':'none';}
@@ -3544,6 +3557,7 @@ function spS6(w){
  ${['Sangrado vaginal inexplicado','Hematuria','Pérdida importante de peso','Dolor nocturno severo','Infecciones recurrentes','Síntomas neurológicos'].map(b=>`<label class="anam-ck"><input type="checkbox" name="spBanderas" onchange="spCkBand()"> ${b}</label>`).join('')}
  </div>`;
  w.appendChild(bc);
+ w.appendChild(mkObs('spObs6'));
  mkBnav(w,true,'Siguiente →',()=>{curStep++;renderProto();},6);
 }
 function spS7(w){
@@ -3559,6 +3573,7 @@ function spS7(w){
  const g3=ce('div','');g3.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px';
  [mkSel('Valoración externa',[['nor','Normal'],['alt','Alterada']],'spValExterna'),mkSel('Valoración interna',[['nr','No realizada'],['nor','Normal'],['alt','Alterada']],'spValInterna'),mkSel('Tono',[['hipo','Hipotónico'],['nor','Normotónico'],['hiper','Hipertónico']],'spTono'),mkSel('Fuerza (Oxford 0-5)',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5']],'spFuerzaOxford'),mkSel('Resistencia',[['baja','Baja'],['nor','Normal'],['buena','Buena']],'spResistencia'),mkSel('Coordinación',[['nor','Normal'],['alt','Alterada']],'spCoordinacion'),mkSel('Puntos gatillo',[['no','No'],['si','Sí']],'spPuntosGatillo'),mkSel('Prolapso (POP-Q simplificado)',[['no','Sin prolapso'],['g1','Grado I'],['g2','Grado II'],['g3','Grado III'],['g4','Grado IV']],'spProlapsoPopq')].forEach(f=>g3.appendChild(f));
  sc.appendChild(g3);w.appendChild(sc);
+ w.appendChild(mkObs('spObs7'));
  mkBnav(w,true,'Generar informe',()=>{curStep++;renderProto();},7);
 }
 function spSZ(w){
@@ -3581,6 +3596,7 @@ function spSZ(w){
  postura:D.spPostura||'',respiracion:D.spRespiracion||'',cicatricesObs:D.spCicatricesObs||'',
  diastasis:D.spDiastasis||'',cicatricesAbd:D.spCicatricesAbd||'',dolorAbdPalp:D.spDolorAbdPalp||'',
  valExterna:D.spValExterna||'',valInterna:D.spValInterna||'',tono:D.spTono||'',fuerzaOxford:D.spFuerzaOxford||'',resistencia:D.spResistencia||'',coordinacion:D.spCoordinacion||'',puntosGatillo:D.spPuntosGatillo||'',prolapsoPopq:D.spProlapsoPopq||'',
+ obs1:D.spObs1||'',obs2:D.spObs2||'',obs3:D.spObs3||'',obs4:D.spObs4||'',obs5:D.spObs5||'',obs6:D.spObs6||'',obs7:D.spObs7||'',
  };
  renderInformeSueloPelvico(w,sd);
 }
@@ -3610,6 +3626,7 @@ Hábitos: Ejercicio ${datos.tipoEjercicio||'-'} | Horas sentada ${datos.horasSen
 Aspecto emocional: Estrés ${datos.estres||'-'} | Ansiedad ${datos.ansiedad||'-'} | Impacto en calidad de vida ${datos.impactoVida||'-'}
 Banderas rojas: ${fa(datos.banderas)}
 Exploración — Abdomen: Diástasis ${datos.diastasis||'-'} | Suelo pélvico: Tono ${datos.tono||'-'} | Fuerza Oxford ${datos.fuerzaOxford||'-'}/5 | Coordinación ${datos.coordinacion||'-'} | Puntos gatillo ${datos.puntosGatillo||'-'} | Prolapso POP-Q ${datos.prolapsoPopq||'-'}
+Observaciones del fisioterapeuta: ${[datos.obs1,datos.obs2,datos.obs3,datos.obs4,datos.obs5,datos.obs6,datos.obs7].filter(Boolean).join(' | ')||'-'}
 Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS / PLAN DE TRATAMIENTO / RECOMENDACIONES / PRONÓSTICO`;
  try{
  const r=await fetch('/api/informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos,dolorPrincipal:prompt,evaActual:datos.dolorEva||0}})});
