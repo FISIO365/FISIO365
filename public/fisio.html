@@ -367,7 +367,7 @@ input[type=number]{text-align:center}
  <div class="sb-item" id="sb-msg" onclick="showSection('msg')">
  Mensajes <span id="sb-msg-badge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:middle"></span>
  </div>
- <div class="sb-item" id="sb-record" onclick="showSection('record')">
+ <div class="sb-item" id="sb-record" onclick="showSection('record')" style="display:none">
  Recordatorios
  </div>
  <div class="sb-item" id="sb-school" onclick="showSection('school')" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px">
@@ -7244,7 +7244,7 @@ async function renderRecordatorios(wrap){
  if(!telefono){ toast('Este paciente no tiene teléfono guardado',false); return; }
  const dia = esViernes ? 'El lunes' : 'Mañana';
  const cierre = esViernes ? 'Nos vemos :)' : 'Hasta mañana :)';
- const texto = `Hola ${c.pacienteNombre||''},\\n\\n${dia} tienes cita en FISIO365 a las ${c.hora||''}\\n\\n${cierre}`;
+ const texto = `Hola ${c.pacienteNombre||''},\n\n${dia} tienes cita en FISIO365 a las ${c.hora||''}\n\n${cierre}`;
  window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`,'_blank');
  };
 
