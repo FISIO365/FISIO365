@@ -4977,9 +4977,8 @@ function renderWiki(wrap, rutaForzada){
  if(saved){const d=JSON.parse(saved);enProgreso=d.scores&&d.scores.some(s=>s.qs&&s.qs.some(q=>q!==null));}
  }catch(e){}
 
- // Bloqueado si el anterior no está completado (excepto el primero)
- const anterior = idx>0 ? misRutas[idx-1] : null;
- const bloqueado = anterior && progresoFisio['wiki_'+anterior.id]?.estado !== 'completado';
+ // Los cursos ya no se bloquean entre sí — se puede entrar en cualquiera en cualquier orden
+ const bloqueado = false;
 
  const row=ce('div','');
  row.style.cssText=`width:100%;max-width:560px;background:${completada?'#f0fdf8':bloqueado?'#fafafa':'white'};border:1.5px solid ${completada?'#9FE1CB':bloqueado?'var(--border)':'var(--border)'};border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;${bloqueado?'opacity:.5':'cursor:pointer;transition:all .15s'}`;
