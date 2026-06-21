@@ -71,12 +71,11 @@ export default async function handler(req) {
       const dataGet = await rGet.json();
       const existente = (dataGet.records || [])[0];
 
-      const fechaHoy = new Date().toLocaleDateString('es-ES');
+      const fechaHoy = new Date().toISOString().split('T')[0];
       const fieldsToSave = {
         FisioId: fisioId,
         Seccion: seccion,
-        Estado: estado || 'completado',
-        Fecha: fechaHoy
+        Estado: estado || 'completado'
       };
 
       if (existente) {
