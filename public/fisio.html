@@ -5140,6 +5140,8 @@ async function loadProgreso(){
 }
 
 async function marcarProgreso(seccion){
+ const btn = document.getElementById('wikiProgresoBtn');
+ if(btn){ btn.disabled=true; btn.innerHTML='Guardando...'; }
  try{
  const r = await fetch('/api/fisios', {
  method: 'POST',
@@ -5152,16 +5154,20 @@ async function marcarProgreso(seccion){
  // Borrar progreso guardado en localStorage al completar
  try{ localStorage.removeItem('fisio365_school_'+seccion.replace('wiki_','')+'_'+(fisioActual?.id||'x')); }catch(e){}
  // Actualizar botón
- const btn = document.getElementById('wikiProgresoBtn');
  if(btn){
+ btn.disabled=false;
  btn.className = 'wiki-completado-btn hecho';
  btn.innerHTML = '✓ Marcado como completado';
  }
- // Actualizar badge en hub si existe
- renderWiki(document.getElementById('mainWrap'));
- // Volver a abrir la ruta para mantener contexto visual
+ toast('Curso completado ✓', true);
+ } else {
+ if(btn){ btn.disabled=false; btn.innerHTML='Marcar como completado'; }
+ toast('Error al guardar: ' + (d.error||'respuesta no ok'), false);
  }
- }catch(e){ toast('Error al guardar progreso', false); }
+ }catch(e){
+ if(btn){ btn.disabled=false; btn.innerHTML='Marcar como completado'; }
+ toast('Error de conexión al guardar progreso', false);
+ }
 }
 
 
