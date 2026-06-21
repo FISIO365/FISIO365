@@ -4688,11 +4688,11 @@ const WIKI_RUTAS = [
  {
  id: 'appPaciente',
  categoria: 'centro',
- titulo: 'Cómo funciona la app del paciente',
- desc: 'Lo que ve y puede hacer cada paciente desde su móvil',
+ titulo: 'Cómo funciona FISIO365',
+ desc: 'La app del paciente y el panel del fisio, de principio a fin',
  etiqueta: 'Todo el equipo',
- info: `<strong>¿Qué aprenderás aquí?</strong><br><br>Todo lo que un paciente puede ver y hacer en su app — desde que entra con su PIN hasta cómo participa en el sorteo de referidos. No es el panel que usáis vosotros, es la experiencia completa del otro lado.<br><br><strong>¿Para qué sirve?</strong><br><br>Los pacientes os preguntarán cosas de su app constantemente — cómo instalarla, por qué no ven un vídeo, cómo suben papeletas. Conociendo bien su lado, puedes resolver esas dudas en el momento sin tener que mirar nada.<br><br><strong>¿Cuánto dura?</strong><br><br>5 módulos con test interactivo. Puedes completarlo a tu ritmo.`,
- pasos: 5,
+ info: `<strong>¿Qué aprenderás aquí?</strong><br><br>Todo lo que un paciente puede ver y hacer en su app — desde que entra con su PIN hasta cómo participa en el sorteo de referidos — y también cómo está organizado el panel que usáis vosotros: anamnesis y protocolos clínicos actuales, asignación de programas, fichas de paciente, informes y mensajes.<br><br><strong>¿Para qué sirve?</strong><br><br>Los pacientes os preguntarán constantemente cosas de su app, y vosotros necesitáis dominar bien vuestra propia herramienta. Este curso cubre ambos lados.<br><br><strong>¿Cuánto dura?</strong><br><br>7 módulos con test interactivo. Puedes completarlo a tu ritmo.`,
+ pasos: 7,
  emoji: '',
  imgs: [],
  tits: [],
@@ -6775,19 +6775,19 @@ function renderFormacion(wrap, ruta){
 
  const MODS_APP_PACIENTE = [
  // ═══════════════════════════════════════
- // MÓDULO 1 — Entrar e instalar la app
+ // MÓDULO 1 — Entrar e instalar la app del paciente
  // ═══════════════════════════════════════
- {t:'Entrar e instalar la app',sub:'El primer contacto del paciente con FISIO365',
+ {t:'La app del paciente — entrar e instalarla',sub:'Lo primero que necesita saber el paciente',
  cards:[
  {ti:'Cómo entra el paciente',icon:'',body:`El paciente accede desde <b>fisio365.vercel.app</b> (sin "/fisio" — esa dirección es la vuestra). Inicia sesión con su <b>email</b> y un <b>PIN de 4 dígitos</b> que se le asigna al crear su ficha. No necesita contraseña ni registro, solo esos dos datos.`},
- {ti:'Por qué conviene que se la instale',icon:'',body:`Aunque funciona perfectamente desde el navegador, recomienda siempre a los pacientes que se instalen la app en el móvil. Se abre en pantalla completa, sin barras del navegador, y mantiene la sesión iniciada — entran directamente sin volver a escribir el PIN cada vez.`},
- {ti:'Cómo se instala',icon:'',body:`En <b>iPhone</b>: abrir en Safari, pulsar el botón de Compartir y elegir "Añadir a pantalla de inicio". En <b>Android</b>: abrir en Chrome, pulsar los tres puntos de arriba y elegir "Añadir a pantalla de inicio". En ambos casos queda un icono como el de cualquier otra app.`},
- {ti:'La propia app tiene una guía',icon:'',body:`Dentro de la app del paciente hay una sección llamada "Guía" con estos mismos pasos de instalación explicados para el paciente, además de un resumen de qué hace cada sección. Si un paciente tiene dudas, puedes decirle que la consulte ahí directamente.`}
+ {ti:'Por qué conviene que se la instale',icon:'',body:`Aunque funciona perfectamente desde el navegador, recomienda siempre a los pacientes que se instalen la app en el móvil. Se abre en pantalla completa sin barras del navegador, y mantiene la sesión iniciada — entran directamente sin volver a escribir el PIN cada vez.`},
+ {ti:'Cómo se instala en iPhone',icon:'',body:`Abrir en <b>Safari</b>, pulsar el botón de <b>Compartir ↑</b> (abajo en el centro de la pantalla) y elegir <b>"Añadir a pantalla de inicio"</b>. No funciona desde Chrome en iPhone.`},
+ {ti:'Cómo se instala en Android',icon:'',body:`Abrir en <b>Chrome</b>, pulsar los <b>tres puntos ⋮</b> arriba a la derecha y elegir <b>"Añadir a pantalla de inicio"</b>. Queda un icono como el de cualquier otra app.`},
+ {ti:'La propia app tiene una guía interna',icon:'',body:`Dentro de la app del paciente hay una sección llamada "Guía" con los pasos de instalación y un resumen de cada sección. Si un paciente tiene dudas, puedes decirle que la consulte ahí directamente.`}
  ],
  qs:[
- {q:'¿Qué necesita el paciente para entrar en su app, además del email?',opts:['Una contraseña que él mismo crea','Un PIN de 4 dígitos asignado al crear su ficha','Nada más, solo el email'],ok:1,fb:['No — no hay un sistema de contraseñas para el paciente.','¡Correcto! Email + PIN de 4 dígitos, sin necesidad de registro.','No es suficiente solo con el email.']},
- {q:'¿Por qué conviene recomendar al paciente que instale la app en vez de usarla solo en el navegador?',opts:['Es obligatorio, no funciona en navegador','Se abre en pantalla completa y mantiene la sesión iniciada','No hay ninguna diferencia real'],ok:1,fb:['No es obligatorio — funciona igual en el navegador.','¡Correcto! Mejor experiencia y no hay que volver a meter el PIN cada vez.','Sí hay diferencia, en comodidad de uso.']},
- {q:'Un paciente te pregunta cómo instalarse la app en su iPhone, ¿qué le dices?',opts:['Que la abra en Chrome y use el menú de tres puntos','Que la abra en Safari, pulse Compartir y elija "Añadir a pantalla de inicio"','Que descargue una app de la App Store'],ok:1,fb:['Eso es para Android, no para iPhone.','¡Correcto! En iPhone es desde Safari con el botón de Compartir.','No existe como app descargable en la App Store — es una web app.']}
+ {q:'¿Qué necesita el paciente para entrar en su app?',opts:['Solo el email','Email + PIN de 4 dígitos','Una contraseña que él mismo crea'],ok:1,fb:['No es suficiente solo con el email.','¡Correcto! Email + PIN de 4 dígitos asignado al crear su ficha.','No hay sistema de contraseña para el paciente.']},
+ {q:'Un paciente con iPhone quiere instalar la app. ¿Desde qué navegador debe abrirla?',opts:['Chrome','Safari','Da igual, cualquiera funciona'],ok:1,fb:['En iPhone, Chrome no permite instalar la app.','¡Correcto! Solo desde Safari se puede instalar en iPhone.','No da igual — en iPhone solo funciona desde Safari.']}
  ]
  },
  // ═══════════════════════════════════════
@@ -6796,59 +6796,87 @@ function renderFormacion(wrap, ruta){
  {t:'Mis ejercicios y Mi racha',sub:'Lo primero que ve el paciente cada día',
  cards:[
  {ti:'Mis ejercicios — la pantalla principal',icon:'',body:`Es lo primero que aparece al entrar. Muestra el programa del día: cada ejercicio con su vídeo de YouTube incrustado (se reproduce directamente, sin salir de la app), y pastillas junto al nombre con series, repeticiones y duración.`},
- {ti:'Si un vídeo no se ve',icon:'',body:`Cuando un ejercicio no tiene vídeo vinculado correctamente, en su lugar aparece un recuadro con un icono de play sin imagen de fondo. Si un paciente reporta esto, dile que se lo comentéis al fisio que le asignó el programa — normalmente se soluciona revisando cómo está guardado ese ejercicio en el programa.`},
- {ti:'Marcar como hecho',icon:'',body:`Al terminar todos los ejercicios, el paciente pulsa el botón <b>"Hecho"</b>. Le aparece la opción de añadir una nota para su fisio si quiere contarle algo sobre cómo se ha sentido — es opcional, puede marcarlo como hecho sin escribir nada.`},
- {ti:'Mi racha — constancia, no dolor',icon:'',body:`Esta sección es un calendario que muestra los días en los que el paciente ha completado sus ejercicios, junto con su racha actual y su mejor racha conseguida. Está pensada para motivar la constancia día a día, igual que cualquier app de hábitos — no registra ni pregunta por el dolor.`}
+ {ti:'Si un vídeo no se ve',icon:'',body:`Cuando un ejercicio no tiene vídeo vinculado correctamente, aparece un recuadro con un icono de play sin imagen. Esto suele pasar cuando el ejercicio se escribió a mano en el programa sin seleccionarlo del desplegable — hay que revisarlo desde el panel.`},
+ {ti:'Marcar como hecho',icon:'',body:`Al terminar, el paciente pulsa <b>"Hecho"</b>. Le aparece la opción de añadir una nota para su fisio — es completamente opcional. Puede marcarlo como hecho sin escribir nada.`},
+ {ti:'Mi racha',icon:'',body:`Calendario que muestra los días que ha completado sus ejercicios, la racha actual y la mejor racha. Está pensada para motivar la constancia, igual que cualquier app de hábitos. No registra ni pregunta por el dolor.`}
  ],
  qs:[
- {q:'¿Qué aparece si un vídeo de un ejercicio no está bien vinculado?',opts:['La app no muestra el ejercicio en absoluto','Un recuadro con un icono de play, sin vídeo de fondo','Un mensaje de error visible para el paciente'],ok:1,fb:['No — el ejercicio se sigue mostrando, solo falla el vídeo.','¡Correcto! Aparece el recuadro vacío con el icono.','No aparece ningún mensaje de error explícito.']},
- {q:'¿Es obligatorio escribir una nota al pulsar "Hecho"?',opts:['Sí, siempre hay que escribir algo','No, es completamente opcional','Solo si el fisio lo ha pedido expresamente'],ok:1,fb:['No es obligatorio.','¡Correcto! Puede marcarlo como hecho sin escribir nada.','No depende de eso — siempre es opcional para el paciente.']},
- {q:'¿Qué mide la sección "Mi racha"?',opts:['El nivel de dolor diario del paciente','Los días que ha completado sus ejercicios y su constancia','Las citas que ha tenido en la clínica'],ok:1,fb:['No — ya no se registra el dolor ahí.','¡Correcto! Es un calendario de constancia con los ejercicios.','Las citas se ven en otra sección distinta, "Mis citas".']}
+ {q:'¿Es obligatorio escribir una nota al pulsar "Hecho"?',opts:['Sí, siempre','No, es completamente opcional','Solo si el fisio lo ha pedido'],ok:1,fb:['No es obligatorio.','¡Correcto! Puede marcarlo como hecho sin escribir nada.','Siempre es opcional, independientemente del fisio.']},
+ {q:'¿Qué mide "Mi racha"?',opts:['El nivel de dolor diario','Los días que ha completado sus ejercicios','Las citas que ha tenido'],ok:1,fb:['Ya no se registra el dolor en la app.','¡Correcto! Es un calendario de constancia con los ejercicios.','Las citas se ven en "Mis citas", sección aparte.']}
  ]
  },
  // ═══════════════════════════════════════
- // MÓDULO 3 — Mis citas y Mis informes
+ // MÓDULO 3 — Mis citas, Mis informes y Chat
  // ═══════════════════════════════════════
- {t:'Mis citas y Mis informes',sub:'Lo que el paciente consulta sobre su seguimiento',
+ {t:'Mis citas, Mis informes y Chat',sub:'Seguimiento, documentación y comunicación',
  cards:[
- {ti:'Mis citas — el calendario',icon:'',body:`Muestra un calendario mensual con un punto en los días que tiene cita. Al tocar uno de esos días se despliega el detalle: hora, fisio asignado, tipo de cita y su estado (pendiente, realizada, cancelada).`},
- {ti:'Próximas citas e historial',icon:'',body:`Debajo del calendario hay dos listas: las próximas citas que tiene agendadas, y un historial reciente con las últimas citas pasadas. Así el paciente no necesita ir mes a mes en el calendario para ver lo más inmediato.`},
- {ti:'Mis informes',icon:'',body:`Aquí aparecen los informes que el fisio ha generado en una valoración y ha decidido guardar en su ficha. El paciente puede desplegar el texto completo dentro de la app, o descargarlo directamente como PDF a su móvil con la cabecera de FISIO365.`},
- {ti:'Si un paciente no ve un informe',icon:'',body:`Si un paciente espera ver un informe y no le aparece, lo más probable es que el fisio todavía no lo haya guardado en su perfil desde el panel — generar el informe y guardarlo en el perfil del paciente son dos pasos distintos.`}
+ {ti:'Mis citas',icon:'',body:`Calendario mensual con un punto en los días con cita. Al tocarlo se despliega el detalle: hora, fisio, tipo y estado. Debajo hay una lista de próximas citas y un historial reciente de las pasadas.`},
+ {ti:'Mis informes',icon:'',body:`Aquí aparecen los informes que el fisio ha generado y guardado en su ficha. El paciente puede leerlos dentro de la app o descargarlos en PDF directamente a su móvil. Si un paciente no ve un informe que espera, lo más probable es que el fisio todavía no lo haya guardado en su perfil — generar el informe y guardarlo en el perfil son dos pasos distintos.`},
+ {ti:'Chat',icon:'',body:`El paciente puede escribir mensajes a cualquier fisio del equipo y recibir respuestas. Tiene dos pestañas: "De mi fisio" (mensajes recibidos, con opción de responder) y "Enviados". Las notas que añade al marcar "Hecho" también llegan aquí al fisio.`},
+ {ti:'Recomienda y gana',icon:'',body:`Sistema de referidos: el paciente comparte un link de WhatsApp y suma <b>+1 papeleta</b> al instante. Si el amigo invitado viene a su primera sesión, el equipo lo marca en el panel y se suman <b>+5 papeletas</b> más. Las papeletas entran en un sorteo mensual.`}
  ],
  qs:[
- {q:'¿Qué información se despliega al tocar un día con cita en el calendario?',opts:['Solo la hora','Hora, fisio, tipo de cita y estado','Solo si la cita está pendiente o no'],ok:1,fb:['Hay más información que solo la hora.','¡Correcto! El detalle completo de esa cita.','Aparece más detalle, no solo el estado.']},
- {q:'Un paciente dice que no le aparece un informe que el fisio le comentó que le haría. ¿Cuál es la causa más probable?',opts:['Un fallo de la app que hay que reportar siempre','El fisio generó el informe pero todavía no lo guardó en el perfil del paciente','Los informes tardan 24h en aparecer'],ok:1,fb:['No suele ser un fallo técnico — primero hay que comprobar esto.','¡Correcto! Son dos pasos distintos: generar y luego guardar en el perfil.','No hay ese retraso — aparece al instante una vez guardado.']}
+ {q:'Un paciente no ve un informe que espera. ¿Cuál es la causa más probable?',opts:['Un fallo técnico de la app','El fisio generó el informe pero no lo guardó todavía en su perfil','Los informes tardan 24h en aparecer'],ok:1,fb:['No suele ser fallo técnico — hay que comprobar esto primero.','¡Correcto! Generar y guardar en el perfil son dos pasos distintos.','No hay ese retraso — aparece al instante una vez guardado.']},
+ {q:'¿Cuántas papeletas suma un paciente al compartir el link, antes de que el amigo venga?',opts:['+5','+1','Ninguna hasta que el amigo venga'],ok:1,fb:['+5 es cuando el amigo completa su primera sesión.','¡Correcto! +1 al instante solo por compartir.','Sí suma algo de inmediato.']}
  ]
  },
  // ═══════════════════════════════════════
- // MÓDULO 4 — Chat con el fisio
+ // MÓDULO 4 — El panel del fisio: acceso y estructura
  // ═══════════════════════════════════════
- {t:'Chat con el fisio',sub:'Cómo se comunica el paciente con el equipo',
+ {t:'El panel del fisio — acceso y estructura',sub:'Cómo entrar y qué tiene cada sección',
  cards:[
- {ti:'Dos pestañas',icon:'',body:`El Chat tiene dos pestañas: <b>"De mi fisio"</b>, con los mensajes que ha recibido y puede responder directamente debajo de cada uno, y <b>"Enviados"</b>, con lo que el propio paciente ha escrito.`},
- {ti:'Iniciar un mensaje nuevo',icon:'',body:`El paciente puede escribir un mensaje nuevo en cualquier momento, eligiendo a qué fisio del equipo se lo envía — no tiene por qué ser siempre el mismo que le atendió la última vez.`},
- {ti:'De dónde salen los mensajes automáticos',icon:'',body:`Cuando el paciente marca "Hecho" en sus ejercicios y añade una nota, ese texto también llega como mensaje al Chat del fisio. Es decir, las notas del día a día y los mensajes directos comparten el mismo canal de comunicación.`},
- {ti:'Cómo lo ve el equipo',icon:'',body:`Cuando un paciente escribe, en el panel del fisio aparece en la sección Mensajes con un aviso visual hasta que se lee. Al responder desde el panel, la respuesta le llega al paciente al instante en su pestaña "De mi fisio".`}
+ {ti:'Cómo se accede',icon:'',body:`El panel está en <b>fisio365.vercel.app/fisio</b> (con "/fisio" al final). Cada fisio entra con su nombre y contraseña personal. Las secciones visibles dependen del rol asignado — si algo no aparece, es porque el acceso no está activado para ese fisio.`},
+ {ti:'Las secciones del panel',icon:'',body:`El panel tiene 5 secciones principales en el menú lateral: <b>Programas</b> (asignar ejercicios a pacientes), <b>Anamnesis</b> (protocolos de valoración clínica con informe por IA), <b>Pacientes</b> (ficha completa de cada paciente), <b>Mensajes</b> (lo que escriben los pacientes) y <b>School</b> (cursos de formación del equipo).`},
+ {ti:'Conectado con la app del paciente',icon:'',body:`Todo lo que haces en el panel llega a la app del paciente al instante. Si asignas ejercicios, los ve en su app. Si guardas un informe en su ficha, aparece en "Mis informes". Si le respondes un mensaje, le llega al Chat. No hay que hacer nada especial — es inmediato.`}
  ],
  qs:[
- {q:'¿Puede el paciente elegir a qué fisio del equipo le escribe un mensaje nuevo?',opts:['No, siempre va al mismo fisio asignado','Sí, puede elegir a quién se lo envía','Solo si es una urgencia'],ok:1,fb:['No — puede elegir, no está fijado a uno solo.','¡Correcto! El paciente decide a quién dirigir cada mensaje.','No depende de eso — siempre puede elegir.']},
- {q:'Si un paciente añade una nota al marcar "Hecho" en sus ejercicios, ¿dónde acaba ese texto?',opts:['Se pierde, solo queda registrado que lo completó','Llega también como mensaje al Chat del fisio','Se guarda solo en "Mi racha"'],ok:1,fb:['No se pierde — sí queda registrado el contenido.','¡Correcto! Comparte el mismo canal que los mensajes directos.','"Mi racha" no almacena texto, solo los días completados.']}
+ {q:'¿En qué dirección entra el fisio al panel?',opts:['fisio365.vercel.app','fisio365.vercel.app/fisio','fisio365.vercel.app/panel'],ok:1,fb:['Esa es la app del paciente.','¡Correcto! Con "/fisio" al final.','Esa ruta no existe.']},
+ {q:'¿Cuántas secciones principales tiene el menú lateral del panel?',opts:['3','5','7'],ok:1,fb:['Son más.','¡Correcto! Programas, Anamnesis, Pacientes, Mensajes y School.','Son menos.']}
  ]
  },
  // ═══════════════════════════════════════
- // MÓDULO 5 — Recomienda y gana
+ // MÓDULO 5 — Anamnesis y protocolos clínicos
  // ═══════════════════════════════════════
- {t:'Recomienda y gana',sub:'El sistema de referidos con sorteo',
+ {t:'Anamnesis y protocolos clínicos',sub:'Valoración guiada y generación de informe por IA',
  cards:[
- {ti:'Cómo funciona',icon:'',body:`Es un sistema de referidos gamificado: el paciente comparte un link de WhatsApp con un amigo invitándolo a la clínica. Ese link, al abrirse, manda directamente un mensaje a la clínica a nombre del paciente que invitó.`},
- {ti:'Las papeletas',icon:'',body:`Por cada vez que el paciente comparte el link, suma <b>+1 papeleta</b> al instante, visible en su propia app. Si el amigo invitado acaba viniendo a su primera sesión, el equipo lo marca desde el panel y se suman <b>+5 papeletas</b> adicionales al paciente que lo recomendó.`},
- {ti:'El sorteo',icon:'',body:`Todas las papeletas acumuladas entran en un sorteo con premio — cuantas más papeletas tenga un paciente, más posibilidades tiene de ganar. La fecha y el premio del sorteo se muestran directamente en esa sección de la app.`},
- {ti:'Qué debe hacer el equipo',icon:'',body:`Cuando un paciente nuevo llega diciendo que viene recomendado por otro paciente, y completa su primera sesión, hay que marcarlo en el sistema para que el paciente que lo invitó reciba sus +5 papeletas. Sin ese paso, las papeletas extra no se suman solas.`}
+ {ti:'Cómo funciona',icon:'',body:`Eliges el protocolo según la zona o patología, seleccionas al paciente y rellenas los pasos guiados. Al final pulsas <b>"Generar informe"</b> y la IA redacta automáticamente el informe con todos los datos introducidos. No sale de la clínica — la IA procesa los datos y devuelve el texto final.`},
+ {ti:'Protocolos disponibles',icon:'',body:`Rodilla, Hombro, Cervical, Codo y antebrazo, Muñeca y mano, Tobillo y pie, Cadera y pelvis, Sacroilíaca, Columna lumbar, <b>Hernia discal lumbar</b> (protocolo específico con Lasègue, Bragard, Slump y marcha en talones/puntillas), Columna torácica, <b>Suelo pélvico</b> y Libre/Otros.`},
+ {ti:'Hernia discal — protocolo específico',icon:'',body:`Distinto al genérico de "Columna lumbar". Incluye tests neurodinámicos (Lasègue, Bragard, Slump), marcha en talones (L4-L5) y puntillas (S1), sensibilidad por dermatoma, reflejos y fuerza por raíz nerviosa. Úsalo cuando la sospecha sea específicamente hernia discal.`},
+ {ti:'Importante: no salir antes de generar',icon:'',body:`Si sales a otra sección del panel antes de generar el informe, los datos introducidos se pierden. Hay que terminar la valoración sin abandonar la anamnesis.`}
  ],
  qs:[
- {q:'¿Cuántas papeletas suma un paciente solo por compartir el link, antes de que el amigo venga?',opts:['+1','+5','Ninguna, hasta que el amigo venga'],ok:0,fb:['¡Correcto! +1 al instante, solo por compartir.','+5 es cuando el amigo completa su primera sesión, no antes.','Sí suma algo de inmediato, no hace falta esperar.']},
- {q:'¿Qué tiene que hacer el equipo para que un paciente reciba las +5 papeletas por un amigo referido?',opts:['Nada, se suman solas cuando el amigo reserva cita','Marcarlo manualmente cuando el amigo completa su primera sesión','El propio paciente lo marca desde su app'],ok:1,fb:['No se suman solas — requiere una acción del equipo.','¡Correcto! Es un paso manual que hace el equipo desde el panel.','No lo hace el paciente, lo hace el equipo desde el panel.']}
+ {q:'Si sales del protocolo a media valoración sin generar el informe, ¿qué pasa?',opts:['Se guarda automáticamente','Los datos se pierden','Se guarda si el paciente ya tiene ficha'],ok:1,fb:['No — los datos no persisten al salir.','¡Correcto! Hay que terminar antes de cambiar de sección.','No depende de eso — se pierden siempre.']},
+ {q:'¿Qué diferencia al protocolo "Hernia discal lumbar" del genérico de "Columna lumbar"?',opts:['Son el mismo formulario','Incluye tests como Lasègue, Bragard, Slump y valoración por raíz nerviosa','El de hernia es más corto'],ok:1,fb:['Son protocolos distintos con contenido diferente.','¡Correcto! Mucho más específico para sospecha de hernia.','Al contrario, es más extenso.']}
+ ]
+ },
+ // ═══════════════════════════════════════
+ // MÓDULO 6 — Programas de ejercicios
+ // ═══════════════════════════════════════
+ {t:'Programas de ejercicios',sub:'Asignar ejercicios y lo que ve el paciente',
+ cards:[
+ {ti:'Cómo asignar un programa',icon:'',body:`Selecciona tu nombre como fisio, busca al paciente (si ya tiene programa, se carga para editar) y añade ejercicios desde la biblioteca. Selecciona siempre del desplegable de autocompletado — si escribes el nombre a mano sin seleccionarlo, el vídeo puede no vincularse correctamente y el paciente verá el recuadro vacío.`},
+ {ti:'El programa nuevo reemplaza al anterior',icon:'',body:`Si guardas un programa nuevo sin cargar primero el actual, el anterior se pierde. Para añadir ejercicios sin borrar los que ya había: carga primero el programa existente, añade los nuevos y guarda.`},
+ {ti:'Ejercicio que no está en la biblioteca',icon:'',body:`Si el ejercicio no existe, hay que grabarlo, subirlo a YouTube y añadirlo en Airtable con el link correcto. Una vez en Airtable, estará disponible para todo el equipo al asignar programas.`},
+ {ti:'Mensaje opcional al paciente',icon:'',body:`Al guardar el programa puedes añadir un mensaje personalizado. Aparece destacado en la app del paciente justo antes de su lista de ejercicios.`}
+ ],
+ qs:[
+ {q:'¿Qué pasa si guardas un programa nuevo sin cargar primero el que ya tenía el paciente?',opts:['Se combinan automáticamente','El programa anterior se pierde','Aparece un aviso y no deja guardar'],ok:1,fb:['No se combinan.','¡Correcto! El nuevo reemplaza al anterior — hay que cargar primero el actual.','No hay ese aviso.']},
+ {q:'¿Por qué es importante seleccionar el ejercicio del desplegable en vez de escribirlo a mano?',opts:['Solo por estética','Para que el vídeo se vincule correctamente al ejercicio','No hay diferencia real'],ok:1,fb:['No es por estética.','¡Correcto! Sin seleccionarlo del desplegable el vídeo puede no aparecer.','Sí hay diferencia — afecta a si el paciente ve el vídeo o no.']}
+ ]
+ },
+ // ═══════════════════════════════════════
+ // MÓDULO 7 — Ficha de paciente e informes
+ // ═══════════════════════════════════════
+ {t:'Ficha de paciente e informes',sub:'Todo el historial en un solo lugar',
+ cards:[
+ {ti:'La ficha del paciente',icon:'',body:`Desde la sección Pacientes, buscas por nombre o email y accedes a la ficha completa: programa actual, informes generados, racha de constancia, y datos de contraseña/PIN. Todo en un solo lugar.`},
+ {ti:'Gestionar informes',icon:'',body:`Cada informe generado en una anamnesis queda en la ficha. Puedes verlo completo, descargarlo en PDF con cabecera FISIO365, o pulsar <b>"Guardar en app"</b> para que el paciente lo vea en su sección "Mis informes". Revisa siempre el contenido antes de guardarlo — una vez hecho, el paciente ya puede verlo.`},
+ {ti:'Estructura del informe',icon:'',body:`Todos los informes siguen la misma estructura: MOTIVO DE CONSULTA · EXPLORACIÓN Y HALLAZGOS · DIAGNÓSTICO FISIOTERAPÉUTICO · OBJETIVOS TERAPÉUTICOS · y solo si hay red flags: ALERTAS.`},
+ {ti:'Mensajes del paciente',icon:'',body:`Cuando un paciente escribe desde su Chat, aparece en la sección Mensajes del panel con un punto rojo. El punto desaparece al entrar en la sección. Escribes la respuesta y le llega al paciente al instante.`}
+ ],
+ qs:[
+ {q:'¿Qué hay que hacer antes de pulsar "Guardar en app" en un informe?',opts:['Nada, se puede deshacer','Revisar el contenido — el paciente lo verá al instante','Esperar 24h'],ok:1,fb:['No se puede deshacer fácilmente.','¡Correcto! Una vez guardado el paciente tiene acceso inmediato.','No hay espera — revisa antes de guardar.']},
+ {q:'¿Qué sección del informe solo aparece si hay señales de alerta clínica?',opts:['OBJETIVOS TERAPÉUTICOS','ALERTAS','MOTIVO DE CONSULTA'],ok:1,fb:['Esa aparece siempre.','¡Correcto! Solo si hay red flags detectadas.','Esa aparece siempre.']}
  ]
  }
  ];
