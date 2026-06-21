@@ -5133,7 +5133,7 @@ function iniciarAutoUpdate(){
 async function loadProgreso(){
  if(!fisioActual) return;
  try{
- const r = await fetch(`/api/fisios?action=progreso&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
+ const r = await fetch(`/api/progreso?fisioId=${encodeURIComponent(fisioActual.id)}`);
  const d = await r.json();
  if(d.ok) progresoFisio = d.progreso || {};
  }catch(e){}
@@ -5143,14 +5143,14 @@ async function marcarProgreso(seccion){
  const btn = document.getElementById('wikiProgresoBtn');
  if(btn){ btn.disabled=true; btn.innerHTML='Guardando...'; }
  try{
- const r = await fetch('/api/fisios', {
+ const r = await fetch('/api/progreso', {
  method: 'POST',
  headers: {'Content-Type':'application/json'},
- body: JSON.stringify({ pwd: apiPwd, action: 'progreso', fisioId: fisioActual.id, seccion, estado: 'completado' })
+ body: JSON.stringify({ fisioId: fisioActual.id, seccion, estado: 'completado' })
  });
  const d = await r.json();
  if(d.ok){
- progresoFisio[seccion] = { estado: 'completado', fecha: new Date().toISOString().split('T')[0] };
+ progresoFisio[seccion] = { estado: 'completado', fecha: d.fecha || new Date().toLocaleDateString('es-ES') };
  // Borrar progreso guardado en localStorage al completar
  try{ localStorage.removeItem('fisio365_school_'+seccion.replace('wiki_','')+'_'+(fisioActual?.id||'x')); }catch(e){}
  // Actualizar botón
