@@ -1010,6 +1010,13 @@ function getEjs(){
 
 function updProg(){
  const ejs=getEjs(), res=$('res');
+ if(res && pacSelId && !pacSelN){
+ res.style.display='block';
+ res.style.color='#c0392b';
+ res.innerHTML='⚠️ Este paciente no tiene nombre guardado en Airtable. Revísalo antes de continuar — puede causar problemas al guardar el programa.';
+ return;
+ }
+ if(res){ res.style.color=''; }
  if(res&&pacSelId&&ejs.length){res.style.display='block';res.textContent=`Se asignarán ${ejs.length} ejercicio${ejs.length>1?'s':''} a ${pacSelN}. El programa anterior se reemplazará.`;}
  else if(res) res.style.display='none';
 }
