@@ -383,7 +383,7 @@ export default async function handler(req) {
       await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: { PacienteId: pacienteId||'', PacienteNombre: pacienteNombre||'', FisioId: fisioId||'', FisioNombre: fisioNombre||'', Texto: texto||'', Fecha: fecha||new Date().toLocaleDateString('es-ES'), Tipo: 'fisio', Visto: true, RespuestaLeida: false } })
+        body: JSON.stringify({ fields: { PacienteId: pacienteId||'', PacienteNombre: pacienteNombre||'', FisioId: fisioId||'', FisioNombre: fisioNombre||'', Texto: texto||'', Fecha: fecha||new Date().toLocaleString('es-ES',{timeZone:'Europe/Madrid'}), Tipo: 'fisio', Visto: true, RespuestaLeida: false } })
       });
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
