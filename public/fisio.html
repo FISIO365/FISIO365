@@ -7240,6 +7240,14 @@ async function renderRecordatorios(wrap){
  }
 }
 
+function parseFechaMsg(s){
+ if(!s) return 0;
+ const m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[,\s]+(\d{1,2}):(\d{2}))?/);
+ if(!m) return 0;
+ const d=parseInt(m[1]),mo=parseInt(m[2])-1,y=parseInt(m[3]);
+ const h=m[4]?parseInt(m[4]):0,mi=m[5]?parseInt(m[5]):0;
+ return new Date(y,mo,d,h,mi).getTime();
+}
 async function renderMensajes(wrap, tab){
  wrap.innerHTML='';
  const tabActiva = tab || 'recibidos';
@@ -7274,7 +7282,7 @@ async function renderMensajes(wrap, tab){
  const data=await res.json();
  loading.remove();
 
- const mensajes=(data.mensajes||[]).filter(m=>m.tipo!=='fisio');
+ const mensajes=(data.mensajes||[]).filter(m=>m.tipo!=='fisio').sort((a,b)=>parseFechaMsg(b.fecha)-parseFechaMsg(a.fecha));
  const sinLeer=mensajes.filter(m=>!m.visto).length;
  const badge=$('sb-msg-badge');
  if(badge){badge.textContent=sinLeer>0?String(sinLeer):'';badge.style.display=sinLeer>0?'block':'none';}
@@ -7333,7 +7341,7 @@ async function renderMensajes(wrap, tab){
       const res=await fetch(`/api/pacientes?action=get-mensajes-fisio&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
       const data=await res.json();
       loading2.remove();
-      const enviados=(data.mensajes||[]).filter(m=>m.tipo==='fisio');
+      const enviados=(data.mensajes||[]).filter(m=>m.tipo==='fisio').sort((a,b)=>parseFechaMsg(b.fecha)-parseFechaMsg(a.fecha));
       if(!enviados.length){
         const em=ce('div','');em.style.cssText='text-align:center;padding:3rem 1rem;color:var(--muted)';
         em.innerHTML='<div style="font-size:16px;font-weight:600;margin-bottom:8px">Sin mensajes enviados</div><div style="font-size:13px">Los mensajes que envíes a los pacientes aparecerán aquí.</div>';
