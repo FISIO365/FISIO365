@@ -7386,7 +7386,7 @@ async function enviarMensajeNuevo(btn){
  pwd:apiPwd, action:'enviar-mensaje-fisio',
  pacienteId, pacienteNombre,
  fisioId:fisioActual.id, fisioNombre:fisioActual.nombre,
- texto, fecha:new Date().toLocaleDateString('es-ES')
+ texto, fecha:new Date().toLocaleString('es-ES',{timeZone:'Europe/Madrid'})
  })
  });
  const d=await res.json();
