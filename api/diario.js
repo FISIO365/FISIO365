@@ -118,7 +118,7 @@ export default async function handler(req) {
 
       // 2. Si enviarFisio=true, crear registro en tabla MENSAJES
       if (enviarFisio && fisioDestinatarioId) {
-        const fecha = new Date().toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' });
+        const fecha = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
         const esDolorAumento = comentario && comentario.startsWith('[Dolor aumentó]');
         await airtableCreate(TABLE_MENSAJES, {
           PacienteId: patientId,
