@@ -60,6 +60,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .pill-s { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: var(--black); color: var(--white); white-space: nowrap; }
 .pill-r { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: #ede9f7; color: #7b6fd4; border: 0.5px solid #d5d0f0; white-space: nowrap; }
 .pill-d { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: #e8f5f0; color: #2a9d6e; border: 0.5px solid #b8e8d4; white-space: nowrap; }
+.ej-nota { margin-bottom: 14px; padding: 10px 12px; background: var(--lila-light); border-radius: 10px; font-size: 13px; line-height: 1.5; color: var(--black); }
 .ej-thumb { position: relative; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; background: #000; cursor: pointer; }
 .ej-thumb iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
 .ej-no-video { aspect-ratio: 16/9; border-radius: 14px; background: #ede9f7; display: flex; align-items: center; justify-content: center; }
@@ -709,7 +710,7 @@ function renderEjercicios(){
   lista.innerHTML='<div class="ej-list">'+ejercicios.map((ej,i)=>{
     const pills=[ej.series?`<span class="pill-s">${ej.series}×</span>`:'',ej.reps?`<span class="pill-r">${ej.reps} reps</span>`:'',(ej.dur||ej.duracion)?`<span class="pill-d">${ej.dur||ej.duracion}s</span>`:''].join('');
     const hasVid=!!ej.ytId;
-    return `<div class="ej-item"><div class="ej-header"><div class="ej-nom">${ej.name}</div><div class="ej-pills">${pills}</div></div>${hasVid?`<div class="ej-thumb"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen></iframe></div>`:`<div class="ej-no-video"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>`}</div>`;
+    return `<div class="ej-item"><div class="ej-header"><div class="ej-nom">${ej.name}</div><div class="ej-pills">${pills}</div></div>${ej.desc?`<div class="ej-nota">${ej.desc.replace(/</g,'&lt;')}</div>`:''}${hasVid?`<div class="ej-thumb"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen></iframe></div>`:`<div class="ej-no-video"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>`}</div>`;
   }).join('')+'</div>';
 }
 
