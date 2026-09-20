@@ -244,11 +244,7 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  </div>
  <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;margin-bottom:12px;">
  <button class="nav-item" id="navMensajes" onclick="showSection('mensajes');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat<div class="nav-item-dot" id="navMensajesDot"></div></button>
- <!-- ★ NUEVO: INVITAR AMIGO -->
- <button class="nav-item" onclick="invitarAmigo();cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;">
-   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-   Recomienda y gana
- </button>
+
  </div>
  <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;display:flex;flex-direction:column;gap:2px;">
  <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#bbb;font-size:14px;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Guía</button>
@@ -301,51 +297,6 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  </div>
  </div>
  </div>
-
- <!-- ★ SECCIÓN SORTEO -->
- <div id="vistaSorteo" style="display:none;padding-top:8px;">
-
- <div style="text-align:center;margin-bottom:28px;">
-   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:#ada3da;margin-bottom:10px;">Sorteo · 31 de julio 2025</div>
-   <div style="font-size:22px;font-weight:800;color:#1a1a1a;letter-spacing:-.5px;">Recomienda y gana</div>
- </div>
-
- <div style="background:white;border:0.5px solid rgba(0,0,0,0.07);border-radius:20px;padding:22px;margin-bottom:10px;">
-   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#ccc;margin-bottom:10px;">Premio</div>
-   <div style="font-size:15px;font-weight:700;color:#1a1a1a;">Una sesión de fisioterapia gratis</div>
- </div>
-
- <div style="background:white;border:0.5px solid rgba(0,0,0,0.07);border-radius:20px;padding:22px;margin-bottom:10px;">
-   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#ccc;margin-bottom:18px;">Cómo participar</div>
-   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
-     <div style="font-size:13px;font-weight:400;color:#555;line-height:1.5;max-width:200px;">Recomiendas a un amigo<br><span style="font-size:11px;color:#ccc;">cada vez que compartes</span></div>
-     <div style="font-size:13px;font-weight:600;color:#ada3da;">+1 papeleta</div>
-   </div>
-   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-     <div style="font-size:13px;font-weight:400;color:#555;line-height:1.5;max-width:200px;">Tu amigo viene a su primera sesión<br><span style="font-size:11px;color:#ccc;">lo verificamos nosotros</span></div>
-     <div style="font-size:13px;font-weight:600;color:#ada3da;">+5 papeletas</div>
-   </div>
- </div>
-
- <div style="background:white;border:0.5px solid rgba(0,0,0,0.07);border-radius:20px;padding:22px;margin-bottom:28px;">
-   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#ccc;margin-bottom:18px;">Tus papeletas</div>
-   <div style="display:flex;align-items:center;justify-content:space-between;">
-     <div style="font-size:13px;color:#bbb;line-height:1.6;max-width:140px;">Cuantas más papeletas, más posibilidades de ganar</div>
-     <div style="text-align:center;">
-       <div style="font-size:52px;font-weight:800;color:#1a1a1a;line-height:1;letter-spacing:-2px;" id="puntosNumero">0</div>
-       <div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#ccc;margin-top:4px;">papeletas</div>
-     </div>
-   </div>
- </div>
-
- <button onclick="compartirRecomendacion()" style="width:100%;padding:16px;background:#25D366;color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:.02em;">
-   <svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.025.507 3.934 1.395 5.608L0 24l6.554-1.371A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.002-1.366l-.359-.214-3.718.977.994-3.62-.234-.372A9.818 9.818 0 1112 21.818z"/></svg>
-   Recomendar por WhatsApp
- </button>
- <div style="text-align:center;margin-top:10px;font-size:11px;color:#ccc;letter-spacing:.01em;">Al compartir sumas +1 papeleta al instante</div>
-
- </div>
-
 
  <div id="vistaProgreso" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mi racha</div><div class="date-sub">Días que has hecho tus ejercicios</div></div>
