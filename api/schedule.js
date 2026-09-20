@@ -3,6 +3,7 @@ const BASE_ID = 'appsrGnHpFt8sVD5A';
 const PLAN_TABLE = 'tblvgE0a4gsrj4Vhp';
 const FISIOS_TABLE = 'tbl2mLUrnaKCFTs6g';
 const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
+const BIBLIO_TABLE = 'tbloqn3ts872ueJSE';
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -71,6 +72,35 @@ module.exports = async function handler(req, res) {
         imagen: ej.imagen || '',
       };
     });
+
+    // Rellenar vídeo/imagen desde la biblioteca en los ejercicios que no lo traen
+    if (ejercicios.some(e => !e.ytId)) {
+      try {
+        const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+        const F_NOMBRE = 'flda62z2UH2gXmmky', F_IMG = 'fldXYCWY9gPOh657M', F_YT = 'fldfB2hp9Ndjr0xAP';
+        const biblio = {};
+        let offset = null;
+        do {
+          const u = `https://api.airtable.com/v0/${BASE_ID}/${BIBLIO_TABLE}?returnFieldsByFieldId=true&fields[]=${F_NOMBRE}&fields[]=${F_IMG}&fields[]=${F_YT}&pageSize=100${offset ? '&offset=' + offset : ''}`;
+          const br = await fetch(u, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+          const bd = await br.json();
+          (bd.records || []).forEach(rec => {
+            const f = rec.fields || {};
+            const k = norm(f[F_NOMBRE]);
+            if (k) biblio[k] = { yt: f[F_YT] || '', img: f[F_IMG]?.[0]?.url || '' };
+          });
+          offset = bd.offset || null;
+        } while (offset);
+        ejercicios = ejercicios.map(ej => {
+          if (ej.ytId) return ej;
+          const b = biblio[norm(ej.name)];
+          if (!b) return ej;
+          const m = (b.yt || '').trim().match(/(?:v=|youtu\.be\/|shorts\/)\s*([\w-]{6,})/);
+          return { ...ej, ytId: m ? m[1].trim() : '', imagen: ej.imagen || b.img };
+        });
+      } catch(e) {}
+    }
+
     let fisio = null;
     try {
       const fisioId = plan['FisioID'];
