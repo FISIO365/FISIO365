@@ -22,8 +22,8 @@
   --border: rgba(0,0,0,0.12);
   --r: 12px;
   --font: 'Poppins', sans-serif;
-  --lila: #ada3da;
-  --lila-light: #ede9f7;
+  --lila: #d9774f;
+  --lila-light: #f7e6dd;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--cream); font-family: var(--font); color: var(--black); }
@@ -58,12 +58,12 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .ej-nom { font-size: 14px; font-weight: 700; color: var(--black); line-height: 1.3; flex: 1; }
 .ej-pills { display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 0; }
 .pill-s { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: var(--black); color: var(--white); white-space: nowrap; }
-.pill-r { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: #ede9f7; color: #7b6fd4; border: 0.5px solid #d5d0f0; white-space: nowrap; }
+.pill-r { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: #f7e6dd; color: #c2552e; border: 0.5px solid #efc7b4; white-space: nowrap; }
 .pill-d { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: #e8f5f0; color: #2a9d6e; border: 0.5px solid #b8e8d4; white-space: nowrap; }
 .ej-nota { margin-bottom: 14px; padding: 10px 12px; background: var(--lila-light); border-radius: 10px; font-size: 13px; line-height: 1.5; color: var(--black); }
 .ej-thumb { position: relative; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; background: #000; cursor: pointer; }
 .ej-thumb iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
-.ej-no-video { aspect-ratio: 16/9; border-radius: 14px; background: #ede9f7; display: flex; align-items: center; justify-content: center; }
+.ej-no-video { aspect-ratio: 16/9; border-radius: 14px; background: #f7e6dd; display: flex; align-items: center; justify-content: center; }
 .date-h { margin-bottom: 20px; }
 .date-today { font-size: 16px; font-weight: 800; color: var(--black); letter-spacing: -.3px; }
 .date-sub { font-size: 12px; color: #aaa; margin-top: 2px; }
@@ -198,10 +198,10 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .premio-banner { background: var(--lila-light); border: 1.5px solid var(--lila); border-radius: var(--r); padding: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; }
 .premio-banner-icon { font-size: 28px; flex-shrink: 0; }
 .premio-banner-titulo { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
-.premio-banner-sub { font-size: 12px; color: #7b6fd4; font-weight: 500; }
+.premio-banner-sub { font-size: 12px; color: #c2552e; font-weight: 500; }
 
 /* ═════ NUEVA ESTÉTICA (estilo Atlas, colores FISIO365) ═════ */
-:root{--cream:#f5f2ee;--black:#1a1a1a;--muted:#8a857e;--border:rgba(26,26,26,.08);--r:22px;--lila:#ada3da;--lila-d:#7b6fd4;--lila-light:#ede9f7;--sombra:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
+:root{--cream:#f5f2ee;--black:#1a1a1a;--muted:#8a857e;--border:rgba(26,26,26,.08);--r:22px;--lila:#d9774f;--lila-d:#c2552e;--lila-light:#f7e6dd;--sombra:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
 body{background:var(--cream);-webkit-font-smoothing:antialiased}
 /* Login */
 .screen{background:var(--cream);justify-content:flex-start;padding:max(56px,env(safe-area-inset-top)) 20px 40px}
@@ -250,7 +250,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .sec-title{color:var(--muted)}
 /* Hoy */
 .hoy-hero{background:var(--black);color:var(--cream);border-radius:28px;padding:22px 22px 24px;margin-bottom:14px;position:relative;overflow:hidden}
-.hoy-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(173,163,218,.55),rgba(173,163,218,0) 70%)}
+.hoy-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,79,.55),rgba(217,119,79,0) 70%)}
 .hoy-hero .date-sub{color:var(--lila);font-weight:600;text-transform:capitalize;font-size:13px;margin:0 0 6px}
 .hoy-hero .date-today{color:var(--cream);font-size:28px!important}
 .hoy-hero-sub{color:rgba(245,242,238,.6);font-size:14px;margin-top:6px;position:relative;z-index:1}
@@ -327,7 +327,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .pl-th{position:relative;width:72px;height:54px;border-radius:14px;background:var(--cream);overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center}
 .pl-th img{width:100%;height:100%;object-fit:cover}
 .pl-th span{font-size:18px;font-weight:800;color:var(--lila-d)}
-.pl-th em{position:absolute;inset:0;background:rgba(123,111,212,.88);display:flex;align-items:center;justify-content:center}
+.pl-th em{position:absolute;inset:0;background:rgba(194,85,46,.9);display:flex;align-items:center;justify-content:center}
 .pl-th em svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
 .pl-tx{flex:1;min-width:0}
 .pl-tx b{display:block;font-size:15px;line-height:1.3;font-weight:700}
@@ -351,7 +351,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .ses-vid{position:relative;aspect-ratio:16/9;border-radius:22px;overflow:hidden;background:#111}
 .ses-vid iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 .ses-novid{aspect-ratio:16/8;border-radius:22px;background:var(--black);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.ses-novid::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(173,163,218,.5),rgba(173,163,218,0) 70%)}
+.ses-novid::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,79,.5),rgba(217,119,79,0) 70%)}
 .ses-novid span{font-size:64px;font-weight:800;color:var(--lila);letter-spacing:-3px}
 .ses-eti{font-size:12.5px;font-weight:600;color:var(--muted);margin:18px 2px 4px;text-transform:uppercase;letter-spacing:.08em}
 .ses-eti b{color:var(--lila-d)}
@@ -403,6 +403,14 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .pl-tmr .tmr-botones{flex:none;gap:6px}
 .pl-tmr .tmr-go{flex:none;height:40px;padding:0 18px;font-size:13px}
 .pl-tmr .tmr-reset{width:40px;height:40px;font-size:16px}
+
+.regalo{display:flex;align-items:center;gap:14px;margin-top:22px;background:var(--lila-light);border-radius:24px;padding:16px;text-decoration:none;color:var(--black)}
+.regalo-ico{width:48px;height:48px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.regalo-ico svg{width:24px;height:24px;fill:none;stroke:var(--lila-d);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.regalo-tx{flex:1;min-width:0}
+.regalo-tx b{display:block;font-size:15px}
+.regalo-tx span{font-size:12.5px;color:#7d6a60}
+.regalo-btn{background:var(--black);color:var(--cream);font-size:13px;font-weight:700;border-radius:99px;padding:10px 16px;flex:none}
 </style>
 </head>
 <body>
@@ -454,6 +462,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 
  </div>
  <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;display:flex;flex-direction:column;gap:2px;">
+ <a class="nav-item" href="https://tally.so/r/WOVB0N?origen=app" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-decoration:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-1.5-3-5.5-4-6-1.5S9 8 12 8zM12 8c1.5-3 5.5-4 6-1.5S15 8 12 8z"/></svg>Regalar</a>
  <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#bbb;font-size:14px;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Guía</button>
  <button onclick="cerrarSesion()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#bbb;font-size:14px;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</button>
  </div>
@@ -512,6 +521,11 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="completado-card"><p>Cada día que te mueves es un paso hacia tu recuperación. ¡Vuelve mañana!</p></div>
  </div>
  </div>
+ <a class="regalo" href="https://tally.so/r/WOVB0N?origen=app" target="_blank" rel="noopener">
+  <div class="regalo-ico"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-1.5-3-5.5-4-6-1.5S9 8 12 8zM12 8c1.5-3 5.5-4 6-1.5S15 8 12 8z"/></svg></div>
+  <div class="regalo-tx"><b>Regala fisioterapia</b><span>Una tarjeta regalo para quien quieras</span></div>
+  <span class="regalo-btn">Regalar</span>
+ </a>
  </div>
 
  <div id="vistaProgreso" style="display:none;">
@@ -584,7 +598,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
        <div style="width:28px;height:28px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#f5f2ee;">3</div>
        <div style="padding-top:5px;">
          <div style="font-size:13px;font-weight:500;color:#1a1a1a;">Toca <strong>"Añadir a pantalla de inicio"</strong></div>
-         <div style="font-size:11px;color:#ada3da;margin-top:2px;font-weight:600;">¡Ya tienes el icono en tu móvil!</div>
+         <div style="font-size:11px;color:#d9774f;margin-top:2px;font-weight:600;">¡Ya tienes el icono en tu móvil!</div>
        </div>
      </div>
    </div>
@@ -607,7 +621,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
        <div style="width:28px;height:28px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#f5f2ee;">3</div>
        <div style="padding-top:5px;">
          <div style="font-size:13px;font-weight:500;color:#1a1a1a;">Toca <strong>"Añadir a pantalla de inicio"</strong></div>
-         <div style="font-size:11px;color:#ada3da;margin-top:2px;font-weight:600;">¡Ya tienes el icono en tu móvil!</div>
+         <div style="font-size:11px;color:#d9774f;margin-top:2px;font-weight:600;">¡Ya tienes el icono en tu móvil!</div>
        </div>
      </div>
    </div>
@@ -621,7 +635,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
    <div style="padding:0 20px 18px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
      <div style="display:flex;gap:14px;align-items:flex-start;">
        <div style="width:36px;height:36px;border-radius:10px;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9774f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
        </div>
        <div>
          <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Mis ejercicios</div>
@@ -632,7 +646,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
    <div style="padding:18px 20px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
      <div style="display:flex;gap:14px;align-items:flex-start;">
        <div style="width:36px;height:36px;border-radius:10px;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H3V5h3M18 9h3V5h-3"/><path d="M6 5h12v7a6 6 0 0 1-12 0V5z"/><path d="M12 17v4M8 21h8"/></svg>
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9774f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H3V5h3M18 9h3V5h-3"/><path d="M6 5h12v7a6 6 0 0 1-12 0V5z"/><path d="M12 17v4M8 21h8"/></svg>
        </div>
        <div>
          <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Mi racha</div>
@@ -643,7 +657,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
    <div style="padding:18px 20px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
      <div style="display:flex;gap:14px;align-items:flex-start;">
        <div style="width:36px;height:36px;border-radius:10px;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9774f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
        </div>
        <div>
          <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Mis citas</div>
@@ -654,7 +668,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
    <div style="padding:18px 20px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
      <div style="display:flex;gap:14px;align-items:flex-start;">
        <div style="width:36px;height:36px;border-radius:10px;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9774f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
        </div>
        <div>
          <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Mis informes</div>
@@ -665,7 +679,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
    <div style="padding:18px 20px;border-bottom:0.5px solid rgba(0,0,0,0.05);">
      <div style="display:flex;gap:14px;align-items:flex-start;">
        <div style="width:36px;height:36px;border-radius:10px;background:#f5f2ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9774f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
        </div>
        <div>
          <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Chat</div>
@@ -675,8 +689,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
    </div>
    <div style="padding:18px 20px;">
      <div style="display:flex;gap:14px;align-items:flex-start;">
-       <div style="width:36px;height:36px;border-radius:10px;background:#ede9f7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+       <div style="width:36px;height:36px;border-radius:10px;background:#f7e6dd;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9774f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
        </div>
        <div>
          <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Recomienda y gana</div>
@@ -1067,7 +1081,7 @@ function initVAS(){const nums=document.getElementById('vasNums');if(nums.childre
 async function cargarDatosVAS(){try{const res=await fetch(`/api/dolor?patientId=${patient.id}`);const data=await res.json();vasRegistros=data.registros||[];actualizarGrafica();}catch(e){}}
 async function guardarVAS(){if(vasSeleccionado===null)return;const btn=document.getElementById('btnVas');btn.disabled=true;btn.textContent='Guardando...';try{await fetch('/api/dolor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,fecha:TODAY,valor:vasSeleccionado})});await cargarDatosVAS();btn.style.display='none';toast('Dolor registrado ✓',true);}catch(e){toast('Error al guardar',false);}btn.disabled=false;btn.textContent='Guardar';}
 function cambiarPeriodo(dias,btn){vasPeriodo=dias;document.querySelectorAll('.periodo').forEach(b=>b.classList.remove('on'));btn.classList.add('on');actualizarGrafica();}
-function actualizarGrafica(){const hoy=new Date(TODAY);const fechaInicio=new Date(hoy);fechaInicio.setDate(hoy.getDate()-(vasPeriodo-1));const fechaInicioStr=fechaInicio.toISOString().split('T')[0];const conDatos=vasRegistros.filter(r=>r.fecha>=fechaInicioStr&&r.fecha<=TODAY).sort((a,b)=>a.fecha.localeCompare(b.fecha));if(conDatos.length<1){document.getElementById('graficaCard').style.display='none';return;}const canvas=document.getElementById('chartSvg');const inner=document.getElementById('graficaInner');const CW=inner.offsetWidth-24;const CH=100;canvas.width=CW*window.devicePixelRatio;canvas.height=CH*window.devicePixelRatio;canvas.style.width=CW+'px';canvas.style.height=CH+'px';const ctx=canvas.getContext('2d');ctx.scale(window.devicePixelRatio,window.devicePixelRatio);ctx.clearRect(0,0,CW,CH);const PAD=8;const pts=conDatos.map((d,i)=>{const x=conDatos.length===1?CW-PAD:PAD+(i/(conDatos.length-1))*(CW-PAD*2);const y=PAD+((10-d.valor)/10)*(CH-PAD*2);return{x,y,valor:d.valor,fecha:d.fecha,esHoy:d.fecha===TODAY};});ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;[PAD,CH/2,CH-PAD].forEach(y=>{ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();});if(pts.length>1){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,CH);ctx.lineTo(pts[0].x,CH);ctx.closePath();ctx.fillStyle='rgba(173,163,218,0.15)';ctx.fill();ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.strokeStyle='#1a1a1a';ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();}pts.forEach((p,i)=>{const isLast=i===pts.length-1;ctx.beginPath();ctx.arc(p.x,p.y,isLast?5:3,0,Math.PI*2);if(isLast){ctx.fillStyle='white';ctx.fill();ctx.strokeStyle='#1a1a1a';ctx.lineWidth=2;ctx.stroke();}else{ctx.fillStyle='#1a1a1a';ctx.fill();}});const diasRow=document.getElementById('diasRow');diasRow.innerHTML='';pts.forEach(p=>{const date=new Date(p.fecha+'T12:00:00');const label=p.esHoy?'Hoy':`${date.getDate()}/${date.getMonth()+1}`;const el=document.createElement('div');el.style.cssText=`position:absolute;left:${p.x}px;top:0;transform:translateX(-50%);font-size:10px;color:${p.esHoy?'#1a1a1a':'#888'};font-weight:${p.esHoy?'600':'400'};white-space:nowrap;`;el.textContent=label;diasRow.appendChild(el);});const msgEl=document.getElementById('vasMsg');if(conDatos.length>=2){const penultimo=conDatos[conDatos.length-2].valor;const ultimo=conDatos[conDatos.length-1].valor;msgEl.style.display='block';if(ultimo<penultimo){const pct=penultimo>0?Math.round(((penultimo-ultimo)/penultimo)*100):0;msgEl.className='vas-msg bien';msgEl.innerHTML=`Tu dolor ha bajado${pct>0?' un '+pct+'%':''} respecto a ayer. ¡Vas por muy buen camino!`;}else if(ultimo>penultimo){msgEl.className='vas-msg animo';msgEl.innerHTML='<div style="font-size:13px;font-weight:600;margin-bottom:12px;color:#000;">No te preocupes, los altibajos son normales. ¿Has cambiado algo en tu rutina hoy?</div><textarea id="vasMsgTxt" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;resize:none;min-height:80px;outline:none;background:#f5f2ee;color:#000;margin-bottom:10px;" placeholder="Ej: He estado de pie muchas horas, he dormido mal..."></textarea><button onclick=\'guardarMsgDolor()\' style=\'width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:#000;color:#f5f2ee;border:none;border-radius:8px;cursor:pointer;\'>Enviar a mi fisio</button>';}else{msgEl.className='vas-msg neutro';msgEl.innerHTML='Tu dolor se mantiene estable. ¡Sigue con tus ejercicios!';}  }else{msgEl.style.display='none';}}
+function actualizarGrafica(){const hoy=new Date(TODAY);const fechaInicio=new Date(hoy);fechaInicio.setDate(hoy.getDate()-(vasPeriodo-1));const fechaInicioStr=fechaInicio.toISOString().split('T')[0];const conDatos=vasRegistros.filter(r=>r.fecha>=fechaInicioStr&&r.fecha<=TODAY).sort((a,b)=>a.fecha.localeCompare(b.fecha));if(conDatos.length<1){document.getElementById('graficaCard').style.display='none';return;}const canvas=document.getElementById('chartSvg');const inner=document.getElementById('graficaInner');const CW=inner.offsetWidth-24;const CH=100;canvas.width=CW*window.devicePixelRatio;canvas.height=CH*window.devicePixelRatio;canvas.style.width=CW+'px';canvas.style.height=CH+'px';const ctx=canvas.getContext('2d');ctx.scale(window.devicePixelRatio,window.devicePixelRatio);ctx.clearRect(0,0,CW,CH);const PAD=8;const pts=conDatos.map((d,i)=>{const x=conDatos.length===1?CW-PAD:PAD+(i/(conDatos.length-1))*(CW-PAD*2);const y=PAD+((10-d.valor)/10)*(CH-PAD*2);return{x,y,valor:d.valor,fecha:d.fecha,esHoy:d.fecha===TODAY};});ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;[PAD,CH/2,CH-PAD].forEach(y=>{ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();});if(pts.length>1){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,CH);ctx.lineTo(pts[0].x,CH);ctx.closePath();ctx.fillStyle='rgba(217,119,79,0.15)';ctx.fill();ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.strokeStyle='#1a1a1a';ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();}pts.forEach((p,i)=>{const isLast=i===pts.length-1;ctx.beginPath();ctx.arc(p.x,p.y,isLast?5:3,0,Math.PI*2);if(isLast){ctx.fillStyle='white';ctx.fill();ctx.strokeStyle='#1a1a1a';ctx.lineWidth=2;ctx.stroke();}else{ctx.fillStyle='#1a1a1a';ctx.fill();}});const diasRow=document.getElementById('diasRow');diasRow.innerHTML='';pts.forEach(p=>{const date=new Date(p.fecha+'T12:00:00');const label=p.esHoy?'Hoy':`${date.getDate()}/${date.getMonth()+1}`;const el=document.createElement('div');el.style.cssText=`position:absolute;left:${p.x}px;top:0;transform:translateX(-50%);font-size:10px;color:${p.esHoy?'#1a1a1a':'#888'};font-weight:${p.esHoy?'600':'400'};white-space:nowrap;`;el.textContent=label;diasRow.appendChild(el);});const msgEl=document.getElementById('vasMsg');if(conDatos.length>=2){const penultimo=conDatos[conDatos.length-2].valor;const ultimo=conDatos[conDatos.length-1].valor;msgEl.style.display='block';if(ultimo<penultimo){const pct=penultimo>0?Math.round(((penultimo-ultimo)/penultimo)*100):0;msgEl.className='vas-msg bien';msgEl.innerHTML=`Tu dolor ha bajado${pct>0?' un '+pct+'%':''} respecto a ayer. ¡Vas por muy buen camino!`;}else if(ultimo>penultimo){msgEl.className='vas-msg animo';msgEl.innerHTML='<div style="font-size:13px;font-weight:600;margin-bottom:12px;color:#000;">No te preocupes, los altibajos son normales. ¿Has cambiado algo en tu rutina hoy?</div><textarea id="vasMsgTxt" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;resize:none;min-height:80px;outline:none;background:#f5f2ee;color:#000;margin-bottom:10px;" placeholder="Ej: He estado de pie muchas horas, he dormido mal..."></textarea><button onclick=\'guardarMsgDolor()\' style=\'width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;background:#000;color:#f5f2ee;border:none;border-radius:8px;cursor:pointer;\'>Enviar a mi fisio</button>';}else{msgEl.className='vas-msg neutro';msgEl.innerHTML='Tu dolor se mantiene estable. ¡Sigue con tus ejercicios!';}  }else{msgEl.style.display='none';}}
 function guardarMsgDolor(){const texto=document.getElementById('vasMsgTxt')?.value?.trim();if(!texto)return;abrirModalDolor(texto);}
 
 // NOTIFICACIONES
