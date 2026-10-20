@@ -321,7 +321,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .hero-go svg{width:16px;height:16px;fill:#1a1a1a}
 .pl-tit{font-size:13px;font-weight:700;color:var(--muted);margin:18px 4px 8px;text-transform:uppercase;letter-spacing:.08em}
 .pl{background:#fff;border-radius:24px;box-shadow:var(--sombra);overflow:hidden}
-.pl-row{display:flex;align-items:center;gap:14px;padding:12px 14px;cursor:pointer;position:relative}
+.pl-row{display:flex;align-items:center;gap:14px;padding:12px 14px;position:relative}
 .pl-row+.pl-row::before{content:'';position:absolute;top:0;left:100px;right:14px;height:1px;background:var(--border)}
 .pl-row:active{background:#faf8f5}
 .pl-th{position:relative;width:72px;height:54px;border-radius:14px;background:var(--cream);overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center}
@@ -901,13 +901,13 @@ function renderEjercicios(){
   document.getElementById('diarioSection').style.display='block';
   const n=ejercicios.length,h=ejHechos();
   const sub=document.getElementById('hoyHeroSub');
-  if(sub)sub.innerHTML=`${n} ${n===1?'ejercicio':'ejercicios'} · ${h===n?'¡todo hecho!':h?`${h} hechos`:'pensados para ti'}<button class="hero-go" onclick="abrirSesion(${h<n?ejercicios.findIndex((e,i)=>!hechos.has(ejKey(e,i))):0})">${h===0?'Empezar sesión':h<n?'Continuar':'Repasar'}<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></button>`;
+  if(sub)sub.textContent=`${n} ${n===1?'ejercicio':'ejercicios'} · ${h===n?'¡todo hecho!':h?`${h} de ${n} hechos`:'pensados para ti'}`;
   lista.innerHTML=`<div class="pl-tit">Tu sesión</div><div class="pl">`+ejercicios.map((ej,i)=>{
     const ok=hechos.has(ejKey(ej,i));
-    return `<div class="pl-row${ok?' ok':''}" onclick="abrirSesion(${i})">
+    return `<div class="pl-row${ok?' ok':''}">
       <div class="pl-th"${ej.ytId?` onclick="event.stopPropagation();verVideoGrande('${ej.ytId}')"`:''}>${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy"><b class="pl-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></b>`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
       <div class="pl-tx"><b>${ej.name}</b><span>${ejMeta(ej)||'&nbsp;'}</span></div>
-      <button class="pl-ck" onclick="event.stopPropagation();toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>${(ej.dur||ej.duracion)?`<div class="pl-tmr" onclick="event.stopPropagation()">${tmrHTML(ej,'L'+i)}</div>`:''}`;}).join('')+`</div>`;
+      <button class="pl-ck" onclick="toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>${(ej.dur||ej.duracion)?`<div class="pl-tmr" onclick="event.stopPropagation()">${tmrHTML(ej,'L'+i)}</div>`:''}`;}).join('')+`</div>`;
 }
 function ejKey(e,i){return e.id||('i'+i);}
 function verVideoGrande(id){let v=document.getElementById('vidGrande');if(!v){v=document.createElement('div');v.id='vidGrande';v.onclick=e=>{if(e.target===v)cerrarVideoGrande();};document.body.appendChild(v);}
