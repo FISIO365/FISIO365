@@ -426,6 +426,27 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .fisio-card + .ch.on .ch-fecha{width:46px;height:46px;border-radius:50%}
 .fisio-card + .ch.on .ch-tx small{display:none}
 
+
+/* Promociones */
+.pr-cab{display:flex;align-items:baseline;justify-content:space-between;margin:22px 2px 10px}
+.pr-cab b{font-size:16px;font-weight:800}
+.pr-cab button{border:none;background:none;font-family:inherit;font-size:13px;font-weight:600;color:#c2552e;cursor:pointer;padding:0}
+.pr-fila{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 16px;margin:0 -16px;padding:2px 16px 8px;scrollbar-width:none}
+.pr-fila::-webkit-scrollbar{display:none}
+.pr{position:relative;overflow:hidden;flex:none;width:82%;max-width:330px;scroll-snap-align:start;border-radius:24px;padding:18px 18px 16px;display:flex;flex-direction:column;min-height:170px}
+.pr.solo{width:100%;max-width:none}
+.pr-lista .pr{width:100%;max-width:none;margin-bottom:12px}
+.pr.Naranja{background:#c2552e;color:#fff6ee}.pr.Negro{background:#1a1a1a;color:#f5f2ee}.pr.Crema{background:#fbeee7;color:#1a1a1a}
+.pr:before{content:'';position:absolute;right:-50px;top:-50px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.12)}
+.pr.Crema:before{background:rgba(194,85,46,.10)}
+.pr-et{position:relative;align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.18);margin-bottom:10px}
+.pr.Crema .pr-et{background:#fff;color:#c2552e}
+.pr h4{position:relative;font-size:20px;font-weight:800;letter-spacing:-.4px;line-height:1.15}
+.pr p{position:relative;font-size:13px;line-height:1.5;opacity:.85;margin-top:6px}
+.pr-b{position:relative;margin-top:auto;padding-top:14px}
+.pr-b button{border:none;border-radius:99px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:#c2552e}
+.pr.Negro .pr-b button{background:#c2552e;color:#fff}.pr.Crema .pr-b button{background:#1a1a1a;color:#fff}
+.pr-vacio{text-align:center;color:#8a837b;font-size:14px;padding:40px 20px}
 /* Guía */
 .gu-inst{display:flex;align-items:center;gap:14px;background:#fff;color:#1a1a1a;border-radius:22px;padding:14px;margin-bottom:14px;cursor:pointer;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
 .gu-inst img{width:46px;height:46px;border-radius:13px;flex:none}
@@ -572,7 +593,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;display:flex;flex-direction:column;gap:2px;">
  <button class="nav-item" id="navInstalar" onclick="cerrarMenu();mostrarInstall()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>Instalar app</button>
  <button class="nav-item" onclick="cerrarMenu();abrirReserva()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#c2552e;font-size:14px;font-weight:700;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>Reservar cita</button>
- <a class="nav-item" href="https://tally.so/r/WOVB0N?origen=app" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-decoration:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-1.5-3-5.5-4-6-1.5S9 8 12 8zM12 8c1.5-3 5.5-4 6-1.5S15 8 12 8z"/></svg>Regalar</a>
+ <button class="nav-item" onclick="cerrarMenu();showSection('promos');pintarPromos()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.5"/></svg>Promociones</button>
  <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Guía</button>
  <button onclick="cerrarSesion()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#bbb;font-size:14px;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</button>
  </div>
@@ -633,11 +654,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="completado-card"><p>Cada día que te mueves es un paso hacia tu recuperación. ¡Vuelve mañana!</p></div>
  </div>
  </div>
- <a class="regalo" href="https://tally.so/r/WOVB0N?origen=app" target="_blank" rel="noopener">
-  <div class="regalo-ico"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-1.5-3-5.5-4-6-1.5S9 8 12 8zM12 8c1.5-3 5.5-4 6-1.5S15 8 12 8z"/></svg></div>
-  <div class="regalo-tx"><b>Regala fisioterapia</b><span>Una tarjeta regalo para quien quieras</span></div>
-  <span class="regalo-btn">Regalar</span>
- </a>
+ <div id="promosHoy"></div>
 
  </div>
 
@@ -668,6 +685,10 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div id="notifListEl"></div>
  </div>
 
+ <div id="vistaPromos" style="display:none;">
+ <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Promociones</div><div class="date-sub">Ofertas para pacientes de FISIO365</div></div>
+ <div id="promosLista" class="pr-lista"></div>
+ </div>
  <div id="vistaCitas" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mis citas</div><div class="date-sub">Tu agenda con el fisio</div></div>
  <button class="rv-btn" onclick="abrirReserva()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Reservar una cita</button>
@@ -764,7 +785,7 @@ function initApp(){
   document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;document.getElementById('hoyHeroSub').textContent=`Hola, ${(patient.nombre||'').split(' ')[0]}. Tus ejercicios de hoy, pensados para ti.`;
   loadEjercicios();
   checkMensajesNoLeidos();
-  try{pintarCitaHoy();}catch(e){}try{mirarBannerInstall();}catch(e){}setTimeout(pedirCitas,1200);
+  try{pintarCitaHoy();}catch(e){}try{mirarBannerInstall();}catch(e){}try{pintarPromos();}catch(e){}setTimeout(pedirCitas,1200);
   // Sincronizar puntos desde Airtable al arrancar (Airtable manda)
   fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id))
     .then(r=>r.json()).then(d=>{
@@ -819,7 +840,7 @@ async function compartirRecomendacion(){
   },2000);
 }
 function showSection(section){
-  ['hoy','notificaciones','citas','progreso','informes','mensajes','guia','sorteo'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
+  ['hoy','notificaciones','citas','progreso','informes','mensajes','guia','sorteo','promos'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
   ['navHoy','navProgreso','navInformes','navCitas','navMensajes','navGuia'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
   const navMap={hoy:'navHoy',progreso:'navProgreso',informes:'navInformes',citas:'navCitas',mensajes:'navMensajes',guia:'navGuia'};
   if(navMap[section]){const el=document.getElementById(navMap[section]);if(el)el.classList.add('active');}
@@ -1116,6 +1137,21 @@ async function loadAdherencia(containerId){
 
 // INSTALACION
 function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('pasosAndroid').style.display=os==='android'?'block':'none';document.getElementById('btnIOS').classList.toggle('active',os==='ios');document.getElementById('btnAndroid').classList.toggle('active',os==='android');}
+
+// ── Promociones ───────────────────────────────────────────────
+// Para añadir una promo: copia un bloque, cambia los textos y sube los cambios.
+// color: 'Naranja' | 'Negro' | 'Crema'   ·   accion: 'reservar' | 'chat' | un enlace https://…
+// desde / hasta (opcional, 'AAAA-MM-DD'): la promo solo sale entre esas fechas.
+const PROMOS=[
+ {etiqueta:'Ahorra',titulo:'Packs de sesiones',texto:'Con los packs cada sesión sale más barata. Pack de 10: ahorras 65 €. Pack de 20: ahorras 200 €.',boton:'Preguntar',accion:'chat',color:'Naranja'},
+ {etiqueta:'Regalo',titulo:'Regala fisioterapia',texto:'Una tarjeta regalo para quien quieras. La preparas en 2 minutos.',boton:'Regalar',accion:'https://tally.so/r/WOVB0N?origen=app',color:'Crema'},
+];
+function promosActivas(){const h=new Date().toISOString().slice(0,10);return PROMOS.filter(p=>(!p.desde||p.desde<=h)&&(!p.hasta||p.hasta>=h));}
+function htmlPromo(p,i,solo){const b=p.boton?`<div class="pr-b"><button onclick="accionPromo(${i})">${p.boton}</button></div>`:'';return `<div class="pr ${p.color||'Naranja'}${solo?' solo':''}">${p.etiqueta?`<div class="pr-et">${p.etiqueta}</div>`:''}<h4>${p.titulo}</h4>${p.texto?`<p>${p.texto}</p>`:''}${b}</div>`;}
+function accionPromo(i){const p=PROMOS[i];if(!p)return;if(p.accion==='reservar')return abrirReserva();if(p.accion==='chat')return showSection('mensajes');if(/^https?:/.test(p.accion||''))window.open(p.accion,'_blank');}
+function pintarPromos(){const act=promosActivas();const H=document.getElementById('promosHoy'),L=document.getElementById('promosLista');
+ if(H)H.innerHTML=act.length?`<div class="pr-cab"><b>Promociones</b>${act.length>1?`<button onclick="showSection('promos');pintarPromos()">Ver todas</button>`:''}</div><div class="pr-fila">${act.map(p=>htmlPromo(p,PROMOS.indexOf(p),act.length===1)).join('')}</div>`:'';
+ if(L)L.innerHTML=act.length?act.map(p=>htmlPromo(p,PROMOS.indexOf(p),1)).join(''):'<div class="pr-vacio">Ahora mismo no hay promociones. ¡Vuelve pronto!</div>';}
 // ── Instalar la app ───────────────────────────────────────────
 let inPrompt=null,inOS='';
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();inPrompt=e;});
