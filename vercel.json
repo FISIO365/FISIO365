@@ -14,6 +14,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/racha-ui.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "public/sw.js",
       "use": "@vercel/static"
     },
@@ -42,6 +46,10 @@
     {
       "src": "/chat-ui.js",
       "dest": "/public/chat-ui.js"
+    },
+    {
+      "src": "/racha-ui.js",
+      "dest": "/public/racha-ui.js"
     },
     {
       "src": "/manifest.json",
