@@ -25,14 +25,16 @@ export default async function handler(req) {
     const sortQ = 'sort[0][field]=FECHA&sort[0][direction]=asc';
 
     const estadoFilter = 'OR({ESTADO}="PENDIENTE ",{ESTADO}="REALIZADA")';
-    let pacienteCitas = null;
+    let pacienteCitas = null, pr_estado = 'sin paciente';
 
     // Rápido: leer del paciente la lista de sus citas (campo enlazado) y pedir solo esas
     if (/^rec[A-Za-z0-9]{14}$/.test(patientId)) {
-      const pr = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}/${patientId}?returnFieldsByFieldId=true&fields[]=${CAMPO_CITAS}`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-      if (pr.ok) {
-        const pd = await pr.json();
-        const ids = (pd.fields && pd.fields[CAMPO_CITAS]) || [];
+      const pr = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?filterByFormula=${encodeURIComponent(`RECORD_ID()="${patientId}"`)}&returnFieldsByFieldId=true&fields[]=${CAMPO_CITAS}&maxRecords=1`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+      pr_estado = pr.status;
+      const pd = pr.ok ? await pr.json() : null;
+      if (pd && pd.records && pd.records.length) {
+        const f0 = pd.records[0].fields || {};
+        const ids = f0[CAMPO_CITAS] || [];
         const trozos = [];
         for (let i = 0; i < ids.length; i += 60) trozos.push(ids.slice(i, i + 60));
         const res = await Promise.all(trozos.map(async t => {
@@ -47,11 +49,13 @@ export default async function handler(req) {
           return recs;
         }));
         pacienteCitas = res.flat();
+        console.log('citas rápido', ids.length, 'enlazadas', pacienteCitas.length, 'válidas');
       }
     }
 
     // Respaldo (lento): recorrer todas las citas y filtrar
     if (!pacienteCitas) {
+      console.log('citas: respaldo lento', pr_estado);
       let allRecords = [], offset = null;
       do {
         const offsetQ = offset ? `&offset=${offset}` : '';
