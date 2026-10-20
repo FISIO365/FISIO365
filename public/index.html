@@ -447,6 +447,27 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .pr-b button{border:none;border-radius:99px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:#c2552e}
 .pr.Negro .pr-b button{background:#c2552e;color:#fff}.pr.Crema .pr-b button{background:#1a1a1a;color:#fff}
 .pr-vacio{text-align:center;color:#8a837b;font-size:14px;padding:40px 20px}
+
+/* Packs */
+#packsSheet{position:fixed;inset:0;z-index:550;background:var(--cream);display:none;flex-direction:column}
+#packsSheet.on{display:flex}
+.pk-body{flex:1;overflow-y:auto;padding:0 16px 30px}
+.pk-ventajas{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 16px}
+.pk-v{background:#fff;border-radius:16px;padding:12px 8px;text-align:center;font-size:11.5px;line-height:1.35;color:#4a453f;box-shadow:0 1px 2px rgba(26,26,26,.04)}
+.pk-v b{display:block;font-size:13.5px;font-weight:800;color:#c2552e;margin-bottom:2px}
+.pk-tipo{font-size:12.5px;color:#6f6861;margin:-4px 2px 12px;line-height:1.5}
+.pk{position:relative;display:flex;align-items:center;gap:12px;background:#fff;border-radius:20px;padding:14px 14px 14px 16px;margin-bottom:10px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05);border:2px solid transparent}
+.pk.top{border-color:#c2552e}
+.pk-tag{position:absolute;top:-10px;left:16px;background:#c2552e;color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:99px}
+.pk-n{flex:1;min-width:0}
+.pk-n b{display:block;font-size:16px}
+.pk-n span{display:block;font-size:12.5px;color:#6f6861;margin-top:1px}
+.pk-n em{font-style:normal;display:inline-block;margin-top:5px;background:#eaf5ea;color:#2e6b34;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:99px}
+.pk-p{text-align:right;flex:none}
+.pk-p b{display:block;font-size:20px;font-weight:800;letter-spacing:-.5px}
+.pk-p button{margin-top:6px;border:none;border-radius:99px;background:#1a1a1a;color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;padding:8px 13px;cursor:pointer}
+.pk.top .pk-p button{background:#c2552e}
+.pk-nota{text-align:center;font-size:12.5px;color:#8a837b;line-height:1.5;margin-top:14px}
 /* Guía */
 .gu-inst{display:flex;align-items:center;gap:14px;background:#fff;color:#1a1a1a;border-radius:22px;padding:14px;margin-bottom:14px;cursor:pointer;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
 .gu-inst img{width:46px;height:46px;border-radius:13px;flex:none}
@@ -1143,15 +1164,35 @@ function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'
 // color: 'Naranja' | 'Negro' | 'Crema'   ·   accion: 'reservar' | 'chat' | un enlace https://…
 // desde / hasta (opcional, 'AAAA-MM-DD'): la promo solo sale entre esas fechas.
 const PROMOS=[
- {etiqueta:'Ahorra',titulo:'Packs de sesiones',texto:'Con los packs cada sesión sale más barata. Pack de 10: ahorras 65 €. Pack de 20: ahorras 200 €.',boton:'Preguntar',accion:'chat',color:'Naranja'},
+ {etiqueta:'Siempre disponible',titulo:'Packs de sesiones',texto:'Cada sesión te sale más barata: hasta 280 € de ahorro. Pagas una vez y solo te preocupas de mejorar.',boton:'Ver packs',accion:'packs',color:'Naranja'},
  {etiqueta:'Regalo',titulo:'Regala fisioterapia',texto:'Una tarjeta regalo para quien quieras. La preparas en 2 minutos.',boton:'Regalar',accion:'https://tally.so/r/WOVB0N?origen=app',color:'Crema'},
 ];
 function promosActivas(){const h=new Date().toISOString().slice(0,10);return PROMOS.filter(p=>(!p.desde||p.desde<=h)&&(!p.hasta||p.hasta>=h));}
 function htmlPromo(p,i,solo){const b=p.boton?`<div class="pr-b"><button onclick="accionPromo(${i})">${p.boton}</button></div>`:'';return `<div class="pr ${p.color||'Naranja'}${solo?' solo':''}">${p.etiqueta?`<div class="pr-et">${p.etiqueta}</div>`:''}<h4>${p.titulo}</h4>${p.texto?`<p>${p.texto}</p>`:''}${b}</div>`;}
-function accionPromo(i){const p=PROMOS[i];if(!p)return;if(p.accion==='reservar')return abrirReserva();if(p.accion==='chat')return showSection('mensajes');if(/^https?:/.test(p.accion||''))window.open(p.accion,'_blank');}
+function accionPromo(i){const p=PROMOS[i];if(!p)return;if(p.accion==='reservar')return abrirReserva();if(p.accion==='chat')return showSection('mensajes');if(p.accion==='packs')return abrirPacks();if(/^https?:/.test(p.accion||''))window.open(p.accion,'_blank');}
 function pintarPromos(){const act=promosActivas();const H=document.getElementById('promosHoy'),L=document.getElementById('promosLista');
  if(H)H.innerHTML=act.length?`<div class="pr-cab"><b>Promociones</b>${act.length>1?`<button onclick="showSection('promos');pintarPromos()">Ver todas</button>`:''}</div><div class="pr-fila">${act.map(p=>htmlPromo(p,PROMOS.indexOf(p),act.length===1)).join('')}</div>`:'';
  if(L)L.innerHTML=act.length?act.map(p=>htmlPromo(p,PROMOS.indexOf(p),1)).join(''):'<div class="pr-vacio">Ahora mismo no hay promociones. ¡Vuelve pronto!</div>';}
+
+// ── Packs ─────────────────────────────────────────────────────
+const PACKS={
+ convencional:{nombre:'Fisioterapia',desc:'Para contracturas, dolor de espalda, tirones y molestias del día a día.',suelta:65,packs:[[5,310],[10,585],[20,1100]]},
+ avanzada:{nombre:'Fisioterapia avanzada',desc:'Con tecnología (bomba diamagnética, ondas de choque) para hernias, tendinitis y lesiones que se resisten.',suelta:75,packs:[[5,345],[10,640],[20,1220]]}};
+let pkTipo='convencional';
+const eur=n=>{const r=Math.round(n*100)/100;const [e,d]=r.toFixed(r%1?2:0).split('.');return e.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+(d?','+d:'')+' €';};
+function abrirPacks(){document.getElementById('packsSheet').classList.add('on');document.body.style.overflow='hidden';pintarPacks();}
+function cerrarPacks(){document.getElementById('packsSheet').classList.remove('on');document.body.style.overflow='';}
+function pintarPacks(){const t=PACKS[pkTipo];
+ document.getElementById('pkTabs').innerHTML=Object.keys(PACKS).map(k=>`<button class="rv-chip${k===pkTipo?' on':''}" onclick="pkTipo='${k}';pintarPacks()">${PACKS[k].nombre}</button>`).join('');
+ const max=Math.max(...t.packs.map(([n,p])=>n*t.suelta-p));
+ let h=`<div class="pk-ventajas"><div class="pk-v"><b>Ahorras</b>cada sesión sale más barata</div><div class="pk-v"><b>Cómodo</b>pagas una vez y te olvidas</div><div class="pk-v"><b>Constancia</b>mejores resultados</div></div>`;
+ h+=`<div class="pk-tipo">${t.desc} Sesión suelta: <b>${eur(t.suelta)}</b>.</div>`;
+ h+=t.packs.map(([n,p])=>{const ah=n*t.suelta-p,top=n===10;return `<div class="pk${top?' top':''}">${top?'<div class="pk-tag">RECOMENDADO</div>':''}<div class="pk-n"><b>Pack de ${n} sesiones</b><span>${eur(p/n)} por sesión</span><em>Ahorras ${eur(ah)}</em></div><div class="pk-p"><b>${eur(p)}</b><button onclick="quieroPack(${n},${p})">Lo quiero</button></div></div>`;}).join('');
+ h+=`<div class="pk-nota">Al tocar «Lo quiero» nos escribes por WhatsApp y te lo dejamos listo.<br>Puedes pagar con tarjeta, transferencia o en efectivo.</div>`;
+ document.getElementById('pkBody').innerHTML=h;}
+function quieroPack(n,p){const t=PACKS[pkTipo];const nom=patient&&patient.nombre?patient.nombre:'';
+ const msg=`Hola, soy ${nom||'paciente de FISIO365'}. Quiero el pack de ${n} sesiones de ${t.nombre.toLowerCase()} (${eur(p)}).`;
+ window.open('https://wa.me/34672893949?text='+encodeURIComponent(msg),'_blank');}
 // ── Instalar la app ───────────────────────────────────────────
 let inPrompt=null,inOS='';
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();inPrompt=e;});
@@ -1234,6 +1275,12 @@ async function loadPuntos(){
 <div class="rv-modal" id="rvModal" onclick="if(event.target===this)cerrarConfirmar()">
  <div class="rv-card"><div class="rv-ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><h3>¿Reservamos esta cita?</h3><div class="rv-res" id="rvRes"></div><div class="rv-err" id="rvErr"></div>
  <button class="rv-btn" id="rvOk" onclick="confirmarReserva()">Reservar</button><button class="rv-cancel" onclick="cerrarConfirmar()">Cancelar</button></div>
+</div>
+
+<div id="packsSheet">
+ <div class="rv-top"><button onclick="cerrarPacks()" aria-label="Cerrar">‹</button><b>Packs de sesiones</b></div>
+ <div class="rv-chips" id="pkTabs"></div>
+ <div class="pk-body" id="pkBody"></div>
 </div>
 </body>
 </html>
