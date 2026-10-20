@@ -315,36 +315,60 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .tmr-go{flex:1;height:44px;border:none;border-radius:99px;background:var(--black);color:var(--cream);font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer}
 .tmr-reset{width:44px;height:44px;border:none;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;color:var(--black)}
 
-/* Ejercicios (diseño nuevo) */
-.ej-prog{display:flex;align-items:center;gap:14px;margin:4px 2px 14px;font-size:13px;color:var(--muted)}
-.ej-prog b{color:var(--black)}
-.ej-prog-bar{flex:1;height:6px;border-radius:99px;background:rgba(26,26,26,.08);overflow:hidden}
-.ej-prog-bar i{display:block;height:100%;background:var(--lila-d);border-radius:99px;transition:width .3s}
-.ej-list{display:flex;flex-direction:column;gap:12px}
-.ej-card{background:#fff;border-radius:24px;padding:16px;box-shadow:var(--sombra);transition:opacity .2s;scroll-margin-top:80px}
-.ej-top{display:flex;align-items:center;gap:12px}
-.ej-n{width:42px;height:42px;border-radius:14px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--black);flex:none}
-.ej-card.ok .ej-n{background:var(--lila-light);color:var(--lila-d)}
-.ej-tit{flex:1;min-width:0}
-.ej-nom2{font-size:16px;font-weight:700;line-height:1.25;letter-spacing:-.2px}
-.ej-card.ok .ej-nom2{color:var(--muted)}
-.ej-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-top:3px}
-.ej-meta b{color:var(--black);font-weight:700}
-.ej-meta i{font-style:normal;color:#cfcac3}
-.ej-check{width:42px;height:42px;border-radius:50%;border:2px solid rgba(26,26,26,.15);background:#fff;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.ej-check svg{width:20px;height:20px;fill:none;stroke:transparent;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-.ej-card.ok .ej-check{background:var(--lila-d);border-color:var(--lila-d)}
-.ej-card.ok .ej-check svg{stroke:#fff}
-.ej-vid{display:block;position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#111;border:none;padding:0;margin-top:14px;cursor:pointer}
-.ej-vid img{width:100%;height:100%;object-fit:cover;display:block;opacity:.92}
-.ej-vid iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
-.ej-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.25)}
-.ej-play svg{width:24px;height:24px;fill:var(--black);margin-left:3px}
-.ej-card .tmr{margin:14px 0 0}
-.ej-nota2{display:flex;gap:10px;align-items:flex-start;margin-top:12px;background:var(--cream);border-radius:16px;padding:12px 14px;font-size:13.5px;line-height:1.5;color:#4a4640}
-.ej-nota2 svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--lila-d);stroke-width:2;stroke-linecap:round;margin-top:1px}
+/* Ejercicios: lista tipo «sesión» + modo sesión a pantalla completa */
+.hoy-hero-sub{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hero-go{display:inline-flex;align-items:center;gap:8px;border:none;background:var(--lila);color:#1a1a1a;font-family:var(--font);font-size:14px;font-weight:700;border-radius:99px;padding:11px 18px;cursor:pointer;margin-top:12px;width:100%;justify-content:center}
+.hero-go svg{width:16px;height:16px;fill:#1a1a1a}
+.pl-tit{font-size:13px;font-weight:700;color:var(--muted);margin:18px 4px 8px;text-transform:uppercase;letter-spacing:.08em}
+.pl{background:#fff;border-radius:24px;box-shadow:var(--sombra);overflow:hidden}
+.pl-row{display:flex;align-items:center;gap:14px;padding:12px 14px;cursor:pointer;position:relative}
+.pl-row+.pl-row::before{content:'';position:absolute;top:0;left:100px;right:14px;height:1px;background:var(--border)}
+.pl-row:active{background:#faf8f5}
+.pl-th{position:relative;width:72px;height:54px;border-radius:14px;background:var(--cream);overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center}
+.pl-th img{width:100%;height:100%;object-fit:cover}
+.pl-th span{font-size:18px;font-weight:800;color:var(--lila-d)}
+.pl-th em{position:absolute;inset:0;background:rgba(123,111,212,.88);display:flex;align-items:center;justify-content:center}
+.pl-th em svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.pl-tx{flex:1;min-width:0}
+.pl-tx b{display:block;font-size:15px;line-height:1.3;font-weight:700}
+.pl-tx span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.pl-row.ok .pl-tx b{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(26,26,26,.25)}
+.pl-fl{width:18px;height:18px;fill:none;stroke:#c9c4bd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .ej-vacio{background:#fff;border-radius:24px;padding:36px 22px;text-align:center;color:var(--muted);font-size:14px;box-shadow:var(--sombra)}
 .ej-vacio b{display:block;color:var(--black);font-size:17px;margin-bottom:6px}
+#sesion{position:fixed;inset:0;z-index:400;background:var(--cream);transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#sesion.on{transform:none}
+.ses{min-height:100%;display:flex;flex-direction:column;max-width:600px;margin:0 auto}
+.ses-top{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 10px;position:sticky;top:0;background:var(--cream);z-index:2}
+.ses-x{width:40px;height:40px;border-radius:50%;border:none;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.ses-x svg{width:18px;height:18px;fill:none;stroke:var(--black);stroke-width:2.2;stroke-linecap:round}
+.ses-segs{flex:1;display:flex;gap:4px}
+.ses-segs i{flex:1;height:5px;border-radius:99px;background:rgba(26,26,26,.1)}
+.ses-segs i.ok{background:var(--lila-d)}
+.ses-segs i.act{background:var(--black)}
+.ses-cont{font-size:13px;font-weight:700;color:var(--muted);min-width:30px;text-align:right}
+.ses-body{flex:1;padding:6px 16px 20px}
+.ses-vid{position:relative;aspect-ratio:16/9;border-radius:22px;overflow:hidden;background:#111}
+.ses-vid iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.ses-novid{aspect-ratio:16/8;border-radius:22px;background:var(--black);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.ses-novid::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(173,163,218,.5),rgba(173,163,218,0) 70%)}
+.ses-novid span{font-size:64px;font-weight:800;color:var(--lila);letter-spacing:-3px}
+.ses-eti{font-size:12.5px;font-weight:600;color:var(--muted);margin:18px 2px 4px;text-transform:uppercase;letter-spacing:.08em}
+.ses-eti b{color:var(--lila-d)}
+.ses-nom{font-size:28px;font-weight:800;letter-spacing:-.8px;line-height:1.15;margin:0 2px 16px}
+.ses-datos{display:flex;gap:10px;margin-bottom:14px}
+.ses-datos div{flex:1;background:#fff;border-radius:20px;padding:14px 8px;text-align:center;box-shadow:var(--sombra)}
+.ses-datos b{display:block;font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1}
+.ses-datos span{font-size:12px;color:var(--muted)}
+.ses-body .tmr{background:#fff;box-shadow:var(--sombra);margin-bottom:14px}
+.ses-nota{background:#fff;border-radius:20px;padding:16px;font-size:15px;line-height:1.55;color:#3d3a35;box-shadow:var(--sombra)}
+.ses-nota div{font-size:11.5px;font-weight:700;color:var(--lila-d);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.ses-pie{position:sticky;bottom:0;display:flex;gap:10px;padding:12px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(245,242,238,0),var(--cream) 30%)}
+.ses-ant{width:58px;height:58px;border-radius:50%;border:none;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;box-shadow:var(--sombra)}
+.ses-ant svg{width:22px;height:22px;fill:none;stroke:var(--black);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ses-ant[disabled]{opacity:.35}
+.ses-ok{flex:1;height:58px;border:none;border-radius:99px;background:var(--black);color:var(--cream);font-family:var(--font);font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer}
+.ses-ok svg{width:20px;height:20px;fill:none;stroke:var(--lila);stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
 <body>
@@ -818,7 +842,7 @@ function mostrarCompletado(){document.getElementById('vistaEjercicios').style.di
 
 // TEMPORIZADOR para ejercicios por tiempo (cuenta atrás con series, sonido y vibración)
 function tmrHTML(ej,i){const seg=parseInt(ej.dur||ej.duracion,10);if(!seg)return '';const series=parseInt(ej.series,10)||1;
-  return `<div class="tmr" id="tmr${i}" data-seg="${seg}" data-series="${series}"><div class="tmr-anillo"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="tmr-fondo"/><circle cx="60" cy="60" r="52" class="tmr-prog" style="stroke-dasharray:326.7;stroke-dashoffset:0"/></svg><div class="tmr-num">${seg}</div></div><div class="tmr-info"><div class="tmr-estado">Serie 1 de ${series}</div><div class="tmr-botones"><button class="tmr-go" onclick="tmrPulsar(${i})">Empezar</button><button class="tmr-reset" onclick="tmrReiniciar(${i})" aria-label="Reiniciar">↺</button></div></div></div>`;}
+  return `<div class="tmr" id="tmr${i}" data-seg="${seg}" data-series="${series}"><div class="tmr-anillo"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="tmr-fondo"/><circle cx="60" cy="60" r="52" class="tmr-prog" style="stroke-dasharray:326.7;stroke-dashoffset:0"/></svg><div class="tmr-num">${seg}</div></div><div class="tmr-info"><div class="tmr-estado">Serie 1 de ${series}</div><div class="tmr-botones"><button class="tmr-go" onclick="tmrPulsar('${i}')">Empezar</button><button class="tmr-reset" onclick="tmrReiniciar('${i}')" aria-label="Reiniciar">↺</button></div></div></div>`;}
 const tmrs={};let tmrAudio=null;
 function tmrPitido(f,ms){try{tmrAudio=tmrAudio||new (window.AudioContext||window.webkitAudioContext)();const o=tmrAudio.createOscillator(),g=tmrAudio.createGain();o.frequency.value=f;o.connect(g);g.connect(tmrAudio.destination);g.gain.setValueAtTime(.25,tmrAudio.currentTime);g.gain.exponentialRampToValueAtTime(.001,tmrAudio.currentTime+ms/1000);o.start();o.stop(tmrAudio.currentTime+ms/1000);}catch(e){}}
 function tmrEstado(i){const el=document.getElementById('tmr'+i);const seg=+el.dataset.seg,series=+el.dataset.series;return tmrs[i]||(tmrs[i]={seg,series,serie:1,resto:seg,fase:'listo',int:null,el});}
@@ -840,31 +864,55 @@ function tmrReiniciar(i){const t=tmrEstado(i);clearInterval(t.int);t.int=null;t.
 function renderEjercicios(){
   const lista=document.getElementById('ejList');
   if(!ejercicios.length){lista.innerHTML=`<div class="ej-vacio"><b>Aún no tienes ejercicios</b>Tu fisio te los asignará después de tu sesión.</div>`;return;}
-  document.getElementById('diarioSection').style.display='block';
-  const n=ejercicios.length;
-  const sub=document.getElementById('hoyHeroSub');if(sub)sub.textContent=`Hola, ${(patient.nombre||'').split(' ')[0]}. Hoy tienes ${n} ${n===1?'ejercicio':'ejercicios'}.`;
-  const hechosN=ejercicios.filter((e,i)=>hechos.has(ejKey(e,i))).length;
-  lista.innerHTML=`<div class="ej-prog"><div><b>${hechosN} de ${n}</b> hechos</div><div class="ej-prog-bar"><i style="width:${Math.round(hechosN/n*100)}%"></i></div></div>`+
-  '<div class="ej-list">'+ejercicios.map((ej,i)=>{
-    const k=ejKey(ej,i),ok=hechos.has(k);
-    const dur=ej.dur||ej.duracion;
-    const meta=[ej.series?`<span><b>${ej.series}</b> ${+ej.series===1?'serie':'series'}</span>`:'',ej.reps?`<span><b>${ej.reps}</b> reps</span>`:'',dur?`<span><b>${dur}</b> s</span>`:''].filter(Boolean).join('<i>·</i>');
-    const vid=ej.ytId?`<button class="ej-vid" onclick="verVideo(this,'${ej.ytId}')" aria-label="Ver vídeo"><img src="https://i.ytimg.com/vi/${ej.ytId}/hqdefault.jpg" alt="" loading="lazy"><span class="ej-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span></button>`:'';
-    const nota=ej.desc?`<div class="ej-nota2"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="9"/></svg><div>${ej.desc.replace(/</g,'&lt;')}</div></div>`:'';
-    return `<div class="ej-card${ok?' ok':''}" id="ejc${i}">
-      <div class="ej-top"><div class="ej-n">${String(i+1).padStart(2,'0')}</div><div class="ej-tit"><div class="ej-nom2">${ej.name}</div>${meta?`<div class="ej-meta">${meta}</div>`:''}</div>
-      <button class="ej-check" onclick="toggleEj(${i})" aria-label="${ok?'Marcar como no hecho':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>
-      ${vid}${tmrHTML(ej,i)}${nota}</div>`;
-  }).join('')+'</div>';
+  document.getElementById('diarioSection').style.display='none';
+  const n=ejercicios.length,h=ejHechos();
+  const sub=document.getElementById('hoyHeroSub');
+  if(sub)sub.innerHTML=`${n} ${n===1?'ejercicio':'ejercicios'} · ${h===n?'¡todo hecho!':h?`${h} hechos`:'pensados para ti'}<button class="hero-go" onclick="abrirSesion(${h<n?ejercicios.findIndex((e,i)=>!hechos.has(ejKey(e,i))):0})">${h===0?'Empezar sesión':h<n?'Continuar':'Repasar'}<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></button>`;
+  lista.innerHTML=`<div class="pl-tit">Tu sesión</div><div class="pl">`+ejercicios.map((ej,i)=>{
+    const ok=hechos.has(ejKey(ej,i));
+    return `<div class="pl-row${ok?' ok':''}" onclick="abrirSesion(${i})">
+      <div class="pl-th">${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy">`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
+      <div class="pl-tx"><b>${ej.name}</b><span>${ejMeta(ej)||'&nbsp;'}</span></div>
+      <svg class="pl-fl" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></div>`;}).join('')+`</div>`;
 }
 function ejKey(e,i){return e.id||('i'+i);}
-function toggleEj(i){const k=ejKey(ejercicios[i],i);hechos.has(k)?hechos.delete(k):hechos.add(k);try{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...hechos]));}catch(e){}
-  const c=document.getElementById('ejc'+i);c.classList.toggle('ok',hechos.has(k));
-  const n=ejercicios.length,h=ejercicios.filter((e,j)=>hechos.has(ejKey(e,j))).length;
-  const pr=document.querySelector('.ej-prog');if(pr){pr.querySelector('b').textContent=`${h} de ${n}`;pr.querySelector('i').style.width=Math.round(h/n*100)+'%';}
-  if(hechos.has(k)&&i<n-1){const sig=document.getElementById('ejc'+(i+1));if(sig)setTimeout(()=>sig.scrollIntoView({behavior:'smooth',block:'start'}),250);}
-  if(h===n){const b=document.getElementById('btnDiario');if(b)setTimeout(()=>b.scrollIntoView({behavior:'smooth',block:'center'}),300);}}
-function verVideo(btn,id){const f=document.createElement('div');f.className='ej-vid';f.innerHTML=`<iframe src="https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&autoplay=1&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;btn.replaceWith(f);}
+function ejHechos(){return ejercicios.filter((e,i)=>hechos.has(ejKey(e,i))).length;}
+function ejMeta(ej){const d=ej.dur||ej.duracion;return [ej.series?`${ej.series} ${+ej.series===1?'serie':'series'}`:'',ej.reps?`${ej.reps} reps`:'',d?`${d} s`:''].filter(Boolean).join(' · ');}
+function guardarHechos(){try{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...hechos]));}catch(e){}}
+
+// MODO SESIÓN: un ejercicio a pantalla completa, con vídeo, temporizador y «Hecho · Siguiente»
+let sesI=0;
+function abrirSesion(i){sesI=i;let ov=document.getElementById('sesion');if(!ov){ov=document.createElement('div');ov.id='sesion';document.body.appendChild(ov);}pintarSesion();ov.classList.add('on');document.body.style.overflow='hidden';}
+function cerrarSesionEj(){const ov=document.getElementById('sesion');if(ov){ov.classList.remove('on');ov.innerHTML='';}document.body.style.overflow='';Object.keys(tmrs).forEach(k=>{clearInterval(tmrs[k].int);delete tmrs[k];});renderEjercicios();}
+function pintarSesion(){
+  const ov=document.getElementById('sesion'),n=ejercicios.length,ej=ejercicios[sesI],ok=hechos.has(ejKey(ej,sesI)),ult=sesI===n-1;
+  Object.keys(tmrs).forEach(k=>{clearInterval(tmrs[k].int);delete tmrs[k];});
+  const d=ej.dur||ej.duracion;
+  const datos=[ej.series?[ej.series,+ej.series===1?'serie':'series']:null,ej.reps?[ej.reps,'reps']:null,d?[d,'segundos']:null].filter(Boolean);
+  ov.innerHTML=`<div class="ses">
+    <div class="ses-top"><button class="ses-x" onclick="cerrarSesionEj()" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <div class="ses-segs">${ejercicios.map((e,i)=>`<i class="${hechos.has(ejKey(e,i))?'ok':''}${i===sesI?' act':''}"></i>`).join('')}</div>
+      <div class="ses-cont">${sesI+1}/${n}</div></div>
+    <div class="ses-body">
+      ${ej.ytId?`<div class="ses-vid"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1&playsinline=1" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`:`<div class="ses-novid"><span>${String(sesI+1).padStart(2,'0')}</span></div>`}
+      <div class="ses-eti">Ejercicio ${sesI+1} de ${n}${ok?' · <b>hecho</b>':''}</div>
+      <h2 class="ses-nom">${ej.name}</h2>
+      ${datos.length?`<div class="ses-datos">${datos.map(x=>`<div><b>${x[0]}</b><span>${x[1]}</span></div>`).join('')}</div>`:''}
+      ${tmrHTML(ej,'S')}
+      ${ej.desc?`<div class="ses-nota"><div>Indicaciones de tu fisio</div>${ej.desc.replace(/</g,'&lt;')}</div>`:''}
+    </div>
+    <div class="ses-pie">
+      <button class="ses-ant" onclick="sesMover(-1)" ${sesI===0?'disabled':''} aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
+      <button class="ses-ok" onclick="sesHecho()">${ult?(ejHechos()+(ok?0:1)>=n?'Terminar sesión':'Hecho'):'Hecho · Siguiente'}<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>
+    </div></div>`;
+  ov.scrollTop=0;
+}
+function sesMover(d){sesI=Math.max(0,Math.min(ejercicios.length-1,sesI+d));pintarSesion();}
+function sesHecho(){hechos.add(ejKey(ejercicios[sesI],sesI));guardarHechos();
+  const n=ejercicios.length;
+  if(ejHechos()>=n){cerrarSesionEj();marcarHecho();return;}
+  const sig=ejercicios.findIndex((e,i)=>i>sesI&&!hechos.has(ejKey(e,i)));
+  sesI=sig>=0?sig:ejercicios.findIndex((e,i)=>!hechos.has(ejKey(e,i)));pintarSesion();}
 
 
 function modalRespuestaNo(){
