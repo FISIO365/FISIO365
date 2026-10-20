@@ -412,7 +412,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .in-flecha svg{width:34px;height:34px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;animation:inBote 1s ease-in-out infinite}
 @keyframes inBote{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
 /* Banner en Hoy */
-.in-banner{display:none;align-items:center;gap:14px;background:#fff;border-radius:24px;padding:14px 14px 14px 16px;margin:12px 0 0;cursor:pointer;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
+.in-banner{display:none;align-items:center;gap:14px;background:#fff;border-radius:24px;padding:14px 14px 14px 16px;margin:0 0 14px;cursor:pointer;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
 .in-banner.on{display:flex}
 .in-banner img{width:48px;height:48px;border-radius:14px;flex:none}
 .in-banner div{flex:1;min-width:0}
@@ -579,6 +579,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="date-today" id="dateToday">Tu programa de hoy</div>
  <div class="hoy-hero-sub" id="hoyHeroSub">Tus ejercicios, pensados para ti.</div>
  </div>
+ <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icono.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
  <div id="fisioCard" class="fisio-card" style="display:none;">
  <div class="fisio-av" id="fisioAv"></div>
  <div><div class="fisio-nombre" id="fisioNombre"></div><div class="fisio-col" id="fisioColegiado"></div></div>
@@ -622,7 +623,6 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
   <div class="regalo-tx"><b>Regala fisioterapia</b><span>Una tarjeta regalo para quien quieras</span></div>
   <span class="regalo-btn">Regalar</span>
  </a>
- <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icono.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
 
  </div>
 
