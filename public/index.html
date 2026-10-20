@@ -219,7 +219,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .pin-d:focus{border-color:var(--lila)}
 .btn-primary{background:var(--black);color:var(--cream);border-radius:99px;height:56px;font-size:15px;margin-bottom:0}
 .login-err{color:#c0392b}
-.btn-install{color:var(--muted);font-size:13px;font-weight:500;max-width:380px;margin-top:14px}
+.btn-install{display:flex;align-items:center;justify-content:center;gap:8px;color:#c2552e;background:#fff;border-radius:99px;font-size:14px;font-weight:700;max-width:380px;margin-top:16px;padding:13px 18px;box-shadow:0 1px 2px rgba(26,26,26,.05),0 6px 18px rgba(26,26,26,.06)}
 .login-langs{text-align:center;margin-top:6px;color:#cfcac3;font-size:12px}
 .login-langs .lang-btn{flex:none;padding:4px 6px;font-size:12px;background:none}
 /* Barra superior */
@@ -386,6 +386,40 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .ses-vid em{font-family:var(--font);position:absolute;left:0;right:0;bottom:12px;text-align:center;font-style:normal;font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6)}
 
 
+
+/* Instalar la app */
+#installPopup{position:fixed;inset:0;z-index:700;background:rgba(17,17,17,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:20px}
+#installPopup.on{display:flex}
+.in-card{background:#fff;width:100%;max-width:380px;max-height:92vh;overflow-y:auto;border-radius:28px;padding:26px 22px 18px;box-shadow:0 24px 60px rgba(17,17,17,.25);animation:rvPop .22s ease-out;position:relative}
+.in-x{position:absolute;right:14px;top:14px;width:34px;height:34px;border-radius:50%;border:none;background:#f5f2ee;font-size:18px;color:#6f6861;cursor:pointer}
+.in-app{width:64px;height:64px;border-radius:18px;margin:0 auto 12px;display:block;box-shadow:0 6px 16px rgba(0,0,0,.15)}
+.in-card h3{text-align:center;font-size:20px;font-weight:800;letter-spacing:-.3px}
+.in-sub{text-align:center;font-size:13.5px;color:#6f6861;margin:6px 6px 16px;line-height:1.5}
+.in-tabs{display:flex;background:#f5f2ee;border-radius:99px;padding:4px;margin-bottom:14px}
+.in-tabs button{flex:1;border:none;background:none;border-radius:99px;padding:8px;font-family:inherit;font-size:13px;font-weight:600;color:#8a837b;cursor:pointer}
+.in-tabs button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.in-paso{display:flex;gap:12px;align-items:center;background:#faf6f2;border-radius:16px;padding:12px;margin-bottom:8px}
+.in-n{width:26px;height:26px;border-radius:50%;background:#c2552e;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.in-t{flex:1;font-size:14px;line-height:1.45;color:#1a1a1a}
+.in-t small{display:block;font-size:12px;color:#8a837b;margin-top:2px}
+.in-i{width:38px;height:38px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.in-i svg{width:22px;height:22px;fill:none;stroke:#007aff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.in-i.and svg{stroke:#1a1a1a}
+.in-aviso{background:#fff4e5;border:1px solid #f3cfa0;color:#7a4a12;border-radius:14px;padding:11px 13px;font-size:13px;line-height:1.5;margin-bottom:12px}
+.in-ok{text-align:center;background:#eef7ee;color:#2e6b34;border-radius:14px;padding:14px;font-size:14px;font-weight:600}
+.in-flecha{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);z-index:701;display:none;flex-direction:column;align-items:center;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none}
+.in-flecha.on{display:flex}
+.in-flecha svg{width:34px;height:34px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;animation:inBote 1s ease-in-out infinite}
+@keyframes inBote{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+/* Banner en Hoy */
+.in-banner{display:none;align-items:center;gap:12px;background:#1a1a1a;color:#fff;border-radius:20px;padding:12px 12px 12px 14px;margin:0 0 14px;cursor:pointer}
+.in-banner.on{display:flex}
+.in-banner img{width:40px;height:40px;border-radius:11px;flex:none}
+.in-banner div{flex:1;min-width:0}
+.in-banner b{display:block;font-size:14px}
+.in-banner span{font-size:12px;color:rgba(255,255,255,.65)}
+.in-banner .ib{background:#c2552e;border:none;color:#fff;border-radius:99px;padding:9px 14px;font-family:inherit;font-size:13px;font-weight:700;flex:none;cursor:pointer}
+.in-banner .ix{background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;padding:0 4px;cursor:pointer;flex:none}
 /* Tarjeta de cita en Hoy */
 .ch{display:none;align-items:center;gap:14px;background:#fff;border-radius:22px;padding:14px 14px 14px 16px;margin:0 0 14px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05);cursor:pointer}
 .ch.on{display:flex}
@@ -486,6 +520,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="login-err" id="loginErr"></div>
  </div>
  <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app?</button>
+<script>try{if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.getElementById('installBtn').style.display='none';}catch(e){}</script>
  <div class="login-langs">
  <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button><span>·</span><button class="lang-btn" data-lang="cat" onclick="setLang('cat')">CAT</button><span>·</span><button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
  </div>
@@ -515,6 +550,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 
  </div>
  <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;display:flex;flex-direction:column;gap:2px;">
+ <button class="nav-item" id="navInstalar" onclick="cerrarMenu();mostrarInstall()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>Instalar la app</button>
  <button class="nav-item" onclick="cerrarMenu();abrirReserva()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#c2552e;font-size:14px;font-weight:700;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>Reservar cita</button>
  <a class="nav-item" href="https://tally.so/r/WOVB0N?origen=app" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-decoration:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-1.5-3-5.5-4-6-1.5S9 8 12 8zM12 8c1.5-3 5.5-4 6-1.5S15 8 12 8z"/></svg>Regalar</a>
  <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#bbb;font-size:14px;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Guía</button>
@@ -542,6 +578,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="fisio-av" id="fisioAv"></div>
  <div><div class="fisio-nombre" id="fisioNombre"></div><div class="fisio-col" id="fisioColegiado"></div></div>
  </div>
+ <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icono.png" alt=""><div><b>Instala la app en tu móvil</b><span>Tenla a un toque, como cualquier app</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
  <div id="citaHoy" class="ch"></div>
  <div id="notaFisioBtn" style="display:none;margin-bottom:12px;">
  <button onclick="toggleNotaFisio()" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:#aaa;display:flex;align-items:center;gap:5px;padding:0;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ver nota de tu fisio</button>
@@ -783,31 +820,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 </div>
 
 <!-- POPUP INSTALACION -->
-<div id="installPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;align-items:flex-end;justify-content:center;">
- <div style="background:white;border-radius:24px 24px 0 0;padding:28px 24px 48px;width:100%;max-width:500px;">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
- <div style="font-size:18px;font-weight:800;color:#000">Instalar la app</div>
- <button onclick="cerrarInstall()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#888">×</button>
- </div>
- <div style="display:flex;gap:8px;margin-bottom:20px;">
- <button id="btnInstIOS" onclick="showInstOS('ios')" style="flex:1;padding:10px;border:1.5px solid #000;border-radius:8px;background:#000;color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">iPhone</button>
- <button id="btnInstAndroid" onclick="showInstOS('android')" style="flex:1;padding:10px;border:1.5px solid #ddd;border-radius:8px;background:none;color:#888;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Android</button>
- </div>
- <div id="instPasosIOS">
- <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div><div style="font-size:14px;line-height:1.6">Abre esta página en <strong>Safari</strong></div></div>
- <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div><div style="font-size:14px;line-height:1.6">Toca el botón <strong>Compartir ↑</strong> abajo en el centro</div></div>
- <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
- <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono</div></div>
- </div>
- <div id="instPasosAndroid" style="display:none;">
- <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div><div style="font-size:14px;line-height:1.6">Abre esta página en <strong>Chrome</strong></div></div>
- <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div><div style="font-size:14px;line-height:1.6">Toca los <strong>3 puntos ⋮</strong> arriba a la derecha</div></div>
- <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir a pantalla de inicio"</strong></div></div>
- <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:#000;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div><div style="font-size:14px;line-height:1.6">Toca <strong>"Añadir"</strong> y ya tendrás el icono</div></div>
- </div>
- </div>
-</div>
-
+<div id="installPopup" onclick="if(event.target===this)cerrarInstall()"><div class="in-card"><button class="in-x" onclick="cerrarInstall()" aria-label="Cerrar">✕</button><div id="inBody"></div></div></div>
+<div class="in-flecha" id="inFlecha">Aquí abajo<svg viewBox="0 0 24 24"><path d="M12 4v15M6 13l6 6 6-6"/></svg></div>
 <div class="toast" id="toast"></div>
 <script>
 let patient=null,ejercicios=[],hechos=new Set(),mensajeFisio='';
@@ -859,7 +873,7 @@ function initApp(){
   document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;document.getElementById('hoyHeroSub').textContent=`Hola, ${(patient.nombre||'').split(' ')[0]}. Tus ejercicios de hoy, pensados para ti.`;
   loadEjercicios();
   checkMensajesNoLeidos();
-  try{pintarCitaHoy();}catch(e){}setTimeout(pedirCitas,1200);
+  try{pintarCitaHoy();}catch(e){}try{mirarBannerInstall();}catch(e){}setTimeout(pedirCitas,1200);
   // Sincronizar puntos desde Airtable al arrancar (Airtable manda)
   fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id))
     .then(r=>r.json()).then(d=>{
@@ -1211,9 +1225,50 @@ async function loadAdherencia(containerId){
 
 // INSTALACION
 function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('pasosAndroid').style.display=os==='android'?'block':'none';document.getElementById('btnIOS').classList.toggle('active',os==='ios');document.getElementById('btnAndroid').classList.toggle('active',os==='android');}
-function mostrarInstall(){document.getElementById('installPopup').style.display='flex';}
-function cerrarInstall(){document.getElementById('installPopup').style.display='none';}
-function showInstOS(os){document.getElementById('instPasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('instPasosAndroid').style.display=os==='android'?'block':'none';['IOS','Android'].forEach(s=>{const btn=document.getElementById('btnInst'+s);const active=s.toLowerCase()===os;btn.style.background=active?'#000':'none';btn.style.color=active?'white':'#888';btn.style.borderColor=active?'#000':'#ddd';});}
+// ── Instalar la app ───────────────────────────────────────────
+let inPrompt=null,inOS='';
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();inPrompt=e;});
+window.addEventListener('appinstalled',()=>{inPrompt=null;try{localStorage.setItem('f365_instalada','1');}catch(x){}ocultarBannerInstall(true);});
+const esInstalada=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+function detectarOS(){const u=navigator.userAgent||'';const ios=/iPhone|iPad|iPod/.test(u)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ const inApp=/Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok|Snapchat|LinkedInApp/i.test(u);
+ if(ios)return {os:'ios',nav:inApp?'inapp':/CriOS|FxiOS|EdgiOS/.test(u)?'otro':'safari'};
+ if(/Android/i.test(u))return {os:'android',nav:inApp?'inapp':/SamsungBrowser/.test(u)?'samsung':'chrome'};
+ return {os:'pc',nav:''};}
+const IC={share:'<svg viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"/></svg>',
+ dots:'<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>',
+ add:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>',
+ ok:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+ vdots:'<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="19" r="1.3"/></svg>',
+ phone:'<svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>',
+ globe:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>'};
+const paso=(n,t,sm,ic,and)=>`<div class="in-paso"><div class="in-n">${n}</div><div class="in-t">${t}${sm?`<small>${sm}</small>`:''}</div><div class="in-i${and?' and':''}">${IC[ic]}</div></div>`;
+function pasosIOS(nav){let h='';
+ if(nav==='inapp')h+=`<div class="in-aviso">Estás dentro de otra app (Instagram, Facebook…). Primero toca <b>···</b> arriba y elige <b>«Abrir en el navegador»</b>.</div>`;
+ h+=paso(1,'Toca el botón <b>Compartir</b>',nav==='otro'?'Está arriba a la derecha, al lado de la barra de direcciones.':'Es el cuadrado con la flecha hacia arriba, en la barra de abajo. Si no lo ves, toca primero los tres puntos <b>···</b>','share');
+ h+=paso(2,'Baja y toca <b>«Añadir a pantalla de inicio»</b>','Si no aparece, toca «Ver más» o desliza la lista hacia abajo.','add');
+ h+=paso(3,'Toca <b>«Añadir»</b> arriba a la derecha','¡Listo! Ya tienes FISIO365 con las demás apps.','ok');return h;}
+function pasosAndroid(nav){let h='';
+ if(inPrompt)h+=`<button class="rv-btn" style="border-radius:99px;margin:0 0 12px" onclick="instalarYa()">Instalar ahora</button><div style="text-align:center;font-size:12px;color:#8a837b;margin:-4px 0 12px">Un toque y listo. Si no funciona, sigue estos pasos:</div>`;
+ if(nav==='inapp')h+=`<div class="in-aviso">Estás dentro de otra app (Instagram, Facebook…). Primero toca <b>⋮</b> arriba y elige <b>«Abrir en Chrome»</b>.</div>`;
+ h+=paso(1,'Toca los <b>tres puntos ⋮</b>',nav==='samsung'?'En Samsung Internet están abajo a la derecha (☰).':'Arriba a la derecha de Chrome.','vdots',1);
+ h+=paso(2,'Toca <b>«Instalar aplicación»</b>','O «Añadir a pantalla de inicio».','phone',1);
+ h+=paso(3,'Toca <b>«Instalar»</b>','¡Listo! Ya tienes FISIO365 con las demás apps.','ok',1);return h;}
+function pintarInstall(os){inOS=os;const d=detectarOS();const nav=os===d.os?d.nav:(os==='ios'?'safari':'chrome');
+ let h=`<img class="in-app" src="/icono.png" alt="FISIO365"><h3>Instala la app</h3><div class="in-sub">Tendrás FISIO365 en tu móvil como cualquier otra app. Es gratis y tardas 30 segundos.</div>`;
+ if(esInstalada()){h+=`<div class="in-ok">¡Ya la tienes instalada! 🎉</div>`;document.getElementById('inBody').innerHTML=h;return;}
+ h+=`<div class="in-tabs"><button class="${os==='ios'?'on':''}" onclick="pintarInstall('ios')">iPhone</button><button class="${os==='android'?'on':''}" onclick="pintarInstall('android')">Android</button></div>`;
+ h+=os==='ios'?pasosIOS(nav):pasosAndroid(nav);
+ h+=`<button class="rv-cancel" onclick="cerrarInstall()">Ahora no</button>`;
+ document.getElementById('inBody').innerHTML=h;
+ document.getElementById('inFlecha').classList.toggle('on',os==='ios'&&d.os==='ios'&&d.nav==='safari');}
+function mostrarInstall(){const d=detectarOS();pintarInstall(d.os==='android'?'android':'ios');document.getElementById('installPopup').classList.add('on');}
+function cerrarInstall(){document.getElementById('installPopup').classList.remove('on');document.getElementById('inFlecha').classList.remove('on');}
+async function instalarYa(){if(!inPrompt)return;inPrompt.prompt();try{const r=await inPrompt.userChoice;if(r.outcome==='accepted'){cerrarInstall();ocultarBannerInstall(true);}}catch(e){}inPrompt=null;}
+function ocultarBannerInstall(siempre){const b=document.getElementById('inBanner');if(b)b.classList.remove('on');try{localStorage.setItem('f365_banner_install',siempre?'nunca':String(Date.now()));}catch(e){}}
+function mirarBannerInstall(){const b=document.getElementById('inBanner'),m=document.getElementById('navInstalar');const inst=esInstalada();if(m)m.style.display=inst?'none':'flex';if(!b)return;
+ let v='';try{v=localStorage.getItem('f365_banner_install')||'';}catch(e){}
+ const oculto=v==='nunca'||(v&&Date.now()-(+v)<3*864e5);b.classList.toggle('on',!inst&&!oculto);}
 
 // MISC
 function formatMensaje(texto){if(!texto)return '';let t=texto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');t=t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');t=t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--black);text-decoration:underline;word-break:break-all;">$1</a>');t=t.replace(/\n/g,'<br>');return t;}
