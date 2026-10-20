@@ -393,14 +393,16 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .vg-pie{color:rgba(255,255,255,.5);font-size:12.5px;margin-top:16px}
 @media (orientation:landscape) and (max-height:500px){.vg-caja{height:calc(100vh - 40px);width:auto;max-width:none}.vg-pie{display:none}}
 
-.pl-tmr{padding:0 14px 14px 100px}
-.pl-tmr .tmr{padding:10px 12px;gap:12px;border-radius:16px}
-.pl-tmr .tmr-anillo{width:58px;height:58px}
-.pl-tmr .tmr-num{font-size:18px}
-.pl-tmr .tmr-estado{font-size:12px;margin-bottom:6px}
-.pl-tmr .tmr-go{height:38px;font-size:13px}
-.pl-tmr .tmr-reset{width:38px;height:38px;font-size:16px}
-@media(max-width:380px){.pl-tmr{padding-left:14px}}
+.pl-tmr{padding:0 14px 14px}
+.pl-tmr .tmr{padding:10px 10px 10px 12px;gap:12px;border-radius:18px;margin:0;align-items:center}
+.pl-tmr .tmr-anillo{width:50px;height:50px}
+.pl-tmr .tmr-fondo,.pl-tmr .tmr-prog{stroke-width:10}
+.pl-tmr .tmr-num{font-size:16px;letter-spacing:-.5px}
+.pl-tmr .tmr-info{display:flex;align-items:center;gap:10px}
+.pl-tmr .tmr-estado{flex:1;min-width:0;margin:0;font-size:13px;line-height:1.3}
+.pl-tmr .tmr-botones{flex:none;gap:6px}
+.pl-tmr .tmr-go{flex:none;height:40px;padding:0 18px;font-size:13px}
+.pl-tmr .tmr-reset{width:40px;height:40px;font-size:16px}
 </style>
 </head>
 <body>
