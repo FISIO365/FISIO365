@@ -375,6 +375,32 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .pl-row.ok .pl-ck{background:var(--lila-d);border-color:var(--lila-d)}
 .pl-row.ok .pl-ck svg{stroke:#fff}
 .ses-des{border:none;background:none;font-family:var(--font);font-size:12px;font-weight:600;color:var(--muted);text-decoration:underline;cursor:pointer;padding:0 0 0 6px;text-transform:none;letter-spacing:0}
+
+.pl-th{cursor:pointer}
+.pl-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18)}
+.pl-play svg{width:22px;height:22px;fill:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,.4))}
+button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
+.ses-vid img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ses-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.ses-play svg{width:28px;height:28px;fill:#1a1a1a;margin-left:4px}
+.ses-vid em{font-family:var(--font);position:absolute;left:0;right:0;bottom:12px;text-align:center;font-style:normal;font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+#vidGrande{position:fixed;inset:0;z-index:600;background:rgba(14,14,14,.94);display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+#vidGrande.on{display:flex}
+.vg-caja{position:relative;width:100%;max-width:960px;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.vg-caja iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.vg-x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:16px;width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.vg-x svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round}
+.vg-pie{color:rgba(255,255,255,.5);font-size:12.5px;margin-top:16px}
+@media (orientation:landscape) and (max-height:500px){.vg-caja{height:calc(100vh - 40px);width:auto;max-width:none}.vg-pie{display:none}}
+
+.pl-tmr{padding:0 14px 14px 100px}
+.pl-tmr .tmr{padding:10px 12px;gap:12px;border-radius:16px}
+.pl-tmr .tmr-anillo{width:58px;height:58px}
+.pl-tmr .tmr-num{font-size:18px}
+.pl-tmr .tmr-estado{font-size:12px;margin-bottom:6px}
+.pl-tmr .tmr-go{height:38px;font-size:13px}
+.pl-tmr .tmr-reset{width:38px;height:38px;font-size:16px}
+@media(max-width:380px){.pl-tmr{padding-left:14px}}
 </style>
 </head>
 <body>
@@ -870,18 +896,22 @@ function tmrReiniciar(i){const t=tmrEstado(i);clearInterval(t.int);t.int=null;t.
 function renderEjercicios(){
   const lista=document.getElementById('ejList');
   if(!ejercicios.length){lista.innerHTML=`<div class="ej-vacio"><b>Aún no tienes ejercicios</b>Tu fisio te los asignará después de tu sesión.</div>`;return;}
-  document.getElementById('diarioSection').style.display='none';
+  document.getElementById('diarioSection').style.display='block';
   const n=ejercicios.length,h=ejHechos();
   const sub=document.getElementById('hoyHeroSub');
   if(sub)sub.innerHTML=`${n} ${n===1?'ejercicio':'ejercicios'} · ${h===n?'¡todo hecho!':h?`${h} hechos`:'pensados para ti'}<button class="hero-go" onclick="abrirSesion(${h<n?ejercicios.findIndex((e,i)=>!hechos.has(ejKey(e,i))):0})">${h===0?'Empezar sesión':h<n?'Continuar':'Repasar'}<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></button>`;
   lista.innerHTML=`<div class="pl-tit">Tu sesión</div><div class="pl">`+ejercicios.map((ej,i)=>{
     const ok=hechos.has(ejKey(ej,i));
     return `<div class="pl-row${ok?' ok':''}" onclick="abrirSesion(${i})">
-      <div class="pl-th">${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy">`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
+      <div class="pl-th"${ej.ytId?` onclick="event.stopPropagation();verVideoGrande('${ej.ytId}')"`:''}>${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy"><b class="pl-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></b>`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
       <div class="pl-tx"><b>${ej.name}</b><span>${ejMeta(ej)||'&nbsp;'}</span></div>
-      <button class="pl-ck" onclick="event.stopPropagation();toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>`;}).join('')+`</div>`;
+      <button class="pl-ck" onclick="event.stopPropagation();toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>${(ej.dur||ej.duracion)?`<div class="pl-tmr" onclick="event.stopPropagation()">${tmrHTML(ej,'L'+i)}</div>`:''}`;}).join('')+`</div>`;
 }
 function ejKey(e,i){return e.id||('i'+i);}
+function verVideoGrande(id){let v=document.getElementById('vidGrande');if(!v){v=document.createElement('div');v.id='vidGrande';v.onclick=e=>{if(e.target===v)cerrarVideoGrande();};document.body.appendChild(v);}
+  v.innerHTML=`<button class="vg-x" onclick="cerrarVideoGrande()" aria-label="Cerrar vídeo"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="vg-caja"><iframe src="https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&autoplay=1&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div><div class="vg-pie">Toca fuera del vídeo o la X para volver</div>`;
+  v.classList.add('on');}
+function cerrarVideoGrande(){const v=document.getElementById('vidGrande');if(v){v.classList.remove('on');v.innerHTML='';}}
 function toggleEj(i){const k=ejKey(ejercicios[i],i);hechos.has(k)?hechos.delete(k):hechos.add(k);guardarHechos();renderEjercicios();}
 function sesDesmarcar(){hechos.delete(ejKey(ejercicios[sesI],sesI));guardarHechos();pintarSesion();}
 function ejHechos(){return ejercicios.filter((e,i)=>hechos.has(ejKey(e,i))).length;}
@@ -902,7 +932,7 @@ function pintarSesion(){
       <div class="ses-segs">${ejercicios.map((e,i)=>`<i class="${hechos.has(ejKey(e,i))?'ok':''}${i===sesI?' act':''}"></i>`).join('')}</div>
       <div class="ses-cont">${sesI+1}/${n}</div></div>
     <div class="ses-body">
-      ${ej.ytId?`<div class="ses-vid"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1&playsinline=1" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`:`<div class="ses-novid"><span>${String(sesI+1).padStart(2,'0')}</span></div>`}
+      ${ej.ytId?`<button class="ses-vid" onclick="verVideoGrande('${ej.ytId}')" aria-label="Ver vídeo"><img src="https://i.ytimg.com/vi/${ej.ytId}/hqdefault.jpg" alt=""><span class="ses-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span><em>Toca para ver el vídeo</em></button>`:`<div class="ses-novid"><span>${String(sesI+1).padStart(2,'0')}</span></div>`}
       <div class="ses-eti">Ejercicio ${sesI+1} de ${n}${ok?' · <b>hecho</b> <button class="ses-des" onclick="sesDesmarcar()">Desmarcar</button>':''}</div>
       <h2 class="ses-nom">${ej.name}</h2>
       ${datos.length?`<div class="ses-datos">${datos.map(x=>`<div><b>${x[0]}</b><span>${x[1]}</span></div>`).join('')}</div>`:''}
