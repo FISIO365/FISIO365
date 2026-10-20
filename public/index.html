@@ -369,6 +369,12 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .ses-ant[disabled]{opacity:.35}
 .ses-ok{flex:1;height:58px;border:none;border-radius:99px;background:var(--black);color:var(--cream);font-family:var(--font);font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer}
 .ses-ok svg{width:20px;height:20px;fill:none;stroke:var(--lila);stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+
+.pl-ck{width:34px;height:34px;border-radius:50%;border:2px solid rgba(26,26,26,.15);background:#fff;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.pl-ck svg{width:17px;height:17px;fill:none;stroke:transparent;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.pl-row.ok .pl-ck{background:var(--lila-d);border-color:var(--lila-d)}
+.pl-row.ok .pl-ck svg{stroke:#fff}
+.ses-des{border:none;background:none;font-family:var(--font);font-size:12px;font-weight:600;color:var(--muted);text-decoration:underline;cursor:pointer;padding:0 0 0 6px;text-transform:none;letter-spacing:0}
 </style>
 </head>
 <body>
@@ -873,9 +879,11 @@ function renderEjercicios(){
     return `<div class="pl-row${ok?' ok':''}" onclick="abrirSesion(${i})">
       <div class="pl-th">${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy">`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
       <div class="pl-tx"><b>${ej.name}</b><span>${ejMeta(ej)||'&nbsp;'}</span></div>
-      <svg class="pl-fl" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></div>`;}).join('')+`</div>`;
+      <button class="pl-ck" onclick="event.stopPropagation();toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>`;}).join('')+`</div>`;
 }
 function ejKey(e,i){return e.id||('i'+i);}
+function toggleEj(i){const k=ejKey(ejercicios[i],i);hechos.has(k)?hechos.delete(k):hechos.add(k);guardarHechos();renderEjercicios();}
+function sesDesmarcar(){hechos.delete(ejKey(ejercicios[sesI],sesI));guardarHechos();pintarSesion();}
 function ejHechos(){return ejercicios.filter((e,i)=>hechos.has(ejKey(e,i))).length;}
 function ejMeta(ej){const d=ej.dur||ej.duracion;return [ej.series?`${ej.series} ${+ej.series===1?'serie':'series'}`:'',ej.reps?`${ej.reps} reps`:'',d?`${d} s`:''].filter(Boolean).join(' · ');}
 function guardarHechos(){try{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...hechos]));}catch(e){}}
@@ -895,7 +903,7 @@ function pintarSesion(){
       <div class="ses-cont">${sesI+1}/${n}</div></div>
     <div class="ses-body">
       ${ej.ytId?`<div class="ses-vid"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1&playsinline=1" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`:`<div class="ses-novid"><span>${String(sesI+1).padStart(2,'0')}</span></div>`}
-      <div class="ses-eti">Ejercicio ${sesI+1} de ${n}${ok?' · <b>hecho</b>':''}</div>
+      <div class="ses-eti">Ejercicio ${sesI+1} de ${n}${ok?' · <b>hecho</b> <button class="ses-des" onclick="sesDesmarcar()">Desmarcar</button>':''}</div>
       <h2 class="ses-nom">${ej.name}</h2>
       ${datos.length?`<div class="ses-datos">${datos.map(x=>`<div><b>${x[0]}</b><span>${x[1]}</span></div>`).join('')}</div>`:''}
       ${tmrHTML(ej,'S')}
@@ -903,7 +911,7 @@ function pintarSesion(){
     </div>
     <div class="ses-pie">
       <button class="ses-ant" onclick="sesMover(-1)" ${sesI===0?'disabled':''} aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
-      <button class="ses-ok" onclick="sesHecho()">${ult?(ejHechos()+(ok?0:1)>=n?'Terminar sesión':'Hecho'):'Hecho · Siguiente'}<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>
+      <button class="ses-ok" onclick="${ok&&!ult?'sesMover(1)':'sesHecho()'}">${ult?(ejHechos()+(ok?0:1)>=n?'Terminar sesión':'Hecho'):(ok?'Siguiente':'Hecho · Siguiente')}<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>
     </div></div>`;
   ov.scrollTop=0;
 }
