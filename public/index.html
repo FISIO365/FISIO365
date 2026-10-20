@@ -298,6 +298,22 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .nav-menu-inner>div:nth-child(1),.nav-menu-inner>div:nth-child(2){display:none!important}
 .nav-menu-inner>div:nth-child(3){border-top:none!important;padding-top:0!important}
 .nav-menu{width:200px}
+
+.tmr{display:flex;align-items:center;gap:18px;background:var(--cream);border-radius:18px;padding:14px 16px;margin-bottom:14px}
+.tmr-anillo{position:relative;width:86px;height:86px;flex:none}
+.tmr-anillo svg{width:100%;height:100%;transform:rotate(-90deg)}
+.tmr-fondo{fill:none;stroke:rgba(26,26,26,.08);stroke-width:9}
+.tmr-prog{fill:none;stroke:var(--lila);stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.tmr.prep .tmr-prog{stroke:#f0b35b}
+.tmr.hecho .tmr-prog{stroke:#2a9d6e}
+.tmr-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;letter-spacing:-1px}
+.tmr.hecho .tmr-num{color:#2a9d6e}
+.tmr-info{flex:1;min-width:0}
+.tmr-estado{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px}
+.tmr.corriendo .tmr-estado{color:var(--black)}
+.tmr-botones{display:flex;gap:8px}
+.tmr-go{flex:1;height:44px;border:none;border-radius:99px;background:var(--black);color:var(--cream);font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer}
+.tmr-reset{width:44px;height:44px;border:none;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;color:var(--black)}
 </style>
 </head>
 <body>
@@ -767,6 +783,28 @@ async function loadEjercicios(){
 
 function mostrarCompletado(){document.getElementById('vistaEjercicios').style.display='none';document.getElementById('vistaCompletado').style.display='block';}
 
+
+// TEMPORIZADOR para ejercicios por tiempo (cuenta atrás con series, sonido y vibración)
+function tmrHTML(ej,i){const seg=parseInt(ej.dur||ej.duracion,10);if(!seg)return '';const series=parseInt(ej.series,10)||1;
+  return `<div class="tmr" id="tmr${i}" data-seg="${seg}" data-series="${series}"><div class="tmr-anillo"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="tmr-fondo"/><circle cx="60" cy="60" r="52" class="tmr-prog" style="stroke-dasharray:326.7;stroke-dashoffset:0"/></svg><div class="tmr-num">${seg}</div></div><div class="tmr-info"><div class="tmr-estado">Serie 1 de ${series}</div><div class="tmr-botones"><button class="tmr-go" onclick="tmrPulsar(${i})">Empezar</button><button class="tmr-reset" onclick="tmrReiniciar(${i})" aria-label="Reiniciar">↺</button></div></div></div>`;}
+const tmrs={};let tmrAudio=null;
+function tmrPitido(f,ms){try{tmrAudio=tmrAudio||new (window.AudioContext||window.webkitAudioContext)();const o=tmrAudio.createOscillator(),g=tmrAudio.createGain();o.frequency.value=f;o.connect(g);g.connect(tmrAudio.destination);g.gain.setValueAtTime(.25,tmrAudio.currentTime);g.gain.exponentialRampToValueAtTime(.001,tmrAudio.currentTime+ms/1000);o.start();o.stop(tmrAudio.currentTime+ms/1000);}catch(e){}}
+function tmrEstado(i){const el=document.getElementById('tmr'+i);const seg=+el.dataset.seg,series=+el.dataset.series;return tmrs[i]||(tmrs[i]={seg,series,serie:1,resto:seg,fase:'listo',int:null,el});}
+function tmrPintar(t){const el=t.el;const tot=t.fase==='prep'?3:t.seg;el.querySelector('.tmr-num').textContent=t.fase==='hecho'?'✓':t.resto;
+  el.querySelector('.tmr-prog').style.strokeDashoffset=(326.7*(1-t.resto/tot)).toFixed(1);
+  el.classList.toggle('prep',t.fase==='prep');el.classList.toggle('corriendo',t.fase==='corre');el.classList.toggle('hecho',t.fase==='hecho');
+  el.querySelector('.tmr-estado').textContent=t.fase==='prep'?'Prepárate…':t.fase==='hecho'?'¡Completado!':t.fase==='descanso'?`Descansa · luego serie ${t.serie} de ${t.series}`:`Serie ${t.serie} de ${t.series}`;
+  el.querySelector('.tmr-go').textContent=t.fase==='corre'||t.fase==='prep'?'Pausa':t.fase==='hecho'?'Otra vez':t.fase==='pausa'?'Seguir':t.serie>1?'Siguiente serie':'Empezar';}
+function tmrTic(t){t.resto--;if(t.fase==='prep'){if(t.resto<=0){t.fase='corre';t.resto=t.seg;tmrPitido(880,250);}else tmrPitido(520,120);}
+  else if(t.fase==='corre'){if(t.resto<=3&&t.resto>0)tmrPitido(520,120);if(t.resto<=0){clearInterval(t.int);t.int=null;tmrPitido(990,500);try{navigator.vibrate&&navigator.vibrate([250,120,250]);}catch(e){}
+    if(t.serie>=t.series){t.fase='hecho';t.resto=0;}else{t.serie++;t.fase='descanso';t.resto=t.seg;}}}
+  tmrPintar(t);}
+function tmrPulsar(i){const t=tmrEstado(i);if(t.int){clearInterval(t.int);t.int=null;t.pausadaEn=t.fase;t.fase='pausa';tmrPintar(t);return;}
+  if(t.fase==='hecho'){t.serie=1;}
+  if(t.fase!=='pausa'){t.fase='prep';t.resto=3;}else{t.fase=t.pausadaEn||'corre';}
+  tmrPitido(520,80);tmrPintar(t);t.int=setInterval(()=>tmrTic(t),1000);}
+function tmrReiniciar(i){const t=tmrEstado(i);clearInterval(t.int);t.int=null;t.serie=1;t.resto=t.seg;t.fase='listo';tmrPintar(t);}
+
 function renderEjercicios(){
   const lista=document.getElementById('ejList');
   if(!ejercicios.length){lista.innerHTML=`<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios.</div></div>`;return;}
@@ -774,7 +812,7 @@ function renderEjercicios(){
   lista.innerHTML='<div class="ej-list">'+ejercicios.map((ej,i)=>{
     const pills=[ej.series?`<span class="pill-s">${ej.series}×</span>`:'',ej.reps?`<span class="pill-r">${ej.reps} reps</span>`:'',(ej.dur||ej.duracion)?`<span class="pill-d">${ej.dur||ej.duracion}s</span>`:''].join('');
     const hasVid=!!ej.ytId;
-    return `<div class="ej-item"><div class="ej-header"><div class="ej-nom">${ej.name}</div><div class="ej-pills">${pills}</div></div>${ej.desc?`<div class="ej-nota">${ej.desc.replace(/</g,'&lt;')}</div>`:''}${hasVid?`<div class="ej-thumb"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen></iframe></div>`:`<div class="ej-no-video"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>`}</div>`;
+    return `<div class="ej-item"><div class="ej-header"><div class="ej-nom">${ej.name}</div><div class="ej-pills">${pills}</div></div>${ej.desc?`<div class="ej-nota">${ej.desc.replace(/</g,'&lt;')}</div>`:''}${tmrHTML(ej,i)}${hasVid?`<div class="ej-thumb"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen></iframe></div>`:`<div class="ej-no-video"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>`}</div>`;
   }).join('')+'</div>';
 }
 

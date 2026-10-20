@@ -351,6 +351,73 @@ input[type=number]{text-align:center}
 .chatp-vacio{color:#8a857e;font-size:13.5px;text-align:center;padding:30px 16px;line-height:1.6}
 .chatp-ficha{height:520px;background:#f5f2ee;border-radius:16px;padding:0 10px}
 @media(max-width:800px){.chatp{grid-template-columns:1fr;height:calc(100vh - 150px)}.chatp-hilo{display:none}.chatp.abierto .chatp-lista{display:none}.chatp.abierto .chatp-hilo{display:flex}.chatp-volver{display:block}}
+
+/* ═════ NUEVA ESTÉTICA DEL PANEL (estilo Atlas, colores FISIO365) ═════ */
+:root{--black:#1a1a1a;--muted:#8a857e;--border:rgba(26,26,26,.08);--r:20px;--r-sm:12px;--lila-d:#7b6fd4;--sombra:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
+body{-webkit-font-smoothing:antialiased}
+/* Entrada */
+#loginScreen{background:var(--cream)}
+.lb{background:#fff;border-radius:28px;padding:34px 26px 26px;box-shadow:var(--sombra)}
+.lb>div:first-child{color:var(--black)!important;font-size:40px!important;letter-spacing:-1.8px!important;margin-bottom:1.6rem!important}
+.llbl{color:var(--muted)}
+#loginScreen .li,#loginNombre{background:var(--cream)!important;color:var(--black)!important;-webkit-text-fill-color:var(--black)!important;border:1.5px solid transparent!important;border-radius:14px;height:52px}
+#loginScreen .li:focus{border-color:var(--lila)!important;box-shadow:none}
+#loginScreen .li::placeholder{color:#b9b4ad}
+#loginScreen .li:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px var(--cream) inset!important;-webkit-text-fill-color:var(--black)!important}
+.pwd-eye{color:var(--muted)}
+.lbtn{background:var(--black);color:var(--cream);border-radius:99px;height:54px;font-size:15px}
+/* Barra lateral */
+.sidebar{background:#fff;border-right:1px solid var(--border);width:224px}
+.sb-logo{border-bottom:none;padding:24px 22px 18px}
+.sb-logo-t{color:var(--black);font-size:21px;letter-spacing:-.8px}
+.sb-logo-t{color:var(--lila)}
+.sb-logo-t span{color:var(--black)}
+.sb-nav{padding:4px 12px;display:flex;flex-direction:column;gap:2px}
+.sb-item{text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;color:#6f6a63;border-left:none;border-radius:14px;padding:11px 14px;gap:12px}
+.sb-item:hover{background:var(--cream);color:var(--black)}
+.sb-item.active{background:var(--black);color:var(--cream);border-left:none;letter-spacing:0}
+.sb-ico{display:flex;width:20px;height:20px;flex:none}
+.sb-ico svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#sb-school{border-top:1px solid var(--border)!important;margin-top:10px!important;padding-top:11px!important;border-radius:0 0 14px 14px}
+.sb-footer{border-top:1px solid var(--border);color:var(--muted);font-size:10px}
+#sb-msg-badge{margin-left:auto!important;font-size:10px!important;padding:2px 7px!important}
+/* Zona principal */
+.main-area{margin-left:224px;width:calc(100% - 224px)}
+.topbar{background:rgba(245,242,238,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:none;padding:22px 32px 12px}
+.topbar-t{font-size:24px;font-weight:800;letter-spacing:-.6px}
+.topbar-s{font-size:13px;margin-top:2px}
+.wrap{padding:14px 32px 90px;max-width:940px}
+.card{border:none;border-radius:var(--r);box-shadow:var(--sombra);padding:20px}
+.ct{color:var(--muted)}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],select,textarea{border-radius:12px;border-color:rgba(26,26,26,.1)}
+.btn{border-radius:99px}
+.btn-g{background:var(--black);border-radius:99px;padding:14px}
+.btn-o{border-radius:99px}
+.btn-back{border-radius:99px;background:#fff}
+.btn-img{border-radius:99px}
+.pi{border:none;background:#fff;border-radius:16px;box-shadow:var(--sombra)}
+.pi:hover,.pi.sel{background:var(--lila-light)}
+.pav{background:var(--lila-light);color:var(--lila-d)}
+.ppin{color:var(--lila-d)}
+.fp-inf-card{border:none;border-radius:16px;box-shadow:var(--sombra)}
+.ejc{background:#fff;border:none;border-radius:16px;box-shadow:var(--sombra)}
+/* Móvil: barra de pestañas abajo en vez de la lateral */
+@media(max-width:768px){
+ .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;left:12px!important;right:12px!important;border-radius:24px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
+ .sb-logo,.sb-footer{display:none!important}
+ .sb-nav{flex-direction:row;padding:6px;gap:2px}
+ .sb-item{flex:1;flex-direction:column;gap:3px;font-size:10px!important;font-weight:600!important;padding:8px 2px!important;border-radius:18px;border:none!important;letter-spacing:0!important;text-transform:none!important;position:relative;min-width:0}
+ .sb-item.active{background:var(--lila-light)!important;color:var(--black)!important;border:none!important}
+ .sb-item .sb-txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+ #sb-school{border-top:none!important;margin-top:0!important;padding-top:8px!important;border-radius:18px}
+ #sb-msg-badge{position:absolute;top:3px;right:calc(50% - 22px);margin:0!important}
+ .main-area{margin-left:0!important;width:100%!important;max-width:100%!important}
+ .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
+ .topbar-t{font-size:21px!important}
+ .topbar-s{font-size:12px!important}
+ .wrap{padding:10px 14px 120px!important}
+ .chatp{height:calc(100vh - 210px)!important}
+}
 </style>
 </head>
 <body>
@@ -360,7 +427,7 @@ input[type=number]{text-align:center}
  <div class="lb">
  <div style="font-size:48px;font-weight:800;color:#f5f2ee;letter-spacing:-1px;margin-bottom:2.5rem;text-align:center">FISIO<span style="color:var(--lila)">365</span></div>
  <label class="llbl">Nombre</label>
- <input class="li" type="text" id="loginNombre" placeholder="" autocomplete="off" autocapitalize="words" style="background:transparent!important;color:white!important;-webkit-text-fill-color:white!important;border:1.5px solid rgba(255,255,255,0.35)!important">
+ <input class="li" type="text" id="loginNombre" placeholder="" autocomplete="off" autocapitalize="words">
  <label class="llbl">Contraseña</label>
  <div class="pwd-wrap">
  <input class="li" type="password" id="loginPwd" placeholder="••••••••">
@@ -384,22 +451,22 @@ input[type=number]{text-align:center}
  <div class="sb-logo"><div class="sb-logo-t"><span>FISIO</span>365</div></div>
  <div class="sb-nav">
  <div class="sb-item active" id="sb-anam" onclick="showSection('anam')">
- Anamnesis
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 3h6v3H9z"/><path d="M8 4.5H6a2 2 0 0 0-2 2V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6.5a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h5"/></svg></span><span class="sb-txt">Anamnesis</span>
  </div>
  <div class="sb-item" id="sb-prog" onclick="showSection('prog')">
- Programas
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span><span class="sb-txt">Programas</span>
  </div>
  <div class="sb-item" id="sb-pac" onclick="showSection('pac')">
- Pacientes
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg></span><span class="sb-txt">Pacientes</span>
  </div>
  <div class="sb-item" id="sb-msg" onclick="showSection('msg')">
- Mensajes <span id="sb-msg-badge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:middle"></span>
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="sb-txt">Mensajes</span><span id="sb-msg-badge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:middle"></span>
  </div>
  <div class="sb-item" id="sb-record" onclick="showSection('record')" style="display:none">
- Recordatorios
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="sb-txt">Recordatorios</span>
  </div>
  <div class="sb-item" id="sb-school" onclick="showSection('school')" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px">
- School
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg></span><span class="sb-txt">School</span>
  </div>
  </div>
  <div class="sb-footer" id="sb-user">Panel fisioterapeuta</div>
