@@ -1187,8 +1187,8 @@ function pintarPacks(){const t=PACKS[pkTipo];
  const max=Math.max(...t.packs.map(([n,p])=>n*t.suelta-p));
  let h=`<div class="pk-ventajas"><div class="pk-v"><b>Ahorras</b>cada sesión sale más barata</div><div class="pk-v"><b>Cómodo</b>pagas una vez y te olvidas</div><div class="pk-v"><b>Constancia</b>mejores resultados</div></div>`;
  h+=`<div class="pk-tipo">${t.desc} Sesión suelta: <b>${eur(t.suelta)}</b>.</div>`;
- h+=t.packs.map(([n,p])=>{const ah=n*t.suelta-p,top=n===10;return `<div class="pk${top?' top':''}">${top?'<div class="pk-tag">RECOMENDADO</div>':''}<div class="pk-n"><b>Pack de ${n} sesiones</b><span>${eur(p/n)} por sesión</span><em>Ahorras ${eur(ah)}</em></div><div class="pk-p"><b>${eur(p)}</b><button onclick="quieroPack(${n},${p})">Lo quiero</button></div></div>`;}).join('');
- h+=`<div class="pk-nota">Al tocar «Lo quiero» nos escribes por WhatsApp y te lo dejamos listo.<br>Puedes pagar con tarjeta, transferencia o en efectivo.</div>`;
+ h+=t.packs.map(([n,p])=>{const ah=n*t.suelta-p,top=n===10;return `<div class="pk${top?' top':''}">${top?'<div class="pk-tag">RECOMENDADO</div>':''}<div class="pk-n"><b>Pack de ${n} sesiones</b><span>${eur(p/n)} por sesión</span><em>Ahorras ${eur(ah)}</em></div><div class="pk-p"><b>${eur(p)}</b></div></div>`;}).join('');
+ h+=`<div class="pk-nota">¿Te interesa alguno? Pregúntanos en el centro o por el chat.</div>`;
  document.getElementById('pkBody').innerHTML=h;}
 function quieroPack(n,p){const t=PACKS[pkTipo];const nom=patient&&patient.nombre?patient.nombre:'';
  const msg=`Hola, soy ${nom||'paciente de FISIO365'}. Quiero el pack de ${n} sesiones de ${t.nombre.toLowerCase()} (${eur(p)}).`;
