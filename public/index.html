@@ -412,14 +412,19 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .in-flecha svg{width:34px;height:34px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;animation:inBote 1s ease-in-out infinite}
 @keyframes inBote{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
 /* Banner en Hoy */
-.in-banner{display:none;align-items:center;gap:12px;background:#1a1a1a;color:#fff;border-radius:20px;padding:12px 12px 12px 14px;margin:0 0 14px;cursor:pointer}
+.in-banner{display:none;align-items:center;gap:14px;background:#fff;border-radius:24px;padding:14px 14px 14px 16px;margin:12px 0 0;cursor:pointer;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
 .in-banner.on{display:flex}
-.in-banner img{width:40px;height:40px;border-radius:11px;flex:none}
+.in-banner img{width:48px;height:48px;border-radius:14px;flex:none}
 .in-banner div{flex:1;min-width:0}
-.in-banner b{display:block;font-size:14px}
-.in-banner span{font-size:12px;color:rgba(255,255,255,.65)}
-.in-banner .ib{background:#c2552e;border:none;color:#fff;border-radius:99px;padding:9px 14px;font-family:inherit;font-size:13px;font-weight:700;flex:none;cursor:pointer}
-.in-banner .ix{background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;padding:0 4px;cursor:pointer;flex:none}
+.in-banner b{display:block;font-size:15px}
+.in-banner span{display:block;font-size:12.5px;line-height:1.4;color:#7d6a60;margin-top:2px}
+.in-banner .ib{background:#1a1a1a;border:none;color:#f5f2ee;border-radius:99px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;flex:none;cursor:pointer}
+.in-banner .ix{display:none}
+/* Fisio + cita en una sola tarjeta */
+.fisio-card:has(+ .ch.on){margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
+.fisio-card + .ch.on{border-top-left-radius:0;border-top-right-radius:0;border-top:1px solid #f0ebe5;box-shadow:0 8px 24px rgba(26,26,26,.05);padding-top:12px}
+.fisio-card + .ch.on .ch-fecha{width:46px;height:46px;border-radius:50%}
+.fisio-card + .ch.on .ch-tx small{display:none}
 /* Tarjeta de cita en Hoy */
 .ch{display:none;align-items:center;gap:14px;background:#fff;border-radius:22px;padding:14px 14px 14px 16px;margin:0 0 14px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05);cursor:pointer}
 .ch.on{display:flex}
@@ -578,7 +583,6 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="fisio-av" id="fisioAv"></div>
  <div><div class="fisio-nombre" id="fisioNombre"></div><div class="fisio-col" id="fisioColegiado"></div></div>
  </div>
- <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icono.png" alt=""><div><b>Instala la app en tu móvil</b><span>Tenla a un toque, como cualquier app</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
  <div id="citaHoy" class="ch"></div>
  <div id="notaFisioBtn" style="display:none;margin-bottom:12px;">
  <button onclick="toggleNotaFisio()" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:#aaa;display:flex;align-items:center;gap:5px;padding:0;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ver nota de tu fisio</button>
@@ -618,6 +622,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
   <div class="regalo-tx"><b>Regala fisioterapia</b><span>Una tarjeta regalo para quien quieras</span></div>
   <span class="regalo-btn">Regalar</span>
  </a>
+ <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icono.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
+
  </div>
 
  <div id="vistaProgreso" style="display:none;">
@@ -1086,7 +1092,7 @@ function pintarCitaHoy(lista){const el=document.getElementById('citaHoy');if(!el
  const ahora=new Date();const prox=(lista||[]).filter(c=>String(c.estado||'').trim()==='PENDIENTE').map(c=>{const d=parseFecha(c.fecha);if(!d)return null;const m=String(c.hora||'').match(/(\d{1,2}):(\d{2})/);if(m)d.setHours(+m[1],+m[2]);else d.setHours(23,59);return {c,d};}).filter(x=>x&&x.d>=ahora).sort((a,b)=>a.d-b.d)[0];
  const ms=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],ds=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
  if(prox){const d=prox.d;el.innerHTML=`<div class="ch-fecha"><b>${d.getDate()}</b><span>${ms[d.getMonth()]}</span></div><div class="ch-tx"><small>Tu próxima cita</small><b>${ds[d.getDay()].charAt(0).toUpperCase()+ds[d.getDay()].slice(1)} · ${prox.c.hora||''}</b><span>con ${prox.c.fisio||'tu fisio'}</span></div><button class="ch-btn sec" onclick="event.stopPropagation();abrirReserva()">Reservar otra</button>`;el.onclick=()=>showSection('citas');}
- else{el.innerHTML=`<div class="ch-fecha"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><div class="ch-tx"><small>Citas</small><b>Reserva tu próxima cita</b><span>Elige día, hora y fisio</span></div><button class="ch-btn" onclick="event.stopPropagation();abrirReserva()">Reservar</button>`;el.onclick=()=>abrirReserva();}
+ else{el.innerHTML=`<div class="ch-fecha"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><div class="ch-tx"><small>Citas</small><b>Reserva tu cita</b><span>Elige día, hora y fisio</span></div><button class="ch-btn" onclick="event.stopPropagation();abrirReserva()">Reservar</button>`;el.onclick=()=>abrirReserva();}
  el.classList.add('on');}
 // ── Reservar cita ─────────────────────────────────────────────
 let rvHuecos=[],rvFisio='',rvSel=null,rvCardHTML='';
