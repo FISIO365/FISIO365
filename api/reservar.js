@@ -9,6 +9,7 @@ const CITAS = 'tblTPlcuiSjQngkaD';
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const LIBRES = ['CITA LIBRE', 'LIBRE - SIN BOMBA'];
 const DIAS_VISTA = 35;          // cuántos días hacia delante se enseñan
+const TIPO_APP = 'recvCLCoYJ82LcPh9';  // «RESERVADA POR LA APP» en la tabla de tipos de cita
 const MARGEN_MIN = 0;           // se puede reservar hasta la hora de empezar, mientras el hueco esté libre
 
 const H = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
@@ -80,7 +81,7 @@ export default async function handler(req) {
       // Reservar: pasa a PENDIENTE y se enlaza al paciente
       const ur = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${CITAS}/${huecoId}`, {
         method: 'PATCH', headers: AT,
-        body: JSON.stringify({ fields: { 'ESTADO': 'PENDIENTE ', 'RELACIÓN - CITA': [patientId], 'RESERVA': 'RESERVADA POR LA APP' } })
+        body: JSON.stringify({ fields: { 'ESTADO': 'PENDIENTE ', 'RELACIÓN - CITA': [patientId], 'TIPO DE CITA': [...new Set([...(Array.isArray(h.fields['TIPO DE CITA']) ? h.fields['TIPO DE CITA'] : []), TIPO_APP])] } })
       });
       const u = await ur.json();
       if (!ur.ok) return json({ ok: false, error: u.error?.message || 'No se ha podido reservar' }, 500);
