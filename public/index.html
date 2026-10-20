@@ -384,6 +384,38 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .ses-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .ses-play svg{width:28px;height:28px;fill:#1a1a1a;margin-left:4px}
 .ses-vid em{font-family:var(--font);position:absolute;left:0;right:0;bottom:12px;text-align:center;font-style:normal;font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+
+/* Reservar cita */
+.rv-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:52px;border:none;border-radius:16px;background:#c2552e;color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin:4px 0 16px;box-shadow:0 8px 20px rgba(194,85,46,.22)}
+.rv-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+#reservaSheet{position:fixed;inset:0;z-index:550;background:var(--cream);display:none;flex-direction:column}
+#reservaSheet.on{display:flex}
+.rv-top{display:flex;align-items:center;gap:10px;padding:14px 16px 6px}
+.rv-top button{width:40px;height:40px;border-radius:50%;border:none;background:#fff;font-size:20px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.06);flex:none}
+.rv-top b{font-size:19px;font-weight:800;letter-spacing:-.3px}
+.rv-sub{font-size:13px;color:#8a837b;padding:0 18px 10px}
+.rv-chips{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 12px;flex:none;scrollbar-width:none}
+.rv-chips::-webkit-scrollbar{display:none}
+.rv-chip{flex:none;border:1px solid #e6ded6;background:#fff;border-radius:99px;padding:8px 15px;font-family:inherit;font-size:13px;font-weight:600;color:#1a1a1a;cursor:pointer}
+.rv-chip.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
+.rv-lista{flex:1;overflow-y:auto;padding:0 16px 30px}
+.rv-dia{background:#fff;border-radius:20px;padding:14px 14px 12px;margin-bottom:12px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
+.rv-dia-t{font-size:14px;font-weight:700;margin:0 2px 10px}
+.rv-horas{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px}
+.rv-h{border:1px solid #efc7b4;background:#fbf3ee;border-radius:14px;padding:9px 6px;text-align:center;cursor:pointer;font-family:inherit}
+.rv-h b{display:block;font-size:15px;font-weight:700;color:#1a1a1a}
+.rv-h span{display:block;font-size:11.5px;color:#c2552e;font-weight:600;margin-top:1px}
+.rv-h:active{transform:scale(.97)}
+.rv-vacio{text-align:center;color:#8a837b;font-size:14px;padding:40px 20px;line-height:1.5}
+.rv-modal{position:fixed;inset:0;z-index:560;background:rgba(17,17,17,.45);display:none;align-items:flex-end;justify-content:center}
+.rv-modal.on{display:flex}
+.rv-card{background:#fff;width:100%;max-width:480px;border-radius:26px 26px 0 0;padding:24px 22px calc(22px + env(safe-area-inset-bottom))}
+.rv-card h3{font-size:19px;font-weight:800;margin-bottom:12px}
+.rv-res{background:#fbf3ee;border-radius:16px;padding:14px 16px;font-size:14.5px;line-height:1.6;margin-bottom:16px}
+
+.rv-card .rv-btn{margin:0 0 8px}
+.rv-cancel{width:100%;height:46px;border:none;background:none;font-family:inherit;font-size:14px;font-weight:600;color:#8a837b;cursor:pointer}
+.rv-err{color:#b3261e;font-size:13px;margin:-6px 0 12px;display:none}
 #vidGrande{position:fixed;inset:0;z-index:600;background:rgba(14,14,14,.94);display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
 #vidGrande.on{display:flex}
 .vg-caja{position:relative;width:100%;max-width:960px;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.5)}
@@ -557,7 +589,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 
  <div id="vistaCitas" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mis citas</div><div class="date-sub">Tu agenda con el fisio</div></div>
- <div id="calendarWrap"></div><div id="citaDetalle"></div><div id="citasLista"></div>
+ <button class="rv-btn" onclick="abrirReserva()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Reservar una cita</button>
+<div id="calendarWrap"></div><div id="citaDetalle"></div><div id="citasLista"></div>
  </div>
 
  <div id="vistaMensajes" style="display:none;">
@@ -1009,6 +1042,35 @@ async function enviarAFisio(fisioId,fisioNombre){
 }
 
 // CITAS
+
+// ── Reservar cita ─────────────────────────────────────────────
+let rvHuecos=[],rvFisio='',rvSel=null,rvCardHTML='';
+const rvDias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],rvMeses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function rvFechaTxt(f){const d=new Date(f+'T12:00:00');const t=`${rvDias[d.getDay()]} ${d.getDate()} de ${rvMeses[d.getMonth()]}`;return t.charAt(0).toUpperCase()+t.slice(1);}
+async function abrirReserva(){document.getElementById('reservaSheet').classList.add('on');document.body.style.overflow='hidden';
+ const L=document.getElementById('rvLista');L.innerHTML='<div style="text-align:center;padding:30px"><div class="spinner"></div></div>';document.getElementById('rvChips').innerHTML='';
+ try{const d=await (await fetch('/api/reservar')).json();if(!d.ok)throw 0;rvHuecos=d.huecos||[];}catch(e){L.innerHTML='<div class="rv-vacio">No hemos podido cargar los huecos. Inténtalo de nuevo en un momento.</div>';return;}
+ rvFisio='';pintarReserva();}
+function cerrarReserva(){document.getElementById('reservaSheet').classList.remove('on');document.body.style.overflow='';}
+function pintarReserva(){const fisios=[...new Set(rvHuecos.map(h=>h.fisio))].sort();
+ document.getElementById('rvChips').innerHTML=fisios.length>1?['',...fisios].map(f=>`<button class="rv-chip${f===rvFisio?' on':''}" data-f="${f}" onclick="rvFisio=this.dataset.f;pintarReserva()">${f||'Todos'}</button>`).join(''):'';
+ const lista=rvHuecos.filter(h=>!rvFisio||h.fisio===rvFisio);const L=document.getElementById('rvLista');
+ if(!lista.length){L.innerHTML='<div class="rv-vacio">Ahora mismo no hay huecos libres'+(rvFisio?' con '+rvFisio:'')+'.<br>Escríbenos por el chat y te buscamos uno.</div>';return;}
+ const porDia={};lista.forEach(h=>{(porDia[h.fecha]=porDia[h.fecha]||[]).push(h);});
+ L.innerHTML=Object.keys(porDia).sort().map(f=>`<div class="rv-dia"><div class="rv-dia-t">${rvFechaTxt(f)}</div><div class="rv-horas">${porDia[f].map(h=>`<button class="rv-h" onclick="elegirHueco('${h.id}')"><b>${h.hora}</b><span>${h.fisio}</span></button>`).join('')}</div></div>`).join('');}
+function elegirHueco(id){const c=document.querySelector('#rvModal .rv-card');if(!rvCardHTML)rvCardHTML=c.innerHTML;else c.innerHTML=rvCardHTML;rvSel=rvHuecos.find(h=>h.id===id);if(!rvSel)return;
+ document.getElementById('rvRes').innerHTML=`<b>${rvFechaTxt(rvSel.fecha)}</b><br>A las <b>${rvSel.hora}</b> con <b>${rvSel.fisio}</b><br><span style="font-size:12.5px;color:#8a837b">FISIO365 · Gran de Sant Andreu 163</span>`;
+ const e=document.getElementById('rvErr');e.style.display='none';const b=document.getElementById('rvOk');b.disabled=false;b.textContent='Reservar';
+ document.getElementById('rvModal').classList.add('on');}
+function cerrarConfirmar(){document.getElementById('rvModal').classList.remove('on');}
+async function confirmarReserva(){if(!rvSel||!patient)return;const b=document.getElementById('rvOk'),e=document.getElementById('rvErr');b.disabled=true;b.textContent='Reservando…';e.style.display='none';
+ try{const r=await fetch('/api/reservar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,huecoId:rvSel.id})});const d=await r.json();
+  if(!d.ok){e.textContent=d.error||'No se ha podido reservar.';e.style.display='block';b.disabled=false;b.textContent='Reservar';if(d.ocupado){rvHuecos=rvHuecos.filter(h=>h.id!==rvSel.id);pintarReserva();b.style.display='none';setTimeout(()=>{b.style.display='';cerrarConfirmar();},1800);}return;}
+  rvHuecos=rvHuecos.filter(h=>h.id!==rvSel.id);
+  document.querySelector('#rvModal .rv-card').innerHTML=`<h3>¡Cita reservada!</h3><div class="rv-res"><b>${rvFechaTxt(rvSel.fecha)}</b><br>A las <b>${rvSel.hora}</b> con <b>${rvSel.fisio}</b></div><div style="font-size:13px;color:#8a837b;margin:-4px 0 16px;line-height:1.5">Si necesitas cambiarla o anularla, escríbenos por el chat o al 672 89 39 49.</div><button class="rv-btn" onclick="reservaHecha()">Perfecto</button>`;
+  try{localStorage.removeItem('f365_citas_'+patient.id);}catch(x){}
+ }catch(x){e.textContent='Sin conexión. Inténtalo de nuevo.';e.style.display='block';b.disabled=false;b.textContent='Reservar';}}
+function reservaHecha(){cerrarConfirmar();cerrarReserva();_citasPromesa=null;initCitas();}
 let citasData=[],calMesActual=new Date(),diaSeleccionado=null;
 // Citas: se piden en segundo plano al entrar y se guardan en el móvil, así el calendario sale al instante
 let _citasPromesa=null;
@@ -1149,5 +1211,16 @@ async function loadPuntos(){
 </script>
 <script src="/chat-ui.js"></script>
 <script src="/racha-ui.js"></script>
+
+<div id="reservaSheet">
+ <div class="rv-top"><button onclick="cerrarReserva()" aria-label="Cerrar">‹</button><b>Reservar cita</b></div>
+ <div class="rv-sub">Elige un hueco libre. Se apunta directamente en la agenda del centro.</div>
+ <div class="rv-chips" id="rvChips"></div>
+ <div class="rv-lista" id="rvLista"></div>
+</div>
+<div class="rv-modal" id="rvModal" onclick="if(event.target===this)cerrarConfirmar()">
+ <div class="rv-card"><h3>¿Reservamos esta cita?</h3><div class="rv-res" id="rvRes"></div><div class="rv-err" id="rvErr"></div>
+ <button class="rv-btn" id="rvOk" onclick="confirmarReserva()">Reservar</button><button class="rv-cancel" onclick="cerrarConfirmar()">Cancelar</button></div>
+</div>
 </body>
 </html>
