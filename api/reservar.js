@@ -80,7 +80,7 @@ export default async function handler(req) {
       // Reservar: pasa a PENDIENTE y se enlaza al paciente
       const ur = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${CITAS}/${huecoId}`, {
         method: 'PATCH', headers: AT,
-        body: JSON.stringify({ fields: { 'ESTADO': 'PENDIENTE ', 'RELACIÓN - CITA': [patientId] } })
+        body: JSON.stringify({ fields: { 'ESTADO': 'PENDIENTE ', 'RELACIÓN - CITA': [patientId], 'RESERVA': 'RESERVADA POR LA APP' } })
       });
       const u = await ur.json();
       if (!ur.ok) return json({ ok: false, error: u.error?.message || 'No se ha podido reservar' }, 500);
