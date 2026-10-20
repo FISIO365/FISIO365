@@ -431,16 +431,16 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .pr-cab{display:flex;align-items:baseline;justify-content:space-between;margin:22px 2px 10px}
 .pr-cab b{font-size:16px;font-weight:800}
 .pr-cab button{border:none;background:none;font-family:inherit;font-size:13px;font-weight:600;color:#c2552e;cursor:pointer;padding:0}
-.pr-fila{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 16px;margin:0 -16px;padding:2px 16px 8px;scrollbar-width:none}
-.pr-fila::-webkit-scrollbar{display:none}
-.pr{position:relative;overflow:hidden;flex:none;width:82%;max-width:330px;scroll-snap-align:start;border-radius:24px;padding:18px 18px 16px;display:flex;flex-direction:column;min-height:170px}
+.pr-fila{display:grid;gap:12px}
+
+.pr{position:relative;overflow:hidden;width:100%;border-radius:24px;padding:18px 18px 16px;display:flex;flex-direction:column}
 .pr.solo{width:100%;max-width:none}
 .pr-lista .pr{width:100%;max-width:none;margin-bottom:12px}
-.pr.Naranja{background:#c2552e;color:#fff6ee}.pr.Negro{background:#1a1a1a;color:#f5f2ee}.pr.Crema{background:#fbeee7;color:#1a1a1a}
+.pr.Naranja{background:#c2552e;color:#fff6ee}.pr.Negro{background:#1a1a1a;color:#f5f2ee}.pr.Crema{background:#fff;color:#1a1a1a;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
 .pr:before{content:'';position:absolute;right:-50px;top:-50px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.12)}
 .pr.Crema:before{background:rgba(194,85,46,.10)}
 .pr-et{position:relative;align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.18);margin-bottom:10px}
-.pr.Crema .pr-et{background:#fff;color:#c2552e}
+.pr.Crema .pr-et{background:#fbeee7;color:#c2552e}
 .pr h4{position:relative;font-size:20px;font-weight:800;letter-spacing:-.4px;line-height:1.15}
 .pr p{position:relative;font-size:13px;line-height:1.5;opacity:.85;margin-top:6px}
 .pr-b{position:relative;margin-top:auto;padding-top:14px}
@@ -1165,13 +1165,13 @@ function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'
 // desde / hasta (opcional, 'AAAA-MM-DD'): la promo solo sale entre esas fechas.
 const PROMOS=[
  {etiqueta:'Siempre disponible',titulo:'Packs de sesiones',texto:'Cada sesión te sale más barata: hasta 280 € de ahorro. Pagas una vez y solo te preocupas de mejorar.',boton:'Ver packs',accion:'packs',color:'Naranja'},
- {etiqueta:'Regalo',titulo:'Regala fisioterapia',texto:'Una tarjeta regalo para quien quieras. La preparas en 2 minutos.',boton:'Regalar',accion:'https://tally.so/r/WOVB0N?origen=app',color:'Crema'},
+ {etiqueta:'Regalo',titulo:'Regala fisioterapia',texto:'Una tarjeta regalo para quien quieras. La preparas en 2 minutos.',boton:'Regalar',accion:'https://tally.so/r/WOVB0N?origen=app',color:'Negro'},
 ];
 function promosActivas(){const h=new Date().toISOString().slice(0,10);return PROMOS.filter(p=>(!p.desde||p.desde<=h)&&(!p.hasta||p.hasta>=h));}
 function htmlPromo(p,i,solo){const b=p.boton?`<div class="pr-b"><button onclick="accionPromo(${i})">${p.boton}</button></div>`:'';return `<div class="pr ${p.color||'Naranja'}${solo?' solo':''}">${p.etiqueta?`<div class="pr-et">${p.etiqueta}</div>`:''}<h4>${p.titulo}</h4>${p.texto?`<p>${p.texto}</p>`:''}${b}</div>`;}
 function accionPromo(i){const p=PROMOS[i];if(!p)return;if(p.accion==='reservar')return abrirReserva();if(p.accion==='chat')return showSection('mensajes');if(p.accion==='packs')return abrirPacks();if(/^https?:/.test(p.accion||''))window.open(p.accion,'_blank');}
 function pintarPromos(){const act=promosActivas();const H=document.getElementById('promosHoy'),L=document.getElementById('promosLista');
- if(H)H.innerHTML=act.length?`<div class="pr-cab"><b>Promociones</b>${act.length>1?`<button onclick="showSection('promos');pintarPromos()">Ver todas</button>`:''}</div><div class="pr-fila">${act.map(p=>htmlPromo(p,PROMOS.indexOf(p),act.length===1)).join('')}</div>`:'';
+ if(H)H.innerHTML=act.length?`<div class="pr-cab"><b>Promociones</b>${act.length>3?`<button onclick="showSection('promos');pintarPromos()">Ver todas</button>`:''}</div><div class="pr-fila">${act.slice(0,3).map(p=>htmlPromo(p,PROMOS.indexOf(p),act.length===1)).join('')}</div>`:'';
  if(L)L.innerHTML=act.length?act.map(p=>htmlPromo(p,PROMOS.indexOf(p),1)).join(''):'<div class="pr-vacio">Ahora mismo no hay promociones. ¡Vuelve pronto!</div>';}
 
 // ── Packs ─────────────────────────────────────────────────────
