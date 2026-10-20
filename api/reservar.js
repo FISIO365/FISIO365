@@ -9,7 +9,7 @@ const CITAS = 'tblTPlcuiSjQngkaD';
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const LIBRES = ['CITA LIBRE', 'LIBRE - SIN BOMBA'];
 const DIAS_VISTA = 35;          // cuántos días hacia delante se enseñan
-const MARGEN_MIN = 120;         // no se puede reservar con menos de 2 h de antelación
+const MARGEN_MIN = 0;           // se puede reservar hasta la hora de empezar, mientras el hueco esté libre
 
 const H = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: H });
