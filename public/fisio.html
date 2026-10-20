@@ -323,6 +323,34 @@ input[type=number]{text-align:center}
 .msg-toolbar button:hover { background:var(--lila-light); color:var(--lila); }
 .msg-toolbar-sep { width:1px; background:var(--border); margin:4px 2px; }
 .msg-with-toolbar { border-radius:0 0 8px 8px !important; border-top:none !important; }
+
+/* Chat del panel */
+.chatp{display:grid;grid-template-columns:320px 1fr;gap:14px;height:calc(100vh - 130px);min-height:520px}
+.chatp-lista{background:#fff;border-radius:20px;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border)}
+.chatp-top{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px}
+.chatp-nuevo{font-family:var(--font);font-size:12px;font-weight:700;border:none;background:#1a1a1a;color:#f5f2ee;border-radius:99px;padding:8px 14px;cursor:pointer}
+.chatp-buscar{padding:0 12px 10px}
+.chatp-buscar input{width:100%;font-family:var(--font);font-size:14px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--border);outline:none;background:#f5f2ee}
+.chatp-res button{display:block;width:100%;text-align:left;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;padding:9px 6px;border-bottom:1px solid var(--border);cursor:pointer;color:#1a1a1a}
+.chatp-res button span{display:block;font-weight:400;font-size:11.5px;color:#8a857e}
+.chatp-items{flex:1;overflow-y:auto;padding:4px 8px 10px}
+.chatp-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:none;padding:10px 8px;border-radius:14px;cursor:pointer;font-family:var(--font);color:#1a1a1a}
+.chatp-item:hover{background:#f7f5f2}.chatp-item.on{background:#ede9f7}
+.chatp-av{width:40px;height:40px;border-radius:50%;background:#ede9f7;color:#7b6fd4;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.chatp-txt{flex:1;min-width:0}
+.chatp-txt div{display:flex;justify-content:space-between;gap:8px}
+.chatp-txt b{font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chatp-txt span{font-size:11px;color:#8a857e;flex:none}
+.chatp-txt p{font-size:12.5px;color:#8a857e;margin:2px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chatp-n{font-style:normal;background:#ee2155;color:#fff;font-size:11px;font-weight:700;border-radius:99px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.chatp-hilo{background:#f5f2ee;border-radius:20px;display:flex;flex-direction:column;min-height:0;padding:0 14px;border:1px solid var(--border)}
+.chatp-cab{display:flex;align-items:center;gap:10px;padding:14px 4px 10px;border-bottom:1px solid var(--border)}
+.chatp-cab b{display:block;font-size:15px}.chatp-cab span{font-size:12px;color:#8a857e}
+.chatp-volver{display:none;border:none;background:#fff;width:36px;height:36px;border-radius:50%;font-size:22px;cursor:pointer}
+.chatp-caja{flex:1;min-height:0}
+.chatp-vacio{color:#8a857e;font-size:13.5px;text-align:center;padding:30px 16px;line-height:1.6}
+.chatp-ficha{height:520px;background:#f5f2ee;border-radius:16px;padding:0 10px}
+@media(max-width:800px){.chatp{grid-template-columns:1fr;height:calc(100vh - 150px)}.chatp-hilo{display:none}.chatp.abierto .chatp-lista{display:none}.chatp.abierto .chatp-hilo{display:flex}.chatp-volver{display:block}}
 </style>
 </head>
 <body>
@@ -435,7 +463,7 @@ const TOPBAR = {
  pac: ['Pacientes','Busca y consulta la ficha de cada paciente'],
  inf: ['Informes','Historial de informes generados'],
  school: ['School','Formación y protocolos del equipo'],
- msg: ['Mensajes','Mensajes enviados por los pacientes'],
+ msg: ['Mensajes','Chat con tus pacientes: texto, fotos y PDFs'],
  record: ['Recordatorios','Citas de mañana pendientes de confirmar']
 };
 
@@ -742,6 +770,7 @@ function renderPacLista(q, lista){
  {key:'programa', label:'Programa'},
  {key:'informes', label:'Informes'},
  {key:'racha', label:'Racha'},
+ {key:'chat', label:'Chat'},
  {key:'diario', label:'Comunicaciones'},
  {key:'pin', label:'Nombre y contraseña'},
  ];
@@ -784,6 +813,7 @@ function renderPacLista(q, lista){
  else if(op.key==='informes') fpTabInformes(p.id, panel, p.nombre, tok);
  else if(op.key==='racha') fpTabRacha(p.id, panel, tok);
  else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel, tok);
+ else if(op.key==='chat'){panel.innerHTML='<div class="chatp-ficha"></div>';FisioChat.montar(panel.querySelector('.chatp-ficha'),{rol:'fisio',pwd:apiPwd,pacienteId:p.id,pacienteNombre:p.nombre,fisio:{id:fisioActual.id,nombre:fisioActual.nombre},onLeido:()=>checkMensajesBadge(),onEnviado:m=>{const txt=m.texto||'Te ha enviado un archivo';notificarPaciente(p.id,`Mensaje de ${fisioActual.nombre}`,txt);crearNotificacion(p.id,`Mensaje de ${fisioActual.nombre}`,txt,'mensaje');}});}
  };
  menu.appendChild(row);
  });
@@ -7248,134 +7278,46 @@ function parseFechaMsg(s){
  const h=m[4]?parseInt(m[4]):0,mi=m[5]?parseInt(m[5]):0;
  return new Date(y,mo,d,h,mi).getTime();
 }
-async function renderMensajes(wrap, tab){
- wrap.innerHTML='';
- const tabActiva = tab || 'recibidos';
-
- // Header
- const hd=ce('div','');
- hd.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:16px';
- hd.innerHTML='<div><div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Mensajes</div></div>';
- wrap.appendChild(hd);
-
- // Tabs
- const tabs=ce('div','');
- tabs.style.cssText='display:flex;gap:8px;margin-bottom:18px;';
- ['recibidos','enviados','nuevo'].forEach(t=>{
- const btn=ce('button','');
- const isActive=t===tabActiva;
- btn.style.cssText=`flex:1;font-family:var(--font);font-size:11px;font-weight:600;padding:6px 12px;border-radius:99px;border:1.5px solid ${isActive?'var(--black)':'var(--border)'};background:${isActive?'var(--black)':'none'};color:${isActive?'white':'var(--muted)'};cursor:pointer;transition:all .15s;`;
- btn.textContent=t==='recibidos'?'Recibidos':t==='enviados'?'Enviados':'Nuevo';
- btn.onclick=()=>renderMensajes(wrap,t);
- tabs.appendChild(btn);
- });
- wrap.appendChild(tabs);
-
- if(tabActiva==='recibidos'){
- // Loading
- const loading=ce('div','');
- loading.innerHTML='<div style="text-align:center;padding:3rem"><div style="width:28px;height:28px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
- wrap.appendChild(loading);
-
- try{
- const res=await fetch(`/api/pacientes?action=get-mensajes-fisio&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
- const data=await res.json();
- loading.remove();
-
- const mensajes=(data.mensajes||[]).filter(m=>m.tipo!=='fisio').sort((a,b)=>parseFechaMsg(b.fecha)-parseFechaMsg(a.fecha));
- const sinLeer=mensajes.filter(m=>!m.visto).length;
- const badge=$('sb-msg-badge');
- if(badge){badge.textContent=sinLeer>0?String(sinLeer):'';badge.style.display=sinLeer>0?'block':'none';}
-
- if(!mensajes.length){
- const em=ce('div','');
- em.style.cssText='text-align:center;padding:3rem 1rem;color:var(--muted)';
- em.innerHTML='<div style="font-size:48px;margin-bottom:12px"></div><div style="font-size:16px;font-weight:600;margin-bottom:8px">Sin mensajes</div><div style="font-size:13px">Cuando un paciente te escriba, aparecerá aquí.</div>';
- wrap.appendChild(em);
- return;
+// ── MENSAJES: chat con cada paciente (texto, fotos y PDFs) — usa /chat-ui.js y /api/chat ──
+async function renderMensajes(wrap, abrirPacId){
+ wrap.innerHTML=`<div class="chatp">
+  <div class="chatp-lista">
+   <div class="chatp-top"><div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Mensajes</div><button class="chatp-nuevo" type="button">+ Nuevo</button></div>
+   <div class="chatp-buscar" hidden><input type="search" placeholder="Busca un paciente…"><div class="chatp-res"></div></div>
+   <div class="chatp-items"><div class="chatp-vacio">Cargando…</div></div>
+  </div>
+  <div class="chatp-hilo"><div class="chatp-vacio" style="margin:auto">Elige una conversación o pulsa <b>+ Nuevo</b> para escribir a un paciente.</div></div>
+ </div>`;
+ const q=s=>wrap.querySelector(s);
+ const iniciales=n=>String(n||'?').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+ const hora=t=>{const d=new Date(t),h=new Date();return d.toDateString()===h.toDateString()?d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});};
+ const escH=t=>String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+ let actual=null, ctl=null;
+ function abrir(pacId,pacNombre){
+  actual=pacId; if(ctl)ctl.parar();
+  wrap.querySelector('.chatp').classList.add('abierto');
+  wrap.querySelectorAll('.chatp-item').forEach(x=>x.classList.toggle('on',x.dataset.id===pacId));
+  const h=q('.chatp-hilo');
+  h.innerHTML=`<div class="chatp-cab"><button class="chatp-volver" type="button" aria-label="Volver">‹</button><div class="chatp-av">${escH(iniciales(pacNombre))}</div><div><b>${escH(pacNombre)}</b><span>Paciente</span></div></div><div class="chatp-caja"></div>`;
+  h.querySelector('.chatp-volver').onclick=()=>{wrap.querySelector('.chatp').classList.remove('abierto');if(ctl)ctl.parar();ctl=null;cargarLista();};
+  ctl=FisioChat.montar(h.querySelector('.chatp-caja'),{rol:'fisio',pwd:apiPwd,pacienteId:pacId,pacienteNombre:pacNombre,fisio:{id:fisioActual.id,nombre:fisioActual.nombre},
+   onLeido:()=>{checkMensajesBadge();const it=wrap.querySelector(`.chatp-item[data-id="${pacId}"] .chatp-n`);if(it)it.remove();},
+   onEnviado:m=>{const txt=m.texto||(m.adjuntos&&m.adjuntos[0]?(/^image\//.test(m.adjuntos[0].tipo)?'Te ha enviado una foto':'Te ha enviado un PDF'):'');notificarPaciente(pacId,`Mensaje de ${fisioActual.nombre}`,txt);crearNotificacion(pacId,`Mensaje de ${fisioActual.nombre}`,txt,'mensaje');cargarLista();}});
  }
-
- mensajes.forEach(m=>{
- const esDolorAumento=m.texto&&m.texto.startsWith('[Dolor aumentó]');
- const textoLimpio=esDolorAumento?m.texto.replace('[Dolor aumentó] ',''):m.texto;
- const tipoBadge=esDolorAumento
- ?'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:#fff0f0;color:#c00;border-radius:99px;padding:2px 8px"> Dolor</span>'
- :m.tipo==='fisio'
- ?'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--lila-light);color:var(--lila);border-radius:99px;padding:2px 8px"> Enviado</span>'
- :'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--lila-light);color:var(--lila);border-radius:99px;padding:2px 8px"> Diario</span>';
- const noVistoBadge=!m.visto?'<span style="width:8px;height:8px;background:#ee2155;border-radius:50%;display:inline-block;margin-left:6px"></span>':'';
-
- const card=ce('div','card');
- card.style.cssText='margin-bottom:12px;'+(m.visto?'':'border-color:var(--lila);');
- card.innerHTML=`
- <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
- <div style="display:flex;align-items:center;gap:8px">${tipoBadge}${noVistoBadge}</div>
- <div style="font-size:11px;color:var(--muted)">${m.fecha||''}</div>
- </div>
- <div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:4px">${m.pacienteNombre||'Paciente'}</div>
- <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:12px;white-space:pre-wrap">${formatMensaje(textoLimpio)}</div>
- ${m.respuesta
- ?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lila);margin-bottom:4px">Tu respuesta</div><div style="font-size:13px;color:var(--black);line-height:1.5;white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`
- :`<div style="display:flex;gap:8px;align-items:flex-start">
- <textarea id="reply_${m.id}" placeholder="Escribe tu respuesta..." style="flex:1;font-family:var(--font);font-size:13px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:70px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
- <button onclick="responderMensaje('${m.id}','${(m.pacienteId||'').replace(/'/g,"\'")}','${(m.pacienteNombre||'').replace(/'/g,"\'")}',this)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:10px 14px;background:var(--lila);color:white;border:none;border-radius:8px;cursor:pointer;flex-shrink:0;white-space:nowrap">Enviar</button>
- </div>`
- }`;
-
- if(!m.visto) marcarMensajeVisto(m.id);
- wrap.appendChild(card);
- });
-
- }catch(e){
- const err=ce('div','');
- err.style.cssText='text-align:center;padding:2rem;color:var(--muted)';
- err.textContent='Error al cargar mensajes';
- wrap.appendChild(err);
+ async function cargarLista(){
+  try{
+   const d=await (await fetch(`/api/chat?action=conversaciones&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`)).json();
+   const cs=(d.conversaciones||[]).map(c=>({...c,pacienteNombre:c.pacienteNombre||((pacs||[]).find(x=>x.id===c.pacienteId)||{}).nombre||'Paciente'}));
+   q('.chatp-items').innerHTML=cs.length?cs.map(c=>`<button type="button" class="chatp-item${c.pacienteId===actual?' on':''}" data-id="${escH(c.pacienteId)}" data-n="${escH(c.pacienteNombre)}"><div class="chatp-av">${escH(iniciales(c.pacienteNombre))}</div><div class="chatp-txt"><div><b>${escH(c.pacienteNombre||'Paciente')}</b><span>${hora(c.ultimo)}</span></div><p>${c.de==='fisio'?'Tú: ':''}${escH(c.texto)}</p></div>${c.sinLeer?`<i class="chatp-n">${c.sinLeer}</i>`:''}</button>`).join(''):'<div class="chatp-vacio">Aún no tienes conversaciones. Pulsa <b>+ Nuevo</b> para escribir a un paciente.</div>';
+   wrap.querySelectorAll('.chatp-item').forEach(b=>b.onclick=()=>abrir(b.dataset.id,b.dataset.n));
+  }catch(e){q('.chatp-items').innerHTML='<div class="chatp-vacio">No se han podido cargar los mensajes.</div>';}
  }
-
-  } else if(tabActiva==='enviados'){
-    const loading2=ce('div','');
-    loading2.innerHTML='<div style="text-align:center;padding:3rem"><div style="width:28px;height:28px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
-    wrap.appendChild(loading2);
-    try{
-      const res=await fetch(`/api/pacientes?action=get-mensajes-fisio&pwd=${encodeURIComponent(apiPwd)}&fisioId=${encodeURIComponent(fisioActual.id)}`);
-      const data=await res.json();
-      loading2.remove();
-      const enviados=(data.mensajes||[]).filter(m=>m.tipo==='fisio').sort((a,b)=>parseFechaMsg(b.fecha)-parseFechaMsg(a.fecha));
-      if(!enviados.length){
-        const em=ce('div','');em.style.cssText='text-align:center;padding:3rem 1rem;color:var(--muted)';
-        em.innerHTML='<div style="font-size:16px;font-weight:600;margin-bottom:8px">Sin mensajes enviados</div><div style="font-size:13px">Los mensajes que envíes a los pacientes aparecerán aquí.</div>';
-        wrap.appendChild(em);
-      } else {
-        enviados.forEach(m=>{
-          const card=ce('div','card');card.style.cssText='margin-bottom:12px;';
-          card.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:14px;font-weight:700;color:var(--black)">${m.pacienteNombre||'Paciente'}</div><div style="font-size:11px;color:var(--muted)">${m.fecha||''}</div></div><div style="font-size:13px;color:#333;line-height:1.6;white-space:pre-wrap">${formatMensaje(m.texto||'')}</div>${m.respuesta?`<div style="background:var(--lila-light);border-radius:8px;padding:10px 12px;margin-top:10px;border-left:3px solid var(--lila)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--lila);margin-bottom:4px">Respuesta del paciente</div><div style="font-size:13px;color:var(--black);white-space:pre-wrap">${formatMensaje(m.respuesta)}</div></div>`:''}`;
-          wrap.appendChild(card);
-        });
-      }
-    }catch(e){loading2.remove();}
-
-  } else {
-    // NUEVO MENSAJE
-    const nuevo=ce('div','');
-    nuevo.style.cssText='background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px;';
- nuevo.innerHTML=`
- <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Busca un paciente</div>
- <input id="msgBuscaPaciente" type="text" placeholder="Busca un paciente..." autocomplete="off" oninput="filtrarPacientesMsg(this.value)" style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;outline:none;background:var(--cream);color:var(--black);margin-bottom:6px;"><div id="msgPacientesResultados" style="max-height:180px;overflow-y:auto;border:1.5px solid var(--border);border-radius:8px;margin-bottom:12px;display:none;background:white;"></div><div id="msgPacienteSeleccionado" style="display:none;background:var(--lila-light);border:1.5px solid var(--lila);border-radius:8px;padding:8px 12px;margin-bottom:12px;align-items:center;justify-content:space-between;"><span id="msgPacienteNombreLabel" style="font-size:13px;font-weight:600;color:var(--black)"></span><button onclick="limpiarPacienteMsg()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted)">×</button></div><input type="hidden" id="msgNuevoPaciente" value=""><input type="hidden" id="msgNuevoPacienteNombre" value="">
- <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Mensaje</div>
- <textarea id="msgNuevoTexto" placeholder="Escribe tu mensaje al paciente..." style="width:100%;font-family:var(--font);font-size:14px;padding:10px;border:1.5px solid var(--border);border-radius:8px;resize:none;min-height:100px;outline:none;background:var(--cream);color:var(--black);transition:border-color .15s;margin-bottom:12px;" onfocus="this.style.borderColor='var(--lila)'" onblur="this.style.borderColor='var(--border)'"></textarea>
- <button onclick="enviarMensajeNuevo(this)" style="width:100%;font-family:var(--font);font-size:13px;font-weight:700;padding:12px;background:var(--lila);color:white;border:none;border-radius:8px;cursor:pointer;">Enviar mensaje</button>`;
- wrap.appendChild(nuevo);
-    // Add formatting toolbar to nuevo mensaje textarea
-    setTimeout(()=>{
-      const ta=document.getElementById('msgNuevoTexto');
-      if(ta&&!ta.previousElementSibling?.classList.contains('msg-toolbar')){
-        ta.parentNode.insertBefore(mkToolbar('msgNuevoTexto'),ta);
-        ta.style.borderRadius='0 0 8px 8px';
-        ta.style.borderTop='none';
-      }
-    },0);
- }
+ q('.chatp-nuevo').onclick=()=>{const b=q('.chatp-buscar');b.hidden=!b.hidden;if(!b.hidden)b.querySelector('input').focus();};
+ q('.chatp-buscar input').oninput=e=>{const t=e.target.value.trim().toLowerCase();const r=t?(pacs||[]).filter(p=>p.nombre.toLowerCase().includes(t)||(p.email||'').toLowerCase().includes(t)).slice(0,8):[];
+  q('.chatp-res').innerHTML=r.map(p=>`<button type="button" data-id="${escH(p.id)}" data-n="${escH(p.nombre)}">${escH(p.nombre)}<span>${escH(p.email||'')}</span></button>`).join('');
+  q('.chatp-res').querySelectorAll('button').forEach(b=>b.onclick=()=>{q('.chatp-buscar').hidden=true;e.target.value='';q('.chatp-res').innerHTML='';abrir(b.dataset.id,b.dataset.n);});};
+ await cargarLista();
+ if(abrirPacId){const p=(pacs||[]).find(x=>x.id===abrirPacId);abrir(abrirPacId,p?p.nombre:'Paciente');}
 }
 
 async function enviarMensajeNuevo(btn){
@@ -7642,5 +7584,6 @@ function cerrarLightbox(){
  $('lightbox').style.display='none';$('lb-img').src='';
 }
 </script>
+<script src="/chat-ui.js"></script>
 </body>
 </html>

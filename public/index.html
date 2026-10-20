@@ -5,9 +5,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="FISIO365">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#f5f2ee">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icono.png">
 <title>FISIO365</title>
@@ -199,33 +199,135 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
 .premio-banner-icon { font-size: 28px; flex-shrink: 0; }
 .premio-banner-titulo { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
 .premio-banner-sub { font-size: 12px; color: #7b6fd4; font-weight: 500; }
+
+/* ═════ NUEVA ESTÉTICA (estilo Atlas, colores FISIO365) ═════ */
+:root{--cream:#f5f2ee;--black:#1a1a1a;--muted:#8a857e;--border:rgba(26,26,26,.08);--r:22px;--lila:#ada3da;--lila-d:#7b6fd4;--lila-light:#ede9f7;--sombra:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
+body{background:var(--cream);-webkit-font-smoothing:antialiased}
+/* Login */
+.screen{background:var(--cream);justify-content:flex-start;padding:max(56px,env(safe-area-inset-top)) 20px 40px}
+.login-top{text-align:center;margin:6vh 0 34px}
+.logo-fisio{font-size:44px;font-weight:800;letter-spacing:-2px;color:var(--black);line-height:1}
+.logo-fisio span{color:var(--lila)}
+.login-saludo{font-size:15px;color:var(--muted);margin-top:10px}
+.login-card{max-width:380px;background:#fff;border-radius:28px;padding:28px 22px 22px;box-shadow:var(--sombra)}
+.lbl,.login-label{color:var(--muted);font-size:11px;letter-spacing:.1em;margin-bottom:8px}
+.inp{background:var(--cream);border:1.5px solid transparent;color:var(--black);border-radius:16px;height:54px}
+.inp:focus{border-color:var(--lila)}
+.inp::placeholder{color:#b9b4ad}
+.pin-wrap{gap:10px;margin-bottom:26px}
+.pin-d{flex:1;width:auto;height:60px;background:var(--cream);border:1.5px solid transparent;color:var(--black);border-radius:16px;font-size:22px}
+.pin-d:focus{border-color:var(--lila)}
+.btn-primary{background:var(--black);color:var(--cream);border-radius:99px;height:56px;font-size:15px;margin-bottom:0}
+.login-err{color:#c0392b}
+.btn-install{color:var(--muted);font-size:13px;font-weight:500;max-width:380px;margin-top:14px}
+.login-langs{text-align:center;margin-top:6px;color:#cfcac3;font-size:12px}
+.login-langs .lang-btn{flex:none;padding:4px 6px;font-size:12px;background:none}
+/* Barra superior */
+.topbar{background:rgba(245,242,238,.88);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);height:auto;padding:calc(10px + env(safe-area-inset-top)) 20px 10px}
+.topbar-logo{color:var(--black);font-size:20px;font-weight:800;letter-spacing:-.8px}
+.topbar-logo span{color:var(--lila)}
+#notifBtn{color:var(--black)!important;width:40px;height:40px;border-radius:50%!important;background:#fff!important;display:none;align-items:center;justify-content:center;padding:0!important}
+.dentro #notifBtn{display:flex!important}
+.hamburger-btn{width:40px;height:40px;border-radius:50%;background:#fff;align-items:center;justify-content:center;gap:4px;padding:0}
+.hamburger-btn span{background:var(--black);width:16px;height:1.8px}
+.nav-menu{top:calc(64px + env(safe-area-inset-top));background:transparent;box-shadow:0 18px 48px rgba(26,26,26,.18);border-radius:22px;width:240px}
+.nav-menu-inner{border-radius:22px!important}
+.nav-item.active{background:var(--lila-light)!important}
+/* Barra inferior */
+.tabbar{display:none}
+.dentro .tabbar{display:flex;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));z-index:150;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:26px;padding:6px;gap:2px;width:min(560px,calc(100% - 24px));box-shadow:0 10px 30px rgba(26,26,26,.12)}
+.tabbar button{flex:1;border:none;background:none;font-family:var(--font);font-size:10.5px;font-weight:600;color:#9a958e;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 7px;border-radius:20px;cursor:pointer;position:relative}
+.tabbar svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button.on{color:var(--black);background:var(--lila-light)}
+.tab-dot{position:absolute;top:6px;right:calc(50% - 16px);width:9px;height:9px;border-radius:50%;background:#ee2155;border:2px solid #fff;display:none}
+.tab-dot.show{display:block}
+.container{padding:14px 16px calc(110px + env(safe-area-inset-bottom))}
+/* Tarjetas y títulos */
+.card,.msg-card,.cita-detalle,.cita-row,.cal-wrap,.inf-pac-card,.vas-card,.grafica-card,.guia-card,.fisio-card,.mensaje-fisio,.completado-card{border:none;border-radius:var(--r);box-shadow:var(--sombra)}
+.date-today{font-size:26px!important;font-weight:800;letter-spacing:-.8px;line-height:1.15}
+.date-sub{font-size:13px;color:var(--muted)}
+.date-h{margin:6px 0 18px}
+.sec-title{color:var(--muted)}
+/* Hoy */
+.hoy-hero{background:var(--black);color:var(--cream);border-radius:28px;padding:22px 22px 24px;margin-bottom:14px;position:relative;overflow:hidden}
+.hoy-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(173,163,218,.55),rgba(173,163,218,0) 70%)}
+.hoy-hero .date-sub{color:var(--lila);font-weight:600;text-transform:capitalize;font-size:13px;margin:0 0 6px}
+.hoy-hero .date-today{color:var(--cream);font-size:28px!important}
+.hoy-hero-sub{color:rgba(245,242,238,.6);font-size:14px;margin-top:6px;position:relative;z-index:1}
+.fisio-card{padding:12px 14px;gap:12px}
+.fisio-av{width:46px;height:46px;background:var(--lila-light);color:var(--lila-d)}
+.ej-list{gap:12px}
+.ej-item,.ej-item+.ej-item{background:#fff;border-radius:var(--r);padding:18px;border-top:none;box-shadow:var(--sombra)}
+.ej-nom{font-size:15.5px}
+.pill-s{background:var(--black);border-radius:99px;padding:5px 10px;font-size:11px}
+.pill-r{background:var(--lila-light);color:var(--lila-d);border:none;border-radius:99px;padding:5px 10px;font-size:11px}
+.pill-d{border:none;border-radius:99px;padding:5px 10px;font-size:11px}
+.ej-nota{border-radius:14px;background:var(--cream)}
+.ej-thumb,.ej-no-video{border-radius:16px}
+.ej-no-video{background:var(--cream);aspect-ratio:16/7}
+.btn-diario{border-radius:99px;height:58px;font-size:16px;background:var(--black)}
+#diarioSection{margin-top:20px!important}
+.completado-wrap{background:#fff;border-radius:28px;padding:40px 22px;box-shadow:var(--sombra)}
+.completado-titulo{font-size:26px;letter-spacing:-.6px}
+.completado-card{background:var(--lila-light);box-shadow:none}
+.premio-banner{border:none;border-radius:var(--r)}
+/* Citas, racha, informes */
+.cal-wrap{padding:18px}
+.cal-dia{border-radius:12px}
+.cal-dia.hoy,.cal-dia.seleccionado{background:var(--black)}
+.cal-nav{border:none;background:var(--cream);border-radius:50%;width:34px;height:34px}
+.cita-row{padding:14px 16px}
+.cita-row-sep{background:var(--border)}
+.btn-inf{padding:11px 20px}
+.btn-inf.pdf{border-color:var(--border);background:#fff}
+.periodo{border-color:var(--border)}
+.vas-num{border-radius:10px}
+.modal-sheet{border-radius:28px 28px 0 0;padding-bottom:calc(32px + env(safe-area-inset-bottom))}
+.toast{bottom:calc(100px + env(safe-area-inset-bottom));padding:12px 22px}
+/* Chat */
+.chat-cab{display:flex;align-items:center;gap:12px;background:#fff;border-radius:22px;padding:12px 14px;box-shadow:var(--sombra)}
+.chat-av{width:46px;height:46px;border-radius:50%;background:var(--lila-light);color:var(--lila-d);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+.chat-av img{width:100%;height:100%;object-fit:cover}
+.chat-nom{font-size:16px;font-weight:700;line-height:1.2}
+.chat-sub{font-size:12px;color:var(--muted)}
+.en-chat .container{padding-bottom:0}
+.chat-box{height:calc(100dvh - 64px - env(safe-area-inset-top) - 14px - 70px - 96px - env(safe-area-inset-bottom));min-height:340px;margin-top:4px}
+
+.pin-d{width:0;min-width:0}
+.hoy-hero .date-sub,.fc-dia{text-transform:none}
+.nav-menu-inner>div:nth-child(1),.nav-menu-inner>div:nth-child(2){display:none!important}
+.nav-menu-inner>div:nth-child(3){border-top:none!important;padding-top:0!important}
+.nav-menu{width:200px}
 </style>
 </head>
 <body>
 <div id="loginScreen" class="screen active">
- <div class="logo-wrap"><div style="font-size:42px;font-weight:800;color:var(--cream);letter-spacing:-2px;">FISIO<span style="opacity:.6">365</span></div></div>
+ <div class="login-top">
+  <div class="logo-fisio">FISIO<span>365</span></div>
+  <div class="login-saludo">Tu fisio, también en casa.</div>
+ </div>
  <div class="login-card">
- <label class="lbl">Email</label>
+ <label class="lbl" for="emailInput">Email</label>
  <input class="inp" type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" />
  <label class="lbl">PIN</label>
  <div class="pin-wrap">
- <input class="pin-d" type="tel" id="p1" maxlength="1" />
- <input class="pin-d" type="tel" id="p2" maxlength="1" />
- <input class="pin-d" type="tel" id="p3" maxlength="1" />
- <input class="pin-d" type="tel" id="p4" maxlength="1" />
+ <input class="pin-d" type="tel" id="p1" maxlength="1" aria-label="PIN 1" />
+ <input class="pin-d" type="tel" id="p2" maxlength="1" aria-label="PIN 2" />
+ <input class="pin-d" type="tel" id="p3" maxlength="1" aria-label="PIN 3" />
+ <input class="pin-d" type="tel" id="p4" maxlength="1" aria-label="PIN 4" />
  </div>
  <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
- <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app?</button>
- <div style="text-align:center;margin-top:10px;">
- <button class="lang-btn" data-lang="es" onclick="setLang('es')" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:rgba(245,242,238,0.4);padding:0;">ES</button><span style="color:rgba(245,242,238,0.15);font-size:12px;font-family:var(--font);padding:0 4px;">/</span><button class="lang-btn" data-lang="cat" onclick="setLang('cat')" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:rgba(245,242,238,0.4);padding:0;">CAT</button><span style="color:rgba(245,242,238,0.15);font-size:12px;font-family:var(--font);padding:0 4px;">/</span><button class="lang-btn" data-lang="en" onclick="setLang('en')" style="background:none;border:none;cursor:pointer;font-family:var(--font);font-size:12px;color:rgba(245,242,238,0.4);padding:0;">EN</button>
- </div>
  <div class="login-err" id="loginErr"></div>
+ </div>
+ <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app?</button>
+ <div class="login-langs">
+ <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button><span>·</span><button class="lang-btn" data-lang="cat" onclick="setLang('cat')">CAT</button><span>·</span><button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
  </div>
 </div>
 
 <div id="appScreen">
  <div class="topbar">
- <div class="topbar-logo">FISIO365</div>
+ <div class="topbar-logo">FISIO<span>365</span></div>
  <div style="display:flex;align-items:center;gap:12px;">
  <div class="topbar-name" id="topbarName" style="display:none"></div>
  <button id="notifBtn" onclick="toggleNotifPanel()" style="display:none;background:none;border:none;cursor:pointer;padding:4px 6px;position:relative;color:var(--cream);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span id="notifBadge" style="display:none;position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;background:#ee2155;"></span></button>
@@ -253,8 +355,21 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  </div>
  </div>
 
+ <nav class="tabbar" id="tabbar" aria-label="Secciones">
+  <button data-s="hoy" onclick="showSection('hoy')" class="on"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>Hoy</button>
+  <button data-s="progreso" onclick="showSection('progreso')"><svg viewBox="0 0 24 24"><path d="M12 3c1.5 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.5 1 2.5 2 3 0-3 .5-5.5 1-7.5z"/></svg>Racha</button>
+  <button data-s="citas" onclick="showSection('citas')"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>Citas</button>
+  <button data-s="informes" onclick="showSection('informes')"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Informes</button>
+  <button data-s="mensajes" onclick="showSection('mensajes')"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Chat<i class="tab-dot" id="tabChatDot"></i></button>
+ </nav>
+
  <div class="container">
  <div id="vistaHoy">
+ <div class="hoy-hero">
+ <div class="date-sub" id="dateSub"></div>
+ <div class="date-today" id="dateToday">Tu programa de hoy</div>
+ <div class="hoy-hero-sub" id="hoyHeroSub">Tus ejercicios, pensados para ti.</div>
+ </div>
  <div id="fisioCard" class="fisio-card" style="display:none;">
  <div class="fisio-av" id="fisioAv"></div>
  <div><div class="fisio-nombre" id="fisioNombre"></div><div class="fisio-col" id="fisioColegiado"></div></div>
@@ -273,10 +388,6 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
      <div class="premio-banner-titulo">¡Has ganado un premio!</div>
      <div class="premio-banner-sub">-10€ en tu próxima sesión por recomendar FISIO365</div>
    </div>
- </div>
- <div class="date-h">
- <div class="date-today" id="dateToday">Tu programa de hoy</div>
- <div class="date-sub" id="dateSub"></div>
  </div>
  <div id="vistaEjercicios">
  <div class="prog-wrap" id="progWrap" style="display:none !important;">
@@ -331,8 +442,8 @@ body { background: var(--cream); font-family: var(--font); color: var(--black); 
  </div>
 
  <div id="vistaMensajes" style="display:none;">
- <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Chat</div><div class="date-sub">Lo que has enviado a tu fisio</div></div>
- <div id="msgList"><div class="loading"><div class="spinner"></div></div></div>
+ <div class="chat-cab"><div class="chat-av" id="chatAv">F</div><div><div class="chat-nom" id="chatNom">Equipo FISIO365</div><div class="chat-sub">Fotos, PDFs y dudas sobre tus ejercicios</div></div></div>
+ <div id="chatBox" class="chat-box"></div>
  </div>
 
  <div id="vistaGuia" style="display:none;">
@@ -530,7 +641,7 @@ let modalTipo=null,modalTexto='',fisiosCache=null;
 const i18n={es:{entrar:"Entrar",entrando:"Entrando...",instalarApp:"¿Cómo instalo la app?",errorEmail:"Introduce tu email",errorPin:"Introduce los 4 dígitos del PIN",errorConexion:"Error de conexión",programaHoy:"Tu programa de ejercicios",progresoHoy:"Progreso de hoy",sesionCompletada:"¡Sesión completada!",sesionSub:"Has terminado tu programa de hoy.",sesionMsg:"Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana!",miProgreso:"Mi progreso",cuantoDolor:"¿Cuánto dolor tienes hoy?",sinDolor:"Sin dolor",dolorMaximo:"Dolor máximo",guardar:"Guardar",salir:"Salir",sinPrograma:"Sin programa asignado",sinProgramaDesc:"Tu fisioterapeuta todavía no ha asignado ejercicios.",dolorBajo:function(pct){return "Tu dolor ha bajado un "+pct+"% respecto a ayer. ¡Vas por muy buen camino!";},dolorEstable:"Tu dolor se mantiene estable. ¡Sigue con tus ejercicios!",dolorSubio:"No te preocupes, los altibajos son normales. ¿Has cambiado algo en tu rutina?",dolorRegistrado:"Dolor registrado ✓"},cat:{entrar:"Entrar",entrando:"Entrant...",instalarApp:"Com instal·lo l'app?",errorEmail:"Introdueix el teu email",errorPin:"Introdueix els 4 dígits del PIN",errorConexion:"Error de connexió",programaHoy:"El teu programa d'exercicis",progresoHoy:"Progrés d'avui",sesionCompletada:"Sessió completada!",sesionSub:"Has acabat el teu programa d'avui.",sesionMsg:"Cada dia que entrenes és un pas cap a la teva recuperació. Torna demà!",miProgreso:"El meu progrés",cuantoDolor:"Quant dolor tens avui?",sinDolor:"Sense dolor",dolorMaximo:"Dolor màxim",guardar:"Guardar",salir:"Sortir",sinPrograma:"Sense programa assignat",sinProgramaDesc:"El teu fisioterapeuta encara no ha assignat exercicis.",dolorBajo:function(pct){return "El teu dolor ha baixat un "+pct+"% respecte a ahir.";},dolorEstable:"El teu dolor es manté estable. Segueix!",dolorSubio:"No et preocupis, els alts i baixos són normals.",dolorRegistrado:"Dolor registrat ✓"},en:{entrar:"Log in",entrando:"Logging in...",instalarApp:"How do I install the app?",errorEmail:"Please enter your email",errorPin:"Please enter all 4 PIN digits",errorConexion:"Connection error",programaHoy:"Your exercise program",progresoHoy:"Today's progress",sesionCompletada:"Session completed!",sesionSub:"You finished today's program.",sesionMsg:"Every day you train is a step towards your recovery. Come back tomorrow!",miProgreso:"My progress",cuantoDolor:"How much pain do you have today?",sinDolor:"No pain",dolorMaximo:"Maximum pain",guardar:"Save",salir:"Log out",sinPrograma:"No program assigned",sinProgramaDesc:"Your physiotherapist has not yet assigned any exercises.",dolorBajo:function(pct){return "Your pain decreased "+pct+"% since yesterday!";},dolorEstable:"Your pain is stable. Keep going!",dolorSubio:"Don't worry, ups and downs are normal.",dolorRegistrado:"Pain recorded ✓"}};
 
 function t(key,...args){const val=i18n[lang]?.[key];return typeof val==='function'?val(...args):(val||i18n.es[key]||key);}
-function setLang(l){lang=l;localStorage.setItem('fisio365_lang',l);document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===l?'rgba(245,242,238,0.9)':'rgba(245,242,238,0.35)';b.style.fontWeight=b.dataset.lang===l?'700':'400';});applyTranslations();}
+function setLang(l){lang=l;localStorage.setItem('fisio365_lang',l);document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===l?'#1a1a1a':'#a8a39b';b.style.fontWeight=b.dataset.lang===l?'700':'400';});applyTranslations();}
 function applyTranslations(){const lb=document.getElementById('loginBtn');const li=document.getElementById('installBtn');if(lb&&!lb.disabled)lb.textContent=t('entrar');if(li)li.textContent=t('instalarApp');const vasQ=document.querySelector('.vas-question');if(vasQ)vasQ.textContent=t('cuantoDolor');const vasLabels=document.querySelectorAll('.vas-labels span');if(vasLabels.length>=2){vasLabels[0].textContent=t('sinDolor');vasLabels[1].textContent=t('dolorMaximo');}const btnVas=document.getElementById('btnVas');if(btnVas)btnVas.textContent=t('guardar');document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});}
 
 let vasSeleccionado=null,vasRegistros=[],vasPeriodo=7;
@@ -539,7 +650,7 @@ const TODAY=new Date().toISOString().split('T')[0];
 window.addEventListener('load',()=>{
   const savedLang=localStorage.getItem('fisio365_lang');if(savedLang)lang=savedLang;
   applyTranslations();
-  document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===lang?'rgba(245,242,238,0.9)':'rgba(245,242,238,0.35)';b.style.fontWeight=b.dataset.lang===lang?'700':'400';});
+  document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===lang?'#1a1a1a':'#a8a39b';b.style.fontWeight=b.dataset.lang===lang?'700':'400';});
   const saved=localStorage.getItem('fisio365_patient');
   if(saved){try{patient=JSON.parse(saved);const lastDay=localStorage.getItem('fisio365_lastday');if(lastDay!==TODAY){localStorage.setItem('fisio365_lastday',TODAY);Object.keys(localStorage).forEach(k=>{if(k.startsWith('hechos_'))localStorage.removeItem(k);});}initApp();}catch(e){localStorage.removeItem('fisio365_patient');}}
 });
@@ -560,7 +671,7 @@ function initApp(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
   document.getElementById('appScreen').style.opacity='0';
-  document.getElementById('hamburgerBtn').style.display='flex';
+  document.getElementById('hamburgerBtn').style.display='flex';document.body.classList.add('dentro');
   document.getElementById('notifBtn').style.display='inline-block';
   window.scrollTo({top:0,behavior:'instant'});
   setTimeout(()=>{document.getElementById('appScreen').style.opacity='1';},10);
@@ -570,7 +681,7 @@ function initApp(){
   const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const hoy=new Date();
   document.getElementById('dateToday').textContent='Tu programa de hoy';
-  document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;
+  document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;document.getElementById('hoyHeroSub').textContent=`Hola, ${(patient.nombre||'').split(' ')[0]}. Tus ejercicios de hoy, pensados para ti.`;
   loadEjercicios();
   checkMensajesNoLeidos();
   // Sincronizar puntos desde Airtable al arrancar (Airtable manda)
@@ -636,14 +747,16 @@ function showSection(section){
   if(section==='notificaciones')loadNotificaciones();
   if(section==='informes')loadInformes();
   if(section==='sorteo')loadPuntos();
-  if(section==='mensajes'){loadMensajes();const dot=document.getElementById('navMensajesDot');if(dot)dot.classList.remove('show');marcarRespuestasLeidas();}
+  if(section==='mensajes')abrirChat();
+  document.body.classList.toggle('en-chat',section==='mensajes');
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.s===section));
   window.scrollTo(0,0);
 }
 
 async function loadEjercicios(){
   try{
     const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();ejercicios=data.ejercicios||[];
-    if(data.fisio){const f=data.fisio;const av=document.getElementById('fisioAv');if(f.foto)av.innerHTML=`<img src="${f.foto}" alt="${f.nombre}">`;else av.textContent=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();document.getElementById('fisioNombre').textContent=`Tu fisio: ${f.nombre}`;document.getElementById('fisioColegiado').textContent=f.colegiado?`Nº Colegiado: ${f.colegiado}`:'';document.getElementById('fisioCard').style.display='flex';}
+    if(data.fisio){window.fisioPlan=data.fisio;const f=data.fisio;const av=document.getElementById('fisioAv');if(f.foto)av.innerHTML=`<img src="${f.foto}" alt="${f.nombre}">`;else av.textContent=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();document.getElementById('fisioNombre').textContent=`Tu fisio: ${f.nombre}`;document.getElementById('fisioColegiado').textContent=f.colegiado?`Nº Colegiado: ${f.colegiado}`:'';document.getElementById('fisioCard').style.display='flex';}
     mensajeFisio=data.mensajeFisio||'';
     if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';if(data.fisio)document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];}
     if(data.ultimaSession===TODAY){mostrarCompletado();return;}
@@ -739,7 +852,16 @@ function selFisioMsg(id,nombre,btn){document.getElementById('msgNuevoFisioId').v
 async function enviarMsgNuevoPaciente(btn){const fisioId=document.getElementById('msgNuevoFisioId')?.value||'';const fisioNombre=document.getElementById('msgNuevoFisioNombre')?.value||'';const texto=document.getElementById('msgNuevoTexto')?.value?.trim()||'';if(!fisioId){toast('Selecciona un fisio',false);return;}if(!texto){toast('Escribe un mensaje',false);return;}btn.disabled=true;btn.textContent='Enviando...';try{await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,pacienteNombre:patient.nombre,comentario:texto,enviarFisio:true,fisioDestinatarioId:fisioId,fisioDestinatarioNombre:fisioNombre})});toast('Mensaje enviado ✓',true);document.getElementById('msgNuevoTexto').value='';document.getElementById('msgNuevoFisioId').value='';document.getElementById('msgNuevoFisioNombre').value='';setTimeout(()=>loadMensajes('enviados'),500);}catch(e){toast('Error al enviar',false);}btn.disabled=false;btn.textContent='Enviar mensaje';}
 async function responderAlFisio(mensajeId,fisioId,btn){const ta=document.getElementById(`preply_${mensajeId}`);const texto=ta?.value?.trim();if(!texto){toast('Escribe una respuesta',false);return;}btn.disabled=true;btn.textContent='...';try{const res=await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'responder-al-fisio',mensajeId,respuesta:texto,pacienteId:patient.id})});const d=await res.json();if(d.ok){toast('Respuesta enviada ✓',true);loadMensajes('recibidos');}else{toast('Error al enviar',false);btn.disabled=false;btn.textContent='Enviar';}}catch(e){toast('Error',false);btn.disabled=false;btn.textContent='Enviar';}}
 async function marcarRespuestasLeidas(){if(!patient)return;try{await fetch(`/api/pacientes?action=marcar-respuesta-leida&pacienteId=${encodeURIComponent(patient.id)}`);}catch(e){}}
-async function checkMensajesNoLeidos(){try{const res=await fetch(`/api/pacientes?action=get-mensajes&pacienteId=${encodeURIComponent(patient.id)}`);const data=await res.json();const mensajes=data.mensajes||[];const hayNovedad=mensajes.some(m=>(m.respuesta&&!m.respuestaLeida)||(m.tipo==='fisio'&&!m.respuestaLeida));const dot=document.getElementById('navMensajesDot');if(dot)dot.classList.toggle('show',hayNovedad);}catch(e){}}
+async function checkMensajesNoLeidos(){if(!patient||!window.FisioChat)return;const n=await FisioChat.sinLeer(patient.id);const hay=n>0&&!document.body.classList.contains('en-chat');['navMensajesDot','tabChatDot'].forEach(id=>{const d=document.getElementById(id);if(d)d.classList.toggle('show',hay);});}
+// CHAT con el fisio (fotos, PDFs y texto) — ver /chat-ui.js
+let chatCtl=null;
+function pintarCabChat(f){if(!f)return;const av=document.getElementById('chatAv');document.getElementById('chatNom').textContent=f.nombre||'Tu fisio';if(f.foto)av.innerHTML=`<img src="${f.foto}" alt="">`;else av.textContent=(f.nombre||'F').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
+function abrirChat(){
+  ['navMensajesDot','tabChatDot'].forEach(id=>{const d=document.getElementById(id);if(d)d.classList.remove('show');});
+  if(window.fisioPlan)pintarCabChat(window.fisioPlan);
+  if(chatCtl){chatCtl.recargar();return;}
+  chatCtl=FisioChat.montar(document.getElementById('chatBox'),{rol:'paciente',pacienteId:patient.id,pacienteNombre:patient.nombre,fisio:window.fisioPlan||null,onFisio:f=>{if(!window.fisioPlan||window.fisioPlan.id!==f.id)pintarCabChat(f);}});
+}
 
 // INFORMES
 async function loadInformes(){
@@ -847,7 +969,7 @@ function showInstOS(os){document.getElementById('instPasosIOS').style.display=os
 function formatMensaje(texto){if(!texto)return '';let t=texto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');t=t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');t=t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--black);text-decoration:underline;word-break:break-all;">$1</a>');t=t.replace(/\n/g,'<br>');return t;}
 function toggleNotaFisio(){const card=document.getElementById('mensajeFisioCard');const btn=document.querySelector('#notaFisioBtn button');const open=card.style.display==='block';card.style.display=open?'none':'block';if(open)btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ver nota de tu fisio';else btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ocultar nota';}
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(ok?'ok':'err');t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
-function cerrarSesion(){localStorage.removeItem('fisio365_patient');patient=null;window._informesPac=[];document.getElementById('appScreen').style.display='none';document.getElementById('hamburgerBtn').style.display='none';try{document.getElementById('notifBtn').style.display='none';}catch(e){}cerrarMenu();const login=document.getElementById('loginScreen');login.style.display='flex';login.style.opacity='1';login.style.visibility='visible';try{document.getElementById('emailInput').value='';}catch(e){}['p1','p2','p3','p4'].forEach(id=>{try{document.getElementById(id).value='';}catch(e){}});window.scrollTo(0,0);}
+function cerrarSesion(){document.body.classList.remove('dentro','en-chat');if(chatCtl){chatCtl.parar();chatCtl=null;document.getElementById('chatBox').innerHTML='';}localStorage.removeItem('fisio365_patient');patient=null;window._informesPac=[];document.getElementById('appScreen').style.display='none';document.getElementById('hamburgerBtn').style.display='none';try{document.getElementById('notifBtn').style.display='none';}catch(e){}cerrarMenu();const login=document.getElementById('loginScreen');login.style.display='flex';login.style.opacity='1';login.style.visibility='visible';try{document.getElementById('emailInput').value='';}catch(e){}['p1','p2','p3','p4'].forEach(id=>{try{document.getElementById(id).value='';}catch(e){}});window.scrollTo(0,0);}
 function clearBadge(){}
 
 async function loadPuntos(){
@@ -868,5 +990,6 @@ async function loadPuntos(){
   }
 }
 </script>
+<script src="/chat-ui.js"></script>
 </body>
 </html>

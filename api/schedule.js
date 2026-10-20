@@ -111,6 +111,7 @@ module.exports = async function handler(req, res) {
         if (fisioRes.ok) {
           const fd = await fisioRes.json();
           fisio = {
+            id: fisioId,
             nombre: fd.fields['Name'] || '',
             colegiado: fd.fields['NºColegiado'] || '',
             foto: fd.fields['Foto']?.[0]?.url || ''
