@@ -314,6 +314,37 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .tmr-botones{display:flex;gap:8px}
 .tmr-go{flex:1;height:44px;border:none;border-radius:99px;background:var(--black);color:var(--cream);font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer}
 .tmr-reset{width:44px;height:44px;border:none;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;color:var(--black)}
+
+/* Ejercicios (diseño nuevo) */
+.ej-prog{display:flex;align-items:center;gap:14px;margin:4px 2px 14px;font-size:13px;color:var(--muted)}
+.ej-prog b{color:var(--black)}
+.ej-prog-bar{flex:1;height:6px;border-radius:99px;background:rgba(26,26,26,.08);overflow:hidden}
+.ej-prog-bar i{display:block;height:100%;background:var(--lila-d);border-radius:99px;transition:width .3s}
+.ej-list{display:flex;flex-direction:column;gap:12px}
+.ej-card{background:#fff;border-radius:24px;padding:16px;box-shadow:var(--sombra);transition:opacity .2s;scroll-margin-top:80px}
+.ej-top{display:flex;align-items:center;gap:12px}
+.ej-n{width:42px;height:42px;border-radius:14px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--black);flex:none}
+.ej-card.ok .ej-n{background:var(--lila-light);color:var(--lila-d)}
+.ej-tit{flex:1;min-width:0}
+.ej-nom2{font-size:16px;font-weight:700;line-height:1.25;letter-spacing:-.2px}
+.ej-card.ok .ej-nom2{color:var(--muted)}
+.ej-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-top:3px}
+.ej-meta b{color:var(--black);font-weight:700}
+.ej-meta i{font-style:normal;color:#cfcac3}
+.ej-check{width:42px;height:42px;border-radius:50%;border:2px solid rgba(26,26,26,.15);background:#fff;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ej-check svg{width:20px;height:20px;fill:none;stroke:transparent;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.ej-card.ok .ej-check{background:var(--lila-d);border-color:var(--lila-d)}
+.ej-card.ok .ej-check svg{stroke:#fff}
+.ej-vid{display:block;position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#111;border:none;padding:0;margin-top:14px;cursor:pointer}
+.ej-vid img{width:100%;height:100%;object-fit:cover;display:block;opacity:.92}
+.ej-vid iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.ej-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.ej-play svg{width:24px;height:24px;fill:var(--black);margin-left:3px}
+.ej-card .tmr{margin:14px 0 0}
+.ej-nota2{display:flex;gap:10px;align-items:flex-start;margin-top:12px;background:var(--cream);border-radius:16px;padding:12px 14px;font-size:13.5px;line-height:1.5;color:#4a4640}
+.ej-nota2 svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--lila-d);stroke-width:2;stroke-linecap:round;margin-top:1px}
+.ej-vacio{background:#fff;border-radius:24px;padding:36px 22px;text-align:center;color:var(--muted);font-size:14px;box-shadow:var(--sombra)}
+.ej-vacio b{display:block;color:var(--black);font-size:17px;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -412,7 +443,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
  </div>
  <div id="ejList"><div class="loading"><div class="spinner"></div></div></div>
  <div id="diarioSection" style="display:none;margin-top:32px;">
- <button class="btn-diario" id="btnDiario" onclick="marcarHecho()">Hecho</button>
+ <button class="btn-diario" id="btnDiario" onclick="marcarHecho()">He terminado por hoy</button>
  </div>
  </div>
  <div id="vistaCompletado" style="display:none;">
@@ -808,14 +839,33 @@ function tmrReiniciar(i){const t=tmrEstado(i);clearInterval(t.int);t.int=null;t.
 
 function renderEjercicios(){
   const lista=document.getElementById('ejList');
-  if(!ejercicios.length){lista.innerHTML=`<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin programa asignado</div><div class="empty-desc">Tu fisioterapeuta todavía no ha asignado ejercicios.</div></div>`;return;}
+  if(!ejercicios.length){lista.innerHTML=`<div class="ej-vacio"><b>Aún no tienes ejercicios</b>Tu fisio te los asignará después de tu sesión.</div>`;return;}
   document.getElementById('diarioSection').style.display='block';
-  lista.innerHTML='<div class="ej-list">'+ejercicios.map((ej,i)=>{
-    const pills=[ej.series?`<span class="pill-s">${ej.series}×</span>`:'',ej.reps?`<span class="pill-r">${ej.reps} reps</span>`:'',(ej.dur||ej.duracion)?`<span class="pill-d">${ej.dur||ej.duracion}s</span>`:''].join('');
-    const hasVid=!!ej.ytId;
-    return `<div class="ej-item"><div class="ej-header"><div class="ej-nom">${ej.name}</div><div class="ej-pills">${pills}</div></div>${ej.desc?`<div class="ej-nota">${ej.desc.replace(/</g,'&lt;')}</div>`:''}${tmrHTML(ej,i)}${hasVid?`<div class="ej-thumb"><iframe src="https://www.youtube.com/embed/${ej.ytId}?rel=0&modestbranding=1" allowfullscreen></iframe></div>`:`<div class="ej-no-video"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ada3da" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 10l6 2-6 2z"/></svg></div>`}</div>`;
+  const n=ejercicios.length;
+  const sub=document.getElementById('hoyHeroSub');if(sub)sub.textContent=`Hola, ${(patient.nombre||'').split(' ')[0]}. Hoy tienes ${n} ${n===1?'ejercicio':'ejercicios'}.`;
+  const hechosN=ejercicios.filter((e,i)=>hechos.has(ejKey(e,i))).length;
+  lista.innerHTML=`<div class="ej-prog"><div><b>${hechosN} de ${n}</b> hechos</div><div class="ej-prog-bar"><i style="width:${Math.round(hechosN/n*100)}%"></i></div></div>`+
+  '<div class="ej-list">'+ejercicios.map((ej,i)=>{
+    const k=ejKey(ej,i),ok=hechos.has(k);
+    const dur=ej.dur||ej.duracion;
+    const meta=[ej.series?`<span><b>${ej.series}</b> ${+ej.series===1?'serie':'series'}</span>`:'',ej.reps?`<span><b>${ej.reps}</b> reps</span>`:'',dur?`<span><b>${dur}</b> s</span>`:''].filter(Boolean).join('<i>·</i>');
+    const vid=ej.ytId?`<button class="ej-vid" onclick="verVideo(this,'${ej.ytId}')" aria-label="Ver vídeo"><img src="https://i.ytimg.com/vi/${ej.ytId}/hqdefault.jpg" alt="" loading="lazy"><span class="ej-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span></button>`:'';
+    const nota=ej.desc?`<div class="ej-nota2"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="9"/></svg><div>${ej.desc.replace(/</g,'&lt;')}</div></div>`:'';
+    return `<div class="ej-card${ok?' ok':''}" id="ejc${i}">
+      <div class="ej-top"><div class="ej-n">${String(i+1).padStart(2,'0')}</div><div class="ej-tit"><div class="ej-nom2">${ej.name}</div>${meta?`<div class="ej-meta">${meta}</div>`:''}</div>
+      <button class="ej-check" onclick="toggleEj(${i})" aria-label="${ok?'Marcar como no hecho':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>
+      ${vid}${tmrHTML(ej,i)}${nota}</div>`;
   }).join('')+'</div>';
 }
+function ejKey(e,i){return e.id||('i'+i);}
+function toggleEj(i){const k=ejKey(ejercicios[i],i);hechos.has(k)?hechos.delete(k):hechos.add(k);try{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...hechos]));}catch(e){}
+  const c=document.getElementById('ejc'+i);c.classList.toggle('ok',hechos.has(k));
+  const n=ejercicios.length,h=ejercicios.filter((e,j)=>hechos.has(ejKey(e,j))).length;
+  const pr=document.querySelector('.ej-prog');if(pr){pr.querySelector('b').textContent=`${h} de ${n}`;pr.querySelector('i').style.width=Math.round(h/n*100)+'%';}
+  if(hechos.has(k)&&i<n-1){const sig=document.getElementById('ejc'+(i+1));if(sig)setTimeout(()=>sig.scrollIntoView({behavior:'smooth',block:'start'}),250);}
+  if(h===n){const b=document.getElementById('btnDiario');if(b)setTimeout(()=>b.scrollIntoView({behavior:'smooth',block:'center'}),300);}}
+function verVideo(btn,id){const f=document.createElement('div');f.className='ej-vid';f.innerHTML=`<iframe src="https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&autoplay=1&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;btn.replaceWith(f);}
+
 
 function modalRespuestaNo(){
   cerrarModal();const btn=document.getElementById('btnDiario');btn.disabled=true;btn.textContent='Guardando...';
