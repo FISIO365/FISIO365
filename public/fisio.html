@@ -4323,19 +4323,23 @@ async function fpTabRacha(pacId, body, tok){
    const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
    const dias=['L','M','X','J','V','S','D'];
 
-   // Build 4 weeks grid
-   let rows=[];
-   for(let i=27;i>=0;i--){
-     const d=new Date(hoy);d.setDate(hoy.getDate()-i);
-     const key=d.toISOString().split('T')[0];
-     rows.push({key,dia:d.getDate(),mes:d.getMonth(),hecho:diasHechos.has(key),esHoy:i===0});
+   // Calendario del mes (empieza en lunes), con flechas para cambiar de mes
+   const pad=n=>String(n).padStart(2,'0');
+   const keyDe=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+   const hoyKey=keyDe(hoy);
+   function calMes(off){
+     const m=new Date(hoy.getFullYear(),hoy.getMonth()+off,1);
+     const huecos=(m.getDay()+6)%7, nDias=new Date(m.getFullYear(),m.getMonth()+1,0).getDate();
+     let celdas='';for(let i=0;i<huecos;i++)celdas+='<div></div>';
+     let hechosMes=0;
+     for(let d=1;d<=nDias;d++){const k=keyDe(new Date(m.getFullYear(),m.getMonth(),d));const h=diasHechos.has(k);if(h)hechosMes++;const fut=k>hoyKey;
+       celdas+=`<div style="aspect-ratio:1;border-radius:50%;background:${h?'#4ade80':fut?'transparent':'#f0ede8'};display:flex;align-items:center;justify-content:center;font-size:11px;color:${h?'white':fut?'#d6d2cc':'#9a958e'};font-weight:${h?'700':'500'};${k===hoyKey?'box-shadow:inset 0 0 0 2px #1a1a1a;':''}">${d}</div>`;}
+     return {titulo:`${meses[m.getMonth()]} ${m.getFullYear()}`,celdas,hechosMes};
    }
-
-   // Month label
-   const mesInicio=meses[rows[0].mes];
-   const mesFin=meses[rows[rows.length-1].mes];
-   const mesLabel=mesInicio===mesFin?mesInicio:`${mesInicio} — ${mesFin}`;
-   const año=hoy.getFullYear();
+   let offMes=0;
+   window._rachaCambiarMes=(dir)=>{offMes=Math.min(0,offMes+dir);const c=calMes(offMes);const w=body.querySelector('.racha-cal');if(!w)return;w.querySelector('.racha-mes').textContent=c.titulo;w.querySelector('.racha-n').textContent=c.hechosMes===1?'1 día hecho':c.hechosMes+' días hechos';w.querySelector('.racha-grid').innerHTML=c.celdas;w.querySelector('.racha-sig').style.visibility=offMes<0?'visible':'hidden';};
+   const cal0=calMes(0);
+   const mesLabel=cal0.titulo, año='';
 
    // Stats
    const totalDias=diasHechos.size;
@@ -4372,20 +4376,16 @@ async function fpTabRacha(pacId, body, tok){
    else msg=`🏆 ¡${rachaActual} días seguidos! Es una máquina.`;
 
    body.innerHTML=`
-   <div style="background:white;border-radius:16px;border:0.5px solid rgba(0,0,0,0.08);padding:20px;margin-bottom:12px;">
-     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
-       <div>
-         <div style="font-size:14px;font-weight:700;color:#111;">Racha del paciente</div>
-         <div style="font-size:11px;color:#aaa;margin-top:2px;">${mesLabel} ${año}</div>
-       </div>
-       ${rachaActual>0?`<div style="text-align:right;"><div style="font-size:22px;font-weight:800;color:#111;">🔥 ${rachaActual}</div><div style="font-size:10px;color:#aaa;">días seguidos</div></div>`:''}
+   <div class="racha-cal" style="background:white;border-radius:18px;padding:20px;margin:0 auto 12px;max-width:420px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)">
+     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px">
+       <button type="button" onclick="_rachaCambiarMes(-1)" style="width:34px;height:34px;border-radius:50%;border:none;background:#f5f2ee;cursor:pointer;font-size:16px">‹</button>
+       <div style="text-align:center"><div class="racha-mes" style="font-size:15px;font-weight:700;color:#1a1a1a">${cal0.titulo}</div><div class="racha-n" style="font-size:11px;color:#8a857e;margin-top:1px">${cal0.hechosMes===1?'1 día hecho':cal0.hechosMes+' días hechos'}</div></div>
+       <button type="button" class="racha-sig" onclick="_rachaCambiarMes(1)" style="width:34px;height:34px;border-radius:50%;border:none;background:#f5f2ee;cursor:pointer;font-size:16px;visibility:hidden">›</button>
      </div>
-     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
-       ${dias.map(d=>`<div style="font-size:9px;font-weight:600;color:#ccc;text-align:center;">${d}</div>`).join('')}
+     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">
+       ${dias.map(d=>`<div style="font-size:10px;font-weight:600;color:#b9b4ad;text-align:center;">${d}</div>`).join('')}
      </div>
-     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;">
-       ${rows.map(d=>`<div style="aspect-ratio:1;border-radius:50%;background:${d.hecho?'#4ade80':'#f0ede8'};display:flex;align-items:center;justify-content:center;font-size:10px;color:${d.hecho?'white':'#bbb'};font-weight:${d.hecho?'600':'500'};${d.esHoy?'box-shadow:0 0 0 2px var(--lila);':''}">${d.dia}</div>`).join('')}
-     </div>
+     <div class="racha-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:14px;">${cal0.celdas}</div>
      <div style="display:flex;gap:12px;font-size:11px;color:#aaa;align-items:center;">
        <div style="display:flex;align-items:center;gap:5px;"><div style="width:9px;height:9px;border-radius:50%;background:#4ade80;"></div>Completado</div>
        <div style="display:flex;align-items:center;gap:5px;"><div style="width:9px;height:9px;border-radius:50%;background:#f0ede8;"></div>Sin datos</div>
