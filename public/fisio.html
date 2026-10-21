@@ -1062,9 +1062,9 @@ function montarEditorEjs(el,inicial,onCambio){
  <div class="pe-chips">${CHIPS[e.modo].map(c=>`<button type="button" data-a="set" data-k="${k}" data-v="${c}" class="${+v===c?'on':''}">${c}${e.modo==='seg'?' s':''}</button>`).join('')}</div>
  <input class="pe-ind" data-k="descripcion" value="${escH(e.descripcion)}" placeholder="Indicaciones (opcional)">
  <details class="pe-mas"${e.aguantar?' open':''}><summary>Más opciones</summary><div class="pe-mas-g">
-  <div><label>Descanso entre series (s)</label><input type="number" inputmode="numeric" data-k="descanso" value="${e.descanso||''}" placeholder="—"></div>
+  <div><label>Descanso (s)</label><input type="number" inputmode="numeric" data-k="descanso" value="${e.descanso||''}" placeholder="—"></div>
   <div><label>Zona</label><input data-k="zona" value="${escH(e.zona)}" placeholder="Lumbar, rodilla…"></div>
-  ${e.modo==='rep'?`<div><label>Aguantar cada repetición (s)</label><input type="number" inputmode="numeric" data-k="aguantar" value="${e.aguantar||''}" placeholder="—"></div>`:''}
+  ${e.modo==='rep'?`<div><label>Aguantar cada rep. (s)</label><input type="number" inputmode="numeric" data-k="aguantar" value="${e.aguantar||''}" placeholder="—"></div>`:''}
  </div></details>
 </div>`;}).join('');
   nuevo=-1;
