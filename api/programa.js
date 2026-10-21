@@ -80,23 +80,22 @@ module.exports = async function handler(req, res) {
     const d = await r.json();
     if (d.error) return res.status(500).json({ ok: false, error: d.error.message });
 
+    // Un solo aviso al paciente: programa nuevo o actualizado
     try {
-      const pacRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/tbldBVgClS4HY2mOJ/${pacienteId}?fields[]=PushSubscription`, {
-        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-      });
-      const pacData = await pacRes.json();
-      const pushSub = pacData.fields?.['PushSubscription'];
-      if (pushSub) {
-        await fetch('https://fisio365.vercel.app/api/notificar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subscription: JSON.parse(pushSub),
-            title: 'FISIO365',
-            message: 'Tu fisio ha actualizado tu programa de ejercicios 💪'
-          })
-        });
+      const { avisar } = require('./_push');
+      const nuevo = !(oldData.records?.length > 0);
+      let fisioNombre = '';
+      if (fisioId) {
+        try {
+          const fr = await fetch(`https://api.airtable.com/v0/${BASE_ID}/tbl2mLUrnaKCFTs6g/${fisioId}`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+          const fd = await fr.json(); fisioNombre = String(fd.fields?.['Name'] || '').split(' ')[0];
+        } catch(e) {}
       }
+      const quien = fisioNombre || 'Tu fisio';
+      const n = ejercicios.length;
+      await avisar('paciente', pacienteId, nuevo
+        ? { title: 'Tienes ejercicios nuevos 💪', body: `${quien} te ha preparado ${n} ejercicio${n !== 1 ? 's' : ''}. Ábrelos en la app.`, url: '/?s=hoy', tag: 'programa' }
+        : { title: 'Tus ejercicios han cambiado', body: `${quien} ha actualizado tu programa (${n} ejercicio${n !== 1 ? 's' : ''}). Échale un vistazo.`, url: '/?s=hoy', tag: 'programa' });
     } catch(e) {}
 
     return res.status(200).json({ ok: true, creados: ejercicios.length });

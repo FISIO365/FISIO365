@@ -419,6 +419,14 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  .wrap{padding:10px 14px 120px!important}
  .chatp{height:calc(100vh - 210px)!important}
 }
+
+#avisoPanel{position:fixed;right:20px;bottom:20px;z-index:900;display:flex;align-items:center;gap:12px;background:#fff;border-radius:22px;padding:12px 12px 12px 14px;box-shadow:0 12px 36px rgba(26,26,26,.18);max-width:420px;font-family:inherit}
+#avisoPanel .ap-ic{width:44px;height:44px;border-radius:14px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}
+#avisoPanel .ap-ic svg{width:22px;height:22px;fill:none;stroke:#c2552e;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#avisoPanel .ap-tx{flex:1;min-width:0}#avisoPanel b{display:block;font-size:14.5px}#avisoPanel span{display:block;font-size:12.5px;color:#7d6a60}
+#avisoPanel .ap-b{border:none;border-radius:99px;background:#c2552e;color:#fff;font-family:inherit;font-size:13px;font-weight:700;padding:9px 15px;cursor:pointer;flex:none}
+#avisoPanel .ap-x{border:none;background:none;color:#b3aca4;font-size:16px;cursor:pointer;flex:none}
+@media(max-width:768px){#avisoPanel{left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));max-width:none}}
 </style>
 </head>
 <body>
@@ -614,6 +622,8 @@ async function doLogin(){
  aplicarRole();
  iniciarAutoUpdate();
  showSection('prog');
+ try{if(avisoPendiente)abrirAvisoPanel(avisoPendiente);}catch(e){}
+ setTimeout(()=>{try{mirarAvisosPanel();}catch(e){}},1200);
  } else {
  $('loginErr').textContent=d.error||'Datos incorrectos';
  }
@@ -705,6 +715,28 @@ function showSection(sec){
  else if(sec==='school') renderWiki(wrap);
  else if(sec==='record') renderRecordatorios(wrap);
 }
+
+
+// ── Avisos del panel (mensajes de pacientes) ──────────────────
+const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
+let avisoPendiente=(()=>{try{const u=new URL(location.href);return u.searchParams.get('s')?location.href:'';}catch(e){return '';}})();
+function b64u8(b){const p='='.repeat((4-b.length%4)%4);const r=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)));}
+const avisosOK=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+async function suscribirPanel(){const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u8(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fisioId:fisioActual.id,pwd:apiPwd,subscription:sub})});}
+function mirarAvisosPanel(){let c=document.getElementById('avisoPanel');if(!fisioActual||!avisosOK()){if(c)c.remove();return;}
+ if(Notification.permission==='granted'){if(c)c.remove();suscribirPanel().catch(()=>{});return;}
+ const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;const ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
+ let no='';try{no=localStorage.getItem('f365_panel_avisos_no')||'';}catch(e){}
+ if(Notification.permission!=='default'||(ios&&!standalone)||(no&&Date.now()-(+no)<7*864e5)){if(c)c.remove();return;}
+ if(c)return;c=document.createElement('div');c.id='avisoPanel';
+ c.innerHTML=`<div class="ap-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div class="ap-tx"><b>Activa los avisos</b><span>Te avisamos cuando un paciente te escriba</span></div><button class="ap-b" type="button">Activar</button><button class="ap-x" type="button" aria-label="Ahora no">✕</button>`;
+ c.querySelector('.ap-b').onclick=async()=>{const b=c.querySelector('.ap-b');b.disabled=true;b.textContent='Activando…';try{if(await Notification.requestPermission()==='granted'){await suscribirPanel();toast('¡Avisos activados!',true);}}catch(e){}mirarAvisosPanel();};
+ c.querySelector('.ap-x').onclick=()=>{try{localStorage.setItem('f365_panel_avisos_no',String(Date.now()));}catch(e){}c.remove();};
+ document.body.appendChild(c);}
+function abrirAvisoPanel(url){try{const u=new URL(url,location.origin);const s=u.searchParams.get('s'),p=u.searchParams.get('p');avisoPendiente='';history.replaceState(null,'',location.pathname);
+ if(!fisioActual){avisoPendiente=url;return;}
+ if(s==='msg'){showSection('msg');if(/^rec[A-Za-z0-9]{14}$/.test(p||''))renderMensajes($('mainWrap'),p);}}catch(e){}}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='ABRIR')abrirAvisoPanel(e.data.url);});}
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function abrirSelectorPacienteInforme(inf, savedKey, miSave){
@@ -1201,8 +1233,7 @@ async function guardar(){
  const d=await r.json();
  if(d.ok){
  toast(`Programa guardado: ${d.creados} ejercicios para ${pacSelN}`,true);
- notificarPaciente(pacSelId,`Nuevo programa de ${fisioActual.nombre}`,`Tu fisio te ha asignado ${d.creados} ejercicio${d.creados!==1?'s':''} nuevos. Ábrelos en tu app.`);
- crearNotificacion(pacSelId,`Nuevo programa de ${fisioActual.nombre}`,`${d.creados} ejercicio${d.creados!==1?'s':''} nuevos asignados`,'programa');
+  crearNotificacion(pacSelId,`Nuevo programa de ${fisioActual.nombre}`,`${d.creados} ejercicio${d.creados!==1?'s':''} nuevos asignados`,'programa');
  } else toast(d.error||'Error al guardar',false);
  }catch(e){toast('Error de conexión',false);}
  btn.disabled=false; btn.textContent='Guardar programa';
@@ -4246,8 +4277,7 @@ async function fpTabPrograma(pacId, body, tok){
        const dd=await rr.json();
        if(dd.ok){
          toast(`Programa guardado: ${dd.creados} ejercicios`,true);
-         notificarPaciente(pacId,`Nuevo programa de ${fisioObj.nombre||'tu fisio'}`,`Te han asignado ${dd.creados} ejercicio${dd.creados!==1?'s':''} nuevos.`);
-         crearNotificacion(pacId,`Nuevo programa de ${fisioObj.nombre||'tu fisio'}`,`${dd.creados} ejercicio${dd.creados!==1?'s':''} nuevos asignados`,'programa');
+                  crearNotificacion(pacId,`Nuevo programa de ${fisioObj.nombre||'tu fisio'}`,`${dd.creados} ejercicio${dd.creados!==1?'s':''} nuevos asignados`,'programa');
        } else toast(dd.error||'Error al guardar',false);
      }catch(e){toast('Error de conexión',false);}
      saveBtn.disabled=false;saveBtn.textContent='Guardar programa';

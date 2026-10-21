@@ -421,6 +421,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .in-banner span{display:block;font-size:12.5px;line-height:1.4;color:#7d6a60;margin-top:2px}
 .in-banner .ib{background:#1a1a1a;border:none;color:#f5f2ee;border-radius:99px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;flex:none;cursor:pointer}
 .in-banner .ix{display:none}
+#avisosCard .ix{display:block;background:none;border:none;color:#b3aca4;font-size:16px;padding:0 2px;cursor:pointer;flex:none}
+#avisosCard .av-ic{flex:0 0 48px;width:48px;height:48px;border-radius:14px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}#avisosCard .av-ic svg{width:24px;height:24px;fill:none;stroke:#c2552e;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 /* Fisio + cita en una sola tarjeta */
 .fisio-card:has(+ .ch.on){margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
 .fisio-card + .ch.on{border-top-left-radius:0;border-top-right-radius:0;border-top:1px solid #f0ebe5;box-shadow:0 8px 24px rgba(26,26,26,.05);padding-top:12px}
@@ -640,6 +642,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="hoy-hero-sub" id="hoyHeroSub">Tus ejercicios, pensados para ti.</div>
  </div>
  <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icono.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
+ <div id="avisosCard" class="in-banner" onclick="activarAvisos()"><div class="av-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div><b>Activa los avisos</b><span>Te avisamos de tus citas y de los mensajes de tu fisio</span></div><button class="ib">Activar</button><button class="ix" onclick="event.stopPropagation();ahoraNoAvisos()" aria-label="Ahora no">✕</button></div>
  <div id="fisioCard" class="fisio-card" style="display:none;">
  <div class="fisio-av" id="fisioAv"></div>
  <div><div class="fisio-nombre" id="fisioNombre"></div><div class="fisio-col" id="fisioColegiado"></div></div>
@@ -801,7 +804,7 @@ function initApp(){
   window.scrollTo({top:0,behavior:'instant'});
   setTimeout(()=>{document.getElementById('appScreen').style.opacity='1';},10);
   applyTranslations();
-  setTimeout(initPushNotifications,2000);
+  setTimeout(()=>{try{mirarAvisos();}catch(e){}},800);
   const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const hoy=new Date();
@@ -809,7 +812,7 @@ function initApp(){
   document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;document.getElementById('hoyHeroSub').textContent=`Hola, ${(patient.nombre||'').split(' ')[0]}. Tus ejercicios de hoy, pensados para ti.`;
   loadEjercicios();
   checkMensajesNoLeidos();
-  try{pintarCitaHoy();}catch(e){}try{mirarBannerInstall();}catch(e){}try{pintarPromos();}catch(e){}setTimeout(pedirCitas,1200);
+  try{pintarCitaHoy();}catch(e){}try{abrirDesdeAviso(location.href);}catch(e){}try{mirarBannerInstall();}catch(e){}try{pintarPromos();}catch(e){}setTimeout(pedirCitas,1200);
   // Sincronizar puntos desde Airtable al arrancar (Airtable manda)
   fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id))
     .then(r=>r.json()).then(d=>{
@@ -1103,7 +1106,7 @@ function abrirChat(){
   ['navMensajesDot','tabChatDot'].forEach(id=>{const d=document.getElementById(id);if(d)d.classList.remove('show');});
   if(window.fisioPlan)pintarCabChat(window.fisioPlan);
   if(chatCtl){chatCtl.recargar();return;}
-  chatCtl=FisioChat.montar(document.getElementById('chatBox'),{rol:'paciente',pacienteId:patient.id,pacienteNombre:patient.nombre,fisio:window.fisioPlan||null,onFisio:f=>{if(!window.fisioPlan||window.fisioPlan.id!==f.id)pintarCabChat(f);}});
+  chatCtl=FisioChat.montar(document.getElementById('chatBox'),{rol:'paciente',pacienteId:patient.id,pacienteNombre:patient.nombre,fisio:window.fisioPlan||null,onFisio:f=>{if(!window.fisioPlan||window.fisioPlan.id!==f.id)pintarCabChat(f);},onEnviado:m=>{const fid=m&&m.fisioId;if(!fid)return;const txt=m.texto||(m.adjuntos&&m.adjuntos[0]?(/^image\//.test(m.adjuntos[0].tipo)?'📷 Te ha enviado una foto':'📄 Te ha enviado un PDF'):'');fetch('/api/notificar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fisioId:fid,pacienteId:patient.id,pacienteNombre:patient.nombre,message:txt})}).catch(()=>{});}});
 }
 
 // INFORMES
@@ -1136,7 +1139,19 @@ async function checkNotifBadge(){if(!patient)return;try{const res=await fetch(`/
 
 // PUSH
 const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
-async function initPushNotifications(){if(!('serviceWorker'in navigator)||!('PushManager'in window))return;try{const reg=await navigator.serviceWorker.register('/sw.js');const permission=await Notification.requestPermission();if(permission!=='granted')return;const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,subscription:sub})});}catch(e){}}
+// ── Avisos (push) ─────────────────────────────────────────────
+const avisosPosibles=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+async function suscribirAvisos(){const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,subscription:sub})});}
+// Si ya dio permiso, se renueva en silencio; si no, se enseña la tarjeta «Activa los avisos»
+function mirarAvisos(){const c=document.getElementById('avisosCard');if(!avisosPosibles()){if(c)c.classList.remove('on');return;}
+ if(Notification.permission==='granted'){if(c)c.classList.remove('on');suscribirAvisos().catch(()=>{});return;}
+ const iosNav=/iPhone|iPad|iPod/.test(navigator.userAgent)&&!esInstalada();let no='';try{no=localStorage.getItem('f365_avisos_no')||'';}catch(e){}
+ if(c)c.classList.toggle('on',Notification.permission==='default'&&!iosNav&&!(no&&Date.now()-(+no)<7*864e5));}
+async function activarAvisos(){const b=document.querySelector('#avisosCard .ib');if(b){b.disabled=true;b.textContent='Activando…';}
+ try{const r=await Notification.requestPermission();if(r==='granted'){await suscribirAvisos();toast('¡Avisos activados!');}}catch(e){}
+ mirarAvisos();if(b){b.disabled=false;b.textContent='Activar';}}
+function ahoraNoAvisos(){try{localStorage.setItem('f365_avisos_no',String(Date.now()));}catch(e){}mirarAvisos();}
+async function initPushNotifications(){try{if(avisosPosibles()&&Notification.permission==='granted')await suscribirAvisos();}catch(e){}}
 function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const rawData=window.atob(base64);const outputArray=new Uint8Array(rawData.length);for(let i=0;i<rawData.length;++i)outputArray[i]=rawData.charCodeAt(i);return outputArray;}
 
 // POLLING
@@ -1162,6 +1177,10 @@ async function loadAdherencia(containerId){
 // INSTALACION
 function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'?'block':'none';document.getElementById('pasosAndroid').style.display=os==='android'?'block':'none';document.getElementById('btnIOS').classList.toggle('active',os==='ios');document.getElementById('btnAndroid').classList.toggle('active',os==='android');}
 
+
+// Abrir la sección que indica el aviso (?s=mensajes|citas|hoy…)
+function abrirDesdeAviso(url){try{const u=new URL(url,location.origin);const sec=u.searchParams.get('s');if(!sec||!patient)return;const m={mensajes:'mensajes',chat:'mensajes',citas:'citas',hoy:'hoy',racha:'progreso',informes:'informes'}[sec];if(m)showSection(m);if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});history.replaceState(null,'',location.pathname);}catch(e){}}
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='ABRIR')abrirDesdeAviso(e.data.url);});
 // ── Promociones ───────────────────────────────────────────────
 // Para añadir una promo: copia un bloque, cambia los textos y sube los cambios.
 // color: 'Naranja' | 'Negro' | 'Crema'   ·   accion: 'reservar' | 'chat' | un enlace https://…

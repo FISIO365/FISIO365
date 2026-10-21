@@ -1,42 +1,40 @@
-self.addEventListener('push', function(event) {
-  let title = ' ';
-  let body = '¡Recuerda hacer tus ejercicios de hoy! Tu recuperación depende de la constancia.';
-  
-  if (event.data) {
-    try {
-      const data = event.data.json();
-      if (data.title) title = data.title;
-      if (data.body) body = data.body;
-    } catch(e) {
-      body = event.data.text() || body;
-    }
-  }
-
-  event.waitUntil(
-    Promise.all([
-      self.registration.showNotification(title, {
-        body: body,
-        icon: '/icono.png',
-        badge: '/icono.png',
-        vibrate: [200, 100, 200],
-        data: { url: '/' }
-      }),
-      // Badge en el icono de la app
-      navigator.setAppBadge ? navigator.setAppBadge(1) : Promise.resolve()
-    ])
-  );
+// FISIO365 · avisos (app del paciente y panel del fisio)
+self.addEventListener('push', function (event) {
+  let d = {};
+  if (event.data) { try { d = event.data.json(); } catch (e) { d = { body: event.data.text() }; } }
+  const title = d.title || 'FISIO365';
+  event.waitUntil(Promise.all([
+    self.registration.showNotification(title, {
+      body: d.body || '',
+      icon: '/icono.png',
+      badge: '/icono.png',
+      vibrate: [200, 100, 200],
+      tag: d.tag || undefined,
+      renotify: !!d.tag,
+      data: { url: d.url || '/' }
+    }),
+    navigator.setAppBadge ? navigator.setAppBadge(1).catch(() => {}) : Promise.resolve()
+  ]));
 });
 
-self.addEventListener('notificationclick', function(event) {
+// Al tocar el aviso: abrir la app justo en lo que toca (chat, citas, ejercicios…)
+self.addEventListener('notificationclick', function (event) {
   event.notification.close();
-  // Quitar badge al abrir la app
-  if (navigator.clearAppBadge) navigator.clearAppBadge();
-  event.waitUntil(clients.openWindow(event.notification.data.url || '/'));
+  if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+  const destino = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+  const esPanel = destino.includes('/fisio');
+  event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(lista => {
+    for (const c of lista) {
+      const enPanel = new URL(c.url).pathname.startsWith('/fisio');
+      if (enPanel === esPanel && 'focus' in c) {
+        c.postMessage({ type: 'ABRIR', url: destino });
+        return c.focus();
+      }
+    }
+    return clients.openWindow(destino);
+  }));
 });
 
-// Quitar badge cuando el paciente abre la app
-self.addEventListener('message', function(event) {
-  if (event.data && event.data.type === 'CLEAR_BADGE') {
-    if (navigator.clearAppBadge) navigator.clearAppBadge();
-  }
+self.addEventListener('message', function (event) {
+  if (event.data && event.data.type === 'CLEAR_BADGE' && navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
 });
