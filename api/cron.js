@@ -1,9 +1,10 @@
 "use strict";
 // Se ejecuta a las 19:00 de Madrid todo el año (vercel.json lanza a las 17 y a las 18 UTC
 // y aquí solo se sigue si en Madrid son las 19 h, así da igual el horario de verano/invierno)
-//  1. Recordatorio de cita: a quien tiene cita PENDIENTE mañana
+//  1. Recordatorio de cita: 2 días antes, a quien tiene cita PENDIENTE pasado mañana
+//     (así aún puede cambiarla o anularla con más de 24 h de margen)
 //  2. Recordatorio de ejercicios, todos los días: a quien hoy aún no los ha hecho
-//     (y los ha hecho en el último mes; si mañana tiene cita, solo le llega el de la cita)
+//     (y los ha hecho en el último mes; si ese día le llega el de la cita, solo le llega ese)
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const { enviar, BASE_ID, TABLAS } = require('./_push');
 const CITAS_TABLE = 'tblTPlcuiSjQngkaD';
@@ -33,15 +34,15 @@ const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', '
 module.exports = async function handler(req, res) {
   if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) return res.status(401).json({ ok: false });
   if (horaMadrid() !== 19 && !/forzar=1/.test(req.url || '')) return res.status(200).json({ ok: true, saltado: 'No son las 19 h en Madrid' });
-  const hoy = madrid(0), manana = madrid(1), hace30 = madrid(-30);
+  const hoy = madrid(0), dia = madrid(2), hace30 = madrid(-30);
   const out = { citas: 0, ejercicios: 0, errores: 0 };
   try {
     // Pacientes con avisos activados
     const pacs = await todos(TABLAS.paciente, `filterByFormula=${encodeURIComponent('{PushSubscription}!=""')}&fields[]=PushSubscription&fields[]=UltimaSession`);
     const subDe = {}; pacs.forEach(p => { try { subDe[p.id] = JSON.parse(p.fields.PushSubscription); } catch (e) {} });
 
-    // 1. Citas de mañana
-    const citas = await todos(CITAS_TABLE, `filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${manana.fecha}',TRIM({ESTADO})='PENDIENTE')`)}&fields[]=HORA&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&sort[0][field]=HORA`);
+    // 1. Citas de pasado mañana
+    const citas = await todos(CITAS_TABLE, `filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${dia.fecha}',TRIM({ESTADO})='PENDIENTE')`)}&fields[]=HORA&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&sort[0][field]=HORA`);
     const yaAvisado = new Set();
     for (const c of citas) {
       const pid = (c.fields['RELACIÓN - CITA'] || [])[0];
@@ -49,8 +50,8 @@ module.exports = async function handler(req, res) {
       yaAvisado.add(pid);
       const hora = String(c.fields['HORA'] || '').slice(0, 5), fisio = fisioDe(c.fields['PREF.']);
       const ok = await enviar(subDe[pid], {
-        title: 'Mañana tienes cita',
-        body: `${DIAS[manana.dia].replace(/^./, m => m.toUpperCase())}${hora ? ' a las ' + hora : ''}${fisio ? ' con ' + fisio : ''}.`,
+        title: 'Pasado mañana tienes cita',
+        body: `${DIAS[dia.dia].replace(/^./, m => m.toUpperCase())} ${+dia.fecha.slice(8)}${hora ? ' a las ' + hora : ''}${fisio ? ' con ' + fisio : ''}.`,
         url: '/?s=citas', tag: 'cita'
       });
       ok ? out.citas++ : out.errores++;

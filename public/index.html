@@ -1157,7 +1157,7 @@ function ahoraNoAvisos(){try{localStorage.setItem('f365_avisos_no',String(Date.n
 async function initPushNotifications(){try{if(avisosPosibles()&&Notification.permission==='granted'&&!F365Avisos.apagados('f365_avisos'))await suscribirAvisos();}catch(e){}}
 // Sección Notificaciones: interruptor para activar/desactivar los avisos en este móvil
 function pintarAjustesAvisos(){if(!patient)return;F365Avisos.pintar(document.getElementById('avisosAjustes'),{clave:'f365_avisos',datos:()=>({patientId:patient.id}),
- lista:['La víspera de tu cita','A las 19:00, si ese día aún no has hecho tus ejercicios','Cuando tu fisio te escribe o te cambia los ejercicios'],
+ lista:['Dos días antes de tu cita','A las 19:00, si ese día aún no has hecho tus ejercicios','Cuando tu fisio te escribe o te cambia los ejercicios'],
  onInstalar:mostrarInstall,onCambio:r=>{if(r==='on')toast('Avisos activados');else if(r==='off')toast('Avisos desactivados');else if(r==='error')toast('No se ha podido cambiar. Inténtalo de nuevo',false);mirarAvisos();}});}
 function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const rawData=window.atob(base64);const outputArray=new Uint8Array(rawData.length);for(let i=0;i<rawData.length;++i)outputArray[i]=rawData.charCodeAt(i);return outputArray;}
 
