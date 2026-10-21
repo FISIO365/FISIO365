@@ -420,6 +420,19 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  .chatp{height:calc(100vh - 210px)!important}
 }
 
+#btnAvisos{position:absolute;right:28px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:none;background:#fff;box-shadow:0 2px 10px rgba(26,26,26,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#c2552e}
+#btnAvisos svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#btnAvisos i{position:absolute;top:8px;right:9px;width:9px;height:9px;border-radius:50%;background:#c2552e;border:2px solid #fff;display:none}
+#btnAvisos.apagado i{display:block}
+.topbar{position:sticky}.topbar-t,.topbar-s{padding-right:56px}
+#avisosModal{position:fixed;inset:0;z-index:950;background:rgba(26,26,26,.35);display:none;align-items:center;justify-content:center;padding:20px}
+#avisosModal.on{display:flex}
+#avisosModal .am-card{background:#f5f2ee;border-radius:26px;padding:18px;width:100%;max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+#avisosModal .am-top{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 14px}
+#avisosModal .am-top b{font-size:19px;font-weight:800;letter-spacing:-.3px}
+#avisosModal .am-top button{border:none;background:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;color:#7d6a60;font-size:14px}
+#avisosModal .f365av{margin-bottom:0}
+@media(max-width:768px){#btnAvisos{right:14px;top:calc(50% + env(safe-area-inset-top)/2)}}
 #avisoPanel{position:fixed;right:20px;bottom:20px;z-index:900;display:flex;align-items:center;gap:12px;background:#fff;border-radius:22px;padding:12px 12px 12px 14px;box-shadow:0 12px 36px rgba(26,26,26,.18);max-width:420px;font-family:inherit}
 #avisoPanel .ap-ic{width:44px;height:44px;border-radius:14px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}
 #avisoPanel .ap-ic svg{width:22px;height:22px;fill:none;stroke:#c2552e;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -484,12 +497,17 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  <!-- MAIN -->
  <div class="main-area">
  <div class="topbar">
+ <button type="button" id="btnAvisos" onclick="abrirAjustesAvisos()" aria-label="Notificaciones"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><i id="btnAvisosDot"></i></button>
  <div class="topbar-t" id="topbar-t">Anamnesis clínica</div>
  <div class="topbar-s" id="topbar-s">Asigna ejercicios a tus pacientes</div>
  </div>
  <div class="wrap" id="mainWrap"></div>
  </div>
  </div>
+</div>
+
+<div id="avisosModal" onclick="if(event.target===this)cerrarAjustesAvisos()">
+ <div class="am-card"><div class="am-top"><b>Notificaciones</b><button type="button" onclick="cerrarAjustesAvisos()" aria-label="Cerrar">✕</button></div><div id="avisosAjustes"></div></div>
 </div>
 
 <!-- LIGHTBOX -->
@@ -724,15 +742,24 @@ function b64u8(b){const p='='.repeat((4-b.length%4)%4);const r=atob((b+p).replac
 const avisosOK=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
 async function suscribirPanel(){const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u8(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fisioId:fisioActual.id,pwd:apiPwd,subscription:sub})});}
 function mirarAvisosPanel(){let c=document.getElementById('avisoPanel');if(!fisioActual||!avisosOK()){if(c)c.remove();return;}
- if(Notification.permission==='granted'){if(c)c.remove();suscribirPanel().catch(()=>{});return;}
+ marcarCampana();
+ if(F365Avisos.apagados('f365_panel_avisos')){if(c)c.remove();return;}
+ if(Notification.permission==='granted'){if(c)c.remove();suscribirPanel().catch(()=>{}).then(marcarCampana);return;}
  const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;const ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
  let no='';try{no=localStorage.getItem('f365_panel_avisos_no')||'';}catch(e){}
  if(Notification.permission!=='default'||(ios&&!standalone)||(no&&Date.now()-(+no)<7*864e5)){if(c)c.remove();return;}
  if(c)return;c=document.createElement('div');c.id='avisoPanel';
  c.innerHTML=`<div class="ap-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div class="ap-tx"><b>Activa los avisos</b><span>Te avisamos cuando un paciente te escriba</span></div><button class="ap-b" type="button">Activar</button><button class="ap-x" type="button" aria-label="Ahora no">✕</button>`;
- c.querySelector('.ap-b').onclick=async()=>{const b=c.querySelector('.ap-b');b.disabled=true;b.textContent='Activando…';try{if(await Notification.requestPermission()==='granted'){await suscribirPanel();toast('¡Avisos activados!',true);}}catch(e){}mirarAvisosPanel();};
+ c.querySelector('.ap-b').onclick=async()=>{const b=c.querySelector('.ap-b');b.disabled=true;b.textContent='Activando…';try{try{localStorage.removeItem('f365_panel_avisos_off');}catch(e){}if(await Notification.requestPermission()==='granted'){await suscribirPanel();toast('¡Avisos activados!',true);}}catch(e){}mirarAvisosPanel();};
  c.querySelector('.ap-x').onclick=()=>{try{localStorage.setItem('f365_panel_avisos_no',String(Date.now()));}catch(e){}c.remove();};
  document.body.appendChild(c);}
+// Ajustes de avisos (campana de arriba a la derecha)
+const avisosOpts=()=>({clave:'f365_panel_avisos',datos:()=>({fisioId:fisioActual.id,pwd:apiPwd}),
+ lista:['Cuando un paciente te escribe por el chat'],
+ onCambio:r=>{if(r==='on')toast('Avisos activados',true);else if(r==='off')toast('Avisos desactivados',true);else if(r==='error')toast('No se ha podido cambiar. Inténtalo de nuevo',false);marcarCampana();mirarAvisosPanel();}});
+function abrirAjustesAvisos(){if(!fisioActual)return;$('avisosModal').classList.add('on');F365Avisos.pintar($('avisosAjustes'),avisosOpts());}
+function cerrarAjustesAvisos(){$('avisosModal').classList.remove('on');}
+async function marcarCampana(){const b=$('btnAvisos');if(!b)return;const e=await F365Avisos.estado('f365_panel_avisos');b.classList.toggle('apagado',e!=='on');}
 function abrirAvisoPanel(url){try{const u=new URL(url,location.origin);const s=u.searchParams.get('s'),p=u.searchParams.get('p');avisoPendiente='';history.replaceState(null,'',location.pathname);
  if(!fisioActual){avisoPendiente=url;return;}
  if(s==='msg'){showSection('msg');if(/^rec[A-Za-z0-9]{14}$/.test(p||''))renderMensajes($('mainWrap'),p);}}catch(e){}}
@@ -7588,6 +7615,7 @@ function cerrarLightbox(){
  $('lightbox').style.display='none';$('lb-img').src='';
 }
 </script>
+<script src="/avisos.js"></script>
 <script src="/chat-ui.js"></script>
 <script src="/racha-ui.js"></script>
 </body>

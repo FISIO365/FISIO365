@@ -617,6 +617,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 
  </div>
  <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;display:flex;flex-direction:column;gap:2px;">
+ <button class="nav-item" id="navAvisos" onclick="showSection('notificaciones');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones</button>
  <button class="nav-item" id="navInstalar" onclick="cerrarMenu();mostrarInstall()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>Instalar app</button>
  <button class="nav-item" onclick="cerrarMenu();abrirReserva()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#c2552e;font-size:14px;font-weight:700;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>Reservar cita</button>
  <button class="nav-item" onclick="cerrarMenu();showSection('promos');pintarPromos()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.5"/></svg>Promociones</button>
@@ -709,6 +710,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 
  <div id="vistaNotificaciones" style="display:none;">
  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;margin-top:4px;"><div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--black)">Notificaciones</div></div>
+ <div id="avisosAjustes"></div>
+ <div style="font-size:13px;font-weight:700;color:#7d6a60;margin:4px 2px 4px">Historial</div>
  <div id="notifListEl"></div>
  </div>
 
@@ -873,7 +876,7 @@ function showSection(section){
   if(navMap[section]){const el=document.getElementById(navMap[section]);if(el)el.classList.add('active');}
   if(section==='progreso'){initVAS();loadAdherencia('adherenciaSection');}
   if(section==='citas')initCitas();
-  if(section==='notificaciones')loadNotificaciones();
+  if(section==='notificaciones'){loadNotificaciones();pintarAjustesAvisos();}
   if(section==='informes')loadInformes();
   if(section==='sorteo')loadPuntos();
   if(section==='mensajes')abrirChat();
@@ -1144,14 +1147,19 @@ const avisosPosibles=()=>('serviceWorker' in navigator)&&('PushManager' in windo
 async function suscribirAvisos(){const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,subscription:sub})});}
 // Si ya dio permiso, se renueva en silencio; si no, se enseña la tarjeta «Activa los avisos»
 function mirarAvisos(){const c=document.getElementById('avisosCard');if(!avisosPosibles()){if(c)c.classList.remove('on');return;}
+ if(F365Avisos.apagados('f365_avisos')){if(c)c.classList.remove('on');return;}
  if(Notification.permission==='granted'){if(c)c.classList.remove('on');suscribirAvisos().catch(()=>{});return;}
  const iosNav=/iPhone|iPad|iPod/.test(navigator.userAgent)&&!esInstalada();let no='';try{no=localStorage.getItem('f365_avisos_no')||'';}catch(e){}
  if(c)c.classList.toggle('on',Notification.permission==='default'&&!iosNav&&!(no&&Date.now()-(+no)<7*864e5));}
 async function activarAvisos(){const b=document.querySelector('#avisosCard .ib');if(b){b.disabled=true;b.textContent='Activando…';}
- try{const r=await Notification.requestPermission();if(r==='granted'){await suscribirAvisos();toast('¡Avisos activados!');}}catch(e){}
+ try{try{localStorage.removeItem('f365_avisos_off');}catch(e){}const r=await Notification.requestPermission();if(r==='granted'){await suscribirAvisos();toast('¡Avisos activados!');}}catch(e){}
  mirarAvisos();if(b){b.disabled=false;b.textContent='Activar';}}
 function ahoraNoAvisos(){try{localStorage.setItem('f365_avisos_no',String(Date.now()));}catch(e){}mirarAvisos();}
-async function initPushNotifications(){try{if(avisosPosibles()&&Notification.permission==='granted')await suscribirAvisos();}catch(e){}}
+async function initPushNotifications(){try{if(avisosPosibles()&&Notification.permission==='granted'&&!F365Avisos.apagados('f365_avisos'))await suscribirAvisos();}catch(e){}}
+// Sección Notificaciones: interruptor para activar/desactivar los avisos en este móvil
+function pintarAjustesAvisos(){if(!patient)return;F365Avisos.pintar(document.getElementById('avisosAjustes'),{clave:'f365_avisos',datos:()=>({patientId:patient.id}),
+ lista:['La víspera de tu cita','A las 19:00, si ese día aún no has hecho tus ejercicios','Cuando tu fisio te escribe o te cambia los ejercicios'],
+ onInstalar:mostrarInstall,onCambio:r=>{if(r==='on')toast('Avisos activados');else if(r==='off')toast('Avisos desactivados');else if(r==='error')toast('No se ha podido cambiar. Inténtalo de nuevo',false);mirarAvisos();}});}
 function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const rawData=window.atob(base64);const outputArray=new Uint8Array(rawData.length);for(let i=0;i<rawData.length;++i)outputArray[i]=rawData.charCodeAt(i);return outputArray;}
 
 // POLLING
@@ -1285,6 +1293,7 @@ async function loadPuntos(){
   }
 }
 </script>
+<script src="/avisos.js"></script>
 <script src="/chat-ui.js"></script>
 <script src="/racha-ui.js"></script>
 
