@@ -71,8 +71,9 @@ window.F365Avisos = (function () {
     const est = await estado(o.clave);
     const sub = { on: 'Activados en este móvil', off: 'Desactivados', bloqueado: 'Bloqueados en el móvil', instalar: 'Instala la app para recibirlos', no: 'Este navegador no los permite' }[est];
     let nota = '';
-    if (est === 'bloqueado') nota = `<div class="f365av-nota">Para volver a recibirlos tienes que permitirlos en el móvil. ${comoDesbloquear()}</div>`;
+    if (est === 'bloqueado') nota = `<div class="f365av-nota">Al preguntarte el móvil se pulsó <b>No permitir</b>, y por seguridad el móvil ya no deja que la app lo vuelva a preguntar. Solo se puede cambiar desde el propio móvil: ${comoDesbloquear()}<br>Después vuelve aquí y ya podrás activarlos y desactivarlos con el interruptor.</div>`;
     if (est === 'instalar') nota = `<div class="f365av-nota">En iPhone los avisos solo llegan con la app instalada en la pantalla de inicio. Instálala y vuelve aquí para activarlos.${o.onInstalar ? '<br><button type="button" class="f365av-bt" data-inst>Cómo instalarla</button>' : ''}</div>`;
+    if (est === 'off' && 'Notification' in window && Notification.permission === 'default') nota = `<div class="f365av-nota">Al activarlos, el móvil te preguntará si quieres recibir notificaciones: pulsa <b>Permitir</b>.</div>`;
     if (est === 'no') nota = `<div class="f365av-nota">Prueba desde el móvil con la app instalada.</div>`;
     const sw = (est === 'on' || est === 'off') ? `<button type="button" class="f365av-sw${est === 'on' ? ' on' : ''}" role="switch" aria-checked="${est === 'on'}" aria-label="Avisos"></button>` : '';
     el.innerHTML = `<div class="f365av"><div class="f365av-top"><div class="f365av-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div class="f365av-tx"><b>Avisos</b><span>${sub}</span></div>${sw}</div>${(o.lista || []).length ? '<ul class="f365av-li">' + o.lista.map(t => '<li>' + t + '</li>').join('') + '</ul>' : ''}${nota}</div>`;
