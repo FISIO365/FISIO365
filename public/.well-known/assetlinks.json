@@ -1,8 +1,15 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "es.fisioterapia365.app",
-        "sha256_cert_fingerprints": ["0F:78:50:30:E0:22:6D:00:2C:1B:CF:40:36:A8:41:CF:1C:AB:45:06:A6:A4:C8:C3:F0:FF:F0:F3:8B:14:3A:37"]
-      }
-    }]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "es.fisioterapia365.app",
+      "sha256_cert_fingerprints": [
+        "0F:78:50:30:E0:22:6D:00:2C:1B:CF:40:36:A8:41:CF:1C:AB:45:06:A6:A4:C8:C3:F0:FF:F0:F3:8B:14:3A:37",
+        "F2:8F:D7:06:74:EC:A5:B7:C2:D7:7B:C4:60:21:7F:BB:BC:4D:AD:BC:16:92:F9:C6:B5:9D:50:85:10:93:00:3B"
+      ]
+    }
+  }
+]
