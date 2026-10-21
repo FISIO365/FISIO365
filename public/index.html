@@ -711,8 +711,6 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div id="vistaNotificaciones" style="display:none;">
  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;margin-top:4px;"><div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--black)">Notificaciones</div></div>
  <div id="avisosAjustes"></div>
- <div style="font-size:13px;font-weight:700;color:#7d6a60;margin:4px 2px 4px">Historial</div>
- <div id="notifListEl"></div>
  </div>
 
  <div id="vistaPromos" style="display:none;">
@@ -876,7 +874,7 @@ function showSection(section){
   if(navMap[section]){const el=document.getElementById(navMap[section]);if(el)el.classList.add('active');}
   if(section==='progreso'){initVAS();loadAdherencia('adherenciaSection');}
   if(section==='citas')initCitas();
-  if(section==='notificaciones'){loadNotificaciones();pintarAjustesAvisos();}
+  if(section==='notificaciones')pintarAjustesAvisos();
   if(section==='informes')loadInformes();
   if(section==='sorteo')loadPuntos();
   if(section==='mensajes')abrirChat();
@@ -1138,7 +1136,8 @@ function toggleNotifPanel(){showSection('notificaciones');}
 async function loadNotificaciones(){const list=document.getElementById('notifListEl');if(!list||!patient)return;list.innerHTML='<div class="loading"><div class="spinner"></div></div>';try{const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);const data=await res.json();const notifs=data.notificaciones||[];const noLeidas=notifs.filter(n=>!n.leida).length;const badge=document.getElementById('notifBadge');if(badge)badge.style.display=noLeidas>0?'block':'none';if(!notifs.length){list.innerHTML='<div class="empty"><div class="empty-title">Sin notificaciones</div></div>';return;}list.innerHTML=notifs.map(n=>`<div style="padding:16px 0;border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start;"><div style="flex:1;cursor:pointer;opacity:${n.leida?'0.45':'1'};" onclick="abrirNotif('${n.id}','${n.tipo}')"><div style="font-size:13px;font-weight:600;color:var(--black);margin-bottom:3px;">${n.titulo||''}</div><div style="font-size:12px;color:var(--muted);line-height:1.5;">${n.texto||''}</div><div style="font-size:11px;color:var(--muted);margin-top:5px;">${n.fecha||''}</div></div><button onclick="marcarNotifLeida('${n.id}',this)" style="width:22px;height:22px;border-radius:50%;border:1.5px solid ${n.leida?'var(--black)':'var(--border)'};background:${n.leida?'var(--black)':'none'};cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;padding:0;">${n.leida?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</button></div>`).join('');}catch(e){list.innerHTML='<div class="empty"><div class="empty-title">Error</div></div>';}}
 async function marcarNotifLeida(notifId,btn){btn.disabled=true;try{await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'marcar-notificacion-leida',notifId})});btn.style.background='var(--black)';btn.style.borderColor='var(--black)';btn.innerHTML='<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';btn.disabled=false;const row=btn.closest('div[style*="border-bottom"]');if(row){const content=row.querySelector('div[style*="flex:1"]');if(content)content.style.opacity='0.45';}checkNotifBadge();}catch(e){btn.disabled=false;}}
 async function abrirNotif(notifId,tipo){try{await fetch('/api/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'marcar-notificacion-leida',notifId})});}catch(e){}if(tipo==='mensaje'||tipo==='respuesta')showSection('mensajes');else showSection('hoy');checkNotifBadge();}
-async function checkNotifBadge(){if(!patient)return;try{const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);const data=await res.json();const badge=document.getElementById('notifBadge');if(badge)badge.style.display=(data.notificaciones||[]).filter(n=>!n.leida).length>0?'block':'none';}catch(e){}}
+async function checkNotifBadge(){return;// ya no hay lista de notificaciones
+if(!patient)return;try{const res=await fetch(`/api/pacientes?action=get-notificaciones&pacienteId=${encodeURIComponent(patient.id)}`);const data=await res.json();const badge=document.getElementById('notifBadge');if(badge)badge.style.display=(data.notificaciones||[]).filter(n=>!n.leida).length>0?'block':'none';}catch(e){}}
 
 // PUSH
 const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
