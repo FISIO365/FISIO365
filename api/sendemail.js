@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
         <p style="margin:8px 0 0;color:#000;font-size:14px;"><strong>PIN:</strong> <span style="font-size:22px;font-weight:800;color:#ada3da;letter-spacing:6px;">${pin}</span></p>
       </div>
 
-      <a href="https://fisio365.vercel.app" style="display:block;background:#000;color:#f5f2ee;text-align:center;padding:16px;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:32px;">Abrir FISIO365</a>
+      <a href="https://app.fisioterapia365.com" style="display:block;background:#000;color:#f5f2ee;text-align:center;padding:16px;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:32px;">Abrir FISIO365</a>
 
       <div style="background:white;border-radius:12px;padding:24px;margin-bottom:32px;">
         <p style="margin:0 0 16px;color:#999;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Instalar en tu móvil</p>
