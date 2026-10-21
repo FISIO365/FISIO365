@@ -543,9 +543,9 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .vg-pie{color:rgba(255,255,255,.5);font-size:12.5px;margin-top:16px}
 @media (orientation:landscape) and (max-height:500px){.vg-caja{height:calc(100vh - 40px);width:auto;max-width:none}.vg-pie{display:none}}
 
-.pl-nota{display:flex;gap:9px;align-items:flex-start;margin:0 14px 12px 100px;background:#fbf3ee;border-radius:12px;padding:9px 11px;font-size:12.5px;line-height:1.45;color:#4a453f}
+.pl-nota{overflow-wrap:anywhere;word-break:break-word;display:flex;gap:9px;align-items:flex-start;margin:0 14px 12px 100px;background:#fbf3ee;border-radius:12px;padding:9px 11px;font-size:12.5px;line-height:1.45;color:#4a453f}
 .pl-nota svg{width:15px;height:15px;flex:none;margin-top:2px;fill:none;stroke:#c2552e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.pl-nota b{display:block;font-size:11px;font-weight:700;color:#c2552e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px}
+.pl-nota>div{min-width:0;flex:1}.pl-nota b{display:block;font-size:11px;font-weight:700;color:#c2552e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px}
 @media(max-width:380px){.pl-nota{margin-left:14px}}
 .pl-tmr{padding:0 14px 14px}
 .pl-tmr .tmr{padding:10px 10px 10px 12px;gap:12px;border-radius:18px;margin:0;align-items:center}
