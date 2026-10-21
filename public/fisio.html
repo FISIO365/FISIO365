@@ -433,6 +433,56 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 #avisosModal .am-top button{border:none;background:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;color:#7d6a60;font-size:14px}
 #avisosModal .f365av{margin-bottom:0}
 @media(max-width:768px){#btnAvisos{right:14px;top:calc(50% + env(safe-area-inset-top)/2)}}
+
+/* Editor de ejercicios (Programas y ficha) */
+.pe-busca{position:relative;margin-bottom:12px}
+.pe-busca input{width:100%;box-sizing:border-box;padding:13px 14px 13px 42px;border:1.5px solid var(--border);border-radius:14px;font-size:15px;font-family:var(--font);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2552e' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 14px center/18px;outline:none}
+.pe-busca input:focus{border-color:#c2552e}
+.pe-res{display:none;margin-top:6px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.10);max-height:330px;overflow-y:auto}
+.pe-res.on{display:block}
+.pe-res button{display:flex;align-items:center;gap:11px;width:100%;border:none;background:none;border-bottom:1px solid #f0ebe6;padding:8px 10px;font-family:var(--font);font-size:14px;text-align:left;cursor:pointer;color:#1a1a1a}
+.pe-res button:last-child{border-bottom:none}
+.pe-res button:hover{background:#fbf7f4}
+.pe-res img,.pe-ph{width:54px;height:40px;border-radius:8px;object-fit:cover;background:#f0ebe6;flex:none}
+.pe-res .pe-n{flex:1;min-width:0}.pe-res strong{color:#c2552e}
+.pe-res .pe-add{flex:none;width:30px;height:30px;border-radius:50%;background:#fbeee7;color:#c2552e;font-size:19px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.pe-res button.ok .pe-add{background:#c2552e;color:#fff;font-size:14px}
+.pe-vacio{padding:14px;font-size:13px;color:var(--muted);text-align:center}
+.pe-hint{font-size:12.5px;color:var(--muted);margin:2px 2px 10px}
+.pe-lista{display:flex;flex-direction:column;gap:10px}
+.pe-ej{background:#faf7f4;border-radius:16px;padding:12px;border:1px solid #f0ebe6}
+.pe-ej.nuevo{animation:peIn .5s}@keyframes peIn{from{background:#fbeee7}}
+.pe-top{display:flex;align-items:center;gap:10px}
+.pe-top img,.pe-top .pe-ph{width:52px;height:40px;border-radius:9px;object-fit:cover;flex:none}
+.pe-nom{flex:1;min-width:0;font-size:14.5px;font-weight:700;line-height:1.25}
+.pe-nom i{font-style:normal;color:#c2552e;margin-right:4px}
+.pe-acc{display:flex;gap:4px;flex:none}
+.pe-acc button{width:30px;height:30px;border-radius:50%;border:none;background:#fff;color:#7d6a60;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.pe-acc button[disabled]{opacity:.3;cursor:default}
+.pe-acc button[data-a=del]{color:#c2552e}
+.pe-modo{display:flex;background:#efe9e3;border-radius:99px;padding:3px;margin:12px 0 10px}
+.pe-modo button{flex:1;border:none;background:none;border-radius:99px;padding:8px 6px;font-family:var(--font);font-size:13px;font-weight:600;color:#7d6a60;cursor:pointer}
+.pe-modo button.on{background:#c2552e;color:#fff;box-shadow:0 2px 6px rgba(194,85,46,.3)}
+.pe-nums{display:flex;gap:10px;flex-wrap:wrap}
+.pe-num label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9a8d84;margin:0 0 5px 2px}
+.pe-step{display:flex;align-items:center;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);width:max-content}
+.pe-step button{width:38px;height:42px;border:none;background:none;color:#c2552e;font-size:21px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.pe-step input{width:44px;border:none;text-align:center;font-size:17px;font-weight:700;font-family:var(--font);background:none;outline:none;-moz-appearance:textfield;padding:0}
+.pe-step input::-webkit-outer-spin-button,.pe-step input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.pe-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.pe-chips button{border:1px solid #eadfd6;background:#fff;border-radius:99px;padding:4px 10px;font-family:var(--font);font-size:12.5px;font-weight:600;color:#5b4a40;cursor:pointer}
+.pe-chips button.on{background:#fbeee7;border-color:#c2552e;color:#c2552e}
+.pe-ind{width:100%;box-sizing:border-box;margin-top:11px;padding:10px 12px;border:1.5px solid #eadfd6;border-radius:12px;font-size:13.5px;font-family:var(--font);background:#fff;outline:none}
+.pe-ind:focus{border-color:#c2552e}
+.pe-mas{margin-top:8px}.pe-mas summary{font-size:12.5px;font-weight:600;color:#9a8d84;cursor:pointer;list-style:none;padding:2px}
+.pe-mas summary::-webkit-details-marker{display:none}.pe-mas summary::before{content:'+ '}.pe-mas[open] summary::before{content:'− '}
+.pe-mas-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.pe-mas-g label{display:block;font-size:11.5px;color:#9a8d84;margin-bottom:3px}
+.pe-mas-g input{width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #eadfd6;border-radius:10px;font-size:13px;font-family:var(--font);background:#fff}
+.pe-vacia{padding:18px;text-align:center;font-size:13px;color:var(--muted);background:#faf7f4;border-radius:14px}
+.pe-fisio{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:#7d6a60}
+.pe-fisio select{flex:1;padding:8px 10px;border:1.5px solid #eadfd6;border-radius:10px;font-size:13px;font-family:var(--font);background:#fff;color:#1a1a1a}
+@media(max-width:360px){.pe-step button{width:32px}.pe-step input{width:36px}}
 #avisoPanel{position:fixed;right:20px;bottom:20px;z-index:900;display:flex;align-items:center;gap:12px;background:#fff;border-radius:22px;padding:12px 12px 12px 14px;box-shadow:0 12px 36px rgba(26,26,26,.18);max-width:420px;font-family:inherit}
 #avisoPanel .ap-ic{width:44px;height:44px;border-radius:14px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}
 #avisoPanel .ap-ic svg{width:22px;height:22px;fill:none;stroke:#c2552e;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -933,7 +983,7 @@ function renderPacLista(q, lista){
  <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Nombre</div><div style="font-size:15px;font-weight:700">${p.nombre}</div></div>
  <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Email</div><div style="font-size:14px">${p.email||'—'}</div></div>
  <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Contraseña (PIN)</div><div style="font-size:28px;font-weight:800;color:var(--lila);letter-spacing:4px">${p.pin||'—'}</div></div>`;
- } else if(op.key==='programa') fpTabPrograma(p.id, panel, tok);
+ } else if(op.key==='programa') fpTabPrograma(p.id, panel, tok, p.nombre);
  else if(op.key==='informes') fpTabInformes(p.id, panel, p.nombre, tok);
  else if(op.key==='racha') fpTabRacha(p.id, panel, tok);
  else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel, tok);
@@ -961,34 +1011,111 @@ function renderPacLista(q, lista){
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION: PROGRAMAS
 // ─────────────────────────────────────────────────────────────────────────────
+// ── EDITOR DE EJERCICIOS (Programas y ficha del paciente) ─────────────────────
+const sinTildes=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const escH=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function peMini(e){return e.imagen||ytThumb(e.youtubeUrl)||'';}
+function peNorm(e){
+ const lib=biblio.find(x=>x.nombre.trim()===String(e.nombre||'').trim())||{};
+ const reps=+e.reps||0, dur=+e.duracion||+e.dur||0;
+ const seg=dur>0&&!reps;
+ return {nombre:String(e.nombre||'').trim(),modo:seg?'seg':'rep',series:+e.series||3,reps:reps||10,seg:seg?dur:30,aguantar:(!seg&&dur)?dur:0,
+  descanso:+e.descanso||0,zona:e.zona||'',descripcion:e.descripcion||e.desc||'',youtubeUrl:e.youtubeUrl||lib.youtubeUrl||'',imagen:e.imagen||lib.imagen||''};
+}
+function montarEditorEjs(el,inicial,onCambio){
+ let ejs=(inicial||[]).map(peNorm), nuevo=-1;
+ el.innerHTML=`<div class="pe-busca"><input type="search" placeholder="Busca un ejercicio para añadirlo…" autocomplete="off" enterkeyhint="search"><div class="pe-res"></div></div><div class="pe-lista"></div>`;
+ const inp=el.querySelector('input'),res=el.querySelector('.pe-res'),lista=el.querySelector('.pe-lista');
+ const avisar=()=>{if(onCambio)onCambio();};
+ function buscar(){
+  const q=sinTildes(inp.value.trim());
+  if(!q){res.classList.remove('on');res.innerHTML='';return;}
+  const r=biblio.filter(e=>sinTildes(e.nombre).includes(q)).slice(0,40);
+  res.innerHTML=r.length?r.map(e=>{const nm=e.nombre.trim(),i=sinTildes(nm).indexOf(q);const hl=i<0?escH(nm):escH(nm.slice(0,i))+'<strong>'+escH(nm.slice(i,i+q.length))+'</strong>'+escH(nm.slice(i+q.length));const m=peMini(e);
+   const ya=ejs.some(x=>x.nombre===nm);
+   return `<button type="button" data-id="${e.id}" class="${ya?'ok':''}">${m?`<img src="${escH(m)}" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="pe-ph"></span>'}<span class="pe-n">${hl}</span><span class="pe-add">${ya?'✓':'+'}</span></button>`;}).join('')
+   :'<div class="pe-vacio">No hay ningún ejercicio con ese nombre</div>';
+  res.classList.add('on');
+ }
+ inp.addEventListener('input',buscar);
+ inp.addEventListener('focus',buscar);
+ document.addEventListener('click',ev=>{if(!el.contains(ev.target))res.classList.remove('on');});
+ res.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-id]');if(!b)return;
+  const e=biblio.find(x=>x.id===b.dataset.id);if(!e)return;
+  ejs.push(peNorm({nombre:e.nombre,series:e.series,reps:(+e.duracion>0)?0:e.reps,duracion:e.duracion,descanso:e.descanso,zona:e.zona,youtubeUrl:e.youtubeUrl,imagen:e.imagen}));
+  nuevo=ejs.length-1;pintar();avisar();
+  b.classList.add('ok');b.querySelector('.pe-add').textContent='✓';
+ });
+ const CHIPS={rep:[5,8,10,12,15,20],seg:[15,20,30,45,60]};
+ function pintar(){
+  if(!ejs.length){lista.innerHTML='<div class="pe-vacia">Todavía no hay ejercicios. Búscalos arriba y tócalos para añadirlos.</div>';return;}
+  lista.innerHTML=ejs.map((e,i)=>{const m=peMini(e),k=e.modo==='seg'?'seg':'reps',v=e[k];
+   return `<div class="pe-ej${i===nuevo?' nuevo':''}" data-i="${i}">
+ <div class="pe-top">${m?`<img src="${escH(m)}" onerror="this.style.visibility='hidden'">`:'<span class="pe-ph"></span>'}<div class="pe-nom"><i>${i+1}.</i>${escH(e.nombre)}</div>
+  <div class="pe-acc"><button type="button" data-a="up" ${i===0?'disabled':''} aria-label="Subir">↑</button><button type="button" data-a="down" ${i===ejs.length-1?'disabled':''} aria-label="Bajar">↓</button><button type="button" data-a="del" aria-label="Quitar">✕</button></div></div>
+ <div class="pe-modo"><button type="button" data-a="modo" data-v="rep" class="${e.modo==='rep'?'on':''}">Repeticiones</button><button type="button" data-a="modo" data-v="seg" class="${e.modo==='seg'?'on':''}">Segundos</button></div>
+ <div class="pe-nums">
+  <div class="pe-num"><label>Series</label><div class="pe-step"><button type="button" data-a="menos" data-k="series">−</button><input type="number" inputmode="numeric" data-k="series" value="${e.series}" min="1"><button type="button" data-a="mas" data-k="series">+</button></div></div>
+  <div class="pe-num"><label>${e.modo==='seg'?'Segundos':'Repeticiones'}</label><div class="pe-step"><button type="button" data-a="menos" data-k="${k}">−</button><input type="number" inputmode="numeric" data-k="${k}" value="${v}" min="1"><button type="button" data-a="mas" data-k="${k}">+</button></div></div>
+ </div>
+ <div class="pe-chips">${CHIPS[e.modo].map(c=>`<button type="button" data-a="set" data-k="${k}" data-v="${c}" class="${+v===c?'on':''}">${c}${e.modo==='seg'?' s':''}</button>`).join('')}</div>
+ <input class="pe-ind" data-k="descripcion" value="${escH(e.descripcion)}" placeholder="Indicaciones (opcional)">
+ <details class="pe-mas"${e.aguantar?' open':''}><summary>Más opciones</summary><div class="pe-mas-g">
+  <div><label>Descanso entre series (s)</label><input type="number" inputmode="numeric" data-k="descanso" value="${e.descanso||''}" placeholder="—"></div>
+  <div><label>Zona</label><input data-k="zona" value="${escH(e.zona)}" placeholder="Lumbar, rodilla…"></div>
+  ${e.modo==='rep'?`<div><label>Aguantar cada repetición (s)</label><input type="number" inputmode="numeric" data-k="aguantar" value="${e.aguantar||''}" placeholder="—"></div>`:''}
+ </div></details>
+</div>`;}).join('');
+  nuevo=-1;
+ }
+ lista.addEventListener('click',ev=>{
+  const b=ev.target.closest('button[data-a]');if(!b)return;
+  const i=+b.closest('.pe-ej').dataset.i,e=ejs[i],a=b.dataset.a,k=b.dataset.k;
+  if(a==='del'){ejs.splice(i,1);}
+  else if(a==='up'&&i>0){[ejs[i-1],ejs[i]]=[ejs[i],ejs[i-1]];}
+  else if(a==='down'&&i<ejs.length-1){[ejs[i+1],ejs[i]]=[ejs[i],ejs[i+1]];}
+  else if(a==='modo'){e.modo=b.dataset.v;}
+  else if(a==='set'){e[k]=+b.dataset.v;}
+  else if(a==='mas'||a==='menos'){const paso=k==='seg'?5:1,min=k==='seg'?5:1;e[k]=Math.max(min,(+e[k]||0)+(a==='mas'?paso:-paso));}
+  pintar();avisar();
+ });
+ lista.addEventListener('input',ev=>{
+  const t=ev.target;if(!t.dataset.k)return;const e=ejs[+t.closest('.pe-ej').dataset.i];
+  e[t.dataset.k]=t.type==='number'?(+t.value||0):t.value;
+  if(t.dataset.k==='reps'||t.dataset.k==='seg')t.closest('.pe-ej').querySelectorAll('.pe-chips button').forEach(c=>c.classList.toggle('on',+c.dataset.v===+t.value));
+  avisar();
+ });
+ lista.addEventListener('change',ev=>{const t=ev.target;if(t.type==='number'&&['series','reps','seg'].includes(t.dataset.k)){const e=ejs[+t.closest('.pe-ej').dataset.i];if(!(+e[t.dataset.k]>0)){e[t.dataset.k]=t.dataset.k==='seg'?30:t.dataset.k==='reps'?10:3;pintar();}}});
+ pintar();
+ return {
+  get:()=>ejs.map(e=>({nombre:e.nombre,series:+e.series||1,reps:e.modo==='rep'?(+e.reps||1):0,duracion:e.modo==='seg'?(+e.seg||30):(+e.aguantar||0),descanso:+e.descanso||0,zona:(e.zona||'').trim(),descripcion:(e.descripcion||'').trim(),youtubeUrl:e.youtubeUrl||'',imagen:e.imagen||''})),
+  set:l=>{ejs=(l||[]).map(peNorm);pintar();avisar();}
+ };
+}
+function selFisioHTML(id,sel){return `<div class="pe-fisio">Lo asigna<select id="${id}">${fisios.map(f=>`<option value="${f.id}" ${f.id===sel?'selected':''}>${escH(f.nombre)}</option>`).join('')}</select></div>`;}
+let progEditor=null;
+
 function renderProg(wrap){
- pacSelId=null; pacSelN=''; fisioSelId=''; ejC=0;
+ pacSelId=null; pacSelN=''; ejC=0;
+ fisioSelId=(fisioActual&&fisios.some(f=>f.id===fisioActual.id))?fisioActual.id:(fisios[0]?.id||'');
 
- // Fisio card
- const fc=ce('div','card');
- fc.innerHTML=`<div class="ct">Fisio que asigna</div>
- <div class="field"><label>Seleccionar fisio</label>
- <select id="fisioSel" onchange="onFisio()">
- <option value="">Seleccionar fisio...</option>
- ${fisios.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join('')}
- </select></div>
- <div class="fprev" id="fprev"><div style="font-size:14px;font-weight:600" id="fpn"></div><div style="font-size:12px;color:var(--muted)" id="fpc"></div></div>`;
- wrap.appendChild(fc);
-
- // Paciente
+ // Paciente (y quién lo asigna, ya elegido)
  const pc=ce('div','card');
  pc.innerHTML=`<div class="ct">Paciente</div>
  <div class="si"><input type="text" id="ps1" placeholder="Buscar paciente..."></div>
  <div id="plistProg"></div>
- <div id="pacSelBox" style="display:none;margin-top:8px;padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--lila)"></div>`;
+ <div id="pacSelBox" style="display:none;margin-top:8px;padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--lila)"></div>
+ ${selFisioHTML('fisioSel',fisioSelId)}`;
  wrap.appendChild(pc);
+ $('fisioSel').onchange=()=>{fisioSelId=$('fisioSel').value;};
  mkPacSearch('ps1','plistProg','pacSelBox',p=>{pacSelId=p.id;pacSelN=p.nombre;updProg();cargarPrograma(p.id);});
 
  // Ejercicios
  const ec=ce('div','card');
- ec.innerHTML=`<div class="ct">Ejercicios del programa</div><div id="ejLista"></div>`;
- const addBtn=ce('button','btn-o'); addBtn.textContent='+ Añadir ejercicio'; addBtn.onclick=addEj;
- ec.appendChild(addBtn); wrap.appendChild(ec);
+ ec.innerHTML=`<div class="ct">Ejercicios del programa</div><div id="ejInfo"></div><div id="ejEditor"></div>`;
+ wrap.appendChild(ec);
+ progEditor=montarEditorEjs($('ejEditor'),[],updProg);
 
  // Mensaje
  const mc=ce('div','card');
@@ -1152,15 +1279,7 @@ function filtrarEj(n){
  acFilter(n);
 }
 
-function getEjs(){
- return [...document.querySelectorAll('.ejc')].map(card=>{
- const n=card.id.replace('ej','');
- const id=$(`esel${n}`)?.value||'';
- const nombre=$(`ebusca${n}`)?.value?.trim();
- if(!nombre)return null;
- return{nombre,series:+$(`es${n}`)?.value||0,reps:+$(`er${n}`)?.value||0,duracion:+$(`ed${n}`)?.value||0,descanso:+$(`edes${n}`)?.value||0,zona:$(`ez${n}`)?.value?.trim()||'',descripcion:$(`edesc${n}`)?.value?.trim()||'',youtubeUrl:(biblio.find(e=>e.id===id)||biblio.find(e=>e.nombre===nombre))?.youtubeUrl||'',imagen:(biblio.find(e=>e.id===id)||biblio.find(e=>e.nombre===nombre))?.imagen||''};
- }).filter(Boolean);
-}
+function getEjs(){return progEditor?progEditor.get().filter(e=>e.nombre):[];}
 
 function updProg(){
  const ejs=getEjs(), res=$('res');
@@ -1176,84 +1295,26 @@ function updProg(){
 }
 
 async function cargarPrograma(pacId){
- // Show loading indicator
- const ejLista = $('ejLista');
- if(!ejLista) return;
- ejLista.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">⏳ Cargando programa actual...</div>';
- // Remove existing ejercicio blocks
- ejC = 0;
-
+ const info=$('ejInfo'); if(!info||!progEditor) return;
+ info.innerHTML='<div class="pe-hint">Cargando el programa actual…</div>';
+ progEditor.set([]);
  try{
- const r = await fetch(`/api/programa?pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
- const d = await r.json();
-
- ejLista.innerHTML = '';
-
- if(d.ok && d.ejercicios && d.ejercicios.length){
- // Show info banner
- const banner = ce('div','');
- banner.style.cssText = 'padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);font-size:13px;color:var(--lila);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px';
- banner.innerHTML = `<span></span><span>Este paciente ya tiene un programa con ${d.ejercicios.length} ejercicio${d.ejercicios.length>1?'s':''}. Puedes modificarlo y guardar.</span>`;
- ejLista.appendChild(banner);
-
- // Load message if exists
- if(d.mensaje && $('mensajeFisio')){
- $('mensajeFisio').value = d.mensaje;
- }
-
- // Load each ejercicio — start ejC from current max to avoid ID collisions
- // Find existing max ejC in DOM first
- const existingIds = [...document.querySelectorAll('.ejc')].map(c=>parseInt(c.id.replace('ej','')));
- if(existingIds.length) ejC = Math.max(...existingIds);
-
- for(const ej of d.ejercicios){
- ejC++; const n = ejC;
- const div = ce('div','ejc'); div.id = `ej${n}`;
- div.innerHTML = `<div class="ejh"><span class="ejn">Ejercicio ${n}</span><button class="bdel" onclick="rmEj(${n})">×</button></div>
- <div class="field"><label>Seleccionar ejercicio</label>
- <div class="ej-ac-wrap" id="acwrap${n}">
- <input type="text" class="ej-ac-input has-val" id="ebusca${n}" placeholder="Escribe para buscar ejercicio..." autocomplete="off"
- oninput="acFilter(${n})" onfocus="acOpen(${n})" onblur="acBlur(${n})"
- value="${(ej.nombre||'').replace(/"/g,'&quot;')}">
- <div class="ej-ac-drop" id="acdrop${n}"></div>
- <input type="hidden" id="esel${n}" value="${biblio.find(e=>e.nombre===ej.nombre)?.id||ej.id||'__loaded__'}">
- </div>
- <div class="ej-preview" id="eprev${n}" style="${ej.zona||ej.descripcion?'display:block':'display:none'}">
- <div class="ej-preview-zona" id="epzona${n}">${ej.zona||''}</div>
- <div class="ej-preview-desc" id="epdesc${n}">${ej.descripcion||''}</div>
- </div></div>
- <div class="g3">
- <div class="field"><label>Series</label><input type="number" id="es${n}" value="${ej.series||3}" min="1"></div>
- <div class="field"><label>Reps</label><input type="number" id="er${n}" value="${ej.reps||10}" min="0"></div>
- <div class="field"><label>Duración (seg)</label><input type="number" id="ed${n}" value="${ej.duracion||0}" min="0"></div>
- </div>
- <div class="g2">
- <div class="field"><label>Descanso (seg)</label><input type="number" id="edes${n}" value="${ej.descanso||30}" min="0"></div>
- <div class="field"><label>Zona corporal</label><input type="text" id="ez${n}" value="${(ej.zona||'').replace(/"/g,'&quot;')}" placeholder="Lumbar, Rodilla..."></div>
- </div>
- <div class="field"><label>Indicaciones</label><input type="text" id="edesc${n}" value="${(ej.descripcion||'').replace(/"/g,'&quot;')}" placeholder="Mantén la espalda recta..."></div>`;
- ejLista.appendChild(div);
- }
- updProg();
- } else {
- // No existing program - show empty state
- ejLista.innerHTML = '';
- const empty = ce('div','');
- empty.style.cssText = 'padding:10px 14px;background:#f8f8f8;border-radius:var(--r-sm);font-size:13px;color:var(--muted);margin-bottom:10px';
- empty.textContent = 'Este paciente no tiene programa asignado todavía.';
- ejLista.appendChild(empty);
- }
- } catch(e){
- ejLista.innerHTML = '';
- console.warn('No se pudo cargar el programa:', e);
- }
+  const r=await fetch(`/api/programa?pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`);
+  const d=await r.json();
+  if(pacSelId!==pacId) return;
+  if(d.ok&&d.ejercicios&&d.ejercicios.length){
+   info.innerHTML=`<div class="pe-hint">Ya tiene un programa con ${d.ejercicios.length} ejercicio${d.ejercicios.length>1?'s':''}. Cámbialo y guarda.</div>`;
+   progEditor.set(d.ejercicios);
+   if(d.mensaje&&$('mensajeFisio'))$('mensajeFisio').value=d.mensaje;
+  } else info.innerHTML='<div class="pe-hint">Todavía no tiene programa.</div>';
+ }catch(e){info.innerHTML='';}
 }
 
 async function guardar(){
  if(!fisioSelId){toast('Selecciona el fisio que asigna',false);return;}
  if(!pacSelId){toast('Selecciona un paciente',false);return;}
  const ejs=getEjs();
- if(!ejs.length){toast('Añade y selecciona al menos un ejercicio',false);return;}
+ if(!ejs.length){toast('Añade al menos un ejercicio',false);return;}
  const btn=$('btnG'); btn.disabled=true; btn.textContent='Guardando...';
  try{
  const r=await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:pacSelId,pacienteNombre:pacSelN,fisioId:fisioSelId,ejercicios:ejs,mensajeFisio:$('mensajeFisio')?.value?.trim()||''})});
@@ -4183,7 +4244,7 @@ function fpSwitch(tab){
  else if(tab==='diario') fpTabDiario(pacId, pacNombre, body);
 }
 
-async function fpTabPrograma(pacId, body, tok){
+async function fpTabPrograma(pacId, body, tok, pacNombre){
  body.innerHTML='<div style="text-align:center;padding:2rem"><div style="width:24px;height:24px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
  try{
    // Cargar programa actual
@@ -4192,77 +4253,12 @@ async function fpTabPrograma(pacId, body, tok){
    if(tok&&body.dataset.token!==tok)return;
    body.innerHTML='';
 
-   // — Selector de fisio —
-   const fc=ce('div','card');
-   fc.style.marginBottom='10px';
-   fc.innerHTML=`<div class="ct" style="margin-bottom:10px">Fisio que asigna</div>
-   <div class="field" style="margin:0"><label>Seleccionar fisio</label>
-   <select id="fpFisioSel" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--font)">
-   <option value="">Seleccionar fisio...</option>
-   ${fisios.map(f=>`<option value="${f.id}">${f.nombre}${f.colegiado?' — Nº '+f.colegiado:''}</option>`).join('')}
-   </select></div>`;
-   body.appendChild(fc);
-
-   // — Lista de ejercicios —
-   let fpEjC=0;
+   // — Ejercicios (quién lo asigna ya viene elegido) —
    const ec=ce('div','card');
    ec.style.marginBottom='10px';
-   ec.innerHTML=`<div class="ct" style="margin-bottom:10px">Ejercicios</div><div id="fpEjLista"></div>`;
-
-   function fpAddEj(ej){
-     fpEjC++;const n=fpEjC;
-     const lista=document.getElementById('fpEjLista');
-     const div=ce('div','ejc');div.id=`fpej${n}`;
-     const nomVal=ej?(ej.nombre||'').replace(/"/g,'&quot;'):'';
-     const hasVal=ej&&ej.nombre?'has-val':'';
-     div.innerHTML=`<div class="ejh"><span class="ejn">Ejercicio ${n}</span><button class="bdel" onclick="this.closest('.ejc').remove()">×</button></div>
-     <div class="field"><label>Ejercicio</label>
-     <div class="ej-ac-wrap" id="fpacwrap${n}">
-     <input type="text" class="ej-ac-input ${hasVal}" id="fpebusca${n}" placeholder="Escribe para buscar..." autocomplete="off"
-       oninput="fpAcFilter(${n})" onfocus="fpAcOpen(${n})" onblur="fpAcBlur(${n})" value="${nomVal}">
-     <div class="ej-ac-drop" id="fpacdrop${n}"></div>
-     <input type="hidden" id="fpesel${n}" value="${ej?(biblio.find(e=>e.nombre===ej.nombre)?.id||'__loaded__'):''}">
-     </div></div>
-     <div class="g3">
-     <div class="field"><label>Series</label><input type="number" id="fpes${n}" value="${ej?.series||3}" min="1"></div>
-     <div class="field"><label>Reps</label><input type="number" id="fper${n}" value="${ej?.reps||10}" min="0"></div>
-     <div class="field"><label>Duración (s)</label><input type="number" id="fped${n}" value="${ej?.duracion||0}" min="0"></div>
-     </div>
-     <div class="g2">
-     <div class="field"><label>Descanso (s)</label><input type="number" id="fpedes${n}" value="${ej?.descanso||30}" min="0"></div>
-     <div class="field"><label>Zona</label><input type="text" id="fpez${n}" value="${(ej?.zona||'').replace(/"/g,'&quot;')}" placeholder="Lumbar, Rodilla..."></div>
-     </div>
-     <div class="field"><label>Indicaciones</label><input type="text" id="fpedesc${n}" value="${(ej?.descripcion||'').replace(/"/g,'&quot;')}" placeholder="Mantén la espalda recta..."></div>`;
-     lista.appendChild(div);
-   }
-
-   // Autocomplete para fpTab
-   window.fpAcFilter=function(n){
-     const q=document.getElementById(`fpebusca${n}`).value.trim().toLowerCase();
-     const drop=document.getElementById(`fpacdrop${n}`);
-     const results=biblio.filter(e=>!q||e.nombre.toLowerCase().includes(q)).slice(0,20);
-     drop.innerHTML=results.map(e=>`<div class="ej-ac-item" data-id="${e.id}" data-nom="${(e.nombre||'').replace(/"/g,'&quot;')}" data-zona="${(e.zona||'').replace(/"/g,'&quot;')}">${e.nombre||'—'}<span style="color:#bbb;font-size:11px;margin-left:6px">${e.zona||''}</span></div>`).join('');
-     drop.classList.add('open');
-     drop.querySelectorAll('.ej-ac-item').forEach(it=>it.addEventListener('mousedown',e=>{
-       e.preventDefault();
-       document.getElementById(`fpebusca${n}`).value=it.dataset.nom;
-       document.getElementById(`fpesel${n}`).value=it.dataset.id;
-       document.getElementById(`fpez${n}`).value=it.dataset.zona||'';
-       drop.classList.remove('open');
-     }));
-   };
-   window.fpAcOpen=function(n){fpAcFilter(n);};
-   window.fpAcBlur=function(n){setTimeout(()=>document.getElementById(`fpacdrop${n}`)?.classList.remove('open'),150);};
-
-   const addBtn=ce('button','btn-o');addBtn.textContent='+ Añadir ejercicio';addBtn.style.marginTop='8px';
-   addBtn.onclick=()=>fpAddEj(null);
-   ec.appendChild(addBtn);
-   body.appendChild(ec);  // ← insertar ANTES de cargar ejercicios
-
-   // Cargar ejercicios existentes
-   if(d.ok&&d.ejercicios&&d.ejercicios.length){
-     d.ejercicios.forEach(ej=>fpAddEj(ej));
-   }
+   ec.innerHTML=`<div class="ct" style="margin-bottom:10px">Ejercicios</div><div id="fpEditor"></div>${selFisioHTML('fpFisioSel',(fisioActual&&fisios.some(f=>f.id===fisioActual.id))?fisioActual.id:(fisios[0]?.id||''))}`;
+   body.appendChild(ec);
+   const fpEditor=montarEditorEjs(ec.querySelector('#fpEditor'),(d.ok&&d.ejercicios)||[]);
 
    // — Mensaje —
    const mc=ce('div','card');mc.style.marginBottom='10px';
@@ -4280,22 +4276,10 @@ async function fpTabPrograma(pacId, body, tok){
    saveBtn.onclick=async()=>{
      const fisioId=document.getElementById('fpFisioSel').value;
      if(!fisioId){toast('Selecciona el fisio que asigna',false);return;}
-     const ejDivs=[...document.getElementById('fpEjLista').querySelectorAll('.ejc')];
-     const ejs=ejDivs.map((div,i)=>{
-       const n=div.id.replace('fpej','');
-       return {
-         nombre:document.getElementById(`fpebusca${n}`)?.value?.trim()||'',
-         series:parseInt(document.getElementById(`fpes${n}`)?.value)||3,
-         reps:parseInt(document.getElementById(`fper${n}`)?.value)||0,
-         duracion:parseInt(document.getElementById(`fped${n}`)?.value)||0,
-         descanso:parseInt(document.getElementById(`fpedes${n}`)?.value)||30,
-         zona:document.getElementById(`fpez${n}`)?.value?.trim()||'',
-         descripcion:document.getElementById(`fpedesc${n}`)?.value?.trim()||''
-       };
-     }).filter(e=>e.nombre);
+     const ejs=fpEditor.get().filter(e=>e.nombre);
      if(!ejs.length){toast('Añade al menos un ejercicio',false);return;}
      const fisioObj=fisios.find(f=>f.id===fisioId)||{};
-     const pacNom=document.querySelector('#pacSelBox')?.textContent||'';
+     const pacNom=pacNombre||document.querySelector('[data-modal]')?.dataset.pacNombre||'';
      saveBtn.disabled=true;saveBtn.textContent='Guardando...';
      try{
        const rr=await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},
