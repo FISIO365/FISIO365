@@ -1,7 +1,8 @@
 "use strict";
-// Se ejecuta una vez al día (vercel.json → crons, 17:00 UTC = 18-19 h en Madrid)
+// Se ejecuta a las 19:00 de Madrid todo el año (vercel.json lanza a las 17 y a las 18 UTC
+// y aquí solo se sigue si en Madrid son las 19 h, así da igual el horario de verano/invierno)
 //  1. Recordatorio de cita: a quien tiene cita PENDIENTE mañana
-//  2. Recordatorio de ejercicios: solo lunes y jueves, a quien lleva 2+ días sin hacerlos
+//  2. Recordatorio de ejercicios, todos los días: a quien hoy aún no los ha hecho
 //     (y los ha hecho en el último mes; si mañana tiene cita, solo le llega el de la cita)
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const { enviar, BASE_ID, TABLAS } = require('./_push');
@@ -15,6 +16,7 @@ function madrid(n = 0) {
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' }).formatToParts(d).map(x => [x.type, x.value]));
   return { fecha: `${p.year}-${p.month}-${p.day}`, dia: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday) };
 }
+const horaMadrid = () => +new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false }).format(new Date());
 async function todos(tabla, query) {
   let recs = [], off = '';
   do {
@@ -30,7 +32,8 @@ const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', '
 
 module.exports = async function handler(req, res) {
   if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) return res.status(401).json({ ok: false });
-  const hoy = madrid(0), manana = madrid(1), ayer = madrid(-1), hace30 = madrid(-30);
+  if (horaMadrid() !== 19 && !/forzar=1/.test(req.url || '')) return res.status(200).json({ ok: true, saltado: 'No son las 19 h en Madrid' });
+  const hoy = madrid(0), manana = madrid(1), hace30 = madrid(-30);
   const out = { citas: 0, ejercicios: 0, errores: 0 };
   try {
     // Pacientes con avisos activados
@@ -53,35 +56,33 @@ module.exports = async function handler(req, res) {
       ok ? out.citas++ : out.errores++;
     }
 
-    // 2. Ejercicios: solo lunes (1) y jueves (4)
-    if (hoy.dia === 1 || hoy.dia === 4) {
-      const recientes = new Set();
-      pacs.forEach(p => { const u = String(p.fields.UltimaSession || '').slice(0, 10); if (u >= ayer.fecha) recientes.add(p.id); });
-      // Tareas de la más reciente a la más antigua; se para al llegar a antes de ayer
-      let off = '', seguir = true;
-      do {
-        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TAREAS_TABLE}?fields[]=PacienteId&fields[]=Fecha&sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=100${off ? '&offset=' + off : ''}`, { headers: AT });
-        const d = await r.json();
-        if (d.error) throw new Error('Tareas: ' + (d.error.message || d.error));
-        for (const t of (d.records || [])) {
-          const f = String(t.fields?.Fecha || '').slice(0, 10);
-          if (f >= ayer.fecha) recientes.add(t.fields?.PacienteId || '');
-          else if (f) { seguir = false; break; }
-        }
-        off = d.offset || '';
-      } while (off && seguir);
-      for (const p of pacs) {
-        if (recientes.has(p.id) || !subDe[p.id] || yaAvisado.has(p.id)) continue;
-        // Solo pacientes en tratamiento: que hayan hecho ejercicios en el último mes
-        const ult = String(p.fields.UltimaSession || '').slice(0, 10);
-        if (!ult || ult < hace30.fecha) continue;
-        const ok = await enviar(subDe[p.id], {
-          title: '¿Hacemos los ejercicios?',
-          body: 'Hace un par de días que no los haces. Son solo unos minutos y es lo que más te ayuda a mejorar.',
-          url: '/?s=hoy', tag: 'ejercicios'
-        });
-        ok ? out.ejercicios++ : out.errores++;
+    // 2. Ejercicios: todos los días, solo a quien hoy aún no los ha hecho
+    const hechoHoy = new Set();
+    pacs.forEach(p => { if (String(p.fields.UltimaSession || '').slice(0, 10) >= hoy.fecha) hechoHoy.add(p.id); });
+    // Tareas de la más reciente a la más antigua; se para al llegar a antes de hoy
+    let off = '', seguir = true;
+    do {
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TAREAS_TABLE}?fields[]=PacienteId&fields[]=Fecha&sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=100${off ? '&offset=' + off : ''}`, { headers: AT });
+      const d = await r.json();
+      if (d.error) throw new Error('Tareas: ' + (d.error.message || d.error));
+      for (const t of (d.records || [])) {
+        const f = String(t.fields?.Fecha || '').slice(0, 10);
+        if (f >= hoy.fecha) hechoHoy.add(t.fields?.PacienteId || '');
+        else if (f) { seguir = false; break; }
       }
+      off = d.offset || '';
+    } while (off && seguir);
+    for (const p of pacs) {
+      if (hechoHoy.has(p.id) || !subDe[p.id] || yaAvisado.has(p.id)) continue;
+      // Solo pacientes en tratamiento: que hayan hecho ejercicios en el último mes
+      const ult = String(p.fields.UltimaSession || '').slice(0, 10);
+      if (!ult || ult < hace30.fecha) continue;
+      const ok = await enviar(subDe[p.id], {
+        title: '¿Hacemos los ejercicios?',
+        body: 'Hoy aún no los has hecho. Son solo unos minutos y es lo que más te ayuda a mejorar.',
+        url: '/?s=hoy', tag: 'ejercicios'
+      });
+      ok ? out.ejercicios++ : out.errores++;
     }
     return res.status(200).json({ ok: true, fecha: hoy.fecha, ...out });
   } catch (e) {
