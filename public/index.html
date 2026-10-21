@@ -543,10 +543,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .vg-pie{color:rgba(255,255,255,.5);font-size:12.5px;margin-top:16px}
 @media (orientation:landscape) and (max-height:500px){.vg-caja{height:calc(100vh - 40px);width:auto;max-width:none}.vg-pie{display:none}}
 
-.pl-nota{overflow-wrap:anywhere;word-break:break-word;display:flex;gap:9px;align-items:flex-start;margin:0 14px 12px 100px;background:#fbf3ee;border-radius:12px;padding:9px 11px;font-size:12.5px;line-height:1.45;color:#4a453f}
-.pl-nota svg{width:15px;height:15px;flex:none;margin-top:2px;fill:none;stroke:#c2552e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.pl-nota>div{min-width:0;flex:1}.pl-nota b{display:block;font-size:11px;font-weight:700;color:#c2552e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px}
-@media(max-width:380px){.pl-nota{margin-left:14px}}
+.pl-ind{margin:-2px 14px 12px;padding:9px 12px;background:#fbf3ee;border-radius:12px;font-size:12.5px;line-height:1.45;color:#4a453f;overflow-wrap:anywhere;word-break:break-word}
+.pl-ind:before{content:"Indicaciones: ";font-weight:700;color:#c2552e}
 .pl-tmr{padding:0 14px 14px}
 .pl-tmr .tmr{padding:10px 10px 10px 12px;gap:12px;border-radius:18px;margin:0;align-items:center}
 .pl-tmr .tmr-anillo{width:50px;height:50px}
@@ -929,7 +927,7 @@ function renderEjercicios(){
     return `<div class="pl-row${ok?' ok':''}">
       <div class="pl-th"${ej.ytId?` onclick="event.stopPropagation();verVideoGrande('${ej.ytId}')"`:''}>${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy"><b class="pl-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></b>`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
       <div class="pl-tx"><b>${ej.name}</b><span>${ejMeta(ej)||'&nbsp;'}</span></div>
-      <button class="pl-ck" onclick="toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>${ej.desc?`<div class="pl-nota"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg><div><b>Indicaciones de tu fisio</b>${String(ej.desc).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</div></div>`:''}${(ej.dur||ej.duracion)?`<div class="pl-tmr" onclick="event.stopPropagation()">${tmrHTML(ej,'L'+i)}</div>`:''}`;}).join('')+`</div>`;
+      <button class="pl-ck" onclick="toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>${ej.desc?`<div class="pl-ind">${String(ej.desc).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</div>`:''}${(ej.dur||ej.duracion)?`<div class="pl-tmr" onclick="event.stopPropagation()">${tmrHTML(ej,'L'+i)}</div>`:''}`;}).join('')+`</div>`;
 }
 function ejKey(e,i){return e.id||('i'+i);}
 function verVideoGrande(id){let v=document.getElementById('vidGrande');if(!v){v=document.createElement('div');v.id='vidGrande';v.onclick=e=>{if(e.target===v)cerrarVideoGrande();};document.body.appendChild(v);}
