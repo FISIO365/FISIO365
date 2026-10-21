@@ -4,7 +4,7 @@
   "description": "Tus ejercicios, tus citas y el chat con tu fisio de FISIO365.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
+  "background_color": "#c2552e",
   "theme_color": "#000000",
   "icons": [
     {

@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="FISIO365">
 <meta name="theme-color" content="#f5f2ee">
 <link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icono.png">
+<link rel="apple-touch-icon" href="/icons/icon-512.png">
 <title>FISIO365</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -642,7 +642,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="date-today" id="dateToday">Tu programa de hoy</div>
  <div class="hoy-hero-sub" id="hoyHeroSub">Tus ejercicios, pensados para ti.</div>
  </div>
- <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icono.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
+ <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icons/icon-512.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
  <div id="avisosCard" class="in-banner" onclick="activarAvisos()"><div class="av-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div><b>Activa los avisos</b><span>Te avisamos de tus citas y de los mensajes de tu fisio</span></div><button class="ib">Activar</button><button class="ix" onclick="event.stopPropagation();ahoraNoAvisos()" aria-label="Ahora no">✕</button></div>
  <div id="fisioCard" class="fisio-card" style="display:none;">
  <div class="fisio-av" id="fisioAv"></div>
@@ -730,7 +730,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 
  <div id="vistaGuia" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Guía de la app</div><div class="date-sub">Todo lo que puedes hacer</div></div>
- <div class="gu-inst" id="guInst" onclick="mostrarInstall()"><img src="/icono.png" alt=""><div><b>Instala la app en tu móvil</b><span>Te enseñamos cómo, paso a paso</span></div><button class="ib">Ver cómo</button></div>
+ <div class="gu-inst" id="guInst" onclick="mostrarInstall()"><img src="/icons/icon-512.png" alt=""><div><b>Instala la app en tu móvil</b><span>Te enseñamos cómo, paso a paso</span></div><button class="ib">Ver cómo</button></div>
  <div class="gu-lista"><div class="gu-it"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></div><div class="gu-tx"><b>Hoy · tus ejercicios</b><span>Cada día tienes tus ejercicios con vídeo. Toca el vídeo para verlo en grande, usa el temporizador si es por tiempo y marca cada uno al hacerlo. Al acabar, pulsa <b>«He terminado por hoy»</b>.</span></div></div><div class="gu-it" onclick="abrirReserva()"><div class="gu-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg></div><div class="gu-tx"><b>Reservar cita</b><span>Elige día, hora y fisio entre los huecos libres. Queda reservada al momento. Para cambiarla o anularla, escríbenos.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('citas')"><div class="gu-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><div class="gu-tx"><b>Mis citas</b><span>Tu calendario con las próximas citas y las que ya has hecho.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('progreso')"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M12 3c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-2 1-3 1-3s.5 2 2 2c0-3-1-5 1-7.5z"/></svg></div><div class="gu-tx"><b>Racha</b><span>Cada día que haces tus ejercicios suma. Mira tu mes y tu mejor racha. La constancia es lo que más ayuda.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('informes')"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div><div class="gu-tx"><b>Informes</b><span>Los informes de tus valoraciones, para leerlos o descargarlos.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('mensajes')"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div><div class="gu-tx"><b>Chat con tu fisio</b><span>Escríbele a tu fisio cuando quieras. Puedes enviar fotos y PDFs (una prueba, un informe…).</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="window.open('https://tally.so/r/WOVB0N?origen=app','_blank')"><div class="gu-ic"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-1.5-3-5.5-4-6-1.5S9 8 12 8zM12 8c1.5-3 5.5-4 6-1.5S15 8 12 8z"/></svg></div><div class="gu-tx"><b>Regalar</b><span>Regala sesiones de fisioterapia con una tarjeta regalo. La preparas en 2 minutos.</span></div><div class=gu-go>›</div></div></div>
  <div class="gu-ayuda">¿Dudas? Escríbenos por el chat o al <b>672 89 39 49</b>.</div>
  </div>
@@ -1252,7 +1252,7 @@ function pasosAndroid(nav){let h='';
  h+=paso(2,'Toca <b>«Instalar aplicación»</b>','O «Añadir a pantalla de inicio».','phone',1);
  h+=paso(3,'Toca <b>«Instalar»</b>','¡Listo! Ya tienes FISIO365 con las demás apps.','ok',1);return h;}
 function pintarInstall(os){inOS=os;const d=detectarOS();const nav=os===d.os?d.nav:(os==='ios'?'safari':'chrome');
- let h=`<img class="in-app" src="/icono.png" alt="FISIO365"><h3>Instala la app</h3><div class="in-sub">Tendrás FISIO365 en tu móvil como cualquier otra app. Es gratis y tardas 30 segundos.</div>`;
+ let h=`<img class="in-app" src="/icons/icon-512.png" alt="FISIO365"><h3>Instala la app</h3><div class="in-sub">Tendrás FISIO365 en tu móvil como cualquier otra app. Es gratis y tardas 30 segundos.</div>`;
  if(esInstalada()){h+=`<div class="in-ok">¡Ya la tienes instalada! 🎉</div>`;document.getElementById('inBody').innerHTML=h;return;}
  h+=`<div class="in-tabs"><button class="${os==='ios'?'on':''}" onclick="pintarInstall('ios')">iPhone</button><button class="${os==='android'?'on':''}" onclick="pintarInstall('android')">Android</button></div>`;
  h+=os==='ios'?pasosIOS(nav):pasosAndroid(nav);
