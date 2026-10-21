@@ -47,6 +47,10 @@
   .fc-elegir button.on{border-color:#1a1a1a;background:#1a1a1a;color:#f5f2ee}
   .fc-elegir img,.fc-elegir i{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#f7e6dd;font-style:normal;font-size:11px;display:flex;align-items:center;justify-content:center;color:#c2552e}
   .fc-enviando{opacity:.55}
+  .fc-guardar{display:flex;align-items:center;gap:6px;margin:2px 0 8px;border:none;border-radius:99px;background:#fbeee7;color:#c2552e;font-family:inherit;font-size:12px;font-weight:700;padding:6px 11px;cursor:pointer}
+  .fc-guardar svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .fc-guardar.ok{background:#eaf5ea;color:#2e6b34;cursor:default}
+  .fc-guardar[disabled]{opacity:.7}
   `;
   if (!document.getElementById('fc-css')) { const s = document.createElement('style'); s.id = 'fc-css'; s.textContent = css; document.head.appendChild(s); }
 
@@ -94,14 +98,30 @@
     const $ = (s) => el.querySelector(s);
     const hilo = $('.fc-hilo'), ta = $('textarea'), env = $('.fc-env'), inp = $('input[type=file]'), prev = $('.fc-prev'), elegir = $('.fc-elegir');
 
+    const guardados = new Set();
+    hilo.addEventListener('click', async ev => {
+      const b = ev.target.closest('.fc-guardar[data-m]'); if (!b) return;
+      b.disabled = true; const txt = b.innerHTML; b.textContent = 'Guardando…';
+      try {
+        const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'guardar-archivo', pwd: o.pwd || '', pacienteId: o.pacienteId, mensajeId: b.dataset.m, i: +b.dataset.i }) });
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.error || 'Error');
+        guardados.add(b.dataset.m + ':' + b.dataset.i);
+        b.className = 'fc-guardar ok'; b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' + (d.ya ? 'Ya estaba en su ficha' : 'Guardado en su ficha');
+      } catch (e) { b.disabled = false; b.innerHTML = txt; alert('No se ha podido guardar: ' + e.message); }
+    });
     function puedeEnviar() { env.disabled = preparando || !(ta.value.trim() || adjunto) || (yo === 'paciente' && !fisio); }
 
     function burbuja(m) {
       const mio = m.de === yo;
       const autor = !mio && m.de === 'fisio' && yo === 'paciente' && m.fisioNombre ? `<div class="fc-autor">${esc(m.fisioNombre)}</div>` : '';
-      const adj = (m.adjuntos || []).map(a => /^image\//.test(a.tipo)
+      const puedeGuardar = yo === 'fisio' && m.de === 'paciente' && !m._enviando && !m.antiguo && /^rec[A-Za-z0-9]{14}$/.test(m.id);
+      const adj = (m.adjuntos || []).map((a, i) => (/^image\//.test(a.tipo)
         ? `<a class="fc-img" href="${esc(a.url)}" target="_blank" rel="noopener"><img src="${esc(a.mini || a.url)}" alt="${esc(a.nombre)}" loading="lazy"></a>`
-        : `<a class="fc-pdf" href="${esc(a.url)}" target="_blank" rel="noopener"><i>PDF</i><div><b>${esc(a.nombre)}</b><span>${a.bytes ? kb(a.bytes) + ' · ' : ''}Toca para abrir</span></div></a>`).join('');
+        : `<a class="fc-pdf" href="${esc(a.url)}" target="_blank" rel="noopener"><i>PDF</i><div><b>${esc(a.nombre)}</b><span>${a.bytes ? kb(a.bytes) + ' · ' : ''}Toca para abrir</span></div></a>`)
+        + (puedeGuardar ? ((a.enFicha || guardados.has(m.id + ':' + i))
+          ? `<button type="button" class="fc-guardar ok" disabled><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Guardado en su ficha</button>`
+          : `<button type="button" class="fc-guardar" data-m="${esc(m.id)}" data-i="${i}"><svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg>Guardar en su ficha</button>`) : '')).join('');
       const d = new Date(m.fecha);
       return `<div class="fc-b ${mio ? 'yo' : 'ellos'}${m._enviando ? ' fc-enviando' : ''}">${autor}${m.etiqueta ? `<span class="fc-tag">${esc(m.etiqueta)}</span><br>` : ''}${adj}${m.texto ? enlaces(m.texto) : ''}<small>${m._enviando ? 'Enviando…' : d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</small></div>`;
     }
@@ -140,7 +160,7 @@
 
     async function cargar(primera) {
       try {
-        const d = await (await fetch(`/api/chat?action=hilo&pacienteId=${encodeURIComponent(o.pacienteId)}`)).json();
+        const d = await (await fetch(`/api/chat?action=hilo&pacienteId=${encodeURIComponent(o.pacienteId)}`, yo === 'fisio' && o.pwd ? { headers: { 'x-fisio-pwd': o.pwd } } : {})).json();
         if (!d.ok) throw new Error(d.error);
         const nueva = d.mensajes.map(m => m.id + (m.adjuntos || []).length).join('|');
         const pendientes = mensajes.filter(m => m._enviando);

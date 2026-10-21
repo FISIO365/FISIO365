@@ -9,6 +9,8 @@ const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
 const BASE_ID = 'appsrGnHpFt8sVD5A';
 const MENSAJES = 'tblIsWo3g6x1QzJyl';
 const CAMPO_ADJUNTOS = 'fldeDjLloaa82SoG7';
+const PACIENTES = 'tbldBVgClS4HY2mOJ';
+const ARCHIVOS_PAC = 'fldTMnwMj4c1C2835'; // campo de archivos de la ficha del paciente
 const MAX_BYTES = 2.6 * 1024 * 1024; // límite por archivo (Vercel no acepta peticiones de más de ~4,5 MB y el archivo viaja en base64)
 const TIPOS_OK = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/gif', 'application/pdf'];
 
@@ -70,7 +72,7 @@ export default async function handler(req) {
   let body = {};
   if (req.method === 'POST') { try { body = await req.json(); } catch (e) { return json({ ok: false, error: 'Petición no válida' }, 400); } }
   const action = url.searchParams.get('action') || body.action || '';
-  const pwd = url.searchParams.get('pwd') || body.pwd || '';
+  const pwd = url.searchParams.get('pwd') || body.pwd || req.headers.get('x-fisio-pwd') || '';
   const esFisio = pwd && pwd.trim() === FISIO_PASSWORD.trim();
 
   // ── Hilo de un paciente ──────────────────────────────────────────
@@ -80,6 +82,15 @@ export default async function handler(req) {
     try {
       const recs = await todos(`{PacienteId}="${pacienteId}"`);
       const mensajes = aBurbujas(recs);
+      // Para el fisio: marcar qué archivos ya están guardados en la ficha del paciente
+      if (esFisio && mensajes.some(m => m.adjuntos.length)) {
+        try {
+          const pr = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES}/${pacienteId}?returnFieldsByFieldId=true`, { headers: AT });
+          const pd = await pr.json();
+          const enFicha = new Set((pd.fields?.[ARCHIVOS_PAC] || []).map(a => a.filename));
+          mensajes.forEach(m => m.adjuntos.forEach(a => { a.enFicha = enFicha.has(a.nombre); }));
+        } catch (e) {}
+      }
       const ultimoFisio = [...recs].sort((a, b) => b.createdTime.localeCompare(a.createdTime)).find(r => r.fields.FisioId);
       return json({ ok: true, mensajes, fisio: ultimoFisio ? { id: ultimoFisio.fields.FisioId, nombre: ultimoFisio.fields.FisioNombre || '' } : null });
     } catch (e) { return json({ ok: false, error: e.message }, 500); }
@@ -171,6 +182,32 @@ export default async function handler(req) {
       }
       const [m] = aBurbujas([{ id: rec.id, createdTime: rec.createdTime, fields }]);
       return json({ ok: true, mensaje: m });
+    } catch (e) { return json({ ok: false, error: e.message }, 500); }
+  }
+
+
+  // ── Guardar un archivo del chat en la ficha del paciente (solo fisio) ──
+  if (action === 'guardar-archivo' && req.method === 'POST') {
+    if (!esFisio) return json({ ok: false, error: 'No autorizado' }, 401);
+    const { pacienteId, mensajeId, i } = body;
+    if (!idValido(pacienteId) || !idValido(mensajeId)) return json({ ok: false, error: 'Datos no válidos' }, 400);
+    try {
+      const mr = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES}/${mensajeId}`, { headers: AT });
+      const md = await mr.json();
+      if (md.fields?.PacienteId !== pacienteId) return json({ ok: false, error: 'Ese archivo no es de este paciente' }, 400);
+      const a = (md.fields?.Adjuntos || [])[+i || 0];
+      if (!a) return json({ ok: false, error: 'Archivo no encontrado' }, 404);
+      const pr = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES}/${pacienteId}?returnFieldsByFieldId=true`, { headers: AT });
+      const pd = await pr.json();
+      const actuales = pd.fields?.[ARCHIVOS_PAC] || [];
+      if (actuales.some(x => x.filename === a.filename)) return json({ ok: true, ya: true });
+      const ur = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES}/${pacienteId}`, {
+        method: 'PATCH', headers: AT,
+        body: JSON.stringify({ fields: { [ARCHIVOS_PAC]: [...actuales.map(x => ({ id: x.id })), { url: a.url, filename: a.filename }] } })
+      });
+      const ud = await ur.json();
+      if (!ur.ok) return json({ ok: false, error: ud.error?.message || 'No se ha podido guardar' }, 500);
+      return json({ ok: true });
     } catch (e) { return json({ ok: false, error: e.message }, 500); }
   }
 
