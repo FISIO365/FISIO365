@@ -1106,7 +1106,7 @@ function abrirChat(){
   ['navMensajesDot','tabChatDot'].forEach(id=>{const d=document.getElementById(id);if(d)d.classList.remove('show');});
   if(window.fisioPlan)pintarCabChat(window.fisioPlan);
   if(chatCtl){chatCtl.recargar();return;}
-  chatCtl=FisioChat.montar(document.getElementById('chatBox'),{rol:'paciente',pacienteId:patient.id,pacienteNombre:patient.nombre,fisio:window.fisioPlan||null,onFisio:f=>{if(!window.fisioPlan||window.fisioPlan.id!==f.id)pintarCabChat(f);},onEnviado:m=>{const fid=m&&m.fisioId;if(!fid)return;const txt=m.texto||(m.adjuntos&&m.adjuntos[0]?(/^image\//.test(m.adjuntos[0].tipo)?'📷 Te ha enviado una foto':'📄 Te ha enviado un PDF'):'');fetch('/api/notificar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fisioId:fid,pacienteId:patient.id,pacienteNombre:patient.nombre,message:txt})}).catch(()=>{});}});
+  chatCtl=FisioChat.montar(document.getElementById('chatBox'),{rol:'paciente',pacienteId:patient.id,pacienteNombre:patient.nombre,fisio:window.fisioPlan||null,onFisio:f=>{if(!window.fisioPlan||window.fisioPlan.id!==f.id)pintarCabChat(f);},onEnviado:m=>{const fid=m&&m.fisioId;if(!fid)return;const txt=m.texto||(m.adjuntos&&m.adjuntos[0]?(/^image\//.test(m.adjuntos[0].tipo)?'Te ha enviado una foto':'Te ha enviado un PDF'):'');fetch('/api/notificar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fisioId:fid,pacienteId:patient.id,pacienteNombre:patient.nombre,message:txt})}).catch(()=>{});}});
 }
 
 // INFORMES

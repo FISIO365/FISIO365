@@ -46,8 +46,8 @@ module.exports = async function handler(req, res) {
       yaAvisado.add(pid);
       const hora = String(c.fields['HORA'] || '').slice(0, 5), fisio = fisioDe(c.fields['PREF.']);
       const ok = await enviar(subDe[pid], {
-        title: 'Mañana tienes cita 📅',
-        body: `${DIAS[manana.dia].replace(/^./, m => m.toUpperCase())}${hora ? ' a las ' + hora : ''}${fisio ? ' con ' + fisio : ''}. Si no puedes venir, avísanos por el chat.`,
+        title: 'Mañana tienes cita',
+        body: `${DIAS[manana.dia].replace(/^./, m => m.toUpperCase())}${hora ? ' a las ' + hora : ''}${fisio ? ' con ' + fisio : ''}.`,
         url: '/?s=citas', tag: 'cita'
       });
       ok ? out.citas++ : out.errores++;
@@ -76,7 +76,7 @@ module.exports = async function handler(req, res) {
         const ult = String(p.fields.UltimaSession || '').slice(0, 10);
         if (!ult || ult < hace30.fecha) continue;
         const ok = await enviar(subDe[p.id], {
-          title: '¿Hacemos los ejercicios? 💪',
+          title: '¿Hacemos los ejercicios?',
           body: 'Hace un par de días que no los haces. Son solo unos minutos y es lo que más te ayuda a mejorar.',
           url: '/?s=hoy', tag: 'ejercicios'
         });

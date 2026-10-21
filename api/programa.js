@@ -94,7 +94,7 @@ module.exports = async function handler(req, res) {
       const quien = fisioNombre || 'Tu fisio';
       const n = ejercicios.length;
       await avisar('paciente', pacienteId, nuevo
-        ? { title: 'Tienes ejercicios nuevos 💪', body: `${quien} te ha preparado ${n} ejercicio${n !== 1 ? 's' : ''}. Ábrelos en la app.`, url: '/?s=hoy', tag: 'programa' }
+        ? { title: 'Tienes ejercicios nuevos', body: `${quien} te ha preparado ${n} ejercicio${n !== 1 ? 's' : ''}. Ábrelos en la app.`, url: '/?s=hoy', tag: 'programa' }
         : { title: 'Tus ejercicios han cambiado', body: `${quien} ha actualizado tu programa (${n} ejercicio${n !== 1 ? 's' : ''}). Échale un vistazo.`, url: '/?s=hoy', tag: 'programa' });
     } catch(e) {}
 
