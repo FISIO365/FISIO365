@@ -88,6 +88,10 @@
       "dest": "/icono.png"
     },
     {
+      "src": "/privacidad",
+      "dest": "/public/privacidad.html"
+    },
+    {
       "src": "/fisio",
       "dest": "/public/fisio.html"
     },
