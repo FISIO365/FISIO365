@@ -573,7 +573,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .ses-pauta b{color:#1a1a1a;font-weight:800}
 .ses-pauta i{width:38px;height:38px;border-radius:12px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}
 .ses-pauta svg{width:20px;height:20px;fill:none;stroke:#c2552e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.pl-tx .pl-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.pl-tx .pl-tags em{font-style:normal;font-size:11px;font-weight:600;color:#a0522d;background:#fbeee7;border-radius:99px;padding:2px 8px;line-height:1.5}
+.pl-tx .pl-frase{display:block;font-size:12.5px;line-height:1.6;color:#8a817a;margin-top:4px;font-weight:400}.pl-tx .pl-frase b{display:inline!important;font-size:inherit!important;font-weight:500!important;color:#4a423c;letter-spacing:0;margin:0}
 </style>
 </head>
 <body>
@@ -942,7 +942,7 @@ function renderEjercicios(){
     const ok=hechos.has(ejKey(ej,i));
     return `<div class="pl-row${ok?' ok':''}">
       <div class="pl-th"${ej.ytId?` onclick="event.stopPropagation();verVideoGrande('${ej.ytId}')"`:''}>${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy"><b class="pl-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></b>`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
-      <div class="pl-tx"><b>${ej.name}</b>${(()=>{const P=ejPauta(ej);if(!P.length)return '<span>&nbsp;</span>';const ex=P.slice(1).map(x=>x.ic==='pausa'?`Aguanta ${+(ej.dur||ej.duracion)} s`:`Descanso ${+ej.descanso} s`);return `<span>${P[0].t.replace(/<\/?b>/g,'')}</span>${ex.length?`<span class="pl-tags">${ex.map(t=>`<em>${t}</em>`).join('')}</span>`:''}`;})()}</div>
+      <div class="pl-tx"><b>${ej.name}</b>${(()=>{const P=ejPauta(ej);if(!P.length)return '<span>&nbsp;</span>';return `<span class="pl-frase">${P.map((x,k)=>k?x.t.replace(/^(<b>)?(\S)/,(m,b,c)=>(b||'')+c.toLowerCase()):x.t).join(' · ')}</span>`;})()}</div>
       <button class="pl-ck" onclick="toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>${ej.desc?`<div class="pl-ind">${String(ej.desc).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</div>`:''}${(ej.dur||ej.duracion)?`<div class="pl-tmr" onclick="event.stopPropagation()">${tmrHTML(ej,'L'+i)}</div>`:''}`;}).join('')+`</div>`;
 }
 function ejKey(e,i){return e.id||('i'+i);}
