@@ -483,6 +483,10 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .pe-fisio{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:#7d6a60}
 .pe-fisio select{flex:1;padding:8px 10px;border:1.5px solid #eadfd6;border-radius:10px;font-size:13px;font-family:var(--font);background:#fff;color:#1a1a1a}
 @media(max-width:360px){.pe-step button{width:32px}.pe-step input{width:36px}}
+#btnSalir{display:none}
+@media(max-width:768px){#btnSalir{display:flex;position:absolute;right:66px;top:calc(50% + env(safe-area-inset-top)/2);transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:none;background:#fff;box-shadow:0 2px 10px rgba(26,26,26,.08);align-items:center;justify-content:center;cursor:pointer;color:#7d6a60}
+#btnSalir svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.topbar-t,.topbar-s{padding-right:110px}}
 #avisoPanel{position:fixed;right:20px;bottom:20px;z-index:900;display:flex;align-items:center;gap:12px;background:#fff;border-radius:22px;padding:12px 12px 12px 14px;box-shadow:0 12px 36px rgba(26,26,26,.18);max-width:420px;font-family:inherit}
 #avisoPanel .ap-ic{width:44px;height:44px;border-radius:14px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}
 #avisoPanel .ap-ic svg{width:22px;height:22px;fill:none;stroke:#c2552e;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -547,6 +551,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  <!-- MAIN -->
  <div class="main-area">
  <div class="topbar">
+ <button type="button" id="btnSalir" onclick="if(confirmarSalir())cerrarSesionPanel()" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg></button>
  <button type="button" id="btnAvisos" onclick="abrirAjustesAvisos()" aria-label="Notificaciones"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><i id="btnAvisosDot"></i></button>
  <div class="topbar-t" id="topbar-t">Anamnesis clínica</div>
  <div class="topbar-s" id="topbar-s">Asigna ejercicios a tus pacientes</div>
@@ -751,7 +756,7 @@ function aplicarRole(){
 
  // Nombre en footer
  const isAdmin = fisioActual.role === 'admin';
- $('sb-user').innerHTML = escH(fisioActual.nombre) + (isAdmin ? ' · Admin' : '') + '<br><a href="#" onclick="cerrarSesionPanel();return false" style="color:inherit;text-decoration:underline;opacity:.8">Cerrar sesión</a>';
+ $('sb-user').innerHTML = escH(fisioActual.nombre) + (isAdmin ? ' · Admin' : '') + '<br><a href="#" onclick="if(confirmarSalir())cerrarSesionPanel();return false" style="color:inherit;text-decoration:underline;opacity:.8">Cerrar sesión</a>';
 }
 
 async function loadFisios(){
@@ -768,6 +773,7 @@ async function loadBiblio(){
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
+function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
 function cerrarSesionPanel(){try{localStorage.removeItem('f365_panel_sesion');sessionStorage.removeItem('f365_panel_sec');}catch(e){}location.reload();}
 function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
