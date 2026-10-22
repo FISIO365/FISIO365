@@ -567,6 +567,14 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .regalo-tx span{font-size:12.5px;color:#7d6a60}
 .regalo-btn{background:var(--black);color:var(--cream);font-size:13px;font-weight:700;border-radius:99px;padding:10px 16px;flex:none}
 .tmr.descansando .tmr-prog{stroke:#b9b2aa!important}
+.pl-tx .pl-pauta{display:block;line-height:1.35;margin-top:1px}
+.pl-tx .pl-pauta b{display:inline!important;font-size:inherit!important;font-weight:700;color:#3d3833;letter-spacing:0;margin:0}
+.ses-pauta{background:#fff;border-radius:22px;padding:6px 16px;margin-bottom:14px;box-shadow:var(--sombra)}
+.ses-pauta>div{display:flex;align-items:center;gap:13px;padding:12px 0;font-size:16px;line-height:1.35;color:#3d3833}
+.ses-pauta>div+div{border-top:1px solid #f0ebe6}
+.ses-pauta b{color:#1a1a1a;font-weight:800}
+.ses-pauta i{width:38px;height:38px;border-radius:12px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}
+.ses-pauta svg{width:20px;height:20px;fill:none;stroke:#c2552e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
 <body>
@@ -935,7 +943,7 @@ function renderEjercicios(){
     const ok=hechos.has(ejKey(ej,i));
     return `<div class="pl-row${ok?' ok':''}">
       <div class="pl-th"${ej.ytId?` onclick="event.stopPropagation();verVideoGrande('${ej.ytId}')"`:''}>${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy"><b class="pl-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></b>`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
-      <div class="pl-tx"><b>${ej.name}</b><span>${ejMeta(ej)||'&nbsp;'}</span></div>
+      <div class="pl-tx"><b>${ej.name}</b>${ejPauta(ej).map(x=>`<span class="pl-pauta">${x.t}</span>`).join('')||'<span>&nbsp;</span>'}</div>
       <button class="pl-ck" onclick="toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>${ej.desc?`<div class="pl-ind">${String(ej.desc).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</div>`:''}${(ej.dur||ej.duracion)?`<div class="pl-tmr" onclick="event.stopPropagation()">${tmrHTML(ej,'L'+i)}</div>`:''}`;}).join('')+`</div>`;
 }
 function ejKey(e,i){return e.id||('i'+i);}
@@ -946,7 +954,14 @@ function cerrarVideoGrande(){const v=document.getElementById('vidGrande');if(v){
 function toggleEj(i){const k=ejKey(ejercicios[i],i);hechos.has(k)?hechos.delete(k):hechos.add(k);guardarHechos();renderEjercicios();}
 function sesDesmarcar(){hechos.delete(ejKey(ejercicios[sesI],sesI));guardarHechos();pintarSesion();}
 function ejHechos(){return ejercicios.filter((e,i)=>hechos.has(ejKey(e,i))).length;}
-function ejMeta(ej){const d=+(ej.dur||ej.duracion)||0,r=+ej.reps||0,ds=+ej.descanso||0;return [ej.series?`${ej.series} ${+ej.series===1?'serie':'series'}`:'',r?`${r} reps`:'',d?(r?`aguanta ${d} s`:`${d} s`):'',ds?`descanso ${ds} s`:''].filter(Boolean).join(' · ');}
+function ejPauta(ej){const se=+ej.series||0,r=+ej.reps||0,d=+(ej.dur||ej.duracion)||0,ds=+ej.descanso||0,pl=(n,a,b)=>n===1?a:b;const L=[];
+ if(r)L.push({ic:'rep',t:`${se?`<b>${se} ${pl(se,'serie','series')}</b> de `:''}<b>${r} ${pl(r,'repetición','repeticiones')}</b>`});
+ else if(d)L.push({ic:'reloj',t:`${se?`<b>${se} ${pl(se,'serie','series')}</b> de `:''}<b>${d} ${pl(d,'segundo','segundos')}</b>`});
+ else if(se)L.push({ic:'rep',t:`<b>${se} ${pl(se,'serie','series')}</b>`});
+ if(r&&d)L.push({ic:'pausa',t:`Aguanta <b>${d} ${pl(d,'segundo','segundos')}</b> en cada repetición`});
+ if(ds&&se>1)L.push({ic:'descanso',t:`Descansa <b>${ds} ${pl(ds,'segundo','segundos')}</b> entre series`});
+ return L;}
+function ejMeta(ej){return ejPauta(ej).map(x=>x.t.replace(/<\/?b>/g,'')).join(' · ');}
 function guardarHechos(){try{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...hechos]));}catch(e){}}
 
 // MODO SESIÓN: un ejercicio a pantalla completa, con vídeo, temporizador y «Hecho · Siguiente»
@@ -966,7 +981,7 @@ function pintarSesion(){
       ${ej.ytId?`<button class="ses-vid" onclick="verVideoGrande('${ej.ytId}')" aria-label="Ver vídeo"><img src="https://i.ytimg.com/vi/${ej.ytId}/hqdefault.jpg" alt=""><span class="ses-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span><em>Toca para ver el vídeo</em></button>`:`<div class="ses-novid"><span>${String(sesI+1).padStart(2,'0')}</span></div>`}
       <div class="ses-eti">Ejercicio ${sesI+1} de ${n}${ok?' · <b>hecho</b> <button class="ses-des" onclick="sesDesmarcar()">Desmarcar</button>':''}</div>
       <h2 class="ses-nom">${ej.name}</h2>
-      ${datos.length?`<div class="ses-datos">${datos.map(x=>`<div><b>${x[0]}</b><span>${x[1]}</span></div>`).join('')}</div>`:''}
+      ${(()=>{const P=ejPauta(ej),IC={rep:'<path d="M4 7h16M4 12h16M4 17h10"/>',reloj:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>',pausa:'<path d="M8 5v14M16 5v14"/>',descanso:'<path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 2v3M10 2v3M14 2v3"/>'};return P.length?`<div class="ses-pauta">${P.map(x=>`<div><i><svg viewBox="0 0 24 24">${IC[x.ic]}</svg></i><span>${x.t}</span></div>`).join('')}</div>`:''})()}
       ${tmrHTML(ej,'S')}
       ${ej.desc?`<div class="ses-nota"><div>Indicaciones de tu fisio</div>${ej.desc.replace(/</g,'&lt;')}</div>`:''}
     </div>
