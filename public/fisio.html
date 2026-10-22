@@ -502,7 +502,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .pm-it:hover{background:#f5f2ee}
 .pm-it svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:#c2552e}
 .pm-it.salir{color:#7d6a60}.pm-it.salir svg{color:#7d6a60}
-.pe-res-txt{margin-top:11px;font-size:12.5px;color:#7d6a60;background:#fff;border-radius:10px;padding:8px 10px;line-height:1.4}.pe-res-txt b{color:#c2552e}
+.pe-res-txt{margin:9px 2px 0;font-size:12px;color:#9a8d84;line-height:1.4}.pe-res-txt b{font-weight:600;color:#7d6a60}
 #avisoPanel{position:fixed;right:20px;bottom:20px;z-index:900;display:flex;align-items:center;gap:12px;background:#fff;border-radius:22px;padding:12px 12px 12px 14px;box-shadow:0 12px 36px rgba(26,26,26,.18);max-width:420px;font-family:inherit}
 #avisoPanel .ap-ic{width:44px;height:44px;border-radius:14px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}
 #avisoPanel .ap-ic svg{width:22px;height:22px;fill:none;stroke:#c2552e;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -1108,7 +1108,7 @@ function montarEditorEjs(el,inicial,onCambio){
   <div class="pe-num"><label>${e.modo==='seg'?'Segundos':'Repeticiones'}</label><div class="pe-step"><button type="button" data-a="menos" data-k="${k}">−</button><input type="number" inputmode="numeric" data-k="${k}" value="${v}" min="1"><button type="button" data-a="mas" data-k="${k}">+</button></div></div>
  </div>
  <div class="pe-chips">${CHIPS[e.modo].map(c=>`<button type="button" data-a="set" data-k="${k}" data-v="${c}" class="${+v===c?'on':''}">${c}${e.modo==='seg'?' s':''}</button>`).join('')}</div>
- <div class="pe-res-txt">El paciente verá: <b>${escH(peResumen(e))}</b></div>
+ <div class="pe-res-txt">Verá: <b>${escH(peResumen(e))}</b></div>
  <input class="pe-ind" data-k="descripcion" value="${escH(e.descripcion)}" placeholder="Indicaciones (opcional)">
  <details class="pe-mas"${e.aguantar?' open':''}><summary>Más opciones</summary><div class="pe-mas-g">
   <div><label>Descanso (s)</label><input type="number" inputmode="numeric" data-k="descanso" value="${e.descanso||''}" placeholder="—"></div>

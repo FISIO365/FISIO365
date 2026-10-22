@@ -567,14 +567,13 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .regalo-tx span{font-size:12.5px;color:#7d6a60}
 .regalo-btn{background:var(--black);color:var(--cream);font-size:13px;font-weight:700;border-radius:99px;padding:10px 16px;flex:none}
 .tmr.descansando .tmr-prog{stroke:#b9b2aa!important}
-.pl-tx .pl-pauta{display:block;line-height:1.35;margin-top:1px}
-.pl-tx .pl-pauta b{display:inline!important;font-size:inherit!important;font-weight:700;color:#3d3833;letter-spacing:0;margin:0}
 .ses-pauta{background:#fff;border-radius:22px;padding:6px 16px;margin-bottom:14px;box-shadow:var(--sombra)}
 .ses-pauta>div{display:flex;align-items:center;gap:13px;padding:12px 0;font-size:16px;line-height:1.35;color:#3d3833}
 .ses-pauta>div+div{border-top:1px solid #f0ebe6}
 .ses-pauta b{color:#1a1a1a;font-weight:800}
 .ses-pauta i{width:38px;height:38px;border-radius:12px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}
 .ses-pauta svg{width:20px;height:20px;fill:none;stroke:#c2552e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pl-tx .pl-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.pl-tx .pl-tags em{font-style:normal;font-size:11px;font-weight:600;color:#a0522d;background:#fbeee7;border-radius:99px;padding:2px 8px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -943,7 +942,7 @@ function renderEjercicios(){
     const ok=hechos.has(ejKey(ej,i));
     return `<div class="pl-row${ok?' ok':''}">
       <div class="pl-th"${ej.ytId?` onclick="event.stopPropagation();verVideoGrande('${ej.ytId}')"`:''}>${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy"><b class="pl-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></b>`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
-      <div class="pl-tx"><b>${ej.name}</b>${ejPauta(ej).map(x=>`<span class="pl-pauta">${x.t}</span>`).join('')||'<span>&nbsp;</span>'}</div>
+      <div class="pl-tx"><b>${ej.name}</b>${(()=>{const P=ejPauta(ej);if(!P.length)return '<span>&nbsp;</span>';const ex=P.slice(1).map(x=>x.ic==='pausa'?`Aguanta ${+(ej.dur||ej.duracion)} s`:`Descanso ${+ej.descanso} s`);return `<span>${P[0].t.replace(/<\/?b>/g,'')}</span>${ex.length?`<span class="pl-tags">${ex.map(t=>`<em>${t}</em>`).join('')}</span>`:''}`;})()}</div>
       <button class="pl-ck" onclick="toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>${ej.desc?`<div class="pl-ind">${String(ej.desc).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</div>`:''}${(ej.dur||ej.duracion)?`<div class="pl-tmr" onclick="event.stopPropagation()">${tmrHTML(ej,'L'+i)}</div>`:''}`;}).join('')+`</div>`;
 }
 function ejKey(e,i){return e.id||('i'+i);}
