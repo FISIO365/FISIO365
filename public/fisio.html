@@ -403,7 +403,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .ejc{background:#fff;border:none;border-radius:16px;box-shadow:var(--sombra)}
 /* Móvil: barra de pestañas abajo en vez de la lateral */
 @media(max-width:768px){
- .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;left:12px!important;right:12px!important;border-radius:24px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
+ .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:24px!important;right:24px!important;border-radius:26px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
  .sb-logo,.sb-footer{display:none!important}
  .sb-nav{flex-direction:row;padding:6px;gap:2px}
  .sb-item{flex:1;flex-direction:column;gap:3px;font-size:10px!important;font-weight:600!important;padding:8px 2px!important;border-radius:18px;border:none!important;letter-spacing:0!important;text-transform:none!important;position:relative;min-width:0}
@@ -484,9 +484,12 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .pe-fisio select{flex:1;padding:8px 10px;border:1.5px solid #eadfd6;border-radius:10px;font-size:13px;font-family:var(--font);background:#fff;color:#1a1a1a}
 @media(max-width:360px){.pe-step button{width:32px}.pe-step input{width:36px}}
 #btnPerfil{display:none}
-@media(max-width:768px){#btnPerfil{display:flex;position:absolute;right:66px;top:calc(50% + env(safe-area-inset-top)/2);transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:none;background:#1a1a1a;color:#fff;font-family:var(--font);font-size:14px;font-weight:700;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;box-shadow:0 2px 10px rgba(26,26,26,.12)}
+@media(max-width:768px){#btnAvisos{display:none!important}
+#btnPerfil{display:flex;position:absolute;right:14px;top:calc(50% + env(safe-area-inset-top)/2);transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:none;background:#1a1a1a;color:#fff;font-family:var(--font);font-size:14px;font-weight:700;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;box-shadow:0 2px 10px rgba(26,26,26,.12)}
 #btnPerfil img{width:100%;height:100%;object-fit:cover}
-.topbar-t,.topbar-s{padding-right:110px}
+.topbar-t,.topbar-s{padding-right:60px}
+#btnPerfil.apagado::after{content:'';position:absolute;top:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#e8935f;border:2px solid #fff}
+#btnPerfil{overflow:visible!important}#btnPerfil img{border-radius:50%}
 #sb-school{display:none!important}}
 #perfilMenu{position:fixed;inset:0;z-index:960;display:none;background:rgba(26,26,26,.25)}
 #perfilMenu.on{display:block}
@@ -849,7 +852,7 @@ const avisosOpts=()=>({clave:'f365_panel_avisos',datos:()=>({fisioId:fisioActual
  onCambio:r=>{if(r==='on')toast('Avisos activados',true);else if(r==='off')toast('Avisos desactivados',true);else if(r==='error')toast('No se ha podido cambiar. Inténtalo de nuevo',false);marcarCampana();mirarAvisosPanel();}});
 function abrirAjustesAvisos(){if(!fisioActual)return;$('avisosModal').classList.add('on');F365Avisos.pintar($('avisosAjustes'),avisosOpts());}
 function cerrarAjustesAvisos(){$('avisosModal').classList.remove('on');}
-async function marcarCampana(){const b=$('btnAvisos');if(!b)return;const e=await F365Avisos.estado('f365_panel_avisos');b.classList.toggle('apagado',e!=='on');}
+async function marcarCampana(){const e=await F365Avisos.estado('f365_panel_avisos');['btnAvisos','btnPerfil'].forEach(id=>{const b=$(id);if(b)b.classList.toggle('apagado',e!=='on');});}
 function abrirAvisoPanel(url){try{const u=new URL(url,location.origin);const s=u.searchParams.get('s'),p=u.searchParams.get('p');avisoPendiente='';history.replaceState(null,'',location.pathname);
  if(!fisioActual){avisoPendiente=url;return;}
  if(s==='msg'){showSection('msg');if(/^rec[A-Za-z0-9]{14}$/.test(p||''))renderMensajes($('mainWrap'),p);}}catch(e){}}
