@@ -296,8 +296,9 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 
 .pin-d{width:0;min-width:0}
 .hoy-hero .date-sub,.fc-dia{text-transform:none}
-.nav-menu-inner>div:nth-child(1),.nav-menu-inner>div:nth-child(2){display:none!important}
-.nav-menu-inner>div:nth-child(3){border-top:none!important;padding-top:0!important}
+.nav-menu-inner>div:nth-of-type(1),.nav-menu-inner>div:nth-of-type(2){display:none!important}
+.nav-menu-inner>div:nth-of-type(3){border-top:none!important;padding-top:0!important}
+.nm-head{display:flex;align-items:center;gap:11px;padding:4px 6px 14px;margin-bottom:8px;border-bottom:1px solid rgba(0,0,0,.06)}.nm-av{width:40px;height:40px;border-radius:50%;background:#c2552e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}.nm-head b{display:block;font-size:14.5px;line-height:1.2;color:#111}.nm-head span{display:block;font-size:12px;color:#8a817a}
 .nav-menu{width:200px}
 
 .tmr{display:flex;align-items:center;gap:18px;background:var(--cream);border-radius:18px;padding:14px 16px;margin-bottom:14px}
@@ -606,6 +607,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="nav-overlay" id="navOverlay" onclick="cerrarMenu()"></div>
  <div class="nav-menu" id="navMenu">
  <div class="nav-menu-inner" style="background:white;border-radius:16px;padding:16px;">
+ <header class="nm-head"><div class="nm-av" id="nmAv"></div><div><b id="nmNom"></b><span>Mi cuenta</span></div></header>
  <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:12px;">
  <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Mis ejercicios</button>
  <button class="nav-item" id="navProgreso" onclick="showSection('progreso');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H3V5h3M18 9h3V5h-3"/><path d="M6 5h12v7a6 6 0 0 1-12 0V5z"/><path d="M12 17v4M8 21h8"/></svg>Mi racha</button>
@@ -796,7 +798,7 @@ async function doLogin(){
   btn.disabled=false;btn.textContent='Entrar';
 }
 
-function initApp(){
+function initApp(){try{const n=(patient&&patient.nombre)||'';document.getElementById('nmNom').textContent=n;document.getElementById('nmAv').textContent=n.trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}catch(e){}
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
   document.getElementById('appScreen').style.opacity='0';
