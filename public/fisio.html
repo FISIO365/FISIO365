@@ -631,6 +631,8 @@ const CFG = {
 document.addEventListener('DOMContentLoaded',()=>{
  $('loginNombre').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginPwd').focus();});
  $('loginPwd').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+ // Sesión guardada: entrar directamente (así no se cierra al recargar o al actualizar la app)
+ try{const ses=JSON.parse(localStorage.getItem('f365_panel_sesion')||'null');if(ses&&ses.n&&ses.p){$('loginNombre').value=ses.n;$('loginPwd').value=ses.p;$('loginBtn').textContent='Entrando…';doLogin(true);}}catch(e){}
  document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarLightbox();});
 });
 
@@ -664,7 +666,7 @@ function togglePwd(){
  }
 }
 
-async function doLogin(){
+async function doLogin(silencioso){
  const nombre=($('loginNombre').value||'').trim();
  const password=($('loginPwd').value||'').trim();
  if(!nombre||!password){ $('loginErr').textContent='Introduce tu nombre y contraseña'; return; }
@@ -679,6 +681,7 @@ async function doLogin(){
  if(d.ok){
  fisioActual=d.fisio;
  fisioActual._pwd=password;
+ try{localStorage.setItem('f365_panel_sesion',JSON.stringify({n:nombre,p:password}));}catch(e){}
  pwd=password;
  apiPwd=d.apiToken||'';
  $('loginScreen').style.display='none';
@@ -689,11 +692,13 @@ async function doLogin(){
  setInterval(checkMensajesBadge, 60000); // revisar cada minuto
  aplicarRole();
  iniciarAutoUpdate();
- showSection('prog');
+ let secIni='prog';try{const g=sessionStorage.getItem('f365_panel_sec');if(g&&TOPBAR[g])secIni=g;}catch(e){}
+ showSection(secIni);
  try{if(avisoPendiente)abrirAvisoPanel(avisoPendiente);}catch(e){}
  setTimeout(()=>{try{mirarAvisosPanel();}catch(e){}},1200);
  } else {
- $('loginErr').textContent=d.error||'Datos incorrectos';
+ $('loginErr').textContent=silencioso?'':(d.error||'Datos incorrectos');
+ if(silencioso){try{localStorage.removeItem('f365_panel_sesion');}catch(e){} $('loginPwd').value='';}
  }
  }catch(e){$('loginErr').textContent='Error de conexión';}
  btn.disabled=false; btn.textContent='Entrar al panel';
@@ -746,7 +751,7 @@ function aplicarRole(){
 
  // Nombre en footer
  const isAdmin = fisioActual.role === 'admin';
- $('sb-user').textContent = fisioActual.nombre + (isAdmin ? ' · Admin' : '');
+ $('sb-user').innerHTML = escH(fisioActual.nombre) + (isAdmin ? ' · Admin' : '') + '<br><a href="#" onclick="cerrarSesionPanel();return false" style="color:inherit;text-decoration:underline;opacity:.8">Cerrar sesión</a>';
 }
 
 async function loadFisios(){
@@ -763,7 +768,9 @@ async function loadBiblio(){
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
+function cerrarSesionPanel(){try{localStorage.removeItem('f365_panel_sesion');sessionStorage.removeItem('f365_panel_sec');}catch(e){}location.reload();}
 function showSection(sec){
+ try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  ['anam','prog','pac','school','msg','record'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
