@@ -66,7 +66,7 @@ module.exports = async function handler(req, res) {
         series: parseInt(ej.series) || 0,
         reps: parseInt(ej.reps) || 0,
         dur: parseInt(ej.duracion) || 0,
-        descanso: parseInt(ej.descanso) || 0,
+        descanso: ej.v2 ? (parseInt(ej.descanso) || 0) : 0, // los programas antiguos traían 30 s puestos solos
         desc: ej.descripcion || '',
         ytId,
         imagen: ej.imagen || '',

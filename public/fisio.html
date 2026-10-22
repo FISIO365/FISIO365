@@ -1064,7 +1064,7 @@ function peNorm(e){
  const reps=+e.reps||0, dur=+e.duracion||+e.dur||0;
  const seg=dur>0&&!reps;
  return {nombre:String(e.nombre||'').trim(),modo:seg?'seg':'rep',series:+e.series||3,reps:reps||10,seg:seg?dur:30,aguantar:(!seg&&dur)?dur:0,
-  descanso:+e.descanso||0,zona:e.zona||'',descripcion:e.descripcion||e.desc||'',youtubeUrl:e.youtubeUrl||lib.youtubeUrl||'',imagen:e.imagen||lib.imagen||''};
+  descanso:(e.v2||e._nuevo)?(+e.descanso||0):0,zona:e.zona||'',descripcion:e.descripcion||e.desc||'',youtubeUrl:e.youtubeUrl||lib.youtubeUrl||'',imagen:e.imagen||lib.imagen||''};
 }
 function peResumen(e){const se=+e.series||0,pl=(n,a,b)=>n===1?a:b,L=[];const r=e.modo==='rep'?(+e.reps||0):0,d=e.modo==='seg'?(+e.seg||0):(+e.aguantar||0),ds=+e.descanso||0;
  if(r)L.push(`${se} ${pl(se,'serie','series')} de ${r} ${pl(r,'repetición','repeticiones')}`);else if(d)L.push(`${se} ${pl(se,'serie','series')} de ${d} ${pl(d,'segundo','segundos')}`);
@@ -1091,7 +1091,7 @@ function montarEditorEjs(el,inicial,onCambio){
  res.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-id]');if(!b)return;
   const e=biblio.find(x=>x.id===b.dataset.id);if(!e)return;
-  ejs.push(peNorm({nombre:e.nombre,series:e.series,reps:(+e.duracion>0)?0:e.reps,duracion:e.duracion,descanso:e.descanso,zona:e.zona,youtubeUrl:e.youtubeUrl,imagen:e.imagen}));
+  ejs.push(peNorm({_nuevo:1,nombre:e.nombre,series:e.series,reps:(+e.duracion>0)?0:e.reps,duracion:e.duracion,descanso:e.descanso,zona:e.zona,youtubeUrl:e.youtubeUrl,imagen:e.imagen}));
   nuevo=ejs.length-1;pintar();avisar();
   b.classList.add('ok');b.querySelector('.pe-add').textContent='✓';
  });
@@ -1139,7 +1139,7 @@ function montarEditorEjs(el,inicial,onCambio){
  lista.addEventListener('change',ev=>{const t=ev.target;if(t.type==='number'&&['series','reps','seg'].includes(t.dataset.k)){const e=ejs[+t.closest('.pe-ej').dataset.i];if(!(+e[t.dataset.k]>0)){e[t.dataset.k]=t.dataset.k==='seg'?30:t.dataset.k==='reps'?10:3;pintar();}}});
  pintar();
  return {
-  get:()=>ejs.map(e=>({nombre:e.nombre,series:+e.series||1,reps:e.modo==='rep'?(+e.reps||1):0,duracion:e.modo==='seg'?(+e.seg||30):(+e.aguantar||0),descanso:+e.descanso||0,zona:(e.zona||'').trim(),descripcion:(e.descripcion||'').trim(),youtubeUrl:e.youtubeUrl||'',imagen:e.imagen||''})),
+  get:()=>ejs.map(e=>({v2:1,nombre:e.nombre,series:+e.series||1,reps:e.modo==='rep'?(+e.reps||1):0,duracion:e.modo==='seg'?(+e.seg||30):(+e.aguantar||0),descanso:+e.descanso||0,zona:(e.zona||'').trim(),descripcion:(e.descripcion||'').trim(),youtubeUrl:e.youtubeUrl||'',imagen:e.imagen||''})),
   set:l=>{ejs=(l||[]).map(peNorm);pintar();avisar();}
  };
 }

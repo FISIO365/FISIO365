@@ -34,7 +34,7 @@ module.exports = async function handler(req, res) {
       series: rec.fields['Series'] || 3,
       reps: rec.fields['Reps'] || 10,
       duracion: rec.fields['Duracion'] || 0,
-      descanso: rec.fields['Descanso'] || 30,
+      descanso: rec.fields['Descanso'] || 0,
     }));
 
     return res.status(200).json({ ok: true, ejercicios });
