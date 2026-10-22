@@ -1256,7 +1256,7 @@ function acBlur(n){
 
 function ytThumb(url){
  if(!url) return '';
- const m = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+ const m = String(url).match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/);
  return m ? `https://img.youtube.com/vi/${m[1]}/mqdefault.jpg` : '';
 }
 
