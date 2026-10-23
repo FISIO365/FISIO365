@@ -136,7 +136,7 @@ async function rendimiento(desde, hasta) {
   const horasSem = {};
   fisiosT.forEach(f => { const n = String(f.fields['Name'] || '').split(' ')[0].toLowerCase(); if (n && Number(f.fields['HORAS SEMANA']) > 0) horasSem[n] = Number(f.fields['HORAS SEMANA']); });
   const R = {};
-  const cuenta = n => !!horasSem[String(n).toLowerCase()];
+  const cuenta = n => true;
   const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, nuevos: [], packs: 0, repiten: 0, pierden: 0 });
   const realizadas = citas.filter(c => est(c) === 'REALIZADA' && pid(c));
   citas.forEach(c => {
@@ -167,7 +167,7 @@ async function rendimiento(desde, hasta) {
       if (pack) x.packs++; else if (vuelve) x.repiten++; else x.pierden++;
     });
   }
-  return Object.values(R).filter(x => x.realizadas || x.nuevos.length).map(x => ({ ...x, nuevos: x.nuevos.length, huecos: Math.round(horasSem[x.fisio.toLowerCase()] * laborables / 5) })).sort((a, b) => b.realizadas - a.realizadas);
+  return Object.values(R).filter(x => x.realizadas || x.nuevos.length).map(x => { const hs = horasSem[x.fisio.toLowerCase()]; return { ...x, nuevos: x.nuevos.length, huecos: hs ? Math.round(hs * laborables / 5) : 0, sinHoras: !hs }; }).sort((a, b) => b.realizadas - a.realizadas);
 }
 
 const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };

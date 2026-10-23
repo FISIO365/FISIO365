@@ -4482,7 +4482,7 @@ async function renderRendimiento(wrap){
  const pcs=(a,b)=>b?Math.round(a*100/b)+'%':'—';
  const box=ce('div','rend');
  box.innerHTML=`<div class="rend-chips">${[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div><div class="rend-res"></div>
-  <div class="rend-ley">Ocupación (por semana o mes) = sesiones realizadas frente a sus horas de contrato (Sara 40 h, Jonathan 36 h, Juan 30 h a la semana; 1 hora = 1 sesión), en los días laborables del periodo. Se cambian en la tabla FISIO, campo HORAS SEMANA. 1ª visita = primera sesión realizada del paciente en el centro. Reagendan = después de su 1ª visita tienen otra cita apuntada. No reagendan = no tienen ninguna más. Faltas = no asistió o cita perdida.</div>`;
+  <div class="rend-ley">Ocupación (por semana o mes) = sesiones realizadas frente a sus horas de contrato (Sara 40 h, Jonathan 36 h, Juan 30 h a la semana; 1 hora = 1 sesión), en los días laborables del periodo. Se cambian en la tabla FISIO, campo HORAS SEMANA. Quien no tiene horas (Ramiro) suma sus sesiones al total pero no cuenta para la ocupación. El total de ocupación es solo de los fisios con horas. 1ª visita = primera sesión realizada del paciente en el centro. Reagendan = después de su 1ª visita tienen otra cita apuntada. No reagendan = no tienen ninguna más. Faltas = no asistió o cita perdida.</div>`;
  wrap.appendChild(box);
  const res=box.querySelector('.rend-res');
  const cargar=async k=>{
@@ -4495,13 +4495,13 @@ async function renderRendimiento(wrap){
    if(!r.ok)throw new Error(r.error||'Error');
    const L=r.fisios||[];
    if(!L.length){res.innerHTML='<div class="fac-vacio">Sin sesiones en este periodo.</div>';return;}
-   const T=L.reduce((a,x)=>{['realizadas','huecos','nuevos','packs','repiten','pierden','noAsistio','perdidas','canceladas'].forEach(q=>a[q]=(a[q]||0)+x[q]);return a;},{fisio:'Total del centro'});
+   const T=L.reduce((a,x)=>{['realizadas','huecos','nuevos','packs','repiten','pierden','noAsistio','perdidas','canceladas'].forEach(q=>a[q]=(a[q]||0)+x[q]);if(!x.sinHoras)a.realOcup+=x.realizadas;return a;},{fisio:'Total del centro',realOcup:0});
    const porDia=(k==='hoy'||k==='ayer');
-   const card=(x,tot)=>{const oc=(!porDia&&x.huecos)?Math.round(x.realizadas*100/x.huecos):null;
-    return `<div class="rend-card${tot?' tot':''}"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc ${oc==null?'':oc>=85?'ok':oc>=65?'med':'bajo'}">${oc==null?(porDia?x.realizadas+' hechas':'—'):oc+'%'}</span></div>
+   const card=(x,tot)=>{const base=tot?x.realOcup:x.realizadas;const oc=(!porDia&&x.huecos&&!x.sinHoras)?Math.round(base*100/x.huecos):null;
+    return `<div class="rend-card${tot?' tot':''}"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc ${oc==null?'':oc>=85?'ok':oc>=65?'med':'bajo'}">${oc==null?x.realizadas+' hechas':oc+'%'}</span></div>
     ${oc==null?'<div style="height:12px"></div>':`<div class="rend-bar"><i style="width:${Math.min(100,oc)}%"></i></div>`}
-    <div class="rend-grid"><div><span>${porDia?'Sesiones hechas':'Hechas / huecos'}</span><b>${porDia?x.realizadas:x.realizadas+' / '+(x.huecos||'—')}</b></div><div><span>Pacientes nuevos</span><b>${x.nuevos}</b></div><div><span>Faltas</span><b>${x.noAsistio+x.perdidas}</b></div><div><span>Canceladas</span><b>${x.canceladas}</b></div></div>
-    ${x.nuevos?`<div class="rend-conv dos"><div><span>Reagendan</span><b>${pcs(x.packs+x.repiten,x.nuevos)}</b></div><div><span>No reagendan</span><b>${pcs(x.pierden,x.nuevos)}</b></div></div>`:''}</div>`;};
+    <div class="rend-grid"><div><span>${porDia||x.sinHoras?'Sesiones hechas':'Hechas / huecos'}</span><b>${porDia||x.sinHoras?x.realizadas:(tot?x.realOcup:x.realizadas)+' / '+(x.huecos||'—')}</b></div><div><span>Pacientes nuevos</span><b>${x.nuevos}</b></div><div><span>Faltas</span><b>${x.noAsistio+x.perdidas}</b></div><div><span>Canceladas</span><b>${x.canceladas}</b></div></div>
+    <div class="rend-conv dos"><div><span>Reagendan</span><b>${x.nuevos?pcs(x.packs+x.repiten,x.nuevos):'—'}</b></div><div><span>No reagendan</span><b>${x.nuevos?pcs(x.pierden,x.nuevos):'—'}</b></div>${x.nuevos?'':'<div class="rend-nota" style="grid-column:1/-1">Sin pacientes nuevos en este periodo</div>'}</div></div>`;};
    res.innerHTML=(L.length>1?card(T,true):'')+L.map(x=>card(x)).join('');
   }catch(e){res.innerHTML='<div class="fac-vacio">No se ha podido calcular: '+escH(e.message)+'</div>';}
  };
