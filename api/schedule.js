@@ -28,6 +28,12 @@ module.exports = async function handler(req, res) {
         allRecords = allRecords.concat(data.records || []);
         offset = data.offset || null;
       } while (offset);
+      const colPorNombre = {};
+      try {
+        const fr = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}?fields[]=Name&fields[]=${encodeURIComponent('NºColegiado')}`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        const fdat = await fr.json();
+        (fdat.records || []).forEach(f => { const n = String(f.fields['Name'] || '').trim().toLowerCase(); if (n) colPorNombre[n] = f.fields['NºColegiado'] || ''; });
+      } catch(e) {}
       const informes = allRecords
         .filter(rec => (rec.fields['PacienteId'] || rec.fields['fldDR9XqkJ9oA3WK0'] || '') === patientId)
         .map(rec => ({
@@ -35,6 +41,7 @@ module.exports = async function handler(req, res) {
           fecha: rec.fields['Fecha'] || '-',
           tipo: rec.fields['Protocolo'] || '-',
           fisioNombre: rec.fields['FisioNombre'] || '-',
+          fisioColegiado: colPorNombre[String(rec.fields['FisioNombre'] || '').trim().toLowerCase()] || '',
           contenido: rec.fields['Informe'] || ''
         }));
       return res.status(200).json({ ok: true, informes });
