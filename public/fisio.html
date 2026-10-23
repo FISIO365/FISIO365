@@ -91,6 +91,7 @@ input[type=number]{text-align:center}
 .btn-g{background:var(--black);color:white;width:100%;padding:13px}.btn-g:hover{opacity:.85}.btn-g:disabled{opacity:.4;cursor:not-allowed}
 .btn-o{background:none;border:1px dashed var(--border);color:var(--muted);width:100%;font-family:var(--font);font-size:14px;font-weight:500;padding:11px;border-radius:var(--r-sm);cursor:pointer}
 .btn-o:hover{background:var(--cream)}
+.mf{margin-top:12px;border:1.5px solid var(--border);border-radius:16px;padding:14px}.mf-top{display:flex;align-items:center;gap:12px}.mf-nom{font-size:16px;font-weight:700}.mf-em{font-size:12.5px;color:var(--muted)}.mf-datos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.mf-datos div{background:var(--cream);border-radius:12px;padding:10px 12px}.mf-datos b{display:block;font-size:17px;font-weight:700;text-transform:capitalize}.mf-datos span{font-size:12px;color:var(--muted)}.mf .su-fisio{margin:0}
 .su-fisio{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--black);margin:0 0 12px;padding:10px 12px;background:var(--cream);border-radius:12px}.su-fisio select{width:auto;flex:1;max-width:240px;font-family:var(--font);font-size:13.5px;font-weight:500;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;background:#fff}
 
 .btn-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:13px;font-weight:500;padding:7px 14px;border-radius:var(--r-sm);cursor:pointer}
@@ -1145,7 +1146,7 @@ function montarEditorEjs(el,inicial,onCambio){
   set:l=>{ejs=(l||[]).map(peNorm);pintar();avisar();}
  };
 }
-function selFisioHTML(id,sel){const soyFisio=fisioActual&&fisios.some(f=>f.id===fisioActual.id);return `<div class="pe-fisio"${soyFisio?' style="display:none"':''}>Lo prescribe<select id="${id}">${fisios.map(f=>`<option value="${f.id}" ${f.id===sel?'selected':''}>${escH(f.nombre)}</option>`).join('')}</select></div>`;}
+function selFisioHTML(id,sel){return `<div class="pe-fisio">Lo asigna<select id="${id}">${fisios.map(f=>`<option value="${f.id}" ${f.id===sel?'selected':''}>${escH(f.nombre)}</option>`).join('')}</select></div>`;}
 let progFisioAsig='';
 // «Su fisio [desplegable]»: el fisio asignado del paciente.
 // Si ya tiene programa, se guarda al momento. Si aún no, se guarda junto con su primer programa.
@@ -1169,6 +1170,25 @@ function pintarSuFisio(cont, pacId, getActual, setActual){
   sel.disabled=false;
  };
 }
+// Mini ficha del paciente al buscarlo: sesiones hechas, próxima cita y su fisio (cambiable)
+function fechaCita(f,h){const v=String(f||'');let m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);let d=m?new Date(+m[3],+m[2]-1,+m[1]):new Date(v.slice(0,10)+'T00:00:00');const hm=String(h||'').match(/(\d{1,2}):(\d{2})/);if(hm)d.setHours(+hm[1],+hm[2]);return d;}
+async function miniFicha(cont,p){
+ if(!cont)return;
+ const ini=p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+ cont.innerHTML=`<div class="mf"><div class="mf-top"><div class="pav">${escH(ini)}</div><div style="flex:1;min-width:0"><div class="mf-nom">${escH(p.nombre)}</div><div class="mf-em">${escH(p.email||'')}</div></div></div>
+ <div class="mf-datos"><div><b class="mf-ses">…</b><span>sesiones hechas</span></div><div><b class="mf-prox">…</b><span>próxima cita</span></div></div>
+ <div id="progSuFisio"></div></div>`;
+ try{
+  const d=await (await fetch(`/api/citas?patientId=${encodeURIComponent(p.id)}`)).json();
+  if(pacSelId!==p.id)return;
+  const citas=(d.citas||[]).map(c=>({...c,_d:fechaCita(c.fecha,c.hora),_e:String(c.estado||'').trim().toLowerCase()}));
+  const ahora=new Date();
+  const hechas=citas.filter(c=>c._e==='realizada'||(c._e==='pendiente'&&c._d<ahora&&c._d.toDateString()!==ahora.toDateString())).length;
+  const prox=citas.filter(c=>c._e==='pendiente'&&c._d>=new Date(ahora.toDateString())).sort((a,b)=>a._d-b._d)[0];
+  cont.querySelector('.mf-ses').textContent=hechas;
+  cont.querySelector('.mf-prox').textContent=prox?prox._d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})+(prox.hora?' · '+prox.hora:''):'—';
+ }catch(e){cont.querySelector('.mf-ses').textContent='—';cont.querySelector('.mf-prox').textContent='—';}
+}
 let progEditor=null;
 
 function renderProg(wrap){
@@ -1180,11 +1200,9 @@ function renderProg(wrap){
  pc.innerHTML=`<div class="ct">Paciente</div>
  <div class="si"><input type="text" id="ps1" placeholder="Buscar paciente..."></div>
  <div id="plistProg"></div>
- <div id="pacSelBox" style="display:none;margin-top:8px;padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--lila)"></div>
- ${selFisioHTML('fisioSel',fisioSelId)}`;
+ <div id="pacFicha"></div>`;
  wrap.appendChild(pc);
- $('fisioSel').onchange=()=>{fisioSelId=$('fisioSel').value;};
- mkPacSearch('ps1','plistProg','pacSelBox',p=>{pacSelId=p.id;pacSelN=p.nombre;updProg();cargarPrograma(p.id);});
+ mkPacSearch('ps1','plistProg',null,p=>{pacSelId=p.id;pacSelN=p.nombre;updProg();miniFicha($('pacFicha'),p);cargarPrograma(p.id);});
 
  // Ejercicios
  const ec=ce('div','card');
@@ -1200,6 +1218,8 @@ function renderProg(wrap){
  wrap.appendChild(mc);
 
  const resDiv=ce('div',''); resDiv.id='res'; resDiv.style.display='none'; wrap.appendChild(resDiv);
+ const asg=ce('div','card'); asg.style.cssText='padding:12px 16px;margin-bottom:10px'; asg.innerHTML=selFisioHTML('fisioSel',fisioSelId); wrap.appendChild(asg);
+ $('fisioSel').onchange=()=>{fisioSelId=$('fisioSel').value;};
  const saveBtn=ce('button','btn btn-g'); saveBtn.id='btnG'; saveBtn.textContent='Guardar programa'; saveBtn.onclick=guardar;
  wrap.appendChild(saveBtn);
 }
@@ -1379,16 +1399,16 @@ async function cargarPrograma(pacId){
   if(pacSelId!==pacId) return;
   progFisioAsig=(d.ok&&d.fisioAsignadoId)||'';
   if(d.ok&&d.ejercicios&&d.ejercicios.length){
-   info.innerHTML=`<div id="progSuFisio"></div><div class="pe-hint">Ya tiene un programa con ${d.ejercicios.length} ejercicio${d.ejercicios.length>1?'s':''}. Cámbialo y guarda.</div>`;
+   info.innerHTML=`<div class="pe-hint">Ya tiene un programa con ${d.ejercicios.length} ejercicio${d.ejercicios.length>1?'s':''}. Cámbialo y guarda.</div>`;
    progEditor.set(d.ejercicios);
    if(d.mensaje&&$('mensajeFisio'))$('mensajeFisio').value=d.mensaje;
-  } else info.innerHTML='<div id="progSuFisio"></div><div class="pe-hint">Todavía no tiene programa.</div>';
+  } else info.innerHTML='<div class="pe-hint">Todavía no tiene programa.</div>';
   pintarSuFisio($('progSuFisio'),pacId,()=>progFisioAsig,v=>{progFisioAsig=v;});
  }catch(e){info.innerHTML='';}
 }
 
 async function guardar(){
- if(!fisioSelId){toast('Selecciona quién prescribe los ejercicios',false);return;}
+ if(!fisioSelId){toast('Selecciona quién asigna el programa',false);return;}
  if(!pacSelId){toast('Selecciona un paciente',false);return;}
  const ejs=getEjs();
  if(!ejs.length){toast('Añade al menos un ejercicio',false);return;}
@@ -4356,7 +4376,7 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
    saveBtn.style.width='100%';
    saveBtn.onclick=async()=>{
      const fisioId=document.getElementById('fpFisioSel').value;
-     if(!fisioId){toast('Selecciona quién prescribe los ejercicios',false);return;}
+     if(!fisioId){toast('Selecciona quién asigna el programa',false);return;}
      const ejs=fpEditor.get().filter(e=>e.nombre);
      if(!ejs.length){toast('Añade al menos un ejercicio',false);return;}
      const cambiarFisio=false; // guardar ejercicios nunca cambia su fisio (se cambia arriba, en «Su fisio»)
