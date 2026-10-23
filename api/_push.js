@@ -116,7 +116,7 @@ async function sinFacturar() {
 
 
 // ── Rendimiento por fisio (de las citas de CITAS) ──
-//   Ocupación = (realizadas + call-in + vídeos) / huecos. Huecos = HORAS POR DÍA de los días que ha trabajado
+//   Ocupación = realizadas / huecos. Huecos = HORAS POR DÍA de los días que ha trabajado, menos sus horas de call-in y vídeos
 //   (días con algo en su agenda; festivos y vacaciones no cuentan).
 // Reagendan = pacientes atendidos en el periodo que tienen otra cita después de su última sesión.
 const NO_FISIO = /NO HAY FISIO|TODOS|\?\?|FIESTA|^$/i;
@@ -182,7 +182,7 @@ async function rendimiento(desde, hasta) {
     r.forEach(p => { nombres[p.id] = { nombre: p.fields['FULL NAME'] || '—', tel: p.fields['WHATSAPP'] || '' }; });
   }
   Object.values(R).forEach(x => { x.lista = x.lista.map(p => ({ ...p, ...(nombres[p.id] || { nombre: '—' }) })).sort((a, b) => b.ultima.localeCompare(a.ultima)); });
-  return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); return { ...x, huecos: capacidad(k), sinHoras: !horasDia[k] }; }).sort((a, b) => b.realizadas - a.realizadas);
+  return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); return { ...x, huecos: Math.max(0, capacidad(k) - x.callin - x.videos), sinHoras: !horasDia[k] }; }).sort((a, b) => b.realizadas - a.realizadas);
 }
 
 const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };
