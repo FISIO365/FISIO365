@@ -228,7 +228,7 @@ export default async function handler(req) {
     const pacId = url.searchParams.get('pacienteId') || '';
     const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
     try {
-      const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo';
+      const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo&fields[]=SoloFisio';
       let allRecords = [], offset = null;
       do {
         const off = offset ? '&offset='+offset : '';
@@ -246,6 +246,7 @@ export default async function handler(req) {
         fecha: rec.fields['Fecha'] || '',
         informe: rec.fields['Informe'] || '',
         protocolo: rec.fields['Protocolo'] || '',
+        soloFisio: !!rec.fields['SoloFisio'],
       }));
       if (pacId) informes = informes.filter(i => i.pacienteId === pacId);
       return new Response(JSON.stringify({ ok: true, informes }), { headers: corsHeaders });
@@ -362,18 +363,23 @@ export default async function handler(req) {
     if ((pwd || '').trim() !== FISIO_PASSWORD.trim()) return new Response(JSON.stringify({ ok: false, error: 'No autorizado' }), { status: 401, headers: corsHeaders });
     if (!/^rec[A-Za-z0-9]{14}$/.test(pacienteId || '')) return new Response(JSON.stringify({ ok: false, error: 'Paciente no válido' }), { status: 400, headers: corsHeaders });
     const out = { ok: true, app: false, ficha: false };
-    if (destino !== 'ficha') try {
+    // destino: 'paciente' (lo ve en su app) o 'privado' (solo el fisio). Ambos guardan en la ficha del panel y suben el PDF.
+    const privado = destino === 'privado' || destino === 'ficha';
+    try {
       const fecha = new Date().toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' });
-      // Si ya existe (recId) se actualiza el texto; si no, se crea
       const existe = /^rec[A-Za-z0-9]{14}$/.test(recId || '');
+      const campos = existe ? { Informe: contenido || '' } : { PacienteId: pacienteId, PacienteNombre: (pacienteNombre || '').toUpperCase(), FisioNombre: fisioNombre || '', Fecha: fecha, Protocolo: tipo || '', Informe: contenido || '', SoloFisio: privado };
+      if (existe && !privado) campos.SoloFisio = false;
       const ar = await fetch(`https://api.airtable.com/v0/${BASE_ID}/tblwvWQxXNJPdR0Iv${existe ? '/' + recId : ''}`, {
         method: existe ? 'PATCH' : 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(existe ? { fields: { Informe: contenido || '' } } : { records: [{ fields: { PacienteId: pacienteId, PacienteNombre: (pacienteNombre || '').toUpperCase(), FisioNombre: fisioNombre || '', Fecha: fecha, Protocolo: tipo || '', Informe: contenido || '' } }] })
+        body: JSON.stringify(existe ? { fields: campos } : { records: [{ fields: campos }] })
       });
       const ad = await ar.json(); out.app = !ad.error; if (ad.error) out.errorApp = ad.error.message || 'Airtable';
-      out.recordId = existe ? recId : (ad.records?.[0]?.id || '');
+      const rec = existe ? ad : ad.records?.[0];
+      out.recordId = existe ? recId : (rec?.id || '');
+      out.compartido = !(rec?.fields?.SoloFisio);
     } catch (e) { out.errorApp = e.message; }
-    if (pdfBase64 && destino !== 'app') {
+    if (pdfBase64) {
       try {
         const ur = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${pacienteId}/fldTMnwMj4c1C2835/uploadAttachment`, {
           method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },

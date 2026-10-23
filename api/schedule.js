@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
   // ── LISTAR INFORMES DEL PACIENTE ─────────────────────────────────────────
   if (action === 'informes') {
     try {
-      const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo';
+      const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo&fields[]=SoloFisio';
       let allRecords = [];
       let offset = null;
       do {
@@ -35,7 +35,7 @@ module.exports = async function handler(req, res) {
         (fdat.records || []).forEach(f => { const n = String(f.fields['Name'] || '').trim().toLowerCase(); if (n) colPorNombre[n] = f.fields['NºColegiado'] || ''; });
       } catch(e) {}
       const informes = allRecords
-        .filter(rec => (rec.fields['PacienteId'] || rec.fields['fldDR9XqkJ9oA3WK0'] || '') === patientId)
+        .filter(rec => (rec.fields['PacienteId'] || rec.fields['fldDR9XqkJ9oA3WK0'] || '') === patientId && !rec.fields['SoloFisio'])
         .map(rec => ({
           id: rec.id,
           fecha: rec.fields['Fecha'] || '-',

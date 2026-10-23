@@ -150,7 +150,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .ia-borrar{margin-top:10px;width:100%;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;color:#b91c1c;padding:8px;cursor:pointer;border-radius:99px}.ia-borrar.armado{background:#b91c1c;color:#fff}
 .inf-acc{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .inf-acc button{font-family:var(--font);font-size:14px;font-weight:600;border-radius:99px;padding:13px;cursor:pointer;border:1.5px solid #1a1a1a}
-.inf-acc .ia-g{background:#c2552e;border-color:#c2552e;color:#fff}.inf-acc .ia-g.hecho{background:#16a34a;border-color:#16a34a}.inf-acc .ia-g{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.2}.ia-g .ia-t{font-weight:600;font-size:14px}.ia-g .ia-s{font-weight:400;font-size:11.5px;opacity:.85}
+.inf-acc .ia-g{background:#c2552e;border-color:#c2552e;color:#fff}.inf-acc .ia-g.hecho{background:#16a34a;border-color:#16a34a}.inf-acc .ia-g{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.2}.ia-g .ia-t{font-weight:600;font-size:14px}.fp-inf-vis{display:inline-block;margin-top:5px;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:#e8f5ec;color:#16803c}.fp-inf-vis.priv{background:#f1ede9;color:#7d6a60}.inf-acc .ia-g.ia-priv:not(.hecho){background:#fff;color:#c2552e}.ia-g .ia-s{font-weight:400;font-size:11.5px;opacity:.85}
 .ia-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ia-row .ia-v,.ia-row .ia-d{background:#fff;color:#1a1a1a}@media(max-width:560px){.ia-row{grid-template-columns:1fr}}
 .ia-est{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px}.ia-est .ok{color:#16a34a;font-weight:600}.ia-est .ko{color:#b91c1c;font-weight:600}
 .ap-sel{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border-radius:12px;font-size:14px}.ap-sel button{margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:99px;padding:5px 12px;cursor:pointer}
@@ -4170,26 +4170,37 @@ function accionesInforme(anchor,ctx,fisioNom){
  if(typeof ctx==='string'){const tipo=ctx;ctx={pacId:anamPacId,pacNom:anamPacNom,tipo,fisioNom,getTexto:()=>informeGenerado};}
  anchor.parentNode.querySelectorAll(':scope > .inf-acc').forEach(x=>x.remove());
  const bar=ce('div','inf-acc');
- const L={app:{t:'Enviar al paciente',s:'Lo verá en su app, en «Informes»'},appUpd:{t:'Actualizar en su app',s:'Ya lo tiene · guarda los cambios'},appOk:{t:'✓ Enviado al paciente',s:'Si lo cambias, vuelve a tocar'},ficha:{t:'Guardar en Airtable',s:'El PDF va a «Archivos» de su ficha'},fichaOk:{t:'✓ Guardado en Airtable',s:'Si lo cambias, vuelve a tocar'},load:{t:'Guardando…',s:'Un momento'}};
+ const L={pac:{t:'Compartir con el paciente',s:'Lo verá en su app · también queda para ti'},pacUpd:{t:'Actualizar en su app',s:'Ya lo tiene · guarda los cambios'},pacOk:{t:'✓ Compartido con el paciente',s:'Si lo cambias, vuelve a tocar'},
+  priv:{t:'Guardar solo para ti',s:'En su ficha del panel y PDF en Airtable'},privOk:{t:'✓ Guardado para ti',s:'El paciente no lo ve'},load:{t:'Guardando…',s:'Un momento'}};
  const pon=(b,k)=>{b.innerHTML=`<span class="ia-t">${L[k].t}</span><span class="ia-s">${L[k].s}</span>`;};
- bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g" data-d="app"></button><button type="button" class="ia-g" data-d="ficha"></button></div>
+ bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g" data-d="paciente"></button><button type="button" class="ia-g ia-priv" data-d="privado"></button></div>
   <div class="ia-row"><button type="button" class="ia-v">Ver PDF · imprimir o enviar</button><button type="button" class="ia-d">Descargar PDF</button></div>`;
  anchor.insertAdjacentElement('afterend',bar);
- const [bApp,bFicha]=bar.querySelectorAll('.ia-g');pon(bApp,ctx.recId?'appUpd':'app');pon(bFicha,'ficha');
+ const [bPac,bPriv]=bar.querySelectorAll('.ia-g');
+ const pinta=()=>{pon(bPac,ctx.recId&&ctx.compartido?'pacUpd':'pac');bPriv.style.display=ctx.recId&&ctx.compartido?'none':'';pon(bPriv,'priv');};pinta();
  const pdf=m=>descargarPDF(ctx.pacNom,ctx.getTexto(),ctx.tipo,ctx.fisioNom,ctx.fisioCol||'',m);
  bar.querySelector('.ia-v').onclick=()=>{window._pdfWin=window.open('','_blank');pdf('ver').catch(()=>{if(window._pdfWin)window._pdfWin.close();});};
  bar.querySelector('.ia-d').onclick=()=>pdf('descargar').catch(()=>{});
  bar.querySelectorAll('.ia-g').forEach(g=>g.onclick=async()=>{
   if(!ctx.pacId){toast('Selecciona un paciente primero',false);return;}
-  const dest=g.dataset.d, k0=dest==='app'?(ctx.recId?'appUpd':'app'):'ficha';
+  const dest=g.dataset.d;
   g.disabled=true;pon(g,'load');
   try{
-   const f=dest==='ficha'?await pdf('base64'):null;
-   const d=await (await fetch('/api/pacientes?action=guardar-informe-completo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,destino:dest,recId:ctx.recId||'',pacienteId:ctx.pacId,pacienteNombre:ctx.pacNom,fisioNombre:ctx.fisioNom,tipo:ctx.tipo,contenido:ctx.getTexto(),pdfBase64:f&&f.base64,filename:f&&f.nombre})})).json();
-   const ok=dest==='app'?d.app:d.ficha;
-   if(ok){if(d.recordId)ctx.recId=d.recordId;g.disabled=false;g.classList.add('hecho');pon(g,dest==='app'?'appOk':'fichaOk');toast(dest==='app'?'Enviado: el paciente lo verá en su app':'PDF guardado en «Archivos» de su ficha de Airtable',true);}
-   else{g.disabled=false;pon(g,k0);toast((dest==='app'?d.errorApp:d.errorFicha)||'No se ha podido guardar',false);}
-  }catch(e){g.disabled=false;pon(g,k0);toast('Error: '+e.message,false);}
+   const texto=ctx.getTexto();
+   // el PDF solo se sube a Airtable si el texto ha cambiado desde la última subida (evita duplicados)
+   const f=ctx.pdfTexto===texto?null:await pdf('base64');
+   const d=await (await fetch('/api/pacientes?action=guardar-informe-completo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,destino:dest,recId:ctx.recId||'',pacienteId:ctx.pacId,pacienteNombre:ctx.pacNom,fisioNombre:ctx.fisioNom,tipo:ctx.tipo,contenido:texto,pdfBase64:f&&f.base64,filename:f&&f.nombre})})).json();
+   g.disabled=false;
+   if(d.app){
+    if(d.recordId)ctx.recId=d.recordId;
+    ctx.compartido=dest==='paciente'?true:!!(d.compartido&&ctx.compartido);
+    if(d.ficha)ctx.pdfTexto=texto;
+    pinta();g.classList.add('hecho');pon(g,dest==='paciente'?'pacOk':'privOk');
+    setTimeout(()=>{g.classList.remove('hecho');pinta();},5000);
+    const aviso=f&&!d.ficha?' (el PDF no se pudo subir a Airtable)':'';
+    toast((dest==='paciente'?'Compartido: el paciente lo verá en su app':'Guardado solo para ti')+aviso,!aviso);
+   }else{pinta();toast(d.errorApp||'No se ha podido guardar',false);}
+  }catch(e){g.disabled=false;pinta();toast('Error: '+e.message,false);}
  });
  return bar;
 }
@@ -4448,7 +4459,7 @@ async function fpTabInformes(pacId, body, pacNombre, tok){
  }
  todos.forEach(inf=>{
  const c=ce('div','fp-inf-card');
- c.innerHTML=`<div class="fp-inf-top"><div><div class="fp-inf-tipo">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</div><div class="fp-inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+escH(inf.fisioNombre):''}</div></div><button type="button" class="fp-btn">Abrir</button></div>`;
+ c.innerHTML=`<div class="fp-inf-top"><div><div class="fp-inf-tipo">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</div><div class="fp-inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+escH(inf.fisioNombre):''}</div>${/^rec/.test(String(inf.id))?`<span class="fp-inf-vis ${inf.soloFisio?'priv':''}">${inf.soloFisio?'Solo para ti':'Lo ve el paciente'}</span>`:''}</div><button type="button" class="fp-btn">Abrir</button></div>`;
  const bAbrir=c.querySelector('.fp-btn');
  bAbrir.onclick=()=>{
   const ab=c.querySelector('.fp-inf-ed');
@@ -4459,7 +4470,7 @@ async function fpTabInformes(pacId, body, pacNombre, tok){
   const ajusta=()=>{ta.style.height='auto';ta.style.height=Math.max(220,ta.scrollHeight+4)+'px';};
   ta.oninput=()=>{inf.informe=ta.value;ajusta();};
   c.appendChild(ed); setTimeout(ajusta);
-  const bar=accionesInforme(ed,{pacId:pacId,pacNom:pacNombre||inf.pacienteNombre||'',tipo:inf.protocolo||'',fisioNom:inf.fisioNombre||'',fisioCol:inf.fisioCol||'',getTexto:()=>ta.value,recId:/^rec/.test(String(inf.id))?inf.id:''});
+  const bar=accionesInforme(ed,{pacId:pacId,pacNom:pacNombre||inf.pacienteNombre||'',tipo:inf.protocolo||'',fisioNom:inf.fisioNombre||'',fisioCol:inf.fisioCol||'',getTexto:()=>ta.value,recId:/^rec/.test(String(inf.id))?inf.id:'',compartido:!inf.soloFisio});
   // Borrar: primer toque pide confirmación, el segundo borra (de la app del paciente y de esta ficha)
   const del=ce('button','ia-borrar');del.type='button';del.textContent='Borrar informe';
   let armado=false,tm=null;
