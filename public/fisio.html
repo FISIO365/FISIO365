@@ -4488,7 +4488,7 @@ async function renderRendimiento(wrap){
  box.innerHTML=`<div class="rend-tot"><div class="rt" data-k="ayer"><span>Ayer</span><b>…</b><i></i></div><div class="rt" data-k="semana"><span>Esta semana</span><b>…</b><i></i></div><div class="rt" data-k="mes"><span>Este mes</span><b>…</b><i></i></div></div>
   <div class="rend-sub">Ocupación del equipo (Sara, Jonathan y Juan)</div><div class="rend-chips">${[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div>
   <div class="rend-res"></div>
-  <div class="rend-ley">Ocupación = sesiones realizadas frente a las horas que trabaja cada fisio esos días (campo HORAS POR DÍA de la tabla FISIO; 1 hora = 1 sesión). Reagendan = de los pacientes que ha atendido en el periodo, cuántos tienen otra cita apuntada después. Faltas = no asistió o cita perdida. De Ramiro solo salen sus sesiones hechas (suman al total).</div>`;
+  <div class="rend-ley">Ocupación = sesiones realizadas frente a las horas que trabaja cada fisio esos días (campo HORAS POR DÍA de la tabla FISIO; 1 hora = 1 sesión). Reagendan = de los pacientes que ha atendido en el periodo, cuántos tienen otra cita apuntada después. Faltas = no asistió o cita perdida. De Ramiro salen sus sesiones hechas y si reagendan (suman al total, pero no a la ocupación).</div>`;
  wrap.appendChild(box);
  const res=box.querySelector('.rend-res');
  const cargar=async k=>{
@@ -4501,9 +4501,9 @@ async function renderRendimiento(wrap){
    if(!r.ok)throw new Error(r.error||'Error');
    const L=r.fisios||[];
    if(!L.length){res.innerHTML='<div class="fac-vacio">Sin sesiones en este periodo.</div>';return;}
-   const T=L.reduce((a,x)=>{a.realizadas+=x.realizadas;if(!x.sinHoras){['huecos','atendidos','reagendan','noAsistio','perdidas','canceladas'].forEach(q=>a[q]+=x[q]);a.realOcup+=x.realizadas;}return a;},{fisio:'Total del centro',realizadas:0,realOcup:0,huecos:0,atendidos:0,reagendan:0,noAsistio:0,perdidas:0,canceladas:0});
+   const T=L.reduce((a,x)=>{a.realizadas+=x.realizadas;a.atendidos+=x.atendidos;a.reagendan+=x.reagendan;if(!x.sinHoras){['huecos','noAsistio','perdidas','canceladas'].forEach(q=>a[q]+=x[q]);a.realOcup+=x.realizadas;}return a;},{fisio:'Total del centro',realizadas:0,realOcup:0,huecos:0,atendidos:0,reagendan:0,noAsistio:0,perdidas:0,canceladas:0});
    const card=(x,tot)=>{
-    if(x.sinHoras&&!tot)return `<div class="rend-card solo"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc">${x.realizadas} <small>sesiones hechas</small></span></div></div>`;
+    if(x.sinHoras&&!tot)return `<div class="rend-card solo"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc">${x.realizadas} <small>sesiones hechas</small></span></div><div class="rend-conv dos"><div><span>Reagendan</span><b>${pcs(x.reagendan,x.atendidos)}</b></div><div><span>No reagendan</span><b>${pcs(x.atendidos-x.reagendan,x.atendidos)}</b></div></div></div>`;
     const base=tot?x.realOcup:x.realizadas;const oc=x.huecos?Math.round(base*100/x.huecos):null;
     return `<div class="rend-card${tot?' tot':''}"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc ${oc==null?'':oc>=85?'ok':oc>=65?'med':'bajo'}">${oc==null?x.realizadas+' <small>hechas</small>':oc+'%'}</span></div>
     ${oc==null?'<div style="height:12px"></div>':`<div class="rend-bar"><i style="width:${Math.min(100,oc)}%"></i></div>`}
