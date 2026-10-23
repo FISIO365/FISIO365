@@ -147,6 +147,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .fp-inf-ed{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
 .fp-inf-ayuda{font-size:12px;color:var(--muted);margin-bottom:6px}
 .fp-inf-ed textarea{width:100%;box-sizing:border-box;font-family:var(--font);font-size:13px;line-height:1.6;padding:12px;border:1.5px solid var(--border);border-radius:12px;resize:vertical;background:#fff}
+.ia-borrar{margin-top:10px;width:100%;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;color:#b91c1c;padding:8px;cursor:pointer;border-radius:99px}.ia-borrar.armado{background:#b91c1c;color:#fff}
 .inf-acc{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .inf-acc button{font-family:var(--font);font-size:14px;font-weight:600;border-radius:99px;padding:13px;cursor:pointer;border:1.5px solid #1a1a1a}
 .inf-acc .ia-g{background:#c2552e;border-color:#c2552e;color:#fff}.inf-acc .ia-g.hecho{background:#16a34a;border-color:#16a34a;cursor:default}
@@ -4450,14 +4451,27 @@ async function fpTabInformes(pacId, body, pacNombre, tok){
  const bAbrir=c.querySelector('.fp-btn');
  bAbrir.onclick=()=>{
   const ab=c.querySelector('.fp-inf-ed');
-  if(ab){ab.remove();c.querySelectorAll('.inf-acc').forEach(x=>x.remove());bAbrir.textContent='Abrir';return;}
+  if(ab){ab.remove();c.querySelectorAll('.inf-acc,.ia-borrar').forEach(x=>x.remove());bAbrir.textContent='Abrir';return;}
   const ed=ce('div','fp-inf-ed');
   ed.innerHTML=`<div class="fp-inf-ayuda">Puedes modificar el texto y luego guardarlo o sacar el PDF.</div><textarea></textarea>`;
   const ta=ed.querySelector('textarea'); ta.value=inf.informe||'';
   const ajusta=()=>{ta.style.height='auto';ta.style.height=Math.max(220,ta.scrollHeight+4)+'px';};
   ta.oninput=()=>{inf.informe=ta.value;ajusta();};
   c.appendChild(ed); setTimeout(ajusta);
-  accionesInforme(ed,{pacId:pacId,pacNom:pacNombre||inf.pacienteNombre||'',tipo:inf.protocolo||'',fisioNom:inf.fisioNombre||'',fisioCol:inf.fisioCol||'',getTexto:()=>ta.value,recId:/^rec/.test(String(inf.id))?inf.id:''});
+  const bar=accionesInforme(ed,{pacId:pacId,pacNom:pacNombre||inf.pacienteNombre||'',tipo:inf.protocolo||'',fisioNom:inf.fisioNombre||'',fisioCol:inf.fisioCol||'',getTexto:()=>ta.value,recId:/^rec/.test(String(inf.id))?inf.id:''});
+  // Borrar: primer toque pide confirmación, el segundo borra (de la app del paciente y de esta ficha)
+  const del=ce('button','ia-borrar');del.type='button';del.textContent='Borrar informe';
+  let armado=false,tm=null;
+  del.onclick=async()=>{
+   if(!armado){armado=true;del.classList.add('armado');del.textContent='¿Seguro? Toca otra vez para borrarlo de la app y del panel';tm=setTimeout(()=>{armado=false;del.classList.remove('armado');del.textContent='Borrar informe';},5000);return;}
+   clearTimeout(tm);del.disabled=true;del.textContent='Borrando…';
+   try{
+    if(/^rec/.test(String(inf.id))){const d=await (await fetch('/api/pacientes?action=borrar-informe-app',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:inf.id})})).json();if(!d.ok)throw new Error(d.error||'No se ha podido borrar');}
+    try{const arr=getInformesLocal().filter(x=>String(x.id)!==String(inf.id));localStorage.setItem('fisio365_informes',JSON.stringify(arr));}catch(e){}
+    c.remove();toast('Informe borrado',true);
+   }catch(e){del.disabled=false;armado=false;del.classList.remove('armado');del.textContent='Borrar informe';toast(e.message,false);}
+  };
+  (bar||ed).insertAdjacentElement('afterend',del);
   bAbrir.textContent='Cerrar';
  };
  body.appendChild(c);

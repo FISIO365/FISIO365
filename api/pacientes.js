@@ -343,6 +343,19 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
+  // Borrar un informe (desaparece de la app del paciente y de su ficha en el panel)
+  if (action === 'borrar-informe-app' && req.method === 'POST') {
+    const { pwd, id } = body;
+    if ((pwd || '').trim() !== FISIO_PASSWORD.trim()) return new Response(JSON.stringify({ ok: false, error: 'No autorizado' }), { status: 401, headers: corsHeaders });
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id || '')) return new Response(JSON.stringify({ ok: false, error: 'Informe no válido' }), { status: 400, headers: corsHeaders });
+    try {
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/tblwvWQxXNJPdR0Iv/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return new Response(JSON.stringify({ ok: false, error: d.error?.message || 'No se ha podido borrar' }), { headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    } catch (e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+  }
+
   // Guardar informe de anamnesis: en «Informes» (app del paciente) + PDF en la ficha (campo DOCUS)
   if (action === 'guardar-informe-completo' && req.method === 'POST') {
     const { pwd, pacienteId, pacienteNombre, fisioNombre, tipo, contenido, pdfBase64, filename, destino, recId } = body;
