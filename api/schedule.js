@@ -6,6 +6,7 @@ const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 const BIBLIO_TABLE = 'tbloqn3ts872ueJSE';
 
 const HOLDED_KEY = process.env.HOLDED_API_KEY;
+const { saldoPaciente } = require('./_saldo');
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const HOLDED_URL = 'https://api.holded.com/api/invoicing/v1';
 
@@ -183,9 +184,10 @@ module.exports = async function handler(req, res) {
     if (action === 'ficha-facturas') {
       const pr = await at(`${PACIENTES}/${pac}`);
       const dni = (pr.fields || {})['DNI'] || '';
-      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, facturas: [] });
-      try { return res.status(200).json({ ok: true, holded: true, dni, facturas: await listarFacturas(await contactosDelPaciente(pac)) }); }
-      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, facturas: [], error: 'No se han podido cargar las facturas' }); }
+      const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
+      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, facturas: [] });
+      try { return res.status(200).json({ ok: true, holded: true, dni, saldo, facturas: await listarFacturas(await contactosDelPaciente(pac)) }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, facturas: [], error: 'No se han podido cargar las facturas' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado (falta la clave en Vercel).' });
@@ -193,7 +195,7 @@ module.exports = async function handler(req, res) {
     if (!lineas.length) return res.status(400).json({ ok: false, error: 'Falta el concepto' });
     if (q.dni && normDni(q.dni).length >= 8) await at(`${PACIENTES}/${pac}`, { method: 'PATCH', body: JSON.stringify({ fields: { DNI: String(q.dni).trim().toUpperCase() } }) });
     const fa = q.facturarA || {};
-    const campos = { [FF.paciente]: [pac], [FF.notas]: String(q.notas || ''), [FF.estado]: 'Pendiente' };
+    const campos = { [FF.paciente]: [pac], 'fldpruhLn03x1x6zI': pac, [FF.notas]: String(q.notas || ''), [FF.estado]: 'Pendiente' };
     if (q.modoPago) campos['fldafSkOOldJ8gH70'] = q.modoPago;
     if (/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) campos[FF.fecha] = q.fecha;
     if (fa.nombre) { campos[FF.aNombre] = String(fa.nombre); campos[FF.aNif] = String(fa.nif || ''); campos[FF.aDir] = String(fa.direccion || ''); }

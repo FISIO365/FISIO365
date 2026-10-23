@@ -7,6 +7,7 @@
 //     (y los ha hecho en el último mes; si ese día le llega el de la cita, solo le llega ese)
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const { enviar, BASE_ID, TABLAS } = require('./_push');
+const saldo = require('./_saldo');
 const CITAS_TABLE = 'tblTPlcuiSjQngkaD';
 const TAREAS_TABLE = 'tblIXYE5ToRNY7MN4'; // cada vez que un paciente pulsa «He terminado por hoy»
 const AT = { Authorization: `Bearer ${AIRTABLE_TOKEN}` };
@@ -30,6 +31,33 @@ async function todos(tabla, query) {
 }
 const fisioDe = v => { if (!v) return ''; if (Array.isArray(v)) v = v[0]; v = typeof v === 'object' ? v.name : String(v); return /^rec|NO HAY|TODOS|\?\?/i.test(v) ? '' : v; };
 const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+
+const eur = n => Number(n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+const escH = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+async function resumenFacturacion(ayer) {
+  const sf = await saldo.sinFacturar();
+  if (!sf.activo) return 'sin facturas todavía';
+  const citas = await todos(CITAS_TABLE, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${ayer.fecha}'`)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=HORA&fields[]=your-name`);
+  const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
+  const hechas = citas.filter(c => ['REALIZADA', 'CITA PERDIDA'].includes(est(c))).length;
+  const sinMarcar = citas.filter(c => est(c) === 'PENDIENTE' && (c.fields['RELACIÓN - CITA'] || []).length);
+  const facs = (await saldo.facturasEmitidas('')).filter(r => saldo.fechaCobro(r.fields) === ayer.fecha);
+  const total = facs.reduce((t, r) => t + Number(r.fields['TOTAL'] || 0), 0);
+  const fila = (a, b, c) => `<tr><td style="padding:8px 0;border-bottom:1px solid #eee">${a}</td><td style="padding:8px 0;border-bottom:1px solid #eee;color:#7d6a60">${b}</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;font-weight:600">${c}</td></tr>`;
+  const fechaTxt = `${DIAS[ayer.dia]} ${+ayer.fecha.slice(8)}/${+ayer.fecha.slice(5, 7)}`;
+  const html = `<div style="font-family:Arial,sans-serif;background:#f7f3ef;padding:24px"><div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;color:#1a1a1a">
+  <div style="font-size:12px;color:#c2552e;font-weight:700;letter-spacing:1px">RESUMEN DE FACTURACIÓN</div>
+  <h2 style="margin:6px 0 18px;font-size:20px">${fechaTxt}</h2>
+  <p style="margin:0 0 4px">Sesiones hechas: <b>${hechas}</b> · Facturas emitidas: <b>${facs.length}</b> (${eur(total)})</p>
+  ${sf.lista.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b42318">⚠️ Sesiones sin facturar (${sf.lista.reduce((t, x) => t - x.saldo, 0)})</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${sf.lista.map(x => fila(escH(x.nombre), escH(x.fisio), (-x.saldo) + ' sin facturar')).join('')}</table>` : `<p style="margin:18px 0 0;color:#16803c;font-weight:600">✓ No hay sesiones sin facturar</p>`}
+  ${sinMarcar.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b45309">Citas de ayer sin marcar (siguen en «Pendiente»): ${sinMarcar.length}</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${sinMarcar.map(c => fila(escH(c.fields['your-name'] || ''), escH(fisioDe(c.fields['PREF.'])), escH(String(c.fields['HORA'] || '').slice(0, 5)))).join('')}</table>` : ''}
+  ${facs.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Facturas emitidas</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${facs.map(r => fila(escH(r.fields['Nº FACTURA'] || ''), escH([r.fields['CONCEPTO 1'], r.fields['CONCEPTO 2']].filter(Boolean).join(' + ')) + (r.fields['MODO DE PAGO'] ? ' · ' + escH(r.fields['MODO DE PAGO']) : ''), eur(r.fields['TOTAL']))).join('')}</table>` : ''}
+  </div></div>`;
+  const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: [{ email: process.env.RESUMEN_EMAIL || 'info@fisioterapia365.com' }], subject: `Facturación ${fechaTxt}${sf.lista.length ? ' · ⚠️ ' + sf.lista.length + ' pacientes sin facturar' : ' · todo en orden'}`, htmlContent: html }) });
+  return r.ok ? 'enviado' : 'error brevo ' + r.status;
+}
 
 module.exports = async function handler(req, res) {
   if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) return res.status(401).json({ ok: false });
@@ -85,6 +113,8 @@ module.exports = async function handler(req, res) {
       });
       ok ? out.ejercicios++ : out.errores++;
     }
+    // 3. Resumen de facturación del día anterior (email a dirección)
+    try { out.resumen = await resumenFacturacion(madrid(-1)); } catch (e) { out.resumen = 'error: ' + e.message; }
     return res.status(200).json({ ok: true, fecha: hoy.fecha, ...out });
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message, ...out });

@@ -190,6 +190,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .fp-inf-meta{font-size:11px;color:var(--muted);margin-bottom:4px}
 .fp-inf-tipo{font-size:14px;font-weight:700;margin-bottom:10px}
 .fp-inf-btns{display:flex;gap:8px;flex-wrap:wrap}
+.fac-saldo{border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#f1ede9;display:flex;flex-direction:column;gap:2px;font-size:14px}.fac-saldo span{font-size:12px;color:var(--muted)}.fac-saldo.neg{background:#fdecea;color:#b42318}.fac-saldo.pos{background:#e8f5ec;color:#16803c}
 .fac-nueva{width:100%;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer;margin-bottom:12px}
 .fac-form{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--sombra);margin-bottom:14px}
 .fac-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:15px}.fac-x{border:none;background:none;font-size:16px;cursor:pointer;color:var(--muted)}
@@ -4466,6 +4467,10 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
  try{d=await (await fetch(`/api/schedule?action=ficha-facturas&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`)).json();}catch(e){}
  if(tok&&body.dataset.token!==tok)return;
  body.innerHTML='';
+ const sd=d.saldo||{};
+ if(sd.activo){const b=ce('div','fac-saldo'+(sd.saldo<0?' neg':sd.saldo>0?' pos':''));
+  b.innerHTML=sd.saldo<0?`<b>⚠️ ${-sd.saldo} sesi${sd.saldo===-1?'ón':'ones'} sin facturar</b><span>Ha hecho ${sd.gastadas} y ha pagado ${sd.pagadas}</span>`:sd.saldo>0?`<b>Le quedan ${sd.saldo} sesi${sd.saldo===1?'ón':'ones'} pagada${sd.saldo===1?'':'s'}</b><span>Ha pagado ${sd.pagadas} y ha hecho ${sd.gastadas}</span>`:`<b>Todo facturado</b><span>Sin sesiones pendientes ni pagadas por adelantado</span>`;
+  body.appendChild(b);}
  const nueva=ce('button','fac-nueva');nueva.type='button';nueva.textContent='+ Cobrar y facturar';
  body.appendChild(nueva);
  const formBox=ce('div','');body.appendChild(formBox);
