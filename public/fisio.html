@@ -91,6 +91,9 @@ input[type=number]{text-align:center}
 .btn-g{background:var(--black);color:white;width:100%;padding:13px}.btn-g:hover{opacity:.85}.btn-g:disabled{opacity:.4;cursor:not-allowed}
 .btn-o{background:none;border:1px dashed var(--border);color:var(--muted);width:100%;font-family:var(--font);font-size:14px;font-weight:500;padding:11px;border-radius:var(--r-sm);cursor:pointer}
 .btn-o:hover{background:var(--cream)}
+.ap-sel{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border-radius:12px;font-size:14px}.ap-sel button{margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:99px;padding:5px 12px;cursor:pointer}
+.btn-informe{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:var(--black);color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}
+.chs{margin-top:2px}
 .mf-fisios{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media(max-width:560px){.mf-fisios{grid-template-columns:1fr}}
 .fpk{position:relative;background:var(--cream);border-radius:12px;padding:8px 10px 10px}
 .fpk-lab{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin:0 0 6px 2px}
@@ -1481,8 +1484,10 @@ function renderAnamHub(wrap){
  h.innerHTML=`<p style="font-size:13px;color:var(--muted);margin-bottom:14px">Selecciona el protocolo de valoración</p>`;
  wrap.appendChild(h);
 
- // Fisio selector for anamnesis
- const fc=ce('div','card');
+ // Fisio: el que ha entrado en el panel. El selector solo sale si quien entra no es fisio (recepción/admin)
+ const soyFisio=fisioActual&&fisios.some(f=>f.id===fisioActual.id);
+ if(soyFisio) fisioSelId=fisioActual.id;
+ const fc=ce('div','card'); if(soyFisio) fc.style.display='none';
  fc.innerHTML=`<div class="ct">Fisioterapeuta</div>
  <select id="anamFisioSel" style="width:100%;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font)">
  <option value="">Seleccionar fisio...</option>
@@ -1536,7 +1541,7 @@ function renderProto(){
  hd.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
  <div><div style="font-size:15px;font-weight:700">${cfg.t}</div>
  <div style="font-size:11px;color:var(--muted)">Protocolo clínico · Informe generado por IA</div></div>
- <button class="btn-back" onclick="showSection('anam')">← Cambiar protocolo</button></div>`;
+ <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">${curStep<cfg.steps.length-1?`<button class="btn-informe" onclick="curStep=CFG[curProto].steps.length-1;renderProto()">Ir al informe →</button>`:''}<button class="btn-back" onclick="showSection('anam')">← Cambiar protocolo</button></div></div>`;
  wrap.appendChild(hd);
 
  // steps
@@ -1572,8 +1577,25 @@ function renderProto(){
  const m=oc.match(/D\['([^']+)'\]/);
  if(m&&D[m[1]]!==undefined){sel.value=D[m[1]];}
  });
+ chipearSelects(wrap);
 }
 
+// Convierte los desplegables de la anamnesis en botoncitos que se tocan (el <select> sigue debajo, oculto, y guarda el valor igual)
+function chipearSelects(wrap){
+ wrap.querySelectorAll('select').forEach(sel=>{
+  if(sel.dataset.chips||sel.multiple||sel.id==='anamFisioSel') return;
+  const ops=[...sel.options].filter(o=>o.value!=='');
+  if(!ops.length||ops.length>9) return;
+  // Sin opción vacía: si aún no se ha elegido nada (no está en D), que no salga nada marcado
+  if(![...sel.options].some(o=>o.value==='')){const m=(sel.getAttribute('onchange')||'').match(/D\[['"]([^'"]+)['"]\]/);if(m&&D[m[1]]===undefined){sel.insertAdjacentHTML('afterbegin','<option value="">—</option>');sel.value='';}}
+  sel.dataset.chips='1'; sel.style.display='none';
+  const box=ce('div','cks chs');
+  const pintar=()=>box.querySelectorAll('.ck').forEach(c=>c.classList.toggle('on',c.dataset.v===sel.value));
+  ops.forEach(o=>{const c=ce('div','ck'+(/⚠/.test(o.textContent)?' w':''));c.dataset.v=o.value;c.textContent=o.textContent;
+   c.onclick=()=>{sel.value=sel.value===o.value?'':o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));pintar();};box.appendChild(c);});
+  sel.insertAdjacentElement('afterend',box); pintar();
+ });
+}
 // ── HELPERS COMUNES ───────────────────────────────────────────────────────────
 function mkSel(l,o,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const s=document.createElement('select');s.innerHTML=`<option value="">—</option>`+o.map(([v,t])=>`<option value="${v}">${t}</option>`).join('');s.value=D[k]||'';s.onchange=()=>{D[k]=s.value;saveAnamD();};w.appendChild(s);return w;}
 function mkInp(l,t,p,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const i=document.createElement('input');i.type=t;i.placeholder=p;i.value=D[k]||'';i.oninput=()=>{D[k]=i.value;saveAnamD();};w.appendChild(i);return w;}
@@ -1610,6 +1632,12 @@ function stepP0(wrap){
  };
  pc.appendChild(inp);
  const listDiv=ce('div',''); listDiv.id='p0list'; pc.appendChild(listDiv);
+ if(anamPacId){ // ya elegido en la pantalla anterior: no se vuelve a pedir
+  inp.style.display='none';
+  const ya=ce('div','ap-sel');ya.innerHTML=`<b>${escH(anamPacNom)}</b><button type="button">Cambiar</button>`;
+  ya.querySelector('button').onclick=()=>{ya.remove();inp.style.display='';inp.value='';inp.focus();};
+  pc.insertBefore(ya,inp);
+ }
  wrap.appendChild(pc);
  wrap.appendChild(mkCard('Datos básicos','',[
  mkInp('Edad','number','años','edad'),
@@ -2317,16 +2345,20 @@ function mkCampoInfo(label, opts, key, info){
  // Select
  const sel=ce('select','');
  sel.style.cssText='width:100%;font-size:13px;border-radius:8px;padding:7px 10px;border:1px solid var(--border);background:#fff';
+ sel.innerHTML='<option value="">—</option>';
  opts.forEach(([v,t])=>{const o=ce('option','');o.value=v;o.textContent=t;sel.appendChild(o);});
- sel.onchange=()=>{D[key]=sel.value;};
+ sel.value=D[key]||'';
+ sel.onchange=()=>{D[key]=sel.value;saveAnamD();};
  wrap.appendChild(sel);
  wrap.appendChild(panel);
  } else {
  wrap.appendChild(lrow);
  const sel=ce('select','');
  sel.style.cssText='width:100%;font-size:13px;border-radius:8px;padding:7px 10px;border:1px solid var(--border);background:#fff';
+ sel.innerHTML='<option value="">—</option>';
  opts.forEach(([v,t])=>{const o=ce('option','');o.value=v;o.textContent=t;sel.appendChild(o);});
- sel.onchange=()=>{D[key]=sel.value;};
+ sel.value=D[key]||'';
+ sel.onchange=()=>{D[key]=sel.value;saveAnamD();};
  wrap.appendChild(sel);
  }
  return wrap;
@@ -3744,7 +3776,7 @@ Fuerza L4 D/I: ${datos.fuerzaL4D||'-'}/${datos.fuerzaL4I||'-'} | L5 ext.hallux: 
 Diagnóstico fisio: ${datos.diagnosticoFisio||'-'} | Plan: ${datos.terapiaManual||'-'}
 Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEUROLÓGICO / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS / PLAN DE TRATAMIENTO / RECOMENDACIONES / PRONÓSTICO`;
  try{
- const r=await fetch('/api/informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos})});
+ const r=await fetch('/api/informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,protocolo:curProto,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos})});
  const d=await r.json();
  if(d.ok&&d.informe){
  informeGenerado=d.informe;
@@ -3977,7 +4009,7 @@ Exploración — Abdomen: Diástasis ${datos.diastasis||'-'} | Suelo pélvico: T
 Observaciones del fisioterapeuta: ${[datos.obs1,datos.obs2,datos.obs3,datos.obs4,datos.obs5,datos.obs6,datos.obs7].filter(Boolean).join(' | ')||'-'}
 Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / DIAGNÓSTICO FISIOTERAPÉUTICO / OBJETIVOS / PLAN DE TRATAMIENTO / RECOMENDACIONES / PRONÓSTICO`;
  try{
- const r=await fetch('/api/informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos,dolorPrincipal:prompt,evaActual:datos.dolorEva||0}})});
+ const r=await fetch('/api/informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,protocolo:curProto,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos,dolorPrincipal:prompt,evaActual:datos.dolorEva||0}})});
  const d=await r.json();
  if(d.ok&&d.informe){
  informeGenerado=d.informe;
@@ -4081,7 +4113,7 @@ Máx 550 palabras. Profesional, empático y esperanzador.`;
  if(testsRealizados) datos_txt[tipo]=(datos_txt[tipo]||'')+'\nTESTS ORTOPÉDICOS: '+testsRealizados;
  const datos_obj={tipo,factores:factores.map(f=>f.t),flags,fase:fase.l,...D};
  try{
- const r=await fetch('/api/informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos_obj,dolorPrincipal:prompt,evaActual:D.evr||D.evm||D.evc||5}})});
+ const r=await fetch('/api/informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,protocolo:curProto,pacienteId:anamPacId,pacienteNombre:anamPacNom,fisioNombre:fisioNom,fisioColegiado:fisioCol,datos:{...datos_obj,dolorPrincipal:prompt,evaActual:D.evr||D.evm||D.evc||5}})});
  const d=await r.json();
  if(d.ok&&d.informe){
  informeGenerado=d.informe;
