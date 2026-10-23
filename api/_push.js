@@ -117,9 +117,7 @@ async function sinFacturar() {
 
 // ── Rendimiento por fisio (de las citas de CITAS) ──
 //   Ocupación = realizadas / huecos (HORAS SEMANA del fisio en los días laborables del periodo).
-// Primera visita = primera cita REALIZADA del paciente en el centro.
-//   Pack = ese mismo día se le emite una factura con 2 o más sesiones.
-//   Repite = sin pack, pero tiene otra cita después. Se pierde = ni pack ni otra cita.
+// Reagendan = pacientes atendidos en el periodo que tienen otra cita después de su última sesión.
 const NO_FISIO = /NO HAY FISIO|TODOS|\?\?|FIESTA|^$/i;
 const nomFisio = v => { if (Array.isArray(v)) v = v[0]; v = v && typeof v === 'object' ? v.name : String(v || ''); return v.trim(); };
 async function rendimiento(desde, hasta) {
@@ -137,37 +135,29 @@ async function rendimiento(desde, hasta) {
   fisiosT.forEach(f => { const n = String(f.fields['Name'] || '').split(' ')[0].toLowerCase(); if (n && Number(f.fields['HORAS SEMANA']) > 0) horasSem[n] = Number(f.fields['HORAS SEMANA']); });
   const R = {};
   const cuenta = n => true;
-  const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, nuevos: [], packs: 0, repiten: 0, pierden: 0 });
+  const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, atendidos: 0, reagendan: 0 });
   const realizadas = citas.filter(c => est(c) === 'REALIZADA' && pid(c));
   citas.forEach(c => {
     const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n) || !cuenta(n)) return;
     const e = est(c), x = de(n);
     if (e === 'REALIZADA') x.realizadas++; else if (e === 'CITA PERDIDA') x.perdidas++; else if (e === 'NO ASISTIÓ') x.noAsistio++; else if (e === 'CANCELADA') x.canceladas++;
   });
-  // Primeras visitas: pacientes con realizada en el periodo y sin ninguna realizada antes
+  // Reagendan: de los pacientes que ha atendido en el periodo, cuántos tienen otra cita después
+  // de su última sesión con él en el periodo (pendiente, realizada, perdida o no asistió).
+  const ultima = {}; // fisio|paciente -> última fecha atendida en el periodo
+  realizadas.forEach(c => { const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n)) return; const k = n + '|' + pid(c), f = String(c.fields['FECHA']).slice(0, 10); if (!ultima[k] || f > ultima[k]) ultima[k] = f; });
   const pacs = [...new Set(realizadas.map(c => pid(c)))];
-  const previos = new Set();
+  const futuras = {}; // paciente -> fecha más lejana con cita
   for (let i = 0; i < pacs.length; i += 40) {
     const lote = pacs.slice(i, i + 40);
-    const r = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_BEFORE({FECHA},'${desde}'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA`);
-    r.forEach(c => (c.fields['RELACIÓN - CITA'] || []).forEach(x => previos.add(x)));
+    const r = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA`).catch(() => []);
+    r.forEach(c => { const f = String(c.fields['FECHA']).slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (!futuras[id] || f > futuras[id]) futuras[id] = f; }); });
   }
-  const primera = {};
-  realizadas.slice().sort((a, b) => String(a.fields['FECHA']).localeCompare(String(b.fields['FECHA']))).forEach(c => { const id = pid(c); if (!previos.has(id) && !primera[id]) primera[id] = c; });
-  const nuevos = Object.keys(primera);
-  if (nuevos.length) {
-    const facs = await todosAT(FACTURAS, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',OR(${nuevos.map(id => `{PacienteId}='${id}'`).join(',')}))`)}`).catch(() => []);
-    const despues = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ', 'REPROGRAMADA', 'POR REAGENDAR'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${nuevos.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA`).catch(() => []);
-    nuevos.forEach(id => {
-      const c = primera[id], dia = String(c.fields['FECHA']).slice(0, 10), n = nomFisio(c.fields['PREF.']);
-      if (NO_FISIO.test(n) || !cuenta(n)) return;
-      const x = de(n); x.nuevos.push(id);
-      const pack = facs.some(r => r.fields['PacienteId'] === id && fechaCobro(r.fields) === dia && sesionesDe(r.fields) >= 2);
-      const vuelve = despues.some(r => (r.fields['RELACIÓN - CITA'] || []).includes(id) && String(r.fields['FECHA']).slice(0, 10) > dia);
-      if (pack) x.packs++; else if (vuelve) x.repiten++; else x.pierden++;
-    });
-  }
-  return Object.values(R).filter(x => x.realizadas || x.nuevos.length).map(x => { const hs = horasSem[x.fisio.toLowerCase()]; return { ...x, nuevos: x.nuevos.length, huecos: hs ? Math.round(hs * laborables / 5) : 0, sinHoras: !hs }; }).sort((a, b) => b.realizadas - a.realizadas);
+  Object.entries(ultima).forEach(([k, f]) => {
+    const [n, id] = k.split('|'); const x = de(n);
+    x.atendidos++; if (futuras[id] && futuras[id] > f) x.reagendan++;
+  });
+  return Object.values(R).filter(x => x.realizadas).map(x => { const hs = horasSem[x.fisio.toLowerCase()]; return { ...x, huecos: hs ? Math.round(hs * laborables / 5) : 0, sinHoras: !hs }; }).sort((a, b) => b.realizadas - a.realizadas);
 }
 
 const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };
