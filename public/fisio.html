@@ -4615,8 +4615,7 @@ async function renderRendimiento(wrap){
  const box=ce('div','rend');
  box.innerHTML=`<div class="rend-tot"><div class="rt" data-k="ayer"><span>Ayer</span><b>…</b><i></i></div><div class="rt" data-k="semana"><span>Esta semana</span><b>…</b><i></i></div><div class="rt" data-k="mes"><span>Este mes</span><b>…</b><i></i></div></div>
   <div class="rend-sub">Ocupación del equipo (Sara, Jonathan y Juan)</div><div class="rend-chips">${[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div>
-  <div class="rend-res"></div>
-  <div class="rend-ley">Ocupación = sesiones realizadas frente a las horas que trabaja cada fisio esos días (campo HORAS POR DÍA de la tabla FISIO; 1 hora = 1 sesión). Las horas de call-in y vídeos se muestran aparte y no cuentan para la ocupación. Reagendan = de los pacientes que ha atendido en el periodo, cuántos tienen otra cita apuntada después. Faltas = no asistió o cita perdida. De Ramiro salen sus sesiones hechas y si reagendan (suman al total, pero no a la ocupación).</div>`;
+  <div class="rend-res"></div>`;
  wrap.appendChild(box);
  const res=box.querySelector('.rend-res');
  const cargar=async k=>{
