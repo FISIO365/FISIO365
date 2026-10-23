@@ -142,6 +142,11 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tst-sig{margin-top:5px;background:#fff1ea;border-radius:8px;padding:6px 10px;font-weight:600;color:#7c2d12}
 .fi-info ul.tc li.fl b{color:#7c2d12}
 
+
+.fp-inf-top{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.fp-inf-ed{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
+.fp-inf-ayuda{font-size:12px;color:var(--muted);margin-bottom:6px}
+.fp-inf-ed textarea{width:100%;box-sizing:border-box;font-family:var(--font);font-size:13px;line-height:1.6;padding:12px;border:1.5px solid var(--border);border-radius:12px;resize:vertical;background:#fff}
 .inf-acc{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .inf-acc button{font-family:var(--font);font-size:14px;font-weight:600;border-radius:99px;padding:13px;cursor:pointer;border:1.5px solid #1a1a1a}
 .inf-acc .ia-g{background:#c2552e;border-color:#c2552e;color:#fff}.inf-acc .ia-g.hecho{background:#16a34a;border-color:#16a34a;cursor:default}
@@ -4157,27 +4162,34 @@ Máx 550 palabras. Profesional, empático y esperanzador.`;
 // DESCARGAR PDF
 // ─────────────────────────────────────────────────────────────────────────────
 // Barra de acciones tras generar el informe: guardar (ficha + app), ver PDF (imprimir/enviar) y descargar
-function accionesInforme(res,tipo,fisioNom){
- const pacId=anamPacId,pacNom=anamPacNom;
- res.parentNode.querySelectorAll('.inf-acc').forEach(x=>x.remove());
+// Barra de acciones del informe (tras generarlo y en la ficha del paciente):
+// guardar en la app (y ficha del panel) · guardar PDF en Airtable · ver PDF · descargar
+// ctx = {pacId, pacNom, tipo, fisioNom, fisioCol, getTexto, recId}
+function accionesInforme(anchor,ctx,fisioNom){
+ if(typeof ctx==='string'){const tipo=ctx;ctx={pacId:anamPacId,pacNom:anamPacNom,tipo,fisioNom,getTexto:()=>informeGenerado};}
+ anchor.parentNode.querySelectorAll(':scope > .inf-acc').forEach(x=>x.remove());
  const bar=ce('div','inf-acc');
- bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g" data-d="app">Guardar en la app del paciente</button><button type="button" class="ia-g" data-d="ficha">Guardar en su ficha (Airtable)</button></div>
+ bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g" data-d="app">${ctx.recId?'Actualizar en la app del paciente':'Guardar en la app del paciente'}</button><button type="button" class="ia-g" data-d="ficha">Guardar PDF en su ficha (Airtable)</button></div>
   <div class="ia-row"><button type="button" class="ia-v">Ver PDF · imprimir o enviar</button><button type="button" class="ia-d">Descargar PDF</button></div>`;
- res.insertAdjacentElement('afterend',bar);
- bar.querySelector('.ia-v').onclick=()=>{window._pdfWin=window.open('','_blank');descargarPDF(pacNom,informeGenerado,tipo,fisioNom,'','ver').catch(()=>{if(window._pdfWin)window._pdfWin.close();});};
- bar.querySelector('.ia-d').onclick=()=>descargarPDF(pacNom,informeGenerado,tipo,fisioNom,'','descargar').catch(()=>{});
+ anchor.insertAdjacentElement('afterend',bar);
+ const pdf=m=>descargarPDF(ctx.pacNom,ctx.getTexto(),ctx.tipo,ctx.fisioNom,ctx.fisioCol||'',m);
+ bar.querySelector('.ia-v').onclick=()=>{window._pdfWin=window.open('','_blank');pdf('ver').catch(()=>{if(window._pdfWin)window._pdfWin.close();});};
+ bar.querySelector('.ia-d').onclick=()=>pdf('descargar').catch(()=>{});
  bar.querySelectorAll('.ia-g').forEach(g=>g.onclick=async()=>{
-  if(!pacId){toast('Selecciona un paciente primero',false);return;}
+  if(!ctx.pacId){toast('Selecciona un paciente primero',false);return;}
   const dest=g.dataset.d, txt0=g.textContent;
   g.disabled=true;g.textContent='Guardando…';
   try{
-   const pdf=dest==='ficha'?await descargarPDF(pacNom,informeGenerado,tipo,fisioNom,'','base64'):null;
-   const d=await (await fetch('/api/pacientes?action=guardar-informe-completo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,destino:dest,pacienteId:pacId,pacienteNombre:pacNom,fisioNombre:fisioNom,tipo,contenido:informeGenerado,pdfBase64:pdf&&pdf.base64,filename:pdf&&pdf.nombre})})).json();
+   const f=dest==='ficha'?await pdf('base64'):null;
+   const d=await (await fetch('/api/pacientes?action=guardar-informe-completo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,destino:dest,recId:ctx.recId||'',pacienteId:ctx.pacId,pacienteNombre:ctx.pacNom,fisioNombre:ctx.fisioNom,tipo:ctx.tipo,contenido:ctx.getTexto(),pdfBase64:f&&f.base64,filename:f&&f.nombre})})).json();
    const ok=dest==='app'?d.app:d.ficha;
-   if(ok){g.textContent=dest==='app'?'✓ En su app · Mis informes':'✓ En su ficha · Archivos';g.classList.add('hecho');toast(dest==='app'?'Informe guardado en la app del paciente':'PDF guardado en su ficha de Airtable',true);}
+   if(ok){if(d.recordId)ctx.recId=d.recordId;g.textContent=dest==='app'?'✓ En su app · Mis informes':'✓ PDF en su ficha';g.classList.add('hecho');toast(dest==='app'?'Informe guardado en la app del paciente':'PDF guardado en su ficha de Airtable',true);
+    // se puede volver a guardar si se edita después
+    setTimeout(()=>{g.disabled=false;g.classList.remove('hecho');g.textContent=dest==='app'?'Actualizar en la app del paciente':'Guardar PDF otra vez en su ficha';},4000);}
    else{g.disabled=false;g.textContent=txt0;toast((dest==='app'?d.errorApp:d.errorFicha)||'No se ha podido guardar',false);}
   }catch(e){g.disabled=false;g.textContent=txt0;toast('Error: '+e.message,false);}
  });
+ return bar;
 }
 function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
  if(!fisioNom){const fo=fisios.find(f=>f.id===fisioSelId)||{};fisioNom=fo.nombre||'';fisioCol=fo.colegiado||'';}
@@ -4434,8 +4446,9 @@ async function fpTabInformes(pacId, body, pacNombre, tok){
  }catch(e){}
  // También locales
  const locales=getInformesLocal().filter(i=>i.pacienteId===pacId);
- const nombres=new Set(todos.map(i=>i.pacienteNombre+'_'+i.fecha));
- const soloLocales=locales.filter(i=>!nombres.has(i.pacienteNombre+'_'+i.fecha));
+ const clave=i=>String(i.pacienteNombre||'').toLowerCase()+'_'+i.fecha+'_'+(i.protocolo||'');
+ const nombres=new Set(todos.map(clave));
+ const soloLocales=locales.filter(i=>!nombres.has(clave(i)));
  todos=[...todos,...soloLocales];
 
  body.innerHTML='';
@@ -4445,35 +4458,20 @@ async function fpTabInformes(pacId, body, pacNombre, tok){
  }
  todos.forEach(inf=>{
  const c=ce('div','fp-inf-card');
- const savedKey='inf_saved_'+inf.id;
- const alreadySaved=localStorage.getItem(savedKey);
- c.innerHTML=`<div class="fp-inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+inf.fisioNombre:''}</div>
- <div class="fp-inf-tipo">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</div>`;
- const btns=ce('div','fp-inf-btns');
-
- const bVer=ce('button','fp-btn'); bVer.textContent='Ver';
- bVer.onclick=()=>{
- const cont=c.querySelector('.fp-inf-cont');
- if(cont){cont.remove();bVer.textContent='Ver';return;}
- const d=ce('div','fp-inf-cont');
- d.style.cssText='font-size:13px;white-space:pre-wrap;border-top:1px solid var(--border);padding-top:12px;margin-top:12px;line-height:1.7';
- d.textContent=inf.informe||'';
- c.appendChild(d);
- bVer.textContent='Ocultar';
+ c.innerHTML=`<div class="fp-inf-top"><div><div class="fp-inf-tipo">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</div><div class="fp-inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+escH(inf.fisioNombre):''}</div></div><button type="button" class="fp-btn">Abrir</button></div>`;
+ const bAbrir=c.querySelector('.fp-btn');
+ bAbrir.onclick=()=>{
+  const ab=c.querySelector('.fp-inf-ed');
+  if(ab){ab.remove();c.querySelectorAll('.inf-acc').forEach(x=>x.remove());bAbrir.textContent='Abrir';return;}
+  const ed=ce('div','fp-inf-ed');
+  ed.innerHTML=`<div class="fp-inf-ayuda">Puedes modificar el texto y luego guardarlo o sacar el PDF.</div><textarea></textarea>`;
+  const ta=ed.querySelector('textarea'); ta.value=inf.informe||'';
+  const ajusta=()=>{ta.style.height='auto';ta.style.height=Math.max(220,ta.scrollHeight+4)+'px';};
+  ta.oninput=()=>{inf.informe=ta.value;ajusta();};
+  c.appendChild(ed); setTimeout(ajusta);
+  accionesInforme(ed,{pacId:pacId,pacNom:pacNombre||inf.pacienteNombre||'',tipo:inf.protocolo||'',fisioNom:inf.fisioNombre||'',fisioCol:inf.fisioCol||'',getTexto:()=>ta.value,recId:/^rec/.test(String(inf.id))?inf.id:''});
+  bAbrir.textContent='Cerrar';
  };
-
- const bEdit=ce('button','fp-btn');bEdit.textContent='Editar';
- bEdit.onclick=()=>editarInformeFicha(c,inf,bEdit);
-
- const bPdf=ce('button','fp-btn lila'); bPdf.textContent='PDF';
- bPdf.onclick=()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'');
-
- const bSave=ce('button','fp-btn'+(alreadySaved?' green':''));
- bSave.textContent=alreadySaved?'✓ En app paciente':'Guardar en app paciente';
- bSave.onclick=()=>abrirSelectorPacienteInforme(inf, savedKey, bSave);
-
- btns.appendChild(bVer); btns.appendChild(bEdit); btns.appendChild(bPdf); btns.appendChild(bSave);
- c.appendChild(btns);
  body.appendChild(c);
  });
 }
@@ -4716,8 +4714,8 @@ async function guardarInformeLocal(pacNom,pacId,fisioNom,tipo,informe){
  arr.unshift({id:Date.now(),pacienteNombre:pacNom,pacienteId:pacId,fisioNombre:fisioNom,fisioCol:fo.colegiado||'',protocolo:tipo,fecha:new Date().toLocaleDateString('es-ES'),informe:informe});
  localStorage.setItem('fisio365_informes',JSON.stringify(arr.slice(0,100)));
  }catch(e){}
- // 2. Guardar en Airtable
- try{
+ // (Ya no se guarda el texto en la columna «Anamnesis» de Airtable: se guarda con los botones del informe)
+ if(false) try{
  await fetch('/api/pacientes?action=guardar-informe',{
  method:'POST',
  headers:{'Content-Type':'application/json'},
