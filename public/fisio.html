@@ -4170,14 +4170,14 @@ function accionesInforme(anchor,ctx,fisioNom){
  if(typeof ctx==='string'){const tipo=ctx;ctx={pacId:anamPacId,pacNom:anamPacNom,tipo,fisioNom,getTexto:()=>informeGenerado};}
  anchor.parentNode.querySelectorAll(':scope > .inf-acc').forEach(x=>x.remove());
  const bar=ce('div','inf-acc');
- const L={pac:{t:'Compartir con el paciente',s:'Se guarda en: su app · panel · Airtable'},pacUpd:{t:'Actualizar (ya compartido)',s:'Se guarda en: su app · panel · Airtable'},pacOk:{t:'✓ Compartido con el paciente',s:'Si lo cambias, vuelve a tocar'},
-  priv:{t:'Guardar sin compartir',s:'Se guarda en: panel · Airtable'},privOk:{t:'✓ Guardado sin compartir',s:'El paciente no lo ve'},load:{t:'Guardando…',s:'Un momento'}};
+ const L={pac:{t:'Compartir con el paciente',s:'Le aparecerá en su app, en «Informes»'},pacUpd:{t:'Actualizar en su app',s:'Ya lo tiene · le llegan los cambios'},pacOk:{t:'✓ Compartido con el paciente',s:'Ya lo tiene en su app'},
+  priv:{t:'Guardar sin compartir',s:'En Airtable y en su ficha del panel · el paciente no lo ve'},privOk:{t:'✓ Guardado',s:'En Airtable y en su ficha del panel'},load:{t:'Guardando…',s:'Un momento'}};
  const pon=(b,k)=>{b.innerHTML=`<span class="ia-t">${L[k].t}</span><span class="ia-s">${L[k].s}</span>`;};
- bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g" data-d="paciente"></button><button type="button" class="ia-g ia-priv" data-d="privado"></button></div>
+ bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g ia-priv" data-d="privado"></button><button type="button" class="ia-g" data-d="paciente"></button></div>
   <div class="ia-row"><button type="button" class="ia-v">Ver PDF · imprimir o enviar</button><button type="button" class="ia-d">Descargar PDF</button></div>`;
  anchor.insertAdjacentElement('afterend',bar);
- const [bPac,bPriv]=bar.querySelectorAll('.ia-g');
- const pinta=()=>{pon(bPac,ctx.recId&&ctx.compartido?'pacUpd':'pac');bPriv.style.display=ctx.recId&&ctx.compartido?'none':'';pon(bPriv,'priv');};pinta();
+ const [bPriv,bPac]=bar.querySelectorAll('.ia-g');
+ const pinta=()=>{pon(bPac,ctx.recId&&ctx.compartido?'pacUpd':'pac');pon(bPriv,'priv');};pinta();
  const pdf=m=>descargarPDF(ctx.pacNom,ctx.getTexto(),ctx.tipo,ctx.fisioNom,ctx.fisioCol||'',m);
  bar.querySelector('.ia-v').onclick=()=>{window._pdfWin=window.open('','_blank');pdf('ver').catch(()=>{if(window._pdfWin)window._pdfWin.close();});};
  bar.querySelector('.ia-d').onclick=()=>pdf('descargar').catch(()=>{});
@@ -4188,7 +4188,7 @@ function accionesInforme(anchor,ctx,fisioNom){
   try{
    const texto=ctx.getTexto();
    // el PDF solo se sube a Airtable si el texto ha cambiado desde la última subida (evita duplicados)
-   const f=ctx.pdfTexto===texto?null:await pdf('base64');
+   const f=(dest==='paciente'||ctx.pdfTexto===texto)?null:await pdf('base64');
    const d=await (await fetch('/api/pacientes?action=guardar-informe-completo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,destino:dest,recId:ctx.recId||'',pacienteId:ctx.pacId,pacienteNombre:ctx.pacNom,fisioNombre:ctx.fisioNom,tipo:ctx.tipo,contenido:texto,pdfBase64:f&&f.base64,filename:f&&f.nombre})})).json();
    g.disabled=false;
    if(d.app){
@@ -4198,7 +4198,7 @@ function accionesInforme(anchor,ctx,fisioNom){
     pinta();g.classList.add('hecho');pon(g,dest==='paciente'?'pacOk':'privOk');
     setTimeout(()=>{g.classList.remove('hecho');pinta();},5000);
     const aviso=f&&!d.ficha?' (el PDF no se pudo subir a Airtable)':'';
-    toast((dest==='paciente'?'Compartido: el paciente lo verá en su app':'Guardado sin compartir: el paciente no lo ve')+aviso,!aviso);
+    toast((dest==='paciente'?'Compartido: ya lo tiene en su app':'Guardado en Airtable y en su ficha del panel')+aviso,!aviso);
    }else{pinta();toast(d.errorApp||'No se ha podido guardar',false);}
   }catch(e){g.disabled=false;pinta();toast('Error: '+e.message,false);}
  });
