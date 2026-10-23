@@ -35,9 +35,21 @@ const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', '
 
 const eur = n => Number(n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 const escH = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const pct = (a, b) => b ? Math.round(a * 100 / b) + '%' : '—';
+function tablaRendimiento(lista, titulo, conPack) {
+  if (!lista.length) return '';
+  const th = t => `<th style="text-align:left;padding:6px 6px 6px 0;font-size:11px;color:#7d6a60;font-weight:600;border-bottom:1px solid #eee">${t}</th>`;
+  const td = (t, b) => `<td style="padding:8px 6px 8px 0;border-bottom:1px solid #f1ede9;${b ? 'font-weight:600' : ''}">${t}</td>`;
+  const T = lista.reduce((a, x) => { ['realizadas', 'huecos', 'nuevos', 'packs', 'repiten', 'pierden', 'noAsistio', 'perdidas', 'canceladas'].forEach(k => a[k] = (a[k] || 0) + x[k]); return a; }, { fisio: 'Total' });
+  const fila = x => `<tr>${td(escH(x.fisio), true)}${td(x.realizadas + (x.huecos ? ' / ' + x.huecos : ''))}${td(pct(x.realizadas, x.huecos))}${td(x.nuevos)}${conPack ? td(x.nuevos ? pct(x.packs, x.nuevos) : '—') : ''}${td(x.nuevos ? pct(conPack ? x.repiten : x.packs + x.repiten, x.nuevos) : '—')}${td(x.nuevos ? pct(x.pierden, x.nuevos) : '—')}${td(x.noAsistio + x.perdidas)}</tr>`;
+  return `<h3 style="margin:24px 0 8px;font-size:15px">${titulo}</h3><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap"><tr>${th('Fisio')}${th('Hechas / huecos')}${th('Ocupación')}${th('1ª visitas')}${conPack ? th('Pack') : ''}${th(conPack ? 'Repiten' : 'Vuelven')}${th('Se pierden')}${th('Faltas')}</tr>${lista.map(fila).join('')}${lista.length > 1 ? fila(T) : ''}</table></div>`;
+}
 async function resumenFacturacion(ayer) {
   const sf = await saldo.sinFacturar();
-  if (!sf.activo) return 'sin facturas todavía';
+  const rendDia = await saldo.rendimiento(ayer.fecha, ayer.fecha);
+  const hoyM = madrid(0);
+  const rendSemana = hoyM.dia === 1 ? await saldo.rendimiento(madrid(-7).fecha, madrid(-1).fecha) : null;
   const citas = await todos(CITAS_TABLE, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${ayer.fecha}'`)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=HORA&fields[]=your-name`);
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const hechas = citas.filter(c => ['REALIZADA', 'CITA PERDIDA'].includes(est(c))).length;
@@ -47,15 +59,18 @@ async function resumenFacturacion(ayer) {
   const fila = (a, b, c) => `<tr><td style="padding:8px 0;border-bottom:1px solid #eee">${a}</td><td style="padding:8px 0;border-bottom:1px solid #eee;color:#7d6a60">${b}</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;font-weight:600">${c}</td></tr>`;
   const fechaTxt = `${DIAS[ayer.dia]} ${+ayer.fecha.slice(8)}/${+ayer.fecha.slice(5, 7)}`;
   const html = `<div style="font-family:Arial,sans-serif;background:#f7f3ef;padding:24px"><div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;color:#1a1a1a">
-  <div style="font-size:12px;color:#c2552e;font-weight:700;letter-spacing:1px">RESUMEN DE FACTURACIÓN</div>
+  <div style="font-size:12px;color:#c2552e;font-weight:700;letter-spacing:1px">RESUMEN DIARIO</div>
   <h2 style="margin:6px 0 18px;font-size:20px">${fechaTxt}</h2>
   <p style="margin:0 0 4px">Sesiones hechas: <b>${hechas}</b> · Facturas emitidas: <b>${facs.length}</b> (${eur(total)})</p>
-  ${sf.lista.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b42318">⚠️ Sesiones sin facturar (${sf.lista.reduce((t, x) => t - x.saldo, 0)})</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${sf.lista.map(x => fila(escH(x.nombre), escH(x.fisio), (-x.saldo) + ' sin facturar')).join('')}</table>` : `<p style="margin:18px 0 0;color:#16803c;font-weight:600">✓ No hay sesiones sin facturar</p>`}
+  ${tablaRendimiento(rendDia, 'Rendimiento del día', sf.activo)}
+  ${rendSemana ? tablaRendimiento(rendSemana, 'Rendimiento de la semana pasada', sf.activo) : ''}
+  <p style="margin:8px 0 0;font-size:11px;color:#9b8f86">${sf.activo ? 'Pack = compra bono de 2+ sesiones el día de su 1ª visita · Repiten = sin pack pero con otra cita' : 'Vuelven = tienen otra cita después de su 1ª visita (el % de pack saldrá cuando se facture desde el panel)'} · Faltas = no asistió o cita perdida</p>
+  ${!sf.activo ? '' : sf.lista.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b42318">⚠️ Sesiones sin facturar (${sf.lista.reduce((t, x) => t - x.saldo, 0)})</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${sf.lista.map(x => fila(escH(x.nombre), escH(x.fisio), (-x.saldo) + ' sin facturar')).join('')}</table>` : `<p style="margin:18px 0 0;color:#16803c;font-weight:600">✓ No hay sesiones sin facturar</p>`}
   ${sinMarcar.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b45309">Citas de ayer sin marcar (siguen en «Pendiente»): ${sinMarcar.length}</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${sinMarcar.map(c => fila(escH(c.fields['your-name'] || ''), escH(fisioDe(c.fields['PREF.'])), escH(String(c.fields['HORA'] || '').slice(0, 5)))).join('')}</table>` : ''}
   ${facs.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Facturas emitidas</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${facs.map(r => fila(escH(r.fields['Nº FACTURA'] || ''), escH([r.fields['CONCEPTO 1'], r.fields['CONCEPTO 2']].filter(Boolean).join(' + ')) + (r.fields['MODO DE PAGO'] ? ' · ' + escH(r.fields['MODO DE PAGO']) : ''), eur(r.fields['TOTAL']))).join('')}</table>` : ''}
   </div></div>`;
   const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: [{ email: process.env.RESUMEN_EMAIL || 'info@fisioterapia365.com' }], subject: `Facturación ${fechaTxt}${sf.lista.length ? ' · ⚠️ ' + sf.lista.length + ' pacientes sin facturar' : ' · todo en orden'}`, htmlContent: html }) });
+    body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: [{ email: process.env.RESUMEN_EMAIL || 'info@fisioterapia365.com' }], subject: `Resumen ${fechaTxt}${sf.lista.length ? ' · ⚠️ ' + sf.lista.length + ' pacientes sin facturar' : ''}${rendSemana ? ' · + semana' : ''}`, htmlContent: html }) });
   return r.ok ? 'enviado' : 'error brevo ' + r.status;
 }
 

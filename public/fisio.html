@@ -4471,6 +4471,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
  if(sd.activo){const b=ce('div','fac-saldo'+(sd.saldo<0?' neg':sd.saldo>0?' pos':''));
   b.innerHTML=sd.saldo<0?`<b>⚠️ ${-sd.saldo} sesi${sd.saldo===-1?'ón':'ones'} sin facturar</b><span>Ha hecho ${sd.gastadas} y ha pagado ${sd.pagadas}</span>`:sd.saldo>0?`<b>Le quedan ${sd.saldo} sesi${sd.saldo===1?'ón':'ones'} pagada${sd.saldo===1?'':'s'}</b><span>Ha pagado ${sd.pagadas} y ha hecho ${sd.gastadas}</span>`:`<b>Todo facturado</b><span>Sin sesiones pendientes ni pagadas por adelantado</span>`;
   body.appendChild(b);}
+ else{const b=ce('div','fac-saldo');b.innerHTML='<b>Saldo de sesiones</b><span>Empezará a contar con la primera factura emitida desde el panel (cuando conectemos Holded).</span>';body.appendChild(b);}
  const nueva=ce('button','fac-nueva');nueva.type='button';nueva.textContent='+ Cobrar y facturar';
  body.appendChild(nueva);
  const formBox=ce('div','');body.appendChild(formBox);

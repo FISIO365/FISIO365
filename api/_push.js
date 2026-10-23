@@ -114,5 +114,56 @@ async function sinFacturar() {
 }
 
 
-const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro };
+
+// ── Rendimiento por fisio (de las citas de CITAS) ──
+// Ocupación = realizadas / huecos (HUECOS SEMANA del fisio; un día = HUECOS SEMANA / 5)
+// Primera visita = primera cita REALIZADA del paciente en el centro.
+//   Pack = ese mismo día se le emite una factura con 2 o más sesiones.
+//   Repite = sin pack, pero tiene otra cita después. Se pierde = ni pack ni otra cita.
+const NO_FISIO = /NO HAY FISIO|TODOS|\?\?|FIESTA|^$/i;
+const nomFisio = v => { if (Array.isArray(v)) v = v[0]; v = v && typeof v === 'object' ? v.name : String(v || ''); return v.trim(); };
+async function rendimiento(desde, hasta) {
+  const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
+  const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
+  const [citas, fisios] = await Promise.all([
+    todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=PacienteId&fields[]=FECHA`),
+    todosAT('tbl2mLUrnaKCFTs6g', `fields[]=Name&fields[]=HUECOS SEMANA&fields[]=Role`)
+  ]);
+  const dias = Math.round((new Date(hasta) - new Date(desde)) / 864e5) + 1;
+  const cap = {}; fisios.forEach(f => { const n = String(f.fields['Name'] || '').split(' ')[0].toLowerCase(); if (n && f.fields['HUECOS SEMANA']) cap[n] = Number(f.fields['HUECOS SEMANA']) * (dias >= 5 ? dias / 7 : dias / 5); });
+  const R = {};
+  const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, perdidas: 0, noAsistio: 0, canceladas: 0, nuevos: [], packs: 0, repiten: 0, pierden: 0 });
+  const realizadas = citas.filter(c => est(c) === 'REALIZADA' && c.fields['PacienteId']);
+  citas.forEach(c => {
+    const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n)) return;
+    const e = est(c), x = de(n);
+    if (e === 'REALIZADA') x.realizadas++; else if (e === 'CITA PERDIDA') x.perdidas++; else if (e === 'NO ASISTIÓ') x.noAsistio++; else if (e === 'CANCELADA') x.canceladas++;
+  });
+  // Primeras visitas: pacientes con realizada en el periodo y sin ninguna realizada antes
+  const pacs = [...new Set(realizadas.map(c => c.fields['PacienteId']))];
+  const previos = new Set();
+  for (let i = 0; i < pacs.length; i += 40) {
+    const lote = pacs.slice(i, i + 40);
+    const r = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_BEFORE({FECHA},'${desde}'),OR(${lote.map(id => `{PacienteId}='${id}'`).join(',')}))`)}&fields[]=PacienteId`);
+    r.forEach(c => previos.add(c.fields['PacienteId']));
+  }
+  const primera = {};
+  realizadas.slice().sort((a, b) => String(a.fields['FECHA']).localeCompare(String(b.fields['FECHA']))).forEach(c => { const id = c.fields['PacienteId']; if (!previos.has(id) && !primera[id]) primera[id] = c; });
+  const nuevos = Object.keys(primera);
+  if (nuevos.length) {
+    const facs = await todosAT(FACTURAS, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',OR(${nuevos.map(id => `{PacienteId}='${id}'`).join(',')}))`)}`).catch(() => []);
+    const despues = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ', 'REPROGRAMADA', 'POR REAGENDAR'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${nuevos.map(id => `{PacienteId}='${id}'`).join(',')}))`)}&fields[]=PacienteId&fields[]=FECHA`).catch(() => []);
+    nuevos.forEach(id => {
+      const c = primera[id], dia = String(c.fields['FECHA']).slice(0, 10), n = nomFisio(c.fields['PREF.']);
+      if (NO_FISIO.test(n)) return;
+      const x = de(n); x.nuevos.push(id);
+      const pack = facs.some(r => r.fields['PacienteId'] === id && fechaCobro(r.fields) === dia && sesionesDe(r.fields) >= 2);
+      const vuelve = despues.some(r => r.fields['PacienteId'] === id && String(r.fields['FECHA']).slice(0, 10) > dia);
+      if (pack) x.packs++; else if (vuelve) x.repiten++; else x.pierden++;
+    });
+  }
+  return Object.values(R).filter(x => x.realizadas || x.nuevos.length).map(x => ({ ...x, nuevos: x.nuevos.length, huecos: cap[x.fisio.toLowerCase()] ? Math.round(cap[x.fisio.toLowerCase()]) : 0 })).sort((a, b) => b.realizadas - a.realizadas);
+}
+
+const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento };
 module.exports = { leerSub, enviar, avisar, idValido, TABLAS, BASE_ID, saldo };
