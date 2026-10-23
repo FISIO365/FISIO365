@@ -7,7 +7,7 @@
 //     (y los ha hecho en el último mes; si ese día le llega el de la cita, solo le llega ese)
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const { enviar, BASE_ID, TABLAS } = require('./_push');
-const saldo = require('./_saldo');
+const { saldo } = require('./_push');
 const CITAS_TABLE = 'tblTPlcuiSjQngkaD';
 const TAREAS_TABLE = 'tblIXYE5ToRNY7MN4'; // cada vez que un paciente pulsa «He terminado por hoy»
 const AT = { Authorization: `Bearer ${AIRTABLE_TOKEN}` };
