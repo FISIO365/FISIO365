@@ -127,7 +127,23 @@ async function rendimiento(desde, hasta) {
   const pid = c => (c.fields['RELACIÓN - CITA'] || [])[0] || '';
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
-  const citas = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA`);
+  const [citas, fisiosT] = await Promise.all([
+    todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA`),
+    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORARIO').catch(() => [])
+  ]);
+  // HORARIO de cada fisio: «Lunes 9-14 16-20» → horas de trabajo por día de la semana (0 = domingo)
+  const DIAS_N = ['dom', 'lun', 'mar', 'mi', 'jue', 'vie', 'sá'];
+  const horario = {};
+  fisiosT.forEach(f => {
+    const n = String(f.fields['Name'] || '').split(' ')[0].toLowerCase(); const txt = String(f.fields['HORARIO'] || ''); if (!n || !txt.trim()) return;
+    const h = {};
+    txt.split('\n').forEach(l => {
+      const t = l.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); const d = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab'].findIndex(x => t.startsWith(x)); if (d < 0) return;
+      const horas = new Set(); (t.match(/(\d{1,2})(?:[:.]\d{2})?\s*-\s*(\d{1,2})(?:[:.]\d{2})?/g) || []).forEach(r => { const [a, b] = r.split('-').map(x => parseInt(x)); for (let k = a; k < b; k++) horas.add(k); });
+      h[d] = horas;
+    });
+    horario[n] = h;
+  });
   const R = {};
   const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, nuevos: [], packs: 0, repiten: 0, pierden: 0 });
   // Huecos por fisio y día, a partir de su agenda
@@ -137,7 +153,7 @@ async function rendimiento(desde, hasta) {
     const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n)) return;
     const m = String(c.fields['HORA'] || '').match(/(\d{1,2}):(\d{2})/); if (!m) return;
     const k = n + '|' + String(c.fields['FECHA']).slice(0, 10), h = +m[1];
-    const a = (agenda[k] = agenda[k] || { n, horas: {} });
+    const a = (agenda[k] = agenda[k] || { n, fecha: String(c.fields['FECHA']).slice(0, 10), horas: {} });
     const x = (a.horas[h] = a.horas[h] || { libre: false, bloq: false, hecha: false });
     const e = est(c);
     if (BLOQ.test(e)) x.bloq = true; else x.libre = true;
@@ -147,8 +163,18 @@ async function rendimiento(desde, hasta) {
   Object.values(agenda).forEach(a => {
     const hs = Object.keys(a.horas).map(Number).filter(h => disponible(a.horas[h]));
     if (!hs.length) return;
+    // Con HORARIO: huecos = sus horas de ese día, menos comida/bloqueos de la agenda
+    const hor = horario[a.n.toLowerCase()], dow = new Date(a.fecha + 'T12:00:00Z').getUTCDay();
+    if (hor && hor[dow]) { let n = 0; hor[dow].forEach(h => { if (!a.horas[h] || disponible(a.horas[h])) n++; }); de(a.n).huecos += Math.max(n, hs.length); de(a.n).conHorario = true; return; }
+    // Horas con agenda + huecos sueltos de 1 hora entre citas. Si hay 2 o más horas seguidas
+    // sin nada (p. ej. el parón de un horario partido), no cuentan como huecos.
     const ini = Math.min(...hs), fin = Math.max(...hs);
-    let n = 0; for (let h = ini; h <= fin; h++) if (!a.horas[h] || disponible(a.horas[h])) n++;
+    let n = 0;
+    for (let h = ini; h <= fin; h++) {
+      if (a.horas[h]) { if (disponible(a.horas[h])) n++; continue; }
+      const solo = !!a.horas[h - 1] && !!a.horas[h + 1];
+      if (solo) n++;
+    }
     de(a.n).huecos += n;
   });
   const realizadas = citas.filter(c => est(c) === 'REALIZADA' && pid(c));
