@@ -4170,8 +4170,8 @@ function accionesInforme(anchor,ctx,fisioNom){
  if(typeof ctx==='string'){const tipo=ctx;ctx={pacId:anamPacId,pacNom:anamPacNom,tipo,fisioNom,getTexto:()=>informeGenerado};}
  anchor.parentNode.querySelectorAll(':scope > .inf-acc').forEach(x=>x.remove());
  const bar=ce('div','inf-acc');
- const L={pac:{t:'Compartir con el paciente',s:'Lo verá en su app · también queda para ti'},pacUpd:{t:'Actualizar en su app',s:'Ya lo tiene · guarda los cambios'},pacOk:{t:'✓ Compartido con el paciente',s:'Si lo cambias, vuelve a tocar'},
-  priv:{t:'Guardar solo para ti',s:'En su ficha del panel y PDF en Airtable'},privOk:{t:'✓ Guardado para ti',s:'El paciente no lo ve'},load:{t:'Guardando…',s:'Un momento'}};
+ const L={pac:{t:'Compartir con el paciente',s:'Le aparecerá en su app'},pacUpd:{t:'Actualizar en su app',s:'Ya lo tiene · guarda los cambios'},pacOk:{t:'✓ Compartido con el paciente',s:'Si lo cambias, vuelve a tocar'},
+  priv:{t:'Guardar sin compartir',s:'Solo lo veis los fisios'},privOk:{t:'✓ Guardado sin compartir',s:'El paciente no lo ve'},load:{t:'Guardando…',s:'Un momento'}};
  const pon=(b,k)=>{b.innerHTML=`<span class="ia-t">${L[k].t}</span><span class="ia-s">${L[k].s}</span>`;};
  bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g" data-d="paciente"></button><button type="button" class="ia-g ia-priv" data-d="privado"></button></div>
   <div class="ia-row"><button type="button" class="ia-v">Ver PDF · imprimir o enviar</button><button type="button" class="ia-d">Descargar PDF</button></div>`;
@@ -4198,7 +4198,7 @@ function accionesInforme(anchor,ctx,fisioNom){
     pinta();g.classList.add('hecho');pon(g,dest==='paciente'?'pacOk':'privOk');
     setTimeout(()=>{g.classList.remove('hecho');pinta();},5000);
     const aviso=f&&!d.ficha?' (el PDF no se pudo subir a Airtable)':'';
-    toast((dest==='paciente'?'Compartido: el paciente lo verá en su app':'Guardado solo para ti')+aviso,!aviso);
+    toast((dest==='paciente'?'Compartido: el paciente lo verá en su app':'Guardado sin compartir: el paciente no lo ve')+aviso,!aviso);
    }else{pinta();toast(d.errorApp||'No se ha podido guardar',false);}
   }catch(e){g.disabled=false;pinta();toast('Error: '+e.message,false);}
  });
@@ -4459,7 +4459,7 @@ async function fpTabInformes(pacId, body, pacNombre, tok){
  }
  todos.forEach(inf=>{
  const c=ce('div','fp-inf-card');
- c.innerHTML=`<div class="fp-inf-top"><div><div class="fp-inf-tipo">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</div><div class="fp-inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+escH(inf.fisioNombre):''}</div>${/^rec/.test(String(inf.id))?`<span class="fp-inf-vis ${inf.soloFisio?'priv':''}">${inf.soloFisio?'Solo para ti':'Lo ve el paciente'}</span>`:''}</div><button type="button" class="fp-btn">Abrir</button></div>`;
+ c.innerHTML=`<div class="fp-inf-top"><div><div class="fp-inf-tipo">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</div><div class="fp-inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+escH(inf.fisioNombre):''}</div>${/^rec/.test(String(inf.id))?`<span class="fp-inf-vis ${inf.soloFisio?'priv':''}">${inf.soloFisio?'Sin compartir':'Compartido con el paciente'}</span>`:''}</div><button type="button" class="fp-btn">Abrir</button></div>`;
  const bAbrir=c.querySelector('.fp-btn');
  bAbrir.onclick=()=>{
   const ab=c.querySelector('.fp-inf-ed');
