@@ -1642,8 +1642,7 @@ function stepP0(wrap){
  wrap.appendChild(mkCard('Datos básicos','',[
  mkInp('Edad','number','años','edad'),
  mkSel('Sexo',[['h','Hombre'],['m','Mujer'],['o','Otro']],'sexo'),
- mkInp('Peso (kg)','number','kg','peso'),
- mkInp('Talla (cm)','number','cm','talla'),
+ mkSel('Peso',[['bajo','Bajo'],['normal','Normal'],['alto','Alto']],'peso'),
  mkSel('Actividad',[['sed','Sedentario/a'],['lev','Leve'],['mod','Moderada'],['alt','Alta / deporte'],['comp','Competición']],'act'),
  mkSel('Ocupación',[['sent','Trabajo sentado'],['cond','Conductor'],['bip','Bipedestación 4–8h'],['bip+','Bipedestación +8h'],['fis','Trabajo físico'],['dep','Deportista']],'ocu'),
  ]));
