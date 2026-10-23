@@ -1108,7 +1108,9 @@ function montarEditorEjs(el,inicial,onCambio){
   const e=biblio.find(x=>x.id===b.dataset.id);if(!e)return;
   ejs.push(peNorm({_nuevo:1,nombre:e.nombre,series:e.series,reps:(+e.duracion>0)?0:e.reps,duracion:e.duracion,descanso:e.descanso,zona:e.zona,youtubeUrl:e.youtubeUrl,imagen:e.imagen}));
   nuevo=ejs.length-1;pintar();avisar();
-  b.classList.add('ok');b.querySelector('.pe-add').textContent='✓';
+  // Al elegir uno, se cierra la lista y se vacía el buscador (listo para buscar el siguiente)
+  res.classList.remove('on');res.innerHTML='';inp.value='';inp.blur();
+  const ult=lista.querySelectorAll('.pe-ej');if(ult.length)ult[ult.length-1].scrollIntoView({behavior:'smooth',block:'nearest'});
  });
  const CHIPS={rep:[5,8,10,12,15,20],seg:[15,20,30,45,60]};
  function pintar(){
