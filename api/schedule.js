@@ -50,12 +50,115 @@ async function contactosDelPaciente(patientId) {
   }).map(c => c.id);
 }
 
+
+// ── EMITIR FACTURA (botón de la tabla FACTURAS de Airtable) ─────────────────
+// Se crea en Holded como ticket de venta (factura simplificada con DNI), en la serie por defecto,
+// con el número que asigna Holded y nunca con fecha anterior a la última emitida.
+const FACTURAS_TABLE = 'tblJw7suXLERn8AFQ';
+const FF = { fecha: 'fldqZyXkxhGRS1qvn', paciente: 'fldbmNoGhedI6ySSb', c1: 'fld3lRaKQbUYcW5qY', n1: 'fldWj0dUmJzTn0lgr', p1: 'fldu2QiBD9hM5scRC', c2: 'fldlkX8RO7crsVOye', n2: 'fldOW7e0lHx3Tfu4X', p2: 'fldkYc6HBh9E1YjUv', notas: 'fldoi8INIByEPPpMn', estado: 'fldWyEjNGH9CCRfmM', num: 'fldcTFAHH31Lsz53c', pdf: 'fld8jBu2P4sPB21ZC', aNombre: 'fldBW06oApJQaNlN9', aNif: 'fld6VO3g0KrFpAi6P', aDir: 'fldFK7NwsZ5AUY6qp' };
+let emitiendo = Promise.resolve();
+const at = (path, opt = {}) => fetch(`https://api.airtable.com/v0/${BASE_ID}/${path}`, { ...opt, headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json', ...(opt.headers || {}) } }).then(r => r.json());
+const holdedPost = async (path, body) => { const r = await fetch(HOLDED_URL + path, { method: 'POST', headers: { key: HOLDED_KEY, accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const d = await r.json().catch(() => ({})); if (!r.ok || d.status === 0) throw new Error(d.info || d.message || ('Holded ' + r.status)); return d; };
+const pagina = (ok, titulo, texto) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f7f3ef;font-family:Poppins,sans-serif;color:#1a1a1a;padding:16px;box-sizing:border-box}.c{background:#fff;border-radius:20px;padding:32px 28px;max-width:420px;width:100%;text-align:center}.i{width:56px;height:56px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;background:${ok ? '#16a34a' : '#c2552e'}}h1{font-size:20px;margin:0 0 8px}p{margin:0;color:#6b5f57;line-height:1.5}</style></head><body><div class="c"><div class="i">${ok ? '✓' : '!'}</div><h1>${titulo}</h1><p>${texto}</p><p style="margin-top:16px;font-size:13px">Ya puedes cerrar esta pestaña.</p></div></body></html>`;
+const escHtml = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function emitirFactura(recId) {
+  const rec = await at(`${FACTURAS_TABLE}/${recId}?returnFieldsByFieldId=true`);
+  if (rec.error) throw new Error('No encuentro esa fila de FACTURAS');
+  const f = rec.fields || {};
+  const nombreSel = v => (v && typeof v === 'object' ? v.name : v) || '';
+  if (f[FF.num]) return { ya: true, num: f[FF.num] };
+  const pacId = (f[FF.paciente] || [])[0];
+  if (!pacId) throw new Error('Falta elegir el PACIENTE');
+  const lineas = [];
+  for (const [c, n, pr] of [[FF.c1, FF.n1, FF.p1], [FF.c2, FF.n2, FF.p2]]) {
+    const concepto = nombreSel(f[c]), uds = Number(f[n] || 0), precio = Number(f[pr] || 0);
+    if (!concepto && !uds && !precio) continue;
+    if (!concepto || !uds || !precio) throw new Error('Cada línea necesita concepto, nº de sesiones y precio');
+    lineas.push({ concepto, uds, precio });
+  }
+  if (!lineas.length) throw new Error('Falta la línea 1 (concepto, nº de sesiones y precio)');
+  const notas = String(f[FF.notas] || '').trim();
+
+  // Fecha: hoy, o la de la fila si es anterior a hoy y no anterior a la última factura emitida
+  const ahora = Math.floor(Date.now() / 1000);
+  const recientes = await holded('/documents/salesreceipt?starttmp=' + (ahora - 400 * 86400) + '&endtmp=' + (ahora + 86400)).catch(() => []);
+  const ultima = (Array.isArray(recientes) ? recientes : []).filter(d => !d.draft).sort((a, b) => (b.date || 0) - (a.date || 0))[0];
+  let fecha = ahora;
+  if (f[FF.fecha]) {
+    const fd = Math.floor(new Date(f[FF.fecha] + 'T12:00:00Z').getTime() / 1000);
+    if (fd > ahora + 86400) throw new Error('La fecha no puede ser futura');
+    if (ultima && ultima.date && fd < ultima.date - 43200) throw new Error('La fecha es anterior a la última factura emitida (' + new Date(ultima.date * 1000).toLocaleDateString('es-ES') + '). Deja la fecha vacía para usar la de hoy.');
+    if (fd < ahora - 43200) fecha = fd;
+  }
+  // IVA: el mismo que lleva la última factura de la serie (sanitaria exenta → 0)
+  const tax = ultima && ultima.products && ultima.products[0] && ultima.products[0].tax != null ? Number(ultima.products[0].tax) : 0;
+
+  // Contacto: «Facturar a» si está rellenado; si no, el paciente (por DNI)
+  let datos;
+  if (String(f[FF.aNombre] || '').trim()) {
+    datos = { name: String(f[FF.aNombre]).trim(), code: normDni(f[FF.aNif]), address: String(f[FF.aDir] || '').trim() };
+  } else {
+    const pac = await at(`${PACIENTES}/${pacId}`);
+    const pf = pac.fields || {};
+    if (!pf['DNI']) throw new Error('El paciente no tiene DNI en Airtable');
+    datos = { name: String(pf['FULL NAME'] || '').trim(), code: normDni(pf['DNI']), email: pf['EMAIL'] || '', mobile: pf['WHATSAPP'] || pf['TELF'] || '' };
+  }
+  if (!datos.code) throw new Error('Falta el DNI/NIF de quien recibe la factura');
+  const lista = await contactos();
+  let contacto = lista.find(c => normDni(c.code || c.vatnumber) === datos.code);
+  let contactId = contacto && contacto.id;
+  if (!contactId) {
+    const body = { name: datos.name, code: datos.code, type: 'client', isperson: !/^[A-HJ-NP-SUVW]/.test(datos.code) };
+    if (datos.email) body.email = datos.email;
+    if (datos.mobile) body.mobile = datos.mobile;
+    if (datos.address) body.billAddress = { address: datos.address };
+    const c = await holdedPost('/contacts', body);
+    contactId = c.id; cacheContactos = null;
+  }
+
+  const doc = await holdedPost('/documents/salesreceipt', {
+    contactId, date: fecha, notes: notas,
+    items: lineas.map(l => ({ name: l.concepto === 'Otros' && notas ? notas.split('\n')[0].slice(0, 120) : l.concepto, units: l.uds, subtotal: l.precio, tax }))
+  });
+  const docId = doc.id;
+  const creado = await holded('/documents/salesreceipt/' + docId).catch(() => ({}));
+  const num = creado.docNumber || doc.invoiceNum || docId;
+  const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: new Date(fecha * 1000).toISOString().slice(0, 10) };
+  await at(`${FACTURAS_TABLE}/${recId}`, { method: 'PATCH', body: JSON.stringify({ fields: campos, typecast: true }) });
+  try {
+    const pdf = await holded('/documents/salesreceipt/' + docId + '/pdf');
+    if (pdf && pdf.data) await fetch(`https://content.airtable.com/v0/${BASE_ID}/${recId}/${FF.pdf}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'application/pdf', file: pdf.data, filename: 'Factura_' + String(num).replace(/[^\w-]/g, '_') + '.pdf' }) });
+  } catch (e) {}
+  return { num, otro: !!String(f[FF.aNombre] || '').trim(), total: lineas.reduce((t, l) => t + l.uds * l.precio, 0) };
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { patientId, action } = req.query;
+
+  if (action === 'emitir') {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    const { rec, k } = req.query;
+    if (!process.env.EMITIR_TOKEN || k !== process.env.EMITIR_TOKEN) return res.status(401).send(pagina(false, 'Enlace no válido', 'Este botón no está bien configurado.'));
+    if (!HOLDED_KEY) return res.status(200).send(pagina(false, 'Holded no está conectado', 'Falta añadir la clave de Holded en Vercel.'));
+    if (!/^rec[A-Za-z0-9]{14}$/.test(rec || '')) return res.status(400).send(pagina(false, 'Fila no válida', 'No se ha podido identificar la factura.'));
+    // De una en una, para que la numeración salga siempre en orden
+    const turno = emitiendo.then(() => emitirFactura(rec));
+    emitiendo = turno.catch(() => {});
+    try {
+      const r = await turno;
+      if (r.ya) return res.status(200).send(pagina(true, 'Ya estaba emitida', 'Esta factura ya se emitió con el número ' + escHtml(r.num) + '. No se ha creado otra.'));
+      return res.status(200).send(pagina(true, 'Factura ' + escHtml(r.num) + ' emitida', 'Creada en Holded por ' + r.total.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €.' + (r.otro ? ' Va a nombre de otra persona, así que no aparece en la app del paciente.' : ' Ya le aparece al paciente en su app.')));
+    } catch (e) {
+      try { await at(`${FACTURAS_TABLE}/${rec}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.estado]: 'Error' }, typecast: true }) }); } catch (x) {}
+      return res.status(200).send(pagina(false, 'No se ha emitido', escHtml(e.message)));
+    }
+  }
+
   if (!patientId) return res.status(400).json({ error: 'Falta patientId' });
 
   // ── FACTURAS DEL PACIENTE (Holded, solo lectura) ─────────────────────────
