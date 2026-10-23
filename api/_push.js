@@ -146,7 +146,7 @@ async function rendimiento(desde, hasta) {
   const capacidad = n => { const v = horasDia[n]; if (!v) return 0; let t = 0; for (let d = new Date(desde + 'T12:00:00Z'); d <= new Date(hasta + 'T12:00:00Z'); d = new Date(d.getTime() + 864e5)) t += v[d.getUTCDay()]; return Math.round(t); };
   const R = {};
   const cuenta = n => true;
-  const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, atendidos: 0, reagendan: 0 });
+  const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, atendidos: 0, reagendan: 0, lista: [] });
   const realizadas = citas.filter(c => est(c) === 'REALIZADA' && pid(c));
   citas.forEach(c => {
     const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n) || !cuenta(n)) return;
@@ -164,10 +164,20 @@ async function rendimiento(desde, hasta) {
     const r = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA`).catch(() => []);
     r.forEach(c => { const f = String(c.fields['FECHA']).slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (!futuras[id] || f > futuras[id]) futuras[id] = f; }); });
   }
+  const sinCita = [];
   Object.entries(ultima).forEach(([k, f]) => {
     const [n, id] = k.split('|'); const x = de(n);
-    x.atendidos++; if (futuras[id] && futuras[id] > f) x.reagendan++;
+    x.atendidos++;
+    if (futuras[id] && futuras[id] > f) x.reagendan++; else { x.lista.push({ id, ultima: f }); sinCita.push(id); }
   });
+  // Nombres de los que no han reagendado
+  const nombres = {};
+  const ids = [...new Set(sinCita)];
+  for (let i = 0; i < ids.length; i += 40) {
+    const r = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + ids.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP`).catch(() => []);
+    r.forEach(p => { nombres[p.id] = { nombre: p.fields['FULL NAME'] || '—', tel: p.fields['WHATSAPP'] || '' }; });
+  }
+  Object.values(R).forEach(x => { x.lista = x.lista.map(p => ({ ...p, ...(nombres[p.id] || { nombre: '—' }) })).sort((a, b) => b.ultima.localeCompare(a.ultima)); });
   return Object.values(R).filter(x => x.realizadas).map(x => { const k = x.fisio.toLowerCase(); return { ...x, huecos: capacidad(k), sinHoras: !horasDia[k] }; }).sort((a, b) => b.realizadas - a.realizadas);
 }
 
