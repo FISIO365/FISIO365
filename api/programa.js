@@ -82,7 +82,8 @@ module.exports = async function handler(req, res) {
     // Fisio asignado: solo cambia si el panel lo pide (cambio de fisio real).
     // Si otro fisio le atiende un día puntual, el paciente sigue con el suyo.
     const fisioPrevio = (oldData.records || []).map(r => r.fields?.FisioID).find(Boolean) || '';
-    const fisioAsignado = (cambiarFisio === true || !fisioPrevio) ? (fisioId || fisioPrevio) : fisioPrevio;
+    const elegido = /^rec[A-Za-z0-9]{14}$/.test(req.body.fisioAsignadoId || '') ? req.body.fisioAsignadoId : '';
+    const fisioAsignado = cambiarFisio === true ? (fisioId || fisioPrevio) : (fisioPrevio || elegido || fisioId);
 
     const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}`, {
       method: 'POST',
