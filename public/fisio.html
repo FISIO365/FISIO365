@@ -133,6 +133,14 @@ input[type=number]{text-align:center}
 .tst-txt b{display:block;font-size:11.5px;font-weight:700;color:#1a1a1a;margin-bottom:1px}
 .tst-txt .tp b{color:#c2552e}
 @media(max-width:700px){.tst-top{flex-wrap:wrap}.tst-res{width:100%}.tst-res button{flex:1}.tst-body{grid-template-columns:1fr}}
+
+ul.tc,ol.tc{margin:2px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+ul.tc li.fl{list-style:none;margin-left:-18px;display:grid;grid-template-columns:minmax(90px,max-content) 1fr;gap:4px 10px}
+ul.tc li.fl b{display:inline;font-size:12.5px;color:#1a1a1a;font-weight:600;margin:0}
+ul.tc li.fl b::after{content:' →';color:#c2552e}
+.aviso-rojo{color:#b91c1c;font-weight:600}
+.tst-sig{margin-top:5px;background:#fff1ea;border-radius:8px;padding:6px 10px;font-weight:600;color:#7c2d12}
+.fi-info ul.tc li.fl b{color:#7c2d12}
 .ap-sel{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border-radius:12px;font-size:14px}.ap-sel button{margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:99px;padding:5px 12px;cursor:pointer}
 .btn-informe{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:var(--black);color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}
 .chs{margin-top:2px}
@@ -1623,8 +1631,32 @@ function renderProto(){
  if(m&&D[m[1]]!==undefined){sel.value=D[m[1]];}
  });
  chipearSelects(wrap);
+ ordenarTests(wrap);
 }
 
+// Textos clínicos más fáciles de leer: frases separadas, «→» como filas, avisos en rojo
+function frasesDe(t){return String(t||'').replace(/\s+/g,' ').trim().split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿"0-9])/).filter(Boolean);}
+function avisos(h){return h.replace(/(CONTRAINDICAD[OA]S?[^.]*|RED FLAG[^.]*|URGENCIA[^.]*|[Dd]erivar(?: a| al)?[^.]*urgente[^.]*)/g,'<span class="aviso-rojo">$1</span>');}
+function filaFlecha(f){const e=escH(f);const i=e.indexOf('→');return i>0&&i<70?`<li class="fl"><b>${e.slice(0,i).trim()}</b><span>${avisos(e.slice(i+1).trim())}</span></li>`:`<li>${avisos(e)}</li>`;}
+function textoClaro(t){
+ // Separa en secciones «CÓMO EVALUARLO: …», «CÓMO INTERPRETARLO: …» (si las hay) y cada una en frases
+ const partes=String(t||'').split(/\b(CÓMO [A-ZÁÉÍÓÚÑ ]+|QUÉ [A-ZÁÉÍÓÚÑ ]+|SI [A-ZÁÉÍÓÚÑ ]+):\s*/);
+ let h='';
+ if(partes[0].trim()) h+=`<ul class="tc">${frasesDe(partes[0]).map(filaFlecha).join('')}</ul>`;
+ for(let i=1;i<partes.length;i+=2){const tit=partes[i].charAt(0)+partes[i].slice(1).toLowerCase();h+=`<b>${escH(tit)}</b><ul class="tc">${frasesDe(partes[i+1]).map(filaFlecha).join('')}</ul>`;}
+ return h;
+}
+// Ordena los tests de cada sección: fiabilidad alta primero, luego media, luego baja
+function ordenarTests(root){
+ const rango={alta:0,media:1,baja:2};
+ const padres=new Set([...root.querySelectorAll('.tst')].map(t=>t.parentElement));
+ padres.forEach(par=>{
+  let grupo=[];
+  const cerrar=()=>{if(grupo.length<2){grupo=[];return;}const ord=[...grupo].sort((a,b)=>(rango[a.dataset.fia]??3)-(rango[b.dataset.fia]??3));const huecos=grupo.map(el=>{const m=document.createComment('t');el.replaceWith(m);return m;});huecos.forEach((m,i)=>m.replaceWith(ord[i]));grupo=[];};
+  [...par.children].forEach(el=>{if(el.classList.contains('tst'))grupo.push(el);else if(el.tagName==='P')cerrar();});
+  cerrar();
+ });
+}
 const ES_NORMAL=/^(no|ninguno|normal|normales|negativo|negativa|neg\.?|sin .*|conservad[oa]s?|5\/5|nunca)$/i;
 // Convierte los desplegables de la anamnesis en botoncitos que se tocan (el <select> sigue debajo, oculto, y guarda el valor igual)
 function chipearSelects(wrap){
@@ -2408,7 +2440,7 @@ function mkCampoInfo(label, opts, key, info){
  // La explicación sale sola cuando se marca algo alterado (p. ej. «Mareos: Sí» → cómo evaluarlo)
  panel.classList.add('fi-info'); panel.style.cssText='display:none';
  { const t=escH(info).replace(/\b(CÓMO [A-ZÁÉÍÓÚÑ ]+|QUÉ [A-ZÁÉÍÓÚÑ ]+|SI [A-ZÁÉÍÓÚÑ ]+):\s*/g,(m,h)=>`<b>${h.charAt(0)+h.slice(1).toLowerCase()}</b>`);
-   panel.innerHTML=/^\s*<b>/.test(t)?t:`<b>Cómo valorarlo</b>${t}`; }
+   panel.innerHTML=/^\s*(CÓMO|QUÉ|SI) /.test(info)?textoClaro(info):`<b>Cómo valorarlo</b>${textoClaro(info)}`; }
  const verInfo=()=>{const t=(sel.options[sel.selectedIndex]||{}).textContent||'';panel.style.display=(sel.value&&!ES_NORMAL.test(t.trim()))?'block':'none';};
  sel.onchange=()=>{D[key]=sel.value;saveAnamD();verInfo();};
  wrap.appendChild(sel);
@@ -2495,15 +2527,16 @@ function mkTestOrtopedico(id, nombre, img, como, positivo, negativo, combinar, f
  // Fila limpia: nombre + fiabilidad a la izquierda, Negativo/Positivo a la derecha (se marca sin abrir nada).
  // «Cómo se hace» despliega imagen y explicación. Tocar otra vez el resultado lo quita.
  const fia=(fiabilidad||'').toLowerCase();
- const div=ce('div','tst');
+ nombre=String(nombre||'').replace(/&rsquo;|&#39;/g,'’').replace(/&lsquo;/g,'‘').replace(/&quot;/g,'"').replace(/&amp;/g,'&');
+ const div=ce('div','tst'); div.dataset.fia=fia;
  div.innerHTML=`<div class="tst-top"><div class="tst-nom"><b>${escH(nombre)}</b>${fia?`<span class="tst-fia ${fia}">Fiabilidad ${escH(fia)}</span>`:''}</div>
   <div class="tst-res"><button type="button" data-v="neg">Negativo</button><button type="button" data-v="pos">Positivo</button></div></div>
   <button type="button" class="tst-ver">Cómo se hace <span>▾</span></button>
   <div class="tst-body" hidden>${img?`<img class="tst-img" alt="" src="${img}">`:''}<div class="tst-txt">
-   <div><b>Cómo se hace</b>${escH(como||'')}</div>
-   <div class="tp"><b>Positivo si</b>${escH(positivo||'')}</div>
-   <div class="tn"><b>Negativo si</b>${escH(negativo||'')}</div>
-   ${combinar?`<div><b>Combinar con</b>${escH(combinar)}</div>`:''}</div></div>`;
+   <div><b>Cómo se hace</b><ol class="tc">${frasesDe(como).map(f=>`<li>${escH(f)}</li>`).join('')}</ol></div>
+   <div class="tp"><b>Positivo si</b>${(()=>{const fs=frasesDe(positivo);const ve=fs.filter(f=>!/^(Indica|Positivo para|Sugiere|Orienta|Confirma)/i.test(f)),sig=fs.filter(f=>/^(Indica|Positivo para|Sugiere|Orienta|Confirma)/i.test(f));return `<ul class="tc">${ve.map(filaFlecha).join('')}</ul>${sig.length?`<div class="tst-sig">${avisos(escH(sig.join(' ')))}</div>`:''}`;})()}</div>
+   <div class="tn"><b>Negativo si</b><ul class="tc">${frasesDe(negativo).map(filaFlecha).join('')}</ul></div>
+   ${combinar?`<div><b>Ten en cuenta</b><ul class="tc">${frasesDe(combinar).map(filaFlecha).join('')}</ul></div>`:''}</div></div>`;
  const pintar=()=>{const v=D['test_'+id]||'';div.classList.toggle('pos',v==='pos');div.classList.toggle('neg',v==='neg');div.querySelectorAll('.tst-res button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));};
  div.querySelectorAll('.tst-res button').forEach(b=>b.onclick=()=>{if(D['test_'+id]===b.dataset.v)delete D['test_'+id];else D['test_'+id]=b.dataset.v;saveAnamD();pintar();});
  const ver=div.querySelector('.tst-ver'), body=div.querySelector('.tst-body');
