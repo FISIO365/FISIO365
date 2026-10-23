@@ -18,6 +18,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/informe/*",
+      "use": "@vercel/static"
+    },
+    {
       "src": "public/icons/*",
       "use": "@vercel/static"
     },
@@ -66,6 +70,10 @@
     {
       "src": "/regalo/(.*)",
       "dest": "/public/regalo/$1"
+    },
+    {
+      "src": "/informe/(.*)",
+      "dest": "/public/informe/$1"
     },
     {
       "src": "/icons/(.*)",
