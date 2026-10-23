@@ -198,6 +198,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .rend-grid,.rend-conv{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rend-conv{grid-template-columns:1fr 1fr 1fr;border-top:1px solid rgba(0,0,0,.06);margin-top:10px;padding-top:10px}.rend-card.tot .rend-conv{border-color:rgba(255,255,255,.12)}
 .rend-grid span,.rend-conv span{display:block;font-size:11px;color:var(--muted)}.rend-grid b,.rend-conv b{font-size:15px}
 .rend-conv.dos{grid-template-columns:1fr 1fr}.rend-nota{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.rend-card.solo{padding:14px 16px}.rend-card.solo .rend-oc{font-size:18px;color:var(--black)}.rend-card.solo small{font-size:12px;font-weight:400;color:var(--muted)}
 .rend-ley{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.5}
 .fac-saldo{border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#f1ede9;display:flex;flex-direction:column;gap:2px;font-size:14px}.fac-saldo span{font-size:12px;color:var(--muted)}.fac-saldo.neg{background:#fdecea;color:#b42318}.fac-saldo.pos{background:#e8f5ec;color:#16803c}
 .fac-nueva{width:100%;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer;margin-bottom:12px}
@@ -4495,14 +4496,14 @@ async function renderRendimiento(wrap){
    if(!r.ok)throw new Error(r.error||'Error');
    const L=r.fisios||[];
    if(!L.length){res.innerHTML='<div class="fac-vacio">Sin sesiones en este periodo.</div>';return;}
-   const T=L.reduce((a,x)=>{['realizadas','huecos','nuevos','packs','repiten','pierden','noAsistio','perdidas','canceladas'].forEach(q=>a[q]=(a[q]||0)+x[q]);if(!x.sinHoras)a.realOcup+=x.realizadas;return a;},{fisio:'Total del centro',realOcup:0});
+   const T=L.reduce((a,x)=>{a.realizadas+=x.realizadas;if(!x.sinHoras){['huecos','nuevos','packs','repiten','pierden','noAsistio','perdidas','canceladas'].forEach(q=>a[q]=(a[q]||0)+x[q]);a.realOcup+=x.realizadas;}return a;},{fisio:'Total del centro',realizadas:0,realOcup:0,huecos:0,nuevos:0,packs:0,repiten:0,pierden:0,noAsistio:0,perdidas:0,canceladas:0});
    const porDia=(k==='hoy'||k==='ayer');
-   const card=(x,tot)=>{const base=tot?x.realOcup:x.realizadas;const oc=(!porDia&&x.huecos&&!x.sinHoras)?Math.round(base*100/x.huecos):null;
+   const card=(x,tot)=>{if(x.sinHoras&&!tot)return `<div class="rend-card solo"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc">${x.realizadas} <small>sesiones hechas</small></span></div></div>`;const base=tot?x.realOcup:x.realizadas;const oc=(!porDia&&x.huecos&&!x.sinHoras)?Math.round(base*100/x.huecos):null;
     return `<div class="rend-card${tot?' tot':''}"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc ${oc==null?'':oc>=85?'ok':oc>=65?'med':'bajo'}">${oc==null?x.realizadas+' hechas':oc+'%'}</span></div>
     ${oc==null?'<div style="height:12px"></div>':`<div class="rend-bar"><i style="width:${Math.min(100,oc)}%"></i></div>`}
     <div class="rend-grid"><div><span>${porDia||x.sinHoras?'Sesiones hechas':'Hechas / huecos'}</span><b>${porDia||x.sinHoras?x.realizadas:(tot?x.realOcup:x.realizadas)+' / '+(x.huecos||'—')}</b></div><div><span>Pacientes nuevos</span><b>${x.nuevos}</b></div><div><span>Faltas</span><b>${x.noAsistio+x.perdidas}</b></div><div><span>Canceladas</span><b>${x.canceladas}</b></div></div>
     <div class="rend-conv dos"><div><span>Reagendan</span><b>${x.nuevos?pcs(x.packs+x.repiten,x.nuevos):'—'}</b></div><div><span>No reagendan</span><b>${x.nuevos?pcs(x.pierden,x.nuevos):'—'}</b></div>${x.nuevos?'':'<div class="rend-nota" style="grid-column:1/-1">Sin pacientes nuevos en este periodo</div>'}</div></div>`;};
-   res.innerHTML=(L.length>1?card(T,true):'')+L.map(x=>card(x)).join('');
+   res.innerHTML=(L.length>1?card(T,true):'')+L.filter(x=>!x.sinHoras).map(x=>card(x)).join('')+L.filter(x=>x.sinHoras).map(x=>card(x)).join('');
   }catch(e){res.innerHTML='<div class="fac-vacio">No se ha podido calcular: '+escH(e.message)+'</div>';}
  };
  box.querySelectorAll('.rend-chips button').forEach(b=>b.onclick=()=>cargar(b.dataset.k));
