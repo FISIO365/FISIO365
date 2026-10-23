@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
 
     try {
       const formula = encodeURIComponent(`{PacienteID}="${pacienteId}"`);
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula=${formula}&fields[]=Ejercicios&fields[]=MensajeFisio&fields[]=FechaAsignacion&sort[0][field]=FechaAsignacion&sort[0][direction]=desc&pageSize=1`;
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula=${formula}&fields[]=Ejercicios&fields[]=MensajeFisio&fields[]=FechaAsignacion&fields[]=FisioID&sort[0][field]=FechaAsignacion&sort[0][direction]=desc&pageSize=1`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
       const data = await r.json();
 
@@ -32,7 +32,8 @@ module.exports = async function handler(req, res) {
         ok: true,
         ejercicios,
         mensaje: rec.fields['MensajeFisio'] || '',
-        fecha: rec.fields['FechaAsignacion'] || ''
+        fecha: rec.fields['FechaAsignacion'] || '',
+        fisioAsignadoId: rec.fields['FisioID'] || ''
       });
     } catch(e) {
       return res.status(500).json({ ok: false, error: e.message });
@@ -41,14 +42,14 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { pwd, pacienteId, pacienteNombre, fisioId, ejercicios, mensajeFisio } = req.body;
+  const { pwd, pacienteId, pacienteNombre, fisioId, ejercicios, mensajeFisio, cambiarFisio } = req.body;
   if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'No autorizado' });
   if (!pacienteId || !ejercicios?.length) return res.status(400).json({ ok: false, error: 'Faltan datos' });
 
   const today = new Date().toISOString().split('T')[0];
   try {
     const formula = encodeURIComponent(`{PacienteID}="${pacienteId}"`);
-    const oldRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula=${formula}&fields[]=PacienteID`, {
+    const oldRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula=${formula}&fields[]=PacienteID&fields[]=FisioID`, {
       headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
     });
     const oldData = await oldRes.json();
@@ -62,6 +63,11 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    // Fisio asignado: solo cambia si el panel lo pide (cambio de fisio real).
+    // Si otro fisio le atiende un día puntual, el paciente sigue con el suyo.
+    const fisioPrevio = (oldData.records || []).map(r => r.fields?.FisioID).find(Boolean) || '';
+    const fisioAsignado = (cambiarFisio === true || !fisioPrevio) ? (fisioId || fisioPrevio) : fisioPrevio;
+
     const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
@@ -70,7 +76,7 @@ module.exports = async function handler(req, res) {
           Nombre: `${pacienteNombre} - ${today}`,
           PacienteID: pacienteId,
           PacienteNombre: pacienteNombre,
-          FisioID: fisioId || '',
+          FisioID: fisioAsignado || '',
           Ejercicios: JSON.stringify(ejercicios),
           FechaAsignacion: today,
           MensajeFisio: mensajeFisio || ''
@@ -98,7 +104,7 @@ module.exports = async function handler(req, res) {
         : { title: 'Tus ejercicios han cambiado', body: `${quien} ha actualizado tu programa (${n} ejercicio${n !== 1 ? 's' : ''}). Échale un vistazo.`, url: '/?s=hoy', tag: 'programa' });
     } catch(e) {}
 
-    return res.status(200).json({ ok: true, creados: ejercicios.length });
+    return res.status(200).json({ ok: true, creados: ejercicios.length, fisioAsignadoId: fisioAsignado });
   } catch(e) {
     return res.status(500).json({ ok: false, error: e.message });
   }
