@@ -206,6 +206,18 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .rend-dif{font-style:normal;font-size:12px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:4px}.rend-dif.mas{background:#e8f5ec;color:#16803c}.rend-dif.menos{background:#fdecea;color:#b42318}.rend-dif.ok{background:#e8f5ec;color:#16803c}
 .rend-aus{background:#fff7ed;border-radius:10px;padding:8px 10px}.rend-aus b{font-size:13px!important;font-weight:600}.rend-card.tot .rend-aus{display:none}
 .rend-ctl{background:#faf7f4;border-radius:12px;padding:10px 12px}.rc-res{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rc-res b{font-size:16px}.rc-res b.mas{color:#16803c}.rc-res b.menos{color:#b42318}.rc-libres{font-size:12.5px;margin-top:8px;color:#7d6a60}.rend-ctl details{margin-top:8px;font-size:13px}.rend-ctl summary{cursor:pointer;color:#c2552e;font-weight:600}.rc-it{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee}.rc-it span{flex:1;font-weight:600}.rc-it i{font-style:normal;color:var(--muted);font-size:12px}
+.hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
+.hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-sizing:border-box}
+.hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
+.hz-lab{font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 6px}.hz-lab span{font-weight:400}
+.hz-card input[type=number],.hz-card input[type=month],.hz-card textarea{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px}
+.hz-banco{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;font-weight:600}.hz-banco input{width:20px;height:20px;accent-color:#c2552e}
+.hz-bts{display:flex;gap:8px;margin-top:16px}.hz-bts button{flex:1;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer}.hz-bts .hz-ok,.hz-bts .hz-pdf{background:#c2552e;border-color:#c2552e;color:#fff}.hz-del{color:#b42318}
+.rc-clas{font-family:var(--font);font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px;border:1.5px solid #c2552e;background:#fff;color:#c2552e;cursor:pointer;white-space:nowrap}.rc-clas.hecho{border-color:#e6ded6;color:#1a1a1a;background:#f7f3ef}
+.rc-banco{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px}.rc-banco span{color:var(--muted)}.rc-banco b.mas{color:#16803c}.rc-banco b.menos{color:#b42318}.rc-inf{margin-left:auto;font-family:var(--font);font-size:12px;font-weight:600;padding:6px 12px;border-radius:99px;border:none;background:#1e2a38;color:#fff;cursor:pointer}
+.hz-res{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.hz-res div{background:#f7f3ef;border-radius:10px;padding:8px 10px}.hz-res span{display:block;font-size:11px;color:var(--muted)}.hz-res b{font-size:15px}.hz-res i{font-style:normal}.hz-res .mas{color:#16803c}.hz-res .menos{color:#b42318}
+.hz-tipos-res{display:flex;flex-wrap:wrap;gap:8px;font-size:13px}.hz-tipos-res span{background:#f7f3ef;padding:4px 10px;border-radius:99px}
+.hz-tabla{font-size:12.5px}.hz-tabla div{display:grid;grid-template-columns:1fr 1fr 50px 1.3fr;gap:6px;padding:6px 0;border-bottom:1px solid #f1ede9}.hz-tabla div:not(.dif){color:var(--muted)}.hz-tabla .mas{color:#16803c;font-weight:700}.hz-tabla .menos{color:#b42318;font-weight:700}
 .rend-ley{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.5}
 .fac-saldo{border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#f1ede9;display:flex;flex-direction:column;gap:2px;font-size:14px}.fac-saldo span{font-size:12px;color:var(--muted)}.fac-saldo.neg{background:#fdecea;color:#b42318}.fac-saldo.pos{background:#e8f5ec;color:#16803c}
 .fac-nueva{width:100%;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer;margin-bottom:12px}
@@ -4494,6 +4506,76 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar</div>';}
 }
 
+// ── Control de horas: clasificar días y banco de horas ──
+const HZ_TIPOS=['Día libre','Asuntos propios','Vacaciones','Baja','Festivo','Salida anticipada','Horas extra','Otro'];
+function hzModal(html){const m=ce('div','hz-modal');m.innerHTML=`<div class="hz-card">${html}</div>`;m.onclick=e=>{if(e.target===m)m.remove();};document.body.appendChild(m);return m;}
+function hzFecha(f){const t=new Date(f+'T12:00:00');return t.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});}
+function abrirClasificar({fisio,fecha,dif,reg,onSave}){
+ let tipo=reg?reg.tipo:(dif>0?'Horas extra':''),banco=reg?reg.banco:false;
+ const m=hzModal(`<div class="hz-top"><b>${escH(fisio)} · ${hzFecha(fecha)}</b><button type="button" class="hz-x">✕</button></div>
+  <div class="hz-lab">¿Qué fue?</div><div class="fac-chips hz-tipos">${HZ_TIPOS.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
+  <div class="hz-lab">Horas <span>(negativas = de menos; positivas = de más)</span></div><input type="number" step="0.5" class="hz-h" value="${reg?reg.horas:dif}">
+  <label class="hz-banco"><input type="checkbox" ${banco?'checked':''}> Llevar al banco de horas</label>
+  <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="hz-nota" rows="2">${reg?escH(reg.nota):''}</textarea>
+  <div class="hz-bts">${reg?'<button type="button" class="hz-del">Quitar</button>':''}<button type="button" class="hz-ok">Guardar</button></div>`);
+ const pinta=()=>m.querySelectorAll('.hz-tipos button').forEach(b=>b.classList.toggle('on',b.dataset.v===tipo));pinta();
+ m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{tipo=b.dataset.v;pinta();});
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const del=m.querySelector('.hz-del');if(del)del.onclick=async()=>{del.disabled=true;await fetch('/api/schedule?action=horas-borrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:reg.id})});m.remove();onSave&&onSave();};
+ m.querySelector('.hz-ok').onclick=async e=>{
+  if(!tipo){toast('Elige qué fue',false);return;}
+  const b=e.target;b.disabled=true;b.textContent='Guardando…';
+  try{const r=await (await fetch('/api/schedule?action=horas-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:reg?reg.id:'',fisio,fecha,tipo,horas:+m.querySelector('.hz-h').value||0,banco:m.querySelector('.hz-banco input').checked,nota:m.querySelector('.hz-nota').value.trim(),por:(fisioActual&&fisioActual.nombre)||''})})).json();
+   if(!r.ok)throw new Error(r.error||'Error');toast('Guardado',true);m.remove();onSave&&onSave();
+  }catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}
+ };
+}
+async function abrirInformeHoras(fisio){
+ const hoy=isoMadrid(new Date());let mes=hoy.slice(0,7);
+ const m=hzModal(`<div class="hz-top"><b>Informe de horas · ${escH(fisio)}</b><button type="button" class="hz-x">✕</button></div>
+  <div class="hz-lab">Mes</div><input type="month" class="hz-mes" value="${mes}" max="${mes}"><div class="hz-inf"></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const box=m.querySelector('.hz-inf');let datos=null;
+ const cargarInf=async()=>{
+  mes=m.querySelector('.hz-mes').value||mes;box.innerHTML='<div class="fac-vacio">Calculando…</div>';
+  const d=mes+'-01',fin=new Date(+mes.slice(0,4),+mes.slice(5,7),0);let h=mes+'-'+String(fin.getDate()).padStart(2,'0');if(h>hoy)h=hoy;
+  try{
+   const [r,hz]=await Promise.all([fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`).then(x=>x.json()),fetch(`/api/schedule?action=horas&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(fisio)}&desde=${d}&hasta=${h}`).then(x=>x.json())]);
+   const x=(r.fisios||[]).find(f=>f.fisio===fisio)||{dias:[],realizadas:0,callin:0,videos:0,huecos:0};
+   const reg={};(hz.registros||[]).forEach(q=>reg[q.fecha]=q);
+   const dias=(x.dias||[]).map(q=>({...q,dif:q.libre?-q.toca:q.hechas-q.toca,reg:reg[q.fecha]}));
+   const toca=dias.reduce((a,q)=>a+q.toca,0),hechas=dias.reduce((a,q)=>a+q.hechas,0);
+   const extra=dias.filter(q=>!q.libre&&q.dif>0).reduce((a,q)=>a+q.dif,0),menos=dias.filter(q=>!q.libre&&q.dif<0).reduce((a,q)=>a-q.dif,0);
+   const porTipo={};Object.values(reg).forEach(q=>{porTipo[q.tipo]=(porTipo[q.tipo]||0)+q.horas;});
+   const bancoMes=Object.values(reg).filter(q=>q.banco).reduce((a,q)=>a+q.horas,0);
+   datos={fisio,mes,dias,toca,hechas,extra,menos,porTipo,bancoMes,banco:hz.banco||0,callin:x.callin||0,videos:x.videos||0,sesiones:x.realizadas||0};
+   box.innerHTML=`<div class="hz-res"><div><span>Horas según horario</span><b>${toca} h</b></div><div><span>Horas trabajadas</span><b>${hechas} h</b></div><div><span>Sesiones · call-in · vídeos</span><b>${datos.sesiones} · ${datos.callin} · ${datos.videos}</b></div><div><span>Extra / de menos</span><b><i class="mas">+${extra}</i> / <i class="menos">−${menos}</i> h</b></div><div><span>Banco del mes</span><b>${bancoMes>0?'+':''}${bancoMes} h</b></div><div><span>Banco acumulado</span><b>${datos.banco>0?'+':''}${datos.banco} h</b></div></div>
+    ${Object.keys(porTipo).length?`<div class="hz-lab">Por tipo</div><div class="hz-tipos-res">${Object.entries(porTipo).map(([t,v])=>`<span>${escH(t)}: <b>${v>0?'+':''}${v} h</b></span>`).join('')}</div>`:''}
+    <div class="hz-lab">Día a día</div><div class="hz-tabla">${dias.map(q=>`<div class="${q.dif?'dif':''}"><span>${fdiaCorto(q.fecha)}</span><span>${q.libre?'no vino':q.hechas+' / '+q.toca+' h'}</span><span class="${q.dif>0?'mas':q.dif<0?'menos':''}">${q.dif?(q.dif>0?'+':'−')+Math.abs(q.dif):'✓'}</span><span>${q.reg?escH(q.reg.tipo)+(q.reg.banco?' · banco':''):''}</span></div>`).join('')}</div>
+    <div class="hz-bts"><button type="button" class="hz-csv">Descargar Excel</button><button type="button" class="hz-pdf">Ver PDF · imprimir</button></div>`;
+   box.querySelector('.hz-csv').onclick=()=>descargarCSVHoras(datos);
+   box.querySelector('.hz-pdf').onclick=()=>imprimirHoras(datos);
+  }catch(e){box.innerHTML='<div class="fac-vacio">No se ha podido calcular</div>';}
+ };
+ m.querySelector('.hz-mes').onchange=cargarInf;cargarInf();
+}
+function fdiaCorto(f){const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+'/'+(t.getMonth()+1);}
+function descargarCSVHoras(D){
+ const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+ const L=[['Fecha','Le tocaban (h)','Trabajadas (h)','Diferencia (h)','Tipo','Banco','Nota'].map(q).join(';')];
+ D.dias.forEach(x=>L.push([x.fecha.split('-').reverse().join('/'),x.toca,x.libre?0:x.hechas,x.dif,x.reg?x.reg.tipo:'',x.reg&&x.reg.banco?'Sí':'',x.reg?x.reg.nota:''].map(q).join(';')));
+ L.push('');L.push([q('Total horario'),q(D.toca)].join(';'));L.push([q('Total trabajadas'),q(D.hechas)].join(';'));L.push([q('Horas extra'),q(D.extra)].join(';'));L.push([q('Horas de menos'),q(D.menos)].join(';'));L.push([q('Banco del mes'),q(D.bancoMes)].join(';'));L.push([q('Banco acumulado'),q(D.banco)].join(';'));
+ const url=URL.createObjectURL(new Blob(['﻿'+L.join('\n')],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`Horas_${D.fisio}_${D.mes}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+function imprimirHoras(D){
+ const mesTxt=new Date(D.mes+'-15').toLocaleDateString('es-ES',{month:'long',year:'numeric'});
+ const w=window.open('','_blank');if(!w){toast('Permite las ventanas emergentes',false);return;}
+ w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Horas ${escH(D.fisio)} ${D.mes}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"><style>body{font-family:Poppins,sans-serif;color:#1a1a1a;margin:32px;font-size:12px}h1{font-size:20px;margin:0}.s{color:#7d6a60;margin:2px 0 18px}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}.g div{background:#f7f3ef;border-radius:10px;padding:10px}.g span{display:block;color:#7d6a60;font-size:11px}.g b{font-size:16px}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:6px 4px;border-bottom:1px solid #eee}th{color:#7d6a60;font-size:11px}.m{color:#16803c}.n{color:#b42318}@media print{body{margin:14mm}}</style></head><body>
+  <div style="color:#c2552e;font-weight:700;letter-spacing:1px;font-size:11px">FISIO365 · CONTROL DE HORAS</div><h1>${escH(D.fisio)}</h1><div class="s">${mesTxt}</div>
+  <div class="g"><div><span>Horas según horario</span><b>${D.toca} h</b></div><div><span>Horas trabajadas</span><b>${D.hechas} h</b></div><div><span>Sesiones · call-in · vídeos</span><b>${D.sesiones} · ${D.callin} · ${D.videos}</b></div><div><span>Horas extra</span><b class="m">+${D.extra} h</b></div><div><span>Horas de menos</span><b class="n">−${D.menos} h</b></div><div><span>Banco (mes / acumulado)</span><b>${D.bancoMes>0?'+':''}${D.bancoMes} / ${D.banco>0?'+':''}${D.banco} h</b></div></div>
+  <table><tr><th>Fecha</th><th>Le tocaban</th><th>Trabajadas</th><th>Diferencia</th><th>Tipo</th><th>Banco</th><th>Nota</th></tr>${D.dias.map(x=>`<tr><td>${fdiaCorto(x.fecha)}</td><td>${x.toca} h</td><td>${x.libre?'no vino':x.hechas+' h'}</td><td class="${x.dif>0?'m':x.dif<0?'n':''}">${x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓'}</td><td>${x.reg?escH(x.reg.tipo):''}</td><td>${x.reg&&x.reg.banco?'Sí':''}</td><td>${x.reg?escH(x.reg.nota):''}</td></tr>`).join('')}</table>
+  <script>setTimeout(()=>print(),600)<\/script></body></html>`);w.document.close();
+}
 // ── RENDIMIENTO DE LOS FISIOS ──
 function isoMadrid(d){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);}
 function rangoRend(k){const hoy=new Date();const iso=n=>isoMadrid(new Date(hoy.getTime()+n*864e5));const dow=(new Date(iso(0)+'T12:00:00').getDay()+6)%7;
@@ -4518,6 +4600,7 @@ async function renderRendimiento(wrap){
    if(!r.ok)throw new Error(r.error||'Error');
    const L=r.fisios||[];
    if(!L.length){res.innerHTML='<div class="fac-vacio">Sin sesiones en este periodo.</div>';return;}
+   await Promise.all(L.filter(x=>x.dias).map(async x=>{try{const hz=await (await fetch(`/api/schedule?action=horas&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`)).json();x.reg={};(hz.registros||[]).forEach(r=>x.reg[r.fecha]=r);x.banco=Math.round((hz.banco||0)*10)/10;}catch(e){}}));
    const T=L.reduce((a,x)=>{a.realizadas+=x.realizadas;a.atendidos+=x.atendidos;a.reagendan+=x.reagendan;if(!x.sinHoras){['huecos','noAsistio','perdidas','canceladas','callin','videos'].forEach(q=>a[q]+=(x[q]||0));a.realOcup+=x.realizadas;}return a;},{fisio:'Total del centro',realizadas:0,realOcup:0,callin:0,videos:0,huecos:0,atendidos:0,reagendan:0,noAsistio:0,perdidas:0,canceladas:0});
    const fch=f=>{const [y,m,d]=String(f).split('-');return +d+'/'+ +m;};
    const listaNo=x=>(x.lista&&x.lista.length)?`<details class="rend-no"><summary>Ver quién no ha reagendado (${x.lista.length})</summary>${x.lista.map(p=>`<div class="rn-it"><span>${escH(p.nombre)}</span><i>última sesión ${fch(p.ultima)}</i>${p.tel?`<a href="https://wa.me/${String(p.tel).replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1')}" target="_blank" rel="noopener">WhatsApp</a>`:''}</div>`).join('')}</details>`:'';
@@ -4525,12 +4608,18 @@ async function renderRendimiento(wrap){
    const DS=['dom','lun','mar','mié','jue','vie','sáb'];
    const fdia=d=>{const t=new Date(d+'T12:00:00');return DS[t.getDay()]+' '+t.getDate()+'/'+(t.getMonth()+1);};
    const controlHoras=x=>{if(!x.dias)return '';
+    const reg=x.reg||{};
     const libres=x.dias.filter(d=>d.libre),dif=x.dias.filter(d=>!d.libre&&d.hechas!==d.toca);
     const extra=dif.filter(d=>d.hechas>d.toca).reduce((a,d)=>a+d.hechas-d.toca,0),menos=dif.filter(d=>d.hechas<d.toca).reduce((a,d)=>a+d.toca-d.hechas,0);
+    const filas=[...libres,...dif].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+    const sinClas=filas.filter(d=>!reg[d.fecha]).length;
+    const fila=d=>{const df=d.libre?-d.toca:d.hechas-d.toca,r=reg[d.fecha];
+     return `<div class="rc-it"><span>${fdia(d.fecha)}</span><i>${d.libre?'no vino':d.hechas+' de '+d.toca+' h'}</i><em class="rend-dif ${df>0?'mas':'menos'}">${df>0?'+':'−'}${Math.abs(df)} h</em>
+      <button type="button" class="rc-clas${r?' hecho':''}" data-fisio="${escH(x.fisio)}" data-fecha="${d.fecha}" data-dif="${df}">${r?escH(r.tipo)+(r.banco?' · banco':''):'Clasificar'}</button></div>`;};
     return `<div style="grid-column:1/-1" class="rend-ctl">
      <div class="rc-res"><div><span>Horas extra</span><b class="mas">+${extra} h</b></div><div><span>Horas de menos</span><b class="menos">−${menos} h</b></div><div><span>Días sin venir</span><b>${libres.length}</b></div></div>
-     ${libres.length?`<div class="rc-libres">No vino: ${libres.map(d=>fdia(d.fecha)+' ('+d.toca+' h)').join(', ')}</div>`:''}
-     ${dif.length?`<details><summary>Ver día a día (${dif.length} día${dif.length>1?'s':''} con diferencia)</summary>${dif.map(d=>`<div class="rc-it"><span>${fdia(d.fecha)}</span><i>${d.hechas} de ${d.toca} h</i><em class="rend-dif ${d.hechas>d.toca?'mas':'menos'}">${d.hechas>d.toca?'+':'−'}${Math.abs(d.hechas-d.toca)} h</em></div>`).join('')}</details>`:'<div class="rc-libres">Todos los días trabajados cuadran con su horario ✓</div>'}
+     <div class="rc-banco"><span>Banco de horas</span><b class="${(x.banco||0)>=0?'mas':'menos'}">${(x.banco||0)>0?'+':''}${x.banco||0} h</b><button type="button" class="rc-inf" data-fisio="${escH(x.fisio)}">Informe de horas</button></div>
+     ${filas.length?`<details${sinClas?' open':''}><summary>Días a revisar (${filas.length})${sinClas?' · '+sinClas+' sin clasificar':' · todo clasificado ✓'}</summary>${filas.map(fila).join('')}</details>`:'<div class="rc-libres">Todos los días cuadran con su horario ✓</div>'}
     </div>`;};
    const card=(x,tot)=>{
     if(x.sinHoras&&!tot)return `<div class="rend-card solo"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc">${x.realizadas} <small>sesiones hechas</small></span></div><div class="rend-conv dos"><div><span>Reagendan</span><b>${pcs(x.reagendan,x.atendidos)}</b></div><div><span>No reagendan</span><b>${pcs(x.atendidos-x.reagendan,x.atendidos)}</b></div></div>${listaNo(x)}</div>`;
@@ -4540,6 +4629,8 @@ async function renderRendimiento(wrap){
     <div class="rend-grid"><div><span>Sesiones / huecos</span><b>${base+' / '+(x.huecos||'—')}</b></div><div><span>Pacientes atendidos</span><b>${x.atendidos}</b></div><div><span>Faltas</span><b>${x.noAsistio+x.perdidas}</b></div><div><span>Canceladas</span><b>${x.canceladas}</b></div>${(!tot&&(x.dias||x.callin||x.videos))?`<div><span>Horas de call-in · vídeos</span><b>${x.callin||0} h · ${x.videos||0} h</b></div>${horasTot(x)}${controlHoras(x)}`:''}</div>
     <div class="rend-conv dos"><div><span>Reagendan</span><b>${pcs(x.reagendan,x.atendidos)}</b></div><div><span>No reagendan</span><b>${pcs(x.atendidos-x.reagendan,x.atendidos)}</b></div></div>${tot?'':listaNo(x)}</div>`;};
    res.innerHTML=(L.length>1?card(T,true):'')+L.filter(x=>!x.sinHoras).map(x=>card(x)).join('')+L.filter(x=>x.sinHoras).map(x=>card(x)).join('');
+   res.querySelectorAll('.rc-clas').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirClasificar({fisio:b.dataset.fisio,fecha:b.dataset.fecha,dif:+b.dataset.dif,reg:(x.reg||{})[b.dataset.fecha],onSave:()=>cargar(k)});});
+   res.querySelectorAll('.rc-inf').forEach(b=>b.onclick=()=>abrirInformeHoras(b.dataset.fisio));
   }catch(e){res.innerHTML='<div class="fac-vacio">No se ha podido calcular: '+escH(e.message)+'</div>';}
  };
  box.querySelectorAll('.rend-chips button').forEach(b=>b.onclick=()=>cargar(b.dataset.k));

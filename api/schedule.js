@@ -184,6 +184,39 @@ module.exports = async function handler(req, res) {
     catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   }
 
+  // ── PANEL: control de horas de los fisios (tabla HORAS FISIOS) ──
+  if (action === 'horas' || action === 'horas-guardar' || action === 'horas-borrar') {
+    const q = req.method === 'POST' ? (req.body || {}) : req.query;
+    if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const T = 'tblrLdMdmTXvM84Kt';
+    const fisio = String(q.fisio || '').trim();
+    try {
+      if (action === 'horas') {
+        if (!fisio) return res.status(400).json({ ok: false });
+        const esc = fisio.replace(/'/g, "\\'");
+        let recs = [], off = '';
+        do { const d = await at(`${T}?filterByFormula=${encodeURIComponent(`LOWER({FISIO})=LOWER('${esc}')`)}&pageSize=100${off ? '&offset=' + off : ''}`); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off);
+        const todos = recs.map(r => ({ id: r.id, fecha: r.fields['FECHA'] || '', tipo: r.fields['TIPO'] || '', horas: Number(r.fields['HORAS'] || 0), banco: !!r.fields['BANCO'], nota: r.fields['NOTA'] || '', por: r.fields['REGISTRADO POR'] || '' }));
+        const { desde, hasta } = q;
+        const banco = todos.filter(r => r.banco && (!hasta || r.fecha <= hasta)).reduce((t, r) => t + r.horas, 0);
+        const registros = todos.filter(r => (!desde || r.fecha >= desde) && (!hasta || r.fecha <= hasta)).sort((a, b) => a.fecha.localeCompare(b.fecha));
+        return res.status(200).json({ ok: true, registros, banco });
+      }
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      if (action === 'horas-borrar') {
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+        await fetch(`https://api.airtable.com/v0/${BASE_ID}/${T}/${q.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        return res.status(200).json({ ok: true });
+      }
+      if (!fisio || !/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) return res.status(400).json({ ok: false, error: 'Faltan datos' });
+      const campos = { FECHA: q.fecha, FISIO: fisio, TIPO: String(q.tipo || 'Otro'), HORAS: Number(q.horas || 0), BANCO: !!q.banco, NOTA: String(q.nota || ''), 'REGISTRADO POR': String(q.por || '') };
+      const ex = /^rec[A-Za-z0-9]{14}$/.test(q.id || '');
+      const d = await at(`${T}${ex ? '/' + q.id : ''}`, { method: ex ? 'PATCH' : 'POST', body: JSON.stringify(ex ? { fields: campos, typecast: true } : { records: [{ fields: campos }], typecast: true }) });
+      if (d.error) return res.status(500).json({ ok: false, error: d.error.message || 'Airtable' });
+      return res.status(200).json({ ok: true, id: ex ? q.id : d.records[0].id });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  }
+
   // ── PANEL: facturas de la ficha y emitir desde el panel ──
   if (action === 'ficha-facturas' || action === 'facturar') {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
