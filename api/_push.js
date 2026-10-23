@@ -148,6 +148,14 @@ async function rendimiento(desde, hasta) {
   const diasCon = {}; // fisio -> Set(fecha)
   citas.forEach(c => { if (/BLOQUEAD|COMIDA|REPROGRAMADA|POR REAGENDAR/i.test(est(c))) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(); (diasCon[n] = diasCon[n] || new Set()).add(String(c.fields['FECHA']).slice(0, 10)); });
   const capacidad = n => { const v = horasDia[n]; if (!v) return 0; let t = 0; (diasCon[n] || new Set()).forEach(f => { t += v[new Date(f + 'T12:00:00Z').getUTCDay()]; }); return Math.round(t); };
+  // Días que le tocaba trabajar y no tienen nada en la agenda (festivo, vacaciones, día libre)
+  const hoyISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const diasLibres = n => { const v = horasDia[n]; if (!v) return []; const out = []; const fin = hasta < hoyISO ? hasta : hoyISO;
+    for (let d = new Date(desde + 'T12:00:00Z'); d <= new Date(fin + 'T12:00:00Z'); d = new Date(d.getTime() + 864e5)) { const f = d.toISOString().slice(0, 10); if (v[d.getUTCDay()] > 0 && !(diasCon[n] || new Set()).has(f)) out.push(f); }
+    return out; };
+  // Horas bloqueadas (CITA/FRANJA BLOQUEADA) en días trabajados: no son huecos (p. ej. media jornada)
+  const bloq = {};
+  citas.forEach(c => { if (!/CITA BLOQUEADA|FRANJA BLOQUEADA/i.test(est(c))) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(); const f = String(c.fields['FECHA']).slice(0, 10); if ((diasCon[n] || new Set()).has(f)) bloq[n] = (bloq[n] || 0) + 1; });
   const R = {};
   const cuenta = n => true;
   const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, callin: 0, videos: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, atendidos: 0, reagendan: 0, lista: [] });
@@ -182,7 +190,7 @@ async function rendimiento(desde, hasta) {
     r.forEach(p => { nombres[p.id] = { nombre: p.fields['FULL NAME'] || '—', tel: p.fields['WHATSAPP'] || '' }; });
   }
   Object.values(R).forEach(x => { x.lista = x.lista.map(p => ({ ...p, ...(nombres[p.id] || { nombre: '—' }) })).sort((a, b) => b.ultima.localeCompare(a.ultima)); });
-  return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); return { ...x, huecos: capacidad(k), sinHoras: !horasDia[k] }; }).sort((a, b) => b.realizadas - a.realizadas);
+  return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); return { ...x, huecos: Math.max(0, capacidad(k) - (bloq[k] || 0)), bloqueadas: bloq[k] || 0, diasLibres: diasLibres(k), sinHoras: !horasDia[k] }; }).sort((a, b) => b.realizadas - a.realizadas);
 }
 
 const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };
