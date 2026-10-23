@@ -190,6 +190,15 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .fp-inf-meta{font-size:11px;color:var(--muted);margin-bottom:4px}
 .fp-inf-tipo{font-size:14px;font-weight:700;margin-bottom:10px}
 .fp-inf-btns{display:flex;gap:8px;flex-wrap:wrap}
+.rend-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.rend-chips button{font-family:var(--font);font-size:13px;padding:8px 14px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer;color:var(--black)}.rend-chips button.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
+.rend-res{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.rend-card{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--sombra)}.rend-card.tot{background:#1e2a38;color:#fff}.rend-card.tot span{color:rgba(255,255,255,.65)!important}
+.rend-top{display:flex;justify-content:space-between;align-items:center;font-size:15px}.rend-oc{font-size:22px;font-weight:700}.rend-oc.ok{color:#16a34a}.rend-oc.med{color:#d97706}.rend-oc.bajo{color:#c2552e}.rend-card.tot .rend-oc{color:#fff}
+.rend-bar{height:6px;border-radius:9px;background:#f1ede9;margin:10px 0 12px;overflow:hidden}.rend-bar i{display:block;height:100%;background:#c2552e;border-radius:9px}.rend-card.tot .rend-bar{background:rgba(255,255,255,.15)}.rend-card.tot .rend-bar i{background:#f39a55}
+.rend-grid,.rend-conv{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rend-conv{grid-template-columns:1fr 1fr 1fr;border-top:1px solid rgba(0,0,0,.06);margin-top:10px;padding-top:10px}.rend-card.tot .rend-conv{border-color:rgba(255,255,255,.12)}
+.rend-grid span,.rend-conv span{display:block;font-size:11px;color:var(--muted)}.rend-grid b,.rend-conv b{font-size:15px}
+.rend-conv.dos{grid-template-columns:1fr 1fr}.rend-nota{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.rend-ley{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.5}
 .fac-saldo{border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#f1ede9;display:flex;flex-direction:column;gap:2px;font-size:14px}.fac-saldo span{font-size:12px;color:var(--muted)}.fac-saldo.neg{background:#fdecea;color:#b42318}.fac-saldo.pos{background:#e8f5ec;color:#16803c}
 .fac-nueva{width:100%;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer;margin-bottom:12px}
 .fac-form{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--sombra);margin-bottom:14px}
@@ -658,6 +667,9 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  <div class="sb-item" id="sb-record" onclick="showSection('record')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="sb-txt">Recordatorios</span>
  </div>
+ <div class="sb-item" id="sb-rend" onclick="showSection('rend')" style="display:none">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="sb-txt">Rendimiento</span>
+ </div>
  <div class="sb-item" id="sb-school" onclick="showSection('school')" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg></span><span class="sb-txt">School</span>
  </div>
@@ -680,6 +692,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 
 <div id="perfilMenu" onclick="if(event.target===this)cerrarPerfilMenu()"><div class="pm-card">
  <div class="pm-head"><div class="pm-av" id="pmAv"></div><div><b id="pmNom"></b><span id="pmRol"></span></div></div>
+ <button type="button" class="pm-it" id="pmRend" style="display:none" onclick="cerrarPerfilMenu();showSection('rend')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rendimiento</button>
  <button type="button" class="pm-it" id="pmSchool" onclick="cerrarPerfilMenu();showSection('school')"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg>School</button>
  <button type="button" class="pm-it" onclick="cerrarPerfilMenu();abrirAjustesAvisos()"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones</button>
  <button type="button" class="pm-it salir" onclick="if(confirmarSalir())cerrarSesionPanel()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button>
@@ -737,7 +750,8 @@ const TOPBAR = {
  inf: ['Informes','Historial de informes generados'],
  school: ['School','Formación y protocolos del equipo'],
  msg: ['Chat','Habla con tus pacientes: texto, fotos y PDFs'],
- record: ['Recordatorios','Citas de mañana pendientes de confirmar']
+ record: ['Recordatorios','Citas de mañana pendientes de confirmar'],
+ rend: ['Rendimiento','Cómo va cada fisio']
 };
 
 const CFG = {
@@ -855,7 +869,8 @@ function aplicarRole(){
  'checklist': 'sb-checklist',
  'tareas': 'sb-tareas',
  'comunicaciones': 'sb-comunicaciones',
- 'vacaciones': 'sb-vacaciones'
+ 'vacaciones': 'sb-vacaciones',
+ 'rendimiento': 'sb-rend'
  };
 
  const accesos = fisioActual.accesos || {};
@@ -902,7 +917,7 @@ function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=
 function pintarPerfil(){if(!fisioActual)return;const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=fisioActual.role==='admin'?'Administración':'Fisioterapeuta';
- const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';}
+ const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');$('pmRend').style.display=(sr&&sr.style.display==='none')?'none':'';}
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
@@ -910,7 +925,7 @@ function cerrarSesionPanel(){try{localStorage.removeItem('f365_panel_sesion');se
 function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
- ['anam','prog','pac','school','msg','record'].forEach(s=>{
+ ['anam','prog','pac','school','msg','record','rend'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
  const [t,s] = TOPBAR[sec];
@@ -928,6 +943,7 @@ function showSection(sec){
  else if(sec==='msg') renderMensajes(wrap);
  else if(sec==='school') renderWiki(wrap);
  else if(sec==='record') renderRecordatorios(wrap);
+ else if(sec==='rend') renderRendimiento(wrap);
 }
 
 
@@ -4457,6 +4473,41 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar</div>';}
 }
 
+// ── RENDIMIENTO DE LOS FISIOS ──
+function isoMadrid(d){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);}
+function rangoRend(k){const hoy=new Date();const iso=n=>isoMadrid(new Date(hoy.getTime()+n*864e5));const dow=(new Date(iso(0)+'T12:00:00').getDay()+6)%7;
+ if(k==='hoy')return[iso(0),iso(0)];if(k==='ayer')return[iso(-1),iso(-1)];if(k==='semana')return[iso(-dow),iso(0)];if(k==='semanaPasada')return[iso(-dow-7),iso(-dow-1)];
+ const d=iso(0);return[d.slice(0,8)+'01',d];}
+async function renderRendimiento(wrap){
+ const pcs=(a,b)=>b?Math.round(a*100/b)+'%':'—';
+ const box=ce('div','rend');
+ box.innerHTML=`<div class="rend-chips">${[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div><div class="rend-res"></div>
+  <div class="rend-ley">Ocupación = sesiones realizadas frente a los huecos de su agenda ese día (de su primera a su última hora, sin comida ni bloqueos). 1ª visita = primera sesión realizada del paciente en el centro. Pack = compra bono de 2 o más sesiones el día de la 1ª visita. Repiten = sin pack pero con otra cita después. Faltas = no asistió o cita perdida.</div>`;
+ wrap.appendChild(box);
+ const res=box.querySelector('.rend-res');
+ const cargar=async k=>{
+  box.querySelectorAll('.rend-chips button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+  try{sessionStorage.setItem('f365_rend',k);}catch(e){}
+  res.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Calculando…</div>';
+  const [d,h]=rangoRend(k);
+  try{
+   const r=await (await fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`)).json();
+   if(!r.ok)throw new Error(r.error||'Error');
+   const L=r.fisios||[];
+   if(!L.length){res.innerHTML='<div class="fac-vacio">Sin sesiones en este periodo.</div>';return;}
+   const T=L.reduce((a,x)=>{['realizadas','huecos','nuevos','packs','repiten','pierden','noAsistio','perdidas','canceladas'].forEach(q=>a[q]=(a[q]||0)+x[q]);return a;},{fisio:'Total del centro'});
+   const card=(x,tot)=>{const oc=x.huecos?Math.round(x.realizadas*100/x.huecos):null;
+    return `<div class="rend-card${tot?' tot':''}"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc ${oc==null?'':oc>=85?'ok':oc>=65?'med':'bajo'}">${oc==null?'—':oc+'%'}</span></div>
+    <div class="rend-bar"><i style="width:${Math.min(100,oc||0)}%"></i></div>
+    <div class="rend-grid"><div><span>Hechas / huecos</span><b>${x.realizadas} / ${x.huecos||'—'}</b></div><div><span>1ª visitas</span><b>${x.nuevos}</b></div><div><span>Faltas</span><b>${x.noAsistio+x.perdidas}</b></div><div><span>Canceladas</span><b>${x.canceladas}</b></div></div>
+    ${x.nuevos?(r.conPack?`<div class="rend-conv"><div><span>Pack</span><b>${pcs(x.packs,x.nuevos)}</b></div><div><span>Repiten</span><b>${pcs(x.repiten,x.nuevos)}</b></div><div><span>Se pierden</span><b>${pcs(x.pierden,x.nuevos)}</b></div></div>`:`<div class="rend-conv dos"><div><span>Vuelven</span><b>${pcs(x.packs+x.repiten,x.nuevos)}</b></div><div><span>Se pierden</span><b>${pcs(x.pierden,x.nuevos)}</b></div></div>`):''}</div>`;};
+   res.innerHTML=(L.length>1?card(T,true):'')+L.map(x=>card(x)).join('')+(r.conPack?'':'<div class="rend-nota">El % de pack saldrá cuando se empiece a facturar desde el panel. Mientras tanto, «Vuelven» = compran pack o piden otra cita.</div>');
+  }catch(e){res.innerHTML='<div class="fac-vacio">No se ha podido calcular: '+escH(e.message)+'</div>';}
+ };
+ box.querySelectorAll('.rend-chips button').forEach(b=>b.onclick=()=>cargar(b.dataset.k));
+ let k0='ayer';try{k0=sessionStorage.getItem('f365_rend')||'ayer';}catch(e){}
+ cargar(k0);
+}
 // ── FACTURAS (ficha del paciente): emitir en Holded y ver las anteriores ──
 const FAC_CONCEPTOS=['Sesión de fisioterapia','Sesión de fisioterapia avanzada','Sesión de suelo pélvico','Sesión de readaptación deportiva','Plus aplicación colágeno','Otros'];
 const FAC_PAGOS=['Tarjeta','Efectivo','Bizum','Transferencia'];

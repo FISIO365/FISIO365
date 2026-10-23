@@ -6,7 +6,7 @@ const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 const BIBLIO_TABLE = 'tbloqn3ts872ueJSE';
 
 const HOLDED_KEY = process.env.HOLDED_API_KEY;
-const { saldoPaciente } = require('./_push').saldo;
+const { saldoPaciente, rendimiento, inicioControl } = require('./_push').saldo;
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const HOLDED_URL = 'https://api.holded.com/api/invoicing/v1';
 
@@ -173,6 +173,15 @@ module.exports = async function handler(req, res) {
       try { await at(`${FACTURAS_TABLE}/${rec}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.estado]: 'Error' }, typecast: true }) }); } catch (x) {}
       return res.status(200).send(pagina(false, 'No se ha emitido', escHtml(e.message)));
     }
+  }
+
+  // ── PANEL: rendimiento de los fisios ──
+  if (action === 'rendimiento') {
+    if (!process.env.FISIO_PASSWORD || String(req.query.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const { desde, hasta } = req.query;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(desde || '') || !/^\d{4}-\d{2}-\d{2}$/.test(hasta || '')) return res.status(400).json({ ok: false, error: 'Fechas no válidas' });
+    try { const [fisios, ini] = await Promise.all([rendimiento(desde, hasta), inicioControl().catch(() => '')]); return res.status(200).json({ ok: true, fisios, conPack: !!ini }); }
+    catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   }
 
   // ── PANEL: facturas de la ficha y emitir desde el panel ──

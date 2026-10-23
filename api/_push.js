@@ -116,7 +116,8 @@ async function sinFacturar() {
 
 
 // ── Rendimiento por fisio (de las citas de CITAS) ──
-// Ocupación = realizadas / huecos (HUECOS SEMANA del fisio; un día = HUECOS SEMANA / 5)
+// Huecos de un fisio en un día = horas desde su primera hasta su última cita de la agenda,
+//   menos las horas que solo tienen comida o bloqueo. Ocupación = realizadas / huecos.
 // Primera visita = primera cita REALIZADA del paciente en el centro.
 //   Pack = ese mismo día se le emite una factura con 2 o más sesiones.
 //   Repite = sin pack, pero tiene otra cita después. Se pierde = ni pack ni otra cita.
@@ -125,14 +126,30 @@ const nomFisio = v => { if (Array.isArray(v)) v = v[0]; v = v && typeof v === 'o
 async function rendimiento(desde, hasta) {
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
-  const [citas, fisios] = await Promise.all([
-    todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=PacienteId&fields[]=FECHA`),
-    todosAT('tbl2mLUrnaKCFTs6g', `fields[]=Name&fields[]=HUECOS SEMANA&fields[]=Role`)
-  ]);
-  const dias = Math.round((new Date(hasta) - new Date(desde)) / 864e5) + 1;
-  const cap = {}; fisios.forEach(f => { const n = String(f.fields['Name'] || '').split(' ')[0].toLowerCase(); if (n && f.fields['HUECOS SEMANA']) cap[n] = Number(f.fields['HUECOS SEMANA']) * (dias >= 5 ? dias / 7 : dias / 5); });
+  const citas = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=PacienteId&fields[]=FECHA&fields[]=HORA`);
   const R = {};
-  const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, perdidas: 0, noAsistio: 0, canceladas: 0, nuevos: [], packs: 0, repiten: 0, pierden: 0 });
+  const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, nuevos: [], packs: 0, repiten: 0, pierden: 0 });
+  // Huecos por fisio y día, a partir de su agenda
+  const BLOQ = /BLOQUEAD|COMIDA|^pen$|^09:00$/i;
+  const agenda = {};
+  citas.forEach(c => {
+    const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n)) return;
+    const m = String(c.fields['HORA'] || '').match(/(\d{1,2}):(\d{2})/); if (!m) return;
+    const k = n + '|' + String(c.fields['FECHA']).slice(0, 10), h = +m[1];
+    const a = (agenda[k] = agenda[k] || { n, horas: {} });
+    const x = (a.horas[h] = a.horas[h] || { libre: false, bloq: false, hecha: false });
+    const e = est(c);
+    if (BLOQ.test(e)) x.bloq = true; else x.libre = true;
+    if (e === 'REALIZADA') x.hecha = true;
+  });
+  const disponible = x => x.hecha || (x.libre && !x.bloq);
+  Object.values(agenda).forEach(a => {
+    const hs = Object.keys(a.horas).map(Number).filter(h => disponible(a.horas[h]));
+    if (!hs.length) return;
+    const ini = Math.min(...hs), fin = Math.max(...hs);
+    let n = 0; for (let h = ini; h <= fin; h++) if (!a.horas[h] || disponible(a.horas[h])) n++;
+    de(a.n).huecos += n;
+  });
   const realizadas = citas.filter(c => est(c) === 'REALIZADA' && c.fields['PacienteId']);
   citas.forEach(c => {
     const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n)) return;
@@ -162,8 +179,8 @@ async function rendimiento(desde, hasta) {
       if (pack) x.packs++; else if (vuelve) x.repiten++; else x.pierden++;
     });
   }
-  return Object.values(R).filter(x => x.realizadas || x.nuevos.length).map(x => ({ ...x, nuevos: x.nuevos.length, huecos: cap[x.fisio.toLowerCase()] ? Math.round(cap[x.fisio.toLowerCase()]) : 0 })).sort((a, b) => b.realizadas - a.realizadas);
+  return Object.values(R).filter(x => x.realizadas || x.nuevos.length).map(x => ({ ...x, nuevos: x.nuevos.length })).sort((a, b) => b.realizadas - a.realizadas);
 }
 
-const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento };
+const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };
 module.exports = { leerSub, enviar, avisar, idValido, TABLAS, BASE_ID, saldo };
