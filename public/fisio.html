@@ -190,6 +190,8 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .fp-inf-meta{font-size:11px;color:var(--muted);margin-bottom:4px}
 .fp-inf-tipo{font-size:14px;font-weight:700;margin-bottom:10px}
 .fp-inf-btns{display:flex;gap:8px;flex-wrap:wrap}
+.rend-tot{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.rend-tot .rt{background:#1e2a38;color:#fff;border-radius:16px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:2px}.rend-tot span{font-size:12px;color:rgba(255,255,255,.7)}.rend-tot b{font-size:26px;font-weight:700}.rend-tot b.ok{color:#4ade80}.rend-tot b.med{color:#fbbf24}.rend-tot b.bajo{color:#f39a55}.rend-tot i{font-style:normal;font-size:11px;color:rgba(255,255,255,.6)}
+.rend-sub{font-size:12px;color:var(--muted);margin:6px 0 16px}
 .rend-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.rend-chips button{font-family:var(--font);font-size:13px;padding:8px 14px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer;color:var(--black)}.rend-chips button.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
 .rend-res{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .rend-card{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--sombra)}.rend-card.tot{background:#1e2a38;color:#fff}.rend-card.tot span{color:rgba(255,255,255,.65)!important}
@@ -4483,7 +4485,9 @@ function rangoRend(k){const hoy=new Date();const iso=n=>isoMadrid(new Date(hoy.g
 async function renderRendimiento(wrap){
  const pcs=(a,b)=>b?Math.round(a*100/b)+'%':'—';
  const box=ce('div','rend');
- box.innerHTML=`<div class="rend-chips">${[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div><div class="rend-res"></div>
+ box.innerHTML=`<div class="rend-tot"><div class="rt" data-k="ayer"><span>Ayer</span><b>…</b><i></i></div><div class="rt" data-k="semana"><span>Esta semana</span><b>…</b><i></i></div><div class="rt" data-k="mes"><span>Este mes</span><b>…</b><i></i></div></div>
+  <div class="rend-sub">Ocupación del equipo (Sara, Jonathan y Juan)</div><div class="rend-chips">${[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div>
+  <div class="rend-res"></div>
   <div class="rend-ley">Ocupación = sesiones realizadas frente a las horas que trabaja cada fisio esos días (campo HORAS POR DÍA de la tabla FISIO; 1 hora = 1 sesión). Reagendan = de los pacientes que ha atendido en el periodo, cuántos tienen otra cita apuntada después. Faltas = no asistió o cita perdida. De Ramiro solo salen sus sesiones hechas (suman al total).</div>`;
  wrap.appendChild(box);
  const res=box.querySelector('.rend-res');
@@ -4509,6 +4513,17 @@ async function renderRendimiento(wrap){
   }catch(e){res.innerHTML='<div class="fac-vacio">No se ha podido calcular: '+escH(e.message)+'</div>';}
  };
  box.querySelectorAll('.rend-chips button').forEach(b=>b.onclick=()=>cargar(b.dataset.k));
+ // Ocupación total del equipo: ayer, esta semana y este mes
+ box.querySelectorAll('.rend-tot .rt').forEach(async t=>{
+  const [d,h]=rangoRend(t.dataset.k);
+  try{const r=await (await fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`)).json();
+   const L=(r.fisios||[]).filter(x=>!x.sinHoras);const hech=L.reduce((a,x)=>a+x.realizadas,0),hue=L.reduce((a,x)=>a+x.huecos,0);
+   const oc=hue?Math.round(hech*100/hue):null;
+   t.querySelector('b').textContent=oc==null?'—':oc+'%';t.querySelector('b').className=oc==null?'':oc>=85?'ok':oc>=65?'med':'bajo';
+   t.querySelector('i').textContent=hue?`${hech} de ${hue} huecos`:'sin huecos';
+  }catch(e){t.querySelector('b').textContent='—';}
+  t.onclick=()=>cargar(t.dataset.k);
+ });
  let k0='ayer';try{k0=sessionStorage.getItem('f365_rend')||'ayer';}catch(e){}
  cargar(k0);
 }
