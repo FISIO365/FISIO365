@@ -55,7 +55,7 @@ async function contactosDelPaciente(patientId) {
 // Se crea en Holded como ticket de venta (factura simplificada con DNI), en la serie por defecto,
 // con el número que asigna Holded y nunca con fecha anterior a la última emitida.
 const FACTURAS_TABLE = 'tblJw7suXLERn8AFQ';
-const FF = { fecha: 'fldqZyXkxhGRS1qvn', paciente: 'fldbmNoGhedI6ySSb', c1: 'fld3lRaKQbUYcW5qY', n1: 'fldWj0dUmJzTn0lgr', p1: 'fldu2QiBD9hM5scRC', c2: 'fldlkX8RO7crsVOye', n2: 'fldOW7e0lHx3Tfu4X', p2: 'fldkYc6HBh9E1YjUv', notas: 'fldoi8INIByEPPpMn', estado: 'fldWyEjNGH9CCRfmM', num: 'fldcTFAHH31Lsz53c', pdf: 'fld8jBu2P4sPB21ZC', aNombre: 'fldBW06oApJQaNlN9', aNif: 'fld6VO3g0KrFpAi6P', aDir: 'fldFK7NwsZ5AUY6qp' };
+const FF = { fecha: 'fldQ17bGOMaS0XaxJ', fechaVieja: 'fldqZyXkxhGRS1qvn', paciente: 'fldbmNoGhedI6ySSb', c1: 'fld3lRaKQbUYcW5qY', n1: 'fldWj0dUmJzTn0lgr', p1: 'fldu2QiBD9hM5scRC', c2: 'fldlkX8RO7crsVOye', n2: 'fldOW7e0lHx3Tfu4X', p2: 'fldkYc6HBh9E1YjUv', notas: 'fldoi8INIByEPPpMn', estado: 'fldWyEjNGH9CCRfmM', num: 'fldcTFAHH31Lsz53c', pdf: 'fld8jBu2P4sPB21ZC', aNombre: 'fldBW06oApJQaNlN9', aNif: 'fld6VO3g0KrFpAi6P', aDir: 'fldFK7NwsZ5AUY6qp' };
 let emitiendo = Promise.resolve();
 const at = (path, opt = {}) => fetch(`https://api.airtable.com/v0/${BASE_ID}/${path}`, { ...opt, headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json', ...(opt.headers || {}) } }).then(r => r.json());
 const holdedPost = async (path, body) => { const r = await fetch(HOLDED_URL + path, { method: 'POST', headers: { key: HOLDED_KEY, accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const d = await r.json().catch(() => ({})); if (!r.ok || d.status === 0) throw new Error(d.info || d.message || ('Holded ' + r.status)); return d; };
@@ -85,8 +85,9 @@ async function emitirFactura(recId) {
   const recientes = await holded('/documents/salesreceipt?starttmp=' + (ahora - 400 * 86400) + '&endtmp=' + (ahora + 86400)).catch(() => []);
   const ultima = (Array.isArray(recientes) ? recientes : []).filter(d => !d.draft).sort((a, b) => (b.date || 0) - (a.date || 0))[0];
   let fecha = ahora;
-  if (f[FF.fecha]) {
-    const fd = Math.floor(new Date(f[FF.fecha] + 'T12:00:00Z').getTime() / 1000);
+  const fFila = f[FF.fecha] || f[FF.fechaVieja];
+  if (fFila) {
+    const fd = Math.floor(new Date(fFila + 'T12:00:00Z').getTime() / 1000);
     if (fd > ahora + 86400) throw new Error('La fecha no puede ser futura');
     if (ultima && ultima.date && fd < ultima.date - 43200) throw new Error('La fecha es anterior a la última factura emitida (' + new Date(ultima.date * 1000).toLocaleDateString('es-ES') + '). Deja la fecha vacía para usar la de hoy.');
     if (fd < ahora - 43200) fecha = fd;
@@ -124,7 +125,7 @@ async function emitirFactura(recId) {
   const docId = doc.id;
   const creado = await holded('/documents/salesreceipt/' + docId).catch(() => ({}));
   const num = creado.docNumber || doc.invoiceNum || docId;
-  const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: new Date(fecha * 1000).toISOString().slice(0, 10) };
+  const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: new Date(fecha * 1000).toISOString().slice(0, 10), [FF.fechaVieja]: new Date(fecha * 1000).toISOString().slice(0, 10) };
   await at(`${FACTURAS_TABLE}/${recId}`, { method: 'PATCH', body: JSON.stringify({ fields: campos, typecast: true }) });
   try {
     const pdf = await holded('/documents/salesreceipt/' + docId + '/pdf');
