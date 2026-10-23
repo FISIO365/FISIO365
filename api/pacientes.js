@@ -343,6 +343,34 @@ export default async function handler(req) {
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
 
+  // Guardar informe de anamnesis: en «Informes» (app del paciente) + PDF en la ficha (campo DOCUS)
+  if (action === 'guardar-informe-completo' && req.method === 'POST') {
+    const { pwd, pacienteId, pacienteNombre, fisioNombre, tipo, contenido, pdfBase64, filename } = body;
+    if ((pwd || '').trim() !== FISIO_PASSWORD.trim()) return new Response(JSON.stringify({ ok: false, error: 'No autorizado' }), { status: 401, headers: corsHeaders });
+    if (!/^rec[A-Za-z0-9]{14}$/.test(pacienteId || '')) return new Response(JSON.stringify({ ok: false, error: 'Paciente no válido' }), { status: 400, headers: corsHeaders });
+    const out = { ok: true, app: false, ficha: false };
+    try {
+      const fecha = new Date().toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' });
+      const ar = await fetch(`https://api.airtable.com/v0/${BASE_ID}/tblwvWQxXNJPdR0Iv`, {
+        method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ records: [{ fields: { PacienteId: pacienteId, PacienteNombre: (pacienteNombre || '').toUpperCase(), FisioNombre: fisioNombre || '', Fecha: fecha, Protocolo: tipo || '', Informe: contenido || '' } }] })
+      });
+      const ad = await ar.json(); out.app = !ad.error; if (ad.error) out.errorApp = ad.error.message || 'Airtable';
+    } catch (e) { out.errorApp = e.message; }
+    if (pdfBase64) {
+      try {
+        const ur = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${pacienteId}/fldTMnwMj4c1C2835/uploadAttachment`, {
+          method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contentType: 'application/pdf', file: pdfBase64, filename: filename || 'Informe.pdf' })
+        });
+        const ud = await ur.json().catch(() => ({}));
+        out.ficha = ur.ok; if (!ur.ok) out.errorFicha = ud.error?.message || ud.error?.type || ('HTTP ' + ur.status);
+      } catch (e) { out.errorFicha = e.message; }
+    }
+    out.ok = out.app || out.ficha;
+    return new Response(JSON.stringify(out), { headers: corsHeaders });
+  }
+
   if (action === 'guardar-informe-panel' && req.method === 'POST') {
     const { pacienteId, pacienteNombre, fisioNombre, tipo, contenido, fecha } = body;
     const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';

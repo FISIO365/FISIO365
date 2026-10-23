@@ -141,6 +141,12 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .aviso-rojo{color:#b91c1c;font-weight:600}
 .tst-sig{margin-top:5px;background:#fff1ea;border-radius:8px;padding:6px 10px;font-weight:600;color:#7c2d12}
 .fi-info ul.tc li.fl b{color:#7c2d12}
+
+.inf-acc{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.inf-acc button{font-family:var(--font);font-size:14px;font-weight:600;border-radius:99px;padding:13px;cursor:pointer;border:1.5px solid #1a1a1a}
+.inf-acc .ia-g{background:#c2552e;border-color:#c2552e;color:#fff}.inf-acc .ia-g.hecho{background:#16a34a;border-color:#16a34a}
+.ia-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ia-row button{background:#fff;color:#1a1a1a}
+.ia-est{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px}.ia-est .ok{color:#16a34a;font-weight:600}.ia-est .ko{color:#b91c1c;font-weight:600}
 .ap-sel{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border-radius:12px;font-size:14px}.ap-sel button{margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:99px;padding:5px 12px;cursor:pointer}
 .btn-informe{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:var(--black);color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}
 .chs{margin-top:2px}
@@ -3798,11 +3804,11 @@ Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEU
  res.textContent=d.informe;res.style.display='block';
  btn.className='gen-btn';btn.style.background='#2e7d32';
  btn.innerHTML='Informe generado — Descargar PDF';
- btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,curProto||'hernia');
+ btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,curProto||'hernia');btn.style.display='none';accionesInforme(res,curProto||'hernia',fisioNom);
  let eb1=$('btnEdit1');if(!eb1){eb1=ce('button','btn');eb1.id='btnEdit1';eb1.style.cssText='margin-top:8px;width:100%;background:white;color:var(--black);border:1.5px solid var(--border);padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)';eb1.textContent='Editar informe';eb1.onclick=()=>editarInforme(res,eb1);res.parentNode.insertBefore(eb1,res.nextSibling);}
  // Botón guardar en perfil paciente
  let saveBtn=$('btnGuardarInforme');
- if(!saveBtn){
+ if(false&&!saveBtn){
  saveBtn=ce('button','btn');
  saveBtn.id='btnGuardarInforme';
  saveBtn.style.cssText='margin-top:10px;width:100%;background:var(--lila,#d9774f);color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer';
@@ -4031,10 +4037,10 @@ Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / DIAGNÓSTICO 
  res.textContent=d.informe;res.style.display='block';
  btn.className='gen-btn';btn.style.background='#2e7d32';
  btn.innerHTML='Informe generado — Descargar PDF';
- btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,curProto||'sueloPelvico');
+ btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,curProto||'sueloPelvico');btn.style.display='none';accionesInforme(res,curProto||'sueloPelvico',fisioNom);
  let eb1=$('btnEdit1');if(!eb1){eb1=ce('button','btn');eb1.id='btnEdit1';eb1.style.cssText='margin-top:8px;width:100%;background:white;color:var(--black);border:1.5px solid var(--border);padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)';eb1.textContent='Editar informe';eb1.onclick=()=>editarInforme(res,eb1);res.parentNode.insertBefore(eb1,res.nextSibling);}
  let saveBtn=$('btnGuardarInforme');
- if(!saveBtn){
+ if(false&&!saveBtn){
  saveBtn=ce('button','btn');
  saveBtn.id='btnGuardarInforme';
  saveBtn.style.cssText='margin-top:10px;width:100%;background:var(--lila,#d9774f);color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer';
@@ -4135,7 +4141,7 @@ Máx 550 palabras. Profesional, empático y esperanzador.`;
  res.textContent=d.informe;res.style.display='block';
  btn.className='gen-btn';btn.style.background='#2e7d32';
  btn.innerHTML='Informe generado — Descargar PDF';
- btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,tipo);
+ btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,tipo);btn.style.display='none';accionesInforme(res,tipo,fisioNom);
  let eb2=$('btnEdit2');if(!eb2){eb2=ce('button','btn');eb2.id='btnEdit2';eb2.style.cssText='margin-top:8px;width:100%;background:white;color:var(--black);border:1.5px solid var(--border);padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)';eb2.textContent='Editar informe';eb2.onclick=()=>editarInforme(res,eb2);res.parentNode.insertBefore(eb2,res.nextSibling);}
  res.scrollIntoView({behavior:'smooth'});
  toast('Informe guardado',true);
@@ -4150,15 +4156,40 @@ Máx 550 palabras. Profesional, empático y esperanzador.`;
 // ─────────────────────────────────────────────────────────────────────────────
 // DESCARGAR PDF
 // ─────────────────────────────────────────────────────────────────────────────
+// Barra de acciones tras generar el informe: guardar (ficha + app), ver PDF (imprimir/enviar) y descargar
+function accionesInforme(res,tipo,fisioNom){
+ const pacId=anamPacId,pacNom=anamPacNom;
+ res.parentNode.querySelectorAll('.inf-acc').forEach(x=>x.remove());
+ const bar=ce('div','inf-acc');
+ bar.innerHTML=`<button type="button" class="ia-g">Guardar en su ficha y en su app</button><div class="ia-row"><button type="button" class="ia-v">Ver PDF · imprimir o enviar</button><button type="button" class="ia-d">Descargar PDF</button></div><div class="ia-est"></div>`;
+ res.insertAdjacentElement('afterend',bar);
+ const est=bar.querySelector('.ia-est');
+ bar.querySelector('.ia-v').onclick=()=>descargarPDF(pacNom,informeGenerado,tipo,fisioNom,'','ver').catch(()=>{});
+ bar.querySelector('.ia-d').onclick=()=>descargarPDF(pacNom,informeGenerado,tipo,fisioNom,'','descargar').catch(()=>{});
+ const g=bar.querySelector('.ia-g');
+ g.onclick=async()=>{
+  if(!pacId){toast('Selecciona un paciente primero',false);return;}
+  g.disabled=true;g.textContent='Guardando…';
+  try{
+   const pdf=await descargarPDF(pacNom,informeGenerado,tipo,fisioNom,'','base64');
+   const d=await (await fetch('/api/pacientes?action=guardar-informe-completo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:pacId,pacienteNombre:pacNom,fisioNombre:fisioNom,tipo,contenido:informeGenerado,pdfBase64:pdf.base64,filename:pdf.nombre})})).json();
+   est.innerHTML=`<span class="${d.app?'ok':'ko'}">${d.app?'✓':'✕'} App del paciente · Mis informes</span><span class="${d.ficha?'ok':'ko'}">${d.ficha?'✓':'✕'} Ficha en Airtable · Archivos (PDF)</span>`;
+   if(d.app&&d.ficha){g.textContent='✓ Guardado';g.classList.add('hecho');toast('Informe guardado en su ficha y en su app',true);}
+   else{g.disabled=false;g.textContent='Reintentar guardar';toast(d.errorFicha||d.errorApp||'No se ha podido guardar todo',false);}
+  }catch(e){g.disabled=false;g.textContent='Guardar en su ficha y en su app';toast('Error: '+e.message,false);}
+ };
+}
 function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
  if(!fisioNom){const fo=fisios.find(f=>f.id===fisioSelId)||{};fisioNom=fo.nombre||'';fisioCol=fo.colegiado||'';}
  const fecha=new Date().toLocaleDateString('es-ES');
- const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo',cadera:'Cadera',codo:'Codo',hernia:'Hernia Discal Lumbar'};
+ const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',codo:'Codo y antebrazo',muneca:'Muñeca y mano',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',libre:'Valoración fisioterapéutica',sueloPelvico:'Suelo pélvico',hernia:'Hernia Discal Lumbar'};
  const tipoLabel=tipos[tipo]||tipo||'Valoración Fisioterapéutica';
  const colNum=fisioCol?'Colegiado nº '+fisioCol:'';
 
+ const modo=arguments[5]||'descargar';
  // Load jsPDF from CDN then generate
- const _run=()=>_generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha);
+ return new Promise((resolve,reject)=>{
+ const _run=()=>{try{resolve(_generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo));}catch(e){reject(e);}};
  if(typeof window.jspdf!=='undefined'&&window.jspdf.jsPDF){
  _run();
  } else {
@@ -4168,13 +4199,14 @@ function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
  const s=document.createElement('script');
  s.id='jspdf-script';
  s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
- s.onload=()=>{if(window.jspdf&&window.jspdf.jsPDF){_run();}else{toast('Error: librería PDF no disponible',false);}};
- s.onerror=()=>toast('Error al cargar librería PDF. Verifica tu conexión.',false);
+ s.onload=()=>{if(window.jspdf&&window.jspdf.jsPDF){_run();}else{toast('Error: librería PDF no disponible',false);reject(new Error('jsPDF'));}};
+ s.onerror=()=>{toast('Error al cargar librería PDF. Verifica tu conexión.',false);reject(new Error('jsPDF'));};
  document.head.appendChild(s);
  }
+ });
 }
 
-function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha){
+function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo){
  const {jsPDF}=window.jspdf;
  const doc=new jsPDF({unit:'mm',format:'a4'});
  const W=210, ml=18, mr=18, tw=W-ml-mr;
@@ -4348,7 +4380,10 @@ function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha){
  doc.text(fecha,W-mr,py+9,{align:'right'});
  }
 
- doc.save('Informe_'+pacNom.replace(/\s+/g,'_')+'_'+fecha.replace(/\//g,'-')+'.pdf');
+ const nombrePdf='Informe_'+pacNom.replace(/\s+/g,'_')+'_'+fecha.replace(/\//g,'-')+'.pdf';
+ if(modo==='ver'){const u=doc.output('bloburl');window.open(u,'_blank');return {nombre:nombrePdf};}
+ if(modo==='base64'){return {nombre:nombrePdf,base64:doc.output('datauristring').split(',')[1]};}
+ doc.save(nombrePdf);return {nombre:nombrePdf};
 }
 
 function _addFooter(doc,W,ml,mr,py,fisioNom,colNum,fecha,pageNum,pageCount){

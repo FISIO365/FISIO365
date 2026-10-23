@@ -70,12 +70,12 @@ HALLAZGOS PRINCIPALES
 - De 3 a 5 viñetas, técnicas y breves (máximo 15 palabras cada una). Solo lo relevante y lo que esté en los datos.
 DIAGNÓSTICO FISIOTERAPÉUTICO
 1 o 2 frases técnicas.
-OBJETIVOS Y PLAN
-- 3 viñetas breves.
+OBJETIVOS
+- 3 viñetas breves con los objetivos terapéuticos (qué se quiere conseguir), SIN técnicas ni tratamiento.
 ${flags.length ? 'ALERTAS\n- Las alertas marcadas y qué hacer, en 1 o 2 viñetas, sin alarmismo.\n' : ''}EN PALABRAS SENCILLAS
-2 o 3 frases para el paciente, en segunda persona y lenguaje cotidiano: qué le pasa, qué vais a trabajar y un mensaje tranquilo y realista.
+2 o 3 frases para el paciente, en segunda persona y lenguaje cotidiano: qué le pasa, qué se quiere conseguir y un mensaje tranquilo y realista.
 
-Reglas: máximo 220 palabras en total. Lenguaje técnico y conciso en todo salvo en la última sección. No expliques términos entre paréntesis. No inventes datos que no estén. No repitas el nombre del fisio ni la fecha.`;
+Reglas: máximo 220 palabras en total. NO menciones cómo se va a tratar (ni técnicas, ni sesiones, ni ejercicios, ni plan de tratamiento). Lenguaje técnico y conciso en todo salvo en la última sección. No expliques términos entre paréntesis. No inventes datos que no estén. No repitas el nombre del fisio ni la fecha.`;
 
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -87,27 +87,8 @@ Reglas: máximo 220 palabras en total. Lenguaje técnico y conciso en todo salvo
       const informe = aiData.content?.[0]?.text || '';
       if (!informe) return res.status(500).json({ ok: false, error: aiData.error?.message || 'Error Anthropic' });
 
-      // Guardar automáticamente en Airtable
-      let savedId = null;
-      try {
-        const atRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ records: [{ fields: {
-            PacienteId:     pacienteId || '',
-            PacienteNombre: (pacienteNombre || '').toUpperCase(),
-            FisioNombre:    fisioNombre || '',
-            Fecha:          fecha,
-            Protocolo:      tipo,
-            Informe:        informe
-          }}]})
-        });
-        const atData = await atRes.json();
-        savedId = atData.records?.[0]?.id || null;
-      } catch(e) {
-        console.error('Error guardando en Airtable:', e.message);
-      }
-
+      // Ya no se guarda solo: se guarda con el botón «Guardar en ficha y app» (evita informes duplicados)
+      const savedId = null;
       return res.status(200).json({ ok: true, informe, savedId });
     } catch(e) {
       return res.status(500).json({ ok: false, error: e.message });
