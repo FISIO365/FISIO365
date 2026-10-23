@@ -91,7 +91,8 @@ input[type=number]{text-align:center}
 .btn-g{background:var(--black);color:white;width:100%;padding:13px}.btn-g:hover{opacity:.85}.btn-g:disabled{opacity:.4;cursor:not-allowed}
 .btn-o{background:none;border:1px dashed var(--border);color:var(--muted);width:100%;font-family:var(--font);font-size:14px;font-weight:500;padding:11px;border-radius:var(--r-sm);cursor:pointer}
 .btn-o:hover{background:var(--cream)}
-.su-fisio{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--muted);margin:0 0 12px}.su-fisio b{color:var(--black);font-weight:600}.su-fisio button{font-family:var(--font);font-size:12.5px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--black);border-radius:99px;padding:5px 12px;cursor:pointer}.su-fisio button.ok{background:var(--black);color:#fff;border-color:var(--black)}.su-fisio select{width:auto;max-width:220px;flex:none;font-family:var(--font);font-size:13px;padding:6px 8px;border:1.5px solid var(--border);border-radius:8px}
+.su-fisio{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--black);margin:0 0 12px;padding:10px 12px;background:var(--cream);border-radius:12px}.su-fisio select{width:auto;flex:1;max-width:240px;font-family:var(--font);font-size:13.5px;font-weight:500;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;background:#fff}
+
 .btn-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:13px;font-weight:500;padding:7px 14px;border-radius:var(--r-sm);cursor:pointer}
 .btn-back:hover{border-color:var(--lila);color:var(--lila)}
 .btn-img{font-family:var(--font);font-size:12px;font-weight:500;padding:7px 14px;border:1px solid var(--lila);border-radius:var(--r-sm);cursor:pointer;background:var(--lila-light);color:var(--lila);white-space:nowrap;flex-shrink:0;transition:all .15s}
@@ -1144,52 +1145,26 @@ function montarEditorEjs(el,inicial,onCambio){
   set:l=>{ejs=(l||[]).map(peNorm);pintar();avisar();}
  };
 }
-function selFisioHTML(id,sel){return `<div class="pe-fisio">Lo asigna<select id="${id}">${fisios.map(f=>`<option value="${f.id}" ${f.id===sel?'selected':''}>${escH(f.nombre)}</option>`).join('')}</select></div>`;}
-// Si guarda el programa un fisio distinto del suyo: ¿cambio de fisio real o solo hoy?
-// Devuelve true (cambio), false (puntual, sigue con el suyo) o null (cancelar).
-function preguntarCambioFisio(actualId, nuevoId){
- if(!actualId||!nuevoId||actualId===nuevoId) return Promise.resolve(false);
- const nom=id=>escH((fisios.find(f=>f.id===id)||{}).nombre||'otro fisio');
- const pr=n=>n.split(' ')[0];
- return new Promise(ok=>{
-  const ov=ce('div');ov.style.cssText='position:fixed;inset:0;background:rgba(26,26,26,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
-  ov.innerHTML=`<div style="background:#fff;border-radius:22px;max-width:380px;width:100%;padding:22px;font-family:var(--font)">
-   <div style="font-size:17px;font-weight:700;margin-bottom:6px">¿Cambia de fisio?</div>
-   <div style="font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:18px">Su fisio es <b style="color:var(--black)">${nom(actualId)}</b> y este programa lo guarda <b style="color:var(--black)">${nom(nuevoId)}</b>.</div>
-   <button class="btn btn-g" data-r="0" style="margin-bottom:8px">Solo hoy · sigue con ${pr(nom(actualId))}</button>
-   <button class="btn btn-o" data-r="1" style="border-style:solid;color:var(--black);margin-bottom:8px">Cambio de fisio · pasa a ${pr(nom(nuevoId))}</button>
-   <button data-r="x" style="background:none;border:none;width:100%;padding:8px;font-family:var(--font);font-size:13px;color:var(--muted);cursor:pointer">Cancelar</button></div>`;
-  ov.onclick=e=>{const b=e.target.closest('[data-r]');if(!b&&e.target!==ov)return;ov.remove();ok(!b?null:b.dataset.r==='x'?null:b.dataset.r==='1');};
-  document.body.appendChild(ov);
- });
-}
+function selFisioHTML(id,sel){return `<div class="pe-fisio">Lo prescribe<select id="${id}">${fisios.map(f=>`<option value="${f.id}" ${f.id===sel?'selected':''}>${escH(f.nombre)}</option>`).join('')}</select></div>`;}
 let progFisioAsig='';
-// «Su fisio: X · Cambiar» — cambia el fisio asignado sin tocar los ejercicios
+// «Su fisio [desplegable]»: el fisio asignado del paciente. Se cambia aquí y se guarda al momento.
+// Guardar ejercicios nunca lo cambia (si otro fisio le atiende un día, el paciente sigue con el suyo).
 function pintarSuFisio(cont, pacId, getActual, setActual){
  if(!cont) return;
+ const a=getActual();
+ if(!a){cont.innerHTML='';return;}
  const nombre=id=>(fisios.find(f=>f.id===id)||{}).nombre||'';
- const vista=()=>{
-  const a=getActual();
-  cont.innerHTML=a?`<div class="su-fisio"><span>Su fisio: <b>${escH(nombre(a)||'—')}</b></span><button type="button">Cambiar</button></div>`
-   :`<div class="su-fisio"><span>Sin fisio asignado todavía · se asigna al guardar su primer programa</span></div>`;
-  const b=cont.querySelector('button'); if(b) b.onclick=editar;
+ cont.innerHTML=`<label class="su-fisio">Su fisio<select>${fisios.some(f=>f.id===a)?'':`<option value="${a}" selected>—</option>`}${fisios.map(f=>`<option value="${f.id}" ${f.id===a?'selected':''}>${escH(f.nombre)}</option>`).join('')}</select></label>`;
+ const sel=cont.querySelector('select');
+ sel.onchange=async()=>{
+  const nuevo=sel.value; sel.disabled=true;
+  try{
+   const d=await (await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'cambiar-fisio',pwd:apiPwd,pacienteId:pacId,fisioId:nuevo})})).json();
+   if(d.ok){setActual(d.fisioAsignadoId);toast(`Ahora su fisio es ${nombre(nuevo).split(' ')[0]}`,true);}
+   else{sel.value=getActual();toast(d.error||'No se ha podido cambiar',false);}
+  }catch(e){sel.value=getActual();toast('Error de conexión',false);}
+  sel.disabled=false;
  };
- const editar=()=>{
-  const a=getActual();
-  cont.innerHTML=`<div class="su-fisio"><span>Su fisio:</span><select>${fisios.map(f=>`<option value="${f.id}" ${f.id===a?'selected':''}>${escH(f.nombre)}</option>`).join('')}</select><button type="button" class="ok">Guardar</button><button type="button" class="no">Cancelar</button></div>`;
-  cont.querySelector('.no').onclick=vista;
-  cont.querySelector('.ok').onclick=async ev=>{
-   const nuevo=cont.querySelector('select').value; if(nuevo===a){vista();return;}
-   ev.target.disabled=true; ev.target.textContent='Guardando…';
-   try{
-    const d=await (await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'cambiar-fisio',pwd:apiPwd,pacienteId:pacId,fisioId:nuevo})})).json();
-    if(d.ok){setActual(d.fisioAsignadoId);toast(`Ahora su fisio es ${nombre(nuevo).split(' ')[0]}`,true);}
-    else toast(d.error||'No se ha podido cambiar',false);
-   }catch(e){toast('Error de conexión',false);}
-   vista();
-  };
- };
- vista();
 }
 let progEditor=null;
 
@@ -1410,12 +1385,11 @@ async function cargarPrograma(pacId){
 }
 
 async function guardar(){
- if(!fisioSelId){toast('Selecciona el fisio que asigna',false);return;}
+ if(!fisioSelId){toast('Selecciona quién prescribe los ejercicios',false);return;}
  if(!pacSelId){toast('Selecciona un paciente',false);return;}
  const ejs=getEjs();
  if(!ejs.length){toast('Añade al menos un ejercicio',false);return;}
- const cambiarFisio=await preguntarCambioFisio(progFisioAsig,fisioSelId);
- if(cambiarFisio===null) return;
+ const cambiarFisio=false; // guardar ejercicios nunca cambia su fisio (se cambia arriba, en «Su fisio»)
  const btn=$('btnG'); btn.disabled=true; btn.textContent='Guardando...';
  try{
  const r=await fetch('/api/programa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:pacSelId,pacienteNombre:pacSelN,fisioId:fisioSelId,cambiarFisio,ejercicios:ejs,mensajeFisio:$('mensajeFisio')?.value?.trim()||''})});
@@ -4379,11 +4353,10 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
    saveBtn.style.width='100%';
    saveBtn.onclick=async()=>{
      const fisioId=document.getElementById('fpFisioSel').value;
-     if(!fisioId){toast('Selecciona el fisio que asigna',false);return;}
+     if(!fisioId){toast('Selecciona quién prescribe los ejercicios',false);return;}
      const ejs=fpEditor.get().filter(e=>e.nombre);
      if(!ejs.length){toast('Añade al menos un ejercicio',false);return;}
-     const cambiarFisio=await preguntarCambioFisio(fpFisioAsig,fisioId);
-     if(cambiarFisio===null) return;
+     const cambiarFisio=false; // guardar ejercicios nunca cambia su fisio (se cambia arriba, en «Su fisio»)
      const fisioObj=fisios.find(f=>f.id===fisioId)||{};
      const pacNom=pacNombre||document.querySelector('[data-modal]')?.dataset.pacNombre||'';
      saveBtn.disabled=true;saveBtn.textContent='Guardando...';

@@ -79,8 +79,12 @@ export default async function handler(req) {
   if (action === 'hilo') {
     const pacienteId = url.searchParams.get('pacienteId') || '';
     if (!idValido(pacienteId)) return json({ ok: false, error: 'Paciente no válido' }, 400);
+    const conFisio = url.searchParams.get('fisioId') || '';
+    const sinFisio = url.searchParams.get('sinFisio') === '1';
     try {
-      const recs = await todos(`{PacienteId}="${pacienteId}"`);
+      // Conversación con un fisio concreto (y los mensajes antiguos sin fisio, si se piden)
+      const filtro = idValido(conFisio) ? `,OR({FisioId}="${conFisio}"${sinFisio ? ',{FisioId}=""' : ''})` : '';
+      const recs = await todos(`AND({PacienteId}="${pacienteId}"${filtro})`);
       const mensajes = aBurbujas(recs);
       // Para el fisio: marcar qué archivos ya están guardados en la ficha del paciente
       if (esFisio && mensajes.some(m => m.adjuntos.length)) {
@@ -93,6 +97,31 @@ export default async function handler(req) {
       }
       const ultimoFisio = [...recs].sort((a, b) => b.createdTime.localeCompare(a.createdTime)).find(r => r.fields.FisioId);
       return json({ ok: true, mensajes, fisio: ultimoFisio ? { id: ultimoFisio.fields.FisioId, nombre: ultimoFisio.fields.FisioNombre || '' } : null });
+    } catch (e) { return json({ ok: false, error: e.message }, 500); }
+  }
+
+  // ── Lista de chats del paciente (tipo WhatsApp): todos los fisios con su último mensaje ──
+  if (action === 'chats') {
+    const pacienteId = url.searchParams.get('pacienteId') || '';
+    const asignado = url.searchParams.get('asignado') || '';
+    if (!idValido(pacienteId)) return json({ ok: false, error: 'Paciente no válido' }, 400);
+    try {
+      const [recs, fd] = await Promise.all([
+        todos(`{PacienteId}="${pacienteId}"`),
+        fetch(`https://api.airtable.com/v0/${BASE_ID}/tbl2mLUrnaKCFTs6g`, { headers: AT }).then(r => r.json())
+      ]);
+      const fisios = (fd.records || []).filter(r => String(r.fields.Role || '').toLowerCase() === 'fisio')
+        .map(r => ({ id: r.id, nombre: r.fields.Name || '', foto: r.fields.Foto?.[0]?.thumbnails?.large?.url || r.fields.Foto?.[0]?.url || '' }));
+      const por = {};
+      for (const b of aBurbujas(recs)) {
+        const fid = b.fisioId || asignado; if (!fid) continue;
+        const c = por[fid] || (por[fid] = { ultimo: '', texto: '', de: '', sinLeer: 0 });
+        if (b.de === 'fisio' && !b.leido) c.sinLeer++;
+        if (b.fecha > c.ultimo) { c.ultimo = b.fecha; c.de = b.de; c.texto = b.texto || (b.adjuntos[0] ? (/^image\//.test(b.adjuntos[0].tipo) ? 'Foto' : 'PDF') : ''); }
+      }
+      const chats = fisios.map(f => ({ ...f, tuyo: f.id === asignado, ...(por[f.id] || { ultimo: '', texto: '', de: '', sinLeer: 0 }) }))
+        .sort((a, b) => (b.tuyo - a.tuyo) || b.ultimo.localeCompare(a.ultimo) || a.nombre.localeCompare(b.nombre));
+      return json({ ok: true, chats });
     } catch (e) { return json({ ok: false, error: e.message }, 500); }
   }
 
@@ -129,17 +158,18 @@ export default async function handler(req) {
 
   // ── Marcar como leído ────────────────────────────────────────────
   if (action === 'leido' && req.method === 'POST') {
-    const { pacienteId, quien, fisioId } = body;
+    const { pacienteId, quien, fisioId, sinFisio } = body;
     if (!idValido(pacienteId)) return json({ ok: false }, 400);
     try {
       if (quien === 'fisio') {
         if (!esFisio) return json({ ok: false, error: 'No autorizado' }, 401);
         // Solo los mensajes dirigidos a este fisio (o sin destinatario): si el paciente escribió a otro fisio, a ese le sigue saliendo sin leer
-        const paraMi = idValido(fisioId) ? `,OR({FisioId}="${fisioId}",{FisioId}="")` : '';
+        const paraMi = idValido(fisioId) ? `,OR({FisioId}="${fisioId}"${sinFisio !== false ? ',{FisioId}=""' : ''})` : '';
         const recs = await todos(`AND({PacienteId}="${pacienteId}",{Visto}=FALSE()${paraMi})`);
         await patch(recs.map(r => ({ id: r.id, fields: { Visto: true } })));
       } else {
-        const recs = await todos(`AND({PacienteId}="${pacienteId}",{RespuestaLeida}=FALSE())`);
+        const deEse = idValido(fisioId) ? `,OR({FisioId}="${fisioId}"${sinFisio ? ',{FisioId}=""' : ''})` : '';
+        const recs = await todos(`AND({PacienteId}="${pacienteId}",{RespuestaLeida}=FALSE()${deEse})`);
         await patch(recs.map(r => ({ id: r.id, fields: { RespuestaLeida: true } })));
       }
       return json({ ok: true });
