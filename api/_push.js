@@ -116,7 +116,8 @@ async function sinFacturar() {
 
 
 // ── Rendimiento por fisio (de las citas de CITAS) ──
-//   Ocupación = realizadas / huecos. Huecos = HORAS POR DÍA de cada día del periodo (call-in y vídeos aparte, no cuentan).
+//   Ocupación = realizadas / huecos. Huecos = HORAS POR DÍA de los días que ha trabajado (con algo en su agenda).
+//   Call-in y vídeos aparte, no cuentan.
 // Reagendan = pacientes atendidos en el periodo que tienen otra cita después de su última sesión.
 const NO_FISIO = /NO HAY FISIO|TODOS|\?\?|FIESTA|^$/i;
 const nomFisio = v => { if (Array.isArray(v)) v = v[0]; v = v && typeof v === 'object' ? v.name : String(v || ''); return v.trim(); };
@@ -143,7 +144,10 @@ async function rendimiento(desde, hasta) {
     if (!alguno && Number(f.fields['HORAS SEMANA']) > 0) { const h = Number(f.fields['HORAS SEMANA']) / 5; for (let d = 1; d <= 5; d++) v[d] = h; alguno = true; }
     if (alguno) horasDia[n] = v;
   });
-  const capacidad = n => { const v = horasDia[n]; if (!v) return 0; let t = 0; for (let d = new Date(desde + 'T12:00:00Z'); d <= new Date(hasta + 'T12:00:00Z'); d = new Date(d.getTime() + 864e5)) t += v[d.getUTCDay()]; return Math.round(t); };
+  // Solo cuentan los días en que el fisio tiene algo en la agenda (festivos, vacaciones o días libres no suman huecos)
+  const diasCon = {};
+  citas.forEach(c => { if (/BLOQUEAD|COMIDA|REPROGRAMADA|POR REAGENDAR/i.test(est(c))) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(); (diasCon[n] = diasCon[n] || new Set()).add(String(c.fields['FECHA']).slice(0, 10)); });
+  const capacidad = n => { const v = horasDia[n]; if (!v) return 0; let t = 0; (diasCon[n] || new Set()).forEach(f => { t += v[new Date(f + 'T12:00:00Z').getUTCDay()]; }); return Math.round(t); };
   const R = {};
   const cuenta = n => true;
   const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, callin: 0, videos: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, atendidos: 0, reagendan: 0, lista: [] });
