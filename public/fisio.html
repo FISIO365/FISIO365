@@ -91,6 +91,27 @@ input[type=number]{text-align:center}
 .btn-g{background:var(--black);color:white;width:100%;padding:13px}.btn-g:hover{opacity:.85}.btn-g:disabled{opacity:.4;cursor:not-allowed}
 .btn-o{background:none;border:1px dashed var(--border);color:var(--muted);width:100%;font-family:var(--font);font-size:14px;font-weight:500;padding:11px;border-radius:var(--r-sm);cursor:pointer}
 .btn-o:hover{background:var(--cream)}
+
+/* ── Anamnesis: diseño ── */
+.stabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;margin-bottom:14px;scrollbar-width:none}.stabs::-webkit-scrollbar{display:none}
+.stab{flex:none;display:flex;align-items:center;gap:7px;font-family:var(--font);font-size:13px;font-weight:600;color:#7d6a60;background:#fff;border:1.5px solid #ece4dc;border-radius:99px;padding:5px 13px 5px 5px;cursor:pointer}
+.stab i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#f3eee9;color:#7d6a60;font-size:11px;display:flex;align-items:center;justify-content:center}
+.stab.ok{color:#1a1a1a}.stab.ok i{background:#e7f6ec;color:#16a34a}
+.stab.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff}.stab.on i{background:#c2552e;color:#fff}
+.anam .card{border-radius:20px;padding:6px 20px 8px;box-shadow:0 2px 14px rgba(26,26,26,.05)}
+.anam .card>.ct{font-size:15px;font-weight:700;color:#1a1a1a;text-transform:none;letter-spacing:-.2px;padding:14px 0 10px;margin:0;display:flex;align-items:center;gap:10px}
+.anam .card>.ct::before{content:'';width:8px;height:8px;border-radius:50%;background:#c2552e;flex:none}
+.anam .card>.grid,.anam .card>div[style*="grid"]{display:block!important}
+.anam .f{display:grid!important;grid-template-columns:190px 1fr;gap:6px 18px;align-items:start;padding:13px 0;border-top:1px solid #f3eee9;margin:0}
+.anam .f>label,.anam .fi>div:first-child>span{font-size:13.5px!important;font-weight:600!important;color:#1a1a1a!important;text-transform:none!important;letter-spacing:0!important;line-height:1.35;padding-top:6px;display:flex;gap:6px}
+.anam .f.hecho>label::after,.anam .fi.hecho>div:first-child>span::after{content:'✓';color:#16a34a;font-weight:700}
+.anam .f>.cks,.anam .f>input,.anam .f>select,.anam .f>.er,.anam .fi>.fi-info{grid-column:2}
+.anam .f>input{max-width:220px}
+.anam .fi>div:first-child{grid-column:1}
+.fi-info{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#7c2d12;margin-top:6px}
+.fi-info b{display:block;font-size:12px;margin:6px 0 2px;color:#c2552e}.fi-info b:first-child{margin-top:0}
+.anam .nota{font-size:13px;color:#7d6a60;margin:0 2px 12px}
+@media(max-width:700px){.anam .f{grid-template-columns:1fr}.anam .f>*{grid-column:1!important}.anam .f>label,.anam .fi>div:first-child>span{padding-top:0}}
 .ap-sel{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border-radius:12px;font-size:14px}.ap-sel button{margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:99px;padding:5px 12px;cursor:pointer}
 .btn-informe{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:var(--black);color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}
 .chs{margin-top:2px}
@@ -828,6 +849,7 @@ function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?'
 function cerrarSesionPanel(){try{localStorage.removeItem('f365_panel_sesion');sessionStorage.removeItem('f365_panel_sec');}catch(e){}location.reload();}
 function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
+ try{$('mainWrap').classList.remove('anam');}catch(e){}
  ['anam','prog','pac','school','msg','record'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
@@ -1547,13 +1569,13 @@ function renderProto(){
  wrap.appendChild(hd);
 
  // steps
- const sn=ce('div','steps-nav');
+ wrap.classList.add('anam');
+ const sn=ce('div','stabs');
  cfg.steps.forEach((s,i)=>{
- const d=ce('div','sdot'+(i===curStep?' active':i<curStep?' done':''));
- d.title=s; d.textContent=i<curStep?'✓':(i+1);
- if(i<curStep) d.onclick=()=>{curStep=i;renderProto();};
+ const d=ce('button','stab'+(i===curStep?' on':i<curStep?' ok':''));
+ d.type='button'; d.innerHTML=`<i>${i<curStep?'✓':(i+1)}</i>${escH(s)}`;
+ d.onclick=()=>{curStep=i;renderProto();window.scrollTo({top:0,behavior:'smooth'});};
  sn.appendChild(d);
- if(i<cfg.steps.length-1){const l=ce('div','sline');sn.appendChild(l);}
  });
  wrap.appendChild(sn);
 
@@ -1582,6 +1604,7 @@ function renderProto(){
  chipearSelects(wrap);
 }
 
+const ES_NORMAL=/^(no|ninguno|normal|normales|negativo|negativa|neg\.?|sin .*|conservad[oa]s?|5\/5|nunca)$/i;
 // Convierte los desplegables de la anamnesis en botoncitos que se tocan (el <select> sigue debajo, oculto, y guarda el valor igual)
 function chipearSelects(wrap){
  wrap.querySelectorAll('select').forEach(sel=>{
@@ -1592,7 +1615,7 @@ function chipearSelects(wrap){
   if(![...sel.options].some(o=>o.value==='')){const m=(sel.getAttribute('onchange')||'').match(/D\[['"]([^'"]+)['"]\]/);if(m&&D[m[1]]===undefined){sel.insertAdjacentHTML('afterbegin','<option value="">—</option>');sel.value='';}}
   sel.dataset.chips='1'; sel.style.display='none';
   const box=ce('div','cks chs');
-  const pintar=()=>box.querySelectorAll('.ck').forEach(c=>c.classList.toggle('on',c.dataset.v===sel.value));
+  const pintar=()=>{box.querySelectorAll('.ck').forEach(c=>c.classList.toggle('on',c.dataset.v===sel.value));const f=box.closest('.f');if(f)f.classList.toggle('hecho',!!sel.value);};
   ops.forEach(o=>{const c=ce('div','ck'+(/⚠/.test(o.textContent)?' w':''));c.dataset.v=o.value;c.textContent=o.textContent;
    c.onclick=()=>{sel.value=sel.value===o.value?'':o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));pintar();};box.appendChild(c);});
   sel.insertAdjacentElement('afterend',box); pintar();
@@ -2328,7 +2351,7 @@ function fSZ(w){renderInformeHub(w,'fascitis',gFF(),gFFF(),getFase(D.evm,D.eva))
 
 
 function mkCampoInfo(label, opts, key, info){
- const wrap = ce('div','');
+ const wrap = ce('div','f fi');
  wrap.style.cssText='display:flex;flex-direction:column;gap:4px';
  
  // Label row with info button
@@ -2345,8 +2368,6 @@ function mkCampoInfo(label, opts, key, info){
  btn.textContent='ⓘ';
  btn.title=info;
  btn.style.display='none';
- lbl.style.cursor='help'; lbl.style.textDecoration='underline dotted'; lbl.style.textUnderlineOffset='3px'; lbl.title='Toca para ver la explicación';
- lbl.onclick=()=>btn.click();
  // Toggle info panel
  const panel = ce('div','');
  panel.style.cssText='display:none;background:#f0f6ff;border:0.5px solid #c8dff5;border-radius:7px;padding:8px 10px;font-size:12px;color:#2a5a8a;line-height:1.5;margin-top:2px';
@@ -2363,9 +2384,14 @@ function mkCampoInfo(label, opts, key, info){
  sel.innerHTML='<option value="">—</option>';
  opts.forEach(([v,t])=>{const o=ce('option','');o.value=v;o.textContent=t;sel.appendChild(o);});
  sel.value=D[key]||'';
- sel.onchange=()=>{D[key]=sel.value;saveAnamD();};
+ // La explicación sale sola cuando se marca algo alterado (p. ej. «Mareos: Sí» → cómo evaluarlo)
+ panel.classList.add('fi-info'); panel.style.cssText='display:none';
+ { const t=escH(info).replace(/\b(CÓMO [A-ZÁÉÍÓÚÑ ]+|QUÉ [A-ZÁÉÍÓÚÑ ]+|SI [A-ZÁÉÍÓÚÑ ]+):\s*/g,(m,h)=>`<b>${h.charAt(0)+h.slice(1).toLowerCase()}</b>`);
+   panel.innerHTML=/^\s*<b>/.test(t)?t:`<b>Cómo valorarlo</b>${t}`; }
+ const verInfo=()=>{const t=(sel.options[sel.selectedIndex]||{}).textContent||'';panel.style.display=(sel.value&&!ES_NORMAL.test(t.trim()))?'block':'none';};
+ sel.onchange=()=>{D[key]=sel.value;saveAnamD();verInfo();};
  wrap.appendChild(sel);
- wrap.appendChild(panel);
+ wrap.appendChild(panel); verInfo();
  } else {
  wrap.appendChild(lrow);
  const sel=ce('select','');
