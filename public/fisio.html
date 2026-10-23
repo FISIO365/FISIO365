@@ -112,6 +112,27 @@ input[type=number]{text-align:center}
 .fi-info b{display:block;font-size:12px;margin:6px 0 2px;color:#c2552e}.fi-info b:first-child{margin-top:0}
 .anam .nota{font-size:13px;color:#7d6a60;margin:0 2px 12px}
 @media(max-width:700px){.anam .f{grid-template-columns:1fr}.anam .f>*{grid-column:1!important}.anam .f>label,.anam .fi>div:first-child>span{padding-top:0}}
+
+.tst{background:#fff;border:1.5px solid #efe8e1;border-radius:16px;padding:12px 14px;margin-bottom:8px;transition:border-color .15s}
+.tst.pos{border-color:#c2552e;background:#fff8f4}.tst.neg{border-color:#d9d0c7}
+.tst-top{display:flex;align-items:center;gap:12px}
+.tst-nom{flex:1;min-width:0}.tst-nom b{display:block;font-size:14px;font-weight:600;color:#1a1a1a;line-height:1.3}
+.tst-fia{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#7d6a60;margin-top:3px}
+.tst-fia::before{content:'';width:7px;height:7px;border-radius:50%;background:#d9d0c7}
+.tst-fia.alta::before{background:#16a34a}.tst-fia.media::before{background:#e8a020}.tst-fia.baja::before{background:#c0392b}
+.tst-res{display:flex;gap:6px;flex:none}
+.tst-res button{font-family:var(--font);font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:99px;border:1.5px solid #e6ded6;background:#fff;color:#4a423c;cursor:pointer}
+.tst-res button[data-v=neg].on{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
+.tst-res button[data-v=pos].on{background:#c2552e;border-color:#c2552e;color:#fff}
+.tst-ver{margin-top:6px;border:none;background:none;padding:0;font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;cursor:pointer}
+.tst-ver span{display:inline-block;transition:transform .2s}.tst-ver.abierto span{transform:rotate(180deg)}
+.tst-body{display:grid;grid-template-columns:200px 1fr;gap:14px;margin-top:10px;padding-top:12px;border-top:1px solid #f3eee9}
+.tst-body[hidden]{display:none}
+.tst-img{width:100%;border-radius:12px;cursor:zoom-in;object-fit:cover;max-height:180px}
+.tst-txt{display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.5;color:#4a423c}
+.tst-txt b{display:block;font-size:11.5px;font-weight:700;color:#1a1a1a;margin-bottom:1px}
+.tst-txt .tp b{color:#c2552e}
+@media(max-width:700px){.tst-top{flex-wrap:wrap}.tst-res{width:100%}.tst-res button{flex:1}.tst-body{grid-template-columns:1fr}}
 .ap-sel{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border-radius:12px;font-size:14px}.ap-sel button{margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:99px;padding:5px 12px;cursor:pointer}
 .btn-informe{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:var(--black);color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}
 .chs{margin-top:2px}
@@ -2471,104 +2492,24 @@ function mkDermMap(){
 }
 
 function mkTestOrtopedico(id, nombre, img, como, positivo, negativo, combinar, fiabilidad){
- const div=ce('div','');
- div.style.cssText='border:0.5px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden';
- const header=ce('div','');
- header.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:var(--cream)';
- const left=ce('div','');
- left.style.cssText='display:flex;align-items:center;gap:10px';
- const nameEl=ce('span','');
- nameEl.style.cssText='font-size:13px;font-weight:600;color:var(--black)';
- nameEl.textContent=nombre;
- left.appendChild(nameEl);
- const badge=ce('span','');
- badge.id='tbadge-'+id;
- badge.style.cssText='font-size:11px;padding:3px 8px;border-radius:6px;background:#f0f0f0;color:#666;border:0.5px solid #ddd';
- badge.textContent='Sin realizar';
- left.appendChild(badge);
- header.appendChild(left);
- const chev=ce('span','');
- chev.textContent='▾';
- chev.style.cssText='color:#999;font-size:14px;transition:transform .2s';
- header.appendChild(chev);
- const body=ce('div','');
- body.style.cssText='display:none;padding:14px;border-top:0.5px solid var(--border);background:#fff';
- // Image
- if(img){
- const imgWrap=ce('div','');
- imgWrap.style.cssText='position:relative;margin-bottom:14px;cursor:pointer;border-radius:10px;overflow:hidden;background:#f5f5f5';
- const im=ce('img','');
- im.src=img;
- im.style.cssText='width:100%;display:block;object-fit:cover;max-height:220px;transition:transform .3s';
- const overlay=ce('div','');
- overlay.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;transition:background .25s';
- const expandIcon=ce('div','');
- expandIcon.style.cssText='width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s;backdrop-filter:blur(4px)';
- expandIcon.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
- overlay.appendChild(expandIcon);
- imgWrap.appendChild(im);
- imgWrap.appendChild(overlay);
- imgWrap.addEventListener('mouseenter',()=>{overlay.style.background='rgba(0,0,0,0.25)';expandIcon.style.opacity='1';im.style.transform='scale(1.02)';});
- imgWrap.addEventListener('mouseleave',()=>{overlay.style.background='rgba(0,0,0,0)';expandIcon.style.opacity='0';im.style.transform='scale(1)';});
- imgWrap.addEventListener('click',()=>verImg(img,nombre));
- imgWrap.addEventListener('touchstart',()=>{overlay.style.background='rgba(0,0,0,0.25)';expandIcon.style.opacity='1';},{passive:true});
- imgWrap.addEventListener('touchend',()=>{overlay.style.background='rgba(0,0,0,0)';expandIcon.style.opacity='0';verImg(img,nombre);},{passive:true});
- body.appendChild(imgWrap);
- }
- // How to do
- const s1=ce('div','');s1.style.cssText='margin-bottom:10px';
- const l1=ce('p','');l1.style.cssText='font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px';l1.textContent='Cómo se realiza';
- const t1=ce('p','');t1.style.cssText='font-size:13px;color:#444;line-height:1.6';t1.textContent=como;
- s1.appendChild(l1);s1.appendChild(t1);body.appendChild(s1);
- // Positive
- const s2=ce('div','');s2.style.cssText='background:#f0faf4;border-radius:8px;padding:10px;margin-bottom:8px';
- const l2=ce('p','');l2.style.cssText='font-size:11px;font-weight:700;color:#2a7a4b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px';l2.textContent='Positivo cuando...';
- const t2=ce('p','');t2.style.cssText='font-size:13px;color:#1a5c38;line-height:1.5';t2.textContent=positivo;
- s2.appendChild(l2);s2.appendChild(t2);body.appendChild(s2);
- // Negative
- const s3=ce('div','');s3.style.cssText='background:#fff5f5;border-radius:8px;padding:10px;margin-bottom:8px';
- const l3=ce('p','');l3.style.cssText='font-size:11px;font-weight:700;color:#a33;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px';l3.textContent='Negativo cuando...';
- const t3=ce('p','');t3.style.cssText='font-size:13px;color:#7a1a1a;line-height:1.5';t3.textContent=negativo;
- s3.appendChild(l3);s3.appendChild(t3);body.appendChild(s3);
- // Combine with
- const s4=ce('div','');s4.style.cssText='margin-bottom:10px';
- const l4=ce('p','');l4.style.cssText='font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px';l4.textContent='Combinar con';
- const t4=ce('p','');t4.style.cssText='font-size:13px;color:#555;line-height:1.5';t4.textContent=combinar;
- s4.appendChild(l4);s4.appendChild(t4);body.appendChild(s4);
- // Reliability bar
- const s5=ce('div','');s5.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px';
- const l5=ce('p','');l5.style.cssText='font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap';l5.textContent='Fiabilidad';
- const bar=ce('div','');bar.style.cssText='flex:1;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden';
- const fill=ce('div','');
- const pct=fiabilidad==='alta'?'90%':fiabilidad==='media'?'55%':'30%';
- const col=fiabilidad==='alta'?'#2a7a4b':fiabilidad==='media'?'#e8a020':'#c0392b';
- fill.style.cssText=`height:100%;width:${pct};background:${col};border-radius:3px`;
- bar.appendChild(fill);
- const label=ce('span','');label.style.cssText=`font-size:12px;font-weight:600;color:${col}`;
- label.textContent=fiabilidad.charAt(0).toUpperCase()+fiabilidad.slice(1);
- s5.appendChild(l5);s5.appendChild(bar);s5.appendChild(label);body.appendChild(s5);
- // Result buttons
- const rb=ce('div','');rb.style.cssText='display:flex;gap:6px';
- [['pos','Positivo','#2a7a4b','#f0faf4','#c8ecd8'],['neg','Negativo','#a33','#fff5f5','#f5c6c6'],['nr','No realizado','#888','#f8f8f8','#e0e0e0']].forEach(([val,lbl,tc,bg,bc])=>{
- const btn=ce('button','');
- btn.style.cssText=`flex:1;padding:7px 4px;font-size:12px;font-weight:500;border-radius:7px;border:0.5px solid #ddd;background:#f8f8f8;cursor:pointer;color:#666;transition:all .15s`;
- btn.textContent=lbl;
- btn.onclick=()=>{
- rb.querySelectorAll('button').forEach(b=>{b.style.background='#f8f8f8';b.style.color='#666';b.style.borderColor='#ddd'});
- btn.style.background=bg;btn.style.color=tc;btn.style.borderColor=bc;
- const b2=document.getElementById('tbadge-'+id);
- if(b2){b2.textContent=lbl;b2.style.background=bg;b2.style.color=tc;b2.style.borderColor=bc;}
- D['test_'+id]=val;saveAnamD();
- };
- rb.appendChild(btn);
- });
- body.appendChild(rb);
- header.onclick=()=>{
- const open=body.style.display==='block';
- body.style.display=open?'none':'block';
- chev.style.transform=open?'':'rotate(180deg)';
- };
- div.appendChild(header);div.appendChild(body);
+ // Fila limpia: nombre + fiabilidad a la izquierda, Negativo/Positivo a la derecha (se marca sin abrir nada).
+ // «Cómo se hace» despliega imagen y explicación. Tocar otra vez el resultado lo quita.
+ const fia=(fiabilidad||'').toLowerCase();
+ const div=ce('div','tst');
+ div.innerHTML=`<div class="tst-top"><div class="tst-nom"><b>${escH(nombre)}</b>${fia?`<span class="tst-fia ${fia}">Fiabilidad ${escH(fia)}</span>`:''}</div>
+  <div class="tst-res"><button type="button" data-v="neg">Negativo</button><button type="button" data-v="pos">Positivo</button></div></div>
+  <button type="button" class="tst-ver">Cómo se hace <span>▾</span></button>
+  <div class="tst-body" hidden>${img?`<img class="tst-img" alt="" src="${img}">`:''}<div class="tst-txt">
+   <div><b>Cómo se hace</b>${escH(como||'')}</div>
+   <div class="tp"><b>Positivo si</b>${escH(positivo||'')}</div>
+   <div class="tn"><b>Negativo si</b>${escH(negativo||'')}</div>
+   ${combinar?`<div><b>Combinar con</b>${escH(combinar)}</div>`:''}</div></div>`;
+ const pintar=()=>{const v=D['test_'+id]||'';div.classList.toggle('pos',v==='pos');div.classList.toggle('neg',v==='neg');div.querySelectorAll('.tst-res button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));};
+ div.querySelectorAll('.tst-res button').forEach(b=>b.onclick=()=>{if(D['test_'+id]===b.dataset.v)delete D['test_'+id];else D['test_'+id]=b.dataset.v;saveAnamD();pintar();});
+ const ver=div.querySelector('.tst-ver'), body=div.querySelector('.tst-body');
+ ver.onclick=()=>{body.hidden=!body.hidden;ver.classList.toggle('abierto',!body.hidden);};
+ const im=div.querySelector('.tst-img'); if(im) im.onclick=()=>verImg(img,nombre);
+ pintar();
  return div;
 }
 
@@ -2806,18 +2747,16 @@ function mkFiltroSospecha(region, contenedor) {
  const tid = t.dataset.testid;
  const testSospechas = SOSPECHA_MAP[tid] || [];
  const match = noFiltro || testSospechas.some(s => selected.has(s));
- t.style.opacity = match ? '1' : '0.2';
- t.style.pointerEvents = match ? '' : 'none';
- t.style.transition = 'opacity .2s';
- // Add/remove highlight border
- if (match && !noFiltro) {
- t.style.outline = '2px solid var(--lila)';
- t.style.outlineOffset = '2px';
- t.style.borderRadius = '10px';
- } else {
- t.style.outline = '';
- }
+ t.style.display = match ? '' : 'none';
  });
+ // Ocultar los títulos de sección que se quedan sin tests visibles
+ let titulo=null, hay=false;
+ const cerrar=()=>{if(titulo)titulo.style.display=hay?'':'none';};
+ [...contenedor.children].forEach(el=>{
+  if(el.tagName==='P'){cerrar();titulo=el;hay=false;}
+  else if(el.dataset&&el.dataset.testid&&el.style.display!=='none')hay=true;
+ });
+ cerrar();
  }
 
  noseChip.onclick = () => {
