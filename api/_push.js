@@ -68,8 +68,8 @@ async function inicioControl() {
 }
 async function citasGastadas(inicio, pacId) {
   const conds = [`OR(${GASTA.map(e => `TRIM({ESTADO})='${e}'`).join(',')})`, `IS_AFTER({FECHA},DATEADD('${inicio}',-1,'days'))`];
-  if (pacId) conds.push(`{PacienteId}='${pacId}'`);
-  return todosAT(CITAS, `filterByFormula=${encodeURIComponent('AND(' + conds.join(',') + ')')}&fields[]=PacienteId&fields[]=FECHA&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA`);
+  if (pacId) conds.push(`FIND('${pacId}',ARRAYJOIN({PacienteRec}))`);
+  return todosAT(CITAS, `filterByFormula=${encodeURIComponent('AND(' + conds.join(',') + ')')}&fields[]=FECHA&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA`);
 }
 
 async function saldoPaciente(pacId) {
@@ -98,7 +98,7 @@ async function sinFacturar() {
   previos.forEach(p => { de(p.id).pagadas += Number(p.fields['SESIONES BONO PREVIO'] || 0); });
   facs.forEach(r => { const id = r.fields['PacienteId']; if (id) de(id).pagadas += sesionesDe(r.fields); });
   citas.forEach(c => {
-    const id = c.fields['PacienteId'] || (c.fields['RELACIÓN - CITA'] || [])[0]; if (!id) return;
+    const id = (c.fields['RELACIÓN - CITA'] || [])[0]; if (!id) return;
     const x = de(id); x.gastadas++;
     const f = c.fields['FECHA'] || '';
     if (f >= x.ultima) { x.ultima = f; const pf = c.fields['PREF.']; x.fisio = (pf && typeof pf === 'object' ? pf.name : pf) || ''; }
@@ -124,9 +124,10 @@ async function sinFacturar() {
 const NO_FISIO = /NO HAY FISIO|TODOS|\?\?|FIESTA|^$/i;
 const nomFisio = v => { if (Array.isArray(v)) v = v[0]; v = v && typeof v === 'object' ? v.name : String(v || ''); return v.trim(); };
 async function rendimiento(desde, hasta) {
+  const pid = c => (c.fields['RELACIÓN - CITA'] || [])[0] || '';
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
-  const citas = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=PacienteId&fields[]=FECHA&fields[]=HORA`);
+  const citas = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA`);
   const R = {};
   const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, nuevos: [], packs: 0, repiten: 0, pierden: 0 });
   // Huecos por fisio y día, a partir de su agenda
@@ -150,32 +151,32 @@ async function rendimiento(desde, hasta) {
     let n = 0; for (let h = ini; h <= fin; h++) if (!a.horas[h] || disponible(a.horas[h])) n++;
     de(a.n).huecos += n;
   });
-  const realizadas = citas.filter(c => est(c) === 'REALIZADA' && c.fields['PacienteId']);
+  const realizadas = citas.filter(c => est(c) === 'REALIZADA' && pid(c));
   citas.forEach(c => {
     const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n)) return;
     const e = est(c), x = de(n);
     if (e === 'REALIZADA') x.realizadas++; else if (e === 'CITA PERDIDA') x.perdidas++; else if (e === 'NO ASISTIÓ') x.noAsistio++; else if (e === 'CANCELADA') x.canceladas++;
   });
   // Primeras visitas: pacientes con realizada en el periodo y sin ninguna realizada antes
-  const pacs = [...new Set(realizadas.map(c => c.fields['PacienteId']))];
+  const pacs = [...new Set(realizadas.map(c => pid(c)))];
   const previos = new Set();
   for (let i = 0; i < pacs.length; i += 40) {
     const lote = pacs.slice(i, i + 40);
-    const r = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_BEFORE({FECHA},'${desde}'),OR(${lote.map(id => `{PacienteId}='${id}'`).join(',')}))`)}&fields[]=PacienteId`);
-    r.forEach(c => previos.add(c.fields['PacienteId']));
+    const r = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_BEFORE({FECHA},'${desde}'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA`);
+    r.forEach(c => (c.fields['RELACIÓN - CITA'] || []).forEach(x => previos.add(x)));
   }
   const primera = {};
-  realizadas.slice().sort((a, b) => String(a.fields['FECHA']).localeCompare(String(b.fields['FECHA']))).forEach(c => { const id = c.fields['PacienteId']; if (!previos.has(id) && !primera[id]) primera[id] = c; });
+  realizadas.slice().sort((a, b) => String(a.fields['FECHA']).localeCompare(String(b.fields['FECHA']))).forEach(c => { const id = pid(c); if (!previos.has(id) && !primera[id]) primera[id] = c; });
   const nuevos = Object.keys(primera);
   if (nuevos.length) {
     const facs = await todosAT(FACTURAS, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',OR(${nuevos.map(id => `{PacienteId}='${id}'`).join(',')}))`)}`).catch(() => []);
-    const despues = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ', 'REPROGRAMADA', 'POR REAGENDAR'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${nuevos.map(id => `{PacienteId}='${id}'`).join(',')}))`)}&fields[]=PacienteId&fields[]=FECHA`).catch(() => []);
+    const despues = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ', 'REPROGRAMADA', 'POR REAGENDAR'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${nuevos.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA`).catch(() => []);
     nuevos.forEach(id => {
       const c = primera[id], dia = String(c.fields['FECHA']).slice(0, 10), n = nomFisio(c.fields['PREF.']);
       if (NO_FISIO.test(n)) return;
       const x = de(n); x.nuevos.push(id);
       const pack = facs.some(r => r.fields['PacienteId'] === id && fechaCobro(r.fields) === dia && sesionesDe(r.fields) >= 2);
-      const vuelve = despues.some(r => r.fields['PacienteId'] === id && String(r.fields['FECHA']).slice(0, 10) > dia);
+      const vuelve = despues.some(r => (r.fields['RELACIÓN - CITA'] || []).includes(id) && String(r.fields['FECHA']).slice(0, 10) > dia);
       if (pack) x.packs++; else if (vuelve) x.repiten++; else x.pierden++;
     });
   }
