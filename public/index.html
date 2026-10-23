@@ -1192,14 +1192,14 @@ async function loadInformes(){
 }
 const escF=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function loadFacturas(){const w=document.getElementById('facPacWrap'),l=document.getElementById('facPacList');if(!w||!patient)return;
- try{const d=await (await fetch('/api/facturas?patientId='+encodeURIComponent(patient.id))).json();
+ try{const d=await (await fetch('/api/schedule?action=facturas&patientId='+encodeURIComponent(patient.id))).json();
   if(!d.ok||!(d.facturas||[]).length){w.style.display='none';return;}
   const eur=n=>n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
   l.innerHTML=d.facturas.map(f=>`<div class="fac-card"><div class="fac-izq"><div class="fac-num">${f.numero?'Factura '+escF(f.numero):'Factura'}</div><div class="fac-meta">${f.fecha?new Date(f.fecha*1000).toLocaleDateString('es-ES'):''}${f.concepto?' · '+escF(f.concepto):''}</div></div><div class="fac-der"><div class="fac-total">${eur(f.total)}</div><button class="btn-inf pdf fac-btn" onclick="descargarFactura('${f.id}',this)">Descargar</button></div></div>`).join('');
   w.style.display='';
  }catch(e){w.style.display='none';}}
 async function descargarFactura(id,btn){const t=btn.textContent;btn.disabled=true;btn.textContent='…';
- try{const d=await (await fetch('/api/facturas?patientId='+encodeURIComponent(patient.id)+'&id='+encodeURIComponent(id))).json();if(!d.ok)throw 0;
+ try{const d=await (await fetch('/api/schedule?action=facturas&patientId='+encodeURIComponent(patient.id)+'&id='+encodeURIComponent(id))).json();if(!d.ok)throw 0;
   const bin=atob(d.pdf),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
   const url=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));const a=document.createElement('a');a.href=url;a.download=d.nombre||'Factura.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
  }catch(e){toast('No se ha podido descargar la factura',false);}
