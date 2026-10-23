@@ -4169,7 +4169,7 @@ function accionesInforme(anchor,ctx,fisioNom){
  if(typeof ctx==='string'){const tipo=ctx;ctx={pacId:anamPacId,pacNom:anamPacNom,tipo,fisioNom,getTexto:()=>informeGenerado};}
  anchor.parentNode.querySelectorAll(':scope > .inf-acc').forEach(x=>x.remove());
  const bar=ce('div','inf-acc');
- bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g" data-d="app">${ctx.recId?'Actualizar en la app del paciente':'Guardar en la app del paciente'}</button><button type="button" class="ia-g" data-d="ficha">Guardar PDF en su ficha (Airtable)</button></div>
+ bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g" data-d="app">${ctx.recId?'Actualizar en la app (paciente y panel)':'Guardar en la app (paciente y panel)'}</button><button type="button" class="ia-g" data-d="ficha">Subir PDF a Airtable</button></div>
   <div class="ia-row"><button type="button" class="ia-v">Ver PDF · imprimir o enviar</button><button type="button" class="ia-d">Descargar PDF</button></div>`;
  anchor.insertAdjacentElement('afterend',bar);
  const pdf=m=>descargarPDF(ctx.pacNom,ctx.getTexto(),ctx.tipo,ctx.fisioNom,ctx.fisioCol||'',m);
@@ -4183,9 +4183,9 @@ function accionesInforme(anchor,ctx,fisioNom){
    const f=dest==='ficha'?await pdf('base64'):null;
    const d=await (await fetch('/api/pacientes?action=guardar-informe-completo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,destino:dest,recId:ctx.recId||'',pacienteId:ctx.pacId,pacienteNombre:ctx.pacNom,fisioNombre:ctx.fisioNom,tipo:ctx.tipo,contenido:ctx.getTexto(),pdfBase64:f&&f.base64,filename:f&&f.nombre})})).json();
    const ok=dest==='app'?d.app:d.ficha;
-   if(ok){if(d.recordId)ctx.recId=d.recordId;g.textContent=dest==='app'?'✓ En su app · Mis informes':'✓ PDF en su ficha';g.classList.add('hecho');toast(dest==='app'?'Informe guardado en la app del paciente':'PDF guardado en su ficha de Airtable',true);
+   if(ok){if(d.recordId)ctx.recId=d.recordId;g.textContent=dest==='app'?'✓ Guardado en la app':'✓ PDF subido a Airtable';g.classList.add('hecho');toast(dest==='app'?'Guardado: lo verá el paciente en su app y lo tienes en su ficha del panel':'PDF subido a su ficha de Airtable (Archivos)',true);
     // se puede volver a guardar si se edita después
-    setTimeout(()=>{g.disabled=false;g.classList.remove('hecho');g.textContent=dest==='app'?'Actualizar en la app del paciente':'Guardar PDF otra vez en su ficha';},4000);}
+    setTimeout(()=>{g.disabled=false;g.classList.remove('hecho');g.textContent=dest==='app'?'Actualizar en la app (paciente y panel)':'Subir PDF otra vez a Airtable';},4000);}
    else{g.disabled=false;g.textContent=txt0;toast((dest==='app'?d.errorApp:d.errorFicha)||'No se ha podido guardar',false);}
   }catch(e){g.disabled=false;g.textContent=txt0;toast('Error: '+e.message,false);}
  });
