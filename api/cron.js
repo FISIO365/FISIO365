@@ -37,13 +37,13 @@ const eur = n => Number(n || 0).toLocaleString('es-ES', { minimumFractionDigits:
 const escH = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const pct = (a, b) => b ? Math.round(a * 100 / b) + '%' : '—';
-function tablaRendimiento(lista, titulo, conPack) {
+function tablaRendimiento(lista, titulo, conOcup) {
   if (!lista.length) return '';
   const th = t => `<th style="text-align:left;padding:6px 6px 6px 0;font-size:11px;color:#7d6a60;font-weight:600;border-bottom:1px solid #eee">${t}</th>`;
   const td = (t, b) => `<td style="padding:8px 6px 8px 0;border-bottom:1px solid #f1ede9;${b ? 'font-weight:600' : ''}">${t}</td>`;
   const T = lista.reduce((a, x) => { ['realizadas', 'huecos', 'nuevos', 'packs', 'repiten', 'pierden', 'noAsistio', 'perdidas', 'canceladas'].forEach(k => a[k] = (a[k] || 0) + x[k]); return a; }, { fisio: 'Total' });
-  const fila = x => `<tr>${td(escH(x.fisio), true)}${td(x.realizadas + (x.huecos ? ' / ' + x.huecos : ''))}${td(pct(x.realizadas, x.huecos))}${td(x.nuevos)}${td(x.nuevos ? pct(x.packs + x.repiten, x.nuevos) : '—')}${td(x.nuevos ? pct(x.pierden, x.nuevos) : '—')}${td(x.noAsistio + x.perdidas)}</tr>`;
-  return `<h3 style="margin:24px 0 8px;font-size:15px">${titulo}</h3><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap"><tr>${th('Fisio')}${th('Hechas / huecos')}${th('Ocupación')}${th('Nuevos')}${th('Reagendan')}${th('No reagendan')}${th('Faltas')}</tr>${lista.map(fila).join('')}${lista.length > 1 ? fila(T) : ''}</table></div>`;
+  const fila = x => `<tr>${td(escH(x.fisio), true)}${td(conOcup ? x.realizadas + (x.huecos ? ' / ' + x.huecos : '') : x.realizadas)}${conOcup ? td(pct(x.realizadas, x.huecos)) : ''}${td(x.nuevos)}${td(x.nuevos ? pct(x.packs + x.repiten, x.nuevos) : '—')}${td(x.nuevos ? pct(x.pierden, x.nuevos) : '—')}${td(x.noAsistio + x.perdidas)}</tr>`;
+  return `<h3 style="margin:24px 0 8px;font-size:15px">${titulo}</h3><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap"><tr>${th('Fisio')}${th(conOcup ? 'Hechas / huecos' : 'Hechas')}${conOcup ? th('Ocupación') : ''}${th('Nuevos')}${th('Reagendan')}${th('No reagendan')}${th('Faltas')}</tr>${lista.map(fila).join('')}${lista.length > 1 ? fila(T) : ''}</table></div>`;
 }
 async function resumenFacturacion(ayer) {
   const sf = await saldo.sinFacturar();
@@ -62,8 +62,8 @@ async function resumenFacturacion(ayer) {
   <div style="font-size:12px;color:#c2552e;font-weight:700;letter-spacing:1px">RESUMEN DIARIO</div>
   <h2 style="margin:6px 0 18px;font-size:20px">${fechaTxt}</h2>
   <p style="margin:0 0 4px">Sesiones hechas: <b>${hechas}</b> · Facturas emitidas: <b>${facs.length}</b> (${eur(total)})</p>
-  ${tablaRendimiento(rendDia, 'Rendimiento del día', sf.activo)}
-  ${rendSemana ? tablaRendimiento(rendSemana, 'Rendimiento de la semana pasada', sf.activo) : ''}
+  ${tablaRendimiento(rendDia, 'Rendimiento del día', false)}
+  ${rendSemana ? tablaRendimiento(rendSemana, 'Rendimiento de la semana pasada', true) : ''}
   <p style="margin:8px 0 0;font-size:11px;color:#9b8f86">Nuevos = pacientes en su 1ª sesión en el centro · Reagendan = tienen otra cita después · Faltas = no asistió o cita perdida</p>
   ${!sf.activo ? '' : sf.lista.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b42318">⚠️ Sesiones sin facturar (${sf.lista.reduce((t, x) => t - x.saldo, 0)})</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${sf.lista.map(x => fila(escH(x.nombre), escH(x.fisio), (-x.saldo) + ' sin facturar')).join('')}</table>` : `<p style="margin:18px 0 0;color:#16803c;font-weight:600">✓ No hay sesiones sin facturar</p>`}
   ${sinMarcar.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b45309">Citas de ayer sin marcar (siguen en «Pendiente»): ${sinMarcar.length}</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${sinMarcar.map(c => fila(escH(c.fields['your-name'] || ''), escH(fisioDe(c.fields['PREF.'])), escH(String(c.fields['HORA'] || '').slice(0, 5)))).join('')}</table>` : ''}

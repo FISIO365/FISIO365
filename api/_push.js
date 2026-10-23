@@ -116,8 +116,7 @@ async function sinFacturar() {
 
 
 // ── Rendimiento por fisio (de las citas de CITAS) ──
-// Huecos de un fisio en un día = horas desde su primera hasta su última cita de la agenda,
-//   menos las horas que solo tienen comida o bloqueo. Ocupación = realizadas / huecos.
+//   Ocupación = realizadas / huecos (HORAS SEMANA del fisio en los días laborables del periodo).
 // Primera visita = primera cita REALIZADA del paciente en el centro.
 //   Pack = ese mismo día se le emite una factura con 2 o más sesiones.
 //   Repite = sin pack, pero tiene otra cita después. Se pierde = ni pack ni otra cita.
@@ -129,57 +128,19 @@ async function rendimiento(desde, hasta) {
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
   const [citas, fisiosT] = await Promise.all([
     todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA`),
-    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORARIO').catch(() => [])
+    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA').catch(() => [])
   ]);
-  // HORARIO de cada fisio: «Lunes 9-14 16-20» → horas de trabajo por día de la semana (0 = domingo)
-  const DIAS_N = ['dom', 'lun', 'mar', 'mi', 'jue', 'vie', 'sá'];
-  const horario = {};
-  fisiosT.forEach(f => {
-    const n = String(f.fields['Name'] || '').split(' ')[0].toLowerCase(); const txt = String(f.fields['HORARIO'] || ''); if (!n || !txt.trim()) return;
-    const h = {};
-    txt.split('\n').forEach(l => {
-      const t = l.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); const d = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab'].findIndex(x => t.startsWith(x)); if (d < 0) return;
-      const horas = new Set(); (t.match(/(\d{1,2})(?:[:.]\d{2})?\s*-\s*(\d{1,2})(?:[:.]\d{2})?/g) || []).forEach(r => { const [a, b] = r.split('-').map(x => parseInt(x)); for (let k = a; k < b; k++) horas.add(k); });
-      h[d] = horas;
-    });
-    horario[n] = h;
-  });
+  // Huecos = HORAS SEMANA del fisio (1 h = 1 sesión) repartidas en los días laborables (lunes a viernes) del periodo
+  let laborables = 0;
+  for (let d = new Date(desde + 'T12:00:00Z'); d <= new Date(hasta + 'T12:00:00Z'); d = new Date(d.getTime() + 864e5)) { const w = d.getUTCDay(); if (w >= 1 && w <= 5) laborables++; }
+  const horasSem = {};
+  fisiosT.forEach(f => { const n = String(f.fields['Name'] || '').split(' ')[0].toLowerCase(); if (n && Number(f.fields['HORAS SEMANA']) > 0) horasSem[n] = Number(f.fields['HORAS SEMANA']); });
   const R = {};
+  const cuenta = n => !!horasSem[String(n).toLowerCase()];
   const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, nuevos: [], packs: 0, repiten: 0, pierden: 0 });
-  // Huecos por fisio y día, a partir de su agenda
-  const BLOQ = /BLOQUEAD|COMIDA|^pen$|^09:00$/i;
-  const agenda = {};
-  citas.forEach(c => {
-    const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n)) return;
-    const m = String(c.fields['HORA'] || '').match(/(\d{1,2}):(\d{2})/); if (!m) return;
-    const k = n + '|' + String(c.fields['FECHA']).slice(0, 10), h = +m[1];
-    const a = (agenda[k] = agenda[k] || { n, fecha: String(c.fields['FECHA']).slice(0, 10), horas: {} });
-    const x = (a.horas[h] = a.horas[h] || { libre: false, bloq: false, hecha: false });
-    const e = est(c);
-    if (BLOQ.test(e)) x.bloq = true; else x.libre = true;
-    if (e === 'REALIZADA') x.hecha = true;
-  });
-  const disponible = x => x.hecha || (x.libre && !x.bloq);
-  Object.values(agenda).forEach(a => {
-    const hs = Object.keys(a.horas).map(Number).filter(h => disponible(a.horas[h]));
-    if (!hs.length) return;
-    // Con HORARIO: huecos = sus horas de ese día, menos comida/bloqueos de la agenda
-    const hor = horario[a.n.toLowerCase()], dow = new Date(a.fecha + 'T12:00:00Z').getUTCDay();
-    if (hor && hor[dow]) { let n = 0; hor[dow].forEach(h => { if (!a.horas[h] || disponible(a.horas[h])) n++; }); de(a.n).huecos += Math.max(n, hs.length); de(a.n).conHorario = true; return; }
-    // Horas con agenda + huecos sueltos de 1 hora entre citas. Si hay 2 o más horas seguidas
-    // sin nada (p. ej. el parón de un horario partido), no cuentan como huecos.
-    const ini = Math.min(...hs), fin = Math.max(...hs);
-    let n = 0;
-    for (let h = ini; h <= fin; h++) {
-      if (a.horas[h]) { if (disponible(a.horas[h])) n++; continue; }
-      const solo = !!a.horas[h - 1] && !!a.horas[h + 1];
-      if (solo) n++;
-    }
-    de(a.n).huecos += n;
-  });
   const realizadas = citas.filter(c => est(c) === 'REALIZADA' && pid(c));
   citas.forEach(c => {
-    const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n)) return;
+    const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n) || !cuenta(n)) return;
     const e = est(c), x = de(n);
     if (e === 'REALIZADA') x.realizadas++; else if (e === 'CITA PERDIDA') x.perdidas++; else if (e === 'NO ASISTIÓ') x.noAsistio++; else if (e === 'CANCELADA') x.canceladas++;
   });
@@ -199,14 +160,14 @@ async function rendimiento(desde, hasta) {
     const despues = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ', 'REPROGRAMADA', 'POR REAGENDAR'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${nuevos.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA`).catch(() => []);
     nuevos.forEach(id => {
       const c = primera[id], dia = String(c.fields['FECHA']).slice(0, 10), n = nomFisio(c.fields['PREF.']);
-      if (NO_FISIO.test(n)) return;
+      if (NO_FISIO.test(n) || !cuenta(n)) return;
       const x = de(n); x.nuevos.push(id);
       const pack = facs.some(r => r.fields['PacienteId'] === id && fechaCobro(r.fields) === dia && sesionesDe(r.fields) >= 2);
       const vuelve = despues.some(r => (r.fields['RELACIÓN - CITA'] || []).includes(id) && String(r.fields['FECHA']).slice(0, 10) > dia);
       if (pack) x.packs++; else if (vuelve) x.repiten++; else x.pierden++;
     });
   }
-  return Object.values(R).filter(x => x.realizadas || x.nuevos.length).map(x => ({ ...x, nuevos: x.nuevos.length })).sort((a, b) => b.realizadas - a.realizadas);
+  return Object.values(R).filter(x => x.realizadas || x.nuevos.length).map(x => ({ ...x, nuevos: x.nuevos.length, huecos: Math.round(horasSem[x.fisio.toLowerCase()] * laborables / 5) })).sort((a, b) => b.realizadas - a.realizadas);
 }
 
 const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };
