@@ -4766,9 +4766,15 @@ async function renderInformes(wrap){
  menuDrop.appendChild(mkMenuItem('Descargar PDF','var(--lila)',()=>descargarPDF(inf.pacienteNombre,inf.informe,inf.protocolo||'hernia',inf.fisioNombre,inf.fisioCol||'')));
  const saveLabel=alreadySaved?'✓ Guardado en app paciente':'Guardar en app paciente';
  const saveColor=alreadySaved?'#166534':'var(--black)';
- const miSave=mkMenuItem(saveLabel,saveColor,()=>{
+ const miSave=mkMenuItem(saveLabel,saveColor,async()=>{
  menuDrop.style.display='none';
- abrirSelectorPacienteInforme(inf, savedKey, miSave);
+ // Si ya se sabe de qué paciente es, se guarda directamente (sin volver a elegirlo)
+ if(!inf.pacienteId){abrirSelectorPacienteInforme(inf, savedKey, miSave);return;}
+ try{
+  const d=await (await fetch('/api/pacientes?action=guardar-informe-completo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,destino:'app',recId:/^rec/.test(String(inf.id))?inf.id:'',pacienteId:inf.pacienteId,pacienteNombre:inf.pacienteNombre,fisioNombre:inf.fisioNombre,tipo:inf.protocolo||'',contenido:inf.informe||''})})).json();
+  if(d.app){localStorage.setItem(savedKey,'1');miSave.textContent='✓ Guardado en app paciente';miSave.style.color='#166534';toast('Guardado en la app de '+(inf.pacienteNombre||'el paciente'),true);}
+  else toast(d.errorApp||'No se ha podido guardar',false);
+ }catch(e){toast('Error: '+e.message,false);}
  });
  menuDrop.appendChild(miSave);
  const miDel1=mkMenuItem('Borrar solo del panel del fisio','#b91c1c',async()=>{
