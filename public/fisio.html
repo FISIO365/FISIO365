@@ -94,6 +94,7 @@ input[type=number]{text-align:center}
 .ap-sel{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border-radius:12px;font-size:14px}.ap-sel button{margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:99px;padding:5px 12px;cursor:pointer}
 .btn-informe{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:var(--black);color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}
 .chs{margin-top:2px}
+.todo-normal{margin-left:auto;font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;border:1.5px solid #16a34a;color:#15803d;background:#f0fdf4;border-radius:99px;padding:5px 12px;cursor:pointer}
 .mf-fisios{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media(max-width:560px){.mf-fisios{grid-template-columns:1fr}}
 .fpk{position:relative;background:var(--cream);border-radius:12px;padding:8px 10px 10px}
 .fpk-lab{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin:0 0 6px 2px}
@@ -210,17 +211,18 @@ input[type=number]{text-align:center}
 .bnav{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
 .bnav span{font-size:12px;color:var(--muted)}
 .bnav-r{display:flex;gap:8px}
-.nota{background:#eff6ff;border-left:3px solid #bfdbfe;padding:9px 13px;font-size:12px;color:#1e40af;margin-bottom:12px;border-radius:0 8px 8px 0;font-style:italic}
+.nota{font-size:12.5px;color:var(--muted);margin:-4px 2px 12px;line-height:1.45}
 .nota strong{font-style:normal}
 .derm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:5px;margin-top:5px}
 .dm{padding:6px 10px;border-radius:7px;border:1px solid var(--border);font-size:12px;cursor:pointer;text-align:center;user-select:none;color:var(--muted);transition:all .15s}
 .dm:hover{border-color:var(--lila)}
 .dm.on{background:var(--lila-light);border-color:var(--lila);color:var(--lila);font-weight:500}
 .dm.w.on{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
-.ck{padding:4px 10px;border-radius:99px;border:1px solid var(--border);font-size:12px;color:var(--muted);cursor:pointer;user-select:none;transition:all .15s}
-.ck:hover{border-color:var(--lila);color:var(--lila)}
-.ck.on{background:var(--lila-light);border-color:var(--lila);color:var(--lila);font-weight:500}
-.cks{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.ck{padding:6px 12px;border-radius:99px;border:1px solid var(--border);background:#fff;font-size:12.5px;color:#4a423c;cursor:pointer;user-select:none;transition:all .15s}
+.ck:hover{border-color:#c2552e}
+.ck.on{background:#c2552e;border-color:#c2552e;color:#fff;font-weight:600}
+.ck.w.on{background:#b91c1c;border-color:#b91c1c;color:#fff}
+.cks{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .ev{width:30px;height:28px;border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
 .ev.g{background:#dcfce7;border-color:#16a34a;color:#15803d}
 .ev.y{background:#fef9c3;border-color:#ca8a04;color:#92400e}
@@ -1595,6 +1597,17 @@ function chipearSelects(wrap){
    c.onclick=()=>{sel.value=sel.value===o.value?'':o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));pintar();};box.appendChild(c);});
   sel.insertAdjacentElement('afterend',box); pintar();
  });
+ // «Todo normal»: en las tarjetas de exploración, marca de un toque la opción normal de cada pregunta que esté vacía
+ const NORMAL=/^(no|normal|normales|normal\/?.*|negativo|negativa|neg\.?|sin alteraci\S*|conservad[oa]s?|5\/5)$/i;
+ wrap.querySelectorAll('.card').forEach(card=>{
+  const ct=card.querySelector('.ct'); if(!ct||card.querySelector('.todo-normal')) return;
+  if(!/neuro|explor|reflej|sensib|fuerza|motor|movilidad|palpa|postur|marcha|muscul|articul|balance|rango/i.test(ct.textContent)) return;
+  const sels=[...card.querySelectorAll('select')].filter(sl=>[...sl.options].some(o=>NORMAL.test(o.textContent.trim())));
+  if(sels.length<2) return;
+  const b=ce('button','todo-normal'); b.type='button'; b.textContent='Todo normal';
+  b.onclick=()=>{sels.forEach(sl=>{if(sl.value)return;const o=[...sl.options].find(o=>NORMAL.test(o.textContent.trim()));if(o){sl.value=o.value;sl.dispatchEvent(new Event('change',{bubbles:true}));}});card.querySelectorAll('.chs').forEach(bx=>{const sl=bx.previousElementSibling;if(sl&&sl.tagName==='SELECT')bx.querySelectorAll('.ck').forEach(c=>c.classList.toggle('on',c.dataset.v===sl.value));});toast('Marcado como normal lo que estaba vacío',true);};
+  ct.style.display='flex'; ct.style.alignItems='center'; ct.appendChild(b);
+ });
 }
 // ── HELPERS COMUNES ───────────────────────────────────────────────────────────
 function mkSel(l,o,k){const w=ce('div','f');w.innerHTML=`<label>${l}</label>`;const s=document.createElement('select');s.innerHTML=`<option value="">—</option>`+o.map(([v,t])=>`<option value="${v}">${t}</option>`).join('');s.value=D[k]||'';s.onchange=()=>{D[k]=s.value;saveAnamD();};w.appendChild(s);return w;}
@@ -1610,7 +1623,7 @@ function mkBnav(wrap,prev,lbl,fn,step){
  const nb=ce('button','btn btn-g');nb.style.width='auto';nb.style.padding='10px 20px';nb.textContent=lbl;nb.onclick=fn;r.appendChild(nb);
  row.appendChild(r);wrap.appendChild(row);
 }
-function mkNota(txt){const n=ce('div','nota');n.innerHTML=`<strong>Clave:</strong> ${txt}`;return n;}
+function mkNota(txt){const n=ce('div','nota');n.innerHTML=txt;return n;}
 function mkDerm(o,k,warn=[]){const w=ce('div','f');w.innerHTML='<label>Distribución / parestesias</label>';const g=ce('div','derm-grid');if(!D[k])D[k]=[];o.forEach(([v,t])=>{const d=ce('div','dm'+(warn.includes(v)?' w':'')+(D[k].includes(v)?' on':''));d.textContent=t;d.onclick=()=>{if(D[k].includes(v))D[k]=D[k].filter(x=>x!==v);else D[k].push(v);d.classList.toggle('on');saveAnamD();};g.appendChild(d);});w.appendChild(g);return w;}
 
 // ── PASO 0 COMPARTIDO (paciente) ──────────────────────────────────────────────
@@ -2331,6 +2344,9 @@ function mkCampoInfo(label, opts, key, info){
  btn.style.cssText='background:none;border:none;cursor:pointer;color:#aad4ee;font-size:13px;padding:0;line-height:1';
  btn.textContent='ⓘ';
  btn.title=info;
+ btn.style.display='none';
+ lbl.style.cursor='help'; lbl.style.textDecoration='underline dotted'; lbl.style.textUnderlineOffset='3px'; lbl.title='Toca para ver la explicación';
+ lbl.onclick=()=>btn.click();
  // Toggle info panel
  const panel = ce('div','');
  panel.style.cssText='display:none;background:#f0f6ff;border:0.5px solid #c8dff5;border-radius:7px;padding:8px 10px;font-size:12px;color:#2a5a8a;line-height:1.5;margin-top:2px';
