@@ -190,6 +190,24 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .fp-inf-meta{font-size:11px;color:var(--muted);margin-bottom:4px}
 .fp-inf-tipo{font-size:14px;font-weight:700;margin-bottom:10px}
 .fp-inf-btns{display:flex;gap:8px;flex-wrap:wrap}
+.fac-nueva{width:100%;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer;margin-bottom:12px}
+.fac-form{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--sombra);margin-bottom:14px}
+.fac-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:15px}.fac-x{border:none;background:none;font-size:16px;cursor:pointer;color:var(--muted)}
+.fac-campo{margin-bottom:12px}.fac-campo label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}.fac-campo label span{font-weight:400}
+.fac-campo input,.fac-campo textarea{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;background:#fff}
+.fac-aviso input{border-color:#c2552e}
+.fac-chips{display:flex;flex-wrap:wrap;gap:6px}.fac-chips button{font-family:var(--font);font-size:13px;padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer;color:var(--black)}.fac-chips button.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
+.fac-linea{border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}.fl-top{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}.fl-del{border:none;background:none;color:#c2552e;font-family:var(--font);font-size:12px;cursor:pointer}
+.fl-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.fl-row .fac-campo{margin:0}
+.fl-step{display:flex;align-items:center;gap:6px}.fl-step input{text-align:center}.fl-step button{width:36px;height:38px;flex-shrink:0;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-size:18px;cursor:pointer}
+.fac-add{font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;color:#c2552e;cursor:pointer;padding:2px 0 12px}
+.fac-otro{margin-bottom:12px;font-size:13px}.fac-otro summary{cursor:pointer;color:var(--muted);font-weight:600;margin-bottom:10px}
+.fac-total{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding:12px 0;font-size:15px}.fac-total b{font-size:20px}
+.fac-emitir{width:100%;font-family:var(--font);font-size:15px;font-weight:600;padding:13px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer}.fac-emitir.armado{background:#16a34a}
+.fac-nota{font-size:11.5px;color:var(--muted);text-align:center;margin-top:8px}
+.fac-tit{font-size:12px;font-weight:600;color:var(--muted);margin:4px 0 8px}.fac-vacio{font-size:13px;color:var(--muted);text-align:center;padding:10px}
+.fac-it{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:11px 14px;margin-bottom:8px;box-shadow:var(--sombra)}.fac-n{font-weight:600;font-size:14px}.fac-m{font-size:12px;color:var(--muted)}.fac-r{display:flex;align-items:center;gap:10px;flex-shrink:0}
+@media(max-width:420px){.fl-row{grid-template-columns:1fr}}
 .fp-btn{font-family:var(--font);font-size:12px;font-weight:600;padding:7px 13px;border-radius:99px;border:1.5px solid var(--border);background:none;cursor:pointer;color:var(--black)}
 .fp-btn.lila{border-color:var(--lila);color:var(--lila);background:var(--lila-light)}
 .fp-btn.green{border-color:#166534;color:#166534}
@@ -1073,6 +1091,7 @@ function renderPacLista(q, lista){
  const opciones=[
  {key:'racha', label:'Racha'},
  {key:'informes', label:'Informes'},
+ {key:'facturas', label:'Facturas'},
  {key:'pin', label:'Datos de acceso'},
  ];
 
@@ -1112,6 +1131,7 @@ function renderPacLista(q, lista){
  <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Contraseña (PIN)</div><div style="font-size:28px;font-weight:800;color:var(--lila);letter-spacing:4px">${p.pin||'—'}</div></div>`;
  } else if(op.key==='programa') fpTabPrograma(p.id, panel, tok, p.nombre);
  else if(op.key==='informes') fpTabInformes(p.id, panel, p.nombre, tok);
+ else if(op.key==='facturas') fpTabFacturas(p.id, panel, p.nombre, tok);
  else if(op.key==='racha') fpTabRacha(p.id, panel, tok);
  else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel, tok);
  else if(op.key==='chat'){panel.innerHTML='<div class="chatp-ficha"></div>';FisioChat.montar(panel.querySelector('.chatp-ficha'),{rol:'fisio',pwd:apiPwd,pacienteId:p.id,pacienteNombre:p.nombre,fisio:{id:fisioActual.id,nombre:fisioActual.nombre},onLeido:()=>checkMensajesBadge(),onEnviado:m=>{const txt=m.texto||'Te ha enviado un archivo';notificarPaciente(p.id,`Mensaje de ${fisioActual.nombre}`,txt);crearNotificacion(p.id,`Mensaje de ${fisioActual.nombre}`,txt,'mensaje');}});}
@@ -4436,6 +4456,94 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar</div>';}
 }
 
+// ── FACTURAS (ficha del paciente): emitir en Holded y ver las anteriores ──
+const FAC_CONCEPTOS=['Sesión de fisioterapia','Sesión de fisioterapia avanzada','Sesión de suelo pélvico','Sesión de readaptación deportiva','Plus aplicación colágeno','Otros'];
+const FAC_PAGOS=['Tarjeta','Efectivo','Bizum','Transferencia'];
+const facEur=n=>Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+async function fpTabFacturas(pacId, body, pacNombre, tok){
+ body.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Cargando...</div>';
+ let d={};
+ try{d=await (await fetch(`/api/schedule?action=ficha-facturas&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${encodeURIComponent(pacId)}`)).json();}catch(e){}
+ if(tok&&body.dataset.token!==tok)return;
+ body.innerHTML='';
+ const nueva=ce('button','fac-nueva');nueva.type='button';nueva.textContent='+ Cobrar y facturar';
+ body.appendChild(nueva);
+ const formBox=ce('div','');body.appendChild(formBox);
+ const lista=ce('div','fac-lista');body.appendChild(lista);
+ const pintarLista=()=>{
+  if(d.holded===false){lista.innerHTML='<div class="fac-vacio">Holded todavía no está conectado.</div>';return;}
+  const fs=d.facturas||[];
+  if(!fs.length){lista.innerHTML='<div class="fac-vacio">Sin facturas todavía.</div>';return;}
+  lista.innerHTML='<div class="fac-tit">Facturas anteriores</div>'+fs.map(f=>`<div class="fac-it"><div><div class="fac-n">Factura ${escH(f.numero||'')}</div><div class="fac-m">${f.fecha?new Date(f.fecha*1000).toLocaleDateString('es-ES'):''}${f.concepto?' · '+escH(f.concepto):''}</div></div><div class="fac-r"><b>${facEur(f.total)}</b><button type="button" class="fp-btn" data-id="${f.id}" data-t="${f.tipo||'salesreceipt'}">PDF</button></div></div>`).join('');
+  lista.querySelectorAll('[data-id]').forEach(b=>b.onclick=async()=>{
+   const w=window.open('','_blank');b.disabled=true;
+   try{const r=await (await fetch(`/api/schedule?action=facturas&patientId=${encodeURIComponent(pacId)}&id=${b.dataset.id}&tipo=${b.dataset.t}`)).json();if(!r.ok)throw 0;
+    const bin=atob(r.pdf),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+    const u=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));if(w)w.location.href=u;else window.open(u,'_blank');
+   }catch(e){if(w)w.close();toast('No se ha podido abrir el PDF',false);}
+   b.disabled=false;});
+ };
+ pintarLista();
+ nueva.onclick=()=>{
+  if(formBox.innerHTML){formBox.innerHTML='';nueva.style.display='';return;}
+  nueva.style.display='none';
+  const hoy=new Date();const hoyIso=new Date(hoy.getTime()-hoy.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const f=ce('div','fac-form');
+  f.innerHTML=`<div class="fac-h"><b>Nueva factura</b><button type="button" class="fac-x" aria-label="Cerrar">✕</button></div>
+   ${d.dni?'':`<div class="fac-campo fac-aviso"><label>DNI del paciente <span>(no lo tiene en su ficha; se guardará)</span></label><input class="fac-dni" placeholder="12345678A"></div>`}
+   <div class="fac-lineas"></div>
+   <button type="button" class="fac-add">+ Añadir otra línea</button>
+   <div class="fac-campo"><label>Modo de pago</label><div class="fac-chips fac-pago">${FAC_PAGOS.map(m=>`<button type="button" data-v="${m}">${m}</button>`).join('')}</div></div>
+   <div class="fac-campo"><label>Fecha de cobro</label><input type="date" class="fac-fecha" value="${hoyIso}" max="${hoyIso}"></div>
+   <div class="fac-campo"><label>Notas en la factura <span>(opcional, salen impresas)</span></label><textarea class="fac-notas" rows="2"></textarea></div>
+   <details class="fac-otro"><summary>Facturar a otra persona o empresa</summary>
+    <div class="fac-campo"><label>Nombre o empresa</label><input class="fac-an"></div>
+    <div class="fac-campo"><label>DNI / NIF</label><input class="fac-anif"></div>
+    <div class="fac-campo"><label>Dirección fiscal</label><input class="fac-adir"></div></details>
+   <div class="fac-total"><span>Total</span><b>0,00 €</b></div>
+   <button type="button" class="fac-emitir">Emitir factura</button>
+   <div class="fac-nota">Se crea en Holded con el siguiente número de la serie y le aparece al paciente en su app.</div>`;
+  formBox.appendChild(f);
+  const lineasBox=f.querySelector('.fac-lineas'),addBtn=f.querySelector('.fac-add');
+  let pago='';
+  const total=()=>{let t=0;lineasBox.querySelectorAll('.fac-linea').forEach(l=>{t+=(+l.querySelector('.fl-n').value||0)*(+String(l.querySelector('.fl-p').value).replace(',','.')||0);});f.querySelector('.fac-total b').textContent=facEur(t);return t;};
+  const addLinea=()=>{
+   const l=ce('div','fac-linea');const num=lineasBox.children.length+1;
+   l.innerHTML=`<div class="fl-top"><span>Línea ${num}</span>${num>1?'<button type="button" class="fl-del">Quitar</button>':''}</div>
+    <div class="fac-chips fl-c">${FAC_CONCEPTOS.map(c=>`<button type="button" data-v="${c}">${c}</button>`).join('')}</div>
+    <div class="fl-row"><div class="fac-campo"><label>Nº sesiones</label><div class="fl-step"><button type="button" class="fl-m">−</button><input class="fl-n" type="number" min="1" value="1" inputmode="numeric"><button type="button" class="fl-p2">+</button></div></div>
+    <div class="fac-campo"><label>Precio por sesión (€)</label><input class="fl-p" inputmode="decimal" placeholder="60"></div></div>`;
+   l.querySelectorAll('.fl-c button').forEach(b=>b.onclick=()=>{l.querySelectorAll('.fl-c button').forEach(x=>x.classList.toggle('on',x===b));l.dataset.c=b.dataset.v;});
+   const n=l.querySelector('.fl-n');l.querySelector('.fl-m').onclick=()=>{n.value=Math.max(1,(+n.value||1)-1);total();};l.querySelector('.fl-p2').onclick=()=>{n.value=(+n.value||0)+1;total();};
+   l.querySelectorAll('input').forEach(i=>i.oninput=total);
+   const del=l.querySelector('.fl-del');if(del)del.onclick=()=>{l.remove();addBtn.style.display='';total();};
+   lineasBox.appendChild(l);addBtn.style.display=lineasBox.children.length>=2?'none':'';
+  };
+  addLinea();addBtn.onclick=addLinea;
+  f.querySelectorAll('.fac-pago button').forEach(b=>b.onclick=()=>{f.querySelectorAll('.fac-pago button').forEach(x=>x.classList.toggle('on',x===b));pago=b.dataset.v;});
+  f.querySelector('.fac-x').onclick=()=>{formBox.innerHTML='';nueva.style.display='';};
+  const em=f.querySelector('.fac-emitir');let armado=false;
+  em.onclick=async()=>{
+   const lineas=[...lineasBox.querySelectorAll('.fac-linea')].map(l=>({concepto:l.dataset.c||'',uds:+l.querySelector('.fl-n').value||0,precio:+String(l.querySelector('.fl-p').value).replace(',','.')||0}));
+   if(lineas.some(l=>!l.concepto)){toast('Elige el concepto',false);return;}
+   if(lineas.some(l=>!l.uds||!l.precio)){toast('Pon el nº de sesiones y el precio',false);return;}
+   if(!pago){toast('Elige el modo de pago',false);return;}
+   const dniIn=f.querySelector('.fac-dni');const an=f.querySelector('.fac-an').value.trim();
+   if(dniIn&&!dniIn.value.trim()&&!an){toast('Falta el DNI del paciente',false);dniIn.focus();return;}
+   if(an&&!f.querySelector('.fac-anif').value.trim()){toast('Falta el DNI/NIF de a quién se factura',false);return;}
+   // Doble toque: primero muestra el total para confirmar
+   if(!armado){armado=true;em.classList.add('armado');em.textContent='Confirmar: emitir por '+facEur(total());setTimeout(()=>{if(armado){armado=false;em.classList.remove('armado');em.textContent='Emitir factura';}},6000);return;}
+   armado=false;em.disabled=true;em.textContent='Emitiendo…';
+   try{
+    const r=await (await fetch('/api/schedule?action=facturar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:pacId,lineas,modoPago:pago,fecha:f.querySelector('.fac-fecha').value,notas:f.querySelector('.fac-notas').value.trim(),dni:dniIn?dniIn.value.trim():'',facturarA:an?{nombre:an,nif:f.querySelector('.fac-anif').value.trim(),direccion:f.querySelector('.fac-adir').value.trim()}:null})})).json();
+    if(!r.ok)throw new Error(r.error||'No se ha podido emitir');
+    toast('Factura '+r.num+' emitida'+(r.otro?'':' · ya la tiene en su app'),true);
+    formBox.innerHTML='';nueva.style.display='';
+    fpTabFacturas(pacId, body, pacNombre, body.dataset.token);
+   }catch(e){em.disabled=false;em.classList.remove('armado');em.textContent='Emitir factura';toast(e.message,false);}
+  };
+ };
+}
 async function fpTabInformes(pacId, body, pacNombre, tok){
  body.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Cargando...</div>';
  let todos=[];

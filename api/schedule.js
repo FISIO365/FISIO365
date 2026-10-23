@@ -134,9 +134,23 @@ async function emitirFactura(recId) {
   return { num, otro: !!String(f[FF.aNombre] || '').trim(), total: lineas.reduce((t, l) => t + l.uds * l.precio, 0) };
 }
 
+async function listarFacturas(ids) {
+  let facturas = [];
+  // Tickets de venta (lo habitual: llevan DNI y sirven como factura) y facturas
+  for (const cid of ids) for (const tipoDoc of ['salesreceipt', 'invoice']) {
+    const docs = await holded('/documents/' + tipoDoc + '?contactid=' + encodeURIComponent(cid)).catch(() => []);
+    (Array.isArray(docs) ? docs : []).forEach(d => {
+      if (d.draft) return;
+      facturas.push({ id: d.id, tipo: tipoDoc, numero: d.docNumber || '', fecha: d.date || 0, total: Number(d.total || 0), pagada: d.status === 1, concepto: (d.products && d.products[0] && d.products[0].name) || d.desc || '' });
+    });
+  }
+  facturas.sort((a, b) => b.fecha - a.fecha);
+  return facturas;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { patientId, action } = req.query;
@@ -160,6 +174,42 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // ── PANEL: facturas de la ficha y emitir desde el panel ──
+  if (action === 'ficha-facturas' || action === 'facturar') {
+    const q = req.method === 'POST' ? (req.body || {}) : req.query;
+    if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const pac = q.pacienteId || patientId;
+    if (!/^rec[A-Za-z0-9]{14}$/.test(pac || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
+    if (action === 'ficha-facturas') {
+      const pr = await at(`${PACIENTES}/${pac}`);
+      const dni = (pr.fields || {})['DNI'] || '';
+      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, facturas: [] });
+      try { return res.status(200).json({ ok: true, holded: true, dni, facturas: await listarFacturas(await contactosDelPaciente(pac)) }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, facturas: [], error: 'No se han podido cargar las facturas' }); }
+    }
+    if (req.method !== 'POST') return res.status(405).json({ ok: false });
+    if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado (falta la clave en Vercel).' });
+    const lineas = (Array.isArray(q.lineas) ? q.lineas : []).slice(0, 2);
+    if (!lineas.length) return res.status(400).json({ ok: false, error: 'Falta el concepto' });
+    if (q.dni && normDni(q.dni).length >= 8) await at(`${PACIENTES}/${pac}`, { method: 'PATCH', body: JSON.stringify({ fields: { DNI: String(q.dni).trim().toUpperCase() } }) });
+    const fa = q.facturarA || {};
+    const campos = { [FF.paciente]: [pac], [FF.notas]: String(q.notas || ''), [FF.estado]: 'Pendiente' };
+    if (q.modoPago) campos['fldafSkOOldJ8gH70'] = q.modoPago;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) campos[FF.fecha] = q.fecha;
+    if (fa.nombre) { campos[FF.aNombre] = String(fa.nombre); campos[FF.aNif] = String(fa.nif || ''); campos[FF.aDir] = String(fa.direccion || ''); }
+    [[FF.c1, FF.n1, FF.p1], [FF.c2, FF.n2, FF.p2]].forEach(([c, n, pr], i) => { const l = lineas[i]; if (!l) return; campos[c] = String(l.concepto || ''); campos[n] = Number(l.uds || 0); campos[pr] = Number(l.precio || 0); });
+    const cr = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
+    const rec = cr.records && cr.records[0] && cr.records[0].id;
+    if (!rec) return res.status(500).json({ ok: false, error: (cr.error && cr.error.message) || 'No se ha podido guardar en Airtable' });
+    const turno = emitiendo.then(() => emitirFactura(rec));
+    emitiendo = turno.catch(() => {});
+    try { const r = await turno; return res.status(200).json({ ok: true, num: r.num, total: r.total, otro: r.otro }); }
+    catch (e) {
+      try { await at(`${FACTURAS_TABLE}/${rec}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.estado]: 'Error' }, typecast: true }) }); } catch (x) {}
+      return res.status(200).json({ ok: false, error: e.message });
+    }
+  }
+
   if (!patientId) return res.status(400).json({ error: 'Falta patientId' });
 
   // ── FACTURAS DEL PACIENTE (Holded, solo lectura) ─────────────────────────
@@ -178,16 +228,7 @@ module.exports = async function handler(req, res) {
         if (!pdf || !pdf.data) return res.status(502).json({ ok: false, error: 'PDF no disponible' });
         return res.status(200).json({ ok: true, nombre: 'Factura_' + String(doc.docNumber || id).replace(/[^\w-]/g, '_') + '.pdf', pdf: pdf.data });
       }
-      let facturas = [];
-      // Tickets de venta (lo habitual: llevan DNI y sirven como factura) y facturas
-      for (const cid of ids) for (const tipoDoc of ['salesreceipt', 'invoice']) {
-        const docs = await holded('/documents/' + tipoDoc + '?contactid=' + encodeURIComponent(cid)).catch(() => []);
-        (Array.isArray(docs) ? docs : []).forEach(d => {
-          if (d.draft) return;
-          facturas.push({ id: d.id, tipo: tipoDoc, numero: d.docNumber || '', fecha: d.date || 0, total: Number(d.total || 0), pagada: d.status === 1, concepto: (d.products && d.products[0] && d.products[0].name) || d.desc || '' });
-        });
-      }
-      facturas.sort((a, b) => b.fecha - a.fecha);
+      const facturas = await listarFacturas(ids);
       return res.status(200).json({ ok: true, facturas });
     } catch (e) {
       return res.status(500).json({ ok: false, error: 'No se han podido cargar las facturas' });
