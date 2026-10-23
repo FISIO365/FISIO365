@@ -129,12 +129,14 @@ export default async function handler(req) {
 
   // ── Marcar como leído ────────────────────────────────────────────
   if (action === 'leido' && req.method === 'POST') {
-    const { pacienteId, quien } = body;
+    const { pacienteId, quien, fisioId } = body;
     if (!idValido(pacienteId)) return json({ ok: false }, 400);
     try {
       if (quien === 'fisio') {
         if (!esFisio) return json({ ok: false, error: 'No autorizado' }, 401);
-        const recs = await todos(`AND({PacienteId}="${pacienteId}",{Visto}=FALSE())`);
+        // Solo los mensajes dirigidos a este fisio (o sin destinatario): si el paciente escribió a otro fisio, a ese le sigue saliendo sin leer
+        const paraMi = idValido(fisioId) ? `,OR({FisioId}="${fisioId}",{FisioId}="")` : '';
+        const recs = await todos(`AND({PacienteId}="${pacienteId}",{Visto}=FALSE()${paraMi})`);
         await patch(recs.map(r => ({ id: r.id, fields: { Visto: true } })));
       } else {
         const recs = await todos(`AND({PacienteId}="${pacienteId}",{RespuestaLeida}=FALSE())`);

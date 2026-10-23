@@ -39,6 +39,10 @@
   .fc-env{background:#1a1a1a}
   .fc-env svg{stroke:#f5f2ee}
   .fc-env[disabled]{opacity:.3;cursor:default}
+  .fc-para{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#8a857e;padding:0 8px 6px}.fc-para b{color:#1a1a1a;font-weight:600}.fc-para button{margin-left:auto;font-family:inherit;font-size:12px;font-weight:600;color:#c2552e;background:none;border:none;cursor:pointer;padding:2px 0}
+  .fc-para[hidden]{display:none}
+  .fc-para-tag{display:block;font-size:10.5px;font-weight:600;opacity:.75;margin-bottom:2px}
+  .fc-elegir .tit{font-weight:500;opacity:.6;margin-left:2px}
   .fc-sub{font-size:11.5px;color:#8a857e;text-align:center;padding:2px 8px 0}
   .fc-elegir{background:#fff;border-radius:20px;padding:16px;margin:6px 4px 10px}
   .fc-elegir b{display:block;font-size:14px;margin-bottom:10px}
@@ -86,6 +90,7 @@
     el.innerHTML = `<div class="fc">
       <div class="fc-hilo" aria-live="polite"><div class="fc-vacio">Cargando…</div></div>
       <div class="fc-elegir" hidden></div>
+      ${yo === 'paciente' ? '<div class="fc-para" hidden></div>' : ''}
       <div class="fc-prev"><img alt="" hidden><div class="n"></div><button type="button" aria-label="Quitar archivo">×</button></div>
       <form class="fc-esc">
         <input type="file" accept="image/*,application/pdf" hidden>
@@ -96,7 +101,17 @@
       ${yo === 'paciente' ? '<div class="fc-sub">Te contestamos en horario de la clínica. Si es urgente, llámanos.</div>' : ''}
     </div>`;
     const $ = (s) => el.querySelector(s);
-    const hilo = $('.fc-hilo'), ta = $('textarea'), env = $('.fc-env'), inp = $('input[type=file]'), prev = $('.fc-prev'), elegir = $('.fc-elegir');
+    const hilo = $('.fc-hilo'), ta = $('textarea'), env = $('.fc-env'), inp = $('input[type=file]'), prev = $('.fc-prev'), elegir = $('.fc-elegir'), para = $('.fc-para');
+    const titular = fisio;   // el fisio asignado (paciente) o el fisio que mira (panel)
+    const corto = (n) => esc(String(n || '').split(' ')[0]);
+    function pintarPara() {
+      if (!para) return;
+      if (!fisio || !elegir.hidden) { para.hidden = true; return; }
+      para.hidden = false;
+      const esTit = titular && fisio.id === titular.id;
+      para.innerHTML = `Para <b>${corto(fisio.nombre)}</b>${esTit ? ' · tu fisio' : ''}<button type="button">${esTit ? 'Escribir a otro fisio' : 'Cambiar'}</button>`;
+      para.querySelector('button').onclick = elegirFisio;
+    }
 
     const guardados = new Set();
     hilo.addEventListener('click', async ev => {
@@ -114,7 +129,9 @@
 
     function burbuja(m) {
       const mio = m.de === yo;
-      const autor = !mio && m.de === 'fisio' && yo === 'paciente' && m.fisioNombre ? `<div class="fc-autor">${esc(m.fisioNombre)}</div>` : '';
+      const otroFisio = titular && m.fisioId && m.fisioId !== titular.id;
+      const autor = m.de === 'fisio' && m.fisioNombre && ((!mio && yo === 'paciente') || (yo === 'fisio' && otroFisio)) ? `<div class="fc-autor">${esc(m.fisioNombre)}</div>` : '';
+      const paraTag = m.de === 'paciente' && otroFisio && m.fisioNombre ? `<span class="fc-para-tag">Para ${corto(m.fisioNombre)}</span>` : '';
       const puedeGuardar = yo === 'fisio' && m.de === 'paciente' && !m._enviando && !m.antiguo && /^rec[A-Za-z0-9]{14}$/.test(m.id);
       const adj = (m.adjuntos || []).map((a, i) => (/^image\//.test(a.tipo)
         ? `<a class="fc-img" href="${esc(a.url)}" target="_blank" rel="noopener"><img src="${esc(a.mini || a.url)}" alt="${esc(a.nombre)}" loading="lazy"></a>`
@@ -123,7 +140,7 @@
           ? `<button type="button" class="fc-guardar ok" disabled><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Guardado en su ficha</button>`
           : `<button type="button" class="fc-guardar" data-m="${esc(m.id)}" data-i="${i}"><svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg>Guardar en su ficha</button>`) : '')).join('');
       const d = new Date(m.fecha);
-      return `<div class="fc-b ${mio ? 'yo' : 'ellos'}${m._enviando ? ' fc-enviando' : ''}">${autor}${m.etiqueta ? `<span class="fc-tag">${esc(m.etiqueta)}</span><br>` : ''}${adj}${m.texto ? enlaces(m.texto) : ''}<small>${m._enviando ? 'Enviando…' : d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</small></div>`;
+      return `<div class="fc-b ${mio ? 'yo' : 'ellos'}${m._enviando ? ' fc-enviando' : ''}">${autor}${paraTag}${m.etiqueta ? `<span class="fc-tag">${esc(m.etiqueta)}</span><br>` : ''}${adj}${m.texto ? enlaces(m.texto) : ''}<small>${m._enviando ? 'Enviando…' : d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</small></div>`;
     }
     function pintar(forzarAbajo) {
       const abajo = forzarAbajo || hilo.scrollHeight - hilo.scrollTop - hilo.clientHeight < 80;
@@ -143,16 +160,17 @@
     }
 
     async function elegirFisio() {
-      elegir.hidden = false;
+      elegir.hidden = false; pintarPara();
       elegir.innerHTML = '<b>¿A quién quieres escribir?</b><div class="ops">Cargando…</div>';
       try {
         const d = await (await fetch('/api/fisios?action=lista-publica')).json();
         const fs = d.fisios || [];
-        elegir.querySelector('.ops').innerHTML = fs.map(f => `<button type="button" data-id="${esc(f.id)}" data-n="${esc(f.nombre)}">${f.foto ? `<img src="${esc(f.foto)}" alt="">` : `<i>${esc(ini(f.nombre))}</i>`}${esc(f.nombre.split(' ')[0])}</button>`).join('') || 'No hay fisios disponibles.';
+        elegir.querySelector('.ops').innerHTML = fs.map(f => `<button type="button" class="${fisio && fisio.id === f.id ? 'on' : ''}" data-id="${esc(f.id)}" data-n="${esc(f.nombre)}" data-f="${esc(f.foto || '')}">${f.foto ? `<img src="${esc(f.foto)}" alt="">` : `<i>${esc(ini(f.nombre))}</i>`}${esc(f.nombre.split(' ')[0])}${titular && titular.id === f.id ? '<span class="tit">· tu fisio</span>' : ''}</button>`).join('') || 'No hay fisios disponibles.';
         elegir.querySelectorAll('button').forEach(b => b.onclick = () => {
-          fisio = { id: b.dataset.id, nombre: b.dataset.n };
+          fisio = titular && titular.id === b.dataset.id ? titular : { id: b.dataset.id, nombre: b.dataset.n, foto: b.dataset.f };
           elegir.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-          puedeEnviar(); ta.focus();
+          if (titular) elegir.hidden = true;
+          puedeEnviar(); pintarPara(); ta.focus();
           if (o.onFisio) o.onFisio(fisio);
         });
       } catch (e) { elegir.querySelector('.ops').textContent = 'No se ha podido cargar la lista.'; }
@@ -167,8 +185,9 @@
         if (nueva !== firma || primera) { firma = nueva; mensajes = d.mensajes.concat(pendientes); pintar(primera); }
         if (yo === 'paciente' && !fisio && d.fisio) { fisio = d.fisio; if (o.onFisio) o.onFisio(fisio); }
         if (yo === 'paciente' && !fisio && primera) elegirFisio();
+        if (primera) pintarPara();
         const sinLeer = d.mensajes.some(m => m.de !== yo && !m.leido);
-        if (sinLeer) fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'leido', pacienteId: o.pacienteId, quien: yo, pwd: o.pwd || '' }) }).then(() => o.onLeido && o.onLeido()).catch(() => {});
+        if (sinLeer) fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'leido', pacienteId: o.pacienteId, quien: yo, pwd: o.pwd || '', fisioId: yo === 'fisio' && titular ? titular.id : '' }) }).then(() => o.onLeido && o.onLeido()).catch(() => {});
         puedeEnviar();
       } catch (e) { if (primera) hilo.innerHTML = '<div class="fc-vacio">No se han podido cargar los mensajes. Revisa tu conexión.</div>'; }
     }
@@ -194,7 +213,7 @@
       const texto = ta.value.trim();
       if (preparando || (!texto && !adjunto) || (yo === 'paciente' && !fisio)) return;
       const adj = adjunto;
-      const temp = { id: 'tmp' + Date.now(), de: yo, texto, fecha: new Date().toISOString(), _enviando: true,
+      const temp = { id: 'tmp' + Date.now(), de: yo, texto, fisioId: yo === 'paciente' && fisio ? fisio.id : '', fisioNombre: yo === 'paciente' && fisio ? fisio.nombre : '', fecha: new Date().toISOString(), _enviando: true,
         adjuntos: adj ? [{ url: URL.createObjectURL(adj.blob), nombre: adj.nombre, tipo: adj.tipo, bytes: adj.bytes }] : [] };
       mensajes.push(temp); pintar(true);
       ta.value = ''; ta.style.height = 'auto'; adjunto = null; prev.classList.remove('on'); puedeEnviar();
@@ -207,7 +226,7 @@
         const d = await r.json().catch(() => ({ ok: false, error: r.status === 413 ? 'El archivo es demasiado grande' : 'Error de conexión' }));
         if (!d.ok) throw new Error(d.error || 'No se ha podido enviar');
         mensajes = mensajes.filter(m => m !== temp); mensajes.push(d.mensaje); firma = ''; pintar(true);
-        elegir.hidden = true;
+        elegir.hidden = true; pintarPara();
         if (o.onEnviado) o.onEnviado(d.mensaje);
       } catch (err) {
         mensajes = mensajes.filter(m => m !== temp); pintar(true);

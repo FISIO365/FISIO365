@@ -44,6 +44,22 @@ module.exports = async function handler(req, res) {
 
   const { pwd, pacienteId, pacienteNombre, fisioId, ejercicios, mensajeFisio, cambiarFisio } = req.body;
   if (pwd !== FISIO_PASSWORD) return res.status(401).json({ ok: false, error: 'No autorizado' });
+
+  // Cambiar el fisio asignado sin tocar los ejercicios
+  if (req.body.action === 'cambiar-fisio') {
+    if (!/^rec[A-Za-z0-9]{14}$/.test(pacienteId || '') || !/^rec[A-Za-z0-9]{14}$/.test(fisioId || '')) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
+    try {
+      const formula = encodeURIComponent(`{PacienteID}="${pacienteId}"`);
+      const d = await (await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula=${formula}&fields[]=FisioID`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })).json();
+      const recs = d.records || [];
+      if (!recs.length) return res.status(200).json({ ok: false, sinPrograma: true, error: 'Todavía no tiene programa: el fisio se asigna al guardar el primero' });
+      for (let i = 0; i < recs.length; i += 10) {
+        await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}`, { method: 'PATCH', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ records: recs.slice(i, i + 10).map(r => ({ id: r.id, fields: { FisioID: fisioId } })) }) });
+      }
+      return res.status(200).json({ ok: true, fisioAsignadoId: fisioId });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  }
   if (!pacienteId || !ejercicios?.length) return res.status(400).json({ ok: false, error: 'Faltan datos' });
 
   const today = new Date().toISOString().split('T')[0];
