@@ -67,18 +67,20 @@ module.exports = async function handler(req, res) {
       const ids = await contactosDelPaciente(patientId);
       if (id) {
         if (!/^[a-f0-9]{24}$/i.test(id)) return res.status(400).json({ ok: false, error: 'Factura no válida' });
-        const doc = await holded('/documents/invoice/' + id);
+        const tipoDoc = req.query.tipo === 'invoice' ? 'invoice' : 'salesreceipt';
+        const doc = await holded('/documents/' + tipoDoc + '/' + id);
         if (!doc || !ids.includes(doc.contact)) return res.status(403).json({ ok: false, error: 'No autorizado' });
-        const pdf = await holded('/documents/invoice/' + id + '/pdf');
+        const pdf = await holded('/documents/' + tipoDoc + '/' + id + '/pdf');
         if (!pdf || !pdf.data) return res.status(502).json({ ok: false, error: 'PDF no disponible' });
         return res.status(200).json({ ok: true, nombre: 'Factura_' + String(doc.docNumber || id).replace(/[^\w-]/g, '_') + '.pdf', pdf: pdf.data });
       }
       let facturas = [];
-      for (const cid of ids) {
-        const docs = await holded('/documents/invoice?contactid=' + encodeURIComponent(cid));
+      // Tickets de venta (lo habitual: llevan DNI y sirven como factura) y facturas
+      for (const cid of ids) for (const tipoDoc of ['salesreceipt', 'invoice']) {
+        const docs = await holded('/documents/' + tipoDoc + '?contactid=' + encodeURIComponent(cid)).catch(() => []);
         (Array.isArray(docs) ? docs : []).forEach(d => {
           if (d.draft) return;
-          facturas.push({ id: d.id, numero: d.docNumber || '', fecha: d.date || 0, total: Number(d.total || 0), pagada: d.status === 1, concepto: (d.products && d.products[0] && d.products[0].name) || d.desc || '' });
+          facturas.push({ id: d.id, tipo: tipoDoc, numero: d.docNumber || '', fecha: d.date || 0, total: Number(d.total || 0), pagada: d.status === 1, concepto: (d.products && d.products[0] && d.products[0].name) || d.desc || '' });
         });
       }
       facturas.sort((a, b) => b.fecha - a.fecha);
