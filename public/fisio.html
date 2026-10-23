@@ -528,6 +528,10 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  #sb-school{border-top:none!important;margin-top:0!important;padding-top:8px!important;border-radius:18px}
  #sb-msg-badge{position:absolute;top:3px;right:calc(50% - 22px);margin:0!important}
  .main-area{margin-left:0!important;width:100%!important;max-width:100%!important}
+ /* El scroll va dentro (no la página): así Safari no mueve la barra de abajo al subir/bajar */
+ html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
+ .main-area{height:100dvh;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+ #sb-rend{display:none!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
  .topbar-t{font-size:21px!important}
  .topbar-s{font-size:12px!important}
@@ -598,6 +602,11 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .pe-fisio{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:#7d6a60}
 .pe-fisio select{flex:1;padding:8px 10px;border:1.5px solid #eadfd6;border-radius:10px;font-size:13px;font-family:var(--font);background:#fff;color:#1a1a1a}
 @media(max-width:360px){.pe-step button{width:32px}.pe-step input{width:36px}}
+#btnRend{display:none}
+@media(max-width:768px){#btnRend.on{display:flex!important;position:absolute;right:66px;top:calc(50% + env(safe-area-inset-top)/2);transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:none;background:#fff;color:#c2552e;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(26,26,26,.08)}
+#btnRend svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+#btnRend.on.activo{background:#c2552e;color:#fff}
+.topbar-t,.topbar-s{padding-right:112px!important}}
 #btnPerfil{display:none}
 @media(max-width:768px){#btnAvisos{display:none!important}
 #btnPerfil{display:flex;position:absolute;right:14px;top:calc(50% + env(safe-area-inset-top)/2);transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:none;background:#1a1a1a;color:#fff;font-family:var(--font);font-size:14px;font-weight:700;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;box-shadow:0 2px 10px rgba(26,26,26,.12)}
@@ -686,6 +695,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  <div class="main-area">
  <div class="topbar">
  <button type="button" id="btnPerfil" onclick="abrirPerfilMenu()" aria-label="Mi perfil"></button>
+ <button type="button" id="btnRend" onclick="showSection('rend')" aria-label="Rendimiento" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
  <button type="button" id="btnAvisos" onclick="abrirAjustesAvisos()" aria-label="Notificaciones"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><i id="btnAvisosDot"></i></button>
  <div class="topbar-t" id="topbar-t">Anamnesis clínica</div>
  <div class="topbar-s" id="topbar-s">Asigna ejercicios a tus pacientes</div>
@@ -922,14 +932,17 @@ function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=
 function pintarPerfil(){if(!fisioActual)return;const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=fisioActual.role==='admin'?'Administración':'Fisioterapeuta';
- const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');$('pmRend').style.display=(sr&&sr.style.display==='none')?'none':'';}
+ const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').style.display='';$('btnRend').classList.toggle('on',okR);}
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
 function cerrarSesionPanel(){try{localStorage.removeItem('f365_panel_sesion');sessionStorage.removeItem('f365_panel_sec');}catch(e){}location.reload();}
+// En móvil el scroll va dentro de .main-area: que window.scrollTo también lo mueva
+(function(){const ws=window.scrollTo.bind(window);window.scrollTo=function(...a){ws(...a);const m=document.querySelector('.main-area');if(m&&m.scrollHeight>m.clientHeight+2){try{m.scrollTo(...a);}catch(e){}}};})();
 function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
+ try{$('btnRend').classList.toggle('activo',sec==='rend');}catch(e){}
  ['anam','prog','pac','school','msg','record','rend'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
