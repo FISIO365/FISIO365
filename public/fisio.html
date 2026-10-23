@@ -4193,6 +4193,7 @@ function accionesInforme(anchor,ctx,fisioNom){
 }
 function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
  if(!fisioNom){const fo=fisios.find(f=>f.id===fisioSelId)||{};fisioNom=fo.nombre||'';fisioCol=fo.colegiado||'';}
+ if(!fisioCol){const fo=fisios.find(f=>(f.nombre||'').trim().toLowerCase()===String(fisioNom||'').trim().toLowerCase())||{};fisioCol=fo.colegiado||'';}
  const fecha=new Date().toLocaleDateString('es-ES');
  const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',codo:'Codo y antebrazo',muneca:'Muñeca y mano',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',libre:'Valoración fisioterapéutica',sueloPelvico:'Suelo pélvico',hernia:'Hernia Discal Lumbar'};
  const tipoLabel=tipos[tipo]||tipo||'Valoración Fisioterapéutica';
@@ -4234,73 +4235,60 @@ function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo){
  let F='helvetica';
  if(R){try{doc.addFileToVFS('P-R.ttf',R.reg);doc.addFont('P-R.ttf','Poppins','normal');doc.addFileToVFS('P-M.ttf',R.med);doc.addFont('P-M.ttf','Poppins','medium');doc.addFileToVFS('P-B.ttf',R.bold);doc.addFont('P-B.ttf','Poppins','bold');F='Poppins';}catch(e){F='helvetica';}}
  const fw=w=>F==='Poppins'?w:(w==='medium'?'bold':w);
- const W=210,H=297,ml=20,mr=20,tw=W-ml-mr,FOOT=22;
- const NAR=[194,85,46],NEG=[26,26,26],GRIS=[107,93,85],CREMA=[245,242,238],LINEA=[230,222,214];
+ const W=210,H=297,ml=24,mr=24,tw=W-ml-mr,FOOT=26;
+ const NAR=[194,85,46],NEG=[26,26,26],TXT=[60,52,47],GRIS=[125,112,104],CREMA=[247,244,240],LINEA=[232,225,218];
  let y=0;
  const txt=(t,x,yy,o)=>doc.text(t,x,yy,o);
  const set=(sz,w,c)=>{doc.setFont(F,fw(w));doc.setFontSize(sz);doc.setTextColor(...c);};
- const nueva=()=>{doc.addPage();y=22;};
- const sitio=h=>{if(y+h>H-FOOT){nueva();}};
+ const sitio=h=>{if(y+h>H-FOOT){doc.addPage();y=26;}};
 
- // ── Cabecera ──
- if(R&&R.logo){try{doc.addImage('data:image/png;base64,'+R.logo,'PNG',ml,16,40,7);}catch(e){set(18,'bold',NAR);txt('FISIO365',ml,22);}}
- else{set(18,'bold',NAR);txt('FISIO365',ml,22);}
- set(8,'normal',GRIS);txt('Centro de fisioterapia avanzada · Sant Andreu',ml,28.5);
- set(9,'medium',NAR);txt('INFORME DE VALORACIÓN',W-mr,19,{align:'right'});
- set(8.5,'normal',GRIS);txt(fecha,W-mr,24.5,{align:'right'});
- // ── Tarjeta paciente ──
- y=36;
- doc.setFillColor(...CREMA);doc.roundedRect(ml,y,tw,24,4,4,'F');
- const col=(lab,val,x)=>{set(7.5,'medium',GRIS);txt(lab.toUpperCase(),x,y+8);set(11,'bold',NEG);txt(doc.splitTextToSize(String(val||'—'),tw/3-8)[0],x,y+15);};
- col('Paciente',pacNom,ml+7);col('Zona valorada',tipoLabel,ml+7+tw/3);col('Fisioterapeuta',fisioNom||'—',ml+7+2*tw/3);
- if(colNum){set(7.5,'normal',GRIS);txt(colNum,ml+7+2*tw/3,y+20);}
- y+=34;
+ // ── Cabecera discreta ──
+ if(R&&R.logo){try{doc.addImage('data:image/png;base64,'+R.logo,'PNG',ml,20,26,4.6);}catch(e){set(13,'bold',NAR);txt('FISIO365',ml,24.5);}}
+ else{set(13,'bold',NAR);txt('FISIO365',ml,24.5);}
+ set(8.5,'normal',GRIS);txt('Informe de valoración · '+fecha,W-mr,24,{align:'right'});
+ doc.setDrawColor(...LINEA);doc.setLineWidth(.3);doc.line(ml,31,W-mr,31);
 
- // ── Contenido: títulos en MAYÚSCULAS, viñetas «- », párrafos ──
+ // ── Datos del paciente ──
+ y=42;
+ const col=(lab,val,x,extra)=>{set(7.5,'medium',GRIS);txt(lab,x,y);set(11.5,'bold',NEG);txt(doc.splitTextToSize(String(val||'—'),tw/3-6)[0],x,y+6.5);if(extra){set(8,'normal',GRIS);txt(extra,x,y+11.5);}};
+ col('Paciente',pacNom,ml);col('Zona valorada',tipoLabel,ml+tw/3);col('Fisioterapeuta',fisioNom||'—',ml+2*tw/3,colNum);
+ y+=24;
+ doc.setDrawColor(...LINEA);doc.line(ml,y,W-mr,y);
+ y+=13;
+
+ // ── Contenido ──
  const lineas=String(informe||'').replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
  const esTitulo=l=>/^[A-ZÁÉÍÓÚÑÜ0-9 ,\/·()-]{5,}$/.test(l)&&!/^- /.test(l);
- let enSencillo=false, bloque=[];
- const titulo=t=>{
-  sitio(16); y+=2;
-  doc.setFillColor(...NAR);doc.circle(ml+1.6,y-1.4,1.3,'F');
-  set(10.5,'bold',NEG);txt(t.charAt(0)+t.slice(1).toLowerCase(),ml+6,y);
-  y+=3;doc.setDrawColor(...LINEA);doc.setLineWidth(.3);doc.line(ml,y,W-mr,y);y+=6;
- };
+ let enSencillo=false,bloque=[],primero=true;
+ const titulo=t=>{sitio(20);if(!primero)y+=6;primero=false;set(9,'bold',NAR);txt(t.toUpperCase(),ml,y,{charSpace:.4});y+=7;};
  const parrafo=(t,bullet)=>{
-  set(10,'normal',NEG);
-  const x=bullet?ml+7:ml, ancho=bullet?tw-7:tw;
+  set(10.5,'normal',TXT);
+  const x=bullet?ml+6:ml,ancho=bullet?tw-6:tw;
   const ls=doc.splitTextToSize(t,ancho);
-  ls.forEach((l,i)=>{sitio(6);if(bullet&&i===0){doc.setFillColor(...NAR);doc.circle(ml+2.2,y-1.3,.9,'F');}txt(l,x,y);y+=5.2;});
-  y+=1.2;
+  ls.forEach((l,i)=>{sitio(7);if(bullet&&i===0){set(10.5,'normal',GRIS);txt('–',ml+.5,y);set(10.5,'normal',TXT);}txt(l,x,y);y+=6;});
+  y+=2;
  };
- const cajaSencillo=(t)=>{
-  set(10,'normal',NEG);const ls=doc.splitTextToSize(t,tw-16);const h=ls.length*5.4+16;
-  sitio(h+4);y+=2;
-  doc.setFillColor(...CREMA);doc.roundedRect(ml,y,tw,h,4,4,'F');doc.setFillColor(...NAR);doc.rect(ml,y+4,1.4,h-8,'F');
-  set(9,'bold',NAR);txt('En palabras sencillas',ml+8,y+8);
-  set(10,'normal',NEG);ls.forEach((l,i)=>txt(l,ml+8,y+14.5+i*5.4));
-  y+=h+4;
+ const cajaSencillo=t=>{
+  set(10.5,'normal',TXT);const ls=doc.splitTextToSize(t,tw-20);const h=ls.length*6+22;
+  sitio(h+10);y+=8;
+  doc.setFillColor(...CREMA);doc.roundedRect(ml,y,tw,h,5,5,'F');
+  set(9,'bold',NAR);txt('EN PALABRAS SENCILLAS',ml+10,y+11,{charSpace:.4});
+  set(10.5,'normal',TXT);ls.forEach((l,i)=>txt(l,ml+10,y+19+i*6));
+  y+=h+6;
  };
  lineas.forEach(l=>{
-  if(esTitulo(l)){
-   if(enSencillo&&bloque.length){cajaSencillo(bloque.join(' '));bloque=[];}
-   enSencillo=/SENCILL/.test(l);
-   if(!enSencillo) titulo(l);
-   return;
-  }
+  if(esTitulo(l)){if(enSencillo&&bloque.length){cajaSencillo(bloque.join(' '));bloque=[];}enSencillo=/SENCILL/.test(l);if(!enSencillo)titulo(l);return;}
   if(enSencillo){bloque.push(l.replace(/^- /,''));return;}
-  if(/^- /.test(l)) parrafo(l.slice(2),true); else parrafo(l,false);
+  if(/^- /.test(l))parrafo(l.slice(2),true);else parrafo(l,false);
  });
- if(enSencillo&&bloque.length) cajaSencillo(bloque.join(' '));
+ if(enSencillo&&bloque.length)cajaSencillo(bloque.join(' '));
 
- // ── Pie en todas las páginas ──
+ // ── Pie ──
  const n=doc.getNumberOfPages();
  for(let i=1;i<=n;i++){
   doc.setPage(i);
-  doc.setDrawColor(...LINEA);doc.setLineWidth(.3);doc.line(ml,H-16,W-mr,H-16);
-  set(7.5,'medium',NEG);txt('FISIO365',ml,H-11);
-  set(7.5,'normal',GRIS);txt('Gran de Sant Andreu, 163 · 672 89 39 49 · fisioterapia365.com',ml+16,H-11);
-  txt(`${i} / ${n}`,W-mr,H-11,{align:'right'});
+  set(7.5,'normal',GRIS);txt('FISIO365 · Gran de Sant Andreu, 163 · Barcelona · 672 89 39 49 · fisioterapia365.com',ml,H-14);
+  if(n>1)txt(`${i} / ${n}`,W-mr,H-14,{align:'right'});
  }
 
  const nombrePdf='Informe_'+pacNom.replace(/\s+/g,'_')+'_'+fecha.replace(/\//g,'-')+'.pdf';
