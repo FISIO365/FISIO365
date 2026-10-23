@@ -4170,8 +4170,8 @@ function accionesInforme(anchor,ctx,fisioNom){
  if(typeof ctx==='string'){const tipo=ctx;ctx={pacId:anamPacId,pacNom:anamPacNom,tipo,fisioNom,getTexto:()=>informeGenerado};}
  anchor.parentNode.querySelectorAll(':scope > .inf-acc').forEach(x=>x.remove());
  const bar=ce('div','inf-acc');
- const L={pac:{t:'Compartir con el paciente',s:'Le aparecerá en su app'},pacUpd:{t:'Actualizar en su app',s:'Ya lo tiene · guarda los cambios'},pacOk:{t:'✓ Compartido con el paciente',s:'Si lo cambias, vuelve a tocar'},
-  priv:{t:'Guardar sin compartir',s:'Solo lo veis los fisios'},privOk:{t:'✓ Guardado sin compartir',s:'El paciente no lo ve'},load:{t:'Guardando…',s:'Un momento'}};
+ const L={pac:{t:'Compartir con el paciente',s:'Se guarda en: su app · panel · Airtable'},pacUpd:{t:'Actualizar (ya compartido)',s:'Se guarda en: su app · panel · Airtable'},pacOk:{t:'✓ Compartido con el paciente',s:'Si lo cambias, vuelve a tocar'},
+  priv:{t:'Guardar sin compartir',s:'Se guarda en: panel · Airtable'},privOk:{t:'✓ Guardado sin compartir',s:'El paciente no lo ve'},load:{t:'Guardando…',s:'Un momento'}};
  const pon=(b,k)=>{b.innerHTML=`<span class="ia-t">${L[k].t}</span><span class="ia-s">${L[k].s}</span>`;};
  bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g" data-d="paciente"></button><button type="button" class="ia-g ia-priv" data-d="privado"></button></div>
   <div class="ia-row"><button type="button" class="ia-v">Ver PDF · imprimir o enviar</button><button type="button" class="ia-d">Descargar PDF</button></div>`;
