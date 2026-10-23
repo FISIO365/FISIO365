@@ -116,7 +116,7 @@ async function sinFacturar() {
 
 
 // ── Rendimiento por fisio (de las citas de CITAS) ──
-//   Ocupación = realizadas / huecos (HORAS SEMANA del fisio en los días laborables del periodo).
+//   Ocupación = realizadas / huecos (horas de trabajo de cada día del periodo, campo HORAS POR DÍA).
 // Reagendan = pacientes atendidos en el periodo que tienen otra cita después de su última sesión.
 const NO_FISIO = /NO HAY FISIO|TODOS|\?\?|FIESTA|^$/i;
 const nomFisio = v => { if (Array.isArray(v)) v = v[0]; v = v && typeof v === 'object' ? v.name : String(v || ''); return v.trim(); };
@@ -126,13 +126,24 @@ async function rendimiento(desde, hasta) {
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
   const [citas, fisiosT] = await Promise.all([
     todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA`),
-    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA').catch(() => [])
+    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA&fields[]=HORAS POR DÍA').catch(() => [])
   ]);
-  // Huecos = HORAS SEMANA del fisio (1 h = 1 sesión) repartidas en los días laborables (lunes a viernes) del periodo
-  let laborables = 0;
-  for (let d = new Date(desde + 'T12:00:00Z'); d <= new Date(hasta + 'T12:00:00Z'); d = new Date(d.getTime() + 864e5)) { const w = d.getUTCDay(); if (w >= 1 && w <= 5) laborables++; }
-  const horasSem = {};
-  fisiosT.forEach(f => { const n = String(f.fields['Name'] || '').split(' ')[0].toLowerCase(); if (n && Number(f.fields['HORAS SEMANA']) > 0) horasSem[n] = Number(f.fields['HORAS SEMANA']); });
+  // Huecos = horas de cada día de la semana («HORAS POR DÍA» del fisio; 1 h = 1 sesión) sumadas en los días del periodo.
+  // Si no tiene «HORAS POR DÍA», se reparte «HORAS SEMANA» de lunes a viernes.
+  const DSEM = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab'];
+  const horasDia = {}; // fisio -> [h dom, h lun, ...]
+  fisiosT.forEach(f => {
+    const n = String(f.fields['Name'] || '').split(' ')[0].toLowerCase(); if (!n) return;
+    const v = [0, 0, 0, 0, 0, 0, 0]; let alguno = false;
+    String(f.fields['HORAS POR DÍA'] || '').split('\n').forEach(l => {
+      const t = l.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const d = DSEM.findIndex(x => t.startsWith(x)); const m = t.match(/(\d+(?:[.,]\d+)?)/);
+      if (d >= 0 && m) { v[d] = parseFloat(m[1].replace(',', '.')); alguno = true; }
+    });
+    if (!alguno && Number(f.fields['HORAS SEMANA']) > 0) { const h = Number(f.fields['HORAS SEMANA']) / 5; for (let d = 1; d <= 5; d++) v[d] = h; alguno = true; }
+    if (alguno) horasDia[n] = v;
+  });
+  const capacidad = n => { const v = horasDia[n]; if (!v) return 0; let t = 0; for (let d = new Date(desde + 'T12:00:00Z'); d <= new Date(hasta + 'T12:00:00Z'); d = new Date(d.getTime() + 864e5)) t += v[d.getUTCDay()]; return Math.round(t); };
   const R = {};
   const cuenta = n => true;
   const de = n => (R[n] = R[n] || { fisio: n, realizadas: 0, huecos: 0, perdidas: 0, noAsistio: 0, canceladas: 0, atendidos: 0, reagendan: 0 });
@@ -157,7 +168,7 @@ async function rendimiento(desde, hasta) {
     const [n, id] = k.split('|'); const x = de(n);
     x.atendidos++; if (futuras[id] && futuras[id] > f) x.reagendan++;
   });
-  return Object.values(R).filter(x => x.realizadas).map(x => { const hs = horasSem[x.fisio.toLowerCase()]; return { ...x, huecos: hs ? Math.round(hs * laborables / 5) : 0, sinHoras: !hs }; }).sort((a, b) => b.realizadas - a.realizadas);
+  return Object.values(R).filter(x => x.realizadas).map(x => { const k = x.fisio.toLowerCase(); return { ...x, huecos: capacidad(k), sinHoras: !horasDia[k] }; }).sort((a, b) => b.realizadas - a.realizadas);
 }
 
 const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };

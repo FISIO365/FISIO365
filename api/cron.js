@@ -63,7 +63,7 @@ async function resumenFacturacion(ayer) {
   <div style="font-size:12px;color:#c2552e;font-weight:700;letter-spacing:1px">RESUMEN DIARIO</div>
   <h2 style="margin:6px 0 18px;font-size:20px">${fechaTxt}</h2>
   <p style="margin:0 0 4px">Sesiones hechas: <b>${hechas}</b> · Facturas emitidas: <b>${facs.length}</b> (${eur(total)})</p>
-  ${tablaRendimiento(rendDia, 'Rendimiento del día', false)}
+  ${tablaRendimiento(rendDia, 'Rendimiento del día', true)}
   ${rendSemana ? tablaRendimiento(rendSemana, 'Rendimiento de la semana pasada', true) : ''}
   <p style="margin:8px 0 0;font-size:11px;color:#9b8f86">Reagendan = de los pacientes atendidos, cuántos tienen otra cita apuntada después · Faltas = no asistió o cita perdida</p>
   ${!sf.activo ? '' : sf.lista.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b42318">⚠️ Sesiones sin facturar (${sf.lista.reduce((t, x) => t - x.saldo, 0)})</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${sf.lista.map(x => fila(escH(x.nombre), escH(x.fisio), (-x.saldo) + ' sin facturar')).join('')}</table>` : `<p style="margin:18px 0 0;color:#16803c;font-weight:600">✓ No hay sesiones sin facturar</p>`}
