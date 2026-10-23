@@ -1,6 +1,6 @@
 "use strict";
-// Se ejecuta a las 19:00 de Madrid todo el año (vercel.json lanza a las 17 y a las 18 UTC
-// y aquí solo se sigue si en Madrid son las 19 h, así da igual el horario de verano/invierno)
+// Recordatorios: vercel.json lo lanza a las 17 UTC (19 h en verano, 18 h en invierno).
+// Resumen de facturación: /api/cron?resumen=1 a las 7 UTC (8 h en invierno, 9 h en verano).
 //  1. Recordatorio de cita: 2 días antes, a quien tiene cita PENDIENTE pasado mañana
 //     (así aún puede cambiarla o anularla con más de 24 h de margen)
 //  2. Recordatorio de ejercicios, todos los días: a quien hoy aún no los ha hecho
@@ -61,7 +61,13 @@ async function resumenFacturacion(ayer) {
 
 module.exports = async function handler(req, res) {
   if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) return res.status(401).json({ ok: false });
-  if (horaMadrid() !== 19 && !/forzar=1/.test(req.url || '')) return res.status(200).json({ ok: true, saltado: 'No son las 19 h en Madrid' });
+  // Resumen de facturación: 7:00 UTC (8 h en invierno, 9 h en verano), de las citas de ayer
+  if (/resumen=1/.test(req.url || '')) {
+    try { return res.status(200).json({ ok: true, resumen: await resumenFacturacion(madrid(-1)) }); }
+    catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  }
+  // Recordatorios: 17:00 UTC (19 h en verano, 18 h en invierno)
+  if (![18, 19].includes(horaMadrid()) && !/forzar=1/.test(req.url || '')) return res.status(200).json({ ok: true, saltado: 'Fuera de hora' });
   const hoy = madrid(0), dia = madrid(2), hace30 = madrid(-30);
   const out = { citas: 0, ejercicios: 0, errores: 0 };
   try {
@@ -113,8 +119,6 @@ module.exports = async function handler(req, res) {
       });
       ok ? out.ejercicios++ : out.errores++;
     }
-    // 3. Resumen de facturación del día anterior (email a dirección)
-    try { out.resumen = await resumenFacturacion(madrid(-1)); } catch (e) { out.resumen = 'error: ' + e.message; }
     return res.status(200).json({ ok: true, fecha: hoy.fecha, ...out });
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message, ...out });
