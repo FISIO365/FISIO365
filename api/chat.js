@@ -40,10 +40,11 @@ function aBurbujas(records) {
     }
     // Formato antiguo
     const deFisio = f.Tipo === 'fisio';
-    if (f.Texto) out.push({ ...base, de: deFisio ? 'fisio' : 'paciente', texto: f.Texto, adjuntos: [], fecha: t, etiqueta: f.Tipo === 'dolor' ? 'Dolor' : '', leido: true, antiguo: true });
+    // «leído» real según Airtable (antes iba siempre a true y los mensajes antiguos no se marcaban nunca como vistos)
+    if (f.Texto) out.push({ ...base, de: deFisio ? 'fisio' : 'paciente', texto: f.Texto, adjuntos: [], fecha: t, etiqueta: f.Tipo === 'dolor' ? 'Dolor' : '', leido: deFisio ? !!f.RespuestaLeida : !!f.Visto, antiguo: true });
     if (f.Respuesta) {
       const t2 = new Date(new Date(t).getTime() + 1000).toISOString();
-      out.push({ ...base, id: r.id + '-r', de: deFisio ? 'paciente' : 'fisio', texto: f.Respuesta, adjuntos: [], fecha: t2, leido: true, antiguo: true });
+      out.push({ ...base, id: r.id + '-r', de: deFisio ? 'paciente' : 'fisio', texto: f.Respuesta, adjuntos: [], fecha: t2, leido: deFisio ? !!f.Visto : !!f.RespuestaLeida, antiguo: true });
     }
   }
   return out.sort((a, b) => a.fecha.localeCompare(b.fecha));

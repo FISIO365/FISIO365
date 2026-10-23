@@ -401,7 +401,16 @@ export default async function handler(req) {
       const mensajes = (data.records || []).map(rec => ({
         id: rec.id, pacienteId: rec.fields['PacienteId']||'', pacienteNombre: rec.fields['PacienteNombre']||'', fisioId: rec.fields['FisioId']||'', fisioNombre: rec.fields['FisioNombre']||'', texto: rec.fields['Texto']||'', fecha: rec.fields['Fecha']||'', tipo: rec.fields['Tipo']||'diario', visto: rec.fields['Visto']||false, respuesta: rec.fields['Respuesta']||'', respuestaLeida: rec.fields['RespuestaLeida']||false
       }));
-      const sinLeer = mensajes.filter(m => !m.visto).length;
+      // Sin leer = mensajes DEL PACIENTE que este fisio no ha visto (no cuentan los que escribe el propio fisio)
+      let sinLeer = 0;
+      try {
+        const fSin = encodeURIComponent(`AND(${fisioId ? `{FisioId}="${fisioId}",` : ''}NOT({Visto}),{Tipo}!="fisio",OR({Tipo}!="chat",{De}!="fisio"))`);
+        let off = '';
+        do {
+          const rs = await (await fetch(`https://api.airtable.com/v0/${BASE_ID}/${MENSAJES_TABLE}?filterByFormula=${fSin}&fields[]=PacienteId&pageSize=100${off ? '&offset=' + off : ''}`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })).json();
+          sinLeer += (rs.records || []).length; off = rs.offset || '';
+        } while (off);
+      } catch (e) { sinLeer = mensajes.filter(m => !m.visto && m.tipo !== 'fisio').length; }
       if (soloCount) return new Response(JSON.stringify({ ok: true, sinLeer }), { headers: corsHeaders });
       return new Response(JSON.stringify({ ok: true, mensajes, sinLeer }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message, sinLeer: 0, mensajes: [] }), { status: 500, headers: corsHeaders }); }
