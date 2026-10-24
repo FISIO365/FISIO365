@@ -4761,8 +4761,12 @@ async function datosTareas(){
  ((sg&&sg.pendientes)||[]).filter(x=>x.fecha<=hoy).forEach(x=>{const q=deQuienSeg(x);if(q)de(q).llam.push(x);});
  return {por,hoy};
 }
+// Todos los números cuentan lo mismo: lo que toca hoy o está atrasado (lo de próximos días no suma)
+function pintarNumPend(d){const h=d.hoy;const nT=d.items.filter(x=>x.tipo!=='llamar'&&x.fecha<=h).length,nL=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=h).length;
+ document.querySelectorAll('.tt-n[data-n]').forEach(e=>{const n=e.dataset.n==='seg'?nL:nT;e.textContent=n||'';e.classList.toggle('on',n>0);});
+ const b=$('btnTarN');if(b){const n=nT+nL;b.textContent=n>99?'99+':n;b.classList.toggle('on',n>0);}}
 async function contarTareas(){
- try{const {items,hoy}=await datosTareasTodas();const n=items.filter(x=>x.fecha<=hoy).length;
+ try{const d0=await datosTareasTodas();pintarNumPend(d0);const {items,hoy}=d0;const n=items.filter(x=>x.fecha<=hoy).length;
   const b=$('btnTarN');if(b){b.textContent=n>99?'99+':n;b.classList.toggle('on',n>0);}
  }catch(e){}
 }
@@ -4787,7 +4791,7 @@ function itemLlamar(x,onDone){
 async function renderTareas(wrap){
  let vista='tareas';try{vista=sessionStorage.getItem('f365_tar')||'tareas';}catch(e){}
  const top=ce('div','tar-top');top.innerHTML=`<div class="seg-tabs"><button type="button" data-v="tareas">Tareas <i class="tt-n" data-n="tareas"></i></button><button type="button" data-v="seg">Llamadas <i class="tt-n" data-n="seg"></i></button></div>`;wrap.appendChild(top);
- datosTareasTodas().then(d=>{const h=d.hoy;const nT=d.items.filter(x=>x.tipo!=='llamar'&&x.fecha<=h).length,nL=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=h).length;const pon=(k,n)=>{const e=top.querySelector(`[data-n=${k}]`);if(e){e.textContent=n||'';e.classList.toggle('on',n>0);}};pon('tareas',nT);pon('seg',nL);}).catch(()=>{});
+ datosTareasTodas().then(pintarNumPend).catch(()=>{});
  const cont=ce('div','');wrap.appendChild(cont);
  const ir=v=>{vista=v;try{sessionStorage.setItem('f365_tar',v);}catch(e){}top.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));cont.innerHTML='';try{const [tt,ts]=v==='seg'?TOPBAR.seg:TOPBAR.tar;$('topbar-t').textContent=tt;$('topbar-s').textContent=ts;}catch(e){}if(v==='seg')renderSeguimiento(cont);else listaTareas(cont);};
  top.querySelectorAll('button').forEach(b=>b.onclick=()=>ir(b.dataset.v));
@@ -4799,13 +4803,14 @@ async function listaTareas(cont){
  const recargar=()=>{cont.innerHTML='';listaTareas(cont);contarTareas();};
  let d;try{d=await datosTareasTodas();}catch(e){box.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
  // Las llamadas viven en su pestaña «Llamadas»: aquí solo lo que hay que hacer y no es llamar
+ pintarNumPend(d);
  const nLl=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=d.hoy&&(!tarFiltro||x.quien===tarFiltro)).length;
  d={...d,items:d.items.filter(x=>x.tipo!=='llamar')};
  const quien=[...new Set(d.items.map(x=>x.quien).filter(Boolean))].sort((a,b)=>TAR_NOMBRES.indexOf(a)-TAR_NOMBRES.indexOf(b));
  const L=d.items.filter(x=>!tarFiltro||x.quien===tarFiltro);
  const hoy=d.hoy;
  const grupos=[['Atrasadas','atr',L.filter(x=>x.fecha<hoy)],['Hoy','hoy',L.filter(x=>x.fecha===hoy)],['Próximos días','prox',L.filter(x=>x.fecha>hoy)]];
- box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todos (${d.items.length})</option>${[...new Set(TAR_NOMBRES.concat(quien))].map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
+ box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todos (${d.items.filter(x=>x.fecha<=hoy).length})</option>${[...new Set(TAR_NOMBRES.concat(quien))].map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
  if(!L.length){box.insertAdjacentHTML('beforeend','<div class="tar-ok">✓ Nada pendiente</div>');}
  grupos.forEach(([t,c,g])=>{if(!g.length)return;
   const h=ce('div','seg-gt '+c);h.innerHTML=`${t} <span>${g.length}</span>`;box.appendChild(h);
@@ -5043,8 +5048,8 @@ async function renderSeguimiento(wrap){
   const flt=x=>!filtroFisio||(filtroFisio==='__yo'?qDe(x)===yo:qDe(x)===filtroFisio);
   const atr=P.filter(x=>x.fecha<hoy).length,deHoy=P.filter(x=>x.fecha===hoy).length;
   const nomF=filtroFisio==='__yo'?'Míos':(filtroFisio||'Todos');
-  let html=`<div class="sg-seg"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Informes</button></div>
-   ${tab==='pend'?`<div class="ll-per"><label class="ll-sel ${filtroFisio?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">Quién llama:</span><select class="sg-quien"><option value="">Todos (${P.length})</option><option value="__yo" ${filtroFisio==='__yo'?'selected':''}>Míos (${P.filter(x=>qDe(x)===yo).length})</option>${fisios.map(f=>`<option value="${escH(f)}" ${filtroFisio===f?'selected':''}>${escH(f)} (${P.filter(x=>qDe(x)===f).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add">+ Añadir</button></div>
+  let html=`<div class="sg-seg"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.filter(x=>x.fecha<=hoy).length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Informes</button></div>
+   ${tab==='pend'?`<div class="ll-per"><label class="ll-sel ${filtroFisio?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">Quién llama:</span><select class="sg-quien"><option value="">Todos (${P.filter(x=>x.fecha<=hoy).length})</option><option value="__yo" ${filtroFisio==='__yo'?'selected':''}>Míos (${P.filter(x=>qDe(x)===yo&&x.fecha<=hoy).length})</option>${fisios.map(f=>`<option value="${escH(f)}" ${filtroFisio===f?'selected':''}>${escH(f)} (${P.filter(x=>qDe(x)===f&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add">+ Añadir</button></div>
    <div class="seg-res"><div class="r"><b>${atr}</b><span>atrasados</span></div><div class="o"><b>${deHoy}</b><span>para hoy</span></div><div><b>${P.length-atr-deHoy}</b><span>próximos</span></div></div>`:''}`;
   if(tab==='pend'){
    const L=P.filter(flt);
@@ -5088,7 +5093,7 @@ async function renderSeguimiento(wrap){
     r.querySelectorAll('button').forEach(b=>b.onclick=()=>{m.remove();abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,onSave:cargar});});};
   };
  };
- const cargar=async()=>{datos=null;pinta();try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();};
+ const cargar=async()=>{datos=null;pinta();try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();contarTareas();};
  cargar();
 }
 // Vista previa del informe dentro del panel (se ve, se cierra con ✕ y desde aquí se guarda/envía el PDF)
