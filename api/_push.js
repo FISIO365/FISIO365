@@ -121,19 +121,13 @@ async function sinFacturar() {
 // Reagendan = pacientes atendidos en el periodo que tienen otra cita después de su última sesión.
 const NO_FISIO = /NO HAY FISIO|TODOS|\?\?|FIESTA|^$/i;
 const nomFisio = v => { if (Array.isArray(v)) v = v[0]; v = v && typeof v === 'object' ? v.name : String(v || ''); return v.trim(); };
-const _rendCache = {};
-async function rendimiento(desde, hasta, fresco) {
+async function rendimiento(desde, hasta) {
   const pid = c => (c.fields['RELACIÓN - CITA'] || [])[0] || '';
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
-  // Caché corta (60 s) mientras la función siga caliente: Tareas, Llamadas y Rendimiento piden lo mismo
-  const ck = desde + '|' + hasta; if (!fresco && _rendCache[ck] && Date.now() - _rendCache[ck].t < 60000) return _rendCache[ck].v;
-  const VIVAS = `OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ'].map(e => `TRIM({ESTADO})='${e}'`).join(',')})`;
-  const [citas, fisiosT, despues] = await Promise.all([
+  const [citas, fisiosT] = await Promise.all([
     todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA`),
-    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA&fields[]=HORAS POR DÍA&fields[]=CONTROL HORAS').catch(() => []),
-    // Citas posteriores al periodo (una sola consulta, en vez de buscar paciente a paciente)
-    todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(${VIVAS},IS_AFTER({FECHA},DATEADD('${hasta}',0,'days')))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA`).catch(() => [])
+    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA&fields[]=HORAS POR DÍA&fields[]=CONTROL HORAS').catch(() => [])
   ]);
   // Huecos = horas de cada día de la semana («HORAS POR DÍA» del fisio; 1 h = 1 sesión) sumadas en los días del periodo.
   // Si no tiene «HORAS POR DÍA», se reparte «HORAS SEMANA» de lunes a viernes.
@@ -183,10 +177,12 @@ async function rendimiento(desde, hasta, fresco) {
   const ultima = {}; // fisio|paciente -> última fecha atendida en el periodo
   realizadas.forEach(c => { const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n)) return; const k = n + '|' + pid(c), f = String(c.fields['FECHA']).slice(0, 10); if (!ultima[k] || f > ultima[k]) ultima[k] = f; });
   const pacs = [...new Set(realizadas.map(c => pid(c)))];
-  const futuras = {}; // paciente -> fecha más lejana con cita (dentro del periodo o después)
-  const vivas = new Set(['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ']);
-  citas.filter(c => vivas.has(est(c).toUpperCase())).concat(despues).forEach(c => { const f = String(c.fields['FECHA']).slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (!futuras[id] || f > futuras[id]) futuras[id] = f; }); });
-
+  const futuras = {}; // paciente -> fecha más lejana con cita
+  for (let i = 0; i < pacs.length; i += 40) {
+    const lote = pacs.slice(i, i + 40);
+    const r = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA`).catch(() => []);
+    r.forEach(c => { const f = String(c.fields['FECHA']).slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (!futuras[id] || f > futuras[id]) futuras[id] = f; }); });
+  }
   const sinCita = [];
   Object.entries(ultima).forEach(([k, f]) => {
     const [n, id] = k.split('|'); const x = de(n);
@@ -196,14 +192,12 @@ async function rendimiento(desde, hasta, fresco) {
   // Nombres de los que no han reagendado
   const nombres = {};
   const ids = [...new Set(sinCita)];
-  const lotesN = []; for (let i = 0; i < ids.length; i += 40) lotesN.push(ids.slice(i, i + 40));
-  (await Promise.all(lotesN.map(l => todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + l.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=POR QUÉ NO REAGENDA&fields[]=POR QUÉ FECHA&fields[]=POR QUÉ FISIO`).catch(() => [])))).forEach(r => {
+  for (let i = 0; i < ids.length; i += 40) {
+    const r = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + ids.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=POR QUÉ NO REAGENDA&fields[]=POR QUÉ FECHA&fields[]=POR QUÉ FISIO`).catch(() => []);
     r.forEach(p => { nombres[p.id] = { nombre: p.fields['FULL NAME'] || '—', tel: p.fields['WHATSAPP'] || '', nota: p.fields['POR QUÉ NO REAGENDA'] || '', notaFecha: p.fields['POR QUÉ FECHA'] || '', notaFisio: p.fields['POR QUÉ FISIO'] || '' }; });
-  });
+  }
   Object.values(R).forEach(x => { x.lista = x.lista.map(p => ({ ...p, ...(nombres[p.id] || { nombre: '—' }) })).sort((a, b) => b.ultima.localeCompare(a.ultima)); });
-  const _v = Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); return { ...x, huecos: capacidad(k), sinHoras: !horasDia[k], dias: diario(k) }; }).sort((a, b) => b.realizadas - a.realizadas);
-  _rendCache[ck] = { t: Date.now(), v: _v };
-  return _v;
+  return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); return { ...x, huecos: capacidad(k), sinHoras: !horasDia[k], dias: diario(k) }; }).sort((a, b) => b.realizadas - a.realizadas);
 }
 
 const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };
