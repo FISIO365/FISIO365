@@ -300,6 +300,10 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tk-m p.tk-meta{display:block;margin-top:1px}.tk-m p.tk-nota{color:#3d342e;font-size:12.5px;margin-top:4px;-webkit-line-clamp:2;cursor:pointer}.tk-m p.tk-nota.abierta{display:block}
 .tk-pie{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}.tk-pie .tk-a{margin-top:0}
 .tk-ed{border:none;background:none;padding:0;font-family:var(--font);font-size:11.5px;font-weight:600;color:#c2552e;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.hz-cuando{font-size:11.5px;color:var(--muted);margin:2px 0 4px}
+.ll-res{background:#fff;border-radius:16px;padding:14px;margin:4px 0 14px;overflow-x:auto}.ll-t{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ll-tab{display:grid}.ll-h,.ll-r{display:grid;grid-template-columns:minmax(64px,1.3fr) .9fr repeat(5,1fr);align-items:center;gap:4px;padding:7px 0;border-bottom:1px solid #f1ede9;font-size:12.5px}.ll-r:last-child{border-bottom:none}
+.ll-h b{font-size:10px;line-height:1.2;color:var(--muted);font-weight:600;text-align:center}.ll-r span{font-weight:600}.ll-r b{text-align:center;font-size:14px}.ll-r i{font-style:normal;text-align:center;color:#3d342e}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -4773,7 +4777,7 @@ async function listaTareas(cont){
    const pid=x.tipo==='llamar'?x.seg.pacienteId:x.p.id;
    const IC_TEL='<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
    const IC_EXP='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
-   const sub=x.tipo==='llamar'?[x.quien?'llama '+x.quien:'',x.seg.ultima?'última sesión '+segFecha(x.seg.ultima).replace(/^\S+ /,'')+(x.seg.fisio?' con '+x.seg.fisio:''):'',x.detalle&&x.detalle!=='Llamada de seguimiento'?x.detalle:''].filter(Boolean).join(' · '):[x.quien,'Última sesión '+segFecha(x.p.ultima).replace(/^\S+ /,''),x.p.nota?'Motivo: '+x.p.nota:''].filter(Boolean).join(' · ');
+   const sub=x.tipo==='llamar'?[x.seg.ultima?'última sesión '+segFecha(x.seg.ultima).replace(/^\S+ /,'')+(x.seg.fisio?' con '+x.seg.fisio:''):'',x.detalle&&x.detalle!=='Llamada de seguimiento'?x.detalle:''].filter(Boolean).join(' · '):[x.quien,'Última sesión '+segFecha(x.p.ultima).replace(/^\S+ /,''),x.p.nota?'Motivo: '+x.p.nota:''].filter(Boolean).join(' · ');
    const ests=pacEstados(pid).map(estNom).filter(Boolean);
    const ico=x.tipo==='llamar'?(x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${IC_TEL}</a>`:`<span class="tk-i ll">${IC_TEL}</span>`):`<span class="tk-i ex">${IC_EXP}</span>`;
    r.innerHTML=`${ico}<div class="tk-m"><b>${escH(x.nombre)}</b><p>${escH(sub)}</p>${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}</div><div class="tk-a"></div>`;
@@ -4853,6 +4857,10 @@ async function datosTareasTodas(){
 }
 // ── SEGUIMIENTO: pacientes a los que hay que llamar ──
 const SEG_RES=['Cita recuperada','Volver a llamar','No contesta','Pendiente de respuesta','Alta'];
+const QUIEN_NOM={NORA:'Nora',SARA:'Sara',JONY:'Jonathan',JUAN:'Juan',RAMIRO:'Ramiro'};
+const quienNom=q=>QUIEN_NOM[String(q||'').trim().toUpperCase()]||q||'';
+const ahoraTxt=()=>new Date().toLocaleString('es-ES',{timeZone:'Europe/Madrid',weekday:'short',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});
+function chipsQuien(m,sel,ini){let q=ini||'';const el=m.querySelector(sel);el.innerHTML=TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('');const pr=()=>el.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.n===q));pr();el.querySelectorAll('button').forEach(b=>b.onclick=()=>{q=b.dataset.n;pr();});return ()=>q;}
 const segIso=n=>isoMadrid(new Date(Date.now()+n*864e5));
 const segTel=t=>String(t||'').replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1');
 function segFecha(f){if(!f)return '—';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+'/'+(t.getMonth()+1);}
@@ -4883,18 +4891,21 @@ function abrirResultadoSeg(it,onSave){
  const m=hzModal(`<div class="hz-top"><div><small>¿Qué ha pasado?</small><b>${escH(it.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-tipos">${SEG_RES.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
   <div class="seg-nf" style="display:none"><div class="hz-lab">¿Cuándo volver a llamar?</div><div class="seg-rap">${[['Mañana',1],['En 3 días',3],['En 1 semana',7],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div><input type="date" class="seg-f" value="${segIso(3)}" min="${segIso(0)}"></div>
+  <div class="hz-lab">¿Quién ha llamado?</div><div class="seg-rap seg-quien"></div>
+  <div class="hz-cuando">Se guarda con la fecha y hora de ahora: ${ahoraTxt()}</div>
   <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="seg-n" rows="2" placeholder="Qué te ha dicho…"></textarea>
   <div class="hz-lab">Estado del paciente</div><div class="est-slot"></div>
   <div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
  const f=m.querySelector('.seg-f'),nf=m.querySelector('.seg-nf');
  const est0=pacEstados(it.pacienteId).slice(),selE=selectorEstados(est0);m.querySelector('.est-slot').appendChild(selE);
- const pintaF=()=>m.querySelectorAll('.seg-rap button').forEach(b=>b.classList.toggle('on',segIso(+b.dataset.d)===f.value));pintaF();
- m.querySelectorAll('.seg-rap button').forEach(b=>b.onclick=()=>{f.value=segIso(+b.dataset.d);pintaF();});f.onchange=pintaF;
+ const getQ=chipsQuien(m,'.seg-quien',miNombreCorto());
+ const pintaF=()=>m.querySelectorAll('.seg-nf .seg-rap button').forEach(b=>b.classList.toggle('on',segIso(+b.dataset.d)===f.value));pintaF();
+ m.querySelectorAll('.seg-nf .seg-rap button').forEach(b=>b.onclick=()=>{f.value=segIso(+b.dataset.d);pintaF();});f.onchange=pintaF;
  m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{res=b.dataset.v;m.querySelectorAll('.hz-tipos button').forEach(x=>x.classList.toggle('on',x===b));nf.style.display=['Volver a llamar','No contesta','Pendiente de respuesta'].includes(res)?'':'none';});
  m.querySelector('.hz-x').onclick=()=>m.remove();
  m.querySelector('.hz-ok').onclick=async e=>{if(!res){toast('Elige qué ha pasado',false);return;}
   const b=e.target;b.disabled=true;b.textContent='Guardando…';
-  try{const d=await (await fetch('/api/schedule?action=seg-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,pacienteId:it.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value.trim(),nuevaFecha:nf.style.display===''?f.value:'',quien:(fisioActual&&fisioActual.nombre)||''})})).json();if(!d.ok)throw new Error(d.error||'Error');
+  try{const d=await (await fetch('/api/schedule?action=seg-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,pacienteId:it.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value.trim(),nuevaFecha:nf.style.display===''?f.value:'',quien:getQ()})})).json();if(!d.ok)throw new Error(d.error||'Error');
    {const nuevos=selE.get();if(it.pacienteId&&nuevos.join()!==est0.join())await guardarEstados(it.pacienteId,nuevos);}
    toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
 }
@@ -4914,15 +4925,17 @@ function abrirEditarSeg(it,onSave){
 function abrirEditarLlamada(x,onSave){
  const inv={'CITA RECUPERADA':'Cita recuperada','VOLVER A LLAMAR':'Volver a llamar','NC - VOLVER A LLAMAR':'No contesta','PENDIENTE RESPUESTA':'Pendiente de respuesta','ALTA':'Alta'};
  let res=inv[x.resultado]||'';
- const m=hzModal(`<div class="hz-top"><div><small>Llamada del ${segFecha(x.fecha)}${x.quien?' · '+escH(x.quien):''}</small><b>${escH(x.nombre)}</b></div><button type="button" class="hz-x">✕</button></div>
+ const m=hzModal(`<div class="hz-top"><div><small>Llamada del ${segFecha(x.fecha)}${x.hora?' a las '+x.hora:''}</small><b>${escH(x.nombre)}</b></div><button type="button" class="hz-x">✕</button></div>
   <div class="hz-tipos">${SEG_RES.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
+  <div class="hz-lab">¿Quién llamó?</div><div class="seg-rap seg-quien"></div>
   <div class="hz-lab">Nota</div><textarea class="seg-n" rows="2">${escH(x.nota||'')}</textarea>
   <div class="hz-bts"><button type="button" class="hz-re">Volver a «Por llamar»</button><button type="button" class="hz-ok">Guardar</button></div>`);
  const pt=()=>m.querySelectorAll('.hz-tipos button').forEach(b=>b.classList.toggle('on',b.dataset.v===res));pt();
  m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{res=b.dataset.v;pt();});
  m.querySelector('.hz-x').onclick=()=>m.remove();
+ const getQ=chipsQuien(m,'.seg-quien',quienNom(x.quien));
  const enviar=async(reabrir,b)=>{b.disabled=true;
-  try{const d=await (await fetch('/api/schedule?action=seg-editar-llamada',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:x.id,segId:x.segId,pacienteId:x.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value,reabrir})})).json();if(!d.ok)throw 0;
+  try{const d=await (await fetch('/api/schedule?action=seg-editar-llamada',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:x.id,segId:x.segId,pacienteId:x.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value,quien:getQ(),reabrir})})).json();if(!d.ok)throw 0;
    toast(reabrir?'Vuelve a estar en «Por llamar»':'Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast('No se ha podido guardar',false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(false,e.target);
  m.querySelector('.hz-re').onclick=e=>enviar(true,e.target);
@@ -4936,8 +4949,10 @@ async function renderSeguimiento(wrap){
   if(!datos){box.innerHTML='<div class="fac-vacio">Cargando…</div>';return;}
   const P=datos.pendientes,H=datos.hechas,hoy=datos.hoy;
   const yo=miNombreCorto();
-  const fisios=TAR_NOMBRES.filter(n=>n!==yo&&P.concat(H).some(x=>deQuienSeg(x)===n));
-  const flt=x=>!filtroFisio||(filtroFisio==='__yo'?deQuienSeg(x)===yo:deQuienSeg(x)===filtroFisio);
+  H.forEach(x=>{x.quienN=quienNom(x.quien);});
+  const qDe=x=>tab==='hech'?x.quienN:deQuienSeg(x);
+  const fisios=TAR_NOMBRES.filter(n=>n!==yo&&(tab==='hech'?H:P).some(x=>qDe(x)===n));
+  const flt=x=>!filtroFisio||(filtroFisio==='__yo'?qDe(x)===yo:qDe(x)===filtroFisio);
   const atr=P.filter(x=>x.fecha<hoy).length,deHoy=P.filter(x=>x.fecha===hoy).length;
   let html=`<div class="seg-head"><div class="seg-tabs"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Hechas (30 días) <b>${H.length}</b></button></div><button type="button" class="seg-add">+ Añadir</button></div>
    ${tab==='pend'?`<div class="seg-res"><div class="r"><b>${atr}</b><span>atrasados</span></div><div class="o"><b>${deHoy}</b><span>para hoy</span></div><div><b>${P.length-atr-deHoy}</b><span>próximos</span></div></div>`:''}
@@ -4946,12 +4961,15 @@ async function renderSeguimiento(wrap){
    const L=P.filter(flt);
    const grupos=[['Atrasados',L.filter(x=>x.fecha<hoy)],['Hoy',L.filter(x=>x.fecha===hoy)],['Esta semana',L.filter(x=>x.fecha>hoy&&x.fecha<=segIso(7))],['Más adelante',L.filter(x=>x.fecha>segIso(7))]];
    html+=grupos.filter(g=>g[1].length).map(([t,g])=>`<div class="seg-gt">${t} <span>${g.length}</span></div><div class="seg-tabla">${g.map(x=>{const ests=pacEstados(x.pacienteId).map(estNom).filter(Boolean);const q=deQuienSeg(x);
-    const meta=`Llamar ${segFecha(x.fecha)} · ${q?'llama '+q:'sin asignar'}`,meta2=x.ultima?`Última sesión ${segFecha(x.ultima)}${x.fisio?' con '+x.fisio:''}`:(x.fisio?'Su fisio: '+x.fisio:'');
+    const meta=`Llamar ${segFecha(x.fecha)}${q?'':' · sin asignar'}`,meta2=x.ultima?`Última sesión ${segFecha(x.ultima)}${x.fisio?' con '+x.fisio:''}`:(x.fisio?'Su fisio: '+x.fisio:'');
     return `<div class="tk${x.fecha<hoy?' atr':''}">${x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${SEG_IC_TEL}</a>`:`<span class="tk-i ll">${SEG_IC_TEL}</span>`}
     <div class="tk-m"><b>${escH(x.nombre)}</b><p class="tk-meta">${escH(meta)}</p>${meta2?`<p class="tk-meta">${escH(meta2)}</p>`:''}${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}<div class="tk-pie"><button type="button" class="seg-ed tk-ed" data-id="${x.id}">Editar</button><div class="tk-a">${x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}<button type="button" class="seg-hecho tk-b" data-id="${x.id}">Resultado</button></div></div></div></div>`;}).join('')}</div>`).join('')||'<div class="tar-ok">✓ Nadie por llamar</div>';
   }else{
    const L=H.filter(flt);
-   html+=L.length?`<div class="seg-tabla">${L.map(x=>`<div class="seg-it hecha" data-id="${x.id}"><div class="seg-f1"><b>${segFecha(x.fecha)}</b><small>${escH(x.quien||'')}</small></div><div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em>${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p></div><div class="seg-f3"><span class="seg-r ${/RECUPERADA|ALTA/.test(x.resultado)?'ok':/NC|VOLVER/.test(x.resultado)?'no':''}">${escH(x.resultado.toLowerCase().replace(/^nc - /,'no contesta · ').replace(/^./,c=>c.toUpperCase()))}</span></div></div>`).join('')}</div>`:'<div class="fac-vacio">Sin llamadas en los últimos 30 días.</div>';
+   const RES=[['Recupera',/RECUPERADA/],['Alta',/^ALTA/],['Volver',/^VOLVER/],['No cont.',/^NC/],['Pendiente',/PENDIENTE/]];
+   const per=[...new Set(L.map(x=>x.quienN||'Sin indicar'))].sort((a,b)=>TAR_NOMBRES.indexOf(a)-TAR_NOMBRES.indexOf(b));
+   if(L.length)html+=`<div class="ll-res"><div class="ll-t">Resumen · últimos 30 días</div><div class="ll-tab"><div class="ll-h"><span></span><b>Llamadas</b>${RES.map(r=>`<b>${r[0]}</b>`).join('')}</div>${per.map(n=>{const l=L.filter(x=>(x.quienN||'Sin indicar')===n);return `<div class="ll-r"><span>${escH(n)}</span><b>${l.length}</b>${RES.map(r=>`<i>${l.filter(x=>r[1].test(x.resultado)).length||'·'}</i>`).join('')}</div>`;}).join('')}</div></div>`;
+   html+=L.length?`<div class="seg-tabla">${L.map(x=>`<div class="seg-it hecha" data-id="${x.id}"><div class="seg-f1"><b>${segFecha(x.fecha)}${x.hora?' · '+x.hora:''}</b><small>${escH(x.quienN||'')}</small></div><div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em>${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p></div><div class="seg-f3"><span class="seg-r ${/RECUPERADA|ALTA/.test(x.resultado)?'ok':/NC|VOLVER/.test(x.resultado)?'no':''}">${escH(x.resultado.toLowerCase().replace(/^nc - /,'no contesta · ').replace(/^./,c=>c.toUpperCase()))}</span></div></div>`).join('')}</div>`:'<div class="fac-vacio">Sin llamadas en los últimos 30 días.</div>';
   }
   box.innerHTML=html;
   box.querySelectorAll('.seg-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;try{sessionStorage.setItem('f365_seg',tab);}catch(e){}pinta();});
