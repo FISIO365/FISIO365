@@ -709,7 +709,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  /* El scroll va dentro (no la página): así Safari no mueve la barra de abajo al subir/bajar */
  html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
  .main-area{height:100dvh;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
- #sb-rend,#sb-seg,#sb-tar,#sb-call{display:none!important}
+ #sb-rend,#sb-seg,#sb-tar,#sb-call,#sb-prog{display:none!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
  .topbar-t{font-size:21px!important}
  .topbar-s{font-size:12px!important}
@@ -885,6 +885,41 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-segit{display:flex;align-items:flex-start;gap:8px;width:100%;text-align:left;font-family:var(--font);font-size:14px;line-height:1.5;color:inherit;background:none;border:none;padding:4px 0;margin:4px 0;cursor:pointer}.fp-segit span{margin-left:auto;color:#c2552e;font-size:20px;line-height:1}.fp-sgv p{margin:4px 0;font-size:14.5px;line-height:1.5}.fp-sgpq{background:#fdf3ec;border-radius:12px;padding:10px 12px;margin-bottom:10px}.fp-sgpq small{display:block;font-size:11.5px;font-weight:600;color:#c2552e;text-transform:uppercase;letter-spacing:.04em}.fp-sgpq p{margin:2px 0 0!important}.fp-sgult{margin-top:10px!important;font-size:13px!important}.fp-sgbts{display:flex;gap:8px}.fp-sgbts .fp-can{flex:1;font-size:14px;padding:12px}.fp-sgbts .hz-ok{flex:2}
 .fp-ic span{white-space:nowrap}
 .fp-bt h3{white-space:nowrap}.fp-bt .fp-edbts{flex-wrap:nowrap}.fp-bt .fp-edbts button,.fp-bt>.fp-ed{white-space:nowrap}
+
+/* Agenda */
+.ag{background:#fff;border-radius:22px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.ag-bar{display:flex;align-items:center;gap:8px}.ag-nv{width:42px;height:42px;border-radius:50%;border:none;background:#f7f3ef;font-size:22px;color:#c2552e;cursor:pointer;flex:none;font-family:var(--font)}
+.ag-fe{flex:1;position:relative;text-align:center;cursor:pointer}.ag-ft{font-size:16px;font-weight:700}.ag-fi{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.ag-bar2{display:flex;align-items:center;gap:8px;margin:10px 0 8px;flex-wrap:wrap}.ag-hoy{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:#fdeee4;color:#c2552e;border-radius:99px;padding:7px 13px;cursor:pointer}
+.ag-sel{position:relative;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;background:#f7f3ef;border-radius:99px;padding:7px 28px 7px 13px}.ag-sel::after{content:'▾';position:absolute;right:11px;font-size:10px;color:#7d6a60}.ag-fs{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer;font-size:16px}
+.ag-res{margin-left:auto;font-size:12.5px;color:#7d6a60}
+.ag-grid{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px 4px}
+.ag-tb{min-width:calc(46px + var(--n) * 150px)}
+.ag-hd,.ag-row{display:grid;grid-template-columns:46px repeat(var(--n),minmax(140px,1fr));gap:6px}
+.ag-hd{position:sticky;top:0;z-index:2;background:#fff;padding:4px 0 6px}.ag-hf{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5f554e;text-align:center}
+.ag-row{border-top:1px solid #f0ebe6;padding:5px 0;min-height:44px}.ag-row.now .ag-h{color:#c2552e;font-weight:700}
+.ag-h{font-size:12px;color:#7d6a60;padding-top:8px;position:sticky;left:0;background:#fff;z-index:1}
+.ag-cell{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ag-c{font-family:var(--font);text-align:left;border:none;border-left:3px solid #c2552e;background:#fbf8f5;border-radius:10px;padding:7px 9px;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-width:0;color:#1a1a1a}
+.ag-c b{font-size:12.5px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ag-c small{font-size:11px;color:#7d6a60;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-c.ok{border-left-color:#16803c;background:#eef8f1}.ag-c.mal{border-left-color:#b42318;background:#fdf0ee}.ag-c.pen{border-left-color:#d97706;background:#fff6e8}
+.ag-c.lib{border:1.5px dashed #6fbf8b;background:#f3fbf5;color:#16803c;font-size:12.5px;font-weight:600;align-items:center;padding:9px}
+.ag-c.blq{border:none;background:#f1ede9;color:#7d6a60;font-size:12px;font-weight:600;align-items:center;padding:9px}
+.ag-ic{display:flex;gap:4px;flex-wrap:wrap}.ag-ic i{font-style:normal;font-size:10.5px;font-weight:700;border-radius:99px;padding:1px 6px;background:#fff}.ag-ok{color:#16803c}.ag-app{color:#c2552e}.ag-not{color:#7d6a60}.ag-est{color:#5f554e}
+.ag-x{font-family:var(--font);font-size:11px;color:#a39890;text-decoration:line-through;background:none;border:none;text-align:left;padding:0 4px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-vac{font-family:var(--font);border:1.5px dashed #e4ddd6;background:none;border-radius:10px;color:#c9bcb2;font-size:16px;padding:6px;cursor:pointer}
+.ag-vac:hover{border-color:#c2552e;color:#c2552e}
+.ag-pac{font:inherit;background:none;border:none;padding:0;color:inherit;cursor:pointer;text-align:left}
+.ag-in{width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:10px 12px;border:1.5px solid var(--border);border-radius:12px;background:#fff}
+.ag-lib{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:6px 0 4px}.ag-lib input{width:18px;height:18px;accent-color:#c2552e}
+.ag-conf{margin-top:10px}
+.ag-bts{display:flex;gap:8px}.ag-bts .fp-can{flex:1;font-size:13.5px;padding:12px}.ag-bts .hz-ok{flex:1.3}
+.ag-hs{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}.ag-hs button{-webkit-text-fill-color:currentColor;font-family:var(--font);font-size:13px;padding:8px 0;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer}
+.ag-hs button.li{border-color:#6fbf8b;color:#16803c;background:#f3fbf5}.ag-hs button.oc{color:#b8aca3;background:#f5f1ed;border-color:#f5f1ed}.ag-hs button.bq{color:#b8aca3;text-decoration:line-through}.ag-hs button.on{border-color:#c2552e;background:#c2552e;color:#fff}
+.ag-res2{display:flex;flex-direction:column;gap:4px;margin-top:6px}.ag-pi{font-family:var(--font);display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:none;background:#f7f3ef;border-radius:10px;padding:8px 12px;cursor:pointer}.ag-pi b{font-size:13.5px}.ag-pi small{font-size:11.5px;color:#7d6a60}.ag-np{color:#c2552e;font-weight:600;font-size:13px}
+.ag-elegido{font-size:13.5px;font-weight:600;color:#16803c;background:#e8f6ec;border-radius:10px;padding:8px 12px}
+.ag-otras{display:flex;gap:14px;justify-content:center;margin-top:12px}.ag-otras button{font-family:var(--font);font-size:12.5px;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
 </style>
 </head>
 <body>
@@ -922,6 +957,9 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  </div>
  <div class="sb-item" id="sb-prog" onclick="showSection('prog')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span><span class="sb-txt">Programas</span>
+ </div>
+ <div class="sb-item" id="sb-agenda" onclick="showSection('agenda')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span><span class="sb-txt">Agenda</span>
  </div>
  <div class="sb-item" id="sb-pac" onclick="showSection('pac')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg></span><span class="sb-txt">Pacientes</span>
@@ -1030,7 +1068,8 @@ const TOPBAR = {
  rend: ['Rendimiento','Cómo va cada fisio'],
  seg: ['Pendientes','Tareas y llamadas del centro'],
  tar: ['Pendientes','Tareas y llamadas del centro'],
- call: ['Call-in','Busca pacientes por estado para llamarles']
+ call: ['Call-in','Busca pacientes por estado para llamarles'],
+ agenda: ['Agenda','Citas del día de cada fisio']
 };
 
 const CFG = {
@@ -1193,7 +1232,7 @@ async function loadBiblio(){
 
 // iPhone: tras un rato en segundo plano, la primera petición a veces falla con «Load failed».
 // Reintentamos solas las peticiones a /api/ que se pueden repetir sin duplicar nada.
-(function(){const f0=window.fetch.bind(window);const NO_REP=/action=(seg-crear|seg-resultado|facturar|horas-guardar|seg-paciente-crear|seg-historial-anadir|seg-tarea-guardar|seg-ficha-archivo)\b/;
+(function(){const f0=window.fetch.bind(window);const NO_REP=/action=(seg-crear|seg-resultado|facturar|horas-guardar|seg-paciente-crear|seg-historial-anadir|seg-tarea-guardar|seg-ficha-archivo|seg-agenda-dar|seg-agenda-mover|seg-agenda-hueco|seg-agenda-editar)\b/;
  window.fetch=async function(u,o){const url=String(u&&u.url||u);
   for(let i=0;;i++){try{return await f0(u,o);}catch(e){if(!/\/api\//.test(url)||NO_REP.test(url)||i>=2)throw new Error(navigator.onLine===false?'Sin conexión. Vuelve a intentarlo.':'No se ha podido conectar. Vuelve a intentarlo.');await new Promise(r=>setTimeout(r,700*(i+1)));}}};})();
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
@@ -1212,7 +1251,7 @@ function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
  try{$('btnRend').classList.toggle('activo',sec==='rend');$('btnTar').classList.toggle('activo',sec==='tar');}catch(e){}
- ['anam','prog','pac','school','msg','record','rend','seg','tar','call'].forEach(s=>{
+ ['anam','prog','agenda','pac','school','msg','record','rend','seg','tar','call'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
  const [t,s] = TOPBAR[sec];
@@ -1234,6 +1273,7 @@ function showSection(sec){
  else if(sec==='seg'){try{sessionStorage.setItem('f365_tar','seg');}catch(e){}renderTareas(wrap);}
  else if(sec==='tar') renderTareas(wrap);
  else if(sec==='call') renderCallIn(wrap);
+ else if(sec==='agenda') renderAgenda(wrap);
 }
 
 
@@ -4802,6 +4842,158 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
 
 // ── CALL-IN: buscar pacientes por etiqueta de estado (varias = tiene todas) ──
 let callSel=[];
+// ══ AGENDA: el día de cada fisio (tabla CITAS: una fila = una hora). Dar, mover, cancelar y bloquear citas ══
+const AG_FISIOS=['Ramiro','Jonathan','NORA','Sara','Paola','Juan','ELENA'];
+const AG_NOFISIO=/^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES)$/i;
+const AG_EST=[['PENDIENTE','Pendiente'],['REALIZADA','Realizada'],['NO ASISTIÓ','No asistió'],['CANCELADA','Cancelada'],['POR REAGENDAR','Por reagendar'],['CITA DUDOSA','Dudosa']];
+const agNom=f=>{f=String(f||'');return f.charAt(0).toUpperCase()+f.slice(1).toLowerCase();};
+const agEsLibre=e=>/^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(e);
+const agEsFuera=e=>/CANCELADA|REPROGRAMADA|CITA PERDIDA/.test(e);
+const agEsBloq=e=>/BLOQUEAD|COMIDA|VIDEOS|CALL-IN|^pen$|^09:00$/i.test(e);
+const agHoyIso=()=>isoMadrid(new Date());
+const agMover=(f,n)=>{const d=new Date(f+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
+const agFechaLarga=f=>{const t=new Date(f+'T12:00:00');return ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][t.getDay()]+' '+t.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][t.getMonth()];};
+let AG={fecha:'',fisio:'',dia:null};
+try{AG.fisio=localStorage.getItem('f365_ag_fisio')||'';}catch(e){}
+async function agPost(a,b){const r=await (await fetch('/api/schedule?action='+a,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd},b))})).json();return r;}
+async function agCargarDia(f){return (await fetch(`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}&fecha=${f}`)).json();}
+function agEquipo(){const nf=(fisios||[]).map(f=>String(f.nombre||f.name||'').split(' ')[0].toLowerCase());const eq=AG_FISIOS.filter(n=>nf.includes(n.toLowerCase()));return eq.length?eq:['Ramiro','Jonathan','Sara','Juan'];}
+function renderAgenda(wrap){
+ if(!AG.fecha)AG.fecha=agHoyIso();
+ const card=ce('div','ag');
+ card.innerHTML=`<div class="ag-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Día anterior">‹</button>
+  <label class="ag-fe"><b class="ag-ft"></b><input type="date" class="ag-fi"></label>
+  <button type="button" class="ag-nv" data-n="1" aria-label="Día siguiente">›</button></div>
+  <div class="ag-bar2"><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><span class="ag-res"></span></div>
+  <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
+ wrap.appendChild(card);
+ const fi=card.querySelector('.ag-fi'),fs=card.querySelector('.ag-fs'),grid=card.querySelector('.ag-grid');
+ card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n);cargar();});
+ card.querySelector('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
+ fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};
+ fs.onchange=()=>{AG.fisio=fs.value;try{localStorage.setItem('f365_ag_fisio',AG.fisio);}catch(e){}pintar();};
+ let tok=0;
+ async function cargar(){
+  const t=++tok;card.querySelector('.ag-ft').textContent=(AG.fecha===agHoyIso()?'Hoy · ':'')+agFechaLarga(AG.fecha);fi.value=AG.fecha;
+  card.querySelector('.ag-hoy').style.visibility=AG.fecha===agHoyIso()?'hidden':'';
+  if(!AG.dia||AG.dia.fecha!==AG.fecha)grid.innerHTML='<div class="fac-vacio">Cargando agenda…</div>';
+  try{const d=await agCargarDia(AG.fecha);if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,citas:d.citas||[]};pintar();}
+  catch(e){if(t!==tok)return;grid.innerHTML=`<div class="fac-vacio">No se ha podido cargar la agenda. <button type="button" class="ag-reint">Reintentar</button></div>`;grid.querySelector('.ag-reint').onclick=cargar;}
+ }
+ function pintar(){
+  const C=(AG.dia&&AG.dia.citas)||[];
+  const presentes=[...new Set(C.map(c=>c.fisio).filter(f=>f&&!AG_NOFISIO.test(f)))];
+  const cols=[...new Set([...agEquipo(),...presentes])].sort((a,b)=>AG_FISIOS.indexOf(a)-AG_FISIOS.indexOf(b));
+  fs.innerHTML=`<option value="">Todos los fisios</option>`+cols.map(f=>`<option value="${escH(f)}">${escH(agNom(f))}</option>`).join('');
+  if(AG.fisio&&!cols.includes(AG.fisio))AG.fisio='';fs.value=AG.fisio;card.querySelector('.ag-selt').textContent=AG.fisio?agNom(AG.fisio):'Todos los fisios';
+  const ver=AG.fisio?[AG.fisio]:cols;
+  const act=C.filter(c=>ver.includes(c.fisio)&&c.pacienteId&&!agEsFuera(c.estado)).length,lib=C.filter(c=>ver.includes(c.fisio)&&agEsLibre(c.estado)).length;
+  card.querySelector('.ag-res').textContent=`${act} cita${act===1?'':'s'}${lib?` · ${lib} libre${lib===1?'':'s'}`:''}`;
+  const horas=new Set();for(let h=7;h<=20;h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
+  const HS=[...horas].sort();
+  const celda=(f,h)=>{const rs=C.filter(c=>c.fisio===f&&c.hora===h);
+   const prin=rs.filter(c=>!agEsFuera(c.estado)),fuera=rs.filter(c=>agEsFuera(c.estado));
+   let html=prin.map(c=>{
+    if(c.pacienteId){const cls=/REALIZADA/.test(c.estado)?'ok':/NO ASIST/.test(c.estado)?'mal':/REAGENDAR|DUDOSA/.test(c.estado)?'pen':'';
+     return `<button type="button" class="ag-c ${cls}" data-id="${c.id}"><b>${escH(c.paciente||'Paciente')}</b>${c.tipos.length?`<small>${escH(c.tipos.join(' · '))}</small>`:''}<span class="ag-ic">${c.confirmada?'<i class="ag-ok" title="Confirmada">✓</i>':''}${c.app?'<i class="ag-app" title="Reservada por la app">app</i>':''}${c.notas?'<i class="ag-not" title="Tiene notas">•••</i>':''}${cls?`<i class="ag-est">${escH(AG_EST.find(x=>c.estado.startsWith(x[0]))?.[1]||agNom(c.estado))}</i>`:''}</span></button>`;}
+    if(agEsLibre(c.estado))return `<button type="button" class="ag-c lib" data-id="${c.id}">Libre${/SIN BOMBA/.test(c.estado)?' · sin bomba':''}</button>`;
+    return `<button type="button" class="ag-c blq" data-id="${c.id}">${escH(agNom(c.estado.replace(/[^\wÁÉÍÓÚÑáéíóúñ\- ]/g,'').trim())||'Bloqueada')}${c.notas?` · ${escH(c.notas)}`:''}</button>`;}).join('');
+   html+=fuera.map(c=>`<button type="button" class="ag-x" data-id="${c.id}">${escH(c.paciente||'—')} · ${escH(agNom(c.estado))}</button>`).join('');
+   if(!prin.length)html=`<button type="button" class="ag-vac" data-f="${escH(f)}" data-h="${h}" aria-label="Dar cita">＋</button>`+html;
+   return html;};
+  grid.innerHTML=`<div class="ag-tb" style="--n:${ver.length}"><div class="ag-hd"><div class="ag-h0"></div>${ver.map(f=>`<div class="ag-hf">${escH(agNom(f))}</div>`).join('')}</div>${HS.map(h=>`<div class="ag-row${h===(AG.fecha===agHoyIso()?new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false}).format(new Date())+':00':'')?' now':''}"><div class="ag-h">${h}</div>${ver.map(f=>`<div class="ag-cell">${celda(f,h)}</div>`).join('')}</div>`).join('')}</div>`;
+  grid.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{const c=C.find(x=>x.id===b.dataset.id);if(!c)return;if(c.pacienteId)agAbrirCita(c,cargar);else if(agEsLibre(c.estado))agDarCita({fecha:AG.fecha,hora:c.hora,fisio:c.fisio,hueco:c},cargar);else agAbrirHueco(c,cargar);});
+  grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agDarCita({fecha:AG.fecha,hora:b.dataset.h,fisio:b.dataset.f},cargar));
+ }
+ card._recargar=cargar;cargar();
+}
+function agCab(fecha,hora,fisio){return `${segFecha(fecha)} · ${hora} · ${agNom(fisio)}`;}
+function agAbrirCita(c,onDone){
+ let est=(AG_EST.find(x=>c.estado.startsWith(x[0]))||[c.estado])[0],conf=c.confirmada;const est0=est;const futuro=AG.fecha>agHoyIso()||(AG.fecha===agHoyIso());
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(agCab(AG.fecha,c.hora,c.fisio))}</small><b><button type="button" class="ag-pac">${escH(c.paciente||'Paciente')} ›</button></b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Estado</div><div class="seg-rap ag-est">${AG_EST.map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
+  <label class="ag-lib" hidden><input type="checkbox" ${futuro?'checked':''}> Dejar la hora libre para otro paciente</label>
+  <button type="button" class="exp-seg ag-conf"><i></i>Confirmada</button>
+  <div class="hz-lab">Etiquetas <span>(separadas por comas)</span></div><input type="text" class="ag-in ag-tip" value="${escH(c.tipos.join(', '))}" placeholder="Ej.: PRIMERA VISITA, 3/10">
+  <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
+  <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="hz-ok">Guardar</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelector('.ag-pac').onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.paciente);};
+ const lib=m.querySelector('.ag-lib');
+ const pe=()=>{m.querySelectorAll('.ag-est button').forEach(b=>b.classList.toggle('on',b.dataset.v===est));lib.hidden=!(/CANCELADA|NO ASIST/.test(est)&&!/CANCELADA|NO ASIST/.test(c.estado));};pe();
+ m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{est=b.dataset.v;pe();});
+ const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
+ m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
+ m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Guardando…';
+  try{const r=await agPost('seg-agenda-editar',{id:c.id,estado:est!==est0?est:undefined,confirmada:conf!==c.confirmada?conf:undefined,notas:m.querySelector('.ag-not2').value,tipos:m.querySelector('.ag-tip').value.split(',').map(x=>x.trim()).filter(Boolean),liberar:!lib.hidden&&lib.querySelector('input').checked});
+   if(!r.ok)throw new Error(r.error||'No se ha podido guardar');toast('Guardado',true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
+  catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
+}
+function agHorasChips(box,fecha,fisio,horaSel,onPick){
+ box.innerHTML='<small class="fp-mu">Cargando horas…</small>';
+ agCargarDia(fecha).then(d=>{const C=(d&&d.citas)||[];const hs=[];for(let h=7;h<=20;h++)hs.push(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(!hs.includes(c.hora)&&/^\d{2}:\d{2}$/.test(c.hora))hs.push(c.hora);});hs.sort();
+  box.innerHTML=hs.map(h=>{const rs=C.filter(c=>c.fisio===fisio&&c.hora===h);const ocup=rs.some(c=>c.pacienteId&&!agEsFuera(c.estado)),blq=rs.some(c=>agEsBloq(c.estado)),lib=rs.some(c=>agEsLibre(c.estado));
+   return `<button type="button" data-h="${h}" class="${ocup?'oc':blq?'bq':lib?'li':''}${h===horaSel?' on':''}">${h}</button>`;}).join('');
+  box.querySelectorAll('button').forEach(b=>b.onclick=()=>{box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));onPick(b.dataset.h);});
+ }).catch(()=>{box.innerHTML='<small class="fp-mu">No se han podido cargar las horas</small>';});
+}
+function agMoverCita(c,onDone){
+ let fecha=AG.fecha,hora='',fisio=c.fisio;const futuro=AG.fecha>=agHoyIso();
+ const m=hzModal(`<div class="hz-top"><div><small>Cambiar día u hora · ahora ${escH(agCab(AG.fecha,c.hora,c.fisio))}</small><b>${escH(c.paciente||'Paciente')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Día</div><input type="date" class="ag-in ag-fd" value="${fecha}">
+  <div class="hz-lab">Fisio</div><select class="ag-in ag-ff">${[...new Set([...agEquipo(),c.fisio])].map(f=>`<option value="${escH(f)}"${f===fisio?' selected':''}>${escH(agNom(f))}</option>`).join('')}</select>
+  <div class="hz-lab">Hora <span>(verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div>
+  ${futuro?'<label class="ag-lib"><input type="checkbox" checked> Dejar la hora de ahora libre para otro paciente</label>':''}
+  <div class="hz-bts"><button type="button" class="hz-ok">Cambiar cita</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const hs=m.querySelector('.ag-hs'),fd=m.querySelector('.ag-fd'),ff=m.querySelector('.ag-ff');
+ const ch=()=>{hora='';agHorasChips(hs,fecha,fisio,'',h=>hora=h);};ch();
+ fd.onchange=()=>{fecha=fd.value;ch();};ff.onchange=()=>{fisio=ff.value;ch();};
+ const enviar=async(b,forzar)=>{if(!fecha||!hora){toast('Elige día y hora',false);return;}b.disabled=true;b.textContent='Cambiando…';
+  try{const lb=m.querySelector('.ag-lib input');const r=await agPost('seg-agenda-mover',{id:c.id,fecha,hora,fisio,liberar:!!(lb&&lb.checked),forzar});
+   if(r.conflicto){b.disabled=false;b.textContent='Cambiar cita';if(confirm(r.error+'. ¿Darla igualmente a la misma hora?'))enviar(b,true);return;}
+   if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Cita cambiada al ${segFecha(fecha)} a las ${hora}`,true);m.remove();if(fecha!==AG.fecha&&confirm('¿Ir a ese día en la agenda?'))AG.fecha=fecha;onDone&&onDone();}
+  catch(err){b.disabled=false;b.textContent='Cambiar cita';toast(err.message,false);}};
+ m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
+}
+function agDarCita({fecha,hora,fisio,hueco},onDone){
+ let pac=null;
+ const m=hzModal(`<div class="hz-top"><div><small>Dar cita · ${escH(agCab(fecha,hora,fisio))}</small><b>${hueco?'Hora libre':'Hora vacía'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Paciente</div><input type="text" class="ag-in ag-bus" placeholder="Busca por nombre, teléfono o email" autocomplete="off"><div class="ag-res2"></div>
+  <div class="hz-lab">Etiquetas <span>(opcional, separadas por comas)</span></div><input type="text" class="ag-in ag-tip" placeholder="Ej.: PRIMERA VISITA">
+  <div class="seg-rap ag-tq">${['PRIMERA VISITA','SESION FISIO','SUELO PÉLVICO'].map(t=>`<button type="button">${t}</button>`).join('')}</div>
+  <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n ag-not2" rows="2"></textarea>
+  <div class="hz-bts"><button type="button" class="hz-ok">Dar cita</button></div>
+  <div class="ag-otras">${hueco?`<button type="button" data-a="blq">Bloquear esta hora</button><button type="button" data-a="del">Quitar hueco libre</button>`:`<button type="button" data-a="lib">Dejar libre para la app</button><button type="button" data-a="blq">Bloquear esta hora</button>`}</div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const bus=m.querySelector('.ag-bus'),res=m.querySelector('.ag-res2'),tip=m.querySelector('.ag-tip');
+ m.querySelectorAll('.ag-tq button').forEach(b=>b.onclick=()=>{const a=tip.value.split(',').map(x=>x.trim()).filter(Boolean);if(!a.includes(b.textContent))a.push(b.textContent);tip.value=a.join(', ');});
+ const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+ bus.oninput=()=>{pac=null;const q=norm(bus.value).trim(),qd=q.replace(/\D/g,'');if(q.length<2){res.innerHTML='';return;}
+  const fl=(pacs||[]).filter(p=>norm(p.nombre).includes(q)||norm(p.email).includes(q)||(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd))).slice(0,6);
+  res.innerHTML=fl.map(p=>`<button type="button" class="ag-pi" data-id="${p.id}"><b>${escH(p.nombre)}</b><small>${escH(p.telefono||p.email||'')}</small></button>`).join('')+`<button type="button" class="ag-pi ag-np">＋ Nuevo paciente «${escH(bus.value.trim())}»</button>`;
+  res.querySelectorAll('.ag-pi[data-id]').forEach(b=>b.onclick=()=>{pac=(pacs||[]).find(p=>p.id===b.dataset.id);bus.value=pac.nombre;res.innerHTML=`<div class="ag-elegido">✓ ${escH(pac.nombre)}</div>`;});
+  res.querySelector('.ag-np').onclick=()=>{m.remove();abrirNuevoPaciente(bus.value.trim());toast('Crea el paciente y vuelve a la agenda para darle la cita',true);};};
+ if(window.innerWidth>=700)bus.focus();
+ const enviar=async(b,forzar)=>{if(!pac){toast('Elige el paciente',false);return;}b.disabled=true;b.textContent='Dando cita…';
+  try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,notas:m.querySelector('.ag-not2').value.trim(),tipos:tip.value.split(',').map(x=>x.trim()).filter(Boolean),forzar});
+   if(r.conflicto){b.disabled=false;b.textContent='Dar cita';if(confirm(r.error+'. ¿Darla igualmente?'))enviar(b,true);return;}
+   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`,true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
+  catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
+ m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
+ m.querySelectorAll('.ag-otras button').forEach(b=>b.onclick=async()=>{b.disabled=true;
+  try{let r;if(b.dataset.a==='lib')r=await agPost('seg-agenda-hueco',{fecha,hora,fisio,estado:'CITA LIBRE'});
+   else if(b.dataset.a==='blq')r=hueco?await agPost('seg-agenda-editar',{id:hueco.id,estado:'CITA BLOQUEADA'}):await agPost('seg-agenda-hueco',{fecha,hora,fisio,estado:'CITA BLOQUEADA'});
+   else r=await agPost('seg-agenda-borrar',{id:hueco.id});
+   if(!r.ok)throw new Error(r.error||'No se ha podido');toast('Hecho',true);m.remove();onDone&&onDone();}catch(err){b.disabled=false;toast(err.message,false);}});
+}
+function agAbrirHueco(c,onDone){
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(agCab(AG.fecha,c.hora,c.fisio))}</small><b>${escH(agNom(c.estado))}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  ${c.notas?`<p class="fp-mu">${escH(c.notas)}</p>`:''}
+  <div class="hz-bts ag-bts"><button type="button" class="fp-can" data-a="del">Quitar</button><button type="button" class="hz-ok" data-a="lib">Dejar libre</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const r=b.dataset.a==='lib'?await agPost('seg-agenda-editar',{id:c.id,estado:'CITA LIBRE'}):await agPost('seg-agenda-borrar',{id:c.id});if(!r.ok)throw new Error(r.error||'No se ha podido');toast('Hecho',true);m.remove();onDone&&onDone();}catch(err){b.disabled=false;toast(err.message,false);}});
+}
 function renderCallIn(wrap){
  cargarSegPac().then(()=>{try{pinta();}catch(e){}});
  const card=ce('div','card');
@@ -9108,11 +9300,12 @@ function cerrarLightbox(){
   if(document.querySelector('.pv.fp, .hz-modal'))return;
   let sec='';try{sec=sessionStorage.getItem('f365_panel_sec')||'';}catch(e){}
   if(!sec||['anam','prog','school'].includes(sec)||!TOPBAR[sec])return;
-  const bus=document.getElementById('pacBuscar'),q=bus?bus.value:'',y=window.scrollY;
+  const ma=document.querySelector('.main-area'),bus=document.getElementById('pacBuscar'),q=bus?bus.value:'',y=window.scrollY,ym=ma?ma.scrollTop:0;
   if(sec==='pac'&&bus){if(q&&bus.oninput)bus.oninput();return;}
+  if(sec==='agenda'){const a=document.querySelector('.ag');if(a&&a._recargar){a._recargar();return;}}
   showSection(sec);
   const b2=document.getElementById('pacBuscar');if(b2&&q){b2.value=q;b2.oninput&&b2.oninput();b2.blur();}
-  window.scrollTo(0,y);
+  window.scrollTo(0,y);if(ma)ma.scrollTop=ym;
  }
  window._refrescarVista=refrescarVista;
  document.addEventListener('visibilitychange',()=>{if(document.hidden){ocultaDesde=Date.now();return;}if(ocultaDesde&&Date.now()-ocultaDesde>3000)alVolver();ocultaDesde=0;});

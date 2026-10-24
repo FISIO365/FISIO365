@@ -196,6 +196,92 @@ module.exports = async function handler(req, res) {
     const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
     const hoyF = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     try {
+      // ── AGENDA: citas de un día, dar/mover/cancelar citas (tabla CITAS: cada fila es una hora de un fisio) ──
+      if (action.startsWith('seg-agenda')) {
+        const TIP = 'tbltoikmBZwHYQcpD', nmA = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
+        const okF = f => /^\d{4}-\d{2}-\d{2}$/.test(f || ''), okH = h => /^\d{1,2}:\d{2}$/.test(h || ''), okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
+        const hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : String(h || ''); };
+        const ACTIVA = e => /PENDIENTE|REALIZADA|DUDOSA|POR REAGENDAR/i.test(e || '');
+        const LIBRE = e => /^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(String(e || '').trim());
+        const CAMPOS_C = ['FECHA', 'HORA', 'ESTADO', 'PREF.', 'RELACIÓN - CITA', 'TIPO DE CITA', 'NOTAS', 'CONFIR', 'RESERVA'].map(f => 'fields[]=' + encodeURIComponent(f)).join('&');
+        const delDia = async (fecha) => todosT(CIT, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}'`)}&${CAMPOS_C}`);
+        const enHora = (rows, hora, fisio) => rows.filter(r => hh(r.fields['HORA']) === hh(hora) && String(nmA(r.fields['PREF.'])).toLowerCase() === String(fisio).toLowerCase());
+        const nueva = async (fecha, hora, fisio, extra) => { const d = await at(CIT, { method: 'POST', body: JSON.stringify({ records: [{ fields: Object.assign({ FECHA: fecha, HORA: hh(hora), 'PREF.': fisio }, extra) }], typecast: true }) }); if (d.error) throw new Error(d.error.message || 'No se ha podido crear'); return d.records[0]; };
+        const patch = async (id, fields) => { const d = await at(`${CIT}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields, typecast: true }) }); if (d.error) throw new Error(d.error.message || 'No se ha podido guardar'); return d; };
+        // Ocupar una hora: si hay un hueco libre en esa hora se usa esa fila; si no, se crea una nueva
+        const ocupar = async (fecha, hora, fisio, campos, forzar) => {
+          const rows = enHora(await delDia(fecha), hora, fisio);
+          const choca = rows.filter(r => ACTIVA(String(nmA(r.fields['ESTADO']))));
+          if (choca.length && !forzar) { const pids = choca.flatMap(r => r.fields['RELACIÓN - CITA'] || []); let n = ''; if (pids[0]) { const p0 = await at(`${PACIENTES}/${pids[0]}`); n = (p0.fields || {})['FULL NAME'] || ''; } return { conflicto: true, con: n }; }
+          const lib = rows.find(r => LIBRE(nmA(r.fields['ESTADO'])));
+          if (lib) { const tipos = campos['TIPO DE CITA']; const f2 = Object.assign({}, campos); if (tipos) f2['TIPO DE CITA'] = tipos; await patch(lib.id, f2); return { id: lib.id }; }
+          const r = await nueva(fecha, hora, fisio, campos); return { id: r.id };
+        };
+        const tiposDe = async (names) => { // nombres → ids de TIPO DE CITA (se crean si no existen)
+          const out = []; for (const n0 of (names || []).map(x => String(x).trim()).filter(Boolean).slice(0, 6)) {
+            const f = await at(`${TIP}?filterByFormula=${encodeURIComponent(`{Name}='${n0.replace(/'/g, "\\'")}'`)}&pageSize=1&fields[]=Name`);
+            if (f.records && f.records[0]) out.push(f.records[0].id); else { const c = await at(TIP, { method: 'POST', body: JSON.stringify({ records: [{ fields: { Name: n0 } }] }) }); if (c.records && c.records[0]) out.push(c.records[0].id); }
+          } return out; };
+
+        if (action === 'seg-agenda-dia') {
+          if (!okF(q.fecha)) return res.status(400).json({ ok: false, error: 'Fecha no válida' });
+          const rows = await delDia(q.fecha);
+          const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], tids = [...new Set(rows.flatMap(r => r.fields['TIPO DE CITA'] || []))];
+          const nomP = {}, nomT = {};
+          const porLotes = async (tabla, ids, campo, dest) => { for (let i = 0; i < ids.length; i += 50) { const t = ids.slice(i, i + 50); const rs = await todosT(tabla, `filterByFormula=${encodeURIComponent('OR(' + t.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent(campo)}`); rs.forEach(r => dest[r.id] = r.fields[campo] || ''); } };
+          await Promise.all([porLotes(PACIENTES, pids, 'FULL NAME', nomP), porLotes(TIP, tids, 'Name', nomT)]);
+          return res.status(200).json({ ok: true, hoy: hoyF, citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: !!F['RESERVA'] }; }) });
+        }
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'seg-agenda-dar') { // dar cita en una hora (o en un hueco libre concreto)
+          if (!okId(q.pacienteId) || !okF(q.fecha) || !okH(q.hora) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
+          const campos = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [q.pacienteId] };
+          if (q.notas) campos.NOTAS = String(q.notas).slice(0, 2000);
+          if (q.tipos && q.tipos.length) campos['TIPO DE CITA'] = await tiposDe(q.tipos);
+          const r = await ocupar(q.fecha, q.hora, q.fisio, campos, !!q.forzar);
+          if (r.conflicto) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${r.con || 'otro paciente'}` });
+          return res.status(200).json({ ok: true, id: r.id });
+        }
+        if (action === 'seg-agenda-hueco') { // dejar una hora libre (para la app), bloqueada, etc.
+          if (!okF(q.fecha) || !okH(q.hora) || !q.fisio || !/^(CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|FRANJA BLOQUEADA|DIA BLOQUEADO|CALL-IN)$/.test(q.estado || '')) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
+          const r = await nueva(q.fecha, q.hora, q.fisio, { ESTADO: q.estado, ...(q.notas ? { NOTAS: String(q.notas) } : {}) }); return res.status(200).json({ ok: true, id: r.id });
+        }
+        if (action === 'seg-agenda-editar') { // estado, confirmada, notas, etiquetas; opcional dejar el hueco libre
+          if (!okId(q.id)) return res.status(400).json({ ok: false });
+          const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false, error: 'Cita no encontrada' });
+          const f = {};
+          if (q.estado) { if (!/^(PENDIENTE|REALIZADA|NO ASISTIÓ|CANCELADA|POR REAGENDAR|CITA DUDOSA|REPROGRAMADA|CITA PERDIDA|CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|FRANJA BLOQUEADA|DIA BLOQUEADO|CALL-IN)$/.test(q.estado)) return res.status(400).json({ ok: false, error: 'Estado no válido' }); f.ESTADO = q.estado === 'PENDIENTE' ? 'PENDIENTE ' : q.estado; }
+          if (q.confirmada != null) f.CONFIR = q.confirmada ? ['CONFIRMADA'] : [];
+          if (q.notas != null) f.NOTAS = String(q.notas).slice(0, 2000);
+          if (Array.isArray(q.tipos)) f['TIPO DE CITA'] = await tiposDe(q.tipos);
+          if (q.liberar) { // el paciente queda en su fila (cancelada…) y se crea un hueco libre en esa hora
+            const c = cur.fields; await nueva(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), { ESTADO: 'CITA LIBRE' });
+          }
+          if (Object.keys(f).length) await patch(q.id, f);
+          return res.status(200).json({ ok: true });
+        }
+        if (action === 'seg-agenda-mover') { // cambiar día/hora/fisio: la original queda REPROGRAMADA y se da la nueva
+          if (!okId(q.id) || !okF(q.fecha) || !okH(q.hora) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
+          const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false, error: 'Cita no encontrada' });
+          const c = cur.fields, pid = (c['RELACIÓN - CITA'] || [])[0];
+          if (!pid) return res.status(400).json({ ok: false, error: 'Esta cita no tiene paciente' });
+          const campos = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pid] };
+          if (c['TIPO DE CITA']) campos['TIPO DE CITA'] = c['TIPO DE CITA'];
+          if (c.NOTAS) campos.NOTAS = c.NOTAS;
+          const r = await ocupar(q.fecha, q.hora, q.fisio, campos, !!q.forzar);
+          if (r.conflicto) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${r.con || 'otro paciente'}` });
+          await patch(q.id, { ESTADO: 'REPROGRAMADA' });
+          if (q.liberar) await nueva(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), { ESTADO: 'CITA LIBRE' });
+          return res.status(200).json({ ok: true, id: r.id });
+        }
+        if (action === 'seg-agenda-borrar') { // solo huecos (libres/bloqueados), nunca citas con paciente
+          if (!okId(q.id)) return res.status(400).json({ ok: false });
+          const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false });
+          if ((cur.fields['RELACIÓN - CITA'] || []).length) return res.status(400).json({ ok: false, error: 'Las citas con paciente no se borran: cámbiala a Cancelada' });
+          const d = await at(`${CIT}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error });
+        }
+        return res.status(400).json({ ok: false, error: 'Acción no válida' });
+      }
       if (action === 'seg-lista') {
         const pendP = todosT(SEG, `filterByFormula=${encodeURIComponent('NOT({HECHO})')}&sort[0][field]=FECHA DE LLAMADA&sort[0][direction]=asc`);
         const prevP = todosT(LLA, `filterByFormula=${encodeURIComponent(`AND({SEG ID}!='',IS_AFTER({FECHA},DATEADD(TODAY(),-180,'days')))`)}&sort[0][field]=FECHA&sort[0][direction]=desc`).catch(() => []);
