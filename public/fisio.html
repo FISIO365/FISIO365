@@ -5222,13 +5222,11 @@ const ST_MET=[
  ['sesiones','Sesiones hechas',s=>s.sesiones,'n'],
  ['nuevos','Pacientes nuevos',s=>s.nuevos,'n'],
  ['conv','Conversión',s=>s.vinieron?Math.round(s.reagendaron*100/s.vinieron):null,'%'],
- ['bono','Pacientes con bono',s=>s.atendidos?Math.round(s.conBono*100/s.atendidos):null,'%'],
  ['ingresos','Ingresos',s=>s.ingresos,'€'],
  ['novino','No vinieron',s=>s.noVino,'n',true],
  ['canc','Canceladas',s=>s.canceladas,'n',true],
  ['recup','Citas recuperadas',s=>s.recuperadas,'n'],
- ['resenas','Reseñas Google',s=>s.resenas,'n'],
- ['quejas','Quejas',s=>s.quejas,'n',true]];
+ ['resenas','Reseñas Google',s=>s.resenas,'n']];
 const stFmt=(v,t)=>v==null?'—':t==='€'?Math.round(v).toLocaleString('es-ES')+' €':t==='%'?v+'%':String(v);
 const stSemTxt=f=>{const a=new Date(f+'T12:00:00'),b=new Date(f+'T12:00:00');b.setDate(b.getDate()+6);const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return `${a.getDate()}${a.getMonth()!==b.getMonth()?' '+M[a.getMonth()]:''} – ${b.getDate()} ${M[b.getMonth()]}`;};
 function renderStats(wrap){
@@ -5250,7 +5248,7 @@ function renderStats(wrap){
   card.querySelectorAll('.ag-nv')[0].style.visibility=i>0?'':'hidden';card.querySelectorAll('.ag-nv')[1].style.visibility=i<L.length-1?'':'hidden';
   const kpis=ST_MET.map(([k,t,fn,ty,malSiSube])=>{const v=fn(S),pv=P?fn(P):null;let dlt='';
    if(v!=null&&pv!=null&&v!==pv){const up=v>pv,bien=malSiSube?!up:up;const diff=ty==='%'?Math.abs(v-pv)+' pts':ty==='€'?Math.round(Math.abs(v-pv)).toLocaleString('es-ES')+' €':Math.abs(v-pv);dlt=`<em class="${bien?'ok':'mal'}">${up?'▲':'▼'} ${diff}</em>`;}
-   const ed=/ingresos|resenas|quejas/.test(k);
+   const ed=/ingresos|resenas/.test(k);
    return `<button type="button" class="st-k${ST.met===k?' on':''}" data-k="${k}"><span>${t}${ed?' <i class="st-ed">✎</i>':''}</span><b>${stFmt(v,ty)}</b>${dlt||'<em>&nbsp;</em>'}</button>`;}).join('');
   const [mk,mt,mfn,mty]=ST_MET.find(m=>m[0]===ST.met);
   const vals=L.map(mfn),max=Math.max(1,...vals.filter(v=>v!=null));
@@ -5263,11 +5261,11 @@ function renderStats(wrap){
    <div class="st-2">
     <div class="st-box"><div class="st-bt"><b>Pacientes nuevos que vinieron</b><small>y si volvieron a reservar</small></div>
      ${S.vinieron?`<div class="st-tb"><div class="st-tr st-th"><span>Fisio</span><span>Vinieron</span><span>Repiten</span><span>%</span></div>${fis.map(([f,x])=>`<div class="st-tr"><span>${escH(agNom(f))}</span><span>${x.vinieron}</span><span>${x.reagendaron}</span><span><b>${Math.round(x.reagendaron*100/x.vinieron)}%</b></span></div>`).join('')}<div class="st-tr st-tt"><span>Total</span><span>${S.vinieron}</span><span>${S.reagendaron}</span><span><b>${Math.round(S.reagendaron*100/S.vinieron)}%</b></span></div></div>
-     <p class="st-p">De los que repiten: <b>${S.pack}</b> con bono · <b>${S.suelta}</b> sesión suelta</p>`:`<p class="st-p">${S.nuevos?`${S.nuevos} fichas nuevas, pero ninguna ha venido aún`:'Sin pacientes nuevos esta semana'}</p>`}</div>
+`:`<p class="st-p">${S.nuevos?`${S.nuevos} fichas nuevas, pero ninguna ha venido aún`:'Sin pacientes nuevos esta semana'}</p>`}</div>
     <div class="st-box"><div class="st-bt"><b>Sesiones por día</b><small>${S.atendidos} pacientes atendidos</small></div><div class="st-dias">${dias.map(([n,v])=>`<div><i style="height:${Math.round(v/mxD*90)}px"></i><b>${v}</b><small>${n}</small></div>`).join('')}</div></div>
    </div>
    <div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
-    <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b> · Reseñas Google: <b>${stFmt(S.resenas)}</b> · Quejas: <b>${stFmt(S.quejas)}</b>${S.resenasPedidas?` · Reseñas pedidas en llamadas: <b>${S.resenasPedidas}</b>`:''}</p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`;
+    <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b> · Reseñas Google: <b>${stFmt(S.resenas)}</b>${S.resenasPedidas?` · Reseñas pedidas en llamadas: <b>${S.resenasPedidas}</b>`:''}</p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`;
   g.querySelectorAll('.st-k').forEach(b=>b.onclick=()=>{ST.met=b.dataset.k;if(b.querySelector('.st-ed')&&ST.met===b.dataset.k&&b.classList.contains('on'))editar();else pintar();});
   g.querySelectorAll('.st-bar').forEach(b=>b.onclick=()=>{ST.sem=b.dataset.s;pintar();});
   g.querySelector('.st-edit').onclick=editar;
@@ -5276,13 +5274,13 @@ function renderStats(wrap){
  function editar(){const S=ST.d.semanas.find(s=>s.semana===ST.sem);
   const m=hzModal(`<div class="hz-top"><div><small>Semana ${escH(stSemTxt(S.semana))}</small><b>Datos a mano</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <div class="hz-lab">Ingresos de la semana (€)</div><input type="number" inputmode="decimal" step="0.01" class="ag-in st-i" value="${S.ingresos??''}">
-   <div class="ag-2c" style="grid-template-columns:1fr 1fr"><div><div class="hz-lab">Reseñas Google</div><input type="number" inputmode="numeric" class="ag-in st-r" value="${S.resenas??''}"></div><div><div class="hz-lab">Quejas</div><input type="number" inputmode="numeric" class="ag-in st-q" value="${S.quejas??''}"></div></div>
+   <div class="hz-lab">Reseñas Google</div><input type="number" inputmode="numeric" class="ag-in st-r" value="${S.resenas??''}">
    <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n st-n" rows="2">${escH(S.notas||'')}</textarea>
    <div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
   m.querySelector('.hz-x').onclick=()=>m.remove();
   m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Guardando…';
-   try{const r=await agPost('seg-estadisticas-guardar',{semana:S.semana,ingresos:m.querySelector('.st-i').value,resenas:m.querySelector('.st-r').value,quejas:m.querySelector('.st-q').value,notas:m.querySelector('.st-n').value});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
-    S.ingresos=m.querySelector('.st-i').value===''?null:+m.querySelector('.st-i').value;S.resenas=m.querySelector('.st-r').value===''?null:+m.querySelector('.st-r').value;S.quejas=m.querySelector('.st-q').value===''?null:+m.querySelector('.st-q').value;S.notas=m.querySelector('.st-n').value;
+   try{const r=await agPost('seg-estadisticas-guardar',{semana:S.semana,ingresos:m.querySelector('.st-i').value,resenas:m.querySelector('.st-r').value,notas:m.querySelector('.st-n').value});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
+    S.ingresos=m.querySelector('.st-i').value===''?null:+m.querySelector('.st-i').value;S.resenas=m.querySelector('.st-r').value===''?null:+m.querySelector('.st-r').value;S.notas=m.querySelector('.st-n').value;
     toast('Guardado',true);m.remove();pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};}
  card._recargar=()=>cargar(true);
  if(ST.d)pintar();cargar();
