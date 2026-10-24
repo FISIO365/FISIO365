@@ -223,6 +223,12 @@ module.exports = async function handler(req, res) {
             if (f.records && f.records[0]) out.push(f.records[0].id); else { const c = await at(TIP, { method: 'POST', body: JSON.stringify({ records: [{ fields: { Name: n0 } }] }) }); if (c.records && c.records[0]) out.push(c.records[0].id); }
           } return out; };
 
+        if (action === 'seg-agenda-tipos') { // etiquetas de tipo de cita, las más usadas primero
+          const rs = await todosT(TIP, `fields[]=Name&fields[]=CITAS`);
+          const tipos = rs.map(r => ({ n: String(r.fields.Name || '').trim(), u: (r.fields.CITAS || []).length })).filter(t => t.n && t.n.length <= 30 && /[A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/.test(t.n) && !/^[.0!]+$/.test(t.n));
+          const vist = {}; tipos.forEach(t => { const k = t.n.toUpperCase(); vist[k] = vist[k] ? { n: vist[k].n, u: vist[k].u + t.u } : t; });
+          return res.status(200).json({ ok: true, tipos: Object.values(vist).sort((a, b) => b.u - a.u).slice(0, 400).map(t => t.n) });
+        }
         if (action === 'seg-agenda-dia') {
           if (!okF(q.fecha)) return res.status(400).json({ ok: false, error: 'Fecha no válida' });
           const rows = await delDia(q.fecha);

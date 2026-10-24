@@ -887,6 +887,19 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-bt h3{white-space:nowrap}.fp-bt .fp-edbts{flex-wrap:nowrap}.fp-bt .fp-edbts button,.fp-bt>.fp-ed{white-space:nowrap}
 
 /* Agenda */
+.ag-badge{font-style:normal;align-self:flex-start;font-size:10.5px;font-weight:700;border-radius:99px;padding:2px 8px;margin-bottom:2px;white-space:nowrap}
+.ag-badge.ok{background:#d9f0e0;color:#16803c}.ag-badge.mal{background:#fbdcd7;color:#b42318}.ag-badge.can{background:#fbdcd7;color:#b42318}.ag-badge.rep{background:#e3e8f1;color:#3b5578}.ag-badge.pen{background:#ffe6c4;color:#b45309}.ag-badge.dud{background:#fff1b8;color:#8a6d00}
+.ag-c.dud{border-left-color:#d4a800;background:#fffbea}
+.ag-tgs{display:flex;flex-wrap:wrap;gap:3px}.ag-tgs i{font-style:normal;font-size:10.5px;font-weight:600;color:#5f554e;background:#efe9e3;border-radius:6px;padding:1px 6px}
+.ag-x{display:flex!important;align-items:center;gap:6px;text-decoration:none!important;color:#7d6a60!important;font-size:11.5px!important;background:#f7f3ef!important;border-radius:8px!important;padding:4px 6px!important;opacity:.95}
+.ag-x span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ag-x .ag-badge{margin:0}
+.ag-x.can span,.ag-x.mal span{text-decoration:line-through}
+.ag-tags .ag-tw{display:flex;flex-wrap:wrap;gap:5px;align-items:center;border:1.5px solid var(--border);border-radius:12px;padding:6px 8px;background:#fff}
+.ag-tl{display:contents}.ag-tag{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;background:#fdeee4;color:#c2552e;border-radius:99px;padding:4px 6px 4px 10px}
+.ag-tag button{border:none;background:none;color:#c2552e;font-size:15px;line-height:1;cursor:pointer;padding:0 2px}
+.ag-ti{flex:1;min-width:110px;border:none;outline:none;font-family:var(--font);font-size:15px;padding:4px 2px;background:none}
+.ag-sug{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.ag-sug button{-webkit-text-fill-color:currentColor;font-family:var(--font);font-size:12px;border:1.5px solid var(--border);background:#fff;border-radius:99px;padding:5px 10px;cursor:pointer;color:#1a1a1a}.ag-sug .ag-nueva{border-color:#c2552e;color:#c2552e;font-weight:600}
+
 .ag-abrir{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:#c2552e;color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}
 .ag-ops{display:flex;flex-direction:column;gap:8px;margin-top:12px}.ag-ops button{font-family:var(--font);text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:14px;padding:11px 14px;cursor:pointer;display:flex;flex-direction:column;gap:2px}.ag-ops button b{font-size:14.5px}.ag-ops button small{font-size:12px;color:#7d6a60}.ag-ops button:first-child{border-color:#c2552e;background:#fdf3ec}
 .ag-2c{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.ag-prev{font-size:12.5px;color:#7d6a60;margin-top:10px;line-height:1.45}
@@ -4851,6 +4864,7 @@ const AG_FISIOS=['Ramiro','Jonathan','Sara','Paola','Juan','ELENA'];
 const AG_NOFISIO=/^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES|NORA)$/i;
 const AG_EST=[['PENDIENTE','Pendiente'],['REALIZADA','Realizada'],['NO ASISTIÓ','No asistió'],['CANCELADA','Cancelada'],['POR REAGENDAR','Por reagendar'],['CITA DUDOSA','Dudosa']];
 const agNom=f=>{f=String(f||'');return f.charAt(0).toUpperCase()+f.slice(1).toLowerCase();};
+const agEstInfo=e=>/REALIZADA/.test(e)?{c:'ok',t:'Hecha',i:'✓'}:/NO ASIST/.test(e)?{c:'mal',t:'No vino',i:'✕'}:/CANCELADA/.test(e)?{c:'can',t:'Cancelada',i:'✕'}:/REPROGRAMADA/.test(e)?{c:'rep',t:'Reprogramada',i:'↻'}:/CITA PERDIDA/.test(e)?{c:'mal',t:'Perdida',i:'✕'}:/REAGENDAR/.test(e)?{c:'pen',t:'Por reagendar',i:'!'}:/DUDOSA/.test(e)?{c:'dud',t:'Dudosa',i:'?'}:{c:'',t:'',i:''};
 const agEsLibre=e=>/^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(e);
 const agEsFuera=e=>/CANCELADA|REPROGRAMADA|CITA PERDIDA/.test(e);
 const agEsBloq=e=>/BLOQUEAD|COMIDA|VIDEOS|CALL-IN|^pen$|^09:00$/i.test(e);
@@ -4898,11 +4912,11 @@ function renderAgenda(wrap){
   const celda=(f,h)=>{const rs=C.filter(c=>c.fisio===f&&c.hora===h);
    const prin=rs.filter(c=>!agEsFuera(c.estado)),fuera=rs.filter(c=>agEsFuera(c.estado));
    let html=prin.map(c=>{
-    if(c.pacienteId){const cls=/REALIZADA/.test(c.estado)?'ok':/NO ASIST/.test(c.estado)?'mal':/REAGENDAR|DUDOSA/.test(c.estado)?'pen':'';
-     return `<button type="button" class="ag-c ${cls}" data-id="${c.id}"><b>${escH(c.paciente||'Paciente')}</b>${c.tipos.length?`<small>${escH(c.tipos.join(' · '))}</small>`:''}<span class="ag-ic">${c.confirmada?'<i class="ag-ok" title="Confirmada">✓</i>':''}${c.app?'<i class="ag-app" title="Reservada por la app">app</i>':''}${c.notas?'<i class="ag-not" title="Tiene notas">•••</i>':''}${cls?`<i class="ag-est">${escH(AG_EST.find(x=>c.estado.startsWith(x[0]))?.[1]||agNom(c.estado))}</i>`:''}</span></button>`;}
+    if(c.pacienteId){const e=agEstInfo(c.estado);
+     return `<button type="button" class="ag-c ${e.c}" data-id="${c.id}">${e.t?`<em class="ag-badge ${e.c}">${e.i} ${e.t}</em>`:''}<b>${escH(c.paciente||'Paciente')}</b>${c.tipos.length?`<span class="ag-tgs">${c.tipos.map(t=>`<i>${escH(t)}</i>`).join('')}</span>`:''}<span class="ag-ic">${c.confirmada?'<i class="ag-ok" title="Confirmada">✓ Confirmada</i>':''}${c.app?'<i class="ag-app" title="Reservada por la app">App</i>':''}${c.notas?'<i class="ag-not" title="Tiene notas">Nota</i>':''}</span></button>`;}
     if(agEsLibre(c.estado))return `<button type="button" class="ag-c lib" data-id="${c.id}">Libre${/SIN BOMBA/.test(c.estado)?' · sin bomba':''}</button>`;
     return `<button type="button" class="ag-c blq" data-id="${c.id}">${escH(agNom(c.estado.replace(/[^\wÁÉÍÓÚÑáéíóúñ\- ]/g,'').trim())||'Bloqueada')}${c.notas?` · ${escH(c.notas)}`:''}</button>`;}).join('');
-   html+=fuera.map(c=>`<button type="button" class="ag-x" data-id="${c.id}">${escH(c.paciente||'—')} · ${escH(agNom(c.estado))}</button>`).join('');
+   html+=fuera.map(c=>{const e=agEstInfo(c.estado);return `<button type="button" class="ag-x ${e.c}" data-id="${c.id}"><em class="ag-badge ${e.c}">${e.i} ${e.t}</em><span>${escH(c.paciente||'—')}</span></button>`;}).join('');
    if(!prin.length)html=`<button type="button" class="ag-vac" data-f="${escH(f)}" data-h="${h}" aria-label="Dar cita">＋</button>`+html;
    return html;};
   grid.innerHTML=`<div class="ag-tb" style="--n:${ver.length}"><div class="ag-hd"><div class="ag-h0"></div>${ver.map(f=>`<div class="ag-hf">${escH(agNom(f))}</div>`).join('')}</div>${HS.map(h=>`<div class="ag-row${h===(AG.fecha===agHoyIso()?new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false}).format(new Date())+':00':'')?' now':''}"><div class="ag-h">${h}</div>${ver.map(f=>`<div class="ag-cell">${celda(f,h)}</div>`).join('')}</div>`).join('')}</div>`;
@@ -4958,6 +4972,26 @@ function agAbrirHuecos({fecha,fisio},onDone){
    toast(`${r.creadas} hueco${r.creadas===1?'':'s'} abierto${r.creadas===1?'':'s'}${r.saltadas?` · ${r.saltadas} ya tenían algo`:''}`,true);m.remove();onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Abrir huecos';toast(err.message,false);}};
 }
+
+// Etiquetas como pestañas: escribes y te sugiere las que ya existen (las más usadas primero)
+let AG_TIPOS=null;
+function agTipos(){if(AG_TIPOS)return Promise.resolve(AG_TIPOS);return fetch(`/api/schedule?action=seg-agenda-tipos&pwd=${encodeURIComponent(apiPwd)}`).then(r=>r.json()).then(d=>AG_TIPOS=(d&&d.tipos)||[]).catch(()=>[]);}
+function agEtiquetas(box,iniciales){
+ let sel=[...(iniciales||[])];
+ box.classList.add('ag-tags');
+ box.innerHTML='<div class="ag-tw"><span class="ag-tl"></span><input type="text" class="ag-ti" placeholder="Escribe una etiqueta…" autocomplete="off" enterkeyhint="done"></div><div class="ag-sug"></div>';
+ const tl=box.querySelector('.ag-tl'),ti=box.querySelector('.ag-ti'),sg=box.querySelector('.ag-sug');
+ const norm=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().trim();
+ const pinta=()=>{tl.innerHTML=sel.map((t,i)=>`<span class="ag-tag">${escH(t)}<button type="button" data-i="${i}" aria-label="Quitar">×</button></span>`).join('');tl.querySelectorAll('button').forEach(b=>b.onclick=()=>{sel.splice(+b.dataset.i,1);pinta();sug();});};
+ const add=t=>{t=String(t||'').trim();if(!t)return;if(!sel.some(x=>norm(x)===norm(t)))sel.push(t);ti.value='';pinta();sug();ti.focus();};
+ const sug=()=>{const q=norm(ti.value),L=(AG_TIPOS||[]).filter(t=>!sel.some(x=>norm(x)===norm(t)));
+  let r=q?[...L.filter(t=>norm(t).startsWith(q)),...L.filter(t=>!norm(t).startsWith(q)&&norm(t).includes(q))]:L;r=r.slice(0,q?8:10);
+  sg.innerHTML=r.map(t=>`<button type="button">${escH(t)}</button>`).join('')+(q&&!r.some(t=>norm(t)===q)?`<button type="button" class="ag-nueva">＋ «${escH(ti.value.trim())}»</button>`:'');
+  sg.querySelectorAll('button').forEach(b=>b.onclick=()=>add(b.classList.contains('ag-nueva')?ti.value:b.textContent));};
+ ti.oninput=sug;ti.onkeydown=e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();const f=sg.querySelector('button');add(f&&!f.classList.contains('ag-nueva')&&ti.value.trim()?f.textContent:ti.value);}else if(e.key==='Backspace'&&!ti.value&&sel.length){sel.pop();pinta();sug();}};
+ pinta();agTipos().then(sug);
+ box.get=()=>{const v=ti.value.trim();return v&&!sel.some(x=>norm(x)===norm(v))?[...sel,v]:sel.slice();};
+ return box;}
 function agCab(fecha,hora,fisio){return `${segFecha(fecha)} · ${hora} · ${agNom(fisio)}`;}
 function agAbrirCita(c,onDone){
  let est=(AG_EST.find(x=>c.estado.startsWith(x[0]))||[c.estado])[0],conf=c.confirmada;const est0=est;const futuro=AG.fecha>agHoyIso()||(AG.fecha===agHoyIso());
@@ -4965,10 +4999,11 @@ function agAbrirCita(c,onDone){
   <div class="hz-lab">Estado</div><div class="seg-rap ag-est">${AG_EST.map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
   <label class="ag-lib" hidden><input type="checkbox" ${futuro?'checked':''}> Dejar la hora libre para otro paciente</label>
   <button type="button" class="exp-seg ag-conf"><i></i>Confirmada</button>
-  <div class="hz-lab">Etiquetas <span>(separadas por comas)</span></div><input type="text" class="ag-in ag-tip" value="${escH(c.tipos.join(', '))}" placeholder="Ej.: PRIMERA VISITA, 3/10">
+  <div class="hz-lab">Etiquetas</div><div class="ag-tip"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
   <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="hz-ok">Guardar</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
+ const tg=agEtiquetas(m.querySelector('.ag-tip'),c.tipos);
  m.querySelector('.ag-pac').onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.paciente);};
  const lib=m.querySelector('.ag-lib');
  const pe=()=>{m.querySelectorAll('.ag-est button').forEach(b=>b.classList.toggle('on',b.dataset.v===est));lib.hidden=!(/CANCELADA|NO ASIST/.test(est)&&!/CANCELADA|NO ASIST/.test(c.estado));};pe();
@@ -4976,7 +5011,7 @@ function agAbrirCita(c,onDone){
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Guardando…';
-  try{const r=await agPost('seg-agenda-editar',{id:c.id,estado:est!==est0?est:undefined,confirmada:conf!==c.confirmada?conf:undefined,notas:m.querySelector('.ag-not2').value,tipos:m.querySelector('.ag-tip').value.split(',').map(x=>x.trim()).filter(Boolean),liberar:!lib.hidden&&lib.querySelector('input').checked});
+  try{const r=await agPost('seg-agenda-editar',{id:c.id,estado:est!==est0?est:undefined,confirmada:conf!==c.confirmada?conf:undefined,notas:m.querySelector('.ag-not2').value,tipos:tg.get(),liberar:!lib.hidden&&lib.querySelector('input').checked});
    if(!r.ok)throw new Error(r.error||'No se ha podido guardar');toast('Guardado',true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
 }
@@ -5011,14 +5046,12 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
  let pac=null;
  const m=hzModal(`<div class="hz-top"><div><small>Dar cita · ${escH(agCab(fecha,hora,fisio))}</small><b>${hueco?'Hora libre':'Hora vacía'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Paciente</div><input type="text" class="ag-in ag-bus" placeholder="Busca por nombre, teléfono o email" autocomplete="off"><div class="ag-res2"></div>
-  <div class="hz-lab">Etiquetas <span>(opcional, separadas por comas)</span></div><input type="text" class="ag-in ag-tip" placeholder="Ej.: PRIMERA VISITA">
-  <div class="seg-rap ag-tq">${['PRIMERA VISITA','SESION FISIO','SUELO PÉLVICO'].map(t=>`<button type="button">${t}</button>`).join('')}</div>
+  <div class="hz-lab">Etiquetas <span>(opcional)</span></div><div class="ag-tip"></div>
   <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n ag-not2" rows="2"></textarea>
   <div class="hz-bts"><button type="button" class="hz-ok">Dar cita</button></div>
   <div class="ag-otras">${hueco?`<button type="button" data-a="blq">Bloquear esta hora</button><button type="button" data-a="del">Quitar hueco libre</button>`:`<button type="button" data-a="lib">Dejar libre para la app</button><button type="button" data-a="blq">Bloquear esta hora</button>`}</div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
- const bus=m.querySelector('.ag-bus'),res=m.querySelector('.ag-res2'),tip=m.querySelector('.ag-tip');
- m.querySelectorAll('.ag-tq button').forEach(b=>b.onclick=()=>{const a=tip.value.split(',').map(x=>x.trim()).filter(Boolean);if(!a.includes(b.textContent))a.push(b.textContent);tip.value=a.join(', ');});
+ const bus=m.querySelector('.ag-bus'),res=m.querySelector('.ag-res2'),tg=agEtiquetas(m.querySelector('.ag-tip'),[]);
  const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
  bus.oninput=()=>{pac=null;const q=norm(bus.value).trim(),qd=q.replace(/\D/g,'');if(q.length<2){res.innerHTML='';return;}
   const fl=(pacs||[]).filter(p=>norm(p.nombre).includes(q)||norm(p.email).includes(q)||(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd))).slice(0,6);
@@ -5027,7 +5060,7 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
   res.querySelector('.ag-np').onclick=()=>{m.remove();abrirNuevoPaciente(bus.value.trim());toast('Crea el paciente y vuelve a la agenda para darle la cita',true);};};
  if(window.innerWidth>=700)bus.focus();
  const enviar=async(b,forzar)=>{if(!pac){toast('Elige el paciente',false);return;}b.disabled=true;b.textContent='Dando cita…';
-  try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,notas:m.querySelector('.ag-not2').value.trim(),tipos:tip.value.split(',').map(x=>x.trim()).filter(Boolean),forzar});
+  try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,notas:m.querySelector('.ag-not2').value.trim(),tipos:tg.get(),forzar});
    if(r.conflicto){b.disabled=false;b.textContent='Dar cita';if(confirm(r.error+'. ¿Darla igualmente?'))enviar(b,true);return;}
    if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`,true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
