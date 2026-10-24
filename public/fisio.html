@@ -4742,7 +4742,7 @@ async function marcarExplicado(id,nota){try{await fetch('/api/schedule?action=no
 function abrirExplicar(p,onSave){
  const [y,mm,dd]=String(p.ultima).split('-');
  const m=hzModal(`<div class="hz-top"><div><small>Última sesión ${+dd}/${+mm}</small><b>${escH(p.nombre)}</b></div><button type="button" class="hz-x">✕</button></div>
-  <div class="hz-lab">¿Por qué no ha reagendado?</div><textarea class="seg-n" rows="3" placeholder="Ej.: le di el alta, se va de viaje, le cuesta pagar…"></textarea>
+  <div class="hz-lab">¿Por qué no ha reagendado?</div><textarea class="seg-n" rows="3" placeholder="Ej.: le di el alta, se va de viaje, le cuesta pagar…">${escH(p.nota||'')}</textarea>
   <div class="hz-lab">Estado del paciente</div><div class="est-slot"></div>
   ${SEG_PAC[p.id]?`<div class="exp-seg ya">✓ Ya está en seguimiento</div>`:`<button type="button" class="exp-seg"><i></i>Añadir también a seguimiento</button>`}
   <div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
@@ -4773,7 +4773,7 @@ async function datosTareasTodas(){
  ((r&&r.fisios)||[]).forEach(f=>(f.lista||[]).filter(p=>!(p.nota&&p.notaFecha>=p.ultima)).forEach(p=>{
   // Plazo para explicarlo: 2 días después de su última sesión
   const lim=new Date(p.ultima+'T12:00:00');lim.setDate(lim.getDate()+2);
-  items.push({tipo:'explicar',fecha:lim.toISOString().slice(0,10),nombre:p.nombre,quien:f.fisio,detalle:'Última sesión '+segFecha(p.ultima)+' y sin próxima cita',p});}));
+  items.push({tipo:'explicar',fecha:lim.toISOString().slice(0,10),nombre:p.nombre,quien:f.fisio,detalle:'Última sesión '+segFecha(p.ultima)+' y sin próxima cita'+(p.nota?' · Motivo: '+p.nota:''),p});}));
  items.sort((a,b)=>a.fecha.localeCompare(b.fecha));
  return {items,hoy};
 }
