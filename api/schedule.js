@@ -233,7 +233,7 @@ module.exports = async function handler(req, res) {
           let rows, limitado = false;
           if (okF(q.fecha)) rows = await delDia(q.fecha);
           else { // rango de fechas, un paciente y/o un fisio (vista de lista)
-            const cond = ["{FECHA}!=''"];
+            const cond = ['{FECHA}'];
             if (okF(q.desde)) cond.push(`NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.desde}','YYYY-MM-DD')))`);
             if (okF(q.hasta)) cond.push(`NOT(IS_AFTER({FECHA},DATETIME_PARSE('${q.hasta}','YYYY-MM-DD')))`);
             if (okId(q.pacienteId)) cond.push(`FIND('${q.pacienteId}',ARRAYJOIN({PacienteRec}))`);
