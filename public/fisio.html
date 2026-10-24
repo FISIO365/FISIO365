@@ -4800,7 +4800,7 @@ async function renderTareas(wrap){
 let tarFiltro='';
 async function listaTareas(cont){
  const box=ce('div','tar');box.innerHTML='<div class="fac-vacio">Cargando…</div>';cont.appendChild(box);
- const recargar=()=>{cont.innerHTML='';listaTareas(cont);contarTareas();};
+ const recargar=()=>{_dtC.t=0;_dtC.d=null;cont.innerHTML='';listaTareas(cont);contarTareas();};
  let d;try{d=await datosTareasTodas();}catch(e){box.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
  // Las llamadas viven en su pestaña «Llamadas»: aquí solo lo que hay que hacer y no es llamar
  pintarNumPend(d);
@@ -4920,7 +4920,13 @@ let SEG_PAC={};
 function setSegPac(sg){SEG_PAC={};((sg&&sg.pendientes)||[]).forEach(x=>{if(x.pacienteId&&(!SEG_PAC[x.pacienteId]||x.fecha<SEG_PAC[x.pacienteId].fecha))SEG_PAC[x.pacienteId]={fecha:x.fecha,quien:deQuienSeg(x)};});}
 async function cargarSegPac(){try{setSegPac(await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`)).json());}catch(e){}}
 const segYaTxt=id=>{const s=SEG_PAC[id];return s?`Ya está en seguimiento${s.fecha?': llamar el '+segFecha(s.fecha):''}${s.quien?' · '+s.quien:''}`:'';};
-async function datosTareasTodas(){
+// Caché de 60 s: Tareas, Llamadas y el número de arriba piden lo mismo; así no se repite la carga
+let _dtC={t:0,d:null,p:null};
+function datosTareasTodas(forzar){
+ if(!forzar&&_dtC.d&&Date.now()-_dtC.t<60000)return Promise.resolve(_dtC.d);
+ if(!forzar&&_dtC.p)return _dtC.p;
+ const p=_datosTareasTodas().then(d=>{_dtC={t:Date.now(),d,p:null};return d;}).catch(e=>{_dtC.p=null;throw e;});_dtC.p=p;return p;}
+async function _datosTareasTodas(){
  const iso=n=>isoMadrid(new Date(Date.now()+n*864e5));
  const [r,sg,tq]=await Promise.all([
   fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${iso(-30)}&hasta=${iso(-1)}`).then(x=>x.json()).catch(()=>({})),
@@ -5031,7 +5037,7 @@ const SEG_IC_TEL='<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 1
 function notasExpandibles(box){box.querySelectorAll('.tk-nota').forEach(n=>{if(n.dataset.ok)return;n.dataset.ok=1;requestAnimationFrame(()=>{if(n.scrollHeight<=n.clientHeight+2)return;const b=document.createElement('button');b.type='button';b.className='tk-mas';b.textContent='Ver más';n.after(b);const t=e=>{e.stopPropagation();const ab=n.classList.toggle('abierta');b.textContent=ab?'Ver menos':'Ver más';};b.onclick=t;n.onclick=t;});});}
 async function renderSeguimiento(wrap){
  const box=ce('div','seg');wrap.appendChild(box);
- let tab='pend',filtroFisio='',datos=null,perH='30',diaH='';
+ let tab='pend',filtroFisio='',datos=null,perH='30',diaH='',segYaCargo=false;
  const PER_H=[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes'],['mesPasado','Mes pasado'],['30','Últimos 30 días'],['todo','Todas']];
  const rangoH=()=>{if(perH==='dia'&&diaH)return[diaH,diaH];if(perH==='30')return[segIso(-30),segIso(0)];if(perH==='todo')return['2020-01-01',segIso(0)];
   if(perH==='mesPasado'){const h=segIso(0);const d=new Date(+h.slice(0,4),+h.slice(5,7)-2,1);const f=new Date(+h.slice(0,4),+h.slice(5,7)-1,0);const z=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;return[z(d),z(f)];}
@@ -5093,7 +5099,7 @@ async function renderSeguimiento(wrap){
     r.querySelectorAll('button').forEach(b=>b.onclick=()=>{m.remove();abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,onSave:cargar});});};
   };
  };
- const cargar=async()=>{datos=null;pinta();try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();contarTareas();};
+ const cargar=async()=>{datos=null;pinta();try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();if(segYaCargo){_dtC.d=null;_dtC.t=0;contarTareas();}segYaCargo=true;};
  cargar();
 }
 // Vista previa del informe dentro del panel (se ve, se cierra con ✕ y desde aquí se guarda/envía el PDF)
