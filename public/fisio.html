@@ -884,6 +884,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-pqrow{display:flex;align-items:center;gap:10px}.fp-pqrow .fp-pqchk{flex:1}.fp-pqchk{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px;cursor:pointer}.fp-pqchk input{width:20px;height:20px;accent-color:#c2552e;margin:0}.fp-pqchk em{margin-left:auto;font-style:normal;font-weight:500;font-size:12.5px;color:#b42318}.fp-pq .fp-ta{margin-top:10px}.fp-pq .fp-pqseg .fp-ta{margin-top:0}.fp-pqseg{margin-top:4px}.fp-pqf{font-family:var(--font);font-size:14px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;background:#fff;max-width:100%;box-sizing:border-box}.fp-pqya{margin-top:10px;font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border-radius:10px;padding:8px 12px}.fp-pqtxt{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-top:10px}.fp-pqtxt p{margin:0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}.fp-pq small{display:block;margin-top:4px;font-size:12px}
 .fp-segit{display:flex;align-items:flex-start;gap:8px;width:100%;text-align:left;font-family:var(--font);font-size:14px;line-height:1.5;color:inherit;background:none;border:none;padding:4px 0;margin:4px 0;cursor:pointer}.fp-segit span{margin-left:auto;color:#c2552e;font-size:20px;line-height:1}.fp-sgv p{margin:4px 0;font-size:14.5px;line-height:1.5}.fp-sgpq{background:#fdf3ec;border-radius:12px;padding:10px 12px;margin-bottom:10px}.fp-sgpq small{display:block;font-size:11.5px;font-weight:600;color:#c2552e;text-transform:uppercase;letter-spacing:.04em}.fp-sgpq p{margin:2px 0 0!important}.fp-sgult{margin-top:10px!important;font-size:13px!important}.fp-sgbts{display:flex;gap:8px}.fp-sgbts .fp-can{flex:1;font-size:14px;padding:12px}.fp-sgbts .hz-ok{flex:2}
 .fp-ic span{white-space:nowrap}
+.fp-bt h3{white-space:nowrap}.fp-bt .fp-edbts{flex-wrap:nowrap}.fp-bt .fp-edbts button,.fp-bt>.fp-ed{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -5158,9 +5159,10 @@ async function abrirFichaPaciente(id,nombre,pBase){
    bt.onclick=()=>{
     if(k==='datos'){blk.querySelector('.fp-fs').innerHTML=[['Teléfono','tel',P.telf,'tel'],['WhatsApp','whatsapp',P.whatsapp,'tel'],['Email','email',P.email,'email'],['DNI','dni',P.dni,'text'],['Cumpleaños','cumple',P.cumple,'date']].map(([l,kk,v,t])=>`<label class="fp-f fp-in"><span>${l}</span><input type="${t}" data-k="${kk}" value="${escH(v||'')}"></label>`).join('');}
     else{const v=k==='notas'?P.notas:P.historial;blk.querySelector('.fp-txt').innerHTML=`<textarea class="fp-ta" rows="8">${escH(v||'')}</textarea>`;}
-    bt.outerHTML='<span class="fp-edbts"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></span>';
-    blk.querySelector('.fp-can').onclick=pintar;
-    blk.querySelector('.fp-ok').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Guardando…';const campos={};
+    {const ev=blk.querySelector('.fp-add-ev');if(ev)ev.remove();}
+    const bx=ce('span','fp-edbts');bx.innerHTML='<button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok fp-guardar">Guardar</button>';bt.replaceWith(bx);
+    bx.querySelector('.fp-can').onclick=pintar;
+    bx.querySelector('.fp-guardar').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Guardando…';const campos={};
      if(k==='datos')blk.querySelectorAll('input[data-k]').forEach(i=>campos[i.dataset.k]=i.value.trim());else campos[k]=blk.querySelector('.fp-ta').value;
      try{await guardar(campos);if(k==='datos'){P.telf=campos.tel;P.whatsapp=campos.whatsapp;}toast('Guardado',true);pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};};});}
  function montarSubida(cont){const inp=cont.querySelector('.fp-up input');inp.onchange=async()=>{const fs=[...inp.files];if(!fs.length)return;
@@ -5174,7 +5176,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
   mm.querySelector('.hz-x').onclick=()=>mm.remove();const sel=selectorEstados(P.estados);mm.querySelector('.est-slot').appendChild(sel);
   mm.querySelector('.hz-ok').onclick=async e=>{e.target.disabled=true;try{await guardarEstados(id,sel.get());P.estados=sel.get();toast('Guardado',true);mm.remove();pintar();}catch(err){e.target.disabled=false;toast('No se ha podido guardar',false);}};}
  pintar();
- m._refrescar=async()=>{if(m.querySelector('.fp-ok')||document.querySelector('.hz-modal'))return;try{await cargar();Object.assign(P,d.paciente);}catch(_){return;}if(m.querySelector('.fp-ok'))return;const sp=segAct();if(sp)SEG_PAC[id]={fecha:sp.fecha,quien:sp.quien};else delete SEG_PAC[id];const y=body.scrollTop;pintar();body.scrollTop=y;};
+ m._refrescar=async()=>{const ed=()=>m.querySelector('textarea, .fp-guardar, input[data-k]')||document.querySelector('.hz-modal');if(ed())return;try{await cargar();Object.assign(P,d.paciente);}catch(_){return;}if(ed())return;const sp=segAct();if(sp)SEG_PAC[id]={fecha:sp.fecha,quien:sp.quien};else delete SEG_PAC[id];const y=body.scrollTop;pintar();body.scrollTop=y;};
 }
 // Botón «i» de información: al tocarlo muestra/oculta la explicación (mismo tamaño de letra que el resto)
 function infoI(t){return `<button type="button" class="fp-i" data-info="${escH(t)}" aria-label="Información">i</button>`;}
@@ -9087,7 +9089,7 @@ function cerrarLightbox(){
  let ocultaDesde=0,ver='';
  const getVer=async()=>{try{return (await (await fetch('/api/schedule?action=version',{cache:'no-store'})).json()).v||'';}catch(e){return '';}};
  getVer().then(v=>ver=v);
- const ocupado=()=>!!document.querySelector('.hz-modal, .fp .fp-ok')||(document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)&&document.activeElement.id!=='pacBuscar');
+ const ocupado=()=>!!document.querySelector('.hz-modal, .fp textarea, .fp .fp-guardar, .fp input[data-k]')||(document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)&&document.activeElement.id!=='pacBuscar');
  async function alVolver(){
   if(!fisioActual||!apiPwd)return;
   const v=await getVer();
