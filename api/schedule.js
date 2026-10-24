@@ -74,7 +74,7 @@ function procesarWeb() { if (!webEnCurso) webEnCurso = _procesarWeb().finally(()
 async function _procesarWeb() {
   const todosW = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
   const nm = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
-  const pend = await todosW(CIT_T, `filterByFormula=${encodeURIComponent(`AND({your-name}!='',ARRAYJOIN({RELACIÓN - CITA})='',IS_AFTER(CREATED_TIME(),DATEADD(TODAY(),-60,'days')))`)}`);
+  const pend = await todosW(CIT_T, `filterByFormula=${encodeURIComponent(`AND({your-name}!='',ARRAYJOIN({RELACIÓN - CITA})='',{RESERVA}='',{ESTADO}='',IS_AFTER(CREATED_TIME(),DATEADD(TODAY(),-60,'days')))`)}`);
   let hechas = 0, sinHueco = 0;
   for (const r of pend) {
     try {
@@ -112,7 +112,7 @@ async function _procesarWeb() {
           .sort((a, b) => carga(nm(a.fields['PREF.'])) - carga(nm(b.fields['PREF.'])))[0] || null;
       }
       if (libre) {
-        const f = Object.assign({}, base, { NOTAS: [libre.fields.NOTAS, nota].filter(Boolean).join('\n'), 'your-name': F['your-name'] || '', 'your-phone': F['your-phone'] || '', 'your-email': F['your-email'] || '', 'your-message': msg });
+        const f = Object.assign({}, base, { NOTAS: [libre.fields.NOTAS, nota].filter(Boolean).join('\n') });
         if (files.length) f['your-file'] = files.map(a => ({ url: a.url, filename: a.filename }));
         const u = await at(`${CIT_T}/${libre.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
         if (u.error) throw new Error(u.error.message);
