@@ -460,16 +460,17 @@ module.exports = async function handler(req, res) {
           const ocup = enS.filter(c => c.pid && EQUIPO.includes(String(c.fisio).toLowerCase()) && /REALIZADA|PENDIENTE/.test(c.e)).length;
           // Capacidad de cada fisio y día = su horario − horas bloqueadas (comida, bloqueos…); si ese día no tiene nada en la agenda, no trabaja.
           // Si ese día tiene más horas abiertas en la agenda que su horario (horas extra), cuentan las de la agenda.
+          const pf = {}; EQUIPO.forEach(k => pf[k] = { ses: real.filter(c => String(c.fisio).toLowerCase() === k).length, ocup: enS.filter(c => c.pid && String(c.fisio).toLowerCase() === k && /REALIZADA|PENDIENTE/.test(c.e)).length, cap: 0 });
           let cap = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
             if (!trabaja.has(k + '|' + f)) return;
             const filas = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k);
             const hBloq = new Set(filas.filter(c => /BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)).size;
             const hAbiertas = new Set(filas.filter(c => !/BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)).size;
-            cap += Math.max((horario[k] && horario[k][dw] || 0) - hBloq, hAbiertas, 0); }); }
+            const cd = Math.max((horario[k] && horario[k][dw] || 0) - hBloq, hAbiertas, 0); cap += cd; pf[k].cap += cd; }); }
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
-            nuevos: nuevos.length, vinieron: vin, reagendaron: reag, porFisio: fis, ocupadas: ocup, capacidad: cap, ocupacion: cap ? Math.round(ocup * 100 / cap) : null,
+            nuevos: nuevos.length, vinieron: vin, reagendaron: reag, porFisio: fis, prod: pf, ocupadas: ocup, capacidad: cap, ocupacion: cap ? Math.round(ocup * 100 / cap) : null,
             recuperadas: ll.filter(r => /RECUPERADA/.test(nmS(r.fields.RESULTADO))).length, resenasPedidas: ll.filter(r => r.fields['RESEÑA']).length,
             ingresos: m && m.fields.INGRESOS != null ? m.fields.INGRESOS : null, resenas: m && m.fields['RESEÑAS GOOGLE'] != null ? m.fields['RESEÑAS GOOGLE'] : null, quejas: m && m.fields.QUEJAS != null ? m.fields.QUEJAS : null, notas: m ? (m.fields.NOTAS || '') : '' });
         }
