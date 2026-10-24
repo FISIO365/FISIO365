@@ -411,7 +411,7 @@ module.exports = async function handler(req, res) {
         const rangoF = (campo, a, b) => `AND(NOT(IS_BEFORE({${campo}},DATETIME_PARSE('${a}','YYYY-MM-DD'))),NOT(IS_AFTER({${campo}},DATETIME_PARSE('${b}','YYYY-MM-DD'))))`;
         const [citas, nuevosP, llam, man] = await Promise.all([
           (async () => { // por trozos de 2 semanas en paralelo (4 a la vez) para que vaya rápido
-            const campos = ['FECHA', 'ESTADO', 'PREF.', 'RELACIÓN - CITA', 'TIPO DE CITA'].map(f => 'fields[]=' + encodeURIComponent(f)).join('&');
+            const campos = ['FECHA', 'HORA', 'ESTADO', 'PREF.', 'RELACIÓN - CITA', 'TIPO DE CITA'].map(f => 'fields[]=' + encodeURIComponent(f)).join('&');
             const tr = []; for (let a = desde; a <= futuro; a = mv(a, 14)) tr.push([a, mv(a, 13) < futuro ? mv(a, 13) : futuro]);
             const out = []; for (let i = 0; i < tr.length; i += 4) (await Promise.all(tr.slice(i, i + 4).map(([a, b]) => todosT(CIT, `filterByFormula=${encodeURIComponent(rangoF('FECHA', a, b))}&${campos}`)))).forEach(x => out.push(...x));
             return out; })(),
@@ -423,7 +423,7 @@ module.exports = async function handler(req, res) {
         const tids = [...new Set(citas.flatMap(c => c.fields['TIPO DE CITA'] || []))], nomT = {};
         for (let i = 0; i < tids.length; i += 50) { const t = tids.slice(i, i + 50); (await todosT(TIP, `filterByFormula=${encodeURIComponent('OR(' + t.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=Name`)).forEach(r => nomT[r.id] = r.fields.Name || ''); }
         const esBono = c => (c.fields['TIPO DE CITA'] || []).some(t => /^\s*\d+\s*\/\s*(4|5|6|8|10|12|15|20)\s*$/.test(nomT[t] || ''));
-        const C = citas.map(c => ({ f: String(c.fields.FECHA || '').slice(0, 10), e: String(nmS(c.fields.ESTADO)).trim(), fisio: nmS(c.fields['PREF.']), pid: (c.fields['RELACIÓN - CITA'] || [])[0] || '', bono: esBono(c) })).filter(c => c.f);
+        const C = citas.map(c => ({ f: String(c.fields.FECHA || '').slice(0, 10), h: String(c.fields.HORA || '').slice(0, 5), e: String(nmS(c.fields.ESTADO)).trim(), fisio: nmS(c.fields['PREF.']), pid: (c.fields['RELACIÓN - CITA'] || [])[0] || '', bono: esBono(c) })).filter(c => c.f);
         const porPac = {}; C.forEach(c => { if (c.pid) (porPac[c.pid] = porPac[c.pid] || []).push(c); });
         Object.values(porPac).forEach(L => L.sort((a, b) => a.f.localeCompare(b.f)));
         // Primera visita real: primera sesión hecha del paciente (sin ninguna sesión hecha antes del periodo)
@@ -457,7 +457,14 @@ module.exports = async function handler(req, res) {
             if (sig.length) { reag++; fis[fz].reagendaron++; }
           });
           const ocup = enS.filter(c => c.pid && EQUIPO.includes(String(c.fisio).toLowerCase()) && /REALIZADA|PENDIENTE/.test(c.e)).length;
-          let cap = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => { if (horario[k] && horario[k][dw] && trabaja.has(k + '|' + f)) cap += horario[k][dw]; }); }
+          // Capacidad de cada fisio y día = su horario − horas bloqueadas (comida, vídeos, bloqueos…); si ese día no tiene nada en la agenda, no trabaja.
+          // Si ese día tiene más horas abiertas en la agenda que su horario (horas extra), cuentan las de la agenda.
+          let cap = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
+            if (!trabaja.has(k + '|' + f)) return;
+            const filas = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k);
+            const hBloq = new Set(filas.filter(c => /BLOQUEAD|COMIDA|VIDEOS|CALL-IN/i.test(c.e)).map(c => c.h)).size;
+            const hAbiertas = new Set(filas.filter(c => !/BLOQUEAD|COMIDA|VIDEOS|CALL-IN/i.test(c.e)).map(c => c.h)).size;
+            cap += Math.max((horario[k] && horario[k][dw] || 0) - hBloq, hAbiertas, 0); }); }
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,

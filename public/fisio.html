@@ -5233,7 +5233,7 @@ const esDireccion=()=>/^(nora|ramiro)$/i.test(String((fisioActual&&fisioActual.n
 let ST={sem:null,met:'sesiones',d:null};
 const ST_MET=[
  ['sesiones','Sesiones hechas',s=>s.sesiones,'n',false,'Citas con paciente marcadas como «Realizada» en la semana (todos los fisios).'],
- ['ocup','Ocupación',s=>s.ocupacion,'%',false,'Sesiones hechas o pendientes de Jonathan, Sara y Juan, entre sus horas de trabajo de la semana (campo HORAS SEMANA de Airtable). Los días que un fisio no tiene nada en la agenda (vacaciones, festivo, baja…) no cuentan. 100% = agenda llena.'],
+ ['ocup','Ocupación',s=>s.ocupacion,'%',false,'Sesiones hechas o pendientes de Jonathan, Sara y Juan, entre sus horas de trabajo de la semana (campo HORAS SEMANA de Airtable). Las horas bloqueadas (comida, vídeos, bloqueos) no cuentan, ni los días que un fisio no tiene nada en la agenda (vacaciones, festivo, baja…). Si un día abre más horas de las suyas, cuentan las de la agenda. 100% = agenda llena.'],
  ['nuevos','Pacientes nuevos',s=>s.nuevos,'n',false,'Fichas de paciente creadas esa semana (por la web, la app, el panel o Airtable), vengan o no.'],
  ['conv','Conversión',s=>s.vinieron?Math.round(s.reagendaron*100/s.vinieron):null,'%',false,'De los pacientes que hicieron su primera sesión esa semana, qué % tiene otra cita después (hecha o pendiente). En las semanas más recientes puede subir aún, porque hay pacientes que reservan más tarde.'],
  ['ingresos','Ingresos',s=>s.ingresos,'€',false,'Lo que apuntáis a mano cada semana (✎). Cuando conectemos Holded saldrá solo.'],
