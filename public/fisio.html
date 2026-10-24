@@ -882,6 +882,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .np-dup-it{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;width:100%;text-align:left;background:#fff;border:none;border-radius:10px;padding:9px 12px;margin-bottom:6px;font-family:var(--font);cursor:pointer}.np-dup-it span{font-weight:600;font-size:13.5px}.np-dup-it small{flex-basis:100%;order:3;font-size:11.5px;color:#9a8d84}.np-dup-it i{margin-left:auto;font-style:normal;font-size:12px;font-weight:600;color:#c2552e}
 .np-forzar{border:none;background:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#7d6a60;text-decoration:underline;cursor:pointer;padding:4px 0 0}
 .fp-pqchk{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px;cursor:pointer}.fp-pqchk input{width:20px;height:20px;accent-color:#c2552e;margin:0}.fp-pqchk em{margin-left:auto;font-style:normal;font-weight:500;font-size:12.5px;color:#b42318}.fp-pq .fp-ta{margin-top:10px}.fp-pq .fp-pqseg .fp-ta{margin-top:0}.fp-pqseg{margin-top:4px}.fp-pqf{font-family:var(--font);font-size:14px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;background:#fff;max-width:100%;box-sizing:border-box}.fp-pqya{margin-top:10px;font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border-radius:10px;padding:8px 12px}.fp-pqtxt{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-top:10px}.fp-pqtxt p{margin:0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}.fp-pq small{display:block;margin-top:4px;font-size:12px}
+.fp-segit{display:flex;align-items:flex-start;gap:8px;width:100%;text-align:left;font-family:var(--font);font-size:14px;line-height:1.5;color:inherit;background:none;border:none;padding:4px 0;margin:4px 0;cursor:pointer}.fp-segit span{margin-left:auto;color:#c2552e;font-size:20px;line-height:1}.fp-sgv p{margin:4px 0;font-size:14.5px;line-height:1.5}.fp-sgbts{display:flex;gap:8px}.fp-sgbts .fp-can{flex:1;font-size:14px;padding:12px}.fp-sgbts .hz-ok{flex:2}
 </style>
 </head>
 <body>
@@ -5009,7 +5010,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
  function cabecera(){const tel=segTel(P.whatsapp||P.tel||P.telf||'');
   return `<div class="fp-hero"><div class="fp-hero-in"><div class="fp-av">${escH(iniciales(P.nombre))}</div><div class="fp-hn"><h2>${escH(P.nombre)}</h2>
     <button type="button" class="fp-estb" aria-label="Cambiar estado">${estadoChips(P.estados)||'<span class="est">+ Estado</span>'}<span class="fp-edit-ic">✎</span></button></div></div>
-   <div class="fp-acts">${tel?`<a class="fp-ic" href="tel:+${tel}">${ICO.tel}<span>Llamar</span></a><a class="fp-ic" href="https://wa.me/${tel}" target="_blank" rel="noopener">${ICO.wa}<span>WhatsApp</span></a>`:''}<button type="button" class="fp-ic fp-segb ${SEG_PAC[id]?'on':''}">${ICO.seg}<span>${SEG_PAC[id]?'En seguimiento':'Seguimiento'}</span></button></div></div>
+   <div class="fp-acts">${tel?`<a class="fp-ic" href="tel:+${tel}">${ICO.tel}<span>Llamar</span></a><a class="fp-ic" href="https://wa.me/${tel}" target="_blank" rel="noopener">${ICO.wa}<span>WhatsApp</span></a>`:''}<button type="button" class="fp-ic fp-segb ${segAct()?'on':''}">${ICO.seg}<span>${segAct()?'En seguimiento':'Seguimiento'}</span></button></div></div>
    <div class="fp-tabs"><div class="fp-seg">${TABS.map(([k,t])=>`<button type="button" data-t="${k}" class="${tab===k?'on':''}">${t}</button>`).join('')}<label class="fp-mas ${MAS.some(x=>x[0]===tab)?'on':''}"><span>${MAS.some(x=>x[0]===tab)?escH(MAS.find(x=>x[0]===tab)[1].split(' ')[0]):'Más'}</span><select aria-label="Más secciones"><option value="" selected disabled hidden>Más</option>${MAS.map(([k,t])=>`<option value="${k}">${tab===k?'✓ ':''}${t}${k==='archivos'&&P.archivos.length?' ('+P.archivos.length+')':''}</option>`).join('')}</select><i>▾</i></label></div></div>`;}
  function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>${lbl}</span><div class="fp-v">${val?escH(tipo==='date'?fch(val):val):'<em>—</em>'}</div></div>`;}
  function resumen(){
@@ -5018,7 +5019,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
   return `
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
   <div class="fp-blk fp-pq"></div>
-  ${pend.length||ult?`<div class="fp-box"><b>Seguimiento</b>${pend.map(x=>`<p>📞 Llamar el ${escH(segFecha(x.fecha))}${x.quien?' · '+escH(x.quien):''}${x.nota?' — '+escH(x.nota):''}</p>`).join('')}${ult?`<p class="fp-mu">Última llamada: <span class="r-${/RECUPERADA|^ALTA/.test(ult.resultado)?'ok':/^NC|^VOLVER/.test(ult.resultado)?'no':'pe'}">${escH(resTxtG(ult.resultado))}</span> · ${escH(segFecha(ult.fecha))}${ult.quien?' · '+escH(quienNom(ult.quien)):''}${ult.nota?' — '+escH(ult.nota):''}</p>`:''}</div>`:''}
+  ${pend.length||ult?`<div class="fp-box"><b>Seguimiento</b>${pend.map(x=>`<button type="button" class="fp-segit" data-id="${escH(x.id||'')}">📞 Llamar el ${escH(segFecha(x.fecha))}${x.quien?' · '+escH(x.quien):''}${x.nota?' — '+escH(x.nota):''}<span>›</span></button>`).join('')}${ult?`<p class="fp-mu">Última llamada: <span class="r-${/RECUPERADA|^ALTA/.test(ult.resultado)?'ok':/^NC|^VOLVER/.test(ult.resultado)?'no':'pe'}">${escH(resTxtG(ult.resultado))}</span> · ${escH(segFecha(ult.fecha))}${ult.quien?' · '+escH(quienNom(ult.quien)):''}${ult.nota?' — '+escH(ult.nota):''}</p>`:''}</div>`:''}
   <div class="fp-blk" data-blk="datos"><div class="fp-bt"><h3>Datos</h3><button type="button" class="fp-ed">Editar</button></div>
    <div class="fp-fs">${campoTxt('Teléfono','tel',P.telf)}${campoTxt('WhatsApp','whatsapp',P.whatsapp)}${campoTxt('Email','email',P.email)}${campoTxt('DNI','dni',P.dni)}${campoTxt('Cumpleaños','cumple',P.cumple,'date')}<div class="fp-f"><span>Paciente desde</span><div class="fp-v">${escH(fch(String(P.alta).slice(0,10)))}</div></div></div></div>
 `;}
@@ -5085,7 +5086,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
      if(sb){const fecha=sb.querySelector('.fp-pqf').value,nota=sb.querySelector('.fp-pqn').value.trim();
       const r2=await post('seg-crear',{pacienteId:id,fecha,nota,responsable:resp});if(!r2.ok)throw new Error('Motivo guardado, pero no se ha podido pasar a seguimiento');
       SEG_PAC[id]={fecha,quien:resp};(d.seguimiento=d.seguimiento||[]).unshift({fecha,nota,hecho:false,quien:resp});}
-     refrescarTareas();toast(sb?'Guardado y pasado a seguimiento':'Guardado',true);pintar();}
+     toast(sb?'Guardado y pasado a seguimiento':'Guardado',true);if(sb)recargarSeg();else{refrescarTareas();pintar();}}
     catch(err){bt.disabled=false;bt.textContent=t0;toast(err.message,false);}};};
   pinta(false);}
  function montarHistoria(cont){
@@ -5108,13 +5109,27 @@ async function abrirFichaPaciente(id,nombre,pBase){
    if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast('El email no parece correcto',false);return;}if(pin&&!/^\d{4,6}$/.test(pin)){toast('El PIN tiene que ser de 4 a 6 números',false);return;}
    b.disabled=true;b.textContent='Guardando…';try{await guardar({email:em,pin});P.email=em.toLowerCase();P.pin=pin;base.pin=pin;const pl=(pacs||[]).find(x=>x.id===id);if(pl){pl.email=P.email;pl.pin=pin;}toast('Acceso guardado',true);pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};};}
 
+ // Seguimiento activo: lo que dice la ficha (datos frescos); si aún no hay datos, la lista general
+ function segAct(){if(d&&d.seguimiento){const p=d.seguimiento.filter(s=>!s.hecho).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));return p[0]||null;}return SEG_PAC[id]?{fecha:SEG_PAC[id].fecha,quien:SEG_PAC[id].quien}:null;}
+ async function recargarSeg(){try{await cargar();Object.assign(P,d.paciente);}catch(_){}
+  const sp=segAct();if(sp)SEG_PAC[id]={fecha:sp.fecha,quien:sp.quien};else delete SEG_PAC[id];
+  try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}pintar();}
+ function verSeg(sp){const it={id:sp.id,pacienteId:id,nombre:P.nombre,fecha:sp.fecha,nota:sp.nota,responsable:sp.quien};
+  const mm=hzModal(`<div class="hz-top"><div><small>En seguimiento</small><b>${escH(P.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   <div class="fp-sgv"><p>📞 Llamar el <b>${escH(segFecha(sp.fecha))}</b>${sp.quien?' · '+escH(sp.quien):''}</p>${sp.nota?`<p class="fp-mu">${escH(sp.nota)}</p>`:''}</div>
+   <div class="hz-bts fp-sgbts"><button type="button" class="fp-can fp-sged">Editar</button><button type="button" class="hz-ok">Apuntar llamada</button></div>`);
+  mm.querySelector('.hz-x').onclick=()=>mm.remove();
+  if(!sp.id){mm.querySelector('.fp-sged').onclick=mm.querySelector('.hz-ok').onclick=()=>{mm.remove();recargarSeg();};return;}
+  mm.querySelector('.fp-sged').onclick=()=>{mm.remove();abrirEditarSeg(it,recargarSeg);};
+  mm.querySelector('.hz-ok').onclick=()=>{mm.remove();abrirResultadoSeg(it,recargarSeg);};}
  function pintar(){
   body.innerHTML=cabecera()+'<div class="fp-cont"></div>';
   const cont=body.querySelector('.fp-cont');
   body.querySelectorAll('.fp-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;pintar();});
   {const ms=body.querySelector('.fp-mas select');ms.onchange=()=>{if(ms.value){tab=ms.value;pintar();}};}
   body.querySelector('.fp-estb').onclick=editarEstado;
-  body.querySelector('.fp-segb').onclick=()=>{if(SEG_PAC[id]){toast(segYaTxt(id),true);return;}abrirNuevoSeg({pacienteId:id,nombre:P.nombre,motivo:P.porQue||'',onSave:()=>{SEG_PAC[id]={fecha:'',quien:''};pintar();}});};
+  body.querySelector('.fp-segb').onclick=()=>{const sp=segAct();if(sp){verSeg(sp);return;}abrirNuevoSeg({pacienteId:id,nombre:P.nombre,motivo:P.porQue||'',onSave:recargarSeg});};
+  cont.querySelectorAll('.fp-segit').forEach(x=>x.onclick=()=>{const sp=(d.seguimiento||[]).find(s=>s.id===x.dataset.id);if(sp)verSeg(sp);});
   const tok='fp_'+Date.now();cont.dataset.token=tok;
   if(tab==='resumen'){cont.innerHTML=resumen();montarEdicion(cont);montarPorQue(cont);}
   else if(tab==='citas')cont.innerHTML=citas();
