@@ -157,6 +157,9 @@ module.exports = async function handler(req, res) {
 
   const { patientId, action } = req.query;
 
+  // Versión publicada: el panel la compara al volver a la app para recargarse si hay una nueva
+  if (action === 'version') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ v: (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 12) }); }
+
   if (action === 'emitir') {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     const { rec, k } = req.query;

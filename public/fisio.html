@@ -5162,6 +5162,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
   mm.querySelector('.hz-x').onclick=()=>mm.remove();const sel=selectorEstados(P.estados);mm.querySelector('.est-slot').appendChild(sel);
   mm.querySelector('.hz-ok').onclick=async e=>{e.target.disabled=true;try{await guardarEstados(id,sel.get());P.estados=sel.get();toast('Guardado',true);mm.remove();pintar();}catch(err){e.target.disabled=false;toast('No se ha podido guardar',false);}};}
  pintar();
+ m._refrescar=async()=>{if(m.querySelector('.fp-ok')||document.querySelector('.hz-modal'))return;try{await cargar();Object.assign(P,d.paciente);}catch(_){return;}if(m.querySelector('.fp-ok'))return;const sp=segAct();if(sp)SEG_PAC[id]={fecha:sp.fecha,quien:sp.quien};else delete SEG_PAC[id];const y=body.scrollTop;pintar();body.scrollTop=y;};
 }
 // Botón «i» de información: al tocarlo muestra/oculta la explicación (mismo tamaño de letra que el resto)
 function infoI(t){return `<button type="button" class="fp-i" data-info="${escH(t)}" aria-label="Información">i</button>`;}
@@ -9068,6 +9069,34 @@ function verImg(url,label){
 function cerrarLightbox(){
  $('lightbox').style.display='none';$('lb-img').src='';
 }
+
+// ── Al volver a la app (sin cerrarla del todo): datos frescos al momento y, si hay versión nueva, recargar ──
+(function(){
+ let ocultaDesde=0,ver='';
+ const getVer=async()=>{try{return (await (await fetch('/api/schedule?action=version',{cache:'no-store'})).json()).v||'';}catch(e){return '';}};
+ getVer().then(v=>ver=v);
+ const ocupado=()=>!!document.querySelector('.hz-modal, .fp .fp-ok')||(document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)&&document.activeElement.id!=='pacBuscar');
+ async function alVolver(){
+  if(!fisioActual||!apiPwd)return;
+  const v=await getVer();
+  if(v&&ver&&v!==ver&&!ocupado()){location.reload();return;}
+  if(v)ver=v;
+  try{_dtC.d=null;_dtC.t=0;_dtC.p=null;_dtC.fresco=true;}catch(e){}
+  await Promise.all([loadPacientes(),loadEstados(),cargarSegPac()]).catch(()=>{});
+  try{contarTareas();}catch(e){}
+  const ficha=document.querySelector('.pv.fp');
+  if(ficha&&ficha._refrescar){ficha._refrescar();return;}
+  if(ocupado())return;
+  let sec='';try{sec=sessionStorage.getItem('f365_panel_sec')||'';}catch(e){}
+  if(!sec||['anam','prog','school'].includes(sec)||!TOPBAR[sec])return;
+  const bus=document.getElementById('pacBuscar'),q=bus?bus.value:'',y=window.scrollY;
+  showSection(sec);
+  const b2=document.getElementById('pacBuscar');if(b2&&q){b2.value=q;b2.oninput&&b2.oninput();b2.blur();}
+  window.scrollTo(0,y);
+ }
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){ocultaDesde=Date.now();return;}if(ocultaDesde&&Date.now()-ocultaDesde>3000)alVolver();ocultaDesde=0;});
+ window.addEventListener('pageshow',e=>{if(e.persisted)alVolver();});
+})();
 </script>
 <script src="/avisos.js"></script>
 <script src="/chat-ui.js"></script>
