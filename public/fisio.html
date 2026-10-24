@@ -4811,6 +4811,7 @@ async function listaTareas(cont){
  const hoy=d.hoy;
  const grupos=[['Atrasadas','atr',L.filter(x=>x.fecha<hoy)],['Hoy','hoy',L.filter(x=>x.fecha===hoy)],['Próximos días','prox',L.filter(x=>x.fecha>hoy)]];
  box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todos (${d.items.filter(x=>x.fecha<=hoy).length})</option>${[...new Set(TAR_NOMBRES.concat(quien))].map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
+ if(d.fallo)box.insertAdjacentHTML('beforeend','<button type="button" class="tar-ll-av tar-fallo">⚠️ No se han podido cargar los pacientes por explicar. <b>Reintentar</b></button>');
  if(!L.length){box.insertAdjacentHTML('beforeend','<div class="tar-ok">✓ Nada pendiente</div>');}
  grupos.forEach(([t,c,g])=>{if(!g.length)return;
   const h=ce('div','seg-gt '+c);h.innerHTML=`${t} <span>${g.length}</span>`;box.appendChild(h);
@@ -4845,6 +4846,7 @@ async function listaTareas(cont){
   box.appendChild(tabla);
  });
  notasExpandibles(box);
+ {const tf=box.querySelector('.tar-fallo');if(tf)tf.onclick=recargar;}
  {const tn=box.querySelector('.tar-nueva');if(tn)tn.onclick=()=>abrirTareaEquipo(null,recargar);}
  {const tq=box.querySelector('.tar-quien');if(tq)tq.onchange=()=>{tarFiltro=tq.value;recargar();};}
 }
@@ -4942,7 +4944,7 @@ async function _datosTareasTodas(fresco){
   const lim=new Date(p.ultima+'T12:00:00');lim.setDate(lim.getDate()+2);
   items.push({tipo:'explicar',fecha:lim.toISOString().slice(0,10),nombre:p.nombre,quien:f.fisio,detalle:'Última sesión '+segFecha(p.ultima)+' y sin próxima cita'+(p.nota?' · Motivo: '+p.nota:''),p});}));
  items.sort((a,b)=>a.fecha.localeCompare(b.fecha));
- return {items,hoy};
+ return {items,hoy,fallo:!(r&&r.ok)};
 }
 // ── SEGUIMIENTO: pacientes a los que hay que llamar ──
 const SEG_RES=['Cita recuperada','Volver a llamar','No contesta','Pendiente de respuesta','Alta'];

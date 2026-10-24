@@ -133,7 +133,7 @@ async function rendimiento(desde, hasta, fresco) {
     todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA`),
     todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA&fields[]=HORAS POR DÍA&fields[]=CONTROL HORAS').catch(() => []),
     // Citas posteriores al periodo (una sola consulta, en vez de buscar paciente a paciente)
-    todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(${VIVAS},IS_AFTER({FECHA},'${hasta}'))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA`).catch(() => [])
+    todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(${VIVAS},IS_AFTER({FECHA},DATEADD('${hasta}',0,'days')))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA`).catch(() => [])
   ]);
   // Huecos = horas de cada día de la semana («HORAS POR DÍA» del fisio; 1 h = 1 sesión) sumadas en los días del periodo.
   // Si no tiene «HORAS POR DÍA», se reparte «HORAS SEMANA» de lunes a viernes.
