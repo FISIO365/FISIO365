@@ -814,6 +814,48 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 #avisoPanel .ap-b{border:none;border-radius:99px;background:#c2552e;color:#fff;font-family:inherit;font-size:13px;font-weight:700;padding:9px 15px;cursor:pointer;flex:none}
 #avisoPanel .ap-x{border:none;background:none;color:#b3aca4;font-size:16px;cursor:pointer;flex:none}
 @media(max-width:768px){#avisoPanel{left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));max-width:none}}
+
+/* ── Ficha del paciente: diseño ── */
+.fp .pv-bar{background:#1e2a38;border-bottom:none;color:#fff}.fp .pv-bar b{color:#fff;font-size:15px}.fp .pv-x{background:rgba(255,255,255,.12);color:#fff}
+.fp-body{background:var(--cream)!important;padding:0 0 70px!important}
+.fp-hero{background:#1e2a38;color:#fff;padding:6px 18px 18px;border-radius:0 0 26px 26px}
+.fp-hero-in{display:flex;align-items:center;gap:14px}
+.fp-hero .fp-av{width:60px;height:60px;border-radius:50%;background:#f4f1ec;color:#1e2a38;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.fp-hero h2{color:#fff;font-size:21px;margin:0 0 6px;line-height:1.15}
+.fp-hero .fp-estb .est{background:rgba(255,255,255,.14);color:#fff}.fp-hero .fp-estb .est.ok{background:#16803c;color:#fff}.fp-hero .fp-estb .est.mal{background:#b42318;color:#fff}.fp-hero .fp-estb .est.pen{background:#c2552e;color:#fff}.fp-hero .fp-edit-ic{color:rgba(255,255,255,.6)}
+.fp-acts{display:flex;gap:8px;padding:16px 0 0!important}
+.fp-hero .fp-ic{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;padding:10px 6px;border-radius:14px;background:rgba(255,255,255,.1);color:#fff;font-size:12.5px;font-weight:600;border:none;text-decoration:none;cursor:pointer}
+.fp-hero .fp-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.fp-hero .fp-ic.on{background:#16803c}
+.fp-tabs{padding:14px 14px 4px!important;border-bottom:none!important;background:transparent!important;display:block!important}
+.fp-seg{display:flex;background:#e9e3dc;border-radius:14px;padding:3px;gap:2px}
+.fp-seg button{flex:1;min-width:0;font-family:var(--font);font-size:12.5px;font-weight:600;color:#6b5f57;background:none;border:none!important;border-radius:11px;padding:9px 2px!important;cursor:pointer;white-space:nowrap}
+.fp-seg button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(26,26,26,.1)}
+.fp-seg .fp-mas{flex:none;position:relative;display:flex;align-items:center;border-radius:11px;padding:0 20px 0 10px!important;margin:0!important;border:none!important;font-size:12.5px;font-weight:600;color:#6b5f57}
+.fp-seg .fp-mas.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(26,26,26,.1)}.fp-seg .fp-mas select{max-width:84px}.fp-seg .fp-mas i{right:7px}
+.fp-cont{padding:10px 14px 0!important}
+.fp-blk{background:#fff;border:none!important;border-radius:18px;padding:16px!important;margin-bottom:12px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 6px 18px rgba(26,26,26,.04)}
+.fp-blk h3{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:#7d6a60;margin:0}
+.fp-bt{margin-bottom:12px!important}
+.fp-k{gap:8px!important;margin-bottom:12px!important}.fp-k>div{background:#fff;border-radius:16px;padding:12px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 6px 18px rgba(26,26,26,.04)}.fp-k b{display:block;font-size:16px}.fp-k span{font-size:11px;color:#9a8d84}
+.fp-box{background:#fff!important;border-radius:18px!important;padding:14px 16px!important;box-shadow:0 1px 2px rgba(26,26,26,.04),0 6px 18px rgba(26,26,26,.04)}.fp-box.warn{background:#fff4e5!important;box-shadow:none}
+.fp-box>b{display:block;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:#7d6a60;margin-bottom:6px}.fp-box p{margin:4px 0;font-size:13.5px;line-height:1.5}
+.fp-fs{display:block!important}.fp-f{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-top:1px solid #f1ede9}.fp-f:first-child{border-top:none;padding-top:2px}
+.fp-f>span{font-size:13px;color:#9a8d84;flex:none}.fp-f .fp-v{text-align:right;font-weight:600}
+.fp-in{display:block;margin:0 0 12px}.fp-in span{display:block;font-size:12px;color:#9a8d84;margin-bottom:4px}.fp-in input{width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 13px;border:1.5px solid var(--border);border-radius:12px;background:#fff}
+.fp-pin{font-size:24px!important;letter-spacing:6px;color:#1e2a38!important;font-weight:800}
+.fp-hres{border-radius:16px!important;padding:12px 16px!important;font-weight:500;margin-bottom:12px!important}
+.fp-intro{background:#faf7f4;border-radius:12px;padding:12px 14px;margin-bottom:14px}.fp-intro p{margin:0 0 6px}.fp-intro p:last-child{margin:0}
+.fp-tl{position:relative;padding-left:18px}.fp-tl:before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:#ece6e0;border-radius:2px}
+.fp-tli{position:relative;padding:0 0 16px}.fp-tli:last-child{padding-bottom:0}.fp-tli>i{position:absolute;left:-18px;top:4px;width:12px;height:12px;border-radius:50%;background:#fff;border:2.5px solid #c2552e;box-sizing:border-box}
+.fp-tli:first-child>i{background:#c2552e}
+.fp-tlh{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:4px}.fp-tlh b{font-size:13.5px}.fp-tlh span{font-size:11.5px;font-weight:600;color:#7d6a60;background:#f3efea;border-radius:99px;padding:2px 9px}
+.fp-tlb{font-size:13.5px;line-height:1.55;color:#2b2420}.fp-tlb p{margin:0 0 6px}.fp-tlb p:last-child{margin:0}
+.fp-cita{background:#fff;border-radius:14px;padding:12px 14px!important;margin-bottom:8px;border:none!important;box-shadow:0 1px 2px rgba(26,26,26,.04)}
+.fp-up{background:#fff}
+
+.fp-seg .fp-mas{flex:0 0 auto;padding:9px 22px 9px 10px!important}.fp-seg .fp-mas span{pointer-events:none}
+.fp-seg .fp-mas select{position:absolute;inset:0;width:100%;height:100%;opacity:0;max-width:none}
+.fp-seg .fp-mas i{background:none!important;width:auto;height:auto;font-size:9px;right:8px;top:50%;transform:translateY(-50%)}
 </style>
 </head>
 <body>
@@ -4938,10 +4980,10 @@ async function abrirFichaPaciente(id,nombre,pBase){
  const TABS=[['resumen','Resumen'],['historia','Historia'],['citas','Citas'],['programa','Ejercicios']];
  const MAS=[['racha','Racha'],['archivos','Archivos'],['informes','Informes'],['facturas','Facturas'],['acceso','Acceso a la app']];
  function cabecera(){const tel=segTel(P.whatsapp||P.tel||P.telf||'');
-  return `<div class="fp-head"><div class="fp-av">${escH(iniciales(P.nombre))}</div><div class="fp-hn"><h2>${escH(P.nombre)}</h2>
-   <button type="button" class="fp-estb">${estadoChips(P.estados)||'<span class="est">+ Estado</span>'}<span class="fp-edit-ic">✎</span></button></div></div>
-   <div class="fp-acts">${tel?`<a class="fp-ic" href="tel:+${tel}">${ICO.tel}<span>Llamar</span></a><a class="fp-ic wa" href="https://wa.me/${tel}" target="_blank" rel="noopener">${ICO.wa}<span>WhatsApp</span></a>`:''}<button type="button" class="fp-ic fp-segb ${SEG_PAC[id]?'on':''}">${ICO.seg}<span>${SEG_PAC[id]?'En seguimiento':'Seguimiento'}</span></button></div>
-   <div class="fp-tabs">${TABS.map(([k,t])=>`<button type="button" data-t="${k}" class="${tab===k?'on':''}">${t}</button>`).join('')}<label class="fp-mas ${MAS.some(x=>x[0]===tab)?'on':''}"><select aria-label="Más secciones"><option value="" selected disabled hidden>Más</option>${MAS.map(([k,t])=>`<option value="${k}">${tab===k?'✓ ':''}${t}${k==='archivos'&&P.archivos.length?' ('+P.archivos.length+')':''}</option>`).join('')}</select><i>▾</i></label></div>`;}
+  return `<div class="fp-hero"><div class="fp-hero-in"><div class="fp-av">${escH(iniciales(P.nombre))}</div><div class="fp-hn"><h2>${escH(P.nombre)}</h2>
+    <button type="button" class="fp-estb" aria-label="Cambiar estado">${estadoChips(P.estados)||'<span class="est">+ Estado</span>'}<span class="fp-edit-ic">✎</span></button></div></div>
+   <div class="fp-acts">${tel?`<a class="fp-ic" href="tel:+${tel}">${ICO.tel}<span>Llamar</span></a><a class="fp-ic" href="https://wa.me/${tel}" target="_blank" rel="noopener">${ICO.wa}<span>WhatsApp</span></a>`:''}<button type="button" class="fp-ic fp-segb ${SEG_PAC[id]?'on':''}">${ICO.seg}<span>${SEG_PAC[id]?'En seguimiento':'Seguimiento'}</span></button></div></div>
+   <div class="fp-tabs"><div class="fp-seg">${TABS.map(([k,t])=>`<button type="button" data-t="${k}" class="${tab===k?'on':''}">${t}</button>`).join('')}<label class="fp-mas ${MAS.some(x=>x[0]===tab)?'on':''}"><span>${MAS.some(x=>x[0]===tab)?escH(MAS.find(x=>x[0]===tab)[1].split(' ')[0]):'Más'}</span><select aria-label="Más secciones"><option value="" selected disabled hidden>Más</option>${MAS.map(([k,t])=>`<option value="${k}">${tab===k?'✓ ':''}${t}${k==='archivos'&&P.archivos.length?' ('+P.archivos.length+')':''}</option>`).join('')}</select><i>▾</i></label></div></div>`;}
  function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>${lbl}</span><div class="fp-v">${val?escH(tipo==='date'?fch(val):val):'<em>—</em>'}</div></div>`;}
  function resumen(){
   const hoy=d.hoy,fut=d.citas.filter(c=>c.fecha>=hoy&&!/CANCEL|REPROGRAM/i.test(c.estado)).reverse(),real=d.citas.filter(c=>c.fecha<hoy&&/REALIZADA/i.test(c.estado));
@@ -4963,10 +5005,13 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const hoy=d.hoy,ses=d.citas.filter(c=>c.fecha<=hoy&&/REALIZADA/i.test(c.estado)),u=ses[0];
   const modD=P.historialMod?isoMadrid(new Date(P.historialMod)):'';
   const par=t=>String(t||'').split(/\n{2,}/).map(x=>`<p>${mdSimple(x.trim())}</p>`).join('');
+  const linea=t=>{const intro=[],ent=[];let cur=null;String(t||'').split('\n').forEach(l=>{const lt=l.replace(/\*\*/g,'').trim();if(/^(sesi[oó]n\s+)?\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}/i.test(lt)){cur={h:lt,b:[]};ent.push(cur);}else if(cur)cur.b.push(l);else intro.push(l);});
+   const txt=a=>a.join('\n').trim();
+   return `${txt(intro)?`<div class="fp-intro">${par(txt(intro))}</div>`:''}${ent.length?`<div class="fp-tl">${ent.slice().reverse().map(x=>{const m=x.h.match(/^(?:sesi[oó]n\s+)?(\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4})\s*[-·:]*\s*(.*)$/i);return `<div class="fp-tli"><i></i><div class="fp-tlh"><b>${escH(m?m[1]:x.h)}</b>${m&&m[2]?`<span>${escH(m[2])}</span>`:''}</div><div class="fp-tlb">${txt(x.b)?par(txt(x.b)):'<em>—</em>'}</div></div>`;}).join('')}</div>`:''}`;};
   const aviso=!u?'':(modD&&modD>=u.fecha)?`<div class="fp-hres ok">✓ Historia actualizada el ${escH(segFecha(modD))}, después de su última sesión</div>`:`<div class="fp-hres mal">⚠️ No se ha actualizado tras la última sesión (${escH(segFecha(u.fecha))}${u.fisio?' · '+escH(u.fisio):''})${modD?`. Última vez: ${escH(segFecha(modD))}`:''}</div>`;
   return `${aviso}
   <div class="fp-blk" data-blk="historial"><div class="fp-bt"><h3>Historia clínica</h3><span class="fp-edbts"><button type="button" class="fp-ok fp-add-ev">＋ Evolución</button><button type="button" class="fp-ed">Editar</button></span></div>
-   <div class="fp-add-slot"></div><div class="fp-txt fp-doc">${P.historial?par(P.historial):'<em>Todavía no tiene historia clínica</em>'}</div></div>
+   <div class="fp-add-slot"></div><div class="fp-txt fp-doc">${P.historial?linea(P.historial):'<em>Todavía no tiene historia clínica</em>'}</div></div>
   <div class="fp-blk" data-blk="notas"><div class="fp-bt"><h3>Notas</h3><button type="button" class="fp-ed">Editar</button></div><div class="fp-txt fp-doc">${P.notas?par(P.notas):'<em>Sin notas</em>'}</div></div>`;}
  function montarHistoria(cont){
   const b=cont.querySelector('.fp-add-ev');if(!b)return;
