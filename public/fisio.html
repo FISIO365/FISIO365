@@ -4939,11 +4939,14 @@ function renderAgenda(wrap){
   if(V==='semana'){const a=new Date(d1+'T12:00:00'),b=new Date(d2+'T12:00:00'),M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];$c('.ag-ft').textContent=`${a.getDate()}${a.getMonth()!==b.getMonth()?' '+M[a.getMonth()]:''} – ${b.getDate()} ${M[b.getMonth()]}`;}
   fi.value=AG.fecha;$c('.ag-hoy').style.display=V==='lista'||(V==='dia'?AG.fecha===agHoyIso():lunes(AG.fecha)===lunes(agHoyIso()))?'none':'';
   $c('.ag-per').value=AG.per;$c('.ag-pert').textContent=(AG_PER.find(x=>x[0]===AG.per)||[])[1]||'';$c('.ag-rg').style.display=AG.per==='rango'?'':'none';$c('.ag-d1').value=AG.r1||'';$c('.ag-d2').value=AG.r2||'';pintaPac();
-  grid.innerHTML='<div class="fac-vacio">Cargando agenda…</div>';
+  const clave=[V,d1,d2,AG.pac&&AG.pac.id,V==='lista'?AG.fisio:''].join('|'),mismo=AG.dia&&AG.dia.clave===clave;
+  // Si es la misma vista (p. ej. tras cambiar una cita) no se vacía la pantalla: se actualiza sin mover el scroll
+  const ma=document.querySelector('.main-area'),pos={y:window.scrollY,ym:ma?ma.scrollTop:0,x:grid.scrollLeft};
+  if(!mismo)grid.innerHTML='<div class="fac-vacio">Cargando agenda…</div>';
   let url=`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}`;
   if(V==='dia')url+=`&fecha=${AG.fecha}`;else{if(d1)url+=`&desde=${d1}`;if(d2)url+=`&hasta=${d2}`;if(V==='lista'&&AG.pac)url+=`&pacienteId=${AG.pac.id}`;if(V==='lista'&&AG.fisio)url+=`&fisio=${encodeURIComponent(AG.fisio)}`;}
   if(V==='lista'&&!d1&&!d2&&!AG.pac&&!AG.fisio){grid.innerHTML='<div class="fac-vacio">Para ver «Todo» elige un paciente o un fisio, o un periodo más corto.</div>';$c('.ag-res').textContent='';AG.dia=null;fs.innerHTML='';opcionesFisio([]);return;}
-  try{const d=await (await fetch(url)).json();if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,citas:d.citas||[],limitado:d.limitado};pintar();}
+  try{const d=await (await fetch(url)).json();if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,citas:d.citas||[],limitado:d.limitado,clave};pintar();if(mismo){const vuelve=()=>{grid.scrollLeft=pos.x;if(ma&&ma.scrollTop!==pos.ym)ma.scrollTop=pos.ym;if(window.scrollY!==pos.y)window.scrollTo(0,pos.y);};vuelve();requestAnimationFrame(vuelve);setTimeout(vuelve,60);}}
   catch(e){if(t!==tok)return;grid.innerHTML=`<div class="fac-vacio">No se ha podido cargar la agenda. <button type="button" class="ag-reint">Reintentar</button></div>`;grid.querySelector('.ag-reint').onclick=cargar;}
  }
  function opcionesFisio(C){const presentes=[...new Set(C.map(c=>c.fisio).filter(f=>f&&!AG_NOFISIO.test(f)))];
