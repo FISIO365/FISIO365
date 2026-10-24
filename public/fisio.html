@@ -875,6 +875,12 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-doc-t{flex:1;min-width:0}.fp-doc-t b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fp-doc-t small{font-size:11.5px;color:#9a8d84}
 .fp-doc-go{font-size:20px;color:#c9bdb3}
 .fp-hero .fp-ic svg{width:17px!important;height:17px!important;flex:none}
+.np-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.np-btn{font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:99px;background:#c2552e;color:#fff;padding:9px 14px;cursor:pointer;white-space:nowrap}
+.exp-seg span small{display:block;font-size:11.5px;font-weight:500;opacity:.8;margin-top:1px}
+.np-accw{display:flex;flex-wrap:wrap;align-items:center;gap:0 4px;margin-top:14px}.np-accw .exp-seg{flex:1;margin:0}
+.np-dup{margin-top:14px;background:#fff4e5;border-radius:14px;padding:12px}.np-dup>b{display:block;font-size:13px;color:#b45309;margin-bottom:8px}
+.np-dup-it{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;width:100%;text-align:left;background:#fff;border:none;border-radius:10px;padding:9px 12px;margin-bottom:6px;font-family:var(--font);cursor:pointer}.np-dup-it span{font-weight:600;font-size:13.5px}.np-dup-it small{flex-basis:100%;order:3;font-size:11.5px;color:#9a8d84}.np-dup-it i{margin-left:auto;font-style:normal;font-size:12px;font-weight:600;color:#c2552e}
+.np-forzar{border:none;background:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#7d6a60;text-decoration:underline;cursor:pointer;padding:4px 0 0}
 </style>
 </head>
 <body>
@@ -1183,7 +1189,7 @@ async function loadBiblio(){
 
 // iPhone: tras un rato en segundo plano, la primera petición a veces falla con «Load failed».
 // Reintentamos solas las peticiones a /api/ que se pueden repetir sin duplicar nada.
-(function(){const f0=window.fetch.bind(window);const NO_REP=/action=(seg-crear|seg-resultado|facturar|horas-guardar)\b/;
+(function(){const f0=window.fetch.bind(window);const NO_REP=/action=(seg-crear|seg-resultado|facturar|horas-guardar|seg-paciente-crear|seg-historial-anadir|seg-tarea-guardar|seg-ficha-archivo)\b/;
  window.fetch=async function(u,o){const url=String(u&&u.url||u);
   for(let i=0;;i++){try{return await f0(u,o);}catch(e){if(!/\/api\//.test(url)||NO_REP.test(url)||i>=2)throw new Error(navigator.onLine===false?'Sin conexión. Vuelve a intentarlo.':'No se ha podido conectar. Vuelve a intentarlo.');await new Promise(r=>setTimeout(r,700*(i+1)));}}};})();
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
@@ -1371,7 +1377,7 @@ let pacFiltroEst='';
 function renderPac(wrap){
  cargarSegPac().then(()=>{const i=document.getElementById('pacBuscar');if(i&&(i.value||pacFiltroEst)&&i.oninput)i.oninput();});
  const card=ce('div','card');
- card.innerHTML=`<div class="ct">Buscar paciente</div>
+ card.innerHTML=`<div class="np-top"><div class="ct" style="margin:0">Buscar paciente</div><button type="button" class="np-btn">＋ Nuevo paciente</button></div>
  <div class="si"><input type="text" id="pacBuscar" placeholder="Escribe nombre o email..." autocomplete="off"></div>
  <div id="pacResultados" style="margin-top:8px"></div>`;
  wrap.appendChild(card);
@@ -1379,6 +1385,7 @@ function renderPac(wrap){
  const lista=document.getElementById('pacResultados');
  lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Escribe para buscar...</div>';
  input.oninput=()=>renderPacLista(input.value, lista);
+ card.querySelector('.np-btn').onclick=()=>abrirNuevoPaciente(input.value);
  input.focus();
 }
 
@@ -5108,6 +5115,40 @@ function abrirAnotarSesion(c,onSave){
  m.querySelector('.hz-ficha').onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.nombre);};
  m.querySelector('.hz-ok').onclick=async e=>{const t=m.querySelector('.seg-n').value.trim();if(!t){toast('Escribe la evolución',false);return;}const b=e.target;b.disabled=true;
   try{const r=await (await fetch('/api/schedule?action=seg-historial-anadir',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:c.pacienteId,texto:t,fecha:c.fecha,fisio:miNombreCorto()})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');toast('Añadido a la historia',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast(err.message,false);}};
+}
+// ── Nuevo paciente ──
+function abrirNuevoPaciente(texto){
+ const esTel=/^[\d\s+()-]{6,}$/.test(texto||''),esMail=/@/.test(texto||'');
+ const nuevo=ESTADOS.find(e=>/PACIENTE NUEVO/i.test(e.nombre));
+ const m=hzModal(`<div class="hz-top"><div><small>Nuevo paciente</small><b>Datos básicos</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <label class="fp-in"><span>Nombre y apellidos *</span><input type="text" class="np-n" autocomplete="off" value="${!esTel&&!esMail?escH(texto||''):''}"></label>
+  <label class="fp-in"><span>Teléfono *</span><input type="tel" inputmode="tel" class="np-t" placeholder="612345678" value="${esTel?escH(texto):''}"></label>
+  <label class="fp-in"><span>Email</span><input type="email" class="np-e" autocomplete="off" value="${esMail?escH(texto):''}"></label>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="fp-in"><span>DNI</span><input type="text" class="np-d" autocomplete="off"></label><label class="fp-in"><span>Fecha de nacimiento</span><input type="date" class="np-c"></label></div>
+  <div class="hz-lab">Estado</div><div class="np-est"></div>
+  <div class="np-accw"><button type="button" class="exp-seg np-acc on"><i></i><span>Darle acceso a la app</span></button>${infoI('Se le crea un PIN de 4 números para entrar en la app con su email. Lo verás al crear el paciente y en su ficha (Más › Acceso a la app).')}</div>
+  <div class="hz-bts"><button type="button" class="hz-ok">Crear paciente</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const sel=selectorEstados(nuevo?[nuevo.id]:[]);m.querySelector('.np-est').appendChild(sel);
+ let acc=true;const ba=m.querySelector('.np-acc');ba.onclick=()=>{acc=!acc;ba.classList.toggle('on',acc);};
+ setTimeout(()=>{const f=m.querySelector(esTel||esMail||!texto?'.np-n':'.np-t');if(window.innerWidth>=700)f.focus();},50);
+ const enviar=async(forzar,b)=>{
+  const datos={nombre:m.querySelector('.np-n').value.trim(),tel:m.querySelector('.np-t').value.trim(),email:m.querySelector('.np-e').value.trim(),dni:m.querySelector('.np-d').value.trim(),cumple:m.querySelector('.np-c').value,estados:sel.get(),acceso:acc};
+  if(datos.nombre.length<3){toast('Escribe nombre y apellidos',false);return;}
+  if(datos.tel.replace(/\D/g,'').length<9){toast('Escribe un teléfono válido',false);return;}
+  if(acc&&!datos.email){toast('Para darle acceso a la app hace falta su email',false);return;}
+  b.disabled=true;const t0=b.textContent;b.textContent='Creando…';
+  try{const d=await (await fetch('/api/schedule?action=seg-paciente-crear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,...datos,forzar})})).json();
+   if(d.duplicado){b.disabled=false;b.textContent=t0;
+    const box=m.querySelector('.np-dup')||(()=>{const x=ce('div','np-dup');m.querySelector('.hz-bts').before(x);return x;})();
+    box.innerHTML=`<b>Ya hay ${d.duplicado.length===1?'un paciente parecido':'pacientes parecidos'}:</b>${d.duplicado.map(p=>`<button type="button" class="np-dup-it" data-id="${p.id}" data-n="${escH(p.nombre)}"><span>${escH(p.nombre)}</span><small>${escH([p.tel,p.email].filter(Boolean).join(' · '))}</small><i>Abrir ›</i></button>`).join('')}<button type="button" class="np-forzar">No es el mismo, crear igualmente</button>`;
+    box.querySelectorAll('.np-dup-it').forEach(x=>x.onclick=()=>{m.remove();abrirFichaPaciente(x.dataset.id,x.dataset.n);});
+    box.querySelector('.np-forzar').onclick=e=>enviar(true,e.target);return;}
+   if(!d.ok)throw new Error(d.error||'No se ha podido crear');
+   const P=d.paciente;(pacs=pacs||[]).push({id:P.id,nombre:P.nombre,email:P.email,pin:P.pin,telefono:P.telefono,estados:P.estados});
+   toast(P.pin?`Paciente creado · PIN de la app: ${P.pin}`:'Paciente creado',true);m.remove();abrirFichaPaciente(P.id,P.nombre);
+  }catch(err){b.disabled=false;b.textContent=t0;toast(err.message,false);}};
+ m.querySelector('.hz-ok').onclick=e=>enviar(false,e.target);
 }
 async function marcarExplicado(id,nota){try{await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:id,nota,fisio:fisioActual.nombre})});}catch(e){}}
 function abrirExplicar(p,onSave){
