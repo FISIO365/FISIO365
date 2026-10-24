@@ -319,12 +319,12 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tk-m p.tk-ult{display:block;color:#7d6a60}.tk-m p.tk-ult strong{font-size:12px}
 .pv{position:fixed;inset:0;z-index:980;background:#f4f1ec;display:flex;flex-direction:column}
 .pv-bar{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;background:#fff;border-bottom:1px solid #ece6e0}.pv-bar b{flex:1;font-size:15px}
-.pv-x{width:36px;height:36px;border-radius:50%;border:none;background:#f3efea;font-size:15px;cursor:pointer}
+.pv-x{width:36px;height:36px;border-radius:50%;border:none;background:#f3efea;font-size:15px;cursor:pointer;color:#1a1a1a}
 .pv-pdf{font-family:var(--font);font-size:13px;font-weight:600;padding:9px 14px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer}
 .pv-doc{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;background:#fff;margin:12px;border-radius:14px;padding:20px 18px 40px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
 .pv-et{color:#c2552e;font-weight:700;letter-spacing:.8px;font-size:10.5px}.pv-doc h1{font-size:21px;margin:4px 0 2px}.pv-sub{color:#7d6a60;font-size:13px;margin-bottom:14px}
 .pv-k{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-bottom:16px}.pv-k div{background:#f7f3ef;border-radius:10px;padding:9px 10px}.pv-k span{display:block;font-size:10.5px;color:#7d6a60}.pv-k b{font-size:17px}
-.pv-doc h2{font-size:13.5px;margin:16px 0 6px}.pv-tw{overflow-x:auto}.pv-doc table{width:100%;border-collapse:collapse;font-size:12.5px}.pv-doc th{text-align:left;font-size:10px;text-transform:uppercase;color:#7d6a60;padding:5px 6px;border-bottom:1px solid #ece6e0}.pv-doc td{padding:7px 6px;border-bottom:1px solid #f1ede9;vertical-align:top}
+.pv-doc h2{font-size:13.5px;margin:16px 0 6px}.pv-tw{overflow-x:auto}.pv-doc table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;line-height:1.35;border:.5px solid #e4ddd6}.pv-doc th{text-align:left;font-size:9.5px;letter-spacing:.3px;text-transform:uppercase;color:#7d6a60;padding:6px 5px;background:#faf7f4;border:.5px solid #e4ddd6}.pv-doc td{padding:6px 5px;border:.5px solid #e4ddd6;vertical-align:top;overflow-wrap:break-word;hyphens:auto}.pv-s{display:block;font-size:10.5px;color:#9a8d84;margin-top:2px;font-weight:500}.pv-s.ok{color:#16803c;font-weight:600}
 .ll-big{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:2px 0 12px}.ll-big div{background:#f7f3ef;border-radius:12px;padding:10px}.ll-big b{display:block;font-size:20px;line-height:1.1}.ll-big div:first-child b{color:#16803c}.ll-big span{font-size:10.5px;color:#7d6a60;line-height:1.2;display:block;margin-top:2px}
 .ll-pct{font-weight:700}.ll-pct.ok{color:#16803c}.ll-pct.me{color:#b45309}.ll-pct.ba{color:#b42318}.ll-ex{font-size:11px;color:#9a8d84;margin-top:8px}
 .ll-resena{margin-top:12px}.pv-nota{font-size:11.5px;color:#9a8d84;margin:-8px 0 14px}
@@ -5037,12 +5037,12 @@ async function renderSeguimiento(wrap){
 // Vista previa del informe dentro del panel (se ve, se cierra con ✕ y desde aquí se guarda/envía el PDF)
 function pdfVista(o){
  const col=c=>({ok:'#16803c',no:'#b42318',gris:'#7d6a60',nar:'#c2552e'})[c]||'';
- const cel=v=>{const x=(v&&typeof v==='object')?v:{t:v};return `<td style="${x.c?'color:'+col(x.c)+';':''}${x.b?'font-weight:600;':''}">${escH(x.t==null?'':x.t)}</td>`;};
+ const cel=v=>{const x=(v&&typeof v==='object')?v:{t:v};return `<td><span style="${x.c?'color:'+col(x.c)+';':''}${x.b?'font-weight:600;':''}">${escH(x.t==null?'':x.t)}</span>${x.sub?`<small class="pv-s ${x.subc||''}">${escH(x.sub)}</small>`:''}</td>`;};
  const m=ce('div','pv');
  m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>Informe</b><button type="button" class="pv-pdf">Guardar o enviar PDF</button></div>
   <div class="pv-doc"><div class="pv-et">${escH(o.etiqueta||'')}</div><h1>${escH(o.titulo||'')}</h1><div class="pv-sub">${escH(o.sub||'')}</div>${o.nota?`<div class="pv-nota">${escH(o.nota)}</div>`:''}
   ${(o.kpis||[]).length?`<div class="pv-k">${o.kpis.map(([l,v,c])=>`<div><span>${escH(l)}</span><b style="${c&&String(v)!=='0'?'color:'+col(c):''}">${escH(v)}</b></div>`).join('')}</div>`:''}
-  ${(o.secciones||[]).map(sc=>`${sc.titulo?`<h2>${escH(sc.titulo)}</h2>`:''}<div class="pv-tw"><table><tr>${sc.cols.map(c=>`<th>${escH(c[0])}</th>`).join('')}</tr>${sc.filas.map(f=>`<tr>${f.map(cel).join('')}</tr>`).join('')}</table></div>`).join('')||'<p class="pv-sub">No hay datos en este periodo.</p>'}
+  ${(o.seccionesVista||o.secciones||[]).map(sc=>`${sc.titulo?`<h2>${escH(sc.titulo)}</h2>`:''}<div class="pv-tw"><table><colgroup>${(()=>{const t=sc.cols.reduce((a,c)=>a+c[1],0);return sc.cols.map(c=>`<col style="width:${(c[1]*100/t).toFixed(2)}%">`).join('');})()}</colgroup><tr>${sc.cols.map(c=>`<th>${escH(c[0])}</th>`).join('')}</tr>${sc.filas.map(f=>`<tr>${f.map(cel).join('')}</tr>`).join('')}</table></div>`).join('')||'<p class="pv-sub">No hay datos en este periodo.</p>'}
   </div>`;
  document.body.appendChild(m);document.body.style.overflow='hidden';
  const cerrar=()=>{m.remove();document.body.style.overflow='';};
@@ -5059,8 +5059,10 @@ function imprimirLlamadas(fisio,L,perTxt,[d1,d2]){
  pdfVista({etiqueta:'FISIO365 · INFORME DE LLAMADAS',titulo:fisio,sub:d1===d2?hzFecha(d1):`Del ${segFecha(d1)} al ${segFecha(d2)}`,
   kpis:[['Llamadas',M.n],['Objetivo conseguido',M.pct+'% ('+M.obj+')',M.obj?'ok':null],['Citas recuperadas',M.rec,'ok'],['Reseñas pedidas',M.res,'ok'],['Altas',M.alta],['Volver a llamar',M.volver],['No contesta',M.nc],['Pendiente respuesta',M.pend]],
   nota:'Objetivo conseguido = llamadas en las que se recuperó la cita o se pidió reseña.',
-  secciones:dias.map(dd=>({titulo:hzFecha(dd).replace(/^./,c=>c.toUpperCase()),cols:[['Hora',12],['Paciente',40],['Resultado',32],['Reseña',14],['Nota',80]],
+  secciones:dias.map(dd=>({titulo:hzFecha(dd).replace(/^./,c=>c.toUpperCase()),cols:[['Hora',13],['Paciente',36],['Resultado',30],['Reseña',15],['Nota',70]],
    filas:L.filter(x=>x.fecha===dd).map(x=>{const r=rt(x.resultado);return [x.hora||'',{t:x.nombre,b:true},{t:r[0],c:r[2],b:true},x.resena?{t:'Sí',c:'ok',b:true}:'',x.nota||''];})})),
+  seccionesVista:dias.map(dd=>({titulo:hzFecha(dd).replace(/^./,c=>c.toUpperCase()),cols:[['Paciente',33],['Resultado',29],['Nota',38]],
+   filas:L.filter(x=>x.fecha===dd).map(x=>{const r=rt(x.resultado);return [{t:x.nombre,b:true,sub:x.hora||''},{t:r[0],c:r[2],b:true,sub:x.resena?'★ Reseña pedida':'',subc:'ok'},x.nota||''];})})),
   nombre:`Llamadas_${fisio}_${d1}${d1!==d2?'_'+d2:''}`});
 }
 // ── Control de horas: clasificar días y banco de horas ──
@@ -5136,6 +5138,8 @@ function imprimirHoras(D){
   kpis:[['Según horario',D.toca+' h'],['Trabajadas',D.hechas+' h'],['Ses. · call-in · víd.',`${D.sesiones} · ${D.callin} · ${D.videos}`],['Horas extra','+'+D.extra+' h','ok'],['Horas de menos','−'+D.menos+' h','no'],['Banco mes / total',`${D.bancoMes>0?'+':''}${D.bancoMes} / ${D.banco>0?'+':''}${D.banco} h`]],
   secciones:[{cols:[['Fecha',22],['Tocaban',16],['Trabajadas',18],['Dif.',14],['Tipo',28],['Banco',12],['Nota',60]],
    filas:D.dias.map(x=>[fdiaCorto(x.fecha),x.toca+' h',x.libre?'no vino':x.hechas+' h',{t:x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓',c:x.dif>0?'ok':x.dif<0?'no':null,b:!!x.dif},x.reg?x.reg.tipo:'',x.reg&&x.reg.banco?'Sí':'',x.reg?x.reg.nota:''])}],
+  seccionesVista:[{cols:[['Día',24],['Toca',15],['Hecho',17],['Dif.',14],['Tipo · nota',30]],
+   filas:D.dias.map(x=>[fdiaCorto(x.fecha),x.toca+' h',x.libre?'no vino':x.hechas+' h',{t:x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓',c:x.dif>0?'ok':x.dif<0?'no':null,b:!!x.dif},{t:x.reg?x.reg.tipo:'',sub:[x.reg&&x.reg.banco?'al banco':'',x.reg?x.reg.nota:''].filter(Boolean).join(' · ')}])}],
   nombre:`Horas_${D.fisio}_${D.mes}`});
 }
 // ── PDF de tablas (informes del panel): se crea un PDF real y se comparte/descarga sin salir del panel ──
@@ -5168,8 +5172,8 @@ async function pdfTablas(o){
    const cel=f.map((v,i)=>{const o2=(v&&typeof v==='object')?v:{t:v};set(8.5,o2.b?'bold':'normal',o2.c||'neg');return {...o2,l:doc.splitTextToSize(String(o2.t==null?'':o2.t),ws[i]-3)};});
    const h=Math.max(...cel.map(c=>c.l.length))*4.2+2.5;
    if(salto(h+2))cab();
-   let x=ml;cel.forEach((c,i)=>{set(8.5,c.b?'bold':'normal',c.c||'neg');doc.text(c.l,x+1,y);x+=ws[i];});
-   y+=h-1.5;doc.setDrawColor(...C.lin);doc.line(ml,y-2.2,ml+tw,y-2.2);y+=1.5;});
+   let x=ml;const y0=y-4;cel.forEach((c,i)=>{set(8.5,c.b?'bold':'normal',c.c||'neg');doc.text(c.l,x+1.2,y);x+=ws[i];});
+   y+=h-1.5;doc.setLineWidth(0.15);doc.setDrawColor(...C.lin);doc.line(ml,y-2.2,ml+tw,y-2.2);{let xv=ml;ws.forEach((w,i)=>{if(i)doc.line(xv,y0,xv,y-2.2);xv+=w;});}y+=1.5;});
   y+=4;});
  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);set(7,'normal','gris');doc.text('FISIO365 · '+new Date().toLocaleDateString('es-ES'),ml,H-9);if(n>1)doc.text(i+' / '+n,W-mr,H-9,{align:'right'});}
  const nombre=(o.nombre||'informe').replace(/[^\wáéíóúñÁÉÍÓÚÑ\-]+/g,'_')+'.pdf';
