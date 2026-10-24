@@ -290,6 +290,8 @@ module.exports = async function handler(req, res) {
             if (f.records && f.records[0]) out.push(f.records[0].id); else { const c = await at(TIP, { method: 'POST', body: JSON.stringify({ records: [{ fields: { Name: n0 } }] }) }); if (c.records && c.records[0]) out.push(c.records[0].id); }
           } return out; };
 
+        // La opción de comida en Airtable lleva emoji y un carácter invisible: se copia tal cual de una fila que ya la tenga
+        const estadoComida = async () => { if (global._estCom) return global._estCom; const d = await at(`${CIT}?filterByFormula=${encodeURIComponent("FIND('COMIDA',{ESTADO}&'')")}&maxRecords=1&fields[]=ESTADO`); const e = d.records && d.records[0] && nmA(d.records[0].fields.ESTADO); return (global._estCom = e || 'COMIDAAA 🥗\u200B'); };
         if (action === 'seg-agenda-tipos') { // etiquetas de tipo de cita, las más usadas primero
           const rs = await todosT(TIP, `fields[]=Name&fields[]=CITAS`);
           const tipos = rs.map(r => ({ n: String(r.fields.Name || '').trim(), u: (r.fields.CITAS || []).length })).filter(t => t.n && t.n.length <= 30 && /[A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/.test(t.n) && !/^[.0!]+$/.test(t.n));
@@ -343,14 +345,14 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, creadas: nuevos.length, saltadas });
         }
         if (action === 'seg-agenda-hueco') { // dejar una hora libre (para la app), bloqueada, etc.
-          if (!okF(q.fecha) || !okH(q.hora) || !q.fisio || !/^(CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|FRANJA BLOQUEADA|DIA BLOQUEADO|CALL-IN)$/.test(q.estado || '')) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
-          const r = await nueva(q.fecha, q.hora, q.fisio, { ESTADO: q.estado, ...(q.notas ? { NOTAS: String(q.notas) } : {}) }); return res.status(200).json({ ok: true, id: r.id });
+          if (!okF(q.fecha) || !okH(q.hora) || !q.fisio || !/^(CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|FRANJA BLOQUEADA|DIA BLOQUEADO|CALL-IN|COMIDA|VIDEOS)$/.test(q.estado || '')) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
+          const r = await nueva(q.fecha, q.hora, q.fisio, { ESTADO: q.estado === 'COMIDA' ? await estadoComida() : q.estado, ...(q.notas ? { NOTAS: String(q.notas) } : {}) }); return res.status(200).json({ ok: true, id: r.id });
         }
         if (action === 'seg-agenda-editar') { // estado, confirmada, notas, etiquetas; opcional dejar el hueco libre
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false, error: 'Cita no encontrada' });
           const f = {};
-          if (q.estado) { if (!/^(PENDIENTE|REALIZADA|NO ASISTIÓ|CANCELADA|POR REAGENDAR|CITA DUDOSA|REPROGRAMADA|CITA PERDIDA|CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|FRANJA BLOQUEADA|DIA BLOQUEADO|CALL-IN)$/.test(q.estado)) return res.status(400).json({ ok: false, error: 'Estado no válido' }); f.ESTADO = q.estado === 'PENDIENTE' ? 'PENDIENTE ' : q.estado; }
+          if (q.estado) { if (!/^(PENDIENTE|REALIZADA|NO ASISTIÓ|CANCELADA|POR REAGENDAR|CITA DUDOSA|REPROGRAMADA|CITA PERDIDA|CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|FRANJA BLOQUEADA|DIA BLOQUEADO|CALL-IN|COMIDA|VIDEOS)$/.test(q.estado)) return res.status(400).json({ ok: false, error: 'Estado no válido' }); f.ESTADO = q.estado === 'PENDIENTE' ? 'PENDIENTE ' : q.estado === 'COMIDA' ? await estadoComida() : q.estado; }
           if (q.confirmada != null) f.CONFIR = q.confirmada ? ['CONFIRMADA'] : [];
           if (q.notas != null) f.NOTAS = String(q.notas).slice(0, 2000);
           if (Array.isArray(q.tipos)) f['TIPO DE CITA'] = await tiposDe(q.tipos);
@@ -377,7 +379,8 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-agenda-borrar') { // solo huecos (libres/bloqueados), nunca citas con paciente
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false });
-          if ((cur.fields['RELACIÓN - CITA'] || []).length) return res.status(400).json({ ok: false, error: 'Las citas con paciente no se borran: cámbiala a Cancelada' });
+          if ((cur.fields['RELACIÓN - CITA'] || []).length && !q.conPaciente) return res.status(400).json({ ok: false, error: 'Esta cita tiene paciente' });
+          if (q.liberar) { const c = cur.fields; await nueva(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), { ESTADO: 'CITA LIBRE' }); }
           const d = await at(`${CIT}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error });
         }
         return res.status(400).json({ ok: false, error: 'Acción no válida' });
