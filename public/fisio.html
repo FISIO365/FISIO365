@@ -338,7 +338,19 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .ll-per .tar-nueva{margin-left:auto;height:40px;padding:0 16px}
 .tar-ll-av{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 12px;padding:11px 14px;border-radius:14px;border:1.5px solid #f3d9c9;background:#fdeee4;color:#7a3a1e;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-align:left}.tar-ll-av b{margin-left:auto;color:#c2552e;white-space:nowrap}
 .tt-n{font-style:normal;font-size:11px;font-weight:700;background:#b42318;color:#fff;border-radius:99px;padding:1px 7px;margin-left:4px;display:none}.tt-n.on{display:inline-block}
-.hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
+.fp{z-index:985}.fp-body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 60px}
+.fp-top{display:flex;align-items:center;gap:12px;margin:4px 4px 12px}.fp-av{width:52px;height:52px;border-radius:50%;background:#fdeee4;color:#c2552e;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}.fp-top h2{margin:0;font-size:19px;line-height:1.2}
+.fp-acc{display:flex;flex-wrap:wrap;gap:6px;margin:0 2px 12px}.fp-b{font-family:var(--font);font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:99px;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;text-decoration:none;cursor:pointer}.fp-b.wa{border-color:#16803c;color:#16803c}
+.fp-sec{background:#fff;border-radius:16px;padding:14px 15px;margin-bottom:10px}.fp-sec h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:#7d6a60}.fp-sec h3 i{font-style:normal;text-transform:none;letter-spacing:0;font-weight:500;color:#9a8d84;margin-left:6px}
+.fp-g{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}.fp-g span{display:block;font-size:11px;color:#9a8d84}.fp-g b{font-size:13.5px;word-break:break-word}
+.fp-mu{font-size:12.5px;color:#9a8d84}.fp-p{font-size:13.5px;line-height:1.5;margin:0}.fp-larga{max-height:9.5em;overflow:hidden}.fp-larga.abierta{max-height:none}
+.fp-sub{font-size:11px;font-weight:700;color:#9a8d84;text-transform:uppercase;letter-spacing:.4px;margin:10px 0 4px}.fp-sub:first-child{margin-top:0}
+.fp-cita{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:8px 0;border-top:1px solid #f1ede9;font-size:13px}.fp-cf{font-weight:600;min-width:118px}.fp-ce{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f3efea;color:#7d6a60}.fp-ce.ok{background:#e8f5ec;color:#16803c}.fp-ce.no{background:#fdecea;color:#b42318}.fp-ce.pe{background:#fff4e5;color:#b45309}.fp-cfi{font-size:12px;color:#7d6a60;margin-left:auto}.fp-cita p{flex-basis:100%;margin:2px 0 0;font-size:12px;color:#5f554e}
+.fp-mas>summary{cursor:pointer;font-size:12.5px;font-weight:600;color:#c2552e;padding:8px 0 0}
+.fp-arch{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.fp-a{display:flex;flex-direction:column;gap:5px;text-decoration:none;color:#1a1a1a;font-size:11px}.fp-a img,.fp-ext{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:#f3efea;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#c2552e}.fp-a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fp-ll{padding:8px 0;border-top:1px solid #f1ede9;font-size:12.5px;color:#7d6a60}.fp-ll:first-child{border-top:none}.fp-ll b{font-size:12.5px}.fp-ll b.r-ok{color:#16803c}.fp-ll b.r-no{color:#b42318}.fp-ll b.r-pe{color:#7d6a60}.fp-ll.pend b{color:#c2552e}.fp-ll p{margin:3px 0 0;color:#3d342e}
+.tk-nom{cursor:pointer}.tk-nom:active{opacity:.6}.tk-pacl{display:block;border:none;background:none;padding:2px 0 0;font-family:var(--font);font-size:12px;font-weight:600;color:#1e2a38;cursor:pointer;text-align:left}
+.hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
 .hz-lab{font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 6px}.hz-lab span{font-weight:400}
@@ -1320,6 +1332,7 @@ function renderPacLista(q, lista){
  menu.style.cssText='display:none;border-top:1px solid var(--border)';
 
  const opciones=[
+ {key:'ficha', label:'Ficha completa'},
  {key:'estado', label:'Estado'},
  {key:'racha', label:'Racha'},
  {key:'informes', label:'Informes'},
@@ -1366,6 +1379,7 @@ function renderPacLista(q, lista){
  } else if(op.key==='programa') fpTabPrograma(p.id, panel, tok, p.nombre);
  else if(op.key==='informes') fpTabInformes(p.id, panel, p.nombre, tok);
  else if(op.key==='facturas') fpTabFacturas(p.id, panel, p.nombre, tok);
+ else if(op.key==='ficha'){panel.style.display='none';row.dataset.active='0';row.style.color='var(--black)';abrirFichaPaciente(p.id,p.nombre);}
  else if(op.key==='estado'){panel.innerHTML='<div class="sc-sub" style="margin:0 0 8px">Toca para poner o quitar. Puede tener varios.</div>';const sel=selectorEstados(p.estados);panel.appendChild(sel);const est=ce('div','est-ok');panel.appendChild(est);sel.addEventListener('change',async()=>{est.textContent='Guardando…';try{await guardarEstados(p.id,sel.get());est.textContent='✓ Guardado';const r=card.querySelector('.est-row');const html=estadoChips(sel.get());if(r)r.innerHTML=html;else if(html)card.querySelector('.pem').insertAdjacentHTML('afterend',`<div class="est-row">${html}</div>`);}catch(e){est.textContent='No se ha podido guardar';}});}
  else if(op.key==='seg'){panel.style.display='none';row.dataset.active='0';row.style.color='var(--black)';if(SEG_PAC[p.id]){toast(segYaTxt(p.id),true);return;}abrirNuevoSeg({pacienteId:p.id,nombre:p.nombre,onSave:()=>{SEG_PAC[p.id]={fecha:'',quien:''};row.innerHTML='<span class="seg-ya">✓ En seguimiento</span>';}});}
  else if(op.key==='racha') fpTabRacha(p.id, panel, tok);
@@ -4712,7 +4726,7 @@ function renderCallIn(wrap){
   res.innerHTML=`<div class="call-n">${l.length} paciente${l.length===1?'':'s'}</div>`;
   l.slice(0,300).forEach(p=>{
    const r=ce('div','call-it');const tel=segTel(p.telefono||'');
-   r.innerHTML=`<div class="call-m"><b>${escH(p.nombre)}</b>${(p.estados||[]).length?`<div class="est-row">${estadoChips(p.estados)}</div>`:''}</div>
+   r.innerHTML=`<div class="call-m"><b class="tk-nom" data-ficha="${p.id}">${escH(p.nombre)}</b>${(p.estados||[]).length?`<div class="est-row">${estadoChips(p.estados)}</div>`:''}</div>
     <div class="call-a">${tel?`<a class="seg-ic" href="tel:+${tel}" aria-label="Llamar"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a><a class="seg-ic wa" href="https://wa.me/${tel}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}
     <button type="button" class="rn-seg${SEG_PAC[p.id]?' en':''}">${SEG_PAC[p.id]?'✓ En seguimiento':'+ Seguimiento'}</button>
     <button type="button" class="call-ed" aria-label="Cambiar estado">Estado</button></div>`;
@@ -4827,7 +4841,7 @@ async function listaTareas(cont){
    const ests=pacEstados(pid).map(estNom).filter(Boolean);
    const IC_TAR='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>';
    const ico=x.tipo==='tarea'?`<span class="tk-i ta">${IC_TAR}</span>`:x.tipo==='llamar'?(x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${IC_TEL}</a>`:`<span class="tk-i ll">${IC_TEL}</span>`):`<span class="tk-i ex">${IC_EXP}</span>`;
-   r.innerHTML=`<div class="tk-ics">${ico}${x.tipo==='llamar'&&x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}</div><div class="tk-m"><b>${escH(x.nombre)}</b>${sub?`<p class="tk-meta">${escH(sub)}</p>`:''}${ul?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(ul.resultado)?'ok':/^NC|^VOLVER/.test(ul.resultado)?'no':'pe'}">${escH(resTxtG(ul.resultado))}</strong> · ${escH(segFecha(ul.fecha).replace(/^\S+ /,''))}${ul.quien?' · '+escH(quienNom(ul.quien)):''}${ul.nota?' — '+escH(ul.nota):''}</p>`:''}${notaT?`<p class="tk-nota">${escH(notaT)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}</div><div class="tk-a"></div>`;
+   r.innerHTML=`<div class="tk-ics">${ico}${x.tipo==='llamar'&&x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}</div><div class="tk-m"><b ${x.tipo!=='tarea'&&pid?`data-ficha="${pid}" class="tk-nom"`:''}>${escH(x.nombre)}</b>${x.tipo==='tarea'&&x.t.pacienteId?`<button type="button" class="tk-pacl" data-ficha="${x.t.pacienteId}" data-fn="${escH(x.t.paciente)}">Ver ficha de ${escH(x.t.paciente)} ›</button>`:''}${sub?`<p class="tk-meta">${escH(sub)}</p>`:''}${ul?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(ul.resultado)?'ok':/^NC|^VOLVER/.test(ul.resultado)?'no':'pe'}">${escH(resTxtG(ul.resultado))}</strong> · ${escH(segFecha(ul.fecha).replace(/^\S+ /,''))}${ul.quien?' · '+escH(quienNom(ul.quien)):''}${ul.nota?' — '+escH(ul.nota):''}</p>`:''}${notaT?`<p class="tk-nota">${escH(notaT)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}</div><div class="tk-a"></div>`;
    const acc=r.querySelector('.tk-a');
    if(x.tipo==='tarea'){
     const b=ce('button','tk-b tk-ok');b.type='button';b.textContent='✓ Hecho';b.onclick=async()=>{b.disabled=true;try{const d=await (await fetch('/api/schedule?action=seg-tarea-hecha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:x.t.id})})).json();if(!d.ok)throw 0;toast('¡Hecho!',true);recargar();}catch(e){b.disabled=false;toast('No se ha podido guardar',false);}};acc.appendChild(b);
@@ -4879,6 +4893,52 @@ function abrirTareaEquipo(t,onSave){
  const bb=m.querySelector('.te-borrar');if(bb){let arm=false;bb.onclick=async()=>{if(!arm){arm=true;bb.textContent='¿Seguro? Toca otra vez';setTimeout(()=>{arm=false;bb.textContent='Borrar';},4000);return;}bb.disabled=true;
   try{const d=await (await fetch('/api/schedule?action=seg-tarea-borrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:t.id})})).json();if(!d.ok)throw 0;toast('Borrada',true);m.remove();onSave&&onSave();}catch(e){bb.disabled=false;toast('No se ha podido borrar',false);}};}
 }
+// ── FICHA COMPLETA DEL PACIENTE (todo lo de Airtable; se carga solo al abrirla) ──
+function mdSimple(t){return escH(String(t||'')).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#{1,3}\s*(.+)$/gm,'<b>$1</b>').replace(/\n/g,'<br>');}
+async function abrirFichaPaciente(id,nombre){
+ const m=ce('div','pv fp');
+ m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>Ficha del paciente</b></div><div class="fp-body"><div class="fac-vacio">Cargando ficha…</div></div>`;
+ document.body.appendChild(m);document.body.style.overflow='hidden';
+ const cerrar=()=>{m.remove();document.body.style.overflow='';};m.querySelector('.pv-x').onclick=cerrar;
+ const body=m.querySelector('.fp-body');
+ let d;try{d=await (await fetch(`/api/schedule?action=seg-ficha&pwd=${encodeURIComponent(apiPwd)}&id=${id}`)).json();if(!d.ok)throw 0;}catch(e){body.innerHTML='<div class="fac-vacio">No se ha podido cargar la ficha</div>';return;}
+ const P=d.paciente,hoy=d.hoy,tel=segTel(P.tel||'');
+ const fch=f=>f?new Date(f+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}):'—';
+ const sec=(t,html,extra='')=>`<section class="fp-sec ${extra}"><h3>${t}</h3>${html}</section>`;
+ const fut=d.citas.filter(c=>c.fecha>=hoy).reverse(),pas=d.citas.filter(c=>c.fecha<hoy);
+ const real=pas.filter(c=>/REALIZADA/i.test(c.estado)).length;
+ const cls=e=>/REALIZADA/i.test(e)?'ok':/CANCEL|NO ASIST|PERDIDA/i.test(e)?'no':/PENDIENTE/i.test(e)?'pe':'';
+ const filaCita=c=>`<div class="fp-cita"><span class="fp-cf">${escH(segFecha(c.fecha))}${c.hora?' · '+escH(c.hora):''}</span><span class="fp-ce ${cls(c.estado)}">${escH(c.estado?c.estado.charAt(0)+c.estado.slice(1).toLowerCase():'—')}</span><span class="fp-cfi">${escH(c.fisio||'')}</span>${c.nota?`<p>${escH(c.nota)}</p>`:''}</div>`;
+ const icoArch=a=>/image/.test(a.tipo)&&a.mini?`<img src="${escH(a.mini)}" alt="">`:`<span class="fp-ext">${escH((a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase())}</span>`;
+ body.innerHTML=`
+  <div class="fp-top">
+   <div class="fp-av">${escH(iniciales(P.nombre))}</div>
+   <div class="fp-tn"><h2>${escH(P.nombre)}</h2><div class="est-row fp-est">${estadoChips(P.estados)||'<span class="fp-mu">Sin estado</span>'}</div></div>
+  </div>
+  <div class="fp-acc">${tel?`<a class="fp-b" href="tel:+${tel}">Llamar</a><a class="fp-b wa" href="https://wa.me/${tel}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button type="button" class="fp-b fp-est-ed">Cambiar estado</button><button type="button" class="fp-b fp-seg-add">${SEG_PAC[P.id]?'✓ En seguimiento':'+ Seguimiento'}</button></div>
+  ${sec('Datos',`<div class="fp-g">
+   <div><span>Teléfono</span><b>${escH(P.tel||P.telf||'—')}</b></div><div><span>Email</span><b>${escH(P.email||'—')}</b></div>
+   <div><span>DNI</span><b>${escH(P.dni||'—')}</b></div><div><span>Cumpleaños</span><b>${P.cumple?fch(P.cumple):'—'}</b></div>
+   <div><span>Paciente desde</span><b>${fch(String(P.alta).slice(0,10))}</b></div><div><span>Sesiones realizadas</span><b>${real}</b></div>
+   ${d.saldo&&d.saldo.activo?`<div><span>Saldo de bono</span><b>${escH(String(d.saldo.saldo??d.saldo.quedan??''))} ses.</b></div>`:''}${P.bonoPrevio?`<div><span>Bono previo</span><b>${P.bonoPrevio} ses.</b></div>`:''}
+  </div>`)}
+  ${P.porQue?sec('Por qué no reagenda',`<p class="fp-p">${escH(P.porQue)}</p><div class="fp-mu">${escH([P.porQueFisio,P.porQueFecha?fch(P.porQueFecha):''].filter(Boolean).join(' · '))}</div>`):''}
+  ${sec(`Citas <i>${fut.length} próximas · ${pas.length} pasadas</i>`,`${fut.length?`<div class="fp-sub">Próximas</div>${fut.map(filaCita).join('')}`:'<div class="fp-mu">Sin próximas citas</div>'}
+   ${pas.length?`<div class="fp-sub">Pasadas</div>${pas.slice(0,6).map(filaCita).join('')}${pas.length>6?`<details class="fp-mas"><summary>Ver las ${pas.length-6} anteriores</summary>${pas.slice(6).map(filaCita).join('')}</details>`:''}`:''}`)}
+  ${sec(`Archivos <i>${P.archivos.length}</i>`,P.archivos.length?`<div class="fp-arch">${P.archivos.map(a=>`<a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-a">${icoArch(a)}<span>${escH(a.nombre)}</span></a>`).join('')}</div>`:'<div class="fp-mu">No tiene archivos</div>')}
+  ${P.historial?sec('Historial clínico',`<div class="fp-p fp-larga">${mdSimple(P.historial)}</div>`):''}
+  ${P.notas?sec('Notas',`<div class="fp-p fp-larga">${mdSimple(P.notas)}</div>`):''}
+  ${(d.seguimiento.length||d.llamadas.length)?sec('Seguimiento y llamadas',`${d.seguimiento.filter(x=>!x.hecho).map(x=>`<div class="fp-ll pend"><b>Por llamar · ${escH(segFecha(x.fecha))}</b>${x.quien?' · '+escH(x.quien):''}${x.nota?`<p>${escH(x.nota)}</p>`:''}</div>`).join('')}
+   ${d.llamadas.map(x=>`<div class="fp-ll"><b class="r-${/RECUPERADA|^ALTA/.test(x.resultado)?'ok':/^NC|^VOLVER/.test(x.resultado)?'no':'pe'}">${escH(resTxtG(x.resultado)||'Llamada')}</b> · ${escH(segFecha(x.fecha))}${x.hora?' '+escH(x.hora):''}${x.quien?' · '+escH(quienNom(x.quien)):''}${x.resena?' · ★ reseña':''}${x.nota?`<p>${escH(x.nota)}</p>`:''}</div>`).join('')}`):''}
+ `;
+ body.querySelectorAll('.fp-larga').forEach(n=>{requestAnimationFrame(()=>{if(n.scrollHeight>n.clientHeight+4){const b=document.createElement('button');b.type='button';b.className='tk-mas';b.textContent='Ver todo';n.after(b);b.onclick=()=>{const ab=n.classList.toggle('abierta');b.textContent=ab?'Ver menos':'Ver todo';};}});});
+ body.querySelector('.fp-est-ed').onclick=()=>{const mm=hzModal(`<div class="hz-top"><div><small>Estado</small><b>${escH(P.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="est-slot"></div><div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);mm.style.zIndex=990;
+  mm.querySelector('.hz-x').onclick=()=>mm.remove();const sel=selectorEstados(pacEstados(P.id).length?pacEstados(P.id):P.estados);mm.querySelector('.est-slot').appendChild(sel);
+  mm.querySelector('.hz-ok').onclick=async e=>{e.target.disabled=true;try{await guardarEstados(P.id,sel.get());P.estados=sel.get();body.querySelector('.fp-est').innerHTML=estadoChips(P.estados)||'<span class="fp-mu">Sin estado</span>';toast('Guardado',true);mm.remove();}catch(err){e.target.disabled=false;toast('No se ha podido guardar',false);}};};
+ body.querySelector('.fp-seg-add').onclick=e=>{const b=e.currentTarget;if(SEG_PAC[P.id]){toast(segYaTxt(P.id),true);return;}const mm=abrirNuevoSeg({pacienteId:P.id,nombre:P.nombre,motivo:P.porQue||'',onSave:()=>{SEG_PAC[P.id]={fecha:'',quien:''};b.textContent='✓ En seguimiento';}});};
+}
+// Tocar el nombre de un paciente (con data-ficha) abre su ficha
+document.addEventListener('click',e=>{const t=e.target.closest('[data-ficha]');if(!t||!t.dataset.ficha)return;e.stopPropagation();abrirFichaPaciente(t.dataset.ficha,t.dataset.fn||t.textContent.trim());},true);
 async function marcarExplicado(id,nota){try{await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:id,nota,fisio:fisioActual.nombre})});}catch(e){}}
 function abrirExplicar(p,onSave){
  const [y,mm,dd]=String(p.ultima).split('-');
@@ -5066,7 +5126,7 @@ async function renderSeguimiento(wrap){
    html+=grupos.filter(g=>g[1].length).map(([t,g])=>`<div class="seg-gt">${t} <span>${g.length}</span></div><div class="seg-tabla">${g.map(x=>{const ests=pacEstados(x.pacienteId).map(estNom).filter(Boolean);const q=deQuienSeg(x);
     const meta=`Llamar ${segFecha(x.fecha)}${q?'':' · sin asignar'}`,meta2=x.ultima?`Última sesión ${segFecha(x.ultima)}${x.fisio?' con '+x.fisio:''}`:(x.fisio?'Su fisio: '+x.fisio:'');
     return `<div class="tk${x.fecha<hoy?' atr':''}"><div class="tk-ics">${x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${SEG_IC_TEL}</a>`+`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:`<span class="tk-i ll">${SEG_IC_TEL}</span>`}</div>
-    <div class="tk-m"><b>${escH(x.nombre)}</b><p class="tk-meta">${escH(meta)}</p>${meta2?`<p class="tk-meta">${escH(meta2)}</p>`:''}${x.ult?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(x.ult.resultado)?'ok':/^NC|^VOLVER/.test(x.ult.resultado)?'no':'pe'}">${escH(resTxtG(x.ult.resultado))}</strong> · ${escH(segFecha(x.ult.fecha).replace(/^\S+ /,''))}${x.ult.quien?' · '+escH(quienNom(x.ult.quien)):''}${x.ult.nota?' — '+escH(x.ult.nota):''}</p>`:''}${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}<div class="tk-pie"><button type="button" class="seg-ed tk-ed" data-id="${x.id}">Editar</button><div class="tk-a"><button type="button" class="seg-hecho tk-b" data-id="${x.id}">Resultado</button></div></div></div></div>`;}).join('')}</div>`).join('')||'<div class="tar-ok">✓ Nadie por llamar</div>';
+    <div class="tk-m"><b class="tk-nom" data-ficha="${x.pacienteId||''}">${escH(x.nombre)}</b><p class="tk-meta">${escH(meta)}</p>${meta2?`<p class="tk-meta">${escH(meta2)}</p>`:''}${x.ult?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(x.ult.resultado)?'ok':/^NC|^VOLVER/.test(x.ult.resultado)?'no':'pe'}">${escH(resTxtG(x.ult.resultado))}</strong> · ${escH(segFecha(x.ult.fecha).replace(/^\S+ /,''))}${x.ult.quien?' · '+escH(quienNom(x.ult.quien)):''}${x.ult.nota?' — '+escH(x.ult.nota):''}</p>`:''}${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}<div class="tk-pie"><button type="button" class="seg-ed tk-ed" data-id="${x.id}">Editar</button><div class="tk-a"><button type="button" class="seg-hecho tk-b" data-id="${x.id}">Resultado</button></div></div></div></div>`;}).join('')}</div>`).join('')||'<div class="tar-ok">✓ Nadie por llamar</div>';
   }else{
    html+=`<div class="ll-per"><label class="ll-sel ${perH!=='dia'?'on':''}"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg><select>${PER_H.map(([k,t])=>`<option value="${k}" ${perH===k?'selected':''}>${t}</option>`).join('')}${perH==='dia'?'<option value="dia" selected>Elige periodo</option>':''}</select><i>▾</i></label>
     <label class="ll-dia ${perH==='dia'?'on':''}"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><span>${perH==='dia'&&diaH?escH(segFecha(diaH)):'Seleccionar día'}</span><input type="date" value="${diaH||''}" max="${segIso(0)}" aria-label="Seleccionar día"></label>${perH==='dia'?'<button type="button" class="ll-quita" aria-label="Quitar día">✕</button>':''}</div>`;
