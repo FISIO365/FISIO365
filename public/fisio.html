@@ -275,6 +275,12 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tk-sg{font-family:var(--font);font-size:12px;font-weight:600;padding:8px 10px;border-radius:99px;border:1.5px solid #1e2a38;background:#fff;color:#1e2a38;cursor:pointer;white-space:nowrap}
 .tk-q{min-width:34px;height:34px;border-radius:99px;border:none;background:#f3efea;color:#7d6a60;font-size:13px;cursor:pointer;padding:0 8px;font-family:var(--font)}.tk-q.arm{background:#b42318;color:#fff;font-size:11.5px;font-weight:600}
 @media(max-width:560px){.tk{flex-wrap:wrap}.tk-a{width:100%;justify-content:flex-end}}
+.est{display:inline-flex;align-items:center;gap:4px;font-family:var(--font);font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;background:#f1ede9;color:#5f554e;border:1.5px solid transparent;white-space:nowrap}
+.est.ok{background:#e8f5ec;color:#16803c}.est.mal{background:#fdecea;color:#b42318}.est.pen{background:#fff4e5;color:#b45309}
+.est-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.est-sel{display:flex;flex-wrap:wrap;gap:6px}.est-sel button{cursor:pointer;font-size:12.5px;padding:6px 12px;opacity:.55}.est-sel button.on{opacity:1;border-color:currentColor}
+.est-fil{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;-webkit-overflow-scrolling:touch}.est-fil span{font-size:12px;color:var(--muted);align-self:center;white-space:nowrap}.est-fil button{cursor:pointer;font-size:12px;padding:5px 11px;opacity:.75}.est-fil button b{font-size:10.5px;opacity:.7}.est-fil button.on{opacity:1;border-color:currentColor}
+.est-ok{font-size:12px;color:#16803c;margin-top:8px;min-height:16px}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -937,7 +943,7 @@ async function doLogin(silencioso){
  $('loginScreen').style.display='none';
  $('panelScreen').style.display='block';
  window.scrollTo({top:0,behavior:'instant'});
- await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso()]);
+ await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso(),loadEstados()]);
  checkMensajesBadge();
  setInterval(checkMensajesBadge, 60000); // revisar cada minuto
  aplicarRole();
@@ -1199,26 +1205,31 @@ async function sinCitaFisio(wrap){
   });
  }catch(e){}
 }
+let pacFiltroEst='';
 function renderPac(wrap){
  const card=ce('div','card');
  card.innerHTML=`<div class="ct">Buscar paciente</div>
  <div class="si"><input type="text" id="pacBuscar" placeholder="Escribe nombre o email..." autocomplete="off"></div>
+ <div class="est-fil"><span>Por estado:</span>${ESTADOS.map(e=>{const n=(pacs||[]).filter(p=>(p.estados||[]).includes(e.id)).length;return `<button type="button" data-id="${e.id}" class="est ${estClase(e.nombre)}${pacFiltroEst===e.id?' on':''}">${escH(e.nombre.charAt(0)+e.nombre.slice(1).toLowerCase())} <b>${n}</b></button>`;}).join('')}</div>
  <div id="pacResultados" style="margin-top:8px"></div>`;
  wrap.appendChild(card);
  const input=document.getElementById('pacBuscar');
  const lista=document.getElementById('pacResultados');
  lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Escribe para buscar...</div>';
  input.oninput=()=>renderPacLista(input.value, lista);
+ card.querySelectorAll('.est-fil button').forEach(b=>b.onclick=()=>{pacFiltroEst=pacFiltroEst===b.dataset.id?'':b.dataset.id;card.querySelectorAll('.est-fil button').forEach(x=>x.classList.toggle('on',x.dataset.id===pacFiltroEst));renderPacLista(input.value, lista);});
+ if(pacFiltroEst)renderPacLista('', lista);
  input.focus();
 }
 
 function renderPacLista(q, lista){
  lista.innerHTML='';
- if(!q||q.length<1){
- lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Escribe para buscar...</div>';
+ if((!q||q.length<1)&&!pacFiltroEst){
+ lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Escribe para buscar o elige un estado...</div>';
  return;
  }
- const fl=(pacs||[]).filter(p=>p.nombre.toLowerCase().includes(q.toLowerCase())||(p.email||'').toLowerCase().includes(q.toLowerCase()));
+ q=q||'';
+ const fl=(pacs||[]).filter(p=>(!pacFiltroEst||(p.estados||[]).includes(pacFiltroEst))&&(p.nombre.toLowerCase().includes(q.toLowerCase())||(p.email||'').toLowerCase().includes(q.toLowerCase())));
  if(!fl.length){
  lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Sin resultados</div>';
  return;
@@ -1235,7 +1246,7 @@ function renderPacLista(q, lista){
  head.onmouseenter=()=>head.style.background='var(--lila-light)';
  head.onmouseleave=()=>head.style.background='';
  head.innerHTML=`<div class="pav">${ini}</div>
- <div style="flex:1;min-width:0"><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div></div>
+ <div style="flex:1;min-width:0"><div class="pnom">${p.nombre}</div><div class="pem">${p.email||''}</div>${(p.estados||[]).length?`<div class="est-row">${estadoChips(p.estados)}</div>`:''}</div>
  <div class="pac-chevron" style="font-size:16px;color:var(--muted);transition:transform .2s">›</div>`;
 
  // Menú de subsecciones — oculto por defecto
@@ -1243,6 +1254,7 @@ function renderPacLista(q, lista){
  menu.style.cssText='display:none;border-top:1px solid var(--border)';
 
  const opciones=[
+ {key:'estado', label:'Estado'},
  {key:'racha', label:'Racha'},
  {key:'informes', label:'Informes'},
  {key:'facturas', label:'Facturas'},
@@ -1287,6 +1299,7 @@ function renderPacLista(q, lista){
  } else if(op.key==='programa') fpTabPrograma(p.id, panel, tok, p.nombre);
  else if(op.key==='informes') fpTabInformes(p.id, panel, p.nombre, tok);
  else if(op.key==='facturas') fpTabFacturas(p.id, panel, p.nombre, tok);
+ else if(op.key==='estado'){panel.innerHTML='<div class="sc-sub" style="margin:0 0 8px">Toca para poner o quitar. Puede tener varios.</div>';const sel=selectorEstados(p.estados);panel.appendChild(sel);const est=ce('div','est-ok');panel.appendChild(est);sel.addEventListener('change',async()=>{est.textContent='Guardando…';try{await guardarEstados(p.id,sel.get());est.textContent='✓ Guardado';const r=card.querySelector('.est-row');const html=estadoChips(sel.get());if(r)r.innerHTML=html;else if(html)card.querySelector('.pem').insertAdjacentHTML('afterend',`<div class="est-row">${html}</div>`);}catch(e){est.textContent='No se ha podido guardar';}});}
  else if(op.key==='seg'){panel.style.display='none';row.dataset.active='0';row.style.color='var(--black)';abrirNuevoSeg({pacienteId:p.id,nombre:p.nombre});}
  else if(op.key==='racha') fpTabRacha(p.id, panel, tok);
  else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel, tok);
@@ -4612,6 +4625,26 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar</div>';}
 }
 
+// ── ESTADO de los pacientes (etiquetas de Airtable, pueden tener varias) ──
+let ESTADOS=[];
+async function loadEstados(){try{const d=await (await fetch(`/api/schedule?action=estados&pwd=${encodeURIComponent(apiPwd)}`)).json();ESTADOS=d.estados||[];}catch(e){}}
+const estNom=id=>(ESTADOS.find(e=>e.id===id)||{}).nombre||'';
+function estClase(n){n=String(n).toUpperCase();if(/ALTA|FAVORABLE|ACTIVO|MANTENIMIENTO|NUEVO/.test(n))return 'ok';if(/ABANDONO|NO ACUDI|SIN EVOLUCI|INCOMPLETO/.test(n))return 'mal';if(/PENDIENTE|SEGUIMIENTO|INCIERTA|VALORACI/.test(n))return 'pen';return '';}
+function estadoChips(ids){return (ids||[]).map(estNom).filter(Boolean).map(n=>`<span class="est ${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('');}
+const pacEstados=id=>((pacs||[]).find(p=>p.id===id)||{}).estados||[];
+// Selector de estados (varios). Devuelve el elemento; get() da los ids marcados
+function selectorEstados(actuales){
+ let sel=new Set(actuales||[]);
+ const el=ce('div','est-sel');
+ el.innerHTML=ESTADOS.map(e=>`<button type="button" data-id="${e.id}" class="est ${estClase(e.nombre)}">${escH(e.nombre.charAt(0)+e.nombre.slice(1).toLowerCase())}</button>`).join('');
+ const pinta=()=>el.querySelectorAll('button').forEach(b=>b.classList.toggle('on',sel.has(b.dataset.id)));pinta();
+ el.querySelectorAll('button').forEach(b=>b.onclick=()=>{sel.has(b.dataset.id)?sel.delete(b.dataset.id):sel.add(b.dataset.id);pinta();el.dispatchEvent(new Event('change'));});
+ el.get=()=>[...sel];return el;
+}
+async function guardarEstados(pacienteId,ids){
+ const d=await (await fetch('/api/schedule?action=estado-paciente',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId,estados:ids})})).json();
+ if(!d.ok)throw new Error(d.error||'Error');const p=(pacs||[]).find(x=>x.id===pacienteId);if(p)p.estados=ids;
+}
 // ── TAREAS: lo que tiene pendiente cada fisio (y Nora ve las de todos) ──
 const TAR_NOMBRES=['Nora','Sara','Jonathan','Juan','Ramiro'];
 function miNombreCorto(){const n=String((fisioActual&&fisioActual.nombre)||'').split(' ')[0];return TAR_NOMBRES.find(x=>x.toLowerCase()===n.toLowerCase())||n;}
@@ -4676,7 +4709,8 @@ async function listaTareas(cont){
   g.forEach(x=>{
    const r=ce('div','tk'+(c==='atr'?' atr':''));
    const tipo=x.tipo==='llamar'?'<span class="tk-t ll">Llamar</span>':'<span class="tk-t ex">Explicar por qué no reagenda</span>';
-   r.innerHTML=`<div class="tk-m">${tipo}<b>${escH(x.nombre)}</b>${x.quien?`<em>${escH(x.quien)}</em>`:''}<p>${escH(x.detalle||'')}</p></div><div class="tk-a"></div>`;
+   const pid=x.tipo==='llamar'?x.seg.pacienteId:x.p.id;
+   r.innerHTML=`<div class="tk-m">${tipo}<b>${escH(x.nombre)}</b>${x.quien?`<em>${escH(x.quien)}</em>`:''}<p>${escH(x.detalle||'')}</p>${pacEstados(pid).length?`<div class="est-row">${estadoChips(pacEstados(pid))}</div>`:''}</div><div class="tk-a"></div>`;
    const acc=r.querySelector('.tk-a');
    if(x.tipo==='llamar'){
     if(x.tel)acc.insertAdjacentHTML('beforeend',`<a class="seg-ic" href="tel:+${segTel(x.tel)}" aria-label="Llamar"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a><a class="seg-ic wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`);
@@ -4700,10 +4734,14 @@ function abrirExplicar(p,onSave){
  const [y,mm,dd]=String(p.ultima).split('-');
  const m=hzModal(`<div class="hz-top"><div><small>Última sesión ${+dd}/${+mm}</small><b>${escH(p.nombre)}</b></div><button type="button" class="hz-x">✕</button></div>
   <div class="hz-lab">¿Por qué no ha reagendado?</div><textarea class="seg-n" rows="3" placeholder="Ej.: le di el alta, se va de viaje, le cuesta pagar…"></textarea>
+  <div class="hz-lab">Estado del paciente</div><div class="est-slot"></div>
   <div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();const ta=m.querySelector('.seg-n');ta.focus();
+ const est0=pacEstados(p.id).slice(),selE=selectorEstados(est0);m.querySelector('.est-slot').appendChild(selE);
  m.querySelector('.hz-ok').onclick=async e=>{const nota=ta.value.trim();if(!nota){toast('Escribe el motivo',false);return;}const b=e.target;b.disabled=true;
-  try{const d=await (await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:p.id,nota,fisio:fisioActual.nombre})})).json();if(!d.ok)throw 0;toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast('No se ha podido guardar',false);}};
+  try{const d=await (await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:p.id,nota,fisio:fisioActual.nombre})})).json();if(!d.ok)throw 0;
+   const nuevos=selE.get();if(nuevos.join()!==est0.join())await guardarEstados(p.id,nuevos);
+   toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast('No se ha podido guardar',false);}};
 }
 // Todas las tareas del centro en una lista: llamadas de seguimiento (hasta 7 días vista) y pacientes sin explicar
 async function datosTareasTodas(){
@@ -4748,8 +4786,10 @@ function abrirResultadoSeg(it,onSave){
   <div class="hz-tipos">${SEG_RES.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
   <div class="seg-nf" style="display:none"><div class="hz-lab">¿Cuándo volver a llamar?</div><div class="seg-rap">${[['Mañana',1],['En 3 días',3],['En 1 semana',7],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div><input type="date" class="seg-f" value="${segIso(3)}" min="${segIso(0)}"></div>
   <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="seg-n" rows="2" placeholder="Qué te ha dicho…"></textarea>
+  <div class="hz-lab">Estado del paciente</div><div class="est-slot"></div>
   <div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
  const f=m.querySelector('.seg-f'),nf=m.querySelector('.seg-nf');
+ const est0=pacEstados(it.pacienteId).slice(),selE=selectorEstados(est0);m.querySelector('.est-slot').appendChild(selE);
  const pintaF=()=>m.querySelectorAll('.seg-rap button').forEach(b=>b.classList.toggle('on',segIso(+b.dataset.d)===f.value));pintaF();
  m.querySelectorAll('.seg-rap button').forEach(b=>b.onclick=()=>{f.value=segIso(+b.dataset.d);pintaF();});f.onchange=pintaF;
  m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{res=b.dataset.v;m.querySelectorAll('.hz-tipos button').forEach(x=>x.classList.toggle('on',x===b));nf.style.display=['Volver a llamar','No contesta','Pendiente de respuesta'].includes(res)?'':'none';});
@@ -4757,6 +4797,7 @@ function abrirResultadoSeg(it,onSave){
  m.querySelector('.hz-ok').onclick=async e=>{if(!res){toast('Elige qué ha pasado',false);return;}
   const b=e.target;b.disabled=true;b.textContent='Guardando…';
   try{const d=await (await fetch('/api/schedule?action=seg-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,pacienteId:it.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value.trim(),nuevaFecha:nf.style.display===''?f.value:'',quien:(fisioActual&&fisioActual.nombre)||''})})).json();if(!d.ok)throw new Error(d.error||'Error');
+   {const nuevos=selE.get();if(it.pacienteId&&nuevos.join()!==est0.join())await guardarEstados(it.pacienteId,nuevos);}
    toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
 }
 function abrirEditarSeg(it,onSave){
@@ -4807,7 +4848,7 @@ async function renderSeguimiento(wrap){
    const grupos=[['Atrasados',L.filter(x=>x.fecha<hoy)],['Hoy',L.filter(x=>x.fecha===hoy)],['Esta semana',L.filter(x=>x.fecha>hoy&&x.fecha<=segIso(7))],['Más adelante',L.filter(x=>x.fecha>segIso(7))]];
    html+=grupos.filter(g=>g[1].length).map(([t,g])=>`<div class="seg-gt">${t} <span>${g.length}</span></div><div class="seg-tabla">${g.map(x=>`<div class="seg-it${x.fecha<hoy?' atr':''}">
     <div class="seg-f1"><b>${segFecha(x.fecha)}</b></div>
-    <div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em title="Su fisio">${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p><button type="button" class="seg-ed" data-id="${x.id}">${deQuienSeg(x)?'Llama: <b>'+escH(deQuienSeg(x))+'</b>':'Sin asignar'} · editar</button></div>
+    <div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em title="Su fisio">${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p>${pacEstados(x.pacienteId).length?`<div class="est-row">${estadoChips(pacEstados(x.pacienteId))}</div>`:''}<button type="button" class="seg-ed" data-id="${x.id}">${deQuienSeg(x)?'Llama: <b>'+escH(deQuienSeg(x))+'</b>':'Sin asignar'} · editar</button></div>
     <div class="seg-f3">${x.tel?`<a class="seg-ic" href="tel:+${segTel(x.tel)}" aria-label="Llamar"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a><a class="seg-ic wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}<button type="button" class="seg-hecho" data-id="${x.id}">Resultado</button></div></div>`).join('')}</div>`).join('')||'<div class="fac-vacio">No hay nadie pendiente de llamar 🎉</div>';
   }else{
    const L=H.filter(flt);
@@ -4926,7 +4967,7 @@ async function renderRendimiento(wrap){
    await Promise.all(L.filter(x=>x.dias).map(async x=>{try{const hz=await (await fetch(`/api/schedule?action=horas&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`)).json();x.reg={};(hz.registros||[]).forEach(r=>x.reg[r.fecha]=r);x.banco=Math.round((hz.banco||0)*10)/10;}catch(e){}}));
    const T=L.reduce((a,x)=>{a.realizadas+=x.realizadas;a.atendidos+=x.atendidos;a.reagendan+=x.reagendan;if(!x.sinHoras){['huecos','noAsistio','perdidas','canceladas','callin','videos'].forEach(q=>a[q]+=(x[q]||0));a.realOcup+=x.realizadas;}return a;},{fisio:'Total del centro',realizadas:0,realOcup:0,callin:0,videos:0,huecos:0,atendidos:0,reagendan:0,noAsistio:0,perdidas:0,canceladas:0});
    const fch=f=>{const [y,m,d]=String(f).split('-');return +d+'/'+ +m;};
-   const listaNo=x=>(x.lista&&x.lista.length)?`<details class="rend-no"><summary>Ver quién no ha reagendado (${x.lista.length})</summary>${x.lista.map(p=>`<div class="rn-it"><div class="rn-txt"><span>${escH(p.nombre)}</span><i>última sesión ${fch(p.ultima)}</i>${(p.nota&&p.notaFecha>=p.ultima)?`<p class="rn-nota">«${escH(p.nota)}»${p.notaFisio?' — '+escH(p.notaFisio):''}</p>`:'<p class="rn-nota sin">Sin explicar todavía</p>'}</div>${p.tel?`<a href="https://wa.me/${String(p.tel).replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1')}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button type="button" class="rn-seg" data-id="${p.id}" data-n="${escH(p.nombre)}" data-nota="${escH(p.nota||'')}">+ Seguimiento</button></div>`).join('')}</details>`:'';
+   const listaNo=x=>(x.lista&&x.lista.length)?`<details class="rend-no"><summary>Ver quién no ha reagendado (${x.lista.length})</summary>${x.lista.map(p=>`<div class="rn-it"><div class="rn-txt"><span>${escH(p.nombre)}</span><i>última sesión ${fch(p.ultima)}</i>${pacEstados(p.id).length?`<div class="est-row">${estadoChips(pacEstados(p.id))}</div>`:''}${(p.nota&&p.notaFecha>=p.ultima)?`<p class="rn-nota">«${escH(p.nota)}»${p.notaFisio?' — '+escH(p.notaFisio):''}</p>`:'<p class="rn-nota sin">Sin explicar todavía</p>'}</div>${p.tel?`<a href="https://wa.me/${String(p.tel).replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1')}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button type="button" class="rn-seg" data-id="${p.id}" data-n="${escH(p.nombre)}" data-nota="${escH(p.nota||'')}">+ Seguimiento</button></div>`).join('')}</details>`:'';
    const horasTot=x=>{const h=x.realizadas+(x.callin||0)+(x.videos||0),d=h-x.huecos;return `<div style="grid-column:1/-1"><span>Horas trabajadas (sesiones + call-in + vídeos)</span><b>${h} de ${x.huecos} h ${d?`<em class="rend-dif ${d>0?'mas':'menos'}">${d>0?'+':'−'}${Math.abs(d)} h</em>`:'<em class="rend-dif ok">✓</em>'}</b></div>`;};
    const DS=['dom','lun','mar','mié','jue','vie','sáb'];
    const fdia=d=>{const t=new Date(d+'T12:00:00');return DS[t.getDay()]+' '+t.getDate()+'/'+(t.getMonth()+1);};

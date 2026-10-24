@@ -261,6 +261,20 @@ module.exports = async function handler(req, res) {
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   }
 
+  // ── PANEL: ESTADO de los pacientes (etiquetas de la tabla ESTADO) ──
+  if (action === 'estados' || action === 'estado-paciente') {
+    const q = req.method === 'POST' ? (req.body || {}) : req.query;
+    if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    if (action === 'estados') {
+      const d = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`);
+      return res.status(200).json({ ok: true, estados: (d.records || []).map(r => ({ id: r.id, nombre: String(r.fields['ESTADO'] || '').trim() })).filter(e => e.nombre).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')) });
+    }
+    if (req.method !== 'POST' || !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
+    const ids = (Array.isArray(q.estados) ? q.estados : []).filter(x => /^rec[A-Za-z0-9]{14}$/.test(x));
+    const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: ids } }) });
+    return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+  }
+
   // ── PANEL: el fisio explica por qué un paciente no ha reagendado ──
   if (action === 'nota-reagenda' && req.method === 'POST') {
     const q = req.body || {};

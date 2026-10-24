@@ -496,13 +496,13 @@ export default async function handler(req) {
     try {
       let allRecords = [], offset = null;
       do {
-        const pageUrl = `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=EMAIL&fields[]=PIN&fields[]=WHATSAPP&sort[0][field]=FULL NAME&sort[0][direction]=asc&pageSize=100${offset?'&offset='+offset:''}`;
+        const pageUrl = `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=EMAIL&fields[]=PIN&fields[]=WHATSAPP&fields[]=ESTADO&sort[0][field]=FULL NAME&sort[0][direction]=asc&pageSize=100${offset?'&offset='+offset:''}`;
         const pageRes = await fetch(pageUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
         const pageData = await pageRes.json();
         allRecords = allRecords.concat(pageData.records || []);
         offset = pageData.offset;
       } while (offset);
-      const pacientes = allRecords.map(rec => ({ id: rec.id, nombre: rec.fields['FULL NAME'] || '—', email: rec.fields['EMAIL'] || '', pin: rec.fields['PIN'] || '', telefono: rec.fields['WHATSAPP'] || '' }));
+      const pacientes = allRecords.map(rec => ({ id: rec.id, nombre: rec.fields['FULL NAME'] || '—', email: rec.fields['EMAIL'] || '', pin: rec.fields['PIN'] || '', telefono: rec.fields['WHATSAPP'] || '', estados: rec.fields['ESTADO'] || [] }));
       return new Response(JSON.stringify({ ok: true, pacientes }), { headers: corsHeaders });
     } catch(e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
   }
