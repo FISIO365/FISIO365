@@ -5241,7 +5241,7 @@ const esDireccion=()=>/^(nora|ramiro)$/i.test(String((fisioActual&&fisioActual.n
 let ST={sem:null,met:'sesiones',d:null};
 const ST_MET=[
  ['sesiones','Sesiones hechas',s=>s.sesiones,'n',false,'Citas con paciente marcadas como «Realizada» en la semana (todos los fisios).'],
- ['ocup','Ocupación',s=>s.ocupacion,'%',false,'Sesiones hechas o pendientes de Jonathan, Sara y Juan, entre sus horas de trabajo de la semana (campo HORAS SEMANA de Airtable). Las horas bloqueadas y de comida no cuentan (las de vídeos y call-in sí, porque se podrían haber dado a un paciente), ni los días que un fisio no tiene nada en la agenda (vacaciones, festivo, baja…). Si un día abre más horas de las suyas, cuentan las de la agenda. 100% = agenda llena.'],
+ ['ocup','Ocupación',s=>s.ocupacion,'%',false,'Horas con paciente (sesiones hechas o pendientes) de Jonathan, Sara y Juan, entre las horas que tenían abiertas en la agenda: citas, huecos libres, call-in, vídeos y horas canceladas que no se llenaron. No cuentan las horas bloqueadas, la comida, ni los días o las horas que no tienen nada en la agenda (vacaciones, festivo, si entra más tarde o se va antes…). 100% = agenda llena.'],
  ['nuevos','Pacientes nuevos',s=>s.nuevos,'n',false,'Fichas de paciente creadas esa semana (por la web, la app, el panel o Airtable), vengan o no.'],
  ['conv','Conversión',s=>s.vinieron?Math.round(s.reagendaron*100/s.vinieron):null,'%',false,'De los pacientes que hicieron su primera sesión esa semana, qué % tiene otra cita después (hecha o pendiente). En las semanas más recientes puede subir aún, porque hay pacientes que reservan más tarde.'],
  ['ingresos','Ingresos',s=>s.ingresos,'€',false,'Lo que apuntáis a mano cada semana (✎). Cuando conectemos Holded saldrá solo.']];
@@ -5250,7 +5250,7 @@ const stSemTxt=f=>{const a=new Date(f+'T12:00:00'),b=new Date(f+'T12:00:00');b.s
 function stRanking(L,S){const sem=ST.rk!=='per'?[S]:L,acc={};
  sem.forEach(w=>{Object.entries(w.prod||{}).forEach(([k,v])=>{const a=acc[k]=acc[k]||{ses:0,ocup:0,cap:0,vin:0,rep:0};a.ses+=v.ses;a.ocup+=v.ocup;a.cap+=v.cap;});
   Object.entries(w.porFisio||{}).forEach(([f,x])=>{const k=String(f).toLowerCase();if(!acc[k])return;acc[k].vin+=x.vinieron;acc[k].rep+=x.reagendaron;});});
- return Object.entries(acc).filter(([k,a])=>a.cap||a.ses).map(([k,a])=>({nombre:agNom(k),ses:a.ses,ocup:a.cap?Math.round(a.ocup*100/a.cap):null,conv:a.vin?Math.round(a.rep*100/a.vin):null,vin:a.vin,rep:a.rep})).sort((x,y)=>(y.ocup??-1)-(x.ocup??-1)||y.ses-x.ses);}
+ return Object.entries(acc).filter(([k,a])=>a.cap||a.ses).map(([k,a])=>({nombre:agNom(k),oc:a.ocup,cap:a.cap,ses:a.ses,ocup:a.cap?Math.round(a.ocup*100/a.cap):null,conv:a.vin?Math.round(a.rep*100/a.vin):null,vin:a.vin,rep:a.rep})).sort((x,y)=>(y.ocup??-1)-(x.ocup??-1)||y.ses-x.ses);}
 function renderStats(wrap){
  if(!esDireccion()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección es solo para dirección.</div></div>';return;}
  const card=ce('div','st');
@@ -5297,8 +5297,8 @@ function renderStats(wrap){
 `:`<p class="st-p">Ninguna primera visita esta semana</p>`}</div>
    </div>
    ${(()=>{const R=stRanking(L,S);return R.length?`<div class="st-box"><div class="st-bt"><b>Ranking de fisios</b><span class="st-rt"><button type="button" class="${ST.rk!=='per'?'on':''}" data-rk="sem">Semana</button><button type="button" class="${ST.rk==='per'?'on':''}" data-rk="per">Periodo</button></span></div>
-    <div class="st-tb st-rk"><div class="st-tr st-th"><span>Fisio</span><span>Ocupación</span><span>Sesiones</span><span>Conversión</span></div>${R.map((r,i)=>`<div class="st-tr"><span><i class="st-pos p${i+1}">${i+1}</i>${escH(r.nombre)}</span><span><b>${r.ocup==null?'—':r.ocup+'%'}</b><em class="st-barra"><i style="width:${Math.min(r.ocup||0,100)}%"></i></em></span><span>${r.ses}</span><span>${r.conv==null?'—':r.conv+'%'}<small>${r.vin?` (${r.rep}/${r.vin})`:''}</small></span></div>`).join('')}</div>
-    <p class="st-p fp-mu">Ordenado por ocupación: sesiones hechas o pendientes entre las horas que tenía disponibles.</p></div>`:'';})()}
+    <div class="st-tb st-rk"><div class="st-tr st-th"><span>Fisio</span><span>Ocupación</span><span>Sesiones</span><span>Conversión</span></div>${R.map((r,i)=>`<div class="st-tr"><span><i class="st-pos p${i+1}">${i+1}</i>${escH(r.nombre)}</span><span><b>${r.ocup==null?'—':r.ocup+'%'}</b><small>${r.cap?` ${r.oc}/${r.cap} h`:''}</small><em class="st-barra"><i style="width:${Math.min(r.ocup||0,100)}%"></i></em></span><span>${r.ses}</span><span>${r.conv==null?'—':r.conv+'%'}<small>${r.vin?` (${r.rep}/${r.vin})`:''}</small></span></div>`).join('')}</div>
+    <p class="st-p fp-mu">Ordenado por ocupación: de las horas que cada uno tenía abiertas en la agenda, cuántas tuvieron paciente. Sesiones = citas hechas. Conversión = de sus primeras visitas, cuántas volvieron.</p></div>`:'';})()}
    <div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
     <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b></p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`;
   g.querySelectorAll('.st-k').forEach(b=>b.onclick=e=>{if(e.target.closest('.fp-i,.fp-ipop'))return;if(b.querySelector('.st-ed')&&b.classList.contains('on'))editar();else{ST.met=b.dataset.k;pintar();}});
