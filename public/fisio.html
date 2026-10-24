@@ -337,6 +337,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .te-sel{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-radius:10px;background:#f7f3ef}.te-sel b{font-size:14px}.te-sel button{border:none;background:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#1a1a1a}
 .ll-per .tar-nueva{margin-left:auto;height:40px;padding:0 16px}
 .tar-ll-av{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 12px;padding:11px 14px;border-radius:14px;border:1.5px solid #f3d9c9;background:#fdeee4;color:#7a3a1e;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-align:left}.tar-ll-av b{margin-left:auto;color:#c2552e;white-space:nowrap}
+.tt-n{font-style:normal;font-size:11px;font-weight:700;background:#b42318;color:#fff;border-radius:99px;padding:1px 7px;margin-left:4px;display:none}.tt-n.on{display:inline-block}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -4785,9 +4786,10 @@ function itemLlamar(x,onDone){
 }
 async function renderTareas(wrap){
  let vista='tareas';try{vista=sessionStorage.getItem('f365_tar')||'tareas';}catch(e){}
- const top=ce('div','tar-top');top.innerHTML=`<div class="seg-tabs"><button type="button" data-v="tareas">Tareas</button><button type="button" data-v="seg">Llamadas</button></div>`;wrap.appendChild(top);
+ const top=ce('div','tar-top');top.innerHTML=`<div class="seg-tabs"><button type="button" data-v="tareas">Tareas <i class="tt-n" data-n="tareas"></i></button><button type="button" data-v="seg">Llamadas <i class="tt-n" data-n="seg"></i></button></div>`;wrap.appendChild(top);
+ datosTareasTodas().then(d=>{const h=d.hoy;const nT=d.items.filter(x=>x.tipo!=='llamar'&&x.fecha<=h).length,nL=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=h).length;const pon=(k,n)=>{const e=top.querySelector(`[data-n=${k}]`);if(e){e.textContent=n||'';e.classList.toggle('on',n>0);}};pon('tareas',nT);pon('seg',nL);}).catch(()=>{});
  const cont=ce('div','');wrap.appendChild(cont);
- const ir=v=>{vista=v;try{sessionStorage.setItem('f365_tar',v);}catch(e){}top.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));cont.innerHTML='';if(v==='seg')renderSeguimiento(cont);else listaTareas(cont);};
+ const ir=v=>{vista=v;try{sessionStorage.setItem('f365_tar',v);}catch(e){}top.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));cont.innerHTML='';try{const [tt,ts]=v==='seg'?TOPBAR.seg:TOPBAR.tar;$('topbar-t').textContent=tt;$('topbar-s').textContent=ts;}catch(e){}if(v==='seg')renderSeguimiento(cont);else listaTareas(cont);};
  top.querySelectorAll('button').forEach(b=>b.onclick=()=>ir(b.dataset.v));
  ir(vista);
 }
@@ -4803,8 +4805,7 @@ async function listaTareas(cont){
  const L=d.items.filter(x=>!tarFiltro||x.quien===tarFiltro);
  const hoy=d.hoy;
  const grupos=[['Atrasadas','atr',L.filter(x=>x.fecha<hoy)],['Hoy','hoy',L.filter(x=>x.fecha===hoy)],['Próximos días','prox',L.filter(x=>x.fecha>hoy)]];
- box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todos (${d.items.length})</option>${quien.map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
- if(nLl)box.insertAdjacentHTML('beforeend',`<button type="button" class="tar-ll-av" onclick="showSection('seg')"><span>📞</span> ${nLl} llamada${nLl===1?'':'s'} por hacer${tarFiltro?' ('+escH(tarFiltro)+')':''} <b>Ver ›</b></button>`);
+ box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todos (${d.items.length})</option>${[...new Set(TAR_NOMBRES.concat(quien))].map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
  if(!L.length){box.insertAdjacentHTML('beforeend','<div class="tar-ok">✓ Nada pendiente</div>');}
  grupos.forEach(([t,c,g])=>{if(!g.length)return;
   const h=ce('div','seg-gt '+c);h.innerHTML=`${t} <span>${g.length}</span>`;box.appendChild(h);
@@ -5038,12 +5039,12 @@ async function renderSeguimiento(wrap){
   const yo=miNombreCorto();
   H.forEach(x=>{x.quienN=quienNom(x.quien);});
   const qDe=x=>tab==='hech'?x.quienN:deQuienSeg(x);
-  const fisios=TAR_NOMBRES.filter(n=>n!==yo&&(tab==='hech'?H:P).some(x=>qDe(x)===n));
+  const fisios=TAR_NOMBRES.filter(n=>n!==yo);
   const flt=x=>!filtroFisio||(filtroFisio==='__yo'?qDe(x)===yo:qDe(x)===filtroFisio);
   const atr=P.filter(x=>x.fecha<hoy).length,deHoy=P.filter(x=>x.fecha===hoy).length;
   const nomF=filtroFisio==='__yo'?'Míos':(filtroFisio||'Todos');
   let html=`<div class="sg-seg"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Informes</button></div>
-   ${tab==='pend'?`<div class="ll-per"><label class="ll-sel ${filtroFisio?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">Quién llama:</span><select class="sg-quien"><option value="">Todos</option><option value="__yo" ${filtroFisio==='__yo'?'selected':''}>Míos</option>${fisios.map(f=>`<option value="${escH(f)}" ${filtroFisio===f?'selected':''}>${escH(f)}</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add">+ Añadir</button></div>
+   ${tab==='pend'?`<div class="ll-per"><label class="ll-sel ${filtroFisio?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">Quién llama:</span><select class="sg-quien"><option value="">Todos (${P.length})</option><option value="__yo" ${filtroFisio==='__yo'?'selected':''}>Míos (${P.filter(x=>qDe(x)===yo).length})</option>${fisios.map(f=>`<option value="${escH(f)}" ${filtroFisio===f?'selected':''}>${escH(f)} (${P.filter(x=>qDe(x)===f).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add">+ Añadir</button></div>
    <div class="seg-res"><div class="r"><b>${atr}</b><span>atrasados</span></div><div class="o"><b>${deHoy}</b><span>para hoy</span></div><div><b>${P.length-atr-deHoy}</b><span>próximos</span></div></div>`:''}`;
   if(tab==='pend'){
    const L=P.filter(flt);
