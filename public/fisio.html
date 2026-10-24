@@ -257,6 +257,14 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .seg-bres{display:flex;flex-direction:column;margin-top:8px}.seg-bres button{text-align:left;font-family:var(--font);font-size:14px;padding:11px 6px;border:none;border-bottom:1px solid #f1ede9;background:none;cursor:pointer}
 .rn-seg{font-family:var(--font);font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:99px;border:1.5px solid #c2552e;background:#fff;color:#c2552e;cursor:pointer;white-space:nowrap}
 @media(max-width:560px){.seg-it{grid-template-columns:1fr auto;}.seg-f1{grid-column:1/-1}.seg-f1 b{font-size:12px;color:var(--muted)}.seg-f2{grid-column:1}}
+.tar-c{margin-bottom:12px}.tar-h{font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:12px 0 2px}
+.tar-ll{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #f1ede9}.tar-ll .seg-f2{flex:1}
+.tar-ok{text-align:center;padding:40px 10px;font-size:15px;font-weight:600;color:#16803c}
+.tar-res{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:14px}.tar-res button{text-align:left;font-family:var(--font);background:#1e2a38;color:#fff;border:none;border-radius:14px;padding:12px 14px;cursor:pointer}.tar-res b{display:block;font-size:15px}.tar-res span{font-size:12px;color:rgba(255,255,255,.75)}
+.seg-fis span{font-size:12px;color:var(--muted);align-self:center;margin-right:2px}
+.seg-ed{display:inline-block;margin-top:5px;font-family:var(--font);font-size:11.5px;color:#7d6a60;background:#f7f3ef;border:none;border-radius:99px;padding:3px 10px;cursor:pointer}.seg-ed b{color:#1a1a1a}
+.seg-it.hecha{cursor:pointer}.seg-it.hecha:hover{background:#fbf8f5}
+.hz-bts .hz-re{flex:1.3;color:#1e2a38}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -595,7 +603,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  /* El scroll va dentro (no la página): así Safari no mueve la barra de abajo al subir/bajar */
  html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
  .main-area{height:100dvh;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
- #sb-rend{display:none!important}
+ #sb-rend,#sb-seg,#sb-tar{display:none!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
  .topbar-t{font-size:21px!important}
  .topbar-s{font-size:12px!important}
@@ -666,11 +674,13 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .pe-fisio{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:#7d6a60}
 .pe-fisio select{flex:1;padding:8px 10px;border:1.5px solid #eadfd6;border-radius:10px;font-size:13px;font-family:var(--font);background:#fff;color:#1a1a1a}
 @media(max-width:360px){.pe-step button{width:32px}.pe-step input{width:36px}}
-#btnRend{display:none}
-@media(max-width:768px){#btnRend.on{display:flex!important;position:absolute;right:66px;top:calc(50% + env(safe-area-inset-top)/2);transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:none;background:#fff;color:#c2552e;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(26,26,26,.08)}
-#btnRend svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
-#btnRend.on.activo{background:#c2552e;color:#fff}
-.topbar-t,.topbar-s{padding-right:112px!important}}
+#topBtns{display:none}
+@media(max-width:768px){#topBtns{display:flex;gap:8px;position:absolute;right:66px;top:calc(50% + env(safe-area-inset-top)/2);transform:translateY(-50%)}
+.tb-b{display:none;width:42px;height:42px;border-radius:50%;border:none;background:#fff;color:#c2552e;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(26,26,26,.08);position:relative;padding:0}
+.tb-b.on{display:flex}.tb-b svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tb-b.on.activo{background:#c2552e;color:#fff}
+.tb-n{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;border-radius:99px;background:#b42318;color:#fff;font-size:10.5px;font-weight:700;font-style:normal;display:none;align-items:center;justify-content:center;padding:0 4px;box-sizing:border-box;border:2px solid #fff}.tb-n.on{display:flex}
+.topbar-t,.topbar-s{padding-right:210px!important}.topbar-t{font-size:19px!important}}
 #btnPerfil{display:none}
 @media(max-width:768px){#btnAvisos{display:none!important}
 #btnPerfil{display:flex;position:absolute;right:14px;top:calc(50% + env(safe-area-inset-top)/2);transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:none;background:#1a1a1a;color:#fff;font-family:var(--font);font-size:14px;font-weight:700;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;box-shadow:0 2px 10px rgba(26,26,26,.12)}
@@ -745,6 +755,9 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  <div class="sb-item" id="sb-record" onclick="showSection('record')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="sb-txt">Recordatorios</span>
  </div>
+ <div class="sb-item" id="sb-tar" onclick="showSection('tar')" style="display:none">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></span><span class="sb-txt">Tareas</span>
+ </div>
  <div class="sb-item" id="sb-seg" onclick="showSection('seg')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="sb-txt">Seguimiento</span>
  </div>
@@ -762,7 +775,11 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  <div class="main-area">
  <div class="topbar">
  <button type="button" id="btnPerfil" onclick="abrirPerfilMenu()" aria-label="Mi perfil"></button>
- <button type="button" id="btnRend" onclick="showSection('rend')" aria-label="Rendimiento" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
+ <div id="topBtns">
+ <button type="button" class="tb-b" id="btnTar" onclick="showSection('tar')" aria-label="Tareas"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><i class="tb-n" id="btnTarN"></i></button>
+ <button type="button" class="tb-b" id="btnSeg" onclick="showSection('seg')" aria-label="Seguimiento"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></button>
+ <button type="button" class="tb-b" id="btnRend" onclick="showSection('rend')" aria-label="Rendimiento" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
+ </div>
  <button type="button" id="btnAvisos" onclick="abrirAjustesAvisos()" aria-label="Notificaciones"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><i id="btnAvisosDot"></i></button>
  <div class="topbar-t" id="topbar-t">Anamnesis clínica</div>
  <div class="topbar-s" id="topbar-s">Asigna ejercicios a tus pacientes</div>
@@ -834,7 +851,8 @@ const TOPBAR = {
  msg: ['Chat','Habla con tus pacientes: texto, fotos y PDFs'],
  record: ['Recordatorios','Citas de mañana pendientes de confirmar'],
  rend: ['Rendimiento','Cómo va cada fisio'],
- seg: ['Seguimiento','Pacientes a los que hay que llamar']
+ seg: ['Seguimiento','Pacientes a los que hay que llamar'],
+ tar: ['Tareas','Lo que tienes pendiente']
 };
 
 const CFG = {
@@ -953,8 +971,7 @@ function aplicarRole(){
  'tareas': 'sb-tareas',
  'comunicaciones': 'sb-comunicaciones',
  'vacaciones': 'sb-vacaciones',
- 'rendimiento': 'sb-rend',
- 'seguimiento': 'sb-seg'
+ 'rendimiento': 'sb-rend'
  };
 
  const accesos = fisioActual.accesos || {};
@@ -1001,7 +1018,7 @@ function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=
 function pintarPerfil(){if(!fisioActual)return;const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=fisioActual.role==='admin'?'Administración':'Fisioterapeuta';
- const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').style.display='';$('btnRend').classList.toggle('on',okR);}
+ const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').style.display='';$('btnRend').classList.toggle('on',okR);$('btnSeg').classList.add('on');$('btnTar').classList.add('on');['sb-seg','sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});contarTareas();}
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
@@ -1011,8 +1028,8 @@ function cerrarSesionPanel(){try{localStorage.removeItem('f365_panel_sesion');se
 function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
- try{$('btnRend').classList.toggle('activo',sec==='rend');}catch(e){}
- ['anam','prog','pac','school','msg','record','rend','seg'].forEach(s=>{
+ try{$('btnRend').classList.toggle('activo',sec==='rend');$('btnSeg').classList.toggle('activo',sec==='seg');$('btnTar').classList.toggle('activo',sec==='tar');}catch(e){}
+ ['anam','prog','pac','school','msg','record','rend','seg','tar'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
  const [t,s] = TOPBAR[sec];
@@ -1032,6 +1049,7 @@ function showSection(sec){
  else if(sec==='record') renderRecordatorios(wrap);
  else if(sec==='rend') renderRendimiento(wrap);
  else if(sec==='seg') renderSeguimiento(wrap);
+ else if(sec==='tar') renderTareas(wrap);
 }
 
 
@@ -1176,7 +1194,6 @@ async function sinCitaFisio(wrap){
  }catch(e){}
 }
 function renderPac(wrap){
- sinCitaFisio(wrap);
  const card=ce('div','card');
  card.innerHTML=`<div class="ct">Buscar paciente</div>
  <div class="si"><input type="text" id="pacBuscar" placeholder="Escribe nombre o email..." autocomplete="off"></div>
@@ -4589,6 +4606,74 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar</div>';}
 }
 
+// ── TAREAS: lo que tiene pendiente cada fisio (y Nora ve las de todos) ──
+const TAR_NOMBRES=['Nora','Sara','Jonathan','Juan','Ramiro'];
+function miNombreCorto(){const n=String((fisioActual&&fisioActual.nombre)||'').split(' ')[0];return TAR_NOMBRES.find(x=>x.toLowerCase()===n.toLowerCase())||n;}
+function esJefe(){return !!fisioActual&&(fisioActual.role==='admin'||!!(fisioActual.accesos||{}).rendimiento);}
+const deQuienSeg=x=>x.responsable||x.fisio||'';
+async function datosTareas(){
+ const iso=n=>isoMadrid(new Date(Date.now()+n*864e5));
+ const [r,sg]=await Promise.all([
+  fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${iso(-30)}&hasta=${iso(-1)}`).then(x=>x.json()).catch(()=>({})),
+  fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
+ const hoy=(sg&&sg.hoy)||iso(0),por={};
+ const de=n=>(por[n]=por[n]||{fisio:n,expl:[],llam:[]});
+ ((r&&r.fisios)||[]).forEach(f=>(f.lista||[]).filter(p=>!(p.nota&&p.notaFecha>=p.ultima)).forEach(p=>de(f.fisio).expl.push(p)));
+ ((sg&&sg.pendientes)||[]).filter(x=>x.fecha<=hoy).forEach(x=>{const q=deQuienSeg(x);if(q)de(q).llam.push(x);});
+ return {por,hoy};
+}
+async function contarTareas(){
+ try{const {por}=await datosTareas();const yo=miNombreCorto();
+  const n=esJefe()?Object.values(por).reduce((a,f)=>a+f.expl.length+f.llam.length,0):((por[yo]||{}).expl||[]).length+((por[yo]||{}).llam||[]).length;
+  const b=$('btnTarN');if(b){b.textContent=n>99?'99+':n;b.classList.toggle('on',n>0);}
+ }catch(e){}
+}
+function itemExplicar(p,onDone){
+ const fch=f=>{const [y,m,d]=String(f).split('-');return +d+'/'+ +m;};
+ const it=ce('div','sc-it');
+ it.innerHTML=`<div class="sc-top"><b>${escH(p.nombre)}</b><i>última sesión ${fch(p.ultima)}</i></div><div class="sc-row"><textarea rows="1" placeholder="¿Por qué no ha reagendado?"></textarea><button type="button">Guardar</button></div>`;
+ const ta=it.querySelector('textarea'),b=it.querySelector('button');
+ ta.oninput=()=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';};
+ b.onclick=async()=>{const nota=ta.value.trim();if(!nota){toast('Escribe el motivo',false);ta.focus();return;}
+  b.disabled=true;b.textContent='…';
+  try{const d=await (await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:p.id,nota,fisio:fisioActual.nombre})})).json();if(!d.ok)throw 0;
+   it.remove();toast('Guardado, gracias',true);onDone&&onDone();}catch(e){b.disabled=false;b.textContent='Guardar';toast('No se ha podido guardar',false);}};
+ return it;
+}
+function itemLlamar(x,onDone){
+ const it=ce('div','tar-ll');
+ it.innerHTML=`<div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em>${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p></div><div class="seg-f3">${x.tel?`<a class="seg-ic" href="tel:+${segTel(x.tel)}" aria-label="Llamar"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a><a class="seg-ic wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}<button type="button" class="seg-hecho">Resultado</button></div>`;
+ it.querySelector('.seg-hecho').onclick=()=>abrirResultadoSeg(x,onDone);
+ return it;
+}
+async function renderTareas(wrap){
+ const box=ce('div','tar');box.innerHTML='<div class="fac-vacio">Cargando…</div>';wrap.appendChild(box);
+ const recargar=()=>{box.remove();renderTareas(wrap);contarTareas();};
+ let d;try{d=await datosTareas();}catch(e){box.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
+ box.innerHTML='';
+ const seccion=(titulo,sub,items,mk)=>{if(!items.length)return null;const c=ce('div','card tar-c');c.innerHTML=`<div class="ct">${titulo} <span class="sc-n">${items.length}</span></div>${sub?`<div class="sc-sub">${sub}</div>`:''}`;items.forEach(x=>c.appendChild(mk(x,recargar)));return c;};
+ const yo=miNombreCorto();
+ if(!esJefe()){
+  const m=d.por[yo]||{expl:[],llam:[]};
+  const a=seccion('Llamadas para hoy','Pacientes de seguimiento que te toca contactar.',m.llam,itemLlamar);
+  const b=seccion('Explica por qué no han reagendado','Pacientes que atendiste en los últimos 30 días y no tienen próxima cita.',m.expl,itemExplicar);
+  [a,b].forEach(x=>x&&box.appendChild(x));
+  if(!a&&!b)box.innerHTML='<div class="tar-ok">✓ No tienes nada pendiente</div>';
+  return;
+ }
+ // Nora / Ramiro: tareas de todos
+ const L=Object.values(d.por).filter(f=>f.expl.length||f.llam.length).sort((a,b)=>(b.expl.length+b.llam.length)-(a.expl.length+a.llam.length));
+ if(!L.length){box.innerHTML='<div class="tar-ok">✓ Nadie tiene tareas pendientes</div>';return;}
+ const res=ce('div','tar-res');res.innerHTML=L.map(f=>`<button type="button" data-f="${escH(f.fisio)}"><b>${escH(f.fisio)}</b><span>${f.llam.length?f.llam.length+' llamada'+(f.llam.length>1?'s':''):''}${f.llam.length&&f.expl.length?' · ':''}${f.expl.length?f.expl.length+' sin explicar':''}</span></button>`).join('');box.appendChild(res);
+ L.forEach(f=>{
+  const c=ce('div','card tar-c');c.id='tar-'+f.fisio;
+  c.innerHTML=`<div class="ct">${escH(f.fisio)} <span class="sc-n">${f.expl.length+f.llam.length}</span></div>`;
+  if(f.llam.length){const h=ce('div','tar-h');h.textContent='Llamadas para hoy o atrasadas';c.appendChild(h);f.llam.forEach(x=>c.appendChild(itemLlamar(x,recargar)));}
+  if(f.expl.length){const h=ce('div','tar-h');h.textContent='Sin explicar por qué no reagendan';c.appendChild(h);f.expl.forEach(p=>c.appendChild(f.fisio===yo?itemExplicar(p,recargar):(()=>{const it=ce('div','sc-it');const [y,m,dd]=String(p.ultima).split('-');it.innerHTML=`<div class="sc-top"><b>${escH(p.nombre)}</b><i>última sesión ${+dd}/${+m}</i></div>`;return it;})()));}
+  box.appendChild(c);
+ });
+ res.querySelectorAll('button').forEach(b=>b.onclick=()=>{const el=document.getElementById('tar-'+b.dataset.f);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});
+}
 // ── SEGUIMIENTO: pacientes a los que hay que llamar ──
 const SEG_RES=['Cita recuperada','Volver a llamar','No contesta','Pendiente de respuesta','Alta'];
 const segIso=n=>isoMadrid(new Date(Date.now()+n*864e5));
@@ -4598,14 +4683,17 @@ function abrirNuevoSeg({pacienteId,nombre,nota,onSave}){
  const m=hzModal(`<div class="hz-top"><div><small>Añadir a seguimiento</small><b>${escH(nombre||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">¿Cuándo hay que llamar?</div><div class="seg-rap">${[['Mañana',1],['En 1 semana',7],['En 2 semanas',14],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div>
   <input type="date" class="seg-f" value="${segIso(7)}" min="${segIso(0)}">
+  <div class="hz-lab">¿Quién le contacta?</div><div class="seg-rap seg-resp">${TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('')}</div>
   <div class="hz-lab">Nota</div><textarea class="seg-n" rows="3" placeholder="Ej.: llamar para ver qué tal está y ofrecer mantenimiento">${escH(nota||'')}</textarea>
   <div class="hz-bts"><button type="button" class="hz-ok">Añadir</button></div>`);
+ let resp=miNombreCorto();const pr=()=>m.querySelectorAll('.seg-resp button').forEach(b=>b.classList.toggle('on',b.dataset.n===resp));pr();
+ m.querySelectorAll('.seg-resp button').forEach(b=>b.onclick=()=>{resp=b.dataset.n;pr();});
  const f=m.querySelector('.seg-f');
  const pinta=()=>m.querySelectorAll('.seg-rap button').forEach(b=>b.classList.toggle('on',segIso(+b.dataset.d)===f.value));pinta();
  m.querySelectorAll('.seg-rap button').forEach(b=>b.onclick=()=>{f.value=segIso(+b.dataset.d);pinta();});f.onchange=pinta;
  m.querySelector('.hz-x').onclick=()=>m.remove();
  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Añadiendo…';
-  try{const d=await (await fetch('/api/schedule?action=seg-crear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId,fecha:f.value,nota:m.querySelector('.seg-n').value.trim()})})).json();if(!d.ok)throw new Error(d.error||'Error');
+  try{const d=await (await fetch('/api/schedule?action=seg-crear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId,fecha:f.value,nota:m.querySelector('.seg-n').value.trim(),responsable:resp})})).json();if(!d.ok)throw new Error(d.error||'Error');
    toast('Añadido a seguimiento',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;b.textContent='Añadir';toast(err.message,false);}};
 }
 function abrirResultadoSeg(it,onSave){
@@ -4625,34 +4713,66 @@ function abrirResultadoSeg(it,onSave){
   try{const d=await (await fetch('/api/schedule?action=seg-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,pacienteId:it.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value.trim(),nuevaFecha:nf.style.display===''?f.value:'',quien:(fisioActual&&fisioActual.nombre)||''})})).json();if(!d.ok)throw new Error(d.error||'Error');
    toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
 }
+function abrirEditarSeg(it,onSave){
+ let resp=it.responsable||'';
+ const m=hzModal(`<div class="hz-top"><div><small>Editar seguimiento</small><b>${escH(it.nombre)}</b></div><button type="button" class="hz-x">✕</button></div>
+  <div class="hz-lab">Fecha para llamar</div><input type="date" class="seg-f" value="${it.fecha}">
+  <div class="hz-lab">¿Quién le contacta?</div><div class="seg-rap seg-resp">${TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('')}</div>
+  <div class="hz-lab">Nota</div><textarea class="seg-n" rows="3">${escH(it.nota||'')}</textarea>
+  <div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
+ const pr=()=>m.querySelectorAll('.seg-resp button').forEach(b=>b.classList.toggle('on',b.dataset.n===resp));pr();
+ m.querySelectorAll('.seg-resp button').forEach(b=>b.onclick=()=>{resp=resp===b.dataset.n?'':b.dataset.n;pr();});
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;
+  try{const d=await (await fetch('/api/schedule?action=seg-editar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,fecha:m.querySelector('.seg-f').value,nota:m.querySelector('.seg-n').value,responsable:resp})})).json();if(!d.ok)throw 0;toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast('No se ha podido guardar',false);}};
+}
+function abrirEditarLlamada(x,onSave){
+ const inv={'CITA RECUPERADA':'Cita recuperada','VOLVER A LLAMAR':'Volver a llamar','NC - VOLVER A LLAMAR':'No contesta','PENDIENTE RESPUESTA':'Pendiente de respuesta','ALTA':'Alta'};
+ let res=inv[x.resultado]||'';
+ const m=hzModal(`<div class="hz-top"><div><small>Llamada del ${segFecha(x.fecha)}${x.quien?' · '+escH(x.quien):''}</small><b>${escH(x.nombre)}</b></div><button type="button" class="hz-x">✕</button></div>
+  <div class="hz-tipos">${SEG_RES.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
+  <div class="hz-lab">Nota</div><textarea class="seg-n" rows="2">${escH(x.nota||'')}</textarea>
+  <div class="hz-bts"><button type="button" class="hz-re">Volver a «Por llamar»</button><button type="button" class="hz-ok">Guardar</button></div>`);
+ const pt=()=>m.querySelectorAll('.hz-tipos button').forEach(b=>b.classList.toggle('on',b.dataset.v===res));pt();
+ m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{res=b.dataset.v;pt();});
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const enviar=async(reabrir,b)=>{b.disabled=true;
+  try{const d=await (await fetch('/api/schedule?action=seg-editar-llamada',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:x.id,segId:x.segId,pacienteId:x.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value,reabrir})})).json();if(!d.ok)throw 0;
+   toast(reabrir?'Vuelve a estar en «Por llamar»':'Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast('No se ha podido guardar',false);}};
+ m.querySelector('.hz-ok').onclick=e=>enviar(false,e.target);
+ m.querySelector('.hz-re').onclick=e=>enviar(true,e.target);
+}
 async function renderSeguimiento(wrap){
  const box=ce('div','seg');wrap.appendChild(box);
- let tab='pend',filtroFisio='',datos=null;
+ let tab='pend',filtroFisio=esJefe()?'':'__yo',datos=null;
  try{tab=sessionStorage.getItem('f365_seg')||'pend';}catch(e){}
  const pinta=()=>{
   if(!datos){box.innerHTML='<div class="fac-vacio">Cargando…</div>';return;}
   const P=datos.pendientes,H=datos.hechas,hoy=datos.hoy;
-  const fisios=[...new Set([...P,...H].map(x=>x.fisio).filter(Boolean))].sort();
-  const flt=x=>!filtroFisio||x.fisio===filtroFisio;
+  const yo=miNombreCorto();
+  const fisios=TAR_NOMBRES.filter(n=>n!==yo&&P.concat(H).some(x=>deQuienSeg(x)===n));
+  const flt=x=>!filtroFisio||(filtroFisio==='__yo'?deQuienSeg(x)===yo:deQuienSeg(x)===filtroFisio);
   const atr=P.filter(x=>x.fecha<hoy).length,deHoy=P.filter(x=>x.fecha===hoy).length;
   let html=`<div class="seg-head"><div class="seg-tabs"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Hechas (30 días) <b>${H.length}</b></button></div><button type="button" class="seg-add">+ Añadir</button></div>
    ${tab==='pend'?`<div class="seg-res"><div class="r"><b>${atr}</b><span>atrasados</span></div><div class="o"><b>${deHoy}</b><span>para hoy</span></div><div><b>${P.length-atr-deHoy}</b><span>próximos</span></div></div>`:''}
-   ${fisios.length?`<div class="seg-fis"><button type="button" data-f="" class="${!filtroFisio?'on':''}">Todos</button>${fisios.map(f=>`<button type="button" data-f="${escH(f)}" class="${filtroFisio===f?'on':''}">${escH(f)}</button>`).join('')}</div>`:''}`;
+   <div class="seg-fis"><span>Quién llama:</span><button type="button" data-f="" class="${!filtroFisio?'on':''}">Todos</button><button type="button" data-f="__yo" class="${filtroFisio==='__yo'?'on':''}">Míos</button>${fisios.map(f=>`<button type="button" data-f="${escH(f)}" class="${filtroFisio===f?'on':''}">${escH(f)}</button>`).join('')}</div>`;
   if(tab==='pend'){
    const L=P.filter(flt);
    const grupos=[['Atrasados',L.filter(x=>x.fecha<hoy)],['Hoy',L.filter(x=>x.fecha===hoy)],['Esta semana',L.filter(x=>x.fecha>hoy&&x.fecha<=segIso(7))],['Más adelante',L.filter(x=>x.fecha>segIso(7))]];
    html+=grupos.filter(g=>g[1].length).map(([t,g])=>`<div class="seg-gt">${t} <span>${g.length}</span></div><div class="seg-tabla">${g.map(x=>`<div class="seg-it${x.fecha<hoy?' atr':''}">
     <div class="seg-f1"><b>${segFecha(x.fecha)}</b></div>
-    <div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em>${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p></div>
+    <div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em title="Su fisio">${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p><button type="button" class="seg-ed" data-id="${x.id}">${deQuienSeg(x)?'Llama: <b>'+escH(deQuienSeg(x))+'</b>':'Sin asignar'} · editar</button></div>
     <div class="seg-f3">${x.tel?`<a class="seg-ic" href="tel:+${segTel(x.tel)}" aria-label="Llamar"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a><a class="seg-ic wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}<button type="button" class="seg-hecho" data-id="${x.id}">Resultado</button></div></div>`).join('')}</div>`).join('')||'<div class="fac-vacio">No hay nadie pendiente de llamar 🎉</div>';
   }else{
    const L=H.filter(flt);
-   html+=L.length?`<div class="seg-tabla">${L.map(x=>`<div class="seg-it hecha"><div class="seg-f1"><b>${segFecha(x.fecha)}</b><small>${escH(x.quien||'')}</small></div><div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em>${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p></div><div class="seg-f3"><span class="seg-r ${/RECUPERADA|ALTA/.test(x.resultado)?'ok':/NC|VOLVER/.test(x.resultado)?'no':''}">${escH(x.resultado.toLowerCase().replace(/^nc - /,'no contesta · ').replace(/^./,c=>c.toUpperCase()))}</span></div></div>`).join('')}</div>`:'<div class="fac-vacio">Sin llamadas en los últimos 30 días.</div>';
+   html+=L.length?`<div class="seg-tabla">${L.map(x=>`<div class="seg-it hecha" data-id="${x.id}"><div class="seg-f1"><b>${segFecha(x.fecha)}</b><small>${escH(x.quien||'')}</small></div><div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em>${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p></div><div class="seg-f3"><span class="seg-r ${/RECUPERADA|ALTA/.test(x.resultado)?'ok':/NC|VOLVER/.test(x.resultado)?'no':''}">${escH(x.resultado.toLowerCase().replace(/^nc - /,'no contesta · ').replace(/^./,c=>c.toUpperCase()))}</span></div></div>`).join('')}</div>`:'<div class="fac-vacio">Sin llamadas en los últimos 30 días.</div>';
   }
   box.innerHTML=html;
   box.querySelectorAll('.seg-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;try{sessionStorage.setItem('f365_seg',tab);}catch(e){}pinta();});
   box.querySelectorAll('.seg-fis button').forEach(b=>b.onclick=()=>{filtroFisio=b.dataset.f;pinta();});
   box.querySelectorAll('.seg-hecho').forEach(b=>b.onclick=()=>abrirResultadoSeg(P.find(x=>x.id===b.dataset.id),cargar));
+  box.querySelectorAll('.seg-ed').forEach(b=>b.onclick=()=>abrirEditarSeg(P.find(x=>x.id===b.dataset.id),cargar));
+  box.querySelectorAll('.seg-it.hecha').forEach(r=>r.onclick=()=>abrirEditarLlamada(H.find(x=>x.id===r.dataset.id),cargar));
   box.querySelector('.seg-add').onclick=()=>{
    const m=hzModal(`<div class="hz-top"><div><small>Añadir a seguimiento</small><b>¿Qué paciente?</b></div><button type="button" class="hz-x">✕</button></div><input type="text" class="seg-bus" placeholder="Busca por nombre…" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px"><div class="seg-bres"></div>`);
    m.querySelector('.hz-x').onclick=()=>m.remove();const inp=m.querySelector('.seg-bus'),r=m.querySelector('.seg-bres');inp.focus();
