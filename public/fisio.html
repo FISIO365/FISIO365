@@ -924,6 +924,8 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .st-bt small b{color:#1a1a1a}
 .st-ch{touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize;overflow:visible!important}.st-dot{pointer-events:none}
 .st-dot span.der{left:auto;right:-4px;transform:none}.st-dot span.izq{left:-4px;transform:none}
+.st-trb{font-family:var(--font);background:none;border:none;border-top:1px solid #efe8e1;width:100%;text-align:inherit;cursor:pointer;color:inherit}.st-trb i{font-style:normal;color:#c2552e;display:inline-block;transition:transform .15s}.st-trb.on i{transform:rotate(90deg)}
+.st-pl{background:#fff;border-radius:10px;padding:4px 10px;margin:2px 0 6px}.st-pi{display:grid;grid-template-columns:18px 1fr;column-gap:6px;padding:6px 0;border-top:1px solid #f3eee9;cursor:pointer}.st-pi:first-child{border-top:none}.st-pi span{grid-row:span 2;font-weight:700;font-size:13px}.st-pi span.ok{color:#16803c}.st-pi span.no{color:#b42318}.st-pi b{font-size:13px;font-weight:600}.st-pi small{font-size:11.5px;color:#7d6a60}
 /* Agenda */
 .ag-sinf{background:#fff6e8;border-radius:14px;padding:10px 12px;margin-bottom:10px}.ag-sinf>b{display:block;font-size:13.5px;color:#b45309}.ag-sinf>small{display:block;font-size:12px;color:#7d6a60;margin-bottom:8px}
 
@@ -5282,14 +5284,16 @@ function renderStats(wrap){
   g.innerHTML=`<div class="st-ks">${kpis}</div>
    <div class="st-box"><div class="st-bt"><b>${mt}</b><small>${resumen}</small></div><div class="st-ch">${grafico}</div></div>
    <div class="st-2">
-    <div class="st-box"><div class="st-bt"><b>Primeras visitas</b><small>y si volvieron a reservar</small></div>
-     ${S.vinieron?`<div class="st-tb"><div class="st-tr st-th"><span>Fisio</span><span>Vinieron</span><span>Repiten</span><span>%</span></div>${fis.map(([f,x])=>`<div class="st-tr"><span>${escH(agNom(f))}</span><span>${x.vinieron}</span><span>${x.reagendaron}</span><span><b>${Math.round(x.reagendaron*100/x.vinieron)}%</b></span></div>`).join('')}<div class="st-tr st-tt"><span>Total</span><span>${S.vinieron}</span><span>${S.reagendaron}</span><span><b>${Math.round(S.reagendaron*100/S.vinieron)}%</b></span></div></div>
+    <div class="st-box"><div class="st-bt"><b>Primeras visitas</b><small>toca un fisio para ver quiénes</small></div>
+     ${S.vinieron?`<div class="st-tb"><div class="st-tr st-th"><span>Fisio</span><span>Vinieron</span><span>Repiten</span><span>%</span></div>${fis.map(([f,x])=>`<button type="button" class="st-tr st-trb" data-f="${escH(f)}"><span>${escH(agNom(f))} <i>›</i></span><span>${x.vinieron}</span><span>${x.reagendaron}</span><span><b>${Math.round(x.reagendaron*100/x.vinieron)}%</b></span></button><div class="st-pl" data-f="${escH(f)}" hidden>${(x.pac||[]).sort((a,b)=>a.f.localeCompare(b.f)).map(p=>`<div class="st-pi" data-id="${p.id}"><span class="${p.rep?'ok':'no'}">${p.rep?'✓':'✕'}</span><b>${escH((ST.d.nombres||{})[p.id]||'Paciente')}</b><small>1.ª ${escH(segFecha(p.f))}${p.rep?` · ${p.rep} cita${p.rep>1?'s':''} más${p.prox?` (próx. ${escH(segFecha(p.prox))})`:''}`:' · no ha vuelto'}</small></div>`).join('')}</div>`).join('')}<div class="st-tr st-tt"><span>Total</span><span>${S.vinieron}</span><span>${S.reagendaron}</span><span><b>${Math.round(S.reagendaron*100/S.vinieron)}%</b></span></div></div>
 `:`<p class="st-p">Ninguna primera visita esta semana</p>`}</div>
    </div>
    <div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
     <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b></p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`;
   g.querySelectorAll('.st-k').forEach(b=>b.onclick=e=>{if(e.target.closest('.fp-i,.fp-ipop'))return;if(b.querySelector('.st-ed')&&b.classList.contains('on'))editar();else{ST.met=b.dataset.k;pintar();}});
   g.querySelector('.st-edit').onclick=editar;
+  g.querySelectorAll('.st-trb').forEach(b=>b.onclick=()=>{const pl=g.querySelector(`.st-pl[data-f="${CSS.escape(b.dataset.f)}"]`);pl.hidden=!pl.hidden;b.classList.toggle('on',!pl.hidden);});
+  g.querySelectorAll('.st-pi').forEach(x=>x.onclick=()=>abrirFichaPaciente(x.dataset.id,x.querySelector('b').textContent));
  }
  function editar(){const S=ST.d.semanas.find(s=>s.semana===ST.sem);
   const m=hzModal(`<div class="hz-top"><div><small>Semana ${escH(stSemTxt(S.semana))}</small><b>Datos a mano</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
