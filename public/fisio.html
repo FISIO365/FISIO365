@@ -4868,13 +4868,12 @@ function renderAgenda(wrap){
  card.innerHTML=`<div class="ag-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Día anterior">‹</button>
   <label class="ag-fe"><b class="ag-ft"></b><input type="date" class="ag-fi"></label>
   <button type="button" class="ag-nv" data-n="1" aria-label="Día siguiente">›</button></div>
-  <div class="ag-bar2"><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><span class="ag-res"></span><button type="button" class="ag-abrir">＋ Abrir huecos</button></div>
+  <div class="ag-bar2"><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><span class="ag-res"></span></div>
   <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
  wrap.appendChild(card);
  const fi=card.querySelector('.ag-fi'),fs=card.querySelector('.ag-fs'),grid=card.querySelector('.ag-grid');
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n);cargar();});
  card.querySelector('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
- card.querySelector('.ag-abrir').onclick=()=>agAbrirHuecos({fecha:AG.fecha,fisio:AG.fisio},cargar);
  fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};
  fs.onchange=()=>{AG.fisio=fs.value;try{localStorage.setItem('f365_ag_fisio',AG.fisio);}catch(e){}pintar();};
  let tok=0;
