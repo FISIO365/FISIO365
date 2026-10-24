@@ -881,6 +881,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .np-dup{margin-top:14px;background:#fff4e5;border-radius:14px;padding:12px}.np-dup>b{display:block;font-size:13px;color:#b45309;margin-bottom:8px}
 .np-dup-it{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;width:100%;text-align:left;background:#fff;border:none;border-radius:10px;padding:9px 12px;margin-bottom:6px;font-family:var(--font);cursor:pointer}.np-dup-it span{font-weight:600;font-size:13.5px}.np-dup-it small{flex-basis:100%;order:3;font-size:11.5px;color:#9a8d84}.np-dup-it i{margin-left:auto;font-style:normal;font-size:12px;font-weight:600;color:#c2552e}
 .np-forzar{border:none;background:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#7d6a60;text-decoration:underline;cursor:pointer;padding:4px 0 0}
+.fp-pqh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.fp-pqh b{margin:0!important}.fp-pq .fp-ed{background:#fff}
 </style>
 </head>
 <body>
@@ -5016,7 +5017,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const pend=d.seguimiento.filter(x=>!x.hecho),ult=d.llamadas[0];
   return `
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
-  ${P.porQue?`<div class="fp-box warn"><b>Por qué no reagenda</b><p>${escH(P.porQue)}</p><small>${escH([P.porQueFisio,fch(P.porQueFecha)].filter(Boolean).join(' · '))}</small></div>`:''}
+  ${P.porQue||!fut.length?`<div class="fp-box warn fp-pq"><div class="fp-pqh"><b>Por qué no reagenda</b><button type="button" class="fp-ed fp-pq-ed">${P.porQue?'Editar':'Escribir'}</button></div><div class="fp-pqc">${P.porQue?`<p>${escH(P.porQue)}</p><small>${escH([P.porQueFisio,fch(P.porQueFecha)].filter(Boolean).join(' · '))}</small>`:'<p class="fp-mu">No tiene próxima cita y nadie ha explicado por qué.</p>'}</div></div>`:''}
   ${pend.length||ult?`<div class="fp-box"><b>Seguimiento</b>${pend.map(x=>`<p>📞 Llamar el ${escH(segFecha(x.fecha))}${x.quien?' · '+escH(x.quien):''}${x.nota?' — '+escH(x.nota):''}</p>`).join('')}${ult?`<p class="fp-mu">Última llamada: <span class="r-${/RECUPERADA|^ALTA/.test(ult.resultado)?'ok':/^NC|^VOLVER/.test(ult.resultado)?'no':'pe'}">${escH(resTxtG(ult.resultado))}</span> · ${escH(segFecha(ult.fecha))}${ult.quien?' · '+escH(quienNom(ult.quien)):''}${ult.nota?' — '+escH(ult.nota):''}</p>`:''}</div>`:''}
   <div class="fp-blk" data-blk="datos"><div class="fp-bt"><h3>Datos</h3><button type="button" class="fp-ed">Editar</button></div>
    <div class="fp-fs">${campoTxt('Teléfono','tel',P.telf)}${campoTxt('WhatsApp','whatsapp',P.whatsapp)}${campoTxt('Email','email',P.email)}${campoTxt('DNI','dni',P.dni)}${campoTxt('Cumpleaños','cumple',P.cumple,'date')}<div class="fp-f"><span>Paciente desde</span><div class="fp-v">${escH(fch(String(P.alta).slice(0,10)))}</div></div></div></div>
@@ -5040,6 +5041,13 @@ async function abrirFichaPaciente(id,nombre,pBase){
   <div class="fp-blk" data-blk="historial"><div class="fp-bt"><h3>Historia clínica</h3><span class="fp-edbts"><button type="button" class="fp-ok fp-add-ev">＋ Evolución</button><button type="button" class="fp-ed">Editar</button></span></div>
    <div class="fp-add-slot"></div><div class="fp-txt fp-doc">${P.historial?linea(P.historial):'<em>Todavía no tiene historia clínica</em>'}</div></div>
   <div class="fp-blk" data-blk="notas"><div class="fp-bt"><h3>Notas</h3><button type="button" class="fp-ed">Editar</button></div><div class="fp-txt fp-doc">${P.notas?par(P.notas):'<em>Sin notas</em>'}</div></div>`;}
+ function montarPorQue(cont){const b=cont.querySelector('.fp-pq-ed');if(!b)return;
+  b.onclick=()=>{const c=cont.querySelector('.fp-pqc');c.innerHTML=`<textarea class="fp-ta" rows="4" placeholder="Ej.: le di el alta, se va de viaje, le cuesta pagar…">${escH(P.porQue||'')}</textarea><div class="fp-edbts" style="justify-content:flex-end;margin-top:8px"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></div>`;b.remove();
+   const ta=c.querySelector('.fp-ta');ta.focus();c.querySelector('.fp-can').onclick=pintar;
+   c.querySelector('.fp-ok').onclick=async e=>{const t=ta.value.trim();if(!t){toast('Escribe el motivo',false);return;}const bt=e.target;bt.disabled=true;bt.textContent='Guardando…';
+    try{const r=await (await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:id,nota:t,fisio:fisioActual.nombre})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
+     P.porQue=t;P.porQueFecha=r.fecha||d.hoy;P.porQueFisio=fisioActual.nombre;try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}toast('Guardado',true);pintar();}catch(err){bt.disabled=false;bt.textContent='Guardar';toast(err.message,false);}};};}
+
  function montarHistoria(cont){
   const b=cont.querySelector('.fp-add-ev');if(!b)return;
   b.onclick=()=>{const slot=cont.querySelector('.fp-add-slot');const u=d.citas.find(c=>c.fecha<=d.hoy&&/REALIZADA/i.test(c.estado));
@@ -5068,7 +5076,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
   body.querySelector('.fp-estb').onclick=editarEstado;
   body.querySelector('.fp-segb').onclick=()=>{if(SEG_PAC[id]){toast(segYaTxt(id),true);return;}abrirNuevoSeg({pacienteId:id,nombre:P.nombre,motivo:P.porQue||'',onSave:()=>{SEG_PAC[id]={fecha:'',quien:''};pintar();}});};
   const tok='fp_'+Date.now();cont.dataset.token=tok;
-  if(tab==='resumen'){cont.innerHTML=resumen();montarEdicion(cont);}
+  if(tab==='resumen'){cont.innerHTML=resumen();montarEdicion(cont);montarPorQue(cont);}
   else if(tab==='citas')cont.innerHTML=citas();
   else if(tab==='archivos'){cont.innerHTML=archivos();montarSubida(cont);}
   else if(tab==='informes')fpTabInformes(id,cont,P.nombre,tok);
