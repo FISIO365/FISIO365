@@ -317,6 +317,14 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .ll-pdf{font-family:var(--font);font-size:10.5px;font-weight:700;padding:4px 6px;border-radius:8px;border:1.5px solid #c2552e;background:#fff;color:#c2552e;cursor:pointer;justify-self:center}
 .ll-det{margin-top:6px}.ll-det>summary{cursor:pointer;font-size:13px;font-weight:600;color:#c2552e;padding:8px 2px;list-style:none}.ll-det>summary::before{content:'▸ '}.ll-det[open]>summary::before{content:'▾ '}
 .tk-m p.tk-ult{display:block;color:#7d6a60}.tk-m p.tk-ult strong{font-size:12px}
+.pv{position:fixed;inset:0;z-index:980;background:#f4f1ec;display:flex;flex-direction:column}
+.pv-bar{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;background:#fff;border-bottom:1px solid #ece6e0}.pv-bar b{flex:1;font-size:15px}
+.pv-x{width:36px;height:36px;border-radius:50%;border:none;background:#f3efea;font-size:15px;cursor:pointer}
+.pv-pdf{font-family:var(--font);font-size:13px;font-weight:600;padding:9px 14px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer}
+.pv-doc{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;background:#fff;margin:12px;border-radius:14px;padding:20px 18px 40px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.pv-et{color:#c2552e;font-weight:700;letter-spacing:.8px;font-size:10.5px}.pv-doc h1{font-size:21px;margin:4px 0 2px}.pv-sub{color:#7d6a60;font-size:13px;margin-bottom:14px}
+.pv-k{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-bottom:16px}.pv-k div{background:#f7f3ef;border-radius:10px;padding:9px 10px}.pv-k span{display:block;font-size:10.5px;color:#7d6a60}.pv-k b{font-size:17px}
+.pv-doc h2{font-size:13.5px;margin:16px 0 6px}.pv-tw{overflow-x:auto}.pv-doc table{width:100%;border-collapse:collapse;font-size:12.5px}.pv-doc th{text-align:left;font-size:10px;text-transform:uppercase;color:#7d6a60;padding:5px 6px;border-bottom:1px solid #ece6e0}.pv-doc td{padding:7px 6px;border-bottom:1px solid #f1ede9;vertical-align:top}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -5016,11 +5024,25 @@ async function renderSeguimiento(wrap){
  const cargar=async()=>{datos=null;pinta();try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();};
  cargar();
 }
+// Vista previa del informe dentro del panel (se ve, se cierra con ✕ y desde aquí se guarda/envía el PDF)
+function pdfVista(o){
+ const col=c=>({ok:'#16803c',no:'#b42318',gris:'#7d6a60',nar:'#c2552e'})[c]||'';
+ const cel=v=>{const x=(v&&typeof v==='object')?v:{t:v};return `<td style="${x.c?'color:'+col(x.c)+';':''}${x.b?'font-weight:600;':''}">${escH(x.t==null?'':x.t)}</td>`;};
+ const m=ce('div','pv');
+ m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>Informe</b><button type="button" class="pv-pdf">Guardar o enviar PDF</button></div>
+  <div class="pv-doc"><div class="pv-et">${escH(o.etiqueta||'')}</div><h1>${escH(o.titulo||'')}</h1><div class="pv-sub">${escH(o.sub||'')}</div>
+  ${(o.kpis||[]).length?`<div class="pv-k">${o.kpis.map(([l,v,c])=>`<div><span>${escH(l)}</span><b style="${c&&String(v)!=='0'?'color:'+col(c):''}">${escH(v)}</b></div>`).join('')}</div>`:''}
+  ${(o.secciones||[]).map(sc=>`${sc.titulo?`<h2>${escH(sc.titulo)}</h2>`:''}<div class="pv-tw"><table><tr>${sc.cols.map(c=>`<th>${escH(c[0])}</th>`).join('')}</tr>${sc.filas.map(f=>`<tr>${f.map(cel).join('')}</tr>`).join('')}</table></div>`).join('')||'<p class="pv-sub">No hay datos en este periodo.</p>'}
+  </div>`;
+ document.body.appendChild(m);document.body.style.overflow='hidden';
+ const cerrar=()=>{m.remove();document.body.style.overflow='';};
+ m.querySelector('.pv-x').onclick=cerrar;m.querySelector('.pv-pdf').onclick=()=>pdfTablas(o);
+}
 function imprimirLlamadas(fisio,L,perTxt,[d1,d2]){
  const RES=[['Cita recuperada',/RECUPERADA/,'ok'],['Alta',/^ALTA/,'ok'],['Volver a llamar',/^VOLVER/,'no'],['No contesta',/^NC/,'no'],['Pendiente de respuesta',/PENDIENTE/,'gris']];
  const rt=r=>{const u=String(r||'').toUpperCase();return RES.find(z=>z[1].test(u))||[r||'—',null,'gris'];};
  const dias=[...new Set(L.map(x=>x.fecha))];
- pdfTablas({etiqueta:'FISIO365 · INFORME DE LLAMADAS',titulo:fisio,sub:d1===d2?hzFecha(d1):`Del ${segFecha(d1)} al ${segFecha(d2)}`,
+ pdfVista({etiqueta:'FISIO365 · INFORME DE LLAMADAS',titulo:fisio,sub:d1===d2?hzFecha(d1):`Del ${segFecha(d1)} al ${segFecha(d2)}`,
   kpis:[['Llamadas',L.length]].concat(RES.map(([t,re,c])=>[t==='Pendiente de respuesta'?'Pendiente':t,L.filter(x=>re.test(String(x.resultado).toUpperCase())).length,c==='gris'?null:c])),
   secciones:dias.map(dd=>({titulo:hzFecha(dd).replace(/^./,c=>c.toUpperCase()),cols:[['Hora',13],['Paciente',45],['Resultado',35],['Nota',85]],
    filas:L.filter(x=>x.fecha===dd).map(x=>{const r=rt(x.resultado);return [x.hora||'',{t:x.nombre,b:true},{t:r[0],c:r[2],b:true},x.nota||''];})})),
@@ -5095,7 +5117,7 @@ function descargarCSVHoras(D){
 }
 function imprimirHoras(D){
  const mesTxt=new Date(D.mes+'-15').toLocaleDateString('es-ES',{month:'long',year:'numeric'});
- pdfTablas({etiqueta:'FISIO365 · CONTROL DE HORAS',titulo:D.fisio,sub:mesTxt.replace(/^./,c=>c.toUpperCase()),
+ pdfVista({etiqueta:'FISIO365 · CONTROL DE HORAS',titulo:D.fisio,sub:mesTxt.replace(/^./,c=>c.toUpperCase()),
   kpis:[['Según horario',D.toca+' h'],['Trabajadas',D.hechas+' h'],['Ses. · call-in · víd.',`${D.sesiones} · ${D.callin} · ${D.videos}`],['Horas extra','+'+D.extra+' h','ok'],['Horas de menos','−'+D.menos+' h','no'],['Banco mes / total',`${D.bancoMes>0?'+':''}${D.bancoMes} / ${D.banco>0?'+':''}${D.banco} h`]],
   secciones:[{cols:[['Fecha',22],['Tocaban',16],['Trabajadas',18],['Dif.',14],['Tipo',28],['Banco',12],['Nota',60]],
    filas:D.dias.map(x=>[fdiaCorto(x.fecha),x.toca+' h',x.libre?'no vino':x.hechas+' h',{t:x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓',c:x.dif>0?'ok':x.dif<0?'no':null,b:!!x.dif},x.reg?x.reg.tipo:'',x.reg&&x.reg.banco?'Sí':'',x.reg?x.reg.nota:''])}],
