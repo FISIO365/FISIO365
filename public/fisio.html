@@ -4996,7 +4996,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
  const m=ce('div','pv fp');
  m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>Ficha del paciente</b></div><div class="fp-body"><div class="fac-vacio">Cargando ficha…</div></div>`;
  document.body.appendChild(m);document.body.style.overflow='hidden';
- const cerrar=()=>{m.remove();document.body.style.overflow='';};m.querySelector('.pv-x').onclick=cerrar;
+ const cerrar=()=>{m.remove();document.body.style.overflow='';try{window._refrescarVista&&window._refrescarVista();}catch(e){}};m.querySelector('.pv-x').onclick=cerrar;
  const body=m.querySelector('.fp-body');
  let d;
  const cargar=async()=>{d=await (await fetch(`/api/schedule?action=seg-ficha&pwd=${encodeURIComponent(apiPwd)}&id=${id}`)).json();if(!d.ok)throw 0;};
@@ -5034,9 +5034,21 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const hoy=d.hoy,ses=d.citas.filter(c=>c.fecha<=hoy&&/REALIZADA/i.test(c.estado)),u=ses[0];
   const modD=P.historialMod?isoMadrid(new Date(P.historialMod)):'';
   const par=t=>String(t||'').split(/\n{2,}/).map(x=>`<p>${mdSimple(x.trim())}</p>`).join('');
-  const linea=t=>{const intro=[],ent=[];let cur=null;String(t||'').split('\n').forEach(l=>{const lt=l.replace(/\*\*/g,'').trim();if(/^(sesi[oó]n\s+)?\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}/i.test(lt)){cur={h:lt,b:[]};ent.push(cur);}else if(cur)cur.b.push(l);else intro.push(l);});
+  // Línea del tiempo: detecta cada sesión aunque el fisio la escriba distinto
+  // («04/09/26 - SARA - 1a», «Primera sesión Jony 01/10/2026», «JONATHAN 14/10/2026», «9a ss Jonathan 13/09», «**`23/10/2026`**»…)
+  const NOMS=['sara','jony','jonathan','juan','nora','ramiro','paola',...(fisios||[]).map(f=>String(f.nombre||f.name||'').split(' ')[0].toLowerCase()).filter(Boolean)];
+  const ORD='primera|segunda|tercera|cuarta|quarta|quinta|sexta|s[eé]ptima|octava|novena|d[eé]cima|1a|2a|3a|4a|5a|6a|7a|8a|9a|10a';
+  const FEC=/(\d{1,2}[\/.-]\d{1,2}(?:[\/.-]\d{2,4})?|\d{1,2}[\/.-]\d{4})(?!\d)/;
+  const cab=l=>{const c=l.replace(/[*`\\]/g,'').replace(/\s+/g,' ').trim();if(!c)return null;const m=c.match(FEC);if(!m)return null;
+   const antes=c.slice(0,m.index).trim(),despues=c.slice(m.index+m[0].length).replace(/^[\s\-–·:.,]+/,'').trim();
+   if(!antes){return despues.length>60?{f:m[0],t:'',extra:despues}:{f:m[0],t:despues};}
+   if(antes.length>40)return null;
+   const pal=antes.toLowerCase().replace(/[\-–·:.,]/g,' ').split(/\s+/).filter(Boolean);
+   const ok=pal.every(w=>new RegExp('^('+ORD+'|\\d{1,2}(a|ª|º)?(ss)?|ss|s+e+i?s+i?[oó]n|sesi[oó]|visita|primera|'+NOMS.join('|')+')$','i').test(w));
+   return ok?{f:m[0],t:[antes,despues].filter(Boolean).join(' · ')}:null;};
+  const linea=t=>{const intro=[],ent=[];let cur=null;String(t||'').split('\n').forEach(l=>{if(/^[\s\\_\-—=]{4,}$/.test(l))return;const h=cab(l);if(h){cur={f:h.f,t:h.t,b:h.extra?[h.extra]:[]};ent.push(cur);}else if(cur)cur.b.push(l);else intro.push(l);});
    const txt=a=>a.join('\n').trim();
-   return `${txt(intro)?`<div class="fp-intro">${par(txt(intro))}</div>`:''}${ent.length?`<div class="fp-tl">${ent.slice().reverse().map(x=>{const m=x.h.match(/^(?:sesi[oó]n\s+)?(\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4})\s*[-·:]*\s*(.*)$/i);return `<div class="fp-tli"><i></i><div class="fp-tlh"><b>${escH(m?m[1]:x.h)}</b>${m&&m[2]?`<span>${escH(m[2])}</span>`:''}</div><div class="fp-tlb">${txt(x.b)?par(txt(x.b)):'<em>—</em>'}</div></div>`;}).join('')}</div>`:''}`;};
+   return `${txt(intro)?`<div class="fp-intro">${par(txt(intro))}</div>`:''}${ent.length?`<div class="fp-tl">${ent.slice().reverse().map(x=>`<div class="fp-tli"><i></i><div class="fp-tlh"><b>${escH(x.f)}</b>${x.t?`<span>${escH(x.t)}</span>`:''}</div><div class="fp-tlb">${txt(x.b)?par(txt(x.b)):'<em>—</em>'}</div></div>`).join('')}</div>`:''}`;};
   const aviso=!u?'':(modD&&modD>=u.fecha)?`<div class="fp-hres ok">✓ Historia actualizada el ${escH(segFecha(modD))}, después de su última sesión</div>`:`<div class="fp-hres mal">⚠️ No se ha actualizado tras la última sesión (${escH(segFecha(u.fecha))}${u.fisio?' · '+escH(u.fisio):''})${modD?`. Última vez: ${escH(segFecha(modD))}`:''}</div>`;
   return `${aviso}
   <div class="fp-blk" data-blk="historial"><div class="fp-bt"><h3>Historia clínica</h3><span class="fp-edbts"><button type="button" class="fp-ok fp-add-ev">＋ Evolución</button><button type="button" class="fp-ed">Editar</button></span></div>
@@ -9087,13 +9099,20 @@ function cerrarLightbox(){
   const ficha=document.querySelector('.pv.fp');
   if(ficha&&ficha._refrescar){ficha._refrescar();return;}
   if(ocupado())return;
+  refrescarVista();
+ }
+ // Vuelve a pintar la pantalla actual (p. ej. al cerrar una ficha) sin perder la búsqueda ni la posición
+ function refrescarVista(){
+  if(document.querySelector('.pv.fp, .hz-modal'))return;
   let sec='';try{sec=sessionStorage.getItem('f365_panel_sec')||'';}catch(e){}
   if(!sec||['anam','prog','school'].includes(sec)||!TOPBAR[sec])return;
   const bus=document.getElementById('pacBuscar'),q=bus?bus.value:'',y=window.scrollY;
+  if(sec==='pac'&&bus){if(q&&bus.oninput)bus.oninput();return;}
   showSection(sec);
   const b2=document.getElementById('pacBuscar');if(b2&&q){b2.value=q;b2.oninput&&b2.oninput();b2.blur();}
   window.scrollTo(0,y);
  }
+ window._refrescarVista=refrescarVista;
  document.addEventListener('visibilitychange',()=>{if(document.hidden){ocultaDesde=Date.now();return;}if(ocultaDesde&&Date.now()-ocultaDesde>3000)alVolver();ocultaDesde=0;});
  window.addEventListener('pageshow',e=>{if(e.persisted)alVolver();});
 })();
