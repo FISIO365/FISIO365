@@ -401,13 +401,13 @@ module.exports = async function handler(req, res) {
           if ('notas' in q) f['NOTAS'] = String(q.notas || '');
           const ya = await todosT(EST_T, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({SEMANA},'YYYY-MM-DD')='${sem}'`)}`);
           const d = ya[0] ? await at(`${EST_T}/${ya[0].id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }) : await at(EST_T, { method: 'POST', body: JSON.stringify({ records: [{ fields: Object.assign({ SEMANA: sem }, f) }] }) });
-          global._estCache = null;
+          global._estCaches = {};
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
         }
         const N = Math.min(Math.max(+q.semanas || 12, 4), 52);
         const lun0 = lunes(hoyF), desde = mv(lun0, -7 * (N - 1)), hasta = mv(lun0, 6), futuro = mv(hoyF, 60);
         const key = `${desde}|${N}`;
-        if (!q.fresco && global._estCache && global._estCache.key === key && Date.now() - global._estCache.t < 5 * 60000) return res.status(200).json(global._estCache.data);
+        { const ca = (global._estCaches || {})[key]; if (!q.fresco && ca && Date.now() - ca.t < 30 * 60000) return res.status(200).json(ca.data); }
         const rangoF = (campo, a, b) => `AND(NOT(IS_BEFORE({${campo}},DATETIME_PARSE('${a}','YYYY-MM-DD'))),NOT(IS_AFTER({${campo}},DATETIME_PARSE('${b}','YYYY-MM-DD'))))`;
         const [citas, nuevosP, llam, man] = await Promise.all([
           (async () => { // por trozos de 2 semanas en paralelo (4 a la vez) para que vaya rápido
@@ -432,8 +432,14 @@ module.exports = async function handler(req, res) {
         const lotesP = []; for (let i = 0; i < cand.length; i += 40) lotesP.push(cand.slice(i, i + 40));
         for (let i = 0; i < lotesP.length; i += 4) (await Promise.all(lotesP.slice(i, i + 4).map(t => todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='REALIZADA',IS_BEFORE({FECHA},DATETIME_PARSE('${desde}','YYYY-MM-DD')),OR(${t.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACI%C3%93N%20-%20CITA`).catch(() => [])))).forEach(rs => rs.forEach(r => (r.fields['RELACIÓN - CITA'] || []).forEach(id => conAntes.add(id))));
         // Ocupación: horas de trabajo a la semana de Jonathan, Sara y Juan (campo HORAS SEMANA de FISIO)
-        const fisT = await todosT(FISIOS_TABLE, `fields[]=Name&fields[]=${encodeURIComponent('HORAS SEMANA')}`).catch(() => []);
-        const EQUIPO = ['jonathan', 'sara', 'juan'], cap = fisT.filter(f => EQUIPO.includes(String(f.fields.Name || '').split(' ')[0].toLowerCase())).reduce((t, f) => t + (+f.fields['HORAS SEMANA'] || 0), 0);
+        // Solo cuentan los días que cada fisio trabaja de verdad: un día sin ninguna fila en su agenda (vacaciones, festivo, baja…) no suma horas
+        const fisT = await todosT(FISIOS_TABLE, `fields[]=Name&fields[]=${encodeURIComponent('HORAS SEMANA')}&fields[]=${encodeURIComponent('HORAS POR DÍA')}`).catch(() => []);
+        const EQUIPO = ['jonathan', 'sara', 'juan'], DSEM = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        const horario = {}; fisT.forEach(f => { const k = String(f.fields.Name || '').split(' ')[0].toLowerCase(); if (!EQUIPO.includes(k)) return; const h = {};
+          String(f.fields['HORAS POR DÍA'] || '').split('\n').forEach(l => { const m = l.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().match(/(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\D*(\d+(?:[.,]\d+)?)/); if (m) h[DSEM.indexOf(m[1])] = +m[2].replace(',', '.'); });
+          if (!Object.keys(h).length && +f.fields['HORAS SEMANA']) [1, 2, 3, 4, 5].forEach(d => h[d] = +f.fields['HORAS SEMANA'] / 5);
+          horario[k] = h; });
+        const trabaja = new Set(C.filter(c => !/DIA BLOQUEADO/.test(c.e) && (c.pid || /LIBRE|PENDIENTE|REALIZADA/.test(c.e))).map(c => String(c.fisio).toLowerCase() + '|' + c.f));
         const semanas = [];
         for (let k = 0; k < N; k++) {
           const a = mv(desde, 7 * k), b = mv(a, 6), en = f => f >= a && f <= b;
@@ -451,6 +457,7 @@ module.exports = async function handler(req, res) {
             if (sig.length) { reag++; fis[fz].reagendaron++; }
           });
           const ocup = enS.filter(c => c.pid && EQUIPO.includes(String(c.fisio).toLowerCase()) && /REALIZADA|PENDIENTE/.test(c.e)).length;
+          let cap = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => { if (horario[k] && horario[k][dw] && trabaja.has(k + '|' + f)) cap += horario[k][dw]; }); }
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
@@ -459,7 +466,7 @@ module.exports = async function handler(req, res) {
             ingresos: m && m.fields.INGRESOS != null ? m.fields.INGRESOS : null, resenas: m && m.fields['RESEÑAS GOOGLE'] != null ? m.fields['RESEÑAS GOOGLE'] : null, quejas: m && m.fields.QUEJAS != null ? m.fields.QUEJAS : null, notas: m ? (m.fields.NOTAS || '') : '' });
         }
         const data = { ok: true, hoy: hoyF, semanas };
-        global._estCache = { key, t: Date.now(), data };
+        global._estCache = { key, t: Date.now(), data }; (global._estCaches = global._estCaches || {})[key] = global._estCache;
         return res.status(200).json(data);
       }
       if (action === 'seg-lista') {
