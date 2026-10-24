@@ -304,6 +304,9 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .ll-res{background:#fff;border-radius:16px;padding:14px;margin:4px 0 14px;overflow-x:auto}.ll-t{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .ll-tab{display:grid}.ll-h,.ll-r{display:grid;grid-template-columns:minmax(64px,1.3fr) .9fr repeat(5,1fr);align-items:center;gap:4px;padding:7px 0;border-bottom:1px solid #f1ede9;font-size:12.5px}.ll-r:last-child{border-bottom:none}
 .ll-h b{font-size:10px;line-height:1.2;color:var(--muted);font-weight:600;text-align:center}.ll-r span{font-weight:600}.ll-r b{text-align:center;font-size:14px}.ll-r i{font-style:normal;text-align:center;color:#3d342e}
+.tk-i.r-ok{background:#e8f5ec;color:#16803c}.tk-i.r-no{background:#fdecea;color:#b42318}.tk-i.r-pe{background:#f3efea;color:#7d6a60}
+.tk-m strong.r-ok{color:#16803c}.tk-m strong.r-no{color:#b42318}.tk-m strong.r-pe{color:#7d6a60}.tk-m strong{font-weight:600;font-size:12.5px}
+.tk.hecha{cursor:pointer}.ll-r i.cero{color:#d4ccc5}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -4966,18 +4969,21 @@ async function renderSeguimiento(wrap){
     <div class="tk-m"><b>${escH(x.nombre)}</b><p class="tk-meta">${escH(meta)}</p>${meta2?`<p class="tk-meta">${escH(meta2)}</p>`:''}${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}<div class="tk-pie"><button type="button" class="seg-ed tk-ed" data-id="${x.id}">Editar</button><div class="tk-a">${x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}<button type="button" class="seg-hecho tk-b" data-id="${x.id}">Resultado</button></div></div></div></div>`;}).join('')}</div>`).join('')||'<div class="tar-ok">✓ Nadie por llamar</div>';
   }else{
    const L=H.filter(flt);
-   const RES=[['Recupera',/RECUPERADA/],['Alta',/^ALTA/],['Volver',/^VOLVER/],['No cont.',/^NC/],['Pendiente',/PENDIENTE/]];
+   const RES=[['Cita',/RECUPERADA/],['Alta',/^ALTA/],['Volver',/^VOLVER/],['No cont.',/^NC/],['Pendiente',/PENDIENTE/]];
    const per=[...new Set(L.map(x=>x.quienN||'Sin indicar'))].sort((a,b)=>TAR_NOMBRES.indexOf(a)-TAR_NOMBRES.indexOf(b));
-   if(L.length)html+=`<div class="ll-res"><div class="ll-t">Resumen · últimos 30 días</div><div class="ll-tab"><div class="ll-h"><span></span><b>Llamadas</b>${RES.map(r=>`<b>${r[0]}</b>`).join('')}</div>${per.map(n=>{const l=L.filter(x=>(x.quienN||'Sin indicar')===n);return `<div class="ll-r"><span>${escH(n)}</span><b>${l.length}</b>${RES.map(r=>`<i>${l.filter(x=>r[1].test(x.resultado)).length||'·'}</i>`).join('')}</div>`;}).join('')}</div></div>`;
-   html+=L.length?`<div class="seg-tabla">${L.map(x=>`<div class="seg-it hecha" data-id="${x.id}"><div class="seg-f1"><b>${segFecha(x.fecha)}${x.hora?' · '+x.hora:''}</b><small>${escH(x.quienN||'')}</small></div><div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em>${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p></div><div class="seg-f3"><span class="seg-r ${/RECUPERADA|ALTA/.test(x.resultado)?'ok':/NC|VOLVER/.test(x.resultado)?'no':''}">${escH(x.resultado.toLowerCase().replace(/^nc - /,'no contesta · ').replace(/^./,c=>c.toUpperCase()))}</span></div></div>`).join('')}</div>`:'<div class="fac-vacio">Sin llamadas en los últimos 30 días.</div>';
+   if(L.length)html+=`<div class="ll-res"><div class="ll-t">Resumen · últimos 30 días</div><div class="ll-tab"><div class="ll-h"><span></span><b>Llamadas</b>${RES.map(r=>`<b>${r[0]}</b>`).join('')}</div>${per.map(n=>{const l=L.filter(x=>(x.quienN||'Sin indicar')===n);return `<div class="ll-r"><span>${escH(n)}</span><b>${l.length}</b>${RES.map(r=>{const n=l.filter(x=>r[1].test(x.resultado)).length;return `<i class="${n?'':'cero'}">${n}</i>`;}).join('')}</div>`;}).join('')}</div></div>`;
+   const resTxt=r=>{r=String(r||'').toUpperCase();return /RECUPERADA/.test(r)?'Cita recuperada':/^ALTA/.test(r)?'Alta':/^NC/.test(r)?'No contesta':/^VOLVER/.test(r)?'Volver a llamar':/PENDIENTE/.test(r)?'Pendiente de respuesta':(r?r.charAt(0)+r.slice(1).toLowerCase():'Sin resultado');};
+   const resCls=r=>/RECUPERADA|^ALTA/.test(r)?'ok':/^NC|^VOLVER/.test(r)?'no':'pe';
+   const IC_OK='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',IC_NO='<svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01"/></svg>',IC_PE='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>';
+   html+=L.length?`<div class="seg-tabla">${L.map(x=>{const c=resCls(x.resultado);return `<div class="tk hecha" data-id="${x.id}"><span class="tk-i r-${c}">${c==='ok'?IC_OK:c==='no'?IC_NO:IC_PE}</span><div class="tk-m"><b>${escH(x.nombre)}</b><p class="tk-meta"><strong class="r-${c}">${escH(resTxt(x.resultado))}</strong></p><p class="tk-meta">${escH((x.quienN?'Llamó '+x.quienN+' · ':'')+segFecha(x.fecha)+(x.hora?' a las '+x.hora:''))}</p>${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}</div></div>`;}).join('')}</div>`:'<div class="fac-vacio">Sin llamadas en los últimos 30 días.</div>';
   }
   box.innerHTML=html;
   box.querySelectorAll('.seg-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;try{sessionStorage.setItem('f365_seg',tab);}catch(e){}pinta();});
   box.querySelectorAll('.seg-fis button').forEach(b=>b.onclick=()=>{filtroFisio=b.dataset.f;pinta();});
   box.querySelectorAll('.seg-hecho').forEach(b=>b.onclick=()=>abrirResultadoSeg(P.find(x=>x.id===b.dataset.id),cargar));
   box.querySelectorAll('.seg-ed').forEach(b=>b.onclick=()=>abrirEditarSeg(P.find(x=>x.id===b.dataset.id),cargar));
-  box.querySelectorAll('.tk-nota').forEach(n=>n.onclick=()=>n.classList.toggle('abierta'));
-  box.querySelectorAll('.seg-it.hecha').forEach(r=>r.onclick=()=>abrirEditarLlamada(H.find(x=>x.id===r.dataset.id),cargar));
+  box.querySelectorAll('.tk-nota').forEach(n=>n.onclick=e=>{e.stopPropagation();n.classList.toggle('abierta');});
+  box.querySelectorAll('.tk.hecha').forEach(r=>r.onclick=()=>abrirEditarLlamada(H.find(x=>x.id===r.dataset.id),cargar));
   box.querySelector('.seg-add').onclick=()=>{
    const m=hzModal(`<div class="hz-top"><div><small>Añadir a seguimiento</small><b>¿Qué paciente?</b></div><button type="button" class="hz-x">✕</button></div><input type="text" class="seg-bus" placeholder="Busca por nombre…" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px"><div class="seg-bres"></div>`);
    m.querySelector('.hz-x').onclick=()=>m.remove();const inp=m.querySelector('.seg-bus'),r=m.querySelector('.seg-bres');inp.focus();
