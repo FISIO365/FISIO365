@@ -287,6 +287,11 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .exp-seg i{width:20px;height:20px;border-radius:6px;border:2px solid #c9c0b8;flex:none;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;color:#fff}
 .exp-seg.on{border-color:#16803c;background:#e8f5ec;color:#16803c}.exp-seg.on i{background:#16803c;border-color:#16803c}.exp-seg.on i::after{content:'✓'}
 .exp-seg.ya{cursor:default;border-color:#16803c;background:#e8f5ec;color:#16803c}
+.exp-segbox{border:1.5px solid #16803c;border-top:none;border-radius:0 0 12px 12px;padding:4px 14px 14px;margin-top:-2px}
+.exp-seg.on{border-radius:12px 12px 0 0}
+.hz-lab2{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.exp-copia{font-family:var(--font);font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:99px;border:1.5px solid #1e2a38;background:#fff;color:#1e2a38;cursor:pointer;white-space:nowrap}
+.exp-nseg{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -4727,7 +4732,7 @@ async function listaTareas(cont){
     const b=ce('button','seg-hecho');b.type='button';b.textContent='Explicar';b.onclick=()=>abrirExplicar(x.p,recargar);
     const sg=ce('button','tk-sg');sg.type='button';sg.textContent='+ Seguimiento';sg.title='Pasar a la lista de seguimiento';
     if(SEG_PAC[x.p.id]){sg.classList.add('en');sg.textContent='✓ En seguimiento';sg.title=segYaTxt(x.p.id);sg.onclick=()=>toast(segYaTxt(x.p.id),true);}
-    else sg.onclick=()=>abrirNuevoSeg({pacienteId:x.p.id,nombre:x.p.nombre,nota:'',onSave:()=>recargar()});
+    else sg.onclick=()=>abrirNuevoSeg({pacienteId:x.p.id,nombre:x.p.nombre,nota:'',motivo:x.p.nota||'',onSave:()=>recargar()});
     const q=ce('button','tk-q');q.type='button';q.setAttribute('aria-label','Quitar');q.innerHTML='✕';q.title='Quitar de tareas';
     let arm=false;q.onclick=async()=>{if(!arm){arm=true;q.classList.add('arm');q.textContent='¿Quitar?';setTimeout(()=>{arm=false;q.classList.remove('arm');q.innerHTML='✕';},4000);return;}q.disabled=true;await marcarExplicado(x.p.id,'Sin seguimiento');toast('Quitado',true);recargar();};
     acc.appendChild(b);acc.appendChild(sg);acc.appendChild(q);
@@ -4741,20 +4746,39 @@ async function listaTareas(cont){
 async function marcarExplicado(id,nota){try{await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:id,nota,fisio:fisioActual.nombre})});}catch(e){}}
 function abrirExplicar(p,onSave){
  const [y,mm,dd]=String(p.ultima).split('-');
- const m=hzModal(`<div class="hz-top"><div><small>Última sesión ${+dd}/${+mm}</small><b>${escH(p.nombre)}</b></div><button type="button" class="hz-x">✕</button></div>
-  <div class="hz-lab">¿Por qué no ha reagendado?</div><textarea class="seg-n" rows="3" placeholder="Ej.: le di el alta, se va de viaje, le cuesta pagar…">${escH(p.nota||'')}</textarea>
+ const ya=!!SEG_PAC[p.id];
+ const m=hzModal(`<div class="hz-top"><div><small>Última sesión ${+dd}/${+mm}</small><b>${escH(p.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">¿Por qué no ha reagendado?</div><textarea class="seg-n exp-mot" rows="3" placeholder="Ej.: le di el alta, se va de viaje, le cuesta pagar…">${escH(p.nota||'')}</textarea>
   <div class="hz-lab">Estado del paciente</div><div class="est-slot"></div>
-  ${SEG_PAC[p.id]?`<div class="exp-seg ya">✓ Ya está en seguimiento</div>`:`<button type="button" class="exp-seg"><i></i>Añadir también a seguimiento</button>`}
+  ${ya?`<div class="exp-seg ya">✓ Ya está en seguimiento</div>`:`<button type="button" class="exp-seg"><i></i>Añadir también a seguimiento</button>
+  <div class="exp-segbox" hidden>
+   <div class="hz-lab">¿Cuándo hay que llamar?</div><div class="seg-rap seg-cuando">${[['Mañana',1],['En 1 semana',7],['En 2 semanas',14],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div>
+   <input type="date" class="seg-f" value="${segIso(7)}" min="${segIso(0)}">
+   <div class="hz-lab">¿Quién le contacta?</div><div class="seg-rap seg-resp">${TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('')}</div>
+   <div class="hz-lab hz-lab2">Nota para la llamada <button type="button" class="exp-copia">Copiar el motivo</button></div>
+   <textarea class="exp-nseg" rows="3" placeholder="Ej.: llamar para ver qué tal está y ofrecer mantenimiento"></textarea>
+  </div>`}
   <div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
- m.querySelector('.hz-x').onclick=()=>m.remove();const ta=m.querySelector('.seg-n');if(window.innerWidth>=700)ta.focus();
- let aSeg=false;const bs=m.querySelector('button.exp-seg');if(bs)bs.onclick=()=>{aSeg=!aSeg;bs.classList.toggle('on',aSeg);};
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const ta=m.querySelector('.exp-mot');if(window.innerWidth>=700)ta.focus();
  const est0=pacEstados(p.id).slice(),selE=selectorEstados(est0);m.querySelector('.est-slot').appendChild(selE);
+ let aSeg=false,resp=miNombreCorto();
+ const bs=m.querySelector('button.exp-seg'),box=m.querySelector('.exp-segbox');
+ if(bs){
+  bs.onclick=()=>{aSeg=!aSeg;bs.classList.toggle('on',aSeg);box.hidden=!aSeg;m.querySelector('.hz-ok').textContent=aSeg?'Guardar y añadir a seguimiento':'Guardar';if(aSeg)setTimeout(()=>box.scrollIntoView({block:'nearest',behavior:'smooth'}),50);};
+  const f=box.querySelector('.seg-f');
+  const pintaF=()=>box.querySelectorAll('.seg-cuando button').forEach(x=>x.classList.toggle('on',segIso(+x.dataset.d)===f.value));pintaF();
+  box.querySelectorAll('.seg-cuando button').forEach(x=>x.onclick=()=>{f.value=segIso(+x.dataset.d);pintaF();});f.onchange=pintaF;
+  const pr=()=>box.querySelectorAll('.seg-resp button').forEach(x=>x.classList.toggle('on',x.dataset.n===resp));pr();
+  box.querySelectorAll('.seg-resp button').forEach(x=>x.onclick=()=>{resp=x.dataset.n;pr();});
+  const ns=box.querySelector('.exp-nseg');
+  box.querySelector('.exp-copia').onclick=()=>{const t=ta.value.trim();if(!t){toast('Primero escribe el motivo',false);return;}ns.value=ns.value.trim()?ns.value.trim()+'\n'+t:t;};
+ }
  m.querySelector('.hz-ok').onclick=async e=>{const nota=ta.value.trim();if(!nota){toast('Escribe el motivo',false);return;}const b=e.target;b.disabled=true;
-  try{const d=await (await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:p.id,nota,fisio:fisioActual.nombre})})).json();if(!d.ok)throw 0;
+  try{const d=await (await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:p.id,nota,fisio:fisioActual.nombre})})).json();if(!d.ok)throw new Error('No se ha podido guardar');
    const nuevos=selE.get();if(nuevos.join()!==est0.join())await guardarEstados(p.id,nuevos);
-   toast('Guardado',true);m.remove();
-   if(aSeg)abrirNuevoSeg({pacienteId:p.id,nombre:p.nombre,nota:'No reagenda: '+nota,onSave:()=>{onSave&&onSave();}});
-   onSave&&onSave();}catch(err){b.disabled=false;toast('No se ha podido guardar',false);}};
+   if(aSeg){const r=await (await fetch('/api/schedule?action=seg-crear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:p.id,fecha:box.querySelector('.seg-f').value,nota:box.querySelector('.exp-nseg').value.trim(),responsable:resp})})).json();if(!r.ok)throw new Error('Motivo guardado, pero no se ha podido añadir a seguimiento');SEG_PAC[p.id]={fecha:box.querySelector('.seg-f').value,quien:resp};}
+   toast(aSeg?'Guardado y añadido a seguimiento':'Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast(err.message||'No se ha podido guardar',false);}};
 }
 // Todas las tareas del centro en una lista: llamadas de seguimiento (hasta 7 días vista) y pacientes sin explicar
 // Pacientes que ya están en la lista de seguimiento (pendientes de llamar) → id: {fecha, quien}
@@ -4782,16 +4806,17 @@ const SEG_RES=['Cita recuperada','Volver a llamar','No contesta','Pendiente de r
 const segIso=n=>isoMadrid(new Date(Date.now()+n*864e5));
 const segTel=t=>String(t||'').replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1');
 function segFecha(f){if(!f)return '—';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+'/'+(t.getMonth()+1);}
-function abrirNuevoSeg({pacienteId,nombre,nota,onSave}){
+function abrirNuevoSeg({pacienteId,nombre,nota,motivo,onSave}){
  const m=hzModal(`<div class="hz-top"><div><small>Añadir a seguimiento</small><b>${escH(nombre||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">¿Cuándo hay que llamar?</div><div class="seg-rap">${[['Mañana',1],['En 1 semana',7],['En 2 semanas',14],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div>
   <input type="date" class="seg-f" value="${segIso(7)}" min="${segIso(0)}">
   <div class="hz-lab">¿Quién le contacta?</div><div class="seg-rap seg-resp">${TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('')}</div>
-  <div class="hz-lab">Nota</div><textarea class="seg-n" rows="3" placeholder="Ej.: llamar para ver qué tal está y ofrecer mantenimiento">${escH(nota||'')}</textarea>
+  <div class="hz-lab hz-lab2">Nota${motivo?' <button type="button" class="exp-copia">Copiar el motivo</button>':''}</div><textarea class="seg-n" rows="3" placeholder="Ej.: llamar para ver qué tal está y ofrecer mantenimiento">${escH(nota||'')}</textarea>
   <div class="hz-lab">Estado del paciente</div><div class="est-slot"></div>
   <div class="hz-bts"><button type="button" class="hz-ok">Añadir</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const est0=pacEstados(pacienteId).slice(),selE=selectorEstados(est0);m.querySelector('.est-slot').appendChild(selE);
+ {const bc=m.querySelector('.exp-copia');if(bc)bc.onclick=()=>{const ns=m.querySelector('.seg-n');ns.value=ns.value.trim()?ns.value.trim()+'\n'+motivo:motivo;};}
  let resp=miNombreCorto();const pr=()=>m.querySelectorAll('.seg-resp button').forEach(b=>b.classList.toggle('on',b.dataset.n===resp));pr();
  m.querySelectorAll('.seg-resp button').forEach(b=>b.onclick=()=>{resp=b.dataset.n;pr();});
  const f=m.querySelector('.seg-f');
@@ -5029,7 +5054,7 @@ async function renderRendimiento(wrap){
    res.innerHTML=(L.length>1?card(T,true):'')+L.filter(x=>!x.sinHoras).map(x=>card(x)).join('')+L.filter(x=>x.sinHoras).map(x=>card(x)).join('');
    res.querySelectorAll('.rc-clas').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirClasificar({fisio:b.dataset.fisio,fecha:b.dataset.fecha,dif:+b.dataset.dif,reg:(x.reg||{})[b.dataset.fecha],onSave:()=>cargar(k)});});
    res.querySelectorAll('.rc-inf').forEach(b=>b.onclick=()=>abrirInformeHoras(b.dataset.fisio));
-   res.querySelectorAll('.rn-seg').forEach(b=>b.onclick=()=>SEG_PAC[b.dataset.id]?toast(segYaTxt(b.dataset.id),true):abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,nota:b.dataset.nota?'No reagenda: '+b.dataset.nota:'',onSave:()=>{SEG_PAC[b.dataset.id]={fecha:'',quien:''};b.classList.add('en');b.textContent='✓ En seguimiento';}}));
+   res.querySelectorAll('.rn-seg').forEach(b=>b.onclick=()=>SEG_PAC[b.dataset.id]?toast(segYaTxt(b.dataset.id),true):abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,nota:'',motivo:b.dataset.nota||'',onSave:()=>{SEG_PAC[b.dataset.id]={fecha:'',quien:''};b.classList.add('en');b.textContent='✓ En seguimiento';}}));
   }catch(e){res.innerHTML='<div class="fac-vacio">No se ha podido calcular: '+escH(e.message)+'</div>';}
  };
  box.querySelectorAll('.rend-chips button').forEach(b=>b.onclick=()=>cargar(b.dataset.k));
