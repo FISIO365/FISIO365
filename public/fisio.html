@@ -332,7 +332,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .ll-per .seg-add{margin-left:auto;height:40px;padding:0 16px}.ll-pre{font-weight:500;opacity:.75;white-space:nowrap}
 .ll-quita{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:13px;cursor:pointer;color:#1a1a1a}
 .tk-ics{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}.tk-ics .tk-wa{width:34px;height:34px}
-.tk-b{min-width:98px;text-align:center}.tk-ph{display:inline-block;width:30px;flex:none}
+.tk-b{min-width:98px;text-align:center}.tk-edq{width:30px;padding:0;display:inline-flex;align-items:center;justify-content:center}.tk-edq svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.tk-ph{display:inline-block;width:30px;flex:none}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -4814,7 +4814,8 @@ async function listaTareas(cont){
    r.innerHTML=`<div class="tk-ics">${ico}${x.tipo==='llamar'&&x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}</div><div class="tk-m"><b>${escH(x.nombre)}</b>${sub?`<p class="tk-meta">${escH(sub)}</p>`:''}${ul?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(ul.resultado)?'ok':/^NC|^VOLVER/.test(ul.resultado)?'no':'pe'}">${escH(resTxtG(ul.resultado))}</strong> · ${escH(segFecha(ul.fecha).replace(/^\S+ /,''))}${ul.quien?' · '+escH(quienNom(ul.quien)):''}${ul.nota?' — '+escH(ul.nota):''}</p>`:''}${notaT?`<p class="tk-nota">${escH(notaT)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}</div><div class="tk-a"></div>`;
    const acc=r.querySelector('.tk-a');
    if(x.tipo==='llamar'){
-    const b=ce('button','tk-b');b.type='button';b.textContent='Resultado';b.onclick=()=>abrirResultadoSeg(x.seg,recargar);acc.appendChild(b);acc.insertAdjacentHTML('beforeend','<span class="tk-ph"></span>');
+    const b=ce('button','tk-b');b.type='button';b.textContent='Resultado';b.onclick=()=>abrirResultadoSeg(x.seg,recargar);acc.appendChild(b);
+    const ed=ce('button','tk-q tk-edq');ed.type='button';ed.setAttribute('aria-label','Editar quién llama, fecha y nota');ed.title='Cambiar quién llama, fecha o nota';ed.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';ed.onclick=()=>abrirEditarSeg(x.seg,recargar);acc.appendChild(ed);
    }else{
     const b=ce('button','tk-b');b.type='button';b.textContent='Explicar';b.onclick=()=>abrirExplicar(x.p,recargar);
     const q=ce('button','tk-q');q.type='button';q.setAttribute('aria-label','Quitar');q.innerHTML='✕';q.title='Quitar de tareas';
@@ -4916,7 +4917,7 @@ function abrirNuevoSeg({pacienteId,nombre,nota,motivo,onSave}){
  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Añadiendo…';
   try{const d=await (await fetch('/api/schedule?action=seg-crear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId,fecha:f.value,nota:m.querySelector('.seg-n').value.trim(),responsable:resp})})).json();if(!d.ok)throw new Error(d.error||'Error');
    {const nuevos=selE.get();if(pacienteId&&nuevos.join()!==est0.join())await guardarEstados(pacienteId,nuevos);}
-   const notaTxt=m.querySelector('.seg-n').value.trim();toast('Añadido a seguimiento',true);m.remove();onSave&&onSave(notaTxt);}catch(err){b.disabled=false;b.textContent='Añadir';toast(err.message,false);}};
+   const notaTxt=m.querySelector('.seg-n').value.trim();toast(d.actualizado?'Ya estaba en seguimiento: actualizado':'Añadido a seguimiento',true);m.remove();onSave&&onSave(notaTxt);}catch(err){b.disabled=false;b.textContent='Añadir';toast(err.message,false);}};
 }
 function abrirResultadoSeg(it,onSave){
  let res='';
