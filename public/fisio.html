@@ -1049,6 +1049,11 @@ async function loadBiblio(){
  }catch(e){}
 }
 
+// iPhone: tras un rato en segundo plano, la primera petición a veces falla con «Load failed».
+// Reintentamos solas las peticiones a /api/ que se pueden repetir sin duplicar nada.
+(function(){const f0=window.fetch.bind(window);const NO_REP=/action=(seg-crear|seg-resultado|facturar|horas-guardar)\b/;
+ window.fetch=async function(u,o){const url=String(u&&u.url||u);
+  for(let i=0;;i++){try{return await f0(u,o);}catch(e){if(!/\/api\//.test(url)||NO_REP.test(url)||i>=2)throw new Error(navigator.onLine===false?'Sin conexión. Vuelve a intentarlo.':'No se ha podido conectar. Vuelve a intentarlo.');await new Promise(r=>setTimeout(r,700*(i+1)));}}};})();
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
 function pintarPerfil(){if(!fisioActual)return;const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
