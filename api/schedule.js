@@ -285,7 +285,7 @@ module.exports = async function handler(req, res) {
       if (action === 'seg-historial-anadir') {
         // Añade una entrada fechada al final del HISTORIAL CLÍNICO (no borra nada de lo anterior)
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '') || !String(q.texto || '').trim()) return res.status(400).json({ ok: false, error: 'Falta el texto' });
-        const pac = await at(`${PACIENTES}/${q.id}?fields[]=HISTORIAL CLÍNICO`);
+        const pac = await at(`${PACIENTES}/${q.id}`);
         if (pac.error) return res.status(404).json({ ok: false, error: 'No encontrado' });
         const prev = String((pac.fields || {})['HISTORIAL CLÍNICO'] || '').replace(/\s+$/, '');
         const [y, m, dd] = (/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyF).split('-');
