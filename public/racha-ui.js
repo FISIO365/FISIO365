@@ -24,6 +24,7 @@
   .rc-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
   .rc-cab button{width:36px;height:36px;border-radius:50%;border:none;background:#f5f2ee;font-size:18px;cursor:pointer;color:#1a1a1a}
   .rc-cab button[disabled]{visibility:hidden}
+  .rc-nota{font-size:12px;color:#8a857e;line-height:1.45;margin:12px 4px 0;text-align:center}
   .rc-mes{text-align:center}
   .rc-mes b{display:block;font-size:15px}
   .rc-mes span{font-size:11.5px;color:#8a857e}
@@ -85,6 +86,8 @@
     // Mes más antiguo con datos
     let minOff = 0;
     if (orden.length) { const y = +orden[0].slice(0, 4), m = +orden[0].slice(5, 7) - 1; minOff = Math.min(0, (y - hoy.getFullYear()) * 12 + (m - hoy.getMonth())); }
+    // En el panel del fisio se puede mirar siempre hasta un año atrás, aunque no haya días marcados
+    if (!tu) minOff = Math.min(minOff, -12);
     let off = 0;
 
     el.innerHTML = `<div class="rc">
@@ -101,6 +104,7 @@
         <div class="rc-dias"><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div></div>
         <div class="rc-grid"></div>
         <div class="rc-ley"><span><i></i>${tu ? 'Hecho' : 'Ejercicios hechos'}</span><span><i class="h"></i>Hoy</span></div></div>
+      ${tu ? '' : `<p class="rc-nota">Cuenta los días en que el paciente pulsa «He terminado por hoy» en la app.${orden.length ? '' : ' Si no hay ninguno, puede que no haga los ejercicios, que los haga sin marcarlo o que no use la app.'}</p>`}
     </div>`;
 
     function mes() {
