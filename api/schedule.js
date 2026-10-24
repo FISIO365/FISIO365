@@ -233,12 +233,12 @@ module.exports = async function handler(req, res) {
           let rows, limitado = false;
           if (okF(q.fecha)) rows = await delDia(q.fecha);
           else { // rango de fechas, un paciente y/o un fisio (vista de lista)
-            const cond = [];
+            const cond = ["{FECHA}!=''"];
             if (okF(q.desde)) cond.push(`NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.desde}','YYYY-MM-DD')))`);
             if (okF(q.hasta)) cond.push(`NOT(IS_AFTER({FECHA},DATETIME_PARSE('${q.hasta}','YYYY-MM-DD')))`);
             if (okId(q.pacienteId)) cond.push(`FIND('${q.pacienteId}',ARRAYJOIN({PacienteRec}))`);
             if (q.fisio && /^[A-Za-zÁÉÍÓÚÑáéíóúñ ]{2,20}$/.test(q.fisio)) cond.push(`{PREF.}='${q.fisio}'`);
-            if (!cond.length) return res.status(400).json({ ok: false, error: 'Elige fechas o un paciente' });
+            if (cond.length < 2) return res.status(400).json({ ok: false, error: 'Elige fechas o un paciente' });
             const MAX = 2500;
             rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(cond.length > 1 ? `AND(${cond.join(',')})` : cond[0])}&${CAMPOS_C}&sort[0][field]=FECHA&sort[0][direction]=desc&maxRecords=${MAX}`);
             limitado = rows.length >= MAX;
