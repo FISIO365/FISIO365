@@ -184,6 +184,64 @@ module.exports = async function handler(req, res) {
     catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   }
 
+  // ── PANEL: SEGUIMIENTO (lista de pacientes a llamar) y LLAMADAS ──
+  if (action && action.startsWith('seg-')) {
+    const q = req.method === 'POST' ? (req.body || {}) : req.query;
+    if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const SEG = 'tblu9YxiktpAh5w87', LLA = 'tbla5rZTwMkMpAiaI', CIT = 'tblTPlcuiSjQngkaD';
+    const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
+    const hoyF = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    try {
+      if (action === 'seg-lista') {
+        const pend = await todosT(SEG, `filterByFormula=${encodeURIComponent('NOT({HECHO})')}&sort[0][field]=FECHA DE LLAMADA&sort[0][direction]=asc`);
+        const llam = await todosT(LLA, `filterByFormula=${encodeURIComponent(`IS_AFTER({FECHA},DATEADD(TODAY(),-30,'days'))`)}&sort[0][field]=FECHA&sort[0][direction]=desc`);
+        const ids = [...new Set([...pend, ...llam].map(r => ((r.fields['PACIENTE'] || [])[0])).filter(Boolean))];
+        const pacInfo = {}, fisioDe = {};
+        for (let i = 0; i < ids.length; i += 40) {
+          const lote = ids.slice(i, i + 40);
+          const [ps, cs] = await Promise.all([
+            todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + lote.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=TELF`),
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=RELACIÓN - CITA`)
+          ]);
+          ps.forEach(p => { pacInfo[p.id] = { nombre: p.fields['FULL NAME'] || '—', tel: p.fields['WHATSAPP'] || p.fields['TELF'] || '' }; });
+          cs.forEach(c => { const f = String(c.fields['FECHA'] || ''); const pf = c.fields['PREF.']; const n = (pf && typeof pf === 'object' ? pf.name : pf) || ''; (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (!fisioDe[id] || f > fisioDe[id].f) fisioDe[id] = { f, n }; }); });
+        }
+        const info = id => ({ pacienteId: id || '', ...(pacInfo[id] || { nombre: '—', tel: '' }), fisio: (fisioDe[id] || {}).n || '' });
+        return res.status(200).json({ ok: true, hoy: hoyF,
+          pendientes: pend.map(r => ({ id: r.id, fecha: r.fields['FECHA DE LLAMADA'] || '', nota: r.fields['NOTAS'] || '', ...info((r.fields['PACIENTE'] || [])[0]) })),
+          hechas: llam.map(r => ({ id: r.id, fecha: String(r.fields['FECHA'] || '').slice(0, 10), quien: (r.fields['QUIEN LLAMA'] && r.fields['QUIEN LLAMA'].name) || r.fields['QUIEN LLAMA'] || '', resultado: String((r.fields['RESULTADO'] && r.fields['RESULTADO'].name) || r.fields['RESULTADO'] || '').trim(), nota: r.fields['NOTAS'] || '', ...info((r.fields['PACIENTE'] || [])[0]) })) });
+      }
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      if (action === 'seg-crear') {
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '') || !/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) return res.status(400).json({ ok: false, error: 'Faltan datos' });
+        const d = await at(SEG, { method: 'POST', body: JSON.stringify({ records: [{ fields: { 'FECHA DE LLAMADA': q.fecha, PACIENTE: [q.pacienteId], NOTAS: String(q.nota || '') } }] }) });
+        return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+      }
+      if (action === 'seg-resultado') {
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+        const MAP = { 'Cita recuperada': 'CITA RECUPERADA ', 'Volver a llamar': 'VOLVER A LLAMAR', 'No contesta': 'NC - VOLVER A LLAMAR', 'Pendiente de respuesta': 'PENDIENTE RESPUESTA ', 'Alta': 'ALTA' };
+        const quienMap = { jonathan: 'JONY', jony: 'JONY', sara: 'SARA', ramiro: 'RAMIRO', nora: 'NORA', juan: 'JUAN' };
+        const quien = quienMap[String(q.quien || '').split(' ')[0].toLowerCase()];
+        const ll = { FECHA: new Date().toISOString(), NOTAS: String(q.nota || ''), RESULTADO: MAP[q.resultado] || q.resultado };
+        if (/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) ll.PACIENTE = [q.pacienteId];
+        if (quien) ll['QUIEN LLAMA'] = quien;
+        if (q.nuevaFecha) ll['FECHA PDTE LLAMAR'] = q.nuevaFecha;
+        await at(LLA, { method: 'POST', body: JSON.stringify({ records: [{ fields: ll }], typecast: true }) });
+        const sigue = /^\d{4}-\d{2}-\d{2}$/.test(q.nuevaFecha || '') && ['Volver a llamar', 'No contesta', 'Pendiente de respuesta'].includes(q.resultado);
+        const campos = sigue ? { 'FECHA DE LLAMADA': q.nuevaFecha } : { HECHO: true };
+        const d = await at(`${SEG}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: campos }) });
+        return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+      }
+      if (action === 'seg-editar') {
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+        const f = {}; if (/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) f['FECHA DE LLAMADA'] = q.fecha; if (q.nota != null) f.NOTAS = String(q.nota);
+        const d = await at(`${SEG}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
+        return res.status(200).json({ ok: !d.error });
+      }
+      return res.status(400).json({ ok: false });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  }
+
   // ── PANEL: el fisio explica por qué un paciente no ha reagendado ──
   if (action === 'nota-reagenda' && req.method === 'POST') {
     const q = req.body || {};

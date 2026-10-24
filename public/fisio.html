@@ -240,6 +240,23 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .ch-stats .bk b{color:#fff;background:#1e2a38;padding:1px 8px;border-radius:99px;font-size:14px}
 .ch-row{background:#faf7f4;border-left:none;position:relative;padding:9px 10px 9px 14px}.ch-row.pend::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:4px;height:60%;border-radius:4px;background:#f39a55}
 .ch-row .rc-clas.hecho{background:#fff}
+.seg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.seg-tabs{display:flex;gap:6px}.seg-tabs button{font-family:var(--font);font-size:13.5px;font-weight:600;padding:9px 14px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer;color:var(--black)}.seg-tabs button b{margin-left:4px;font-size:12px;background:#f1ede9;padding:1px 7px;border-radius:99px}.seg-tabs button.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a}.seg-tabs button.on b{background:rgba(255,255,255,.2)}
+.seg-add{font-family:var(--font);font-size:13.5px;font-weight:600;padding:9px 16px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer}
+.seg-res{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.seg-res div{background:#fff;border-radius:14px;padding:10px 12px;box-shadow:var(--sombra)}.seg-res b{display:block;font-size:22px}.seg-res span{font-size:12px;color:var(--muted)}.seg-res .r b{color:#b42318}.seg-res .o b{color:#c2552e}
+.seg-fis{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px}.seg-fis button{font-family:var(--font);font-size:12.5px;padding:6px 12px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer;color:var(--black)}.seg-fis button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}
+.seg-gt{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}.seg-gt span{background:#f1ede9;color:var(--black);padding:1px 7px;border-radius:99px;margin-left:4px}
+.seg-tabla{background:#fff;border-radius:16px;box-shadow:var(--sombra);overflow:hidden}
+.seg-it{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #f1ede9}.seg-it:last-child{border-bottom:none}.seg-it.atr{box-shadow:inset 3px 0 0 #b42318}
+.seg-f1 b{font-size:13px}.seg-it.atr .seg-f1 b{color:#b42318}.seg-f1 small{display:block;font-size:11px;color:var(--muted)}
+.seg-f2{min-width:0}.seg-f2 b{font-size:14px}.seg-f2 em{font-style:normal;font-size:11px;font-weight:600;background:#eef2f7;color:#1e2a38;padding:1px 8px;border-radius:99px;margin-left:6px}.seg-f2 p{margin:3px 0 0;font-size:12.5px;color:#6b5f57;line-height:1.35}
+.seg-f3{display:flex;align-items:center;gap:6px}.seg-ic{width:36px;height:36px;border-radius:50%;background:#f3efea;display:flex;align-items:center;justify-content:center;color:#1a1a1a}.seg-ic.wa{background:#e8f5ec;color:#16803c}.seg-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.seg-hecho{font-family:var(--font);font-size:12.5px;font-weight:600;padding:8px 12px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer}
+.seg-r{font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:#f1ede9;white-space:nowrap}.seg-r.ok{background:#e8f5ec;color:#16803c}.seg-r.no{background:#fdecea;color:#b42318}
+.seg-rap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.seg-rap button{font-family:var(--font);font-size:12.5px;padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer}.seg-rap button.on{border-color:#c2552e;background:#fdeee4;color:#c2552e;font-weight:600}
+.hz-card input[type=date]{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px}
+.seg-bres{display:flex;flex-direction:column;margin-top:8px}.seg-bres button{text-align:left;font-family:var(--font);font-size:14px;padding:11px 6px;border:none;border-bottom:1px solid #f1ede9;background:none;cursor:pointer}
+.rn-seg{font-family:var(--font);font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:99px;border:1.5px solid #c2552e;background:#fff;color:#c2552e;cursor:pointer;white-space:nowrap}
+@media(max-width:560px){.seg-it{grid-template-columns:1fr auto;}.seg-f1{grid-column:1/-1}.seg-f1 b{font-size:12px;color:var(--muted)}.seg-f2{grid-column:1}}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -728,6 +745,9 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  <div class="sb-item" id="sb-record" onclick="showSection('record')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="sb-txt">Recordatorios</span>
  </div>
+ <div class="sb-item" id="sb-seg" onclick="showSection('seg')" style="display:none">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="sb-txt">Seguimiento</span>
+ </div>
  <div class="sb-item" id="sb-rend" onclick="showSection('rend')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="sb-txt">Rendimiento</span>
  </div>
@@ -813,7 +833,8 @@ const TOPBAR = {
  school: ['School','Formación y protocolos del equipo'],
  msg: ['Chat','Habla con tus pacientes: texto, fotos y PDFs'],
  record: ['Recordatorios','Citas de mañana pendientes de confirmar'],
- rend: ['Rendimiento','Cómo va cada fisio']
+ rend: ['Rendimiento','Cómo va cada fisio'],
+ seg: ['Seguimiento','Pacientes a los que hay que llamar']
 };
 
 const CFG = {
@@ -932,7 +953,8 @@ function aplicarRole(){
  'tareas': 'sb-tareas',
  'comunicaciones': 'sb-comunicaciones',
  'vacaciones': 'sb-vacaciones',
- 'rendimiento': 'sb-rend'
+ 'rendimiento': 'sb-rend',
+ 'seguimiento': 'sb-seg'
  };
 
  const accesos = fisioActual.accesos || {};
@@ -990,7 +1012,7 @@ function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
  try{$('btnRend').classList.toggle('activo',sec==='rend');}catch(e){}
- ['anam','prog','pac','school','msg','record','rend'].forEach(s=>{
+ ['anam','prog','pac','school','msg','record','rend','seg'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
  const [t,s] = TOPBAR[sec];
@@ -1009,6 +1031,7 @@ function showSection(sec){
  else if(sec==='school') renderWiki(wrap);
  else if(sec==='record') renderRecordatorios(wrap);
  else if(sec==='rend') renderRendimiento(wrap);
+ else if(sec==='seg') renderSeguimiento(wrap);
 }
 
 
@@ -1200,6 +1223,7 @@ function renderPacLista(q, lista){
  {key:'racha', label:'Racha'},
  {key:'informes', label:'Informes'},
  {key:'facturas', label:'Facturas'},
+ {key:'seg', label:'Añadir a seguimiento'},
  {key:'pin', label:'Datos de acceso'},
  ];
 
@@ -1240,6 +1264,7 @@ function renderPacLista(q, lista){
  } else if(op.key==='programa') fpTabPrograma(p.id, panel, tok, p.nombre);
  else if(op.key==='informes') fpTabInformes(p.id, panel, p.nombre, tok);
  else if(op.key==='facturas') fpTabFacturas(p.id, panel, p.nombre, tok);
+ else if(op.key==='seg'){panel.style.display='none';row.dataset.active='0';row.style.color='var(--black)';abrirNuevoSeg({pacienteId:p.id,nombre:p.nombre});}
  else if(op.key==='racha') fpTabRacha(p.id, panel, tok);
  else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel, tok);
  else if(op.key==='chat'){panel.innerHTML='<div class="chatp-ficha"></div>';FisioChat.montar(panel.querySelector('.chatp-ficha'),{rol:'fisio',pwd:apiPwd,pacienteId:p.id,pacienteNombre:p.nombre,fisio:{id:fisioActual.id,nombre:fisioActual.nombre},onLeido:()=>checkMensajesBadge(),onEnviado:m=>{const txt=m.texto||'Te ha enviado un archivo';notificarPaciente(p.id,`Mensaje de ${fisioActual.nombre}`,txt);crearNotificacion(p.id,`Mensaje de ${fisioActual.nombre}`,txt,'mensaje');}});}
@@ -4564,6 +4589,80 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
  }catch(e){body.innerHTML='<div style="color:red;padding:20px">Error al cargar</div>';}
 }
 
+// ── SEGUIMIENTO: pacientes a los que hay que llamar ──
+const SEG_RES=['Cita recuperada','Volver a llamar','No contesta','Pendiente de respuesta','Alta'];
+const segIso=n=>isoMadrid(new Date(Date.now()+n*864e5));
+const segTel=t=>String(t||'').replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1');
+function segFecha(f){if(!f)return '—';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+'/'+(t.getMonth()+1);}
+function abrirNuevoSeg({pacienteId,nombre,nota,onSave}){
+ const m=hzModal(`<div class="hz-top"><div><small>Añadir a seguimiento</small><b>${escH(nombre||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">¿Cuándo hay que llamar?</div><div class="seg-rap">${[['Mañana',1],['En 1 semana',7],['En 2 semanas',14],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div>
+  <input type="date" class="seg-f" value="${segIso(7)}" min="${segIso(0)}">
+  <div class="hz-lab">Nota</div><textarea class="seg-n" rows="3" placeholder="Ej.: llamar para ver qué tal está y ofrecer mantenimiento">${escH(nota||'')}</textarea>
+  <div class="hz-bts"><button type="button" class="hz-ok">Añadir</button></div>`);
+ const f=m.querySelector('.seg-f');
+ const pinta=()=>m.querySelectorAll('.seg-rap button').forEach(b=>b.classList.toggle('on',segIso(+b.dataset.d)===f.value));pinta();
+ m.querySelectorAll('.seg-rap button').forEach(b=>b.onclick=()=>{f.value=segIso(+b.dataset.d);pinta();});f.onchange=pinta;
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Añadiendo…';
+  try{const d=await (await fetch('/api/schedule?action=seg-crear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId,fecha:f.value,nota:m.querySelector('.seg-n').value.trim()})})).json();if(!d.ok)throw new Error(d.error||'Error');
+   toast('Añadido a seguimiento',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;b.textContent='Añadir';toast(err.message,false);}};
+}
+function abrirResultadoSeg(it,onSave){
+ let res='';
+ const m=hzModal(`<div class="hz-top"><div><small>¿Qué ha pasado?</small><b>${escH(it.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-tipos">${SEG_RES.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
+  <div class="seg-nf" style="display:none"><div class="hz-lab">¿Cuándo volver a llamar?</div><div class="seg-rap">${[['Mañana',1],['En 3 días',3],['En 1 semana',7],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div><input type="date" class="seg-f" value="${segIso(3)}" min="${segIso(0)}"></div>
+  <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="seg-n" rows="2" placeholder="Qué te ha dicho…"></textarea>
+  <div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
+ const f=m.querySelector('.seg-f'),nf=m.querySelector('.seg-nf');
+ const pintaF=()=>m.querySelectorAll('.seg-rap button').forEach(b=>b.classList.toggle('on',segIso(+b.dataset.d)===f.value));pintaF();
+ m.querySelectorAll('.seg-rap button').forEach(b=>b.onclick=()=>{f.value=segIso(+b.dataset.d);pintaF();});f.onchange=pintaF;
+ m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{res=b.dataset.v;m.querySelectorAll('.hz-tipos button').forEach(x=>x.classList.toggle('on',x===b));nf.style.display=['Volver a llamar','No contesta','Pendiente de respuesta'].includes(res)?'':'none';});
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelector('.hz-ok').onclick=async e=>{if(!res){toast('Elige qué ha pasado',false);return;}
+  const b=e.target;b.disabled=true;b.textContent='Guardando…';
+  try{const d=await (await fetch('/api/schedule?action=seg-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,pacienteId:it.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value.trim(),nuevaFecha:nf.style.display===''?f.value:'',quien:(fisioActual&&fisioActual.nombre)||''})})).json();if(!d.ok)throw new Error(d.error||'Error');
+   toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
+}
+async function renderSeguimiento(wrap){
+ const box=ce('div','seg');wrap.appendChild(box);
+ let tab='pend',filtroFisio='',datos=null;
+ try{tab=sessionStorage.getItem('f365_seg')||'pend';}catch(e){}
+ const pinta=()=>{
+  if(!datos){box.innerHTML='<div class="fac-vacio">Cargando…</div>';return;}
+  const P=datos.pendientes,H=datos.hechas,hoy=datos.hoy;
+  const fisios=[...new Set([...P,...H].map(x=>x.fisio).filter(Boolean))].sort();
+  const flt=x=>!filtroFisio||x.fisio===filtroFisio;
+  const atr=P.filter(x=>x.fecha<hoy).length,deHoy=P.filter(x=>x.fecha===hoy).length;
+  let html=`<div class="seg-head"><div class="seg-tabs"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Hechas (30 días) <b>${H.length}</b></button></div><button type="button" class="seg-add">+ Añadir</button></div>
+   ${tab==='pend'?`<div class="seg-res"><div class="r"><b>${atr}</b><span>atrasados</span></div><div class="o"><b>${deHoy}</b><span>para hoy</span></div><div><b>${P.length-atr-deHoy}</b><span>próximos</span></div></div>`:''}
+   ${fisios.length?`<div class="seg-fis"><button type="button" data-f="" class="${!filtroFisio?'on':''}">Todos</button>${fisios.map(f=>`<button type="button" data-f="${escH(f)}" class="${filtroFisio===f?'on':''}">${escH(f)}</button>`).join('')}</div>`:''}`;
+  if(tab==='pend'){
+   const L=P.filter(flt);
+   const grupos=[['Atrasados',L.filter(x=>x.fecha<hoy)],['Hoy',L.filter(x=>x.fecha===hoy)],['Esta semana',L.filter(x=>x.fecha>hoy&&x.fecha<=segIso(7))],['Más adelante',L.filter(x=>x.fecha>segIso(7))]];
+   html+=grupos.filter(g=>g[1].length).map(([t,g])=>`<div class="seg-gt">${t} <span>${g.length}</span></div><div class="seg-tabla">${g.map(x=>`<div class="seg-it${x.fecha<hoy?' atr':''}">
+    <div class="seg-f1"><b>${segFecha(x.fecha)}</b></div>
+    <div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em>${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p></div>
+    <div class="seg-f3">${x.tel?`<a class="seg-ic" href="tel:+${segTel(x.tel)}" aria-label="Llamar"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a><a class="seg-ic wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}<button type="button" class="seg-hecho" data-id="${x.id}">Resultado</button></div></div>`).join('')}</div>`).join('')||'<div class="fac-vacio">No hay nadie pendiente de llamar 🎉</div>';
+  }else{
+   const L=H.filter(flt);
+   html+=L.length?`<div class="seg-tabla">${L.map(x=>`<div class="seg-it hecha"><div class="seg-f1"><b>${segFecha(x.fecha)}</b><small>${escH(x.quien||'')}</small></div><div class="seg-f2"><b>${escH(x.nombre)}</b>${x.fisio?`<em>${escH(x.fisio)}</em>`:''}<p>${escH(x.nota||'')}</p></div><div class="seg-f3"><span class="seg-r ${/RECUPERADA|ALTA/.test(x.resultado)?'ok':/NC|VOLVER/.test(x.resultado)?'no':''}">${escH(x.resultado.toLowerCase().replace(/^nc - /,'no contesta · ').replace(/^./,c=>c.toUpperCase()))}</span></div></div>`).join('')}</div>`:'<div class="fac-vacio">Sin llamadas en los últimos 30 días.</div>';
+  }
+  box.innerHTML=html;
+  box.querySelectorAll('.seg-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;try{sessionStorage.setItem('f365_seg',tab);}catch(e){}pinta();});
+  box.querySelectorAll('.seg-fis button').forEach(b=>b.onclick=()=>{filtroFisio=b.dataset.f;pinta();});
+  box.querySelectorAll('.seg-hecho').forEach(b=>b.onclick=()=>abrirResultadoSeg(P.find(x=>x.id===b.dataset.id),cargar));
+  box.querySelector('.seg-add').onclick=()=>{
+   const m=hzModal(`<div class="hz-top"><div><small>Añadir a seguimiento</small><b>¿Qué paciente?</b></div><button type="button" class="hz-x">✕</button></div><input type="text" class="seg-bus" placeholder="Busca por nombre…" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px"><div class="seg-bres"></div>`);
+   m.querySelector('.hz-x').onclick=()=>m.remove();const inp=m.querySelector('.seg-bus'),r=m.querySelector('.seg-bres');inp.focus();
+   inp.oninput=()=>{const q=inp.value.trim().toLowerCase();r.innerHTML=q?(pacs||[]).filter(p=>p.nombre.toLowerCase().includes(q)).slice(0,8).map(p=>`<button type="button" data-id="${p.id}" data-n="${escH(p.nombre)}">${escH(p.nombre)}</button>`).join(''):'';
+    r.querySelectorAll('button').forEach(b=>b.onclick=()=>{m.remove();abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,onSave:cargar});});};
+  };
+ };
+ const cargar=async()=>{datos=null;pinta();try{const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();};
+ cargar();
+}
 // ── Control de horas: clasificar días y banco de horas ──
 const HZ_TIPOS=['Día libre','Asuntos propios','Vacaciones','Baja','Festivo','Salida anticipada','Horas extra','Otro'];
 function hzModal(html){const m=ce('div','hz-modal');m.innerHTML=`<div class="hz-card">${html}</div>`;m.onclick=e=>{if(e.target===m)m.remove();};document.body.appendChild(m);return m;}
@@ -4661,7 +4760,7 @@ async function renderRendimiento(wrap){
    await Promise.all(L.filter(x=>x.dias).map(async x=>{try{const hz=await (await fetch(`/api/schedule?action=horas&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`)).json();x.reg={};(hz.registros||[]).forEach(r=>x.reg[r.fecha]=r);x.banco=Math.round((hz.banco||0)*10)/10;}catch(e){}}));
    const T=L.reduce((a,x)=>{a.realizadas+=x.realizadas;a.atendidos+=x.atendidos;a.reagendan+=x.reagendan;if(!x.sinHoras){['huecos','noAsistio','perdidas','canceladas','callin','videos'].forEach(q=>a[q]+=(x[q]||0));a.realOcup+=x.realizadas;}return a;},{fisio:'Total del centro',realizadas:0,realOcup:0,callin:0,videos:0,huecos:0,atendidos:0,reagendan:0,noAsistio:0,perdidas:0,canceladas:0});
    const fch=f=>{const [y,m,d]=String(f).split('-');return +d+'/'+ +m;};
-   const listaNo=x=>(x.lista&&x.lista.length)?`<details class="rend-no"><summary>Ver quién no ha reagendado (${x.lista.length})</summary>${x.lista.map(p=>`<div class="rn-it"><div class="rn-txt"><span>${escH(p.nombre)}</span><i>última sesión ${fch(p.ultima)}</i>${(p.nota&&p.notaFecha>=p.ultima)?`<p class="rn-nota">«${escH(p.nota)}»${p.notaFisio?' — '+escH(p.notaFisio):''}</p>`:'<p class="rn-nota sin">Sin explicar todavía</p>'}</div>${p.tel?`<a href="https://wa.me/${String(p.tel).replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1')}" target="_blank" rel="noopener">WhatsApp</a>`:''}</div>`).join('')}</details>`:'';
+   const listaNo=x=>(x.lista&&x.lista.length)?`<details class="rend-no"><summary>Ver quién no ha reagendado (${x.lista.length})</summary>${x.lista.map(p=>`<div class="rn-it"><div class="rn-txt"><span>${escH(p.nombre)}</span><i>última sesión ${fch(p.ultima)}</i>${(p.nota&&p.notaFecha>=p.ultima)?`<p class="rn-nota">«${escH(p.nota)}»${p.notaFisio?' — '+escH(p.notaFisio):''}</p>`:'<p class="rn-nota sin">Sin explicar todavía</p>'}</div>${p.tel?`<a href="https://wa.me/${String(p.tel).replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1')}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button type="button" class="rn-seg" data-id="${p.id}" data-n="${escH(p.nombre)}" data-nota="${escH(p.nota||'')}">+ Seguimiento</button></div>`).join('')}</details>`:'';
    const horasTot=x=>{const h=x.realizadas+(x.callin||0)+(x.videos||0),d=h-x.huecos;return `<div style="grid-column:1/-1"><span>Horas trabajadas (sesiones + call-in + vídeos)</span><b>${h} de ${x.huecos} h ${d?`<em class="rend-dif ${d>0?'mas':'menos'}">${d>0?'+':'−'}${Math.abs(d)} h</em>`:'<em class="rend-dif ok">✓</em>'}</b></div>`;};
    const DS=['dom','lun','mar','mié','jue','vie','sáb'];
    const fdia=d=>{const t=new Date(d+'T12:00:00');return DS[t.getDay()]+' '+t.getDate()+'/'+(t.getMonth()+1);};
@@ -4694,6 +4793,7 @@ async function renderRendimiento(wrap){
    res.innerHTML=(L.length>1?card(T,true):'')+L.filter(x=>!x.sinHoras).map(x=>card(x)).join('')+L.filter(x=>x.sinHoras).map(x=>card(x)).join('');
    res.querySelectorAll('.rc-clas').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirClasificar({fisio:b.dataset.fisio,fecha:b.dataset.fecha,dif:+b.dataset.dif,reg:(x.reg||{})[b.dataset.fecha],onSave:()=>cargar(k)});});
    res.querySelectorAll('.rc-inf').forEach(b=>b.onclick=()=>abrirInformeHoras(b.dataset.fisio));
+   res.querySelectorAll('.rn-seg').forEach(b=>b.onclick=()=>abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,nota:b.dataset.nota?'No reagenda: '+b.dataset.nota:''}));
   }catch(e){res.innerHTML='<div class="fac-vacio">No se ha podido calcular: '+escH(e.message)+'</div>';}
  };
  box.querySelectorAll('.rend-chips button').forEach(b=>b.onclick=()=>cargar(b.dataset.k));
