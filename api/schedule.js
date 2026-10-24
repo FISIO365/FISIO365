@@ -461,12 +461,14 @@ module.exports = async function handler(req, res) {
           // Capacidad de cada fisio y día = su horario − horas bloqueadas (comida, bloqueos…); si ese día no tiene nada en la agenda, no trabaja.
           // Si ese día tiene más horas abiertas en la agenda que su horario (horas extra), cuentan las de la agenda.
           const pf = {}; EQUIPO.forEach(k => pf[k] = { ses: real.filter(c => String(c.fisio).toLowerCase() === k).length, ocup: enS.filter(c => c.pid && String(c.fisio).toLowerCase() === k && /REALIZADA|PENDIENTE/.test(c.e)).length, cap: 0 });
-          // Horas disponibles = las horas que el fisio tiene en su agenda ese día (citas, huecos libres, call-in, vídeos, canceladas…),
-          // sin contar bloqueos ni comida. Un día sin ninguna cita/hueco vivo (solo canceladas o reprogramadas, o nada) no cuenta.
-          let cap = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d); EQUIPO.forEach(k => {
+          // Horas disponibles por día trabajado = su horario de ese día − horas bloqueadas/comida (si abre más horas en la agenda, cuentan esas).
+          // Un día sin ninguna cita/hueco vivo (nada, o solo canceladas/reprogramadas: festivos, vacaciones…) no cuenta.
+          let cap = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
             const filas = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k);
             if (!filas.some(c => /PENDIENTE|REALIZADA|NO ASIST|PERDIDA|LIBRE|CALL-IN|VIDEOS|DUDOSA|REAGENDAR/i.test(c.e))) return;
-            const cd = new Set(filas.filter(c => !/BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)).size; cap += cd; pf[k].cap += cd; }); }
+            const hBloq = new Set(filas.filter(c => /BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)).size;
+            const hAbiertas = new Set(filas.filter(c => !/BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)).size;
+            const cd = Math.max((horario[k] && horario[k][dw] || 0) - hBloq, hAbiertas, 0); cap += cd; pf[k].cap += cd; }); }
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
