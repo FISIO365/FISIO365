@@ -202,6 +202,10 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .rend-conv.dos{grid-template-columns:1fr 1fr}.rend-nota{grid-column:1/-1;font-size:12px;color:var(--muted)}
 .rend-card.solo{padding:14px 16px}.rend-card.solo .rend-oc{font-size:18px;color:var(--black)}.rend-card.solo small{font-size:12px;font-weight:400;color:var(--muted)}
 .rend-card.solo{padding:14px 16px}.rend-card.solo .rend-oc{font-size:18px;color:var(--black)}.rend-oc small{font-size:12px;font-weight:400;color:var(--muted)}
+.sc-box .ct{display:flex;align-items:center;gap:8px}.sc-n{background:#c2552e;color:#fff;font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px}.sc-sub{font-size:12.5px;color:var(--muted);margin:-4px 0 10px}
+.sc-it{padding:10px 0;border-top:1px solid #f1ede9}.sc-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.sc-top b{font-size:14px}.sc-top i{font-style:normal;font-size:11.5px;color:var(--muted)}
+.sc-row{display:flex;gap:8px;margin-top:6px;align-items:flex-end}.sc-row textarea{flex:1;font-family:var(--font);font-size:13.5px;padding:9px 12px;border:1.5px solid var(--border);border-radius:12px;resize:none;overflow:hidden;min-height:40px;box-sizing:border-box}.sc-row button{font-family:var(--font);font-size:13px;font-weight:600;padding:10px 14px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer}
+.rn-txt{flex:1;min-width:0}.rn-txt span{display:block}.rn-nota{margin:3px 0 0;font-size:12.5px;color:#1a1a1a;font-style:italic}.rn-nota.sin{color:#b42318;font-style:normal;font-size:11.5px}
 .rend-no{margin-top:10px;font-size:13px}.rend-no summary{cursor:pointer;color:#c2552e;font-weight:600}.rn-it{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1ede9}.rn-it span{flex:1;font-weight:600}.rn-it i{font-style:normal;font-size:11.5px;color:var(--muted)}.rn-it a{font-size:12px;color:#16803c;font-weight:600;text-decoration:none}
 .rend-dif{font-style:normal;font-size:12px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:4px}.rend-dif.mas{background:#e8f5ec;color:#16803c}.rend-dif.menos{background:#fdecea;color:#b42318}.rend-dif.ok{background:#e8f5ec;color:#16803c}
 .rend-aus{background:#fff7ed;border-radius:10px;padding:8px 10px}.rend-aus b{font-size:13px!important;font-weight:600}.rend-card.tot .rend-aus{display:none}
@@ -1123,7 +1127,33 @@ function mkPacSearch(inputId, listId, selBoxId, onSelect){
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION: PACIENTES
 // ─────────────────────────────────────────────────────────────────────────────
+// ── Pacientes sin próxima cita: el fisio explica por qué no han reagendado ──
+async function sinCitaFisio(wrap){
+ if(!fisioActual)return;
+ const yo=String(fisioActual.nombre||'').split(' ')[0].toLowerCase();if(!yo)return;
+ const box=ce('div','card sc-box');box.style.display='none';wrap.appendChild(box);
+ const iso=n=>isoMadrid(new Date(Date.now()+n*864e5));
+ try{
+  const r=await (await fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${iso(-30)}&hasta=${iso(-1)}`)).json();
+  const me=(r.fisios||[]).find(f=>String(f.fisio).toLowerCase()===yo);
+  const L=((me&&me.lista)||[]).filter(p=>!(p.nota&&p.notaFecha>=p.ultima));
+  if(!L.length)return;
+  const fch=f=>{const [y,m,d]=String(f).split('-');return +d+'/'+ +m;};
+  box.style.display='';
+  box.innerHTML=`<div class="ct">Pacientes sin próxima cita <span class="sc-n">${L.length}</span></div><div class="sc-sub">Cuéntanos en una frase por qué no han reagendado.</div>`+L.map(p=>`<div class="sc-it" data-id="${p.id}"><div class="sc-top"><b>${escH(p.nombre)}</b><i>última sesión ${fch(p.ultima)}</i></div><div class="sc-row"><textarea rows="1" placeholder="Ej.: le di el alta, se va de viaje…"></textarea><button type="button">Guardar</button></div></div>`).join('');
+  box.querySelectorAll('.sc-it').forEach(it=>{
+   const ta=it.querySelector('textarea'),b=it.querySelector('button');
+   ta.oninput=()=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';};
+   b.onclick=async()=>{const nota=ta.value.trim();if(!nota){toast('Escribe el motivo',false);ta.focus();return;}
+    b.disabled=true;b.textContent='…';
+    try{const d=await (await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:it.dataset.id,nota,fisio:fisioActual.nombre})})).json();if(!d.ok)throw 0;
+     it.remove();toast('Guardado, gracias',true);const n=box.querySelectorAll('.sc-it').length;if(!n)box.remove();else box.querySelector('.sc-n').textContent=n;
+    }catch(e){b.disabled=false;b.textContent='Guardar';toast('No se ha podido guardar',false);}};
+  });
+ }catch(e){}
+}
 function renderPac(wrap){
+ sinCitaFisio(wrap);
  const card=ce('div','card');
  card.innerHTML=`<div class="ct">Buscar paciente</div>
  <div class="si"><input type="text" id="pacBuscar" placeholder="Escribe nombre o email..." autocomplete="off"></div>
@@ -4631,7 +4661,7 @@ async function renderRendimiento(wrap){
    await Promise.all(L.filter(x=>x.dias).map(async x=>{try{const hz=await (await fetch(`/api/schedule?action=horas&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`)).json();x.reg={};(hz.registros||[]).forEach(r=>x.reg[r.fecha]=r);x.banco=Math.round((hz.banco||0)*10)/10;}catch(e){}}));
    const T=L.reduce((a,x)=>{a.realizadas+=x.realizadas;a.atendidos+=x.atendidos;a.reagendan+=x.reagendan;if(!x.sinHoras){['huecos','noAsistio','perdidas','canceladas','callin','videos'].forEach(q=>a[q]+=(x[q]||0));a.realOcup+=x.realizadas;}return a;},{fisio:'Total del centro',realizadas:0,realOcup:0,callin:0,videos:0,huecos:0,atendidos:0,reagendan:0,noAsistio:0,perdidas:0,canceladas:0});
    const fch=f=>{const [y,m,d]=String(f).split('-');return +d+'/'+ +m;};
-   const listaNo=x=>(x.lista&&x.lista.length)?`<details class="rend-no"><summary>Ver quién no ha reagendado (${x.lista.length})</summary>${x.lista.map(p=>`<div class="rn-it"><span>${escH(p.nombre)}</span><i>última sesión ${fch(p.ultima)}</i>${p.tel?`<a href="https://wa.me/${String(p.tel).replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1')}" target="_blank" rel="noopener">WhatsApp</a>`:''}</div>`).join('')}</details>`:'';
+   const listaNo=x=>(x.lista&&x.lista.length)?`<details class="rend-no"><summary>Ver quién no ha reagendado (${x.lista.length})</summary>${x.lista.map(p=>`<div class="rn-it"><div class="rn-txt"><span>${escH(p.nombre)}</span><i>última sesión ${fch(p.ultima)}</i>${(p.nota&&p.notaFecha>=p.ultima)?`<p class="rn-nota">«${escH(p.nota)}»${p.notaFisio?' — '+escH(p.notaFisio):''}</p>`:'<p class="rn-nota sin">Sin explicar todavía</p>'}</div>${p.tel?`<a href="https://wa.me/${String(p.tel).replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1')}" target="_blank" rel="noopener">WhatsApp</a>`:''}</div>`).join('')}</details>`:'';
    const horasTot=x=>{const h=x.realizadas+(x.callin||0)+(x.videos||0),d=h-x.huecos;return `<div style="grid-column:1/-1"><span>Horas trabajadas (sesiones + call-in + vídeos)</span><b>${h} de ${x.huecos} h ${d?`<em class="rend-dif ${d>0?'mas':'menos'}">${d>0?'+':'−'}${Math.abs(d)} h</em>`:'<em class="rend-dif ok">✓</em>'}</b></div>`;};
    const DS=['dom','lun','mar','mié','jue','vie','sáb'];
    const fdia=d=>{const t=new Date(d+'T12:00:00');return DS[t.getDay()]+' '+t.getDate()+'/'+(t.getMonth()+1);};

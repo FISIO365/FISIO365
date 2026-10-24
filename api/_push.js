@@ -193,8 +193,8 @@ async function rendimiento(desde, hasta) {
   const nombres = {};
   const ids = [...new Set(sinCita)];
   for (let i = 0; i < ids.length; i += 40) {
-    const r = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + ids.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP`).catch(() => []);
-    r.forEach(p => { nombres[p.id] = { nombre: p.fields['FULL NAME'] || '—', tel: p.fields['WHATSAPP'] || '' }; });
+    const r = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + ids.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=POR QUÉ NO REAGENDA&fields[]=POR QUÉ FECHA&fields[]=POR QUÉ FISIO`).catch(() => []);
+    r.forEach(p => { nombres[p.id] = { nombre: p.fields['FULL NAME'] || '—', tel: p.fields['WHATSAPP'] || '', nota: p.fields['POR QUÉ NO REAGENDA'] || '', notaFecha: p.fields['POR QUÉ FECHA'] || '', notaFisio: p.fields['POR QUÉ FISIO'] || '' }; });
   }
   Object.values(R).forEach(x => { x.lista = x.lista.map(p => ({ ...p, ...(nombres[p.id] || { nombre: '—' }) })).sort((a, b) => b.ultima.localeCompare(a.ultima)); });
   return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); return { ...x, huecos: capacidad(k), sinHoras: !horasDia[k], dias: diario(k) }; }).sort((a, b) => b.realizadas - a.realizadas);
