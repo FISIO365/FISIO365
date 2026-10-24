@@ -281,6 +281,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .est-sel{display:flex;flex-wrap:wrap;gap:6px}.est-sel button{cursor:pointer;font-size:12.5px;padding:6px 12px;opacity:.55}.est-sel button.on{opacity:1;border-color:currentColor}
 .est-fil{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;-webkit-overflow-scrolling:touch}.est-fil span{font-size:12px;color:var(--muted);align-self:center;white-space:nowrap}.est-fil button{cursor:pointer;font-size:12px;padding:5px 11px;opacity:.75}.est-fil button b{font-size:10.5px;opacity:.7}.est-fil button.on{opacity:1;border-color:currentColor}
 .est-ok{font-size:12px;color:#16803c;margin-top:8px;min-height:16px}
+.seg-ya{color:#16803c}.seg-ya-t{display:block;font-size:11.5px;font-weight:500;color:var(--muted);margin-top:2px}
 .tk-sg.en,.rn-seg.en{background:#e8f5ec;border-color:#16803c;color:#16803c}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
@@ -1208,6 +1209,7 @@ async function sinCitaFisio(wrap){
 }
 let pacFiltroEst='';
 function renderPac(wrap){
+ cargarSegPac().then(()=>{const i=document.getElementById('pacBuscar');if(i&&(i.value||pacFiltroEst)&&i.oninput)i.oninput();});
  const card=ce('div','card');
  card.innerHTML=`<div class="ct">Buscar paciente</div>
  <div class="si"><input type="text" id="pacBuscar" placeholder="Escribe nombre o email..." autocomplete="off"></div>
@@ -1271,6 +1273,7 @@ function renderPacLista(q, lista){
  const row=ce('div','');
  row.style.cssText='padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--black);border-bottom:'+(i<opciones.length-1?'1px solid var(--border)':'none');
  row.textContent=op.label;
+ if(op.key==='seg'&&SEG_PAC[p.id]){row.innerHTML=`<span class="seg-ya">✓ En seguimiento</span><small class="seg-ya-t">${escH(segYaTxt(p.id).replace('Ya está en seguimiento: ',''))}</small>`;}
  row.onmouseenter=()=>row.style.background='var(--lila-light)';
  row.onmouseleave=()=>row.style.background='';
  row.dataset.active='0';
@@ -1301,7 +1304,7 @@ function renderPacLista(q, lista){
  else if(op.key==='informes') fpTabInformes(p.id, panel, p.nombre, tok);
  else if(op.key==='facturas') fpTabFacturas(p.id, panel, p.nombre, tok);
  else if(op.key==='estado'){panel.innerHTML='<div class="sc-sub" style="margin:0 0 8px">Toca para poner o quitar. Puede tener varios.</div>';const sel=selectorEstados(p.estados);panel.appendChild(sel);const est=ce('div','est-ok');panel.appendChild(est);sel.addEventListener('change',async()=>{est.textContent='Guardando…';try{await guardarEstados(p.id,sel.get());est.textContent='✓ Guardado';const r=card.querySelector('.est-row');const html=estadoChips(sel.get());if(r)r.innerHTML=html;else if(html)card.querySelector('.pem').insertAdjacentHTML('afterend',`<div class="est-row">${html}</div>`);}catch(e){est.textContent='No se ha podido guardar';}});}
- else if(op.key==='seg'){panel.style.display='none';row.dataset.active='0';row.style.color='var(--black)';abrirNuevoSeg({pacienteId:p.id,nombre:p.nombre});}
+ else if(op.key==='seg'){panel.style.display='none';row.dataset.active='0';row.style.color='var(--black)';if(SEG_PAC[p.id]){toast(segYaTxt(p.id),true);return;}abrirNuevoSeg({pacienteId:p.id,nombre:p.nombre,onSave:()=>{SEG_PAC[p.id]={fecha:'',quien:''};row.innerHTML='<span class="seg-ya">✓ En seguimiento</span>';}});}
  else if(op.key==='racha') fpTabRacha(p.id, panel, tok);
  else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel, tok);
  else if(op.key==='chat'){panel.innerHTML='<div class="chatp-ficha"></div>';FisioChat.montar(panel.querySelector('.chatp-ficha'),{rol:'fisio',pwd:apiPwd,pacienteId:p.id,pacienteNombre:p.nombre,fisio:{id:fisioActual.id,nombre:fisioActual.nombre},onLeido:()=>checkMensajesBadge(),onEnviado:m=>{const txt=m.texto||'Te ha enviado un archivo';notificarPaciente(p.id,`Mensaje de ${fisioActual.nombre}`,txt);crearNotificacion(p.id,`Mensaje de ${fisioActual.nombre}`,txt,'mensaje');}});}
@@ -4720,7 +4723,7 @@ async function listaTareas(cont){
     const b=ce('button','seg-hecho');b.type='button';b.textContent='Explicar';b.onclick=()=>abrirExplicar(x.p,recargar);
     const sg=ce('button','tk-sg');sg.type='button';sg.textContent='+ Seguimiento';sg.title='Pasar a la lista de seguimiento';
     if(SEG_PAC[x.p.id]){sg.classList.add('en');sg.textContent='✓ En seguimiento';sg.title=segYaTxt(x.p.id);sg.onclick=()=>toast(segYaTxt(x.p.id),true);}
-    else sg.onclick=()=>abrirNuevoSeg({pacienteId:x.p.id,nombre:x.p.nombre,nota:'',onSave:async nota=>{await marcarExplicado(x.p.id,nota?('A seguimiento: '+nota):'Pasado a seguimiento');recargar();}});
+    else sg.onclick=()=>abrirNuevoSeg({pacienteId:x.p.id,nombre:x.p.nombre,nota:'',onSave:()=>recargar()});
     const q=ce('button','tk-q');q.type='button';q.setAttribute('aria-label','Quitar');q.innerHTML='✕';q.title='Quitar de tareas';
     let arm=false;q.onclick=async()=>{if(!arm){arm=true;q.classList.add('arm');q.textContent='¿Quitar?';setTimeout(()=>{arm=false;q.classList.remove('arm');q.innerHTML='✕';},4000);return;}q.disabled=true;await marcarExplicado(x.p.id,'Sin seguimiento');toast('Quitado',true);recargar();};
     acc.appendChild(b);acc.appendChild(sg);acc.appendChild(q);
