@@ -881,7 +881,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .np-dup{margin-top:14px;background:#fff4e5;border-radius:14px;padding:12px}.np-dup>b{display:block;font-size:13px;color:#b45309;margin-bottom:8px}
 .np-dup-it{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;width:100%;text-align:left;background:#fff;border:none;border-radius:10px;padding:9px 12px;margin-bottom:6px;font-family:var(--font);cursor:pointer}.np-dup-it span{font-weight:600;font-size:13.5px}.np-dup-it small{flex-basis:100%;order:3;font-size:11.5px;color:#9a8d84}.np-dup-it i{margin-left:auto;font-style:normal;font-size:12px;font-weight:600;color:#c2552e}
 .np-forzar{border:none;background:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#7d6a60;text-decoration:underline;cursor:pointer;padding:4px 0 0}
-.fp-pqchk{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px;cursor:pointer}.fp-pqchk input{width:20px;height:20px;accent-color:#c2552e;margin:0}.fp-pqchk em{margin-left:auto;font-style:normal;font-weight:500;font-size:12.5px;color:#b42318}.fp-pq .fp-ta{margin-top:10px}.fp-pqtxt{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-top:10px}.fp-pqtxt p{margin:0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}.fp-pq small{display:block;margin-top:4px;font-size:12px}
+.fp-pqchk{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px;cursor:pointer}.fp-pqchk input{width:20px;height:20px;accent-color:#c2552e;margin:0}.fp-pqchk em{margin-left:auto;font-style:normal;font-weight:500;font-size:12.5px;color:#b42318}.fp-pq .fp-ta{margin-top:10px}.fp-pq .fp-pqseg .fp-ta{margin-top:0}.fp-pqseg{margin-top:4px}.fp-pqf{font-family:var(--font);font-size:14px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;background:#fff;max-width:100%;box-sizing:border-box}.fp-pqya{margin-top:10px;font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border-radius:10px;padding:8px 12px}.fp-pqtxt{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-top:10px}.fp-pqtxt p{margin:0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}.fp-pq small{display:block;margin-top:4px;font-size:12px}
 </style>
 </head>
 <body>
@@ -5043,22 +5043,47 @@ async function abrirFichaPaciente(id,nombre,pBase){
   <div class="fp-blk" data-blk="notas"><div class="fp-bt"><h3>Notas</h3><button type="button" class="fp-ed">Editar</button></div><div class="fp-txt fp-doc">${P.notas?par(P.notas):'<em>Sin notas</em>'}</div></div>`;}
  function montarPorQue(cont){const box=cont.querySelector('.fp-pq');if(!box)return;
   const sinCita=!d.citas.some(c=>c.fecha>=d.hoy&&!/CANCEL|REPROGRAM/i.test(c.estado));
-  const guardarPQ=async(t,bt)=>{if(bt){bt.disabled=true;bt.textContent='Guardando…';}
-   try{const r=await (await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:id,nota:t,fisio:fisioActual.nombre})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
-    P.porQue=t;P.porQueFecha=t?(r.fecha||d.hoy):'';P.porQueFisio=t?fisioActual.nombre:'';try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}toast(t?'Guardado':'Motivo quitado',true);return true;}
-   catch(err){if(bt){bt.disabled=false;bt.textContent='Guardar';}toast(err.message,false);return false;}};
-  const pinta=(editando)=>{const on=editando||!!P.porQue;
+  const segPend=()=>(d.seguimiento||[]).find(s=>!s.hecho)||(SEG_PAC[id]?{fecha:SEG_PAC[id].fecha,quien:SEG_PAC[id].quien}:null);
+  const post=async(a,b)=>(await fetch('/api/schedule?action='+a,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd},b))})).json();
+  const refrescarTareas=()=>{try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}};
+  const pinta=(editando)=>{const on=editando||!!P.porQue,sp=segPend();
    box.innerHTML=`<label class="fp-pqchk"><input type="checkbox" ${on?'checked':''}><span>No reagenda</span>${sinCita&&!on?'<em>Sin próxima cita</em>':''}</label>`+
-    (editando?`<textarea class="fp-ta" rows="3" placeholder="¿Por qué? Ej.: alta, se va de viaje, le cuesta pagar…">${escH(P.porQue||'')}</textarea><div class="fp-edbts" style="justify-content:flex-end;margin-top:8px"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></div>`
+    (editando?`<textarea class="fp-ta fp-pqmot" rows="3" placeholder="¿Por qué? Ej.: alta, se va de viaje, le cuesta pagar…">${escH(P.porQue||'')}</textarea>
+     ${sp?`<div class="fp-pqya">✓ Ya está en seguimiento${sp.fecha?' · llamar el '+segFecha(sp.fecha):''}${sp.quien?' · '+escH(sp.quien):''}</div>`:`<div class="fp-pqseg">
+      <div class="hz-lab">Pasa a seguimiento · ¿cuándo llamar?</div><div class="seg-rap fp-pqcu">${[['Mañana',1],['En 1 semana',7],['En 2 semanas',14],['En 1 mes',30]].map(([t,n])=>`<button type="button" data-d="${n}">${t}</button>`).join('')}</div>
+      <input type="date" class="fp-pqf" value="${segIso(7)}" min="${segIso(0)}">
+      <div class="hz-lab">¿Quién le contacta?</div><div class="seg-rap fp-pqre">${TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('')}</div>
+      <div class="hz-lab hz-lab2">Nota para la llamada <button type="button" class="exp-copia">Copiar el motivo</button></div>
+      <textarea class="fp-ta fp-pqn" rows="2" placeholder="Ej.: ver qué tal está y ofrecer mantenimiento"></textarea></div>`}
+     <div class="fp-edbts" style="justify-content:flex-end;margin-top:10px"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">${sp?'Guardar':'Guardar y pasar a seguimiento'}</button></div>`
     :P.porQue?`<div class="fp-pqtxt"><p>${escH(P.porQue)}</p><button type="button" class="fp-ed fp-pq-ed">Editar</button></div><small class="fp-mu">${escH([P.porQueFisio,fch(P.porQueFecha)].filter(Boolean).join(' · '))}</small>`:'');
-   const chk=box.querySelector('input');
+   const chk=box.querySelector('input[type=checkbox]');
    chk.onchange=async()=>{if(chk.checked){pinta(true);return;}
     if(!P.porQue){pinta(false);return;}
     if(!confirm('¿Quitar el motivo de no reagenda?')){chk.checked=true;return;}
-    chk.disabled=true;if(await guardarPQ('',null))pinta(false);else chk.checked=true,chk.disabled=false;};
+    chk.disabled=true;
+    try{const r=await post('nota-reagenda',{pacienteId:id,nota:'',fisio:fisioActual.nombre});if(!r.ok)throw new Error(r.error||'No se ha podido quitar');P.porQue='';P.porQueFecha='';P.porQueFisio='';refrescarTareas();toast('Motivo quitado',true);pinta(false);}
+    catch(err){chk.checked=true;chk.disabled=false;toast(err.message,false);}};
    const ed=box.querySelector('.fp-pq-ed');if(ed)ed.onclick=()=>pinta(true);
-   if(editando){const ta=box.querySelector('.fp-ta');ta.focus();box.querySelector('.fp-can').onclick=()=>pinta(false);
-    box.querySelector('.fp-ok').onclick=async e=>{const t=ta.value.trim();if(!t){toast('Escribe el motivo',false);return;}if(await guardarPQ(t,e.target))pinta(false);};}};
+   if(!editando)return;
+   const ta=box.querySelector('.fp-pqmot');ta.focus();box.querySelector('.fp-can').onclick=()=>pinta(false);
+   let resp=miNombreCorto();const sb=box.querySelector('.fp-pqseg');
+   if(sb){const f=sb.querySelector('.fp-pqf');
+    const pf=()=>sb.querySelectorAll('.fp-pqcu button').forEach(x=>x.classList.toggle('on',segIso(+x.dataset.d)===f.value));pf();
+    sb.querySelectorAll('.fp-pqcu button').forEach(x=>x.onclick=()=>{f.value=segIso(+x.dataset.d);pf();});f.onchange=pf;
+    const pr=()=>sb.querySelectorAll('.fp-pqre button').forEach(x=>x.classList.toggle('on',x.dataset.n===resp));pr();
+    sb.querySelectorAll('.fp-pqre button').forEach(x=>x.onclick=()=>{resp=x.dataset.n;pr();});
+    const ns=sb.querySelector('.fp-pqn');sb.querySelector('.exp-copia').onclick=()=>{const t=ta.value.trim();if(!t){toast('Primero escribe el motivo',false);return;}ns.value=ns.value.trim()?ns.value.trim()+'\n'+t:t;};}
+   box.querySelector('.fp-ok').onclick=async e=>{const t=ta.value.trim();if(!t){toast('Escribe el motivo',false);return;}
+    if(sb&&!sb.querySelector('.fp-pqf').value){toast('Elige cuándo llamar',false);return;}
+    const bt=e.target,t0=bt.textContent;bt.disabled=true;bt.textContent='Guardando…';
+    try{const r=await post('nota-reagenda',{pacienteId:id,nota:t,fisio:fisioActual.nombre});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
+     P.porQue=t;P.porQueFecha=r.fecha||d.hoy;P.porQueFisio=fisioActual.nombre;
+     if(sb){const fecha=sb.querySelector('.fp-pqf').value,nota=sb.querySelector('.fp-pqn').value.trim();
+      const r2=await post('seg-crear',{pacienteId:id,fecha,nota,responsable:resp});if(!r2.ok)throw new Error('Motivo guardado, pero no se ha podido pasar a seguimiento');
+      SEG_PAC[id]={fecha,quien:resp};(d.seguimiento=d.seguimiento||[]).unshift({fecha,nota,hecho:false,quien:resp});}
+     refrescarTareas();toast(sb?'Guardado y pasado a seguimiento':'Guardado',true);pintar();}
+    catch(err){bt.disabled=false;bt.textContent=t0;toast(err.message,false);}};};
   pinta(false);}
  function montarHistoria(cont){
   const b=cont.querySelector('.fp-add-ev');if(!b)return;
@@ -5200,6 +5225,8 @@ function abrirExplicar(p,onSave){
   box.querySelectorAll('.seg-resp button').forEach(x=>x.onclick=()=>{resp=x.dataset.n;pr();});
   const ns=box.querySelector('.exp-nseg');
   box.querySelector('.exp-copia').onclick=()=>{const t=ta.value.trim();if(!t){toast('Primero escribe el motivo',false);return;}ns.value=ns.value.trim()?ns.value.trim()+'\n'+t:t;};
+
+  aSeg=true;bs.classList.add('on');box.hidden=false;m.querySelector('.hz-ok').textContent='Guardar y añadir a seguimiento';
  }
  m.querySelector('.hz-ok').onclick=async e=>{const nota=ta.value.trim();if(!nota){toast('Escribe el motivo',false);return;}const b=e.target;b.disabled=true;
   try{const d=await (await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:p.id,nota,fisio:fisioActual.nombre})})).json();if(!d.ok)throw new Error('No se ha podido guardar');
