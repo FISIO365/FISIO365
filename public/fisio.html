@@ -302,7 +302,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tk-ed{border:none;background:none;padding:0;font-family:var(--font);font-size:11.5px;font-weight:600;color:#c2552e;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .hz-cuando{font-size:11.5px;color:var(--muted);margin:2px 0 4px}
 .ll-res{background:#fff;border-radius:16px;padding:14px;margin:4px 0 14px;overflow-x:auto}.ll-t{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.ll-tab{display:grid}.ll-h,.ll-r{display:grid;grid-template-columns:minmax(58px,1.2fr) .9fr repeat(5,1fr) 40px;align-items:center;gap:4px;padding:7px 0;border-bottom:1px solid #f1ede9;font-size:12.5px}.ll-r:last-child{border-bottom:none}
+.ll-tab{display:grid}.ll-h,.ll-r{display:grid;grid-template-columns:minmax(58px,1.2fr) repeat(5,1fr) 40px;align-items:center;gap:4px;padding:7px 0;border-bottom:1px solid #f1ede9;font-size:12.5px}.ll-r:last-child{border-bottom:none}
 .ll-h b{font-size:10px;line-height:1.2;color:var(--muted);font-weight:600;text-align:center}.ll-r span{font-weight:600}.ll-r b{text-align:center;font-size:14px}.ll-r i{font-style:normal;text-align:center;color:#3d342e}
 .tk-i.r-ok{background:#e8f5ec;color:#16803c}.tk-i.r-no{background:#fdecea;color:#b42318}.tk-i.r-pe{background:#f3efea;color:#7d6a60}
 .tk-m strong.r-ok{color:#16803c}.tk-m strong.r-no{color:#b42318}.tk-m strong.r-pe{color:#7d6a60}.tk-m strong{font-weight:600;font-size:12.5px}
@@ -325,6 +325,9 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .pv-et{color:#c2552e;font-weight:700;letter-spacing:.8px;font-size:10.5px}.pv-doc h1{font-size:21px;margin:4px 0 2px}.pv-sub{color:#7d6a60;font-size:13px;margin-bottom:14px}
 .pv-k{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-bottom:16px}.pv-k div{background:#f7f3ef;border-radius:10px;padding:9px 10px}.pv-k span{display:block;font-size:10.5px;color:#7d6a60}.pv-k b{font-size:17px}
 .pv-doc h2{font-size:13.5px;margin:16px 0 6px}.pv-tw{overflow-x:auto}.pv-doc table{width:100%;border-collapse:collapse;font-size:12.5px}.pv-doc th{text-align:left;font-size:10px;text-transform:uppercase;color:#7d6a60;padding:5px 6px;border-bottom:1px solid #ece6e0}.pv-doc td{padding:7px 6px;border-bottom:1px solid #f1ede9;vertical-align:top}
+.ll-big{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:2px 0 12px}.ll-big div{background:#f7f3ef;border-radius:12px;padding:10px}.ll-big b{display:block;font-size:20px;line-height:1.1}.ll-big div:first-child b{color:#16803c}.ll-big span{font-size:10.5px;color:#7d6a60;line-height:1.2;display:block;margin-top:2px}
+.ll-pct{font-weight:700}.ll-pct.ok{color:#16803c}.ll-pct.me{color:#b45309}.ll-pct.ba{color:#b42318}.ll-ex{font-size:11px;color:#9a8d84;margin-top:8px}
+.ll-resena{margin-top:12px}.pv-nota{font-size:11.5px;color:#9a8d84;margin:-8px 0 14px}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -4915,19 +4918,21 @@ function abrirResultadoSeg(it,onSave){
   <div class="seg-nf" style="display:none"><div class="hz-lab">¿Cuándo volver a llamar?</div><div class="seg-rap">${[['Mañana',1],['En 3 días',3],['En 1 semana',7],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div><input type="date" class="seg-f" value="${segIso(3)}" min="${segIso(0)}"></div>
   <div class="hz-lab">¿Quién ha llamado?</div><div class="seg-rap seg-quien"></div>
   <div class="hz-cuando">Se guarda con la fecha y hora de ahora: ${ahoraTxt()}</div>
+  <button type="button" class="exp-seg ll-resena"><i></i>Le he pedido reseña</button>
   <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="seg-n" rows="2" placeholder="Qué te ha dicho…"></textarea>
   <div class="hz-lab">Estado del paciente</div><div class="est-slot"></div>
   <div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
  const f=m.querySelector('.seg-f'),nf=m.querySelector('.seg-nf');
  const est0=pacEstados(it.pacienteId).slice(),selE=selectorEstados(est0);m.querySelector('.est-slot').appendChild(selE);
  const getQ=chipsQuien(m,'.seg-quien',miNombreCorto());
+ let resena=false;{const br=m.querySelector('.ll-resena');br.onclick=()=>{resena=!resena;br.classList.toggle('on',resena);};}
  const pintaF=()=>m.querySelectorAll('.seg-nf .seg-rap button').forEach(b=>b.classList.toggle('on',segIso(+b.dataset.d)===f.value));pintaF();
  m.querySelectorAll('.seg-nf .seg-rap button').forEach(b=>b.onclick=()=>{f.value=segIso(+b.dataset.d);pintaF();});f.onchange=pintaF;
  m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{res=b.dataset.v;m.querySelectorAll('.hz-tipos button').forEach(x=>x.classList.toggle('on',x===b));nf.style.display=['Volver a llamar','No contesta','Pendiente de respuesta'].includes(res)?'':'none';});
  m.querySelector('.hz-x').onclick=()=>m.remove();
  m.querySelector('.hz-ok').onclick=async e=>{if(!res){toast('Elige qué ha pasado',false);return;}
   const b=e.target;b.disabled=true;b.textContent='Guardando…';
-  try{const d=await (await fetch('/api/schedule?action=seg-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,pacienteId:it.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value.trim(),nuevaFecha:nf.style.display===''?f.value:'',quien:getQ()})})).json();if(!d.ok)throw new Error(d.error||'Error');
+  try{const d=await (await fetch('/api/schedule?action=seg-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,pacienteId:it.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value.trim(),nuevaFecha:nf.style.display===''?f.value:'',quien:getQ(),resena})})).json();if(!d.ok)throw new Error(d.error||'Error');
    {const nuevos=selE.get();if(it.pacienteId&&nuevos.join()!==est0.join())await guardarEstados(it.pacienteId,nuevos);}
    toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
 }
@@ -4950,14 +4955,16 @@ function abrirEditarLlamada(x,onSave){
  const m=hzModal(`<div class="hz-top"><div><small>Llamada del ${segFecha(x.fecha)}${x.hora?' a las '+x.hora:''}</small><b>${escH(x.nombre)}</b></div><button type="button" class="hz-x">✕</button></div>
   <div class="hz-tipos">${SEG_RES.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
   <div class="hz-lab">¿Quién llamó?</div><div class="seg-rap seg-quien"></div>
+  <button type="button" class="exp-seg ll-resena${x.resena?' on':''}"><i></i>Le pidió reseña</button>
   <div class="hz-lab">Nota</div><textarea class="seg-n" rows="2">${escH(x.nota||'')}</textarea>
   <div class="hz-bts"><button type="button" class="hz-re">Volver a «Por llamar»</button><button type="button" class="hz-ok">Guardar</button></div>`);
  const pt=()=>m.querySelectorAll('.hz-tipos button').forEach(b=>b.classList.toggle('on',b.dataset.v===res));pt();
  m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{res=b.dataset.v;pt();});
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const getQ=chipsQuien(m,'.seg-quien',quienNom(x.quien));
+ let resena=!!x.resena;{const br=m.querySelector('.ll-resena');br.onclick=()=>{resena=!resena;br.classList.toggle('on',resena);};}
  const enviar=async(reabrir,b)=>{b.disabled=true;
-  try{const d=await (await fetch('/api/schedule?action=seg-editar-llamada',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:x.id,segId:x.segId,pacienteId:x.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value,quien:getQ(),reabrir})})).json();if(!d.ok)throw 0;
+  try{const d=await (await fetch('/api/schedule?action=seg-editar-llamada',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:x.id,segId:x.segId,pacienteId:x.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value,quien:getQ(),resena,reabrir})})).json();if(!d.ok)throw 0;
    toast(reabrir?'Vuelve a estar en «Por llamar»':'Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast('No se ha podido guardar',false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(false,e.target);
  m.querySelector('.hz-re').onclick=e=>enviar(true,e.target);
@@ -4995,9 +5002,12 @@ async function renderSeguimiento(wrap){
    html+=`<div class="ll-per"><label class="ll-sel ${perH!=='dia'?'on':''}"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg><select>${PER_H.map(([k,t])=>`<option value="${k}" ${perH===k?'selected':''}>${t}</option>`).join('')}${perH==='dia'?'<option value="dia" selected>Un día</option>':''}</select><i>▾</i></label>
     <label class="ll-dia ${perH==='dia'?'on':''}"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><span>${perH==='dia'&&diaH?escH(segFecha(diaH)):'Seleccionar día'}</span><input type="date" value="${diaH||''}" max="${segIso(0)}" aria-label="Seleccionar día"></label></div>`;
    const L=H;
-   const RES=[['Cita recup.',/RECUPERADA/],['Alta',/^ALTA/],['Volver',/^VOLVER/],['No cont.',/^NC/],['Pendiente',/PENDIENTE/]];
    const per=[...new Set(L.map(x=>x.quienN||'Sin indicar'))].sort((a,b)=>TAR_NOMBRES.indexOf(a)-TAR_NOMBRES.indexOf(b));
-   if(L.length)html+=`<div class="ll-res"><div class="ll-t">Resumen · ${escH(perTxt())}</div><div class="ll-tab"><div class="ll-h"><span></span><b>Llamadas</b>${RES.map(r=>`<b>${r[0]}</b>`).join('')}<b>PDF</b></div>${per.map(n=>{const l=L.filter(x=>(x.quienN||'Sin indicar')===n);return `<div class="ll-r"><span>${escH(n)}</span><b>${l.length}</b>${RES.map(r=>{const n=l.filter(x=>r[1].test(x.resultado)).length;return `<i class="${n?'':'cero'}">${n}</i>`;}).join('')}<button type="button" class="ll-pdf" data-n="${escH(n)}" aria-label="Descargar informe">PDF</button></div>`;}).join('')}</div></div>`;
+   const MT=metricasLlamadas(L);
+   if(L.length)html+=`<div class="ll-res"><div class="ll-t">Productividad · ${escH(perTxt())}</div>
+    <div class="ll-big"><div><b>${MT.pct}%</b><span>objetivo conseguido</span></div><div><b>${MT.rec}</b><span>citas recuperadas</span></div><div><b>${MT.res}</b><span>reseñas pedidas</span></div><div><b>${MT.n}</b><span>llamadas</span></div></div>
+    <div class="ll-tab"><div class="ll-h"><span></span><b>Llamadas</b><b>Citas recup.</b><b>Reseñas</b><b>Objetivo</b><b>Sin respuesta</b><b>PDF</b></div>${per.map(n=>{const M=metricasLlamadas(L.filter(x=>(x.quienN||'Sin indicar')===n));const z=v=>`<i class="${v?'':'cero'}">${v}</i>`;return `<div class="ll-r"><span>${escH(n)}</span><b>${M.n}</b>${z(M.rec)}${z(M.res)}<i class="ll-pct ${M.pct>=50?'ok':M.pct>=25?'me':'ba'}">${M.pct}%</i>${z(M.nc+M.pend)}<button type="button" class="ll-pdf" data-n="${escH(n)}" aria-label="Ver informe">PDF</button></div>`;}).join('')}</div>
+    <div class="ll-ex">Objetivo = se recuperó la cita o se pidió reseña.</div></div>`;
    const resTxt=r=>{r=String(r||'').toUpperCase();return /RECUPERADA/.test(r)?'Cita recuperada':/^ALTA/.test(r)?'Alta':/^NC/.test(r)?'No contesta':/^VOLVER/.test(r)?'Volver a llamar':/PENDIENTE/.test(r)?'Pendiente de respuesta':(r?r.charAt(0)+r.slice(1).toLowerCase():'Sin resultado');};
    const resCls=r=>/RECUPERADA|^ALTA/.test(r)?'ok':/^NC|^VOLVER/.test(r)?'no':'pe';
    const IC_OK='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',IC_NO='<svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01"/></svg>',IC_PE='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>';
@@ -5030,7 +5040,7 @@ function pdfVista(o){
  const cel=v=>{const x=(v&&typeof v==='object')?v:{t:v};return `<td style="${x.c?'color:'+col(x.c)+';':''}${x.b?'font-weight:600;':''}">${escH(x.t==null?'':x.t)}</td>`;};
  const m=ce('div','pv');
  m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>Informe</b><button type="button" class="pv-pdf">Guardar o enviar PDF</button></div>
-  <div class="pv-doc"><div class="pv-et">${escH(o.etiqueta||'')}</div><h1>${escH(o.titulo||'')}</h1><div class="pv-sub">${escH(o.sub||'')}</div>
+  <div class="pv-doc"><div class="pv-et">${escH(o.etiqueta||'')}</div><h1>${escH(o.titulo||'')}</h1><div class="pv-sub">${escH(o.sub||'')}</div>${o.nota?`<div class="pv-nota">${escH(o.nota)}</div>`:''}
   ${(o.kpis||[]).length?`<div class="pv-k">${o.kpis.map(([l,v,c])=>`<div><span>${escH(l)}</span><b style="${c&&String(v)!=='0'?'color:'+col(c):''}">${escH(v)}</b></div>`).join('')}</div>`:''}
   ${(o.secciones||[]).map(sc=>`${sc.titulo?`<h2>${escH(sc.titulo)}</h2>`:''}<div class="pv-tw"><table><tr>${sc.cols.map(c=>`<th>${escH(c[0])}</th>`).join('')}</tr>${sc.filas.map(f=>`<tr>${f.map(cel).join('')}</tr>`).join('')}</table></div>`).join('')||'<p class="pv-sub">No hay datos en este periodo.</p>'}
   </div>`;
@@ -5038,14 +5048,19 @@ function pdfVista(o){
  const cerrar=()=>{m.remove();document.body.style.overflow='';};
  m.querySelector('.pv-x').onclick=cerrar;m.querySelector('.pv-pdf').onclick=()=>pdfTablas(o);
 }
+// Productividad de llamadas: el objetivo es recuperar la cita o conseguir reseña
+function metricasLlamadas(L){const U=x=>String(x.resultado||'').toUpperCase();
+ const rec=L.filter(x=>/RECUPERADA/.test(U(x))).length,res=L.filter(x=>x.resena).length,obj=L.filter(x=>/RECUPERADA/.test(U(x))||x.resena).length;
+ return {n:L.length,rec,res,obj,pct:L.length?Math.round(obj*100/L.length):0,alta:L.filter(x=>/^ALTA/.test(U(x))).length,volver:L.filter(x=>/^VOLVER/.test(U(x))).length,nc:L.filter(x=>/^NC/.test(U(x))).length,pend:L.filter(x=>/PENDIENTE/.test(U(x))).length};}
 function imprimirLlamadas(fisio,L,perTxt,[d1,d2]){
  const RES=[['Cita recuperada',/RECUPERADA/,'ok'],['Alta',/^ALTA/,'ok'],['Volver a llamar',/^VOLVER/,'no'],['No contesta',/^NC/,'no'],['Pendiente de respuesta',/PENDIENTE/,'gris']];
  const rt=r=>{const u=String(r||'').toUpperCase();return RES.find(z=>z[1].test(u))||[r||'—',null,'gris'];};
- const dias=[...new Set(L.map(x=>x.fecha))];
+ const M=metricasLlamadas(L);const dias=[...new Set(L.map(x=>x.fecha))];
  pdfVista({etiqueta:'FISIO365 · INFORME DE LLAMADAS',titulo:fisio,sub:d1===d2?hzFecha(d1):`Del ${segFecha(d1)} al ${segFecha(d2)}`,
-  kpis:[['Llamadas',L.length]].concat(RES.map(([t,re,c])=>[t==='Pendiente de respuesta'?'Pendiente':t,L.filter(x=>re.test(String(x.resultado).toUpperCase())).length,c==='gris'?null:c])),
-  secciones:dias.map(dd=>({titulo:hzFecha(dd).replace(/^./,c=>c.toUpperCase()),cols:[['Hora',13],['Paciente',45],['Resultado',35],['Nota',85]],
-   filas:L.filter(x=>x.fecha===dd).map(x=>{const r=rt(x.resultado);return [x.hora||'',{t:x.nombre,b:true},{t:r[0],c:r[2],b:true},x.nota||''];})})),
+  kpis:[['Llamadas',M.n],['Objetivo conseguido',M.pct+'% ('+M.obj+')',M.obj?'ok':null],['Citas recuperadas',M.rec,'ok'],['Reseñas pedidas',M.res,'ok'],['Altas',M.alta],['Volver a llamar',M.volver],['No contesta',M.nc],['Pendiente respuesta',M.pend]],
+  nota:'Objetivo conseguido = llamadas en las que se recuperó la cita o se pidió reseña.',
+  secciones:dias.map(dd=>({titulo:hzFecha(dd).replace(/^./,c=>c.toUpperCase()),cols:[['Hora',12],['Paciente',40],['Resultado',32],['Reseña',14],['Nota',80]],
+   filas:L.filter(x=>x.fecha===dd).map(x=>{const r=rt(x.resultado);return [x.hora||'',{t:x.nombre,b:true},{t:r[0],c:r[2],b:true},x.resena?{t:'Sí',c:'ok',b:true}:'',x.nota||''];})})),
   nombre:`Llamadas_${fisio}_${d1}${d1!==d2?'_'+d2:''}`});
 }
 // ── Control de horas: clasificar días y banco de horas ──
@@ -5141,15 +5156,16 @@ async function pdfTablas(o){
  set(8.5,'bold','nar');doc.text(o.etiqueta||'FISIO365',ml,y);y+=8;
  set(18,'bold','neg');doc.text(o.titulo||'',ml,y);y+=6;
  set(10,'normal','gris');doc.text(o.sub||'',ml,y);y+=8;
- if(o.kpis&&o.kpis.length){const n=o.kpis.length,gap=3,bw=(tw-gap*(n-1))/n;
-  o.kpis.forEach(([l,v,c],i)=>{const x=ml+i*(bw+gap);doc.setFillColor(...C.crema);doc.roundedRect(x,y,bw,17,2.5,2.5,'F');set(7,'normal','gris');doc.text(doc.splitTextToSize(String(l),bw-5)[0],x+2.5,y+5.5);set(13,'bold',(c&&String(v)!=='0')?c:'neg');doc.text(String(v),x+2.5,y+13.5);});y+=24;}
+ if(o.kpis&&o.kpis.length){const per=o.kpis.length>6?Math.ceil(o.kpis.length/2):o.kpis.length,gap=3,bw=(tw-gap*(per-1))/per;
+  o.kpis.forEach(([l,v,c],i)=>{if(i&&i%per===0)y+=20;const x=ml+(i%per)*(bw+gap);doc.setFillColor(...C.crema);doc.roundedRect(x,y,bw,17,2.5,2.5,'F');set(7,'normal','gris');doc.text(doc.splitTextToSize(String(l),bw-5)[0],x+2.5,y+5.5);set(13,'bold',(c&&String(v)!=='0')?c:'neg');doc.text(String(v),x+2.5,y+13.5);});y+=24;}
+ if(o.nota){set(8,'normal','gris');doc.text(o.nota,ml,y);y+=7;}
  (o.secciones||[]).forEach(sec=>{
   salto(20);if(sec.titulo){set(10.5,'bold','neg');doc.text(sec.titulo,ml,y);y+=6;}
   const tot=sec.cols.reduce((a,c)=>a+c[1],0),k=tw/tot,ws=sec.cols.map(c=>c[1]*k);
   const cab=()=>{set(7,'bold','gris');let x=ml;sec.cols.forEach((c,i)=>{doc.text(String(c[0]).toUpperCase(),x+1,y);x+=ws[i];});y+=2;doc.setDrawColor(...C.lin);doc.line(ml,y,ml+tw,y);y+=4.5;};
   cab();
   sec.filas.forEach(f=>{
-   const cel=f.map((v,i)=>{const o2=(v&&typeof v==='object')?v:{t:v};return {...o2,l:doc.splitTextToSize(String(o2.t==null?'':o2.t),ws[i]-2)};});
+   const cel=f.map((v,i)=>{const o2=(v&&typeof v==='object')?v:{t:v};set(8.5,o2.b?'bold':'normal',o2.c||'neg');return {...o2,l:doc.splitTextToSize(String(o2.t==null?'':o2.t),ws[i]-3)};});
    const h=Math.max(...cel.map(c=>c.l.length))*4.2+2.5;
    if(salto(h+2))cab();
    let x=ml;cel.forEach((c,i)=>{set(8.5,c.b?'bold':'normal',c.c||'neg');doc.text(c.l,x+1,y);x+=ws[i];});
