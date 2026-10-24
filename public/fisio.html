@@ -5049,6 +5049,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const pinta=(editando)=>{const on=editando||!!P.porQue,sp=segPend();
    box.innerHTML=`<label class="fp-pqchk"><input type="checkbox" ${on?'checked':''}><span>No reagenda</span>${sinCita&&!on?'<em>Sin próxima cita</em>':''}</label>`+
     (editando?`<textarea class="fp-ta fp-pqmot" rows="3" placeholder="¿Por qué? Ej.: alta, se va de viaje, le cuesta pagar…">${escH(P.porQue||'')}</textarea>
+     <div class="hz-lab">Estado del paciente</div><div class="fp-pqest"></div>
      ${sp?`<div class="fp-pqya">✓ Ya está en seguimiento${sp.fecha?' · llamar el '+segFecha(sp.fecha):''}${sp.quien?' · '+escH(sp.quien):''}</div>`:`<div class="fp-pqseg">
       <div class="hz-lab">Pasa a seguimiento · ¿cuándo llamar?</div><div class="seg-rap fp-pqcu">${[['Mañana',1],['En 1 semana',7],['En 2 semanas',14],['En 1 mes',30]].map(([t,n])=>`<button type="button" data-d="${n}">${t}</button>`).join('')}</div>
       <input type="date" class="fp-pqf" value="${segIso(7)}" min="${segIso(0)}">
@@ -5067,6 +5068,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
    const ed=box.querySelector('.fp-pq-ed');if(ed)ed.onclick=()=>pinta(true);
    if(!editando)return;
    const ta=box.querySelector('.fp-pqmot');ta.focus();box.querySelector('.fp-can').onclick=()=>pinta(false);
+   const est0=(P.estados||[]).slice(),selE=selectorEstados(est0);box.querySelector('.fp-pqest').appendChild(selE);
    let resp=miNombreCorto();const sb=box.querySelector('.fp-pqseg');
    if(sb){const f=sb.querySelector('.fp-pqf');
     const pf=()=>sb.querySelectorAll('.fp-pqcu button').forEach(x=>x.classList.toggle('on',segIso(+x.dataset.d)===f.value));pf();
@@ -5079,6 +5081,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
     const bt=e.target,t0=bt.textContent;bt.disabled=true;bt.textContent='Guardando…';
     try{const r=await post('nota-reagenda',{pacienteId:id,nota:t,fisio:fisioActual.nombre});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
      P.porQue=t;P.porQueFecha=r.fecha||d.hoy;P.porQueFisio=fisioActual.nombre;
+     {const nv=selE.get();if(nv.slice().sort().join()!==est0.slice().sort().join()){await guardarEstados(id,nv);P.estados=nv;}}
      if(sb){const fecha=sb.querySelector('.fp-pqf').value,nota=sb.querySelector('.fp-pqn').value.trim();
       const r2=await post('seg-crear',{pacienteId:id,fecha,nota,responsable:resp});if(!r2.ok)throw new Error('Motivo guardado, pero no se ha podido pasar a seguimiento');
       SEG_PAC[id]={fecha,quien:resp};(d.seguimiento=d.seguimiento||[]).unshift({fecha,nota,hecho:false,quien:resp});}
