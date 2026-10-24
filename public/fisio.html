@@ -4800,7 +4800,7 @@ async function renderTareas(wrap){
 let tarFiltro='';
 async function listaTareas(cont){
  const box=ce('div','tar');box.innerHTML='<div class="fac-vacio">Cargando…</div>';cont.appendChild(box);
- const recargar=()=>{_dtC.t=0;_dtC.d=null;cont.innerHTML='';listaTareas(cont);contarTareas();};
+ const recargar=()=>{_dtC.t=0;_dtC.d=null;_dtC.fresco=true;cont.innerHTML='';listaTareas(cont);contarTareas();};
  let d;try{d=await datosTareasTodas();}catch(e){box.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
  // Las llamadas viven en su pestaña «Llamadas»: aquí solo lo que hay que hacer y no es llamar
  pintarNumPend(d);
@@ -4923,13 +4923,14 @@ const segYaTxt=id=>{const s=SEG_PAC[id];return s?`Ya está en seguimiento${s.fec
 // Caché de 60 s: Tareas, Llamadas y el número de arriba piden lo mismo; así no se repite la carga
 let _dtC={t:0,d:null,p:null};
 function datosTareasTodas(forzar){
+ if(_dtC.fresco){forzar=true;_dtC.fresco=false;}
  if(!forzar&&_dtC.d&&Date.now()-_dtC.t<60000)return Promise.resolve(_dtC.d);
  if(!forzar&&_dtC.p)return _dtC.p;
- const p=_datosTareasTodas().then(d=>{_dtC={t:Date.now(),d,p:null};return d;}).catch(e=>{_dtC.p=null;throw e;});_dtC.p=p;return p;}
-async function _datosTareasTodas(){
+ const p=_datosTareasTodas(forzar).then(d=>{_dtC={t:Date.now(),d,p:null};return d;}).catch(e=>{_dtC.p=null;throw e;});_dtC.p=p;return p;}
+async function _datosTareasTodas(fresco){
  const iso=n=>isoMadrid(new Date(Date.now()+n*864e5));
  const [r,sg,tq]=await Promise.all([
-  fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${iso(-30)}&hasta=${iso(-1)}`).then(x=>x.json()).catch(()=>({})),
+  fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${iso(-30)}&hasta=${iso(-1)}${fresco?'&fresco=1':''}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-tareas&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
  setSegPac(sg);
@@ -5099,7 +5100,7 @@ async function renderSeguimiento(wrap){
     r.querySelectorAll('button').forEach(b=>b.onclick=()=>{m.remove();abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,onSave:cargar});});};
   };
  };
- const cargar=async()=>{datos=null;pinta();try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();if(segYaCargo){_dtC.d=null;_dtC.t=0;contarTareas();}segYaCargo=true;};
+ const cargar=async()=>{datos=null;pinta();try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();if(segYaCargo){_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}segYaCargo=true;};
  cargar();
 }
 // Vista previa del informe dentro del panel (se ve, se cierra con ✕ y desde aquí se guarda/envía el PDF)
