@@ -5014,16 +5014,14 @@ async function renderSeguimiento(wrap){
  cargar();
 }
 function imprimirLlamadas(fisio,L,perTxt,[d1,d2]){
- const w=window.open('','_blank');if(!w){toast('Permite las ventanas emergentes',false);return;}
- const RES=[['Cita recuperada',/RECUPERADA/],['Alta',/^ALTA/],['Volver a llamar',/^VOLVER/],['No contesta',/^NC/],['Pendiente de respuesta',/PENDIENTE/]];
- const rt=r=>{const x=RES.find(z=>z[1].test(String(r||'').toUpperCase()));return x?x[0]:(r||'—');};
- const rango=d1===d2?hzFecha(d1):`${segFecha(d1)} – ${segFecha(d2)}`;
+ const RES=[['Cita recuperada',/RECUPERADA/,'ok'],['Alta',/^ALTA/,'ok'],['Volver a llamar',/^VOLVER/,'no'],['No contesta',/^NC/,'no'],['Pendiente de respuesta',/PENDIENTE/,'gris']];
+ const rt=r=>{const u=String(r||'').toUpperCase();return RES.find(z=>z[1].test(u))||[r||'—',null,'gris'];};
  const dias=[...new Set(L.map(x=>x.fecha))];
- w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Llamadas ${escH(fisio)} ${d1}${d1!==d2?'_'+d2:''}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"><style>body{font-family:Poppins,sans-serif;color:#1a1a1a;margin:32px;font-size:12px}h1{margin:4px 0 0;font-size:22px}.s{color:#7d6a60;margin-bottom:18px}.g{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px}.g div{border:1px solid #e8e2dc;border-radius:10px;padding:10px}.g span{display:block;font-size:10px;color:#7d6a60}.g b{font-size:18px}h2{font-size:13px;margin:18px 0 6px}h2::first-letter{text-transform:uppercase}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid #eee;vertical-align:top}th{font-size:10px;color:#7d6a60;text-transform:uppercase}.ok{color:#16803c;font-weight:600}.no{color:#b42318;font-weight:600}.pe{color:#7d6a60;font-weight:600}@media print{body{margin:14mm}}</style></head><body>
- <div style="color:#c2552e;font-weight:700;letter-spacing:1px;font-size:11px">FISIO365 · INFORME DE LLAMADAS</div><h1>${escH(fisio)}</h1><div class="s">${escH(rango)}</div>
- <div class="g"><div><span>Llamadas</span><b>${L.length}</b></div>${RES.map(([t,re])=>`<div><span>${t}</span><b>${L.filter(x=>re.test(String(x.resultado).toUpperCase())).length}</b></div>`).join('')}</div>
- ${dias.map(dd=>`<h2>${escH(hzFecha(dd))}</h2><table><tr><th style="width:52px">Hora</th><th style="width:30%">Paciente</th><th style="width:20%">Resultado</th><th>Nota</th></tr>${L.filter(x=>x.fecha===dd).map(x=>{const r=String(x.resultado).toUpperCase();const c=/RECUPERADA|^ALTA/.test(r)?'ok':/^NC|^VOLVER/.test(r)?'no':'pe';return `<tr><td>${escH(x.hora||'')}</td><td>${escH(x.nombre)}</td><td class="${c}">${escH(rt(x.resultado))}</td><td>${escH(x.nota||'')}</td></tr>`;}).join('')}</table>`).join('')||'<p>Sin llamadas en este periodo.</p>'}
- <script>setTimeout(()=>print(),700)<\/script></body></html>`);w.document.close();
+ pdfTablas({etiqueta:'FISIO365 · INFORME DE LLAMADAS',titulo:fisio,sub:d1===d2?hzFecha(d1):`Del ${segFecha(d1)} al ${segFecha(d2)}`,
+  kpis:[['Llamadas',L.length]].concat(RES.map(([t,re,c])=>[t==='Pendiente de respuesta'?'Pendiente':t,L.filter(x=>re.test(String(x.resultado).toUpperCase())).length,c==='gris'?null:c])),
+  secciones:dias.map(dd=>({titulo:hzFecha(dd).replace(/^./,c=>c.toUpperCase()),cols:[['Hora',13],['Paciente',45],['Resultado',35],['Nota',85]],
+   filas:L.filter(x=>x.fecha===dd).map(x=>{const r=rt(x.resultado);return [x.hora||'',{t:x.nombre,b:true},{t:r[0],c:r[2],b:true},x.nota||''];})})),
+  nombre:`Llamadas_${fisio}_${d1}${d1!==d2?'_'+d2:''}`});
 }
 // ── Control de horas: clasificar días y banco de horas ──
 const HZ_TIPOS=['Día libre','Asuntos propios','Vacaciones','Baja','Festivo','Salida anticipada','Horas extra','Otro'];
@@ -5094,12 +5092,50 @@ function descargarCSVHoras(D){
 }
 function imprimirHoras(D){
  const mesTxt=new Date(D.mes+'-15').toLocaleDateString('es-ES',{month:'long',year:'numeric'});
- const w=window.open('','_blank');if(!w){toast('Permite las ventanas emergentes',false);return;}
- w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Horas ${escH(D.fisio)} ${D.mes}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"><style>body{font-family:Poppins,sans-serif;color:#1a1a1a;margin:32px;font-size:12px}h1{font-size:20px;margin:0}.s{color:#7d6a60;margin:2px 0 18px}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}.g div{background:#f7f3ef;border-radius:10px;padding:10px}.g span{display:block;color:#7d6a60;font-size:11px}.g b{font-size:16px}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:6px 4px;border-bottom:1px solid #eee}th{color:#7d6a60;font-size:11px}.m{color:#16803c}.n{color:#b42318}@media print{body{margin:14mm}}</style></head><body>
-  <div style="color:#c2552e;font-weight:700;letter-spacing:1px;font-size:11px">FISIO365 · CONTROL DE HORAS</div><h1>${escH(D.fisio)}</h1><div class="s">${mesTxt}</div>
-  <div class="g"><div><span>Horas según horario</span><b>${D.toca} h</b></div><div><span>Horas trabajadas</span><b>${D.hechas} h</b></div><div><span>Sesiones · call-in · vídeos</span><b>${D.sesiones} · ${D.callin} · ${D.videos}</b></div><div><span>Horas extra</span><b class="m">+${D.extra} h</b></div><div><span>Horas de menos</span><b class="n">−${D.menos} h</b></div><div><span>Banco (mes / acumulado)</span><b>${D.bancoMes>0?'+':''}${D.bancoMes} / ${D.banco>0?'+':''}${D.banco} h</b></div></div>
-  <table><tr><th>Fecha</th><th>Le tocaban</th><th>Trabajadas</th><th>Diferencia</th><th>Tipo</th><th>Banco</th><th>Nota</th></tr>${D.dias.map(x=>`<tr><td>${fdiaCorto(x.fecha)}</td><td>${x.toca} h</td><td>${x.libre?'no vino':x.hechas+' h'}</td><td class="${x.dif>0?'m':x.dif<0?'n':''}">${x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓'}</td><td>${x.reg?escH(x.reg.tipo):''}</td><td>${x.reg&&x.reg.banco?'Sí':''}</td><td>${x.reg?escH(x.reg.nota):''}</td></tr>`).join('')}</table>
-  <script>setTimeout(()=>print(),600)<\/script></body></html>`);w.document.close();
+ pdfTablas({etiqueta:'FISIO365 · CONTROL DE HORAS',titulo:D.fisio,sub:mesTxt.replace(/^./,c=>c.toUpperCase()),
+  kpis:[['Según horario',D.toca+' h'],['Trabajadas',D.hechas+' h'],['Ses. · call-in · víd.',`${D.sesiones} · ${D.callin} · ${D.videos}`],['Horas extra','+'+D.extra+' h','ok'],['Horas de menos','−'+D.menos+' h','no'],['Banco mes / total',`${D.bancoMes>0?'+':''}${D.bancoMes} / ${D.banco>0?'+':''}${D.banco} h`]],
+  secciones:[{cols:[['Fecha',22],['Tocaban',16],['Trabajadas',18],['Dif.',14],['Tipo',28],['Banco',12],['Nota',60]],
+   filas:D.dias.map(x=>[fdiaCorto(x.fecha),x.toca+' h',x.libre?'no vino':x.hechas+' h',{t:x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓',c:x.dif>0?'ok':x.dif<0?'no':null,b:!!x.dif},x.reg?x.reg.tipo:'',x.reg&&x.reg.banco?'Sí':'',x.reg?x.reg.nota:''])}],
+  nombre:`Horas_${D.fisio}_${D.mes}`});
+}
+// ── PDF de tablas (informes del panel): se crea un PDF real y se comparte/descarga sin salir del panel ──
+let _pdfFonts=null;
+function pdfFuentes(){if(_pdfFonts)return _pdfFonts;const b64=async u=>{const r=await fetch(u);if(!r.ok)throw 0;const a=new Uint8Array(await r.arrayBuffer());let t='';for(let i=0;i<a.length;i+=0x8000)t+=String.fromCharCode.apply(null,a.subarray(i,i+0x8000));return btoa(t);};
+ _pdfFonts=Promise.all(['/informe/Poppins-Regular.ttf','/informe/Poppins-Bold.ttf'].map(b64)).then(([r,b])=>({r,b})).catch(()=>{_pdfFonts=null;return null;});return _pdfFonts;}
+function pdfJs(){if(window.jspdf&&window.jspdf.jsPDF)return Promise.resolve();return new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';sc.onload=ok;sc.onerror=()=>ko(new Error('No se ha podido preparar el PDF'));document.head.appendChild(sc);});}
+// o = {etiqueta, titulo, sub, kpis:[[label,valor,color?]], secciones:[{titulo, cols:[[nombre,anchoMM]], filas:[[celda|{t,c}]]}], nombre}
+async function pdfTablas(o){
+ toast('Preparando PDF…',true);
+ try{await pdfJs();const F0=await pdfFuentes();
+ const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});let F='helvetica';
+ if(F0){try{doc.addFileToVFS('PR.ttf',F0.r);doc.addFont('PR.ttf','Poppins','normal');doc.addFileToVFS('PB.ttf',F0.b);doc.addFont('PB.ttf','Poppins','bold');F='Poppins';}catch(e){}}
+ const W=210,H=297,ml=16,mr=16,tw=W-ml-mr;let y=18;
+ const C={nar:[194,85,46],neg:[26,26,26],gris:[125,112,104],lin:[232,225,218],ok:[22,128,60],no:[180,35,24],crema:[247,243,239]};
+ const set=(sz,w,c)=>{doc.setFont(F,w);doc.setFontSize(sz);doc.setTextColor(...(C[c]||c||C.neg));};
+ const salto=h=>{if(y+h>H-16){doc.addPage();y=18;return true;}return false;};
+ set(8.5,'bold','nar');doc.text(o.etiqueta||'FISIO365',ml,y);y+=8;
+ set(18,'bold','neg');doc.text(o.titulo||'',ml,y);y+=6;
+ set(10,'normal','gris');doc.text(o.sub||'',ml,y);y+=8;
+ if(o.kpis&&o.kpis.length){const n=o.kpis.length,gap=3,bw=(tw-gap*(n-1))/n;
+  o.kpis.forEach(([l,v,c],i)=>{const x=ml+i*(bw+gap);doc.setFillColor(...C.crema);doc.roundedRect(x,y,bw,17,2.5,2.5,'F');set(7,'normal','gris');doc.text(doc.splitTextToSize(String(l),bw-5)[0],x+2.5,y+5.5);set(13,'bold',(c&&String(v)!=='0')?c:'neg');doc.text(String(v),x+2.5,y+13.5);});y+=24;}
+ (o.secciones||[]).forEach(sec=>{
+  salto(20);if(sec.titulo){set(10.5,'bold','neg');doc.text(sec.titulo,ml,y);y+=6;}
+  const tot=sec.cols.reduce((a,c)=>a+c[1],0),k=tw/tot,ws=sec.cols.map(c=>c[1]*k);
+  const cab=()=>{set(7,'bold','gris');let x=ml;sec.cols.forEach((c,i)=>{doc.text(String(c[0]).toUpperCase(),x+1,y);x+=ws[i];});y+=2;doc.setDrawColor(...C.lin);doc.line(ml,y,ml+tw,y);y+=4.5;};
+  cab();
+  sec.filas.forEach(f=>{
+   const cel=f.map((v,i)=>{const o2=(v&&typeof v==='object')?v:{t:v};return {...o2,l:doc.splitTextToSize(String(o2.t==null?'':o2.t),ws[i]-2)};});
+   const h=Math.max(...cel.map(c=>c.l.length))*4.2+2.5;
+   if(salto(h+2))cab();
+   let x=ml;cel.forEach((c,i)=>{set(8.5,c.b?'bold':'normal',c.c||'neg');doc.text(c.l,x+1,y);x+=ws[i];});
+   y+=h-1.5;doc.setDrawColor(...C.lin);doc.line(ml,y-2.2,ml+tw,y-2.2);y+=1.5;});
+  y+=4;});
+ const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);set(7,'normal','gris');doc.text('FISIO365 · '+new Date().toLocaleDateString('es-ES'),ml,H-9);if(n>1)doc.text(i+' / '+n,W-mr,H-9,{align:'right'});}
+ const nombre=(o.nombre||'informe').replace(/[^\wáéíóúñÁÉÍÓÚÑ\-]+/g,'_')+'.pdf';
+ const blob=doc.output('blob'),file=new File([blob],nombre,{type:'application/pdf'});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:nombre});return;}catch(e){if(e&&e.name==='AbortError')return;}}
+ const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
+ }catch(e){toast(e.message||'No se ha podido crear el PDF',false);}
 }
 // ── RENDIMIENTO DE LOS FISIOS ──
 function isoMadrid(d){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);}
