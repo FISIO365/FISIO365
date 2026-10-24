@@ -887,6 +887,17 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-bt h3{white-space:nowrap}.fp-bt .fp-edbts{flex-wrap:nowrap}.fp-bt .fp-edbts button,.fp-bt>.fp-ed{white-space:nowrap}
 
 /* Agenda */
+.ag-vis{display:flex;background:#f3efea;border-radius:99px;padding:3px;margin-bottom:10px}.ag-vis button{flex:1;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;border-radius:99px;padding:8px 0;color:#7d6a60;cursor:pointer}.ag-vis button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.ag-lf{display:none;gap:8px;flex-wrap:wrap;align-items:center}.ag.es-lista .ag-lf{display:flex}.ag.es-lista .ag-bar,.ag.es-lista .ag-hoy{display:none!important}
+.ag-w{min-width:0}.ag-rg{display:flex;align-items:center;gap:6px;font-size:13px;color:#7d6a60}.ag-rg .ag-in{width:auto;padding:7px 9px;font-size:14px}
+.ag-pf{position:relative;flex:1;min-width:160px}.ag-pf .ag-in{padding:8px 12px;font-size:14px;border-radius:99px}.ag-pdd{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:6px;display:flex;flex-direction:column}.ag-pdd button{font-family:var(--font);text-align:left;font-size:13.5px;border:none;background:none;padding:8px 10px;border-radius:8px;cursor:pointer}.ag-pdd button:hover{background:#f7f3ef}
+.ag-fil{max-width:200px}.ag-w span{white-space:nowrap}.ag-fil span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ag-lista{display:flex;flex-direction:column}.ag-ld{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5f554e;padding:14px 0 6px;border-bottom:1px solid #f0ebe6;margin-bottom:6px}
+.ag-li{display:grid;grid-template-columns:46px 1fr;gap:8px;align-items:start;margin-bottom:6px}.ag-lh{font-size:12.5px;color:#7d6a60;padding-top:8px}
+.ag-fz{font-weight:700!important;font-size:10.5px!important;text-transform:uppercase;letter-spacing:.03em}
+.ag-sem .ag-hd,.ag-sem .ag-row{grid-template-columns:46px repeat(var(--n),minmax(120px,1fr))}.ag-sem{min-width:calc(46px + var(--n) * 126px)}
+.ag-hdia{font-family:var(--font);border:none;background:none;cursor:pointer;border-radius:8px;padding:4px 0}.ag-hdia:hover{background:#f7f3ef}.ag-hdia.hoy{color:#c2552e}
+
 .ag-badge{font-style:normal;align-self:flex-start;font-size:10.5px;font-weight:700;border-radius:99px;padding:2px 8px;margin-bottom:2px;white-space:nowrap}
 .ag-badge.ok{background:#d9f0e0;color:#16803c}.ag-badge.mal{background:#fbdcd7;color:#b42318}.ag-badge.can{background:#fbdcd7;color:#b42318}.ag-badge.rep{background:#e3e8f1;color:#3b5578}.ag-badge.pen{background:#ffe6c4;color:#b45309}.ag-badge.dud{background:#fff1b8;color:#8a6d00}
 .ag-c.dud{border-left-color:#d4a800;background:#fffbea}
@@ -908,7 +919,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .ag-bar{display:flex;align-items:center;gap:8px}.ag-nv{width:42px;height:42px;border-radius:50%;border:none;background:#f7f3ef;font-size:22px;color:#c2552e;cursor:pointer;flex:none;font-family:var(--font)}
 .ag-fe{flex:1;position:relative;text-align:center;cursor:pointer}.ag-ft{font-size:16px;font-weight:700}.ag-fi{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
 .ag-bar2{display:flex;align-items:center;gap:8px;margin:10px 0 8px;flex-wrap:wrap}.ag-hoy{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:#fdeee4;color:#c2552e;border-radius:99px;padding:7px 13px;cursor:pointer}
-.ag-sel{position:relative;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;background:#f7f3ef;border-radius:99px;padding:7px 28px 7px 13px}.ag-sel::after{content:'▾';position:absolute;right:11px;font-size:10px;color:#7d6a60}.ag-fs{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer;font-size:16px}
+.ag-sel{position:relative;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;background:#f7f3ef;border-radius:99px;padding:7px 28px 7px 13px}.ag-sel::after{content:'▾';position:absolute;right:11px;font-size:10px;color:#7d6a60}.ag-sel select{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:16px}
 .ag-res{margin-left:auto;font-size:12.5px;color:#7d6a60}
 .ag-grid{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px 4px}
 .ag-tb{min-width:calc(46px + var(--n) * 150px)}
@@ -4876,52 +4887,104 @@ try{AG.fisio=localStorage.getItem('f365_ag_fisio')||'';}catch(e){}
 async function agPost(a,b){const r=await (await fetch('/api/schedule?action='+a,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd},b))})).json();return r;}
 async function agCargarDia(f){return (await fetch(`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}&fecha=${f}`)).json();}
 function agEquipo(){const nf=(fisios||[]).map(f=>String(f.nombre||f.name||'').split(' ')[0].toLowerCase());const eq=AG_FISIOS.filter(n=>nf.includes(n.toLowerCase()));return eq.length?eq:['Ramiro','Jonathan','Sara','Juan'];}
+const AG_COL={Ramiro:'#8b5cf6',Jonathan:'#0891b2',Sara:'#ea7a2a',Juan:'#16a34a',Paola:'#ca8a04',ELENA:'#2563eb'};
+const AG_PER=[['prox7','Próximos 7 días'],['hoy','Hoy'],['manana','Mañana'],['semana','Esta semana'],['semanaP','Semana pasada'],['ult7','Últimos 7 días'],['mes','Este mes'],['mesP','Mes pasado'],['ult30','Últimos 30 días'],['todo','Todo (desde el principio)'],['rango','Elegir fechas…']];
+const AG_FIL=[['','Todos los estados'],['pend','Pendientes'],['sinconf','Pendientes sin confirmar'],['hecha','Hechas'],['novino','No vino'],['canc','Canceladas'],['rep','Reprogramadas'],['reag','Por reagendar'],['dud','Dudosas'],['libre','Huecos libres']];
+function agRango(per){const h=agHoyIso(),dow=d=>(new Date(d+'T12:00:00').getDay()+6)%7,lun=agMover(h,-dow(h)),m1=h.slice(0,8)+'01';
+ const finMes=f=>{const d=new Date(f+'T12:00:00Z');d.setUTCMonth(d.getUTCMonth()+1,0);return d.toISOString().slice(0,10);};const mp=(()=>{const d=new Date(m1+'T12:00:00Z');d.setUTCMonth(d.getUTCMonth()-1);return d.toISOString().slice(0,10);})();
+ return {hoy:[h,h],manana:[agMover(h,1),agMover(h,1)],prox7:[h,agMover(h,6)],semana:[lun,agMover(lun,6)],semanaP:[agMover(lun,-7),agMover(lun,-1)],ult7:[agMover(h,-6),h],mes:[m1,finMes(m1)],mesP:[mp,finMes(mp)],ult30:[agMover(h,-29),h],todo:['',''] }[per]||[h,h];}
+function agPasaFiltro(c,f){if(!f)return true;const e=c.estado;
+ return f==='pend'?/PENDIENTE/.test(e)&&!!c.pacienteId:f==='sinconf'?/PENDIENTE/.test(e)&&!!c.pacienteId&&!c.confirmada:f==='hecha'?/REALIZADA/.test(e):f==='novino'?/NO ASIST|PERDIDA/.test(e):f==='canc'?/CANCELADA/.test(e):f==='rep'?/REPROGRAMADA/.test(e):f==='reag'?/REAGENDAR/.test(e):f==='dud'?/DUDOSA/.test(e):f==='libre'?agEsLibre(e):true;}
 function renderAgenda(wrap){
  if(!AG.fecha)AG.fecha=agHoyIso();
+ try{AG.vista=AG.vista||localStorage.getItem('f365_ag_vista')||'dia';}catch(e){AG.vista=AG.vista||'dia';}
+ AG.per=AG.per||'prox7';AG.fil=AG.fil||'';
  const card=ce('div','ag');
- card.innerHTML=`<div class="ag-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Día anterior">‹</button>
+ card.innerHTML=`<div class="ag-vis">${[['dia','Día'],['semana','Semana'],['lista','Lista']].map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
+  <div class="ag-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Anterior">‹</button>
   <label class="ag-fe"><b class="ag-ft"></b><input type="date" class="ag-fi"></label>
-  <button type="button" class="ag-nv" data-n="1" aria-label="Día siguiente">›</button></div>
-  <div class="ag-bar2"><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><span class="ag-res"></span></div>
+  <button type="button" class="ag-nv" data-n="1" aria-label="Siguiente">›</button></div>
+  <div class="ag-lf"><label class="ag-sel ag-w"><span class="ag-pert"></span><select class="ag-per">${AG_PER.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label>
+   <span class="ag-rg"><input type="date" class="ag-in ag-d1"><span>a</span><input type="date" class="ag-in ag-d2"></span>
+   <div class="ag-pf"><input type="text" class="ag-in ag-pb" placeholder="Paciente…" autocomplete="off"><div class="ag-pr"></div></div></div>
+  <div class="ag-bar2"><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><label class="ag-sel ag-fil"><span class="ag-filt"></span><select class="ag-fis">${AG_FIL.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label><span class="ag-res"></span></div>
   <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
  wrap.appendChild(card);
- const fi=card.querySelector('.ag-fi'),fs=card.querySelector('.ag-fs'),grid=card.querySelector('.ag-grid');
- card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n);cargar();});
- card.querySelector('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
+ const $c=q=>card.querySelector(q),fi=$c('.ag-fi'),fs=$c('.ag-fs'),grid=$c('.ag-grid');
+ const lunes=f=>agMover(f,-((new Date(f+'T12:00:00').getDay()+6)%7));
+ card.querySelectorAll('.ag-vis button').forEach(b=>b.onclick=()=>{AG.vista=b.dataset.v;try{localStorage.setItem('f365_ag_vista',AG.vista);}catch(e){}cargar();});
+ card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n*(AG.vista==='semana'?7:1));cargar();});
+ $c('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
  fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};
- fs.onchange=()=>{AG.fisio=fs.value;try{localStorage.setItem('f365_ag_fisio',AG.fisio);}catch(e){}pintar();};
+ fs.onchange=()=>{AG.fisio=fs.value;try{localStorage.setItem('f365_ag_fisio',AG.fisio);}catch(e){}AG.vista==='lista'?cargar():pintar();};
+ $c('.ag-fis').onchange=e=>{AG.fil=e.target.value;pintar();};
+ $c('.ag-per').onchange=e=>{AG.per=e.target.value;if(AG.per==='rango'&&!AG.r1){AG.r1=agMover(agHoyIso(),-30);AG.r2=agHoyIso();}cargar();};
+ $c('.ag-d1').onchange=e=>{AG.r1=e.target.value;cargar();};$c('.ag-d2').onchange=e=>{AG.r2=e.target.value;cargar();};
+ // Paciente
+ const pb=$c('.ag-pb'),pr=$c('.ag-pr');const norm=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+ const pintaPac=()=>{if(AG.pac){pb.style.display='none';pr.innerHTML=`<span class="ag-tag">${escH(AG.pac.nombre)}<button type="button" aria-label="Quitar">×</button></span>`;pr.querySelector('button').onclick=()=>{AG.pac=null;pb.value='';pb.style.display='';pr.innerHTML='';cargar();};}else{pb.style.display='';}};
+ pb.oninput=()=>{const q=norm(pb.value).trim();if(q.length<2){pr.innerHTML='';return;}const fl=(pacs||[]).filter(p=>norm(p.nombre).includes(q)).slice(0,6);
+  pr.innerHTML=`<div class="ag-pdd">${fl.map(p=>`<button type="button" data-id="${p.id}">${escH(p.nombre)}</button>`).join('')||'<small class="fp-mu">No encontrado</small>'}</div>`;
+  pr.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>{AG.pac=(pacs||[]).find(p=>p.id===b.dataset.id);if(AG.per!=='todo'&&AG.per!=='rango')AG.per='todo';cargar();});};
  let tok=0;
+ function rango(){if(AG.vista==='dia')return [AG.fecha,AG.fecha];if(AG.vista==='semana'){const l=lunes(AG.fecha);return [l,agMover(l,6)];}return AG.per==='rango'?[AG.r1||'',AG.r2||'']:agRango(AG.per);}
  async function cargar(){
-  const t=++tok;card.querySelector('.ag-ft').textContent=(AG.fecha===agHoyIso()?'Hoy · ':'')+agFechaLarga(AG.fecha);fi.value=AG.fecha;
-  card.querySelector('.ag-hoy').style.visibility=AG.fecha===agHoyIso()?'hidden':'';
-  if(!AG.dia||AG.dia.fecha!==AG.fecha)grid.innerHTML='<div class="fac-vacio">Cargando agenda…</div>';
-  try{const d=await agCargarDia(AG.fecha);if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,citas:d.citas||[]};pintar();}
+  const t=++tok,V=AG.vista;
+  card.querySelectorAll('.ag-vis button').forEach(b=>b.classList.toggle('on',b.dataset.v===V));
+  card.classList.toggle('es-lista',V==='lista');
+  const [d1,d2]=rango();
+  if(V==='dia')$c('.ag-ft').textContent=(AG.fecha===agHoyIso()?'Hoy · ':'')+agFechaLarga(AG.fecha);
+  if(V==='semana'){const a=new Date(d1+'T12:00:00'),b=new Date(d2+'T12:00:00'),M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];$c('.ag-ft').textContent=`${a.getDate()}${a.getMonth()!==b.getMonth()?' '+M[a.getMonth()]:''} – ${b.getDate()} ${M[b.getMonth()]}`;}
+  fi.value=AG.fecha;$c('.ag-hoy').style.display=V==='lista'||(V==='dia'?AG.fecha===agHoyIso():lunes(AG.fecha)===lunes(agHoyIso()))?'none':'';
+  $c('.ag-per').value=AG.per;$c('.ag-pert').textContent=(AG_PER.find(x=>x[0]===AG.per)||[])[1]||'';$c('.ag-rg').style.display=AG.per==='rango'?'':'none';$c('.ag-d1').value=AG.r1||'';$c('.ag-d2').value=AG.r2||'';pintaPac();
+  grid.innerHTML='<div class="fac-vacio">Cargando agenda…</div>';
+  let url=`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}`;
+  if(V==='dia')url+=`&fecha=${AG.fecha}`;else{if(d1)url+=`&desde=${d1}`;if(d2)url+=`&hasta=${d2}`;if(V==='lista'&&AG.pac)url+=`&pacienteId=${AG.pac.id}`;if(V==='lista'&&AG.fisio)url+=`&fisio=${encodeURIComponent(AG.fisio)}`;}
+  if(V==='lista'&&!d1&&!d2&&!AG.pac&&!AG.fisio){grid.innerHTML='<div class="fac-vacio">Para ver «Todo» elige un paciente o un fisio, o un periodo más corto.</div>';$c('.ag-res').textContent='';AG.dia=null;fs.innerHTML='';opcionesFisio([]);return;}
+  try{const d=await (await fetch(url)).json();if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,citas:d.citas||[],limitado:d.limitado};pintar();}
   catch(e){if(t!==tok)return;grid.innerHTML=`<div class="fac-vacio">No se ha podido cargar la agenda. <button type="button" class="ag-reint">Reintentar</button></div>`;grid.querySelector('.ag-reint').onclick=cargar;}
  }
- function pintar(){
-  const C=(AG.dia&&AG.dia.citas)||[];
-  const presentes=[...new Set(C.map(c=>c.fisio).filter(f=>f&&!AG_NOFISIO.test(f)))];
+ function opcionesFisio(C){const presentes=[...new Set(C.map(c=>c.fisio).filter(f=>f&&!AG_NOFISIO.test(f)))];
   const cols=[...new Set([...agEquipo(),...presentes])].sort((a,b)=>AG_FISIOS.indexOf(a)-AG_FISIOS.indexOf(b));
   fs.innerHTML=`<option value="">Todos los fisios</option>`+cols.map(f=>`<option value="${escH(f)}">${escH(agNom(f))}</option>`).join('');
-  if(AG.fisio&&!cols.includes(AG.fisio))AG.fisio='';fs.value=AG.fisio;card.querySelector('.ag-selt').textContent=AG.fisio?agNom(AG.fisio):'Todos los fisios';
+  if(AG.fisio&&!cols.includes(AG.fisio))AG.fisio='';fs.value=AG.fisio;$c('.ag-selt').textContent=AG.fisio?agNom(AG.fisio):'Todos los fisios';
+  $c('.ag-fis').value=AG.fil;$c('.ag-filt').textContent=(AG_FIL.find(x=>x[0]===AG.fil)||AG_FIL[0])[1];return cols;}
+ const tarjeta=(c,conFisio)=>{
+  if(c.pacienteId){const e=agEstInfo(c.estado);
+   return `<button type="button" class="ag-c ${e.c}" data-id="${c.id}" ${conFisio?`style="border-left-color:${AG_COL[c.fisio]||'#c2552e'}"`:''}>${e.t?`<em class="ag-badge ${e.c}">${e.i} ${e.t}</em>`:''}<b>${escH(c.paciente||'Paciente')}</b>${conFisio?`<small class="ag-fz" style="color:${AG_COL[c.fisio]||'#7d6a60'}">${escH(agNom(c.fisio))}</small>`:''}${c.tipos.length?`<span class="ag-tgs">${c.tipos.map(t=>`<i>${escH(t)}</i>`).join('')}</span>`:''}<span class="ag-ic">${c.confirmada?'<i class="ag-ok">✓ Confirmada</i>':''}${c.app?'<i class="ag-app">App</i>':''}${c.notas?'<i class="ag-not">Nota</i>':''}</span></button>`;}
+  if(agEsLibre(c.estado))return `<button type="button" class="ag-c lib" data-id="${c.id}">Libre${/SIN BOMBA/.test(c.estado)?' · sin bomba':''}${conFisio?` · ${escH(agNom(c.fisio))}`:''}</button>`;
+  return `<button type="button" class="ag-c blq" data-id="${c.id}">${escH(agNom(c.estado.replace(/[^\wÁÉÍÓÚÑáéíóúñ\- ]/g,'').trim())||'Bloqueada')}${conFisio?` · ${escH(agNom(c.fisio))}`:''}${c.notas?` · ${escH(c.notas)}`:''}</button>`;};
+ const fuera=c=>{const e=agEstInfo(c.estado);return `<button type="button" class="ag-x ${e.c}" data-id="${c.id}"><em class="ag-badge ${e.c}">${e.i} ${e.t}</em><span>${escH(c.paciente||'—')}</span></button>`;};
+ function pintar(){
+  const V=AG.vista,todas=(AG.dia&&AG.dia.citas)||[],cols=opcionesFisio(todas);
   const ver=AG.fisio?[AG.fisio]:cols;
-  const act=C.filter(c=>ver.includes(c.fisio)&&c.pacienteId&&!agEsFuera(c.estado)).length,lib=C.filter(c=>ver.includes(c.fisio)&&agEsLibre(c.estado)).length;
-  card.querySelector('.ag-res').textContent=`${act} cita${act===1?'':'s'}${lib?` · ${lib} libre${lib===1?'':'s'}`:''}`;
+  const C=todas.filter(c=>(V==='lista'?(!AG.fisio||c.fisio===AG.fisio):ver.includes(c.fisio))&&agPasaFiltro(c,AG.fil));
+  const act=C.filter(c=>c.pacienteId&&!agEsFuera(c.estado)).length,lib=C.filter(c=>agEsLibre(c.estado)).length;
+  $c('.ag-res').textContent=V==='lista'?`${C.length} resultado${C.length===1?'':'s'}${AG.dia&&AG.dia.limitado?' (solo las 2.500 más recientes)':''}`:`${act} cita${act===1?'':'s'}${lib?` · ${lib} libre${lib===1?'':'s'}`:''}`;
+  const abrir=()=>grid.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{const c=todas.find(x=>x.id===b.dataset.id);if(!c)return;const f=c.fecha||AG.fecha;
+   if(c.pacienteId)agAbrirCita(Object.assign({fecha:f},c),cargar);else if(agEsLibre(c.estado))agDarCita({fecha:f,hora:c.hora,fisio:c.fisio,hueco:c},cargar);else agAbrirHueco(Object.assign({fecha:f},c),cargar);});
+  if(V==='lista'){
+   if(!C.length){grid.innerHTML='<div class="fac-vacio">No hay citas con estos filtros</div>';return;}
+   const fut=AG.per!=='todo'&&!/semanaP|ult7|mesP|ult30/.test(AG.per)&&!AG.pac;
+   const L=C.slice().sort((a,b)=>fut?(a.fecha+a.hora).localeCompare(b.fecha+b.hora):(b.fecha+b.hora).localeCompare(a.fecha+a.hora));
+   let html='',dia='';L.forEach(c=>{if(c.fecha!==dia){dia=c.fecha;html+=`<div class="ag-ld">${escH(agFechaLarga(c.fecha))}${c.fecha.slice(0,4)!==agHoyIso().slice(0,4)?' '+c.fecha.slice(0,4):''}${c.fecha===agHoyIso()?' · hoy':''}</div>`;}
+    html+=`<div class="ag-li"><span class="ag-lh">${escH(c.hora)}</span>${agEsFuera(c.estado)?fuera(c):tarjeta(c,true)}</div>`;});
+   grid.innerHTML=`<div class="ag-lista">${html}</div>`;abrir();return;}
+  if(V==='semana'){
+   const [d1]=rango(),dias=[0,1,2,3,4,5,6].map(i=>agMover(d1,i)).filter((d,i)=>i<5||todas.some(c=>c.fecha===d));
+   const horas=new Set();for(let h=7;h<=20;h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
+   const DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+   grid.innerHTML=`<div class="ag-tb ag-sem" style="--n:${dias.length}"><div class="ag-hd"><div class="ag-h0"></div>${dias.map(d=>`<button type="button" class="ag-hf ag-hdia${d===agHoyIso()?' hoy':''}" data-d="${d}">${DN[new Date(d+'T12:00:00').getDay()]} ${+d.slice(8)}</button>`).join('')}</div>${[...horas].sort().map(h=>`<div class="ag-row"><div class="ag-h">${h}</div>${dias.map(d=>{const rs=C.filter(c=>c.fecha===d&&c.hora===h);const pr=rs.filter(c=>!agEsFuera(c.estado)),fu=rs.filter(c=>agEsFuera(c.estado));
+    return `<div class="ag-cell">${pr.map(c=>tarjeta(c,!AG.fisio)).join('')}${fu.map(fuera).join('')}${!pr.length&&AG.fisio?`<button type="button" class="ag-vac" data-f="${escH(AG.fisio)}" data-h="${h}" data-d="${d}" aria-label="Hora vacía">＋</button>`:''}</div>`;}).join('')}</div>`).join('')}</div>`;
+   grid.querySelectorAll('.ag-hdia').forEach(b=>b.onclick=()=>{AG.fecha=b.dataset.d;AG.vista='dia';cargar();});
+   grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agVacio({fecha:b.dataset.d,hora:b.dataset.h,fisio:b.dataset.f},cargar));abrir();return;}
+  // Día
   const horas=new Set();for(let h=7;h<=20;h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
-  const HS=[...horas].sort();
-  const celda=(f,h)=>{const rs=C.filter(c=>c.fisio===f&&c.hora===h);
-   const prin=rs.filter(c=>!agEsFuera(c.estado)),fuera=rs.filter(c=>agEsFuera(c.estado));
-   let html=prin.map(c=>{
-    if(c.pacienteId){const e=agEstInfo(c.estado);
-     return `<button type="button" class="ag-c ${e.c}" data-id="${c.id}">${e.t?`<em class="ag-badge ${e.c}">${e.i} ${e.t}</em>`:''}<b>${escH(c.paciente||'Paciente')}</b>${c.tipos.length?`<span class="ag-tgs">${c.tipos.map(t=>`<i>${escH(t)}</i>`).join('')}</span>`:''}<span class="ag-ic">${c.confirmada?'<i class="ag-ok" title="Confirmada">✓ Confirmada</i>':''}${c.app?'<i class="ag-app" title="Reservada por la app">App</i>':''}${c.notas?'<i class="ag-not" title="Tiene notas">Nota</i>':''}</span></button>`;}
-    if(agEsLibre(c.estado))return `<button type="button" class="ag-c lib" data-id="${c.id}">Libre${/SIN BOMBA/.test(c.estado)?' · sin bomba':''}</button>`;
-    return `<button type="button" class="ag-c blq" data-id="${c.id}">${escH(agNom(c.estado.replace(/[^\wÁÉÍÓÚÑáéíóúñ\- ]/g,'').trim())||'Bloqueada')}${c.notas?` · ${escH(c.notas)}`:''}</button>`;}).join('');
-   html+=fuera.map(c=>{const e=agEstInfo(c.estado);return `<button type="button" class="ag-x ${e.c}" data-id="${c.id}"><em class="ag-badge ${e.c}">${e.i} ${e.t}</em><span>${escH(c.paciente||'—')}</span></button>`;}).join('');
-   if(!prin.length)html=`<button type="button" class="ag-vac" data-f="${escH(f)}" data-h="${h}" aria-label="Dar cita">＋</button>`+html;
-   return html;};
-  grid.innerHTML=`<div class="ag-tb" style="--n:${ver.length}"><div class="ag-hd"><div class="ag-h0"></div>${ver.map(f=>`<div class="ag-hf">${escH(agNom(f))}</div>`).join('')}</div>${HS.map(h=>`<div class="ag-row${h===(AG.fecha===agHoyIso()?new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false}).format(new Date())+':00':'')?' now':''}"><div class="ag-h">${h}</div>${ver.map(f=>`<div class="ag-cell">${celda(f,h)}</div>`).join('')}</div>`).join('')}</div>`;
-  grid.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{const c=C.find(x=>x.id===b.dataset.id);if(!c)return;if(c.pacienteId)agAbrirCita(c,cargar);else if(agEsLibre(c.estado))agDarCita({fecha:AG.fecha,hora:c.hora,fisio:c.fisio,hueco:c},cargar);else agAbrirHueco(c,cargar);});
-  grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agVacio({fecha:AG.fecha,hora:b.dataset.h,fisio:b.dataset.f},cargar));
+  const ahora=AG.fecha===agHoyIso()?new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false}).format(new Date())+':00':'';
+  const celda=(f,h)=>{const rs=C.filter(c=>c.fisio===f&&c.hora===h),pr=rs.filter(c=>!agEsFuera(c.estado)),fu=rs.filter(c=>agEsFuera(c.estado));
+   return (pr.length?'':`<button type="button" class="ag-vac" data-f="${escH(f)}" data-h="${h}" aria-label="Hora vacía">＋</button>`)+pr.map(c=>tarjeta(c,false)).join('')+fu.map(fuera).join('');};
+  grid.innerHTML=`<div class="ag-tb" style="--n:${ver.length}"><div class="ag-hd"><div class="ag-h0"></div>${ver.map(f=>`<div class="ag-hf">${escH(agNom(f))}</div>`).join('')}</div>${[...horas].sort().map(h=>`<div class="ag-row${h===ahora?' now':''}"><div class="ag-h">${h}</div>${ver.map(f=>`<div class="ag-cell">${celda(f,h)}</div>`).join('')}</div>`).join('')}</div>`;
+  grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agVacio({fecha:AG.fecha,hora:b.dataset.h,fisio:b.dataset.f},cargar));abrir();
  }
  card._recargar=cargar;cargar();
 }
@@ -4994,8 +5057,9 @@ function agEtiquetas(box,iniciales){
  return box;}
 function agCab(fecha,hora,fisio){return `${segFecha(fecha)} · ${hora} · ${agNom(fisio)}`;}
 function agAbrirCita(c,onDone){
- let est=(AG_EST.find(x=>c.estado.startsWith(x[0]))||[c.estado])[0],conf=c.confirmada;const est0=est;const futuro=AG.fecha>agHoyIso()||(AG.fecha===agHoyIso());
- const m=hzModal(`<div class="hz-top"><div><small>${escH(agCab(AG.fecha,c.hora,c.fisio))}</small><b><button type="button" class="ag-pac">${escH(c.paciente||'Paciente')} ›</button></b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+ const FD=c.fecha||AG.fecha;
+ let est=(AG_EST.find(x=>c.estado.startsWith(x[0]))||[c.estado])[0],conf=c.confirmada;const est0=est;const futuro=FD>=agHoyIso();
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(agCab(FD,c.hora,c.fisio))}</small><b><button type="button" class="ag-pac">${escH(c.paciente||'Paciente')} ›</button></b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Estado</div><div class="seg-rap ag-est">${AG_EST.map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
   <label class="ag-lib" hidden><input type="checkbox" ${futuro?'checked':''}> Dejar la hora libre para otro paciente</label>
   <button type="button" class="exp-seg ag-conf"><i></i>Confirmada</button>
@@ -5024,8 +5088,8 @@ function agHorasChips(box,fecha,fisio,horaSel,onPick){
  }).catch(()=>{box.innerHTML='<small class="fp-mu">No se han podido cargar las horas</small>';});
 }
 function agMoverCita(c,onDone){
- let fecha=AG.fecha,hora='',fisio=c.fisio;const futuro=AG.fecha>=agHoyIso();
- const m=hzModal(`<div class="hz-top"><div><small>Cambiar día u hora · ahora ${escH(agCab(AG.fecha,c.hora,c.fisio))}</small><b>${escH(c.paciente||'Paciente')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+ const FD=c.fecha||AG.fecha;let fecha=FD,hora='',fisio=c.fisio;const futuro=FD>=agHoyIso();
+ const m=hzModal(`<div class="hz-top"><div><small>Cambiar día u hora · ahora ${escH(agCab(FD,c.hora,c.fisio))}</small><b>${escH(c.paciente||'Paciente')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Día</div><input type="date" class="ag-in ag-fd" value="${fecha}">
   <div class="hz-lab">Fisio</div><select class="ag-in ag-ff">${[...new Set([...agEquipo(),c.fisio])].map(f=>`<option value="${escH(f)}"${f===fisio?' selected':''}>${escH(agNom(f))}</option>`).join('')}</select>
   <div class="hz-lab">Hora <span>(verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div>
@@ -5038,7 +5102,7 @@ function agMoverCita(c,onDone){
  const enviar=async(b,forzar)=>{if(!fecha||!hora){toast('Elige día y hora',false);return;}b.disabled=true;b.textContent='Cambiando…';
   try{const lb=m.querySelector('.ag-lib input');const r=await agPost('seg-agenda-mover',{id:c.id,fecha,hora,fisio,liberar:!!(lb&&lb.checked),forzar});
    if(r.conflicto){b.disabled=false;b.textContent='Cambiar cita';if(confirm(r.error+'. ¿Darla igualmente a la misma hora?'))enviar(b,true);return;}
-   if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Cita cambiada al ${segFecha(fecha)} a las ${hora}`,true);m.remove();if(fecha!==AG.fecha&&confirm('¿Ir a ese día en la agenda?'))AG.fecha=fecha;onDone&&onDone();}
+   if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Cita cambiada al ${segFecha(fecha)} a las ${hora}`,true);m.remove();if(AG.vista==='dia'&&fecha!==AG.fecha&&confirm('¿Ir a ese día en la agenda?'))AG.fecha=fecha;onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Cambiar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
 }
@@ -5072,7 +5136,7 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
    if(!r.ok)throw new Error(r.error||'No se ha podido');toast('Hecho',true);m.remove();onDone&&onDone();}catch(err){b.disabled=false;toast(err.message,false);}});
 }
 function agAbrirHueco(c,onDone){
- const m=hzModal(`<div class="hz-top"><div><small>${escH(agCab(AG.fecha,c.hora,c.fisio))}</small><b>${escH(agNom(c.estado))}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(agCab(c.fecha||AG.fecha,c.hora,c.fisio))}</small><b>${escH(agNom(c.estado))}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   ${c.notas?`<p class="fp-mu">${escH(c.notas)}</p>`:''}
   <div class="hz-bts ag-bts"><button type="button" class="fp-can" data-a="del">Quitar</button><button type="button" class="hz-ok" data-a="lib">Dejar libre</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
