@@ -282,7 +282,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .est-fil{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;-webkit-overflow-scrolling:touch}.est-fil span{font-size:12px;color:var(--muted);align-self:center;white-space:nowrap}.est-fil button{cursor:pointer;font-size:12px;padding:5px 11px;opacity:.75}.est-fil button b{font-size:10.5px;opacity:.7}.est-fil button.on{opacity:1;border-color:currentColor}
 .est-ok{font-size:12px;color:#16803c;margin-top:8px;min-height:16px}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
-.hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-sizing:border-box}
+.hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
 .hz-lab{font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 6px}.hz-lab span{font-weight:400}
 .hz-card input[type=number],.hz-card input[type=month],.hz-card textarea{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px}
@@ -4736,7 +4736,7 @@ function abrirExplicar(p,onSave){
   <div class="hz-lab">¿Por qué no ha reagendado?</div><textarea class="seg-n" rows="3" placeholder="Ej.: le di el alta, se va de viaje, le cuesta pagar…"></textarea>
   <div class="hz-lab">Estado del paciente</div><div class="est-slot"></div>
   <div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
- m.querySelector('.hz-x').onclick=()=>m.remove();const ta=m.querySelector('.seg-n');ta.focus();
+ m.querySelector('.hz-x').onclick=()=>m.remove();const ta=m.querySelector('.seg-n');if(window.innerWidth>=700)ta.focus();
  const est0=pacEstados(p.id).slice(),selE=selectorEstados(est0);m.querySelector('.est-slot').appendChild(selE);
  m.querySelector('.hz-ok').onclick=async e=>{const nota=ta.value.trim();if(!nota){toast('Escribe el motivo',false);return;}const b=e.target;b.disabled=true;
   try{const d=await (await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:p.id,nota,fisio:fisioActual.nombre})})).json();if(!d.ok)throw 0;
@@ -4876,7 +4876,12 @@ async function renderSeguimiento(wrap){
 }
 // ── Control de horas: clasificar días y banco de horas ──
 const HZ_TIPOS=['Día libre','Asuntos propios','Vacaciones','Baja','Festivo','Salida anticipada','Horas extra','Otro'];
-function hzModal(html){const m=ce('div','hz-modal');m.innerHTML=`<div class="hz-card">${html}</div>`;m.onclick=e=>{if(e.target===m)m.remove();};document.body.appendChild(m);return m;}
+function hzModal(html){const m=ce('div','hz-modal');m.innerHTML=`<div class="hz-card">${html}</div>`;m.onclick=e=>{if(e.target===m)m.remove();};document.body.appendChild(m);
+ // En el móvil, al abrir el teclado: la hoja se queda pegada encima del teclado y el campo a la vista
+ const vv=window.visualViewport;
+ if(vv){const fit=()=>{if(!m.isConnected){vv.removeEventListener('resize',fit);vv.removeEventListener('scroll',fit);return;}m.style.top=vv.offsetTop+'px';m.style.height=vv.height+'px';m.style.bottom='auto';};vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit);fit();}
+ m.addEventListener('focusin',e=>{const t=e.target;if(!/INPUT|TEXTAREA/.test(t.tagName))return;setTimeout(()=>{try{t.scrollIntoView({block:'center',behavior:'smooth'});}catch(_){}},350);});
+ return m;}
 function hzFecha(f){const t=new Date(f+'T12:00:00');return t.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});}
 function abrirClasificar({fisio,fecha,dif,reg,onSave}){
  let tipo=reg?reg.tipo:(dif>0?'Horas extra':''),banco=reg?reg.banco:false,horas=reg?reg.horas:dif;
