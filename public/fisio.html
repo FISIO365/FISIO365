@@ -336,6 +336,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tk-i.ta{background:#fff4e5;color:#b45309}.tk-ok{background:#16803c}
 .te-sel{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-radius:10px;background:#f7f3ef}.te-sel b{font-size:14px}.te-sel button{border:none;background:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#1a1a1a}
 .ll-per .tar-nueva{margin-left:auto;height:40px;padding:0 16px}
+.tar-ll-av{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 12px;padding:11px 14px;border-radius:14px;border:1.5px solid #f3d9c9;background:#fdeee4;color:#7a3a1e;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-align:left}.tar-ll-av b{margin-left:auto;color:#c2552e;white-space:nowrap}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -922,7 +923,7 @@ const TOPBAR = {
  msg: ['Chat','Habla con tus pacientes: texto, fotos y PDFs'],
  record: ['Recordatorios','Citas de mañana pendientes de confirmar'],
  rend: ['Rendimiento','Cómo va cada fisio'],
- seg: ['Seguimiento','Pacientes a los que hay que llamar'],
+ seg: ['Llamadas','Pacientes a los que hay que llamar'],
  tar: ['Tareas','Lo que hay pendiente en el centro'],
  call: ['Call-in','Busca pacientes por estado para llamarles']
 };
@@ -4784,7 +4785,7 @@ function itemLlamar(x,onDone){
 }
 async function renderTareas(wrap){
  let vista='tareas';try{vista=sessionStorage.getItem('f365_tar')||'tareas';}catch(e){}
- const top=ce('div','tar-top');top.innerHTML=`<div class="seg-tabs"><button type="button" data-v="tareas">Tareas</button><button type="button" data-v="seg">Seguimiento</button></div>`;wrap.appendChild(top);
+ const top=ce('div','tar-top');top.innerHTML=`<div class="seg-tabs"><button type="button" data-v="tareas">Tareas</button><button type="button" data-v="seg">Llamadas</button></div>`;wrap.appendChild(top);
  const cont=ce('div','');wrap.appendChild(cont);
  const ir=v=>{vista=v;try{sessionStorage.setItem('f365_tar',v);}catch(e){}top.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));cont.innerHTML='';if(v==='seg')renderSeguimiento(cont);else listaTareas(cont);};
  top.querySelectorAll('button').forEach(b=>b.onclick=()=>ir(b.dataset.v));
@@ -4795,11 +4796,15 @@ async function listaTareas(cont){
  const box=ce('div','tar');box.innerHTML='<div class="fac-vacio">Cargando…</div>';cont.appendChild(box);
  const recargar=()=>{cont.innerHTML='';listaTareas(cont);contarTareas();};
  let d;try{d=await datosTareasTodas();}catch(e){box.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
+ // Las llamadas viven en su pestaña «Llamadas»: aquí solo lo que hay que hacer y no es llamar
+ const nLl=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=d.hoy&&(!tarFiltro||x.quien===tarFiltro)).length;
+ d={...d,items:d.items.filter(x=>x.tipo!=='llamar')};
  const quien=[...new Set(d.items.map(x=>x.quien).filter(Boolean))].sort((a,b)=>TAR_NOMBRES.indexOf(a)-TAR_NOMBRES.indexOf(b));
  const L=d.items.filter(x=>!tarFiltro||x.quien===tarFiltro);
  const hoy=d.hoy;
  const grupos=[['Atrasadas','atr',L.filter(x=>x.fecha<hoy)],['Hoy','hoy',L.filter(x=>x.fecha===hoy)],['Próximos días','prox',L.filter(x=>x.fecha>hoy)]];
  box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todos (${d.items.length})</option>${quien.map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
+ if(nLl)box.insertAdjacentHTML('beforeend',`<button type="button" class="tar-ll-av" onclick="showSection('seg')"><span>📞</span> ${nLl} llamada${nLl===1?'':'s'} por hacer${tarFiltro?' ('+escH(tarFiltro)+')':''} <b>Ver ›</b></button>`);
  if(!L.length){box.insertAdjacentHTML('beforeend','<div class="tar-ok">✓ Nada pendiente</div>');}
  grupos.forEach(([t,c,g])=>{if(!g.length)return;
   const h=ce('div','seg-gt '+c);h.innerHTML=`${t} <span>${g.length}</span>`;box.appendChild(h);
