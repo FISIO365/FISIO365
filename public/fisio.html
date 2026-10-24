@@ -6031,10 +6031,10 @@ function abrirClasificar({fisio,fecha,dif,reg,onSave}){
  const m=hzModal(`<div class="hz-top"><div><small>${escH(fisio)}</small><b>${hzFecha(fecha)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">¿Qué fue?</div><div class="hz-tipos">${HZ_TIPOS.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
   <div class="hz-row"><div><div class="hz-lab">Horas</div><div class="hz-step"><button type="button" data-d="-0.5">−</button><b class="hz-hv"></b><button type="button" data-d="0.5">+</button></div></div>
-   <label class="hz-sw"><input type="checkbox" ${banco?'checked':''}><i></i><span>Al banco<br>de horas</span></label></div>
+   <label class="hz-sw"><input type="checkbox" ${banco?'checked':''}><i></i><span class="hz-swt"></span></label></div>
   <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="hz-nota" rows="2" placeholder="Ej.: médico, se cambió con Jonathan…">${reg?escH(reg.nota):''}</textarea>
   <div class="hz-bts">${reg?'<button type="button" class="hz-del">Quitar</button>':''}<button type="button" class="hz-ok">Guardar</button></div>`);
- const pinta=()=>{m.querySelectorAll('.hz-tipos button').forEach(b=>b.classList.toggle('on',b.dataset.v===tipo));const hv=m.querySelector('.hz-hv');hv.textContent=(horas>0?'+':horas<0?'−':'')+Math.abs(horas)+' h';hv.className='hz-hv '+(horas>0?'mas':horas<0?'menos':'');};pinta();
+ const pinta=()=>{m.querySelectorAll('.hz-tipos button').forEach(b=>b.classList.toggle('on',b.dataset.v===tipo));const hv=m.querySelector('.hz-hv');hv.textContent=(horas>0?'+':horas<0?'−':'')+Math.abs(horas)+' h';hv.className='hz-hv '+(horas>0?'mas':horas<0?'menos':'');m.querySelector('.hz-swt').innerHTML=horas<0?'Restar del<br>banco de horas':'Sumar al<br>banco de horas';};pinta();
  m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{tipo=b.dataset.v;pinta();});
  m.querySelectorAll('.hz-step button').forEach(b=>b.onclick=()=>{horas=Math.round((horas+ +b.dataset.d)*2)/2;pinta();});
  m.querySelector('.hz-x').onclick=()=>m.remove();
