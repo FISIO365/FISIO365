@@ -5001,14 +5001,14 @@ function renderAgenda(wrap){
    grid.innerHTML=`<div class="ag-lista">${html}</div>`;abrir();return;}
   if(V==='semana'){
    const [d1]=rango(),dias=[0,1,2,3,4,5,6].map(i=>agMover(d1,i)).filter((d,i)=>i<5||todas.some(c=>c.fecha===d));
-   const horas=new Set();for(let h=7;h<=20;h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
+   const horas=new Set();for(let h=7;h<=21;h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
    const DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
    grid.innerHTML=`<div class="ag-tb ag-sem" style="--n:${dias.length}"><div class="ag-hd"><div class="ag-h0"></div>${dias.map(d=>`<button type="button" class="ag-hf ag-hdia${d===agHoyIso()?' hoy':''}" data-d="${d}">${DN[new Date(d+'T12:00:00').getDay()]} ${+d.slice(8)}</button>`).join('')}</div>${[...horas].sort().map(h=>`<div class="ag-row"><div class="ag-h">${h}</div>${dias.map(d=>{const rs=C.filter(c=>c.fecha===d&&c.hora===h);const pr=rs.filter(c=>!agEsFuera(c.estado)),fu=rs.filter(c=>agEsFuera(c.estado));
     return `<div class="ag-cell">${pr.map(c=>tarjeta(c,!AG.fisio)).join('')}${fu.map(fuera).join('')}${!pr.length&&AG.fisio?`<button type="button" class="ag-vac" data-f="${escH(AG.fisio)}" data-h="${h}" data-d="${d}" aria-label="Hora vacía">＋</button>`:''}</div>`;}).join('')}</div>`).join('')}</div>`;
    grid.querySelectorAll('.ag-hdia').forEach(b=>b.onclick=()=>{AG.fecha=b.dataset.d;AG.vista='dia';cargar();});
    grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agVacio({fecha:b.dataset.d,hora:b.dataset.h,fisio:b.dataset.f},cargar));abrir();return;}
   // Día
-  const horas=new Set();for(let h=7;h<=20;h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
+  const horas=new Set();for(let h=7;h<=21;h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
   const ahora=AG.fecha===agHoyIso()?new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false}).format(new Date())+':00':'';
   const celda=(f,h)=>{const rs=C.filter(c=>c.fisio===f&&c.hora===h),pr=rs.filter(c=>!agEsFuera(c.estado)),fu=rs.filter(c=>agEsFuera(c.estado));
    return (pr.length?'':`<button type="button" class="ag-vac" data-f="${escH(f)}" data-h="${h}" aria-label="Hora vacía">＋</button>`)+pr.map(c=>tarjeta(c,false)).join('')+fu.map(fuera).join('');};
@@ -5118,7 +5118,7 @@ function agAbrirCita(c,onDone){
 }
 function agHorasChips(box,fecha,fisio,horaSel,onPick){
  box.innerHTML='<small class="fp-mu">Cargando horas…</small>';
- agCargarDia(fecha).then(d=>{const C=(d&&d.citas)||[];const hs=[];for(let h=7;h<=20;h++)hs.push(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(!hs.includes(c.hora)&&/^\d{2}:\d{2}$/.test(c.hora))hs.push(c.hora);});hs.sort();
+ agCargarDia(fecha).then(d=>{const C=(d&&d.citas)||[];const hs=[];for(let h=7;h<=21;h++)hs.push(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(!hs.includes(c.hora)&&/^\d{2}:\d{2}$/.test(c.hora))hs.push(c.hora);});hs.sort();
   box.innerHTML=hs.map(h=>{const rs=C.filter(c=>c.fisio===fisio&&c.hora===h);const ocup=rs.some(c=>c.pacienteId&&!agEsFuera(c.estado)),blq=rs.some(c=>agEsBloq(c.estado)),lib=rs.some(c=>agEsLibre(c.estado));
    return `<button type="button" data-h="${h}" class="${ocup?'oc':blq?'bq':lib?'li':''}${h===horaSel?' on':''}">${h}</button>`;}).join('');
   box.querySelectorAll('button').forEach(b=>b.onclick=()=>{box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));onPick(b.dataset.h);});
