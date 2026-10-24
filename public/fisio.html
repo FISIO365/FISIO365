@@ -286,7 +286,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .exp-seg{display:flex;align-items:center;gap:10px;width:100%;margin-top:14px;padding:11px 14px;border-radius:12px;border:1.5px solid var(--border);background:#fff;font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--black);cursor:pointer;text-align:left;box-sizing:border-box}
 .exp-seg i{width:20px;height:20px;border-radius:6px;border:2px solid #c9c0b8;flex:none;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;color:#fff}
 .exp-seg.on{border-color:#16803c;background:#e8f5ec;color:#16803c}.exp-seg.on i{background:#16803c;border-color:#16803c}.exp-seg.on i::after{content:'✓'}
-.exp-seg.ya{cursor:default;border-color:#16803c;background:#e8f5ec;color:#16803c}
+.exp-seg.ya{border-radius:12px}.exp-seg small{display:block;font-size:11.5px;font-weight:500;opacity:.85;margin-top:1px}.exp-seg.ya{cursor:default;border-color:#16803c;background:#e8f5ec;color:#16803c}
 .exp-segbox{border:1.5px solid #16803c;border-top:none;border-radius:0 0 12px 12px;padding:4px 14px 14px;margin-top:-2px}
 .exp-seg.on{border-radius:12px 12px 0 0}
 .hz-lab2{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -4730,12 +4730,9 @@ async function listaTareas(cont){
     const b=ce('button','seg-hecho');b.type='button';b.textContent='Resultado';b.onclick=()=>abrirResultadoSeg(x.seg,recargar);acc.appendChild(b);
    }else{
     const b=ce('button','seg-hecho');b.type='button';b.textContent='Explicar';b.onclick=()=>abrirExplicar(x.p,recargar);
-    const sg=ce('button','tk-sg');sg.type='button';sg.textContent='+ Seguimiento';sg.title='Pasar a la lista de seguimiento';
-    if(SEG_PAC[x.p.id]){sg.classList.add('en');sg.textContent='✓ En seguimiento';sg.title=segYaTxt(x.p.id);sg.onclick=()=>toast(segYaTxt(x.p.id),true);}
-    else sg.onclick=()=>abrirNuevoSeg({pacienteId:x.p.id,nombre:x.p.nombre,nota:'',motivo:x.p.nota||'',onSave:()=>recargar()});
     const q=ce('button','tk-q');q.type='button';q.setAttribute('aria-label','Quitar');q.innerHTML='✕';q.title='Quitar de tareas';
     let arm=false;q.onclick=async()=>{if(!arm){arm=true;q.classList.add('arm');q.textContent='¿Quitar?';setTimeout(()=>{arm=false;q.classList.remove('arm');q.innerHTML='✕';},4000);return;}q.disabled=true;await marcarExplicado(x.p.id,'Sin seguimiento');toast('Quitado',true);recargar();};
-    acc.appendChild(b);acc.appendChild(sg);acc.appendChild(q);
+    acc.appendChild(b);acc.appendChild(q);
    }
    tabla.appendChild(r);
   });
@@ -4750,7 +4747,7 @@ function abrirExplicar(p,onSave){
  const m=hzModal(`<div class="hz-top"><div><small>Última sesión ${+dd}/${+mm}</small><b>${escH(p.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">¿Por qué no ha reagendado?</div><textarea class="seg-n exp-mot" rows="3" placeholder="Ej.: le di el alta, se va de viaje, le cuesta pagar…">${escH(p.nota||'')}</textarea>
   <div class="hz-lab">Estado del paciente</div><div class="est-slot"></div>
-  ${ya?`<div class="exp-seg ya">✓ Ya está en seguimiento</div>`:`<button type="button" class="exp-seg"><i></i>Añadir también a seguimiento</button>
+  ${ya?`<div class="exp-seg on ya"><i></i><span>Ya está en seguimiento<small>${escH(segYaTxt(p.id).replace(/^Ya está en seguimiento:? ?/,''))}</small></span></div>`:`<button type="button" class="exp-seg"><i></i>Añadir también a seguimiento</button>
   <div class="exp-segbox" hidden>
    <div class="hz-lab">¿Cuándo hay que llamar?</div><div class="seg-rap seg-cuando">${[['Mañana',1],['En 1 semana',7],['En 2 semanas',14],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div>
    <input type="date" class="seg-f" value="${segIso(7)}" min="${segIso(0)}">
