@@ -279,7 +279,8 @@ module.exports = async function handler(req, res) {
           const rows = enHora(await delDia(fecha), hora, fisio);
           const choca = rows.filter(r => ACTIVA(String(nmA(r.fields['ESTADO']))));
           if (choca.length && !forzar) { const pids = choca.flatMap(r => r.fields['RELACIÓN - CITA'] || []); let n = ''; if (pids[0]) { const p0 = await at(`${PACIENTES}/${pids[0]}`); n = (p0.fields || {})['FULL NAME'] || ''; } return { conflicto: true, con: n }; }
-          const lib = rows.find(r => LIBRE(nmA(r.fields['ESTADO'])));
+          const sinPac = rows.filter(r => !(r.fields['RELACIÓN - CITA'] || []).length && !/CANCELADA|REPROGRAMADA|PERDIDA/.test(String(nmA(r.fields['ESTADO']))));
+          const lib = sinPac.find(r => LIBRE(nmA(r.fields['ESTADO']))) || sinPac[0];
           if (lib) { const tipos = campos['TIPO DE CITA']; const f2 = Object.assign({}, campos); if (tipos) f2['TIPO DE CITA'] = tipos; await patch(lib.id, f2); return { id: lib.id }; }
           const r = await nueva(fecha, hora, fisio, campos); return { id: r.id };
         };

@@ -910,7 +910,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .ag-tags .ag-tw{display:flex;flex-wrap:wrap;gap:5px;align-items:center;border:1.5px solid var(--border);border-radius:12px;padding:6px 8px;background:#fff}
 .ag-tl{display:contents}.ag-tag{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;background:#fdeee4;color:#c2552e;border-radius:99px;padding:4px 6px 4px 10px}
 .ag-tag button{border:none;background:none;color:#c2552e;font-size:15px;line-height:1;cursor:pointer;padding:0 2px}
-.ag-ti{flex:1;min-width:110px;border:none;outline:none;font-family:var(--font);font-size:15px;padding:4px 2px;background:none}
+.ag-ti{flex:1;min-width:110px;border:none!important;box-shadow:none!important;outline:none;margin:0!important;font-family:var(--font);font-size:15px;padding:4px 2px;background:none}
 .ag-sug{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.ag-sug button{-webkit-text-fill-color:currentColor;font-family:var(--font);font-size:12px;border:1.5px solid var(--border);background:#fff;border-radius:99px;padding:5px 10px;cursor:pointer;color:#1a1a1a}.ag-sug .ag-nueva{border-color:#c2552e;color:#c2552e;font-weight:600}
 
 .ag-abrir{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:#c2552e;color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}
@@ -5108,16 +5108,25 @@ function agMoverCita(c,onDone){
   catch(err){b.disabled=false;b.textContent='Cambiar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
 }
+const AG_TIPOS_H=[['CITA LIBRE','Libre'],['LIBRE - SIN BOMBA','Libre sin bomba'],['CITA BLOQUEADA','Bloqueada'],['CALL-IN','Call-in']];
+// Chips para cambiar el tipo de un hueco (libre, sin bomba, bloqueada…): al tocar uno se guarda al momento
+function agTipoHueco(m,c,onDone){const box=m.querySelector('.ag-th');if(!box)return;const act=String(c.estado||'').trim();
+ box.innerHTML=AG_TIPOS_H.map(([v,t])=>`<button type="button" data-v="${v}" class="${v===act?'on':''}">${t}</button>`).join('');
+ box.querySelectorAll('button').forEach(b=>b.onclick=async()=>{if(b.dataset.v===act)return;box.querySelectorAll('button').forEach(x=>x.disabled=true);
+  try{const r=await agPost('seg-agenda-editar',{id:c.id,estado:b.dataset.v});if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Ahora es «${b.textContent}»`,true);m.remove();onDone&&onDone();}
+  catch(err){box.querySelectorAll('button').forEach(x=>x.disabled=false);toast(err.message,false);}});}
 function agDarCita({fecha,hora,fisio,hueco},onDone){
  let pac=null;
  const m=hzModal(`<div class="hz-top"><div><small>Dar cita · ${escH(agCab(fecha,hora,fisio))}</small><b>${hueco?'Hora libre':'Hora vacía'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  ${hueco?'<div class="hz-lab">Tipo de hueco</div><div class="seg-rap ag-th"></div>':''}
   <div class="hz-lab">Paciente</div><input type="text" class="ag-in ag-bus" placeholder="Busca por nombre, teléfono o email" autocomplete="off"><div class="ag-res2"></div>
   <div class="hz-lab">Etiquetas <span>(opcional)</span></div><div class="ag-tip"></div>
   <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n ag-not2" rows="2"></textarea>
   <div class="hz-bts"><button type="button" class="hz-ok">Dar cita</button></div>
-  <div class="ag-otras">${hueco?`<button type="button" data-a="blq">Bloquear esta hora</button><button type="button" data-a="del">Quitar hueco libre</button>`:`<button type="button" data-a="lib">Dejar libre para la app</button><button type="button" data-a="blq">Bloquear esta hora</button>`}</div>`);
+  <div class="ag-otras">${hueco?`<button type="button" data-a="del">Quitar este hueco</button>`:`<button type="button" data-a="lib">Dejar libre para la app</button><button type="button" data-a="blq">Bloquear esta hora</button>`}</div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const bus=m.querySelector('.ag-bus'),res=m.querySelector('.ag-res2'),tg=agEtiquetas(m.querySelector('.ag-tip'),[]);
+ if(hueco)agTipoHueco(m,hueco,onDone);
  const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
  bus.oninput=()=>{pac=null;const q=norm(bus.value).trim(),qd=q.replace(/\D/g,'');if(q.length<2){res.innerHTML='';return;}
   const fl=(pacs||[]).filter(p=>norm(p.nombre).includes(q)||norm(p.email).includes(q)||(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd))).slice(0,6);
@@ -5138,12 +5147,16 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
    if(!r.ok)throw new Error(r.error||'No se ha podido');toast('Hecho',true);m.remove();onDone&&onDone();}catch(err){b.disabled=false;toast(err.message,false);}});
 }
 function agAbrirHueco(c,onDone){
- const m=hzModal(`<div class="hz-top"><div><small>${escH(agCab(c.fecha||AG.fecha,c.hora,c.fisio))}</small><b>${escH(agNom(c.estado))}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(agCab(c.fecha||AG.fecha,c.hora,c.fisio))}</small><b>${escH(agNom(String(c.estado).replace(/[^\wÁÉÍÓÚÑáéíóúñ\- ]/g,'').trim())||'Hueco')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   ${c.notas?`<p class="fp-mu">${escH(c.notas)}</p>`:''}
-  <div class="hz-bts ag-bts"><button type="button" class="fp-can" data-a="del">Quitar</button><button type="button" class="hz-ok" data-a="lib">Dejar libre</button></div>`);
+  <div class="hz-lab">Cambiar a</div><div class="seg-rap ag-th"></div>
+  <div class="ag-otras"><button type="button" data-a="cita">Dar cita a esta hora</button><button type="button" data-a="del">Quitar este hueco</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
- m.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const r=b.dataset.a==='lib'?await agPost('seg-agenda-editar',{id:c.id,estado:'CITA LIBRE'}):await agPost('seg-agenda-borrar',{id:c.id});if(!r.ok)throw new Error(r.error||'No se ha podido');toast('Hecho',true);m.remove();onDone&&onDone();}catch(err){b.disabled=false;toast(err.message,false);}});
+ agTipoHueco(m,c,onDone);
+ m.querySelector('[data-a=cita]').onclick=()=>{m.remove();agDarCita({fecha:c.fecha||AG.fecha,hora:c.hora,fisio:c.fisio,hueco:Object.assign({},c)},onDone);};
+ m.querySelector('[data-a=del]').onclick=async e=>{const b=e.target;b.disabled=true;try{const r=await agPost('seg-agenda-borrar',{id:c.id});if(!r.ok)throw new Error(r.error||'No se ha podido');toast('Hueco quitado',true);m.remove();onDone&&onDone();}catch(err){b.disabled=false;toast(err.message,false);}};
 }
+
 function renderCallIn(wrap){
  cargarSegPac().then(()=>{try{pinta();}catch(e){}});
  const card=ce('div','card');
