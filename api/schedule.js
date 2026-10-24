@@ -426,6 +426,14 @@ module.exports = async function handler(req, res) {
         const C = citas.map(c => ({ f: String(c.fields.FECHA || '').slice(0, 10), e: String(nmS(c.fields.ESTADO)).trim(), fisio: nmS(c.fields['PREF.']), pid: (c.fields['RELACIÓN - CITA'] || [])[0] || '', bono: esBono(c) })).filter(c => c.f);
         const porPac = {}; C.forEach(c => { if (c.pid) (porPac[c.pid] = porPac[c.pid] || []).push(c); });
         Object.values(porPac).forEach(L => L.sort((a, b) => a.f.localeCompare(b.f)));
+        // Primera visita real: primera sesión hecha del paciente (sin ninguna sesión hecha antes del periodo)
+        const prim = {}; Object.entries(porPac).forEach(([pid, L]) => { const x = L.find(c => c.f >= desde && /REALIZADA/.test(c.e)); if (x && !L.some(c => c.f < desde && /REALIZADA/.test(c.e))) prim[pid] = x; });
+        const cand = Object.keys(prim), conAntes = new Set();
+        const lotesP = []; for (let i = 0; i < cand.length; i += 40) lotesP.push(cand.slice(i, i + 40));
+        for (let i = 0; i < lotesP.length; i += 4) (await Promise.all(lotesP.slice(i, i + 4).map(t => todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='REALIZADA',IS_BEFORE({FECHA},DATETIME_PARSE('${desde}','YYYY-MM-DD')),OR(${t.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACI%C3%93N%20-%20CITA`).catch(() => [])))).forEach(rs => rs.forEach(r => (r.fields['RELACIÓN - CITA'] || []).forEach(id => conAntes.add(id))));
+        // Ocupación: horas de trabajo a la semana de Jonathan, Sara y Juan (campo HORAS SEMANA de FISIO)
+        const fisT = await todosT(FISIOS_TABLE, `fields[]=Name&fields[]=${encodeURIComponent('HORAS SEMANA')}`).catch(() => []);
+        const EQUIPO = ['jonathan', 'sara', 'juan'], cap = fisT.filter(f => EQUIPO.includes(String(f.fields.Name || '').split(' ')[0].toLowerCase())).reduce((t, f) => t + (+f.fields['HORAS SEMANA'] || 0), 0);
         const semanas = [];
         for (let k = 0; k < N; k++) {
           const a = mv(desde, 7 * k), b = mv(a, 6), en = f => f >= a && f <= b;
@@ -436,17 +444,17 @@ module.exports = async function handler(req, res) {
           const conBono = atend.filter(pid => real.some(c => c.pid === pid && c.bono)).length;
           const nuevos = nuevosP.filter(p => en(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(p.createdTime))));
           const fis = {}; let vin = 0, reag = 0, pack = 0, suelta = 0;
-          nuevos.forEach(p => {
-            const L = (porPac[p.id] || []).filter(c => c.f >= a);
-            const prim = L.find(c => /REALIZADA/.test(c.e)); if (!prim) return;
-            vin++; const fz = prim.fisio || '—'; fis[fz] = fis[fz] || { vinieron: 0, reagendaron: 0 }; fis[fz].vinieron++;
-            const sig = L.filter(c => c.f >= prim.f && c !== prim && /PENDIENTE|REALIZADA/.test(c.e));
-            if (sig.length) { reag++; fis[fz].reagendaron++; if (sig.some(c => c.bono) || prim.bono) pack++; else suelta++; }
+          Object.entries(prim).forEach(([pid, p0]) => {
+            if (!en(p0.f) || conAntes.has(pid)) return;
+            vin++; const fz = p0.fisio || '—'; fis[fz] = fis[fz] || { vinieron: 0, reagendaron: 0 }; fis[fz].vinieron++;
+            const sig = porPac[pid].filter(c => c !== p0 && c.f >= p0.f && /PENDIENTE|REALIZADA/.test(c.e));
+            if (sig.length) { reag++; fis[fz].reagendaron++; }
           });
+          const ocup = enS.filter(c => c.pid && EQUIPO.includes(String(c.fisio).toLowerCase()) && /REALIZADA|PENDIENTE/.test(c.e)).length;
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
-            nuevos: nuevos.length, vinieron: vin, reagendaron: reag, pack, suelta, porFisio: fis,
+            nuevos: nuevos.length, vinieron: vin, reagendaron: reag, porFisio: fis, ocupadas: ocup, capacidad: cap, ocupacion: cap ? Math.round(ocup * 100 / cap) : null,
             recuperadas: ll.filter(r => /RECUPERADA/.test(nmS(r.fields.RESULTADO))).length, resenasPedidas: ll.filter(r => r.fields['RESEÑA']).length,
             ingresos: m && m.fields.INGRESOS != null ? m.fields.INGRESOS : null, resenas: m && m.fields['RESEÑAS GOOGLE'] != null ? m.fields['RESEÑAS GOOGLE'] : null, quejas: m && m.fields.QUEJAS != null ? m.fields.QUEJAS : null, notas: m ? (m.fields.NOTAS || '') : '' });
         }

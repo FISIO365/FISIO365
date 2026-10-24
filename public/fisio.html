@@ -898,7 +898,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 /* Estadísticas */
 .st{background:#fff;border-radius:22px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .st .ag-fe{display:flex;flex-direction:column;align-items:center}.st-s{font-size:12px;color:#c2552e;font-weight:600;min-height:15px}
-.st-ks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:12px 0}
+.st-ks{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin:12px 0}
 .st-k{font-family:var(--font);text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:14px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px;color:inherit}
 .st-k span{font-size:12px;color:#7d6a60;font-weight:600}.st-k b{font-size:22px;line-height:1.2}.st-k em{font-style:normal;font-size:11.5px;font-weight:700}.st-k em.ok{color:#16803c}.st-k em.mal{color:#b42318}
 .st-k.on{border-color:#c2552e;background:#fdf6f1}.st-ed{font-style:normal;color:#c2552e}
@@ -5220,12 +5220,10 @@ const esDireccion=()=>/^(nora|ramiro)$/i.test(String((fisioActual&&fisioActual.n
 let ST={sem:null,met:'sesiones',d:null};
 const ST_MET=[
  ['sesiones','Sesiones hechas',s=>s.sesiones,'n'],
+ ['ocup','Ocupación',s=>s.ocupacion,'%'],
  ['nuevos','Pacientes nuevos',s=>s.nuevos,'n'],
  ['conv','Conversión',s=>s.vinieron?Math.round(s.reagendaron*100/s.vinieron):null,'%'],
  ['ingresos','Ingresos',s=>s.ingresos,'€'],
- ['novino','No vinieron',s=>s.noVino,'n',true],
- ['canc','Canceladas',s=>s.canceladas,'n',true],
- ['recup','Citas recuperadas',s=>s.recuperadas,'n'],
  ['resenas','Reseñas Google',s=>s.resenas,'n']];
 const stFmt=(v,t)=>v==null?'—':t==='€'?Math.round(v).toLocaleString('es-ES')+' €':t==='%'?v+'%':String(v);
 const stSemTxt=f=>{const a=new Date(f+'T12:00:00'),b=new Date(f+'T12:00:00');b.setDate(b.getDate()+6);const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return `${a.getDate()}${a.getMonth()!==b.getMonth()?' '+M[a.getMonth()]:''} – ${b.getDate()} ${M[b.getMonth()]}`;};
@@ -5259,10 +5257,10 @@ function renderStats(wrap){
   g.innerHTML=`<div class="st-ks">${kpis}</div>
    <div class="st-box"><div class="st-bt"><b>${mt}</b><small>últimas ${L.length} semanas</small></div><div class="st-ch"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${barras}</svg></div></div>
    <div class="st-2">
-    <div class="st-box"><div class="st-bt"><b>Pacientes nuevos que vinieron</b><small>y si volvieron a reservar</small></div>
+    <div class="st-box"><div class="st-bt"><b>Primeras visitas</b><small>y si volvieron a reservar</small></div>
      ${S.vinieron?`<div class="st-tb"><div class="st-tr st-th"><span>Fisio</span><span>Vinieron</span><span>Repiten</span><span>%</span></div>${fis.map(([f,x])=>`<div class="st-tr"><span>${escH(agNom(f))}</span><span>${x.vinieron}</span><span>${x.reagendaron}</span><span><b>${Math.round(x.reagendaron*100/x.vinieron)}%</b></span></div>`).join('')}<div class="st-tr st-tt"><span>Total</span><span>${S.vinieron}</span><span>${S.reagendaron}</span><span><b>${Math.round(S.reagendaron*100/S.vinieron)}%</b></span></div></div>
-`:`<p class="st-p">${S.nuevos?`${S.nuevos} fichas nuevas, pero ninguna ha venido aún`:'Sin pacientes nuevos esta semana'}</p>`}</div>
-    <div class="st-box"><div class="st-bt"><b>Sesiones por día</b><small>${S.atendidos} pacientes atendidos</small></div><div class="st-dias">${dias.map(([n,v])=>`<div><i style="height:${Math.round(v/mxD*90)}px"></i><b>${v}</b><small>${n}</small></div>`).join('')}</div></div>
+`:`<p class="st-p">Ninguna primera visita esta semana</p>`}</div>
+    <div class="st-box"><div class="st-bt"><b>Sesiones por día</b><small>${S.atendidos} pacientes atendidos${S.capacidad?` · ${S.ocupadas} de ${S.capacidad} h (Jonathan, Sara y Juan)`:''}</small></div><div class="st-dias">${dias.map(([n,v])=>`<div><i style="height:${Math.round(v/mxD*90)}px"></i><b>${v}</b><small>${n}</small></div>`).join('')}</div></div>
    </div>
    <div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
     <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b> · Reseñas Google: <b>${stFmt(S.resenas)}</b>${S.resenasPedidas?` · Reseñas pedidas en llamadas: <b>${S.resenasPedidas}</b>`:''}</p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`;
