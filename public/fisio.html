@@ -252,8 +252,8 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .seg-f3{display:flex;align-items:center;gap:6px}.seg-ic{width:36px;height:36px;border-radius:50%;background:#f3efea;display:flex;align-items:center;justify-content:center;color:#1a1a1a}.seg-ic.wa{background:#e8f5ec;color:#16803c}.seg-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .seg-hecho{font-family:var(--font);font-size:12.5px;font-weight:600;padding:8px 12px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer}
 .seg-r{font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:#f1ede9;white-space:nowrap}.seg-r.ok{background:#e8f5ec;color:#16803c}.seg-r.no{background:#fdecea;color:#b42318}
-.seg-rap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.seg-rap button{font-family:var(--font);font-size:12.5px;padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer}.seg-rap button.on{border-color:#c2552e;background:#fdeee4;color:#c2552e;font-weight:600}
-.hz-card input[type=date]{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px}
+.seg-rap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.seg-rap button{font-family:var(--font);font-size:12.5px;padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer;color:var(--black)}.seg-rap button.on{border-color:#c2552e;background:#fdeee4;color:#c2552e;font-weight:600}
+.hz-card input[type=date]{width:100%;max-width:100%;min-width:0;display:block;-webkit-appearance:none;appearance:none;background:#fff;color:var(--black);text-align:left;min-height:42px;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px}
 .seg-bres{display:flex;flex-direction:column;margin-top:8px}.seg-bres button{text-align:left;font-family:var(--font);font-size:14px;padding:11px 6px;border:none;border-bottom:1px solid #f1ede9;background:none;cursor:pointer}
 .rn-seg{font-family:var(--font);font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:99px;border:1.5px solid #c2552e;background:#fff;color:#c2552e;cursor:pointer;white-space:nowrap}
 @media(max-width:560px){.seg-it{grid-template-columns:1fr auto;}.seg-f1{grid-column:1/-1}.seg-f1 b{font-size:12px;color:var(--muted)}.seg-f2{grid-column:1}}
@@ -4769,15 +4769,19 @@ function abrirNuevoSeg({pacienteId,nombre,nota,onSave}){
   <input type="date" class="seg-f" value="${segIso(7)}" min="${segIso(0)}">
   <div class="hz-lab">¿Quién le contacta?</div><div class="seg-rap seg-resp">${TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('')}</div>
   <div class="hz-lab">Nota</div><textarea class="seg-n" rows="3" placeholder="Ej.: llamar para ver qué tal está y ofrecer mantenimiento">${escH(nota||'')}</textarea>
+  <div class="hz-lab">Estado del paciente</div><div class="est-slot"></div>
   <div class="hz-bts"><button type="button" class="hz-ok">Añadir</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const est0=pacEstados(pacienteId).slice(),selE=selectorEstados(est0);m.querySelector('.est-slot').appendChild(selE);
  let resp=miNombreCorto();const pr=()=>m.querySelectorAll('.seg-resp button').forEach(b=>b.classList.toggle('on',b.dataset.n===resp));pr();
  m.querySelectorAll('.seg-resp button').forEach(b=>b.onclick=()=>{resp=b.dataset.n;pr();});
  const f=m.querySelector('.seg-f');
- const pinta=()=>m.querySelectorAll('.seg-rap button').forEach(b=>b.classList.toggle('on',segIso(+b.dataset.d)===f.value));pinta();
- m.querySelectorAll('.seg-rap button').forEach(b=>b.onclick=()=>{f.value=segIso(+b.dataset.d);pinta();});f.onchange=pinta;
+ const pinta=()=>m.querySelectorAll('.seg-rap:not(.seg-resp) button').forEach(b=>b.classList.toggle('on',segIso(+b.dataset.d)===f.value));pinta();
+ m.querySelectorAll('.seg-rap:not(.seg-resp) button').forEach(b=>b.onclick=()=>{f.value=segIso(+b.dataset.d);pinta();});f.onchange=pinta;
  m.querySelector('.hz-x').onclick=()=>m.remove();
  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Añadiendo…';
   try{const d=await (await fetch('/api/schedule?action=seg-crear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId,fecha:f.value,nota:m.querySelector('.seg-n').value.trim(),responsable:resp})})).json();if(!d.ok)throw new Error(d.error||'Error');
+   {const nuevos=selE.get();if(pacienteId&&nuevos.join()!==est0.join())await guardarEstados(pacienteId,nuevos);}
    const notaTxt=m.querySelector('.seg-n').value.trim();toast('Añadido a seguimiento',true);m.remove();onSave&&onSave(notaTxt);}catch(err){b.disabled=false;b.textContent='Añadir';toast(err.message,false);}};
 }
 function abrirResultadoSeg(it,onSave){
