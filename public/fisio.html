@@ -887,6 +887,10 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-bt h3{white-space:nowrap}.fp-bt .fp-edbts{flex-wrap:nowrap}.fp-bt .fp-edbts button,.fp-bt>.fp-ed{white-space:nowrap}
 
 /* Agenda */
+.ag-abrir{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:#c2552e;color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}
+.ag-ops{display:flex;flex-direction:column;gap:8px;margin-top:12px}.ag-ops button{font-family:var(--font);text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:14px;padding:11px 14px;cursor:pointer;display:flex;flex-direction:column;gap:2px}.ag-ops button b{font-size:14.5px}.ag-ops button small{font-size:12px;color:#7d6a60}.ag-ops button:first-child{border-color:#c2552e;background:#fdf3ec}
+.ag-2c{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.ag-prev{font-size:12.5px;color:#7d6a60;margin-top:10px;line-height:1.45}
+
 .ag{background:#fff;border-radius:22px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .ag-bar{display:flex;align-items:center;gap:8px}.ag-nv{width:42px;height:42px;border-radius:50%;border:none;background:#f7f3ef;font-size:22px;color:#c2552e;cursor:pointer;flex:none;font-family:var(--font)}
 .ag-fe{flex:1;position:relative;text-align:center;cursor:pointer}.ag-ft{font-size:16px;font-weight:700}.ag-fi{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
@@ -1232,7 +1236,7 @@ async function loadBiblio(){
 
 // iPhone: tras un rato en segundo plano, la primera petición a veces falla con «Load failed».
 // Reintentamos solas las peticiones a /api/ que se pueden repetir sin duplicar nada.
-(function(){const f0=window.fetch.bind(window);const NO_REP=/action=(seg-crear|seg-resultado|facturar|horas-guardar|seg-paciente-crear|seg-historial-anadir|seg-tarea-guardar|seg-ficha-archivo|seg-agenda-dar|seg-agenda-mover|seg-agenda-hueco|seg-agenda-editar)\b/;
+(function(){const f0=window.fetch.bind(window);const NO_REP=/action=(seg-crear|seg-resultado|facturar|horas-guardar|seg-paciente-crear|seg-historial-anadir|seg-tarea-guardar|seg-ficha-archivo|seg-agenda-dar|seg-agenda-mover|seg-agenda-hueco|seg-agenda-huecos|seg-agenda-editar)\b/;
  window.fetch=async function(u,o){const url=String(u&&u.url||u);
   for(let i=0;;i++){try{return await f0(u,o);}catch(e){if(!/\/api\//.test(url)||NO_REP.test(url)||i>=2)throw new Error(navigator.onLine===false?'Sin conexión. Vuelve a intentarlo.':'No se ha podido conectar. Vuelve a intentarlo.');await new Promise(r=>setTimeout(r,700*(i+1)));}}};})();
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
@@ -4843,8 +4847,8 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
 // ── CALL-IN: buscar pacientes por etiqueta de estado (varias = tiene todas) ──
 let callSel=[];
 // ══ AGENDA: el día de cada fisio (tabla CITAS: una fila = una hora). Dar, mover, cancelar y bloquear citas ══
-const AG_FISIOS=['Ramiro','Jonathan','NORA','Sara','Paola','Juan','ELENA'];
-const AG_NOFISIO=/^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES)$/i;
+const AG_FISIOS=['Ramiro','Jonathan','Sara','Paola','Juan','ELENA'];
+const AG_NOFISIO=/^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES|NORA)$/i;
 const AG_EST=[['PENDIENTE','Pendiente'],['REALIZADA','Realizada'],['NO ASISTIÓ','No asistió'],['CANCELADA','Cancelada'],['POR REAGENDAR','Por reagendar'],['CITA DUDOSA','Dudosa']];
 const agNom=f=>{f=String(f||'');return f.charAt(0).toUpperCase()+f.slice(1).toLowerCase();};
 const agEsLibre=e=>/^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(e);
@@ -4864,12 +4868,13 @@ function renderAgenda(wrap){
  card.innerHTML=`<div class="ag-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Día anterior">‹</button>
   <label class="ag-fe"><b class="ag-ft"></b><input type="date" class="ag-fi"></label>
   <button type="button" class="ag-nv" data-n="1" aria-label="Día siguiente">›</button></div>
-  <div class="ag-bar2"><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><span class="ag-res"></span></div>
+  <div class="ag-bar2"><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><span class="ag-res"></span><button type="button" class="ag-abrir">＋ Abrir huecos</button></div>
   <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
  wrap.appendChild(card);
  const fi=card.querySelector('.ag-fi'),fs=card.querySelector('.ag-fs'),grid=card.querySelector('.ag-grid');
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n);cargar();});
  card.querySelector('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
+ card.querySelector('.ag-abrir').onclick=()=>agAbrirHuecos({fecha:AG.fecha,fisio:AG.fisio},cargar);
  fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};
  fs.onchange=()=>{AG.fisio=fs.value;try{localStorage.setItem('f365_ag_fisio',AG.fisio);}catch(e){}pintar();};
  let tok=0;
@@ -4903,9 +4908,56 @@ function renderAgenda(wrap){
    return html;};
   grid.innerHTML=`<div class="ag-tb" style="--n:${ver.length}"><div class="ag-hd"><div class="ag-h0"></div>${ver.map(f=>`<div class="ag-hf">${escH(agNom(f))}</div>`).join('')}</div>${HS.map(h=>`<div class="ag-row${h===(AG.fecha===agHoyIso()?new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false}).format(new Date())+':00':'')?' now':''}"><div class="ag-h">${h}</div>${ver.map(f=>`<div class="ag-cell">${celda(f,h)}</div>`).join('')}</div>`).join('')}</div>`;
   grid.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{const c=C.find(x=>x.id===b.dataset.id);if(!c)return;if(c.pacienteId)agAbrirCita(c,cargar);else if(agEsLibre(c.estado))agDarCita({fecha:AG.fecha,hora:c.hora,fisio:c.fisio,hueco:c},cargar);else agAbrirHueco(c,cargar);});
-  grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agDarCita({fecha:AG.fecha,hora:b.dataset.h,fisio:b.dataset.f},cargar));
+  grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agVacio({fecha:AG.fecha,hora:b.dataset.h,fisio:b.dataset.f},cargar));
  }
  card._recargar=cargar;cargar();
+}
+
+function agHorasLista(desde,hasta,cada){const out=[];const a=t=>{const [h,m]=t.split(':').map(Number);return h*60+m;};for(let x=a(desde);x<a(hasta);x+=cada)out.push(String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0'));return out;}
+function agVacio({fecha,hora,fisio},onDone){
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(agCab(fecha,hora,fisio))}</small><b>Hora vacía</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Hora</div><input type="time" class="ag-in ag-hv" value="${hora}" step="300">
+  <div class="ag-ops"><button type="button" data-a="cita"><b>Dar cita</b><small>Buscar paciente y reservar</small></button>
+  <button type="button" data-a="CITA LIBRE"><b>Abrir hueco libre</b><small>Aparece libre en la agenda y en la app</small></button>
+  <button type="button" data-a="LIBRE - SIN BOMBA"><b>Hueco libre sin bomba</b><small>Libre, pero sin bomba diamagnética</small></button>
+  <button type="button" data-a="CITA BLOQUEADA"><b>Bloquear</b><small>Nadie puede reservar esta hora</small></button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelectorAll('.ag-ops button').forEach(b=>b.onclick=async()=>{const h=m.querySelector('.ag-hv').value||hora;
+  if(b.dataset.a==='cita'){m.remove();agDarCita({fecha,hora:h,fisio},onDone);return;}
+  b.disabled=true;try{const r=await agPost('seg-agenda-hueco',{fecha,hora:h,fisio,estado:b.dataset.a});if(!r.ok)throw new Error(r.error||'No se ha podido');toast(b.dataset.a==='CITA BLOQUEADA'?'Hora bloqueada':'Hueco abierto',true);m.remove();onDone&&onDone();}catch(err){b.disabled=false;toast(err.message,false);}});
+}
+function agAbrirHuecos({fecha,fisio},onDone){
+ const eq=agEquipo();let tipo='CITA LIBRE';
+ const HS=[];for(let h=7;h<=21;h++)HS.push(String(h).padStart(2,'0')+':00');
+ const m=hzModal(`<div class="hz-top"><div><small>Agenda</small><b>Abrir huecos</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Fisio</div><select class="ag-in ag-hf2">${eq.map(f=>`<option value="${escH(f)}"${f===fisio?' selected':''}>${escH(agNom(f))}</option>`).join('')}</select>
+  <div class="hz-lab">Qué abrir</div><div class="seg-rap ag-tipo">${[['CITA LIBRE','Libre'],['LIBRE - SIN BOMBA','Libre sin bomba'],['CITA BLOQUEADA','Bloqueado'],['DIA BLOQUEADO','Día bloqueado (vacaciones…)']].map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
+  <div class="hz-lab">Día</div><input type="date" class="ag-in ag-d1" value="${fecha}">
+  <div class="ag-2c"><div><div class="hz-lab">Desde</div><select class="ag-in ag-de">${HS.map(h=>`<option${h==='09:00'?' selected':''}>${h}</option>`).join('')}</select></div>
+   <div><div class="hz-lab">Hasta</div><select class="ag-in ag-ha">${HS.map(h=>`<option${h==='14:00'?' selected':''}>${h}</option>`).join('')}</select></div>
+   <div><div class="hz-lab">Cada</div><select class="ag-in ag-ca"><option value="60">1 h</option><option value="45">45 min</option><option value="30">30 min</option></select></div></div>
+  <div class="hz-lab">Repetir</div><select class="ag-in ag-rep"><option value="1">Solo este día</option><option value="semana">De lunes a viernes de esa semana</option><option value="w4">Este día de la semana, 4 semanas</option><option value="w8">Este día de la semana, 8 semanas</option><option value="w12">Este día de la semana, 12 semanas</option><option value="d14">Todos los días laborables, 2 semanas</option></select>
+  <div class="hz-lab">Nota <span>(opcional)</span></div><input type="text" class="ag-in ag-hn" placeholder="Ej.: vacaciones, formación…">
+  <div class="ag-prev"></div>
+  <div class="hz-bts"><button type="button" class="hz-ok">Abrir huecos</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const $m=q=>m.querySelector(q);
+ const fechas=()=>{const f0=$m('.ag-d1').value;if(!f0)return [];const r=$m('.ag-rep').value,dow=d=>new Date(d+'T12:00:00').getDay();
+  if(r==='1')return [f0];
+  if(r==='semana'){const lun=agMover(f0,-((dow(f0)+6)%7));return [0,1,2,3,4].map(i=>agMover(lun,i)).filter(d=>d>=agHoyIso());}
+  if(r[0]==='w'){return Array.from({length:+r.slice(1)},(_,i)=>agMover(f0,7*i));}
+  const out=[];let d=f0;while(out.length<10){if(dow(d)%6!==0)out.push(d);d=agMover(d,1);}return out;};
+ const horas=()=>tipo==='DIA BLOQUEADO'?agHorasLista('07:00','21:00',60):agHorasLista($m('.ag-de').value,$m('.ag-ha').value,+$m('.ag-ca').value);
+ const prev=()=>{const f=fechas(),h=horas();$m('.ag-prev').textContent=h.length?`Se abrirán ${h.length} hora${h.length===1?'':'s'}${f.length>1?` en ${f.length} días (${f.length*h.length} en total)`:` el ${segFecha(f[0]||'')}`}. Las horas que ya tengan algo no se tocan.`:'«Hasta» tiene que ser después de «Desde»';
+  m.querySelector('.ag-2c').style.display=tipo==='DIA BLOQUEADO'?'none':'';};
+ const pt=()=>m.querySelectorAll('.ag-tipo button').forEach(b=>b.classList.toggle('on',b.dataset.v===tipo));pt();
+ m.querySelectorAll('.ag-tipo button').forEach(b=>b.onclick=()=>{tipo=b.dataset.v;pt();prev();});
+ m.querySelectorAll('select,input').forEach(x=>x.addEventListener('change',prev));prev();
+ $m('.hz-ok').onclick=async e=>{const f=fechas(),h=horas();if(!f.length||!h.length){toast('Revisa el día y las horas',false);return;}
+  const b=e.target;b.disabled=true;b.textContent='Abriendo…';
+  try{const r=await agPost('seg-agenda-huecos',{fisio:$m('.ag-hf2').value,fechas:f,horas:h,estado:tipo,notas:$m('.ag-hn').value.trim()});if(!r.ok)throw new Error(r.error||'No se han podido abrir');
+   toast(`${r.creadas} hueco${r.creadas===1?'':'s'} abierto${r.creadas===1?'':'s'}${r.saltadas?` · ${r.saltadas} ya tenían algo`:''}`,true);m.remove();onDone&&onDone();}
+  catch(err){b.disabled=false;b.textContent='Abrir huecos';toast(err.message,false);}};
 }
 function agCab(fecha,hora,fisio){return `${segFecha(fecha)} · ${hora} · ${agNom(fisio)}`;}
 function agAbrirCita(c,onDone){
