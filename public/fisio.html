@@ -5549,14 +5549,15 @@ async function abrirFichaPaciente(id,nombre,pBase){
  function montarEdicion(cont){
   cont.querySelectorAll('.fp-blk').forEach(blk=>{const k=blk.dataset.blk,bt=blk.querySelector('.fp-ed');if(!bt)return;
    bt.onclick=()=>{
-    if(k==='datos'){blk.querySelector('.fp-fs').innerHTML=[['Teléfono','tel',P.telf,'tel'],['WhatsApp','whatsapp',P.whatsapp,'tel'],['Email','email',P.email,'email'],['DNI','dni',P.dni,'text'],['Cumpleaños','cumple',P.cumple,'date']].map(([l,kk,v,t])=>`<label class="fp-f fp-in"><span>${l}</span><input type="${t}" data-k="${kk}" value="${escH(v||'')}"></label>`).join('');}
+    if(k==='datos'){blk.querySelector('.fp-fs').innerHTML=[['Nombre','nombre',P.nombre,'text'],['Teléfono','tel',P.telf,'tel'],['WhatsApp','whatsapp',P.whatsapp,'tel'],['Email','email',P.email,'email'],['DNI','dni',P.dni,'text'],['Cumpleaños','cumple',P.cumple,'date']].map(([l,kk,v,t])=>`<label class="fp-f fp-in"><span>${l}</span><input type="${t}" data-k="${kk}" value="${escH(v||'')}"></label>`).join('');}
     else{const v=k==='notas'?P.notas:P.historial;blk.querySelector('.fp-txt').innerHTML=`<textarea class="fp-ta" rows="8">${escH(v||'')}</textarea>`;}
     {const ev=blk.querySelector('.fp-add-ev');if(ev)ev.remove();}
     const bx=ce('span','fp-edbts');bx.innerHTML='<button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok fp-guardar">Guardar</button>';bt.replaceWith(bx);
     bx.querySelector('.fp-can').onclick=pintar;
     bx.querySelector('.fp-guardar').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Guardando…';const campos={};
      if(k==='datos')blk.querySelectorAll('input[data-k]').forEach(i=>campos[i.dataset.k]=i.value.trim());else campos[k]=blk.querySelector('.fp-ta').value;
-     try{await guardar(campos);if(k==='datos'){P.telf=campos.tel;P.whatsapp=campos.whatsapp;}toast('Guardado',true);pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};};});}
+     if(k==='datos'&&!campos.nombre){b.disabled=false;b.textContent='Guardar';toast('El nombre no puede quedar vacío',false);return;}
+     try{await guardar(campos);if(k==='datos'){P.telf=campos.tel;P.whatsapp=campos.whatsapp;const pl=(pacs||[]).find(x=>x.id===id);if(pl){pl.nombre=campos.nombre;pl.telefono=campos.whatsapp||campos.tel;}}toast('Guardado',true);pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};};});}
  function montarSubida(cont){const inp=cont.querySelector('.fp-up input');inp.onchange=async()=>{const fs=[...inp.files];if(!fs.length)return;
   for(const f of fs){if(f.size>3*1024*1024){toast(`«${f.name}» pesa más de 3 MB`,false);continue;}
    toast(`Subiendo ${f.name}…`,true);
