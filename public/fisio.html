@@ -333,7 +333,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .ll-quita{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:13px;cursor:pointer;color:#1a1a1a}
 .tk-ics{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}.tk-ics .tk-wa{width:34px;height:34px}
 .tk-b{min-width:98px;text-align:center}.tk-edq{width:30px;padding:0;display:inline-flex;align-items:center;justify-content:center}.tk-edq svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.tk-ph{display:inline-block;width:30px;flex:none}
-.tk-i.ta{background:#fff4e5;color:#b45309}.tk-ok{background:#16803c}
+.tk-i.an{background:#eef2f7;color:#1e2a38}.tk-i.ta{background:#fff4e5;color:#b45309}.tk-ok{background:#16803c}
 .te-sel{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-radius:10px;background:#f7f3ef}.te-sel b{font-size:14px}.te-sel button{border:none;background:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#1a1a1a}
 .ll-per .tar-nueva{margin-left:auto;height:40px;padding:0 16px}
 .tar-ll-av{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 12px;padding:11px 14px;border-radius:14px;border:1.5px solid #f3d9c9;background:#fdeee4;color:#7a3a1e;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-align:left}.tar-ll-av b{margin-left:auto;color:#c2552e;white-space:nowrap}
@@ -358,6 +358,19 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .fp-arch{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.fp-a{display:flex;flex-direction:column;gap:5px;text-decoration:none;color:#1a1a1a;font-size:11px}.fp-a img,.fp-ext{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:#f3efea;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#c2552e}.fp-a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fp-pin{font-size:26px;letter-spacing:4px;color:#c2552e}.fp-mu{color:#7d6a60}.fp-mu .r-ok{color:#16803c;font-weight:600}.fp-mu .r-no{color:#b42318;font-weight:600}.fp-mu .r-pe{font-weight:600}
 .tk-nom{cursor:pointer}.tk-nom:active{opacity:.6}.tk-pacl{display:block;border:none;background:none;padding:2px 0 0;font-family:var(--font);font-size:12px;font-weight:600;color:#1e2a38;cursor:pointer;text-align:left}
+.fp-tabs{display:flex;flex-wrap:nowrap;gap:4px;padding:0 12px;border-bottom:1px solid #ece6e0;background:#fff;align-items:center}
+.fp-tabs button{flex:none;font-family:var(--font);font-size:13.5px;font-weight:600;color:#7d6a60;background:none;border:none;border-bottom:2.5px solid transparent;border-radius:0;padding:12px 7px;cursor:pointer}
+.fp-tabs button.on{color:#1a1a1a;background:none;border-bottom-color:#c2552e}
+.fp-mas{position:relative;margin-left:auto;flex:none;display:inline-flex;align-items:center;font-size:13.5px;font-weight:600;color:#7d6a60;padding:12px 18px 12px 9px;border-bottom:2.5px solid transparent}.fp-mas.on{color:#1a1a1a;border-bottom-color:#c2552e}
+.fp-mas select{appearance:none;-webkit-appearance:none;border:none;background:none;font:inherit;color:inherit;cursor:pointer;outline:none;width:auto;max-width:130px;padding:0}.fp-mas i{position:absolute;right:4px;font-style:normal;font-size:10px;pointer-events:none}
+.fp-ev{background:#faf7f4;border-radius:12px;padding:12px;margin-bottom:12px}
+.fp-hres{margin:0 0 12px;padding:10px 14px;border-radius:12px;font-size:13px;background:#e8f5ec;color:#16803c}.fp-hres.mal{background:#fdecea;color:#b42318}.fp-hres span{font-weight:700}
+.fp-h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#7d6a60;margin:18px 2px 8px}
+.fp-doc p{margin:0 0 8px}.fp-doc p:last-child{margin:0}
+.fp-ses{border:1px solid #ece6e0;border-radius:14px;padding:12px 14px;margin-bottom:8px;background:#fff}.fp-ses.falta{border-color:#f5c2bd;background:#fffafa}
+.fp-sh{display:flex;align-items:center;gap:8px;margin-bottom:6px}.fp-sh b{font-size:13.5px}.fp-sh span{font-size:12px;color:#7d6a60;background:#f3efea;border-radius:99px;padding:2px 9px}.fp-sed{margin-left:auto;font-family:var(--font);font-size:12px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:5px 12px;cursor:pointer}
+.fp-sb{font-size:13.5px;line-height:1.55;color:#2b2420;overflow-wrap:anywhere}.fp-sb p{margin:0 0 6px}.fp-falta{color:#b42318;font-weight:600;font-size:13px}
+.fp-gen{font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:10px;background:#1e2a38;color:#fff;padding:0 14px;cursor:pointer}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -4841,18 +4854,21 @@ async function listaTareas(cont){
   const tabla=ce('div','seg-tabla');
   g.forEach(x=>{
    const r=ce('div','tk'+(c==='atr'?' atr':''));
-   const pid=x.tipo==='llamar'?x.seg.pacienteId:x.tipo==='tarea'?x.t.pacienteId:x.p.id;
+   const pid=x.tipo==='llamar'?x.seg.pacienteId:x.tipo==='tarea'?x.t.pacienteId:x.tipo==='anotar'?x.c.pacienteId:x.p.id;
    const IC_TEL='<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
    const IC_EXP='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
-   const sub=x.tipo==='tarea'?[x.t.para?'Para '+x.t.para:'Para cualquiera',x.t.paciente?'Paciente: '+x.t.paciente:'',x.t.creadaPor&&x.t.creadaPor!==x.t.para?'la apuntó '+x.t.creadaPor:''].filter(Boolean).join(' · '):x.tipo==='llamar'?(x.seg.ultima?'Última sesión '+segFecha(x.seg.ultima).replace(/^\S+ /,'')+(x.seg.fisio?' con '+x.seg.fisio:''):''):[x.quien,'Última sesión '+segFecha(x.p.ultima).replace(/^\S+ /,'')].filter(Boolean).join(' · ');
-   const notaT=x.tipo==='tarea'?x.t.nota:x.tipo==='llamar'?(x.detalle&&x.detalle.trim()!=='Llamada de seguimiento'?x.detalle:''):(x.p.nota?'Motivo: '+x.p.nota:'');
+   const sub=x.tipo==='anotar'?[x.quien,'Historia sin actualizar tras la sesión del '+segFecha(x.c.fecha)].filter(Boolean).join(' · '):x.tipo==='tarea'?[x.t.para?'Para '+x.t.para:'Para cualquiera',x.t.paciente?'Paciente: '+x.t.paciente:'',x.t.creadaPor&&x.t.creadaPor!==x.t.para?'la apuntó '+x.t.creadaPor:''].filter(Boolean).join(' · '):x.tipo==='llamar'?(x.seg.ultima?'Última sesión '+segFecha(x.seg.ultima).replace(/^\S+ /,'')+(x.seg.fisio?' con '+x.seg.fisio:''):''):[x.quien,'Última sesión '+segFecha(x.p.ultima).replace(/^\S+ /,'')].filter(Boolean).join(' · ');
+   const notaT=x.tipo==='anotar'?'':x.tipo==='tarea'?x.t.nota:x.tipo==='llamar'?(x.detalle&&x.detalle.trim()!=='Llamada de seguimiento'?x.detalle:''):(x.p.nota?'Motivo: '+x.p.nota:'');
    const ul=x.tipo==='llamar'&&x.seg.ult?x.seg.ult:null;
    const ests=pacEstados(pid).map(estNom).filter(Boolean);
    const IC_TAR='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>';
-   const ico=x.tipo==='tarea'?`<span class="tk-i ta">${IC_TAR}</span>`:x.tipo==='llamar'?(x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${IC_TEL}</a>`:`<span class="tk-i ll">${IC_TEL}</span>`):`<span class="tk-i ex">${IC_EXP}</span>`;
+   const IC_NOTA='<svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>';
+   const ico=x.tipo==='anotar'?`<span class="tk-i an">${IC_NOTA}</span>`:x.tipo==='tarea'?`<span class="tk-i ta">${IC_TAR}</span>`:x.tipo==='llamar'?(x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${IC_TEL}</a>`:`<span class="tk-i ll">${IC_TEL}</span>`):`<span class="tk-i ex">${IC_EXP}</span>`;
    r.innerHTML=`<div class="tk-ics">${ico}${x.tipo==='llamar'&&x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}</div><div class="tk-m"><b ${x.tipo!=='tarea'&&pid?`data-ficha="${pid}" class="tk-nom"`:''}>${escH(x.nombre)}</b>${x.tipo==='tarea'&&x.t.pacienteId?`<button type="button" class="tk-pacl" data-ficha="${x.t.pacienteId}" data-fn="${escH(x.t.paciente)}">Ver ficha de ${escH(x.t.paciente)} ›</button>`:''}${sub?`<p class="tk-meta">${escH(sub)}</p>`:''}${ul?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(ul.resultado)?'ok':/^NC|^VOLVER/.test(ul.resultado)?'no':'pe'}">${escH(resTxtG(ul.resultado))}</strong> · ${escH(segFecha(ul.fecha).replace(/^\S+ /,''))}${ul.quien?' · '+escH(quienNom(ul.quien)):''}${ul.nota?' — '+escH(ul.nota):''}</p>`:''}${notaT?`<p class="tk-nota">${escH(notaT)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}</div><div class="tk-a"></div>`;
    const acc=r.querySelector('.tk-a');
-   if(x.tipo==='tarea'){
+   if(x.tipo==='anotar'){
+    const b=ce('button','tk-b');b.type='button';b.textContent='Actualizar';b.onclick=()=>abrirAnotarSesion(x.c,recargar);acc.appendChild(b);acc.insertAdjacentHTML('beforeend','<span class="tk-ph"></span>');
+   }else if(x.tipo==='tarea'){
     const b=ce('button','tk-b tk-ok');b.type='button';b.textContent='✓ Hecho';b.onclick=async()=>{b.disabled=true;try{const d=await (await fetch('/api/schedule?action=seg-tarea-hecha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:x.t.id})})).json();if(!d.ok)throw 0;toast('¡Hecho!',true);recargar();}catch(e){b.disabled=false;toast('No se ha podido guardar',false);}};acc.appendChild(b);
     const ed=ce('button','tk-q tk-edq');ed.type='button';ed.setAttribute('aria-label','Editar tarea');ed.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';ed.onclick=()=>abrirTareaEquipo(x.t,recargar);acc.appendChild(ed);
    }else if(x.tipo==='llamar'){
@@ -4919,12 +4935,13 @@ async function abrirFichaPaciente(id,nombre,pBase){
  const cls=e=>/REALIZADA/i.test(e)?'ok':/CANCEL|NO ASIST|PERDIDA/i.test(e)?'no':/PENDIENTE/i.test(e)?'pe':'';
  const guardar=async campos=>{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id,campos})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');Object.assign(P,campos);if(campos.email!=null){const x=(pacs||[]).find(z=>z.id===id);if(x)x.email=campos.email;}};
  const ICO={tel:'<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',wa:'<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>',seg:'<svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>'};
- const TABS=[['resumen','Resumen'],['citas','Citas'],['programa','Ejercicios'],['racha','Racha'],['archivos','Archivos'],['informes','Informes'],['facturas','Facturas'],['acceso','Acceso app']];
+ const TABS=[['resumen','Resumen'],['historia','Historia'],['citas','Citas'],['programa','Ejercicios']];
+ const MAS=[['racha','Racha'],['archivos','Archivos'],['informes','Informes'],['facturas','Facturas'],['acceso','Acceso a la app']];
  function cabecera(){const tel=segTel(P.whatsapp||P.tel||P.telf||'');
   return `<div class="fp-head"><div class="fp-av">${escH(iniciales(P.nombre))}</div><div class="fp-hn"><h2>${escH(P.nombre)}</h2>
    <button type="button" class="fp-estb">${estadoChips(P.estados)||'<span class="est">+ Estado</span>'}<span class="fp-edit-ic">✎</span></button></div></div>
    <div class="fp-acts">${tel?`<a class="fp-ic" href="tel:+${tel}">${ICO.tel}<span>Llamar</span></a><a class="fp-ic wa" href="https://wa.me/${tel}" target="_blank" rel="noopener">${ICO.wa}<span>WhatsApp</span></a>`:''}<button type="button" class="fp-ic fp-segb ${SEG_PAC[id]?'on':''}">${ICO.seg}<span>${SEG_PAC[id]?'En seguimiento':'Seguimiento'}</span></button></div>
-   <div class="fp-tabs">${TABS.map(([k,t])=>`<button type="button" data-t="${k}" class="${tab===k?'on':''}">${t}${k==='archivos'&&P.archivos.length?` <i>${P.archivos.length}</i>`:''}</button>`).join('')}</div>`;}
+   <div class="fp-tabs">${TABS.map(([k,t])=>`<button type="button" data-t="${k}" class="${tab===k?'on':''}">${t}</button>`).join('')}<label class="fp-mas ${MAS.some(x=>x[0]===tab)?'on':''}"><select aria-label="Más secciones"><option value="" selected disabled hidden>Más</option>${MAS.map(([k,t])=>`<option value="${k}">${tab===k?'✓ ':''}${t}${k==='archivos'&&P.archivos.length?' ('+P.archivos.length+')':''}</option>`).join('')}</select><i>▾</i></label></div>`;}
  function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>${lbl}</span><div class="fp-v">${val?escH(tipo==='date'?fch(val):val):'<em>—</em>'}</div></div>`;}
  function resumen(){
   const hoy=d.hoy,fut=d.citas.filter(c=>c.fecha>=hoy&&!/CANCEL|REPROGRAM/i.test(c.estado)).reverse(),real=d.citas.filter(c=>c.fecha<hoy&&/REALIZADA/i.test(c.estado));
@@ -4935,18 +4952,47 @@ async function abrirFichaPaciente(id,nombre,pBase){
   ${pend.length||ult?`<div class="fp-box"><b>Seguimiento</b>${pend.map(x=>`<p>📞 Llamar el ${escH(segFecha(x.fecha))}${x.quien?' · '+escH(x.quien):''}${x.nota?' — '+escH(x.nota):''}</p>`).join('')}${ult?`<p class="fp-mu">Última llamada: <span class="r-${/RECUPERADA|^ALTA/.test(ult.resultado)?'ok':/^NC|^VOLVER/.test(ult.resultado)?'no':'pe'}">${escH(resTxtG(ult.resultado))}</span> · ${escH(segFecha(ult.fecha))}${ult.quien?' · '+escH(quienNom(ult.quien)):''}${ult.nota?' — '+escH(ult.nota):''}</p>`:''}</div>`:''}
   <div class="fp-blk" data-blk="datos"><div class="fp-bt"><h3>Datos</h3><button type="button" class="fp-ed">Editar</button></div>
    <div class="fp-fs">${campoTxt('Teléfono','tel',P.telf)}${campoTxt('WhatsApp','whatsapp',P.whatsapp)}${campoTxt('Email','email',P.email)}${campoTxt('DNI','dni',P.dni)}${campoTxt('Cumpleaños','cumple',P.cumple,'date')}<div class="fp-f"><span>Paciente desde</span><div class="fp-v">${escH(fch(String(P.alta).slice(0,10)))}</div></div></div></div>
-  <div class="fp-blk" data-blk="notas"><div class="fp-bt"><h3>Notas</h3><button type="button" class="fp-ed">Editar</button></div><div class="fp-txt">${P.notas?mdSimple(P.notas):'<em>Sin notas</em>'}</div></div>
-  <div class="fp-blk" data-blk="historial"><div class="fp-bt"><h3>Historial clínico</h3><button type="button" class="fp-ed">Editar</button></div><div class="fp-txt">${P.historial?mdSimple(P.historial):'<em>Sin historial</em>'}</div></div>`;}
+`;}
  function citas(){const hoy=d.hoy;if(!d.citas.length)return '<div class="fac-vacio">Sin citas</div>';
   const fila=c=>`<div class="fp-cita"><div class="fp-cd"><b>${escH(segFecha(c.fecha))}</b><span>${escH(c.hora||'')}</span></div><div class="fp-cm"><span class="fp-ce ${cls(c.estado)}">${escH(c.estado?c.estado.charAt(0)+c.estado.slice(1).toLowerCase():'—')}</span>${c.fisio?`<span class="fp-cfi">${escH(c.fisio)}</span>`:''}${c.nota?`<p>${escH(c.nota)}</p>`:''}</div></div>`;
   const fut=d.citas.filter(c=>c.fecha>=hoy).reverse(),pas=d.citas.filter(c=>c.fecha<hoy);
   return `${fut.length?`<div class="fp-sub">Próximas</div>${fut.map(fila).join('')}`:''}${pas.length?`<div class="fp-sub">Pasadas · ${pas.length}</div>${pas.map(fila).join('')}`:''}`;}
  function archivos(){return `<label class="fp-up"><input type="file" multiple hidden><span>＋ Subir archivo</span><small>PDF o fotos, hasta 3 MB</small></label>
   ${P.archivos.length?`<div class="fp-arch">${P.archivos.map(a=>`<a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-a">${/image/.test(a.tipo)&&a.mini?`<img src="${escH(a.mini)}" alt="">`:`<span class="fp-ext">${escH((a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase())}</span>`}<span>${escH(a.nombre)}</span></a>`).join('')}</div>`:'<div class="fac-vacio">No tiene archivos</div>'}`;}
+ function historia(){
+  const hoy=d.hoy,ses=d.citas.filter(c=>c.fecha<=hoy&&/REALIZADA/i.test(c.estado)),u=ses[0];
+  const modD=P.historialMod?isoMadrid(new Date(P.historialMod)):'';
+  const par=t=>String(t||'').split(/\n{2,}/).map(x=>`<p>${mdSimple(x.trim())}</p>`).join('');
+  const aviso=!u?'':(modD&&modD>=u.fecha)?`<div class="fp-hres ok">✓ Historia actualizada el ${escH(segFecha(modD))}, después de su última sesión</div>`:`<div class="fp-hres mal">⚠️ No se ha actualizado tras la última sesión (${escH(segFecha(u.fecha))}${u.fisio?' · '+escH(u.fisio):''})${modD?`. Última vez: ${escH(segFecha(modD))}`:''}</div>`;
+  return `${aviso}
+  <div class="fp-blk" data-blk="historial"><div class="fp-bt"><h3>Historia clínica</h3><span class="fp-edbts"><button type="button" class="fp-ok fp-add-ev">＋ Evolución</button><button type="button" class="fp-ed">Editar</button></span></div>
+   <div class="fp-add-slot"></div><div class="fp-txt fp-doc">${P.historial?par(P.historial):'<em>Todavía no tiene historia clínica</em>'}</div></div>
+  <div class="fp-blk" data-blk="notas"><div class="fp-bt"><h3>Notas</h3><button type="button" class="fp-ed">Editar</button></div><div class="fp-txt fp-doc">${P.notas?par(P.notas):'<em>Sin notas</em>'}</div></div>`;}
+ function montarHistoria(cont){
+  const b=cont.querySelector('.fp-add-ev');if(!b)return;
+  b.onclick=()=>{const slot=cont.querySelector('.fp-add-slot');const u=d.citas.find(c=>c.fecha<=d.hoy&&/REALIZADA/i.test(c.estado));
+   slot.innerHTML=`<div class="fp-ev"><div class="fp-mu" style="margin-bottom:6px">Se añade al final de la historia con la fecha${u?' de la sesión del '+escH(segFecha(u.fecha)):''} y tu nombre.</div><textarea class="fp-ta" rows="6" placeholder="Qué se trabajó, cómo respondió, cambios en el dolor, pauta para casa…"></textarea><div class="fp-edbts" style="justify-content:flex-end;margin-top:8px"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></div></div>`;
+   const ta=slot.querySelector('.fp-ta');ta.focus();slot.querySelector('.fp-can').onclick=()=>{slot.innerHTML='';};
+   slot.querySelector('.fp-ok').onclick=async e=>{const t=ta.value.trim();if(!t){toast('Escribe la evolución',false);return;}const bt=e.target;bt.disabled=true;bt.textContent='Guardando…';
+    try{const r=await (await fetch('/api/schedule?action=seg-historial-anadir',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id,texto:t,fecha:u?u.fecha:'',fisio:miNombreCorto()})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');P.historial=r.historial;P.historialMod=new Date().toISOString();toast('Añadido a la historia',true);pintar();}catch(err){bt.disabled=false;bt.textContent='Guardar';toast(err.message,false);}};};
+ }
+ function acceso(){return `<div class="fp-blk" data-blk="acceso"><div class="fp-bt"><h3>Acceso a la app</h3><button type="button" class="fp-ed fp-acc-ed">${P.email&&(P.pin||base.pin)?'Editar':'Dar acceso'}</button></div>
+  <div class="fp-fs" style="grid-template-columns:1fr"><div class="fp-f"><span>Email para entrar</span><div class="fp-v">${escH(P.email||'—')}</div></div><div class="fp-f"><span>Contraseña (PIN)</span><div class="fp-v fp-pin">${escH(P.pin||base.pin||'—')}</div></div></div>
+  ${P.email&&(P.pin||base.pin)?'':'<p class="fp-mu" style="margin-top:10px">Todavía no puede entrar en la app: ponle email y PIN.</p>'}</div>`;}
+ function montarAcceso(cont){const bt=cont.querySelector('.fp-acc-ed');bt.onclick=()=>{const blk=cont.querySelector('.fp-blk');
+  blk.querySelector('.fp-fs').innerHTML=`<label class="fp-in"><span>Email</span><input type="email" data-k="email" value="${escH(P.email||'')}" autocomplete="off"></label><label class="fp-in"><span>PIN (4 números)</span><div style="display:flex;gap:8px"><input type="text" inputmode="numeric" maxlength="6" data-k="pin" value="${escH(P.pin||base.pin||'')}"><button type="button" class="fp-gen">Generar</button></div></label>`;
+  blk.querySelector('.fp-gen').onclick=()=>{blk.querySelector('[data-k=pin]').value=String(Math.floor(1000+Math.random()*9000));};
+  bt.outerHTML='<span class="fp-edbts"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></span>';
+  blk.querySelector('.fp-can').onclick=pintar;
+  blk.querySelector('.fp-ok').onclick=async e=>{const b=e.target;const em=blk.querySelector('[data-k=email]').value.trim(),pin=blk.querySelector('[data-k=pin]').value.trim();
+   if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast('El email no parece correcto',false);return;}if(pin&&!/^\d{4,6}$/.test(pin)){toast('El PIN tiene que ser de 4 a 6 números',false);return;}
+   b.disabled=true;b.textContent='Guardando…';try{await guardar({email:em,pin});P.email=em.toLowerCase();P.pin=pin;base.pin=pin;const pl=(pacs||[]).find(x=>x.id===id);if(pl){pl.email=P.email;pl.pin=pin;}toast('Acceso guardado',true);pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};};}
+
  function pintar(){
   body.innerHTML=cabecera()+'<div class="fp-cont"></div>';
   const cont=body.querySelector('.fp-cont');
   body.querySelectorAll('.fp-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;pintar();});
+  {const ms=body.querySelector('.fp-mas select');ms.onchange=()=>{if(ms.value){tab=ms.value;pintar();}};}
   body.querySelector('.fp-estb').onclick=editarEstado;
   body.querySelector('.fp-segb').onclick=()=>{if(SEG_PAC[id]){toast(segYaTxt(id),true);return;}abrirNuevoSeg({pacienteId:id,nombre:P.nombre,motivo:P.porQue||'',onSave:()=>{SEG_PAC[id]={fecha:'',quien:''};pintar();}});};
   const tok='fp_'+Date.now();cont.dataset.token=tok;
@@ -4957,7 +5003,8 @@ async function abrirFichaPaciente(id,nombre,pBase){
   else if(tab==='facturas')fpTabFacturas(id,cont,P.nombre,tok);
   else if(tab==='racha')fpTabRacha(id,cont,tok);
   else if(tab==='programa')fpTabPrograma(id,cont,tok,P.nombre);
-  else if(tab==='acceso')cont.innerHTML=`<div class="fp-blk"><div class="fp-fs" style="grid-template-columns:1fr"><div class="fp-f"><span>Email para entrar en la app</span><div class="fp-v">${escH(P.email||'—')}</div></div><div class="fp-f"><span>Contraseña (PIN)</span><div class="fp-v fp-pin">${escH(P.pin||base.pin||'—')}</div></div></div></div>`;
+  else if(tab==='acceso'){cont.innerHTML=acceso();montarAcceso(cont);}
+  else if(tab==='historia'){cont.innerHTML=historia();montarEdicion(cont);montarHistoria(cont);}
  }
  function montarEdicion(cont){
   cont.querySelectorAll('.fp-blk').forEach(blk=>{const k=blk.dataset.blk,bt=blk.querySelector('.fp-ed');if(!bt)return;
@@ -4983,6 +5030,17 @@ async function abrirFichaPaciente(id,nombre,pBase){
 }
 // Tocar el nombre de un paciente (con data-ficha) abre su ficha
 document.addEventListener('click',e=>{const t=e.target.closest('[data-ficha]');if(!t||!t.dataset.ficha)return;e.stopPropagation();abrirFichaPaciente(t.dataset.ficha,t.dataset.fn||t.textContent.trim());},true);
+// Nota de evolución de una sesión (se guarda en la cita de Airtable, campo NOTAS)
+function abrirAnotarSesion(c,onSave){
+ const m=hzModal(`<div class="hz-top"><div><small>Sesión del ${escH(segFecha(c.fecha))}${c.hora?' · '+escH(c.hora):''}${c.fisio?' · '+escH(c.fisio):''}</small><b>${escH(c.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Evolución de la sesión</div><textarea class="seg-n" rows="7" placeholder="Qué se trabajó, cómo respondió, cambios en el dolor, pauta para casa…"></textarea>
+  <div class="hz-cuando">Se añade al final de su historia clínica con la fecha de la sesión. Si ya la actualizaste en Airtable, ábrela en la ficha y el aviso desaparece solo.</div>
+  <div class="hz-bts"><button type="button" class="hz-re hz-ficha">Ver ficha</button><button type="button" class="hz-ok">Añadir a la historia</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelector('.hz-ficha').onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.nombre);};
+ m.querySelector('.hz-ok').onclick=async e=>{const t=m.querySelector('.seg-n').value.trim();if(!t){toast('Escribe la evolución',false);return;}const b=e.target;b.disabled=true;
+  try{const r=await (await fetch('/api/schedule?action=seg-historial-anadir',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:c.pacienteId,texto:t,fecha:c.fecha,fisio:miNombreCorto()})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');toast('Añadido a la historia',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast(err.message,false);}};
+}
 async function marcarExplicado(id,nota){try{await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:id,nota,fisio:fisioActual.nombre})});}catch(e){}}
 function abrirExplicar(p,onSave){
  const [y,mm,dd]=String(p.ultima).split('-');
@@ -5035,13 +5093,16 @@ function datosTareasTodas(forzar){
  const p=_datosTareasTodas(forzar).then(d=>{_dtC={t:Date.now(),d,p:null};return d;}).catch(e=>{_dtC.p=null;throw e;});_dtC.p=p;return p;}
 async function _datosTareasTodas(fresco){
  const iso=n=>isoMadrid(new Date(Date.now()+n*864e5));
- const [r,sg,tq]=await Promise.all([
+ const [r,sg,tq,sa]=await Promise.all([
   fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${iso(-30)}&hasta=${iso(-1)}${fresco?'&fresco=1':''}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
-  fetch(`/api/schedule?action=seg-tareas&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
+  fetch(`/api/schedule?action=seg-tareas&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
+  fetch(`/api/schedule?action=seg-sin-anotar&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
  setSegPac(sg);
  const hoy=(sg&&sg.hoy)||iso(0),items=[];
  ((tq&&tq.tareas)||[]).forEach(t=>items.push({tipo:'tarea',fecha:t.fecha,nombre:t.texto,quien:t.para,t}));
+ // Sesiones realizadas sin nota de evolución: hay que anotarlas como tarde el día siguiente
+ ((sa&&sa.sesiones)||[]).filter(c=>c.pacienteId).forEach(c=>{const lim=new Date(c.fecha+'T12:00:00');lim.setDate(lim.getDate()+1);const q=String(c.fisio||'').trim().split(' ')[0];const qn=q?q.charAt(0).toUpperCase()+q.slice(1).toLowerCase():'';items.push({tipo:'anotar',fecha:lim.toISOString().slice(0,10),nombre:c.nombre,quien:TAR_NOMBRES.includes(qn)?qn:(qn||''),c});});
  ((sg&&sg.pendientes)||[]).filter(x=>x.fecha<=iso(7)).forEach(x=>items.push({tipo:'llamar',fecha:x.fecha,nombre:x.nombre,quien:deQuienSeg(x),detalle:x.nota,tel:x.tel,seg:x}));
  ((r&&r.fisios)||[]).forEach(f=>(f.lista||[]).filter(p=>!(p.nota&&p.notaFecha>=p.ultima)).forEach(p=>{
   // Plazo para explicarlo: 2 días después de su última sesión
