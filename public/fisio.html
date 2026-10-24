@@ -886,6 +886,14 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-ic span{white-space:nowrap}
 .fp-bt h3{white-space:nowrap}.fp-bt .fp-edbts{flex-wrap:nowrap}.fp-bt .fp-edbts button,.fp-bt>.fp-ed{white-space:nowrap}
 
+.pt-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 10px;font-size:13px;color:#7d6a60}
+.pt-hd{display:flex;justify-content:space-between;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9a8d84;padding:0 12px 6px}
+.pt-l{display:flex;flex-direction:column;gap:6px}
+.pt-r{font-family:var(--font);display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;color:inherit}
+.pt-r:hover{background:#fbf7f4}.pt-n{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pt-n b{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pt-n small{font-size:12px;color:#7d6a60}
+.pt-f{font-size:12.5px;color:#5f554e;white-space:nowrap;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px}.pt-f i{font-style:normal;font-size:10.5px;font-weight:700;color:#16803c;background:#e8f6ec;border-radius:99px;padding:1px 7px}
+.pt-r{padding:8px 12px}.pt-r .pav{width:36px;height:36px;font-size:13px;flex:none}.pt-e{display:inline-flex;gap:3px;vertical-align:middle;margin-left:4px}.pt-e .est{font-size:10.5px!important;padding:1px 7px!important}
+.pt-mas{font-family:var(--font);display:block;margin:12px auto 0;border:none;background:#f7f3ef;border-radius:99px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;color:#5f554e}
 /* Agenda */
 .ag-sinf{background:#fff6e8;border-radius:14px;padding:10px 12px;margin-bottom:10px}.ag-sinf>b{display:block;font-size:13.5px;color:#b45309}.ag-sinf>small{display:block;font-size:12px;color:#7d6a60;margin-bottom:8px}
 
@@ -1457,18 +1465,35 @@ function renderPac(wrap){
  wrap.appendChild(card);
  const input=document.getElementById('pacBuscar');
  const lista=document.getElementById('pacResultados');
- lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Escribe para buscar...</div>';
+ renderPacTodos(lista);
  input.oninput=()=>renderPacLista(input.value, lista);
  card.querySelector('.np-btn').onclick=()=>abrirNuevoPaciente(input.value);
  input.focus();
 }
 
+// Lista completa de pacientes (como en Airtable), con fecha de alta y orden
+let PAC_ORDEN='nuevos';try{PAC_ORDEN=localStorage.getItem('f365_pac_orden')||'nuevos';}catch(e){}
+function renderPacTodos(lista){
+ const L=(pacs||[]).slice();
+ const fA=p=>p.creado?isoMadrid(new Date(p.creado)):'';
+ if(PAC_ORDEN==='nuevos')L.sort((a,b)=>String(b.creado).localeCompare(String(a.creado)));
+ else if(PAC_ORDEN==='antiguos')L.sort((a,b)=>String(a.creado).localeCompare(String(b.creado)));
+ else L.sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+ const fch=f=>{if(!f)return '—';const [y,m,d]=f.split('-');return `${+d}/${+m}/${y}`;};
+ let n=60;
+ lista.innerHTML=`<div class="pt-top"><span>${L.length.toLocaleString('es-ES')} pacientes</span><label class="ag-sel"><span class="pt-ot"></span><select class="pt-ord"><option value="nuevos">Más recientes primero</option><option value="antiguos">Más antiguos primero</option><option value="az">Nombre A–Z</option></select></label></div><div class="pt-hd"><span>Paciente</span><span>Creado</span></div><div class="pt-l"></div><button type="button" class="pt-mas">Ver más</button>`;
+ const sel=lista.querySelector('.pt-ord');sel.value=PAC_ORDEN;lista.querySelector('.pt-ot').textContent=sel.selectedOptions[0].textContent;
+ sel.onchange=()=>{PAC_ORDEN=sel.value;try{localStorage.setItem('f365_pac_orden',PAC_ORDEN);}catch(e){}renderPacTodos(lista);};
+ const box=lista.querySelector('.pt-l'),mas=lista.querySelector('.pt-mas');
+ const pinta=()=>{box.innerHTML=L.slice(0,n).map(p=>{const ini=p.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();const f=fA(p);
+  return `<button type="button" class="pt-r" data-id="${p.id}"><span class="pav">${escH(ini)}</span><span class="pt-n"><b>${escH(p.nombre)}</b><small>${escH(p.telefono||p.email||'')}${(p.estados||[]).length?` <span class="pt-e">${estadoChips(p.estados)}</span>`:''}</small></span><span class="pt-f">${fch(f)}${f===isoMadrid(new Date())?'<i>Hoy</i>':''}</span></button>`;}).join('');
+  box.querySelectorAll('.pt-r').forEach(b=>b.onclick=()=>{const p=L.find(x=>x.id===b.dataset.id);abrirFichaPaciente(p.id,p.nombre,p);});
+  mas.style.display=n<L.length?'':'none';mas.textContent=`Ver más (${(L.length-n).toLocaleString('es-ES')} más)`;};
+ mas.onclick=()=>{n+=100;pinta();};pinta();
+}
 function renderPacLista(q, lista){
  lista.innerHTML='';
- if((!q||q.length<1)&&!pacFiltroEst){
- lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Escribe para buscar...</div>';
- return;
- }
+ if((!q||q.length<1)&&!pacFiltroEst){renderPacTodos(lista);return;}
  q=q||'';
  const fl=(pacs||[]).filter(p=>(!pacFiltroEst||(p.estados||[]).includes(pacFiltroEst))&&(p.nombre.toLowerCase().includes(q.toLowerCase())||(p.email||'').toLowerCase().includes(q.toLowerCase())));
  if(!fl.length){
