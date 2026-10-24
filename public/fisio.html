@@ -307,7 +307,13 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tk-i.r-ok{background:#e8f5ec;color:#16803c}.tk-i.r-no{background:#fdecea;color:#b42318}.tk-i.r-pe{background:#f3efea;color:#7d6a60}
 .tk-m strong.r-ok{color:#16803c}.tk-m strong.r-no{color:#b42318}.tk-m strong.r-pe{color:#7d6a60}.tk-m strong{font-weight:600;font-size:12.5px}
 .tk.hecha{cursor:pointer}.ll-r i.cero{color:#d4ccc5}
-.ll-per{flex-wrap:wrap}.ll-dia{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);padding:3px 4px 3px 10px;border-radius:99px;border:1.5px solid var(--border);background:#fff}.ll-dia.on{border-color:#1e2a38;color:#1e2a38}.ll-dia input{font-family:var(--font);font-size:12.5px;border:none;background:none;padding:2px;color:var(--black)}
+.ll-per{display:flex;gap:8px;margin:2px 0 12px;flex-wrap:wrap}
+.ll-sel,.ll-dia{position:relative;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:#fff;font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--black);cursor:pointer;box-sizing:border-box}
+.ll-sel.on,.ll-dia.on{border-color:#1e2a38;background:#1e2a38;color:#fff}
+.ll-sel svg,.ll-dia svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ll-sel select{appearance:none;-webkit-appearance:none;border:none;background:none;font:inherit;color:inherit;padding:0 14px 0 0;cursor:pointer;outline:none}
+.ll-sel select option{color:#1a1a1a}.ll-sel i{position:absolute;right:12px;font-style:normal;font-size:11px;pointer-events:none;opacity:.8}
+.ll-dia input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;-webkit-appearance:none;appearance:none}
 .ll-pdf{font-family:var(--font);font-size:10.5px;font-weight:700;padding:4px 6px;border-radius:8px;border:1.5px solid #c2552e;background:#fff;color:#c2552e;cursor:pointer;justify-self:center}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
@@ -4949,9 +4955,11 @@ const SEG_IC_TEL='<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 1
 async function renderSeguimiento(wrap){
  const box=ce('div','seg');wrap.appendChild(box);
  let tab='pend',filtroFisio='',datos=null,perH='30',diaH='';
- const PER_H=[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes'],['30','Últimos 30 días']];
- const rangoH=()=>{if(perH==='dia'&&diaH)return[diaH,diaH];if(perH==='30')return[segIso(-30),segIso(0)];return rangoRend(perH);};
- const perTxt=()=>{if(perH==='dia'&&diaH)return segFecha(diaH);const x=PER_H.find(p=>p[0]===perH);return x?x[1].toLowerCase():'';};
+ const PER_H=[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes'],['mesPasado','Mes pasado'],['30','Últimos 30 días'],['todo','Todas']];
+ const rangoH=()=>{if(perH==='dia'&&diaH)return[diaH,diaH];if(perH==='30')return[segIso(-30),segIso(0)];if(perH==='todo')return['2020-01-01',segIso(0)];
+  if(perH==='mesPasado'){const h=segIso(0);const d=new Date(+h.slice(0,4),+h.slice(5,7)-2,1);const f=new Date(+h.slice(0,4),+h.slice(5,7)-1,0);const z=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;return[z(d),z(f)];}
+  return rangoRend(perH);};
+ const perTxt=()=>{if(perH==='dia'&&diaH)return hzFecha(diaH);if(perH==='todo')return 'todas las llamadas';const x=PER_H.find(p=>p[0]===perH);return x?x[1].toLowerCase():'';};
  try{tab=sessionStorage.getItem('f365_seg')||'pend';}catch(e){}
  const pinta=()=>{
   if(!datos){box.innerHTML='<div class="fac-vacio">Cargando…</div>';return;}
@@ -4973,7 +4981,8 @@ async function renderSeguimiento(wrap){
     return `<div class="tk${x.fecha<hoy?' atr':''}">${x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${SEG_IC_TEL}</a>`:`<span class="tk-i ll">${SEG_IC_TEL}</span>`}
     <div class="tk-m"><b>${escH(x.nombre)}</b><p class="tk-meta">${escH(meta)}</p>${meta2?`<p class="tk-meta">${escH(meta2)}</p>`:''}${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}<div class="tk-pie"><button type="button" class="seg-ed tk-ed" data-id="${x.id}">Editar</button><div class="tk-a">${x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}<button type="button" class="seg-hecho tk-b" data-id="${x.id}">Resultado</button></div></div></div></div>`;}).join('')}</div>`).join('')||'<div class="tar-ok">✓ Nadie por llamar</div>';
   }else{
-   html+=`<div class="seg-fis ll-per"><span>Cuándo:</span>${PER_H.map(([k,t])=>`<button type="button" data-p="${k}" class="${perH===k?'on':''}">${t}</button>`).join('')}<label class="ll-dia ${perH==='dia'?'on':''}">Un día: <input type="date" value="${diaH||''}" max="${segIso(0)}"></label></div>`;
+   html+=`<div class="ll-per"><label class="ll-sel ${perH!=='dia'?'on':''}"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg><select>${PER_H.map(([k,t])=>`<option value="${k}" ${perH===k?'selected':''}>${t}</option>`).join('')}${perH==='dia'?'<option value="dia" selected>Un día</option>':''}</select><i>▾</i></label>
+    <label class="ll-dia ${perH==='dia'?'on':''}"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><span>${perH==='dia'&&diaH?escH(segFecha(diaH)):'Seleccionar día'}</span><input type="date" value="${diaH||''}" max="${segIso(0)}" aria-label="Seleccionar día"></label></div>`;
    const L=H.filter(flt);
    const RES=[['Cita recup.',/RECUPERADA/],['Alta',/^ALTA/],['Volver',/^VOLVER/],['No cont.',/^NC/],['Pendiente',/PENDIENTE/]];
    const per=[...new Set(L.map(x=>x.quienN||'Sin indicar'))].sort((a,b)=>TAR_NOMBRES.indexOf(a)-TAR_NOMBRES.indexOf(b));
@@ -4990,8 +4999,8 @@ async function renderSeguimiento(wrap){
   box.querySelectorAll('.seg-hecho').forEach(b=>b.onclick=()=>abrirResultadoSeg(P.find(x=>x.id===b.dataset.id),cargar));
   box.querySelectorAll('.seg-ed').forEach(b=>b.onclick=()=>abrirEditarSeg(P.find(x=>x.id===b.dataset.id),cargar));
   box.querySelectorAll('.tk-nota').forEach(n=>n.onclick=e=>{e.stopPropagation();n.classList.toggle('abierta');});
-  box.querySelectorAll('.ll-per button').forEach(b=>b.onclick=()=>{perH=b.dataset.p;cargar();});
-  {const di=box.querySelector('.ll-dia input');if(di)di.onchange=()=>{if(!di.value)return;diaH=di.value;perH='dia';cargar();};}
+  {const se=box.querySelector('.ll-sel select');if(se)se.onchange=()=>{if(se.value==='dia')return;perH=se.value;cargar();};}
+  {const di=box.querySelector('.ll-dia input');if(di){const go=()=>{if(!di.value||(perH==='dia'&&di.value===diaH))return;diaH=di.value;perH='dia';cargar();};di.onchange=go;di.onblur=go;}}
   box.querySelectorAll('.ll-pdf').forEach(b=>b.onclick=()=>imprimirLlamadas(b.dataset.n,H.filter(x=>(x.quienN||'Sin indicar')===b.dataset.n),perTxt(),rangoH()));
   box.querySelectorAll('.tk.hecha').forEach(r=>r.onclick=()=>abrirEditarLlamada(H.find(x=>x.id===r.dataset.id),cargar));
   box.querySelector('.seg-add').onclick=()=>{
