@@ -281,6 +281,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .est-sel{display:flex;flex-wrap:wrap;gap:6px}.est-sel button{cursor:pointer;font-size:12.5px;padding:6px 12px;opacity:.55}.est-sel button.on{opacity:1;border-color:currentColor}
 .est-fil{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;-webkit-overflow-scrolling:touch}.est-fil span{font-size:12px;color:var(--muted);align-self:center;white-space:nowrap}.est-fil button{cursor:pointer;font-size:12px;padding:5px 11px;opacity:.75}.est-fil button b{font-size:10.5px;opacity:.7}.est-fil button.on{opacity:1;border-color:currentColor}
 .est-ok{font-size:12px;color:#16803c;margin-top:8px;min-height:16px}
+.tk-sg.en,.rn-seg.en{background:#e8f5ec;border-color:#16803c;color:#16803c}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -4718,7 +4719,8 @@ async function listaTareas(cont){
    }else{
     const b=ce('button','seg-hecho');b.type='button';b.textContent='Explicar';b.onclick=()=>abrirExplicar(x.p,recargar);
     const sg=ce('button','tk-sg');sg.type='button';sg.textContent='+ Seguimiento';sg.title='Pasar a la lista de seguimiento';
-    sg.onclick=()=>abrirNuevoSeg({pacienteId:x.p.id,nombre:x.p.nombre,nota:'',onSave:async nota=>{await marcarExplicado(x.p.id,nota?('A seguimiento: '+nota):'Pasado a seguimiento');recargar();}});
+    if(SEG_PAC[x.p.id]){sg.classList.add('en');sg.textContent='✓ En seguimiento';sg.title=segYaTxt(x.p.id);sg.onclick=()=>toast(segYaTxt(x.p.id),true);}
+    else sg.onclick=()=>abrirNuevoSeg({pacienteId:x.p.id,nombre:x.p.nombre,nota:'',onSave:async nota=>{await marcarExplicado(x.p.id,nota?('A seguimiento: '+nota):'Pasado a seguimiento');recargar();}});
     const q=ce('button','tk-q');q.type='button';q.setAttribute('aria-label','Quitar');q.innerHTML='✕';q.title='Quitar de tareas';
     let arm=false;q.onclick=async()=>{if(!arm){arm=true;q.classList.add('arm');q.textContent='¿Quitar?';setTimeout(()=>{arm=false;q.classList.remove('arm');q.innerHTML='✕';},4000);return;}q.disabled=true;await marcarExplicado(x.p.id,'Sin seguimiento');toast('Quitado',true);recargar();};
     acc.appendChild(b);acc.appendChild(sg);acc.appendChild(q);
@@ -4744,11 +4746,17 @@ function abrirExplicar(p,onSave){
    toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast('No se ha podido guardar',false);}};
 }
 // Todas las tareas del centro en una lista: llamadas de seguimiento (hasta 7 días vista) y pacientes sin explicar
+// Pacientes que ya están en la lista de seguimiento (pendientes de llamar) → id: {fecha, quien}
+let SEG_PAC={};
+function setSegPac(sg){SEG_PAC={};((sg&&sg.pendientes)||[]).forEach(x=>{if(x.pacienteId&&(!SEG_PAC[x.pacienteId]||x.fecha<SEG_PAC[x.pacienteId].fecha))SEG_PAC[x.pacienteId]={fecha:x.fecha,quien:deQuienSeg(x)};});}
+async function cargarSegPac(){try{setSegPac(await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`)).json());}catch(e){}}
+const segYaTxt=id=>{const s=SEG_PAC[id];return s?`Ya está en seguimiento${s.fecha?': llamar el '+segFecha(s.fecha):''}${s.quien?' · '+s.quien:''}`:'';};
 async function datosTareasTodas(){
  const iso=n=>isoMadrid(new Date(Date.now()+n*864e5));
  const [r,sg]=await Promise.all([
   fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${iso(-30)}&hasta=${iso(-1)}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
+ setSegPac(sg);
  const hoy=(sg&&sg.hoy)||iso(0),items=[];
  ((sg&&sg.pendientes)||[]).filter(x=>x.fecha<=iso(7)).forEach(x=>items.push({tipo:'llamar',fecha:x.fecha,nombre:x.nombre,quien:deQuienSeg(x),detalle:x.nota,tel:x.tel,seg:x}));
  ((r&&r.fisios)||[]).forEach(f=>(f.lista||[]).filter(p=>!(p.nota&&p.notaFecha>=p.ultima)).forEach(p=>{
@@ -4969,6 +4977,7 @@ async function renderRendimiento(wrap){
   res.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Calculando…</div>';
   const [d,h]=rangoRend(k);
   try{
+   await cargarSegPac();
    const r=await (await fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`)).json();
    if(!r.ok)throw new Error(r.error||'Error');
    const L=r.fisios||[];
@@ -4976,7 +4985,7 @@ async function renderRendimiento(wrap){
    await Promise.all(L.filter(x=>x.dias).map(async x=>{try{const hz=await (await fetch(`/api/schedule?action=horas&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`)).json();x.reg={};(hz.registros||[]).forEach(r=>x.reg[r.fecha]=r);x.banco=Math.round((hz.banco||0)*10)/10;}catch(e){}}));
    const T=L.reduce((a,x)=>{a.realizadas+=x.realizadas;a.atendidos+=x.atendidos;a.reagendan+=x.reagendan;if(!x.sinHoras){['huecos','noAsistio','perdidas','canceladas','callin','videos'].forEach(q=>a[q]+=(x[q]||0));a.realOcup+=x.realizadas;}return a;},{fisio:'Total del centro',realizadas:0,realOcup:0,callin:0,videos:0,huecos:0,atendidos:0,reagendan:0,noAsistio:0,perdidas:0,canceladas:0});
    const fch=f=>{const [y,m,d]=String(f).split('-');return +d+'/'+ +m;};
-   const listaNo=x=>(x.lista&&x.lista.length)?`<details class="rend-no"><summary>Ver quién no ha reagendado (${x.lista.length})</summary>${x.lista.map(p=>`<div class="rn-it"><div class="rn-txt"><span>${escH(p.nombre)}</span><i>última sesión ${fch(p.ultima)}</i>${pacEstados(p.id).length?`<div class="est-row">${estadoChips(pacEstados(p.id))}</div>`:''}${(p.nota&&p.notaFecha>=p.ultima)?`<p class="rn-nota">«${escH(p.nota)}»${p.notaFisio?' — '+escH(p.notaFisio):''}</p>`:'<p class="rn-nota sin">Sin explicar todavía</p>'}</div>${p.tel?`<a href="https://wa.me/${String(p.tel).replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1')}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button type="button" class="rn-seg" data-id="${p.id}" data-n="${escH(p.nombre)}" data-nota="${escH(p.nota||'')}">+ Seguimiento</button></div>`).join('')}</details>`:'';
+   const listaNo=x=>(x.lista&&x.lista.length)?`<details class="rend-no"><summary>Ver quién no ha reagendado (${x.lista.length})</summary>${x.lista.map(p=>`<div class="rn-it"><div class="rn-txt"><span>${escH(p.nombre)}</span><i>última sesión ${fch(p.ultima)}</i>${pacEstados(p.id).length?`<div class="est-row">${estadoChips(pacEstados(p.id))}</div>`:''}${(p.nota&&p.notaFecha>=p.ultima)?`<p class="rn-nota">«${escH(p.nota)}»${p.notaFisio?' — '+escH(p.notaFisio):''}</p>`:'<p class="rn-nota sin">Sin explicar todavía</p>'}</div>${p.tel?`<a href="https://wa.me/${String(p.tel).replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1')}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button type="button" class="rn-seg${SEG_PAC[p.id]?' en':''}" data-id="${p.id}" data-n="${escH(p.nombre)}" data-nota="${escH(p.nota||'')}" title="${escH(segYaTxt(p.id))}">${SEG_PAC[p.id]?'✓ En seguimiento':'+ Seguimiento'}</button></div>`).join('')}</details>`:'';
    const horasTot=x=>{const h=x.realizadas+(x.callin||0)+(x.videos||0),d=h-x.huecos;return `<div style="grid-column:1/-1"><span>Horas trabajadas (sesiones + call-in + vídeos)</span><b>${h} de ${x.huecos} h ${d?`<em class="rend-dif ${d>0?'mas':'menos'}">${d>0?'+':'−'}${Math.abs(d)} h</em>`:'<em class="rend-dif ok">✓</em>'}</b></div>`;};
    const DS=['dom','lun','mar','mié','jue','vie','sáb'];
    const fdia=d=>{const t=new Date(d+'T12:00:00');return DS[t.getDay()]+' '+t.getDate()+'/'+(t.getMonth()+1);};
@@ -5009,7 +5018,7 @@ async function renderRendimiento(wrap){
    res.innerHTML=(L.length>1?card(T,true):'')+L.filter(x=>!x.sinHoras).map(x=>card(x)).join('')+L.filter(x=>x.sinHoras).map(x=>card(x)).join('');
    res.querySelectorAll('.rc-clas').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirClasificar({fisio:b.dataset.fisio,fecha:b.dataset.fecha,dif:+b.dataset.dif,reg:(x.reg||{})[b.dataset.fecha],onSave:()=>cargar(k)});});
    res.querySelectorAll('.rc-inf').forEach(b=>b.onclick=()=>abrirInformeHoras(b.dataset.fisio));
-   res.querySelectorAll('.rn-seg').forEach(b=>b.onclick=()=>abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,nota:b.dataset.nota?'No reagenda: '+b.dataset.nota:''}));
+   res.querySelectorAll('.rn-seg').forEach(b=>b.onclick=()=>SEG_PAC[b.dataset.id]?toast(segYaTxt(b.dataset.id),true):abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,nota:b.dataset.nota?'No reagenda: '+b.dataset.nota:'',onSave:()=>{SEG_PAC[b.dataset.id]={fecha:'',quien:''};b.classList.add('en');b.textContent='✓ En seguimiento';}}));
   }catch(e){res.innerHTML='<div class="fac-vacio">No se ha podido calcular: '+escH(e.message)+'</div>';}
  };
  box.querySelectorAll('.rend-chips button').forEach(b=>b.onclick=()=>cargar(b.dataset.k));
