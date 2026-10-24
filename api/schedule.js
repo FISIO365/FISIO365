@@ -385,6 +385,75 @@ module.exports = async function handler(req, res) {
         }
         return res.status(400).json({ ok: false, error: 'Acción no válida' });
       }
+      // ── ESTADÍSTICAS DEL CENTRO (semanas de lunes a domingo) ──
+      if (action === 'seg-estadisticas' || action === 'seg-estadisticas-guardar') {
+        const EST_T = 'tblE7NWfZmxcou5mV', TIP = 'tbltoikmBZwHYQcpD';
+        const nmS = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
+        const mv = (f, n) => { const d = new Date(f + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+        const lunes = f => mv(f, -((new Date(f + 'T12:00:00Z').getUTCDay() + 6) % 7));
+        if (action === 'seg-estadisticas-guardar') {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(q.semana || '')) return res.status(400).json({ ok: false });
+          const sem = lunes(q.semana), f = {};
+          const num = v => (v === '' || v == null) ? null : Number(String(v).replace(',', '.'));
+          if ('ingresos' in q) f['INGRESOS'] = num(q.ingresos);
+          if ('resenas' in q) f['RESEÑAS GOOGLE'] = num(q.resenas);
+          if ('quejas' in q) f['QUEJAS'] = num(q.quejas);
+          if ('notas' in q) f['NOTAS'] = String(q.notas || '');
+          const ya = await todosT(EST_T, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({SEMANA},'YYYY-MM-DD')='${sem}'`)}`);
+          const d = ya[0] ? await at(`${EST_T}/${ya[0].id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }) : await at(EST_T, { method: 'POST', body: JSON.stringify({ records: [{ fields: Object.assign({ SEMANA: sem }, f) }] }) });
+          global._estCache = null;
+          return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+        }
+        const N = Math.min(Math.max(+q.semanas || 12, 4), 52);
+        const lun0 = lunes(hoyF), desde = mv(lun0, -7 * (N - 1)), hasta = mv(lun0, 6), futuro = mv(hoyF, 60);
+        const key = `${desde}|${N}`;
+        if (!q.fresco && global._estCache && global._estCache.key === key && Date.now() - global._estCache.t < 5 * 60000) return res.status(200).json(global._estCache.data);
+        const rangoF = (campo, a, b) => `AND(NOT(IS_BEFORE({${campo}},DATETIME_PARSE('${a}','YYYY-MM-DD'))),NOT(IS_AFTER({${campo}},DATETIME_PARSE('${b}','YYYY-MM-DD'))))`;
+        const [citas, nuevosP, llam, man] = await Promise.all([
+          (async () => { // por trozos de 2 semanas en paralelo (4 a la vez) para que vaya rápido
+            const campos = ['FECHA', 'ESTADO', 'PREF.', 'RELACIÓN - CITA', 'TIPO DE CITA'].map(f => 'fields[]=' + encodeURIComponent(f)).join('&');
+            const tr = []; for (let a = desde; a <= futuro; a = mv(a, 14)) tr.push([a, mv(a, 13) < futuro ? mv(a, 13) : futuro]);
+            const out = []; for (let i = 0; i < tr.length; i += 4) (await Promise.all(tr.slice(i, i + 4).map(([a, b]) => todosT(CIT, `filterByFormula=${encodeURIComponent(rangoF('FECHA', a, b))}&${campos}`)))).forEach(x => out.push(...x));
+            return out; })(),
+          todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`NOT(IS_BEFORE(CREATED_TIME(),DATETIME_PARSE('${desde}','YYYY-MM-DD')))`)}&fields[]=FULL%20NAME`),
+          todosT(LLA, `filterByFormula=${encodeURIComponent(`NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${mv(desde, -1)}','YYYY-MM-DD')))`)}&fields[]=FECHA&fields[]=RESULTADO&fields[]=RESE%C3%91A`).catch(() => []),
+          todosT(EST_T, `filterByFormula=${encodeURIComponent(rangoF('SEMANA', mv(desde, -400), hasta))}`).catch(() => [])
+        ]);
+        // Etiquetas (tipo de cita) para saber si una cita es de bono («3/10»)
+        const tids = [...new Set(citas.flatMap(c => c.fields['TIPO DE CITA'] || []))], nomT = {};
+        for (let i = 0; i < tids.length; i += 50) { const t = tids.slice(i, i + 50); (await todosT(TIP, `filterByFormula=${encodeURIComponent('OR(' + t.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=Name`)).forEach(r => nomT[r.id] = r.fields.Name || ''); }
+        const esBono = c => (c.fields['TIPO DE CITA'] || []).some(t => /^\s*\d+\s*\/\s*(4|5|6|8|10|12|15|20)\s*$/.test(nomT[t] || ''));
+        const C = citas.map(c => ({ f: String(c.fields.FECHA || '').slice(0, 10), e: String(nmS(c.fields.ESTADO)).trim(), fisio: nmS(c.fields['PREF.']), pid: (c.fields['RELACIÓN - CITA'] || [])[0] || '', bono: esBono(c) })).filter(c => c.f);
+        const porPac = {}; C.forEach(c => { if (c.pid) (porPac[c.pid] = porPac[c.pid] || []).push(c); });
+        Object.values(porPac).forEach(L => L.sort((a, b) => a.f.localeCompare(b.f)));
+        const semanas = [];
+        for (let k = 0; k < N; k++) {
+          const a = mv(desde, 7 * k), b = mv(a, 6), en = f => f >= a && f <= b;
+          const enS = C.filter(c => en(c.f));
+          const real = enS.filter(c => /REALIZADA/.test(c.e));
+          const dias = {}; real.forEach(c => dias[c.f] = (dias[c.f] || 0) + 1);
+          const atend = [...new Set(real.map(c => c.pid).filter(Boolean))];
+          const conBono = atend.filter(pid => real.some(c => c.pid === pid && c.bono)).length;
+          const nuevos = nuevosP.filter(p => en(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(p.createdTime))));
+          const fis = {}; let vin = 0, reag = 0, pack = 0, suelta = 0;
+          nuevos.forEach(p => {
+            const L = (porPac[p.id] || []).filter(c => c.f >= a);
+            const prim = L.find(c => /REALIZADA/.test(c.e)); if (!prim) return;
+            vin++; const fz = prim.fisio || '—'; fis[fz] = fis[fz] || { vinieron: 0, reagendaron: 0 }; fis[fz].vinieron++;
+            const sig = L.filter(c => c.f >= prim.f && c !== prim && /PENDIENTE|REALIZADA/.test(c.e));
+            if (sig.length) { reag++; fis[fz].reagendaron++; if (sig.some(c => c.bono) || prim.bono) pack++; else suelta++; }
+          });
+          const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
+          const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
+          semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
+            nuevos: nuevos.length, vinieron: vin, reagendaron: reag, pack, suelta, porFisio: fis,
+            recuperadas: ll.filter(r => /RECUPERADA/.test(nmS(r.fields.RESULTADO))).length, resenasPedidas: ll.filter(r => r.fields['RESEÑA']).length,
+            ingresos: m && m.fields.INGRESOS != null ? m.fields.INGRESOS : null, resenas: m && m.fields['RESEÑAS GOOGLE'] != null ? m.fields['RESEÑAS GOOGLE'] : null, quejas: m && m.fields.QUEJAS != null ? m.fields.QUEJAS : null, notas: m ? (m.fields.NOTAS || '') : '' });
+        }
+        const data = { ok: true, hoy: hoyF, semanas };
+        global._estCache = { key, t: Date.now(), data };
+        return res.status(200).json(data);
+      }
       if (action === 'seg-lista') {
         const pendP = todosT(SEG, `filterByFormula=${encodeURIComponent('NOT({HECHO})')}&sort[0][field]=FECHA DE LLAMADA&sort[0][direction]=asc`);
         const prevP = todosT(LLA, `filterByFormula=${encodeURIComponent(`AND({SEG ID}!='',IS_AFTER({FECHA},DATEADD(TODAY(),-180,'days')))`)}&sort[0][field]=FECHA&sort[0][direction]=desc`).catch(() => []);
