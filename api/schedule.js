@@ -181,7 +181,7 @@ module.exports = async function handler(req, res) {
     if (!process.env.FISIO_PASSWORD || String(req.query.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
     const { desde, hasta } = req.query;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(desde || '') || !/^\d{4}-\d{2}-\d{2}$/.test(hasta || '')) return res.status(400).json({ ok: false, error: 'Fechas no válidas' });
-    try { const [fisios, ini] = await Promise.all([rendimiento(desde, hasta, !!q.fresco), inicioControl().catch(() => '')]); return res.status(200).json({ ok: true, fisios, conPack: !!ini }); }
+    try { const [fisios, ini] = await Promise.all([rendimiento(desde, hasta, !!req.query.fresco), inicioControl().catch(() => '')]); return res.status(200).json({ ok: true, fisios, conPack: !!ini }); }
     catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   }
 
