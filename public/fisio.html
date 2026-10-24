@@ -302,11 +302,13 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tk-ed{border:none;background:none;padding:0;font-family:var(--font);font-size:11.5px;font-weight:600;color:#c2552e;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .hz-cuando{font-size:11.5px;color:var(--muted);margin:2px 0 4px}
 .ll-res{background:#fff;border-radius:16px;padding:14px;margin:4px 0 14px;overflow-x:auto}.ll-t{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.ll-tab{display:grid}.ll-h,.ll-r{display:grid;grid-template-columns:minmax(64px,1.3fr) .9fr repeat(5,1fr);align-items:center;gap:4px;padding:7px 0;border-bottom:1px solid #f1ede9;font-size:12.5px}.ll-r:last-child{border-bottom:none}
+.ll-tab{display:grid}.ll-h,.ll-r{display:grid;grid-template-columns:minmax(58px,1.2fr) .9fr repeat(5,1fr) 40px;align-items:center;gap:4px;padding:7px 0;border-bottom:1px solid #f1ede9;font-size:12.5px}.ll-r:last-child{border-bottom:none}
 .ll-h b{font-size:10px;line-height:1.2;color:var(--muted);font-weight:600;text-align:center}.ll-r span{font-weight:600}.ll-r b{text-align:center;font-size:14px}.ll-r i{font-style:normal;text-align:center;color:#3d342e}
 .tk-i.r-ok{background:#e8f5ec;color:#16803c}.tk-i.r-no{background:#fdecea;color:#b42318}.tk-i.r-pe{background:#f3efea;color:#7d6a60}
 .tk-m strong.r-ok{color:#16803c}.tk-m strong.r-no{color:#b42318}.tk-m strong.r-pe{color:#7d6a60}.tk-m strong{font-weight:600;font-size:12.5px}
 .tk.hecha{cursor:pointer}.ll-r i.cero{color:#d4ccc5}
+.ll-per{flex-wrap:wrap}.ll-dia{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);padding:3px 4px 3px 10px;border-radius:99px;border:1.5px solid var(--border);background:#fff}.ll-dia.on{border-color:#1e2a38;color:#1e2a38}.ll-dia input{font-family:var(--font);font-size:12.5px;border:none;background:none;padding:2px;color:var(--black)}
+.ll-pdf{font-family:var(--font);font-size:10.5px;font-weight:700;padding:4px 6px;border-radius:8px;border:1.5px solid #c2552e;background:#fff;color:#c2552e;cursor:pointer;justify-self:center}
 .hz-modal{position:fixed;inset:0;z-index:960;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -4946,7 +4948,10 @@ function abrirEditarLlamada(x,onSave){
 const SEG_IC_TEL='<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
 async function renderSeguimiento(wrap){
  const box=ce('div','seg');wrap.appendChild(box);
- let tab='pend',filtroFisio='',datos=null;
+ let tab='pend',filtroFisio='',datos=null,perH='30',diaH='';
+ const PER_H=[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes'],['30','Últimos 30 días']];
+ const rangoH=()=>{if(perH==='dia'&&diaH)return[diaH,diaH];if(perH==='30')return[segIso(-30),segIso(0)];return rangoRend(perH);};
+ const perTxt=()=>{if(perH==='dia'&&diaH)return segFecha(diaH);const x=PER_H.find(p=>p[0]===perH);return x?x[1].toLowerCase():'';};
  try{tab=sessionStorage.getItem('f365_seg')||'pend';}catch(e){}
  const pinta=()=>{
   if(!datos){box.innerHTML='<div class="fac-vacio">Cargando…</div>';return;}
@@ -4957,7 +4962,7 @@ async function renderSeguimiento(wrap){
   const fisios=TAR_NOMBRES.filter(n=>n!==yo&&(tab==='hech'?H:P).some(x=>qDe(x)===n));
   const flt=x=>!filtroFisio||(filtroFisio==='__yo'?qDe(x)===yo:qDe(x)===filtroFisio);
   const atr=P.filter(x=>x.fecha<hoy).length,deHoy=P.filter(x=>x.fecha===hoy).length;
-  let html=`<div class="seg-head"><div class="seg-tabs"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Hechas (30 días) <b>${H.length}</b></button></div><button type="button" class="seg-add">+ Añadir</button></div>
+  let html=`<div class="seg-head"><div class="seg-tabs"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Hechas <b>${H.length}</b></button></div><button type="button" class="seg-add">+ Añadir</button></div>
    ${tab==='pend'?`<div class="seg-res"><div class="r"><b>${atr}</b><span>atrasados</span></div><div class="o"><b>${deHoy}</b><span>para hoy</span></div><div><b>${P.length-atr-deHoy}</b><span>próximos</span></div></div>`:''}
    <div class="seg-fis"><span>Quién llama:</span><button type="button" data-f="" class="${!filtroFisio?'on':''}">Todos</button><button type="button" data-f="__yo" class="${filtroFisio==='__yo'?'on':''}">Míos</button>${fisios.map(f=>`<button type="button" data-f="${escH(f)}" class="${filtroFisio===f?'on':''}">${escH(f)}</button>`).join('')}</div>`;
   if(tab==='pend'){
@@ -4968,14 +4973,16 @@ async function renderSeguimiento(wrap){
     return `<div class="tk${x.fecha<hoy?' atr':''}">${x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${SEG_IC_TEL}</a>`:`<span class="tk-i ll">${SEG_IC_TEL}</span>`}
     <div class="tk-m"><b>${escH(x.nombre)}</b><p class="tk-meta">${escH(meta)}</p>${meta2?`<p class="tk-meta">${escH(meta2)}</p>`:''}${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}<div class="tk-pie"><button type="button" class="seg-ed tk-ed" data-id="${x.id}">Editar</button><div class="tk-a">${x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}<button type="button" class="seg-hecho tk-b" data-id="${x.id}">Resultado</button></div></div></div></div>`;}).join('')}</div>`).join('')||'<div class="tar-ok">✓ Nadie por llamar</div>';
   }else{
+   html+=`<div class="seg-fis ll-per"><span>Cuándo:</span>${PER_H.map(([k,t])=>`<button type="button" data-p="${k}" class="${perH===k?'on':''}">${t}</button>`).join('')}<label class="ll-dia ${perH==='dia'?'on':''}">Un día: <input type="date" value="${diaH||''}" max="${segIso(0)}"></label></div>`;
    const L=H.filter(flt);
-   const RES=[['Cita',/RECUPERADA/],['Alta',/^ALTA/],['Volver',/^VOLVER/],['No cont.',/^NC/],['Pendiente',/PENDIENTE/]];
+   const RES=[['Cita recup.',/RECUPERADA/],['Alta',/^ALTA/],['Volver',/^VOLVER/],['No cont.',/^NC/],['Pendiente',/PENDIENTE/]];
    const per=[...new Set(L.map(x=>x.quienN||'Sin indicar'))].sort((a,b)=>TAR_NOMBRES.indexOf(a)-TAR_NOMBRES.indexOf(b));
-   if(L.length)html+=`<div class="ll-res"><div class="ll-t">Resumen · últimos 30 días</div><div class="ll-tab"><div class="ll-h"><span></span><b>Llamadas</b>${RES.map(r=>`<b>${r[0]}</b>`).join('')}</div>${per.map(n=>{const l=L.filter(x=>(x.quienN||'Sin indicar')===n);return `<div class="ll-r"><span>${escH(n)}</span><b>${l.length}</b>${RES.map(r=>{const n=l.filter(x=>r[1].test(x.resultado)).length;return `<i class="${n?'':'cero'}">${n}</i>`;}).join('')}</div>`;}).join('')}</div></div>`;
+   if(L.length)html+=`<div class="ll-res"><div class="ll-t">Resumen · ${escH(perTxt())}</div><div class="ll-tab"><div class="ll-h"><span></span><b>Llamadas</b>${RES.map(r=>`<b>${r[0]}</b>`).join('')}<b>PDF</b></div>${per.map(n=>{const l=L.filter(x=>(x.quienN||'Sin indicar')===n);return `<div class="ll-r"><span>${escH(n)}</span><b>${l.length}</b>${RES.map(r=>{const n=l.filter(x=>r[1].test(x.resultado)).length;return `<i class="${n?'':'cero'}">${n}</i>`;}).join('')}<button type="button" class="ll-pdf" data-n="${escH(n)}" aria-label="Descargar informe">PDF</button></div>`;}).join('')}</div></div>`;
    const resTxt=r=>{r=String(r||'').toUpperCase();return /RECUPERADA/.test(r)?'Cita recuperada':/^ALTA/.test(r)?'Alta':/^NC/.test(r)?'No contesta':/^VOLVER/.test(r)?'Volver a llamar':/PENDIENTE/.test(r)?'Pendiente de respuesta':(r?r.charAt(0)+r.slice(1).toLowerCase():'Sin resultado');};
    const resCls=r=>/RECUPERADA|^ALTA/.test(r)?'ok':/^NC|^VOLVER/.test(r)?'no':'pe';
    const IC_OK='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',IC_NO='<svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01"/></svg>',IC_PE='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>';
-   html+=L.length?`<div class="seg-tabla">${L.map(x=>{const c=resCls(x.resultado);return `<div class="tk hecha" data-id="${x.id}"><span class="tk-i r-${c}">${c==='ok'?IC_OK:c==='no'?IC_NO:IC_PE}</span><div class="tk-m"><b>${escH(x.nombre)}</b><p class="tk-meta"><strong class="r-${c}">${escH(resTxt(x.resultado))}</strong></p><p class="tk-meta">${escH((x.quienN?'Llamó '+x.quienN+' · ':'')+segFecha(x.fecha)+(x.hora?' a las '+x.hora:''))}</p>${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}</div></div>`;}).join('')}</div>`:'<div class="fac-vacio">Sin llamadas en los últimos 30 días.</div>';
+   const dias=[...new Set(L.map(x=>x.fecha))];
+   html+=L.length?dias.map(dd=>{const Ld=L.filter(x=>x.fecha===dd);return `<div class="seg-gt">${escH(hzFecha(dd).replace(/^./,c=>c.toUpperCase()))} <span>${Ld.length}</span></div><div class="seg-tabla">${Ld.map(x=>{const c=resCls(x.resultado);return `<div class="tk hecha" data-id="${x.id}"><span class="tk-i r-${c}">${c==='ok'?IC_OK:c==='no'?IC_NO:IC_PE}</span><div class="tk-m"><b>${escH(x.nombre)}</b><p class="tk-meta"><strong class="r-${c}">${escH(resTxt(x.resultado))}</strong></p><p class="tk-meta">${escH((x.quienN?'Llamó '+x.quienN:'')+(x.hora?(x.quienN?' a las ':'A las ')+x.hora:''))}</p>${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}</div></div>`;}).join('')}</div>`;}).join(''):`<div class="fac-vacio">Sin llamadas ${escH(perTxt())}.</div>`;
   }
   box.innerHTML=html;
   box.querySelectorAll('.seg-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;try{sessionStorage.setItem('f365_seg',tab);}catch(e){}pinta();});
@@ -4983,6 +4990,9 @@ async function renderSeguimiento(wrap){
   box.querySelectorAll('.seg-hecho').forEach(b=>b.onclick=()=>abrirResultadoSeg(P.find(x=>x.id===b.dataset.id),cargar));
   box.querySelectorAll('.seg-ed').forEach(b=>b.onclick=()=>abrirEditarSeg(P.find(x=>x.id===b.dataset.id),cargar));
   box.querySelectorAll('.tk-nota').forEach(n=>n.onclick=e=>{e.stopPropagation();n.classList.toggle('abierta');});
+  box.querySelectorAll('.ll-per button').forEach(b=>b.onclick=()=>{perH=b.dataset.p;cargar();});
+  {const di=box.querySelector('.ll-dia input');if(di)di.onchange=()=>{if(!di.value)return;diaH=di.value;perH='dia';cargar();};}
+  box.querySelectorAll('.ll-pdf').forEach(b=>b.onclick=()=>imprimirLlamadas(b.dataset.n,H.filter(x=>(x.quienN||'Sin indicar')===b.dataset.n),perTxt(),rangoH()));
   box.querySelectorAll('.tk.hecha').forEach(r=>r.onclick=()=>abrirEditarLlamada(H.find(x=>x.id===r.dataset.id),cargar));
   box.querySelector('.seg-add').onclick=()=>{
    const m=hzModal(`<div class="hz-top"><div><small>Añadir a seguimiento</small><b>¿Qué paciente?</b></div><button type="button" class="hz-x">✕</button></div><input type="text" class="seg-bus" placeholder="Busca por nombre…" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px"><div class="seg-bres"></div>`);
@@ -4991,8 +5001,20 @@ async function renderSeguimiento(wrap){
     r.querySelectorAll('button').forEach(b=>b.onclick=()=>{m.remove();abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,onSave:cargar});});};
   };
  };
- const cargar=async()=>{datos=null;pinta();try{const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();};
+ const cargar=async()=>{datos=null;pinta();try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();};
  cargar();
+}
+function imprimirLlamadas(fisio,L,perTxt,[d1,d2]){
+ const w=window.open('','_blank');if(!w){toast('Permite las ventanas emergentes',false);return;}
+ const RES=[['Cita recuperada',/RECUPERADA/],['Alta',/^ALTA/],['Volver a llamar',/^VOLVER/],['No contesta',/^NC/],['Pendiente de respuesta',/PENDIENTE/]];
+ const rt=r=>{const x=RES.find(z=>z[1].test(String(r||'').toUpperCase()));return x?x[0]:(r||'—');};
+ const rango=d1===d2?hzFecha(d1):`${segFecha(d1)} – ${segFecha(d2)}`;
+ const dias=[...new Set(L.map(x=>x.fecha))];
+ w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Llamadas ${escH(fisio)} ${d1}${d1!==d2?'_'+d2:''}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"><style>body{font-family:Poppins,sans-serif;color:#1a1a1a;margin:32px;font-size:12px}h1{margin:4px 0 0;font-size:22px}.s{color:#7d6a60;margin-bottom:18px}.g{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px}.g div{border:1px solid #e8e2dc;border-radius:10px;padding:10px}.g span{display:block;font-size:10px;color:#7d6a60}.g b{font-size:18px}h2{font-size:13px;margin:18px 0 6px}h2::first-letter{text-transform:uppercase}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid #eee;vertical-align:top}th{font-size:10px;color:#7d6a60;text-transform:uppercase}.ok{color:#16803c;font-weight:600}.no{color:#b42318;font-weight:600}.pe{color:#7d6a60;font-weight:600}@media print{body{margin:14mm}}</style></head><body>
+ <div style="color:#c2552e;font-weight:700;letter-spacing:1px;font-size:11px">FISIO365 · INFORME DE LLAMADAS</div><h1>${escH(fisio)}</h1><div class="s">${escH(rango)}</div>
+ <div class="g"><div><span>Llamadas</span><b>${L.length}</b></div>${RES.map(([t,re])=>`<div><span>${t}</span><b>${L.filter(x=>re.test(String(x.resultado).toUpperCase())).length}</b></div>`).join('')}</div>
+ ${dias.map(dd=>`<h2>${escH(hzFecha(dd))}</h2><table><tr><th style="width:52px">Hora</th><th style="width:30%">Paciente</th><th style="width:20%">Resultado</th><th>Nota</th></tr>${L.filter(x=>x.fecha===dd).map(x=>{const r=String(x.resultado).toUpperCase();const c=/RECUPERADA|^ALTA/.test(r)?'ok':/^NC|^VOLVER/.test(r)?'no':'pe';return `<tr><td>${escH(x.hora||'')}</td><td>${escH(x.nombre)}</td><td class="${c}">${escH(rt(x.resultado))}</td><td>${escH(x.nota||'')}</td></tr>`;}).join('')}</table>`).join('')||'<p>Sin llamadas en este periodo.</p>'}
+ <script>setTimeout(()=>print(),700)<\/script></body></html>`);w.document.close();
 }
 // ── Control de horas: clasificar días y banco de horas ──
 const HZ_TIPOS=['Día libre','Asuntos propios','Vacaciones','Baja','Festivo','Salida anticipada','Horas extra','Otro'];
