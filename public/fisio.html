@@ -922,6 +922,8 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .st-dot span{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:700;color:#fff;background:#c2552e;border-radius:8px;padding:2px 7px;white-space:nowrap;font-family:var(--font)}
 .st-max{position:absolute;left:4px;top:4px;font-size:11px;color:#9a8d84}
 .st-bt small b{color:#1a1a1a}
+.st-ch{touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize;overflow:visible!important}.st-dot{pointer-events:none}
+.st-dot span.der{left:auto;right:-4px;transform:none}.st-dot span.izq{left:-4px;transform:none}
 /* Agenda */
 .ag-sinf{background:#fff6e8;border-radius:14px;padding:10px 12px;margin-bottom:10px}.ag-sinf>b{display:block;font-size:13.5px;color:#b45309}.ag-sinf>small{display:block;font-size:12px;color:#7d6a60;margin-bottom:8px}
 
@@ -5233,7 +5235,7 @@ const esDireccion=()=>/^(nora|ramiro)$/i.test(String((fisioActual&&fisioActual.n
 let ST={sem:null,met:'sesiones',d:null};
 const ST_MET=[
  ['sesiones','Sesiones hechas',s=>s.sesiones,'n',false,'Citas con paciente marcadas como «Realizada» en la semana (todos los fisios).'],
- ['ocup','Ocupación',s=>s.ocupacion,'%',false,'Sesiones hechas o pendientes de Jonathan, Sara y Juan, entre sus horas de trabajo de la semana (campo HORAS SEMANA de Airtable). Las horas bloqueadas (comida, vídeos, bloqueos) no cuentan, ni los días que un fisio no tiene nada en la agenda (vacaciones, festivo, baja…). Si un día abre más horas de las suyas, cuentan las de la agenda. 100% = agenda llena.'],
+ ['ocup','Ocupación',s=>s.ocupacion,'%',false,'Sesiones hechas o pendientes de Jonathan, Sara y Juan, entre sus horas de trabajo de la semana (campo HORAS SEMANA de Airtable). Las horas bloqueadas y de comida no cuentan (las de vídeos y call-in sí, porque se podrían haber dado a un paciente), ni los días que un fisio no tiene nada en la agenda (vacaciones, festivo, baja…). Si un día abre más horas de las suyas, cuentan las de la agenda. 100% = agenda llena.'],
  ['nuevos','Pacientes nuevos',s=>s.nuevos,'n',false,'Fichas de paciente creadas esa semana (por la web, la app, el panel o Airtable), vengan o no.'],
  ['conv','Conversión',s=>s.vinieron?Math.round(s.reagendaron*100/s.vinieron):null,'%',false,'De los pacientes que hicieron su primera sesión esa semana, qué % tiene otra cita después (hecha o pendiente). En las semanas más recientes puede subir aún, porque hay pacientes que reservan más tarde.'],
  ['ingresos','Ingresos',s=>s.ingresos,'€',false,'Lo que apuntáis a mano cada semana (✎). Cuando conectemos Holded saldrá solo.'],
@@ -5266,14 +5268,14 @@ function renderStats(wrap){
    return `<div class="st-k${ST.met===k?' on':''}" data-k="${k}" role="button" tabindex="0"><div class="st-kh"><span>${t}${ed?' <i class="st-ed">✎</i>':''}</span>${infoI(info)}</div><b>${stFmt(v,ty)}</b>${dlt||'<em>&nbsp;</em>'}</div>`;}).join('');
   const [mk,mt,mfn,mty]=ST_MET.find(m=>m[0]===ST.met);
   const vals=L.map(mfn),ok=vals.filter(v=>v!=null),max=Math.max(1,...ok),min=0;
-  const W=640,H=200,pl=8,pr=8,pt=24,pb=26,n=L.length,X=j=>pl+(n<2?0:j*(W-pl-pr)/(n-1)),Y=v=>pt+(H-pt-pb)*(1-(v-min)/(max-min||1));
+  const W=640,H=200,pl=10,pr=10,pt=38,pb=26,n=L.length,X=j=>pl+(n<2?0:j*(W-pl-pr)/(n-1)),Y=v=>pt+(H-pt-pb)*(1-(v-min)/(max-min||1));
   const pts=vals.map((v,j)=>v==null?null:[X(j),Y(v)]);
   let path='',area='';{let seg=[];const flush=()=>{if(seg.length){path+='M'+seg.map(p=>p.join(',')).join('L');area+=`M${seg[0][0]},${H-pb}L`+seg.map(p=>p.join(',')).join('L')+`L${seg[seg.length-1][0]},${H-pb}Z`;}seg=[];};pts.forEach(p=>p?seg.push(p):flush());flush();}
   const paso=n>30?8:n>14?4:2,fmtV=v=>mty==='€'?(v>=1000?Math.round(v/100)/10+'k':Math.round(v)):v+(mty==='%'?'%':'');
-  const xl=L.map((s,j)=>(j%paso===0||j===n-1)?`<span class="st-x" style="left:${X(j)/W*100}%;transform:translateX(${j===0?'0':j===n-1?'-100%':'-50%'})">${+s.semana.slice(8)}/${+s.semana.slice(5,7)}</span>`:'').join('');
+  const xl=L.map((s,j)=>((j%paso===0&&(n-1-j>=paso/2||j===n-1))||j===n-1)?`<span class="st-x" style="left:${X(j)/W*100}%;transform:translateX(${j===0?'0':j===n-1?'-100%':'-50%'})">${+s.semana.slice(8)}/${+s.semana.slice(5,7)}</span>`:'').join('');
   const iS=L.findIndex(s=>s.semana===ST.sem),pS=pts[iS];
   const grafico=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="st-svg"><line x1="${pl}" x2="${W-pr}" y1="${H-pb}" y2="${H-pb}" class="st-ax"/><line x1="${pl}" x2="${W-pr}" y1="${Y(max)}" y2="${Y(max)}" class="st-gr"/><path d="${area}" class="st-area"/><path d="${path}" class="st-line"/>${pS?`<line x1="${pS[0]}" x2="${pS[0]}" y1="${pt-6}" y2="${H-pb}" class="st-sel"/>`:''}</svg><div class="st-xl">${xl}</div>
-   <div class="st-dots">${pts.map((p,j)=>p?`<button type="button" class="st-dot${j===iS?' on':''}" data-s="${L[j].semana}" style="left:${p[0]/W*100}%;top:${p[1]/H*100}%" aria-label="Semana ${L[j].semana}">${j===iS?`<span>${fmtV(vals[j])}</span>`:''}</button>`:'').join('')}</div><small class="st-max">${fmtV(max)}</small>`;
+   <div class="st-dots">${pts.map((p,j)=>p?`<button type="button" class="st-dot${j===iS?' on':''}" data-s="${L[j].semana}" style="left:${p[0]/W*100}%;top:${p[1]/H*100}%" aria-label="Semana ${L[j].semana}">${j===iS?`<span class="${j>n*0.8?'der':j<n*0.2?'izq':''}">${fmtV(vals[j])}</span>`:''}</button>`:'').join('')}</div><small class="st-max">${fmtV(max)}</small>`;
   const tot=ok.reduce((a,b)=>a+b,0),med=ok.length?tot/ok.length:0;
   const resumen=mty==='%'?`Media del periodo: <b>${Math.round(med)}%</b>`:`Total del periodo: <b>${stFmt(Math.round(tot*100)/100,mty)}</b> · Media semanal: <b>${stFmt(Math.round(med),mty)}</b>`;
   const fis=Object.entries(S.porFisio||{}).sort((a,b)=>b[1].vinieron-a[1].vinieron);
@@ -5288,7 +5290,6 @@ function renderStats(wrap){
    <div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
     <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b> · Reseñas Google: <b>${stFmt(S.resenas)}</b>${S.resenasPedidas?` · Reseñas pedidas en llamadas: <b>${S.resenasPedidas}</b>`:''}</p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`;
   g.querySelectorAll('.st-k').forEach(b=>b.onclick=e=>{if(e.target.closest('.fp-i,.fp-ipop'))return;if(b.querySelector('.st-ed')&&b.classList.contains('on'))editar();else{ST.met=b.dataset.k;pintar();}});
-  g.querySelectorAll('.st-dot').forEach(b=>b.onclick=()=>{ST.sem=b.dataset.s;pintar();});
   g.querySelector('.st-edit').onclick=editar;
  }
  function editar(){const S=ST.d.semanas.find(s=>s.semana===ST.sem);
@@ -5302,6 +5303,13 @@ function renderStats(wrap){
    try{const r=await agPost('seg-estadisticas-guardar',{semana:S.semana,ingresos:m.querySelector('.st-i').value,resenas:m.querySelector('.st-r').value,notas:m.querySelector('.st-n').value});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
     S.ingresos=m.querySelector('.st-i').value===''?null:+m.querySelector('.st-i').value;S.resenas=m.querySelector('.st-r').value===''?null:+m.querySelector('.st-r').value;S.notas=m.querySelector('.st-n').value;
     toast('Guardado',true);m.remove();pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};}
+ // Arrastrar el dedo (o el ratón) por la gráfica para ir semana a semana, sin mover la pantalla
+ let arr=false;const scrub=e=>{const ch=g.querySelector('.st-ch');if(!ch||!ST.d)return;const r=ch.getBoundingClientRect(),L=ST.d.semanas,n=L.length;
+  const x=Math.min(Math.max((e.clientX-r.left)/r.width,0),1),j=Math.round((x*640-10)/((640-20)/Math.max(n-1,1)));const k=Math.min(Math.max(j,0),n-1);
+  if(L[k].semana!==ST.sem){ST.sem=L[k].semana;pintar();}};
+ g.addEventListener('pointerdown',e=>{if(!e.target.closest('.st-ch'))return;arr=true;e.preventDefault();scrub(e);});
+ window.addEventListener('pointermove',e=>{if(arr){e.preventDefault();scrub(e);}},{passive:false});
+ window.addEventListener('pointerup',()=>arr=false);window.addEventListener('pointercancel',()=>arr=false);
  card._recargar=()=>cargar(true);
  if(ST.d)pintar();cargar();
 }

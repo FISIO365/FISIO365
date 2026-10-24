@@ -457,13 +457,13 @@ module.exports = async function handler(req, res) {
             if (sig.length) { reag++; fis[fz].reagendaron++; }
           });
           const ocup = enS.filter(c => c.pid && EQUIPO.includes(String(c.fisio).toLowerCase()) && /REALIZADA|PENDIENTE/.test(c.e)).length;
-          // Capacidad de cada fisio y día = su horario − horas bloqueadas (comida, vídeos, bloqueos…); si ese día no tiene nada en la agenda, no trabaja.
+          // Capacidad de cada fisio y día = su horario − horas bloqueadas (comida, bloqueos…); si ese día no tiene nada en la agenda, no trabaja.
           // Si ese día tiene más horas abiertas en la agenda que su horario (horas extra), cuentan las de la agenda.
           let cap = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
             if (!trabaja.has(k + '|' + f)) return;
             const filas = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k);
-            const hBloq = new Set(filas.filter(c => /BLOQUEAD|COMIDA|VIDEOS|CALL-IN/i.test(c.e)).map(c => c.h)).size;
-            const hAbiertas = new Set(filas.filter(c => !/BLOQUEAD|COMIDA|VIDEOS|CALL-IN/i.test(c.e)).map(c => c.h)).size;
+            const hBloq = new Set(filas.filter(c => /BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)).size;
+            const hAbiertas = new Set(filas.filter(c => !/BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)).size;
             cap += Math.max((horario[k] && horario[k][dw] || 0) - hBloq, hAbiertas, 0); }); }
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
