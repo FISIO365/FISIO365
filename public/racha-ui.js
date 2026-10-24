@@ -24,7 +24,7 @@
   .rc-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
   .rc-cab button{width:36px;height:36px;border-radius:50%;border:none;background:#f5f2ee;font-size:18px;cursor:pointer;color:#1a1a1a}
   .rc-cab button[disabled]{visibility:hidden}
-  .rc-nota{font-size:12px;color:#8a857e;line-height:1.45;margin:12px 4px 0;text-align:center}
+  .rc-nota{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;font-size:13px;color:#8a857e;margin:12px 4px 0}
   .rc-mes{text-align:center}
   .rc-mes b{display:block;font-size:15px}
   .rc-mes span{font-size:11.5px;color:#8a857e}
@@ -104,7 +104,7 @@
         <div class="rc-dias"><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div></div>
         <div class="rc-grid"></div>
         <div class="rc-ley"><span><i></i>${tu ? 'Hecho' : 'Ejercicios hechos'}</span><span><i class="h"></i>Hoy</span></div></div>
-      ${tu ? '' : `<p class="rc-nota">Cuenta los días en que el paciente pulsa «He terminado por hoy» en la app.${orden.length ? '' : ' Si no hay ninguno, puede que no haga los ejercicios, que los haga sin marcarlo o que no use la app.'}</p>`}
+      ${tu ? '' : `<div class="rc-nota"><span>¿Qué cuenta la racha?</span><button type="button" class="fp-i" data-info="Los días en que el paciente pulsa «He terminado por hoy» en la app.${orden.length ? '' : ' Si sale a 0, puede que no haga los ejercicios, que los haga sin marcarlo o que no use la app.'}" aria-label="Información">i</button></div>`}
     </div>`;
 
     function mes() {

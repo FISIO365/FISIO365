@@ -856,6 +856,25 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-seg .fp-mas{flex:0 0 auto;padding:9px 22px 9px 10px!important}.fp-seg .fp-mas span{pointer-events:none}
 .fp-seg .fp-mas select{position:absolute;inset:0;width:100%;height:100%;opacity:0;max-width:none}
 .fp-seg .fp-mas i{background:none!important;width:auto;height:auto;font-size:9px;right:8px;top:50%;transform:translateY(-50%)}
+
+/* ── Ficha v3: cabecera clara, info «i», documentos visibles ── */
+.fp .pv-bar{background:#fff!important;color:#1a1a1a!important;border-bottom:1px solid #ece6e0!important}.fp .pv-bar b{color:#1a1a1a!important}.fp .pv-x{background:#f3efea!important;color:#1a1a1a!important}
+.fp-hero{background:#fff!important;color:#1a1a1a!important;margin:12px 14px 0;border-radius:20px!important;padding:16px!important;box-shadow:0 1px 2px rgba(26,26,26,.04),0 6px 18px rgba(26,26,26,.05)}
+.fp-hero .fp-av{background:#fdeee4!important;color:#c2552e!important;width:56px!important;height:56px!important;font-size:19px!important}
+.fp-hero h2{color:#1a1a1a!important;font-size:20px!important}
+.fp-hero .fp-estb .est{background:#f1ede9!important;color:#5f554e!important}.fp-hero .fp-estb .est.ok{background:#e8f5ec!important;color:#16803c!important}.fp-hero .fp-estb .est.mal{background:#fdecea!important;color:#b42318!important}.fp-hero .fp-estb .est.pen{background:#fff4e5!important;color:#b45309!important}.fp-hero .fp-edit-ic{color:#b8aca3!important}
+.fp-hero .fp-ic{background:#f7f3ef!important;color:#1a1a1a!important}.fp-hero .fp-ic svg{color:#c2552e}.fp-hero .fp-ic.on{background:#e8f5ec!important;color:#16803c!important}.fp-hero .fp-ic.on svg{color:#16803c}
+.fp-i{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1.5px solid #c9bdb3;background:#fff;color:#8a7e76;font-family:Georgia,serif;font-style:italic;font-weight:700;font-size:12px;line-height:1;cursor:pointer;padding:0;margin-left:6px;vertical-align:middle;flex:none}
+.fp-ipop{flex-basis:100%;width:100%;margin-top:8px;font-size:13.5px;line-height:1.5;color:#5f554e;background:#faf7f4;border-radius:12px;padding:10px 12px}
+.fp-up{flex-direction:row!important;flex-wrap:wrap;justify-content:center;align-items:center;background:#fff!important;border:1.5px dashed #d9cdc2!important;padding:14px!important}.fp-up span{font-size:14px}
+.fp-evh{display:flex;flex-wrap:wrap;align-items:center;margin-bottom:8px}.fp-evh b{font-size:13.5px}
+.fp-docs{display:flex;flex-direction:column;gap:8px}
+.fp-doc-it{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:10px 14px 10px 10px;text-decoration:none;color:#1a1a1a;box-shadow:0 1px 2px rgba(26,26,26,.05),0 6px 16px rgba(26,26,26,.05)}
+.fp-doc-it img,.fp-doc-ic{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:#f3efea;border:1px solid #ece6e0}
+.fp-doc-ic{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#7d6a60}.fp-doc-ic.pdf{background:#fdecea;color:#b42318;border-color:#f5c2bd}.fp-doc-ic.img{background:#eef2f7;color:#1e2a38}
+.fp-doc-t{flex:1;min-width:0}.fp-doc-t b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fp-doc-t small{font-size:11.5px;color:#9a8d84}
+.fp-doc-go{font-size:20px;color:#c9bdb3}
+.fp-hero .fp-ic svg{width:17px!important;height:17px!important;flex:none}
 </style>
 </head>
 <body>
@@ -4999,8 +5018,9 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const fila=c=>`<div class="fp-cita"><div class="fp-cd"><b>${escH(segFecha(c.fecha))}</b><span>${escH(c.hora||'')}</span></div><div class="fp-cm"><span class="fp-ce ${cls(c.estado)}">${escH(c.estado?c.estado.charAt(0)+c.estado.slice(1).toLowerCase():'—')}</span>${c.fisio?`<span class="fp-cfi">${escH(c.fisio)}</span>`:''}${c.nota?`<p>${escH(c.nota)}</p>`:''}</div></div>`;
   const fut=d.citas.filter(c=>c.fecha>=hoy).reverse(),pas=d.citas.filter(c=>c.fecha<hoy);
   return `${fut.length?`<div class="fp-sub">Próximas</div>${fut.map(fila).join('')}`:''}${pas.length?`<div class="fp-sub">Pasadas · ${pas.length}</div>${pas.map(fila).join('')}`:''}`;}
- function archivos(){return `<label class="fp-up"><input type="file" multiple hidden><span>＋ Subir archivo</span><small>PDF o fotos, hasta 3 MB</small></label>
-  ${P.archivos.length?`<div class="fp-arch">${P.archivos.map(a=>`<a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-a">${/image/.test(a.tipo)&&a.mini?`<img src="${escH(a.mini)}" alt="">`:`<span class="fp-ext">${escH((a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase())}</span>`}<span>${escH(a.nombre)}</span></a>`).join('')}</div>`:'<div class="fac-vacio">No tiene archivos</div>'}`;}
+ function archivos(){const kb=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+  return `<label class="fp-up"><input type="file" multiple hidden><span>＋ Subir archivo</span>${infoI('PDF o fotos de hasta 3 MB. Se guardan en su ficha de Airtable.')}</label>
+  ${P.archivos.length?`<div class="fp-docs">${P.archivos.map(a=>{const ext=(a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase();return `<a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-doc-it">${a.mini?`<img src="${escH(a.mini)}" alt="">`:`<span class="fp-doc-ic ${/PDF/.test(ext)?'pdf':/JPG|JPEG|PNG|HEIC|WEBP/.test(ext)?'img':''}">${escH(ext)}</span>`}<span class="fp-doc-t"><b>${escH(a.nombre)}</b><small>${escH(ext)}${a.tam?' · '+kb(a.tam):''}</small></span><span class="fp-doc-go">›</span></a>`;}).join('')}</div>`:'<div class="fac-vacio">No tiene archivos</div>'}`;}
  function historia(){
   const hoy=d.hoy,ses=d.citas.filter(c=>c.fecha<=hoy&&/REALIZADA/i.test(c.estado)),u=ses[0];
   const modD=P.historialMod?isoMadrid(new Date(P.historialMod)):'';
@@ -5016,7 +5036,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
  function montarHistoria(cont){
   const b=cont.querySelector('.fp-add-ev');if(!b)return;
   b.onclick=()=>{const slot=cont.querySelector('.fp-add-slot');const u=d.citas.find(c=>c.fecha<=d.hoy&&/REALIZADA/i.test(c.estado));
-   slot.innerHTML=`<div class="fp-ev"><div class="fp-mu" style="margin-bottom:6px">Se añade al final de la historia con la fecha${u?' de la sesión del '+escH(segFecha(u.fecha)):''} y tu nombre.</div><textarea class="fp-ta" rows="6" placeholder="Qué se trabajó, cómo respondió, cambios en el dolor, pauta para casa…"></textarea><div class="fp-edbts" style="justify-content:flex-end;margin-top:8px"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></div></div>`;
+   slot.innerHTML=`<div class="fp-ev"><div class="fp-evh"><b>Evolución${u?' · sesión del '+escH(segFecha(u.fecha)):''}</b>${infoI('Se añade al final de la historia clínica con la fecha de la sesión y tu nombre. No borra nada de lo anterior.')}</div><textarea class="fp-ta" rows="6" placeholder="Qué se trabajó, cómo respondió, cambios en el dolor, pauta para casa…"></textarea><div class="fp-edbts" style="justify-content:flex-end;margin-top:8px"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></div></div>`;
    const ta=slot.querySelector('.fp-ta');ta.focus();slot.querySelector('.fp-can').onclick=()=>{slot.innerHTML='';};
    slot.querySelector('.fp-ok').onclick=async e=>{const t=ta.value.trim();if(!t){toast('Escribe la evolución',false);return;}const bt=e.target;bt.disabled=true;bt.textContent='Guardando…';
     try{const r=await (await fetch('/api/schedule?action=seg-historial-anadir',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id,texto:t,fecha:u?u.fecha:'',fisio:miNombreCorto()})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');P.historial=r.historial;P.historialMod=new Date().toISOString();toast('Añadido a la historia',true);pintar();}catch(err){bt.disabled=false;bt.textContent='Guardar';toast(err.message,false);}};};
@@ -5073,6 +5093,9 @@ async function abrirFichaPaciente(id,nombre,pBase){
   mm.querySelector('.hz-ok').onclick=async e=>{e.target.disabled=true;try{await guardarEstados(id,sel.get());P.estados=sel.get();toast('Guardado',true);mm.remove();pintar();}catch(err){e.target.disabled=false;toast('No se ha podido guardar',false);}};}
  pintar();
 }
+// Botón «i» de información: al tocarlo muestra/oculta la explicación (mismo tamaño de letra que el resto)
+function infoI(t){return `<button type="button" class="fp-i" data-info="${escH(t)}" aria-label="Información">i</button>`;}
+document.addEventListener('click',e=>{const b=e.target.closest('.fp-i');if(!b)return;e.preventDefault();e.stopPropagation();const nx=b.parentElement.querySelector(':scope > .fp-ipop');if(nx){nx.remove();return;}const pp=document.createElement('div');pp.className='fp-ipop';pp.textContent=b.dataset.info;b.parentElement.appendChild(pp);},true);
 // Tocar el nombre de un paciente (con data-ficha) abre su ficha
 document.addEventListener('click',e=>{const t=e.target.closest('[data-ficha]');if(!t||!t.dataset.ficha)return;e.stopPropagation();abrirFichaPaciente(t.dataset.ficha,t.dataset.fn||t.textContent.trim());},true);
 // Nota de evolución de una sesión (se guarda en la cita de Airtable, campo NOTAS)
@@ -8942,6 +8965,6 @@ function cerrarLightbox(){
 </script>
 <script src="/avisos.js"></script>
 <script src="/chat-ui.js"></script>
-<script src="/racha-ui.js?v=2"></script>
+<script src="/racha-ui.js?v=3"></script>
 </body>
 </html>
