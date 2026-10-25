@@ -86,18 +86,37 @@ function consentResumen(r) {
     marketing: { conocido: cNm(F['CONOCIDO']), newsletter: cNm(F['NEWSLETTER']), imagenes: cNm(F['IMAGENES']), citas: cNm(F['CITAS']) },
     email: cTxt(F['EMAIL']), dni: cTxt(F['DNI']).replace(/\s/g, ''), tel: cDig(F['TELF']), nombre: cTxt((F['﻿NOMBRE'] || F['NOMBRE'] || '') + ' ' + (F['APELLIDOS'] || '')).replace(/\s+/g, ' ') };
 }
-async function consentDe(P) {
-  const email = cTxt(P['EMAIL']), dni = cTxt(P['DNI']).replace(/\s/g, ''), tels = [cDig(P['TELF']), cDig(P['WHATSAPP'])].filter(t => t.length === 9);
-  const nombre = cTxt(P['FULL NAME']).replace(/\s+/g, ' ');
-  const conds = [];
-  if (email) conds.push(`LOWER(TRIM({EMAIL}))='${cEsc(email)}'`);
-  if (dni.length >= 6) conds.push(`SUBSTITUTE(LOWER(TRIM({DNI})),' ','')='${cEsc(dni)}'`);
-  tels.forEach(t => conds.push(`RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${t}'`));
-  const buscar = async f => { const d = await at(`${CONS_T}?filterByFormula=${encodeURIComponent(f)}&sort[0][field]=Creada&sort[0][direction]=desc&pageSize=5`); return d.records || []; };
-  let rs = conds.length ? await buscar(`OR(${conds.join(',')})`) : [];
-  if (!rs.length && nombre.split(' ').length >= 2) rs = await buscar(`LOWER(TRIM(TRIM({﻿NOMBRE})&' '&TRIM({APELLIDOS})))='${cEsc(nombre)}'`);
-  if (!rs.length) return null;
-  const c = consentResumen(rs[0]); delete c.email; delete c.dni; delete c.tel; delete c.nombre; return c;
+// Todos los consentimientos en memoria (10 min): para emparejar sin hacer una búsqueda por paciente
+let _cons = { t: 0, v: null, p: null };
+async function consTodos(forzar) {
+  if (!forzar && _cons.v && Date.now() - _cons.t < 10 * 60e3) return _cons.v;
+  if (_cons.p) return _cons.p;
+  _cons.p = capTodos(CONS_T, 'sort[0][field]=Creada&sort[0][direction]=desc').then(rs => { const v = rs.map(r => ({ ...consentResumen(r), pac: r.fields['PACIENTE'] || [] })); _cons = { t: Date.now(), v, p: null }; return v; }).catch(e => { _cons.p = null; throw e; });
+  return _cons.p;
+}
+const nomToks = t => capNorm(t).split(/[^a-z0-9ñ]+/).filter(w => w.length >= 3 && !/^(del|las|los|que)$/.test(w));
+const nombresCuadran = (a, b) => { const A = nomToks(a), B = nomToks(b); return A.some(w => B.includes(w)); };
+// Busca el consentimiento de un paciente. estado: 'enlazado' | 'auto' (se acaba de enlazar) | 'dudoso' (mismo email/DNI/teléfono pero otro nombre)
+function emparejar(P, pacId, lista) {
+  const enl = lista.filter(c => c.pac.includes(pacId));
+  if (enl.length) return { c: enl[0], estado: 'enlazado' };
+  const email = cTxt(P['EMAIL']), dni = cTxt(P['DNI']).replace(/\s/g, ''), tels = [cDig(P['TELF']), cDig(P['WHATSAPP'])].filter(t => t.length === 9), nombre = P['FULL NAME'] || '';
+  const libres = lista.filter(c => !c.pac.length);
+  const cands = libres.filter(c => (email && c.email === email) || (dni.length >= 6 && c.dni === dni) || (c.tel.length === 9 && tels.includes(c.tel)));
+  const buenos = cands.filter(c => nombresCuadran(c.nombre, nombre));
+  if (buenos.length) return { c: buenos[0], estado: 'auto' };
+  const n = capNorm(nombre).replace(/\s+/g, ' ').trim(), porNombre = n.split(' ').length >= 2 ? libres.filter(c => capNorm(c.nombre) === n) : [];
+  if (porNombre.length) return { c: porNombre[0], estado: 'auto' };
+  if (cands.length) return { c: cands[0], estado: 'dudoso' };
+  return null;
+}
+const enlazarCons = async (consId, pacId) => { const d = await at(`${CONS_T}/${consId}`, { method: 'PATCH', body: JSON.stringify({ fields: { PACIENTE: pacId ? [pacId] : [] } }) }); if (_cons.v) { const c = _cons.v.find(x => x.id === consId); if (c) c.pac = pacId ? [pacId] : []; } _alertas.t = 0; return !d.error; };
+const consPublico = (x, estado) => { if (!x) return null; const c = { ...x, estado }; ['email', 'dni', 'tel', 'pac'].forEach(k => delete c[k]); c.nombreForm = x.nombre; delete c.nombre; return c; };
+async function consentDe(P, pacId) {
+  const lista = await consTodos();
+  const m = emparejar(P, pacId, lista); if (!m) return null;
+  if (m.estado === 'auto') await enlazarCons(m.c.id, pacId).catch(() => {});
+  return consPublico(m.c, m.estado === 'dudoso' ? 'dudoso' : 'enlazado');
 }
 // Pacientes con marcapasos, embarazo o cáncer (para marcarlos en rojo en la agenda). Se guarda 20 min.
 let _alertas = { t: 0, m: null, p: null };
@@ -106,10 +125,12 @@ async function alertasSalud() {
   if (_alertas.p) return _alertas.p;
   _alertas.p = (async () => {
     const todos = async (t, q2) => { let recs = [], off = ''; do { const d = await at(`${t}?${q2}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
-    const cs = (await todos(CONS_T, `filterByFormula=${encodeURIComponent(`OR({MARCAPASOS}='Sí',{EMBARAZO}='Sí',{CÁNCER}='Sí')`)}`)).map(consentResumen).filter(c => c.rojo.length);
+    const todosC = (await consTodos()).filter(c => c.rojo.length), m0 = {};
+    todosC.filter(c => c.pac.length).forEach(c => c.pac.forEach(id => { m0[id] = [...new Set([...(m0[id] || []), ...c.rojo])]; }));
+    const cs = todosC.filter(c => !c.pac.length);
     const conds = []; cs.forEach(c => { if (c.email) conds.push(`LOWER(TRIM({EMAIL}))='${cEsc(c.email)}'`); if (c.dni.length >= 6) conds.push(`SUBSTITUTE(LOWER(TRIM({DNI})),' ','')='${cEsc(c.dni)}'`); if (c.tel.length === 9) conds.push(`RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${c.tel}'`, `RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${c.tel}'`); });
     const pacs = []; for (let i = 0; i < conds.length; i += 40) pacs.push(...await todos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + conds.slice(i, i + 40).join(',') + ')')}&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP`));
-    const m = {};
+    const m = m0;
     pacs.forEach(p => { const F = p.fields, e = cTxt(F['EMAIL']), d = cTxt(F['DNI']).replace(/\s/g, ''), ts = [cDig(F['TELF']), cDig(F['WHATSAPP'])].filter(t => t.length === 9);
       cs.forEach(c => { if ((e && c.email === e) || (d.length >= 6 && c.dni === d) || (c.tel.length === 9 && ts.includes(c.tel))) m[p.id] = [...new Set([...(m[p.id] || []), ...c.rojo])]; }); });
     _alertas = { t: Date.now(), m, p: null }; return m;
@@ -334,6 +355,48 @@ module.exports = async function handler(req, res) {
     const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
     const hoyF = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     try {
+      // ── CONSENTIMIENTOS: buscar, enlazar y pendientes ──
+      if (action === 'seg-consent-buscar') {
+        const t = capNorm(q.q || '').trim(), td = String(q.q || '').replace(/\D/g, '');
+        if (t.length < 2) return res.status(200).json({ ok: true, res: [] });
+        const lista = await consTodos();
+        const r = lista.filter(c => capNorm(c.nombre).includes(t) || (c.email && c.email.includes(t)) || (td.length >= 4 && (c.tel.includes(td.slice(-9)) || c.dni.includes(td)))).slice(0, 15);
+        const pids = [...new Set(r.flatMap(c => c.pac))], nom = {};
+        if (pids.length) (await capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME`)).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; });
+        return res.status(200).json({ ok: true, res: r.map(c => ({ id: c.id, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, de: c.pac.map(id => nom[id] || '').filter(Boolean).join(', ') })) });
+      }
+      if (action === 'seg-consent-pendientes') {
+        // 1) Consentimientos de los últimos 4 meses sin paciente: se enlazan solos si cuadra; si no, a Pendientes
+        // 2) Pacientes con sesión realizada en los últimos 30 días sin consentimiento enlazado
+        const lista = await consTodos();
+        const desde = new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10);
+        const ses = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_AFTER({FECHA},DATEADD(TODAY(),-31,'days')),NOT(IS_AFTER({FECHA},TODAY())))`)}&fields[]=FECHA&fields[]=RELACIÓN - CITA&fields[]=PREF.`);
+        const ult = {}; ses.forEach(c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0]; if (!pid) return; const f = String(c.fields['FECHA'] || '').slice(0, 10); if (!ult[pid] || f < ult[pid].primera) ult[pid] = { primera: f, fisio: cNm(c.fields['PREF.']) }; });
+        const enl = new Set(lista.flatMap(c => c.pac));
+        const pidsSin = Object.keys(ult).filter(id => !enl.has(id)), info = {};
+        for (let i = 0; i < pidsSin.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pidsSin.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP`)).forEach(p => { info[p.id] = p.fields; });
+        const sinCons = [], dudosos = {}; let enlazados = 0;
+        for (const id of pidsSin) { const P = info[id]; if (!P) continue; const m = emparejar(P, id, lista);
+          if (m && m.estado === 'auto') { if (enlazados < 40 && await enlazarCons(m.c.id, id).catch(() => false)) { enlazados++; continue; } }
+          if (m && m.estado === 'dudoso') dudosos[m.c.id] = { id, nombre: P['FULL NAME'] || '' };
+          sinCons.push({ pacienteId: id, nombre: P['FULL NAME'] || '', tel: P['WHATSAPP'] || P['TELF'] || '', primera: ult[id].primera, fisio: ult[id].fisio, sugerido: m ? { id: m.c.id, nombre: m.c.nombre, fecha: m.c.fecha } : null }); }
+        // Formularios recientes sin paciente: se buscan por email/DNI/teléfono en PACIENTES y se enlazan si el nombre cuadra
+        const sueltos = lista.filter(c => !c.pac.length && c.fecha >= desde && !dudosos[c.id]);
+        const conds = []; sueltos.forEach(c => { if (c.email) conds.push(`LOWER(TRIM({EMAIL}))='${cEsc(c.email)}'`); if (c.dni.length >= 6) conds.push(`SUBSTITUTE(LOWER(TRIM({DNI})),' ','')='${cEsc(c.dni)}'`); if (c.tel.length === 9) conds.push(`RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${c.tel}'`, `RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${c.tel}'`); });
+        const pc = []; for (let i = 0; i < conds.length; i += 40) pc.push(...await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + conds.slice(i, i + 40).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP`).catch(() => []));
+        for (const c of sueltos) {
+          const ps = pc.filter(p => { const F = p.fields, ts = [cDig(F['TELF']), cDig(F['WHATSAPP'])]; return (c.email && cTxt(F['EMAIL']) === c.email) || (c.dni.length >= 6 && cTxt(F['DNI']).replace(/\s/g, '') === c.dni) || (c.tel.length === 9 && ts.includes(c.tel)); });
+          const bueno = ps.find(p => nombresCuadran(c.nombre, p.fields['FULL NAME']));
+          if (bueno && enlazados < 80 && !enl.has(bueno.id)) { if (await enlazarCons(c.id, bueno.id).catch(() => false)) { enlazados++; enl.add(bueno.id); continue; } }
+          if (ps.length) dudosos[c.id] = { id: ps[0].id, nombre: ps[0].fields['FULL NAME'] || '' };
+        }
+        const huerfanos = lista.filter(c => !c.pac.length && c.fecha >= desde).map(c => ({ id: c.id, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, sugerido: dudosos[c.id] || null }));
+        return res.status(200).json({ ok: true, hoy: hoyF, enlazados, sinCons, huerfanos });
+      }
+      if (action === 'seg-consent-enlazar') {
+        if (req.method !== 'POST' || !/^rec[A-Za-z0-9]{14}$/.test(q.consentId || '') || (q.pacienteId && !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId))) return res.status(400).json({ ok: false });
+        return res.status(200).json({ ok: await enlazarCons(q.consentId, q.pacienteId || '') });
+      }
       // ── CAPTACIÓN ──
       if (action.startsWith('seg-cap')) {
         const okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || ''), okF = f => /^\d{4}-\d{2}-\d{2}$/.test(f || '');
@@ -646,7 +709,7 @@ module.exports = async function handler(req, res) {
           todosT(SEG, `filterByFormula=${encodeURIComponent(`FIND('${q.id}',ARRAYJOIN({PacRec}))`)}&sort[0][field]=FECHA DE LLAMADA&sort[0][direction]=desc`).catch(() => []),
           llIds.length ? todosT(LLA, `filterByFormula=${encodeURIComponent('OR(' + llIds.slice(0, 60).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&sort[0][field]=FECHA&sort[0][direction]=desc`).catch(() => []) : [],
           saldoPaciente(q.id).catch(() => ({ activo: false })),
-          consentDe(F).catch(() => null)
+          consentDe(F, q.id).catch(() => null)
         ]);
         const diaMad = x => { const s2 = String(x || ''); if (!s2.includes('T')) return { f: s2.slice(0, 10), h: '' }; const pz = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date(s2)).reduce((o, p) => (o[p.type] = p.value, o), {}); return { f: `${pz.year}-${pz.month}-${pz.day}`, h: `${pz.hour === '24' ? '00' : pz.hour}:${pz.minute}` }; };
         // Si ya ha vuelto a reservar, el «No reagenda» se desmarca solo
@@ -748,7 +811,7 @@ module.exports = async function handler(req, res) {
         const r = await at(`${CONS_T}/${q.id}`); if (r.error) return res.status(404).json({ ok: false });
         const ahora = cNm(r.fields[q.campo]).trim(), nuevo = q.campo === 'CÁNCER' && /^s[ií]$/i.test(ahora) ? 'Alta' : 'No';
         const d = await at(`${CONS_T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [q.campo]: nuevo }, typecast: true }) });
-        _alertas.t = 0; return res.status(200).json({ ok: !d.error, valor: nuevo });
+        _alertas.t = 0; _cons.t = 0; return res.status(200).json({ ok: !d.error, valor: nuevo });
       }
       if (action === 'seg-tarea-guardar' || action === 'seg-tarea-hecha' || action === 'seg-tarea-borrar') {
         const PT = 'tblxPpPSvj15NWqNT';

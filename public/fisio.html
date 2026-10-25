@@ -939,6 +939,14 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .ag-pf{position:relative;flex:1;min-width:160px}.ag-pf .ag-in{padding:8px 12px;font-size:14px;border-radius:99px}.ag-pdd{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:6px;display:flex;flex-direction:column}.ag-pdd button{font-family:var(--font);text-align:left;font-size:13.5px;border:none;background:none;padding:8px 10px;border-radius:8px;cursor:pointer}.ag-pdd button:hover{background:#f7f3ef}
 .ag-fil{max-width:200px}.ag-w span{white-space:nowrap}.ag-fil span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ag-lista{display:flex;flex-direction:column}.ag-ld{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5f554e;padding:14px 0 6px;border-bottom:1px solid #f0ebe6;margin-bottom:6px}
+.fp-cbts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.fp-cbts button{font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:999px;padding:8px 14px;cursor:pointer;background:#f7f3ef;color:#1a1a1a}.fp-cbts button:first-child{background:#c2552e;color:#fff}
+button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
+.fp-dud{background:#fff4e0;color:#5c3d00;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:10px}
+.fp-chip{font-size:12px;font-weight:600;border-radius:999px;padding:4px 10px}.fp-chip.ok{background:#e8f5ec;color:#16803c}.fp-chip.no{background:#fdecea;color:#b3261e}
+.fp-nada{background:#f3faf5;color:#16803c;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:500}
+.fp-sp{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#7d6a60}.fp-sp b{font-size:13px}.fp-sp b.si{color:#16803c}.fp-sp b.no{color:#b3261e}
+.fp-conoc{display:flex;align-items:center;gap:12px;background:#fdf3ec;border-radius:14px;padding:10px 12px;margin-bottom:8px}.fp-conoc svg{width:34px;height:34px;flex:none;padding:7px;box-sizing:border-box;border-radius:50%;background:#fff;fill:none;stroke:#c2552e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.fp-conoc span{display:block;font-size:12px;color:#7d6a60}.fp-conoc b{font-size:15px}
+.fp-mts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.fp-mt{background:#f7f3ef;border-radius:12px;padding:9px 10px;min-width:0}.fp-mt span{display:block;font-size:11.5px;color:#7d6a60;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fp-mt b{display:flex;align-items:center;gap:6px;font-size:14px;margin-top:2px}.fp-mt b i{width:8px;height:8px;border-radius:50%;background:#c9bfb7}.fp-mt b.si i{background:#16a34a}.fp-mt b.no i{background:#c9bfb7}
 .fp-alr{background:#d93025;color:#fff;font-weight:700;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:14px}.fp-sal{display:flex;flex-wrap:wrap;gap:6px}.fp-sal span{background:#fff4e0;color:#8a5200;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}.fp-salx{border:0;background:none;color:inherit;font:inherit;font-weight:700;margin-left:6px;padding:0 2px;cursor:pointer;opacity:.7}.fp-sal span.gr{background:#fdecea;color:#b3261e}.fp-sin{color:#b3261e;font-weight:600;font-size:14px}
 .ag-c.ag-al{background:#fdecea!important;border-color:#e0453a!important;border-left:4px solid #d93025!important}.ag-c.ag-al>b{color:#b3261e!important}.ag-alt{display:block;font-size:11.5px;font-weight:700;color:#d93025;margin-top:2px;-webkit-text-fill-color:currentColor}
 .ag-li{display:grid;grid-template-columns:46px 1fr;gap:8px;align-items:start;margin-bottom:6px}.ag-lh{font-size:12.5px;color:#7d6a60;padding-top:8px}
@@ -5454,19 +5462,23 @@ async function listaTareas(cont){
   const tabla=ce('div','seg-tabla');
   g.forEach(x=>{
    const r=ce('div','tk'+(c==='atr'?' atr':''));
-   const pid=x.tipo==='llamar'?x.seg.pacienteId:x.tipo==='tarea'?x.t.pacienteId:x.tipo==='anotar'?x.c.pacienteId:x.p.id;
+   const pid=x.tipo==='consent'?(x.k.pacienteId||''):x.tipo==='llamar'?x.seg.pacienteId:x.tipo==='tarea'?x.t.pacienteId:x.tipo==='anotar'?x.c.pacienteId:x.p.id;
    const IC_TEL='<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
    const IC_EXP='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
-   const sub=x.tipo==='anotar'?[x.quien,'Historia sin actualizar tras la sesión del '+segFecha(x.c.fecha)].filter(Boolean).join(' · '):x.tipo==='tarea'?[x.t.para?'Para '+x.t.para:'Para cualquiera',x.t.paciente?'Paciente: '+x.t.paciente:'',x.t.creadaPor&&x.t.creadaPor!==x.t.para?'la apuntó '+x.t.creadaPor:''].filter(Boolean).join(' · '):x.tipo==='llamar'?(x.seg.ultima?'Última sesión '+segFecha(x.seg.ultima).replace(/^\S+ /,'')+(x.seg.fisio?' con '+x.seg.fisio:''):''):[x.quien,'Última sesión '+segFecha(x.p.ultima).replace(/^\S+ /,'')].filter(Boolean).join(' · ');
-   const notaT=x.tipo==='anotar'?'':x.tipo==='tarea'?x.t.nota:x.tipo==='llamar'?(x.detalle&&x.detalle.trim()!=='Llamada de seguimiento'?x.detalle:''):(x.p.nota?'Motivo: '+x.p.nota:'');
+   const sub=x.tipo==='consent'?(x.k.modo==='P'?'Sin consentimiento firmado · vino el '+segFecha(x.k.primera)+(x.k.fisio?' con '+x.k.fisio:''):'Consentimiento sin paciente · '+[x.k.tel,x.k.sugerido?'¿es de '+x.k.sugerido.nombre+'?':''].filter(Boolean).join(' · ')):x.tipo==='anotar'?[x.quien,'Historia sin actualizar tras la sesión del '+segFecha(x.c.fecha)].filter(Boolean).join(' · '):x.tipo==='tarea'?[x.t.para?'Para '+x.t.para:'Para cualquiera',x.t.paciente?'Paciente: '+x.t.paciente:'',x.t.creadaPor&&x.t.creadaPor!==x.t.para?'la apuntó '+x.t.creadaPor:''].filter(Boolean).join(' · '):x.tipo==='llamar'?(x.seg.ultima?'Última sesión '+segFecha(x.seg.ultima).replace(/^\S+ /,'')+(x.seg.fisio?' con '+x.seg.fisio:''):''):[x.quien,'Última sesión '+segFecha(x.p.ultima).replace(/^\S+ /,'')].filter(Boolean).join(' · ');
+   const notaT=x.tipo==='consent'||x.tipo==='anotar'?'':x.tipo==='tarea'?x.t.nota:x.tipo==='llamar'?(x.detalle&&x.detalle.trim()!=='Llamada de seguimiento'?x.detalle:''):(x.p.nota?'Motivo: '+x.p.nota:'');
    const ul=x.tipo==='llamar'&&x.seg.ult?x.seg.ult:null;
    const ests=pacEstados(pid).map(estNom).filter(Boolean);
    const IC_TAR='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>';
    const IC_NOTA='<svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>';
-   const ico=x.tipo==='anotar'?`<span class="tk-i an">${IC_NOTA}</span>`:x.tipo==='tarea'?`<span class="tk-i ta">${IC_TAR}</span>`:x.tipo==='llamar'?(x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${IC_TEL}</a>`:`<span class="tk-i ll">${IC_TEL}</span>`):`<span class="tk-i ex">${IC_EXP}</span>`;
+   const ico=x.tipo==='anotar'||x.tipo==='consent'?`<span class="tk-i an">${IC_NOTA}</span>`:x.tipo==='tarea'?`<span class="tk-i ta">${IC_TAR}</span>`:x.tipo==='llamar'?(x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${IC_TEL}</a>`:`<span class="tk-i ll">${IC_TEL}</span>`):`<span class="tk-i ex">${IC_EXP}</span>`;
    r.innerHTML=`<div class="tk-ics">${ico}${x.tipo==='llamar'&&x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}</div><div class="tk-m"><b ${x.tipo!=='tarea'&&pid?`data-ficha="${pid}" class="tk-nom"`:''}>${escH(x.nombre)}</b>${x.tipo==='tarea'&&x.t.pacienteId?`<button type="button" class="tk-pacl" data-ficha="${x.t.pacienteId}" data-fn="${escH(x.t.paciente)}">Ver ficha de ${escH(x.t.paciente)} ›</button>`:''}${sub?`<p class="tk-meta">${escH(sub)}</p>`:''}${ul?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(ul.resultado)?'ok':/^NC|^VOLVER/.test(ul.resultado)?'no':'pe'}">${escH(resTxtG(ul.resultado))}</strong> · ${escH(segFecha(ul.fecha).replace(/^\S+ /,''))}${ul.quien?' · '+escH(quienNom(ul.quien)):''}${ul.nota?' — '+escH(ul.nota):''}</p>`:''}${notaT?`<p class="tk-nota">${escH(notaT)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}</div><div class="tk-a"></div>`;
    const acc=r.querySelector('.tk-a');
-   if(x.tipo==='anotar'){
+   if(x.tipo==='consent'){
+    const b=ce('button','tk-b');b.type='button';b.textContent='Enlazar';b.onclick=()=>abrirEnlazarConsent(x.k.modo==='P'?{pacienteId:x.k.pacienteId,nombre:x.k.nombre,onDone:recargar}:{consent:x.k,onDone:recargar});acc.appendChild(b);
+    if(x.k.modo==='P'){const w=ce('button','tk-q');w.type='button';w.title='Enviar el formulario por WhatsApp';w.setAttribute('aria-label','Enviar por WhatsApp');w.innerHTML='<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>';w.onclick=()=>{const t=segTel(x.k.tel);const txt=`Hola ${String(x.k.nombre||'').split(' ')[0]}, necesitamos que rellenes este formulario de FISIO365 (2 minutos): ${CONSENT_URL} . Pon tu propio teléfono, por favor. ¡Gracias!`;window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');};acc.appendChild(w);}
+    else acc.insertAdjacentHTML('beforeend','<span class="tk-ph"></span>');
+   }else if(x.tipo==='anotar'){
     const b=ce('button','tk-b');b.type='button';b.textContent='Actualizar';b.onclick=()=>abrirAnotarSesion(x.c,recargar);acc.appendChild(b);acc.insertAdjacentHTML('beforeend','<span class="tk-ph"></span>');
    }else if(x.tipo==='tarea'){
     const b=ce('button','tk-b tk-ok');b.type='button';b.textContent='✓ Hecho';b.onclick=async()=>{b.disabled=true;try{const d=await (await fetch('/api/schedule?action=seg-tarea-hecha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:x.t.id})})).json();if(!d.ok)throw 0;toast('¡Hecho!',true);recargar();}catch(e){b.disabled=false;toast('No se ha podido guardar',false);}};acc.appendChild(b);
@@ -5520,6 +5532,28 @@ function abrirTareaEquipo(t,onSave){
 }
 // ── FICHA COMPLETA DEL PACIENTE (todo lo de Airtable; se carga solo al abrirla) ──
 function mdSimple(t){return escH(String(t||'')).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#{1,3}\s*(.+)$/gm,'<b>$1</b>').replace(/\n/g,'<br>');}
+const CONSENT_URL='https://tally.so/r/b5j1M2';
+// Enlazar un consentimiento con su paciente: desde el paciente (busca consentimientos) o desde el consentimiento (busca pacientes)
+function abrirEnlazarConsent({pacienteId,nombre,consent,onDone}){
+ const modoP=!!pacienteId;
+ const m=hzModal(`<div class="hz-top"><div><small>${modoP?'Consentimiento de':'¿De qué paciente es?'}</small><b>${escH(modoP?nombre:consent.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  ${modoP?'':`<div class="fp-mu" style="font-size:13px">Rellenado el ${escH(String(consent.fecha||'').split('-').reverse().join('/'))}${consent.tel?' · tel. '+escH(consent.tel):''}${consent.email?' · '+escH(consent.email):''}</div>`}
+  <div class="hz-lab">${modoP?'Busca el formulario por nombre, teléfono, email o DNI':'Busca el paciente'}</div><input type="text" class="ag-in cs-bus" autocomplete="off" value="${escH(modoP?String(nombre||'').split(' ').slice(-1)[0]:consent.nombre)}"><div class="ag-res2 cs-res"></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const bus=m.querySelector('.cs-bus'),res=m.querySelector('.cs-res');
+ const enlazar=async(consentId,pacId,b)=>{b.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-consent-enlazar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,consentId,pacienteId:pacId})})).json();if(!r.ok)throw 0;toast('Consentimiento enlazado',true);m.remove();onDone&&onDone();}catch(e){b.disabled=false;toast('No se ha podido enlazar',false);}};
+ const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+ let tk=0;
+ const buscar=async()=>{const q=bus.value.trim();if(q.length<2){res.innerHTML='';return;}const t=++tk;
+  if(modoP){res.innerHTML='<div class="fac-vacio">Buscando…</div>';let r;try{r=await (await fetch(`/api/schedule?action=seg-consent-buscar&pwd=${encodeURIComponent(apiPwd)}&q=${encodeURIComponent(q)}`)).json();}catch(e){r={};}if(t!==tk)return;
+   const L=(r&&r.res)||[];res.innerHTML=L.length?L.map(c=>`<button type="button" class="ag-pi" data-id="${c.id}"><b>${escH(c.nombre)}</b><small>${escH([String(c.fecha||'').split('-').reverse().join('/'),c.tel,c.email].filter(Boolean).join(' · '))}${c.de?` · <span style="color:#b3261e">ya enlazado a ${escH(c.de)}</span>`:''}</small></button>`).join(''):'<div class="fac-vacio">No hay ningún formulario así</div>';
+   res.querySelectorAll('.ag-pi').forEach(b=>b.onclick=()=>enlazar(b.dataset.id,pacienteId,b));}
+  else{const qn=norm(q),qd=q.replace(/\D/g,'');const L=(pacs||[]).filter(p=>norm(p.nombre).includes(qn)||(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd))).slice(0,8);
+   const sug=consent.sugerido;
+   res.innerHTML=(sug?`<button type="button" class="ag-pi" data-id="${sug.id}"><b>${escH(sug.nombre)}</b><small>Mismo teléfono o email</small></button>`:'')+L.filter(p=>!sug||p.id!==sug.id).map(p=>`<button type="button" class="ag-pi" data-id="${p.id}"><b>${escH(p.nombre)}</b><small>${escH(p.telefono||p.email||'')}</small></button>`).join('')||'<div class="fac-vacio">Sin resultados</div>';
+   res.querySelectorAll('.ag-pi').forEach(b=>b.onclick=()=>enlazar(consent.id,b.dataset.id,b));}};
+ let tm;bus.oninput=()=>{clearTimeout(tm);tm=setTimeout(buscar,250);};buscar();
+}
 async function abrirFichaPaciente(id,nombre,pBase){
  const base=pBase||(pacs||[]).find(x=>x.id===id)||{id,nombre};
  const m=ce('div','pv fp');
@@ -5547,15 +5581,17 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const hoy=d.hoy,fut=d.citas.filter(c=>c.fecha>=hoy&&!/CANCEL|REPROGRAM/i.test(c.estado)).reverse(),real=d.citas.filter(c=>c.fecha<hoy&&/REALIZADA/i.test(c.estado));
   const pend=d.seguimiento.filter(x=>!x.hecho),ult=d.llamadas[0];
   const C=d.consent,fC=f=>f?f.split('-').reverse().join('/'):'',sn=v=>/^s[ií]$/i.test(v||'')?'Sí':/^no$/i.test(v||'')?'No':(v||'—');
-  const salud=!C?`<div class="fp-blk"><div class="fp-bt"><h3>Salud</h3></div><div class="fp-sin">⚠️ No encontramos su consentimiento firmado</div></div>`:
-   `<div class="fp-blk"><div class="fp-bt"><h3>Salud</h3><small class="fp-mu">Consentimiento del ${escH(fC(C.fecha))}</small></div>
-    ${C.salud.length?`<div class="fp-sal">${C.salud.map(x=>`<span class="${x.grave?'gr':''}">${x.grave?'⚠ ':''}${escH(x.t)}${['EMBARAZO','CÁNCER'].includes(x.k)?`<button type="button" class="fp-salx" data-k="${x.k}" aria-label="Quitar">✕</button>`:''}</span>`).join('')}</div>`:'<div class="fp-mu">✓ No marcó nada a tener en cuenta</div>'}
-    ${C.sueloPelvico?`<div class="fp-mu" style="margin-top:8px">Suelo pélvico: Sí · ${C.aceptaSP?'acepta la exploración ✓':'no consta que acepte la exploración'}</div>`:''}</div>
-   <div class="fp-blk"><div class="fp-bt"><h3>Marketing</h3></div><div class="fp-fs">
-    <div class="fp-f"><span>Nos conoció por</span><div class="fp-v">${escH(C.marketing.conocido||'—')}</div></div>
-    <div class="fp-f"><span>Newsletter</span><div class="fp-v">${sn(C.marketing.newsletter)}</div></div>
-    <div class="fp-f"><span>Uso de imágenes</span><div class="fp-v">${sn(C.marketing.imagenes)}</div></div>
-    <div class="fp-f"><span>Avisos de citas</span><div class="fp-v">${sn(C.marketing.citas)}</div></div></div></div>`;
+  const ICS={Google:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',Redes:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',Ubicación:'<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',Recomendación:'<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.8a3 3 0 0 1 0 5.4M17.5 13.6A5.5 5.5 0 0 1 20.5 19"/>',Médico:'<path d="M12 5v14M5 12h14"/>'};
+  const ico=k=>`<svg viewBox="0 0 24 24">${ICS[k]||'<circle cx="12" cy="12" r="7"/>'}</svg>`;
+  const tile=(l,v)=>{const x=sn(v);return `<div class="fp-mt"><span>${l}</span><b class="${x==='Sí'?'si':x==='No'?'no':''}"><i></i>${x}</b></div>`;};
+  const salud=!C?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Salud</h3><span class="fp-chip no">Sin consentimiento</span></div><div class="fp-sin">No encontramos su consentimiento firmado</div><div class="fp-cbts"><button type="button" class="fp-cbus">Buscar y enlazar</button><button type="button" class="fp-cenv">Enviar por WhatsApp</button></div></div>`:
+   `<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Salud</h3><button type="button" class="fp-chip ${C.estado==='dudoso'?'no':'ok'} fp-cbus" title="Cambiar el consentimiento enlazado">${C.estado==='dudoso'?'¿Es suyo?':'✓ Firmado '+escH(fC(C.fecha))}</button></div>
+    ${C.estado==='dudoso'?`<div class="fp-dud">Lo rellenó <b>${escH(C.nombreForm||'otra persona')}</b> el ${escH(fC(C.fecha))} con su mismo teléfono o email. ¿Es suyo?<div class="fp-cbts"><button type="button" class="fp-csi">Sí, es suyo</button><button type="button" class="fp-cbus">No, buscar otro</button></div></div>`:''}
+    ${C.salud.length?`<div class="fp-sal">${C.salud.map(x=>`<span class="${x.grave?'gr':''}">${x.grave?'⚠ ':''}${escH(x.t)}${['EMBARAZO','CÁNCER'].includes(x.k)?`<button type="button" class="fp-salx" data-k="${x.k}" aria-label="Quitar">✕</button>`:''}</span>`).join('')}</div>`:'<div class="fp-nada">Nada a tener en cuenta</div>'}
+    ${C.sueloPelvico?`<div class="fp-sp">Suelo pélvico <b class="${C.aceptaSP?'si':'no'}">${C.aceptaSP?'✓ Acepta la exploración':'Sin aceptación de la exploración'}</b></div>`:''}</div>
+   <div class="fp-blk fp-cs"><div class="fp-bt"><h3>Marketing</h3></div>
+    <div class="fp-conoc">${ico(C.marketing.conocido)}<div><span>Nos conoció por</span><b>${escH(C.marketing.conocido||'—')}</b></div></div>
+    <div class="fp-mts">${tile('Newsletter',C.marketing.newsletter)}${tile('Imágenes',C.marketing.imagenes)}${tile('Avisos',C.marketing.citas)}</div></div>`;
   return `${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
   <div class="fp-blk fp-pq"></div>
@@ -5684,6 +5720,9 @@ async function abrirFichaPaciente(id,nombre,pBase){
   cont.querySelectorAll('.fp-segit').forEach(x=>x.onclick=()=>{const sp=(d.seguimiento||[]).find(s=>s.id===x.dataset.id);if(sp)verSeg(sp);});
   const tok='fp_'+Date.now();cont.dataset.token=tok;
   if(tab==='resumen'){cont.innerHTML=resumen();montarEdicion(cont);montarPorQue(cont);
+   cont.querySelectorAll('.fp-cbus').forEach(bt=>bt.onclick=()=>abrirEnlazarConsent({pacienteId:id,nombre:P.nombre,onDone:async()=>{try{await cargar();}catch(_){}pintar();}}));
+   {const bs=cont.querySelector('.fp-csi');if(bs)bs.onclick=async()=>{bs.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-consent-enlazar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,consentId:d.consent.id,pacienteId:id})})).json();if(!r.ok)throw 0;d.consent.estado='enlazado';toast('Enlazado',true);pintar();}catch(e){bs.disabled=false;toast('No se ha podido enlazar',false);}};}
+   {const be=cont.querySelector('.fp-cenv');if(be)be.onclick=()=>{const t=segTel(P.whatsapp||P.telf||P.tel||'');const txt=`Hola ${String(P.nombre||'').split(' ')[0]}, antes de tu sesión en FISIO365 necesitamos que rellenes este formulario (2 minutos): ${CONSENT_URL} . Pon tu propio teléfono, por favor. ¡Gracias!`;window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');};}
    cont.querySelectorAll('.fp-salx').forEach(bt=>bt.onclick=async()=>{if(!bt.dataset.ok){bt.dataset.ok=1;bt.textContent='¿Quitar? ✓';setTimeout(()=>{if(bt.isConnected){delete bt.dataset.ok;bt.textContent='✕';}},3000);return;}
     bt.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-consent-quitar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:d.consent.id,campo:bt.dataset.k})})).json();if(!r.ok)throw 0;
      const C=d.consent,i=C.salud.findIndex(x=>x.k===bt.dataset.k),nom=bt.dataset.k==='CÁNCER'?'Cáncer':'Embarazo';
@@ -5828,16 +5867,20 @@ function datosTareasTodas(forzar){
  const p=_datosTareasTodas(forzar).then(d=>{_dtC={t:Date.now(),d,p:null};return d;}).catch(e=>{_dtC.p=null;throw e;});_dtC.p=p;return p;}
 async function _datosTareasTodas(fresco){
  const iso=n=>isoMadrid(new Date(Date.now()+n*864e5));
- const [r,sg,tq,sa]=await Promise.all([
+ const [r,sg,tq,sa,cs]=await Promise.all([
   fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${iso(-30)}&hasta=${iso(-1)}${fresco?'&fresco=1':''}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-tareas&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
-  fetch(`/api/schedule?action=seg-sin-anotar&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
+  fetch(`/api/schedule?action=seg-sin-anotar&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
+  fetch(`/api/schedule?action=seg-consent-pendientes&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
  setSegPac(sg);
  const hoy=(sg&&sg.hoy)||iso(0),items=[];
  ((tq&&tq.tareas)||[]).forEach(t=>items.push({tipo:'tarea',fecha:t.fecha,nombre:t.texto,quien:t.para,t}));
  // Sesiones realizadas sin nota de evolución: hay que anotarlas como tarde el día siguiente
  ((sa&&sa.sesiones)||[]).filter(c=>c.pacienteId).forEach(c=>{const lim=new Date(c.fecha+'T12:00:00');lim.setDate(lim.getDate()+1);const q=String(c.fisio||'').trim().split(' ')[0];const qn=q?q.charAt(0).toUpperCase()+q.slice(1).toLowerCase():'';items.push({tipo:'anotar',fecha:lim.toISOString().slice(0,10),nombre:c.nombre,quien:TAR_NOMBRES.includes(qn)?qn:(qn||''),c});});
+ // Consentimientos: pacientes que ya han venido sin consentimiento enlazado, y formularios que no sabemos de quién son
+ ((cs&&cs.sinCons)||[]).forEach(k=>items.push({tipo:'consent',fecha:k.primera,nombre:k.nombre,quien:'Nora',k:{...k,modo:'P'}}));
+ ((cs&&cs.huerfanos)||[]).forEach(k=>items.push({tipo:'consent',fecha:k.fecha,nombre:k.nombre,quien:'Nora',k:{...k,modo:'C'}}));
  ((sg&&sg.pendientes)||[]).filter(x=>x.fecha<=iso(7)).forEach(x=>items.push({tipo:'llamar',fecha:x.fecha,nombre:x.nombre,quien:deQuienSeg(x),detalle:x.nota,tel:x.tel,seg:x}));
  ((r&&r.fisios)||[]).forEach(f=>(f.lista||[]).filter(p=>!(p.nota&&p.notaFecha>=p.ultima)).forEach(p=>{
   // Plazo para explicarlo: 2 días después de su última sesión
