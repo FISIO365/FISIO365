@@ -6413,9 +6413,9 @@ async function _datosTareasTodas(fresco){
  return {items,hoy,fallo:!(r&&r.ok)};
 }
 // ── SEGUIMIENTO: pacientes a los que hay que llamar ──
-const SEG_RES=['Cita recuperada','Volver a llamar','No contesta','Pendiente de respuesta','Alta'];
+const SEG_RES=['Cita recuperada','Volver a llamar','No contesta','Pendiente de respuesta','Alta','No volver a llamar'];
 const QUIEN_NOM={NORA:'Nora',SARA:'Sara',JONY:'Jonathan',JUAN:'Juan',RAMIRO:'Ramiro'};
-const resTxtG=r=>{r=String(r||'').toUpperCase();return /RECUPERADA/.test(r)?'Cita recuperada':/^ALTA/.test(r)?'Alta':/^NC/.test(r)?'No contesta':/^VOLVER/.test(r)?'Volver a llamar':/PENDIENTE/.test(r)?'Pendiente de respuesta':(r?r.charAt(0)+r.slice(1).toLowerCase():'');};
+const resTxtG=r=>{r=String(r||'').toUpperCase();if(/^NO VOLVER/.test(r))return 'No volver a llamar';return /RECUPERADA/.test(r)?'Cita recuperada':/^ALTA/.test(r)?'Alta':/^NC/.test(r)?'No contesta':/^VOLVER/.test(r)?'Volver a llamar':/PENDIENTE/.test(r)?'Pendiente de respuesta':(r?r.charAt(0)+r.slice(1).toLowerCase():'');};
 const quienNom=q=>QUIEN_NOM[String(q||'').trim().toUpperCase()]||q||'';
 const ahoraTxt=()=>new Date().toLocaleString('es-ES',{timeZone:'Europe/Madrid',weekday:'short',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});
 function chipsQuien(m,sel,ini){let q=ini||'';const el=m.querySelector(sel);el.innerHTML=TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('');const pr=()=>el.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.n===q));pr();el.querySelectorAll('button').forEach(b=>b.onclick=()=>{q=b.dataset.n;pr();});return ()=>q;}
