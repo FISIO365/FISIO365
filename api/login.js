@@ -17,6 +17,7 @@ module.exports = async function handler(req, res) {
     const patient = data.records.find(rec => String(rec.fields['PIN'] || '').trim() === String(pin).trim());
     if (!patient) return res.status(200).json({ ok: false, error: 'PIN incorrecto. Contacta con tu fisioterapeuta.' });
     const f = patient.fields;
+    await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${patient.id}`, { method: 'PATCH', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { 'ÚLTIMO ACCESO APP': new Date().toISOString() } }) }).catch(() => {});
     return res.status(200).json({
       ok: true,
       patient: {

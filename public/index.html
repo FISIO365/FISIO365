@@ -313,6 +313,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .hoy-hero .date-sub,.fc-dia{text-transform:none}
 .nav-menu-inner>div:nth-of-type(1),.nav-menu-inner>div:nth-of-type(2){display:none!important}
 .nav-menu-inner>div:nth-of-type(3){border-top:none!important;padding-top:0!important}
+.nm-av{overflow:hidden}.nm-av img,.cu-av img{width:100%;height:100%;object-fit:cover;display:block}.cu-top{display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px 16px;margin-bottom:14px}.cu-av{width:96px;height:96px;border-radius:50%;background:#c2552e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:30px;overflow:hidden}.cu-top b{font-size:17px}.cu-top small{font-size:13px;color:#7d6a60}.cu-bt{font-family:inherit;font-size:14px;font-weight:700;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:12px;padding:10px 16px;cursor:pointer}.cu-box{background:#fff;border:1px solid var(--border);border-radius:20px;padding:16px;margin-bottom:14px}.cu-box h3{font-size:15px;margin:0 0 12px}.cu-box label{display:block;font-size:12.5px;color:#7d6a60;margin:10px 0 5px}.cu-box input{width:100%;box-sizing:border-box;font-family:inherit;font-size:20px;letter-spacing:8px;text-align:center;padding:10px;border:1.5px solid var(--border);border-radius:12px;background:#f5f2ee}.cu-ok{width:100%;margin-top:14px;font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:12px;padding:13px;background:#1a1a1a;color:#fff;cursor:pointer}.cu-err{font-size:13px;color:#c0392b;margin-top:8px;min-height:1px}
 .nm-head{display:flex;align-items:center;gap:11px;padding:4px 6px 14px;margin-bottom:8px;border-bottom:1px solid rgba(0,0,0,.06)}.nm-av{width:40px;height:40px;border-radius:50%;background:#c2552e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}.nm-head b{display:block;font-size:14.5px;line-height:1.2;color:#111}.nm-head span{display:block;font-size:12px;color:#8a817a}
 .nav-menu{width:200px}
 
@@ -630,7 +631,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="nav-overlay" id="navOverlay" onclick="cerrarMenu()"></div>
  <div class="nav-menu" id="navMenu">
  <div class="nav-menu-inner" style="background:white;border-radius:16px;padding:16px;">
- <header class="nm-head"><div class="nm-av" id="nmAv"></div><div><b id="nmNom"></b><span>Mi cuenta</span></div></header>
+ <header class="nm-head" onclick="showSection('cuenta');cerrarMenu()" role="button" tabindex="0" style="cursor:pointer"><div class="nm-av" id="nmAv"></div><div><b id="nmNom"></b><span>Mi cuenta ›</span></div></header>
  <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:12px;">
  <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Mis ejercicios</button>
  <button class="nav-item" id="navProgreso" onclick="showSection('progreso');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H3V5h3M18 9h3V5h-3"/><path d="M6 5h12v7a6 6 0 0 1-12 0V5z"/><path d="M12 17v4M8 21h8"/></svg>Mi racha</button>
@@ -735,6 +736,16 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="doc-sec" id="infPacWrap" style="display:none"><div class="doc-h">Informes de tus valoraciones</div><div id="infPacList"></div></div>
  </div>
 
+ <div id="vistaCuenta" style="display:none;">
+ <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mi cuenta</div></div>
+ <div class="cu-top"><div class="cu-av" id="cuAv"></div><b id="cuNom"></b><small id="cuMail"></small><button type="button" class="cu-bt" onclick="document.getElementById('cuFile').click()">Cambiar foto</button><input type="file" id="cuFile" accept="image/*" style="display:none" onchange="subirFotoPerfil(this)"></div>
+ <div class="cu-box"><h3>Cambiar mi PIN</h3>
+  <label for="cuPin0">PIN actual</label><input id="cuPin0" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password">
+  <label for="cuPin1">PIN nuevo (4 números)</label><input id="cuPin1" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password">
+  <label for="cuPin2">Repite el PIN nuevo</label><input id="cuPin2" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password">
+  <div class="cu-err" id="cuErr"></div><button type="button" class="cu-ok" id="cuOk" onclick="cambiarPin()">Guardar PIN nuevo</button></div>
+ </div>
+
  <div id="vistaNotificaciones" style="display:none;">
  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;margin-top:4px;"><div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--black)">Notificaciones</div></div>
  <div id="avisosAjustes"></div>
@@ -829,7 +840,8 @@ async function doLogin(){
   btn.disabled=false;btn.textContent='Entrar';
 }
 
-function initApp(){try{const n=(patient&&patient.nombre)||'';document.getElementById('nmNom').textContent=n;document.getElementById('nmAv').textContent=n.trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}catch(e){}
+function initApp(){try{const n=(patient&&patient.nombre)||'';document.getElementById('nmNom').textContent=n;pintarAvatar();}catch(e){}
+  try{const k='f365_visto_'+patient.id,ya=localStorage.getItem(k)===TODAY;fetch('/api/schedule?action='+(ya?'mi-cuenta':'app-visto')+'&patientId='+encodeURIComponent(patient.id)).then(r=>r.json()).then(d=>{if(d&&d.ok){if(!ya)localStorage.setItem(k,TODAY);patient.foto=d.foto||'';pintarAvatar();}}).catch(()=>{});}catch(e){}
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
   document.getElementById('appScreen').style.opacity='0';
@@ -901,7 +913,7 @@ async function compartirRecomendacion(){
   },2000);
 }
 function showSection(section){
-  ['hoy','notificaciones','citas','progreso','informes','facturas','mensajes','guia','sorteo','promos'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
+  ['hoy','notificaciones','citas','progreso','informes','facturas','mensajes','guia','sorteo','promos','cuenta'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
   ['navHoy','navProgreso','navInformes','navFacturas','navCitas','navMensajes','navGuia'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
   const navMap={hoy:'navHoy',progreso:'navProgreso',informes:'navInformes',facturas:'navFacturas',citas:'navCitas',mensajes:'navMensajes',guia:'navGuia'};
   if(section==='facturas')section='informes';
@@ -910,6 +922,7 @@ function showSection(section){
   if(section==='citas')initCitas();
   if(section==='notificaciones')pintarAjustesAvisos();
   if(section==='informes')loadInformes();
+  if(section==='cuenta')pintarCuenta();
   if(section==='sorteo')loadPuntos();
   if(section==='mensajes')abrirChat();
   document.body.classList.toggle('en-chat',section==='mensajes');
@@ -1182,6 +1195,26 @@ function abrirConv(c){
   if(chatCtl){chatCtl.parar();chatCtl=null;}
   chatCtl=FisioChat.montar(document.getElementById('chatBox'),{rol:'paciente',pacienteId:patient.id,pacienteNombre:patient.nombre,fisio:f,sinFisio:!!c.tuyo,onLeido:()=>checkMensajesNoLeidos(),onEnviado:m=>{const txt=m.texto||(m.adjuntos&&m.adjuntos[0]?(/^image\//.test(m.adjuntos[0].tipo)?'Te ha enviado una foto':'Te ha enviado un PDF'):'');fetch('/api/notificar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fisioId:f.id,pacienteId:patient.id,pacienteNombre:patient.nombre,message:txt})}).catch(()=>{});}});
 }
+
+// MI CUENTA (foto de perfil y PIN)
+function inicialesPac(){return String((patient&&patient.nombre)||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
+function pintarAvatar(){const e=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));const html=patient&&patient.foto?`<img src="${e(patient.foto)}" alt="" onerror="this.parentNode.textContent='${e(inicialesPac())}'">`:e(inicialesPac());['nmAv','cuAv'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});}
+function pintarCuenta(){document.getElementById('cuNom').textContent=patient.nombre||'';document.getElementById('cuMail').textContent=patient.email||'';pintarAvatar();['cuPin0','cuPin1','cuPin2'].forEach(id=>document.getElementById(id).value='');document.getElementById('cuErr').textContent='';}
+async function subirFotoPerfil(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
+ try{toast('Subiendo foto…',true);
+  const img=await new Promise((ok,ko)=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{URL.revokeObjectURL(u);ok(i);};i.onerror=ko;i.src=u;});
+  const L=640,sc=Math.min(1,L/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const b64=c.toDataURL('image/jpeg',0.85).split(',')[1];
+  const d=await (await fetch('/api/schedule?action=subir-foto&patientId='+encodeURIComponent(patient.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({b64})})).json();
+  if(!d.ok)throw new Error(d.error||'');patient.foto='data:image/jpeg;base64,'+b64;pintarAvatar();toast('Foto actualizada ✓',true);
+ }catch(e){toast(e.message||'No se ha podido subir la foto',false);}}
+async function cambiarPin(){const v=id=>document.getElementById(id).value.trim(),err=document.getElementById('cuErr'),b=document.getElementById('cuOk');err.textContent='';
+ const a=v('cuPin0'),n1=v('cuPin1'),n2=v('cuPin2');
+ if(!/^\d{4}$/.test(n1)){err.textContent='El PIN nuevo tiene que tener 4 números';return;}
+ if(n1!==n2){err.textContent='Los dos PIN nuevos no coinciden';return;}
+ b.disabled=true;try{const d=await (await fetch('/api/schedule?action=cambiar-pin&patientId='+encodeURIComponent(patient.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actual:a,nuevo:n1})})).json();
+  if(!d.ok){err.textContent=d.error||'No se ha podido cambiar';}else{toast('PIN cambiado ✓ La próxima vez entra con el nuevo',true);pintarCuenta();}}catch(e){err.textContent='Error de conexión';}
+ b.disabled=false;}
 
 // INFORMES
 async function loadDocumentos(){const w=document.getElementById('docPacWrap'),l=document.getElementById('docPacList');if(!w||!patient)return;

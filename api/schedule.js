@@ -525,6 +525,30 @@ module.exports = async function handler(req, res) {
         if (pids.length) (await capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME`)).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; });
         return res.status(200).json({ ok: true, res: r.map(c => ({ id: c.id, tipo: c.tipo, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, de: c.pac.map(id => nom[id] || '').filter(Boolean).join(', ') })) });
       }
+      if (action === 'seg-app-pendientes') {
+        // Pacientes con sesión en los últimos 30 días que no han abierto la app, o que no tienen plan de ejercicios
+        const ses = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_AFTER({FECHA},DATEADD(TODAY(),-31,'days')),NOT(IS_AFTER({FECHA},TODAY())))`)}&fields[]=FECHA&fields[]=RELACIÓN - CITA&fields[]=PREF.`);
+        const ult = {}; ses.forEach(c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0]; if (!pid) return; const f = String(c.fields['FECHA'] || '').slice(0, 10); if (!ult[pid] || f > ult[pid].fecha) ult[pid] = { fecha: f, fisio: cNm(c.fields['PREF.']) }; });
+        const pids = Object.keys(ult), info = {};
+        for (let i = 0; i < pids.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=TELF&fields[]=EMAIL&fields[]=PIN&fields[]=ÚLTIMO ACCESO APP&fields[]=PushSubscription&fields[]=SIN AVISO APP`)).forEach(p => { info[p.id] = p.fields; });
+        const [planes, dolor] = await Promise.all([
+          todosT('tblvgE0a4gsrj4Vhp', `filterByFormula=${encodeURIComponent("LEN({Ejercicios}&'')>2")}&fields[]=PacienteID`).catch(() => []),
+          todosT('tblxJmnb7LHML2ZZh', 'fields[]=PacienteID').catch(() => [])]);
+        const conPlan = new Set(planes.map(r => r.fields['PacienteID'])), usaApp = new Set(dolor.map(r => r.fields['PacienteID']));
+        const sinApp = [], sinPlan = [];
+        pids.forEach(id => { const P = info[id]; if (!P || P['SIN AVISO APP']) return;
+          const x = { pacienteId: id, nombre: P['FULL NAME'] || '', tel: P['WHATSAPP'] || P['TELF'] || '', email: P['EMAIL'] || '', pin: P['PIN'] || '', ultima: ult[id].fecha, fisio: ult[id].fisio };
+          if (!conPlan.has(id)) sinPlan.push(x);
+          else if (!P['ÚLTIMO ACCESO APP'] && !P['PushSubscription'] && !usaApp.has(id) && !x.pin) { x.pin = nuevoPin(); x.pinNuevo = true; }
+          else if (!P['ÚLTIMO ACCESO APP'] && !P['PushSubscription'] && !usaApp.has(id)) sinApp.push(x); });
+        for (const x of sinApp.filter(x => x.pinNuevo).slice(0, 20)) await at(`${PACIENTES}/${x.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: x.pin } }) }).catch(() => {});
+        return res.status(200).json({ ok: true, sinApp, sinPlan });
+      }
+      if (action === 'seg-app-ignorar' && req.method === 'POST') {
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
+        const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'SIN AVISO APP': true } }) });
+        return res.status(200).json({ ok: !d.error });
+      }
       if (action === 'seg-consent-pendientes') {
         // 1) Consentimientos de los últimos 4 meses sin paciente: se enlazan solos si cuadra; si no, a Pendientes
         // 2) Pacientes con sesión realizada en los últimos 30 días sin consentimiento enlazado
@@ -950,7 +974,7 @@ module.exports = async function handler(req, res) {
           if (vuelve) { await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) }).catch(() => {}); F['POR QUÉ NO REAGENDA'] = ''; F['POR QUÉ FECHA'] = ''; F['POR QUÉ FISIO'] = ''; }
         }
         return res.status(200).json({ ok: true, hoy: hoyF, saldo, consent,
-          paciente: { id: pac.id, pin: F['PIN'] || '', nombre: F['FULL NAME'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', telf: F['TELF'] || '', whatsapp: F['WHATSAPP'] || '', pin: F['PIN'] || '', email: F['EMAIL'] || '', dni: F['DNI'] || '', cumple: F['CUMPLE'] || '', telDescartado: F['TELF FORM DESCARTADO'] || '', alta: pac.createdTime || '', estados: F['ESTADO'] || [],
+          paciente: { id: pac.id, pin: F['PIN'] || '', nombre: F['FULL NAME'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', telf: F['TELF'] || '', whatsapp: F['WHATSAPP'] || '', pin: F['PIN'] || '', email: F['EMAIL'] || '', dni: F['DNI'] || '', cumple: F['CUMPLE'] || '', telDescartado: F['TELF FORM DESCARTADO'] || '', foto: (((F['FOTO PERFIL'] || [])[0] || {}).thumbnails || {}).large ? F['FOTO PERFIL'][0].thumbnails.large.url : (((F['FOTO PERFIL'] || [])[0] || {}).url || ''), ultimoAcceso: F['ÚLTIMO ACCESO APP'] || '', appUsada: !!(F['ÚLTIMO ACCESO APP'] || F['PushSubscription']), alta: pac.createdTime || '', estados: F['ESTADO'] || [],
             historial: F['HISTORIAL CLÍNICO'] || '', historialMod: F['HISTORIAL ACTUALIZADO'] || '', notas: F['NOTAS'] || '', porQue: F['POR QUÉ NO REAGENDA'] || '', porQueFecha: F['POR QUÉ FECHA'] || '', porQueFisio: F['POR QUÉ FISIO'] || '', bonoPrevio: F['SESIONES BONO PREVIO'] || 0, colab: F['COLAB'] || '', resena: !!F['RESEÑA POSITIVA'],
             archivos: (F['DOCUS'] || []).map(a => ({ nombre: a.filename || 'archivo', url: a.url, tipo: a.type || '', tam: a.size || 0, mini: (a.thumbnails && ((a.thumbnails.large && a.thumbnails.large.url) || (a.thumbnails.small && a.thumbnails.small.url))) || '' })) },
           citas: citas.map(c => ({ id: c.id, fecha: String(c.fields['FECHA'] || '').slice(0, 10), hora: c.fields['HORA'] || '', estado: String(nm(c.fields['ESTADO'])).trim(), fisio: nm(c.fields['PREF.']), nota: c.fields['NOTAS'] || '' })),
@@ -1212,6 +1236,33 @@ module.exports = async function handler(req, res) {
       if (d.papel) { const r = await at(`${CONS_O}/${id}`); const a = r.fields && (r.fields['ARCHIVO'] || [])[0]; if (!a) return res.status(404).json({ ok: false });
         const im = await fetch(a.url); return res.status(200).json({ ok: true, papel: true, nombre: a.filename || 'consentimiento', tipo: a.type || 'application/octet-stream', b64: Buffer.from(await im.arrayBuffer()).toString('base64') }); }
       delete d.pac; return res.status(200).json(d);
+    } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
+  }
+  // ── App del paciente: su cuenta (foto de perfil, cambiar PIN) y «la ha abierto» ──
+  if (action === 'mi-cuenta' || action === 'cambiar-pin' || action === 'subir-foto' || action === 'app-visto') {
+    if (!/^rec[A-Za-z0-9]{14}$/.test(patientId || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
+    const b = req.method === 'POST' ? (req.body || {}) : {};
+    try {
+      const p = await at(`${PACIENTES}/${patientId}`); if (p.error) return res.status(404).json({ ok: false, error: 'No encontrado' });
+      const F = p.fields || {}, foto = (F['FOTO PERFIL'] || [])[0];
+      const fotoUrl = foto ? ((foto.thumbnails && foto.thumbnails.large && foto.thumbnails.large.url) || foto.url) : '';
+      if (action === 'app-visto') { await at(`${PACIENTES}/${patientId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ÚLTIMO ACCESO APP': new Date().toISOString() } }) }).catch(() => {}); return res.status(200).json({ ok: true, foto: fotoUrl }); }
+      if (action === 'mi-cuenta') return res.status(200).json({ ok: true, foto: fotoUrl, email: F['EMAIL'] || '' });
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      if (action === 'cambiar-pin') {
+        const actual = String(b.actual || '').trim(), nuevo = String(b.nuevo || '').trim();
+        if (actual !== String(F['PIN'] || '').trim()) return res.status(200).json({ ok: false, error: 'El PIN actual no es correcto' });
+        if (!/^\d{4}$/.test(nuevo)) return res.status(200).json({ ok: false, error: 'El PIN nuevo tiene que tener 4 números' });
+        const d = await at(`${PACIENTES}/${patientId}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: nuevo } }) });
+        return res.status(200).json({ ok: !d.error, error: d.error ? 'No se ha podido guardar' : undefined });
+      }
+      // subir-foto: imagen ya reducida en el móvil (jpeg en base64); sustituye a la anterior
+      const b64 = String(b.b64 || ''); if (!b64 || b64.length > 3e6) return res.status(400).json({ ok: false, error: 'Foto no válida' });
+      await at(`${PACIENTES}/${patientId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'FOTO PERFIL': [] } }) });
+      const up = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${patientId}/fldHLMwQ7hVrL4mL3/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'image/jpeg', file: b64, filename: 'perfil.jpg' }) }).then(x => x.json()).catch(() => ({ error: 1 }));
+      if (up.error) return res.status(200).json({ ok: false, error: 'No se ha podido subir la foto' });
+      const a = ((up.fields || {})['fldHLMwQ7hVrL4mL3'] || [])[0];
+      return res.status(200).json({ ok: true, foto: a ? a.url : '' });
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
   }
   if (action === 'facturas') {
