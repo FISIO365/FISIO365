@@ -420,7 +420,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .rp-ck{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid #d9cfc7;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700;transition:all .15s}.rp-it.on .rp-ck{background:#16803c;border-color:#16803c}
 .rp-tx{flex:1;min-width:0;font-size:14.5px;line-height:1.35;color:#1e2a38;padding-top:2px}.rp-it.on .rp-tx{color:#7d6a60}
 .rp-av{display:block;margin-top:6px;font-size:12.5px;color:#b45309;background:#fdf1e8;border-radius:10px;padding:7px 10px;line-height:1.45}.rp-av u{text-decoration:none;font-weight:600;color:#c2552e;cursor:pointer}.rp-av.ok{color:#16803c;background:#e8f5ec}
-.rp-sub{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:12.5px;color:#7d6a60;line-height:1.35}.rp-sub span::before{content:'· ';color:#c2552e;font-weight:700}
+.rp-sub{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:12.5px;color:#7d6a60;line-height:1.35}.rp-tx b{font-weight:700;color:#1e2a38}.rp-it.on .rp-tx b{color:#7d6a60}.rp-sub b{color:#5c4f47}.rp-sub span::before{content:'· ';color:#c2552e;font-weight:700}
 .rp-nota{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:12px;resize:vertical;margin-top:4px}
 .rp-env{display:block;width:100%;margin-top:12px;padding:14px;border:none;border-radius:14px;background:#c2552e;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer}.rp-env.armado{background:#1e2a38}.rp-env:disabled{opacity:.6}
 .rp-ok{display:flex;align-items:center;gap:8px;background:#e8f5ec;color:#16803c;border-radius:14px;padding:11px 14px;font-size:13.5px;font-weight:600;margin-bottom:12px}
@@ -5623,6 +5623,7 @@ async function borrarFicha(id,nombre,cerrarFicha){
 }
 
 // ── REPORTE DIARIO: checklist rápida de final de día (tic, tic, tic y enviar) ──
+const negr=t=>escH(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
 async function renderReporte(wrap){
  const box=ce('div','rp');wrap.appendChild(box);
  const yo=(fisioActual&&fisioActual.nombre)||'';const esFisio=(fisios||[]).some(f=>String(f.nombre).split(' ')[0].toLowerCase()===yo.split(' ')[0].toLowerCase());
@@ -5630,7 +5631,7 @@ async function renderReporte(wrap){
  let d;try{d=await (await fetch(`/api/schedule?action=seg-cierre&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(yo)}${esDireccion()?'&todos=1':''}`)).json();}catch(e){d={ok:false};}
  if(!d.ok){box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
  const KEY='f365_rep_'+d.fecha+'_'+yo;let marc=new Set();try{marc=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'));}catch(_){}
- if(d.enviado&&d.enviado.marcados&&!marc.size)String(d.enviado.marcados).split('\n').forEach(l=>{if(l.startsWith('✓')){const it=(d.items||[]).find(x=>l.slice(2)===x.t);if(it)marc.add(it.k);}});
+ if(d.enviado&&d.enviado.marcados&&!marc.size)String(d.enviado.marcados).split('\n').forEach(l=>{if(l.startsWith('✓')){const it=(d.items||[]).find(x=>l.slice(2)===x.t.replace(/\*\*/g,''));if(it)marc.add(it.k);}});
  const guarda=()=>{try{localStorage.setItem(KEY,JSON.stringify([...marc]));}catch(_){}};
  const fechaTxt=new Date(d.fecha+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
  const hora=t=>t?new Date(t).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
@@ -5644,7 +5645,7 @@ async function renderReporte(wrap){
    if(d.enviado)h+=`<div class="rp-ok">✓ Reporte enviado a las ${hora(d.enviado.enviado)}${todo?'':' · puedes volver a enviarlo'}</div>`;
    h+=`<div class="rp-c"><div class="rp-h"><div><b>Mi reporte de hoy</b><small>${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}${d.dia&&d.dia.citas?' · '+d.dia.hechas+' sesiones hechas':''}</small></div><span class="rp-n${todo?' ok':''}">${n}/${tot}</span></div><div class="rp-bar${todo?' ok':''}"><i style="width:${Math.round(n/tot*100)}%"></i></div>`+
     items.map(x=>{const c=x.auto&&chk[x.auto];const pend=c&&c.items.length?c.items:null;
-     return `<button type="button" class="rp-it${marc.has(x.k)?' on':''}" data-k="${x.k}"><span class="rp-ck">${marc.has(x.k)?'✓':''}</span><span class="rp-tx">${escH(x.t)}${x.sub&&x.sub.length?`<span class="rp-sub">${x.sub.map(z=>`<span>${escH(z)}</span>`).join('')}</span>`:''}${pend?`<span class="rp-av">${c.aviso?'Ojo':'El panel ve '+pend.length+' pendiente'+(pend.length>1?'s':'')}: ${pend.slice(0,6).map(i=>(i.id?`<u data-ficha="${i.id}" data-nom="${escH(i.nombre)}">${escH(capTit(i.nombre))}</u>`:`<b>${escH(i.nombre)}</b>`)+(i.extra?' ('+escH(i.extra)+')':'')).join(', ')}${pend.length>6?' y '+(pend.length-6)+' más':''}</span>`:''}</span></button>`;}).join('')+
+     return `<button type="button" class="rp-it${marc.has(x.k)?' on':''}" data-k="${x.k}"><span class="rp-ck">${marc.has(x.k)?'✓':''}</span><span class="rp-tx">${negr(x.t)}${x.sub&&x.sub.length?`<span class="rp-sub">${x.sub.map(z=>`<span>${negr(z)}</span>`).join('')}</span>`:''}${pend?`<span class="rp-av">${c.aviso?'Ojo':'El panel ve '+pend.length+' pendiente'+(pend.length>1?'s':'')}: ${pend.slice(0,6).map(i=>(i.id?`<u data-ficha="${i.id}" data-nom="${escH(i.nombre)}">${escH(capTit(i.nombre))}</u>`:`<b>${escH(i.nombre)}</b>`)+(i.extra?' ('+escH(i.extra)+')':'')).join(', ')}${pend.length>6?' y '+(pend.length-6)+' más':''}</span>`:''}</span></button>`;}).join('')+
     `<div class="hz-lab" style="margin-top:14px">¿Algo que contar? <span>(opcional)</span></div><textarea class="rp-nota" rows="2" placeholder="Ej.: falta gel, la camilla 2 hace ruido…">${escH((d.enviado&&d.enviado.nota)||'')}</textarea>
     <button type="button" class="rp-env">${d.enviado?'Volver a enviar':'Enviar reporte'}</button></div>`;
   } else if(!d.resumen) h+='<div class="rp-c">El reporte diario es para los fisios.</div>';

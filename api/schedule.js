@@ -438,19 +438,19 @@ async function _procesarWeb() {
 const CIERRES_T = 'tblmJMoILPnxXzD8w';
 // Puntos del reporte diario (los que tienen «auto» los comprueba también el panel)
 const REPORTE_ITEMS = [
-  { k: 'cobrar', t: 'He registrado en el panel todos los cobros del día', auto: 'cobrar' },
-  { k: 'marcar', t: 'He actualizado el estado de todas mis citas del día', auto: 'marcar' },
-  { k: 'ejercicios', t: 'Mis pacientes tienen su programa de ejercicios actualizado en la app', auto: 'ejercicios' },
-  { k: 'consent', t: 'Las primeras visitas han firmado el consentimiento', auto: 'consent' },
-  { k: 'anamnesis', t: 'He hecho la anamnesis a las primeras visitas', auto: 'anamnesis' },
-  { k: 'app', t: 'He dado acceso a la app a los pacientes nuevos del día y la han instalado en su móvil', auto: 'app' },
-  { k: 'proxima', t: 'Si alguien no ha reagendado, he apuntado por qué y lo he pasado a seguimiento', auto: 'proxima' },
-  { k: 'llamadas', t: 'He hecho mis llamadas de seguimiento de hoy y he apuntado el resultado', auto: 'llamadas' },
-  { k: 'chat', t: 'He contestado los mensajes de mis pacientes en el chat', auto: 'chat' },
-  { k: 'tareas', t: 'He hecho mis tareas pendientes de hoy', auto: 'tareas' },
-  { k: 'historia', t: 'He actualizado todas las historias clínicas de hoy' },
-  { k: 'manana', t: 'He revisado mi agenda de mañana (primeras visitas, citas por confirmar y huecos)' },
-  { k: 'limpieza', t: 'He dejado la cabina limpia y lista para mañana', sub: ['Mesa y muebles limpios, sin polvo', 'Grifo y lavamanos limpios', 'Papelera vacía', 'Rulo y taburete colocados sobre la camilla', 'Trapo doblado en su sitio (se cambia cada semana)', 'Toalla de manos colgada en su sitio (se cambia cada semana)', 'Cables bien recogidos, ninguno por el suelo', 'Máquinas apagadas y en su sitio', 'Carrito ordenado y bien presentado'] },
+  { k: 'cobrar', t: 'He registrado en el panel **todos los cobros** del día', auto: 'cobrar' },
+  { k: 'marcar', t: 'He actualizado el **estado de todas mis citas** del día', auto: 'marcar' },
+  { k: 'ejercicios', t: 'Mis pacientes tienen su **programa de ejercicios** actualizado en la app', auto: 'ejercicios' },
+  { k: 'consent', t: 'Las primeras visitas han firmado el **consentimiento**', auto: 'consent' },
+  { k: 'anamnesis', t: 'He hecho la **anamnesis** a las primeras visitas', auto: 'anamnesis' },
+  { k: 'app', t: 'He dado **acceso a la app** a los pacientes nuevos del día y la han **instalado en su móvil**', auto: 'app' },
+  { k: 'proxima', t: 'Si alguien **no ha reagendado**, he apuntado por qué y lo he **pasado a seguimiento**', auto: 'proxima' },
+  { k: 'llamadas', t: 'He hecho mis **llamadas de seguimiento** de hoy y he apuntado el resultado', auto: 'llamadas' },
+  { k: 'chat', t: 'He contestado los **mensajes del chat** de mis pacientes', auto: 'chat' },
+  { k: 'tareas', t: 'He hecho mis **tareas pendientes** de hoy', auto: 'tareas' },
+  { k: 'historia', t: 'He actualizado todas las **historias clínicas** de hoy' },
+  { k: 'manana', t: 'He revisado mi **agenda de mañana** (primeras visitas, citas por confirmar y huecos)' },
+  { k: 'limpieza', t: 'He dejado la **cabina limpia** y lista para mañana', sub: ['**Mesa y muebles** limpios, sin polvo', '**Grifo y lavamanos** limpios', '**Papelera** vacía', '**Rulo y taburete** sobre la camilla', '**Trapo** doblado en su sitio (se cambia cada semana)', '**Toalla de manos** colgada en su sitio (se cambia cada semana)', '**Cables** bien recogidos, ninguno por el suelo', '**Máquinas** apagadas y en su sitio', '**Carrito** ordenado y bien presentado'] },
 ];
 const nmSel = v => String((v && typeof v === 'object') ? (v.name || '') : (v || '')).trim();
 const fisioKey = n => String(n || '').trim().split(' ')[0].toLowerCase();
@@ -1343,7 +1343,7 @@ module.exports = async function handler(req, res) {
         const dia = todos[k] || { checks: [], pendientes: 0 };
         const detalle = dia.checks.map(c => (c.items.length ? (c.aviso ? '• ' : '✗ ') : '✓ ') + c.t + (c.items.length ? ': ' + c.items.map(i => i.nombre + (i.extra ? ' (' + i.extra + ')' : '')).join(', ') : '')).join('\n');
         const marc = new Set(Array.isArray(q.marcados) ? q.marcados : []);
-        const MARCADOS = REPORTE_ITEMS.map(x => (marc.has(x.k) ? '✓ ' : '✗ ') + x.t).join('\n');
+        const MARCADOS = REPORTE_ITEMS.map(x => (marc.has(x.k) ? '✓ ' : '✗ ') + x.t.replace(/\*\*/g, '')).join('\n');
         const fields = { CIERRE: fecha + ' · ' + String(q.fisio).trim(), FECHA: fecha, FISIO: String(q.fisio).trim(), ENVIADO: new Date().toISOString(), PENDIENTES: dia.pendientes, DETALLE: detalle, NOTA: String(q.nota || '').slice(0, 2000), MARCADOS };
         const prev = (await cierresEnviados(fecha))[fisioKey(q.fisio)];
         const d = prev ? await at(`${CIERRES_T}/${prev.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) }) : await at(CIERRES_T, { method: 'POST', body: JSON.stringify({ records: [{ fields }] }) });
