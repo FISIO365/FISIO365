@@ -272,7 +272,9 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .cap-mot{background:#fff;border:1px solid rgba(26,26,26,.08);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}.cap-moth{font-size:14px;font-weight:700}.cap-moth span{font-size:12px;font-weight:500;color:#9a8f87;margin-left:6px}.cap-mrt{display:flex;justify-content:space-between;font-size:13px}.cap-mrt span{font-weight:700;color:#c2552e}.cap-bar{height:7px;border-radius:99px;background:#f7f3ef;margin-top:4px;overflow:hidden}.cap-bar i{display:block;height:100%;background:#f39a55;border-radius:99px}.cap-mr small{display:block;font-size:11.5px;color:#7d6a60;margin-top:3px}
 .ag-esp{display:inline-block;margin-left:6px;font-style:normal;font-size:11px;font-weight:700;background:#e8f5ec;color:#16803c;border-radius:99px;padding:1px 7px}.ag-espb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;font-weight:700;border:1.5px solid #cfe9d6;background:#f2faf4;color:#16803c;border-radius:12px;padding:11px;cursor:pointer;margin-bottom:6px}.ag-espb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ag-espb b{background:#16803c;color:#fff;border-radius:99px;font-size:11.5px;padding:1px 8px}
 @media(min-width:769px){#topBtns{display:flex!important;position:absolute;right:80px;top:50%;transform:translateY(-50%);gap:8px;z-index:2}#topBtns .tb-b:not(#btnNoCit){display:none!important}#btnNoCit{display:flex!important;width:42px;height:42px;padding:0;border-radius:50%;border:none;background:#fff;color:#c2552e;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(26,26,26,.08)}#btnNoCit svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}}
-.ci-lab{font-size:11.5px;font-weight:700;color:#7d6a60;text-transform:uppercase;letter-spacing:.05em;margin-top:14px}.ci-fis{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}.ci-fis button{font-family:var(--font);font-size:13px;font-weight:600;color:#1a1a1a;background:#f7f3ef;border:none;border-radius:99px;padding:7px 13px;cursor:pointer}.ci-fis button.on{background:#c2552e;color:#fff}.ci-carg{font-size:12.5px;color:#9a8f87}.ci-ul{font-size:12px;color:#7d6a60;margin-top:5px}
+.ci-carg{font-size:12.5px;color:#9a8f87}.ci-ul{font-size:12px;color:#7d6a60;margin-top:5px}
+.ci-row{display:flex;align-items:flex-start;gap:12px;margin-top:12px}.ci-lab{flex:none;width:82px;font-size:11.5px;font-weight:700;color:#7d6a60;text-transform:uppercase;letter-spacing:.05em;padding-top:9px;line-height:1.2}.ci-lab small{display:block;font-size:10px;font-weight:600;text-transform:none;letter-spacing:0;color:#9a8f87}.ci-row .ci-est{margin-top:0;flex:1}
+@media(max-width:560px){.ci-row{flex-direction:column;gap:6px}.ci-lab{width:auto;padding-top:0}.ci-lab small{display:inline;margin-left:4px}}
 .ci-f{background:#fff;border:1px solid rgba(26,26,26,.08);border-radius:18px;padding:16px;box-shadow:0 1px 3px rgba(26,26,26,.04)}.ci-ft b{display:block;font-size:16px}.ci-ft span{display:block;font-size:12.5px;color:#7d6a60;margin-top:2px}.ci-est{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}.ci-est button{display:inline-flex;align-items:center;gap:7px;font-family:var(--font);font-size:13px;font-weight:600;color:#1a1a1a;background:#f7f3ef;border:1.5px solid transparent;border-radius:99px;padding:7px 12px;cursor:pointer}.ci-est button b{font-size:11px;font-weight:700;color:#7d6a60;background:#fff;border-radius:99px;padding:1px 7px}.ci-est button.on{background:#1e2a38;color:#fff}.ci-est button.on b{background:#f39a55;color:#1e2a38}.ci-est .dot{width:8px;height:8px;border-radius:50%;background:#9a8f87}.ci-est .dot.ok{background:#16803c}.ci-est .dot.mal{background:#d93025}.ci-est .dot.pen{background:#f39a55}.ci-bus{display:flex;align-items:center;gap:8px;margin-top:14px;background:#f7f3ef;border-radius:12px;padding:0 12px}.ci-bus svg{width:17px;height:17px;fill:none;stroke:#7d6a60;stroke-width:2;stroke-linecap:round;flex:none}.ci-bus input{flex:1;border:none;background:none;font-family:var(--font);font-size:14px;padding:11px 0;outline:none}.ci-h{display:flex;align-items:center;justify-content:space-between;margin:18px 2px 8px}.ci-n{font-size:12px;font-weight:700;color:#7d6a60;text-transform:uppercase;letter-spacing:.05em}.ci-h .tar-resl{margin:0}.ci-er{margin-top:6px}.cap-av img{width:100%;height:100%;object-fit:cover;border-radius:inherit}.cap-b.en{background:#e8f5ec;color:#16803c}.ci-res .rn-seg{min-width:136px}
 .cap-sinh{font-size:12.5px;color:#9a8f87;padding:8px 4px 0}.cap-hh small{font-size:inherit;font-weight:600}.cap-hh em{font-style:normal}
 @media(max-width:560px){.cap-hh em{display:none}.cap-hh small{font-size:11px;font-weight:600;opacity:.8}}
@@ -5389,8 +5391,9 @@ function renderCallIn(wrap){
  let ULT=window._ultimasCI||null,ciFisio='';
  if(!ULT)fetch(`/api/schedule?action=seg-ultimas&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).then(d=>{if(d.ok){ULT=window._ultimasCI=d.ultimas;pintaFis();pinta();}}).catch(()=>{});
  const box=ce('div','ci');wrap.appendChild(box);
- box.innerHTML=`<div class="ci-f"><div class="ci-ft"><b>¿A quién llamamos?</b><span>Elige uno o varios estados. Si eliges varios, salen los que los tienen todos.</span></div><div class="ci-est"></div>
-  <div class="ci-lab">Última sesión con</div><div class="ci-fis"><span class="ci-carg">Cargando fisios…</span></div>
+ box.innerHTML=`<div class="ci-f"><div class="ci-ft"><b>¿A quién llamamos?</b></div>
+  <div class="ci-row"><span class="ci-lab">Estado</span><div class="ci-est"></div></div>
+  <div class="ci-row"><span class="ci-lab">Fisio<small>última sesión</small></span><div class="ci-fis ci-est"><span class="ci-carg">Cargando…</span></div></div>
   <div class="ci-bus"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="call-q" placeholder="Buscar por nombre…" autocomplete="off"></div></div>
   <div class="ci-h"><span class="ci-n"></span><button type="button" class="tar-resl ci-lim" hidden>Quitar filtros</button></div><div class="cap-list ci-res"></div>`;
  const ce1=box.querySelector('.ci-est'),q=box.querySelector('.call-q'),res=box.querySelector('.ci-res'),nEl=box.querySelector('.ci-n'),lim=box.querySelector('.ci-lim');
@@ -5400,8 +5403,8 @@ function renderCallIn(wrap){
   ce1.querySelectorAll('button').forEach(b=>b.onclick=()=>{const id=b.dataset.id;callSel=callSel.includes(id)?callSel.filter(x=>x!==id):[...callSel,id];pintaChips();pinta();});};
  const fisN=f=>capNomF(String(f||'').split(' ')[0]);
  const pintaFis=()=>{const cf=box.querySelector('.ci-fis');if(!ULT){return;}const cnt={};Object.values(ULT).forEach(u=>{const k=fisN(u.fi);if(k)cnt[k]=(cnt[k]||0)+1;});
-  cf.innerHTML=Object.keys(cnt).sort().map(k=>`<button type="button" data-f="${escH(k)}" class="${ciFisio===k?'on':''}">${escH(k)}</button>`).join('');
-  cf.querySelectorAll('button').forEach(b=>b.onclick=()=>{ciFisio=ciFisio===b.dataset.f?'':b.dataset.f;pintaFis();pinta();});};
+  cf.innerHTML=`<button type="button" data-f="" class="${ciFisio?'':'on'}">Todos</button>`+Object.keys(cnt).sort().map(k=>`<button type="button" data-f="${escH(k)}" class="${ciFisio===k?'on':''}">${escH(k)}<b>${cnt[k]}</b></button>`).join('');
+  cf.querySelectorAll('button').forEach(b=>b.onclick=()=>{ciFisio=b.dataset.f;pintaFis();pinta();});};
  lim.onclick=()=>{callSel=[];ciFisio='';q.value='';pintaChips();pintaFis();pinta();};
  function pinta(){
   const t=q.value.trim().toLowerCase();lim.hidden=!callSel.length&&!t&&!ciFisio;
@@ -5421,7 +5424,7 @@ function renderCallIn(wrap){
    res.appendChild(r);});
   if(l.length>300)res.insertAdjacentHTML('beforeend','<div class="fac-vacio">Se muestran los primeros 300. Añade otro estado o un nombre para afinar.</div>');
  }
- q.oninput=pinta;pintaChips();pinta();
+ q.oninput=pinta;pintaChips();pintaFis();pinta();
 }
 // ── CAPTACIÓN: lista de espera, contactos que no se citaron y negocios del barrio ──
 let capTab='espera',capVerTodo=false;
