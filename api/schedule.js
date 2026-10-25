@@ -105,12 +105,16 @@ async function syncTally(subsYa) {
       const d = await fetch(`https://api.tally.so/forms/${form}/submissions?filter=completed&page=${page}&limit=50`, { headers: { Authorization: `Bearer ${KEY}` } }).then(x => x.ok ? x.json() : null).catch(() => null);
       if (!d) break;
       const qs = d.questions || [], tit = id => { const q0 = qs.find(q => q.id === id) || {}; return capNorm(q0.title || q0.label || '').trim(); };
-      const recs = (d.submissions || []).filter(s => s.isCompleted !== false && s.id && !subsYa.has(s.id)).map(s => {
+      let pend = (d.submissions || []).filter(s => s.isCompleted !== false && s.id && /^[A-Za-z0-9]+$/.test(s.id) && !subsYa.has(s.id));
+      // Otra copia del panel puede haberlas guardado ya: se mira en Airtable antes de crear nada
+      if (pend.length) { const ya = await capTodos(CONS_O, `filterByFormula=${encodeURIComponent('OR(' + pend.map(s => `{SUBMISSION ID}='${s.id}'`).join(',') + ')')}&fields[]=SUBMISSION ID`).catch(() => null);
+        if (!ya) break; ya.forEach(r => subsYa.add(String(r.fields['SUBMISSION ID'] || ''))); pend = pend.filter(s => !subsYa.has(s.id)); }
+      const recs = pend.map(s => {
         const f = { TIPO: tipo, 'SUBMISSION ID': s.id, 'FORM ID': form, FECHA: String(s.submittedAt || '').slice(0, 10) };
         (s.responses || []).forEach(x => { const t = tit(x.questionId), a = x.answer !== undefined ? x.answer : x.value;
           const arr = Array.isArray(a) ? a : (a == null ? [] : [a]);
           const txt = arr.filter(v => typeof v !== 'object').join(', ').trim(), files = arr.filter(v => v && typeof v === 'object' && v.url).map(v => ({ url: v.url, filename: v.name || 'archivo' }));
-          if (t === 'nombre') f.NOMBRE = txt; else if (t === 'apellidos') f.APELLIDOS = txt; else if (/^nif|nie$/.test(t)) f.DNI = txt; else if (/telefono/.test(t)) f.TELF = txt;
+          if (t === 'nombre') f.NOMBRE = txt; else if (t === 'apellidos') f.APELLIDOS = txt; else if (/^nif|nie$/.test(t)) f.DNI = txt; else if (/telefono/.test(t)) f.TELF = txt; else if (t === 'email') f.EMAIL = txt;
           else if (/fecha del alta/.test(t)) { if (/^\d{4}-\d{2}-\d{2}/.test(txt)) f['FECHA ALTA'] = txt.slice(0, 10); }
           else if (/informe/.test(t)) { if (files.length) f.INFORME = files; }
           else if (t === 'firma') { if (files.length) f.FIRMA = files.slice(0, 1); }
@@ -136,7 +140,7 @@ async function consTodos(forzar) {
   if (_cons.p) return _cons.p;
   _cons.p = (async () => {
     const leer = async () => { const [a, b] = await Promise.all([capTodos(CONS_T, 'sort[0][field]=Creada&sort[0][direction]=desc'), capTodos(CONS_O, 'sort[0][field]=FECHA&sort[0][direction]=desc').catch(() => [])]);
-      return [...a.map(r => ({ ...consentResumen(r, CONS_T), pac: r.fields['PACIENTE'] || [] })), ...b.map(r => ({ ...consentResumen(r, CONS_O), pac: r.fields['PACIENTE'] || [] }))].sort((x, y) => y.fecha.localeCompare(x.fecha)); };
+      return [...a.map(r => ({ ...consentResumen(r, CONS_T), pac: r.fields['PACIENTE'] || [] })), ...b.filter((r, i) => { const sb = String(r.fields['SUBMISSION ID'] || ''); return !sb || !b.some((o, j) => String(o.fields['SUBMISSION ID'] || '') === sb && ((o.fields['PACIENTE'] || []).length > (r.fields['PACIENTE'] || []).length || (j < i && (o.fields['PACIENTE'] || []).length === (r.fields['PACIENTE'] || []).length))); }).map(r => ({ ...consentResumen(r, CONS_O), pac: r.fields['PACIENTE'] || [] }))].sort((x, y) => y.fecha.localeCompare(x.fecha)); };
     let v = fresco && !forzar ? _cons.v : await leer();
     const nuevos = await syncTally(new Set(v.map(c => c.sub).filter(Boolean))).catch(() => 0);
     if (nuevos) v = await leer();
