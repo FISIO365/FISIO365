@@ -97,7 +97,7 @@ async function resumenFacturacion(ayer) {
   ${facs.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Facturas emitidas</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${facs.map(r => fila(escH(r.fields['Nº FACTURA'] || ''), escH([r.fields['CONCEPTO 1'], r.fields['CONCEPTO 2']].filter(Boolean).join(' + ')) + (r.fields['MODO DE PAGO'] ? ' · ' + escH(r.fields['MODO DE PAGO']) : ''), eur(r.fields['TOTAL']))).join('')}</table>` : ''}
   </div></div>`;
   const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: String(process.env.RESUMEN_EMAIL || 'info@fisioterapia365.com').split(/[,;\s]+/).filter(Boolean).map(email => ({ email })), subject: `Resumen ${fechaTxt}${Object.keys(rep).some(f => !envs[String(f).split(' ')[0].toLowerCase()]) ? ' · ✗ falta algún check-list' : ''}${sf.lista.length ? ' · ⚠️ ' + sf.lista.length + ' pacientes sin facturar' : ''}${rendSemana ? ' · + semana' : ''}`, htmlContent: html }) });
+    body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: String(process.env.RESUMEN_EMAIL || 'fisio365gestion@gmail.com').split(/[,;\s]+/).filter(Boolean).map(email => ({ email })), subject: `Resumen ${fechaTxt}${Object.keys(rep).some(f => !envs[String(f).split(' ')[0].toLowerCase()]) ? ' · ✗ falta algún check-list' : ''}${sf.lista.length ? ' · ⚠️ ' + sf.lista.length + ' pacientes sin facturar' : ''}${rendSemana ? ' · + semana' : ''}`, htmlContent: html }) });
   return r.ok ? 'enviado' : 'error brevo ' + r.status;
 }
 
