@@ -425,6 +425,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .rp-env{display:block;width:100%;margin-top:12px;padding:14px;border:none;border-radius:14px;background:#c2552e;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer}.rp-env.armado{background:#1e2a38}.rp-env:disabled{opacity:.6}
 .rp-ok{display:flex;align-items:center;gap:8px;background:#e8f5ec;color:#16803c;border-radius:14px;padding:11px 14px;font-size:13.5px;font-weight:600;margin-bottom:12px}
 .rp-eq{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #f1ede9;font-size:14px}.rp-eq:first-of-type{border-top:none}.rp-eq b{color:#1e2a38}.rp-eq span{font-size:12.5px;font-weight:600;border-radius:99px;padding:3px 10px}.rp-eq .si{background:#e8f5ec;color:#16803c}.rp-eq .no{background:#fdecea;color:#c0392b}.rp-eq .pe{background:#f3efea;color:#7d6a60}
+@media(max-width:768px){.topbar-t,.topbar-s{padding-right:112px;box-sizing:border-box;overflow-wrap:anywhere}}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -1227,22 +1228,22 @@ const $ = id => document.getElementById(id);
 const ce = (t,c) => { const e=document.createElement(t); if(c)e.className=c; return e; };
 
 const TOPBAR = {
- prog: ['Programas','Asigna ejercicios a tus pacientes'],
- anam: ['Anamnesis clínica','Valoración y protocolos clínicos'],
- pac: ['Pacientes','Busca y consulta la ficha de cada paciente'],
- inf: ['Informes','Historial de informes generados'],
- school: ['School','Formación y protocolos del equipo'],
- msg: ['Chat','Habla con tus pacientes: texto, fotos y PDFs'],
- record: ['Recordatorios','Citas de mañana pendientes de confirmar'],
+ prog: ['Programas','Ejercicios de tus pacientes'],
+ anam: ['Anamnesis clínica','Valoración y protocolos'],
+ pac: ['Pacientes','Fichas de los pacientes'],
+ inf: ['Informes','Informes generados'],
+ school: ['School','Formación del equipo'],
+ msg: ['Chat','Mensajes con pacientes'],
+ record: ['Recordatorios','Citas de mañana'],
  rend: ['Rendimiento','Cómo va cada fisio'],
- seg: ['Pendientes','Tareas y llamadas del centro'],
- tar: ['Pendientes','Tareas y llamadas del centro'],
- call: ['Call-in','Busca pacientes por estado para llamarles'],
- agenda: ['Agenda','Citas del día de cada fisio'],
- stats: ['Estadísticas','Cómo va el centro semana a semana'],
- cap: ['Captación','Lista de espera, contactos y negocios del barrio'],
- ejer: ['Ejercicios','La biblioteca de vídeos del equipo'],
- rep: ['Reporte diario','Lo imprescindible antes de irte: marca y envía']
+ seg: ['Pendientes','Tareas y llamadas'],
+ tar: ['Pendientes','Tareas y llamadas'],
+ call: ['Call-in','Pacientes para llamar'],
+ agenda: ['Agenda','Citas del día'],
+ stats: ['Estadísticas','El centro semana a semana'],
+ cap: ['Captación','Lista de espera y contactos'],
+ ejer: ['Ejercicios','Biblioteca de vídeos'],
+ rep: ['Reporte diario','Marca y envía antes de irte']
 };
 
 const CFG = {
@@ -1411,7 +1412,7 @@ async function loadBiblio(){
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function pavHtml(p,ini){return p&&p.foto?`<img src="${escH(p.foto)}" alt="" onerror="this.replaceWith(document.createTextNode('${escH(ini)}'))">`:escH(ini);}
 function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
-function pintarPerfil(){if(!fisioActual)return;const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
+function pintarPerfil(){if(!fisioActual)return;requestAnimationFrame(ajustaTopbar);const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=fisioActual.role==='admin'?'Administración':'Fisioterapeuta';
  const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const dir=esDireccion();$('pmStats').style.display=dir?'':'none';$('sb-stats').style.display=dir?'':'none';}catch(e){}contarTareas();}
@@ -1424,7 +1425,8 @@ function cerrarSesionPanel(){try{localStorage.removeItem('f365_panel_sesion');se
 // Que el título y la descripción de la sección no se metan debajo de los botones de arriba a la derecha
 function ajustaTopbar(){try{const tb=document.querySelector('.topbar');if(!tb)return;const r=tb.getBoundingClientRect();let izq=r.right;
  ['topBtns','btnPerfil','btnAvisos'].forEach(id=>{const e=$(id);if(!e||e.offsetParent===null)return;[e,...e.children].forEach(x=>{if(x.offsetParent===null)return;const q=x.getBoundingClientRect();if(q.width&&q.left>r.left+r.width/2)izq=Math.min(izq,q.left);});});
- const pr=Math.max(0,Math.round(r.right-izq-parseFloat(getComputedStyle(tb).paddingRight)+10));['topbar-t','topbar-s'].forEach(id=>{const e=$(id);if(e)e.style.paddingRight=pr+'px';});}catch(e){}}
+ if(izq>=r.right)return;const pr=Math.max(0,Math.round(r.right-izq-parseFloat(getComputedStyle(tb).paddingRight)+10));['topbar-t','topbar-s'].forEach(id=>{const e=$(id);if(e)e.style.paddingRight=pr+'px';});}catch(e){}}
+try{document.fonts&&document.fonts.ready.then(()=>ajustaTopbar());}catch(e){}setTimeout(ajustaTopbar,1500);
 window.addEventListener('resize',()=>ajustaTopbar());
 function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
