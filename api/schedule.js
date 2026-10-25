@@ -168,6 +168,7 @@ async function syncTelReserva(KEY) {
 }
 // Todos los consentimientos en memoria (10 min) y las respuestas nuevas de Tally (cada minuto)
 let _cons = { t: 0, v: null, p: null };
+let _ultimas = { t: 0, v: null };
 async function consTodos(forzar) {
   const fresco = _cons.v && Date.now() - _cons.t < 3 * 60e3;
   if (!forzar && fresco && (!process.env.TALLY_API_KEY || Date.now() - _syncT < 60e3)) return _cons.v;
@@ -656,6 +657,15 @@ module.exports = async function handler(req, res) {
           if (!q.deshacer && !r0.fields['CÓDIGO']) { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; f['CÓDIGO'] = 'F365-' + Array.from({ length: 4 }, () => A[Math.floor(Math.random() * A.length)]).join(''); const c = new Date(hoyF + 'T12:00:00Z'); c.setUTCMonth(c.getUTCMonth() + 6); f.CADUCA = c.toISOString().slice(0, 10); f['FECHA TARJETA'] = hoyF; f['Regalo entregado'] = true; }
           const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }); return res.status(200).json({ ok: !d.error }); }
         return res.status(400).json({ ok: false });
+      }
+      if (action === 'seg-ultimas') {
+        // Última sesión hecha de cada paciente (último año) y con qué fisio. Se guarda 30 min.
+        if (!_ultimas.v || Date.now() - _ultimas.t > 30 * 60e3 || q.fresco) {
+          const cs = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_AFTER({FECHA},DATEADD(TODAY(),-365,'days')))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=PacienteRec`);
+          const u = {}; cs.forEach(c => { const f = String(c.fields['FECHA'] || '').slice(0, 10); (c.fields['PacienteRec'] || []).forEach(id => { if (!u[id] || f > u[id].f) u[id] = { f, fi: cNm(c.fields['PREF.']) }; }); });
+          _ultimas = { t: Date.now(), v: u };
+        }
+        return res.status(200).json({ ok: true, ultimas: _ultimas.v });
       }
       if (action === 'seg-app-pendientes') {
         // Pacientes con sesión en los últimos 30 días que no han abierto la app, o que no tienen plan de ejercicios
