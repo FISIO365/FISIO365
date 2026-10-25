@@ -14,7 +14,7 @@ let cacheContactos = null, cacheT = 0;
 
 const holded = async path => {
   const r = await fetch(HOLDED_URL + path, { headers: { key: HOLDED_KEY, accept: 'application/json' } });
-  if (!r.ok) throw new Error('Holded ' + r.status);
+  if (!r.ok) { const t = await r.text().catch(() => ''); let m = t; try { const j = JSON.parse(t); m = j.info || j.message || j.error || t; } catch (_) {} throw new Error('Holded ' + r.status + ' en ' + path.split('?')[0] + (m ? ': ' + String(m).slice(0, 140) : '')); }
   return r.json();
 };
 const normDni = t => String(t || '').toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/^ES/, '');
