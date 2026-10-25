@@ -3,7 +3,7 @@ export const config = { runtime: 'edge' };
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const BASE_ID = 'appsrGnHpFt8sVD5A';
 const TABLE_PACIENTES = 'tbldBVgClS4HY2mOJ';
-const TABLE_MENSAJES = 'MENSAJES';
+const TABLE_MENSAJES = 'tblIsWo3g6x1QzJyl'; // MENSAJES (por id: la tabla se puede renombrar)
 
 async function airtableGet(table, formula) {
   const url = `https://api.airtable.com/v0/${BASE_ID}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100&sort%5B0%5D%5Bfield%5D=Fecha&sort%5B0%5D%5Bdirection%5D=desc`;
