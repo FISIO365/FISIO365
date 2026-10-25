@@ -442,10 +442,15 @@ const REPORTE_ITEMS = [
   { k: 'marcar', t: 'He actualizado el estado de todas mis citas del día', auto: 'marcar' },
   { k: 'ejercicios', t: 'Mis pacientes tienen su programa de ejercicios actualizado en la app', auto: 'ejercicios' },
   { k: 'consent', t: 'Las primeras visitas han firmado el consentimiento', auto: 'consent' },
+  { k: 'anamnesis', t: 'He hecho la anamnesis a las primeras visitas', auto: 'anamnesis' },
   { k: 'app', t: 'He dado acceso a la app a los pacientes nuevos del día y la han instalado en su móvil', auto: 'app' },
   { k: 'proxima', t: 'Si alguien no ha reagendado, he apuntado por qué y lo he pasado a seguimiento', auto: 'proxima' },
+  { k: 'llamadas', t: 'He hecho mis llamadas de seguimiento de hoy y he apuntado el resultado', auto: 'llamadas' },
+  { k: 'chat', t: 'He contestado los mensajes de mis pacientes en el chat', auto: 'chat' },
+  { k: 'tareas', t: 'He hecho mis tareas pendientes de hoy', auto: 'tareas' },
   { k: 'historia', t: 'He actualizado todas las historias clínicas de hoy' },
-  { k: 'limpieza', t: 'He dejado la cabina limpia y lista para mañana', sub: ['Mesa limpia y sin polvo en los muebles', 'Grifo limpio', 'Papelera vacía', 'Rulo y taburete sobre la camilla', 'Trapito doblado (se cambia 1 vez por semana)', 'Toalla de manos colgada en su sitio (se cambia 1 vez por semana)', 'TODOS los cables bien recogidos', 'Máquinas apagadas y bien colocadas', 'Las cosas del carrito ordenadas y que se vean bonitas'] },
+  { k: 'manana', t: 'He revisado mi agenda de mañana (primeras visitas, citas por confirmar y huecos)' },
+  { k: 'limpieza', t: 'He dejado la cabina limpia y lista para mañana', sub: ['Mesa y muebles limpios, sin polvo', 'Grifo y lavamanos limpios', 'Papelera vacía', 'Rulo y taburete colocados sobre la camilla', 'Trapo doblado en su sitio (se cambia cada semana)', 'Toalla de manos colgada en su sitio (se cambia cada semana)', 'Cables bien recogidos, ninguno por el suelo', 'Máquinas apagadas y en su sitio', 'Carrito ordenado y bien presentado'] },
 ];
 const nmSel = v => String((v && typeof v === 'object') ? (v.name || '') : (v || '')).trim();
 const fisioKey = n => String(n || '').trim().split(' ')[0].toLowerCase();
@@ -467,6 +472,18 @@ async function cierreDia(fecha, soloFisio) {
     sinFacturar().catch(() => ({ activo: false, lista: [] })),
     consTodos().catch(() => [])
   ]);
+  // Lo que es de cada fisio aunque no sea de un paciente de hoy: llamadas, tareas y mensajes
+  const nuevos = P.filter(id => !new Set(previas.flatMap(c => c.fields['PacienteRec'] || [])).has(id));
+  const [segPend, tarPend, msgs, fisT, anam] = await Promise.all([
+    capTodos('tblu9YxiktpAh5w87', `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),NOT(IS_AFTER({FECHA DE LLAMADA},'${fecha}')))`)}&fields[]=RESPONSABLE&fields[]=PACIENTE&fields[]=PacRec`).catch(() => []),
+    capTodos('tblxPpPSvj15NWqNT', `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),NOT(IS_AFTER({FECHA},'${fecha}')))`)}&fields[]=TAREA&fields[]=PARA&fields[]=PACIENTE`).catch(() => []),
+    capTodos('tblIsWo3g6x1QzJyl', `filterByFormula=${encodeURIComponent(`AND(NOT({Visto}),{Tipo}!="fisio",OR({Tipo}!="chat",{De}!="fisio"))`)}&fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioId`).catch(() => []),
+    at('tbl2mLUrnaKCFTs6g?fields[]=Name').catch(() => ({})),
+    lotes(nuevos, ids => capTodos('tblF4as0orW1b6KIw', `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `{PacienteID}='${id}'`).join(',') + ')')}&fields[]=PacienteID`)).catch(() => [])
+  ]);
+  const idFisio = Object.fromEntries((fisT.records || []).map(r => [fisioKey(r.fields.Name), r.id]));
+  const conAnam = new Set(anam.map(r => String(r.fields['PacienteID'] || '')));
+  const nomLink = v => (Array.isArray(v) ? v : []).map(x => (x && x.name) || x).filter(Boolean).join(', ');
   const nom = Object.fromEntries(nombres.map(p => [p.id, p.fields['FULL NAME'] || '']));
   const conFutura = new Set([...futuras.flatMap(c => c.fields['PacienteRec'] || []), ...segs.flatMap(r => r.fields['PacRec'] || [])]);
   const usaApp = new Set(nombres.filter(p => p.fields['ÚLTIMO ACCESO APP']).map(p => p.id));
@@ -487,6 +504,10 @@ async function cierreDia(fecha, soloFisio) {
       { k: 'ejercicios', t: 'Ejercicios en la app', d: 'Cada paciente de hoy tiene su programa cargado', items: uni(hs.filter(c => !conPlan.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c))) },
       { k: 'consent', t: 'Consentimiento firmado', d: 'Las primeras visitas tienen el consentimiento', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !conCons.has(id); }).map(c => it(c, 'primera visita'))) },
       { k: 'app', t: 'App a los nuevos', d: 'Los pacientes nuevos del día ya han entrado en la app', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !usaApp.has(id); }).map(c => it(c, 'aún no ha entrado'))) },
+      { k: 'anamnesis', t: 'Anamnesis', d: 'Las primeras visitas tienen su anamnesis', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !conAnam.has(id); }).map(c => it(c, 'primera visita'))) },
+      { k: 'llamadas', t: 'Llamadas de seguimiento', d: 'Llamadas de hoy (o atrasadas) con su resultado', items: segPend.filter(r => fisioKey(nmSel(r.fields['RESPONSABLE'])) === fisioKey(fisio)).map(r => ({ id: (r.fields['PacRec'] || [])[0] || '', nombre: nomLink(r.fields['PACIENTE']) || '—', extra: 'sin resultado' })) },
+      { k: 'chat', t: 'Chat', d: 'Mensajes de pacientes sin leer', items: (() => { const fid = idFisio[fisioKey(fisio)]; const v = new Map(); msgs.filter(m => fid && m.fields['FisioId'] === fid).forEach(m => { const id = m.fields['PacienteId'] || ''; const x = v.get(id) || { id, nombre: m.fields['PacienteNombre'] || '—', n: 0 }; x.n++; v.set(id, x); }); return [...v.values()].map(x => ({ id: x.id, nombre: x.nombre, extra: x.n + (x.n > 1 ? ' mensajes' : ' mensaje') })); })() },
+      { k: 'tareas', t: 'Tareas', d: 'Tareas de hoy o atrasadas', items: tarPend.filter(r => fisioKey(nmSel(r.fields['PARA'])) === fisioKey(fisio)).map(r => ({ id: '', nombre: String(r.fields['TAREA'] || 'Tarea').slice(0, 60), extra: nomLink(r.fields['PACIENTE']) })) },
       { k: 'proxima', t: 'Próxima cita o seguimiento', d: 'Quien no reagenda, pasa a seguimiento con el motivo', items: uni(hs.filter(c => !conFutura.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c, 'sin cita ni seguimiento'))) },
     ];
     out[fisio] = { citas: cs.length, hechas: hs.length, checks, pendientes: checks.filter(x => !x.aviso).reduce((t, x) => t + x.items.length, 0) };
