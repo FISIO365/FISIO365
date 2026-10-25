@@ -93,7 +93,7 @@ function consentResumen(r, tabla) {
   return { id: r.id, tabla: otro ? CONS_O : CONS_T, tipo, fecha, salud, rojo, sueloPelvico: tipo === 'Suelo pélvico' || /^s[ií]$/i.test(sp), aceptaSP: !!F['ACEPTACIÓN S.P.'],
     fechaAlta: F['FECHA ALTA'] || '', notasSalud: F['NOTAS SALUD'] || '', sub: String(F['SUBMISSION ID'] || '').trim(), papel: !!F['PAPEL'], ignorar: !!F['IGNORAR'],
     marketing: otro ? null : { conocido: cNm(F['CONOCIDO']), newsletter: cNm(F['NEWSLETTER']), imagenes: cNm(F['IMAGENES']), citas: cNm(F['CITAS']) },
-    email: cTxt(F['EMAIL']), dni: cTxt(F['DNI']).replace(/\s/g, ''), tel: cDig(F['TELF']), nombre: cTxt(nombre).replace(/\s+/g, ' ') };
+    email: cTxt(F['EMAIL']), dni: cTxt(F['DNI']).replace(/\s/g, ''), tel: cDig(F['TELF']), telRaw: String(F['TELF'] || '').trim(), nombre: cTxt(nombre).replace(/\s+/g, ' ') };
 }
 // Trae de Tally las respuestas nuevas de suelo pélvico y alta oncológica (como mucho cada minuto)
 let _syncT = 0;
@@ -172,7 +172,20 @@ const enlazarCons = async (consId, pacId) => { const c0 = (_cons.v || []).find(x
     // sus copias van con él
     const copias = (_cons.v || []).filter(x => mismoForm(x, c0));
     for (const x of copias.slice(0, 5)) { const r = await at(`${x.tabla}/${x.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PACIENTE: pacId ? [pacId] : [] } }) }).catch(() => ({ error: 1 })); if (!r.error) x.pac = pacId ? [pacId] : []; } }
+  if (pacId && !d.error) await rellenarPaciente(pacId, d.fields || {}).catch(() => {});
   _alertas.t = 0; return !d.error; };
+// Al enlazar un formulario, los datos que le faltaban al paciente (DNI, email, cumpleaños, teléfono) se rellenan con los del formulario.
+// Lo que ya tenía no se toca (el formulario lo puede haber rellenado un familiar).
+async function rellenarPaciente(pacId, CF) {
+  const p = await at(`${PACIENTES}/${pacId}?fields[]=DNI&fields[]=EMAIL&fields[]=CUMPLE&fields[]=TELF&fields[]=WHATSAPP`); if (p.error) return;
+  const P = p.fields || {}, f = {};
+  const dni = String(CF['DNI'] || '').trim().toUpperCase(), email = String(CF['EMAIL'] || '').trim().toLowerCase(), nac = String(CF['NACIMIENTO'] || '').slice(0, 10), tel = String(CF['TELF'] || '').replace(/[^\d+]/g, '');
+  if (!P['DNI'] && dni.length >= 6 && !/^0+$/.test(dni)) f['DNI'] = dni;
+  if (!P['EMAIL'] && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) f['EMAIL'] = email;
+  if (!P['CUMPLE'] && /^\d{4}-\d{2}-\d{2}$/.test(nac)) f['CUMPLE'] = nac;
+  if (!P['TELF'] && !P['WHATSAPP'] && tel.replace(/\D/g, '').length >= 9) f['TELF'] = tel;
+  if (Object.keys(f).length) await at(`${PACIENTES}/${pacId}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
+}
 const consPublico = (x, estado) => { if (!x) return null; const c = { ...x, estado }; ['email', 'dni', 'tel', 'pac', 'sub'].forEach(k => delete c[k]); c.nombreForm = x.nombre; delete c.nombre; return c; };
 // Junta todos los formularios de un paciente: la salud sale del último de primera visita o suelo pélvico; el alta oncológica quita el cáncer
 function resumenPaciente(enl) {
@@ -186,6 +199,7 @@ function resumenPaciente(enl) {
   out.marketing = (prim || {}).marketing || null; out.fechaPrimera = prim ? prim.fecha : '';
   out.docs = docs.map(c => ({ id: c.id, tipo: c.tipo, fecha: c.fecha, firmante: c.papel ? '' : capNorm(c.nombre).trim(), papel: c.papel }));
   out.soloPapel = !!base.papel;
+  { const ct = docs.find(c => !c.papel && c.telRaw); out.telForm = ct ? ct.telRaw : ''; }
   out.cancerActivo = out.salud.some(x => x.k === 'CÁNCER' && !x.alta);
   return out;
 }
