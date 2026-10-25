@@ -157,8 +157,9 @@ function emparejar(P, pacId, lista) {
   const libres = lista.filter(c => !c.pac.length);
   const cands = libres.filter(c => (email && c.email === email) || (dni.length >= 6 && c.dni === dni) || (c.tel.length === 9 && tels.includes(c.tel)));
   const n = capNorm(nombre).replace(/\s+/g, ' ').trim();
-  const buenos = [...new Set([...cands.filter(c => nombresCuadran(c.nombre, nombre)), ...(n.split(' ').length >= 2 ? libres.filter(c => capNorm(c.nombre) === n) : [])])];
-  return { enl, buenos, dudosos: cands.filter(c => !buenos.includes(c)) };
+  // Teléfono, email o DNI iguales bastan para enlazarlo (aunque lo firme con otro nombre); si no, por nombre completo
+  const buenos = [...new Set([...cands, ...(n.split(' ').length >= 2 ? libres.filter(c => capNorm(c.nombre) === n) : [])])];
+  return { enl, buenos, dudosos: [] };
 }
 const enlazarCons = async (consId, pacId) => { const c0 = (_cons.v || []).find(x => x.id === consId), T = c0 ? c0.tabla : CONS_T;
   let d = await at(`${T}/${consId}`, { method: 'PATCH', body: JSON.stringify({ fields: { PACIENTE: pacId ? [pacId] : [] } }) });
@@ -175,7 +176,7 @@ function resumenPaciente(enl) {
   if (alta && base !== alta && alta.fecha >= base.fecha) { out.salud = out.salud.filter(x => x.k !== 'CÁNCER'); out.salud.push({ k: 'ALTA', alta: true, t: 'Alta oncológica' + (alta.fechaAlta ? ' (' + fBr(alta.fechaAlta) + ')' : '') + ' ✓', grave: false }); out.rojo = out.rojo.filter(x => x !== 'Cáncer'); }
   out.aceptaSP = docs.some(c => c.aceptaSP); out.sueloPelvico = docs.some(c => c.sueloPelvico);
   out.marketing = (prim || {}).marketing || null; out.fechaPrimera = prim ? prim.fecha : '';
-  out.docs = docs.map(c => ({ id: c.id, tipo: c.tipo, fecha: c.fecha }));
+  out.docs = docs.map(c => ({ id: c.id, tipo: c.tipo, fecha: c.fecha, firmante: capNorm(c.nombre).trim() }));
   out.cancerActivo = out.salud.some(x => x.k === 'CÁNCER' && !x.alta);
   return out;
 }
@@ -457,7 +458,7 @@ module.exports = async function handler(req, res) {
         const pc = []; for (let i = 0; i < conds.length; i += 40) pc.push(...await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + conds.slice(i, i + 40).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP`).catch(() => []));
         for (const c of sueltos) {
           const ps = pc.filter(p => { const F = p.fields, ts = [cDig(F['TELF']), cDig(F['WHATSAPP'])]; return (c.email && cTxt(F['EMAIL']) === c.email) || (c.dni.length >= 6 && cTxt(F['DNI']).replace(/\s/g, '') === c.dni) || (c.tel.length === 9 && ts.includes(c.tel)); });
-          const bueno = ps.find(p => nombresCuadran(c.nombre, p.fields['FULL NAME']));
+          const bueno = ps.find(p => nombresCuadran(c.nombre, p.fields['FULL NAME'])) || (ps.length === 1 ? ps[0] : null);
           if (bueno && enlazados < 100) { if (await enlazarCons(c.id, bueno.id).catch(() => false)) { enlazados++; enl.add(bueno.id); continue; } }
           if (ps.length) dudosos[c.id] = { id: ps[0].id, nombre: ps[0].fields['FULL NAME'] || '' };
         }

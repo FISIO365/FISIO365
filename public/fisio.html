@@ -5695,7 +5695,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
     ${C.sueloPelvico?`<div class="fp-sp">Suelo pélvico <b class="${C.aceptaSP?'si':'no'}">${C.aceptaSP?'✓ Acepta la exploración':'Sin aceptación de la exploración'}</b></div>`:''}
     ${envios.length?`<div class="fp-cbts fp-cenvs" style="grid-template-columns:repeat(${envios.length},1fr)">${envios.join('')}</div>`:''}
     ${C.estado==='dudoso'?'':`<div class="fp-cfoot"><span>Documentos firmados</span><button type="button" class="fp-cbus">Enlazar otro</button></div>
-     <div class="fp-docs2">${docs.map(x=>`<button type="button" class="fp-doc2" data-id="${x.id}" data-t="${escH(x.tipo)}"><span><b>${escH(x.tipo)}</b><small>${escH(fC(x.fecha))}</small></span><i>PDF ›</i></button>`).join('')}</div>`}</div>
+     <div class="fp-docs2">${docs.map(x=>`<button type="button" class="fp-doc2" data-id="${x.id}" data-t="${escH(x.tipo)}"><span><b>${escH(x.tipo)}</b><small>${escH(fC(x.fecha))}${x.firmante&&!String(P.nombre||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/).some(w=>w.length>2&&x.firmante.includes(w))?' · firmado por '+escH(x.firmante.replace(/\b\w/g,c=>c.toUpperCase())):''}</small></span><i>PDF ›</i></button>`).join('')}</div>`}</div>
    ${C.marketing?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Marketing</h3></div>
     <div class="fp-conoc">${ico(C.marketing.conocido)}<div><span>Nos conoció por</span><b>${escH(C.marketing.conocido||'—')}</b></div></div>
     <div class="fp-mts">${tile('Newsletter',C.marketing.newsletter)}${tile('Imágenes',C.marketing.imagenes)}${tile('Avisos',C.marketing.citas)}</div></div>`:''}`;
