@@ -51,14 +51,18 @@ let _gasH = { t: 0, v: null };
 async function gastosBancoMeses() {
   if (_gasH.v && Date.now() - _gasH.t < 15 * 60e3) return _gasH.v;
   const cuentas = await holdedTodos('/treasury/accounts?limit=100', 3);
-  const g = {}, nombres = [], fallos = [];
-  for (const c of cuentas) { const id = c && (c.id || c._id); if (!id) continue; nombres.push(c.name || c.alias || c.bank_name || c.iban || 'Cuenta');
+  const g = {}, nombres = [], fallos = [], det = [];
+  for (const c of cuentas) { const id = c && (c.id || c._id); if (!id) continue; const nom = c.name || c.alias || c.bank_name || c.iban || 'Cuenta'; nombres.push(nom);
     let mv = [];
-    try { mv = await holdedTodos(`/treasury/accounts/${id}/bank-movements?limit=200`, 40); } catch (e) { fallos.push(e.message); continue; }
-    const vistos = new Set();
-    mv.forEach(m => { const mid = m && (m.id || m._id); if (mid && vistos.has(mid)) return; if (mid) vistos.add(mid);
-      const n = importeMov(m), f = fechaMov(m); if (!(n < 0) || !f) return; g[f.slice(0, 7)] = Math.round(((g[f.slice(0, 7)] || 0) - n) * 100) / 100; }); }
-  const v = { fuente: 'banco', meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), cuentas: nombres, error: !nombres.length ? 'No hay cuentas bancarias en Holded' : (fallos.length === nombres.length ? fallos[0] : null) };
+    try { mv = await holdedTodos(`/treasury/accounts/${id}/bank-movements?limit=200`, 40); } catch (e) { fallos.push(e.message); det.push({ nombre: nom, error: e.message.slice(0, 160) }); continue; }
+    const vistos = new Set(); let rep = 0, ent = 0, sal = 0, ini = '', fin = '', gm = {};
+    mv.forEach(m => { const mid = m && (m.id || m._id); if (mid && vistos.has(mid)) { rep++; return; } if (mid) vistos.add(mid);
+      const n = importeMov(m), f = fechaMov(m); if (!f) return; if (!ini || f < ini) ini = f; if (f > fin) fin = f;
+      if (n > 0) ent += n; if (!(n < 0)) return; sal -= n; gm[f.slice(0, 7)] = (gm[f.slice(0, 7)] || 0) - n; g[f.slice(0, 7)] = Math.round(((g[f.slice(0, 7)] || 0) - n) * 100) / 100; });
+    const ej = mv[0] ? Object.fromEntries(Object.entries(mv[0]).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v).slice(0, 60) : String(v).slice(0, 40)])) : null;
+    det.push({ nombre: nom, iban: String(c.iban || '').slice(-4), tipo: c.type || c.kind || '', saldo: aNum(c.balance ?? c.current_balance ?? c.amount), n: mv.length, repetidos: rep, entradas: Math.round(ent), salidas: Math.round(sal), desde: ini, hasta: fin,
+      octubre: Math.round(gm['2026-10'] || 0), ej }); }
+  const v = { fuente: 'banco', meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), cuentas: nombres, det, error: !nombres.length ? 'No hay cuentas bancarias en Holded' : (fallos.length === nombres.length ? fallos[0] : null) };
   _gasH = { t: Date.now(), v }; return v;
 }
 // Si la clave no puede leer el banco: gastos = compras y gastos registrados en Holded (menos sus rectificativas)
