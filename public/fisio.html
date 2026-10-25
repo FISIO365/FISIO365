@@ -5519,27 +5519,28 @@ const EJ_ZONAS=['Cervical','Hombro','Codo, muñeca y mano','Dorsal','Lumbar','Ca
 let ejZona='',ejQ='',ejMax=60;
 const ejKey=n=>sinTildes(n).replace(/[^a-z0-9]+/g,' ').trim();
 const ejYt=u=>{const m=String(u||'').match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/);return m?m[1]:'';};
+const ejRepK=e=>ejYt(e.youtubeUrl)||'n:'+ejKey(e.nombre);
 async function ejApi(body){const r=await fetch('/api/ejercicios',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,...body})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'No se ha podido guardar');return d;}
 async function renderEjercicios(wrap){
  const box=ce('div','ej');wrap.appendChild(box);
  if(!biblio.length){box.innerHTML='<p class="ej-n">Cargando ejercicios…</p>';await loadBiblio();box.innerHTML='';}
  box.innerHTML=`<div class="ej-top"><input type="search" class="ej-q" placeholder="Buscar ejercicio…" value="${escH(ejQ)}"><button type="button" class="seg-add ej-nuevo">+ Nuevo ejercicio</button></div><div class="ej-zs"></div><p class="ej-n"></p><div class="ej-g"></div>`;
  const pinta=()=>{
-  const rep={};biblio.forEach(e=>{const k=ejKey(e.nombre);rep[k]=(rep[k]||0)+1;});
+  const rep={};biblio.forEach(e=>{const k=ejRepK(e);rep[k]=(rep[k]||0)+1;});
   const cnt={};biblio.forEach(e=>{const z=e.zona||'';cnt[z]=(cnt[z]||0)+1;});
   const zonas=[...new Set([...EJ_ZONAS,...biblio.map(e=>e.zona).filter(Boolean)])].filter(z=>cnt[z]);
-  const nRep=biblio.filter(e=>rep[ejKey(e.nombre)]>1).length;
+  const nRep=biblio.filter(e=>rep[ejRepK(e)]>1).length;
   const ops=[['','Todos',biblio.length],...zonas.map(z=>[z,z,cnt[z]]),...(cnt['']?[['__sin','Sin zona',cnt['']]]:[]),...(nRep?[['__rep','Repetidos',nRep]]:[])];
   if(!ops.some(o=>o[0]===ejZona))ejZona='';
   const zs=box.querySelector('.ej-zs');zs.innerHTML=ops.map(o=>`<button type="button" data-z="${escH(o[0])}" class="${o[0]===ejZona?'on':''}">${escH(o[1])}<i>${o[2]}</i></button>`).join('');
   zs.querySelectorAll('button').forEach(b=>b.onclick=()=>{ejZona=b.dataset.z;ejMax=60;pinta();});
   const q=sinTildes(ejQ.trim());
-  let L=biblio.filter(e=>(!q||sinTildes(e.nombre+' '+(e.descripcion||'')).includes(q))&&(ejZona===''||(ejZona==='__sin'?!e.zona:ejZona==='__rep'?rep[ejKey(e.nombre)]>1:e.zona===ejZona)));
-  if(ejZona==='__rep')L=L.slice().sort((a,b)=>ejKey(a.nombre).localeCompare(ejKey(b.nombre)));
-  box.querySelector('.ej-n').textContent=L.length===1?'1 ejercicio':`${L.length} ejercicios`+(ejZona==='__rep'?' · mismos nombres, puedes borrar los que sobren':'');
+  let L=biblio.filter(e=>(!q||sinTildes(e.nombre+' '+(e.descripcion||'')).includes(q))&&(ejZona===''||(ejZona==='__sin'?!e.zona:ejZona==='__rep'?rep[ejRepK(e)]>1:e.zona===ejZona)));
+  if(ejZona==='__rep')L=L.slice().sort((a,b)=>ejRepK(a).localeCompare(ejRepK(b)));
+  box.querySelector('.ej-n').textContent=L.length===1?'1 ejercicio':`${L.length} ejercicios`+(ejZona==='__rep'?' · mismo vídeo subido varias veces, borra los que sobren':'');
   const g=box.querySelector('.ej-g');g.innerHTML='';
   if(!L.length){g.innerHTML='<p class="ej-n">No hay ejercicios con ese filtro.</p>';}
-  L.slice(0,ejMax).forEach(e=>{const c=ce('button','ej-c');c.type='button';const th=peMini(e);const n=rep[ejKey(e.nombre)];
+  L.slice(0,ejMax).forEach(e=>{const c=ce('button','ej-c');c.type='button';const th=peMini(e);const n=rep[ejRepK(e)];
    c.innerHTML=`<div class="ej-th" ${th?`style="background-image:url('${escH(th)}')"`:''}>${th?'':'Sin vídeo'}${n>1?`<em>×${n}</em>`:''}</div><div class="ej-b"><b>${escH(e.nombre)}</b>${e.zona?`<span>${escH(e.zona)}</span>`:'<span class="sz">Sin zona</span>'}</div>`;
    c.onclick=()=>ejEditar(e,pinta);g.appendChild(c);});
   if(L.length>ejMax){const b=ce('button','ej-mas');b.type='button';b.textContent=`Ver más (${L.length-ejMax})`;b.onclick=()=>{ejMax+=60;pinta();};g.after(b);}
@@ -5569,6 +5570,8 @@ function ejEditar(e,onSaved){
  m.querySelector('.hz-ok').onclick=async ev=>{const b=ev.target;const campos={nombre:m.querySelector('.ej-nom').value.trim(),youtube:yt.value.trim(),zona:gZ()||'',descripcion:m.querySelector('.ej-des').value.trim()};
   if(!campos.nombre){toast('Pon el nombre del ejercicio',false);return;}
   if(campos.youtube&&!ejYt(campos.youtube)){toast('Ese link no parece de YouTube',false);return;}
+  const vid0=ejYt(campos.youtube),mismoV=vid0&&biblio.find(x=>x.id!==e.id&&ejYt(x.youtubeUrl)===vid0);
+  if(mismoV){toast(`Este vídeo ya está en la biblioteca como «${mismoV.nombre.trim()}»`,false);return;}
   const igual=biblio.find(x=>x.id!==e.id&&ejKey(x.nombre)===ejKey(campos.nombre));
   if(igual&&!b.dataset.ok){b.dataset.ok=1;b.textContent='Ya hay uno igual · Toca otra vez';setTimeout(()=>{delete b.dataset.ok;b.textContent=nuevo?'Añadir':'Guardar';},4000);return;}
   b.disabled=true;try{await ejApi({id:e.id||'',campos,foto:foto?{b64:foto.b64,tipo:foto.tipo}:null});toast(nuevo?'Ejercicio añadido':'Guardado',true);m.remove();await loadBiblio();onSaved&&onSaved();}catch(err){b.disabled=false;toast(err.message,false);}};
