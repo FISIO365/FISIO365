@@ -439,10 +439,10 @@ const CIERRES_T = 'tblmJMoILPnxXzD8w';
 // Puntos del reporte diario (los que tienen «auto» los comprueba también el panel)
 const REPORTE_ITEMS = [
   { k: 'cobrar', t: 'He registrado en el panel todos los cobros del día', auto: 'cobrar' },
-  { k: 'marcar', t: 'He marcado todas mis citas (hecha, no vino…)', auto: 'marcar' },
-  { k: 'ejercicios', t: 'Mis pacientes tienen los ejercicios en la app', auto: 'ejercicios' },
+  { k: 'marcar', t: 'He actualizado el estado de todas mis citas del día', auto: 'marcar' },
+  { k: 'ejercicios', t: 'Mis pacientes tienen su programa de ejercicios actualizado en la app', auto: 'ejercicios' },
   { k: 'consent', t: 'Las primeras visitas han firmado el consentimiento', auto: 'consent' },
-  { k: 'app', t: 'He dado acceso a la app a todos los pacientes nuevos del día', auto: 'app' },
+  { k: 'app', t: 'He dado acceso a la app a los pacientes nuevos del día y la han instalado en su móvil', auto: 'app' },
   { k: 'proxima', t: 'Si alguien no ha reagendado, he apuntado por qué y lo he pasado a seguimiento', auto: 'proxima' },
   { k: 'historia', t: 'He actualizado todas las historias clínicas de hoy' },
   { k: 'limpieza', t: 'He dejado la cabina limpia y lista para mañana', sub: ['Mesa limpia y sin polvo en los muebles', 'Grifo limpio', 'Papelera vacía', 'Rulo y taburete sobre la camilla', 'Trapito doblado (se cambia 1 vez por semana)', 'Toalla de manos colgada en su sitio (se cambia 1 vez por semana)', 'TODOS los cables bien recogidos', 'Máquinas apagadas y bien colocadas', 'Las cosas del carrito ordenadas y que se vean bonitas'] },
