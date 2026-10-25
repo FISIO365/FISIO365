@@ -784,7 +784,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  /* El scroll va dentro (no la página): así Safari no mueve la barra de abajo al subir/bajar */
  html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
  .main-area{height:100dvh;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
- #sb-rend,#sb-seg,#sb-tar,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-record,#sb-admin{display:none!important}
+ #sb-rend,#sb-seg,#sb-tar,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-admin{display:none!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
  .topbar-t{font-size:21px!important}
  .topbar-s{font-size:12px!important}
@@ -1174,9 +1174,6 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="sb-item" id="sb-cap" onclick="showSection('cap')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 11l15-6v14L3 13z"/><path d="M7 12.5V18a2 2 0 0 0 4 0v-4"/><path d="M21 9.5v5"/></svg></span><span class="sb-txt">Captación</span>
  </div>
- <div class="sb-item" id="sb-record" onclick="showSection('record')" style="display:none">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="sb-txt">Recordatorios</span>
- </div>
  <div class="sb-grp"></div>
  <div class="sb-item" id="sb-prog" onclick="showSection('prog')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span><span class="sb-txt">Programas</span>
@@ -1290,7 +1287,6 @@ const TOPBAR = {
  inf: ['Informes','Informes generados'],
  school: ['School','Formación del equipo'],
  msg: ['Chat','Mensajes con pacientes'],
- record: ['Recordatorios','Citas de mañana'],
  rend: ['Rendimiento','Cómo va cada fisio'],
  seg: ['Pendientes','Tareas y llamadas'],
  tar: ['Pendientes','Tareas y llamadas'],
@@ -1415,7 +1411,6 @@ function aplicarRole(){
  'checklist': 'sb-rep',
  'callin': 'sb-call',
  'captacion': 'sb-cap',
- 'recordatorios': 'sb-record',
  'programas': 'sb-prog',
  'ejercicios': 'sb-ejer',
  'anamnesis': 'sb-anam',
@@ -1500,13 +1495,13 @@ try{document.fonts&&document.fonts.ready.then(()=>ajustaTopbar());}catch(e){}set
 window.addEventListener('resize',()=>ajustaTopbar());
 function showSection(sec){
  // Si no tiene acceso a esa sección (Administración › Accesos), a la primera que sí tenga
- try{const SBM={agenda:'sb-agenda',pac:'sb-pac',msg:'sb-msg',rep:'sb-rep',call:'sb-call',cap:'sb-cap',record:'sb-record',prog:'sb-prog',ejer:'sb-ejer',anam:'sb-anam',rend:'sb-rend',stats:'sb-stats',school:'sb-school',admin:'sb-admin'};
+ try{const SBM={agenda:'sb-agenda',pac:'sb-pac',msg:'sb-msg',rep:'sb-rep',call:'sb-call',cap:'sb-cap',prog:'sb-prog',ejer:'sb-ejer',anam:'sb-anam',rend:'sb-rend',stats:'sb-stats',school:'sb-school',admin:'sb-admin'};
   if(fisioActual&&SBM[sec]){const e=$(SBM[sec]);if(e&&e.style.display==='none'){const alt=Object.keys(SBM).find(k=>{const x=$(SBM[k]);return x&&x.style.display!=='none';});if(alt)sec=alt;}}}catch(e){}
  try{const pv=sessionStorage.getItem('f365_panel_sec');if(sec==='anam'&&pv&&pv!=='anam')sessionStorage.setItem('f365_panel_prev',pv);}catch(e){}
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
  try{$('btnRend').classList.toggle('activo',sec==='rend');$('btnTar').classList.toggle('activo',sec==='tar');}catch(e){}
- ['anam','prog','agenda','pac','school','msg','record','rend','seg','tar','call','stats','cap','ejer','rep','admin'].forEach(s=>{
+ ['anam','prog','agenda','pac','school','msg','rend','seg','tar','call','stats','cap','ejer','rep','admin'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
  const [t,s] = TOPBAR[sec];
@@ -1526,7 +1521,6 @@ function showSection(sec){
  else if(sec==='pac') renderPac(wrap);
  else if(sec==='msg') renderMensajes(wrap);
  else if(sec==='school') renderWiki(wrap);
- else if(sec==='record') renderRecordatorios(wrap);
  else if(sec==='rend') renderRendimiento(wrap);
  else if(sec==='seg'){try{sessionStorage.setItem('f365_tar','seg');}catch(e){}renderTareas(wrap);}
  else if(sec==='tar') renderTareas(wrap);
@@ -5446,7 +5440,7 @@ function stRanking(L,S){const sem=ST.rk!=='per'?[S]:L,acc={};
  return Object.entries(acc).filter(([k,a])=>a.cap||a.ses).map(([k,a])=>({nombre:agNom(k),oc:a.ocup,cap:a.cap,ses:a.ses,ocup:a.cap?Math.round(a.ocup*100/a.cap):null,conv:a.vin?Math.round(a.rep*100/a.vin):null,vin:a.vin,rep:a.rep})).sort((x,y)=>(y.ocup??-1)-(x.ocup??-1)||y.ses-x.ses);}
 // ══ ADMINISTRACIÓN: equipo, horarios, vacaciones y festivos, accesos y contraseñas (solo quien tiene acceso «admin») ══
 const ADM={tab:'equipo',d:null};
-const ADM_SEC=[['agenda','Agenda'],['pacientes','Pacientes'],['chat','Chat'],['checklist','Check-list'],['callin','Call-in'],['captacion','Captación'],['recordatorios','Recordatorios'],['programas','Programas'],['ejercicios','Ejercicios'],['anamnesis','Anamnesis'],['rendimiento','Rendimiento'],['estadisticas','Estadísticas'],['school','School'],['admin','Administración']];
+const ADM_SEC=[['agenda','Agenda'],['pacientes','Pacientes'],['chat','Chat'],['checklist','Check-list'],['callin','Call-in'],['captacion','Captación'],['programas','Programas'],['ejercicios','Ejercicios'],['anamnesis','Anamnesis'],['rendimiento','Rendimiento'],['estadisticas','Estadísticas'],['school','School'],['admin','Administración']];
 const ADM_TIPOS=['Vacaciones','Festivo','Día libre','Menos horas','Baja','Formación','Otro'];
 const ADM_DC={Lunes:'Lun',Martes:'Mar','Miércoles':'Mié',Jueves:'Jue',Viernes:'Vie','Sábado':'Sáb'};
 async function admPost(a,b){return agPost(a,Object.assign({yo:fisioActual.nombre,clave:fisioActual._pwd},b||{}));}
@@ -10314,87 +10308,6 @@ function renderFormacion(wrap, ruta){
 
 // ── MENSAJES ─────────────────────────────────────────────────────────────────
 const TABLE_MENSAJES = 'tblMENSAJES'; // Crear en Airtable
-
-async function renderRecordatorios(wrap){
- wrap.innerHTML='';
-
- const hd=ce('div','');
- hd.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:16px';
- hd.innerHTML='<div><div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Recordatorios</div></div>';
- wrap.appendChild(hd);
-
- const loading=ce('div','');
- loading.innerHTML='<div style="text-align:center;padding:3rem"><div style="width:28px;height:28px;border:3px solid var(--lila-light);border-top-color:var(--lila);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div></div>';
- wrap.appendChild(loading);
-
- try{
- const res=await fetch('/api/recordatorios');
- const data=await res.json();
- loading.remove();
-
- if(!data.ok){
- const em=ce('div','');
- em.style.cssText='text-align:center;padding:3rem 1rem;color:var(--muted)';
- em.innerHTML='<div style="font-size:16px;font-weight:600;margin-bottom:8px">Error al cargar</div><div style="font-size:13px">'+(data.error||'')+'</div>';
- wrap.appendChild(em);
- return;
- }
-
- const citas=data.citas||[];
-
- if(!citas.length){
- const em=ce('div','');
- em.style.cssText='text-align:center;padding:3rem 1rem;color:var(--muted)';
- em.innerHTML='<div style="font-size:48px;margin-bottom:12px"></div><div style="font-size:16px;font-weight:600;margin-bottom:8px">Sin citas pendientes</div><div style="font-size:13px">No hay citas pendientes para mañana.</div>';
- wrap.appendChild(em);
- return;
- }
-
- // Determinar si hoy es viernes (5) para usar el mensaje del lunes
- const esViernes = new Date().getDay() === 5;
-
- citas.forEach(c=>{
- const card=ce('div','card');
- card.style.cssText='margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;';
- const estadoTxt=(c.estado||'').trim();
- const estadoBadge=estadoTxt?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:var(--lila-light);color:var(--lila);border-radius:99px;padding:2px 8px;margin-left:8px;">${estadoTxt}</span>`:'';
- card.innerHTML=`
- <div style="display:flex;align-items:center;gap:12px;">
- <div style="text-align:center;width:46px;flex-shrink:0;">
- <div style="font-size:15px;font-weight:700;">${c.hora||'--:--'}</div>
- </div>
- <div>
- <div style="font-size:14px;font-weight:600;">${c.pacienteNombre||'Paciente'}</div>
- <div style="font-size:12px;color:var(--muted);margin-top:1px;">${[c.tipo,c.fisio].filter(Boolean).join(' · ')}${estadoBadge}</div>
- </div>
- </div>
- `;
-
- const btn=ce('button','');
- btn.style.cssText='background:#25D366;border:none;border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;';
- btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-1.746-.873-2.892-1.559-4.043-3.537-.305-.526.305-.488.873-1.625.097-.198.05-.371-.05-.52-.099-.149-.669-1.612-.917-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.064 2.875 1.213 3.074.148.198 2.057 3.146 5.05 4.287 2.994 1.14 2.994.76 4.034.659 1.04-.099 1.756-.658 2.063-1.296.297-.621.297-1.153.182-1.296-.105-.13-.297-.198-.594-.347z"/><path d="M12.04 2.003c-5.553 0-10.04 4.487-10.04 10.04 0 1.79.47 3.47 1.29 4.92l-1.38 5.04 5.16-1.35c1.41.77 3.02 1.21 4.71 1.21 5.553 0 10.04-4.487 10.04-10.04 0-5.553-4.487-10.04-10.04-10.04zm0 18.18c-1.52 0-3-.4-4.28-1.16l-.31-.18-3.06.8.82-2.98-.2-.31a8.13 8.13 0 0 1-1.27-4.32c0-4.49 3.65-8.14 8.14-8.14 4.49 0 8.14 3.65 8.14 8.14 0 4.49-3.65 8.14-8.14 8.14z"/></svg>';
- btn.onclick=()=>{
- let telefono=(c.pacienteTelefono||'').toString().replace(/\\D/g,'');
- if(telefono && !telefono.startsWith('34') && telefono.length===9) telefono='34'+telefono;
- if(!telefono){ toast('Este paciente no tiene teléfono guardado',false); return; }
- const dia = esViernes ? 'El lunes' : 'Mañana';
- const cierre = esViernes ? 'Nos vemos :)' : 'Hasta mañana :)';
- const texto = `Hola ${c.pacienteNombre||''},\n\n${dia} tienes cita en FISIO365 a las ${c.hora||''}\n\n${cierre}`;
- window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`,'_blank');
- };
-
- card.appendChild(btn);
- wrap.appendChild(card);
- });
-
- }catch(e){
- loading.remove();
- const em=ce('div','');
- em.style.cssText='text-align:center;padding:3rem 1rem;color:var(--muted)';
- em.innerHTML='<div style="font-size:16px;font-weight:600;margin-bottom:8px">Error de conexión</div>';
- wrap.appendChild(em);
- }
-}
 
 function parseFechaMsg(s){
  if(!s) return 0;

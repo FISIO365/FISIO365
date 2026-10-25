@@ -843,7 +843,7 @@ module.exports = async function handler(req, res) {
       if (action.startsWith('seg-adm-')) {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const FT = FISIOS_TABLE, AUS = 'tblkezm4bTQ4jJf1X', DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        const ACC = ['agenda', 'pacientes', 'chat', 'checklist', 'callin', 'captacion', 'recordatorios', 'programas', 'ejercicios', 'anamnesis', 'rendimiento', 'estadisticas', 'school', 'admin'];
+        const ACC = ['agenda', 'pacientes', 'chat', 'checklist', 'callin', 'captacion', 'programas', 'ejercicios', 'anamnesis', 'rendimiento', 'estadisticas', 'school', 'admin'];
         const full = await todosT(FT, 'sort[0][field]=Name');
         const yo = full.find(r => r.fields && String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
         if (!yo || String(yo.fields.Password || '').trim() !== String(q.clave || '').trim() || !yo.fields.acc_admin || yo.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Solo dirección puede entrar en Administración. Vuelve a iniciar sesión.' });
