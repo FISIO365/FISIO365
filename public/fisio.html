@@ -939,6 +939,8 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .ag-pf{position:relative;flex:1;min-width:160px}.ag-pf .ag-in{padding:8px 12px;font-size:14px;border-radius:99px}.ag-pdd{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:6px;display:flex;flex-direction:column}.ag-pdd button{font-family:var(--font);text-align:left;font-size:13.5px;border:none;background:none;padding:8px 10px;border-radius:8px;cursor:pointer}.ag-pdd button:hover{background:#f7f3ef}
 .ag-fil{max-width:200px}.ag-w span{white-space:nowrap}.ag-fil span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ag-lista{display:flex;flex-direction:column}.ag-ld{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5f554e;padding:14px 0 6px;border-bottom:1px solid #f0ebe6;margin-bottom:6px}
+.fp-alr{background:#d93025;color:#fff;font-weight:700;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:14px}.fp-sal{display:flex;flex-wrap:wrap;gap:6px}.fp-sal span{background:#fff4e0;color:#8a5200;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}.fp-sal span.gr{background:#fdecea;color:#b3261e}.fp-sin{color:#b3261e;font-weight:600;font-size:14px}
+.ag-c.ag-al{background:#fdecea!important;border-color:#e0453a!important;border-left:4px solid #d93025!important}.ag-c.ag-al>b{color:#b3261e!important}.ag-alt{display:block;font-size:11.5px;font-weight:700;color:#d93025;margin-top:2px;-webkit-text-fill-color:currentColor}
 .ag-li{display:grid;grid-template-columns:46px 1fr;gap:8px;align-items:start;margin-bottom:6px}.ag-lh{font-size:12.5px;color:#7d6a60;padding-top:8px}
 .ag-fz{font-weight:700!important;font-size:10.5px!important;text-transform:uppercase;letter-spacing:.03em}
 .ag-sem .ag-hd,.ag-sem .ag-row{grid-template-columns:46px repeat(var(--n),minmax(120px,1fr))}.ag-sem{min-width:calc(46px + var(--n) * 126px)}
@@ -5013,7 +5015,7 @@ function renderAgenda(wrap){
   let url=`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}`;
   if(V==='dia')url+=`&fecha=${AG.fecha}`;else{if(d1)url+=`&desde=${d1}`;if(d2)url+=`&hasta=${d2}`;if(V==='lista'&&AG.pac)url+=`&pacienteId=${AG.pac.id}`;if(V==='lista'&&AG.fisio)url+=`&fisio=${encodeURIComponent(AG.fisio)}`;}
   if(V==='lista'&&!d1&&!d2&&!AG.pac&&!AG.fisio){grid.innerHTML='<div class="fac-vacio">Para ver «Todo» elige un paciente o un fisio, o un periodo más corto.</div>';$c('.ag-res').textContent='';AG.dia=null;fs.innerHTML='';opcionesFisio([]);return;}
-  try{const d=await (await fetch(url)).json();if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,citas:d.citas||[],limitado:d.limitado,clave};pintar();if(mismo){const vuelve=()=>{grid.scrollLeft=pos.x;if(ma&&ma.scrollTop!==pos.ym)ma.scrollTop=pos.ym;if(window.scrollY!==pos.y)window.scrollTo(0,pos.y);};vuelve();requestAnimationFrame(vuelve);setTimeout(vuelve,60);}}
+  try{const d=await (await fetch(url)).json();if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,citas:d.citas||[],limitado:d.limitado,alertas:d.alertas||{},clave};pintar();if(mismo){const vuelve=()=>{grid.scrollLeft=pos.x;if(ma&&ma.scrollTop!==pos.ym)ma.scrollTop=pos.ym;if(window.scrollY!==pos.y)window.scrollTo(0,pos.y);};vuelve();requestAnimationFrame(vuelve);setTimeout(vuelve,60);}}
   catch(e){if(t!==tok)return;grid.innerHTML=`<div class="fac-vacio">No se ha podido cargar la agenda. <button type="button" class="ag-reint">Reintentar</button></div>`;grid.querySelector('.ag-reint').onclick=cargar;}
  }
  function opcionesFisio(C){const presentes=[...new Set(C.map(c=>c.fisio).filter(f=>f&&!AG_NOFISIO.test(f)))];
@@ -5022,8 +5024,8 @@ function renderAgenda(wrap){
   if(AG.fisio&&!cols.includes(AG.fisio))AG.fisio='';fs.value=AG.fisio;$c('.ag-selt').textContent=AG.fisio?agNom(AG.fisio):'Todos los fisios';
   $c('.ag-fis').value=AG.fil;$c('.ag-filt').textContent=(AG_FIL.find(x=>x[0]===AG.fil)||AG_FIL[0])[1];return cols;}
  const tarjeta=(c,conFisio)=>{
-  if(c.pacienteId){const e=agEstInfo(c.estado);
-   return `<button type="button" class="ag-c ${e.c}" data-id="${c.id}" ${conFisio?`style="border-left-color:${AG_COL[c.fisio]||'#c2552e'}"`:''}>${e.t?`<em class="ag-badge ${e.c}">${e.i} ${e.t}</em>`:''}<b>${escH(c.paciente||'Paciente')}</b>${conFisio?`<small class="ag-fz" style="color:${AG_COL[c.fisio]||'#7d6a60'}">${escH(agNom(c.fisio))}</small>`:''}${c.tipos.length?`<span class="ag-tgs">${c.tipos.map(t=>`<i>${escH(t)}</i>`).join('')}</span>`:''}<span class="ag-ic">${c.confirmada?'<i class="ag-ok">✓ Confirmada</i>':''}${c.app?'<i class="ag-app">App</i>':''}${c.web?'<i class="ag-app">Web</i>':''}${c.notas?'<i class="ag-not">Nota</i>':''}</span></button>`;}
+  if(c.pacienteId){const e=agEstInfo(c.estado),al=((AG.dia&&AG.dia.alertas)||{})[c.pacienteId];
+   return `<button type="button" class="ag-c ${e.c}${al?' ag-al':''}" data-id="${c.id}" ${conFisio&&!al?`style="border-left-color:${AG_COL[c.fisio]||'#c2552e'}"`:''}>${e.t?`<em class="ag-badge ${e.c}">${e.i} ${e.t}</em>`:''}<b>${escH(c.paciente||'Paciente')}</b>${al?`<span class="ag-alt">⚠ ${escH(al.join(' · '))}</span>`:''}${conFisio?`<small class="ag-fz" style="color:${AG_COL[c.fisio]||'#7d6a60'}">${escH(agNom(c.fisio))}</small>`:''}${c.tipos.length?`<span class="ag-tgs">${c.tipos.map(t=>`<i>${escH(t)}</i>`).join('')}</span>`:''}<span class="ag-ic">${c.confirmada?'<i class="ag-ok">✓ Confirmada</i>':''}${c.app?'<i class="ag-app">App</i>':''}${c.web?'<i class="ag-app">Web</i>':''}${c.notas?'<i class="ag-not">Nota</i>':''}</span></button>`;}
   if(agEsLibre(c.estado))return `<button type="button" class="ag-c lib" data-id="${c.id}">Libre${/SIN BOMBA/.test(c.estado)?' · sin bomba':''}${conFisio?` · ${escH(agNom(c.fisio))}`:''}</button>`;
   return `<button type="button" class="ag-c blq" data-id="${c.id}">${escH(agEstNom(c.estado))}${conFisio?` · ${escH(agNom(c.fisio))}`:''}${c.notas?` · ${escH(c.notas)}`:''}</button>`;};
  const fuera=c=>{const e=agEstInfo(c.estado);return `<button type="button" class="ag-x ${e.c}" data-id="${c.id}"><em class="ag-badge ${e.c}">${e.i} ${e.t}</em><span>${escH(c.paciente||'—')}</span></button>`;};
@@ -5544,11 +5546,22 @@ async function abrirFichaPaciente(id,nombre,pBase){
  function resumen(){
   const hoy=d.hoy,fut=d.citas.filter(c=>c.fecha>=hoy&&!/CANCEL|REPROGRAM/i.test(c.estado)).reverse(),real=d.citas.filter(c=>c.fecha<hoy&&/REALIZADA/i.test(c.estado));
   const pend=d.seguimiento.filter(x=>!x.hecho),ult=d.llamadas[0];
-  return `
+  const C=d.consent,fC=f=>f?f.split('-').reverse().join('/'):'',sn=v=>/^s[ií]$/i.test(v||'')?'Sí':/^no$/i.test(v||'')?'No':(v||'—');
+  const salud=!C?`<div class="fp-blk"><div class="fp-bt"><h3>Salud</h3></div><div class="fp-sin">⚠️ No encontramos su consentimiento firmado</div></div>`:
+   `<div class="fp-blk"><div class="fp-bt"><h3>Salud</h3><small class="fp-mu">Consentimiento del ${escH(fC(C.fecha))}</small></div>
+    ${C.salud.length?`<div class="fp-sal">${C.salud.map(x=>`<span class="${x.grave?'gr':''}">${x.grave?'⚠ ':''}${escH(x.t)}</span>`).join('')}</div>`:'<div class="fp-mu">✓ No marcó nada a tener en cuenta</div>'}
+    ${C.sueloPelvico?`<div class="fp-mu" style="margin-top:8px">Suelo pélvico: Sí · ${C.aceptaSP?'acepta la exploración ✓':'no consta que acepte la exploración'}</div>`:''}</div>
+   <div class="fp-blk"><div class="fp-bt"><h3>Marketing</h3></div><div class="fp-fs">
+    <div class="fp-f"><span>Nos conoció por</span><div class="fp-v">${escH(C.marketing.conocido||'—')}</div></div>
+    <div class="fp-f"><span>Newsletter</span><div class="fp-v">${sn(C.marketing.newsletter)}</div></div>
+    <div class="fp-f"><span>Uso de imágenes</span><div class="fp-v">${sn(C.marketing.imagenes)}</div></div>
+    <div class="fp-f"><span>Avisos de citas</span><div class="fp-v">${sn(C.marketing.citas)}</div></div></div></div>`;
+  return `${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
   <div class="fp-blk fp-pq"></div>
   <div class="fp-blk" data-blk="datos"><div class="fp-bt"><h3>Datos</h3><button type="button" class="fp-ed">Editar</button></div>
    <div class="fp-fs">${campoTxt('Teléfono','tel',P.telf)}${campoTxt('WhatsApp','whatsapp',P.whatsapp)}${campoTxt('Email','email',P.email)}${campoTxt('DNI','dni',P.dni)}${campoTxt('Cumpleaños','cumple',P.cumple,'date')}<div class="fp-f"><span>Paciente desde</span><div class="fp-v">${escH(fch(String(P.alta).slice(0,10)))}</div></div></div></div>
+  ${salud}
 `;}
  function citas(){const hoy=d.hoy;if(!d.citas.length)return '<div class="fac-vacio">Sin citas</div>';
   const fila=c=>`<div class="fp-cita"><div class="fp-cd"><b>${escH(segFecha(c.fecha))}</b><span>${escH(c.hora||'')}</span></div><div class="fp-cm"><span class="fp-ce ${cls(c.estado)}">${escH(c.estado?c.estado.charAt(0)+c.estado.slice(1).toLowerCase():'—')}</span>${c.fisio?`<span class="fp-cfi">${escH(c.fisio)}</span>`:''}${c.nota?`<p>${escH(c.nota)}</p>`:''}</div></div>`;
