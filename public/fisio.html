@@ -408,6 +408,8 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .ej-vid{aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#111;margin-bottom:4px}.ej-vid iframe{width:100%;height:100%;border:0;display:block}.ej-vid img{width:100%;height:100%;object-fit:cover;display:block}
 .ej-mod .seg-rap{flex-wrap:wrap}.ej-foto{display:flex;align-items:center;gap:10px;font-size:12.5px;color:#7d6a60}.ej-foto label{font-weight:600;color:#1e2a38;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;cursor:pointer}
 @media(max-width:560px){.ej-g{grid-template-columns:repeat(2,1fr);gap:10px}.ej-b{padding:8px 10px 10px}.ej-b b{font-size:12.5px}.ej-top .seg-add{flex:1 1 100%;padding:11px;border-radius:14px}}
+.fp-masmenu button.fp-masdel{color:#c0392b}.fp-masmenu button.fp-masdel:hover{background:#fdecea}
+.bf-av{background:#fdf1e8;border-radius:12px;padding:10px 12px;font-size:13px;color:#5c4f47;line-height:1.5;margin:4px 0 10px}.bf-av b{color:#c2552e}.bf-ok{background:#c0392b!important}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -5577,6 +5579,27 @@ function ejEditar(e,onSaved){
   b.disabled=true;try{await ejApi({id:e.id||'',campos,foto:foto?{b64:foto.b64,tipo:foto.tipo}:null});toast(nuevo?'Ejercicio añadido':'Guardado',true);m.remove();await loadBiblio();onSaved&&onSaved();}catch(err){b.disabled=false;toast(err.message,false);}};
  const del=m.querySelector('.ej-del');if(del)capConf(del,'¿Seguro? Toca otra vez',async()=>{await ejApi({accion:'borrar',id:e.id});toast('Borrado',true);m.remove();biblio=biblio.filter(x=>x.id!==e.id);onSaved&&onSaved();});
 }
+
+// Borrar la ficha de un paciente (solo dirección)
+async function borrarFicha(id,nombre,cerrarFicha){
+ const q=b=>fetch('/api/schedule?action=seg-paciente-borrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,quien:(fisioActual&&fisioActual.nombre)||'',id,...b})}).then(r=>r.json());
+ const m=hzModal(`<div class="hz-top"><div><small>Borrar ficha</small><b>${escH(nombre||'Paciente')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="bf-c" style="font-size:13px;color:var(--muted)">Mirando qué tiene…</div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ let d;try{d=await q({paso:'info'});}catch(e){d={ok:false,error:'No se ha podido conectar'};}
+ const c=m.querySelector('.bf-c');if(!d.ok){c.textContent=d.error||'Error';return;}
+ const i=d.info,pl=(n,a,b)=>n===1?a:b;
+ if(i.futuras){c.innerHTML=`<div class="bf-av">Tiene <b>${i.futuras} ${pl(i.futuras,'cita pendiente','citas pendientes')}</b>. Anúla${pl(i.futuras,'la','las')} primero en la agenda y luego borra la ficha.</div>`;return;}
+ const lista=[i.realizadas?`${i.realizadas} ${pl(i.realizadas,'sesión hecha','sesiones hechas')}`:'',i.historial?'historial clínico':'',i.consentimientos?`${i.consentimientos} ${pl(i.consentimientos,'consentimiento firmado','consentimientos firmados')}`:''].filter(Boolean);
+ c.innerHTML=(i.clinico?`<div class="bf-av">Esta ficha tiene <b>${lista.join(', ')}</b>. Si la borras, se pierde de la ficha y no se puede recuperar desde el panel. Las facturas de Holded no se tocan.</div><div class="hz-lab">Para confirmar, escribe su nombre completo</div>${capIn('bf-n',i.nombre)}`:`<div class="bf-av">No tiene sesiones hechas, historial ni consentimientos. Se borrará la ficha y su acceso a la app.</div>`)+
+  `<div class="hz-bts"><button type="button" class="hz-re bf-no">Cancelar</button><button type="button" class="hz-ok bf-ok">Borrar ficha</button></div>`;
+ c.style.color='';c.querySelector('.bf-no').onclick=()=>m.remove();
+ c.querySelector('.bf-ok').onclick=async e=>{const b=e.target;const conf=(c.querySelector('.bf-n')||{}).value||'';
+  if(i.clinico&&conf.trim().toLowerCase()!==String(i.nombre).trim().toLowerCase()){toast('El nombre no coincide',false);return;}
+  b.disabled=true;let r;try{r=await q({paso:'borrar',confirma:conf});}catch(_){r={ok:false,error:'No se ha podido conectar'};}
+  if(!r.ok){b.disabled=false;toast(r.error||'No se ha podido borrar',false);return;}
+  m.remove();toast('Ficha borrada',true);try{pacs=(pacs||[]).filter(p=>p.id!==id);}catch(_){}
+  cerrarFicha&&cerrarFicha();try{if(sessionStorage.getItem('f365_panel_sec')==='pac')showSection('pac');}catch(_){}};
+}
 async function renderCaptacion(wrap){
  const box=ce('div','cap');wrap.appendChild(box);
  box.innerHTML='<div class="fac-vacio">Cargando…</div>';
@@ -6315,10 +6338,10 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const cont=body.querySelector('.fp-cont');
   body.querySelectorAll('.fp-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;pintar();});
   {const mb=body.querySelector('.fp-mas');if(mb)mb.onclick=e=>{e.stopPropagation();const ya=document.querySelector('.fp-masmenu');if(ya){ya.remove();return;}
-    const mn=ce('div','fp-masmenu');mn.innerHTML=MAS.map(([k,t])=>`<button type="button" data-k="${k}" class="${tab===k?'on':''}"><span>${t}${k==='archivos'&&P.archivos.length?' <em>'+P.archivos.length+'</em>':''}</span>${tab===k?'<b>✓</b>':''}</button>`).join('')+'<div class="fp-masdiv"></div><button type="button" data-k="_anam" class="fp-masanam"><span>Hacer anamnesis</span><b>›</b></button>';
+    const mn=ce('div','fp-masmenu');mn.innerHTML=MAS.map(([k,t])=>`<button type="button" data-k="${k}" class="${tab===k?'on':''}"><span>${t}${k==='archivos'&&P.archivos.length?' <em>'+P.archivos.length+'</em>':''}</span>${tab===k?'<b>✓</b>':''}</button>`).join('')+'<div class="fp-masdiv"></div><button type="button" data-k="_anam" class="fp-masanam"><span>Hacer anamnesis</span><b>›</b></button>'+(esDireccion()?'<button type="button" data-k="_borrar" class="fp-masdel"><span>Borrar ficha</span></button>':'');
     document.body.appendChild(mn);const rc=mb.getBoundingClientRect();mn.style.top=(rc.bottom+6)+'px';mn.style.right=Math.max(12,window.innerWidth-rc.right)+'px';
     const fuera=ev=>{if(!mn.contains(ev.target)){mn.remove();document.removeEventListener('click',fuera,true);}};setTimeout(()=>document.addEventListener('click',fuera,true),0);
-    mn.querySelectorAll('button').forEach(b=>b.onclick=()=>{mn.remove();document.removeEventListener('click',fuera,true);if(b.dataset.k==='_anam'){cerrar();abrirAnamnesisDe({id,nombre:P.nombre});return;}tab=b.dataset.k;pintar();});};}
+    mn.querySelectorAll('button').forEach(b=>b.onclick=()=>{mn.remove();document.removeEventListener('click',fuera,true);if(b.dataset.k==='_anam'){cerrar();abrirAnamnesisDe({id,nombre:P.nombre});return;}if(b.dataset.k==='_borrar'){borrarFicha(id,P.nombre,cerrar);return;}tab=b.dataset.k;pintar();});};}
   body.querySelector('.fp-estb').onclick=editarEstado;
   {const ba=body.querySelector('.fp-appb');if(ba)ba.onclick=()=>enviarApp(P);}
   body.querySelector('.fp-segb').onclick=()=>{const sp=segAct();if(sp){verSeg(sp);return;}abrirNuevoSeg({pacienteId:id,nombre:P.nombre,motivo:P.porQue||'',onSave:recargarSeg});};

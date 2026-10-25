@@ -1231,6 +1231,30 @@ module.exports = async function handler(req, res) {
         const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'HISTORIAL CLÍNICO': nuevo } }) });
         return res.status(200).json({ ok: !d.error, historial: nuevo, error: d.error && (d.error.message || d.error.type) });
       }
+      // Borrar la ficha de un paciente (solo dirección). paso 'info' → qué tiene; paso 'borrar' → la borra
+      if (action === 'seg-paciente-borrar') {
+        if (!/^(nora|ramiro)$/i.test(String(q.quien || '').trim().split(' ')[0])) return res.status(403).json({ ok: false, error: 'Solo dirección puede borrar fichas' });
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
+        const pac = await at(`${PACIENTES}/${q.id}`); if (pac.error) return res.status(404).json({ ok: false, error: 'No encontrado' });
+        const F = pac.fields || {}, hoyM = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+        const citas = await capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`FIND('${q.id}',ARRAYJOIN({PacienteRec}))`)}&fields[]=ESTADO&fields[]=FECHA`).catch(() => []);
+        const est = c => String(c.fields['ESTADO'] || '').trim().toUpperCase(), fe = c => String(c.fields['FECHA'] || '').slice(0, 10);
+        const info = {
+          nombre: F['FULL NAME'] || '',
+          realizadas: citas.filter(c => est(c) === 'REALIZADA').length,
+          futuras: citas.filter(c => est(c) === 'PENDIENTE' && fe(c) >= hoyM).length,
+          historial: !!String(F['HISTORIAL CLÍNICO'] || '').trim(),
+          consentimientos: (await consTodos().catch(() => [])).filter(c => (c.pac || []).includes(q.id)).length,
+        };
+        info.clinico = info.realizadas > 0 || info.historial || info.consentimientos > 0;
+        if (q.paso !== 'borrar') return res.status(200).json({ ok: true, info });
+        if (info.futuras) return res.status(200).json({ ok: false, error: `Tiene ${info.futuras} cita${info.futuras > 1 ? 's' : ''} pendiente${info.futuras > 1 ? 's' : ''}. Anúlala${info.futuras > 1 ? 's' : ''} primero.` });
+        if (info.clinico && String(q.confirma || '').trim().toLowerCase() !== String(info.nombre).trim().toLowerCase()) return res.status(200).json({ ok: false, error: 'Escribe su nombre completo para confirmar' });
+        const d = await at(`${PACIENTES}/${q.id}`, { method: 'DELETE' });
+        if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido borrar' });
+        console.log('ficha borrada', q.id, info.nombre, 'por', q.quien);
+        return res.status(200).json({ ok: true });
+      }
       if (action === 'seg-paciente-crear') {
         const nombre = String(q.nombre || '').trim().replace(/\s+/g, ' ');
         const tel = String(q.tel || '').replace(/\D/g, '').replace(/^0034|^34(?=\d{9}$)/, '');
