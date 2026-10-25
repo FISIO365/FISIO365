@@ -1207,7 +1207,8 @@ module.exports = async function handler(req, res) {
         let holdedMes = null; const mesAct = hoyF.slice(0, 7);
         if (HOLDED_KEY && !ms.some(x => x.m === mesAct)) try {
           const tk = await holdedTodos(`/sales-receipts?limit=200&start_date=${mesAct}-01&end_date=${hoyF}`, 20);
-          const deMes = tk.filter(d => String(d.date || '').slice(0, 7) === mesAct && d.status !== 'cancelled');
+          const vistos = new Set(); // sin repetir ningún ticket aunque Holded lo devuelva dos veces al paginar
+          const deMes = tk.filter(d => d && d.id && !vistos.has(d.id) && vistos.add(d.id) && String(d.date || '').slice(0, 7) === mesAct);
           const sum = L => Math.round(L.reduce((t, d) => t + importeDoc(d), 0) * 100) / 100;
           const bor = deMes.filter(d => !d.document_number), pend = deMes.filter(d => d.document_number && ['pending', 'partial', 'overdue'].includes(d.status));
           holdedMes = { m: mesAct, v: sum(deMes), n: deMes.length, hasta: hoyF, borr: { n: bor.length, v: sum(bor) }, pend: { n: pend.length, v: sum(pend) } };
