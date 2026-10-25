@@ -942,7 +942,10 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-cbts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.fp-cbts button{font-family:var(--font);font-size:13.5px;font-weight:600;border:none;border-radius:12px;padding:11px 8px;cursor:pointer;background:#f7f3ef;color:#1a1a1a}.fp-cbts button:first-child{background:#c2552e;color:#fff}
 .fp-sin{background:#fdecea;color:#b3261e;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:600}
 .fp-cdoc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.fp-cdoc button{font-family:var(--font);font-size:13.5px;font-weight:600;border:none;border-radius:12px;padding:11px 6px;cursor:pointer;background:#f7f3ef;color:#1a1a1a}.fp-cdoc button:first-child{background:#c2552e;color:#fff}
-.fp-cfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #f1ede9;margin-top:12px;padding-top:10px;font-size:13px;color:#16803c;font-weight:500}.fp-cfoot button{font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;color:#c2552e;cursor:pointer;padding:0}
+.cs-menu{display:flex;flex-direction:column;gap:8px;margin-top:6px}.cs-menu button{font-family:var(--font);font-size:15px;font-weight:600;border:none;border-radius:12px;padding:13px;cursor:pointer;background:#f7f3ef;color:#1a1a1a}.cs-menu button:first-child{background:#c2552e;color:#fff}
+.fp-docs2{display:flex;flex-direction:column;gap:6px;margin-top:8px}.fp-doc2{display:flex;align-items:center;justify-content:space-between;width:100%;font-family:var(--font);border:none;background:#f7f3ef;border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;color:#1a1a1a}.fp-doc2 span{display:flex;flex-direction:column}.fp-doc2 b{font-size:14px}.fp-doc2 small{font-size:12px;color:#7d6a60}.fp-doc2 i{font-style:normal;font-weight:600;font-size:13px;color:#c2552e}
+.fp-cenvs button{background:#c2552e!important;color:#fff!important}.fp-sal span.ok{background:#e8f5ec;color:#16803c}
+.fp-cfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #f1ede9;margin-top:12px;padding-top:10px;font-size:12px;color:#7d6a60;font-weight:600;text-transform:uppercase;letter-spacing:.5px}.fp-cfoot button{text-transform:none;letter-spacing:0;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;color:#c2552e;cursor:pointer;padding:0}
 button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .fp-dud .fp-cbts button:last-child{background:#fff}.fp-dud{background:#fff4e0;color:#5c3d00;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:10px}
 .fp-chip{font-size:12px;font-weight:600;border-radius:999px;padding:4px 10px}.fp-chip.ok{background:#e8f5ec;color:#16803c}.fp-chip.no{background:#fdecea;color:#b3261e}
@@ -5535,7 +5538,7 @@ function abrirTareaEquipo(t,onSave){
 }
 // ── FICHA COMPLETA DEL PACIENTE (todo lo de Airtable; se carga solo al abrirla) ──
 function mdSimple(t){return escH(String(t||'')).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#{1,3}\s*(.+)$/gm,'<b>$1</b>').replace(/\n/g,'<br>');}
-const CONSENT_URL='https://tally.so/r/b5j1M2';
+const CONSENT_URL='https://tally.so/r/b5j1M2';const FORM_SP_URL='https://tally.so/r/Gex8jo',FORM_ALTA_URL='https://tally.so/r/Dq4gE5';
 // ── PDF del consentimiento (mismo contenido que el formulario de Tally «Formulario Primera Visita») ──
 const CONS_PREG=[['EMBARAZO','Si eres mujer, ¿embarazada o en periodo de lactancia?'],['MARCAPASOS','¿Tienes marcapasos u otro implante electrónico?'],['PROBLEMAS CIRCULACIÓN','¿Tienes problemas circulatorios graves?'],['HIPERTENSIÓN|ARRITMIAS','¿Tienes hipertensión no controlada o arritmias significativas?'],['PRÓTESIS','¿Tienes prótesis, implantes metálicos u otros materiales en la zona a tratar?'],['FRACTURAS/CIRUGÍA','¿Has tenido fracturas recientes o cirugías recientes en la zona a tratar?'],['CÁNCER','¿Has sido diagnosticado con cáncer o está recibiendo tratamiento oncológico?'],['ENFERMEDAD NEUROLÓGICA','¿Tienes enfermedades neurológicas o musculares graves?'],['MEDICAMENTO CUAGULACIÓN','¿Tomas medicación que afecte la coagulación o tenga efectos importantes sobre la circulación?'],['ALERGIA','¿Tiene alergias graves a medicamentos o materiales?'],['DOLOR CRÓNICO','¿Tienes dolor crónico o limitaciones funcionales importantes?'],['SUELO PÉLVICO','¿Tu consulta está relacionada con el suelo pélvico (embarazo, postparto, pérdidas de orina, dolor pélvico, etc.)?']];
 const CONS_SP=['La fisioterapia de suelo pélvico tiene como objetivo la valoración y tratamiento de disfunciones relacionadas con la región abdomino-pélvica, como la incontinencia urinaria o fecal, el dolor pélvico, el postparto, los prolapsos o las disfunciones sexuales, entre otras.','Para ello, se realiza una valoración individualizada que puede incluir una exploración funcional del suelo pélvico. En algunos casos, esta exploración puede requerir técnicas intracavitarias (vaginales o anales), siempre realizadas con el consentimiento del paciente y respetando en todo momento su intimidad.','El tratamiento puede incluir diferentes técnicas como terapia manual, ejercicio terapéutico, reeducación funcional, biofeedback y/o electroterapia, adaptadas a cada caso.','Las técnicas utilizadas no deben ser dolorosas. No obstante, en algunos casos puede aparecer una ligera molestia o sensación de irritación tras la sesión. De forma poco frecuente, pueden aparecer molestias derivadas de la sensibilidad de la zona o del uso de dispositivos terapéuticos.','Es importante que el paciente informe al fisioterapeuta de cualquier condición médica relevante, como embarazo, infecciones, enfermedades diagnosticadas, tratamientos farmacológicos, cirugías previas o la presencia de dispositivos electrónicos implantados.','Este tipo de tratamiento puede implicar un abordaje de carácter íntimo, por lo que se realiza siempre con el máximo respeto, explicando previamente cada procedimiento y pudiendo el paciente retirar su consentimiento en cualquier momento.'];
@@ -5565,9 +5568,21 @@ async function pdfConsentimiento(D){
  const fila=(l,v,c)=>{set(8.5,'normal','gris');const L=doc.splitTextToSize(l,tw*0.68);set(8.5,'bold',c||'neg');const V=doc.splitTextToSize(String(v||'—'),tw*0.3);const h=Math.max(L.length,V.length)*3.7+2.2;salto(h);set(8.5,'normal','gris');doc.text(L,ml,y);set(8.5,'bold',c||'neg');doc.text(V,ml+tw,y,{align:'right'});y+=h-1;doc.setDrawColor(...C.lin);doc.setLineWidth(0.15);doc.line(ml,y-2.4,ml+tw,y-2.4);y+=1;};
  const fC=f=>f?String(f).slice(0,10).split('-').reverse().join('/'):'—';
  const R=D.resp||{},v=k=>k.split('|').map(x=>R[x]).filter(Boolean),resp=k=>{const a=v(k);return a.some(x=>/^s[ií]$/i.test(x))?'Sí':a[0]||'—';};
+ const TIPO=D.tipo||'Primera visita';
  set(8.5,'bold','nar');doc.text('FISIO365 · CONSENTIMIENTO INFORMADO',ml,y);y+=8;
- set(18,'bold','neg');doc.text('Formulario de primera visita',ml,y);y+=6.5;
+ set(18,'bold','neg');doc.text(TIPO==='Suelo pélvico'?'Fisioterapia de suelo pélvico':TIPO==='Alta oncológica'?'Consentimiento por alta oncológica':'Formulario de primera visita',ml,y);y+=6.5;
  set(10,'normal','gris');doc.text(`${[D.nombre,D.apellidos].filter(Boolean).join(' ')} · firmado el ${fC(D.fecha)}`,ml,y);y+=6;
+ const chk=(t,on)=>{set(8.5,'bold','neg');const L=doc.splitTextToSize(t,tw-6);salto(L.length*3.6+2);doc.setDrawColor(...C.neg);doc.setLineWidth(0.3);doc.rect(ml,y-2.8,3.2,3.2);if(on){doc.setDrawColor(...C.ok);doc.setLineWidth(0.6);doc.line(ml+0.6,y-1.2,ml+1.4,y-0.3);doc.line(ml+1.4,y-0.3,ml+2.8,y-2.3);}L.forEach(l=>{doc.text(l,ml+6,y);y+=3.6;});y+=1.6;};
+ if(TIPO!=='Primera visita'){
+  tit('Datos del paciente');[['Nombre',[D.nombre,D.apellidos].filter(Boolean).join(' ')],['NIF / NIE',D.dni],['Teléfono',D.tel],...(TIPO==='Alta oncológica'?[['Fecha del alta oncológica',D.fechaAlta?fC(D.fechaAlta):'—'],['Informe de alta',(D.informe||[]).length?(D.informe.length+' archivo'+(D.informe.length>1?'s':'')+' adjunto'+(D.informe.length>1?'s':'')):'No adjuntado']]:[])].forEach(([l,x])=>fila(l,x));
+  if(TIPO==='Suelo pélvico'){tit('Cuestionario de salud');CONS_PREG.filter(([k])=>k!=='SUELO PÉLVICO').forEach(([k,p])=>{const r=resp(k);fila(p,r,/^s[ií]$/i.test(r)||/^alta$/i.test(r)?'no':null);});
+   if(D.notasSalud){par('Otros datos de salud: '+D.notasSalud,8.5);}
+   tit('Consentimiento informado – Fisioterapia de suelo pélvico');CONS_SP.forEach(t=>par(t));
+   chk('He leído y comprendido la información anterior y doy mi consentimiento para la valoración y tratamiento de fisioterapia de suelo pélvico.',D.aceptaSP);chk('Entiendo que puedo retirar mi consentimiento en cualquier momento.',D.aceptaSP);}
+  else{tit('Situación médica actual');par('Declaro haber recibido el alta médica en la unidad oncológica correspondiente, no estar actualmente bajo tratamiento activo contra el cáncer (quimioterapia, radioterapia, inmunoterapia u otros), y que no existe contraindicación médica actual para la aplicación de terapias físicas o magnéticas.');par('Declaro asimismo que he informado al profesional de FISIO365 de mi historia clínica relevante y de los tratamientos que sigo actualmente.');
+   tit('Sobre el tratamiento');par('Las terapias físicas y magnéticas (como la bomba diamagnética) son tratamientos no invasivos: no implican cirugía, inyecciones ni radiación ionizante. Su objetivo es favorecer la recuperación de los tejidos, reducir el dolor y mejorar la circulación.');par('Suelen tolerarse bien, aunque de forma excepcional pueden aparecer molestias leves, enrojecimiento, sensación de calor o una reactivación temporal del dolor. Aunque no existe evidencia de riesgo específico para personas con alta oncológica, FISIO365 no puede garantizar una respuesta clínica determinada ni se hace responsable de reacciones individuales imprevisibles.');
+   tit('Declaro que');['He leído y comprendido la información anterior y he podido resolver mis dudas.','Autorizo voluntariamente a FISIO365 a aplicarme estos tratamientos tras mi alta oncológica, bajo mi propia responsabilidad.','Eximo al centro y a sus profesionales de cualquier responsabilidad derivada de efectos secundarios no previsibles, recaídas o complicaciones no atribuibles a negligencia.'].forEach(t=>chk(t,true));}
+ }else{
  tit('Datos del paciente');
  [['Nombre',[D.nombre,D.apellidos].filter(Boolean).join(' ')],['NIF',D.dni],['Fecha de nacimiento',fC(D.nacimiento)],['Email',D.email],['Teléfono',D.tel],...(D.tutor?[['Tutor legal',D.tutor],['NIF del tutor',D.tutorNif]]:[]),['¿Cómo nos has conocido?',R['CONOCIDO']||'—'],...(D.recomendo?[['¿Quién te recomendó?',D.recomendo]]:[])].forEach(([l,x])=>fila(l,x));
  tit('Cuestionario de salud');
@@ -5580,15 +5595,18 @@ async function pdfConsentimiento(D){
  CONS_LEGAL.forEach(([t,ps])=>{tit(t);ps.forEach(x=>par(x));});
  CONS_AUT.forEach(([k,t,x])=>{salto(34);tit(t);par(x);fila('Respuesta',R[k]||'—');});
  tit('Derechos');par(CONS_DER);
+ }
  salto(52);y+=2;tit('Firma');
  if(D.firma){try{const im=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=D.firma;});const r=im.width/im.height,hh=Math.min(30,(tw*0.5)/r);doc.addImage(D.firma,'PNG',ml,y,hh*r,hh);y+=hh+3;}catch(e){par('(Firma no disponible)',8.5,'normal','gris');}}
  else par('Firmado electrónicamente a través del formulario de FISIO365 (Tally).',8.5,'normal','gris');
  par('Firmado en Barcelona, a '+fC(D.fecha)+'.',9,'bold');
  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);set(7,'normal','gris');doc.text('FISIO365 · Fourth Dynamic, S.L. · Consentimiento de '+[D.nombre,D.apellidos].filter(Boolean).join(' '),ml,H-10);doc.text(i+' / '+n,W-ml,H-10,{align:'right'});}
- const nombre=('Consentimiento_'+[D.nombre,D.apellidos].filter(Boolean).join('_')).replace(/[^\wáéíóúñÁÉÍÓÚÑ\-]+/g,'_')+'.pdf';
+ const nombre=((TIPO==='Suelo pélvico'?'Suelo_pelvico_':TIPO==='Alta oncológica'?'Alta_oncologica_':'Consentimiento_')+[D.nombre,D.apellidos].filter(Boolean).join('_')).replace(/[^\wáéíóúñÁÉÍÓÚÑ\-]+/g,'_')+'.pdf';
  return {blob:doc.output('blob'),nombre,b64:()=>doc.output('datauristring').split(',')[1]};
 }
-async function consAccion(accion,{consentId,paciente,email,tel}){
+function consMenu(o){const m=hzModal(`<div class="hz-top"><div><small>${escH(o.paciente||'')}</small><b>${escH(o.tipo||'Consentimiento')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="cs-menu"><button type="button" data-a="ver">Ver PDF</button><button type="button" data-a="wa">Enviar por WhatsApp</button><button type="button" data-a="email">Enviar por email</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelectorAll('.cs-menu button').forEach(b=>b.onclick=()=>{m.remove();consAccion(b.dataset.a,o);});}
+async function consAccion(accion,{consentId,paciente,email,tel,tipo}){
  let win=null;if(accion==='ver'&&!(navigator.standalone||matchMedia('(display-mode: standalone)').matches))win=window.open('','_blank');
  toast('Preparando el PDF…',true);
  try{const r=await consDatos(consentId);const P=await pdfConsentimiento(r.doc);
@@ -5601,7 +5619,7 @@ async function consAccion(accion,{consentId,paciente,email,tel}){
    const m=hzModal(`<div class="hz-top"><div><small>Enviar consentimiento por email</small><b>${escH(paciente||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="hz-lab">Email</div><input type="email" class="ag-in cs-mail" value="${escH(to)}" autocomplete="off"><div class="hz-bts"><button type="button" class="hz-ok">Enviar</button></div>`);
    m.querySelector('.hz-x').onclick=()=>m.remove();
    m.querySelector('.hz-ok').onclick=async e=>{const b=e.target,dest=m.querySelector('.cs-mail').value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dest)){toast('Revisa el email',false);return;}b.disabled=true;b.textContent='Enviando…';
-    try{const x=await (await fetch('/api/schedule?action=seg-consent-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,to:dest,pdf:P.b64(),archivo:P.nombre,nombre:paciente||''})})).json();if(!x.ok)throw new Error(x.error||'No se ha podido enviar');toast('Enviado a '+dest,true);m.remove();}catch(err){b.disabled=false;b.textContent='Enviar';toast(err.message,false);}};}
+    try{const x=await (await fetch('/api/schedule?action=seg-consent-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,to:dest,pdf:P.b64(),archivo:P.nombre,nombre:paciente||'',titulo:tipo==='Suelo pélvico'?'tu consentimiento de fisioterapia de suelo pélvico':tipo==='Alta oncológica'?'tu consentimiento por alta oncológica':''})})).json();if(!x.ok)throw new Error(x.error||'No se ha podido enviar');toast('Enviado a '+dest,true);m.remove();}catch(err){b.disabled=false;b.textContent='Enviar';toast(err.message,false);}};}
  }catch(e){if(win)win.close();toast(e.message||'No se ha podido crear el PDF',false);}
 }
 
@@ -5656,15 +5674,20 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const ICS={Google:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',Redes:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',Ubicación:'<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',Recomendación:'<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.8a3 3 0 0 1 0 5.4M17.5 13.6A5.5 5.5 0 0 1 20.5 19"/>',Médico:'<path d="M12 5v14M5 12h14"/>'};
   const ico=k=>`<svg viewBox="0 0 24 24">${ICS[k]||'<circle cx="12" cy="12" r="7"/>'}</svg>`;
   const tile=(l,v)=>{const x=sn(v);return `<div class="fp-mt"><span>${l}</span><b class="${x==='Sí'?'si':x==='No'?'no':''}"><i></i>${x}</b></div>`;};
+  const docs=(C&&C.docs)||[],envSP=C&&C.estado!=='dudoso'&&!C.aceptaSP,envAlta=C&&C.cancerActivo;
+  const envios=[envSP?'<button type="button" class="fp-cform" data-f="sp">Enviar suelo pélvico</button>':'',envAlta?'<button type="button" class="fp-cform" data-f="alta">Enviar alta oncológica</button>':''].filter(Boolean);
   const salud=!C?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Salud</h3></div><div class="fp-sin">Sin consentimiento firmado</div><div class="fp-cbts"><button type="button" class="fp-cbus">Buscar y enlazar</button><button type="button" class="fp-cenv">Enviar WhatsApp</button></div></div>`:
    `<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Salud</h3></div>
     ${C.estado==='dudoso'?`<div class="fp-dud">Lo rellenó <b>${escH(C.nombreForm||'otra persona')}</b> el ${escH(fC(C.fecha))} con su mismo teléfono o email. ¿Es suyo?<div class="fp-cbts"><button type="button" class="fp-csi">Sí, es suyo</button><button type="button" class="fp-cbus">No, buscar otro</button></div></div>`:''}
-    ${C.salud.length?`<div class="fp-sal">${C.salud.map(x=>`<span class="${x.grave?'gr':''}">${x.grave?'⚠ ':''}${escH(x.t)}${['EMBARAZO','CÁNCER'].includes(x.k)?`<button type="button" class="fp-salx" data-k="${x.k}" aria-label="Quitar">✕</button>`:''}</span>`).join('')}</div>`:'<div class="fp-nada">Nada a tener en cuenta</div>'}
+    ${C.salud.length?`<div class="fp-sal">${C.salud.map(x=>`<span class="${x.grave?'gr':x.k==='ALTA'?'ok':''}">${x.grave?'⚠ ':''}${escH(x.t)}${['EMBARAZO','CÁNCER'].includes(x.k)?`<button type="button" class="fp-salx" data-k="${x.k}" aria-label="Quitar">✕</button>`:''}</span>`).join('')}</div>`:'<div class="fp-nada">Nada a tener en cuenta</div>'}
+    ${C.notasSalud?`<div class="fp-sp" style="display:block">${escH(C.notasSalud)}</div>`:''}
     ${C.sueloPelvico?`<div class="fp-sp">Suelo pélvico <b class="${C.aceptaSP?'si':'no'}">${C.aceptaSP?'✓ Acepta la exploración':'Sin aceptación de la exploración'}</b></div>`:''}
-    ${C.estado==='dudoso'?'':`<div class="fp-cfoot"><span>✓ Firmado el ${escH(fC(C.fecha))}</span><button type="button" class="fp-cbus">Cambiar</button></div><div class="fp-cdoc"><button type="button" data-a="ver">Ver PDF</button><button type="button" data-a="wa">WhatsApp</button><button type="button" data-a="email">Email</button></div>`}</div>
-   <div class="fp-blk fp-cs"><div class="fp-bt"><h3>Marketing</h3></div>
+    ${envios.length?`<div class="fp-cbts fp-cenvs" style="grid-template-columns:repeat(${envios.length},1fr)">${envios.join('')}</div>`:''}
+    ${C.estado==='dudoso'?'':`<div class="fp-cfoot"><span>Documentos firmados</span><button type="button" class="fp-cbus">Enlazar otro</button></div>
+     <div class="fp-docs2">${docs.map(x=>`<button type="button" class="fp-doc2" data-id="${x.id}" data-t="${escH(x.tipo)}"><span><b>${escH(x.tipo)}</b><small>${escH(fC(x.fecha))}</small></span><i>PDF ›</i></button>`).join('')}</div>`}</div>
+   ${C.marketing?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Marketing</h3></div>
     <div class="fp-conoc">${ico(C.marketing.conocido)}<div><span>Nos conoció por</span><b>${escH(C.marketing.conocido||'—')}</b></div></div>
-    <div class="fp-mts">${tile('Newsletter',C.marketing.newsletter)}${tile('Imágenes',C.marketing.imagenes)}${tile('Avisos',C.marketing.citas)}</div></div>`;
+    <div class="fp-mts">${tile('Newsletter',C.marketing.newsletter)}${tile('Imágenes',C.marketing.imagenes)}${tile('Avisos',C.marketing.citas)}</div></div>`:''}`;
   return `${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
   <div class="fp-blk fp-pq"></div>
@@ -5793,7 +5816,10 @@ async function abrirFichaPaciente(id,nombre,pBase){
   cont.querySelectorAll('.fp-segit').forEach(x=>x.onclick=()=>{const sp=(d.seguimiento||[]).find(s=>s.id===x.dataset.id);if(sp)verSeg(sp);});
   const tok='fp_'+Date.now();cont.dataset.token=tok;
   if(tab==='resumen'){cont.innerHTML=resumen();montarEdicion(cont);montarPorQue(cont);
-   cont.querySelectorAll('.fp-cdoc button').forEach(bt=>bt.onclick=()=>consAccion(bt.dataset.a,{consentId:d.consent.id,paciente:P.nombre,email:P.email,tel:P.whatsapp||P.telf||P.tel}));
+   cont.querySelectorAll('.fp-doc2').forEach(bt=>bt.onclick=()=>consMenu({consentId:bt.dataset.id,tipo:bt.dataset.t,paciente:P.nombre,email:P.email,tel:P.whatsapp||P.telf||P.tel}));
+   cont.querySelectorAll('.fp-cform').forEach(bt=>bt.onclick=()=>{const sp=bt.dataset.f==='sp',t=segTel(P.whatsapp||P.telf||P.tel||''),n=String(P.nombre||'').split(' ')[0];
+    const txt=sp?`Hola ${n}, antes de empezar con suelo pélvico necesitamos que rellenes este formulario (2 minutos): ${FORM_SP_URL} . ¡Gracias!`:`Hola ${n}, para poder aplicarte el tratamiento necesitamos que rellenes este formulario de alta oncológica (2 minutos): ${FORM_ALTA_URL} . ¡Gracias!`;
+    window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');});
    cont.querySelectorAll('.fp-cbus').forEach(bt=>bt.onclick=()=>abrirEnlazarConsent({pacienteId:id,nombre:P.nombre,onDone:async()=>{try{await cargar();}catch(_){}pintar();}}));
    {const bs=cont.querySelector('.fp-csi');if(bs)bs.onclick=async()=>{bs.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-consent-enlazar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,consentId:d.consent.id,pacienteId:id})})).json();if(!r.ok)throw 0;d.consent.estado='enlazado';toast('Enlazado',true);pintar();}catch(e){bs.disabled=false;toast('No se ha podido enlazar',false);}};}
    {const be=cont.querySelector('.fp-cenv');if(be)be.onclick=()=>{const t=segTel(P.whatsapp||P.telf||P.tel||'');const txt=`Hola ${String(P.nombre||'').split(' ')[0]}, antes de tu sesión en FISIO365 necesitamos que rellenes este formulario (2 minutos): ${CONSENT_URL} . Pon tu propio teléfono, por favor. ¡Gracias!`;window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');};}
