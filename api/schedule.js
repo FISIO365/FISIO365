@@ -6,7 +6,7 @@ const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 const BIBLIO_TABLE = 'tbloqn3ts872ueJSE';
 
 const HOLDED_KEY = process.env.HOLDED_API_KEY;
-const { saldoPaciente, rendimiento, inicioControl } = require('./_push').saldo;
+const { saldoPaciente, rendimiento, inicioControl, sinFacturar } = require('./_push').saldo;
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const HOLDED_URL = 'https://api.holded.com/api/v2'; // API nueva de Holded (clave «Bearer»)
 
@@ -431,6 +431,69 @@ async function _procesarWeb() {
     } catch (e) { console.log('reserva web', r.id, e.message); }
   }
   return { hechas, sinHueco };
+}
+
+
+// ── CIERRE DEL DÍA: checklist de cada fisio (lo imprescindible antes de irse) ──
+const CIERRES_T = 'tblmJMoILPnxXzD8w';
+// Puntos del reporte diario (los que tienen «auto» los comprueba también el panel)
+const REPORTE_ITEMS = [
+  { k: 'cobrar', t: 'He registrado en el panel todos los cobros del día', auto: 'cobrar' },
+  { k: 'marcar', t: 'He marcado todas mis citas (hecha, no vino…)', auto: 'marcar' },
+  { k: 'ejercicios', t: 'Mis pacientes tienen los ejercicios en la app', auto: 'ejercicios' },
+  { k: 'consent', t: 'Las primeras visitas han firmado el consentimiento', auto: 'consent' },
+  { k: 'proxima', t: 'Cada paciente sale con su próxima cita o seguimiento', auto: 'proxima' },
+  { k: 'historia', t: 'He apuntado la evolución de cada paciente' },
+  { k: 'limpieza', t: 'He dejado la cabina limpia y recogida' },
+  { k: 'material', t: 'Aparatos apagados y material en su sitio' },
+];
+const nmSel = v => String((v && typeof v === 'object') ? (v.name || '') : (v || '')).trim();
+const fisioKey = n => String(n || '').trim().split(' ')[0].toLowerCase();
+const orIds = (ids, campo) => 'OR(' + ids.map(id => `FIND('${id}',ARRAYJOIN({${campo}}))`).join(',') + ')';
+async function lotes(ids, fn, n = 15) { const out = []; for (let i = 0; i < ids.length; i += n) out.push(...await fn(ids.slice(i, i + n))); return out; }
+async function cierreDia(fecha, soloFisio) {
+  const citas = await capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}'`)}&fields[]=ESTADO&fields[]=HORA&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=your-name`);
+  const conPac = citas.filter(c => (c.fields['RELACIÓN - CITA'] || []).length && nmSel(c.fields['PREF.']) && (!soloFisio || fisioKey(nmSel(c.fields['PREF.'])) === fisioKey(soloFisio)));
+  const est = c => nmSel(c.fields['ESTADO']).toUpperCase();
+  const hechas = conPac.filter(c => est(c) === 'REALIZADA');
+  const P = [...new Set(hechas.map(c => c.fields['RELACIÓN - CITA'][0]))];
+  const todosP = [...new Set(conPac.map(c => c.fields['RELACIÓN - CITA'][0]))];
+  const [nombres, futuras, previas, planes, sf, cons] = await Promise.all([
+    lotes(todosP, ids => capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME`), 40).catch(() => []),
+    lotes(P, ids => capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='PENDIENTE',IS_AFTER({FECHA},'${fecha}'),${orIds(ids, 'PacienteRec')})`)}&fields[]=PacienteRec`)).catch(() => []),
+    lotes(P, ids => capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_BEFORE({FECHA},'${fecha}'),${orIds(ids, 'PacienteRec')})`)}&fields[]=PacienteRec`)).catch(() => []),
+    lotes(P, ids => capTodos(PLAN_TABLE, `filterByFormula=${encodeURIComponent(`AND(LEN({Ejercicios}&'')>2,OR(${ids.map(id => `{PacienteID}='${id}'`).join(',')}))`)}&fields[]=PacienteID`)).catch(() => []),
+    sinFacturar().catch(() => ({ activo: false, lista: [] })),
+    consTodos().catch(() => [])
+  ]);
+  const nom = Object.fromEntries(nombres.map(p => [p.id, p.fields['FULL NAME'] || '']));
+  const conFutura = new Set(futuras.flatMap(c => c.fields['PacienteRec'] || []));
+  const yaVino = new Set(previas.flatMap(c => c.fields['PacienteRec'] || []));
+  const conPlan = new Set(planes.map(r => String(r.fields['PacienteID'] || '')));
+  const debe = new Map((sf.lista || []).map(x => [x.id, -x.saldo]));
+  const conCons = new Set(cons.flatMap(c => c.pac || []));
+  const porFisio = {};
+  conPac.forEach(c => { const f = nmSel(c.fields['PREF.']); (porFisio[f] = porFisio[f] || []).push(c); });
+  const out = {};
+  for (const [fisio, cs] of Object.entries(porFisio)) {
+    const it = (c, extra) => { const id = c.fields['RELACIÓN - CITA'][0]; return { id, nombre: nom[id] || c.fields['your-name'] || '—', hora: String(c.fields['HORA'] || '').slice(0, 5), extra: extra || '' }; };
+    const hs = cs.filter(c => est(c) === 'REALIZADA');
+    const uni = arr => { const v = new Set(); return arr.filter(x => !v.has(x.id) && v.add(x.id)); };
+    const checks = [
+      { k: 'marcar', t: 'Citas marcadas', d: 'Todas las citas del día con su estado (hecha, no vino…)', items: cs.filter(c => ['PENDIENTE', 'CITA DUDOSA'].includes(est(c))).map(c => it(c)) },
+      { k: 'cobrar', t: 'Todo cobrado', d: sf.activo ? 'Cada sesión hecha está pagada (pack o cobro desde el panel)' : 'El control de cobros empezará con el primer cobro desde el panel', items: sf.activo ? uni(hs.filter(c => debe.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c, debe.get(c.fields['RELACIÓN - CITA'][0]) + ' sin cobrar'))) : [] },
+      { k: 'ejercicios', t: 'Ejercicios en la app', d: 'Cada paciente de hoy tiene su programa cargado', items: uni(hs.filter(c => !conPlan.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c))) },
+      { k: 'consent', t: 'Consentimiento firmado', d: 'Las primeras visitas tienen el consentimiento', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !conCons.has(id); }).map(c => it(c, 'primera visita'))) },
+      { k: 'proxima', t: 'Próxima cita', d: 'Cada paciente sale con su próxima cita (si es alta, no hace falta)', aviso: true, items: uni(hs.filter(c => !conFutura.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c))) },
+    ];
+    out[fisio] = { citas: cs.length, hechas: hs.length, checks, pendientes: checks.filter(x => !x.aviso).reduce((t, x) => t + x.items.length, 0) };
+  }
+  return out;
+}
+async function cierresEnviados(fecha) {
+  const r = await capTodos(CIERRES_T, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}'`)}`).catch(() => []);
+  const m = {}; r.forEach(x => { const k = fisioKey(x.fields['FISIO']); if (!m[k] || String(x.fields['ENVIADO'] || '') > String(m[k].enviado || '')) m[k] = { id: x.id, fisio: x.fields['FISIO'] || '', enviado: x.fields['ENVIADO'] || '', pendientes: Number(x.fields['PENDIENTES'] || 0), detalle: x.fields['DETALLE'] || '', nota: x.fields['NOTA'] || '', marcados: x.fields['MARCADOS'] || '' }; });
+  return m;
 }
 
 // Tarjetas regalo (10 €) que el paciente tiene sin usar: con código y sin caducar, o ganadas (el recomendado ya vino)
@@ -1232,6 +1295,14 @@ module.exports = async function handler(req, res) {
         const out = pids.filter(id => info[id] && diaMad(info[id].mod) < ult[id].fecha).map(id => ({ pacienteId: id, nombre: info[id].nombre, fecha: ult[id].fecha, hora: ult[id].hora, fisio: ult[id].fisio, historialMod: diaMad(info[id].mod) }));
         return res.status(200).json({ ok: true, sesiones: out.sort((a, b) => a.fecha.localeCompare(b.fecha)) });
       }
+      if (action === 'seg-cierre') {
+        const fecha = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyF;
+        const todos = await cierreDia(fecha, q.fisio || '');
+        const k = Object.keys(todos).find(f => fisioKey(f) === fisioKey(q.fisio)) || '';
+        const env = (await cierresEnviados(fecha))[fisioKey(q.fisio)] || null;
+        const resumen = q.todos ? { fisios: Object.entries(todos).map(([f, x]) => ({ fisio: f, citas: x.citas, pendientes: x.pendientes })), enviados: await cierresEnviados(fecha) } : null;
+        return res.status(200).json({ ok: true, fecha, fisio: k || q.fisio || '', items: REPORTE_ITEMS, dia: todos[k] || { citas: 0, hechas: 0, checks: [], pendientes: 0 }, enviado: env, resumen });
+      }
       if (action === 'seg-tareas') {
         const PT = 'tblxPpPSvj15NWqNT';
         const rs = await todosT(PT, `filterByFormula=${encodeURIComponent('NOT({HECHO})')}&sort[0][field]=FECHA&sort[0][direction]=asc`);
@@ -1240,6 +1311,20 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ ok: true, hoy: hoyF, tareas: rs.map(r => { const pid = (r.fields['PACIENTE'] || [])[0] || ''; return { id: r.id, texto: r.fields['TAREA'] || '', fecha: r.fields['FECHA'] || hoyF, para: (r.fields['PARA'] && r.fields['PARA'].name) || r.fields['PARA'] || '', nota: r.fields['NOTA'] || '', creadaPor: r.fields['CREADA POR'] || '', pacienteId: pid, paciente: (pn[pid] || {}).nombre || '', tel: (pn[pid] || {}).tel || '' }; }) });
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      if (action === 'seg-cierre-enviar') {
+        const fecha = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyF;
+        if (!String(q.fisio || '').trim()) return res.status(400).json({ ok: false, error: 'Falta el fisio' });
+        const todos = await cierreDia(fecha, q.fisio);
+        const k = Object.keys(todos).find(f => fisioKey(f) === fisioKey(q.fisio));
+        const dia = todos[k] || { checks: [], pendientes: 0 };
+        const detalle = dia.checks.map(c => (c.items.length ? (c.aviso ? '• ' : '✗ ') : '✓ ') + c.t + (c.items.length ? ': ' + c.items.map(i => i.nombre + (i.extra ? ' (' + i.extra + ')' : '')).join(', ') : '')).join('\n');
+        const marc = new Set(Array.isArray(q.marcados) ? q.marcados : []);
+        const MARCADOS = REPORTE_ITEMS.map(x => (marc.has(x.k) ? '✓ ' : '✗ ') + x.t).join('\n');
+        const fields = { CIERRE: fecha + ' · ' + String(q.fisio).trim(), FECHA: fecha, FISIO: String(q.fisio).trim(), ENVIADO: new Date().toISOString(), PENDIENTES: dia.pendientes, DETALLE: detalle, NOTA: String(q.nota || '').slice(0, 2000), MARCADOS };
+        const prev = (await cierresEnviados(fecha))[fisioKey(q.fisio)];
+        const d = prev ? await at(`${CIERRES_T}/${prev.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) }) : await at(CIERRES_T, { method: 'POST', body: JSON.stringify({ records: [{ fields }] }) });
+        return res.status(200).json({ ok: !d.error, pendientes: dia.pendientes, error: d.error && (d.error.message || 'No se ha podido guardar') });
+      }
       if (action === 'seg-crear') {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '') || !/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) return res.status(400).json({ ok: false, error: 'Faltan datos' });
         const fc = { 'FECHA DE LLAMADA': q.fecha, PACIENTE: [q.pacienteId], NOTAS: String(q.nota || '') }; if (q.responsable) fc.RESPONSABLE = String(q.responsable);
@@ -1715,3 +1800,6 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '', ultimaSession: '' });
   }
 }
+module.exports.cierreDia = cierreDia;
+module.exports.cierresEnviados = cierresEnviados;
+module.exports.holdedApi = { holded: (...a) => holded(...a), holdedTodos: (...a) => holdedTodos(...a), activo: () => !!HOLDED_KEY };
