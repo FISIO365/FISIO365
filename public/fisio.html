@@ -362,6 +362,8 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .fp-tabs button{flex:none;font-family:var(--font);font-size:13.5px;font-weight:600;color:#7d6a60;background:none;border:none;border-bottom:2.5px solid transparent;border-radius:0;padding:12px 7px;cursor:pointer}
 .fp-tabs button.on{color:#1a1a1a;background:none;border-bottom-color:#c2552e}
 .fp-mas{position:relative;margin-left:auto;flex:none;display:inline-flex;align-items:center;font-size:13.5px;font-weight:600;color:#7d6a60;padding:12px 18px 12px 9px;border-bottom:2.5px solid transparent}.fp-mas.on{color:#1a1a1a;border-bottom-color:#c2552e}
+.fp-masmenu{position:fixed;z-index:3000;min-width:210px;background:#fff;border-radius:16px;box-shadow:0 10px 34px rgba(26,26,26,.18),0 1px 3px rgba(26,26,26,.08);padding:6px;font-family:var(--font)}.fp-masmenu button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;background:none;border:none;border-radius:11px;padding:11px 12px;font:inherit;font-size:14px;font-weight:600;color:#1a1a1a;text-align:left;cursor:pointer}.fp-masmenu button:hover{background:#f7f3ef}.fp-masmenu button.on{background:#fdeee4;color:#c2552e}.fp-masmenu b{font-weight:700;color:#c2552e}.fp-masmenu em{font-style:normal;font-size:12px;color:#7d6a60;margin-left:4px}.fp-masdiv{height:1px;background:rgba(26,26,26,.08);margin:5px 8px}.fp-masanam{color:#c2552e!important}
+button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer}
 .fp-mas select{appearance:none;-webkit-appearance:none;border:none;background:none;font:inherit;color:inherit;cursor:pointer;outline:none;width:auto;max-width:130px;padding:0}.fp-mas i{position:absolute;right:4px;font-style:normal;font-size:10px;pointer-events:none}
 .fp-ev{background:#faf7f4;border-radius:12px;padding:12px;margin-bottom:12px}
 .fp-hres{margin:0 0 12px;padding:10px 14px;border-radius:12px;font-size:13px;background:#e8f5ec;color:#16803c}.fp-hres.mal{background:#fdecea;color:#b42318}.fp-hres span{font-weight:700}
@@ -709,7 +711,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  /* El scroll va dentro (no la página): así Safari no mueve la barra de abajo al subir/bajar */
  html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
  .main-area{height:100dvh;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
- #sb-rend,#sb-seg,#sb-tar,#sb-call,#sb-prog,#sb-stats{display:none!important}
+ #sb-rend,#sb-seg,#sb-tar,#sb-call,#sb-prog,#sb-anam,#sb-stats{display:none!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
  .topbar-t{font-size:21px!important}
  .topbar-s{font-size:12px!important}
@@ -1049,7 +1051,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="sidebar">
  <div class="sb-logo"><div class="sb-logo-t"><span>FISIO</span>365</div></div>
  <div class="sb-nav">
- <div class="sb-item active" id="sb-anam" onclick="showSection('anam')">
+ <div class="sb-item" id="sb-anam" onclick="showSection('anam')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 3h6v3H9z"/><path d="M8 4.5H6a2 2 0 0 0-2 2V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6.5a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h5"/></svg></span><span class="sb-txt">Anamnesis</span>
  </div>
  <div class="sb-item" id="sb-prog" onclick="showSection('prog')">
@@ -1256,7 +1258,7 @@ async function doLogin(silencioso){
  setInterval(checkMensajesBadge, 60000); // revisar cada minuto
  aplicarRole();
  iniciarAutoUpdate();
- let secIni='prog';try{const g=sessionStorage.getItem('f365_panel_sec');if(g&&TOPBAR[g])secIni=g;}catch(e){}
+ let secIni='agenda';try{const g=sessionStorage.getItem('f365_panel_sec');if(g&&TOPBAR[g]&&!['prog','anam'].includes(g))secIni=g;}catch(e){}
  showSection(secIni);
  try{if(avisoPendiente)abrirAvisoPanel(avisoPendiente);}catch(e){}
  setTimeout(()=>{try{mirarAvisosPanel();}catch(e){}},1200);
@@ -2068,6 +2070,8 @@ const PROTOS_LIST = [
  {id:'sueloPelvico', t:'Suelo pélvico', s:'Incontinencia · Prolapsos · Dolor pélvico · Disfunciones posparto', r:1},
 ];
 
+let anamPreset=null; // paciente elegido desde su ficha («Hacer anamnesis»)
+function abrirAnamnesisDe(p){anamPreset=p;curProto=null;curStep=0;showSection('anam');}
 function renderAnamHub(wrap){
  curProto=null; curStep=0; D={}; anamPacId=null; anamPacNom=''; // D loaded after proto/pacId set
 
@@ -2105,6 +2109,7 @@ function renderAnamHub(wrap){
  <div id="anamPsel" style="display:none;margin-top:10px;padding:10px 14px;background:var(--lila-light);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--lila)"></div>`;
  wrap.appendChild(pc);
  mkPacSearch('anamPs','anamPlist','anamPsel',p=>{anamPacId=p.id;anamPacNom=p.nombre;});
+ if(anamPreset){anamPacId=anamPreset.id;anamPacNom=anamPreset.nombre;const sel=$('anamPsel');if(sel){sel.style.display='block';sel.textContent=anamPreset.nombre;}const si=pc.querySelector('.si');if(si)si.style.display='none';}
 
  const grid=ce('div','proto-grid');
  PROTOS_LIST.forEach(p=>{
@@ -5713,7 +5718,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
   return `<div class="fp-hero"><div class="fp-hero-in"><div class="fp-av">${P.foto?`<img src="${escH(P.foto)}" alt="">`:escH(iniciales(P.nombre))}</div><div class="fp-hn"><h2>${escH(P.nombre)}</h2>
     <button type="button" class="fp-estb" aria-label="Cambiar estado">${estadoChips(P.estados)||'<span class="est">+ Estado</span>'}<span class="fp-edit-ic">✎</span></button></div></div>
    <div class="fp-acts">${tel?`<a class="fp-ic" href="tel:+${tel}">${ICO.tel}<span>Llamar</span></a><a class="fp-ic" href="https://wa.me/${tel}" target="_blank" rel="noopener">${ICO.wa}<span>WhatsApp</span></a>`:''}<button type="button" class="fp-ic fp-appb ${P.appUsada?'on':''}" title="${P.appUsada?'Ya usa la app':'Todavía no ha entrado en la app'}"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg><span>${P.appUsada?'App ✓':'Enviar app'}</span></button><button type="button" class="fp-ic fp-segb ${segAct()?'on':''}">${segAct()?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>':ICO.seg}<span>Seguimiento</span></button></div></div>
-   <div class="fp-tabs"><div class="fp-seg">${TABS.map(([k,t])=>`<button type="button" data-t="${k}" class="${tab===k?'on':''}">${t}</button>`).join('')}<label class="fp-mas ${MAS.some(x=>x[0]===tab)?'on':''}"><span>${MAS.some(x=>x[0]===tab)?escH(MAS.find(x=>x[0]===tab)[1].split(' ')[0]):'Más'}</span><select aria-label="Más secciones"><option value="" selected disabled hidden>Más</option>${MAS.map(([k,t])=>`<option value="${k}">${tab===k?'✓ ':''}${t}${k==='archivos'&&P.archivos.length?' ('+P.archivos.length+')':''}</option>`).join('')}</select><i>▾</i></label></div></div>`;}
+   <div class="fp-tabs"><div class="fp-seg">${TABS.map(([k,t])=>`<button type="button" data-t="${k}" class="${tab===k?'on':''}">${t}</button>`).join('')}<button type="button" class="fp-mas ${MAS.some(x=>x[0]===tab)?'on':''}" aria-haspopup="true"><span>${MAS.some(x=>x[0]===tab)?escH(MAS.find(x=>x[0]===tab)[1].split(' ')[0]):'Más'}</span><i>▾</i></button></div></div>`;}
  function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>${lbl}</span><div class="fp-v">${val?escH(tipo==='date'?fch(val):val):'<em>—</em>'}</div></div>`;}
  function resumen(){
   const hoy=d.hoy,fut=d.citas.filter(c=>c.fecha>=hoy&&!/CANCEL|REPROGRAM/i.test(c.estado)).reverse(),real=d.citas.filter(c=>c.fecha<hoy&&/REALIZADA/i.test(c.estado));
@@ -5861,7 +5866,11 @@ async function abrirFichaPaciente(id,nombre,pBase){
   body.innerHTML=cabecera()+'<div class="fp-cont"></div>';
   const cont=body.querySelector('.fp-cont');
   body.querySelectorAll('.fp-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;pintar();});
-  {const ms=body.querySelector('.fp-mas select');ms.onchange=()=>{if(ms.value){tab=ms.value;pintar();}};}
+  {const mb=body.querySelector('.fp-mas');if(mb)mb.onclick=e=>{e.stopPropagation();const ya=document.querySelector('.fp-masmenu');if(ya){ya.remove();return;}
+    const mn=ce('div','fp-masmenu');mn.innerHTML=MAS.map(([k,t])=>`<button type="button" data-k="${k}" class="${tab===k?'on':''}"><span>${t}${k==='archivos'&&P.archivos.length?' <em>'+P.archivos.length+'</em>':''}</span>${tab===k?'<b>✓</b>':''}</button>`).join('')+'<div class="fp-masdiv"></div><button type="button" data-k="_anam" class="fp-masanam"><span>Hacer anamnesis</span><b>›</b></button>';
+    document.body.appendChild(mn);const rc=mb.getBoundingClientRect();mn.style.top=(rc.bottom+6)+'px';mn.style.right=Math.max(12,window.innerWidth-rc.right)+'px';
+    const fuera=ev=>{if(!mn.contains(ev.target)){mn.remove();document.removeEventListener('click',fuera,true);}};setTimeout(()=>document.addEventListener('click',fuera,true),0);
+    mn.querySelectorAll('button').forEach(b=>b.onclick=()=>{mn.remove();document.removeEventListener('click',fuera,true);if(b.dataset.k==='_anam'){cerrar();abrirAnamnesisDe({id,nombre:P.nombre});return;}tab=b.dataset.k;pintar();});};}
   body.querySelector('.fp-estb').onclick=editarEstado;
   {const ba=body.querySelector('.fp-appb');if(ba)ba.onclick=()=>enviarApp(P);}
   body.querySelector('.fp-segb').onclick=()=>{const sp=segAct();if(sp){verSeg(sp);return;}abrirNuevoSeg({pacienteId:id,nombre:P.nombre,motivo:P.porQue||'',onSave:recargarSeg});};
