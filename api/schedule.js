@@ -594,6 +594,17 @@ module.exports = async function handler(req, res) {
             const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'CÓDIGO': cod, 'FECHA TARJETA': hoyF, CADUCA: cad, 'Regalo entregado': true } }) }); if (d.error) return res.status(200).json({ ok: false }); }
           return res.status(200).json({ ok: true, codigo: cod, caduca: cad });
         }
+        if (action === 'seg-referido-negocio') {
+          // Nos recomendó un negocio o profesional: se apunta en NEGOCIOS DEL BARRIO (o se usa el que ya está) y no toca tarjeta
+          const NEG = 'tblO5y1Ikg3LIalic', nombre = String(q.nombre || '').trim().slice(0, 100), tel = String(q.tel || '').trim().slice(0, 30); if (!nombre) return res.status(400).json({ ok: false });
+          const ya = (await todosT(NEG, `filterByFormula=${encodeURIComponent(`LOWER(TRIM({NOMBRE}))='${cEsc(nombre.toLowerCase())}'`)}&fields[]=NOMBRE&fields[]=TELF&fields[]=HISTORIAL`).catch(() => []))[0];
+          const linea = `${hoyF.split('-').reverse().join('/')}: nos ha recomendado a un paciente nuevo (agradecimiento enviado)`;
+          let negId = ya && ya.id;
+          if (ya) { const f = { HISTORIAL: [String(ya.fields['HISTORIAL'] || '').trim(), linea].filter(Boolean).join('\n') }; if (tel && !ya.fields['TELF']) f.TELF = tel; await at(`${NEG}/${ya.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }); }
+          else { const c = await at(NEG, { method: 'POST', body: JSON.stringify({ records: [{ fields: { NOMBRE: nombre, ...(tel ? { TELF: tel } : {}), HISTORIAL: linea, FECHA: hoyF } }], typecast: true }) }); if (c.error) return res.status(200).json({ ok: false }); negId = c.records[0].id; }
+          const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { NEGOCIO: [negId], IGNORAR: true } }) });
+          return res.status(200).json({ ok: !d.error, tel: tel || (ya && ya.fields['TELF']) || '' });
+        }
         if (action === 'seg-referido-img') {
           const b64 = String(q.b64 || ''); if (!b64 || b64.length > 3e6) return res.status(400).json({ ok: false });
           await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'TARJETA IMG': [] } }) });
