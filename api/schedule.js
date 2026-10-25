@@ -1239,11 +1239,8 @@ module.exports = async function handler(req, res) {
       // Ingresos desde el principio (tabla ESTADISTICAS SEMANA, una cifra por semana)
       if (action === 'seg-gastos') {
         if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Falta la clave de Holded' });
-        let eb = null;
-        try { const b = await gastosBancoMeses(); if (!b.error) return res.status(200).json(Object.assign({ ok: true }, b)); eb = b.error; } catch (e) { eb = e.message; }
-        try { if (_gasH.c && Date.now() - _gasH.c.t < 15 * 60e3) return res.status(200).json(_gasH.c.v);
-          const c = Object.assign({ ok: true, avisoBanco: eb }, await gastosComprasMeses()); _gasH.c = { t: Date.now(), v: c }; return res.status(200).json(c); }
-        catch (e) { return res.status(200).json({ ok: false, error: 'No se pueden leer ni el banco ni las compras de Holded. Banco: ' + String(eb).slice(0, 120) + ' · Compras: ' + e.message.slice(0, 120) }); }
+        try { const b = await gastosBancoMeses(); if (b.error) throw new Error(b.error); return res.status(200).json(Object.assign({ ok: true }, b)); }
+        catch (e) { _gasH = { t: 0, v: null }; return res.status(200).json({ ok: false, error: /40[13]/.test(e.message) ? 'la clave de Holded todavía no tiene permiso para leer las cuentas bancarias' : e.message }); }
       }
       if (action === 'seg-ingresos-todo') {
         const rs = await todosT('tblE7NWfZmxcou5mV', `filterByFormula=${encodeURIComponent('{INGRESOS}!=BLANK()')}&fields[]=SEMANA&fields[]=INGRESOS&sort[0][field]=SEMANA&sort[0][direction]=asc`);
