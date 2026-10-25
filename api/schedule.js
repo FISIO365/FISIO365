@@ -60,9 +60,8 @@ async function gastosBancoMeses() {
     mv.forEach(m => { const mid = m && (m.id || m._id); if (mid && vistos.has(mid)) { rep++; return; } if (mid) vistos.add(mid);
       const n = importeMov(m), f = fechaMov(m); if (!f) return; if (!ini || f < ini) ini = f; if (f > fin) fin = f;
       if (n > 0) { ent += n; e[f.slice(0, 7)] = Math.round(((e[f.slice(0, 7)] || 0) + n) * 100) / 100; } if (!(n < 0)) return; sal -= n; gm[f.slice(0, 7)] = (gm[f.slice(0, 7)] || 0) - n; g[f.slice(0, 7)] = Math.round(((g[f.slice(0, 7)] || 0) - n) * 100) / 100; });
-    const ej = mv[0] ? Object.fromEntries(Object.entries(mv[0]).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v).slice(0, 60) : String(v).slice(0, 40)])) : null;
     det.push({ nombre: nom, iban: String(c.iban || '').slice(-4), tipo: c.type || c.kind || '', saldo: aNum(c.balance ?? c.current_balance ?? c.amount), n: mv.length, repetidos: rep, entradas: Math.round(ent), salidas: Math.round(sal), desde: ini, hasta: fin,
-      octubre: Math.round(gm['2026-10'] || 0), ej }); }
+      octubre: Math.round(gm['2026-10'] || 0) }); }
   const v = { fuente: 'banco', meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), entradas: Object.entries(e).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), cuentas: nombres, det, error: !nombres.length ? 'No se encuentra la cuenta de FOURTH DYNAMIC S.L. en Holded' : (fallos.length === nombres.length ? fallos[0] : null) };
   _gasH = { t: Date.now(), v }; return v;
 }
