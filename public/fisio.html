@@ -5402,7 +5402,7 @@ function renderCallIn(wrap){
  const pintaChips=()=>{ce1.innerHTML=ESTADOS.map(e=>{const n=(pacs||[]).filter(p=>(p.estados||[]).includes(e.id)).length;return `<button type="button" data-id="${e.id}" class="${callSel.includes(e.id)?'on':''}"><i class="dot ${estClase(e.nombre)}"></i>${escH(nom(e.nombre))}<b>${n}</b></button>`;}).join('');
   ce1.querySelectorAll('button').forEach(b=>b.onclick=()=>{const id=b.dataset.id;callSel=callSel.includes(id)?callSel.filter(x=>x!==id):[...callSel,id];pintaChips();pinta();});};
  const fisN=f=>capNomF(String(f||'').split(' ')[0]);
- const pintaFis=()=>{const cf=box.querySelector('.ci-fis');if(!ULT){return;}const cnt={};Object.values(ULT).forEach(u=>{const k=fisN(u.fi);if(k)cnt[k]=(cnt[k]||0)+1;});
+ const pintaFis=()=>{const cf=box.querySelector('.ci-fis');if(!ULT){return;}const sonFisio=new Set((fisios||[]).filter(f=>/fisio/i.test(f.role||'')||f.colegiado).map(f=>fisN(f.nombre)));const cnt={};Object.values(ULT).forEach(u=>{const k=fisN(u.fi);if(k&&(!sonFisio.size||sonFisio.has(k)))cnt[k]=(cnt[k]||0)+1;});
   cf.innerHTML=`<button type="button" data-f="" class="${ciFisio?'':'on'}">Todos</button>`+Object.keys(cnt).sort().map(k=>`<button type="button" data-f="${escH(k)}" class="${ciFisio===k?'on':''}">${escH(k)}<b>${cnt[k]}</b></button>`).join('');
   cf.querySelectorAll('button').forEach(b=>b.onclick=()=>{ciFisio=b.dataset.f;pintaFis();pinta();});};
  lim.onclick=()=>{callSel=[];ciFisio='';q.value='';pintaChips();pintaFis();pinta();};
