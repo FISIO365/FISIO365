@@ -1211,7 +1211,9 @@ module.exports = async function handler(req, res) {
           const deMes = tk.filter(d => d && d.id && !vistos.has(d.id) && vistos.add(d.id) && String(d.date || '').slice(0, 7) === mesAct);
           const sum = L => Math.round(L.reduce((t, d) => t + importeDoc(d), 0) * 100) / 100;
           const bor = deMes.filter(d => !d.document_number), pend = deMes.filter(d => d.document_number && ['pending', 'partial', 'overdue'].includes(d.status));
-          holdedMes = { m: mesAct, v: sum(deMes), n: deMes.length, hasta: hoyF, borr: { n: bor.length, v: sum(bor) }, pend: { n: pend.length, v: sum(pend) } };
+          const otros = deMes.filter(d => !bor.includes(d) && !pend.includes(d));
+          const det = L => L.slice(0, 10).map(d => ({ quien: d.contact_name || '—', num: d.document_number || 'borrador', fecha: String(d.date || '').slice(0, 10), v: importeDoc(d), estado: d.status || '' }));
+          holdedMes = { m: mesAct, v: sum(deMes), n: deMes.length, hasta: hoyF, borr: { n: bor.length, v: sum(bor), det: det(bor) }, pend: { n: pend.length, v: sum(pend) }, otros: { n: otros.length, v: sum(otros), det: det(otros) } };
         } catch (e) { holdedMes = { m: mesAct, error: e.message }; }
         return res.status(200).json({ ok: true, fuente, meses: ms, holdedMes, semanas: rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s) });
       }
