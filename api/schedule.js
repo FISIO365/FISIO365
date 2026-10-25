@@ -184,7 +184,10 @@ async function consentDe(P, pacId) {
   const { enl, buenos, dudosos } = emparejar(P, pacId, lista);
   for (const c of buenos.slice(0, 6)) if (await enlazarCons(c.id, pacId).catch(() => false)) enl.push(c);
   if (!enl.length) return dudosos.length ? consPublico(dudosos[0], 'dudoso') : null;
-  return consPublico(resumenPaciente(enl), 'enlazado');
+  const out = consPublico(resumenPaciente(enl), 'enlazado');
+  // Formularios con su mismo teléfono/email/DNI pero otro nombre (p. ej. lo rellenó un familiar): se preguntan en la ficha
+  out.porConfirmar = dudosos.filter(c => !enl.some(e => e.sub && e.sub === c.sub)).slice(0, 5).map(c => ({ id: c.id, tipo: c.tipo, fecha: c.fecha, nombre: c.nombre }));
+  return out;
 }
 // Pacientes con marcapasos, embarazo o cáncer (para marcarlos en rojo en la agenda). Se guarda 20 min.
 let _alertas = { t: 0, m: null, p: null };
