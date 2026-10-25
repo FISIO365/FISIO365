@@ -5512,6 +5512,8 @@ async function listaTareas(cont,keep){
    const acc=r.querySelector('.tk-a');
    if(x.tipo==='regalo'){
     const g=x.g,b=ce('button','tk-b');b.type='button';
+    // Los dos pacientes a la vista y clicables: quien recomendó (arriba) y el nuevo
+    {const mt=r.querySelector('.tk-meta');if(mt)mt.innerHTML=g.recomendo?`Recomendó a <b class="tk-nom" data-ficha="${g.nuevo.id}" data-fn="${escH(g.nuevo.nombre)}" style="cursor:pointer">${escH(g.nuevo.nombre)}</b> · vino el ${escH(segFecha(g.primera))}`:`<b class="tk-nom" data-ficha="${g.nuevo.id}" data-fn="${escH(g.nuevo.nombre)}" style="cursor:pointer">${escH(g.nuevo.nombre)}</b> vino recomendado por «${escH(g.texto)}» · ¿quién es?`;}
     if(g.recomendo){b.textContent='Enviar tarjeta';b.onclick=async()=>{b.disabled=true;try{const d=await (await fetch('/api/schedule?action=seg-referido-tarjeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:g.id})})).json();if(!d.ok)throw 0;
       await enviarTarjeta(g.recomendo.tel,g.recomendo.nombre,g.nuevo.nombre,d.caduca,g.id);quitar(r,x);}catch(e){b.disabled=false;toast('No se ha podido crear la tarjeta',false);}};}
     else{b.textContent='¿Quién es?';b.onclick=()=>elegirRecomendo(g,recargar);}
