@@ -1211,21 +1211,11 @@ module.exports = async function handler(req, res) {
           const deMes = tk.filter(d => d && d.id && !vistos.has(d.id) && vistos.add(d.id) && String(d.date || '').slice(0, 7) === mesAct && !/\btest\b|prueba/i.test(d.contact_name || ''));
           const sum = L => Math.round(L.reduce((t, d) => t + importeDoc(d), 0) * 100) / 100;
           const bor = deMes.filter(d => !d.document_number);
-          // Rectificativas (F. simple rectificativa, importe negativo) del mes: anulan tickets → se restan
-          let rect = [], rectOk = true;
-          let facLeidas = 0; const errsR = [], facDet = [], porEp = {};
-          const fechaDoc = d => { const v = d.date ?? d.issue_date ?? d.created_at; if (typeof v === 'number') return new Date(v < 1e12 ? v * 1000 : v).toISOString().slice(0, 10); return String(v || '').slice(0, 10); };
-          { const vr = new Set(); let leidas = 0;
-            for (const [ep, qs] of [['/credit-notes', 'limit=100'], ['/credit-notes', `limit=100&start_date=${mesAct}-01&end_date=${hoyF}`], ['/invoices', `limit=200&start_date=${mesAct}-01&end_date=${hoyF}`]]) {
-              try { const L = await holdedTodos(`${ep}?${qs}`, ep === '/credit-notes' && qs === 'limit=100' ? 3 : 10); leidas++; porEp[ep] = (porEp[ep] || 0) + L.length;
-                L.forEach(d => { if (!d || !d.id || vr.has(d.id)) return; vr.add(d.id); facLeidas++;
-                  const esRect = ep === '/credit-notes' || aNum(d.total) < 0 || /^TN/i.test(String(d.document_number || d.number || d.doc_number || '')) || /rectific|credit/i.test(String(d.type || d.doc_type || d.document_type || ''));
-                  if (facDet.length < 8) facDet.push({ ep, num: d.document_number || d.number || '', fecha: fechaDoc(d), total: d.total, tipo: d.type || d.doc_type || '' });
-                  if (fechaDoc(d).slice(0, 7) === mesAct && esRect) rect.push(d); }); } catch (e) { errsR.push(ep + ': ' + String(e.message || '').replace(/^Holded /, '').slice(0, 90)); }
-            }
-            rectOk = leidas > 0; }
-          const rectV = -Math.round(rect.reduce((t, d) => t + Math.abs(aNum(d.total) || 0), 0) * 100) / 100;
-          holdedMes = { m: mesAct, v: Math.round((sum(deMes) + rectV) * 100) / 100, n: deMes.length, hasta: hoyF, borr: { n: bor.length, v: sum(bor) }, rect: { n: rect.length, v: rectV, ok: rectOk, leidas: facLeidas, errs: errsR, facDet, porEp, det: rect.slice(0, 10).map(d => ({ quien: d.contact_name || '—', num: d.document_number || '', v: aNum(d.total) })) } };
+          // Tickets anulados con «factura simple rectificativa»: Holded no da esas rectificativas por la API,
+          // pero el ticket anulado queda como «Pagado» (en la clínica no se marcan los cobros en Holded) → no cuentan
+          const anul = deMes.filter(d => d.status === 'completed');
+          const rectV = -sum(anul);
+          holdedMes = { m: mesAct, v: Math.round((sum(deMes) + rectV) * 100) / 100, n: deMes.length - anul.length, hasta: hoyF, borr: { n: bor.length, v: sum(bor) }, rect: { n: anul.length, v: rectV, ok: true } };
         } catch (e) { holdedMes = { m: mesAct, error: e.message }; }
         return res.status(200).json({ ok: true, fuente, meses: ms, holdedMes, semanas: rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s) });
       }
