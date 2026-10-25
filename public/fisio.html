@@ -942,6 +942,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-cbts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.fp-cbts button{font-family:var(--font);font-size:13.5px;font-weight:600;border:none;border-radius:12px;padding:11px 8px;cursor:pointer;background:#f7f3ef;color:#1a1a1a}.fp-cbts button:first-child{background:#c2552e;color:#fff}
 .fp-sin{background:#fdecea;color:#b3261e;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:600}
 .fp-cdoc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.fp-cdoc button{font-family:var(--font);font-size:13.5px;font-weight:600;border:none;border-radius:12px;padding:11px 6px;cursor:pointer;background:#f7f3ef;color:#1a1a1a}.fp-cdoc button:first-child{background:#c2552e;color:#fff}
+.cs-forms{display:flex;flex-direction:column;gap:8px;margin-top:6px}.cs-forms button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;font-family:var(--font);border:none;border-radius:12px;padding:12px 14px;cursor:pointer;background:#f7f3ef;color:#1a1a1a;text-align:left}.cs-forms b{font-size:15px}.cs-forms small{font-size:12.5px;color:#7d6a60}
 .cs-menu{display:flex;flex-direction:column;gap:8px;margin-top:6px}.cs-menu button{font-family:var(--font);font-size:15px;font-weight:600;border:none;border-radius:12px;padding:13px;cursor:pointer;background:#f7f3ef;color:#1a1a1a}.cs-menu button:first-child{background:#c2552e;color:#fff}
 .fp-docs2{display:flex;flex-direction:column;gap:6px;margin-top:8px}.fp-doc2{display:flex;align-items:center;justify-content:space-between;width:100%;font-family:var(--font);border:none;background:#f7f3ef;border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;color:#1a1a1a}.fp-doc2 span{display:flex;flex-direction:column}.fp-doc2 b{font-size:14px}.fp-doc2 small{font-size:12px;color:#7d6a60}.fp-doc2 i{font-style:normal;font-weight:600;font-size:13px;color:#c2552e}
 .fp-cenvs button{background:#c2552e!important;color:#fff!important}.fp-sal span.ok{background:#e8f5ec;color:#16803c}
@@ -5604,6 +5605,14 @@ async function pdfConsentimiento(D){
  const nombre=((TIPO==='Suelo pélvico'?'Suelo_pelvico_':TIPO==='Alta oncológica'?'Alta_oncologica_':'Consentimiento_')+[D.nombre,D.apellidos].filter(Boolean).join('_')).replace(/[^\wáéíóúñÁÉÍÓÚÑ\-]+/g,'_')+'.pdf';
  return {blob:doc.output('blob'),nombre,b64:()=>doc.output('datauristring').split(',')[1]};
 }
+// Elegir qué formulario de Tally mandar al paciente por WhatsApp
+function enviarFormulario(P){const t=segTel(P.whatsapp||P.telf||P.tel||''),n=String(P.nombre||'').split(' ')[0];
+ const F=[['pv','Primera visita','Datos, salud y consentimiento general',`Hola ${n}, antes de tu primera sesión en FISIO365 necesitamos que rellenes este formulario (2 minutos): ${CONSENT_URL} . Pon tu propio teléfono, por favor. ¡Gracias!`],
+  ['sp','Suelo pélvico','Salud actualizada y consentimiento de suelo pélvico',`Hola ${n}, antes de empezar con suelo pélvico necesitamos que rellenes este formulario (2 minutos): ${FORM_SP_URL} . ¡Gracias!`],
+  ['alta','Alta oncológica','Para pacientes con alta del cáncer',`Hola ${n}, para poder aplicarte el tratamiento necesitamos que rellenes este formulario de alta oncológica (2 minutos): ${FORM_ALTA_URL} . ¡Gracias!`]];
+ const m=hzModal(`<div class="hz-top"><div><small>Enviar por WhatsApp a</small><b>${escH(P.nombre||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="cs-forms">${F.map(([k,ti,su])=>`<button type="button" data-k="${k}"><b>${ti}</b><small>${su}</small></button>`).join('')}</div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelectorAll('.cs-forms button').forEach(b=>b.onclick=()=>{const f=F.find(x=>x[0]===b.dataset.k);m.remove();window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(f[3])}`:`https://wa.me/?text=${encodeURIComponent(f[3])}`,'_blank');});}
 function consMenu(o){const m=hzModal(`<div class="hz-top"><div><small>${escH(o.paciente||'')}</small><b>${escH(o.tipo||'Consentimiento')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="cs-menu"><button type="button" data-a="ver">Ver PDF</button><button type="button" data-a="wa">Enviar por WhatsApp</button><button type="button" data-a="email">Enviar por email</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelectorAll('.cs-menu button').forEach(b=>b.onclick=()=>{m.remove();consAccion(b.dataset.a,o);});}
 async function consAccion(accion,{consentId,paciente,email,tel,tipo}){
@@ -5675,8 +5684,8 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const ico=k=>`<svg viewBox="0 0 24 24">${ICS[k]||'<circle cx="12" cy="12" r="7"/>'}</svg>`;
   const tile=(l,v)=>{const x=sn(v);return `<div class="fp-mt"><span>${l}</span><b class="${x==='Sí'?'si':x==='No'?'no':''}"><i></i>${x}</b></div>`;};
   const docs=(C&&C.docs)||[],envSP=C&&C.estado!=='dudoso'&&!C.aceptaSP,envAlta=C&&C.cancerActivo;
-  const envios=[envSP?'<button type="button" class="fp-cform" data-f="sp">Enviar suelo pélvico</button>':'',envAlta?'<button type="button" class="fp-cform" data-f="alta">Enviar alta oncológica</button>':''].filter(Boolean);
-  const salud=!C?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Salud</h3></div><div class="fp-sin">Sin consentimiento firmado</div><div class="fp-cbts"><button type="button" class="fp-cbus">Buscar y enlazar</button><button type="button" class="fp-cenv">Enviar WhatsApp</button></div></div>`:
+  const envios=['<button type="button" class="fp-cform">Enviar un formulario</button>'];
+  const salud=!C?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Salud</h3></div><div class="fp-sin">Sin consentimiento firmado</div><div class="fp-cbts"><button type="button" class="fp-cbus">Buscar y enlazar</button><button type="button" class="fp-cform">Enviar formulario</button></div></div>`:
    `<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Salud</h3></div>
     ${C.estado==='dudoso'?`<div class="fp-dud">Lo rellenó <b>${escH(C.nombreForm||'otra persona')}</b> el ${escH(fC(C.fecha))} con su mismo teléfono o email. ¿Es suyo?<div class="fp-cbts"><button type="button" class="fp-csi">Sí, es suyo</button><button type="button" class="fp-cbus">No, buscar otro</button></div></div>`:''}
     ${C.salud.length?`<div class="fp-sal">${C.salud.map(x=>`<span class="${x.grave?'gr':x.k==='ALTA'?'ok':''}">${x.grave?'⚠ ':''}${escH(x.t)}${['EMBARAZO','CÁNCER'].includes(x.k)?`<button type="button" class="fp-salx" data-k="${x.k}" aria-label="Quitar">✕</button>`:''}</span>`).join('')}</div>`:'<div class="fp-nada">Nada a tener en cuenta</div>'}
@@ -5817,9 +5826,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const tok='fp_'+Date.now();cont.dataset.token=tok;
   if(tab==='resumen'){cont.innerHTML=resumen();montarEdicion(cont);montarPorQue(cont);
    cont.querySelectorAll('.fp-doc2').forEach(bt=>bt.onclick=()=>consMenu({consentId:bt.dataset.id,tipo:bt.dataset.t,paciente:P.nombre,email:P.email,tel:P.whatsapp||P.telf||P.tel}));
-   cont.querySelectorAll('.fp-cform').forEach(bt=>bt.onclick=()=>{const sp=bt.dataset.f==='sp',t=segTel(P.whatsapp||P.telf||P.tel||''),n=String(P.nombre||'').split(' ')[0];
-    const txt=sp?`Hola ${n}, antes de empezar con suelo pélvico necesitamos que rellenes este formulario (2 minutos): ${FORM_SP_URL} . ¡Gracias!`:`Hola ${n}, para poder aplicarte el tratamiento necesitamos que rellenes este formulario de alta oncológica (2 minutos): ${FORM_ALTA_URL} . ¡Gracias!`;
-    window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');});
+   cont.querySelectorAll('.fp-cform').forEach(bt=>bt.onclick=()=>enviarFormulario(P));
    cont.querySelectorAll('.fp-cbus').forEach(bt=>bt.onclick=()=>abrirEnlazarConsent({pacienteId:id,nombre:P.nombre,onDone:async()=>{try{await cargar();}catch(_){}pintar();}}));
    {const bs=cont.querySelector('.fp-csi');if(bs)bs.onclick=async()=>{bs.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-consent-enlazar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,consentId:d.consent.id,pacienteId:id})})).json();if(!r.ok)throw 0;d.consent.estado='enlazado';toast('Enlazado',true);pintar();}catch(e){bs.disabled=false;toast('No se ha podido enlazar',false);}};}
    {const be=cont.querySelector('.fp-cenv');if(be)be.onclick=()=>{const t=segTel(P.whatsapp||P.telf||P.tel||'');const txt=`Hola ${String(P.nombre||'').split(' ')[0]}, antes de tu sesión en FISIO365 necesitamos que rellenes este formulario (2 minutos): ${CONSENT_URL} . Pon tu propio teléfono, por favor. ¡Gracias!`;window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');};}
