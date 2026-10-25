@@ -6318,7 +6318,8 @@ async function abrirFichaPaciente(id,nombre,pBase){
     <button type="button" class="fp-estb" aria-label="Cambiar estado">${estadoChips(P.estados)||'<span class="est">+ Estado</span>'}<span class="fp-edit-ic">✎</span></button></div></div>
    <div class="fp-acts">${tel?`<a class="fp-ic" href="tel:+${tel}">${ICO.tel}<span>Llamar</span></a><a class="fp-ic" href="https://wa.me/${tel}" target="_blank" rel="noopener">${ICO.wa}<span>WhatsApp</span></a>`:''}<button type="button" class="fp-ic fp-appb ${P.appUsada?'on':''}" title="${P.appUsada?'Ya usa la app':'Todavía no ha entrado en la app'}"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg><span>${P.appUsada?'App ✓':'Enviar app'}</span></button><button type="button" class="fp-ic fp-segb ${segAct()?'on':''}">${segAct()?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>':ICO.seg}<span>Seguimiento</span></button><button type="button" class="fp-ic fp-cobb fp-cobb-ic"><svg viewBox="0 0 24 24"><path d="M17.5 6.5A7 7 0 1 0 17.5 17.5"/><path d="M4 10.5h9M4 13.5h9"/></svg><span>Cobrar</span></button></div><button type="button" class="fp-cobb fp-cobb-mov"><svg viewBox="0 0 24 24"><path d="M17.5 6.5A7 7 0 1 0 17.5 17.5"/><path d="M4 10.5h9M4 13.5h9"/></svg>Cobrar y facturar</button></div>
    <div class="fp-tabs"><div class="fp-seg">${TABS.map(([k,t])=>`<button type="button" data-t="${k}" class="${tab===k?'on':''}">${t}</button>`).join('')}<button type="button" class="fp-mas ${MAS.some(x=>x[0]===tab)?'on':''}" aria-haspopup="true"><span>${MAS.some(x=>x[0]===tab)?escH(MAS.find(x=>x[0]===tab)[1].split(' ')[0]):'Más'}</span><i>▾</i></button></div></div>`;}
- function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>${lbl}</span><div class="fp-v">${val?escH(tipo==='date'?fch(val):val):'<em>—</em>'}</div></div>`;}
+ const telIgual=(a,b)=>{const n=x=>String(x||'').replace(/\D/g,'').slice(-9);return !n(a)||!n(b)||n(a)===n(b);};
+function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>${lbl}</span><div class="fp-v">${val?escH(tipo==='date'?fch(val):val):'<em>—</em>'}</div></div>`;}
  function resumen(){
   const hoy=d.hoy,fut=d.citas.filter(c=>c.fecha>=hoy&&!/CANCEL|REPROGRAM/i.test(c.estado)).reverse(),real=d.citas.filter(c=>c.fecha<hoy&&/REALIZADA/i.test(c.estado));
   const pend=d.seguimiento.filter(x=>!x.hecho),ult=d.llamadas[0];
@@ -6351,7 +6352,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
   <div class="fp-blk fp-pq"></div>
   <div class="fp-blk" data-blk="datos"><div class="fp-bt"><h3>Datos</h3><button type="button" class="fp-ed">Editar</button></div>
-   <div class="fp-fs"><div class="fp-f fp-mot"><span>Motivo de visita</span><div class="fp-v">${P.motivo?escH(P.motivo):'<em>Sin apuntar · toca «Editar»</em>'}</div></div>${campoTxt('Teléfono','tel',P.telf)}${campoTxt('WhatsApp','whatsapp',P.whatsapp)}${campoTxt('Email','email',P.email)}${campoTxt('DNI','dni',P.dni)}${campoTxt('Cumpleaños','cumple',P.cumple,'date')}<div class="fp-f"><span>Paciente desde</span><div class="fp-v">${escH(fch(String(P.alta).slice(0,10)))}</div></div></div></div>
+   <div class="fp-fs"><div class="fp-f fp-mot"><span>Motivo de visita</span><div class="fp-v">${P.motivo?escH(P.motivo):'<em>Sin apuntar · toca «Editar»</em>'}</div></div>${telIgual(P.telf,P.whatsapp)?campoTxt('Teléfono','tel',P.whatsapp||P.telf):campoTxt('Teléfono','tel',P.telf)+campoTxt('WhatsApp','whatsapp',P.whatsapp)}${campoTxt('Email','email',P.email)}${campoTxt('DNI','dni',P.dni)}${campoTxt('Cumpleaños','cumple',P.cumple,'date')}<div class="fp-f"><span>Paciente desde</span><div class="fp-v">${escH(fch(String(P.alta).slice(0,10)))}</div></div></div></div>
   ${salud}
   ${refBlk}
 `;}
@@ -6516,13 +6517,14 @@ async function abrirFichaPaciente(id,nombre,pBase){
  function montarEdicion(cont){
   cont.querySelectorAll('.fp-blk').forEach(blk=>{const k=blk.dataset.blk,bt=blk.querySelector('.fp-ed');if(!bt)return;
    bt.onclick=()=>{
-    if(k==='datos'){blk.querySelector('.fp-fs').innerHTML=[['Nombre','nombre',P.nombre,'text'],['Motivo de visita','motivo',P.motivo,'text'],['Teléfono','tel',P.telf,'tel'],['WhatsApp','whatsapp',P.whatsapp,'tel'],['Email','email',P.email,'email'],['DNI','dni',P.dni,'text'],['Cumpleaños','cumple',P.cumple,'date']].map(([l,kk,v,t])=>`<label class="fp-f fp-in"><span>${l}</span><input type="${t}" data-k="${kk}" value="${escH(v||'')}"></label>`).join('');}
+    if(k==='datos'){blk.querySelector('.fp-fs').innerHTML=[['Nombre','nombre',P.nombre,'text'],['Motivo de visita','motivo',P.motivo,'text'],...(telIgual(P.telf,P.whatsapp)?[['Teléfono','tel',P.whatsapp||P.telf,'tel']]:[['Teléfono','tel',P.telf,'tel'],['WhatsApp','whatsapp',P.whatsapp,'tel']]),['Email','email',P.email,'email'],['DNI','dni',P.dni,'text'],['Cumpleaños','cumple',P.cumple,'date']].map(([l,kk,v,t])=>`<label class="fp-f fp-in"><span>${l}</span><input type="${t}" data-k="${kk}" value="${escH(v||'')}"></label>`).join('');}
     else{const v=k==='notas'?P.notas:P.historial;blk.querySelector('.fp-txt').innerHTML=`<textarea class="fp-ta" rows="8">${escH(v||'')}</textarea>`;}
     {const ev=blk.querySelector('.fp-add-ev');if(ev)ev.remove();}
     const bx=ce('span','fp-edbts');bx.innerHTML='<button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok fp-guardar">Guardar</button>';bt.replaceWith(bx);
     bx.querySelector('.fp-can').onclick=pintar;
     bx.querySelector('.fp-guardar').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Guardando…';const campos={};
      if(k==='datos')blk.querySelectorAll('input[data-k]').forEach(i=>campos[i.dataset.k]=i.value.trim());else campos[k]=blk.querySelector('.fp-ta').value;
+     if(k==='datos'&&campos.tel!==undefined&&campos.whatsapp===undefined)campos.whatsapp=campos.tel; // un solo teléfono: sirve también para WhatsApp
      if(k==='datos'&&!campos.nombre){b.disabled=false;b.textContent='Guardar';toast('El nombre no puede quedar vacío',false);return;}
      try{await guardar(campos);if(k==='datos'){P.telf=campos.tel;P.whatsapp=campos.whatsapp;const pl=(pacs||[]).find(x=>x.id===id);if(pl){pl.nombre=campos.nombre;pl.telefono=campos.whatsapp||campos.tel;}}toast('Guardado',true);pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};};});}
  function montarSubida(cont){const inp=cont.querySelector('.fp-up input');inp.onchange=async()=>{const fs=[...inp.files];if(!fs.length)return;
