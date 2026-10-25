@@ -393,6 +393,40 @@ module.exports = async function handler(req, res) {
         const huerfanos = lista.filter(c => !c.pac.length && c.fecha >= desde).map(c => ({ id: c.id, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, sugerido: dudosos[c.id] || null }));
         return res.status(200).json({ ok: true, hoy: hoyF, enlazados, sinCons, huerfanos });
       }
+      if (action === 'seg-consent-doc') {
+        // Datos completos de un consentimiento para crear su PDF (con la firma). La firma se trae de Tally la primera vez y se guarda en Airtable.
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+        const r = await at(`${CONS_T}/${q.id}`); if (r.error) return res.status(404).json({ ok: false });
+        const F = r.fields || {}, KEY = process.env.TALLY_API_KEY;
+        let firmaUrl = ((F['FIRMA'] || [])[0] || {}).url || '', tutor = '', tutorNif = '', recomendo = '';
+        const sub = String(F['SUBMISSION ID'] || '').trim(), form = cNm(F['FORM ID']).trim() || 'b5j1M2';
+        if (KEY && sub && /^[A-Za-z0-9]+$/.test(sub) && /^[A-Za-z0-9]+$/.test(form)) {
+          const t = await fetch(`https://api.tally.so/forms/${form}/submissions/${sub}`, { headers: { Authorization: `Bearer ${KEY}` } }).then(x => x.ok ? x.json() : null).catch(() => null);
+          if (t) {
+            const qs = t.questions || (t.data && t.data.questions) || [], subm = t.submission || t.data || t, resp = subm.responses || [];
+            const lab = id => { const x = qs.find(z => z.id === id); return capNorm(x && (x.title || x.label) || ''); };
+            const val = a => Array.isArray(a) ? a.map(v => typeof v === 'object' ? '' : v).join(', ') : (typeof a === 'object' ? '' : String(a ?? ''));
+            resp.forEach(x => { const l = lab(x.questionId), a = x.answer !== undefined ? x.answer : x.value;
+              if (/tutor/.test(l) && /nif/.test(l)) tutorNif = val(a); else if (/tutor/.test(l)) tutor = val(a); else if (/recomend/.test(l)) recomendo = val(a);
+              if (!firmaUrl) { const enc = JSON.stringify(a || ''); const m = enc.match(/https:\/\/storage\.tally\.so\/[^"]+\.png[^"]*/); if (m && (/firma|signature/.test(l) || x.type === 'SIGNATURE' || !l)) firmaUrl = m[0].replace(/\\u0026/g, '&'); } });
+            if (firmaUrl && !(F['FIRMA'] || []).length) await at(`${CONS_T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { FIRMA: [{ url: firmaUrl, filename: 'firma.png' }] } }) }).catch(() => {});
+          }
+        }
+        let firma = '';
+        if (firmaUrl) { try { const im = await fetch(firmaUrl); if (im.ok) firma = `data:${im.headers.get('content-type') || 'image/png'};base64,` + Buffer.from(await im.arrayBuffer()).toString('base64'); } catch (e) {} }
+        const resp = {}; Object.keys(F).forEach(k => { const v = F[k]; if (v && typeof v === 'object' && !Array.isArray(v) && v.name) resp[k] = v.name; });
+        return res.status(200).json({ ok: true, tally: !!KEY, doc: { id: r.id, nombre: String(F['﻿NOMBRE'] || F['NOMBRE'] || '').trim(), apellidos: String(F['APELLIDOS'] || '').trim(), dni: String(F['DNI'] || '').trim(), nacimiento: F['NACIMIENTO'] || '', email: F['EMAIL'] || '', tel: F['TELF'] || '', fecha: F['Creada'] || String(r.createdTime || '').slice(0, 10), aceptaSP: !!F['ACEPTACIÓN S.P.'], resp, firma, tutor, tutorNif, recomendo } });
+      }
+      if (action === 'seg-consent-email') {
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const to = String(q.to || '').trim(), pdf = String(q.pdf || '');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to) || !pdf || pdf.length > 4e6) return res.status(400).json({ ok: false, error: 'Falta el email o el PDF' });
+        const nom = String(q.nombre || '').split(' ')[0];
+        const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a">Hola${nom ? ' ' + escHtml(nom) : ''},<br><br>Te adjuntamos una copia de tu formulario de primera visita y consentimiento informado de FISIO365.<br><br>Cualquier duda, estamos en el 672 89 39 49.<br><br>Un abrazo,<br>Equipo FISIO365</div>`;
+        const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: [{ email: to }], subject: 'Tu consentimiento · FISIO365', htmlContent: html, attachment: [{ content: pdf, name: String(q.archivo || 'Consentimiento_FISIO365.pdf').replace(/[^\w.\-áéíóúñÁÉÍÓÚÑ]/g, '_') }] }) });
+        return res.status(200).json({ ok: r.ok, error: r.ok ? '' : 'No se ha podido enviar (' + r.status + ')' });
+      }
       if (action === 'seg-consent-enlazar') {
         if (req.method !== 'POST' || !/^rec[A-Za-z0-9]{14}$/.test(q.consentId || '') || (q.pacienteId && !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId))) return res.status(400).json({ ok: false });
         return res.status(200).json({ ok: await enlazarCons(q.consentId, q.pacienteId || '') });
