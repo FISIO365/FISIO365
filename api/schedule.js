@@ -36,6 +36,11 @@ const holdedTodos = async (path, max = 20) => {
 };
 const normDni = t => String(t || '').toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/^ES/, '');
 const soloDigitos = t => String(t || '').replace(/\D/g, '').slice(-9);
+// Importe del ticket: «total» puede venir como texto, número u objeto; si no, se calcula con las líneas
+const aNum = v => { if (v == null) return NaN; if (typeof v === 'object') v = v.amount ?? v.value ?? v.total; return Number(String(v).replace(/\s/g, '').replace(/,(\d{1,2})$/, '.$1')); };
+const importeDoc = d => { for (const k of ['total', 'total_amount', 'amount', 'grand_total']) { const n = aNum(d[k]); if (n > 0) return n; }
+  const p = (aNum(d.payments_total) || 0) + (aNum(d.payments_pending) || 0); if (p > 0) return p;
+  const l = (d.lines || []).reduce((t, x) => t + (aNum(x.price) || 0) * (aNum(x.units) || 1) * (1 - (aNum(x.discount) || 0) / 100), 0); return Math.round(l * 100) / 100 || 0; };
 const docTipo = t => t === 'invoice' ? 'invoices' : 'sales-receipts';
 
 // Busca contactos de Holded por un filtro exacto (code = DNI/NIF, email, mobile, phone)
@@ -59,8 +64,8 @@ async function contactosDelPaciente(patientId) {
   const tel = soloDigitos(f['WHATSAPP'] || f['TELF']);
   const ids = new Set();
   (await contactoPorDni(f['DNI'])).forEach(c => ids.add(c.id));
-  (await buscarContactos('email', email)).filter(c => String(c.email || '').trim().toLowerCase() === email).forEach(c => ids.add(c.id));
-  if (tel.length === 9) for (const v of [tel, '+34' + tel, '+34 ' + tel, tel.replace(/(\d{3})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4'), tel.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')])
+  if (!ids.size) (await buscarContactos('email', email)).filter(c => String(c.email || '').trim().toLowerCase() === email).forEach(c => ids.add(c.id));
+  if (!ids.size && tel.length === 9) for (const v of [tel, '+34' + tel, '+34 ' + tel, tel.replace(/(\d{3})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4'), tel.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')])
     for (const campo of ['mobile', 'phone']) (await buscarContactos(campo, v)).forEach(c => ids.add(c.id));
   return [...ids];
 }
@@ -505,7 +510,7 @@ async function listarFacturas(ids) {
     const docs = await holdedTodos('/' + docTipo(tipoDoc) + '?limit=100&contact_id=' + encodeURIComponent(cid), 5).catch(e => { if (tipoDoc === 'salesreceipt') throw e; return []; });
     docs.forEach(d => {
       if (d.contact_id !== cid || !d.document_number) return; // solo suyos y ya emitidos (no borradores)
-      facturas.push({ id: d.id, tipo: tipoDoc, numero: d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: Number(d.total || 0), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' });
+      facturas.push({ id: d.id, tipo: tipoDoc, numero: d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: importeDoc(d), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' });
     });
   }
   facturas.sort((a, b) => b.fecha - a.fecha);
