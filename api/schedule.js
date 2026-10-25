@@ -151,15 +151,17 @@ async function consTodos(forzar) {
 const nomToks = t => capNorm(t).split(/[^a-z0-9ñ]+/).filter(w => w.length >= 3 && !/^(del|las|los|que)$/.test(w));
 const nombresCuadran = (a, b) => { const A = nomToks(a), B = nomToks(b); return A.some(w => B.includes(w)); };
 // Para un paciente: los que ya tiene enlazados, los libres que son suyos seguro (buenos) y los que comparten teléfono/email/DNI pero no el nombre (dudosos)
-function emparejar(P, pacId, lista) {
+function emparejar(P, pacId, lista, altaPac) {
   const enl = lista.filter(c => c.pac.includes(pacId));
   const email = cTxt(P['EMAIL']), dni = cTxt(P['DNI']).replace(/\s/g, ''), tels = [cDig(P['TELF']), cDig(P['WHATSAPP'])].filter(t => t.length === 9), nombre = P['FULL NAME'] || '';
   const libres = lista.filter(c => !c.pac.length);
   const cands = libres.filter(c => (email && c.email === email) || (dni.length >= 6 && c.dni === dni) || (c.tel.length === 9 && tels.includes(c.tel)));
   const n = capNorm(nombre).replace(/\s+/g, ' ').trim();
-  // Teléfono, email o DNI iguales bastan para enlazarlo (aunque lo firme con otro nombre); si no, por nombre completo
-  const buenos = [...new Set([...cands, ...(n.split(' ').length >= 2 ? libres.filter(c => capNorm(c.nombre) === n) : [])])];
-  return { enl, buenos, dudosos: [] };
+  // Teléfono, email o DNI iguales bastan para enlazarlo aunque lo firme con otro nombre, siempre que el formulario sea
+  // de después de crear la ficha (los antiguos con otro nombre son de otra persona o pruebas: esos se preguntan)
+  const desde = altaPac ? new Date(new Date(altaPac).getTime() - 3 * 864e5).toISOString().slice(0, 10) : '';
+  const buenos = [...new Set([...cands.filter(c => nombresCuadran(c.nombre, nombre) || (desde && c.fecha >= desde)), ...(n.split(' ').length >= 2 ? libres.filter(c => capNorm(c.nombre) === n) : [])])];
+  return { enl, buenos, dudosos: cands.filter(c => !buenos.includes(c)) };
 }
 const enlazarCons = async (consId, pacId) => { const c0 = (_cons.v || []).find(x => x.id === consId), T = c0 ? c0.tabla : CONS_T;
   let d = await at(`${T}/${consId}`, { method: 'PATCH', body: JSON.stringify({ fields: { PACIENTE: pacId ? [pacId] : [] } }) });
@@ -180,9 +182,9 @@ function resumenPaciente(enl) {
   out.cancerActivo = out.salud.some(x => x.k === 'CÁNCER' && !x.alta);
   return out;
 }
-async function consentDe(P, pacId) {
+async function consentDe(P, pacId, altaPac) {
   const lista = await consTodos();
-  const { enl, buenos, dudosos } = emparejar(P, pacId, lista);
+  const { enl, buenos, dudosos } = emparejar(P, pacId, lista, altaPac);
   for (const c of buenos.slice(0, 6)) if (await enlazarCons(c.id, pacId).catch(() => false)) enl.push(c);
   if (!enl.length) return dudosos.length ? consPublico(dudosos[0], 'dudoso') : null;
   const out = consPublico(resumenPaciente(enl), 'enlazado');
@@ -445,9 +447,9 @@ module.exports = async function handler(req, res) {
         const ult = {}; ses.forEach(c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0]; if (!pid) return; const f = String(c.fields['FECHA'] || '').slice(0, 10); if (!ult[pid] || f < ult[pid].primera) ult[pid] = { primera: f, fisio: cNm(c.fields['PREF.']) }; });
         const enl = new Set(lista.flatMap(c => c.pac));
         const pidsSin = Object.keys(ult).filter(id => !enl.has(id)), info = {};
-        for (let i = 0; i < pidsSin.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pidsSin.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP`)).forEach(p => { info[p.id] = p.fields; });
+        for (let i = 0; i < pidsSin.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pidsSin.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP&fields[]=FECHA`)).forEach(p => { info[p.id] = { ...p.fields, FECHA: p.fields['FECHA'] || p.createdTime }; });
         const sinCons = [], dudosos = {}; let enlazados = 0;
-        for (const id of pidsSin) { const P = info[id]; if (!P) continue; const m = emparejar(P, id, lista); let ok = false;
+        for (const id of pidsSin) { const P = info[id]; if (!P) continue; const m = emparejar(P, id, lista, P['FECHA']); let ok = false;
           for (const c of m.buenos.slice(0, 4)) if (enlazados < 60 && await enlazarCons(c.id, id).catch(() => false)) { enlazados++; ok = true; }
           if (ok) continue;
           const dd = m.dudosos[0]; if (dd) dudosos[dd.id] = { id, nombre: P['FULL NAME'] || '' };
@@ -458,7 +460,7 @@ module.exports = async function handler(req, res) {
         const pc = []; for (let i = 0; i < conds.length; i += 40) pc.push(...await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + conds.slice(i, i + 40).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP`).catch(() => []));
         for (const c of sueltos) {
           const ps = pc.filter(p => { const F = p.fields, ts = [cDig(F['TELF']), cDig(F['WHATSAPP'])]; return (c.email && cTxt(F['EMAIL']) === c.email) || (c.dni.length >= 6 && cTxt(F['DNI']).replace(/\s/g, '') === c.dni) || (c.tel.length === 9 && ts.includes(c.tel)); });
-          const bueno = ps.find(p => nombresCuadran(c.nombre, p.fields['FULL NAME'])) || (ps.length === 1 ? ps[0] : null);
+          const bueno = ps.find(p => nombresCuadran(c.nombre, p.fields['FULL NAME'])) || (ps.length === 1 && c.fecha >= new Date(new Date(ps[0].createdTime).getTime() - 3 * 864e5).toISOString().slice(0, 10) ? ps[0] : null);
           if (bueno && enlazados < 100) { if (await enlazarCons(c.id, bueno.id).catch(() => false)) { enlazados++; enl.add(bueno.id); continue; } }
           if (ps.length) dudosos[c.id] = { id: ps[0].id, nombre: ps[0].fields['FULL NAME'] || '' };
         }
@@ -815,7 +817,7 @@ module.exports = async function handler(req, res) {
           todosT(SEG, `filterByFormula=${encodeURIComponent(`FIND('${q.id}',ARRAYJOIN({PacRec}))`)}&sort[0][field]=FECHA DE LLAMADA&sort[0][direction]=desc`).catch(() => []),
           llIds.length ? todosT(LLA, `filterByFormula=${encodeURIComponent('OR(' + llIds.slice(0, 60).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&sort[0][field]=FECHA&sort[0][direction]=desc`).catch(() => []) : [],
           saldoPaciente(q.id).catch(() => ({ activo: false })),
-          consentDe(F, q.id).catch(() => null)
+          consentDe(F, q.id, pac.createdTime).catch(() => null)
         ]);
         const diaMad = x => { const s2 = String(x || ''); if (!s2.includes('T')) return { f: s2.slice(0, 10), h: '' }; const pz = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date(s2)).reduce((o, p) => (o[p.type] = p.value, o), {}); return { f: `${pz.year}-${pz.month}-${pz.day}`, h: `${pz.hour === '24' ? '00' : pz.hour}:${pz.minute}` }; };
         // Si ya ha vuelto a reservar, el «No reagenda» se desmarca solo
