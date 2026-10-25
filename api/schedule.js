@@ -8,50 +8,61 @@ const BIBLIO_TABLE = 'tbloqn3ts872ueJSE';
 const HOLDED_KEY = process.env.HOLDED_API_KEY;
 const { saldoPaciente, rendimiento, inicioControl } = require('./_push').saldo;
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
-const HOLDED_URL = 'https://api.holded.com/api/invoicing/v1';
+const HOLDED_URL = 'https://api.holded.com/api/v2'; // API nueva de Holded (clave «Bearer»)
 
-let cacheContactos = null, cacheT = 0;
+let cacheContactos = null; // (ya no se descargan todos: se buscan por DNI, email o móvil)
 
+const holdedErr = async (r, path) => { const t = await r.text().catch(() => ''); let m = t; try { const j = JSON.parse(t); m = j.message || j.detail || j.error || j.info || (j.errors && JSON.stringify(j.errors)) || t; } catch (_) {} return new Error('Holded ' + r.status + ' en ' + path.split('?')[0] + (m ? ': ' + String(typeof m === 'string' ? m : JSON.stringify(m)).slice(0, 160) : '')); };
 const holded = async path => {
-  const r = await fetch(HOLDED_URL + path, { headers: { key: HOLDED_KEY, accept: 'application/json' } });
-  if (!r.ok) { const t = await r.text().catch(() => ''); let m = t; try { const j = JSON.parse(t); m = j.info || j.message || j.error || t; } catch (_) {} throw new Error('Holded ' + r.status + ' en ' + path.split('?')[0] + (m ? ': ' + String(m).slice(0, 140) : '')); }
+  const r = await fetch(HOLDED_URL + path, { headers: { Authorization: 'Bearer ' + HOLDED_KEY, accept: 'application/json' } });
+  if (!r.ok) throw await holdedErr(r, path);
   return r.json();
+};
+// PDF (Holded lo devuelve en binario) → base64
+const holdedPdf = async path => {
+  const r = await fetch(HOLDED_URL + path, { headers: { Authorization: 'Bearer ' + HOLDED_KEY, accept: 'application/pdf' } });
+  if (!r.ok) throw await holdedErr(r, path);
+  return Buffer.from(await r.arrayBuffer()).toString('base64');
+};
+// Listado con páginas (cursor)
+const holdedTodos = async (path, max = 20) => {
+  let out = [], cursor = null;
+  for (let i = 0; i < max; i++) {
+    const d = await holded(cursor ? path + (path.includes('?') ? '&' : '?') + 'cursor=' + encodeURIComponent(cursor) : path);
+    out = out.concat(d.items || []);
+    if (!d.has_more || !d.cursor) break; cursor = d.cursor;
+  }
+  return out;
 };
 const normDni = t => String(t || '').toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/^ES/, '');
 const soloDigitos = t => String(t || '').replace(/\D/g, '').slice(-9);
+const docTipo = t => t === 'invoice' ? 'invoices' : 'sales-receipts';
 
-async function contactos() {
-  if (cacheContactos && Date.now() - cacheT < 10 * 60 * 1000) return cacheContactos;
-  let todos = [];
-  const vistos = new Set();
-  for (let page = 1; page <= 60; page++) {
-    const lote = await holded('/contacts?page=' + page);
-    if (!Array.isArray(lote) || !lote.length) break;
-    const nuevos = lote.filter(c => c && c.id && !vistos.has(c.id));
-    if (!nuevos.length) break; // Holded repite la misma página: ya están todos
-    nuevos.forEach(c => vistos.add(c.id));
-    todos = todos.concat(nuevos);
-  }
-  cacheContactos = todos; cacheT = Date.now();
-  return todos;
+// Busca contactos de Holded por un filtro exacto (code = DNI/NIF, email, mobile, phone)
+async function buscarContactos(campo, valor) {
+  if (!valor) return [];
+  return holdedTodos('/contacts?limit=100&' + campo + '=' + encodeURIComponent(valor), 3).catch(e => { if (/ 40[13] /.test(e.message)) throw e; return []; });
+}
+async function contactoPorDni(dni) {
+  const n = normDni(dni); if (n.length < 8) return [];
+  const vistos = new Map();
+  for (const v of new Set([n, String(dni || '').trim().toUpperCase()])) (await buscarContactos('code', v)).forEach(c => vistos.set(c.id, c));
+  return [...vistos.values()];
 }
 
-// Contactos de Holded que corresponden al paciente (por email o por móvil)
+// Contactos de Holded que corresponden al paciente (por DNI, email o móvil)
 async function contactosDelPaciente(patientId) {
   const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES}/${patientId}`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
   if (!r.ok) return [];
   const f = (await r.json()).fields || {};
   const email = String(f['EMAIL'] || '').trim().toLowerCase();
   const tel = soloDigitos(f['WHATSAPP'] || f['TELF']);
-  const dni = normDni(f['DNI']);
-  const lista = await contactos();
-  return lista.filter(c => {
-    if (dni && dni.length >= 8 && (normDni(c.code) === dni || normDni(c.vatnumber) === dni)) return true;
-    const ce = String(c.email || '').trim().toLowerCase();
-    if (email && ce && ce === email) return true;
-    if (tel && tel.length === 9 && (soloDigitos(c.mobile) === tel || soloDigitos(c.phone) === tel)) return true;
-    return false;
-  }).map(c => c.id);
+  const ids = new Set();
+  (await contactoPorDni(f['DNI'])).forEach(c => ids.add(c.id));
+  (await buscarContactos('email', email)).filter(c => String(c.email || '').trim().toLowerCase() === email).forEach(c => ids.add(c.id));
+  if (tel.length === 9) for (const v of [tel, '+34' + tel, '+34 ' + tel, tel.replace(/(\d{3})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4'), tel.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')])
+    for (const campo of ['mobile', 'phone']) (await buscarContactos(campo, v)).forEach(c => ids.add(c.id));
+  return [...ids];
 }
 
 
@@ -63,7 +74,7 @@ const FF = { fecha: 'fldQ17bGOMaS0XaxJ', fechaVieja: 'fldqZyXkxhGRS1qvn', pacien
 let emitiendo = Promise.resolve();
 // Si Airtable dice «demasiadas peticiones» (429), espera y lo reintenta
 const at = async (path, opt = {}) => { for (let i = 0; ; i++) { const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${path}`, { ...opt, headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json', ...(opt.headers || {}) } }); if (r.status === 429 && i < 4) { await new Promise(z => setTimeout(z, 600 * (i + 1))); continue; } return r.json(); } };
-const holdedPost = async (path, body) => { const r = await fetch(HOLDED_URL + path, { method: 'POST', headers: { key: HOLDED_KEY, accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const d = await r.json().catch(() => ({})); if (!r.ok || d.status === 0) throw new Error(d.info || d.message || ('Holded ' + r.status)); return d; };
+const holdedPost = async (path, body) => { const r = await fetch(HOLDED_URL + path, { method: 'POST', headers: { Authorization: 'Bearer ' + HOLDED_KEY, accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); if (!r.ok) throw await holdedErr(r, path); return r.json().catch(() => ({})); };
 const pagina = (ok, titulo, texto) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f7f3ef;font-family:Poppins,sans-serif;color:#1a1a1a;padding:16px;box-sizing:border-box}.c{background:#fff;border-radius:20px;padding:32px 28px;max-width:420px;width:100%;text-align:center}.i{width:56px;height:56px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;background:${ok ? '#16a34a' : '#c2552e'}}h1{font-size:20px;margin:0 0 8px}p{margin:0;color:#6b5f57;line-height:1.5}</style></head><body><div class="c"><div class="i">${ok ? '✓' : '!'}</div><h1>${titulo}</h1><p>${texto}</p><p style="margin-top:16px;font-size:13px">Ya puedes cerrar esta pestaña.</p></div></body></html>`;
 const escHtml = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -431,20 +442,23 @@ async function emitirFactura(recId) {
   if (!lineas.length) throw new Error('Falta la línea 1 (concepto, nº de sesiones y precio)');
   const notas = String(f[FF.notas] || '').trim();
 
-  // Fecha: hoy, o la de la fila si es anterior a hoy y no anterior a la última factura emitida
-  const ahora = Math.floor(Date.now() / 1000);
-  const recientes = await holded('/documents/salesreceipt?starttmp=' + (ahora - 400 * 86400) + '&endtmp=' + (ahora + 86400)).catch(() => []);
-  const ultima = (Array.isArray(recientes) ? recientes : []).filter(d => !d.draft).sort((a, b) => (b.date || 0) - (a.date || 0))[0];
-  let fecha = ahora;
+  // Fecha: hoy, o la de la fila si es anterior a hoy y no anterior al último ticket emitido
+  const isoMad = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  const hoyIso = isoMad(new Date());
+  const ult = await holded('/sales-receipts?limit=1&sort=-date&approval_status=approved').catch(() => ({}));
+  const ultima = (ult.items || [])[0];
+  const ultFecha = ultima && ultima.date ? String(ultima.date).slice(0, 10) : '';
+  let fecha = hoyIso;
   const fFila = f[FF.fecha] || f[FF.fechaVieja];
   if (fFila) {
-    const fd = Math.floor(new Date(fFila + 'T12:00:00Z').getTime() / 1000);
-    if (fd > ahora + 86400) throw new Error('La fecha no puede ser futura');
-    if (ultima && ultima.date && fd < ultima.date - 43200) throw new Error('La fecha es anterior a la última factura emitida (' + new Date(ultima.date * 1000).toLocaleDateString('es-ES') + '). Deja la fecha vacía para usar la de hoy.');
-    if (fd < ahora - 43200) fecha = fd;
+    const fd = String(fFila).slice(0, 10);
+    if (fd > hoyIso) throw new Error('La fecha no puede ser futura');
+    if (ultFecha && fd < ultFecha) throw new Error('La fecha es anterior a la última factura emitida (' + ultFecha.split('-').reverse().join('/') + '). Deja la fecha vacía para usar la de hoy.');
+    fecha = fd;
   }
-  // IVA: el mismo que lleva la última factura de la serie (sanitaria exenta → 0)
-  const tax = ultima && ultima.products && ultima.products[0] && ultima.products[0].tax != null ? Number(ultima.products[0].tax) : 0;
+  // Impuesto: el mismo que lleva el último ticket (sanitaria exenta → sin impuesto)
+  const l0 = ultima && (ultima.lines || [])[0];
+  const taxes = l0 && Array.isArray(l0.taxes) && l0.taxes.length ? l0.taxes.map(t => typeof t === 'string' ? t : (t && (t.key || t.id))).filter(Boolean) : null;
 
   // Contacto: «Facturar a» si está rellenado; si no, el paciente (por DNI)
   let datos;
@@ -457,42 +471,41 @@ async function emitirFactura(recId) {
     datos = { name: String(pf['FULL NAME'] || '').trim(), code: normDni(pf['DNI']), email: pf['EMAIL'] || '', mobile: pf['WHATSAPP'] || pf['TELF'] || '' };
   }
   if (!datos.code) throw new Error('Falta el DNI/NIF de quien recibe la factura');
-  const lista = await contactos();
-  let contacto = lista.find(c => normDni(c.code || c.vatnumber) === datos.code);
-  let contactId = contacto && contacto.id;
+  let contactId = ((await contactoPorDni(datos.code))[0] || {}).id;
   if (!contactId) {
-    const body = { name: datos.name, code: datos.code, type: 'client', isperson: !/^[A-HJ-NP-SUVW]/.test(datos.code) };
+    const body = { name: datos.name, code: datos.code, type: 'client' };
     if (datos.email) body.email = datos.email;
     if (datos.mobile) body.mobile = datos.mobile;
-    if (datos.address) body.billAddress = { address: datos.address };
+    if (datos.address) body.bill_address = { address: datos.address };
     const c = await holdedPost('/contacts', body);
-    contactId = c.id; cacheContactos = null;
+    contactId = c.id;
   }
 
-  const doc = await holdedPost('/documents/salesreceipt', {
-    contactId, date: fecha, notes: notas,
-    items: lineas.map(l => ({ name: l.concepto === 'Otros' && notas ? notas.split('\n')[0].slice(0, 120) : l.concepto, units: l.uds, subtotal: l.precio, tax }))
-  });
+  const items = lineas.map(l => { const it = { name: l.concepto === 'Otros' && notas ? notas.split('\n')[0].slice(0, 120) : l.concepto, units: l.uds, price: l.precio }; if (taxes) it.taxes = taxes; return it; });
+  const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: notas || null, currency: 'EUR', language: 'es', items });
   const docId = doc.id;
-  const creado = await holded('/documents/salesreceipt/' + docId).catch(() => ({}));
-  const num = creado.docNumber || doc.invoiceNum || docId;
-  const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: new Date(fecha * 1000).toISOString().slice(0, 10), [FF.fechaVieja]: new Date(fecha * 1000).toISOString().slice(0, 10) };
+  if (!docId) throw new Error('Holded no ha devuelto el ticket creado');
+  let creado = await holded('/sales-receipts/' + docId).catch(() => ({}));
+  // Si se ha quedado en borrador (sin número), se aprueba para que coja el siguiente número de la serie
+  if (!creado.document_number) { await holdedPost('/sales-receipts/' + docId + '/approve', {}).catch(() => {}); creado = await holded('/sales-receipts/' + docId).catch(() => creado); }
+  const num = creado.document_number || docId;
+  const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: fecha, [FF.fechaVieja]: fecha };
   await at(`${FACTURAS_TABLE}/${recId}`, { method: 'PATCH', body: JSON.stringify({ fields: campos, typecast: true }) });
   try {
-    const pdf = await holded('/documents/salesreceipt/' + docId + '/pdf');
-    if (pdf && pdf.data) await fetch(`https://content.airtable.com/v0/${BASE_ID}/${recId}/${FF.pdf}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'application/pdf', file: pdf.data, filename: 'Factura_' + String(num).replace(/[^\w-]/g, '_') + '.pdf' }) });
+    const pdf = await holdedPdf('/sales-receipts/' + docId + '/pdf');
+    if (pdf) await fetch(`https://content.airtable.com/v0/${BASE_ID}/${recId}/${FF.pdf}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'application/pdf', file: pdf, filename: 'Factura_' + String(num).replace(/[^\w-]/g, '_') + '.pdf' }) });
   } catch (e) {}
   return { num, otro: !!String(f[FF.aNombre] || '').trim(), total: lineas.reduce((t, l) => t + l.uds * l.precio, 0) };
 }
 
 async function listarFacturas(ids) {
   let facturas = [];
-  // Tickets de venta (lo habitual: llevan DNI y sirven como factura) y facturas
+  // Tickets de venta (lo habitual: llevan DNI y sirven como factura) y, por si acaso, facturas completas
   for (const cid of ids) for (const tipoDoc of ['salesreceipt', 'invoice']) {
-    const docs = await holded('/documents/' + tipoDoc + '?contactid=' + encodeURIComponent(cid)).catch(() => []);
-    (Array.isArray(docs) ? docs : []).forEach(d => {
-      if (d.draft || (d.contact && d.contact !== cid)) return; // por si Holded ignorase el filtro
-      facturas.push({ id: d.id, tipo: tipoDoc, numero: d.docNumber || '', fecha: d.date || 0, total: Number(d.total || 0), pagada: d.status === 1, concepto: (d.products && d.products[0] && d.products[0].name) || d.desc || '' });
+    const docs = await holdedTodos('/' + docTipo(tipoDoc) + '?limit=100&contact_id=' + encodeURIComponent(cid), 5).catch(e => { if (tipoDoc === 'salesreceipt') throw e; return []; });
+    docs.forEach(d => {
+      if (d.contact_id !== cid || !d.document_number) return; // solo suyos y ya emitidos (no borradores)
+      facturas.push({ id: d.id, tipo: tipoDoc, numero: d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: Number(d.total || 0), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' });
     });
   }
   facturas.sort((a, b) => b.fecha - a.fecha);
@@ -1388,7 +1401,7 @@ module.exports = async function handler(req, res) {
       const dni = (pr.fields || {})['DNI'] || '';
       const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
       if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, facturas: [] });
-      try { const ids = await contactosDelPaciente(pac); return res.status(200).json({ ok: true, holded: true, dni, saldo, enHolded: ids.length, nContactos: (cacheContactos || []).length, facturas: await listarFacturas(ids) }); }
+      try { const ids = await contactosDelPaciente(pac); return res.status(200).json({ ok: true, holded: true, dni, saldo, enHolded: ids.length, facturas: await listarFacturas(ids) }); }
       catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -1481,12 +1494,12 @@ module.exports = async function handler(req, res) {
       const ids = await contactosDelPaciente(patientId);
       if (id) {
         if (!/^[a-f0-9]{24}$/i.test(id)) return res.status(400).json({ ok: false, error: 'Factura no válida' });
-        const tipoDoc = req.query.tipo === 'invoice' ? 'invoice' : 'salesreceipt';
-        const doc = await holded('/documents/' + tipoDoc + '/' + id);
-        if (!doc || !ids.includes(doc.contact)) return res.status(403).json({ ok: false, error: 'No autorizado' });
-        const pdf = await holded('/documents/' + tipoDoc + '/' + id + '/pdf');
-        if (!pdf || !pdf.data) return res.status(502).json({ ok: false, error: 'PDF no disponible' });
-        return res.status(200).json({ ok: true, nombre: 'Factura_' + String(doc.docNumber || id).replace(/[^\w-]/g, '_') + '.pdf', pdf: pdf.data });
+        const tipoDoc = docTipo(req.query.tipo);
+        const doc = await holded('/' + tipoDoc + '/' + id);
+        if (!doc || !ids.includes(doc.contact_id)) return res.status(403).json({ ok: false, error: 'No autorizado' });
+        const pdf = await holdedPdf('/' + tipoDoc + '/' + id + '/pdf');
+        if (!pdf) return res.status(502).json({ ok: false, error: 'PDF no disponible' });
+        return res.status(200).json({ ok: true, nombre: 'Factura_' + String(doc.document_number || id).replace(/[^\w-]/g, '_') + '.pdf', pdf });
       }
       const facturas = await listarFacturas(ids);
       return res.status(200).json({ ok: true, facturas });
