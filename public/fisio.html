@@ -5596,7 +5596,8 @@ const FORM_SP_URL='https://tally.so/r/Gex8jo',FORM_ALTA_URL='https://tally.so/r/
 let _consDoc={};
 async function consDatos(id){if(_consDoc[id])return _consDoc[id];const r=await (await fetch(`/api/schedule?action=seg-consent-doc&pwd=${encodeURIComponent(apiPwd)}&id=${id}`)).json();if(!r.ok)throw new Error('No se ha podido cargar el consentimiento');_consDoc[id]=r;return r;}
 // Tarjeta regalo por recomendar (10 €, 6 meses)
-function capi(n){n=String(n||'').trim().split(' ')[0];return n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';}
+function pn(n){n=String(n||'').trim().split(/\s+/)[0]||'';return n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';}
+function capi(n){n=String(n||'').trim();if(/[a-záéíóúñ]/.test(n)&&n===n.replace(/^\S/,c=>c.toUpperCase()))return n;n=n.split(' ')[0];return n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';}
 function mensajeTarjeta(quien,nuevo,cad){const nm=capi(quien),nvm=capi(nuevo);
  return `¡Hola ${nm}! Gracias por recomendarnos${nvm?' a '+nvm:''}, nos hace muchísima ilusión.\n\nTe regalamos 10 € de descuento en tu próxima sesión (válido hasta el ${String(cad||'').split('-').reverse().join('/')}). No tienes que hacer nada: lo tenemos apuntado en tu ficha y te lo descontamos al pagar.\n\n¡Gracias por confiar en FISIO365!`;}
 // Imagen de la tarjeta regalo (para mandarla por WhatsApp)
@@ -5615,7 +5616,15 @@ async function tarjetaImagen(quien,nuevo,cad){
  x.globalAlpha=.85;x.font='500 26px Poppins';x.fillText(`Válida hasta el ${String(cad||'').split('-').reverse().join('/')} · te lo descontamos al pagar`,72,606);x.globalAlpha=1;
  return await new Promise(ok=>c.toBlob(ok,'image/png'));}
 // Enviar la tarjeta: en el móvil se comparte la imagen (WhatsApp); en el ordenador se descarga y se abre WhatsApp con el texto
-async function enviarTarjeta(tel,quien,nuevo,cad){const txt=mensajeTarjeta(quien,nuevo,cad);
+// Antes de enviar se pueden retocar los nombres (nombres compuestos, apodos…)
+function enviarTarjeta(tel,quien,nuevo,cad){return new Promise(fin=>{
+ const m=hzModal(`<div class="hz-top"><div><small>Tarjeta regalo de 10 €</small><b>¿Cómo ponemos los nombres?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Para</div><input type="text" class="tj-q" maxlength="30" value="${escH(pn(quien))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
+  <div class="hz-lab">Por recomendarnos a</div><input type="text" class="tj-n" maxlength="30" value="${escH(pn(nuevo))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
+  <div class="hz-bts"><button type="button" class="hz-ok">Enviar por WhatsApp</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>{m.remove();fin();};
+ m.querySelector('.hz-ok').onclick=async()=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();m.remove();await enviarTarjeta2(tel,q,n,cad);fin();};});}
+async function enviarTarjeta2(tel,quien,nuevo,cad){const txt=mensajeTarjeta(quien,nuevo,cad);
  try{const b=await tarjetaImagen(quien,nuevo,cad);const f=new File([b],'Tarjeta-regalo-FISIO365.png',{type:'image/png'});
   if(navigator.canShare&&navigator.canShare({files:[f]})&&/Android|iPhone|iPad/i.test(navigator.userAgent)){try{await navigator.share({files:[f],text:txt});return;}catch(e){if(e&&e.name==='AbortError')return;}}
   const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);
