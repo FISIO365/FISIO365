@@ -266,7 +266,8 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .seg-fis span{font-size:12px;color:var(--muted);align-self:center;margin-right:2px}
 .seg-ed{display:inline-block;margin-top:5px;font-family:var(--font);font-size:11.5px;color:#7d6a60;background:#f7f3ef;border:none;border-radius:99px;padding:3px 10px;cursor:pointer}.seg-ed b{color:#1a1a1a}
 .seg-it.hecha{cursor:pointer}.seg-it.hecha:hover{background:#fbf8f5}
-.hz-bts .hz-re{flex:1.3;color:#1e2a38}.tar-resl{display:block;margin:14px auto 0;background:none;border:none;font-family:var(--font);font-size:13px;font-weight:600;color:#7d6a60;cursor:pointer;text-decoration:underline}
+.hz-bts .hz-re{flex:1.3;color:#1e2a38}.cap-tabs{display:flex;gap:6px;background:#f1ede9;border-radius:14px;padding:4px;margin-bottom:14px;overflow-x:auto}.cap-tabs button{flex:1;white-space:nowrap;font-family:var(--font);font-size:13px;font-weight:600;color:#6b5f57;background:none;border:none;border-radius:11px;padding:9px 10px;cursor:pointer}.cap-tabs button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(26,26,26,.1)}.cap-tabs i{font-style:normal;background:#c2552e;color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:4px}.cap-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.cap-top p{margin:0;font-size:13px;color:#7d6a60}.cap-top .seg-add{flex:none}.cap-it small{display:block}.cap-nota{color:#5c4f47!important;margin-top:2px}.cap-ok{color:#16803c!important;font-weight:600}.cap-np{font-style:normal;font-size:11px;font-weight:600;color:#7d6a60;background:#fff;border-radius:99px;padding:1px 7px;margin-left:4px}.fp-ref button.cap-ic{padding:7px 8px;display:flex;align-items:center}.cap-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.cap-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.cap-stat>div{background:#fff;border:1px solid rgba(26,26,26,.08);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column}.cap-stat b{font-size:17px}.cap-stat span{font-size:11.5px;color:#7d6a60}
+.tar-resl{display:block;margin:14px auto 0;background:none;border:none;font-family:var(--font);font-size:13px;font-weight:600;color:#7d6a60;cursor:pointer;text-decoration:underline}
 .msg-prev{white-space:pre-wrap;background:#e7f6e9;border-radius:12px;padding:11px 13px;font-size:13px;line-height:1.45;color:#1a1a1a;margin-top:8px;max-height:220px;overflow:auto}.er-negb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;font-weight:700;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;background:#16803c;color:#fff}.er-negb svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.er-negb:disabled{opacity:.6}
 .tar-top{margin-bottom:14px}
 .tk{display:flex;align-items:flex-start;gap:11px;padding:13px 14px;border-bottom:1px solid #f1ede9}.tk:last-child{border-bottom:none}.tk.atr{box-shadow:inset 3px 0 0 #b42318}
@@ -1070,6 +1071,9 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="sb-item" id="sb-msg" onclick="showSection('msg')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="sb-txt">Chat</span><span id="sb-msg-badge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:middle"></span>
  </div>
+ <div class="sb-item" id="sb-cap" onclick="showSection('cap')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 11l15-6v14L3 13z"/><path d="M7 12.5V18a2 2 0 0 0 4 0v-4"/><path d="M21 9.5v5"/></svg></span><span class="sb-txt">Captación</span>
+ </div>
  <div class="sb-item" id="sb-record" onclick="showSection('record')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="sb-txt">Recordatorios</span>
  </div>
@@ -1178,7 +1182,8 @@ const TOPBAR = {
  tar: ['Pendientes','Tareas y llamadas del centro'],
  call: ['Call-in','Busca pacientes por estado para llamarles'],
  agenda: ['Agenda','Citas del día de cada fisio'],
- stats: ['Estadísticas','Cómo va el centro semana a semana']
+ stats: ['Estadísticas','Cómo va el centro semana a semana'],
+ cap: ['Captación','Lista de espera, contactos y negocios del barrio']
 };
 
 const CFG = {
@@ -1361,7 +1366,7 @@ function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
  try{$('btnRend').classList.toggle('activo',sec==='rend');$('btnTar').classList.toggle('activo',sec==='tar');}catch(e){}
- ['anam','prog','agenda','pac','school','msg','record','rend','seg','tar','call','stats'].forEach(s=>{
+ ['anam','prog','agenda','pac','school','msg','record','rend','seg','tar','call','stats','cap'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
  const [t,s] = TOPBAR[sec];
@@ -1384,6 +1389,7 @@ function showSection(sec){
  else if(sec==='tar') renderTareas(wrap);
  else if(sec==='call') renderCallIn(wrap);
  else if(sec==='agenda') renderAgenda(wrap);
+ else if(sec==='cap') renderCaptacion(wrap);
  else if(sec==='stats') renderStats(wrap);
 }
 
@@ -5393,6 +5399,151 @@ function renderCallIn(wrap){
  }
  q.oninput=pinta;pintaChips();pinta();
 }
+// ── CAPTACIÓN: lista de espera, contactos que no se citaron y negocios del barrio ──
+let capTab='espera',capVerTodo=false;
+const CAP_DIAS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],CAP_FRANJA=['Mañana','Mediodía','Tarde'];
+const CAP_MEDIO=['LLAMADA','WHATSAPP','POR LA PUERTA','REDES','EMAIL'],CAP_MOTIVO=['Precio','Mutua / seguro','Sin hueco','Horario','Solo información','Lo pensará','Otro'];
+const CAP_TIPO=['FARMACIA','PODÓLOGO','CLÍNICA DENTAL','CLÍNICA ESTÉTICA','GIMNASIO','OTRO'];
+const capFe=f=>f?String(f).slice(0,10).split('-').reverse().join('/'):'';
+const capNomF=f=>{f=String(f||'').trim();return f?f.charAt(0).toUpperCase()+f.slice(1).toLowerCase():'';};
+const IC_WA='<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>',IC_ED='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+async function capGuardar(tabla,campos,id){const d=await (await fetch('/api/schedule?action=seg-cap-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,tabla,id:id||'',campos})})).json();if(!d.ok)throw new Error(d.error||'No se ha podido guardar');return d;}
+async function capBorrar(tabla,id){const d=await (await fetch('/api/schedule?action=seg-cap-borrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,tabla,id})})).json();if(!d.ok)throw 0;}
+// Chips (una o varias)
+function capChips(cont,ops,sel,multi){let v=multi?new Set(sel||[]):(sel||'');const pinta=()=>{cont.innerHTML=ops.map(o=>`<button type="button" data-v="${escH(o)}" class="${multi?(v.has(o)?'on':''):(v===o?'on':'')}">${escH(o.charAt(0)+o.slice(1).toLowerCase())}</button>`).join('');
+  cont.querySelectorAll('button').forEach(b=>b.onclick=()=>{const o=b.dataset.v;if(multi){v.has(o)?v.delete(o):v.add(o);}else v=v===o?'':o;pinta();cont.dispatchEvent(new Event('cambio'));});};pinta();return ()=>multi?[...v]:v;}
+const capIn=(cls,ph,val,tipo)=>`<input type="${tipo||'text'}" class="${cls}" placeholder="${escH(ph||'')}" value="${escH(val||'')}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px">`;
+function capConf(b,txt,fn){let arm=false;b.onclick=async()=>{if(!arm){arm=true;const t0=b.innerHTML;b.textContent=txt;setTimeout(()=>{arm=false;b.innerHTML=t0;},4000);return;}b.disabled=true;try{await fn();}catch(e){b.disabled=false;toast(e.message||'No se ha podido',false);}};}
+
+async function renderCaptacion(wrap){
+ const box=ce('div','cap');wrap.appendChild(box);
+ box.innerHTML='<div class="fac-vacio">Cargando…</div>';
+ let D;const cargar=async()=>{const d=await (await fetch(`/api/schedule?action=seg-cap&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!d.ok)throw 0;D=d;};
+ try{await cargar();}catch(e){box.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
+ const recargar=async()=>{const y=window.scrollY;try{await cargar();}catch(e){}pinta();window.scrollTo(0,y);};
+ const hace=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
+ function pinta(){
+  const esp=D.espera.filter(x=>x.estado==='ESPERANDO'),conSin=D.contactos.filter(c=>c.citado!=='SÍ'&&String(c.fecha).slice(0,10)>=hace(30));
+  const negPend=D.negocios.filter(n=>n.proxima&&n.proxima<=D.hoy).length;
+  box.innerHTML=`<div class="cap-tabs">${[['espera','Lista de espera',esp.length],['contactos','Contactos sin cita',conSin.length],['negocios','Negocios',negPend]].map(([k,t,n])=>`<button type="button" data-t="${k}" class="${capTab===k?'on':''}">${t}${n?` <i>${n}</i>`:''}</button>`).join('')}</div><div class="cap-body"></div>`;
+  box.querySelectorAll('.cap-tabs button').forEach(b=>b.onclick=()=>{capTab=b.dataset.t;capVerTodo=false;pinta();});
+  const body=box.querySelector('.cap-body');
+  if(capTab==='espera')pEspera(body);else if(capTab==='contactos')pContactos(body);else pNegocios(body);}
+
+ // ── Lista de espera ──
+ function pEspera(body){
+  const L=D.espera.filter(x=>capVerTodo||x.estado==='ESPERANDO');
+  body.innerHTML=`<div class="cap-top"><p>Pacientes y no pacientes que quieren cita en cuanto haya hueco.</p><button type="button" class="seg-add cap-add">+ Añadir</button></div>
+   ${L.length?`<div class="fp-refs">${L.map(x=>`<div class="fp-ref cap-it" data-id="${x.id}"><div><b ${x.pacienteId?`class="tk-nom" data-ficha="${x.pacienteId}"`:''}>${escH(x.nombre)}${x.pacienteId?'':' <em class="cap-np">no paciente</em>'}</b>
+    <small>${escH([x.dias.length?x.dias.join(', '):'',x.franja.length?x.franja.join(', ').toLowerCase():'',x.fisio?'con '+x.fisio:'','desde el '+capFe(x.fecha)].filter(Boolean).join(' · '))}${x.estado!=='ESPERANDO'?' · <b>'+escH(capNomF(x.estado))+'</b>':''}</small>${x.nota||x.disp?`<small class="cap-nota">${escH([x.disp,x.nota].filter(Boolean).join(' · '))}</small>`:''}</div>
+    <span class="fp-refb">${x.tel?`<button type="button" class="sec cap-ic cap-wa" title="WhatsApp">${IC_WA}</button>`:''}<button type="button" class="sec cap-ic cap-ed" title="Editar">${IC_ED}</button>${x.estado==='ESPERANDO'?'<button type="button" class="cap-cit">Citado</button>':''}</span></div>`).join('')}</div>`:'<div class="fac-vacio">Nadie esperando hueco ahora mismo</div>'}
+   <button type="button" class="tar-resl cap-todo">${capVerTodo?'Ver solo los que esperan':'Ver también los citados y los que ya no'}</button>`;
+  body.querySelector('.cap-add').onclick=()=>editEspera(null);
+  body.querySelector('.cap-todo').onclick=()=>{capVerTodo=!capVerTodo;pinta();};
+  body.querySelectorAll('.cap-it').forEach(r=>{const x=D.espera.find(e=>e.id===r.dataset.id);
+   const wa=r.querySelector('.cap-wa');if(wa)wa.onclick=()=>waAbrir(x.tel,`¡Hola ${capNomF(String(x.nombre).split(' ')[0])}! Te escribimos de FISIO365: se nos ha quedado un hueco libre. ¿Te viene bien el `);
+   r.querySelector('.cap-ed').onclick=()=>editEspera(x);
+   const c=r.querySelector('.cap-cit');if(c)capConf(c,'¿Citado?',async()=>{await capGuardar(x.tabla,{estado:'CITADO'},x.id);toast('Apuntado como citado',true);recargar();});});}
+ function editEspera(x){
+  x=x||{};let pac=x.pacienteId?{id:x.pacienteId,nombre:x.nombre}:null,esPac=x.id?x.tabla==='esperaP':true;
+  const fis=(fisios||[]).map(f=>String(f.nombre||'').split(' ')[0]).filter(Boolean);
+  const m=hzModal(`<div class="hz-top"><div><small>Lista de espera</small><b>${x.id?escH(x.nombre):'Añadir a la lista'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   ${x.id?'':`<div class="seg-rap ce-tipo"></div>`}<div class="ce-quien"></div>
+   <div class="hz-lab">¿Qué días le van bien?</div><div class="seg-rap ce-dias"></div>
+   <div class="hz-lab">¿A qué hora?</div><div class="seg-rap ce-fr"></div>
+   <div class="hz-lab">Fisio <span>(opcional)</span></div><div class="seg-rap ce-fi"></div>
+   <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="seg-n ce-nota" rows="2" placeholder="Ej.: prefiere a última hora, lumbalgia…">${escH(x.nota||'')}</textarea>
+   ${x.id?`<div class="hz-lab">Estado</div><div class="seg-rap ce-est"></div>`:''}
+   <div class="hz-bts">${x.id?'<button type="button" class="hz-re ce-del">Borrar</button>':''}<button type="button" class="hz-ok">${x.id?'Guardar':'Añadir'}</button></div>`);
+  m.querySelector('.hz-x').onclick=()=>m.remove();
+  const q=m.querySelector('.ce-quien');
+  const pintaQ=()=>{if(esPac){if(pac){q.innerHTML=`<div class="te-sel"><b>${escH(pac.nombre)}</b>${x.id?'':'<button type="button" aria-label="Quitar">✕</button>'}</div>`;const b=q.querySelector('button');if(b)b.onclick=()=>{pac=null;pintaQ();};return;}
+    q.innerHTML=capIn('ce-bus','Buscar paciente…')+'<div class="seg-bres"></div>';const i=q.querySelector('.ce-bus'),r=q.querySelector('.seg-bres');
+    i.oninput=()=>{const t=i.value.trim().toLowerCase();r.innerHTML=t.length<2?'':(pacs||[]).filter(p=>p.nombre.toLowerCase().includes(t)).slice(0,6).map(p=>`<button type="button" data-id="${p.id}" data-n="${escH(p.nombre)}">${escH(p.nombre)}</button>`).join('');r.querySelectorAll('button').forEach(b=>b.onclick=()=>{pac={id:b.dataset.id,nombre:b.dataset.n};pintaQ();});};}
+   else q.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${capIn('ce-nom','Nombre',x.nombre&&x.nombre!=='Sin nombre'?x.nombre:'')}${capIn('ce-tel','Teléfono',x.tel,'tel')}</div>`;};
+  if(!x.id){const t=m.querySelector('.ce-tipo');const g=capChips(t,['Paciente','No paciente'],'Paciente');t.addEventListener('cambio',()=>{esPac=g()!=='No paciente';pintaQ();});}
+  pintaQ();
+  const gD=capChips(m.querySelector('.ce-dias'),CAP_DIAS,x.dias,true),gF=capChips(m.querySelector('.ce-fr'),CAP_FRANJA,x.franja,true),gFi=capChips(m.querySelector('.ce-fi'),fis,fis.find(f=>f.toLowerCase()===String(x.fisio||'').toLowerCase())||'');
+  const gE=x.id?capChips(m.querySelector('.ce-est'),['ESPERANDO','CITADO','YA NO'],x.estado):null;
+  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;const c={dias:gD(),franja:gF(),fisio:gFi(),nota:m.querySelector('.ce-nota').value.trim()};if(gE)c.estado=gE();else c.estado='ESPERANDO';
+   let tabla=x.tabla;if(!x.id){tabla=esPac?'esperaP':'esperaN';}
+   if(tabla==='esperaP'){if(!pac){toast('Elige el paciente',false);return;}c.pacienteId=pac.id;}else{c.nombre=(m.querySelector('.ce-nom')||{}).value||'';c.tel=(m.querySelector('.ce-tel')||{}).value||'';if(!c.nombre.trim()){toast('Pon el nombre',false);return;}}
+   b.disabled=true;try{await capGuardar(tabla,c,x.id);toast('Guardado',true);m.remove();recargar();}catch(err){b.disabled=false;toast(err.message,false);}};
+  const del=m.querySelector('.ce-del');if(del)capConf(del,'¿Seguro? Toca otra vez',async()=>{await capBorrar(x.tabla,x.id);toast('Borrado',true);m.remove();recargar();});}
+
+ // ── Contactos que preguntaron y no se citaron ──
+ function pContactos(body){
+  const mes=D.contactos.filter(c=>String(c.fecha).slice(0,10)>=hace(30)),cit=mes.filter(c=>c.citado==='SÍ').length;
+  const mot={};mes.filter(c=>c.citado!=='SÍ'&&c.motivoTipo).forEach(c=>{mot[c.motivoTipo]=(mot[c.motivoTipo]||0)+1;});const top=Object.entries(mot).sort((a,b)=>b[1]-a[1])[0];
+  const L=D.contactos.filter(c=>capVerTodo||c.citado!=='SÍ');
+  body.innerHTML=`<div class="cap-top"><p>Gente que preguntó (llamada, WhatsApp, puerta…). Apúntalos para poder volver a escribirles.</p><button type="button" class="seg-add cap-add">+ Apuntar</button></div>
+   ${mes.length?`<div class="cap-stat"><div><b>${mes.length}</b><span>contactos este mes</span></div><div><b>${Math.round(cit*100/mes.length)}%</b><span>se citaron</span></div><div><b>${top?escH(top[0]):'—'}</b><span>motivo más común</span></div></div>`:''}
+   ${L.length?`<div class="fp-refs">${L.map(c=>`<div class="fp-ref cap-it" data-id="${c.id}"><div><b>${escH(c.nombre||'Sin nombre')}</b><small>${escH([capFe(c.fecha),capNomF(c.medio),c.citado==='SÍ'?'se citó':c.motivoTipo?'no se citó: '+c.motivoTipo.toLowerCase():'sin cita',c.por?'apuntó '+c.por:''].filter(Boolean).join(' · '))}</small>${c.mensaje||c.motivo?`<small class="cap-nota">${escH([c.mensaje,c.motivo].filter(Boolean).join(' · '))}</small>`:''}</div>
+    <span class="fp-refb">${c.tel?`<button type="button" class="sec cap-ic cap-wa" title="WhatsApp">${IC_WA}</button>`:''}<button type="button" class="sec cap-ic cap-ed" title="Editar">${IC_ED}</button>${c.citado!=='SÍ'?'<button type="button" class="cap-cit">Se citó</button>':''}</span></div>`).join('')}</div>`:'<div class="fac-vacio">Nada apuntado</div>'}
+   <button type="button" class="tar-resl cap-todo">${capVerTodo?'Ver solo los que no se citaron':'Ver también los que se citaron'}</button>`;
+  body.querySelector('.cap-add').onclick=()=>editContacto(null);
+  body.querySelector('.cap-todo').onclick=()=>{capVerTodo=!capVerTodo;pinta();};
+  body.querySelectorAll('.cap-it').forEach(r=>{const c=D.contactos.find(e=>e.id===r.dataset.id);
+   const wa=r.querySelector('.cap-wa');if(wa)wa.onclick=()=>waAbrir(c.tel,`¡Hola${c.nombre?' '+capNomF(String(c.nombre).split(' ')[0]):''}! Te escribimos de FISIO365. Hace unos días nos preguntaste por una cita, ¿quieres que te busquemos un hueco esta semana?`);
+   r.querySelector('.cap-ed').onclick=()=>editContacto(c);
+   const b=r.querySelector('.cap-cit');if(b)capConf(b,'¿Se citó?',async()=>{await capGuardar('contacto',{citado:'SÍ'},c.id);toast('Apuntado',true);recargar();});});}
+ function editContacto(c){
+  c=c||{};
+  const m=hzModal(`<div class="hz-top"><div><small>Contacto</small><b>${c.id?escH(c.nombre||'Sin nombre'):'Alguien ha preguntado'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   <div style="display:flex;flex-direction:column;gap:8px">${capIn('cc-nom','Nombre',c.nombre)}${capIn('cc-tel','Teléfono',c.tel,'tel')}</div>
+   <div class="hz-lab">¿Por dónde?</div><div class="seg-rap cc-medio"></div>
+   <div class="hz-lab">¿Se citó?</div><div class="seg-rap cc-cit"></div>
+   <div class="cc-no"><div class="hz-lab">¿Por qué no?</div><div class="seg-rap cc-mot"></div></div>
+   <div class="hz-lab">Qué preguntó / nota <span>(opcional)</span></div><textarea class="seg-n cc-msg" rows="2" placeholder="Ej.: dolor de rodilla, preguntó precio del bono…">${escH(c.mensaje||'')}</textarea>
+   <div class="hz-bts">${c.id?'<button type="button" class="hz-re cc-del">Borrar</button>':''}<button type="button" class="hz-ok">${c.id?'Guardar':'Apuntar'}</button></div>`);
+  m.querySelector('.hz-x').onclick=()=>m.remove();
+  const gM=capChips(m.querySelector('.cc-medio'),CAP_MEDIO,c.medio||'');const ct=m.querySelector('.cc-cit');const gC=capChips(ct,['SÍ','NO'],c.citado||'NO');
+  const gMo=capChips(m.querySelector('.cc-mot'),CAP_MOTIVO,c.motivoTipo||'');const vis=()=>{m.querySelector('.cc-no').style.display=gC()==='SÍ'?'none':'';};vis();ct.addEventListener('cambio',vis);
+  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;const f={nombre:m.querySelector('.cc-nom').value.trim(),tel:m.querySelector('.cc-tel').value.trim(),medio:gM(),citado:gC()||'NO',motivoTipo:gC()==='SÍ'?'':gMo(),mensaje:m.querySelector('.cc-msg').value.trim()};
+   if(!f.nombre&&!f.tel){toast('Pon al menos el nombre o el teléfono',false);return;}if(!c.id)f.por=miNombreCorto();
+   b.disabled=true;try{await capGuardar('contacto',f,c.id);toast('Guardado',true);m.remove();recargar();}catch(err){b.disabled=false;toast(err.message,false);}};
+  const del=m.querySelector('.cc-del');if(del)capConf(del,'¿Seguro? Toca otra vez',async()=>{await capBorrar('contacto',c.id);toast('Borrado',true);m.remove();recargar();});}
+
+ // ── Negocios del barrio ──
+ function pNegocios(body){
+  const L=D.negocios.slice().sort((a,b)=>{const pa=a.proxima||'9999',pb=b.proxima||'9999';return pa.localeCompare(pb)||a.nombre.localeCompare(b.nombre);});
+  body.innerHTML=`<div class="cap-top"><p>Negocios del barrio: a quién llevar flyers, cuándo volver y quién os manda pacientes.</p><button type="button" class="seg-add cap-add">+ Negocio</button></div>
+   ${L.length?`<div class="fp-refs">${L.map(n=>`<div class="fp-ref cap-it" data-id="${n.id}"><div><b>${escH(n.nombre)}</b><small>${escH([capNomF(n.tipo),n.flyers?'flyers entregados':'flyers pendientes',n.proxima?(n.proxima<=D.hoy?'⚠ toca visita':'próxima visita '+capFe(n.proxima)):'',n.diez?'10 % a sus clientes':''].filter(Boolean).join(' · '))}</small>${n.vienen.length?`<small class="cap-ok">Os ha mandado ${n.vienen.length} paciente${n.vienen.length>1?'s':''}</small>`:''}</div>
+    <span class="fp-refb">${n.tel?`<button type="button" class="sec cap-ic cap-wa" title="WhatsApp">${IC_WA}</button>`:''}<button type="button" class="sec cap-ic cap-ed" title="Editar">${IC_ED}</button><button type="button" class="cap-vis">Visitado</button></span></div>`).join('')}</div>`:'<div class="fac-vacio">Ningún negocio apuntado</div>'}`;
+  body.querySelector('.cap-add').onclick=()=>editNegocio(null);
+  body.querySelectorAll('.cap-it').forEach(r=>{const n=D.negocios.find(e=>e.id===r.dataset.id);
+   const wa=r.querySelector('.cap-wa');if(wa)wa.onclick=()=>waAbrir(n.tel,`¡Hola${n.contacto?' '+capNomF(String(n.contacto).split(' ')[0]):''}! Os escribimos de FISIO365, el centro de fisioterapia de Gran de Sant Andreu. `);
+   r.querySelector('.cap-ed').onclick=()=>editNegocio(n);
+   r.querySelector('.cap-vis').onclick=()=>visitaNegocio(n);});}
+ function visitaNegocio(n){
+  const m=hzModal(`<div class="hz-top"><div><small>Visita de hoy</small><b>${escH(n.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   <div class="hz-lab">¿Qué tal?</div><textarea class="seg-n vn-nota" rows="2" placeholder="Ej.: hablé con la encargada, dejé 20 flyers…"></textarea>
+   <label class="vn-fl" style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px"><input type="checkbox" class="vn-fly" ${n.flyers?'checked':''}> Flyers entregados</label>
+   <div class="hz-lab">¿Cuándo volver?</div><div class="seg-rap vn-cu">${[['En 1 mes',30],['En 2 meses',60],['En 3 meses',90],['No hace falta',0]].map(([t,d])=>`<button type="button" data-d="${d}" class="${d===30?'on':''}">${t}</button>`).join('')}</div>
+   <div class="hz-bts"><button type="button" class="hz-ok">Guardar visita</button></div>`);
+  m.querySelector('.hz-x').onclick=()=>m.remove();let dias=30;m.querySelectorAll('.vn-cu button').forEach(b=>b.onclick=()=>{dias=+b.dataset.d;m.querySelectorAll('.vn-cu button').forEach(x=>x.classList.toggle('on',x===b));});
+  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;const nota=m.querySelector('.vn-nota').value.trim();const fly=m.querySelector('.vn-fly').checked;
+   const linea=`${capFe(D.hoy)}: visita${nota?' — '+nota:''}${fly&&!n.flyers?' (flyers entregados)':''} · ${miNombreCorto()}`;
+   try{await capGuardar('negocio',{fecha:D.hoy,flyers:fly,estado:fly?'ENTREGADO':'PENDIENTE',proxima:dias?segIso(dias):'',historial:[String(n.historial||'').trim(),linea].filter(Boolean).join('\n')},n.id);toast('Visita apuntada',true);m.remove();recargar();}catch(err){b.disabled=false;toast(err.message,false);}};}
+ function editNegocio(n){
+  n=n||{};
+  const m=hzModal(`<div class="hz-top"><div><small>Negocio del barrio</small><b>${n.id?escH(n.nombre):'Nuevo negocio'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   <div style="display:flex;flex-direction:column;gap:8px">${capIn('en-nom','Nombre del negocio',n.nombre)}${capIn('en-con','Persona de contacto',n.contacto)}${capIn('en-tel','Teléfono',n.tel,'tel')}${capIn('en-dir','Dirección',n.direccion)}</div>
+   <div class="hz-lab">Tipo</div><div class="seg-rap en-tipo"></div>
+   <div class="hz-lab">Próxima visita <span>(opcional)</span></div><input type="date" class="ag-in en-prox" value="${escH(n.proxima||'')}">
+   <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n en-notas" rows="2">${escH(n.notas||'')}</textarea>
+   ${n.historial?`<div class="hz-lab">Historial</div><div class="msg-prev" style="background:#f7f3ef">${escH(n.historial)}</div>`:''}
+   ${n.vienen&&n.vienen.length?`<div class="hz-lab">Pacientes que os ha mandado</div><div class="msg-prev" style="background:#f7f3ef">${n.vienen.map(v=>escH(v.nombre)+(v.fecha?' · '+capFe(v.fecha):'')).join('\n')}</div>`:''}
+   <div class="hz-bts">${n.id?'<button type="button" class="hz-re en-del">Borrar</button>':''}<button type="button" class="hz-ok">Guardar</button></div>`);
+  m.querySelector('.hz-x').onclick=()=>m.remove();
+  const gT=capChips(m.querySelector('.en-tipo'),[...new Set([...CAP_TIPO,...(n.tipo?[n.tipo]:[])])],n.tipo||'');
+  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;const f={nombre:m.querySelector('.en-nom').value.trim(),contacto:m.querySelector('.en-con').value.trim(),tel:m.querySelector('.en-tel').value.trim(),direccion:m.querySelector('.en-dir').value.trim(),tipo:gT(),proxima:m.querySelector('.en-prox').value,notas:m.querySelector('.en-notas').value.trim()};
+   if(!f.nombre){toast('Pon el nombre',false);return;}if(!n.id){f.estado='PENDIENTE';f.fecha=D.hoy;}
+   b.disabled=true;try{await capGuardar('negocio',f,n.id);toast('Guardado',true);m.remove();recargar();}catch(err){b.disabled=false;toast(err.message,false);}};
+  const del=m.querySelector('.en-del');if(del)capConf(del,'¿Seguro? Toca otra vez',async()=>{await capBorrar('negocio',n.id);toast('Borrado',true);m.remove();recargar();});}
+
+ pinta();
+}
 // ── ESTADO de los pacientes (etiquetas de Airtable, pueden tener varias) ──
 let ESTADOS=[];
 async function loadEstados(){try{const d=await (await fetch(`/api/schedule?action=estados&pwd=${encodeURIComponent(apiPwd)}`)).json();ESTADOS=d.estados||[];}catch(e){}}
@@ -5853,7 +6004,8 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const RF=d.referidos,hoyR=d.hoy,tActivas=RF?RF.haRecomendado.filter(t=>t.ganada||(t.codigo&&!t.canjeada&&(!t.caduca||t.caduca>=hoyR))):[];
   const fR=f=>f?String(f).split('-').reverse().join('/'):'';
   const refBlk=RF&&(RF.leRecomendo||RF.haRecomendado.length)?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Recomendaciones</h3></div>${RF.leRecomendo?`<div class="fp-lerec">Le recomendó: <b ${RF.leRecomendo.id?`data-ficha="${RF.leRecomendo.id}"`:''}>${escH(RF.leRecomendo.nombre||'—')}</b></div>`:''}${RF.haRecomendado.length?`<div class="fp-refs">${RF.haRecomendado.map(t=>`<div class="fp-ref"><div><b>${escH(t.nombre)}</b><small>${t.ganada?'Se ha ganado 10 € de descuento · tarjeta sin enviar':t.codigo?(t.canjeada?'Tarjeta de 10 € canjeada el '+fR(t.canjeada):t.caduca&&t.caduca<hoyR?'Tarjeta caducada el '+fR(t.caduca):'Tarjeta de 10 € · sin usar · hasta el '+fR(t.caduca)):t.ignorar?'Sin tarjeta':'Tarjeta pendiente: cuando venga a su primera sesión'}</small></div>${t.canjeada?`<span class="fp-refb"><button type="button" class="sec fp-refu" data-id="${t.id}">Deshacer</button></span>`:''}${t.ganada||(t.codigo&&!t.canjeada&&!(t.caduca&&t.caduca<hoyR))?`<span class="fp-refb"><button type="button" class="sec fp-refwa" data-id="${t.id}">${t.ganada?'Enviar':'Reenviar'}</button><button type="button" class="fp-refc" data-id="${t.id}">Canjear</button></span>`:''}</div>`).join('')}</div>`:''}</div>`:'';
-  return `${tActivas.length?`<div class="fp-gift"><span>🎁 Tiene ${tActivas.length>1?tActivas.length+' tarjetas regalo':'una tarjeta regalo'} de 10 € para descontar al pagar</span><button type="button" class="fp-refc" data-id="${tActivas.slice().sort((a,b)=>String(a.caduca).localeCompare(String(b.caduca)))[0].id}">Canjear</button></div>`:''}${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
+  const negDesc=RF&&RF.deNegocio&&!real.length?`<div class="fp-gift"><span>🏷️ Viene de parte de ${escH(RF.deNegocio.nombre)}: 10 % de descuento en su primera sesión</span></div>`:'';
+  return `${negDesc}${tActivas.length?`<div class="fp-gift"><span>🎁 Tiene ${tActivas.length>1?tActivas.length+' tarjetas regalo':'una tarjeta regalo'} de 10 € para descontar al pagar</span><button type="button" class="fp-refc" data-id="${tActivas.slice().sort((a,b)=>String(a.caduca).localeCompare(String(b.caduca)))[0].id}">Canjear</button></div>`:''}${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
   <div class="fp-blk fp-pq"></div>
   <div class="fp-blk" data-blk="datos"><div class="fp-bt"><h3>Datos</h3><button type="button" class="fp-ed">Editar</button></div>
