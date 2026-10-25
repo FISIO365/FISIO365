@@ -729,10 +729,10 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  </div>
 
  <div id="vistaInformes" style="display:none;">
- <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mis documentos</div><div class="date-sub">Tus informes, facturas y formularios firmados</div></div>
- <div class="doc-sec"><div class="doc-h">Informes</div><div id="infPacList"><div class="loading"><div class="spinner"></div></div></div></div>
- <div class="doc-sec" id="facPacWrap"><div class="doc-h">Facturas</div><div id="facPacList"><div class="loading"><div class="spinner"></div></div></div></div>
+ <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mis documentos</div><div class="date-sub">Todo lo tuyo, para descargarlo cuando lo necesites</div></div>
  <div class="doc-sec" id="docPacWrap"><div class="doc-h">Formularios firmados</div><div id="docPacList"><div class="loading"><div class="spinner"></div></div></div></div>
+ <div class="doc-sec" id="facPacWrap"><div class="doc-h">Facturas</div><div id="facPacList"><div class="doc-vacio">Próximamente podrás descargar aquí tus facturas.</div></div></div>
+ <div class="doc-sec" id="infPacWrap" style="display:none"><div class="doc-h">Informes de tus valoraciones</div><div id="infPacList"></div></div>
  </div>
 
  <div id="vistaNotificaciones" style="display:none;">
@@ -1199,13 +1199,13 @@ async function descargarDocumento(id,btn){const t=btn.textContent;btn.disabled=t
   else{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
  }catch(e){toast('No se ha podido descargar el documento',false);}
  btn.disabled=false;btn.textContent=t;}
-async function loadInformes(){loadDocumentos();loadFacturas();
-  const list=document.getElementById('infPacList');if(!list)return;list.innerHTML='<div class="loading"><div class="spinner"></div></div>';window._informesPac=[];
+async function loadInformes(){loadDocumentos();
+  const list=document.getElementById('infPacList'),wr=document.getElementById('infPacWrap');if(!list)return;window._informesPac=[];
   try{const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);const data=await res.json();const informes=data.informes||[];
-  if(!informes.length){list.innerHTML='<div class="doc-vacio">Todavía no hay informes. Cuando tu fisio prepare el informe de tu valoración aparecerá aquí.</div>';return;}
+  if(!informes.length){wr.style.display='none';return;}
   const tipoLabel={rodilla:'Rodilla',hombro:'Hombro',cervical:'Cervical',codo:'Codo y antebrazo',muneca:'Muñeca y mano',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',hernia:'Columna lumbar',libre:'Valoración libre'};
   list.innerHTML=informes.map((inf,i)=>`<div class="inf-pac-card"><div class="inf-pac-fecha">${inf.fecha}</div><div class="inf-pac-tipo">${tipoLabel[inf.tipo]||inf.tipo||'Valoración'}</div><div class="inf-pac-fisio">Fisioterapeuta: ${inf.fisioNombre}</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-inf" onclick="toggleInforme(${i})">Ver informe</button><button class="btn-inf pdf" onclick="imprimirInforme(${i})">Descargar PDF</button></div><div class="inf-pac-contenido" id="infCont${i}">${inf.contenido}</div></div>`).join('');
-  window._informesPac=informes;}catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
+  window._informesPac=informes;wr.style.display='';}catch(e){wr.style.display='none';}
 }
 const escF=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function loadFacturas(){const w=document.getElementById('facPacWrap'),l=document.getElementById('facPacList');if(!w||!patient)return;
