@@ -470,7 +470,8 @@ module.exports = async function handler(req, res) {
         const pidsSin = Object.keys(ult).filter(id => !enl.has(id)), info = {};
         for (let i = 0; i < pidsSin.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pidsSin.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP&fields[]=FECHA&fields[]=SIN AVISO CONSENTIMIENTO`)).forEach(p => { info[p.id] = { ...p.fields, FECHA: p.fields['FECHA'] || p.createdTime }; });
         const sinCons = [], dudosos = {}; let enlazados = 0;
-        for (const id of pidsSin) { const P = info[id]; if (!P || P['SIN AVISO CONSENTIMIENTO']) continue; const m = emparejar(P, id, lista, P['FECHA']); let ok = false;
+        const FORM_INICIO = '2026-01-08'; // los pacientes de antes firmaron en papel: no se avisa
+        for (const id of pidsSin) { const P = info[id]; if (!P || P['SIN AVISO CONSENTIMIENTO'] || String(P['FECHA'] || '').slice(0, 10) < FORM_INICIO) continue; const m = emparejar(P, id, lista, P['FECHA']); let ok = false;
           for (const c of m.buenos.slice(0, 4)) if (enlazados < 60 && await enlazarCons(c.id, id).catch(() => false)) { enlazados++; ok = true; }
           if (ok) continue;
           const dd = m.dudosos[0]; if (dd) dudosos[dd.id] = [...(dudosos[dd.id] || []), { id, nombre: P['FULL NAME'] || '' }];
