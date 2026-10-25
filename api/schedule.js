@@ -93,7 +93,7 @@ function consentResumen(r, tabla) {
   return { id: r.id, tabla: otro ? CONS_O : CONS_T, tipo, fecha, salud, rojo, sueloPelvico: tipo === 'Suelo pélvico' || /^s[ií]$/i.test(sp), aceptaSP: !!F['ACEPTACIÓN S.P.'],
     fechaAlta: F['FECHA ALTA'] || '', notasSalud: F['NOTAS SALUD'] || '', sub: String(F['SUBMISSION ID'] || '').trim(), papel: !!F['PAPEL'], ignorar: !!F['IGNORAR'],
     marketing: otro ? null : { conocido: cNm(F['CONOCIDO']), newsletter: cNm(F['NEWSLETTER']), imagenes: cNm(F['IMAGENES']), citas: cNm(F['CITAS']) },
-    email: cTxt(F['EMAIL']), dni: cTxt(F['DNI']).replace(/\s/g, ''), tel: cDig(F['TELF']), telRaw: String(F['TELF'] || '').trim(), nombre: cTxt(nombre).replace(/\s+/g, ' ') };
+    email: cTxt(F['EMAIL']), dni: cTxt(F['DNI']).replace(/\s/g, ''), tel: cDig(F['TELF']), telRaw: String(F['TELF'] || '').trim(), raw: { DNI: F['DNI'] || '', EMAIL: F['EMAIL'] || '', NACIMIENTO: F['NACIMIENTO'] || '', TELF: F['TELF'] || '' }, nombre: cTxt(nombre).replace(/\s+/g, ' ') };
 }
 // Trae de Tally las respuestas nuevas de suelo pélvico y alta oncológica (como mucho cada minuto)
 let _syncT = 0;
@@ -177,16 +177,17 @@ const enlazarCons = async (consId, pacId) => { const c0 = (_cons.v || []).find(x
 // Al enlazar un formulario, los datos que le faltaban al paciente (DNI, email, cumpleaños, teléfono) se rellenan con los del formulario.
 // Lo que ya tenía no se toca (el formulario lo puede haber rellenado un familiar).
 async function rellenarPaciente(pacId, CF) {
-  const p = await at(`${PACIENTES}/${pacId}?fields[]=DNI&fields[]=EMAIL&fields[]=CUMPLE&fields[]=TELF&fields[]=WHATSAPP`); if (p.error) return;
+  const p = await at(`${PACIENTES}/${pacId}`); if (p.error) return; // (el GET de un registro no admite fields[])
   const P = p.fields || {}, f = {};
   const dni = String(CF['DNI'] || '').trim().toUpperCase(), email = String(CF['EMAIL'] || '').trim().toLowerCase(), nac = String(CF['NACIMIENTO'] || '').slice(0, 10), tel = String(CF['TELF'] || '').replace(/[^\d+]/g, '');
   if (!P['DNI'] && dni.length >= 6 && !/^0+$/.test(dni)) f['DNI'] = dni;
   if (!P['EMAIL'] && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) f['EMAIL'] = email;
   if (!P['CUMPLE'] && /^\d{4}-\d{2}-\d{2}$/.test(nac)) f['CUMPLE'] = nac;
   if (!P['TELF'] && !P['WHATSAPP'] && tel.replace(/\D/g, '').length >= 9) f['TELF'] = tel;
-  if (Object.keys(f).length) await at(`${PACIENTES}/${pacId}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
+  if (Object.keys(f).length) { const r = await at(`${PACIENTES}/${pacId}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }); if (r.error) return {}; }
+  return f;
 }
-const consPublico = (x, estado) => { if (!x) return null; const c = { ...x, estado }; ['email', 'dni', 'tel', 'pac', 'sub'].forEach(k => delete c[k]); c.nombreForm = x.nombre; delete c.nombre; return c; };
+const consPublico = (x, estado) => { if (!x) return null; const c = { ...x, estado }; ['email', 'dni', 'tel', 'pac', 'sub', 'raw'].forEach(k => delete c[k]); c.nombreForm = x.nombre; delete c.nombre; return c; };
 // Junta todos los formularios de un paciente: la salud sale del último de primera visita o suelo pélvico; el alta oncológica quita el cáncer
 function resumenPaciente(enl) {
   if (!enl.length) return null;
@@ -208,7 +209,14 @@ async function consentDe(P, pacId, altaPac) {
   const { enl, buenos, dudosos } = emparejar(P, pacId, lista, altaPac);
   for (const c of buenos.slice(0, 6)) if (await enlazarCons(c.id, pacId).catch(() => false)) enl.push(c);
   if (!enl.length) return dudosos.length ? consPublico(dudosos[0], 'dudoso') : null;
-  const out = consPublico(resumenPaciente(enl), 'enlazado');
+  // Si le faltan datos personales que están en sus formularios (p. ej. enlazados antes), se rellenan ahora
+  let rell = {};
+  if (!P['DNI'] || !P['EMAIL'] || !P['CUMPLE'] || (!P['TELF'] && !P['WHATSAPP'])) {
+    const src = enl.slice().sort((a, b) => b.fecha.localeCompare(a.fecha)).filter(c => !c.papel && c.raw), mix = {};
+    ['DNI', 'EMAIL', 'NACIMIENTO', 'TELF'].forEach(k => { const c = src.find(x => x.raw[k]); if (c) mix[k] = c.raw[k]; });
+    if (Object.keys(mix).length) rell = await rellenarPaciente(pacId, mix).catch(() => ({})) || {};
+  }
+  const out = consPublico(resumenPaciente(enl), 'enlazado'); out.rellenado = rell;
   // Formularios con su mismo teléfono/email/DNI pero otro nombre (p. ej. lo rellenó un familiar): se preguntan en la ficha
   out.porConfirmar = dudosos.filter(c => !enl.some(e => e.sub && e.sub === c.sub)).slice(0, 5).map(c => ({ id: c.id, tipo: c.tipo, fecha: c.fecha, nombre: c.nombre }));
   return out;
@@ -881,6 +889,7 @@ module.exports = async function handler(req, res) {
           saldoPaciente(q.id).catch(() => ({ activo: false })),
           consentDe(F, q.id, pac.createdTime).catch(() => null)
         ]);
+        if (consent && consent.rellenado) { Object.assign(F, consent.rellenado); delete consent.rellenado; }
         const diaMad = x => { const s2 = String(x || ''); if (!s2.includes('T')) return { f: s2.slice(0, 10), h: '' }; const pz = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date(s2)).reduce((o, p) => (o[p.type] = p.value, o), {}); return { f: `${pz.year}-${pz.month}-${pz.day}`, h: `${pz.hour === '24' ? '00' : pz.hour}:${pz.minute}` }; };
         // Si ya ha vuelto a reservar, el «No reagenda» se desmarca solo
         if (F['POR QUÉ NO REAGENDA']) {
