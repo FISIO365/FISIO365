@@ -6928,7 +6928,8 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
  const pintarLista=()=>{
   if(d.holded===false){lista.innerHTML='<div class="fac-vacio">Holded todavía no está conectado.</div>';return;}
   const fs=d.facturas||[];
-  if(!fs.length){lista.innerHTML='<div class="fac-vacio">Sin facturas todavía.</div>';return;}
+  if(d.error){lista.innerHTML=`<div class="fac-vacio">${escH(d.error)}</div>`;return;}
+  if(!fs.length){lista.innerHTML=`<div class="fac-vacio">${d.enHolded===0?`No encuentro a este paciente en Holded${d.nContactos?` (he mirado ${d.nContactos} contactos)`:''}. Busco por DNI${d.dni?' '+escH(d.dni):''}, email o móvil.`:'Sin facturas todavía.'}</div>`;return;}
   lista.innerHTML='<div class="fac-tit">Facturas anteriores</div>'+fs.map(f=>`<div class="fac-it"><div><div class="fac-n">Factura ${escH(f.numero||'')}</div><div class="fac-m">${f.fecha?new Date(f.fecha*1000).toLocaleDateString('es-ES'):''}${f.concepto?' · '+escH(f.concepto):''}</div></div><div class="fac-r"><b>${facEur(f.total)}</b><button type="button" class="fp-btn" data-id="${f.id}" data-t="${f.tipo||'salesreceipt'}">PDF</button></div></div>`).join('');
   lista.querySelectorAll('[data-id]').forEach(b=>b.onclick=async()=>{
    const w=window.open('','_blank');b.disabled=true;

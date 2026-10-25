@@ -23,11 +23,14 @@ const soloDigitos = t => String(t || '').replace(/\D/g, '').slice(-9);
 async function contactos() {
   if (cacheContactos && Date.now() - cacheT < 10 * 60 * 1000) return cacheContactos;
   let todos = [];
-  for (let page = 1; page <= 40; page++) {
+  const vistos = new Set();
+  for (let page = 1; page <= 60; page++) {
     const lote = await holded('/contacts?page=' + page);
     if (!Array.isArray(lote) || !lote.length) break;
-    todos = todos.concat(lote);
-    if (lote.length < 500) break;
+    const nuevos = lote.filter(c => c && c.id && !vistos.has(c.id));
+    if (!nuevos.length) break; // Holded repite la misma página: ya están todos
+    nuevos.forEach(c => vistos.add(c.id));
+    todos = todos.concat(nuevos);
   }
   cacheContactos = todos; cacheT = Date.now();
   return todos;
@@ -43,7 +46,7 @@ async function contactosDelPaciente(patientId) {
   const dni = normDni(f['DNI']);
   const lista = await contactos();
   return lista.filter(c => {
-    if (dni && dni.length >= 8 && normDni(c.code || c.vatnumber) === dni) return true;
+    if (dni && dni.length >= 8 && (normDni(c.code) === dni || normDni(c.vatnumber) === dni)) return true;
     const ce = String(c.email || '').trim().toLowerCase();
     if (email && ce && ce === email) return true;
     if (tel && tel.length === 9 && (soloDigitos(c.mobile) === tel || soloDigitos(c.phone) === tel)) return true;
@@ -488,7 +491,7 @@ async function listarFacturas(ids) {
   for (const cid of ids) for (const tipoDoc of ['salesreceipt', 'invoice']) {
     const docs = await holded('/documents/' + tipoDoc + '?contactid=' + encodeURIComponent(cid)).catch(() => []);
     (Array.isArray(docs) ? docs : []).forEach(d => {
-      if (d.draft) return;
+      if (d.draft || (d.contact && d.contact !== cid)) return; // por si Holded ignorase el filtro
       facturas.push({ id: d.id, tipo: tipoDoc, numero: d.docNumber || '', fecha: d.date || 0, total: Number(d.total || 0), pagada: d.status === 1, concepto: (d.products && d.products[0] && d.products[0].name) || d.desc || '' });
     });
   }
@@ -1385,8 +1388,8 @@ module.exports = async function handler(req, res) {
       const dni = (pr.fields || {})['DNI'] || '';
       const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
       if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, facturas: [] });
-      try { return res.status(200).json({ ok: true, holded: true, dni, saldo, facturas: await listarFacturas(await contactosDelPaciente(pac)) }); }
-      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, facturas: [], error: 'No se han podido cargar las facturas' }); }
+      try { const ids = await contactosDelPaciente(pac); return res.status(200).json({ ok: true, holded: true, dni, saldo, enHolded: ids.length, nContactos: (cacheContactos || []).length, facturas: await listarFacturas(ids) }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado (falta la clave en Vercel).' });
