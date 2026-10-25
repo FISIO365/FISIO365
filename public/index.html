@@ -1181,8 +1181,8 @@ async function volverChats(){
     if(!d.ok)throw new Error();
     chatsCache=d.chats||[];
     lista.innerHTML=chatsCache.map((c,i)=>{const foto=c.foto||(c.tuyo&&window.fisioPlan&&window.fisioPlan.foto)||'';
-      const ult=c.texto?(c.de==='paciente'?'Tú: ':'')+c.texto:(c.tuyo?'Tu fisio · escríbele cuando quieras':'Escríbele una consulta');
-      return `<button type="button" class="cl-it${c.sinLeer?' nuevo':''}" data-i="${i}"><div class="cl-av">${foto?`<img src="${escC(foto)}" alt="">`:escC(iniciales(c.nombre))}</div><div class="cl-tx"><div class="cl-top"><b>${escC(c.nombre)}</b>${c.tuyo?'<span class="cl-tuyo">Tu fisio</span>':''}<span class="cl-hora">${horaChat(c.ultimo)}</span></div><div class="cl-ult"><span>${escC(ult)}</span>${c.sinLeer?`<i class="cl-n">${c.sinLeer}</i>`:''}</div></div></button>`;}).join('')||'<div class="loading">No hay fisios disponibles.</div>';
+      const ult=c.texto?(c.de==='paciente'?'Tú: ':'')+c.texto:(c.tuyo?'Tu fisio · escríbele cuando quieras':c.admin?'Citas, pagos y dudas del centro':'Escríbele una consulta');
+      return `<button type="button" class="cl-it${c.sinLeer?' nuevo':''}" data-i="${i}"><div class="cl-av">${foto?`<img src="${escC(foto)}" alt="">`:escC(iniciales(c.nombre))}</div><div class="cl-tx"><div class="cl-top"><b>${escC(c.nombre)}</b>${c.admin?'<span class="cl-tuyo">Administración</span>':''}${c.tuyo?'<span class="cl-tuyo">Tu fisio</span>':''}<span class="cl-hora">${horaChat(c.ultimo)}</span></div><div class="cl-ult"><span>${escC(ult)}</span>${c.sinLeer?`<i class="cl-n">${c.sinLeer}</i>`:''}</div></div></button>`;}).join('')||'<div class="loading">No hay fisios disponibles.</div>';
     lista.querySelectorAll('.cl-it').forEach(b=>b.onclick=()=>abrirConv(chatsCache[+b.dataset.i]));
   }catch(e){if(!chatsCache.length)lista.innerHTML='<div class="loading">No se han podido cargar los chats. Revisa tu conexión.</div>';}
 }
@@ -1193,7 +1193,7 @@ function abrirConv(c){
   document.body.classList.add('en-conv');
   const av=document.getElementById('chatAv');document.getElementById('chatNom').textContent=f.nombre;
   if(f.foto)av.innerHTML=`<img src="${escC(f.foto)}" alt="">`;else av.textContent=iniciales(f.nombre);
-  document.getElementById('chatSub').textContent=c.tuyo?'Tu fisio · fotos, PDFs y dudas':'Fotos, PDFs y dudas';
+  document.getElementById('chatSub').textContent=c.tuyo?'Tu fisio · fotos, PDFs y dudas':c.admin?'Administración · citas, pagos y dudas':'Fotos, PDFs y dudas';
   if(chatCtl){chatCtl.parar();chatCtl=null;}
   chatCtl=FisioChat.montar(document.getElementById('chatBox'),{rol:'paciente',pacienteId:patient.id,pacienteNombre:patient.nombre,fisio:f,sinFisio:!!c.tuyo,onLeido:()=>checkMensajesNoLeidos(),onEnviado:m=>{const txt=m.texto||(m.adjuntos&&m.adjuntos[0]?(/^image\//.test(m.adjuntos[0].tipo)?'Te ha enviado una foto':'Te ha enviado un PDF'):'');fetch('/api/notificar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fisioId:f.id,pacienteId:patient.id,pacienteNombre:patient.nombre,message:txt})}).catch(()=>{});}});
 }

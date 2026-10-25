@@ -26,9 +26,11 @@ export default async function handler(req) {
       });
       const data = await r.json();
       const fisios = (data.records || [])
-        .filter(rec => (rec.fields['Role'] || '').toLowerCase() === 'fisio')
+        .filter(rec => ['fisio', 'admin'].includes((rec.fields['Role'] || '').toLowerCase()))
+        .sort((a, b) => ((a.fields['Role'] || '').toLowerCase() === 'admin') - ((b.fields['Role'] || '').toLowerCase() === 'admin'))
         .map(rec => ({
           id: rec.id,
+          admin: (rec.fields['Role'] || '').toLowerCase() === 'admin',
           nombre: rec.fields['Name'] || '',
           foto: rec.fields['Foto']?.[0]?.url || ''
         }));

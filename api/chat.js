@@ -111,8 +111,9 @@ export default async function handler(req) {
         todos(`{PacienteId}="${pacienteId}"`),
         fetch(`https://api.airtable.com/v0/${BASE_ID}/tbl2mLUrnaKCFTs6g`, { headers: AT }).then(r => r.json())
       ]);
-      const fisios = (fd.records || []).filter(r => String(r.fields.Role || '').toLowerCase() === 'fisio')
-        .map(r => ({ id: r.id, nombre: r.fields.Name || '', foto: r.fields.Foto?.[0]?.thumbnails?.large?.url || r.fields.Foto?.[0]?.url || '' }));
+      // Fisios y administración (Nora), para que el paciente también pueda escribir a recepción
+      const fisios = (fd.records || []).filter(r => ['fisio', 'admin'].includes(String(r.fields.Role || '').toLowerCase()))
+        .map(r => ({ id: r.id, nombre: r.fields.Name || '', admin: String(r.fields.Role || '').toLowerCase() === 'admin', foto: r.fields.Foto?.[0]?.thumbnails?.large?.url || r.fields.Foto?.[0]?.url || '' }));
       const por = {};
       for (const b of aBurbujas(recs)) {
         const fid = b.fisioId || asignado; if (!fid) continue;
@@ -121,7 +122,7 @@ export default async function handler(req) {
         if (b.fecha > c.ultimo) { c.ultimo = b.fecha; c.de = b.de; c.texto = b.texto || (b.adjuntos[0] ? (/^image\//.test(b.adjuntos[0].tipo) ? 'Foto' : 'PDF') : ''); }
       }
       const chats = fisios.map(f => ({ ...f, tuyo: f.id === asignado, ...(por[f.id] || { ultimo: '', texto: '', de: '', sinLeer: 0 }) }))
-        .sort((a, b) => (b.tuyo - a.tuyo) || b.ultimo.localeCompare(a.ultimo) || a.nombre.localeCompare(b.nombre));
+        .sort((a, b) => (b.tuyo - a.tuyo) || b.ultimo.localeCompare(a.ultimo) || (a.admin - b.admin) || a.nombre.localeCompare(b.nombre));
       return json({ ok: true, chats });
     } catch (e) { return json({ ok: false, error: e.message }, 500); }
   }
