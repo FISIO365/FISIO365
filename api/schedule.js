@@ -1203,10 +1203,10 @@ module.exports = async function handler(req, res) {
         try { const r = await fetch(`https://api.airtable.com/v0/appR5HDJuhjQG504R/tbloIpGtMu3QVOqoU?pageSize=100`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }); const d = await r.json(); if (d.error) throw 0; ms = (d.records || []).map(x => ({ m: String(x.fields['MES'] || '').slice(0, 7), v: Number(x.fields['IMPORTE'] || 0) })); }
         catch (e) { fuente = 'INGRESOS MES'; ms = (await todosT('tblSJPZroRyyWphVp', 'fields[]=MES&fields[]=IMPORTE').catch(() => [])).map(x => ({ m: String(x.fields['MES'] || '').slice(0, 7), v: Number(x.fields['IMPORTE'] || 0) })); }
         ms = ms.filter(x => x.m && x.v).sort((a, b) => a.m.localeCompare(b.m));
-        // Mes en curso: suma de los TICKETS DE VENTA de Holded (solo aprobados; no facturas)
+        // Mes en curso: suma de los TICKETS DE VENTA de Holded (aprobados y en borrador; no facturas)
         let holdedMes = null; const mesAct = hoyF.slice(0, 7);
         if (HOLDED_KEY && !ms.some(x => x.m === mesAct)) try {
-          const tk = await holdedTodos(`/sales-receipts?limit=200&approval_status=approved&start_date=${mesAct}-01&end_date=${hoyF}`, 20);
+          const tk = await holdedTodos(`/sales-receipts?limit=200&start_date=${mesAct}-01&end_date=${hoyF}`, 20);
           const deMes = tk.filter(d => String(d.date || '').slice(0, 7) === mesAct && d.status !== 'cancelled');
           holdedMes = { m: mesAct, v: Math.round(deMes.reduce((t, d) => t + importeDoc(d), 0) * 100) / 100, n: deMes.length, hasta: hoyF };
         } catch (e) { holdedMes = { m: mesAct, error: e.message }; }
