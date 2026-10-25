@@ -79,7 +79,7 @@ const FACTURAS_TABLE = 'tblJw7suXLERn8AFQ';
 const HOLDED_BORRADOR = true;
 // Texto legal que va en cada ticket (Holded no pone el de su plantilla cuando se crea por la API)
 const TEXTO_RGPD = 'Protección de datos: Responsable: Fourth Dynamic, S.L., C/ Gran de Sant Andreu 163, 08030 Barcelona. Finalidad: gestionar la relación contractual y la facturación. Puede ejercer sus derechos de acceso, rectificación, supresión, limitación, portabilidad y oposición escribiendo a info@fisioterapia365.com, y reclamar ante la AEPD. (RGPD UE 2016/679 y LOPDGDD 3/2018)';
-const FF = { fecha: 'fldQ17bGOMaS0XaxJ', fechaVieja: 'fldqZyXkxhGRS1qvn', paciente: 'fldbmNoGhedI6ySSb', c1: 'fld3lRaKQbUYcW5qY', n1: 'fldWj0dUmJzTn0lgr', p1: 'fldu2QiBD9hM5scRC', c2: 'fldlkX8RO7crsVOye', n2: 'fldOW7e0lHx3Tfu4X', p2: 'fldkYc6HBh9E1YjUv', notas: 'fldoi8INIByEPPpMn', estado: 'fld2nvRuSlR97LhbN', num: 'fldcTFAHH31Lsz53c', pdf: 'fld8jBu2P4sPB21ZC', aNombre: 'fldBW06oApJQaNlN9', aNif: 'fld6VO3g0KrFpAi6P', aDir: 'fldFK7NwsZ5AUY6qp' };
+const FF = { fecha: 'fldQ17bGOMaS0XaxJ', fechaVieja: 'fldqZyXkxhGRS1qvn', paciente: 'fldbmNoGhedI6ySSb', c1: 'fld3lRaKQbUYcW5qY', n1: 'fldWj0dUmJzTn0lgr', p1: 'fldu2QiBD9hM5scRC', c2: 'fldlkX8RO7crsVOye', n2: 'fldOW7e0lHx3Tfu4X', p2: 'fldkYc6HBh9E1YjUv', notas: 'fldoi8INIByEPPpMn', estado: 'fld2nvRuSlR97LhbN', num: 'fldcTFAHH31Lsz53c', pdf: 'fld8jBu2P4sPB21ZC', aNombre: 'fldBW06oApJQaNlN9', aNif: 'fld6VO3g0KrFpAi6P', aDir: 'fldFK7NwsZ5AUY6qp', holdedId: 'fld4ds1kfoPbbCtVg' };
 let emitiendo = Promise.resolve();
 // Si Airtable dice «demasiadas peticiones» (429), espera y lo reintenta
 const at = async (path, opt = {}) => { for (let i = 0; ; i++) { const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${path}`, { ...opt, headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json', ...(opt.headers || {}) } }); if (r.status === 429 && i < 4) { await new Promise(z => setTimeout(z, 600 * (i + 1))); continue; } return r.json(); } };
@@ -518,7 +518,7 @@ async function emitirFactura(recId, quien, fisioSel) {
   if (!HOLDED_BORRADOR && !creado.document_number) { await holdedPost('/sales-receipts/' + docId + '/approve', {}).catch(() => {}); creado = await holded('/sales-receipts/' + docId).catch(() => creado); }
   const borrador = !creado.document_number;
   const num = creado.document_number || 'Borrador';
-  const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: fecha, [FF.fechaVieja]: fecha };
+  const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: fecha, [FF.fechaVieja]: fecha, [FF.holdedId]: String(docId) };
   await at(`${FACTURAS_TABLE}/${recId}`, { method: 'PATCH', body: JSON.stringify({ fields: campos, typecast: true }) });
   if (!borrador) try {
     const pdf = await holdedPdf('/sales-receipts/' + docId + '/pdf');
@@ -1454,7 +1454,19 @@ module.exports = async function handler(req, res) {
       const dni = (pr.fields || {})['DNI'] || '';
       const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
       if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, facturas: [] });
-      try { const ids = await contactosDelPaciente(pac); return res.status(200).json({ ok: true, holded: true, dni, saldo, enHolded: ids.length, facturas: await listarFacturas(ids, true) }); }
+      try {
+        const ids = await contactosDelPaciente(pac); const facturas = await listarFacturas(ids, true);
+        // Tickets borrados en Holded → su fila de FACTURAS pasa a «Anulada» y deja de contar en el saldo
+        let saldo2 = saldo;
+        if (ids.length) try {
+          const vivos = new Set(facturas.map(x => x.id));
+          const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{HOLDED ID}!='')`)}&returnFieldsByFieldId=true`);
+          const muertas = filas.filter(r => !String(r.fields[FF.aNombre] || '').trim() && Date.now() - Date.parse(r.createdTime) > 120e3 && !vivos.has(String(r.fields[FF.holdedId] || '')));
+          for (let i = 0; i < muertas.length; i += 10) await at(FACTURAS_TABLE, { method: 'PATCH', body: JSON.stringify({ typecast: true, records: muertas.slice(i, i + 10).map(r => ({ id: r.id, fields: { [FF.estado]: 'Anulada' } })) }) });
+          if (muertas.length) saldo2 = await saldoPaciente(pac).catch(() => saldo);
+        } catch (e) {}
+        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, enHolded: ids.length, facturas });
+      }
       catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
