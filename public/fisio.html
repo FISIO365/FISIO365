@@ -5628,11 +5628,12 @@ function enviarTarjeta(tel,quien,nuevo,cad,refId,crear){return new Promise(fin=>
  m.querySelector('.hz-x').onclick=()=>{m.remove();fin(false);};
  m.querySelector('.hz-ok').onclick=async e=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();
   // La tarjeta solo se crea cuando se confirma el envío (si se cierra la ventana no se gasta)
-  if(crear){e.target.disabled=true;try{cad=await crear();}catch(err){e.target.disabled=false;toast('No se ha podido crear la tarjeta',false);return;}}
-  m.remove();await enviarTarjeta2(tel,q,n,cad,refId);fin(true);};});}
-async function enviarTarjeta2(tel,quien,nuevo,cad,refId){let txt=mensajeTarjeta(quien,nuevo,cad);
+  const w=window.open('about:blank','_blank'); // se abre ya (si no, el navegador puede bloquearlo tras esperar)
+  if(crear){e.target.disabled=true;try{cad=await crear();}catch(err){if(w)w.close();e.target.disabled=false;toast('No se ha podido crear la tarjeta',false);return;}}
+  m.remove();await enviarTarjeta2(tel,q,n,cad,refId,w);fin(true);};});}
+async function enviarTarjeta2(tel,quien,nuevo,cad,refId,w0){let txt=mensajeTarjeta(quien,nuevo,cad);
  // La imagen se guarda y va como enlace: WhatsApp enseña la tarjeta en la vista previa (sin descargar ni adjuntar nada)
- const w=window.open('about:blank','_blank');
+ const w=w0||window.open('about:blank','_blank');
  try{const b=await tarjetaImagen(quien,nuevo,cad,'image/jpeg');const b64=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(',')[1]);fr.readAsDataURL(b);});
   const d=await (await fetch('/api/schedule?action=seg-referido-img',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:refId,b64})})).json();
   if(d.ok&&d.url)txt+=`\n\nAquí tienes tu tarjeta: ${d.url}`;}catch(e){}
