@@ -83,6 +83,10 @@
       "dest": "/public/informe/$1"
     },
     {
+      "src": "/favicon.ico",
+      "dest": "/public/icons/favicon.ico"
+    },
+    {
       "src": "/icons/(.*)",
       "dest": "/public/icons/$1"
     },
