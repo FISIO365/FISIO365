@@ -5708,9 +5708,11 @@ function abrirEnlazarConsent({pacienteId,nombre,consent,onDone}){
   if(modoP){res.innerHTML='<div class="fac-vacio">Buscando…</div>';let r;try{r=await (await fetch(`/api/schedule?action=seg-consent-buscar&pwd=${encodeURIComponent(apiPwd)}&q=${encodeURIComponent(q)}`)).json();}catch(e){r={};}if(t!==tk)return;
    const L=(r&&r.res)||[];res.innerHTML=L.length?L.map(c=>`<button type="button" class="ag-pi" data-id="${c.id}"><b>${escH(c.nombre)}</b><small>${escH([String(c.fecha||'').split('-').reverse().join('/'),c.tel,c.email].filter(Boolean).join(' · '))}${c.de?` · <span style="color:#b3261e">ya enlazado a ${escH(c.de)}</span>`:''}</small></button>`).join(''):'<div class="fac-vacio">No hay ningún formulario así</div>';
    res.querySelectorAll('.ag-pi').forEach(b=>b.onclick=()=>enlazar(b.dataset.id,pacienteId,b));}
-  else{const qn=norm(q),qd=q.replace(/\D/g,'');const L=(pacs||[]).filter(p=>norm(p.nombre).includes(qn)||(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd))).slice(0,8);
-   const sug=consent.sugerido;
-   res.innerHTML=(sug?`<button type="button" class="ag-pi" data-id="${sug.id}"><b>${escH(sug.nombre)}</b><small>Mismo teléfono o email</small></button>`:'')+L.filter(p=>!sug||p.id!==sug.id).map(p=>`<button type="button" class="ag-pi" data-id="${p.id}"><b>${escH(p.nombre)}</b><small>${escH(p.telefono||p.email||'')}</small></button>`).join('')||'<div class="fac-vacio">Sin resultados</div>';
+  else{const toks=norm(q).split(/[^a-z0-9ñ]+/).filter(w=>w.length>=2),qd=q.replace(/\D/g,'');
+   // Vale con que coincida una palabra (nombre o apellido); salen primero los que coinciden en más
+   const L=(pacs||[]).map(p=>{const pw=norm(p.nombre).split(/[^a-z0-9ñ]+/);let sc=toks.filter(t=>pw.some(w=>w.startsWith(t)||t.startsWith(w)&&w.length>=3)).length;if(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd))sc+=5;return {p,sc};}).filter(x=>x.sc>0).sort((a,b)=>b.sc-a.sc).slice(0,10).map(x=>x.p);
+   const sugs=consent.sugeridos&&consent.sugeridos.length?consent.sugeridos:(consent.sugerido?[consent.sugerido]:[]);
+   res.innerHTML=sugs.map(sug=>`<button type="button" class="ag-pi" data-id="${sug.id}"><b>${escH(sug.nombre)}</b><small>Mismo teléfono, email o DNI</small></button>`).join('')+L.filter(p=>!sugs.some(x=>x.id===p.id)).map(p=>`<button type="button" class="ag-pi" data-id="${p.id}"><b>${escH(p.nombre)}</b><small>${escH(p.telefono||p.email||'')}</small></button>`).join('')||'<div class="fac-vacio">Sin resultados</div>';
    res.querySelectorAll('.ag-pi').forEach(b=>b.onclick=()=>enlazar(consent.id,b.dataset.id,b));}};
  let tm;bus.oninput=()=>{clearTimeout(tm);tm=setTimeout(buscar,250);};buscar();
 }
