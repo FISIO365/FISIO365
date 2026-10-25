@@ -4963,7 +4963,7 @@ let callSel=[];
 // ══ AGENDA: el día de cada fisio (tabla CITAS: una fila = una hora). Dar, mover, cancelar y bloquear citas ══
 const AG_FISIOS=['Ramiro','Jonathan','Sara','Paola','Juan','ELENA'];
 const AG_NOFISIO=/^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES|NORA)$/i;
-const AG_EST=[['PENDIENTE','Pendiente'],['REALIZADA','Realizada'],['NO ASISTIÓ','No asistió'],['CANCELADA','Cancelada'],['POR REAGENDAR','Por reagendar'],['CITA DUDOSA','Dudosa']];
+const AG_EST=[['PENDIENTE','Pendiente'],['REALIZADA','Realizada'],['NO ASISTIÓ','No asistió'],['CANCELADA','Cancelada'],['REPROGRAMADA','Reprogramada'],['POR REAGENDAR','Por reagendar'],['CITA DUDOSA','Dudosa']];
 const agNom=f=>{f=String(f||'');return f.charAt(0).toUpperCase()+f.slice(1).toLowerCase();};
 const agEstInfo=e=>/REALIZADA/.test(e)?{c:'ok',t:'Hecha',i:'✓'}:/NO ASIST/.test(e)?{c:'mal',t:'No vino',i:'✕'}:/CANCELADA/.test(e)?{c:'can',t:'Cancelada',i:'✕'}:/REPROGRAMADA/.test(e)?{c:'rep',t:'Reprogramada',i:'↻'}:/CITA PERDIDA/.test(e)?{c:'mal',t:'Perdida',i:'✕'}:/REAGENDAR/.test(e)?{c:'pen',t:'Por reagendar',i:'!'}:/DUDOSA/.test(e)?{c:'dud',t:'Dudosa',i:'?'}:{c:'',t:'',i:''};
 const agEsLibre=e=>/^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(e);
@@ -5165,7 +5165,7 @@ function agAbrirCita(c,onDone){
  const tg=agEtiquetas(m.querySelector('.ag-tip'),c.tipos);
  m.querySelector('.ag-pac').onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.paciente);};
  const lib=m.querySelector('.ag-lib');
- const pe=()=>{m.querySelectorAll('.ag-est button').forEach(b=>b.classList.toggle('on',b.dataset.v===est));lib.hidden=!(/CANCELADA|NO ASIST/.test(est)&&!/CANCELADA|NO ASIST/.test(c.estado));};pe();
+ const pe=()=>{m.querySelectorAll('.ag-est button').forEach(b=>b.classList.toggle('on',b.dataset.v===est));lib.hidden=!(/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(est)&&!/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(c.estado));};pe();
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{est=b.dataset.v;pe();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
