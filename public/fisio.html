@@ -5513,7 +5513,7 @@ async function listaTareas(cont,keep){
    if(x.tipo==='regalo'){
     const g=x.g,b=ce('button','tk-b');b.type='button';
     if(g.recomendo){b.textContent='Enviar tarjeta';b.onclick=async()=>{b.disabled=true;try{const d=await (await fetch('/api/schedule?action=seg-referido-tarjeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:g.id})})).json();if(!d.ok)throw 0;
-      waAbrir(g.recomendo.tel,mensajeTarjeta(g.recomendo.nombre,g.nuevo.nombre,d.codigo,d.caduca));toast('Tarjeta '+d.codigo+' creada',true);quitar(r,x);}catch(e){b.disabled=false;toast('No se ha podido crear la tarjeta',false);}};}
+      await enviarTarjeta(g.recomendo.tel,g.recomendo.nombre,g.nuevo.nombre,d.caduca);quitar(r,x);}catch(e){b.disabled=false;toast('No se ha podido crear la tarjeta',false);}};}
     else{b.textContent='¿Quién es?';b.onclick=()=>elegirRecomendo(g,recargar);}
     acc.appendChild(b);
     const q=ce('button','tk-q');q.type='button';q.setAttribute('aria-label','No toca tarjeta');q.title='No toca tarjeta';q.innerHTML='✕';let arm=false;
@@ -5596,8 +5596,31 @@ const FORM_SP_URL='https://tally.so/r/Gex8jo',FORM_ALTA_URL='https://tally.so/r/
 let _consDoc={};
 async function consDatos(id){if(_consDoc[id])return _consDoc[id];const r=await (await fetch(`/api/schedule?action=seg-consent-doc&pwd=${encodeURIComponent(apiPwd)}&id=${id}`)).json();if(!r.ok)throw new Error('No se ha podido cargar el consentimiento');_consDoc[id]=r;return r;}
 // Tarjeta regalo por recomendar (10 €, 6 meses)
-function mensajeTarjeta(quien,nuevo,cod,cad){const n=String(quien||'').trim().split(' ')[0];const nm=n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';const nv=String(nuevo||'').trim().split(' ')[0];const nvm=nv?nv.charAt(0).toUpperCase()+nv.slice(1).toLowerCase():'';
- return `¡Hola ${nm}! 🎁 Gracias por recomendarnos${nvm?' a '+nvm:''}, nos hace muchísima ilusión.\n\nTe dejamos una tarjeta regalo de 10 € de descuento para tu próxima sesión:\n• Código: ${cod}\n• Válida hasta el ${String(cad||'').split('-').reverse().join('/')}\n\nEnséñala al pagar (también la tienes en tu app, en Mis documentos: ${APP_URL}).\n\n¡Gracias por confiar en FISIO365! 🧡`;}
+function capi(n){n=String(n||'').trim().split(' ')[0];return n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';}
+function mensajeTarjeta(quien,nuevo,cad){const nm=capi(quien),nvm=capi(nuevo);
+ return `¡Hola ${nm}! Gracias por recomendarnos${nvm?' a '+nvm:''}, nos hace muchísima ilusión.\n\nTe regalamos 10 € de descuento en tu próxima sesión (válido hasta el ${String(cad||'').split('-').reverse().join('/')}). No tienes que hacer nada: lo tenemos apuntado en tu ficha y te lo descontamos al pagar.\n\n¡Gracias por confiar en FISIO365!`;}
+// Imagen de la tarjeta regalo (para mandarla por WhatsApp)
+async function tarjetaImagen(quien,nuevo,cad){
+ try{await document.fonts.load('800 60px Poppins');await document.fonts.load('600 30px Poppins');}catch(e){}
+ const W=1080,H=680,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+ const rr=(X,Y,w,h,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath();};
+ const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#de8257');g.addColorStop(1,'#c2552e');x.fillStyle=g;x.fillRect(0,0,W,H);
+ x.save();x.fillStyle='rgba(255,255,255,.10)';x.beginPath();x.arc(W-90,70,230,0,Math.PI*2);x.fill();x.beginPath();x.arc(W-40,H+40,160,0,Math.PI*2);x.fill();x.restore();
+ x.fillStyle='#fff';x.textBaseline='alphabetic';
+ x.font='800 46px Poppins';x.fillText('FISIO365',72,112);
+ x.font='600 26px Poppins';x.globalAlpha=.9;x.fillText('TARJETA REGALO',72,160);x.globalAlpha=1;
+ x.font='800 190px Poppins';x.fillText('10 €',60,380);
+ x.font='600 40px Poppins';x.fillText('de descuento en tu próxima sesión',72,450);
+ x.font='600 30px Poppins';x.globalAlpha=.95;x.fillText(`Para ${capi(quien)}${capi(nuevo)?' · gracias por recomendarnos a '+capi(nuevo):''}`,72,560);
+ x.globalAlpha=.85;x.font='500 26px Poppins';x.fillText(`Válida hasta el ${String(cad||'').split('-').reverse().join('/')} · te lo descontamos al pagar`,72,606);x.globalAlpha=1;
+ return await new Promise(ok=>c.toBlob(ok,'image/png'));}
+// Enviar la tarjeta: en el móvil se comparte la imagen (WhatsApp); en el ordenador se descarga y se abre WhatsApp con el texto
+async function enviarTarjeta(tel,quien,nuevo,cad){const txt=mensajeTarjeta(quien,nuevo,cad);
+ try{const b=await tarjetaImagen(quien,nuevo,cad);const f=new File([b],'Tarjeta-regalo-FISIO365.png',{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})&&/Android|iPhone|iPad/i.test(navigator.userAgent)){try{await navigator.share({files:[f],text:txt});return;}catch(e){if(e&&e.name==='AbortError')return;}}
+  const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);
+  toast('Imagen de la tarjeta descargada: adjúntala en WhatsApp',true);}catch(e){}
+ waAbrir(tel,txt);}
 function waAbrir(tel,txt){const t=segTel(tel||'');window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');}
 // Elegir quién recomendó (si el nombre que puso no cuadra con un único paciente)
 function elegirRecomendo(r,onDone){
@@ -5613,8 +5636,8 @@ function elegirRecomendo(r,onDone){
  m.querySelector('.er-no').onclick=async()=>{try{const d=await post('seg-referido-ignorar');if(!d.ok)throw 0;toast('Vale, no toca tarjeta',true);m.remove();onDone&&onDone();}catch(e){toast('No se ha podido guardar',false);}};}
 // Mensaje de bienvenida a la app (enlace + cómo instalarla + email y PIN), para mandar por WhatsApp
 const APP_URL='https://app.fisioterapia365.com';
-function mensajeApp(P){const n=String(P.nombre||'').trim().split(' ')[0];const nm=n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';
- return `¡Hola ${nm}! 👋 Ya tienes tu app de FISIO365. Ahí encontrarás tus ejercicios con vídeo, tus citas, el chat con tu fisio y tus documentos.\n\n📲 Entra aquí: ${APP_URL}\n\n🔑 Tus datos de acceso:\n• ${P.email?'Email: '+P.email:'Teléfono: '+segTel(P.whatsapp||P.telf||P.tel||'').slice(-9)}\n• PIN: ${P.pin}\n\n📌 Para tenerla en el móvil como una app:\n• iPhone: ábrela en Safari, toca Compartir y «Añadir a pantalla de inicio».\n• Android: ábrela en Chrome, toca el menú ⋮ y «Instalar aplicación».\n\nCualquier duda, nos escribes por aquí. ¡Un abrazo!`;}
+function mensajeApp(P){const nm=capi(P.nombre);
+ return `¡Hola ${nm}! Ya tienes tu app de FISIO365. Ahí encontrarás tus ejercicios con vídeo, tus citas, el chat con tu fisio y tus documentos.\n\nEntra aquí: ${APP_URL}\n\nTus datos de acceso:\n- ${P.email?'Email: '+P.email:'Teléfono: '+segTel(P.whatsapp||P.telf||P.tel||'').slice(-9)}\n- PIN: ${P.pin}\n\nPara tenerla en el móvil como una app:\n- iPhone: ábrela en Safari, toca Compartir y «Añadir a pantalla de inicio».\n- Android: ábrela en Chrome, toca el menú (los tres puntos) y «Instalar aplicación».\n\nCualquier duda, nos escribes por aquí. ¡Un abrazo!`;}
 function enviarApp(P){const t=segTel(P.whatsapp||P.telf||P.tel||'');
  if(!P.email&&segTel(P.whatsapp||P.telf||P.tel||'').length<9){toast('Le falta el email o el teléfono para poder entrar',false);return;}
  if(!P.pin){toast('Le falta el PIN: abre su ficha y se le pone solo',false);return;}
@@ -5776,7 +5799,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
     <div class="fp-mts">${tile('Newsletter',C.marketing.newsletter)}${tile('Imágenes',C.marketing.imagenes)}${tile('Avisos',C.marketing.citas)}</div></div>`:''}`;
   const RF=d.referidos,hoyR=d.hoy,tActivas=RF?RF.haRecomendado.filter(t=>t.codigo&&!t.canjeada&&(!t.caduca||t.caduca>=hoyR)):[];
   const fR=f=>f?String(f).split('-').reverse().join('/'):'';
-  const refBlk=RF&&(RF.leRecomendo||RF.haRecomendado.length)?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Recomendaciones</h3></div>${RF.leRecomendo?`<div class="fp-lerec">Le recomendó: <b ${RF.leRecomendo.id?`data-ficha="${RF.leRecomendo.id}"`:''}>${escH(RF.leRecomendo.nombre||'—')}</b></div>`:''}${RF.haRecomendado.length?`<div class="fp-refs">${RF.haRecomendado.map(t=>`<div class="fp-ref"><div><b>${escH(t.nombre)}</b><small>${t.codigo?(t.canjeada?'Tarjeta de 10 € canjeada el '+fR(t.canjeada):t.caduca&&t.caduca<hoyR?'Tarjeta caducada el '+fR(t.caduca):'Tarjeta de 10 € · '+escH(t.codigo)+' · hasta el '+fR(t.caduca)):t.ignorar?'Sin tarjeta':'Tarjeta pendiente: cuando venga a su primera sesión'}</small></div>${t.codigo&&!t.canjeada&&!(t.caduca&&t.caduca<hoyR)?`<span class="fp-refb"><button type="button" class="sec fp-refwa" data-id="${t.id}">WhatsApp</button><button type="button" class="fp-refc" data-id="${t.id}">Canjear</button></span>`:''}</div>`).join('')}</div>`:''}</div>`:'';
+  const refBlk=RF&&(RF.leRecomendo||RF.haRecomendado.length)?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Recomendaciones</h3></div>${RF.leRecomendo?`<div class="fp-lerec">Le recomendó: <b ${RF.leRecomendo.id?`data-ficha="${RF.leRecomendo.id}"`:''}>${escH(RF.leRecomendo.nombre||'—')}</b></div>`:''}${RF.haRecomendado.length?`<div class="fp-refs">${RF.haRecomendado.map(t=>`<div class="fp-ref"><div><b>${escH(t.nombre)}</b><small>${t.codigo?(t.canjeada?'Tarjeta de 10 € canjeada el '+fR(t.canjeada):t.caduca&&t.caduca<hoyR?'Tarjeta caducada el '+fR(t.caduca):'Tarjeta de 10 € · sin usar · hasta el '+fR(t.caduca)):t.ignorar?'Sin tarjeta':'Tarjeta pendiente: cuando venga a su primera sesión'}</small></div>${t.codigo&&!t.canjeada&&!(t.caduca&&t.caduca<hoyR)?`<span class="fp-refb"><button type="button" class="sec fp-refwa" data-id="${t.id}">Reenviar</button><button type="button" class="fp-refc" data-id="${t.id}">Canjear</button></span>`:''}</div>`).join('')}</div>`:''}</div>`:'';
   return `${tActivas.length?`<div class="fp-gift">🎁 Tiene ${tActivas.length>1?tActivas.length+' tarjetas regalo':'una tarjeta regalo'} de 10 € para descontar al pagar</div>`:''}${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
   <div class="fp-blk fp-pq"></div>
@@ -5916,7 +5939,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
    cont.querySelectorAll('.fp-cform').forEach(bt=>bt.onclick=()=>enviarFormulario(P));
    cont.querySelectorAll('.fp-refc').forEach(bt=>{let arm=false;bt.onclick=async()=>{if(!arm){arm=true;bt.textContent='¿Canjear?';setTimeout(()=>{arm=false;bt.textContent='Canjear';},4000);return;}bt.disabled=true;
      try{const r=await (await fetch('/api/schedule?action=seg-referido-canjear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:bt.dataset.id})})).json();if(!r.ok)throw 0;const t=d.referidos.haRecomendado.find(x=>x.id===bt.dataset.id);if(t)t.canjeada=d.hoy;toast('Tarjeta canjeada: descuenta 10 € de este pago',true);pintar();}catch(e){bt.disabled=false;toast('No se ha podido guardar',false);}};});
-   cont.querySelectorAll('.fp-refwa').forEach(bt=>bt.onclick=()=>{const t=d.referidos.haRecomendado.find(x=>x.id===bt.dataset.id);if(t)waAbrir(P.whatsapp||P.telf||P.tel,mensajeTarjeta(P.nombre,t.nombre,t.codigo,t.caduca));});
+   cont.querySelectorAll('.fp-refwa').forEach(bt=>bt.onclick=()=>{const t=d.referidos.haRecomendado.find(x=>x.id===bt.dataset.id);if(t)enviarTarjeta(P.whatsapp||P.telf||P.tel,P.nombre,t.nombre,t.caduca);});
    cont.querySelectorAll('.fp-cpc').forEach(bt=>bt.onclick=async()=>{bt.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-consent-enlazar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,consentId:bt.dataset.id,pacienteId:id})})).json();if(!r.ok)throw 0;toast('Enlazado',true);try{await cargar();}catch(_){}pintar();}catch(e){bt.disabled=false;toast('No se ha podido enlazar',false);}});
    const noEs=cid=>fetch('/api/schedule?action=seg-consent-noes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,consentId:cid,pacienteId:id})}).then(r=>r.json()).then(r=>{if(!r.ok)throw 0;});
    cont.querySelectorAll('.fp-cpno').forEach(bt=>bt.onclick=async()=>{bt.disabled=true;try{await noEs(bt.dataset.id);d.consent.porConfirmar=(d.consent.porConfirmar||[]).filter(x=>x.id!==bt.dataset.id);pintar();toast('Vale, no se te volverá a preguntar por este formulario',true);}catch(e){bt.disabled=false;toast('No se ha podido guardar',false);}});
