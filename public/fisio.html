@@ -6973,6 +6973,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    <div class="fac-lineas"></div>
    <button type="button" class="fac-add">+ Añadir otra línea</button>
    <div class="fac-campo"><label>Modo de pago</label><div class="fac-chips fac-pago">${FAC_PAGOS.map(m=>`<button type="button" data-v="${m}">${m}</button>`).join('')}</div></div>
+   <div class="fac-campo"><label>Fisio que le atiende <span>(sale en el ticket con su nº de colegiado)</span></label><div class="fac-chips fac-fisio">${(fisios||[]).map(x=>`<button type="button" data-v="${escH(x.nombre)}">${escH(String(x.nombre).split(' ')[0])}</button>`).join('')}<button type="button" data-v="">No poner fisio</button></div></div>
    <div class="fac-campo"><label>Fecha de cobro</label><input type="date" class="fac-fecha" value="${hoyIso}" max="${hoyIso}"></div>
    <div class="fac-campo"><label>Notas en la factura <span>(opcional, salen impresas)</span></label><textarea class="fac-notas" rows="2"></textarea></div>
    <details class="fac-otro"><summary>Facturar a otra persona o empresa</summary>
@@ -6984,7 +6985,8 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    <div class="fac-nota">Se crea en Holded con el siguiente número de la serie y le aparece al paciente en su app.</div>`;
   formBox.appendChild(f);
   const lineasBox=f.querySelector('.fac-lineas'),addBtn=f.querySelector('.fac-add');
-  let pago='';
+  let pago='',fisioSel=null;
+  f.querySelectorAll('.fac-fisio button').forEach(b=>b.onclick=()=>{f.querySelectorAll('.fac-fisio button').forEach(x=>x.classList.toggle('on',x===b));fisioSel=b.dataset.v;});
   const total=()=>{let t=0;lineasBox.querySelectorAll('.fac-linea').forEach(l=>{t+=(+l.querySelector('.fl-n').value||0)*(+String(l.querySelector('.fl-p').value).replace(',','.')||0);});f.querySelector('.fac-total b').textContent=facEur(t);return t;};
   const addLinea=()=>{
    const l=ce('div','fac-linea');const num=lineasBox.children.length+1;
@@ -7007,6 +7009,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    if(lineas.some(l=>!l.concepto)){toast('Elige el concepto',false);return;}
    if(lineas.some(l=>!l.uds||!l.precio)){toast('Pon el nº de sesiones y el precio',false);return;}
    if(!pago){toast('Elige el modo de pago',false);return;}
+   if(fisioSel===null){toast('Elige el fisio (o «No poner fisio»)',false);return;}
    const dniIn=f.querySelector('.fac-dni');const an=f.querySelector('.fac-an').value.trim();
    if(dniIn&&!dniIn.value.trim()&&!an){toast('Falta el DNI del paciente',false);dniIn.focus();return;}
    if(an&&!f.querySelector('.fac-anif').value.trim()){toast('Falta el DNI/NIF de a quién se factura',false);return;}
@@ -7014,7 +7017,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    if(!armado){armado=true;em.classList.add('armado');em.textContent='Confirmar: emitir por '+facEur(total());setTimeout(()=>{if(armado){armado=false;em.classList.remove('armado');em.textContent='Emitir factura';}},6000);return;}
    armado=false;em.disabled=true;em.textContent='Emitiendo…';
    try{
-    const r=await (await fetch('/api/schedule?action=facturar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,quien:(fisioActual&&fisioActual.nombre)||'',pacienteId:pacId,lineas,modoPago:pago,fecha:f.querySelector('.fac-fecha').value,notas:f.querySelector('.fac-notas').value.trim(),dni:dniIn?dniIn.value.trim():'',facturarA:an?{nombre:an,nif:f.querySelector('.fac-anif').value.trim(),direccion:f.querySelector('.fac-adir').value.trim()}:null})})).json();
+    const r=await (await fetch('/api/schedule?action=facturar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,quien:(fisioActual&&fisioActual.nombre)||'',fisio:fisioSel,fisioElegido:true,pacienteId:pacId,lineas,modoPago:pago,fecha:f.querySelector('.fac-fecha').value,notas:f.querySelector('.fac-notas').value.trim(),dni:dniIn?dniIn.value.trim():'',facturarA:an?{nombre:an,nif:f.querySelector('.fac-anif').value.trim(),direccion:f.querySelector('.fac-adir').value.trim()}:null})})).json();
     if(!r.ok)throw new Error(r.error||'No se ha podido emitir');
     toast(r.borrador?'Ticket creado en Holded como borrador · apruébalo allí y le saldrá en su app':'Factura '+r.num+' emitida'+(r.otro?'':' · ya la tiene en su app'),true);
     formBox.innerHTML='';nueva.style.display='';
