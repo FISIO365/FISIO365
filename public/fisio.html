@@ -398,6 +398,16 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .fp-sh{display:flex;align-items:center;gap:8px;margin-bottom:6px}.fp-sh b{font-size:13.5px}.fp-sh span{font-size:12px;color:#7d6a60;background:#f3efea;border-radius:99px;padding:2px 9px}.fp-sed{margin-left:auto;font-family:var(--font);font-size:12px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:5px 12px;cursor:pointer}
 .fp-sb{font-size:13.5px;line-height:1.55;color:#2b2420;overflow-wrap:anywhere}.fp-sb p{margin:0 0 6px}.fp-falta{color:#b42318;font-weight:600;font-size:13px}
 .fp-gen{font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:10px;background:#1e2a38;color:#fff;padding:0 14px;cursor:pointer}
+.ej-top{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}.ej-top input{flex:1 1 220px;min-width:0;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:11px 14px;border:1.5px solid var(--border);border-radius:14px;background:#fff}.ej-top .seg-add{flex:none}
+.ej-zs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}.ej-zs::-webkit-scrollbar{display:none}.ej-zs button{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#6b5f57;background:#fff;border:1px solid rgba(26,26,26,.1);border-radius:99px;padding:7px 12px;cursor:pointer}.ej-zs button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}.ej-zs button i{font-style:normal;opacity:.6;margin-left:4px;font-weight:500}
+.ej-n{font-size:12.5px;color:#7d6a60;margin:0 0 10px}
+.ej-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}.ej-c{background:#fff;border:1px solid rgba(26,26,26,.08);box-shadow:0 1px 3px rgba(26,26,26,.05);border-radius:16px;overflow:hidden;cursor:pointer;text-align:left;font-family:var(--font);padding:0;display:flex;flex-direction:column}.ej-c:hover{box-shadow:0 4px 14px rgba(26,26,26,.1)}
+.ej-th{position:relative;aspect-ratio:16/9;background:#f3efea center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#b9aca3;font-size:12px}.ej-th em{position:absolute;right:8px;bottom:8px;font-style:normal;font-size:11px;font-weight:700;background:#c2552e;color:#fff;border-radius:99px;padding:2px 8px}
+.ej-b{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px}.ej-b b{font-size:13.5px;font-weight:600;color:#1e2a38;line-height:1.3}.ej-b span{align-self:flex-start;font-size:11px;font-weight:600;color:#c2552e;background:#fdf1e8;border-radius:99px;padding:2px 9px}.ej-b span.sz{color:#9a8b82;background:#f3efea}
+.ej-mas{display:block;margin:16px auto 0;font-family:var(--font);font-size:13px;font-weight:600;border:1.5px solid var(--border);background:#fff;border-radius:12px;padding:10px 18px;cursor:pointer}
+.ej-vid{aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#111;margin-bottom:4px}.ej-vid iframe{width:100%;height:100%;border:0;display:block}.ej-vid img{width:100%;height:100%;object-fit:cover;display:block}
+.ej-mod .seg-rap{flex-wrap:wrap}.ej-foto{display:flex;align-items:center;gap:10px;font-size:12.5px;color:#7d6a60}.ej-foto label{font-weight:600;color:#1e2a38;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;cursor:pointer}
+@media(max-width:560px){.ej-g{grid-template-columns:repeat(2,1fr);gap:10px}.ej-b{padding:8px 10px 10px}.ej-b b{font-size:12.5px}.ej-top .seg-add{flex:1 1 100%;padding:11px;border-radius:14px}}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -736,7 +746,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  /* El scroll va dentro (no la página): así Safari no mueve la barra de abajo al subir/bajar */
  html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
  .main-area{height:100dvh;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
- #sb-rend,#sb-seg,#sb-tar,#sb-call,#sb-prog,#sb-anam,#sb-stats{display:none!important}
+ #sb-rend,#sb-seg,#sb-tar,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer{display:none!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
  .topbar-t{font-size:21px!important}
  .topbar-s{font-size:12px!important}
@@ -1083,6 +1093,9 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="sb-item" id="sb-prog" onclick="showSection('prog')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span><span class="sb-txt">Programas</span>
  </div>
+ <div class="sb-item" id="sb-ejer" onclick="showSection('ejer')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg></span><span class="sb-txt">Ejercicios</span>
+ </div>
  <div class="sb-item" id="sb-agenda" onclick="showSection('agenda')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span><span class="sb-txt">Agenda</span>
  </div>
@@ -1140,6 +1153,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <button type="button" class="pm-it" id="pmCall" onclick="cerrarPerfilMenu();showSection('call')"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Call-in</button>
  <button type="button" class="pm-it" id="pmRend" style="display:none" onclick="cerrarPerfilMenu();showSection('rend')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rendimiento</button>
  <button type="button" class="pm-it" id="pmStats" style="display:none" onclick="cerrarPerfilMenu();showSection('stats')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Estadísticas</button>
+ <button type="button" class="pm-it" id="pmEjer" onclick="cerrarPerfilMenu();showSection('ejer')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg>Ejercicios</button>
  <button type="button" class="pm-it" id="pmSchool" onclick="cerrarPerfilMenu();showSection('school')"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg>School</button>
  <button type="button" class="pm-it" onclick="cerrarPerfilMenu();abrirAjustesAvisos()"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones</button>
  <button type="button" class="pm-it salir" onclick="if(confirmarSalir())cerrarSesionPanel()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button>
@@ -1205,7 +1219,8 @@ const TOPBAR = {
  call: ['Call-in','Busca pacientes por estado para llamarles'],
  agenda: ['Agenda','Citas del día de cada fisio'],
  stats: ['Estadísticas','Cómo va el centro semana a semana'],
- cap: ['Captación','Lista de espera, contactos y negocios del barrio']
+ cap: ['Captación','Lista de espera, contactos y negocios del barrio'],
+ ejer: ['Ejercicios','La biblioteca de vídeos del equipo']
 };
 
 const CFG = {
@@ -1388,7 +1403,7 @@ function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
  try{$('btnRend').classList.toggle('activo',sec==='rend');$('btnTar').classList.toggle('activo',sec==='tar');}catch(e){}
- ['anam','prog','agenda','pac','school','msg','record','rend','seg','tar','call','stats','cap'].forEach(s=>{
+ ['anam','prog','agenda','pac','school','msg','record','rend','seg','tar','call','stats','cap','ejer'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
  const [t,s] = TOPBAR[sec];
@@ -1412,6 +1427,7 @@ function showSection(sec){
  else if(sec==='call') renderCallIn(wrap);
  else if(sec==='agenda') renderAgenda(wrap);
  else if(sec==='cap') renderCaptacion(wrap);
+ else if(sec==='ejer') renderEjercicios(wrap);
  else if(sec==='stats') renderStats(wrap);
 }
 
@@ -5497,6 +5513,67 @@ function capOfrecerModal(h,esp,hoy,onDone){const P=capPrio(esp,h,hoy);
  m.querySelector('.hz-x').onclick=()=>{m.remove();onDone&&onDone();};
  m.querySelectorAll('.cap-p').forEach(b=>b.onclick=async()=>{const r=P[+b.dataset.i];await capOfrecer(r.x,h,hoy);b.classList.add('av');toast('Apuntado: avisado hoy',true);});}
 
+
+// ── BIBLIOTECA DE EJERCICIOS ──────────────────────────────────────────────────
+const EJ_ZONAS=['Cervical','Hombro','Codo, muñeca y mano','Dorsal','Lumbar','Cadera y glúteo','Rodilla','Tobillo y pie','Core','Equilibrio','Neurodinamia','Respiración','General'];
+let ejZona='',ejQ='',ejMax=60;
+const ejKey=n=>sinTildes(n).replace(/[^a-z0-9]+/g,' ').trim();
+const ejYt=u=>{const m=String(u||'').match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/);return m?m[1]:'';};
+async function ejApi(body){const r=await fetch('/api/ejercicios',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,...body})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'No se ha podido guardar');return d;}
+async function renderEjercicios(wrap){
+ const box=ce('div','ej');wrap.appendChild(box);
+ if(!biblio.length){box.innerHTML='<p class="ej-n">Cargando ejercicios…</p>';await loadBiblio();box.innerHTML='';}
+ box.innerHTML=`<div class="ej-top"><input type="search" class="ej-q" placeholder="Buscar ejercicio…" value="${escH(ejQ)}"><button type="button" class="seg-add ej-nuevo">+ Nuevo ejercicio</button></div><div class="ej-zs"></div><p class="ej-n"></p><div class="ej-g"></div>`;
+ const pinta=()=>{
+  const rep={};biblio.forEach(e=>{const k=ejKey(e.nombre);rep[k]=(rep[k]||0)+1;});
+  const cnt={};biblio.forEach(e=>{const z=e.zona||'';cnt[z]=(cnt[z]||0)+1;});
+  const zonas=[...new Set([...EJ_ZONAS,...biblio.map(e=>e.zona).filter(Boolean)])].filter(z=>cnt[z]);
+  const nRep=biblio.filter(e=>rep[ejKey(e.nombre)]>1).length;
+  const ops=[['','Todos',biblio.length],...zonas.map(z=>[z,z,cnt[z]]),...(cnt['']?[['__sin','Sin zona',cnt['']]]:[]),...(nRep?[['__rep','Repetidos',nRep]]:[])];
+  if(!ops.some(o=>o[0]===ejZona))ejZona='';
+  const zs=box.querySelector('.ej-zs');zs.innerHTML=ops.map(o=>`<button type="button" data-z="${escH(o[0])}" class="${o[0]===ejZona?'on':''}">${escH(o[1])}<i>${o[2]}</i></button>`).join('');
+  zs.querySelectorAll('button').forEach(b=>b.onclick=()=>{ejZona=b.dataset.z;ejMax=60;pinta();});
+  const q=sinTildes(ejQ.trim());
+  let L=biblio.filter(e=>(!q||sinTildes(e.nombre+' '+(e.descripcion||'')).includes(q))&&(ejZona===''||(ejZona==='__sin'?!e.zona:ejZona==='__rep'?rep[ejKey(e.nombre)]>1:e.zona===ejZona)));
+  if(ejZona==='__rep')L=L.slice().sort((a,b)=>ejKey(a.nombre).localeCompare(ejKey(b.nombre)));
+  box.querySelector('.ej-n').textContent=L.length===1?'1 ejercicio':`${L.length} ejercicios`+(ejZona==='__rep'?' · mismos nombres, puedes borrar los que sobren':'');
+  const g=box.querySelector('.ej-g');g.innerHTML='';
+  if(!L.length){g.innerHTML='<p class="ej-n">No hay ejercicios con ese filtro.</p>';}
+  L.slice(0,ejMax).forEach(e=>{const c=ce('button','ej-c');c.type='button';const th=peMini(e);const n=rep[ejKey(e.nombre)];
+   c.innerHTML=`<div class="ej-th" ${th?`style="background-image:url('${escH(th)}')"`:''}>${th?'':'Sin vídeo'}${n>1?`<em>×${n}</em>`:''}</div><div class="ej-b"><b>${escH(e.nombre)}</b>${e.zona?`<span>${escH(e.zona)}</span>`:'<span class="sz">Sin zona</span>'}</div>`;
+   c.onclick=()=>ejEditar(e,pinta);g.appendChild(c);});
+  if(L.length>ejMax){const b=ce('button','ej-mas');b.type='button';b.textContent=`Ver más (${L.length-ejMax})`;b.onclick=()=>{ejMax+=60;pinta();};g.after(b);}
+  box.querySelectorAll('.ej-mas').forEach((b,i,a)=>{if(L.length<=ejMax||i<a.length-1)b.remove();});
+ };
+ let t;box.querySelector('.ej-q').oninput=e=>{clearTimeout(t);t=setTimeout(()=>{ejQ=e.target.value;ejMax=60;pinta();},150);};
+ box.querySelector('.ej-nuevo').onclick=()=>ejEditar(null,pinta);
+ pinta();
+}
+function ejEditar(e,onSaved){
+ e=e||{};const nuevo=!e.id;let foto=null;
+ const m=hzModal(`<div class="ej-mod"><div class="hz-top"><div><small>Ejercicio</small><b>${nuevo?'Nuevo ejercicio':escH(e.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="ej-vid"></div>
+  <div class="hz-lab">Nombre</div>${capIn('ej-nom','Ej.: Puente de glúteo',e.nombre)}
+  <div class="hz-lab">Link de YouTube</div>${capIn('ej-yt','https://youtu.be/…',e.youtubeUrl,'url')}
+  <div class="hz-lab">Zona</div><div class="seg-rap ej-z"></div>
+  <div class="hz-lab">Cómo se hace <span>(opcional, lo ve el paciente)</span></div><textarea class="seg-n ej-des" rows="3" placeholder="Ej.: Tumbado boca arriba, rodillas dobladas. Sube la cadera apretando glúteos…">${escH(e.descripcion||'')}</textarea>
+  <div class="hz-lab">Foto <span>(opcional, si no hay vídeo)</span></div><div class="ej-foto"><label>Elegir foto<input type="file" accept="image/*" hidden></label><span class="ej-fn">${e.imagen?'Ya tiene foto':''}</span></div>
+  <div class="hz-bts">${nuevo?'':'<button type="button" class="hz-re ej-del">Borrar</button>'}<button type="button" class="hz-ok">${nuevo?'Añadir':'Guardar'}</button></div></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const zs=[...new Set([...EJ_ZONAS,...biblio.map(x=>x.zona).filter(Boolean)])];
+ const gZ=capChips(m.querySelector('.ej-z'),zs,e.zona||'',false,Object.fromEntries(zs.map(z=>[z,z])));
+ const vid=m.querySelector('.ej-vid'),yt=m.querySelector('.ej-yt');
+ const pv=()=>{const id=ejYt(yt.value);if(id){vid.style.display='';if(vid.dataset.id!==id){vid.dataset.id=id;vid.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>`;}}else if(foto||e.imagen){vid.style.display='';vid.dataset.id='';vid.innerHTML=`<img src="${escH(foto?foto.url:e.imagen)}" alt="">`;}else{vid.style.display='none';vid.innerHTML='';vid.dataset.id='';}};
+ pv();yt.addEventListener('input',pv);
+ m.querySelector('.ej-foto input').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const img=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=URL.createObjectURL(f);});const k=Math.min(1,1200/Math.max(img.width,img.height));const cv=document.createElement('canvas');cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);const url=cv.toDataURL('image/jpeg',.82);foto={url,b64:url.split(',')[1],tipo:'image/jpeg'};m.querySelector('.ej-fn').textContent=f.name;pv();}catch(_){toast('No se ha podido leer la foto',false);}};
+ m.querySelector('.hz-ok').onclick=async ev=>{const b=ev.target;const campos={nombre:m.querySelector('.ej-nom').value.trim(),youtube:yt.value.trim(),zona:gZ()||'',descripcion:m.querySelector('.ej-des').value.trim()};
+  if(!campos.nombre){toast('Pon el nombre del ejercicio',false);return;}
+  if(campos.youtube&&!ejYt(campos.youtube)){toast('Ese link no parece de YouTube',false);return;}
+  const igual=biblio.find(x=>x.id!==e.id&&ejKey(x.nombre)===ejKey(campos.nombre));
+  if(igual&&!b.dataset.ok){b.dataset.ok=1;b.textContent='Ya hay uno igual · Toca otra vez';setTimeout(()=>{delete b.dataset.ok;b.textContent=nuevo?'Añadir':'Guardar';},4000);return;}
+  b.disabled=true;try{await ejApi({id:e.id||'',campos,foto:foto?{b64:foto.b64,tipo:foto.tipo}:null});toast(nuevo?'Ejercicio añadido':'Guardado',true);m.remove();await loadBiblio();onSaved&&onSaved();}catch(err){b.disabled=false;toast(err.message,false);}};
+ const del=m.querySelector('.ej-del');if(del)capConf(del,'¿Seguro? Toca otra vez',async()=>{await ejApi({accion:'borrar',id:e.id});toast('Borrado',true);m.remove();biblio=biblio.filter(x=>x.id!==e.id);onSaved&&onSaved();});
+}
 async function renderCaptacion(wrap){
  const box=ce('div','cap');wrap.appendChild(box);
  box.innerHTML='<div class="fac-vacio">Cargando…</div>';
