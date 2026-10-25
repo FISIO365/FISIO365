@@ -320,6 +320,26 @@ async function esperaLista(forzar) {
     ...p.map(r => { const F = r.fields, pid = (F['PACIENTE'] || [])[0] || ''; return { id: r.id, tabla: 'esperaP', pacienteId: pid, nombre: (info[pid] || {}).nombre || '—', tel: (info[pid] || {}).tel || '', fecha: F['FECHA SOLICITUD'] || String(r.createdTime).slice(0, 10), nota: F['NOTAS'] || '', disp: F['DISPONIBILIDAD'] || '', dias: (F['DIAS'] || []).map(cNm), franja: (F['FRANJA'] || []).map(cNm), fisio: F['FISIO'] || '', estado: est(F, false), aviso: F['ÚLTIMO AVISO'] || '' }; }),
     ...n.map(r => { const F = r.fields; return { id: r.id, tabla: 'esperaN', pacienteId: '', nombre: F['NOMBRE'] || 'Sin nombre', tel: F['TELF'] || '', fecha: F['FECHA SOLICITUD'] || String(r.createdTime).slice(0, 10), nota: F['NOTAS'] || '', disp: F['DISPONIBILIDAD'] || '', dias: (F['DIAS'] || []).map(cNm), franja: (F['FRANJA'] || []).map(cNm), fisio: F['FISIO'] || '', estado: est(F, cNm(F['PERDIDO?']) === 'SÍ'), aviso: F['ÚLTIMO AVISO'] || '' }; })
   ].sort((a, b) => b.fecha.localeCompare(a.fecha));
+  // Si alguien de la lista ya tiene cita (dada después de apuntarse), pasa solo a «Ya tiene cita»
+  try {
+    const esp = v.filter(e => e.estado === 'ESPERANDO');
+    if (esp.length) {
+      const sinPac = esp.filter(e => !e.pacienteId && String(e.tel || '').replace(/\D/g, '').length >= 9), pidTel = {};
+      if (sinPac.length) { const tels = [...new Set(sinPac.map(e => String(e.tel).replace(/\D/g, '').slice(-9)))];
+        (await capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + tels.slice(0, 30).flatMap(t => [`RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${t}'`, `RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${t}'`]).join(',') + ')')}&fields[]=TELF&fields[]=WHATSAPP`).catch(() => [])).forEach(p => [p.fields['TELF'], p.fields['WHATSAPP']].forEach(t => { const d = String(t || '').replace(/\D/g, '').slice(-9); if (d.length === 9) pidTel[d] = p.id; })); }
+      const quien = esp.map(e => ({ e, pid: e.pacienteId || pidTel[String(e.tel || '').replace(/\D/g, '').slice(-9)] || '' })).filter(x => x.pid);
+      const pids = [...new Set(quien.map(x => x.pid))], citas = {};
+      for (let i = 0; i < pids.length; i += 15) { const lote = pids.slice(i, i + 15);
+        (await capTodos('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='REALIZADA'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=PacienteRec`).catch(() => [])).forEach(c => (c.fields['PacienteRec'] || []).forEach(id => { if (lote.includes(id)) (citas[id] = citas[id] || []).push({ fecha: String(c.fields['FECHA'] || '').slice(0, 10), creada: String(c.createdTime || '').slice(0, 10) }); })); }
+      for (const { e, pid } of quien.slice(0, 20)) {
+        const c = (citas[pid] || []).filter(c => c.creada >= e.fecha && c.fecha >= e.fecha).sort((a, b) => a.fecha.localeCompare(b.fecha))[0];
+        if (!c) continue;
+        const T = e.tabla === 'esperaP' ? CAP.esperaP : CAP.esperaN;
+        const r = await at(`${T}/${e.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'CITADO', NOTAS: [e.nota, `Ya tiene cita el ${c.fecha.split('-').reverse().join('/')} (se quitó sola de la lista)`].filter(Boolean).join(' · ') }, typecast: true }) }).catch(() => ({ error: 1 }));
+        if (!r.error) { e.estado = 'CITADO'; e.nota = [e.nota, `Ya tiene cita el ${c.fecha.split('-').reverse().join('/')}`].filter(Boolean).join(' · '); }
+      }
+    }
+  } catch (err) {}
   _espera = { t: Date.now(), v }; return v;
 }
 const capNorm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
