@@ -427,7 +427,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .rp-eq{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #f1ede9;font-size:14px}.rp-eq:first-of-type{border-top:none}.rp-eq b{color:#1e2a38}.rp-eq span{font-size:12.5px;font-weight:600;border-radius:99px;padding:3px 10px}.rp-eq .si{background:#e8f5ec;color:#16803c}.rp-eq .no{background:#fdecea;color:#c0392b}.rp-eq .pe{background:#f3efea;color:#7d6a60}
 @media(max-width:768px){.topbar-t,.topbar-s{padding-right:112px;box-sizing:border-box;overflow-wrap:anywhere}}
 @media(min-width:769px){#pmCap,#pmEjer{display:none!important}}
-@media(min-width:769px){.sidebar .sb-item{padding:8px 12px!important;font-size:13.5px!important;border-radius:12px!important}.sb-logo{padding:20px 22px 12px!important}.sb-grp{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b0a69e;padding:14px 12px 4px}}
+@media(min-width:769px){.sidebar .sb-item{padding:7px 12px!important;font-size:13.5px!important;border-radius:11px!important}.sidebar .sb-ico svg{width:18px;height:18px}.sb-logo{padding:18px 22px 10px!important}.sb-grp{height:1px;background:rgba(26,26,26,.08);margin:6px 12px}#sidebar #sb-school,.sidebar #sb-school{margin-top:0!important;border-top:none!important;padding-top:7px!important;border-radius:11px!important}.sb-footer{padding-top:8px!important;padding-bottom:8px!important}}
 @media(max-width:768px){.sb-grp{display:none!important}}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
@@ -1121,7 +1121,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="sb-item" id="sb-rep" onclick="showSection('rep')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="18" rx="2.5"/><path d="M8.5 9l1.5 1.5 3-3M8.5 15l1.5 1.5 3-3M15.5 9.5h1M15.5 15.5h1"/></svg></span><span class="sb-txt">Check-list</span>
  </div>
- <div class="sb-grp">Seguimiento</div>
+ <div class="sb-grp"></div>
  <div class="sb-item" id="sb-tar" onclick="showSection('tar')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></span><span class="sb-txt">Pendientes</span>
  </div>
@@ -1134,7 +1134,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="sb-item" id="sb-record" onclick="showSection('record')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="sb-txt">Recordatorios</span>
  </div>
- <div class="sb-grp">Clínica</div>
+ <div class="sb-grp"></div>
  <div class="sb-item" id="sb-prog" onclick="showSection('prog')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span><span class="sb-txt">Programas</span>
  </div>
@@ -1144,14 +1144,15 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="sb-item" id="sb-anam" onclick="showSection('anam')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 3h6v3H9z"/><path d="M8 4.5H6a2 2 0 0 0-2 2V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6.5a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h5"/></svg></span><span class="sb-txt">Anamnesis</span>
  </div>
- <div class="sb-grp" id="sb-g-dir" style="display:none">Dirección</div>
+ <div class="sb-grp" id="sb-g-dir" style="display:none"></div>
  <div class="sb-item" id="sb-rend" onclick="showSection('rend')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="sb-txt">Rendimiento</span>
  </div>
  <div class="sb-item" id="sb-stats" onclick="showSection('stats')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg></span><span class="sb-txt">Estadísticas</span>
  </div>
- <div class="sb-item" id="sb-school" onclick="showSection('school')" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px">
+ <div class="sb-grp"></div>
+ <div class="sb-item" id="sb-school" onclick="showSection('school')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg></span><span class="sb-txt">School</span>
  </div>
  </div>
