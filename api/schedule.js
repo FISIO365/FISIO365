@@ -258,6 +258,30 @@ async function alertasSalud() {
   })().catch(e => { _alertas.p = null; return _alertas.m || {}; });
   return _alertas.p;
 }
+// Datos completos de un consentimiento para crear su PDF (con la firma). La firma se trae de Tally la primera vez y se guarda en Airtable.
+async function datosConsent(id) {
+  let r = await at(`${CONS_T}/${id}`); if (r.error) r = await at(`${CONS_O}/${id}`); if (r.error) return null; const T = (r.fields && (r.fields['TIPO'] || r.fields['FECHA ALTA'] !== undefined || r.fields['Creada'] === undefined && r.fields['FECHA'])) ? CONS_O : CONS_T; // Airtable devuelve el registro aunque la tabla de la URL no sea la suya
+  const F = r.fields || {}, KEY = T === CONS_T ? process.env.TALLY_API_KEY : '', otro = T === CONS_O;
+  let firmaUrl = ((F['FIRMA'] || [])[0] || {}).url || '', tutor = '', tutorNif = '', recomendo = '';
+  const sub = String(F['SUBMISSION ID'] || '').trim(), form = cNm(F['FORM ID']).trim() || 'b5j1M2';
+  if (KEY && sub && /^[A-Za-z0-9]+$/.test(sub) && /^[A-Za-z0-9]+$/.test(form)) {
+    const t = await fetch(`https://api.tally.so/forms/${form}/submissions/${sub}`, { headers: { Authorization: `Bearer ${KEY}` } }).then(x => x.ok ? x.json() : null).catch(() => null);
+    if (t) {
+      const qs = t.questions || (t.data && t.data.questions) || [], subm = t.submission || t.data || t, resp = subm.responses || [];
+      const lab = id => { const x = qs.find(z => z.id === id); return capNorm(x && (x.title || x.label) || ''); };
+      const val = a => Array.isArray(a) ? a.map(v => typeof v === 'object' ? '' : v).join(', ') : (typeof a === 'object' ? '' : String(a ?? ''));
+      resp.forEach(x => { const l = lab(x.questionId), a = x.answer !== undefined ? x.answer : x.value;
+        if (/tutor/.test(l) && /nif/.test(l)) tutorNif = val(a); else if (/tutor/.test(l)) tutor = val(a); else if (/recomend/.test(l)) recomendo = val(a);
+        if (!firmaUrl) { const enc = JSON.stringify(a || ''); const m = enc.match(/https:\/\/storage\.tally\.so\/[^"]+\.png[^"]*/); if (m && (/firma|signature/.test(l) || x.type === 'SIGNATURE' || !l)) firmaUrl = m[0].replace(/\\u0026/g, '&'); } });
+      if (firmaUrl && !(F['FIRMA'] || []).length) await at(`${CONS_T}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { FIRMA: [{ url: firmaUrl, filename: 'firma.png' }] } }) }).catch(() => {});
+    }
+  }
+  let firma = '';
+  if (firmaUrl) { try { const im = await fetch(firmaUrl); if (im.ok) firma = `data:${im.headers.get('content-type') || 'image/png'};base64,` + Buffer.from(await im.arrayBuffer()).toString('base64'); } catch (e) {} }
+  const resp = {}; Object.keys(F).forEach(k => { const v = F[k]; if (v && typeof v === 'object' && !Array.isArray(v) && v.name) resp[k] = v.name; else if (typeof v === 'string' && v.length < 60) resp[k] = v; });
+  return { ok: true, tally: !!process.env.TALLY_API_KEY, pac: F['PACIENTE'] || [], papel: !!F['PAPEL'], doc: { id: r.id, tipo: otro ? (cNm(F['TIPO']) || 'Suelo pélvico') : 'Primera visita', fechaAlta: F['FECHA ALTA'] || '', notasSalud: F['NOTAS SALUD'] || '', informe: (F['INFORME'] || []).map(a => ({ url: a.url, nombre: a.filename || 'informe' })), nombre: String(F['﻿NOMBRE'] || F['NOMBRE'] || '').trim(), apellidos: String(F['APELLIDOS'] || '').trim(), dni: String(F['DNI'] || '').trim(), nacimiento: F['NACIMIENTO'] || '', email: F['EMAIL'] || '', tel: F['TELF'] || '', fecha: (otro ? F['FECHA'] : F['Creada']) || String(r.createdTime || '').slice(0, 10), aceptaSP: !!F['ACEPTACIÓN S.P.'], resp, firma, tutor, tutorNif, recomendo } };
+}
+
 // ── CAPTACIÓN: contactos sin cita, lista de espera y negocios del barrio ─────
 const CAP = { contacto: 'tblgsMcknBLDyfWHu', esperaP: 'tbl5ksXlpfsSTZk5i', esperaN: 'tblAvnUMOvVo4OBne', negocio: 'tblO5y1Ikg3LIalic', referidos: 'tblr27u3cvtzfyqI6' };
 const capTodos = async (t, q2) => { let recs = [], off = ''; do { const d = await at(`${t}?${q2}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
@@ -533,28 +557,9 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ ok: true, hoy: hoyF, enlazados, sinCons, huerfanos, revisar });
       }
       if (action === 'seg-consent-doc') {
-        // Datos completos de un consentimiento para crear su PDF (con la firma). La firma se trae de Tally la primera vez y se guarda en Airtable.
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
-        let r = await at(`${CONS_T}/${q.id}`); if (r.error) r = await at(`${CONS_O}/${q.id}`); if (r.error) return res.status(404).json({ ok: false }); const T = (r.fields && (r.fields['TIPO'] || r.fields['FECHA ALTA'] !== undefined || r.fields['Creada'] === undefined && r.fields['FECHA'])) ? CONS_O : CONS_T; // Airtable devuelve el registro aunque la tabla de la URL no sea la suya
-        const F = r.fields || {}, KEY = T === CONS_T ? process.env.TALLY_API_KEY : '', otro = T === CONS_O;
-        let firmaUrl = ((F['FIRMA'] || [])[0] || {}).url || '', tutor = '', tutorNif = '', recomendo = '';
-        const sub = String(F['SUBMISSION ID'] || '').trim(), form = cNm(F['FORM ID']).trim() || 'b5j1M2';
-        if (KEY && sub && /^[A-Za-z0-9]+$/.test(sub) && /^[A-Za-z0-9]+$/.test(form)) {
-          const t = await fetch(`https://api.tally.so/forms/${form}/submissions/${sub}`, { headers: { Authorization: `Bearer ${KEY}` } }).then(x => x.ok ? x.json() : null).catch(() => null);
-          if (t) {
-            const qs = t.questions || (t.data && t.data.questions) || [], subm = t.submission || t.data || t, resp = subm.responses || [];
-            const lab = id => { const x = qs.find(z => z.id === id); return capNorm(x && (x.title || x.label) || ''); };
-            const val = a => Array.isArray(a) ? a.map(v => typeof v === 'object' ? '' : v).join(', ') : (typeof a === 'object' ? '' : String(a ?? ''));
-            resp.forEach(x => { const l = lab(x.questionId), a = x.answer !== undefined ? x.answer : x.value;
-              if (/tutor/.test(l) && /nif/.test(l)) tutorNif = val(a); else if (/tutor/.test(l)) tutor = val(a); else if (/recomend/.test(l)) recomendo = val(a);
-              if (!firmaUrl) { const enc = JSON.stringify(a || ''); const m = enc.match(/https:\/\/storage\.tally\.so\/[^"]+\.png[^"]*/); if (m && (/firma|signature/.test(l) || x.type === 'SIGNATURE' || !l)) firmaUrl = m[0].replace(/\\u0026/g, '&'); } });
-            if (firmaUrl && !(F['FIRMA'] || []).length) await at(`${CONS_T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { FIRMA: [{ url: firmaUrl, filename: 'firma.png' }] } }) }).catch(() => {});
-          }
-        }
-        let firma = '';
-        if (firmaUrl) { try { const im = await fetch(firmaUrl); if (im.ok) firma = `data:${im.headers.get('content-type') || 'image/png'};base64,` + Buffer.from(await im.arrayBuffer()).toString('base64'); } catch (e) {} }
-        const resp = {}; Object.keys(F).forEach(k => { const v = F[k]; if (v && typeof v === 'object' && !Array.isArray(v) && v.name) resp[k] = v.name; else if (typeof v === 'string' && v.length < 60) resp[k] = v; });
-        return res.status(200).json({ ok: true, tally: !!process.env.TALLY_API_KEY, doc: { id: r.id, tipo: otro ? (cNm(F['TIPO']) || 'Suelo pélvico') : 'Primera visita', fechaAlta: F['FECHA ALTA'] || '', notasSalud: F['NOTAS SALUD'] || '', informe: (F['INFORME'] || []).map(a => ({ url: a.url, nombre: a.filename || 'informe' })), nombre: String(F['﻿NOMBRE'] || F['NOMBRE'] || '').trim(), apellidos: String(F['APELLIDOS'] || '').trim(), dni: String(F['DNI'] || '').trim(), nacimiento: F['NACIMIENTO'] || '', email: F['EMAIL'] || '', tel: F['TELF'] || '', fecha: (otro ? F['FECHA'] : F['Creada']) || String(r.createdTime || '').slice(0, 10), aceptaSP: !!F['ACEPTACIÓN S.P.'], resp, firma, tutor, tutorNif, recomendo } });
+        const d = await datosConsent(q.id); if (!d) return res.status(404).json({ ok: false });
+        delete d.pac; return res.status(200).json(d);
       }
       if (action === 'seg-consent-email') {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -1175,6 +1180,22 @@ module.exports = async function handler(req, res) {
   if (!patientId) return res.status(400).json({ error: 'Falta patientId' });
 
   // ── FACTURAS DEL PACIENTE (Holded, solo lectura) ─────────────────────────
+  // ── App del paciente: sus documentos firmados (consentimientos) ──
+  if (action === 'mis-documentos' || action === 'mi-documento') {
+    if (!/^rec[A-Za-z0-9]{14}$/.test(patientId || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
+    try {
+      if (action === 'mis-documentos') {
+        const lista = await consTodos();
+        const docs = lista.filter(c => c.pac.includes(patientId)).sort((a, b) => b.fecha.localeCompare(a.fecha)).map(c => ({ id: c.id, tipo: c.tipo, fecha: c.fecha, papel: c.papel }));
+        return res.status(200).json({ ok: true, docs });
+      }
+      const id = req.query.id; if (!/^rec[A-Za-z0-9]{14}$/.test(id || '')) return res.status(400).json({ ok: false });
+      const d = await datosConsent(id); if (!d || !d.pac.includes(patientId)) return res.status(404).json({ ok: false, error: 'No encontrado' });
+      if (d.papel) { const r = await at(`${CONS_O}/${id}`); const a = r.fields && (r.fields['ARCHIVO'] || [])[0]; if (!a) return res.status(404).json({ ok: false });
+        const im = await fetch(a.url); return res.status(200).json({ ok: true, papel: true, nombre: a.filename || 'consentimiento', tipo: a.type || 'application/octet-stream', b64: Buffer.from(await im.arrayBuffer()).toString('base64') }); }
+      delete d.pac; return res.status(200).json(d);
+    } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
+  }
   if (action === 'facturas') {
     const id = req.query.id;
     if (!/^rec[A-Za-z0-9]{14}$/.test(patientId || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });

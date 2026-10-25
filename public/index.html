@@ -732,6 +732,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 
  <div id="vistaInformes" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mis informes</div><div class="date-sub">Informes de tus valoraciones</div></div>
+ <div id="docPacWrap" style="display:none;margin-bottom:18px"><div class="date-sub" style="margin:0 0 8px;font-weight:600">Documentos firmados</div><div id="docPacList"></div></div>
  <div id="infPacList"><div class="loading"><div class="spinner"></div></div></div>
  </div>
 
@@ -1188,7 +1189,22 @@ function abrirConv(c){
 }
 
 // INFORMES
-async function loadInformes(){
+async function loadDocumentos(){const w=document.getElementById('docPacWrap'),l=document.getElementById('docPacList');if(!w||!patient)return;
+ try{const d=await (await fetch('/api/schedule?action=mis-documentos&patientId='+encodeURIComponent(patient.id))).json();
+  if(!d.ok||!(d.docs||[]).length){w.style.display='none';return;}
+  l.innerHTML=d.docs.map(x=>`<div class="fac-card"><div class="fac-izq"><div class="fac-num">${escF(x.tipo==='Primera visita'?'Consentimiento de primera visita':x.tipo==='Suelo pélvico'?'Consentimiento de suelo pélvico':'Consentimiento por alta oncológica')}</div><div class="fac-meta">Firmado el ${escF(String(x.fecha||'').split('-').reverse().join('/'))}${x.papel?' · en papel':''}</div></div><div class="fac-der"><button class="btn-inf pdf fac-btn" onclick="descargarDocumento('${x.id}',this)">Descargar</button></div></div>`).join('');
+  w.style.display='';}catch(e){w.style.display='none';}}
+async function descargarDocumento(id,btn){const t=btn.textContent;btn.disabled=true;btn.textContent='…';
+ try{const d=await (await fetch('/api/schedule?action=mi-documento&patientId='+encodeURIComponent(patient.id)+'&id='+encodeURIComponent(id))).json();if(!d.ok)throw 0;
+  let blob,nombre;
+  if(d.papel){const bin=atob(d.b64),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);blob=new Blob([u8],{type:d.tipo});nombre=d.nombre;}
+  else{const P=await pdfConsentimiento(d.doc);blob=P.blob;nombre=P.nombre;}
+  const file=new File([blob],nombre,{type:blob.type});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:nombre});}catch(e){}}
+  else{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+ }catch(e){toast('No se ha podido descargar el documento',false);}
+ btn.disabled=false;btn.textContent=t;}
+async function loadInformes(){loadDocumentos();
   const list=document.getElementById('infPacList');if(!list)return;list.innerHTML='<div class="loading"><div class="spinner"></div></div>';window._informesPac=[];
   try{const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);const data=await res.json();const informes=data.informes||[];
   if(!informes.length){list.innerHTML='<div class="empty"><div class="empty-icon"></div><div class="empty-title">Sin informes todavía</div><div class="empty-desc">Cuando tu fisio genere un informe aparecerá aquí.</div></div>';return;}
@@ -1383,6 +1399,7 @@ async function loadPuntos(){
   }
 }
 </script>
+<script src="/consent-pdf.js"></script>
 <script src="/avisos.js"></script>
 <script src="/chat-ui.js"></script>
 <script src="/racha-ui.js"></script>

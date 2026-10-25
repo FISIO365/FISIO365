@@ -25,6 +25,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/consent-pdf.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "public/icons/*",
       "use": "@vercel/static"
     },
@@ -97,6 +101,10 @@
     {
       "src": "/avisos.js",
       "dest": "/public/avisos.js"
+    },
+    {
+      "src": "/consent-pdf.js",
+      "dest": "/public/consent-pdf.js"
     },
     {
       "src": "/manifest.json",
