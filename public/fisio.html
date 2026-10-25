@@ -1110,7 +1110,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="topbar">
  <button type="button" id="btnPerfil" onclick="abrirPerfilMenu()" aria-label="Mi perfil"></button>
  <div id="topBtns">
- <button type="button" class="tb-b" id="btnNoCit" onclick="editContactoG(null,()=>{try{if(sessionStorage.getItem('f365_panel_sec')==='cap')showSection('cap');}catch(e){}})" aria-label="Apuntar alguien que pregunta" title="Apuntar alguien que pregunta (no citado)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg></button>
+ <button type="button" class="tb-b on" id="btnNoCit" onclick="editContactoG(null,()=>{try{if(sessionStorage.getItem('f365_panel_sec')==='cap')showSection('cap');}catch(e){}})" aria-label="Apuntar alguien que pregunta" title="Apuntar alguien que pregunta (no citado)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg></button>
  <button type="button" class="tb-b" id="btnTar" onclick="showSection('tar')" aria-label="Pendientes"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><i class="tb-n" id="btnTarN"></i></button>
  <button type="button" class="tb-b" id="btnRend" onclick="showSection('rend')" aria-label="Rendimiento" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
  </div>
