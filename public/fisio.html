@@ -5603,17 +5603,17 @@ function mensajeTarjeta(quien,nuevo,cad){const nm=capi(quien),nvm=capi(nuevo);
 // Imagen de la tarjeta regalo (para mandarla por WhatsApp)
 async function tarjetaImagen(quien,nuevo,cad,tipo){
  try{await document.fonts.load('800 60px Poppins');await document.fonts.load('600 30px Poppins');}catch(e){}
- // Todo centrado y dentro del cuadrado central: WhatsApp a veces recorta la vista previa en cuadrado
- const W=1200,H=630,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+ // Cuadrada y centrada: WhatsApp enseña la vista previa en un cuadradito y así se ve entera
+ const W=1080,H=1080,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
  const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#de8257');g.addColorStop(1,'#c2552e');x.fillStyle=g;x.fillRect(0,0,W,H);
- x.fillStyle='rgba(255,255,255,.10)';x.beginPath();x.arc(W-80,60,220,0,Math.PI*2);x.fill();x.beginPath();x.arc(70,H+30,170,0,Math.PI*2);x.fill();
+ x.fillStyle='rgba(255,255,255,.10)';x.beginPath();x.arc(W-60,60,260,0,Math.PI*2);x.fill();x.beginPath();x.arc(40,H-20,220,0,Math.PI*2);x.fill();
  x.fillStyle='#fff';x.textAlign='center';x.textBaseline='alphabetic';const cx=W/2;
- x.font='800 34px Poppins';x.fillText('FISIO365',cx,92);
- x.font='600 22px Poppins';x.globalAlpha=.9;x.fillText('TARJETA  REGALO',cx,128);x.globalAlpha=1;
- x.font='800 170px Poppins';x.fillText('10 €',cx,318);
- x.font='600 36px Poppins';x.fillText('de descuento en',cx,382);x.fillText('tu próxima sesión',cx,428);
- x.font='600 28px Poppins';x.globalAlpha=.95;x.fillText(`Para ${capi(quien)}`,cx,512);
- x.globalAlpha=.85;x.font='500 22px Poppins';x.fillText(`Válida hasta el ${String(cad||'').split('-').reverse().join('/')}`,cx,552);x.globalAlpha=1;
+ x.font='800 58px Poppins';x.fillText('FISIO365',cx,190);
+ x.font='600 38px Poppins';x.globalAlpha=.9;x.fillText('TARJETA  REGALO',cx,250);x.globalAlpha=1;
+ x.font='800 300px Poppins';x.fillText('10 €',cx,580);
+ x.font='600 54px Poppins';x.fillText('de descuento en',cx,680);x.fillText('tu próxima sesión',cx,748);
+ x.font='600 44px Poppins';x.globalAlpha=.95;x.fillText(`Para ${capi(quien)}`,cx,870);
+ x.globalAlpha=.85;x.font='500 34px Poppins';x.fillText(`Válida hasta el ${String(cad||'').split('-').reverse().join('/')}`,cx,925);x.globalAlpha=1;
  return await new Promise(ok=>c.toBlob(ok,tipo||'image/png',0.88));}
 // Enviar la tarjeta: se guarda la imagen y se manda un enlace; WhatsApp enseña la tarjeta en la vista previa
 // Antes de enviar se pueden retocar los nombres (nombres compuestos, apodos…)
