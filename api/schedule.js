@@ -58,8 +58,16 @@ async function gastosBancoMeses() {
     const vistos = new Set();
     mv.forEach(m => { const mid = m && (m.id || m._id); if (mid && vistos.has(mid)) return; if (mid) vistos.add(mid);
       const n = importeMov(m), f = fechaMov(m); if (!(n < 0) || !f) return; g[f.slice(0, 7)] = Math.round(((g[f.slice(0, 7)] || 0) - n) * 100) / 100; }); }
-  const v = { meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), cuentas: nombres, error: !nombres.length ? 'No hay cuentas bancarias en Holded' : (fallos.length === nombres.length ? fallos[0] : null) };
+  const v = { fuente: 'banco', meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), cuentas: nombres, error: !nombres.length ? 'No hay cuentas bancarias en Holded' : (fallos.length === nombres.length ? fallos[0] : null) };
   _gasH = { t: Date.now(), v }; return v;
+}
+// Si la clave no puede leer el banco: gastos = compras y gastos registrados en Holded (menos sus rectificativas)
+async function gastosComprasMeses() {
+  const g = {}, suma = (L, sg) => { const vistos = new Set(); L.forEach(d => { if (!d || (d.id && vistos.has(d.id))) return; if (d.id) vistos.add(d.id);
+    const f = fechaMov(d); if (!f) return; g[f.slice(0, 7)] = Math.round(((g[f.slice(0, 7)] || 0) + sg * Math.abs(importeDoc(d))) * 100) / 100; }); };
+  suma(await holdedTodos('/purchases?limit=200', 40), 1);
+  try { suma(await holdedTodos('/purchase-refunds?limit=200', 20), -1); } catch (e) {}
+  return { fuente: 'compras', meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), error: null };
 }
 // Ingresos por día desde Holded: todos los tickets de venta (también borradores), menos los anulados con
 // rectificativa (salen «Pagado»: en la clínica no se marcan los cobros) y los de pacientes de prueba
@@ -1231,8 +1239,11 @@ module.exports = async function handler(req, res) {
       // Ingresos desde el principio (tabla ESTADISTICAS SEMANA, una cifra por semana)
       if (action === 'seg-gastos') {
         if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Falta la clave de Holded' });
-        try { return res.status(200).json(Object.assign({ ok: true }, await gastosBancoMeses())); }
-        catch (e) { return res.status(200).json({ ok: false, error: /40[13]/.test(e.message) ? 'La clave de Holded no tiene permiso de Tesorería (cuentas bancarias)' : e.message }); }
+        let eb = null;
+        try { const b = await gastosBancoMeses(); if (!b.error) return res.status(200).json(Object.assign({ ok: true }, b)); eb = b.error; } catch (e) { eb = e.message; }
+        try { if (_gasH.c && Date.now() - _gasH.c.t < 15 * 60e3) return res.status(200).json(_gasH.c.v);
+          const c = Object.assign({ ok: true, avisoBanco: eb }, await gastosComprasMeses()); _gasH.c = { t: Date.now(), v: c }; return res.status(200).json(c); }
+        catch (e) { return res.status(200).json({ ok: false, error: 'No se pueden leer ni el banco ni las compras de Holded. Banco: ' + String(eb).slice(0, 120) + ' · Compras: ' + e.message.slice(0, 120) }); }
       }
       if (action === 'seg-ingresos-todo') {
         const rs = await todosT('tblE7NWfZmxcou5mV', `filterByFormula=${encodeURIComponent('{INGRESOS}!=BLANK()')}&fields[]=SEMANA&fields[]=INGRESOS&sort[0][field]=SEMANA&sort[0][direction]=asc`);
