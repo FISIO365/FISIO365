@@ -1218,7 +1218,7 @@ module.exports = async function handler(req, res) {
             for (const ep of ['/invoices', '/credit-notes', '/rectifying-invoices']) {
               try { const L = await holdedTodos(`${ep}?limit=200&start_date=${mesAct}-01&end_date=${hoyF}`, 10); leidas++;
                 L.forEach(d => { if (!d || !d.id || vr.has(d.id)) return; vr.add(d.id); facLeidas++;
-                  const esRect = aNum(d.total) < 0 || /^TN/i.test(String(d.document_number || '')) || /rectific|credit/i.test(String(d.type || d.doc_type || d.document_type || ''));
+                  const esRect = ep === '/credit-notes' || aNum(d.total) < 0 || /^TN/i.test(String(d.document_number || d.number || d.doc_number || '')) || /rectific|credit/i.test(String(d.type || d.doc_type || d.document_type || ''));
                   if (String(d.date || '').slice(0, 7) === mesAct && esRect) rect.push(d); }); } catch (e) {}
             }
             rectOk = leidas > 0; }
