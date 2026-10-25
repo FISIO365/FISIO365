@@ -5237,7 +5237,7 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
  const enviar=async(b,forzar)=>{if(!pac){toast('Elige el paciente',false);return;}b.disabled=true;b.textContent='Dando cita…';
   try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,notas:m.querySelector('.ag-not2').value.trim(),tipos:tg.get(),forzar});
    if(r.conflicto){b.disabled=false;b.textContent='Dar cita';if(confirm(r.error+'. ¿Darla igualmente?'))enviar(b,true);return;}
-   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`,true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
+   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`+(r.reprogramadas?' · su cita «Por reagendar» pasa a Reprogramada':''),true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
  m.querySelectorAll('.ag-otras button').forEach(b=>b.onclick=async()=>{b.disabled=true;

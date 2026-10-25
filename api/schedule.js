@@ -64,6 +64,24 @@ const holdedPost = async (path, body) => { const r = await fetch(HOLDED_URL + pa
 const pagina = (ok, titulo, texto) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f7f3ef;font-family:Poppins,sans-serif;color:#1a1a1a;padding:16px;box-sizing:border-box}.c{background:#fff;border-radius:20px;padding:32px 28px;max-width:420px;width:100%;text-align:center}.i{width:56px;height:56px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;background:${ok ? '#16a34a' : '#c2552e'}}h1{font-size:20px;margin:0 0 8px}p{margin:0;color:#6b5f57;line-height:1.5}</style></head><body><div class="c"><div class="i">${ok ? '✓' : '!'}</div><h1>${titulo}</h1><p>${texto}</p><p style="margin-top:16px;font-size:13px">Ya puedes cerrar esta pestaña.</p></div></body></html>`;
 const escHtml = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// ── Citas «Por reagendar» que ya tienen otra cita apuntada → pasan solas a «Reprogramada» ──
+let _reagT = 0;
+async function revisarPorReagendar(forzar) {
+  if (!forzar && Date.now() - _reagT < 5 * 60e3) return 0; _reagT = Date.now();
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const pr = await capTodos(CIT_T, `filterByFormula=${encodeURIComponent("TRIM({ESTADO})='POR REAGENDAR'")}&fields[]=FECHA&fields[]=PacienteRec`);
+  const pids = [...new Set(pr.flatMap(c => c.fields['PacienteRec'] || []))]; if (!pids.length) return 0;
+  const otras = [];
+  for (let i = 0; i < pids.length; i += 15) {
+    const lote = pids.slice(i, i + 15);
+    otras.push(...await capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='REALIZADA',TRIM({ESTADO})='CITA DUDOSA'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=PacienteRec`).catch(() => []));
+  }
+  const cambiar = pr.filter(c => { const f = String(c.fields['FECHA'] || '').slice(0, 10), ps = c.fields['PacienteRec'] || [];
+    return ps.length && otras.some(o => o.id !== c.id && (o.fields['PacienteRec'] || []).some(id => ps.includes(id)) && (String(o.fields['FECHA'] || '').slice(0, 10) >= f || String(o.fields['FECHA'] || '').slice(0, 10) >= hoy)); });
+  for (let i = 0; i < cambiar.length; i += 10) await at(CIT_T, { method: 'PATCH', body: JSON.stringify({ records: cambiar.slice(i, i + 10).map(c => ({ id: c.id, fields: { ESTADO: 'REPROGRAMADA' } })), typecast: true }) }).catch(() => {});
+  return cambiar.length;
+}
+
 // ── CONSENTIMIENTOS (formularios Tally) ────────────────────────────────────
 // CONSENTIMIENTOS = formulario de primera visita (lo crea la integración de Tally).
 // OTROS CONSENTIMIENTOS = suelo pélvico y alta oncológica: el panel los trae solo de Tally (API) y los guarda ahí.
@@ -670,7 +688,7 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, tipos: Object.values(vist).sort((a, b) => b.u - a.u).slice(0, 400).map(t => t.n) });
         }
         if (action === 'seg-agenda-dia') {
-          await procesarWeb().catch(() => {});
+          await Promise.all([procesarWeb().catch(() => {}), revisarPorReagendar().catch(() => 0)]);
           let rows, limitado = false;
           if (okF(q.fecha)) rows = await delDia(q.fecha);
           else { // rango de fechas, un paciente y/o un fisio (vista de lista)
@@ -699,7 +717,8 @@ module.exports = async function handler(req, res) {
           if (q.tipos && q.tipos.length) campos['TIPO DE CITA'] = await tiposDe(q.tipos);
           const r = await ocupar(q.fecha, q.hora, q.fisio, campos, !!q.forzar);
           if (r.conflicto) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${r.con || 'otro paciente'}` });
-          return res.status(200).json({ ok: true, id: r.id });
+          const rep = await revisarPorReagendar(true).catch(() => 0);
+          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep });
         }
         if (action === 'seg-agenda-huecos') { // abrir varias horas de golpe (libres o bloqueadas), sin pisar lo que ya hay
           const fechas = (q.fechas || []).filter(okF).slice(0, 60), horas = (q.horas || []).map(hh).filter(okH).slice(0, 24);
