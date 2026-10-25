@@ -35,7 +35,7 @@ async function pdfConsentimiento(D){
  const TIPO=D.tipo||'Primera visita';
  try{const lg=await new Promise((ok,ko)=>{fetch('/informe/logo.png').then(r=>r.blob()).then(b=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=ko;fr.readAsDataURL(b);}).catch(ko);});doc.addImage(lg,'PNG',ml,y-5,26,26*130/751);y+=4;}catch(e){}
  set(8.5,'bold','nar');doc.text('CONSENTIMIENTO INFORMADO',ml,y);y+=8;
- set(18,'bold','neg');doc.text(TIPO==='Suelo pélvico'?'Fisioterapia de suelo pélvico':TIPO==='Alta oncológica'?'Consentimiento por alta oncológica':'Formulario de primera visita',ml,y);y+=6.5;
+ set(18,'bold','neg');doc.text(TIPO==='Suelo pélvico'?'Fisioterapia de suelo pélvico':TIPO==='Alta oncológica'?'Alta oncológica':'Consentimiento informado',ml,y);y+=6.5;
  set(10,'normal','gris');doc.text(`${[D.nombre,D.apellidos].filter(Boolean).join(' ')} · firmado el ${fC(D.fecha)}`,ml,y);y+=6;
  const chk=(t,on)=>{set(8.5,'bold','neg');const L=doc.splitTextToSize(t,tw-6);salto(L.length*3.6+2);doc.setDrawColor(...C.neg);doc.setLineWidth(0.3);doc.rect(ml,y-2.8,3.2,3.2);if(on){doc.setDrawColor(...C.ok);doc.setLineWidth(0.6);doc.line(ml+0.6,y-1.2,ml+1.4,y-0.3);doc.line(ml+1.4,y-0.3,ml+2.8,y-2.3);}L.forEach(l=>{doc.text(l,ml+6,y);y+=3.6;});y+=1.6;};
  if(TIPO!=='Primera visita'){
