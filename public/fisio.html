@@ -427,6 +427,8 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .rp-eq{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #f1ede9;font-size:14px}.rp-eq:first-of-type{border-top:none}.rp-eq b{color:#1e2a38}.rp-eq span{font-size:12.5px;font-weight:600;border-radius:99px;padding:3px 10px}.rp-eq .si{background:#e8f5ec;color:#16803c}.rp-eq .no{background:#fdecea;color:#c0392b}.rp-eq .pe{background:#f3efea;color:#7d6a60}
 @media(max-width:768px){.topbar-t,.topbar-s{padding-right:112px;box-sizing:border-box;overflow-wrap:anywhere}}
 @media(min-width:769px){#pmCap,#pmEjer{display:none!important}}
+@media(min-width:769px){.sidebar .sb-item{padding:8px 12px!important;font-size:13.5px!important;border-radius:12px!important}.sb-logo{padding:20px 22px 12px!important}.sb-grp{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b0a69e;padding:14px 12px 4px}}
+@media(max-width:768px){.sb-grp{display:none!important}}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -722,7 +724,7 @@ body{-webkit-font-smoothing:antialiased}
 .sb-logo-t{color:var(--black);font-size:21px;letter-spacing:-.8px}
 .sb-logo-t{color:var(--lila)}
 .sb-logo-t span{color:var(--black)}
-.sb-nav{padding:4px 12px;display:flex;flex-direction:column;gap:2px}
+.sb-nav{padding:4px 12px;display:flex;flex-direction:column;gap:1px}
 .sb-item{text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;color:#6f6a63;border-left:none;border-radius:14px;padding:11px 14px;gap:12px}
 .sb-item:hover{background:var(--cream);color:var(--black)}
 .sb-item.active{background:var(--black);color:var(--cream);border-left:none;letter-spacing:0}
@@ -1107,15 +1109,6 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="sidebar">
  <div class="sb-logo"><div class="sb-logo-t"><span>FISIO</span>365</div></div>
  <div class="sb-nav">
- <div class="sb-item" id="sb-anam" onclick="showSection('anam')">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 3h6v3H9z"/><path d="M8 4.5H6a2 2 0 0 0-2 2V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6.5a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h5"/></svg></span><span class="sb-txt">Anamnesis</span>
- </div>
- <div class="sb-item" id="sb-prog" onclick="showSection('prog')">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span><span class="sb-txt">Programas</span>
- </div>
- <div class="sb-item" id="sb-ejer" onclick="showSection('ejer')">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg></span><span class="sb-txt">Ejercicios</span>
- </div>
  <div class="sb-item" id="sb-agenda" onclick="showSection('agenda')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span><span class="sb-txt">Agenda</span>
  </div>
@@ -1128,18 +1121,30 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="sb-item" id="sb-rep" onclick="showSection('rep')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="18" rx="2.5"/><path d="M8.5 9l1.5 1.5 3-3M8.5 15l1.5 1.5 3-3M15.5 9.5h1M15.5 15.5h1"/></svg></span><span class="sb-txt">Check-list</span>
  </div>
- <div class="sb-item" id="sb-cap" onclick="showSection('cap')">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 11l15-6v14L3 13z"/><path d="M7 12.5V18a2 2 0 0 0 4 0v-4"/><path d="M21 9.5v5"/></svg></span><span class="sb-txt">Captación</span>
- </div>
- <div class="sb-item" id="sb-record" onclick="showSection('record')" style="display:none">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="sb-txt">Recordatorios</span>
- </div>
+ <div class="sb-grp">Seguimiento</div>
  <div class="sb-item" id="sb-tar" onclick="showSection('tar')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></span><span class="sb-txt">Pendientes</span>
  </div>
  <div class="sb-item" id="sb-call" onclick="showSection('call')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="sb-txt">Call-in</span>
  </div>
+ <div class="sb-item" id="sb-cap" onclick="showSection('cap')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 11l15-6v14L3 13z"/><path d="M7 12.5V18a2 2 0 0 0 4 0v-4"/><path d="M21 9.5v5"/></svg></span><span class="sb-txt">Captación</span>
+ </div>
+ <div class="sb-item" id="sb-record" onclick="showSection('record')" style="display:none">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="sb-txt">Recordatorios</span>
+ </div>
+ <div class="sb-grp">Clínica</div>
+ <div class="sb-item" id="sb-prog" onclick="showSection('prog')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span><span class="sb-txt">Programas</span>
+ </div>
+ <div class="sb-item" id="sb-ejer" onclick="showSection('ejer')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg></span><span class="sb-txt">Ejercicios</span>
+ </div>
+ <div class="sb-item" id="sb-anam" onclick="showSection('anam')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 3h6v3H9z"/><path d="M8 4.5H6a2 2 0 0 0-2 2V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6.5a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h5"/></svg></span><span class="sb-txt">Anamnesis</span>
+ </div>
+ <div class="sb-grp" id="sb-g-dir" style="display:none">Dirección</div>
  <div class="sb-item" id="sb-rend" onclick="showSection('rend')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="sb-txt">Rendimiento</span>
  </div>
@@ -1417,7 +1422,7 @@ function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=
 function pintarPerfil(){if(!fisioActual)return;requestAnimationFrame(ajustaTopbar);const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=fisioActual.role==='admin'?'Administración':'Fisioterapeuta';
- const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const dir=esDireccion();$('pmStats').style.display=dir?'':'none';$('sb-stats').style.display=dir?'':'none';}catch(e){}contarTareas();}
+ const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const dir=esDireccion();$('pmStats').style.display=dir?'':'none';$('sb-stats').style.display=dir?'':'none';}catch(e){}try{const v=['sb-rend','sb-stats'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();}
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
