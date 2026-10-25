@@ -467,18 +467,20 @@ p{font-size:13px;line-height:1.85;text-align:justify;margin:0 0 7mm;color:#2c3a4
 .sf b{display:block;font-size:14px;font-weight:700}.sf span{font-size:12.5px;color:#5c4f47}.sp{text-align:right;font-size:11.5px;line-height:1.45;color:#2c3a4a}.sp small{display:block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#9b8f86}
 table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:6mm}th{text-align:left;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7d6a60;font-weight:600;padding:0 3mm 2.5mm;border-bottom:1.5px solid #1e2a38}td{padding:2.6mm 3mm;border-bottom:1px solid #ece6df}tr:nth-child(even) td{background:#faf8f5}td:first-child{color:#c2552e;font-weight:700;width:10mm}
 .fin{margin-top:6mm}.pie{margin-top:auto;padding-top:8mm;border-top:1px solid #ece6df;display:flex;justify-content:space-between;gap:16px;font-size:9px;color:#9b8f86;line-height:1.5}
-@media screen and (max-width:820px){.hoja{width:100%;min-height:0;padding:22px 18px;margin:0 0 16px;box-shadow:none}.cab{flex-direction:column}.dat{text-align:left}h1{font-size:21px;margin-top:22px}.s{flex-direction:column;align-items:flex-start}.sp{text-align:left}table{font-size:11px}td,th{padding-left:6px;padding-right:6px}}
-@media print{html,body{background:#fff}.bar{display:none}.hoja{margin:0;box-shadow:none}}
+.marco{display:flex;justify-content:center;padding:4px 0 24px}.esc{transform-origin:top left}.esc .hoja{margin:0}
+@media print{html,body{background:#fff}.bar{display:none}.marco{display:block;padding:0;height:auto!important}.esc{transform:none!important;width:auto!important}.hoja{margin:0;box-shadow:none}}
 </style></head><body>
 <div class="bar"><button type="button" onclick="window.print()">Descargar PDF</button></div>
-<div class="hoja">
+<div class="marco"><div class="esc"><div class="hoja">
 <div class="cab"><div class="logo">FISIO<span>365</span><small>Centro de Fisioterapia</small></div><div class="dat">Fourth Dynamic, S.L. · NIF B56503592<br>C/ Gran de Sant Andreu, 163 · 08030 Barcelona<br>672 89 39 49 · info@fisioterapia365.com</div></div>
 <h1>${titulo}</h1><div class="ref">Barcelona, ${e(fCorta(D.emitido || ''))}</div>
 <p>${texto}</p>
 ${tarjetas}
 <p class="fin">Y para que así conste a los efectos oportunos, se expide el presente documento en Barcelona, a ${e(fCorta(D.emitido || ''))}.</p>
 <div class="pie"><span>Documento generado a partir del registro de citas de FISIO365.</span><span>Ref. ${e(String(tk).slice(0, 8).toUpperCase())}</span></div>
-</div></body></html>`;
+</div></div></div>
+<script>(function(){var m=document.querySelector('.marco'),e=document.querySelector('.esc'),h=document.querySelector('.hoja');function aj(){e.style.transform='';m.style.height='';var w=h.offsetWidth,hh=h.offsetHeight,k=Math.min(1,(window.innerWidth-24)/w);e.style.transform='scale('+k+')';e.style.width=w+'px';m.style.height=(hh*k+28)+'px';m.style.justifyContent=k<1?'flex-start':'center';m.style.paddingLeft=k<1?'12px':'0';}aj();window.addEventListener('resize',aj);if(document.fonts)document.fonts.ready.then(aj);})();</script>
+</body></html>`;
 }
 
 // ── CIERRE DEL DÍA: checklist de cada fisio (lo imprescindible antes de irse) ──
