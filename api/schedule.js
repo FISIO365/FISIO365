@@ -1208,7 +1208,9 @@ module.exports = async function handler(req, res) {
         if (HOLDED_KEY && !ms.some(x => x.m === mesAct)) try {
           const tk = await holdedTodos(`/sales-receipts?limit=200&start_date=${mesAct}-01&end_date=${hoyF}`, 20);
           const deMes = tk.filter(d => String(d.date || '').slice(0, 7) === mesAct && d.status !== 'cancelled');
-          holdedMes = { m: mesAct, v: Math.round(deMes.reduce((t, d) => t + importeDoc(d), 0) * 100) / 100, n: deMes.length, hasta: hoyF };
+          const sum = L => Math.round(L.reduce((t, d) => t + importeDoc(d), 0) * 100) / 100;
+          const bor = deMes.filter(d => !d.document_number), pend = deMes.filter(d => d.document_number && ['pending', 'partial', 'overdue'].includes(d.status));
+          holdedMes = { m: mesAct, v: sum(deMes), n: deMes.length, hasta: hoyF, borr: { n: bor.length, v: sum(bor) }, pend: { n: pend.length, v: sum(pend) } };
         } catch (e) { holdedMes = { m: mesAct, error: e.message }; }
         return res.status(200).json({ ok: true, fuente, meses: ms, holdedMes, semanas: rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s) });
       }
