@@ -89,6 +89,7 @@ async function revisarPorReagendar(forzar) {
 const CONS_T = 'tbl8uv04zFAk5L5bA', CONS_O = 'tblBBSyxl2IZMyU7I';
 const TALLY_FORMS = { Gex8jo: 'Suelo pélvico', Dq4gE5: 'Alta oncológica' };
 const C_SALUD = [['MARCAPASOS', 'Marcapasos'], ['EMBARAZO', 'Embarazo'], ['CÁNCER', 'Cáncer'], ['MEDICAMENTO CUAGULACIÓN', 'Toma anticoagulantes'], ['ARRITMIAS', 'Arritmias'], ['HIPERTENSIÓN', 'Hipertensión'], ['PROBLEMAS CIRCULACIÓN', 'Problemas de circulación'], ['PRÓTESIS', 'Prótesis'], ['FRACTURAS/CIRUGÍA', 'Fracturas o cirugías'], ['ENFERMEDAD NEUROLÓGICA', 'Enfermedad neurológica'], ['ALERGIA', 'Alergias'], ['DOLOR CRÓNICO', 'Dolor crónico']];
+const nuevoPin = () => String(1000 + Math.floor(Math.random() * 9000));
 const cNm = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
 const cDig = v => String(v || '').replace(/\D/g, '').slice(-9);
 const cTxt = v => String(v || '').trim().toLowerCase();
@@ -341,7 +342,7 @@ async function _procesarWeb() {
       if (conds.length) { const ps = await todosW(PACIENTES, `filterByFormula=${encodeURIComponent(`OR(${conds.join(',')})`)}&fields[]=FULL%20NAME&fields[]=TELF&fields[]=WHATSAPP&fields[]=DOCUS`);
         pac = ps.find(p => tel && String((p.fields.TELF || '') + ' ' + (p.fields.WHATSAPP || '')).replace(/\D/g, '').includes(tel)) || ps[0] || null; }
       if (!pac) {
-        const nf = { 'FULL NAME': nombre || 'Paciente web' };
+        const nf = { 'FULL NAME': nombre || 'Paciente web', PIN: nuevoPin() };
         if (tel) { nf.TELF = String(F['your-phone']).trim(); nf.WHATSAPP = String(F['your-phone']).trim(); }
         if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) nf.EMAIL = email;
         const c = await at(PACIENTES, { method: 'POST', body: JSON.stringify({ records: [{ fields: nf }], typecast: true }) });
@@ -939,6 +940,8 @@ module.exports = async function handler(req, res) {
           saldoPaciente(q.id).catch(() => ({ activo: false })),
           consentDe(F, q.id, pac.createdTime).catch(() => null)
         ]);
+        // Sin PIN (p. ej. creado a mano en Airtable): se le pone uno solo para que pueda entrar en la app
+        if (!String(F['PIN'] || '').trim()) { const pin = nuevoPin(); const r = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: pin } }) }).catch(() => ({ error: 1 })); if (!r.error) F['PIN'] = pin; }
         if (consent && consent.rellenado) { Object.assign(F, consent.rellenado); delete consent.rellenado; }
         const diaMad = x => { const s2 = String(x || ''); if (!s2.includes('T')) return { f: s2.slice(0, 10), h: '' }; const pz = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date(s2)).reduce((o, p) => (o[p.type] = p.value, o), {}); return { f: `${pz.year}-${pz.month}-${pz.day}`, h: `${pz.hour === '24' ? '00' : pz.hour}:${pz.minute}` }; };
         // Si ya ha vuelto a reservar, el «No reagenda» se desmarca solo
@@ -1017,7 +1020,7 @@ module.exports = async function handler(req, res) {
           const ya = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + conds.join(',') + ')')}&fields[]=FULL NAME&fields[]=TELF&fields[]=EMAIL&maxRecords=5`).catch(() => []);
           if (ya.length) return res.status(200).json({ ok: false, duplicado: ya.map(r => ({ id: r.id, nombre: r.fields['FULL NAME'] || '', tel: r.fields['TELF'] || '', email: r.fields['EMAIL'] || '' })) });
         }
-        const f = { 'FULL NAME': nombre, TELF: tel, WHATSAPP: tel };
+        const f = { 'FULL NAME': nombre, TELF: tel, WHATSAPP: tel, PIN: nuevoPin() };
         if (email) f.EMAIL = email;
         if (q.dni) f.DNI = String(q.dni).trim().toUpperCase();
         if (/^\d{4}-\d{2}-\d{2}$/.test(q.cumple || '')) f.CUMPLE = q.cumple;
