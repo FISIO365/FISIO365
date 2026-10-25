@@ -1198,7 +1198,12 @@ module.exports = async function handler(req, res) {
       // Ingresos desde el principio (tabla ESTADISTICAS SEMANA, una cifra por semana)
       if (action === 'seg-ingresos-todo') {
         const rs = await todosT('tblE7NWfZmxcou5mV', `filterByFormula=${encodeURIComponent('{INGRESOS}!=BLANK()')}&fields[]=SEMANA&fields[]=INGRESOS&sort[0][field]=SEMANA&sort[0][direction]=asc`);
-        return res.status(200).json({ ok: true, semanas: rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s) });
+        // Meses: los de la base ESTADISTICAS (INCOME / MONTH), y si no se puede leer, la copia INGRESOS MES de esta base
+        let ms = [], fuente = 'ESTADISTICAS';
+        try { const r = await fetch(`https://api.airtable.com/v0/appR5HDJuhjQG504R/tbloIpGtMu3QVOqoU?pageSize=100`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }); const d = await r.json(); if (d.error) throw 0; ms = (d.records || []).map(x => ({ m: String(x.fields['MES'] || '').slice(0, 7), v: Number(x.fields['IMPORTE'] || 0) })); }
+        catch (e) { fuente = 'INGRESOS MES'; ms = (await todosT('tblSJPZroRyyWphVp', 'fields[]=MES&fields[]=IMPORTE').catch(() => [])).map(x => ({ m: String(x.fields['MES'] || '').slice(0, 7), v: Number(x.fields['IMPORTE'] || 0) })); }
+        ms = ms.filter(x => x.m && x.v).sort((a, b) => a.m.localeCompare(b.m));
+        return res.status(200).json({ ok: true, fuente, meses: ms, semanas: rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s) });
       }
       // Cómo nos han conocido: respuestas del formulario de primera visita (CONSENTIMIENTOS) en el periodo
       if (action === 'seg-conocido') {
