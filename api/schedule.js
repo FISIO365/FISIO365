@@ -582,7 +582,25 @@ module.exports = async function handler(req, res) {
             return { id: r.id, nuevo: { id: nid, nombre: nomP(nid) }, primera: prim[nid], texto: String(F['Nombre de quien recomendó'] || '').trim(), recomendo: rid ? { id: rid, nombre: nomP(rid), tel: rp ? rp.tel : '' } : null, sugeridos: sug[r.id] || [] }; });
           return res.status(200).json({ ok: true, porDar });
         }
+        if (action === 'seg-referidos-resueltos') {
+          // Las ya resueltas (tarjeta enviada o canjeada, «no toca», negocio) de los últimos 4 meses, para poder deshacerlas
+          const desde = new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10);
+          const rs = await todosT(REF, `filterByFormula=${encodeURIComponent(`AND({Nombre de quien recomendó}!='',OR({IGNORAR},{CÓDIGO}!='',{Regalo entregado}),IS_AFTER({Fecha},'${desde}'))`)}`);
+          const ids = [...new Set(rs.flatMap(r => [...(r.fields['PACIENTE'] || []), ...(r.fields['RECOMENDÓ'] || [])]))], nom = {};
+          for (let i = 0; i < ids.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.slice(i, i + 40).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=FULL NAME`).catch(() => [])).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; });
+          const negs = {}; const nids = [...new Set(rs.flatMap(r => r.fields['NEGOCIO'] || []))];
+          if (nids.length) (await todosT('tblO5y1Ikg3LIalic', `filterByFormula=${encodeURIComponent('OR(' + nids.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=NOMBRE`).catch(() => [])).forEach(n => { negs[n.id] = n.fields['NOMBRE'] || ''; });
+          const out = rs.map(r => { const F = r.fields, rid = (F['RECOMENDÓ'] || [])[0], nid = (F['NEGOCIO'] || [])[0];
+            const estado = F['CANJEADA'] ? 'Tarjeta canjeada el ' + String(F['CANJEADA']).split('-').reverse().join('/') : F['CÓDIGO'] ? 'Tarjeta enviada el ' + String(F['FECHA TARJETA'] || '').split('-').reverse().join('/') : nid ? 'Negocio: ' + (negs[nid] || '') + ' · gracias enviadas' : 'Marcado «no toca tarjeta»';
+            return { id: r.id, quien: rid ? nom[rid] : (nid ? negs[nid] : String(F['Nombre de quien recomendó'] || '').trim()), nuevo: nom[(F['PACIENTE'] || [])[0]] || `${F['Nombre'] || ''} ${F['Apellidos'] || ''}`.trim(), estado, canjeada: !!F['CANJEADA'], fecha: F['FECHA TARJETA'] || F['Fecha'] || '' }; }).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+          return res.status(200).json({ ok: true, resueltas: out });
+        }
         if (req.method !== 'POST' || !okId(q.id)) return res.status(400).json({ ok: false });
+        if (action === 'seg-referido-deshacer') {
+          // solo canje: vuelve a estar sin usar; todo: vuelve a Tareas como si no se hubiera hecho nada (se mantiene quién recomendó)
+          const f = q.soloCanje ? { CANJEADA: null } : { IGNORAR: false, NEGOCIO: [], 'CÓDIGO': '', 'FECHA TARJETA': null, CADUCA: null, CANJEADA: null, 'TARJETA IMG': [], 'Regalo entregado': false };
+          const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }); return res.status(200).json({ ok: !d.error });
+        }
         if (action === 'seg-referido-recomendo') { if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
           const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECOMENDÓ': [q.pacienteId] } }) }); return res.status(200).json({ ok: !d.error }); }
         if (action === 'seg-referido-ignorar') { const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { IGNORAR: true } }) }); return res.status(200).json({ ok: !d.error }); }
