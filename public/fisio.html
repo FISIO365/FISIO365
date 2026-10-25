@@ -9853,8 +9853,8 @@ function cerrarLightbox(){
  async function alVolver(){
   if(!fisioActual||!apiPwd)return;
   const v=await getVer();
-  if(v&&ver&&v!==ver&&!ocupado()){location.reload();return;}
-  if(v)ver=v;
+  if(v&&ver&&v!==ver){if(!ocupado()){location.reload();return;}}
+  else if(v)ver=v; // si hay versión nueva pero estás escribiendo, se recarga la próxima vez
   try{_dtC.d=null;_dtC.t=0;_dtC.p=null;_dtC.fresco=true;}catch(e){}
   await Promise.all([loadPacientes(),loadEstados(),cargarSegPac()]).catch(()=>{});
   try{contarTareas();}catch(e){}
