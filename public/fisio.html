@@ -266,7 +266,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .seg-fis span{font-size:12px;color:var(--muted);align-self:center;margin-right:2px}
 .seg-ed{display:inline-block;margin-top:5px;font-family:var(--font);font-size:11.5px;color:#7d6a60;background:#f7f3ef;border:none;border-radius:99px;padding:3px 10px;cursor:pointer}.seg-ed b{color:#1a1a1a}
 .seg-it.hecha{cursor:pointer}.seg-it.hecha:hover{background:#fbf8f5}
-.hz-bts .hz-re{flex:1.3;color:#1e2a38}.er-negb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;font-weight:700;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;background:#16803c;color:#fff}.er-negb svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.er-negb:disabled{opacity:.6}
+.hz-bts .hz-re{flex:1.3;color:#1e2a38}.msg-prev{white-space:pre-wrap;background:#e7f6e9;border-radius:12px;padding:11px 13px;font-size:13px;line-height:1.45;color:#1a1a1a;margin-top:8px;max-height:220px;overflow:auto}.er-negb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;font-weight:700;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;background:#16803c;color:#fff}.er-negb svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.er-negb:disabled{opacity:.6}
 .tar-top{margin-bottom:14px}
 .tk{display:flex;align-items:flex-start;gap:11px;padding:13px 14px;border-bottom:1px solid #f1ede9}.tk:last-child{border-bottom:none}.tk.atr{box-shadow:inset 3px 0 0 #b42318}
 .tk-i{width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;margin-top:1px}.tk-i svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -5624,8 +5624,13 @@ function enviarTarjeta(tel,quien,nuevo,cad,refId,crear){return new Promise(fin=>
  const m=hzModal(`<div class="hz-top"><div><small>Tarjeta regalo de 10 €</small><b>¿Cómo ponemos los nombres?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Para</div><input type="text" class="tj-q" maxlength="30" value="${escH(pn(quien))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
   <div class="hz-lab">Por recomendarnos a</div><input type="text" class="tj-n" maxlength="30" value="${escH(pn(nuevo))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
+  <div class="hz-lab">Así le llega</div><img class="tj-img" alt="" style="width:100%;border-radius:12px;display:block"><div class="tj-prev msg-prev"></div>
   <div class="hz-bts"><button type="button" class="hz-ok">Enviar por WhatsApp</button></div>`);
  m.querySelector('.hz-x').onclick=()=>{m.remove();fin(false);};
+ {const cad0=cad||(()=>{const c=new Date();c.setMonth(c.getMonth()+6);return isoMadrid(c);})();let tm=0,url='';
+  const pv=()=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();m.querySelector('.tj-prev').textContent=mensajeTarjeta(q,n,cad0)+'\n\nAquí tienes tu tarjeta: https://app.fisioterapia365.com/tarjeta/…';
+   clearTimeout(tm);tm=setTimeout(async()=>{try{const b=await tarjetaImagen(q,n,cad0,'image/jpeg');if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(b);const im=m.querySelector('.tj-img');if(im)im.src=url;}catch(e){}},250);};
+  pv();m.querySelector('.tj-q').oninput=pv;m.querySelector('.tj-n').oninput=pv;}
  m.querySelector('.hz-ok').onclick=async e=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();
   // La tarjeta solo se crea cuando se confirma el envío (si se cierra la ventana no se gasta)
   const w=window.open('about:blank','_blank'); // se abre ya (si no, el navegador puede bloquearlo tras esperar)
@@ -5645,24 +5650,25 @@ const REG_NEG=[['Gracias','Si alguna vez podemos ayudaros a vosotros o a vuestro
  ['Os recomendamos','Y por supuesto, cuando alguno de nuestros pacientes necesite lo que hacéis vosotros, le hablaremos de vosotros.'],
  ['Sesión regalo','Como agradecimiento, nos encantaría regalar una sesión de fisioterapia a alguien de vuestro equipo: solo tenéis que escribirnos para reservarla.'],
  ['10% a sus clientes','Además, vuestros clientes tendrán un 10 % de descuento en su primera sesión con nosotros: solo tienen que decir que vienen de vuestra parte.']];
+const msgNegocio=i=>`¡Hola! Somos FISIO365, el centro de fisioterapia de Gran de Sant Andreu. Nos ha llegado un paciente nuevo recomendado por vosotros y queríamos daros las gracias de corazón: es la mejor forma de crecer.\n\n${REG_NEG[i][1]}\n\n¡Muchas gracias!`;
 // Elegir quién recomendó (si el nombre que puso no cuadra con un único paciente)
 function elegirRecomendo(r,onDone){
  const m=hzModal(`<div class="hz-top"><div><small>Recomendó a ${escH(r.nuevo.nombre)}</small><b>¿Quién es «${escH(r.texto)}»?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   ${r.sugeridos.length?`<div class="hz-lab">Puede ser</div><div class="cs-forms er-sug">${r.sugeridos.map(p=>`<button type="button" data-id="${p.id}"><b>${escH(p.nombre)}</b></button>`).join('')}</div>`:''}
   <div class="hz-lab">Buscar paciente</div><input type="text" class="er-bus" placeholder="Nombre…" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px"><div class="seg-bres er-res"></div>
   <div class="hz-lab">¿Es un negocio o un profesional?</div>
-  <div class="er-neg" style="display:flex;flex-direction:column;gap:8px"><input type="text" class="er-nn" placeholder="Nombre del negocio" value="${escH(r.texto)}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px"><input type="tel" class="er-nt" placeholder="Su teléfono (para darle las gracias)" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px"><div class="seg-rap er-reg">${REG_NEG.map((g,i)=>`<button type="button" data-i="${i}" class="${i?'':'on'}">${g[0]}</button>`).join('')}</div><button type="button" class="er-negb"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Darle las gracias por WhatsApp</button></div>
+  <div class="er-neg" style="display:flex;flex-direction:column;gap:8px"><input type="text" class="er-nn" placeholder="Nombre del negocio" value="${escH(r.texto)}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px"><input type="tel" class="er-nt" placeholder="Su teléfono (para darle las gracias)" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px"><div class="seg-rap er-reg">${REG_NEG.map((g,i)=>`<button type="button" data-i="${i}" class="${i?'':'on'}">${g[0]}</button>`).join('')}</div><div class="er-prev msg-prev"></div><button type="button" class="er-negb"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Darle las gracias por WhatsApp</button></div>
   <div class="hz-bts"><button type="button" class="hz-re er-no">No es nadie conocido · no toca tarjeta</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const post=(a,b)=>fetch('/api/schedule?action='+a,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd,id:r.id},b||{}))}).then(x=>x.json());
  const elegir=async id=>{try{const d=await post('seg-referido-recomendo',{pacienteId:id});if(!d.ok)throw 0;toast('Apuntado',true);m.remove();onDone&&onDone();}catch(e){toast('No se ha podido guardar',false);}};
  m.querySelectorAll('.er-sug button').forEach(b=>b.onclick=()=>elegir(b.dataset.id));
  const inp=m.querySelector('.er-bus'),res=m.querySelector('.er-res');inp.oninput=()=>{const q=inp.value.trim().toLowerCase();res.innerHTML=q.length<2?'':(pacs||[]).filter(p=>p.nombre.toLowerCase().includes(q)).slice(0,6).map(p=>`<button type="button" data-id="${p.id}">${escH(p.nombre)}</button>`).join('');res.querySelectorAll('button').forEach(b=>b.onclick=()=>elegir(b.dataset.id));};
- let regI=0;m.querySelectorAll('.er-reg button').forEach(b=>b.onclick=()=>{regI=+b.dataset.i;m.querySelectorAll('.er-reg button').forEach(x=>x.classList.toggle('on',x===b));});
+ let regI=0;const pv=()=>{m.querySelector('.er-prev').textContent=msgNegocio(regI);};pv();m.querySelectorAll('.er-reg button').forEach(b=>b.onclick=()=>{regI=+b.dataset.i;m.querySelectorAll('.er-reg button').forEach(x=>x.classList.toggle('on',x===b));pv();});
  m.querySelector('.er-negb').onclick=async e=>{const nombre=m.querySelector('.er-nn').value.trim(),tel=m.querySelector('.er-nt').value.trim();if(!nombre){toast('Pon el nombre del negocio',false);return;}
   const w=window.open('about:blank','_blank');e.target.disabled=true;
   try{const d=await post('seg-referido-negocio',{nombre,tel,regalo:REG_NEG[regI][0]});if(!d.ok)throw 0;
-   const txt=`¡Hola! Somos FISIO365, el centro de fisioterapia de Gran de Sant Andreu. Nos ha llegado un paciente nuevo recomendado por vosotros y queríamos daros las gracias de corazón: es la mejor forma de crecer.\n\n${REG_NEG[regI][1]}\n\n¡Muchas gracias!`;
+   const txt=msgNegocio(regI);
    const t=segTel(d.tel||tel),u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;if(w)w.location.href=u;else window.open(u,'_blank');
    toast('Apuntado en Negocios del barrio',true);m.remove();onDone&&onDone();}catch(err){if(w)w.close();e.target.disabled=false;toast('No se ha podido guardar',false);}};
  m.querySelector('.er-no').onclick=async()=>{try{const d=await post('seg-referido-ignorar');if(!d.ok)throw 0;toast('Vale, no toca tarjeta',true);m.remove();onDone&&onDone();}catch(e){toast('No se ha podido guardar',false);}};}
