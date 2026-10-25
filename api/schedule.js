@@ -1195,6 +1195,11 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ ok: false, error: 'Acción no válida' });
       }
       // ── ESTADÍSTICAS DEL CENTRO (semanas de lunes a domingo) ──
+      // Ingresos desde el principio (tabla ESTADISTICAS SEMANA, una cifra por semana)
+      if (action === 'seg-ingresos-todo') {
+        const rs = await todosT('tblE7NWfZmxcou5mV', `filterByFormula=${encodeURIComponent('{INGRESOS}!=BLANK()')}&fields[]=SEMANA&fields[]=INGRESOS&sort[0][field]=SEMANA&sort[0][direction]=asc`);
+        return res.status(200).json({ ok: true, semanas: rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s) });
+      }
       // Cómo nos han conocido: respuestas del formulario de primera visita (CONSENTIMIENTOS) en el periodo
       if (action === 'seg-conocido') {
         const desde = /^\d{4}-\d{2}-\d{2}$/.test(q.desde || '') ? q.desde : '2000-01-01';
