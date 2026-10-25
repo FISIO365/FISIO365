@@ -5472,6 +5472,9 @@ function stRanking(L,S){const sem=ST.rk!=='per'?[S]:L,acc={};
  return Object.entries(acc).filter(([k,a])=>a.cap||a.ses).map(([k,a])=>({nombre:agNom(k),oc:a.ocup,cap:a.cap,ses:a.ses,ocup:a.cap?Math.round(a.ocup*100/a.cap):null,conv:a.vin?Math.round(a.rep*100/a.vin):null,vin:a.vin,rep:a.rep})).sort((x,y)=>(y.ocup??-1)-(x.ocup??-1)||y.ses-x.ses);}
 // ══ ADMINISTRACIÓN: equipo, horarios, vacaciones y festivos, accesos y contraseñas (solo quien tiene acceso «admin») ══
 const ADM={tab:'equipo',d:null};
+// Pregunta de sí/no con el estilo del panel (en vez del cuadro del navegador)
+function admSiNo(txt,si){return new Promise(ok=>{const m=hzModal(`<div class="hz-top"><div><b>¿Seguro?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><p class="adm-nota" style="font-size:14px;color:#3d342e">${escH(txt)}</p><div class="hz-bts"><button type="button" class="adm-gen s-n">Cancelar</button><button type="button" class="hz-ok s-s">${escH(si||'Sí, seguir')}</button></div>`);
+ const fin=v=>{m.remove();ok(v);};m.querySelector('.hz-x').onclick=m.querySelector('.s-n').onclick=()=>fin(false);m.querySelector('.s-s').onclick=()=>fin(true);m.onclick=e=>{if(e.target===m)fin(false);};});}
 const ADM_SEC=[['agenda','Agenda'],['pacientes','Pacientes'],['chat','Chat'],['checklist','Check-list'],['callin','Call-in'],['captacion','Captación'],['programas','Programas'],['ejercicios','Ejercicios'],['anamnesis','Anamnesis'],['rendimiento','Rendimiento'],['estadisticas','Estadísticas'],['school','School'],['admin','Administración']];
 const ADM_TIPOS=['Vacaciones','Festivo','Día libre','Menos horas','Baja','Formación','Otro'];
 const ADM_DC={Lunes:'Lun',Martes:'Mar','Miércoles':'Mié',Jueves:'Jue',Viernes:'Vie','Sábado':'Sáb'};
@@ -5536,9 +5539,9 @@ async function renderAdmin(wrap){
     if(r.aviso)toast(r.aviso,false);if(yo&&(foto||quitarFoto)){fisioActual.foto=r.fisio.foto||'';pintarPerfil();}
     if(cl)admClaveLista(r.fisio.nombre,cl);else if(!r.aviso)toast(nuevo?'Añadido al equipo':'Guardado',true);}
    catch(err){toast(err.message,false);b.disabled=false;b.textContent=nuevo?'Añadir':'Guardar';}};
-  const bb=$m('.adm-baja');if(bb)bb.onclick=async()=>{const baja=!f.baja;if(baja&&!confirm(`¿Dar de baja a ${f.nombre}? No podrá entrar al panel y dejará de salir en la agenda. Sus citas, historiales y datos se conservan.`))return;
+  const bb=$m('.adm-baja');if(bb)bb.onclick=async()=>{const baja=!f.baja;if(baja&&!await admSiNo(`¿Dar de baja a ${f.nombre}? No podrá entrar al panel y dejará de salir en la agenda. Sus citas, historiales y datos se conservan.`))return;
    bb.disabled=true;let r=await admPost('seg-adm-baja',{id:f.id,baja});
-   if(!r.ok&&r.citas){if(!confirm(r.error)){bb.disabled=false;return;}r=await admPost('seg-adm-baja',{id:f.id,baja,confirmar:true});}
+   if(!r.ok&&r.citas){if(!await admSiNo(r.error)){bb.disabled=false;return;}r=await admPost('seg-adm-baja',{id:f.id,baja,confirmar:true});}
    if(!r.ok){toast(r.error||'No se ha podido',false);bb.disabled=false;return;}m.remove();await cargar();pinta();loadFisios();toast(baja?'Dado de baja':'Reactivado',true);};
  }
  // Al poner contraseña: se enseña para pasársela por WhatsApp
@@ -5585,7 +5588,7 @@ async function renderAdmin(wrap){
     ADM.d.ausencias=r.ausencias;pintaAus();const res=body.querySelector('.a-res');
     res.innerHTML=`<div class="adm-ok">Guardado.${r.bloqueados?` Se han bloqueado ${r.bloqueados} hueco${r.bloqueados===1?'':'s'} libre${r.bloqueados===1?'':'s'}.`:''}</div>${r.conPaciente&&r.conPaciente.length?`<div class="adm-alerta"><b>Hay ${r.conPaciente.length} cita${r.conPaciente.length===1?'':'s'} con paciente en ese tiempo. Muévelas desde la Agenda:</b>${r.conPaciente.slice(0,20).map(c=>`<span>${admFecha(c.fecha)} · ${escH(c.hora)} · ${escH(agNom(c.fisio))}</span>`).join('')}</div>`:''}`;}
    catch(err){toast(err.message,false);b.disabled=false;b.textContent='Guardar';}};
-  body.querySelectorAll('.adm-ax').forEach(b=>b.onclick=async()=>{if(!confirm('¿Quitarlo? Los huecos que se bloquearon siguen bloqueados: ábrelos desde la Agenda si hace falta.'))return;const r=await admPost('seg-adm-ausencia-borrar',{id:b.dataset.id});if(r.ok){ADM.d.ausencias=r.ausencias;pintaAus();}else toast('No se ha podido quitar',false);});
+  body.querySelectorAll('.adm-ax').forEach(b=>b.onclick=async()=>{if(!await admSiNo('¿Quitarlo? Los huecos que se bloquearon siguen bloqueados: ábrelos desde la Agenda si hace falta.'))return;const r=await admPost('seg-adm-ausencia-borrar',{id:b.dataset.id});if(r.ok){ADM.d.ausencias=r.ausencias;pintaAus();}else toast('No se ha podido quitar',false);});
  }
  // Check-list de final de día: se ve igual que la de los fisios; cada punto se edita aparte
  async function pintaChk(){const aj=await ajustesAdm();if(!aj||ADM.tab!=='chk')return;
@@ -5616,10 +5619,10 @@ async function renderAdmin(wrap){
     const v=e.value,seg=v.slice(a,b);e.value=/^\*\*.*\*\*$/.test(seg)?v.slice(0,a)+seg.slice(2,-2)+v.slice(b):v.slice(0,a)+'**'+seg.trim()+'**'+v.slice(b);pv();e.focus();};
    m.querySelector('.hz-x').onclick=()=>m.remove();
    const off=m.querySelector('.p-off');if(off)off.onclick=()=>{x.off=!x.off;m.remove();sucio();};
-   const del=m.querySelector('.p-del');if(del)del.onclick=()=>{if(!confirm('¿Quitar este punto?'))return;L.splice(L.indexOf(x),1);m.remove();sucio();};
+   const del=m.querySelector('.p-del');if(del)del.onclick=async()=>{if(!await admSiNo('¿Quitar este punto?'))return;L.splice(L.indexOf(x),1);m.remove();sucio();};
    m.querySelector('.p-ok').onclick=()=>{if(!t.value.trim()){toast('Escribe el texto',false);return;}x.t=t.value.trim();x.sub=sb.value.split('\n').map(y=>y.trim()).filter(Boolean);if(nuevo)L.push(x);m.remove();sucio();};
    setTimeout(()=>t.focus(),50);}
-  body.querySelector('.c-rest').onclick=async()=>{if(!confirm('¿Volver a la check-list original? Se pierden los cambios que hayáis hecho.'))return;const r=await admPost('seg-adm-checklist',{reset:true});
+  body.querySelector('.c-rest').onclick=async()=>{if(!await admSiNo('¿Volver a la check-list original? Se pierden los cambios que hayáis hecho.'))return;const r=await admPost('seg-adm-checklist',{reset:true});
    if(!r.ok){toast(r.error||'No se ha podido',false);return;}ADM.aj.checklist=r.checklist;ADM.chk=null;ADM.chkSucio=false;pintaChk();toast('Check-list original recuperada',true);};
   body.querySelector('.c-g').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Guardando…';
    const r=await admPost('seg-adm-checklist',{items:L.map(x=>({k:x.k,t:x.t,sub:x.sub,off:x.off}))});
@@ -5656,7 +5659,7 @@ async function renderAdmin(wrap){
   // estados y tipos (tablas)
   body.querySelectorAll('.adm-et').forEach(card=>{const t=card.dataset.t,box=card.querySelector('.adm-etl');let E=null,bus='',todas=false;
    const op=async(o,msg)=>{card.classList.add('cargando');let r;try{r=await admPost('seg-adm-etiquetas',Object.assign({tabla:t},o));}catch(e){r={ok:false,error:'No se ha podido conectar. Vuelve a intentarlo.'};}card.classList.remove('cargando');
-    if(!r.ok&&r.uso){if(!confirm(r.error))return;return op(Object.assign({},o,{confirmar:true}),msg);}
+    if(!r.ok&&r.uso){if(!await admSiNo(r.error))return;return op(Object.assign({},o,{confirmar:true}),msg);}
     if(!r.ok){toast(r.error||'No se ha podido',false);return;}E=r.etiquetas;p();if(t==='estados'){loadEstados();loadPacientes();}toast(msg||'Hecho',true);};
    const p=()=>{if(!E){box.innerHTML='<div class="fac-vacio">Cargando…</div>';return;}const q=bus.toLowerCase();let F=E.filter(x=>!q||x.n.toLowerCase().includes(q));const mas=!todas&&!q&&F.length>25;if(mas)F=F.slice(0,25);
     const mx=Math.max(1,...E.map(y=>y.uso));
@@ -5664,8 +5667,15 @@ async function renderAdmin(wrap){
     card.querySelector('.adm-cnt').textContent=E.length;const vm=box.querySelector('.adm-mas');if(vm)vm.onclick=()=>{todas=true;p();};
     box.querySelectorAll('.adm-em1').forEach(b=>b.onclick=()=>{const x=E.find(y=>y.id===b.closest('.adm-er').dataset.id);
      ddMenuG(b,[{v:'ren',t:'Cambiar nombre'},{v:'jun',t:'Juntar con…'},{v:'del',t:'Borrar'}],async v=>{
-      if(v==='ren'){const n=prompt('Nuevo nombre',x.n);if(n&&n.trim()&&n.trim()!==x.n)op({op:'renombrar',id:x.id,nombre:n.trim()});}
-      else if(v==='del'){if(confirm(`¿Borrar «${x.n}»?`))op({op:'borrar',id:x.id});}
+      if(v==='ren'){const mr=hzModal(`<div class="hz-top"><div><small>${t==='tipos'?'Tipo de cita':'Estado del paciente'}</small><b>Cambiar nombre</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+        <div class="hz-lab">Nombre</div><input class="ag-in r-n" value="${escH(x.n)}" style="width:100%;box-sizing:border-box">${x.uso?`<p class="adm-nota">Se cambia también en ${x.uso} ${t==='tipos'?'cita'+(x.uso===1?'':'s'):'paciente'+(x.uso===1?'':'s')}.</p>`:''}
+        <div class="hz-bts"><button type="button" class="adm-gen r-c">Cancelar</button><button type="button" class="hz-ok r-g">Guardar</button></div>`);
+       const inp=mr.querySelector('.r-n'),fin=()=>{const n=inp.value.trim();mr.remove();if(n&&n!==x.n)op({op:'renombrar',id:x.id,nombre:n},'Nombre cambiado');};
+       mr.querySelector('.hz-x').onclick=mr.querySelector('.r-c').onclick=()=>mr.remove();mr.querySelector('.r-g').onclick=fin;inp.onkeydown=e=>{if(e.key==='Enter')fin();};setTimeout(()=>{inp.focus();inp.select();},50);}
+      else if(v==='del'){const md=hzModal(`<div class="hz-top"><div><small>${t==='tipos'?'Tipo de cita':'Estado del paciente'}</small><b>¿Borrar «${escH(capTit(x.n))}»?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+        <p class="adm-nota">${x.uso?`La tienen ${x.uso} ${t==='tipos'?'cita'+(x.uso===1?'':'s'):'paciente'+(x.uso===1?'':'s')} y se les quitará. Si es igual que otra, mejor usa «Juntar con…».`:'No la usa nadie.'}</p>
+        <div class="hz-bts"><button type="button" class="adm-gen d-c">Cancelar</button><button type="button" class="hz-ok d-g">Borrar</button></div>`);
+       md.querySelector('.hz-x').onclick=md.querySelector('.d-c').onclick=()=>md.remove();md.querySelector('.d-g').onclick=()=>{md.remove();op({op:'borrar',id:x.id,confirmar:true},'Borrado');};}
       else{const otros=E.filter(y=>y.id!==x.id);const m=hzModal(`<div class="hz-top"><div><small>Juntar «${escH(x.n)}»</small><b>¿Con cuál?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><p class="adm-nota">Sus ${x.uso} ${t==='tipos'?'citas':'pacientes'} pasan a la que elijas y «${escH(x.n)}» se borra.</p><input class="ag-in j-b" placeholder="Buscar…" style="width:100%;box-sizing:border-box;margin:10px 0 6px"><div class="adm-jl"></div>`);
        const jl=m.querySelector('.adm-jl'),pj=f=>{jl.innerHTML=otros.filter(y=>!f||y.n.toLowerCase().includes(f)).slice(0,40).map(y=>`<button type="button" data-id="${y.id}">${escH(y.n)}<small>${y.uso}</small></button>`).join('');jl.querySelectorAll('button').forEach(bb=>bb.onclick=async()=>{const dst=otros.find(y=>y.id===bb.dataset.id);m.remove();toast('Juntando… puede tardar unos segundos',true);await op({op:'juntar',id:x.id,a:bb.dataset.id},`Hecho: ${x.uso} ${t==='tipos'?'cita'+(x.uso===1?'':'s'):'paciente'+(x.uso===1?'':'s')} pasan a «${dst?dst.n:''}» y «${x.n}» se ha borrado`);});};pj('');
        m.querySelector('.j-b').oninput=e=>pj(e.target.value.toLowerCase());m.querySelector('.hz-x').onclick=()=>m.remove();}});});};
@@ -5694,7 +5704,7 @@ async function renderAdmin(wrap){
     <div class="hz-bts"><button type="button" class="hz-ok x-g">Guardar</button></div></div>`;
   const $b=q=>body.querySelector(q);
   $b('.t-g').onclick=e=>guardarConf('tarjeta',{importe:$b('.t-i').value.replace(',','.'),meses:$b('.t-m').value},e.target);
-  $b('.h-g').onclick=e=>{if($b('.h-b').checked&&H.borrador&&!confirm('¿Seguro? Los tickets que se hagan desde el panel saldrán ya aprobados en Holded, con su número definitivo.'))return;guardarConf('holded',{borrador:!$b('.h-b').checked,rgpd:$b('.h-r').value},e.target);};
+  $b('.h-g').onclick=async e=>{if($b('.h-b').checked&&H.borrador&&!await admSiNo('Los tickets que se hagan desde el panel saldrán ya aprobados en Holded, con su número definitivo.'))return;guardarConf('holded',{borrador:!$b('.h-b').checked,rgpd:$b('.h-r').value},e.target);};
   $b('.k-g').onclick=e=>guardarConf('clinica',{razon:$b('.k-r').value,nif:$b('.k-n').value,direccion:$b('.k-d').value,tel:$b('.k-t').value,email:$b('.k-e').value},e.target);
   $b('.x-g').onclick=e=>guardarConf('cancelacion',{horas:$b('.x-h').value,texto:$b('.x-t').value},e.target);
  }
