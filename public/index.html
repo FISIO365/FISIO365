@@ -281,6 +281,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .cita-row-sep{background:var(--border)}
 .btn-inf{padding:11px 20px}
 .btn-inf.pdf{border-color:var(--border);background:#fff}
+.tj-card{position:relative;overflow:hidden;background:linear-gradient(135deg,#d9774f,#c2552e);color:#fff;border-radius:20px;padding:18px 18px 16px;margin-bottom:10px;box-shadow:0 8px 22px rgba(194,85,46,.25)}.tj-card:after{content:'';position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.12)}.tj-top{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9}.tj-imp{font-size:34px;font-weight:800;line-height:1.1;margin:6px 0 2px}.tj-sub{font-size:13px;opacity:.95}.tj-cod{display:inline-block;margin-top:12px;background:#fff;color:#c2552e;font-weight:800;letter-spacing:.12em;border-radius:10px;padding:7px 12px;font-size:15px}.tj-cad{font-size:12px;opacity:.9;margin-top:8px}
 .doc-sec{margin-bottom:22px}.doc-h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d6a60;margin:0 0 8px 2px}.doc-vacio{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px 16px;font-size:13px;color:#7d6a60}.fac-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:10px}.fac-num{font-weight:700;font-size:15px}.fac-meta{font-size:12.5px;color:#7d6a60;margin-top:2px}.fac-der{display:flex;align-items:center;gap:10px;flex-shrink:0}.fac-total{font-weight:700;font-size:15px}.fac-btn{padding:8px 14px!important;font-size:13px}
 .periodo{border-color:var(--border)}
 .vas-num{border-radius:10px}
@@ -731,6 +732,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 
  <div id="vistaInformes" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mis documentos</div><div class="date-sub">Todo lo tuyo, para descargarlo cuando lo necesites</div></div>
+ <div class="doc-sec" id="regPacWrap" style="display:none"><div class="doc-h">Tarjetas regalo</div><div id="regPacList"></div></div>
  <div class="doc-sec" id="docPacWrap"><div class="doc-h">Formularios firmados</div><div id="docPacList"><div class="loading"><div class="spinner"></div></div></div></div>
  <div class="doc-sec" id="facPacWrap"><div class="doc-h">Facturas</div><div id="facPacList"><div class="doc-vacio">Próximamente podrás descargar aquí tus facturas.</div></div></div>
  <div class="doc-sec" id="infPacWrap" style="display:none"><div class="doc-h">Informes de tus valoraciones</div><div id="infPacList"></div></div>
@@ -1232,7 +1234,10 @@ async function descargarDocumento(id,btn){const t=btn.textContent;btn.disabled=t
   else{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
  }catch(e){toast('No se ha podido descargar el documento',false);}
  btn.disabled=false;btn.textContent=t;}
-async function loadInformes(){loadDocumentos();
+async function loadRegalos(){const w=document.getElementById('regPacWrap'),l=document.getElementById('regPacList');if(!w||!patient)return;
+ try{const d=await (await fetch('/api/schedule?action=mis-regalos&patientId='+encodeURIComponent(patient.id))).json();if(!d.ok||!(d.tarjetas||[]).length){w.style.display='none';return;}
+  l.innerHTML=d.tarjetas.map(t=>`<div class="tj-card"><div class="tj-top">Tarjeta regalo · FISIO365</div><div class="tj-imp">10 €</div><div class="tj-sub">de descuento en tu próxima sesión${t.por?', por recomendarnos a '+escF(t.por.split(' ')[0]):''} 🧡</div><div class="tj-cod">${escF(t.codigo)}</div><div class="tj-cad">Válida hasta el ${escF(String(t.caduca||'').split('-').reverse().join('/'))} · enséñala al pagar</div></div>`).join('');w.style.display='';}catch(e){w.style.display='none';}}
+async function loadInformes(){loadDocumentos();loadRegalos();
   const list=document.getElementById('infPacList'),wr=document.getElementById('infPacWrap');if(!list)return;window._informesPac=[];
   try{const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);const data=await res.json();const informes=data.informes||[];
   if(!informes.length){wr.style.display='none';return;}

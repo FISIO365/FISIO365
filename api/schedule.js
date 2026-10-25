@@ -533,6 +533,56 @@ module.exports = async function handler(req, res) {
         if (pids.length) (await capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME`)).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; });
         return res.status(200).json({ ok: true, res: r.map(c => ({ id: c.id, tipo: c.tipo, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, de: c.pac.map(id => nom[id] || '').filter(Boolean).join(', ') })) });
       }
+      // ── REFERIDOS: tarjeta regalo de 10 € para quien recomienda, cuando el recomendado viene a su primera sesión ──
+      if (action.startsWith('seg-referido')) {
+        const REF = 'tblr27u3cvtzfyqI6', okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
+        if (action === 'seg-referidos') {
+          const desde = new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10);
+          const rs = await todosT(REF, `filterByFormula=${encodeURIComponent(`AND({Nombre de quien recomendó}!='',NOT({IGNORAR}),{CÓDIGO}='',NOT({Regalo entregado}),IS_AFTER({Fecha},'${desde}'))`)}`);
+          if (!rs.length) return res.status(200).json({ ok: true, porDar: [] });
+          const cons = await consTodos(), pacsAll = await todosT(PACIENTES, 'fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=TELF');
+          const nomP = id => ((pacsAll.find(p => p.id === id) || {}).fields || {})['FULL NAME'] || '';
+          const tokP = pacsAll.map(p => ({ id: p.id, t: nomToks(p.fields['FULL NAME'] || ''), creado: p.createdTime, tel: p.fields['WHATSAPP'] || p.fields['TELF'] || '' }));
+          // 1) Paciente nuevo: el del formulario de ese día con ese nombre (ya enlazado); si no, por nombre completo
+          for (const r of rs) { const F = r.fields; if ((F['PACIENTE'] || []).length) continue;
+            const nm = `${F['Nombre'] || ''} ${F['Apellidos'] || ''}`, fe = String(F['Fecha'] || '').slice(0, 10);
+            const c = cons.find(c => c.tipo === 'Primera visita' && c.pac.length === 1 && Math.abs(new Date(c.fecha) - new Date(fe)) <= 3 * 864e5 && nombresCuadran(c.nombre, nm) && nomToks(nm).filter(t => nomToks(c.nombre).includes(t)).length >= 2);
+            let pid = c ? c.pac[0] : '';
+            if (!pid) { const tk = nomToks(nm); const m = tokP.filter(p => tk.length >= 2 && tk.every(t => p.t.includes(t))); if (m.length === 1) pid = m[0].id; }
+            if (pid) { const u = await at(`${REF}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PACIENTE: [pid] } }) }); if (!u.error) F['PACIENTE'] = [pid]; } }
+          // 2) Quién recomendó: si su nombre (2 palabras o más) cuadra con un único paciente, se enlaza solo; si no, se proponen
+          const sug = {};
+          for (const r of rs) { const F = r.fields; if ((F['RECOMENDÓ'] || []).length) continue;
+            const tk = nomToks(String(F['Nombre de quien recomendó'] || '').replace(/\(.*?\)/g, ' ')); if (!tk.length) { sug[r.id] = []; continue; }
+            const nuevo = (F['PACIENTE'] || [])[0];
+            const m = tokP.filter(p => p.id !== nuevo && tk.every(t => p.t.includes(t)));
+            if (tk.length >= 2 && m.length === 1) { const u = await at(`${REF}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECOMENDÓ': [m[0].id] } }) }); if (!u.error) { F['RECOMENDÓ'] = [m[0].id]; continue; } }
+            const parc = tokP.filter(p => p.id !== nuevo && tk.some(t => p.t.includes(t))).map(p => ({ p, n: tk.filter(t => p.t.includes(t)).length })).sort((a, b) => b.n - a.n).slice(0, 6);
+            sug[r.id] = (m.length ? m.slice(0, 6) : parc.map(x => x.p)).map(p => ({ id: p.id, nombre: nomP(p.id) })); }
+          // 3) ¿Ha venido ya el recomendado? (primera sesión realizada)
+          const nuevos = [...new Set(rs.map(r => (r.fields['PACIENTE'] || [])[0]).filter(Boolean))], prim = {};
+          for (let i = 0; i < nuevos.length; i += 15) { const lote = nuevos.slice(i, i + 15);
+            (await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=PacienteRec`).catch(() => [])).forEach(c => { const f = String(c.fields['FECHA'] || '').slice(0, 10); (c.fields['PacienteRec'] || []).forEach(id => { if (lote.includes(id) && (!prim[id] || f < prim[id])) prim[id] = f; }); }); }
+          const porDar = rs.filter(r => prim[(r.fields['PACIENTE'] || [])[0]]).map(r => { const F = r.fields, nid = F['PACIENTE'][0], rid = (F['RECOMENDÓ'] || [])[0] || '';
+            const rp = rid ? tokP.find(p => p.id === rid) : null;
+            return { id: r.id, nuevo: { id: nid, nombre: nomP(nid) }, primera: prim[nid], texto: String(F['Nombre de quien recomendó'] || '').trim(), recomendo: rid ? { id: rid, nombre: nomP(rid), tel: rp ? rp.tel : '' } : null, sugeridos: sug[r.id] || [] }; });
+          return res.status(200).json({ ok: true, porDar });
+        }
+        if (req.method !== 'POST' || !okId(q.id)) return res.status(400).json({ ok: false });
+        if (action === 'seg-referido-recomendo') { if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
+          const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECOMENDÓ': [q.pacienteId] } }) }); return res.status(200).json({ ok: !d.error }); }
+        if (action === 'seg-referido-ignorar') { const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { IGNORAR: true } }) }); return res.status(200).json({ ok: !d.error }); }
+        if (action === 'seg-referido-tarjeta') {
+          const r0 = await at(`${REF}/${q.id}`); if (r0.error) return res.status(404).json({ ok: false });
+          let cod = r0.fields['CÓDIGO'], cad = r0.fields['CADUCA'];
+          if (!cod) { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; cod = 'F365-' + Array.from({ length: 4 }, () => A[Math.floor(Math.random() * A.length)]).join('');
+            const c = new Date(hoyF + 'T12:00:00Z'); c.setUTCMonth(c.getUTCMonth() + 6); cad = c.toISOString().slice(0, 10);
+            const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'CÓDIGO': cod, 'FECHA TARJETA': hoyF, CADUCA: cad, 'Regalo entregado': true } }) }); if (d.error) return res.status(200).json({ ok: false }); }
+          return res.status(200).json({ ok: true, codigo: cod, caduca: cad });
+        }
+        if (action === 'seg-referido-canjear') { const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { CANJEADA: q.deshacer ? null : hoyF } }) }); return res.status(200).json({ ok: !d.error }); }
+        return res.status(400).json({ ok: false });
+      }
       if (action === 'seg-app-pendientes') {
         // Pacientes con sesión en los últimos 30 días que no han abierto la app, o que no tienen plan de ejercicios
         const ses = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_AFTER({FECHA},DATEADD(TODAY(),-31,'days')),NOT(IS_AFTER({FECHA},TODAY())))`)}&fields[]=FECHA&fields[]=RELACIÓN - CITA&fields[]=PREF.`);
@@ -990,7 +1040,16 @@ module.exports = async function handler(req, res) {
           const vuelve = citas.some(c => { const f = String(c.fields['FECHA'] || '').slice(0, 10), e = String(nm(c.fields['ESTADO'])).toUpperCase(); return (f > hoyF && !/CANCEL|REPROGRAM|NO ASIST/.test(e)) || (f === hoyF && /PENDIENTE/.test(e)); });
           if (vuelve) { await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) }).catch(() => {}); F['POR QUÉ NO REAGENDA'] = ''; F['POR QUÉ FECHA'] = ''; F['POR QUÉ FISIO'] = ''; }
         }
-        return res.status(200).json({ ok: true, hoy: hoyF, saldo, consent,
+        // Recomendaciones: quién le recomendó y a quién ha recomendado (con su tarjeta regalo)
+        let referidos = null;
+        { const ids = [...(F['VINO RECOMENDADO'] || []), ...(F['HA RECOMENDADO'] || [])];
+          if (ids.length) { const rr = await todosT('tblr27u3cvtzfyqI6', `filterByFormula=${encodeURIComponent('OR(' + ids.slice(0, 40).map(i => `RECORD_ID()='${i}'`).join(',') + ')')}`).catch(() => []);
+            const otros = [...new Set(rr.flatMap(r => [...(r.fields['PACIENTE'] || []), ...(r.fields['RECOMENDÓ'] || [])]).filter(x => x !== q.id))], nom = {};
+            if (otros.length) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + otros.slice(0, 40).map(i => `RECORD_ID()='${i}'`).join(',') + ')')}&fields[]=FULL NAME`).catch(() => [])).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; });
+            const vino = rr.find(r => (r.fields['PACIENTE'] || []).includes(q.id));
+            referidos = { leRecomendo: vino ? { id: (vino.fields['RECOMENDÓ'] || [])[0] || '', nombre: nom[(vino.fields['RECOMENDÓ'] || [])[0]] || String(vino.fields['Nombre de quien recomendó'] || '').trim() } : null,
+              haRecomendado: rr.filter(r => (r.fields['RECOMENDÓ'] || []).includes(q.id)).map(r => ({ id: r.id, nombre: nom[(r.fields['PACIENTE'] || [])[0]] || `${r.fields['Nombre'] || ''} ${r.fields['Apellidos'] || ''}`.trim(), fecha: r.fields['Fecha'] || '', codigo: r.fields['CÓDIGO'] || '', caduca: r.fields['CADUCA'] || '', canjeada: r.fields['CANJEADA'] || '', fechaTarjeta: r.fields['FECHA TARJETA'] || '', ignorar: !!r.fields['IGNORAR'] })) }; } }
+        return res.status(200).json({ ok: true, hoy: hoyF, saldo, consent, referidos,
           paciente: { id: pac.id, pin: F['PIN'] || '', nombre: F['FULL NAME'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', telf: F['TELF'] || '', whatsapp: F['WHATSAPP'] || '', pin: F['PIN'] || '', email: F['EMAIL'] || '', dni: F['DNI'] || '', cumple: F['CUMPLE'] || '', telDescartado: F['TELF FORM DESCARTADO'] || '', foto: (((F['FOTO PERFIL'] || [])[0] || {}).thumbnails || {}).large ? F['FOTO PERFIL'][0].thumbnails.large.url : (((F['FOTO PERFIL'] || [])[0] || {}).url || ''), ultimoAcceso: F['ÚLTIMO ACCESO APP'] || '', appUsada: !!(F['ÚLTIMO ACCESO APP'] || F['PushSubscription']), alta: pac.createdTime || '', estados: F['ESTADO'] || [],
             historial: F['HISTORIAL CLÍNICO'] || '', historialMod: F['HISTORIAL ACTUALIZADO'] || '', notas: F['NOTAS'] || '', porQue: F['POR QUÉ NO REAGENDA'] || '', porQueFecha: F['POR QUÉ FECHA'] || '', porQueFisio: F['POR QUÉ FISIO'] || '', bonoPrevio: F['SESIONES BONO PREVIO'] || 0, colab: F['COLAB'] || '', resena: !!F['RESEÑA POSITIVA'],
             archivos: (F['DOCUS'] || []).map(a => ({ nombre: a.filename || 'archivo', url: a.url, tipo: a.type || '', tam: a.size || 0, mini: (a.thumbnails && ((a.thumbnails.large && a.thumbnails.large.url) || (a.thumbnails.small && a.thumbnails.small.url))) || '' })) },
@@ -1256,7 +1315,7 @@ module.exports = async function handler(req, res) {
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
   }
   // ── App del paciente: su cuenta (foto de perfil, cambiar PIN) y «la ha abierto» ──
-  if (action === 'mi-cuenta' || action === 'cambiar-pin' || action === 'subir-foto' || action === 'app-visto') {
+  if (action === 'mi-cuenta' || action === 'cambiar-pin' || action === 'subir-foto' || action === 'app-visto' || action === 'mis-regalos') {
     if (!/^rec[A-Za-z0-9]{14}$/.test(patientId || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
     const b = req.method === 'POST' ? (req.body || {}) : {};
     try {
@@ -1265,6 +1324,13 @@ module.exports = async function handler(req, res) {
       const fotoUrl = foto ? ((foto.thumbnails && foto.thumbnails.large && foto.thumbnails.large.url) || foto.url) : '';
       if (action === 'app-visto') { await at(`${PACIENTES}/${patientId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ÚLTIMO ACCESO APP': new Date().toISOString() } }) }).catch(() => {}); return res.status(200).json({ ok: true, foto: fotoUrl }); }
       if (action === 'mi-cuenta') return res.status(200).json({ ok: true, foto: fotoUrl, email: F['EMAIL'] || '' });
+      if (action === 'mis-regalos') {
+        const ids = (F['HA RECOMENDADO'] || []).slice(0, 40); if (!ids.length) return res.status(200).json({ ok: true, tarjetas: [] });
+        const hoy = new Date().toISOString().slice(0, 10);
+        const d = await at(`tblr27u3cvtzfyqI6?filterByFormula=${encodeURIComponent('OR(' + ids.map(i => `RECORD_ID()='${i}'`).join(',') + ')')}`);
+        const tarjetas = (d.records || []).filter(r => r.fields['CÓDIGO'] && !r.fields['CANJEADA'] && (!r.fields['CADUCA'] || r.fields['CADUCA'] >= hoy)).map(r => ({ codigo: r.fields['CÓDIGO'], caduca: r.fields['CADUCA'] || '', por: String(r.fields['Nombre'] || '').trim() }));
+        return res.status(200).json({ ok: true, tarjetas });
+      }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
       if (action === 'cambiar-pin') {
         const actual = String(b.actual || '').trim(), nuevo = String(b.nuevo || '').trim();

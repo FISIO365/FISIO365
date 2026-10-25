@@ -964,6 +964,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .fp-sp{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#7d6a60}.fp-sp b{font-size:13px}.fp-sp b.si{color:#16803c}.fp-sp b.no{color:#b3261e}
 .fp-conoc{display:flex;align-items:center;gap:12px;background:#fdf3ec;border-radius:14px;padding:10px 12px;margin-bottom:8px}.fp-conoc svg{width:34px;height:34px;flex:none;padding:7px;box-sizing:border-box;border-radius:50%;background:#fff;fill:none;stroke:#c2552e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.fp-conoc span{display:block;font-size:12px;color:#7d6a60}.fp-conoc b{font-size:15px}
 .fp-mts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.fp-mt{background:#f7f3ef;border-radius:12px;padding:9px 10px;min-width:0}.fp-mt span{display:block;font-size:11.5px;color:#7d6a60;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fp-mt b{display:flex;align-items:center;gap:6px;font-size:14px;margin-top:2px}.fp-mt b i{width:8px;height:8px;border-radius:50%;background:#c9bfb7}.fp-mt b.si i{background:#16a34a}.fp-mt b.no i{background:#c9bfb7}
+.fp-gift{background:#fdeee4;color:#c2552e;font-weight:700;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:14px}.fp-refs{display:flex;flex-direction:column;gap:6px;margin-top:4px}.fp-ref{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f7f3ef;border-radius:12px;padding:10px 12px}.fp-ref>div{display:flex;flex-direction:column;min-width:0}.fp-ref b{font-size:14px}.fp-ref small{font-size:12px;color:#7d6a60}.fp-ref .fp-refb{display:flex;gap:6px;flex:none}.fp-ref button{font-family:var(--font);font-size:12.5px;font-weight:700;border:none;border-radius:10px;padding:8px 11px;cursor:pointer;background:#c2552e;color:#fff}.fp-ref button.sec{background:#fff;color:#1a1a1a;border:1.5px solid rgba(26,26,26,.1)}.fp-lerec{font-size:14px;margin-bottom:8px}.fp-lerec b{cursor:pointer}
 .fp-alr{background:#d93025;color:#fff;font-weight:700;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:14px}.fp-sal{display:flex;flex-wrap:wrap;gap:6px}.fp-sal span{background:#fff4e0;color:#8a5200;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}.fp-salx{border:0;background:none;color:inherit;font:inherit;font-weight:700;margin-left:6px;padding:0 2px;cursor:pointer;opacity:.7}.fp-sal span.gr{background:#fdecea;color:#b3261e}
 .ag-c.ag-al{background:#fdecea!important;border-color:#e0453a!important;border-left:4px solid #d93025!important}.ag-c.ag-al>b{color:#b3261e!important}.ag-alt{display:block;font-size:11.5px;font-weight:700;color:#d93025;margin-top:2px;-webkit-text-fill-color:currentColor}
 .ag-li{display:grid;grid-template-columns:46px 1fr;gap:8px;align-items:start;margin-bottom:6px}.ag-lh{font-size:12.5px;color:#7d6a60;padding-top:8px}
@@ -5483,7 +5484,7 @@ async function listaTareas(cont,keep){
  const L=d.items.filter(x=>!tarFiltro||x.quien===tarFiltro);
  const hoy=d.hoy;
  // Agrupadas por tipo; dentro, por fecha (las atrasadas primero, marcadas en rojo)
- const TIPOS_T=[['tarea','Tareas del equipo'],['anotar','Historia por actualizar'],['explicar','Sin próxima cita'],['consent','Consentimientos'],['consentAnt','Antiguos: subir el consentimiento en papel'],['plan','Sin plan de ejercicios en la app'],['app','Sin la app']];
+ const TIPOS_T=[['tarea','Tareas del equipo'],['anotar','Historia por actualizar'],['explicar','Sin próxima cita'],['consent','Consentimientos'],['consentAnt','Antiguos: subir el consentimiento en papel'],['regalo','Tarjetas regalo por dar'],['plan','Sin plan de ejercicios en la app'],['app','Sin la app']];
  const grT=x=>x.tipo==='consent'&&x.k&&x.k.antiguo?'consentAnt':x.tipo;
  const grupos=TIPOS_T.map(([k,t])=>[t,k,L.filter(x=>grT(x)===k).sort((a,b)=>a.fecha.localeCompare(b.fecha))]);
  box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todos (${d.items.filter(x=>x.fecha<=hoy).length})</option>${[...new Set(TAR_NOMBRES.concat(quien))].map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
@@ -5493,22 +5494,33 @@ async function listaTareas(cont,keep){
   const h=ce('div','seg-gt '+c);h.innerHTML=`${t} <span>${g.length}</span>`;box.appendChild(h);
   const tabla=ce('div','seg-tabla');
   g.forEach(x=>{
-   const sinAtr=['consent','app','plan'].includes(x.tipo);const r=ce('div','tk'+(x.fecha<hoy&&!sinAtr?' atr':''));
-   const pid=x.tipo==='app'||x.tipo==='plan'?x.a.pacienteId:x.tipo==='consent'?(x.k.pacienteId||''):x.tipo==='llamar'?x.seg.pacienteId:x.tipo==='tarea'?x.t.pacienteId:x.tipo==='anotar'?x.c.pacienteId:x.p.id;
+   const sinAtr=['consent','app','plan','regalo'].includes(x.tipo);const r=ce('div','tk'+(x.fecha<hoy&&!sinAtr?' atr':''));
+   const pid=x.tipo==='regalo'?(x.g.recomendo?x.g.recomendo.id:''):x.tipo==='app'||x.tipo==='plan'?x.a.pacienteId:x.tipo==='consent'?(x.k.pacienteId||''):x.tipo==='llamar'?x.seg.pacienteId:x.tipo==='tarea'?x.t.pacienteId:x.tipo==='anotar'?x.c.pacienteId:x.p.id;
    const IC_TEL='<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
    const IC_EXP='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
-   const sub=x.tipo==='app'||x.tipo==='plan'?[x.quien?'Con '+x.quien:'',x.tipo==='plan'?'Sin ejercicios asignados':'Tiene ejercicios pero no ha entrado en la app','vino el '+segFecha(x.a.ultima)].filter(Boolean).join(' · '):x.tipo==='consent'?(x.k.modo==='R'?(x.k.motivo==='doble'?`${x.k.tipo} enlazado a ${x.k.pacientes.length} pacientes: ${x.k.pacientes.map(p=>p.nombre).join(' y ')}`:`${x.k.tipo} firmado con otro nombre y enlazado a ${x.k.pacientes[0].nombre}`):x.k.modo==='P'?(x.k.antiguo?'1ª visita '+(x.k.primeraVisita?String(x.k.primeraVisita).split('-').reverse().join('/'):'—')+' · vino el '+segFecha(x.k.primera):'Le falta el consentimiento · vino el '+segFecha(x.k.primera))+(x.k.fisio?' con '+x.k.fisio:''):'Formulario firmado, no sabemos de quién · '+[x.k.tel,x.k.sugerido?'¿es de '+x.k.sugerido.nombre+'?':''].filter(Boolean).join(' · ')):x.tipo==='anotar'?[x.quien,'Historia sin actualizar tras la sesión del '+segFecha(x.c.fecha)].filter(Boolean).join(' · '):x.tipo==='tarea'?[x.t.para?'Para '+x.t.para:'Para cualquiera',x.t.paciente?'Paciente: '+x.t.paciente:'',x.t.creadaPor&&x.t.creadaPor!==x.t.para?'la apuntó '+x.t.creadaPor:''].filter(Boolean).join(' · '):x.tipo==='llamar'?(x.seg.ultima?'Última sesión '+segFecha(x.seg.ultima).replace(/^\S+ /,'')+(x.seg.fisio?' con '+x.seg.fisio:''):''):[x.quien,'Última sesión '+segFecha(x.p.ultima).replace(/^\S+ /,'')].filter(Boolean).join(' · ');
-   const notaT=x.tipo==='consent'||x.tipo==='anotar'||x.tipo==='app'||x.tipo==='plan'?'':x.tipo==='tarea'?x.t.nota:x.tipo==='llamar'?(x.detalle&&x.detalle.trim()!=='Llamada de seguimiento'?x.detalle:''):(x.p.nota?'Motivo: '+x.p.nota:'');
+   const sub=x.tipo==='regalo'?(x.g.recomendo?'Recomendó a '+x.g.nuevo.nombre+' · vino el '+segFecha(x.g.primera):'Puso «'+x.g.texto+'» como quien le recomendó · ¿quién es?'):x.tipo==='app'||x.tipo==='plan'?[x.quien?'Con '+x.quien:'',x.tipo==='plan'?'Sin ejercicios asignados':'Tiene ejercicios pero no ha entrado en la app','vino el '+segFecha(x.a.ultima)].filter(Boolean).join(' · '):x.tipo==='consent'?(x.k.modo==='R'?(x.k.motivo==='doble'?`${x.k.tipo} enlazado a ${x.k.pacientes.length} pacientes: ${x.k.pacientes.map(p=>p.nombre).join(' y ')}`:`${x.k.tipo} firmado con otro nombre y enlazado a ${x.k.pacientes[0].nombre}`):x.k.modo==='P'?(x.k.antiguo?'1ª visita '+(x.k.primeraVisita?String(x.k.primeraVisita).split('-').reverse().join('/'):'—')+' · vino el '+segFecha(x.k.primera):'Le falta el consentimiento · vino el '+segFecha(x.k.primera))+(x.k.fisio?' con '+x.k.fisio:''):'Formulario firmado, no sabemos de quién · '+[x.k.tel,x.k.sugerido?'¿es de '+x.k.sugerido.nombre+'?':''].filter(Boolean).join(' · ')):x.tipo==='anotar'?[x.quien,'Historia sin actualizar tras la sesión del '+segFecha(x.c.fecha)].filter(Boolean).join(' · '):x.tipo==='tarea'?[x.t.para?'Para '+x.t.para:'Para cualquiera',x.t.paciente?'Paciente: '+x.t.paciente:'',x.t.creadaPor&&x.t.creadaPor!==x.t.para?'la apuntó '+x.t.creadaPor:''].filter(Boolean).join(' · '):x.tipo==='llamar'?(x.seg.ultima?'Última sesión '+segFecha(x.seg.ultima).replace(/^\S+ /,'')+(x.seg.fisio?' con '+x.seg.fisio:''):''):[x.quien,'Última sesión '+segFecha(x.p.ultima).replace(/^\S+ /,'')].filter(Boolean).join(' · ');
+   const notaT=x.tipo==='consent'||x.tipo==='anotar'||x.tipo==='app'||x.tipo==='plan'||x.tipo==='regalo'?'':x.tipo==='tarea'?x.t.nota:x.tipo==='llamar'?(x.detalle&&x.detalle.trim()!=='Llamada de seguimiento'?x.detalle:''):(x.p.nota?'Motivo: '+x.p.nota:'');
    const ul=x.tipo==='llamar'&&x.seg.ult?x.seg.ult:null;
    const ests=pacEstados(pid).map(estNom).filter(Boolean);
    const IC_TAR='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>';
    const IC_NOTA='<svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>';
    const IC_APP='<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg>';
-   const ico=x.tipo==='app'||x.tipo==='plan'?`<span class="tk-i ta">${IC_APP}</span>`:x.tipo==='anotar'||x.tipo==='consent'?`<span class="tk-i an">${IC_NOTA}</span>`:x.tipo==='tarea'?`<span class="tk-i ta">${IC_TAR}</span>`:x.tipo==='llamar'?(x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${IC_TEL}</a>`:`<span class="tk-i ll">${IC_TEL}</span>`):`<span class="tk-i ex">${IC_EXP}</span>`;
+   const IC_REG='<svg viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="12.5" rx="2"/><path d="M12 8v12.5M3.5 12.5h17M12 8c-1.5-3.5-5.5-4-5.5-1.5S12 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S12 8 12 8z"/></svg>';
+   const ico=x.tipo==='regalo'?`<span class="tk-i ta">${IC_REG}</span>`:x.tipo==='app'||x.tipo==='plan'?`<span class="tk-i ta">${IC_APP}</span>`:x.tipo==='anotar'||x.tipo==='consent'?`<span class="tk-i an">${IC_NOTA}</span>`:x.tipo==='tarea'?`<span class="tk-i ta">${IC_TAR}</span>`:x.tipo==='llamar'?(x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${IC_TEL}</a>`:`<span class="tk-i ll">${IC_TEL}</span>`):`<span class="tk-i ex">${IC_EXP}</span>`;
    r.innerHTML=`<div class="tk-ics">${ico}${x.tipo==='llamar'&&x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}</div><div class="tk-m"><b ${x.tipo!=='tarea'&&pid?`data-ficha="${pid}" class="tk-nom"`:''}>${escH(x.nombre)}</b>${x.tipo==='tarea'&&x.t.pacienteId?`<button type="button" class="tk-pacl" data-ficha="${x.t.pacienteId}" data-fn="${escH(x.t.paciente)}">Ver ficha de ${escH(x.t.paciente)} ›</button>`:''}${sub?`<p class="tk-meta">${escH(sub)}</p>`:''}${ul?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(ul.resultado)?'ok':/^NC|^VOLVER/.test(ul.resultado)?'no':'pe'}">${escH(resTxtG(ul.resultado))}</strong> · ${escH(segFecha(ul.fecha).replace(/^\S+ /,''))}${ul.quien?' · '+escH(quienNom(ul.quien)):''}${ul.nota?' — '+escH(ul.nota):''}</p>`:''}${notaT?`<p class="tk-nota">${escH(notaT)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}</div><div class="tk-a"></div>`;
    {const tm=r.querySelector('.tk-m');if(tm){const dd=Math.round((new Date(x.fecha+'T12:00:00')-new Date(hoy+'T12:00:00'))/864e5);tm.insertAdjacentHTML('afterbegin',`<small class="tk-fe ${dd<0&&!sinAtr?'atr':''}">${dd===0?'Hoy':dd===-1?'Ayer':dd===1?'Mañana':segFecha(x.fecha)}${dd<0&&!sinAtr?' · atrasada':''}</small>`);}}
    const acc=r.querySelector('.tk-a');
-   if(x.tipo==='app'||x.tipo==='plan'){
+   if(x.tipo==='regalo'){
+    const g=x.g,b=ce('button','tk-b');b.type='button';
+    if(g.recomendo){b.textContent='Enviar tarjeta';b.onclick=async()=>{b.disabled=true;try{const d=await (await fetch('/api/schedule?action=seg-referido-tarjeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:g.id})})).json();if(!d.ok)throw 0;
+      waAbrir(g.recomendo.tel,mensajeTarjeta(g.recomendo.nombre,g.nuevo.nombre,d.codigo,d.caduca));toast('Tarjeta '+d.codigo+' creada',true);quitar(r,x);}catch(e){b.disabled=false;toast('No se ha podido crear la tarjeta',false);}};}
+    else{b.textContent='¿Quién es?';b.onclick=()=>elegirRecomendo(g,recargar);}
+    acc.appendChild(b);
+    const q=ce('button','tk-q');q.type='button';q.setAttribute('aria-label','No toca tarjeta');q.title='No toca tarjeta';q.innerHTML='✕';let arm=false;
+    q.onclick=async()=>{if(!arm){arm=true;q.classList.add('arm');q.textContent='¿Quitar?';setTimeout(()=>{arm=false;q.classList.remove('arm');q.innerHTML='✕';},4000);return;}
+     q.disabled=true;try{const rs=await (await fetch('/api/schedule?action=seg-referido-ignorar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:g.id})})).json();if(!rs.ok)throw 0;toast('Quitado',true);quitar(r,x);}catch(e){q.disabled=false;toast('No se ha podido quitar',false);}};
+    acc.appendChild(q);
+   }else if(x.tipo==='app'||x.tipo==='plan'){
     const b=ce('button','tk-b');b.type='button';
     if(x.tipo==='app'){b.textContent='Enviar app';b.onclick=()=>enviarApp({nombre:x.a.nombre,tel:x.a.tel,email:x.a.email,pin:x.a.pin});}
     else{b.textContent='Ver ficha';b.dataset.ficha=x.a.pacienteId;b.dataset.fn=x.a.nombre;}
@@ -5583,6 +5595,22 @@ const CONSENT_URL='https://tally.so/r/b5j1M2',FORM_INICIO='2026-01-08'; // desde
 const FORM_SP_URL='https://tally.so/r/Gex8jo',FORM_ALTA_URL='https://tally.so/r/Dq4gE5';
 let _consDoc={};
 async function consDatos(id){if(_consDoc[id])return _consDoc[id];const r=await (await fetch(`/api/schedule?action=seg-consent-doc&pwd=${encodeURIComponent(apiPwd)}&id=${id}`)).json();if(!r.ok)throw new Error('No se ha podido cargar el consentimiento');_consDoc[id]=r;return r;}
+// Tarjeta regalo por recomendar (10 €, 6 meses)
+function mensajeTarjeta(quien,nuevo,cod,cad){const n=String(quien||'').trim().split(' ')[0];const nm=n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';const nv=String(nuevo||'').trim().split(' ')[0];const nvm=nv?nv.charAt(0).toUpperCase()+nv.slice(1).toLowerCase():'';
+ return `¡Hola ${nm}! 🎁 Gracias por recomendarnos${nvm?' a '+nvm:''}, nos hace muchísima ilusión.\n\nTe dejamos una tarjeta regalo de 10 € de descuento para tu próxima sesión:\n• Código: ${cod}\n• Válida hasta el ${String(cad||'').split('-').reverse().join('/')}\n\nEnséñala al pagar (también la tienes en tu app, en Mis documentos: ${APP_URL}).\n\n¡Gracias por confiar en FISIO365! 🧡`;}
+function waAbrir(tel,txt){const t=segTel(tel||'');window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');}
+// Elegir quién recomendó (si el nombre que puso no cuadra con un único paciente)
+function elegirRecomendo(r,onDone){
+ const m=hzModal(`<div class="hz-top"><div><small>Recomendó a ${escH(r.nuevo.nombre)}</small><b>¿Quién es «${escH(r.texto)}»?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  ${r.sugeridos.length?`<div class="hz-lab">Puede ser</div><div class="cs-forms er-sug">${r.sugeridos.map(p=>`<button type="button" data-id="${p.id}"><b>${escH(p.nombre)}</b></button>`).join('')}</div>`:''}
+  <div class="hz-lab">Buscar paciente</div><input type="text" class="er-bus" placeholder="Nombre…" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px"><div class="seg-bres er-res"></div>
+  <div class="hz-bts"><button type="button" class="hz-re er-no">No es paciente · no toca tarjeta</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const post=(a,b)=>fetch('/api/schedule?action='+a,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd,id:r.id},b||{}))}).then(x=>x.json());
+ const elegir=async id=>{try{const d=await post('seg-referido-recomendo',{pacienteId:id});if(!d.ok)throw 0;toast('Apuntado',true);m.remove();onDone&&onDone();}catch(e){toast('No se ha podido guardar',false);}};
+ m.querySelectorAll('.er-sug button').forEach(b=>b.onclick=()=>elegir(b.dataset.id));
+ const inp=m.querySelector('.er-bus'),res=m.querySelector('.er-res');inp.oninput=()=>{const q=inp.value.trim().toLowerCase();res.innerHTML=q.length<2?'':(pacs||[]).filter(p=>p.nombre.toLowerCase().includes(q)).slice(0,6).map(p=>`<button type="button" data-id="${p.id}">${escH(p.nombre)}</button>`).join('');res.querySelectorAll('button').forEach(b=>b.onclick=()=>elegir(b.dataset.id));};
+ m.querySelector('.er-no').onclick=async()=>{try{const d=await post('seg-referido-ignorar');if(!d.ok)throw 0;toast('Vale, no toca tarjeta',true);m.remove();onDone&&onDone();}catch(e){toast('No se ha podido guardar',false);}};}
 // Mensaje de bienvenida a la app (enlace + cómo instalarla + email y PIN), para mandar por WhatsApp
 const APP_URL='https://app.fisioterapia365.com';
 function mensajeApp(P){const n=String(P.nombre||'').trim().split(' ')[0];const nm=n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';
@@ -5746,12 +5774,16 @@ async function abrirFichaPaciente(id,nombre,pBase){
    ${C.marketing?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Marketing</h3></div>
     <div class="fp-conoc">${ico(C.marketing.conocido)}<div><span>Nos conoció por</span><b>${escH(C.marketing.conocido||'—')}</b></div></div>
     <div class="fp-mts">${tile('Newsletter',C.marketing.newsletter)}${tile('Imágenes',C.marketing.imagenes)}${tile('Avisos',C.marketing.citas)}</div></div>`:''}`;
-  return `${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
+  const RF=d.referidos,hoyR=d.hoy,tActivas=RF?RF.haRecomendado.filter(t=>t.codigo&&!t.canjeada&&(!t.caduca||t.caduca>=hoyR)):[];
+  const fR=f=>f?String(f).split('-').reverse().join('/'):'';
+  const refBlk=RF&&(RF.leRecomendo||RF.haRecomendado.length)?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Recomendaciones</h3></div>${RF.leRecomendo?`<div class="fp-lerec">Le recomendó: <b ${RF.leRecomendo.id?`data-ficha="${RF.leRecomendo.id}"`:''}>${escH(RF.leRecomendo.nombre||'—')}</b></div>`:''}${RF.haRecomendado.length?`<div class="fp-refs">${RF.haRecomendado.map(t=>`<div class="fp-ref"><div><b>${escH(t.nombre)}</b><small>${t.codigo?(t.canjeada?'Tarjeta de 10 € canjeada el '+fR(t.canjeada):t.caduca&&t.caduca<hoyR?'Tarjeta caducada el '+fR(t.caduca):'Tarjeta de 10 € · '+escH(t.codigo)+' · hasta el '+fR(t.caduca)):t.ignorar?'Sin tarjeta':'Tarjeta pendiente: cuando venga a su primera sesión'}</small></div>${t.codigo&&!t.canjeada&&!(t.caduca&&t.caduca<hoyR)?`<span class="fp-refb"><button type="button" class="sec fp-refwa" data-id="${t.id}">WhatsApp</button><button type="button" class="fp-refc" data-id="${t.id}">Canjear</button></span>`:''}</div>`).join('')}</div>`:''}</div>`:'';
+  return `${tActivas.length?`<div class="fp-gift">🎁 Tiene ${tActivas.length>1?tActivas.length+' tarjetas regalo':'una tarjeta regalo'} de 10 € para descontar al pagar</div>`:''}${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
   <div class="fp-blk fp-pq"></div>
   <div class="fp-blk" data-blk="datos"><div class="fp-bt"><h3>Datos</h3><button type="button" class="fp-ed">Editar</button></div>
    <div class="fp-fs">${campoTxt('Teléfono','tel',P.telf)}${campoTxt('WhatsApp','whatsapp',P.whatsapp)}${campoTxt('Email','email',P.email)}${campoTxt('DNI','dni',P.dni)}${campoTxt('Cumpleaños','cumple',P.cumple,'date')}<div class="fp-f"><span>Paciente desde</span><div class="fp-v">${escH(fch(String(P.alta).slice(0,10)))}</div></div></div></div>
   ${salud}
+  ${refBlk}
 `;}
  function citas(){const hoy=d.hoy;if(!d.citas.length)return '<div class="fac-vacio">Sin citas</div>';
   const fila=c=>`<div class="fp-cita"><div class="fp-cd"><b>${escH(segFecha(c.fecha))}</b><span>${escH(c.hora||'')}</span></div><div class="fp-cm"><span class="fp-ce ${cls(c.estado)}">${escH(c.estado?c.estado.charAt(0)+c.estado.slice(1).toLowerCase():'—')}</span>${c.fisio?`<span class="fp-cfi">${escH(c.fisio)}</span>`:''}${c.nota?`<p>${escH(c.nota)}</p>`:''}</div></div>`;
@@ -5882,6 +5914,9 @@ async function abrirFichaPaciente(id,nombre,pBase){
    cont.querySelectorAll('.fp-doc2').forEach(bt=>bt.onclick=()=>consMenu({consentId:bt.dataset.id,pacienteId:id,onDone:async()=>{try{await cargar();}catch(_){}pintar();},tipo:bt.dataset.t,papel:!!bt.dataset.papel,paciente:P.nombre,email:P.email,tel:P.whatsapp||P.telf||P.tel}));
    cont.querySelectorAll('.fp-cpap').forEach(bt=>bt.onclick=()=>subirPapel({pacienteId:id,nombre:P.nombre,onDone:async()=>{try{await cargar();}catch(_){}pintar();}}));
    cont.querySelectorAll('.fp-cform').forEach(bt=>bt.onclick=()=>enviarFormulario(P));
+   cont.querySelectorAll('.fp-refc').forEach(bt=>{let arm=false;bt.onclick=async()=>{if(!arm){arm=true;bt.textContent='¿Canjear?';setTimeout(()=>{arm=false;bt.textContent='Canjear';},4000);return;}bt.disabled=true;
+     try{const r=await (await fetch('/api/schedule?action=seg-referido-canjear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:bt.dataset.id})})).json();if(!r.ok)throw 0;const t=d.referidos.haRecomendado.find(x=>x.id===bt.dataset.id);if(t)t.canjeada=d.hoy;toast('Tarjeta canjeada: descuenta 10 € de este pago',true);pintar();}catch(e){bt.disabled=false;toast('No se ha podido guardar',false);}};});
+   cont.querySelectorAll('.fp-refwa').forEach(bt=>bt.onclick=()=>{const t=d.referidos.haRecomendado.find(x=>x.id===bt.dataset.id);if(t)waAbrir(P.whatsapp||P.telf||P.tel,mensajeTarjeta(P.nombre,t.nombre,t.codigo,t.caduca));});
    cont.querySelectorAll('.fp-cpc').forEach(bt=>bt.onclick=async()=>{bt.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-consent-enlazar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,consentId:bt.dataset.id,pacienteId:id})})).json();if(!r.ok)throw 0;toast('Enlazado',true);try{await cargar();}catch(_){}pintar();}catch(e){bt.disabled=false;toast('No se ha podido enlazar',false);}});
    const noEs=cid=>fetch('/api/schedule?action=seg-consent-noes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,consentId:cid,pacienteId:id})}).then(r=>r.json()).then(r=>{if(!r.ok)throw 0;});
    cont.querySelectorAll('.fp-cpno').forEach(bt=>bt.onclick=async()=>{bt.disabled=true;try{await noEs(bt.dataset.id);d.consent.porConfirmar=(d.consent.porConfirmar||[]).filter(x=>x.id!==bt.dataset.id);pintar();toast('Vale, no se te volverá a preguntar por este formulario',true);}catch(e){bt.disabled=false;toast('No se ha podido guardar',false);}});
@@ -6034,13 +6069,14 @@ function datosTareasTodas(forzar){
  const p=_datosTareasTodas(forzar).then(d=>{_dtC={t:Date.now(),d,p:null};return d;}).catch(e=>{_dtC.p=null;throw e;});_dtC.p=p;return p;}
 async function _datosTareasTodas(fresco){
  const iso=n=>isoMadrid(new Date(Date.now()+n*864e5));
- const [r,sg,tq,sa,cs,ap]=await Promise.all([
+ const [r,sg,tq,sa,cs,ap,rf]=await Promise.all([
   fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${iso(-30)}&hasta=${iso(-1)}${fresco?'&fresco=1':''}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-tareas&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-sin-anotar&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-consent-pendientes&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
-  fetch(`/api/schedule?action=seg-app-pendientes&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
+  fetch(`/api/schedule?action=seg-app-pendientes&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
+  fetch(`/api/schedule?action=seg-referidos&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
  setSegPac(sg);
  const hoy=(sg&&sg.hoy)||iso(0),items=[];
  ((tq&&tq.tareas)||[]).forEach(t=>items.push({tipo:'tarea',fecha:t.fecha,nombre:t.texto,quien:t.para,t}));
@@ -6054,6 +6090,8 @@ async function _datosTareasTodas(fresco){
  const qFisio=f=>{const q=String(f||'').trim().split(' ')[0];const qn=q?q.charAt(0).toUpperCase()+q.slice(1).toLowerCase():'';return qn;};
  ((ap&&ap.sinPlan)||[]).forEach(a=>items.push({tipo:'plan',fecha:a.ultima,nombre:a.nombre,quien:qFisio(a.fisio),a}));
  // («Sin la app» de momento no se enseña en Tareas)
+ // Tarjetas regalo: el recomendado ya ha venido a su primera sesión
+ ((rf&&rf.porDar)||[]).forEach(g=>items.push({tipo:'regalo',fecha:g.primera,nombre:g.recomendo?g.recomendo.nombre:g.texto,quien:'Nora',g}));
  ((sg&&sg.pendientes)||[]).filter(x=>x.fecha<=iso(7)).forEach(x=>items.push({tipo:'llamar',fecha:x.fecha,nombre:x.nombre,quien:deQuienSeg(x),detalle:x.nota,tel:x.tel,seg:x}));
  ((r&&r.fisios)||[]).forEach(f=>(f.lista||[]).filter(p=>!(p.nota&&p.notaFecha>=p.ultima)).forEach(p=>{
   // Plazo para explicarlo: 2 días después de su última sesión
