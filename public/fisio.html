@@ -5490,7 +5490,7 @@ function renderStats(wrap){
   const lab=k=>MS[+k.slice(5,7)-1]+(k.slice(5,7)==='01'||k===K[0]?' '+k.slice(2,4):'');
   const ti=K.reduce((t,k)=>t+gi[k],0),tg=K.reduce((t,k)=>t+gg[k],0),hoyM=new Date().toISOString().slice(0,7);
   c.innerHTML=`<div class="st-gb">${K.map(k=>{const d=gi[k]-gg[k];return `<div class="st-gc" title="${escH(lab(k))} · Ingresos ${eur(gi[k])} · Gastos ${eur(gg[k])} · Diferencia ${eur(d)}"><em class="${d<0?'neg':''}">${d>0?'+':''}${corto(d)}</em><div class="st-gp"><i class="in" style="height:${Math.max(2,Math.round(gi[k]/mx*100))}%"></i><i class="ga" style="height:${Math.max(2,Math.round(gg[k]/mx*100))}%"></i></div><span>${escH(lab(k))}</span></div>`;}).join('')}</div>
-   <p class="st-p">Ingresos <b>${eur(ti)}</b> · Gastos <b>${eur(tg)}</b> · Diferencia <b class="${ti-tg<0?'st-neg':''}">${eur(ti-tg)}</b></p><p class="st-p fp-mu" style="font-size:12px">Cuenta de FOURTH DYNAMIC S.L. (···2638): ingresos = dinero que entra, gastos = dinero que sale.${K.includes(hoyM)?' El mes actual aún está en curso.':''}</p>`;
+   <p class="st-p">Ingresos <b>${eur(ti)}</b> · Gastos <b>${eur(tg)}</b> · Diferencia <b class="${ti-tg<0?'st-neg':''}">${eur(ti-tg)}</b></p>`;
  }
  async function pintaConocido(box,desde){if(!box)return;ST.con=ST.con||{};
   try{if(!ST.con[desde]){const r=await (await fetch(`/api/schedule?action=seg-conocido&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}`)).json();if(!r.ok)throw 0;ST.con[desde]=r;}}catch(e){box.innerHTML='<p class="st-p fp-mu">No se ha podido cargar.</p>';return;}
