@@ -445,8 +445,7 @@ const REPORTE_ITEMS = [
   { k: 'app', t: 'He dado acceso a la app a todos los pacientes nuevos del día', auto: 'app' },
   { k: 'proxima', t: 'Si alguien no ha reagendado, he apuntado por qué y lo he pasado a seguimiento', auto: 'proxima' },
   { k: 'historia', t: 'He actualizado todas las historias clínicas de hoy' },
-  { k: 'limpieza', t: 'He dejado la cabina limpia y recogida' },
-  { k: 'material', t: 'Aparatos apagados y material en su sitio' },
+  { k: 'limpieza', t: 'He dejado la cabina limpia y lista para mañana', sub: ['Mesa limpia y sin polvo en los muebles', 'Grifo limpio', 'Papelera vacía', 'Rulo y taburete sobre la camilla', 'Trapito doblado (se cambia 1 vez por semana)', 'Toalla de manos colgada en su sitio (se cambia 1 vez por semana)', 'TODOS los cables bien recogidos', 'Máquinas apagadas y bien colocadas', 'Las cosas del carrito ordenadas y que se vean bonitas'] },
 ];
 const nmSel = v => String((v && typeof v === 'object') ? (v.name || '') : (v || '')).trim();
 const fisioKey = n => String(n || '').trim().split(' ')[0].toLowerCase();
