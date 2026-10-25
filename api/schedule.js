@@ -317,8 +317,8 @@ async function esperaLista(forzar) {
   for (let i = 0; i < pids.length; i += 40) (await capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=TELF`)).forEach(x => { info[x.id] = { nombre: x.fields['FULL NAME'] || '', tel: x.fields['WHATSAPP'] || x.fields['TELF'] || '' }; });
   const est = (F, perdido) => { const e = cNm(F['ESTADO']); if (e) return e; return perdido ? 'YA NO' : 'ESPERANDO'; };
   const v = [
-    ...p.map(r => { const F = r.fields, pid = (F['PACIENTE'] || [])[0] || ''; return { id: r.id, tabla: 'esperaP', pacienteId: pid, nombre: (info[pid] || {}).nombre || '—', tel: (info[pid] || {}).tel || '', fecha: F['FECHA SOLICITUD'] || String(r.createdTime).slice(0, 10), nota: F['NOTAS'] || '', disp: F['DISPONIBILIDAD'] || '', dias: (F['DIAS'] || []).map(cNm), franja: (F['FRANJA'] || []).map(cNm), fisio: F['FISIO'] || '', estado: est(F, false) }; }),
-    ...n.map(r => { const F = r.fields; return { id: r.id, tabla: 'esperaN', pacienteId: '', nombre: F['NOMBRE'] || 'Sin nombre', tel: F['TELF'] || '', fecha: F['FECHA SOLICITUD'] || String(r.createdTime).slice(0, 10), nota: F['NOTAS'] || '', disp: F['DISPONIBILIDAD'] || '', dias: (F['DIAS'] || []).map(cNm), franja: (F['FRANJA'] || []).map(cNm), fisio: F['FISIO'] || '', estado: est(F, cNm(F['PERDIDO?']) === 'SÍ') }; })
+    ...p.map(r => { const F = r.fields, pid = (F['PACIENTE'] || [])[0] || ''; return { id: r.id, tabla: 'esperaP', pacienteId: pid, nombre: (info[pid] || {}).nombre || '—', tel: (info[pid] || {}).tel || '', fecha: F['FECHA SOLICITUD'] || String(r.createdTime).slice(0, 10), nota: F['NOTAS'] || '', disp: F['DISPONIBILIDAD'] || '', dias: (F['DIAS'] || []).map(cNm), franja: (F['FRANJA'] || []).map(cNm), fisio: F['FISIO'] || '', estado: est(F, false), aviso: F['ÚLTIMO AVISO'] || '' }; }),
+    ...n.map(r => { const F = r.fields; return { id: r.id, tabla: 'esperaN', pacienteId: '', nombre: F['NOMBRE'] || 'Sin nombre', tel: F['TELF'] || '', fecha: F['FECHA SOLICITUD'] || String(r.createdTime).slice(0, 10), nota: F['NOTAS'] || '', disp: F['DISPONIBILIDAD'] || '', dias: (F['DIAS'] || []).map(cNm), franja: (F['FRANJA'] || []).map(cNm), fisio: F['FISIO'] || '', estado: est(F, cNm(F['PERDIDO?']) === 'SÍ'), aviso: F['ÚLTIMO AVISO'] || '' }; })
   ].sort((a, b) => b.fecha.localeCompare(a.fecha));
   _espera = { t: Date.now(), v }; return v;
 }
@@ -772,18 +772,23 @@ module.exports = async function handler(req, res) {
         const okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || ''), okF = f => /^\d{4}-\d{2}-\d{2}$/.test(f || '');
         if (action === 'seg-cap') {
           const desde = new Date(Date.now() - 180 * 864e5).toISOString().slice(0, 10);
-          const [con, esp, neg, ref] = await Promise.all([
+          const fin = new Date(Date.now() + 8 * 864e5).toISOString().slice(0, 10), ayer = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+          const [con, esp, neg, ref, lib] = await Promise.all([
             capTodos(CAP.contacto, `filterByFormula=${encodeURIComponent(`IS_AFTER({FECHA},'${desde}')`)}&sort[0][field]=FECHA&sort[0][direction]=desc`),
             esperaLista(true),
             capTodos(CAP.negocio, 'sort[0][field]=NOMBRE&sort[0][direction]=asc'),
-            capTodos(CAP.referidos, `filterByFormula=${encodeURIComponent("{Nombre de quien recomendó}!=''")}&fields[]=Nombre de quien recomendó&fields[]=Nombre&fields[]=Apellidos&fields[]=Fecha&fields[]=NEGOCIO`).catch(() => [])
+            capTodos(CAP.referidos, `filterByFormula=${encodeURIComponent("{Nombre de quien recomendó}!=''")}&fields[]=Nombre de quien recomendó&fields[]=Nombre&fields[]=Apellidos&fields[]=Fecha&fields[]=NEGOCIO`).catch(() => []),
+            capTodos('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO})='CITA LIBRE',TRIM({ESTADO})='LIBRE - SIN BOMBA'),IS_AFTER({FECHA},'${ayer}'),IS_BEFORE({FECHA},'${fin}'))`)}&fields[]=FECHA&fields[]=HORA&fields[]=PREF.&fields[]=ESTADO`).catch(() => [])
           ]);
+          const ahoraH = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+          const libres = lib.map(r => ({ fecha: String(r.fields['FECHA'] || '').slice(0, 10), hora: String(r.fields['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: cNm(r.fields['PREF.']), sinBomba: /SIN BOMBA/.test(cNm(r.fields['ESTADO'])) }))
+            .filter(h => h.fecha && h.hora && (h.fecha > hoyF || (h.fecha === hoyF && h.hora > ahoraH))).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
           const negocios = neg.map(r => { const F = r.fields, toks = capNorm(F['NOMBRE']).split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !CAP_STOP.test(w));
             const vienen = ref.filter(x => (x.fields['NEGOCIO'] || []).includes(r.id) || (toks.length && (() => { const t = capNorm(x.fields['Nombre de quien recomendó']); return toks.some(w => t.includes(w)); })())).map(x => ({ nombre: [x.fields['Nombre'], x.fields['Apellidos']].filter(Boolean).join(' ').trim(), fecha: x.fields['Fecha'] || '' }));
             return { id: r.id, nombre: F['NOMBRE'] || '', tipo: cNm(F['TIPO NEGOCIO']), estado: cNm(F['ESTADO']) || 'PENDIENTE', fecha: F['FECHA'] || '', flyers: !!F['FLAYERS ENTREGADOS'], notas: F['NOTAS'] || '', direccion: F['DIRECCIÓN'] || '', contacto: F['CONTACTO'] || '', tel: F['TELF'] || '', proxima: F['PRÓXIMA VISITA'] || '', historial: F['HISTORIAL'] || '', diez: !!F['10% A SUS CLIENTES'], vienen }; });
           return res.status(200).json({ ok: true, hoy: hoyF,
             contactos: con.map(r => { const F = r.fields; return { id: r.id, fecha: F['FECHA'] || r.createdTime, nombre: F['NOMBRE'] || '', medio: cNm(F['MEDIO']), mensaje: F['MENSAJE'] || '', citado: cNm(F['CITADO']), motivo: F['MOTIVO'] || '', motivoTipo: cNm(F['MOTIVO TIPO']), tel: F['TELF'] || '', por: F['REGISTRADO POR'] || '' }; }),
-            espera: esp, negocios });
+            espera: esp, negocios, libres });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const T = { contacto: CAP.contacto, esperaP: CAP.esperaP, esperaN: CAP.esperaN, negocio: CAP.negocio }[q.tabla];
@@ -806,7 +811,7 @@ module.exports = async function handler(req, res) {
             if (c.flyers !== undefined) f['FLAYERS ENTREGADOS'] = !!c.flyers;
           } else {
             if (c.fecha !== undefined || !q.id) f['FECHA SOLICITUD'] = okF(c.fecha) ? c.fecha : hoyF;
-            txt('NOTAS', c.nota); txt('DISPONIBILIDAD', c.disp, 500); txt('FISIO', c.fisio, 40);
+            txt('NOTAS', c.nota); txt('DISPONIBILIDAD', c.disp, 500); txt('FISIO', c.fisio, 40); if (c.aviso !== undefined) f['ÚLTIMO AVISO'] = okF(c.aviso) ? c.aviso : null;
             if (c.dias !== undefined) f['DIAS'] = lista(c.dias); if (c.franja !== undefined) f['FRANJA'] = lista(c.franja); if (c.estado !== undefined) f['ESTADO'] = c.estado || null;
             if (q.tabla === 'esperaP') { if (c.pacienteId !== undefined) f['PACIENTE'] = okId(c.pacienteId) ? [c.pacienteId] : []; }
             else { txt('NOMBRE', c.nombre, 120); if (c.tel !== undefined) f['TELF'] = String(c.tel || '').slice(0, 30); }
