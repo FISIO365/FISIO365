@@ -433,6 +433,20 @@ async function _procesarWeb() {
   return { hechas, sinHueco };
 }
 
+// Tarjetas regalo (10 €) que el paciente tiene sin usar: con código y sin caducar, o ganadas (el recomendado ya vino)
+async function tarjetasActivas(F) {
+  const ids = (F['HA RECOMENDADO'] || []).slice(0, 40); if (!ids.length) return [];
+  const hoy = new Date().toISOString().slice(0, 10);
+  const d = await at(`tblr27u3cvtzfyqI6?filterByFormula=${encodeURIComponent('OR(' + ids.map(i => `RECORD_ID()='${i}'`).join(',') + ')')}`);
+  const sinCod = (d.records || []).filter(r => !r.fields['CÓDIGO'] && !r.fields['IGNORAR'] && (r.fields['PACIENTE'] || []).length), vinieron = new Set();
+  if (sinCod.length) { const ps = sinCod.slice(0, 15).map(r => r.fields['PACIENTE'][0]);
+    const c = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${ps.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=PacienteRec&pageSize=100`);
+    (c.records || []).forEach(x => (x.fields['PacienteRec'] || []).forEach(id => vinieron.add(id))); }
+  const cad6 = (() => { const c = new Date(); c.setMonth(c.getMonth() + 6); return c.toISOString().slice(0, 10); })();
+  return (d.records || []).filter(r => !r.fields['CANJEADA'] && ((r.fields['CÓDIGO'] && (!r.fields['CADUCA'] || r.fields['CADUCA'] >= hoy)) || (!r.fields['CÓDIGO'] && !r.fields['IGNORAR'] && vinieron.has((r.fields['PACIENTE'] || [])[0]))))
+    .map(r => ({ id: r.id, codigo: r.fields['CÓDIGO'] || '', caduca: r.fields['CADUCA'] || cad6, por: String(r.fields['Nombre'] || '').trim() }));
+}
+
 // Fisio que atiende al paciente (el de su última sesión; si no, quien cobra) con su nº de colegiado
 async function fisioDelPaciente(pacId, quien, elegido) {
   const nm = v => String((v && v.name) || v || '').trim();
@@ -451,7 +465,7 @@ async function fisioDelPaciente(pacId, quien, elegido) {
   return 'Fisioterapeuta: ' + f.Name.trim() + (f['NºColegiado'] ? ' · Nº de colegiado ' + String(f['NºColegiado']).trim() : '');
 }
 
-async function emitirFactura(recId, quien, fisioSel) {
+async function emitirFactura(recId, quien, fisioSel, descuento) {
   const rec = await at(`${FACTURAS_TABLE}/${recId}?returnFieldsByFieldId=true`);
   if (rec.error) throw new Error('No encuentro esa fila de FACTURAS');
   const f = rec.fields || {};
@@ -510,7 +524,8 @@ async function emitirFactura(recId, quien, fisioSel) {
 
   const fisioTxt = await fisioDelPaciente(pacId, quien, fisioSel).catch(() => '');
   const items = lineas.map(l => { const it = { name: l.concepto === 'Otros' && notas ? notas.split('\n')[0].slice(0, 120) : l.concepto, units: l.uds, price: l.precio }; if (taxes) it.taxes = taxes; return it; });
-  const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas].filter(Boolean).join('\n\n\n') + '\n\n\n' + TEXTO_RGPD, currency: 'EUR', language: 'es', items });
+  if (descuento) { const it = { name: descuento.texto, units: 1, price: -Math.abs(descuento.importe) }; if (taxes) it.taxes = taxes; items.push(it); }
+  const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas, TEXTO_RGPD].filter(Boolean).join('\n\n\n'), currency: 'EUR', language: 'es', items });
   const docId = doc.id;
   if (!docId) throw new Error('Holded no ha devuelto el ticket creado');
   let creado = await holded('/sales-receipts/' + docId).catch(() => ({}));
@@ -524,7 +539,7 @@ async function emitirFactura(recId, quien, fisioSel) {
     const pdf = await holdedPdf('/sales-receipts/' + docId + '/pdf');
     if (pdf) await fetch(`https://content.airtable.com/v0/${BASE_ID}/${recId}/${FF.pdf}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'application/pdf', file: pdf, filename: 'Factura_' + String(num).replace(/[^\w-]/g, '_') + '.pdf' }) });
   } catch (e) {}
-  return { num, borrador, otro: !!String(f[FF.aNombre] || '').trim(), total: lineas.reduce((t, l) => t + l.uds * l.precio, 0) };
+  return { num, borrador, otro: !!String(f[FF.aNombre] || '').trim(), total: lineas.reduce((t, l) => t + l.uds * l.precio, 0) - (descuento ? Math.abs(descuento.importe) : 0) };
 }
 
 async function listarFacturas(ids, conBorradores) {
@@ -1452,8 +1467,9 @@ module.exports = async function handler(req, res) {
     if (action === 'ficha-facturas') {
       const pr = await at(`${PACIENTES}/${pac}`);
       const dni = (pr.fields || {})['DNI'] || '';
+      const tarjetas = await tarjetasActivas(pr.fields || {}).catch(() => []);
       const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
-      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, facturas: [] });
+      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, tarjetas, facturas: [] });
       try {
         const ids = await contactosDelPaciente(pac); const facturas = await listarFacturas(ids, true);
         // Tickets borrados en Holded → su fila de FACTURAS pasa a «Anulada» y deja de contar en el saldo
@@ -1465,15 +1481,23 @@ module.exports = async function handler(req, res) {
           for (let i = 0; i < muertas.length; i += 10) await at(FACTURAS_TABLE, { method: 'PATCH', body: JSON.stringify({ typecast: true, records: muertas.slice(i, i + 10).map(r => ({ id: r.id, fields: { [FF.estado]: 'Anulada' } })) }) });
           if (muertas.length) saldo2 = await saldoPaciente(pac).catch(() => saldo);
         } catch (e) {}
-        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, enHolded: ids.length, facturas });
+        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, tarjetas, enHolded: ids.length, facturas });
       }
-      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, tarjetas, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado (falta la clave en Vercel).' });
     const lineas = (Array.isArray(q.lineas) ? q.lineas : []).slice(0, 2);
     if (!lineas.length) return res.status(400).json({ ok: false, error: 'Falta el concepto' });
     if (q.dni && normDni(q.dni).length >= 8) await at(`${PACIENTES}/${pac}`, { method: 'PATCH', body: JSON.stringify({ fields: { DNI: String(q.dni).trim().toUpperCase() } }) });
+    let descuento = null, tarjeta = null;
+    if (q.tarjetaId) {
+      const pr = await at(`${PACIENTES}/${pac}`);
+      tarjeta = (await tarjetasActivas(pr.fields || {})).find(t => t.id === q.tarjetaId);
+      if (!tarjeta) return res.status(200).json({ ok: false, error: 'Esa tarjeta regalo ya no está disponible (usada o caducada).' });
+      if (lineas.reduce((t, l) => t + Number(l.uds || 0) * Number(l.precio || 0), 0) < 10) return res.status(200).json({ ok: false, error: 'El cobro tiene que ser de más de 10 € para descontar la tarjeta.' });
+      descuento = { importe: 10, texto: 'Tarjeta regalo por recomendar' + (tarjeta.por ? ' a ' + tarjeta.por.split(' ')[0] : '') };
+    }
     const fa = q.facturarA || {};
     const campos = { [FF.paciente]: [pac], 'fldpruhLn03x1x6zI': pac, [FF.notas]: String(q.notas || ''), [FF.estado]: 'Pendiente' };
     if (q.modoPago) campos['fldafSkOOldJ8gH70'] = q.modoPago;
@@ -1483,9 +1507,13 @@ module.exports = async function handler(req, res) {
     const cr = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
     const rec = cr.records && cr.records[0] && cr.records[0].id;
     if (!rec) return res.status(500).json({ ok: false, error: (cr.error && cr.error.message) || 'No se ha podido guardar en Airtable' });
-    const turno = emitiendo.then(() => emitirFactura(rec, q.quien, q.fisioElegido ? String(q.fisio || '') : undefined));
+    const turno = emitiendo.then(() => emitirFactura(rec, q.quien, q.fisioElegido ? String(q.fisio || '') : undefined, descuento));
     emitiendo = turno.catch(() => {});
-    try { const r = await turno; return res.status(200).json({ ok: true, num: r.num, borrador: !!r.borrador, total: r.total, otro: r.otro }); }
+    try { const r = await turno;
+      if (tarjeta) { const hoyT = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()); const fT = { CANJEADA: hoyT };
+        if (!tarjeta.codigo) { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; fT['CÓDIGO'] = 'F365-' + Array.from({ length: 4 }, () => A[Math.floor(Math.random() * A.length)]).join(''); fT.CADUCA = tarjeta.caduca; }
+        await at(`tblr27u3cvtzfyqI6/${tarjeta.id}`, { method: 'PATCH', body: JSON.stringify({ fields: fT }) }).catch(() => {}); }
+      return res.status(200).json({ ok: true, tarjeta: !!tarjeta, num: r.num, borrador: !!r.borrador, total: r.total, otro: r.otro }); }
     catch (e) {
       try { await at(`${FACTURAS_TABLE}/${rec}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.estado]: 'Error' }, typecast: true }) }); } catch (x) {}
       return res.status(200).json({ ok: false, error: e.message });
@@ -1522,16 +1550,7 @@ module.exports = async function handler(req, res) {
       if (action === 'app-visto') { await at(`${PACIENTES}/${patientId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ÚLTIMO ACCESO APP': new Date().toISOString() } }) }).catch(() => {}); return res.status(200).json({ ok: true, foto: fotoUrl }); }
       if (action === 'mi-cuenta') return res.status(200).json({ ok: true, foto: fotoUrl, email: F['EMAIL'] || '' });
       if (action === 'mis-regalos') {
-        const ids = (F['HA RECOMENDADO'] || []).slice(0, 40); if (!ids.length) return res.status(200).json({ ok: true, tarjetas: [] });
-        const hoy = new Date().toISOString().slice(0, 10);
-        const d = await at(`tblr27u3cvtzfyqI6?filterByFormula=${encodeURIComponent('OR(' + ids.map(i => `RECORD_ID()='${i}'`).join(',') + ')')}`);
-        // También las ganadas aunque la tarjeta aún no se haya enviado (el recomendado ya vino a su primera sesión)
-        const sinCod = (d.records || []).filter(r => !r.fields['CÓDIGO'] && !r.fields['IGNORAR'] && (r.fields['PACIENTE'] || []).length), vinieron = new Set();
-        if (sinCod.length) { const ps = sinCod.slice(0, 15).map(r => r.fields['PACIENTE'][0]);
-          const c = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${ps.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=PacienteRec&pageSize=100`);
-          (c.records || []).forEach(x => (x.fields['PacienteRec'] || []).forEach(id => vinieron.add(id))); }
-        const cad6 = (() => { const c = new Date(); c.setMonth(c.getMonth() + 6); return c.toISOString().slice(0, 10); })();
-        const tarjetas = (d.records || []).filter(r => !r.fields['CANJEADA'] && ((r.fields['CÓDIGO'] && (!r.fields['CADUCA'] || r.fields['CADUCA'] >= hoy)) || (!r.fields['CÓDIGO'] && !r.fields['IGNORAR'] && vinieron.has((r.fields['PACIENTE'] || [])[0])))).map(r => ({ codigo: r.fields['CÓDIGO'] || '', caduca: r.fields['CADUCA'] || cad6, por: String(r.fields['Nombre'] || '').trim() }));
+        const tarjetas = (await tarjetasActivas(F)).map(t => ({ codigo: t.codigo, caduca: t.caduca, por: t.por }));
         return res.status(200).json({ ok: true, tarjetas });
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
