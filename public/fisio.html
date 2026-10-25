@@ -5636,10 +5636,10 @@ async function enviarTarjeta2(tel,quien,nuevo,cad,refId){let txt=mensajeTarjeta(
  if(w)w.location.href=u;else window.open(u,'_blank');}
 function waAbrir(tel,txt){const t=segTel(tel||'');window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');}
 // Qué le damos a un negocio que nos recomienda (cambia el mensaje de WhatsApp)
-const REG_NEG=[['Solo gracias','Si alguna vez podemos ayudaros a vosotros o a vuestros clientes, aquí estamos.'],
+const REG_NEG=[['Gracias','Si alguna vez podemos ayudaros a vosotros o a vuestros clientes, aquí estamos.'],
  ['Os recomendamos','Y por supuesto, cuando alguno de nuestros pacientes necesite lo que hacéis vosotros, le hablaremos de vosotros.'],
- ['Detalle en persona','Un día de estos nos pasamos a saludaros y a dejaros un pequeño detalle de agradecimiento.'],
- ['Sesión de regalo','Como agradecimiento, nos encantaría regalar una sesión de fisioterapia a alguien de vuestro equipo: solo tenéis que escribirnos para reservarla.']];
+ ['Sesión regalo','Como agradecimiento, nos encantaría regalar una sesión de fisioterapia a alguien de vuestro equipo: solo tenéis que escribirnos para reservarla.'],
+ ['10% a sus clientes','Además, vuestros clientes tendrán un 10 % de descuento en su primera sesión con nosotros: solo tienen que decir que vienen de vuestra parte.']];
 // Elegir quién recomendó (si el nombre que puso no cuadra con un único paciente)
 function elegirRecomendo(r,onDone){
  const m=hzModal(`<div class="hz-top"><div><small>Recomendó a ${escH(r.nuevo.nombre)}</small><b>¿Quién es «${escH(r.texto)}»?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>

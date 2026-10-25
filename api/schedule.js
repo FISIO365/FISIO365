@@ -598,7 +598,7 @@ module.exports = async function handler(req, res) {
           // Nos recomendó un negocio o profesional: se apunta en NEGOCIOS DEL BARRIO (o se usa el que ya está) y no toca tarjeta
           const NEG = 'tblO5y1Ikg3LIalic', nombre = String(q.nombre || '').trim().slice(0, 100), tel = String(q.tel || '').trim().slice(0, 30); if (!nombre) return res.status(400).json({ ok: false });
           const ya = (await todosT(NEG, `filterByFormula=${encodeURIComponent(`LOWER(TRIM({NOMBRE}))='${cEsc(nombre.toLowerCase())}'`)}&fields[]=NOMBRE&fields[]=TELF&fields[]=HISTORIAL`).catch(() => []))[0];
-          const linea = `${hoyF.split('-').reverse().join('/')}: nos ha recomendado a un paciente nuevo · gracias enviadas${q.regalo && q.regalo !== 'Solo gracias' ? ' · regalo: ' + String(q.regalo).slice(0, 40) : ''}`;
+          const linea = `${hoyF.split('-').reverse().join('/')}: nos ha recomendado a un paciente nuevo · gracias enviadas${q.regalo && q.regalo !== 'Gracias' ? ' · regalo: ' + String(q.regalo).slice(0, 40) : ''}`;
           let negId = ya && ya.id;
           if (ya) { const f = { HISTORIAL: [String(ya.fields['HISTORIAL'] || '').trim(), linea].filter(Boolean).join('\n') }; if (tel && !ya.fields['TELF']) f.TELF = tel; await at(`${NEG}/${ya.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }); }
           else { const c = await at(NEG, { method: 'POST', body: JSON.stringify({ records: [{ fields: { NOMBRE: nombre, ...(tel ? { TELF: tel } : {}), HISTORIAL: linea, FECHA: hoyF } }], typecast: true }) }); if (c.error) return res.status(200).json({ ok: false }); negId = c.records[0].id; }
