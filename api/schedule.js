@@ -91,7 +91,7 @@ function consentResumen(r, tabla) {
   const sp = cNm(F['SUELO PÉLVICO']).trim();
   const nombre = String(F['﻿NOMBRE'] || F['NOMBRE'] || '') + ' ' + String(F['APELLIDOS'] || '');
   return { id: r.id, tabla: otro ? CONS_O : CONS_T, tipo, fecha, salud, rojo, sueloPelvico: tipo === 'Suelo pélvico' || /^s[ií]$/i.test(sp), aceptaSP: !!F['ACEPTACIÓN S.P.'],
-    fechaAlta: F['FECHA ALTA'] || '', notasSalud: F['NOTAS SALUD'] || '', sub: String(F['SUBMISSION ID'] || '').trim(),
+    fechaAlta: F['FECHA ALTA'] || '', notasSalud: F['NOTAS SALUD'] || '', sub: String(F['SUBMISSION ID'] || '').trim(), papel: !!F['PAPEL'], ignorar: !!F['IGNORAR'],
     marketing: otro ? null : { conocido: cNm(F['CONOCIDO']), newsletter: cNm(F['NEWSLETTER']), imagenes: cNm(F['IMAGENES']), citas: cNm(F['CITAS']) },
     email: cTxt(F['EMAIL']), dni: cTxt(F['DNI']).replace(/\s/g, ''), tel: cDig(F['TELF']), nombre: cTxt(nombre).replace(/\s+/g, ' ') };
 }
@@ -172,13 +172,14 @@ const consPublico = (x, estado) => { if (!x) return null; const c = { ...x, esta
 function resumenPaciente(enl) {
   if (!enl.length) return null;
   const docs = enl.slice().sort((a, b) => b.fecha.localeCompare(a.fecha));
-  const base = docs.find(c => c.tipo !== 'Alta oncológica') || docs[0], alta = docs.find(c => c.tipo === 'Alta oncológica');
-  const prim = docs.find(c => c.tipo === 'Primera visita');
+  const base = docs.find(c => c.tipo !== 'Alta oncológica' && !c.papel) || docs.find(c => c.tipo !== 'Alta oncológica') || docs[0], alta = docs.find(c => c.tipo === 'Alta oncológica');
+  const prim = docs.find(c => c.tipo === 'Primera visita' && !c.papel);
   const out = { ...base, salud: base.salud.slice(), rojo: base.rojo.slice() };
   if (alta && base !== alta && alta.fecha >= base.fecha) { out.salud = out.salud.filter(x => x.k !== 'CÁNCER'); out.salud.push({ k: 'ALTA', alta: true, t: 'Alta oncológica' + (alta.fechaAlta ? ' (' + fBr(alta.fechaAlta) + ')' : '') + ' ✓', grave: false }); out.rojo = out.rojo.filter(x => x !== 'Cáncer'); }
   out.aceptaSP = docs.some(c => c.aceptaSP); out.sueloPelvico = docs.some(c => c.sueloPelvico);
   out.marketing = (prim || {}).marketing || null; out.fechaPrimera = prim ? prim.fecha : '';
-  out.docs = docs.map(c => ({ id: c.id, tipo: c.tipo, fecha: c.fecha, firmante: capNorm(c.nombre).trim() }));
+  out.docs = docs.map(c => ({ id: c.id, tipo: c.tipo, fecha: c.fecha, firmante: c.papel ? '' : capNorm(c.nombre).trim(), papel: c.papel }));
+  out.soloPapel = !!base.papel;
   out.cancerActivo = out.salud.some(x => x.k === 'CÁNCER' && !x.alta);
   return out;
 }
@@ -447,15 +448,15 @@ module.exports = async function handler(req, res) {
         const ult = {}; ses.forEach(c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0]; if (!pid) return; const f = String(c.fields['FECHA'] || '').slice(0, 10); if (!ult[pid] || f < ult[pid].primera) ult[pid] = { primera: f, fisio: cNm(c.fields['PREF.']) }; });
         const enl = new Set(lista.flatMap(c => c.pac));
         const pidsSin = Object.keys(ult).filter(id => !enl.has(id)), info = {};
-        for (let i = 0; i < pidsSin.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pidsSin.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP&fields[]=FECHA`)).forEach(p => { info[p.id] = { ...p.fields, FECHA: p.fields['FECHA'] || p.createdTime }; });
+        for (let i = 0; i < pidsSin.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pidsSin.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP&fields[]=FECHA&fields[]=SIN AVISO CONSENTIMIENTO`)).forEach(p => { info[p.id] = { ...p.fields, FECHA: p.fields['FECHA'] || p.createdTime }; });
         const sinCons = [], dudosos = {}; let enlazados = 0;
-        for (const id of pidsSin) { const P = info[id]; if (!P) continue; const m = emparejar(P, id, lista, P['FECHA']); let ok = false;
+        for (const id of pidsSin) { const P = info[id]; if (!P || P['SIN AVISO CONSENTIMIENTO']) continue; const m = emparejar(P, id, lista, P['FECHA']); let ok = false;
           for (const c of m.buenos.slice(0, 4)) if (enlazados < 60 && await enlazarCons(c.id, id).catch(() => false)) { enlazados++; ok = true; }
           if (ok) continue;
           const dd = m.dudosos[0]; if (dd) dudosos[dd.id] = { id, nombre: P['FULL NAME'] || '' };
           sinCons.push({ pacienteId: id, nombre: P['FULL NAME'] || '', tel: P['WHATSAPP'] || P['TELF'] || '', primera: ult[id].primera, fisio: ult[id].fisio, sugerido: dd ? { id: dd.id, nombre: dd.nombre, fecha: dd.fecha } : null }); }
         // Formularios recientes sin paciente: se buscan por email/DNI/teléfono en PACIENTES y se enlazan si el nombre cuadra
-        const sueltos = lista.filter(c => !c.pac.length && c.fecha >= desde && !dudosos[c.id]);
+        const sueltos = lista.filter(c => !c.pac.length && !c.ignorar && c.fecha >= desde && !dudosos[c.id]);
         const conds = []; sueltos.forEach(c => { if (c.email) conds.push(`LOWER(TRIM({EMAIL}))='${cEsc(c.email)}'`); if (c.dni.length >= 6) conds.push(`SUBSTITUTE(LOWER(TRIM({DNI})),' ','')='${cEsc(c.dni)}'`); if (c.tel.length === 9) conds.push(`RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${c.tel}'`, `RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${c.tel}'`); });
         const pc = []; for (let i = 0; i < conds.length; i += 40) pc.push(...await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + conds.slice(i, i + 40).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP`).catch(() => []));
         for (const c of sueltos) {
@@ -464,7 +465,7 @@ module.exports = async function handler(req, res) {
           if (bueno && enlazados < 100) { if (await enlazarCons(c.id, bueno.id).catch(() => false)) { enlazados++; enl.add(bueno.id); continue; } }
           if (ps.length) dudosos[c.id] = { id: ps[0].id, nombre: ps[0].fields['FULL NAME'] || '' };
         }
-        const huerfanos = lista.filter(c => !c.pac.length && c.fecha >= desde).map(c => ({ id: c.id, tipo: c.tipo, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, sugerido: dudosos[c.id] || null }));
+        const huerfanos = lista.filter(c => !c.pac.length && !c.ignorar && c.fecha >= desde).map(c => ({ id: c.id, tipo: c.tipo, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, sugerido: dudosos[c.id] || null }));
         return res.status(200).json({ ok: true, hoy: hoyF, enlazados, sinCons, huerfanos });
       }
       if (action === 'seg-consent-doc') {
@@ -500,6 +501,37 @@ module.exports = async function handler(req, res) {
         const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: [{ email: to }], subject: 'Tu consentimiento · FISIO365', htmlContent: html, attachment: [{ content: pdf, name: String(q.archivo || 'Consentimiento_FISIO365.pdf').replace(/[^\w.\-áéíóúñÁÉÍÓÚÑ]/g, '_') }] }) });
         return res.status(200).json({ ok: r.ok, error: r.ok ? '' : 'No se ha podido enviar (' + r.status + ')' });
+      }
+      if (action === 'seg-consent-ignorar') {
+        // Quitar un aviso de Pendientes sin hacer nada (pruebas, etc.)
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) { const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'SIN AVISO CONSENTIMIENTO': true } }) }); return res.status(200).json({ ok: !d.error }); }
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.consentId || '')) return res.status(400).json({ ok: false });
+        const c0 = (_cons.v || []).find(x => x.id === q.consentId);
+        let d = await at(`${c0 ? c0.tabla : CONS_T}/${q.consentId}`, { method: 'PATCH', body: JSON.stringify({ fields: { IGNORAR: true } }) });
+        if (d.error && !c0) d = await at(`${CONS_O}/${q.consentId}`, { method: 'PATCH', body: JSON.stringify({ fields: { IGNORAR: true } }) });
+        if (c0) c0.ignorar = true; return res.status(200).json({ ok: !d.error });
+      }
+      if (action === 'seg-consent-papel') {
+        // Consentimiento firmado en papel: se crea en OTROS CONSENTIMIENTOS con la foto o el PDF
+        if (req.method !== 'POST' || !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '') || !q.file) return res.status(400).json({ ok: false, error: 'Falta el archivo' });
+        const tipo = ['Primera visita', 'Suelo pélvico', 'Alta oncológica'].includes(q.tipo) ? q.tipo : 'Primera visita';
+        const pac = await at(`${PACIENTES}/${q.pacienteId}`); if (pac.error) return res.status(404).json({ ok: false, error: 'Paciente no encontrado' });
+        const f = { TIPO: tipo, FECHA: /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyF, PACIENTE: [q.pacienteId], PAPEL: true, NOMBRE: pac.fields['FULL NAME'] || '', 'FORM ID': 'papel', TELF: String(pac.fields['TELF'] || pac.fields['WHATSAPP'] || '') };
+        if (tipo === 'Alta oncológica') f['CÁNCER'] = 'Alta'; if (tipo === 'Suelo pélvico') f['ACEPTACIÓN S.P.'] = true;
+        const cr = await at(CONS_O, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }], typecast: true }) });
+        const rid = cr.records && cr.records[0] && cr.records[0].id; if (!rid) return res.status(200).json({ ok: false, error: (cr.error && (cr.error.message || cr.error.type)) || 'No se ha podido guardar' });
+        const up = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${rid}/fldzmytX5WC15qRaR/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: String(q.tipoArchivo || 'image/jpeg'), file: String(q.file), filename: String(q.nombre || 'consentimiento.jpg').slice(0, 120) }) });
+        const ud = await up.json().catch(() => ({}));
+        if (!up.ok || ud.error) { await at(`${CONS_O}/${rid}`, { method: 'DELETE' }).catch(() => {}); return res.status(200).json({ ok: false, error: 'No se ha podido subir el archivo' }); }
+        _cons.t = 0; _alertas.t = 0; return res.status(200).json({ ok: true, id: rid });
+      }
+      if (action === 'seg-consent-archivo') {
+        // El archivo de un consentimiento en papel (para verlo, compartirlo o mandarlo por email)
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+        const r = await at(`${CONS_O}/${q.id}`); const a = r.fields && (r.fields['ARCHIVO'] || [])[0]; if (!a) return res.status(404).json({ ok: false, error: 'Sin archivo' });
+        const im = await fetch(a.url); if (!im.ok) return res.status(200).json({ ok: false, error: 'No se ha podido abrir el archivo' });
+        return res.status(200).json({ ok: true, nombre: a.filename || 'consentimiento', tipo: a.type || im.headers.get('content-type') || 'application/octet-stream', b64: Buffer.from(await im.arrayBuffer()).toString('base64') });
       }
       if (action === 'seg-consent-enlazar') {
         if (req.method !== 'POST' || !/^rec[A-Za-z0-9]{14}$/.test(q.consentId || '') || (q.pacienteId && !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId))) return res.status(400).json({ ok: false });
