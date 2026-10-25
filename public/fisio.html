@@ -5469,7 +5469,7 @@ async function listaTareas(cont){
  const L=d.items.filter(x=>!tarFiltro||x.quien===tarFiltro);
  const hoy=d.hoy;
  // Agrupadas por tipo; dentro, por fecha (las atrasadas primero, marcadas en rojo)
- const TIPOS_T=[['tarea','Tareas del equipo'],['anotar','Historia por actualizar'],['explicar','Sin próxima cita'],['consent','Consentimientos'],['consentAnt','Antiguos: subir el consentimiento en papel'],['plan','Sin plan de ejercicios'],['app','Sin la app']];
+ const TIPOS_T=[['tarea','Tareas del equipo'],['anotar','Historia por actualizar'],['explicar','Sin próxima cita'],['consent','Consentimientos'],['consentAnt','Antiguos: subir el consentimiento en papel'],['plan','Sin plan de ejercicios en la app'],['app','Sin la app']];
  const grT=x=>x.tipo==='consent'&&x.k&&x.k.antiguo?'consentAnt':x.tipo;
  const grupos=TIPOS_T.map(([k,t])=>[t,k,L.filter(x=>grT(x)===k).sort((a,b)=>a.fecha.localeCompare(b.fecha))]);
  box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todos (${d.items.filter(x=>x.fecha<=hoy).length})</option>${[...new Set(TAR_NOMBRES.concat(quien))].map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
@@ -6029,7 +6029,7 @@ async function _datosTareasTodas(fresco){
  // App: pacientes de este mes sin plan de ejercicios, o con plan pero que no han entrado nunca en la app (para su fisio)
  const qFisio=f=>{const q=String(f||'').trim().split(' ')[0];const qn=q?q.charAt(0).toUpperCase()+q.slice(1).toLowerCase():'';return qn;};
  ((ap&&ap.sinPlan)||[]).forEach(a=>items.push({tipo:'plan',fecha:a.ultima,nombre:a.nombre,quien:qFisio(a.fisio),a}));
- ((ap&&ap.sinApp)||[]).forEach(a=>items.push({tipo:'app',fecha:a.ultima,nombre:a.nombre,quien:qFisio(a.fisio),a}));
+ // («Sin la app» de momento no se enseña en Tareas)
  ((sg&&sg.pendientes)||[]).filter(x=>x.fecha<=iso(7)).forEach(x=>items.push({tipo:'llamar',fecha:x.fecha,nombre:x.nombre,quien:deQuienSeg(x),detalle:x.nota,tel:x.tel,seg:x}));
  ((r&&r.fisios)||[]).forEach(f=>(f.lista||[]).filter(p=>!(p.nota&&p.notaFecha>=p.ultima)).forEach(p=>{
   // Plazo para explicarlo: 2 días después de su última sesión
