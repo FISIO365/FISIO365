@@ -1260,7 +1260,12 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
       }
       if (action === 'seg-resultado') {
-        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+        // Desde Call-in puede venir sin fila de seguimiento: se usa la que tenga abierta el paciente, si la hay
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) {
+          if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
+          const ya = (await todosT(SEG, `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),FIND('${q.pacienteId}',ARRAYJOIN({PacRec})))`)}`).catch(() => []))[0];
+          if (ya) q.id = ya.id;
+        }
         const MAP = { 'Cita recuperada': 'CITA RECUPERADA ', 'Volver a llamar': 'VOLVER A LLAMAR', 'No contesta': 'NC - VOLVER A LLAMAR', 'Pendiente de respuesta': 'PENDIENTE RESPUESTA ', 'Alta': 'ALTA', 'No volver a llamar': 'NO VOLVER A LLAMAR' };
         const quienMap = { jonathan: 'JONY', jony: 'JONY', sara: 'SARA', ramiro: 'RAMIRO', nora: 'NORA', juan: 'JUAN' };
         const quien = quienMap[String(q.quien || '').split(' ')[0].toLowerCase()];
@@ -1269,9 +1274,17 @@ module.exports = async function handler(req, res) {
         if (quien) ll['QUIEN LLAMA'] = quien;
         if (q.nuevaFecha) ll['FECHA PDTE LLAMAR'] = q.nuevaFecha;
         if (q.resena) ll['RESEÑA'] = true;
+        const sigue = /^\d{4}-\d{2}-\d{2}$/.test(q.nuevaFecha || '') && ['Volver a llamar', 'No contesta', 'Pendiente de respuesta'].includes(q.resultado);
+        if (!q.id) {
+          // Llamada suelta (Call-in) sin seguimiento abierto: se apunta la llamada y, si hay que volver a llamar, se crea el seguimiento
+          if (sigue) { const fc = { 'FECHA DE LLAMADA': q.nuevaFecha, PACIENTE: [q.pacienteId], NOTAS: String(q.nota || '') }; const rq = String(q.quien || '').trim().slice(0, 30); if (rq) fc.RESPONSABLE = rq;
+            const c = await at(SEG, { method: 'POST', body: JSON.stringify({ records: [{ fields: fc }], typecast: true }) }); if (!c.error) ll['SEG ID'] = c.records[0].id; }
+          const d0 = await at(LLA, { method: 'POST', body: JSON.stringify({ records: [{ fields: ll }], typecast: true }) });
+          if (q.resultado === 'Cita recuperada') await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) }).catch(() => {});
+          return res.status(200).json({ ok: !d0.error, error: d0.error && d0.error.message });
+        }
         ll['SEG ID'] = q.id;
         await at(LLA, { method: 'POST', body: JSON.stringify({ records: [{ fields: ll }], typecast: true }) });
-        const sigue = /^\d{4}-\d{2}-\d{2}$/.test(q.nuevaFecha || '') && ['Volver a llamar', 'No contesta', 'Pendiente de respuesta'].includes(q.resultado);
         const campos = sigue ? { 'FECHA DE LLAMADA': q.nuevaFecha } : { HECHO: true };
         const d = await at(`${SEG}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: campos }) });
         if (q.resultado === 'Cita recuperada' && /^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) }).catch(() => {});
