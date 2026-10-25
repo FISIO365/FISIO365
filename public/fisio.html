@@ -429,6 +429,10 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 @media(min-width:769px){#pmCap,#pmEjer{display:none!important}}
 @media(min-width:769px){.sidebar .sb-item{padding:7px 12px!important;font-size:13.5px!important;border-radius:11px!important}.sidebar .sb-ico svg{width:18px;height:18px}.sb-logo{padding:18px 22px 10px!important}.sb-grp{height:1px;background:rgba(26,26,26,.08);margin:6px 12px}#sidebar #sb-school,.sidebar #sb-school{margin-top:0!important;border-top:none!important;padding-top:7px!important;border-radius:11px!important}.sb-footer{padding-top:8px!important;padding-bottom:8px!important}}
 @media(max-width:768px){.sb-grp{display:none!important}}
+.jd-tipo{display:grid;grid-template-columns:1fr 1fr;gap:8px}.jd-tipo button{font-family:var(--font);text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:14px;padding:11px 12px;cursor:pointer}.jd-tipo button b{display:block;font-size:13.5px;color:#1e2a38}.jd-tipo button span{font-size:11.5px;color:#7d6a60;line-height:1.35}.jd-tipo button.on{border-color:#c2552e;background:#fdf1e8}
+.jd-l{max-height:42vh;overflow-y:auto;border:1px solid var(--border);border-radius:14px}.jd-s{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;font-family:var(--font);text-align:left;background:none;border:none;border-top:1px solid #f1ede9;padding:10px 12px;cursor:pointer}.jd-s:first-child{border-top:none}.jd-s i{flex:none;width:20px;height:20px;border-radius:6px;border:2px solid #d9cfc7;display:flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:12px;font-weight:700}.jd-s.on i{background:#c2552e;border-color:#c2552e}.jd-s b{font-size:13.5px;color:#1e2a38;font-weight:600}.jd-s span{font-size:12px;color:#7d6a60;margin-left:auto;text-align:right}
+.jd-acc{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7d6a60;margin:6px 2px 0}.jd-acc button{font-family:var(--font);font-size:12px;font-weight:600;color:#c2552e;background:none;border:none;cursor:pointer;padding:4px 0}
+.jd-ck{display:flex;align-items:center;gap:8px;font-size:13px;color:#5c4f47;margin-top:12px;cursor:pointer}.jd-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}.jd-btns button{font-family:var(--font);font-size:14px;font-weight:700;border-radius:14px;padding:13px;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:#1e2a38}.jd-btns .wa{background:#16803c;border-color:#16803c;color:#fff}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -5679,6 +5683,36 @@ async function renderReporte(wrap){
  };
  pinta();
 }
+
+// ── Justificante de asistencia / informe de sesiones (solo sesiones «Realizada» de la agenda) ──
+function abrirJustificante(pacId,P,d){
+ const ses=(d.citas||[]).filter(c=>/REALIZADA/i.test(c.estado)).sort((a,b)=>(b.fecha+b.hora).localeCompare(a.fecha+a.hora));
+ const m=hzModal(`<div class="hz-top"><div><small>Documento para el paciente</small><b>${escH(P.nombre||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="jd-tipo"><button type="button" data-t="justificante" class="on"><b>Justificante</b><span>De asistencia, para el trabajo u otros</span></button><button type="button" data-t="informe"><b>Informe de sesiones</b><span>Todas las sesiones hechas, en lista</span></button></div>
+  <div class="hz-lab">Sesiones <span>(solo las marcadas como realizadas en la agenda)</span></div>
+  ${ses.length?`<div class="jd-l">${ses.map(c=>`<button type="button" class="jd-s" data-id="${c.id}"><i>✓</i><b>${escH(segFecha(c.fecha))}</b><span>${escH(c.hora||'')}${c.fisio?' · '+escH(c.fisio):''}</span></button>`).join('')}</div><div class="jd-acc"><span class="jd-n"></span><span><button type="button" class="jd-todas">Todas</button> · <button type="button" class="jd-ning">Ninguna</button></span></div>`:'<div class="fac-vacio">Este paciente aún no tiene sesiones realizadas en la agenda.</div>'}
+  ${P.dni?`<label class="jd-ck"><input type="checkbox" class="jd-dni" checked> Incluir su DNI (${escH(P.dni)})</label>`:''}
+  <div class="jd-btns"><button type="button" class="jd-ver">Ver</button><button type="button" class="wa jd-wa">Enviar por WhatsApp</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ if(!ses.length){m.querySelectorAll('.jd-btns button').forEach(b=>b.disabled=true);return;}
+ let tipo='justificante';const sel=new Set([ses[0].id]);
+ const pinta=()=>{m.querySelectorAll('.jd-s').forEach(b=>b.classList.toggle('on',sel.has(b.dataset.id)));m.querySelector('.jd-n').textContent=sel.size===1?'1 sesión elegida':sel.size+' sesiones elegidas';};
+ m.querySelectorAll('.jd-tipo button').forEach(b=>b.onclick=()=>{tipo=b.dataset.t;m.querySelectorAll('.jd-tipo button').forEach(x=>x.classList.toggle('on',x===b));sel.clear();(tipo==='informe'?ses:[ses[0]]).forEach(c=>sel.add(c.id));pinta();});
+ m.querySelectorAll('.jd-s').forEach(b=>b.onclick=()=>{sel.has(b.dataset.id)?sel.delete(b.dataset.id):sel.add(b.dataset.id);pinta();});
+ m.querySelector('.jd-todas').onclick=()=>{ses.forEach(c=>sel.add(c.id));pinta();};m.querySelector('.jd-ning').onclick=()=>{sel.clear();pinta();};
+ pinta();
+ const crear=async(wa,btn)=>{if(!sel.size){toast('Elige al menos una sesión',false);return;}
+  const w=window.open('','_blank');const t0=btn.textContent;btn.disabled=true;btn.textContent='Creando…';
+  try{const r=await (await fetch('/api/schedule?action=seg-justificante',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:pacId,citas:[...sel],tipo,conDni:!!(m.querySelector('.jd-dni')||{}).checked,quien:(fisioActual&&fisioActual.nombre)||''})})).json();
+   if(!r.ok)throw new Error(r.error||'No se ha podido crear');
+   const nom=String(P.nombre||'').trim().split(' ')[0];const nomBonito=nom?nom.charAt(0).toUpperCase()+nom.slice(1).toLowerCase():'';
+   const txt=`Hola${nomBonito?' '+nomBonito:''}, te enviamos tu ${tipo==='informe'?'informe de sesiones':'justificante de asistencia'} de FISIO365. Puedes verlo y descargarlo en PDF aquí: ${r.url}`;
+   if(wa){const t=segTel(P.whatsapp||P.tel||P.telf||'');if(w)w.location.href=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;else waAbrir(P.whatsapp||P.tel||P.telf,txt);}
+   else{if(w)w.location.href=r.url;else window.open(r.url,'_blank');}
+   toast(wa?'Listo: se abre WhatsApp con el enlace':'Documento creado',true);m.remove();
+  }catch(e){if(w)w.close();btn.disabled=false;btn.textContent=t0;toast(e.message,false);}};
+ m.querySelector('.jd-ver').onclick=e=>crear(false,e.target);m.querySelector('.jd-wa').onclick=e=>crear(true,e.target);
+}
 async function renderCaptacion(wrap){
  const box=ce('div','cap');wrap.appendChild(box);
  box.innerHTML='<div class="fac-vacio">Cargando…</div>';
@@ -6417,10 +6451,10 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const cont=body.querySelector('.fp-cont');
   body.querySelectorAll('.fp-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;pintar();});
   {const mb=body.querySelector('.fp-mas');if(mb)mb.onclick=e=>{e.stopPropagation();const ya=document.querySelector('.fp-masmenu');if(ya){ya.remove();return;}
-    const mn=ce('div','fp-masmenu');mn.innerHTML=MAS.map(([k,t])=>`<button type="button" data-k="${k}" class="${tab===k?'on':''}"><span>${t}${k==='archivos'&&P.archivos.length?' <em>'+P.archivos.length+'</em>':''}</span>${tab===k?'<b>✓</b>':''}</button>`).join('')+'<div class="fp-masdiv"></div><button type="button" data-k="_anam" class="fp-masanam"><span>Hacer anamnesis</span><b>›</b></button>'+(esDireccion()?'<button type="button" data-k="_borrar" class="fp-masdel"><span>Borrar ficha</span></button>':'');
+    const mn=ce('div','fp-masmenu');mn.innerHTML=MAS.map(([k,t])=>`<button type="button" data-k="${k}" class="${tab===k?'on':''}"><span>${t}${k==='archivos'&&P.archivos.length?' <em>'+P.archivos.length+'</em>':''}</span>${tab===k?'<b>✓</b>':''}</button>`).join('')+'<div class="fp-masdiv"></div><button type="button" data-k="_anam" class="fp-masanam"><span>Hacer anamnesis</span><b>›</b></button><button type="button" data-k="_doc" class="fp-masanam"><span>Justificante o informe</span><b>›</b></button>'+(esDireccion()?'<button type="button" data-k="_borrar" class="fp-masdel"><span>Borrar ficha</span></button>':'');
     document.body.appendChild(mn);const rc=mb.getBoundingClientRect();mn.style.top=(rc.bottom+6)+'px';mn.style.right=Math.max(12,window.innerWidth-rc.right)+'px';
     const fuera=ev=>{if(!mn.contains(ev.target)){mn.remove();document.removeEventListener('click',fuera,true);}};setTimeout(()=>document.addEventListener('click',fuera,true),0);
-    mn.querySelectorAll('button').forEach(b=>b.onclick=()=>{mn.remove();document.removeEventListener('click',fuera,true);if(b.dataset.k==='_anam'){cerrar();abrirAnamnesisDe({id,nombre:P.nombre});return;}if(b.dataset.k==='_borrar'){borrarFicha(id,P.nombre,cerrar);return;}tab=b.dataset.k;pintar();});};}
+    mn.querySelectorAll('button').forEach(b=>b.onclick=()=>{mn.remove();document.removeEventListener('click',fuera,true);if(b.dataset.k==='_anam'){cerrar();abrirAnamnesisDe({id,nombre:P.nombre});return;}if(b.dataset.k==='_borrar'){borrarFicha(id,P.nombre,cerrar);return;}if(b.dataset.k==='_doc'){abrirJustificante(id,P,d);return;}tab=b.dataset.k;pintar();});};}
   body.querySelector('.fp-estb').onclick=editarEstado;
   {const ba=body.querySelector('.fp-appb');if(ba)ba.onclick=()=>enviarApp(P);}
   body.querySelectorAll('.fp-cobb').forEach(bc=>bc.onclick=()=>{tab='facturas';pintar();let n=0;const t=setInterval(()=>{const b=body.querySelector('.fac-nueva');if(b||++n>40){clearInterval(t);if(b&&b.style.display!=='none'){b.click();setTimeout(()=>{const fm=body.querySelector('.fac-form');if(fm)fm.scrollIntoView({behavior:'smooth',block:'start'});},50);}}},150);});

@@ -67,6 +67,10 @@
       "dest": "/api/schedule.js?action=tarjeta-pagina&id=$1"
     },
     {
+      "src": "/doc/([A-Za-z0-9]{24})",
+      "dest": "/api/schedule.js?action=doc-pagina&t=$1"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api/$1.js"
     },

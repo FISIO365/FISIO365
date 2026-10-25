@@ -434,6 +434,53 @@ async function _procesarWeb() {
 }
 
 
+// ── JUSTIFICANTES E INFORMES DE SESIONES (solo con citas REALIZADA de la agenda) ──
+const JUST_T = 'tblPXzcT8105MfqvB';
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const DIAS_S = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const fLarga = f => { const d = new Date(f + 'T12:00:00Z'); return `${DIAS_S[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]} de ${d.getUTCFullYear()}`; };
+const fCorta = f => { const d = new Date(f + 'T12:00:00Z'); return `${d.getUTCDate()} de ${MESES[d.getUTCMonth()]} de ${d.getUTCFullYear()}`; };
+const masUnaHora = h => { const m = /^(\d{1,2}):(\d{2})/.exec(h || ''); return m ? String((+m[1] + 1) % 24).padStart(2, '0') + ':' + m[2] : ''; };
+function paginaJustificante(D, tk) {
+  const e = escHtml, ses = D.sesiones || [], just = D.tipo !== 'informe', una = ses.length === 1;
+  const fisioTxt = x => x.fisio ? `${e(x.fisio)}${x.colegiado ? ` · Nº colegiado ${e(x.colegiado)}` : ''}` : '';
+  const tarjetas = just ? ses.map(x => `<div class="s"><div class="sf"><b>${e(fLarga(x.fecha).charAt(0).toUpperCase() + fLarga(x.fecha).slice(1))}</b><span>${x.hora ? `de ${e(x.hora)} a ${e(masUnaHora(x.hora))} h` : ''}</span></div>${x.fisio ? `<div class="sp"><small>Fisioterapeuta</small>${fisioTxt(x)}</div>` : ''}</div>`).join('')
+    : `<table><thead><tr><th>Nº</th><th>Fecha</th><th>Horario</th><th>Fisioterapeuta</th></tr></thead><tbody>${ses.map((x, i) => `<tr><td>${i + 1}</td><td>${e(fCorta(x.fecha))}</td><td>${x.hora ? `${e(x.hora)}–${e(masUnaHora(x.hora))}` : ''}</td><td>${fisioTxt(x)}</td></tr>`).join('')}</tbody></table>`;
+  const quien = `<b>${e(D.paciente || '')}</b>${D.dni ? `, con DNI <b>${e(D.dni)}</b>,` : ''}`;
+  const texto = just
+    ? `FISIO365 Centro de Fisioterapia certifica que ${quien} ha asistido ${una ? 'a una sesión de fisioterapia' : `a las siguientes ${ses.length} sesiones de fisioterapia`} en nuestro centro:`
+    : `FISIO365 Centro de Fisioterapia certifica que ${quien} ha realizado <b>${ses.length} ${ses.length === 1 ? 'sesión' : 'sesiones'}</b> de fisioterapia en nuestro centro${ses.length > 1 ? ` entre el ${e(fCorta(ses[0].fecha))} y el ${e(fCorta(ses[ses.length - 1].fecha))}` : ''}:`;
+  const titulo = just ? 'Justificante de asistencia' : 'Informe de sesiones realizadas';
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo} · FISIO365</title>
+<meta name="robots" content="noindex"><meta property="og:title" content="${titulo} · FISIO365"><meta property="og:description" content="Documento de FISIO365 Centro de Fisioterapia. Ábrelo para verlo y descargarlo en PDF."><meta property="og:image" content="https://app.fisioterapia365.com/icons/icon-512.png">
+<link rel="icon" href="/icons/favicon-cara.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@page{size:A4;margin:0}*{box-sizing:border-box}html{background:#e9e4dd}body{margin:0;font-family:Poppins,sans-serif;color:#1e2a38;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.bar{position:sticky;top:0;z-index:2;display:flex;justify-content:center;gap:10px;padding:12px;background:rgba(233,228,221,.92);backdrop-filter:blur(8px)}.bar button{font-family:inherit;font-size:14px;font-weight:700;border:none;border-radius:14px;padding:12px 22px;cursor:pointer;background:#c2552e;color:#fff}
+.hoja{width:210mm;min-height:297mm;margin:0 auto 24px;background:#fff;padding:20mm 20mm 16mm;display:flex;flex-direction:column;box-shadow:0 6px 30px rgba(30,42,56,.12)}
+.cab{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding-bottom:9mm;border-bottom:1.5px solid #1e2a38}
+.logo{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1}.logo span{color:#c2552e}.logo small{display:block;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:#7d6a60;margin-top:6px}
+.dat{text-align:right;font-size:9.5px;line-height:1.6;color:#5c4f47}
+h1{font-size:25px;font-weight:800;letter-spacing:-.4px;margin:13mm 0 2mm}.ref{font-size:10px;color:#9b8f86;margin-bottom:9mm;letter-spacing:.04em}
+p{font-size:13px;line-height:1.85;text-align:justify;margin:0 0 7mm;color:#2c3a4a}p b{color:#1e2a38}
+.s{display:flex;justify-content:space-between;align-items:center;gap:16px;background:#f5f2ee;border-left:4px solid #c2552e;border-radius:12px;padding:5mm 6mm;margin-bottom:3.5mm;break-inside:avoid}
+.sf b{display:block;font-size:14px;font-weight:700}.sf span{font-size:12.5px;color:#5c4f47}.sp{text-align:right;font-size:11.5px;line-height:1.45;color:#2c3a4a}.sp small{display:block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#9b8f86}
+table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:6mm}th{text-align:left;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7d6a60;font-weight:600;padding:0 3mm 2.5mm;border-bottom:1.5px solid #1e2a38}td{padding:2.6mm 3mm;border-bottom:1px solid #ece6df}tr:nth-child(even) td{background:#faf8f5}td:first-child{color:#c2552e;font-weight:700;width:10mm}
+.fin{margin-top:6mm}.pie{margin-top:auto;padding-top:8mm;border-top:1px solid #ece6df;display:flex;justify-content:space-between;gap:16px;font-size:9px;color:#9b8f86;line-height:1.5}
+@media screen and (max-width:820px){.hoja{width:100%;min-height:0;padding:22px 18px;margin:0 0 16px;box-shadow:none}.cab{flex-direction:column}.dat{text-align:left}h1{font-size:21px;margin-top:22px}.s{flex-direction:column;align-items:flex-start}.sp{text-align:left}table{font-size:11px}td,th{padding-left:6px;padding-right:6px}}
+@media print{html,body{background:#fff}.bar{display:none}.hoja{margin:0;box-shadow:none}}
+</style></head><body>
+<div class="bar"><button type="button" onclick="window.print()">Descargar PDF</button></div>
+<div class="hoja">
+<div class="cab"><div class="logo">FISIO<span>365</span><small>Centro de Fisioterapia</small></div><div class="dat">Fourth Dynamic, S.L. · NIF B56503592<br>C/ Gran de Sant Andreu, 163 · 08030 Barcelona<br>672 89 39 49 · info@fisioterapia365.com</div></div>
+<h1>${titulo}</h1><div class="ref">Barcelona, ${e(fCorta(D.emitido || ''))}</div>
+<p>${texto}</p>
+${tarjetas}
+<p class="fin">Y para que así conste a los efectos oportunos, se expide el presente documento en Barcelona, a ${e(fCorta(D.emitido || ''))}.</p>
+<div class="pie"><span>Documento generado a partir del registro de citas de FISIO365.</span><span>Ref. ${e(String(tk).slice(0, 8).toUpperCase())}</span></div>
+</div></body></html>`;
+}
+
 // ── CIERRE DEL DÍA: checklist de cada fisio (lo imprescindible antes de irse) ──
 const CIERRES_T = 'tblmJMoILPnxXzD8w';
 // Puntos del reporte diario (los que tienen «auto» los comprueba también el panel)
@@ -654,6 +701,15 @@ module.exports = async function handler(req, res) {
   // Versión publicada: el panel la compara al volver a la app para recargarse si hay una nueva
   // Lo llama la automatización de Airtable al entrar una reserva por la web (y el panel al abrir la agenda)
   if (action === 'web-procesar') { try { const r = await procesarWeb(); return res.status(200).json({ ok: true, ...r }); } catch (e) { return res.status(500).json({ ok: false, error: e.message }); } }
+  // Justificante / informe de sesiones (enlace privado que va por WhatsApp)
+  if (action === 'doc-pagina') {
+    const tk = String(req.query.t || ''); if (!/^[A-Za-z0-9]{24}$/.test(tk)) return res.status(404).send('No encontrado');
+    const r = await at(`${JUST_T}?filterByFormula=${encodeURIComponent(`{TOKEN}='${tk}'`)}&maxRecords=1`);
+    const rec = (r.records || [])[0]; if (!rec) return res.status(404).send('Documento no encontrado');
+    let D = {}; try { D = JSON.parse(rec.fields['DATOS'] || '{}'); } catch (e) {}
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
+    return res.status(200).send(paginaJustificante(D, tk));
+  }
   // Tarjeta regalo pública (el enlace que va por WhatsApp; la vista previa enseña la imagen)
   if (action === 'tarjeta-img' || action === 'tarjeta-pagina') {
     const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(404).end();
@@ -1336,6 +1392,31 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ ok: true, hoy: hoyF, tareas: rs.map(r => { const pid = (r.fields['PACIENTE'] || [])[0] || ''; return { id: r.id, texto: r.fields['TAREA'] || '', fecha: r.fields['FECHA'] || hoyF, para: (r.fields['PARA'] && r.fields['PARA'].name) || r.fields['PARA'] || '', nota: r.fields['NOTA'] || '', creadaPor: r.fields['CREADA POR'] || '', pacienteId: pid, paciente: (pn[pid] || {}).nombre || '', tel: (pn[pid] || {}).tel || '' }; }) });
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      if (action === 'seg-justificante') {
+        const pac = q.pacienteId; if (!/^rec[A-Za-z0-9]{14}$/.test(pac || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
+        const ids = (Array.isArray(q.citas) ? q.citas : []).filter(x => /^rec[A-Za-z0-9]{14}$/.test(x)).slice(0, 100);
+        if (!ids.length) return res.status(400).json({ ok: false, error: 'Elige al menos una sesión' });
+        const [p, cs, fd] = await Promise.all([
+          at(`${PACIENTES}/${pac}`),
+          lotes(ids, l => capTodos(CIT_T, `filterByFormula=${encodeURIComponent('OR(' + l.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA`), 30),
+          at('tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=NºColegiado').catch(() => ({}))
+        ]);
+        if (p.error) return res.status(404).json({ ok: false, error: 'Paciente no encontrado' });
+        // Solo sesiones de este paciente y marcadas como REALIZADA en la agenda
+        const ok = cs.filter(c => (c.fields['RELACIÓN - CITA'] || []).includes(pac) && nmSel(c.fields['ESTADO']).toUpperCase() === 'REALIZADA');
+        if (ok.length !== ids.length) return res.status(200).json({ ok: false, error: 'Solo se pueden incluir sesiones de este paciente marcadas como «Realizada» en la agenda.' });
+        const FS = (fd.records || []).map(r => r.fields || {});
+        const sesiones = ok.map(c => { const n = nmSel(c.fields['PREF.']); const f = FS.find(x => fisioKey(x.Name) === fisioKey(n));
+          return { fecha: String(c.fields['FECHA'] || '').slice(0, 10), hora: String(c.fields['HORA'] || '').slice(0, 5), fisio: f ? String(f.Name).trim() : n, colegiado: f && f['NºColegiado'] ? String(f['NºColegiado']).trim() : '' }; })
+          .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+        const tipo = q.tipo === 'informe' ? 'informe' : 'justificante';
+        const D = { tipo, paciente: String(p.fields['FULL NAME'] || '').trim(), dni: q.conDni === false ? '' : String(p.fields['DNI'] || '').trim().toUpperCase(), sesiones, emitido: hoyF, por: String(q.quien || '') };
+        const A = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'; const tk = Array.from(require('crypto').randomBytes(24), b => A[b % A.length]).join('');
+        const d = await at(JUST_T, { method: 'POST', body: JSON.stringify({ typecast: true, records: [{ fields: { DOCUMENTO: (tipo === 'informe' ? 'Informe' : 'Justificante') + ' · ' + D.paciente + ' · ' + hoyF, FECHA: new Date().toISOString(), TIPO: tipo === 'informe' ? 'Informe de sesiones' : 'Justificante de asistencia', PACIENTE: [pac], TOKEN: tk, DATOS: JSON.stringify(D), 'CREADO POR': D.por } }] }) });
+        if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
+        const host = String(req.headers['x-forwarded-host'] || req.headers.host || 'app.fisioterapia365.com');
+        return res.status(200).json({ ok: true, url: `https://${/fisioterapia365\.com|vercel\.app/.test(host) ? host : 'app.fisioterapia365.com'}/doc/${tk}`, n: sesiones.length });
+      }
       if (action === 'seg-cierre-enviar') {
         const fecha = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyF;
         if (!String(q.fisio || '').trim()) return res.status(400).json({ ok: false, error: 'Falta el fisio' });
