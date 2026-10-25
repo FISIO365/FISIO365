@@ -5513,7 +5513,7 @@ async function listaTareas(cont,keep){
    if(x.tipo==='regalo'){
     const g=x.g,b=ce('button','tk-b');b.type='button';
     if(g.recomendo){b.textContent='Enviar tarjeta';b.onclick=async()=>{b.disabled=true;try{const d=await (await fetch('/api/schedule?action=seg-referido-tarjeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:g.id})})).json();if(!d.ok)throw 0;
-      await enviarTarjeta(g.recomendo.tel,g.recomendo.nombre,g.nuevo.nombre,d.caduca);quitar(r,x);}catch(e){b.disabled=false;toast('No se ha podido crear la tarjeta',false);}};}
+      await enviarTarjeta(g.recomendo.tel,g.recomendo.nombre,g.nuevo.nombre,d.caduca,g.id);quitar(r,x);}catch(e){b.disabled=false;toast('No se ha podido crear la tarjeta',false);}};}
     else{b.textContent='¿Quién es?';b.onclick=()=>elegirRecomendo(g,recargar);}
     acc.appendChild(b);
     const q=ce('button','tk-q');q.type='button';q.setAttribute('aria-label','No toca tarjeta');q.title='No toca tarjeta';q.innerHTML='✕';let arm=false;
@@ -5601,7 +5601,7 @@ function capi(n){n=String(n||'').trim();if(/[a-záéíóúñ]/.test(n)&&n===n.re
 function mensajeTarjeta(quien,nuevo,cad){const nm=capi(quien),nvm=capi(nuevo);
  return `¡Hola ${nm}! Gracias por recomendarnos${nvm?' a '+nvm:''}, nos hace muchísima ilusión.\n\nTe regalamos 10 € de descuento en tu próxima sesión (válido hasta el ${String(cad||'').split('-').reverse().join('/')}). No tienes que hacer nada: lo tenemos apuntado en tu ficha y te lo descontamos al pagar.\n\n¡Gracias por confiar en FISIO365!`;}
 // Imagen de la tarjeta regalo (para mandarla por WhatsApp)
-async function tarjetaImagen(quien,nuevo,cad){
+async function tarjetaImagen(quien,nuevo,cad,tipo){
  try{await document.fonts.load('800 60px Poppins');await document.fonts.load('600 30px Poppins');}catch(e){}
  const W=1080,H=680,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
  const rr=(X,Y,w,h,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath();};
@@ -5614,22 +5614,24 @@ async function tarjetaImagen(quien,nuevo,cad){
  x.font='600 40px Poppins';x.fillText('de descuento en tu próxima sesión',72,450);
  x.font='600 30px Poppins';x.globalAlpha=.95;x.fillText(`Para ${capi(quien)}${capi(nuevo)?' · gracias por recomendarnos a '+capi(nuevo):''}`,72,560);
  x.globalAlpha=.85;x.font='500 26px Poppins';x.fillText(`Válida hasta el ${String(cad||'').split('-').reverse().join('/')} · te lo descontamos al pagar`,72,606);x.globalAlpha=1;
- return await new Promise(ok=>c.toBlob(ok,'image/png'));}
-// Enviar la tarjeta: en el móvil se comparte la imagen (WhatsApp); en el ordenador se descarga y se abre WhatsApp con el texto
+ return await new Promise(ok=>c.toBlob(ok,tipo||'image/png',0.88));}
+// Enviar la tarjeta: se guarda la imagen y se manda un enlace; WhatsApp enseña la tarjeta en la vista previa
 // Antes de enviar se pueden retocar los nombres (nombres compuestos, apodos…)
-function enviarTarjeta(tel,quien,nuevo,cad){return new Promise(fin=>{
+function enviarTarjeta(tel,quien,nuevo,cad,refId){return new Promise(fin=>{
  const m=hzModal(`<div class="hz-top"><div><small>Tarjeta regalo de 10 €</small><b>¿Cómo ponemos los nombres?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Para</div><input type="text" class="tj-q" maxlength="30" value="${escH(pn(quien))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
   <div class="hz-lab">Por recomendarnos a</div><input type="text" class="tj-n" maxlength="30" value="${escH(pn(nuevo))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
   <div class="hz-bts"><button type="button" class="hz-ok">Enviar por WhatsApp</button></div>`);
  m.querySelector('.hz-x').onclick=()=>{m.remove();fin();};
- m.querySelector('.hz-ok').onclick=async()=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();m.remove();await enviarTarjeta2(tel,q,n,cad);fin();};});}
-async function enviarTarjeta2(tel,quien,nuevo,cad){const txt=mensajeTarjeta(quien,nuevo,cad);
- try{const b=await tarjetaImagen(quien,nuevo,cad);const f=new File([b],'Tarjeta-regalo-FISIO365.png',{type:'image/png'});
-  if(navigator.canShare&&navigator.canShare({files:[f]})&&/Android|iPhone|iPad/i.test(navigator.userAgent)){try{await navigator.share({files:[f],text:txt});return;}catch(e){if(e&&e.name==='AbortError')return;}}
-  const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);
-  toast('Imagen de la tarjeta descargada: adjúntala en WhatsApp',true);}catch(e){}
- waAbrir(tel,txt);}
+ m.querySelector('.hz-ok').onclick=async()=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();m.remove();await enviarTarjeta2(tel,q,n,cad,refId);fin();};});}
+async function enviarTarjeta2(tel,quien,nuevo,cad,refId){let txt=mensajeTarjeta(quien,nuevo,cad);
+ // La imagen se guarda y va como enlace: WhatsApp enseña la tarjeta en la vista previa (sin descargar ni adjuntar nada)
+ const w=window.open('about:blank','_blank');
+ try{const b=await tarjetaImagen(quien,nuevo,cad,'image/jpeg');const b64=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(',')[1]);fr.readAsDataURL(b);});
+  const d=await (await fetch('/api/schedule?action=seg-referido-img',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:refId,b64})})).json();
+  if(d.ok&&d.url)txt+=`\n\nAquí tienes tu tarjeta: ${d.url}`;}catch(e){}
+ const t=segTel(tel||''),u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;
+ if(w)w.location.href=u;else window.open(u,'_blank');}
 function waAbrir(tel,txt){const t=segTel(tel||'');window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');}
 // Elegir quién recomendó (si el nombre que puso no cuadra con un único paciente)
 function elegirRecomendo(r,onDone){
@@ -5948,7 +5950,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
    cont.querySelectorAll('.fp-cform').forEach(bt=>bt.onclick=()=>enviarFormulario(P));
    cont.querySelectorAll('.fp-refc').forEach(bt=>{let arm=false;bt.onclick=async()=>{if(!arm){arm=true;bt.textContent='¿Canjear?';setTimeout(()=>{arm=false;bt.textContent='Canjear';},4000);return;}bt.disabled=true;
      try{const r=await (await fetch('/api/schedule?action=seg-referido-canjear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:bt.dataset.id})})).json();if(!r.ok)throw 0;const t=d.referidos.haRecomendado.find(x=>x.id===bt.dataset.id);if(t)t.canjeada=d.hoy;toast('Tarjeta canjeada: descuenta 10 € de este pago',true);pintar();}catch(e){bt.disabled=false;toast('No se ha podido guardar',false);}};});
-   cont.querySelectorAll('.fp-refwa').forEach(bt=>bt.onclick=()=>{const t=d.referidos.haRecomendado.find(x=>x.id===bt.dataset.id);if(t)enviarTarjeta(P.whatsapp||P.telf||P.tel,P.nombre,t.nombre,t.caduca);});
+   cont.querySelectorAll('.fp-refwa').forEach(bt=>bt.onclick=()=>{const t=d.referidos.haRecomendado.find(x=>x.id===bt.dataset.id);if(t)enviarTarjeta(P.whatsapp||P.telf||P.tel,P.nombre,t.nombre,t.caduca,t.id);});
    cont.querySelectorAll('.fp-cpc').forEach(bt=>bt.onclick=async()=>{bt.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-consent-enlazar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,consentId:bt.dataset.id,pacienteId:id})})).json();if(!r.ok)throw 0;toast('Enlazado',true);try{await cargar();}catch(_){}pintar();}catch(e){bt.disabled=false;toast('No se ha podido enlazar',false);}});
    const noEs=cid=>fetch('/api/schedule?action=seg-consent-noes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,consentId:cid,pacienteId:id})}).then(r=>r.json()).then(r=>{if(!r.ok)throw 0;});
    cont.querySelectorAll('.fp-cpno').forEach(bt=>bt.onclick=async()=>{bt.disabled=true;try{await noEs(bt.dataset.id);d.consent.porConfirmar=(d.consent.porConfirmar||[]).filter(x=>x.id!==bt.dataset.id);pintar();toast('Vale, no se te volverá a preguntar por este formulario',true);}catch(e){bt.disabled=false;toast('No se ha podido guardar',false);}});

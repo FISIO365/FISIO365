@@ -63,6 +63,10 @@
   ],
   "routes": [
     {
+      "src": "/tarjeta/(rec[A-Za-z0-9]{14})",
+      "dest": "/api/schedule.js?action=tarjeta-pagina&id=$1"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api/$1.js"
     },

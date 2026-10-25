@@ -485,6 +485,20 @@ module.exports = async function handler(req, res) {
   // Versión publicada: el panel la compara al volver a la app para recargarse si hay una nueva
   // Lo llama la automatización de Airtable al entrar una reserva por la web (y el panel al abrir la agenda)
   if (action === 'web-procesar') { try { const r = await procesarWeb(); return res.status(200).json({ ok: true, ...r }); } catch (e) { return res.status(500).json({ ok: false, error: e.message }); } }
+  // Tarjeta regalo pública (el enlace que va por WhatsApp; la vista previa enseña la imagen)
+  if (action === 'tarjeta-img' || action === 'tarjeta-pagina') {
+    const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(404).end();
+    const r = await at(`tblr27u3cvtzfyqI6/${id}`); const a = r.fields && (r.fields['TARJETA IMG'] || [])[0];
+    if (!a) return res.status(404).send('Tarjeta no encontrada');
+    if (action === 'tarjeta-img') { const im = await fetch(a.url); res.setHeader('Content-Type', a.type || 'image/jpeg'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(Buffer.from(await im.arrayBuffer())); }
+    const img = `https://app.fisioterapia365.com/api/schedule?action=tarjeta-img&id=${id}`, cad = String(r.fields['CADUCA'] || '').split('-').reverse().join('/');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tarjeta regalo · FISIO365</title>
+<meta property="og:title" content="Tu tarjeta regalo de 10 € · FISIO365"><meta property="og:description" content="Gracias por recomendarnos. Te lo descontamos en tu próxima sesión${cad ? ' (válida hasta el ' + cad + ')' : ''}."><meta property="og:image" content="${img}"><meta property="og:image:width" content="1080"><meta property="og:image:height" content="680"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/icons/favicon-cara.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#f5f2ee;font-family:Poppins,sans-serif;color:#1a1a1a;display:flex;justify-content:center}main{max-width:520px;width:100%;padding:28px 16px;box-sizing:border-box}img{width:100%;border-radius:20px;box-shadow:0 10px 30px rgba(194,85,46,.25);display:block}h1{font-size:20px;margin:22px 0 6px}p{font-size:15px;line-height:1.5;color:#5c4f47;margin:0 0 18px}a{display:block;text-align:center;background:#1a1a1a;color:#fff;text-decoration:none;font-weight:700;border-radius:14px;padding:14px}</style></head>
+<body><main><img src="${img}" alt="Tarjeta regalo de 10 €"><h1>¡Gracias por recomendarnos!</h1><p>Tienes 10 € de descuento en tu próxima sesión${cad ? ', válido hasta el ' + cad : ''}. No tienes que hacer nada: lo tenemos apuntado y te lo descontamos al pagar.</p><a href="https://app.fisioterapia365.com">Abrir mi app de FISIO365</a></main></body></html>`);
+  }
   if (action === 'version') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ v: (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 12) }); }
 
   if (action === 'emitir') {
@@ -579,6 +593,12 @@ module.exports = async function handler(req, res) {
             const c = new Date(hoyF + 'T12:00:00Z'); c.setUTCMonth(c.getUTCMonth() + 6); cad = c.toISOString().slice(0, 10);
             const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'CÓDIGO': cod, 'FECHA TARJETA': hoyF, CADUCA: cad, 'Regalo entregado': true } }) }); if (d.error) return res.status(200).json({ ok: false }); }
           return res.status(200).json({ ok: true, codigo: cod, caduca: cad });
+        }
+        if (action === 'seg-referido-img') {
+          const b64 = String(q.b64 || ''); if (!b64 || b64.length > 3e6) return res.status(400).json({ ok: false });
+          await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'TARJETA IMG': [] } }) });
+          const up = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${q.id}/fldsXb167H8HWe37u/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'image/jpeg', file: b64, filename: 'tarjeta-regalo.jpg' }) }).then(x => x.json()).catch(() => ({ error: 1 }));
+          return res.status(200).json({ ok: !up.error, url: `https://app.fisioterapia365.com/tarjeta/${q.id}` });
         }
         if (action === 'seg-referido-canjear') { const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { CANJEADA: q.deshacer ? null : hoyF } }) }); return res.status(200).json({ ok: !d.error }); }
         return res.status(400).json({ ok: false });
