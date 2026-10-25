@@ -433,7 +433,25 @@ async function _procesarWeb() {
   return { hechas, sinHueco };
 }
 
-async function emitirFactura(recId) {
+// Fisio que atiende al paciente (el de su última sesión; si no, quien cobra) con su nº de colegiado
+async function fisioDelPaciente(pacId, quien) {
+  const nm = v => String((v && v.name) || v || '').trim();
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+  let pref = '';
+  try {
+    const c = await at(`${CIT_T}?filterByFormula=${encodeURIComponent(`AND(FIND('${pacId}',ARRAYJOIN({PacienteRec})),OR(TRIM({ESTADO})='REALIZADA',TRIM({ESTADO})='PENDIENTE'),NOT(IS_AFTER({FECHA},'${hoy}')))`)}&sort[0][field]=FECHA&sort[0][direction]=desc&pageSize=1&fields[]=PREF.&fields[]=FECHA`);
+    pref = nm((((c.records || [])[0] || {}).fields || {})['PREF.']);
+  } catch (e) {}
+  const buscar = String(pref || quien || '').trim().toLowerCase(); if (!buscar) return '';
+  const d = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=NºColegiado`).catch(() => ({}));
+  const fs = (d.records || []).map(r => r.fields || {}).filter(f => f.Name);
+  const f = fs.find(x => x.Name.trim().toLowerCase() === buscar) || fs.find(x => x.Name.trim().toLowerCase().split(' ')[0] === buscar.split(' ')[0]);
+  if (!pref && !(f && f['NºColegiado'])) return ''; // quien cobra solo cuenta si es fisio (no recepción)
+  if (!f) return pref ? 'Fisioterapeuta: ' + pref.charAt(0) + pref.slice(1).toLowerCase() : '';
+  return 'Fisioterapeuta: ' + f.Name.trim() + (f['NºColegiado'] ? ' · Nº de colegiado ' + String(f['NºColegiado']).trim() : '');
+}
+
+async function emitirFactura(recId, quien) {
   const rec = await at(`${FACTURAS_TABLE}/${recId}?returnFieldsByFieldId=true`);
   if (rec.error) throw new Error('No encuentro esa fila de FACTURAS');
   const f = rec.fields || {};
@@ -490,8 +508,9 @@ async function emitirFactura(recId) {
     contactId = c.id;
   }
 
+  const fisioTxt = await fisioDelPaciente(pacId, quien).catch(() => '');
   const items = lineas.map(l => { const it = { name: l.concepto === 'Otros' && notas ? notas.split('\n')[0].slice(0, 120) : l.concepto, units: l.uds, price: l.precio }; if (taxes) it.taxes = taxes; return it; });
-  const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: notas || null, body: TEXTO_RGPD, currency: 'EUR', language: 'es', items });
+  const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas].filter(Boolean).join('\n') + '\n\n\n' + TEXTO_RGPD, currency: 'EUR', language: 'es', items });
   const docId = doc.id;
   if (!docId) throw new Error('Holded no ha devuelto el ticket creado');
   let creado = await holded('/sales-receipts/' + docId).catch(() => ({}));
@@ -1452,7 +1471,7 @@ module.exports = async function handler(req, res) {
     const cr = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
     const rec = cr.records && cr.records[0] && cr.records[0].id;
     if (!rec) return res.status(500).json({ ok: false, error: (cr.error && cr.error.message) || 'No se ha podido guardar en Airtable' });
-    const turno = emitiendo.then(() => emitirFactura(rec));
+    const turno = emitiendo.then(() => emitirFactura(rec, q.quien));
     emitiendo = turno.catch(() => {});
     try { const r = await turno; return res.status(200).json({ ok: true, num: r.num, borrador: !!r.borrador, total: r.total, otro: r.otro }); }
     catch (e) {
