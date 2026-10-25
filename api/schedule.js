@@ -239,7 +239,15 @@ function resumenPaciente(enl) {
   return out;
 }
 async function consentDe(P, pacId, altaPac) {
-  const lista = await consTodos();
+  let lista = await consTodos();
+  // La lista está en memoria (puede ser de hace unos minutos y de otra copia del servidor): lo enlazado se toma de la propia ficha
+  // y los candidatos se vuelven a leer de Airtable, para no volver a enlazar ni preguntar lo que ya se ha dicho que no es suyo
+  { const ids = new Set(); Object.values(P || {}).forEach(v => { if (Array.isArray(v)) v.forEach(x => { if (typeof x === 'string' && /^rec/.test(x)) ids.add(x); }); });
+    lista.forEach(c => { const tiene = ids.has(c.id); if (tiene && !c.pac.includes(pacId)) c.pac = [...c.pac, pacId]; else if (!tiene && c.pac.includes(pacId)) c.pac = c.pac.filter(x => x !== pacId); });
+    const pre = emparejar(P, pacId, lista, altaPac), cand = [...pre.buenos, ...pre.dudosos].slice(0, 20);
+    for (const T of [CONS_T, CONS_O]) { const cs = cand.filter(c => c.tabla === T); if (!cs.length) continue;
+      const rs = await capTodos(T, `filterByFormula=${encodeURIComponent('OR(' + cs.map(c => `RECORD_ID()='${c.id}'`).join(',') + ')')}&fields[]=PACIENTE&fields[]=NO ES DE`).catch(() => null);
+      if (rs) cs.forEach(c => { const r = rs.find(x => x.id === c.id); if (!r) return; c.pac = r.fields['PACIENTE'] || []; c.noDe = String(r.fields['NO ES DE'] || '').split(/[\s,]+/).filter(Boolean); }); } }
   const { enl, buenos, dudosos } = emparejar(P, pacId, lista, altaPac);
   for (const c of buenos.slice(0, 6)) if (await enlazarCons(c.id, pacId).catch(() => false)) enl.push(c);
   if (!enl.length) return dudosos.length ? consPublico(dudosos[0], 'dudoso') : null;
