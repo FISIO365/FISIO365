@@ -1045,6 +1045,12 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .adm-er small{flex:none;font-size:11.5px;font-weight:600;color:#5f554e;background:#f3efea;border-radius:99px;padding:4px 10px;min-width:92px;text-align:center;box-sizing:border-box}.adm-er small.cero{color:#9a8d84;background:#fff;border:1px dashed #e2d8ce}
 .adm-em1{flex:none;border:1px solid #ece6e0;background:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}.adm-em1 svg{width:16px;height:16px;fill:#5f554e}.adm-em1:hover{background:#f3efea}
 .adm-cnt{font-style:normal;font-size:11px;font-weight:600;color:#c2552e;background:#fdf0e7;border-radius:99px;padding:2px 8px;margin-left:4px;vertical-align:2px}.adm-cnt:empty{display:none}
+.adm-selbar{position:sticky;bottom:84px;z-index:3;display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#fff;border:1px solid #ece6e0;border-radius:14px;padding:8px 10px;margin:4px 0 10px;font-size:13px;box-shadow:0 6px 18px rgba(30,42,56,.06)}.adm-selbar span{flex:1;min-width:160px}.adm-selbar .fp-mu{font-size:12px}
+.adm-selbar button{font-family:var(--font);font-size:12.5px;font-weight:600;border:1px solid #ece6e0;background:#fff;border-radius:99px;padding:6px 12px;cursor:pointer;color:#1e2a38}.adm-selbar .sb-j{background:#1e2a38;border-color:#1e2a38;color:#fff}.adm-selbar .sb-d{color:#b42318}
+.adm-er.sel{background:#fdf6f0}.adm-ck2{flex:none;width:22px;height:22px;border-radius:7px}.adm-ck2.on::after{left:6px;top:2px;width:6px;height:11px}
+.adm-sell{display:flex;flex-direction:column;max-height:30vh;overflow-y:auto;margin:4px 0 6px}.adm-sell span{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;border-top:1px solid #f1ece7;padding:7px 0}.adm-sell span:first-child{border-top:none}.adm-sell small{color:var(--muted)}
+.adm-jl button.mia{background:#fdf6f0}
+@media(min-width:769px){.adm-selbar{bottom:12px}}
 .adm-et.cargando{opacity:.55;pointer-events:none}
 .adm-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.adm-grid .adm-card{margin:0;display:flex;flex-direction:column}.adm-grid .adm-ls{flex:1;align-content:flex-start}
 @media(max-width:760px){.adm-grid{grid-template-columns:1fr}}
@@ -5657,14 +5663,37 @@ async function renderAdmin(wrap){
   body.querySelector('.c-ad').onclick=()=>{L.conceptos.push({n:'',p:''});pc();const ins=cps.querySelectorAll('.c-nm');ins[ins.length-1].focus();};
   body.querySelector('.c-gu').onclick=e=>{L.conceptos=L.conceptos.filter(x=>String(x.n).trim());guardarConf('listas',L,e.target).then(()=>pc());};
   // estados y tipos (tablas)
-  body.querySelectorAll('.adm-et').forEach(card=>{const t=card.dataset.t,box=card.querySelector('.adm-etl');let E=null,bus='',todas=false;
+  body.querySelectorAll('.adm-et').forEach(card=>{const t=card.dataset.t,box=card.querySelector('.adm-etl');let E=null,bus='',todas=false;const sel=new Set();
+   const uds=n=>`${n} ${t==='tipos'?'cita'+(n===1?'':'s'):'paciente'+(n===1?'':'s')}`;
+   const bar=ce('div','adm-selbar');bar.hidden=true;box.after(bar);
+   const pBar=()=>{[...sel].forEach(id=>{if(!E.some(x=>x.id===id))sel.delete(id);});const L=E.filter(x=>sel.has(x.id)),u=L.reduce((a,x)=>a+x.uso,0),sinUso=E.filter(x=>!x.uso).length;
+    bar.hidden=false;bar.innerHTML=sel.size?`<span><b>${sel.size}</b> seleccionada${sel.size===1?'':'s'}${u?` · ${uds(u)}`:''}</span><button type="button" class="sb-j">Juntar</button><button type="button" class="sb-d">Borrar</button><button type="button" class="sb-x">Quitar selección</button>`
+     :`<span class="fp-mu">Marca varias para juntarlas o borrarlas de golpe.</span>${sinUso?`<button type="button" class="sb-s">Marcar las ${sinUso} sin usar</button>`:''}`;
+    const $q=c=>bar.querySelector(c);
+    if($q('.sb-s'))$q('.sb-s').onclick=()=>{E.filter(x=>!x.uso).forEach(x=>sel.add(x.id));p();};
+    if($q('.sb-x'))$q('.sb-x').onclick=()=>{sel.clear();p();};
+    if($q('.sb-d'))$q('.sb-d').onclick=()=>{const md=hzModal(`<div class="hz-top"><div><small>${t==='tipos'?'Tipos de cita':'Estados del paciente'}</small><b>¿Borrar ${L.length===1?'«'+escH(capTit(L[0].n))+'»':L.length+' etiquetas'}?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+      <div class="adm-sell">${L.map(x=>`<span>${escH(capTit(x.n))}<small>${x.uso?uds(x.uso):'sin usar'}</small></span>`).join('')}</div>
+      <p class="adm-nota">${u?`Las tienen ${uds(u)} y se les quitarán. Si son iguales que otra, mejor usa «Juntar».`:'No las usa nadie.'}</p>
+      <div class="hz-bts"><button type="button" class="adm-gen d-c">Cancelar</button><button type="button" class="hz-ok d-g">Borrar ${L.length}</button></div>`);
+     md.querySelector('.hz-x').onclick=md.querySelector('.d-c').onclick=()=>md.remove();md.querySelector('.d-g').onclick=async()=>{md.remove();const ids=[...sel];sel.clear();await op({op:'borrar',ids,confirmar:true},`${ids.length} borrada${ids.length===1?'':'s'}`);};};
+    if($q('.sb-j'))$q('.sb-j').onclick=()=>juntar(L);};
+   // Juntar una o varias en la que se elija (la elegida se queda; las demás se borran)
+   const juntar=L=>{const m=hzModal(`<div class="hz-top"><div><small>Juntar ${L.length===1?'«'+escH(capTit(L[0].n))+'»':L.length+' etiquetas'}</small><b>¿En cuál se quedan?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+     <p class="adm-nota">Sus ${uds(L.reduce((a,x)=>a+x.uso,0))} pasan a la que elijas y el resto se borran. Puedes elegir una de las marcadas.</p><input class="ag-in j-b" placeholder="Buscar…" style="width:100%;box-sizing:border-box;margin:10px 0 6px"><div class="adm-jl"></div>`);
+    const jl=m.querySelector('.adm-jl'),ids=L.map(x=>x.id),pj=f=>{const O=E.filter(y=>!f||y.n.toLowerCase().includes(f)).sort((a,b)=>ids.includes(b.id)-ids.includes(a.id)||b.uso-a.uso).slice(0,50);
+     jl.innerHTML=O.map(y=>`<button type="button" data-id="${y.id}" class="${ids.includes(y.id)?'mia':''}">${escH(capTit(y.n))}<small>${ids.includes(y.id)?'marcada · ':''}${y.uso}</small></button>`).join('');
+     jl.querySelectorAll('button').forEach(bb=>bb.onclick=async()=>{const dst=E.find(y=>y.id===bb.dataset.id),src=ids.filter(x=>x!==dst.id);if(!src.length){toast('Elige otra: tiene que quedar una y juntarse las demás',false);return;}
+      const n=L.filter(x=>x.id!==dst.id).reduce((a,x)=>a+x.uso,0);m.remove();sel.clear();toast('Juntando… puede tardar unos segundos',true);
+      await op({op:'juntar',ids:src,a:dst.id},`Hecho: ${uds(n)} pasan a «${capTit(dst.n)}» y se ha${src.length===1?'':'n'} borrado ${src.length}`);});};pj('');
+    m.querySelector('.j-b').oninput=e=>pj(e.target.value.toLowerCase());m.querySelector('.hz-x').onclick=()=>m.remove();};
    const op=async(o,msg)=>{card.classList.add('cargando');let r;try{r=await admPost('seg-adm-etiquetas',Object.assign({tabla:t},o));}catch(e){r={ok:false,error:'No se ha podido conectar. Vuelve a intentarlo.'};}card.classList.remove('cargando');
     if(!r.ok&&r.uso){if(!await admSiNo(r.error))return;return op(Object.assign({},o,{confirmar:true}),msg);}
     if(!r.ok){toast(r.error||'No se ha podido',false);return;}E=r.etiquetas;p();if(t==='estados'){loadEstados();loadPacientes();}toast(msg||'Hecho',true);};
    const p=()=>{if(!E){box.innerHTML='<div class="fac-vacio">Cargando…</div>';return;}const q=bus.toLowerCase();let F=E.filter(x=>!q||x.n.toLowerCase().includes(q));const mas=!todas&&!q&&F.length>25;if(mas)F=F.slice(0,25);
     const mx=Math.max(1,...E.map(y=>y.uso));
-    box.innerHTML=F.map(x=>`<div class="adm-er" data-id="${x.id}"><span class="adm-en"><b>${escH(capTit(x.n))}</b><i style="width:${Math.max(2,Math.round(x.uso/mx*100))}%"></i></span><small class="${x.uso?'':'cero'}">${x.uso?`${x.uso} ${t==='tipos'?'cita'+(x.uso===1?'':'s'):'paciente'+(x.uso===1?'':'s')}`:'sin usar'}</small><button type="button" class="adm-em1" aria-label="Opciones"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></div>`).join('')+(mas?`<button type="button" class="adm-mas">Ver las ${E.length}</button>`:'')||'<p class="adm-nota">Nada.</p>';
-    card.querySelector('.adm-cnt').textContent=E.length;const vm=box.querySelector('.adm-mas');if(vm)vm.onclick=()=>{todas=true;p();};
+    box.innerHTML=F.map(x=>`<div class="adm-er${sel.has(x.id)?' sel':''}" data-id="${x.id}"><button type="button" class="adm-ck adm-ck2${sel.has(x.id)?' on':''}" aria-label="Marcar"></button><span class="adm-en"><b>${escH(capTit(x.n))}</b><i style="width:${Math.max(2,Math.round(x.uso/mx*100))}%"></i></span><small class="${x.uso?'':'cero'}">${x.uso?`${x.uso} ${t==='tipos'?'cita'+(x.uso===1?'':'s'):'paciente'+(x.uso===1?'':'s')}`:'sin usar'}</small><button type="button" class="adm-em1" aria-label="Opciones"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></div>`).join('')+(mas?`<button type="button" class="adm-mas">Ver las ${E.length}</button>`:'')||'<p class="adm-nota">Nada.</p>';
+    card.querySelector('.adm-cnt').textContent=E.length;box.querySelectorAll('.adm-ck2').forEach(b=>b.onclick=()=>{const id=b.closest('.adm-er').dataset.id;sel.has(id)?sel.delete(id):sel.add(id);p();});pBar();const vm=box.querySelector('.adm-mas');if(vm)vm.onclick=()=>{todas=true;p();};
     box.querySelectorAll('.adm-em1').forEach(b=>b.onclick=()=>{const x=E.find(y=>y.id===b.closest('.adm-er').dataset.id);
      ddMenuG(b,[{v:'ren',t:'Cambiar nombre'},{v:'jun',t:'Juntar con…'},{v:'del',t:'Borrar'}],async v=>{
       if(v==='ren'){const mr=hzModal(`<div class="hz-top"><div><small>${t==='tipos'?'Tipo de cita':'Estado del paciente'}</small><b>Cambiar nombre</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
@@ -5676,9 +5705,7 @@ async function renderAdmin(wrap){
         <p class="adm-nota">${x.uso?`La tienen ${x.uso} ${t==='tipos'?'cita'+(x.uso===1?'':'s'):'paciente'+(x.uso===1?'':'s')} y se les quitará. Si es igual que otra, mejor usa «Juntar con…».`:'No la usa nadie.'}</p>
         <div class="hz-bts"><button type="button" class="adm-gen d-c">Cancelar</button><button type="button" class="hz-ok d-g">Borrar</button></div>`);
        md.querySelector('.hz-x').onclick=md.querySelector('.d-c').onclick=()=>md.remove();md.querySelector('.d-g').onclick=()=>{md.remove();op({op:'borrar',id:x.id,confirmar:true},'Borrado');};}
-      else{const otros=E.filter(y=>y.id!==x.id);const m=hzModal(`<div class="hz-top"><div><small>Juntar «${escH(x.n)}»</small><b>¿Con cuál?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><p class="adm-nota">Sus ${x.uso} ${t==='tipos'?'citas':'pacientes'} pasan a la que elijas y «${escH(x.n)}» se borra.</p><input class="ag-in j-b" placeholder="Buscar…" style="width:100%;box-sizing:border-box;margin:10px 0 6px"><div class="adm-jl"></div>`);
-       const jl=m.querySelector('.adm-jl'),pj=f=>{jl.innerHTML=otros.filter(y=>!f||y.n.toLowerCase().includes(f)).slice(0,40).map(y=>`<button type="button" data-id="${y.id}">${escH(y.n)}<small>${y.uso}</small></button>`).join('');jl.querySelectorAll('button').forEach(bb=>bb.onclick=async()=>{const dst=otros.find(y=>y.id===bb.dataset.id);m.remove();toast('Juntando… puede tardar unos segundos',true);await op({op:'juntar',id:x.id,a:bb.dataset.id},`Hecho: ${x.uso} ${t==='tipos'?'cita'+(x.uso===1?'':'s'):'paciente'+(x.uso===1?'':'s')} pasan a «${dst?dst.n:''}» y «${x.n}» se ha borrado`);});};pj('');
-       m.querySelector('.j-b').oninput=e=>pj(e.target.value.toLowerCase());m.querySelector('.hz-x').onclick=()=>m.remove();}});});};
+      else juntar([x]);});});};
    const bi=card.querySelector('.e-bus');if(bi)bi.oninput=()=>{bus=bi.value.trim();p();};
    const add=()=>{const i=card.querySelector('.e-n'),v=i.value.trim();if(!v)return;i.value='';op({op:'nuevo',nombre:v});};card.querySelector('.e-a').onclick=add;card.querySelector('.e-n').onkeydown=e=>{if(e.key==='Enter')add();};
    admPost('seg-adm-etiquetas',{tabla:t,op:'ver'}).then(r=>{E=r.ok?r.etiquetas:[];p();});});

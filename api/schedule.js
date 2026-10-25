@@ -963,21 +963,25 @@ module.exports = async function handler(req, res) {
             const ya = (await todasE()).find(x => x.n.toLowerCase() === n.toLowerCase() && x.id !== q.id); if (ya) return res.status(400).json({ ok: false, error: 'Ya existe. Si quieres juntarlas, usa «Juntar con…»' });
             const d = q.op === 'nuevo' ? await at(T, { method: 'POST', body: JSON.stringify({ records: [{ fields: { [NOM]: n } }] }) }) : okR(q.id) ? await at(`${T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [NOM]: n } }) }) : { error: { message: 'Falta cuál' } };
             if (d.error) return res.status(400).json({ ok: false, error: d.error.message });
-          } else if (q.op === 'borrar') {
-            if (!okR(q.id)) return res.status(400).json({ ok: false });
-            const r = (await todasE()).find(x => x.id === q.id); if (r && r.uso && !q.confirmar) return res.status(200).json({ ok: false, uso: r.uso, error: `La tienen ${r.uso} ${q.tabla === 'tipos' ? 'citas' : 'pacientes'}. Si la borras, se la quita a todos.` });
-            await at(`${T}/${q.id}`, { method: 'DELETE' });
-          } else if (q.op === 'juntar') { // pasar todas las citas/pacientes de A a B y borrar A
-            if (!okR(q.id) || !okR(q.a) || q.id === q.a) return res.status(400).json({ ok: false });
-            const A = await at(`${T}/${q.id}`); const ids = (A.fields && A.fields[LNK]) || [];
-            if (ids.length > 600) return res.status(400).json({ ok: false, error: `Tiene ${ids.length}: son demasiadas para juntarlas de golpe. Dímelo y lo hago yo.` });
-            const DST = q.tabla === 'tipos' ? CIT : PACIENTES, CAMPO = q.tabla === 'tipos' ? 'TIPO DE CITA' : 'ESTADO';
+          } else if (q.op === 'borrar') { // una o varias
+            const ids = [...new Set((Array.isArray(q.ids) ? q.ids : [q.id]).filter(okR))].slice(0, 200); if (!ids.length) return res.status(400).json({ ok: false });
+            const E0 = await todasE(), uso = E0.filter(x => ids.includes(x.id)).reduce((t, x) => t + x.uso, 0);
+            if (uso && !q.confirmar) return res.status(200).json({ ok: false, uso, error: `Las tienen ${uso} ${q.tabla === 'tipos' ? 'citas' : 'pacientes'}. Si las borras, se les quitan.` });
+            for (let i = 0; i < ids.length; i += 10) await at(`${T}?${ids.slice(i, i + 10).map(x => 'records[]=' + x).join('&')}`, { method: 'DELETE' });
+          } else if (q.op === 'juntar') { // pasar todas las citas/pacientes de una o varias a la elegida y borrar las otras
+            const src = [...new Set((Array.isArray(q.ids) ? q.ids : [q.id]).filter(okR))].filter(x => x !== q.a).slice(0, 100);
+            if (!src.length || !okR(q.a)) return res.status(400).json({ ok: false });
+            const E0 = await todasE(); if (!E0.some(x => x.id === q.a)) return res.status(400).json({ ok: false, error: 'No se encuentra la etiqueta de destino' });
+            const recs = await todosT(T, `filterByFormula=${encodeURIComponent('OR(' + src.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${LNK}`);
+            const ids = [...new Set(recs.flatMap(r => r.fields[LNK] || []))];
+            if (ids.length > 900) return res.status(400).json({ ok: false, error: `Son ${ids.length} ${q.tabla === 'tipos' ? 'citas' : 'pacientes'}: demasiadas de golpe. Júntalas en grupos más pequeños.` });
+            const DST = q.tabla === 'tipos' ? CIT : PACIENTES, CAMPO = q.tabla === 'tipos' ? 'TIPO DE CITA' : 'ESTADO', S = new Set(src);
             for (let i = 0; i < ids.length; i += 40) {
               const rs = await todosT(DST, `filterByFormula=${encodeURIComponent('OR(' + ids.slice(i, i + 40).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent(CAMPO)}`);
-              const ch = rs.map(r => ({ id: r.id, fields: { [CAMPO]: [...new Set((r.fields[CAMPO] || []).map(x => x === q.id ? q.a : x))] } }));
+              const ch = rs.map(r => ({ id: r.id, fields: { [CAMPO]: [...new Set((r.fields[CAMPO] || []).map(x => S.has(x) ? q.a : x))] } }));
               for (let k = 0; k < ch.length; k += 10) { const d = await at(DST, { method: 'PATCH', body: JSON.stringify({ records: ch.slice(k, k + 10) }) }); if (d.error) return res.status(400).json({ ok: false, error: d.error.message }); }
             }
-            await at(`${T}/${q.id}`, { method: 'DELETE' });
+            for (let i = 0; i < src.length; i += 10) await at(`${T}?${src.slice(i, i + 10).map(x => 'records[]=' + x).join('&')}`, { method: 'DELETE' });
           }
           global._tiposCache = null;
           const L = (await todasE()).filter(x => x.n).sort((a, b) => b.uso - a.uso || a.n.localeCompare(b.n, 'es'));
