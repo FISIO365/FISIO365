@@ -1384,7 +1384,13 @@ module.exports = async function handler(req, res) {
         const ids = (F['HA RECOMENDADO'] || []).slice(0, 40); if (!ids.length) return res.status(200).json({ ok: true, tarjetas: [] });
         const hoy = new Date().toISOString().slice(0, 10);
         const d = await at(`tblr27u3cvtzfyqI6?filterByFormula=${encodeURIComponent('OR(' + ids.map(i => `RECORD_ID()='${i}'`).join(',') + ')')}`);
-        const tarjetas = (d.records || []).filter(r => r.fields['CÓDIGO'] && !r.fields['CANJEADA'] && (!r.fields['CADUCA'] || r.fields['CADUCA'] >= hoy)).map(r => ({ codigo: r.fields['CÓDIGO'], caduca: r.fields['CADUCA'] || '', por: String(r.fields['Nombre'] || '').trim() }));
+        // También las ganadas aunque la tarjeta aún no se haya enviado (el recomendado ya vino a su primera sesión)
+        const sinCod = (d.records || []).filter(r => !r.fields['CÓDIGO'] && !r.fields['IGNORAR'] && (r.fields['PACIENTE'] || []).length), vinieron = new Set();
+        if (sinCod.length) { const ps = sinCod.slice(0, 15).map(r => r.fields['PACIENTE'][0]);
+          const c = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${ps.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=PacienteRec&pageSize=100`);
+          (c.records || []).forEach(x => (x.fields['PacienteRec'] || []).forEach(id => vinieron.add(id))); }
+        const cad6 = (() => { const c = new Date(); c.setMonth(c.getMonth() + 6); return c.toISOString().slice(0, 10); })();
+        const tarjetas = (d.records || []).filter(r => !r.fields['CANJEADA'] && ((r.fields['CÓDIGO'] && (!r.fields['CADUCA'] || r.fields['CADUCA'] >= hoy)) || (!r.fields['CÓDIGO'] && !r.fields['IGNORAR'] && vinieron.has((r.fields['PACIENTE'] || [])[0])))).map(r => ({ codigo: r.fields['CÓDIGO'] || '', caduca: r.fields['CADUCA'] || cad6, por: String(r.fields['Nombre'] || '').trim() }));
         return res.status(200).json({ ok: true, tarjetas });
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
