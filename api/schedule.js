@@ -450,7 +450,7 @@ const REPORTE_ITEMS = [
   { k: 'tareas', t: 'He hecho mis **tareas pendientes** de hoy', auto: 'tareas' },
   { k: 'historia', t: 'He actualizado todas las **historias clínicas** de hoy' },
   { k: 'manana', t: 'He revisado mi **agenda de mañana** (primeras visitas, citas por confirmar y huecos)' },
-  { k: 'limpieza', t: 'He dejado la **cabina limpia** y lista para mañana', sub: ['**Mesa y muebles** limpios, sin polvo', '**Grifo y lavamanos** limpios', '**Papelera** vacía', '**Rulo y taburete** sobre la camilla', '**Trapo** doblado en su sitio (se cambia cada semana)', '**Toalla de manos** colgada en su sitio (se cambia cada semana)', '**Cables** bien recogidos, ninguno por el suelo', '**Máquinas** apagadas y en su sitio', '**Carrito** ordenado y bien presentado'] },
+  { k: 'limpieza', t: 'He dejado la **cabina limpia** y lista para mañana', sub: ['**Mesa y muebles** limpios y sin polvo', '**Grifo** limpio', '**Papelera** vacía', '**Papelera, rulo y taburete** sobre la camilla', '**Trapo** doblado en su sitio (se cambia cada semana)', '**Toalla de manos** colgada en su sitio (se cambia cada semana)', '**Cables** bien recogidos, ninguno por el suelo', '**Máquinas** apagadas y en su sitio', '**Carrito** ordenado y bien presentado'] },
 ];
 const nmSel = v => String((v && typeof v === 'object') ? (v.name || '') : (v || '')).trim();
 const fisioKey = n => String(n || '').trim().split(' ')[0].toLowerCase();
