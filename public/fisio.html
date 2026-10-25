@@ -275,6 +275,9 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .ci-carg{font-size:12.5px;color:#9a8f87}.ci-ul{font-size:12px;color:#7d6a60;margin-top:5px}
 .ci-row{display:flex;align-items:flex-start;gap:12px;margin-top:12px}.ci-lab{flex:none;width:82px;font-size:11.5px;font-weight:700;color:#7d6a60;text-transform:uppercase;letter-spacing:.05em;padding-top:9px;line-height:1.2}.ci-lab small{display:block;font-size:10px;font-weight:600;text-transform:none;letter-spacing:0;color:#9a8f87}.ci-row .ci-est{margin-top:0;flex:1}
 @media(max-width:560px){.ci-row{flex-direction:column;gap:6px}.ci-lab{width:auto;padding-top:0}.ci-lab small{display:inline;margin-left:4px}}
+/* Call-in: desplegables */
+.ci-dds{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.ci-dd{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;font-family:var(--font);background:#f7f3ef;border:1.5px solid transparent;border-radius:14px;padding:11px 36px 11px 14px;cursor:pointer;min-width:0}.ci-dd small{font-size:11px;font-weight:700;color:#7d6a60;text-transform:uppercase;letter-spacing:.04em}.ci-dd .ci-ddv{font-size:14.5px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.ci-dd i{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;color:#7d6a60}.ci-dd.on{background:#fff;border-color:#1e2a38}.ci-menu .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#9a8f87;margin-right:8px}.ci-menu .dot.ok{background:#16803c}.ci-menu .dot.mal{background:#d93025}.ci-menu .dot.pen{background:#f39a55}.ci-menu{max-height:60vh;overflow:auto}
+@media(max-width:560px){.ci-dds{grid-template-columns:1fr}}
 /* Call-in con más aire */
 .ci .ci-f{padding:22px 22px 20px;border-radius:20px}.ci .ci-ft b{font-size:17px}.ci .ci-row{margin-top:18px;gap:16px}.ci .ci-lab{padding-top:10px}.ci .ci-est{gap:9px}.ci .ci-est button{padding:9px 14px;font-size:13.5px}.ci .ci-bus{margin-top:20px;padding:2px 14px}.ci .ci-h{margin:26px 4px 12px}
 .ci .cap-list{gap:12px}.ci .cap-it{padding:16px 16px 16px 18px;gap:14px;border-radius:18px}.ci .cap-av{width:44px;height:44px}.ci .cap-h b{font-size:15.5px}.ci .ci-er{margin-top:8px;gap:6px}.ci .ci-ul{margin-top:8px}.ci .cap-a{gap:8px}.ci .cap-ic{width:40px;height:40px}.ci .cap-b{height:40px;padding:0 16px}
@@ -5396,19 +5399,26 @@ function renderCallIn(wrap){
  if(!ULT)fetch(`/api/schedule?action=seg-ultimas&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).then(d=>{if(d.ok){ULT=window._ultimasCI=d.ultimas;pintaFis();pinta();}}).catch(()=>{});
  const box=ce('div','ci');wrap.appendChild(box);
  box.innerHTML=`<div class="ci-f"><div class="ci-ft"><b>¿A quién llamamos?</b></div>
-  <div class="ci-row"><span class="ci-lab">Estado</span><div class="ci-est"></div></div>
-  <div class="ci-row"><span class="ci-lab">Fisio<small>última sesión</small></span><div class="ci-fis ci-est"><span class="ci-carg">Cargando…</span></div></div>
+  <div class="ci-dds"><button type="button" class="ci-dd ci-dde"><small>Estado</small><span class="ci-ddv">Elige…</span><i>▾</i></button><button type="button" class="ci-dd ci-ddf"><small>Fisio de la última sesión</small><span class="ci-ddv">Todos</span><i>▾</i></button></div>
   <div class="ci-bus"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="call-q" placeholder="Buscar por nombre…" autocomplete="off"></div></div>
   <div class="ci-h"><span class="ci-n"></span><button type="button" class="tar-resl ci-lim" hidden>Quitar filtros</button></div><div class="cap-list ci-res"></div>`;
  const ce1=box.querySelector('.ci-est'),q=box.querySelector('.call-q'),res=box.querySelector('.ci-res'),nEl=box.querySelector('.ci-n'),lim=box.querySelector('.ci-lim');
  const nom=n=>n.charAt(0)+n.slice(1).toLowerCase();
  const IC_TEL='<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',IC_TAG='<svg viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>';
- const pintaChips=()=>{ce1.innerHTML=ESTADOS.map(e=>{const n=(pacs||[]).filter(p=>(p.estados||[]).includes(e.id)).length;return `<button type="button" data-id="${e.id}" class="${callSel.includes(e.id)?'on':''}"><i class="dot ${estClase(e.nombre)}"></i>${escH(nom(e.nombre))}<b>${n}</b></button>`;}).join('');
-  ce1.querySelectorAll('button').forEach(b=>b.onclick=()=>{const id=b.dataset.id;callSel=callSel.includes(id)?callSel.filter(x=>x!==id):[...callSel,id];pintaChips();pinta();});};
+ // Desplegables (menú propio, no el del navegador): estado (varios) y fisio (uno)
+ const ddMenu=(btn,items,multi,onPick)=>{document.querySelectorAll('.ci-menu').forEach(x=>x.remove());const mn=ce('div','fp-masmenu ci-menu');
+  const pint=()=>{mn.innerHTML=items().map(it=>`<button type="button" data-v="${escH(it.v)}" class="${it.on?'on':''}"><span>${it.dot!=null?`<i class="dot ${it.dot}"></i>`:''}${escH(it.t)}${it.n!=null?` <em>${it.n}</em>`:''}</span>${it.on?'<b>✓</b>':''}</button>`).join('');
+   mn.querySelectorAll('button').forEach(b=>b.onclick=ev=>{ev.stopPropagation();onPick(b.dataset.v);if(multi)pint();else cerrar();});};
+  document.body.appendChild(mn);pint();const rc=btn.getBoundingClientRect();mn.style.top=(rc.bottom+6)+'px';mn.style.minWidth=rc.width+'px';mn.style.left=Math.max(12,Math.min(rc.left,window.innerWidth-mn.offsetWidth-12))+'px';
+  const cerrar=()=>{mn.remove();document.removeEventListener('click',fuera,true);};const fuera=ev=>{if(!mn.contains(ev.target)&&ev.target!==btn&&!btn.contains(ev.target))cerrar();};setTimeout(()=>document.addEventListener('click',fuera,true),0);};
+ const bE=box.querySelector('.ci-dde'),bF=box.querySelector('.ci-ddf');
+ const pintaChips=()=>{const nm=callSel.map(estNom).filter(Boolean).map(nom);bE.querySelector('.ci-ddv').textContent=nm.length?nm.join(' + '):'Elige…';bE.classList.toggle('on',!!nm.length);};
+ bE.onclick=()=>ddMenu(bE,()=>ESTADOS.map(e=>({v:e.id,t:nom(e.nombre),n:(pacs||[]).filter(p=>(p.estados||[]).includes(e.id)).length,on:callSel.includes(e.id),dot:estClase(e.nombre)||''})),true,id=>{callSel=callSel.includes(id)?callSel.filter(x=>x!==id):[...callSel,id];pintaChips();pinta();});
  const fisN=f=>capNomF(String(f||'').split(' ')[0]);
- const pintaFis=()=>{const cf=box.querySelector('.ci-fis');if(!ULT){return;}const sonFisio=new Set((fisios||[]).filter(f=>/fisio/i.test(f.role||'')||f.colegiado).map(f=>fisN(f.nombre)));const cnt={};Object.values(ULT).forEach(u=>{const k=fisN(u.fi);if(k&&(!sonFisio.size||sonFisio.has(k)))cnt[k]=(cnt[k]||0)+1;});
-  cf.innerHTML=`<button type="button" data-f="" class="${ciFisio?'':'on'}">Todos</button>`+Object.keys(cnt).sort().map(k=>`<button type="button" data-f="${escH(k)}" class="${ciFisio===k?'on':''}">${escH(k)}<b>${cnt[k]}</b></button>`).join('');
-  cf.querySelectorAll('button').forEach(b=>b.onclick=()=>{ciFisio=b.dataset.f;pintaFis();pinta();});};
+ let FIS_CNT={};
+ const pintaFis=()=>{bF.querySelector('.ci-ddv').textContent=ciFisio||'Todos';bF.classList.toggle('on',!!ciFisio);if(!ULT){return;}const sonFisio=new Set((fisios||[]).filter(f=>/fisio/i.test(f.role||'')||f.colegiado).map(f=>fisN(f.nombre)));const cnt={};Object.values(ULT).forEach(u=>{const k=fisN(u.fi);if(k&&(!sonFisio.size||sonFisio.has(k)))cnt[k]=(cnt[k]||0)+1;});
+  FIS_CNT=cnt;};
+ bF.onclick=()=>ddMenu(bF,()=>[{v:'',t:'Todos',on:!ciFisio},...Object.keys(FIS_CNT).sort().map(k=>({v:k,t:k,n:FIS_CNT[k],on:ciFisio===k}))],false,v=>{ciFisio=v;pintaFis();pinta();});
  lim.onclick=()=>{callSel=[];ciFisio='';q.value='';pintaChips();pintaFis();pinta();};
  function pinta(){
   const t=q.value.trim().toLowerCase();lim.hidden=!callSel.length&&!t&&!ciFisio;
