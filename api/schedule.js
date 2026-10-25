@@ -448,6 +448,7 @@ const REPORTE_ITEMS = [
   { k: 'llamadas', t: 'He hecho mis **llamadas de seguimiento** de hoy y he apuntado el resultado', auto: 'llamadas' },
   { k: 'chat', t: 'He contestado los **mensajes del chat** de mis pacientes', auto: 'chat' },
   { k: 'tareas', t: 'He hecho mis **tareas pendientes** de hoy', auto: 'tareas' },
+  { k: 'nomejora', t: 'Si algún paciente **no mejora como se esperaba**, he empezado el **protocolo de no mejora** (si no hay ninguno, márcalo igual)' },
   { k: 'historia', t: 'He actualizado todas las **historias clínicas** de hoy' },
   { k: 'manana', t: 'He revisado mi **agenda de mañana** (primeras visitas, citas por confirmar y huecos)' },
   { k: 'limpieza', t: 'He dejado la **cabina limpia** y lista para mañana', sub: ['**Mesa y muebles** limpios y sin polvo', '**Grifo** limpio', '**Papelera** vacía', '**Papelera, rulo y taburete** sobre la camilla', '**Trapo** doblado en su sitio (se cambia cada semana)', '**Toalla de manos** colgada en su sitio (se cambia cada semana)', '**Cables** bien recogidos, ninguno por el suelo', '**Máquinas** apagadas y en su sitio', '**Carrito** ordenado y bien presentado'] },
