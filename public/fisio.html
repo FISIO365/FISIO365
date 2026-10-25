@@ -5451,7 +5451,7 @@ function renderStats(wrap){
     <div class="st-tb st-rk"><div class="st-tr st-th"><span>Fisio</span><span>Ocupación</span><span>Sesiones</span><span>Conversión</span></div>${R.map((r,i)=>`<div class="st-tr"><span><i class="st-pos p${i+1}">${i+1}</i>${escH(r.nombre)}</span><span><b>${r.ocup==null?'—':r.ocup+'%'}</b><small>${r.cap?` ${r.oc}/${r.cap} h`:''}</small><em class="st-barra"><i style="width:${Math.min(r.ocup||0,100)}%"></i></em></span><span>${r.ses}</span><span>${r.conv==null?'—':r.conv+'%'}<small>${r.vin?` (${r.rep}/${r.vin})`:''}</small></span></div>`).join('')}</div>
     <p class="st-p fp-mu">Ordenado por ocupación: de las horas de su horario de los días que trabajó (menos lo bloqueado), cuántas tuvieron paciente. Sesiones = citas hechas. Conversión = de sus primeras visitas, cuántas volvieron.</p></div>`:'';})()}
    <div class="st-box st-it"><div class="st-bt"><b>Ingresos desde el principio</b><span class="st-rt"><button type="button" data-v="mes" class="on">Por mes</button><button type="button" data-v="ano">Por año</button></span></div><div class="st-itc"><p class="st-p fp-mu">Cargando…</p></div></div>
-   <div class="st-box st-gv"><div class="st-bt"><b>Gastos frente a ingresos</b><span class="st-gl"><i class="in"></i>Ingresos<i class="ga"></i>Gastos</span></div><div class="st-gvc"><p class="st-p fp-mu">Cargando…</p></div></div>
+   <div class="st-box st-gv"><div class="st-bt"><b>Banco: ingresos y gastos</b><span class="st-gl"><i class="in"></i>Ingresos<i class="ga"></i>Gastos</span></div><div class="st-gvc"><p class="st-p fp-mu">Cargando…</p></div></div>
    <div class="st-box st-con"><div class="st-bt"><b>¿Cómo nos han conocido?</b><small>Primeras visitas del periodo</small></div><div class="st-cq"><p class="st-p fp-mu">Cargando…</p></div></div>
    <div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
     <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b></p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`;
@@ -5484,15 +5484,14 @@ function renderStats(wrap){
  async function pintaGastos(box){if(!box)return;const c=box.querySelector('.st-gvc');
   try{if(!ST.gas||Date.now()-(ST.gasT||0)>60000){ST.gasT=Date.now();ST.gas=await (await fetch(`/api/schedule?action=seg-gastos&pwd=${encodeURIComponent(apiPwd)}`)).json();}}catch(e){ST.gas={ok:false,error:'No se ha podido conectar'};}
   const G=ST.gas;if(!G.ok||G.error){c.innerHTML=`<p class="st-p fp-mu">No se han podido leer los gastos del banco${G.error?': '+escH(G.error):''}.</p>`;return;}
-  for(let k=0;k<40&&!ST.ingM;k++)await new Promise(r=>setTimeout(r,250));
-  const gi={};(ST.ingM||[]).forEach(x=>{gi[x.m]=x.v;});const gg={};(G.meses||[]).forEach(x=>{gg[x.m]=x.v;});
-  const K=Object.keys(gg).filter(m=>m in gi).sort();if(!K.length){c.innerHTML='<p class="st-p fp-mu">Todavía no hay movimientos del banco en Holded.</p>';return;}
+  const gi={};(G.entradas||[]).forEach(x=>{gi[x.m]=x.v;});const gg={};(G.meses||[]).forEach(x=>{gg[x.m]=x.v;});
+  const K=[...new Set(Object.keys(gg).concat(Object.keys(gi)))].sort();K.forEach(k=>{gi[k]=gi[k]||0;gg[k]=gg[k]||0;});if(!K.length){c.innerHTML='<p class="st-p fp-mu">Todavía no hay movimientos del banco en Holded.</p>';return;}
   const MS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],mx=Math.max(...K.map(k=>Math.max(gi[k],gg[k])),1);
   const eur=v=>Math.round(v).toLocaleString('es-ES')+' €',corto=v=>Math.abs(v)>=1000?(Math.round(v/100)/10).toString().replace('.',',')+'k':Math.round(v);
   const lab=k=>MS[+k.slice(5,7)-1]+(k.slice(5,7)==='01'||k===K[0]?' '+k.slice(2,4):'');
   const ti=K.reduce((t,k)=>t+gi[k],0),tg=K.reduce((t,k)=>t+gg[k],0),hoyM=new Date().toISOString().slice(0,7);
   c.innerHTML=`<div class="st-gb">${K.map(k=>{const d=gi[k]-gg[k];return `<div class="st-gc" title="${escH(lab(k))} · Ingresos ${eur(gi[k])} · Gastos ${eur(gg[k])} · Diferencia ${eur(d)}"><em class="${d<0?'neg':''}">${d>0?'+':''}${corto(d)}</em><div class="st-gp"><i class="in" style="height:${Math.max(2,Math.round(gi[k]/mx*100))}%"></i><i class="ga" style="height:${Math.max(2,Math.round(gg[k]/mx*100))}%"></i></div><span>${escH(lab(k))}</span></div>`;}).join('')}</div>
-   <p class="st-p">Ingresos <b>${eur(ti)}</b> · Gastos <b>${eur(tg)}</b> · Diferencia <b class="${ti-tg<0?'st-neg':''}">${eur(ti-tg)}</b></p><p class="st-p fp-mu" style="font-size:12px">Gastos: salidas de dinero de la cuenta del banco.${K.includes(hoyM)?' El mes actual aún está en curso.':''}</p>
+   <p class="st-p">Ingresos <b>${eur(ti)}</b> · Gastos <b>${eur(tg)}</b> · Diferencia <b class="${ti-tg<0?'st-neg':''}">${eur(ti-tg)}</b></p><p class="st-p fp-mu" style="font-size:12px">Cuenta de FOURTH DYNAMIC S.L. (···2638): ingresos = dinero que entra, gastos = dinero que sale.${K.includes(hoyM)?' El mes actual aún está en curso.':''}</p>
    <details class="st-gd"><summary>Ver detalle por cuenta</summary>${(G.det||[]).map(d=>d.error?`<p><b>${escH(d.nombre)}</b>: ${escH(d.error)}</p>`:`<p><b>${escH(d.nombre)}</b>${d.iban?' ···'+escH(d.iban):''}${d.tipo?' ('+escH(d.tipo)+')':''}${isNaN(d.saldo)||d.saldo==null?'':' · saldo '+eur(d.saldo)}<br>${d.n} movimientos (${d.repetidos} repetidos) del ${escH(d.desde)} al ${escH(d.hasta)} · entradas ${eur(d.entradas)} · salidas ${eur(d.salidas)} · salidas oct ${eur(d.octubre)}</p>${d.ej?`<code>${escH(JSON.stringify(d.ej))}</code>`:''}`).join('')}</details>`;
  }
  async function pintaConocido(box,desde){if(!box)return;ST.con=ST.con||{};
