@@ -787,7 +787,7 @@ module.exports = async function handler(req, res) {
             const vienen = ref.filter(x => (x.fields['NEGOCIO'] || []).includes(r.id) || (toks.length && (() => { const t = capNorm(x.fields['Nombre de quien recomendó']); return toks.some(w => t.includes(w)); })())).map(x => ({ nombre: [x.fields['Nombre'], x.fields['Apellidos']].filter(Boolean).join(' ').trim(), fecha: x.fields['Fecha'] || '' }));
             return { id: r.id, nombre: F['NOMBRE'] || '', tipo: cNm(F['TIPO NEGOCIO']), estado: cNm(F['ESTADO']) || 'PENDIENTE', fecha: F['FECHA'] || '', flyers: !!F['FLAYERS ENTREGADOS'], notas: F['NOTAS'] || '', direccion: F['DIRECCIÓN'] || '', contacto: F['CONTACTO'] || '', tel: F['TELF'] || '', proxima: F['PRÓXIMA VISITA'] || '', historial: F['HISTORIAL'] || '', diez: !!F['10% A SUS CLIENTES'], vienen }; });
           return res.status(200).json({ ok: true, hoy: hoyF,
-            contactos: con.map(r => { const F = r.fields; return { id: r.id, fecha: F['FECHA'] || r.createdTime, nombre: F['NOMBRE'] || '', medio: cNm(F['MEDIO']), mensaje: F['MENSAJE'] || '', citado: cNm(F['CITADO']), motivo: F['MOTIVO'] || '', motivoTipo: cNm(F['MOTIVO TIPO']), tel: F['TELF'] || '', por: F['REGISTRADO POR'] || '' }; }),
+            contactos: con.map(r => { const F = r.fields; return { id: r.id, fecha: F['FECHA'] || r.createdTime, nombre: F['NOMBRE'] || '', medio: cNm(F['MEDIO']), mensaje: F['MENSAJE'] || '', citado: cNm(F['CITADO']), motivo: F['MOTIVO'] || '', motivoTipo: cNm(F['MOTIVO TIPO']), tel: F['TELF'] || '', por: F['REGISTRADO POR'] || '', archivado: !!F['ARCHIVADO'] }; }),
             espera: esp, negocios, libres });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -801,7 +801,7 @@ module.exports = async function handler(req, res) {
             if (c.fecha !== undefined) f['FECHA'] = c.fecha || new Date().toISOString();
             txt('NOMBRE', c.nombre, 120); txt('MENSAJE', c.mensaje); txt('MOTIVO', c.motivo); txt('REGISTRADO POR', c.por, 60);
             if (c.medio !== undefined) f['MEDIO'] = c.medio || null; if (c.citado !== undefined) f['CITADO'] = c.citado || null; if (c.motivoTipo !== undefined) f['MOTIVO TIPO'] = c.motivoTipo || null;
-            if (c.tel !== undefined) f['TELF'] = String(c.tel || '').slice(0, 30);
+            if (c.tel !== undefined) f['TELF'] = String(c.tel || '').slice(0, 30); if (c.archivado !== undefined) f['ARCHIVADO'] = !!c.archivado;
             if (!q.id && !f['FECHA']) f['FECHA'] = new Date().toISOString();
           } else if (q.tabla === 'negocio') {
             txt('NOMBRE', c.nombre, 120); txt('NOTAS', c.notas); txt('DIRECCIÓN', c.direccion, 200); txt('CONTACTO', c.contacto, 120); txt('HISTORIAL', c.historial, 20000);
