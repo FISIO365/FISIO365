@@ -510,7 +510,7 @@ async function emitirFactura(recId, quien, fisioSel) {
 
   const fisioTxt = await fisioDelPaciente(pacId, quien, fisioSel).catch(() => '');
   const items = lineas.map(l => { const it = { name: l.concepto === 'Otros' && notas ? notas.split('\n')[0].slice(0, 120) : l.concepto, units: l.uds, price: l.precio }; if (taxes) it.taxes = taxes; return it; });
-  const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas].filter(Boolean).join('\n') + '\n\n\n' + TEXTO_RGPD, currency: 'EUR', language: 'es', items });
+  const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas].filter(Boolean).join('\n\n\n') + '\n\n\n' + TEXTO_RGPD, currency: 'EUR', language: 'es', items });
   const docId = doc.id;
   if (!docId) throw new Error('Holded no ha devuelto el ticket creado');
   let creado = await holded('/sales-receipts/' + docId).catch(() => ({}));
