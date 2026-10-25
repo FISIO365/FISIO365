@@ -42,6 +42,13 @@ const aNum = v => { if (v == null) return NaN; if (typeof v === 'object') v = v.
 const importeDoc = d => { for (const k of ['total', 'total_amount', 'amount', 'grand_total']) { const n = aNum(d[k]); if (n > 0) return n; }
   const p = (aNum(d.payments_total) || 0) + (aNum(d.payments_pending) || 0); if (p > 0) return p;
   const l = (d.lines || []).reduce((t, x) => t + (aNum(x.price) || 0) * (aNum(x.units) || 1) * (1 - (aNum(x.discount) || 0) / 100), 0); return Math.round(l * 100) / 100 || 0; };
+// Ausencias del equipo (vacaciones, festivos…) que tocan un rango de fechas — tabla AUSENCIAS (Administración)
+let _ausC = { t: 0, v: null };
+async function ausenciasEn(desde, hasta) {
+  if (!_ausC.v || Date.now() - _ausC.t > 60e3) { const d = await at(`tblkezm4bTQ4jJf1X?pageSize=100&filterByFormula=${encodeURIComponent(`NOT(IS_BEFORE({HASTA},DATEADD(TODAY(),-400,'days')))`)}`); if (d.error) throw new Error(d.error.message);
+    _ausC = { t: Date.now(), v: (d.records || []).map(r => ({ fisio: r.fields.FISIO || '', desde: r.fields.DESDE || '', hasta: r.fields.HASTA || r.fields.DESDE || '', tipo: (r.fields.TIPO && r.fields.TIPO.name) || r.fields.TIPO || '', nota: r.fields.NOTA || '' })) }; }
+  return _ausC.v.filter(a => a.desde && a.desde <= hasta && a.hasta >= desde);
+}
 // Gastos al mes desde las cuentas bancarias conectadas en Holded: suma de los movimientos negativos (salidas)
 const fechaMov = m => { for (const k of ['date', 'operation_date', 'value_date', 'booking_date', 'created_at']) { const v = m[k]; if (v == null || v === '') continue;
   if (typeof v === 'number' || /^\d{9,13}$/.test(String(v))) { const n = Number(v); return new Date(n < 1e12 ? n * 1000 : n).toISOString().slice(0, 10); }
@@ -809,6 +816,89 @@ module.exports = async function handler(req, res) {
     const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
     const hoyF = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     try {
+      // ── ADMINISTRACIÓN: equipo, horarios, ausencias, accesos y contraseñas (solo quien tiene acc_admin) ──
+      if (action.startsWith('seg-adm-')) {
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const FT = FISIOS_TABLE, AUS = 'tblkezm4bTQ4jJf1X', DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const ACC = ['agenda', 'pacientes', 'chat', 'checklist', 'callin', 'captacion', 'recordatorios', 'programas', 'ejercicios', 'anamnesis', 'rendimiento', 'estadisticas', 'school', 'admin'];
+        const full = await todosT(FT, 'sort[0][field]=Name');
+        const yo = full.find(r => r.fields && String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
+        if (!yo || String(yo.fields.Password || '').trim() !== String(q.clave || '').trim() || !yo.fields.acc_admin || yo.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Solo dirección puede entrar en Administración. Vuelve a iniciar sesión.' });
+        const pila = s => String(s || '').trim().split(/\s+/)[0];
+        const vista = r => { const F = r.fields || {}, horas = {};
+          String(F['HORAS POR DÍA'] || '').split('\n').forEach(l => { const m = l.trim().match(/^(\S+)\s+([\d.,]+)/); if (!m) return; const d = DIAS.find(x => capNorm(x) === capNorm(m[1])); if (d) horas[d] = Number(m[2].replace(',', '.')); });
+          return { id: r.id, nombre: F.Name || '', role: F.Role || 'fisio', colegiado: F['NºColegiado'] || '', tel: F['TELÉFONO'] || '', email: F.EMAIL || '', alta: F['FECHA ALTA'] || '', baja: F['FECHA BAJA'] || '', notas: F['NOTAS ADMIN'] || '',
+            horas, semana: F['HORAS SEMANA'] || null, control: !!F['CONTROL HORAS'], accesos: Object.fromEntries(ACC.map(k => [k, !!F['acc_' + k]])), foto: (F.Foto && F.Foto[0] && F.Foto[0].thumbnails && F.Foto[0].thumbnails.large && F.Foto[0].thumbnails.large.url) || '',
+            claveDebil: !F.Password || String(F.Password).trim().length < 6 || /^(1234|12345|123456|0000|fisio365)$/i.test(String(F.Password).trim()) }; };
+        const ausencias = async () => (await todosT(AUS, `filterByFormula=${encodeURIComponent(`NOT(IS_BEFORE({HASTA},DATEADD(TODAY(),-60,'days')))`)}&sort[0][field]=DESDE&sort[0][direction]=asc`)).map(r => ({ id: r.id, fisio: r.fields.FISIO || '', desde: r.fields.DESDE || '', hasta: r.fields.HASTA || r.fields.DESDE || '', tipo: (r.fields.TIPO && r.fields.TIPO.name) || r.fields.TIPO || '', nota: r.fields.NOTA || '', por: r.fields['CREADO POR'] || '' }));
+        if (action === 'seg-adm-equipo') {
+          const eq = full.filter(r => r.fields && r.fields.Name).map(vista).sort((a, b) => !!a.baja - !!b.baja || (a.role === 'admin') - (b.role === 'admin') || a.nombre.localeCompare(b.nombre));
+          return res.status(200).json({ ok: true, equipo: eq, ausencias: await ausencias().catch(() => []), dias: DIAS, accesos: ACC });
+        }
+        if (action === 'seg-adm-fisio') {
+          const c = q.fisio || {}, nombre = String(c.nombre || '').trim().replace(/\s+/g, ' ');
+          if (nombre.length < 2) return res.status(400).json({ ok: false, error: 'Escribe el nombre' });
+          const otro = full.find(r => r.id !== c.id && r.fields && String(r.fields.Name || '').trim().toLowerCase() === nombre.toLowerCase());
+          if (otro) return res.status(400).json({ ok: false, error: 'Ya hay alguien con ese nombre' });
+          const mismaPila = full.find(r => r.id !== c.id && r.fields && !r.fields['FECHA BAJA'] && pila(r.fields.Name).toLowerCase() === pila(nombre).toLowerCase());
+          if (mismaPila) return res.status(400).json({ ok: false, error: `Ya hay otra persona que se llama ${pila(nombre)}. En la agenda se distingue por el nombre de pila: ponle otro (por ejemplo «${pila(nombre)} M.»)` });
+          const f = { Name: nombre, Role: c.role === 'admin' ? 'admin' : 'fisio', 'NºColegiado': String(c.colegiado || '').trim(), 'TELÉFONO': String(c.tel || '').trim(), 'NOTAS ADMIN': String(c.notas || '').slice(0, 5000), 'CONTROL HORAS': !!c.control };
+          const em = String(c.email || '').trim(); f.EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em) ? em : null;
+          f['FECHA ALTA'] = /^\d{4}-\d{2}-\d{2}$/.test(c.alta || '') ? c.alta : null;
+          const h = c.horas || {}, lin = []; let tot = 0; DIAS.forEach(d => { const n = Math.max(0, Math.min(14, Number(String(h[d] || '').replace(',', '.')) || 0)); if (n) { lin.push(`${d} ${n}`); tot += n; } });
+          f['HORAS POR DÍA'] = lin.join('\n'); f['HORAS SEMANA'] = Math.round(tot) || null;
+          ACC.forEach(k => { if (c.accesos && k in c.accesos) f['acc_' + k] = !!c.accesos[k]; });
+          if (c.id === yo.id) f.acc_admin = true; // que nadie se quite a sí mismo el acceso a Administración
+          const clave = String(c.clave || '').trim();
+          if (clave) { if (clave.length < 6) return res.status(400).json({ ok: false, error: 'La contraseña tiene que tener al menos 6 caracteres' }); f.Password = clave; }
+          let d;
+          if (c.id) { if (!/^rec[A-Za-z0-9]{14}$/.test(c.id)) return res.status(400).json({ ok: false }); d = await at(`${FT}/${c.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }); }
+          else { if (!clave) return res.status(400).json({ ok: false, error: 'Ponle una contraseña para que pueda entrar' }); if (!c.accesos) ['agenda', 'pacientes', 'chat', 'checklist', 'callin', 'captacion', 'programas', 'ejercicios', 'anamnesis', 'school'].forEach(k => f['acc_' + k] = true);
+            if (!f['FECHA ALTA']) f['FECHA ALTA'] = hoyF; d = await at(FT, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }], typecast: true }) }); d = d.records ? d.records[0] : d; }
+          if (d.error) return res.status(400).json({ ok: false, error: d.error.message || 'No se ha podido guardar' });
+          return res.status(200).json({ ok: true, fisio: vista(d) });
+        }
+        if (action === 'seg-adm-acceso') { // marcar o desmarcar una sección para una persona
+          const r = full.find(x => x.id === q.id); if (!r || !ACC.includes(q.k)) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
+          if (r.id === yo.id && q.k === 'admin' && !q.v) return res.status(400).json({ ok: false, error: 'No puedes quitarte a ti mismo el acceso a Administración' });
+          const d = await at(`${FT}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ['acc_' + q.k]: !!q.v } }) });
+          return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+        }
+        if (action === 'seg-adm-baja') {
+          const r = full.find(x => x.id === q.id); if (!r) return res.status(404).json({ ok: false, error: 'No encontrado' });
+          if (r.id === yo.id) return res.status(400).json({ ok: false, error: 'No puedes darte de baja a ti mismo' });
+          if (q.baja) { // citas con paciente que tiene a partir de hoy (para avisar)
+            const fut = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({PREF.}='${pila(r.fields.Name).replace(/'/g, '')}',NOT(IS_BEFORE({FECHA},'${hoyF}')),{RELACIÓN - CITA}!='',FIND('PENDIENTE',{ESTADO}&''))`)}&fields[]=FECHA`).catch(() => []);
+            if (fut.length && !q.confirmar) return res.status(200).json({ ok: false, citas: fut.length, error: `${pila(r.fields.Name)} tiene ${fut.length} cita${fut.length === 1 ? '' : 's'} pendiente${fut.length === 1 ? '' : 's'} a partir de hoy. Muévelas a otro fisio antes, o confirma la baja igualmente.` });
+          }
+          const d = await at(`${FT}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'FECHA BAJA': q.baja ? hoyF : null } }) });
+          return res.status(200).json({ ok: !d.error, error: d.error && d.error.message, fisio: !d.error && vista(d) });
+        }
+        if (action === 'seg-adm-ausencia') {
+          const a = q.ausencia || {}, ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '');
+          if (!ok(a.desde)) return res.status(400).json({ ok: false, error: 'Elige la fecha' });
+          const hasta = ok(a.hasta) && a.hasta >= a.desde ? a.hasta : a.desde;
+          const tipo = ['Vacaciones', 'Festivo', 'Día libre', 'Baja', 'Formación', 'Otro'].includes(a.tipo) ? a.tipo : 'Vacaciones';
+          const todosF = a.fisio === 'TODOS', quien = todosF ? 'Toda la clínica' : pila(a.fisio);
+          if (!todosF && !full.some(r => r.fields && pila(r.fields.Name).toLowerCase() === quien.toLowerCase())) return res.status(400).json({ ok: false, error: 'Elige el fisio' });
+          const d = await at(AUS, { method: 'POST', body: JSON.stringify({ records: [{ fields: { AUSENCIA: `${tipo} · ${quien} · ${a.desde}${hasta !== a.desde ? ' → ' + hasta : ''}`, FISIO: quien, DESDE: a.desde, HASTA: hasta, TIPO: tipo, NOTA: String(a.nota || '').slice(0, 2000), 'CREADO POR': String(yo.fields.Name || '') } }], typecast: true }) });
+          if (d.error) return res.status(400).json({ ok: false, error: d.error.message }); _ausC = { t: 0, v: null };
+          // Bloquear los huecos libres de esos días (para que no se reserven desde la app) y avisar de las citas con paciente
+          const cond = [`NOT(IS_BEFORE({FECHA},'${a.desde}'))`, `NOT(IS_AFTER({FECHA},'${hasta}'))`]; if (!todosF) cond.push(`{PREF.}='${quien.replace(/'/g, '')}'`);
+          const filas = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(${cond.join(',')})`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []);
+          const est = r => String((r.fields.ESTADO && r.fields.ESTADO.name) || r.fields.ESTADO || '').trim();
+          const libres = filas.filter(r => /^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(est(r)) && !(r.fields['RELACIÓN - CITA'] || []).length);
+          for (let i = 0; i < libres.length; i += 10) await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: libres.slice(i, i + 10).map(r => ({ id: r.id, fields: { ESTADO: 'CITA BLOQUEADA', NOTAS: tipo } })), typecast: true }) });
+          const conPac = filas.filter(r => (r.fields['RELACIÓN - CITA'] || []).length && /PENDIENTE/.test(est(r))).map(r => ({ fecha: String(r.fields.FECHA || '').slice(0, 10), hora: r.fields.HORA || '', fisio: (r.fields['PREF.'] && r.fields['PREF.'].name) || r.fields['PREF.'] || '' })).sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora));
+          return res.status(200).json({ ok: true, bloqueados: libres.length, conPaciente: conPac, ausencias: await ausencias().catch(() => []) });
+        }
+        if (action === 'seg-adm-ausencia-borrar') {
+          if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+          const d = await at(`${AUS}/${q.id}`, { method: 'DELETE' }); _ausC = { t: 0, v: null };
+          return res.status(200).json({ ok: !d.error, ausencias: await ausencias().catch(() => []) });
+        }
+        return res.status(400).json({ ok: false, error: 'Acción no válida' });
+      }
       // ── CONSENTIMIENTOS: buscar, enlazar y pendientes ──
       if (action === 'seg-consent-buscar') {
         const t = capNorm(q.q || '').trim(), td = String(q.q || '').replace(/\D/g, '');
@@ -1170,7 +1260,8 @@ module.exports = async function handler(req, res) {
           const alertasDia = {}; pids.forEach(id => { if (alertas[id]) alertasDia[id] = alertas[id]; });
           // Pacientes sin ningún consentimiento enlazado (de después del formulario digital) para marcarlos en la agenda
           const conCons = new Set((consL || []).flatMap(c => c.pac)), sinConsent = consL ? pids.filter(id => !conCons.has(id) && (altaP[id] || '') >= '2026-01-08') : [];
-          return res.status(200).json({ ok: true, hoy: hoyF, limitado, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
+          const ausDia = okF(q.fecha) ? await ausenciasEn(q.fecha, q.fecha).catch(() => []) : [];
+          return res.status(200).json({ ok: true, hoy: hoyF, limitado, ausencias: ausDia, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'seg-agenda-dar') { // dar cita en una hora (o en un hueco libre concreto)
@@ -1186,8 +1277,10 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-agenda-huecos') { // abrir varias horas de golpe (libres o bloqueadas), sin pisar lo que ya hay
           const fechas = (q.fechas || []).filter(okF).slice(0, 60), horas = (q.horas || []).map(hh).filter(okH).slice(0, 24);
           if (!q.fisio || !fechas.length || !horas.length || !/^(CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|DIA BLOQUEADO|FRANJA BLOQUEADA)$/.test(q.estado || '')) return res.status(400).json({ ok: false, error: 'Faltan datos' });
-          const nuevos = []; let saltadas = 0;
+          const nuevos = []; let saltadas = 0, ausentes = 0;
+          const libre = /LIBRE/.test(q.estado), ausL = libre ? await ausenciasEn(fechas.slice().sort()[0], fechas.slice().sort().slice(-1)[0]).catch(() => []) : [];
           for (const f of fechas) {
+            if (ausL.some(a => a.desde <= f && a.hasta >= f && (a.fisio === 'Toda la clínica' || a.fisio.toLowerCase() === String(q.fisio).toLowerCase()))) { ausentes++; continue; }
             const rows = await delDia(f);
             for (const h of horas) {
               const ya = enHora(rows, h, q.fisio).some(r => !/CANCELADA|REPROGRAMADA|CITA PERDIDA/.test(String(nmA(r.fields['ESTADO']))));
@@ -1196,7 +1289,7 @@ module.exports = async function handler(req, res) {
             }
           }
           for (let i = 0; i < nuevos.length; i += 10) { const d = await at(CIT, { method: 'POST', body: JSON.stringify({ records: nuevos.slice(i, i + 10), typecast: true }) }); if (d.error) throw new Error(d.error.message || 'No se han podido crear'); }
-          return res.status(200).json({ ok: true, creadas: nuevos.length, saltadas });
+          return res.status(200).json({ ok: true, creadas: nuevos.length, saltadas, ausentes });
         }
         if (action === 'seg-agenda-hueco') { // dejar una hora libre (para la app), bloqueada, etc.
           if (!okF(q.fecha) || !okH(q.hora) || !q.fisio || !/^(CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|FRANJA BLOQUEADA|DIA BLOQUEADO|CALL-IN|COMIDA|VIDEOS)$/.test(q.estado || '')) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
@@ -1315,8 +1408,10 @@ module.exports = async function handler(req, res) {
         for (let i = 0; i < lotesP.length; i += 4) (await Promise.all(lotesP.slice(i, i + 4).map(t => todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='REALIZADA',IS_BEFORE({FECHA},DATETIME_PARSE('${desde}','YYYY-MM-DD')),OR(${t.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACI%C3%93N%20-%20CITA`).catch(() => [])))).forEach(rs => rs.forEach(r => (r.fields['RELACIÓN - CITA'] || []).forEach(id => conAntes.add(id))));
         // Ocupación: horas de trabajo a la semana de Jonathan, Sara y Juan (campo HORAS SEMANA de FISIO)
         // Solo cuentan los días que cada fisio trabaja de verdad: un día sin ninguna fila en su agenda (vacaciones, festivo, baja…) no suma horas
-        const fisT = await todosT(FISIOS_TABLE, `fields[]=Name&fields[]=${encodeURIComponent('HORAS SEMANA')}&fields[]=${encodeURIComponent('HORAS POR DÍA')}`).catch(() => []);
-        const EQUIPO = ['jonathan', 'sara', 'juan'], DSEM = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        const fisT = await todosT(FISIOS_TABLE, `fields[]=Name&fields[]=${encodeURIComponent('HORAS SEMANA')}&fields[]=${encodeURIComponent('HORAS POR DÍA')}&fields[]=Role&fields[]=${encodeURIComponent('FECHA BAJA')}`).catch(() => []);
+        // Equipo = fisios con horario (Administración); si no se puede leer, los de siempre
+        const eqH = fisT.filter(f => !f.fields['FECHA BAJA'] && String(f.fields.Role || 'fisio').toLowerCase() === 'fisio' && (f.fields['HORAS POR DÍA'] || Number(f.fields['HORAS SEMANA']) > 0)).map(f => String(f.fields.Name || '').split(' ')[0].toLowerCase()).filter(Boolean);
+        const EQUIPO = eqH.length ? eqH : ['jonathan', 'sara', 'juan'], DSEM = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
         const horario = {}; fisT.forEach(f => { const k = String(f.fields.Name || '').split(' ')[0].toLowerCase(); if (!EQUIPO.includes(k)) return; const h = {};
           String(f.fields['HORAS POR DÍA'] || '').split('\n').forEach(l => { const m = l.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().match(/(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\D*(\d+(?:[.,]\d+)?)/); if (m) h[DSEM.indexOf(m[1])] = +m[2].replace(',', '.'); });
           if (!Object.keys(h).length && +f.fields['HORAS SEMANA']) [1, 2, 3, 4, 5].forEach(d => h[d] = +f.fields['HORAS SEMANA'] / 5);

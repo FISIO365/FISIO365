@@ -26,7 +26,7 @@ export default async function handler(req) {
       });
       const data = await r.json();
       const fisios = (data.records || [])
-        .filter(rec => ['fisio', 'admin'].includes((rec.fields['Role'] || '').toLowerCase()))
+        .filter(rec => !rec.fields['FECHA BAJA'] && ['fisio', 'admin'].includes((rec.fields['Role'] || '').toLowerCase()))
         .sort((a, b) => ((a.fields['Role'] || '').toLowerCase() === 'admin') - ((b.fields['Role'] || '').toLowerCase() === 'admin'))
         .map(rec => ({
           id: rec.id,
@@ -48,7 +48,7 @@ export default async function handler(req) {
       });
       const data = await r.json();
       const fisios = (data.records || [])
-        .filter(rec => rec.fields['Name'] && rec.fields['Password'])
+        .filter(rec => rec.fields['Name'] && rec.fields['Password'] && !rec.fields['FECHA BAJA'])
         .map(rec => ({
           id: rec.id,
           nombre: rec.fields['Name'] || '',
@@ -79,6 +79,7 @@ export default async function handler(req) {
         (r.fields['Name'] || '').trim().toLowerCase() === nombre.trim().toLowerCase()
       );
       if (!rec) return new Response(JSON.stringify({ ok: false, error: 'Usuario no encontrado' }), { headers: corsHeaders });
+      if (rec.fields['FECHA BAJA']) return new Response(JSON.stringify({ ok: false, baja: true, error: 'Este usuario está dado de baja' }), { headers: corsHeaders });
       const pwdAirtable = (rec.fields['Password'] || '').trim();
       if (pwdAirtable !== password.trim()) return new Response(JSON.stringify({ ok: false, error: 'Contraseña incorrecta' }), { headers: corsHeaders });
       const accesos = {};

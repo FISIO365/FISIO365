@@ -112,7 +112,7 @@ export default async function handler(req) {
         fetch(`https://api.airtable.com/v0/${BASE_ID}/tbl2mLUrnaKCFTs6g`, { headers: AT }).then(r => r.json())
       ]);
       // Fisios y administración (Nora), para que el paciente también pueda escribir a recepción
-      const fisios = (fd.records || []).filter(r => ['fisio', 'admin'].includes(String(r.fields.Role || '').toLowerCase()))
+      const fisios = (fd.records || []).filter(r => !r.fields['FECHA BAJA'] && ['fisio', 'admin'].includes(String(r.fields.Role || '').toLowerCase()))
         .map(r => ({ id: r.id, nombre: r.fields.Name || '', admin: String(r.fields.Role || '').toLowerCase() === 'admin', foto: r.fields.Foto?.[0]?.thumbnails?.large?.url || r.fields.Foto?.[0]?.url || '' }));
       const por = {};
       for (const b of aBurbujas(recs)) {
