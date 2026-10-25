@@ -1116,7 +1116,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg></span><span class="sb-txt">Ejercicios</span>
  </div>
  <div class="sb-item" id="sb-rep" onclick="showSection('rep')">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="18" rx="2.5"/><path d="M8.5 9l1.5 1.5 3-3M8.5 15l1.5 1.5 3-3M15.5 9.5h1M15.5 15.5h1"/></svg></span><span class="sb-txt">Reporte</span>
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="18" rx="2.5"/><path d="M8.5 9l1.5 1.5 3-3M8.5 15l1.5 1.5 3-3M15.5 9.5h1M15.5 15.5h1"/></svg></span><span class="sb-txt">Check-list</span>
  </div>
  <div class="sb-item" id="sb-agenda" onclick="showSection('agenda')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span><span class="sb-txt">Agenda</span>
@@ -1243,7 +1243,7 @@ const TOPBAR = {
  stats: ['Estadísticas','El centro semana a semana'],
  cap: ['Captación','Lista de espera y contactos'],
  ejer: ['Ejercicios','Biblioteca de vídeos'],
- rep: ['Reporte diario','Marca y envía antes de irte']
+ rep: ['Check-list','Marca y envía antes de irte']
 };
 
 const CFG = {
@@ -5646,28 +5646,28 @@ async function renderReporte(wrap){
  const pinta=()=>{
   let h='';
   if(d.resumen){const env=d.resumen.enviados||{};const fs=d.resumen.fisios||[];
-   if(fs.length)h+=`<div class="rp-c"><div class="rp-h"><div><b>Reportes del equipo</b><small>Fisios con citas hoy y si ya han enviado su reporte</small></div></div>${fs.map(f=>{const e=env[String(f.fisio).split(' ')[0].toLowerCase()];return `<div class="rp-eq"><b>${escH(f.fisio)} <small style="font-weight:400;color:#7d6a60">· ${f.citas} citas</small></b>${e?`<span class="si">✓ ${hora(e.enviado)}${e.pendientes?' · '+e.pendientes+' pend.':''}</span>`:`<span class="${new Date().getHours()>=19?'no':'pe'}">Sin enviar</span>`}</div>`;}).join('')}</div>`;
+   if(fs.length)h+=`<div class="rp-c"><div class="rp-h"><div><b>Check-list del equipo</b><small>Fisios con citas hoy y si ya lo han enviado</small></div></div>${fs.map(f=>{const e=env[String(f.fisio).split(' ')[0].toLowerCase()];return `<div class="rp-eq"><b>${escH(f.fisio)} <small style="font-weight:400;color:#7d6a60">· ${f.citas} citas</small></b>${e?`<span class="si">✓ ${hora(e.enviado)}${e.pendientes?' · '+e.pendientes+' pend.':''}</span>`:`<span class="${new Date().getHours()>=19?'no':'pe'}">Sin enviar</span>`}</div>`;}).join('')}</div>`;
 }
   if(esFisio){
    const items=d.items||[],chk=Object.fromEntries(((d.dia&&d.dia.checks)||[]).map(c=>[c.k,c]));
    const n=items.filter(x=>marc.has(x.k)).length,tot=items.length,todo=n===tot;
-   if(d.enviado)h+=`<div class="rp-ok">✓ Reporte enviado a las ${hora(d.enviado.enviado)}${todo?'':' · puedes volver a enviarlo'}</div>`;
-   h+=`<div class="rp-c"><div class="rp-h"><div><b>Mi reporte de hoy</b><small>${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}${d.dia&&d.dia.citas?' · '+d.dia.hechas+(d.dia.hechas===1?' sesión hecha':' sesiones hechas'):' · hoy no tienes citas'}</small></div><span class="rp-n${todo?' ok':''}">${n}/${tot}</span></div><div class="rp-bar${todo?' ok':''}"><i style="width:${Math.round(n/tot*100)}%"></i></div>`+
+   if(d.enviado)h+=`<div class="rp-ok">✓ Check-list enviado a las ${hora(d.enviado.enviado)}${todo?'':' · puedes volver a enviarlo'}</div>`;
+   h+=`<div class="rp-c"><div class="rp-h"><div><b>Mi check-list de hoy</b><small>${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}${d.dia&&d.dia.citas?' · '+d.dia.hechas+(d.dia.hechas===1?' sesión hecha':' sesiones hechas'):' · hoy no tienes citas'}</small></div><span class="rp-n${todo?' ok':''}">${n}/${tot}</span></div><div class="rp-bar${todo?' ok':''}"><i style="width:${Math.round(n/tot*100)}%"></i></div>`+
     items.map(x=>{const c=x.auto&&chk[x.auto];const pend=c&&c.items.length?c.items:null;
      return `<button type="button" class="rp-it${marc.has(x.k)?' on':''}" data-k="${x.k}"><span class="rp-ck">${marc.has(x.k)?'✓':''}</span><span class="rp-tx">${negr(x.t)}${x.sub&&x.sub.length?`<span class="rp-sub">${x.sub.map(z=>`<span>${negr(z)}</span>`).join('')}</span>`:''}${pend?`<span class="rp-av">${c.aviso?'Ojo':'El panel ve '+pend.length+' pendiente'+(pend.length>1?'s':'')}: ${pend.slice(0,6).map(i=>(i.id?`<u data-ficha="${i.id}" data-nom="${escH(i.nombre)}">${escH(capTit(i.nombre))}</u>`:`<b>${escH(i.nombre)}</b>`)+(i.extra?' ('+escH(i.extra)+')':'')).join(', ')}${pend.length>6?' y '+(pend.length-6)+' más':''}</span>`:''}</span></button>`;}).join('')+
     `<div class="hz-lab" style="margin-top:14px">¿Algo que contar? <span>(opcional)</span></div><textarea class="rp-nota" rows="2" placeholder="Ej.: falta gel, la camilla 2 hace ruido…">${escH((d.enviado&&d.enviado.nota)||'')}</textarea>
-    <button type="button" class="rp-env">${d.enviado?'Volver a enviar':'Enviar reporte'}</button></div>`;
-  } else if(!d.resumen) h+='<div class="rp-c">El reporte diario es para los fisios.</div>';
+    <button type="button" class="rp-env">${d.enviado?'Volver a enviar':'Enviar check-list'}</button></div>`;
+  } else if(!d.resumen) h+='<div class="rp-c">El check-list es para los fisios.</div>';
   box.innerHTML=h;
   box.querySelectorAll('.rp-it').forEach(b=>b.onclick=e=>{if(e.target.closest('u'))return;const k=b.dataset.k;marc.has(k)?marc.delete(k):marc.add(k);guarda();const nota=box.querySelector('.rp-nota');const v=nota?nota.value:'';pinta();const n2=box.querySelector('.rp-nota');if(n2)n2.value=v;});
   box.querySelectorAll('u[data-ficha]').forEach(u=>u.onclick=e=>{e.stopPropagation();abrirFichaPaciente(u.dataset.ficha,u.dataset.nom);});
   const env=box.querySelector('.rp-env');if(!env)return;let armado=false;
   env.onclick=async()=>{const falta=(d.items||[]).filter(x=>!marc.has(x.k)).length;
-   if(falta&&!armado){armado=true;env.classList.add('armado');env.textContent=`Faltan ${falta} sin marcar · toca otra vez para enviar igual`;setTimeout(()=>{if(armado){armado=false;env.classList.remove('armado');env.textContent=d.enviado?'Volver a enviar':'Enviar reporte';}},5000);return;}
+   if(falta&&!armado){armado=true;env.classList.add('armado');env.textContent=`Faltan ${falta} sin marcar · toca otra vez para enviar igual`;setTimeout(()=>{if(armado){armado=false;env.classList.remove('armado');env.textContent=d.enviado?'Volver a enviar':'Enviar check-list';}},5000);return;}
    armado=false;env.disabled=true;env.textContent='Enviando…';
    try{const r=await (await fetch('/api/schedule?action=seg-cierre-enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,fisio:yo,marcados:[...marc],nota:(box.querySelector('.rp-nota')||{}).value||''})})).json();
-    if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast('Reporte enviado. ¡Buen trabajo!',true);showSection('rep');}
-   catch(e){env.disabled=false;env.textContent=d.enviado?'Volver a enviar':'Enviar reporte';toast(e.message,false);}};
+    if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast('Check-list enviado. ¡Buen trabajo!',true);showSection('rep');}
+   catch(e){env.disabled=false;env.textContent=d.enviado?'Volver a enviar':'Enviar check-list';toast(e.message,false);}};
  };
  pinta();
 }

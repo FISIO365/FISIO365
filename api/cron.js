@@ -81,10 +81,10 @@ async function resumenFacturacion(ayer) {
   <p style="margin:0 0 4px">Sesiones hechas: <b>${hechas}</b> · Facturas emitidas: <b>${facs.length}</b> (${eur(total)})</p>
   ${Object.keys(caja).length ? `<p style="margin:6px 0 0;font-size:13.5px;color:#5c4f47">Caja: ${Object.entries(caja).map(([m, t]) => `${escH(m)} <b>${eur(t)}</b>`).join(' · ')}</p>` : ''}
   ${(() => { const fs = Object.entries(rep); if (!fs.length) return '';
-    return `<h3 style="margin:22px 0 6px;font-size:15px">Reporte diario de los fisios</h3><table style="width:100%;border-collapse:collapse;font-size:13.5px">${fs.map(([f, x]) => { const e = envs[String(f).split(' ')[0].toLowerCase()];
+    return `<h3 style="margin:22px 0 6px;font-size:15px">Check-list de los fisios</h3><table style="width:100%;border-collapse:collapse;font-size:13.5px">${fs.map(([f, x]) => { const e = envs[String(f).split(' ')[0].toLowerCase()];
       const noMarc = e ? String(e.marcados || '').split('\n').filter(l => l.startsWith('✗')).map(l => l.slice(2)) : [];
       const vistos = x.checks.filter(c => !c.aviso && c.items.length).map(c => `${escH(c.t)}: ${c.items.map(i => escH(i.nombre) + (i.extra ? ' (' + escH(i.extra) + ')' : '')).join(', ')}`);
-      const estado = e ? `<b style="color:#16803c">✓ Enviado ${new Date(e.enviado).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' })}</b>` : `<b style="color:#b42318">✗ No ha enviado el reporte</b>`;
+      const estado = e ? `<b style="color:#16803c">✓ Enviado ${new Date(e.enviado).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' })}</b>` : `<b style="color:#b42318">✗ No ha enviado el check-list</b>`;
       return `<tr><td style="padding:10px 0;border-bottom:1px solid #eee;vertical-align:top"><b>${escH(f)}</b><br><span style="color:#7d6a60;font-size:12px">${x.hechas} ${x.hechas === 1 ? 'sesión hecha' : 'sesiones hechas'}</span></td><td style="padding:10px 0 10px 10px;border-bottom:1px solid #eee">${estado}${noMarc.length ? `<br><span style="color:#b45309">Sin marcar: ${noMarc.map(escH).join(' · ')}</span>` : e ? '<br><span style="color:#16803c">Todo marcado</span>' : ''}${vistos.length ? `<br><span style="color:#b42318">El panel ve pendiente → ${vistos.join(' · ')}</span>` : ''}${e && e.nota ? `<br><span style="color:#5c4f47">Nota: «${escH(e.nota)}»</span>` : ''}</td></tr>`; }).join('')}</table>`; })()}
   ${tablaRendimiento(rendDia, 'Rendimiento del día', true)}
   ${rendSemana ? tablaRendimiento(rendSemana, 'Rendimiento de la semana pasada', true) : ''}
@@ -97,7 +97,7 @@ async function resumenFacturacion(ayer) {
   ${facs.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Facturas emitidas</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${facs.map(r => fila(escH(r.fields['Nº FACTURA'] || ''), escH([r.fields['CONCEPTO 1'], r.fields['CONCEPTO 2']].filter(Boolean).join(' + ')) + (r.fields['MODO DE PAGO'] ? ' · ' + escH(r.fields['MODO DE PAGO']) : ''), eur(r.fields['TOTAL']))).join('')}</table>` : ''}
   </div></div>`;
   const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: String(process.env.RESUMEN_EMAIL || 'info@fisioterapia365.com').split(/[,;\s]+/).filter(Boolean).map(email => ({ email })), subject: `Resumen ${fechaTxt}${Object.keys(rep).some(f => !envs[String(f).split(' ')[0].toLowerCase()]) ? ' · ✗ falta algún reporte' : ''}${sf.lista.length ? ' · ⚠️ ' + sf.lista.length + ' pacientes sin facturar' : ''}${rendSemana ? ' · + semana' : ''}`, htmlContent: html }) });
+    body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: String(process.env.RESUMEN_EMAIL || 'info@fisioterapia365.com').split(/[,;\s]+/).filter(Boolean).map(email => ({ email })), subject: `Resumen ${fechaTxt}${Object.keys(rep).some(f => !envs[String(f).split(' ')[0].toLowerCase()]) ? ' · ✗ falta algún check-list' : ''}${sf.lista.length ? ' · ⚠️ ' + sf.lista.length + ' pacientes sin facturar' : ''}${rendSemana ? ' · + semana' : ''}`, htmlContent: html }) });
   return r.ok ? 'enviado' : 'error brevo ' + r.status;
 }
 
