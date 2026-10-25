@@ -466,7 +466,14 @@ module.exports = async function handler(req, res) {
           if (ps.length) dudosos[c.id] = { id: ps[0].id, nombre: ps[0].fields['FULL NAME'] || '' };
         }
         const huerfanos = lista.filter(c => !c.pac.length && !c.ignorar && c.fecha >= desde).map(c => ({ id: c.id, tipo: c.tipo, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, sugerido: dudosos[c.id] || null }));
-        return res.status(200).json({ ok: true, hoy: hoyF, enlazados, sinCons, huerfanos });
+        // Formularios enlazados a más de un paciente, o enlazados a alguien con otro nombre (últimos 4 meses)
+        const dobles = lista.filter(c => c.pac.length > 1 && !c.ignorar), raros0 = lista.filter(c => c.pac.length === 1 && !c.ignorar && !c.papel && c.fecha >= desde);
+        const idsN = [...new Set([...dobles.flatMap(c => c.pac), ...raros0.map(c => c.pac[0])])], nomP = {};
+        for (let i = 0; i < idsN.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + idsN.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME`).catch(() => [])).forEach(p => { nomP[p.id] = p.fields['FULL NAME'] || ''; });
+        const revisar = [
+          ...dobles.map(c => ({ id: c.id, tipo: c.tipo, fecha: c.fecha, nombre: c.nombre, motivo: 'doble', pacientes: c.pac.map(id => ({ id, nombre: nomP[id] || '—' })) })),
+          ...raros0.filter(c => nomP[c.pac[0]] && !nombresCuadran(c.nombre, nomP[c.pac[0]])).map(c => ({ id: c.id, tipo: c.tipo, fecha: c.fecha, nombre: c.nombre, motivo: 'nombre', pacientes: [{ id: c.pac[0], nombre: nomP[c.pac[0]] }] }))];
+        return res.status(200).json({ ok: true, hoy: hoyF, enlazados, sinCons, huerfanos, revisar });
       }
       if (action === 'seg-consent-doc') {
         // Datos completos de un consentimiento para crear su PDF (con la firma). La firma se trae de Tally la primera vez y se guarda en Airtable.
