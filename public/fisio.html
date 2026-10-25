@@ -1039,6 +1039,13 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .adm-modos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.adm-modos button{font-family:var(--font);text-align:left;background:#fff;border:1.5px solid #ece6e0;border-radius:14px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px;color:#1e2a38}.adm-modos button b{font-size:13.5px}.adm-modos button small{font-size:11.5px;color:var(--muted)}.adm-modos button.on{border-color:#1e2a38;background:#1e2a38;color:#fff}.adm-modos button.on small{color:rgba(255,255,255,.75)}
 .adm-at.hor{color:#1e3a5f;background:#e8eef6}
 @media(max-width:560px){.adm-modos{grid-template-columns:1fr}}
+.adm-ls{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.adm-tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;background:#f3efea;border-radius:99px;padding:5px 6px 5px 12px}.adm-tag button{border:none;background:#fff;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:10px;color:#7d6a60}
+.adm-cps{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}.adm-cp1{display:grid;grid-template-columns:1fr 112px 62px 28px;gap:8px;align-items:center}.adm-cp1 .ag-in{width:100%;box-sizing:border-box;min-width:0}.adm-eur{position:relative}.adm-eur i{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--muted);font-size:13px}.adm-eur .ag-in{padding-right:26px}.adm-auto{font-style:normal;font-size:11px;font-weight:600;color:#2f6b45;background:#eaf5ee;border-radius:99px;padding:4px 9px;text-align:center}.adm-auto.vac{visibility:hidden}
+.adm-er{display:flex;align-items:center;gap:10px;border-top:1px solid #f1ece7;padding:8px 0}.adm-er:first-child{border-top:none}.adm-en{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.adm-er small{flex:none;font-size:12px;color:var(--muted)}.adm-em1{flex:none;border:1px solid #ece6e0;background:#fff;border-radius:99px;width:34px;height:28px;cursor:pointer;color:#5f554e;font-weight:700;letter-spacing:1px}
+.adm-etl{margin-bottom:10px}.adm-mas{font-family:var(--font);font-size:13px;font-weight:600;color:#c2552e;background:none;border:none;padding:8px 0;cursor:pointer}
+.adm-jl{display:flex;flex-direction:column;max-height:50vh;overflow-y:auto}.adm-jl button{display:flex;justify-content:space-between;gap:10px;font-family:var(--font);font-size:14px;text-align:left;background:none;border:none;border-top:1px solid #f1ece7;padding:10px 2px;cursor:pointer}.adm-jl small{color:var(--muted)}
+@media(max-width:560px){.adm-cp1{grid-template-columns:1fr 92px 28px}.adm-cp1 .adm-auto{display:none}}
+.ag-tarde{margin:8px 0 2px;font-size:12.5px;line-height:1.45;color:#7a1c14;background:#fdecea;border-radius:12px;padding:9px 12px}.ag-tarde b{font-weight:600}
 .ag-ausb{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.ag-aus{background:#fff4e8;border:1px solid #f6d3b3;color:#8a4a1f;border-radius:999px;padding:5px 12px;font-size:12.5px}.ag-aus b{font-weight:600}
 .ag-sinf{background:#fff6e8;border-radius:14px;padding:10px 12px;margin-bottom:10px}.ag-sinf>b{display:block;font-size:13.5px;color:#b45309}.ag-sinf>small{display:block;font-size:12px;color:#7d6a60;margin-bottom:8px}
 
@@ -1380,7 +1387,7 @@ async function doLogin(silencioso){
  $('loginScreen').style.display='none';
  $('panelScreen').style.display='block';
  window.scrollTo({top:0,behavior:'instant'});
- await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso(),loadEstados()]);
+ await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso(),loadEstados(),loadConf()]);
  checkMensajesBadge();
  setInterval(checkMensajesBadge, 60000); // revisar cada minuto
  aplicarRole();
@@ -1452,10 +1459,18 @@ function aplicarRole(){
  pintarPerfil();
 }
 
+// Listas y ajustes de Administración (conceptos y precios, formas de pago, motivos, tipos de negocio, zonas, tarjeta regalo…)
+let CONF=null;const TJ_IMP=()=>{const v=CONF&&CONF.tarjeta&&Number(CONF.tarjeta.importe);return v>0?(Math.round(v*100)/100).toString().replace('.',','):'10';};
+function aplicarConf(c){if(!c)return;CONF=c;const L=c.listas||{};
+ if(Array.isArray(L.conceptos)&&L.conceptos.length){FAC_CONCEPTOS=L.conceptos.map(x=>x.n);FAC_PRECIO={};L.conceptos.forEach(x=>{if(x.p!==''&&x.p!=null)FAC_PRECIO[x.n]=x.p;});}
+ if(Array.isArray(L.pagos)&&L.pagos.length)FAC_PAGOS=L.pagos;if(Array.isArray(L.motivos))CAP_MOTIVO=L.motivos;if(Array.isArray(L.negocios))CAP_TIPO=L.negocios;if(Array.isArray(L.zonas)&&L.zonas.length)EJ_ZONAS=L.zonas;}
+async function loadConf(){try{const r=await (await fetch(`/api/schedule?action=seg-config&pwd=${encodeURIComponent(apiPwd)}`)).json();if(r.ok)aplicarConf(r.conf);}catch(e){}}
 async function loadFisios(){
  try{
  const r=await fetch(`/api/fisios?pwd=${encodeURIComponent(apiPwd)}`);
  const d=await r.json(); fisios=d.fisios||[];
+ // Nombres para «¿quién le contacta?» y tareas: el equipo en activo (Administración)
+ const nn=fisios.map(f=>String(f.nombre||'').trim().split(' ')[0]).filter(Boolean).map(n=>n.charAt(0).toUpperCase()+n.slice(1));if(nn.length)TAR_NOMBRES=[...new Set([...TAR_NOMBRES.filter(n=>nn.includes(n)),...nn])];
  }catch(e){}
 }
 async function loadBiblio(){
@@ -5326,6 +5341,7 @@ function agAbrirCita(c,onDone){
  const m=hzModal(`<div class="hz-top"><div><small>${escH(agCab(FD,c.hora,c.fisio))}</small><b><button type="button" class="ag-pac">${escH(c.paciente||'Paciente')} ›</button></b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Estado</div><div class="seg-rap ag-est">${AG_EST.map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
   <label class="ag-lib" hidden><input type="checkbox" ${futuro?'checked':''}> Dejar la hora libre para otro paciente</label>
+  <div class="ag-tarde" hidden></div>
   <button type="button" class="exp-seg ag-conf"><i></i>Confirmada</button>
   <div class="hz-lab">Etiquetas</div><div class="ag-tip"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
@@ -5335,7 +5351,11 @@ function agAbrirCita(c,onDone){
  const tg=agEtiquetas(m.querySelector('.ag-tip'),c.tipos);
  m.querySelector('.ag-pac').onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.paciente);};
  const lib=m.querySelector('.ag-lib');
- const pe=()=>{m.querySelectorAll('.ag-est button').forEach(b=>b.classList.toggle('on',b.dataset.v===est));lib.hidden=!(/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(est)&&!/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(c.estado));};pe();
+ // Cancelación tardía: avisa con menos horas de las de la política (Administración › Ajustes)
+ const hPol=CONF&&CONF.cancelacion?Number(CONF.cancelacion.horas):24,tarde=m.querySelector('.ag-tarde');
+ const faltan=(()=>{const h=String(c.hora||'').match(/^(\d{1,2}):(\d{2})/);if(!h)return null;const t=new Date(`${FD}T${h[1].padStart(2,'0')}:${h[2]}:00`);return (t-Date.now())/36e5;})();
+ const pe=()=>{const esT=est==='CANCELADA'&&est0!=='CANCELADA'&&hPol>0&&faltan!=null&&faltan<hPol&&faltan>-12;tarde.hidden=!esT;if(esT)tarde.innerHTML=`<b>Cancelación tardía</b> · ha avisado con ${faltan<1?'menos de 1 hora':'unas '+Math.floor(faltan)+' h'} y la política pide ${hPol} h. Apúntalo en las notas si se le cobra.`;
+  m.querySelectorAll('.ag-est button').forEach(b=>b.classList.toggle('on',b.dataset.v===est));lib.hidden=!(/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(est)&&!/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(c.estado));};pe();
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{est=b.dataset.v;pe();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
@@ -5455,12 +5475,12 @@ function admClave(){const c='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i
 async function renderAdmin(wrap){
  const card=ce('div','adm');wrap.appendChild(card);
  const A=fisioActual.accesos||{};if(!A.admin){card.innerHTML='<div class="card"><div class="fac-vacio">Esta sección es solo para dirección.</div></div>';return;}
- card.innerHTML=`<div class="adm-tabs">${[['equipo','Equipo'],['aus','Vacaciones y horarios'],['acc','Accesos'],['chk','Check-list'],['mail','Emails']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div><div class="adm-body"><div class="fac-vacio">Cargando…</div></div>`;
+ card.innerHTML=`<div class="adm-tabs">${[['equipo','Equipo'],['aus','Vacaciones y horarios'],['acc','Accesos'],['chk','Check-list'],['listas','Listas'],['ajustes','Ajustes'],['mail','Emails']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div><div class="adm-body"><div class="fac-vacio">Cargando…</div></div>`;
  const body=card.querySelector('.adm-body');
  card.querySelectorAll('.adm-tabs button').forEach(b=>b.onclick=()=>{ADM.tab=b.dataset.k;pinta();});
  async function cargar(){try{const r=await admPost('seg-adm-equipo');if(!r.ok)throw new Error(r.error||'No se ha podido cargar');ADM.d=r;}catch(e){body.innerHTML=`<div class="fac-vacio">${escH(e.message)}</div>`;return false;}return true;}
  function pinta(){card.querySelectorAll('.adm-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===ADM.tab));if(!ADM.d)return;
-  if(ADM.tab==='equipo')pintaEquipo();else if(ADM.tab==='aus')pintaAus();else if(ADM.tab==='chk')pintaChk();else if(ADM.tab==='mail')pintaMail();else pintaAcc();}
+  if(ADM.tab==='equipo')pintaEquipo();else if(ADM.tab==='aus')pintaAus();else if(ADM.tab==='chk')pintaChk();else if(ADM.tab==='mail')pintaMail();else if(ADM.tab==='listas')pintaListas();else if(ADM.tab==='ajustes')pintaAjustes();else pintaAcc();}
  async function ajustesAdm(){if(!ADM.aj){body.innerHTML='<div class="fac-vacio">Cargando…</div>';const r=await admPost('seg-adm-ajustes');if(!r.ok){body.innerHTML=`<div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div>`;return null;}ADM.aj=r;}return ADM.aj;}
  const activos=()=>ADM.d.equipo.filter(f=>!f.baja);
  const av=f=>f.foto?`<img src="${escH(f.foto)}" alt="">`:escH(iniciales(f.nombre));
@@ -5599,6 +5619,76 @@ async function renderAdmin(wrap){
    const r=await admPost('seg-adm-checklist',{items:L.map(x=>({k:x.k,t:x.t,sub:x.sub,off:x.off}))});
    if(!r.ok){toast(r.error||'No se ha podido guardar',false);b.disabled=false;b.textContent='Guardar cambios';return;}
    ADM.aj.checklist=r.checklist;ADM.chk=null;ADM.chkSucio=false;pintaChk();toast('Guardado: los fisios ya la ven así',true);};
+ }
+ // ── Listas: estados del paciente, tipos de cita, conceptos y precios, formas de pago, motivos, negocios, zonas ──
+ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule?action=seg-config&pwd=${encodeURIComponent(apiPwd)}`)).json().catch(()=>({}));if(!r.ok)return null;ADM.conf=r.conf;}return ADM.conf;}
+ async function guardarConf(seccion,valor,b){const t0=b.textContent;b.disabled=true;b.textContent='Guardando…';const r=await admPost('seg-adm-config',{seccion,valor});b.disabled=false;b.textContent=t0;
+  if(!r.ok){toast(r.error||'No se ha podido guardar',false);return false;}ADM.conf=r.conf;aplicarConf(r.conf);toast('Guardado',true);return true;}
+ async function pintaListas(){body.innerHTML='<div class="fac-vacio">Cargando…</div>';const c=await admConf();if(!c||ADM.tab!=='listas'){if(!c)body.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
+  const L=JSON.parse(JSON.stringify(c.listas));
+  const simple=(k,tit,sub,ph)=>`<div class="adm-card" data-k="${k}"><div class="adm-h"><b>${tit}</b><small>${sub}</small></div><div class="adm-ls"></div>
+   <div class="adm-cl"><input class="ag-in l-n" placeholder="${ph}"><button type="button" class="adm-gen l-a">Añadir</button></div><div class="hz-bts"><button type="button" class="hz-ok l-g">Guardar</button></div></div>`;
+  body.innerHTML=`<div class="adm-card adm-et" data-t="estados"><div class="adm-h"><b>Estados del paciente</b><small>Las etiquetas que se ponen en la ficha (Activo, Alta, Abandono…).</small></div><div class="adm-etl"><div class="fac-vacio">Cargando…</div></div><div class="adm-cl"><input class="ag-in e-n" placeholder="Nuevo estado"><button type="button" class="adm-gen e-a">Añadir</button></div></div>
+   <div class="adm-card adm-et" data-t="tipos"><div class="adm-h"><b>Tipos de cita</b><small>Las etiquetas de las citas en la agenda. Si hay dos que son lo mismo, usa «Juntar con…» y las citas pasan a la buena.</small></div><input class="ag-in e-bus" placeholder="Buscar…" style="width:100%;box-sizing:border-box;margin-bottom:6px"><div class="adm-etl"><div class="fac-vacio">Cargando…</div></div><div class="adm-cl"><input class="ag-in e-n" placeholder="Nuevo tipo de cita"><button type="button" class="adm-gen e-a">Añadir</button></div></div>
+   <div class="adm-card" data-k="conceptos"><div class="adm-h"><b>Conceptos y precios al cobrar</b><small>Lo que sale al hacer un ticket. Con precio, se rellena solo al elegirlo (se puede cambiar en cada cobro). Los que empiezan por «Sesión» cuentan en las sesiones pagadas del paciente.</small></div><div class="adm-cps"></div>
+    <button type="button" class="adm-add c-ad">＋ Añadir concepto</button><div class="hz-bts"><button type="button" class="hz-ok c-gu">Guardar</button></div></div>
+   ${simple('pagos','Formas de pago','Las que salen al cobrar.','Ej.: Datáfono 2')}
+   ${simple('motivos','Motivos de no citarse (Call-in)','Por qué alguien que contactó no pidió cita. Salen en Estadísticas.','Ej.: Le pilla lejos')}
+   ${simple('negocios','Tipos de negocio (Captación)','Para clasificar los negocios del barrio.','Ej.: Peluquería')}
+   ${simple('zonas','Zonas de ejercicios','Para ordenar la biblioteca de ejercicios.','Ej.: Mandíbula')}`;
+  // listas simples
+  body.querySelectorAll('.adm-card[data-k]:not([data-k=conceptos])').forEach(card=>{const k=card.dataset.k,ls=card.querySelector('.adm-ls');
+   const p=()=>{ls.innerHTML=L[k].map((v,i)=>`<span class="adm-tag">${escH(v)}<button type="button" data-i="${i}" aria-label="Quitar">✕</button></span>`).join('')||'<p class="adm-nota">Vacía.</p>';ls.querySelectorAll('button').forEach(b=>b.onclick=()=>{L[k].splice(+b.dataset.i,1);p();});};p();
+   const add=()=>{const i=card.querySelector('.l-n'),v=i.value.trim();if(!v)return;if(!L[k].some(x=>x.toLowerCase()===v.toLowerCase()))L[k].push(v);i.value='';p();};
+   card.querySelector('.l-a').onclick=add;card.querySelector('.l-n').onkeydown=e=>{if(e.key==='Enter')add();};
+   card.querySelector('.l-g').onclick=e=>guardarConf('listas',L,e.target);});
+  // conceptos con precio
+  const cps=body.querySelector('.adm-cps');const pc=()=>{cps.innerHTML=L.conceptos.map((x,i)=>`<div class="adm-cp1" data-i="${i}"><input class="ag-in c-nm" value="${escH(x.n)}" placeholder="Concepto"><span class="adm-eur"><input class="ag-in c-pr" inputmode="decimal" value="${x.p===''||x.p==null?'':String(x.p).replace('.',',')}" placeholder="Precio"><i>€</i></span>${/^sesi/i.test(x.n)?'<em class="adm-auto" title="Cuenta en las sesiones pagadas">Sesión</em>':'<em class="adm-auto vac"></em>'}<button type="button" class="adm-ax" aria-label="Quitar">✕</button></div>`).join('');
+   cps.querySelectorAll('.adm-cp1').forEach(r=>{const i=+r.dataset.i;r.querySelector('.c-nm').oninput=e=>{L.conceptos[i].n=e.target.value;};r.querySelector('.c-nm').onchange=pc;r.querySelector('.c-pr').oninput=e=>{L.conceptos[i].p=e.target.value.trim()===''?'':e.target.value.trim().replace(',','.');};r.querySelector('.adm-ax').onclick=()=>{L.conceptos.splice(i,1);pc();};});};pc();
+  body.querySelector('.c-ad').onclick=()=>{L.conceptos.push({n:'',p:''});pc();const ins=cps.querySelectorAll('.c-nm');ins[ins.length-1].focus();};
+  body.querySelector('.c-gu').onclick=e=>{L.conceptos=L.conceptos.filter(x=>String(x.n).trim());guardarConf('listas',L,e.target).then(()=>pc());};
+  // estados y tipos (tablas)
+  body.querySelectorAll('.adm-et').forEach(card=>{const t=card.dataset.t,box=card.querySelector('.adm-etl');let E=null,bus='',todas=false;
+   const op=async(o)=>{const r=await admPost('seg-adm-etiquetas',Object.assign({tabla:t},o));if(!r.ok&&r.uso){if(!confirm(r.error))return;return op(Object.assign({},o,{confirmar:true}));}
+    if(!r.ok){toast(r.error||'No se ha podido',false);return;}E=r.etiquetas;p();if(t==='estados')loadEstados();toast('Hecho',true);};
+   const p=()=>{if(!E){box.innerHTML='<div class="fac-vacio">Cargando…</div>';return;}const q=bus.toLowerCase();let F=E.filter(x=>!q||x.n.toLowerCase().includes(q));const mas=!todas&&!q&&F.length>25;if(mas)F=F.slice(0,25);
+    box.innerHTML=F.map(x=>`<div class="adm-er" data-id="${x.id}"><span class="adm-en">${escH(x.n)}</span><small>${x.uso?`${x.uso} ${t==='tipos'?'cita'+(x.uso===1?'':'s'):'paciente'+(x.uso===1?'':'s')}`:'sin usar'}</small><button type="button" class="adm-em1" aria-label="Opciones">···</button></div>`).join('')+(mas?`<button type="button" class="adm-mas">Ver las ${E.length}</button>`:'')||'<p class="adm-nota">Nada.</p>';
+    const vm=box.querySelector('.adm-mas');if(vm)vm.onclick=()=>{todas=true;p();};
+    box.querySelectorAll('.adm-em1').forEach(b=>b.onclick=()=>{const x=E.find(y=>y.id===b.closest('.adm-er').dataset.id);
+     ddMenuG(b,[{v:'ren',t:'Cambiar nombre'},{v:'jun',t:'Juntar con…'},{v:'del',t:'Borrar'}],async v=>{
+      if(v==='ren'){const n=prompt('Nuevo nombre',x.n);if(n&&n.trim()&&n.trim()!==x.n)op({op:'renombrar',id:x.id,nombre:n.trim()});}
+      else if(v==='del'){if(confirm(`¿Borrar «${x.n}»?`))op({op:'borrar',id:x.id});}
+      else{const otros=E.filter(y=>y.id!==x.id);const m=hzModal(`<div class="hz-top"><div><small>Juntar «${escH(x.n)}»</small><b>¿Con cuál?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><p class="adm-nota">Sus ${x.uso} ${t==='tipos'?'citas':'pacientes'} pasan a la que elijas y «${escH(x.n)}» se borra.</p><input class="ag-in j-b" placeholder="Buscar…" style="width:100%;box-sizing:border-box;margin:10px 0 6px"><div class="adm-jl"></div>`);
+       const jl=m.querySelector('.adm-jl'),pj=f=>{jl.innerHTML=otros.filter(y=>!f||y.n.toLowerCase().includes(f)).slice(0,40).map(y=>`<button type="button" data-id="${y.id}">${escH(y.n)}<small>${y.uso}</small></button>`).join('');jl.querySelectorAll('button').forEach(bb=>bb.onclick=async()=>{m.remove();toast('Juntando…',true);await op({op:'juntar',id:x.id,a:bb.dataset.id});});};pj('');
+       m.querySelector('.j-b').oninput=e=>pj(e.target.value.toLowerCase());m.querySelector('.hz-x').onclick=()=>m.remove();}});});};
+   const bi=card.querySelector('.e-bus');if(bi)bi.oninput=()=>{bus=bi.value.trim();p();};
+   const add=()=>{const i=card.querySelector('.e-n'),v=i.value.trim();if(!v)return;i.value='';op({op:'nuevo',nombre:v});};card.querySelector('.e-a').onclick=add;card.querySelector('.e-n').onkeydown=e=>{if(e.key==='Enter')add();};
+   admPost('seg-adm-etiquetas',{tabla:t,op:'ver'}).then(r=>{E=r.ok?r.etiquetas:[];p();});});
+ }
+ // ── Ajustes: tarjeta regalo, Holded, datos de la clínica, cancelaciones ──
+ async function pintaAjustes(){body.innerHTML='<div class="fac-vacio">Cargando…</div>';const c=await admConf();if(!c||ADM.tab!=='ajustes'){if(!c)body.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
+  const T=c.tarjeta,H=c.holded,C=c.clinica,X=c.cancelacion;
+  body.innerHTML=`<div class="adm-card"><div class="adm-h"><b>Tarjeta regalo por recomendar</b><small>La que se da a quien nos recomienda cuando el recomendado viene.</small></div>
+    <div class="adm-2"><div><div class="hz-lab">Descuento (€)</div><input class="ag-in t-i" inputmode="decimal" value="${escH(String(T.importe).replace('.',','))}"></div><div><div class="hz-lab">Vale durante (meses)</div><input class="ag-in t-m" inputmode="numeric" value="${escH(T.meses)}"></div></div>
+    <div class="hz-bts"><button type="button" class="hz-ok t-g">Guardar</button></div></div>
+   <div class="adm-card"><div class="adm-h"><b>Tickets de Holded</b></div>
+    <label class="adm-sw"><input type="checkbox" class="h-b" ${H.borrador?'':'checked'}><span><b>Aprobar los tickets automáticamente</b><small>Si está desmarcado, los tickets del panel se quedan en borrador y hay que aprobarlos en Holded (como ahora). Marcado: salen ya aprobados y el paciente los ve en su app al momento.</small></span></label>
+    <div class="hz-lab">Texto de protección de datos (sale abajo del ticket)</div><textarea class="seg-n h-r" rows="5">${escH(H.rgpd)}</textarea>
+    <div class="hz-bts"><button type="button" class="hz-ok h-g">Guardar</button></div></div>
+   <div class="adm-card"><div class="adm-h"><b>Datos de la clínica</b><small>Salen en los justificantes e informes de asistencia.</small></div>
+    <div class="adm-2"><div><div class="hz-lab">Razón social</div><input class="ag-in k-r" value="${escH(C.razon)}"></div><div><div class="hz-lab">NIF</div><input class="ag-in k-n" value="${escH(C.nif)}"></div></div>
+    <div class="hz-lab">Dirección</div><input class="ag-in k-d" value="${escH(C.direccion)}" style="width:100%;box-sizing:border-box">
+    <div class="adm-2"><div><div class="hz-lab">Teléfono</div><input class="ag-in k-t" value="${escH(C.tel)}"></div><div><div class="hz-lab">Email</div><input class="ag-in k-e" value="${escH(C.email)}"></div></div>
+    <div class="hz-bts"><button type="button" class="hz-ok k-g">Guardar</button></div></div>
+   <div class="adm-card"><div class="adm-h"><b>Política de cancelación</b><small>El texto lo ven los pacientes en «Mis citas» de su app. Si alguien cancela con menos horas, al marcarla en la agenda sale un aviso de cancelación tardía.</small></div>
+    <div class="hz-lab">Hay que avisar con al menos (horas)</div><input class="ag-in x-h" inputmode="numeric" value="${escH(X.horas)}" style="max-width:140px">
+    <div class="hz-lab">Texto para los pacientes</div><textarea class="seg-n x-t" rows="3">${escH(X.texto)}</textarea>
+    <div class="hz-bts"><button type="button" class="hz-ok x-g">Guardar</button></div></div>`;
+  const $b=q=>body.querySelector(q);
+  $b('.t-g').onclick=e=>guardarConf('tarjeta',{importe:$b('.t-i').value.replace(',','.'),meses:$b('.t-m').value},e.target);
+  $b('.h-g').onclick=e=>{if($b('.h-b').checked&&H.borrador&&!confirm('¿Seguro? Los tickets que se hagan desde el panel saldrán ya aprobados en Holded, con su número definitivo.'))return;guardarConf('holded',{borrador:!$b('.h-b').checked,rgpd:$b('.h-r').value},e.target);};
+  $b('.k-g').onclick=e=>guardarConf('clinica',{razon:$b('.k-r').value,nif:$b('.k-n').value,direccion:$b('.k-d').value,tel:$b('.k-t').value,email:$b('.k-e').value},e.target);
+  $b('.x-g').onclick=e=>guardarConf('cancelacion',{horas:$b('.x-h').value,texto:$b('.x-t').value},e.target);
  }
  // A quién llega el resumen diario
  async function pintaMail(){const aj=await ajustesAdm();if(!aj||ADM.tab!=='mail')return;const E=(ADM.mails=ADM.mails||aj.emails.slice());
@@ -5796,8 +5886,8 @@ function renderCallIn(wrap){
 // ── CAPTACIÓN: lista de espera, contactos que no se citaron y negocios del barrio ──
 let capTab='espera',capVerTodo=false;
 const CAP_DIAS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],CAP_FRANJA=['Mañana','Mediodía','Tarde'];
-const CAP_MEDIO=['LLAMADA','WHATSAPP','POR LA PUERTA','REDES','EMAIL'],CAP_MOTIVO=['Busca ecografía','Sanitas','Adeslas','Otros seguros','No tenemos disponibilidad','Pide precios','Solo pide info','Quiere algo que no tenemos'];
-const CAP_TIPO=['FARMACIA','PODÓLOGO','CLÍNICA DENTAL','CLÍNICA ESTÉTICA','GIMNASIO','OTRO'];
+const CAP_MEDIO=['LLAMADA','WHATSAPP','POR LA PUERTA','REDES','EMAIL'];let CAP_MOTIVO=['Busca ecografía','Sanitas','Adeslas','Otros seguros','No tenemos disponibilidad','Pide precios','Solo pide info','Quiere algo que no tenemos'];
+let CAP_TIPO=['FARMACIA','PODÓLOGO','CLÍNICA DENTAL','CLÍNICA ESTÉTICA','GIMNASIO','OTRO'];
 const capIni=n=>String(n||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
 const capTit=n=>{n=String(n||'').trim();return n&&n===n.toUpperCase()?n.toLowerCase().replace(/(^|[\s-])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase()):n;};
 const capFe=f=>f?String(f).slice(0,10).split('-').reverse().join('/'):'';
@@ -5851,7 +5941,7 @@ function capOfrecerModal(h,esp,hoy,onDone){const P=capPrio(esp,h,hoy);
 
 
 // ── BIBLIOTECA DE EJERCICIOS ──────────────────────────────────────────────────
-const EJ_ZONAS=['Cervical','Hombro','Codo, muñeca y mano','Dorsal','Lumbar','Cadera y glúteo','Rodilla','Tobillo y pie','Core','Equilibrio','Neurodinamia','Respiración','General'];
+let EJ_ZONAS=['Cervical','Hombro','Codo, muñeca y mano','Dorsal','Lumbar','Cadera y glúteo','Rodilla','Tobillo y pie','Core','Equilibrio','Neurodinamia','Respiración','General'];
 let ejZona='',ejQ='',ejMax=60;
 const ejKey=n=>sinTildes(n).replace(/[^a-z0-9]+/g,' ').trim();
 const ejYt=u=>{const m=String(u||'').match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/);return m?m[1]:'';};
@@ -6174,7 +6264,7 @@ async function guardarEstados(pacienteId,ids){
  if(!d.ok)throw new Error(d.error||'Error');const p=(pacs||[]).find(x=>x.id===pacienteId);if(p)p.estados=ids;
 }
 // ── TAREAS: lo que tiene pendiente cada fisio (y Nora ve las de todos) ──
-const TAR_NOMBRES=['Nora','Sara','Jonathan','Juan','Ramiro'];
+let TAR_NOMBRES=['Nora','Sara','Jonathan','Juan','Ramiro'];
 function miNombreCorto(){const n=String((fisioActual&&fisioActual.nombre)||'').split(' ')[0];return TAR_NOMBRES.find(x=>x.toLowerCase()===n.toLowerCase())||n;}
 function esJefe(){return !!fisioActual&&(fisioActual.role==='admin'||!!(fisioActual.accesos||{}).rendimiento);}
 const deQuienSeg=x=>x.responsable||x.fisio||'';
@@ -6366,11 +6456,11 @@ const CONSENT_URL='https://tally.so/r/b5j1M2',FORM_INICIO='2026-01-08'; // desde
 const FORM_SP_URL='https://tally.so/r/Gex8jo',FORM_ALTA_URL='https://tally.so/r/Dq4gE5';
 let _consDoc={};
 async function consDatos(id){if(_consDoc[id])return _consDoc[id];const r=await (await fetch(`/api/schedule?action=seg-consent-doc&pwd=${encodeURIComponent(apiPwd)}&id=${id}`)).json();if(!r.ok)throw new Error('No se ha podido cargar el consentimiento');_consDoc[id]=r;return r;}
-// Tarjeta regalo por recomendar (10 €, 6 meses)
+// Tarjeta regalo por recomendar (importe y meses: Administración › Listas y ajustes)
 function pn(n){n=String(n||'').trim().split(/\s+/)[0]||'';return n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';}
 function capi(n){n=String(n||'').trim();if(/[a-záéíóúñ]/.test(n)&&n===n.replace(/^\S/,c=>c.toUpperCase()))return n;n=n.split(' ')[0];return n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';}
 function mensajeTarjeta(quien,nuevo,cad){const nm=capi(quien),nvm=capi(nuevo);
- return `¡Hola ${nm}! Gracias por recomendarnos${nvm?' a '+nvm:''}, nos hace muchísima ilusión.\n\nTe regalamos 10 € de descuento en tu próxima sesión (válido hasta el ${String(cad||'').split('-').reverse().join('/')}). No tienes que hacer nada: lo tenemos apuntado en tu ficha y te lo descontamos al pagar.\n\n¡Gracias por confiar en FISIO365!`;}
+ return `¡Hola ${nm}! Gracias por recomendarnos${nvm?' a '+nvm:''}, nos hace muchísima ilusión.\n\nTe regalamos ${TJ_IMP()} € de descuento en tu próxima sesión (válido hasta el ${String(cad||'').split('-').reverse().join('/')}). No tienes que hacer nada: lo tenemos apuntado en tu ficha y te lo descontamos al pagar.\n\n¡Gracias por confiar en FISIO365!`;}
 // Imagen de la tarjeta regalo (para mandarla por WhatsApp)
 async function tarjetaImagen(quien,nuevo,cad,tipo){
  try{await document.fonts.load('800 60px Poppins');await document.fonts.load('600 30px Poppins');}catch(e){}
@@ -6381,7 +6471,7 @@ async function tarjetaImagen(quien,nuevo,cad,tipo){
  x.fillStyle='#fff';x.textAlign='center';x.textBaseline='alphabetic';const cx=W/2;
  x.font='800 58px Poppins';x.fillText('FISIO365',cx,190);
  x.font='600 38px Poppins';x.globalAlpha=.9;x.fillText('TARJETA  REGALO',cx,250);x.globalAlpha=1;
- x.font='800 300px Poppins';x.fillText('10 €',cx,580);
+ x.font='800 300px Poppins';x.fillText(TJ_IMP()+' €',cx,580);
  x.font='600 54px Poppins';x.fillText('de descuento en',cx,680);x.fillText('tu próxima sesión',cx,748);
  x.font='600 44px Poppins';x.globalAlpha=.95;x.fillText(`Para ${capi(quien)}`,cx,870);
  x.globalAlpha=.85;x.font='500 34px Poppins';x.fillText(`Válida hasta el ${String(cad||'').split('-').reverse().join('/')}`,cx,925);x.globalAlpha=1;
@@ -6389,7 +6479,7 @@ async function tarjetaImagen(quien,nuevo,cad,tipo){
 // Enviar la tarjeta: se guarda la imagen y se manda un enlace; WhatsApp enseña la tarjeta en la vista previa
 // Antes de enviar se pueden retocar los nombres (nombres compuestos, apodos…)
 function enviarTarjeta(tel,quien,nuevo,cad,refId,crear){return new Promise(fin=>{
- const m=hzModal(`<div class="hz-top"><div><small>Tarjeta regalo de 10 €</small><b>¿Cómo ponemos los nombres?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+ const m=hzModal(`<div class="hz-top"><div><small>Tarjeta regalo de ${TJ_IMP()} €</small><b>¿Cómo ponemos los nombres?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Para</div><input type="text" class="tj-q" maxlength="30" value="${escH(pn(quien))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
   <div class="hz-lab">Por recomendarnos a</div><input type="text" class="tj-n" maxlength="30" value="${escH(pn(nuevo))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
   <div class="hz-lab">Así le llega</div><img class="tj-img" alt="" style="width:100%;border-radius:12px;display:block"><div class="tj-prev msg-prev"></div>
@@ -6621,7 +6711,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   const fR=f=>f?String(f).split('-').reverse().join('/'):'';
   const refBlk=RF&&(RF.leRecomendo||RF.haRecomendado.length)?`<div class="fp-blk fp-cs"><div class="fp-bt"><h3>Recomendaciones</h3></div>${RF.leRecomendo?`<div class="fp-lerec">Le recomendó: <b ${RF.leRecomendo.id?`data-ficha="${RF.leRecomendo.id}"`:''}>${escH(RF.leRecomendo.nombre||'—')}</b></div>`:''}${RF.haRecomendado.length?`<div class="fp-refs">${RF.haRecomendado.map(t=>`<div class="fp-ref"><div><b>${escH(t.nombre)}</b><small>${t.ganada?'Se ha ganado 10 € de descuento · tarjeta sin enviar':t.codigo?(t.canjeada?'Tarjeta de 10 € canjeada el '+fR(t.canjeada):t.caduca&&t.caduca<hoyR?'Tarjeta caducada el '+fR(t.caduca):'Tarjeta de 10 € · sin usar · hasta el '+fR(t.caduca)):t.ignorar?'Sin tarjeta':'Tarjeta pendiente: cuando venga a su primera sesión'}</small></div>${t.canjeada?`<span class="fp-refb"><button type="button" class="sec fp-refu" data-id="${t.id}">Deshacer</button></span>`:''}${t.ganada||(t.codigo&&!t.canjeada&&!(t.caduca&&t.caduca<hoyR))?`<span class="fp-refb"><button type="button" class="sec fp-refwa" data-id="${t.id}">${t.ganada?'Enviar':'Reenviar'}</button><button type="button" class="fp-refc" data-id="${t.id}">Canjear</button></span>`:''}</div>`).join('')}</div>`:''}</div>`:'';
   const negDesc=RF&&RF.deNegocio&&!real.length?`<div class="fp-gift"><span>🏷️ Viene de parte de ${escH(RF.deNegocio.nombre)}: 10 % de descuento en su primera sesión</span></div>`:'';
-  return `${negDesc}${tActivas.length?`<div class="fp-gift"><span>🎁 Tiene ${tActivas.length>1?tActivas.length+' tarjetas regalo':'una tarjeta regalo'} de 10 € para descontar al pagar</span><button type="button" class="fp-refc" data-id="${tActivas.slice().sort((a,b)=>String(a.caduca).localeCompare(String(b.caduca)))[0].id}">Canjear</button></div>`:''}${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
+  return `${negDesc}${tActivas.length?`<div class="fp-gift"><span>🎁 Tiene ${tActivas.length>1?tActivas.length+' tarjetas regalo':'una tarjeta regalo'} de ${TJ_IMP()} € para descontar al pagar</span><button type="button" class="fp-refc" data-id="${tActivas.slice().sort((a,b)=>String(a.caduca).localeCompare(String(b.caduca)))[0].id}">Canjear</button></div>`:''}${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
   <div class="fp-blk fp-pq"></div>
   <div class="fp-blk" data-blk="datos"><div class="fp-bt"><h3>Datos</h3><button type="button" class="fp-ed">Editar</button></div>
@@ -7339,8 +7429,8 @@ async function renderRendimiento(wrap){
  cargar(k0);
 }
 // ── FACTURAS (ficha del paciente): emitir en Holded y ver las anteriores ──
-const FAC_CONCEPTOS=['Sesión de fisioterapia','Sesión de fisioterapia avanzada','Sesión de suelo pélvico','Sesión de readaptación deportiva','Plus aplicación colágeno','Otros'];
-const FAC_PAGOS=['Tarjeta','Efectivo','Bizum','Transferencia'];
+let FAC_PRECIO={};let FAC_CONCEPTOS=['Sesión de fisioterapia','Sesión de fisioterapia avanzada','Sesión de suelo pélvico','Sesión de readaptación deportiva','Plus aplicación colágeno','Otros'];
+let FAC_PAGOS=['Tarjeta','Efectivo','Bizum','Transferencia'];
 const facEur=n=>Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
 async function fpTabFacturas(pacId, body, pacNombre, tok){
  body.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Cargando...</div>';
@@ -7389,7 +7479,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
     <div class="fac-campo"><label>Nombre o empresa</label><input class="fac-an"></div>
     <div class="fac-campo"><label>DNI / NIF</label><input class="fac-anif"></div>
     <div class="fac-campo"><label>Dirección fiscal</label><input class="fac-adir"></div></details>
-   ${(d.tarjetas||[]).length?`<button type="button" class="fac-tj"><i>✓</i><span><b>Descontar tarjeta regalo −10 €</b>Por recomendar a ${escH(String(d.tarjetas[0].por||'alguien').split(' ')[0])}${d.tarjetas.length>1?` · tiene ${d.tarjetas.length}, se usa una`:''}</span></button>`:''}
+   ${(d.tarjetas||[]).length?`<button type="button" class="fac-tj"><i>✓</i><span><b>Descontar tarjeta regalo −${TJ_IMP()} €</b>Por recomendar a ${escH(String(d.tarjetas[0].por||'alguien').split(' ')[0])}${d.tarjetas.length>1?` · tiene ${d.tarjetas.length}, se usa una`:''}</span></button>`:''}
    <div class="fac-total"><span>Total</span><b>0,00 €</b></div>
    <button type="button" class="fac-emitir">Emitir factura</button>
    <div class="fac-nota">Se crea en Holded con el siguiente número de la serie y le aparece al paciente en su app.</div>`;
@@ -7398,14 +7488,16 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
   let pago='',fisioSel=null,usarTj=false;
   {const tj=f.querySelector('.fac-tj');if(tj)tj.onclick=()=>{usarTj=!usarTj;tj.classList.toggle('on',usarTj);total();};}
   f.querySelectorAll('.fac-fisio button').forEach(b=>b.onclick=()=>{f.querySelectorAll('.fac-fisio button').forEach(x=>x.classList.toggle('on',x===b));fisioSel=b.dataset.v;});
-  const total=()=>{let t=0;lineasBox.querySelectorAll('.fac-linea').forEach(l=>{t+=(+l.querySelector('.fl-n').value||0)*(+String(l.querySelector('.fl-p').value).replace(',','.')||0);});if(usarTj)t=Math.max(0,t-10);f.querySelector('.fac-total b').textContent=facEur(t);return t;};
+  const total=()=>{let t=0;lineasBox.querySelectorAll('.fac-linea').forEach(l=>{t+=(+l.querySelector('.fl-n').value||0)*(+String(l.querySelector('.fl-p').value).replace(',','.')||0);});if(usarTj)t=Math.max(0,t-TJ_IMP());f.querySelector('.fac-total b').textContent=facEur(t);return t;};
   const addLinea=()=>{
    const l=ce('div','fac-linea');const num=lineasBox.children.length+1;
    l.innerHTML=`<div class="fl-top"><span>Línea ${num}</span>${num>1?'<button type="button" class="fl-del">Quitar</button>':''}</div>
     <div class="fac-chips fl-c">${FAC_CONCEPTOS.map(c=>`<button type="button" data-v="${c}">${c}</button>`).join('')}</div>
     <div class="fl-row"><div class="fac-campo"><label>Nº sesiones</label><div class="fl-step"><button type="button" class="fl-m">−</button><input class="fl-n" type="number" min="1" value="1" inputmode="numeric"><button type="button" class="fl-p2">+</button></div></div>
     <div class="fac-campo"><label>Precio por sesión (€)</label><input class="fl-p" inputmode="decimal" placeholder="60"></div></div>`;
-   l.querySelectorAll('.fl-c button').forEach(b=>b.onclick=()=>{l.querySelectorAll('.fl-c button').forEach(x=>x.classList.toggle('on',x===b));l.dataset.c=b.dataset.v;});
+   l.querySelectorAll('.fl-c button').forEach(b=>b.onclick=()=>{l.querySelectorAll('.fl-c button').forEach(x=>x.classList.toggle('on',x===b));l.dataset.c=b.dataset.v;
+    const pi=l.querySelector('.fl-p'),pr=FAC_PRECIO[b.dataset.v];if(pr!=null&&pr!==''&&(!pi.value||pi.dataset.auto)){pi.value=String(pr).replace('.',',');pi.dataset.auto='1';total();}});
+   l.querySelector('.fl-p').addEventListener('input',e=>{delete e.target.dataset.auto;});
    const n=l.querySelector('.fl-n');l.querySelector('.fl-m').onclick=()=>{n.value=Math.max(1,(+n.value||1)-1);total();};l.querySelector('.fl-p2').onclick=()=>{n.value=(+n.value||0)+1;total();};
    l.querySelectorAll('input').forEach(i=>i.oninput=total);
    const del=l.querySelector('.fl-del');if(del)del.onclick=()=>{l.remove();addBtn.style.display='';total();};

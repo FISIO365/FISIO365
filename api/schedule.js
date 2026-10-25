@@ -493,7 +493,8 @@ const DIAS_S = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes',
 const fLarga = f => { const d = new Date(f + 'T12:00:00Z'); return `${DIAS_S[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]} de ${d.getUTCFullYear()}`; };
 const fCorta = f => { const d = new Date(f + 'T12:00:00Z'); return `${d.getUTCDate()} de ${MESES[d.getUTCMonth()]} de ${d.getUTCFullYear()}`; };
 const masUnaHora = h => { const m = /^(\d{1,2}):(\d{2})/.exec(h || ''); return m ? String((+m[1] + 1) % 24).padStart(2, '0') + ':' + m[2] : ''; };
-function paginaJustificante(D, tk) {
+function paginaJustificante(D, tk, C) {
+  C = C || CONF_DEF.clinica;
   const e = escHtml, ses = D.sesiones || [], just = D.tipo !== 'informe', una = ses.length === 1;
   const fisioTxt = x => x.fisio ? `${e(x.fisio)}${x.colegiado ? ` · Nº colegiado ${e(x.colegiado)}` : ''}` : '';
   const tarjetas = just ? ses.map(x => `<div class="s"><div class="sf"><b>${e(fLarga(x.fecha).charAt(0).toUpperCase() + fLarga(x.fecha).slice(1))}</b><span>${x.hora ? `de ${e(x.hora)} a ${e(masUnaHora(x.hora))} h` : ''}</span></div>${x.fisio ? `<div class="sp"><small>Fisioterapeuta</small>${fisioTxt(x)}</div>` : ''}</div>`).join('')
@@ -524,7 +525,7 @@ table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:6mm}th{
 </style></head><body>
 <div class="bar"><button type="button" onclick="window.print()">Descargar PDF</button></div>
 <div class="marco"><div class="esc"><div class="hoja">
-<div class="cab"><div class="logo">FISIO<span>365</span><small>Centro de Fisioterapia</small></div><div class="dat">Fourth Dynamic, S.L. · NIF B56503592<br>C/ Gran de Sant Andreu, 163 · 08030 Barcelona<br>672 89 39 49 · info@fisioterapia365.com</div></div>
+<div class="cab"><div class="logo">FISIO<span>365</span><small>Centro de Fisioterapia</small></div><div class="dat">${e(C.razon)} · NIF ${e(C.nif)}<br>${e(C.direccion)}<br>${e(C.tel)} · ${e(C.email)}</div></div>
 <h1>${titulo}</h1><div class="ref">Barcelona, ${e(fCorta(D.emitido || ''))}</div>
 <p>${texto}</p>
 ${tarjetas}
@@ -569,6 +570,21 @@ async function guardarAjuste(clave, valor, quien) {
   const d = a ? await at(`${AJ_T}/${a.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) }) : await at(AJ_T, { method: 'POST', body: JSON.stringify({ records: [{ fields }] }) });
   _aj = { t: 0, v: null }; if (d.error) throw new Error(d.error.message); return true;
 }
+// Ajustes de la clínica (Administración › Listas y ajustes). Lo que no se haya cambiado sale de aquí.
+const CONF_DEF = {
+  listas: {
+    conceptos: [{ n: 'Sesión de fisioterapia', p: '' }, { n: 'Sesión de fisioterapia avanzada', p: '' }, { n: 'Sesión de suelo pélvico', p: '' }, { n: 'Sesión de readaptación deportiva', p: '' }, { n: 'Plus aplicación colágeno', p: '' }, { n: 'Otros', p: '' }],
+    pagos: ['Tarjeta', 'Efectivo', 'Bizum', 'Transferencia'],
+    motivos: ['Busca ecografía', 'Sanitas', 'Adeslas', 'Otros seguros', 'No tenemos disponibilidad', 'Pide precios', 'Solo pide info', 'Quiere algo que no tenemos'],
+    negocios: ['FARMACIA', 'PODÓLOGO', 'CLÍNICA DENTAL', 'CLÍNICA ESTÉTICA', 'GIMNASIO', 'OTRO'],
+    zonas: ['Cervical', 'Hombro', 'Codo, muñeca y mano', 'Dorsal', 'Lumbar', 'Cadera y glúteo', 'Rodilla', 'Tobillo y pie', 'Core', 'Equilibrio', 'Neurodinamia', 'Respiración', 'General']
+  },
+  tarjeta: { importe: 10, meses: 6 },
+  holded: { borrador: true, rgpd: TEXTO_RGPD },
+  clinica: { razon: 'Fourth Dynamic, S.L.', nif: 'B56503592', direccion: 'C/ Gran de Sant Andreu, 163 · 08030 Barcelona', tel: '672 89 39 49', email: 'info@fisioterapia365.com' },
+  cancelacion: { horas: 24, texto: 'Si no puedes venir, avísanos con al menos 24 horas de antelación para poder dar tu hora a otra persona.' }
+};
+async function conf() { const g = await ajuste('config', null) || {}; const o = {}; Object.keys(CONF_DEF).forEach(k => { o[k] = Object.assign({}, CONF_DEF[k], g[k] || {}); }); o.listas = Object.assign({}, CONF_DEF.listas, (g.listas || {})); return o; }
 // Check-list: la guardada en Administración (los puntos de siempre conservan su comprobación automática)
 async function checklistTodos() {
   const g = await ajuste('checklist', null); if (!Array.isArray(g) || !g.length) return REPORTE_ITEMS.map(x => Object.assign({}, x));
@@ -654,7 +670,8 @@ async function tarjetasActivas(F) {
   if (sinCod.length) { const ps = sinCod.slice(0, 15).map(r => r.fields['PACIENTE'][0]);
     const c = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${ps.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=PacienteRec&pageSize=100`);
     (c.records || []).forEach(x => (x.fields['PacienteRec'] || []).forEach(id => vinieron.add(id))); }
-  const cad6 = (() => { const c = new Date(); c.setMonth(c.getMonth() + 6); return c.toISOString().slice(0, 10); })();
+  const mesesT = Number((await conf().catch(() => CONF_DEF)).tarjeta.meses) || 6;
+  const cad6 = (() => { const c = new Date(); c.setMonth(c.getMonth() + mesesT); return c.toISOString().slice(0, 10); })();
   return (d.records || []).filter(r => !r.fields['CANJEADA'] && ((r.fields['CÓDIGO'] && (!r.fields['CADUCA'] || r.fields['CADUCA'] >= hoy)) || (!r.fields['CÓDIGO'] && !r.fields['IGNORAR'] && vinieron.has((r.fields['PACIENTE'] || [])[0]))))
     .map(r => ({ id: r.id, codigo: r.fields['CÓDIGO'] || '', caduca: r.fields['CADUCA'] || cad6, por: String(r.fields['Nombre'] || '').trim() }));
 }
@@ -678,6 +695,7 @@ async function fisioDelPaciente(pacId, quien, elegido) {
 }
 
 async function emitirFactura(recId, quien, fisioSel, descuento) {
+  const CF = await conf().catch(() => CONF_DEF), borradorH = CF.holded.borrador !== false, rgpdH = String(CF.holded.rgpd || TEXTO_RGPD);
   const rec = await at(`${FACTURAS_TABLE}/${recId}?returnFieldsByFieldId=true`);
   if (rec.error) throw new Error('No encuentro esa fila de FACTURAS');
   const f = rec.fields || {};
@@ -737,12 +755,12 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
   const fisioTxt = await fisioDelPaciente(pacId, quien, fisioSel).catch(() => '');
   const items = lineas.map(l => { const it = { name: l.concepto === 'Otros' && notas ? notas.split('\n')[0].slice(0, 120) : l.concepto, units: l.uds, price: l.precio }; if (taxes) it.taxes = taxes; return it; });
   if (descuento) { const it = { name: descuento.texto, units: 1, price: -Math.abs(descuento.importe) }; if (taxes) it.taxes = taxes; items.push(it); }
-  const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas, TEXTO_RGPD].filter(Boolean).join('\n\n\n'), currency: 'EUR', language: 'es', items });
+  const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas, rgpdH].filter(Boolean).join('\n\n\n'), currency: 'EUR', language: 'es', items });
   const docId = doc.id;
   if (!docId) throw new Error('Holded no ha devuelto el ticket creado');
   let creado = await holded('/sales-receipts/' + docId).catch(() => ({}));
   // Si se ha quedado en borrador (sin número), se aprueba para que coja el siguiente número de la serie
-  if (!HOLDED_BORRADOR && !creado.document_number) { await holdedPost('/sales-receipts/' + docId + '/approve', {}).catch(() => {}); creado = await holded('/sales-receipts/' + docId).catch(() => creado); }
+  if (!borradorH && !creado.document_number) { await holdedPost('/sales-receipts/' + docId + '/approve', {}).catch(() => {}); creado = await holded('/sales-receipts/' + docId).catch(() => creado); }
   const borrador = !creado.document_number;
   const num = creado.document_number || 'Borrador';
   const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: fecha, [FF.fechaVieja]: fecha, [FF.holdedId]: String(docId) };
@@ -785,7 +803,7 @@ module.exports = async function handler(req, res) {
     const rec = (r.records || [])[0]; if (!rec) return res.status(404).send('Documento no encontrado');
     let D = {}; try { D = JSON.parse(rec.fields['DATOS'] || '{}'); } catch (e) {}
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
-    return res.status(200).send(paginaJustificante(D, tk));
+    return res.status(200).send(paginaJustificante(D, tk, (await conf().catch(() => CONF_DEF)).clinica));
   }
   // Tarjeta regalo pública (el enlace que va por WhatsApp; la vista previa enseña la imagen)
   if (action === 'tarjeta-img' || action === 'tarjeta-pagina') {
@@ -793,13 +811,18 @@ module.exports = async function handler(req, res) {
     const r = await at(`tblr27u3cvtzfyqI6/${id}`); const a = r.fields && (r.fields['TARJETA IMG'] || [])[0];
     if (!a) return res.status(404).send('Tarjeta no encontrada');
     if (action === 'tarjeta-img') { const im = await fetch(a.url); res.setHeader('Content-Type', a.type || 'image/jpeg'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(Buffer.from(await im.arrayBuffer())); }
+    const impP = Number((await conf().catch(() => CONF_DEF)).tarjeta.importe) || 10;
     const img = `https://app.fisioterapia365.com/api/schedule?action=tarjeta-img&id=${id}`, cad = String(r.fields['CADUCA'] || '').split('-').reverse().join('/');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return res.status(200).send(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tarjeta regalo · FISIO365</title>
-<meta property="og:title" content="Tarjeta regalo de 10 €"><meta property="og:description" content="FISIO365 · Te lo descontamos en tu próxima sesión"><meta property="og:image" content="${img}"><meta property="og:image:width" content="1080"><meta property="og:image:height" content="1080"><meta property="og:image:type" content="image/jpeg"><meta property="og:type" content="website"><meta name="twitter:card" content="summary">
+<meta property="og:title" content="Tarjeta regalo de ${impP} €"><meta property="og:description" content="FISIO365 · Te lo descontamos en tu próxima sesión"><meta property="og:image" content="${img}"><meta property="og:image:width" content="1080"><meta property="og:image:height" content="1080"><meta property="og:image:type" content="image/jpeg"><meta property="og:type" content="website"><meta name="twitter:card" content="summary">
 <link rel="icon" href="/icons/favicon-cara.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
 <style>body{margin:0;background:#f5f2ee;font-family:Poppins,sans-serif;color:#1a1a1a;display:flex;justify-content:center}main{max-width:440px;width:100%;padding:28px 16px;box-sizing:border-box}img{width:100%;border-radius:20px;box-shadow:0 10px 30px rgba(194,85,46,.25);display:block}h1{font-size:20px;margin:22px 0 6px}p{font-size:15px;line-height:1.5;color:#5c4f47;margin:0 0 18px}a{display:block;text-align:center;background:#1a1a1a;color:#fff;text-decoration:none;font-weight:700;border-radius:14px;padding:14px}</style></head>
-<body><main><img src="${img}" alt="Tarjeta regalo de 10 €"><h1>¡Gracias por recomendarnos!</h1><p>Tienes 10 € de descuento en tu próxima sesión${cad ? ', válido hasta el ' + cad : ''}. No tienes que hacer nada: lo tenemos apuntado y te lo descontamos al pagar.</p><a href="https://app.fisioterapia365.com">Abrir mi app de FISIO365</a></main></body></html>`);
+<body><main><img src="${img}" alt="Tarjeta regalo de ${impP} €"><h1>¡Gracias por recomendarnos!</h1><p>Tienes ${impP} € de descuento en tu próxima sesión${cad ? ', válido hasta el ' + cad : ''}. No tienes que hacer nada: lo tenemos apuntado y te lo descontamos al pagar.</p><a href="https://app.fisioterapia365.com">Abrir mi app de FISIO365</a></main></body></html>`);
+  }
+  if (action === 'config-pub') { // lo que la app del paciente necesita saber (sin datos privados)
+    const c = await conf().catch(() => CONF_DEF); res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.status(200).json({ ok: true, tarjeta: c.tarjeta, cancelacion: c.cancelacion, tel: c.clinica.tel });
   }
   if (action === 'version') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ v: (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 12) }); }
 
@@ -839,6 +862,7 @@ module.exports = async function handler(req, res) {
     const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
     const hoyF = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     try {
+      if (action === 'seg-config') return res.status(200).json({ ok: true, conf: await conf() });
       // ── ADMINISTRACIÓN: equipo, horarios, ausencias, accesos y contraseñas (solo quien tiene acc_admin) ──
       if (action.startsWith('seg-adm-')) {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -909,6 +933,55 @@ module.exports = async function handler(req, res) {
           const mal = E.find(x => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)); if (mal) return res.status(400).json({ ok: false, error: `«${mal}» no es un email válido` });
           if (!E.length) return res.status(400).json({ ok: false, error: 'Deja al menos un email' });
           await guardarAjuste('emails_resumen', E.slice(0, 10), yo.fields.Name); return res.status(200).json({ ok: true, emails: await emailsResumen() });
+        }
+        if (action === 'seg-adm-config') { // guardar una parte de «Listas y ajustes»
+          const sec = String(q.seccion || ''), v = q.valor || {}, cur = (await ajuste('config', null)) || {};
+          const lim = (x, n) => String(x == null ? '' : x).trim().slice(0, n);
+          const lista = (L, n) => [...new Set((Array.isArray(L) ? L : []).map(x => lim(x, n)).filter(Boolean))].slice(0, 60);
+          if (sec === 'listas') {
+            const conceptos = (Array.isArray(v.conceptos) ? v.conceptos : []).map(c => ({ n: lim(c && c.n, 80), p: c && c.p !== '' && c.p != null && !isNaN(Number(String(c.p).replace(',', '.'))) ? Number(String(c.p).replace(',', '.')) : '' })).filter(c => c.n).slice(0, 40);
+            if (!conceptos.length) return res.status(400).json({ ok: false, error: 'Deja al menos un concepto' });
+            const L = { conceptos, pagos: lista(v.pagos, 40), motivos: lista(v.motivos, 60), negocios: lista(v.negocios, 40), zonas: lista(v.zonas, 40) };
+            if (!L.pagos.length) return res.status(400).json({ ok: false, error: 'Deja al menos una forma de pago' });
+            cur.listas = L;
+          } else if (sec === 'tarjeta') {
+            const imp = Math.round(Number(String(v.importe).replace(',', '.')) * 100) / 100, me = Math.round(Number(v.meses));
+            if (!(imp > 0 && imp <= 200) || !(me >= 1 && me <= 36)) return res.status(400).json({ ok: false, error: 'Revisa el importe y los meses' });
+            cur.tarjeta = { importe: imp, meses: me };
+          } else if (sec === 'holded') cur.holded = { borrador: !!v.borrador, rgpd: lim(v.rgpd, 1500) || TEXTO_RGPD };
+          else if (sec === 'clinica') cur.clinica = { razon: lim(v.razon, 80), nif: lim(v.nif, 20), direccion: lim(v.direccion, 160), tel: lim(v.tel, 30), email: lim(v.email, 80) };
+          else if (sec === 'cancelacion') { const h = Math.round(Number(v.horas)); if (!(h >= 0 && h <= 168)) return res.status(400).json({ ok: false, error: 'Revisa las horas' }); cur.cancelacion = { horas: h, texto: lim(v.texto, 600) }; }
+          else return res.status(400).json({ ok: false, error: 'Sección no válida' });
+          await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() });
+        }
+        if (action === 'seg-adm-etiquetas') { // estados del paciente y tipos de cita (son tablas: cada etiqueta es una fila)
+          const T = q.tabla === 'tipos' ? 'tbltoikmBZwHYQcpD' : 'tbldOsLe8iw78Wun7', NOM = q.tabla === 'tipos' ? 'Name' : 'ESTADO', LNK = q.tabla === 'tipos' ? 'CITAS' : 'PACIENTES';
+          const todasE = async () => (await todosT(T, `fields[]=${NOM}&fields[]=${LNK}`)).map(r => ({ id: r.id, n: String(r.fields[NOM] || '').trim(), uso: (r.fields[LNK] || []).length }));
+          const okR = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
+          if (q.op === 'nuevo' || q.op === 'renombrar') {
+            const n = String(q.nombre || '').trim().replace(/\s+/g, ' ').slice(0, 40); if (n.length < 2) return res.status(400).json({ ok: false, error: 'Escribe el nombre' });
+            const ya = (await todasE()).find(x => x.n.toLowerCase() === n.toLowerCase() && x.id !== q.id); if (ya) return res.status(400).json({ ok: false, error: 'Ya existe. Si quieres juntarlas, usa «Juntar con…»' });
+            const d = q.op === 'nuevo' ? await at(T, { method: 'POST', body: JSON.stringify({ records: [{ fields: { [NOM]: n } }] }) }) : okR(q.id) ? await at(`${T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [NOM]: n } }) }) : { error: { message: 'Falta cuál' } };
+            if (d.error) return res.status(400).json({ ok: false, error: d.error.message });
+          } else if (q.op === 'borrar') {
+            if (!okR(q.id)) return res.status(400).json({ ok: false });
+            const r = (await todasE()).find(x => x.id === q.id); if (r && r.uso && !q.confirmar) return res.status(200).json({ ok: false, uso: r.uso, error: `La tienen ${r.uso} ${q.tabla === 'tipos' ? 'citas' : 'pacientes'}. Si la borras, se la quita a todos.` });
+            await at(`${T}/${q.id}`, { method: 'DELETE' });
+          } else if (q.op === 'juntar') { // pasar todas las citas/pacientes de A a B y borrar A
+            if (!okR(q.id) || !okR(q.a) || q.id === q.a) return res.status(400).json({ ok: false });
+            const A = await at(`${T}/${q.id}`); const ids = (A.fields && A.fields[LNK]) || [];
+            if (ids.length > 600) return res.status(400).json({ ok: false, error: `Tiene ${ids.length}: son demasiadas para juntarlas de golpe. Dímelo y lo hago yo.` });
+            const DST = q.tabla === 'tipos' ? CIT : PACIENTES, CAMPO = q.tabla === 'tipos' ? 'TIPO DE CITA' : 'ESTADO';
+            for (let i = 0; i < ids.length; i += 40) {
+              const rs = await todosT(DST, `filterByFormula=${encodeURIComponent('OR(' + ids.slice(i, i + 40).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent(CAMPO)}`);
+              const ch = rs.map(r => ({ id: r.id, fields: { [CAMPO]: [...new Set((r.fields[CAMPO] || []).map(x => x === q.id ? q.a : x))] } }));
+              for (let k = 0; k < ch.length; k += 10) { const d = await at(DST, { method: 'PATCH', body: JSON.stringify({ records: ch.slice(k, k + 10) }) }); if (d.error) return res.status(400).json({ ok: false, error: d.error.message }); }
+            }
+            await at(`${T}/${q.id}`, { method: 'DELETE' });
+          }
+          global._tiposCache = null;
+          const L = (await todasE()).filter(x => x.n).sort((a, b) => b.uso - a.uso || a.n.localeCompare(b.n, 'es'));
+          return res.status(200).json({ ok: true, etiquetas: L });
         }
         if (action === 'seg-adm-baja') {
           const r = full.find(x => x.id === q.id); if (!r) return res.status(404).json({ ok: false, error: 'No encontrado' });
@@ -1021,7 +1094,7 @@ module.exports = async function handler(req, res) {
           const r0 = await at(`${REF}/${q.id}`); if (r0.error) return res.status(404).json({ ok: false });
           let cod = r0.fields['CÓDIGO'], cad = r0.fields['CADUCA'];
           if (!cod) { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; cod = 'F365-' + Array.from({ length: 4 }, () => A[Math.floor(Math.random() * A.length)]).join('');
-            const c = new Date(hoyF + 'T12:00:00Z'); c.setUTCMonth(c.getUTCMonth() + 6); cad = c.toISOString().slice(0, 10);
+            const c = new Date(hoyF + 'T12:00:00Z'); c.setUTCMonth(c.getUTCMonth() + (Number((await conf().catch(() => CONF_DEF)).tarjeta.meses) || 6)); cad = c.toISOString().slice(0, 10);
             const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'CÓDIGO': cod, 'FECHA TARJETA': hoyF, CADUCA: cad, 'Regalo entregado': true } }) }); if (d.error) return res.status(200).json({ ok: false }); }
           return res.status(200).json({ ok: true, codigo: cod, caduca: cad });
         }
@@ -1768,7 +1841,7 @@ module.exports = async function handler(req, res) {
         }
         const MAP = { 'Cita recuperada': 'CITA RECUPERADA ', 'Volver a llamar': 'VOLVER A LLAMAR', 'No contesta': 'NC - VOLVER A LLAMAR', 'Pendiente de respuesta': 'PENDIENTE RESPUESTA ', 'Alta': 'ALTA', 'No volver a llamar': 'NO VOLVER A LLAMAR' };
         const quienMap = { jonathan: 'JONY', jony: 'JONY', sara: 'SARA', ramiro: 'RAMIRO', nora: 'NORA', juan: 'JUAN' };
-        const quien = quienMap[String(q.quien || '').split(' ')[0].toLowerCase()];
+        const kq = String(q.quien || '').trim().split(' ')[0].toLowerCase(), quien = quienMap[kq] || (kq ? kq.toUpperCase() : ''); // fisios nuevos: su nombre (Airtable crea la opción)
         const ll = { FECHA: new Date().toISOString(), NOTAS: String(q.nota || ''), RESULTADO: MAP[q.resultado] || q.resultado };
         if (/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) ll.PACIENTE = [q.pacienteId];
         if (quien) ll['QUIEN LLAMA'] = quien;
@@ -1799,7 +1872,7 @@ module.exports = async function handler(req, res) {
       if (action === 'seg-editar-llamada') {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
         const MAP = { 'Cita recuperada': 'CITA RECUPERADA ', 'Volver a llamar': 'VOLVER A LLAMAR', 'No contesta': 'NC - VOLVER A LLAMAR', 'Pendiente de respuesta': 'PENDIENTE RESPUESTA ', 'Alta': 'ALTA', 'No volver a llamar': 'NO VOLVER A LLAMAR' };
-        const f = {}; if (q.resultado) f.RESULTADO = MAP[q.resultado] || q.resultado; if (q.nota != null) f.NOTAS = String(q.nota); if (q.resena != null) f['RESEÑA'] = !!q.resena; { const qm = { jonathan: 'JONY', jony: 'JONY', sara: 'SARA', ramiro: 'RAMIRO', nora: 'NORA', juan: 'JUAN' }[String(q.quien || '').split(' ')[0].toLowerCase()]; if (qm) f['QUIEN LLAMA'] = qm; }
+        const f = {}; if (q.resultado) f.RESULTADO = MAP[q.resultado] || q.resultado; if (q.nota != null) f.NOTAS = String(q.nota); if (q.resena != null) f['RESEÑA'] = !!q.resena; { const qm = { jonathan: 'JONY', jony: 'JONY', sara: 'SARA', ramiro: 'RAMIRO', nora: 'NORA', juan: 'JUAN' }[String(q.quien || '').split(' ')[0].toLowerCase()] || String(q.quien || '').trim().split(' ')[0].toUpperCase(); if (qm) f['QUIEN LLAMA'] = qm; }
         const d = await at(`${LLA}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
         // Volver a «Por llamar»: reabre su fila de SEGUIMIENTO (por SEG ID o, si es antigua, la última del paciente)
         if (q.reabrir) {
@@ -1911,8 +1984,9 @@ module.exports = async function handler(req, res) {
       const pr = await at(`${PACIENTES}/${pac}`);
       tarjeta = (await tarjetasActivas(pr.fields || {})).find(t => t.id === q.tarjetaId);
       if (!tarjeta) return res.status(200).json({ ok: false, error: 'Esa tarjeta regalo ya no está disponible (usada o caducada).' });
-      if (lineas.reduce((t, l) => t + Number(l.uds || 0) * Number(l.precio || 0), 0) < 10) return res.status(200).json({ ok: false, error: 'El cobro tiene que ser de más de 10 € para descontar la tarjeta.' });
-      descuento = { importe: 10, texto: 'Tarjeta regalo por recomendar' + (tarjeta.por ? ' a ' + tarjeta.por.split(' ')[0] : '') };
+      const impT = Number((await conf().catch(() => CONF_DEF)).tarjeta.importe) || 10;
+      if (lineas.reduce((t, l) => t + Number(l.uds || 0) * Number(l.precio || 0), 0) < impT) return res.status(200).json({ ok: false, error: `El cobro tiene que ser de más de ${impT} € para descontar la tarjeta.` });
+      descuento = { importe: impT, texto: 'Tarjeta regalo por recomendar' + (tarjeta.por ? ' a ' + tarjeta.por.split(' ')[0] : '') };
     }
     const fa = q.facturarA || {};
     const campos = { [FF.paciente]: [pac], 'fldpruhLn03x1x6zI': pac, [FF.notas]: String(q.notas || ''), [FF.estado]: 'Pendiente' };

@@ -591,6 +591,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .ses-pauta i{width:38px;height:38px;border-radius:12px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}
 .ses-pauta svg{width:20px;height:20px;fill:none;stroke:#c2552e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .pl-tx .pl-frase{display:block;font-size:12.5px;line-height:1.6;color:#8a817a;margin-top:4px;font-weight:400}.pl-tx .pl-frase b{display:inline!important;font-size:inherit!important;font-weight:500!important;color:#4a423c;letter-spacing:0;margin:0}
+.citas-pol{margin:14px 2px 0;font-size:12.5px;line-height:1.5;color:#8a837b;text-align:center}
 </style>
 </head>
 <body>
@@ -688,7 +689,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
    <div class="premio-banner-icon">🎁</div>
    <div>
      <div class="premio-banner-titulo">¡Has ganado un premio!</div>
-     <div class="premio-banner-sub">-10€ en tu próxima sesión por recomendar FISIO365</div>
+     <div class="premio-banner-sub"><span class="cf-tj">-10€</span> en tu próxima sesión por recomendar FISIO365</div>
    </div>
  </div>
  <div id="vistaEjercicios">
@@ -760,7 +761,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div id="vistaCitas" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mis citas</div><div class="date-sub">Tu agenda con el fisio</div></div>
  <button class="rv-btn" onclick="abrirReserva()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Reservar una cita</button>
-<div id="calendarWrap"></div><div id="citaDetalle"></div><div id="citasLista"></div>
+<div id="calendarWrap"></div><div id="citaDetalle"></div><div id="citasLista"></div><div id="citasPol" class="citas-pol" hidden></div>
  </div>
 
  <div id="vistaMensajes" style="display:none;">
@@ -1236,7 +1237,12 @@ async function descargarDocumento(id,btn){const t=btn.textContent;btn.disabled=t
  btn.disabled=false;btn.textContent=t;}
 async function loadRegalos(){const w=document.getElementById('regPacWrap'),l=document.getElementById('regPacList');if(!w||!patient)return;
  try{const d=await (await fetch('/api/schedule?action=mis-regalos&patientId='+encodeURIComponent(patient.id))).json();if(!d.ok||!(d.tarjetas||[]).length){w.style.display='none';return;}
-  l.innerHTML=d.tarjetas.map(t=>`<div class="tj-card"><div class="tj-top">Tarjeta regalo · FISIO365</div><div class="tj-imp">10 €</div><div class="tj-sub">de descuento en tu próxima sesión${t.por?', por recomendarnos a '+escF(t.por.split(' ')[0]):''} 🧡</div><div class="tj-cad">Válida hasta el ${escF(String(t.caduca||'').split('-').reverse().join('/'))} · no tienes que hacer nada, te lo descontamos al pagar</div></div>`).join('');w.style.display='';}catch(e){w.style.display='none';}}
+  l.innerHTML=d.tarjetas.map(t=>`<div class="tj-card"><div class="tj-top">Tarjeta regalo · FISIO365</div><div class="tj-imp">${CFG.tj} €</div><div class="tj-sub">de descuento en tu próxima sesión${t.por?', por recomendarnos a '+escF(t.por.split(' ')[0]):''} 🧡</div><div class="tj-cad">Válida hasta el ${escF(String(t.caduca||'').split('-').reverse().join('/'))} · no tienes que hacer nada, te lo descontamos al pagar</div></div>`).join('');w.style.display='';}catch(e){w.style.display='none';}}
+// Ajustes de la clínica (tarjeta regalo, política de cancelación): se cambian desde el panel
+const CFG={tj:'10'};
+(async function(){try{const r=await (await fetch('/api/schedule?action=config-pub')).json();if(!r.ok)return;
+ if(r.tarjeta&&r.tarjeta.importe){CFG.tj=String(Math.round(r.tarjeta.importe*100)/100).replace('.',',');document.querySelectorAll('.cf-tj').forEach(e=>e.textContent='-'+CFG.tj+'€');}
+ const p=document.getElementById('citasPol');if(p&&r.cancelacion&&String(r.cancelacion.texto||'').trim()){p.textContent=r.cancelacion.texto;p.hidden=false;}}catch(e){}})();
 async function loadInformes(){loadDocumentos();loadRegalos();loadFacturas();
   const list=document.getElementById('infPacList'),wr=document.getElementById('infPacWrap');if(!list)return;window._informesPac=[];
   try{const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);const data=await res.json();const informes=data.informes||[];
