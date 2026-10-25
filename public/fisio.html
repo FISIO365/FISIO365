@@ -6953,7 +6953,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
   const fs=d.facturas||[];
   if(d.error){lista.innerHTML=`<div class="fac-vacio">${escH(d.error)}</div>`;return;}
   if(!fs.length){lista.innerHTML=`<div class="fac-vacio">${d.enHolded===0?`No encuentro a este paciente en Holded${d.nContactos?` (he mirado ${d.nContactos} contactos)`:''}. Busco por DNI${d.dni?' '+escH(d.dni):''}, email o móvil.`:'Sin facturas todavía.'}</div>`;return;}
-  lista.innerHTML='<div class="fac-tit">Facturas anteriores</div>'+fs.map(f=>`<div class="fac-it"><div><div class="fac-n">Factura ${escH(f.numero||'')}</div><div class="fac-m">${f.fecha?new Date(f.fecha*1000).toLocaleDateString('es-ES'):''}${f.concepto?' · '+escH(f.concepto):''}</div></div><div class="fac-r"><b>${facEur(f.total)}</b><button type="button" class="fp-btn" data-id="${f.id}" data-t="${f.tipo||'salesreceipt'}">PDF</button></div></div>`).join('');
+  lista.innerHTML='<div class="fac-tit">Facturas anteriores</div>'+fs.map(f=>`<div class="fac-it"><div><div class="fac-n">${f.borrador?'Borrador <span style="font-size:11px;font-weight:600;color:#c2552e;background:#fdf1e8;border-radius:99px;padding:1px 8px;margin-left:4px">pendiente de aprobar en Holded</span>':'Factura '+escH(f.numero||'')}</div><div class="fac-m">${f.fecha?new Date(f.fecha*1000).toLocaleDateString('es-ES'):''}${f.concepto?' · '+escH(f.concepto):''}</div></div><div class="fac-r"><b>${facEur(f.total)}</b><button type="button" class="fp-btn" data-id="${f.id}" data-t="${f.tipo||'salesreceipt'}">PDF</button></div></div>`).join('');
   lista.querySelectorAll('[data-id]').forEach(b=>b.onclick=async()=>{
    const w=window.open('','_blank');b.disabled=true;
    try{const r=await (await fetch(`/api/schedule?action=facturas&patientId=${encodeURIComponent(pacId)}&id=${b.dataset.id}&tipo=${b.dataset.t}`)).json();if(!r.ok)throw 0;
@@ -7016,7 +7016,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    try{
     const r=await (await fetch('/api/schedule?action=facturar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:pacId,lineas,modoPago:pago,fecha:f.querySelector('.fac-fecha').value,notas:f.querySelector('.fac-notas').value.trim(),dni:dniIn?dniIn.value.trim():'',facturarA:an?{nombre:an,nif:f.querySelector('.fac-anif').value.trim(),direccion:f.querySelector('.fac-adir').value.trim()}:null})})).json();
     if(!r.ok)throw new Error(r.error||'No se ha podido emitir');
-    toast('Factura '+r.num+' emitida'+(r.otro?'':' · ya la tiene en su app'),true);
+    toast(r.borrador?'Ticket creado en Holded como borrador · apruébalo allí y le saldrá en su app':'Factura '+r.num+' emitida'+(r.otro?'':' · ya la tiene en su app'),true);
     formBox.innerHTML='';nueva.style.display='';
     fpTabFacturas(pacId, body, pacNombre, body.dataset.token);
    }catch(e){em.disabled=false;em.classList.remove('armado');em.textContent='Emitir factura';toast(e.message,false);}

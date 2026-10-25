@@ -75,6 +75,8 @@ async function contactosDelPaciente(patientId) {
 // Se crea en Holded como ticket de venta (factura simplificada con DNI), en la serie por defecto,
 // con el número que asigna Holded y nunca con fecha anterior a la última emitida.
 const FACTURAS_TABLE = 'tblJw7suXLERn8AFQ';
+// De momento los tickets se crean en BORRADOR y se aprueban a mano en Holded (para revisar unos días). Poner false para que salgan ya aprobados.
+const HOLDED_BORRADOR = true;
 const FF = { fecha: 'fldQ17bGOMaS0XaxJ', fechaVieja: 'fldqZyXkxhGRS1qvn', paciente: 'fldbmNoGhedI6ySSb', c1: 'fld3lRaKQbUYcW5qY', n1: 'fldWj0dUmJzTn0lgr', p1: 'fldu2QiBD9hM5scRC', c2: 'fldlkX8RO7crsVOye', n2: 'fldOW7e0lHx3Tfu4X', p2: 'fldkYc6HBh9E1YjUv', notas: 'fldoi8INIByEPPpMn', estado: 'fldWyEjNGH9CCRfmM', num: 'fldcTFAHH31Lsz53c', pdf: 'fld8jBu2P4sPB21ZC', aNombre: 'fldBW06oApJQaNlN9', aNif: 'fld6VO3g0KrFpAi6P', aDir: 'fldFK7NwsZ5AUY6qp' };
 let emitiendo = Promise.resolve();
 // Si Airtable dice «demasiadas peticiones» (429), espera y lo reintenta
@@ -492,25 +494,26 @@ async function emitirFactura(recId) {
   if (!docId) throw new Error('Holded no ha devuelto el ticket creado');
   let creado = await holded('/sales-receipts/' + docId).catch(() => ({}));
   // Si se ha quedado en borrador (sin número), se aprueba para que coja el siguiente número de la serie
-  if (!creado.document_number) { await holdedPost('/sales-receipts/' + docId + '/approve', {}).catch(() => {}); creado = await holded('/sales-receipts/' + docId).catch(() => creado); }
-  const num = creado.document_number || docId;
+  if (!HOLDED_BORRADOR && !creado.document_number) { await holdedPost('/sales-receipts/' + docId + '/approve', {}).catch(() => {}); creado = await holded('/sales-receipts/' + docId).catch(() => creado); }
+  const borrador = !creado.document_number;
+  const num = creado.document_number || 'Borrador';
   const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: fecha, [FF.fechaVieja]: fecha };
   await at(`${FACTURAS_TABLE}/${recId}`, { method: 'PATCH', body: JSON.stringify({ fields: campos, typecast: true }) });
-  try {
+  if (!borrador) try {
     const pdf = await holdedPdf('/sales-receipts/' + docId + '/pdf');
     if (pdf) await fetch(`https://content.airtable.com/v0/${BASE_ID}/${recId}/${FF.pdf}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'application/pdf', file: pdf, filename: 'Factura_' + String(num).replace(/[^\w-]/g, '_') + '.pdf' }) });
   } catch (e) {}
-  return { num, otro: !!String(f[FF.aNombre] || '').trim(), total: lineas.reduce((t, l) => t + l.uds * l.precio, 0) };
+  return { num, borrador, otro: !!String(f[FF.aNombre] || '').trim(), total: lineas.reduce((t, l) => t + l.uds * l.precio, 0) };
 }
 
-async function listarFacturas(ids) {
+async function listarFacturas(ids, conBorradores) {
   let facturas = [];
   // Tickets de venta (lo habitual: llevan DNI y sirven como factura) y, por si acaso, facturas completas
   for (const cid of ids) for (const tipoDoc of ['salesreceipt', 'invoice']) {
     const docs = await holdedTodos('/' + docTipo(tipoDoc) + '?limit=100&contact_id=' + encodeURIComponent(cid), 5).catch(e => { if (tipoDoc === 'salesreceipt') throw e; return []; });
     docs.forEach(d => {
-      if (d.contact_id !== cid || !d.document_number) return; // solo suyos y ya emitidos (no borradores)
-      facturas.push({ id: d.id, tipo: tipoDoc, numero: d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: importeDoc(d), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' });
+      if (d.contact_id !== cid || (!d.document_number && !conBorradores)) return; // solo suyos y ya aprobados (el panel ve también los borradores)
+      facturas.push({ id: d.id, tipo: tipoDoc, numero: d.document_number || '', borrador: !d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: importeDoc(d), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' });
     });
   }
   facturas.sort((a, b) => b.fecha - a.fecha);
@@ -1430,7 +1433,7 @@ module.exports = async function handler(req, res) {
       const dni = (pr.fields || {})['DNI'] || '';
       const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
       if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, facturas: [] });
-      try { const ids = await contactosDelPaciente(pac); return res.status(200).json({ ok: true, holded: true, dni, saldo, enHolded: ids.length, facturas: await listarFacturas(ids) }); }
+      try { const ids = await contactosDelPaciente(pac); return res.status(200).json({ ok: true, holded: true, dni, saldo, enHolded: ids.length, facturas: await listarFacturas(ids, true) }); }
       catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -1449,7 +1452,7 @@ module.exports = async function handler(req, res) {
     if (!rec) return res.status(500).json({ ok: false, error: (cr.error && cr.error.message) || 'No se ha podido guardar en Airtable' });
     const turno = emitiendo.then(() => emitirFactura(rec));
     emitiendo = turno.catch(() => {});
-    try { const r = await turno; return res.status(200).json({ ok: true, num: r.num, total: r.total, otro: r.otro }); }
+    try { const r = await turno; return res.status(200).json({ ok: true, num: r.num, borrador: !!r.borrador, total: r.total, otro: r.otro }); }
     catch (e) {
       try { await at(`${FACTURAS_TABLE}/${rec}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.estado]: 'Error' }, typecast: true }) }); } catch (x) {}
       return res.status(200).json({ ok: false, error: e.message });
