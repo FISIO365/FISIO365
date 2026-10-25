@@ -5603,17 +5603,17 @@ function mensajeTarjeta(quien,nuevo,cad){const nm=capi(quien),nvm=capi(nuevo);
 // Imagen de la tarjeta regalo (para mandarla por WhatsApp)
 async function tarjetaImagen(quien,nuevo,cad,tipo){
  try{await document.fonts.load('800 60px Poppins');await document.fonts.load('600 30px Poppins');}catch(e){}
- const W=1080,H=680,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
- const rr=(X,Y,w,h,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath();};
+ // Todo centrado y dentro del cuadrado central: WhatsApp a veces recorta la vista previa en cuadrado
+ const W=1200,H=630,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
  const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#de8257');g.addColorStop(1,'#c2552e');x.fillStyle=g;x.fillRect(0,0,W,H);
- x.save();x.fillStyle='rgba(255,255,255,.10)';x.beginPath();x.arc(W-90,70,230,0,Math.PI*2);x.fill();x.beginPath();x.arc(W-40,H+40,160,0,Math.PI*2);x.fill();x.restore();
- x.fillStyle='#fff';x.textBaseline='alphabetic';
- x.font='800 46px Poppins';x.fillText('FISIO365',72,112);
- x.font='600 26px Poppins';x.globalAlpha=.9;x.fillText('TARJETA REGALO',72,160);x.globalAlpha=1;
- x.font='800 190px Poppins';x.fillText('10 €',60,380);
- x.font='600 40px Poppins';x.fillText('de descuento en tu próxima sesión',72,450);
- x.font='600 30px Poppins';x.globalAlpha=.95;x.fillText(`Para ${capi(quien)}${capi(nuevo)?' · gracias por recomendarnos a '+capi(nuevo):''}`,72,560);
- x.globalAlpha=.85;x.font='500 26px Poppins';x.fillText(`Válida hasta el ${String(cad||'').split('-').reverse().join('/')} · te lo descontamos al pagar`,72,606);x.globalAlpha=1;
+ x.fillStyle='rgba(255,255,255,.10)';x.beginPath();x.arc(W-80,60,220,0,Math.PI*2);x.fill();x.beginPath();x.arc(70,H+30,170,0,Math.PI*2);x.fill();
+ x.fillStyle='#fff';x.textAlign='center';x.textBaseline='alphabetic';const cx=W/2;
+ x.font='800 34px Poppins';x.fillText('FISIO365',cx,92);
+ x.font='600 22px Poppins';x.globalAlpha=.9;x.fillText('TARJETA  REGALO',cx,128);x.globalAlpha=1;
+ x.font='800 170px Poppins';x.fillText('10 €',cx,318);
+ x.font='600 36px Poppins';x.fillText('de descuento en',cx,382);x.fillText('tu próxima sesión',cx,428);
+ x.font='600 28px Poppins';x.globalAlpha=.95;x.fillText(`Para ${capi(quien)}`,cx,512);
+ x.globalAlpha=.85;x.font='500 22px Poppins';x.fillText(`Válida hasta el ${String(cad||'').split('-').reverse().join('/')}`,cx,552);x.globalAlpha=1;
  return await new Promise(ok=>c.toBlob(ok,tipo||'image/png',0.88));}
 // Enviar la tarjeta: se guarda la imagen y se manda un enlace; WhatsApp enseña la tarjeta en la vista previa
 // Antes de enviar se pueden retocar los nombres (nombres compuestos, apodos…)
