@@ -1,5 +1,5 @@
 // api/reservar.js — El paciente reserva una cita desde la app
-// Los huecos libres son las citas de Airtable con ESTADO «CITA LIBRE» o «LIBRE - SIN BOMBA».
+// Los huecos libres son las citas de Airtable con ESTADO «CITA LIBRE» (los «LIBRE - SIN BOMBA» no salen en la app).
 // Reservar = esa misma fila pasa a «PENDIENTE » y se enlaza con el paciente (llega directa a la agenda de Airtable).
 export const config = { runtime: 'edge' };
 
@@ -7,7 +7,7 @@ const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const BASE_ID = 'appsrGnHpFt8sVD5A';
 const CITAS = 'tblTPlcuiSjQngkaD';
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
-const LIBRES = ['CITA LIBRE', 'LIBRE - SIN BOMBA'];
+const LIBRES = ['CITA LIBRE']; // «LIBRE - SIN BOMBA» no se ofrece en la app (solo la da la clínica)
 const DIAS_VISTA = 35;          // cuántos días hacia delante se enseñan
 const TIPO_APP = 'recvCLCoYJ82LcPh9';  // «RESERVADA POR LA APP» en la tabla de tipos de cita
 const MARGEN_MIN = 0;           // se puede reservar hasta la hora de empezar, mientras el hueco esté libre
