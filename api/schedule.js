@@ -78,8 +78,8 @@ function consentResumen(r) {
   const viejo = fecha && (Date.now() - new Date(fecha + 'T12:00:00Z')) / 864e5 > DIAS_EMBARAZO;
   const salud = [], rojo = [];
   C_SALUD.forEach(([k, t]) => { const v = cNm(F[k]).trim(); if (!/^s[ií]$|^alta$/i.test(v)) return;
-    if (k === 'EMBARAZO' && viejo) { salud.push({ t: 'Embarazo (marcado el ' + fecha.split('-').reverse().join('/') + ')', grave: false }); return; }
-    const alta = /^alta$/i.test(v); salud.push({ t: alta ? t + ' (ya de alta)' : t, grave: !alta && ['MARCAPASOS', 'EMBARAZO', 'CÁNCER'].includes(k) });
+    if (k === 'EMBARAZO' && viejo) { salud.push({ k, t: 'Embarazo (marcado el ' + fecha.split('-').reverse().join('/') + ')', grave: false }); return; }
+    const alta = /^alta$/i.test(v); salud.push({ k, alta, t: alta ? t + ' (ya de alta)' : t, grave: !alta && ['MARCAPASOS', 'EMBARAZO', 'CÁNCER'].includes(k) });
     if (!alta && ['MARCAPASOS', 'EMBARAZO', 'CÁNCER'].includes(k)) rojo.push(t); });
   const sp = cNm(F['SUELO PÉLVICO']).trim();
   return { id: r.id, fecha, salud, rojo, sueloPelvico: /^s[ií]$/i.test(sp), aceptaSP: !!F['ACEPTACIÓN S.P.'],
@@ -116,6 +116,25 @@ async function alertasSalud() {
   })().catch(e => { _alertas.p = null; return _alertas.m || {}; });
   return _alertas.p;
 }
+
+// ── CAPTACIÓN: contactos sin cita, lista de espera y negocios del barrio ─────
+const CAP = { contacto: 'tblgsMcknBLDyfWHu', esperaP: 'tbl5ksXlpfsSTZk5i', esperaN: 'tblAvnUMOvVo4OBne', negocio: 'tblO5y1Ikg3LIalic', referidos: 'tblr27u3cvtzfyqI6' };
+const capTodos = async (t, q2) => { let recs = [], off = ''; do { const d = await at(`${t}?${q2}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
+let _espera = { t: 0, v: null };
+async function esperaLista(forzar) {
+  if (!forzar && _espera.v && Date.now() - _espera.t < 5 * 60e3) return _espera.v;
+  const [p, n] = await Promise.all([capTodos(CAP.esperaP, 'sort[0][field]=FECHA SOLICITUD&sort[0][direction]=desc'), capTodos(CAP.esperaN, 'sort[0][field]=FECHA SOLICITUD&sort[0][direction]=desc')]);
+  const pids = [...new Set(p.map(r => (r.fields['PACIENTE'] || [])[0]).filter(Boolean))], info = {};
+  for (let i = 0; i < pids.length; i += 40) (await capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=TELF`)).forEach(x => { info[x.id] = { nombre: x.fields['FULL NAME'] || '', tel: x.fields['WHATSAPP'] || x.fields['TELF'] || '' }; });
+  const est = (F, perdido) => { const e = cNm(F['ESTADO']); if (e) return e; return perdido ? 'YA NO' : 'ESPERANDO'; };
+  const v = [
+    ...p.map(r => { const F = r.fields, pid = (F['PACIENTE'] || [])[0] || ''; return { id: r.id, tabla: 'esperaP', pacienteId: pid, nombre: (info[pid] || {}).nombre || '—', tel: (info[pid] || {}).tel || '', fecha: F['FECHA SOLICITUD'] || String(r.createdTime).slice(0, 10), nota: F['NOTAS'] || '', disp: F['DISPONIBILIDAD'] || '', dias: (F['DIAS'] || []).map(cNm), franja: (F['FRANJA'] || []).map(cNm), fisio: F['FISIO'] || '', estado: est(F, false) }; }),
+    ...n.map(r => { const F = r.fields; return { id: r.id, tabla: 'esperaN', pacienteId: '', nombre: F['NOMBRE'] || 'Sin nombre', tel: F['TELF'] || '', fecha: F['FECHA SOLICITUD'] || String(r.createdTime).slice(0, 10), nota: F['NOTAS'] || '', disp: F['DISPONIBILIDAD'] || '', dias: (F['DIAS'] || []).map(cNm), franja: (F['FRANJA'] || []).map(cNm), fisio: F['FISIO'] || '', estado: est(F, cNm(F['PERDIDO?']) === 'SÍ') }; })
+  ].sort((a, b) => b.fecha.localeCompare(a.fecha));
+  _espera = { t: Date.now(), v }; return v;
+}
+const capNorm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const CAP_STOP = /^(farmacia|clinica|clinic|centro|dental|estetica|podologia|podologo|institut|institus|odontologics|barcelona|sant|andreu|gran|de|del|la|el|les|los|y|i)$/;
 
 // ── RESERVAS DE LA WEB ─────────────────────────────────────────────────────
 // El formulario de la web crea una fila nueva en CITAS con los datos en your-name / your-phone / your-email /
@@ -315,6 +334,56 @@ module.exports = async function handler(req, res) {
     const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
     const hoyF = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     try {
+      // ── CAPTACIÓN ──
+      if (action.startsWith('seg-cap')) {
+        const okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || ''), okF = f => /^\d{4}-\d{2}-\d{2}$/.test(f || '');
+        if (action === 'seg-cap') {
+          const desde = new Date(Date.now() - 180 * 864e5).toISOString().slice(0, 10);
+          const [con, esp, neg, ref] = await Promise.all([
+            capTodos(CAP.contacto, `filterByFormula=${encodeURIComponent(`IS_AFTER({FECHA},'${desde}')`)}&sort[0][field]=FECHA&sort[0][direction]=desc`),
+            esperaLista(true),
+            capTodos(CAP.negocio, 'sort[0][field]=NOMBRE&sort[0][direction]=asc'),
+            capTodos(CAP.referidos, `filterByFormula=${encodeURIComponent("{Nombre de quien recomendó}!=''")}&fields[]=Nombre de quien recomendó&fields[]=Nombre&fields[]=Apellidos&fields[]=Fecha`).catch(() => [])
+          ]);
+          const negocios = neg.map(r => { const F = r.fields, toks = capNorm(F['NOMBRE']).split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !CAP_STOP.test(w));
+            const vienen = toks.length ? ref.filter(x => { const t = capNorm(x.fields['Nombre de quien recomendó']); return toks.some(w => t.includes(w)); }).map(x => ({ nombre: [x.fields['Nombre'], x.fields['Apellidos']].filter(Boolean).join(' ').trim(), fecha: x.fields['Fecha'] || '' })) : [];
+            return { id: r.id, nombre: F['NOMBRE'] || '', tipo: cNm(F['TIPO NEGOCIO']), estado: cNm(F['ESTADO']) || 'PENDIENTE', fecha: F['FECHA'] || '', flyers: !!F['FLAYERS ENTREGADOS'], notas: F['NOTAS'] || '', direccion: F['DIRECCIÓN'] || '', contacto: F['CONTACTO'] || '', tel: F['TELF'] || '', proxima: F['PRÓXIMA VISITA'] || '', historial: F['HISTORIAL'] || '', vienen }; });
+          return res.status(200).json({ ok: true, hoy: hoyF,
+            contactos: con.map(r => { const F = r.fields; return { id: r.id, fecha: F['FECHA'] || r.createdTime, nombre: F['NOMBRE'] || '', medio: cNm(F['MEDIO']), mensaje: F['MENSAJE'] || '', citado: cNm(F['CITADO']), motivo: F['MOTIVO'] || '', motivoTipo: cNm(F['MOTIVO TIPO']), tel: F['TELF'] || '', por: F['REGISTRADO POR'] || '' }; }),
+            espera: esp, negocios });
+        }
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const T = { contacto: CAP.contacto, esperaP: CAP.esperaP, esperaN: CAP.esperaN, negocio: CAP.negocio }[q.tabla];
+        if (!T) return res.status(400).json({ ok: false, error: 'Tabla' });
+        if (action === 'seg-cap-borrar') { if (!okId(q.id)) return res.status(400).json({ ok: false }); const d = await at(`${T}/${q.id}`, { method: 'DELETE' }); if (T !== CAP.contacto && T !== CAP.negocio) _espera.t = 0; return res.status(200).json({ ok: !d.error }); }
+        if (action === 'seg-cap-guardar') {
+          const c = q.campos || {}, f = {}, txt = (k, v, n = 2000) => { if (v !== undefined) f[k] = String(v || '').slice(0, n); };
+          const lista = v => Array.isArray(v) ? v.map(String).slice(0, 7) : [];
+          if (q.tabla === 'contacto') {
+            if (c.fecha !== undefined) f['FECHA'] = c.fecha || new Date().toISOString();
+            txt('NOMBRE', c.nombre, 120); txt('MENSAJE', c.mensaje); txt('MOTIVO', c.motivo); txt('REGISTRADO POR', c.por, 60);
+            if (c.medio !== undefined) f['MEDIO'] = c.medio || null; if (c.citado !== undefined) f['CITADO'] = c.citado || null; if (c.motivoTipo !== undefined) f['MOTIVO TIPO'] = c.motivoTipo || null;
+            if (c.tel !== undefined) f['TELF'] = String(c.tel || '').slice(0, 30);
+            if (!q.id && !f['FECHA']) f['FECHA'] = new Date().toISOString();
+          } else if (q.tabla === 'negocio') {
+            txt('NOMBRE', c.nombre, 120); txt('NOTAS', c.notas); txt('DIRECCIÓN', c.direccion, 200); txt('CONTACTO', c.contacto, 120); txt('HISTORIAL', c.historial, 20000);
+            if (c.tel !== undefined) f['TELF'] = String(c.tel || '').slice(0, 30);
+            if (c.tipo !== undefined) f['TIPO NEGOCIO'] = c.tipo || null; if (c.estado !== undefined) f['ESTADO'] = c.estado || null;
+            if (c.fecha !== undefined) f['FECHA'] = okF(c.fecha) ? c.fecha : null; if (c.proxima !== undefined) f['PRÓXIMA VISITA'] = okF(c.proxima) ? c.proxima : null;
+            if (c.flyers !== undefined) f['FLAYERS ENTREGADOS'] = !!c.flyers;
+          } else {
+            if (c.fecha !== undefined || !q.id) f['FECHA SOLICITUD'] = okF(c.fecha) ? c.fecha : hoyF;
+            txt('NOTAS', c.nota); txt('DISPONIBILIDAD', c.disp, 500); txt('FISIO', c.fisio, 40);
+            if (c.dias !== undefined) f['DIAS'] = lista(c.dias); if (c.franja !== undefined) f['FRANJA'] = lista(c.franja); if (c.estado !== undefined) f['ESTADO'] = c.estado || null;
+            if (q.tabla === 'esperaP') { if (c.pacienteId !== undefined) f['PACIENTE'] = okId(c.pacienteId) ? [c.pacienteId] : []; }
+            else { txt('NOMBRE', c.nombre, 120); if (c.tel !== undefined) f['TELF'] = String(c.tel || '').slice(0, 30); }
+            _espera.t = 0;
+          }
+          const d = okId(q.id) ? await at(`${T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }) : await at(T, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }], typecast: true }) });
+          return res.status(200).json({ ok: !d.error, error: d.error && (d.error.message || d.error), id: d.id || (d.records && d.records[0] && d.records[0].id) });
+        }
+        return res.status(400).json({ ok: false });
+      }
       // ── AGENDA: citas de un día, dar/mover/cancelar citas (tabla CITAS: cada fila es una hora de un fisio) ──
       if (action.startsWith('seg-agenda')) {
         const TIP = 'tbltoikmBZwHYQcpD', nmA = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
@@ -369,9 +438,9 @@ module.exports = async function handler(req, res) {
           const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], tids = [...new Set(rows.flatMap(r => r.fields['TIPO DE CITA'] || []))];
           const nomP = {}, nomT = {};
           const porLotes = async (tabla, ids, campo, dest) => { const lotes = []; for (let i = 0; i < ids.length; i += 50) lotes.push(ids.slice(i, i + 50)); for (let k = 0; k < lotes.length; k += 4) await Promise.all(lotes.slice(k, k + 4).map(async t => { const rs = await todosT(tabla, `filterByFormula=${encodeURIComponent('OR(' + t.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent(campo)}`); rs.forEach(r => dest[r.id] = r.fields[campo] || ''); })); };
-          const [, , alertas] = await Promise.all([porLotes(PACIENTES, pids, 'FULL NAME', nomP), porLotes(TIP, tids, 'Name', nomT), alertasSalud().catch(() => ({}))]);
+          const [, , alertas, esperaTodos] = await Promise.all([porLotes(PACIENTES, pids, 'FULL NAME', nomP), porLotes(TIP, tids, 'Name', nomT), alertasSalud().catch(() => ({})), esperaLista().catch(() => [])]);
           const alertasDia = {}; pids.forEach(id => { if (alertas[id]) alertasDia[id] = alertas[id]; });
-          return res.status(200).json({ ok: true, hoy: hoyF, limitado, alertas: alertasDia, citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
+          return res.status(200).json({ ok: true, hoy: hoyF, limitado, alertas: alertasDia, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'seg-agenda-dar') { // dar cita en una hora (o en un hueco libre concreto)
@@ -672,6 +741,14 @@ module.exports = async function handler(req, res) {
         const r = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${q.id}/fldTMnwMj4c1C2835/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: String(q.tipo || 'application/octet-stream'), file: String(q.file), filename: String(q.nombre || 'archivo').slice(0, 120) }) });
         const d = await r.json().catch(() => ({}));
         return res.status(200).json({ ok: r.ok && !d.error, error: d.error && (d.error.message || d.error.type) });
+      }
+      if (action === 'seg-consent-quitar') {
+        // Quitar embarazo o cáncer de su consentimiento (cáncer activo → «de alta» → nada)
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '') || !['EMBARAZO', 'CÁNCER'].includes(q.campo)) return res.status(400).json({ ok: false });
+        const r = await at(`${CONS_T}/${q.id}`); if (r.error) return res.status(404).json({ ok: false });
+        const ahora = cNm(r.fields[q.campo]).trim(), nuevo = q.campo === 'CÁNCER' && /^s[ií]$/i.test(ahora) ? 'Alta' : 'No';
+        const d = await at(`${CONS_T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [q.campo]: nuevo }, typecast: true }) });
+        _alertas.t = 0; return res.status(200).json({ ok: !d.error, valor: nuevo });
       }
       if (action === 'seg-tarea-guardar' || action === 'seg-tarea-hecha' || action === 'seg-tarea-borrar') {
         const PT = 'tblxPpPSvj15NWqNT';

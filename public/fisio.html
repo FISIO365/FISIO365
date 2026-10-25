@@ -939,7 +939,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .ag-pf{position:relative;flex:1;min-width:160px}.ag-pf .ag-in{padding:8px 12px;font-size:14px;border-radius:99px}.ag-pdd{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:6px;display:flex;flex-direction:column}.ag-pdd button{font-family:var(--font);text-align:left;font-size:13.5px;border:none;background:none;padding:8px 10px;border-radius:8px;cursor:pointer}.ag-pdd button:hover{background:#f7f3ef}
 .ag-fil{max-width:200px}.ag-w span{white-space:nowrap}.ag-fil span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ag-lista{display:flex;flex-direction:column}.ag-ld{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5f554e;padding:14px 0 6px;border-bottom:1px solid #f0ebe6;margin-bottom:6px}
-.fp-alr{background:#d93025;color:#fff;font-weight:700;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:14px}.fp-sal{display:flex;flex-wrap:wrap;gap:6px}.fp-sal span{background:#fff4e0;color:#8a5200;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}.fp-sal span.gr{background:#fdecea;color:#b3261e}.fp-sin{color:#b3261e;font-weight:600;font-size:14px}
+.fp-alr{background:#d93025;color:#fff;font-weight:700;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:14px}.fp-sal{display:flex;flex-wrap:wrap;gap:6px}.fp-sal span{background:#fff4e0;color:#8a5200;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}.fp-salx{border:0;background:none;color:inherit;font:inherit;font-weight:700;margin-left:6px;padding:0 2px;cursor:pointer;opacity:.7}.fp-sal span.gr{background:#fdecea;color:#b3261e}.fp-sin{color:#b3261e;font-weight:600;font-size:14px}
 .ag-c.ag-al{background:#fdecea!important;border-color:#e0453a!important;border-left:4px solid #d93025!important}.ag-c.ag-al>b{color:#b3261e!important}.ag-alt{display:block;font-size:11.5px;font-weight:700;color:#d93025;margin-top:2px;-webkit-text-fill-color:currentColor}
 .ag-li{display:grid;grid-template-columns:46px 1fr;gap:8px;align-items:start;margin-bottom:6px}.ag-lh{font-size:12.5px;color:#7d6a60;padding-top:8px}
 .ag-fz{font-weight:700!important;font-size:10.5px!important;text-transform:uppercase;letter-spacing:.03em}
@@ -5549,7 +5549,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
   const C=d.consent,fC=f=>f?f.split('-').reverse().join('/'):'',sn=v=>/^s[ií]$/i.test(v||'')?'Sí':/^no$/i.test(v||'')?'No':(v||'—');
   const salud=!C?`<div class="fp-blk"><div class="fp-bt"><h3>Salud</h3></div><div class="fp-sin">⚠️ No encontramos su consentimiento firmado</div></div>`:
    `<div class="fp-blk"><div class="fp-bt"><h3>Salud</h3><small class="fp-mu">Consentimiento del ${escH(fC(C.fecha))}</small></div>
-    ${C.salud.length?`<div class="fp-sal">${C.salud.map(x=>`<span class="${x.grave?'gr':''}">${x.grave?'⚠ ':''}${escH(x.t)}</span>`).join('')}</div>`:'<div class="fp-mu">✓ No marcó nada a tener en cuenta</div>'}
+    ${C.salud.length?`<div class="fp-sal">${C.salud.map(x=>`<span class="${x.grave?'gr':''}">${x.grave?'⚠ ':''}${escH(x.t)}${['EMBARAZO','CÁNCER'].includes(x.k)?`<button type="button" class="fp-salx" data-k="${x.k}" aria-label="Quitar">✕</button>`:''}</span>`).join('')}</div>`:'<div class="fp-mu">✓ No marcó nada a tener en cuenta</div>'}
     ${C.sueloPelvico?`<div class="fp-mu" style="margin-top:8px">Suelo pélvico: Sí · ${C.aceptaSP?'acepta la exploración ✓':'no consta que acepte la exploración'}</div>`:''}</div>
    <div class="fp-blk"><div class="fp-bt"><h3>Marketing</h3></div><div class="fp-fs">
     <div class="fp-f"><span>Nos conoció por</span><div class="fp-v">${escH(C.marketing.conocido||'—')}</div></div>
@@ -5683,7 +5683,13 @@ async function abrirFichaPaciente(id,nombre,pBase){
   body.querySelector('.fp-segb').onclick=()=>{const sp=segAct();if(sp){verSeg(sp);return;}abrirNuevoSeg({pacienteId:id,nombre:P.nombre,motivo:P.porQue||'',onSave:recargarSeg});};
   cont.querySelectorAll('.fp-segit').forEach(x=>x.onclick=()=>{const sp=(d.seguimiento||[]).find(s=>s.id===x.dataset.id);if(sp)verSeg(sp);});
   const tok='fp_'+Date.now();cont.dataset.token=tok;
-  if(tab==='resumen'){cont.innerHTML=resumen();montarEdicion(cont);montarPorQue(cont);}
+  if(tab==='resumen'){cont.innerHTML=resumen();montarEdicion(cont);montarPorQue(cont);
+   cont.querySelectorAll('.fp-salx').forEach(bt=>bt.onclick=async()=>{if(!bt.dataset.ok){bt.dataset.ok=1;bt.textContent='¿Quitar? ✓';setTimeout(()=>{if(bt.isConnected){delete bt.dataset.ok;bt.textContent='✕';}},3000);return;}
+    bt.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-consent-quitar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:d.consent.id,campo:bt.dataset.k})})).json();if(!r.ok)throw 0;
+     const C=d.consent,i=C.salud.findIndex(x=>x.k===bt.dataset.k),nom=bt.dataset.k==='CÁNCER'?'Cáncer':'Embarazo';
+     if(r.valor==='Alta'&&i>=0)C.salud[i]={k:bt.dataset.k,alta:true,t:'Cáncer (ya de alta)',grave:false};else if(i>=0)C.salud.splice(i,1);
+     C.rojo=C.rojo.filter(x=>x!==nom);toast(r.valor==='Alta'?'Cáncer pasado a «de alta»':'Quitado',true);pintar();
+    }catch(e){bt.disabled=false;toast('No se ha podido quitar',false);}});}
   else if(tab==='citas')cont.innerHTML=citas();
   else if(tab==='archivos'){cont.innerHTML=archivos();montarSubida(cont);}
   else if(tab==='informes')fpTabInformes(id,cont,P.nombre,tok);
