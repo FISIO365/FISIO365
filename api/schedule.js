@@ -554,6 +554,29 @@ const REPORTE_ITEMS = [
   { k: 'manana', t: 'He revisado mi **agenda de mañana** (primeras visitas, citas por confirmar y huecos)' },
   { k: 'limpieza', t: 'He dejado la **cabina limpia** y lista para mañana', sub: ['**Mesa y muebles** limpios y sin polvo', '**Grifo** limpio', '**Papelera** vacía', '**Papelera, rulo y taburete** sobre la camilla', '**Trapo** doblado en su sitio (se cambia cada semana)', '**Toalla de manos** colgada en su sitio (se cambia cada semana)', '**Cables** bien recogidos, ninguno por el suelo', '**Máquinas** apagadas y en su sitio', '**Carrito** ordenado y bien presentado'] },
 ];
+// Ajustes editables desde Administración (tabla AJUSTES: CLAVE + VALOR en JSON)
+const AJ_T = 'tblMxPEXHLmnaBnYb';
+let _aj = { t: 0, v: null };
+async function ajustes() {
+  if (_aj.v && Date.now() - _aj.t < 60e3) return _aj.v;
+  const d = await at(`${AJ_T}?pageSize=100`); if (d.error) throw new Error(d.error.message);
+  const v = {}; (d.records || []).forEach(r => { try { v[r.fields.CLAVE] = { id: r.id, v: JSON.parse(r.fields.VALOR || 'null') }; } catch (e) {} });
+  _aj = { t: Date.now(), v }; return v;
+}
+async function ajuste(clave, def) { try { const a = (await ajustes())[clave]; return a && a.v != null ? a.v : def; } catch (e) { return def; } }
+async function guardarAjuste(clave, valor, quien) {
+  const a = (await ajustes())[clave], fields = { CLAVE: clave, VALOR: JSON.stringify(valor), 'CAMBIADO POR': String(quien || '') };
+  const d = a ? await at(`${AJ_T}/${a.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) }) : await at(AJ_T, { method: 'POST', body: JSON.stringify({ records: [{ fields }] }) });
+  _aj = { t: 0, v: null }; if (d.error) throw new Error(d.error.message); return true;
+}
+// Check-list: la guardada en Administración (los puntos de siempre conservan su comprobación automática)
+async function checklistTodos() {
+  const g = await ajuste('checklist', null); if (!Array.isArray(g) || !g.length) return REPORTE_ITEMS.map(x => Object.assign({}, x));
+  return g.filter(x => x && x.k && x.t).map(x => { const b = REPORTE_ITEMS.find(y => y.k === x.k); return { k: String(x.k), t: String(x.t), sub: Array.isArray(x.sub) && x.sub.length ? x.sub.map(String) : undefined, auto: b && b.auto, off: !!x.off }; });
+}
+const checklistItems = async () => (await checklistTodos()).filter(x => !x.off).map(({ off, ...x }) => x);
+const EMAILS_DEF = () => String(process.env.RESUMEN_EMAIL || 'fisio365gestion@gmail.com').split(/[,;\s]+/).filter(Boolean);
+async function emailsResumen() { const e = await ajuste('emails_resumen', null); return Array.isArray(e) && e.length ? e : EMAILS_DEF(); }
 const nmSel = v => String((v && typeof v === 'object') ? (v.name || '') : (v || '')).trim();
 const fisioKey = n => String(n || '').trim().split(' ')[0].toLowerCase();
 const orIds = (ids, campo) => 'OR(' + ids.map(id => `FIND('${id}',ARRAYJOIN({${campo}}))`).join(',') + ')';
@@ -863,6 +886,22 @@ module.exports = async function handler(req, res) {
           if (r.id === yo.id && q.k === 'admin' && !q.v) return res.status(400).json({ ok: false, error: 'No puedes quitarte a ti mismo el acceso a Administración' });
           const d = await at(`${FT}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ['acc_' + q.k]: !!q.v } }) });
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+        }
+        if (action === 'seg-adm-ajustes') {
+          return res.status(200).json({ ok: true, checklist: await checklistTodos(), emails: await emailsResumen(), base: REPORTE_ITEMS.map(x => x.k) });
+        }
+        if (action === 'seg-adm-checklist') {
+          if (q.reset) { await guardarAjuste('checklist', null, yo.fields.Name); return res.status(200).json({ ok: true, checklist: await checklistTodos() }); }
+          const L = (Array.isArray(q.items) ? q.items : []).slice(0, 40).map((x, i) => ({ k: /^[a-z0-9_]{2,30}$/.test(x && x.k || '') ? x.k : 'p' + Date.now().toString(36) + i, t: String(x && x.t || '').trim().slice(0, 300), sub: (Array.isArray(x && x.sub) ? x.sub : []).map(y => String(y).trim().slice(0, 200)).filter(Boolean).slice(0, 20), off: !!(x && x.off) })).filter(x => x.t);
+          if (!L.filter(x => !x.off).length) return res.status(400).json({ ok: false, error: 'Deja al menos un punto' });
+          if (new Set(L.map(x => x.k)).size !== L.length) return res.status(400).json({ ok: false, error: 'Puntos repetidos' });
+          await guardarAjuste('checklist', L, yo.fields.Name); return res.status(200).json({ ok: true, checklist: await checklistTodos() });
+        }
+        if (action === 'seg-adm-emails') {
+          const E = [...new Set((Array.isArray(q.emails) ? q.emails : []).map(x => String(x).trim().toLowerCase()).filter(Boolean))];
+          const mal = E.find(x => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)); if (mal) return res.status(400).json({ ok: false, error: `«${mal}» no es un email válido` });
+          if (!E.length) return res.status(400).json({ ok: false, error: 'Deja al menos un email' });
+          await guardarAjuste('emails_resumen', E.slice(0, 10), yo.fields.Name); return res.status(200).json({ ok: true, emails: await emailsResumen() });
         }
         if (action === 'seg-adm-baja') {
           const r = full.find(x => x.id === q.id); if (!r) return res.status(404).json({ ok: false, error: 'No encontrado' });
@@ -1560,7 +1599,7 @@ module.exports = async function handler(req, res) {
         const k = Object.keys(todos).find(f => fisioKey(f) === fisioKey(q.fisio)) || '';
         const env = (await cierresEnviados(fecha))[fisioKey(q.fisio)] || null;
         const resumen = q.todos ? { fisios: Object.entries(todos).map(([f, x]) => ({ fisio: f, citas: x.citas, pendientes: x.pendientes })), enviados: await cierresEnviados(fecha) } : null;
-        return res.status(200).json({ ok: true, fecha, fisio: k || q.fisio || '', items: REPORTE_ITEMS, dia: todos[k] || { citas: 0, hechas: 0, checks: [], pendientes: 0 }, enviado: env, resumen });
+        return res.status(200).json({ ok: true, fecha, fisio: k || q.fisio || '', items: await checklistItems(), dia: todos[k] || { citas: 0, hechas: 0, checks: [], pendientes: 0 }, enviado: env, resumen });
       }
       if (action === 'seg-tareas') {
         const PT = 'tblxPpPSvj15NWqNT';
@@ -1603,7 +1642,7 @@ module.exports = async function handler(req, res) {
         const dia = todos[k] || { checks: [], pendientes: 0 };
         const detalle = dia.checks.map(c => (c.items.length ? (c.aviso ? '• ' : '✗ ') : '✓ ') + c.t + (c.items.length ? ': ' + c.items.map(i => i.nombre + (i.extra ? ' (' + i.extra + ')' : '')).join(', ') : '')).join('\n');
         const marc = new Set(Array.isArray(q.marcados) ? q.marcados : []);
-        const MARCADOS = REPORTE_ITEMS.map(x => (marc.has(x.k) ? '✓ ' : '✗ ') + x.t.replace(/\*\*/g, '')).join('\n');
+        const MARCADOS = (await checklistItems()).map(x => (marc.has(x.k) ? '✓ ' : '✗ ') + x.t.replace(/\*\*/g, '')).join('\n');
         const fields = { CIERRE: fecha + ' · ' + String(q.fisio).trim(), FECHA: fecha, FISIO: String(q.fisio).trim(), ENVIADO: new Date().toISOString(), PENDIENTES: dia.pendientes, DETALLE: detalle, NOTA: String(q.nota || '').slice(0, 2000), MARCADOS };
         const prev = (await cierresEnviados(fecha))[fisioKey(q.fisio)];
         const d = prev ? await at(`${CIERRES_T}/${prev.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) }) : await at(CIERRES_T, { method: 'POST', body: JSON.stringify({ records: [{ fields }] }) });
@@ -2085,5 +2124,6 @@ module.exports = async function handler(req, res) {
   }
 }
 module.exports.cierreDia = cierreDia;
+module.exports.emailsResumen = emailsResumen;
 module.exports.cierresEnviados = cierresEnviados;
 module.exports.holdedApi = { holded: (...a) => holded(...a), holdedTodos: (...a) => holdedTodos(...a), activo: () => !!HOLDED_KEY };
