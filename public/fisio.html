@@ -433,6 +433,8 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .jd-l{max-height:42vh;overflow-y:auto;border:1px solid var(--border);border-radius:14px}.jd-s{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;font-family:var(--font);text-align:left;background:none;border:none;border-top:1px solid #f1ede9;padding:10px 12px;cursor:pointer}.jd-s:first-child{border-top:none}.jd-s i{flex:none;width:20px;height:20px;border-radius:6px;border:2px solid #d9cfc7;display:flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:12px;font-weight:700}.jd-s.on i{background:#c2552e;border-color:#c2552e}.jd-s b{font-size:13.5px;color:#1e2a38;font-weight:600}.jd-s span{font-size:12px;color:#7d6a60;margin-left:auto;text-align:right}
 .jd-acc{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7d6a60;margin:6px 2px 0}.jd-acc button{font-family:var(--font);font-size:12px;font-weight:600;color:#c2552e;background:none;border:none;cursor:pointer;padding:4px 0}
 .jd-ck{display:flex;align-items:center;gap:8px;font-size:13px;color:#5c4f47;margin-top:12px;cursor:pointer}.jd-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}.jd-btns button{font-family:var(--font);font-size:14px;font-weight:700;border-radius:14px;padding:13px;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:#1e2a38}.jd-btns .wa{background:#16803c;border-color:#16803c;color:#fff}
+@media(min-width:769px){.wrap[data-sec="agenda"]{max-width:1080px}.fp .fp-body>*{max-width:920px;margin-left:auto!important;margin-right:auto!important;width:calc(100% - 28px)}}
+.tb-volver{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdf1e8;border:none;border-radius:99px;padding:5px 12px;cursor:pointer;margin-top:4px}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -1434,6 +1436,16 @@ function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?'
 function cerrarSesionPanel(){try{localStorage.removeItem('f365_panel_sesion');sessionStorage.removeItem('f365_panel_sec');}catch(e){}location.reload();}
 // En móvil el scroll va dentro de .main-area: que window.scrollTo también lo mueva
 (function(){const ws=window.scrollTo.bind(window);window.scrollTo=function(...a){ws(...a);const m=document.querySelector('.main-area');if(m&&m.scrollHeight>m.clientHeight+2){try{m.scrollTo(...a);}catch(e){}}};})();
+// Desplegables con el estilo del panel (en ordenador, en vez de la lista del navegador)
+function ddMenuG(btn,items,onPick){document.querySelectorAll('.ci-menu').forEach(x=>x.remove());const mn=ce('div','fp-masmenu ci-menu');
+ mn.innerHTML=items.map(it=>`<button type="button" data-v="${escH(it.v)}" class="${it.on?'on':''}"><span>${escH(it.t)}</span>${it.on?'<b>✓</b>':''}</button>`).join('');
+ document.body.appendChild(mn);const rc=btn.getBoundingClientRect();mn.style.top=(rc.bottom+6)+'px';mn.style.minWidth=rc.width+'px';mn.style.left=Math.max(12,Math.min(rc.left,window.innerWidth-mn.offsetWidth-12))+'px';
+ const cerrar=()=>{mn.remove();document.removeEventListener('mousedown',fuera,true);};const fuera=ev=>{if(!mn.contains(ev.target))cerrar();};setTimeout(()=>document.addEventListener('mousedown',fuera,true),0);
+ mn.querySelectorAll('button').forEach(b=>b.onclick=ev=>{ev.stopPropagation();cerrar();onPick(b.dataset.v);});}
+document.addEventListener('mousedown',e=>{const sel=e.target&&e.target.closest&&e.target.closest('.ag-sel select');if(!sel||window.innerWidth<769)return;e.preventDefault();
+ if(document.querySelector('.ci-menu')){document.querySelectorAll('.ci-menu').forEach(x=>x.remove());return;}
+ ddMenuG(sel.parentElement,[...sel.options].filter(o=>!o.disabled&&!o.hidden).map(o=>({v:o.value,t:o.textContent,on:o.value===sel.value})),v=>{sel.value=v;sel.dispatchEvent(new Event('change',{bubbles:true}));});},true);
+
 // Que el título y la descripción de la sección no se metan debajo de los botones de arriba a la derecha
 function ajustaTopbar(){try{const tb=document.querySelector('.topbar');if(!tb)return;const r=tb.getBoundingClientRect();let izq=r.right;
  ['topBtns','btnPerfil','btnAvisos'].forEach(id=>{const e=$(id);if(!e||e.offsetParent===null)return;[e,...e.children].forEach(x=>{if(x.offsetParent===null)return;const q=x.getBoundingClientRect();if(q.width&&q.left>r.left+r.width/2)izq=Math.min(izq,q.left);});});
@@ -1441,6 +1453,7 @@ function ajustaTopbar(){try{const tb=document.querySelector('.topbar');if(!tb)re
 try{document.fonts&&document.fonts.ready.then(()=>ajustaTopbar());}catch(e){}setTimeout(ajustaTopbar,1500);
 window.addEventListener('resize',()=>ajustaTopbar());
 function showSection(sec){
+ try{const pv=sessionStorage.getItem('f365_panel_sec');if(sec==='anam'&&pv&&pv!=='anam')sessionStorage.setItem('f365_panel_prev',pv);}catch(e){}
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
  try{$('btnRend').classList.toggle('activo',sec==='rend');$('btnTar').classList.toggle('activo',sec==='tar');}catch(e){}
@@ -1450,9 +1463,11 @@ function showSection(sec){
  const [t,s] = TOPBAR[sec];
  $('topbar-t').textContent=t;
  $('topbar-s').textContent=s;
+ if(sec!=='anam')anamVolver=null;
+ if(sec==='anam'&&anamVolver){const v=anamVolver;$('topbar-s').innerHTML=`<button type="button" class="tb-volver">‹ Volver a la ficha de ${escH(capTit(String(v.nombre||'').split(' ').slice(0,2).join(' '))||'paciente')}</button>`;$('topbar-s').querySelector('.tb-volver').onclick=()=>{anamVolver=null;showSection(sessionStorage.getItem('f365_panel_prev')||'pac');abrirFichaPaciente(v.id,v.nombre);};}
  requestAnimationFrame(ajustaTopbar);
  const wrap=$('mainWrap');
- wrap.innerHTML='';
+ wrap.innerHTML='';wrap.dataset.sec=sec;
  if(sec==='prog') renderProg(wrap);
  else if(sec==='anam'){
  // Si hay anamnesis en curso, retomar directamente en lugar de mostrar el hub
@@ -2162,7 +2177,8 @@ const PROTOS_LIST = [
 ];
 
 let anamPreset=null; // paciente elegido desde su ficha («Hacer anamnesis»)
-function abrirAnamnesisDe(p){anamPreset=p;curProto=null;curStep=0;showSection('anam');}
+let anamVolver=null; // ficha desde la que se abrió la anamnesis (para poder volver)
+function abrirAnamnesisDe(p){anamPreset=p;anamVolver=p&&p.id?{id:p.id,nombre:p.nombre||''}:null;curProto=null;curStep=0;showSection('anam');}
 function renderAnamHub(wrap){
  curProto=null; curStep=0; D={}; anamPacId=null; anamPacNom=''; // D loaded after proto/pacId set
 
