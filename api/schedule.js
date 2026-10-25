@@ -41,6 +41,19 @@ const aNum = v => { if (v == null) return NaN; if (typeof v === 'object') v = v.
 const importeDoc = d => { for (const k of ['total', 'total_amount', 'amount', 'grand_total']) { const n = aNum(d[k]); if (n > 0) return n; }
   const p = (aNum(d.payments_total) || 0) + (aNum(d.payments_pending) || 0); if (p > 0) return p;
   const l = (d.lines || []).reduce((t, x) => t + (aNum(x.price) || 0) * (aNum(x.units) || 1) * (1 - (aNum(x.discount) || 0) / 100), 0); return Math.round(l * 100) / 100 || 0; };
+// Ingresos por día desde Holded: todos los tickets de venta (también borradores), menos los anulados con
+// rectificativa (salen «Pagado»: en la clínica no se marcan los cobros) y los de pacientes de prueba
+const HOLDED_DESDE = '2026-10-01'; // desde aquí los ingresos salen de Holded; antes, de las tablas que llevabais a mano
+let _ingH = { t: 0, k: '', v: null };
+async function ingresosHoldedDias(desde, hasta) {
+  const k = desde + '|' + hasta; if (_ingH.k === k && Date.now() - _ingH.t < 10 * 60e3) return _ingH.v;
+  const tk = await holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40);
+  const vistos = new Set(), dias = {};
+  tk.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id);
+    const f = String(d.date || '').slice(0, 10); if (f < desde || f > hasta || d.status === 'completed' || /\btest\b|prueba/i.test(d.contact_name || '')) return;
+    dias[f] = Math.round(((dias[f] || 0) + importeDoc(d)) * 100) / 100; });
+  _ingH = { t: Date.now(), k, v: dias }; return dias;
+}
 const docTipo = t => t === 'invoice' ? 'invoices' : 'sales-receipts';
 
 // Busca contactos de Holded por un filtro exacto (code = DNI/NIF, email, mobile, phone)
@@ -1203,21 +1216,13 @@ module.exports = async function handler(req, res) {
         try { const r = await fetch(`https://api.airtable.com/v0/appR5HDJuhjQG504R/tbloIpGtMu3QVOqoU?pageSize=100`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }); const d = await r.json(); if (d.error) throw 0; ms = (d.records || []).map(x => ({ m: String(x.fields['MES'] || '').slice(0, 7), v: Number(x.fields['IMPORTE'] || 0) })); }
         catch (e) { fuente = 'INGRESOS MES'; ms = (await todosT('tblSJPZroRyyWphVp', 'fields[]=MES&fields[]=IMPORTE').catch(() => [])).map(x => ({ m: String(x.fields['MES'] || '').slice(0, 7), v: Number(x.fields['IMPORTE'] || 0) })); }
         ms = ms.filter(x => x.m && x.v).sort((a, b) => a.m.localeCompare(b.m));
-        // Mes en curso: suma de los TICKETS DE VENTA de Holded (aprobados y en borrador; no facturas)
-        let holdedMes = null; const mesAct = hoyF.slice(0, 7);
-        if (HOLDED_KEY && !ms.some(x => x.m === mesAct)) try {
-          const tk = await holdedTodos(`/sales-receipts?limit=200&start_date=${mesAct}-01&end_date=${hoyF}`, 20);
-          const vistos = new Set(); // sin repetir ningún ticket aunque Holded lo devuelva dos veces al paginar
-          const deMes = tk.filter(d => d && d.id && !vistos.has(d.id) && vistos.add(d.id) && String(d.date || '').slice(0, 7) === mesAct && !/\btest\b|prueba/i.test(d.contact_name || ''));
-          const sum = L => Math.round(L.reduce((t, d) => t + importeDoc(d), 0) * 100) / 100;
-          const bor = deMes.filter(d => !d.document_number);
-          // Tickets anulados con «factura simple rectificativa»: Holded no da esas rectificativas por la API,
-          // pero el ticket anulado queda como «Pagado» (en la clínica no se marcan los cobros en Holded) → no cuentan
-          const anul = deMes.filter(d => d.status === 'completed');
-          const rectV = -sum(anul);
-          holdedMes = { m: mesAct, v: Math.round((sum(deMes) + rectV) * 100) / 100, n: deMes.length - anul.length, hasta: hoyF, borr: { n: bor.length, v: sum(bor) }, rect: { n: anul.length, v: rectV, ok: true } };
-        } catch (e) { holdedMes = { m: mesAct, error: e.message }; }
-        return res.status(200).json({ ok: true, fuente, meses: ms, holdedMes, semanas: rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s) });
+        // Desde octubre 2026 los meses salen de Holded (tickets de venta del mes, lunes a domingo da igual aquí: mes natural)
+        let holdedMeses = [];
+        if (HOLDED_KEY) try { const dias = await ingresosHoldedDias(HOLDED_DESDE, hoyF); const g = {};
+          Object.entries(dias).forEach(([f, v]) => { g[f.slice(0, 7)] = (g[f.slice(0, 7)] || 0) + v; });
+          holdedMeses = Object.entries(g).map(([m, v]) => ({ m, v: Math.round(v * 100) / 100 })); } catch (e) {}
+        ms = ms.filter(x => x.m < HOLDED_DESDE.slice(0, 7)).concat(holdedMeses).sort((a, b) => a.m.localeCompare(b.m));
+        return res.status(200).json({ ok: true, fuente, meses: ms, semanas: rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s) });
       }
       // Cómo nos han conocido: respuestas del formulario de primera visita (CONSENTIMIENTOS) en el periodo
       if (action === 'seg-conocido') {
@@ -1280,6 +1285,8 @@ module.exports = async function handler(req, res) {
           if (!Object.keys(h).length && +f.fields['HORAS SEMANA']) [1, 2, 3, 4, 5].forEach(d => h[d] = +f.fields['HORAS SEMANA'] / 5);
           horario[k] = h; });
         const trabaja = new Set(C.filter(c => !/DIA BLOQUEADO/.test(c.e) && (c.pid || /LIBRE|PENDIENTE|REALIZADA/.test(c.e))).map(c => String(c.fisio).toLowerCase() + '|' + c.f));
+        let diasH = {}; if (HOLDED_KEY && hasta >= HOLDED_DESDE) diasH = await ingresosHoldedDias(HOLDED_DESDE, hoyF).catch(() => ({}));
+        const ingH = a => { if (a < HOLDED_DESDE || !HOLDED_KEY) return undefined; let t = 0; for (let d = 0; d < 7; d++) t += diasH[mv(a, d)] || 0; return Math.round(t * 100) / 100; };
         const semanas = [], usados = new Set();
         for (let k = 0; k < N; k++) {
           const a = mv(desde, 7 * k), b = mv(a, 6), en = f => f >= a && f <= b;
@@ -1314,7 +1321,7 @@ module.exports = async function handler(req, res) {
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
             nuevos: nuevos.length, vinieron: vin, reagendaron: reag, porFisio: fis, prod: pf, ocupadas: ocup, capacidad: cap, ocupacion: cap ? Math.round(ocup * 100 / cap) : null,
             recuperadas: ll.filter(r => /RECUPERADA/.test(nmS(r.fields.RESULTADO))).length, resenasPedidas: ll.filter(r => r.fields['RESEÑA']).length,
-            ingresos: m && m.fields.INGRESOS != null ? m.fields.INGRESOS : null, resenas: m && m.fields['RESEÑAS GOOGLE'] != null ? m.fields['RESEÑAS GOOGLE'] : null, quejas: m && m.fields.QUEJAS != null ? m.fields.QUEJAS : null, notas: m ? (m.fields.NOTAS || '') : '' });
+            ingresos: ingH(a) !== undefined ? ingH(a) : (m && m.fields.INGRESOS != null ? m.fields.INGRESOS : null), ingresosHolded: ingH(a) !== undefined, resenas: m && m.fields['RESEÑAS GOOGLE'] != null ? m.fields['RESEÑAS GOOGLE'] : null, quejas: m && m.fields.QUEJAS != null ? m.fields.QUEJAS : null, notas: m ? (m.fields.NOTAS || '') : '' });
         }
         const nombres = {}; { const ids = [...usados]; const lt = []; for (let i = 0; i < ids.length; i += 50) lt.push(ids.slice(i, i + 50));
           for (let i = 0; i < lt.length; i += 4) (await Promise.all(lt.slice(i, i + 4).map(t => todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + t.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=FULL%20NAME`).catch(() => [])))).forEach(rs => rs.forEach(r => nombres[r.id] = r.fields['FULL NAME'] || '')); }
