@@ -879,6 +879,13 @@ module.exports = async function handler(req, res) {
           else { if (!clave) return res.status(400).json({ ok: false, error: 'Ponle una contraseña para que pueda entrar' }); if (!c.accesos) ['agenda', 'pacientes', 'chat', 'checklist', 'callin', 'captacion', 'programas', 'ejercicios', 'anamnesis', 'school'].forEach(k => f['acc_' + k] = true);
             if (!f['FECHA ALTA']) f['FECHA ALTA'] = hoyF; d = await at(FT, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }], typecast: true }) }); d = d.records ? d.records[0] : d; }
           if (d.error) return res.status(400).json({ ok: false, error: d.error.message || 'No se ha podido guardar' });
+          // Foto: nueva (cuadrada, comprimida en el panel) o quitarla
+          if ((c.foto && c.foto.b64 && String(c.foto.b64).length < 4e6) || c.quitarFoto) {
+            await at(`${FT}/${d.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { Foto: [] } }) });
+            if (!c.quitarFoto) { const up = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${d.id}/fldpL6HNfozN4T9Zw/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'image/jpeg', file: c.foto.b64, filename: 'foto-' + pila(nombre).toLowerCase() + '.jpg' }) }).catch(() => null);
+              if (!up || !up.ok) return res.status(200).json({ ok: true, aviso: 'Se ha guardado, pero la foto no se ha podido subir. Prueba otra vez.', fisio: vista(d) }); }
+            d = await at(`${FT}/${d.id}`);
+          }
           return res.status(200).json({ ok: true, fisio: vista(d) });
         }
         if (action === 'seg-adm-acceso') { // marcar o desmarcar una sección para una persona
@@ -917,9 +924,10 @@ module.exports = async function handler(req, res) {
           const a = q.ausencia || {}, ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '');
           if (!ok(a.desde)) return res.status(400).json({ ok: false, error: 'Elige la fecha' });
           const hasta = ok(a.hasta) && a.hasta >= a.desde ? a.hasta : a.desde;
-          const tipo = ['Vacaciones', 'Festivo', 'Día libre', 'Menos horas', 'Baja', 'Formación', 'Otro'].includes(a.tipo) ? a.tipo : 'Vacaciones';
+          const horario = a.modo === 'horario'; // «trabaja otro horario ese día»: se bloquea lo que queda fuera
+          const tipo = horario ? 'Cambio de horario' : ['Vacaciones', 'Festivo', 'Día libre', 'Menos horas', 'Baja', 'Formación', 'Otro'].includes(a.tipo) ? a.tipo : 'Vacaciones';
           const p2 = x => { const m = String(x || '').match(/^(\d{1,2}):(\d{2})$/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
-          const hd = p2(a.hd), hh2 = p2(a.hh); if ((hd || hh2) && !(hd && hh2 && hd < hh2)) return res.status(400).json({ ok: false, error: 'Revisa las horas: «desde» tiene que ser antes que «hasta»' });
+          const hd = p2(a.hd), hh2 = p2(a.hh); if ((hd || hh2 || horario) && !(hd && hh2 && hd < hh2)) return res.status(400).json({ ok: false, error: 'Revisa las horas: «desde» tiene que ser antes que «hasta»' });
           const todosF = a.fisio === 'TODOS', quien = todosF ? 'Toda la clínica' : pila(a.fisio);
           if (!todosF && !full.some(r => r.fields && pila(r.fields.Name).toLowerCase() === quien.toLowerCase())) return res.status(400).json({ ok: false, error: 'Elige el fisio' });
           const d = await at(AUS, { method: 'POST', body: JSON.stringify({ records: [{ fields: { AUSENCIA: `${tipo} · ${quien} · ${a.desde}${hasta !== a.desde ? ' → ' + hasta : ''}${hd ? ` · ${hd}-${hh2}` : ''}`, FISIO: quien, 'HORA DESDE': hd, 'HORA HASTA': hh2, DESDE: a.desde, HASTA: hasta, TIPO: tipo, NOTA: String(a.nota || '').slice(0, 2000), 'CREADO POR': String(yo.fields.Name || '') } }], typecast: true }) });
@@ -928,7 +936,7 @@ module.exports = async function handler(req, res) {
           const cond = [`NOT(IS_BEFORE({FECHA},'${a.desde}'))`, `NOT(IS_AFTER({FECHA},'${hasta}'))`]; if (!todosF) cond.push(`{PREF.}='${quien.replace(/'/g, '')}'`);
           const filas = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(${cond.join(',')})`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []);
           const est = r => String((r.fields.ESTADO && r.fields.ESTADO.name) || r.fields.ESTADO || '').trim();
-          const enHoras = r => { if (!hd) return true; const x = p2(r.fields.HORA); return x && x >= hd && x < hh2; };
+          const enHoras = r => { if (!hd) return true; const x = p2(r.fields.HORA); if (!x) return false; const dentro = x >= hd && x < hh2; return horario ? !dentro : dentro; };
           filas.splice(0, filas.length, ...filas.filter(enHoras));
           const libres = filas.filter(r => /^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(est(r)) && !(r.fields['RELACIÓN - CITA'] || []).length);
           for (let i = 0; i < libres.length; i += 10) await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: libres.slice(i, i + 10).map(r => ({ id: r.id, fields: { ESTADO: 'CITA BLOQUEADA', NOTAS: tipo } })), typecast: true }) });
@@ -1327,7 +1335,7 @@ module.exports = async function handler(req, res) {
             const ausF = ausL.filter(a => a.desde <= f && a.hasta >= f && (a.fisio === 'Toda la clínica' || a.fisio.toLowerCase() === String(q.fisio).toLowerCase()));
             const rows = await delDia(f);
             for (const h of horas) {
-              if (ausF.some(a => !a.hd || (p2h(h) >= a.hd && p2h(h) < a.hh))) { ausentes++; continue; }
+              if (ausF.some(a => { if (!a.hd) return true; const dentro = p2h(h) >= a.hd && p2h(h) < a.hh; return a.tipo === 'Cambio de horario' ? !dentro : dentro; })) { ausentes++; continue; }
               const ya = enHora(rows, h, q.fisio).some(r => !/CANCELADA|REPROGRAMADA|CITA PERDIDA/.test(String(nmA(r.fields['ESTADO']))));
               if (ya) { saltadas++; continue; }
               nuevos.push({ fields: { FECHA: f, HORA: h, 'PREF.': q.fisio, ESTADO: q.estado, ...(q.notas ? { NOTAS: String(q.notas) } : {}) } });
