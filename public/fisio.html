@@ -5570,7 +5570,7 @@ async function pdfConsentimiento(D){
  const fC=f=>f?String(f).slice(0,10).split('-').reverse().join('/'):'—';
  const R=D.resp||{},v=k=>k.split('|').map(x=>R[x]).filter(Boolean),resp=k=>{const a=v(k);return a.some(x=>/^s[ií]$/i.test(x))?'Sí':a[0]||'—';};
  const TIPO=D.tipo||'Primera visita';
- try{const lg=await new Promise((ok,ko)=>{fetch('/informe/logo.png').then(r=>r.blob()).then(b=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=ko;fr.readAsDataURL(b);}).catch(ko);});doc.addImage(lg,'PNG',ml,y-6,44,44*130/751);y+=8;}catch(e){}
+ try{const lg=await new Promise((ok,ko)=>{fetch('/informe/logo.png').then(r=>r.blob()).then(b=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=ko;fr.readAsDataURL(b);}).catch(ko);});doc.addImage(lg,'PNG',ml,y-5,26,26*130/751);y+=4;}catch(e){}
  set(8.5,'bold','nar');doc.text('CONSENTIMIENTO INFORMADO',ml,y);y+=8;
  set(18,'bold','neg');doc.text(TIPO==='Suelo pélvico'?'Fisioterapia de suelo pélvico':TIPO==='Alta oncológica'?'Consentimiento por alta oncológica':'Formulario de primera visita',ml,y);y+=6.5;
  set(10,'normal','gris');doc.text(`${[D.nombre,D.apellidos].filter(Boolean).join(' ')} · firmado el ${fC(D.fecha)}`,ml,y);y+=6;
