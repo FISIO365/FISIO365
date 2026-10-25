@@ -442,8 +442,9 @@ const REPORTE_ITEMS = [
   { k: 'marcar', t: 'He marcado todas mis citas (hecha, no vino…)', auto: 'marcar' },
   { k: 'ejercicios', t: 'Mis pacientes tienen los ejercicios en la app', auto: 'ejercicios' },
   { k: 'consent', t: 'Las primeras visitas han firmado el consentimiento', auto: 'consent' },
-  { k: 'proxima', t: 'Cada paciente sale con su próxima cita o seguimiento', auto: 'proxima' },
-  { k: 'historia', t: 'He apuntado la evolución de cada paciente' },
+  { k: 'app', t: 'He dado acceso a la app a todos los pacientes nuevos del día', auto: 'app' },
+  { k: 'proxima', t: 'Si alguien no ha reagendado, he apuntado por qué y lo he pasado a seguimiento', auto: 'proxima' },
+  { k: 'historia', t: 'He actualizado todas las historias clínicas de hoy' },
   { k: 'limpieza', t: 'He dejado la cabina limpia y recogida' },
   { k: 'material', t: 'Aparatos apagados y material en su sitio' },
 ];
@@ -458,8 +459,9 @@ async function cierreDia(fecha, soloFisio) {
   const hechas = conPac.filter(c => est(c) === 'REALIZADA');
   const P = [...new Set(hechas.map(c => c.fields['RELACIÓN - CITA'][0]))];
   const todosP = [...new Set(conPac.map(c => c.fields['RELACIÓN - CITA'][0]))];
-  const [nombres, futuras, previas, planes, sf, cons] = await Promise.all([
-    lotes(todosP, ids => capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME`), 40).catch(() => []),
+  const [nombres, segs, futuras, previas, planes, sf, cons] = await Promise.all([
+    lotes(todosP, ids => capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=ÚLTIMO ACCESO APP`), 40).catch(() => []),
+    lotes(P, ids => capTodos('tblu9YxiktpAh5w87', `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),${orIds(ids, 'PacRec')})`)}&fields[]=PacRec`)).catch(() => []),
     lotes(P, ids => capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='PENDIENTE',IS_AFTER({FECHA},'${fecha}'),${orIds(ids, 'PacienteRec')})`)}&fields[]=PacienteRec`)).catch(() => []),
     lotes(P, ids => capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_BEFORE({FECHA},'${fecha}'),${orIds(ids, 'PacienteRec')})`)}&fields[]=PacienteRec`)).catch(() => []),
     lotes(P, ids => capTodos(PLAN_TABLE, `filterByFormula=${encodeURIComponent(`AND(LEN({Ejercicios}&'')>2,OR(${ids.map(id => `{PacienteID}='${id}'`).join(',')}))`)}&fields[]=PacienteID`)).catch(() => []),
@@ -467,7 +469,8 @@ async function cierreDia(fecha, soloFisio) {
     consTodos().catch(() => [])
   ]);
   const nom = Object.fromEntries(nombres.map(p => [p.id, p.fields['FULL NAME'] || '']));
-  const conFutura = new Set(futuras.flatMap(c => c.fields['PacienteRec'] || []));
+  const conFutura = new Set([...futuras.flatMap(c => c.fields['PacienteRec'] || []), ...segs.flatMap(r => r.fields['PacRec'] || [])]);
+  const usaApp = new Set(nombres.filter(p => p.fields['ÚLTIMO ACCESO APP']).map(p => p.id));
   const yaVino = new Set(previas.flatMap(c => c.fields['PacienteRec'] || []));
   const conPlan = new Set(planes.map(r => String(r.fields['PacienteID'] || '')));
   const debe = new Map((sf.lista || []).map(x => [x.id, -x.saldo]));
@@ -484,7 +487,8 @@ async function cierreDia(fecha, soloFisio) {
       { k: 'cobrar', t: 'Todo cobrado', d: sf.activo ? 'Cada sesión hecha está pagada (pack o cobro desde el panel)' : 'El control de cobros empezará con el primer cobro desde el panel', items: sf.activo ? uni(hs.filter(c => debe.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c, debe.get(c.fields['RELACIÓN - CITA'][0]) + ' sin cobrar'))) : [] },
       { k: 'ejercicios', t: 'Ejercicios en la app', d: 'Cada paciente de hoy tiene su programa cargado', items: uni(hs.filter(c => !conPlan.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c))) },
       { k: 'consent', t: 'Consentimiento firmado', d: 'Las primeras visitas tienen el consentimiento', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !conCons.has(id); }).map(c => it(c, 'primera visita'))) },
-      { k: 'proxima', t: 'Próxima cita', d: 'Cada paciente sale con su próxima cita (si es alta, no hace falta)', aviso: true, items: uni(hs.filter(c => !conFutura.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c))) },
+      { k: 'app', t: 'App a los nuevos', d: 'Los pacientes nuevos del día ya han entrado en la app', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !usaApp.has(id); }).map(c => it(c, 'aún no ha entrado'))) },
+      { k: 'proxima', t: 'Próxima cita o seguimiento', d: 'Quien no reagenda, pasa a seguimiento con el motivo', items: uni(hs.filter(c => !conFutura.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c, 'sin cita ni seguimiento'))) },
     ];
     out[fisio] = { citas: cs.length, hechas: hs.length, checks, pendientes: checks.filter(x => !x.aviso).reduce((t, x) => t + x.items.length, 0) };
   }
