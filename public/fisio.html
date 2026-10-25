@@ -1022,7 +1022,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .adm-nota{font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.45}.adm-nota.warn{color:#b42318}
 .adm-clv{font-size:26px;font-weight:600;letter-spacing:.06em;text-align:center;background:#f6f2ee;border-radius:14px;padding:16px;margin:6px 0 4px;user-select:all}
 .adm-ai{display:flex;align-items:center;gap:10px;border-top:1px solid #f1ece7;padding:10px 0}.adm-ai:first-of-type{border-top:none}.adm-ai div{flex:1;min-width:0;display:flex;flex-direction:column}.adm-ai b{font-size:14px}.adm-ai small{font-size:12px;color:var(--muted)}.adm-ai.pas{opacity:.6}
-.adm-at{flex:none;font-size:11px;font-weight:600;color:#8a4a1f;background:#fff4e8;border-radius:99px;padding:4px 9px;min-width:72px;text-align:center}.adm-ax{flex:none;border:none;background:#f3efea;width:28px;height:28px;border-radius:50%;cursor:pointer;color:#7d6a60}
+.adm-at{flex:none;font-size:11px;font-weight:600;color:#8a4a1f;background:#fff4e8;border-radius:99px;padding:4px 9px;width:92px;box-sizing:border-box;text-align:center}.adm-ax{flex:none;border:none;background:#f3efea;width:28px;height:28px;border-radius:50%;cursor:pointer;color:#7d6a60}
 .adm-ok{margin-top:12px;font-size:13px;color:#2f6b45;background:#eaf5ee;border-radius:12px;padding:10px 12px}.adm-alerta{margin-top:8px;font-size:12.5px;background:#fdecea;color:#7a1c14;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
 .adm-tw{overflow-x:auto;margin:0 -4px}.adm-t{border-collapse:collapse;width:100%;font-size:13px}.adm-t th{font-size:11.5px;font-weight:600;color:#5f554e;padding:4px 6px 8px;text-align:center;min-width:58px}.adm-t td{border-top:1px solid #f1ece7;padding:7px 6px;text-align:center}.adm-t td:first-child{text-align:left;font-weight:500;white-space:nowrap;padding-left:4px}
 .adm-ck{width:26px;height:26px;border-radius:8px;border:1.5px solid #d9cfc6;background:#fff;cursor:pointer;position:relative}.adm-ck.on{background:#1e2a38;border-color:#1e2a38}.adm-ck.on::after{content:'';position:absolute;left:8px;top:4px;width:6px;height:11px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
@@ -5239,7 +5239,7 @@ function renderAgenda(wrap){
   const celda=(f,h)=>{const rs=C.filter(c=>c.fisio===f&&c.hora===h),pr=rs.filter(c=>!agEsFuera(c.estado)),fu=rs.filter(c=>agEsFuera(c.estado));
    return (pr.length?'':`<button type="button" class="ag-vac" data-f="${escH(f)}" data-h="${h}" aria-label="Hora vacía">＋</button>`)+pr.map(c=>tarjeta(c,false)).join('')+fu.map(fuera).join('');};
   const sinF=todas.filter(c=>!c.fisio&&c.pacienteId&&!agEsFuera(c.estado));
-  const ausH=((AG.dia&&AG.dia.aus)||[]).map(a=>`<span class="ag-aus"><b>${escH(a.fisio)}</b> · ${escH(a.tipo||'Ausencia')}${a.hasta&&a.hasta!==a.desde?` hasta el ${+a.hasta.slice(8)}/${+a.hasta.slice(5,7)}`:''}${a.nota?` · ${escH(a.nota)}`:''}</span>`).join('');
+  const ausH=((AG.dia&&AG.dia.aus)||[]).map(a=>`<span class="ag-aus"><b>${escH(a.fisio)}</b> · ${escH(a.tipo||'Ausencia')}${a.hd?` de ${escH(a.hd)} a ${escH(a.hh)}`:''}${a.hasta&&a.hasta!==a.desde?` hasta el ${+a.hasta.slice(8)}/${+a.hasta.slice(5,7)}`:''}${a.nota?` · ${escH(a.nota)}`:''}</span>`).join('');
   grid.innerHTML=(ausH?`<div class="ag-ausb">${ausH}</div>`:'')+(sinF.length?`<div class="ag-sinf"><b>Sin fisio asignado</b><small>Toca la cita y «Cambiar día u hora» para darle fisio</small>${sinF.map(c=>`<div class="ag-li"><span class="ag-lh">${escH(c.hora)}</span>${tarjeta(c,false)}</div>`).join('')}</div>`:'')+`<div class="ag-tb" style="--n:${ver.length}"><div class="ag-hd"><div class="ag-h0"></div>${ver.map(f=>`<div class="ag-hf">${escH(agNom(f))}</div>`).join('')}</div>${[...horas].sort().map(h=>`<div class="ag-row${h===ahora?' now':''}"><div class="ag-h">${h}</div>${ver.map(f=>`<div class="ag-cell">${celda(f,h)}</div>`).join('')}</div>`).join('')}</div>`;
   grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agVacio({fecha:AG.fecha,hora:b.dataset.h,fisio:b.dataset.f},cargar));abrir();
  }
@@ -5441,7 +5441,7 @@ function stRanking(L,S){const sem=ST.rk!=='per'?[S]:L,acc={};
 // ══ ADMINISTRACIÓN: equipo, horarios, vacaciones y festivos, accesos y contraseñas (solo quien tiene acceso «admin») ══
 const ADM={tab:'equipo',d:null};
 const ADM_SEC=[['agenda','Agenda'],['pacientes','Pacientes'],['chat','Chat'],['checklist','Check-list'],['callin','Call-in'],['captacion','Captación'],['recordatorios','Recordatorios'],['programas','Programas'],['ejercicios','Ejercicios'],['anamnesis','Anamnesis'],['rendimiento','Rendimiento'],['estadisticas','Estadísticas'],['school','School'],['admin','Administración']];
-const ADM_TIPOS=['Vacaciones','Festivo','Día libre','Baja','Formación','Otro'];
+const ADM_TIPOS=['Vacaciones','Festivo','Día libre','Menos horas','Baja','Formación','Otro'];
 const ADM_DC={Lunes:'Lun',Martes:'Mar','Miércoles':'Mié',Jueves:'Jue',Viernes:'Vie','Sábado':'Sáb'};
 async function admPost(a,b){return agPost(a,Object.assign({yo:fisioActual.nombre,clave:fisioActual._pwd},b||{}));}
 const admFecha=f=>{if(!f)return '';const [y,m,d]=f.split('-');return `${+d} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][+m-1]}${y!==agHoyIso().slice(0,4)?' '+y:''}`;};
@@ -5510,22 +5510,26 @@ async function renderAdmin(wrap){
   m.querySelector('.adm-cp').onclick=()=>{try{navigator.clipboard.writeText(txt);toast('Copiado',true);}catch(e){}};
   m.querySelector('.adm-wa').onclick=()=>{const f=ADM.d.equipo.find(x=>x.nombre===nombre);const t=String((f&&f.tel)||'').replace(/\D/g,'');window.open(`https://wa.me/${t?(t.length===9?'34'+t:t):''}?text=${encodeURIComponent(txt)}`,'_blank');};}
  function pintaAus(){const act=activos();const hoy=agHoyIso();const L=ADM.d.ausencias||[];const prox=L.filter(a=>a.hasta>=hoy),pas=L.filter(a=>a.hasta<hoy).reverse();
-  const it=a=>`<div class="adm-ai${a.hasta<hoy?' pas':''}"><span class="adm-at">${escH(a.tipo||'Ausencia')}</span><div><b>${escH(a.fisio)}</b><small>${admFecha(a.desde)}${a.hasta!==a.desde?' – '+admFecha(a.hasta):''}${a.nota?' · '+escH(a.nota):''}</small></div><button type="button" class="adm-ax" data-id="${a.id}" aria-label="Quitar">✕</button></div>`;
-  body.innerHTML=`<div class="adm-card"><div class="adm-h"><b>Apuntar vacaciones o festivo</b></div>
+  const it=a=>`<div class="adm-ai${a.hasta<hoy?' pas':''}"><span class="adm-at">${escH(a.tipo||'Ausencia')}</span><div><b>${escH(a.fisio)}</b><small>${admFecha(a.desde)}${a.hasta!==a.desde?' – '+admFecha(a.hasta):''}${a.hd?` · de ${escH(a.hd)} a ${escH(a.hh)}`:' · todo el día'}${a.nota?' · '+escH(a.nota):''}</small></div><button type="button" class="adm-ax" data-id="${a.id}" aria-label="Quitar">✕</button></div>`;
+  body.innerHTML=`<div class="adm-card"><div class="adm-h"><b>Apuntar vacaciones, festivo o menos horas</b></div>
    <div class="hz-lab">¿Quién?</div><div class="fac-chips a-q"><button type="button" data-v="TODOS">Toda la clínica</button>${act.filter(f=>f.role!=='admin').map(f=>`<button type="button" data-v="${escH(f.nombre.split(' ')[0])}">${escH(f.nombre.split(' ')[0])}</button>`).join('')}</div>
    <div class="hz-lab">Tipo</div><div class="fac-chips a-t">${ADM_TIPOS.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
    <div class="adm-2"><div><div class="hz-lab">Desde</div><input type="date" class="ag-in a-d1" value="${hoy}"></div><div><div class="hz-lab">Hasta <span>(incluido)</span></div><input type="date" class="ag-in a-d2" value="${hoy}"></div></div>
-   <div class="hz-lab">Nota <span>(opcional)</span></div><input class="ag-in a-n" placeholder="Ej.: Navidad, congreso…">
-   <p class="adm-nota">Los huecos libres de esos días se bloquean solos, para que nadie reserve desde la app. Si ya hay pacientes citados, te lo digo para que los muevas.</p>
+   <div class="hz-lab">¿Todo el día?</div><div class="fac-chips a-j"><button type="button" data-v="dia">Todo el día</button><button type="button" data-v="horas">Solo unas horas</button></div>
+   <div class="adm-2 a-hs" style="display:none"><div><div class="hz-lab">No está desde las</div><input type="time" class="ag-in a-h1" value="15:00" step="1800"></div><div><div class="hz-lab">Hasta las</div><input type="time" class="ag-in a-h2" value="21:00" step="1800"></div></div>
+   <div class="hz-lab">Nota <span>(opcional)</span></div><input class="ag-in a-n" placeholder="Ej.: Navidad, congreso, médico…">
+   <p class="adm-nota">Los huecos libres de esos días (o de esas horas) se bloquean solos, para que nadie reserve desde la app. Si ya hay pacientes citados, te lo digo para que los muevas.</p>
    <div class="hz-bts"><button type="button" class="hz-ok a-g">Guardar</button></div><div class="a-res"></div></div>
    <div class="adm-card"><div class="adm-h"><b>Próximas</b></div>${prox.length?prox.map(it).join(''):'<p class="adm-nota">No hay nada apuntado.</p>'}</div>
    ${pas.length?`<div class="adm-card"><div class="adm-h"><b>Pasadas</b></div>${pas.slice(0,15).map(it).join('')}</div>`:''}`;
   let quien='',tipo='Vacaciones';const sel=(cls,v)=>body.querySelectorAll(cls+' button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));sel('.a-t',tipo);
   body.querySelectorAll('.a-q button').forEach(b=>b.onclick=()=>{quien=b.dataset.v;sel('.a-q',quien);if(quien==='TODOS'&&tipo==='Vacaciones'){tipo='Festivo';sel('.a-t',tipo);}});
-  body.querySelectorAll('.a-t button').forEach(b=>b.onclick=()=>{tipo=b.dataset.v;sel('.a-t',tipo);});
+  let jor='dia';const pJ=()=>{sel('.a-j',jor);body.querySelector('.a-hs').style.display=jor==='horas'?'':'none';};pJ();
+  body.querySelectorAll('.a-j button').forEach(b=>b.onclick=()=>{jor=b.dataset.v;pJ();if(jor==='horas'&&tipo==='Vacaciones'){tipo='Menos horas';sel('.a-t',tipo);}});
+  body.querySelectorAll('.a-t button').forEach(b=>b.onclick=()=>{tipo=b.dataset.v;sel('.a-t',tipo);if(tipo==='Menos horas'&&jor!=='horas'){jor='horas';pJ();}});
   const d1=body.querySelector('.a-d1'),d2=body.querySelector('.a-d2');d1.onchange=()=>{if(!d2.value||d2.value<d1.value)d2.value=d1.value;};
   body.querySelector('.a-g').onclick=async e=>{if(!quien){toast('Elige quién',false);return;}const b=e.target;b.disabled=true;b.textContent='Guardando…';
-   try{const r=await admPost('seg-adm-ausencia',{ausencia:{fisio:quien,tipo,desde:d1.value,hasta:d2.value,nota:body.querySelector('.a-n').value}});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
+   try{const r=await admPost('seg-adm-ausencia',{ausencia:{fisio:quien,tipo,desde:d1.value,hasta:d2.value,nota:body.querySelector('.a-n').value,hd:jor==='horas'?body.querySelector('.a-h1').value:'',hh:jor==='horas'?body.querySelector('.a-h2').value:''}});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
     ADM.d.ausencias=r.ausencias;pintaAus();const res=body.querySelector('.a-res');
     res.innerHTML=`<div class="adm-ok">Guardado.${r.bloqueados?` Se han bloqueado ${r.bloqueados} hueco${r.bloqueados===1?'':'s'} libre${r.bloqueados===1?'':'s'}.`:''}</div>${r.conPaciente&&r.conPaciente.length?`<div class="adm-alerta"><b>Hay ${r.conPaciente.length} cita${r.conPaciente.length===1?'':'s'} con paciente esos días. Muévelas desde la Agenda:</b>${r.conPaciente.slice(0,20).map(c=>`<span>${admFecha(c.fecha)} · ${escH(c.hora)} · ${escH(agNom(c.fisio))}</span>`).join('')}</div>`:''}`;}
    catch(err){toast(err.message,false);b.disabled=false;b.textContent='Guardar';}};

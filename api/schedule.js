@@ -46,7 +46,7 @@ const importeDoc = d => { for (const k of ['total', 'total_amount', 'amount', 'g
 let _ausC = { t: 0, v: null };
 async function ausenciasEn(desde, hasta) {
   if (!_ausC.v || Date.now() - _ausC.t > 60e3) { const d = await at(`tblkezm4bTQ4jJf1X?pageSize=100&filterByFormula=${encodeURIComponent(`NOT(IS_BEFORE({HASTA},DATEADD(TODAY(),-400,'days')))`)}`); if (d.error) throw new Error(d.error.message);
-    _ausC = { t: Date.now(), v: (d.records || []).map(r => ({ fisio: r.fields.FISIO || '', desde: r.fields.DESDE || '', hasta: r.fields.HASTA || r.fields.DESDE || '', tipo: (r.fields.TIPO && r.fields.TIPO.name) || r.fields.TIPO || '', nota: r.fields.NOTA || '' })) }; }
+    _ausC = { t: Date.now(), v: (d.records || []).map(r => ({ fisio: r.fields.FISIO || '', desde: r.fields.DESDE || '', hasta: r.fields.HASTA || r.fields.DESDE || '', tipo: (r.fields.TIPO && r.fields.TIPO.name) || r.fields.TIPO || '', nota: r.fields.NOTA || '', hd: r.fields['HORA DESDE'] || '', hh: r.fields['HORA HASTA'] || '' })) }; }
   return _ausC.v.filter(a => a.desde && a.desde <= hasta && a.hasta >= desde);
 }
 // Gastos al mes desde las cuentas bancarias conectadas en Holded: suma de los movimientos negativos (salidas)
@@ -830,7 +830,7 @@ module.exports = async function handler(req, res) {
           return { id: r.id, nombre: F.Name || '', role: F.Role || 'fisio', colegiado: F['NºColegiado'] || '', tel: F['TELÉFONO'] || '', email: F.EMAIL || '', alta: F['FECHA ALTA'] || '', baja: F['FECHA BAJA'] || '', notas: F['NOTAS ADMIN'] || '',
             horas, semana: F['HORAS SEMANA'] || null, control: !!F['CONTROL HORAS'], accesos: Object.fromEntries(ACC.map(k => [k, !!F['acc_' + k]])), foto: (F.Foto && F.Foto[0] && F.Foto[0].thumbnails && F.Foto[0].thumbnails.large && F.Foto[0].thumbnails.large.url) || '',
             claveDebil: !F.Password || String(F.Password).trim().length < 6 || /^(1234|12345|123456|0000|fisio365)$/i.test(String(F.Password).trim()) }; };
-        const ausencias = async () => (await todosT(AUS, `filterByFormula=${encodeURIComponent(`NOT(IS_BEFORE({HASTA},DATEADD(TODAY(),-60,'days')))`)}&sort[0][field]=DESDE&sort[0][direction]=asc`)).map(r => ({ id: r.id, fisio: r.fields.FISIO || '', desde: r.fields.DESDE || '', hasta: r.fields.HASTA || r.fields.DESDE || '', tipo: (r.fields.TIPO && r.fields.TIPO.name) || r.fields.TIPO || '', nota: r.fields.NOTA || '', por: r.fields['CREADO POR'] || '' }));
+        const ausencias = async () => (await todosT(AUS, `filterByFormula=${encodeURIComponent(`NOT(IS_BEFORE({HASTA},DATEADD(TODAY(),-60,'days')))`)}&sort[0][field]=DESDE&sort[0][direction]=asc`)).map(r => ({ id: r.id, fisio: r.fields.FISIO || '', desde: r.fields.DESDE || '', hasta: r.fields.HASTA || r.fields.DESDE || '', tipo: (r.fields.TIPO && r.fields.TIPO.name) || r.fields.TIPO || '', nota: r.fields.NOTA || '', por: r.fields['CREADO POR'] || '', hd: r.fields['HORA DESDE'] || '', hh: r.fields['HORA HASTA'] || '' }));
         if (action === 'seg-adm-equipo') {
           const eq = full.filter(r => r.fields && r.fields.Name).map(vista).sort((a, b) => !!a.baja - !!b.baja || (a.role === 'admin') - (b.role === 'admin') || a.nombre.localeCompare(b.nombre));
           return res.status(200).json({ ok: true, equipo: eq, ausencias: await ausencias().catch(() => []), dias: DIAS, accesos: ACC });
@@ -878,15 +878,19 @@ module.exports = async function handler(req, res) {
           const a = q.ausencia || {}, ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '');
           if (!ok(a.desde)) return res.status(400).json({ ok: false, error: 'Elige la fecha' });
           const hasta = ok(a.hasta) && a.hasta >= a.desde ? a.hasta : a.desde;
-          const tipo = ['Vacaciones', 'Festivo', 'Día libre', 'Baja', 'Formación', 'Otro'].includes(a.tipo) ? a.tipo : 'Vacaciones';
+          const tipo = ['Vacaciones', 'Festivo', 'Día libre', 'Menos horas', 'Baja', 'Formación', 'Otro'].includes(a.tipo) ? a.tipo : 'Vacaciones';
+          const p2 = x => { const m = String(x || '').match(/^(\d{1,2}):(\d{2})$/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
+          const hd = p2(a.hd), hh2 = p2(a.hh); if ((hd || hh2) && !(hd && hh2 && hd < hh2)) return res.status(400).json({ ok: false, error: 'Revisa las horas: «desde» tiene que ser antes que «hasta»' });
           const todosF = a.fisio === 'TODOS', quien = todosF ? 'Toda la clínica' : pila(a.fisio);
           if (!todosF && !full.some(r => r.fields && pila(r.fields.Name).toLowerCase() === quien.toLowerCase())) return res.status(400).json({ ok: false, error: 'Elige el fisio' });
-          const d = await at(AUS, { method: 'POST', body: JSON.stringify({ records: [{ fields: { AUSENCIA: `${tipo} · ${quien} · ${a.desde}${hasta !== a.desde ? ' → ' + hasta : ''}`, FISIO: quien, DESDE: a.desde, HASTA: hasta, TIPO: tipo, NOTA: String(a.nota || '').slice(0, 2000), 'CREADO POR': String(yo.fields.Name || '') } }], typecast: true }) });
+          const d = await at(AUS, { method: 'POST', body: JSON.stringify({ records: [{ fields: { AUSENCIA: `${tipo} · ${quien} · ${a.desde}${hasta !== a.desde ? ' → ' + hasta : ''}${hd ? ` · ${hd}-${hh2}` : ''}`, FISIO: quien, 'HORA DESDE': hd, 'HORA HASTA': hh2, DESDE: a.desde, HASTA: hasta, TIPO: tipo, NOTA: String(a.nota || '').slice(0, 2000), 'CREADO POR': String(yo.fields.Name || '') } }], typecast: true }) });
           if (d.error) return res.status(400).json({ ok: false, error: d.error.message }); _ausC = { t: 0, v: null };
           // Bloquear los huecos libres de esos días (para que no se reserven desde la app) y avisar de las citas con paciente
           const cond = [`NOT(IS_BEFORE({FECHA},'${a.desde}'))`, `NOT(IS_AFTER({FECHA},'${hasta}'))`]; if (!todosF) cond.push(`{PREF.}='${quien.replace(/'/g, '')}'`);
           const filas = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(${cond.join(',')})`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []);
           const est = r => String((r.fields.ESTADO && r.fields.ESTADO.name) || r.fields.ESTADO || '').trim();
+          const enHoras = r => { if (!hd) return true; const x = p2(r.fields.HORA); return x && x >= hd && x < hh2; };
+          filas.splice(0, filas.length, ...filas.filter(enHoras));
           const libres = filas.filter(r => /^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(est(r)) && !(r.fields['RELACIÓN - CITA'] || []).length);
           for (let i = 0; i < libres.length; i += 10) await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: libres.slice(i, i + 10).map(r => ({ id: r.id, fields: { ESTADO: 'CITA BLOQUEADA', NOTAS: tipo } })), typecast: true }) });
           const conPac = filas.filter(r => (r.fields['RELACIÓN - CITA'] || []).length && /PENDIENTE/.test(est(r))).map(r => ({ fecha: String(r.fields.FECHA || '').slice(0, 10), hora: r.fields.HORA || '', fisio: (r.fields['PREF.'] && r.fields['PREF.'].name) || r.fields['PREF.'] || '' })).sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora));
@@ -1279,10 +1283,12 @@ module.exports = async function handler(req, res) {
           if (!q.fisio || !fechas.length || !horas.length || !/^(CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|DIA BLOQUEADO|FRANJA BLOQUEADA)$/.test(q.estado || '')) return res.status(400).json({ ok: false, error: 'Faltan datos' });
           const nuevos = []; let saltadas = 0, ausentes = 0;
           const libre = /LIBRE/.test(q.estado), ausL = libre ? await ausenciasEn(fechas.slice().sort()[0], fechas.slice().sort().slice(-1)[0]).catch(() => []) : [];
+          const p2h = x => { const m = String(x || '').match(/^(\d{1,2}):(\d{2})$/); return m ? m[1].padStart(2, '0') + ':' + m[2] : x; };
           for (const f of fechas) {
-            if (ausL.some(a => a.desde <= f && a.hasta >= f && (a.fisio === 'Toda la clínica' || a.fisio.toLowerCase() === String(q.fisio).toLowerCase()))) { ausentes++; continue; }
+            const ausF = ausL.filter(a => a.desde <= f && a.hasta >= f && (a.fisio === 'Toda la clínica' || a.fisio.toLowerCase() === String(q.fisio).toLowerCase()));
             const rows = await delDia(f);
             for (const h of horas) {
+              if (ausF.some(a => !a.hd || (p2h(h) >= a.hd && p2h(h) < a.hh))) { ausentes++; continue; }
               const ya = enHora(rows, h, q.fisio).some(r => !/CANCELADA|REPROGRAMADA|CITA PERDIDA/.test(String(nmA(r.fields['ESTADO']))));
               if (ya) { saltadas++; continue; }
               nuevos.push({ fields: { FECHA: f, HORA: h, 'PREF.': q.fisio, ESTADO: q.estado, ...(q.notas ? { NOTAS: String(q.notas) } : {}) } });
