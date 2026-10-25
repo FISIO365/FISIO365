@@ -440,6 +440,8 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .fp-seg .fp-mas{display:flex!important;align-items:center;justify-content:center;gap:5px;padding:9px 12px!important}@media(max-width:560px){.fp-seg{gap:4px!important}.fp-seg button{font-size:12px!important;padding:9px 3px!important;letter-spacing:-.1px}.fp-seg .fp-mas{flex:0 0 auto!important;padding:9px 7px 9px 9px!important;gap:2px}}
 .fp-chev{width:16px;height:16px;flex:none;fill:none;stroke:#c2552e;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}.fp-seg .fp-mas.on .fp-chev{stroke:#f39a55}
 .tb-volver{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdf1e8;border:none;border-radius:99px;padding:5px 12px;cursor:pointer;margin-top:4px}
+.st-qs{display:flex;align-items:center;gap:22px;flex-wrap:wrap}.st-qsv{width:150px;height:150px;flex:none}.st-qn{font:800 26px Poppins,sans-serif;fill:#1e2a38}.st-ql{font:500 11px Poppins,sans-serif;fill:#7d6a60}
+.st-qlg{flex:1;min-width:190px;max-width:380px;display:flex;flex-direction:column;gap:7px}.st-qlg div{display:flex;align-items:center;gap:9px;font-size:13.5px}.st-qlg i{flex:none;width:12px;height:12px;border-radius:4px}.st-qlg span{flex:1;color:#1e2a38}.st-qlg b{font-weight:700;color:#1e2a38;min-width:38px;text-align:right}.st-qlg em{font-style:normal;font-size:12px;color:#9a8d84;min-width:24px;text-align:right}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -5444,6 +5446,7 @@ function renderStats(wrap){
    ${(()=>{const R=stRanking(L,S);return R.length?`<div class="st-box"><div class="st-bt"><b>Ranking de fisios</b><span class="st-rt"><button type="button" class="${ST.rk!=='per'?'on':''}" data-rk="sem">Semana</button><button type="button" class="${ST.rk==='per'?'on':''}" data-rk="per">Periodo</button></span></div>
     <div class="st-tb st-rk"><div class="st-tr st-th"><span>Fisio</span><span>Ocupación</span><span>Sesiones</span><span>Conversión</span></div>${R.map((r,i)=>`<div class="st-tr"><span><i class="st-pos p${i+1}">${i+1}</i>${escH(r.nombre)}</span><span><b>${r.ocup==null?'—':r.ocup+'%'}</b><small>${r.cap?` ${r.oc}/${r.cap} h`:''}</small><em class="st-barra"><i style="width:${Math.min(r.ocup||0,100)}%"></i></em></span><span>${r.ses}</span><span>${r.conv==null?'—':r.conv+'%'}<small>${r.vin?` (${r.rep}/${r.vin})`:''}</small></span></div>`).join('')}</div>
     <p class="st-p fp-mu">Ordenado por ocupación: de las horas de su horario de los días que trabajó (menos lo bloqueado), cuántas tuvieron paciente. Sesiones = citas hechas. Conversión = de sus primeras visitas, cuántas volvieron.</p></div>`:'';})()}
+   <div class="st-box st-con"><div class="st-bt"><b>¿Cómo nos han conocido?</b><small>Primeras visitas del periodo</small></div><div class="st-cq"><p class="st-p fp-mu">Cargando…</p></div></div>
    <div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
     <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b></p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`;
   g.querySelectorAll('.st-k').forEach(b=>b.onclick=e=>{if(e.target.closest('.fp-i,.fp-ipop'))return;if(b.querySelector('.st-ed')&&b.classList.contains('on'))editar();else{ST.met=b.dataset.k;pintar();}});
@@ -5451,6 +5454,18 @@ function renderStats(wrap){
   g.querySelectorAll('.st-rt button').forEach(b=>b.onclick=()=>{ST.rk=b.dataset.rk;pintar();});
   g.querySelectorAll('.st-trb').forEach(b=>b.onclick=()=>{const pl=g.querySelector(`.st-pl[data-f="${CSS.escape(b.dataset.f)}"]`);pl.hidden=!pl.hidden;b.classList.toggle('on',!pl.hidden);});
   g.querySelectorAll('.st-pi').forEach(x=>x.onclick=()=>abrirFichaPaciente(x.dataset.id,x.querySelector('b').textContent));
+  pintaConocido(g.querySelector('.st-cq'),L[0].semana);
+ }
+ async function pintaConocido(box,desde){if(!box)return;ST.con=ST.con||{};
+  try{if(!ST.con[desde]){const r=await (await fetch(`/api/schedule?action=seg-conocido&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}`)).json();if(!r.ok)throw 0;ST.con[desde]=r;}}catch(e){box.innerHTML='<p class="st-p fp-mu">No se ha podido cargar.</p>';return;}
+  const r=ST.con[desde],D=r.datos||[],T=D.reduce((t,x)=>t+x.n,0);if(!T){box.innerHTML='<p class="st-p fp-mu">Todavía no hay respuestas en este periodo.</p>';return;}
+  const COL={'Recomendación':'#c2552e','Google':'#1e2a38','Redes':'#f39a55','Ubicación':'#7d9cb8','Médico':'#8fa876','Otro':'#c9b8a8','Sin respuesta':'#e4ddd5'};const extra=['#b07aa1','#d4a373','#6b9080'];
+  const col=(k,i)=>COL[k]||extra[i%extra.length];
+  const R=60,C=2*Math.PI*R;let acc=0;
+  const arcs=D.map((x,i)=>{const f=x.n/T,l=f*C,a=`<circle r="${R}" cx="80" cy="80" fill="none" stroke="${col(x.k,i)}" stroke-width="30" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-acc}" transform="rotate(-90 80 80)"><title>${escH(x.k)}: ${x.n}</title></circle>`;acc+=l;return a;}).join('');
+  const top=D.find(x=>x.k!=='Sin respuesta');
+  box.innerHTML=`<div class="st-qs"><svg viewBox="0 0 160 160" class="st-qsv">${arcs}<text x="80" y="76" text-anchor="middle" class="st-qn">${T}</text><text x="80" y="96" text-anchor="middle" class="st-ql">${T===1?'paciente':'pacientes'}</text></svg>
+   <div class="st-qlg">${D.map((x,i)=>`<div><i style="background:${col(x.k,i)}"></i><span>${escH(x.k)}</span><b>${Math.round(x.n/T*100)}%</b><em>${x.n}</em></div>`).join('')}</div></div>${top?`<p class="st-p fp-mu" style="margin-top:10px">La mayoría llega por <b>${escH(top.k.toLowerCase())}</b>.</p>`:''}`;
  }
  function editar(){const S=ST.d.semanas.find(s=>s.semana===ST.sem);
   const m=hzModal(`<div class="hz-top"><div><small>Semana ${escH(stSemTxt(S.semana))}</small><b>Datos a mano</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>

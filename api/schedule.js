@@ -1195,6 +1195,13 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ ok: false, error: 'Acción no válida' });
       }
       // ── ESTADÍSTICAS DEL CENTRO (semanas de lunes a domingo) ──
+      // Cómo nos han conocido: respuestas del formulario de primera visita (CONSENTIMIENTOS) en el periodo
+      if (action === 'seg-conocido') {
+        const desde = /^\d{4}-\d{2}-\d{2}$/.test(q.desde || '') ? q.desde : '2000-01-01';
+        const rs = await todosT(CONS_T, `filterByFormula=${encodeURIComponent(`AND(NOT({IGNORAR}),NOT(IS_BEFORE({Creada},'${desde}')))`)}&fields[]=CONOCIDO`);
+        const cnt = {}; rs.forEach(r => { const v = String(cNm(r.fields['CONOCIDO']) || '').trim() || 'Sin respuesta'; cnt[v] = (cnt[v] || 0) + 1; });
+        return res.status(200).json({ ok: true, total: rs.length, datos: Object.entries(cnt).map(([k, n]) => ({ k, n })).sort((a, b) => (a.k === 'Sin respuesta') - (b.k === 'Sin respuesta') || b.n - a.n) });
+      }
       if (action === 'seg-estadisticas' || action === 'seg-estadisticas-guardar') {
         const EST_T = 'tblE7NWfZmxcou5mV', TIP = 'tbltoikmBZwHYQcpD';
         const nmS = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
