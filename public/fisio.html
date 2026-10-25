@@ -5514,8 +5514,9 @@ async function listaTareas(cont,keep){
     const g=x.g,b=ce('button','tk-b');b.type='button';
     // Los dos pacientes a la vista y clicables: quien recomendó (arriba) y el nuevo
     {const mt=r.querySelector('.tk-meta');if(mt)mt.innerHTML=g.recomendo?`Recomendó a <b class="tk-nom" data-ficha="${g.nuevo.id}" data-fn="${escH(g.nuevo.nombre)}" style="cursor:pointer">${escH(g.nuevo.nombre)}</b> · vino el ${escH(segFecha(g.primera))}`:`<b class="tk-nom" data-ficha="${g.nuevo.id}" data-fn="${escH(g.nuevo.nombre)}" style="cursor:pointer">${escH(g.nuevo.nombre)}</b> vino recomendado por «${escH(g.texto)}» · ¿quién es?`;}
-    if(g.recomendo){b.textContent='Enviar tarjeta';b.onclick=async()=>{b.disabled=true;try{const d=await (await fetch('/api/schedule?action=seg-referido-tarjeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:g.id})})).json();if(!d.ok)throw 0;
-      await enviarTarjeta(g.recomendo.tel,g.recomendo.nombre,g.nuevo.nombre,d.caduca,g.id);quitar(r,x);}catch(e){b.disabled=false;toast('No se ha podido crear la tarjeta',false);}};}
+    if(g.recomendo){b.textContent='Enviar tarjeta';b.onclick=async()=>{
+      const ok=await enviarTarjeta(g.recomendo.tel,g.recomendo.nombre,g.nuevo.nombre,'',g.id,async()=>{const d=await (await fetch('/api/schedule?action=seg-referido-tarjeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:g.id})})).json();if(!d.ok)throw 0;return d.caduca;});
+      if(ok)quitar(r,x);};}
     else{b.textContent='¿Quién es?';b.onclick=()=>elegirRecomendo(g,recargar);}
     acc.appendChild(b);
     const q=ce('button','tk-q');q.type='button';q.setAttribute('aria-label','No toca tarjeta');q.title='No toca tarjeta';q.innerHTML='✕';let arm=false;
@@ -5619,13 +5620,16 @@ async function tarjetaImagen(quien,nuevo,cad,tipo){
  return await new Promise(ok=>c.toBlob(ok,tipo||'image/png',0.88));}
 // Enviar la tarjeta: se guarda la imagen y se manda un enlace; WhatsApp enseña la tarjeta en la vista previa
 // Antes de enviar se pueden retocar los nombres (nombres compuestos, apodos…)
-function enviarTarjeta(tel,quien,nuevo,cad,refId){return new Promise(fin=>{
+function enviarTarjeta(tel,quien,nuevo,cad,refId,crear){return new Promise(fin=>{
  const m=hzModal(`<div class="hz-top"><div><small>Tarjeta regalo de 10 €</small><b>¿Cómo ponemos los nombres?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Para</div><input type="text" class="tj-q" maxlength="30" value="${escH(pn(quien))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
   <div class="hz-lab">Por recomendarnos a</div><input type="text" class="tj-n" maxlength="30" value="${escH(pn(nuevo))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
   <div class="hz-bts"><button type="button" class="hz-ok">Enviar por WhatsApp</button></div>`);
- m.querySelector('.hz-x').onclick=()=>{m.remove();fin();};
- m.querySelector('.hz-ok').onclick=async()=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();m.remove();await enviarTarjeta2(tel,q,n,cad,refId);fin();};});}
+ m.querySelector('.hz-x').onclick=()=>{m.remove();fin(false);};
+ m.querySelector('.hz-ok').onclick=async e=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();
+  // La tarjeta solo se crea cuando se confirma el envío (si se cierra la ventana no se gasta)
+  if(crear){e.target.disabled=true;try{cad=await crear();}catch(err){e.target.disabled=false;toast('No se ha podido crear la tarjeta',false);return;}}
+  m.remove();await enviarTarjeta2(tel,q,n,cad,refId);fin(true);};});}
 async function enviarTarjeta2(tel,quien,nuevo,cad,refId){let txt=mensajeTarjeta(quien,nuevo,cad);
  // La imagen se guarda y va como enlace: WhatsApp enseña la tarjeta en la vista previa (sin descargar ni adjuntar nada)
  const w=window.open('about:blank','_blank');
