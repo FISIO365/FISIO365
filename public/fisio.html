@@ -6448,7 +6448,7 @@ function abrirResultadoSeg(it,onSave){
  let res='';
  const m=hzModal(`<div class="hz-top"><div><small>¿Qué ha pasado?</small><b>${escH(it.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-tipos">${SEG_RES.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
-  <div class="seg-nf" style="display:none"><div class="hz-lab">¿Cuándo volver a llamar?</div><div class="seg-rap">${[['Mañana',1],['En 3 días',3],['En 1 semana',7],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div><input type="date" class="seg-f" value="${segIso(3)}" min="${segIso(0)}"></div>
+  <div class="seg-nf" style="display:none"><div class="hz-lab">¿Cuándo volver a llamar?</div><div class="seg-rap">${[['Mañana',1],['En 3 días',3],['En 1 semana',7],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}<button type="button" class="seg-nomas">No volver a llamar</button></div><input type="date" class="seg-f" value="${segIso(3)}" min="${segIso(0)}"></div>
   <div class="hz-lab">¿Quién ha llamado?</div><div class="seg-rap seg-quien"></div>
   <div class="hz-cuando">Se guarda con la fecha y hora de ahora: ${ahoraTxt()}</div>
   <button type="button" class="exp-seg ll-resena"><i></i>Le he pedido reseña</button>
@@ -6459,15 +6459,16 @@ function abrirResultadoSeg(it,onSave){
  const est0=pacEstados(it.pacienteId).slice(),selE=selectorEstados(est0);m.querySelector('.est-slot').appendChild(selE);
  const getQ=chipsQuien(m,'.seg-quien',miNombreCorto());
  let resena=false;{const br=m.querySelector('.ll-resena');br.onclick=()=>{resena=!resena;br.classList.toggle('on',resena);};}
- const pintaF=()=>m.querySelectorAll('.seg-nf .seg-rap button').forEach(b=>b.classList.toggle('on',segIso(+b.dataset.d)===f.value));pintaF();
- m.querySelectorAll('.seg-nf .seg-rap button').forEach(b=>b.onclick=()=>{f.value=segIso(+b.dataset.d);pintaF();});f.onchange=pintaF;
+ let noMas=false;const bNo=m.querySelector('.seg-nomas');
+ const pintaF=()=>{m.querySelectorAll('.seg-nf .seg-rap button:not(.seg-nomas)').forEach(b=>b.classList.toggle('on',!noMas&&segIso(+b.dataset.d)===f.value));bNo.classList.toggle('on',noMas);f.style.display=noMas?'none':'';};pintaF();
+ m.querySelectorAll('.seg-nf .seg-rap button:not(.seg-nomas)').forEach(b=>b.onclick=()=>{noMas=false;f.value=segIso(+b.dataset.d);pintaF();});bNo.onclick=()=>{noMas=!noMas;pintaF();};f.onchange=()=>{noMas=false;pintaF();};
  m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{res=b.dataset.v;m.querySelectorAll('.hz-tipos button').forEach(x=>x.classList.toggle('on',x===b));nf.style.display=['Volver a llamar','No contesta','Pendiente de respuesta'].includes(res)?'':'none';});
  m.querySelector('.hz-x').onclick=()=>m.remove();
  m.querySelector('.hz-ok').onclick=async e=>{if(!res){toast('Elige qué ha pasado',false);return;}
   const b=e.target;b.disabled=true;b.textContent='Guardando…';
-  try{const d=await (await fetch('/api/schedule?action=seg-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,pacienteId:it.pacienteId,resultado:res,nota:m.querySelector('.seg-n').value.trim(),nuevaFecha:nf.style.display===''?f.value:'',quien:getQ(),resena})})).json();if(!d.ok)throw new Error(d.error||'Error');
+  try{const d=await (await fetch('/api/schedule?action=seg-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,pacienteId:it.pacienteId,resultado:res,nota:[m.querySelector('.seg-n').value.trim(),noMas&&nf.style.display===''?'No volver a llamar':''].filter(Boolean).join(' · '),nuevaFecha:nf.style.display===''&&!noMas?f.value:'',quien:getQ(),resena})})).json();if(!d.ok)throw new Error(d.error||'Error');
    {const nuevos=selE.get();if(it.pacienteId&&nuevos.join()!==est0.join())await guardarEstados(it.pacienteId,nuevos);}
-   toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
+   toast(noMas&&nf.style.display===''?'Guardado: ya no sale para llamar':'Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
 }
 function abrirEditarSeg(it,onSave){
  let resp=it.responsable||'';
