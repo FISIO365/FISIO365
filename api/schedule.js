@@ -110,7 +110,7 @@ function consentResumen(r, tabla) {
   const sp = cNm(F['SUELO PÉLVICO']).trim();
   const nombre = String(F['﻿NOMBRE'] || F['NOMBRE'] || '') + ' ' + String(F['APELLIDOS'] || '');
   return { id: r.id, tabla: otro ? CONS_O : CONS_T, tipo, fecha, salud, rojo, sueloPelvico: tipo === 'Suelo pélvico' || /^s[ií]$/i.test(sp), aceptaSP: !!F['ACEPTACIÓN S.P.'],
-    fechaAlta: F['FECHA ALTA'] || '', notasSalud: F['NOTAS SALUD'] || '', sub: String(F['SUBMISSION ID'] || '').trim(), papel: !!F['PAPEL'], ignorar: !!F['IGNORAR'],
+    fechaAlta: F['FECHA ALTA'] || '', notasSalud: F['NOTAS SALUD'] || '', sub: String(F['SUBMISSION ID'] || '').trim(), papel: !!F['PAPEL'], ignorar: !!F['IGNORAR'], noDe: String(F['NO ES DE'] || '').split(/[\s,]+/).filter(Boolean),
     marketing: otro ? null : { conocido: cNm(F['CONOCIDO']), newsletter: cNm(F['NEWSLETTER']), imagenes: cNm(F['IMAGENES']), citas: cNm(F['CITAS']) },
     email: cTxt(F['EMAIL']), dni: cTxt(F['DNI']).replace(/\s/g, ''), tel: cDig(F['TELF']), telRes: cDig(F['TELF RESERVA']), tels: [cDig(F['TELF']), cDig(F['TELF RESERVA'])].filter((t, i, a) => t.length === 9 && a.indexOf(t) === i), telRaw: String(F['TELF'] || '').trim(), raw: { DNI: F['DNI'] || '', EMAIL: F['EMAIL'] || '', NACIMIENTO: F['NACIMIENTO'] || '', TELF: F['TELF'] || '' }, nombre: cTxt(nombre).replace(/\s+/g, ' ') };
 }
@@ -188,7 +188,7 @@ const nombresCuadran = (a, b) => { const A = nomToks(a), B = nomToks(b); return 
 function emparejar(P, pacId, lista, altaPac) {
   const enl = lista.filter(c => c.pac.includes(pacId));
   const email = cTxt(P['EMAIL']), dni = cTxt(P['DNI']).replace(/\s/g, ''), tels = [cDig(P['TELF']), cDig(P['WHATSAPP'])].filter(t => t.length === 9), nombre = P['FULL NAME'] || '';
-  const libres = lista.filter(c => !c.pac.length);
+  const libres = lista.filter(c => !c.pac.length && !(c.noDe || []).includes(pacId));
   const cands = libres.filter(c => (email && c.email === email) || (dni.length >= 6 && c.dni === dni) || c.tels.some(t => tels.includes(t)));
   const n = capNorm(nombre).replace(/\s+/g, ' ').trim();
   // Teléfono, email o DNI iguales bastan para enlazarlo aunque lo firme con otro nombre, siempre que el formulario sea
@@ -571,7 +571,7 @@ module.exports = async function handler(req, res) {
         const conds = []; sueltos.forEach(c => { if (c.email) conds.push(`LOWER(TRIM({EMAIL}))='${cEsc(c.email)}'`); if (c.dni.length >= 6) conds.push(`SUBSTITUTE(LOWER(TRIM({DNI})),' ','')='${cEsc(c.dni)}'`); c.tels.forEach(t => conds.push(`RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${t}'`, `RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${t}'`)); });
         const pc = []; for (let i = 0; i < conds.length; i += 40) pc.push(...await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + conds.slice(i, i + 40).join(',') + ')')}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP`).catch(() => []));
         for (const c of sueltos) {
-          const ps = pc.filter(p => { const F = p.fields, ts = [cDig(F['TELF']), cDig(F['WHATSAPP'])]; return (c.email && cTxt(F['EMAIL']) === c.email) || (c.dni.length >= 6 && cTxt(F['DNI']).replace(/\s/g, '') === c.dni) || c.tels.some(t => ts.includes(t)); });
+          const ps = pc.filter(p => !(c.noDe || []).includes(p.id)).filter(p => { const F = p.fields, ts = [cDig(F['TELF']), cDig(F['WHATSAPP'])]; return (c.email && cTxt(F['EMAIL']) === c.email) || (c.dni.length >= 6 && cTxt(F['DNI']).replace(/\s/g, '') === c.dni) || c.tels.some(t => ts.includes(t)); });
           const bueno = ps.find(p => nombresCuadran(c.nombre, p.fields['FULL NAME'])) || (ps.length === 1 && c.fecha >= new Date(new Date(ps[0].createdTime).getTime() - 3 * 864e5).toISOString().slice(0, 10) ? ps[0] : null);
           if (bueno && enlazados < 100) { if (await enlazarCons(c.id, bueno.id).catch(() => false)) { enlazados++; enl.add(bueno.id); continue; } }
           if (ps.length) dudosos[c.id] = ps.slice(0, 5).map(p => ({ id: p.id, nombre: p.fields['FULL NAME'] || '' }));
@@ -641,6 +641,15 @@ module.exports = async function handler(req, res) {
         const r = await at(`${CONS_O}/${q.id}`); const a = r.fields && (r.fields['ARCHIVO'] || [])[0]; if (!a) return res.status(404).json({ ok: false, error: 'Sin archivo' });
         const im = await fetch(a.url); if (!im.ok) return res.status(200).json({ ok: false, error: 'No se ha podido abrir el archivo' });
         return res.status(200).json({ ok: true, nombre: a.filename || 'consentimiento', tipo: a.type || im.headers.get('content-type') || 'application/octet-stream', b64: Buffer.from(await im.arrayBuffer()).toString('base64') });
+      }
+      if (action === 'seg-consent-noes') {
+        // «No es suyo»: se desenlaza (si lo estaba) y no se vuelve a enlazar ni a preguntar para ese paciente
+        if (req.method !== 'POST' || !/^rec[A-Za-z0-9]{14}$/.test(q.consentId || '') || !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
+        const lista = await consTodos(); const c0 = lista.find(x => x.id === q.consentId); if (!c0) return res.status(404).json({ ok: false });
+        const todos = [c0, ...lista.filter(x => mismoForm(x, c0))].slice(0, 6); let ok = true;
+        for (const c of todos) { const noDe = [...new Set([...(c.noDe || []), q.pacienteId])]; const f = { 'NO ES DE': noDe.join(',') }; if (c.pac.includes(q.pacienteId)) f.PACIENTE = c.pac.filter(x => x !== q.pacienteId);
+          const r = await at(`${c.tabla}/${c.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }); if (r.error) ok = false; else { c.noDe = noDe; if (f.PACIENTE) c.pac = f.PACIENTE; } }
+        _alertas.t = 0; return res.status(200).json({ ok });
       }
       if (action === 'seg-consent-enlazar') {
         if (req.method !== 'POST' || !/^rec[A-Za-z0-9]{14}$/.test(q.consentId || '') || (q.pacienteId && !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId))) return res.status(400).json({ ok: false });
