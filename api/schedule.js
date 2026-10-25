@@ -135,7 +135,7 @@ async function syncTally(subsYa) {
 // Todos los consentimientos en memoria (10 min) y las respuestas nuevas de Tally (cada minuto)
 let _cons = { t: 0, v: null, p: null };
 async function consTodos(forzar) {
-  const fresco = _cons.v && Date.now() - _cons.t < 10 * 60e3;
+  const fresco = _cons.v && Date.now() - _cons.t < 3 * 60e3;
   if (!forzar && fresco && (!process.env.TALLY_API_KEY || Date.now() - _syncT < 60e3)) return _cons.v;
   if (_cons.p) return _cons.p;
   _cons.p = (async () => {
@@ -163,10 +163,16 @@ function emparejar(P, pacId, lista, altaPac) {
   const buenos = [...new Set([...cands.filter(c => nombresCuadran(c.nombre, nombre) || (desde && c.fecha >= desde)), ...(n.split(' ').length >= 2 ? libres.filter(c => capNorm(c.nombre) === n) : [])])];
   return { enl, buenos, dudosos: cands.filter(c => !buenos.includes(c)) };
 }
+// Mismo formulario repetido (la importación de mayo duplicó filas, o Tally lo mandó dos veces): mismo envío, o mismo nombre + fecha + teléfono/DNI
+const mismoForm = (a, b) => a.id !== b.id && a.tabla === b.tabla && ((a.sub && a.sub === b.sub) || (a.nombre && a.nombre === b.nombre && a.fecha === b.fecha && ((a.tel && a.tel === b.tel) || (a.dni && a.dni === b.dni))));
 const enlazarCons = async (consId, pacId) => { const c0 = (_cons.v || []).find(x => x.id === consId), T = c0 ? c0.tabla : CONS_T;
   let d = await at(`${T}/${consId}`, { method: 'PATCH', body: JSON.stringify({ fields: { PACIENTE: pacId ? [pacId] : [] } }) });
   if (d.error && !c0) d = await at(`${CONS_O}/${consId}`, { method: 'PATCH', body: JSON.stringify({ fields: { PACIENTE: pacId ? [pacId] : [] } }) });
-  if (c0) c0.pac = pacId ? [pacId] : []; _alertas.t = 0; return !d.error; };
+  if (c0) { c0.pac = pacId ? [pacId] : [];
+    // sus copias van con él
+    const copias = (_cons.v || []).filter(x => mismoForm(x, c0));
+    for (const x of copias.slice(0, 5)) { const r = await at(`${x.tabla}/${x.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PACIENTE: pacId ? [pacId] : [] } }) }).catch(() => ({ error: 1 })); if (!r.error) x.pac = pacId ? [pacId] : []; } }
+  _alertas.t = 0; return !d.error; };
 const consPublico = (x, estado) => { if (!x) return null; const c = { ...x, estado }; ['email', 'dni', 'tel', 'pac', 'sub'].forEach(k => delete c[k]); c.nombreForm = x.nombre; delete c.nombre; return c; };
 // Junta todos los formularios de un paciente: la salud sale del último de primera visita o suelo pélvico; el alta oncológica quita el cáncer
 function resumenPaciente(enl) {
@@ -442,7 +448,7 @@ module.exports = async function handler(req, res) {
       if (action === 'seg-consent-pendientes') {
         // 1) Consentimientos de los últimos 4 meses sin paciente: se enlazan solos si cuadra; si no, a Pendientes
         // 2) Pacientes con sesión realizada en los últimos 30 días sin consentimiento enlazado
-        const lista = await consTodos();
+        const lista = await consTodos(true); // siempre fresco: los enlaces se pueden haber hecho desde otro móvil
         const desde = new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10);
         const ses = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_AFTER({FECHA},DATEADD(TODAY(),-31,'days')),NOT(IS_AFTER({FECHA},TODAY())))`)}&fields[]=FECHA&fields[]=RELACIÓN - CITA&fields[]=PREF.`);
         const ult = {}; ses.forEach(c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0]; if (!pid) return; const f = String(c.fields['FECHA'] || '').slice(0, 10); if (!ult[pid] || f < ult[pid].primera) ult[pid] = { primera: f, fisio: cNm(c.fields['PREF.']) }; });
@@ -465,7 +471,9 @@ module.exports = async function handler(req, res) {
           if (bueno && enlazados < 100) { if (await enlazarCons(c.id, bueno.id).catch(() => false)) { enlazados++; enl.add(bueno.id); continue; } }
           if (ps.length) dudosos[c.id] = ps.slice(0, 5).map(p => ({ id: p.id, nombre: p.fields['FULL NAME'] || '' }));
         }
-        const huerfanos = lista.filter(c => !c.pac.length && !c.ignorar && c.fecha >= desde).map(c => ({ id: c.id, tipo: c.tipo, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, sugeridos: dudosos[c.id] || [], sugerido: (dudosos[c.id] || [])[0] || null }));
+        // Copias sueltas de formularios ya enlazados: se enlazan al mismo paciente
+        for (const c of lista.filter(c => !c.pac.length).slice(0, 2000)) { const tw = lista.find(o => o.pac.length && mismoForm(o, c)); if (tw && enlazados < 120 && await enlazarCons(c.id, tw.pac[0]).catch(() => false)) enlazados++; }
+        const huerfanos = lista.filter(c => !c.pac.length && !c.ignorar && c.fecha >= desde && !lista.some(o => o.pac.length && mismoForm(o, c))).map(c => ({ id: c.id, tipo: c.tipo, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, sugeridos: dudosos[c.id] || [], sugerido: (dudosos[c.id] || [])[0] || null }));
         // Formularios enlazados a más de un paciente, o enlazados a alguien con otro nombre (últimos 4 meses)
         const dobles = lista.filter(c => c.pac.length > 1 && !c.ignorar), raros0 = lista.filter(c => c.pac.length === 1 && !c.ignorar && !c.papel && c.fecha >= desde);
         const idsN = [...new Set([...dobles.flatMap(c => c.pac), ...raros0.map(c => c.pac[0])])], nomP = {};
