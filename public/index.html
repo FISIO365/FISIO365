@@ -599,8 +599,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
   <div class="login-saludo">Tu fisio, también en casa.</div>
  </div>
  <div class="login-card">
- <label class="lbl" for="emailInput">Email</label>
- <input class="inp" type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" />
+ <label class="lbl" for="emailInput">Email o teléfono</label>
+ <input class="inp" type="text" id="emailInput" placeholder="tu@email.com o 600123456" autocomplete="username" autocapitalize="off" spellcheck="false" />
  <label class="lbl">PIN</label>
  <div class="pin-wrap">
  <input class="pin-d" type="tel" id="p1" maxlength="1" aria-label="PIN 1" />
@@ -834,7 +834,7 @@ document.getElementById('emailInput').addEventListener('keydown',e=>{if(e.key===
 
 async function doLogin(){
   const email=document.getElementById('emailInput').value.trim();const pin=pids.map(id=>document.getElementById(id).value).join('');const errEl=document.getElementById('loginErr');errEl.textContent='';
-  if(!email){errEl.textContent='Introduce tu email';return;}if(pin.length!==4){errEl.textContent='Introduce los 4 dígitos del PIN';return;}
+  if(!email){errEl.textContent='Introduce tu email o teléfono';return;}if(pin.length!==4){errEl.textContent='Introduce los 4 dígitos del PIN';return;}
   const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='Entrando...';
   try{const res=await fetch(`/api/login?email=${encodeURIComponent(email)}&pin=${pin}`);const data=await res.json();if(data.ok){patient=data.patient;localStorage.setItem('fisio365_patient',JSON.stringify(data.patient));initApp();}else errEl.textContent=data.error||'Error al entrar';}catch(e){errEl.textContent='Error de conexión';}
   btn.disabled=false;btn.textContent='Entrar';

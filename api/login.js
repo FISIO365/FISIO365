@@ -9,11 +9,15 @@ module.exports = async function handler(req, res) {
   const { email, pin } = req.query;
   if (!email || !pin) return res.status(400).json({ ok: false, error: 'Faltan datos' });
   try {
-    const emailClean = email.trim().toLowerCase();
-    const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=LOWER({EMAIL})="${emailClean}"&fields[]=FULL NAME&fields[]=EMAIL&fields[]=PIN&fields[]=WHATSAPP`;
+    // Se entra con el email o con el teléfono (los que no tienen email)
+    const emailClean = email.trim().toLowerCase().replace(/"/g, '');
+    const tel = emailClean.includes('@') ? '' : emailClean.replace(/\D/g, '').slice(-9);
+    if (!emailClean.includes('@') && tel.length !== 9) return res.status(200).json({ ok: false, error: 'Escribe tu email o tu teléfono' });
+    const formula = tel ? `OR(RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)="${tel}",RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)="${tel}")` : `LOWER({EMAIL})="${emailClean}"`;
+    const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=${encodeURIComponent(formula)}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=PIN&fields[]=WHATSAPP`;
     const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
     const data = await r.json();
-    if (!data.records?.length) return res.status(200).json({ ok: false, error: 'Email no encontrado. Contacta con tu fisioterapeuta.' });
+    if (!data.records?.length) return res.status(200).json({ ok: false, error: (tel ? 'Teléfono' : 'Email') + ' no encontrado. Contacta con tu fisioterapeuta.' });
     const patient = data.records.find(rec => String(rec.fields['PIN'] || '').trim() === String(pin).trim());
     if (!patient) return res.status(200).json({ ok: false, error: 'PIN incorrecto. Contacta con tu fisioterapeuta.' });
     const f = patient.fields;
