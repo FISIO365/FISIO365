@@ -442,6 +442,8 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .tb-volver{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdf1e8;border:none;border-radius:99px;padding:5px 12px;cursor:pointer;margin-top:4px}
 .st-qs{display:flex;align-items:center;gap:22px;flex-wrap:wrap}.st-qsv{width:150px;height:150px;flex:none}.st-qn{font:800 26px Poppins,sans-serif;fill:#1e2a38}.st-ql{font:500 11px Poppins,sans-serif;fill:#7d6a60}
 .st-qlg{flex:1;min-width:190px;max-width:380px;display:flex;flex-direction:column;gap:7px}.st-qlg div{display:flex;align-items:center;gap:9px;font-size:13.5px}.st-qlg i{flex:none;width:12px;height:12px;border-radius:4px}.st-qlg span{flex:1;color:#1e2a38}.st-qlg b{font-weight:700;color:#1e2a38;min-width:38px;text-align:right}.st-qlg em{font-style:normal;font-size:12px;color:#9a8d84;min-width:24px;text-align:right}
+.st-gl{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#7d6a60}.st-gl i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:6px}.st-gl i.in,.st-gp i.in{background:#1e2a38}.st-gl i.ga,.st-gp i.ga{background:#f39a55}
+.st-gb{display:flex;align-items:flex-end;gap:6px;height:190px;padding:18px 4px 0;margin:4px 0 10px;overflow-x:auto}.st-gc{flex:1 0 40px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:40px}.st-gp{flex:1;width:100%;max-width:46px;display:flex;align-items:flex-end;gap:3px}.st-gp i{flex:1;display:block;border-radius:6px 6px 2px 2px}.st-gc em{font-style:normal;font-size:9.5px;font-weight:600;color:#3f7a4f;white-space:nowrap}.st-gc em.neg,.st-neg{color:#c2552e}.st-gc span{font-size:10px;color:#9a8d84;white-space:nowrap;height:14px}
 .st-ib{display:flex;align-items:flex-end;gap:4px;height:190px;padding:18px 4px 0;margin:4px 0 10px;overflow-x:auto}.st-ic{flex:1 0 32px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:32px}.st-ic i{display:block;width:100%;max-width:34px;background:#f3c9b2;border-radius:7px 7px 3px 3px}.st-ic.top i{background:#c2552e}.st-ic em{font-style:normal;font-size:9.5px;font-weight:600;color:#7d6a60;white-space:nowrap}.st-ic span{font-size:10px;color:#9a8d84;white-space:nowrap;height:14px}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
@@ -5448,6 +5450,7 @@ function renderStats(wrap){
     <div class="st-tb st-rk"><div class="st-tr st-th"><span>Fisio</span><span>Ocupación</span><span>Sesiones</span><span>Conversión</span></div>${R.map((r,i)=>`<div class="st-tr"><span><i class="st-pos p${i+1}">${i+1}</i>${escH(r.nombre)}</span><span><b>${r.ocup==null?'—':r.ocup+'%'}</b><small>${r.cap?` ${r.oc}/${r.cap} h`:''}</small><em class="st-barra"><i style="width:${Math.min(r.ocup||0,100)}%"></i></em></span><span>${r.ses}</span><span>${r.conv==null?'—':r.conv+'%'}<small>${r.vin?` (${r.rep}/${r.vin})`:''}</small></span></div>`).join('')}</div>
     <p class="st-p fp-mu">Ordenado por ocupación: de las horas de su horario de los días que trabajó (menos lo bloqueado), cuántas tuvieron paciente. Sesiones = citas hechas. Conversión = de sus primeras visitas, cuántas volvieron.</p></div>`:'';})()}
    <div class="st-box st-it"><div class="st-bt"><b>Ingresos desde el principio</b><span class="st-rt"><button type="button" data-v="mes" class="on">Por mes</button><button type="button" data-v="ano">Por año</button></span></div><div class="st-itc"><p class="st-p fp-mu">Cargando…</p></div></div>
+   <div class="st-box st-gv"><div class="st-bt"><b>Gastos frente a ingresos</b><span class="st-gl"><i class="in"></i>Ingresos<i class="ga"></i>Gastos</span></div><div class="st-gvc"><p class="st-p fp-mu">Cargando…</p></div></div>
    <div class="st-box st-con"><div class="st-bt"><b>¿Cómo nos han conocido?</b><small>Primeras visitas del periodo</small></div><div class="st-cq"><p class="st-p fp-mu">Cargando…</p></div></div>
    <div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
     <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b></p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`;
@@ -5457,7 +5460,7 @@ function renderStats(wrap){
   g.querySelectorAll('.st-trb').forEach(b=>b.onclick=()=>{const pl=g.querySelector(`.st-pl[data-f="${CSS.escape(b.dataset.f)}"]`);pl.hidden=!pl.hidden;b.classList.toggle('on',!pl.hidden);});
   g.querySelectorAll('.st-pi').forEach(x=>x.onclick=()=>abrirFichaPaciente(x.dataset.id,x.querySelector('b').textContent));
   pintaConocido(g.querySelector('.st-cq'),L[0].semana);
-  pintaIngTodo(g.querySelector('.st-it'));
+  pintaIngTodo(g.querySelector('.st-it'));pintaGastos(g.querySelector('.st-gv'));
  }
  async function pintaIngTodo(box){if(!box)return;const c=box.querySelector('.st-itc');
   try{if(!ST.ing||Date.now()-(ST.ingT||0)>60000){ST.ingT=Date.now();const r=await (await fetch(`/api/schedule?action=seg-ingresos-todo&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw 0;ST.ing=r.semanas;ST.ingM=r.meses||[];ST.ingH=null;}}catch(e){c.innerHTML='<p class="st-p fp-mu">No se han podido cargar.</p>';return;}
@@ -5476,6 +5479,19 @@ function renderStats(wrap){
    c.innerHTML=`<div class="st-ib" style="--n:${K.length}">${K.map((k,j)=>`<div class="st-ic${j===i?' top':''}" title="${escH(lab(k))}: ${eur(V[j])}"><em>${corto(V[j])}</em><i style="height:${Math.max(2,Math.round(V[j]/mx*100))}%"></i><span>${escH(lab(k))}</span></div>`).join('')}</div>
     <p class="st-p">Total: <b>${eur(tot)}</b> · Media ${modo==='ano'?'anual':'mensual'}: <b>${eur(tot/K.length)}</b> · Mejor ${modo==='ano'?'año':'mes'}: <b>${escH(modo==='ano'?K[i]:MS[+K[i].slice(5,7)-1]+' '+K[i].slice(0,4))}</b> (${eur(V[i])})</p><p class="st-p fp-mu" style="font-size:12px">Desde octubre de 2026, de los tickets de venta de Holded.</p>`;};
   box.querySelectorAll('.st-rt button').forEach(b=>b.onclick=()=>{ST.ingModo=b.dataset.v;pinta();});pinta();
+ }
+ async function pintaGastos(box){if(!box)return;const c=box.querySelector('.st-gvc');
+  try{if(!ST.gas||Date.now()-(ST.gasT||0)>60000){ST.gasT=Date.now();ST.gas=await (await fetch(`/api/schedule?action=seg-gastos&pwd=${encodeURIComponent(apiPwd)}`)).json();}}catch(e){ST.gas={ok:false,error:'No se ha podido conectar'};}
+  const G=ST.gas;if(!G.ok||G.error){c.innerHTML=`<p class="st-p fp-mu">No se han podido leer los gastos del banco${G.error?': '+escH(G.error):''}.</p>`;return;}
+  for(let k=0;k<40&&!ST.ingM;k++)await new Promise(r=>setTimeout(r,250));
+  const gi={};(ST.ingM||[]).forEach(x=>{gi[x.m]=x.v;});const gg={};(G.meses||[]).forEach(x=>{gg[x.m]=x.v;});
+  const K=Object.keys(gg).filter(m=>m in gi).sort();if(!K.length){c.innerHTML='<p class="st-p fp-mu">Todavía no hay movimientos del banco en Holded.</p>';return;}
+  const MS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],mx=Math.max(...K.map(k=>Math.max(gi[k],gg[k])),1);
+  const eur=v=>Math.round(v).toLocaleString('es-ES')+' €',corto=v=>Math.abs(v)>=1000?(Math.round(v/100)/10).toString().replace('.',',')+'k':Math.round(v);
+  const lab=k=>MS[+k.slice(5,7)-1]+(k.slice(5,7)==='01'||k===K[0]?' '+k.slice(2,4):'');
+  const ti=K.reduce((t,k)=>t+gi[k],0),tg=K.reduce((t,k)=>t+gg[k],0),hoyM=new Date().toISOString().slice(0,7);
+  c.innerHTML=`<div class="st-gb">${K.map(k=>{const d=gi[k]-gg[k];return `<div class="st-gc" title="${escH(lab(k))} · Ingresos ${eur(gi[k])} · Gastos ${eur(gg[k])} · Diferencia ${eur(d)}"><em class="${d<0?'neg':''}">${d>0?'+':''}${corto(d)}</em><div class="st-gp"><i class="in" style="height:${Math.max(2,Math.round(gi[k]/mx*100))}%"></i><i class="ga" style="height:${Math.max(2,Math.round(gg[k]/mx*100))}%"></i></div><span>${escH(lab(k))}</span></div>`;}).join('')}</div>
+   <p class="st-p">Ingresos <b>${eur(ti)}</b> · Gastos <b>${eur(tg)}</b> · Diferencia <b class="${ti-tg<0?'st-neg':''}">${eur(ti-tg)}</b></p>${K.includes(hoyM)?'<p class="st-p fp-mu" style="font-size:12px">El mes actual aún está en curso.</p>':''}`;
  }
  async function pintaConocido(box,desde){if(!box)return;ST.con=ST.con||{};
   try{if(!ST.con[desde]){const r=await (await fetch(`/api/schedule?action=seg-conocido&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}`)).json();if(!r.ok)throw 0;ST.con[desde]=r;}}catch(e){box.innerHTML='<p class="st-p fp-mu">No se ha podido cargar.</p>';return;}

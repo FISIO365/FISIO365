@@ -29,7 +29,8 @@ const holdedTodos = async (path, max = 20) => {
   let out = [], cursor = null;
   for (let i = 0; i < max; i++) {
     const d = await holded(cursor ? path + (path.includes('?') ? '&' : '?') + 'cursor=' + encodeURIComponent(cursor) : path);
-    out = out.concat(d.items || []);
+    out = out.concat(Array.isArray(d) ? d : (d.items || d.data || []));
+    if (Array.isArray(d)) break;
     if (!d.has_more || !d.cursor) break; cursor = d.cursor;
   }
   return out;
@@ -41,6 +42,25 @@ const aNum = v => { if (v == null) return NaN; if (typeof v === 'object') v = v.
 const importeDoc = d => { for (const k of ['total', 'total_amount', 'amount', 'grand_total']) { const n = aNum(d[k]); if (n > 0) return n; }
   const p = (aNum(d.payments_total) || 0) + (aNum(d.payments_pending) || 0); if (p > 0) return p;
   const l = (d.lines || []).reduce((t, x) => t + (aNum(x.price) || 0) * (aNum(x.units) || 1) * (1 - (aNum(x.discount) || 0) / 100), 0); return Math.round(l * 100) / 100 || 0; };
+// Gastos al mes desde las cuentas bancarias conectadas en Holded: suma de los movimientos negativos (salidas)
+const fechaMov = m => { for (const k of ['date', 'operation_date', 'value_date', 'booking_date', 'created_at']) { const v = m[k]; if (v == null || v === '') continue;
+  if (typeof v === 'number' || /^\d{9,13}$/.test(String(v))) { const n = Number(v); return new Date(n < 1e12 ? n * 1000 : n).toISOString().slice(0, 10); }
+  const t = String(v).slice(0, 10); if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t; } return ''; };
+const importeMov = m => { for (const k of ['amount', 'value', 'total', 'quantity']) { const n = aNum(m[k]); if (!isNaN(n) && n !== 0) return n; } return 0; };
+let _gasH = { t: 0, v: null };
+async function gastosBancoMeses() {
+  if (_gasH.v && Date.now() - _gasH.t < 15 * 60e3) return _gasH.v;
+  const cuentas = await holdedTodos('/treasury/accounts?limit=100', 3);
+  const g = {}, nombres = [], fallos = [];
+  for (const c of cuentas) { const id = c && (c.id || c._id); if (!id) continue; nombres.push(c.name || c.alias || c.bank_name || c.iban || 'Cuenta');
+    let mv = [];
+    try { mv = await holdedTodos(`/treasury/accounts/${id}/bank-movements?limit=200`, 40); } catch (e) { fallos.push(e.message); continue; }
+    const vistos = new Set();
+    mv.forEach(m => { const mid = m && (m.id || m._id); if (mid && vistos.has(mid)) return; if (mid) vistos.add(mid);
+      const n = importeMov(m), f = fechaMov(m); if (!(n < 0) || !f) return; g[f.slice(0, 7)] = Math.round(((g[f.slice(0, 7)] || 0) - n) * 100) / 100; }); }
+  const v = { meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), cuentas: nombres, error: !nombres.length ? 'No hay cuentas bancarias en Holded' : (fallos.length === nombres.length ? fallos[0] : null) };
+  _gasH = { t: Date.now(), v }; return v;
+}
 // Ingresos por día desde Holded: todos los tickets de venta (también borradores), menos los anulados con
 // rectificativa (salen «Pagado»: en la clínica no se marcan los cobros) y los de pacientes de prueba
 const HOLDED_DESDE = '2026-10-01'; // desde aquí los ingresos salen de Holded; antes, de las tablas que llevabais a mano
@@ -1209,6 +1229,11 @@ module.exports = async function handler(req, res) {
       }
       // ── ESTADÍSTICAS DEL CENTRO (semanas de lunes a domingo) ──
       // Ingresos desde el principio (tabla ESTADISTICAS SEMANA, una cifra por semana)
+      if (action === 'seg-gastos') {
+        if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Falta la clave de Holded' });
+        try { return res.status(200).json(Object.assign({ ok: true }, await gastosBancoMeses())); }
+        catch (e) { return res.status(200).json({ ok: false, error: /40[13]/.test(e.message) ? 'La clave de Holded no tiene permiso de Tesorería (cuentas bancarias)' : e.message }); }
+      }
       if (action === 'seg-ingresos-todo') {
         const rs = await todosT('tblE7NWfZmxcou5mV', `filterByFormula=${encodeURIComponent('{INGRESOS}!=BLANK()')}&fields[]=SEMANA&fields[]=INGRESOS&sort[0][field]=SEMANA&sort[0][direction]=asc`);
         // Meses: los de la base ESTADISTICAS (INCOME / MONTH), y si no se puede leer, la copia INGRESOS MES de esta base
