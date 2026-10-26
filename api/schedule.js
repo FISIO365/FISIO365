@@ -1365,26 +1365,44 @@ module.exports = async function handler(req, res) {
           const vist = {}; tipos.forEach(t => { const k = t.n.toUpperCase(); vist[k] = vist[k] ? { n: vist[k].n, u: vist[k].u + t.u } : t; });
           return res.status(200).json({ ok: true, tipos: Object.values(vist).sort((a, b) => b.u - a.u).slice(0, 400).map(t => t.n) });
         }
-        if (action === 'seg-agenda-num') { // aparte de la agenda (para que nunca la frene): nº de sesión de las citas de un día o semana
+        if (action === 'seg-agenda-num') { // aparte de la agenda (para que nunca la frene): nº de sesión y de dónde sale (pack, suelta, sin pagar)
           if (!okF(q.desde)) return res.status(400).json({ ok: false });
           const hasta = okF(q.hasta) ? q.hasta : q.desde;
           const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({FECHA},NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.desde}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${hasta}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`);
-          // Nº de sesión de cada cita: cuántas citas hechas o pendientes tiene el paciente antes + 1 (se calcula solo; no hacen falta etiquetas «Sesión 2, 3…»)
-          const numSes = {}; try {
+          const numSes = {}, pago = {}; let inicio = '';
+          try {
             const pv = [...new Set(rows.map(r => (r.fields['RELACIÓN - CITA'] || [])[0]).filter(Boolean))];
             if (pv.length && pv.length <= 160) {
-              global._sesPac = global._sesPac || {}; const C = global._sesPac, ahora = Date.now(), falta = pv.filter(id => !C[id] || ahora - C[id].t > 10 * 60e3);
+              inicio = await inicioControl().catch(() => '');
+              global._sesPac = global._sesPac || {}; const C = global._sesPac, ahora = Date.now(), falta = pv.filter(id => !C[id] || ahora - C[id].t > 3 * 60e3);
               const grupos = []; for (let i = 0; i < falta.length; i += 15) grupos.push(falta.slice(i, i + 15));
-              for (let k = 0; k < grupos.length; k += 4) await Promise.all(grupos.slice(k, k + 4).map(async g => {
-                const rs = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE'),OR(${g.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=PacienteRec`);
-                const L = {}; g.forEach(id => L[id] = []);
-                rs.forEach(r => (r.fields['PacienteRec'] || []).forEach(id => { if (L[id]) L[id].push(String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA)); }));
-                g.forEach(id => C[id] = { t: ahora, v: L[id].sort() }); }));
+              const sesDe = f => [[f['CONCEPTO 1'], f['Nº SESIONES 1'], f['PRECIO SESIÓN 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2'], f['PRECIO SESIÓN 2']]].filter(([c, n]) => /^Sesi/i.test(nmA(c) || '') && Number(n) > 0).map(([c, n, pr]) => ({ n: Number(n), precio: Number(pr) || 0, concepto: nmA(c) }));
+              for (let k = 0; k < grupos.length; k += 3) await Promise.all(grupos.slice(k, k + 3).map(async g => {
+                const [rs, fs, ps] = await Promise.all([
+                  todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),OR(${g.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PacienteRec`),
+                  inicio ? todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',OR(${g.map(id => `{PacienteId}='${id}'`).join(',')}))`)}`).catch(() => []) : Promise.resolve([]),
+                  todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}`).catch(() => [])
+                ]);
+                const L = {}; g.forEach(id => L[id] = { citas: [], lotes: [] });
+                rs.forEach(r => (r.fields['PacienteRec'] || []).forEach(id => { if (L[id]) L[id].citas.push({ id: r.id, k: String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA), e: String(nmA(r.fields.ESTADO)).trim().toUpperCase() }); }));
+                ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0); if (L[p.id] && n > 0) L[p.id].lotes.push({ f: '', n, precio: 0, previo: true }); });
+                fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => { const id = r.fields['PacienteId']; if (!L[id]) return;
+                  sesDe(r.fields).forEach(x => L[id].lotes.push({ f: r.fields['FECHA DE COBRO'] || r.fields['FECHA'] || '', n: x.n, precio: x.precio, num: r.fields['Nº FACTURA'] || '' })); });
+                g.forEach(id => { L[id].citas.sort((a, b) => a.k.localeCompare(b.k)); C[id] = { t: ahora, v: L[id] }; }); }));
               rows.forEach(r => { const pid = (r.fields['RELACIÓN - CITA'] || [])[0]; if (!pid || !C[pid]) return; const e = String(nmA(r.fields['ESTADO'])).trim().toUpperCase();
-                if (/CANCELADA|REPROGRAMADA|PERDIDA|NO ASIST/.test(e)) return; const k = String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA);
-                numSes[r.id] = C[pid].v.filter(x => x < k).length + 1; });
-            } } catch (e) {}
-          return res.status(200).json({ ok: true, num: numSes });
+                if (/CANCELADA|REPROGRAMADA|NO ASIST/.test(e)) return; const k = String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA);
+                const V = C[pid].v; numSes[r.id] = V.citas.filter(x => x.k < k && x.e !== 'CITA PERDIDA').length + 1;
+                if (!inicio || k.slice(0, 10) < inicio) return; // antes de empezar a cobrar desde el panel no se sabe
+                // Se gastan los pagos por orden (primero el más antiguo) con las citas desde el inicio del control, en orden
+                const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio); let li = 0, usado = 0;
+                for (const x of gastan) { while (li < V.lotes.length && usado >= V.lotes[li].n) { li++; usado = 0; }
+                  if (x.id === r.id) { const lo = V.lotes[li];
+                    pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: usado + 1, n: lo.n } : lo.n > 1 ? { t: 'pack', i: usado + 1, n: lo.n, v: Math.round(lo.precio * 100) / 100 } : { t: 'suelta', v: lo.precio };
+                    break; }
+                  if (li < V.lotes.length) usado++; }
+              });
+            } } catch (e) { console.log('agenda-num', e.message); }
+          return res.status(200).json({ ok: true, num: numSes, pago, inicio });
         }
         if (action === 'seg-agenda-dia') {
           await Promise.all([procesarWeb().catch(() => {}), revisarPorReagendar().catch(() => 0)]);
@@ -1414,7 +1432,7 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, hoy: hoyF, limitado, ausencias: ausDia, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
-        if (action === 'seg-agenda-dar') { // dar cita en una hora (o en un hueco libre concreto)
+        if (action === 'seg-agenda-dar') { global._sesPac = {}; // dar cita en una hora (o en un hueco libre concreto)
           if (!okId(q.pacienteId) || !okF(q.fecha) || !okH(q.hora) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
           const campos = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [q.pacienteId] };
           if (q.notas) campos.NOTAS = String(q.notas).slice(0, 2000);
@@ -1447,7 +1465,7 @@ module.exports = async function handler(req, res) {
           if (!okF(q.fecha) || !okH(q.hora) || !q.fisio || !/^(CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|FRANJA BLOQUEADA|DIA BLOQUEADO|CALL-IN|COMIDA|VIDEOS)$/.test(q.estado || '')) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
           const r = await nueva(q.fecha, q.hora, q.fisio, { ESTADO: q.estado === 'COMIDA' ? await estadoComida() : q.estado, ...(q.notas ? { NOTAS: String(q.notas) } : {}) }); return res.status(200).json({ ok: true, id: r.id });
         }
-        if (action === 'seg-agenda-editar') { // estado, confirmada, notas, etiquetas; opcional dejar el hueco libre
+        if (action === 'seg-agenda-editar') { global._sesPac = {}; // estado, confirmada, notas, etiquetas; opcional dejar el hueco libre
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false, error: 'Cita no encontrada' });
           const f = {};
@@ -1461,7 +1479,7 @@ module.exports = async function handler(req, res) {
           if (Object.keys(f).length) await patch(q.id, f);
           return res.status(200).json({ ok: true });
         }
-        if (action === 'seg-agenda-mover') { // cambiar día/hora/fisio: la original queda REPROGRAMADA y se da la nueva
+        if (action === 'seg-agenda-mover') { global._sesPac = {}; // cambiar día/hora/fisio: la original queda REPROGRAMADA y se da la nueva
           if (!okId(q.id) || !okF(q.fecha) || !okH(q.hora) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
           const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false, error: 'Cita no encontrada' });
           const c = cur.fields, pid = (c['RELACIÓN - CITA'] || [])[0];
@@ -2020,7 +2038,7 @@ module.exports = async function handler(req, res) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) campos[FF.fecha] = q.fecha;
     if (fa.nombre) { campos[FF.aNombre] = String(fa.nombre); campos[FF.aNif] = String(fa.nif || ''); campos[FF.aDir] = String(fa.direccion || ''); }
     [[FF.c1, FF.n1, FF.p1], [FF.c2, FF.n2, FF.p2]].forEach(([c, n, pr], i) => { const l = lineas[i]; if (!l) return; campos[c] = String(l.concepto || ''); campos[n] = Number(l.uds || 0); campos[pr] = Number(l.precio || 0); });
-    const cr = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
+    global._sesPac = {}; const cr = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
     const rec = cr.records && cr.records[0] && cr.records[0].id;
     if (!rec) return res.status(500).json({ ok: false, error: (cr.error && cr.error.message) || 'No se ha podido guardar en Airtable' });
     const turno = emitiendo.then(() => emitirFactura(rec, q.quien, q.fisioElegido ? String(q.fisio || '') : undefined, descuento));
