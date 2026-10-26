@@ -1738,12 +1738,22 @@ module.exports = async function handler(req, res) {
         };
         if (action === 'seg-sinevo') {
           // Datos que se rellenan solos: anamnesis de la app, ejercicios asignados y si los hace (días marcados en la app)
-          const [casos, infs, plan, hechos] = await Promise.all([
+          const [casos, infs, plan, hechos, citasM, saldo] = await Promise.all([
             casosDe(),
-            todosT(INFORMES_TABLE, `filterByFormula=${encodeURIComponent(`{PacienteId}='${pid}'`)}&fields[]=Protocolo&fields[]=Fecha&fields[]=FisioNombre`).catch(() => []),
+            todosT(INFORMES_TABLE, `filterByFormula=${encodeURIComponent(`{PacienteId}='${pid}'`)}&fields[]=Protocolo&fields[]=Fecha&fields[]=FisioNombre&fields[]=Informe`).catch(() => []),
             at(`${PLAN_TABLE}?filterByFormula=${encodeURIComponent(`{PacienteID}='${pid}'`)}&sort[0][field]=FechaAsignacion&sort[0][direction]=desc&maxRecords=1`).catch(() => ({})),
-            todosT(TAR, `filterByFormula=${encodeURIComponent(`AND({PacienteId}='${pid}',IS_AFTER(DATETIME_PARSE({Fecha},'YYYY-MM-DD'),DATEADD(TODAY(),-60,'days')))`)}&fields[]=Fecha`).catch(() => [])
+            todosT(TAR, `filterByFormula=${encodeURIComponent(`AND({PacienteId}='${pid}',IS_AFTER(DATETIME_PARSE({Fecha},'YYYY-MM-DD'),DATEADD(TODAY(),-60,'days')))`)}&fields[]=Fecha`).catch(() => []),
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(FIND('${pid}',ARRAYJOIN({PacienteRec})),OR({motivo}!='',{your-message}!=''))`)}&fields[]=FECHA&fields[]=motivo&fields[]=your-message&sort[0][field]=FECHA&sort[0][direction]=asc`).catch(() => []),
+            saldoPaciente(pid).catch(() => ({ activo: false }))
           ]);
+          // Qué le ocurre y diagnóstico: del informe de anamnesis más reciente (si lo hay) o de lo que escribió al reservar
+          const fx = t => { const m = String(t || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : ''; };
+          const anaTxt = infs.filter(r => !/sin evoluci/i.test(String(r.fields['Protocolo'] || '')) && r.fields['Informe']).sort((a, b) => fx(b.fields['Fecha']).localeCompare(fx(a.fields['Fecha'])))[0];
+          const seccion = (t, nom) => { const L = String(t || '').replace(/\r/g, '').split('\n'); const i = L.findIndex(l => new RegExp('^[#*\\s]*' + nom, 'i').test(l.trim())); if (i < 0) return '';
+            const out = []; for (let k = i + 1; k < L.length; k++) { const l = L[k].trim(); if (/^[#*\s]*[A-ZÁÉÍÓÚÑ ]{6,}[*:]*$/.test(l)) break; out.push(l.replace(/^[-*•]\s*/, '').replace(/\*\*/g, '')); } return out.join(' ').replace(/\s+/g, ' ').trim(); };
+          const motivoAna = anaTxt ? seccion(anaTxt.fields['Informe'], 'MOTIVO DE CONSULTA') : '';
+          const dxAna = anaTxt ? seccion(anaTxt.fields['Informe'], 'DIAGN[ÓO]STICO FISIOTERAP') : '';
+          const cm = citasM[0] ? String(citasM[0].fields['motivo'] || citasM[0].fields['your-message'] || '').trim() : '';
           const anamnesis = infs.map(r => ({ protocolo: String(r.fields['Protocolo'] || '').trim(), fecha: r.fields['Fecha'] || '', fisio: r.fields['FisioNombre'] || '' }))
             .filter(a => a.protocolo && !/sin evoluci/i.test(a.protocolo));
           const pl = ((plan.records || [])[0] || {}).fields || {};
@@ -1756,7 +1766,7 @@ module.exports = async function handler(req, res) {
           const ventana = Math.max(1, Math.round((new Date(hoyF) - new Date(ini)) / 864e5) + 1);
           const enVentana = dias.filter(f => f >= ini && f <= hoyF).length;
           return res.status(200).json({ ok: true, hoy: hoyF, casos: casos.map(vistaCaso),
-            auto: { anamnesis, ejercicios, planFecha: asign, planFisio: pl['FisioNombre'] || '',
+            auto: { anamnesis, ejercicios, motivo: (motivoAna || cm).slice(0, 600), dxFisio: dxAna.slice(0, 600), saldo, planFecha: asign, planFisio: pl['FisioNombre'] || '',
               adherencia: { dias: enVentana, de: ventana, desde: ini, ultimo: dias[dias.length - 1] || '', pct: ejercicios.length ? Math.round(enVentana / ventana * 100) : null } } });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });

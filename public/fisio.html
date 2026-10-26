@@ -6764,6 +6764,7 @@ function sevTexto(pf,au,f,fisio){
  L.push(`*SIN EVOLUCIÓN · ${v(pf.nombre).toUpperCase()}*`);
  L.push(`_${[fisio,sevF(isoMadrid(new Date()))].filter(Boolean).join(' · ')}_`);L.push('');
  lin('Paciente',f.a_paciente);
+ lin('Qué le ocurre',f.a_motivo);
  lin('Sesiones',f.a_sesiones);
  lin('Diagnóstico médico',f.dxMed||'No tiene');
  lin('Diagnóstico fisio',f.dxFisio);
@@ -6774,7 +6775,7 @@ function sevTexto(pf,au,f,fisio){
  lin('Tratamiento hasta ahora',f.tratamiento);
  L.push('');L.push('*En la app*');
  L.push('- Anamnesis: '+(v(f.a_anamnesis)||'NO'));
- const ejl=String(f.a_ejercicios||'').split('\n').map(x=>x.trim()).filter(Boolean);
+ const ejl=String(f.a_ejercicios||'').split('\n').map(x=>x.trim()).filter(x=>x&&!/^ningun/i.test(x));
  L.push('- Ejercicios: '+(ejl.length?ejl.length+' asignados: '+ejl.join(', '):'NINGUNO'));
  if(v(f.a_hace))L.push('- Los hace: '+v(f.a_hace));
  if(ejl.length)L.push('- Los hace bien: '+(f.haceBien||'No comprobado'));
@@ -6818,18 +6819,22 @@ async function sevFormulario(ctx,casoAbierto){
  if(!casoAbierto&&!f0.enfermedades&&pf.salud.length)f0.enfermedades=pf.salud.join(', ')+(pf.notasSalud?'. '+pf.notasSalud:'');
  const a=au.adherencia;
  // Datos de la app: salen solos pero se pueden corregir (al editar un caso abierto se respeta lo corregido)
- const A={a_paciente:[pf.edad!=null?pf.edad+' años':'',pf.motivo].filter(Boolean).join(' · '),
+ const sal=pf.saldo!=null?pf.saldo:(au.saldo&&au.saldo.activo?au.saldo.saldo:null);
+ const A={a_paciente:pf.edad!=null?pf.edad+' años':'',
+  a_motivo:pf.motivo||au.motivo||'',
   a_sesiones:pf.sesiones+(pf.fisios.length?' · con '+pf.fisios.join(', '):'')+(pf.primera?' · desde el '+sevF(pf.primera):''),
   a_anamnesis:au.anamnesis.length?'Sí · '+au.anamnesis.map(x=>x.protocolo+(x.fecha?' '+x.fecha:'')).join(', '):'No',
-  a_ejercicios:au.ejercicios.map(e=>e.nombre+(e.series?' '+e.series+'×'+(e.reps||e.dur+'s'):'')).join('\n'),
-  a_hace:au.ejercicios.length?`${a.dias} de ${a.de} días (${a.pct??0} %)`+(a.ultimo?' · último el '+sevF(a.ultimo):' · nunca los ha marcado'):'',
-  a_pagadas:pf.saldo==null?'':pf.saldo>0?pf.saldo+' sesiones':pf.saldo<0?'ninguna (debe '+(-pf.saldo)+')':'ninguna'};
+  a_ejercicios:au.ejercicios.length?au.ejercicios.map(e=>e.nombre+(e.series?' '+e.series+'×'+(e.reps||e.dur+'s'):'')).join('\n'):'Ninguno',
+  a_hace:au.ejercicios.length?`${a.dias} de ${a.de} días (${a.pct??0} %)`+(a.ultimo?' · último el '+sevF(a.ultimo):' · nunca los ha marcado'):'No tiene ejercicios',
+  a_pagadas:sal==null?'':sal>0?sal+(sal===1?' sesión':' sesiones'):sal<0?'ninguna (debe '+(-sal)+')':'ninguna'};
+ if(!casoAbierto&&!f0.dxFisio&&au.dxFisio)f0.dxFisio=au.dxFisio;
  Object.keys(A).forEach(k=>{if(!(casoAbierto&&f0[k]!=null))f0[k]=A[k];});
  const campo=(k,lbl,ph,rows,req)=>`<div class="sev-f"><label>${lbl}${req?' <i>*</i>':''}</label>${rows===1?`<input class="fp-ta" data-k="${k}" placeholder="${escH(ph||'')}" value="${escH(f0[k]||'')}">`:`<textarea class="fp-ta" data-k="${k}" rows="${rows||2}" placeholder="${escH(ph||'')}">${escH(f0[k]||'')}</textarea>`}</div>`;
  const chips=(k,ops,cls)=>`<div class="sev-ch ${cls||''}" data-k="${k}">${ops.map(o=>`<button type="button" class="${f0[k]===o?'on':''}">${escH(o)}</button>`).join('')}</div>`;
  m.body.innerHTML=`
  <div class="fp-blk"><div class="fp-bt"><h3>Datos de la app</h3></div><small class="fp-mu sev-ayu">Se rellenan solos. Si algo no cuadra, corrígelo aquí.</small>
-  ${campo('a_paciente','Paciente','Edad · motivo de consulta',1)}
+  ${campo('a_paciente','Paciente','Edad',1)}
+  ${campo('a_motivo','¿Qué le ocurre?','Motivo de consulta',2)}
   ${campo('a_sesiones','Sesiones','Nº de sesiones · con quién · desde cuándo',1)}
   ${campo('a_anamnesis','Anamnesis completa en la app','Sí / No',1)}
   ${campo('a_ejercicios','Ejercicios asignados','Uno por línea. Vacío si no tiene',2)}
