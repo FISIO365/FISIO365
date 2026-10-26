@@ -6207,7 +6207,7 @@ function renderStats(wrap){
   card.querySelectorAll('.ag-nv')[0].style.visibility=i>0?'':'hidden';card.querySelectorAll('.ag-nv')[1].style.visibility=i<L.length-1?'':'hidden';
   const kpis=ST_MET.map(([k,t,fn,ty,malSiSube,info])=>{const v=fn(S),pv=P?fn(P):null;let dlt='';
    if(v!=null&&pv!=null&&v!==pv){const up=v>pv,bien=malSiSube?!up:up;const diff=ty==='%'?Math.abs(v-pv)+' pts':ty==='€'?Math.round(Math.abs(v-pv)).toLocaleString('es-ES')+' €':Math.abs(v-pv);dlt=`<em class="${bien?'ok':'mal'}">${up?'▲':'▼'} ${diff}</em>`;}
-   const ed=/ingresos/.test(k);
+   const ed=/ingresos/.test(k)&&!S.ingresosHolded;
    return `<div class="st-k${ST.met===k?' on':''}" data-k="${k}" role="button" tabindex="0"><div class="st-kh"><span>${t}${ed?' <i class="st-ed">✎</i>':''}</span>${infoI(info)}</div><b>${stFmt(v,ty)}</b>${dlt||'<em>&nbsp;</em>'}</div>`;}).join('');
   const [mk,mt,mfn,mty]=ST_MET.find(m=>m[0]===ST.met);
   const vals=L.map(mfn),ok=vals.filter(v=>v!=null),max=Math.max(1,...ok),min=0;
@@ -6236,8 +6236,8 @@ function renderStats(wrap){
    <div class="st-box st-it"><div class="st-bt"><b>Ingresos desde el principio</b><span class="st-rt"><button type="button" data-v="mes" class="on">Por mes</button><button type="button" data-v="ano">Por año</button></span></div><div class="st-itc"><p class="st-p fp-mu">Cargando…</p></div></div>
    <div class="st-box st-gv"><div class="st-bt"><b>Banco: ingresos y gastos</b><span class="st-gl"><i class="in"></i>Ingresos<i class="ga"></i>Gastos</span></div><div class="st-gvc"><p class="st-p fp-mu">Cargando…</p></div></div>
    <div class="st-box st-con"><div class="st-bt"><b>¿Cómo nos han conocido?</b><small>Primeras visitas del periodo</small></div><div class="st-cq"><p class="st-p fp-mu">Cargando…</p></div></div>
-   <div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
-    <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b></p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`;
+   ${S.ingresosHolded?`<div class="st-box st-man"><div class="st-bt"><b>Notas de esta semana</b><button type="button" class="fp-ed st-edit">${S.notas?'Editar':'Añadir'}</button></div>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:'<p class="st-p fp-mu">Sin notas.</p>'}</div>`:`<div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
+    <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b></p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`}`;
   g.querySelectorAll('.st-k').forEach(b=>b.onclick=e=>{if(e.target.closest('.fp-i,.fp-ipop'))return;if(b.querySelector('.st-ed')&&b.classList.contains('on'))editar();else{ST.met=b.dataset.k;pintar();}});
   g.querySelector('.st-edit').onclick=editar;
   g.querySelectorAll('.st-rt button').forEach(b=>b.onclick=()=>{ST.rk=b.dataset.rk;pintar();});
@@ -6290,7 +6290,7 @@ function renderStats(wrap){
    <div class="st-qlg">${D.map((x,i)=>`<div><i style="background:${col(x.k,i)}"></i><span>${escH(x.k)}</span><b>${Math.round(x.n/T*100)}%</b><em>${x.n}</em></div>`).join('')}</div></div>${top?`<p class="st-p fp-mu" style="margin-top:10px">La mayoría llega por <b>${escH(top.k.toLowerCase())}</b>.</p>`:''}`;
  }
  function editar(){const S=ST.d.semanas.find(s=>s.semana===ST.sem);
-  const m=hzModal(`<div class="hz-top"><div><small>Semana ${escH(stSemTxt(S.semana))}</small><b>Datos a mano</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  const m=hzModal(`<div class="hz-top"><div><small>Semana ${escH(stSemTxt(S.semana))}</small><b>${S.ingresosHolded?'Notas de la semana':'Datos a mano'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    ${S.ingresosHolded?`<p class="st-p fp-mu" style="margin:0 0 6px">Los ingresos de esta semana salen solos de Holded: <b>${stFmt(S.ingresos,'€')}</b>.</p>`:`<div class="hz-lab">Ingresos de la semana (€)</div><input type="number" inputmode="decimal" step="0.01" class="ag-in st-i" value="${S.ingresos??''}">`}
 
    <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n st-n" rows="2">${escH(S.notas||'')}</textarea>
