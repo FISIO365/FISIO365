@@ -5307,7 +5307,9 @@ async function agRecordatorios(onDone){
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-encuestas&pwd=${encodeURIComponent(apiPwd)}&fecha=${encF}`)).json();if(!r.ok)throw new Error(r.error||'Error');encD=r.citas;pintaEnc();}
   catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
  const encTexto=c=>{const p=String(c.pila||c.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
-  return `Hola${n?' '+n:''},\n\n¡Gracias por venir a *FISIO365*! ¿Nos cuentas qué tal tu primera visita? Es solo un minuto:\n${ENCUESTA_1A}\n\n¡Muchas gracias!`;};
+  const h=agHoyIso(),cu=c.fecha===agMover(h,-1)?'de ayer':'del '+REC_DIAS[new Date(c.fecha+'T12:00:00').getDay()];
+  const fi=String(c.fisio||'').trim().split(' ')[0],fn=fi?' con '+fi.charAt(0).toUpperCase()+fi.slice(1).toLowerCase():'';
+  return `Hola${n?' '+n:''}, ¿qué tal te encuentras después de la sesión ${cu}${fn}?\n\nNos encantaría saber qué te pareció tu primera visita en FISIO365. Es solo un minuto:\n${ENCUESTA_1A}\n\n¡Gracias!`;};
  function pintaEnc(){const L=encD||[],env=L.filter(c=>c.enviado).length;
   body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="rec-dias"><span>Vinieron el ${escH(fC(encF).toLowerCase())}</span><button type="button" class="rec-otro">Otro día</button></div>
    <div class="rec-pr"><div><b>${env}</b> de ${L.length} enviadas</div></div><div class="rec-bar"><i style="width:${L.length?Math.round(env/L.length*100):0}%"></i></div></div>
