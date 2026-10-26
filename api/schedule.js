@@ -1580,6 +1580,29 @@ module.exports = async function handler(req, res) {
           const d = await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: ids.map(id => ({ id, fields: { 'RECORDATORIO ENVIADO': q.enviado === false ? null : new Date().toISOString(), 'RECORDATORIO POR': q.enviado === false ? '' : String(q.por || '').slice(0, 40) } })) }) });
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
         }
+        // Al dar cita: si estaba en «Por llamar» sale de la lista (se apunta como cita recuperada) y su etiqueta pasa a ACTIVO
+        const salirDeSeguimiento = async (pid, quienTxt, fecha, hora) => {
+          const abiertas = (await todosT(SEG, `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),FIND('${pid}',ARRAYJOIN({PacRec})))`)}`).catch(() => [])).filter(r => (r.fields['PACIENTE'] || []).includes(pid));
+          const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
+          const pac = await at(`${PACIENTES}/${pid}?fields[]=ESTADO`); const act = (pac.fields && pac.fields['ESTADO']) || [];
+          const QUITAR = ['SEGUIMIENTO', 'ABANDONO', 'PENDIENTE DE CONTINUAR', 'NO ACUDIÓ', 'ALTA'].map(n => E[n]).filter(Boolean);
+          const enSeg = abiertas.length || act.some(id => QUITAR.includes(id));
+          if (!enSeg) return null;
+          const kq = String(quienTxt || '').trim().split(' ')[0].toLowerCase();
+          const quien = ({ jonathan: 'JONY', jony: 'JONY', sara: 'SARA', ramiro: 'RAMIRO', nora: 'NORA', juan: 'JUAN' })[kq] || (kq ? kq.toUpperCase() : '');
+          const [y, mo, d] = String(fecha).split('-');
+          for (const r of abiertas) {
+            const ll = { FECHA: new Date().toISOString(), PACIENTE: [pid], RESULTADO: 'CITA RECUPERADA ', NOTAS: `Cita dada desde la agenda para el ${d}/${mo} a las ${String(hora).slice(0, 5)}`, 'SEG ID': r.id };
+            if (quien) ll['QUIEN LLAMA'] = quien;
+            await at(LLA, { method: 'POST', body: JSON.stringify({ records: [{ fields: ll }], typecast: true }) });
+            await at(`${SEG}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHO: true } }) });
+          }
+          const nuevo = [...new Set([...act.filter(id => !QUITAR.includes(id)), ...(E['ACTIVO'] ? [E['ACTIVO']] : [])])];
+          const f = { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' };
+          if (nuevo.join() !== act.join()) f.ESTADO = nuevo;
+          await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
+          return { quitado: abiertas.length, estados: nuevo };
+        };
         if (action === 'seg-agenda-dar') { global._sesPac = {}; // dar cita en una hora (o en un hueco libre concreto)
           if (!okId(q.pacienteId) || !okF(q.fecha) || !okH(q.hora) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
           const campos = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [q.pacienteId] };
@@ -1588,7 +1611,8 @@ module.exports = async function handler(req, res) {
           const r = await ocupar(q.fecha, q.hora, q.fisio, campos, !!q.forzar);
           if (r.conflicto) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${r.con || 'otro paciente'}` });
           const rep = await revisarPorReagendar(true).catch(() => 0);
-          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep });
+          const seg = await salirDeSeguimiento(q.pacienteId, q.quien, q.fecha, q.hora).catch(() => null);
+          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg });
         }
         if (action === 'seg-agenda-huecos') { // abrir varias horas de golpe (libres o bloqueadas), sin pisar lo que ya hay
           const fechas = (q.fechas || []).filter(okF).slice(0, 60), horas = (q.horas || []).map(hh).filter(okH).slice(0, 24);
