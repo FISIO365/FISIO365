@@ -1172,7 +1172,10 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-ayu{display:block;font-size:12px;margin:-6px 0 12px;line-height:1.4}
 .sev-ch.c5 button:last-child:nth-child(odd){grid-column:1/-1}
 .sev-m small.fp-mu{line-height:1.5}
-.ag-otras{display:flex;gap:14px;justify-content:center;margin-top:12px}.ag-borrar{color:#b42318!important}.ag-otras button{font-family:var(--font);font-size:12.5px;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
+.ag-otras{display:flex;gap:14px;justify-content:center;margin-top:12px}
+.ag-segb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin:12px 0 10px;font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:#3d3530;cursor:pointer}
+.ag-segb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ag-segb.sug{border-color:#c2552e;background:#fdeee4;color:#c2552e}.ag-segb.ya{border-color:#e8f6ec;background:#e8f6ec;color:#16803c}.ag-borrar{color:#b42318!important}.ag-otras button{font-family:var(--font);font-size:12.5px;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
 </style>
 </head>
 <body>
@@ -5391,6 +5394,7 @@ function agAbrirCita(c,onDone){
   <button type="button" class="exp-seg ag-conf"><i></i>Confirmada</button>
   <div class="hz-lab">Etiquetas</div><div class="ag-tip"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
+  <button type="button" class="ag-segb"></button>
   <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="hz-ok">Guardar</button></div>
   <div class="ag-otras"><button type="button" class="ag-borrar">Borrar cita</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
@@ -5402,7 +5406,15 @@ function agAbrirCita(c,onDone){
  const faltan=(()=>{const h=String(c.hora||'').match(/^(\d{1,2}):(\d{2})/);if(!h)return null;const t=new Date(`${FD}T${h[1].padStart(2,'0')}:${h[2]}:00`);return (t-Date.now())/36e5;})();
  const pe=()=>{const esT=est==='CANCELADA'&&est0!=='CANCELADA'&&hPol>0&&faltan!=null&&faltan<hPol&&faltan>-12;tarde.hidden=!esT;if(esT)tarde.innerHTML=`<b>Cancelación tardía</b> · ha avisado con ${faltan<1?'menos de 1 hora':'unas '+Math.floor(faltan)+' h'} y la política pide ${hPol} h. Apúntalo en las notas si se le cobra.`;
   m.querySelectorAll('.ag-est button').forEach(b=>b.classList.toggle('on',b.dataset.v===est));lib.hidden=!(/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(est)&&!/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(c.estado));};pe();
- m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{est=b.dataset.v;pe();});
+ // Seguimiento: para los que cancelan, no vienen o hay que reagendar (se puede desde cualquier cita)
+ const sb=m.querySelector('.ag-segb');
+ const pSeg=()=>{const ya=!!SEG_PAC[c.pacienteId],sug=/CANCELADA|NO ASIST|POR REAGENDAR/.test(est);sb.classList.toggle('ya',ya);sb.classList.toggle('sug',!ya&&sug);
+  sb.innerHTML=ya?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Ya está en seguimiento':'<svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Pasar a seguimiento';};
+ sb.onclick=()=>{if(SEG_PAC[c.pacienteId]){toast(segYaTxt(c.pacienteId),true);return;}
+  const qe=est==='CANCELADA'?'Canceló':est==='NO ASISTIÓ'?'No vino a':est==='POR REAGENDAR'?'Hay que reagendar':'';
+  const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);
+  abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
+ m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
  m.querySelector('.ag-borrar').onclick=()=>{const mm=hzModal(`<div class="hz-top"><div><small>${escH(agCab(FD,c.hora,c.fisio))}</small><b>¿Borrar la cita de ${escH(c.paciente||'este paciente')}?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
