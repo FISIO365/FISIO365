@@ -1710,6 +1710,115 @@ module.exports = async function handler(req, res) {
           seguimiento: segs.map(r => ({ id: r.id, fecha: r.fields['FECHA DE LLAMADA'] || '', nota: r.fields['NOTAS'] || '', hecho: !!r.fields['HECHO'], quien: nm(r.fields['RESPONSABLE']) })),
           llamadas: llams.map(r => { const d = diaMad(r.fields['FECHA']); return { fecha: d.f, hora: d.h, quien: nm(r.fields['QUIEN LLAMA']), resultado: String(nm(r.fields['RESULTADO'])).trim(), nota: r.fields['NOTAS'] || '', resena: !!r.fields['RESEÑA'] }; }) });
       }
+      // ── PROTOCOLO DE NO MEJORA («Sin evolución»): un caso por fila en ⚙ APP · SIN EVOLUCIÓN ──
+      if (action.startsWith('seg-sinevo')) {
+        const SEV = 'tbl0OR8AfBuvWyhTo', TAR = 'tblIXYE5ToRNY7MN4', okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
+        if (action === 'seg-sinevo-lista') {
+          // Para Tareas: casos abiertos (falta decidir) y en revisión a los que ya les toca revisar
+          const rs = await todosT(SEV, `filterByFormula=${encodeURIComponent(`{ESTADO}!='Cerrado'`)}&fields[]=PACIENTE&fields[]=FISIO&fields[]=FECHA&fields[]=ESTADO&fields[]=DECISIÓN&fields[]=FECHA DECISIÓN&fields[]=SESIONES AL DECIDIR&fields[]=REVISAR TRAS`);
+          const pids = [...new Set(rs.map(r => (r.fields['PACIENTE'] || [])[0]).filter(Boolean))], nom = {}, real = {};
+          if (pids.length) {
+            const lote = pids.slice(0, 60);
+            const [ps, cs] = await Promise.all([
+              todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + lote.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=FULL NAME`),
+              todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${lote.map(x => `FIND('${x}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=PacienteRec&fields[]=FECHA`)
+            ]);
+            ps.forEach(p => { nom[p.id] = p.fields['FULL NAME'] || '—'; });
+            cs.forEach(c => { if (String(c.fields['FECHA'] || '').slice(0, 10) > hoyF) return; (c.fields['PacienteRec'] || []).forEach(x => { real[x] = (real[x] || 0) + 1; }); });
+          }
+          const nmL = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+          const casos = rs.map(r => { const F = r.fields, p = (F['PACIENTE'] || [])[0] || '', est = nmL(F['ESTADO']) || 'Abierto';
+            const hechas = Math.max(0, (real[p] || 0) - (Number(F['SESIONES AL DECIDIR']) || 0)), tras = Number(F['REVISAR TRAS']) || 3;
+            return { id: r.id, pacienteId: p, nombre: nom[p] || '—', fisio: F['FISIO'] || '', fecha: F['FECHA'] || hoyF, estado: est, decision: nmL(F['DECISIÓN']), fechaDecision: F['FECHA DECISIÓN'] || '', hechas, tras, revisar: est === 'En revisión' && hechas >= tras }; })
+            .filter(c => c.pacienteId && (c.estado === 'Abierto' || c.revisar));
+          return res.status(200).json({ ok: true, casos });
+        }
+        const pid = q.id || q.pacienteId;
+        if (!okId(pid)) return res.status(400).json({ ok: false, error: 'Paciente no válido' });
+        const nmS = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
+        const vistaCaso = r => { const F = r.fields || {}; let datos = {}; try { datos = JSON.parse(F['DATOS'] || '{}'); } catch (e) {}
+          return { id: r.id, fecha: F['FECHA'] || '', fisio: F['FISIO'] || '', estado: nmS(F['ESTADO']) || 'Abierto', datos, informe: F['INFORME'] || '', decision: nmS(F['DECISIÓN']), nota: F['NOTA DECISIÓN'] || '', fechaDecision: F['FECHA DECISIÓN'] || '',
+            decididoPor: F['DECIDIDO POR'] || '', sesDecidir: F['SESIONES AL DECIDIR'] ?? null, revisarTras: F['REVISAR TRAS'] || 3, resultado: nmS(F['RESULTADO']), fechaCierre: F['FECHA CIERRE'] || '' }; };
+        const casosDe = async () => (await todosT(SEV, `filterByFormula=${encodeURIComponent(`FIND('${pid}',ARRAYJOIN({PACIENTE}))`)}&sort[0][field]=FECHA&sort[0][direction]=desc`)).filter(r => (r.fields['PACIENTE'] || []).includes(pid));
+        // Etiqueta «SIN EVOLUCIÓN» del paciente (se busca por nombre en ⚙ APP · ESTADOS DEL PACIENTE)
+        const etiqueta = async (poner) => {
+          const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`);
+          const e = (est.records || []).find(r => /SIN EVOLUCI/i.test(String(r.fields['ESTADO'] || ''))); if (!e) return null;
+          const pac = await at(`${PACIENTES}/${pid}?fields[]=ESTADO`); const act = (pac.fields && pac.fields['ESTADO']) || [];
+          const nuevo = poner ? [...new Set([...act, e.id])] : act.filter(x => x !== e.id);
+          if (nuevo.length !== act.length) await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: nuevo } }) });
+          return nuevo;
+        };
+        if (action === 'seg-sinevo') {
+          // Datos que se rellenan solos: anamnesis de la app, ejercicios asignados y si los hace (días marcados en la app)
+          const [casos, infs, plan, hechos] = await Promise.all([
+            casosDe(),
+            todosT(INFORMES_TABLE, `filterByFormula=${encodeURIComponent(`{PacienteId}='${pid}'`)}&fields[]=Protocolo&fields[]=Fecha&fields[]=FisioNombre`).catch(() => []),
+            at(`${PLAN_TABLE}?filterByFormula=${encodeURIComponent(`{PacienteID}='${pid}'`)}&sort[0][field]=FechaAsignacion&sort[0][direction]=desc&maxRecords=1`).catch(() => ({})),
+            todosT(TAR, `filterByFormula=${encodeURIComponent(`AND({PacienteId}='${pid}',IS_AFTER(DATETIME_PARSE({Fecha},'YYYY-MM-DD'),DATEADD(TODAY(),-60,'days')))`)}&fields[]=Fecha`).catch(() => [])
+          ]);
+          const anamnesis = infs.map(r => ({ protocolo: String(r.fields['Protocolo'] || '').trim(), fecha: r.fields['Fecha'] || '', fisio: r.fields['FisioNombre'] || '' }))
+            .filter(a => a.protocolo && !/sin evoluci/i.test(a.protocolo));
+          const pl = ((plan.records || [])[0] || {}).fields || {};
+          let ejs = []; try { ejs = JSON.parse(pl['Ejercicios'] || '[]'); } catch (e) {}
+          const ejercicios = ejs.filter(x => x && x.nombre).map(x => ({ nombre: String(x.nombre).trim(), series: parseInt(x.series) || 0, reps: parseInt(x.reps) || 0, dur: parseInt(x.duracion) || 0 }));
+          const dias = [...new Set(hechos.map(r => String(r.fields['Fecha'] || '').slice(0, 10)).filter(Boolean))].sort();
+          const desdeD = n => { const x = new Date(hoyF + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() - n); return x.toISOString().slice(0, 10); };
+          // Adherencia: días con los ejercicios hechos en las últimas 2 semanas (o desde que se le asignó el plan, si es más reciente)
+          const asign = pl['FechaAsignacion'] || '', ini = asign && asign > desdeD(13) ? asign : desdeD(13);
+          const ventana = Math.max(1, Math.round((new Date(hoyF) - new Date(ini)) / 864e5) + 1);
+          const enVentana = dias.filter(f => f >= ini && f <= hoyF).length;
+          return res.status(200).json({ ok: true, hoy: hoyF, casos: casos.map(vistaCaso),
+            auto: { anamnesis, ejercicios, planFecha: asign, planFisio: pl['FisioNombre'] || '',
+              adherencia: { dias: enVentana, de: ventana, desde: ini, ultimo: dias[dias.length - 1] || '', pct: ejercicios.length ? Math.round(enVentana / ventana * 100) : null } } });
+        }
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const hoyIso = hoyF;
+        if (action === 'seg-sinevo-guardar') {
+          // Crea o actualiza el caso con el formulario y el informe; pone la etiqueta y lo guarda también en Informes (solo para el equipo)
+          const datos = q.datos && typeof q.datos === 'object' ? q.datos : {};
+          const informe = String(q.informe || '').slice(0, 20000);
+          const nombre = String(q.nombre || '').trim();
+          let casoId = okId(q.casoId) ? q.casoId : '';
+          if (casoId) { const cur = await at(`${SEV}/${casoId}`); if (cur.error || !(cur.fields['PACIENTE'] || []).includes(pid)) return res.status(404).json({ ok: false, error: 'Caso no encontrado' });
+            let prev = {}; try { prev = JSON.parse(cur.fields['DATOS'] || '{}'); } catch (e) {} if (prev._inf && !datos._inf) datos._inf = prev._inf; }
+          // Informe en ⚙ APP · INFORMES (SoloFisio: el paciente no lo ve en su app)
+          const infCampos = { Informe: informe };
+          const infR = okId(datos._inf) ? await at(`${INFORMES_TABLE}/${datos._inf}`, { method: 'PATCH', body: JSON.stringify({ fields: infCampos }) })
+            : await at(INFORMES_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ...infCampos, PacienteId: pid, PacienteNombre: nombre.toUpperCase(), FisioNombre: String(q.fisio || ''), Fecha: new Date().toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' }), Protocolo: 'Sin evolución', SoloFisio: true } }] }) });
+          if (!infR.error) datos._inf = infR.id || ((infR.records || [])[0] || {}).id || datos._inf;
+          const campos = { DATOS: JSON.stringify(datos), INFORME: informe };
+          const d = casoId ? await at(`${SEV}/${casoId}`, { method: 'PATCH', body: JSON.stringify({ fields: campos }) })
+            : await at(SEV, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ...campos, CASO: `${nombre || 'Paciente'} · ${hoyIso.split('-').reverse().join('/')}`, FECHA: hoyIso, PACIENTE: [pid], FISIO: String(q.fisio || ''), ESTADO: 'Abierto' } }] }) });
+          if (d.error) return res.status(400).json({ ok: false, error: d.error.message || 'No se ha podido guardar' });
+          const estados = await etiqueta(true).catch(() => null);
+          return res.status(200).json({ ok: true, caso: vistaCaso(casoId ? d : d.records[0]), estados });
+        }
+        const casoId = q.casoId;
+        if (!okId(casoId)) return res.status(400).json({ ok: false });
+        const cur = await at(`${SEV}/${casoId}`);
+        if (cur.error || !(cur.fields['PACIENTE'] || []).includes(pid)) return res.status(404).json({ ok: false, error: 'Caso no encontrado' });
+        if (action === 'seg-sinevo-decision') {
+          const DEC = ['Cambiar enfoque', 'Cambiar de fisio', 'Derivar al médico', 'Pedir pruebas', 'Alta'];
+          if (!DEC.includes(q.decision)) return res.status(400).json({ ok: false, error: 'Elige la decisión' });
+          const alta = q.decision === 'Alta';
+          const campos = { 'DECISIÓN': q.decision, 'NOTA DECISIÓN': String(q.nota || '').slice(0, 5000), 'FECHA DECISIÓN': hoyIso, 'DECIDIDO POR': String(q.fisio || ''), 'SESIONES AL DECIDIR': Number(q.realizadas) || 0, 'REVISAR TRAS': 3,
+            ESTADO: alta ? 'Cerrado' : 'En revisión', ...(alta ? { RESULTADO: 'Alta', 'FECHA CIERRE': hoyIso } : {}) };
+          const d = await at(`${SEV}/${casoId}`, { method: 'PATCH', body: JSON.stringify({ fields: campos }) });
+          if (d.error) return res.status(400).json({ ok: false, error: d.error.message });
+          const estados = alta ? await etiqueta(false).catch(() => null) : null;
+          return res.status(200).json({ ok: true, caso: vistaCaso(d), estados });
+        }
+        if (action === 'seg-sinevo-resultado') {
+          // Revisión: «Ha mejorado» cierra el caso y quita la etiqueta; «Sigue igual» lo cierra y se abre uno nuevo desde el panel
+          const mejora = q.resultado === 'mejora';
+          const d = await at(`${SEV}/${casoId}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'Cerrado', RESULTADO: mejora ? 'Ha mejorado' : 'Sigue igual', 'FECHA CIERRE': hoyIso } }) });
+          if (d.error) return res.status(400).json({ ok: false, error: d.error.message });
+          const estados = mejora ? await etiqueta(false).catch(() => null) : null;
+          return res.status(200).json({ ok: true, caso: vistaCaso(d), estados });
+        }
+        return res.status(400).json({ ok: false });
+      }
       if (action === 'seg-sin-anotar') {
         // Pacientes cuya última sesión realizada (últimos 14 días) es posterior a la última vez que se tocó su HISTORIAL CLÍNICO
         const cs = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_AFTER({FECHA},DATEADD(TODAY(),-15,'days')),NOT(IS_AFTER({FECHA},TODAY())))`)}&fields[]=FECHA&fields[]=HORA&fields[]=PREF.&fields[]=RELACIÓN - CITA`);
