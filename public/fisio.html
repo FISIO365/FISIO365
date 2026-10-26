@@ -1180,6 +1180,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-pdfb{color:#c2552e;background:#fdeee4}.sev-ch.c3{grid-template-columns:repeat(3,1fr)}.hl-res{margin:14px 0 4px;font-size:13.5px}.hl-res b{color:#141414;font-size:16px}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}
+.mcal-fijo .mcal-g button{aspect-ratio:auto;height:36px}.mcal-fijo .mcal-g i{padding:2px 0}.mcal-fijo{position:static!important;width:auto!important;box-shadow:none!important;padding:4px 0 0!important;border-radius:0!important}.mcal-g button.pas{color:#c9bfb7}
 .mcal{position:fixed;z-index:3000;width:292px;background:#fff;border-radius:18px;box-shadow:0 12px 40px rgba(20,20,20,.18);padding:14px;font-family:var(--font)}
 .mcal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.mcal-h b{font-size:14.5px}
 .mcal-h button{width:34px;height:34px;border-radius:50%;border:none;background:#f3efea;color:#c2552e;font-size:18px;cursor:pointer;font-family:var(--font)}
@@ -5274,6 +5275,19 @@ function miniCal(anchor,valor,onPick){
  const cerrar=()=>{box.remove();document.removeEventListener('click',fuera,true);removeEventListener('resize',coloca);};
  setTimeout(()=>document.addEventListener('click',fuera,true),0);addEventListener('resize',coloca);pinta();
 }
+// Calendario fijo dentro de una ventana (para elegir día directamente, p. ej. al cambiar una cita)
+function calFijo(box,valor,onPick){
+ const hoy=agHoyIso();let mes=(valor||hoy).slice(0,7),sel=valor;box.classList.add('mcal','mcal-fijo');
+ const MS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+ const pinta=()=>{const [y,m]=mes.split('-').map(Number),ini=(new Date(Date.UTC(y,m-1,1)).getUTCDay()+6)%7,dias=new Date(Date.UTC(y,m,0)).getUTCDate();
+  let html=`<div class="mcal-h"><button type="button" data-d="-1" aria-label="Mes anterior">‹</button><b>${MS[m-1]} ${y}</b><button type="button" data-d="1" aria-label="Mes siguiente">›</button></div><div class="mcal-g">${['L','M','X','J','V','S','D'].map(d=>`<i>${d}</i>`).join('')}`;
+  for(let i=0;i<ini;i++)html+='<span></span>';
+  for(let d=1;d<=dias;d++){const f=`${mes}-${String(d).padStart(2,'0')}`;html+=`<button type="button" data-f="${f}" class="${f===sel?'sel':''}${f===hoy?' hoy':''}${f<hoy?' pas':''}">${d}</button>`;}
+  box.innerHTML=html+'</div>';
+  box.querySelectorAll('.mcal-h button').forEach(b=>b.onclick=()=>{const d=new Date(Date.UTC(y,m-1+(+b.dataset.d),1));mes=d.toISOString().slice(0,7);pinta();});
+  box.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{sel=b.dataset.f;pinta();onPick(sel);});};
+ pinta();
+}
 async function agRecordatorios(onDone){
  let fechas=recFechasDef(),datos=null;
  const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>Recordatorios por WhatsApp</b></div><div class="fp-body"></div>`;
@@ -5574,7 +5588,7 @@ function agAbrirCita(c,onDone){
   const qe=est==='CANCELADA'?'Canceló':est==='NO ASISTIÓ'?'No vino a':est==='POR REAGENDAR'?'Hay que reagendar':'';
   const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);
   abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
- m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
+ m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='REPROGRAMADA'&&!/REPROGRAMADA/.test(c.estado)){m.remove();agMoverCita(c,onDone);return;}est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
  m.querySelector('.ag-borrar').onclick=()=>{const mm=hzModal(`<div class="hz-top"><div><small>${escH(agCab(FD,c.hora,c.fisio))}</small><b>¿Borrar la cita de ${escH(c.paciente||'este paciente')}?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
@@ -5598,7 +5612,7 @@ function agHorasChips(box,fecha,fisio,horaSel,onPick){
 function agMoverCita(c,onDone){
  const FD=c.fecha||AG.fecha;let fecha=FD,hora='',fisio=c.fisio;const futuro=FD>=agHoyIso();
  const m=hzModal(`<div class="hz-top"><div><small>Cambiar día u hora · ahora ${escH(agCab(FD,c.hora,c.fisio))}</small><b>${escH(c.paciente||'Paciente')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-  <div class="hz-lab">Día</div><input type="date" class="ag-in ag-fd" value="${fecha}">
+  <div class="hz-lab">Día</div><div class="ag-fd"></div>
   <div class="hz-lab">Fisio</div><select class="ag-in ag-ff">${[...new Set([...agEquipo(),c.fisio])].map(f=>`<option value="${escH(f)}"${f===fisio?' selected':''}>${escH(agNom(f))}</option>`).join('')}</select>
   <div class="hz-lab">Hora <span>(verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div>
   ${futuro?'<label class="ag-lib"><input type="checkbox" checked> Dejar la hora de ahora libre para otro paciente</label>':''}
@@ -5606,7 +5620,7 @@ function agMoverCita(c,onDone){
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const hs=m.querySelector('.ag-hs'),fd=m.querySelector('.ag-fd'),ff=m.querySelector('.ag-ff');
  const ch=()=>{hora='';agHorasChips(hs,fecha,fisio,'',h=>hora=h);};ch();
- fd.onchange=()=>{fecha=fd.value;ch();};ff.onchange=()=>{fisio=ff.value;ch();};
+ calFijo(fd,fecha,f=>{fecha=f;ch();});ff.onchange=()=>{fisio=ff.value;ch();};
  const enviar=async(b,forzar)=>{if(!fecha||!hora){toast('Elige día y hora',false);return;}b.disabled=true;b.textContent='Cambiando…';
   try{const lb=m.querySelector('.ag-lib input');const r=await agPost('seg-agenda-mover',{id:c.id,fecha,hora,fisio,liberar:!!(lb&&lb.checked),forzar});
    if(r.conflicto){b.disabled=false;b.textContent='Cambiar cita';if(confirm(r.error+'. ¿Darla igualmente a la misma hora?'))enviar(b,true);return;}
