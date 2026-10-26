@@ -1173,6 +1173,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-ch.c5 button:last-child:nth-child(odd){grid-column:1/-1}
 .sev-m small.fp-mu{line-height:1.5}
 .ag-recb{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border:none;border-radius:99px;padding:8px 13px;cursor:pointer}.ag-recb svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.ag-pdfb{color:#c2552e;background:#fdeee4}.sev-ch.c3{grid-template-columns:repeat(3,1fr)}.hl-res{margin:14px 0 4px;font-size:13.5px}.hl-res b{color:#141414;font-size:16px}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{position:relative;font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border-radius:99px;padding:7px 12px;cursor:pointer;overflow:hidden}.rec-otro input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .rec-def{font-family:var(--font);font-size:12.5px;font-weight:600;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
@@ -5262,6 +5263,61 @@ async function agRecordatorios(onDone){
  }
  cargar();
 }
+// ── PDF DE HUECOS LIBRES (para mandar por WhatsApp) ──
+function cargarJsPDF(){return new Promise((ok,ko)=>{if(window.jspdf&&window.jspdf.jsPDF)return ok(window.jspdf.jsPDF);const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=()=>window.jspdf&&window.jspdf.jsPDF?ok(window.jspdf.jsPDF):ko(new Error('No se ha podido cargar el PDF'));s.onerror=()=>ko(new Error('No se ha podido cargar el PDF. Revisa la conexión.'));document.head.appendChild(s);});}
+function agPdfHuecos(){
+ const eq=agEquipo();let dias=7,sel=new Set();
+ const m=hzModal(`<div class="hz-top"><div><small>Agenda</small><b>Huecos libres en PDF</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">¿Qué días?</div><div class="sev-ch c3 hl-dias">${[[3,'3 días'],[7,'7 días'],[14,'14 días']].map(([n,t])=>`<button type="button" data-n="${n}" class="${n===7?'on':''}">Próx. ${t}</button>`).join('')}</div>
+  <div class="hz-lab">¿De qué fisio?</div><div class="seg-rap hl-fis"><button type="button" data-f="" class="on">Todos</button>${eq.map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
+  <div class="hl-res fp-mu"></div>
+  <div class="sev-bts"><button type="button" class="sev-b hl-dl">Descargar</button><button type="button" class="sev-b ok hl-wa">Enviar por WhatsApp</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const res=m.querySelector('.hl-res');let huecos=null,tk=0;
+ const rango=()=>{const h=agHoyIso();return [h,agMover(h,dias-1)];};
+ async function contar(){const t=++tk;huecos=null;res.textContent='Buscando huecos…';const [d1,d2]=rango();
+  try{const d=await (await fetch(`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}&desde=${d1}&hasta=${d2}`)).json();if(t!==tk)return;if(!d.ok)throw 0;
+   const ahora=new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date()),hoy=agHoyIso();
+   huecos=(d.citas||[]).filter(c=>agEsLibre(c.estado)&&c.fisio&&!AG_NOFISIO.test(c.fisio)&&/^\d{1,2}:\d{2}/.test(c.hora||'')&&!(c.fecha===hoy&&c.hora<=ahora)).map(c=>({fecha:c.fecha,hora:String(c.hora).replace(/^(\d):/,'0$1:').slice(0,5),fisio:c.fisio}));pinta();}
+  catch(e){if(t===tk)res.textContent='No se han podido cargar los huecos';}}
+ const elegidos=()=>(huecos||[]).filter(x=>!sel.size||sel.has(x.fisio));
+ function pinta(){if(!huecos)return;const n=elegidos().length;res.innerHTML=n?`<b>${n}</b> hueco${n===1?'':'s'} libre${n===1?'':'s'}`:'No hay huecos libres con estos filtros';m.querySelectorAll('.hl-dl,.hl-wa').forEach(b=>b.disabled=!n);}
+ m.querySelectorAll('.hl-dias button').forEach(b=>b.onclick=()=>{dias=+b.dataset.n;m.querySelectorAll('.hl-dias button').forEach(x=>x.classList.toggle('on',x===b));contar();});
+ const fb=m.querySelectorAll('.hl-fis button');fb.forEach(b=>b.onclick=()=>{const f=b.dataset.f;if(!f)sel.clear();else sel.has(f)?sel.delete(f):sel.add(f);fb.forEach(x=>x.classList.toggle('on',x.dataset.f?sel.has(x.dataset.f):!sel.size));pinta();});
+ async function hacer(){const J=await cargarJsPDF(),L=elegidos(),[d1,d2]=rango();
+  const doc=new J({unit:'mm',format:'a4'}),W=210,X=18,T=[194,85,46],G=[125,106,96],N=[20,20,20];
+  const DN=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const fL=f=>{const t=new Date(f+'T12:00:00');return `${DN[t.getDay()]} ${t.getDate()} de ${MS[t.getMonth()]}`;};
+  const fisSel=sel.size?[...sel].map(agNom):[];
+  let y=22;const cab=()=>{doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...T);doc.text('FISIO365',X,y);y+=11;};
+  cab();doc.setTextColor(...N);doc.setFontSize(22);doc.text('Huecos libres',X,y);y+=7;
+  doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(...G);
+  const t1=new Date(d1+'T12:00:00'),t2=new Date(d2+'T12:00:00');
+  doc.text(`Del ${t1.getDate()} de ${MS[t1.getMonth()]} al ${t2.getDate()} de ${MS[t2.getMonth()]}${fisSel.length?' · Con '+fisSel.join(', '):''}`,X,y);y+=10;
+  const porDia={};L.forEach(h=>{(porDia[h.fecha]=porDia[h.fecha]||[]).push(h);});
+  const variosF=fisSel.length!==1;
+  Object.keys(porDia).sort().forEach(f=>{const H=porDia[f];
+   const filas=variosF?[...new Set(H.map(h=>h.fisio))].sort((a,b)=>AG_FISIOS.indexOf(a)-AG_FISIOS.indexOf(b)).map(fi=>[agNom(fi),[...new Set(H.filter(h=>h.fisio===fi).map(h=>h.hora))].sort()]):[['',[...new Set(H.map(h=>h.hora))].sort()]];
+   const alto=10+filas.reduce((t,[,hs])=>t+Math.ceil(hs.length/(variosF?7:9))*9+2,0);
+   if(y+alto>280){doc.addPage();y=22;cab();}
+   doc.setDrawColor(239,235,229);doc.setLineWidth(0.4);doc.line(X,y,W-X,y);y+=7;
+   doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(...N);doc.text(fL(f),X,y);y+=5;
+   filas.forEach(([fi,hs])=>{let x=X+(variosF?26:0),yy=y+3;
+    if(variosF){doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(...G);doc.text(fi,X,yy+4.3);}
+    hs.forEach((h,i)=>{if(i&&i%(variosF?7:9)===0){x=X+(variosF?26:0);yy+=9;}doc.setFillColor(253,238,228);doc.roundedRect(x,yy,16.5,6.6,2,2,'F');doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(...T);doc.text(h,x+8.25,yy+4.6,{align:'center'});x+=18.5;});
+    y=yy+9;});
+   y+=3;});
+  if(y>262){doc.addPage();y=22;}
+  y=Math.max(y+6,250);doc.setDrawColor(239,235,229);doc.line(X,y,W-X,y);y+=8;
+  doc.setFont('helvetica','bold');doc.setFontSize(11.5);doc.setTextColor(...N);doc.text('¿Te va bien alguna? Escríbenos o llámanos y te la reservamos.',X,y);y+=6;
+  const C=(CONF&&CONF.clinica)||{};doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(...G);doc.text(`${C.tel||'672 89 39 49'} · ${C.direccion||'C/ Gran de Sant Andreu, 163 · Barcelona'}`,X,y);y+=5.5;doc.text('También puedes reservar desde la app de FISIO365.',X,y);
+  const nom=`Huecos libres FISIO365 ${t1.getDate()}-${t1.getMonth()+1}${fisSel.length===1?' '+fisSel[0]:''}.pdf`;
+  return {blob:doc.output('blob'),nom};}
+ m.querySelector('.hl-wa').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{const {blob,nom}=await hacer();const file=new File([blob],nom,{type:'application/pdf'});
+   if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:nom});}catch(er){}}else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nom;a.click();toast('PDF descargado: adjúntalo en WhatsApp',true);}}catch(er){toast(er.message,false);}b.disabled=false;};
+ m.querySelector('.hl-dl').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{const {blob,nom}=await hacer();const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nom;a.click();}catch(er){toast(er.message,false);}b.disabled=false;};
+ contar();
+}
 function renderAgenda(wrap){
  if(!AG.fecha)AG.fecha=agHoyIso();
  try{AG.vista=AG.vista||localStorage.getItem('f365_ag_vista')||'dia';}catch(e){AG.vista=AG.vista||'dia';}
@@ -5274,7 +5330,7 @@ function renderAgenda(wrap){
   <button type="button" class="ag-nv" data-n="1" aria-label="Siguiente">›</button></div>
   <div class="ag-lf"><label class="ag-sel ag-w"><span class="ag-pert"></span><select class="ag-per">${AG_PER.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label>
    <span class="ag-rg"><input type="date" class="ag-in ag-d1"><span>a</span><input type="date" class="ag-in ag-d2"></span></div>
-  <div class="ag-bar2"><button type="button" class="ag-recb"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Recordatorios</button><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><label class="ag-sel ag-fil"><span class="ag-filt"></span><select class="ag-fis">${AG_FIL.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label><span class="ag-res"></span></div>
+  <div class="ag-bar2"><button type="button" class="ag-recb"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Recordatorios</button><button type="button" class="ag-recb ag-pdfb"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>Huecos libres</button><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><label class="ag-sel ag-fil"><span class="ag-filt"></span><select class="ag-fis">${AG_FIL.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label><span class="ag-res"></span></div>
   <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
  wrap.appendChild(card);
  const $c=q=>card.querySelector(q),fi=$c('.ag-fi'),fs=$c('.ag-fs'),grid=$c('.ag-grid');
@@ -5282,7 +5338,8 @@ function renderAgenda(wrap){
  card.querySelectorAll('.ag-vis button').forEach(b=>b.onclick=()=>{AG.vista=b.dataset.v;try{localStorage.setItem('f365_ag_vista',AG.vista);}catch(e){}cargar();});
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n*(AG.vista==='semana'?7:1));cargar();});
  $c('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
- $c('.ag-recb').onclick=()=>agRecordatorios(()=>cargar());
+ $c('.ag-recb:not(.ag-pdfb)').onclick=()=>agRecordatorios(()=>cargar());
+ $c('.ag-pdfb').onclick=()=>agPdfHuecos();
  fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};
  fs.onchange=()=>{AG.fisio=fs.value;try{localStorage.setItem('f365_ag_fisio',AG.fisio);}catch(e){}AG.vista==='lista'?cargar():pintar();};
  $c('.ag-fis').onchange=e=>{AG.fil=e.target.value;pintar();};
