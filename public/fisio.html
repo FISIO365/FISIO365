@@ -8128,8 +8128,11 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
  if(sd.activo){const b=ce('div','fac-saldo'+(sd.saldo<0?' neg':sd.saldo>0?' pos':''));
   b.innerHTML=sd.saldo<0?`<b>⚠️ ${-sd.saldo} sesi${sd.saldo===-1?'ón':'ones'} sin facturar</b><span>Ha hecho ${sd.gastadas} y ha pagado ${sd.pagadas}</span>`:sd.saldo>0?`<b>Le quedan ${sd.saldo} sesi${sd.saldo===1?'ón':'ones'} pagada${sd.saldo===1?'':'s'}</b><span>Ha pagado ${sd.pagadas} y ha hecho ${sd.gastadas}</span>`:`<b>Todo facturado</b><span>Sin sesiones pendientes ni pagadas por adelantado</span>`;
   body.appendChild(b);
-  const bp=ce('div','fac-bp');bp.innerHTML=d.bonoPrevio?`<span>Pack pagado fuera del panel: <b>${d.bonoPrevio} sesiones</b></span><button type="button">Cambiar</button>`:`<span>¿Tiene un pack pagado que no se facturó desde aquí?</span><button type="button">Marcar pack</button>`;
-  bp.querySelector('button').onclick=()=>marcarPack(pacId,pacNombre,d.bonoPrevio||0,false,()=>fpTabFacturas(pacId,body,pacNombre,body.dataset.token));body.appendChild(bp);}
+  // El pack de fuera del panel se marca desde la cita (Agenda › cita › «Tiene pack»: sesión X de N); aquí solo se ve y se puede quitar
+  if(d.bonoPrevio){const bp=ce('div','fac-bp');bp.innerHTML=`<span>Pack de <b>${d.bonoPrevio} sesiones</b> pagado fuera del panel</span><button type="button">Quitar</button>`;
+   const q=bp.querySelector('button');let arm=false;q.onclick=async()=>{if(!arm){arm=true;q.textContent='¿Quitar?';setTimeout(()=>{arm=false;q.textContent='Quitar';},4000);return;}q.disabled=true;
+    try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:pacId,bonoPrevio:0})})).json();if(!r.ok)throw 0;toast('Quitado',true);fpTabFacturas(pacId,body,pacNombre,body.dataset.token);}catch(e){q.disabled=false;toast('No se ha podido quitar',false);}};
+   body.appendChild(bp);}}
  else{const b=ce('div','fac-saldo');b.innerHTML='<b>Saldo de sesiones</b><span>Empezará a contar con la primera factura emitida desde el panel (cuando conectemos Holded).</span>';body.appendChild(b);}
  const nueva=ce('button','fac-nueva');nueva.type='button';nueva.textContent='+ Cobrar y facturar';
  body.appendChild(nueva);
