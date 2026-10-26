@@ -1178,6 +1178,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-m small.fp-mu{line-height:1.5}
 .ag-recb{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border:none;border-radius:99px;padding:8px 13px;cursor:pointer}.ag-recb svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .ag-pdfb{color:#c2552e;background:#fdeee4}.sev-ch.c3{grid-template-columns:repeat(3,1fr)}.hl-res{margin:14px 0 4px;font-size:13.5px}.hl-res b{color:#141414;font-size:16px}
+.rec-tabs{margin:0 0 12px}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}
 .mcal-fijo .mcal-g button{aspect-ratio:auto;height:36px}.mcal-fijo .mcal-g i{padding:2px 0}.mcal-fijo{position:static!important;width:auto!important;box-shadow:none!important;padding:4px 0 0!important;border-radius:0!important}.mcal-g button.pas{color:#c9bfb7}
@@ -1201,6 +1202,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rec-b{flex:none;width:104px;font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:12px;padding:10px 0;cursor:pointer}.rec-b.env{background:#16803c;color:#fff}.rec-b.otra{background:#f3efea;color:#5f554e}.rec-b.cf{background:#fff;color:#16803c;box-shadow:inset 0 0 0 1.5px #16803c}.rec-b.cf.on{background:#e8f6ec;box-shadow:none}
 .rec-re{font-family:var(--font);font-size:12px;color:#7d6a60;background:none;border:none;padding:0;text-decoration:underline;cursor:pointer}.rec-b.sin{background:#fff4e5;color:#b45309}
 .ag-otras{display:flex;gap:14px;justify-content:center;margin-top:12px}
+.ag-sgr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 10px}.ag-sgr .ag-segb{margin:0!important}.ag-sgr button{white-space:nowrap;font-size:13px!important;gap:6px!important;padding:11px 4px!important;min-width:0}
+.ag-altab{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px 6px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:#3d3530;cursor:pointer}.ag-altab svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .ag-segb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin:12px 0 10px;font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:#3d3530;cursor:pointer}
 .ag-segb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .ag-segb.sug{border-color:#c2552e;background:#fdeee4;color:#c2552e}.ag-segb.ya{border-color:#e8f6ec;background:#e8f6ec;color:#16803c}.ag-borrar{color:#b42318!important}.ag-otras button{font-family:var(--font);font-size:12.5px;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
@@ -5241,6 +5244,7 @@ function agPasaFiltro(c,f){if(!f)return true;const e=c.estado;
  return f==='pend'?/PENDIENTE/.test(e)&&!!c.pacienteId:f==='sinconf'?/PENDIENTE/.test(e)&&!!c.pacienteId&&!c.confirmada:f==='hecha'?/REALIZADA/.test(e):f==='novino'?/NO ASIST|PERDIDA/.test(e):f==='canc'?/CANCELADA/.test(e):f==='rep'?/REPROGRAMADA/.test(e):f==='reag'?/REAGENDAR/.test(e):f==='dud'?/DUDOSA/.test(e):f==='libre'?agEsLibre(e):true;}
 // ── RECORDATORIOS POR WHATSAPP (en un toque) ──
 // Día anterior; el viernes también los del lunes. Cada mensaje lleva el enlace para que el paciente confirme.
+const ENCUESTA_1A='https://tally.so/r/aQqBzX',ENCUESTA_FELIZ='https://tally.so/r/Zj220z';
 const REC_DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 function recFechasDef(){const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return dw===5?[agMover(h,1),agMover(h,3)]:dw===6?[agMover(h,2)]:dw===0?[agMover(h,1)]:[agMover(h,1)];}
 function recTexto(g){const h=agHoyIso(),t=new Date(g.fecha+'T12:00:00'),dm=t.getDate()+'/'+(t.getMonth()+1),dn=REC_DIAS[t.getDay()];
@@ -5295,7 +5299,27 @@ async function agRecordatorios(onDone){
  const cerrar=()=>{m.remove();document.body.style.overflow=ov;onDone&&onDone();};m.querySelector('.pv-x').onclick=cerrar;
  const body=m.querySelector('.fp-body');
  const fC=f=>{const t=new Date(f+'T12:00:00');return REC_DIAS[t.getDay()].charAt(0).toUpperCase()+REC_DIAS[t.getDay()].slice(1)+' '+t.getDate()+'/'+(t.getMonth()+1);};
- async function cargar(){body.innerHTML='<div class="fac-vacio">Cargando…</div>';
+ // Dos pestañas: recordatorios de las citas y encuesta de satisfacción a los de primera visita
+ let modo='rec',encF=(()=>{const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return agMover(h,dw===1?-2:dw===0?-1:-1);})(),encD=null;
+ const tabs=()=>`<div class="ag-vis rec-tabs"><button type="button" data-t="rec" class="${modo==='rec'?'on':''}">Recordatorios</button><button type="button" data-t="enc" class="${modo==='enc'?'on':''}">Encuesta 1ª visita</button></div>`;
+ const atarTabs=()=>body.querySelectorAll('.rec-tabs button').forEach(b=>b.onclick=()=>{if(modo===b.dataset.t)return;modo=b.dataset.t;m.querySelector('.pv-bar b').textContent=modo==='rec'?'Recordatorios por WhatsApp':'Encuesta de primera visita';cargar();});
+ async function cargarEnc(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
+  try{const r=await (await fetch(`/api/schedule?action=seg-agenda-encuestas&pwd=${encodeURIComponent(apiPwd)}&fecha=${encF}`)).json();if(!r.ok)throw new Error(r.error||'Error');encD=r.citas;pintaEnc();}
+  catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
+ const encTexto=c=>{const p=String(c.pila||c.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
+  return `Hola${n?' '+n:''},\n\n¡Gracias por venir a *FISIO365*! ¿Nos cuentas qué tal tu primera visita? Es solo un minuto:\n${ENCUESTA_1A}\n\n¡Muchas gracias!`;};
+ function pintaEnc(){const L=encD||[],env=L.filter(c=>c.enviado).length;
+  body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="rec-dias"><span>Vinieron el ${escH(fC(encF).toLowerCase())}</span><button type="button" class="rec-otro">Otro día</button></div>
+   <div class="rec-pr"><div><b>${env}</b> de ${L.length} enviadas</div></div><div class="rec-bar"><i style="width:${L.length?Math.round(env/L.length*100):0}%"></i></div></div>
+   ${!L.length?'<div class="fac-vacio">Ese día no hubo primeras visitas</div>':`<div class="fp-blk rec-lista">${L.map((c,i)=>{const tel=segTel(c.tel);return `<div class="rec-it${c.enviado?' env':''}" data-i="${i}"><div class="rec-h">${escH(c.hora)}</div><div class="rec-n"><b>${escH(capTit(c.nombre||'—'))}</b><small>${escH(String(c.fisio||'').split(' ')[0])}${c.enviado&&tel.length>=9?' · <button type="button" class="rec-re">Reenviar</button>':''}</small></div>
+    ${tel.length<9?`<button type="button" class="rec-b sin" data-ficha="${c.pacienteId}" data-fn="${escH(c.nombre)}">Sin teléfono</button>`:c.enviado?'<button type="button" class="rec-b cf on" disabled>✓ Enviada</button>':'<button type="button" class="rec-b env">Enviar</button>'}</div>`;}).join('')}</div>`}`;
+  atarTabs();
+  const oi=body.querySelector('.rec-otro');oi.onclick=()=>miniCal(oi,encF,f=>{encF=f;cargar();});
+  body.querySelectorAll('.rec-it').forEach(it=>{const c=L[+it.dataset.i],b=it.querySelector('.rec-b.env,.rec-re');if(!b)return;
+   b.onclick=async()=>{abrirWA(segTel(c.tel),encTexto(c));if(c.enviado)return;c.enviado=new Date().toISOString();pintaEnc();
+    try{const r=await agPost('seg-agenda-encuesta',{id:c.id});if(!r.ok)throw 0;}catch(e){c.enviado='';pintaEnc();toast('No se ha podido marcar como enviada',false);}};});
+ }
+ async function cargar(){if(modo==='enc')return cargarEnc();body.innerHTML='<div class="fac-vacio">Cargando…</div>';
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-recordatorios&pwd=${encodeURIComponent(apiPwd)}&fechas=${fechas.join(',')}`)).json();if(!r.ok)throw new Error(r.error||'Error');datos=r.citas;pinta();}
   catch(e){body.innerHTML=`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;body.querySelector('.ag-reint').onclick=cargar;}}
  function pinta(){
@@ -5304,13 +5328,14 @@ async function agRecordatorios(onDone){
   gr.forEach(g=>{g.enviado=g.citas.every(c=>c.enviado);g.conf=g.citas.every(c=>c.confirmada);g.por=(g.citas.find(c=>c.por)||{}).por||'';g.cuando=(g.citas.find(c=>c.enviado)||{}).enviado||'';});
   const env=gr.filter(g=>g.enviado).length,cf=gr.filter(g=>g.conf).length;
   const def=recFechasDef().join(',')===fechas.join(',');
-  body.innerHTML=`<div class="fp-blk rec-top"><div class="rec-dias">${fechas.map(f=>`<span>${escH(fC(f))}</span>`).join('')}<button type="button" class="rec-otro">Otro día</button>${def?'':'<button type="button" class="rec-def">Volver</button>'}</div>
+  body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="rec-dias">${fechas.map(f=>`<span>${escH(fC(f))}</span>`).join('')}<button type="button" class="rec-otro">Otro día</button>${def?'':'<button type="button" class="rec-def">Volver</button>'}</div>
    ${esMovil()?'':`<div class="rec-modo-l">Abrir en</div><div class="rec-modo">${[['web','WhatsApp Web','No hay que instalar nada, pero tarda unos segundos en abrir cada chat.'],['app','App de WhatsApp','Al instante. Necesita WhatsApp instalado en este ordenador.']].map(([k,t,d])=>`<button type="button" data-m="${k}" class="${recModoPC()===k?'on':''}"><b>${t}</b><small>${d}</small></button>`).join('')}</div>`}
    <div class="rec-pr"><div><b>${env}</b> de ${gr.length} enviados</div><div><b>${cf}</b> confirmados</div></div><div class="rec-bar"><i style="width:${gr.length?Math.round(env/gr.length*100):0}%"></i></div></div>
    ${!gr.length?'<div class="fac-vacio">No hay citas pendientes esos días</div>':''}
    ${fechas.map(f=>{const L=gr.filter(g=>g.fecha===f);if(!L.length)return '';return `<div class="rec-sub">${escH(fC(f))} · ${L.length}</div><div class="fp-blk rec-lista">${L.map(g=>{const i=gr.indexOf(g),tel=segTel(g.tel);
     return `<div class="rec-it${g.enviado?' env':''}" data-i="${i}"><div class="rec-h">${escH(g.citas.map(c=>c.hora).join(' · '))}</div><div class="rec-n"><b>${escH(capTit(g.nombre||'—'))}</b><small>${escH([...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]))].join(', '))}${g.enviado?` · enviado${g.por?' por '+escH(String(g.por).split(' ')[0]):''}${tel.length>=9?' · <button type="button" class="rec-re">Reenviar</button>':''}`:''}</small></div>
      ${tel.length<9&&!g.enviado?`<button type="button" class="rec-b sin" data-ficha="${g.pacienteId}" data-fn="${escH(g.nombre)}">Sin teléfono</button>`:g.conf?`<button type="button" class="rec-b cf on">✓ Confirmada</button>`:g.enviado?`<button type="button" class="rec-b cf">Confirmar</button>`:`<button type="button" class="rec-b env">Enviar</button>`}</div>`;}).join('')}</div>`;}).join('')}`;
+  atarTabs();
   body.querySelectorAll('.rec-modo button').forEach(b=>b.onclick=()=>{try{localStorage.setItem('f365_wa',b.dataset.m);}catch(e){}pinta();});
   const oi=body.querySelector('.rec-otro');oi.onclick=()=>miniCal(oi,fechas[fechas.length-1],f=>{fechas=[f];cargar();});
   const bd=body.querySelector('.rec-def');if(bd)bd.onclick=()=>{fechas=recFechasDef();cargar();};
@@ -5568,7 +5593,7 @@ function agAbrirCita(c,onDone){
   <button type="button" class="exp-seg ag-conf"><i></i>Confirmada</button>
   <div class="hz-lab">Etiquetas</div><div class="ag-tip"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
-  <button type="button" class="ag-segb"></button>
+  <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No necesita más</button></div>
   <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="hz-ok">Guardar</button></div>
   <div class="ag-otras"><button type="button" class="ag-borrar">Borrar cita</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
@@ -5583,11 +5608,12 @@ function agAbrirCita(c,onDone){
  // Seguimiento: para los que cancelan, no vienen o hay que reagendar (se puede desde cualquier cita)
  const sb=m.querySelector('.ag-segb');
  const pSeg=()=>{const ya=!!SEG_PAC[c.pacienteId],sug=/CANCELADA|NO ASIST|POR REAGENDAR/.test(est);sb.classList.toggle('ya',ya);sb.classList.toggle('sug',!ya&&sug);
-  sb.innerHTML=ya?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Ya está en seguimiento':'<svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Pasar a seguimiento';};
+  sb.innerHTML=ya?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>En seguimiento':'<svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Seguimiento';};
  sb.onclick=()=>{if(SEG_PAC[c.pacienteId]){toast(segYaTxt(c.pacienteId),true);return;}
   const qe=est==='CANCELADA'?'Canceló':est==='NO ASISTIÓ'?'No vino a':est==='POR REAGENDAR'?'Hay que reagendar':'';
   const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);
   abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
+ m.querySelector('.ag-altab').onclick=()=>agAlta(c);
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='REPROGRAMADA'&&!/REPROGRAMADA/.test(c.estado)){m.remove();agMoverCita(c,onDone);return;}est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
@@ -5608,6 +5634,25 @@ function agHorasChips(box,fecha,fisio,horaSel,onPick){
    return `<button type="button" data-h="${h}" class="${ocup?'oc':blq?'bq':lib?'li':''}${h===horaSel?' on':''}">${h}</button>`;}).join('');
   box.querySelectorAll('button').forEach(b=>b.onclick=()=>{box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));onPick(b.dataset.h);});
  }).catch(()=>{box.innerHTML='<small class="fp-mu">No se han podido cargar las horas</small>';});
+}
+// Cancela y ya no necesita más sesiones: alta (sin seguimiento) y, si se quiere, pedirle reseña
+function agAlta(c){
+ const nom=String(c.paciente||'').trim(),pila=capTit(nom.split(/\s+/)[0]||'');
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(capTit(nom))}</small><b>¿Ya no necesita más sesiones?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <p class="fp-mu" style="font-size:13.5px;margin:0 0 6px">Se le pone la etiqueta <b>Alta</b> y no pasa a seguimiento ni sale en «sin próxima cita».</p>
+  <div class="hz-lab">Motivo</div><textarea class="seg-n al-n" rows="2">Alta: ya no necesita más sesiones</textarea>
+  <div class="sev-bts"><button type="button" class="sev-b al-no">Cancelar</button><button type="button" class="sev-b ok al-ok">Dar el alta</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.al-no').onclick=()=>m.remove();
+ m.querySelector('.al-ok').onclick=async e=>{const b=e.currentTarget;b.disabled=true;
+  try{const r=await agPost('seg-agenda-alta',{pacienteId:c.pacienteId,nota:m.querySelector('.al-n').value.trim(),fisio:String((fisioActual&&fisioActual.nombre)||'')});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
+   const px=(pacs||[]).find(x=>x.id===c.pacienteId);if(px&&r.estados)px.estados=r.estados;try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}
+   const tel=segTel((px&&(px.telefono||px.tel))||'');
+   m.querySelector('.hz-card').innerHTML=`<div class="hz-top"><div><small>${escH(capTit(nom))}</small><b>✓ Alta apuntada</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+    <p style="font-size:14px;line-height:1.5;margin:0 0 4px">¿Le pedimos que nos valore? Le llega la encuesta <b>«Paciente feliz»</b>: si responde Excelente, le lleva a dejar reseña en Google.</p>
+    <div class="sev-bts"><button type="button" class="sev-b al-no">Ahora no</button><button type="button" class="sev-b ok al-wa" ${tel.length<9?'disabled':''}>${tel.length<9?'Sin teléfono':'Pedir reseña'}</button></div>`;
+   m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.al-no').onclick=()=>m.remove();
+   const w=m.querySelector('.al-wa');if(w)w.onclick=()=>{abrirWA(tel,`Hola${pila?' '+pila:''},\n\n¡Nos alegra mucho haberte ayudado! Si tienes un minuto, ¿nos cuentas qué tal tu experiencia en *FISIO365*?\n${ENCUESTA_FELIZ}\n\n¡Gracias por confiar en nosotros!`);m.remove();};
+  }catch(err){b.disabled=false;toast(err.message,false);}};
 }
 function agMoverCita(c,onDone){
  const FD=c.fecha||AG.fecha;let fecha=FD,hora='',fisio=c.fisio;const futuro=FD>=agHoyIso();

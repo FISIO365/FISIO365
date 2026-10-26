@@ -1470,6 +1470,25 @@ module.exports = async function handler(req, res) {
             .filter(c => c.pacienteId).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
           return res.status(200).json({ ok: true, hoy: hoyF, citas });
         }
+        if (action === 'seg-agenda-encuestas') {
+          // Encuesta de satisfacción: pacientes cuya PRIMERA sesión realizada fue ese día
+          const fecha = okF(q.fecha) ? q.fecha : hoyF;
+          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}',TRIM({ESTADO})='REALIZADA')`)}&fields[]=FECHA&fields[]=HORA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('ENCUESTA ENVIADA')}`);
+          const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], antes = new Set(), pac = {};
+          for (let i = 0; i < pids.length; i += 40) {
+            const l = pids.slice(i, i + 40);
+            const [ps, prev] = await Promise.all([
+              todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + l.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`),
+              todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_BEFORE({FECHA},DATETIME_PARSE('${fecha}','YYYY-MM-DD')),OR(${l.map(x => `FIND('${x}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=PacienteRec`)
+            ]);
+            ps.forEach(p => { pac[p.id] = { nombre: p.fields['FULL NAME'] || '', pila: p.fields['NOMBRE'] || '', tel: p.fields['WHATSAPP'] || p.fields['TELF'] || '' }; });
+            prev.forEach(c => (c.fields['PacienteRec'] || []).forEach(x => antes.add(x)));
+          }
+          const nmE = v => (v && typeof v === 'object') ? (v.name || '') : (v || ''), vistos = new Set();
+          const lista = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha, hora: String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: nmE(F['PREF.']), pacienteId: pid, ...(pac[pid] || { nombre: '', pila: '', tel: '' }), enviado: F['ENCUESTA ENVIADA'] || '' }; })
+            .filter(c => c.pacienteId && !antes.has(c.pacienteId) && !vistos.has(c.pacienteId) && vistos.add(c.pacienteId)).sort((a, b) => a.hora.localeCompare(b.hora));
+          return res.status(200).json({ ok: true, hoy: hoyF, fecha, citas: lista });
+        }
         if (action === 'seg-agenda-dia') {
           await Promise.all([procesarWeb().catch(() => {}), revisarPorReagendar().catch(() => 0)]);
           let rows, limitado = false;
@@ -1498,6 +1517,21 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, hoy: hoyF, limitado, ausencias: ausDia, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'seg-agenda-encuesta') { // marcar que se ha enviado la encuesta de primera visita
+          if (!okId(q.id)) return res.status(400).json({ ok: false });
+          const d = await at(`${CIT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ENCUESTA ENVIADA': q.enviado === false ? null : new Date().toISOString() } }) });
+          return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+        }
+        if (action === 'seg-agenda-alta') { // cancela y ya no necesita más sesiones: etiqueta ALTA y motivo apuntado (no sale en «sin próxima cita»)
+          if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
+          const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`), e = (est.records || []).find(r => /^ALTA$/i.test(String(r.fields['ESTADO'] || '').trim()));
+          const pac = await at(`${PACIENTES}/${q.pacienteId}`); if (pac.error) return res.status(404).json({ ok: false, error: 'Paciente no encontrado' });
+          const act = (pac.fields && pac.fields['ESTADO']) || [];
+          const f = { 'POR QUÉ NO REAGENDA': String(q.nota || 'Alta: ya no necesita más sesiones').slice(0, 2000), 'POR QUÉ FECHA': hoyF, 'POR QUÉ FISIO': String(q.fisio || '').slice(0, 60) };
+          if (e) f.ESTADO = [...new Set([...act, e.id])];
+          const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
+          return res.status(200).json({ ok: !d.error, estados: f.ESTADO || act, error: d.error && d.error.message });
+        }
         if (action === 'seg-agenda-recordatorio') { // marcar (o desmarcar) que se ha enviado el recordatorio de una o varias citas
           const ids = (Array.isArray(q.ids) ? q.ids : [q.id]).filter(okId).slice(0, 10); if (!ids.length) return res.status(400).json({ ok: false });
           const d = await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: ids.map(id => ({ id, fields: { 'RECORDATORIO ENVIADO': q.enviado === false ? null : new Date().toISOString(), 'RECORDATORIO POR': q.enviado === false ? '' : String(q.por || '').slice(0, 40) } })) }) });
