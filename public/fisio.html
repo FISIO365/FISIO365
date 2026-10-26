@@ -1177,6 +1177,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{position:relative;font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border-radius:99px;padding:7px 12px;cursor:pointer;overflow:hidden}.rec-otro input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .rec-def{font-family:var(--font);font-size:12.5px;font-weight:600;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
+.rec-modo{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:12.5px;color:#7d6a60}.rec-modo .seg-rap{margin:0}
 .rec-pr{display:flex;justify-content:space-between;margin-top:14px;font-size:13px;color:#7d6a60}.rec-pr b{font-size:17px;color:#141414}
 .rec-bar{height:6px;background:#f3efea;border-radius:99px;margin-top:8px;overflow:hidden}.rec-bar i{display:block;height:100%;background:#16803c;border-radius:99px;transition:width .3s}
 .rec-sub{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7d6a60;margin:16px 4px 8px}
@@ -5233,6 +5234,13 @@ function recTexto(g){const h=agHoyIso(),t=new Date(g.fecha+'T12:00:00'),dm=t.get
  const pila=String(g.pila||g.nombre||'').trim().split(/\s+/)[0],nom=pila?pila.charAt(0).toUpperCase()+pila.slice(1).toLowerCase():'';
  // Sin emojis: al abrir WhatsApp desde un enlace algunos se ven como «�»
  return `Hola${nom?' '+nom:''},\n\nTe recordamos tu cita en *FISIO365*:\n*${cuando} a las ${horas.join(' y a las ')}*${fis.length?`\nCon ${fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y ')}`:''}\n\nConfírmanos que vienes aquí:\n${g.citas[0].link}\n\n¡Te esperamos!`;}
+// Abrir WhatsApp sin ir dejando una pestaña por paciente:
+// móvil → abre la app directamente; ordenador → siempre la MISMA pestaña de WhatsApp Web (o la app de escritorio si se elige)
+const esMovil=()=>/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
+function recModoPC(){try{return localStorage.getItem('f365_wa')||'web';}catch(e){return 'web';}}
+function abrirWA(tel,texto){const q=`phone=${tel}&text=${encodeURIComponent(texto)}`;
+ if(esMovil()||recModoPC()==='app'){location.href=`whatsapp://send?${q}`;return;}
+ const w=window.open(`https://web.whatsapp.com/send?${q}`,'f365_whatsapp');if(w)try{w.focus();}catch(e){}}
 async function agRecordatorios(onDone){
  let fechas=recFechasDef(),datos=null;
  const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>Recordatorios por WhatsApp</b></div><div class="fp-body"></div>`;
@@ -5250,15 +5258,17 @@ async function agRecordatorios(onDone){
   const env=gr.filter(g=>g.enviado).length,cf=gr.filter(g=>g.conf).length;
   const def=recFechasDef().join(',')===fechas.join(',');
   body.innerHTML=`<div class="fp-blk rec-top"><div class="rec-dias">${fechas.map(f=>`<span>${escH(fC(f))}</span>`).join('')}<label class="rec-otro">Otro día<input type="date" value="${fechas[fechas.length-1]}"></label>${def?'':'<button type="button" class="rec-def">Volver</button>'}</div>
+   ${esMovil()?'':`<div class="rec-modo"><span>Abrir en</span><div class="seg-rap">${[['web','WhatsApp Web'],['app','App de WhatsApp']].map(([k,t])=>`<button type="button" data-m="${k}" class="${recModoPC()===k?'on':''}">${t}</button>`).join('')}</div></div>`}
    <div class="rec-pr"><div><b>${env}</b> de ${gr.length} enviados</div><div><b>${cf}</b> confirmados</div></div><div class="rec-bar"><i style="width:${gr.length?Math.round(env/gr.length*100):0}%"></i></div></div>
    ${!gr.length?'<div class="fac-vacio">No hay citas pendientes esos días</div>':''}
    ${fechas.map(f=>{const L=gr.filter(g=>g.fecha===f);if(!L.length)return '';return `<div class="rec-sub">${escH(fC(f))} · ${L.length}</div><div class="fp-blk rec-lista">${L.map(g=>{const i=gr.indexOf(g),tel=segTel(g.tel);
     return `<div class="rec-it${g.enviado?' env':''}" data-i="${i}"><div class="rec-h">${escH(g.citas.map(c=>c.hora).join(' · '))}</div><div class="rec-n"><b>${escH(capTit(g.nombre||'—'))}</b><small>${escH([...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]))].join(', '))}${g.conf?' · <em class="ok">✓ Confirmada</em>':g.enviado?` · enviado${g.por?' por '+escH(String(g.por).split(' ')[0]):''}`:''}</small></div>
      ${tel.length<9?`<button type="button" class="rec-b sin" data-ficha="${g.pacienteId}" data-fn="${escH(g.nombre)}">Sin teléfono</button>`:g.enviado?`<button type="button" class="rec-b otra">Reenviar</button>`:`<button type="button" class="rec-b env">Enviar</button>`}</div>`;}).join('')}</div>`;}).join('')}`;
+  body.querySelectorAll('.rec-modo button').forEach(b=>b.onclick=()=>{try{localStorage.setItem('f365_wa',b.dataset.m);}catch(e){}pinta();});
   const oi=body.querySelector('.rec-otro input');oi.onchange=()=>{if(oi.value){fechas=[oi.value];cargar();}};
   const bd=body.querySelector('.rec-def');if(bd)bd.onclick=()=>{fechas=recFechasDef();cargar();};
   body.querySelectorAll('.rec-it').forEach(it=>{const g=gr[+it.dataset.i],b=it.querySelector('.rec-b.env,.rec-b.otra');if(!b)return;
-   b.onclick=async()=>{window.open(`https://wa.me/${segTel(g.tel)}?text=${encodeURIComponent(recTexto(g))}`,'_blank');
+   b.onclick=async()=>{abrirWA(segTel(g.tel),recTexto(g));
     if(g.enviado)return;const por=String((fisioActual&&fisioActual.nombre)||'');g.citas.forEach(c=>{c.enviado=new Date().toISOString();c.por=por;});pinta();
     try{const r=await agPost('seg-agenda-recordatorio',{ids:g.citas.map(c=>c.id),por});if(!r.ok)throw 0;}catch(e){g.citas.forEach(c=>{c.enviado='';c.por='';});pinta();toast('No se ha podido marcar como enviado',false);}};});
  }
