@@ -1714,24 +1714,11 @@ module.exports = async function handler(req, res) {
       if (action.startsWith('seg-sinevo')) {
         const SEV = 'tbl0OR8AfBuvWyhTo', TAR = 'tblIXYE5ToRNY7MN4', okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
         if (action === 'seg-sinevo-lista') {
-          // Para Tareas: casos abiertos (falta decidir) y en revisión a los que ya les toca revisar
-          const rs = await todosT(SEV, `filterByFormula=${encodeURIComponent(`{ESTADO}!='Cerrado'`)}&fields[]=PACIENTE&fields[]=FISIO&fields[]=FECHA&fields[]=ESTADO&fields[]=DECISIÓN&fields[]=FECHA DECISIÓN&fields[]=SESIONES AL DECIDIR&fields[]=REVISAR TRAS`);
-          const pids = [...new Set(rs.map(r => (r.fields['PACIENTE'] || [])[0]).filter(Boolean))], nom = {}, real = {};
-          if (pids.length) {
-            const lote = pids.slice(0, 60);
-            const [ps, cs] = await Promise.all([
-              todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + lote.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=FULL NAME`),
-              todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${lote.map(x => `FIND('${x}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=PacienteRec&fields[]=FECHA`)
-            ]);
-            ps.forEach(p => { nom[p.id] = p.fields['FULL NAME'] || '—'; });
-            cs.forEach(c => { if (String(c.fields['FECHA'] || '').slice(0, 10) > hoyF) return; (c.fields['PacienteRec'] || []).forEach(x => { real[x] = (real[x] || 0) + 1; }); });
-          }
-          const nmL = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
-          const casos = rs.map(r => { const F = r.fields, p = (F['PACIENTE'] || [])[0] || '', est = nmL(F['ESTADO']) || 'Abierto';
-            const hechas = Math.max(0, (real[p] || 0) - (Number(F['SESIONES AL DECIDIR']) || 0)), tras = Number(F['REVISAR TRAS']) || 3;
-            return { id: r.id, pacienteId: p, nombre: nom[p] || '—', fisio: F['FISIO'] || '', fecha: F['FECHA'] || hoyF, estado: est, decision: nmL(F['DECISIÓN']), fechaDecision: F['FECHA DECISIÓN'] || '', hechas, tras, revisar: est === 'En revisión' && hechas >= tras }; })
-            .filter(c => c.pacienteId && (c.estado === 'Abierto' || c.revisar));
-          return res.status(200).json({ ok: true, casos });
+          // Para Tareas: casos abiertos (el fisio todavía no ha decidido cómo seguir)
+          const rs = await todosT(SEV, `filterByFormula=${encodeURIComponent(`{ESTADO}='Abierto'`)}&fields[]=PACIENTE&fields[]=FISIO&fields[]=FECHA`);
+          const pids = [...new Set(rs.map(r => (r.fields['PACIENTE'] || [])[0]).filter(Boolean))], nom = {};
+          if (pids.length) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(0, 80).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=FULL NAME`)).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || '—'; });
+          return res.status(200).json({ ok: true, casos: rs.map(r => { const p = (r.fields['PACIENTE'] || [])[0] || ''; return { id: r.id, pacienteId: p, nombre: nom[p] || '—', fisio: r.fields['FISIO'] || '', fecha: r.fields['FECHA'] || hoyF }; }).filter(c => c.pacienteId) });
         }
         const pid = q.id || q.pacienteId;
         if (!okId(pid)) return res.status(400).json({ ok: false, error: 'Paciente no válido' });
@@ -1799,22 +1786,15 @@ module.exports = async function handler(req, res) {
         const cur = await at(`${SEV}/${casoId}`);
         if (cur.error || !(cur.fields['PACIENTE'] || []).includes(pid)) return res.status(404).json({ ok: false, error: 'Caso no encontrado' });
         if (action === 'seg-sinevo-decision') {
+          // Tarea hecha: el fisio ya sabe cómo seguir. Se cierra el caso (si vuelve a no mejorar, se abre otro).
           const DEC = ['Cambiar enfoque', 'Cambiar de fisio', 'Derivar al médico', 'Pedir pruebas', 'Alta'];
-          if (!DEC.includes(q.decision)) return res.status(400).json({ ok: false, error: 'Elige la decisión' });
+          const nota = String(q.nota || '').trim().slice(0, 5000);
+          if (!nota) return res.status(400).json({ ok: false, error: 'Escribe cómo vas a seguir' });
           const alta = q.decision === 'Alta';
-          const campos = { 'DECISIÓN': q.decision, 'NOTA DECISIÓN': String(q.nota || '').slice(0, 5000), 'FECHA DECISIÓN': hoyIso, 'DECIDIDO POR': String(q.fisio || ''), 'SESIONES AL DECIDIR': Number(q.realizadas) || 0, 'REVISAR TRAS': 3,
-            ESTADO: alta ? 'Cerrado' : 'En revisión', ...(alta ? { RESULTADO: 'Alta', 'FECHA CIERRE': hoyIso } : {}) };
+          const campos = { 'NOTA DECISIÓN': nota, 'FECHA DECISIÓN': hoyIso, 'DECIDIDO POR': String(q.fisio || ''), ESTADO: 'Cerrado', 'FECHA CIERRE': hoyIso, ...(DEC.includes(q.decision) ? { 'DECISIÓN': q.decision } : {}), ...(alta ? { RESULTADO: 'Alta' } : {}) };
           const d = await at(`${SEV}/${casoId}`, { method: 'PATCH', body: JSON.stringify({ fields: campos }) });
           if (d.error) return res.status(400).json({ ok: false, error: d.error.message });
           const estados = alta ? await etiqueta(false).catch(() => null) : null;
-          return res.status(200).json({ ok: true, caso: vistaCaso(d), estados });
-        }
-        if (action === 'seg-sinevo-resultado') {
-          // Revisión: «Ha mejorado» cierra el caso y quita la etiqueta; «Sigue igual» lo cierra y se abre uno nuevo desde el panel
-          const mejora = q.resultado === 'mejora';
-          const d = await at(`${SEV}/${casoId}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'Cerrado', RESULTADO: mejora ? 'Ha mejorado' : 'Sigue igual', 'FECHA CIERRE': hoyIso } }) });
-          if (d.error) return res.status(400).json({ ok: false, error: d.error.message });
-          const estados = mejora ? await etiqueta(false).catch(() => null) : null;
           return res.status(200).json({ ok: true, caso: vistaCaso(d), estados });
         }
         return res.status(400).json({ ok: false });

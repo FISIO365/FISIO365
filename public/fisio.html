@@ -1167,6 +1167,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-pie{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #eee5dd;padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;z-index:2}.sev-pie button{flex:1}
 .sev-txt{min-height:360px;font-size:13.5px!important;line-height:1.5}
 .sev-hist{margin-top:10px;font-size:12px;color:#7d6a60}
+.sev-ch.c5 button:last-child:nth-child(odd){grid-column:1/-1}
+.sev-m small.fp-mu{line-height:1.5}
 .ag-otras{display:flex;gap:14px;justify-content:center;margin-top:12px}.ag-borrar{color:#b42318!important}.ag-otras button{font-family:var(--font);font-size:12.5px;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
 </style>
 </head>
@@ -6409,7 +6411,7 @@ async function listaTareas(cont,keep){
  const L=d.items.filter(x=>!tarFiltro||x.quien===tarFiltro);
  const hoy=d.hoy;
  // Agrupadas por tipo; dentro, por fecha (las atrasadas primero, marcadas en rojo)
- const TIPOS_T=[['tarea','Tareas del equipo'],['anotar','Historia por actualizar'],['explicar','Sin próxima cita'],['consent','Consentimientos'],['consentAnt','Antiguos: subir el consentimiento en papel'],['hueco','Huecos libres para la lista de espera'],['regalo','Tarjetas regalo por dar'],['negocio','Negocios que toca visitar'],['plan','Sin plan de ejercicios en la app'],['app','Sin la app']];
+ const TIPOS_T=[['sinevo','Sin evolución: decidir cómo seguir'],['tarea','Tareas del equipo'],['anotar','Historia por actualizar'],['explicar','Sin próxima cita'],['consent','Consentimientos'],['consentAnt','Antiguos: subir el consentimiento en papel'],['hueco','Huecos libres para la lista de espera'],['regalo','Tarjetas regalo por dar'],['negocio','Negocios que toca visitar'],['plan','Sin plan de ejercicios en la app'],['app','Sin la app']];
  const grT=x=>x.tipo==='consent'&&x.k&&x.k.antiguo?'consentAnt':x.tipo;
  const grupos=TIPOS_T.map(([k,t])=>[t,k,L.filter(x=>grT(x)===k).sort((a,b)=>a.fecha.localeCompare(b.fecha))]);
  box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todos (${d.items.filter(x=>x.fecha<=hoy).length})</option>${[...new Set(TAR_NOMBRES.concat(quien))].map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
@@ -6419,12 +6421,12 @@ async function listaTareas(cont,keep){
   const h=ce('div','seg-gt '+c);h.innerHTML=`${t} <span>${g.length}</span>`;box.appendChild(h);
   const tabla=ce('div','seg-tabla');
   g.forEach(x=>{
-   const sinAtr=['consent','app','plan','regalo','hueco','negocio'].includes(x.tipo);const r=ce('div','tk'+(x.fecha<hoy&&!sinAtr?' atr':''));
-   const pid=x.tipo==='hueco'||x.tipo==='negocio'?'':x.tipo==='regalo'?(x.g.recomendo?x.g.recomendo.id:''):x.tipo==='app'||x.tipo==='plan'?x.a.pacienteId:x.tipo==='consent'?(x.k.pacienteId||''):x.tipo==='llamar'?x.seg.pacienteId:x.tipo==='tarea'?x.t.pacienteId:x.tipo==='anotar'?x.c.pacienteId:x.p.id;
+   const sinAtr=['consent','app','plan','regalo','hueco','negocio','sinevo'].includes(x.tipo);const r=ce('div','tk'+(x.fecha<hoy&&!sinAtr?' atr':''));
+   const pid=x.tipo==='hueco'||x.tipo==='negocio'?'':x.tipo==='regalo'?(x.g.recomendo?x.g.recomendo.id:''):x.tipo==='app'||x.tipo==='plan'?x.a.pacienteId:x.tipo==='sinevo'?x.sv.pacienteId:x.tipo==='consent'?(x.k.pacienteId||''):x.tipo==='llamar'?x.seg.pacienteId:x.tipo==='tarea'?x.t.pacienteId:x.tipo==='anotar'?x.c.pacienteId:x.p.id;
    const IC_TEL='<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
    const IC_EXP='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
-   const sub=x.tipo==='hueco'?('Ofrecer a '+capTit(x.P[0].x.nombre)+' · '+x.P[0].es+' días esperando'+(x.P.length>1?' · '+(x.P.length-1)+' más pueden':'')):x.tipo==='negocio'?('Tocaba visita el '+segFecha(x.n.proxima)):x.tipo==='regalo'?(x.g.recomendo?'Recomendó a '+x.g.nuevo.nombre+' · vino el '+segFecha(x.g.primera):'Puso «'+x.g.texto+'» como quien le recomendó · ¿quién es?'):x.tipo==='app'||x.tipo==='plan'?[x.quien?'Con '+x.quien:'',x.tipo==='plan'?'Sin ejercicios asignados':'Tiene ejercicios pero no ha entrado en la app','vino el '+segFecha(x.a.ultima)].filter(Boolean).join(' · '):x.tipo==='consent'?(x.k.modo==='R'?(x.k.motivo==='doble'?`${x.k.tipo} enlazado a ${x.k.pacientes.length} pacientes: ${x.k.pacientes.map(p=>p.nombre).join(' y ')}`:`${x.k.tipo} firmado con otro nombre y enlazado a ${x.k.pacientes[0].nombre}`):x.k.modo==='P'?(x.k.antiguo?'1ª visita '+(x.k.primeraVisita?String(x.k.primeraVisita).split('-').reverse().join('/'):'—')+' · vino el '+segFecha(x.k.primera):'Le falta el consentimiento · vino el '+segFecha(x.k.primera))+(x.k.fisio?' con '+x.k.fisio:''):'Formulario firmado, no sabemos de quién · '+[x.k.tel,x.k.sugerido?'¿es de '+x.k.sugerido.nombre+'?':''].filter(Boolean).join(' · ')):x.tipo==='anotar'?[x.quien,'Historia sin actualizar tras la sesión del '+segFecha(x.c.fecha)].filter(Boolean).join(' · '):x.tipo==='tarea'?[x.t.para?'Para '+x.t.para:'Para cualquiera',x.t.paciente?'Paciente: '+x.t.paciente:'',x.t.creadaPor&&x.t.creadaPor!==x.t.para?'la apuntó '+x.t.creadaPor:''].filter(Boolean).join(' · '):x.tipo==='llamar'?(x.seg.ultima?'Última sesión '+segFecha(x.seg.ultima).replace(/^\S+ /,'')+(x.seg.fisio?' con '+x.seg.fisio:''):''):[x.quien,'Última sesión '+segFecha(x.p.ultima).replace(/^\S+ /,'')].filter(Boolean).join(' · ');
-   const notaT=x.tipo==='hueco'||x.tipo==='negocio'||x.tipo==='consent'||x.tipo==='anotar'||x.tipo==='app'||x.tipo==='plan'||x.tipo==='regalo'?'':x.tipo==='tarea'?x.t.nota:x.tipo==='llamar'?(x.detalle&&x.detalle.trim()!=='Llamada de seguimiento'?x.detalle:''):(x.p.nota?'Motivo: '+x.p.nota:'');
+   const sub=x.tipo==='sinevo'?('Informe del '+segFecha(x.sv.fecha)+(x.sv.fisio?' · '+String(x.sv.fisio).split(' ')[0]:'')+' · falta decidir cómo seguir'):x.tipo==='hueco'?('Ofrecer a '+capTit(x.P[0].x.nombre)+' · '+x.P[0].es+' días esperando'+(x.P.length>1?' · '+(x.P.length-1)+' más pueden':'')):x.tipo==='negocio'?('Tocaba visita el '+segFecha(x.n.proxima)):x.tipo==='regalo'?(x.g.recomendo?'Recomendó a '+x.g.nuevo.nombre+' · vino el '+segFecha(x.g.primera):'Puso «'+x.g.texto+'» como quien le recomendó · ¿quién es?'):x.tipo==='app'||x.tipo==='plan'?[x.quien?'Con '+x.quien:'',x.tipo==='plan'?'Sin ejercicios asignados':'Tiene ejercicios pero no ha entrado en la app','vino el '+segFecha(x.a.ultima)].filter(Boolean).join(' · '):x.tipo==='consent'?(x.k.modo==='R'?(x.k.motivo==='doble'?`${x.k.tipo} enlazado a ${x.k.pacientes.length} pacientes: ${x.k.pacientes.map(p=>p.nombre).join(' y ')}`:`${x.k.tipo} firmado con otro nombre y enlazado a ${x.k.pacientes[0].nombre}`):x.k.modo==='P'?(x.k.antiguo?'1ª visita '+(x.k.primeraVisita?String(x.k.primeraVisita).split('-').reverse().join('/'):'—')+' · vino el '+segFecha(x.k.primera):'Le falta el consentimiento · vino el '+segFecha(x.k.primera))+(x.k.fisio?' con '+x.k.fisio:''):'Formulario firmado, no sabemos de quién · '+[x.k.tel,x.k.sugerido?'¿es de '+x.k.sugerido.nombre+'?':''].filter(Boolean).join(' · ')):x.tipo==='anotar'?[x.quien,'Historia sin actualizar tras la sesión del '+segFecha(x.c.fecha)].filter(Boolean).join(' · '):x.tipo==='tarea'?[x.t.para?'Para '+x.t.para:'Para cualquiera',x.t.paciente?'Paciente: '+x.t.paciente:'',x.t.creadaPor&&x.t.creadaPor!==x.t.para?'la apuntó '+x.t.creadaPor:''].filter(Boolean).join(' · '):x.tipo==='llamar'?(x.seg.ultima?'Última sesión '+segFecha(x.seg.ultima).replace(/^\S+ /,'')+(x.seg.fisio?' con '+x.seg.fisio:''):''):[x.quien,'Última sesión '+segFecha(x.p.ultima).replace(/^\S+ /,'')].filter(Boolean).join(' · ');
+   const notaT=x.tipo==='sinevo'||x.tipo==='hueco'||x.tipo==='negocio'||x.tipo==='consent'||x.tipo==='anotar'||x.tipo==='app'||x.tipo==='plan'||x.tipo==='regalo'?'':x.tipo==='tarea'?x.t.nota:x.tipo==='llamar'?(x.detalle&&x.detalle.trim()!=='Llamada de seguimiento'?x.detalle:''):(x.p.nota?'Motivo: '+x.p.nota:'');
    const ul=x.tipo==='llamar'&&x.seg.ult?x.seg.ult:null;
    const ests=pacEstados(pid).map(estNom).filter(Boolean);
    const IC_TAR='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>';
@@ -6432,11 +6434,13 @@ async function listaTareas(cont,keep){
    const IC_APP='<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg>';
    const IC_REG='<svg viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="12.5" rx="2"/><path d="M12 8v12.5M3.5 12.5h17M12 8c-1.5-3.5-5.5-4-5.5-1.5S12 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S12 8 12 8z"/></svg>';
    const IC_CAL='<svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>',IC_TIENDA='<svg viewBox="0 0 24 24"><path d="M3 9l2-5h14l2 5M4 9v11h16V9M3 9h18M9 20v-6h6v6"/></svg>';
-   const ico=x.tipo==='hueco'?`<span class="tk-i ta">${IC_CAL}</span>`:x.tipo==='negocio'?`<span class="tk-i ta">${IC_TIENDA}</span>`:x.tipo==='regalo'?`<span class="tk-i ta">${IC_REG}</span>`:x.tipo==='app'||x.tipo==='plan'?`<span class="tk-i ta">${IC_APP}</span>`:x.tipo==='anotar'||x.tipo==='consent'?`<span class="tk-i an">${IC_NOTA}</span>`:x.tipo==='tarea'?`<span class="tk-i ta">${IC_TAR}</span>`:x.tipo==='llamar'?(x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${IC_TEL}</a>`:`<span class="tk-i ll">${IC_TEL}</span>`):`<span class="tk-i ex">${IC_EXP}</span>`;
+   const ico=x.tipo==='hueco'?`<span class="tk-i ta">${IC_CAL}</span>`:x.tipo==='negocio'?`<span class="tk-i ta">${IC_TIENDA}</span>`:x.tipo==='regalo'?`<span class="tk-i ta">${IC_REG}</span>`:x.tipo==='app'||x.tipo==='plan'?`<span class="tk-i ta">${IC_APP}</span>`:x.tipo==='sinevo'?`<span class="tk-i an">${IC_NOTA}</span>`:x.tipo==='anotar'||x.tipo==='consent'?`<span class="tk-i an">${IC_NOTA}</span>`:x.tipo==='tarea'?`<span class="tk-i ta">${IC_TAR}</span>`:x.tipo==='llamar'?(x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${IC_TEL}</a>`:`<span class="tk-i ll">${IC_TEL}</span>`):`<span class="tk-i ex">${IC_EXP}</span>`;
    r.innerHTML=`<div class="tk-ics">${ico}${x.tipo==='llamar'&&x.tel?`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:''}</div><div class="tk-m"><b ${x.tipo!=='tarea'&&pid?`data-ficha="${pid}" class="tk-nom"`:''}>${escH(x.nombre)}</b>${x.tipo==='tarea'&&x.t.pacienteId?`<button type="button" class="tk-pacl" data-ficha="${x.t.pacienteId}" data-fn="${escH(x.t.paciente)}">Ver ficha de ${escH(x.t.paciente)} ›</button>`:''}${sub?`<p class="tk-meta">${escH(sub)}</p>`:''}${ul?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(ul.resultado)?'ok':/^NC|^VOLVER/.test(ul.resultado)?'no':'pe'}">${escH(resTxtG(ul.resultado))}</strong> · ${escH(segFecha(ul.fecha).replace(/^\S+ /,''))}${ul.quien?' · '+escH(quienNom(ul.quien)):''}${ul.nota?' — '+escH(ul.nota):''}</p>`:''}${notaT?`<p class="tk-nota">${escH(notaT)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}</div><div class="tk-a"></div>`;
    {const tm=r.querySelector('.tk-m');if(tm){const dd=Math.round((new Date(x.fecha+'T12:00:00')-new Date(hoy+'T12:00:00'))/864e5);tm.insertAdjacentHTML('afterbegin',`<small class="tk-fe ${dd<0&&!sinAtr?'atr':''}">${dd===0?'Hoy':dd===-1?'Ayer':dd===1?'Mañana':segFecha(x.fecha)}${dd<0&&!sinAtr?' · atrasada':''}</small>`);}}
    const acc=r.querySelector('.tk-a');
-   if(x.tipo==='hueco'){
+   if(x.tipo==='sinevo'){
+    const b=ce('button','tk-b');b.type='button';b.textContent='Ver caso';b.dataset.ficha=x.sv.pacienteId;b.dataset.fn=x.nombre;acc.appendChild(b);
+   }else if(x.tipo==='hueco'){
     const b=ce('button','tk-b');b.type='button';b.textContent='Ofrecer';b.onclick=async()=>{await capOfrecer(x.P[0].x,x.h,x.hoyC);toast('Apuntado: avisado hoy',true);};acc.appendChild(b);
     if(x.P.length>1){const v=ce('button','tk-q tk-edq');v.type='button';v.title='Ver todos los que pueden';v.textContent='+'+(x.P.length-1);v.onclick=()=>capOfrecerModal(x.h,x.esp,x.hoyC);acc.appendChild(v);}
    }else if(x.tipo==='negocio'){
@@ -6736,6 +6740,164 @@ function abrirEnlazarConsent({pacienteId,nombre,consent,onDone}){
    res.querySelectorAll('.ag-pi').forEach(b=>b.onclick=()=>enlazar(consent.id,b.dataset.id,b));}};
  let tm;bus.oninput=()=>{clearTimeout(tm);tm=setTimeout(buscar,250);};buscar();
 }
+// ── PROTOCOLO DE NO MEJORA («Sin evolución») ──
+// Ficha › Resumen: casilla «Sin evolución» → formulario → informe para el grupo técnico de WhatsApp.
+// El caso queda como tarea del fisio hasta que escribe cómo va a seguir. Si vuelve a no mejorar, se abre otro.
+const SEV_C={};
+const sevPost=async(a,b)=>{const r=await (await fetch('/api/schedule?action='+a,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd},b))})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');return r;};
+const sevF=f=>f?String(f).slice(0,10).split('-').reverse().join('/'):'';
+const sevFC=f=>{const p=String(f||'').slice(0,10).split('-');return p.length===3?+p[2]+'/'+ +p[1]:'';};
+async function sevDatos(id,forzar){if(!forzar&&SEV_C[id])return SEV_C[id];const r=await (await fetch(`/api/schedule?action=seg-sinevo&pwd=${encodeURIComponent(apiPwd)}&id=${id}`)).json();if(!r.ok)throw new Error(r.error||'No se ha podido cargar');SEV_C[id]=r;return r;}
+// Lo que sale de la ficha: perfil, sesiones, fisios, salud y sesiones pagadas
+function sevPerfil(P,d){
+ const hoy=d.hoy,real=d.citas.filter(c=>c.fecha<=hoy&&/REALIZADA/i.test(c.estado));
+ const cnt={};real.forEach(c=>{const n=String(c.fisio||'').trim().split(' ')[0];if(n)cnt[n]=(cnt[n]||0)+1;});
+ let edad=null;if(/^\d{4}-\d{2}-\d{2}/.test(P.cumple||'')){const [y,m,dd]=P.cumple.slice(0,10).split('-').map(Number),[hy,hm,hd]=hoy.split('-').map(Number);edad=hy-y-((hm<m||(hm===m&&hd<dd))?1:0);if(edad<0||edad>110)edad=null;}
+ const C=d.consent,salud=C&&C.estado!=='dudoso'?(C.salud||[]).map(x=>x.t):[];
+ const S=d.saldo&&d.saldo.activo?d.saldo.saldo:null;
+ return {nombre:P.nombre,edad,motivo:P.motivo||'',desde:String(P.alta||'').slice(0,10),sesiones:real.length,primera:real.length?real[real.length-1].fecha:'',fisios:Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([n,k])=>n+(Object.keys(cnt).length>1?' ('+k+')':'')),salud,saldo:S,notasSalud:(C&&C.notasSalud)||''};
+}
+const SEV_HACE=['Sí','Regular','No','No comprobado'],SEV_DEC=['Cambiar enfoque','Cambiar de fisio','Derivar al médico','Pedir pruebas','Alta'];
+function sevTexto(pf,au,f,fisio){
+ const L=[],v=x=>String(x||'').trim(),lin=(k,x)=>{if(v(x))L.push(`*${k}:* ${v(x)}`);};
+ L.push(`*SIN EVOLUCIÓN · ${v(pf.nombre).toUpperCase()}*`);
+ L.push(`_${[fisio,sevF(isoMadrid(new Date()))].filter(Boolean).join(' · ')}_`);L.push('');
+ lin('Paciente',[pf.edad!=null?pf.edad+' años':'',pf.motivo,pf.sesiones+' sesiones'+(pf.fisios.length?' con '+pf.fisios.join(', '):''),pf.primera?'desde el '+sevF(pf.primera):''].filter(Boolean).join(' · '));
+ lin('Diagnóstico médico',f.dxMed||'No tiene');
+ lin('Diagnóstico fisio',f.dxFisio);
+ lin('Síntomas',f.sintomas);
+ const ag=[['Ocupación',f.ocupacion],['Hábitos',f.habitos],['Estado físico',f.fisico]].filter(x=>v(x[1])).map(x=>x[0]+': '+v(x[1]));
+ if(ag.length)L.push('*Factores agravantes:*\n'+ag.map(x=>'- '+x).join('\n'));
+ lin('Otras enfermedades',f.enfermedades||'Ninguna');
+ lin('Tratamiento hasta ahora',f.tratamiento);
+ L.push('');L.push('*En la app*');
+ L.push('- Anamnesis: '+(au.anamnesis.length?'Sí ('+au.anamnesis.map(a=>a.protocolo+(a.fecha?' '+a.fecha:'')).join(', ')+')':'NO'));
+ L.push('- Ejercicios: '+(au.ejercicios.length?au.ejercicios.length+' asignados'+(au.planFecha?' el '+sevF(au.planFecha):'')+': '+au.ejercicios.map(e=>e.nombre).join(', '):'NINGUNO'));
+ if(au.ejercicios.length){const a=au.adherencia;L.push('- Los hace: '+a.dias+' de '+a.de+' días ('+(a.pct??0)+' %)'+(a.ultimo?' · último el '+sevF(a.ultimo):' · nunca los ha marcado'));L.push('- Los hace bien: '+(f.haceBien||'No comprobado'));}
+ lin('Sesiones pagadas que le quedan',pf.saldo==null?'':pf.saldo>0?String(pf.saldo):pf.saldo<0?'ninguna (debe '+(-pf.saldo)+')':'ninguna');
+ L.push('');
+ lin('Qué dice el paciente',f.dice);
+ lin('Pruebas / estudios',f.pruebas||'No tiene');
+ lin('Objetivos del paciente',f.objetivos);
+ lin('Banderas rojas',f.banderas==='Sí'?'SÍ'+(v(f.banderasTxt)?' – '+v(f.banderasTxt):''):'No');
+ L.push('');lin('Hipótesis / qué propongo',f.hipotesis);
+ return L.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+function sevModal(titulo){
+ const m=ce('div','pv fp sev-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>${escH(titulo)}</b></div><div class="fp-body"></div>`;
+ document.body.appendChild(m);const prevOv=document.body.style.overflow;document.body.style.overflow='hidden';
+ m.cerrar=()=>{m.remove();document.body.style.overflow=prevOv;};m.querySelector('.pv-x').onclick=()=>m.cerrar();m.body=m.querySelector('.fp-body');return m;
+}
+// Informe ya creado: se puede retocar, copiar o enviar al grupo de WhatsApp
+function sevVerInforme(ctx,caso){
+ const m=sevModal('Informe · Sin evolución');
+ m.body.innerHTML=`<div class="fp-blk"><div class="fp-bt"><h3>Para el grupo técnico</h3><button type="button" class="fp-ed sev-edf">Cambiar respuestas</button></div><textarea class="fp-ta sev-txt"></textarea><small class="fp-mu" style="display:block;margin-top:6px;font-size:12px">Puedes retocar el texto antes de enviarlo. Queda guardado en la ficha (Informes) y el paciente no lo ve.</small></div>
+  <div class="sev-pie"><button type="button" class="sev-b sev-cp">Copiar</button><button type="button" class="sev-b pri sev-wa">Enviar por WhatsApp</button></div>`;
+ const ta=m.querySelector('.sev-txt');ta.value=caso.informe||'';
+ const aj=()=>{ta.style.height='auto';ta.style.height=(ta.scrollHeight+4)+'px';};ta.addEventListener('input',aj);setTimeout(aj);
+ let guardado=ta.value;
+ const guarda=async()=>{if(ta.value===guardado)return;const r=await sevPost('seg-sinevo-guardar',{id:ctx.id,casoId:caso.id,nombre:ctx.P.nombre,fisio:caso.fisio,datos:caso.datos,informe:ta.value});guardado=ta.value;caso.informe=ta.value;Object.assign(caso,r.caso);delete SEV_C[ctx.id];};
+ ta.onblur=()=>guarda().catch(e=>toast(e.message,false));
+ m.querySelector('.sev-cp').onclick=async()=>{try{await navigator.clipboard.writeText(ta.value);toast('Copiado: pégalo en el grupo',true);}catch(e){ta.select();document.execCommand('copy');toast('Copiado',true);}guarda().catch(()=>{});};
+ m.querySelector('.sev-edf').onclick=()=>{const x0=m.cerrar;guarda().catch(()=>{}).finally(()=>{m.remove();sevFormulario(ctx,caso);});};
+ m.querySelector('.sev-wa').onclick=()=>{window.open('https://wa.me/?text='+encodeURIComponent(ta.value),'_blank');guarda().catch(()=>{});};
+ const x=m.cerrar;m.cerrar=()=>{guarda().catch(()=>{}).finally(()=>{x();ctx.refrescar&&ctx.refrescar();});};m.querySelector('.pv-x').onclick=()=>m.cerrar();
+}
+// Formulario (nuevo caso, o uno abierto que se quiere corregir)
+async function sevFormulario(ctx,casoAbierto){
+ const m=sevModal('Sin evolución · '+ctx.P.nombre);
+ m.body.innerHTML='<div class="fac-vacio">Cargando…</div>';
+ let r;try{r=await sevDatos(ctx.id,true);}catch(e){m.body.innerHTML=`<div class="fac-vacio">${escH(e.message)}</div>`;return;}
+ const au=r.auto,pf=sevPerfil(ctx.P,ctx.d);
+ // Se parte del caso abierto o, si ya hubo uno antes, de lo que se escribió entonces
+ const ant=(casoAbierto||r.casos[0]||{}).datos||{},f0=Object.assign({haceBien:'',banderas:'No'},ant.f||{});
+ if(!casoAbierto&&!f0.enfermedades&&pf.salud.length)f0.enfermedades=pf.salud.join(', ')+(pf.notasSalud?'. '+pf.notasSalud:'');
+ const a=au.adherencia,SI='<b class="si">Sí</b>',NO='<b class="no">No</b>';
+ const fila=(k,h)=>`<div class="sev-a"><span>${k}</span><div>${h}</div></div>`;
+ const campo=(k,lbl,ph,rows,req)=>`<div class="sev-f"><label>${lbl}${req?' <i>*</i>':''}</label><textarea class="fp-ta" data-k="${k}" rows="${rows||2}" placeholder="${escH(ph||'')}">${escH(f0[k]||'')}</textarea></div>`;
+ const chips=(k,ops,cls)=>`<div class="sev-ch ${cls||''}" data-k="${k}">${ops.map(o=>`<button type="button" class="${f0[k]===o?'on':''}">${escH(o)}</button>`).join('')}</div>`;
+ m.body.innerHTML=`
+ <div class="fp-blk"><div class="fp-bt"><h3>Sale solo de la app</h3></div><div class="sev-auto">
+  ${fila('Paciente',escH([pf.edad!=null?pf.edad+' años':'',pf.motivo||'motivo sin apuntar'].filter(Boolean).join(' · ')))}
+  ${fila('Sesiones',escH(pf.sesiones+(pf.fisios.length?' · con '+pf.fisios.join(', '):'')+(pf.primera?' · desde el '+sevF(pf.primera):'')))}
+  ${fila('Anamnesis app',au.anamnesis.length?SI+' · '+escH(au.anamnesis.map(x=>x.protocolo+(x.fecha?' '+x.fecha:'')).join(', ')):NO)}
+  ${fila('Ejercicios',au.ejercicios.length?`${SI} · ${au.ejercicios.length}${au.planFecha?' desde el '+sevF(au.planFecha):''}<ul class="sev-ejs">${au.ejercicios.map(e=>`<li>${escH(e.nombre)}${e.series?` <span class="fp-mu">${e.series}×${e.reps||e.dur+'s'}</span>`:''}</li>`).join('')}</ul>`:NO+' · no tiene ejercicios asignados')}
+  ${au.ejercicios.length?fila('¿Los hace?',`<b class="${a.pct>=60?'si':'no'}">${a.dias} de ${a.de} días (${a.pct??0} %)</b>${a.ultimo?' · último el '+sevF(a.ultimo):' · nunca los ha marcado'}`):''}
+  ${fila('Pagadas que le quedan',pf.saldo==null?'—':escH(pf.saldo>0?pf.saldo+' sesiones':pf.saldo<0?'ninguna (debe '+(-pf.saldo)+')':'ninguna'))}
+ </div></div>
+ <div class="fp-blk"><div class="fp-bt"><h3>Diagnóstico</h3></div>
+  ${campo('dxMed','Diagnóstico médico','Déjalo vacío si no tiene',2)}
+  ${campo('dxFisio','Diagnóstico fisioterapéutico','',2,1)}
+ </div>
+ <div class="fp-blk"><div class="fp-bt"><h3>Paciente</h3></div>
+  ${au.ejercicios.length?`<div class="sev-f"><label>¿Hace bien los ejercicios?</label>${chips('haceBien',SEV_HACE)}</div>`:''}
+  ${campo('sintomas','Síntomas actuales','Qué le duele, cuándo, cuánto…',3,1)}
+  <div class="sev-f"><label>Factores agravantes</label><div class="sev-3">
+   <input class="fp-ta" data-k="ocupacion" placeholder="Ocupación (ej.: oficina 8 h sentado)" value="${escH(f0.ocupacion||'')}">
+   <input class="fp-ta" data-k="habitos" placeholder="Hábitos (sueño, deporte, postura…)" value="${escH(f0.habitos||'')}">
+   <input class="fp-ta" data-k="fisico" placeholder="Estado físico" value="${escH(f0.fisico||'')}"></div></div>
+  ${campo('enfermedades','Otras enfermedades','Ninguna',2)}
+  ${campo('tratamiento','Tratamiento hecho hasta ahora','Técnicas, ejercicios, cargas, frecuencia…',3,1)}
+  ${campo('dice','¿Qué dice el paciente?','Cómo lo vive, qué nota, qué espera…',2)}
+  ${campo('pruebas','Pruebas / estudios','Ej.: RM rodilla 09/2026 – rotura meniscal. Vacío si no tiene',2)}
+  ${campo('objetivos','Objetivos del paciente','',2)}
+  <div class="sev-f"><label>Banderas rojas</label>${chips('banderas',['No','Sí'],'c2')}<textarea class="fp-ta sev-bt" data-k="banderasTxt" rows="2" placeholder="¿Cuáles?" style="margin-top:6px!important;${f0.banderas==='Sí'?'':'display:none'}">${escH(f0.banderasTxt||'')}</textarea></div>
+ </div>
+ <div class="fp-blk"><div class="fp-bt"><h3>Tu hipótesis</h3></div>${campo('hipotesis','¿Qué crees que pasa y qué propones?','Ej.: componente central, bajar carga y derivar a traumatólogo para RM',3,1)}</div>
+ <div class="sev-pie"><button type="button" class="sev-b sev-can">Cancelar</button><button type="button" class="sev-b pri sev-ok">Crear informe</button></div>`;
+ m.body.querySelectorAll('.sev-ch').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>{g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(g.dataset.k==='banderas'){const t=m.body.querySelector('.sev-bt');t.style.display=b.textContent==='Sí'?'':'none';}}));
+ m.body.querySelectorAll('textarea.fp-ta').forEach(t=>{const aj=()=>{t.style.height='auto';t.style.height=(t.scrollHeight+3)+'px';};t.addEventListener('input',aj);setTimeout(aj);});
+ m.querySelector('.sev-can').onclick=()=>m.cerrar();
+ m.querySelector('.sev-ok').onclick=async e=>{
+  const f={};m.body.querySelectorAll('[data-k]').forEach(x=>{if(x.classList.contains('sev-ch')){const o=x.querySelector('button.on');f[x.dataset.k]=o?o.textContent:'';}else f[x.dataset.k]=x.value.trim();});
+  if(f.banderas!=='Sí')f.banderasTxt='';
+  const falta=[['dxFisio','el diagnóstico fisioterapéutico'],['sintomas','los síntomas'],['tratamiento','el tratamiento hecho'],['hipotesis','tu hipótesis']].find(([k])=>!f[k]);
+  if(falta){toast('Falta '+falta[1],false);const x=m.body.querySelector(`[data-k="${falta[0]}"]`);if(x){x.scrollIntoView({behavior:'smooth',block:'center'});x.focus();}return;}
+  const fisio=(casoAbierto&&casoAbierto.fisio)||String((fisioActual&&fisioActual.nombre)||'').trim();
+  const informe=sevTexto(pf,au,f,fisio);
+  const b=e.target;b.disabled=true;b.textContent='Guardando…';
+  try{const rs=await sevPost('seg-sinevo-guardar',{id:ctx.id,casoId:casoAbierto?casoAbierto.id:'',nombre:ctx.P.nombre,fisio,informe,datos:Object.assign({},ant._inf&&casoAbierto?{_inf:ant._inf}:{},{f,auto:au,perfil:pf})});
+   delete SEV_C[ctx.id];try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}
+   if(rs.estados)ctx.onEstados&&ctx.onEstados(rs.estados);
+   m.remove();document.body.style.overflow='hidden';sevVerInforme(ctx,rs.caso);
+  }catch(err){b.disabled=false;b.textContent='Crear informe';toast(err.message,false);}};
+}
+// Tarea hecha: cómo va a seguir con el paciente
+function sevHecho(ctx,caso,onDone){
+ const m=sevModal('¿Cómo sigues con '+String(ctx.P.nombre||'').split(' ')[0]+'?');
+ m.body.innerHTML=`<div class="fp-blk"><div class="sev-f"><label>Decisión</label><div class="sev-ch c5">${SEV_DEC.map(o=>`<button type="button">${escH(o)}</button>`).join('')}</div></div>
+  <div class="sev-f"><label>¿Qué vas a hacer? <i>*</i></label><textarea class="fp-ta sev-nota" rows="4" placeholder="Ej.: comentado con Sara, probamos 2 sesiones con ejercicio de carga progresiva y si no, derivamos a trauma"></textarea></div>
+  <small class="fp-mu" style="font-size:12px">Al guardar, la tarea queda hecha. Si sigue sin mejorar, vuelve a marcar «Sin evolución».</small></div>
+  <div class="sev-pie"><button type="button" class="sev-b sev-can">Cancelar</button><button type="button" class="sev-b ok sev-ok">Tarea hecha</button></div>`;
+ m.body.querySelectorAll('.sev-ch button').forEach(b=>b.onclick=()=>{const on=!b.classList.contains('on');m.body.querySelectorAll('.sev-ch button').forEach(x=>x.classList.remove('on'));b.classList.toggle('on',on);});
+ m.querySelector('.sev-can').onclick=()=>m.cerrar();
+ m.querySelector('.sev-ok').onclick=async e=>{const nota=m.querySelector('.sev-nota').value.trim(),dec=(m.body.querySelector('.sev-ch button.on')||{}).textContent||'';
+  if(!nota){toast('Escribe cómo vas a seguir',false);m.querySelector('.sev-nota').focus();return;}
+  const b=e.target;b.disabled=true;
+  try{const rs=await sevPost('seg-sinevo-decision',{id:ctx.id,casoId:caso.id,decision:dec,nota,fisio:String((fisioActual&&fisioActual.nombre)||'')});
+   delete SEV_C[ctx.id];try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}
+   if(rs.estados)ctx.onEstados&&ctx.onEstados(rs.estados);
+   toast('Tarea hecha',true);m.cerrar();onDone&&onDone();
+  }catch(err){b.disabled=false;toast(err.message,false);}};
+}
+// Bloque en Ficha › Resumen
+async function sevMontar(box,ctx){
+ if(!box)return;
+ const tieneEt=()=>(ctx.P.estados||[]).some(x=>/SIN EVOLUCI/i.test(estNom(x)));
+ const pinta=r=>{
+  const ab=(r.casos||[]).find(c=>c.estado!=='Cerrado'),ult=(r.casos||[]).find(c=>c.estado==='Cerrado');
+  box.innerHTML=`<div class="sev-row"><label class="fp-pqchk"><input type="checkbox" ${ab?'checked':''}><span>Sin evolución</span></label><em>${ab?'Pendiente de decidir':tieneEt()?'Falta el informe':'3 sesiones sin mejorar'}</em></div>`+
+   (ab?`<div class="sev-est">Informe del ${escH(sevF(ab.fecha))}${ab.fisio?' · '+escH(String(ab.fisio).split(' ')[0]):''}<small>Queda en Tareas hasta que se decida cómo seguir.</small></div>
+    <div class="sev-bts"><button type="button" class="sev-b sev-ver">Ver informe</button><button type="button" class="sev-b ok sev-dec">Ya sé cómo seguir</button></div>`:'')+
+   (!ab&&ult?`<div class="sev-hist">Último caso (${escH(sevF(ult.fechaDecision||ult.fecha))}): ${escH([ult.decision,ult.nota].filter(Boolean).join(' – '))}${(r.casos||[]).length>1?` · ${r.casos.length} casos en total`:''}</div>`:'');
+  const chk=box.querySelector('input');
+  chk.onchange=()=>{if(ab){chk.checked=true;sevVerInforme(ctx,ab);return;}chk.checked=false;sevFormulario(ctx,null);};
+  const v=box.querySelector('.sev-ver');if(v)v.onclick=()=>sevVerInforme(ctx,ab);
+  const dc=box.querySelector('.sev-dec');if(dc)dc.onclick=()=>sevHecho(ctx,ab,()=>ctx.refrescar&&ctx.refrescar());
+ };
+ if(SEV_C[ctx.id])pinta(SEV_C[ctx.id]);else box.innerHTML='<div class="sev-row"><label class="fp-pqchk"><input type="checkbox" disabled><span>Sin evolución</span></label></div>';
+ try{pinta(await sevDatos(ctx.id,!SEV_C[ctx.id]));}catch(e){}
+}
 async function abrirFichaPaciente(id,nombre,pBase){
  const base=pBase||(pacs||[]).find(x=>x.id===id)||{id,nombre};
  const m=ce('div','pv fp');
@@ -6791,6 +6953,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   return `${negDesc}${tActivas.length?`<div class="fp-gift"><span>🎁 Tiene ${tActivas.length>1?tActivas.length+' tarjetas regalo':'una tarjeta regalo'} de ${TJ_IMP()} € para descontar al pagar</span><button type="button" class="fp-refc" data-id="${tActivas.slice().sort((a,b)=>String(a.caduca).localeCompare(String(b.caduca)))[0].id}">Canjear</button></div>`:''}${C&&C.rojo.length?`<div class="fp-alr">⚠ ${escH(C.rojo.join(' · '))}</div>`:''}
   <div class="fp-k"><div><b>${real.length}</b><span>sesiones hechas</span></div><div><b>${fut[0]?escH(segFecha(fut[0].fecha)):'—'}</b><span>próxima cita</span></div><div><b>${real[0]?escH(segFecha(real[0].fecha)):'—'}</b><span>última sesión</span></div></div>
   <div class="fp-blk fp-pq"></div>
+  <div class="fp-blk fp-sev"></div>
   <div class="fp-blk" data-blk="datos"><div class="fp-bt"><h3>Datos</h3><button type="button" class="fp-ed">Editar</button></div>
    <div class="fp-fs"><div class="fp-f fp-mot"><span>Motivo de visita</span><div class="fp-v">${P.motivo?escH(P.motivo):'<em>Sin apuntar · toca «Editar»</em>'}</div></div>${telIgual(P.telf,P.whatsapp)?campoTxt('Teléfono','tel',P.whatsapp||P.telf):campoTxt('Teléfono','tel',P.telf)+campoTxt('WhatsApp','whatsapp',P.whatsapp)}${campoTxt('Email','email',P.email)}${campoTxt('DNI','dni',P.dni)}${campoTxt('Cumpleaños','cumple',P.cumple,'date')}<div class="fp-f"><span>Paciente desde</span><div class="fp-v">${escH(fch(String(P.alta).slice(0,10)))}</div></div></div></div>
   ${salud}
@@ -6923,6 +7086,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   cont.querySelectorAll('.fp-segit').forEach(x=>x.onclick=()=>{const sp=(d.seguimiento||[]).find(s=>s.id===x.dataset.id);if(sp)verSeg(sp);});
   const tok='fp_'+Date.now();cont.dataset.token=tok;
   if(tab==='resumen'){cont.innerHTML=resumen();montarEdicion(cont);montarPorQue(cont);
+   sevMontar(cont.querySelector('.fp-sev'),{id,P,d,onEstados:ids=>{P.estados=ids;const px=(pacs||[]).find(x=>x.id===id);if(px)px.estados=ids;},refrescar:()=>{if(tab==='resumen')pintar();}});
    cont.querySelectorAll('.fp-doc2').forEach(bt=>bt.onclick=()=>consMenu({consentId:bt.dataset.id,pacienteId:id,onDone:async()=>{try{await cargar();}catch(_){}pintar();},tipo:bt.dataset.t,papel:!!bt.dataset.papel,paciente:P.nombre,email:P.email,tel:P.whatsapp||P.telf||P.tel}));
    cont.querySelectorAll('.fp-cpap').forEach(bt=>bt.onclick=()=>subirPapel({pacienteId:id,nombre:P.nombre,onDone:async()=>{try{await cargar();}catch(_){}pintar();}}));
    cont.querySelectorAll('.fp-cform').forEach(bt=>bt.onclick=()=>enviarFormulario(P));
@@ -7084,7 +7248,7 @@ function datosTareasTodas(forzar){
  const p=_datosTareasTodas(forzar).then(d=>{_dtC={t:Date.now(),d,p:null};return d;}).catch(e=>{_dtC.p=null;throw e;});_dtC.p=p;return p;}
 async function _datosTareasTodas(fresco){
  const iso=n=>isoMadrid(new Date(Date.now()+n*864e5));
- const [r,sg,tq,sa,cs,ap,rf,cv]=await Promise.all([
+ const [r,sg,tq,sa,cs,ap,rf,cv,sev]=await Promise.all([
   fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${iso(-30)}&hasta=${iso(-1)}${fresco?'&fresco=1':''}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-tareas&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
@@ -7092,10 +7256,13 @@ async function _datosTareasTodas(fresco){
   fetch(`/api/schedule?action=seg-consent-pendientes&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-app-pendientes&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
   fetch(`/api/schedule?action=seg-referidos&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
-  fetch(`/api/schedule?action=seg-cap-avisos&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
+  fetch(`/api/schedule?action=seg-cap-avisos&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({})),
+  fetch(`/api/schedule?action=seg-sinevo-lista&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).catch(()=>({}))]);
  setSegPac(sg);
  const hoy=(sg&&sg.hoy)||iso(0),items=[];
  ((tq&&tq.tareas)||[]).forEach(t=>items.push({tipo:'tarea',fecha:t.fecha,nombre:t.texto,quien:t.para,t}));
+ // Sin evolución: casos con informe hecho a la espera de que el fisio decida cómo seguir
+ ((sev&&sev.casos)||[]).forEach(c=>{const q=String(c.fisio||'').trim().split(' ')[0];const qn=q?q.charAt(0).toUpperCase()+q.slice(1).toLowerCase():'';items.push({tipo:'sinevo',fecha:c.fecha,nombre:c.nombre,quien:qn,sv:c});});
  // Sesiones realizadas sin nota de evolución: hay que anotarlas como tarde el día siguiente
  ((sa&&sa.sesiones)||[]).filter(c=>c.pacienteId).forEach(c=>{const lim=new Date(c.fecha+'T12:00:00');lim.setDate(lim.getDate()+1);const q=String(c.fisio||'').trim().split(' ')[0];const qn=q?q.charAt(0).toUpperCase()+q.slice(1).toLowerCase():'';items.push({tipo:'anotar',fecha:lim.toISOString().slice(0,10),nombre:c.nombre,quien:TAR_NOMBRES.includes(qn)?qn:(qn||''),c});});
  // Consentimientos: pacientes que ya han venido sin consentimiento enlazado, y formularios que no sabemos de quién son
@@ -7641,6 +7808,7 @@ async function fpTabInformes(pacId, body, pacNombre, tok){
   ta.oninput=()=>{inf.informe=ta.value;ajusta();};
   c.appendChild(ed); setTimeout(ajusta);
   const bar=accionesInforme(ed,{pacId:pacId,pacNom:pacNombre||inf.pacienteNombre||'',tipo:inf.protocolo||'',fisioNom:inf.fisioNombre||'',fisioCol:inf.fisioCol||'',getTexto:()=>ta.value,recId:/^rec/.test(String(inf.id))?inf.id:'',compartido:!inf.soloFisio});
+  if(/sin evoluci/i.test(inf.protocolo||'')){const bp=bar&&bar.querySelector('.ia-g[data-d="paciente"]');if(bp)bp.remove();}
   // Borrar: primer toque pide confirmación, el segundo borra (de la app del paciente y de esta ficha)
   const del=ce('button','ia-borrar');del.type='button';del.textContent='Borrar informe';
   let armado=false,tm=null;
