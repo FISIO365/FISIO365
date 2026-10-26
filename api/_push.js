@@ -126,9 +126,11 @@ async function rendimiento(desde, hasta) {
   const pid = c => (c.fields['RELACIÓN - CITA'] || [])[0] || '';
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
-  const [citas, fisiosT] = await Promise.all([
+  const [citas, fisiosT, ausT] = await Promise.all([
     todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA`),
-    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA&fields[]=HORAS POR DÍA&fields[]=CONTROL HORAS').catch(() => [])
+    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA&fields[]=HORAS POR DÍA&fields[]=CONTROL HORAS').catch(() => []),
+    // Cambios puntuales de horario (Administración › Vacaciones y horarios)
+    todosAT('tblkezm4bTQ4jJf1X', `filterByFormula=${encodeURIComponent(`AND(NOT(IS_BEFORE({HASTA},'${desde}')),NOT(IS_AFTER({DESDE},'${hasta}')))`)}`).catch(() => [])
   ]);
   // Huecos = horas de cada día de la semana («HORAS POR DÍA» del fisio; 1 h = 1 sesión) sumadas en los días del periodo.
   // Si no tiene «HORAS POR DÍA», se reparte «HORAS SEMANA» de lunes a viernes.
@@ -148,7 +150,13 @@ async function rendimiento(desde, hasta) {
   const diasCon = {};
   // Días trabajados = días con al menos una sesión hecha (REALIZADA). Los demás no cuentan (no estaba trabajando).
   citas.forEach(c => { if (est(c) !== 'REALIZADA' || !pid(c)) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(); (diasCon[n] = diasCon[n] || new Set()).add(String(c.fields['FECHA']).slice(0, 10)); });
-  const capacidad = n => { const v = horasDia[n]; if (!v) return 0; let t = 0; (diasCon[n] || new Set()).forEach(f => { t += v[new Date(f + 'T12:00:00Z').getUTCDay()]; }); return Math.round(t); };
+  // Horas de un día concreto: su horario, cambiado por lo apuntado en Vacaciones y horarios («trabaja otro horario» = esas horas; «falta unas horas» = se restan; todo el día = 0)
+  const aus = (ausT || []).map(r => ({ fisio: String(r.fields.FISIO || ''), desde: r.fields.DESDE || '', hasta: r.fields.HASTA || r.fields.DESDE || '', tipo: (r.fields.TIPO && r.fields.TIPO.name) || r.fields.TIPO || '', hd: r.fields['HORA DESDE'] || '', hh: r.fields['HORA HASTA'] || '' }));
+  const durH = x => { const [h1, m1] = String(x.hd).split(':').map(Number), [h2, m2] = String(x.hh).split(':').map(Number); return Math.max(0, (h2 * 60 + m2 - h1 * 60 - m1) / 60); };
+  const horasDe = (n, f) => { const v = horasDia[n]; let h = v ? v[new Date(f + 'T12:00:00Z').getUTCDay()] : 0;
+    aus.filter(x => x.desde <= f && x.hasta >= f && (x.fisio === 'Toda la clínica' || x.fisio.toLowerCase() === n)).forEach(x => { if (x.tipo === 'Cambio de horario' && x.hd) h = durH(x); else if (x.hd) h = Math.max(0, h - durH(x)); else h = 0; });
+    return h; };
+  const capacidad = n => { if (!horasDia[n]) return 0; let t = 0; (diasCon[n] || new Set()).forEach(f => { t += horasDe(n, f); }); return Math.round(t); };
   // Control de horas día a día (fisios con «CONTROL HORAS»): horas hechas (sesiones + call-in + vídeos) frente a las que le tocaban
   const control = new Set(fisiosT.filter(f => f.fields['CONTROL HORAS']).map(f => String(f.fields['Name'] || '').split(' ')[0].toLowerCase()));
   const hechasDia = {}; // fisio -> {fecha: horas}
@@ -158,7 +166,7 @@ async function rendimiento(desde, hasta) {
     if (!control.has(n) || !horasDia[n]) return null;
     const v = horasDia[n], out = [], fin = hasta < hoyISO ? hasta : hoyISO;
     for (let d = new Date(desde + 'T12:00:00Z'); d <= new Date(fin + 'T12:00:00Z'); d = new Date(d.getTime() + 864e5)) {
-      const f = d.toISOString().slice(0, 10), toca = v[d.getUTCDay()], hechas = (hechasDia[n] || {})[f] || 0, trabajo = (diasCon[n] || new Set()).has(f);
+      const f = d.toISOString().slice(0, 10), toca = horasDe(n, f), hechas = (hechasDia[n] || {})[f] || 0, trabajo = (diasCon[n] || new Set()).has(f);
       if (!toca && !hechas) continue;
       out.push({ fecha: f, toca, hechas, libre: toca > 0 && !trabajo });
     }

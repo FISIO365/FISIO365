@@ -1804,11 +1804,17 @@ module.exports = async function handler(req, res) {
           // horas entregadas = solo las sesiones hechas (REALIZADA, 1 sesión = 1 h). Los días sin ninguna sesión hecha no cuentan
           // (no estaba trabajando). Pendientes, no vino, canceladas, call-in y vídeos no cuentan como entregadas.
           const hecha = c => c.pid && /^REALIZADA$/.test(String(c.e).trim());
-          const ocup = enS.filter(c => hecha(c) && EQUIPO.includes(String(c.fisio).toLowerCase())).length;
-          const pf = {}; EQUIPO.forEach(k => pf[k] = { ses: real.filter(c => String(c.fisio).toLowerCase() === k).length, ocup: enS.filter(c => hecha(c) && String(c.fisio).toLowerCase() === k).length, cap: 0 });
-          let cap = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
-            if (!C.some(c => c.f === f && String(c.fisio).toLowerCase() === k && hecha(c))) return; // sin sesiones hechas ese día: no cuenta
-            const cd = (horario[k] && horario[k][dw]) || 0; cap += cd; pf[k].cap += cd; }); }
+          // Cambios puntuales de horario (Administración › Vacaciones y horarios): «trabaja otro horario» = esas horas; «falta unas horas» = se restan
+          const ausS = await ausenciasEn(a, mv(a, 6)).catch(() => []);
+          const durH = x => { const [h1, m1] = String(x.hd).split(':').map(Number), [h2, m2] = String(x.hh).split(':').map(Number); return Math.max(0, (h2 * 60 + m2 - h1 * 60 - m1) / 60); };
+          const horasDe = (k, f, base) => { let h = base; ausS.filter(x => x.desde <= f && x.hasta >= f && (x.fisio === 'Toda la clínica' || String(x.fisio).toLowerCase() === k)).forEach(x => {
+            if (x.tipo === 'Cambio de horario' && x.hd) h = durH(x); else if (x.hd) h = Math.max(0, h - durH(x)); else h = 0; }); return h; };
+          const pf = {}; EQUIPO.forEach(k => pf[k] = { ses: real.filter(c => String(c.fisio).toLowerCase() === k).length, ocup: 0, cap: 0, extra: 0 });
+          let cap = 0, ocup = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
+            const n = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k && hecha(c)).length;
+            if (!n) return; // sin sesiones hechas ese día: no cuenta (no estaba trabajando)
+            const cd = horasDe(k, f, (horario[k] && horario[k][dw]) || 0), ent = Math.min(n, cd), ex = n - ent; // lo que pase de su horario = horas extra (aparte)
+            cap += cd; ocup += ent; pf[k].cap += cd; pf[k].ocup += ent; pf[k].extra += ex; }); }
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
