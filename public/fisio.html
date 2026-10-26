@@ -5395,7 +5395,7 @@ function agPdfHuecos(){
  async function contar(){const t=++tk;huecos=null;res.textContent='Buscando huecos…';const [d1,d2]=rango();
   try{const d=await (await fetch(`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}&desde=${d1}&hasta=${d2}`)).json();if(t!==tk)return;if(!d.ok)throw 0;
    const ahora=new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date()),hoy=agHoyIso();
-   huecos=(d.citas||[]).filter(c=>agEsLibre(c.estado)&&c.fisio&&!AG_NOFISIO.test(c.fisio)&&/^\d{1,2}:\d{2}/.test(c.hora||'')&&!(c.fecha===hoy&&c.hora<=ahora)).map(c=>({fecha:c.fecha,hora:String(c.hora).replace(/^(\d):/,'0$1:').slice(0,5),fisio:c.fisio}));pinta();}
+   huecos=(d.citas||[]).filter(c=>agEsLibre(c.estado)&&c.fisio&&!AG_NOFISIO.test(c.fisio)&&/^\d{1,2}:\d{2}/.test(c.hora||'')&&!(c.fecha===hoy&&c.hora<=ahora)).map(c=>({fecha:c.fecha,hora:String(c.hora).replace(/^(\d):/,'0$1:').slice(0,5),fisio:c.fisio,sb:/SIN BOMBA/.test(c.estado)}));pinta();}
   catch(e){if(t===tk)res.textContent='No se han podido cargar los huecos';}}
  const elegidos=()=>(huecos||[]).filter(x=>!sel.size||sel.has(x.fisio));
  function pinta(){if(!huecos)return;const n=elegidos().length;res.innerHTML=n?`<b>${n}</b> hueco${n===1?'':'s'} libre${n===1?'':'s'}`:'No hay huecos libres con estos filtros';m.querySelectorAll('.hl-dl,.hl-wa').forEach(b=>b.disabled=!n);}
@@ -5414,16 +5414,21 @@ function agPdfHuecos(){
   const porDia={};L.forEach(h=>{(porDia[h.fecha]=porDia[h.fecha]||[]).push(h);});
   const variosF=fisSel.length!==1;
   Object.keys(porDia).sort().forEach(f=>{const H=porDia[f];
-   const filas=variosF?[...new Set(H.map(h=>h.fisio))].sort((a,b)=>AG_FISIOS.indexOf(a)-AG_FISIOS.indexOf(b)).map(fi=>[agNom(fi),[...new Set(H.filter(h=>h.fisio===fi).map(h=>h.hora))].sort()]):[['',[...new Set(H.map(h=>h.hora))].sort()]];
+   // Cada hora sabe si es «sin bomba» (se marca con * en el PDF)
+   const hs0=L0=>{const mp={};L0.forEach(h=>{mp[h.hora]=mp[h.hora]===undefined?h.sb:(mp[h.hora]&&h.sb);});return Object.keys(mp).sort().map(x=>mp[x]?x+'*':x);};
+   const filas=variosF?[...new Set(H.map(h=>h.fisio))].sort((a,b)=>AG_FISIOS.indexOf(a)-AG_FISIOS.indexOf(b)).map(fi=>[agNom(fi),hs0(H.filter(h=>h.fisio===fi))]):[['',hs0(H)]];
    const alto=10+filas.reduce((t,[,hs])=>t+Math.ceil(hs.length/(variosF?7:9))*9+2,0);
    if(y+alto>280){doc.addPage();y=22;cab();}
    doc.setDrawColor(239,235,229);doc.setLineWidth(0.4);doc.line(X,y,W-X,y);y+=7;
    doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(...N);doc.text(fL(f),X,y);y+=5;
    filas.forEach(([fi,hs])=>{let x=X+(variosF?26:0),yy=y+3;
     if(variosF){doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(...G);doc.text(fi,X,yy+4.3);}
-    hs.forEach((h,i)=>{if(i&&i%(variosF?7:9)===0){x=X+(variosF?26:0);yy+=9;}doc.setFillColor(253,238,228);doc.roundedRect(x,yy,16.5,6.6,2,2,'F');doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(...T);doc.text(h,x+8.25,yy+4.6,{align:'center'});x+=18.5;});
+    hs.forEach((h,i)=>{if(i&&i%(variosF?7:9)===0){x=X+(variosF?26:0);yy+=9;}const sb=h.endsWith('*');
+     if(sb){doc.setDrawColor(...G);doc.setLineWidth(0.3);doc.roundedRect(x,yy,16.5,6.6,2,2,'S');doc.setTextColor(...G);}else{doc.setFillColor(253,238,228);doc.roundedRect(x,yy,16.5,6.6,2,2,'F');doc.setTextColor(...T);}
+     doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.text(h,x+8.25,yy+4.6,{align:'center'});x+=18.5;});
     y=yy+9;});
    y+=3;});
+  if(L.some(h=>h.sb)){if(y>270){doc.addPage();y=22;}doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...G);doc.text('* Horas sin bomba diamagnética',X,y+2);y+=6;}
   if(y>262){doc.addPage();y=22;}
   y=Math.max(y+6,250);doc.setDrawColor(239,235,229);doc.line(X,y,W-X,y);y+=8;
   doc.setFont('helvetica','bold');doc.setFontSize(11.5);doc.setTextColor(...N);doc.text('¿Te va bien alguna? Escríbenos o llámanos y te la reservamos.',X,y);y+=6;
