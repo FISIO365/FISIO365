@@ -333,6 +333,9 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tk-m strong.r-ok{color:#16803c}.tk-m strong.r-no{color:#b42318}.tk-m strong.r-pe{color:#7d6a60}.tk-m strong{font-weight:600;font-size:12.5px}
 .tk.hecha{cursor:pointer}.ll-r i.cero{color:#d4ccc5}
 .ll-per{display:flex;gap:8px;margin:2px 0 12px;flex-wrap:wrap}
+.sg-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}.sg-top .sg-seg{margin-bottom:0}.sg-top .seg-add{margin-left:auto;height:40px;padding:0 16px}
+.ll-h2 .ll-sel:last-child{grid-column:1/-1}.ll-2 .ll-dia{width:100%;min-width:0;justify-content:center}.ll-2 .ll-dia span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ll-2{display:grid;grid-template-columns:1fr 1fr}.ll-2 .ll-sel{width:100%;min-width:0}.ll-2 .ll-sel select{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:16px}@media(max-width:420px){.ll-2 .ll-pre{display:none}}
 .ll-rf{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px}.ll-rft{font-size:12.5px;color:#7d6a60;font-weight:500;margin-right:2px}.ll-rf button{font-family:var(--font);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;border:1px solid #e3dbd3;background:#fff;color:#5f554e;cursor:pointer;white-space:nowrap}.ll-rf button b{font-size:11px;background:#f3efea;border-radius:99px;padding:1px 6px;margin-left:3px}.ll-rf button.r-ok{color:#16803c}.ll-rf button.r-no{color:#b42318}.ll-rf button.r-pe{color:#9a6a12}.ll-rf button.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff}.ll-rf button.on b{background:rgba(255,255,255,.2)}
 .ll-sel,.ll-dia{position:relative;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:#fff;font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--black);cursor:pointer;box-sizing:border-box}
 .ll-sel.on,.ll-dia.on{border-color:#1e2a38;background:#1e2a38;color:#fff}
@@ -1213,6 +1216,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}
 .mcal-fijo .mcal-g button{aspect-ratio:auto;height:36px}.mcal-fijo .mcal-g i{padding:2px 0}.mcal-fijo{position:static!important;width:auto!important;box-shadow:none!important;padding:4px 0 0!important;border-radius:0!important}.mcal-g button.pas{color:#c9bfb7}
+.selp{width:auto!important;max-width:calc(100vw - 20px);max-height:min(60vh,420px);overflow-y:auto;padding:6px!important;border-radius:16px!important;box-sizing:border-box}.selp button{display:block;width:100%;text-align:left;font-family:var(--font);font-size:14px;font-weight:500;color:#1a1a1a;background:none;border:none;border-radius:10px;padding:10px 12px;cursor:pointer;white-space:nowrap}.selp button:hover{background:#f6f1ec}.selp button.sel{background:#fdeee4;color:#c2552e;font-weight:700}.selp button:disabled{opacity:.4;cursor:default}.selp-g{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9b8b80;padding:10px 12px 4px}
 .mcal{position:fixed;z-index:3000;width:292px;background:#fff;border-radius:18px;box-shadow:0 12px 40px rgba(20,20,20,.18);padding:14px;font-family:var(--font)}
 .mcal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.mcal-h b{font-size:14.5px}
 .mcal-h button{width:34px;height:34px;border-radius:50%;border:none;background:#f3efea;color:#c2552e;font-size:18px;cursor:pointer;font-family:var(--font)}
@@ -5325,6 +5329,30 @@ function calFijo(box,valor,onPick){
  pinta();
 }
 // Selector de hora con el estilo del panel (cuadrícula de horas en una ventanita)
+// Todos los desplegables (<select>) se abren con un menú con el estilo del panel, no con el del navegador
+function selMenu(sel){
+ document.querySelectorAll('.mcal').forEach(x=>x.remove());
+ const anchor=sel.closest('.ll-sel')||sel;
+ const box=ce('div','mcal selp');document.body.appendChild(box);
+ const op=o=>o.hidden?'':`<button type="button" data-i="${o.index}" class="${o.selected?'sel':''}" ${o.disabled?'disabled':''}>${escH(o.textContent.trim())}</button>`;
+ box.innerHTML=[...sel.children].map(ch=>ch.tagName==='OPTGROUP'?`<div class="selp-g">${escH(ch.label)}</div>`+[...ch.children].map(op).join(''):op(ch)).join('');
+ const coloca=()=>{const r=anchor.getBoundingClientRect();box.style.minWidth=Math.min(Math.max(r.width,200),innerWidth-20)+'px';const w=box.offsetWidth,h=box.offsetHeight;let l=Math.max(10,Math.min(r.left,innerWidth-w-10));let t=r.bottom+6;if(t+h>innerHeight-10)t=Math.max(10,r.top-h-6);box.style.left=l+'px';box.style.top=t+'px';};
+ const fuera=e=>{if(!box.contains(e.target)&&!anchor.contains(e.target))cerrar();};
+ const tecla=e=>{if(e.key==='Escape')cerrar();};
+ const cerrar=()=>{box.remove();document.removeEventListener('click',fuera,true);removeEventListener('resize',coloca);removeEventListener('keydown',tecla);};
+ box.querySelectorAll('[data-i]').forEach(b=>b.onclick=e=>{e.stopPropagation();cerrar();const i=+b.dataset.i;if(sel.selectedIndex!==i){sel.selectedIndex=i;sel.dispatchEvent(new Event('input',{bubbles:true}));sel.dispatchEvent(new Event('change',{bubbles:true}));}});
+ setTimeout(()=>document.addEventListener('click',fuera,true),0);addEventListener('resize',coloca);addEventListener('keydown',tecla);coloca();
+ const s0=box.querySelector('.sel');if(s0)s0.scrollIntoView({block:'nearest'});
+}
+(function(){
+ const selDe=e=>{const t=e.target;if(!t||!t.closest)return null;let s=t.closest('select');if(!s){const w=t.closest('.ll-sel');s=w&&w.querySelector('select');}
+  return s&&!s.disabled&&!s.multiple&&!(s.size>1)&&!('nativo' in s.dataset)?s:null;};
+ let tx=0,ty=0,tsel=null;
+ document.addEventListener('touchstart',e=>{tsel=selDe(e);if(tsel){tx=e.touches[0].clientX;ty=e.touches[0].clientY;}},{capture:true,passive:true});
+ document.addEventListener('touchend',e=>{if(!tsel)return;const c=e.changedTouches[0];const s=tsel;tsel=null;if(Math.abs(c.clientX-tx)>10||Math.abs(c.clientY-ty)>10)return;e.preventDefault();selMenu(s);},{capture:true,passive:false});
+ document.addEventListener('mousedown',e=>{const s=selDe(e);if(!s)return;e.preventDefault();selMenu(s);},true);
+ document.addEventListener('keydown',e=>{const s=e.target&&e.target.tagName==='SELECT'?e.target:null;if(!s||!selDe(e))return;if(e.key==='Enter'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();selMenu(s);}},true);
+})();
 function horaPicker(anchor,valor,ops,onPick){
  document.querySelectorAll('.mcal').forEach(x=>x.remove());
  const box=ce('div','mcal hpk');document.body.appendChild(box);
@@ -7798,7 +7826,7 @@ async function renderSeguimiento(wrap){
  const RES_K=r=>{r=String(r||'').toUpperCase().trim();return !r?'sin':/^NO VOLVER/.test(r)?'novol':/^NC/.test(r)?'nc':/^VOLVER/.test(r)?'volver':/PENDIENTE/.test(r)?'pend':/RECUPERADA/.test(r)?'rec':/^ALTA/.test(r)?'alta':'otro';};
  const RES_L=[['pend','Pendiente de respuesta','pe'],['volver','Volver a llamar','no'],['nc','No contesta','no'],['rec','Cita recuperada','ok'],['alta','Alta','ok'],['novol','No volver a llamar','pe'],['otro','Otro','pe'],['sin','','pe']];
  const chipsRes=(L,kf,sinTxt)=>{const c={};L.forEach(x=>{const k=kf(x);c[k]=(c[k]||0)+1;});if(resF&&!c[resF])c[resF]=0;
-  return `<div class="ll-rf"><span class="ll-rft">Resultado:</span><button type="button" data-r="" class="${resF?'':'on'}">Todos <b>${L.length}</b></button>${RES_L.filter(([k])=>c[k]!=null).map(([k,t,cl])=>`<button type="button" data-r="${k}" class="r-${cl} ${resF===k?'on':''}">${escH(k==='sin'?sinTxt:t)} <b>${c[k]}</b></button>`).join('')}</div>`;};
+  return `<label class="ll-sel ${resF?'on':''}"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span class="ll-pre">Resultado:</span><select class="sg-resf"><option value="">Cualquier resultado</option>${RES_L.filter(([k])=>c[k]!=null).map(([k,t])=>`<option value="${k}" ${resF===k?'selected':''}>${escH(k==='sin'?sinTxt:t)} (${c[k]})</option>`).join('')}</select><i>▾</i></label>`;};
  const PER_H=[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes'],['mesPasado','Mes pasado'],['30','Últimos 30 días'],['todo','Todas']];
  const rangoH=()=>{if(perH==='dia'&&diaH)return[diaH,diaH];if(perH==='30')return[segIso(-30),segIso(0)];if(perH==='todo')return['2020-01-01',segIso(0)];
   if(perH==='mesPasado'){const h=segIso(0);const d=new Date(+h.slice(0,4),+h.slice(5,7)-2,1);const f=new Date(+h.slice(0,4),+h.slice(5,7)-1,0);const z=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;return[z(d),z(f)];}
@@ -7815,21 +7843,19 @@ async function renderSeguimiento(wrap){
   const flt=x=>!filtroFisio||(filtroFisio==='__yo'?qDe(x)===yo:qDe(x)===filtroFisio);
   const atr=P.filter(x=>x.fecha<hoy).length,deHoy=P.filter(x=>x.fecha===hoy).length;
   const nomF=filtroFisio==='__yo'?'Míos':(filtroFisio||'Todos');
-  let html=`<div class="sg-seg"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.filter(x=>x.fecha<=hoy).length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Informes</button></div>
-   ${tab==='pend'?`<div class="ll-per"><label class="ll-sel ${filtroFisio?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">Quién llama:</span><select class="sg-quien"><option value="">Todos (${P.filter(x=>x.fecha<=hoy).length})</option><option value="__yo" ${filtroFisio==='__yo'?'selected':''}>Míos (${P.filter(x=>qDe(x)===yo&&x.fecha<=hoy).length})</option>${fisios.map(f=>`<option value="${escH(f)}" ${filtroFisio===f?'selected':''}>${escH(f)} (${P.filter(x=>qDe(x)===f&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add">+ Añadir</button></div>
-   <div class="seg-res"><div class="r"><b>${atr}</b><span>atrasados</span></div><div class="o"><b>${deHoy}</b><span>para hoy</span></div><div><b>${P.length-atr-deHoy}</b><span>próximos</span></div></div>`:''}`;
+  let html=`<div class="sg-top"><div class="sg-seg"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.filter(x=>x.fecha<=hoy).length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Ya hechas</button></div>${tab==='pend'?'<button type="button" class="seg-add">+ Añadir</button>':''}</div>
+   ${tab==='pend'?`<div class="ll-per ll-2"><label class="ll-sel ${filtroFisio?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">Quién:</span><select class="sg-quien"><option value="">Todo el equipo</option><option value="__yo" ${filtroFisio==='__yo'?'selected':''}>Míos (${P.filter(x=>qDe(x)===yo&&x.fecha<=hoy).length})</option>${fisios.map(f=>`<option value="${escH(f)}" ${filtroFisio===f?'selected':''}>${escH(f)} (${P.filter(x=>qDe(x)===f&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label>${chipsRes(P.filter(flt),x=>RES_K(x.ult&&x.ult.resultado),'Aún sin llamar')}</div>`:''}`;
   if(tab==='pend'){
    const kP=x=>RES_K(x.ult&&x.ult.resultado);
-   html+=chipsRes(P.filter(flt),kP,'Aún sin llamar');
    const L=P.filter(flt).filter(x=>!resF||kP(x)===resF);
    const grupos=[['Atrasados',L.filter(x=>x.fecha<hoy)],['Hoy',L.filter(x=>x.fecha===hoy)],['Esta semana',L.filter(x=>x.fecha>hoy&&x.fecha<=segIso(7))],['Más adelante',L.filter(x=>x.fecha>segIso(7))]];
    html+=grupos.filter(g=>g[1].length).map(([t,g])=>`<div class="seg-gt">${t} <span>${g.length}</span></div><div class="seg-tabla">${g.map(x=>{const ests=pacEstados(x.pacienteId).map(estNom).filter(Boolean);const q=deQuienSeg(x);
-    const meta=`Llamar ${segFecha(x.fecha)}${q?'':' · sin asignar'}`,meta2=x.ultima?`Última sesión ${segFecha(x.ultima)}${x.fisio?' con '+x.fisio:''}`:(x.fisio?'Su fisio: '+x.fisio:'');
+    const meta=x.fecha<hoy?`Tocaba llamar el ${segFecha(x.fecha)}`:x.fecha>hoy?`Llamar el ${segFecha(x.fecha)}`:'',meta2=x.ultima?`Última sesión ${segFecha(x.ultima)}${x.fisio?' con '+x.fisio:''}`:(x.fisio?'Su fisio: '+x.fisio:'');
     return `<div class="tk${x.fecha<hoy?' atr':''}"><div class="tk-ics">${x.tel?`<a class="tk-i ll" href="tel:+${segTel(x.tel)}" aria-label="Llamar">${SEG_IC_TEL}</a>`+`<a class="tk-wa" href="https://wa.me/${segTel(x.tel)}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></a>`:`<span class="tk-i ll">${SEG_IC_TEL}</span>`}</div>
-    <div class="tk-m"><b class="tk-nom" data-ficha="${x.pacienteId||''}">${escH(x.nombre)}</b><p class="tk-meta">${escH(meta)}</p>${meta2?`<p class="tk-meta">${escH(meta2)}</p>`:''}${x.ult?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(x.ult.resultado)?'ok':/^NC|^VOLVER/.test(x.ult.resultado)?'no':'pe'}">${escH(resTxtG(x.ult.resultado))}</strong> · ${escH(segFecha(x.ult.fecha).replace(/^\S+ /,''))}${x.ult.quien?' · '+escH(quienNom(x.ult.quien)):''}${x.ult.nota?' — '+escH(x.ult.nota):''}</p>`:''}${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}<div class="tk-pie"><button type="button" class="seg-ed tk-ed" data-id="${x.id}">Editar</button><div class="tk-a"><button type="button" class="seg-hecho tk-b" data-id="${x.id}">Resultado</button></div></div></div></div>`;}).join('')}</div>`).join('')||(resF?'<div class="fac-vacio">Nadie con este resultado.</div>':'<div class="tar-ok">✓ Nadie por llamar</div>');
+    <div class="tk-m"><b class="tk-nom" data-ficha="${x.pacienteId||''}">${escH(x.nombre)}</b>${meta?`<p class="tk-meta">${escH(meta)}</p>`:''}${meta2?`<p class="tk-meta">${escH(meta2)}</p>`:''}${x.ult?`<p class="tk-meta tk-ult">Última llamada: <strong class="r-${/RECUPERADA|^ALTA/.test(x.ult.resultado)?'ok':/^NC|^VOLVER/.test(x.ult.resultado)?'no':'pe'}">${escH(resTxtG(x.ult.resultado))}</strong> · ${escH(segFecha(x.ult.fecha).replace(/^\S+ /,''))}${x.ult.quien?' · '+escH(quienNom(x.ult.quien)):''}${x.ult.nota?' — '+escH(x.ult.nota):''}</p>`:''}${x.ult?'':`<p class="tk-meta">Aún no se le ha llamado</p>`}${x.nota&&!/^Recuperado de las llamadas antiguas/.test(x.nota)?`<p class="tk-nota">${escH(x.nota)}</p>`:''}${ests.length?`<div class="tk-e">${ests.map(n=>`<span class="${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('')}</div>`:''}<div class="tk-pie"><button type="button" class="seg-ed tk-ed" data-id="${x.id}">Editar</button><div class="tk-a"><button type="button" class="seg-hecho tk-b" data-id="${x.id}">Resultado</button></div></div></div></div>`;}).join('')}</div>`).join('')||(resF?'<div class="fac-vacio">Nadie con este resultado.</div>':'<div class="tar-ok">✓ Nadie por llamar</div>');
   }else{
-   html+=`<div class="ll-per"><label class="ll-sel ${perH!=='dia'?'on':''}"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg><select>${PER_H.map(([k,t])=>`<option value="${k}" ${perH===k?'selected':''}>${t}</option>`).join('')}${perH==='dia'?'<option value="dia" selected>Elige periodo</option>':''}</select><i>▾</i></label>
-    <label class="ll-dia ${perH==='dia'?'on':''}"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><span>${perH==='dia'&&diaH?escH(segFecha(diaH)):'Seleccionar día'}</span><input type="date" value="${diaH||''}" max="${segIso(0)}" aria-label="Seleccionar día"></label>${perH==='dia'?'<button type="button" class="ll-quita" aria-label="Quitar día">✕</button>':''}</div>`;
+   html+=`<div class="ll-per ll-2 ll-h2"><label class="ll-sel ${perH!=='dia'?'on':''}"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg><select>${PER_H.map(([k,t])=>`<option value="${k}" ${perH===k?'selected':''}>${t}</option>`).join('')}${perH==='dia'?'<option value="dia" selected>Elige periodo</option>':''}</select><i>▾</i></label>
+    <button type="button" class="ll-dia ${perH==='dia'?'on':''}"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><span>${perH==='dia'&&diaH?escH(segFecha(diaH)):'Un día concreto'}</span></button>${H.length?chipsRes(H,x=>RES_K(x.resultado),'Sin resultado'):''}</div>`;
    const L=H;
    const per=[...new Set(L.map(x=>x.quienN||'Sin indicar'))].sort((a,b)=>TAR_NOMBRES.indexOf(a)-TAR_NOMBRES.indexOf(b));
    const MT=metricasLlamadas(L);
@@ -7840,7 +7866,6 @@ async function renderSeguimiento(wrap){
    const resTxt=r=>{r=String(r||'').toUpperCase();return /RECUPERADA/.test(r)?'Cita recuperada':/^ALTA/.test(r)?'Alta':/^NC/.test(r)?'No contesta':/^VOLVER/.test(r)?'Volver a llamar':/PENDIENTE/.test(r)?'Pendiente de respuesta':(r?r.charAt(0)+r.slice(1).toLowerCase():'Sin resultado');};
    const resCls=r=>/RECUPERADA|^ALTA/.test(r)?'ok':/^NC|^VOLVER/.test(r)?'no':'pe';
    const IC_OK='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',IC_NO='<svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01"/></svg>',IC_PE='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>';
-   if(L.length)html+=chipsRes(L,x=>RES_K(x.resultado),'Sin resultado');
    const LF=resF?L.filter(x=>RES_K(x.resultado)===resF):L;
    const dias=[...new Set(LF.map(x=>x.fecha))];
    html+=L.length?(LF.length?`<details class="ll-det"${resF?' open':''}><summary>${resF?`Ver las ${LF.length} llamadas con este resultado`:`Ver las ${L.length} llamadas una a una`}</summary>`+dias.map(dd=>{const Ld=LF.filter(x=>x.fecha===dd);return `<div class="seg-gt">${escH(hzFecha(dd).replace(/^./,c=>c.toUpperCase()))} <span>${Ld.length}</span></div><div class="seg-tabla">${Ld.map(x=>{const c=resCls(x.resultado);return `<div class="tk hecha" data-id="${x.id}"><span class="tk-i r-${c}">${c==='ok'?IC_OK:c==='no'?IC_NO:IC_PE}</span><div class="tk-m"><b>${escH(x.nombre)}</b><p class="tk-meta"><strong class="r-${c}">${escH(resTxt(x.resultado))}</strong></p><p class="tk-meta">${escH((x.quienN?'Llamó '+x.quienN:'')+(x.hora?(x.quienN?' a las ':'A las ')+x.hora:''))}</p>${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}</div></div>`;}).join('')}</div>`;}).join('')+'</details>':`<div class="fac-vacio">Ninguna llamada con este resultado ${escH(perTxt())}.</div>`):`<div class="fac-vacio">Sin llamadas ${escH(perTxt())}.</div>`;
@@ -7849,13 +7874,13 @@ async function renderSeguimiento(wrap){
   {const sq=box.querySelector('.sg-quien');if(sq)sq.onchange=()=>{filtroFisio=sq.value;pinta();};}
   box.querySelectorAll('.sg-seg button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;resF='';try{sessionStorage.setItem('f365_seg',tab);}catch(e){}pinta();});
   box.querySelectorAll('.seg-fis button').forEach(b=>b.onclick=()=>{filtroFisio=b.dataset.f;pinta();});
-  box.querySelectorAll('.ll-rf button').forEach(b=>b.onclick=()=>{resF=b.dataset.r;pinta();});
+  {const rs=box.querySelector('.sg-resf');if(rs)rs.onchange=()=>{resF=rs.value;pinta();};}
   box.querySelectorAll('.seg-hecho').forEach(b=>b.onclick=()=>abrirResultadoSeg(P.find(x=>x.id===b.dataset.id),cargar));
   box.querySelectorAll('.seg-ed').forEach(b=>b.onclick=()=>abrirEditarSeg(P.find(x=>x.id===b.dataset.id),cargar));
   notasExpandibles(box);
-  {const se=box.querySelector('.ll-per select:not(.sg-quien)');if(se)se.onchange=()=>{if(se.value==='dia')return;perH=se.value;diaH='';cargar();};}
+  {const se=box.querySelector('.ll-per select:not(.sg-quien):not(.sg-resf)');if(se)se.onchange=()=>{if(se.value==='dia')return;perH=se.value;diaH='';cargar();};}
   {const lq=box.querySelector('.ll-quita');if(lq)lq.onclick=()=>{perH='30';diaH='';cargar();};}
-  {const di=box.querySelector('.ll-dia input');if(di){const go=()=>{if(!di.value||(perH==='dia'&&di.value===diaH))return;diaH=di.value;perH='dia';cargar();};di.onchange=go;di.onblur=go;}}
+  {const di=box.querySelector('button.ll-dia');if(di)di.onclick=()=>miniCal(di,diaH||segIso(0),f=>{if(!f||f>segIso(0)||(perH==='dia'&&f===diaH))return;diaH=f;perH='dia';cargar();});}
   box.querySelectorAll('.ll-pdf').forEach(b=>b.onclick=()=>imprimirLlamadas(b.dataset.n,H.filter(x=>(x.quienN||'Sin indicar')===b.dataset.n),perTxt(),rangoH()));
   box.querySelectorAll('.tk.hecha').forEach(r=>r.onclick=()=>abrirEditarLlamada(H.find(x=>x.id===r.dataset.id),cargar));
   if(box.querySelector('.seg-add'))box.querySelector('.seg-add').onclick=()=>{
