@@ -1118,8 +1118,10 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag{background:#fff;border-radius:22px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .ag-bar{display:flex;align-items:center;gap:8px}.ag-nv{width:42px;height:42px;border-radius:50%;border:none;background:#f7f3ef;font-size:22px;color:#c2552e;cursor:pointer;flex:none;font-family:var(--font)}
 .ag-fe{flex:1;position:relative;text-align:center;cursor:pointer}.ag-ft{font-size:16px;font-weight:700}.ag-fi{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
-.ag-bar2{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:8px;margin:10px 0 8px}
-@media(min-width:760px){.ag-bar2{grid-template-columns:repeat(4,1fr)}}
+.ag-bar2{display:grid;grid-template-columns:repeat(6,1fr);align-items:center;gap:8px;margin:10px 0 8px}
+.ag-bar2>.ag-recb{grid-column:span 2}.ag-bar2>.ag-sel{grid-column:span 3}
+@media(min-width:760px){.ag-bar2{grid-template-columns:repeat(5,1fr)}.ag-bar2>.ag-recb,.ag-bar2>.ag-sel{grid-column:auto}}
+.ag-recb.ag-encb{color:#7c3aed;background:#f1ebfd}@media(max-width:759px){.ag-bar2 .ag-recb svg{display:none}}.ag-bar2 .ag-recb{white-space:nowrap;font-size:12.5px;padding-left:6px;padding-right:6px;gap:5px}
 .ag-bar2 .ag-recb,.ag-bar2 .ag-sel{width:100%;max-width:none;min-width:0;box-sizing:border-box;justify-content:center;padding-top:9px;padding-bottom:9px}
 .ag-bar2 .ag-sel span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ag-bar2 .ag-res{grid-column:1/-1;text-align:right;margin:0}.ag-hoy{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:#fdeee4;color:#c2552e;border-radius:99px;padding:7px 13px;cursor:pointer}
@@ -5292,16 +5294,17 @@ function calFijo(box,valor,onPick){
   box.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{sel=b.dataset.f;pinta();onPick(sel);});};
  pinta();
 }
-async function agRecordatorios(onDone){
+async function agRecordatorios(onDone,modoIni){
  let fechas=recFechasDef(),datos=null;
- const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>Recordatorios por WhatsApp</b></div><div class="fp-body"></div>`;
+ const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>${modoIni==='enc'?'Encuesta de primera visita':'Recordatorios por WhatsApp'}</b></div><div class="fp-body"></div>`;
  document.body.appendChild(m);const ov=document.body.style.overflow;document.body.style.overflow='hidden';
  const cerrar=()=>{m.remove();document.body.style.overflow=ov;onDone&&onDone();};m.querySelector('.pv-x').onclick=cerrar;
  const body=m.querySelector('.fp-body');
  const fC=f=>{const t=new Date(f+'T12:00:00');return REC_DIAS[t.getDay()].charAt(0).toUpperCase()+REC_DIAS[t.getDay()].slice(1)+' '+t.getDate()+'/'+(t.getMonth()+1);};
  // Dos pestañas: recordatorios de las citas y encuesta de satisfacción a los de primera visita
- let modo='rec',encF=(()=>{const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return agMover(h,dw===1?-2:dw===0?-1:-1);})(),encD=null;
- const tabs=()=>`<div class="ag-vis rec-tabs"><button type="button" data-t="rec" class="${modo==='rec'?'on':''}">Recordatorios</button><button type="button" data-t="enc" class="${modo==='enc'?'on':''}">Encuesta 1ª visita</button></div>`;
+ let modo=modoIni==='enc'?'enc':'rec',encF=(()=>{const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return agMover(h,dw===1?-2:dw===0?-1:-1);})(),encD=null;
+ // Cada cosa se abre desde su propio botón de la agenda: sin pestañas
+ const tabs=()=>'',_tabsViejo=()=>`<div class="ag-vis rec-tabs"><button type="button" data-t="rec" class="${modo==='rec'?'on':''}">Recordatorios</button><button type="button" data-t="enc" class="${modo==='enc'?'on':''}">Encuesta 1ª visita</button></div>`;
  const atarTabs=()=>body.querySelectorAll('.rec-tabs button').forEach(b=>b.onclick=()=>{if(modo===b.dataset.t)return;modo=b.dataset.t;m.querySelector('.pv-bar b').textContent=modo==='rec'?'Recordatorios por WhatsApp':'Encuesta de primera visita';cargar();});
  async function cargarEnc(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-encuestas&pwd=${encodeURIComponent(apiPwd)}&fecha=${encF}`)).json();if(!r.ok)throw new Error(r.error||'Error');encD=r.citas;pintaEnc();}
@@ -5421,7 +5424,7 @@ function renderAgenda(wrap){
   <button type="button" class="ag-hoy">Hoy</button><button type="button" class="ag-nv" data-n="1" aria-label="Siguiente">›</button></div>
   <div class="ag-lf"><label class="ag-sel ag-w"><span class="ag-pert"></span><select class="ag-per">${AG_PER.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label>
    <span class="ag-rg"><input type="date" class="ag-in ag-d1"><span>a</span><input type="date" class="ag-in ag-d2"></span></div>
-  <div class="ag-bar2"><button type="button" class="ag-recb"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Recordatorios</button><button type="button" class="ag-recb ag-pdfb"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>Huecos libres</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><label class="ag-sel ag-fil"><span class="ag-filt"></span><select class="ag-fis">${AG_FIL.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label><span class="ag-res"></span></div>
+  <div class="ag-bar2"><button type="button" class="ag-recb"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Recordatorios</button><button type="button" class="ag-recb ag-encb"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>Encuestas</button><button type="button" class="ag-recb ag-pdfb"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>Huecos libres</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><label class="ag-sel ag-fil"><span class="ag-filt"></span><select class="ag-fis">${AG_FIL.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label><span class="ag-res"></span></div>
   <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
  wrap.appendChild(card);
  const $c=q=>card.querySelector(q),fi=$c('.ag-fi'),fs=$c('.ag-fs'),grid=$c('.ag-grid');
@@ -5429,7 +5432,8 @@ function renderAgenda(wrap){
  card.querySelectorAll('.ag-vis button').forEach(b=>b.onclick=()=>{AG.vista=b.dataset.v;try{localStorage.setItem('f365_ag_vista',AG.vista);}catch(e){}cargar();});
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n*(AG.vista==='semana'?7:1));cargar();});
  $c('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
- $c('.ag-recb:not(.ag-pdfb)').onclick=()=>agRecordatorios(()=>cargar());
+ $c('.ag-recb:not(.ag-pdfb):not(.ag-encb)').onclick=()=>agRecordatorios(()=>cargar());
+ $c('.ag-encb').onclick=()=>agRecordatorios(()=>cargar(),'enc');
  $c('.ag-pdfb').onclick=()=>agPdfHuecos();
  fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};fi.style.display='none';
  $c('.ag-fe').onclick=e=>{e.preventDefault();miniCal($c('.ag-ft'),AG.fecha,f=>{AG.fecha=f;cargar();});};
