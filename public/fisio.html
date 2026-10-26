@@ -6551,7 +6551,9 @@ async function enviarTarjeta2(tel,quien,nuevo,cad,refId,w0){let txt=mensajeTarje
  const w=w0||window.open('about:blank','_blank');
  try{const b=await tarjetaImagen(quien,nuevo,cad,'image/jpeg');const b64=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(',')[1]);fr.readAsDataURL(b);});
   const d=await (await fetch('/api/schedule?action=seg-referido-img',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:refId,b64})})).json();
-  if(d.ok&&d.url)txt+=`\n\nAquí tienes tu tarjeta: ${d.url}`;}catch(e){}
+  if(!d.ok)console.log('tarjeta img',d);}catch(e){console.log('tarjeta img',e);}
+ // El enlace va siempre (la página de la tarjeta se ve aunque la imagen no se haya podido guardar)
+ if(refId)txt+=`\n\nAquí tienes tu tarjeta: https://app.fisioterapia365.com/tarjeta/${refId}`;
  const t=segTel(tel||''),u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;
  if(w)w.location.href=u;else window.open(u,'_blank');}
 function waAbrir(tel,txt){const t=segTel(tel||'');window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');}
