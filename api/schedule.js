@@ -1458,6 +1458,30 @@ module.exports = async function handler(req, res) {
             } } catch (e) { console.log('agenda-num', e.message); }
           return res.status(200).json({ ok: true, num: numSes, pago, inicio });
         }
+        if (action === 'seg-agenda-pack') {
+          // Al dar una cita: qué sesión del pack sería (mismo reparto que la agenda: los pagos se gastan por orden de fecha)
+          if (!okId(q.pacienteId) || !okF(q.fecha)) return res.status(400).json({ ok: false });
+          const inicio = await inicioControl().catch(() => '');
+          if (!inicio) return res.status(200).json({ ok: true, activo: false });
+          const hora = okH(q.hora) ? hh(q.hora) : '23:59', clave = q.fecha + ' ' + hora;
+          const [rs, fs, pr] = await Promise.all([
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),FIND('${q.pacienteId}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${inicio}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA`),
+            todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${q.pacienteId}')`)}`).catch(() => []),
+            at(`${PACIENTES}/${q.pacienteId}?fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}`).catch(() => ({}))
+          ]);
+          const lotes = [], P = pr.fields || {}, nP = Number(P['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(P['BONO PREVIO YA USADAS'] || 0));
+          if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true });
+          fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => {
+            [[r.fields['CONCEPTO 1'], r.fields['Nº SESIONES 1']], [r.fields['CONCEPTO 2'], r.fields['Nº SESIONES 2']]].forEach(([c, n]) => { if (/^Sesi/i.test(nmA(c) || '') && Number(n) > 0) lotes.push({ n: Number(n) }); }); });
+          const claves = rs.map(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA)).filter(k => k !== clave);
+          claves.push(clave); claves.sort();
+          let li = 0, usado = 0, out = { t: 'sin' };
+          for (const k of claves) { while (li < lotes.length && usado >= lotes[li].n) { li++; usado = 0; }
+            if (k === clave) { const lo = lotes[li]; out = !lo ? { t: 'sin' } : lo.n > 1 || lo.previo ? { t: 'pack', i: usado + 1 + (lo.off || 0), n: lo.tot || lo.n } : { t: 'suelta' }; break; }
+            if (li < lotes.length) usado++; }
+          const total = lotes.reduce((t, l) => t + l.n, 0);
+          return res.status(200).json({ ok: true, activo: true, ...out, quedan: Math.max(0, total - claves.length) });
+        }
         if (action === 'seg-agenda-recordatorios') {
           // Recordatorios por WhatsApp (en un toque): citas pendientes de las fechas pedidas, con teléfono y si ya se envió
           const fechas = String(q.fechas || '').split(',').filter(okF).slice(0, 4);

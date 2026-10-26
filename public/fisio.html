@@ -1153,6 +1153,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-hs{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}.ag-hs button{-webkit-text-fill-color:currentColor;font-family:var(--font);font-size:13px;padding:8px 0;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer}
 .ag-hs button.li{border-color:#6fbf8b;color:#16803c;background:#f3fbf5}.ag-hs button.oc{color:#b8aca3;background:#f5f1ed;border-color:#f5f1ed}.ag-hs button.bq{color:#b8aca3;text-decoration:line-through}.ag-hs button.on{border-color:#c2552e;background:#c2552e;color:#fff}
 .ag-res2{display:flex;flex-direction:column;gap:4px;margin-top:6px}.ag-pi{font-family:var(--font);display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:none;background:#f7f3ef;border-radius:10px;padding:8px 12px;cursor:pointer}.ag-pi b{font-size:13.5px}.ag-pi small{font-size:11.5px;color:#7d6a60}.ag-np{color:#c2552e;font-weight:600;font-size:13px}
+.ag-pkinfo{margin-top:6px;font-size:13px;border-radius:10px;padding:8px 12px;background:#f3efea;color:#7d6a60}.ag-pkinfo.ok{background:#e8eef6;color:#1e3a5f}.ag-pkinfo.ult{background:#fff4e5;color:#b45309}.ag-pkinfo.sin{background:#fdecea;color:#b42318}
 .ag-elegido{font-size:13.5px;font-weight:600;color:#16803c;background:#e8f6ec;border-radius:10px;padding:8px 12px}
 /* ── Protocolo de no mejora («Sin evolución») ── */
 .sev-row{display:flex;align-items:center;gap:10px}.sev-row .fp-pqchk{flex:1}.sev-row em{font-style:normal;font-weight:500;font-size:12.5px;color:#7d6a60}
@@ -5787,7 +5788,7 @@ function agTipoHueco(m,c,onDone){const box=m.querySelector('.ag-th');if(!box)ret
   try{const r=await agPost('seg-agenda-editar',{id:c.id,estado:b.dataset.v});if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Ahora es «${b.textContent}»`,true);m.remove();onDone&&onDone();}
   catch(err){box.querySelectorAll('button').forEach(x=>x.disabled=false);toast(err.message,false);}});}
 function agDarCita({fecha,hora,fisio,hueco},onDone){
- let pac=null;
+ let pac=null,pacInfo='';
  setTimeout(()=>{const eb=document.querySelector('.ag-espb');if(eb)eb.onclick=()=>capOfrecerModal({fecha,hora,fisio},AG.dia.espera||[],AG.dia.hoy);},0);
  const m=hzModal(`<div class="hz-top"><div><small>Dar cita · ${escH(agCab(fecha,hora,fisio))}</small><b>${hueco?'Hora libre':'Hora vacía'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   ${hueco&&AG.dia&&AG.dia.hoy&&fecha>=AG.dia.hoy&&capPrio(AG.dia.espera||[],{fecha,hora,fisio},AG.dia.hoy).length?`<button type="button" class="ag-espb">${IC_WA} Ofrecer a la lista de espera <b>${capPrio(AG.dia.espera||[],{fecha,hora,fisio},AG.dia.hoy).length}</b></button>`:''}
@@ -5804,13 +5805,19 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
  bus.oninput=()=>{pac=null;const q=norm(bus.value).trim(),qd=q.replace(/\D/g,'');if(q.length<2){res.innerHTML='';return;}
   const fl=(pacs||[]).filter(p=>norm(p.nombre).includes(q)||norm(p.email).includes(q)||(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd))).slice(0,6);
   res.innerHTML=fl.map(p=>`<button type="button" class="ag-pi" data-id="${p.id}"><b>${escH(p.nombre)}</b><small>${escH(p.telefono||p.email||'')}</small></button>`).join('')+`<button type="button" class="ag-pi ag-np">＋ Nuevo paciente «${escH(bus.value.trim())}»</button>`;
-  res.querySelectorAll('.ag-pi[data-id]').forEach(b=>b.onclick=()=>{pac=(pacs||[]).find(p=>p.id===b.dataset.id);bus.value=pac.nombre;res.innerHTML=`<div class="ag-elegido">✓ ${escH(pac.nombre)}</div>`;});
+  res.querySelectorAll('.ag-pi[data-id]').forEach(b=>b.onclick=()=>{pac=(pacs||[]).find(p=>p.id===b.dataset.id);bus.value=pac.nombre;res.innerHTML=`<div class="ag-elegido">✓ ${escH(pac.nombre)}</div><div class="ag-pkinfo">Mirando su pack…</div>`;
+   // Qué sesión del pack sería esta cita
+   const yo=pac;pacInfo='';fetch(`/api/schedule?action=seg-agenda-pack&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${yo.id}&fecha=${fecha}&hora=${encodeURIComponent(hora)}`).then(x=>x.json()).then(r=>{if(pac!==yo)return;const el=res.querySelector('.ag-pkinfo');if(!el)return;
+    if(!r||!r.ok||!r.activo){el.remove();return;}
+    pacInfo=r.t==='pack'?`Pack ${r.i}/${r.n}`:r.t==='suelta'?'Sesión suelta pagada':'Sin pagar';
+    el.className='ag-pkinfo '+(r.t==='sin'?'sin':r.t==='pack'&&r.i===r.n?'ult':'ok');
+    el.innerHTML=r.t==='pack'?`<b>Sería la sesión ${r.i} de ${r.n} del pack</b>${r.i===r.n?' · la última: toca renovar':''}`:r.t==='suelta'?'<b>Tiene esta sesión pagada</b>':'<b>No le quedan sesiones pagadas</b> · tendrá que pagar esta sesión';}).catch(()=>{const el=res.querySelector('.ag-pkinfo');if(el)el.remove();});});
   res.querySelector('.ag-np').onclick=()=>{m.remove();abrirNuevoPaciente(bus.value.trim());toast('Crea el paciente y vuelve a la agenda para darle la cita',true);};};
  if(window.innerWidth>=700)bus.focus();
  const enviar=async(b,forzar)=>{if(!pac){toast('Elige el paciente',false);return;}b.disabled=true;b.textContent='Dando cita…';
   try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,notas:m.querySelector('.ag-not2').value.trim(),tipos:tg.get(),forzar});
    if(r.conflicto){b.disabled=false;b.textContent='Dar cita';if(confirm(r.error+'. ¿Darla igualmente?'))enviar(b,true);return;}
-   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`+(r.reprogramadas?' · su cita «Por reagendar» pasa a Reprogramada':''),true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
+   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`+(pacInfo?' · '+pacInfo:'')+(r.reprogramadas?' · su cita «Por reagendar» pasa a Reprogramada':''),true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
  m.querySelectorAll('.ag-otras button').forEach(b=>b.onclick=async()=>{b.disabled=true;
