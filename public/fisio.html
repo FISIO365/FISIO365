@@ -1180,7 +1180,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-m small.fp-mu{line-height:1.5}
 .ag-recb{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border:none;border-radius:99px;padding:8px 13px;cursor:pointer}.ag-recb svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .ag-pdfb{color:#c2552e;background:#fdeee4}.sev-ch.c3{grid-template-columns:repeat(3,1fr)}.hl-res{margin:14px 0 4px;font-size:13.5px}.hl-res b{color:#141414;font-size:16px}
-.rec-tabs{margin:0 0 12px}.rec-bus{margin-bottom:10px!important}.rec-lista .rec-it .rec-n{padding-left:2px}
+.rec-tabs{margin:0 0 12px}.sev-ch.c4{grid-template-columns:repeat(2,1fr);margin-top:6px}.sev-ch.c4 button{font-size:12.5px;padding:9px 4px}
+.res-prev{margin-top:10px;background:#f3efea;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#3d3530}.res-prev i{color:#7d6a60}.rec-bus{margin-bottom:10px!important}.rec-lista .rec-it .rec-n{padding-left:2px}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}
 .mcal-fijo .mcal-g button{aspect-ratio:auto;height:36px}.mcal-fijo .mcal-g i{padding:2px 0}.mcal-fijo{position:static!important;width:auto!important;box-shadow:none!important;padding:4px 0 0!important;border-radius:0!important}.mcal-g button.pas{color:#c9bfb7}
@@ -5312,16 +5313,27 @@ async function agRecordatorios(onDone,modoIni){
  async function cargarRes(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-resenas&pwd=${encodeURIComponent(apiPwd)}&ids=${resExtra.join(',')}`)).json();if(!r.ok)throw new Error(r.error||'Error');resD=r.pacientes;pintaRes();}
   catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
+ // Varias versiones del mensaje según el perfil del paciente (se recuerda la última elegida)
+ const RES_VAR=[
+  ['gen','General',(h,fi)=>`${h}, ¡gracias por confiar en FISIO365!\n\nSi te está yendo bien con nosotros, nos ayudaría muchísimo una reseña tuya en Google:\n${RESENA_GOOGLE}\n\n¡Mil gracias!`],
+  ['alta','De alta',(h,fi)=>`${h}, ¡qué alegría que hayas terminado el tratamiento tan bien!\n\nSi tienes un minuto, nos ayudaría muchísimo que contaras tu experiencia en Google:\n${RESENA_GOOGLE}\n\nY ya sabes dónde estamos para lo que necesites. ¡Gracias!`],
+  ['mejor','Está mucho mejor',(h,fi)=>`${h}, ¡qué bien que estés notando tanta mejoría!\n\nSi te apetece contarlo, una reseña en Google nos ayuda muchísimo${fi?` (y a ${fi} le hará mucha ilusión)`:''}:\n${RESENA_GOOGLE}\n\n¡Gracias!`],
+  ['fiel','Viene hace tiempo',(h,fi)=>`${h}, ¡gracias por seguir confiando en nosotros todo este tiempo!\n\nNos haría mucha ilusión que contaras tu experiencia en Google:\n${RESENA_GOOGLE}\n\n¡Mil gracias!`]];
+ let resVar=(()=>{try{return localStorage.getItem('f365_resvar')||'gen';}catch(e){return 'gen';}})();
  const resTexto=c=>{const p=String(c.pila||c.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
-  return `Hola${n?' '+n:''}, ¡gracias por confiar en FISIO365!\n\nSi te está yendo bien con nosotros, nos ayudaría muchísimo una reseña tuya en Google:\n${RESENA_GOOGLE}\n\n¡Mil gracias!`;};
+  const f0=String(c.fisio||'').trim().split(' ')[0],fi=f0?f0.charAt(0).toUpperCase()+f0.slice(1).toLowerCase():'';
+  return (RES_VAR.find(v=>v[0]===resVar)||RES_VAR[0])[2](`Hola${n?' '+n:''}`,fi);};
  function pintaRes(){const L=resD||[],ped=L.filter(c=>c.pedida).length,fC2=f=>f?sevFC(f):'';
   body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="ag-pf ag-busca rec-bus"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in ag-pb" placeholder="Buscar otro paciente…" autocomplete="off"><div class="ag-pr"></div></div>
-   <div class="rec-pr" style="margin-top:4px"><div><b>${ped}</b> de ${L.length} con la reseña pedida</div></div><small class="fp-mu" style="display:block;font-size:12px;margin-top:6px">Salen los que han tenido sesión los últimos 7 días.</small></div>
+   <div class="rec-modo-l" style="margin-top:2px">Mensaje</div><div class="sev-ch c4 res-var">${RES_VAR.map(([k,t])=>`<button type="button" data-v="${k}" class="${resVar===k?'on':''}">${t}</button>`).join('')}</div>
+   <div class="res-prev">${escH(resTexto({pila:'Laura',fisio:'Sara'})).replace(/\n/g,'<br>').replace(RESENA_GOOGLE,'<i>enlace de Google</i>')}</div>
+   <div class="rec-pr" style="margin-top:12px"><div><b>${ped}</b> de ${L.length} con la reseña pedida</div></div><small class="fp-mu" style="display:block;font-size:12px;margin-top:6px">Salen los que han tenido sesión los últimos 7 días.</small></div>
    ${!L.length?'<div class="fac-vacio">Nadie ha tenido sesión estos días</div>':`<div class="fp-blk rec-lista">${L.map((c,i)=>{const tel=segTel(c.tel);
     const sub=[c.ultima?'sesión el '+fC2(c.ultima):'',String(c.fisio||'').split(' ')[0]].filter(Boolean).join(' · ');
     return `<div class="rec-it${c.pedida||c.dejada?' env':''}" data-i="${i}"><div class="rec-n"><b>${escH(capTit(c.nombre||'—'))}</b><small>${escH(sub)}${c.dejada?' · <em class="ok">✓ Ya dejó reseña</em>':c.pedida?' · pedida el '+escH(fC2(c.pedida)):''}</small></div>
      ${tel.length<9?`<button type="button" class="rec-b sin" data-ficha="${c.pacienteId}" data-fn="${escH(c.nombre)}">Sin teléfono</button>`:c.pedida||c.dejada?'<button type="button" class="rec-b otra">Reenviar</button>':'<button type="button" class="rec-b env">Enviar</button>'}</div>`;}).join('')}</div>`}`;
   atarTabs();
+  body.querySelectorAll('.res-var button').forEach(b=>b.onclick=()=>{resVar=b.dataset.v;try{localStorage.setItem('f365_resvar',resVar);}catch(e){}pintaRes();});
   const bi=body.querySelector('.rec-bus input'),bp=body.querySelector('.rec-bus .ag-pr'),nrm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   bi.oninput=()=>{const q=nrm(bi.value).trim();if(q.length<2){bp.innerHTML='';return;}const pal=q.split(/\s+/);const fl=(pacs||[]).filter(p=>{const n=nrm(p.nombre);return pal.every(w=>n.includes(w));}).slice(0,8);
    bp.innerHTML=`<div class="ag-pdd">${fl.map(p=>`<button type="button" data-id="${p.id}">${escH(capTit(p.nombre))}</button>`).join('')||'<small class="fp-mu">No encontrado</small>'}</div>`;
