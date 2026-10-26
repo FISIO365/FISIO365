@@ -1373,7 +1373,8 @@ module.exports = async function handler(req, res) {
           try {
             const pv = [...new Set(rows.map(r => (r.fields['RELACIÓN - CITA'] || [])[0]).filter(Boolean))];
             if (pv.length && pv.length <= 160) {
-              inicio = await inicioControl().catch(() => '');
+              const conPago = q.pago === '1'; // «Pack 3/10, Suelta, Sin pagar»: desactivado en el panel de momento
+              inicio = conPago ? await inicioControl().catch(() => '') : '';
               global._sesPac = global._sesPac || {}; const C = global._sesPac, ahora = Date.now(), falta = pv.filter(id => !C[id] || ahora - C[id].t > 3 * 60e3);
               const grupos = []; for (let i = 0; i < falta.length; i += 15) grupos.push(falta.slice(i, i + 15));
               const sesDe = f => [[f['CONCEPTO 1'], f['Nº SESIONES 1'], f['PRECIO SESIÓN 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2'], f['PRECIO SESIÓN 2']]].filter(([c, n]) => /^Sesi/i.test(nmA(c) || '') && Number(n) > 0).map(([c, n, pr]) => ({ n: Number(n), precio: Number(pr) || 0, concepto: nmA(c) }));
@@ -1381,7 +1382,7 @@ module.exports = async function handler(req, res) {
                 const [rs, fs, ps] = await Promise.all([
                   todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),OR(${g.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PacienteRec`),
                   inicio ? todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',OR(${g.map(id => `{PacienteId}='${id}'`).join(',')}))`)}`).catch(() => []) : Promise.resolve([]),
-                  todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}`).catch(() => [])
+                  conPago ? todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}`).catch(() => []) : Promise.resolve([])
                 ]);
                 const L = {}; g.forEach(id => L[id] = { citas: [], lotes: [] });
                 rs.forEach(r => (r.fields['PacienteRec'] || []).forEach(id => { if (L[id]) L[id].citas.push({ id: r.id, k: String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA), e: String(nmA(r.fields.ESTADO)).trim().toUpperCase() }); }));
