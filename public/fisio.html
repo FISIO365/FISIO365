@@ -1181,6 +1181,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-m small.fp-mu{line-height:1.5}
 .ag-recb{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border:none;border-radius:99px;padding:8px 13px;cursor:pointer}.ag-recb svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .ag-pdfb{color:#c2552e;background:#fdeee4}
+.pk-g{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.pk-g button{font-family:var(--font);font-size:13.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;border-radius:10px;padding:9px 0;cursor:pointer;color:#3d3530}.pk-g button.on{border-color:#c2552e;background:#fdeee4;color:#c2552e}
 .fac-bp{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:#5c4f47;background:#fff;border:1px solid #eee5dd;border-radius:12px;padding:9px 12px;margin:-4px 0 10px}.fac-bp button{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:6px 12px;cursor:pointer}
 .ag-sinfac{display:flex;align-items:center;gap:10px;justify-content:space-between;background:#fdecea;border-radius:12px;padding:10px 12px;margin:10px 0}
 .ag-sinfac.ok{background:#e8f6ec}.ag-sinfac.ok span:first-child{color:#16803c}.ag-sinfac.ok .ag-sfb button{color:#16803c}.ag-sinfac.ok .ag-sfb .ag-sf-co{background:#fff;color:#16803c}
@@ -5709,7 +5710,7 @@ function agAbrirCita(c,onDone){
   const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);
   abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
  m.querySelector('.ag-altab').onclick=()=>agAlta(c);
- {const pk=m.querySelector('.ag-sf-pk');if(pk)pk.onclick=()=>marcarPack(c.pacienteId,c.paciente,0,true,()=>{m.remove();onDone&&onDone();});
+ {const pk=m.querySelector('.ag-sf-pk');if(pk)pk.onclick=()=>marcarPack(c.pacienteId,c.paciente,0,true,()=>{m.remove();onDone&&onDone();},c.id);
   const co=m.querySelector('.ag-sf-co');if(co)co.onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.paciente);let k=0;const t=setInterval(()=>{const b=document.querySelector('.fp .fp-cobb');if(b||++k>60){clearInterval(t);if(b)b.click();}},150);};}
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='REPROGRAMADA'&&!/REPROGRAMADA/.test(c.estado)){m.remove();agMoverCita(c,onDone);return;}est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
@@ -8069,19 +8070,27 @@ let FAC_PRECIO={};let FAC_CONCEPTOS=['Sesión de fisioterapia','Sesión de fisio
 let FAC_PAGOS=['Tarjeta','Efectivo','Bizum','Transferencia'];
 const facEur=n=>Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
 // Pack pagado fuera del panel (antes de facturar desde aquí, en efectivo sin ticket…): cuenta como sesiones pagadas
-function marcarPack(pacId,nombre,actual,sumar,onDone){
+function marcarPack(pacId,nombre,actual,sumar,onDone,citaId){
  const m=hzModal(`<div class="hz-top"><div><small>${escH(capTit(nombre||''))}</small><b>${sumar?'Tiene un pack pagado':'Pack pagado fuera del panel'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <p class="fp-mu" style="font-size:13.5px;margin:0 0 8px;line-height:1.5">${sumar?'¿De cuántas sesiones es el pack que pagó y no está facturado desde el panel?':'Sesiones de packs pagados que no se facturaron desde el panel. Cuentan como pagadas.'}</p>
   <div class="sev-ch c4 pk-ch">${[5,10,20].map(n=>`<button type="button" data-n="${n}">${n} sesiones</button>`).join('')}<button type="button" data-n="">Otro</button></div>
   <input type="number" min="0" max="500" inputmode="numeric" class="ag-in pk-n" style="margin-top:8px" placeholder="Nº de sesiones" value="${!sumar&&actual?actual:''}">
+  ${citaId?'<div class="hz-lab">¿Qué sesión del pack es esta cita?</div><div class="pk-ses"><small class="fp-mu">Elige primero de cuántas sesiones es el pack</small></div>':''}
   ${!sumar&&actual?'<small class="fp-mu" style="display:block;margin-top:6px;font-size:12px">Pon 0 para quitarlo.</small>':''}
   <div class="sev-bts"><button type="button" class="sev-b pk-no">Cancelar</button><button type="button" class="sev-b ok pk-ok">Guardar</button></div>`);
  const inp=m.querySelector('.pk-n');m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.pk-no').onclick=()=>m.remove();
- m.querySelectorAll('.pk-ch button').forEach(b=>b.onclick=()=>{m.querySelectorAll('.pk-ch button').forEach(x=>x.classList.toggle('on',x===b));if(b.dataset.n)inp.value=b.dataset.n;else{inp.value='';inp.focus();}});
+ // Desde una cita: además, qué sesión del pack es (1 de 5, 4 de 5…)
+ let ses=0;const sb=m.querySelector('.pk-ses');
+ const pSes=()=>{if(!sb)return;const n=parseInt(inp.value,10);if(!(n>0&&n<=40)){sb.innerHTML='<small class="fp-mu">Elige primero de cuántas sesiones es el pack</small>';ses=0;return;}if(ses>n)ses=0;
+  sb.innerHTML=`<div class="pk-g">${Array.from({length:n},(_,i)=>`<button type="button" data-s="${i+1}" class="${ses===i+1?'on':''}">${i+1}ª</button>`).join('')}</div>`;
+  sb.querySelectorAll('button').forEach(b=>b.onclick=()=>{ses=+b.dataset.s;pSes();});};
+ inp.addEventListener('input',pSes);
+ m.querySelectorAll('.pk-ch button').forEach(b=>b.onclick=()=>{m.querySelectorAll('.pk-ch button').forEach(x=>x.classList.toggle('on',x===b));if(b.dataset.n)inp.value=b.dataset.n;else{inp.value='';inp.focus();}pSes();});
  m.querySelector('.pk-ok').onclick=async e=>{const n=parseInt(inp.value,10);if(!(n>=0)||(sumar&&!n)){toast('Pon el nº de sesiones',false);inp.focus();return;}
+  if(citaId&&!ses){toast('Elige qué sesión del pack es esta cita',false);return;}
   const b=e.currentTarget;b.disabled=true;
-  try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd,id:pacId},sumar?{bonoSumar:n}:{bonoPrevio:n}))})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
-   toast(r.bonoPrevio?`Apuntado: ${r.bonoPrevio} sesiones de pack pagadas fuera del panel`:'Quitado',true);m.remove();onDone&&onDone(r.bonoPrevio);}catch(err){b.disabled=false;toast(err.message,false);}};
+  try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd,id:pacId},citaId?{bonoPack:{n,sesion:ses,citaId}}:sumar?{bonoSumar:n}:{bonoPrevio:n}))})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
+   toast(citaId?`Apuntado: esta cita es la ${ses}ª de un pack de ${n}`:r.bonoPrevio?`Apuntado: ${r.bonoPrevio} sesiones de pack pagadas fuera del panel`:'Quitado',true);m.remove();onDone&&onDone(r.bonoPrevio);}catch(err){b.disabled=false;toast(err.message,false);}};
 }
 async function fpTabFacturas(pacId, body, pacNombre, tok){
  body.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Cargando...</div>';

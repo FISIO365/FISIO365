@@ -1435,11 +1435,11 @@ module.exports = async function handler(req, res) {
                 const [rs, fs, ps] = await Promise.all([
                   todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),OR(${g.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PacienteRec`),
                   inicio ? todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',OR(${g.map(id => `{PacienteId}='${id}'`).join(',')}))`)}`).catch(() => []) : Promise.resolve([]),
-                  conPago ? todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}`).catch(() => []) : Promise.resolve([])
+                  conPago ? todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}`).catch(() => []) : Promise.resolve([])
                 ]);
                 const L = {}; g.forEach(id => L[id] = { citas: [], lotes: [] });
                 rs.forEach(r => (r.fields['PacienteRec'] || []).forEach(id => { if (L[id]) L[id].citas.push({ id: r.id, k: String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA), e: String(nmA(r.fields.ESTADO)).trim().toUpperCase() }); }));
-                ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0); if (L[p.id] && n > 0) L[p.id].lotes.push({ f: '', n, precio: 0, previo: true }); });
+                ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0), u = Math.min(n, Number(p.fields['BONO PREVIO YA USADAS'] || 0)); if (L[p.id] && n - u > 0) L[p.id].lotes.push({ f: '', n: n - u, tot: n, off: u, precio: 0, previo: true }); });
                 fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => { const id = r.fields['PacienteId']; if (!L[id]) return;
                   sesDe(r.fields).forEach(x => L[id].lotes.push({ f: r.fields['FECHA DE COBRO'] || r.fields['FECHA'] || '', n: x.n, precio: x.precio, num: r.fields['Nº FACTURA'] || '' })); });
                 g.forEach(id => { L[id].citas.sort((a, b) => a.k.localeCompare(b.k)); C[id] = { t: ahora, v: L[id] }; }); }));
@@ -1451,7 +1451,7 @@ module.exports = async function handler(req, res) {
                 const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio); let li = 0, usado = 0;
                 for (const x of gastan) { while (li < V.lotes.length && usado >= V.lotes[li].n) { li++; usado = 0; }
                   if (x.id === r.id) { const lo = V.lotes[li];
-                    pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: usado + 1, n: lo.n } : lo.n > 1 ? { t: 'pack', i: usado + 1, n: lo.n, v: Math.round(lo.precio * 100) / 100 } : { t: 'suelta', v: lo.precio };
+                    pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: usado + 1 + (lo.off || 0), n: lo.tot || lo.n } : lo.n > 1 ? { t: 'pack', i: usado + 1, n: lo.n, v: Math.round(lo.precio * 100) / 100 } : { t: 'suelta', v: lo.precio };
                     break; }
                   if (li < V.lotes.length) usado++; }
               });
@@ -2009,11 +2009,27 @@ module.exports = async function handler(req, res) {
       if (action === 'seg-ficha-guardar') {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
         // Pack pagado fuera del panel: «bonoPrevio» fija el nº de sesiones; «bonoSumar» le suma un pack nuevo
+        // «Tiene pack» desde una cita: pack de n sesiones y esta cita es la nº «sesion» del pack.
+        // Las sesiones del pack anteriores que el panel no cuenta (de antes de empezar a facturar aquí) se apuntan como «ya usadas».
+        if (q.bonoPack && /^rec[A-Za-z0-9]{14}$/.test(q.bonoPack.citaId || '')) {
+          const n = Math.round(Number(q.bonoPack.n)), k = Math.round(Number(q.bonoPack.sesion) || 1);
+          if (!(n > 0 && n <= 200) || !(k >= 1 && k <= n)) return res.status(400).json({ ok: false, error: 'Revisa el nº de sesiones' });
+          const cit = await at(`tblTPlcuiSjQngkaD/${q.bonoPack.citaId}`); if (cit.error) return res.status(404).json({ ok: false, error: 'Cita no encontrada' });
+          const hh2 = h => String(h || '').replace(/^(\d):/, '0$1:').slice(0, 5), clave = String(cit.fields.FECHA || '').slice(0, 10) + ' ' + hh2(cit.fields.HORA);
+          const inicio = await inicioControl().catch(() => '');
+          let m = 0;
+          if (inicio) { const cs = await todosT('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),FIND('${q.id}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${inicio}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA`);
+            m = cs.filter(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh2(c.fields.HORA) < clave).length; }
+          const usadas = Math.max(0, (k - 1) - m);
+          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'SESIONES BONO PREVIO': n, 'BONO PREVIO YA USADAS': usadas || null } }) });
+          global._sesPac = {};
+          return res.status(200).json({ ok: !d.error, bonoPrevio: n, usadas, error: d.error && (d.error.message || d.error.type) });
+        }
         if (q.bonoPrevio != null || q.bonoSumar != null) {
           let n = Number(q.bonoPrevio);
           if (q.bonoSumar != null) { const cur = await at(`${PACIENTES}/${q.id}?fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}`); n = Number((cur.fields || {})['SESIONES BONO PREVIO'] || 0) + Number(q.bonoSumar); }
           if (!Number.isFinite(n) || n < 0 || n > 500) return res.status(400).json({ ok: false, error: 'Nº de sesiones no válido' });
-          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'SESIONES BONO PREVIO': Math.round(n) || null } }) });
+          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: Object.assign({ 'SESIONES BONO PREVIO': Math.round(n) || null }, q.bonoPrevio != null ? { 'BONO PREVIO YA USADAS': null } : {}) }) });
           global._sesPac = {};
           return res.status(200).json({ ok: !d.error, bonoPrevio: Math.round(n), error: d.error && (d.error.message || d.error.type) });
         }

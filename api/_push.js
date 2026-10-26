@@ -79,7 +79,8 @@ async function saldoPaciente(pacId) {
     facturasEmitidas(pacId), citasGastadas(inicio, pacId),
     fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_T}/${pacId}`, { headers: { Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}` } }).then(r => r.json())
   ]);
-  const previo = Number((pac.fields || {})['SESIONES BONO PREVIO'] || 0);
+  // Pack pagado fuera del panel: cuenta lo que le quedaba cuando el panel empezó a contar (total − ya usadas antes)
+  const previo = Math.max(0, Number((pac.fields || {})['SESIONES BONO PREVIO'] || 0) - Number((pac.fields || {})['BONO PREVIO YA USADAS'] || 0));
   const pagadas = facs.reduce((t, r) => t + sesionesDe(r.fields), 0) + previo;
   const gastadas = citas.length;
   return { activo: true, inicio, pagadas, gastadas, saldo: pagadas - gastadas };
@@ -91,11 +92,11 @@ async function sinFacturar() {
   if (!inicio) return { activo: false, lista: [] };
   const [facs, citas, previos] = await Promise.all([
     facturasEmitidas(''), citasGastadas(inicio, ''),
-    todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('{SESIONES BONO PREVIO}>0')}&fields[]=SESIONES BONO PREVIO`)
+    todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('{SESIONES BONO PREVIO}>0')}&fields[]=SESIONES BONO PREVIO&fields[]=BONO PREVIO YA USADAS`)
   ]);
   const s = {};
   const de = id => (s[id] = s[id] || { pagadas: 0, gastadas: 0, nombre: '', fisio: '', ultima: '' });
-  previos.forEach(p => { de(p.id).pagadas += Number(p.fields['SESIONES BONO PREVIO'] || 0); });
+  previos.forEach(p => { de(p.id).pagadas += Math.max(0, Number(p.fields['SESIONES BONO PREVIO'] || 0) - Number(p.fields['BONO PREVIO YA USADAS'] || 0)); });
   facs.forEach(r => { const id = r.fields['PacienteId']; if (id) de(id).pagadas += sesionesDe(r.fields); });
   citas.forEach(c => {
     const id = (c.fields['RELACIÓN - CITA'] || [])[0]; if (!id) return;
