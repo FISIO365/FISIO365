@@ -333,6 +333,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tk-m strong.r-ok{color:#16803c}.tk-m strong.r-no{color:#b42318}.tk-m strong.r-pe{color:#7d6a60}.tk-m strong{font-weight:600;font-size:12.5px}
 .tk.hecha{cursor:pointer}.ll-r i.cero{color:#d4ccc5}
 .ll-per{display:flex;gap:8px;margin:2px 0 12px;flex-wrap:wrap}
+.ver-nueva span{white-space:nowrap}.ver-nueva{width:max-content;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:4000;display:flex;align-items:center;gap:10px;background:#1e2a38;color:#fff;border-radius:99px;padding:8px 8px 8px 18px;font-family:var(--font);font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:calc(100vw - 24px);box-sizing:border-box}.ver-nueva button{font-family:var(--font);font-size:13px;font-weight:700;border:none;border-radius:99px;padding:8px 14px;background:#c2552e;color:#fff;cursor:pointer;white-space:nowrap}.ver-nueva .vx{background:none;padding:8px;opacity:.7}
 .seg.recargando{opacity:.6;transition:opacity .2s;pointer-events:none}
 .sg-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}.sg-top .sg-seg{margin-bottom:0}.sg-top .seg-add{margin-left:auto;height:40px;padding:0 16px}
 .ll-h2 .ll-sel:last-child{grid-column:1/-1}.ll-2 .ll-dia{width:100%;min-width:0;justify-content:center}.ll-2 .ll-dia span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1504,6 +1505,8 @@ async function doLogin(silencioso){
  iniciarAutoUpdate();
  let secIni='agenda';try{const g=sessionStorage.getItem('f365_panel_sec');if(g&&TOPBAR[g]&&!['prog','anam'].includes(g))secIni=g;}catch(e){}
  showSection(secIni);
+ // Si el móvil cerró la app por detrás, al volver se deja la pantalla donde estaba (misma sección y misma altura)
+ try{const sv=JSON.parse(sessionStorage.getItem('f365_vista')||'null');if(sv&&sv.sec===secIni&&Date.now()-sv.t<3600e3&&sv.y>0){let n=0;const iv=setInterval(()=>{n++;if(document.documentElement.scrollHeight>=sv.y+innerHeight||n>30){clearInterval(iv);window.scrollTo(0,sv.y);}},150);}}catch(e){}
  try{if(avisoPendiente)abrirAvisoPanel(avisoPendiente);}catch(e){}
  setTimeout(()=>{try{mirarAvisosPanel();}catch(e){}},1200);
  } else {
@@ -6822,6 +6825,7 @@ async function listaTareas(cont,keep){
  // keep: recarga sin vaciar la pantalla ni volver arriba (se cambia la lista cuando ya están los datos nuevos)
  const box=ce('div','tar');if(!keep){box.innerHTML='<div class="fac-vacio">Cargando…</div>';cont.appendChild(box);}
  const recargar=()=>{_dtC.t=0;_dtC.d=null;_dtC.fresco=true;listaTareas(cont,{y:window.scrollY});contarTareas();};
+ box._recargar=()=>{if(box.isConnected)listaTareas(cont,{y:window.scrollY});};
  // Quitar una fila al momento (hecha, borrada o aviso quitado), sin recargar toda la lista
  const quitar=(fila,x)=>{fila.style.transition='opacity .2s,max-height .25s';fila.style.overflow='hidden';fila.style.maxHeight=fila.offsetHeight+'px';requestAnimationFrame(()=>{fila.style.opacity='0';fila.style.maxHeight='0';});
   setTimeout(()=>{const tb=fila.parentNode;fila.remove();if(tb){const h=tb.previousElementSibling;const n=tb.children.length;if(!n){tb.remove();if(h)h.remove();}else if(h){const sp=h.querySelector('span');if(sp)sp.textContent=n;}}},260);
@@ -7900,6 +7904,7 @@ async function renderSeguimiento(wrap){
     r.querySelectorAll('button').forEach(b=>b.onclick=()=>{m.remove();abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,onSave:cargar});});};
   };
  };
+ box._recargar=()=>cargar();
  const cargar=async()=>{const habia=!!datos;if(!habia)pinta();else box.classList.add('recargando');const prev=datos;try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos=prev||{pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}box.classList.remove('recargando');if(habia)mantenerVista(box,pinta);else pinta();if(segYaCargo){_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}segYaCargo=true;};
  cargar();
 }
@@ -9129,6 +9134,12 @@ document.addEventListener('keydown',e=>{
 });
 
 
+// Hay versión nueva del panel: aviso discreto con botón, sin recargar sola (no se pierde lo que estás viendo)
+function avisoVersionNueva(){
+ if(document.querySelector('.ver-nueva'))return;
+ const d=ce('div','ver-nueva');d.innerHTML='<span>Hay una versión nueva</span><button type="button">Actualizar</button><button type="button" class="vx" aria-label="Más tarde">✕</button>';
+ d.querySelector('button').onclick=()=>location.reload();d.querySelector('.vx').onclick=()=>d.remove();document.body.appendChild(d);
+}
 // ── AUTO-UPDATE ───────────────────────────────────────────────────────────────
 let lastDeployId = null;
 let lastAccesos = null;
@@ -9142,8 +9153,7 @@ async function checkDeploy(){
  if(lastDeployId === null){
  lastDeployId = d.version;
  } else if(d.version !== lastDeployId){
- console.log('Nueva versión detectada, recargando...');
- window.location.reload();
+ avisoVersionNueva();
  }
  }catch(e){}
 }
@@ -11528,19 +11538,21 @@ function cerrarLightbox(){
  async function alVolver(){
   if(!fisioActual||!apiPwd)return;
   const v=await getVer();
-  if(v&&ver&&v!==ver){if(!ocupado()){location.reload();return;}}
-  else if(v)ver=v; // si hay versión nueva pero estás escribiendo, se recarga la próxima vez
+  if(v&&ver&&v!==ver)avisoVersionNueva(); // no se recarga sola: sale un aviso y se actualiza cuando tú quieras
   try{_dtC.d=null;_dtC.t=0;_dtC.p=null;_dtC.fresco=true;}catch(e){}
   await Promise.all([loadPacientes(),loadEstados(),cargarSegPac()]).catch(()=>{});
   try{contarTareas();}catch(e){}
   const ficha=document.querySelector('.pv.fp');
   if(ficha&&ficha._refrescar){ficha._refrescar();return;}
   if(ocupado())return;
-  refrescarVista();
+  refrescarVista(true);
  }
  // Vuelve a pintar la pantalla actual (p. ej. al cerrar una ficha) sin perder la búsqueda ni la posición
- function refrescarVista(){
+ function refrescarVista(suave){
   if(document.querySelector('.pv.fp, .hz-modal'))return;
+  // Al volver a la app: se actualizan los datos de lo que estás viendo sin rehacer la pantalla (no pierdes pestaña, filtros ni posición)
+  if(suave){const hs=[...document.querySelectorAll('.main-area *')].filter(e=>typeof e._recargar==='function');hs.forEach(h=>{try{h._recargar();}catch(e){}});
+   const bs=document.getElementById('pacBuscar');if(bs&&bs.value&&bs.oninput&&document.activeElement!==bs)bs.oninput();return;}
   let sec='';try{sec=sessionStorage.getItem('f365_panel_sec')||'';}catch(e){}
   if(!sec||['anam','prog','school'].includes(sec)||!TOPBAR[sec])return;
   const ma=document.querySelector('.main-area'),bus=document.getElementById('pacBuscar'),q=bus?bus.value:'',y=window.scrollY,ym=ma?ma.scrollTop:0;
@@ -11551,7 +11563,7 @@ function cerrarLightbox(){
   window.scrollTo(0,y);if(ma)ma.scrollTop=ym;
  }
  window._refrescarVista=refrescarVista;
- document.addEventListener('visibilitychange',()=>{if(document.hidden){ocultaDesde=Date.now();return;}if(ocultaDesde&&Date.now()-ocultaDesde>3000)alVolver();ocultaDesde=0;});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){ocultaDesde=Date.now();try{sessionStorage.setItem('f365_vista',JSON.stringify({sec:sessionStorage.getItem('f365_panel_sec')||'',y:window.scrollY,t:Date.now()}));}catch(e){}return;}if(ocultaDesde&&Date.now()-ocultaDesde>3000)alVolver();ocultaDesde=0;});
  window.addEventListener('pageshow',e=>{if(e.persisted)alVolver();});
 })();
 </script>
