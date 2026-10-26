@@ -1180,7 +1180,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-m small.fp-mu{line-height:1.5}
 .ag-recb{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border:none;border-radius:99px;padding:8px 13px;cursor:pointer}.ag-recb svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .ag-pdfb{color:#c2552e;background:#fdeee4}.sev-ch.c3{grid-template-columns:repeat(3,1fr)}.hl-res{margin:14px 0 4px;font-size:13.5px}.hl-res b{color:#141414;font-size:16px}
-.rec-tabs{margin:0 0 12px}
+.rec-tabs{margin:0 0 12px}.rec-bus{margin-bottom:10px!important}.rec-lista .rec-it .rec-n{padding-left:2px}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}
 .mcal-fijo .mcal-g button{aspect-ratio:auto;height:36px}.mcal-fijo .mcal-g i{padding:2px 0}.mcal-fijo{position:static!important;width:auto!important;box-shadow:none!important;padding:4px 0 0!important;border-radius:0!important}.mcal-g button.pas{color:#c9bfb7}
@@ -5296,7 +5296,7 @@ function calFijo(box,valor,onPick){
 }
 async function agRecordatorios(onDone,modoIni){
  let fechas=recFechasDef(),datos=null;
- const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>${modoIni==='enc'?'Encuesta de primera visita':'Recordatorios por WhatsApp'}</b></div><div class="fp-body"></div>`;
+ const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>${modoIni==='enc'?'Encuestas':'Recordatorios por WhatsApp'}</b></div><div class="fp-body"></div>`;
  document.body.appendChild(m);const ov=document.body.style.overflow;document.body.style.overflow='hidden';
  const cerrar=()=>{m.remove();document.body.style.overflow=ov;onDone&&onDone();};m.querySelector('.pv-x').onclick=cerrar;
  const body=m.querySelector('.fp-body');
@@ -5304,8 +5304,32 @@ async function agRecordatorios(onDone,modoIni){
  // Dos pestañas: recordatorios de las citas y encuesta de satisfacción a los de primera visita
  let modo=modoIni==='enc'?'enc':'rec',encF=(()=>{const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return agMover(h,dw===1?-2:dw===0?-1:-1);})(),encD=null;
  // Cada cosa se abre desde su propio botón de la agenda: sin pestañas
- const tabs=()=>'',_tabsViejo=()=>`<div class="ag-vis rec-tabs"><button type="button" data-t="rec" class="${modo==='rec'?'on':''}">Recordatorios</button><button type="button" data-t="enc" class="${modo==='enc'?'on':''}">Encuesta 1ª visita</button></div>`;
- const atarTabs=()=>body.querySelectorAll('.rec-tabs button').forEach(b=>b.onclick=()=>{if(modo===b.dataset.t)return;modo=b.dataset.t;m.querySelector('.pv-bar b').textContent=modo==='rec'?'Recordatorios por WhatsApp':'Encuesta de primera visita';cargar();});
+ // En Encuestas: pestañas «1ª visita» y «Reseña Google» (Recordatorios va aparte, sin pestañas)
+ const TIT={rec:'Recordatorios por WhatsApp',enc:'Encuestas',res:'Encuestas'};
+ const tabs=()=>modo==='rec'?'':`<div class="ag-vis rec-tabs"><button type="button" data-t="enc" class="${modo==='enc'?'on':''}">1ª visita</button><button type="button" data-t="res" class="${modo==='res'?'on':''}">Reseña Google</button></div>`;
+ const atarTabs=()=>body.querySelectorAll('.rec-tabs button').forEach(b=>b.onclick=()=>{if(modo===b.dataset.t)return;modo=b.dataset.t;m.querySelector('.pv-bar b').textContent=TIT[modo];cargar();});
+ let resD=null,resExtra=[];
+ async function cargarRes(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
+  try{const r=await (await fetch(`/api/schedule?action=seg-agenda-resenas&pwd=${encodeURIComponent(apiPwd)}&ids=${resExtra.join(',')}`)).json();if(!r.ok)throw new Error(r.error||'Error');resD=r.pacientes;pintaRes();}
+  catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
+ const resTexto=c=>{const p=String(c.pila||c.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
+  return `Hola${n?' '+n:''}, ¡gracias por confiar en FISIO365!\n\nSi te está yendo bien con nosotros, nos ayudaría muchísimo una reseña tuya en Google:\n${RESENA_GOOGLE}\n\n¡Mil gracias!`;};
+ function pintaRes(){const L=resD||[],ped=L.filter(c=>c.pedida).length,fC2=f=>f?sevFC(f):'';
+  body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="ag-pf ag-busca rec-bus"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in ag-pb" placeholder="Buscar otro paciente…" autocomplete="off"><div class="ag-pr"></div></div>
+   <div class="rec-pr" style="margin-top:4px"><div><b>${ped}</b> de ${L.length} con la reseña pedida</div></div><small class="fp-mu" style="display:block;font-size:12px;margin-top:6px">Salen los que han tenido sesión los últimos 7 días.</small></div>
+   ${!L.length?'<div class="fac-vacio">Nadie ha tenido sesión estos días</div>':`<div class="fp-blk rec-lista">${L.map((c,i)=>{const tel=segTel(c.tel);
+    const sub=[c.ultima?'sesión el '+fC2(c.ultima):'',String(c.fisio||'').split(' ')[0]].filter(Boolean).join(' · ');
+    return `<div class="rec-it${c.pedida||c.dejada?' env':''}" data-i="${i}"><div class="rec-n"><b>${escH(capTit(c.nombre||'—'))}</b><small>${escH(sub)}${c.dejada?' · <em class="ok">✓ Ya dejó reseña</em>':c.pedida?' · pedida el '+escH(fC2(c.pedida)):''}</small></div>
+     ${tel.length<9?`<button type="button" class="rec-b sin" data-ficha="${c.pacienteId}" data-fn="${escH(c.nombre)}">Sin teléfono</button>`:c.pedida||c.dejada?'<button type="button" class="rec-b otra">Reenviar</button>':'<button type="button" class="rec-b env">Enviar</button>'}</div>`;}).join('')}</div>`}`;
+  atarTabs();
+  const bi=body.querySelector('.rec-bus input'),bp=body.querySelector('.rec-bus .ag-pr'),nrm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  bi.oninput=()=>{const q=nrm(bi.value).trim();if(q.length<2){bp.innerHTML='';return;}const pal=q.split(/\s+/);const fl=(pacs||[]).filter(p=>{const n=nrm(p.nombre);return pal.every(w=>n.includes(w));}).slice(0,8);
+   bp.innerHTML=`<div class="ag-pdd">${fl.map(p=>`<button type="button" data-id="${p.id}">${escH(capTit(p.nombre))}</button>`).join('')||'<small class="fp-mu">No encontrado</small>'}</div>`;
+   bp.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>{if(!resD.some(x=>x.pacienteId===b.dataset.id))resExtra.push(b.dataset.id);cargar();});};
+  body.querySelectorAll('.rec-it').forEach(it=>{const c=L[+it.dataset.i],b=it.querySelector('.rec-b.env,.rec-b.otra');if(!b)return;
+   b.onclick=async()=>{abrirWA(segTel(c.tel),resTexto(c));const ant=c.pedida;c.pedida=new Date().toISOString();pintaRes();
+    try{const r=await agPost('seg-agenda-resena',{pacienteId:c.pacienteId});if(!r.ok)throw 0;}catch(e){c.pedida=ant;pintaRes();toast('No se ha podido apuntar',false);}};});
+ }
  async function cargarEnc(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-encuestas&pwd=${encodeURIComponent(apiPwd)}&fecha=${encF}`)).json();if(!r.ok)throw new Error(r.error||'Error');encD=r.citas;pintaEnc();}
   catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
@@ -5324,7 +5348,7 @@ async function agRecordatorios(onDone,modoIni){
    b.onclick=async()=>{abrirWA(segTel(c.tel),encTexto(c));if(c.enviado)return;c.enviado=new Date().toISOString();pintaEnc();
     try{const r=await agPost('seg-agenda-encuesta',{id:c.id});if(!r.ok)throw 0;}catch(e){c.enviado='';pintaEnc();toast('No se ha podido marcar como enviada',false);}};});
  }
- async function cargar(){if(modo==='enc')return cargarEnc();body.innerHTML='<div class="fac-vacio">Cargando…</div>';
+ async function cargar(){if(modo==='enc')return cargarEnc();if(modo==='res')return cargarRes();body.innerHTML='<div class="fac-vacio">Cargando…</div>';
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-recordatorios&pwd=${encodeURIComponent(apiPwd)}&fechas=${fechas.join(',')}`)).json();if(!r.ok)throw new Error(r.error||'Error');datos=r.citas;pinta();}
   catch(e){body.innerHTML=`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;body.querySelector('.ag-reint').onclick=cargar;}}
  function pinta(){

@@ -1470,6 +1470,18 @@ module.exports = async function handler(req, res) {
             .filter(c => c.pacienteId).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
           return res.status(200).json({ ok: true, hoy: hoyF, citas });
         }
+        if (action === 'seg-agenda-resenas') {
+          // Pedir reseña en Google: pacientes con sesión realizada los últimos 7 días (o los ids pedidos), con si ya se les pidió / ya la dejaron
+          const extra = String(q.ids || '').split(',').filter(okId).slice(0, 20);
+          const cs = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_AFTER({FECHA},DATEADD(TODAY(),-8,'days')),NOT(IS_AFTER({FECHA},TODAY())))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`);
+          const ult = {}, nmR = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+          cs.forEach(c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0], f = String(c.fields['FECHA'] || '').slice(0, 10); if (pid && (!ult[pid] || f > ult[pid].fecha)) ult[pid] = { fecha: f, fisio: nmR(c.fields['PREF.']) }; });
+          const pids = [...new Set([...Object.keys(ult), ...extra])], out = [];
+          for (let i = 0; i < pids.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 40).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('RESEÑA PEDIDA')}&fields[]=${encodeURIComponent('RESEÑA POSITIVA')}`)).forEach(p => {
+            const F = p.fields; out.push({ pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', pedida: F['RESEÑA PEDIDA'] || '', dejada: !!F['RESEÑA POSITIVA'], ultima: (ult[p.id] || {}).fecha || '', fisio: (ult[p.id] || {}).fisio || '', extra: !ult[p.id] }); });
+          out.sort((a, b) => (b.ultima || '').localeCompare(a.ultima || '') || a.nombre.localeCompare(b.nombre));
+          return res.status(200).json({ ok: true, hoy: hoyF, pacientes: out });
+        }
         if (action === 'seg-agenda-encuestas') {
           // Encuesta de satisfacción: pacientes cuya PRIMERA sesión realizada fue ese día
           const fecha = okF(q.fecha) ? q.fecha : hoyF;
@@ -1517,6 +1529,11 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, hoy: hoyF, limitado, ausencias: ausDia, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'seg-agenda-resena') { // apuntar que se le ha pedido la reseña en Google
+          if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
+          const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RESEÑA PEDIDA': q.enviado === false ? null : new Date().toISOString() } }) });
+          return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+        }
         if (action === 'seg-agenda-encuesta') { // marcar que se ha enviado la encuesta de primera visita
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const d = await at(`${CIT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ENCUESTA ENVIADA': q.enviado === false ? null : new Date().toISOString() } }) });
