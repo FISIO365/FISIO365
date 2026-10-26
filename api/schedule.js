@@ -2008,6 +2008,15 @@ module.exports = async function handler(req, res) {
       }
       if (action === 'seg-ficha-guardar') {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+        // Pack pagado fuera del panel: «bonoPrevio» fija el nº de sesiones; «bonoSumar» le suma un pack nuevo
+        if (q.bonoPrevio != null || q.bonoSumar != null) {
+          let n = Number(q.bonoPrevio);
+          if (q.bonoSumar != null) { const cur = await at(`${PACIENTES}/${q.id}?fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}`); n = Number((cur.fields || {})['SESIONES BONO PREVIO'] || 0) + Number(q.bonoSumar); }
+          if (!Number.isFinite(n) || n < 0 || n > 500) return res.status(400).json({ ok: false, error: 'Nº de sesiones no válido' });
+          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'SESIONES BONO PREVIO': Math.round(n) || null } }) });
+          global._sesPac = {};
+          return res.status(200).json({ ok: !d.error, bonoPrevio: Math.round(n), error: d.error && (d.error.message || d.error.type) });
+        }
         const MAPA = { tel: 'TELF', whatsapp: 'WHATSAPP', email: 'EMAIL', dni: 'DNI', cumple: 'CUMPLE', notas: 'NOTAS', motivo: 'MOTIVO DE VISITA', historial: 'HISTORIAL CLÍNICO', nombre: 'FULL NAME', pin: 'PIN', telDescartado: 'TELF FORM DESCARTADO' };
         const f = {}; Object.entries(q.campos || {}).forEach(([k, v]) => { if (!MAPA[k]) return; v = String(v ?? '').trim(); if (k === 'cumple') f[MAPA[k]] = /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null; else if (k === 'email') f[MAPA[k]] = v ? v.toLowerCase() : null; else if (k === 'pin') { if (v && !/^\d{4,6}$/.test(v)) return; f[MAPA[k]] = v; } else if (k === 'whatsapp') f[MAPA[k]] = v || null; else f[MAPA[k]] = v; });
         if (!Object.keys(f).length) return res.status(400).json({ ok: false, error: 'Nada que guardar' });
@@ -2225,7 +2234,8 @@ module.exports = async function handler(req, res) {
       const dni = (pr.fields || {})['DNI'] || '';
       const tarjetas = await tarjetasActivas(pr.fields || {}).catch(() => []);
       const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
-      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, tarjetas, facturas: [] });
+      const bonoPrevio = Number((pr.fields || {})['SESIONES BONO PREVIO'] || 0);
+      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, bonoPrevio, tarjetas, facturas: [] });
       try {
         const ids = await contactosDelPaciente(pac); const facturas = await listarFacturas(ids, true);
         // Tickets borrados en Holded → su fila de FACTURAS pasa a «Anulada» y deja de contar en el saldo
@@ -2237,9 +2247,9 @@ module.exports = async function handler(req, res) {
           for (let i = 0; i < muertas.length; i += 10) await at(FACTURAS_TABLE, { method: 'PATCH', body: JSON.stringify({ typecast: true, records: muertas.slice(i, i + 10).map(r => ({ id: r.id, fields: { [FF.estado]: 'Anulada' } })) }) });
           if (muertas.length) saldo2 = await saldoPaciente(pac).catch(() => saldo);
         } catch (e) {}
-        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, tarjetas, enHolded: ids.length, facturas });
+        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, bonoPrevio, tarjetas, enHolded: ids.length, facturas });
       }
-      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, tarjetas, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, bonoPrevio, tarjetas, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado (falta la clave en Vercel).' });

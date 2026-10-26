@@ -1181,6 +1181,9 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-m small.fp-mu{line-height:1.5}
 .ag-recb{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border:none;border-radius:99px;padding:8px 13px;cursor:pointer}.ag-recb svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .ag-pdfb{color:#c2552e;background:#fdeee4}
+.fac-bp{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:#5c4f47;background:#fff;border:1px solid #eee5dd;border-radius:12px;padding:9px 12px;margin:-4px 0 10px}.fac-bp button{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:6px 12px;cursor:pointer}
+.ag-sinfac{display:flex;align-items:center;gap:10px;justify-content:space-between;background:#fdecea;border-radius:12px;padding:10px 12px;margin:10px 0}.ag-sinfac span:first-child{display:flex;flex-direction:column;color:#b42318;font-size:13px}.ag-sinfac small{font-size:11.5px;color:#9a3a30}
+.ag-sfb{display:flex;gap:6px;flex:none}.ag-sfb button{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;border-radius:10px;padding:8px 10px;cursor:pointer;background:#fff;color:#b42318}.ag-sfb .ag-sf-co{background:#b42318;color:#fff}
 .ag-fac{display:block;width:100%;box-sizing:border-box;margin:0 0 10px;font-family:var(--font);font-size:13px;font-weight:600;text-align:left;border:none;border-radius:12px;padding:10px 14px}.ag-fac.ok{background:#e8f6ec;color:#16803c;cursor:default}.ag-fac.mal{background:#fdecea;color:#b42318;cursor:pointer}.ag-fac u{float:right;font-weight:700}
 .ag-c .ag-pg.sin{display:inline-block;align-self:flex-start;width:auto;margin-top:3px;font-style:normal;font-size:10.5px;font-weight:700;color:#fff;background:#b42318;border-radius:6px;padding:2px 6px}.sev-ch.c3{grid-template-columns:repeat(3,1fr)}.hl-res{margin:14px 0 4px;font-size:13.5px}.hl-res b{color:#141414;font-size:16px}
 .rec-tabs{margin:0 0 12px;background:#fff!important;border-radius:16px!important;padding:4px!important;gap:4px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 6px 18px rgba(26,26,26,.06)}
@@ -5677,6 +5680,7 @@ function agAbrirCita(c,onDone){
   <div class="hz-lab">Estado</div><div class="seg-rap ag-est">${AG_EST.map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
   <label class="ag-lib" hidden><input type="checkbox" ${futuro?'checked':''}> Dejar la hora libre para otro paciente</label>
   <div class="ag-tarde" hidden></div>
+  ${(()=>{const pg=((AG.dia&&AG.dia.pago)||{})[c.id];return pg&&pg.t==='sin'&&/REALIZADA/.test(c.estado)?`<div class="ag-sinfac"><span><b>Sesión sin factura</b><small>No tiene ninguna factura ni pack que la cubra</small></span><span class="ag-sfb"><button type="button" class="ag-sf-pk">Tiene pack</button><button type="button" class="ag-sf-co">Cobrar</button></span></div>`:'';})()}
   <button type="button" class="exp-seg ag-conf"><i></i>Confirmada</button>
   <div class="hz-lab">Etiquetas</div><div class="ag-tip"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
@@ -5701,6 +5705,8 @@ function agAbrirCita(c,onDone){
   const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);
   abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
  m.querySelector('.ag-altab').onclick=()=>agAlta(c);
+ {const pk=m.querySelector('.ag-sf-pk');if(pk)pk.onclick=()=>marcarPack(c.pacienteId,c.paciente,0,true,()=>{m.remove();onDone&&onDone();});
+  const co=m.querySelector('.ag-sf-co');if(co)co.onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.paciente);setTimeout(()=>{const b=document.querySelector('.fp .fp-cobb');if(b)b.click();},900);};}
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='REPROGRAMADA'&&!/REPROGRAMADA/.test(c.estado)){m.remove();agMoverCita(c,onDone);return;}est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
@@ -8058,6 +8064,21 @@ async function renderRendimiento(wrap){
 let FAC_PRECIO={};let FAC_CONCEPTOS=['Sesión de fisioterapia','Sesión de fisioterapia avanzada','Sesión de suelo pélvico','Sesión de readaptación deportiva','Plus aplicación colágeno','Otros'];
 let FAC_PAGOS=['Tarjeta','Efectivo','Bizum','Transferencia'];
 const facEur=n=>Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+// Pack pagado fuera del panel (antes de facturar desde aquí, en efectivo sin ticket…): cuenta como sesiones pagadas
+function marcarPack(pacId,nombre,actual,sumar,onDone){
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(capTit(nombre||''))}</small><b>${sumar?'Tiene un pack pagado':'Pack pagado fuera del panel'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <p class="fp-mu" style="font-size:13.5px;margin:0 0 8px;line-height:1.5">${sumar?'¿De cuántas sesiones es el pack que pagó y no está facturado desde el panel?':'Sesiones de packs pagados que no se facturaron desde el panel. Cuentan como pagadas.'}</p>
+  <div class="sev-ch c4 pk-ch">${[5,10,20].map(n=>`<button type="button" data-n="${n}">${n} sesiones</button>`).join('')}<button type="button" data-n="">Otro</button></div>
+  <input type="number" min="0" max="500" inputmode="numeric" class="ag-in pk-n" style="margin-top:8px" placeholder="Nº de sesiones" value="${!sumar&&actual?actual:''}">
+  ${!sumar&&actual?'<small class="fp-mu" style="display:block;margin-top:6px;font-size:12px">Pon 0 para quitarlo.</small>':''}
+  <div class="sev-bts"><button type="button" class="sev-b pk-no">Cancelar</button><button type="button" class="sev-b ok pk-ok">Guardar</button></div>`);
+ const inp=m.querySelector('.pk-n');m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.pk-no').onclick=()=>m.remove();
+ m.querySelectorAll('.pk-ch button').forEach(b=>b.onclick=()=>{m.querySelectorAll('.pk-ch button').forEach(x=>x.classList.toggle('on',x===b));if(b.dataset.n)inp.value=b.dataset.n;else{inp.value='';inp.focus();}});
+ m.querySelector('.pk-ok').onclick=async e=>{const n=parseInt(inp.value,10);if(!(n>=0)||(sumar&&!n)){toast('Pon el nº de sesiones',false);inp.focus();return;}
+  const b=e.currentTarget;b.disabled=true;
+  try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd,id:pacId},sumar?{bonoSumar:n}:{bonoPrevio:n}))})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
+   toast(r.bonoPrevio?`Apuntado: ${r.bonoPrevio} sesiones de pack pagadas fuera del panel`:'Quitado',true);m.remove();onDone&&onDone(r.bonoPrevio);}catch(err){b.disabled=false;toast(err.message,false);}};
+}
 async function fpTabFacturas(pacId, body, pacNombre, tok){
  body.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Cargando...</div>';
  let d={};
@@ -8067,7 +8088,9 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
  const sd=d.saldo||{};
  if(sd.activo){const b=ce('div','fac-saldo'+(sd.saldo<0?' neg':sd.saldo>0?' pos':''));
   b.innerHTML=sd.saldo<0?`<b>⚠️ ${-sd.saldo} sesi${sd.saldo===-1?'ón':'ones'} sin facturar</b><span>Ha hecho ${sd.gastadas} y ha pagado ${sd.pagadas}</span>`:sd.saldo>0?`<b>Le quedan ${sd.saldo} sesi${sd.saldo===1?'ón':'ones'} pagada${sd.saldo===1?'':'s'}</b><span>Ha pagado ${sd.pagadas} y ha hecho ${sd.gastadas}</span>`:`<b>Todo facturado</b><span>Sin sesiones pendientes ni pagadas por adelantado</span>`;
-  body.appendChild(b);}
+  body.appendChild(b);
+  const bp=ce('div','fac-bp');bp.innerHTML=d.bonoPrevio?`<span>Pack pagado fuera del panel: <b>${d.bonoPrevio} sesiones</b></span><button type="button">Cambiar</button>`:`<span>¿Tiene un pack pagado que no se facturó desde aquí?</span><button type="button">Marcar pack</button>`;
+  bp.querySelector('button').onclick=()=>marcarPack(pacId,pacNombre,d.bonoPrevio||0,false,()=>fpTabFacturas(pacId,body,pacNombre,body.dataset.token));body.appendChild(bp);}
  else{const b=ce('div','fac-saldo');b.innerHTML='<b>Saldo de sesiones</b><span>Empezará a contar con la primera factura emitida desde el panel (cuando conectemos Holded).</span>';body.appendChild(b);}
  const nueva=ce('button','fac-nueva');nueva.type='button';nueva.textContent='+ Cobrar y facturar';
  body.appendChild(nueva);
