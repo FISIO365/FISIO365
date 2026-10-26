@@ -333,6 +333,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .tk-m strong.r-ok{color:#16803c}.tk-m strong.r-no{color:#b42318}.tk-m strong.r-pe{color:#7d6a60}.tk-m strong{font-weight:600;font-size:12.5px}
 .tk.hecha{cursor:pointer}.ll-r i.cero{color:#d4ccc5}
 .ll-per{display:flex;gap:8px;margin:2px 0 12px;flex-wrap:wrap}
+.seg.recargando{opacity:.6;transition:opacity .2s;pointer-events:none}
 .sg-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}.sg-top .sg-seg{margin-bottom:0}.sg-top .seg-add{margin-left:auto;height:40px;padding:0 16px}
 .ll-h2 .ll-sel:last-child{grid-column:1/-1}.ll-2 .ll-dia{width:100%;min-width:0;justify-content:center}.ll-2 .ll-dia span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ll-2{display:grid;grid-template-columns:1fr 1fr}.ll-2 .ll-sel{width:100%;min-width:0}.ll-2 .ll-sel select{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:16px}@media(max-width:420px){.ll-2 .ll-pre{display:none}}
@@ -7820,6 +7821,14 @@ function abrirEditarLlamada(x,onSave){
 }
 const SEG_IC_TEL='<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
 function notasExpandibles(box){box.querySelectorAll('.tk-nota').forEach(n=>{if(n.dataset.ok)return;n.dataset.ok=1;requestAnimationFrame(()=>{if(n.scrollHeight<=n.clientHeight+2)return;const b=document.createElement('button');b.type='button';b.className='tk-mas';b.textContent='Ver más';n.after(b);const t=e=>{e.stopPropagation();const ab=n.classList.toggle('abierta');b.textContent=ab?'Ver menos':'Ver más';};b.onclick=t;n.onclick=t;});});}
+// Repinta un bloque sin que la pantalla salte arriba: guarda el scroll y los desplegables abiertos y los deja igual
+function mantenerVista(el,repinta){
+ const scs=[];for(let n=el.parentElement;n;n=n.parentElement){if(n.scrollTop>0)scs.push([n,n.scrollTop]);}
+ const wy=scrollY,abiertos=[...el.querySelectorAll('details[open]>summary')].map(x=>x.textContent.replace(/\d+/g,'#'));
+ repinta();
+ el.querySelectorAll('details>summary').forEach(x=>{if(abiertos.includes(x.textContent.replace(/\d+/g,'#')))x.parentElement.open=true;});
+ scs.forEach(([n,t])=>n.scrollTop=t);window.scrollTo(0,wy);
+}
 async function renderSeguimiento(wrap){
  const box=ce('div','seg');wrap.appendChild(box);
  let tab='pend',filtroFisio='',datos=null,perH='30',diaH='',segYaCargo=false,resF='';
@@ -7891,7 +7900,7 @@ async function renderSeguimiento(wrap){
     r.querySelectorAll('button').forEach(b=>b.onclick=()=>{m.remove();abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,onSave:cargar});});};
   };
  };
- const cargar=async()=>{datos=null;pinta();try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos={pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}pinta();if(segYaCargo){_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}segYaCargo=true;};
+ const cargar=async()=>{const habia=!!datos;if(!habia)pinta();else box.classList.add('recargando');const prev=datos;try{const [dH,hH]=rangoH();const d=await (await fetch(`/api/schedule?action=seg-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${dH}&hasta=${hH}`)).json();if(!d.ok)throw new Error(d.error);datos=d;}catch(e){datos=prev||{pendientes:[],hechas:[],hoy:segIso(0)};toast('No se ha podido cargar',false);}box.classList.remove('recargando');if(habia)mantenerVista(box,pinta);else pinta();if(segYaCargo){_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}segYaCargo=true;};
  cargar();
 }
 // Vista previa del informe dentro del panel (se ve, se cierra con ✕ y desde aquí se guarda/envía el PDF)
