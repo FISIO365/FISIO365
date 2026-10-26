@@ -5244,7 +5244,7 @@ function agPasaFiltro(c,f){if(!f)return true;const e=c.estado;
  return f==='pend'?/PENDIENTE/.test(e)&&!!c.pacienteId:f==='sinconf'?/PENDIENTE/.test(e)&&!!c.pacienteId&&!c.confirmada:f==='hecha'?/REALIZADA/.test(e):f==='novino'?/NO ASIST|PERDIDA/.test(e):f==='canc'?/CANCELADA/.test(e):f==='rep'?/REPROGRAMADA/.test(e):f==='reag'?/REAGENDAR/.test(e):f==='dud'?/DUDOSA/.test(e):f==='libre'?agEsLibre(e):true;}
 // ── RECORDATORIOS POR WHATSAPP (en un toque) ──
 // Día anterior; el viernes también los del lunes. Cada mensaje lleva el enlace para que el paciente confirme.
-const ENCUESTA_1A='https://tally.so/r/aQqBzX',ENCUESTA_FELIZ='https://tally.so/r/Zj220z';
+const ENCUESTA_1A='https://tally.so/r/aQqBzX',ENCUESTA_FELIZ='https://tally.so/r/Zj220z',RESENA_GOOGLE='https://search.google.com/local/writereview?placeid=ChIJCadKnf2G6AIRcmUzdzMr4nk';
 const REC_DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 function recFechasDef(){const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return dw===5?[agMover(h,1),agMover(h,3)]:dw===6?[agMover(h,2)]:dw===0?[agMover(h,1)]:[agMover(h,1)];}
 function recTexto(g){const h=agHoyIso(),t=new Date(g.fecha+'T12:00:00'),dm=t.getDate()+'/'+(t.getMonth()+1),dn=REC_DIAS[t.getDay()];
@@ -5648,10 +5648,13 @@ function agAlta(c){
    const px=(pacs||[]).find(x=>x.id===c.pacienteId);if(px&&r.estados)px.estados=r.estados;try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}
    const tel=segTel((px&&(px.telefono||px.tel))||'');
    m.querySelector('.hz-card').innerHTML=`<div class="hz-top"><div><small>${escH(capTit(nom))}</small><b>✓ Alta apuntada</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-    <p style="font-size:14px;line-height:1.5;margin:0 0 4px">¿Le pedimos que nos valore? Le llega la encuesta <b>«Paciente feliz»</b>: si responde Excelente, le lleva a dejar reseña en Google.</p>
-    <div class="sev-bts"><button type="button" class="sev-b al-no">Ahora no</button><button type="button" class="sev-b ok al-wa" ${tel.length<9?'disabled':''}>${tel.length<9?'Sin teléfono':'Pedir reseña'}</button></div>`;
+    <p style="font-size:14px;line-height:1.5;margin:0 0 10px">¿Le pedimos que nos valore?</p>
+    ${tel.length<9?'<p class="fp-mu" style="font-size:13px">No tiene teléfono en su ficha.</p>':`<div class="ag-ops al-ops"><button type="button" data-a="g"><b>Reseña en Google directa</b><small>Le llega el enlace para dejar la reseña. Para los que sabes que están contentos.</small></button>
+     <button type="button" data-a="e"><b>Encuesta «Paciente feliz»</b><small>Si responde Excelente, le lleva a Google; si no, os lo cuenta a vosotros.</small></button></div>`}
+    <div class="sev-bts"><button type="button" class="sev-b al-no">Ahora no</button></div>`;
    m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.al-no').onclick=()=>m.remove();
-   const w=m.querySelector('.al-wa');if(w)w.onclick=()=>{abrirWA(tel,`Hola${pila?' '+pila:''},\n\n¡Nos alegra mucho haberte ayudado! Si tienes un minuto, ¿nos cuentas qué tal tu experiencia en *FISIO365*?\n${ENCUESTA_FELIZ}\n\n¡Gracias por confiar en nosotros!`);m.remove();};
+   const hola=`Hola${pila?' '+pila:''},\n\n¡Nos alegra mucho haberte ayudado!`;
+   m.querySelectorAll('.al-ops button').forEach(w=>w.onclick=()=>{abrirWA(tel,w.dataset.a==='g'?`${hola} Si tienes un minuto, nos ayudaría muchísimo una reseña tuya en Google:\n${RESENA_GOOGLE}\n\n¡Gracias por confiar en *FISIO365*!`:`${hola} Si tienes un minuto, ¿nos cuentas qué tal tu experiencia en *FISIO365*?\n${ENCUESTA_FELIZ}\n\n¡Gracias por confiar en nosotros!`);m.remove();});
   }catch(err){b.disabled=false;toast(err.message,false);}};
 }
 function agMoverCita(c,onDone){
