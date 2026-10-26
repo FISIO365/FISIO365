@@ -147,7 +147,8 @@ async function rendimiento(desde, hasta) {
   });
   // Solo cuentan los días en que el fisio tiene algo en la agenda (festivos, vacaciones o días libres no suman huecos)
   const diasCon = {};
-  citas.forEach(c => { if (/BLOQUEAD|COMIDA|REPROGRAMADA|POR REAGENDAR/i.test(est(c))) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(); (diasCon[n] = diasCon[n] || new Set()).add(String(c.fields['FECHA']).slice(0, 10)); });
+  citas.forEach(c => { if (/BLOQUEAD|COMIDA|REPROGRAMADA|POR REAGENDAR|CANCELADA/i.test(est(c))) return; // un día con solo citas canceladas no cuenta como trabajado (igual que en Estadísticas)
+    const n = nomFisio(c.fields['PREF.']).toLowerCase(); (diasCon[n] = diasCon[n] || new Set()).add(String(c.fields['FECHA']).slice(0, 10)); });
   const capacidad = n => { const v = horasDia[n]; if (!v) return 0; let t = 0; (diasCon[n] || new Set()).forEach(f => { t += v[new Date(f + 'T12:00:00Z').getUTCDay()]; }); return Math.round(t); };
   // Control de horas día a día (fisios con «CONTROL HORAS»): horas hechas (sesiones + call-in + vídeos) frente a las que le tocaban
   const control = new Set(fisiosT.filter(f => f.fields['CONTROL HORAS']).map(f => String(f.fields['Name'] || '').split(' ')[0].toLowerCase()));
