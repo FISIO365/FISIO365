@@ -1809,8 +1809,9 @@ module.exports = async function handler(req, res) {
           let cap = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
             const filas = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k);
             if (!filas.some(c => /PENDIENTE|REALIZADA|NO ASIST|PERDIDA|LIBRE|CALL-IN|VIDEOS|DUDOSA|REAGENDAR/i.test(c.e))) return;
-            const hBloq = new Set(filas.filter(c => /BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)).size;
-            const hAbiertas = new Set(filas.filter(c => !/BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)).size;
+            const bloq = new Set(filas.filter(c => /BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)), hBloq = bloq.size;
+            // Horas abiertas = horas con algo vivo (no cuentan las canceladas/reprogramadas, que dejan la hora vacía, ni las horas de comida o bloqueadas)
+            const hAbiertas = new Set(filas.filter(c => !/BLOQUEAD|COMIDA|CANCELADA|REPROGRAMADA/i.test(c.e) && !bloq.has(c.h)).map(c => c.h)).size;
             const cd = Math.max((horario[k] && horario[k][dw] || 0) - hBloq, hAbiertas, 0); cap += cd; pf[k].cap += cd; }); }
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
