@@ -451,6 +451,10 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .st-gl{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#7d6a60}.st-gl i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:6px}.st-gl i.in,.st-gp i.in{background:#4f9d69}.st-gl i.ga,.st-gp i.ga{background:#d9534f}
 .st-gb{display:flex;align-items:flex-end;gap:18px;height:190px;padding:18px 4px 0;margin:4px 0 10px;overflow-x:auto}.st-gc{flex:1 0 52px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:52px}.st-gp{flex:1;width:100%;max-width:58px;display:flex;align-items:flex-end;gap:7px}.st-gp i{flex:1;display:block;border-radius:6px 6px 2px 2px}.st-gc em{font-style:normal;font-size:9.5px;font-weight:600;color:#3a7d50;white-space:nowrap}.st-gc em.neg,.st-neg{color:#c2552e}.st-gc span{font-size:10px;color:#9a8d84;white-space:nowrap;height:14px}
 .st-ib{display:flex;align-items:flex-end;gap:4px;height:190px;padding:18px 4px 0;margin:4px 0 10px;overflow-x:auto}.st-ic{flex:1 0 32px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:32px}.st-ic i{display:block;width:100%;max-width:34px;background:#f3c9b2;border-radius:7px 7px 3px 3px}.st-ic.top i{background:#c2552e}.st-ic em{font-style:normal;font-size:9.5px;font-weight:600;color:#7d6a60;white-space:nowrap}.st-ic span{font-size:10px;color:#9a8d84;white-space:nowrap;height:14px}
+.st-gver{display:block;width:100%;margin-top:12px;font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px;border-radius:12px;border:1.5px solid #f3c9b2;background:#fff;color:#c2552e;cursor:pointer}.st-gc[data-k]{cursor:pointer}
+.gv-m .hz-card{max-width:620px}.gv-meses{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:6px;scrollbar-width:none}.gv-meses::-webkit-scrollbar{display:none}.gv-meses button{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:99px;border:1px solid #e3dbd3;background:#fff;color:#5f554e;cursor:pointer}.gv-meses button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}
+.gv-g{border-bottom:1px solid #f1ebe5}.gv-g>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:11px 2px;position:relative}.gv-g>summary::-webkit-details-marker{display:none}.gv-n b{display:block;font-size:13.5px;font-weight:600;color:#1a1a1a;word-break:break-word}.gv-n small{font-size:12px;color:#9b8b80}.gv-v{font-size:14px;font-weight:700;color:#1a1a1a;white-space:nowrap;align-self:center}.gv-bar{grid-column:1/-1;display:block;height:4px;border-radius:99px;background:#f3c9b2;margin-top:4px}
+.gv-it{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;padding:7px 4px 7px 12px;font-size:12.5px;color:#5f554e;background:#faf7f4;border-radius:10px;margin:0 0 4px}.gv-it span{white-space:nowrap;color:#9b8b80}.gv-it p{margin:0;word-break:break-word}.gv-it b{white-space:nowrap;color:#1a1a1a;font-weight:600}.gv-g[open]{padding-bottom:8px}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
 .hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
@@ -6265,8 +6269,9 @@ function renderStats(wrap){
   const eur=v=>Math.round(v).toLocaleString('es-ES')+' €',corto=v=>Math.abs(v)>=1000?(Math.round(v/100)/10).toString().replace('.',',')+'k':Math.round(v);
   const lab=k=>MS[+k.slice(5,7)-1]+(k.slice(5,7)==='01'||k===K[0]?' '+k.slice(2,4):'');
   const ti=K.reduce((t,k)=>t+gi[k],0),tg=K.reduce((t,k)=>t+gg[k],0),hoyM=new Date().toISOString().slice(0,7);
-  c.innerHTML=`<div class="st-gb">${K.map(k=>{const d=gi[k]-gg[k];return `<div class="st-gc" title="${escH(lab(k))} · Ingresos ${eur(gi[k])} · Gastos ${eur(gg[k])} · Diferencia ${eur(d)}"><em class="${d<0?'neg':''}">${d>0?'+':''}${corto(d)}</em><div class="st-gp"><i class="in" style="height:${Math.max(2,Math.round(gi[k]/mx*100))}%"></i><i class="ga" style="height:${Math.max(2,Math.round(gg[k]/mx*100))}%"></i></div><span>${escH(lab(k))}</span></div>`;}).join('')}</div>
-   <p class="st-p">Ingresos <b>${eur(ti)}</b> · Gastos <b>${eur(tg)}</b> · Diferencia <b class="${ti-tg<0?'st-neg':''}">${eur(ti-tg)}</b></p>`;
+  c.innerHTML=`<div class="st-gb">${K.map(k=>{const d=gi[k]-gg[k];return `<div class="st-gc" data-k="${k}" title=""${escH(lab(k))} · Ingresos ${eur(gi[k])} · Gastos ${eur(gg[k])} · Diferencia ${eur(d)}"><em class="${d<0?'neg':''}">${d>0?'+':''}${corto(d)}</em><div class="st-gp"><i class="in" style="height:${Math.max(2,Math.round(gi[k]/mx*100))}%"></i><i class="ga" style="height:${Math.max(2,Math.round(gg[k]/mx*100))}%"></i></div><span>${escH(lab(k))}</span></div>`;}).join('')}</div>
+   <p class="st-p">Ingresos <b>${eur(ti)}</b> · Gastos <b>${eur(tg)}</b> · Diferencia <b class="${ti-tg<0?'st-neg':''}">${eur(ti-tg)}</b></p>${G.lista?'<button type="button" class="st-gver">Ver a qué corresponden los gastos</button>':''}`;
+  if(G.lista){c.querySelectorAll('.st-gc').forEach(b=>b.onclick=()=>verGastos(G.lista,b.dataset.k));const bv=c.querySelector('.st-gver');if(bv)bv.onclick=()=>verGastos(G.lista,K[K.length-1]);}
  }
  async function pintaConocido(box,desde){if(!box)return;ST.con=ST.con||{};
   try{if(!ST.con[desde]){const r=await (await fetch(`/api/schedule?action=seg-conocido&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}`)).json();if(!r.ok)throw 0;ST.con[desde]=r;}}catch(e){box.innerHTML='<p class="st-p fp-mu">No se ha podido cargar.</p>';return;}
@@ -7941,6 +7946,30 @@ function imprimirLlamadas(fisio,L,perTxt,[d1,d2]){
 }
 // ── Control de horas: clasificar días y banco de horas ──
 const HZ_TIPOS=['Día libre','Asuntos propios','Vacaciones','Baja','Festivo','Salida anticipada','Horas extra','Otro'];
+// Gastos del banco de un mes, agrupados por concepto (lo que pone el banco en cada movimiento)
+function verGastos(lista,mes){
+ const MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+ const meses=Object.keys(lista).sort().reverse();if(!meses.includes(mes))mes=meses[0];
+ const eur=v=>v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+ const nomM=k=>MS[+k.slice(5,7)-1].replace(/^./,c=>c.toUpperCase())+' '+k.slice(0,4);
+ // Mismo proveedor aunque cambie el número de recibo, la fecha o la tarjeta
+ const clave=t=>String(t||'Sin concepto').toUpperCase().replace(/\d{2}[\/.-]\d{2}([\/.-]\d{2,4})?/g,' ').replace(/[*#]?\d{3,}/g,' ').replace(/\b(REF|NUM|N[ºO]|TARJ(ETA)?|RECIBO)\b[:.]?/g,' ').replace(/[^A-ZÁÉÍÓÚÑÜ&. ]/g,' ').replace(/\s+/g,' ').trim().slice(0,42)||'SIN CONCEPTO';
+ const m=hzModal(`<div class="hz-top"><div><small>Gastos del banco</small><b class="gv-tit"></b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="gv-meses"></div><div class="gv-body"></div>`);
+ m.classList.add('gv-m');m.querySelector('.hz-x').onclick=()=>m.remove();
+ const pinta=()=>{
+  const L=lista[mes]||[],tot=L.reduce((t,x)=>t+x.v,0),G={};
+  L.forEach(x=>{const k=clave(x.t);(G[k]=G[k]||{k,t:x.t,v:0,n:[]}).v+=x.v;G[k].n.push(x);});
+  const gs=Object.values(G).sort((a,b)=>b.v-a.v);
+  m.querySelector('.gv-tit').textContent=nomM(mes)+' · '+eur(tot);
+  m.querySelector('.gv-meses').innerHTML=meses.map(k=>`<button type="button" data-k="${k}" class="${k===mes?'on':''}">${MS[+k.slice(5,7)-1].slice(0,3)} ${k.slice(2,4)}</button>`).join('');
+  m.querySelector('.gv-body').innerHTML=gs.length?gs.map((g,i)=>{const pc=Math.round(g.v/tot*100);g.n.sort((a,b)=>a.f.localeCompare(b.f));
+   return `<details class="gv-g"><summary><span class="gv-n"><b>${escH(g.t.length>60?g.t.slice(0,60)+'…':g.t)}</b><small>${g.n.length>1?g.n.length+' movimientos · ':''}${pc}% del mes</small></span><span class="gv-v">${eur(g.v)}</span><i class="gv-bar" style="width:${Math.max(2,pc)}%"></i></summary>
+    ${g.n.map(x=>`<div class="gv-it"><span>${escH(segFecha(x.f))}</span><p>${escH(x.t||'Sin concepto')}</p><b>${eur(x.v)}</b></div>`).join('')}</details>`;}).join(''):'<div class="fac-vacio">Sin gastos este mes.</div>';
+  m.querySelectorAll('.gv-meses button').forEach(b=>b.onclick=()=>{mes=b.dataset.k;pinta();});
+  const on=m.querySelector('.gv-meses .on');if(on)on.scrollIntoView({inline:'center',block:'nearest'});
+ };
+ pinta();
+}
 function hzModal(html){const m=ce('div','hz-modal');m.innerHTML=`<div class="hz-card">${html}</div>`;m.onclick=e=>{if(e.target===m)m.remove();};document.body.appendChild(m);
  // En el móvil, al abrir el teclado: la hoja se queda pegada encima del teclado y el campo a la vista
  const vv=window.visualViewport;

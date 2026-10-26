@@ -53,23 +53,26 @@ async function ausenciasEn(desde, hasta) {
 const fechaMov = m => { for (const k of ['date', 'operation_date', 'value_date', 'booking_date', 'created_at']) { const v = m[k]; if (v == null || v === '') continue;
   if (typeof v === 'number' || /^\d{9,13}$/.test(String(v))) { const n = Number(v); return new Date(n < 1e12 ? n * 1000 : n).toISOString().slice(0, 10); }
   const t = String(v).slice(0, 10); if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t; } return ''; };
+// Concepto del movimiento del banco (Holded lo da con nombres distintos según el banco)
+const textoMov = m => { for (const k of ['description', 'desc', 'concept', 'concepto', 'notes', 'reference', 'counterpart', 'counterpart_name', 'name', 'title']) { const v = m[k]; if (typeof v === 'string' && v.trim()) return v.trim().replace(/\s+/g, ' ').slice(0, 140); if (v && typeof v === 'object' && typeof v.name === 'string') return v.name.slice(0, 140); }
+  const o = Object.entries(m).filter(([k, v]) => typeof v === 'string' && v.trim() && !/id$|^id|iban|currency|date|status|type|account/i.test(k)).map(([, v]) => v.trim()); return (o[0] || '').slice(0, 140); };
 const importeMov = m => { for (const k of ['amount', 'value', 'total', 'quantity']) { const n = aNum(m[k]); if (!isNaN(n) && n !== 0) return n; } return 0; };
 let _gasH = { t: 0, v: null };
 async function gastosBancoMeses() {
   if (_gasH.v && Date.now() - _gasH.t < 15 * 60e3) return _gasH.v;
   // Solo la cuenta de la SL (FOURTH DYNAMIC S.L., acabada en 2638)
   const cuentas = (await holdedTodos('/treasury/accounts?limit=100', 3)).filter(c => c && (/fourth\s*dynamic/i.test(c.name || c.alias || '') || /2638$/.test(String(c.iban || '').replace(/\s/g, ''))));
-  const e = {}, g = {}, nombres = [], fallos = [], det = [];
+  const e = {}, g = {}, nombres = [], fallos = [], det = [], lista = {};
   for (const c of cuentas) { const id = c && (c.id || c._id); if (!id) continue; const nom = c.name || c.alias || c.bank_name || c.iban || 'Cuenta'; nombres.push(nom);
     let mv = [];
     try { mv = await holdedTodos(`/treasury/accounts/${id}/bank-movements?limit=200`, 40); } catch (e) { fallos.push(e.message); det.push({ nombre: nom, error: e.message.slice(0, 160) }); continue; }
     const vistos = new Set(); let rep = 0, ent = 0, sal = 0, ini = '', fin = '', gm = {};
     mv.forEach(m => { const mid = m && (m.id || m._id); if (mid && vistos.has(mid)) { rep++; return; } if (mid) vistos.add(mid);
       const n = importeMov(m), f = fechaMov(m); if (!f) return; if (!ini || f < ini) ini = f; if (f > fin) fin = f;
-      if (n > 0) { ent += n; e[f.slice(0, 7)] = Math.round(((e[f.slice(0, 7)] || 0) + n) * 100) / 100; } if (!(n < 0)) return; sal -= n; gm[f.slice(0, 7)] = (gm[f.slice(0, 7)] || 0) - n; g[f.slice(0, 7)] = Math.round(((g[f.slice(0, 7)] || 0) - n) * 100) / 100; });
+      if (n > 0) { ent += n; e[f.slice(0, 7)] = Math.round(((e[f.slice(0, 7)] || 0) + n) * 100) / 100; } if (!(n < 0)) return; sal -= n; (lista[f.slice(0, 7)] = lista[f.slice(0, 7)] || []).push({ f, v: Math.round(-n * 100) / 100, t: textoMov(m) }); gm[f.slice(0, 7)] = (gm[f.slice(0, 7)] || 0) - n; g[f.slice(0, 7)] = Math.round(((g[f.slice(0, 7)] || 0) - n) * 100) / 100; });
     det.push({ nombre: nom, iban: String(c.iban || '').slice(-4), tipo: c.type || c.kind || '', saldo: aNum(c.balance ?? c.current_balance ?? c.amount), n: mv.length, repetidos: rep, entradas: Math.round(ent), salidas: Math.round(sal), desde: ini, hasta: fin,
       octubre: Math.round(gm['2026-10'] || 0) }); }
-  const v = { fuente: 'banco', meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), entradas: Object.entries(e).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), cuentas: nombres, det, error: !nombres.length ? 'No se encuentra la cuenta de FOURTH DYNAMIC S.L. en Holded' : (fallos.length === nombres.length ? fallos[0] : null) };
+  const v = { fuente: 'banco', meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), entradas: Object.entries(e).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), lista, cuentas: nombres, det, error: !nombres.length ? 'No se encuentra la cuenta de FOURTH DYNAMIC S.L. en Holded' : (fallos.length === nombres.length ? fallos[0] : null) };
   _gasH = { t: Date.now(), v }; return v;
 }
 // Si la clave no puede leer el banco: gastos = compras y gastos registrados en Holded (menos sus rectificativas)
