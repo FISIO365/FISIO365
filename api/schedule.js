@@ -809,7 +809,9 @@ module.exports = async function handler(req, res) {
   if (action === 'tarjeta-img' || action === 'tarjeta-pagina') {
     const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(404).end();
     const r = await at(`tblr27u3cvtzfyqI6/${id}`); const a = r.fields && (r.fields['TARJETA IMG'] || [])[0];
-    if (!a) return res.status(404).send('Tarjeta no encontrada');
+    // Sin la imagen guardada la página se enseña igual (con la tarjeta dibujada); solo falla si la tarjeta no existe
+    if (!r.fields || !r.fields['CÓDIGO']) return res.status(404).send('Tarjeta no encontrada');
+    if (action === 'tarjeta-img' && !a) return res.redirect(302, 'https://app.fisioterapia365.com/icons/icon-512.png');
     if (action === 'tarjeta-img') { const im = await fetch(a.url); res.setHeader('Content-Type', a.type || 'image/jpeg'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(Buffer.from(await im.arrayBuffer())); }
     const impP = Number((await conf().catch(() => CONF_DEF)).tarjeta.importe) || 10;
     const img = `https://app.fisioterapia365.com/api/schedule?action=tarjeta-img&id=${id}`, cad = String(r.fields['CADUCA'] || '').split('-').reverse().join('/');
@@ -817,8 +819,8 @@ module.exports = async function handler(req, res) {
     return res.status(200).send(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tarjeta regalo · FISIO365</title>
 <meta property="og:title" content="Tarjeta regalo de ${impP} €"><meta property="og:description" content="FISIO365 · Te lo descontamos en tu próxima sesión"><meta property="og:image" content="${img}"><meta property="og:image:width" content="1080"><meta property="og:image:height" content="1080"><meta property="og:image:type" content="image/jpeg"><meta property="og:type" content="website"><meta name="twitter:card" content="summary">
 <link rel="icon" href="/icons/favicon-cara.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
-<style>body{margin:0;background:#f5f2ee;font-family:Poppins,sans-serif;color:#1a1a1a;display:flex;justify-content:center}main{max-width:440px;width:100%;padding:28px 16px;box-sizing:border-box}img{width:100%;border-radius:20px;box-shadow:0 10px 30px rgba(194,85,46,.25);display:block}h1{font-size:20px;margin:22px 0 6px}p{font-size:15px;line-height:1.5;color:#5c4f47;margin:0 0 18px}a{display:block;text-align:center;background:#1a1a1a;color:#fff;text-decoration:none;font-weight:700;border-radius:14px;padding:14px}</style></head>
-<body><main><img src="${img}" alt="Tarjeta regalo de ${impP} €"><h1>¡Gracias por recomendarnos!</h1><p>Tienes ${impP} € de descuento en tu próxima sesión${cad ? ', válido hasta el ' + cad : ''}. No tienes que hacer nada: lo tenemos apuntado y te lo descontamos al pagar.</p><a href="https://app.fisioterapia365.com">Abrir mi app de FISIO365</a></main></body></html>`);
+<style>body{margin:0;background:#f5f2ee;font-family:Poppins,sans-serif;color:#1a1a1a;display:flex;justify-content:center}main{max-width:440px;width:100%;padding:28px 16px;box-sizing:border-box}img{width:100%;border-radius:20px;box-shadow:0 10px 30px rgba(194,85,46,.25);display:block}h1{font-size:20px;margin:22px 0 6px}p{font-size:15px;line-height:1.5;color:#5c4f47;margin:0 0 18px}a{display:block;text-align:center;background:#1a1a1a;color:#fff;text-decoration:none;font-weight:700;border-radius:14px;padding:14px}.tj{aspect-ratio:1;border-radius:20px;background:linear-gradient(135deg,#de8257,#c2552e);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 10px 30px rgba(194,85,46,.25)}.tj b{font-size:22px}.tj small{font-size:13px;letter-spacing:.2em;opacity:.9;margin-top:4px}.tj strong{font-size:84px;line-height:1.1;margin:14px 0 4px}.tj span{font-size:17px;font-weight:600}.tj em{font-style:normal;font-size:16px;margin-top:22px}.tj i{font-style:normal;font-size:13px;opacity:.85;margin-top:4px}</style></head>
+<body><main>${a ? `<img src="${img}" alt="Tarjeta regalo de ${impP} €">` : `<div class="tj"><b>FISIO365</b><small>TARJETA REGALO</small><strong>${impP} €</strong><span>de descuento en tu próxima sesión</span>${r.fields['Nombre de quien recomendó'] ? `<em>Para ${String(r.fields['Nombre de quien recomendó']).split(' ')[0].replace(/[<>&"]/g, '')}</em>` : ''}${cad ? `<i>Válida hasta el ${cad}</i>` : ''}</div>`}<h1>¡Gracias por recomendarnos!</h1><p>Tienes ${impP} € de descuento en tu próxima sesión${cad ? ', válido hasta el ' + cad : ''}. No tienes que hacer nada: lo tenemos apuntado y te lo descontamos al pagar.</p><a href="https://app.fisioterapia365.com">Abrir mi app de FISIO365</a></main></body></html>`);
   }
   if (action === 'config-pub') { // lo que la app del paciente necesita saber (sin datos privados)
     const c = await conf().catch(() => CONF_DEF); res.setHeader('Cache-Control', 'public, max-age=300');
@@ -1118,7 +1120,8 @@ module.exports = async function handler(req, res) {
           const b64 = String(q.b64 || ''); if (!b64 || b64.length > 3e6) return res.status(400).json({ ok: false });
           await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'TARJETA IMG': [] } }) });
           const up = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${q.id}/fldsXb167H8HWe37u/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'image/jpeg', file: b64, filename: 'tarjeta-regalo.jpg' }) }).then(x => x.json()).catch(() => ({ error: 1 }));
-          return res.status(200).json({ ok: !up.error, url: `https://app.fisioterapia365.com/tarjeta/${q.id}` });
+          if (!up.ok) console.log('tarjeta-img subida', up.status, (await up.text().catch(() => '')).slice(0, 300));
+          return res.status(200).json({ ok: true, img: up.ok, url: `https://app.fisioterapia365.com/tarjeta/${q.id}` });
         }
         if (action === 'seg-referido-canjear') {
           const r0 = await at(`${REF}/${q.id}`); if (r0.error) return res.status(404).json({ ok: false });
