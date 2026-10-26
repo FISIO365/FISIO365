@@ -1065,7 +1065,9 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .ag-vis{display:flex;background:#f3efea;border-radius:99px;padding:3px;margin-bottom:10px}.ag-vis button{flex:1;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;border-radius:99px;padding:8px 0;color:#7d6a60;cursor:pointer}.ag-vis button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .ag-lf{display:none;gap:8px;flex-wrap:wrap;align-items:center}.ag.es-lista .ag-lf{display:flex}.ag.es-lista .ag-bar,.ag.es-lista .ag-hoy{display:none!important}
 .ag-w{min-width:0}.ag-rg{display:flex;align-items:center;gap:6px;font-size:13px;color:#7d6a60}.ag-rg .ag-in{width:auto;padding:7px 9px;font-size:14px}
-.ag-pf{position:relative;flex:1;min-width:160px}.ag-pf .ag-in{padding:8px 12px;font-size:14px;border-radius:99px}.ag-pdd{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:6px;display:flex;flex-direction:column}.ag-pdd button{font-family:var(--font);text-align:left;font-size:13.5px;border:none;background:none;padding:8px 10px;border-radius:8px;cursor:pointer}.ag-pdd button:hover{background:#f7f3ef}
+.ag-pf{position:relative;flex:1;min-width:160px}
+.ag-busca{margin-bottom:10px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}.ag-busca>svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:17px;height:17px;fill:none;stroke:#7d6a60;stroke-width:2;stroke-linecap:round;pointer-events:none}.ag-busca .ag-pb{width:100%;box-sizing:border-box;padding-left:38px!important}.ag-busca .ag-pr{display:contents}.ag-busca .ag-tag{font-size:13.5px;padding:7px 8px 7px 38px;width:100%;box-sizing:border-box;justify-content:space-between}
+.ag-busca:has(.ag-tag)>svg{stroke:#c2552e}.ag-pf .ag-in{padding:8px 12px;font-size:14px;border-radius:99px}.ag-pdd{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:6px;display:flex;flex-direction:column}.ag-pdd button{font-family:var(--font);text-align:left;font-size:13.5px;border:none;background:none;padding:8px 10px;border-radius:8px;cursor:pointer}.ag-pdd button:hover{background:#f7f3ef}
 .ag-fil{max-width:200px}.ag-w span{white-space:nowrap}.ag-fil span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ag-lista{display:flex;flex-direction:column}.ag-ld{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5f554e;padding:14px 0 6px;border-bottom:1px solid #f0ebe6;margin-bottom:6px}
 .fp-cbts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.fp-cbts button{font-family:var(--font);font-size:13.5px;font-weight:600;border:none;border-radius:12px;padding:11px 8px;cursor:pointer;background:#f7f3ef;color:#1a1a1a}.fp-cbts button:first-child{background:#c2552e;color:#fff}
@@ -5212,12 +5214,12 @@ function renderAgenda(wrap){
  AG.per=AG.per||'prox7';AG.fil=AG.fil||'';
  const card=ce('div','ag');
  card.innerHTML=`<div class="ag-vis">${[['dia','Día'],['semana','Semana'],['lista','Lista']].map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
+  <div class="ag-pf ag-busca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in ag-pb" placeholder="Buscar paciente…" autocomplete="off"><div class="ag-pr"></div></div>
   <div class="ag-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Anterior">‹</button>
   <label class="ag-fe"><b class="ag-ft"></b><input type="date" class="ag-fi"></label>
   <button type="button" class="ag-nv" data-n="1" aria-label="Siguiente">›</button></div>
   <div class="ag-lf"><label class="ag-sel ag-w"><span class="ag-pert"></span><select class="ag-per">${AG_PER.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label>
-   <span class="ag-rg"><input type="date" class="ag-in ag-d1"><span>a</span><input type="date" class="ag-in ag-d2"></span>
-   <div class="ag-pf"><input type="text" class="ag-in ag-pb" placeholder="Paciente…" autocomplete="off"><div class="ag-pr"></div></div></div>
+   <span class="ag-rg"><input type="date" class="ag-in ag-d1"><span>a</span><input type="date" class="ag-in ag-d2"></span></div>
   <div class="ag-bar2"><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><label class="ag-sel ag-fil"><span class="ag-filt"></span><select class="ag-fis">${AG_FIL.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label><span class="ag-res"></span></div>
   <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
  wrap.appendChild(card);
@@ -5233,10 +5235,12 @@ function renderAgenda(wrap){
  $c('.ag-d1').onchange=e=>{AG.r1=e.target.value;cargar();};$c('.ag-d2').onchange=e=>{AG.r2=e.target.value;cargar();};
  // Paciente
  const pb=$c('.ag-pb'),pr=$c('.ag-pr');const norm=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
- const pintaPac=()=>{if(AG.pac){pb.style.display='none';pr.innerHTML=`<span class="ag-tag">${escH(AG.pac.nombre)}<button type="button" aria-label="Quitar">×</button></span>`;pr.querySelector('button').onclick=()=>{AG.pac=null;pb.value='';pb.style.display='';pr.innerHTML='';cargar();};}else{pb.style.display='';}};
- pb.oninput=()=>{const q=norm(pb.value).trim();if(q.length<2){pr.innerHTML='';return;}const fl=(pacs||[]).filter(p=>norm(p.nombre).includes(q)).slice(0,6);
+ const pintaPac=()=>{if(AG.pac){pb.style.display='none';pr.innerHTML=`<span class="ag-tag">${escH(AG.pac.nombre)}<button type="button" aria-label="Quitar">×</button></span>`;pr.querySelector('button').onclick=()=>{AG.pac=null;pb.value='';pb.style.display='';pr.innerHTML='';if(AG.vistaPrev){AG.vista=AG.vistaPrev;AG.vistaPrev='';}if(AG.perPrev){AG.per=AG.perPrev;AG.perPrev='';}cargar();};}else{pb.style.display='';}};
+ pb.oninput=()=>{const q=norm(pb.value).trim(),qd=q.replace(/\D/g,'');if(q.length<2){pr.innerHTML='';return;}
+  const pal=q.split(/\s+/).filter(Boolean);const fl=(pacs||[]).filter(p=>{const n=norm(p.nombre);return pal.every(w=>n.includes(w))||(qd.length>=4&&String(p.telefono||p.tel||p.whatsapp||'').replace(/\D/g,'').includes(qd));}).slice(0,8);
   pr.innerHTML=`<div class="ag-pdd">${fl.map(p=>`<button type="button" data-id="${p.id}">${escH(p.nombre)}</button>`).join('')||'<small class="fp-mu">No encontrado</small>'}</div>`;
-  pr.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>{AG.pac=(pacs||[]).find(p=>p.id===b.dataset.id);if(!/^(todo|rango|desdehoy)$/.test(AG.per))AG.per='todo';cargar();});};
+  pr.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>{AG.pac=(pacs||[]).find(p=>p.id===b.dataset.id);if(AG.vista!=='lista'){AG.vistaPrev=AG.vista;AG.vista='lista';}if(!/^(todo|rango|desdehoy)$/.test(AG.per)){AG.perPrev=AG.per;AG.per='todo';}cargar();});};
+ document.addEventListener('click',e=>{if(!card.isConnected)return;if(!e.target.closest('.ag-busca'))pr.querySelectorAll('.ag-pdd').forEach(x=>x.remove());});
  let tok=0;
  function rango(){if(AG.vista==='dia')return [AG.fecha,AG.fecha];if(AG.vista==='semana'){const l=lunes(AG.fecha);return [l,agMover(l,6)];}return AG.per==='rango'?[AG.r1||'',AG.r2||'']:agRango(AG.per);}
  async function cargar(){
