@@ -1800,19 +1800,15 @@ module.exports = async function handler(req, res) {
             if (sig.length) { reag++; fis[fz].reagendaron++; }
             fis[fz].pac.push({ id: pid, f: p0.f, rep: sig.length, prox: (sig.find(c => /PENDIENTE/.test(c.e)) || {}).f || '' }); usados.add(pid);
           });
-          const ocup = enS.filter(c => c.pid && EQUIPO.includes(String(c.fisio).toLowerCase()) && /REALIZADA|PENDIENTE/.test(c.e)).length;
-          // Capacidad de cada fisio y día = su horario − horas bloqueadas (comida, bloqueos…); si ese día no tiene nada en la agenda, no trabaja.
-          // Si ese día tiene más horas abiertas en la agenda que su horario (horas extra), cuentan las de la agenda.
-          const pf = {}; EQUIPO.forEach(k => pf[k] = { ses: real.filter(c => String(c.fisio).toLowerCase() === k).length, ocup: enS.filter(c => c.pid && String(c.fisio).toLowerCase() === k && /REALIZADA|PENDIENTE/.test(c.e)).length, cap: 0 });
-          // Horas disponibles por día trabajado = su horario de ese día − horas bloqueadas/comida (si abre más horas en la agenda, cuentan esas).
-          // Un día sin ninguna cita/hueco vivo (nada, o solo canceladas/reprogramadas: festivos, vacaciones…) no cuenta.
+          // OCUPACIÓN (regla de dirección, simple): horas posibles = su horario de cada día en que hizo al menos una sesión;
+          // horas entregadas = solo las sesiones hechas (REALIZADA, 1 sesión = 1 h). Los días sin ninguna sesión hecha no cuentan
+          // (no estaba trabajando). Pendientes, no vino, canceladas, call-in y vídeos no cuentan como entregadas.
+          const hecha = c => c.pid && /^REALIZADA$/.test(String(c.e).trim());
+          const ocup = enS.filter(c => hecha(c) && EQUIPO.includes(String(c.fisio).toLowerCase())).length;
+          const pf = {}; EQUIPO.forEach(k => pf[k] = { ses: real.filter(c => String(c.fisio).toLowerCase() === k).length, ocup: enS.filter(c => hecha(c) && String(c.fisio).toLowerCase() === k).length, cap: 0 });
           let cap = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
-            const filas = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k);
-            if (!filas.some(c => /PENDIENTE|REALIZADA|NO ASIST|PERDIDA|LIBRE|CALL-IN|VIDEOS|DUDOSA|REAGENDAR/i.test(c.e))) return;
-            const bloq = new Set(filas.filter(c => /BLOQUEAD|COMIDA/i.test(c.e)).map(c => c.h)), hBloq = bloq.size;
-            // Horas abiertas = horas con algo vivo (no cuentan las canceladas/reprogramadas, que dejan la hora vacía, ni las horas de comida o bloqueadas)
-            const hAbiertas = new Set(filas.filter(c => !/BLOQUEAD|COMIDA|CANCELADA|REPROGRAMADA/i.test(c.e) && !bloq.has(c.h)).map(c => c.h)).size;
-            const cd = Math.max((horario[k] && horario[k][dw] || 0) - hBloq, hAbiertas, 0); cap += cd; pf[k].cap += cd; }); }
+            if (!C.some(c => c.f === f && String(c.fisio).toLowerCase() === k && hecha(c))) return; // sin sesiones hechas ese día: no cuenta
+            const cd = (horario[k] && horario[k][dw]) || 0; cap += cd; pf[k].cap += cd; }); }
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
