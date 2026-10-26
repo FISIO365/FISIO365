@@ -1154,7 +1154,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-hs button.li{border-color:#6fbf8b;color:#16803c;background:#f3fbf5}.ag-hs button.oc{color:#b8aca3;background:#f5f1ed;border-color:#f5f1ed}.ag-hs button.bq{color:#b8aca3;text-decoration:line-through}.ag-hs button.on{border-color:#c2552e;background:#c2552e;color:#fff}
 .ag-res2{display:flex;flex-direction:column;gap:4px;margin-top:6px}.ag-pi{font-family:var(--font);display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:none;background:#f7f3ef;border-radius:10px;padding:8px 12px;cursor:pointer}.ag-pi b{font-size:13.5px}.ag-pi small{font-size:11.5px;color:#7d6a60}.ag-np{color:#c2552e;font-weight:600;font-size:13px}
 .ag-pkinfo{margin-top:6px;font-size:13px;border-radius:10px;padding:8px 12px;background:#f3efea;color:#7d6a60}.ag-pkinfo.ok{background:#e8eef6;color:#1e3a5f}.ag-pkinfo.ult{background:#fff4e5;color:#b45309}.ag-pkinfo.sin{background:#fdecea;color:#b42318;display:flex;align-items:center;gap:10px;justify-content:space-between}.ag-pkinfo.sin span{display:flex;flex-direction:column}.ag-pkinfo.sin small{font-size:11.5px;color:#9a3a30}
-.ag-pkq{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;border:none;border-radius:10px;padding:8px 10px;background:#fff;color:#b42318;cursor:pointer}.ag-pkq.on{background:#16803c;color:#fff}
+.ag-pkbox{margin-top:8px;background:#fff;border:1.5px solid #f3c7c2;border-radius:12px;padding:4px 12px 12px}
+.ag-pkq{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;border:none;border-radius:10px;padding:8px 10px;background:#fff;color:#b42318;cursor:pointer}.ag-pkq.on{background:#fff;color:#7d6a60}
 .ag-elegido{font-size:13.5px;font-weight:600;color:#16803c;background:#e8f6ec;border-radius:10px;padding:8px 12px}
 /* ── Protocolo de no mejora («Sin evolución») ── */
 .sev-row{display:flex;align-items:center;gap:10px}.sev-row .fp-pqchk{flex:1}.sev-row em{font-style:normal;font-weight:500;font-size:12.5px;color:#7d6a60}
@@ -5789,7 +5790,7 @@ function agTipoHueco(m,c,onDone){const box=m.querySelector('.ag-th');if(!box)ret
   try{const r=await agPost('seg-agenda-editar',{id:c.id,estado:b.dataset.v});if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Ahora es «${b.textContent}»`,true);m.remove();onDone&&onDone();}
   catch(err){box.querySelectorAll('button').forEach(x=>x.disabled=false);toast(err.message,false);}});}
 function agDarCita({fecha,hora,fisio,hueco},onDone){
- let pac=null,pacInfo='',quierePack=false;
+ let pac=null,pacInfo='',quierePack=false,packSel=null;
  setTimeout(()=>{const eb=document.querySelector('.ag-espb');if(eb)eb.onclick=()=>capOfrecerModal({fecha,hora,fisio},AG.dia.espera||[],AG.dia.hoy);},0);
  const m=hzModal(`<div class="hz-top"><div><small>Dar cita · ${escH(agCab(fecha,hora,fisio))}</small><b>${hueco?'Hora libre':'Hora vacía'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   ${hueco&&AG.dia&&AG.dia.hoy&&fecha>=AG.dia.hoy&&capPrio(AG.dia.espera||[],{fecha,hora,fisio},AG.dia.hoy).length?`<button type="button" class="ag-espb">${IC_WA} Ofrecer a la lista de espera <b>${capPrio(AG.dia.espera||[],{fecha,hora,fisio},AG.dia.hoy).length}</b></button>`:''}
@@ -5806,22 +5807,26 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
  bus.oninput=()=>{pac=null;const q=norm(bus.value).trim(),qd=q.replace(/\D/g,'');if(q.length<2){res.innerHTML='';return;}
   const fl=(pacs||[]).filter(p=>norm(p.nombre).includes(q)||norm(p.email).includes(q)||(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd))).slice(0,6);
   res.innerHTML=fl.map(p=>`<button type="button" class="ag-pi" data-id="${p.id}"><b>${escH(p.nombre)}</b><small>${escH(p.telefono||p.email||'')}</small></button>`).join('')+`<button type="button" class="ag-pi ag-np">＋ Nuevo paciente «${escH(bus.value.trim())}»</button>`;
-  res.querySelectorAll('.ag-pi[data-id]').forEach(b=>b.onclick=()=>{quierePack=false;pac=(pacs||[]).find(p=>p.id===b.dataset.id);bus.value=pac.nombre;res.innerHTML=`<div class="ag-elegido">✓ ${escH(pac.nombre)}</div><div class="ag-pkinfo">Mirando su pack…</div>`;
+  res.querySelectorAll('.ag-pi[data-id]').forEach(b=>b.onclick=()=>{quierePack=false;packSel=null;pac=(pacs||[]).find(p=>p.id===b.dataset.id);bus.value=pac.nombre;res.innerHTML=`<div class="ag-elegido">✓ ${escH(pac.nombre)}</div><div class="ag-pkinfo">Mirando su pack…</div>`;
    // Qué sesión del pack sería esta cita
    const yo=pac;pacInfo='';fetch(`/api/schedule?action=seg-agenda-pack&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${yo.id}&fecha=${fecha}&hora=${encodeURIComponent(hora)}`).then(x=>x.json()).then(r=>{if(pac!==yo)return;const el=res.querySelector('.ag-pkinfo');if(!el)return;
     if(!r||!r.ok||!r.activo){el.remove();return;}
     pacInfo=r.t==='pack'?`Pack ${r.i}/${r.n}`:r.t==='suelta'?'Sesión suelta pagada':'Sin pagar';
     el.className='ag-pkinfo '+(r.t==='sin'?'sin':r.t==='pack'&&r.i===r.n?'ult':'ok');
     el.innerHTML=r.t==='pack'?`<b>Sería la sesión ${r.i} de ${r.n} del pack</b>${r.i===r.n?' · la última: toca renovar':''}`:r.t==='suelta'?'<b>Tiene esta sesión pagada</b>':`<span><b>No consta ningún pago para esta sesión</b><small>Si viene con un pack de antes que no está apuntado, márcalo</small></span><button type="button" class="ag-pkq">Tiene pack</button>`;
-    const bq=el.querySelector('.ag-pkq');if(bq)bq.onclick=()=>{quierePack=!quierePack;bq.classList.toggle('on',quierePack);bq.textContent=quierePack?'✓ Al dar la cita':'Tiene pack';};}).catch(()=>{const el=res.querySelector('.ag-pkinfo');if(el)el.remove();});});
+    const bq=el.querySelector('.ag-pkq');if(bq)bq.onclick=()=>{quierePack=!quierePack;bq.classList.toggle('on',quierePack);bq.textContent=quierePack?'Quitar':'Tiene pack';
+     let pb=res.querySelector('.ag-pkbox');if(quierePack){if(!pb){pb=ce('div','ag-pkbox');el.after(pb);}packSel=packSelector(pb);}else{if(pb)pb.remove();packSel=null;}};}).catch(()=>{const el=res.querySelector('.ag-pkinfo');if(el)el.remove();});});
   res.querySelector('.ag-np').onclick=()=>{m.remove();abrirNuevoPaciente(bus.value.trim());toast('Crea el paciente y vuelve a la agenda para darle la cita',true);};};
  if(window.innerWidth>=700)bus.focus();
- const enviar=async(b,forzar)=>{if(!pac){toast('Elige el paciente',false);return;}b.disabled=true;b.textContent='Dando cita…';
+ const enviar=async(b,forzar)=>{if(!pac){toast('Elige el paciente',false);return;}
+  if(quierePack&&packSel&&!packSel.listo()){toast('Completa el pack: de cuántas sesiones y qué sesión es esta',false);return;}
+  b.disabled=true;b.textContent='Dando cita…';
   try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,notas:m.querySelector('.ag-not2').value.trim(),tipos:tg.get(),forzar});
    if(r.conflicto){b.disabled=false;b.textContent='Dar cita';if(confirm(r.error+'. ¿Darla igualmente?'))enviar(b,true);return;}
    if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`+(pacInfo?' · '+pacInfo:'')+(r.reprogramadas?' · su cita «Por reagendar» pasa a Reprogramada':''),true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();
    // Venía con un pack de antes sin apuntar: se marca ahora con esta cita (sesión X de N)
-   if(quierePack&&r.id)marcarPackCita(pac.id,pac.nombre,r.id,()=>{onDone&&onDone();});}
+   if(quierePack&&packSel&&r.id){const {n,ses}=packSel.get();
+    fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:pac.id,bonoPack:{n,sesion:ses,citaId:r.id}})}).then(x=>x.json()).then(k=>{if(!k.ok)throw 0;toast(`Pack apuntado: sesión ${ses} de ${n}`,true);onDone&&onDone();}).catch(()=>toast('La cita está dada, pero no se ha podido apuntar el pack. Hazlo desde la cita',false));}}
   catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
  m.querySelectorAll('.ag-otras button').forEach(b=>b.onclick=async()=>{b.disabled=true;
@@ -8084,6 +8089,19 @@ let FAC_PRECIO={};let FAC_CONCEPTOS=['Sesión de fisioterapia','Sesión de fisio
 let FAC_PAGOS=['Tarjeta','Efectivo','Bizum','Transferencia'];
 const facEur=n=>Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
 // Pack pagado fuera del panel (antes de facturar desde aquí, en efectivo sin ticket…): cuenta como sesiones pagadas
+// Selector «Pack de N · Esta cita es la X» (se usa al dar cita y desde una cita)
+function packSelector(box){let n=0,ses=0,otro=false;
+ box.innerHTML=`<div class="hz-lab">Pack de</div><div class="sev-ch c4 pk-ch">${[5,10,20].map(k=>`<button type="button" data-n="${k}">${k}</button>`).join('')}<button type="button" data-n="">Otro</button></div>
+  <input type="number" min="1" max="40" inputmode="numeric" class="ag-in pk-n" placeholder="¿Cuántas sesiones?" hidden style="margin-top:8px">
+  <div class="pk-s2" hidden><div class="hz-lab">Esta cita es la</div><div class="pk-ses"></div></div><div class="pk-res"></div>`;
+ const inp=box.querySelector('.pk-n'),s2=box.querySelector('.pk-s2'),sb=box.querySelector('.pk-ses'),res=box.querySelector('.pk-res');
+ const pinta=()=>{box.querySelectorAll('.pk-ch button').forEach(b=>b.classList.toggle('on',otro?!b.dataset.n:!!b.dataset.n&&+b.dataset.n===n));inp.hidden=!otro;if(ses>n)ses=0;s2.hidden=!(n>0);
+  sb.innerHTML=n>0?`<div class="pk-g">${Array.from({length:n},(_,i)=>`<button type="button" data-s="${i+1}" class="${ses===i+1?'on':''}">${i+1}ª</button>`).join('')}</div>`:'';
+  sb.querySelectorAll('button').forEach(b=>b.onclick=()=>{ses=+b.dataset.s;pinta();});
+  const q=n-ses;res.innerHTML=n&&ses?`<b>Sesión ${ses} de ${n}</b> · ${q?`le ${q===1?'queda 1 sesión':'quedan '+q+' sesiones'} después de esta`:'es la última del pack'}`:'';box.dispatchEvent(new Event('cambio'));};
+ box.querySelectorAll('.pk-ch button').forEach(b=>b.onclick=()=>{otro=!b.dataset.n;n=otro?(parseInt(inp.value,10)||0):+b.dataset.n;pinta();if(otro)inp.focus();});
+ inp.oninput=()=>{n=Math.min(40,parseInt(inp.value,10)||0);pinta();};pinta();
+ return {get:()=>({n,ses}),listo:()=>!!(n&&ses)};}
 // Desde una cita: «Esta cita es la sesión X de un pack de N» (lo más simple posible)
 function marcarPackCita(pacId,nombre,citaId,onDone){
  let n=0,ses=0,otro=false;
