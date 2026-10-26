@@ -580,20 +580,21 @@ function paginaConfirmar(D, C) {
   const fl = D.fecha ? (() => { const d = new Date(D.fecha + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} de ${MES[d.getUTCMonth()]}`; })() : '';
   const tel = String(C.tel || '').replace(/\s/g, '');
   const cuerpo = D.error && !D.fecha ? `<h1>Vaya…</h1><p>${e(D.error)}</p>`
-    : `<p class="hola">${D.pila ? 'Hola ' + e(D.pila) : 'Hola'}</p><div class="cita"><small>Tu cita en FISIO365</small><b>${e(fl.charAt(0).toUpperCase() + fl.slice(1))}</b><b>a las ${e(D.hora)}</b>${D.fisio ? `<span>Con ${e(D.fisio)}</span>` : ''}</div>
+    : `<p class="hola">${D.pila ? 'Hola, ' + e(D.pila) : 'Hola'} 👋</p><p class="sub">${D.inactiva ? '' : D.confirmada ? '' : '¿Nos confirmas que vienes a tu cita?'}</p><div class="cita"><small>Tu cita en FISIO365</small><b>${e(fl.charAt(0).toUpperCase() + fl.slice(1))}</b><b>a las ${e(D.hora)}</b>${D.fisio ? `<span>Con ${e(D.fisio)}</span>` : ''}</div>
       ${D.error ? `<p class="err">${e(D.error)}</p>` : ''}
       ${D.inactiva ? `<p>Esta cita ya no está activa.</p>` : D.confirmada ? `<div class="ok">✓ ${D.recien ? '¡Gracias! Tu cita está confirmada' : 'Tu cita ya está confirmada'}</div><p class="peq">Te esperamos.</p>`
         : `<form method="post"><button type="submit">Confirmo que voy</button></form>`}`;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu cita · FISIO365</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<meta property="og:title" content="Confirma tu cita en FISIO365"><meta property="og:description" content="${e(fl ? (fl.charAt(0).toUpperCase() + fl.slice(1)) + ' a las ' + (D.hora || '') : 'Tu cita en FISIO365')}"><meta property="og:image" content="https://app.fisioterapia365.com/icono.png"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .c{background:#fff;border-radius:24px;padding:28px 22px;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
-.marca{font-weight:700;letter-spacing:.08em;font-size:13px;color:#c2552e;margin-bottom:18px}.hola{font-size:17px;margin:0 0 14px}
+.logo{display:block;width:84px;height:84px;border-radius:22px;margin:0 auto 18px}.hola{font-size:22px;font-weight:700;margin:0 0 4px}.sub{font-size:15px;color:#5c4f47;margin:0 0 18px;min-height:2px}
 .cita{background:#f3efea;border-radius:18px;padding:18px 14px;display:flex;flex-direction:column;gap:2px;margin-bottom:20px}.cita small{font-size:12px;color:#7d6a60;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}.cita b{font-size:20px;line-height:1.3}.cita span{margin-top:6px;color:#5c4f47}
 button{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:16px;cursor:pointer}
 .ok{background:#e8f6ec;color:#16803c;font-weight:600;border-radius:14px;padding:16px}.err{color:#b42318}.peq{font-size:14px;color:#7d6a60;margin:12px 0 0}
 .pie{margin-top:22px;font-size:12.5px;color:#7d6a60;line-height:1.6}.pie a{color:#7d6a60}h1{font-size:20px}</style></head>
-<body><div class="c"><div class="marca">FISIO365</div>${cuerpo}<div class="pie">${e(C.direccion || '')}${tel ? `<br>¿Dudas? Llámanos al <a href="tel:+34${e(tel)}">${e(C.tel)}</a>` : ''}</div></div></body></html>`;
+<body><div class="c"><img class="logo" src="https://app.fisioterapia365.com/icono.png" alt="FISIO365">${cuerpo}<div class="pie">${e(C.direccion || '')}${tel ? `<br>¿Dudas? Llámanos al <a href="tel:+34${e(tel)}">${e(C.tel)}</a>` : ''}</div></div></body></html>`;
 }
 const CONF_DEF = {
   listas: {
@@ -833,7 +834,7 @@ module.exports = async function handler(req, res) {
     const fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5);
     const fisio = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '').trim().split(' ')[0];
     const pid = (F['RELACIÓN - CITA'] || [])[0]; let pila = '';
-    if (pid) { const p = await at(`${PACIENTES}/${pid}?fields[]=NOMBRE&fields[]=${encodeURIComponent('FULL NAME')}`).catch(() => ({})); pila = String((p.fields && (p.fields['NOMBRE'] || p.fields['FULL NAME'])) || '').trim().split(/\s+/)[0]; }
+    if (pid) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}; pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; }
     const hoyC = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     const D = { pila: pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '', fecha, hora, fisio: fisio ? fisio.charAt(0).toUpperCase() + fisio.slice(1).toLowerCase() : '' };
     if (!/PENDIENTE/.test(est) || fecha < hoyC) return res.status(200).send(paginaConfirmar({ ...D, inactiva: true }, C));
