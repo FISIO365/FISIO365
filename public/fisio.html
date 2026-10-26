@@ -1187,6 +1187,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .res-bus{margin:-2px 0 14px;background:#fdf6f1;border-radius:14px;padding:2px 10px 2px 14px}.res-bus .rec-it{border:none;gap:8px}
 .res-bx{flex:none;width:30px;height:30px;border:none;border-radius:50%;background:#fff;color:#7d6a60;font-size:12px;cursor:pointer}
 .res-prev{margin-top:10px;background:#f3efea;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#3d3530}.res-prev i{color:#7d6a60}.rec-bus{margin-bottom:10px!important}.rec-lista .rec-it .rec-n{padding-left:2px}
+.ce-hr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.ce-hr label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:#7d6a60}.ce-hr select{font-size:15px;padding:9px 10px}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}
 .mcal-fijo .mcal-g button{aspect-ratio:auto;height:36px}.mcal-fijo .mcal-g i{padding:2px 0}.mcal-fijo{position:static!important;width:auto!important;box-shadow:none!important;padding:4px 0 0!important;border-radius:0!important}.mcal-g button.pas{color:#c9bfb7}
@@ -6299,9 +6300,13 @@ function editContactoG(c,onSaved){
 // Helpers de la lista de espera (también para Tareas y Agenda)
 const capFranjaDe=h=>{const n=parseInt(String(h).slice(0,2),10);return n<13?'Mañana':n<16?'Mediodía':'Tarde';};
 const capDiaNom=f=>CAP_DIAS[new Date(f+'T12:00:00').getDay()-1]||'';
-const capEncaja=(x,h)=>(!(x.dias||[]).length||x.dias.includes(capDiaNom(h.fecha)))&&(!(x.franja||[]).length||x.franja.includes(capFranjaDe(h.hora)))&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
+// Horario «17:00-21:00» (desde-hasta; un lado vacío = sin límite). Si no tiene, se usa la franja antigua (mañana/mediodía/tarde)
+const capHor=x=>{const m=String((x&&x.horario)||'').match(/^(\d{2}:\d{2})?-(\d{2}:\d{2})?$/);return m&&(m[1]||m[2])?{d:m[1]||'',h:m[2]||''}:null;};
+const capEnHora=(x,hora)=>{const r=capHor(x),hh=String(hora||'').replace(/^(\d):/,'0$1:').slice(0,5);if(r)return (!r.d||hh>=r.d)&&(!r.h||hh<r.h);return !(x.franja||[]).length||x.franja.includes(capFranjaDe(hora));};
+const capHorTxt=x=>{const r=capHor(x);if(r)return r.d&&r.h?`De ${r.d} a ${r.h}`:r.d?`A partir de las ${r.d}`:`Hasta las ${r.h}`;return (x.franja||[]).length?x.franja.join(' · '):'Cualquier hora';};
+const capEncaja=(x,h)=>(!(x.dias||[]).length||x.dias.includes(capDiaNom(h.fecha)))&&capEnHora(x,h.hora)&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
 const capDiasEntre=(a,b)=>a?Math.round((new Date(b+'T12:00:00')-new Date(String(a).slice(0,10)+'T12:00:00'))/864e5):null;
-function capPrio(esp,h,hoy){return esp.filter(x=>x.tel&&capEncaja(x,h)).map(x=>{const av=capDiasEntre(x.aviso,hoy),es=capDiasEntre(x.fecha,hoy)||0;return {x,reciente:!!x.aviso&&av!==null&&av<2,exacto:!!((x.dias||[]).length||(x.franja||[]).length),es};}).sort((a,b)=>(a.reciente-b.reciente)||(b.es-a.es)||(b.exacto-a.exacto));}
+function capPrio(esp,h,hoy){return esp.filter(x=>x.tel&&capEncaja(x,h)).map(x=>{const av=capDiasEntre(x.aviso,hoy),es=capDiasEntre(x.fecha,hoy)||0;return {x,reciente:!!x.aviso&&av!==null&&av<2,exacto:!!((x.dias||[]).length||(x.franja||[]).length||capHor(x)),es};}).sort((a,b)=>(a.reciente-b.reciente)||(b.es-a.es)||(b.exacto-a.exacto));}
 const capDiaLargo=f=>{const t=new Date(f+'T12:00:00');return ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][t.getDay()]+' '+t.getDate();};
 async function capOfrecer(x,h,hoy){const nom=capNomF(String(capTit(x.nombre)).split(' ')[0]);
  waAbrir(x.tel,`¡Hola ${nom}! Te escribimos de FISIO365: nos ha quedado un hueco libre el ${capDiaLargo(h.fecha)} a las ${h.hora}${h.fisio?' con '+capNomF(String(h.fisio).split(' ')[0]):''}. ¿Te va bien? Si no, te avisamos del siguiente.`);
@@ -6488,7 +6493,7 @@ async function renderCaptacion(wrap){
  // ── Lista de espera ──
  const franjaDe=h=>{const n=parseInt(String(h).slice(0,2),10);return n<13?'Mañana':n<16?'Mediodía':'Tarde';};
  const diaNom=f=>CAP_DIAS[new Date(f+'T12:00:00').getDay()-1]||'';
- const encaja=(x,h)=>(!x.dias.length||x.dias.includes(diaNom(h.fecha)))&&(!x.franja.length||x.franja.includes(franjaDe(h.hora)))&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
+ const encaja=(x,h)=>(!x.dias.length||x.dias.includes(diaNom(h.fecha)))&&capEnHora(x,h.hora)&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
  const diasDesde=f=>f?Math.round((new Date(D.hoy+'T12:00:00')-new Date(String(f).slice(0,10)+'T12:00:00'))/864e5):null;
  const diaTxt=f=>{const t=new Date(f+'T12:00:00'),w=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][t.getDay()]+' '+t.getDate();return diasDesde(f)===0?'Hoy · '+w:w;};
  const diaLargo=f=>{const t=new Date(f+'T12:00:00');return ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][t.getDay()]+' '+t.getDate();};
@@ -6503,7 +6508,7 @@ async function renderCaptacion(wrap){
   const sinH=dias.filter(f=>!(D.libres||[]).some(h=>h.fecha===f));
   const sem=dias.filter(f=>!sinH.includes(f)).map(f=>{const hs=(D.libres||[]).filter(h=>h.fecha===f);
    // Para cada hueco: a quién ofrecérselo primero (quien más lleva esperando y no se le ha avisado en 2 días), y el resto por si dice que no
-   const prio=h=>esp.filter(x=>x.tel&&encaja(x,h)).map(x=>{const av=diasDesde(x.aviso),es=diasDesde(x.fecha)||0;return {x,reciente:x.aviso&&av!==null&&av<2,exacto:!!(x.dias.length||x.franja.length),es};})
+   const prio=h=>esp.filter(x=>x.tel&&encaja(x,h)).map(x=>{const av=diasDesde(x.aviso),es=diasDesde(x.fecha)||0;return {x,reciente:x.aviso&&av!==null&&av<2,exacto:!!(x.dias.length||x.franja.length||capHor(x)),es};})
      .sort((a,b)=>(a.reciente-b.reciente)||(b.es-a.es)||(b.exacto-a.exacto));
    const frs=CAP_FRANJA.map(fr=>{const hf=hs.filter(h=>franjaDe(h.hora)===fr);if(!hf.length)return '';
     return `<div class="cap-fr"><span class="cap-frn">${fr}</span><div class="cap-frc">${hf.map(h=>{const P=prio(h),p0=P[0],resto=P.slice(1);
@@ -6513,7 +6518,7 @@ async function renderCaptacion(wrap){
    <div class="cap-sem">${sem}${sinH.length?`<div class="cap-sinh">Sin huecos libres: ${sinH.map(f=>diaTxt(f).replace('Hoy · ','hoy, ')).join(', ')}</div>`:''}</div>
    <div class="seg-gt" style="margin-top:20px">${capVerTodo?'Todos':'En espera'} <span>${L.length}</span></div>
    ${L.length?`<div class="cap-list">${L.map(x=>{const d=diasDesde(x.fecha),av=diasDesde(x.aviso);return `<div class="cap-it${x.estado!=='ESPERANDO'?' off':''}" data-id="${x.id}"><span class="cap-av">${escH(capIni(x.nombre))}</span><div class="cap-m"><div class="cap-h"><b ${x.pacienteId?`class="tk-nom" data-ficha="${x.pacienteId}"`:''}>${escH(capTit(x.nombre))}</b>${x.pacienteId?'':'<em class="cap-tag">No paciente</em>'}${x.estado!=='ESPERANDO'?`<em class="cap-tag ${x.estado==='CITADO'?'ok':''}">${escH(CAP_EST[x.estado]||capNomF(x.estado))}</em>`:''}</div>
-    <div class="cap-dsem">${CAP_DIAS.map(dd=>`<i class="${!x.dias.length||x.dias.includes(dd)?'on':''}">${dd.slice(0,1)}</i>`).join('')}<em>${x.franja.length?x.franja.join(' · '):'Cualquier hora'}</em>${x.fisio?`<span class="fi">${escH(capNomF(x.fisio))}</span>`:''}</div>
+    <div class="cap-dsem">${CAP_DIAS.map(dd=>`<i class="${!x.dias.length||x.dias.includes(dd)?'on':''}">${dd.slice(0,1)}</i>`).join('')}<em>${escH(capHorTxt(x))}</em>${x.fisio?`<span class="fi">${escH(capNomF(x.fisio))}</span>`:''}</div>
     <div class="cap-ch">${x.estado==='ESPERANDO'?`<span class="${d>7?'no':''}">Espera desde hace ${d===0?'hoy':d+' día'+(d>1?'s':'')}</span><span class="${x.aviso?'ok':''}">${x.aviso?(av===0?'Avisado hoy':'Avisado hace '+av+' día'+(av>1?'s':'')):'Sin avisar'}</span>`:''}</div>${x.nota||x.disp?`<p class="cap-nota">${escH([x.disp,x.nota].filter(Boolean).join(' · '))}</p>`:''}</div>
     <div class="cap-a">${x.tel?`<button type="button" class="cap-ic wa cap-wa" title="WhatsApp">${IC_WA}</button>`:''}<button type="button" class="cap-ic cap-ed" title="Editar">${IC_ED}</button>${x.estado==='ESPERANDO'?'<button type="button" class="cap-b cap-cit">Ya tiene cita</button>':''}</div></div>`;}).join('')}</div>`:'<div class="fac-vacio">Nadie esperando hueco ahora mismo</div>'}
    <button type="button" class="tar-resl cap-todo">${capVerTodo?'Ver solo los que esperan':'Ver también los que ya tienen cita o ya no les interesa'}</button>`;
@@ -6531,7 +6536,8 @@ async function renderCaptacion(wrap){
   const m=hzModal(`<div class="hz-top"><div><small>Lista de espera</small><b>${x.id?escH(x.nombre):'Añadir a la lista'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    ${x.id?'':`<div class="seg-rap ce-tipo"></div>`}<div class="ce-quien"></div>
    <div class="hz-lab">¿Qué días le van bien?</div><div class="seg-rap ce-dias"></div>
-   <div class="hz-lab">¿A qué hora?</div><div class="seg-rap ce-fr"></div>
+   <div class="hz-lab">¿A qué hora puede?</div><div class="sev-ch c4 ce-frr"></div>
+   <div class="ce-hr"><label><span>Desde</span><select class="ag-in ce-hd"></select></label><label><span>Hasta</span><select class="ag-in ce-hh"></select></label></div>
    <div class="hz-lab">Fisio <span>(opcional)</span></div><div class="seg-rap ce-fi"></div>
    <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="seg-n ce-nota" rows="2" placeholder="Ej.: prefiere a última hora, lumbalgia…">${escH(x.nota||'')}</textarea>
    ${x.id?`<div class="hz-lab">¿Cómo está?</div><div class="seg-rap ce-est"></div>`:''}
@@ -6544,9 +6550,19 @@ async function renderCaptacion(wrap){
    else q.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${capIn('ce-nom','Nombre',x.nombre&&x.nombre!=='Sin nombre'?x.nombre:'')}${capIn('ce-tel','Teléfono',x.tel,'tel')}</div>`;};
   if(!x.id){const t=m.querySelector('.ce-tipo');const g=capChips(t,['Paciente','No paciente'],'Paciente');t.addEventListener('cambio',()=>{esPac=g()!=='No paciente';pintaQ();});}
   pintaQ();
-  const gD=capChips(m.querySelector('.ce-dias'),CAP_DIAS,x.dias,true),gF=capChips(m.querySelector('.ce-fr'),CAP_FRANJA,x.franja,true),gFi=capChips(m.querySelector('.ce-fi'),fis,fis.find(f=>f.toLowerCase()===String(x.fisio||'').toLowerCase())||'');
+  // Horario: atajos (mañana/mediodía/tarde) o desde-hasta exacto
+  const HS=[];for(let h=7;h<=22;h++){HS.push(String(h).padStart(2,'0')+':00');if(h<22)HS.push(String(h).padStart(2,'0')+':30');}
+  const hd=m.querySelector('.ce-hd'),hh=m.querySelector('.ce-hh');
+  hd.innerHTML='<option value="">Cuando sea</option>'+HS.slice(0,-1).map(h=>`<option>${h}</option>`).join('');hh.innerHTML='<option value="">Cuando sea</option>'+HS.slice(1).map(h=>`<option>${h}</option>`).join('');
+  {const r=capHor(x);if(r){hd.value=r.d;hh.value=r.h;}else if((x.franja||[]).length){const ix=x.franja.map(f=>CAP_FRANJA.indexOf(f)).filter(i=>i>=0).sort();const R=[['','13:00'],['13:00','16:00'],['16:00','']];if(ix.length&&ix.every((v,k)=>!k||v===ix[k-1]+1)){hd.value=R[ix[0]][0];hh.value=R[ix[ix.length-1]][1];}}}
+  const ATJ=[['Cualquier hora','',''],['Mañanas','','13:00'],['Mediodía','13:00','16:00'],['Tardes','16:00','']],fr=m.querySelector('.ce-frr');
+  const pAtj=()=>fr.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',ATJ[i][1]===hd.value&&ATJ[i][2]===hh.value));
+  fr.innerHTML=ATJ.map(a=>`<button type="button">${a[0]}</button>`).join('');fr.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>{hd.value=ATJ[i][1];hh.value=ATJ[i][2];pAtj();});
+  hd.onchange=hh.onchange=()=>{if(hd.value&&hh.value&&hh.value<=hd.value){hh.value='';toast('«Hasta» tiene que ser después de «Desde»',false);}pAtj();};pAtj();
+  const gF=()=>[];
+  const gD=capChips(m.querySelector('.ce-dias'),CAP_DIAS,x.dias,true),gFi=capChips(m.querySelector('.ce-fi'),fis,fis.find(f=>f.toLowerCase()===String(x.fisio||'').toLowerCase())||'');
   const gE=x.id?capChips(m.querySelector('.ce-est'),['ESPERANDO','CITADO','YA NO'],x.estado,false,CAP_EST):null;
-  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;const c={dias:gD(),franja:gF(),fisio:gFi(),nota:m.querySelector('.ce-nota').value.trim()};if(gE)c.estado=gE();else c.estado='ESPERANDO';
+  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;const c={dias:gD(),franja:gF(),horario:hd.value||hh.value?`${hd.value}-${hh.value}`:'',fisio:gFi(),nota:m.querySelector('.ce-nota').value.trim()};if(gE)c.estado=gE();else c.estado='ESPERANDO';
    let tabla=x.tabla;if(!x.id){tabla=esPac?'esperaP':'esperaN';}
    if(tabla==='esperaP'){if(!pac){toast('Elige el paciente',false);return;}c.pacienteId=pac.id;}else{c.nombre=(m.querySelector('.ce-nom')||{}).value||'';c.tel=(m.querySelector('.ce-tel')||{}).value||'';if(!c.nombre.trim()){toast('Pon el nombre',false);return;}}
    b.disabled=true;try{await capGuardar(tabla,c,x.id);toast('Guardado',true);m.remove();recargar();}catch(err){b.disabled=false;toast(err.message,false);}};
