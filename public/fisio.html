@@ -5271,6 +5271,7 @@ function agPdfHuecos(){
   <div class="hz-lab">¿Qué días?</div><div class="sev-ch c3 hl-dias">${[[3,'3 días'],[7,'7 días'],[14,'14 días']].map(([n,t])=>`<button type="button" data-n="${n}" class="${n===7?'on':''}">Próx. ${t}</button>`).join('')}</div>
   <div class="hz-lab">¿De qué fisio?</div><div class="seg-rap hl-fis"><button type="button" data-f="" class="on">Todos</button>${eq.map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
   <div class="hl-res fp-mu"></div>
+  <div class="hz-lab">Mensaje para acompañar el PDF</div><textarea class="seg-n hl-msg" rows="3">Hola 👋 Te paso los huecos libres que tenemos estos días en FISIO365. Si te va bien alguno, dímelo y te lo reservo 😊</textarea>
   <div class="sev-bts"><button type="button" class="sev-b hl-dl">Descargar</button><button type="button" class="sev-b ok hl-wa">Enviar por WhatsApp</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const res=m.querySelector('.hl-res');let huecos=null,tk=0;
@@ -5314,7 +5315,8 @@ function agPdfHuecos(){
   const nom=`Huecos libres FISIO365 ${t1.getDate()}-${t1.getMonth()+1}${fisSel.length===1?' '+fisSel[0]:''}.pdf`;
   return {blob:doc.output('blob'),nom};}
  m.querySelector('.hl-wa').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{const {blob,nom}=await hacer();const file=new File([blob],nom,{type:'application/pdf'});
-   if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:nom});}catch(er){}}else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nom;a.click();toast('PDF descargado: adjúntalo en WhatsApp',true);}}catch(er){toast(er.message,false);}b.disabled=false;};
+   const msg=m.querySelector('.hl-msg').value.trim();try{if(msg)await navigator.clipboard.writeText(msg);}catch(_){}
+   if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share(Object.assign({files:[file],title:nom},msg?{text:msg}:{}));}catch(er){}}else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nom;a.click();toast(msg?'PDF descargado y mensaje copiado: pégalo en WhatsApp':'PDF descargado: adjúntalo en WhatsApp',true);}}catch(er){toast(er.message,false);}b.disabled=false;};
  m.querySelector('.hl-dl').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{const {blob,nom}=await hacer();const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nom;a.click();}catch(er){toast(er.message,false);}b.disabled=false;};
  contar();
 }
