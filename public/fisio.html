@@ -1118,7 +1118,11 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag{background:#fff;border-radius:22px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .ag-bar{display:flex;align-items:center;gap:8px}.ag-nv{width:42px;height:42px;border-radius:50%;border:none;background:#f7f3ef;font-size:22px;color:#c2552e;cursor:pointer;flex:none;font-family:var(--font)}
 .ag-fe{flex:1;position:relative;text-align:center;cursor:pointer}.ag-ft{font-size:16px;font-weight:700}.ag-fi{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
-.ag-bar2{display:flex;align-items:center;gap:8px;margin:10px 0 8px;flex-wrap:wrap}.ag-hoy{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:#fdeee4;color:#c2552e;border-radius:99px;padding:7px 13px;cursor:pointer}
+.ag-bar2{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:8px;margin:10px 0 8px}
+@media(min-width:760px){.ag-bar2{grid-template-columns:repeat(4,1fr)}}
+.ag-bar2 .ag-recb,.ag-bar2 .ag-sel{width:100%;max-width:none;min-width:0;box-sizing:border-box;justify-content:center;padding-top:9px;padding-bottom:9px}
+.ag-bar2 .ag-sel span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ag-bar2 .ag-res{grid-column:1/-1;text-align:right;margin:0}.ag-hoy{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:#fdeee4;color:#c2552e;border-radius:99px;padding:7px 13px;cursor:pointer}
 .ag-sel{position:relative;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;background:#f7f3ef;border-radius:99px;padding:7px 28px 7px 13px}.ag-sel::after{content:'▾';position:absolute;right:11px;font-size:10px;color:#7d6a60}.ag-sel select{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:16px}
 .ag-res{margin-left:auto;font-size:12.5px;color:#7d6a60}
 .ag-grid{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px 4px}
@@ -1177,14 +1181,17 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{position:relative;font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border-radius:99px;padding:7px 12px;cursor:pointer;overflow:hidden}.rec-otro input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .rec-def{font-family:var(--font);font-size:12.5px;font-weight:600;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
-.rec-modo{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:12.5px;color:#7d6a60}.rec-modo .seg-rap{margin:0}
+.rec-modo-l{margin-top:14px;font-size:12px;font-weight:600;color:#7d6a60}.rec-modo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.rec-modo button{display:flex;flex-direction:column;gap:3px;text-align:left;font-family:var(--font);border:1.5px solid var(--border);background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;color:#3d3530}.rec-modo button b{font-size:13.5px}.rec-modo button small{font-size:11.5px;line-height:1.35;color:#7d6a60}
+.rec-modo button.on{border-color:#16803c;background:#f3fbf5}.rec-modo button.on b{color:#16803c}
 .rec-pr{display:flex;justify-content:space-between;margin-top:14px;font-size:13px;color:#7d6a60}.rec-pr b{font-size:17px;color:#141414}
 .rec-bar{height:6px;background:#f3efea;border-radius:99px;margin-top:8px;overflow:hidden}.rec-bar i{display:block;height:100%;background:#16803c;border-radius:99px;transition:width .3s}
 .rec-sub{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7d6a60;margin:16px 4px 8px}
 .rec-lista{padding:4px 16px!important}.rec-it{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f3efea}.rec-it:last-child{border-bottom:none}
 .rec-h{flex:none;width:48px;font-size:14px;font-weight:700}.rec-n{flex:1;min-width:0}.rec-n b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rec-n small{font-size:12px;color:#7d6a60}.rec-n em.ok{font-style:normal;color:#16803c;font-weight:600}
 .rec-it.env .rec-h,.rec-it.env .rec-n b{color:#9a8d84}
-.rec-b{flex:none;width:104px;font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:12px;padding:10px 0;cursor:pointer}.rec-b.env{background:#16803c;color:#fff}.rec-b.otra{background:#f3efea;color:#5f554e}.rec-b.sin{background:#fff4e5;color:#b45309}
+.rec-b{flex:none;width:104px;font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:12px;padding:10px 0;cursor:pointer}.rec-b.env{background:#16803c;color:#fff}.rec-b.otra{background:#f3efea;color:#5f554e}.rec-b.cf{background:#fff;color:#16803c;box-shadow:inset 0 0 0 1.5px #16803c}.rec-b.cf.on{background:#e8f6ec;box-shadow:none}
+.rec-re{font-family:var(--font);font-size:12px;color:#7d6a60;background:none;border:none;padding:0;text-decoration:underline;cursor:pointer}.rec-b.sin{background:#fff4e5;color:#b45309}
 .ag-otras{display:flex;gap:14px;justify-content:center;margin-top:12px}
 .ag-segb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin:12px 0 10px;font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:#3d3530;cursor:pointer}
 .ag-segb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -5258,16 +5265,20 @@ async function agRecordatorios(onDone){
   const env=gr.filter(g=>g.enviado).length,cf=gr.filter(g=>g.conf).length;
   const def=recFechasDef().join(',')===fechas.join(',');
   body.innerHTML=`<div class="fp-blk rec-top"><div class="rec-dias">${fechas.map(f=>`<span>${escH(fC(f))}</span>`).join('')}<label class="rec-otro">Otro día<input type="date" value="${fechas[fechas.length-1]}"></label>${def?'':'<button type="button" class="rec-def">Volver</button>'}</div>
-   ${esMovil()?'':`<div class="rec-modo"><span>Abrir en</span><div class="seg-rap">${[['web','WhatsApp Web'],['app','App de WhatsApp']].map(([k,t])=>`<button type="button" data-m="${k}" class="${recModoPC()===k?'on':''}">${t}</button>`).join('')}</div></div>`}
+   ${esMovil()?'':`<div class="rec-modo-l">Abrir en</div><div class="rec-modo">${[['web','WhatsApp Web','No hay que instalar nada, pero tarda unos segundos en abrir cada chat.'],['app','App de WhatsApp','Al instante. Necesita WhatsApp instalado en este ordenador.']].map(([k,t,d])=>`<button type="button" data-m="${k}" class="${recModoPC()===k?'on':''}"><b>${t}</b><small>${d}</small></button>`).join('')}</div>`}
    <div class="rec-pr"><div><b>${env}</b> de ${gr.length} enviados</div><div><b>${cf}</b> confirmados</div></div><div class="rec-bar"><i style="width:${gr.length?Math.round(env/gr.length*100):0}%"></i></div></div>
    ${!gr.length?'<div class="fac-vacio">No hay citas pendientes esos días</div>':''}
    ${fechas.map(f=>{const L=gr.filter(g=>g.fecha===f);if(!L.length)return '';return `<div class="rec-sub">${escH(fC(f))} · ${L.length}</div><div class="fp-blk rec-lista">${L.map(g=>{const i=gr.indexOf(g),tel=segTel(g.tel);
-    return `<div class="rec-it${g.enviado?' env':''}" data-i="${i}"><div class="rec-h">${escH(g.citas.map(c=>c.hora).join(' · '))}</div><div class="rec-n"><b>${escH(capTit(g.nombre||'—'))}</b><small>${escH([...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]))].join(', '))}${g.conf?' · <em class="ok">✓ Confirmada</em>':g.enviado?` · enviado${g.por?' por '+escH(String(g.por).split(' ')[0]):''}`:''}</small></div>
-     ${tel.length<9?`<button type="button" class="rec-b sin" data-ficha="${g.pacienteId}" data-fn="${escH(g.nombre)}">Sin teléfono</button>`:g.enviado?`<button type="button" class="rec-b otra">Reenviar</button>`:`<button type="button" class="rec-b env">Enviar</button>`}</div>`;}).join('')}</div>`;}).join('')}`;
+    return `<div class="rec-it${g.enviado?' env':''}" data-i="${i}"><div class="rec-h">${escH(g.citas.map(c=>c.hora).join(' · '))}</div><div class="rec-n"><b>${escH(capTit(g.nombre||'—'))}</b><small>${escH([...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]))].join(', '))}${g.enviado?` · enviado${g.por?' por '+escH(String(g.por).split(' ')[0]):''}${tel.length>=9?' · <button type="button" class="rec-re">Reenviar</button>':''}`:''}</small></div>
+     ${tel.length<9&&!g.enviado?`<button type="button" class="rec-b sin" data-ficha="${g.pacienteId}" data-fn="${escH(g.nombre)}">Sin teléfono</button>`:g.conf?`<button type="button" class="rec-b cf on">✓ Confirmada</button>`:g.enviado?`<button type="button" class="rec-b cf">Confirmar</button>`:`<button type="button" class="rec-b env">Enviar</button>`}</div>`;}).join('')}</div>`;}).join('')}`;
   body.querySelectorAll('.rec-modo button').forEach(b=>b.onclick=()=>{try{localStorage.setItem('f365_wa',b.dataset.m);}catch(e){}pinta();});
-  const oi=body.querySelector('.rec-otro input');oi.onchange=()=>{if(oi.value){fechas=[oi.value];cargar();}};
+  const oi=body.querySelector('.rec-otro input');oi.onclick=()=>{try{oi.showPicker();}catch(e){}};oi.onchange=()=>{if(oi.value){fechas=[oi.value];cargar();}};
   const bd=body.querySelector('.rec-def');if(bd)bd.onclick=()=>{fechas=recFechasDef();cargar();};
-  body.querySelectorAll('.rec-it').forEach(it=>{const g=gr[+it.dataset.i],b=it.querySelector('.rec-b.env,.rec-b.otra');if(!b)return;
+  body.querySelectorAll('.rec-it').forEach(it=>{const g=gr[+it.dataset.i];
+   // Confirmar a mano (contestó «ok», un 👍, «ahí estaré»…) o deshacerlo
+   const cf=it.querySelector('.rec-b.cf');if(cf)cf.onclick=async()=>{const v=!g.conf;cf.disabled=true;g.citas.forEach(c=>{c.confirmada=v;});pinta();
+    try{for(const c of g.citas){const r=await agPost('seg-agenda-editar',{id:c.id,confirmada:v});if(!r.ok)throw 0;}}catch(e){g.citas.forEach(c=>{c.confirmada=!v;});pinta();toast('No se ha podido guardar',false);}};
+   const b=it.querySelector('.rec-b.env,.rec-re');if(!b)return;
    b.onclick=async()=>{abrirWA(segTel(g.tel),recTexto(g));
     if(g.enviado)return;const por=String((fisioActual&&fisioActual.nombre)||'');g.citas.forEach(c=>{c.enviado=new Date().toISOString();c.por=por;});pinta();
     try{const r=await agPost('seg-agenda-recordatorio',{ids:g.citas.map(c=>c.id),por});if(!r.ok)throw 0;}catch(e){g.citas.forEach(c=>{c.enviado='';c.por='';});pinta();toast('No se ha podido marcar como enviado',false);}};});
@@ -5340,10 +5351,10 @@ function renderAgenda(wrap){
   <div class="ag-pf ag-busca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in ag-pb" placeholder="Buscar paciente…" autocomplete="off"><div class="ag-pr"></div></div>
   <div class="ag-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Anterior">‹</button>
   <label class="ag-fe"><b class="ag-ft"></b><input type="date" class="ag-fi"></label>
-  <button type="button" class="ag-nv" data-n="1" aria-label="Siguiente">›</button></div>
+  <button type="button" class="ag-hoy">Hoy</button><button type="button" class="ag-nv" data-n="1" aria-label="Siguiente">›</button></div>
   <div class="ag-lf"><label class="ag-sel ag-w"><span class="ag-pert"></span><select class="ag-per">${AG_PER.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label>
    <span class="ag-rg"><input type="date" class="ag-in ag-d1"><span>a</span><input type="date" class="ag-in ag-d2"></span></div>
-  <div class="ag-bar2"><button type="button" class="ag-recb"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Recordatorios</button><button type="button" class="ag-recb ag-pdfb"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>Huecos libres</button><button type="button" class="ag-hoy">Hoy</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><label class="ag-sel ag-fil"><span class="ag-filt"></span><select class="ag-fis">${AG_FIL.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label><span class="ag-res"></span></div>
+  <div class="ag-bar2"><button type="button" class="ag-recb"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Recordatorios</button><button type="button" class="ag-recb ag-pdfb"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>Huecos libres</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><label class="ag-sel ag-fil"><span class="ag-filt"></span><select class="ag-fis">${AG_FIL.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label><span class="ag-res"></span></div>
   <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
  wrap.appendChild(card);
  const $c=q=>card.querySelector(q),fi=$c('.ag-fi'),fs=$c('.ag-fs'),grid=$c('.ag-grid');
@@ -5353,7 +5364,7 @@ function renderAgenda(wrap){
  $c('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
  $c('.ag-recb:not(.ag-pdfb)').onclick=()=>agRecordatorios(()=>cargar());
  $c('.ag-pdfb').onclick=()=>agPdfHuecos();
- fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};
+ fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};fi.onclick=()=>{try{fi.showPicker();}catch(e){}};
  fs.onchange=()=>{AG.fisio=fs.value;try{localStorage.setItem('f365_ag_fisio',AG.fisio);}catch(e){}AG.vista==='lista'?cargar():pintar();};
  $c('.ag-fis').onchange=e=>{AG.fil=e.target.value;pintar();};
  $c('.ag-per').onchange=e=>{AG.per=e.target.value;if(AG.per==='rango'&&!AG.r1){AG.r1=agMover(agHoyIso(),-30);AG.r2=agHoyIso();}cargar();};
