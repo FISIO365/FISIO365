@@ -560,6 +560,7 @@ const REPORTE_ITEMS = [
 ];
 // Ajustes editables desde Administración (tabla AJUSTES: CLAVE + VALOR en JSON)
 const AJ_T = 'tblMxPEXHLmnaBnYb';
+const OTROS_G = 'tblvdXDRDmLrThdWZ'; // ⚙ APP · OTROS GASTOS (efectivo, otras tarjetas…)
 let _aj = { t: 0, v: null };
 async function ajustes() {
   if (_aj.v && Date.now() - _aj.t < 60e3) return _aj.v;
@@ -1679,9 +1680,27 @@ module.exports = async function handler(req, res) {
       }
       // ── ESTADÍSTICAS DEL CENTRO (semanas de lunes a domingo) ──
       // Ingresos desde el principio (tabla ESTADISTICAS SEMANA, una cifra por semana)
+      if (action === 'seg-gasto-guardar') { // gasto apuntado a mano (no pasa por el banco de la SL)
+        const v = Math.round(Number(String(q.importe || '').replace(',', '.')) * 100) / 100;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') || !(v > 0) || !String(q.concepto || '').trim()) return res.status(400).json({ ok: false, error: 'Faltan datos' });
+        const f = { CONCEPTO: String(q.concepto).trim().slice(0, 200), FECHA: q.fecha, IMPORTE: v, 'PAGADO CON': String(q.pagado || 'Otro').slice(0, 40), NOTA: String(q.nota || '').slice(0, 2000) };
+        if (!q.id) f['REGISTRADO POR'] = String(q.por || '').slice(0, 60);
+        const d = /^rec[A-Za-z0-9]{14}$/.test(q.id || '') ? await at(`${OTROS_G}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }) : await at(OTROS_G, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }], typecast: true }) });
+        return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+      }
+      if (action === 'seg-gasto-borrar') {
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+        const d = await at(`${OTROS_G}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error });
+      }
       if (action === 'seg-gastos') {
         if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Falta la clave de Holded' });
-        try { const b = await gastosBancoMeses(); if (b.error) throw new Error(b.error); return res.status(200).json(Object.assign({ ok: true }, b)); }
+        try { const b = await gastosBancoMeses(); if (b.error) throw new Error(b.error);
+          // Se suman los gastos apuntados a mano (efectivo, otras tarjetas…)
+          const g = {}, lista = {}; (b.meses || []).forEach(x => { g[x.m] = x.v; }); Object.entries(b.lista || {}).forEach(([k, L]) => { lista[k] = L.slice(); });
+          const otros = await todosT(OTROS_G, 'sort[0][field]=FECHA&sort[0][direction]=desc').catch(() => []);
+          otros.forEach(r => { const F = r.fields, f = String(F['FECHA'] || '').slice(0, 10), v = Number(F['IMPORTE'] || 0); if (!f || !v) return; const k = f.slice(0, 7);
+            g[k] = Math.round(((g[k] || 0) + v) * 100) / 100; (lista[k] = lista[k] || []).push({ id: r.id, f, v, t: F['CONCEPTO'] || '', man: (F['PAGADO CON'] && F['PAGADO CON'].name) || F['PAGADO CON'] || 'Otro', nota: F['NOTA'] || '', por: F['REGISTRADO POR'] || '' }); });
+          return res.status(200).json(Object.assign({ ok: true }, b, { meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, c) => a.m.localeCompare(c.m)), lista })); }
         catch (e) { _gasH = { t: 0, v: null }; return res.status(200).json({ ok: false, error: /40[13]/.test(e.message) ? 'la clave de Holded todavía no tiene permiso para leer las cuentas bancarias' : e.message }); }
       }
       if (action === 'seg-ingresos-todo') {

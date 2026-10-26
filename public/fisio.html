@@ -452,6 +452,10 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .st-gb{display:flex;align-items:flex-end;gap:18px;height:190px;padding:18px 4px 0;margin:4px 0 10px;overflow-x:auto}.st-gc{flex:1 0 52px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:52px}.st-gp{flex:1;width:100%;max-width:58px;display:flex;align-items:flex-end;gap:7px}.st-gp i{flex:1;display:block;border-radius:6px 6px 2px 2px}.st-gc em{font-style:normal;font-size:9.5px;font-weight:600;color:#3a7d50;white-space:nowrap}.st-gc em.neg,.st-neg{color:#c2552e}.st-gc span{font-size:10px;color:#9a8d84;white-space:nowrap;height:14px}
 .st-ib{display:flex;align-items:flex-end;gap:4px;height:190px;padding:18px 4px 0;margin:4px 0 10px;overflow-x:auto}.st-ic{flex:1 0 32px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:32px}.st-ic i{display:block;width:100%;max-width:34px;background:#f3c9b2;border-radius:7px 7px 3px 3px}.st-ic.top i{background:#c2552e}.st-ic em{font-style:normal;font-size:9.5px;font-weight:600;color:#7d6a60;white-space:nowrap}.st-ic span{font-size:10px;color:#9a8d84;white-space:nowrap;height:14px}
 .st-gver{display:block;width:100%;margin-top:12px;font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px;border-radius:12px;border:1.5px solid #f3c9b2;background:#fff;color:#c2552e;cursor:pointer}.st-gc[data-k]{cursor:pointer}
+.gv-add{display:block;width:100%;font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px;border-radius:12px;border:1.5px dashed #e8b597;background:#fffaf6;color:#c2552e;cursor:pointer;margin:0 0 6px}.gv-man{font-style:normal;font-size:11px;font-weight:700;background:#eef2f7;color:#1e2a38;border-radius:99px;padding:1px 8px;margin-right:2px}.gv-it p small{display:block;font-size:11.5px;color:#9b8b80;margin-top:2px}.gv-acc{display:flex;gap:14px;justify-content:flex-end;padding:0 6px 6px}.gv-acc button{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:none;color:#c2552e;cursor:pointer;padding:2px}.gv-acc .gv-del{color:#b42318}
+.gf-l{display:block;font-size:12.5px;font-weight:600;color:#7d6a60;margin:12px 0 5px}.gf-l small{font-weight:400}.gf-i{width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 12px;border:1.5px solid var(--border);border-radius:12px;background:#fff;color:#1a1a1a;text-align:left;outline:none}.gf-i:focus{border-color:#c2552e}textarea.gf-i{resize:vertical}button.gf-i{cursor:pointer;font-weight:500}
+.gf-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.gf-eu{position:relative}.gf-eu span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#9b8b80;font-weight:600}.gf-eu input{padding-right:30px}
+.gf-p{display:flex;flex-wrap:wrap;gap:6px}.gf-p button{font-family:var(--font);font-size:13px;font-weight:600;padding:8px 12px;border-radius:99px;border:1.5px solid #e3dbd3;background:#fff;color:#5f554e;cursor:pointer}.gf-p button.on{background:#c2552e;border-color:#c2552e;color:#fff}.gf-ok{margin-top:16px;width:100%;font-family:var(--font);font-size:15px;font-weight:700;padding:13px;border:none;border-radius:14px;background:#c2552e;color:#fff;cursor:pointer}.gf-ok:disabled{opacity:.6}
 .gv-m .hz-card{max-width:620px}.gv-meses{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:6px;scrollbar-width:none}.gv-meses::-webkit-scrollbar{display:none}.gv-meses button{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:99px;border:1px solid #e3dbd3;background:#fff;color:#5f554e;cursor:pointer}.gv-meses button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}
 .gv-g{border-bottom:1px solid #f1ebe5}.gv-g>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:11px 2px;position:relative}.gv-g>summary::-webkit-details-marker{display:none}.gv-n b{display:block;font-size:13.5px;font-weight:600;color:#1a1a1a;word-break:break-word}.gv-n small{font-size:12px;color:#9b8b80}.gv-v{font-size:14px;font-weight:700;color:#1a1a1a;white-space:nowrap;align-self:center}.gv-bar{grid-column:1/-1;display:block;height:4px;border-radius:99px;background:#f3c9b2;margin-top:4px}
 .gv-it{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;padding:7px 4px 7px 12px;font-size:12.5px;color:#5f554e;background:#faf7f4;border-radius:10px;margin:0 0 4px}.gv-it span{white-space:nowrap;color:#9b8b80}.gv-it p{margin:0;word-break:break-word}.gv-it b{white-space:nowrap;color:#1a1a1a;font-weight:600}.gv-g[open]{padding-bottom:8px}
@@ -6271,7 +6275,8 @@ function renderStats(wrap){
   const ti=K.reduce((t,k)=>t+gi[k],0),tg=K.reduce((t,k)=>t+gg[k],0),hoyM=new Date().toISOString().slice(0,7);
   c.innerHTML=`<div class="st-gb">${K.map(k=>{const d=gi[k]-gg[k];return `<div class="st-gc" data-k="${k}" title=""${escH(lab(k))} · Ingresos ${eur(gi[k])} · Gastos ${eur(gg[k])} · Diferencia ${eur(d)}"><em class="${d<0?'neg':''}">${d>0?'+':''}${corto(d)}</em><div class="st-gp"><i class="in" style="height:${Math.max(2,Math.round(gi[k]/mx*100))}%"></i><i class="ga" style="height:${Math.max(2,Math.round(gg[k]/mx*100))}%"></i></div><span>${escH(lab(k))}</span></div>`;}).join('')}</div>
    <p class="st-p">Ingresos <b>${eur(ti)}</b> · Gastos <b>${eur(tg)}</b> · Diferencia <b class="${ti-tg<0?'st-neg':''}">${eur(ti-tg)}</b></p>${G.lista?'<button type="button" class="st-gver">Ver a qué corresponden los gastos</button>':''}`;
-  if(G.lista){c.querySelectorAll('.st-gc').forEach(b=>b.onclick=()=>verGastos(G.lista,b.dataset.k));const bv=c.querySelector('.st-gver');if(bv)bv.onclick=()=>verGastos(G.lista,K[K.length-1]);}
+  const recarga=async()=>{ST.gas=null;await pintaGastos(box);return (ST.gas&&ST.gas.lista)||{};};
+  if(G.lista){c.querySelectorAll('.st-gc').forEach(b=>b.onclick=()=>verGastos(G.lista,b.dataset.k,recarga));const bv=c.querySelector('.st-gver');if(bv)bv.onclick=()=>verGastos(G.lista,K[K.length-1],recarga);}
  }
  async function pintaConocido(box,desde){if(!box)return;ST.con=ST.con||{};
   try{if(!ST.con[desde]){const r=await (await fetch(`/api/schedule?action=seg-conocido&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}`)).json();if(!r.ok)throw 0;ST.con[desde]=r;}}catch(e){box.innerHTML='<p class="st-p fp-mu">No se ha podido cargar.</p>';return;}
@@ -7947,27 +7952,54 @@ function imprimirLlamadas(fisio,L,perTxt,[d1,d2]){
 // ── Control de horas: clasificar días y banco de horas ──
 const HZ_TIPOS=['Día libre','Asuntos propios','Vacaciones','Baja','Festivo','Salida anticipada','Horas extra','Otro'];
 // Gastos del banco de un mes, agrupados por concepto (lo que pone el banco en cada movimiento)
-function verGastos(lista,mes){
+function verGastos(lista,mes,recarga){
  const MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
- const meses=Object.keys(lista).sort().reverse();if(!meses.includes(mes))mes=meses[0];
+ let meses=Object.keys(lista).sort().reverse();if(!meses.includes(mes))mes=meses[0];
  const eur=v=>v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
  const nomM=k=>MS[+k.slice(5,7)-1].replace(/^./,c=>c.toUpperCase())+' '+k.slice(0,4);
  // Mismo proveedor aunque cambie el número de recibo, la fecha o la tarjeta
  const clave=t=>String(t||'Sin concepto').toUpperCase().replace(/\d{2}[\/.-]\d{2}([\/.-]\d{2,4})?/g,' ').replace(/[*#]?\d{3,}/g,' ').replace(/\b(REF|NUM|N[ºO]|TARJ(ETA)?|RECIBO)\b[:.]?/g,' ').replace(/[^A-ZÁÉÍÓÚÑÜ&. ]/g,' ').replace(/\s+/g,' ').trim().slice(0,42)||'SIN CONCEPTO';
- const m=hzModal(`<div class="hz-top"><div><small>Gastos del banco</small><b class="gv-tit"></b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="gv-meses"></div><div class="gv-body"></div>`);
+ const m=hzModal(`<div class="hz-top"><div><small>Gastos</small><b class="gv-tit"></b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="gv-meses"></div><button type="button" class="gv-add">+ Añadir un gasto (efectivo, otra tarjeta…)</button><div class="gv-body"></div>`);
  m.classList.add('gv-m');m.querySelector('.hz-x').onclick=()=>m.remove();
  const pinta=()=>{
   const L=lista[mes]||[],tot=L.reduce((t,x)=>t+x.v,0),G={};
-  L.forEach(x=>{const k=clave(x.t);(G[k]=G[k]||{k,t:x.t,v:0,n:[]}).v+=x.v;G[k].n.push(x);});
+  L.forEach(x=>{const k=x.man?'§'+x.id:clave(x.t);(G[k]=G[k]||{k,t:x.t,v:0,n:[]}).v+=x.v;G[k].n.push(x);});
   const gs=Object.values(G).sort((a,b)=>b.v-a.v);
   m.querySelector('.gv-tit').textContent=nomM(mes)+' · '+eur(tot);
   m.querySelector('.gv-meses').innerHTML=meses.map(k=>`<button type="button" data-k="${k}" class="${k===mes?'on':''}">${MS[+k.slice(5,7)-1].slice(0,3)} ${k.slice(2,4)}</button>`).join('');
   m.querySelector('.gv-body').innerHTML=gs.length?gs.map((g,i)=>{const pc=Math.round(g.v/tot*100);g.n.sort((a,b)=>a.f.localeCompare(b.f));
-   return `<details class="gv-g"><summary><span class="gv-n"><b>${escH(g.t.length>60?g.t.slice(0,60)+'…':g.t)}</b><small>${g.n.length>1?g.n.length+' movimientos · ':''}${pc}% del mes</small></span><span class="gv-v">${eur(g.v)}</span><i class="gv-bar" style="width:${Math.max(2,pc)}%"></i></summary>
-    ${g.n.map(x=>`<div class="gv-it"><span>${escH(segFecha(x.f))}</span><p>${escH(x.t||'Sin concepto')}</p><b>${eur(x.v)}</b></div>`).join('')}</details>`;}).join(''):'<div class="fac-vacio">Sin gastos este mes.</div>';
+   return `<details class="gv-g"><summary><span class="gv-n"><b>${escH(g.t.length>60?g.t.slice(0,60)+'…':g.t)}</b><small>${g.n[0].man?`<em class="gv-man">${escH(g.n[0].man)}</em> `:''}${g.n.length>1?g.n.length+' movimientos · ':''}${pc}% del mes</small></span><span class="gv-v">${eur(g.v)}</span><i class="gv-bar" style="width:${Math.max(2,pc)}%"></i></summary>
+    ${g.n.map(x=>`<div class="gv-it"><span>${escH(segFecha(x.f))}</span><p>${escH(x.t||'Sin concepto')}${x.man?`<small>Pagado con ${escH(x.man.toLowerCase())}${x.por?' · apuntado por '+escH(x.por):''}${x.nota?' · '+escH(x.nota):''}</small>`:''}</p><b>${eur(x.v)}</b></div>${x.man?`<div class="gv-acc"><button type="button" class="gv-ed" data-id="${x.id}">Editar</button><button type="button" class="gv-del" data-id="${x.id}">Borrar</button></div>`:''}`).join('')}</details>`;}).join(''):'<div class="fac-vacio">Sin gastos este mes.</div>';
   m.querySelectorAll('.gv-meses button').forEach(b=>b.onclick=()=>{mes=b.dataset.k;pinta();});
+  const todos=()=>Object.values(lista).flat();
+  m.querySelectorAll('.gv-ed').forEach(b=>b.onclick=()=>form(todos().find(x=>x.id===b.dataset.id)));
+  m.querySelectorAll('.gv-del').forEach(b=>b.onclick=async()=>{const x=todos().find(y=>y.id===b.dataset.id);if(!x)return;if(!b.dataset.ok){b.dataset.ok=1;b.textContent='¿Seguro? Toca otra vez';setTimeout(()=>{if(b.isConnected){delete b.dataset.ok;b.textContent='Borrar';}},3500);return;}b.disabled=true;
+   try{const r=await agPost('seg-gasto-borrar',{id:x.id});if(!r.ok)throw 0;toast('Gasto borrado',true);await actualiza();}catch(e){b.disabled=false;toast('No se ha podido borrar',false);}});
   const on=m.querySelector('.gv-meses .on');if(on)on.scrollIntoView({inline:'center',block:'nearest'});
  };
+ const actualiza=async()=>{if(!recarga)return;const ab=[...m.querySelectorAll('details[open]>summary')].map(x=>x.textContent);lista=await recarga();meses=Object.keys(lista).sort().reverse();pinta();m.querySelectorAll('details>summary').forEach(x=>{if(ab.includes(x.textContent))x.parentElement.open=true;});};
+ // Formulario para apuntar (o cambiar) un gasto que no pasa por el banco
+ const form=x=>{const PAG=['Efectivo','Otra tarjeta','Bizum','Transferencia otra cuenta','Otro'];let fecha=(x&&x.f)||segIso(0),pag=(x&&x.man)||'Efectivo';
+  const f=hzModal(`<div class="hz-top"><div><small>${x?'Cambiar gasto':'Nuevo gasto'}</small><b>Gasto fuera del banco</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   <label class="gf-l">Concepto</label><input class="gf-i gf-c" type="text" placeholder="Ej.: material de oficina, toallas…" value="${escH((x&&x.t)||'')}">
+   <div class="gf-2"><div><label class="gf-l">Importe</label><div class="gf-eu"><input class="gf-i gf-v" type="text" inputmode="decimal" placeholder="0,00" value="${x?String(x.v).replace('.',','):''}"><span>€</span></div></div>
+   <div><label class="gf-l">Fecha</label><button type="button" class="gf-i gf-f"></button></div></div>
+   <label class="gf-l">Pagado con</label><div class="gf-p">${PAG.map(p=>`<button type="button" data-p="${p}">${p}</button>`).join('')}</div>
+   <label class="gf-l">Nota <small>(opcional)</small></label><textarea class="gf-i gf-n" rows="2">${escH((x&&x.nota)||'')}</textarea>
+   <button type="button" class="hz-ok gf-ok">${x?'Guardar cambios':'Añadir gasto'}</button>`);
+  f.style.zIndex=1000;f.querySelector('.hz-x').onclick=()=>f.remove();
+  const pf=()=>{f.querySelector('.gf-f').textContent=segFecha(fecha);f.querySelectorAll('.gf-p button').forEach(b=>b.classList.toggle('on',b.dataset.p===pag));};pf();
+  f.querySelector('.gf-f').onclick=e=>miniCal(e.currentTarget,fecha,v=>{if(v){fecha=v;pf();}});
+  f.querySelectorAll('.gf-p button').forEach(b=>b.onclick=()=>{pag=b.dataset.p;pf();});
+  if(!x)setTimeout(()=>f.querySelector('.gf-c').focus(),50);
+  f.querySelector('.gf-ok').onclick=async e=>{const b=e.currentTarget,con=f.querySelector('.gf-c').value.trim(),iv=f.querySelector('.gf-v').value.trim().replace(/\s|€/g,''),imp=Number(iv.includes(',')?iv.replace(/\./g,'').replace(',','.'):iv);
+   if(!con){toast('Pon el concepto',false);return;}if(!(imp>0)){toast('Pon el importe',false);return;}
+   b.disabled=true;b.textContent='Guardando…';
+   try{const r=await agPost('seg-gasto-guardar',{id:x&&x.id,concepto:con,importe:imp,fecha,pagado:pag,nota:f.querySelector('.gf-n').value.trim(),por:miNombreCorto()});if(!r.ok)throw new Error(r.error||'');
+    f.remove();toast(x?'Gasto cambiado':'Gasto añadido',true);mes=fecha.slice(0,7);await actualiza();}
+   catch(err){b.disabled=false;b.textContent=x?'Guardar cambios':'Añadir gasto';toast('No se ha podido guardar',false);}};
+ };
+ m.querySelector('.gv-add').onclick=()=>form(null);
  pinta();
 }
 function hzModal(html){const m=ce('div','hz-modal');m.innerHTML=`<div class="hz-card">${html}</div>`;m.onclick=e=>{if(e.target===m)m.remove();};document.body.appendChild(m);
