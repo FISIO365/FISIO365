@@ -156,7 +156,9 @@ async function rendimiento(desde, hasta) {
   const horasDe = (n, f) => { const v = horasDia[n]; let h = v ? v[new Date(f + 'T12:00:00Z').getUTCDay()] : 0;
     aus.filter(x => x.desde <= f && x.hasta >= f && (x.fisio === 'Toda la clínica' || x.fisio.toLowerCase() === n)).forEach(x => { if (x.tipo === 'Cambio de horario' && x.hd) h = durH(x); else if (x.hd) h = Math.max(0, h - durH(x)); else h = 0; });
     return h; };
-  const capacidad = n => { if (!horasDia[n]) return 0; let t = 0; (diasCon[n] || new Set()).forEach(f => { t += horasDe(n, f); }); return Math.round(t); };
+  // Sesiones hechas por fisio y día: si un día hace más que su horario, ese día cuenta como las horas que hizo (100 %)
+  const realDia = {}; citas.forEach(c => { if (est(c) !== 'REALIZADA' || !pid(c)) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(), f = String(c.fields['FECHA']).slice(0, 10); (realDia[n] = realDia[n] || {})[f] = ((realDia[n] || {})[f] || 0) + 1; });
+  const capacidad = n => { if (!horasDia[n]) return 0; let t = 0; (diasCon[n] || new Set()).forEach(f => { t += Math.max(horasDe(n, f), (realDia[n] || {})[f] || 0); }); return Math.round(t); };
   // Control de horas día a día (fisios con «CONTROL HORAS»): horas hechas (sesiones + call-in + vídeos) frente a las que le tocaban
   const control = new Set(fisiosT.filter(f => f.fields['CONTROL HORAS']).map(f => String(f.fields['Name'] || '').split(' ')[0].toLowerCase()));
   const hechasDia = {}; // fisio -> {fecha: horas}

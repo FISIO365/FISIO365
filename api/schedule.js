@@ -1813,8 +1813,9 @@ module.exports = async function handler(req, res) {
           let cap = 0, ocup = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
             const n = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k && hecha(c)).length;
             if (!n) return; // sin sesiones hechas ese día: no cuenta (no estaba trabajando)
-            const cd = horasDe(k, f, (horario[k] && horario[k][dw]) || 0), ent = Math.min(n, cd), ex = n - ent; // lo que pase de su horario = horas extra (aparte)
-            cap += cd; ocup += ent; pf[k].cap += cd; pf[k].ocup += ent; pf[k].extra += ex; }); }
+            // Si hace más sesiones que su horario, ese día trabajó esas horas: cuentan todas (ese día = 100 %) y lo de más se apunta como horas extra
+            const h = horasDe(k, f, (horario[k] && horario[k][dw]) || 0), cd = Math.max(h, n), ex = Math.max(0, n - h);
+            cap += cd; ocup += n; pf[k].cap += cd; pf[k].ocup += n; pf[k].extra += ex; }); }
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
