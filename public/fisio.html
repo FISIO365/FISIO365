@@ -8094,7 +8094,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
   const hoy=new Date();const hoyIso=new Date(hoy.getTime()-hoy.getTimezoneOffset()*60000).toISOString().slice(0,10);
   const f=ce('div','fac-form');
   f.innerHTML=`<div class="fac-h"><b>Nueva factura</b><button type="button" class="fac-x" aria-label="Cerrar">✕</button></div>
-   ${d.dni?'':`<div class="fac-campo fac-aviso"><label>DNI del paciente <span>(no lo tiene en su ficha; se guardará)</span></label><input class="fac-dni" placeholder="12345678A"></div>`}
+   ${d.dni?'':`<div class="fac-campo fac-aviso"><label>DNI del paciente <span>(opcional · no lo tiene en su ficha; si lo pones, se guarda)</span></label><input class="fac-dni" placeholder="12345678A"></div>`}
    <div class="fac-lineas"></div>
    <button type="button" class="fac-add">+ Añadir otra línea</button>
    <div class="fac-campo"><label>Modo de pago</label><div class="fac-chips fac-pago">${FAC_PAGOS.map(m=>`<button type="button" data-v="${m}">${m}</button>`).join('')}</div></div>
@@ -8140,7 +8140,6 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    if(!pago){toast('Elige el modo de pago',false);return;}
    if(fisioSel===null){toast('Elige el fisio (o «No poner fisio»)',false);return;}
    const dniIn=f.querySelector('.fac-dni');const an=f.querySelector('.fac-an').value.trim();
-   if(dniIn&&!dniIn.value.trim()&&!an){toast('Falta el DNI del paciente',false);dniIn.focus();return;}
    if(an&&!f.querySelector('.fac-anif').value.trim()){toast('Falta el DNI/NIF de a quién se factura',false);return;}
    // Doble toque: primero muestra el total para confirmar
    if(!armado){armado=true;em.classList.add('armado');em.textContent='Confirmar: emitir por '+facEur(total());setTimeout(()=>{if(armado){armado=false;em.classList.remove('armado');em.textContent='Emitir factura';}},6000);return;}

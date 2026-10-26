@@ -763,13 +763,13 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
   } else {
     const pac = await at(`${PACIENTES}/${pacId}`);
     const pf = pac.fields || {};
-    if (!pf['DNI']) throw new Error('El paciente no tiene DNI en Airtable');
-    datos = { name: String(pf['FULL NAME'] || '').trim(), code: normDni(pf['DNI']), email: pf['EMAIL'] || '', mobile: pf['WHATSAPP'] || pf['TELF'] || '' };
+    // Sin DNI también se puede (ticket / factura simplificada): se busca su contacto en Holded por email o móvil, o se crea sin DNI
+    datos = { name: String(pf['FULL NAME'] || '').trim(), code: normDni(pf['DNI'] || ''), email: pf['EMAIL'] || '', mobile: pf['WHATSAPP'] || pf['TELF'] || '', sinDni: !pf['DNI'] };
   }
-  if (!datos.code) throw new Error('Falta el DNI/NIF de quien recibe la factura');
-  let contactId = ((await contactoPorDni(datos.code))[0] || {}).id;
+  if (!datos.code && !datos.sinDni) throw new Error('Falta el DNI/NIF de quien recibe la factura');
+  let contactId = datos.code ? ((await contactoPorDni(datos.code))[0] || {}).id : (await contactosDelPaciente(pacId).catch(() => []))[0];
   if (!contactId) {
-    const body = { name: datos.name, code: datos.code, type: 'client' };
+    const body = { name: datos.name, type: 'client' }; if (datos.code) body.code = datos.code;
     if (datos.email) body.email = datos.email;
     if (datos.mobile) body.mobile = datos.mobile;
     if (datos.address) body.bill_address = { address: datos.address };
