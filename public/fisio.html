@@ -1167,6 +1167,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-pie{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #eee5dd;padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;z-index:2}.sev-pie button{flex:1}
 .sev-txt{min-height:360px;font-size:13.5px!important;line-height:1.5}
 .sev-hist{margin-top:10px;font-size:12px;color:#7d6a60}
+.sev-ayu{display:block;font-size:12px;margin:-6px 0 12px;line-height:1.4}
 .sev-ch.c5 button:last-child:nth-child(odd){grid-column:1/-1}
 .sev-m small.fp-mu{line-height:1.5}
 .ag-otras{display:flex;gap:14px;justify-content:center;margin-top:12px}.ag-borrar{color:#b42318!important}.ag-otras button{font-family:var(--font);font-size:12.5px;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
@@ -6762,7 +6763,8 @@ function sevTexto(pf,au,f,fisio){
  const L=[],v=x=>String(x||'').trim(),lin=(k,x)=>{if(v(x))L.push(`*${k}:* ${v(x)}`);};
  L.push(`*SIN EVOLUCIÓN · ${v(pf.nombre).toUpperCase()}*`);
  L.push(`_${[fisio,sevF(isoMadrid(new Date()))].filter(Boolean).join(' · ')}_`);L.push('');
- lin('Paciente',[pf.edad!=null?pf.edad+' años':'',pf.motivo,pf.sesiones+' sesiones'+(pf.fisios.length?' con '+pf.fisios.join(', '):''),pf.primera?'desde el '+sevF(pf.primera):''].filter(Boolean).join(' · '));
+ lin('Paciente',f.a_paciente);
+ lin('Sesiones',f.a_sesiones);
  lin('Diagnóstico médico',f.dxMed||'No tiene');
  lin('Diagnóstico fisio',f.dxFisio);
  lin('Síntomas',f.sintomas);
@@ -6771,10 +6773,12 @@ function sevTexto(pf,au,f,fisio){
  lin('Otras enfermedades',f.enfermedades||'Ninguna');
  lin('Tratamiento hasta ahora',f.tratamiento);
  L.push('');L.push('*En la app*');
- L.push('- Anamnesis: '+(au.anamnesis.length?'Sí ('+au.anamnesis.map(a=>a.protocolo+(a.fecha?' '+a.fecha:'')).join(', ')+')':'NO'));
- L.push('- Ejercicios: '+(au.ejercicios.length?au.ejercicios.length+' asignados'+(au.planFecha?' el '+sevF(au.planFecha):'')+': '+au.ejercicios.map(e=>e.nombre).join(', '):'NINGUNO'));
- if(au.ejercicios.length){const a=au.adherencia;L.push('- Los hace: '+a.dias+' de '+a.de+' días ('+(a.pct??0)+' %)'+(a.ultimo?' · último el '+sevF(a.ultimo):' · nunca los ha marcado'));L.push('- Los hace bien: '+(f.haceBien||'No comprobado'));}
- lin('Sesiones pagadas que le quedan',pf.saldo==null?'':pf.saldo>0?String(pf.saldo):pf.saldo<0?'ninguna (debe '+(-pf.saldo)+')':'ninguna');
+ L.push('- Anamnesis: '+(v(f.a_anamnesis)||'NO'));
+ const ejl=String(f.a_ejercicios||'').split('\n').map(x=>x.trim()).filter(Boolean);
+ L.push('- Ejercicios: '+(ejl.length?ejl.length+' asignados: '+ejl.join(', '):'NINGUNO'));
+ if(v(f.a_hace))L.push('- Los hace: '+v(f.a_hace));
+ if(ejl.length)L.push('- Los hace bien: '+(f.haceBien||'No comprobado'));
+ lin('Sesiones pagadas que le quedan',f.a_pagadas);
  L.push('');
  lin('Qué dice el paciente',f.dice);
  lin('Pruebas / estudios',f.pruebas||'No tiene');
@@ -6812,25 +6816,32 @@ async function sevFormulario(ctx,casoAbierto){
  // Se parte del caso abierto o, si ya hubo uno antes, de lo que se escribió entonces
  const ant=(casoAbierto||r.casos[0]||{}).datos||{},f0=Object.assign({haceBien:'',banderas:'No'},ant.f||{});
  if(!casoAbierto&&!f0.enfermedades&&pf.salud.length)f0.enfermedades=pf.salud.join(', ')+(pf.notasSalud?'. '+pf.notasSalud:'');
- const a=au.adherencia,SI='<b class="si">Sí</b>',NO='<b class="no">No</b>';
- const fila=(k,h)=>`<div class="sev-a"><span>${k}</span><div>${h}</div></div>`;
- const campo=(k,lbl,ph,rows,req)=>`<div class="sev-f"><label>${lbl}${req?' <i>*</i>':''}</label><textarea class="fp-ta" data-k="${k}" rows="${rows||2}" placeholder="${escH(ph||'')}">${escH(f0[k]||'')}</textarea></div>`;
+ const a=au.adherencia;
+ // Datos de la app: salen solos pero se pueden corregir (al editar un caso abierto se respeta lo corregido)
+ const A={a_paciente:[pf.edad!=null?pf.edad+' años':'',pf.motivo].filter(Boolean).join(' · '),
+  a_sesiones:pf.sesiones+(pf.fisios.length?' · con '+pf.fisios.join(', '):'')+(pf.primera?' · desde el '+sevF(pf.primera):''),
+  a_anamnesis:au.anamnesis.length?'Sí · '+au.anamnesis.map(x=>x.protocolo+(x.fecha?' '+x.fecha:'')).join(', '):'No',
+  a_ejercicios:au.ejercicios.map(e=>e.nombre+(e.series?' '+e.series+'×'+(e.reps||e.dur+'s'):'')).join('\n'),
+  a_hace:au.ejercicios.length?`${a.dias} de ${a.de} días (${a.pct??0} %)`+(a.ultimo?' · último el '+sevF(a.ultimo):' · nunca los ha marcado'):'',
+  a_pagadas:pf.saldo==null?'':pf.saldo>0?pf.saldo+' sesiones':pf.saldo<0?'ninguna (debe '+(-pf.saldo)+')':'ninguna'};
+ Object.keys(A).forEach(k=>{if(!(casoAbierto&&f0[k]!=null))f0[k]=A[k];});
+ const campo=(k,lbl,ph,rows,req)=>`<div class="sev-f"><label>${lbl}${req?' <i>*</i>':''}</label>${rows===1?`<input class="fp-ta" data-k="${k}" placeholder="${escH(ph||'')}" value="${escH(f0[k]||'')}">`:`<textarea class="fp-ta" data-k="${k}" rows="${rows||2}" placeholder="${escH(ph||'')}">${escH(f0[k]||'')}</textarea>`}</div>`;
  const chips=(k,ops,cls)=>`<div class="sev-ch ${cls||''}" data-k="${k}">${ops.map(o=>`<button type="button" class="${f0[k]===o?'on':''}">${escH(o)}</button>`).join('')}</div>`;
  m.body.innerHTML=`
- <div class="fp-blk"><div class="fp-bt"><h3>Sale solo de la app</h3></div><div class="sev-auto">
-  ${fila('Paciente',escH([pf.edad!=null?pf.edad+' años':'',pf.motivo||'motivo sin apuntar'].filter(Boolean).join(' · ')))}
-  ${fila('Sesiones',escH(pf.sesiones+(pf.fisios.length?' · con '+pf.fisios.join(', '):'')+(pf.primera?' · desde el '+sevF(pf.primera):'')))}
-  ${fila('Anamnesis app',au.anamnesis.length?SI+' · '+escH(au.anamnesis.map(x=>x.protocolo+(x.fecha?' '+x.fecha:'')).join(', ')):NO)}
-  ${fila('Ejercicios',au.ejercicios.length?`${SI} · ${au.ejercicios.length}${au.planFecha?' desde el '+sevF(au.planFecha):''}<ul class="sev-ejs">${au.ejercicios.map(e=>`<li>${escH(e.nombre)}${e.series?` <span class="fp-mu">${e.series}×${e.reps||e.dur+'s'}</span>`:''}</li>`).join('')}</ul>`:NO+' · no tiene ejercicios asignados')}
-  ${au.ejercicios.length?fila('¿Los hace?',`<b class="${a.pct>=60?'si':'no'}">${a.dias} de ${a.de} días (${a.pct??0} %)</b>${a.ultimo?' · último el '+sevF(a.ultimo):' · nunca los ha marcado'}`):''}
-  ${fila('Pagadas que le quedan',pf.saldo==null?'—':escH(pf.saldo>0?pf.saldo+' sesiones':pf.saldo<0?'ninguna (debe '+(-pf.saldo)+')':'ninguna'))}
- </div></div>
+ <div class="fp-blk"><div class="fp-bt"><h3>Datos de la app</h3></div><small class="fp-mu sev-ayu">Se rellenan solos. Si algo no cuadra, corrígelo aquí.</small>
+  ${campo('a_paciente','Paciente','Edad · motivo de consulta',1)}
+  ${campo('a_sesiones','Sesiones','Nº de sesiones · con quién · desde cuándo',1)}
+  ${campo('a_anamnesis','Anamnesis completa en la app','Sí / No',1)}
+  ${campo('a_ejercicios','Ejercicios asignados','Uno por línea. Vacío si no tiene',2)}
+  ${campo('a_hace','¿Los hace?','Ej.: 4 de 14 días',1)}
+  ${campo('a_pagadas','Sesiones pagadas que le quedan','Ej.: 3 sesiones',1)}
+ </div>
  <div class="fp-blk"><div class="fp-bt"><h3>Diagnóstico</h3></div>
   ${campo('dxMed','Diagnóstico médico','Déjalo vacío si no tiene',2)}
   ${campo('dxFisio','Diagnóstico fisioterapéutico','',2,1)}
  </div>
  <div class="fp-blk"><div class="fp-bt"><h3>Paciente</h3></div>
-  ${au.ejercicios.length?`<div class="sev-f"><label>¿Hace bien los ejercicios?</label>${chips('haceBien',SEV_HACE)}</div>`:''}
+  <div class="sev-f"><label>¿Hace bien los ejercicios?</label>${chips('haceBien',SEV_HACE)}</div>
   ${campo('sintomas','Síntomas actuales','Qué le duele, cuándo, cuánto…',3,1)}
   <div class="sev-f"><label>Factores agravantes</label><div class="sev-3">
    <input class="fp-ta" data-k="ocupacion" placeholder="Ocupación (ej.: oficina 8 h sentado)" value="${escH(f0.ocupacion||'')}">
