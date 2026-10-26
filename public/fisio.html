@@ -1184,7 +1184,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rec-tabs{margin:0 0 12px;background:#fff!important;border-radius:16px!important;padding:4px!important;gap:4px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 6px 18px rgba(26,26,26,.06)}
 .rec-tabs button{border-radius:12px!important;padding:11px 0!important;font-size:14px!important;font-weight:600!important;color:#5f554e!important;background:none!important}
 .rec-tabs button.on{background:#c2552e!important;color:#fff!important;box-shadow:none!important}.sev-ch.c4{grid-template-columns:repeat(2,1fr);margin-top:6px}@media(min-width:760px){.sev-ch.c4{grid-template-columns:repeat(4,1fr)}}.sev-ch.c4 button{font-size:12.5px;padding:9px 4px}
-.rec-lista{overflow:hidden}.rec-it.bus{background:#fdf6f1;margin:0 -16px;padding-left:16px;padding-right:16px}.rec-busq{font-style:normal;font-weight:600;color:#c2552e}
+.res-bus{margin:-2px 0 14px;background:#fdf6f1;border-radius:14px;padding:2px 10px 2px 14px}.res-bus .rec-it{border:none;gap:8px}
+.res-bx{flex:none;width:30px;height:30px;border:none;border-radius:50%;background:#fff;color:#7d6a60;font-size:12px;cursor:pointer}
 .res-prev{margin-top:10px;background:#f3efea;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#3d3530}.res-prev i{color:#7d6a60}.rec-bus{margin-bottom:10px!important}.rec-lista .rec-it .rec-n{padding-left:2px}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}
@@ -5313,9 +5314,9 @@ async function agRecordatorios(onDone,modoIni){
  const TIT={rec:'Recordatorios por WhatsApp',enc:'Encuestas',res:'Encuestas'};
  const tabs=()=>modo==='rec'?'':`<div class="ag-vis rec-tabs"><button type="button" data-t="enc" class="${modo==='enc'?'on':''}">1ª visita</button><button type="button" data-t="res" class="${modo==='res'?'on':''}">Reseña Google</button></div>`;
  const atarTabs=()=>body.querySelectorAll('.rec-tabs button').forEach(b=>b.onclick=()=>{if(modo===b.dataset.t)return;modo=b.dataset.t;m.querySelector('.pv-bar b').textContent=TIT[modo];cargar();});
- let resD=null,resExtra=[];
+ let resD=null,resExtra=[],resBus=null;
  async function cargarRes(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
-  try{const r=await (await fetch(`/api/schedule?action=seg-agenda-resenas&pwd=${encodeURIComponent(apiPwd)}&ids=${resExtra.join(',')}`)).json();if(!r.ok)throw new Error(r.error||'Error');resD=r.pacientes;pintaRes();}
+  try{const r=await (await fetch(`/api/schedule?action=seg-agenda-resenas&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw new Error(r.error||'Error');resD=r.pacientes;pintaRes();}
   catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
  // Varias versiones del mensaje según el perfil del paciente (se recuerda la última elegida)
  const RES_VAR=[
@@ -5328,24 +5329,28 @@ async function agRecordatorios(onDone,modoIni){
   const f0=String(c.fisio||'').trim().split(' ')[0],fi=f0?f0.charAt(0).toUpperCase()+f0.slice(1).toLowerCase():'';
   return (RES_VAR.find(v=>v[0]===resVar)||RES_VAR[0])[2](`Hola${n?' '+n:''}`,fi);};
  function pintaRes(){
-  // Los que se buscan a mano salen arriba del todo (el último buscado, primero)
-  const L=(resD||[]).slice().sort((a,b)=>{const ia=resExtra.indexOf(a.pacienteId),ib=resExtra.indexOf(b.pacienteId);return (ib-ia)||0;}),ped=L.filter(c=>c.pedida).length,fC2=f=>f?sevFC(f):'';
+  const fila=(c,i)=>{const tel=segTel(c.tel),fC3=f=>f?sevFC(f):'';
+   const sub=[c.ultima?'última sesión el '+fC3(c.ultima):(c.cargando?'':'sin sesiones'),String(c.fisio||'').split(' ')[0]].filter(Boolean).join(' · ');
+   return `<div class="rec-it${c.pedida||c.dejada?' env':''}" data-i="${i}"><div class="rec-n"><b>${escH(capTit(c.nombre||'—'))}</b><small>${escH(sub)}${c.dejada?' · <em class="ok">✓ Ya dejó reseña</em>':c.pedida?' · pedida el '+escH(fC3(c.pedida)):''}</small></div>
+    ${c.cargando?'<span class="rec-b otra" style="text-align:center">…</span>':tel.length<9?`<button type="button" class="rec-b sin" data-ficha="${c.pacienteId}" data-fn="${escH(c.nombre)}">Sin teléfono</button>`:c.pedida||c.dejada?'<button type="button" class="rec-b otra">Reenviar</button>':'<button type="button" class="rec-b env">Enviar</button>'}</div>`;};
+  const L=resD||[],ped=L.filter(c=>c.pedida).length,fC2=f=>f?sevFC(f):'';
   body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="ag-pf ag-busca rec-bus"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in ag-pb" placeholder="Buscar otro paciente…" autocomplete="off"><div class="ag-pr"></div></div>
+   ${resBus?`<div class="res-bus">${fila(resBus,'b').replace(/<\/div>$/,'<button type="button" class="res-bx" aria-label="Quitar">✕</button></div>')}</div>`:''}
    <div class="rec-modo-l" style="margin-top:2px">Mensaje</div><div class="sev-ch c4 res-var">${RES_VAR.map(([k,t])=>`<button type="button" data-v="${k}" class="${resVar===k?'on':''}">${t}</button>`).join('')}</div>
    <div class="res-prev">${escH(resTexto({pila:'Laura',fisio:'Sara'})).replace(/\n/g,'<br>').replace(RESENA_GOOGLE,'<i>enlace de Google</i>')}</div>
    <div class="rec-pr" style="margin-top:12px"><div><b>${ped}</b> de ${L.length} con la reseña pedida</div></div><small class="fp-mu" style="display:block;font-size:12px;margin-top:6px">Salen los que han tenido sesión los últimos 7 días.</small></div>
-   ${!L.length?'<div class="fac-vacio">Nadie ha tenido sesión estos días</div>':`<div class="fp-blk rec-lista">${L.map((c,i)=>{const tel=segTel(c.tel);
-    const sub=[c.ultima?'sesión el '+fC2(c.ultima):'',String(c.fisio||'').split(' ')[0]].filter(Boolean).join(' · ');
-    return `<div class="rec-it${c.pedida||c.dejada?' env':''}${resExtra.includes(c.pacienteId)?' bus':''}" data-i="${i}"><div class="rec-n"><b>${escH(capTit(c.nombre||'—'))}</b><small>${resExtra.includes(c.pacienteId)?'<em class="rec-busq">Buscado</em> ':''}${escH(sub)}${c.dejada?' · <em class="ok">✓ Ya dejó reseña</em>':c.pedida?' · pedida el '+escH(fC2(c.pedida)):''}</small></div>
-     ${tel.length<9?`<button type="button" class="rec-b sin" data-ficha="${c.pacienteId}" data-fn="${escH(c.nombre)}">Sin teléfono</button>`:c.pedida||c.dejada?'<button type="button" class="rec-b otra">Reenviar</button>':'<button type="button" class="rec-b env">Enviar</button>'}</div>`;}).join('')}</div>`}`;
+   ${!L.length?'<div class="fac-vacio">Nadie ha tenido sesión estos días</div>':`<div class="fp-blk rec-lista">${L.map((c,i)=>fila(c,i)).join('')}</div>`}`;
   atarTabs();
   body.querySelectorAll('.res-var button').forEach(b=>b.onclick=()=>{resVar=b.dataset.v;try{localStorage.setItem('f365_resvar',resVar);}catch(e){}pintaRes();});
   const bi=body.querySelector('.rec-bus input'),bp=body.querySelector('.rec-bus .ag-pr'),nrm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   bi.oninput=()=>{const q=nrm(bi.value).trim();if(q.length<2){bp.innerHTML='';return;}const pal=q.split(/\s+/);const fl=(pacs||[]).filter(p=>{const n=nrm(p.nombre);return pal.every(w=>n.includes(w));}).slice(0,8);
    bp.innerHTML=`<div class="ag-pdd">${fl.map(p=>`<button type="button" data-id="${p.id}">${escH(capTit(p.nombre))}</button>`).join('')||'<small class="fp-mu">No encontrado</small>'}</div>`;
-   bp.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>{const id=b.dataset.id;resExtra=resExtra.filter(x=>x!==id);resExtra.push(id);
-    if(resD.some(x=>x.pacienteId===id)){pintaRes();}else cargar();setTimeout(()=>{const it=body.querySelector('.rec-it.bus');if(it)it.scrollIntoView({behavior:'smooth',block:'center'});},400);});};
-  body.querySelectorAll('.rec-it').forEach(it=>{const c=L[+it.dataset.i],b=it.querySelector('.rec-b.env,.rec-b.otra');if(!b)return;
+   bp.querySelectorAll('button[data-id]').forEach(b=>b.onclick=async()=>{const id=b.dataset.id,ya=resD.find(x=>x.pacienteId===id);
+    resBus=ya||{pacienteId:id,nombre:((pacs||[]).find(p=>p.id===id)||{}).nombre||'',cargando:true};pintaRes();if(ya)return;
+    try{const r=await (await fetch(`/api/schedule?action=seg-agenda-resenas&pwd=${encodeURIComponent(apiPwd)}&ids=${id}&solo=1`)).json();if(!r.ok||!r.pacientes||!r.pacientes[0])throw 0;if(resBus&&resBus.pacienteId===id){resBus=r.pacientes[0];pintaRes();}}
+    catch(e){if(resBus&&resBus.pacienteId===id){resBus=null;pintaRes();toast('No se ha podido cargar el paciente',false);}}});};
+  {const bx=body.querySelector('.res-bx');if(bx)bx.onclick=()=>{resBus=null;pintaRes();};}
+  body.querySelectorAll('.rec-it').forEach(it=>{const c=it.dataset.i==='b'?resBus:L[+it.dataset.i],b=it.querySelector('button.rec-b.env,button.rec-b.otra');if(!b||!c)return;
    b.onclick=async()=>{abrirWA(segTel(c.tel),resTexto(c));const ant=c.pedida;c.pedida=new Date().toISOString();pintaRes();
     try{const r=await agPost('seg-agenda-resena',{pacienteId:c.pacienteId});if(!r.ok)throw 0;}catch(e){c.pedida=ant;pintaRes();toast('No se ha podido apuntar',false);}};});
  }

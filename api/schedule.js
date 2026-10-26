@@ -1473,7 +1473,9 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-agenda-resenas') {
           // Pedir reseña en Google: pacientes con sesión realizada los últimos 7 días (o los ids pedidos), con si ya se les pidió / ya la dejaron
           const extra = String(q.ids || '').split(',').filter(okId).slice(0, 20);
-          const cs = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_AFTER({FECHA},DATEADD(TODAY(),-8,'days')),NOT(IS_AFTER({FECHA},TODAY())))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`);
+          // solo=1: solo los pacientes pedidos (el buscador), con su última sesión; mucho más rápido
+          const solo = q.solo && extra.length;
+          const cs = await todosT(CIT, `filterByFormula=${encodeURIComponent(solo ? `AND(TRIM({ESTADO})='REALIZADA',NOT(IS_AFTER({FECHA},TODAY())),OR(${extra.map(x => `FIND('${x}',ARRAYJOIN({PacienteRec}))`).join(',')}))` : `AND(TRIM({ESTADO})='REALIZADA',IS_AFTER({FECHA},DATEADD(TODAY(),-8,'days')),NOT(IS_AFTER({FECHA},TODAY())))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`);
           const ult = {}, nmR = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
           cs.forEach(c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0], f = String(c.fields['FECHA'] || '').slice(0, 10); if (pid && (!ult[pid] || f > ult[pid].fecha)) ult[pid] = { fecha: f, fisio: nmR(c.fields['PREF.']) }; });
           const pids = [...new Set([...Object.keys(ult), ...extra])], out = [];
