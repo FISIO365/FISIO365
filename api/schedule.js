@@ -571,6 +571,30 @@ async function guardarAjuste(clave, valor, quien) {
   _aj = { t: 0, v: null }; if (d.error) throw new Error(d.error.message); return true;
 }
 // Ajustes de la clínica (Administración › Listas y ajustes). Lo que no se haya cambiado sale de aquí.
+// Enlace de confirmar cita: firma corta para que nadie pueda confirmar citas ajenas cambiando el id
+function firmaCita(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cita:' + id).digest('hex').slice(0, 10); }
+const enlaceConfirmar = id => `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}`;
+function paginaConfirmar(D, C) {
+  const e = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'], MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const fl = D.fecha ? (() => { const d = new Date(D.fecha + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} de ${MES[d.getUTCMonth()]}`; })() : '';
+  const tel = String(C.tel || '').replace(/\s/g, '');
+  const cuerpo = D.error && !D.fecha ? `<h1>Vaya…</h1><p>${e(D.error)}</p>`
+    : `<p class="hola">${D.pila ? 'Hola ' + e(D.pila) : 'Hola'}</p><div class="cita"><small>Tu cita en FISIO365</small><b>${e(fl.charAt(0).toUpperCase() + fl.slice(1))}</b><b>a las ${e(D.hora)}</b>${D.fisio ? `<span>Con ${e(D.fisio)}</span>` : ''}</div>
+      ${D.error ? `<p class="err">${e(D.error)}</p>` : ''}
+      ${D.inactiva ? `<p>Esta cita ya no está activa.</p>` : D.confirmada ? `<div class="ok">✓ ${D.recien ? '¡Gracias! Tu cita está confirmada' : 'Tu cita ya está confirmada'}</div><p class="peq">Te esperamos.</p>`
+        : `<form method="post"><button type="submit">Confirmo que voy</button></form>`}`;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu cita · FISIO365</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.c{background:#fff;border-radius:24px;padding:28px 22px;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
+.marca{font-weight:700;letter-spacing:.08em;font-size:13px;color:#c2552e;margin-bottom:18px}.hola{font-size:17px;margin:0 0 14px}
+.cita{background:#f3efea;border-radius:18px;padding:18px 14px;display:flex;flex-direction:column;gap:2px;margin-bottom:20px}.cita small{font-size:12px;color:#7d6a60;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}.cita b{font-size:20px;line-height:1.3}.cita span{margin-top:6px;color:#5c4f47}
+button{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:16px;cursor:pointer}
+.ok{background:#e8f6ec;color:#16803c;font-weight:600;border-radius:14px;padding:16px}.err{color:#b42318}.peq{font-size:14px;color:#7d6a60;margin:12px 0 0}
+.pie{margin-top:22px;font-size:12.5px;color:#7d6a60;line-height:1.6}.pie a{color:#7d6a60}h1{font-size:20px}</style></head>
+<body><div class="c"><div class="marca">FISIO365</div>${cuerpo}<div class="pie">${e(C.direccion || '')}${tel ? `<br>¿Dudas? Llámanos al <a href="tel:+34${e(tel)}">${e(C.tel)}</a>` : ''}</div></div></body></html>`;
+}
 const CONF_DEF = {
   listas: {
     conceptos: [{ n: 'Sesión de fisioterapia', p: '' }, { n: 'Sesión de fisioterapia avanzada', p: '' }, { n: 'Sesión de suelo pélvico', p: '' }, { n: 'Sesión de readaptación deportiva', p: '' }, { n: 'Plus aplicación colágeno', p: '' }, { n: 'Otros', p: '' }],
@@ -796,6 +820,31 @@ module.exports = async function handler(req, res) {
   // Versión publicada: el panel la compara al volver a la app para recargarse si hay una nueva
   // Lo llama la automatización de Airtable al entrar una reserva por la web (y el panel al abrir la agenda)
   if (action === 'web-procesar') { try { const r = await procesarWeb(); return res.status(200).json({ ok: true, ...r }); } catch (e) { return res.status(500).json({ ok: false, error: e.message }); } }
+  // Confirmar cita (enlace del recordatorio por WhatsApp). Solo confirma: para cambiar o anular hay que llamar.
+  // Al abrir el enlace no se confirma nada (WhatsApp abre los enlaces para la vista previa): hace falta pulsar el botón.
+  if (action === 'cita-confirmar') {
+    const id = String(req.query.id || ''), sg = String(req.query.s || '');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
+    const C = (await conf().catch(() => CONF_DEF)).clinica || CONF_DEF.clinica;
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaCita(id)) return res.status(404).send(paginaConfirmar({ error: 'Este enlace no es válido.' }, C));
+    const r = await at(`tblTPlcuiSjQngkaD/${id}`);
+    if (r.error) return res.status(404).send(paginaConfirmar({ error: 'No encontramos esta cita.' }, C));
+    const F = r.fields || {}, est = String((F['ESTADO'] && F['ESTADO'].name) || F['ESTADO'] || '').toUpperCase();
+    const fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5);
+    const fisio = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '').trim().split(' ')[0];
+    const pid = (F['RELACIÓN - CITA'] || [])[0]; let pila = '';
+    if (pid) { const p = await at(`${PACIENTES}/${pid}?fields[]=NOMBRE&fields[]=${encodeURIComponent('FULL NAME')}`).catch(() => ({})); pila = String((p.fields && (p.fields['NOMBRE'] || p.fields['FULL NAME'])) || '').trim().split(/\s+/)[0]; }
+    const hoyC = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    const D = { pila: pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '', fecha, hora, fisio: fisio ? fisio.charAt(0).toUpperCase() + fisio.slice(1).toLowerCase() : '' };
+    if (!/PENDIENTE/.test(est) || fecha < hoyC) return res.status(200).send(paginaConfirmar({ ...D, inactiva: true }, C));
+    let conf0 = (F['CONFIR'] || []).some(x => /CONFIRMADA/i.test(x.name || x));
+    if (req.method === 'POST' && !conf0) {
+      const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { CONFIR: ['CONFIRMADA'] } }) });
+      if (u.error) return res.status(500).send(paginaConfirmar({ ...D, error: 'No se ha podido confirmar. Inténtalo de nuevo en un momento.' }, C));
+      conf0 = true;
+    }
+    return res.status(200).send(paginaConfirmar({ ...D, confirmada: conf0, recien: req.method === 'POST' }, C));
+  }
   // Justificante / informe de sesiones (enlace privado que va por WhatsApp)
   if (action === 'doc-pagina') {
     const tk = String(req.query.t || ''); if (!/^[A-Za-z0-9]{24}$/.test(tk)) return res.status(404).send('No encontrado');
@@ -1408,6 +1457,18 @@ module.exports = async function handler(req, res) {
             } } catch (e) { console.log('agenda-num', e.message); }
           return res.status(200).json({ ok: true, num: numSes, pago, inicio });
         }
+        if (action === 'seg-agenda-recordatorios') {
+          // Recordatorios por WhatsApp (en un toque): citas pendientes de las fechas pedidas, con teléfono y si ya se envió
+          const fechas = String(q.fechas || '').split(',').filter(okF).slice(0, 4);
+          if (!fechas.length) return res.status(400).json({ ok: false, error: 'Faltan las fechas' });
+          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(${fechas.map(f => `DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f}'`).join(',')}),FIND('PENDIENTE',UPPER({ESTADO}&'')))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('RECORDATORIO ENVIADO')}&fields[]=${encodeURIComponent('RECORDATORIO POR')}&fields[]=CONFIR`);
+          const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], pac = {};
+          for (let i = 0; i < pids.length; i += 50) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 50).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`)).forEach(p => { pac[p.id] = { nombre: p.fields['FULL NAME'] || '', pila: p.fields['NOMBRE'] || '', tel: p.fields['WHATSAPP'] || p.fields['TELF'] || '' }; });
+          const nmR = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+          const citas = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: nmR(F['PREF.']), pacienteId: pid, ...(pac[pid] || { nombre: '', pila: '', tel: '' }), enviado: F['RECORDATORIO ENVIADO'] || '', por: F['RECORDATORIO POR'] || '', link: enlaceConfirmar(r.id), confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/i.test(x.name || x)) }; })
+            .filter(c => c.pacienteId).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+          return res.status(200).json({ ok: true, hoy: hoyF, citas });
+        }
         if (action === 'seg-agenda-dia') {
           await Promise.all([procesarWeb().catch(() => {}), revisarPorReagendar().catch(() => 0)]);
           let rows, limitado = false;
@@ -1436,6 +1497,11 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, hoy: hoyF, limitado, ausencias: ausDia, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'seg-agenda-recordatorio') { // marcar (o desmarcar) que se ha enviado el recordatorio de una o varias citas
+          const ids = (Array.isArray(q.ids) ? q.ids : [q.id]).filter(okId).slice(0, 10); if (!ids.length) return res.status(400).json({ ok: false });
+          const d = await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: ids.map(id => ({ id, fields: { 'RECORDATORIO ENVIADO': q.enviado === false ? null : new Date().toISOString(), 'RECORDATORIO POR': q.enviado === false ? '' : String(q.por || '').slice(0, 40) } })) }) });
+          return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+        }
         if (action === 'seg-agenda-dar') { global._sesPac = {}; // dar cita en una hora (o en un hueco libre concreto)
           if (!okId(q.pacienteId) || !okF(q.fecha) || !okH(q.hora) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
           const campos = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [q.pacienteId] };
