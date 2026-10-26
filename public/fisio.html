@@ -6567,9 +6567,10 @@ async function verResueltas(onDone){
  m.querySelector('.hz-x').onclick=()=>m.remove();const L=m.querySelector('.rs-l');let cambio=false;
  const post=(id,b)=>fetch('/api/schedule?action=seg-referido-deshacer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd,id},b||{}))}).then(x=>x.json());
  const pinta=rs=>{if(!rs.length){L.innerHTML='<div class="fac-vacio">Nada resuelto todavía</div>';return;}
-  L.innerHTML=`<div class="fp-refs">${rs.map(r=>`<div class="fp-ref" data-id="${r.id}"><div><b>${escH(r.quien||'—')}</b><small>Recomendó a ${escH(r.nuevo)} · ${escH(r.estado)}</small></div><span class="fp-refb">${r.canjeada?`<button type="button" class="sec rs-c">Quitar canje</button>`:''}<button type="button" class="sec rs-d">Deshacer</button></span></div>`).join('')}</div>`;
+  L.innerHTML=`<div class="fp-refs">${rs.map(r=>`<div class="fp-ref" data-id="${r.id}"><div><b>${escH(r.quien||'—')}</b><small>Recomendó a ${escH(r.nuevo)} · ${escH(r.estado)}</small></div><span class="fp-refb">${r.tarjeta?`<button type="button" class="sec rs-e">Volver a enviar</button>`:''}${r.canjeada?`<button type="button" class="sec rs-c">Quitar canje</button>`:''}<button type="button" class="sec rs-d">Deshacer</button></span></div>`).join('')}</div>`;
   L.querySelectorAll('.fp-ref').forEach(row=>{const id=row.dataset.id;
    const conf=(b,txt,fn)=>{let arm=false;b.onclick=async()=>{if(!arm){arm=true;const t0=b.textContent;b.textContent=txt;setTimeout(()=>{arm=false;b.textContent=t0;},4000);return;}b.disabled=true;try{const d=await fn();if(!d.ok)throw 0;cambio=true;toast('Hecho',true);cargarR();}catch(e){b.disabled=false;toast('No se ha podido',false);}};};
+   const ev=row.querySelector('.rs-e');if(ev)ev.onclick=()=>{const r=rs.find(x=>x.id===id);enviarTarjeta(r.tel,r.quien,r.nuevoNombre||r.nuevo,r.caduca,id,null);};
    const d=row.querySelector('.rs-d');if(d)conf(d,'¿Seguro?',()=>post(id));const c=row.querySelector('.rs-c');if(c)conf(c,'¿Seguro?',()=>post(id,{soloCanje:true}));});};
  const cargarR=async()=>{try{const d=await (await fetch(`/api/schedule?action=seg-referidos-resueltos&pwd=${encodeURIComponent(apiPwd)}`)).json();pinta(d.resueltas||[]);}catch(e){L.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';}};
  cargarR();
