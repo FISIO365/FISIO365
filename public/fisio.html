@@ -1181,6 +1181,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-m small.fp-mu{line-height:1.5}
 .ag-recb{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border:none;border-radius:99px;padding:8px 13px;cursor:pointer}.ag-recb svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .ag-pdfb{color:#c2552e;background:#fdeee4}
+.pk-res{margin-top:12px;font-size:14px;color:#3d3530;min-height:2px}.pk-res b{color:#16803c}
 .pk-g{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.pk-g button{font-family:var(--font);font-size:13.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;border-radius:10px;padding:9px 0;cursor:pointer;color:#3d3530}.pk-g button.on{border-color:#c2552e;background:#fdeee4;color:#c2552e}
 .fac-bp{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:#5c4f47;background:#fff;border:1px solid #eee5dd;border-radius:12px;padding:9px 12px;margin:-4px 0 10px}.fac-bp button{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:6px 12px;cursor:pointer}
 .ag-sinfac{display:flex;align-items:center;gap:10px;justify-content:space-between;background:#fdecea;border-radius:12px;padding:10px 12px;margin:10px 0}
@@ -5710,7 +5711,7 @@ function agAbrirCita(c,onDone){
   const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);
   abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
  m.querySelector('.ag-altab').onclick=()=>agAlta(c);
- {const pk=m.querySelector('.ag-sf-pk');if(pk)pk.onclick=()=>marcarPack(c.pacienteId,c.paciente,0,true,()=>{m.remove();onDone&&onDone();},c.id);
+ {const pk=m.querySelector('.ag-sf-pk');if(pk)pk.onclick=()=>marcarPackCita(c.pacienteId,c.paciente,c.id,()=>{m.remove();onDone&&onDone();});
   const co=m.querySelector('.ag-sf-co');if(co)co.onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.paciente);let k=0;const t=setInterval(()=>{const b=document.querySelector('.fp .fp-cobb');if(b||++k>60){clearInterval(t);if(b)b.click();}},150);};}
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='REPROGRAMADA'&&!/REPROGRAMADA/.test(c.estado)){m.remove();agMoverCita(c,onDone);return;}est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
@@ -8070,6 +8071,29 @@ let FAC_PRECIO={};let FAC_CONCEPTOS=['Sesión de fisioterapia','Sesión de fisio
 let FAC_PAGOS=['Tarjeta','Efectivo','Bizum','Transferencia'];
 const facEur=n=>Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
 // Pack pagado fuera del panel (antes de facturar desde aquí, en efectivo sin ticket…): cuenta como sesiones pagadas
+// Desde una cita: «Esta cita es la sesión X de un pack de N» (lo más simple posible)
+function marcarPackCita(pacId,nombre,citaId,onDone){
+ let n=0,ses=0,otro=false;
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(capTit(nombre||''))}</small><b>Viene con pack</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Pack de</div><div class="sev-ch c4 pk-ch">${[5,10,20].map(k=>`<button type="button" data-n="${k}">${k}</button>`).join('')}<button type="button" data-n="">Otro</button></div>
+  <input type="number" min="1" max="40" inputmode="numeric" class="ag-in pk-n" placeholder="¿Cuántas sesiones?" hidden style="margin-top:8px">
+  <div class="pk-s2" hidden><div class="hz-lab">Esta cita es la</div><div class="pk-ses"></div></div>
+  <div class="pk-res"></div>
+  <div class="sev-bts"><button type="button" class="sev-b pk-no">Cancelar</button><button type="button" class="sev-b ok pk-ok" disabled>Guardar</button></div>`);
+ const inp=m.querySelector('.pk-n'),s2=m.querySelector('.pk-s2'),sb=m.querySelector('.pk-ses'),res=m.querySelector('.pk-res'),ok=m.querySelector('.pk-ok');
+ m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.pk-no').onclick=()=>m.remove();
+ const pinta=()=>{m.querySelectorAll('.pk-ch button').forEach(b=>b.classList.toggle('on',otro?!b.dataset.n:!!b.dataset.n&&+b.dataset.n===n));inp.hidden=!otro;
+  if(ses>n)ses=0;s2.hidden=!(n>0);
+  sb.innerHTML=n>0?`<div class="pk-g">${Array.from({length:n},(_,i)=>`<button type="button" data-s="${i+1}" class="${ses===i+1?'on':''}">${i+1}ª</button>`).join('')}</div>`:'';
+  sb.querySelectorAll('button').forEach(b=>b.onclick=()=>{ses=+b.dataset.s;pinta();});
+  const q=n-ses;res.innerHTML=n&&ses?`<b>Sesión ${ses} de ${n}</b> · ${q?`le ${q===1?'queda 1 sesión':'quedan '+q+' sesiones'} después de esta`:'es la última del pack'}`:'';ok.disabled=!(n&&ses);};
+ m.querySelectorAll('.pk-ch button').forEach(b=>b.onclick=()=>{otro=!b.dataset.n;n=otro?(parseInt(inp.value,10)||0):+b.dataset.n;pinta();if(otro)inp.focus();});
+ inp.oninput=()=>{n=Math.min(40,parseInt(inp.value,10)||0);pinta();};
+ ok.onclick=async()=>{ok.disabled=true;
+  try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:pacId,bonoPack:{n,sesion:ses,citaId}})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
+   toast(`Apuntado: sesión ${ses} de ${n}`,true);m.remove();onDone&&onDone();}catch(err){ok.disabled=false;toast(err.message,false);}};
+ pinta();
+}
 function marcarPack(pacId,nombre,actual,sumar,onDone,citaId){
  const m=hzModal(`<div class="hz-top"><div><small>${escH(capTit(nombre||''))}</small><b>${sumar?'Tiene un pack pagado':'Pack pagado fuera del panel'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <p class="fp-mu" style="font-size:13.5px;margin:0 0 8px;line-height:1.5">${sumar?'¿De cuántas sesiones es el pack que pagó y no está facturado desde el panel?':'Sesiones de packs pagados que no se facturaron desde el panel. Cuentan como pagadas.'}</p>
