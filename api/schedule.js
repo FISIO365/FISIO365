@@ -1076,6 +1076,28 @@ module.exports = async function handler(req, res) {
           const conPac = filas.filter(r => (r.fields['RELACIÓN - CITA'] || []).length && /PENDIENTE/.test(est(r))).map(r => ({ fecha: String(r.fields.FECHA || '').slice(0, 10), hora: r.fields.HORA || '', fisio: (r.fields['PREF.'] && r.fields['PREF.'].name) || r.fields['PREF.'] || '' })).sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora));
           return res.status(200).json({ ok: true, bloqueados: libres.length, conPaciente: conPac, ausencias: await ausencias().catch(() => []) });
         }
+        if (action === 'seg-adm-ausencia-quitar-dia') { // vuelve a su horario normal un día concreto (si la ausencia es de varios días, se parte)
+          if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '') || !/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) return res.status(400).json({ ok: false });
+          const r = await at(`${AUS}/${q.id}`); if (r.error) return res.status(404).json({ ok: false, error: 'No encontrada' });
+          const F = r.fields, d0 = F.DESDE, d1 = F.HASTA || F.DESDE, f = q.fecha, tipo = (F.TIPO && F.TIPO.name) || F.TIPO || '';
+          const mvD = (x, n) => { const t = new Date(x + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+          if (f < d0 || f > d1) return res.status(400).json({ ok: false, error: 'Ese día no está en esta ausencia' });
+          const nom = (a, b) => `${tipo} · ${F.FISIO} · ${a}${b !== a ? ' → ' + b : ''}${F['HORA DESDE'] ? ` · ${F['HORA DESDE']}-${F['HORA HASTA']}` : ''}`;
+          if (d0 === d1) await at(`${AUS}/${q.id}`, { method: 'DELETE' });
+          else if (f === d0) await at(`${AUS}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { DESDE: mvD(f, 1), AUSENCIA: nom(mvD(f, 1), d1) } }) });
+          else if (f === d1) await at(`${AUS}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HASTA: mvD(f, -1), AUSENCIA: nom(d0, mvD(f, -1)) } }) });
+          else { await at(`${AUS}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HASTA: mvD(f, -1), AUSENCIA: nom(d0, mvD(f, -1)) } }) });
+            const cp = { FISIO: F.FISIO, DESDE: mvD(f, 1), HASTA: d1, TIPO: tipo, NOTA: F.NOTA || '', 'CREADO POR': F['CREADO POR'] || '', 'HORA DESDE': F['HORA DESDE'] || '', 'HORA HASTA': F['HORA HASTA'] || '', AUSENCIA: nom(mvD(f, 1), d1) };
+            await at(AUS, { method: 'POST', body: JSON.stringify({ records: [{ fields: cp }], typecast: true }) }); }
+          _ausC = { t: 0, v: null };
+          // Se vuelven a abrir los huecos que se bloquearon por esta ausencia ese día
+          let abiertos = 0;
+          if (tipo && !q.noAbrir) { const cond = [`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f}'`, `TRIM({ESTADO}&'')='CITA BLOQUEADA'`, `{NOTAS}='${String(tipo).replace(/'/g, '')}'`]; if (F.FISIO !== 'Toda la clínica') cond.push(`{PREF.}='${String(F.FISIO).replace(/'/g, '')}'`);
+            const bl = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(${cond.join(',')})`)}&fields[]=ESTADO`).catch(() => []);
+            for (let i = 0; i < bl.length; i += 10) await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: bl.slice(i, i + 10).map(x => ({ id: x.id, fields: { ESTADO: 'CITA LIBRE', NOTAS: '' } })), typecast: true }) });
+            abiertos = bl.length; }
+          return res.status(200).json({ ok: true, abiertos, ausencias: await ausencias().catch(() => []) });
+        }
         if (action === 'seg-adm-ausencia-borrar') {
           if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
           const d = await at(`${AUS}/${q.id}`, { method: 'DELETE' }); _ausC = { t: 0, v: null };
