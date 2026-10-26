@@ -1804,6 +1804,29 @@ module.exports = async function handler(req, res) {
         return res.status(200).json(data);
       }
       if (action === 'seg-lista') {
+        // Una sola vez: pacientes de la tabla de llamadas antigua que se quedaron a medias (pendiente de respuesta, volver a llamar, no contesta)
+        // y no están en «Por llamar» ni han vuelto a tener cita → se ponen en «Por llamar» para hoy
+        if (!(await ajuste('RESCATE_LLAMADAS_V1', null))) { try {
+          const todas = await todosT(LLA, `fields[]=FECHA&fields[]=RESULTADO&fields[]=PACIENTE&fields[]=NOTAS&fields[]=QUIEN LLAMA&fields[]=SEG ID`);
+          const ult = {}; todas.forEach(r => { const pid = (r.fields['PACIENTE'] || [])[0]; const f = String(r.fields['FECHA'] || ''); if (!pid || !f) return; if (!ult[pid] || f > String(ult[pid].fields['FECHA'])) ult[pid] = r; });
+          const abiertos = new Set((await todosT(SEG, `filterByFormula=${encodeURIComponent('NOT({HECHO})')}&fields[]=PACIENTE`)).flatMap(r => r.fields['PACIENTE'] || []));
+          const nmR = v => String((v && typeof v === 'object' ? v.name : v) || '').toUpperCase();
+          let cand = Object.entries(ult).filter(([pid, r]) => /PENDIENTE|^VOLVER|^NC/.test(nmR(r.fields['RESULTADO'])) && !abiertos.has(pid));
+          const conCita = new Set(), ids = cand.map(c => c[0]);
+          for (let i = 0; i < ids.length; i += 30) { const lote = ids.slice(i, i + 30);
+            const cs = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(IS_AFTER({FECHA},'2026-08-01'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=ESTADO&fields[]=RELACIÓN - CITA`);
+            cs.forEach(c => { const est = nmR(c.fields['ESTADO']); if (!/REALIZADA|PENDIENTE|CONFIRMADA/.test(est)) return; (c.fields['RELACIÓN - CITA'] || []).forEach(pid => { const r = ult[pid]; if (r && String(c.fields['FECHA'] || '') > String(r.fields['FECHA']).slice(0, 10)) conCita.add(pid); }); }); }
+          cand = cand.filter(([pid]) => !conCita.has(pid));
+          const RT = r => { const x = nmR(r); return /PENDIENTE/.test(x) ? 'Pendiente de respuesta' : /^NC/.test(x) ? 'No contesta' : 'Volver a llamar'; };
+          for (let i = 0; i < cand.length; i += 10) { const lote = cand.slice(i, i + 10);
+            const c = await at(SEG, { method: 'POST', body: JSON.stringify({ typecast: true, records: lote.map(([pid, r]) => { const f = String(r.fields['FECHA']).slice(0, 10).split('-');
+              return { fields: { 'FECHA DE LLAMADA': hoyF, PACIENTE: [pid], NOTAS: `Recuperado de las llamadas antiguas. Última llamada (${f[2]}/${f[1]}): ${RT(r.fields['RESULTADO'])}${r.fields['NOTAS'] ? ' — ' + r.fields['NOTAS'] : ''}` } }; }) }) });
+            if (c.error) throw new Error(c.error.message);
+            // La llamada antigua queda enlazada a su nueva fila, para que salga como «Última llamada»
+            await at(LLA, { method: 'PATCH', body: JSON.stringify({ records: c.records.map((n, k) => ({ id: lote[k][1].id, fields: { 'SEG ID': n.id } })) }) });
+          }
+          await guardarAjuste('RESCATE_LLAMADAS_V1', { fecha: hoyF, rescatados: cand.length, yaConCita: conCita.size }, 'panel');
+        } catch (e) { console.error('rescate llamadas', e.message); } }
         const pendP = todosT(SEG, `filterByFormula=${encodeURIComponent('NOT({HECHO})')}&sort[0][field]=FECHA DE LLAMADA&sort[0][direction]=asc`);
         const prevP = todosT(LLA, `filterByFormula=${encodeURIComponent(`AND({SEG ID}!='',IS_AFTER({FECHA},DATEADD(TODAY(),-180,'days')))`)}&sort[0][field]=FECHA&sort[0][direction]=desc`).catch(() => []);
         const conRango = /^\d{4}-\d{2}-\d{2}$/.test(q.desde || '') && /^\d{4}-\d{2}-\d{2}$/.test(q.hasta || '');
