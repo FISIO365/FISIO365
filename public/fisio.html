@@ -1192,6 +1192,9 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .hpk{width:300px;padding:12px!important}.hpk-g button{padding:8px 0!important}.hpk-any{width:100%;font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:10px;padding:9px;background:#f3efea;color:#5f554e;cursor:pointer;margin-bottom:8px}
 .hpk-g{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.hpk-g button{font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:9px;padding:9px 0;background:#fdeee4;color:#c2552e;cursor:pointer}
 .hpk-g button.m{background:#fff;color:#7d6a60;box-shadow:inset 0 0 0 1px #eee5dd;font-weight:500}.hpk-g button.sel,.hpk-any.sel{background:#c2552e!important;color:#fff!important;box-shadow:none}
+.cap-np{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#b42318;background:#fff;border:1.5px solid #f3c7c2;border-radius:10px;padding:7px 12px;cursor:pointer}
+.cap-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}.cap-col>.cap-of,.cap-col>.cap-nadie{width:100%}
+.cap-ofrs{display:flex;flex-direction:column;gap:6px;min-width:0}.cap-ofr{display:flex;align-items:center;gap:8px;justify-content:space-between;background:#fff8e6;border-radius:12px;padding:8px 8px 8px 12px;font-size:12.5px;color:#7a5b00}.cap-ofr b{color:#3d3530}
 .rec-dias{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rec-dias span{font-size:13.5px;font-weight:600;background:#f3efea;border-radius:99px;padding:7px 12px}
 .rec-otro{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}
 .mcal-fijo .mcal-g button{aspect-ratio:auto;height:36px}.mcal-fijo .mcal-g i{padding:2px 0}.mcal-fijo{position:static!important;width:auto!important;box-shadow:none!important;padding:4px 0 0!important;border-radius:0!important}.mcal-g button.pas{color:#c9bfb7}
@@ -6319,19 +6322,33 @@ const capDiaNom=f=>CAP_DIAS[new Date(f+'T12:00:00').getDay()-1]||'';
 const capHor=x=>{const m=String((x&&x.horario)||'').match(/^(\d{2}:\d{2})?-(\d{2}:\d{2})?$/);return m&&(m[1]||m[2])?{d:m[1]||'',h:m[2]||''}:null;};
 const capEnHora=(x,hora)=>{const r=capHor(x),hh=String(hora||'').replace(/^(\d):/,'0$1:').slice(0,5);if(r)return (!r.d||hh>=r.d)&&(!r.h||hh<r.h);return !(x.franja||[]).length||x.franja.includes(capFranjaDe(hora));};
 const capHorTxt=x=>{const r=capHor(x);if(r)return r.d&&r.h?`De ${r.d} a ${r.h}`:r.d?`A partir de las ${r.d}`:`Hasta las ${r.h}`;return (x.franja||[]).length?x.franja.join(' · '):'Cualquier hora';};
-const capEncaja=(x,h)=>(!(x.dias||[]).length||x.dias.includes(capDiaNom(h.fecha)))&&capEnHora(x,h.hora)&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
+// Huecos concretos que ya dijo que no puede (no se le vuelven a ofrecer)
+const capHKey=h=>`${String(h.fecha).slice(0,10)} ${String(h.hora||'').replace(/^(\d):/,'0$1:').slice(0,5)} ${String(h.fisio||'').trim().split(' ')[0].toLowerCase()}`;
+const capLs=(v,hoy)=>String(v||'').split('\n').map(l=>l.trim().toLowerCase()).filter(l=>l&&(!hoy||l.slice(0,10)>=hoy));
+const capNoPuede=(x,h)=>capLs(x&&x.nopuede).includes(capHKey(h));
+const capOfrecido=(x,h)=>capLs(x&&x.ofrecido).includes(capHKey(h))&&!capNoPuede(x,h);
+const capCon=(v,k,hoy)=>{const L=capLs(v,hoy);if(!L.includes(k))L.push(k);return L.join('\n');};
+const capSin=(v,k,hoy)=>capLs(v,hoy).filter(l=>l!==k).join('\n');
+// Dice que no puede: ese hueco no se le vuelve a ofrecer y vuelve a estar disponible para los demás huecos
+async function capMarcarNoPuede(x,h,hoy){const k=capHKey(h),nop=capCon(x.nopuede,k,hoy),of=capSin(x.ofrecido,k,hoy);
+ await capGuardar(x.tabla,{nopuede:nop,ofrecido:of,aviso:''},x.id);x.nopuede=nop;x.ofrecido=of;x.aviso='';}
+// Ofrecido: queda «esperando respuesta» en ese hueco y se le ofrece al siguiente si se pide
+async function capApuntarOfrecido(x,h,hoy){const of=capCon(x.ofrecido,capHKey(h),hoy);await capGuardar(x.tabla,{aviso:hoy,ofrecido:of},x.id);x.aviso=hoy;x.ofrecido=of;}
+const capEncaja=(x,h)=>!capNoPuede(x,h)&&(!(x.dias||[]).length||x.dias.includes(capDiaNom(h.fecha)))&&capEnHora(x,h.hora)&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
 const capDiasEntre=(a,b)=>a?Math.round((new Date(b+'T12:00:00')-new Date(String(a).slice(0,10)+'T12:00:00'))/864e5):null;
-function capPrio(esp,h,hoy){return esp.filter(x=>x.tel&&capEncaja(x,h)).map(x=>{const av=capDiasEntre(x.aviso,hoy),es=capDiasEntre(x.fecha,hoy)||0;return {x,reciente:!!x.aviso&&av!==null&&av<2,exacto:!!((x.dias||[]).length||(x.franja||[]).length||capHor(x)),es};}).sort((a,b)=>(a.reciente-b.reciente)||(b.es-a.es)||(b.exacto-a.exacto));}
+function capPrio(esp,h,hoy){return esp.filter(x=>x.tel&&capEncaja(x,h)&&!capOfrecido(x,h)).map(x=>{const av=capDiasEntre(x.aviso,hoy),es=capDiasEntre(x.fecha,hoy)||0;return {x,reciente:!!x.aviso&&av!==null&&av<2,exacto:!!((x.dias||[]).length||(x.franja||[]).length||capHor(x)),es};}).sort((a,b)=>(a.reciente-b.reciente)||(b.es-a.es)||(b.exacto-a.exacto));}
 const capDiaLargo=f=>{const t=new Date(f+'T12:00:00');return ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][t.getDay()]+' '+t.getDate();};
 async function capOfrecer(x,h,hoy){const nom=capNomF(String(capTit(x.nombre)).split(' ')[0]);
  waAbrir(x.tel,`¡Hola ${nom}! Te escribimos de FISIO365: nos ha quedado un hueco libre el ${capDiaLargo(h.fecha)} a las ${h.hora}${h.fisio?' con '+capNomF(String(h.fisio).split(' ')[0]):''}. ¿Te va bien? Si no, te avisamos del siguiente.`);
- try{await capGuardar(x.tabla,{aviso:hoy},x.id);x.aviso=hoy;}catch(e){}}
+ try{await capApuntarOfrecido(x,h,hoy);}catch(e){}}
 // Ventana con todos los que pueden en un hueco, en orden de prioridad
-function capOfrecerModal(h,esp,hoy,onDone){const P=capPrio(esp,h,hoy);
+function capOfrecerModal(h,esp,hoy,onDone){const P=capPrio(esp,h,hoy),O=esp.filter(x=>capOfrecido(x,h));
  const m=hzModal(`<div class="hz-top"><div><small>Hueco libre · ${escH(capDiaLargo(h.fecha))} · ${escH(h.hora)}${h.fisio?' · '+escH(capNomF(String(h.fisio).split(' ')[0])):''}</small><b>Lista de espera</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-  ${P.length?`<div class="cap-otros" style="flex-direction:column">${P.map((r,i)=>`<button type="button" class="cap-p${r.reciente?' av':''}" data-i="${i}" style="justify-content:flex-start;border-radius:12px;padding:9px 12px">${IC_WA}<span>${i?'':'Primero: '}<b>${escH(capTit(r.x.nombre))}</b></span><small>${r.es} día${r.es===1?'':'s'} esperando${r.reciente?' · avisado':''}${r.exacto?'':' · le va cualquier día'}</small></button>`).join('')}</div>`:'<div class="fac-vacio">Nadie de la lista puede a esta hora</div>'}`);
+  ${O.length?`<div class="cap-ofrs" style="margin-bottom:10px">${O.map((x,i)=>`<div class="cap-ofr"><span>Ofrecido a <b>${escH(capTit(x.nombre))}</b> · esperando respuesta</span><button type="button" class="cap-np" data-o="${i}">No puede</button></div>`).join('')}</div>`:''}
+  ${P.length?`<div class="cap-otros" style="flex-direction:column">${P.map((r,i)=>`<button type="button" class="cap-p${r.reciente?' av':''}" data-i="${i}" style="justify-content:flex-start;border-radius:12px;padding:9px 12px">${IC_WA}<span>${i?'':(O.length?'Siguiente: ':'Primero: ')}<b>${escH(capTit(r.x.nombre))}</b></span><small>${r.es} día${r.es===1?'':'s'} esperando${r.reciente?' · avisado':''}${r.exacto?'':' · le va cualquier día'}</small></button>`).join('')}</div>`:(O.length?'':'<div class="fac-vacio">Nadie de la lista puede a esta hora</div>')}`);
  m.querySelector('.hz-x').onclick=()=>{m.remove();onDone&&onDone();};
- m.querySelectorAll('.cap-p').forEach(b=>b.onclick=async()=>{const r=P[+b.dataset.i];await capOfrecer(r.x,h,hoy);b.classList.add('av');toast('Apuntado: avisado hoy',true);});}
+ m.querySelectorAll('.cap-p').forEach(b=>b.onclick=async()=>{const r=P[+b.dataset.i];await capOfrecer(r.x,h,hoy);toast('Apuntado: esperando respuesta',true);m.remove();capOfrecerModal(h,esp,hoy,onDone);});
+ m.querySelectorAll('.cap-np').forEach(b=>b.onclick=async()=>{const x=O[+b.dataset.o];b.disabled=true;try{await capMarcarNoPuede(x,h,hoy);toast('Apuntado: no puede',true);m.remove();capOfrecerModal(h,esp,hoy,onDone);}catch(e){b.disabled=false;toast('No se ha podido guardar',false);}});}
 
 
 // ── BIBLIOTECA DE EJERCICIOS ──────────────────────────────────────────────────
@@ -6508,13 +6525,13 @@ async function renderCaptacion(wrap){
  // ── Lista de espera ──
  const franjaDe=h=>{const n=parseInt(String(h).slice(0,2),10);return n<13?'Mañana':n<16?'Mediodía':'Tarde';};
  const diaNom=f=>CAP_DIAS[new Date(f+'T12:00:00').getDay()-1]||'';
- const encaja=(x,h)=>(!x.dias.length||x.dias.includes(diaNom(h.fecha)))&&capEnHora(x,h.hora)&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
+ const encaja=(x,h)=>!capNoPuede(x,h)&&(!x.dias.length||x.dias.includes(diaNom(h.fecha)))&&capEnHora(x,h.hora)&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
  const diasDesde=f=>f?Math.round((new Date(D.hoy+'T12:00:00')-new Date(String(f).slice(0,10)+'T12:00:00'))/864e5):null;
  const diaTxt=f=>{const t=new Date(f+'T12:00:00'),w=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][t.getDay()]+' '+t.getDate();return diasDesde(f)===0?'Hoy · '+w:w;};
  const diaLargo=f=>{const t=new Date(f+'T12:00:00');return ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][t.getDay()]+' '+t.getDate();};
  async function avisar(x,h){const nom=capNomF(String(capTit(x.nombre)).split(' ')[0]);
   const txt=h?`¡Hola ${nom}! Te escribimos de FISIO365: nos ha quedado un hueco libre el ${diaLargo(h.fecha)} a las ${h.hora}${h.fisio?' con '+capNomF(String(h.fisio).split(' ')[0]):''}. ¿Te va bien? Si no, te avisamos del siguiente.`:`¡Hola ${nom}! Te escribimos de FISIO365 por la lista de espera. ¿Sigues queriendo cita? Dinos qué días te van mejor y te buscamos hueco.`;
-  waAbrir(x.tel,txt);try{await capGuardar(x.tabla,{aviso:D.hoy},x.id);x.aviso=D.hoy;pinta();}catch(e){}}
+  waAbrir(x.tel,txt);try{if(h)await capApuntarOfrecido(x,h,D.hoy);else{await capGuardar(x.tabla,{aviso:D.hoy},x.id);x.aviso=D.hoy;}pinta();}catch(e){}}
  function pEspera(body){
   const esp=D.espera.filter(x=>x.estado==='ESPERANDO');
   const L=D.espera.filter(x=>capVerTodo||x.estado==='ESPERANDO').slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
@@ -6523,11 +6540,13 @@ async function renderCaptacion(wrap){
   const sinH=dias.filter(f=>!(D.libres||[]).some(h=>h.fecha===f));
   const sem=dias.filter(f=>!sinH.includes(f)).map(f=>{const hs=(D.libres||[]).filter(h=>h.fecha===f);
    // Para cada hueco: a quién ofrecérselo primero (quien más lleva esperando y no se le ha avisado en 2 días), y el resto por si dice que no
-   const prio=h=>esp.filter(x=>x.tel&&encaja(x,h)).map(x=>{const av=diasDesde(x.aviso),es=diasDesde(x.fecha)||0;return {x,reciente:x.aviso&&av!==null&&av<2,exacto:!!(x.dias.length||x.franja.length||capHor(x)),es};})
+   const prio=h=>esp.filter(x=>x.tel&&encaja(x,h)&&!capOfrecido(x,h)).map(x=>{const av=diasDesde(x.aviso),es=diasDesde(x.fecha)||0;return {x,reciente:x.aviso&&av!==null&&av<2,exacto:!!(x.dias.length||x.franja.length||capHor(x)),es};})
      .sort((a,b)=>(a.reciente-b.reciente)||(b.es-a.es)||(b.exacto-a.exacto));
    const frs=CAP_FRANJA.map(fr=>{const hf=hs.filter(h=>franjaDe(h.hora)===fr);if(!hf.length)return '';
     return `<div class="cap-fr"><span class="cap-frn">${fr}</span><div class="cap-frc">${hf.map(h=>{const P=prio(h),p0=P[0],resto=P.slice(1);
-     return `<div class="cap-hu"><span class="cap-hh${h.sinBomba?' sb':''}">${h.hora}${h.fisio?'<em> · </em><small>'+escH(capNomF(String(h.fisio).split(' ')[0]))+'</small>':''}</span>${p0?`<div class="cap-of"><button type="button" class="cap-p${p0.reciente?' av':''}" data-id="${p0.x.id}" data-f="${h.fecha}" data-h="${h.hora}" data-fi="${escH(h.fisio)}">${IC_WA}<span>${p0.reciente?'Avisado: ':'Ofrecer a '}<b>${escH(capTit(p0.x.nombre).split(' ').slice(0,2).join(' '))}</b></span><small>${p0.es} día${p0.es===1?'':'s'} esperando${p0.exacto?'':' · le va cualquier día'}</small></button>${resto.length?`<button type="button" class="cap-mas">+${resto.length} más</button><div class="cap-otros" hidden>${resto.map(r=>`<button type="button" class="cap-p sm${r.reciente?' av':''}" data-id="${r.x.id}" data-f="${h.fecha}" data-h="${h.hora}" data-fi="${escH(h.fisio)}">${IC_WA}<span>${escH(capTit(r.x.nombre).split(' ').slice(0,2).join(' '))}</span><small>${r.es}d${r.reciente?' · avisado':''}</small></button>`).join('')}</div>`:''}</div>`:'<span class="cap-nadie">Nadie de la lista puede a esta hora</span>'}</div>`;}).join('')}</div></div>`;}).join('');
+     const ofr=esp.filter(x=>capOfrecido(x,h));
+     const ofrH=ofr.map(x=>`<div class="cap-ofr"><span>Ofrecido a <b>${escH(capTit(x.nombre).split(' ').slice(0,2).join(' '))}</b> · esperando respuesta</span><button type="button" class="cap-np" data-id="${x.id}" data-f="${h.fecha}" data-h="${h.hora}" data-fi="${escH(h.fisio)}">No puede</button></div>`).join('');
+     return `<div class="cap-hu"><span class="cap-hh${h.sinBomba?' sb':''}">${h.hora}${h.fisio?'<em> · </em><small>'+escH(capNomF(String(h.fisio).split(' ')[0]))+'</small>':''}</span><div class="cap-col">${ofrH?`<div class="cap-ofrs">${ofrH}</div>`:''}${p0?`<div class="cap-of"><button type="button" class="cap-p${p0.reciente?' av':''}" data-id="${p0.x.id}" data-f="${h.fecha}" data-h="${h.hora}" data-fi="${escH(h.fisio)}">${IC_WA}<span>${p0.reciente?'Avisado: ':'Ofrecer a '}<b>${escH(capTit(p0.x.nombre).split(' ').slice(0,2).join(' '))}</b></span><small>${ofr.length?'Si no puede, el siguiente · ':''}${p0.es} día${p0.es===1?'':'s'} esperando${p0.exacto?'':' · le va cualquier día'}</small></button>${resto.length?`<button type="button" class="cap-mas">+${resto.length} más</button><div class="cap-otros" hidden>${resto.map(r=>`<button type="button" class="cap-p sm${r.reciente?' av':''}" data-id="${r.x.id}" data-f="${h.fecha}" data-h="${h.hora}" data-fi="${escH(h.fisio)}">${IC_WA}<span>${escH(capTit(r.x.nombre).split(' ').slice(0,2).join(' '))}</span><small>${r.es}d${r.reciente?' · avisado':''}</small></button>`).join('')}</div>`:''}</div>`:(ofr.length?'':'<span class="cap-nadie">Nadie de la lista puede a esta hora</span>')}</div></div>`;}).join('')}</div></div>`;}).join('');
    return `<div class="cap-dia${hs.length?'':' vacio'}"><div class="cap-dh"><b>${diaTxt(f)}</b><span>${hs.length?hs.length+' hueco'+(hs.length>1?'s':'')+' libre'+(hs.length>1?'s':''):'Sin huecos libres'}</span></div>${frs}</div>`;}).join('');
   body.innerHTML=`<div class="cap-top"><p>Huecos libres de esta semana y quién de la lista de espera encaja en cada uno.</p><button type="button" class="seg-add cap-add">+ Añadir</button></div>
    <div class="cap-sem">${sem}${sinH.length?`<div class="cap-sinh">Sin huecos libres: ${sinH.map(f=>diaTxt(f).replace('Hoy · ','hoy, ')).join(', ')}</div>`:''}</div>
@@ -6541,6 +6560,8 @@ async function renderCaptacion(wrap){
   body.querySelector('.cap-todo').onclick=()=>{capVerTodo=!capVerTodo;pinta();};
   body.querySelectorAll('.cap-mas').forEach(b=>b.onclick=()=>{const o=b.nextElementSibling;o.hidden=!o.hidden;b.textContent=o.hidden?b.dataset.t||b.textContent:'Ocultar';if(!b.dataset.t)b.dataset.t=b.textContent;});
   body.querySelectorAll('.cap-p').forEach(b=>b.onclick=()=>{const x=D.espera.find(e=>e.id===b.dataset.id);avisar(x,{fecha:b.dataset.f,hora:b.dataset.h,fisio:b.dataset.fi});});
+  body.querySelectorAll('.cap-np').forEach(b=>b.onclick=async()=>{const x=D.espera.find(e=>e.id===b.dataset.id);if(!x)return;b.disabled=true;
+   try{await capMarcarNoPuede(x,{fecha:b.dataset.f,hora:b.dataset.h,fisio:b.dataset.fi},D.hoy);pinta();toast(`Apuntado: ${capNomF(String(capTit(x.nombre)).split(' ')[0])} no puede. Ofrécelo al siguiente`,true);}catch(e){b.disabled=false;toast('No se ha podido guardar',false);}});
   body.querySelectorAll('.cap-it').forEach(r=>{const x=D.espera.find(e=>e.id===r.dataset.id);
    const wa=r.querySelector('.cap-wa');if(wa)wa.onclick=()=>avisar(x,null);
    r.querySelector('.cap-ed').onclick=()=>editEspera(x);
