@@ -914,7 +914,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .cs-tapa .cs-lacre{fill:#c2552e;stroke:#fff;stroke-width:2.5;transition:opacity .15s}
 .com-sobre.abre .cs-tapa{transform:scaleY(-1);z-index:1}.com-sobre.abre .cs-lacre{opacity:0}
 .com-sobre.sale .cs-carta{transform:translateY(-58%)}
-@media(max-width:560px){.com-bz{min-height:124px;padding:20px}.com-bz .com-buzon{width:46px;height:46px;margin-top:-23px;right:22px}.com-carta{padding:22px 18px 16px}.com-carta.com-r{margin-left:10px}}
+@media(max-width:560px){.com-ev{margin-left:10px;padding-left:14px}.com-ojo{margin-left:10px}.com-bz{min-height:124px;padding:20px}.com-bz .com-buzon{width:46px;height:46px;margin-top:-23px;right:22px}.com-carta{padding:22px 18px 16px}.com-carta.com-r{margin-left:10px}}
 /* Carta: cabecera con sello */
 .com-cab2{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:16px;margin-bottom:4px;border-bottom:1px solid #f1ebe5}
 .com-cab2>div>b{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c2552e}
@@ -949,6 +949,11 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-resp.plegada .com-anadir{display:flex}.com-anadir{align-items:center;justify-content:center;gap:8px;width:100%;font-family:var(--font);font-size:14px;font-weight:600;color:#7d6a60;background:none;border:none;border-radius:20px;padding:15px;cursor:pointer;margin:0}
 .com-anadir svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .com-hilo>.com-cerrar{background:none;color:#a89a90;font-size:12.5px;margin:2px 0 8px}
+.com-ev{display:flex;align-items:center;gap:12px;padding:10px 6px 10px 18px;margin:2px 0 10px 18px}
+.com-ev-i{flex:none;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#e9f4ec;color:#2f7a52}.com-ev.no .com-ev-i{background:#fde4e2;color:#b42318}.com-ev.info .com-ev-i{background:#e4ebf3;color:#1e2a38}
+.com-ev-i svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.com-ev-i svg rect{display:none}
+.com-ev b{display:block;font-size:14px;font-weight:700;color:#1a1a1a}.com-ev small{display:block;font-size:12px;color:#9b8b80;margin-top:1px}
+.com-ojo{margin:-4px 0 12px 18px;background:#fbf3e4;border-radius:14px;padding:11px 14px;display:flex;flex-direction:column;gap:3px}.com-ojo b{font-size:12.5px;font-weight:700;color:#9a6512;margin-bottom:2px}.com-ojo span{font-size:13px;color:#6b5f57}
 /* Móvil: barra de pestañas abajo en vez de la lateral */
 @media(max-width:768px){
  .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:24px!important;right:24px!important;border-radius:26px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
@@ -6198,6 +6203,7 @@ const COM_IC={
  campana:'<path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 8 2.5 8h-17S6 15 6 9"/><path d="M10.3 20.5a1.9 1.9 0 0 0 3.4 0"/>',
  megafono:'<path d="M3.5 10.5v3a1 1 0 0 0 1 1H7l7 4.5v-14L7 9.5H4.5a1 1 0 0 0-1 1z"/><path d="M18 9a4 4 0 0 1 0 6"/>',
  check:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="m8 12 3 3 5-6"/>',
+ cruz:'<path d="M7 7l10 10M17 7 7 17"/>',
  candado:'<rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2"/>',
  salvavidas:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="m6 6 3.5 3.5M18 6l-3.5 3.5M6 18l3.5-3.5M18 18l-3.5-3.5"/>',
  sobre:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
@@ -6284,6 +6290,14 @@ function comSobre(h){
  o.onclick=fin;
 }
 
+function comEvento(t){const L=String(t||'').split('\n'),f=L[0]||'';let tipo='';
+ if(/^✓ (Aprobada|Gestionada|Resuelta)/.test(f))tipo='ok';else if(/^✗ Rechazada/.test(f))tipo='no';else if(/^🙋 /.test(f))tipo='info';if(!tipo)return null;
+ const ev={tipo,titulo:f.replace(/^(✓|✗|🙋)\s*/,'').replace(/\.$/,'').replace('Me encargo yo','Se encarga'),det:[],ojo:[],coment:''},com=[];
+ L.slice(1).join('\n').split(/\n\s*\n/).forEach(p=>{p=p.trim();if(!p)return;
+  if(/^Apuntada en/.test(p)){ev.det.push('Apuntada en Vacaciones y horarios');const n=p.match(/(\d+) hueco/);if(n)ev.det.push(`${n[1]} hueco${n[1]==='1'?'':'s'} bloqueado${n[1]==='1'?'':'s'}`);}
+  else if(/^Ojo:/.test(p))ev.ojo=p.split('\n').slice(1).map(x=>x.replace(/^•\s*/,'').trim()).filter(Boolean);
+  else com.push(p);});
+ ev.coment=com.join('\n\n');return ev;}
 async function comHilo(wrap,id){
  const volver=()=>{COM.hilo=null;comGuarda();wrap.innerHTML='';renderCom(wrap);};
  const box=ce('div','com com-hilo');wrap.appendChild(box);
@@ -6305,9 +6319,8 @@ async function comHilo(wrap,id){
  const hecho=x=>`<div class="com-ok">${comIco('check')}<span>${escH(x)}</span></div>`,boton=(k,t)=>`<button type="button" class="com-b" data-a="${k}">${t}</button>`,miH=h.hecho[yo];
  let acc='';
  if(h.puedeAprobar)acc=`<p class="com-acc-t">Al aprobarla se apunta en Administración y se bloquean sus huecos libres en la agenda.</p><div class="com-bts"><button type="button" class="com-b sec" data-a="rech">Rechazar</button><button type="button" class="com-b" data-a="apr">Aprobar</button></div>`;
- else if(esAus&&h.resolucion!=='Pendiente'&&h.para.includes(yo))acc=hecho(`${h.resolucion} por ${h.resueltaPor}`);
  else if(h.tipo==='Tareas'&&h.para.includes(yo))acc=h.abierta?boton('todas','✓ Marcar todo como hecho'):hecho('Todas las tareas hechas');
- else if(h.tipo==='Incidencia'&&h.para.includes(yo))acc=h.abierta?boton('gest','✓ Marcar como gestionada'):hecho(`Gestionada por ${h.resueltaPor||'dirección'}`);
+ else if(h.tipo==='Incidencia'&&h.para.includes(yo))acc=h.abierta?boton('gest','✓ Marcar como gestionada'):'';
  else if(h.tipo==='Ayuda'&&h.abierta)acc=!D.encargado&&h.para.includes(yo)?boton('encargo','🙋 Me encargo'):(D.encargado===yo||env)?boton('resuelta','✓ Resuelta'):'';
  else if(!esAus&&!esp&&h.para.includes(yo))acc=miH?hecho(`${h.req?'Hecha':'Confirmado'} · ${comFecha(miH)}`):h.abierta?boton('hecho',h.req?'✓ Marcar como hecha':'✓ Recibido y conforme'):'';
  const firma=n=>`<div class="com-firma"><span>Atentamente,</span><b>${escH(n)}</b><small>${escH(comRol(n))}</small></div>`;
@@ -6321,12 +6334,14 @@ async function comHilo(wrap,id){
    ${firma(m0.de)}
    <footer class="com-pie"><span class="com-logo"><span>FISIO</span>365</span>Fourth Dynamic, S.L. · Gran de Sant Andreu 163, Barcelona</footer>
   </article>
-  ${resp.map(m=>{const t=String(m.cuerpo||''),ap=/^✓ (Aprobada|Gestionada|Resuelta)/.test(t),re=/^✗ Rechazada/.test(t);return `<article class="com-carta com-r${m.de===yo?' mio':''}${ap?' ap':re?' re':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>Respuesta · ${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${escH(t)}</div></article>`;}).join('')}
+  ${resp.map(m=>{const resp1=t=>`<article class="com-carta com-r${m.de===yo?' mio':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${escH(t)}</div></article>`;
+   const ev=comEvento(m.cuerpo);if(!ev)return resp1(String(m.cuerpo||''));
+   return `<div class="com-ev ${ev.tipo}"><span class="com-ev-i">${comIco(ev.tipo==='no'?'cruz':'check')}</span><div><b>${escH(ev.titulo)}</b><small>${escH([comFecha(m.fecha)].concat(ev.det).join(' · '))}</small></div></div>${ev.ojo.length?`<div class="com-ojo"><b>Citas con paciente que hay que mover</b>${ev.ojo.map(x=>`<span>${escH(x)}</span>`).join('')}</div>`:''}${ev.coment?resp1(ev.coment):''}`;}).join('')}
   ${acc?`<div class="com-card com-acc">${acc}</div>`:''}
   <div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>
   <div class="com-card com-resp plegada"><button type="button" class="com-anadir">${comIco('lapiz')}<span>${env?'Añadir algo a esta carta':'¿Dudas o algo que decir?'}</span></button><textarea rows="4" placeholder="${env?'Añade algo a tu carta…':'Escribe tu respuesta…'}"></textarea>
    <div class="com-bts"><button type="button" class="com-b" data-a="resp">Enviar</button></div></div>
-  ${env?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}`;
+  ${env&&!(esAus&&h.resolucion!=='Pendiente')?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}`;
  box.querySelector('.com-volver').onclick=volver;
  const ta=box.querySelector('textarea');
  box.querySelectorAll('.com-ta[data-ti]').forEach(b=>b.onclick=async()=>{if(b.disabled)return;const i=+b.dataset.ti,on=!b.classList.contains('on');b.disabled=true;
