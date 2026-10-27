@@ -1613,7 +1613,11 @@ module.exports = async function handler(req, res) {
           const ya = pide.yaVino || new Set(), nuevosPin = [];
           citas.forEach(c => { const a = acc[c.pacienteId]; if (!a || a.app || !ya.has(c.pacienteId)) return; const t = String(c.tel || '').replace(/\D/g, '').slice(-9);
             if (!a.email && t.length < 9) return; if (!a.pin) { a.pin = nuevoPin(); nuevosPin.push([c.pacienteId, a.pin]); }
-            c.app = { url: 'https://app.fisioterapia365.com', usuario: a.email ? 'tu email (' + a.email + ')' : 'tu teléfono (' + t + ')', pin: a.pin }; });
+            c.app = { url: 'https://app.fisioterapia365.com', usuario: a.email || t, pin: a.pin }; });
+          // ¿Ya tiene ejercicios puestos? (cambia cómo se le cuenta la app)
+          const conApp = [...new Set(citas.filter(c => c.app).map(c => c.pacienteId))];
+          if (conApp.length) { const pl = await todosT('tblvgE0a4gsrj4Vhp', `filterByFormula=${encodeURIComponent(`AND(LEN({Ejercicios}&'')>2,OR(${conApp.slice(0, 60).map(id => `{PacienteID}='${id}'`).join(',')}))`)}&fields[]=PacienteID`).catch(() => []);
+            const conEj = new Set(pl.map(r => String(r.fields['PacienteID'] || ''))); citas.forEach(c => { if (c.app) c.app.ejercicios = conEj.has(c.pacienteId); }); }
           for (const [id, pin] of [...new Map(nuevosPin)].slice(0, 30)) await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: pin } }) }).catch(() => {});
           return res.status(200).json({ ok: true, hoy: hoyF, citas });
         }
