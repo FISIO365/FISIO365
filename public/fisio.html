@@ -809,7 +809,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-msg{padding:16px 18px}.com-msg.mio{background:#fdfbf9}
 .com-mh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.com-mh .com-av{width:30px;height:30px;font-size:12px}.com-mh b{font-size:14px}.com-mh em{font-style:normal;font-size:11px;font-weight:600;color:#7d6a60;background:#f1ede9;border-radius:99px;padding:2px 8px}.com-mh time{margin-left:auto;font-size:12px;color:#9b8b80}
 .com-cu{white-space:pre-wrap;word-break:break-word;font-size:14.5px;line-height:1.55;color:#1a1a1a}
-.com-resp{padding:14px}
+.com-resp{padding:14px}.com-anadir{display:none}.com-resp.plegada{background:none;box-shadow:none;padding:0}.com-resp.plegada>*{display:none}.com-resp.plegada .com-anadir,.com-resp.plegada .com-cerrar{display:block}.com-anadir{width:100%;font-family:var(--font);font-size:13.5px;font-weight:600;color:#c2552e;background:#fff;border:1.5px dashed #f3c9b2;border-radius:14px;padding:12px;cursor:pointer;margin-bottom:8px}
 .com-resp textarea,.com-in{display:block;width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:11px 13px;border:1.5px solid var(--border);border-radius:12px;background:#fff;resize:vertical}
 .com-resp textarea:focus,.com-in:focus{outline:none;border-color:#c2552e}
 .com-bts{display:flex;gap:8px;margin-top:10px}.com-b{flex:1;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:12px;border:1.5px solid #c2552e;background:#c2552e;color:#fff;cursor:pointer}.com-b.sec{background:#fff;color:#c2552e}.com-b:disabled{opacity:.6}
@@ -850,19 +850,20 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 /* ── Buzón (v2): estilo fino, ilustraciones a línea ── */
 .com{max-width:720px}
 .com-bz{position:relative;background:#1e2a38;border-radius:24px;padding:24px 22px 22px;color:#fff;margin-bottom:14px;min-height:178px;overflow:hidden}
-.com-buzon{position:absolute;right:12px;bottom:-4px;width:140px;height:132px;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.com-buzon .b1{stroke:rgba(255,255,255,.55);stroke-width:1.6}.com-buzon .b2{stroke:rgba(255,255,255,.3);stroke-width:1.6}.com-buzon .b3{stroke:rgba(255,255,255,.28);stroke-width:1.4}
-.com-buzon .b4{stroke:#f5f2ee;stroke-width:1.6}.com-buzon .bg{fill:#1e2a38}.com-buzon .b5{stroke:#f39a55;stroke-width:1.8}.com-buzon .f{fill:rgba(243,154,85,.25)}
+.com-buzon{position:absolute;right:10px;bottom:-2px;width:150px;height:140px;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.com-buzon .b1{stroke:rgba(255,255,255,.7);stroke-width:1.8}.com-buzon .b2{stroke:rgba(255,255,255,.35);stroke-width:1.8}.com-buzon .b3{stroke:rgba(255,255,255,.45);stroke-width:1.6}.com-buzon .bg{fill:#1e2a38}
+.com-buzon .b4{stroke:#f5f2ee;stroke-width:1.7}.com-buzon .b5{stroke:#f39a55;stroke-width:1.9}.com-buzon .f{fill:rgba(243,154,85,.3)}.com-buzon .k{fill:rgba(255,255,255,.7)}.com-buzon .lc{fill:#c2552e}
 .com-bz-n{position:relative;font-size:52px;font-weight:800;line-height:.9;letter-spacing:-.04em}.com-bz-n span{color:#f39a55}
 .com-bz-t{position:relative;font-size:13px;color:#aab4c1;margin-top:6px}
 .com-esc{position:relative;margin-top:16px;display:inline-flex;align-items:center;gap:8px;font-family:var(--font);font-size:14px;font-weight:600;border:none;border-radius:99px;padding:12px 20px;background:#c2552e;color:#fff;cursor:pointer}
 .com-esc svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.com-cas{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 4px;margin:0 0 14px;scrollbar-width:none}.com-cas::-webkit-scrollbar{display:none}
+.com-cas{margin:0 0 14px}.com-cas-t{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#a89a90;margin:4px 4px 8px}.com-cas-l{display:flex;gap:10px;overflow-x:auto;padding:4px 2px;scrollbar-width:none}.com-cas-l::-webkit-scrollbar{display:none}
 .com-cs{flex:none;width:64px;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--font);font-size:11.5px;font-weight:600;color:#7d6a60;background:none;border:none;padding:0;cursor:pointer}
 .com-cs-av{position:relative;width:56px;height:56px;border-radius:18px;background:#fff;box-shadow:0 1px 3px rgba(26,26,26,.08);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:#c2552e}
 .com-cs-av img{width:100%;height:100%;object-fit:cover;border-radius:18px}
 .com-cs-av svg{width:22px;height:22px;fill:none;stroke:#1a1a1a;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .com-cs.on{color:#1a1a1a}.com-cs.on .com-cs-av{box-shadow:0 0 0 2px #1a1a1a}
+.com-cs-av>i{position:absolute;right:-4px;bottom:-4px;width:22px;height:22px;border-radius:50%;background:#c2552e;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #f5f2ee}.com-cs-av>i svg{width:11px;height:11px;stroke:#fff;stroke-width:2.2}.com-cs:active .com-cs-av{transform:scale(.95)}
 .com-cs-av em{position:absolute;right:-5px;top:-5px;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:99px;background:#c2552e;color:#fff;font-style:normal;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #f5f2ee}
 .com .com-tabs{margin:0 0 6px}
 .com-h{font-size:11px;font-weight:700;letter-spacing:.12em;color:#a89a90;margin:16px 4px 8px}
@@ -884,12 +885,13 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-l3{display:flex;align-items:center;gap:8px}.com-tx .com-ex{flex:1;min-width:0;font-size:12.5px;color:#9b8b80;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .com-l3 .com-pill{flex:none;font-size:10.5px;padding:2px 8px}
 .com-vacio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 0 10px;color:#9b8b80;font-size:14px}
-.com-vacio .com-buzon{position:static;width:96px;height:90px}.com-vacio .com-buzon .b1,.com-vacio .com-buzon .b2,.com-vacio .com-buzon .b3{stroke:#cbbcb0}
+.com-vacio .com-buzon{position:static;width:110px;height:103px}.com-vacio .com-buzon .b1,.com-vacio .com-buzon .b2,.com-vacio .com-buzon .b3{stroke:#cbbcb0}.com-vacio .com-buzon .bg{fill:#f5f2ee}.com-vacio .com-buzon .k{fill:#cbbcb0}
 .com-vacio b{font-weight:600}
 /* Carta abierta: más fina */
 .com-carta::before{display:none}
 .com-carta{border-radius:22px;padding:26px 26px 20px;box-shadow:0 1px 3px rgba(26,26,26,.05),0 8px 24px rgba(26,26,26,.04);border:none}
 .com-mem{align-items:center;padding-bottom:14px}
+@media(max-width:560px){.com-mem{flex-direction:column;align-items:flex-start;gap:10px}.com-mem-d{align-items:flex-start;text-align:left}}
 .com-mem-izq{display:flex;align-items:center;gap:12px;align-self:flex-start}
 .com-mem .com-mini{width:44px;height:37px}.com-mem .com-mini>svg{width:44px;height:37px}
 .com-logo{font-size:17px}.com-mem-d b{font-size:11px}.com-mem-d span{font-size:12.5px}
@@ -912,7 +914,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .cs-tapa .cs-lacre{fill:#c2552e;stroke:#fff;stroke-width:2.5;transition:opacity .15s}
 .com-sobre.abre .cs-tapa{transform:scaleY(-1);z-index:1}.com-sobre.abre .cs-lacre{opacity:0}
 .com-sobre.sale .cs-carta{transform:translateY(-58%)}
-@media(max-width:560px){.com-bz{min-height:170px;padding:22px 20px 20px}.com-buzon{width:122px;height:115px;right:6px}.com-carta{padding:22px 18px 16px}.com-carta.com-r{margin-left:10px}}
+@media(max-width:560px){.com-bz{min-height:170px;padding:22px 20px 20px}.com-bz .com-buzon{width:132px;height:123px;right:4px}.com-carta{padding:22px 18px 16px}.com-carta.com-r{margin-left:10px}}
 /* Móvil: barra de pestañas abajo en vez de la lateral */
 @media(max-width:768px){
  .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:24px!important;right:24px!important;border-radius:26px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
@@ -6170,7 +6172,7 @@ function comMini(h,cerrado){const [c,i]=comSelloDe(h);
   :'<path d="M3.8 14 24 2l20.2 12" class="e"/><rect x="10" y="5" width="28" height="20" rx="2" class="pap"/><path d="M15 11h14M15 15h10" class="ln"/><rect x="3" y="14" width="42" height="24" rx="4" class="e bg"/><path d="M3.8 15.5 24 28l20.2-12.5" class="e"/>';
  return `<span class="com-mini${cerrado?' cerr':''}"><svg viewBox="0 0 48 40">${svg}</svg><i style="background:${c}">${comIco(i)}</i></span>`;}
 // Buzón dibujado a línea (cabecera). Con la banderita levantada si hay cartas sin abrir
-const comBuzonSvg=n=>`<svg class="com-buzon" viewBox="0 0 140 132"><path d="M72 82v46M58 128h28" class="b2"/><path d="M24 82V54a24 24 0 0 1 24-24h46a24 24 0 0 1 24 24v28z" class="b1"/><path d="M24 82V54a24 24 0 0 1 48 0v28" class="b3"/>${n?'<path d="M102 82V40" class="b5"/><path d="M102 40h22l-5 6.5 5 6.5h-22" class="b5 f"/><rect x="6" y="58" width="34" height="22" rx="2.5" class="b4 bg"/><path d="M6.5 59.5 23 71l16.5-11.5" class="b4"/>':'<path d="M102 82V62" class="b2"/><path d="M102 62h20l-4 5 4 5h-20" class="b2"/>'}</svg>`;
+const comBuzonSvg=n=>`<svg class="com-buzon" viewBox="0 0 150 140"><path d="M40 134h54" class="b2"/><path d="M48 134l-3-6M53 134v-7M87 134l3-6M82 134v-6" class="b2"/><path d="M67 86v48" class="b2"/><path d="M22 86V58a28 28 0 0 1 28-28h34a28 28 0 0 1 28 28v28z" class="b1 bg"/><path d="M22 86V58a19 19 0 0 1 38 0v28" class="b3"/><circle cx="53" cy="66" r="2.2" class="k"/>${n?'<path d="M122 86V40" class="b5"/><circle cx="122" cy="38" r="2.4" class="b5 f"/><path d="M122 44h17a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-17" class="b5 f"/><rect x="4" y="63" width="32" height="21" rx="3" class="b4 bg"/><path d="M5 65l15 10 15-10" class="b4"/><circle cx="20" cy="75" r="2.4" class="lc"/>':'<path d="M116 74h24" class="b3"/><circle cx="116" cy="74" r="2" class="k"/><path d="M134 74v13a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3v-13" class="b3"/>'}</svg>`;
 const comDia=iso=>{if(!iso)return '';const d=new Date(iso),h=new Date(),ay=new Date();ay.setDate(h.getDate()-1);const k=x=>x.toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'});
  if(k(d)===k(h))return 'HOY';if(k(d)===k(ay))return 'AYER';return d.toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'Europe/Madrid'}).replace('.','').toUpperCase()+(d.getFullYear()!==h.getFullYear()?' '+d.getFullYear():'');};
 const comHora=iso=>iso?new Date(iso).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}):'';
@@ -6196,13 +6198,12 @@ function renderCom(wrap){
   box.querySelector('.com-bz').innerHTML=`${comBuzonSvg(n)}<div class="com-bz-n">${n}<span>.</span></div><div class="com-bz-t">${n===1?'carta sin abrir':n?'cartas sin abrir':'Buzón al día'}</div><button type="button" class="com-esc">${comIco('lapiz')}Escribir</button>`;
   box.querySelector('.com-esc').onclick=()=>comNueva(()=>{COM.tab='env';comGuarda();pinta(true);});
   // Casilleros: uno por persona del equipo (tocar filtra)
-  const otros=(d.equipo||[]).filter(p=>p!==yo);if(COM.quien&&!otros.includes(COM.quien))COM.quien='';
-  const nDe=p=>sinAbrir.filter(h=>h.de===p).length;
-  box.querySelector('.com-cas').innerHTML=`<button type="button" class="com-cs${!COM.quien?' on':''}" data-p=""><span class="com-cs-av">${comIco('sobre')}</span>Todos</button>`+otros.map(p=>{const f=(fisios||[]).find(x=>String(x.nombre||'').trim().split(' ')[0].toLowerCase()===p.toLowerCase()),k=nDe(p);
-   return `<button type="button" class="com-cs${COM.quien===p?' on':''}" data-p="${escH(p)}"><span class="com-cs-av">${f&&f.foto?`<img src="${escH(f.foto)}" alt="">`:escH(p.charAt(0))}${k?`<em>${k}</em>`:''}</span>${escH(p)}</button>`;}).join('');
-  box.querySelectorAll('.com-cs').forEach(b=>b.onclick=()=>{COM.quien=b.dataset.p;comGuarda();pinta();});
+  const otros=(d.equipo||[]).filter(p=>p!==yo);
+  box.querySelector('.com-cas').innerHTML=`<div class="com-cas-t">Escribir a…</div><div class="com-cas-l">`+otros.map(p=>{const f=(fisios||[]).find(x=>String(x.nombre||'').trim().split(' ')[0].toLowerCase()===p.toLowerCase());
+   return `<button type="button" class="com-cs" data-p="${escH(p)}"><span class="com-cs-av">${f&&f.foto?`<img src="${escH(f.foto)}" alt="">`:escH(p.charAt(0))}<i>${comIco('lapiz')}</i></span>${escH(p)}</button>`;}).join('')+`<button type="button" class="com-cs" data-p="*"><span class="com-cs-av">${comIco('sobre')}</span>Todos</button></div>`;
+  box.querySelectorAll('.com-cs').forEach(b=>b.onclick=()=>comNueva(()=>{COM.tab='env';comGuarda();pinta(true);},b.dataset.p==='*'?otros.slice():[b.dataset.p]));
   box.querySelectorAll('.com-tabs i').forEach(i=>{const v=i.dataset.n==='rec'?n:nPen;i.textContent=v||'';i.style.display=v?'':'none';});
-  const deQuien=h=>!COM.quien||h.de===COM.quien||h.para.includes(COM.quien);
+  const deQuien=h=>true;
   const est=h=>{const env=h.de===yo;if(h.tipo==='Ausencia')return h.resolucion==='Aprobada'?['ok','Aprobada']:h.resolucion==='Rechazada'?['rojo','Rechazada']:!h.abierta?['gris','Retirada']:['nar',h.puedeAprobar?'Por aprobar':'Pendiente'];
    if(!h.abierta)return h.req?['gris','Cerrada']:null;if(!h.req)return null;const hechos=h.para.filter(p=>h.hecho[p]).length;
    return env?[hechos===h.para.length?'ok':'nar',`Hecha ${hechos}/${h.para.length}`]:h.hecho[yo]?['ok','Hecha']:['nar','Requiere acción'];};
@@ -6211,7 +6212,7 @@ function renderCom(wrap){
   const porDia=L=>{const g=[];L.forEach(h=>{const k=comDia(h.ultima);const u=g[g.length-1];if(u&&u[0]===k)u[1].push(h);else g.push([k,[h]]);});return g.map(([k,l])=>`<div class="com-h">${escH(k)}</div><div class="com-card">${l.map(fila).join('')}</div>`).join('');};
   const vacio=t=>`<div class="com-vacio">${comBuzonSvg(0)}<b>${escH(t)}</b></div>`;
   let html='';
-  if(COM.tab==='rec'){const L=H.filter(h=>h.de!==yo&&deQuien(h));html=L.length?porDia(L):vacio(COM.quien?`Nada de ${COM.quien}`:'Tu buzón está vacío');}
+  if(COM.tab==='rec'){const L=H.filter(h=>h.de!==yo&&deQuien(h));html=L.length?porDia(L):vacio('Tu buzón está vacío');}
   else if(COM.tab==='env'){const L=H.filter(h=>h.de===yo&&deQuien(h));html=L.length?porDia(L):vacio('Todavía no has enviado ninguna');}
   else{const A=H.filter(h=>h.pendienteMio&&deQuien(h)).sort((a,b)=>(a.limite||'9')<(b.limite||'9')?-1:1),B=H.filter(h=>h.esperando&&deQuien(h));
    html=(A.length?`<div class="com-h">TE TOCA A TI</div><div class="com-card">${A.map(fila).join('')}</div>`:'')+(B.length?`<div class="com-h">ESPERANDO A OTROS</div><div class="com-card">${B.map(fila).join('')}</div>`:'')||vacio('Nada pendiente');}
@@ -6267,11 +6268,12 @@ async function comHilo(wrap,id){
   </article>
   ${resp.map(m=>{const t=String(m.cuerpo||''),ap=/^✓ Aprobada/.test(t),re=/^✗ Rechazada/.test(t);return `<article class="com-carta com-r${m.de===yo?' mio':''}${ap?' ap':re?' re':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>Respuesta · ${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${escH(t)}</div></article>`;}).join('')}
   <div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>
-  <div class="com-card com-resp">${h.puedeAprobar?'<div class="com-apr">Solicitud pendiente de tu aprobación. Al aprobarla se apunta en Administración y se bloquean sus huecos en la agenda.</div>':''}<textarea rows="${h.puedeAprobar?3:4}" placeholder="${h.puedeAprobar?'Comentario (opcional)…':'Escribe tu respuesta…'}"></textarea>
+  <div class="com-card com-resp${env&&!resp.some(m=>m.de!==yo)&&!h.puedeAprobar?' plegada':''}"><button type="button" class="com-anadir">+ Añadir algo a esta carta</button>${h.puedeAprobar?'<div class="com-apr">Solicitud pendiente de tu aprobación. Al aprobarla se apunta en Administración y se bloquean sus huecos en la agenda.</div>':''}<textarea rows="${h.puedeAprobar?3:4}" placeholder="${h.puedeAprobar?'Comentario (opcional)…':env&&!resp.some(m=>m.de!==yo)?'Añade algo a tu carta…':'Escribe tu respuesta…'}"></textarea>
    <div class="com-bts">${h.puedeAprobar?'<button type="button" class="com-b sec" data-a="rech">Rechazar</button><button type="button" class="com-b" data-a="apr">Aprobar</button>':`${miPend?'<button type="button" class="com-b sec" data-a="hecho">Marcar como hecha</button>':''}<button type="button" class="com-b" data-a="resp">${miPend?'Responder y marcar hecha':'Responder'}</button>`}</div>
    ${env?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}</div>`;
  box.querySelector('.com-volver').onclick=volver;
  const ta=box.querySelector('textarea');
+ {const rp=box.querySelector('.com-resp'),ad=box.querySelector('.com-anadir');if(ad)ad.onclick=()=>{rp.classList.remove('plegada');const b=rp.querySelector('[data-a=resp]');if(b)b.textContent='Añadir';ta.focus();};}
  const hacer=async(b,accion,extra,msg)=>{const bs=box.querySelectorAll('.com-resp button');bs.forEach(x=>x.disabled=true);const t0=b.textContent;b.textContent='Guardando…';
   try{const r=await comPost(accion,Object.assign({id:h.id},extra));if(!r.ok)throw new Error(r.error||'No se ha podido');toast(msg,true);
    const y=comY();COM.d=null;wrap.innerHTML='';await comHilo(wrap,h.id);comSetY(y);}
@@ -6297,11 +6299,11 @@ function comHoraPick(anchor,valor,onPick){
  const s=box.querySelector('.sel');if(s)box.scrollTop=s.offsetTop-box.clientHeight/2;
 }
 
-function comNueva(onOk){
+function comNueva(onOk,paraIni){
  const yo=String(fisioActual.nombre||'').trim().split(' ')[0].toLowerCase();
  const eq=((COM.d&&COM.d.equipo)||TAR_NOMBRES).filter(n=>n.toLowerCase()!==yo);
  const dir=COM_APRUEBAN.filter(n=>n.toLowerCase()!==yo);
- const S={para:[],tipo:'Comunicado',req:false,limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:''};
+ const S={para:(paraIni||[]).filter(n=>eq.includes(n)),tipo:'Comunicado',req:false,limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:''};
  const m=hzModal(`<div class="hz-top"><div><b>Nueva comunicación</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Tipo</div><div class="com-chips com-tipo">${COM_TIPOS.map(t=>`<button type="button" data-t="${t}">${escH(comTipoTxt(t))}</button>`).join('')}</div>
   <div class="com-normal">
