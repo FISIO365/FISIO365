@@ -2663,28 +2663,29 @@ module.exports = async function handler(req, res) {
       };
     });
 
-    // Rellenar vídeo/imagen desde la biblioteca en los ejercicios que no lo traen
-    if (ejercicios.some(e => !e.ytId)) {
+    // Desde la biblioteca: la explicación de cada ejercicio, y vídeo/imagen en los que no lo traen
+    {
       try {
         const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
-        const F_NOMBRE = 'flda62z2UH2gXmmky', F_IMG = 'fldXYCWY9gPOh657M', F_YT = 'fldfB2hp9Ndjr0xAP';
-        const biblio = {};
+        const F_NOMBRE = 'flda62z2UH2gXmmky', F_IMG = 'fldXYCWY9gPOh657M', F_YT = 'fldfB2hp9Ndjr0xAP', F_DESC = 'fld59uaaRP043hTUK';
+        let biblio = global._biblioApp && Date.now() - global._biblioApp.t < 10 * 60e3 ? global._biblioApp.v : null;
         let offset = null;
-        do {
-          const u = `https://api.airtable.com/v0/${BASE_ID}/${BIBLIO_TABLE}?returnFieldsByFieldId=true&fields[]=${F_NOMBRE}&fields[]=${F_IMG}&fields[]=${F_YT}&pageSize=100${offset ? '&offset=' + offset : ''}`;
+        if (!biblio) { biblio = {}; do {
+          const u = `https://api.airtable.com/v0/${BASE_ID}/${BIBLIO_TABLE}?returnFieldsByFieldId=true&fields[]=${F_NOMBRE}&fields[]=${F_IMG}&fields[]=${F_YT}&fields[]=${F_DESC}&pageSize=100${offset ? '&offset=' + offset : ''}`;
           const br = await fetch(u, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
           const bd = await br.json();
           (bd.records || []).forEach(rec => {
             const f = rec.fields || {};
             const k = norm(f[F_NOMBRE]);
-            if (k) biblio[k] = { yt: f[F_YT] || '', img: f[F_IMG]?.[0]?.url || '' };
+            if (k) biblio[k] = { yt: f[F_YT] || '', img: f[F_IMG]?.[0]?.url || '', explica: String(f[F_DESC] || '').trim() };
           });
           offset = bd.offset || null;
-        } while (offset);
+        } while (offset); global._biblioApp = { t: Date.now(), v: biblio }; }
         ejercicios = ejercicios.map(ej => {
-          if (ej.ytId) return ej;
           const b = biblio[norm(ej.name)];
           if (!b) return ej;
+          if (b.explica && b.explica !== ej.desc) ej = { ...ej, explica: b.explica };
+          if (ej.ytId) return ej;
           const m = (b.yt || '').trim().match(/(?:v=|youtu\.be\/|shorts\/)\s*([\w-]{6,})/);
           return { ...ej, ytId: m ? m[1].trim() : '', imagen: ej.imagen || b.img };
         });

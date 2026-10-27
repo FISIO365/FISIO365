@@ -592,6 +592,10 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .ses-pauta svg{width:20px;height:20px;fill:none;stroke:#c2552e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .pl-tx .pl-frase{display:block;font-size:12.5px;line-height:1.6;color:#8a817a;margin-top:4px;font-weight:400}.pl-tx .pl-frase b{display:inline!important;font-size:inherit!important;font-weight:500!important;color:#4a423c;letter-spacing:0;margin:0}
 .citas-pol{margin:14px 2px 0;font-size:12.5px;line-height:1.5;color:#8a837b;text-align:center}
+
+.ej-exp{margin:6px 0 10px;border-radius:14px;background:#f7f3ef;overflow:hidden}.ej-exp summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;font-weight:600;font-size:13.5px;color:#1E2A38;cursor:pointer}.ej-exp summary::-webkit-details-marker{display:none}
+.ej-exp summary::after{content:'';width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin:-4px 4px 0 0;transition:transform .2s;flex:none}.ej-exp[open] summary::after{transform:rotate(-135deg);margin-top:4px}.pl .ej-exp{margin:0 14px 12px}.ej-exp[open] summary span{color:#c2552e}
+.ej-exp>div{padding:0 14px 12px;font-size:14px;line-height:1.55;color:#3d3530}.ses-exp{margin:12px 0}
 </style>
 </head>
 <body>
@@ -983,9 +987,11 @@ function renderEjercicios(){
     return `<div class="pl-row${ok?' ok':''}">
       <div class="pl-th"${ej.ytId?` onclick="event.stopPropagation();verVideoGrande('${ej.ytId}')"`:''}>${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy"><b class="pl-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></b>`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
       <div class="pl-tx"><b>${ej.name}</b>${(()=>{const P=ejPauta(ej);if(!P.length)return '<span>&nbsp;</span>';return `<span class="pl-frase">${P.map((x,k)=>k?x.t.replace(/^(<b>)?(\S)/,(m,b,c)=>(b||'')+c.toLowerCase()):x.t).join(' · ')}</span>`;})()}</div>
-      <button class="pl-ck" onclick="toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>${ej.desc?`<div class="pl-ind">${String(ej.desc).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</div>`:''}${(ej.dur||ej.duracion)?`<div class="pl-tmr" onclick="event.stopPropagation()">${tmrHTML(ej,'L'+i)}</div>`:''}`;}).join('')+`</div>`;
+      <button class="pl-ck" onclick="toggleEj(${i})" aria-label="${ok?'Desmarcar':'Marcar como hecho'}"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>${ej.desc?`<div class="pl-ind">${String(ej.desc).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</div>`:''}${ej.explica?`<details class="ej-exp" onclick="event.stopPropagation()"><summary><span>Ver explicación</span></summary><div>${ejTxt(ej.explica)}</div></details>`:''}${(ej.dur||ej.duracion)?`<div class="pl-tmr" onclick="event.stopPropagation()">${tmrHTML(ej,'L'+i)}</div>`:''}`;}).join('')+`</div>`;
 }
 function ejKey(e,i){return e.id||('i'+i);}
+// Texto de la explicación del ejercicio (de la biblioteca): seguro y con sus saltos de línea
+function ejTxt(t){return String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/\n/g,'<br>');}
 function verVideoGrande(id){let v=document.getElementById('vidGrande');if(!v){v=document.createElement('div');v.id='vidGrande';v.onclick=e=>{if(e.target===v)cerrarVideoGrande();};document.body.appendChild(v);}
   v.innerHTML=`<button class="vg-x" onclick="cerrarVideoGrande()" aria-label="Cerrar vídeo"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="vg-caja"><iframe src="https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&autoplay=1&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div><div class="vg-pie">Toca fuera del vídeo o la X para volver</div>`;
   v.classList.add('on');}
@@ -1022,6 +1028,7 @@ function pintarSesion(){
       <h2 class="ses-nom">${ej.name}</h2>
       ${(()=>{const P=ejPauta(ej),IC={rep:'<path d="M4 7h16M4 12h16M4 17h10"/>',reloj:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>',pausa:'<path d="M8 5v14M16 5v14"/>',descanso:'<path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 2v3M10 2v3M14 2v3"/>'};return P.length?`<div class="ses-pauta">${P.map(x=>`<div><i><svg viewBox="0 0 24 24">${IC[x.ic]}</svg></i><span>${x.t}</span></div>`).join('')}</div>`:''})()}
       ${tmrHTML(ej,'S')}
+      ${ej.explica?`<details class="ej-exp ses-exp"><summary><span>Ver explicación</span></summary><div>${ejTxt(ej.explica)}</div></details>`:''}
       ${ej.desc?`<div class="ses-nota"><div>Indicaciones de tu fisio</div>${ej.desc.replace(/</g,'&lt;')}</div>`:''}
     </div>
     <div class="ses-pie">
