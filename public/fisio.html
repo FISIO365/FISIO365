@@ -6255,9 +6255,10 @@ function renderCom(wrap){
    if(h.tipo==='Ayuda')return !h.abierta?['ok','Resuelta']:D.encargado?['ok',D.encargado===yo?'Te encargas':'Con '+D.encargado]:['nar',env?'Buscando ayuda':'Pide ayuda'];
    if(h.tipo==='Ausencia')return h.resolucion==='Aprobada'?['ok','Aprobada']:h.resolucion==='Rechazada'?['rojo','Rechazada']:!h.abierta?['gris','Retirada']:['nar',h.puedeAprobar?'Por aprobar':'Pendiente'];
    const hechos=h.para.filter(p=>h.hecho[p]).length,todos=hechos===h.para.length;
-   if(!h.req)return env?[todos?'ok':'gris',`Conforme ${hechos}/${h.para.length}`]:h.hecho[yo]?['ok','Conforme']:['nar','Por confirmar'];
+   const nP=h.para.length,cuenta=(si,no)=>todos?['ok',nP>1?si+' por todos':si]:nP===1?['nar',no]:[hechos?'gris':'nar',hechos?`${si} por ${hechos} de ${nP}`:no];
+   if(!h.req)return env?cuenta('Confirmada','Sin confirmar'):h.hecho[yo]?['ok','Confirmada']:['nar','Por confirmar'];
    if(!h.abierta)return ['gris','Cerrada'];
-   return env?[todos?'ok':'nar',`Hecha ${hechos}/${h.para.length}`]:h.hecho[yo]?['ok','Hecha']:['nar','Requiere acción'];};
+   return env?cuenta('Hecha','Pendiente'):h.hecho[yo]?['ok','Hecha']:['nar','Por hacer'];};
   const fila=h=>{const env=h.de===yo,nuevo=!env&&h.noLeido,e=est(h),quien=env?'Para '+comLista(h.para):h.de;
    return `<button type="button" class="com-it${nuevo?' nuevo':''}" data-id="${h.id}">${comMini(h,nuevo||(env&&!h.para.some(p=>h.leido[p])))}<span class="com-tx"><span class="com-l1"><b>${escH(quien)}</b><time>${escH(comHora(h.ultima))}</time></span><span class="com-as">${escH(h.tipo==='Ausencia'?String(h.asunto).split(' · ').slice(0,2).join(' · '):h.asunto)}</span><span class="com-l3"><span class="com-ex">${h.nResp&&h.ultimoDe?escH((h.ultimoDe===yo?'Tú':h.ultimoDe)+': '):''}${escH(h.extracto)}</span>${e?`<span class="com-pill ${e[0]}">${escH(e[1])}</span>`:''}</span></span></button>`;};
   const porDia=L=>{const g=[];L.forEach(h=>{const k=comDia(h.ultima);const u=g[g.length-1];if(u&&u[0]===k)u[1].push(h);else g.push([k,[h]]);});return g.map(([k,l])=>`<div class="com-h">${escH(k)}</div><div class="com-card">${l.map(fila).join('')}</div>`).join('');};
