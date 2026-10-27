@@ -943,6 +943,12 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-to>span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.com-to b{font-size:14px;font-weight:700}.com-to small{font-size:12.5px;line-height:1.4;color:#8a7c72}
 .com-to em{display:none;flex:none;font-style:normal;font-size:12.5px;font-weight:600;color:#c2552e}
 .com-to.on{border-color:#1e2a38;background:#fcfaf8}.com-tsel:not(.abierto) .com-to.on em{display:block}
+.com-acc{padding:14px}.com-acc .com-b{width:100%}.com-acc-t{font-size:13px;color:#7d6a60;margin:0 0 10px;line-height:1.45}
+.com-ok{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:#2f7a52;background:#e9f4ec;border-radius:12px;padding:12px}.com-ok svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.com-ok svg rect{display:none}
+.com-resp.plegada{background:#fff;box-shadow:0 1px 3px rgba(26,26,26,.05);padding:0}
+.com-resp.plegada .com-anadir{display:flex}.com-anadir{align-items:center;justify-content:center;gap:8px;width:100%;font-family:var(--font);font-size:14px;font-weight:600;color:#7d6a60;background:none;border:none;border-radius:20px;padding:15px;cursor:pointer;margin:0}
+.com-anadir svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.com-hilo>.com-cerrar{background:none;color:#a89a90;font-size:12.5px;margin:2px 0 8px}
 /* Móvil: barra de pestañas abajo en vez de la lateral */
 @media(max-width:768px){
  .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:24px!important;right:24px!important;border-radius:26px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
@@ -6296,6 +6302,14 @@ async function comHilo(wrap,id){
  const fichaEsp=h.tipo==='Incidencia'?`<div class="com-conf">${comIco('candado')}Confidencial · solo dirección</div><div class="com-ficha"><div><span>Tema</span><b>${escH(D.cat||'')}</b></div>${(D.sobre||[]).length?`<div><span>Sobre</span><b>${escH(comLista(D.sobre))}</b></div>`:''}${!h.abierta?`<div><span>Estado</span><b>Gestionada · ${escH(h.resueltaPor)}</b></div>`:''}</div>`
   :h.tipo==='Ayuda'?`<div class="com-ficha"><div><span>Para cuándo</span><b>${escH(D.urg||'')}</b></div><div><span>Se encarga</span><b>${escH(D.encargado||'Nadie todavía')}</b></div>${!h.abierta?'<div><span>Estado</span><b>Resuelta</b></div>':''}</div>`
   :h.tipo==='Tareas'?`<div class="com-tareas"><div class="com-tareas-h"><b>Tareas</b><span>${(D.items||[]).filter(x=>x.por).length}/${(D.items||[]).length}</span></div>${(D.items||[]).map((x,i)=>`<button type="button" class="com-ta${x.por?' on':''}" data-ti="${i}"${env||h.para.includes(yo)?'':' disabled'}><span class="com-ta-c">${x.por?comIco('check'):''}</span><span class="com-ta-t">${escH(x.t)}${x.por?`<small>${escH(x.por)} · ${escH(comFecha(x.en))}</small>`:''}</span></button>`).join('')}</div>`:'';
+ const hecho=x=>`<div class="com-ok">${comIco('check')}<span>${escH(x)}</span></div>`,boton=(k,t)=>`<button type="button" class="com-b" data-a="${k}">${t}</button>`,miH=h.hecho[yo];
+ let acc='';
+ if(h.puedeAprobar)acc=`<p class="com-acc-t">Al aprobarla se apunta en Administración y se bloquean sus huecos libres en la agenda.</p><div class="com-bts"><button type="button" class="com-b sec" data-a="rech">Rechazar</button><button type="button" class="com-b" data-a="apr">Aprobar</button></div>`;
+ else if(esAus&&h.resolucion!=='Pendiente'&&h.para.includes(yo))acc=hecho(`${h.resolucion} por ${h.resueltaPor}`);
+ else if(h.tipo==='Tareas'&&h.para.includes(yo))acc=h.abierta?boton('todas','✓ Marcar todo como hecho'):hecho('Todas las tareas hechas');
+ else if(h.tipo==='Incidencia'&&h.para.includes(yo))acc=h.abierta?boton('gest','✓ Marcar como gestionada'):hecho(`Gestionada por ${h.resueltaPor||'dirección'}`);
+ else if(h.tipo==='Ayuda'&&h.abierta)acc=!D.encargado&&h.para.includes(yo)?boton('encargo','🙋 Me encargo'):(D.encargado===yo||env)?boton('resuelta','✓ Resuelta'):'';
+ else if(!esAus&&!esp&&h.para.includes(yo))acc=miH?hecho(`${h.req?'Hecha':'Confirmado'} · ${comFecha(miH)}`):h.abierta?boton('hecho',h.req?'✓ Marcar como hecha':'✓ Recibido y conforme'):'';
  const firma=n=>`<div class="com-firma"><span>Atentamente,</span><b>${escH(n)}</b><small>${escH(comRol(n))}</small></div>`;
  box.innerHTML=`<button type="button" class="com-volver">‹ Volver</button>
   <article class="com-carta">
@@ -6308,30 +6322,29 @@ async function comHilo(wrap,id){
    <footer class="com-pie"><span class="com-logo"><span>FISIO</span>365</span>Fourth Dynamic, S.L. · Gran de Sant Andreu 163, Barcelona</footer>
   </article>
   ${resp.map(m=>{const t=String(m.cuerpo||''),ap=/^✓ (Aprobada|Gestionada|Resuelta)/.test(t),re=/^✗ Rechazada/.test(t);return `<article class="com-carta com-r${m.de===yo?' mio':''}${ap?' ap':re?' re':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>Respuesta · ${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${escH(t)}</div></article>`;}).join('')}
+  ${acc?`<div class="com-card com-acc">${acc}</div>`:''}
   <div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>
-  <div class="com-card com-resp${env&&!resp.some(m=>m.de!==yo)&&!h.puedeAprobar?' plegada':''}"><button type="button" class="com-anadir">+ Añadir algo a esta carta</button>${h.puedeAprobar?'<div class="com-apr">Solicitud pendiente de tu aprobación. Al aprobarla se apunta en Administración y se bloquean sus huecos en la agenda.</div>':''}<textarea rows="${h.puedeAprobar?3:4}" placeholder="${h.puedeAprobar||(h.tipo==='Incidencia'&&h.puedeGestionar)?'Comentario (opcional)…':env&&!resp.some(m=>m.de!==yo)?'Añade algo a tu carta…':'Escribe tu respuesta…'}"></textarea>
-   <div class="com-bts">${esp?(h.tipo==='Incidencia'&&h.puedeGestionar?'<button type="button" class="com-b sec" data-a="resp">Responder</button><button type="button" class="com-b" data-a="gest">Marcar como gestionada</button>'
-     :h.tipo==='Ayuda'&&h.abierta&&!D.encargado&&h.para.includes(yo)?'<button type="button" class="com-b sec" data-a="resp">Responder</button><button type="button" class="com-b" data-a="encargo">🙋 Me encargo</button>'
-     :h.tipo==='Ayuda'&&h.abierta&&(D.encargado===yo||env)?'<button type="button" class="com-b sec" data-a="resp">Responder</button><button type="button" class="com-b" data-a="resuelta">✓ Resuelta</button>'
-     :'<button type="button" class="com-b" data-a="resp">Responder</button>'):h.puedeAprobar?'<button type="button" class="com-b sec" data-a="rech">Rechazar</button><button type="button" class="com-b" data-a="apr">Aprobar</button>':`${miPend?`<button type="button" class="com-b sec" data-a="hecho">${h.req?'Marcar como hecha':'✓ Recibido y conforme'}</button>`:''}<button type="button" class="com-b" data-a="resp">${miPend&&h.req?'Responder y marcar hecha':'Responder'}</button>`}</div>
-   ${env?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}</div>`;
+  <div class="com-card com-resp plegada"><button type="button" class="com-anadir">${comIco('lapiz')}<span>${env?'Añadir algo a esta carta':'¿Dudas o algo que decir?'}</span></button><textarea rows="4" placeholder="${env?'Añade algo a tu carta…':'Escribe tu respuesta…'}"></textarea>
+   <div class="com-bts"><button type="button" class="com-b" data-a="resp">Enviar</button></div></div>
+  ${env?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}`;
  box.querySelector('.com-volver').onclick=volver;
  const ta=box.querySelector('textarea');
  box.querySelectorAll('.com-ta[data-ti]').forEach(b=>b.onclick=async()=>{if(b.disabled)return;const i=+b.dataset.ti,on=!b.classList.contains('on');b.disabled=true;
   try{const r=await comPost('seg-com-tarea',{id:h.id,idx:i,hecho:on});if(!r.ok)throw new Error(r.error||'No se ha podido');if(r.todas)toast('¡Todas hechas!',true);const y=comY();COM.d=null;wrap.innerHTML='';await comHilo(wrap,h.id);comSetY(y);}catch(e){b.disabled=false;toast(e.message,false);}});
- {const rp=box.querySelector('.com-resp'),ad=box.querySelector('.com-anadir');if(ad)ad.onclick=()=>{rp.classList.remove('plegada');const b=rp.querySelector('[data-a=resp]');if(b)b.textContent='Añadir';ta.focus();};}
- const hacer=async(b,accion,extra,msg)=>{const bs=box.querySelectorAll('.com-resp button');bs.forEach(x=>x.disabled=true);const t0=b.textContent;b.textContent='Guardando…';
+ {const rp=box.querySelector('.com-resp'),ad=box.querySelector('.com-anadir');ad.onclick=()=>{rp.classList.remove('plegada');ta.focus();};}
+ const hacer=async(b,accion,extra,msg)=>{const bs=box.querySelectorAll('.com-acc button,.com-resp button,.com-cerrar');bs.forEach(x=>x.disabled=true);const t0=b.textContent;b.textContent='Guardando…';
   try{const r=await comPost(accion,Object.assign({id:h.id},extra));if(!r.ok)throw new Error(r.error||'No se ha podido');toast(msg,true);
    const y=comY();COM.d=null;wrap.innerHTML='';await comHilo(wrap,h.id);comSetY(y);}
   catch(e){bs.forEach(x=>x.disabled=false);b.textContent=t0;toast(e.message,false);}};
  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;
-  if(a==='resp'){const t=ta.value.trim();if(!t){ta.focus();toast('Escribe la respuesta',false);return;}hacer(b,'seg-com-responder',{cuerpo:t,hecho:miPend},'Respuesta enviada');}
-  else if(a==='hecho')hacer(b,'seg-com-responder',{cuerpo:ta.value.trim(),hecho:true},h.req?'Marcada como hecha':'Acuse de recibo enviado');
-  else if(a==='apr')admSiNo(`Se apuntará en Administración (${String(A.que||'').toLowerCase()} de ${h.de}) y se bloquearán sus huecos libres en la agenda.`,'Sí, aprobar').then(ok=>{if(ok)hacer(b,'seg-com-resolver',{aprobar:true,comentario:ta.value.trim()},'Solicitud aprobada');});
-  else if(a==='gest')hacer(b,'seg-com-gestion',{comentario:ta.value.trim()},'Marcada como gestionada');
-  else if(a==='encargo')hacer(b,'seg-com-gestion',{accion:'encargo',comentario:ta.value.trim()},'Te encargas tú');
-  else if(a==='resuelta')hacer(b,'seg-com-gestion',{accion:'resuelta',comentario:ta.value.trim()},'Marcada como resuelta');
-  else if(a==='rech')hacer(b,'seg-com-resolver',{aprobar:false,comentario:ta.value.trim()},'Solicitud rechazada');
+  if(a==='resp'){const t=ta.value.trim();if(!t){ta.focus();toast('Escribe algo',false);return;}hacer(b,'seg-com-responder',{cuerpo:t,hecho:miPend&&!h.req},env?'Añadido':'Respuesta enviada');}
+  else if(a==='hecho')hacer(b,'seg-com-responder',{cuerpo:'',hecho:true},h.req?'Marcada como hecha':'Confirmado');
+  else if(a==='todas')hacer(b,'seg-com-tarea',{idx:'todas',hecho:true},'¡Todas hechas!');
+  else if(a==='apr')admSiNo(`Se apuntará en Administración (${String(A.que||'').toLowerCase()} de ${h.de}) y se bloquearán sus huecos libres en la agenda.`,'Sí, aprobar').then(ok=>{if(ok)hacer(b,'seg-com-resolver',{aprobar:true},'Solicitud aprobada');});
+  else if(a==='rech')admSiNo('La solicitud quedará rechazada. Si quieres explicar el motivo, escríbelo luego en «¿Dudas o algo que decir?».','Sí, rechazar').then(ok=>{if(ok)hacer(b,'seg-com-resolver',{aprobar:false},'Solicitud rechazada');});
+  else if(a==='gest')hacer(b,'seg-com-gestion',{},'Marcada como gestionada');
+  else if(a==='encargo')hacer(b,'seg-com-gestion',{accion:'encargo'},'Te encargas tú');
+  else if(a==='resuelta')hacer(b,'seg-com-gestion',{accion:'resuelta'},'Marcada como resuelta');
   else if(a==='estado')admSiNo(h.abierta?'La comunicación quedará cerrada y dejará de salir en Pendientes.':'La comunicación volverá a estar abierta.',h.abierta?'Sí, cerrar':'Sí, reabrir').then(ok=>{if(ok)hacer(b,'seg-com-estado',{abrir:!h.abierta},h.abierta?'Cerrada':'Reabierta');});});
 }
 

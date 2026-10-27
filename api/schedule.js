@@ -1153,9 +1153,10 @@ module.exports = async function handler(req, res) {
           const root = await buscar(q.id), F = root.fields, para0 = listaPara(F.PARA);
           if (nmC(F.TIPO) !== 'Tareas') return res.status(400).json({ ok: false, error: 'No es una lista de tareas' });
           if (F.DE !== yo && !para0.includes(yo)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
-          const D = json(F.DATOS), it = (D.items || [])[Number(q.idx)];
-          if (!it) return res.status(400).json({ ok: false, error: 'Tarea no válida' });
-          if (q.hecho) { it.por = yo; it.en = ahora; } else { it.por = ''; it.en = ''; }
+          const D = json(F.DATOS);
+          if (q.idx === 'todas') (D.items || []).forEach(x => { if (!x.por) { x.por = yo; x.en = ahora; } });
+          else { const it = (D.items || [])[Number(q.idx)]; if (!it) return res.status(400).json({ ok: false, error: 'Tarea no válida' });
+            if (q.hecho) { it.por = yo; it.en = ahora; } else { it.por = ''; it.en = ''; } }
           const todas = D.items.every(x => x.por), hc = {}; if (todas) para0.forEach(p => { hc[p] = ahora; });
           const le = json(F['LEÍDO']); le[yo] = ahora;
           const d = await at(`${COM}/${root.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { DATOS: JSON.stringify(D), HECHO: JSON.stringify(todas ? hc : {}), ESTADO: todas ? 'Cerrada' : 'Abierta', 'LEÍDO': JSON.stringify(le) } }) });
