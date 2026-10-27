@@ -1206,7 +1206,8 @@ module.exports = async function handler(req, res) {
           const F = root.fields, de = F.DE || '', para0 = listaPara(F.PARA);
           if (de !== yo && !para0.includes(yo)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
           if (!cuerpo && !q.hecho) return res.status(400).json({ ok: false, error: 'Escribe la respuesta' });
-          // Sin chat: quien la recibe puede responder una sola vez; quien la envía no contesta
+          // Sin respuestas escritas: solo los botones de cada tipo
+          if (cuerpo) return res.status(400).json({ ok: false, error: 'Las comunicaciones no se responden; usa los botones' });
           if (cuerpo) {
             if (de === yo) return res.status(400).json({ ok: false, error: 'No puedes responder a tu propia comunicación' });
             const prev = await todosT(COM, `filterByFormula=${encodeURIComponent(`AND({HILO}='${root.id}',{DE}='${yo.replace(/'/g, '')}')`)}&fields[]=CUERPO`);
