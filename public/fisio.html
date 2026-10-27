@@ -850,9 +850,9 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 /* ── Buzón (v2): estilo fino, ilustraciones a línea ── */
 .com{max-width:720px}
 .com-bz{position:relative;background:#1e2a38;border-radius:24px;padding:24px 22px 22px;color:#fff;margin-bottom:14px;min-height:132px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
-.com-buzon{position:absolute;right:22px;top:50%;margin-top:-46px;width:120px;height:92px;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.com-buzon .b1{stroke:rgba(255,255,255,.75);stroke-width:1.8}.com-buzon .b2{stroke:rgba(255,255,255,.35);stroke-width:1.8}.com-buzon .b3{stroke:rgba(255,255,255,.45);stroke-width:1.6}.com-buzon .bg{fill:#1e2a38}
-.com-buzon .b4{stroke:#f5f2ee;stroke-width:1.7}.com-buzon .b5{stroke:#f39a55;stroke-width:1.9}.com-buzon .f{fill:rgba(243,154,85,.3)}.com-buzon .k{fill:rgba(255,255,255,.7)}.com-buzon .lc{fill:#c2552e}
+.com-buzon{position:absolute;right:26px;top:50%;margin-top:-26px;width:52px;height:52px;fill:none;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.com-buzon .b1{stroke:rgba(255,255,255,.55);stroke-width:1}.com-buzon .b2{stroke:rgba(255,255,255,.35);stroke-width:1.8}.com-buzon .b3{stroke:rgba(255,255,255,.45);stroke-width:1.6}.com-buzon .bg{fill:#1e2a38}
+.com-buzon .b4{stroke:#f5f2ee;stroke-width:1.7}.com-buzon .b5{stroke:#f39a55;stroke-width:1.9}.com-buzon .f{fill:rgba(243,154,85,.3)}.com-buzon .k{fill:rgba(255,255,255,.7)}.com-buzon .lc{fill:#f39a55;stroke:#1e2a38;stroke-width:1}
 .com-bz-n{position:relative;font-size:52px;font-weight:800;line-height:.9;letter-spacing:-.04em}.com-bz-n span{color:#f39a55}
 .com-bz-t{position:relative;font-size:13px;color:#aab4c1;margin-top:6px}
 .com-esc{position:relative;margin-top:16px;display:inline-flex;align-items:center;gap:8px;font-family:var(--font);font-size:14px;font-weight:600;border:none;border-radius:99px;padding:12px 20px;background:#c2552e;color:#fff;cursor:pointer}
@@ -885,7 +885,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-l3{display:flex;align-items:center;gap:8px}.com-tx .com-ex{flex:1;min-width:0;font-size:12.5px;color:#9b8b80;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .com-l3 .com-pill{flex:none;font-size:10.5px;padding:2px 8px}
 .com-vacio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 0 10px;color:#9b8b80;font-size:14px}
-.com-vacio .com-buzon{position:static;margin:0;width:100px;height:77px}.com-vacio .com-buzon .b1,.com-vacio .com-buzon .b2,.com-vacio .com-buzon .b3{stroke:#cbbcb0}.com-vacio .com-buzon .bg{fill:#f5f2ee}.com-vacio .com-buzon .k{fill:#cbbcb0}
+.com-vacio .com-buzon{position:static;margin:0;width:40px;height:40px}.com-vacio .com-buzon .b1,.com-vacio .com-buzon .b2,.com-vacio .com-buzon .b3{stroke:#cbbcb0}.com-vacio .com-buzon .bg{fill:#f5f2ee}.com-vacio .com-buzon .k{fill:#cbbcb0}
 .com-vacio b{font-weight:600}
 /* Carta abierta: más fina */
 .com-carta::before{display:none}
@@ -914,7 +914,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .cs-tapa .cs-lacre{fill:#c2552e;stroke:#fff;stroke-width:2.5;transition:opacity .15s}
 .com-sobre.abre .cs-tapa{transform:scaleY(-1);z-index:1}.com-sobre.abre .cs-lacre{opacity:0}
 .com-sobre.sale .cs-carta{transform:translateY(-58%)}
-@media(max-width:560px){.com-bz{min-height:124px;padding:20px}.com-bz .com-buzon{width:104px;height:80px;margin-top:-40px;right:18px}.com-carta{padding:22px 18px 16px}.com-carta.com-r{margin-left:10px}}
+@media(max-width:560px){.com-bz{min-height:124px;padding:20px}.com-bz .com-buzon{width:46px;height:46px;margin-top:-23px;right:22px}.com-carta{padding:22px 18px 16px}.com-carta.com-r{margin-left:10px}}
 /* Móvil: barra de pestañas abajo en vez de la lateral */
 @media(max-width:768px){
  .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:24px!important;right:24px!important;border-radius:26px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
@@ -6172,8 +6172,7 @@ function comMini(h,cerrado){const [c,i]=comSelloDe(h);
   :'<path d="M3.8 14 24 2l20.2 12" class="e"/><rect x="10" y="5" width="28" height="20" rx="2" class="pap"/><path d="M15 11h14M15 15h10" class="ln"/><rect x="3" y="14" width="42" height="24" rx="4" class="e bg"/><path d="M3.8 15.5 24 28l20.2-12.5" class="e"/>';
  return `<span class="com-mini${cerrado?' cerr':''}"><svg viewBox="0 0 48 40">${svg}</svg><i style="background:${c}">${comIco(i)}</i></span>`;}
 // Buzón dibujado a línea (cabecera). Con la banderita levantada si hay cartas sin abrir
-const comBuzonSvg=n=>n?`<svg class="com-buzon" viewBox="0 0 120 92"><rect x="6" y="18" width="108" height="70" rx="10" class="b1 bg"/><path d="M8 22l52 36 52-36" class="b1"/><path d="M8 84l38-28M112 84 74 56" class="b2"/><circle cx="60" cy="58" r="8" class="lc"/><rect x="88" y="26" width="16" height="19" rx="2" class="b5 f"/></svg>`
- :`<svg class="com-buzon" viewBox="0 0 120 92"><path d="M8 40 60 6l52 34" class="b2"/><rect x="22" y="14" width="76" height="50" rx="4" class="b3 bg"/><path d="M34 28h52M34 38h40M34 48h28" class="b2"/><rect x="6" y="40" width="108" height="48" rx="10" class="b1 bg"/><path d="M8 43l52 32 52-32" class="b1"/></svg>`;
+const comBuzonSvg=n=>`<svg class="com-buzon" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5" class="b1"/><path d="m3 7 9 6.2L21 7" class="b1"/>${n?'<circle cx="20.5" cy="5.5" r="2.6" class="lc"/>':''}</svg>`;
 const comDia=iso=>{if(!iso)return '';const d=new Date(iso),h=new Date(),ay=new Date();ay.setDate(h.getDate()-1);const k=x=>x.toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'});
  if(k(d)===k(h))return 'HOY';if(k(d)===k(ay))return 'AYER';return d.toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'Europe/Madrid'}).replace('.','').toUpperCase()+(d.getFullYear()!==h.getFullYear()?' '+d.getFullYear():'');};
 const comHora=iso=>iso?new Date(iso).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}):'';
