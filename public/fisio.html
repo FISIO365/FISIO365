@@ -955,6 +955,13 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-ev-i svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.com-ev-i svg rect{display:none}
 .com-ev b{display:block;font-size:14px;font-weight:700;color:#1a1a1a}.com-ev small{display:block;font-size:12px;color:#9b8b80;margin-top:1px}
 .com-ojo{margin:-4px 0 12px 18px;background:#fbf3e4;border-radius:14px;padding:11px 14px;display:flex;flex-direction:column;gap:3px}.com-ojo b{font-size:12.5px;font-weight:700;color:#9a6512;margin-bottom:2px}.com-ojo span{font-size:13px;color:#6b5f57}
+/* Cabecera del buzón: número a la izquierda, Escribir a la derecha */
+.com .com-bz{flex-direction:row;align-items:center;justify-content:space-between;gap:16px;min-height:0;padding:22px 22px 22px 24px}
+.com-bz-izq{min-width:0}
+.com .com-bz-t{display:flex;align-items:center;gap:8px;margin-top:8px}
+.com .com-bz-t .com-buzon{position:relative;right:auto;top:auto;bottom:auto;margin:0;width:20px!important;height:20px!important;flex:none}
+.com .com-bz-t .com-buzon .b1{stroke:rgba(255,255,255,.6);stroke-width:1.6}
+.com .com-esc{flex:none;margin:0;padding:12px 18px;width:auto}
 /* Móvil: barra de pestañas abajo en vez de la lateral */
 @media(max-width:768px){
  .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:24px!important;right:24px!important;border-radius:26px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
@@ -6242,7 +6249,7 @@ function renderCom(wrap){
   const sinAbrir=H.filter(h=>h.de!==yo&&h.noLeido),nPen=H.filter(h=>h.pendienteMio).length;
   // Cabecera: el buzón
   const n=sinAbrir.length;
-  box.querySelector('.com-bz').innerHTML=`${comBuzonSvg(n)}<div class="com-bz-n">${n}<span>.</span></div><div class="com-bz-t">${n===1?'carta sin abrir':n?'cartas sin abrir':'Buzón al día'}</div><button type="button" class="com-esc">${comIco('lapiz')}Escribir</button>`;
+  box.querySelector('.com-bz').innerHTML=`<div class="com-bz-izq"><div class="com-bz-n">${n}<span>.</span></div><div class="com-bz-t">${comBuzonSvg(n)}${n===1?'carta sin abrir':n?'cartas sin abrir':'Buzón al día'}</div></div><button type="button" class="com-esc">${comIco('lapiz')}Escribir</button>`;
   // Casilleros: uno por persona del equipo (tocar filtra)
   const otros=(d.equipo||[]).filter(p=>p!==yo);
   box.querySelector('.com-esc').onclick=()=>comNueva(()=>{COM.tab='env';comGuarda();pinta(true);});
