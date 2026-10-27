@@ -1206,6 +1206,12 @@ module.exports = async function handler(req, res) {
           const F = root.fields, de = F.DE || '', para0 = listaPara(F.PARA);
           if (de !== yo && !para0.includes(yo)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
           if (!cuerpo && !q.hecho) return res.status(400).json({ ok: false, error: 'Escribe la respuesta' });
+          // Sin chat: quien la recibe puede responder una sola vez; quien la envía no contesta
+          if (cuerpo) {
+            if (de === yo) return res.status(400).json({ ok: false, error: 'No puedes responder a tu propia comunicación' });
+            const prev = await todosT(COM, `filterByFormula=${encodeURIComponent(`AND({HILO}='${root.id}',{DE}='${yo.replace(/'/g, '')}')`)}&fields[]=CUERPO`);
+            if (prev.some(r => !/^(✓ (Aprobada|Gestionada|Resuelta)|✗ Rechazada|🙋 )/.test(String(r.fields.CUERPO || '')))) return res.status(400).json({ ok: false, error: 'Ya has respondido a esta comunicación' });
+          }
           if (cuerpo) { const otros = [...new Set([de, ...para0])].filter(p => p && p !== yo);
             const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: 'RE: ' + (F.ASUNTO || ''), HILO: root.id, DE: yo, PARA: otros.join(', '), CUERPO: cuerpo, FECHA: ahora } }] }) });
             if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' }); }

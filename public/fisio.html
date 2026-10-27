@@ -809,7 +809,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-msg{padding:16px 18px}.com-msg.mio{background:#fdfbf9}
 .com-mh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.com-mh .com-av{width:30px;height:30px;font-size:12px}.com-mh b{font-size:14px}.com-mh em{font-style:normal;font-size:11px;font-weight:600;color:#7d6a60;background:#f1ede9;border-radius:99px;padding:2px 8px}.com-mh time{margin-left:auto;font-size:12px;color:#9b8b80}
 .com-cu{white-space:pre-wrap;word-break:break-word;font-size:14.5px;line-height:1.55;color:#1a1a1a}
-.com-resp{padding:14px}.com-anadir{display:none}.com-resp.plegada{background:none;box-shadow:none;padding:0}.com-resp.plegada>*{display:none}.com-resp.plegada .com-anadir,.com-resp.plegada .com-cerrar{display:block}.com-anadir{width:100%;font-family:var(--font);font-size:13.5px;font-weight:600;color:#c2552e;background:#fff;border:1.5px dashed #f3c9b2;border-radius:14px;padding:12px;cursor:pointer;margin-bottom:8px}
+.com-resp{padding:14px}.com-resp .com-acc-t{margin:0 0 8px;font-size:12.5px}.com-anadir{display:none}.com-resp.plegada{background:none;box-shadow:none;padding:0}.com-resp.plegada>*{display:none}.com-resp.plegada .com-anadir,.com-resp.plegada .com-cerrar{display:block}.com-anadir{width:100%;font-family:var(--font);font-size:13.5px;font-weight:600;color:#c2552e;background:#fff;border:1.5px dashed #f3c9b2;border-radius:14px;padding:12px;cursor:pointer;margin-bottom:8px}
 .com-resp textarea,.com-in{display:block;width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:11px 13px;border:1.5px solid var(--border);border-radius:12px;background:#fff;resize:vertical}
 .com-resp textarea:focus,.com-in:focus{outline:none;border-color:#c2552e}
 .com-bts{display:flex;gap:8px;margin-top:10px}.com-b{flex:1;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:12px;border:1.5px solid #c2552e;background:#c2552e;color:#fff;cursor:pointer}.com-b.sec{background:#fff;color:#c2552e}.com-b:disabled{opacity:.6}
@@ -6316,6 +6316,7 @@ async function comHilo(wrap,id){
  const fichaEsp=h.tipo==='Incidencia'?`<div class="com-conf">${comIco('candado')}Confidencial · solo dirección</div><div class="com-ficha"><div><span>Tema</span><b>${escH(D.cat||'')}</b></div>${(D.sobre||[]).length?`<div><span>Sobre</span><b>${escH(comLista(D.sobre))}</b></div>`:''}${!h.abierta?`<div><span>Estado</span><b>Gestionada · ${escH(h.resueltaPor)}</b></div>`:''}</div>`
   :h.tipo==='Ayuda'?`<div class="com-ficha"><div><span>Para cuándo</span><b>${escH(D.urg||'')}</b></div><div><span>Se encarga</span><b>${escH(D.encargado||'Nadie todavía')}</b></div>${!h.abierta?'<div><span>Estado</span><b>Resuelta</b></div>':''}</div>`
   :h.tipo==='Tareas'?`<div class="com-tareas"><div class="com-tareas-h"><b>Tareas</b><span>${(D.items||[]).filter(x=>x.por).length}/${(D.items||[]).length}</span></div>${(D.items||[]).map((x,i)=>`<button type="button" class="com-ta${x.por?' on':''}" data-ti="${i}"${env||h.para.includes(yo)?'':' disabled'}><span class="com-ta-c">${x.por?comIco('check'):''}</span><span class="com-ta-t">${escH(x.t)}${x.por?`<small>${escH(x.por)} · ${escH(comFecha(x.en))}</small>`:''}</span></button>`).join('')}</div>`:'';
+ const puedeResp=!env&&h.para.includes(yo)&&!resp.some(m=>m.de===yo&&!comEvento(m.cuerpo));
  const hecho=x=>`<div class="com-ok">${comIco('check')}<span>${escH(x)}</span></div>`,boton=(k,t)=>`<button type="button" class="com-b" data-a="${k}">${t}</button>`,miH=h.hecho[yo];
  let acc='';
  if(h.puedeAprobar)acc=`<p class="com-acc-t">Al aprobarla se apunta en Administración y se bloquean sus huecos libres en la agenda.</p><div class="com-bts"><button type="button" class="com-b sec" data-a="rech">Rechazar</button><button type="button" class="com-b" data-a="apr">Aprobar</button></div>`;
@@ -6339,20 +6340,20 @@ async function comHilo(wrap,id){
    return `<div class="com-ev ${ev.tipo}"><span class="com-ev-i">${comIco(ev.tipo==='no'?'cruz':'check')}</span><div><b>${escH(ev.titulo)}</b><small>${escH([comFecha(m.fecha)].concat(ev.det).join(' · '))}</small></div></div>${ev.ojo.length?`<div class="com-ojo"><b>Citas con paciente que hay que mover</b>${ev.ojo.map(x=>`<span>${escH(x)}</span>`).join('')}</div>`:''}${ev.coment?resp1(ev.coment):''}`;}).join('')}
   ${acc?`<div class="com-card com-acc">${acc}</div>`:''}
   <div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>
-  <div class="com-card com-resp plegada"><button type="button" class="com-anadir">${comIco('lapiz')}<span>${env?'Añadir algo a esta carta':'¿Dudas o algo que decir?'}</span></button><textarea rows="4" placeholder="${env?'Añade algo a tu carta…':'Escribe tu respuesta…'}"></textarea>
-   <div class="com-bts"><button type="button" class="com-b" data-a="resp">Enviar</button></div></div>
+  ${puedeResp?`<div class="com-card com-resp plegada"><button type="button" class="com-anadir">${comIco('lapiz')}<span>¿Dudas o algo que decir?</span></button><p class="com-acc-t">Se puede responder una sola vez, así que escríbelo todo junto.</p><textarea rows="4" placeholder="Escribe tu respuesta…"></textarea>
+   <div class="com-bts"><button type="button" class="com-b" data-a="resp">Enviar respuesta</button></div></div>`:''}
   ${env&&!(esAus&&h.resolucion!=='Pendiente')?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}`;
  box.querySelector('.com-volver').onclick=volver;
  const ta=box.querySelector('textarea');
  box.querySelectorAll('.com-ta[data-ti]').forEach(b=>b.onclick=async()=>{if(b.disabled)return;const i=+b.dataset.ti,on=!b.classList.contains('on');b.disabled=true;
   try{const r=await comPost('seg-com-tarea',{id:h.id,idx:i,hecho:on});if(!r.ok)throw new Error(r.error||'No se ha podido');if(r.todas)toast('¡Todas hechas!',true);const y=comY();COM.d=null;wrap.innerHTML='';await comHilo(wrap,h.id);comSetY(y);}catch(e){b.disabled=false;toast(e.message,false);}});
- {const rp=box.querySelector('.com-resp'),ad=box.querySelector('.com-anadir');ad.onclick=()=>{rp.classList.remove('plegada');ta.focus();};}
+ {const rp=box.querySelector('.com-resp'),ad=box.querySelector('.com-anadir');if(ad)ad.onclick=()=>{rp.classList.remove('plegada');ta.focus();};}
  const hacer=async(b,accion,extra,msg)=>{const bs=box.querySelectorAll('.com-acc button,.com-resp button,.com-cerrar');bs.forEach(x=>x.disabled=true);const t0=b.textContent;b.textContent='Guardando…';
   try{const r=await comPost(accion,Object.assign({id:h.id},extra));if(!r.ok)throw new Error(r.error||'No se ha podido');toast(msg,true);
    const y=comY();COM.d=null;wrap.innerHTML='';await comHilo(wrap,h.id);comSetY(y);}
   catch(e){bs.forEach(x=>x.disabled=false);b.textContent=t0;toast(e.message,false);}};
  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;
-  if(a==='resp'){const t=ta.value.trim();if(!t){ta.focus();toast('Escribe algo',false);return;}hacer(b,'seg-com-responder',{cuerpo:t,hecho:miPend&&!h.req},env?'Añadido':'Respuesta enviada');}
+  if(a==='resp'){const t=ta.value.trim();if(!t){ta.focus();toast('Escribe algo',false);return;}hacer(b,'seg-com-responder',{cuerpo:t,hecho:miPend&&!h.req},'Respuesta enviada');}
   else if(a==='hecho')hacer(b,'seg-com-responder',{cuerpo:'',hecho:true},h.req?'Marcada como hecha':'Confirmado');
   else if(a==='todas')hacer(b,'seg-com-tarea',{idx:'todas',hecho:true},'¡Todas hechas!');
   else if(a==='apr')admSiNo(`Se apuntará en Administración (${String(A.que||'').toLowerCase()} de ${h.de}) y se bloquearán sus huecos libres en la agenda.`,'Sí, aprobar').then(ok=>{if(ok)hacer(b,'seg-com-resolver',{aprobar:true},'Solicitud aprobada');});
