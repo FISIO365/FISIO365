@@ -1581,6 +1581,9 @@ async function loadPacientes(){
  }catch(e){}await new Promise(r=>setTimeout(r,1200*(i+1)));}})();
  try{await pacsP;}finally{pacsP=null;}
 }
+// Buscador: además de la lista cargada, pregunta a Airtable por si falta alguien (cb vuelve a pintar si aparece alguno nuevo)
+let _pbT=null;
+function pacsRemoto(q,cb){clearTimeout(_pbT);q=String(q||'').trim();if(q.length<2)return;_pbT=setTimeout(async()=>{try{const d=await (await fetch(`/api/pacientes?action=buscar&pwd=${encodeURIComponent(apiPwd)}&q=${encodeURIComponent(q)}`)).json();if(!d.ok||!Array.isArray(d.pacientes))return;let nuevo=false;pacs=pacs||[];for(const p of d.pacientes){if(!pacs.some(x=>x.id===p.id)){pacs.push(p);nuevo=true;}}if(nuevo&&cb)cb();}catch(e){}},300);}
 // Lista de pacientes al día para los buscadores: recarga si tiene más de 3 min o está vacía
 function pacsAlDia(cb){if(!pacs||!pacs.length||Date.now()-pacsT>180000)loadPacientes().then(()=>cb&&cb());}
 
@@ -1908,7 +1911,9 @@ function renderPacLista(q, lista){
  lista.innerHTML='';
  if((!q||q.length<1)&&!pacFiltroEst){renderPacTodos(lista);return;}
  q=q||'';
- const fl=(pacs||[]).filter(p=>(!pacFiltroEst||(p.estados||[]).includes(pacFiltroEst))&&(p.nombre.toLowerCase().includes(q.toLowerCase())||(p.email||'').toLowerCase().includes(q.toLowerCase())));
+ const _n=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();const _q=_n(q).trim(),_pal=_q.split(/\s+/).filter(Boolean),_qd=_q.replace(/\D/g,'');
+ const fl=(pacs||[]).filter(p=>(!pacFiltroEst||(p.estados||[]).includes(pacFiltroEst))&&(_pal.every(w=>_n(p.nombre).includes(w))||_n(p.email).includes(_q)||(_qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(_qd))));
+ if(_q.length>=2)pacsRemoto(q,()=>{if(lista.isConnected)renderPacLista(q,lista);});
  if(!fl.length){
  lista.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px">Sin resultados</div>';
  return;
@@ -5640,6 +5645,7 @@ function renderAgenda(wrap){
  const pintaPac=()=>{if(AG.pac){pb.style.display='none';pr.innerHTML=`<span class="ag-tag">${escH(AG.pac.nombre)}<button type="button" aria-label="Quitar">×</button></span>`;pr.querySelector('button').onclick=()=>{AG.pac=null;pb.value='';pb.style.display='';pr.innerHTML='';if(AG.vistaPrev){AG.vista=AG.vistaPrev;AG.vistaPrev='';}if(AG.perPrev){AG.per=AG.perPrev;AG.perPrev='';}cargar();};}else{pb.style.display='';}};
  pb.oninput=()=>{const q=norm(pb.value).trim(),qd=q.replace(/\D/g,'');if(q.length<2){pr.innerHTML='';return;}
   const pal=q.split(/\s+/).filter(Boolean);const fl=(pacs||[]).filter(p=>{const n=norm(p.nombre).replace(/[^a-z0-9ñ ]+/g,' ');return pal.every(w=>n.includes(w.replace(/[^a-z0-9ñ]+/g,'')))||(qd.length>=4&&String(p.telefono||p.tel||p.whatsapp||'').replace(/\D/g,'').includes(qd))||(q.includes('@')&&norm(p.email).includes(q));}).sort((a,b)=>{const na=norm(a.nombre),nb=norm(b.nombre);return (nb.startsWith(pal[0])-na.startsWith(pal[0]))||na.localeCompare(nb);}).slice(0,10);
+  pacsRemoto(pb.value,()=>{if(pb.isConnected&&!AG.pac&&pb.value.trim().length>=2)pb.oninput();});
   if(!fl.length&&!pacsP&&Date.now()-pacsT>20000){pr.innerHTML='<div class="ag-pdd"><small class="fp-mu">Buscando…</small></div>';loadPacientes().then(()=>{if(pb.isConnected&&pb.value.trim().length>=2&&!AG.pac)pb.oninput();});return;}
   pr.innerHTML=`<div class="ag-pdd">${fl.map(p=>`<button type="button" data-id="${p.id}">${escH(p.nombre)}</button>`).join('')||'<small class="fp-mu">No encontrado</small>'}</div>`;
   pr.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>{AG.pac=(pacs||[]).find(p=>p.id===b.dataset.id);if(AG.vista!=='lista'){AG.vistaPrev=AG.vista;AG.vista='lista';}if(!/^(todo|rango|desdehoy)$/.test(AG.per)){AG.perPrev=AG.per;AG.per='todo';}cargar();});};
@@ -5917,7 +5923,8 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
  if(hueco)agTipoHueco(m,hueco,onDone);
  const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
  bus.oninput=()=>{pac=null;nuevoP=false;const q=norm(bus.value).trim(),qd=q.replace(/\D/g,'');if(q.length<2){res.innerHTML='';return;}
-  const fl=(pacs||[]).filter(p=>norm(p.nombre).includes(q)||norm(p.email).includes(q)||(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd))).slice(0,6);
+  const pal=q.split(/\s+/).filter(Boolean);const fl=(pacs||[]).filter(p=>{const n=norm(p.nombre);return pal.every(w=>n.includes(w))||norm(p.email).includes(q)||(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd));}).sort((a,b)=>(norm(b.nombre).startsWith(pal[0])-norm(a.nombre).startsWith(pal[0]))).slice(0,8);
+  {const v0=bus.value;pacsRemoto(v0,()=>{if(bus.isConnected&&!pac&&bus.value===v0)bus.oninput();});}
   res.innerHTML=fl.map(p=>`<button type="button" class="ag-pi" data-id="${p.id}"><b>${escH(p.nombre)}</b><small>${escH(p.telefono||p.email||'')}</small></button>`).join('')+`<button type="button" class="ag-pi ag-np">＋ Nuevo paciente «${escH(bus.value.trim())}»</button>`;
   res.querySelectorAll('.ag-pi[data-id]').forEach(b=>b.onclick=()=>{quierePack=false;packSel=null;pac=(pacs||[]).find(p=>p.id===b.dataset.id);bus.value=pac.nombre;res.innerHTML=`<div class="ag-elegido">✓ ${escH(pac.nombre)}</div><div class="ag-pkinfo">Mirando su pack…</div>`;
    // Qué sesión del pack sería esta cita

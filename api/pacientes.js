@@ -204,6 +204,30 @@ export default async function handler(req) {
   const expected = (FISIO_PASSWORD || '').trim();
   if (pwd !== expected) return new Response(JSON.stringify({ ok: false, error: 'Contrasena incorrecta' }), { status: 401, headers: corsHeaders });
 
+  // ── BUSCAR PACIENTES EN AIRTABLE (respaldo de los buscadores del panel) ──
+  if (action === 'buscar') {
+    const q = String(url.searchParams.get('q') || body.q || '').trim().toLowerCase().slice(0, 60);
+    if (q.length < 2) return new Response(JSON.stringify({ ok: true, pacientes: [] }), { headers: corsHeaders });
+    const esc = t => t.replace(/\\/g, '').replace(/'/g, "\\'");
+    const dig = q.replace(/\D/g, '');
+    const pal = q.split(/\s+/).filter(Boolean).map(esc);
+    const conds = [`AND(${pal.map(w => `SEARCH('${w}',LOWER({FULL NAME}&''))`).join(',')})`];
+    if (dig.length >= 4) conds.push(`SEARCH('${dig}',SUBSTITUTE(SUBSTITUTE({WHATSAPP}&'',' ',''),'+','')&SUBSTITUTE({TELF}&'',' ',''))`);
+    if (q.includes('@')) conds.push(`SEARCH('${esc(q)}',LOWER({EMAIL}&''))`);
+    const formula = conds.length > 1 ? `OR(${conds.join(',')})` : conds[0];
+    try {
+      let d = null;
+      for (let i = 0; i < 4; i++) {
+        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?filterByFormula=${encodeURIComponent(formula)}&fields[]=FULL NAME&fields[]=EMAIL&fields[]=PIN&fields[]=WHATSAPP&fields[]=TELF&fields[]=ESTADO&maxRecords=20`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        if (r.status === 429 || r.status >= 500) { await new Promise(x => setTimeout(x, 500 * (i + 1))); continue; }
+        d = await r.json(); break;
+      }
+      if (!d || d.error) throw new Error((d && d.error && (d.error.message || d.error.type)) || 'Airtable ocupado');
+      const pacientes = (d.records || []).map(rec => ({ id: rec.id, nombre: rec.fields['FULL NAME'] || '—', email: rec.fields['EMAIL'] || '', pin: rec.fields['PIN'] || '', telefono: rec.fields['WHATSAPP'] || rec.fields['TELF'] || '', estados: rec.fields['ESTADO'] || [], creado: rec.createdTime || '' }));
+      return new Response(JSON.stringify({ ok: true, pacientes }), { headers: corsHeaders });
+    } catch (e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: corsHeaders }); }
+  }
+
   // ── COMPLETAR REFERIDO (+5 puntos al referidor, desde panel fisio) ───────
   if (action === 'completar-referido' && req.method === 'POST') {
     const { pacienteId } = body;
