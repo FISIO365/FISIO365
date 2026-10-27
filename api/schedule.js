@@ -1025,7 +1025,7 @@ module.exports = async function handler(req, res) {
         const COM = 'tbl2qRD3WsvQVPrwX', TIPOS_C = ['Comunicado', 'Solicitud', 'Informe', 'Aviso', 'Ausencia', 'Tareas', 'Incidencia', 'Ayuda'];
         const CAT_INC = ['Comportamiento', 'Puntualidad', 'Calidad del trabajo', 'Material o instalaciones', 'Otro'], URG_AY = ['Hoy', 'Esta semana', 'Cuando se pueda'];
         // Solicitudes de ausencia (vacaciones, día libre, horas libres, cambio de horario): las aprueba Nora o Ramiro
-        const QUE_AUS = ['Vacaciones', 'Día libre', 'Horas libres', 'Cambio de horario'], APRUEBAN_C = ['Nora', 'Ramiro'];
+        const QUE_AUS = ['Vacaciones', 'Día libre', 'Horas libres', 'Cambio de horario'], APRUEBAN_C = ['Nora'], RESERVA_C = 'Ramiro'; // administración (si lo pide Nora, va a Ramiro)
         const pilaC = s => { const p = String(s || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
         // Quién soy: nombre + contraseña del panel (como en Administración)
         const equipoRecs = await todosT(FISIOS_TABLE, 'fields[]=Name&fields[]=Password&fields[]=' + encodeURIComponent('FECHA BAJA'));
@@ -1034,6 +1034,7 @@ module.exports = async function handler(req, res) {
         const yo = pilaC(yoRec.fields.Name);
         const equipo = [...new Set(equipoRecs.filter(r => r.fields.Name && !r.fields['FECHA BAJA']).map(r => pilaC(r.fields.Name)))].sort((a, b) => a.localeCompare(b, 'es'));
         const aprueban = APRUEBAN_C.filter(n => equipo.includes(n));
+        const paraAdmin = () => { const p = aprueban.filter(n => n !== yo); return p.length ? p : (equipo.includes(RESERVA_C) && RESERVA_C !== yo ? [RESERVA_C] : []); };
         const ahora = new Date().toISOString();
         const MES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
         const fC = f => { const [y, m, d] = String(f || '').split('-').map(Number); return d ? `${d} ${MES_C[m - 1]}` : ''; };
@@ -1050,7 +1051,7 @@ module.exports = async function handler(req, res) {
           const ult = msgs[msgs.length - 1], req = !!F['REQUIERE ACCIÓN'], abierta = nmC(F.ESTADO) !== 'Cerrada';
           const faltan = para.filter(p => !hecho[p]);
           const tipo = nmC(F.TIPO) || 'Comunicado', esAus = tipo === 'Ausencia', resolucion = esAus ? (nmC(F['RESOLUCIÓN']) || 'Pendiente') : '';
-          const puedeAprobar = esAus && abierta && resolucion === 'Pendiente' && aprueban.includes(yo) && de !== yo;
+          const puedeAprobar = esAus && abierta && resolucion === 'Pendiente' && para.includes(yo) && de !== yo;
           return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo, de, para, req, limite: F['FECHA LÍMITE'] || '', abierta,
             num: F['Nº'] ? `COM-${String(msgs[0].fecha || '').slice(0, 4)}-${String(F['Nº']).padStart(4, '0')}` : '', ausencia: esAus ? json(F.AUSENCIA) : null, datos: json(F.DATOS), resolucion, resueltaPor: F['RESUELTA POR'] || '', puedeAprobar,
             fecha: msgs[0].fecha, ultima: ult.fecha, ultimoDe: ult.de, nResp: resp.length, extracto: String(ult.cuerpo || '').replace(/\s+/g, ' ').slice(0, 140),
@@ -1091,8 +1092,8 @@ module.exports = async function handler(req, res) {
           const a = { que: A.que, desde: A.desde, hasta: okF(A.hasta) && A.hasta >= A.desde ? A.hasta : A.desde, hd: '', hh: '' };
           if (A.que === 'Horas libres' || A.que === 'Cambio de horario') { if (!okH(A.hd) || !okH(A.hh) || A.hd >= A.hh) return res.status(400).json({ ok: false, error: 'Revisa las horas: «de» tiene que ser antes que «a»' }); a.hd = A.hd; a.hh = A.hh; }
           if (a.hasta < hoyF) return res.status(400).json({ ok: false, error: 'Esas fechas ya han pasado' });
-          const para = aprueban.filter(n => n !== yo);
-          if (!para.length) return res.status(400).json({ ok: false, error: 'No hay nadie de dirección a quien enviarla' });
+          const para = paraAdmin();
+          if (!para.length) return res.status(400).json({ ok: false, error: 'No hay nadie de administración a quien enviarla' });
           const motivo = String(q.cuerpo || '').trim().slice(0, 5000);
           const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: textoAus(a), TIPO: 'Ausencia', DE: yo, PARA: para.join(', '), CUERPO: motivo || 'Solicito ' + textoAus(a).toLowerCase() + '.', FECHA: ahora,
             'REQUIERE ACCIÓN': true, AUSENCIA: JSON.stringify(a), 'RESOLUCIÓN': 'Pendiente', 'LEÍDO': JSON.stringify({ [yo]: ahora }), HECHO: '{}', ESTADO: 'Abierta' } }], typecast: true }) });
@@ -1103,7 +1104,7 @@ module.exports = async function handler(req, res) {
           // Aprobar o rechazar una solicitud de ausencia. Al aprobar: se apunta en Administración y se bloquea la agenda
           const root = await buscar(q.id), F = root.fields;
           if (nmC(F.TIPO) !== 'Ausencia') return res.status(400).json({ ok: false, error: 'No es una solicitud de ausencia' });
-          if (!aprueban.includes(yo) || F.DE === yo) return res.status(403).json({ ok: false, error: 'Solo Nora o Ramiro pueden aprobarla' });
+          if (!listaPara(F.PARA).includes(yo) || F.DE === yo) return res.status(403).json({ ok: false, error: 'Solo administración puede aprobarla' });
           if ((nmC(F['RESOLUCIÓN']) || 'Pendiente') !== 'Pendiente') return res.status(400).json({ ok: false, error: `Ya está ${String(nmC(F['RESOLUCIÓN'])).toLowerCase()}` });
           const coment = String(q.comentario || '').trim().slice(0, 5000), a = json(F.AUSENCIA);
           let texto;
@@ -1131,8 +1132,8 @@ module.exports = async function handler(req, res) {
             if (!asunto) asunto = items.length === 1 ? items[0] : `${items.length} tareas`;
             datos = { items: items.map(t => ({ t, por: '', en: '' })) };
           } else if (tipo === 'Incidencia') {
-            para = aprueban.filter(n => n !== yo);
-            if (!para.length) return res.status(400).json({ ok: false, error: 'No hay nadie de dirección a quien enviarlo' });
+            para = paraAdmin();
+            if (!para.length) return res.status(400).json({ ok: false, error: 'No hay nadie de administración a quien enviarlo' });
             const cat = CAT_INC.includes(q.cat) ? q.cat : 'Otro';
             datos = { cat, sobre: [...new Set((Array.isArray(q.sobre) ? q.sobre : []).map(pilaC))].filter(p => equipo.includes(p)) };
             if (!cuerpo) return res.status(400).json({ ok: false, error: 'Cuenta lo que ha pasado' });
@@ -1170,7 +1171,7 @@ module.exports = async function handler(req, res) {
           const le = json(F['LEÍDO']); le[yo] = ahora;
           let fields;
           if (tipo === 'Incidencia') {
-            if (!para0.includes(yo)) return res.status(403).json({ ok: false, error: 'Solo dirección puede gestionarla' });
+            if (!para0.includes(yo)) return res.status(403).json({ ok: false, error: 'Solo administración puede gestionarla' });
             const hc = {}; para0.forEach(p => { hc[p] = ahora; });
             await nota(`✓ Gestionada por ${yo}.`);
             fields = { HECHO: JSON.stringify(hc), ESTADO: 'Cerrada', 'RESUELTA POR': yo };

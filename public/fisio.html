@@ -6165,14 +6165,14 @@ function agAbrirHueco(c,onDone){
 
 // ══ COMUNICACIONES INTERNAS (com system): comunicaciones formales entre el equipo, con hilo ══
 // De momento solo la ve quien esté en COM_USUARIOS (por el nombre de pila). Para abrirla a todos: COM_USUARIOS=null
-const COM_USUARIOS=['nora','ramiro'];
+const COM_USUARIOS=null; // todo el equipo
 const comVe=()=>!!fisioActual&&(!COM_USUARIOS||COM_USUARIOS.includes(String(fisioActual.nombre||'').trim().split(' ')[0].toLowerCase()));
 const COM_TIPOS=['Comunicado','Solicitud','Tareas','Incidencia','Ausencia'];
-const COM_TIPO_DESC={Comunicado:'Para informar de algo importante. Quien lo recibe confirma que lo ha leído.',Solicitud:'Para pedir algo que la otra persona tiene que resolver.',Tareas:'Una lista de tareas que se van marcando a medida que se hacen.',Incidencia:'Confidencial: solo lo leen Nora y Ramiro. Para contar algo que crees que hay que corregir.',Ausencia:'Para pedir vacaciones, días libres, horas o un cambio de horario. Lo aprueba dirección.'};
+const COM_TIPO_DESC={Comunicado:'Para informar de algo importante. Quien lo recibe confirma que lo ha leído.',Solicitud:'Para pedir algo que la otra persona tiene que resolver.',Tareas:'Una lista de tareas que se van marcando a medida que se hacen.',Incidencia:'Confidencial: solo lo lee administración (Nora). Para contar algo que crees que hay que corregir.',Ausencia:'Para pedir vacaciones, días libres, horas o un cambio de horario. Lo aprueba administración (Nora).'};
 const COM_CAT_INC=['Comportamiento','Puntualidad','Calidad del trabajo','Material o instalaciones','Otro'];
-const COM_APRUEBAN=['Nora','Ramiro']; // quién aprueba vacaciones, días libres y cambios de horario
-const comTipoTxt=t=>({Comunicado:'Informe',Aviso:'Informe',Ausencia:'Vacaciones y horarios',Incidencia:'Para dirección',Ayuda:'Necesito ayuda'})[t]||t;
-const comRol=n=>COM_APRUEBAN.includes(n)?'Dirección · FISIO365':'Fisioterapeuta · FISIO365';
+const COM_APRUEBAN=['Nora']; // administración: aprueba vacaciones y recibe lo confidencial (si lo pide Nora, va a Ramiro) // quién aprueba vacaciones, días libres y cambios de horario
+const comTipoTxt=t=>({Comunicado:'Informe',Aviso:'Informe',Ausencia:'Vacaciones y horarios',Incidencia:'Para administración',Ayuda:'Necesito ayuda'})[t]||t;
+const comRol=n=>/^(nora|ramiro)$/i.test(n||'')?'Administración · FISIO365':'Fisioterapeuta · FISIO365';
 const comFechaDia=f=>{if(!f)return '';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][t.getMonth()];};
 const comFechaCarta=iso=>iso?new Date(iso).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Madrid'}):'';
 let COM={tab:'rec',d:null,hilo:null,y:0};
@@ -6314,7 +6314,7 @@ async function comHilo(wrap,id){
  const sello=esAus&&h.resolucion!=='Pendiente'?`<div class="com-sello ${h.resolucion==='Aprobada'?'ok':'no'}"><b>${escH(h.resolucion.toUpperCase())}</b><span>${escH(h.resueltaPor)}</span></div>`:'';
  const A=h.ausencia||{};
  const ficha=esAus?`<div class="com-ficha"><div><span>Qué pide</span><b>${escH(A.que||'')}</b></div><div><span>${A.hasta&&A.hasta!==A.desde?'Fechas':'Fecha'}</span><b>${escH(comFechaDia(A.desde))}${A.hasta&&A.hasta!==A.desde?' → '+escH(comFechaDia(A.hasta)):''}</b></div>${A.hd?`<div><span>${A.que==='Cambio de horario'?'Trabajaría':'No estaría'}</span><b>de ${escH(A.hd)} a ${escH(A.hh)}</b></div>`:''}</div>`:'';
- const fichaEsp=h.tipo==='Incidencia'?`<div class="com-conf">${comIco('candado')}Confidencial · solo dirección</div><div class="com-ficha"><div><span>Tema</span><b>${escH(D.cat||'')}</b></div>${(D.sobre||[]).length?`<div><span>Sobre</span><b>${escH(comLista(D.sobre))}</b></div>`:''}${!h.abierta?`<div><span>Estado</span><b>Gestionada · ${escH(h.resueltaPor)}</b></div>`:''}</div>`
+ const fichaEsp=h.tipo==='Incidencia'?`<div class="com-conf">${comIco('candado')}Confidencial · solo administración</div><div class="com-ficha"><div><span>Tema</span><b>${escH(D.cat||'')}</b></div>${(D.sobre||[]).length?`<div><span>Sobre</span><b>${escH(comLista(D.sobre))}</b></div>`:''}${!h.abierta?`<div><span>Estado</span><b>Gestionada · ${escH(h.resueltaPor)}</b></div>`:''}</div>`
   :h.tipo==='Ayuda'?`<div class="com-ficha"><div><span>Para cuándo</span><b>${escH(D.urg||'')}</b></div><div><span>Se encarga</span><b>${escH(D.encargado||'Nadie todavía')}</b></div>${!h.abierta?'<div><span>Estado</span><b>Resuelta</b></div>':''}</div>`
   :h.tipo==='Tareas'?`<div class="com-tareas"><div class="com-tareas-h"><b>Tareas</b><span>${(D.items||[]).filter(x=>x.por).length}/${(D.items||[]).length}</span></div>${(D.items||[]).map((x,i)=>`<button type="button" class="com-ta${x.por?' on':''}" data-ti="${i}"${env||h.para.includes(yo)?'':' disabled'}><span class="com-ta-c">${x.por?comIco('check'):''}</span><span class="com-ta-t">${escH(x.t)}${x.por?`<small>${escH(x.por)} · ${escH(comFecha(x.en))}</small>`:''}</span></button>`).join('')}</div>`:'';
  const puedeResp=!env&&h.para.includes(yo)&&!resp.some(m=>m.de===yo&&!comEvento(m.cuerpo));
@@ -6380,7 +6380,7 @@ function comHoraPick(anchor,valor,onPick){
 function comNueva(onOk,paraIni){
  const yo=String(fisioActual.nombre||'').trim().split(' ')[0].toLowerCase();
  const eq=((COM.d&&COM.d.equipo)||TAR_NOMBRES).filter(n=>n.toLowerCase()!==yo);
- const dir=COM_APRUEBAN.filter(n=>n.toLowerCase()!==yo);
+ const dir=COM_APRUEBAN.filter(n=>n.toLowerCase()!==yo);if(!dir.length)dir.push('Ramiro');
  const S={para:(paraIni||[]).filter(n=>eq.includes(n)),tipo:'Comunicado',req:false,limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:'',items:['',''],cat:'',sobre:[],urg:'Esta semana'};
  const NORMAL=['Comunicado','Solicitud'];const abierto=true;
  const m=hzModal(`<div class="hz-top"><div><b>Nueva comunicación</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
@@ -6443,7 +6443,7 @@ function comNueva(onOk,paraIni){
  $m('.com-sw').onclick=()=>{S.req=!S.req;if(!S.req)S.limite='';pinta();};
  $m('.com-lim').onclick=()=>miniCal($m('.com-lim'),S.limite||agHoyIso(),f=>{S.limite=f;pinta();});
  $m('.hz-ok').onclick=async()=>{const b=$m('.hz-ok'),T=S.tipo,asunto=$m('.com-asunto').value.trim(),cuerpo=$m('.com-cuerpo').value.trim();let datos;
-  if(T==='Ausencia'){if(!dir.length)return toast('No hay nadie de dirección a quien enviarla',false);if(!S.desde)return toast('Elige el día',false);if(conHoras()&&!(S.hd&&S.hh&&S.hd<S.hh))return toast('Revisa las horas',false);
+  if(T==='Ausencia'){if(!dir.length)return toast('No hay nadie de administración a quien enviarla',false);if(!S.desde)return toast('Elige el día',false);if(conHoras()&&!(S.hd&&S.hh&&S.hd<S.hh))return toast('Revisa las horas',false);
    datos={tipo:'Ausencia',ausencia:{que:S.que,desde:S.desde,hasta:variosDias()?S.hasta:'',hd:S.hd,hh:S.hh},cuerpo};}
   else if(T==='Incidencia'){if(!S.cat)return toast('Elige el tema',false);if(!cuerpo){$m('.com-cuerpo').focus();return toast('Cuenta lo que ha pasado',false);}datos={tipo:T,cat:S.cat,sobre:S.sobre,cuerpo};}
   else if(T==='Tareas'){const items=S.items.map(x=>x.trim()).filter(Boolean);if(!S.para.length)return toast('Elige a quién se las envías',false);if(!items.length)return toast('Escribe al menos una tarea',false);datos={tipo:T,para:S.para,asunto,items,cuerpo,limite:S.limite};}
@@ -6451,7 +6451,7 @@ function comNueva(onOk,paraIni){
   else{if(!S.para.length)return toast('Elige a quién se la envías',false);if(!asunto){$m('.com-asunto').focus();return toast('Falta el asunto',false);}if(!cuerpo){$m('.com-cuerpo').focus();return toast('Escribe el contenido',false);}
    datos={para:S.para,tipo:T,asunto,cuerpo,req:S.req,limite:S.limite};}
   b.disabled=true;b.textContent='Enviando…';
-  try{const r=await comPost('seg-com-enviar',datos);if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast({Ausencia:'Solicitud enviada a dirección',Incidencia:'Enviado a dirección',Ayuda:'Petición de ayuda enviada',Tareas:'Tareas enviadas'}[T]||'Comunicación enviada',true);cerrar();onOk&&onOk(r.id);}
+  try{const r=await comPost('seg-com-enviar',datos);if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast({Ausencia:'Solicitud enviada a administración',Incidencia:'Enviado a administración',Ayuda:'Petición de ayuda enviada',Tareas:'Tareas enviadas'}[T]||'Comunicación enviada',true);cerrar();onOk&&onOk(r.id);}
   catch(e){b.disabled=false;b.textContent='Enviar';toast(e.message,false);}};
  pintaTareas();pinta();
 }
