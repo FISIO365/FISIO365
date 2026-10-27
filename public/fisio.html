@@ -7998,7 +7998,7 @@ function pdfVista(o){
   ${(o.kpis||[]).length?`<div class="pv-k">${o.kpis.map(([l,v,c])=>`<div><span>${escH(l)}</span><b style="${c&&String(v)!=='0'?'color:'+col(c):''}">${escH(v)}</b></div>`).join('')}</div>`:''}
   ${(o.seccionesVista||o.secciones||[]).map(sc=>`${sc.titulo?`<h2>${escH(sc.titulo)}</h2>`:''}<div class="pv-tw"><table><colgroup>${(()=>{const t=sc.cols.reduce((a,c)=>a+c[1],0);return sc.cols.map(c=>`<col style="width:${(c[1]*100/t).toFixed(2)}%">`).join('');})()}</colgroup><tr>${sc.cols.map(c=>`<th>${escH(c[0])}</th>`).join('')}</tr>${sc.filas.map(f=>`<tr>${f.map(cel).join('')}</tr>`).join('')}</table></div>`).join('')||'<p class="pv-sub">No hay datos en este periodo.</p>'}
   </div>`;
- document.body.appendChild(m);document.body.style.overflow='hidden';
+ document.body.appendChild(m);document.body.style.overflow='hidden';ocultaModalesMientras(m);
  const cerrar=()=>{m.remove();document.body.style.overflow='';};
  m.querySelector('.pv-x').onclick=cerrar;m.querySelector('.pv-pdf').onclick=()=>pdfTablas(o);
 }
@@ -8153,10 +8153,10 @@ async function abrirInformeHoras(fisio){
 }
 function fmtEur(v){v=Math.round((+v||0)*100)/100;return v.toLocaleString('es-ES',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2})+' €';}
 // Abre la ficha del paciente por encima de las ventanas abiertas (informe…); al cerrarla vuelven tal cual estaban
-function fichaEncima(id,nombre){const mods=[...document.querySelectorAll('.hz-modal')].filter(x=>x.style.display!=='none');mods.forEach(x=>x.style.display='none');
- const antes=new Set(document.querySelectorAll('.fp'));abrirFichaPaciente(id,nombre);const fp=[...document.querySelectorAll('.fp')].find(x=>!antes.has(x));
- const vuelve=()=>mods.forEach(x=>{if(x.isConnected)x.style.display='';});if(!fp){vuelve();return;}
- const ob=new MutationObserver(()=>{if(!fp.isConnected){ob.disconnect();vuelve();}});ob.observe(document.body,{childList:true});}
+// Mientras una pantalla completa (PDF, ficha…) está abierta, las ventanas de abajo se esconden; al cerrarla vuelven
+function ocultaModalesMientras(el){const mods=[...document.querySelectorAll('.hz-modal')].filter(x=>x.style.display!=='none'&&!x.contains(el));if(!mods.length)return;mods.forEach(x=>x.style.display='none');
+ const ob=new MutationObserver(()=>{if(!el.isConnected){ob.disconnect();mods.forEach(x=>{if(x.isConnected)x.style.display='';});}});ob.observe(document.body,{childList:true});}
+function fichaEncima(id,nombre){const antes=new Set(document.querySelectorAll('.fp'));abrirFichaPaciente(id,nombre);const fp=[...document.querySelectorAll('.fp')].find(x=>!antes.has(x));if(fp)ocultaModalesMientras(fp);}
 // Repinta algo sin que la pantalla se mueva de donde estaba
 function mantenScroll(fn){const els=[document.scrollingElement||document.documentElement,...document.querySelectorAll('.main-area,.hz-card')].map(e=>[e,e.scrollTop]);try{fn();}finally{els.forEach(([e,y])=>{if(e.isConnected&&y)e.scrollTop=y;});requestAnimationFrame(()=>els.forEach(([e,y])=>{if(e.isConnected&&y&&Math.abs(e.scrollTop-y)>2)e.scrollTop=y;}));}}
 function editarImporte(q,listo,otras){if(!q)return;otras=otras||[];
@@ -8196,7 +8196,7 @@ function descargarCSVHoras(D){
 function imprimirHoras(D){
  const mesTxt=new Date(D.mes+'-15').toLocaleDateString('es-ES',{month:'long',year:'numeric'});
  pdfVista({etiqueta:'FISIO365 · CONTROL DE HORAS',titulo:D.fisio,sub:mesTxt.replace(/^./,c=>c.toUpperCase()),
-  kpis:[['Horas que podía hacer',D.posibles+' h'],['Horas con pacientes',`${D.sesiones} h · ${D.ocup} %`]].concat(D.callin+D.videos?[['Call-in y vídeos',(D.callin+D.videos)+' h']]:[]).concat(D.din?[['Dinero producido',(D.din.estimado>D.din.real?'≈ ':'')+fmtEur(D.din.total)]]:[]).concat(D.diasNoVino?[['Días que no vino',String(D.diasNoVino)]]:[]),
+  kpis:[['Horas que podía hacer',D.posibles+' h'],['Horas con pacientes',D.sesiones+' h'],['Ocupación',D.ocup+' %']].concat(D.callin+D.videos?[['Call-in y vídeos',(D.callin+D.videos)+' h']]:[]).concat(D.din?[['Dinero producido',D.din.total?(D.din.sesEst?'≈ ':'')+fmtEur(D.din.total):'—']]:[]).concat(D.diasNoVino?[['Días que no vino',String(D.diasNoVino)]]:[]),
   secciones:[{titulo:'Día a día',cols:[['Día',28],['Le tocaban',28],['Hizo',28],['Diferencia',28],['Nota',66]],
    filas:D.dias.map(x=>[fdiaCorto(x.fecha),x.toca+' h',x.libre?'No vino':x.hechas+' h',{t:x.libre?'−'+x.toca+' h':x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓',c:x.libre||x.dif<0?'no':x.dif>0?'ok':null,b:!!(x.libre||x.dif)},[x.cambio,x.reg?x.reg.tipo+(x.reg.nota?' · '+x.reg.nota:''):''].filter(Boolean).join(' · ')])}].concat(D.din&&D.din.sesiones.some(x=>x.e==='REALIZADA')?[{titulo:'Lo que pagó cada paciente (≈ aproximado)',cols:[['Día',30],['Paciente',70],['Importe',28]],filas:D.din.sesiones.filter(x=>x.e==='REALIZADA').map(x=>[fdiaCorto(x.f)+' '+x.h,x.pac,{t:x.eur?(x.real?'':'≈ ')+fmtEur(x.eur):'—',c:x.real?'ok':null}])}]:[]),
   seccionesVista:[{cols:[['Día',26],['Hizo',30],['Dif.',18],['Nota',26]],
