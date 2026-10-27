@@ -846,23 +846,73 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-hp{position:fixed;z-index:1000;width:240px;max-height:260px;overflow-y:auto;background:#fff;border-radius:16px;box-shadow:0 12px 34px rgba(26,26,26,.18);padding:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.com-hp button{font-family:var(--font);font-size:13px;font-weight:600;padding:8px 0;border:none;border-radius:10px;background:#f7f3ef;color:#1a1a1a;cursor:pointer}.com-hp button:hover{background:#f3e3da}.com-hp button.sel{background:#c2552e;color:#fff}
 .hz-lab span{font-weight:400}
 @media(max-width:560px){.com-carta{padding:24px 18px 16px}.com-mem{flex-direction:column;gap:8px}.com-mem-d{align-items:flex-start;text-align:left}.com-carta.com-r{margin-left:12px;padding:16px}.com-dl dd.as{font-size:16px}}
-/* Sobre que se abre al abrir una comunicación sin leer */
-.com-sobre{position:fixed;inset:0;z-index:995;display:flex;align-items:center;justify-content:center;background:rgba(245,242,238,.92);backdrop-filter:blur(6px);animation:comSobreIn .25s ease both;cursor:pointer}
-.com-sobre.fuera{animation:comSobreOut .3s ease both}
-.cs-env{position:relative;width:300px;height:196px;animation:comSobrePop .35s cubic-bezier(.2,.9,.3,1.2) both}
-.cs-back{position:absolute;inset:0;background:#e9ddd3;border-radius:14px}
-.cs-carta{position:absolute;left:16px;right:16px;top:14px;height:168px;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(26,26,26,.08);padding:16px 18px;box-sizing:border-box;z-index:2;transition:transform .55s cubic-bezier(.3,.8,.3,1)}
-.cs-carta::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:#c2552e;border-radius:10px 10px 0 0}
-.cs-carta .com-logo{font-size:14px}.cs-carta b{display:block;font-size:12.5px;font-weight:700;color:#1a1a1a;margin-top:10px;line-height:1.3;max-height:2.6em;overflow:hidden}.cs-carta i{display:block;height:6px;border-radius:3px;background:#f1ebe5;margin-top:8px}.cs-carta i:nth-of-type(2){width:80%}.cs-carta i:nth-of-type(3){width:55%}
-.cs-front{position:absolute;inset:0;z-index:3;border-radius:14px;overflow:hidden;pointer-events:none}
-.cs-front::before{content:'';position:absolute;inset:0;background:#f3e3da;clip-path:polygon(0 0,50% 58%,100% 0,100% 100%,0 100%)}
-.cs-front span{position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:13px;font-weight:600;color:#7d6a60}.cs-front span b{color:#1a1a1a}
-.cs-tapa{position:absolute;left:0;right:0;top:0;height:118px;z-index:4;transform-origin:top center;transition:transform .45s cubic-bezier(.5,0,.3,1)}
-.cs-tapa::before{content:'';position:absolute;inset:0;background:#c2552e;clip-path:polygon(0 0,100% 0,50% 100%);border-radius:14px 14px 0 0}
-.cs-sello{position:absolute;left:50%;top:100%;width:46px;height:46px;margin:-34px 0 0 -23px;border-radius:50%;background:#1a1a1a;color:#fff;font-size:11px;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px #c2552e;transition:opacity .15s}
-.com-sobre.abre .cs-tapa{transform:scaleY(-1);z-index:1}.com-sobre.abre .cs-sello{opacity:0}
-.com-sobre.sale .cs-carta{transform:translateY(-62%)}
 @keyframes comSobreIn{from{opacity:0}to{opacity:1}}@keyframes comSobreOut{to{opacity:0}}@keyframes comSobrePop{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:none}}
+/* ── Buzón (v2): estilo fino, ilustraciones a línea ── */
+.com{max-width:720px}
+.com-bz{position:relative;background:#1e2a38;border-radius:24px;padding:24px 22px 22px;color:#fff;margin-bottom:14px;min-height:178px;overflow:hidden}
+.com-buzon{position:absolute;right:12px;bottom:-4px;width:140px;height:132px;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.com-buzon .b1{stroke:rgba(255,255,255,.55);stroke-width:1.6}.com-buzon .b2{stroke:rgba(255,255,255,.3);stroke-width:1.6}.com-buzon .b3{stroke:rgba(255,255,255,.28);stroke-width:1.4}
+.com-buzon .b4{stroke:#f5f2ee;stroke-width:1.6}.com-buzon .bg{fill:#1e2a38}.com-buzon .b5{stroke:#f39a55;stroke-width:1.8}.com-buzon .f{fill:rgba(243,154,85,.25)}
+.com-bz-n{position:relative;font-size:52px;font-weight:800;line-height:.9;letter-spacing:-.04em}.com-bz-n span{color:#f39a55}
+.com-bz-t{position:relative;font-size:13px;color:#aab4c1;margin-top:6px}
+.com-esc{position:relative;margin-top:16px;display:inline-flex;align-items:center;gap:8px;font-family:var(--font);font-size:14px;font-weight:600;border:none;border-radius:99px;padding:12px 20px;background:#c2552e;color:#fff;cursor:pointer}
+.com-esc svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.com-cas{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 4px;margin:0 0 14px;scrollbar-width:none}.com-cas::-webkit-scrollbar{display:none}
+.com-cs{flex:none;width:64px;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--font);font-size:11.5px;font-weight:600;color:#7d6a60;background:none;border:none;padding:0;cursor:pointer}
+.com-cs-av{position:relative;width:56px;height:56px;border-radius:18px;background:#fff;box-shadow:0 1px 3px rgba(26,26,26,.08);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:#c2552e}
+.com-cs-av img{width:100%;height:100%;object-fit:cover;border-radius:18px}
+.com-cs-av svg{width:22px;height:22px;fill:none;stroke:#1a1a1a;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.com-cs.on{color:#1a1a1a}.com-cs.on .com-cs-av{box-shadow:0 0 0 2px #1a1a1a}
+.com-cs-av em{position:absolute;right:-5px;top:-5px;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:99px;background:#c2552e;color:#fff;font-style:normal;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #f5f2ee}
+.com .com-tabs{margin:0 0 6px}
+.com-h{font-size:11px;font-weight:700;letter-spacing:.12em;color:#a89a90;margin:16px 4px 8px}
+.com-card{background:#fff;border:none;border-radius:20px;box-shadow:0 1px 3px rgba(26,26,26,.05),0 8px 24px rgba(26,26,26,.04);overflow:hidden;margin-bottom:6px}
+.com-it{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;text-align:left;font-family:var(--font);background:#fff;border:none;border-bottom:1px solid #f3ede7;padding:13px 16px;cursor:pointer;color:#1a1a1a}
+.com-it:last-child{border-bottom:none}.com-it:hover{background:#fcfaf8}.com-it.nuevo{background:#fff}
+.com-mini{flex:none;position:relative;width:50px;height:42px}
+.com-mini>svg{width:50px;height:42px;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.com-mini .e{stroke:#b9aa9e;stroke-width:1.5}.com-mini.cerr .e{stroke:#1e2a38}
+.com-mini .bg{fill:#fff}.com-mini .pap{fill:#fff;stroke:#d9cdc2;stroke-width:1.2}.com-mini .ln{stroke:#e2d8cf;stroke-width:1.5}
+.com-mini .lac{fill:#c2552e;stroke:#fff;stroke-width:1.5}
+.com-mini i{position:absolute;right:-3px;top:11px;width:15px;height:17px;border-radius:2px;box-shadow:0 0 0 2px #fff,0 1px 3px rgba(26,26,26,.25);display:flex;align-items:center;justify-content:center}
+.com-mini.cerr i{top:4px}
+.com-mini i svg{width:9px;height:9px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.com-tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.com-tx .com-l1{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.com-tx .com-l1 b{font-size:13px;font-weight:600;color:#7d6a60;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0}.com-tx .com-l1 time{font-size:11.5px;color:#a89a90;white-space:nowrap}
+.com-it.nuevo .com-l1 b{color:#1a1a1a;font-weight:700}
+.com-tx .com-as{font-size:14.5px;font-weight:600;color:#3d342e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:1px 0}.com-it.nuevo .com-as{font-weight:700;color:#1a1a1a}
+.com-l3{display:flex;align-items:center;gap:8px}.com-tx .com-ex{flex:1;min-width:0;font-size:12.5px;color:#9b8b80;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.com-l3 .com-pill{flex:none;font-size:10.5px;padding:2px 8px}
+.com-vacio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 0 10px;color:#9b8b80;font-size:14px}
+.com-vacio .com-buzon{position:static;width:96px;height:90px}.com-vacio .com-buzon .b1,.com-vacio .com-buzon .b2,.com-vacio .com-buzon .b3{stroke:#cbbcb0}
+.com-vacio b{font-weight:600}
+/* Carta abierta: más fina */
+.com-carta::before{display:none}
+.com-carta{border-radius:22px;padding:26px 26px 20px;box-shadow:0 1px 3px rgba(26,26,26,.05),0 8px 24px rgba(26,26,26,.04);border:none}
+.com-mem{align-items:center;padding-bottom:14px}
+.com-mem-izq{display:flex;align-items:center;gap:12px;align-self:flex-start}
+.com-mem .com-mini{width:44px;height:37px}.com-mem .com-mini>svg{width:44px;height:37px}
+.com-logo{font-size:17px}.com-mem-d b{font-size:11px}.com-mem-d span{font-size:12.5px}
+.com-carta.com-r{margin-left:18px;border-radius:18px}
+/* Sobre que se abre, a línea */
+.com-sobre{position:fixed;inset:0;z-index:995;display:flex;align-items:center;justify-content:center;background:rgba(245,242,238,.94);backdrop-filter:blur(6px);animation:comSobreIn .25s ease both;cursor:pointer}
+.com-sobre.fuera{animation:comSobreOut .3s ease both}
+.cs-env{position:relative;width:240px;height:160px;animation:comSobrePop .4s cubic-bezier(.2,.9,.3,1.15) both}
+.cs-env svg{position:absolute;left:0;top:0;width:240px;overflow:visible;fill:#fff;stroke:#1e2a38;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.cs-back{height:160px;z-index:1}
+.cs-carta{position:absolute;left:18px;right:18px;top:20px;height:126px;background:#fff;border:1.4px solid #d9cdc2;border-radius:8px;padding:12px 14px;box-sizing:border-box;z-index:2;transition:transform .6s cubic-bezier(.3,.8,.3,1)}
+.cs-num{display:block;font-size:9px;font-weight:700;letter-spacing:.1em;color:#c2552e}
+.cs-carta b{display:block;font-size:12px;font-weight:700;color:#1a1a1a;margin-top:4px;line-height:1.3;max-height:2.6em;overflow:hidden}
+.cs-carta i{display:block;height:5px;border-radius:3px;background:#f1ebe5;margin-top:7px}.cs-carta i:nth-of-type(2){width:80%}.cs-carta i:nth-of-type(3){width:55%}
+.cs-front{height:160px;z-index:3}.cs-front .cs-ln{fill:none;stroke-width:1.2;stroke:#d9cdc2}
+.cs-de{position:absolute;left:0;right:0;bottom:16px;z-index:4;text-align:center;font-size:12.5px;color:#7d6a60}.cs-de b{color:#1a1a1a}
+.cs-sello{position:absolute;right:14px;bottom:14px;z-index:4;width:22px;height:26px;border-radius:2px;box-shadow:0 0 0 2.5px #fff,0 1px 4px rgba(26,26,26,.25);display:flex;align-items:center;justify-content:center}
+.cs-sello svg{position:static;width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2}
+.cs-tapa{height:110px;z-index:5;transform-origin:center 1px;transition:transform .5s cubic-bezier(.5,0,.3,1)}
+.cs-tapa .cs-lacre{fill:#c2552e;stroke:#fff;stroke-width:2.5;transition:opacity .15s}
+.com-sobre.abre .cs-tapa{transform:scaleY(-1);z-index:1}.com-sobre.abre .cs-lacre{opacity:0}
+.com-sobre.sale .cs-carta{transform:translateY(-58%)}
+@media(max-width:560px){.com-bz{min-height:170px;padding:22px 20px 20px}.com-buzon{width:122px;height:115px;right:6px}.com-carta{padding:22px 18px 16px}.com-carta.com-r{margin-left:10px}}
 /* Móvil: barra de pestañas abajo en vez de la lateral */
 @media(max-width:768px){
  .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:24px!important;right:24px!important;border-radius:26px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
@@ -1558,7 +1608,7 @@ const TOPBAR = {
  cap: ['Captación','Lista de espera y contactos'],
  ejer: ['Ejercicios','Biblioteca de vídeos'],
  rep: ['Check-list','Marca y envía antes de irte'],
- com: ['Comunicaciones','Comunicaciones internas del equipo']
+ com: ['Buzón','Comunicaciones internas del equipo']
 };
 
 const CFG = {
@@ -6083,10 +6133,10 @@ const comRol=n=>COM_APRUEBAN.includes(n)?'Dirección · FISIO365':'Fisioterapeut
 const comFechaDia=f=>{if(!f)return '';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][t.getMonth()];};
 const comFechaCarta=iso=>iso?new Date(iso).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Madrid'}):'';
 let COM={tab:'rec',d:null,hilo:null,y:0};
-try{const g=JSON.parse(sessionStorage.getItem('f365_com')||'{}');if(g.tab)COM.tab=g.tab;if(g.hilo)COM.hilo=g.hilo;}catch(e){}
+try{const g=JSON.parse(sessionStorage.getItem('f365_com')||'{}');if(g.tab)COM.tab=g.tab;if(g.hilo)COM.hilo=g.hilo;if(g.quien)COM.quien=g.quien;}catch(e){}
 const comY=()=>{const m=document.querySelector('.main-area');return Math.max(window.scrollY||0,m?m.scrollTop:0);};
 const comSetY=y=>requestAnimationFrame(()=>{window.scrollTo(0,y);const m=document.querySelector('.main-area');if(m)m.scrollTop=y;});
-const comGuarda=()=>{try{sessionStorage.setItem('f365_com',JSON.stringify({tab:COM.tab,hilo:COM.hilo}));}catch(e){}};
+const comGuarda=()=>{try{sessionStorage.setItem('f365_com',JSON.stringify({tab:COM.tab,hilo:COM.hilo,quien:COM.quien||''}));}catch(e){}};
 async function comPost(a,b){return agPost(a,Object.assign({yo:fisioActual.nombre,clave:fisioActual._pwd},b||{}));}
 let _comIv=null;
 function comVisibilidad(){const v=comVe();['sb-com','pmCom'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});if(v){comContar();if(!_comIv)_comIv=setInterval(()=>{if(!document.hidden&&comVe()&&!(document.querySelector('.com')&&COM.tab))comContar();},120000);}}
@@ -6101,12 +6151,37 @@ const comLim=f=>{if(!f)return '';const t=new Date(f+'T12:00:00');return t.getDat
 const comAv=n=>{const f=(fisios||[]).find(x=>String(x.nombre||'').trim().split(' ')[0].toLowerCase()===String(n||'').toLowerCase());return `<span class="com-av">${f&&f.foto?`<img src="${escH(f.foto)}" alt="">`:escH(String(n||'?').charAt(0).toUpperCase())}</span>`;};
 const comLista=L=>L.length<=2?L.join(' y '):L.slice(0,-1).join(', ')+' y '+L[L.length-1];
 
+// Iconos a línea fina (mismo trazo que el resto del panel)
+const COM_IC={
+ avion:'<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+ reloj:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ doc:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+ mano:'<path d="M12 21a8 8 0 1 0-8-8"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>',
+ aviso:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/>',
+ comunicado:'<path d="M3 11l15-6v14L3 13z"/><path d="M7 12.5V18a2 2 0 0 0 4 0v-4"/>',
+ sobre:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+ lapiz:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'};
+const comIco=(k,c)=>`<svg viewBox="0 0 24 24"${c?` class="${c}"`:''}>${COM_IC[k]||''}</svg>`;
+// Sello de cada tipo: color + icono
+const comSelloDe=h=>{const q=(h.ausencia&&h.ausencia.que)||'';return h.tipo==='Ausencia'?(/Vacaciones|Día libre/.test(q)?['#2f7a52','avion']:['#2f7a52','reloj']):({Informe:['#1e2a38','doc'],Solicitud:['#c2552e','mano'],Aviso:['#b8862f','aviso'],Comunicado:['#6b5f57','comunicado']})[h.tipo]||['#6b5f57','comunicado'];};
+// Sobrecito: cerrado con lacre si está sin abrir; abierto con la carta asomando si ya se ha leído
+function comMini(h,cerrado){const [c,i]=comSelloDe(h);
+ const svg=cerrado?'<rect x="3" y="9" width="42" height="29" rx="4" class="e"/><path d="M3.8 11 24 25l20.2-14" class="e"/><circle cx="24" cy="25" r="4" class="lac"/>'
+  :'<path d="M3.8 14 24 2l20.2 12" class="e"/><rect x="10" y="5" width="28" height="20" rx="2" class="pap"/><path d="M15 11h14M15 15h10" class="ln"/><rect x="3" y="14" width="42" height="24" rx="4" class="e bg"/><path d="M3.8 15.5 24 28l20.2-12.5" class="e"/>';
+ return `<span class="com-mini${cerrado?' cerr':''}"><svg viewBox="0 0 48 40">${svg}</svg><i style="background:${c}">${comIco(i)}</i></span>`;}
+// Buzón dibujado a línea (cabecera). Con la banderita levantada si hay cartas sin abrir
+const comBuzonSvg=n=>`<svg class="com-buzon" viewBox="0 0 140 132"><path d="M72 82v46M58 128h28" class="b2"/><path d="M24 82V54a24 24 0 0 1 24-24h46a24 24 0 0 1 24 24v28z" class="b1"/><path d="M24 82V54a24 24 0 0 1 48 0v28" class="b3"/>${n?'<path d="M102 82V40" class="b5"/><path d="M102 40h22l-5 6.5 5 6.5h-22" class="b5 f"/><rect x="6" y="58" width="34" height="22" rx="2.5" class="b4 bg"/><path d="M6.5 59.5 23 71l16.5-11.5" class="b4"/>':'<path d="M102 82V62" class="b2"/><path d="M102 62h20l-4 5 4 5h-20" class="b2"/>'}</svg>`;
+const comDia=iso=>{if(!iso)return '';const d=new Date(iso),h=new Date(),ay=new Date();ay.setDate(h.getDate()-1);const k=x=>x.toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'});
+ if(k(d)===k(h))return 'HOY';if(k(d)===k(ay))return 'AYER';return d.toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'Europe/Madrid'}).replace('.','').toUpperCase()+(d.getFullYear()!==h.getFullYear()?' '+d.getFullYear():'');};
+const comHora=iso=>iso?new Date(iso).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}):'';
+
 function renderCom(wrap){
  if(!comVe()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección todavía no está disponible.</div></div>';return;}
  if(COM.hilo)return comHilo(wrap,COM.hilo);
  const box=ce('div','com');wrap.appendChild(box);
- box.innerHTML=`<div class="com-top"><div class="cap-tabs com-tabs"><button type="button" data-t="rec">Recibidas <i data-n="rec" style="display:none"></i></button><button type="button" data-t="env">Enviadas</button><button type="button" data-t="pen">Pendientes <i data-n="pen" style="display:none"></i></button></div><button type="button" class="seg-add com-nueva">+ Nueva</button></div><div class="com-list"></div>`;
- box.querySelector('.com-nueva').onclick=()=>comNueva(()=>{COM.tab='env';comGuarda();pinta(true);});
+ box.innerHTML=`<div class="com-bz"></div><div class="com-cas"></div>
+  <div class="cap-tabs com-tabs"><button type="button" data-t="rec">Entrada <i data-n="rec" style="display:none"></i></button><button type="button" data-t="env">Salida</button><button type="button" data-t="pen">Pendientes <i data-n="pen" style="display:none"></i></button></div>
+  <div class="com-list"></div>`;
  box.querySelectorAll('.com-tabs button').forEach(b=>b.onclick=()=>{COM.tab=b.dataset.t;COM.y=0;comGuarda();pinta();});
  const list=box.querySelector('.com-list');
  const pinta=async(recarga)=>{
@@ -6115,19 +6190,31 @@ function renderCom(wrap){
    const r=await comPost('seg-com-buzon').catch(e=>({ok:false,error:e.message}));if(!box.isConnected)return;
    if(!r.ok){if(!COM.d){list.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;}return;}COM.d=r;}
   const d=COM.d,yo=d.yo,H=d.hilos;comContar(d);
-  const nRec=H.filter(h=>h.de!==yo&&h.noLeido).length,nPen=H.filter(h=>h.pendienteMio).length;
-  box.querySelectorAll('.com-tabs i').forEach(i=>{const v=i.dataset.n==='rec'?nRec:nPen;i.textContent=v||'';i.style.display=v?'':'none';});
-  const fila=h=>{const env=h.de===yo,otros=env?h.para:[h.de];
-   const leidos=h.para.filter(p=>h.leido[p]).length,hechos=h.para.filter(p=>h.hecho[p]).length,venc=h.limite&&h.abierta&&h.limite<agHoyIso();
-   const est=h.tipo==='Ausencia'?(h.resolucion==='Aprobada'?'<span class="com-pill ok">Aprobada</span>':h.resolucion==='Rechazada'?'<span class="com-pill rojo">Rechazada</span>':!h.abierta?'<span class="com-pill gris">Retirada</span>':`<span class="com-pill nar">${h.puedeAprobar?'Por aprobar':'Pendiente de aprobar'}</span>`):!h.abierta?'<span class="com-pill gris">Cerrada</span>':h.req?(env?`<span class="com-pill ${hechos===h.para.length?'ok':'nar'}">Hecha ${hechos}/${h.para.length}</span>`:(h.hecho[yo]?'<span class="com-pill ok">Hecha</span>':'<span class="com-pill nar">Requiere acción</span>')):'';
-   return `<button type="button" class="com-it${h.noLeido?' nuevo':''}" data-id="${h.id}">${comAv(otros[0])}<span class="com-m"><span class="com-l1"><b>${escH(env?'Para '+comLista(otros):h.de)}</b><time>${escH(comFecha(h.ultima))}</time></span>
-    <span class="com-as">${escH(h.asunto)}${h.nResp?` <em>${h.nResp+1}</em>`:''}</span><span class="com-ex">${h.ultimoDe&&h.nResp?escH(h.ultimoDe===yo?'Tú: ':h.ultimoDe+': '):''}${escH(h.extracto)}</span>
-    <span class="com-tags"><span class="com-pill tipo">${escH(comTipoTxt(h.tipo))}</span>${est}${h.limite&&h.abierta?`<span class="com-pill ${venc?'rojo':'gris'}">Límite ${comLim(h.limite)}</span>`:''}${env&&h.tipo!=='Ausencia'?`<span class="com-pill gris">Leída ${leidos}/${h.para.length}</span>`:''}</span></span>${h.noLeido?'<i class="com-dot"></i>':''}</button>`;};
+  const sinAbrir=H.filter(h=>h.de!==yo&&h.noLeido),nPen=H.filter(h=>h.pendienteMio).length;
+  // Cabecera: el buzón
+  const n=sinAbrir.length;
+  box.querySelector('.com-bz').innerHTML=`${comBuzonSvg(n)}<div class="com-bz-n">${n}<span>.</span></div><div class="com-bz-t">${n===1?'carta sin abrir':n?'cartas sin abrir':'Buzón al día'}</div><button type="button" class="com-esc">${comIco('lapiz')}Escribir</button>`;
+  box.querySelector('.com-esc').onclick=()=>comNueva(()=>{COM.tab='env';comGuarda();pinta(true);});
+  // Casilleros: uno por persona del equipo (tocar filtra)
+  const otros=(d.equipo||[]).filter(p=>p!==yo);if(COM.quien&&!otros.includes(COM.quien))COM.quien='';
+  const nDe=p=>sinAbrir.filter(h=>h.de===p).length;
+  box.querySelector('.com-cas').innerHTML=`<button type="button" class="com-cs${!COM.quien?' on':''}" data-p=""><span class="com-cs-av">${comIco('sobre')}</span>Todos</button>`+otros.map(p=>{const f=(fisios||[]).find(x=>String(x.nombre||'').trim().split(' ')[0].toLowerCase()===p.toLowerCase()),k=nDe(p);
+   return `<button type="button" class="com-cs${COM.quien===p?' on':''}" data-p="${escH(p)}"><span class="com-cs-av">${f&&f.foto?`<img src="${escH(f.foto)}" alt="">`:escH(p.charAt(0))}${k?`<em>${k}</em>`:''}</span>${escH(p)}</button>`;}).join('');
+  box.querySelectorAll('.com-cs').forEach(b=>b.onclick=()=>{COM.quien=b.dataset.p;comGuarda();pinta();});
+  box.querySelectorAll('.com-tabs i').forEach(i=>{const v=i.dataset.n==='rec'?n:nPen;i.textContent=v||'';i.style.display=v?'':'none';});
+  const deQuien=h=>!COM.quien||h.de===COM.quien||h.para.includes(COM.quien);
+  const est=h=>{const env=h.de===yo;if(h.tipo==='Ausencia')return h.resolucion==='Aprobada'?['ok','Aprobada']:h.resolucion==='Rechazada'?['rojo','Rechazada']:!h.abierta?['gris','Retirada']:['nar',h.puedeAprobar?'Por aprobar':'Pendiente'];
+   if(!h.abierta)return h.req?['gris','Cerrada']:null;if(!h.req)return null;const hechos=h.para.filter(p=>h.hecho[p]).length;
+   return env?[hechos===h.para.length?'ok':'nar',`Hecha ${hechos}/${h.para.length}`]:h.hecho[yo]?['ok','Hecha']:['nar','Requiere acción'];};
+  const fila=h=>{const env=h.de===yo,nuevo=!env&&h.noLeido,e=est(h),quien=env?'Para '+comLista(h.para):h.de;
+   return `<button type="button" class="com-it${nuevo?' nuevo':''}" data-id="${h.id}">${comMini(h,nuevo||(env&&!h.para.some(p=>h.leido[p])))}<span class="com-tx"><span class="com-l1"><b>${escH(quien)}</b><time>${escH(comHora(h.ultima))}</time></span><span class="com-as">${escH(h.tipo==='Ausencia'?String(h.asunto).split(' · ').slice(0,2).join(' · '):h.asunto)}</span><span class="com-l3"><span class="com-ex">${h.nResp&&h.ultimoDe?escH((h.ultimoDe===yo?'Tú':h.ultimoDe)+': '):''}${escH(h.extracto)}</span>${e?`<span class="com-pill ${e[0]}">${escH(e[1])}</span>`:''}</span></span></button>`;};
+  const porDia=L=>{const g=[];L.forEach(h=>{const k=comDia(h.ultima);const u=g[g.length-1];if(u&&u[0]===k)u[1].push(h);else g.push([k,[h]]);});return g.map(([k,l])=>`<div class="com-h">${escH(k)}</div><div class="com-card">${l.map(fila).join('')}</div>`).join('');};
+  const vacio=t=>`<div class="com-vacio">${comBuzonSvg(0)}<b>${escH(t)}</b></div>`;
   let html='';
-  if(COM.tab==='rec'){const L=H.filter(h=>h.de!==yo);html=L.length?`<div class="com-card">${L.map(fila).join('')}</div>`:'<div class="tar-ok">No has recibido ninguna comunicación</div>';}
-  else if(COM.tab==='env'){const L=H.filter(h=>h.de===yo);html=L.length?`<div class="com-card">${L.map(fila).join('')}</div>`:'<div class="tar-ok">Todavía no has enviado ninguna</div>';}
-  else{const A=H.filter(h=>h.pendienteMio).sort((a,b)=>(a.limite||'9')<(b.limite||'9')?-1:1),B=H.filter(h=>h.esperando);
-   html=(A.length?`<div class="com-h">Te toca a ti <span>${A.length}</span></div><div class="com-card">${A.map(fila).join('')}</div>`:'')+(B.length?`<div class="com-h">Esperando a otros <span>${B.length}</span></div><div class="com-card">${B.map(fila).join('')}</div>`:'')||'<div class="tar-ok">✓ Nada pendiente</div>';}
+  if(COM.tab==='rec'){const L=H.filter(h=>h.de!==yo&&deQuien(h));html=L.length?porDia(L):vacio(COM.quien?`Nada de ${COM.quien}`:'Tu buzón está vacío');}
+  else if(COM.tab==='env'){const L=H.filter(h=>h.de===yo&&deQuien(h));html=L.length?porDia(L):vacio('Todavía no has enviado ninguna');}
+  else{const A=H.filter(h=>h.pendienteMio&&deQuien(h)).sort((a,b)=>(a.limite||'9')<(b.limite||'9')?-1:1),B=H.filter(h=>h.esperando&&deQuien(h));
+   html=(A.length?`<div class="com-h">TE TOCA A TI</div><div class="com-card">${A.map(fila).join('')}</div>`:'')+(B.length?`<div class="com-h">ESPERANDO A OTROS</div><div class="com-card">${B.map(fila).join('')}</div>`:'')||vacio('Nada pendiente');}
   list.innerHTML=html;
   list.querySelectorAll('.com-it').forEach(b=>b.onclick=()=>{const hh=H.find(x=>x.id===b.dataset.id);if(hh&&hh.noLeido&&hh.de!==yo)comSobre(hh);COM.y=comY();COM.hilo=b.dataset.id;comGuarda();wrap.innerHTML='';comSetY(0);comHilo(wrap,b.dataset.id);});
   if(COM.y){const y=COM.y;COM.y=0;comSetY(y);}
@@ -6135,16 +6222,23 @@ function renderCom(wrap){
  pinta(!!COM.d);
 }
 
-// Sobre que se abre (solo al abrir una comunicación sin leer). Tocar lo salta
+// Sobre que se abre (solo al abrir una carta sin abrir), en la misma línea fina. Tocar lo salta
 function comSobre(h){
  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const [c,i]=comSelloDe(h);
  const o=ce('div','com-sobre');
- o.innerHTML=`<div class="cs-env"><div class="cs-back"></div><div class="cs-carta"><div class="com-logo"><span>FISIO</span>365</div><b>${escH(h.tipo==='Ausencia'?'Solicitud de '+String((h.ausencia&&h.ausencia.que)||'ausencia').toLowerCase():h.asunto)}</b><i></i><i></i><i></i></div><div class="cs-front"><span>De <b>${escH(h.de)}</b></span></div><div class="cs-tapa"><div class="cs-sello">365</div></div></div>`;
+ o.innerHTML=`<div class="cs-env"><svg class="cs-back" viewBox="0 0 240 160"><rect x="1" y="1" width="238" height="158" rx="14"/></svg>
+  <div class="cs-carta"><span class="cs-num">${escH(h.num||'')}</span><b>${escH(h.tipo==='Ausencia'?'Solicitud de '+String((h.ausencia&&h.ausencia.que)||'ausencia').toLowerCase():h.asunto)}</b><i></i><i></i><i></i></div>
+  <svg class="cs-front" viewBox="0 0 240 160"><path d="M1 16v129a14 14 0 0 0 14 14h210a14 14 0 0 0 14-14V16L120 104z"/><path d="M2 152 98 88M238 152 142 88" class="cs-ln"/></svg>
+  <div class="cs-de">De <b>${escH(h.de)}</b></div>
+  <span class="cs-sello" style="background:${c}">${comIco(i)}</span>
+  <svg class="cs-tapa" viewBox="0 0 240 110"><path d="M15 1h210a14 14 0 0 1 14 14v1L120 104 1 16v-1A14 14 0 0 1 15 1z"/><circle cx="120" cy="96" r="11" class="cs-lacre"/></svg></div>`;
  document.body.appendChild(o);
- const T=[setTimeout(()=>o.classList.add('abre'),450),setTimeout(()=>o.classList.add('sale'),900),setTimeout(fin,1650)];
+ const T=[setTimeout(()=>o.classList.add('abre'),500),setTimeout(()=>o.classList.add('sale'),950),setTimeout(fin,1750)];
  function fin(){T.forEach(clearTimeout);if(!o.isConnected)return;o.classList.add('fuera');setTimeout(()=>o.remove(),300);}
  o.onclick=fin;
 }
+
 async function comHilo(wrap,id){
  const volver=()=>{COM.hilo=null;comGuarda();wrap.innerHTML='';renderCom(wrap);};
  const box=ce('div','com com-hilo');wrap.appendChild(box);
@@ -6163,7 +6257,7 @@ async function comHilo(wrap,id){
  const firma=n=>`<div class="com-firma"><span>Atentamente,</span><b>${escH(n)}</b><small>${escH(comRol(n))}</small></div>`;
  box.innerHTML=`<button type="button" class="com-volver">‹ Volver</button>
   <article class="com-carta">
-   <header class="com-mem"><div class="com-logo"><span>FISIO</span>365</div><div class="com-mem-d">${h.num?`<b>${escH(h.num)}</b>`:''}<span>Barcelona, ${escH(comFechaCarta(h.fecha))}</span></div></header>
+   <header class="com-mem"><div class="com-mem-izq">${comMini(h,false)}<div class="com-logo"><span>FISIO</span>365</div></div><div class="com-mem-d">${h.num?`<b>${escH(h.num)}</b>`:''}<span>Barcelona, ${escH(comFechaCarta(h.fecha))}</span></div></header>
    <div class="com-tags"><span class="com-pill tipo">${escH(comTipoTxt(h.tipo))}</span>${esAus?'':h.req?`<span class="com-pill ${h.abierta?'nar':'gris'}">${h.abierta?'Requiere acción':'Cerrada'}</span>`:(!h.abierta?'<span class="com-pill gris">Cerrada</span>':'')}${h.limite?`<span class="com-pill ${h.abierta&&h.limite<agHoyIso()?'rojo':'gris'}">Límite ${comLim(h.limite)}</span>`:''}</div>
    <dl class="com-dl"><dt>De</dt><dd>${escH(h.de)}</dd><dt>Para</dt><dd>${escH(comLista(h.para))}</dd><dt>Asunto</dt><dd class="as">${escH(esAus?'Solicitud de '+String(A.que||'ausencia').toLowerCase():h.asunto)}</dd></dl>
    ${sello}${ficha}
