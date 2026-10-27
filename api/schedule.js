@@ -979,11 +979,27 @@ module.exports = async function handler(req, res) {
           String(F['HORAS POR DÍA'] || '').split('\n').forEach(l => { const m = l.trim().match(/^(\S+)\s+([\d.,]+)/); if (!m) return; const d = DIAS.find(x => capNorm(x) === capNorm(m[1])); if (d) horas[d] = Number(m[2].replace(',', '.')); });
           return { id: r.id, nombre: F.Name || '', role: F.Role || 'fisio', colegiado: F['NºColegiado'] || '', tel: F['TELÉFONO'] || '', email: F.EMAIL || '', alta: F['FECHA ALTA'] || '', baja: F['FECHA BAJA'] || '', notas: F['NOTAS ADMIN'] || '',
             horas, semana: F['HORAS SEMANA'] || null, control: !!F['CONTROL HORAS'], accesos: Object.fromEntries(ACC.map(k => [k, !!F['acc_' + k]])), foto: (F.Foto && F.Foto[0] && F.Foto[0].thumbnails && F.Foto[0].thumbnails.large && F.Foto[0].thumbnails.large.url) || '',
+            contrato: { tipo: (F['TIPO CONTRATO'] && F['TIPO CONTRATO'].name) || F['TIPO CONTRATO'] || '', pct: F['PORCENTAJE FISIO'] == null ? null : Number(F['PORCENTAJE FISIO']), coste: F['COSTE EMPRESA MES'] == null ? null : Number(F['COSTE EMPRESA MES']) },
+            docs: (F.DOCUMENTOS || []).map(a => ({ id: a.id, nombre: a.filename || 'documento', url: a.url, tipo: a.type || '', size: a.size || 0 })),
             claveDebil: !F.Password || String(F.Password).trim().length < 6 || /^(1234|12345|123456|0000|fisio365)$/i.test(String(F.Password).trim()) }; };
         const ausencias = async () => (await todosT(AUS, `filterByFormula=${encodeURIComponent(`NOT(IS_BEFORE({HASTA},DATEADD(TODAY(),-60,'days')))`)}&sort[0][field]=DESDE&sort[0][direction]=asc`)).map(r => ({ id: r.id, fisio: r.fields.FISIO || '', desde: r.fields.DESDE || '', hasta: r.fields.HASTA || r.fields.DESDE || '', tipo: (r.fields.TIPO && r.fields.TIPO.name) || r.fields.TIPO || '', nota: r.fields.NOTA || '', por: r.fields['CREADO POR'] || '', hd: r.fields['HORA DESDE'] || '', hh: r.fields['HORA HASTA'] || '' }));
         if (action === 'seg-adm-equipo') {
           const eq = full.filter(r => r.fields && r.fields.Name).map(vista).sort((a, b) => !!a.baja - !!b.baja || (a.role === 'admin') - (b.role === 'admin') || a.nombre.localeCompare(b.nombre));
           return res.status(200).json({ ok: true, equipo: eq, ausencias: await ausencias().catch(() => []), dias: DIAS, accesos: ACC });
+        }
+        // Documentos del fisio (contratos, confidencialidad…): subir o borrar
+        if (action === 'seg-adm-doc') {
+          const fi = full.find(r => r.id === q.id); if (!fi) return res.status(404).json({ ok: false, error: 'No encuentro a esa persona' });
+          if (q.op === 'subir') {
+            const b64 = String(q.b64 || ''), nom = String(q.nombre || 'documento').replace(/[\\/:*?"<>|]/g, '').slice(0, 120) || 'documento';
+            if (!b64 || b64.length > 4.4e6) return res.status(400).json({ ok: false, error: 'El archivo es demasiado grande (máximo unos 3 MB)' });
+            const up = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${fi.id}/fldSlNzar6AlmEXfP/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: String(q.tipo || 'application/octet-stream').slice(0, 100), file: b64, filename: nom }) }).catch(() => null);
+            if (!up || !up.ok) return res.status(200).json({ ok: false, error: 'No se ha podido subir. Prueba otra vez.' });
+          } else if (q.op === 'borrar') {
+            const quedan = (fi.fields.DOCUMENTOS || []).filter(a => a.id !== q.doc).map(a => ({ id: a.id }));
+            const d = await at(`${FT}/${fi.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { DOCUMENTOS: quedan } }) }); if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido borrar' });
+          } else return res.status(400).json({ ok: false });
+          const d = await at(`${FT}/${fi.id}`); return res.status(200).json({ ok: true, fisio: vista(d) });
         }
         if (action === 'seg-adm-fisio') {
           const c = q.fisio || {}, nombre = String(c.nombre || '').trim().replace(/\s+/g, ' ');
@@ -998,6 +1014,10 @@ module.exports = async function handler(req, res) {
           const h = c.horas || {}, lin = []; let tot = 0; DIAS.forEach(d => { const n = Math.max(0, Math.min(14, Number(String(h[d] || '').replace(',', '.')) || 0)); if (n) { lin.push(`${d} ${n}`); tot += n; } });
           f['HORAS POR DÍA'] = lin.join('\n'); f['HORAS SEMANA'] = Math.round(tot) || null;
           ACC.forEach(k => { if (c.accesos && k in c.accesos) f['acc_' + k] = !!c.accesos[k]; });
+          if (c.contrato) { const t = c.contrato.tipo === 'Nómina' ? 'Nómina' : c.contrato.tipo === 'Autónomo' ? 'Autónomo' : null; f['TIPO CONTRATO'] = t;
+            const n = v => { const x = Number(String(v == null ? '' : v).replace(',', '.')); return String(v == null ? '' : v).trim() === '' || !isFinite(x) ? null : x; };
+            const pc = n(c.contrato.pct), co = n(c.contrato.coste);
+            f['PORCENTAJE FISIO'] = t === 'Autónomo' && pc != null ? Math.max(0, Math.min(100, pc)) : null; f['COSTE EMPRESA MES'] = t === 'Nómina' && co != null ? Math.max(0, co) : null; }
           if (c.id === yo.id) f.acc_admin = true; // que nadie se quite a sí mismo el acceso a Administración
           const clave = String(c.clave || '').trim();
           if (clave) { if (clave.length < 6) return res.status(400).json({ ok: false, error: 'La contraseña tiene que tener al menos 6 caracteres' }); f.Password = clave; }
