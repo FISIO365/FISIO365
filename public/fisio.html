@@ -1093,6 +1093,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .hz-eur{display:flex;align-items:center;gap:8px;background:#f7f3ef;border-radius:12px;padding:6px 14px}.hz-eur input{flex:1;min-width:0;border:0;background:none;font:700 26px Poppins,sans-serif;color:#1a1a1a;outline:none;padding:6px 0}.hz-eur span{font-weight:700;font-size:20px;color:#7d6a60}
 .hz-bts3{display:grid;grid-template-columns:1fr 1fr;gap:8px}.hz-bts3 button{width:100%}.hz-ok2{font-family:inherit;font-weight:600;font-size:14px;padding:13px;border-radius:99px;border:1px solid #e3dbd3;background:#fff;color:#1a1a1a;cursor:pointer}
 .hz-auto{display:block;width:100%;margin-top:8px;background:none!important;border:0!important;color:#9a8d84!important;font:500 13px Poppins,sans-serif;cursor:pointer;padding:8px}.hz-sl small em.hz-ver{font-style:normal;color:#2f6b45;font-weight:600}
+.hz-ficha{display:block;width:100%;margin-top:10px;font:600 13.5px Poppins,sans-serif;color:#1e2a38;background:#f7f3ef;border:0;border-radius:12px;padding:12px;cursor:pointer;text-align:center}
 .hz-res2{margin-top:6px}.hz-pc{font-style:normal;font-weight:500;font-size:11.5px;color:#7d6a60;margin-left:4px}.hz-big{grid-column:1/-1}.hz-big b{font-size:22px}.hz-aviso{font-size:12px;color:#8a4a1f;background:#fff4e8;border-radius:10px;padding:8px 10px;margin:6px 0 0}
 .hz-ses{margin-top:10px;border:1px solid #ece6e0;border-radius:12px;padding:8px 10px}.hz-ses summary{cursor:pointer;font-weight:600;font-size:13px}.hz-sl{display:flex;flex-direction:column;margin-top:6px}.hz-sl>div{display:grid;grid-template-columns:104px 1fr auto;gap:0 10px;padding:6px 0;border-top:1px solid #f3eee9;font-size:12.5px;align-items:center}.hz-sl>div>i{grid-column:2;font-style:normal;color:#9a8d84;font-size:11.5px}.hz-sl>div>em{grid-column:3;grid-row:1/3;font-style:normal;font-weight:600}.hz-sl em{background:none;padding:0;border:0;white-space:nowrap}.hz-sl em.hz-ok{color:#2f6b45}.hz-sl em.hz-es{color:#7d6a60}.hz-sl .perd b{color:#b42318}.hz-dd{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow-y:auto}.hz-d{border:1px solid #ece6e0;border-radius:12px;padding:8px 10px;font-size:12.5px}.hz-d.dif{border-color:#f1d9c7}.hz-d1{display:flex;justify-content:space-between;align-items:center}.hz-d1 b{font-size:13px;text-transform:capitalize}.hz-d1 span{font-weight:600}.hz-d1 .mas{color:#2f6b45}.hz-d1 .menos{color:#b42318}.hz-d1 .ok{color:#7d6a60}
 .hz-d2{display:flex;flex-wrap:wrap;gap:3px 12px;margin-top:3px;color:#5f554e}.hz-d2 em{font-style:normal;color:#9a8d84}.hz-cb{color:#1e3a5f;background:#e8eef6;border-radius:99px;padding:1px 8px}.hz-rg{color:#8a4a1f;background:#fff4e8;border-radius:99px;padding:1px 8px}
@@ -8145,6 +8146,11 @@ async function abrirInformeHoras(fisio){
  cargarInf();
 }
 function fmtEur(v){v=Math.round((+v||0)*100)/100;return v.toLocaleString('es-ES',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2})+' €';}
+// Abre la ficha del paciente por encima de las ventanas abiertas (informe…); al cerrarla vuelven tal cual estaban
+function fichaEncima(id,nombre){const mods=[...document.querySelectorAll('.hz-modal')].filter(x=>x.style.display!=='none');mods.forEach(x=>x.style.display='none');
+ const antes=new Set(document.querySelectorAll('.fp'));abrirFichaPaciente(id,nombre);const fp=[...document.querySelectorAll('.fp')].find(x=>!antes.has(x));
+ const vuelve=()=>mods.forEach(x=>{if(x.isConnected)x.style.display='';});if(!fp){vuelve();return;}
+ const ob=new MutationObserver(()=>{if(!fp.isConnected){ob.disconnect();vuelve();}});ob.observe(document.body,{childList:true});}
 // Repinta algo sin que la pantalla se mueva de donde estaba
 function mantenScroll(fn){const els=[document.scrollingElement||document.documentElement,...document.querySelectorAll('.main-area,.hz-card')].map(e=>[e,e.scrollTop]);try{fn();}finally{els.forEach(([e,y])=>{if(e.isConnected&&y)e.scrollTop=y;});requestAnimationFrame(()=>els.forEach(([e,y])=>{if(e.isConnected&&y&&Math.abs(e.scrollTop-y)>2)e.scrollTop=y;}));}}
 function editarImporte(q,listo){if(!q)return;
@@ -8152,7 +8158,9 @@ function editarImporte(q,listo){if(!q)return;
   <div class="hz-lab">Lo que pagó por esta sesión</div><div class="hz-eur"><input type="text" inputmode="decimal" value="${q.eur?String(q.eur).replace('.',','):''}" placeholder="0"><span>€</span></div>
   <p class="adm-nota">${q.ver?'✓ Verificado por '+escH(q.ver)+'. Queda fijo.':q.man?'Puesto a mano.':q.real?'Sale de: '+escH(q.o)+'.':'Aproximado: no hay un cobro que le toque.'}</p>
   <div class="hz-bts hz-bts3"><button type="button" class="hz-ok2">Guardar</button><button type="button" class="hz-ok">✓ Verificado</button></div>
+  ${q.pid?`<button type="button" class="hz-ficha">Ver ficha de ${escH(q.pac)} ›</button>`:''}
   ${q.man?'<button type="button" class="hz-del hz-auto">Volver al automático</button>':''}`);
+ const fb=m.querySelector('.hz-ficha');if(fb)fb.onclick=()=>fichaEncima(q.pid,q.pac);
  const inp=m.querySelector('input');setTimeout(()=>{try{inp.focus();inp.select();}catch(e){}},200);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const guarda=async(v,verif)=>{const bs=m.querySelectorAll('button');bs.forEach(b=>b.disabled=true);

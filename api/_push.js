@@ -279,7 +279,7 @@ async function valorSesiones(citasRango, hasta, precios, opts) {
     if (c.id in manual || (c.fields['IMPORTE SESIÓN'] != null && c.fields['IMPORTE SESIÓN'] !== '')) { eur = c.id in manual ? manual[c.id] : num(c.fields['IMPORTE SESIÓN']); real = true; man = true; o = ver ? 'Verificado · ' + ver : 'Puesto a mano'; }
     else if (u && u.p) { eur = u.p; real = true; o = u.o; }
     else { eur = ultimoP[id] || ref || 0; o = u ? u.o : 'Sin cobro encontrado'; }
-    return { id: c.id, n: nomFisio(c.fields['PREF.']).toLowerCase(), f, h: hora(c), e: est(c), pac: nombre[id] || '—', eur, real, man, ver: man ? ver : '', o };
+    return { id: c.id, n: nomFisio(c.fields['PREF.']).toLowerCase(), f, h: hora(c), e: est(c), pid: id, pac: nombre[id] || '—', eur, real, man, ver: man ? ver : '', o };
   }).sort((a, b) => (a.f + a.h).localeCompare(b.f + b.h));
   return { lista, ref };
 }
