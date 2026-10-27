@@ -1055,8 +1055,8 @@ module.exports = async function handler(req, res) {
             fecha: msgs[0].fecha, ultima: ult.fecha, ultimoDe: ult.de, nResp: resp.length, extracto: String(ult.cuerpo || '').replace(/\s+/g, ' ').slice(0, 140),
             leido, hecho, faltan,
             noLeido: ult.de !== yo && (!leido[yo] || leido[yo] < ult.fecha),
-            pendienteMio: esAus ? puedeAprobar : req && abierta && para.includes(yo) && !hecho[yo],
-            esperando: esAus ? (de === yo && abierta && resolucion === 'Pendiente') : req && abierta && de === yo && faltan.length > 0,
+            pendienteMio: esAus ? puedeAprobar : abierta && para.includes(yo) && !hecho[yo],
+            esperando: esAus ? (de === yo && abierta && resolucion === 'Pendiente') : abierta && de === yo && faltan.length > 0,
             msgs };
         };
         const cargar = async () => {

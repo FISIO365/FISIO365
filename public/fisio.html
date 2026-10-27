@@ -6204,8 +6204,10 @@ function renderCom(wrap){
   box.querySelectorAll('.com-tabs i').forEach(i=>{const v=i.dataset.n==='rec'?n:nPen;i.textContent=v||'';i.style.display=v?'':'none';});
   const deQuien=h=>true;
   const est=h=>{const env=h.de===yo;if(h.tipo==='Ausencia')return h.resolucion==='Aprobada'?['ok','Aprobada']:h.resolucion==='Rechazada'?['rojo','Rechazada']:!h.abierta?['gris','Retirada']:['nar',h.puedeAprobar?'Por aprobar':'Pendiente'];
-   if(!h.abierta)return h.req?['gris','Cerrada']:null;if(!h.req)return null;const hechos=h.para.filter(p=>h.hecho[p]).length;
-   return env?[hechos===h.para.length?'ok':'nar',`Hecha ${hechos}/${h.para.length}`]:h.hecho[yo]?['ok','Hecha']:['nar','Requiere acción'];};
+   const hechos=h.para.filter(p=>h.hecho[p]).length,todos=hechos===h.para.length;
+   if(!h.req)return env?[todos?'ok':'gris',`Conforme ${hechos}/${h.para.length}`]:h.hecho[yo]?['ok','Conforme']:['nar','Por confirmar'];
+   if(!h.abierta)return ['gris','Cerrada'];
+   return env?[todos?'ok':'nar',`Hecha ${hechos}/${h.para.length}`]:h.hecho[yo]?['ok','Hecha']:['nar','Requiere acción'];};
   const fila=h=>{const env=h.de===yo,nuevo=!env&&h.noLeido,e=est(h),quien=env?'Para '+comLista(h.para):h.de;
    return `<button type="button" class="com-it${nuevo?' nuevo':''}" data-id="${h.id}">${comMini(h,nuevo||(env&&!h.para.some(p=>h.leido[p])))}<span class="com-tx"><span class="com-l1"><b>${escH(quien)}</b><time>${escH(comHora(h.ultima))}</time></span><span class="com-as">${escH(h.tipo==='Ausencia'?String(h.asunto).split(' · ').slice(0,2).join(' · '):h.asunto)}</span><span class="com-l3"><span class="com-ex">${h.nResp&&h.ultimoDe?escH((h.ultimoDe===yo?'Tú':h.ultimoDe)+': '):''}${escH(h.extracto)}</span>${e?`<span class="com-pill ${e[0]}">${escH(e[1])}</span>`:''}</span></span></button>`;};
   const porDia=L=>{const g=[];L.forEach(h=>{const k=comDia(h.ultima);const u=g[g.length-1];if(u&&u[0]===k)u[1].push(h);else g.push([k,[h]]);});return g.map(([k,l])=>`<div class="com-h">${escH(k)}</div><div class="com-card">${l.map(fila).join('')}</div>`).join('');};
@@ -6249,7 +6251,7 @@ async function comHilo(wrap,id){
  const h=r.hilo,yo=r.yo,env=h.de===yo,esAus=h.tipo==='Ausencia',miPend=!esAus&&h.pendienteMio;
  if(COM.d){const i=COM.d.hilos.findIndex(x=>x.id===h.id);if(i>=0){const{msgs,...s}=h;COM.d.hilos[i]=s;}comContar(COM.d);}
  const est=p=>esAus?(h.leido[p]?`<span class="com-pill gris">Leída · ${escH(comFecha(h.leido[p]))}</span>`:'<span class="com-pill gris">Sin leer</span>')
-  :h.hecho[p]?`<span class="com-pill ok">Hecha · ${escH(comFecha(h.hecho[p]))}</span>`:h.leido[p]?`<span class="com-pill gris">Leída · ${escH(comFecha(h.leido[p]))}</span>`:'<span class="com-pill gris">Sin leer</span>';
+  :h.hecho[p]?`<span class="com-pill ok">${h.req?'Hecha':'Conforme'} · ${escH(comFecha(h.hecho[p]))}</span>`:h.leido[p]?`<span class="com-pill gris">Leída · ${escH(comFecha(h.leido[p]))}</span>`:'<span class="com-pill gris">Sin leer</span>';
  const [m0,...resp]=h.msgs;
  const sello=esAus&&h.resolucion!=='Pendiente'?`<div class="com-sello ${h.resolucion==='Aprobada'?'ok':'no'}"><b>${escH(h.resolucion.toUpperCase())}</b><span>${escH(h.resueltaPor)}</span></div>`:'';
  const A=h.ausencia||{};
@@ -6268,7 +6270,7 @@ async function comHilo(wrap,id){
   ${resp.map(m=>{const t=String(m.cuerpo||''),ap=/^✓ Aprobada/.test(t),re=/^✗ Rechazada/.test(t);return `<article class="com-carta com-r${m.de===yo?' mio':''}${ap?' ap':re?' re':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>Respuesta · ${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${escH(t)}</div></article>`;}).join('')}
   <div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>
   <div class="com-card com-resp${env&&!resp.some(m=>m.de!==yo)&&!h.puedeAprobar?' plegada':''}"><button type="button" class="com-anadir">+ Añadir algo a esta carta</button>${h.puedeAprobar?'<div class="com-apr">Solicitud pendiente de tu aprobación. Al aprobarla se apunta en Administración y se bloquean sus huecos en la agenda.</div>':''}<textarea rows="${h.puedeAprobar?3:4}" placeholder="${h.puedeAprobar?'Comentario (opcional)…':env&&!resp.some(m=>m.de!==yo)?'Añade algo a tu carta…':'Escribe tu respuesta…'}"></textarea>
-   <div class="com-bts">${h.puedeAprobar?'<button type="button" class="com-b sec" data-a="rech">Rechazar</button><button type="button" class="com-b" data-a="apr">Aprobar</button>':`${miPend?'<button type="button" class="com-b sec" data-a="hecho">Marcar como hecha</button>':''}<button type="button" class="com-b" data-a="resp">${miPend?'Responder y marcar hecha':'Responder'}</button>`}</div>
+   <div class="com-bts">${h.puedeAprobar?'<button type="button" class="com-b sec" data-a="rech">Rechazar</button><button type="button" class="com-b" data-a="apr">Aprobar</button>':`${miPend?`<button type="button" class="com-b sec" data-a="hecho">${h.req?'Marcar como hecha':'✓ Recibido y conforme'}</button>`:''}<button type="button" class="com-b" data-a="resp">${miPend&&h.req?'Responder y marcar hecha':'Responder'}</button>`}</div>
    ${env?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}</div>`;
  box.querySelector('.com-volver').onclick=volver;
  const ta=box.querySelector('textarea');
@@ -6279,7 +6281,7 @@ async function comHilo(wrap,id){
   catch(e){bs.forEach(x=>x.disabled=false);b.textContent=t0;toast(e.message,false);}};
  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;
   if(a==='resp'){const t=ta.value.trim();if(!t){ta.focus();toast('Escribe la respuesta',false);return;}hacer(b,'seg-com-responder',{cuerpo:t,hecho:miPend},'Respuesta enviada');}
-  else if(a==='hecho')hacer(b,'seg-com-responder',{cuerpo:ta.value.trim(),hecho:true},'Marcada como hecha');
+  else if(a==='hecho')hacer(b,'seg-com-responder',{cuerpo:ta.value.trim(),hecho:true},h.req?'Marcada como hecha':'Acuse de recibo enviado');
   else if(a==='apr')admSiNo(`Se apuntará en Administración (${String(A.que||'').toLowerCase()} de ${h.de}) y se bloquearán sus huecos libres en la agenda.`,'Sí, aprobar').then(ok=>{if(ok)hacer(b,'seg-com-resolver',{aprobar:true,comentario:ta.value.trim()},'Solicitud aprobada');});
   else if(a==='rech')hacer(b,'seg-com-resolver',{aprobar:false,comentario:ta.value.trim()},'Solicitud rechazada');
   else if(a==='estado')admSiNo(h.abierta?'La comunicación quedará cerrada y dejará de salir en Pendientes.':'La comunicación volverá a estar abierta.',h.abierta?'Sí, cerrar':'Sí, reabrir').then(ok=>{if(ok)hacer(b,'seg-com-estado',{abrir:!h.abierta},h.abierta?'Cerrada':'Reabierta');});});
