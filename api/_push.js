@@ -264,7 +264,7 @@ async function valorSesiones(citasRango, hasta, precios, opts) {
   const yaHolded = new Set();
   facs.forEach(r => { const f = r.fields, id = f['PacienteId']; if (f['HOLDED ID']) yaHolded.add(String(f['HOLDED ID'])); if (!id || !pacs.includes(id)) return; const fc = fechaCobro(f);
     [[f['CONCEPTO 1'], f['Nº SESIONES 1'], f['PRECIO SESIÓN 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2'], f['PRECIO SESIÓN 2']]].forEach(([c, n, p]) => { if (!/^Sesi/i.test(String(c || ''))) return;
-      n = num(n); p = num(p); const gr = String((f['PAGADO CON'] && f['PAGADO CON'].name) || f['PAGADO CON'] || '') === 'Gratis'; for (let i = 0; i < n; i++) mete(id, gr ? { f: fc, p: 0, gratis: true, o: 'Gratis' } : { f: fc, p, o: 'Cobro del panel' + (n > 1 ? ` · pack de ${n}` : '') }); }); });
+      n = num(n); p = num(p); const gr = String((f['MODO DE PAGO'] && f['MODO DE PAGO'].name) || f['MODO DE PAGO'] || '') === 'Gratis'; for (let i = 0; i < n; i++) mete(id, gr ? { f: fc, p: 0, gratis: true, o: 'Gratis' } : { f: fc, p, o: 'Cobro del panel' + (n > 1 ? ` · pack de ${n}` : '') }); }); });
   // Tickets de Holded hechos fuera del panel
   if (opts.cobros) { try { const h = await opts.cobros(pacT, yaHolded); Object.entries(h).forEach(([id, us]) => us.forEach(u => mete(id, u))); } catch (e) { console.log('cobros Holded', e.message); } }
   Object.values(cola).forEach(q => q.sort((a, b) => a.f.localeCompare(b.f)));

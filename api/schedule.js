@@ -2480,7 +2480,7 @@ module.exports = async function handler(req, res) {
       const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
       const bonoPrevio = Number((pr.fields || {})['SESIONES BONO PREVIO'] || 0);
       // Sesiones gratis (no van a Holded): se ven en la ficha junto a las facturas
-      const gratis = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{PAGADO CON}='Gratis')`)}`).catch(() => [])).map(r => { const f = r.fields;
+      const gratis = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{MODO DE PAGO}='Gratis')`)}`).catch(() => [])).map(r => { const f = r.fields;
         return { id: r.id, fecha: String(f['FECHA DE COBRO'] || f['FECHA'] || String(r.createdTime).slice(0, 10)).slice(0, 10), lineas: [[f['CONCEPTO 1'], f['Nº SESIONES 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2']]].filter(([c]) => c).map(([c, n]) => ({ c: (c && c.name) || c, n: Number(n) || 1 })), nota: f['NOTAS'] || '' }; }).sort((a, b) => b.fecha.localeCompare(a.fecha));
       if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, bonoPrevio, tarjetas, gratis, facturas: [] });
       try {
