@@ -122,7 +122,7 @@ async function sinFacturar() {
 // Reagendan = pacientes atendidos en el periodo que tienen otra cita después de su última sesión.
 const NO_FISIO = /NO HAY FISIO|TODOS|\?\?|FIESTA|^$/i;
 const nomFisio = v => { if (Array.isArray(v)) v = v[0]; v = v && typeof v === 'object' ? v.name : String(v || ''); return v.trim(); };
-async function rendimiento(desde, hasta) {
+async function rendimiento(desde, hasta, _fresco, opts) {
   const pid = c => (c.fields['RELACIÓN - CITA'] || [])[0] || '';
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
@@ -162,15 +162,24 @@ async function rendimiento(desde, hasta) {
   // Control de horas día a día (fisios con «CONTROL HORAS»): horas hechas (sesiones + call-in + vídeos) frente a las que le tocaban
   const control = new Set(fisiosT.filter(f => f.fields['CONTROL HORAS']).map(f => String(f.fields['Name'] || '').split(' ')[0].toLowerCase()));
   const hechasDia = {}; // fisio -> {fecha: horas}
-  citas.forEach(c => { const e = est(c); if (!['REALIZADA', 'CALL-IN', 'VIDEOS', 'VÍDEOS'].includes(e)) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(); const f = String(c.fields['FECHA']).slice(0, 10); (hechasDia[n] = hechasDia[n] || {})[f] = ((hechasDia[n] || {})[f] || 0) + 1; });
+  citas.forEach(c => { const e = est(c); if (!['REALIZADA', 'CALL-IN', 'VIDEOS', 'VÍDEOS'].includes(e) || (e === 'REALIZADA' && !pid(c))) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(); const f = String(c.fields['FECHA']).slice(0, 10); (hechasDia[n] = hechasDia[n] || {})[f] = ((hechasDia[n] || {})[f] || 0) + 1; });
   const hoyISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  // Detalle de cada día para el informe de horas: sesiones, call-in, vídeos, faltas, primera y última hora con algo hecho
+  const det = {}; const hh = x => { const m = String(x || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
+  citas.forEach(c => { const e = est(c), n = nomFisio(c.fields['PREF.']).toLowerCase(), f = String(c.fields['FECHA']).slice(0, 10), x = ((det[n] = det[n] || {})[f] = det[n][f] || { ses: 0, callin: 0, videos: 0, noVino: 0, canceladas: 0, ini: '', fin: '' });
+    if (e === 'REALIZADA' && pid(c)) x.ses++; else if (e === 'CALL-IN') x.callin++; else if (e === 'VIDEOS' || e === 'VÍDEOS') x.videos++; else if (e === 'NO ASISTIÓ' || e === 'CITA PERDIDA') x.noVino++; else if (e === 'CANCELADA') x.canceladas++; else return;
+    if (!['REALIZADA', 'CALL-IN', 'VIDEOS', 'VÍDEOS'].includes(e)) return; const h = hh(c.fields['HORA']); if (!h) return; if (!x.ini || h < x.ini) x.ini = h; if (!x.fin || h > x.fin) x.fin = h; });
+  const din = opts && opts.dinero ? await valorSesiones(citas, hasta, opts.precios || {}) : null;
+  if (din) din.lista.forEach(q => { const x = ((det[q.n] = det[q.n] || {})[q.f] = det[q.n][q.f] || { ses: 0, callin: 0, videos: 0, noVino: 0, canceladas: 0, ini: '', fin: '' }); if (q.e !== 'REALIZADA') return; x.eur = (x.eur || 0) + (q.eur || 0); if (!q.real) x.eurEst = (x.eurEst || 0) + (q.eur || 0); });
+  const cambioDe = (n, f) => aus.filter(x => x.desde <= f && x.hasta >= f && (x.fisio === 'Toda la clínica' || x.fisio.toLowerCase() === n)).map(x => x.tipo === 'Cambio de horario' && x.hd ? `Otro horario ${x.hd}–${x.hh}` : x.hd ? `Falta ${x.hd}–${x.hh}` : (x.tipo || 'No trabaja') + (x.fisio === 'Toda la clínica' ? ' (clínica)' : '')).join(' · ');
   const diario = n => {
-    if (!control.has(n) || !horasDia[n]) return null;
+    if (!horasDia[n]) return null;
     const v = horasDia[n], out = [], fin = hasta < hoyISO ? hasta : hoyISO;
     for (let d = new Date(desde + 'T12:00:00Z'); d <= new Date(fin + 'T12:00:00Z'); d = new Date(d.getTime() + 864e5)) {
       const f = d.toISOString().slice(0, 10), toca = horasDe(n, f), hechas = (hechasDia[n] || {})[f] || 0, trabajo = (diasCon[n] || new Set()).has(f);
-      if (!toca && !hechas) continue;
-      out.push({ fecha: f, toca, hechas, libre: toca > 0 && !trabajo });
+      const cambio = cambioDe(n, f), dd = (det[n] || {})[f] || {};
+      if (!toca && !hechas && !cambio) continue;
+      out.push({ fecha: f, toca, base: v[d.getUTCDay()], hechas, libre: toca > 0 && !trabajo, cambio, ses: dd.ses || 0, callin: dd.callin || 0, videos: dd.videos || 0, noVino: dd.noVino || 0, canceladas: dd.canceladas || 0, eur: Math.round((dd.eur || 0) * 100) / 100, eurEst: Math.round((dd.eurEst || 0) * 100) / 100, ini: dd.ini || '', fin: dd.fin ? (() => { const [a, b] = dd.fin.split(':').map(Number); return String(a + 1).padStart(2, '0') + ':' + String(b).padStart(2, '0'); })() : '' });
     }
     return out;
   };
@@ -208,7 +217,50 @@ async function rendimiento(desde, hasta) {
     r.forEach(p => { nombres[p.id] = { nombre: p.fields['FULL NAME'] || '—', tel: p.fields['WHATSAPP'] || '', nota: p.fields['POR QUÉ NO REAGENDA'] || '', notaFecha: p.fields['POR QUÉ FECHA'] || '', notaFisio: p.fields['POR QUÉ FISIO'] || '' }; });
   }
   Object.values(R).forEach(x => { x.lista = x.lista.map(p => ({ ...p, ...(nombres[p.id] || { nombre: '—' }) })).sort((a, b) => b.ultima.localeCompare(a.ultima)); });
-  return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); return { ...x, huecos: capacidad(k), sinHoras: !horasDia[k], dias: diario(k) }; }).sort((a, b) => b.realizadas - a.realizadas);
+  return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); const r = { ...x, huecos: capacidad(k), sinHoras: !horasDia[k], dias: diario(k), control: control.has(k) };
+    if (din) { const L = din.lista.filter(q => q.n === k), S = L.filter(q => q.e === 'REALIZADA'), P = L.filter(q => q.e !== 'REALIZADA'), su = a => Math.round(a.reduce((t, q) => t + (q.eur || 0), 0) * 100) / 100;
+      r.dinero = { total: su(S), real: su(S.filter(q => q.real)), estimado: su(S.filter(q => !q.real)), sesReal: S.filter(q => q.real).length, sesEst: S.filter(q => !q.real && q.eur).length, sinPrecio: S.filter(q => !q.eur).length, perdidas: P.length, perdidasEur: su(P), sesiones: L.map(({ n, ...q }) => q) }; }
+    return r; }).sort((a, b) => b.realizadas - a.realizadas);
+}
+
+// ── Dinero que representa cada sesión hecha (para el informe de cada fisio) ──
+// Cada sesión gasta, por orden de fecha, una de las sesiones que el paciente ha pagado en las facturas del panel (FACTURAS emitidas):
+//   · si le toca una sesión cobrada → su precio real (precio por sesión de esa factura, packs incluidos)
+//   · si no (sesión de antes de que el panel empezara a cobrar, del pack previo o aún sin cobrar) → precio estimado:
+//     el último precio por sesión que ha pagado ese paciente o, si nunca ha pagado por el panel, la tarifa de «Sesión de fisioterapia»
+async function valorSesiones(citasRango, hasta, precios) {
+  const pid = c => (c.fields['RELACIÓN - CITA'] || [])[0] || '';
+  const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
+  const hora = c => { const m = String(c.fields['HORA'] || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
+  const gast = citasRango.filter(c => GASTA.includes(est(c)) && pid(c));
+  const pacs = [...new Set(gast.map(pid))];
+  if (!pacs.length) return { lista: [] };
+  const lotes = async (fn) => { let out = []; for (let i = 0; i < pacs.length; i += 40) out = out.concat(await fn(pacs.slice(i, i + 40))); return out; };
+  const inicio = await inicioControl().catch(() => '');
+  const [facs, pacT, previas] = await Promise.all([
+    inicio ? facturasEmitidas('').catch(() => []) : [],
+    lotes(ids => todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=SESIONES BONO PREVIO&fields[]=BONO PREVIO YA USADAS`).catch(() => [])),
+    inicio ? lotes(ids => todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${GASTA.map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},DATEADD('${inicio}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')),OR(${ids.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=RELACIÓN - CITA`).catch(() => [])) : []
+  ]);
+  const num = v => Number(String(v == null ? '' : v).replace(',', '.')) || 0;
+  // Tarifa de referencia: Ajustes › Conceptos y precios, o el precio suelto más habitual de las facturas
+  const freq = {}; facs.forEach(r => { const f = r.fields; if (String(f['CONCEPTO 1'] || '').trim() === 'Sesión de fisioterapia' && num(f['Nº SESIONES 1']) === 1) { const p = num(f['PRECIO SESIÓN 1']); if (p) freq[p] = (freq[p] || 0) + 1; } });
+  const ref = num(precios['Sesión de fisioterapia']) || Number(Object.keys(freq).sort((a, b) => freq[b] - freq[a])[0] || 0);
+  const nombre = {}, cola = {}, ultimoP = {};
+  pacT.forEach(p => { nombre[p.id] = p.fields['FULL NAME'] || '—'; const prev = Math.max(0, num(p.fields['SESIONES BONO PREVIO']) - num(p.fields['BONO PREVIO YA USADAS'])); if (prev) cola[p.id] = Array.from({ length: prev }, () => ({ p: 0, o: 'Pack pagado antes del panel' })); });
+  facs.slice().sort((a, b) => fechaCobro(a.fields).localeCompare(fechaCobro(b.fields))).forEach(r => { const f = r.fields, id = f['PacienteId']; if (!id || !pacs.includes(id)) return;
+    [[f['CONCEPTO 1'], f['Nº SESIONES 1'], f['PRECIO SESIÓN 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2'], f['PRECIO SESIÓN 2']]].forEach(([c, n, p]) => { if (!/^Sesi/i.test(String(c || ''))) return;
+      n = num(n); p = num(p); const q = (cola[id] = cola[id] || []); for (let i = 0; i < n; i++) q.push({ p, o: String(c).trim() + (n > 1 ? ` (pack de ${n})` : '') }); if (p) ultimoP[id] = p; }); });
+  // Reparto por orden: cada sesión gastada desde que el panel cobra toma la siguiente sesión pagada de su paciente
+  const toma = {};
+  previas.slice().sort((a, b) => (String(a.fields['FECHA']).slice(0, 10) + hora(a) + a.id).localeCompare(String(b.fields['FECHA']).slice(0, 10) + hora(b) + b.id)).forEach(c => { const q = cola[pid(c)]; toma[c.id] = q && q.length ? q.shift() : null; });
+  const lista = gast.map(c => { const id = pid(c), f = String(c.fields['FECHA']).slice(0, 10), u = toma[c.id];
+    let eur = 0, real = false, o;
+    if (u && u.p) { eur = u.p; real = true; o = u.o; }
+    else { eur = ultimoP[id] || ref || 0; o = !inicio || f < inicio ? 'Antes de cobrar por el panel' : u ? u.o : 'Sin cobrar todavía'; }
+    return { id: c.id, n: nomFisio(c.fields['PREF.']).toLowerCase(), f, h: hora(c), e: est(c), pac: nombre[id] || '—', eur, real, o };
+  }).sort((a, b) => (a.f + a.h).localeCompare(b.f + b.h));
+  return { lista, ref, inicio };
 }
 
 const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };
