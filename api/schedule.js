@@ -974,6 +974,33 @@ module.exports = async function handler(req, res) {
     const SEG = 'tblu9YxiktpAh5w87', LLA = 'tbla5rZTwMkMpAiaI', CIT = 'tblTPlcuiSjQngkaD';
     const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error || d.errors) throw new Error((d.error && d.error.message) || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
     const hoyF = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    // Apunta una ausencia (vacaciones, día libre, horas, cambio de horario) en AUSENCIAS, bloquea los huecos libres de la agenda
+    // y devuelve las citas con paciente que caen dentro. La usan Administración y las solicitudes aprobadas en Comunicaciones.
+    const altaAusencia = async (a, equipoNombres, creadoPor) => {
+      const AUS = 'tblkezm4bTQ4jJf1X';
+      const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '');
+      if (!ok(a.desde)) return { ok: false, error: 'Elige la fecha' };
+      const hasta = ok(a.hasta) && a.hasta >= a.desde ? a.hasta : a.desde;
+      const horario = a.modo === 'horario'; // «trabaja otro horario ese día»: se bloquea lo que queda fuera
+      const tipo = horario ? 'Cambio de horario' : ['Vacaciones', 'Festivo', 'Día libre', 'Menos horas', 'Baja', 'Formación', 'Otro'].includes(a.tipo) ? a.tipo : 'Vacaciones';
+      const p2 = x => { const m = String(x || '').match(/^(\d{1,2}):(\d{2})$/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
+      const hd = p2(a.hd), hh2 = p2(a.hh); if ((hd || hh2 || horario) && !(hd && hh2 && hd < hh2)) return { ok: false, error: 'Revisa las horas: «desde» tiene que ser antes que «hasta»' };
+      const pila = s => String(s || '').trim().split(/\s+/)[0];
+      const todosF = a.fisio === 'TODOS', quien = todosF ? 'Toda la clínica' : pila(a.fisio);
+      if (!todosF && !equipoNombres.some(n => pila(n).toLowerCase() === quien.toLowerCase())) return { ok: false, error: 'Elige el fisio' };
+      const d = await at(AUS, { method: 'POST', body: JSON.stringify({ records: [{ fields: { AUSENCIA: `${tipo} · ${quien} · ${a.desde}${hasta !== a.desde ? ' → ' + hasta : ''}${hd ? ` · ${hd}-${hh2}` : ''}`, FISIO: quien, 'HORA DESDE': hd, 'HORA HASTA': hh2, DESDE: a.desde, HASTA: hasta, TIPO: tipo, NOTA: String(a.nota || '').slice(0, 2000), 'CREADO POR': String(creadoPor || '') } }], typecast: true }) });
+      if (d.error) return { ok: false, error: d.error.message }; _ausC = { t: 0, v: null };
+      // Bloquear los huecos libres de esos días (para que no se reserven desde la app) y avisar de las citas con paciente
+      const cond = [`NOT(IS_BEFORE({FECHA},'${a.desde}'))`, `NOT(IS_AFTER({FECHA},'${hasta}'))`]; if (!todosF) cond.push(`{PREF.}='${quien.replace(/'/g, '')}'`);
+      const filas = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(${cond.join(',')})`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []);
+      const est = r => String((r.fields.ESTADO && r.fields.ESTADO.name) || r.fields.ESTADO || '').trim();
+      const enHoras = r => { if (!hd) return true; const x = p2(r.fields.HORA); if (!x) return false; const dentro = x >= hd && x < hh2; return horario ? !dentro : dentro; };
+      filas.splice(0, filas.length, ...filas.filter(enHoras));
+      const libres = filas.filter(r => /^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(est(r)) && !(r.fields['RELACIÓN - CITA'] || []).length);
+      for (let i = 0; i < libres.length; i += 10) await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: libres.slice(i, i + 10).map(r => ({ id: r.id, fields: { ESTADO: 'CITA BLOQUEADA', NOTAS: tipo } })), typecast: true }) });
+      const conPac = filas.filter(r => (r.fields['RELACIÓN - CITA'] || []).length && /PENDIENTE/.test(est(r))).map(r => ({ fecha: String(r.fields.FECHA || '').slice(0, 10), hora: r.fields.HORA || '', fisio: (r.fields['PREF.'] && r.fields['PREF.'].name) || r.fields['PREF.'] || '' })).sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora));
+      return { ok: true, bloqueados: libres.length, conPaciente: conPac, id: d.records[0].id };
+    };
     try {
       // Importe de una sesión puesto a mano (informe de horas). Vacío = vuelve al cálculo automático
       if (action === 'seg-importe-sesion') {
@@ -995,7 +1022,9 @@ module.exports = async function handler(req, res) {
       // En la original: LEÍDO {nombre: fecha} (última vez que cada uno abrió el hilo) y HECHO {nombre: fecha} (quién ha confirmado/resuelto).
       if (action.startsWith('seg-com-')) {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
-        const COM = 'tbl2qRD3WsvQVPrwX', TIPOS_C = ['Comunicado', 'Solicitud', 'Informe', 'Aviso'];
+        const COM = 'tbl2qRD3WsvQVPrwX', TIPOS_C = ['Comunicado', 'Solicitud', 'Informe', 'Aviso', 'Ausencia'];
+        // Solicitudes de ausencia (vacaciones, día libre, horas libres, cambio de horario): las aprueba Nora o Ramiro
+        const QUE_AUS = ['Vacaciones', 'Día libre', 'Horas libres', 'Cambio de horario'], APRUEBAN_C = ['Nora', 'Ramiro'];
         const pilaC = s => { const p = String(s || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
         // Quién soy: nombre + contraseña del panel (como en Administración)
         const equipoRecs = await todosT(FISIOS_TABLE, 'fields[]=Name&fields[]=Password&fields[]=' + encodeURIComponent('FECHA BAJA'));
@@ -1003,7 +1032,12 @@ module.exports = async function handler(req, res) {
         if (!yoRec || !String(q.clave || '').trim() || String(yoRec.fields.Password || '').trim() !== String(q.clave || '').trim() || yoRec.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
         const yo = pilaC(yoRec.fields.Name);
         const equipo = [...new Set(equipoRecs.filter(r => r.fields.Name && !r.fields['FECHA BAJA']).map(r => pilaC(r.fields.Name)))].sort((a, b) => a.localeCompare(b, 'es'));
+        const aprueban = APRUEBAN_C.filter(n => equipo.includes(n));
         const ahora = new Date().toISOString();
+        const MES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        const fC = f => { const [y, m, d] = String(f || '').split('-').map(Number); return d ? `${d} ${MES_C[m - 1]}` : ''; };
+        const textoAus = a => { const dias = a.hasta && a.hasta !== a.desde ? `${fC(a.desde)} → ${fC(a.hasta)}` : fC(a.desde);
+          return a.que === 'Horas libres' ? `${a.que} · ${dias} · de ${a.hd} a ${a.hh}` : a.que === 'Cambio de horario' ? `${a.que} · ${dias} · trabaja de ${a.hd} a ${a.hh}` : `${a.que} · ${dias}`; };
         const json = t => { try { const o = JSON.parse(t || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } };
         const nmC = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
         const listaPara = t => String(t || '').split(',').map(x => x.trim()).filter(Boolean);
@@ -1014,12 +1048,15 @@ module.exports = async function handler(req, res) {
           const msgs = [root, ...resp].map(vistaMsg).sort((a, b) => a.fecha.localeCompare(b.fecha));
           const ult = msgs[msgs.length - 1], req = !!F['REQUIERE ACCIÓN'], abierta = nmC(F.ESTADO) !== 'Cerrada';
           const faltan = para.filter(p => !hecho[p]);
-          return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo: nmC(F.TIPO) || 'Comunicado', de, para, req, limite: F['FECHA LÍMITE'] || '', abierta,
+          const tipo = nmC(F.TIPO) || 'Comunicado', esAus = tipo === 'Ausencia', resolucion = esAus ? (nmC(F['RESOLUCIÓN']) || 'Pendiente') : '';
+          const puedeAprobar = esAus && abierta && resolucion === 'Pendiente' && aprueban.includes(yo) && de !== yo;
+          return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo, de, para, req, limite: F['FECHA LÍMITE'] || '', abierta,
+            num: F['Nº'] ? `COM-${String(msgs[0].fecha || '').slice(0, 4)}-${String(F['Nº']).padStart(4, '0')}` : '', ausencia: esAus ? json(F.AUSENCIA) : null, resolucion, resueltaPor: F['RESUELTA POR'] || '', puedeAprobar,
             fecha: msgs[0].fecha, ultima: ult.fecha, ultimoDe: ult.de, nResp: resp.length, extracto: String(ult.cuerpo || '').replace(/\s+/g, ' ').slice(0, 140),
             leido, hecho, faltan,
             noLeido: ult.de !== yo && (!leido[yo] || leido[yo] < ult.fecha),
-            pendienteMio: req && abierta && para.includes(yo) && !hecho[yo],
-            esperando: req && abierta && de === yo && faltan.length > 0,
+            pendienteMio: esAus ? puedeAprobar : req && abierta && para.includes(yo) && !hecho[yo],
+            esperando: esAus ? (de === yo && abierta && resolucion === 'Pendiente') : req && abierta && de === yo && faltan.length > 0,
             msgs };
         };
         const cargar = async () => {
@@ -1045,13 +1082,51 @@ module.exports = async function handler(req, res) {
           if (h.noLeido || !h.leido[yo]) { await marcar(root, 'LEÍDO'); h = vistaHilo(root, resp); }
           return res.status(200).json({ ok: true, yo, hilo: h });
         }
+        if (action === 'seg-com-enviar' && q.tipo === 'Ausencia') {
+          const A = q.ausencia || {}, okF = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''), okH = x => /^\d{2}:\d{2}$/.test(x || '');
+          if (!QUE_AUS.includes(A.que)) return res.status(400).json({ ok: false, error: 'Elige qué pides' });
+          if (!okF(A.desde)) return res.status(400).json({ ok: false, error: 'Elige la fecha' });
+          const a = { que: A.que, desde: A.desde, hasta: okF(A.hasta) && A.hasta >= A.desde ? A.hasta : A.desde, hd: '', hh: '' };
+          if (A.que === 'Horas libres' || A.que === 'Cambio de horario') { if (!okH(A.hd) || !okH(A.hh) || A.hd >= A.hh) return res.status(400).json({ ok: false, error: 'Revisa las horas: «de» tiene que ser antes que «a»' }); a.hd = A.hd; a.hh = A.hh; }
+          if (a.hasta < hoyF) return res.status(400).json({ ok: false, error: 'Esas fechas ya han pasado' });
+          const para = aprueban.filter(n => n !== yo);
+          if (!para.length) return res.status(400).json({ ok: false, error: 'No hay nadie de dirección a quien enviarla' });
+          const motivo = String(q.cuerpo || '').trim().slice(0, 5000);
+          const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: textoAus(a), TIPO: 'Ausencia', DE: yo, PARA: para.join(', '), CUERPO: motivo || 'Solicito ' + textoAus(a).toLowerCase() + '.', FECHA: ahora,
+            'REQUIERE ACCIÓN': true, AUSENCIA: JSON.stringify(a), 'RESOLUCIÓN': 'Pendiente', 'LEÍDO': JSON.stringify({ [yo]: ahora }), HECHO: '{}', ESTADO: 'Abierta' } }], typecast: true }) });
+          if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' });
+          return res.status(200).json({ ok: true, id: d.records[0].id });
+        }
+        if (action === 'seg-com-resolver') {
+          // Aprobar o rechazar una solicitud de ausencia. Al aprobar: se apunta en Administración y se bloquea la agenda
+          const root = await buscar(q.id), F = root.fields;
+          if (nmC(F.TIPO) !== 'Ausencia') return res.status(400).json({ ok: false, error: 'No es una solicitud de ausencia' });
+          if (!aprueban.includes(yo) || F.DE === yo) return res.status(403).json({ ok: false, error: 'Solo Nora o Ramiro pueden aprobarla' });
+          if ((nmC(F['RESOLUCIÓN']) || 'Pendiente') !== 'Pendiente') return res.status(400).json({ ok: false, error: `Ya está ${String(nmC(F['RESOLUCIÓN'])).toLowerCase()}` });
+          const coment = String(q.comentario || '').trim().slice(0, 5000), a = json(F.AUSENCIA);
+          let texto;
+          if (q.aprobar) {
+            const map = { 'Vacaciones': { modo: 'dia', tipo: 'Vacaciones' }, 'Día libre': { modo: 'dia', tipo: 'Día libre' }, 'Horas libres': { modo: 'horas', tipo: 'Menos horas', hd: a.hd, hh: a.hh }, 'Cambio de horario': { modo: 'horario', hd: a.hd, hh: a.hh } }[a.que];
+            if (!map) return res.status(400).json({ ok: false, error: 'La solicitud no tiene datos válidos' });
+            const r = await altaAusencia({ ...map, fisio: F.DE, desde: a.desde, hasta: a.hasta, nota: `Solicitud aprobada por ${yo} (Comunicaciones)` }, equipoRecs.filter(x => x.fields.Name && !x.fields['FECHA BAJA']).map(x => x.fields.Name), yoRec.fields.Name);
+            if (!r.ok) return res.status(400).json({ ok: false, error: r.error || 'No se ha podido apuntar' });
+            texto = `✓ Aprobada por ${yo}.\nApuntada en Administración › Vacaciones y horarios${r.bloqueados ? ` y ${r.bloqueados === 1 ? 'bloqueado 1 hueco' : `bloqueados ${r.bloqueados} huecos`} de la agenda` : ''}.`;
+            if (r.conPaciente.length) texto += `\n\nOjo: en esas fechas ${r.conPaciente.length === 1 ? 'hay 1 cita' : `hay ${r.conPaciente.length} citas`} con paciente que hay que mover:\n` + r.conPaciente.slice(0, 30).map(c => `• ${fC(c.fecha)} · ${c.hora}`).join('\n');
+          } else texto = `✗ Rechazada por ${yo}.`;
+          if (coment) texto += `\n\n${coment}`;
+          const otros = [...new Set([F.DE, ...listaPara(F.PARA)])].filter(p => p && p !== yo);
+          await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: 'RE: ' + (F.ASUNTO || ''), HILO: root.id, DE: yo, PARA: otros.join(', '), CUERPO: texto, FECHA: ahora } }] }) });
+          const hc = json(F.HECHO); listaPara(F.PARA).forEach(p => { hc[p] = hc[p] || ahora; }); const le = json(F['LEÍDO']); le[yo] = ahora;
+          const d = await at(`${COM}/${root.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RESOLUCIÓN': q.aprobar ? 'Aprobada' : 'Rechazada', 'RESUELTA POR': yo, ESTADO: 'Cerrada', HECHO: JSON.stringify(hc), 'LEÍDO': JSON.stringify(le) } }) });
+          return res.status(200).json({ ok: !d.error, error: d.error ? 'No se ha podido guardar' : undefined });
+        }
         if (action === 'seg-com-enviar') {
           const asunto = String(q.asunto || '').trim().slice(0, 140), cuerpo = String(q.cuerpo || '').trim().slice(0, 20000);
           const para = [...new Set((Array.isArray(q.para) ? q.para : []).map(pilaC))].filter(p => equipo.includes(p) && p !== yo);
           if (!asunto) return res.status(400).json({ ok: false, error: 'Falta el asunto' });
           if (!cuerpo) return res.status(400).json({ ok: false, error: 'Escribe el contenido' });
           if (!para.length) return res.status(400).json({ ok: false, error: 'Elige a quién se la envías' });
-          const tipo = TIPOS_C.includes(q.tipo) ? q.tipo : 'Comunicado', limite = /^\d{4}-\d{2}-\d{2}$/.test(q.limite || '') ? q.limite : null;
+          const tipo = TIPOS_C.includes(q.tipo) && q.tipo !== 'Ausencia' ? q.tipo : 'Comunicado', limite = /^\d{4}-\d{2}-\d{2}$/.test(q.limite || '') ? q.limite : null;
           const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: asunto, TIPO: tipo, DE: yo, PARA: para.join(', '), CUERPO: cuerpo, FECHA: ahora,
             'REQUIERE ACCIÓN': !!q.req, 'FECHA LÍMITE': q.req ? limite : null, 'LEÍDO': JSON.stringify({ [yo]: ahora }), HECHO: '{}', ESTADO: 'Abierta' } }], typecast: true }) });
           if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' });
@@ -1066,13 +1141,14 @@ module.exports = async function handler(req, res) {
             const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: 'RE: ' + (F.ASUNTO || ''), HILO: root.id, DE: yo, PARA: otros.join(', '), CUERPO: cuerpo, FECHA: ahora } }] }) });
             if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' }); }
           await marcar(root, 'LEÍDO');
-          if (q.hecho && para0.includes(yo)) { const hc = json(root.fields.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
+          if (q.hecho && para0.includes(yo) && nmC(F.TIPO) !== 'Ausencia') { const hc = json(root.fields.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
             await marcar(root, 'HECHO', todos && F['REQUIERE ACCIÓN'] ? { ESTADO: 'Cerrada' } : null); }
           return res.status(200).json({ ok: true });
         }
         if (action === 'seg-com-hecho') {
           const root = await buscar(q.id), F = root.fields, para0 = listaPara(F.PARA);
           if (!para0.includes(yo)) return res.status(403).json({ ok: false, error: 'Solo quien la recibe puede confirmarla' });
+          if (nmC(F.TIPO) === 'Ausencia') return res.status(400).json({ ok: false, error: 'Esta se aprueba o se rechaza' });
           const hc = json(F.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
           await marcar(root, 'HECHO', todos && F['REQUIERE ACCIÓN'] ? { ESTADO: 'Cerrada' } : null);
           return res.status(200).json({ ok: true });
@@ -1242,27 +1318,9 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message, fisio: !d.error && vista(d) });
         }
         if (action === 'seg-adm-ausencia') {
-          const a = q.ausencia || {}, ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '');
-          if (!ok(a.desde)) return res.status(400).json({ ok: false, error: 'Elige la fecha' });
-          const hasta = ok(a.hasta) && a.hasta >= a.desde ? a.hasta : a.desde;
-          const horario = a.modo === 'horario'; // «trabaja otro horario ese día»: se bloquea lo que queda fuera
-          const tipo = horario ? 'Cambio de horario' : ['Vacaciones', 'Festivo', 'Día libre', 'Menos horas', 'Baja', 'Formación', 'Otro'].includes(a.tipo) ? a.tipo : 'Vacaciones';
-          const p2 = x => { const m = String(x || '').match(/^(\d{1,2}):(\d{2})$/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
-          const hd = p2(a.hd), hh2 = p2(a.hh); if ((hd || hh2 || horario) && !(hd && hh2 && hd < hh2)) return res.status(400).json({ ok: false, error: 'Revisa las horas: «desde» tiene que ser antes que «hasta»' });
-          const todosF = a.fisio === 'TODOS', quien = todosF ? 'Toda la clínica' : pila(a.fisio);
-          if (!todosF && !full.some(r => r.fields && pila(r.fields.Name).toLowerCase() === quien.toLowerCase())) return res.status(400).json({ ok: false, error: 'Elige el fisio' });
-          const d = await at(AUS, { method: 'POST', body: JSON.stringify({ records: [{ fields: { AUSENCIA: `${tipo} · ${quien} · ${a.desde}${hasta !== a.desde ? ' → ' + hasta : ''}${hd ? ` · ${hd}-${hh2}` : ''}`, FISIO: quien, 'HORA DESDE': hd, 'HORA HASTA': hh2, DESDE: a.desde, HASTA: hasta, TIPO: tipo, NOTA: String(a.nota || '').slice(0, 2000), 'CREADO POR': String(yo.fields.Name || '') } }], typecast: true }) });
-          if (d.error) return res.status(400).json({ ok: false, error: d.error.message }); _ausC = { t: 0, v: null };
-          // Bloquear los huecos libres de esos días (para que no se reserven desde la app) y avisar de las citas con paciente
-          const cond = [`NOT(IS_BEFORE({FECHA},'${a.desde}'))`, `NOT(IS_AFTER({FECHA},'${hasta}'))`]; if (!todosF) cond.push(`{PREF.}='${quien.replace(/'/g, '')}'`);
-          const filas = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(${cond.join(',')})`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []);
-          const est = r => String((r.fields.ESTADO && r.fields.ESTADO.name) || r.fields.ESTADO || '').trim();
-          const enHoras = r => { if (!hd) return true; const x = p2(r.fields.HORA); if (!x) return false; const dentro = x >= hd && x < hh2; return horario ? !dentro : dentro; };
-          filas.splice(0, filas.length, ...filas.filter(enHoras));
-          const libres = filas.filter(r => /^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(est(r)) && !(r.fields['RELACIÓN - CITA'] || []).length);
-          for (let i = 0; i < libres.length; i += 10) await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: libres.slice(i, i + 10).map(r => ({ id: r.id, fields: { ESTADO: 'CITA BLOQUEADA', NOTAS: tipo } })), typecast: true }) });
-          const conPac = filas.filter(r => (r.fields['RELACIÓN - CITA'] || []).length && /PENDIENTE/.test(est(r))).map(r => ({ fecha: String(r.fields.FECHA || '').slice(0, 10), hora: r.fields.HORA || '', fisio: (r.fields['PREF.'] && r.fields['PREF.'].name) || r.fields['PREF.'] || '' })).sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora));
-          return res.status(200).json({ ok: true, bloqueados: libres.length, conPaciente: conPac, ausencias: await ausencias().catch(() => []) });
+          const r = await altaAusencia(q.ausencia || {}, full.filter(x => x.fields && x.fields.Name).map(x => x.fields.Name), yo.fields.Name);
+          if (!r.ok) return res.status(400).json(r);
+          return res.status(200).json({ ok: true, bloqueados: r.bloqueados, conPaciente: r.conPaciente, ausencias: await ausencias().catch(() => []) });
         }
         if (action === 'seg-adm-ausencia-quitar-dia') { // vuelve a su horario normal un día concreto (si la ausencia es de varios días, se parte)
           if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '') || !/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) return res.status(400).json({ ok: false });
