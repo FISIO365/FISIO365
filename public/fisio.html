@@ -1176,13 +1176,14 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-res{margin-left:auto;font-size:12.5px;color:#7d6a60}
 .ag-grid{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px 4px}
 /* Agenda con horas a la izquierda y fisios arriba siempre a la vista: la tabla tiene su propio scroll (alto = pantalla) */
-.ag-grid:has(.ag-tb){overflow:auto;max-height:calc(100dvh - var(--tb-h,0px) - var(--pie-h,0px) - 30px);position:sticky;top:calc(var(--tb-h,0px) + 4px)}
-.ag-tb{min-width:calc(46px + var(--n) * 150px)}
-.ag-hd,.ag-row{display:grid;grid-template-columns:46px repeat(var(--n),minmax(140px,1fr));gap:6px}
+.ag-cabf{position:sticky;top:var(--tb-h,0px);z-index:6;overflow:hidden;margin:0 -14px;padding:0 14px;background:#fff;box-shadow:0 1px 0 #ece6e0,0 8px 10px -8px rgba(26,26,26,.16)}.ag-cabf .ag-h0{position:relative;z-index:2;background:#fff}.ag-cabf .ag-hd{position:static;box-shadow:none}.ag-cabf.on{box-shadow:0 8px 10px -8px rgba(26,26,26,.18)}.ag-grid .ag-tb>.ag-hd.ag-oc{display:none}
+.ag-tb{min-width:calc(54px + var(--n) * 150px)}
+.ag-hd,.ag-row{display:grid;grid-template-columns:54px repeat(var(--n),minmax(140px,1fr));gap:6px}
 .ag-hd{position:sticky;top:0;z-index:3;background:#fff;padding:8px 0;box-shadow:0 1px 0 #ece6e0,0 8px 10px -8px rgba(26,26,26,.18)}
 .ag-hd .ag-hf{background:#f7f3ef;border-radius:99px;padding:7px 4px;color:#1e2a38;font-size:12px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ag-hd .ag-hf.hoy{background:#c2552e;color:#fff}.ag-hf{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5f554e;text-align:center}
-.ag-row{border-top:1px solid #f0ebe6;padding:5px 0;min-height:44px}.ag-row.now .ag-h{color:#c2552e;font-weight:700}
-.ag-h{font-size:12px;color:#7d6a60;padding-top:8px;padding-left:6px;position:sticky;left:-14px;background:#fff;z-index:1;box-shadow:6px 0 0 #fff,12px 0 10px -6px rgba(26,26,26,.12)}
+.ag-row{border-top:1px solid #f0ebe6;padding:5px 0;min-height:44px}
+.ag-h{position:sticky;left:-14px;background:#fff;z-index:1;padding:2px 0 0;box-shadow:6px 0 0 #fff,12px 0 10px -6px rgba(26,26,26,.12)}
+.ag-hp{display:block;background:#f7f3ef;border-radius:99px;padding:7px 0;text-align:center;font-size:12px;font-weight:700;color:#1e2a38;letter-spacing:.02em}.ag-row.now .ag-hp{background:#c2552e;color:#fff}
 .ag-h0{position:sticky;left:-14px;background:#fff;z-index:4;box-shadow:6px 0 0 #fff;margin:-8px 0;padding:8px 0}
 .ag-cell{display:flex;flex-direction:column;gap:4px;min-width:0}
 .ag-c{font-family:var(--font);text-align:left;border:none;border-left:3px solid #c2552e;background:#fbf8f5;border-radius:10px;padding:7px 9px;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-width:0;color:#1a1a1a}
@@ -5593,7 +5594,7 @@ function renderAgenda(wrap){
   <button type="button" class="ag-fac" hidden></button>
   <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
  wrap.appendChild(card);
- const $c=q=>card.querySelector(q),fi=$c('.ag-fi'),fs=$c('.ag-fs'),grid=$c('.ag-grid');try{window.__ponAltos&&window.__ponAltos();}catch(e){}
+ const $c=q=>card.querySelector(q),fi=$c('.ag-fi'),fs=$c('.ag-fs'),grid=$c('.ag-grid');try{window.__ponAltos&&window.__ponAltos();agCabFija(grid);}catch(e){}
  const lunes=f=>agMover(f,-((new Date(f+'T12:00:00').getDay()+6)%7));
  card.querySelectorAll('.ag-vis button').forEach(b=>b.onclick=()=>{AG.vista=b.dataset.v;try{localStorage.setItem('f365_ag_vista',AG.vista);}catch(e){}cargar();});
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n*(AG.vista==='semana'?7:1));cargar();});
@@ -5675,7 +5676,7 @@ function renderAgenda(wrap){
    const [d1]=rango(),dias=[0,1,2,3,4,5,6].map(i=>agMover(d1,i)).filter((d,i)=>i<5||todas.some(c=>c.fecha===d));
    const horas=new Set();for(let h=7;h<=21;h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
    const DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-   grid.innerHTML=`<div class="ag-tb ag-sem" style="--n:${dias.length}"><div class="ag-hd"><div class="ag-h0"></div>${dias.map(d=>`<button type="button" class="ag-hf ag-hdia${d===agHoyIso()?' hoy':''}" data-d="${d}">${DN[new Date(d+'T12:00:00').getDay()]} ${+d.slice(8)}</button>`).join('')}</div>${[...horas].sort().map(h=>`<div class="ag-row"><div class="ag-h">${h}</div>${dias.map(d=>{const rs=C.filter(c=>c.fecha===d&&c.hora===h);const pr=rs.filter(c=>!agEsFuera(c.estado)),fu=rs.filter(c=>agEsFuera(c.estado));
+   grid.innerHTML=`<div class="ag-tb ag-sem" style="--n:${dias.length}"><div class="ag-hd"><div class="ag-h0"></div>${dias.map(d=>`<button type="button" class="ag-hf ag-hdia${d===agHoyIso()?' hoy':''}" data-d="${d}">${DN[new Date(d+'T12:00:00').getDay()]} ${+d.slice(8)}</button>`).join('')}</div>${[...horas].sort().map(h=>`<div class="ag-row"><div class="ag-h"><span class="ag-hp">${h}</span></div>${dias.map(d=>{const rs=C.filter(c=>c.fecha===d&&c.hora===h);const pr=rs.filter(c=>!agEsFuera(c.estado)),fu=rs.filter(c=>agEsFuera(c.estado));
     return `<div class="ag-cell">${pr.map(c=>tarjeta(c,!AG.fisio)).join('')}${fu.map(fuera).join('')}${!pr.length&&AG.fisio?`<button type="button" class="ag-vac" data-f="${escH(AG.fisio)}" data-h="${h}" data-d="${d}" aria-label="Hora vacía">＋</button>`:''}</div>`;}).join('')}</div>`).join('')}</div>`;
    grid.querySelectorAll('.ag-hdia').forEach(b=>b.onclick=()=>{AG.fecha=b.dataset.d;AG.vista='dia';cargar();});
    grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agVacio({fecha:b.dataset.d,hora:b.dataset.h,fisio:b.dataset.f},cargar));abrir();return;}
@@ -5686,7 +5687,7 @@ function renderAgenda(wrap){
    return (pr.length?'':`<button type="button" class="ag-vac" data-f="${escH(f)}" data-h="${h}" aria-label="Hora vacía">＋</button>`)+pr.map(c=>tarjeta(c,false)).join('')+fu.map(fuera).join('');};
   const sinF=todas.filter(c=>!c.fisio&&c.pacienteId&&!agEsFuera(c.estado));
   const ausH=((AG.dia&&AG.dia.aus)||[]).map(a=>`<span class="ag-aus"><b>${escH(a.fisio)}</b> · ${a.tipo==='Cambio de horario'?`hoy trabaja de ${escH(a.hd)} a ${escH(a.hh)}`:escH(a.tipo||'Ausencia')+(a.hd?` de ${escH(a.hd)} a ${escH(a.hh)}`:'')}${a.hasta&&a.hasta!==a.desde?` hasta el ${+a.hasta.slice(8)}/${+a.hasta.slice(5,7)}`:''}${a.nota?` · ${escH(a.nota)}`:''}</span>`).join('');
-  grid.innerHTML=(ausH?`<div class="ag-ausb">${ausH}</div>`:'')+(sinF.length?`<div class="ag-sinf"><b>Sin fisio asignado</b><small>Toca la cita y «Cambiar día u hora» para darle fisio</small>${sinF.map(c=>`<div class="ag-li"><span class="ag-lh">${escH(c.hora)}</span>${tarjeta(c,false)}</div>`).join('')}</div>`:'')+`<div class="ag-tb" style="--n:${ver.length}"><div class="ag-hd"><div class="ag-h0"></div>${ver.map(f=>`<div class="ag-hf">${escH(agNom(f))}</div>`).join('')}</div>${[...horas].sort().map(h=>`<div class="ag-row${h===ahora?' now':''}"><div class="ag-h">${h}</div>${ver.map(f=>`<div class="ag-cell">${celda(f,h)}</div>`).join('')}</div>`).join('')}</div>`;
+  grid.innerHTML=(ausH?`<div class="ag-ausb">${ausH}</div>`:'')+(sinF.length?`<div class="ag-sinf"><b>Sin fisio asignado</b><small>Toca la cita y «Cambiar día u hora» para darle fisio</small>${sinF.map(c=>`<div class="ag-li"><span class="ag-lh">${escH(c.hora)}</span>${tarjeta(c,false)}</div>`).join('')}</div>`:'')+`<div class="ag-tb" style="--n:${ver.length}"><div class="ag-hd"><div class="ag-h0"></div>${ver.map(f=>`<div class="ag-hf">${escH(agNom(f))}</div>`).join('')}</div>${[...horas].sort().map(h=>`<div class="ag-row${h===ahora?' now':''}"><div class="ag-h"><span class="ag-hp">${h}</span></div>${ver.map(f=>`<div class="ag-cell">${celda(f,h)}</div>`).join('')}</div>`).join('')}</div>`;
   grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agVacio({fecha:AG.fecha,hora:b.dataset.h,fisio:b.dataset.f},cargar));abrir();
  }
  card._recargar=cargar;cargar();
@@ -8208,6 +8209,14 @@ async function abrirInformeHoras(fisio){
  cargarInf();
 }
 function fmtEur(v){v=Math.round((+v||0)*100)/100;return v.toLocaleString('es-ES',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2})+' €';}
+// Agenda: la fila con los nombres de los fisios (o los días) se queda pegada arriba al bajar y se mueve a la vez que la agenda hacia los lados
+function agCabFija(grid){if(!grid||grid._cab)return;const cab=ce('div','ag-cabf');grid.parentNode.insertBefore(cab,grid);grid._cab=cab;
+ const mueve=()=>{const i=cab.firstElementChild;if(!i)return;const x=grid.scrollLeft;i.style.transform=`translateX(${-x}px)`;const c=i.querySelector('.ag-h0');if(c)c.style.transform=`translateX(${x}px)`;};
+ const sync=()=>{const tb=grid.querySelector(':scope>.ag-tb'),hd=tb&&tb.querySelector(':scope>.ag-hd');if(!hd){cab.style.display='none';cab.innerHTML='';return;}cab.style.display='';hd.classList.add('ag-oc');
+  const inner=document.createElement('div');inner.className=tb.className;inner.setAttribute('style',tb.getAttribute('style')||'');inner.style.width=tb.offsetWidth?tb.offsetWidth+'px':'';
+  const cl=hd.cloneNode(true);cl.classList.remove('ag-oc');inner.appendChild(cl);cab.innerHTML='';cab.appendChild(inner);mueve();};
+ grid.addEventListener('scroll',mueve,{passive:true});new MutationObserver(sync).observe(grid,{childList:true});addEventListener('resize',sync);
+ cab.addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(b){const o=grid.querySelector(`.ag-hd [data-d="${b.dataset.d}"]`);if(o)o.click();}});sync();}
 // Abre la ficha del paciente por encima de las ventanas abiertas (informe…); al cerrarla vuelven tal cual estaban
 // Mientras una pantalla completa (PDF, ficha…) está abierta, las ventanas de abajo se esconden; al cerrarla vuelven
 function ocultaModalesMientras(el){const mods=[...document.querySelectorAll('.hz-modal')].filter(x=>x.style.display!=='none'&&!x.contains(el));if(!mods.length)return;mods.forEach(x=>x.style.display='none');
