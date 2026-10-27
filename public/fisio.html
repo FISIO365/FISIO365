@@ -6366,7 +6366,7 @@ function comNueva(onOk,paraIni){
  const eq=((COM.d&&COM.d.equipo)||TAR_NOMBRES).filter(n=>n.toLowerCase()!==yo);
  const dir=COM_APRUEBAN.filter(n=>n.toLowerCase()!==yo);
  const S={para:(paraIni||[]).filter(n=>eq.includes(n)),tipo:'Comunicado',req:false,limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:'',items:['',''],cat:'',sobre:[],urg:'Esta semana'};
- const NORMAL=['Comunicado','Solicitud'];let abierto=false;
+ const NORMAL=['Comunicado','Solicitud'];const abierto=true;
  const m=hzModal(`<div class="hz-top"><div><b>Nueva comunicación</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Tipo</div><div class="com-tsel">${COM_TIPOS.map(t=>`<button type="button" class="com-to" data-t="${t}">${comSello({tipo:t,ausencia:{que:'Vacaciones'}})}<span><b>${escH(comTipoTxt(t))}</b><small>${escH(COM_TIPO_DESC[t])}</small></span><em>Cambiar</em></button>`).join('')}</div>
   <div class="s-para"><div class="hz-lab">Para</div><div class="com-chips com-para"><button type="button" data-n="*">Todo el equipo</button>${eq.map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div></div>
@@ -6415,7 +6415,7 @@ function comNueva(onOk,paraIni){
   $m('.com-sw').classList.toggle('on',S.req);$m('.com-lim b').textContent=S.limite?hzFecha(S.limite):'Sin fecha';$m('.com-lim').classList.toggle('on',!!S.limite);};
  $m('.hz-x').onclick=$m('.s-n').onclick=cerrar;
  m.querySelectorAll('.com-para button').forEach(b=>b.onclick=()=>{const n=b.dataset.n;if(n==='*'){const todos=eq.every(x=>S.para.includes(x));S.para=todos?[]:eq.slice();}else S.para=S.para.includes(n)?S.para.filter(x=>x!==n):S.para.concat(n);pinta();});
- m.querySelectorAll('.com-to').forEach(b=>b.onclick=()=>{if(!abierto&&b.dataset.t===S.tipo){abierto=true;pinta();return;}abierto=false;S.tipo=b.dataset.t;if(S.tipo==='Solicitud')S.req=true;if(S.tipo==='Ayuda'&&!S.para.length)S.para=eq.slice();pinta();});
+ m.querySelectorAll('.com-to').forEach(b=>b.onclick=()=>{S.tipo=b.dataset.t;if(S.tipo==='Solicitud')S.req=true;if(S.tipo==='Ayuda'&&!S.para.length)S.para=eq.slice();pinta();});
  m.querySelectorAll('.com-que button').forEach(b=>b.onclick=()=>{S.que=b.dataset.q;if(!variosDias())S.hasta='';pinta();});
  m.querySelectorAll('.com-cat button').forEach(b=>b.onclick=()=>{S.cat=b.dataset.c;pinta();});
  m.querySelectorAll('.com-sob button').forEach(b=>b.onclick=()=>{const n=b.dataset.n;S.sobre=S.sobre.includes(n)?S.sobre.filter(x=>x!==n):S.sobre.concat(n);pinta();});
