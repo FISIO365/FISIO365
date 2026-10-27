@@ -846,6 +846,23 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-hp{position:fixed;z-index:1000;width:240px;max-height:260px;overflow-y:auto;background:#fff;border-radius:16px;box-shadow:0 12px 34px rgba(26,26,26,.18);padding:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.com-hp button{font-family:var(--font);font-size:13px;font-weight:600;padding:8px 0;border:none;border-radius:10px;background:#f7f3ef;color:#1a1a1a;cursor:pointer}.com-hp button:hover{background:#f3e3da}.com-hp button.sel{background:#c2552e;color:#fff}
 .hz-lab span{font-weight:400}
 @media(max-width:560px){.com-carta{padding:24px 18px 16px}.com-mem{flex-direction:column;gap:8px}.com-mem-d{align-items:flex-start;text-align:left}.com-carta.com-r{margin-left:12px;padding:16px}.com-dl dd.as{font-size:16px}}
+/* Sobre que se abre al abrir una comunicación sin leer */
+.com-sobre{position:fixed;inset:0;z-index:995;display:flex;align-items:center;justify-content:center;background:rgba(245,242,238,.92);backdrop-filter:blur(6px);animation:comSobreIn .25s ease both;cursor:pointer}
+.com-sobre.fuera{animation:comSobreOut .3s ease both}
+.cs-env{position:relative;width:300px;height:196px;animation:comSobrePop .35s cubic-bezier(.2,.9,.3,1.2) both}
+.cs-back{position:absolute;inset:0;background:#e9ddd3;border-radius:14px}
+.cs-carta{position:absolute;left:16px;right:16px;top:14px;height:168px;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(26,26,26,.08);padding:16px 18px;box-sizing:border-box;z-index:2;transition:transform .55s cubic-bezier(.3,.8,.3,1)}
+.cs-carta::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:#c2552e;border-radius:10px 10px 0 0}
+.cs-carta .com-logo{font-size:14px}.cs-carta b{display:block;font-size:12.5px;font-weight:700;color:#1a1a1a;margin-top:10px;line-height:1.3;max-height:2.6em;overflow:hidden}.cs-carta i{display:block;height:6px;border-radius:3px;background:#f1ebe5;margin-top:8px}.cs-carta i:nth-of-type(2){width:80%}.cs-carta i:nth-of-type(3){width:55%}
+.cs-front{position:absolute;inset:0;z-index:3;border-radius:14px;overflow:hidden;pointer-events:none}
+.cs-front::before{content:'';position:absolute;inset:0;background:#f3e3da;clip-path:polygon(0 0,50% 58%,100% 0,100% 100%,0 100%)}
+.cs-front span{position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:13px;font-weight:600;color:#7d6a60}.cs-front span b{color:#1a1a1a}
+.cs-tapa{position:absolute;left:0;right:0;top:0;height:118px;z-index:4;transform-origin:top center;transition:transform .45s cubic-bezier(.5,0,.3,1)}
+.cs-tapa::before{content:'';position:absolute;inset:0;background:#c2552e;clip-path:polygon(0 0,100% 0,50% 100%);border-radius:14px 14px 0 0}
+.cs-sello{position:absolute;left:50%;top:100%;width:46px;height:46px;margin:-34px 0 0 -23px;border-radius:50%;background:#1a1a1a;color:#fff;font-size:11px;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px #c2552e;transition:opacity .15s}
+.com-sobre.abre .cs-tapa{transform:scaleY(-1);z-index:1}.com-sobre.abre .cs-sello{opacity:0}
+.com-sobre.sale .cs-carta{transform:translateY(-62%)}
+@keyframes comSobreIn{from{opacity:0}to{opacity:1}}@keyframes comSobreOut{to{opacity:0}}@keyframes comSobrePop{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:none}}
 /* Móvil: barra de pestañas abajo en vez de la lateral */
 @media(max-width:768px){
  .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:24px!important;right:24px!important;border-radius:26px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
@@ -6112,12 +6129,22 @@ function renderCom(wrap){
   else{const A=H.filter(h=>h.pendienteMio).sort((a,b)=>(a.limite||'9')<(b.limite||'9')?-1:1),B=H.filter(h=>h.esperando);
    html=(A.length?`<div class="com-h">Te toca a ti <span>${A.length}</span></div><div class="com-card">${A.map(fila).join('')}</div>`:'')+(B.length?`<div class="com-h">Esperando a otros <span>${B.length}</span></div><div class="com-card">${B.map(fila).join('')}</div>`:'')||'<div class="tar-ok">✓ Nada pendiente</div>';}
   list.innerHTML=html;
-  list.querySelectorAll('.com-it').forEach(b=>b.onclick=()=>{COM.y=comY();COM.hilo=b.dataset.id;comGuarda();wrap.innerHTML='';comSetY(0);comHilo(wrap,b.dataset.id);});
+  list.querySelectorAll('.com-it').forEach(b=>b.onclick=()=>{const hh=H.find(x=>x.id===b.dataset.id);if(hh&&hh.noLeido&&hh.de!==yo)comSobre(hh);COM.y=comY();COM.hilo=b.dataset.id;comGuarda();wrap.innerHTML='';comSetY(0);comHilo(wrap,b.dataset.id);});
   if(COM.y){const y=COM.y;COM.y=0;comSetY(y);}
  };
  pinta(!!COM.d);
 }
 
+// Sobre que se abre (solo al abrir una comunicación sin leer). Tocar lo salta
+function comSobre(h){
+ if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const o=ce('div','com-sobre');
+ o.innerHTML=`<div class="cs-env"><div class="cs-back"></div><div class="cs-carta"><div class="com-logo"><span>FISIO</span>365</div><b>${escH(h.tipo==='Ausencia'?'Solicitud de '+String((h.ausencia&&h.ausencia.que)||'ausencia').toLowerCase():h.asunto)}</b><i></i><i></i><i></i></div><div class="cs-front"><span>De <b>${escH(h.de)}</b></span></div><div class="cs-tapa"><div class="cs-sello">365</div></div></div>`;
+ document.body.appendChild(o);
+ const T=[setTimeout(()=>o.classList.add('abre'),450),setTimeout(()=>o.classList.add('sale'),900),setTimeout(fin,1650)];
+ function fin(){T.forEach(clearTimeout);if(!o.isConnected)return;o.classList.add('fuera');setTimeout(()=>o.remove(),300);}
+ o.onclick=fin;
+}
 async function comHilo(wrap,id){
  const volver=()=>{COM.hilo=null;comGuarda();wrap.innerHTML='';renderCom(wrap);};
  const box=ce('div','com com-hilo');wrap.appendChild(box);
