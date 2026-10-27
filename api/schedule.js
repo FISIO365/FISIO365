@@ -441,15 +441,15 @@ async function esperaLista(forzar) {
       const quien = esp.map(e => ({ e, pid: e.pacienteId || pidTel[String(e.tel || '').replace(/\D/g, '').slice(-9)] || '' })).filter(x => x.pid);
       const pids = [...new Set(quien.map(x => x.pid))], citas = {};
       for (let i = 0; i < pids.length; i += 15) { const lote = pids.slice(i, i + 15);
-        (await capTodos('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='REALIZADA'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=PacienteRec`).catch(() => [])).forEach(c => (c.fields['PacienteRec'] || []).forEach(id => { if (lote.includes(id)) (citas[id] = citas[id] || []).push({ fecha: String(c.fields['FECHA'] || '').slice(0, 10), creada: String(c.createdTime || '') }); })); }
+        (await capTodos('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=PacienteRec`).catch(() => [])).forEach(c => (c.fields['PacienteRec'] || []).forEach(id => { if (lote.includes(id)) (citas[id] = citas[id] || []).push({ fecha: String(c.fields['FECHA'] || '').slice(0, 10), creada: String(c.createdTime || '') }); })); }
       for (const { e, pid } of quien.slice(0, 20)) {
-        // Solo cuenta una cita dada DESPUÉS de apuntarse (15 min de margen: si en la misma llamada se le da una cita lejana y se apunta para adelantarla, se queda en la lista)
-        const lim = e.creado ? new Date(new Date(e.creado).getTime() + 15 * 60e3).toISOString() : '';
-        const c = (citas[pid] || []).filter(c => lim && c.creada > lim && c.fecha >= e.fecha).sort((a, b) => a.fecha.localeCompare(b.fecha))[0];
+        // Solo sale sola de la lista cuando ya ha venido: una sesión REALIZADA en un día posterior a apuntarse.
+        // Si tiene una cita pendiente (p. ej. lejana y se apunta para adelantarla) se queda hasta que venga o la quitemos a mano.
+        const c = (citas[pid] || []).filter(c => c.fecha > e.fecha).sort((a, b) => a.fecha.localeCompare(b.fecha))[0];
         if (!c) continue;
         const T = e.tabla === 'esperaP' ? CAP.esperaP : CAP.esperaN;
-        const r = await at(`${T}/${e.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'CITADO', NOTAS: [e.nota, `Ya tiene cita el ${c.fecha.split('-').reverse().join('/')} (se quitó sola de la lista)`].filter(Boolean).join(' · ') }, typecast: true }) }).catch(() => ({ error: 1 }));
-        if (!r.error) { e.estado = 'CITADO'; e.nota = [e.nota, `Ya tiene cita el ${c.fecha.split('-').reverse().join('/')}`].filter(Boolean).join(' · '); }
+        const r = await at(`${T}/${e.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'CITADO', NOTAS: [e.nota, `Vino el ${c.fecha.split('-').reverse().join('/')} (se quitó sola de la lista)`].filter(Boolean).join(' · ') }, typecast: true }) }).catch(() => ({ error: 1 }));
+        if (!r.error) { e.estado = 'CITADO'; e.nota = [e.nota, `Vino el ${c.fecha.split('-').reverse().join('/')}`].filter(Boolean).join(' · '); }
       }
     }
   } catch (err) {}
