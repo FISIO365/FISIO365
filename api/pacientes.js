@@ -497,8 +497,15 @@ export default async function handler(req) {
       let allRecords = [], offset = null;
       do {
         const pageUrl = `https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_TABLE}?fields[]=FULL NAME&fields[]=EMAIL&fields[]=PIN&fields[]=WHATSAPP&fields[]=TELF&fields[]=ESTADO&fields[]=FOTO PERFIL&sort[0][field]=FULL NAME&sort[0][direction]=asc&pageSize=100${offset?'&offset='+offset:''}`;
-        const pageRes = await fetch(pageUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-        const pageData = await pageRes.json();
+        let pageData = null;
+        for (let i = 0; i < 5; i++) {
+          const pageRes = await fetch(pageUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+          if (pageRes.status === 429 || pageRes.status >= 500) { await new Promise(r => setTimeout(r, 600 * (i + 1))); continue; }
+          pageData = await pageRes.json();
+          if (!pageRes.ok || pageData.error) throw new Error((pageData.error && (pageData.error.message || pageData.error.type || pageData.error)) || 'Airtable ' + pageRes.status);
+          break;
+        }
+        if (!pageData) throw new Error('Airtable ocupado, vuelve a intentarlo');
         allRecords = allRecords.concat(pageData.records || []);
         offset = pageData.offset;
       } while (offset);
