@@ -937,6 +937,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-tl-x{flex:none;width:30px;height:30px;border:none;border-radius:50%;background:#f3efea;color:#7d6a60;cursor:pointer;font-size:12px}
 .com-tl-add{margin-top:8px;font-family:var(--font);font-size:13.5px;font-weight:600;color:#c2552e;background:none;border:none;padding:6px 0;cursor:pointer}
 .com-a-para b{color:#1a1a1a}
+.com-chips button:disabled{cursor:default;opacity:1}
 .com-tsel{display:flex;flex-direction:column;gap:6px}
 .com-to{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;text-align:left;font-family:var(--font);background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:11px 14px;cursor:pointer;color:#1a1a1a}
 .com-to .com-st{position:static;flex:none;width:36px;height:36px;border-radius:12px;box-shadow:none}.com-to .com-st svg{width:18px;height:18px;stroke-width:1.8}
@@ -6168,7 +6169,7 @@ function agAbrirHueco(c,onDone){
 const COM_USUARIOS=null; // todo el equipo
 const comVe=()=>!!fisioActual&&(!COM_USUARIOS||COM_USUARIOS.includes(String(fisioActual.nombre||'').trim().split(' ')[0].toLowerCase()));
 const COM_TIPOS=['Comunicado','Solicitud','Tareas','Incidencia','Ausencia'];
-const COM_TIPO_DESC={Comunicado:'Para informar de algo importante. Quien lo recibe confirma que lo ha leído.',Solicitud:'Para pedir algo que la otra persona tiene que resolver.',Tareas:'Una lista de tareas que se van marcando a medida que se hacen.',Incidencia:'Confidencial: solo lo lee administración (Nora). Para contar algo que crees que hay que corregir.',Ausencia:'Para pedir vacaciones, días libres, horas o un cambio de horario. Lo aprueba administración (Nora).'};
+const COM_TIPO_DESC={Comunicado:'Para informar de algo importante. Quien lo recibe confirma que lo ha leído.',Solicitud:'Para pedir algo que la otra persona tiene que resolver.',Tareas:'Una lista de tareas que se van marcando a medida que se hacen.',Incidencia:'Para contar algo que crees que hay que corregir.',Ausencia:'Para pedir vacaciones, días libres, horas o un cambio de horario.'};
 const COM_CAT_INC=['Comportamiento','Puntualidad','Calidad del trabajo','Material o instalaciones','Otro'];
 const COM_APRUEBAN=['Nora']; // administración: aprueba vacaciones y recibe lo confidencial (si lo pide Nora, va a Ramiro) // quién aprueba vacaciones, días libres y cambios de horario
 const comTipoTxt=t=>({Comunicado:'Informe',Aviso:'Informe',Ausencia:'Vacaciones y horarios',Incidencia:'Para administración',Ayuda:'Necesito ayuda'})[t]||t;
@@ -6314,7 +6315,7 @@ async function comHilo(wrap,id){
  const sello=esAus&&h.resolucion!=='Pendiente'?`<div class="com-sello ${h.resolucion==='Aprobada'?'ok':'no'}"><b>${escH(h.resolucion.toUpperCase())}</b><span>${escH(h.resueltaPor)}</span></div>`:'';
  const A=h.ausencia||{};
  const ficha=esAus?`<div class="com-ficha"><div><span>Qué pide</span><b>${escH(A.que||'')}</b></div><div><span>${A.hasta&&A.hasta!==A.desde?'Fechas':'Fecha'}</span><b>${escH(comFechaDia(A.desde))}${A.hasta&&A.hasta!==A.desde?' → '+escH(comFechaDia(A.hasta)):''}</b></div>${A.hd?`<div><span>${A.que==='Cambio de horario'?'Trabajaría':'No estaría'}</span><b>de ${escH(A.hd)} a ${escH(A.hh)}</b></div>`:''}</div>`:'';
- const fichaEsp=h.tipo==='Incidencia'?`<div class="com-conf">${comIco('candado')}Confidencial · solo administración</div><div class="com-ficha"><div><span>Tema</span><b>${escH(D.cat||'')}</b></div>${(D.sobre||[]).length?`<div><span>Sobre</span><b>${escH(comLista(D.sobre))}</b></div>`:''}${!h.abierta?`<div><span>Estado</span><b>Gestionada · ${escH(h.resueltaPor)}</b></div>`:''}</div>`
+ const fichaEsp=h.tipo==='Incidencia'?`<div class="com-ficha"><div><span>Tema</span><b>${escH(D.cat||'')}</b></div>${(D.sobre||[]).length?`<div><span>Sobre</span><b>${escH(comLista(D.sobre))}</b></div>`:''}${!h.abierta?`<div><span>Estado</span><b>Gestionada · ${escH(h.resueltaPor)}</b></div>`:''}</div>`
   :h.tipo==='Ayuda'?`<div class="com-ficha"><div><span>Para cuándo</span><b>${escH(D.urg||'')}</b></div><div><span>Se encarga</span><b>${escH(D.encargado||'Nadie todavía')}</b></div>${!h.abierta?'<div><span>Estado</span><b>Resuelta</b></div>':''}</div>`
   :h.tipo==='Tareas'?`<div class="com-tareas"><div class="com-tareas-h"><b>Tareas</b><span>${(D.items||[]).filter(x=>x.por).length}/${(D.items||[]).length}</span></div>${(D.items||[]).map((x,i)=>`<button type="button" class="com-ta${x.por?' on':''}" data-ti="${i}"${env||h.para.includes(yo)?'':' disabled'}><span class="com-ta-c">${x.por?comIco('check'):''}</span><span class="com-ta-t">${escH(x.t)}${x.por?`<small>${escH(x.por)} · ${escH(comFecha(x.en))}</small>`:''}</span></button>`).join('')}</div>`:'';
  const puedeResp=!env&&h.para.includes(yo)&&!resp.some(m=>m.de===yo&&!comEvento(m.cuerpo));
@@ -6385,6 +6386,7 @@ function comNueva(onOk,paraIni){
  const NORMAL=['Comunicado','Solicitud'];const abierto=true;
  const m=hzModal(`<div class="hz-top"><div><b>Nueva comunicación</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Tipo</div><div class="com-tsel">${COM_TIPOS.map(t=>`<button type="button" class="com-to" data-t="${t}">${comSello({tipo:t,ausencia:{que:'Vacaciones'}})}<span><b>${escH(comTipoTxt(t))}</b><small>${escH(COM_TIPO_DESC[t])}</small></span><em>Cambiar</em></button>`).join('')}</div>
+  <div class="s-pdir"><div class="hz-lab">Para</div><div class="com-chips">${dir.map(n=>`<button type="button" class="on" disabled>${escH(n)}</button>`).join('')}</div></div>
   <div class="s-para"><div class="hz-lab">Para</div><div class="com-chips com-para"><button type="button" data-n="*">Todo el equipo</button>${eq.map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div></div>
   <div class="s-inc">
    <div class="hz-lab">Tema</div><div class="com-chips com-cat">${COM_CAT_INC.map(t=>`<button type="button" data-c="${t}">${t}</button>`).join('')}</div>
@@ -6412,7 +6414,7 @@ function comNueva(onOk,paraIni){
   tl.querySelectorAll('.com-tl-x').forEach(b=>b.onclick=()=>{S.items.splice(+b.dataset.i,1);if(!S.items.length)S.items=[''];pintaTareas();});};
  $m('.com-tl-add').onclick=()=>{S.items.push('');pintaTareas();const l=m.querySelectorAll('.com-tl input');l[l.length-1].focus();};
  const pinta=()=>{const T=S.tipo,todos=eq.length&&eq.every(n=>S.para.includes(n)),normal=NORMAL.includes(T);
-  ver('.s-para',normal||T==='Tareas'||T==='Ayuda');ver('.s-inc',T==='Incidencia');ver('.s-urg',T==='Ayuda');
+  ver('.s-para',normal||T==='Tareas'||T==='Ayuda');ver('.s-pdir',T==='Ausencia'||T==='Incidencia');ver('.s-inc',T==='Incidencia');ver('.s-urg',T==='Ayuda');
   ver('.s-asunto',normal||T==='Tareas'||T==='Ayuda');ver('.s-tareas',T==='Tareas');ver('.s-aus',T==='Ausencia');ver('.s-req',normal);ver('.s-lim',(normal&&S.req)||T==='Tareas');
   $m('.com-l-asunto').innerHTML=T==='Tareas'?'Título <span>(opcional)</span>':T==='Ayuda'?'¿Con qué necesitas ayuda?':'Asunto';
   $m('.com-asunto').placeholder=T==='Tareas'?'Ej.: Cierre del viernes':T==='Ayuda'?'Ej.: Mover las citas del jueves':'Ej.: Informe de horas de octubre';
