@@ -955,7 +955,10 @@ module.exports = async function handler(req, res) {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false, error: 'Falta la cita' });
         const v = q.importe === '' || q.importe == null ? null : Number(String(q.importe).replace(',', '.'));
         if (v !== null && (!isFinite(v) || v < 0 || v > 5000)) return res.status(400).json({ ok: false, error: 'Importe no válido' });
-        const d = await at(`${CIT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'IMPORTE SESIÓN': v } }) });
+        const quien = String(q.verificado || '').trim().slice(0, 40);
+        const cuando = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'numeric' }).format(new Date());
+        const d = await at(`${CIT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'IMPORTE SESIÓN': v, 'IMPORTE VERIFICADO': v !== null && quien ? `${quien} · ${cuando}` : '' } }) });
+        if (!d.error) return res.status(200).json({ ok: true, ver: v !== null && quien ? `${quien} · ${cuando}` : '' });
         return res.status(200).json({ ok: !d.error, error: d.error ? 'No se ha podido guardar' : undefined });
       }
       if (action === 'seg-config') return res.status(200).json({ ok: true, conf: await conf() });

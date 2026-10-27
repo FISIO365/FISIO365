@@ -134,7 +134,7 @@ async function rendimiento(desde, hasta, _fresco, opts) {
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
   const [citas, fisiosT, ausT] = await Promise.all([
-    todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA${opts && opts.dinero ? '&fields[]=IMPORTE SESIÓN' : ''}`),
+    todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA${opts && opts.dinero ? '&fields[]=IMPORTE SESIÓN&fields[]=IMPORTE VERIFICADO' : ''}`),
     todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA&fields[]=HORAS POR DÍA&fields[]=CONTROL HORAS').catch(() => []),
     // Cambios puntuales de horario (Administración › Vacaciones y horarios)
     todosAT('tblkezm4bTQ4jJf1X', `filterByFormula=${encodeURIComponent(`AND(NOT(IS_BEFORE({HASTA},'${desde}')),NOT(IS_AFTER({DESDE},'${hasta}')))`)}`).catch(() => [])
@@ -275,11 +275,11 @@ async function valorSesiones(citasRango, hasta, precios, opts) {
     .forEach(c => { if (c.fields['IMPORTE SESIÓN'] != null && c.fields['IMPORTE SESIÓN'] !== '') { manual[c.id] = num(c.fields['IMPORTE SESIÓN']); return; }
       const q = cola[pid(c)]; if (!q || !q.length) return; const lim = mas14(String(c.fields['FECHA']).slice(0, 10)); const k = q.findIndex(u => u.f <= lim); if (k >= 0) toma[c.id] = q.splice(k, 1)[0]; });
   const lista = gast.map(c => { const id = pid(c), f = String(c.fields['FECHA']).slice(0, 10), u = toma[c.id];
-    let eur = 0, real = false, o, man = false;
-    if (c.id in manual || (c.fields['IMPORTE SESIÓN'] != null && c.fields['IMPORTE SESIÓN'] !== '')) { eur = c.id in manual ? manual[c.id] : num(c.fields['IMPORTE SESIÓN']); real = true; man = true; o = 'Puesto a mano'; }
+    let eur = 0, real = false, o, man = false; const ver = String(c.fields['IMPORTE VERIFICADO'] || '');
+    if (c.id in manual || (c.fields['IMPORTE SESIÓN'] != null && c.fields['IMPORTE SESIÓN'] !== '')) { eur = c.id in manual ? manual[c.id] : num(c.fields['IMPORTE SESIÓN']); real = true; man = true; o = ver ? 'Verificado · ' + ver : 'Puesto a mano'; }
     else if (u && u.p) { eur = u.p; real = true; o = u.o; }
     else { eur = ultimoP[id] || ref || 0; o = u ? u.o : 'Sin cobro encontrado'; }
-    return { id: c.id, n: nomFisio(c.fields['PREF.']).toLowerCase(), f, h: hora(c), e: est(c), pac: nombre[id] || '—', eur, real, man, o };
+    return { id: c.id, n: nomFisio(c.fields['PREF.']).toLowerCase(), f, h: hora(c), e: est(c), pac: nombre[id] || '—', eur, real, man, ver: man ? ver : '', o };
   }).sort((a, b) => (a.f + a.h).localeCompare(b.f + b.h));
   return { lista, ref };
 }
