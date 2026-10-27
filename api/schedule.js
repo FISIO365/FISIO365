@@ -990,6 +990,102 @@ module.exports = async function handler(req, res) {
         if (!d.error) return res.status(200).json({ ok: true, n: ids.length, ver: fields['IMPORTE VERIFICADO'] });
         return res.status(200).json({ ok: !d.error, error: d.error ? 'No se ha podido guardar' : undefined });
       }
+      // ── COMUNICACIONES INTERNAS (com system): comunicaciones formales entre el equipo, con hilo ──
+      // Tabla ⚙ APP · COMUNICACIONES. Una fila por mensaje; las respuestas llevan en HILO el id de la original.
+      // En la original: LEÍDO {nombre: fecha} (última vez que cada uno abrió el hilo) y HECHO {nombre: fecha} (quién ha confirmado/resuelto).
+      if (action.startsWith('seg-com-')) {
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const COM = 'tbl2qRD3WsvQVPrwX', TIPOS_C = ['Comunicado', 'Solicitud', 'Informe', 'Aviso'];
+        const pilaC = s => { const p = String(s || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
+        // Quién soy: nombre + contraseña del panel (como en Administración)
+        const equipoRecs = await todosT(FISIOS_TABLE, 'fields[]=Name&fields[]=Password&fields[]=' + encodeURIComponent('FECHA BAJA'));
+        const yoRec = equipoRecs.find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
+        if (!yoRec || !String(q.clave || '').trim() || String(yoRec.fields.Password || '').trim() !== String(q.clave || '').trim() || yoRec.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
+        const yo = pilaC(yoRec.fields.Name);
+        const equipo = [...new Set(equipoRecs.filter(r => r.fields.Name && !r.fields['FECHA BAJA']).map(r => pilaC(r.fields.Name)))].sort((a, b) => a.localeCompare(b, 'es'));
+        const ahora = new Date().toISOString();
+        const json = t => { try { const o = JSON.parse(t || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } };
+        const nmC = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+        const listaPara = t => String(t || '').split(',').map(x => x.trim()).filter(Boolean);
+        const okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
+        const vistaMsg = r => { const F = r.fields || {}; return { id: r.id, de: F.DE || '', para: listaPara(F.PARA), cuerpo: F.CUERPO || '', fecha: F.FECHA || r.createdTime || '' }; };
+        const vistaHilo = (root, resp) => {
+          const F = root.fields || {}, para = listaPara(F.PARA), de = F.DE || '', leido = json(F['LEÍDO']), hecho = json(F.HECHO);
+          const msgs = [root, ...resp].map(vistaMsg).sort((a, b) => a.fecha.localeCompare(b.fecha));
+          const ult = msgs[msgs.length - 1], req = !!F['REQUIERE ACCIÓN'], abierta = nmC(F.ESTADO) !== 'Cerrada';
+          const faltan = para.filter(p => !hecho[p]);
+          return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo: nmC(F.TIPO) || 'Comunicado', de, para, req, limite: F['FECHA LÍMITE'] || '', abierta,
+            fecha: msgs[0].fecha, ultima: ult.fecha, ultimoDe: ult.de, nResp: resp.length, extracto: String(ult.cuerpo || '').replace(/\s+/g, ' ').slice(0, 140),
+            leido, hecho, faltan,
+            noLeido: ult.de !== yo && (!leido[yo] || leido[yo] < ult.fecha),
+            pendienteMio: req && abierta && para.includes(yo) && !hecho[yo],
+            esperando: req && abierta && de === yo && faltan.length > 0,
+            msgs };
+        };
+        const cargar = async () => {
+          const rs = await todosT(COM, 'sort[0][field]=FECHA&sort[0][direction]=asc');
+          const roots = rs.filter(r => !r.fields.HILO), porHilo = {};
+          rs.filter(r => r.fields.HILO).forEach(r => { (porHilo[r.fields.HILO] = porHilo[r.fields.HILO] || []).push(r); });
+          return roots.map(r => ({ r, h: vistaHilo(r, porHilo[r.id] || []) }));
+        };
+        const participa = h => h.de === yo || h.para.includes(yo);
+        const marcar = async (root, campo, extra) => { const o = json(root.fields[campo]); o[yo] = ahora; const fields = { [campo]: JSON.stringify(o), ...(extra || {}) };
+          const d = await at(`${COM}/${root.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) }); if (d.error) throw new Error('No se ha podido guardar'); root.fields = d.fields || root.fields; return o; };
+        const buscar = async id => { if (!okId(id)) throw new Error('Comunicación no válida'); const d = await at(`${COM}/${id}`); if (d.error || !d.fields || d.fields.HILO) throw new Error('No se encuentra la comunicación'); return d; };
+
+        if (action === 'seg-com-buzon') {
+          const hs = (await cargar()).map(x => x.h).filter(participa).map(({ msgs, ...h }) => h).sort((a, b) => b.ultima.localeCompare(a.ultima));
+          return res.status(200).json({ ok: true, yo, equipo, hilos: hs });
+        }
+        if (action === 'seg-com-hilo') {
+          const root = await buscar(q.id);
+          const resp = await todosT(COM, `filterByFormula=${encodeURIComponent(`{HILO}='${root.id}'`)}`);
+          let h = vistaHilo(root, resp);
+          if (!participa(h)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
+          if (h.noLeido || !h.leido[yo]) { await marcar(root, 'LEÍDO'); h = vistaHilo(root, resp); }
+          return res.status(200).json({ ok: true, yo, hilo: h });
+        }
+        if (action === 'seg-com-enviar') {
+          const asunto = String(q.asunto || '').trim().slice(0, 140), cuerpo = String(q.cuerpo || '').trim().slice(0, 20000);
+          const para = [...new Set((Array.isArray(q.para) ? q.para : []).map(pilaC))].filter(p => equipo.includes(p) && p !== yo);
+          if (!asunto) return res.status(400).json({ ok: false, error: 'Falta el asunto' });
+          if (!cuerpo) return res.status(400).json({ ok: false, error: 'Escribe el contenido' });
+          if (!para.length) return res.status(400).json({ ok: false, error: 'Elige a quién se la envías' });
+          const tipo = TIPOS_C.includes(q.tipo) ? q.tipo : 'Comunicado', limite = /^\d{4}-\d{2}-\d{2}$/.test(q.limite || '') ? q.limite : null;
+          const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: asunto, TIPO: tipo, DE: yo, PARA: para.join(', '), CUERPO: cuerpo, FECHA: ahora,
+            'REQUIERE ACCIÓN': !!q.req, 'FECHA LÍMITE': q.req ? limite : null, 'LEÍDO': JSON.stringify({ [yo]: ahora }), HECHO: '{}', ESTADO: 'Abierta' } }], typecast: true }) });
+          if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' });
+          return res.status(200).json({ ok: true, id: d.records[0].id });
+        }
+        if (action === 'seg-com-responder') {
+          const root = await buscar(q.id), cuerpo = String(q.cuerpo || '').trim().slice(0, 20000);
+          const F = root.fields, de = F.DE || '', para0 = listaPara(F.PARA);
+          if (de !== yo && !para0.includes(yo)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
+          if (!cuerpo && !q.hecho) return res.status(400).json({ ok: false, error: 'Escribe la respuesta' });
+          if (cuerpo) { const otros = [...new Set([de, ...para0])].filter(p => p && p !== yo);
+            const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: 'RE: ' + (F.ASUNTO || ''), HILO: root.id, DE: yo, PARA: otros.join(', '), CUERPO: cuerpo, FECHA: ahora } }] }) });
+            if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' }); }
+          await marcar(root, 'LEÍDO');
+          if (q.hecho && para0.includes(yo)) { const hc = json(root.fields.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
+            await marcar(root, 'HECHO', todos && F['REQUIERE ACCIÓN'] ? { ESTADO: 'Cerrada' } : null); }
+          return res.status(200).json({ ok: true });
+        }
+        if (action === 'seg-com-hecho') {
+          const root = await buscar(q.id), F = root.fields, para0 = listaPara(F.PARA);
+          if (!para0.includes(yo)) return res.status(403).json({ ok: false, error: 'Solo quien la recibe puede confirmarla' });
+          const hc = json(F.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
+          await marcar(root, 'HECHO', todos && F['REQUIERE ACCIÓN'] ? { ESTADO: 'Cerrada' } : null);
+          return res.status(200).json({ ok: true });
+        }
+        if (action === 'seg-com-estado') {
+          // Cerrar o reabrir: quien la envió
+          const root = await buscar(q.id);
+          if ((root.fields.DE || '') !== yo) return res.status(403).json({ ok: false, error: 'Solo quien la envió puede cerrarla o reabrirla' });
+          const d = await at(`${COM}/${root.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: q.abrir ? 'Abierta' : 'Cerrada' } }) });
+          return res.status(200).json({ ok: !d.error, error: d.error ? 'No se ha podido guardar' : undefined });
+        }
+        return res.status(400).json({ ok: false, error: 'Acción no válida' });
+      }
       if (action === 'seg-config') return res.status(200).json({ ok: true, conf: await conf() });
       // ── ADMINISTRACIÓN: equipo, horarios, ausencias, accesos y contraseñas (solo quien tiene acc_admin) ──
       if (action.startsWith('seg-adm-')) {
