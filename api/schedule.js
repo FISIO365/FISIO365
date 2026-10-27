@@ -1006,7 +1006,7 @@ module.exports = async function handler(req, res) {
             horas, semana: F['HORAS SEMANA'] || null, control: !!F['CONTROL HORAS'], accesos: Object.fromEntries(ACC.map(k => [k, !!F['acc_' + k]])), foto: (F.Foto && F.Foto[0] && F.Foto[0].thumbnails && F.Foto[0].thumbnails.large && F.Foto[0].thumbnails.large.url) || '',
             contrato: { tipo: (F['TIPO CONTRATO'] && F['TIPO CONTRATO'].name) || F['TIPO CONTRATO'] || '', pct: F['PORCENTAJE FISIO'] == null ? null : Number(F['PORCENTAJE FISIO']), coste: F['COSTE EMPRESA MES'] == null ? null : Number(F['COSTE EMPRESA MES']) },
             docs: (F.DOCUMENTOS || []).map(a => ({ id: a.id, nombre: a.filename || 'documento', url: a.url, tipo: a.type || '', size: a.size || 0 })),
-            claveDebil: !F.Password || String(F.Password).trim().length < 6 || /^(1234|12345|123456|0000|fisio365)$/i.test(String(F.Password).trim()) }; };
+            claveDebil: !F.Password || String(F.Password).trim().length < 4 || /^(1234|12345|123456|4321|0000|fisio365)$/i.test(String(F.Password).trim()) || /^(.)\1+$/.test(String(F.Password).trim()) }; };
         const ausencias = async () => (await todosT(AUS, `filterByFormula=${encodeURIComponent(`NOT(IS_BEFORE({HASTA},DATEADD(TODAY(),-60,'days')))`)}&sort[0][field]=DESDE&sort[0][direction]=asc`)).map(r => ({ id: r.id, fisio: r.fields.FISIO || '', desde: r.fields.DESDE || '', hasta: r.fields.HASTA || r.fields.DESDE || '', tipo: (r.fields.TIPO && r.fields.TIPO.name) || r.fields.TIPO || '', nota: r.fields.NOTA || '', por: r.fields['CREADO POR'] || '', hd: r.fields['HORA DESDE'] || '', hh: r.fields['HORA HASTA'] || '' }));
         if (action === 'seg-adm-equipo') {
           const eq = full.filter(r => r.fields && r.fields.Name).map(vista).sort((a, b) => !!a.baja - !!b.baja || (a.role === 'admin') - (b.role === 'admin') || a.nombre.localeCompare(b.nombre));
@@ -1045,7 +1045,7 @@ module.exports = async function handler(req, res) {
             f['PORCENTAJE FISIO'] = t === 'Autónomo' && pc != null ? Math.max(0, Math.min(100, pc)) : null; f['COSTE EMPRESA MES'] = t === 'Nómina' && co != null ? Math.max(0, co) : null; }
           if (c.id === yo.id) f.acc_admin = true; // que nadie se quite a sí mismo el acceso a Administración
           const clave = String(c.clave || '').trim();
-          if (clave) { if (clave.length < 6) return res.status(400).json({ ok: false, error: 'La contraseña tiene que tener al menos 6 caracteres' }); f.Password = clave; }
+          if (clave) { if (clave.length < 4) return res.status(400).json({ ok: false, error: 'La contraseña tiene que tener al menos 4 caracteres' }); f.Password = clave; }
           let d;
           if (c.id) { if (!/^rec[A-Za-z0-9]{14}$/.test(c.id)) return res.status(400).json({ ok: false }); d = await at(`${FT}/${c.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }); }
           else { if (!clave) return res.status(400).json({ ok: false, error: 'Ponle una contraseña para que pueda entrar' }); if (!c.accesos) ['agenda', 'pacientes', 'chat', 'checklist', 'callin', 'captacion', 'programas', 'ejercicios', 'anamnesis', 'school'].forEach(k => f['acc_' + k] = true);

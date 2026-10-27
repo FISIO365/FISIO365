@@ -5997,7 +5997,7 @@ const ADM_TIPOS=['Vacaciones','Festivo','Día libre','Menos horas','Baja','Forma
 const ADM_DC={Lunes:'Lun',Martes:'Mar','Miércoles':'Mié',Jueves:'Jue',Viernes:'Vie','Sábado':'Sáb'};
 async function admPost(a,b){return agPost(a,Object.assign({yo:fisioActual.nombre,clave:fisioActual._pwd},b||{}));}
 const admFecha=f=>{if(!f)return '';const [y,m,d]=f.split('-');return `${+d} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][+m-1]}${y!==agHoyIso().slice(0,4)?' '+y:''}`;};
-function admClave(){const c='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i=0;i<8;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+function admClave(){let s;do{s=String(Math.floor(Math.random()*10000)).padStart(4,'0');}while(/^(1234|4321|0000)$/.test(s)||/^(.)\1+$/.test(s));return s;}
 async function renderAdmin(wrap){
  const card=ce('div','adm');wrap.appendChild(card);
  const A=fisioActual.accesos||{};if(!A.admin){card.innerHTML='<div class="card"><div class="fac-vacio">Esta sección es solo para dirección.</div></div>';return;}
@@ -6031,7 +6031,7 @@ async function renderAdmin(wrap){
    <div class="adm-tot"></div>
    <label class="adm-sw"><input type="checkbox" class="a-ctl" ${f.control?'checked':''}><span><b>Contar sus horas</b><small>Para contratados: en Rendimiento verás cada día si ha trabajado más o menos horas de las de su horario, y los días que no vino.</small></span></label>
    <div class="hz-lab">${nuevo?'Contraseña para entrar al panel':'Nueva contraseña <span>(déjalo vacío para no cambiarla)</span>'}</div>
-   <div class="adm-cl"><input class="ag-in a-cl" value="" autocomplete="new-password" placeholder="${nuevo?'Mínimo 6 caracteres':'Sin cambios'}"><button type="button" class="adm-gen">Generar</button></div>
+   <div class="adm-cl"><input class="ag-in a-cl" value="" autocomplete="new-password" placeholder="${nuevo?'Mínimo 4 caracteres':'Sin cambios'}"><button type="button" class="adm-gen">Generar</button></div>
    ${f.claveDebil&&!nuevo?'<p class="adm-nota warn">Tiene una contraseña poco segura (por ejemplo «1234»). Ponle una nueva y pásasela.</p>':''}
    <div class="hz-lab">Contrato <span>(solo lo ve dirección)</span></div>
    <div class="fac-chips a-ct"><button type="button" data-v="Autónomo">Autónomo</button><button type="button" data-v="Nómina">En nómina</button></div>
@@ -6070,7 +6070,7 @@ async function renderAdmin(wrap){
   const tot=()=>{const t=[...m.querySelectorAll('.adm-dias input')].reduce((a,i)=>a+(Number(String(i.value).replace(',','.'))||0),0);$m('.adm-tot').textContent=t?`${t} horas a la semana`:'Sin horario: no cuenta en la ocupación de Rendimiento ni Estadísticas';};tot();
   m.querySelectorAll('.adm-dias input').forEach(i=>i.oninput=tot);
   $m('.hz-x').onclick=()=>m.remove();
-  $m('.adm-gen').onclick=()=>{$m('.a-cl').value=admClave();$m('.a-cl').focus();};
+  $m('.adm-cl .adm-gen').onclick=()=>{$m('.a-cl').value=admClave();$m('.a-cl').focus();};
   $m('.hz-ok').onclick=async e=>{const b=e.target,cl=$m('.a-cl').value.trim();b.disabled=true;b.textContent='Guardando…';
    const horas={};m.querySelectorAll('.adm-dias input').forEach(i=>{if(i.value!=='')horas[i.dataset.d]=i.value;});
    try{const r=await admPost('seg-adm-fisio',{fisio:{id:f.id||'',nombre:$m('.a-nom').value,role:rol,colegiado:$m('.a-col').value,tel:$m('.a-tel').value,email:$m('.a-em').value,alta:$m('.a-alta').value,notas:$m('.a-not').value,horas,control:$m('.a-ctl').checked,clave:cl,foto,quitarFoto,contrato:{tipo:ct.tipo,pct:$m('.a-pct')?$m('.a-pct').value:'',coste:$m('.a-cos')?$m('.a-cos').value:''}}});
