@@ -1486,7 +1486,7 @@ module.exports = async function handler(req, res) {
           } else {
             if (c.fecha !== undefined || !q.id) f['FECHA SOLICITUD'] = okF(c.fecha) ? c.fecha : hoyF;
             txt('NOTAS', c.nota); txt('DISPONIBILIDAD', c.disp, 500); txt('FISIO', c.fisio, 40); txt('NO PUEDE', c.nopuede, 5000); txt('OFRECIDO', c.ofrecido, 5000); if (c.aviso !== undefined) f['ÚLTIMO AVISO'] = okF(c.aviso) ? c.aviso : null;
-            if (c.dias !== undefined) f['DIAS'] = lista(c.dias); if (c.franja !== undefined) f['FRANJA'] = lista(c.franja); if (c.horario !== undefined) f['HORARIO'] = /^(\d{2}:\d{2})?-(\d{2}:\d{2})?$/.test(c.horario || '') && c.horario !== '-' ? c.horario : ''; if (c.estado !== undefined) f['ESTADO'] = c.estado || null;
+            if (c.dias !== undefined) f['DIAS'] = lista(c.dias); if (c.franja !== undefined) f['FRANJA'] = lista(c.franja); if (c.horario !== undefined) f['HORARIO'] = (/^(\d{2}:\d{2})?-(\d{2}:\d{2})?$/.test(c.horario || '') && c.horario !== '-') || /^([A-Za-zÁÉÍÓÚáéíóú,]*=(\d{2}:\d{2})?-(\d{2}:\d{2})?)(\|[A-Za-zÁÉÍÓÚáéíóú,]*=(\d{2}:\d{2})?-(\d{2}:\d{2})?)*$/.test(c.horario || '') ? String(c.horario).slice(0, 500) : ''; if (c.estado !== undefined) f['ESTADO'] = c.estado || null;
             if (q.tabla === 'esperaP') { if (c.pacienteId !== undefined) f['PACIENTE'] = okId(c.pacienteId) ? [c.pacienteId] : []; }
             else { txt('NOMBRE', c.nombre, 120); if (c.tel !== undefined) f['TELF'] = String(c.tel || '').slice(0, 30); }
             _espera.t = 0;
@@ -2309,6 +2309,7 @@ module.exports = async function handler(req, res) {
         if (q.dni) f.DNI = String(q.dni).trim().toUpperCase();
         if (/^\d{4}-\d{2}-\d{2}$/.test(q.cumple || '')) f.CUMPLE = q.cumple;
         if (q.notas) f.NOTAS = String(q.notas);
+        if (q.motivo) f['MOTIVO DE VISITA'] = String(q.motivo).trim().slice(0, 2000);
         const est = (Array.isArray(q.estados) ? q.estados : []).filter(x => /^rec[A-Za-z0-9]{14}$/.test(x)); if (est.length) f.ESTADO = est;
         let pin = ''; if (q.acceso && email) { pin = String(Math.floor(1000 + Math.random() * 9000)); f.PIN = pin; }
         const d = await at(PACIENTES, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }], typecast: true }) });

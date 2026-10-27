@@ -1102,6 +1102,10 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .adm-up{display:block;text-align:center;border:1.5px dashed #d8cfc6;border-radius:12px;padding:12px;font:600 13px Poppins,sans-serif;color:#1e2a38;cursor:pointer}.adm-up.sub{opacity:.6;pointer-events:none}
 .hz-kp>div.hz-rep{grid-column:1/-1;background:#1e2a38;color:#fff}.hz-rep>span{color:#cfd6df!important}.hz-rep>small{color:#aab4c0!important;margin-top:6px}.hz-rp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}.hz-rp>div{display:flex;flex-direction:column}.hz-rp small{font-size:11.5px;color:#cfd6df}.hz-rp b{font-size:20px;color:#fff!important}.hz-rp b.menos{color:#ffb4a8!important}.hz-rp em{font-style:normal;font-size:12px;color:#F39A55;font-weight:600;line-height:1.3}
 .rec-1a{font-style:normal;color:#c2552e;font-weight:600}
+.ag-npf{background:#f7f3ef;border-radius:14px;padding:12px;margin-top:6px;display:flex;flex-direction:column;gap:8px}.ag-npt{font-weight:700;font-size:13px;color:#1e2a38}.ag-npf .fp-in{margin:0}.ag-npf .fp-in i{font-style:normal;color:#9a8d84;font-weight:400}.npf-dup b{display:block;font-size:12.5px;margin:4px 0 6px}.npf-f{width:100%;margin-top:6px;font:600 13px Poppins,sans-serif;border:1px solid #e3dbd3;background:#fff;border-radius:12px;padding:10px;cursor:pointer}
+.ce-tr{background:#f7f3ef;border-radius:14px;padding:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px}.ce-trh{display:flex;justify-content:space-between;align-items:center}.ce-trh b{font-size:12.5px;color:#1e2a38}.ce-trx{width:28px;height:28px;border-radius:50%;border:0;background:#fff;color:#7d6a60;cursor:pointer}
+.ce-trd{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}.ce-tra{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.ce-trd button,.ce-tra button{font:600 12px Poppins,sans-serif;border:1px solid #e3dbd3;background:#fff;color:#5f554e;border-radius:10px;padding:8px 2px;cursor:pointer}.ce-trd button.on,.ce-tra button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}.ce-tra button{font-size:11.5px}
+.ce-tr .ce-hr{margin:0}.ce-trt{font-size:11.5px;color:#7d6a60}.ce-addt{width:100%;font:600 13px Poppins,sans-serif;color:#1e2a38;background:none;border:1.5px dashed #d8cfc6;border-radius:12px;padding:10px;cursor:pointer;margin-bottom:4px}
 .hz-res2{margin-top:6px}.hz-pc{font-style:normal;font-weight:500;font-size:11.5px;color:#7d6a60;margin-left:4px}.hz-big{grid-column:1/-1}.hz-big b{font-size:22px}.hz-aviso{font-size:12px;color:#8a4a1f;background:#fff4e8;border-radius:10px;padding:8px 10px;margin:6px 0 0}
 .hz-ses{margin-top:10px;border:1px solid #ece6e0;border-radius:12px;padding:8px 10px}.hz-ses summary{cursor:pointer;font-weight:600;font-size:13px}.hz-sl{display:flex;flex-direction:column;margin-top:6px}.hz-sl>div{display:grid;grid-template-columns:104px 1fr auto;gap:0 10px;padding:6px 0;border-top:1px solid #f3eee9;font-size:12.5px;align-items:center}.hz-sl>div>i{grid-column:2;font-style:normal;color:#9a8d84;font-size:11.5px}.hz-sl>div>em{grid-column:3;grid-row:1/3;font-style:normal;font-weight:600}.hz-sl em{background:none;padding:0;border:0;white-space:nowrap}.hz-sl em.hz-ok{color:#2f6b45}.hz-sl em.hz-es{color:#7d6a60}.hz-sl .perd b{color:#b42318}.hz-dd{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow-y:auto}.hz-d{border:1px solid #ece6e0;border-radius:12px;padding:8px 10px;font-size:12.5px}.hz-d.dif{border-color:#f1d9c7}.hz-d1{display:flex;justify-content:space-between;align-items:center}.hz-d1 b{font-size:13px;text-transform:capitalize}.hz-d1 span{font-weight:600}.hz-d1 .mas{color:#2f6b45}.hz-d1 .menos{color:#b42318}.hz-d1 .ok{color:#7d6a60}
 .hz-d2{display:flex;flex-wrap:wrap;gap:3px 12px;margin-top:3px;color:#5f554e}.hz-d2 em{font-style:normal;color:#9a8d84}.hz-cb{color:#1e3a5f;background:#e8eef6;border-radius:99px;padding:1px 8px}.hz-rg{color:#8a4a1f;background:#fff4e8;border-radius:99px;padding:1px 8px}
@@ -5869,7 +5873,7 @@ function agTipoHueco(m,c,onDone){const box=m.querySelector('.ag-th');if(!box)ret
   try{const r=await agPost('seg-agenda-editar',{id:c.id,estado:b.dataset.v});if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Ahora es «${b.textContent}»`,true);m.remove();onDone&&onDone();}
   catch(err){box.querySelectorAll('button').forEach(x=>x.disabled=false);toast(err.message,false);}});}
 function agDarCita({fecha,hora,fisio,hueco},onDone){
- let pac=null,pacInfo='',quierePack=false,packSel=null;
+ let pac=null,pacInfo='',quierePack=false,packSel=null,nuevoP=false;
  setTimeout(()=>{const eb=document.querySelector('.ag-espb');if(eb)eb.onclick=()=>capOfrecerModal({fecha,hora,fisio},AG.dia.espera||[],AG.dia.hoy);},0);
  const m=hzModal(`<div class="hz-top"><div><small>Dar cita · ${escH(agCab(fecha,hora,fisio))}</small><b>${hueco?'Hora libre':'Hora vacía'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   ${hueco&&AG.dia&&AG.dia.hoy&&fecha>=AG.dia.hoy&&capPrio(AG.dia.espera||[],{fecha,hora,fisio},AG.dia.hoy).length?`<button type="button" class="ag-espb">${IC_WA} Ofrecer a la lista de espera <b>${capPrio(AG.dia.espera||[],{fecha,hora,fisio},AG.dia.hoy).length}</b></button>`:''}
@@ -5883,7 +5887,7 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
  const bus=m.querySelector('.ag-bus'),res=m.querySelector('.ag-res2'),tg=agEtiquetas(m.querySelector('.ag-tip'),[]);
  if(hueco)agTipoHueco(m,hueco,onDone);
  const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
- bus.oninput=()=>{pac=null;const q=norm(bus.value).trim(),qd=q.replace(/\D/g,'');if(q.length<2){res.innerHTML='';return;}
+ bus.oninput=()=>{pac=null;nuevoP=false;const q=norm(bus.value).trim(),qd=q.replace(/\D/g,'');if(q.length<2){res.innerHTML='';return;}
   const fl=(pacs||[]).filter(p=>norm(p.nombre).includes(q)||norm(p.email).includes(q)||(qd.length>=4&&String(p.telefono||'').replace(/\D/g,'').includes(qd))).slice(0,6);
   res.innerHTML=fl.map(p=>`<button type="button" class="ag-pi" data-id="${p.id}"><b>${escH(p.nombre)}</b><small>${escH(p.telefono||p.email||'')}</small></button>`).join('')+`<button type="button" class="ag-pi ag-np">＋ Nuevo paciente «${escH(bus.value.trim())}»</button>`;
   res.querySelectorAll('.ag-pi[data-id]').forEach(b=>b.onclick=()=>{quierePack=false;packSel=null;pac=(pacs||[]).find(p=>p.id===b.dataset.id);bus.value=pac.nombre;res.innerHTML=`<div class="ag-elegido">✓ ${escH(pac.nombre)}</div><div class="ag-pkinfo">Mirando su pack…</div>`;
@@ -5895,9 +5899,30 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
     el.innerHTML=r.t==='pack'?`<b>Sería la sesión ${r.i} de ${r.n} del pack</b>${r.i===r.n?' · la última: toca renovar':''}`:r.t==='suelta'?'<b>Tiene esta sesión pagada</b>':`<span><b>No consta ningún pago para esta sesión</b><small>Si viene con un pack de antes que no está apuntado, márcalo</small></span><button type="button" class="ag-pkq">Tiene pack</button>`;
     const bq=el.querySelector('.ag-pkq');if(bq)bq.onclick=()=>{quierePack=!quierePack;bq.classList.toggle('on',quierePack);bq.textContent=quierePack?'Quitar':'Tiene pack';
      let pb=res.querySelector('.ag-pkbox');if(quierePack){if(!pb){pb=ce('div','ag-pkbox');el.after(pb);}packSel=packSelector(pb);}else{if(pb)pb.remove();packSel=null;}};}).catch(()=>{const el=res.querySelector('.ag-pkinfo');if(el)el.remove();});});
-  res.querySelector('.ag-np').onclick=()=>{m.remove();abrirNuevoPaciente(bus.value.trim());toast('Crea el paciente y vuelve a la agenda para darle la cita',true);};};
+  // Paciente nuevo: se crea aquí mismo con lo mínimo (nombre, teléfono y motivo) al dar la cita
+  res.querySelector('.ag-np').onclick=()=>{const t=bus.value.trim(),esTel=/^[\d\s+()-]{6,}$/.test(t);nuevoP=true;pac=null;
+   res.innerHTML=`<div class="ag-npf"><div class="ag-npt">Nuevo paciente</div>
+    <label class="fp-in"><span>Nombre y apellidos *</span><input type="text" class="ag-in npf-n" autocomplete="off" value="${esTel?'':escH(t)}"></label>
+    <label class="fp-in"><span>Teléfono *</span><input type="tel" inputmode="tel" class="ag-in npf-t" placeholder="612345678" value="${esTel?escH(t):''}"></label>
+    <label class="fp-in"><span>Motivo de la cita *</span><input type="text" class="ag-in npf-m" placeholder="Ej.: dolor lumbar desde hace 2 semanas" autocomplete="off"></label>
+    <label class="fp-in"><span>Email <i>(opcional)</i></span><input type="email" class="ag-in npf-e" autocomplete="off"></label><div class="npf-dup"></div></div>`;
+   setTimeout(()=>{const f=res.querySelector(esTel||!t?'.npf-n':'.npf-t');if(f)f.focus();},50);};};
  if(window.innerWidth>=700)bus.focus();
- const enviar=async(b,forzar)=>{if(!pac){toast('Elige el paciente',false);return;}
+ const enviar=async(b,forzar)=>{
+  if(!pac&&nuevoP){const v=q=>(res.querySelector(q)||{}).value||'',N={nombre:v('.npf-n').trim(),tel:v('.npf-t').trim(),motivo:v('.npf-m').trim(),email:v('.npf-e').trim()};
+   if(N.nombre.length<3){toast('Escribe nombre y apellidos',false);return;}if(N.tel.replace(/\D/g,'').length<9){toast('Escribe un teléfono válido',false);return;}if(!N.motivo){toast('Escribe el motivo de la cita',false);return;}
+   const est=(ESTADOS||[]).find(e=>/PACIENTE NUEVO/i.test(e.nombre));b.disabled=true;b.textContent='Creando paciente…';
+   try{const d=await (await fetch('/api/schedule?action=seg-paciente-crear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,...N,estados:est?[est.id]:[],forzar:!!b._forzarP})})).json();
+    if(d.duplicado){b.disabled=false;b.textContent='Dar cita';const box=res.querySelector('.npf-dup');
+     box.innerHTML=`<b>Ya hay ${d.duplicado.length===1?'un paciente parecido':'pacientes parecidos'}. ¿Es alguno de estos?</b>${d.duplicado.map(p=>`<button type="button" class="np-dup-it" data-id="${p.id}" data-n="${escH(p.nombre)}"><span>${escH(p.nombre)}</span><small>${escH([p.tel,p.email].filter(Boolean).join(' · '))}</small></button>`).join('')}<button type="button" class="npf-f">No, es otra persona: crearlo</button>`;
+     box.querySelectorAll('.np-dup-it').forEach(x=>x.onclick=()=>{pac=(pacs||[]).find(p=>p.id===x.dataset.id)||{id:x.dataset.id,nombre:x.dataset.n};nuevoP=false;bus.value=pac.nombre;res.innerHTML=`<div class="ag-elegido">✓ ${escH(pac.nombre)}</div>`;});
+     box.querySelector('.npf-f').onclick=()=>{b._forzarP=true;enviar(b,forzar);};return;}
+    if(!d.ok)throw new Error(d.error||'No se ha podido crear el paciente');
+    const P=d.paciente;pac={id:P.id,nombre:P.nombre,email:P.email,pin:P.pin,telefono:P.telefono,estados:P.estados};(pacs=pacs||[]).push(pac);nuevoP=false;
+    const nt=m.querySelector('.ag-not2');if(nt&&!nt.value.trim())nt.value='Motivo: '+N.motivo;
+    res.innerHTML=`<div class="ag-elegido">✓ ${escH(pac.nombre)} <small>(paciente nuevo creado)</small></div>`;}
+   catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);return;}}
+  if(!pac){toast('Elige el paciente',false);return;}
   if(quierePack&&packSel&&!packSel.listo()){toast('Completa el pack: de cuántas sesiones y qué sesión es esta',false);return;}
   b.disabled=true;b.textContent='Dando cita…';
   try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,quien:miNombreCorto(),notas:m.querySelector('.ag-not2').value.trim(),tipos:tg.get(),forzar});
@@ -6511,7 +6536,16 @@ const capHor=x=>{const m=String((x&&x.horario)||'').match(/^(\d{2}:\d{2})?-(\d{2
 const capEnHora=(x,hora)=>{const r=capHor(x),hh=String(hora||'').replace(/^(\d):/,'0$1:').slice(0,5);if(r)return (!r.d||hh>=r.d)&&(!r.h||hh<r.h);return !(x.franja||[]).length||x.franja.includes(capFranjaDe(hora));};
 // Texto «lun 26/10 18:00 · Sara» de una línea guardada
 const capHTxt=l=>{const m=String(l).match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) ?(.*)$/);if(!m)return l;const t=new Date(m[1]+'T12:00:00');return `${['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]} ${t.getDate()}/${t.getMonth()+1} ${m[2]}${m[3]?' · '+capNomF(m[3]):''}`;};
-const capHorTxt=x=>{const r=capHor(x);if(r)return r.d&&r.h?`De ${r.d} a ${r.h}`:r.d?`A partir de las ${r.d}`:`Hasta las ${r.h}`;return (x.franja||[]).length?x.franja.join(' · '):'Cualquier hora';};
+// Varias franjas: «Lunes,Martes=09:00-13:00|Jueves=16:00-» (cada franja con sus días y su horario). Lo antiguo (días + un horario) sigue valiendo
+const CAP_FR_R={'Mañana':['','13:00'],'Mediodía':['13:00','16:00'],'Tarde':['16:00','']};
+const capTramos=x=>{const hz=String((x&&x.horario)||'');
+ if(hz.includes('='))return hz.split('|').map(t=>{const [ds,r]=t.split('=');const m=String(r||'').match(/^(\d{2}:\d{2})?-(\d{2}:\d{2})?$/);return {dias:(ds||'').split(',').filter(Boolean),d:(m&&m[1])||'',h:(m&&m[2])||''};});
+ const r=capHor(x);if(r)return [{dias:(x&&x.dias)||[],d:r.d,h:r.h}];
+ const F=((x&&x.franja)||[]).filter(f=>CAP_FR_R[f]);if(F.length)return F.map(f=>({dias:(x&&x.dias)||[],d:CAP_FR_R[f][0],h:CAP_FR_R[f][1]}));
+ return [{dias:(x&&x.dias)||[],d:'',h:''}];};
+const capRangoTxt=t=>!t.d&&!t.h?'Cualquier hora':!t.d&&t.h==='13:00'?'Mañanas':t.d==='13:00'&&t.h==='16:00'?'Mediodía':t.d==='16:00'&&!t.h?'Tardes':t.d&&t.h?`De ${t.d} a ${t.h}`:t.d?`A partir de las ${t.d}`:`Hasta las ${t.h}`;
+const capCabe=(x,h)=>{const dn=capDiaNom(h.fecha),hh=String(h.hora||'').replace(/^(\d):/,'0$1:').slice(0,5);return capTramos(x).some(t=>(!t.dias.length||t.dias.includes(dn))&&(!t.d||hh>=t.d)&&(!t.h||hh<t.h));};
+const capHorTxt=x=>{const T=capTramos(x);if(T.length===1)return capRangoTxt(T[0]);return T.map(t=>`${t.dias.length?t.dias.map(d=>d.slice(0,3).toLowerCase()).join(', '):'todos'} ${capRangoTxt(t).toLowerCase()}`).join(' · ');};
 // Huecos concretos que ya dijo que no puede (no se le vuelven a ofrecer)
 const capHKey=h=>`${String(h.fecha).slice(0,10)} ${String(h.hora||'').replace(/^(\d):/,'0$1:').slice(0,5)} ${String(h.fisio||'').trim().split(' ')[0].toLowerCase()}`;
 const capLs=(v,hoy)=>String(v||'').split('\n').map(l=>l.trim().toLowerCase()).filter(l=>l&&(!hoy||l.slice(0,10)>=hoy));
@@ -6525,7 +6559,7 @@ async function capMarcarNoPuede(x,h,hoy){const k=capHKey(h),nop=capCon(x.nopuede
  await capGuardar(x.tabla,{nopuede:nop,ofrecido:of},x.id);x.nopuede=nop;x.ofrecido=of;}
 // Ofrecido: queda «esperando respuesta» en ese hueco y se le ofrece al siguiente si se pide
 async function capApuntarOfrecido(x,h,hoy){const of=capCon(x.ofrecido,capHKey(h),hoy);await capGuardar(x.tabla,{aviso:hoy,ofrecido:of},x.id);x.aviso=hoy;x.ofrecido=of;}
-const capEncaja=(x,h)=>!capNoPuede(x,h)&&(!(x.dias||[]).length||x.dias.includes(capDiaNom(h.fecha)))&&capEnHora(x,h.hora)&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
+const capEncaja=(x,h)=>!capNoPuede(x,h)&&capCabe(x,h)&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
 const capDiasEntre=(a,b)=>a?Math.round((new Date(b+'T12:00:00')-new Date(String(a).slice(0,10)+'T12:00:00'))/864e5):null;
 function capPrio(esp,h,hoy){return esp.filter(x=>x.tel&&capEncaja(x,h)&&!capOfrecido(x,h)).map(x=>{const av=capDiasEntre(x.aviso,hoy),es=capDiasEntre(x.fecha,hoy)||0;return {x,reciente:!!x.aviso&&av!==null&&av<2&&(!x.ofrecido||capLs(x.ofrecido,hoy).length>0),exacto:!!((x.dias||[]).length||(x.franja||[]).length||capHor(x)),es};}).sort((a,b)=>(a.reciente-b.reciente)||(b.es-a.es)||(b.exacto-a.exacto));}
 const capDiaLargo=f=>{const t=new Date(f+'T12:00:00');return ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][t.getDay()]+' '+t.getDate();};
@@ -6716,7 +6750,7 @@ async function renderCaptacion(wrap){
  // ── Lista de espera ──
  const franjaDe=h=>{const n=parseInt(String(h).slice(0,2),10);return n<13?'Mañana':n<16?'Mediodía':'Tarde';};
  const diaNom=f=>CAP_DIAS[new Date(f+'T12:00:00').getDay()-1]||'';
- const encaja=(x,h)=>!capNoPuede(x,h)&&(!x.dias.length||x.dias.includes(diaNom(h.fecha)))&&capEnHora(x,h.hora)&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
+ const encaja=(x,h)=>!capNoPuede(x,h)&&capCabe(x,h)&&(!x.fisio||String(h.fisio).toLowerCase().startsWith(String(x.fisio).toLowerCase().split(' ')[0]));
  const diasDesde=f=>f?Math.round((new Date(D.hoy+'T12:00:00')-new Date(String(f).slice(0,10)+'T12:00:00'))/864e5):null;
  const diaTxt=f=>{const t=new Date(f+'T12:00:00'),w=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][t.getDay()]+' '+t.getDate();return diasDesde(f)===0?'Hoy · '+w:w;};
  const diaLargo=f=>{const t=new Date(f+'T12:00:00');return ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][t.getDay()]+' '+t.getDate();};
@@ -6763,9 +6797,7 @@ async function renderCaptacion(wrap){
   const fis=(fisios||[]).map(f=>String(f.nombre||'').split(' ')[0]).filter(Boolean);
   const m=hzModal(`<div class="hz-top"><div><small>Lista de espera</small><b>${x.id?escH(x.nombre):'Añadir a la lista'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    ${x.id?'':`<div class="seg-rap ce-tipo"></div>`}<div class="ce-quien"></div>
-   <div class="hz-lab">¿Qué días le van bien?</div><div class="seg-rap ce-dias"></div>
-   <div class="hz-lab">¿A qué hora puede?</div><div class="sev-ch c4 ce-frr"></div>
-   <div class="ce-hr"><label><span>Desde</span><button type="button" class="ag-in ce-hb ce-hd"></button></label><label><span>Hasta</span><button type="button" class="ag-in ce-hb ce-hh"></button></label></div>
+   <div class="hz-lab">¿Cuándo puede? <span>(puedes poner varias franjas)</span></div><div class="ce-trs"></div><button type="button" class="ce-addt">＋ Añadir otra franja</button>
    <div class="hz-lab">Fisio <span>(opcional)</span></div><div class="seg-rap ce-fi"></div>
    <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="seg-n ce-nota" rows="2" placeholder="Ej.: prefiere a última hora, lumbalgia…">${escH(x.nota||'')}</textarea>
    ${x.id?`<div class="hz-lab">¿Cómo está?</div><div class="seg-rap ce-est"></div>`:''}
@@ -6778,22 +6810,28 @@ async function renderCaptacion(wrap){
    else q.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${capIn('ce-nom','Nombre',x.nombre&&x.nombre!=='Sin nombre'?x.nombre:'')}${capIn('ce-tel','Teléfono',x.tel,'tel')}</div>`;};
   if(!x.id){const t=m.querySelector('.ce-tipo');const g=capChips(t,['Paciente','No paciente'],'Paciente');t.addEventListener('cambio',()=>{esPac=g()!=='No paciente';pintaQ();});}
   pintaQ();
-  // Horario: atajos (mañana/mediodía/tarde) o desde-hasta exacto
+  // Franjas: cada una con sus días y su horario (atajos mañana/mediodía/tarde o desde-hasta exacto)
   const HS=[];for(let h=7;h<=22;h++){HS.push(String(h).padStart(2,'0')+':00');if(h<22)HS.push(String(h).padStart(2,'0')+':30');}
-  // Botones con selector de horas propio (el desplegable del navegador sale sin estilo)
-  const mkH=(el,ops)=>{let v='';const pinta=()=>{el.innerHTML=`<span>${v||'Cuando sea'}</span><i>▾</i>`;el.classList.toggle('vac',!v);};
-   Object.defineProperty(el,'value',{get:()=>v,set:x=>{v=x||'';pinta();}});pinta();
-   el.onclick=()=>horaPicker(el,v,ops,x=>{v=x;pinta();el.onchange&&el.onchange();});return el;};
-  const hd=mkH(m.querySelector('.ce-hd'),HS.slice(0,-1)),hh=mkH(m.querySelector('.ce-hh'),HS.slice(1));
-  {const r=capHor(x);if(r){hd.value=r.d;hh.value=r.h;}else if((x.franja||[]).length){const ix=x.franja.map(f=>CAP_FRANJA.indexOf(f)).filter(i=>i>=0).sort();const R=[['','13:00'],['13:00','16:00'],['16:00','']];if(ix.length&&ix.every((v,k)=>!k||v===ix[k-1]+1)){hd.value=R[ix[0]][0];hh.value=R[ix[ix.length-1]][1];}}}
-  const ATJ=[['Cualquier hora','',''],['Mañanas','','13:00'],['Mediodía','13:00','16:00'],['Tardes','16:00','']],fr=m.querySelector('.ce-frr');
-  const pAtj=()=>fr.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',ATJ[i][1]===hd.value&&ATJ[i][2]===hh.value));
-  fr.innerHTML=ATJ.map(a=>`<button type="button">${a[0]}</button>`).join('');fr.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>{hd.value=ATJ[i][1];hh.value=ATJ[i][2];pAtj();});
-  hd.onchange=hh.onchange=()=>{if(hd.value&&hh.value&&hh.value<=hd.value){hh.value='';toast('«Hasta» tiene que ser después de «Desde»',false);}pAtj();};pAtj();
+  const ATJ=[['Todo el día','',''],['Mañanas','','13:00'],['Mediodía','13:00','16:00'],['Tardes','16:00','']];
+  let T=capTramos(x).map(t=>({dias:[...t.dias],d:t.d,h:t.h}));
+  const trs=m.querySelector('.ce-trs');
+  const pintaT=()=>{trs.innerHTML=T.map((t,k)=>`<div class="ce-tr" data-k="${k}">${T.length>1?`<div class="ce-trh"><b>Franja ${k+1}</b><button type="button" class="ce-trx" aria-label="Quitar">✕</button></div>`:''}
+    <div class="ce-trd">${CAP_DIAS.map(d=>`<button type="button" data-d="${d}" class="${t.dias.includes(d)?'on':''}">${d.slice(0,3)}</button>`).join('')}</div>
+    <div class="ce-tra">${ATJ.map((a,i)=>`<button type="button" data-i="${i}" class="${a[1]===t.d&&a[2]===t.h?'on':''}">${a[0]}</button>`).join('')}</div>
+    <div class="ce-hr"><label><span>Desde</span><button type="button" class="ag-in ce-hb" data-c="d"><span>${t.d||'Cuando sea'}</span><i>▾</i></button></label><label><span>Hasta</span><button type="button" class="ag-in ce-hb" data-c="h"><span>${t.h||'Cuando sea'}</span><i>▾</i></button></label></div>
+    <small class="ce-trt">${t.dias.length?'':'Todos los días · '}${escH(capRangoTxt(t))}</small></div>`).join('');
+   trs.querySelectorAll('.ce-tr').forEach(el=>{const t=T[+el.dataset.k];
+    el.querySelectorAll('.ce-trd button').forEach(b=>b.onclick=()=>{const d=b.dataset.d;t.dias=t.dias.includes(d)?t.dias.filter(z=>z!==d):CAP_DIAS.filter(z=>z===d||t.dias.includes(z));mantenScroll(pintaT);});
+    el.querySelectorAll('.ce-tra button').forEach(b=>b.onclick=()=>{const a=ATJ[+b.dataset.i];t.d=a[1];t.h=a[2];mantenScroll(pintaT);});
+    el.querySelectorAll('.ce-hb').forEach(b=>b.onclick=()=>{const c=b.dataset.c;horaPicker(b,t[c],c==='d'?HS.slice(0,-1):HS.slice(1),v=>{t[c]=v;if(t.d&&t.h&&t.h<=t.d){t.h='';toast('«Hasta» tiene que ser después de «Desde»',false);}mantenScroll(pintaT);});});
+    const xx=el.querySelector('.ce-trx');if(xx)xx.onclick=()=>{T.splice(+el.dataset.k,1);mantenScroll(pintaT);};});};
+  m.querySelector('.ce-addt').onclick=()=>{T.push({dias:[],d:'',h:''});mantenScroll(pintaT);};pintaT();
+  const gD=()=>T.some(t=>!t.dias.length)?[]:CAP_DIAS.filter(d=>T.some(t=>t.dias.includes(d)));
+  const gH=()=>T.length===1?(T[0].d||T[0].h?`${T[0].d}-${T[0].h}`:''):T.map(t=>`${t.dias.join(',')}=${t.d}-${t.h}`).join('|');
   const gF=()=>[];
-  const gD=capChips(m.querySelector('.ce-dias'),CAP_DIAS,x.dias,true),gFi=capChips(m.querySelector('.ce-fi'),fis,fis.find(f=>f.toLowerCase()===String(x.fisio||'').toLowerCase())||'');
+  const gFi=capChips(m.querySelector('.ce-fi'),fis,fis.find(f=>f.toLowerCase()===String(x.fisio||'').toLowerCase())||'');
   const gE=x.id?capChips(m.querySelector('.ce-est'),['ESPERANDO','CITADO','YA NO'],x.estado,false,CAP_EST):null;
-  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;const c={dias:gD(),franja:gF(),horario:hd.value||hh.value?`${hd.value}-${hh.value}`:'',fisio:gFi(),nota:m.querySelector('.ce-nota').value.trim()};if(gE)c.estado=gE();else c.estado='ESPERANDO';
+  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;const c={dias:gD(),franja:gF(),horario:gH(),fisio:gFi(),nota:m.querySelector('.ce-nota').value.trim()};if(gE)c.estado=gE();else c.estado='ESPERANDO';
    let tabla=x.tabla;if(!x.id){tabla=esPac?'esperaP':'esperaN';}
    if(tabla==='esperaP'){if(!pac){toast('Elige el paciente',false);return;}c.pacienteId=pac.id;}else{c.nombre=(m.querySelector('.ce-nom')||{}).value||'';c.tel=(m.querySelector('.ce-tel')||{}).value||'';if(!c.nombre.trim()){toast('Pon el nombre',false);return;}}
    b.disabled=true;try{await capGuardar(tabla,c,x.id);toast('Guardado',true);m.remove();recargar();}catch(err){b.disabled=false;toast(err.message,false);}};
