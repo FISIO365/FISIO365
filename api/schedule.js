@@ -1022,7 +1022,8 @@ module.exports = async function handler(req, res) {
       // En la original: LEÍDO {nombre: fecha} (última vez que cada uno abrió el hilo) y HECHO {nombre: fecha} (quién ha confirmado/resuelto).
       if (action.startsWith('seg-com-')) {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
-        const COM = 'tbl2qRD3WsvQVPrwX', TIPOS_C = ['Comunicado', 'Solicitud', 'Informe', 'Aviso', 'Ausencia'];
+        const COM = 'tbl2qRD3WsvQVPrwX', TIPOS_C = ['Comunicado', 'Solicitud', 'Informe', 'Aviso', 'Ausencia', 'Tareas', 'Incidencia', 'Ayuda'];
+        const CAT_INC = ['Comportamiento', 'Puntualidad', 'Calidad del trabajo', 'Material o instalaciones', 'Otro'], URG_AY = ['Hoy', 'Esta semana', 'Cuando se pueda'];
         // Solicitudes de ausencia (vacaciones, día libre, horas libres, cambio de horario): las aprueba Nora o Ramiro
         const QUE_AUS = ['Vacaciones', 'Día libre', 'Horas libres', 'Cambio de horario'], APRUEBAN_C = ['Nora', 'Ramiro'];
         const pilaC = s => { const p = String(s || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
@@ -1051,12 +1052,13 @@ module.exports = async function handler(req, res) {
           const tipo = nmC(F.TIPO) || 'Comunicado', esAus = tipo === 'Ausencia', resolucion = esAus ? (nmC(F['RESOLUCIÓN']) || 'Pendiente') : '';
           const puedeAprobar = esAus && abierta && resolucion === 'Pendiente' && aprueban.includes(yo) && de !== yo;
           return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo, de, para, req, limite: F['FECHA LÍMITE'] || '', abierta,
-            num: F['Nº'] ? `COM-${String(msgs[0].fecha || '').slice(0, 4)}-${String(F['Nº']).padStart(4, '0')}` : '', ausencia: esAus ? json(F.AUSENCIA) : null, resolucion, resueltaPor: F['RESUELTA POR'] || '', puedeAprobar,
+            num: F['Nº'] ? `COM-${String(msgs[0].fecha || '').slice(0, 4)}-${String(F['Nº']).padStart(4, '0')}` : '', ausencia: esAus ? json(F.AUSENCIA) : null, datos: json(F.DATOS), resolucion, resueltaPor: F['RESUELTA POR'] || '', puedeAprobar,
             fecha: msgs[0].fecha, ultima: ult.fecha, ultimoDe: ult.de, nResp: resp.length, extracto: String(ult.cuerpo || '').replace(/\s+/g, ' ').slice(0, 140),
             leido, hecho, faltan,
             noLeido: ult.de !== yo && (!leido[yo] || leido[yo] < ult.fecha),
             pendienteMio: esAus ? puedeAprobar : abierta && para.includes(yo) && !hecho[yo],
-            esperando: esAus ? (de === yo && abierta && resolucion === 'Pendiente') : abierta && de === yo && faltan.length > 0,
+            puedeGestionar: abierta && ((tipo === 'Incidencia' && para.includes(yo)) || (tipo === 'Ayuda' && (para.includes(yo) && !json(F.DATOS).encargado || json(F.DATOS).encargado === yo || de === yo))),
+            esperando: esAus ? (de === yo && abierta && resolucion === 'Pendiente') : abierta && de === yo && (faltan.length > 0 || tipo === 'Ayuda'),
             msgs };
         };
         const cargar = async () => {
@@ -1120,6 +1122,72 @@ module.exports = async function handler(req, res) {
           const d = await at(`${COM}/${root.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RESOLUCIÓN': q.aprobar ? 'Aprobada' : 'Rechazada', 'RESUELTA POR': yo, ESTADO: 'Cerrada', HECHO: JSON.stringify(hc), 'LEÍDO': JSON.stringify(le) } }) });
           return res.status(200).json({ ok: !d.error, error: d.error ? 'No se ha podido guardar' : undefined });
         }
+        if (action === 'seg-com-enviar' && ['Tareas', 'Incidencia', 'Ayuda'].includes(q.tipo)) {
+          const tipo = q.tipo, cuerpo = String(q.cuerpo || '').trim().slice(0, 20000);
+          let para = [...new Set((Array.isArray(q.para) ? q.para : []).map(pilaC))].filter(p => equipo.includes(p) && p !== yo), datos = {}, asunto = String(q.asunto || '').trim().slice(0, 140);
+          if (tipo === 'Tareas') {
+            const items = (Array.isArray(q.items) ? q.items : []).map(t => String(t || '').trim().slice(0, 200)).filter(Boolean).slice(0, 40);
+            if (!items.length) return res.status(400).json({ ok: false, error: 'Añade al menos una tarea' });
+            if (!asunto) asunto = items.length === 1 ? items[0] : `${items.length} tareas`;
+            datos = { items: items.map(t => ({ t, por: '', en: '' })) };
+          } else if (tipo === 'Incidencia') {
+            para = aprueban.filter(n => n !== yo);
+            if (!para.length) return res.status(400).json({ ok: false, error: 'No hay nadie de dirección a quien enviarlo' });
+            const cat = CAT_INC.includes(q.cat) ? q.cat : 'Otro';
+            datos = { cat, sobre: [...new Set((Array.isArray(q.sobre) ? q.sobre : []).map(pilaC))].filter(p => equipo.includes(p)) };
+            if (!cuerpo) return res.status(400).json({ ok: false, error: 'Cuenta lo que ha pasado' });
+            if (!asunto) asunto = cat + (datos.sobre.length ? ' · ' + datos.sobre.join(', ') : '');
+          } else {
+            datos = { urg: URG_AY.includes(q.urg) ? q.urg : 'Cuando se pueda', encargado: '', en: '' };
+            if (!asunto) return res.status(400).json({ ok: false, error: 'Di con qué necesitas ayuda' });
+          }
+          if (!para.length) return res.status(400).json({ ok: false, error: 'Elige a quién se la envías' });
+          const limite = /^\d{4}-\d{2}-\d{2}$/.test(q.limite || '') ? q.limite : null;
+          const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: asunto, TIPO: tipo, DE: yo, PARA: para.join(', '), CUERPO: cuerpo, FECHA: ahora,
+            'REQUIERE ACCIÓN': true, 'FECHA LÍMITE': tipo === 'Tareas' ? limite : null, DATOS: JSON.stringify(datos), 'LEÍDO': JSON.stringify({ [yo]: ahora }), HECHO: '{}', ESTADO: 'Abierta' } }], typecast: true }) });
+          if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' });
+          return res.status(200).json({ ok: true, id: d.records[0].id });
+        }
+        // Tareas: marcar / desmarcar una. Cuando están todas, la carta queda hecha y se cierra
+        if (action === 'seg-com-tarea') {
+          const root = await buscar(q.id), F = root.fields, para0 = listaPara(F.PARA);
+          if (nmC(F.TIPO) !== 'Tareas') return res.status(400).json({ ok: false, error: 'No es una lista de tareas' });
+          if (F.DE !== yo && !para0.includes(yo)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
+          const D = json(F.DATOS), it = (D.items || [])[Number(q.idx)];
+          if (!it) return res.status(400).json({ ok: false, error: 'Tarea no válida' });
+          if (q.hecho) { it.por = yo; it.en = ahora; } else { it.por = ''; it.en = ''; }
+          const todas = D.items.every(x => x.por), hc = {}; if (todas) para0.forEach(p => { hc[p] = ahora; });
+          const le = json(F['LEÍDO']); le[yo] = ahora;
+          const d = await at(`${COM}/${root.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { DATOS: JSON.stringify(D), HECHO: JSON.stringify(todas ? hc : {}), ESTADO: todas ? 'Cerrada' : 'Abierta', 'LEÍDO': JSON.stringify(le) } }) });
+          return res.status(200).json({ ok: !d.error, todas, error: d.error ? 'No se ha podido guardar' : undefined });
+        }
+        // Para dirección: marcarla como gestionada (basta con uno de dirección). Ayuda: «Me encargo» y «Resuelta»
+        if (action === 'seg-com-gestion') {
+          const root = await buscar(q.id), F = root.fields, para0 = listaPara(F.PARA), tipo = nmC(F.TIPO), D = json(F.DATOS), coment = String(q.comentario || '').trim().slice(0, 5000);
+          const otros = [...new Set([F.DE, ...para0])].filter(p => p && p !== yo);
+          const nota = async t => { await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: 'RE: ' + (F.ASUNTO || ''), HILO: root.id, DE: yo, PARA: otros.join(', '), CUERPO: t + (coment ? '\n\n' + coment : ''), FECHA: ahora } }] }) }); };
+          const le = json(F['LEÍDO']); le[yo] = ahora;
+          let fields;
+          if (tipo === 'Incidencia') {
+            if (!para0.includes(yo)) return res.status(403).json({ ok: false, error: 'Solo dirección puede gestionarla' });
+            const hc = {}; para0.forEach(p => { hc[p] = ahora; });
+            await nota(`✓ Gestionada por ${yo}.`);
+            fields = { HECHO: JSON.stringify(hc), ESTADO: 'Cerrada', 'RESUELTA POR': yo };
+          } else if (tipo === 'Ayuda' && q.accion === 'encargo') {
+            if (!para0.includes(yo)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
+            if (D.encargado && D.encargado !== yo) return res.status(400).json({ ok: false, error: `Ya se encarga ${D.encargado}` });
+            D.encargado = yo; D.en = ahora; const hc = {}; para0.filter(p => p !== yo).forEach(p => { hc[p] = ahora; });
+            await nota(`🙋 Me encargo yo.`);
+            fields = { DATOS: JSON.stringify(D), HECHO: JSON.stringify(hc) };
+          } else if (tipo === 'Ayuda' && q.accion === 'resuelta') {
+            if (F.DE !== yo && D.encargado !== yo) return res.status(403).json({ ok: false, error: 'La marca como resuelta quien la pidió o quien se encarga' });
+            const hc = {}; para0.forEach(p => { hc[p] = ahora; });
+            await nota(`✓ Resuelta.`);
+            fields = { HECHO: JSON.stringify(hc), ESTADO: 'Cerrada', 'RESUELTA POR': yo };
+          } else return res.status(400).json({ ok: false, error: 'Acción no válida' });
+          const d = await at(`${COM}/${root.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ...fields, 'LEÍDO': JSON.stringify(le) } }) });
+          return res.status(200).json({ ok: !d.error, error: d.error ? 'No se ha podido guardar' : undefined });
+        }
         if (action === 'seg-com-enviar') {
           const asunto = String(q.asunto || '').trim().slice(0, 140), cuerpo = String(q.cuerpo || '').trim().slice(0, 20000);
           const para = [...new Set((Array.isArray(q.para) ? q.para : []).map(pilaC))].filter(p => equipo.includes(p) && p !== yo);
@@ -1141,14 +1209,14 @@ module.exports = async function handler(req, res) {
             const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: 'RE: ' + (F.ASUNTO || ''), HILO: root.id, DE: yo, PARA: otros.join(', '), CUERPO: cuerpo, FECHA: ahora } }] }) });
             if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' }); }
           await marcar(root, 'LEÍDO');
-          if (q.hecho && para0.includes(yo) && nmC(F.TIPO) !== 'Ausencia') { const hc = json(root.fields.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
+          if (q.hecho && para0.includes(yo) && !['Ausencia', 'Tareas', 'Incidencia', 'Ayuda'].includes(nmC(F.TIPO))) { const hc = json(root.fields.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
             await marcar(root, 'HECHO', todos && F['REQUIERE ACCIÓN'] ? { ESTADO: 'Cerrada' } : null); }
           return res.status(200).json({ ok: true });
         }
         if (action === 'seg-com-hecho') {
           const root = await buscar(q.id), F = root.fields, para0 = listaPara(F.PARA);
           if (!para0.includes(yo)) return res.status(403).json({ ok: false, error: 'Solo quien la recibe puede confirmarla' });
-          if (nmC(F.TIPO) === 'Ausencia') return res.status(400).json({ ok: false, error: 'Esta se aprueba o se rechaza' });
+          if (['Ausencia', 'Tareas', 'Incidencia', 'Ayuda'].includes(nmC(F.TIPO))) return res.status(400).json({ ok: false, error: 'Esta se gestiona con sus propios botones' });
           const hc = json(F.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
           await marcar(root, 'HECHO', todos && F['REQUIERE ACCIÓN'] ? { ESTADO: 'Cerrada' } : null);
           return res.status(200).json({ ok: true });

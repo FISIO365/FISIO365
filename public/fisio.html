@@ -926,6 +926,17 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-dl{margin:16px 0 18px;gap:7px 16px}.com-dl dd,.com-dl dd.as{font-size:15px;font-weight:600}
 .com-pie{display:flex;flex-direction:column;align-items:center;gap:3px}.com-pie .com-logo{font-size:13px;font-weight:800;color:#c2552e}.com-pie .com-logo span{color:#1a1a1a}
 .cs-sello svg{position:static!important;fill:none!important;width:15px!important;height:15px!important;stroke-width:1.9!important}
+.com-conf{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#8a4fa3;background:#f1e8f5;border-radius:99px;padding:4px 11px;margin:0 0 12px}.com-conf svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.com-tareas{border:1px solid #efe8e1;border-radius:16px;overflow:hidden;margin:4px 0 18px}
+.com-tareas-h{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#faf7f4;border-bottom:1px solid #efe8e1}.com-tareas-h b{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9b8b80}.com-tareas-h span{font-size:12.5px;font-weight:700;color:#3460b0}
+.com-ta{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;text-align:left;font-family:var(--font);background:#fff;border:none;border-bottom:1px solid #f3ede7;padding:12px 14px;cursor:pointer;color:#1a1a1a}.com-ta:last-child{border-bottom:none}.com-ta:disabled{cursor:default}
+.com-ta-c{flex:none;width:22px;height:22px;border-radius:7px;border:1.6px solid #cbbcb0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.com-ta.on .com-ta-c{background:#3460b0;border-color:#3460b0}.com-ta-c svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.com-ta-c svg rect{display:none}
+.com-ta-t{flex:1;min-width:0;font-size:14.5px;font-weight:500;word-break:break-word}.com-ta.on .com-ta-t{color:#9b8b80;text-decoration:line-through}.com-ta-t small{display:block;font-size:11.5px;color:#a89a90;text-decoration:none;margin-top:1px}
+.com-tl{display:flex;flex-direction:column;gap:8px}.com-tl-it{display:flex;align-items:center;gap:10px}.com-tl-c{flex:none;width:18px;height:18px;border-radius:6px;border:1.6px solid #cbbcb0}.com-tl-it .com-in{flex:1;padding:10px 12px}
+.com-tl-x{flex:none;width:30px;height:30px;border:none;border-radius:50%;background:#f3efea;color:#7d6a60;cursor:pointer;font-size:12px}
+.com-tl-add{margin-top:8px;font-family:var(--font);font-size:13.5px;font-weight:600;color:#c2552e;background:none;border:none;padding:6px 0;cursor:pointer}
+.com-a-para b{color:#1a1a1a}
 /* Móvil: barra de pestañas abajo en vez de la lateral */
 @media(max-width:768px){
  .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:24px!important;right:24px!important;border-radius:26px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
@@ -6139,9 +6150,10 @@ function agAbrirHueco(c,onDone){
 // De momento solo la ve quien esté en COM_USUARIOS (por el nombre de pila). Para abrirla a todos: COM_USUARIOS=null
 const COM_USUARIOS=['nora','ramiro'];
 const comVe=()=>!!fisioActual&&(!COM_USUARIOS||COM_USUARIOS.includes(String(fisioActual.nombre||'').trim().split(' ')[0].toLowerCase()));
-const COM_TIPOS=['Comunicado','Solicitud','Informe','Aviso','Ausencia'];
+const COM_TIPOS=['Comunicado','Informe','Aviso','Solicitud','Tareas','Ayuda','Incidencia','Ausencia'];
+const COM_CAT_INC=['Comportamiento','Puntualidad','Calidad del trabajo','Material o instalaciones','Otro'];
 const COM_APRUEBAN=['Nora','Ramiro']; // quién aprueba vacaciones, días libres y cambios de horario
-const comTipoTxt=t=>t==='Ausencia'?'Vacaciones y horarios':t;
+const comTipoTxt=t=>({Ausencia:'Vacaciones y horarios',Incidencia:'Para dirección',Ayuda:'Necesito ayuda'})[t]||t;
 const comRol=n=>COM_APRUEBAN.includes(n)?'Dirección · FISIO365':'Fisioterapeuta · FISIO365';
 const comFechaDia=f=>{if(!f)return '';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][t.getMonth()];};
 const comFechaCarta=iso=>iso?new Date(iso).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Madrid'}):'';
@@ -6172,11 +6184,14 @@ const COM_IC={
  pregunta:'<path d="M20 11.5a8 8 0 0 1-11.6 7.1L4 20l1.4-4.2A8 8 0 1 1 20 11.5z"/><path d="M10 9.5a2.2 2.2 0 1 1 3 2c-.6.3-1 .8-1 1.4M12 15.6v.01"/>',
  campana:'<path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 8 2.5 8h-17S6 15 6 9"/><path d="M10.3 20.5a1.9 1.9 0 0 0 3.4 0"/>',
  megafono:'<path d="M3.5 10.5v3a1 1 0 0 0 1 1H7l7 4.5v-14L7 9.5H4.5a1 1 0 0 0-1 1z"/><path d="M18 9a4 4 0 0 1 0 6"/>',
+ check:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="m8 12 3 3 5-6"/>',
+ candado:'<rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2"/>',
+ salvavidas:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="m6 6 3.5 3.5M18 6l-3.5 3.5M6 18l3.5-3.5M18 18l-3.5-3.5"/>',
  sobre:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
  lapiz:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'};
 const comIco=(k,c)=>`<svg viewBox="0 0 24 24"${c?` class="${c}"`:''}>${COM_IC[k]||''}</svg>`;
 // Sello de cada tipo: color + icono
-const comSelloDe=h=>{const q=(h.ausencia&&h.ausencia.que)||'';return h.tipo==='Ausencia'?(/Vacaciones|Día libre/.test(q)?['#e3f2e8','#2f7a52','sol']:['#ede9f7','#6b5fb5','reloj']):({Informe:['#e4ebf3','#1e2a38','doc'],Solicitud:['#fdebe1','#c2552e','pregunta'],Aviso:['#fbf0d9','#b07a1e','campana'],Comunicado:['#f3ede7','#7d6a60','megafono']})[h.tipo]||['#f3ede7','#7d6a60','megafono'];};
+const comSelloDe=h=>{const q=(h.ausencia&&h.ausencia.que)||'';return h.tipo==='Ausencia'?(/Vacaciones|Día libre/.test(q)?['#e3f2e8','#2f7a52','sol']:['#ede9f7','#6b5fb5','reloj']):({Tareas:['#e6eefb','#3460b0','check'],Incidencia:['#f1e8f5','#8a4fa3','candado'],Ayuda:['#e2f3f4','#1f7a80','salvavidas'],Informe:['#e4ebf3','#1e2a38','doc'],Solicitud:['#fdebe1','#c2552e','pregunta'],Aviso:['#fbf0d9','#b07a1e','campana'],Comunicado:['#f3ede7','#7d6a60','megafono']})[h.tipo]||['#f3ede7','#7d6a60','megafono'];};
 const comSello=h=>{const [bg,c,i]=comSelloDe(h);return `<i class="com-st" style="background:${bg}"><svg viewBox="0 0 24 24" style="stroke:${c}">${COM_IC[i]}</svg></i>`;};
 // Sobrecito: cerrado con lacre si está sin abrir; abierto con la carta asomando si ya se ha leído
 function comMini(h,cerrado){
@@ -6215,7 +6230,11 @@ function renderCom(wrap){
   box.querySelectorAll('.com-cs').forEach(b=>b.onclick=()=>comNueva(()=>{COM.tab='env';comGuarda();pinta(true);},b.dataset.p==='*'?otros.slice():[b.dataset.p]));
   box.querySelectorAll('.com-tabs i').forEach(i=>{const v=i.dataset.n==='rec'?n:nPen;i.textContent=v||'';i.style.display=v?'':'none';});
   const deQuien=h=>true;
-  const est=h=>{const env=h.de===yo;if(h.tipo==='Ausencia')return h.resolucion==='Aprobada'?['ok','Aprobada']:h.resolucion==='Rechazada'?['rojo','Rechazada']:!h.abierta?['gris','Retirada']:['nar',h.puedeAprobar?'Por aprobar':'Pendiente'];
+  const est=h=>{const env=h.de===yo,D=h.datos||{};
+   if(h.tipo==='Tareas'){const it=D.items||[],n=it.filter(x=>x.por).length;return [n===it.length?'ok':'nar',`${n}/${it.length} hechas`];}
+   if(h.tipo==='Incidencia')return h.abierta?['nar',env?'Enviado':'Por gestionar']:['ok','Gestionada'];
+   if(h.tipo==='Ayuda')return !h.abierta?['ok','Resuelta']:D.encargado?['ok',D.encargado===yo?'Te encargas':'Con '+D.encargado]:['nar',env?'Buscando ayuda':'Pide ayuda'];
+   if(h.tipo==='Ausencia')return h.resolucion==='Aprobada'?['ok','Aprobada']:h.resolucion==='Rechazada'?['rojo','Rechazada']:!h.abierta?['gris','Retirada']:['nar',h.puedeAprobar?'Por aprobar':'Pendiente'];
    const hechos=h.para.filter(p=>h.hecho[p]).length,todos=hechos===h.para.length;
    if(!h.req)return env?[todos?'ok':'gris',`Conforme ${hechos}/${h.para.length}`]:h.hecho[yo]?['ok','Conforme']:['nar','Por confirmar'];
    if(!h.abierta)return ['gris','Cerrada'];
@@ -6259,32 +6278,40 @@ async function comHilo(wrap,id){
  box.querySelector('.com-volver').onclick=volver;
  const r=await comPost('seg-com-hilo',{id}).catch(e=>({ok:false,error:e.message}));if(!box.isConnected)return;
  if(!r.ok){box.innerHTML=`<button type="button" class="com-volver">‹ Volver</button><div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido abrir')}</div></div>`;box.querySelector('.com-volver').onclick=volver;return;}
- const h=r.hilo,yo=r.yo,env=h.de===yo,esAus=h.tipo==='Ausencia',miPend=!esAus&&h.pendienteMio;
+ const h=r.hilo,yo=r.yo,env=h.de===yo,esAus=h.tipo==='Ausencia',D=h.datos||{},esp=['Tareas','Incidencia','Ayuda'].includes(h.tipo),miPend=!esAus&&!esp&&h.pendienteMio;
  if(COM.d){const i=COM.d.hilos.findIndex(x=>x.id===h.id);if(i>=0){const{msgs,...s}=h;COM.d.hilos[i]=s;}comContar(COM.d);}
  const est=p=>esAus?(h.leido[p]?`<span class="com-pill gris">Leída · ${escH(comFecha(h.leido[p]))}</span>`:'<span class="com-pill gris">Sin leer</span>')
-  :h.hecho[p]?`<span class="com-pill ok">${h.req?'Hecha':'Conforme'} · ${escH(comFecha(h.hecho[p]))}</span>`:h.leido[p]?`<span class="com-pill gris">Leída · ${escH(comFecha(h.leido[p]))}</span>`:'<span class="com-pill gris">Sin leer</span>';
+  :h.hecho[p]&&!esp?`<span class="com-pill ok">${h.req?'Hecha':'Conforme'} · ${escH(comFecha(h.hecho[p]))}</span>`:h.leido[p]?`<span class="com-pill gris">Leída · ${escH(comFecha(h.leido[p]))}</span>`:'<span class="com-pill gris">Sin leer</span>';
  const [m0,...resp]=h.msgs;
  const sello=esAus&&h.resolucion!=='Pendiente'?`<div class="com-sello ${h.resolucion==='Aprobada'?'ok':'no'}"><b>${escH(h.resolucion.toUpperCase())}</b><span>${escH(h.resueltaPor)}</span></div>`:'';
  const A=h.ausencia||{};
  const ficha=esAus?`<div class="com-ficha"><div><span>Qué pide</span><b>${escH(A.que||'')}</b></div><div><span>${A.hasta&&A.hasta!==A.desde?'Fechas':'Fecha'}</span><b>${escH(comFechaDia(A.desde))}${A.hasta&&A.hasta!==A.desde?' → '+escH(comFechaDia(A.hasta)):''}</b></div>${A.hd?`<div><span>${A.que==='Cambio de horario'?'Trabajaría':'No estaría'}</span><b>de ${escH(A.hd)} a ${escH(A.hh)}</b></div>`:''}</div>`:'';
+ const fichaEsp=h.tipo==='Incidencia'?`<div class="com-conf">${comIco('candado')}Confidencial · solo dirección</div><div class="com-ficha"><div><span>Tema</span><b>${escH(D.cat||'')}</b></div>${(D.sobre||[]).length?`<div><span>Sobre</span><b>${escH(comLista(D.sobre))}</b></div>`:''}${!h.abierta?`<div><span>Estado</span><b>Gestionada · ${escH(h.resueltaPor)}</b></div>`:''}</div>`
+  :h.tipo==='Ayuda'?`<div class="com-ficha"><div><span>Para cuándo</span><b>${escH(D.urg||'')}</b></div><div><span>Se encarga</span><b>${escH(D.encargado||'Nadie todavía')}</b></div>${!h.abierta?'<div><span>Estado</span><b>Resuelta</b></div>':''}</div>`
+  :h.tipo==='Tareas'?`<div class="com-tareas"><div class="com-tareas-h"><b>Tareas</b><span>${(D.items||[]).filter(x=>x.por).length}/${(D.items||[]).length}</span></div>${(D.items||[]).map((x,i)=>`<button type="button" class="com-ta${x.por?' on':''}" data-ti="${i}"${env||h.para.includes(yo)?'':' disabled'}><span class="com-ta-c">${x.por?comIco('check'):''}</span><span class="com-ta-t">${escH(x.t)}${x.por?`<small>${escH(x.por)} · ${escH(comFecha(x.en))}</small>`:''}</span></button>`).join('')}</div>`:'';
  const firma=n=>`<div class="com-firma"><span>Atentamente,</span><b>${escH(n)}</b><small>${escH(comRol(n))}</small></div>`;
  box.innerHTML=`<button type="button" class="com-volver">‹ Volver</button>
   <article class="com-carta">
    <header class="com-cab2"><div><b>${escH(comTipoTxt(h.tipo))}${h.num?` · ${escH(h.num)}`:''}</b><span>Barcelona, ${escH(comFechaCarta(h.fecha))}</span></div><span class="com-sello2">${comSello(h)}</span></header>
-   <div class="com-tags">${esAus?'':h.req?`<span class="com-pill ${h.abierta?'nar':'gris'}">${h.abierta?'Requiere acción':'Cerrada'}</span>`:(!h.abierta?'<span class="com-pill gris">Cerrada</span>':'')}${h.limite?`<span class="com-pill ${h.abierta&&h.limite<agHoyIso()?'rojo':'gris'}">Límite ${comLim(h.limite)}</span>`:''}</div>
+   <div class="com-tags">${esAus||esp?'':h.req?`<span class="com-pill ${h.abierta?'nar':'gris'}">${h.abierta?'Requiere acción':'Cerrada'}</span>`:(!h.abierta?'<span class="com-pill gris">Cerrada</span>':'')}${h.limite?`<span class="com-pill ${h.abierta&&h.limite<agHoyIso()?'rojo':'gris'}">Límite ${comLim(h.limite)}</span>`:''}</div>
    <dl class="com-dl"><dt>De</dt><dd>${escH(h.de)}</dd><dt>Para</dt><dd>${escH(comLista(h.para))}</dd><dt>Asunto</dt><dd class="as">${escH(esAus?'Solicitud de '+String(A.que||'ausencia').toLowerCase():h.asunto)}</dd></dl>
-   ${sello}${ficha}
-   <div class="com-cu">${escH(m0.cuerpo)}</div>
+   ${sello}${ficha}${h.tipo==='Tareas'?'':fichaEsp}
+   ${m0.cuerpo?`<div class="com-cu">${escH(m0.cuerpo)}</div>`:''}${h.tipo==='Tareas'?fichaEsp:''}
    ${firma(m0.de)}
    <footer class="com-pie"><span class="com-logo"><span>FISIO</span>365</span>Fourth Dynamic, S.L. · Gran de Sant Andreu 163, Barcelona</footer>
   </article>
-  ${resp.map(m=>{const t=String(m.cuerpo||''),ap=/^✓ Aprobada/.test(t),re=/^✗ Rechazada/.test(t);return `<article class="com-carta com-r${m.de===yo?' mio':''}${ap?' ap':re?' re':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>Respuesta · ${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${escH(t)}</div></article>`;}).join('')}
+  ${resp.map(m=>{const t=String(m.cuerpo||''),ap=/^✓ (Aprobada|Gestionada|Resuelta)/.test(t),re=/^✗ Rechazada/.test(t);return `<article class="com-carta com-r${m.de===yo?' mio':''}${ap?' ap':re?' re':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>Respuesta · ${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${escH(t)}</div></article>`;}).join('')}
   <div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>
-  <div class="com-card com-resp${env&&!resp.some(m=>m.de!==yo)&&!h.puedeAprobar?' plegada':''}"><button type="button" class="com-anadir">+ Añadir algo a esta carta</button>${h.puedeAprobar?'<div class="com-apr">Solicitud pendiente de tu aprobación. Al aprobarla se apunta en Administración y se bloquean sus huecos en la agenda.</div>':''}<textarea rows="${h.puedeAprobar?3:4}" placeholder="${h.puedeAprobar?'Comentario (opcional)…':env&&!resp.some(m=>m.de!==yo)?'Añade algo a tu carta…':'Escribe tu respuesta…'}"></textarea>
-   <div class="com-bts">${h.puedeAprobar?'<button type="button" class="com-b sec" data-a="rech">Rechazar</button><button type="button" class="com-b" data-a="apr">Aprobar</button>':`${miPend?`<button type="button" class="com-b sec" data-a="hecho">${h.req?'Marcar como hecha':'✓ Recibido y conforme'}</button>`:''}<button type="button" class="com-b" data-a="resp">${miPend&&h.req?'Responder y marcar hecha':'Responder'}</button>`}</div>
+  <div class="com-card com-resp${env&&!resp.some(m=>m.de!==yo)&&!h.puedeAprobar?' plegada':''}"><button type="button" class="com-anadir">+ Añadir algo a esta carta</button>${h.puedeAprobar?'<div class="com-apr">Solicitud pendiente de tu aprobación. Al aprobarla se apunta en Administración y se bloquean sus huecos en la agenda.</div>':''}<textarea rows="${h.puedeAprobar?3:4}" placeholder="${h.puedeAprobar||(h.tipo==='Incidencia'&&h.puedeGestionar)?'Comentario (opcional)…':env&&!resp.some(m=>m.de!==yo)?'Añade algo a tu carta…':'Escribe tu respuesta…'}"></textarea>
+   <div class="com-bts">${esp?(h.tipo==='Incidencia'&&h.puedeGestionar?'<button type="button" class="com-b sec" data-a="resp">Responder</button><button type="button" class="com-b" data-a="gest">Marcar como gestionada</button>'
+     :h.tipo==='Ayuda'&&h.abierta&&!D.encargado&&h.para.includes(yo)?'<button type="button" class="com-b sec" data-a="resp">Responder</button><button type="button" class="com-b" data-a="encargo">🙋 Me encargo</button>'
+     :h.tipo==='Ayuda'&&h.abierta&&(D.encargado===yo||env)?'<button type="button" class="com-b sec" data-a="resp">Responder</button><button type="button" class="com-b" data-a="resuelta">✓ Resuelta</button>'
+     :'<button type="button" class="com-b" data-a="resp">Responder</button>'):h.puedeAprobar?'<button type="button" class="com-b sec" data-a="rech">Rechazar</button><button type="button" class="com-b" data-a="apr">Aprobar</button>':`${miPend?`<button type="button" class="com-b sec" data-a="hecho">${h.req?'Marcar como hecha':'✓ Recibido y conforme'}</button>`:''}<button type="button" class="com-b" data-a="resp">${miPend&&h.req?'Responder y marcar hecha':'Responder'}</button>`}</div>
    ${env?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}</div>`;
  box.querySelector('.com-volver').onclick=volver;
  const ta=box.querySelector('textarea');
+ box.querySelectorAll('.com-ta[data-ti]').forEach(b=>b.onclick=async()=>{if(b.disabled)return;const i=+b.dataset.ti,on=!b.classList.contains('on');b.disabled=true;
+  try{const r=await comPost('seg-com-tarea',{id:h.id,idx:i,hecho:on});if(!r.ok)throw new Error(r.error||'No se ha podido');if(r.todas)toast('¡Todas hechas!',true);const y=comY();COM.d=null;wrap.innerHTML='';await comHilo(wrap,h.id);comSetY(y);}catch(e){b.disabled=false;toast(e.message,false);}});
  {const rp=box.querySelector('.com-resp'),ad=box.querySelector('.com-anadir');if(ad)ad.onclick=()=>{rp.classList.remove('plegada');const b=rp.querySelector('[data-a=resp]');if(b)b.textContent='Añadir';ta.focus();};}
  const hacer=async(b,accion,extra,msg)=>{const bs=box.querySelectorAll('.com-resp button');bs.forEach(x=>x.disabled=true);const t0=b.textContent;b.textContent='Guardando…';
   try{const r=await comPost(accion,Object.assign({id:h.id},extra));if(!r.ok)throw new Error(r.error||'No se ha podido');toast(msg,true);
@@ -6294,6 +6321,9 @@ async function comHilo(wrap,id){
   if(a==='resp'){const t=ta.value.trim();if(!t){ta.focus();toast('Escribe la respuesta',false);return;}hacer(b,'seg-com-responder',{cuerpo:t,hecho:miPend},'Respuesta enviada');}
   else if(a==='hecho')hacer(b,'seg-com-responder',{cuerpo:ta.value.trim(),hecho:true},h.req?'Marcada como hecha':'Acuse de recibo enviado');
   else if(a==='apr')admSiNo(`Se apuntará en Administración (${String(A.que||'').toLowerCase()} de ${h.de}) y se bloquearán sus huecos libres en la agenda.`,'Sí, aprobar').then(ok=>{if(ok)hacer(b,'seg-com-resolver',{aprobar:true,comentario:ta.value.trim()},'Solicitud aprobada');});
+  else if(a==='gest')hacer(b,'seg-com-gestion',{comentario:ta.value.trim()},'Marcada como gestionada');
+  else if(a==='encargo')hacer(b,'seg-com-gestion',{accion:'encargo',comentario:ta.value.trim()},'Te encargas tú');
+  else if(a==='resuelta')hacer(b,'seg-com-gestion',{accion:'resuelta',comentario:ta.value.trim()},'Marcada como resuelta');
   else if(a==='rech')hacer(b,'seg-com-resolver',{aprobar:false,comentario:ta.value.trim()},'Solicitud rechazada');
   else if(a==='estado')admSiNo(h.abierta?'La comunicación quedará cerrada y dejará de salir en Pendientes.':'La comunicación volverá a estar abierta.',h.abierta?'Sí, cerrar':'Sí, reabrir').then(ok=>{if(ok)hacer(b,'seg-com-estado',{abrir:!h.abierta},h.abierta?'Cerrada':'Reabierta');});});
 }
@@ -6315,58 +6345,81 @@ function comNueva(onOk,paraIni){
  const yo=String(fisioActual.nombre||'').trim().split(' ')[0].toLowerCase();
  const eq=((COM.d&&COM.d.equipo)||TAR_NOMBRES).filter(n=>n.toLowerCase()!==yo);
  const dir=COM_APRUEBAN.filter(n=>n.toLowerCase()!==yo);
- const S={para:(paraIni||[]).filter(n=>eq.includes(n)),tipo:'Comunicado',req:false,limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:''};
+ const S={para:(paraIni||[]).filter(n=>eq.includes(n)),tipo:'Comunicado',req:false,limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:'',items:['',''],cat:'',sobre:[],urg:'Esta semana'};
+ const NORMAL=['Comunicado','Informe','Aviso','Solicitud'];
  const m=hzModal(`<div class="hz-top"><div><b>Nueva comunicación</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Tipo</div><div class="com-chips com-tipo">${COM_TIPOS.map(t=>`<button type="button" data-t="${t}">${escH(comTipoTxt(t))}</button>`).join('')}</div>
-  <div class="com-normal">
-   <div class="hz-lab">Para</div><div class="com-chips com-para"><button type="button" data-n="*">Todo el equipo</button>${eq.map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div>
-   <div class="hz-lab">Asunto</div><input type="text" class="com-in com-asunto" maxlength="140" placeholder="Ej.: Informe de horas de octubre">
+  <div class="s-dir com-a-para"></div>
+  <div class="s-para"><div class="hz-lab">Para</div><div class="com-chips com-para"><button type="button" data-n="*">Todo el equipo</button>${eq.map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div></div>
+  <div class="s-inc">
+   <div class="hz-lab">Tema</div><div class="com-chips com-cat">${COM_CAT_INC.map(t=>`<button type="button" data-c="${t}">${t}</button>`).join('')}</div>
+   <div class="hz-lab">¿Sobre alguien? <span>(opcional)</span></div><div class="com-chips com-sob">${eq.filter(n=>!COM_APRUEBAN.includes(n)).map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div>
   </div>
-  <div class="com-aus">
-   <div class="com-a-para">Se envía a dirección: <b>${escH(comLista(dir))}</b></div>
+  <div class="s-urg"><div class="hz-lab">¿Para cuándo?</div><div class="com-chips com-urg">${['Hoy','Esta semana','Cuando se pueda'].map(t=>`<button type="button" data-u="${t}">${t}</button>`).join('')}</div></div>
+  <div class="s-asunto"><div class="hz-lab com-l-asunto">Asunto</div><input type="text" class="com-in com-asunto" maxlength="140"></div>
+  <div class="s-tareas"><div class="hz-lab">Tareas</div><div class="com-tl"></div><button type="button" class="com-tl-add">+ Añadir tarea</button></div>
+  <div class="s-aus">
    <div class="hz-lab">Qué pides</div><div class="com-chips com-que">${['Vacaciones','Día libre','Horas libres','Cambio de horario'].map(t=>`<button type="button" data-q="${t}">${t}</button>`).join('')}</div>
    <div class="com-2"><div><div class="hz-lab com-l-desde">Desde</div><button type="button" class="com-sel com-desde"><b></b><i>▾</i></button></div><div class="com-c-hasta"><div class="hz-lab">Hasta</div><button type="button" class="com-sel com-hasta"><b></b><i>▾</i></button></div></div>
    <div class="com-2 com-horas"><div><div class="hz-lab com-l-hd">De</div><button type="button" class="com-sel com-hd"><b></b><i>▾</i></button></div><div><div class="hz-lab">A</div><button type="button" class="com-sel com-hh"><b></b><i>▾</i></button></div></div>
   </div>
-  <div class="hz-lab com-l-cuerpo">Contenido</div><textarea class="com-in com-cuerpo" rows="7" placeholder="Escribe la comunicación…"></textarea>
-  <div class="com-normal">
-   <button type="button" class="com-sw"><span class="com-sw-t"><b>Requiere acción</b><small>Quien la recibe tiene que confirmarla o resolverla</small></span><i></i></button>
-   <button type="button" class="com-lim" style="display:none"><span>Fecha límite</span><b>Sin fecha</b></button>
-  </div>
+  <div class="hz-lab com-l-cuerpo">Contenido</div><textarea class="com-in com-cuerpo" rows="7"></textarea>
+  <div class="s-req"><button type="button" class="com-sw"><span class="com-sw-t"><b>Requiere acción</b><small>Quien la recibe tiene que confirmarla o resolverla</small></span><i></i></button></div>
+  <button type="button" class="com-lim s-lim"><span>Fecha límite</span><b>Sin fecha</b></button>
   <div class="hz-bts"><button type="button" class="s-n">Cancelar</button><button type="button" class="hz-ok">Enviar</button></div>`);
  m.classList.add('com-modal');
  const $m=s=>m.querySelector(s),cerrar=()=>m.remove();
  const conHoras=()=>S.que==='Horas libres'||S.que==='Cambio de horario',variosDias=()=>S.que==='Vacaciones'||S.que==='Día libre';
- const pinta=()=>{const aus=S.tipo==='Ausencia',todos=eq.length&&eq.every(n=>S.para.includes(n));
-  m.querySelectorAll('.com-normal').forEach(e=>e.style.display=aus?'none':'');$m('.com-aus').style.display=aus?'':'none';
+ const ver=(c,v)=>m.querySelectorAll(c).forEach(e=>e.style.display=v?'':'none');
+ // Lista de tareas editable (sin perder lo escrito al repintar)
+ const pintaTareas=()=>{const tl=$m('.com-tl');tl.innerHTML=S.items.map((t,i)=>`<div class="com-tl-it"><span class="com-tl-c"></span><input class="com-in" data-i="${i}" maxlength="200" placeholder="Tarea ${i+1}" value="${escH(t)}"><button type="button" class="com-tl-x" data-i="${i}" aria-label="Quitar">✕</button></div>`).join('');
+  tl.querySelectorAll('input').forEach(inp=>{inp.oninput=()=>{S.items[+inp.dataset.i]=inp.value;};inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();S.items.splice(+inp.dataset.i+1,0,'');pintaTareas();const n=tl.querySelector(`input[data-i="${+inp.dataset.i+1}"]`);if(n)n.focus();}};});
+  tl.querySelectorAll('.com-tl-x').forEach(b=>b.onclick=()=>{S.items.splice(+b.dataset.i,1);if(!S.items.length)S.items=[''];pintaTareas();});};
+ $m('.com-tl-add').onclick=()=>{S.items.push('');pintaTareas();const l=m.querySelectorAll('.com-tl input');l[l.length-1].focus();};
+ const pinta=()=>{const T=S.tipo,todos=eq.length&&eq.every(n=>S.para.includes(n)),normal=NORMAL.includes(T);
+  ver('.s-para',normal||T==='Tareas'||T==='Ayuda');ver('.s-dir',T==='Ausencia'||T==='Incidencia');ver('.s-inc',T==='Incidencia');ver('.s-urg',T==='Ayuda');
+  ver('.s-asunto',normal||T==='Tareas'||T==='Ayuda');ver('.s-tareas',T==='Tareas');ver('.s-aus',T==='Ausencia');ver('.s-req',normal);ver('.s-lim',(normal&&S.req)||T==='Tareas');
+  $m('.s-dir').innerHTML=T==='Incidencia'?`<b>Confidencial.</b> Solo lo lee dirección (${escH(comLista(COM_APRUEBAN))}). Sirve para contar algo que crees que hay que corregir.`:`Se envía a dirección: <b>${escH(comLista(dir))}</b>`;
+  $m('.com-l-asunto').innerHTML=T==='Tareas'?'Título <span>(opcional)</span>':T==='Ayuda'?'¿Con qué necesitas ayuda?':'Asunto';
+  $m('.com-asunto').placeholder=T==='Tareas'?'Ej.: Cierre del viernes':T==='Ayuda'?'Ej.: Mover las citas del jueves':'Ej.: Informe de horas de octubre';
+  const C={Ausencia:['Motivo <span>(opcional)</span>','Ej.: boda de mi hermana, médico…',3],Tareas:['Nota <span>(opcional)</span>','Algo que deban saber para hacerlas…',3],Incidencia:['¿Qué ha pasado?','Cuéntalo con calma: qué, cuándo y cómo…',6],Ayuda:['Cuéntalo <span>(opcional)</span>','Los detalles que hagan falta…',4]}[T]||['Contenido','Escribe la comunicación…',7];
+  $m('.com-l-cuerpo').innerHTML=C[0];$m('.com-cuerpo').placeholder=C[1];$m('.com-cuerpo').rows=C[2];
   m.querySelectorAll('.com-para button').forEach(b=>b.classList.toggle('on',b.dataset.n==='*'?todos:S.para.includes(b.dataset.n)));
-  m.querySelectorAll('.com-tipo button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.tipo));
+  m.querySelectorAll('.com-tipo button').forEach(b=>b.classList.toggle('on',b.dataset.t===T));
   m.querySelectorAll('.com-que button').forEach(b=>b.classList.toggle('on',b.dataset.q===S.que));
-  $m('.com-l-cuerpo').innerHTML=aus?'Motivo <span>(opcional)</span>':'Contenido';$m('.com-cuerpo').placeholder=aus?'Ej.: boda de mi hermana, médico…':'Escribe la comunicación…';$m('.com-cuerpo').rows=aus?3:7;
+  m.querySelectorAll('.com-cat button').forEach(b=>b.classList.toggle('on',b.dataset.c===S.cat));
+  m.querySelectorAll('.com-sob button').forEach(b=>b.classList.toggle('on',S.sobre.includes(b.dataset.n)));
+  m.querySelectorAll('.com-urg button').forEach(b=>b.classList.toggle('on',b.dataset.u===S.urg));
   $m('.com-c-hasta').style.display=variosDias()?'':'none';$m('.com-l-desde').textContent=variosDias()?'Desde':'Día';
   $m('.com-horas').style.display=conHoras()?'':'none';$m('.com-l-hd').textContent=S.que==='Cambio de horario'?'Trabajaría de':'No estaría de';
   const sv=(c,v,ph)=>{$m(c+' b').textContent=v||ph;$m(c).classList.toggle('vacio',!v);};
   sv('.com-desde',S.desde&&comFechaDia(S.desde),'Elegir día');sv('.com-hasta',S.hasta&&comFechaDia(S.hasta),'Mismo día');sv('.com-hd',S.hd,'--:--');sv('.com-hh',S.hh,'--:--');
-  $m('.com-sw').classList.toggle('on',S.req);$m('.com-lim').style.display=S.req?'':'none';$m('.com-lim b').textContent=S.limite?hzFecha(S.limite):'Sin fecha';$m('.com-lim').classList.toggle('on',!!S.limite);};
+  $m('.com-sw').classList.toggle('on',S.req);$m('.com-lim b').textContent=S.limite?hzFecha(S.limite):'Sin fecha';$m('.com-lim').classList.toggle('on',!!S.limite);};
  $m('.hz-x').onclick=$m('.s-n').onclick=cerrar;
  m.querySelectorAll('.com-para button').forEach(b=>b.onclick=()=>{const n=b.dataset.n;if(n==='*'){const todos=eq.every(x=>S.para.includes(x));S.para=todos?[]:eq.slice();}else S.para=S.para.includes(n)?S.para.filter(x=>x!==n):S.para.concat(n);pinta();});
- m.querySelectorAll('.com-tipo button').forEach(b=>b.onclick=()=>{S.tipo=b.dataset.t;if(S.tipo==='Solicitud')S.req=true;pinta();});
+ m.querySelectorAll('.com-tipo button').forEach(b=>b.onclick=()=>{S.tipo=b.dataset.t;if(S.tipo==='Solicitud')S.req=true;if(S.tipo==='Ayuda'&&!S.para.length)S.para=eq.slice();pinta();});
  m.querySelectorAll('.com-que button').forEach(b=>b.onclick=()=>{S.que=b.dataset.q;if(!variosDias())S.hasta='';pinta();});
+ m.querySelectorAll('.com-cat button').forEach(b=>b.onclick=()=>{S.cat=b.dataset.c;pinta();});
+ m.querySelectorAll('.com-sob button').forEach(b=>b.onclick=()=>{const n=b.dataset.n;S.sobre=S.sobre.includes(n)?S.sobre.filter(x=>x!==n):S.sobre.concat(n);pinta();});
+ m.querySelectorAll('.com-urg button').forEach(b=>b.onclick=()=>{S.urg=b.dataset.u;pinta();});
  $m('.com-desde').onclick=()=>miniCal($m('.com-desde'),S.desde||agHoyIso(),f=>{S.desde=f;if(S.hasta&&S.hasta<f)S.hasta='';pinta();});
  $m('.com-hasta').onclick=()=>miniCal($m('.com-hasta'),S.hasta||S.desde||agHoyIso(),f=>{S.hasta=f;if(S.desde&&f<S.desde){S.hasta=S.desde;S.desde=f;}pinta();});
  $m('.com-hd').onclick=()=>comHoraPick($m('.com-hd'),S.hd||'09:00',v=>{S.hd=v;pinta();});
  $m('.com-hh').onclick=()=>comHoraPick($m('.com-hh'),S.hh||S.hd||'14:00',v=>{S.hh=v;pinta();});
  $m('.com-sw').onclick=()=>{S.req=!S.req;if(!S.req)S.limite='';pinta();};
  $m('.com-lim').onclick=()=>miniCal($m('.com-lim'),S.limite||agHoyIso(),f=>{S.limite=f;pinta();});
- $m('.hz-ok').onclick=async()=>{const b=$m('.hz-ok'),asunto=$m('.com-asunto').value.trim(),cuerpo=$m('.com-cuerpo').value.trim();let datos;
-  if(S.tipo==='Ausencia'){if(!dir.length)return toast('No hay nadie de dirección a quien enviarla',false);if(!S.desde)return toast('Elige el día',false);if(conHoras()&&!(S.hd&&S.hh&&S.hd<S.hh))return toast('Revisa las horas',false);
+ $m('.hz-ok').onclick=async()=>{const b=$m('.hz-ok'),T=S.tipo,asunto=$m('.com-asunto').value.trim(),cuerpo=$m('.com-cuerpo').value.trim();let datos;
+  if(T==='Ausencia'){if(!dir.length)return toast('No hay nadie de dirección a quien enviarla',false);if(!S.desde)return toast('Elige el día',false);if(conHoras()&&!(S.hd&&S.hh&&S.hd<S.hh))return toast('Revisa las horas',false);
    datos={tipo:'Ausencia',ausencia:{que:S.que,desde:S.desde,hasta:variosDias()?S.hasta:'',hd:S.hd,hh:S.hh},cuerpo};}
+  else if(T==='Incidencia'){if(!S.cat)return toast('Elige el tema',false);if(!cuerpo){$m('.com-cuerpo').focus();return toast('Cuenta lo que ha pasado',false);}datos={tipo:T,cat:S.cat,sobre:S.sobre,cuerpo};}
+  else if(T==='Tareas'){const items=S.items.map(x=>x.trim()).filter(Boolean);if(!S.para.length)return toast('Elige a quién se las envías',false);if(!items.length)return toast('Escribe al menos una tarea',false);datos={tipo:T,para:S.para,asunto,items,cuerpo,limite:S.limite};}
+  else if(T==='Ayuda'){if(!S.para.length)return toast('Elige a quién se la pides',false);if(!asunto){$m('.com-asunto').focus();return toast('Di con qué necesitas ayuda',false);}datos={tipo:T,para:S.para,asunto,urg:S.urg,cuerpo};}
   else{if(!S.para.length)return toast('Elige a quién se la envías',false);if(!asunto){$m('.com-asunto').focus();return toast('Falta el asunto',false);}if(!cuerpo){$m('.com-cuerpo').focus();return toast('Escribe el contenido',false);}
-   datos={para:S.para,tipo:S.tipo,asunto,cuerpo,req:S.req,limite:S.limite};}
+   datos={para:S.para,tipo:T,asunto,cuerpo,req:S.req,limite:S.limite};}
   b.disabled=true;b.textContent='Enviando…';
-  try{const r=await comPost('seg-com-enviar',datos);if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast(S.tipo==='Ausencia'?'Solicitud enviada a dirección':'Comunicación enviada',true);cerrar();onOk&&onOk(r.id);}
+  try{const r=await comPost('seg-com-enviar',datos);if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast({Ausencia:'Solicitud enviada a dirección',Incidencia:'Enviado a dirección',Ayuda:'Petición de ayuda enviada',Tareas:'Tareas enviadas'}[T]||'Comunicación enviada',true);cerrar();onOk&&onOk(r.id);}
   catch(e){b.disabled=false;b.textContent='Enviar';toast(e.message,false);}};
- pinta();
+ pintaTareas();pinta();
 }
 
 // ══ ESTADÍSTICAS DEL CENTRO (solo dirección: Nora y Ramiro) ══
