@@ -1546,7 +1546,7 @@ module.exports = async function handler(req, res) {
             if (pv.length && pv.length <= 160) {
               const conPago = q.pago === '1'; // «Pack 3/10, Suelta, Sin pagar»: desactivado en el panel de momento
               inicio = conPago ? await inicioControl().catch(() => '') : '';
-              global._sesPac = global._sesPac || {}; const C = global._sesPac, ahora = Date.now(), falta = pv.filter(id => !C[id] || ahora - C[id].t > 3 * 60e3);
+              global._sesPac = global._sesPac || {}; const C = global._sesPac, ahora = Date.now(), falta = pv.filter(id => q.fresco || !C[id] || ahora - C[id].t > 3 * 60e3);
               const grupos = []; for (let i = 0; i < falta.length; i += 15) grupos.push(falta.slice(i, i + 15));
               const sesDe = f => [[f['CONCEPTO 1'], f['Nº SESIONES 1'], f['PRECIO SESIÓN 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2'], f['PRECIO SESIÓN 2']]].filter(([c, n]) => /^Sesi/i.test(nmA(c) || '') && Number(n) > 0).map(([c, n, pr]) => ({ n: Number(n), precio: Number(pr) || 0, concepto: nmA(c) }));
               for (let k = 0; k < grupos.length; k += 3) await Promise.all(grupos.slice(k, k + 3).map(async g => {

@@ -5333,7 +5333,7 @@ const AG_PER=[['prox7','Próximos 7 días'],['hoy','Hoy'],['manana','Mañana'],[
 let AG_SESIONES=['Fisioterapia convencional','Fisioterapia avanzada','Suelo pélvico','Diástasis','Readaptación deportiva','ATM','Hernia/Protusión'];
 const AG_SES_COL={'fisioterapia avanzada':'#2563eb','suelo pelvico':'#c0267a','diastasis':'#a21caf','readaptacion deportiva':'#15803d','atm':'#7c3aed','hernia/protusion':'#b45309'},AG_SES_PAL=['#0e7490','#be123c','#4d7c0f','#9333ea','#c2410c','#0369a1'];
 const agSesN=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-const agSesCol=t=>{const k=agSesN(t);if(!k||k==='fisioterapia convencional')return '';if(AG_SES_COL[k])return AG_SES_COL[k];let h=0;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return AG_SES_PAL[h%AG_SES_PAL.length];};
+const agSesCol=t=>{const k=agSesN(t);if(!k)return '';if(k==='fisioterapia convencional')return '#c2552e';if(AG_SES_COL[k])return AG_SES_COL[k];let h=0;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return AG_SES_PAL[h%AG_SES_PAL.length];};
 const agEsSP=c=>/^(suelo pelvico|diastasis)$/.test(agSesN(c.sesion));
 // Selector de tipo de sesión (uno solo; tocar el elegido lo quita)
 function agSesSel(box,ini){let v=ini||'';const opts=[...new Set([...AG_SESIONES,...(v?[v]:[])])];
@@ -5657,7 +5657,7 @@ function renderAgenda(wrap){
   if(V==='lista'&&!d1&&!d2&&!AG.pac&&!AG.fisio){grid.innerHTML='<div class="fac-vacio">Para ver «Todo» elige un paciente o un fisio, o un periodo más corto.</div>';$c('.ag-res').textContent='';AG.dia=null;fs.innerHTML='';opcionesFisio([]);return;}
   try{const d=await (await fetch(url)).json();if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,aus:d.ausencias||[],citas:d.citas||[],limitado:d.limitado,alertas:d.alertas||{},sinConsent:new Set(d.sinConsent||[]),hoy:d.hoy,espera:d.espera||[],clave,num:(AG.dia&&AG.dia.clave===clave&&AG.dia.num)||{},pago:(AG.dia&&AG.dia.clave===clave&&AG.dia.pago)||{}};pintar();
    // Nº de sesión: se pide aparte para no frenar la agenda (día y semana)
-   if(V!=='lista'){const dd=AG.dia;fetch(`/api/schedule?action=seg-agenda-num&pwd=${encodeURIComponent(apiPwd)}&desde=${d1}&hasta=${d2}&pago=1`).then(x=>x.json()).then(n=>{if(n&&n.ok&&AG.dia===dd&&t===tok){dd.num=n.num||{};dd.pago=n.pago||{};pintar();}}).catch(()=>{});}if(mismo){const vuelve=()=>{grid.scrollLeft=pos.x;if(ma&&ma.scrollTop!==pos.ym)ma.scrollTop=pos.ym;if(window.scrollY!==pos.y)window.scrollTo(0,pos.y);};vuelve();requestAnimationFrame(vuelve);setTimeout(vuelve,60);}}
+   if(V!=='lista'){const dd=AG.dia;fetch(`/api/schedule?action=seg-agenda-num&pwd=${encodeURIComponent(apiPwd)}&desde=${d1}&hasta=${d2}&pago=1${window.__agFresco?'&fresco=1':''}`).then(x=>x.json()).then(n=>{if(n&&n.ok&&AG.dia===dd&&t===tok){dd.num=n.num||{};dd.pago=n.pago||{};window.__agFresco=false;pintar();}}).catch(()=>{});}if(mismo){const vuelve=()=>{grid.scrollLeft=pos.x;if(ma&&ma.scrollTop!==pos.ym)ma.scrollTop=pos.ym;if(window.scrollY!==pos.y)window.scrollTo(0,pos.y);};vuelve();requestAnimationFrame(vuelve);setTimeout(vuelve,60);}}
   catch(e){if(t!==tok)return;grid.innerHTML=`<div class="fac-vacio">No se ha podido cargar la agenda. <button type="button" class="ag-reint">Reintentar</button></div>`;grid.querySelector('.ag-reint').onclick=cargar;}
  }
  function opcionesFisio(C){const presentes=[...new Set(C.map(c=>c.fisio).filter(f=>f&&!AG_NOFISIO.test(f)))];
@@ -11918,7 +11918,7 @@ function cerrarLightbox(){
  window.__sigueAqui={cancela:para};
  window.fetch=function(u,o){
   try{const m=String((o&&o.method)||(u&&u.method)||'GET').toUpperCase();
-   if(m!=='GET'){const pos=scrollers().map(e=>[clave(e),e.scrollTop]).filter(x=>x[1]>0);
+   if(m!=='GET'){window.__agFresco=true;const pos=scrollers().map(e=>[clave(e),e.scrollTop]).filter(x=>x[1]>0);
     if(pos.length){para();st={pos,desde:Date.now(),hasta:Date.now()+12000};
      // que el contenido no encoja mientras se repinta (si encoge, el navegador sube la pantalla)
      pos.forEach(([k])=>{const e=busca(k);const c=e===(document.scrollingElement||document.documentElement)?document.body:e.firstElementChild;if(c&&!c.dataset.saMin){c.dataset.saMin=c.style.minHeight||'';c.style.minHeight=c.scrollHeight+'px';}});
