@@ -174,7 +174,9 @@ async function rendimiento(desde, hasta, _fresco, opts) {
   const cambioDe = (n, f) => aus.filter(x => x.desde <= f && x.hasta >= f && (x.fisio === 'Toda la clínica' || x.fisio.toLowerCase() === n)).map(x => x.tipo === 'Cambio de horario' && x.hd ? `Otro horario ${x.hd}–${x.hh}` : x.hd ? `Falta ${x.hd}–${x.hh}` : (x.tipo || 'No trabaja') + (x.fisio === 'Toda la clínica' ? ' (clínica)' : '')).join(' · ');
   const diario = n => {
     if (!horasDia[n]) return null;
-    const v = horasDia[n], out = [], fin = hasta < hoyISO ? hasta : hoyISO;
+    // Solo días cerrados: hoy todavía no ha terminado y no puede salir como «no vino» ni como horas de menos
+    const ayerISO = new Date(new Date(hoyISO + 'T12:00:00Z').getTime() - 864e5).toISOString().slice(0, 10);
+    const v = horasDia[n], out = [], fin = hasta < hoyISO ? hasta : ayerISO;
     for (let d = new Date(desde + 'T12:00:00Z'); d <= new Date(fin + 'T12:00:00Z'); d = new Date(d.getTime() + 864e5)) {
       const f = d.toISOString().slice(0, 10), toca = horasDe(n, f), hechas = (hechasDia[n] || {})[f] || 0, trabajo = (diasCon[n] || new Set()).has(f);
       const cambio = cambioDe(n, f), dd = (det[n] || {})[f] || {};
