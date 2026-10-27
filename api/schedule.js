@@ -621,7 +621,7 @@ async function pidenConsentimiento(pids, antesDe) {
   }
   let firmados = new Set(); try { (await consTodos()).forEach(c => (c.pac || []).forEach(x => firmados.add(x))); } catch (e) {}
   pids.forEach(x => { if (!yaVino.has(x) && !firmados.has(x)) out.add(x); });
-  return out;
+  out.yaVino = yaVino; return out;
 }
 function firmaCita(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cita:' + id).digest('hex').slice(0, 10); }
 const enlaceConfirmar = id => `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}`;
@@ -1599,14 +1599,20 @@ module.exports = async function handler(req, res) {
           const fechas = String(q.fechas || '').split(',').filter(okF).slice(0, 4);
           if (!fechas.length) return res.status(400).json({ ok: false, error: 'Faltan las fechas' });
           const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(${fechas.map(f => `DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f}'`).join(',')}),FIND('PENDIENTE',UPPER({ESTADO}&'')))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('RECORDATORIO ENVIADO')}&fields[]=${encodeURIComponent('RECORDATORIO POR')}&fields[]=CONFIR`);
-          const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], pac = {};
-          for (let i = 0; i < pids.length; i += 50) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 50).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`)).forEach(p => { pac[p.id] = { nombre: p.fields['FULL NAME'] || '', pila: p.fields['NOMBRE'] || '', tel: p.fields['WHATSAPP'] || p.fields['TELF'] || '' }; });
+          const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], pac = {}, acc = {};
+          for (let i = 0; i < pids.length; i += 50) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 50).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=EMAIL&fields[]=PIN&fields[]=${encodeURIComponent('ÚLTIMO ACCESO APP')}`)).forEach(p => { pac[p.id] = { nombre: p.fields['FULL NAME'] || '', pila: p.fields['NOMBRE'] || '', tel: p.fields['WHATSAPP'] || p.fields['TELF'] || '' }; acc[p.id] = { app: !!p.fields['ÚLTIMO ACCESO APP'], pin: String(p.fields['PIN'] || '').trim(), email: String(p.fields['EMAIL'] || '').trim() }; });
           const nmR = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
           const citas = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: nmR(F['PREF.']), pacienteId: pid, ...(pac[pid] || { nombre: '', pila: '', tel: '' }), enviado: F['RECORDATORIO ENVIADO'] || '', por: F['RECORDATORIO POR'] || '', link: enlaceConfirmar(r.id), confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/i.test(x.name || x)) }; })
             .filter(c => c.pacienteId).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
           // Primera visita sin consentimiento: el mensaje lleva también el enlace del consentimiento informado
           const pide = await pidenConsentimiento(citas.map(c => c.pacienteId), fechas.slice().sort()[0]).catch(() => new Set());
           citas.forEach(c => { if (pide.has(c.pacienteId)) { c.primera = true; c.consent = CONSENT_URL; } });
+          // Ya ha venido alguna vez y nunca ha entrado en la app: el mensaje lleva también cómo entrar (se le pone PIN si no tiene)
+          const ya = pide.yaVino || new Set(), nuevosPin = [];
+          citas.forEach(c => { const a = acc[c.pacienteId]; if (!a || a.app || !ya.has(c.pacienteId)) return; const t = String(c.tel || '').replace(/\D/g, '').slice(-9);
+            if (!a.email && t.length < 9) return; if (!a.pin) { a.pin = nuevoPin(); nuevosPin.push([c.pacienteId, a.pin]); }
+            c.app = { url: 'https://app.fisioterapia365.com', usuario: a.email ? 'tu email (' + a.email + ')' : 'tu teléfono (' + t + ')', pin: a.pin }; });
+          for (const [id, pin] of [...new Map(nuevosPin)].slice(0, 30)) await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: pin } }) }).catch(() => {});
           return res.status(200).json({ ok: true, hoy: hoyF, citas });
         }
         if (action === 'seg-agenda-resenas') {
