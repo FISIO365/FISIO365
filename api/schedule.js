@@ -380,7 +380,7 @@ async function alertasSalud() {
   if (_alertas.m && Date.now() - _alertas.t < 20 * 60e3) return _alertas.m;
   if (_alertas.p) return _alertas.p;
   _alertas.p = (async () => {
-    const todos = async (t, q2) => { let recs = [], off = ''; do { const d = await at(`${t}?${q2}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
+    const todos = async (t, q2) => { let recs = [], off = ''; do { const d = await at(`${t}?${q2}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error || d.errors) throw new Error((d.error && d.error.message) || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
     const lista = await consTodos(), m = {}, porPac = {};
     lista.forEach(c => c.pac.forEach(id => { (porPac[id] = porPac[id] || []).push(c); }));
     Object.entries(porPac).forEach(([id, cs]) => { const r = resumenPaciente(cs); if (r && r.rojo.length) m[id] = r.rojo; });
@@ -419,7 +419,7 @@ async function datosConsent(id) {
 
 // ── CAPTACIÓN: contactos sin cita, lista de espera y negocios del barrio ─────
 const CAP = { contacto: 'tblgsMcknBLDyfWHu', esperaP: 'tbl5ksXlpfsSTZk5i', esperaN: 'tblAvnUMOvVo4OBne', negocio: 'tblO5y1Ikg3LIalic', referidos: 'tblr27u3cvtzfyqI6' };
-const capTodos = async (t, q2) => { let recs = [], off = ''; do { const d = await at(`${t}?${q2}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
+const capTodos = async (t, q2) => { let recs = [], off = ''; do { const d = await at(`${t}?${q2}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error || d.errors) throw new Error((d.error && d.error.message) || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
 let _espera = { t: 0, v: null };
 async function esperaLista(forzar) {
   if (!forzar && _espera.v && Date.now() - _espera.t < 5 * 60e3) return _espera.v;
@@ -464,7 +464,7 @@ const CIT_T = 'tblTPlcuiSjQngkaD';
 let webEnCurso = null;
 function procesarWeb() { if (!webEnCurso) webEnCurso = _procesarWeb().finally(() => { webEnCurso = null; }); return webEnCurso; }
 async function _procesarWeb() {
-  const todosW = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
+  const todosW = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error || d.errors) throw new Error((d.error && d.error.message) || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
   const nm = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
   const pend = await todosW(CIT_T, `filterByFormula=${encodeURIComponent(`AND({your-name}!='',ARRAYJOIN({RELACIÓN - CITA})='',{RESERVA}='',{ESTADO}='',IS_AFTER(CREATED_TIME(),DATEADD(TODAY(),-60,'days')))`)}`);
   let hechas = 0, sinHueco = 0;
@@ -947,7 +947,7 @@ module.exports = async function handler(req, res) {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
     const SEG = 'tblu9YxiktpAh5w87', LLA = 'tbla5rZTwMkMpAiaI', CIT = 'tblTPlcuiSjQngkaD';
-    const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
+    const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error || d.errors) throw new Error((d.error && d.error.message) || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
     const hoyF = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     try {
       // Importe de una sesión puesto a mano (informe de horas). Vacío = vuelve al cálculo automático

@@ -41,9 +41,16 @@ const GASTA = ['REALIZADA', 'CITA PERDIDA'];
 async function todosAT(tabla, query) {
   let recs = [], off = '';
   do {
-    const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${tabla}?${query}&pageSize=100${off ? '&offset=' + off : ''}`, { headers: { Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}` } });
-    const d = await r.json();
-    if (d.error) throw new Error(d.error.message || 'Airtable');
+    // Si Airtable dice «demasiadas peticiones» (429) se espera y se reintenta; nunca se da por buena una página que ha fallado
+    // (antes una página con error se tomaba como «no hay más» y salían menos citas de las que hay)
+    let r, d;
+    for (let i = 0; ; i++) {
+      r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${tabla}?${query}&pageSize=100${off ? '&offset=' + off : ''}`, { headers: { Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}` } });
+      if (r.status === 429 && i < 6) { await new Promise(z => setTimeout(z, 700 * (i + 1))); continue; }
+      break;
+    }
+    d = await r.json().catch(() => ({}));
+    if (!r.ok || d.error || d.errors) throw new Error((d.error && (d.error.message || d.error)) || 'Airtable ' + r.status);
     recs = recs.concat(d.records || []); off = d.offset || '';
   } while (off);
   return recs;
