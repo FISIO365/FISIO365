@@ -1094,7 +1094,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .hz-bts3{display:grid;grid-template-columns:1fr 1fr;gap:8px}.hz-bts3 button{width:100%}.hz-ok2{font-family:inherit;font-weight:600;font-size:14px;padding:13px;border-radius:99px;border:1px solid #e3dbd3;background:#fff;color:#1a1a1a;cursor:pointer}
 .hz-auto{display:block;width:100%;margin-top:8px;background:none!important;border:0!important;color:#9a8d84!important;font:500 13px Poppins,sans-serif;cursor:pointer;padding:8px}.hz-sl small em.hz-ver{font-style:normal;color:#2f6b45;font-weight:600}
 .hz-ficha{display:block;width:100%;margin-top:10px;font:600 13.5px Poppins,sans-serif;color:#1e2a38;background:#f7f3ef;border:0;border-radius:12px;padding:12px;cursor:pointer;text-align:center}
-.hz-res2{margin-top:6px}.hz-pc{font-style:normal;font-weight:500;font-size:11.5px;color:#7d6a60;margin-left:4px}.hz-big{grid-column:1/-1}.hz-big b{font-size:22px}.hz-aviso{font-size:12px;color:#8a4a1f;background:#fff4e8;border-radius:10px;padding:8px 10px;margin:6px 0 0}
+.hz-todas{margin:4px 0 12px;font-weight:500!important;color:#5f554e}.hz-res2{margin-top:6px}.hz-pc{font-style:normal;font-weight:500;font-size:11.5px;color:#7d6a60;margin-left:4px}.hz-big{grid-column:1/-1}.hz-big b{font-size:22px}.hz-aviso{font-size:12px;color:#8a4a1f;background:#fff4e8;border-radius:10px;padding:8px 10px;margin:6px 0 0}
 .hz-ses{margin-top:10px;border:1px solid #ece6e0;border-radius:12px;padding:8px 10px}.hz-ses summary{cursor:pointer;font-weight:600;font-size:13px}.hz-sl{display:flex;flex-direction:column;margin-top:6px}.hz-sl>div{display:grid;grid-template-columns:104px 1fr auto;gap:0 10px;padding:6px 0;border-top:1px solid #f3eee9;font-size:12.5px;align-items:center}.hz-sl>div>i{grid-column:2;font-style:normal;color:#9a8d84;font-size:11.5px}.hz-sl>div>em{grid-column:3;grid-row:1/3;font-style:normal;font-weight:600}.hz-sl em{background:none;padding:0;border:0;white-space:nowrap}.hz-sl em.hz-ok{color:#2f6b45}.hz-sl em.hz-es{color:#7d6a60}.hz-sl .perd b{color:#b42318}.hz-dd{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow-y:auto}.hz-d{border:1px solid #ece6e0;border-radius:12px;padding:8px 10px;font-size:12.5px}.hz-d.dif{border-color:#f1d9c7}.hz-d1{display:flex;justify-content:space-between;align-items:center}.hz-d1 b{font-size:13px;text-transform:capitalize}.hz-d1 span{font-weight:600}.hz-d1 .mas{color:#2f6b45}.hz-d1 .menos{color:#b42318}.hz-d1 .ok{color:#7d6a60}
 .hz-d2{display:flex;flex-wrap:wrap;gap:3px 12px;margin-top:3px;color:#5f554e}.hz-d2 em{font-style:normal;color:#9a8d84}.hz-cb{color:#1e3a5f;background:#e8eef6;border-radius:99px;padding:1px 8px}.hz-rg{color:#8a4a1f;background:#fff4e8;border-radius:99px;padding:1px 8px}
 .ag-ausb{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.ag-aus{background:#fff4e8;border:1px solid #f6d3b3;color:#8a4a1f;border-radius:999px;padding:5px 12px;font-size:12.5px}.ag-aus b{font-weight:600}
@@ -8138,7 +8138,7 @@ async function abrirInformeHoras(fisio){
    const pintaDin=()=>{if(!dn)return;const S=dn.sesiones.filter(q=>q.e==='REALIZADA'),su=a=>a.reduce((t,q)=>t+(q.eur||0),0);dn.total=su(S);dn.real=su(S.filter(q=>q.real));dn.estimado=su(S.filter(q=>!q.real));dn.sesReal=S.filter(q=>q.real).length;dn.sesEst=S.length-dn.sesReal;
     const c=box.querySelector('.hz-dinc');if(c)c.innerHTML=`<span>Dinero que ha producido</span><b>${dn.total?(dn.sesEst?'≈ ':'')+fmtEur(dn.total):'—'}</b><small>${!dn.total?'falta la tarifa de «Sesión de fisioterapia» en Administración › Listas':dn.sesEst?`${dn.sesReal} de ${S.length} sesiones con el importe real; el resto, aproximado`:'todas las sesiones con lo que pagó el paciente'}</small>`;
     const l=box.querySelector('.hz-sl');if(l)l.innerHTML=S.map(q=>`<button type="button" data-id="${q.id}"><span>${fdiaCorto(q.f)} · ${q.h}</span><b>${escH(q.pac)}</b><i class="${q.man?'hz-iman':q.real?'hz-iok':'hz-ies'}">${q.eur?(q.real?'':'≈ ')+fmtEur(q.eur):'—'}</i><small>${q.ver?`<em class="hz-ver">✓ Verificado · ${escH(q.ver)}</em>`:escH(q.o)}</small></button>`).join('');
-    if(l)l.querySelectorAll('button').forEach(b=>b.onclick=()=>editarImporte(dn.sesiones.find(q=>q.id===b.dataset.id),pintaDin));};
+    if(l)l.querySelectorAll('button').forEach(b=>b.onclick=()=>{const q=dn.sesiones.find(q=>q.id===b.dataset.id);editarImporte(q,pintaDin,q&&q.pid?dn.sesiones.filter(o=>o.pid===q.pid&&o.e==='REALIZADA'&&o.id!==q.id):[]);});};
    pintaDin();
    box.querySelector('.hz-pdf').onclick=()=>imprimirHoras(datos);
   }catch(e){box.innerHTML='<div class="fac-vacio">No se ha podido calcular</div>';}
@@ -8153,10 +8153,11 @@ function fichaEncima(id,nombre){const mods=[...document.querySelectorAll('.hz-mo
  const ob=new MutationObserver(()=>{if(!fp.isConnected){ob.disconnect();vuelve();}});ob.observe(document.body,{childList:true});}
 // Repinta algo sin que la pantalla se mueva de donde estaba
 function mantenScroll(fn){const els=[document.scrollingElement||document.documentElement,...document.querySelectorAll('.main-area,.hz-card')].map(e=>[e,e.scrollTop]);try{fn();}finally{els.forEach(([e,y])=>{if(e.isConnected&&y)e.scrollTop=y;});requestAnimationFrame(()=>els.forEach(([e,y])=>{if(e.isConnected&&y&&Math.abs(e.scrollTop-y)>2)e.scrollTop=y;}));}}
-function editarImporte(q,listo){if(!q)return;
+function editarImporte(q,listo,otras){if(!q)return;otras=otras||[];
  const m=hzModal(`<div class="hz-top"><div><small>${fdiaCorto(q.f)} · ${q.h}</small><b>${escH(q.pac)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Lo que pagó por esta sesión</div><div class="hz-eur"><input type="text" inputmode="decimal" value="${q.eur?String(q.eur).replace('.',','):''}" placeholder="0"><span>€</span></div>
   <p class="adm-nota">${q.ver?'✓ Verificado por '+escH(q.ver)+'. Queda fijo.':q.man?'Puesto a mano.':q.real?'Sale de: '+escH(q.o)+'.':'Aproximado: no hay un cobro que le toque.'}</p>
+  ${otras.length?`<label class="hz-sw hz-todas"><input type="checkbox"><i></i><span>Aplicar también a sus otras ${otras.length} sesiones de este mes</span></label>`:''}
   <div class="hz-bts hz-bts3"><button type="button" class="hz-ok2">Guardar</button><button type="button" class="hz-ok">✓ Verificado</button></div>
   ${q.pid?`<button type="button" class="hz-ficha">Ver ficha de ${escH(q.pac)} ›</button>`:''}
   ${q.man?'<button type="button" class="hz-del hz-auto">Volver al automático</button>':''}`);
@@ -8164,10 +8165,12 @@ function editarImporte(q,listo){if(!q)return;
  const inp=m.querySelector('input');setTimeout(()=>{try{inp.focus();inp.select();}catch(e){}},200);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const guarda=async(v,verif)=>{const bs=m.querySelectorAll('button');bs.forEach(b=>b.disabled=true);
+  const tg=m.querySelector('.hz-todas input'),G=[q].concat(tg&&tg.checked?otras:[]);
   const quien=verif?(String((typeof fisioActual!=='undefined'&&fisioActual&&fisioActual.nombre)||'').split(' ')[0]||'Panel'):'';
-  try{const r=await (await fetch('/api/schedule?action=seg-importe-sesion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:q.id,importe:v,verificado:quien})})).json();
+  try{const r=await (await fetch('/api/schedule?action=seg-importe-sesion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,ids:G.map(x=>x.id),importe:v,verificado:quien})})).json();
    if(!r.ok)throw new Error(r.error||'');
-   if(v===''){q.man=false;q.ver='';toast('Vuelve al cálculo automático; se verá al recargar el informe');}else{q.eur=Number(v);q.real=true;q.man=true;q.ver=r.ver||'';q.o=q.ver?'Verificado · '+q.ver:'Puesto a mano';toast(q.ver?'Verificado ✓':'Guardado');}
+   G.forEach(x=>{if(v===''){x.man=false;x.ver='';}else{x.eur=Number(v);x.real=true;x.man=true;x.ver=r.ver||'';x.o=x.ver?'Verificado · '+x.ver:'Puesto a mano';}});
+   toast(v===''?'Vuelve al cálculo automático; se verá al recargar el informe':(r.ver?'Verificado ✓':'Guardado')+(G.length>1?` · ${G.length} sesiones`:''));
    m.remove();listo&&listo();}catch(e){bs.forEach(b=>b.disabled=false);toast('No se ha podido guardar');}};
  const ok=verif=>{const v=String(inp.value).trim().replace(',','.');if(v===''||!isFinite(+v)||+v<0){toast('Pon un importe válido');return;}guarda(String(Math.round(+v*100)/100),verif);};
  m.querySelector('.hz-ok').onclick=()=>ok(true);m.querySelector('.hz-ok2').onclick=()=>ok(false);

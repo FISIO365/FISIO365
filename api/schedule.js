@@ -952,13 +952,17 @@ module.exports = async function handler(req, res) {
     try {
       // Importe de una sesión puesto a mano (informe de horas). Vacío = vuelve al cálculo automático
       if (action === 'seg-importe-sesion') {
-        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false, error: 'Falta la cita' });
+        // Una cita (id) o varias del mismo paciente (ids)
+        const ids = (Array.isArray(q.ids) && q.ids.length ? q.ids : [q.id]).filter(x => /^rec[A-Za-z0-9]{14}$/.test(x || '')).slice(0, 200);
+        if (!ids.length) return res.status(400).json({ ok: false, error: 'Falta la cita' });
         const v = q.importe === '' || q.importe == null ? null : Number(String(q.importe).replace(',', '.'));
         if (v !== null && (!isFinite(v) || v < 0 || v > 5000)) return res.status(400).json({ ok: false, error: 'Importe no válido' });
         const quien = String(q.verificado || '').trim().slice(0, 40);
         const cuando = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'numeric' }).format(new Date());
-        const d = await at(`${CIT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'IMPORTE SESIÓN': v, 'IMPORTE VERIFICADO': v !== null && quien ? `${quien} · ${cuando}` : '' } }) });
-        if (!d.error) return res.status(200).json({ ok: true, ver: v !== null && quien ? `${quien} · ${cuando}` : '' });
+        const fields = { 'IMPORTE SESIÓN': v, 'IMPORTE VERIFICADO': v !== null && quien ? `${quien} · ${cuando}` : '' };
+        let d = {};
+        for (let i = 0; i < ids.length && !d.error; i += 10) d = await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: ids.slice(i, i + 10).map(id => ({ id, fields })) }) });
+        if (!d.error) return res.status(200).json({ ok: true, n: ids.length, ver: fields['IMPORTE VERIFICADO'] });
         return res.status(200).json({ ok: !d.error, error: d.error ? 'No se ha podido guardar' : undefined });
       }
       if (action === 'seg-config') return res.status(200).json({ ok: true, conf: await conf() });
