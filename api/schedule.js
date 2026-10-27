@@ -2515,6 +2515,15 @@ module.exports = async function handler(req, res) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) campos[FF.fecha] = q.fecha;
     if (fa.nombre) { campos[FF.aNombre] = String(fa.nombre); campos[FF.aNif] = String(fa.nif || ''); campos[FF.aDir] = String(fa.direccion || ''); }
     [[FF.c1, FF.n1, FF.p1], [FF.c2, FF.n2, FF.p2]].forEach(([c, n, pr], i) => { const l = lineas[i]; if (!l) return; campos[c] = String(l.concepto || ''); campos[n] = Number(l.uds || 0); campos[pr] = Number(l.precio || 0); });
+    // Sesión gratis: no se cobra ni se hace ticket en Holded; queda apuntada (a 0 €) para que la sesión cuente como pagada
+    if (q.gratis) {
+      const hoyG = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), fG = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyG;
+      Object.assign(campos, { [FF.estado]: 'Emitida', [FF.fecha]: fG, [FF.fechaVieja]: fG, 'fldafSkOOldJ8gH70': 'Gratis', [FF.notas]: ['Gratis', String(q.notas || '').trim(), q.quien ? 'apuntado por ' + String(q.quien).split(' ')[0] : ''].filter(Boolean).join(' · ') });
+      [FF.p1, FF.p2].forEach(k => { if (k in campos) campos[k] = 0; });
+      global._sesPac = {}; const g = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
+      if (g.error || !g.records) return res.status(200).json({ ok: false, error: (g.error && g.error.message) || 'No se ha podido apuntar' });
+      return res.status(200).json({ ok: true, gratis: true });
+    }
     global._sesPac = {}; const cr = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
     const rec = cr.records && cr.records[0] && cr.records[0].id;
     if (!rec) return res.status(500).json({ ok: false, error: (cr.error && cr.error.message) || 'No se ha podido guardar en Airtable' });

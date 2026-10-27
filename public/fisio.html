@@ -1109,6 +1109,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .ag-c.ag-sp{background:#fcebf4;border-left-color:#c0267a!important}.ag-spb{display:inline-block;align-self:flex-start;font-style:normal;font-size:10.5px;font-weight:700;color:#fff;background:#c0267a;border-radius:99px;padding:2px 8px;margin-bottom:2px;letter-spacing:.02em}
 .ag-sptg{display:flex;align-items:center;gap:10px;width:100%;margin-top:12px;font:600 13.5px Poppins,sans-serif;color:#1a1a1a;background:#fff;border:1.5px solid #ece6e0;border-radius:12px;padding:11px 12px;cursor:pointer;text-align:left}.ag-sptg i{width:20px;height:20px;border-radius:6px;border:2px solid #d8cfc6;flex:none;display:flex;align-items:center;justify-content:center}.ag-sptg.on{border-color:#c0267a;background:#fcebf4}.ag-sptg.on i{background:#c0267a;border-color:#c0267a}.ag-sptg.on i::after{content:'✓';color:#fff;font-size:12px;font-style:normal;font-weight:700}
 .ag-ses{display:flex;flex-wrap:wrap;gap:6px}.ag-ses button{font:600 12.5px Poppins,sans-serif;border:1.5px solid #e3dbd3;background:#fff;color:#3d3530;border-radius:99px;padding:7px 12px;cursor:pointer}.ag-ses button.on{background:var(--sc,#1e2a38);border-color:var(--sc,#1e2a38);color:#fff}
+.fac-gr{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;font-family:inherit;background:#fff;border:1.5px solid #ece6e0;border-radius:14px;padding:12px;margin:2px 0 12px;cursor:pointer;color:#5f554e;font-size:12.5px;line-height:1.4}.fac-gr b{display:block;color:#1a1a1a;font-size:14px}.fac-gr i{width:20px;height:20px;border-radius:6px;border:2px solid #d8cfc6;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-style:normal}.fac-gr.on{border-color:#16803c;background:#eef8f1}.fac-gr.on i{background:#16803c;border-color:#16803c}.fac-gr.on i::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
 .hz-res2{margin-top:6px}.hz-pc{font-style:normal;font-weight:500;font-size:11.5px;color:#7d6a60;margin-left:4px}.hz-big{grid-column:1/-1}.hz-big b{font-size:22px}.hz-aviso{font-size:12px;color:#8a4a1f;background:#fff4e8;border-radius:10px;padding:8px 10px;margin:6px 0 0}
 .hz-ses{margin-top:10px;border:1px solid #ece6e0;border-radius:12px;padding:8px 10px}.hz-ses summary{cursor:pointer;font-weight:600;font-size:13px}.hz-sl{display:flex;flex-direction:column;margin-top:6px}.hz-sl>div{display:grid;grid-template-columns:104px 1fr auto;gap:0 10px;padding:6px 0;border-top:1px solid #f3eee9;font-size:12.5px;align-items:center}.hz-sl>div>i{grid-column:2;font-style:normal;color:#9a8d84;font-size:11.5px}.hz-sl>div>em{grid-column:3;grid-row:1/3;font-style:normal;font-weight:600}.hz-sl em{background:none;padding:0;border:0;white-space:nowrap}.hz-sl em.hz-ok{color:#2f6b45}.hz-sl em.hz-es{color:#7d6a60}.hz-sl .perd b{color:#b42318}.hz-dd{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow-y:auto}.hz-d{border:1px solid #ece6e0;border-radius:12px;padding:8px 10px;font-size:12.5px}.hz-d.dif{border-color:#f1d9c7}.hz-d1{display:flex;justify-content:space-between;align-items:center}.hz-d1 b{font-size:13px;text-transform:capitalize}.hz-d1 span{font-weight:600}.hz-d1 .mas{color:#2f6b45}.hz-d1 .menos{color:#b42318}.hz-d1 .ok{color:#7d6a60}
 .hz-d2{display:flex;flex-wrap:wrap;gap:3px 12px;margin-top:3px;color:#5f554e}.hz-d2 em{font-style:normal;color:#9a8d84}.hz-cb{color:#1e3a5f;background:#e8eef6;border-radius:99px;padding:1px 8px}.hz-rg{color:#8a4a1f;background:#fff4e8;border-radius:99px;padding:1px 8px}
@@ -8260,7 +8261,7 @@ async function abrirInformeHoras(fisio){
      fl.querySelectorAll('button').forEach(b=>b.onclick=()=>{window._hzFil=b.dataset.k;mantenScroll(pintaDin);});}
     const fk=window._hzFil||'pend',SV=S.filter(q=>fk==='todas'||(fk==='ver'?!!q.ver:!q.ver));
     const sm=box.querySelector('.hz-ses summary span');if(sm)sm.textContent=nV<S.length?`${S.length-nV} por verificar`:'todo verificado ✓';
-    const l=box.querySelector('.hz-sl');if(l)l.innerHTML=(SV.length?'':`<p class="adm-nota" style="text-align:center;padding:10px 0">${fk==='pend'?'No falta ninguna por verificar ✓':'Ninguna todavía'}</p>`)+SV.map(q=>`<button type="button" data-id="${q.id}"><span>${fdiaCorto(q.f)} · ${q.h}</span><b>${escH(q.pac)}</b><i class="${q.man?'hz-iman':q.real?'hz-iok':'hz-ies'}">${q.eur?(q.real?'':'≈ ')+fmtEur(q.eur):'—'}</i><small>${q.ver?`<em class="hz-ver">✓ Verificado · ${escH(q.ver)}</em>`:escH(q.o)}</small></button>`).join('');
+    const l=box.querySelector('.hz-sl');if(l)l.innerHTML=(SV.length?'':`<p class="adm-nota" style="text-align:center;padding:10px 0">${fk==='pend'?'No falta ninguna por verificar ✓':'Ninguna todavía'}</p>`)+SV.map(q=>`<button type="button" data-id="${q.id}"><span>${fdiaCorto(q.f)} · ${q.h}</span><b>${escH(q.pac)}</b><i class="${q.man?'hz-iman':q.real?'hz-iok':'hz-ies'}">${q.o==='Gratis'?'Gratis':q.eur?(q.real?'':'≈ ')+fmtEur(q.eur):'—'}</i><small>${q.ver?`<em class="hz-ver">✓ Verificado · ${escH(q.ver)}</em>`:escH(q.o)}</small></button>`).join('');
     pintaRep();
     if(l)l.querySelectorAll('button').forEach(b=>b.onclick=()=>{const q=dn.sesiones.find(q=>q.id===b.dataset.id);editarImporte(q,pintaDin,q&&q.pid?dn.sesiones.filter(o=>o.pid===q.pid&&o.e==='REALIZADA'&&o.id!==q.id):[]);});};
    pintaDin();
@@ -8556,13 +8557,14 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
   const f=ce('div','fac-form');
   f.innerHTML=`<div class="fac-h"><b>Nueva factura</b><button type="button" class="fac-x" aria-label="Cerrar">✕</button></div>
    ${d.dni?'':`<div class="fac-campo fac-aviso"><label>DNI del paciente <span>(opcional · no lo tiene en su ficha; si lo pones, se guarda)</span></label><input class="fac-dni" placeholder="12345678A"></div>`}
+   <button type="button" class="fac-gr"><i></i><span><b>Es gratis</b>No se cobra ni se hace ticket: la sesión queda apuntada como pagada a 0 €</span></button>
    <div class="fac-lineas"></div>
    <button type="button" class="fac-add">+ Añadir otra línea</button>
-   <div class="fac-campo"><label>Modo de pago</label><div class="fac-chips fac-pago">${FAC_PAGOS.map(m=>`<button type="button" data-v="${m}">${m}</button>`).join('')}</div></div>
-   <div class="fac-campo"><label>Fisio que le atiende <span>(sale en el ticket con su nº de colegiado)</span></label><div class="fac-chips fac-fisio">${(fisios||[]).map(x=>`<button type="button" data-v="${escH(x.nombre)}">${escH(String(x.nombre).split(' ')[0])}</button>`).join('')}<button type="button" data-v="">No poner fisio</button></div></div>
+   <div class="fac-campo fac-sinG"><label>Modo de pago</label><div class="fac-chips fac-pago">${FAC_PAGOS.map(m=>`<button type="button" data-v="${m}">${m}</button>`).join('')}</div></div>
+   <div class="fac-campo fac-sinG"><label>Fisio que le atiende <span>(sale en el ticket con su nº de colegiado)</span></label><div class="fac-chips fac-fisio">${(fisios||[]).map(x=>`<button type="button" data-v="${escH(x.nombre)}">${escH(String(x.nombre).split(' ')[0])}</button>`).join('')}<button type="button" data-v="">No poner fisio</button></div></div>
    <div class="fac-campo"><label>Fecha de cobro</label><input type="date" class="fac-fecha" value="${hoyIso}" max="${hoyIso}"></div>
    <div class="fac-campo"><label>Notas en la factura <span>(opcional, salen impresas)</span></label><textarea class="fac-notas" rows="2"></textarea></div>
-   <details class="fac-otro"><summary>Facturar a otra persona o empresa</summary>
+   <details class="fac-otro fac-sinG"><summary>Facturar a otra persona o empresa</summary>
     <div class="fac-campo"><label>Nombre o empresa</label><input class="fac-an"></div>
     <div class="fac-campo"><label>DNI / NIF</label><input class="fac-anif"></div>
     <div class="fac-campo"><label>Dirección fiscal</label><input class="fac-adir"></div></details>
@@ -8572,7 +8574,10 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    <div class="fac-nota">Se crea en Holded con el siguiente número de la serie y le aparece al paciente en su app.</div>`;
   formBox.appendChild(f);
   const lineasBox=f.querySelector('.fac-lineas'),addBtn=f.querySelector('.fac-add');
-  let pago='',fisioSel=null,usarTj=false;
+  let pago='',fisioSel=null,usarTj=false,gratis=false;
+  {const g=f.querySelector('.fac-gr');g.onclick=()=>{gratis=!gratis;g.classList.toggle('on',gratis);f.querySelectorAll('.fac-sinG,.fac-tj').forEach(x=>x.hidden=gratis);
+    lineasBox.querySelectorAll('.fl-p').forEach(i=>{i.disabled=gratis;if(gratis){i.dataset.ant=i.value;i.value='0';}else{i.value=i.dataset.ant||'';}});
+    f.querySelector('.fac-emitir').textContent=gratis?'Apuntar sesión gratis':'Emitir factura';f.querySelector('.fac-nota').textContent=gratis?'No se hace ticket en Holded. Cuenta en sus sesiones pagadas (a 0 €).':'Se crea en Holded con el siguiente número de la serie y le aparece al paciente en su app.';total();};}
   {const tj=f.querySelector('.fac-tj');if(tj)tj.onclick=()=>{usarTj=!usarTj;tj.classList.toggle('on',usarTj);total();};}
   f.querySelectorAll('.fac-fisio button').forEach(b=>b.onclick=()=>{f.querySelectorAll('.fac-fisio button').forEach(x=>x.classList.toggle('on',x===b));fisioSel=b.dataset.v;});
   const total=()=>{let t=0;lineasBox.querySelectorAll('.fac-linea').forEach(l=>{t+=(+l.querySelector('.fl-n').value||0)*(+String(l.querySelector('.fl-p').value).replace(',','.')||0);});if(usarTj)t=Math.max(0,t-TJ_IMP());f.querySelector('.fac-total b').textContent=facEur(t);return t;};
@@ -8589,6 +8594,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    l.querySelectorAll('input').forEach(i=>i.oninput=total);
    const del=l.querySelector('.fl-del');if(del)del.onclick=()=>{l.remove();addBtn.style.display='';total();};
    lineasBox.appendChild(l);addBtn.style.display=lineasBox.children.length>=2?'none':'';
+   if(gratis){const pi=l.querySelector('.fl-p');pi.value='0';pi.disabled=true;}
   };
   addLinea();addBtn.onclick=addLinea;
   f.querySelectorAll('.fac-pago button').forEach(b=>b.onclick=()=>{f.querySelectorAll('.fac-pago button').forEach(x=>x.classList.toggle('on',x===b));pago=b.dataset.v;});
@@ -8597,6 +8603,11 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
   em.onclick=async()=>{
    const lineas=[...lineasBox.querySelectorAll('.fac-linea')].map(l=>({concepto:l.dataset.c||'',uds:+l.querySelector('.fl-n').value||0,precio:+String(l.querySelector('.fl-p').value).replace(',','.')||0}));
    if(lineas.some(l=>!l.concepto)){toast('Elige el concepto',false);return;}
+   if(gratis){if(lineas.some(l=>!l.uds)){toast('Pon el nº de sesiones',false);return;}
+    em.disabled=true;em.textContent='Apuntando…';
+    try{const r=await (await fetch('/api/schedule?action=facturar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,quien:(fisioActual&&fisioActual.nombre)||'',pacienteId:pacId,lineas:lineas.map(l=>({...l,precio:0})),gratis:true,fecha:f.querySelector('.fac-fecha').value,notas:f.querySelector('.fac-notas').value.trim()})})).json();
+     if(!r.ok)throw new Error(r.error||'No se ha podido apuntar');toast('Sesión gratis apuntada',true);formBox.innerHTML='';nueva.style.display='';fpTabFacturas(pacId,body,pacNombre,body.dataset.token);}
+    catch(e){em.disabled=false;em.textContent='Apuntar sesión gratis';toast(e.message,false);}return;}
    if(lineas.some(l=>!l.uds||!l.precio)){toast('Pon el nº de sesiones y el precio',false);return;}
    if(!pago){toast('Elige el modo de pago',false);return;}
    if(fisioSel===null){toast('Elige el fisio (o «No poner fisio»)',false);return;}
