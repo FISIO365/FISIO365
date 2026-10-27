@@ -937,6 +937,12 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .com-tl-x{flex:none;width:30px;height:30px;border:none;border-radius:50%;background:#f3efea;color:#7d6a60;cursor:pointer;font-size:12px}
 .com-tl-add{margin-top:8px;font-family:var(--font);font-size:13.5px;font-weight:600;color:#c2552e;background:none;border:none;padding:6px 0;cursor:pointer}
 .com-a-para b{color:#1a1a1a}
+.com-tsel{display:flex;flex-direction:column;gap:6px}
+.com-to{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;text-align:left;font-family:var(--font);background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:11px 14px;cursor:pointer;color:#1a1a1a}
+.com-to .com-st{position:static;flex:none;width:36px;height:36px;border-radius:12px;box-shadow:none}.com-to .com-st svg{width:18px;height:18px;stroke-width:1.8}
+.com-to>span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.com-to b{font-size:14px;font-weight:700}.com-to small{font-size:12.5px;line-height:1.4;color:#8a7c72}
+.com-to em{display:none;flex:none;font-style:normal;font-size:12.5px;font-weight:600;color:#c2552e}
+.com-to.on{border-color:#1e2a38;background:#fcfaf8}.com-tsel:not(.abierto) .com-to.on em{display:block}
 /* Móvil: barra de pestañas abajo en vez de la lateral */
 @media(max-width:768px){
  .sidebar{width:auto!important;height:auto!important;top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:24px!important;right:24px!important;border-radius:26px;border:none;box-shadow:0 10px 30px rgba(26,26,26,.14);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);overflow:visible}
@@ -6150,7 +6156,8 @@ function agAbrirHueco(c,onDone){
 // De momento solo la ve quien esté en COM_USUARIOS (por el nombre de pila). Para abrirla a todos: COM_USUARIOS=null
 const COM_USUARIOS=['nora','ramiro'];
 const comVe=()=>!!fisioActual&&(!COM_USUARIOS||COM_USUARIOS.includes(String(fisioActual.nombre||'').trim().split(' ')[0].toLowerCase()));
-const COM_TIPOS=['Comunicado','Informe','Aviso','Solicitud','Tareas','Ayuda','Incidencia','Ausencia'];
+const COM_TIPOS=['Comunicado','Solicitud','Tareas','Incidencia','Ausencia'];
+const COM_TIPO_DESC={Comunicado:'Para informar de algo importante. Quien lo recibe confirma que lo ha leído.',Solicitud:'Para pedir algo que la otra persona tiene que resolver.',Tareas:'Una lista de tareas que se van marcando a medida que se hacen.',Incidencia:'Confidencial: solo lo leen Nora y Ramiro. Para contar algo que crees que hay que corregir.',Ausencia:'Para pedir vacaciones, días libres, horas o un cambio de horario. Lo aprueba dirección.'};
 const COM_CAT_INC=['Comportamiento','Puntualidad','Calidad del trabajo','Material o instalaciones','Otro'];
 const COM_APRUEBAN=['Nora','Ramiro']; // quién aprueba vacaciones, días libres y cambios de horario
 const comTipoTxt=t=>({Ausencia:'Vacaciones y horarios',Incidencia:'Para dirección',Ayuda:'Necesito ayuda'})[t]||t;
@@ -6346,10 +6353,9 @@ function comNueva(onOk,paraIni){
  const eq=((COM.d&&COM.d.equipo)||TAR_NOMBRES).filter(n=>n.toLowerCase()!==yo);
  const dir=COM_APRUEBAN.filter(n=>n.toLowerCase()!==yo);
  const S={para:(paraIni||[]).filter(n=>eq.includes(n)),tipo:'Comunicado',req:false,limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:'',items:['',''],cat:'',sobre:[],urg:'Esta semana'};
- const NORMAL=['Comunicado','Informe','Aviso','Solicitud'];
+ const NORMAL=['Comunicado','Solicitud'];let abierto=false;
  const m=hzModal(`<div class="hz-top"><div><b>Nueva comunicación</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-  <div class="hz-lab">Tipo</div><div class="com-chips com-tipo">${COM_TIPOS.map(t=>`<button type="button" data-t="${t}">${escH(comTipoTxt(t))}</button>`).join('')}</div>
-  <div class="s-dir com-a-para"></div>
+  <div class="hz-lab">Tipo</div><div class="com-tsel">${COM_TIPOS.map(t=>`<button type="button" class="com-to" data-t="${t}">${comSello({tipo:t,ausencia:{que:'Vacaciones'}})}<span><b>${escH(comTipoTxt(t))}</b><small>${escH(COM_TIPO_DESC[t])}</small></span><em>Cambiar</em></button>`).join('')}</div>
   <div class="s-para"><div class="hz-lab">Para</div><div class="com-chips com-para"><button type="button" data-n="*">Todo el equipo</button>${eq.map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div></div>
   <div class="s-inc">
    <div class="hz-lab">Tema</div><div class="com-chips com-cat">${COM_CAT_INC.map(t=>`<button type="button" data-c="${t}">${t}</button>`).join('')}</div>
@@ -6377,15 +6383,14 @@ function comNueva(onOk,paraIni){
   tl.querySelectorAll('.com-tl-x').forEach(b=>b.onclick=()=>{S.items.splice(+b.dataset.i,1);if(!S.items.length)S.items=[''];pintaTareas();});};
  $m('.com-tl-add').onclick=()=>{S.items.push('');pintaTareas();const l=m.querySelectorAll('.com-tl input');l[l.length-1].focus();};
  const pinta=()=>{const T=S.tipo,todos=eq.length&&eq.every(n=>S.para.includes(n)),normal=NORMAL.includes(T);
-  ver('.s-para',normal||T==='Tareas'||T==='Ayuda');ver('.s-dir',T==='Ausencia'||T==='Incidencia');ver('.s-inc',T==='Incidencia');ver('.s-urg',T==='Ayuda');
+  ver('.s-para',normal||T==='Tareas'||T==='Ayuda');ver('.s-inc',T==='Incidencia');ver('.s-urg',T==='Ayuda');
   ver('.s-asunto',normal||T==='Tareas'||T==='Ayuda');ver('.s-tareas',T==='Tareas');ver('.s-aus',T==='Ausencia');ver('.s-req',normal);ver('.s-lim',(normal&&S.req)||T==='Tareas');
-  $m('.s-dir').innerHTML=T==='Incidencia'?`<b>Confidencial.</b> Solo lo lee dirección (${escH(comLista(COM_APRUEBAN))}). Sirve para contar algo que crees que hay que corregir.`:`Se envía a dirección: <b>${escH(comLista(dir))}</b>`;
   $m('.com-l-asunto').innerHTML=T==='Tareas'?'Título <span>(opcional)</span>':T==='Ayuda'?'¿Con qué necesitas ayuda?':'Asunto';
   $m('.com-asunto').placeholder=T==='Tareas'?'Ej.: Cierre del viernes':T==='Ayuda'?'Ej.: Mover las citas del jueves':'Ej.: Informe de horas de octubre';
   const C={Ausencia:['Motivo <span>(opcional)</span>','Ej.: boda de mi hermana, médico…',3],Tareas:['Nota <span>(opcional)</span>','Algo que deban saber para hacerlas…',3],Incidencia:['¿Qué ha pasado?','Cuéntalo con calma: qué, cuándo y cómo…',6],Ayuda:['Cuéntalo <span>(opcional)</span>','Los detalles que hagan falta…',4]}[T]||['Contenido','Escribe la comunicación…',7];
   $m('.com-l-cuerpo').innerHTML=C[0];$m('.com-cuerpo').placeholder=C[1];$m('.com-cuerpo').rows=C[2];
   m.querySelectorAll('.com-para button').forEach(b=>b.classList.toggle('on',b.dataset.n==='*'?todos:S.para.includes(b.dataset.n)));
-  m.querySelectorAll('.com-tipo button').forEach(b=>b.classList.toggle('on',b.dataset.t===T));
+  m.querySelectorAll('.com-to').forEach(b=>{b.classList.toggle('on',b.dataset.t===T);b.style.display=abierto||b.dataset.t===T?'':'none';});$m('.com-tsel').classList.toggle('abierto',abierto);
   m.querySelectorAll('.com-que button').forEach(b=>b.classList.toggle('on',b.dataset.q===S.que));
   m.querySelectorAll('.com-cat button').forEach(b=>b.classList.toggle('on',b.dataset.c===S.cat));
   m.querySelectorAll('.com-sob button').forEach(b=>b.classList.toggle('on',S.sobre.includes(b.dataset.n)));
@@ -6397,7 +6402,7 @@ function comNueva(onOk,paraIni){
   $m('.com-sw').classList.toggle('on',S.req);$m('.com-lim b').textContent=S.limite?hzFecha(S.limite):'Sin fecha';$m('.com-lim').classList.toggle('on',!!S.limite);};
  $m('.hz-x').onclick=$m('.s-n').onclick=cerrar;
  m.querySelectorAll('.com-para button').forEach(b=>b.onclick=()=>{const n=b.dataset.n;if(n==='*'){const todos=eq.every(x=>S.para.includes(x));S.para=todos?[]:eq.slice();}else S.para=S.para.includes(n)?S.para.filter(x=>x!==n):S.para.concat(n);pinta();});
- m.querySelectorAll('.com-tipo button').forEach(b=>b.onclick=()=>{S.tipo=b.dataset.t;if(S.tipo==='Solicitud')S.req=true;if(S.tipo==='Ayuda'&&!S.para.length)S.para=eq.slice();pinta();});
+ m.querySelectorAll('.com-to').forEach(b=>b.onclick=()=>{if(!abierto&&b.dataset.t===S.tipo){abierto=true;pinta();return;}abierto=false;S.tipo=b.dataset.t;if(S.tipo==='Solicitud')S.req=true;if(S.tipo==='Ayuda'&&!S.para.length)S.para=eq.slice();pinta();});
  m.querySelectorAll('.com-que button').forEach(b=>b.onclick=()=>{S.que=b.dataset.q;if(!variosDias())S.hasta='';pinta();});
  m.querySelectorAll('.com-cat button').forEach(b=>b.onclick=()=>{S.cat=b.dataset.c;pinta();});
  m.querySelectorAll('.com-sob button').forEach(b=>b.onclick=()=>{const n=b.dataset.n;S.sobre=S.sobre.includes(n)?S.sobre.filter(x=>x!==n):S.sobre.concat(n);pinta();});
