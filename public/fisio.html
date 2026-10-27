@@ -8039,7 +8039,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
  const telIgual=(a,b)=>{const n=x=>String(x||'').replace(/\D/g,'').slice(-9);return !n(a)||!n(b)||n(a)===n(b);};
 function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>${lbl}</span><div class="fp-v">${val?escH(tipo==='date'?fch(val):val):'<em>—</em>'}</div></div>`;}
  function resumen(){
-  const hoy=d.hoy,fut=d.citas.filter(c=>c.fecha>=hoy&&!/CANCEL|REPROGRAM/i.test(c.estado)).reverse(),real=d.citas.filter(c=>c.fecha<hoy&&/REALIZADA/i.test(c.estado));
+  const hoy=d.hoy,cerr=c=>/REALIZADA|NO ASIST/i.test(c.estado),fut=d.citas.filter(c=>c.fecha>=hoy&&!cerr(c)&&!/CANCEL|REPROGRAM/i.test(c.estado)).reverse(),real=d.citas.filter(c=>c.fecha<=hoy&&/REALIZADA/i.test(c.estado));
   const pend=d.seguimiento.filter(x=>!x.hecho),ult=d.llamadas[0];
   const C=d.consent,fC=f=>f?f.split('-').reverse().join('/'):'',sn=v=>/^s[ií]$/i.test(v||'')?'Sí':/^no$/i.test(v||'')?'No':(v||'—');
   const ICS={Google:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',Redes:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',Ubicación:'<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',Recomendación:'<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.8a3 3 0 0 1 0 5.4M17.5 13.6A5.5 5.5 0 0 1 20.5 19"/>',Médico:'<path d="M12 5v14M5 12h14"/>'};
@@ -8077,7 +8077,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
 `;}
  function citas(){const hoy=d.hoy;if(!d.citas.length)return '<div class="fac-vacio">Sin citas</div>';
   const fila=c=>`<div class="fp-cita"><div class="fp-cd"><b>${escH(segFecha(c.fecha))}</b><span>${escH(c.hora||'')}</span></div><div class="fp-cm"><span class="fp-ce ${cls(c.estado)}">${escH(c.estado?c.estado.charAt(0)+c.estado.slice(1).toLowerCase():'—')}</span>${c.fisio?`<span class="fp-cfi">${escH(c.fisio)}</span>`:''}${c.nota?`<p>${escH(c.nota)}</p>`:''}</div></div>`;
-  const fut=d.citas.filter(c=>c.fecha>=hoy).reverse(),pas=d.citas.filter(c=>c.fecha<hoy);
+  const cerr=c=>/REALIZADA|NO ASIST/i.test(c.estado),fut=d.citas.filter(c=>c.fecha>=hoy&&!cerr(c)).reverse(),pas=d.citas.filter(c=>c.fecha<hoy||cerr(c));
   return `${fut.length?`<div class="fp-sub">Próximas</div>${fut.map(fila).join('')}`:''}${pas.length?`<div class="fp-sub">Pasadas · ${pas.length}</div>${pas.map(fila).join('')}`:''}`;}
  function archivos(){const kb=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
   return `<label class="fp-up"><input type="file" multiple hidden><span>＋ Subir archivo</span>${infoI('PDF o fotos de hasta 3 MB. Se guardan en su ficha de Airtable.')}</label>
