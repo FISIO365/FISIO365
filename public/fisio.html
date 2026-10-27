@@ -8016,7 +8016,7 @@ function imprimirLlamadas(fisio,L,perTxt,[d1,d2]){
   nombre:`Llamadas_${fisio}_${d1}${d1!==d2?'_'+d2:''}`});
 }
 // ── Control de horas: clasificar días y banco de horas ──
-const HZ_TIPOS=['Sin paciente','Día libre','Asuntos propios','Vacaciones','Baja','Festivo','Salida anticipada','Horas extra','Otro'];
+const HZ_TIPOS=['Sin paciente','Cubrió a un compañero','Horas extra','Día libre','Asuntos propios','Vacaciones','Baja','Festivo','Salida anticipada','Otro'];
 // Gastos del banco de un mes, agrupados por concepto (lo que pone el banco en cada movimiento)
 function verGastos(lista,mes,recarga){
  const MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -8143,6 +8143,8 @@ async function abrirInformeHoras(fisio){
  cargarInf();
 }
 function fmtEur(v){v=Math.round((+v||0)*100)/100;return v.toLocaleString('es-ES',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2})+' €';}
+// Repinta algo sin que la pantalla se mueva de donde estaba
+function mantenScroll(fn){const els=[document.scrollingElement||document.documentElement,...document.querySelectorAll('.main-area,.hz-card')].map(e=>[e,e.scrollTop]);try{fn();}finally{els.forEach(([e,y])=>{if(e.isConnected&&y)e.scrollTop=y;});requestAnimationFrame(()=>els.forEach(([e,y])=>{if(e.isConnected&&y&&Math.abs(e.scrollTop-y)>2)e.scrollTop=y;}));}}
 function editarImporte(q,listo){if(!q)return;
  const m=hzModal(`<div class="hz-top"><div><small>${fdiaCorto(q.f)} · ${q.h}</small><b>${escH(q.pac)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Lo que pagó por esta sesión</div><div class="hz-eur"><input type="text" inputmode="decimal" value="${q.eur?String(q.eur).replace('.',','):''}" placeholder="0"><span>€</span></div>
@@ -8243,7 +8245,9 @@ async function renderRendimiento(wrap){
    if(!r.ok)throw new Error(r.error||'Error');
    const L=r.fisios||[];
    if(!L.length){res.innerHTML='<div class="fac-vacio">Sin sesiones en este periodo.</div>';return;}
-   await Promise.all(L.filter(x=>x.dias).map(async x=>{try{const hz=await (await fetch(`/api/schedule?action=horas&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`)).json();x.reg={};(hz.registros||[]).forEach(r=>x.reg[r.fecha]=r);x.banco=Math.round((hz.banco||0)*10)/10;}catch(e){}}));
+   const horasDe=async x=>{try{const hz=await (await fetch(`/api/schedule?action=horas&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`)).json();x.reg={};(hz.registros||[]).forEach(r=>x.reg[r.fecha]=r);x.banco=Math.round((hz.banco||0)*10)/10;}catch(e){}};
+   await Promise.all(L.filter(x=>x.dias).map(horasDe));
+   const pinta=()=>{
    const T=L.reduce((a,x)=>{a.realizadas+=x.realizadas;a.atendidos+=x.atendidos;a.reagendan+=x.reagendan;if(!x.sinHoras){['huecos','noAsistio','perdidas','canceladas','callin','videos'].forEach(q=>a[q]+=(x[q]||0));a.realOcup+=x.realizadas;}return a;},{fisio:'Total del centro',realizadas:0,realOcup:0,callin:0,videos:0,huecos:0,atendidos:0,reagendan:0,noAsistio:0,perdidas:0,canceladas:0});
    const fch=f=>{const [y,m,d]=String(f).split('-');return +d+'/'+ +m;};
    const listaNo=x=>(x.lista&&x.lista.length)?`<details class="rend-no"><summary>Ver quién no ha reagendado (${x.lista.length})</summary>${x.lista.map(p=>`<div class="rn-it"><div class="rn-txt"><span>${escH(p.nombre)}</span><i>última sesión ${fch(p.ultima)}</i>${pacEstados(p.id).length?`<div class="est-row">${estadoChips(pacEstados(p.id))}</div>`:''}${(p.nota&&p.notaFecha>=p.ultima)?`<p class="rn-nota">«${escH(p.nota)}»${p.notaFisio?' — '+escH(p.notaFisio):''}</p>`:'<p class="rn-nota sin">Sin explicar todavía</p>'}</div>${p.tel?`<a href="https://wa.me/${String(p.tel).replace(/\D/g,'').replace(/^(?!34)(\d{9})$/,'34$1')}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button type="button" class="rn-seg${SEG_PAC[p.id]?' en':''}" data-id="${p.id}" data-n="${escH(p.nombre)}" data-nota="${escH(p.nota||'')}" title="${escH(segYaTxt(p.id))}">${SEG_PAC[p.id]?'✓ En seguimiento':'+ Seguimiento'}</button></div>`).join('')}</details>`:'';
@@ -8277,9 +8281,11 @@ async function renderRendimiento(wrap){
     <div class="rend-grid"><div><span>Sesiones / huecos</span><b>${base+' / '+(x.huecos||'—')}</b></div><div><span>Pacientes atendidos</span><b>${x.atendidos}</b></div><div><span>Faltas</span><b>${x.noAsistio+x.perdidas}</b></div><div><span>Canceladas</span><b>${x.canceladas}</b></div></div>
     <div class="rend-conv dos"><div><span>Reagendan</span><b>${pcs(x.reagendan,x.atendidos)}</b></div><div><span>No reagendan</span><b>${pcs(x.atendidos-x.reagendan,x.atendidos)}</b></div></div>${tot?'':listaNo(x)}${(!tot&&x.dias)?controlHoras(x):''}</div>`;};
    res.innerHTML=(L.length>1?card(T,true):'')+L.filter(x=>!x.sinHoras).map(x=>card(x)).join('')+L.filter(x=>x.sinHoras).map(x=>card(x)).join('');
-   res.querySelectorAll('.rc-clas').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirClasificar({fisio:b.dataset.fisio,fecha:b.dataset.fecha,dif:+b.dataset.dif,reg:(x.reg||{})[b.dataset.fecha],onSave:()=>cargar(k)});});
+   res.querySelectorAll('.rc-clas').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirClasificar({fisio:b.dataset.fisio,fecha:b.dataset.fecha,dif:+b.dataset.dif,reg:(x.reg||{})[b.dataset.fecha],onSave:async()=>{await horasDe(x);mantenScroll(pinta);}});});
    res.querySelectorAll('.rc-inf').forEach(b=>b.onclick=()=>abrirInformeHoras(b.dataset.fisio));
    res.querySelectorAll('.rn-seg').forEach(b=>b.onclick=()=>SEG_PAC[b.dataset.id]?toast(segYaTxt(b.dataset.id),true):abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,nota:'',motivo:b.dataset.nota||'',onSave:()=>{SEG_PAC[b.dataset.id]={fecha:'',quien:''};b.classList.add('en');b.textContent='✓ En seguimiento';}}));
+   };
+   pinta();
   }catch(e){res.innerHTML='<div class="fac-vacio">No se ha podido calcular: '+escH(e.message)+'</div>';}
  };
  box.querySelectorAll('.rend-chips button').forEach(b=>b.onclick=()=>cargar(b.dataset.k));
@@ -11748,7 +11754,7 @@ function cerrarLightbox(){
  window.fetch=function(u,o){
   try{const m=String((o&&o.method)||(u&&u.method)||'GET').toUpperCase();
    if(m!=='GET'){const pos=scrollers().map(e=>[clave(e),e.scrollTop]).filter(x=>x[1]>0);
-    if(pos.length){para();st={pos,desde:Date.now(),hasta:Date.now()+5000};
+    if(pos.length){para();st={pos,desde:Date.now(),hasta:Date.now()+12000};
      // que el contenido no encoja mientras se repinta (si encoge, el navegador sube la pantalla)
      pos.forEach(([k])=>{const e=busca(k);const c=e===(document.scrollingElement||document.documentElement)?document.body:e.firstElementChild;if(c&&!c.dataset.saMin){c.dataset.saMin=c.style.minHeight||'';c.style.minHeight=c.scrollHeight+'px';}});
      raf=requestAnimationFrame(bucle);}}}catch(e){}
