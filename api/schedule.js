@@ -608,6 +608,21 @@ async function guardarAjuste(clave, valor, quien) {
 }
 // Ajustes de la clínica (Administración › Listas y ajustes). Lo que no se haya cambiado sale de aquí.
 // Enlace de confirmar cita: firma corta para que nadie pueda confirmar citas ajenas cambiando el id
+// Primeras visitas que aún no tienen el consentimiento firmado (para mandárselo con el recordatorio / en la página de confirmar)
+const CONSENT_URL = 'https://tally.so/r/b5j1M2';
+async function pidenConsentimiento(pids, antesDe) {
+  pids = [...new Set(pids.filter(x => /^rec[A-Za-z0-9]{14}$/.test(x || '')))]; const out = new Set(); if (!pids.length) return out;
+  const yaVino = new Set();
+  for (let i = 0; i < pids.length; i += 40) {
+    const l = pids.slice(i, i + 40);
+    const d = await capTodos('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_BEFORE({FECHA},'${antesDe}'),OR(${l.map(x => `FIND('${x}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => null);
+    if (!d) return out; // si no se puede saber, mejor no mandarlo
+    d.forEach(r => (r.fields['RELACIÓN - CITA'] || []).forEach(x => yaVino.add(x)));
+  }
+  let firmados = new Set(); try { (await consTodos()).forEach(c => (c.pac || []).forEach(x => firmados.add(x))); } catch (e) {}
+  pids.forEach(x => { if (!yaVino.has(x) && !firmados.has(x)) out.add(x); });
+  return out;
+}
 function firmaCita(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cita:' + id).digest('hex').slice(0, 10); }
 const enlaceConfirmar = id => `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}`;
 function paginaConfirmar(D, C) {
@@ -619,7 +634,8 @@ function paginaConfirmar(D, C) {
     : `<p class="hola">${D.pila ? 'Hola, ' + e(D.pila) : 'Hola'} 👋</p><p class="sub">${D.inactiva ? '' : D.confirmada ? '' : '¿Nos confirmas que vienes a tu cita?'}</p><div class="cita"><small>Tu cita en FISIO365</small><b>${e(fl.charAt(0).toUpperCase() + fl.slice(1))}</b><b>a las ${e(D.hora)}</b>${D.fisio ? `<span>Con ${e(D.fisio)}</span>` : ''}</div>
       ${D.error ? `<p class="err">${e(D.error)}</p>` : ''}
       ${D.inactiva ? `<p>Esta cita ya no está activa.</p>` : D.confirmada ? `<div class="ok">✓ ${D.recien ? '¡Gracias! Tu cita está confirmada' : 'Tu cita ya está confirmada'}</div><p class="peq">Te esperamos.</p>`
-        : `<form method="post"><button type="submit">Confirmo que voy</button></form>`}`;
+        : `<form method="post"><button type="submit">Confirmo que voy</button></form>`}
+      ${!D.inactiva && D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : ''}`;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu cita · FISIO365</title>
 <meta property="og:title" content="Confirma tu cita en FISIO365"><meta property="og:description" content="${e(fl ? (fl.charAt(0).toUpperCase() + fl.slice(1)) + ' a las ' + (D.hora || '') : 'Tu cita en FISIO365')}"><meta property="og:image" content="https://app.fisioterapia365.com/icono.png"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
@@ -629,6 +645,8 @@ function paginaConfirmar(D, C) {
 .cita{background:#f3efea;border-radius:18px;padding:18px 14px;display:flex;flex-direction:column;gap:2px;margin-bottom:20px}.cita small{font-size:12px;color:#7d6a60;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}.cita b{font-size:20px;line-height:1.3}.cita span{margin-top:6px;color:#5c4f47}
 button{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:16px;cursor:pointer}
 .ok{background:#e8f6ec;color:#16803c;font-weight:600;border-radius:14px;padding:16px}.err{color:#b42318}.peq{font-size:14px;color:#7d6a60;margin:12px 0 0}
+.cons{margin-top:18px;background:#fbf3ec;border-radius:18px;padding:18px 16px;text-align:left}.cons b{display:block;font-size:16px;margin-bottom:4px}.cons p{margin:0 0 14px;font-size:14px;color:#5c4f47;line-height:1.5}.cons small{display:block;margin-top:10px;font-size:12px;color:#7d6a60}
+.btn2{display:block;text-align:center;text-decoration:none;font-weight:600;font-size:15px;color:#1e2a38;background:#fff;border:1.5px solid #1e2a38;border-radius:14px;padding:13px}
 .pie{margin-top:22px;font-size:12.5px;color:#7d6a60;line-height:1.6}.pie a{color:#7d6a60}h1{font-size:20px}</style></head>
 <body><div class="c"><img class="logo" src="https://app.fisioterapia365.com/icono.png" alt="FISIO365">${cuerpo}<div class="pie">${e(C.direccion || '')}${tel ? `<br>¿Dudas? Llámanos al <a href="tel:+34${e(tel)}">${e(C.tel)}</a>` : ''}</div></div></body></html>`;
 }
@@ -880,7 +898,8 @@ module.exports = async function handler(req, res) {
       if (u.error) return res.status(500).send(paginaConfirmar({ ...D, error: 'No se ha podido confirmar. Inténtalo de nuevo en un momento.' }, C));
       conf0 = true;
     }
-    return res.status(200).send(paginaConfirmar({ ...D, confirmada: conf0, recien: req.method === 'POST' }, C));
+    const pide = pid ? await pidenConsentimiento([pid], fecha).catch(() => new Set()) : new Set();
+    return res.status(200).send(paginaConfirmar({ ...D, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '' }, C));
   }
   // Justificante / informe de sesiones (enlace privado que va por WhatsApp)
   if (action === 'doc-pagina') {
@@ -1585,6 +1604,9 @@ module.exports = async function handler(req, res) {
           const nmR = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
           const citas = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: nmR(F['PREF.']), pacienteId: pid, ...(pac[pid] || { nombre: '', pila: '', tel: '' }), enviado: F['RECORDATORIO ENVIADO'] || '', por: F['RECORDATORIO POR'] || '', link: enlaceConfirmar(r.id), confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/i.test(x.name || x)) }; })
             .filter(c => c.pacienteId).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+          // Primera visita sin consentimiento: el mensaje lleva también el enlace del consentimiento informado
+          const pide = await pidenConsentimiento(citas.map(c => c.pacienteId), fechas.slice().sort()[0]).catch(() => new Set());
+          citas.forEach(c => { if (pide.has(c.pacienteId)) { c.primera = true; c.consent = CONSENT_URL; } });
           return res.status(200).json({ ok: true, hoy: hoyF, citas });
         }
         if (action === 'seg-agenda-resenas') {
