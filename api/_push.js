@@ -127,7 +127,7 @@ async function rendimiento(desde, hasta, _fresco, opts) {
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
   const [citas, fisiosT, ausT] = await Promise.all([
-    todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA`),
+    todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA${opts && opts.dinero ? '&fields[]=IMPORTE SESIÓN' : ''}`),
     todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA&fields[]=HORAS POR DÍA&fields[]=CONTROL HORAS').catch(() => []),
     // Cambios puntuales de horario (Administración › Vacaciones y horarios)
     todosAT('tblkezm4bTQ4jJf1X', `filterByFormula=${encodeURIComponent(`AND(NOT(IS_BEFORE({HASTA},'${desde}')),NOT(IS_AFTER({DESDE},'${hasta}')))`)}`).catch(() => [])
@@ -169,7 +169,7 @@ async function rendimiento(desde, hasta, _fresco, opts) {
   citas.forEach(c => { const e = est(c), n = nomFisio(c.fields['PREF.']).toLowerCase(), f = String(c.fields['FECHA']).slice(0, 10), x = ((det[n] = det[n] || {})[f] = det[n][f] || { ses: 0, callin: 0, videos: 0, noVino: 0, canceladas: 0, ini: '', fin: '' });
     if (e === 'REALIZADA' && pid(c)) x.ses++; else if (e === 'CALL-IN') x.callin++; else if (e === 'VIDEOS' || e === 'VÍDEOS') x.videos++; else if (e === 'NO ASISTIÓ' || e === 'CITA PERDIDA') x.noVino++; else if (e === 'CANCELADA') x.canceladas++; else return;
     if (!['REALIZADA', 'CALL-IN', 'VIDEOS', 'VÍDEOS'].includes(e)) return; const h = hh(c.fields['HORA']); if (!h) return; if (!x.ini || h < x.ini) x.ini = h; if (!x.fin || h > x.fin) x.fin = h; });
-  const din = opts && opts.dinero ? await valorSesiones(citas, hasta, opts.precios || {}) : null;
+  const din = opts && opts.dinero ? await valorSesiones(citas, hasta, opts.precios || {}, opts) : null;
   if (din) din.lista.forEach(q => { const x = ((det[q.n] = det[q.n] || {})[q.f] = det[q.n][q.f] || { ses: 0, callin: 0, videos: 0, noVino: 0, canceladas: 0, ini: '', fin: '' }); if (q.e !== 'REALIZADA') return; x.eur = (x.eur || 0) + (q.eur || 0); if (!q.real) x.eurEst = (x.eurEst || 0) + (q.eur || 0); });
   const cambioDe = (n, f) => aus.filter(x => x.desde <= f && x.hasta >= f && (x.fisio === 'Toda la clínica' || x.fisio.toLowerCase() === n)).map(x => x.tipo === 'Cambio de horario' && x.hd ? `Otro horario ${x.hd}–${x.hh}` : x.hd ? `Falta ${x.hd}–${x.hh}` : (x.tipo || 'No trabaja') + (x.fisio === 'Toda la clínica' ? ' (clínica)' : '')).join(' · ');
   const diario = n => {
@@ -225,44 +225,56 @@ async function rendimiento(desde, hasta, _fresco, opts) {
     return r; }).sort((a, b) => b.realizadas - a.realizadas);
 }
 
-// ── Dinero que representa cada sesión hecha (para el informe de cada fisio) ──
-// Cada sesión gasta, por orden de fecha, una de las sesiones que el paciente ha pagado en las facturas del panel (FACTURAS emitidas):
-//   · si le toca una sesión cobrada → su precio real (precio por sesión de esa factura, packs incluidos)
-//   · si no (sesión de antes de que el panel empezara a cobrar, del pack previo o aún sin cobrar) → precio estimado:
-//     el último precio por sesión que ha pagado ese paciente o, si nunca ha pagado por el panel, la tarifa de «Sesión de fisioterapia»
-async function valorSesiones(citasRango, hasta, precios) {
+// ── Dinero que representa cada sesión hecha (informe de horas de cada fisio) ──
+// Cada sesión vale lo que pagó ese paciente por ella:
+//   · importe puesto a mano en la cita («IMPORTE SESIÓN») → manda siempre
+//   · si no, gasta por orden de fecha una de las sesiones que el paciente ha pagado:
+//       cobros del panel (FACTURAS emitidas) + tickets de Holded (desde que se usa Holded) que no vienen del panel.
+//       Precio por sesión = lo que pagó ÷ sesiones de ese cobro (packs incluidos). Un cobro vale para sesiones desde 14 días antes.
+//   · si no hay cobro que le toque → estimado: el último precio que pagó ese paciente o la tarifa de «Sesión de fisioterapia»
+async function valorSesiones(citasRango, hasta, precios, opts) {
+  opts = opts || {};
   const pid = c => (c.fields['RELACIÓN - CITA'] || [])[0] || '';
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const hora = c => { const m = String(c.fields['HORA'] || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
+  const num = v => Number(String(v == null ? '' : v).replace(',', '.')) || 0;
   const gast = citasRango.filter(c => GASTA.includes(est(c)) && pid(c));
   const pacs = [...new Set(gast.map(pid))];
   if (!pacs.length) return { lista: [] };
   const lotes = async (fn) => { let out = []; for (let i = 0; i < pacs.length; i += 40) out = out.concat(await fn(pacs.slice(i, i + 40))); return out; };
-  const inicio = await inicioControl().catch(() => '');
+  const ini = [await inicioControl().catch(() => ''), opts.desdeCobros || ''].filter(Boolean).sort()[0] || '';
   const [facs, pacT, previas] = await Promise.all([
-    inicio ? facturasEmitidas('').catch(() => []) : [],
-    lotes(ids => todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=SESIONES BONO PREVIO&fields[]=BONO PREVIO YA USADAS`).catch(() => [])),
-    inicio ? lotes(ids => todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${GASTA.map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},DATEADD('${inicio}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')),OR(${ids.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=RELACIÓN - CITA`).catch(() => [])) : []
+    facturasEmitidas('').catch(() => []),
+    lotes(ids => todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=SESIONES BONO PREVIO&fields[]=BONO PREVIO YA USADAS&fields[]=DNI&fields[]=EMAIL&fields[]=WHATSAPP&fields[]=TELF`).catch(() => [])),
+    ini ? lotes(ids => todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${GASTA.map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},DATEADD('${ini}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')),OR(${ids.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=RELACIÓN - CITA&fields[]=IMPORTE SESIÓN`).catch(() => [])) : []
   ]);
-  const num = v => Number(String(v == null ? '' : v).replace(',', '.')) || 0;
-  // Tarifa de referencia: Ajustes › Conceptos y precios, o el precio suelto más habitual de las facturas
   const freq = {}; facs.forEach(r => { const f = r.fields; if (String(f['CONCEPTO 1'] || '').trim() === 'Sesión de fisioterapia' && num(f['Nº SESIONES 1']) === 1) { const p = num(f['PRECIO SESIÓN 1']); if (p) freq[p] = (freq[p] || 0) + 1; } });
   const ref = num(precios['Sesión de fisioterapia']) || Number(Object.keys(freq).sort((a, b) => freq[b] - freq[a])[0] || 0);
   const nombre = {}, cola = {}, ultimoP = {};
-  pacT.forEach(p => { nombre[p.id] = p.fields['FULL NAME'] || '—'; const prev = Math.max(0, num(p.fields['SESIONES BONO PREVIO']) - num(p.fields['BONO PREVIO YA USADAS'])); if (prev) cola[p.id] = Array.from({ length: prev }, () => ({ p: 0, o: 'Pack pagado antes del panel' })); });
-  facs.slice().sort((a, b) => fechaCobro(a.fields).localeCompare(fechaCobro(b.fields))).forEach(r => { const f = r.fields, id = f['PacienteId']; if (!id || !pacs.includes(id)) return;
+  const mete = (id, u) => { (cola[id] = cola[id] || []).push(u); if (u.p) ultimoP[id] = u.p; };
+  pacT.forEach(p => { nombre[p.id] = p.fields['FULL NAME'] || '—'; const prev = Math.max(0, num(p.fields['SESIONES BONO PREVIO']) - num(p.fields['BONO PREVIO YA USADAS'])); for (let i = 0; i < prev; i++) mete(p.id, { f: '', p: 0, o: 'Pack pagado antes' }); });
+  // Cobros del panel
+  const yaHolded = new Set();
+  facs.forEach(r => { const f = r.fields, id = f['PacienteId']; if (f['HOLDED ID']) yaHolded.add(String(f['HOLDED ID'])); if (!id || !pacs.includes(id)) return; const fc = fechaCobro(f);
     [[f['CONCEPTO 1'], f['Nº SESIONES 1'], f['PRECIO SESIÓN 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2'], f['PRECIO SESIÓN 2']]].forEach(([c, n, p]) => { if (!/^Sesi/i.test(String(c || ''))) return;
-      n = num(n); p = num(p); const q = (cola[id] = cola[id] || []); for (let i = 0; i < n; i++) q.push({ p, o: String(c).trim() + (n > 1 ? ` (pack de ${n})` : '') }); if (p) ultimoP[id] = p; }); });
-  // Reparto por orden: cada sesión gastada desde que el panel cobra toma la siguiente sesión pagada de su paciente
-  const toma = {};
-  previas.slice().sort((a, b) => (String(a.fields['FECHA']).slice(0, 10) + hora(a) + a.id).localeCompare(String(b.fields['FECHA']).slice(0, 10) + hora(b) + b.id)).forEach(c => { const q = cola[pid(c)]; toma[c.id] = q && q.length ? q.shift() : null; });
+      n = num(n); p = num(p); for (let i = 0; i < n; i++) mete(id, { f: fc, p, o: 'Cobro del panel' + (n > 1 ? ` · pack de ${n}` : '') }); }); });
+  // Tickets de Holded hechos fuera del panel
+  if (opts.cobros) { try { const h = await opts.cobros(pacT, yaHolded); Object.entries(h).forEach(([id, us]) => us.forEach(u => mete(id, u))); } catch (e) { console.log('cobros Holded', e.message); } }
+  Object.values(cola).forEach(q => q.sort((a, b) => a.f.localeCompare(b.f)));
+  const mas14 = f => new Date(new Date(f + 'T12:00:00Z').getTime() + 14 * 864e5).toISOString().slice(0, 10);
+  const toma = {}, manual = {};
+  previas.concat(citasRango.filter(c => GASTA.includes(est(c)) && pid(c) && !previas.some(x => x.id === c.id)))
+    .sort((a, b) => (String(a.fields['FECHA']).slice(0, 10) + hora(a) + a.id).localeCompare(String(b.fields['FECHA']).slice(0, 10) + hora(b) + b.id))
+    .forEach(c => { if (c.fields['IMPORTE SESIÓN'] != null && c.fields['IMPORTE SESIÓN'] !== '') { manual[c.id] = num(c.fields['IMPORTE SESIÓN']); return; }
+      const q = cola[pid(c)]; if (!q || !q.length) return; const lim = mas14(String(c.fields['FECHA']).slice(0, 10)); const k = q.findIndex(u => u.f <= lim); if (k >= 0) toma[c.id] = q.splice(k, 1)[0]; });
   const lista = gast.map(c => { const id = pid(c), f = String(c.fields['FECHA']).slice(0, 10), u = toma[c.id];
-    let eur = 0, real = false, o;
-    if (u && u.p) { eur = u.p; real = true; o = u.o; }
-    else { eur = ultimoP[id] || ref || 0; o = !inicio || f < inicio ? 'Antes de cobrar por el panel' : u ? u.o : 'Sin cobrar todavía'; }
-    return { id: c.id, n: nomFisio(c.fields['PREF.']).toLowerCase(), f, h: hora(c), e: est(c), pac: nombre[id] || '—', eur, real, o };
+    let eur = 0, real = false, o, man = false;
+    if (c.id in manual || (c.fields['IMPORTE SESIÓN'] != null && c.fields['IMPORTE SESIÓN'] !== '')) { eur = c.id in manual ? manual[c.id] : num(c.fields['IMPORTE SESIÓN']); real = true; man = true; o = 'Puesto a mano'; }
+    else if (u && u.p) { eur = u.p; real = true; o = u.o; }
+    else { eur = ultimoP[id] || ref || 0; o = u ? u.o : 'Sin cobro encontrado'; }
+    return { id: c.id, n: nomFisio(c.fields['PREF.']).toLowerCase(), f, h: hora(c), e: est(c), pac: nombre[id] || '—', eur, real, man, o };
   }).sort((a, b) => (a.f + a.h).localeCompare(b.f + b.h));
-  return { lista, ref, inicio };
+  return { lista, ref };
 }
 
 const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };

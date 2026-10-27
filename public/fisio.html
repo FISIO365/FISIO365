@@ -18,7 +18,7 @@
 <style>
 :root{--cream:#f5f2ee;--black:#000;--white:#fff;--lila:#d9774f;--lila-light:#f7e6dd;--muted:#888;--border:rgba(0,0,0,0.1);--font:'Poppins',sans-serif;--r:14px;--r-sm:8px}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--cream);color:var(--black);min-height:100vh;overflow-x:hidden}
+html{overflow-x:clip}body{font-family:var(--font);background:var(--cream);color:var(--black);min-height:100vh;overflow-x:clip;overscroll-behavior-x:none}
 
 /* LOGIN */
 #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:#000}
@@ -460,7 +460,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .gv-g{border-bottom:1px solid #f1ebe5}.gv-g>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:11px 2px;position:relative}.gv-g>summary::-webkit-details-marker{display:none}.gv-n b{display:block;font-size:13.5px;font-weight:600;color:#1a1a1a;word-break:break-word}.gv-n small{font-size:12px;color:#9b8b80}.gv-v{font-size:14px;font-weight:700;color:#1a1a1a;white-space:nowrap;align-self:center}.gv-bar{grid-column:1/-1;display:block;height:4px;border-radius:99px;background:#f3c9b2;margin-top:4px}
 .gv-it{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;padding:7px 4px 7px 12px;font-size:12.5px;color:#5f554e;background:#faf7f4;border-radius:10px;margin:0 0 4px}.gv-it span{white-space:nowrap;color:#9b8b80}.gv-it p{margin:0;word-break:break-word}.gv-it b{white-space:nowrap;color:#1a1a1a;font-weight:600}.gv-g[open]{padding-bottom:8px}
 .hz-modal{position:fixed;inset:0;z-index:990;background:rgba(26,26,26,.4);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:700px){.hz-modal{align-items:center}}
-.hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;box-sizing:border-box}
+.hz-card{background:#fff;border-radius:22px;padding:18px;width:100%;max-width:520px;max-height:88vh;max-height:calc(100% - 4px);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;box-sizing:border-box}
 .hz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}.hz-x{border:none;background:#f3efea;width:32px;height:32px;border-radius:50%;cursor:pointer}
 .hz-lab{font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 6px}.hz-lab span{font-weight:400}
 .hz-card input[type=number],.hz-card input[type=month],.hz-card textarea{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px}
@@ -797,7 +797,8 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  .main-area{margin-left:0!important;width:100%!important;max-width:100%!important}
  /* El scroll va dentro (no la página): así Safari no mueve la barra de abajo al subir/bajar */
  html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
- .main-area{height:100dvh;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+ .main-area>*{overflow-x:clip;max-width:100%}
+ .main-area{height:100dvh;overflow-y:auto!important;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
  #sb-rend,#sb-seg,#sb-tar,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-admin{display:none!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
  .topbar-t{font-size:21px!important}
@@ -1085,10 +1086,13 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .hs-ley{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:#7d6a60;margin:8px 2px 0}.hs-ley i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}.hs-ley i.otro{background:#c6d4e6}.hs-ley i.menos{background:#f6d3b3}.hs-ley i.no{background:#f3c7c2}
 .hs-ops{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}.hs-ops button{font-family:var(--font);text-align:left;background:#fff;border:1.5px solid #ece6e0;border-radius:14px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px;color:#1e2a38}.hs-ops b{font-size:13.5px}.hs-ops small{font-size:11.5px;color:var(--muted)}.hs-ops button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}.hs-ops button.on small{color:rgba(255,255,255,.75)}
 .hz-kp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.hz-kp>div{background:#f7f3ef;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column}.hz-kp span{font-size:12px;color:#7d6a60}.hz-kp b{font-size:22px;margin:2px 0}.hz-kp small{font-size:11px;color:#9a8d84;line-height:1.3}
-.hz-nv{margin:8px 0 0;font-size:13px;color:#b42318}.hz-dd2{display:flex;flex-direction:column;max-height:46vh;overflow-y:auto}.hz-dd2>div{display:grid;grid-template-columns:78px 1fr auto;align-items:center;gap:8px;padding:8px 2px;border-top:1px solid #f1ebe5;font-size:13px}.hz-dd2 b{text-transform:capitalize}.hz-dd2 span{display:flex;flex-direction:column}.hz-dd2 small{font-size:11px;color:#9a8d84}.hz-dd2 i{font-style:normal;font-weight:600}.hz-dd2 .mas{color:#2f6b45}.hz-dd2 .menos{color:#b42318}.hz-dd2 .ok{color:#9a8d84}
+.hz-nv{margin:8px 0 0;font-size:13px;color:#b42318}.hz-dd2{display:flex;flex-direction:column}.hz-dd2>div{display:grid;grid-template-columns:78px 1fr auto;align-items:center;gap:8px;padding:8px 2px;border-top:1px solid #f1ebe5;font-size:13px}.hz-dd2 b{text-transform:capitalize}.hz-dd2 span{display:flex;flex-direction:column}.hz-dd2 small{font-size:11px;color:#9a8d84}.hz-dd2 i{font-style:normal;font-weight:600}.hz-dd2 .mas{color:#2f6b45}.hz-dd2 .menos{color:#b42318}.hz-dd2 .ok{color:#9a8d84}
 .hz-mesn{display:flex;align-items:center;justify-content:space-between;background:#f7f3ef;border-radius:12px;padding:4px;margin-top:8px}.hz-mesn b{font-size:14px}.hz-mesn button{width:36px;height:36px;border:0;border-radius:10px;background:#fff;font-size:20px;line-height:1;cursor:pointer;color:#1a1a1a;font-family:inherit}.hz-mesn button:disabled{opacity:.3;cursor:default}
+.hz-kp>div.hz-dinc{grid-column:1/-1}.hz-ses summary span{font-weight:500;color:#9a8d84;font-size:12px;margin-left:6px}
+.hz-sl>button{display:grid;grid-template-columns:1fr auto;gap:0 10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid #f3eee9;padding:8px 2px;font-family:inherit;font-size:12.5px;color:inherit;cursor:pointer}.hz-sl>button span{grid-column:1;color:#9a8d84;font-size:11.5px}.hz-sl>button b{grid-column:1;font-weight:600}.hz-sl>button i{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-weight:700;font-size:14px}.hz-sl>button small{grid-column:1/-1;color:#b3a69c;font-size:11px}.hz-sl>button i{background:none!important;padding:0!important;border:0!important;width:auto!important;height:auto!important}.hz-sl i.hz-iok{color:#2f6b45}.hz-sl i.hz-ies{color:#9a8d84}.hz-sl i.hz-iman{color:#c2552e}
+.hz-eur{display:flex;align-items:center;gap:8px;background:#f7f3ef;border-radius:12px;padding:6px 14px}.hz-eur input{flex:1;min-width:0;border:0;background:none;font:700 26px Poppins,sans-serif;color:#1a1a1a;outline:none;padding:6px 0}.hz-eur span{font-weight:700;font-size:20px;color:#7d6a60}
 .hz-res2{margin-top:6px}.hz-pc{font-style:normal;font-weight:500;font-size:11.5px;color:#7d6a60;margin-left:4px}.hz-big{grid-column:1/-1}.hz-big b{font-size:22px}.hz-aviso{font-size:12px;color:#8a4a1f;background:#fff4e8;border-radius:10px;padding:8px 10px;margin:6px 0 0}
-.hz-ses{margin-top:10px;border:1px solid #ece6e0;border-radius:12px;padding:8px 10px}.hz-ses summary{cursor:pointer;font-weight:600;font-size:13px}.hz-sl{display:flex;flex-direction:column;max-height:40vh;overflow-y:auto;margin-top:6px}.hz-sl>div{display:grid;grid-template-columns:104px 1fr auto;gap:0 10px;padding:6px 0;border-top:1px solid #f3eee9;font-size:12.5px;align-items:center}.hz-sl>div>i{grid-column:2;font-style:normal;color:#9a8d84;font-size:11.5px}.hz-sl>div>em{grid-column:3;grid-row:1/3;font-style:normal;font-weight:600}.hz-sl em{background:none;padding:0;border:0;white-space:nowrap}.hz-sl em.hz-ok{color:#2f6b45}.hz-sl em.hz-es{color:#7d6a60}.hz-sl .perd b{color:#b42318}.hz-dd{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow-y:auto}.hz-d{border:1px solid #ece6e0;border-radius:12px;padding:8px 10px;font-size:12.5px}.hz-d.dif{border-color:#f1d9c7}.hz-d1{display:flex;justify-content:space-between;align-items:center}.hz-d1 b{font-size:13px;text-transform:capitalize}.hz-d1 span{font-weight:600}.hz-d1 .mas{color:#2f6b45}.hz-d1 .menos{color:#b42318}.hz-d1 .ok{color:#7d6a60}
+.hz-ses{margin-top:10px;border:1px solid #ece6e0;border-radius:12px;padding:8px 10px}.hz-ses summary{cursor:pointer;font-weight:600;font-size:13px}.hz-sl{display:flex;flex-direction:column;margin-top:6px}.hz-sl>div{display:grid;grid-template-columns:104px 1fr auto;gap:0 10px;padding:6px 0;border-top:1px solid #f3eee9;font-size:12.5px;align-items:center}.hz-sl>div>i{grid-column:2;font-style:normal;color:#9a8d84;font-size:11.5px}.hz-sl>div>em{grid-column:3;grid-row:1/3;font-style:normal;font-weight:600}.hz-sl em{background:none;padding:0;border:0;white-space:nowrap}.hz-sl em.hz-ok{color:#2f6b45}.hz-sl em.hz-es{color:#7d6a60}.hz-sl .perd b{color:#b42318}.hz-dd{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow-y:auto}.hz-d{border:1px solid #ece6e0;border-radius:12px;padding:8px 10px;font-size:12.5px}.hz-d.dif{border-color:#f1d9c7}.hz-d1{display:flex;justify-content:space-between;align-items:center}.hz-d1 b{font-size:13px;text-transform:capitalize}.hz-d1 span{font-weight:600}.hz-d1 .mas{color:#2f6b45}.hz-d1 .menos{color:#b42318}.hz-d1 .ok{color:#7d6a60}
 .hz-d2{display:flex;flex-wrap:wrap;gap:3px 12px;margin-top:3px;color:#5f554e}.hz-d2 em{font-style:normal;color:#9a8d84}.hz-cb{color:#1e3a5f;background:#e8eef6;border-radius:99px;padding:1px 8px}.hz-rg{color:#8a4a1f;background:#fff4e8;border-radius:99px;padding:1px 8px}
 .ag-ausb{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.ag-aus{background:#fff4e8;border:1px solid #f6d3b3;color:#8a4a1f;border-radius:999px;padding:5px 12px;font-size:12.5px}.ag-aus b{font-weight:600}
 .ag-sinf{background:#fff6e8;border-radius:14px;padding:10px 12px;margin-bottom:10px}.ag-sinf>b{display:block;font-size:13.5px;color:#b45309}.ag-sinf>small{display:block;font-size:12px;color:#7d6a60;margin-bottom:8px}
@@ -1653,6 +1657,7 @@ function ajustaTopbar(){try{const tb=document.querySelector('.topbar');if(!tb)re
 try{document.fonts&&document.fonts.ready.then(()=>ajustaTopbar());}catch(e){}setTimeout(ajustaTopbar,1500);
 window.addEventListener('resize',()=>ajustaTopbar());
 function showSection(sec){
+ try{window.__sigueAqui&&window.__sigueAqui.cancela();}catch(e){}
  // Si no tiene acceso a esa sección (Administración › Accesos), a la primera que sí tenga
  try{const SBM={agenda:'sb-agenda',pac:'sb-pac',msg:'sb-msg',rep:'sb-rep',call:'sb-call',cap:'sb-cap',prog:'sb-prog',ejer:'sb-ejer',anam:'sb-anam',rend:'sb-rend',stats:'sb-stats',school:'sb-school',admin:'sb-admin'};
   if(fisioActual&&SBM[sec]){const e=$(SBM[sec]);if(e&&e.style.display==='none'){const alt=Object.keys(SBM).find(k=>{const x=$(SBM[k]);return x&&x.style.display!=='none';});if(alt)sec=alt;}}}catch(e){}
@@ -8120,19 +8125,39 @@ async function abrirInformeHoras(fisio){
      <div><span>Horas que podía hacer</span><b>${datos.posibles} h</b><small>los días que vino, según su horario</small></div>
      <div><span>Horas con pacientes</span><b>${datos.sesiones} h</b><small>${datos.ocup} % de las que podía</small></div>
      ${ci?`<div><span>Call-in y vídeos</span><b>${ci} h</b><small>total trabajado: ${hechas} h</small></div>`:''}
-     ${dn?`<div><span>Dinero que ha producido</span><b>${dn.total?(aprox?'≈ ':'')+fmtEur(dn.total):'—'}</b><small>${!dn.total?'falta la tarifa de «Sesión de fisioterapia» en Administración › Listas':aprox?'aproximado: aún hay pocos cobros hechos desde el panel':'según lo que han pagado sus pacientes'}</small></div>`:''}
+     ${dn?`<div class="hz-dinc"></div>`:''}
     </div>
     ${datos.diasNoVino?`<p class="hz-nv">Días que no vino: <b>${datos.diasNoVino}</b></p>`:''}
     <div class="hz-lab">Día a día</div><div class="hz-dd2">${dias.map(q=>{const ex=[q.cambio,q.reg?q.reg.tipo+(q.reg.nota?' · '+q.reg.nota:''):''].filter(Boolean).join(' · ');
       return `<div><b>${fdiaCorto(q.fecha)}</b><span>${q.libre?'No vino':`${q.hechas} de ${q.toca} h`}${ex?`<small>${escH(ex)}</small>`:''}</span><i class="${q.libre||q.dif<0?'menos':q.dif>0?'mas':'ok'}">${q.libre?'−'+q.toca+' h':q.dif?(q.dif>0?'+':'−')+Math.abs(q.dif)+' h':'✓'}</i></div>`;}).join('')||'<p class="adm-nota">Sin datos este mes.</p>'}</div>
-    <div class="hz-bts"><button type="button" class="hz-csv">Excel con todo el detalle</button><button type="button" class="hz-pdf">Ver PDF · imprimir</button></div>`;
-   box.querySelector('.hz-csv').onclick=()=>descargarCSVHoras(datos);
+    ${dn&&dn.sesiones.some(q=>q.e==='REALIZADA')?`<details class="hz-ses"><summary>Lo que pagó cada paciente <span>${dn.sesiones.filter(q=>q.e==='REALIZADA').length} sesiones</span></summary><p class="adm-nota">Toca un importe para cambiarlo si no está bien.</p><div class="hz-sl"></div></details>`:''}
+    <div class="hz-bts"><button type="button" class="hz-pdf">Ver PDF · imprimir</button></div>`;
+   const pintaDin=()=>{if(!dn)return;const S=dn.sesiones.filter(q=>q.e==='REALIZADA'),su=a=>a.reduce((t,q)=>t+(q.eur||0),0);dn.total=su(S);dn.real=su(S.filter(q=>q.real));dn.estimado=su(S.filter(q=>!q.real));dn.sesReal=S.filter(q=>q.real).length;dn.sesEst=S.length-dn.sesReal;
+    const c=box.querySelector('.hz-dinc');if(c)c.innerHTML=`<span>Dinero que ha producido</span><b>${dn.total?(dn.sesEst?'≈ ':'')+fmtEur(dn.total):'—'}</b><small>${!dn.total?'falta la tarifa de «Sesión de fisioterapia» en Administración › Listas':dn.sesEst?`${dn.sesReal} de ${S.length} sesiones con el importe real; el resto, aproximado`:'todas las sesiones con lo que pagó el paciente'}</small>`;
+    const l=box.querySelector('.hz-sl');if(l)l.innerHTML=S.map(q=>`<button type="button" data-id="${q.id}"><span>${fdiaCorto(q.f)} · ${q.h}</span><b>${escH(q.pac)}</b><i class="${q.man?'hz-iman':q.real?'hz-iok':'hz-ies'}">${q.eur?(q.real?'':'≈ ')+fmtEur(q.eur):'—'}</i><small>${escH(q.o)}</small></button>`).join('');
+    if(l)l.querySelectorAll('button').forEach(b=>b.onclick=()=>editarImporte(dn.sesiones.find(q=>q.id===b.dataset.id),pintaDin));};
+   pintaDin();
    box.querySelector('.hz-pdf').onclick=()=>imprimirHoras(datos);
   }catch(e){box.innerHTML='<div class="fac-vacio">No se ha podido calcular</div>';}
  };
  cargarInf();
 }
 function fmtEur(v){v=Math.round((+v||0)*100)/100;return v.toLocaleString('es-ES',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2})+' €';}
+function editarImporte(q,listo){if(!q)return;
+ const m=hzModal(`<div class="hz-top"><div><small>${fdiaCorto(q.f)} · ${q.h}</small><b>${escH(q.pac)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Lo que pagó por esta sesión</div><div class="hz-eur"><input type="text" inputmode="decimal" value="${q.eur?String(q.eur).replace('.',','):''}" placeholder="0"><span>€</span></div>
+  <p class="adm-nota">${q.man?'Puesto a mano.':q.real?'Sale de: '+escH(q.o)+'.':'Aproximado: no hay un cobro que le toque.'}</p>
+  <div class="hz-bts">${q.man?'<button type="button" class="hz-del">Volver al automático</button>':''}<button type="button" class="hz-ok">Guardar</button></div>`);
+ const inp=m.querySelector('input');setTimeout(()=>{try{inp.focus();inp.select();}catch(e){}},200);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const guarda=async v=>{const b=m.querySelector('.hz-ok');b.disabled=true;
+  try{const r=await (await fetch('/api/schedule?action=seg-importe-sesion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:q.id,importe:v})})).json();
+   if(!r.ok)throw new Error(r.error||'');
+   if(v===''){q.man=false;toast('Vuelve al cálculo automático; se verá al recargar el informe');}else{q.eur=Number(v);q.real=true;q.man=true;q.o='Puesto a mano';toast('Guardado');}
+   m.remove();listo&&listo();}catch(e){b.disabled=false;toast('No se ha podido guardar');}};
+ m.querySelector('.hz-ok').onclick=()=>{const v=String(inp.value).trim().replace(',','.');if(v===''||!isFinite(+v)||+v<0){toast('Pon un importe válido');return;}guarda(String(Math.round(+v*100)/100));};
+ const d=m.querySelector('.hz-del');if(d)d.onclick=()=>guarda('');
+}
 function eurCsv(v){return v?String(Math.round(v*100)/100).replace('.',','):'';}
 function fdiaCorto(f){const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+'/'+(t.getMonth()+1);}
 function descargarCSVHoras(D){
@@ -8149,9 +8174,9 @@ function imprimirHoras(D){
  pdfVista({etiqueta:'FISIO365 · CONTROL DE HORAS',titulo:D.fisio,sub:mesTxt.replace(/^./,c=>c.toUpperCase()),
   kpis:[['Horas que podía hacer',D.posibles+' h'],['Horas con pacientes',`${D.sesiones} h · ${D.ocup} %`]].concat(D.callin+D.videos?[['Call-in y vídeos',(D.callin+D.videos)+' h']]:[]).concat(D.din?[['Dinero producido',(D.din.estimado>D.din.real?'≈ ':'')+fmtEur(D.din.total)]]:[]).concat(D.diasNoVino?[['Días que no vino',String(D.diasNoVino)]]:[]),
   secciones:[{titulo:'Día a día',cols:[['Día',28],['Le tocaban',28],['Hizo',28],['Diferencia',28],['Nota',66]],
-   filas:D.dias.map(x=>[fdiaCorto(x.fecha),x.toca+' h',x.libre?'No vino':x.hechas+' h',{t:x.libre?'−'+x.toca+' h':x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓',c:x.libre||x.dif<0?'no':x.dif>0?'ok':null,b:!!(x.libre||x.dif)},[x.cambio,x.reg?x.reg.tipo+(x.reg.nota?' · '+x.reg.nota:''):''].filter(Boolean).join(' · ')])}],
+   filas:D.dias.map(x=>[fdiaCorto(x.fecha),x.toca+' h',x.libre?'No vino':x.hechas+' h',{t:x.libre?'−'+x.toca+' h':x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓',c:x.libre||x.dif<0?'no':x.dif>0?'ok':null,b:!!(x.libre||x.dif)},[x.cambio,x.reg?x.reg.tipo+(x.reg.nota?' · '+x.reg.nota:''):''].filter(Boolean).join(' · ')])}].concat(D.din&&D.din.sesiones.some(x=>x.e==='REALIZADA')?[{titulo:'Lo que pagó cada paciente (≈ aproximado)',cols:[['Día',30],['Paciente',70],['Importe',28]],filas:D.din.sesiones.filter(x=>x.e==='REALIZADA').map(x=>[fdiaCorto(x.f)+' '+x.h,x.pac,{t:x.eur?(x.real?'':'≈ ')+fmtEur(x.eur):'—',c:x.real?'ok':null}])}]:[]),
   seccionesVista:[{cols:[['Día',26],['Hizo',30],['Dif.',18],['Nota',26]],
-   filas:D.dias.map(x=>[fdiaCorto(x.fecha),x.libre?'No vino':x.hechas+' de '+x.toca+' h',{t:x.libre?'−'+x.toca+' h':x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓',c:x.libre||x.dif<0?'no':x.dif>0?'ok':null,b:!!(x.libre||x.dif)},[x.cambio,x.reg?x.reg.tipo:''].filter(Boolean).join(' · ')])}],
+   filas:D.dias.map(x=>[fdiaCorto(x.fecha),x.libre?'No vino':x.hechas+' de '+x.toca+' h',{t:x.libre?'−'+x.toca+' h':x.dif?(x.dif>0?'+':'−')+Math.abs(x.dif)+' h':'✓',c:x.libre||x.dif<0?'no':x.dif>0?'ok':null,b:!!(x.libre||x.dif)},[x.cambio,x.reg?x.reg.tipo:''].filter(Boolean).join(' · ')])}].concat(D.din&&D.din.sesiones.some(x=>x.e==='REALIZADA')?[{titulo:'Lo que pagó cada paciente (≈ aproximado)',cols:[['Día',30],['Paciente',45],['Importe',25]],filas:D.din.sesiones.filter(x=>x.e==='REALIZADA').map(x=>[fdiaCorto(x.f)+' '+x.h,x.pac,{t:x.eur?(x.real?'':'≈ ')+fmtEur(x.eur):'—',c:x.real?'ok':null}])}]:[]),
   nombre:`Horas_${D.fisio}_${D.mes}`});
 }
 // ── PDF de tablas (informes del panel): se crea un PDF real y se comparte/descarga sin salir del panel ──
@@ -11706,6 +11731,30 @@ function cerrarLightbox(){
 })();
 </script>
 <script src="/avisos.js"></script>
+<script>
+// ── Al guardar algo, la pantalla se queda donde estaba (no sube arriba) ──
+// Cuando se guarda (cualquier petición que no sea de lectura), durante unos segundos se recoloca el scroll
+// si el contenido se repinta, salvo que la persona toque/desplace la pantalla o cambie de sección.
+(function(){
+ const F=window.fetch.bind(window);let st=null,raf=0;
+ const scrollers=()=>{const l=[document.scrollingElement||document.documentElement];document.querySelectorAll('.main-area,.hz-card,.fp-body,.pv,.pv-doc').forEach(e=>{if(e.scrollHeight>e.clientHeight+2)l.push(e);});return l;};
+ const clave=e=>e===(document.scrollingElement||document.documentElement)?'#doc':(e.id?'#'+e.id:'.'+String(e.className).trim().split(/\s+/)[0]);
+ const busca=k=>k==='#doc'?(document.scrollingElement||document.documentElement):k[0]==='#'?document.getElementById(k.slice(1)):[...document.getElementsByClassName(k.slice(1))].pop();
+ const para=()=>{st=null;cancelAnimationFrame(raf);try{document.querySelectorAll('[data-sa-min]').forEach(e=>{e.style.minHeight=e.dataset.saMin;delete e.dataset.saMin;});}catch(e){}};
+ const bucle=()=>{if(!st)return;if(Date.now()>st.hasta)return para();
+  st.pos.forEach(([k,y])=>{const e=busca(k);if(e&&Math.abs(e.scrollTop-y)>3&&e.scrollHeight-e.clientHeight>=y-3)e.scrollTop=y;});raf=requestAnimationFrame(bucle);};
+ ['touchstart','wheel','mousedown','keydown'].forEach(ev=>addEventListener(ev,e=>{if(st&&Date.now()-st.desde>350)para();},{passive:true,capture:true}));
+ window.__sigueAqui={cancela:para};
+ window.fetch=function(u,o){
+  try{const m=String((o&&o.method)||(u&&u.method)||'GET').toUpperCase();
+   if(m!=='GET'){const pos=scrollers().map(e=>[clave(e),e.scrollTop]).filter(x=>x[1]>0);
+    if(pos.length){para();st={pos,desde:Date.now(),hasta:Date.now()+5000};
+     // que el contenido no encoja mientras se repinta (si encoge, el navegador sube la pantalla)
+     pos.forEach(([k])=>{const e=busca(k);const c=e===(document.scrollingElement||document.documentElement)?document.body:e.firstElementChild;if(c&&!c.dataset.saMin){c.dataset.saMin=c.style.minHeight||'';c.style.minHeight=c.scrollHeight+'px';}});
+     raf=requestAnimationFrame(bucle);}}}catch(e){}
+  return F(u,o);};
+})();
+</script>
 <script src="/chat-ui.js"></script>
 <script src="/racha-ui.js?v=3"></script>
 </body>

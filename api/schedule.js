@@ -96,6 +96,38 @@ async function ingresosHoldedDias(desde, hasta) {
     dias[f] = Math.round(((dias[f] || 0) + importeDoc(d)) * 100) / 100; });
   _ingH = { t: Date.now(), k, v: dias }; return dias;
 }
+// Tickets de Holded (hechos fuera del panel) → sesiones pagadas por paciente, para el valor de cada sesión del informe de horas
+let _hCont = { t: 0, v: null };
+async function cobrosHolded(pacT, yaPanel, desde, hasta) {
+  const nrm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const [tk, cont] = await Promise.all([
+    holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40),
+    _hCont.v && Date.now() - _hCont.t < 30 * 60e3 ? _hCont.v : holdedTodos('/contacts?limit=200', 40).then(v => { _hCont = { t: Date.now(), v }; return v; }).catch(() => [])
+  ]);
+  const dni = {}, mail = {}, tel = {}, nom = {};
+  pacT.forEach(p => { const f = p.fields || {}; const d = normDni(f['DNI']); if (d.length >= 8) dni[d] = p.id; const e = String(f['EMAIL'] || '').trim().toLowerCase(); if (e) mail[e] = p.id;
+    const t = soloDigitos(f['WHATSAPP'] || f['TELF']); if (t.length === 9) tel[t] = p.id; const n = nrm(f['FULL NAME']); if (n) (nom[n] = nom[n] || []).push(p.id); });
+  const porNom = n => { const l = nom[nrm(n)]; return l && l.length === 1 ? l[0] : ''; };
+  const contPac = {};
+  cont.forEach(c => { const id = dni[normDni(c.code || c.vatnumber || c.tax_id || c.nif)] || mail[String(c.email || '').trim().toLowerCase()] || tel[soloDigitos(c.mobile)] || tel[soloDigitos(c.phone)] || porNom(c.name); if (id) contPac[c.id] = id; });
+  const out = {}; let ok = 0, sinPac = 0, sinSes = 0;
+  tk.forEach(d => {
+    if (!d || !d.id || d.status === 'completed' || yaPanel.has(String(d.id))) return;
+    const f = String(d.date || '').slice(0, 10); if (f < desde || f > hasta) return;
+    const cid = d.contact_id || (d.contact && typeof d.contact === 'object' ? d.contact.id : d.contact);
+    const pid = contPac[cid] || porNom(d.contact_name || d.contactName); if (!pid) { sinPac++; return; }
+    let n = 0;
+    (d.lines || d.products || d.items || []).forEach(x => { const nm = String(x.name || x.desc || x.concept || x.product_name || x.description || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); const u = aNum(x.units) || 1;
+      const m = nm.match(/(\d+)\s*(ses|sesion)/); if (m) n += +m[1] * u; else if (/sesion|valoracion|fisio|pelvi|readapt|tratamiento|masaje|bono|pack|osteo|puncion/.test(nm)) n += u; });
+    if (!n) { sinSes++; return; }
+    const tot = importeDoc(d); if (!tot) return; ok++;
+    const p = Math.round(tot / n * 100) / 100;
+    for (let i = 0; i < n; i++) (out[pid] = out[pid] || []).push({ f, p, o: 'Ticket de Holded' + (n > 1 ? ` · ${n} sesiones` : '') });
+  });
+  const e = tk[0] || {}, l = (e.lines || e.products || e.items || [])[0] || {};
+  console.log('cobrosHolded', JSON.stringify({ tickets: tk.length, contactos: cont.length, ligados: Object.keys(contPac).length, ok, sinPac, sinSes, claves: Object.keys(e), linea: Object.keys(l), nombresLinea: tk.slice(0, 8).map(t => (t.lines || t.products || t.items || []).map(x => x.name || x.desc).join(' + ')) }));
+  return out;
+}
 const docTipo = t => t === 'invoice' ? 'invoices' : 'sales-receipts';
 
 // Busca contactos de Holded por un filtro exacto (code = DNI/NIF, email, mobile, phone)
@@ -906,7 +938,7 @@ module.exports = async function handler(req, res) {
     if (!process.env.FISIO_PASSWORD || String(req.query.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
     const { desde, hasta } = req.query;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(desde || '') || !/^\d{4}-\d{2}-\d{2}$/.test(hasta || '')) return res.status(400).json({ ok: false, error: 'Fechas no válidas' });
-    try { const [fisios, ini] = await Promise.all([rendimiento(desde, hasta, !!req.query.fresco, req.query.dinero === '1' ? { dinero: true, precios: Object.fromEntries(((await conf().catch(() => CONF_DEF)).listas.conceptos || []).map(c => [c.n, c.p])) } : null), inicioControl().catch(() => '')]); return res.status(200).json({ ok: true, fisios, conPack: !!ini }); }
+    try { const [fisios, ini] = await Promise.all([rendimiento(desde, hasta, !!req.query.fresco, req.query.dinero === '1' ? { dinero: true, desdeCobros: HOLDED_DESDE, cobros: HOLDED_KEY ? (pacT, ya) => cobrosHolded(pacT, ya, HOLDED_DESDE, hasta) : null, precios: Object.fromEntries(((await conf().catch(() => CONF_DEF)).listas.conceptos || []).map(c => [c.n, c.p])) } : null), inicioControl().catch(() => '')]); return res.status(200).json({ ok: true, fisios, conPack: !!ini }); }
     catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   }
 
@@ -918,6 +950,14 @@ module.exports = async function handler(req, res) {
     const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
     const hoyF = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     try {
+      // Importe de una sesión puesto a mano (informe de horas). Vacío = vuelve al cálculo automático
+      if (action === 'seg-importe-sesion') {
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false, error: 'Falta la cita' });
+        const v = q.importe === '' || q.importe == null ? null : Number(String(q.importe).replace(',', '.'));
+        if (v !== null && (!isFinite(v) || v < 0 || v > 5000)) return res.status(400).json({ ok: false, error: 'Importe no válido' });
+        const d = await at(`${CIT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'IMPORTE SESIÓN': v } }) });
+        return res.status(200).json({ ok: !d.error, error: d.error ? 'No se ha podido guardar' : undefined });
+      }
       if (action === 'seg-config') return res.status(200).json({ ok: true, conf: await conf() });
       // ── ADMINISTRACIÓN: equipo, horarios, ausencias, accesos y contraseñas (solo quien tiene acc_admin) ──
       if (action.startsWith('seg-adm-')) {
