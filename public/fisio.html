@@ -8934,7 +8934,8 @@ function mantenerVista(el,repinta){
 }
 // WhatsApp a un paciente con el mensaje ya escrito: la IA lo personaliza con sus notas (se puede retocar antes de enviar)
 function waPersonal(o){
- const nom=capTit(String(o.nombre||'').split(' ')[0]),yo1=miNombreCorto();
+ // Firma el fisio que le atendió (si no consta, quien lo envía)
+ const nom=capTit(String(o.nombre||'').split(' ')[0]),yo1=capTit(String(o.fisio||'').trim().split(' ')[0])||miNombreCorto();
  const gen=o.generico||(o.proxima?`Hola ${nom}, soy ${yo1} de FISIO365 😊 ¿Qué tal sigues? Te recuerdo que nos vemos el ${segFecha(o.proxima)}. Cualquier cosa, escríbenos. ¡Un abrazo!`:`Hola ${nom}, soy ${yo1} de FISIO365 😊 ¿Qué tal sigues desde la última sesión? Si notas cualquier molestia o te apetece hacer una revisión, dime y te buscamos hueco. ¡Un abrazo!`);
  const ultTxt=o.ult?[resTxtG(o.ult.resultado),o.ult.nota].filter(Boolean).join(' — '):'';
  const ctx=[o.nota,o.ult&&o.ult.nota].filter(Boolean).join(' · ');

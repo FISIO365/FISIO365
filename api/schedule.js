@@ -2749,7 +2749,7 @@ module.exports = async function handler(req, res) {
         const prompt = `Escribe un WhatsApp corto (2-3 frases, máx. 280 caracteres) de una clínica de fisioterapia (FISIO365, Barcelona) a un paciente, para saber cómo está y animarle a volver si lo necesita.
 Datos:
 - Nombre del paciente: ${c(q.nombre)}
-- Quién escribe: ${c(q.yo)} (fisio o recepción de FISIO365)
+- Quién firma: ${c(q.yo)} (el fisio que le atendió en FISIO365)
 - Su fisio habitual: ${c(q.fisio) || 'no consta'}
 - Última sesión: ${c(q.ultima) || 'no consta'}
 - Próxima cita ya reservada: ${c(q.proxima) || 'ninguna'}
