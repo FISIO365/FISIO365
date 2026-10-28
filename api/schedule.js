@@ -2748,6 +2748,7 @@ module.exports = async function handler(req, res) {
         } catch (e) { console.error('seg-wa-ia ficha', e.message); } }
         const prompt = `Escribe un WhatsApp corto (2 frases, máx. 220 caracteres) de un fisio de FISIO365 (Barcelona) a un paciente al que trató. El objetivo es que el paciente CONTESTE: el mensaje termina con UNA pregunta concreta y fácil de responder.
 Datos:
+- Hoy es: ${hoyF}
 - Nombre del paciente: ${c(q.nombre)}
 - Quién firma: ${c(q.yo)} (el fisio que le atendió)
 - Última sesión: ${c(q.ultima) || 'no consta'}
@@ -2764,6 +2765,8 @@ Cómo escribirlo:
 - Termina con UNA pregunta concreta que se conteste en una línea y que, sutilmente, abra la puerta a volver. Ejemplos del estilo: «¿Cómo la notas ahora al levantarte por las mañanas?», «¿Has podido volver al pádel sin molestias?», «¿Te va bien que te guarde un hueco la semana que viene para revisarla?».
 - Si el último contacto fue un WhatsApp que no ha contestado: es un segundo intento. Sin reproches ni «te escribí la semana pasada» insistente; no repitas la misma pregunta: haz otra distinta, todavía más fácil de contestar (por ejemplo, ofrecerle dos opciones o preguntarle si prefiere que le llamemos).
 - Si YA tiene próxima cita, no ofrezcas hueco: pregunta algo sobre cómo está y menciona que os veis ese día.
+- Referencias de tiempo: solo si salen de comparar «Hoy» con la fecha de la última sesión (p. ej. «hace un par de meses»). NUNCA menciones fiestas, estaciones ni fechas que aparezcan en el historial (puede ser antiguo).
+- Tono profesional y cercano, de fisio a paciente. Nada personal ni afectivo: prohibido «pensaba en ti», «me acordaba de ti», «te echamos de menos», «tenía ganas de saber de ti» y similares.
 - PROHIBIDO: «espero que…», «recuerda…», «cualquier cosa nos escribes», «aquí estamos», «no dudes en…», consejos o deberes, despedidas de relleno y emojis. Nada que se pueda leer sin contestar.
 Devuelve solo el texto del mensaje, sin comillas.`;
         // Se prueban varios modelos por si alguno ya no está disponible; los errores se ven en los logs de Vercel
