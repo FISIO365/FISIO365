@@ -1644,6 +1644,10 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rd-at{border-top:1px solid #f0ebe6;padding:8px 0}.rd-at:first-of-type{border-top:none}.rd-at summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;cursor:pointer;list-style:none;font-size:13.5px}.rd-at summary::-webkit-details-marker{display:none}
 .rd-at summary::before{content:'›';color:#a99d93;font-weight:700;transition:.15s}.rd-at[open] summary::before{transform:rotate(90deg)}.rd-at summary span{color:#5e554d}.rd-at summary em{font-style:normal;font-size:12.5px;color:#7d6a60;margin-left:auto}.rd-at.viejo summary em{color:#b42318;font-weight:600}
 .rd-at .rd-avisar{margin-top:8px}
+.sg-ant{font-family:var(--font);font-size:12.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:#5e554d;border-radius:99px;padding:7px 12px;cursor:pointer}.sg-ant b{color:#c2552e;margin-left:3px}.sg-ant.on{background:#1e2a38;border-color:#1e2a38;color:#fff}.sg-ant.on b{color:#fff}
+.sg-antn{font-size:12.5px;line-height:1.45;color:#5e554d;background:#faf6f2;border-radius:12px;padding:10px 12px;margin:8px 0 4px}
+.tk-tri{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:8px;padding-top:8px;border-top:1px dashed #ece4dc}.tk-tri button{font-family:var(--font);font-size:12.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:99px;padding:6px 12px;cursor:pointer}.tk-tri button.wa{background:#1f9d55;border-color:#1f9d55;color:#fff}.tk-tri button:disabled{opacity:.5}.tk-tri span{font-size:12.5px;font-weight:700;color:#16803c}
+.tk:has(.tk-tri){flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -8913,7 +8917,8 @@ function mantenerVista(el,repinta){
 }
 async function renderSeguimiento(wrap){
  const box=ce('div','seg');wrap.appendChild(box);
- let tab='pend',filtroFisio='',datos=null,perH='30',diaH='',segYaCargo=false,resF='';
+ let tab='pend',filtroFisio='',datos=null,perH='30',diaH='',segYaCargo=false,resF='',antF=false;
+ const esAntigua=x=>/^Recuperado de las llamadas antiguas/i.test(String(x&&x.nota||''));
  const RES_K=r=>{r=String(r||'').toUpperCase().trim();return !r?'sin':/^NO VOLVER/.test(r)?'novol':/^NC/.test(r)?'nc':/^VOLVER/.test(r)?'volver':/PENDIENTE/.test(r)?'pend':/RECUPERADA/.test(r)?'rec':/^ALTA/.test(r)?'alta':'otro';};
  const RES_L=[['pend','Pendiente de respuesta','pe'],['volver','Volver a llamar','no'],['nc','No contesta','no'],['rec','Cita recuperada','ok'],['alta','Alta','ok'],['novol','No volver a llamar','pe'],['otro','Otro','pe'],['sin','','pe']];
  const chipsRes=(L,kf,sinTxt)=>{const c={};L.forEach(x=>{const k=kf(x);c[k]=(c[k]||0)+1;});if(resF&&!c[resF])c[resF]=0;
@@ -8935,10 +8940,10 @@ async function renderSeguimiento(wrap){
   const atr=P.filter(x=>x.fecha<hoy).length,deHoy=P.filter(x=>x.fecha===hoy).length;
   const nomF=filtroFisio==='__yo'?'Míos':(filtroFisio||'Todos');
   let html=`<div class="sg-top"><div class="sg-seg"><button type="button" data-t="pend" class="${tab==='pend'?'on':''}">Por llamar <b>${P.filter(x=>x.fecha<=hoy).length}</b></button><button type="button" data-t="hech" class="${tab==='hech'?'on':''}">Ya hechas</button></div>${tab==='pend'?'<button type="button" class="seg-add">+ Añadir</button>':''}</div>
-   ${tab==='pend'?`<div class="ll-per ll-2"><label class="ll-sel ${filtroFisio?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">Quién:</span><select class="sg-quien"><option value="">Todo el equipo</option><option value="__yo" ${filtroFisio==='__yo'?'selected':''}>Míos (${P.filter(x=>qDe(x)===yo&&x.fecha<=hoy).length})</option>${fisios.map(f=>`<option value="${escH(f)}" ${filtroFisio===f?'selected':''}>${escH(f)} (${P.filter(x=>qDe(x)===f&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label>${chipsRes(P.filter(flt).filter(x=>x.fecha<=hoy),x=>RES_K(x.ult&&x.ult.resultado),'Aún sin llamar')}</div>`:''}`;
+   ${tab==='pend'?`<div class="ll-per ll-2"><label class="ll-sel ${filtroFisio?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">Quién:</span><select class="sg-quien"><option value="">Todo el equipo</option><option value="__yo" ${filtroFisio==='__yo'?'selected':''}>Míos (${P.filter(x=>qDe(x)===yo&&x.fecha<=hoy).length})</option>${fisios.map(f=>`<option value="${escH(f)}" ${filtroFisio===f?'selected':''}>${escH(f)} (${P.filter(x=>qDe(x)===f&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label>${chipsRes(P.filter(flt).filter(x=>x.fecha<=hoy),x=>RES_K(x.ult&&x.ult.resultado),'Aún sin llamar')}${P.some(esAntigua)?`<button type="button" class="sg-ant${antF?' on':''}">Antiguas sin asignar <b>${P.filter(esAntigua).length}</b></button>`:''}</div>${antF?'<p class="sg-antn">Llamadas que se quedaron a medias en el sistema antiguo. Para vaciarlas rápido: <b>Cerrar</b> si ya no hace falta, <b>En un mes</b> si conviene más adelante, o <b>WhatsApp</b> con un mensaje ya escrito (queda pendiente de respuesta 7 días).</p>':''}`:''}`;
   if(tab==='pend'){
    const kP=x=>RES_K(x.ult&&x.ult.resultado);
-   const L=P.filter(flt).filter(x=>!resF||kP(x)===resF);
+   const L=P.filter(flt).filter(x=>!resF||kP(x)===resF).filter(x=>!antF||esAntigua(x));
    const grupos=[['Atrasados',L.filter(x=>x.fecha<hoy)],['Hoy',L.filter(x=>x.fecha===hoy)],['Esta semana',L.filter(x=>x.fecha>hoy&&x.fecha<=segIso(7))],['Más adelante',L.filter(x=>x.fecha>segIso(7))]];
    const nFut=L.filter(x=>x.fecha>hoy).length;
    html+=grupos.filter(g=>g[1].length).map(([t,g],gi)=>(t==='Esta semana'||(t==='Más adelante'&&!grupos[2][1].length)?`<details class="ll-det ll-fut"><summary>Programadas para más adelante (${nFut})</summary>`:'')+`<div class="seg-gt">${t} <span>${g.length}</span></div><div class="seg-tabla">${g.map(x=>{const ests=pacEstados(x.pacienteId).map(estNom).filter(Boolean);const q=deQuienSeg(x);
@@ -8967,6 +8972,17 @@ async function renderSeguimiento(wrap){
   box.querySelectorAll('.sg-seg button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;resF='';try{sessionStorage.setItem('f365_seg',tab);}catch(e){}pinta();});
   box.querySelectorAll('.seg-fis button').forEach(b=>b.onclick=()=>{filtroFisio=b.dataset.f;pinta();});
   {const rs=box.querySelector('.sg-resf');if(rs)rs.onchange=()=>{resF=rs.value;pinta();};}
+  {const ab=box.querySelector('.sg-ant');if(ab)ab.onclick=()=>{antF=!antF;pinta();};}
+  // Criba rápida de las llamadas antiguas: cerrar, dejar para dentro de un mes o WhatsApp con mensaje ya escrito
+  if(tab==='pend')box.querySelectorAll('.seg-hecho').forEach(b=>{const x=P.find(y=>y.id===b.dataset.id);if(!x||!esAntigua(x))return;const tk=b.closest('.tk');if(!tk||tk.querySelector('.tk-tri'))return;
+   const d=ce('div','tk-tri');d.innerHTML=`<button type="button" data-a="cerrar">Cerrar</button><button type="button" data-a="mes">En un mes</button>${x.tel?'<button type="button" data-a="wa" class="wa">WhatsApp</button>':''}`;tk.appendChild(d);
+   const fin=t=>{tk.style.opacity='.45';d.innerHTML=`<span>✓ ${t}</span>`;setTimeout(()=>{datos.pendientes=datos.pendientes.filter(y=>y.id!==x.id);pinta();},900);};
+   d.querySelectorAll('button').forEach(bt=>bt.onclick=async e=>{e.stopPropagation();d.querySelectorAll('button').forEach(z=>z.disabled=true);const a=bt.dataset.a;let r;
+    try{if(a==='cerrar')r=await agPost('seg-resultado',{id:x.id,pacienteId:x.pacienteId,resultado:'No volver a llamar',nota:'Cerrada al revisar las llamadas antiguas',quien:miNombreCorto()});
+     else if(a==='mes')r=await agPost('seg-editar',{id:x.id,fecha:segIso(30)});
+     else{const nom=capTit(String(x.nombre||'').split(' ')[0]);window.open(`https://wa.me/${segTel(x.tel)}?text=${encodeURIComponent(`Hola ${nom}, ¿qué tal sigues? Si te apetece retomar las sesiones, te buscamos hueco esta semana. Un abrazo, FISIO365`)}`,'_blank');
+      r=await agPost('seg-resultado',{id:x.id,pacienteId:x.pacienteId,resultado:'Pendiente de respuesta',nota:'WhatsApp para retomar enviado',nuevaFecha:segIso(7),quien:miNombreCorto()});}
+     if(!r||!r.ok)throw 0;fin(a==='cerrar'?'Cerrada':a==='mes'?'Para dentro de un mes':'WhatsApp enviado · vuelve en 7 días');}catch(_){d.querySelectorAll('button').forEach(z=>z.disabled=false);toast('No se ha podido guardar',false);}});});
   box.querySelectorAll('.seg-hecho').forEach(b=>b.onclick=()=>abrirResultadoSeg(P.find(x=>x.id===b.dataset.id),cargar));
   box.querySelectorAll('.seg-ed').forEach(b=>b.onclick=()=>abrirEditarSeg(P.find(x=>x.id===b.dataset.id),cargar));
   notasExpandibles(box);
