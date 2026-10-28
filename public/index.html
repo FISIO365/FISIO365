@@ -315,14 +315,13 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .nav-menu-inner>div:nth-of-type(1),.nav-menu-inner>div:nth-of-type(2){display:none!important}
 .nav-menu-inner>div:nth-of-type(3){border-top:none!important;padding-top:0!important}
 .nm-av{overflow:hidden}.nm-av img,.cu-av img{width:100%;height:100%;object-fit:cover;display:block}.cu-top{display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px 16px;margin-bottom:14px}.cu-av{width:96px;height:96px;border-radius:50%;background:#c2552e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:30px;overflow:hidden}.cu-top b{font-size:17px}.cu-top small{font-size:13px;color:#7d6a60}.cu-bt{font-family:inherit;font-size:14px;font-weight:700;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:12px;padding:10px 16px;cursor:pointer}.cu-box{background:#fff;border:1px solid var(--border);border-radius:20px;padding:16px;margin-bottom:14px}.cu-box h3{font-size:15px;margin:0 0 12px}.cu-box label{display:block;font-size:12.5px;color:#7d6a60;margin:10px 0 5px}.cu-box input{width:100%;box-sizing:border-box;font-family:inherit;font-size:20px;letter-spacing:8px;text-align:center;padding:10px;border:1.5px solid var(--border);border-radius:12px;background:#f5f2ee}.cu-ok{width:100%;margin-top:14px;font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:12px;padding:13px;background:#1a1a1a;color:#fff;cursor:pointer}.cu-err{font-size:13px;color:#c0392b;margin-top:8px;min-height:1px}
-.sg-hero{background:var(--black);color:var(--cream);border-radius:28px;padding:22px 22px 24px;margin:4px 0 14px;position:relative;overflow:hidden}
-.sg-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,79,.5),rgba(217,119,79,0) 70%)}
+.sg-hero{background:var(--black);color:var(--cream);border-radius:22px;padding:16px 18px;margin:4px 0 12px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
+.sg-hero::after{content:'';position:absolute;right:-50px;top:-70px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,79,.4),rgba(217,119,79,0) 70%)}
 .sg-hero>*{position:relative;z-index:1}
-.sg-hero-ic{width:44px;height:44px;border-radius:14px;background:rgba(245,242,238,.08);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-.sg-hero-ic svg{width:22px;height:22px;fill:none;stroke:var(--lila);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.sg-hero-k{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--lila);margin-bottom:6px}
-.sg-hero-t{font-size:26px;font-weight:800;letter-spacing:-.8px;line-height:1.15}
-.sg-hero-s{font-size:14px;line-height:1.5;color:rgba(245,242,238,.62);margin-top:8px}
+.sg-hero-ic{flex:none;width:38px;height:38px;border-radius:12px;background:rgba(245,242,238,.08);display:flex;align-items:center;justify-content:center}
+.sg-hero-ic svg{width:20px;height:20px;fill:none;stroke:var(--lila);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.sg-hero-t{font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.2}
+.sg-hero-s{font-size:12.5px;line-height:1.4;color:rgba(245,242,238,.6);margin-top:3px}
 .sg-card{background:#fff;border-radius:24px;padding:16px;margin-bottom:14px;box-shadow:var(--sombra)}
 .sg-ta-w{position:relative}
 .sg-ta{display:block;width:100%;box-sizing:border-box;font-family:inherit;font-size:15.5px;line-height:1.55;padding:16px 16px 30px;border:1.5px solid transparent;border-radius:18px;background:var(--cream);resize:none;min-height:170px;outline:none;color:var(--black);transition:border-color .15s,background .15s}
@@ -810,8 +809,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 
  <div id="vistaSugerencias" style="display:none;">
  <div class="sg-hero"><div class="sg-hero-ic"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg></div>
-  <div class="sg-hero-k">Buzón de sugerencias</div><div class="sg-hero-t">¿Qué mejorarías?</div>
-  <div class="sg-hero-s">Ideas, cosas que echas en falta o algo que no te ha gustado. Lo leemos todo.</div></div>
+  <div><div class="sg-hero-t">¿Qué mejorarías?</div><div class="sg-hero-s">Ideas, cosas que echas en falta o algo que no te ha gustado.</div></div></div>
  <div class="sg-card" id="sgForm">
   <div class="sg-ta-w"><textarea id="sgTexto" class="sg-ta" rows="6" maxlength="1500" placeholder="Escribe aquí tu sugerencia…" oninput="sgCuenta()"></textarea><span class="sg-n" id="sgN">0/1500</span></div>
   <label class="sg-anon"><span class="sg-anon-t"><b>Enviar sin mi nombre</b><small id="sgAnonS">La verá el equipo con tu nombre</small></span><input type="checkbox" id="sgAnon" onchange="sgCuenta()"><span class="sg-sw"></span></label>
