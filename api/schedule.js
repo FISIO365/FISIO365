@@ -2754,7 +2754,7 @@ Datos:
 - Próxima cita ya reservada: ${c(q.proxima) || 'ninguna'}
 - Etapa en la clínica: ${c(q.etapas) || 'no consta'}
 - Nota del seguimiento: ${c(q.nota) || 'ninguna'}
-- Última llamada: ${c(q.ultLlamada) || 'ninguna'}
+- Último contacto (llamada o WhatsApp): ${String(q.ultLlamada || '').replace(/\s+/g, ' ').trim().slice(0, 700) || 'ninguno'}
 - Por qué no reagenda: ${porQue || 'no consta'}
 - Notas de la ficha (lo más reciente al final): ${notasF || 'ninguna'}
 - Historial clínico (lo más reciente al final; úsalo para saber qué le pasaba y cómo acabó): ${hist || 'no consta'}
@@ -2762,6 +2762,7 @@ Cómo escribirlo:
 - Empieza con «Hola <nombre de pila>, soy ${c(q.yo)} de FISIO365.» y tutea, español de España, como lo escribiría el fisio desde su móvil: natural, cercano, nada comercial.
 - Primera frase: algo concreto y reciente de esta persona (la zona que se trató en palabras sencillas —la cadera, la rodilla, la espalda—, su deporte, las plantillas, lo que quedó pendiente…). Sin diagnósticos ni datos clínicos delicados. No inventes nada que no esté en los datos.
 - Termina con UNA pregunta concreta que se conteste en una línea y que, sutilmente, abra la puerta a volver. Ejemplos del estilo: «¿Cómo la notas ahora al levantarte por las mañanas?», «¿Has podido volver al pádel sin molestias?», «¿Te va bien que te guarde un hueco la semana que viene para revisarla?».
+- Si el último contacto fue un WhatsApp que no ha contestado: es un segundo intento. Sin reproches ni «te escribí la semana pasada» insistente; no repitas la misma pregunta: haz otra distinta, todavía más fácil de contestar (por ejemplo, ofrecerle dos opciones o preguntarle si prefiere que le llamemos).
 - Si YA tiene próxima cita, no ofrezcas hueco: pregunta algo sobre cómo está y menciona que os veis ese día.
 - PROHIBIDO: «espero que…», «recuerda…», «cualquier cosa nos escribes», «aquí estamos», «no dudes en…», consejos o deberes, despedidas de relleno y emojis. Nada que se pueda leer sin contestar.
 Devuelve solo el texto del mensaje, sin comillas.`;

@@ -8593,7 +8593,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
    const px=(d.citas||[]).filter(c=>c.fecha>=d.hoy&&!/CANCEL|REPROGRAM|REALIZADA|NO ASIST/i.test(c.estado)).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)))[0];
    waPersonal({nombre:P.nombre,tel:P.whatsapp||P.telf||P.tel,pacienteId:id,fisio:re&&re.fisio,ultima:re&&re.fecha,proxima:px&&px.fecha,nota:[sp&&sp.nota,P.porQue].filter(Boolean).join(' · '),ult:d.llamadas&&d.llamadas[0],
     enviarTxt:'Abrir en WhatsApp',
-    alEnviar:async(t,fecha)=>{const r=await agPost('seg-resultado',Object.assign({pacienteId:id,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,180),quien:miNombreCorto()},fecha?{nuevaFecha:fecha}:{}));if(!r||!r.ok)throw 0;toast(fecha?'✓ Volverá a Por llamar el '+segFecha(fecha):'✓ Apuntado en su ficha',true);recargarSeg();}});}
+    alEnviar:async(t,fecha)=>{const r=await agPost('seg-resultado',Object.assign({pacienteId:id,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,600),quien:miNombreCorto()},fecha?{nuevaFecha:fecha}:{}));if(!r||!r.ok)throw 0;toast(fecha?'✓ Volverá a Por llamar el '+segFecha(fecha):'✓ Apuntado en su ficha',true);recargarSeg();}});}
  function verSeg(sp){const it={id:sp.id,pacienteId:id,nombre:P.nombre,fecha:sp.fecha,nota:sp.nota,responsable:sp.quien};
   const mm=hzModal(`<div class="hz-top"><div><small>En seguimiento</small><b>${escH(P.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <div class="fp-sgv">${P.porQue?`<div class="fp-sgpq"><small>No reagenda</small><p>${escH(P.porQue)}</p></div>`:''}<p>Llamar el <b>${escH(segFecha(sp.fecha))}</b>${sp.quien?' · '+escH(sp.quien):''}</p>${sp.nota?`<p class="fp-mu">${escH(sp.nota)}</p>`:''}${(()=>{const u=d.llamadas&&d.llamadas[0];return u?`<p class="fp-mu fp-sgult">Última llamada: <span class="r-${/RECUPERADA|^ALTA/.test(u.resultado)?'ok':/^NC|^VOLVER/.test(u.resultado)?'no':'pe'}">${escH(resTxtG(u.resultado))}</span> · ${escH(segFecha(u.fecha))}${u.quien?' · '+escH(quienNom(u.quien)):''}${u.nota?' — '+escH(u.nota):''}</p>`:'';})()}</div>
@@ -9043,7 +9043,7 @@ async function renderSeguimiento(wrap){
    const notaL=String(x.nota||'').replace(/^Recuperado de las llamadas antiguas[^.:\n]*[.:]?\s*/i,'').trim();
    waPersonal({nombre:x.nombre,tel:x.tel,pacienteId:x.pacienteId,fisio:x.fisio,ultima:x.ultima,nota:notaL,ult:x.ult,
     enviarTxt:'Abrir en WhatsApp',
-    alEnviar:async(t,fecha)=>{const r=await agPost('seg-resultado',Object.assign({id:x.id,pacienteId:x.pacienteId,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,180),quien:miNombreCorto()},fecha?{nuevaFecha:fecha}:{}));if(!r||!r.ok)throw 0;
+    alEnviar:async(t,fecha)=>{const r=await agPost('seg-resultado',Object.assign({id:x.id,pacienteId:x.pacienteId,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,600),quien:miNombreCorto()},fecha?{nuevaFecha:fecha}:{}));if(!r||!r.ok)throw 0;
      const tk=b.closest('.tk');if(tk){tk.style.transition='opacity .3s';tk.style.opacity='.35';}toast(fecha?`✓ ${nom}: vuelve el ${segFecha(fecha)}`:`✓ ${nom}: cerrada`,true);setTimeout(()=>{datos.pendientes=datos.pendientes.filter(y=>y.id!==x.id);pinta();},600);}});});
   box.querySelectorAll('.sg-wa2').forEach(b=>b.onclick=e=>{e.stopPropagation();const w=b.closest('.tk').querySelector('.sg-wa');if(w)w.click();});
   box.querySelectorAll('.seg-hecho').forEach(b=>b.onclick=()=>abrirResultadoSeg(P.find(x=>x.id===b.dataset.id),cargar));
