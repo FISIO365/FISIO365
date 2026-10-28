@@ -5699,7 +5699,7 @@ function recTexto(g){const h=agHoyIso(),t=new Date(g.fecha+'T12:00:00'),dm=t.get
  return `Hola${nom?' '+nom:''},\n\nTe recordamos tu cita en *FISIO365*:\n*${cuando} a las ${horas.join(' y a las ')}*${fis.length?`\nCon ${fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y ')}`:''}\n\nConfírmanos que vienes aquí:\n${g.citas[0].link}${(g.citas.find(c=>c.consent)||{}).consent?`\n\nComo es tu primera visita, puedes ir rellenando ya el *consentimiento informado* y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión:\n${g.citas.find(c=>c.consent).consent}\n(Pon tu propio teléfono en el formulario, por favor.)`:''}${(()=>{const ap=(g.citas.find(c=>c.app)||{}).app;return ap?(ap.ejercicios
      ?`\n\nTe recordamos que en tu *app de FISIO365* tienes los ejercicios que te ha preparado tu fisio, con vídeo para hacerlos bien. Hacerlos en casa es lo que más acelera la recuperación. Te dejamos tus datos de acceso por si acaso:`
      :`\n\nPor cierto, tienes tu *app de FISIO365* esperándote: puedes ver tus citas, escribir a tu fisio por el chat y tener tus documentos a mano. Y cuando tu fisio te prepare los ejercicios para casa, los tendrás ahí con vídeo para hacerlos bien (es lo que más acelera la recuperación).`)
-     +`${ap.ejercicios?'\n':'\n\n'}Entra aquí: ${ap.url}\nUsuario: ${ap.usuario}\nPIN: *${ap.pin}*`:''})()}\n\n¡Te esperamos!`;}
+     +`${ap.ejercicios?'\n':'\n\n'}Descárgala:\nAndroid: ${PLAY_URL}\niPhone: ${ap.url} (en Safari, Compartir › «Añadir a pantalla de inicio»)\nUsuario: ${ap.usuario}\nPIN: *${ap.pin}*`:''})()}\n\n¡Te esperamos!`;}
 // Abrir WhatsApp sin ir dejando una pestaña por paciente:
 // móvil → abre la app directamente; ordenador → siempre la MISMA pestaña de WhatsApp Web (o la app de escritorio si se elige)
 const esMovil=()=>/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
@@ -8045,9 +8045,9 @@ function elegirRecomendo(r,onDone){
    toast('Apuntado en Negocios del barrio',true);m.remove();onDone&&onDone();}catch(err){if(w)w.close();e.target.disabled=false;toast('No se ha podido guardar',false);}};
  m.querySelector('.er-no').onclick=async()=>{try{const d=await post('seg-referido-ignorar');if(!d.ok)throw 0;toast('Vale, no toca tarjeta',true);m.remove();onDone&&onDone();}catch(e){toast('No se ha podido guardar',false);}};}
 // Mensaje de bienvenida a la app (enlace + cómo instalarla + email y PIN), para mandar por WhatsApp
-const APP_URL='https://app.fisioterapia365.com';
+const APP_URL='https://app.fisioterapia365.com',PLAY_URL='https://play.google.com/store/apps/details?id=es.fisioterapia365.app';
 function mensajeApp(P){const nm=capi(P.nombre);
- return `¡Hola ${nm}! Ya tienes tu app de FISIO365. Ahí encontrarás tus ejercicios con vídeo, tus citas, el chat con tu fisio y tus documentos.\n\nEntra aquí: ${APP_URL}\n\nTus datos de acceso:\n- ${P.email?'Email: '+P.email:'Teléfono: '+segTel(P.whatsapp||P.telf||P.tel||'').slice(-9)}\n- PIN: ${P.pin}\n\nPara tenerla en el móvil como una app:\n- iPhone: ábrela en Safari, toca Compartir y «Añadir a pantalla de inicio».\n- Android: ábrela en Chrome, toca el menú (los tres puntos) y «Instalar aplicación».\n\nCualquier duda, nos escribes por aquí. ¡Un abrazo!`;}
+ return `¡Hola ${nm}! Ya tienes tu app de FISIO365. Ahí encontrarás tus ejercicios con vídeo, tus citas, el chat con tu fisio y tus documentos.\n\nDescárgala:\n- Android: ${PLAY_URL}\n- iPhone: abre ${APP_URL} en Safari, toca Compartir y «Añadir a pantalla de inicio».\n\nTus datos de acceso:\n- ${P.email?'Email: '+P.email:'Teléfono: '+segTel(P.whatsapp||P.telf||P.tel||'').slice(-9)}\n- PIN: ${P.pin}\n\nCualquier duda, nos escribes por aquí. ¡Un abrazo!`;}
 function enviarApp(P){const t=segTel(P.whatsapp||P.telf||P.tel||'');
  if(!P.email&&segTel(P.whatsapp||P.telf||P.tel||'').length<9){toast('Le falta el email o el teléfono para poder entrar',false);return;}
  if(!P.pin){toast('Le falta el PIN: abre su ficha y se le pone solo',false);return;}

@@ -883,8 +883,9 @@ async function doLogin(){
   btn.disabled=false;btn.textContent='Entrar';
 }
 
+try{if(/^android-app:\/\//.test(document.referrer||''))sessionStorage.setItem('f365_twa','1');}catch(e){}
 function initApp(){try{const n=(patient&&patient.nombre)||'';document.getElementById('nmNom').textContent=n;pintarAvatar();}catch(e){}
-  try{const k='f365_visto_'+patient.id,ki='f365_inst_'+patient.id,inst=!!((window.matchMedia&&(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches))||navigator.standalone===true),avIn=inst&&!localStorage.getItem(ki),ya=localStorage.getItem(k)===TODAY&&!avIn;fetch('/api/schedule?action='+(ya?'mi-cuenta':'app-visto')+'&patientId='+encodeURIComponent(patient.id)+(inst?'&inst=1':'')).then(r=>r.json()).then(d=>{if(d&&d.ok){if(!ya)localStorage.setItem(k,TODAY);if(avIn)localStorage.setItem(ki,'1');patient.foto=d.foto||'';pintarAvatar();}}).catch(()=>{});}catch(e){}
+  try{const k='f365_visto_'+patient.id,ki='f365_inst_'+patient.id,inst=!!((window.matchMedia&&(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches))||navigator.standalone===true||/^android-app:\/\//.test(document.referrer||'')||sessionStorage.getItem('f365_twa')==='1'),avIn=inst&&!localStorage.getItem(ki),ya=localStorage.getItem(k)===TODAY&&!avIn;fetch('/api/schedule?action='+(ya?'mi-cuenta':'app-visto')+'&patientId='+encodeURIComponent(patient.id)+(inst?'&inst=1':'')).then(r=>r.json()).then(d=>{if(d&&d.ok){if(!ya)localStorage.setItem(k,TODAY);if(avIn)localStorage.setItem(ki,'1');patient.foto=d.foto||'';pintarAvatar();}}).catch(()=>{});}catch(e){}
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
   document.getElementById('appScreen').style.opacity='0';
