@@ -2745,10 +2745,11 @@ Datos:
 - Quién escribe: ${c(q.yo)} (fisio o recepción de FISIO365)
 - Su fisio habitual: ${c(q.fisio) || 'no consta'}
 - Última sesión: ${c(q.ultima) || 'no consta'}
+- Próxima cita ya reservada: ${c(q.proxima) || 'ninguna'}
 - Etapa en la clínica: ${c(q.etapas) || 'no consta'}
 - Nota del seguimiento: ${c(q.nota) || 'ninguna'}
 - Última llamada: ${c(q.ultLlamada) || 'ninguna'}
-Reglas: tutea, español de España, tono cercano y natural, como lo escribiría una persona real; empieza con «Hola <nombre de pila>, soy ${c(q.yo)} de FISIO365»; menciona algo concreto de las notas si lo hay (deporte, plantillas, molestia…), sin datos clínicos delicados ni diagnósticos; no inventes nada que no esté en los datos; si las notas indican que el paciente iba a avisar él, pregúntale cómo le ha ido sin presionar; termina ofreciendo buscarle hueco si lo necesita. Como mucho un emoji. Devuelve solo el texto del mensaje, sin comillas.`;
+Reglas: tutea, español de España, tono cercano y natural, como lo escribiría una persona real; empieza con «Hola <nombre de pila>, soy ${c(q.yo)} de FISIO365»; menciona algo concreto de las notas si lo hay (deporte, plantillas, molestia…), sin datos clínicos delicados ni diagnósticos; no inventes nada que no esté en los datos; si las notas indican que el paciente iba a avisar él, pregúntale cómo le ha ido sin presionar; si NO tiene próxima cita, termina ofreciendo buscarle hueco si lo necesita; si YA tiene próxima cita, no ofrezcas hueco: recuérdale la cita con su día y dile que cualquier cosa os escriba. Como mucho un emoji. Devuelve solo el texto del mensaje, sin comillas.`;
         try {
           const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': K, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, messages: [{ role: 'user', content: prompt }] }) });
           const j = await r.json(); const t = String((j.content && j.content[0] && j.content[0].text) || '').trim().replace(/^["«]|["»]$/g, '');
