@@ -2859,6 +2859,20 @@ module.exports = async function handler(req, res) {
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   }
 
+  // ── PANEL: «Reporte diario» (solo dirección: Rendimiento o Administración) ──
+  if (action === 'reporte-dia') {
+    const q = req.method === 'POST' ? (req.body || {}) : req.query;
+    if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const eqH = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_rendimiento&fields[]=acc_admin&pageSize=100`);
+    const yr = (eqH.records || []).find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
+    if (!yr || String(yr.fields.Password || '').trim() !== String(q.clave || '').trim()) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
+    if (!(yr.fields.acc_rendimiento || yr.fields.acc_admin)) return res.status(403).json({ ok: false, error: 'Solo para dirección' });
+    try {
+      const CR = require('./cron');
+      const fecha = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : await CR.ultimoDiaConCitas();
+      return res.status(200).json({ ok: true, reporte: await CR.reporteDia(fecha) });
+    } catch (e) { return res.status(500).json({ ok: false, error: 'No se ha podido preparar el reporte' }); }
+  }
   // ── PANEL: facturas de la ficha y emitir desde el panel ──
   if (action === 'ficha-facturas' || action === 'facturar') {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;

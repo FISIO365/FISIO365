@@ -48,11 +48,15 @@ function tablaRendimiento(lista, titulo, conOcup) {
   const noReag = lista.filter(x => x.lista && x.lista.length).map(x => `<p style="margin:8px 0 0;font-size:12.5px"><b>${escH(x.fisio)}</b> · no han reagendado: ${x.lista.map(p => escH(p.nombre)).join(', ')}</p>`).join('');
   return `<h3 style="margin:24px 0 8px;font-size:15px">${titulo}</h3><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap"><tr>${th('Fisio')}${th(conOcup ? 'Hechas / huecos' : 'Hechas')}${conOcup ? th('Ocupación') : ''}${th('Atendidos')}${th('Reagendan')}${th('Faltas')}</tr>${lista.map(x => fila(x)).join('')}${lista.length > 1 ? fila(T, true) : ''}</table></div>${noReag}`;
 }
-async function resumenFacturacion(ayer) {
+const masDias = (f, n) => { const d = new Date(f + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const diaDe = f => ({ fecha: f, dia: new Date(f + 'T12:00:00Z').getUTCDay() });
+// Todos los datos de un día cerrado (lo usan el email y la sección «Reporte diario» del panel)
+async function datosDia(ayer, panel) {
   const sf = await saldo.sinFacturar();
   const rendDia = await saldo.rendimiento(ayer.fecha, ayer.fecha);
-  const hoyM = madrid(0);
-  const rendSemana = hoyM.dia === 1 ? await saldo.rendimiento(madrid(-7).fecha, madrid(-1).fecha) : null;
+  // Semana: el domingo (lo que se envía el lunes) y, en el panel, también al ver un viernes
+  const conSemana = ayer.dia === 0 || (panel && ayer.dia === 5);
+  const rendSemana = conSemana ? await saldo.rendimiento(masDias(ayer.fecha, ayer.dia === 0 ? -6 : -4), ayer.fecha) : null;
   const citas = await todos(CITAS_TABLE, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${ayer.fecha}'`)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=HORA&fields[]=your-name`);
   const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim();
   const hechas = citas.filter(c => ['REALIZADA', 'CITA PERDIDA'].includes(est(c))).length;
@@ -73,6 +77,33 @@ async function resumenFacturacion(ayer) {
       const ids = new Set(facsTodas.map(r => String(r.fields['HOLDED ID'] || '')).filter(Boolean)); fuera = deAyer.filter(d => !ids.has(d.id)); } catch (e) {}
   }
   const total = facs.reduce((t, r) => t + Number(r.fields['TOTAL'] || 0), 0);
+  return { sf, rendDia, rendSemana, citas, est, hechas, sinMarcar, facs, canceladas, caja, rep, envs, borradores, fuera, total };
+}
+// Para el panel: lo mismo en datos simples
+async function reporteDia(fecha) {
+  const ayer = diaDe(fecha), D = await datosDia(ayer, true);
+  const hora = t => t ? new Date(t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' }) : '';
+  const cita = c => ({ nombre: c.fields['your-name'] || '', fisio: fisioDe(c.fields['PREF.']), hora: String(c.fields['HORA'] || '').slice(0, 5), estado: D.est(c) });
+  return {
+    fecha, hechas: D.hechas, nFacturas: D.facs.length, total: D.total, caja: D.caja,
+    fisios: Object.entries(D.rep || {}).map(([f, x]) => { const e = (D.envs || {})[String(f).split(' ')[0].toLowerCase()];
+      return { fisio: f, hechas: x.hechas, enviado: e ? hora(e.enviado) : '', noMarcados: e ? String(e.marcados || '').split('\n').filter(l => l.startsWith('✗')).map(l => l.slice(2)) : [], nota: e && e.nota || '',
+        pendiente: (x.checks || []).filter(c => !c.aviso && c.items.length).map(c => ({ t: c.t, items: c.items.map(i => i.nombre + (i.extra ? ' (' + i.extra + ')' : '')) })) }; }),
+    rendDia: D.rendDia, rendSemana: D.rendSemana,
+    sinFacturar: D.sf && D.sf.activo ? D.sf.lista.map(x => ({ nombre: x.nombre, fisio: x.fisio, n: -x.saldo })) : null,
+    sinMarcar: D.sinMarcar.map(cita), canceladas: D.canceladas.map(cita),
+    fuera: D.fuera.map(d => ({ nombre: d.contact_name || '—', total: Number(d.total || 0) })),
+    borradores: D.borradores.slice(0, 40).map(d => ({ nombre: d.contact_name || '—', fecha: String(d.date || '').slice(0, 10) })),
+    facturas: D.facs.map(r => ({ num: r.fields['Nº FACTURA'] || '', concepto: [r.fields['CONCEPTO 1'], r.fields['CONCEPTO 2']].filter(Boolean).join(' + '), pago: (r.fields['MODO DE PAGO'] && r.fields['MODO DE PAGO'].name) || r.fields['MODO DE PAGO'] || '', total: Number(r.fields['TOTAL'] || 0) }))
+  };
+}
+// Último día con citas antes de hoy (para abrir el reporte en el último día de trabajo)
+async function ultimoDiaConCitas() {
+  for (let n = 1; n <= 7; n++) { const f = madrid(-n).fecha; const c = await todos(CITAS_TABLE, `filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f}',TRIM({ESTADO})='REALIZADA')`)}&fields[]=FECHA&maxRecords=1`); if (c.length) return f; }
+  return madrid(-1).fecha;
+}
+async function resumenFacturacion(ayer) {
+  const { sf, rendDia, rendSemana, est, hechas, sinMarcar, facs, canceladas, caja, rep, envs, borradores, fuera, total } = await datosDia(ayer);
   const fila = (a, b, c) => `<tr><td style="padding:8px 0;border-bottom:1px solid #eee">${a}</td><td style="padding:8px 0;border-bottom:1px solid #eee;color:#7d6a60">${b}</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;font-weight:600">${c}</td></tr>`;
   const fechaTxt = `${DIAS[ayer.dia]} ${+ayer.fecha.slice(8)}/${+ayer.fecha.slice(5, 7)}`;
   const html = `<div style="font-family:Arial,sans-serif;background:#f7f3ef;padding:24px"><div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;color:#1a1a1a">
@@ -96,33 +127,17 @@ async function resumenFacturacion(ayer) {
   ${canceladas.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Citas de ayer canceladas o que no vinieron: ${canceladas.length}</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${canceladas.map(c => fila(escH(c.fields['your-name'] || ''), escH(fisioDe(c.fields['PREF.'])) + ' · ' + escH(est(c).toLowerCase()), escH(String(c.fields['HORA'] || '').slice(0, 5)))).join('')}</table>` : ''}
   ${facs.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Facturas emitidas</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${facs.map(r => fila(escH(r.fields['Nº FACTURA'] || ''), escH([r.fields['CONCEPTO 1'], r.fields['CONCEPTO 2']].filter(Boolean).join(' + ')) + (r.fields['MODO DE PAGO'] ? ' · ' + escH(r.fields['MODO DE PAGO']) : ''), eur(r.fields['TOTAL']))).join('')}</table>` : ''}
   </div></div>`;
-  // 1) Llega por la app: una comunicación «Informe» en el buzón de dirección (Comunicaciones), con el resumen dentro
-  let app = 'no';
-  try {
-    const eq = await todos('tbl2mLUrnaKCFTs6g', `fields[]=Name&fields[]=acc_rendimiento&fields[]=acc_admin&fields[]=${encodeURIComponent('FECHA BAJA')}`);
-    const pila = n => { const x = String(n || '').trim().split(/\s+/)[0]; return x.charAt(0).toUpperCase() + x.slice(1).toLowerCase(); };
-    const para = [...new Set(eq.filter(r => (r.fields.acc_rendimiento || r.fields.acc_admin) && !r.fields['FECHA BAJA']).map(r => pila(r.fields.Name)))].filter(Boolean);
-    if (para.length) {
-      const ahora = new Date().toISOString();
-      const c = await fetch(`https://api.airtable.com/v0/${BASE_ID}/tbl2qRD3WsvQVPrwX`, { method: 'POST', headers: { ...AT, 'Content-Type': 'application/json' }, body: JSON.stringify({ typecast: true, records: [{ fields: {
-        ASUNTO: `Resumen diario · ${fechaTxt}`, TIPO: 'Informe', DE: 'FISIO365', PARA: para.join(', '), FECHA: ahora,
-        CUERPO: `Sesiones hechas: ${hechas} · Facturas emitidas: ${facs.length} (${eur(total)})`, DATOS: JSON.stringify({ resumen: true, html }),
-        'LEÍDO': '{}', HECHO: '{}', ESTADO: 'Abierta' } }] }) });
-      app = c.ok ? 'ok' : 'error ' + c.status + ' ' + (await c.text().catch(() => '')).slice(0, 200);
-    }
-  } catch (e) { app = 'error ' + e.message; }
-  // 2) Y por email (si la clave de Brevo funciona)
+  // Por email (además, el panel lo enseña en «Reporte diario»)
   const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: (await (SCH.emailsResumen ? SCH.emailsResumen() : Promise.resolve(String(process.env.RESUMEN_EMAIL || 'fisio365gestion@gmail.com').split(/[,;\s]+/).filter(Boolean)))).map(email => ({ email })), subject: `Resumen ${fechaTxt}${Object.keys(rep).some(f => !envs[String(f).split(' ')[0].toLowerCase()]) ? ' · ✗ falta algún check-list' : ''}${sf.lista.length ? ' · ⚠️ ' + sf.lista.length + ' pacientes sin facturar' : ''}${rendSemana ? ' · + semana' : ''}`, htmlContent: html }) });
   const email = r.ok ? 'enviado' : 'error brevo ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 300);
-  return (app === 'ok' || email === 'enviado' ? 'enviado' : 'fallo') + ` (app: ${app} · email: ${email})`;
+  return email;
 }
 
 module.exports = async function handler(req, res) {
   const esCron = req.headers['authorization'] === `Bearer ${process.env.CRON_SECRET}`;
-  // Respaldo: el panel también puede pedir el resumen (con la clave del panel) por si el cron de Vercel no se lanza; solo se envía una vez al día
-  const pwdPanel = String((req.query && req.query.pwd) || '').trim(), esPanel = !!pwdPanel && pwdPanel === String(process.env.FISIO_PASSWORD || '').trim();
-  if (!esCron && !(esPanel && /resumen=1/.test(req.url || ''))) return res.status(401).json({ ok: false });
+  const esPanel = false;
+  if (!esCron) return res.status(401).json({ ok: false });
   // Resumen de facturación: 7:00 UTC (8 h en invierno, 9 h en verano), de las citas de ayer
   if (/resumen=1/.test(req.url || '')) {
     const ayer = madrid(-1);
@@ -191,3 +206,6 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ ok: false, error: e.message, ...out });
   }
 };
+
+module.exports.reporteDia = reporteDia;
+module.exports.ultimoDiaConCitas = ultimoDiaConCitas;
