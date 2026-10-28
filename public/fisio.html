@@ -1635,6 +1635,11 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 @media(max-width:768px){#sb-rep{position:relative}#rdiaBadge{position:absolute;top:4px;left:calc(50% + 8px);margin:0!important}}
 .rd-gris{font-size:12.5px;color:#7d6a60;font-weight:600}.rd-sinp{font-size:12.5px;color:#b45309;font-weight:600;align-self:center}
 @media(max-width:600px){.rd-row{row-gap:4px}.rd-row>span:first-child{flex:1 1 100%}.rd-row small{text-align:left;flex:1 1 auto}.rd-row .rd-ac{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;align-items:center}}
+.rd-cart{display:block;margin-top:8px;font-family:var(--font);font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:99px;padding:5px 11px;cursor:pointer}.rd-cart:disabled{color:#16803c;background:#eef8f1;border-color:#eef8f1}
+.rd-compra .cp{margin-top:10px}.cp-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px}.cp-h h4{margin:0}.cp-h h4 span{display:inline-block;background:#c2552e;color:#fff;font-size:11px;border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:middle}
+.cp-it i{font-style:normal;color:#7d6a60}.cp-x{border:none;background:none;color:#a99d93;font-size:14px;cursor:pointer;padding:4px 6px}
+.cp-hist{margin-top:8px}.cp-hist summary{font-size:12.5px;color:#7d6a60;cursor:pointer;padding:4px 0}.cp-tach{text-decoration:line-through;color:#9a8d84}
+.rp-cp{display:flex;align-items:center;justify-content:space-between;gap:12px}.rp-cp b{display:block;font-size:14.5px}.rp-cp small{font-size:12.5px;color:#7d6a60}.rp-cpb{flex:none;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:#c2552e;color:#fff;border-radius:99px;padding:9px 16px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -7573,10 +7578,12 @@ async function renderReporte(wrap){
      return `<button type="button" class="rp-it${marc.has(x.k)?' on':''}" data-k="${x.k}"><span class="rp-ck">${marc.has(x.k)?'✓':''}</span><span class="rp-tx">${negr(x.t)}${x.sub&&x.sub.length?`<span class="rp-sub">${x.sub.map(z=>`<span>${negr(z)}</span>`).join('')}</span>`:''}${pend?`<span class="rp-av">${c.aviso?'Ojo':'Tengo '+pend.length+' pendiente'+(pend.length>1?'s':'')}: ${pend.slice(0,6).map(i=>(i.id?`<u data-ficha="${i.id}" data-nom="${escH(i.nombre)}">${escH(capTit(i.nombre))}</u>`:`<b>${escH(i.nombre)}</b>`)+(i.extra?' ('+escH(i.extra)+')':'')).join(', ')}${pend.length>6?' y '+(pend.length-6)+' más':''}</span>`:''}</span></button>`;}).join('')+
     `<div class="hz-lab" style="margin-top:14px">¿Algo que contar? <span>(opcional)</span></div><textarea class="rp-nota" rows="2" placeholder="Ej.: falta gel, la camilla 2 hace ruido…">${escH((d.enviado&&d.enviado.nota)||'')}</textarea>
     <button type="button" class="rp-env">${d.enviado?'Volver a enviar':'Enviar check-list'}</button></div>`;
+   h+=`<div class="rp-c rp-cp"><div><b>🛒 ¿Falta material?</b><small>Apúntalo y le llega a dirección para el próximo pedido.</small></div><button type="button" class="rp-cpb">Apuntar</button></div>`;
   } else if(!d.resumen) h+='<div class="rp-c">El check-list es para los fisios.</div>';
   box.innerHTML=h;
   box.querySelectorAll('.rp-it').forEach(b=>b.onclick=e=>{if(e.target.closest('u'))return;const k=b.dataset.k;marc.has(k)?marc.delete(k):marc.add(k);guarda();const nota=box.querySelector('.rp-nota');const v=nota?nota.value:'';pinta();const n2=box.querySelector('.rp-nota');if(n2)n2.value=v;});
   box.querySelectorAll('u[data-ficha]').forEach(u=>u.onclick=e=>{e.stopPropagation();abrirFichaPaciente(u.dataset.ficha,u.dataset.nom);});
+  {const cb=box.querySelector('.rp-cpb');if(cb)cb.onclick=()=>compraAnadir({por:String(yo).split(' ')[0]});}
   const env=box.querySelector('.rp-env');if(!env)return;let armado=false;
   env.onclick=async()=>{const falta=(d.items||[]).filter(x=>!marc.has(x.k)).length;
    if(falta&&!armado){armado=true;env.classList.add('armado');env.textContent=`Faltan ${falta} sin marcar · toca otra vez para enviar igual`;setTimeout(()=>{if(armado){armado=false;env.classList.remove('armado');env.textContent=d.enviado?'Volver a enviar':'Enviar check-list';}},5000);return;}
@@ -12485,7 +12492,8 @@ function rdiaBadge(){try{const b=$('rdiaBadge');if(!b)return;if(!RD_DIR){b.style
 async function renderReporteDia(wrap){
  const card=ce('div','rd');wrap.appendChild(card);
  card.innerHTML=`<div class="rd-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Día anterior">‹</button><div class="rd-ft"><b></b><small></small></div><button type="button" class="ag-nv" data-n="1" aria-label="Día siguiente">›</button></div>
-  <div class="rd-acc"><button type="button" class="rd-pdf"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Descargar PDF</button><button type="button" class="rd-mio">Mi check-list</button></div><div class="rd-body"><div class="fac-vacio">Preparando el reporte…</div></div>`;
+  <div class="rd-acc"><button type="button" class="rd-pdf"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Descargar PDF</button><button type="button" class="rd-mio">Mi check-list</button></div><div class="rd-body"><div class="fac-vacio">Preparando el reporte…</div></div><div class="rd-compra"></div>`;
+ compraPintar(card.querySelector('.rd-compra'));
  const body=card.querySelector('.rd-body');
  card.querySelector('.rd-mio').onclick=()=>showSection('rep');
  card.querySelector('.rd-pdf').onclick=()=>rdPdf(card);
@@ -12517,7 +12525,7 @@ async function renderReporteDia(wrap){
    ${nf?`<div class="rd-fis">${R.fisios.map((f,fi)=>`<div class="rd-f${f.enviado?'':' no'}"><div class="rd-fh"><div><b>${escH(f.fisio)}</b><small>${f.hechas} ${f.hechas===1?'sesión hecha':'sesiones hechas'}</small></div><span class="rd-pill ${f.enviado?'ok':'no'}">${f.enviado?'✓ Enviado '+escH(f.enviado):'✗ No enviado'}</span></div>
      ${f.enviado?(f.noMarcados.length?`<div class="rd-lin amb"><b>Sin marcar</b>${f.noMarcados.map(escH).join(' · ')}</div>`:'<div class="rd-lin ok">Todo marcado</div>'):''}
      ${f.pendiente.length?`<div class="rd-lin mal"><b>El panel ve pendiente</b>${f.pendiente.map(c=>`<div>${escH(c.t)}: ${c.items.map(it=>pac(it.id,it.nombre)+(it.extra?` <i>(${escH(it.extra)})</i>`:'')).join(', ')}</div>`).join('')}</div>`:''}
-     ${f.nota?`<div class="rd-lin"><b>Nota</b>«${escH(f.nota)}»</div>`:''}
+     ${f.nota?`<div class="rd-lin"><b>Nota</b>«${escH(f.nota)}»<button type="button" class="rd-cart" data-fi="${fi}" title="Añadir a la lista de la compra">🛒 Añadir a la compra</button></div>`:''}
      ${avisable(f)?`<button type="button" class="rd-avisar" data-f="${fi}">Avisar a ${escH(String(f.fisio).split(' ')[0])}</button>`:''}</div>`).join('')}</div>`:'<p class="fp-mu">Ese día no trabajó nadie.</p>'}
    ${R.sinFacturar?(R.sinFacturar.length?lista(`⚠️ Sesiones sin facturar ahora mismo (${R.sinFacturar.reduce((t,x)=>t+x.n,0)})`,'mal',R.sinFacturar.map(x=>fila(pac(x.id,x.nombre),escH(x.fisio),x.n,x.id?`<button type="button" class="rd-b" data-p="${escH(x.id)}" data-n="${escH(x.nombre)}">Cobrar</button>`:''))):'<div class="rd-sec ok"><h4>✓ No hay sesiones sin facturar</h4></div>'):''}
    ${lista(`Citas sin marcar (siguen en «Pendiente»): ${R.sinMarcar.length}`,'amb',R.sinMarcar.map(c=>fila(pac(c.pacienteId,c.nombre),escH(c.fisio),escH(c.hora),`<button type="button" class="rd-b ok" data-c="${escH(c.id)}" data-e="REALIZADA">Realizada</button><button type="button" class="rd-b" data-c="${escH(c.id)}" data-e="NO ASISTIÓ">No vino</button>`)))}
@@ -12536,9 +12544,36 @@ async function renderReporteDia(wrap){
    const r=await agPost('seg-crear',{pacienteId:b.dataset.ll,fecha:rdHoy(),nota:`Canceló o no vino el ${rdFechaTxt(R.fecha).toLowerCase()} y no tiene otra cita`,responsable:String(b.dataset.fz||'').split(' ')[0]}).catch(()=>({ok:false}));
    if(!r.ok){b.disabled=false;toast('No se ha podido',false);return;}
    b.closest('.rd-ac').innerHTML='<span class="rd-gris">✓ En «Por llamar»</span>';toast('Pasado a «Por llamar»',true);delete RD.cache[RD.fecha];});
-  body.querySelectorAll('.rd-avisar').forEach(b=>b.onclick=()=>rdAvisar(R,R.fisios[+b.dataset.f],b));}
+  body.querySelectorAll('.rd-avisar').forEach(b=>b.onclick=()=>rdAvisar(R,R.fisios[+b.dataset.f],b));
+  body.querySelectorAll('.rd-cart').forEach(b=>b.onclick=()=>{const f=R.fisios[+b.dataset.fi];compraAnadir({nota:f.nota,por:String(f.fisio).split(' ')[0]},()=>{b.textContent='✓ En la lista';b.disabled=true;compraPintar(card.querySelector('.rd-compra'));});});}
  cargar();
 }
+
+// ── LISTA DE LA COMPRA (Fisaude) ──
+const FISAUDE=q=>'https://tienda.fisaude.com/advanced_search_result.php?keywords='+encodeURIComponent(q);
+function compraAnadir(o,onOk){o=o||{};
+ const m=hzModal(`<div class="hz-top"><div><small>Lista de la compra</small><b>¿Qué falta?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  ${o.nota?`<p class="ap-txt">Nota de ${escH(o.por||'')}: «${escH(o.nota)}»</p>`:''}
+  <div class="hz-lab">Producto</div><input class="ag-in cp-p" placeholder="Ej.: guantes de nitrilo talla M" autocomplete="off">
+  <div class="hz-lab">Cantidad <span>(opcional)</span></div><input class="ag-in cp-c" placeholder="Ej.: 2 cajas" autocomplete="off">
+  <div class="hz-bts"><button type="button" class="hz-ok">Añadir a la lista</button></div>`);
+ const p=m.querySelector('.cp-p');setTimeout(()=>p.focus(),60);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;if(!p.value.trim()){toast('Escribe qué falta',false);return;}b.disabled=true;
+  const r=await comPost('compra-anadir',{producto:p.value.trim(),cantidad:m.querySelector('.cp-c').value.trim(),nota:o.nota||'',por:o.por||''}).catch(x=>({ok:false,error:x.message}));
+  if(!r.ok){b.disabled=false;toast(r.error||'No se ha podido',false);return;}m.remove();toast('Añadido a la lista de la compra',true);onOk&&onOk(r.item);};}
+async function compraPintar(box){if(!box)return;
+ const r=await comPost('compra-lista',{}).catch(()=>({ok:false}));if(!box.isConnected||!r.ok){box.innerHTML='';return;}
+ const fch=t=>{const d=new Date(t);return isNaN(d)?'':d.getDate()+'/'+(d.getMonth()+1);};
+ const P=r.pendientes||[],C=r.comprados||[];
+ box.innerHTML=`<div class="rd-sec cp"><div class="cp-h"><h4>🛒 Lista de la compra${P.length?` <span>${P.length}</span>`:''}</h4><button type="button" class="rd-b cp-nuevo">+ Añadir</button></div>
+  ${P.length?P.map(x=>`<div class="rd-row cp-it" data-id="${x.id}"><span><b>${escH(x.producto)}</b>${x.cantidad?` <i>· ${escH(x.cantidad)}</i>`:''}</span><small>${escH(x.por)}${x.fecha?' · '+fch(x.fecha):''}</small><span class="rd-ac"><a class="rd-b" href="${FISAUDE(x.producto)}" target="_blank" rel="noopener">Buscar en Fisaude</a><button type="button" class="rd-b ok cp-ok">✓ Comprado</button><button type="button" class="cp-x" aria-label="Quitar">✕</button></span></div>`).join(''):'<p class="fp-mu" style="margin:4px 0 0">No falta nada. Los fisios lo pueden apuntar desde su check-list.</p>'}
+  ${C.length?`<details class="cp-hist"><summary>Comprado hace poco (${C.length})</summary>${C.map(x=>`<div class="rd-row"><span class="cp-tach">${escH(x.producto)}${x.cantidad?' · '+escH(x.cantidad):''}</span><small>${escH(x.compradoPor)}${x.fechaCompra?' · '+fch(x.fechaCompra):''}</small><span class="rd-ac"><button type="button" class="rd-b cp-des" data-id="${x.id}">Deshacer</button></span></div>`).join('')}</details>`:''}</div>`;
+ box.querySelector('.cp-nuevo').onclick=()=>compraAnadir({},()=>compraPintar(box));
+ const act=async(id,a,extra)=>{const r=await comPost(a,Object.assign({id},extra||{})).catch(()=>({ok:false}));if(!r.ok){toast('No se ha podido',false);return;}compraPintar(box);};
+ box.querySelectorAll('.cp-ok').forEach(b=>b.onclick=()=>{b.disabled=true;act(b.closest('.cp-it').dataset.id,'compra-hecho',{hecho:true});});
+ box.querySelectorAll('.cp-x').forEach(b=>b.onclick=()=>{if(confirm('¿Quitar de la lista?'))act(b.closest('.cp-it').dataset.id,'compra-borrar');});
+ box.querySelectorAll('.cp-des').forEach(b=>b.onclick=()=>act(b.dataset.id,'compra-hecho',{hecho:false}));}
 // Avisar al fisio de lo que le falta: le llega como comunicación «Informe» que requiere acción
 function rdAvisar(R,f,btn){const nom=String(f.fisio).split(' ')[0];
  const L=[];if(!f.enviado)L.push('No has enviado el check-list.');if(f.noMarcados.length)L.push('Sin marcar: '+f.noMarcados.join(' · ')+'.');

@@ -2862,6 +2862,33 @@ module.exports = async function handler(req, res) {
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   }
 
+  // ── LISTA DE LA COMPRA (material, Fisaude): cualquiera del equipo apunta; dirección ve la lista y marca lo comprado ──
+  if (action === 'compra-lista' || action === 'compra-anadir' || action === 'compra-hecho' || action === 'compra-borrar') {
+    const q = req.method === 'POST' ? (req.body || {}) : req.query;
+    if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const eqC = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_rendimiento&fields[]=acc_admin&fields[]=${encodeURIComponent('DIRECCIÓN')}&fields[]=${encodeURIComponent('FECHA BAJA')}&pageSize=100`);
+    const yc = (eqC.records || []).find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
+    if (!yc || yc.fields['FECHA BAJA'] || String(yc.fields.Password || '').trim() !== String(q.clave || '').trim()) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
+    const dirC = !!(yc.fields['DIRECCIÓN'] || yc.fields.acc_admin), yoC = String(yc.fields.Name || '').trim().split(/\s+/)[0];
+    const COMPRA = 'tbl6tWCWWzZfODDns';
+    const vistaC = r => ({ id: r.id, producto: r.fields.PRODUCTO || '', cantidad: r.fields.CANTIDAD || '', por: r.fields['PEDIDO POR'] || '', fecha: r.fields.FECHA || r.createdTime, nota: r.fields.NOTA || '', comprado: !!r.fields.COMPRADO, compradoPor: r.fields['COMPRADO POR'] || '', fechaCompra: r.fields['FECHA COMPRA'] || '' });
+    if (action === 'compra-anadir') {
+      const producto = String(q.producto || '').trim().slice(0, 140); if (!producto) return res.status(400).json({ ok: false, error: 'Escribe qué falta' });
+      const d = await at(COMPRA, { method: 'POST', body: JSON.stringify({ records: [{ fields: { PRODUCTO: producto, CANTIDAD: String(q.cantidad || '').trim().slice(0, 60), 'PEDIDO POR': String(q.por || yoC).slice(0, 40), FECHA: new Date().toISOString(), NOTA: String(q.nota || '').slice(0, 1000) } }] }) });
+      return res.status(200).json({ ok: !d.error, item: d.records && vistaC(d.records[0]) });
+    }
+    if (!dirC) return res.status(403).json({ ok: false, error: 'Solo para dirección' });
+    if (action === 'compra-lista') {
+      const pend = []; let off = ''; do { const d = await at(`${COMPRA}?filterByFormula=${encodeURIComponent('NOT({COMPRADO})')}&pageSize=100${off ? '&offset=' + off : ''}`); pend.push(...(d.records || [])); off = d.offset || ''; } while (off);
+      const hechos = await at(`${COMPRA}?filterByFormula=${encodeURIComponent('{COMPRADO}')}&sort[0][field]=${encodeURIComponent('FECHA COMPRA')}&sort[0][direction]=desc&maxRecords=15`);
+      return res.status(200).json({ ok: true, pendientes: pend.map(vistaC).sort((a, b) => String(a.fecha).localeCompare(String(b.fecha))), comprados: (hechos.records || []).map(vistaC) });
+    }
+    if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+    if (action === 'compra-borrar') { const d = await at(`${COMPRA}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error }); }
+    const hecho = q.hecho !== false;
+    const d = await at(`${COMPRA}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { COMPRADO: hecho, 'COMPRADO POR': hecho ? yoC : '', 'FECHA COMPRA': hecho ? new Date().toISOString() : null } }) });
+    return res.status(200).json({ ok: !d.error });
+  }
   // ── PANEL: «Reporte diario» (solo dirección: Rendimiento o Administración) ──
   if (action === 'reporte-dia') {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
