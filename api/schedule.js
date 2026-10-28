@@ -1036,7 +1036,7 @@ module.exports = async function handler(req, res) {
             captura: c ? { url: c.url, mini: (c.thumbnails && c.thumbnails.large && c.thumbnails.large.url) || c.url } : null, estado: nm(F.ESTADO) || 'Nueva', nota: F.NOTA || '', cambiadoPor: F['CAMBIADO POR'] || '', fecha: F.FECHA || r.createdTime || '' }; };
         if (action === 'seg-sug-contar') {
           if (!lector) return res.status(200).json({ ok: true, lector: false, nuevas: 0 });
-          const rs = await todosT(SUG, `fields[]=RESUMEN&filterByFormula=${encodeURIComponent("{ESTADO}='Nueva'")}`);
+          const rs = await todosT(SUG, `fields[]=RESUMEN&filterByFormula=${encodeURIComponent("NOT({ESTADO}='Hecha')")}`);
           return res.status(200).json({ ok: true, lector: true, nuevas: rs.length });
         }
         if (action === 'seg-sug-lista') {
