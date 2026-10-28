@@ -1189,7 +1189,7 @@ module.exports = async function handler(req, res) {
           const puedeAprobar = esAus && abierta && resolucion === 'Pendiente' && para.includes(yo) && de !== yo;
           return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo, de, para, req, limite: F['FECHA LÍMITE'] || '', abierta,
             num: SEQ_C[root.id] ? `COM-${String(msgs[0].fecha || '').slice(0, 4)}-${String(SEQ_C[root.id]).padStart(4, '0')}` : '', ausencia: esAus ? json(F.AUSENCIA) : null, datos: json(F.DATOS), resolucion, resueltaPor: F['RESUELTA POR'] || '', puedeAprobar,
-            fecha: msgs[0].fecha, ultima: ult.fecha, ultimoDe: ult.de, nResp: resp.length, extracto: String(ult.cuerpo || '').replace(/\[\[pac:rec[A-Za-z0-9]{14}\|([^\]]{1,80})\]\]/g, '@$1').replace(/\[\[sec:[a-z]{2,8}\|([^\]]{1,40})\]\]/g, '@$1').replace(/\s+/g, ' ').slice(0, 140),
+            fecha: msgs[0].fecha, ultima: ult.fecha, ultimoDe: ult.de, nResp: resp.length, extracto: String(ult.cuerpo || '').replace(/\[\[pac:rec[A-Za-z0-9]{14}\|([^\]|]{1,80})(?:\|[a-z]{3,12})?\]\]/g, '@$1').replace(/\[\[sec:[a-z]{2,8}\|([^\]]{1,40})\]\]/g, '@$1').replace(/\s+/g, ' ').slice(0, 140),
             leido, hecho, faltan,
             noLeido: ult.de !== yo && (!leido[yo] || leido[yo] < ult.fecha),
             pendienteMio: esAus ? puedeAprobar : abierta && para.includes(yo) && !hecho[yo],
