@@ -5528,7 +5528,7 @@ function accionesInforme(anchor,ctx,fisioNom){
  anchor.insertAdjacentElement('afterend',bar);
  const [bPriv,bPac]=bar.querySelectorAll('.ia-g');
  const pinta=()=>{pon(bPac,ctx.recId&&ctx.compartido?'pacUpd':'pac');pon(bPriv,'priv');};pinta();
- const pdf=m=>descargarPDF(ctx.pacNom,ctx.getTexto(),ctx.tipo,ctx.fisioNom,ctx.fisioCol||'',m);
+ const pdf=m=>descargarPDF(ctx.pacNom,ctx.getTexto(),ctx.tipo,ctx.fisioNom,ctx.fisioCol||'',m,ctx.recId?'INF-'+String(ctx.recId).slice(3).toUpperCase():'');
  bar.querySelector('.ia-v').onclick=()=>{window._pdfWin=window.open('','_blank');pdf('ver').catch(()=>{if(window._pdfWin)window._pdfWin.close();});};
  bar.querySelector('.ia-d').onclick=()=>pdf('descargar').catch(()=>{});
  bar.querySelectorAll('.ia-g').forEach(g=>g.onclick=async()=>{
@@ -5563,10 +5563,10 @@ function descargarPDF(pacNom,informe,tipo,fisioNom,fisioCol){
  const tipoLabel=tipos[tipo]||tipo||'Valoración Fisioterapéutica';
  const colNum=fisioCol?'Colegiado nº '+fisioCol:'';
 
- const modo=arguments[5]||'descargar';
+ const modo=arguments[5]||'descargar',codigo=arguments[6]||'';
  // Load jsPDF from CDN then generate
  return new Promise((resolve,reject)=>{
- const _run=async()=>{try{window._pdfRec=await cargarRecursosPDF();resolve(_generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo));}catch(e){reject(e);}};
+ const _run=async()=>{try{window._pdfRec=await cargarRecursosPDF();resolve(_generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo,codigo));}catch(e){reject(e);}};
  if(typeof window.jspdf!=='undefined'&&window.jspdf.jsPDF){
  _run();
  } else {
@@ -5592,7 +5592,7 @@ function cargarRecursosPDF(){
   .then(([reg,med,bold,logo])=>({reg,med,bold,logo})).catch(e=>{_pdfRecursos=null;return null;});
  return _pdfRecursos;
 }
-function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo){
+function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo,codigo){
  const {jsPDF}=window.jspdf;
  const doc=new jsPDF({unit:'mm',format:'a4'});
  const R=window._pdfRec;
@@ -5658,6 +5658,7 @@ function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo){
  for(let i=1;i<=n;i++){
   doc.setPage(i);
   set(7.5,'normal',GRIS);txt('FISIO365 · Gran de Sant Andreu, 163 · Barcelona · 672 89 39 49 · fisioterapia365.com',ml,H-14);
+  if(codigo){set(7.5,'medium',GRIS);txt('Nº '+codigo,ml,H-9.5);}
   if(n>1)txt(`${i} / ${n}`,W-mr,H-14,{align:'right'});
  }
 
@@ -9891,7 +9892,7 @@ function infEntregaBloque(inf,o){
  const post=async(a,x)=>{try{const r=await fetch('/api/schedule?action='+a,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,...x})});return await r.json();}catch(e){return{ok:false,error:'Sin conexión. Inténtalo de nuevo.'};}};
  const pinta=()=>{
   if(inf.recibido){b.innerHTML=`<div class="ient-h">Entrega al paciente</div><div class="ient-ok"><b>✓ Recibí firmado</b><span>${infFechaHora(inf.recibido)}${inf.entrega&&inf.entrega.canal?' · '+({app:'en su app',whatsapp:'enlace por WhatsApp',email:'enlace por email',mano:'en mano'}[inf.entrega.canal]||''):''}</span></div><button type="button" class="ient-rb">Descargar el recibí en PDF</button>`;
-   b.querySelector('.ient-rb').onclick=async e=>{const bt=e.currentTarget;bt.disabled=true;bt.textContent='Preparando…';try{const d=await post('seg-inf-recibi',{id:inf.id});if(!d.ok)throw new Error(d.error);await new Promise((ok,ko)=>{if(window.InformePDF&&window.InformePDF.recibi)return ok();const sc=document.createElement('script');sc.src='/informe/pdf.js?v=2';sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc);});await window.InformePDF.recibi(d);}catch(err){toast((err&&err.message)||'No se ha podido crear el PDF',false);}bt.disabled=false;bt.textContent='Descargar el recibí en PDF';};
+   b.querySelector('.ient-rb').onclick=async e=>{const bt=e.currentTarget;bt.disabled=true;bt.textContent='Preparando…';try{const d=await post('seg-inf-recibi',{id:inf.id});if(!d.ok)throw new Error(d.error);await new Promise((ok,ko)=>{if(window.InformePDF&&window.InformePDF.recibi)return ok();const sc=document.createElement('script');sc.src='/informe/pdf.js?v=3';sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc);});await window.InformePDF.recibi(d);}catch(err){toast((err&&err.message)||'No se ha podido crear el PDF',false);}bt.disabled=false;bt.textContent='Descargar el recibí en PDF';};
    return;}
   const E=inf.entrega;
   b.innerHTML=`<div class="ient-h">Dárselo con recibí firmado</div><div class="ient-s">${E&&E.canal&&inf.recibiPide?(E.canal==='app'?'Compartido en su app el ':'Enlace '+({whatsapp:'para WhatsApp',email:'para email'}[E.canal]||'')+' creado el ')+infFechaHora(E.enviado)+(E.abierto?' · lo abrió el '+infFechaHora(E.abierto):' · todavía no lo ha abierto')+'. Falta su firma. Puedes volver a mandarlo.':'El paciente firma que lo ha recibido. Queda guardado con la fecha y la hora.'}</div>
@@ -9916,7 +9917,7 @@ function infEntregaBloque(inf,o){
   r2.querySelector('.ient-cp').onclick=async e=>{try{await navigator.clipboard.writeText(msg);e.currentTarget.textContent='✓ Copiado';}catch(_){toast('No se ha podido copiar',false);}};
  };
  const firmaMano=()=>{
-  const m=hzModal(`<div class="ient-mt">Recibí del informe</div><div class="ient-s">${escH(o.pacNom||'')} firma que ha recibido su informe.</div><label class="ient-chk"><input type="checkbox"><span>Confirmo que he recibido mi informe fisioterapéutico de FISIO365.</span></label><div class="ient-sigw"><canvas></canvas><span class="ient-sigl">Firma aquí con el dedo</span><button type="button" class="ient-borra">Borrar</button></div><div class="hz-bts"><button type="button" class="hz-no">Cancelar</button><button type="button" class="hz-ok" disabled>Guardar firma</button></div>`);
+  const m=hzModal(`<div class="ient-mt">Recibí del informe</div><div class="ient-s">${escH(o.pacNom||'')} firma que ha recibido su informe.</div><label class="ient-chk"><input type="checkbox"><span>Confirmo que he recibido mi informe fisioterapéutico de FISIO365 (nº INF-${String(inf.id).slice(3).toUpperCase()}).</span></label><div class="ient-sigw"><canvas></canvas><span class="ient-sigl">Firma aquí con el dedo</span><button type="button" class="ient-borra">Borrar</button></div><div class="hz-bts"><button type="button" class="hz-no">Cancelar</button><button type="button" class="hz-ok" disabled>Guardar firma</button></div>`);
   const ok=m.querySelector('.hz-ok'),ck=m.querySelector('input'),sl=m.querySelector('.ient-sigl');let pad;
   const listo=()=>{ok.disabled=!(pad&&pad.hay()&&ck.checked);};
   setTimeout(()=>{pad=infFirmaPad(m.querySelector('canvas'),h=>{sl.hidden=h;listo();});},60);

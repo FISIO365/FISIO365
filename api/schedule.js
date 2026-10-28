@@ -685,10 +685,15 @@ async function pidenConsentimiento(pids, antesDe) {
   out.yaVino = yaVino; return out;
 }
 // Página del enlace del informe (/i/TOKEN): comprueba que es el paciente, enseña el informe y pide firmar el recibí
+// Nº de informe (sale en el PDF del informe y en el recibí) y huella del texto (SHA-256): si el informe cambia después de firmar, ya no coincide
+const infCodigo = id => 'INF-' + String(id || '').slice(3).toUpperCase();
+const infHuella = t => require('crypto').createHash('sha256').update(String(t || '').replace(/\r/g, '').trim(), 'utf8').digest('hex');
+const infTextoRecibi = id => `Confirmo que he recibido mi informe fisioterapéutico de FISIO365 (nº ${infCodigo(id)}).`;
 // Fecha de nacimiento del paciente (el campo se lee por su id)
 async function pacNacimiento(pid) { if (!/^rec[A-Za-z0-9]{14}$/.test(pid || '')) return ''; const r = await at(`${PACIENTES}/${pid}?returnFieldsByFieldId=true`).catch(() => ({})); return String(((r || {}).fields || {}).fldkHQkEdPfWrRdJq || '').slice(0, 10); }
 function paginaRecibi(tk) {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu informe · FISIO365</title>
+<meta property="og:title" content="Tu informe · FISIO365"><meta property="og:description" content="Enlace privado. Para abrirlo te pediremos que confirmes que eres tú."><meta property="og:image" content="https://app.fisioterapia365.com/informe/og-informe.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:type" content="website">
 <link rel="icon" href="/icons/favicon-cara.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f5f2ee;font-family:Poppins,sans-serif;color:#1a1a1a;-webkit-font-smoothing:antialiased}
@@ -734,7 +739,7 @@ $('b1').onclick=async()=>{const b=$('b1');dato=$('dato').value.trim();if(!dato)r
  if(!r.ok){$('e1').textContent=r.error||'No se ha podido comprobar';if(r.bloqueado||r.quedan===0){b.disabled=true;}return;}
  D=r;pintaDoc();if(r.firmado){fin();return;}ver('v2');prepFirma();};
 function pintaDoc(){const ls=String(D.informe||'').split('\\n').map(l=>l.trim()).filter(Boolean);
- $('doc').innerHTML='<div class="dh"><img src="/informe/logo.png" alt=""><span>'+esc(/fisioterap/i.test(D.tipo)?'Informe fisioterapéutico':'Informe')+(D.fecha?' · '+esc(D.fecha):'')+'</span></div>'+ls.map(l=>esTit(l)?'<div class="t">'+esc(l.replace(/:$/,''))+'</div>':'<p>'+esc(l.replace(/^- /,'– '))+'</p>').join('');
+ $('doc').innerHTML='<div class="dh"><img src="/informe/logo.png" alt=""><span>'+esc(/fisioterap/i.test(D.tipo)?'Informe fisioterapéutico':'Informe')+(D.fecha?' · '+esc(D.fecha):'')+(D.codigo?' · Nº '+esc(D.codigo):'')+'</span></div>'+ls.map(l=>esTit(l)?'<div class="t">'+esc(l.replace(/:$/,''))+'</div>':'<p>'+esc(l.replace(/^- /,'– '))+'</p>').join('');
  $('txtAcepto').textContent=D.texto;}
 let cv,cx,dib=false,hay=false;
 function prepFirma(){cv=$('cv');const r=cv.getBoundingClientRect(),dp=window.devicePixelRatio||1;cv.width=r.width*dp;cv.height=r.height*dp;cx=cv.getContext('2d');cx.scale(dp,dp);cx.lineWidth=2.2;cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle='#1a1a1a';
@@ -748,8 +753,8 @@ function firmaPng(){const w=Math.min(600,cv.width),h=Math.round(cv.height*w/cv.w
 $('b2').onclick=async()=>{const b=$('b2');b.disabled=true;b.textContent='Guardando…';$('e2').textContent='';
  const r=await api('inf-firmar',{dato,firma:firmaPng()});if(!r.ok){$('e2').textContent=r.error||'No se ha podido guardar';b.disabled=false;b.textContent='Firmar y recibir mi informe';return;}fin();};
 function fin(){if(D&&D.pila)$('gracias').textContent='Gracias, '+D.pila+'. Ya puedes descargar tu informe.';ver('v3');}
-$('b3').onclick=()=>{const b=$('b3');b.disabled=true;b.textContent='Preparando…';const go=()=>window.InformePDF.generar({paciente:D.paciente,informe:D.informe,zona:D.tipo,fisio:D.fisio,colegiado:D.colegiado,fecha:D.fecha}).catch(()=>alert('No se ha podido crear el PDF')).finally(()=>{b.disabled=false;b.textContent='Descargar PDF';});
- if(window.InformePDF)go();else{const s=document.createElement('script');s.src='/informe/pdf.js';s.onload=go;document.head.appendChild(s);}};
+$('b3').onclick=()=>{const b=$('b3');b.disabled=true;b.textContent='Preparando…';const go=()=>window.InformePDF.generar({paciente:D.paciente,informe:D.informe,zona:D.tipo,fisio:D.fisio,colegiado:D.colegiado,fecha:D.fecha,codigo:D.codigo}).catch(()=>alert('No se ha podido crear el PDF')).finally(()=>{b.disabled=false;b.textContent='Descargar PDF';});
+ if(window.InformePDF)go();else{const s=document.createElement('script');s.src='/informe/pdf.js?v=3';s.onload=go;document.head.appendChild(s);}};
 </script></body></html>`;
 }
 function firmaCita(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cita:' + id).digest('hex').slice(0, 10); }
@@ -1099,7 +1104,6 @@ module.exports = async function handler(req, res) {
     const ahoraIso = new Date().toISOString();
     const quienEs = () => ({ ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].trim(), nav: String(req.headers['user-agent'] || '').slice(0, 200) });
     const firmaOk = f => typeof f === 'string' && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(f) && f.length > 800 && f.length < 95000;
-    const TEXTO_RECIBI = 'Confirmo que he recibido mi informe fisioterapéutico de FISIO365.';
     if ((action === 'inf-firmar' || action === 'inf-recibi-app') && req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Método no permitido' });
     if (action === 'inf-recibi-app') {
       // Desde la app del paciente (ya ha entrado con su usuario)
@@ -1109,7 +1113,7 @@ module.exports = async function handler(req, res) {
       const r = await at(`${INFORMES_TABLE}/${id}`); const F = r.fields || {};
       if (r.error || String(F['PacienteId'] || '') !== pid) return res.status(404).json({ ok: false, error: 'Informe no encontrado' });
       if (F['RECIBI FECHA']) return res.status(200).json({ ok: true, ya: true });
-      const u = await at(`${INFORMES_TABLE}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECIBI FECHA': ahoraIso, 'RECIBI FIRMA': q.firma, 'RECIBI DATOS': JSON.stringify({ canal: 'app', verificado: 'sesión de la app', texto: TEXTO_RECIBI, ...quienEs() }) } }) });
+      const u = await at(`${INFORMES_TABLE}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECIBI FECHA': ahoraIso, 'RECIBI FIRMA': q.firma, 'RECIBI DATOS': JSON.stringify({ canal: 'app', verificado: 'sesión de la app', codigo: infCodigo(id), huella: infHuella(F['Informe']), texto: infTextoRecibi(id), ...quienEs() }) } }) });
       if (u.error) return res.status(500).json({ ok: false, error: 'No se ha podido guardar la firma' });
       return res.status(200).json({ ok: true });
     }
@@ -1137,12 +1141,12 @@ module.exports = async function handler(req, res) {
     if (action === 'inf-ver') {
       if (!E.abierto || E.intentos) await guardaE({ abierto: E.abierto || ahoraIso, intentos: 0 });
       let col = ''; try { const fr = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=${encodeURIComponent('NºColegiado')}`); const f = (fr.records || []).find(x => String(x.fields.Name || '').trim().toLowerCase() === String(F['FisioNombre'] || '').trim().toLowerCase()); col = f ? String(f.fields['NºColegiado'] || '') : ''; } catch (e) {}
-      return res.status(200).json({ ok: true, pila: pilaB, paciente: String(P['FULL NAME'] || F['PacienteNombre'] || '').trim(), informe: F['Informe'] || '', tipo: F['Protocolo'] || '', fisio: F['FisioNombre'] || '', colegiado: col, fecha: F['Fecha'] || '', firmado: !!F['RECIBI FECHA'], texto: TEXTO_RECIBI });
+      return res.status(200).json({ ok: true, pila: pilaB, paciente: String(P['FULL NAME'] || F['PacienteNombre'] || '').trim(), informe: F['Informe'] || '', tipo: F['Protocolo'] || '', fisio: F['FisioNombre'] || '', colegiado: col, fecha: F['Fecha'] || '', firmado: !!F['RECIBI FECHA'], codigo: infCodigo(rec.id), texto: infTextoRecibi(rec.id) });
     }
     // inf-firmar
     if (F['RECIBI FECHA']) return res.status(200).json({ ok: true, ya: true });
     if (!firmaOk(q.firma)) return res.status(400).json({ ok: false, error: 'Falta la firma' });
-    const u = await at(`${INFORMES_TABLE}/${rec.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECIBI FECHA': ahoraIso, 'RECIBI FIRMA': q.firma, 'RECIBI DATOS': JSON.stringify({ canal: E.canal || 'enlace', verificado: modo === 'dni' ? '4 últimos números del DNI' : 'fecha de nacimiento', texto: TEXTO_RECIBI, ...quienEs() }) } }) });
+    const u = await at(`${INFORMES_TABLE}/${rec.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECIBI FECHA': ahoraIso, 'RECIBI FIRMA': q.firma, 'RECIBI DATOS': JSON.stringify({ canal: E.canal || 'enlace', verificado: modo === 'dni' ? '4 últimos números del DNI' : 'fecha de nacimiento', codigo: infCodigo(rec.id), huella: infHuella(F['Informe']), texto: infTextoRecibi(rec.id), ...quienEs() }) } }) });
     if (u.error) return res.status(500).json({ ok: false, error: 'No se ha podido guardar la firma. Inténtalo de nuevo.' });
     return res.status(200).json({ ok: true });
   }
@@ -2980,7 +2984,7 @@ module.exports = async function handler(req, res) {
         if (typeof q.firma !== 'string' || !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(q.firma) || q.firma.length > 95000) return res.status(400).json({ ok: false, error: 'Falta la firma' });
         const r = await at(`${INFORMES_TABLE}/${id}`); if (r.error) return res.status(404).json({ ok: false, error: 'Informe no encontrado' });
         let E = {}; try { E = JSON.parse((r.fields || {})['ENTREGA'] || '{}'); } catch (e) {}
-        const u = await at(`${INFORMES_TABLE}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECIBI PIDE': true, 'RECIBI FECHA': new Date().toISOString(), 'RECIBI FIRMA': q.firma, ENTREGA: JSON.stringify({ ...E, canal: 'mano', enviado: E.enviado || new Date().toISOString(), quien: String(q.quien || '').slice(0, 60) }), 'RECIBI DATOS': JSON.stringify({ canal: 'mano', verificado: 'en persona, en la clínica' + (q.quien ? ' (' + String(q.quien).slice(0, 60) + ')' : ''), texto: 'Confirmo que he recibido mi informe fisioterapéutico de FISIO365.' }) } }) });
+        const u = await at(`${INFORMES_TABLE}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECIBI PIDE': true, 'RECIBI FECHA': new Date().toISOString(), 'RECIBI FIRMA': q.firma, ENTREGA: JSON.stringify({ ...E, canal: 'mano', enviado: E.enviado || new Date().toISOString(), quien: String(q.quien || '').slice(0, 60) }), 'RECIBI DATOS': JSON.stringify({ canal: 'mano', verificado: 'en persona, en la clínica' + (q.quien ? ' (' + String(q.quien).slice(0, 60) + ')' : ''), codigo: infCodigo(id), huella: infHuella((r.fields || {})['Informe']), texto: infTextoRecibi(id) }) } }) });
         if (u.error) return res.status(500).json({ ok: false, error: u.error.message || 'No se ha podido guardar' });
         return res.status(200).json({ ok: true });
       }
@@ -2989,7 +2993,7 @@ module.exports = async function handler(req, res) {
         const r = await at(`${INFORMES_TABLE}/${id}`); const F = r.fields || {};
         if (!F['RECIBI FECHA']) return res.status(200).json({ ok: false, error: 'Todavía no ha firmado el recibí' });
         let D = {}; try { D = JSON.parse(F['RECIBI DATOS'] || '{}'); } catch (e) {}
-        return res.status(200).json({ ok: true, fecha: F['RECIBI FECHA'], firma: F['RECIBI FIRMA'] || '', datos: D, paciente: String(F['PacienteNombre'] || ''), tipo: F['Protocolo'] || '', fechaInforme: F['Fecha'] || '', fisio: F['FisioNombre'] || '' });
+        return res.status(200).json({ ok: true, fecha: F['RECIBI FECHA'], firma: F['RECIBI FIRMA'] || '', datos: D, codigo: infCodigo(id), huellaActual: infHuella(F['Informe']), coincide: D.huella ? D.huella === infHuella(F['Informe']) : null, paciente: String(F['PacienteNombre'] || ''), tipo: F['Protocolo'] || '', fechaInforme: F['Fecha'] || '', fisio: F['FisioNombre'] || '' });
       }
       if (action === 'seg-informe-tto') {
         // Informe fisioterapéutico redactado por la IA con el historial clínico, la anamnesis y las sesiones realizadas.

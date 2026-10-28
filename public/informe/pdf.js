@@ -8,7 +8,7 @@ function cargarRecursosPDF(){
   .then(([reg,med,bold,logo])=>({reg,med,bold,logo})).catch(e=>{_pdfRecursos=null;return null;});
  return _pdfRecursos;
 }
-function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo){
+function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo,codigo){
  const {jsPDF}=window.jspdf;
  const doc=new jsPDF({unit:'mm',format:'a4'});
  const R=window._pdfRec;
@@ -74,6 +74,7 @@ function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo){
  for(let i=1;i<=n;i++){
   doc.setPage(i);
   set(7.5,'normal',GRIS);txt('FISIO365 · Gran de Sant Andreu, 163 · Barcelona · 672 89 39 49 · fisioterapia365.com',ml,H-14);
+  if(codigo){set(7.5,'medium',GRIS);txt('Nº '+codigo,ml,H-9.5);}
   if(n>1)txt(`${i} / ${n}`,W-mr,H-14,{align:'right'});
  }
 
@@ -97,11 +98,17 @@ function _recibiPDF(o){
  let y=48;set(18,'bold',NEG);doc.text('Recibí',ml,y);y+=12;
  const fila=(l,v)=>{set(8,'normal',GRIS);doc.text(l,ml,y);set(11,'bold',NEG);const ls=doc.splitTextToSize(String(v||'—'),tw-50);doc.text(ls,ml+50,y);y+=Math.max(9,ls.length*5.5+3);};
  const d=new Date(o.fecha);const fh=isNaN(d)?String(o.fecha||''):d.toLocaleString('es-ES',{timeZone:'Europe/Madrid',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+ if(o.codigo)fila('Nº de informe',o.codigo);
  fila('Paciente',o.paciente);fila('Documento',(/fisioterap/i.test(o.tipo||'')?'Informe fisioterapéutico':(o.tipo||'Informe'))+(o.fechaInforme?' del '+o.fechaInforme:''));fila('Fisioterapeuta',o.fisio);
  const canal={app:'En la app de FISIO365',whatsapp:'Enlace enviado por WhatsApp',email:'Enlace enviado por email',mano:'En mano, en la clínica',enlace:'Enlace personal'}[(o.datos||{}).canal]||'—';
  fila('Forma de entrega',canal);fila('Identificación',(o.datos||{}).verificado||'—');fila('Firmado el',fh);
  y+=6;doc.setDrawColor(...LIN);doc.line(ml,y,W-mr,y);y+=12;
  set(11,'normal',TXT);const tx=doc.splitTextToSize((o.datos&&o.datos.texto)||'Confirmo que he recibido mi informe fisioterapéutico de FISIO365.',tw);doc.text(tx,ml,y);y+=tx.length*6+10;
+ const hu=(o.datos||{}).huella;
+ if(hu){set(8,'normal',GRIS);doc.text('Huella del texto firmado (SHA-256)',ml,y);y+=5;set(7.5,'normal',TXT);doc.text(hu,ml,y);y+=6;
+  if(o.coincide===true){set(8.5,'bold',[22,128,60]);doc.text('El informe guardado hoy es exactamente el mismo que se firmó.',ml,y);}
+  else if(o.coincide===false){set(8.5,'bold',[180,35,24]);doc.text('Atención: el informe se ha modificado después de la firma.',ml,y);}
+  y+=12;}
  set(8,'normal',GRIS);doc.text('Firma del paciente',ml,y);y+=4;
  if(o.firma){try{const im=new Image();im.src=o.firma;const r=(im.naturalHeight||200)/(im.naturalWidth||600);const w=80;doc.addImage(o.firma,'PNG',ml,y,w,Math.min(45,w*r));y+=Math.min(45,w*r)+4;}catch(e){}}
  doc.setDrawColor(...LIN);doc.line(ml,y,ml+90,y);
@@ -113,6 +120,6 @@ window.InformePDF={async generar(o){
  await cargarJsPDF();
  window._pdfRec=await cargarRecursosPDF();
  const col=o.colegiado?('Colegiado nº '+o.colegiado):'';
- return _generarPDF(o.paciente||'',o.informe||'',o.zona||'Valoración fisioterapéutica',o.fisio||'',col,o.fecha||new Date().toLocaleDateString('es-ES'),o.modo||'descargar');
+ return _generarPDF(o.paciente||'',o.informe||'',o.zona||'Valoración fisioterapéutica',o.fisio||'',col,o.fecha||new Date().toLocaleDateString('es-ES'),o.modo||'descargar',o.codigo||'');
 },async recibi(o){await cargarJsPDF();window._pdfRec=await cargarRecursosPDF();return _recibiPDF(o);}};
 })();
