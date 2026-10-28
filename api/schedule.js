@@ -1833,7 +1833,8 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-agenda-num') { // aparte de la agenda (para que nunca la frene): nº de sesión y de dónde sale (pack, suelta, sin pagar)
           if (!okF(q.desde)) return res.status(400).json({ ok: false });
           const hasta = okF(q.hasta) ? q.hasta : q.desde;
-          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({FECHA},NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.desde}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${hasta}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`);
+          const soloPac = okId(q.pacienteId) ? `,FIND('${q.pacienteId}',ARRAYJOIN({PacienteRec}))` : ''; // ficha del paciente: solo sus citas
+          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({FECHA},NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.desde}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${hasta}','YYYY-MM-DD')))${soloPac})`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`);
           const numSes = {}, pago = {}; let inicio = '';
           try {
             const pv = [...new Set(rows.map(r => (r.fields['RELACIÓN - CITA'] || [])[0]).filter(Boolean))];

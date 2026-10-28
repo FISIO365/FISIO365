@@ -1556,6 +1556,19 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sug-vacio{text-align:center;padding:36px 16px;color:#8a7f76;font-size:14px}
 .sug-vacio svg{width:34px;height:34px;fill:none;stroke:#cdbfb3;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 10px}
 @media(max-width:768px){.sug-res{gap:6px}.sug-res button{font-size:13px;padding:10px 6px;gap:5px}.sug-res button svg{width:14px;height:14px}.sug-ap{grid-template-columns:1fr}.sug-ap button{flex-direction:row;align-items:center;gap:12px;padding:12px 14px}.sug-ap button span{display:flex;flex-direction:column;gap:2px}.sug-hero{padding:18px 18px;border-radius:20px}.sug-card{padding:16px}}
+/* Ficha › Citas: como en la agenda */
+.fp-nc{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-family:var(--font);font-size:14px;font-weight:700;border:1.5px dashed rgba(194,85,46,.45);background:#fff;color:#c2552e;border-radius:14px;padding:12px;margin:2px 0 12px;cursor:pointer}
+.fp-nc svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.fp-cit{width:100%;text-align:left;font-family:var(--font);cursor:pointer;align-items:center;color:inherit}
+.fp-cit:active{transform:scale(.995)}
+.fp-cch{width:18px;height:18px;flex:none;fill:none;stroke:#c9bfb6;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fp-cn,.fp-cpk,.fp-cok{font-style:normal;font-size:11.5px;font-weight:600;border-radius:99px;padding:2px 9px}
+.fp-cn{background:#f3efea;color:#5f554e}.fp-cn.pri{background:#fdebe1;color:#c2552e}
+.fp-cpk{background:#e8eef6;color:#1e3a5f}.fp-cpk.ult{background:#fff4e5;color:#b45309}.fp-cpk.su{background:#f3efea;color:#7d6a60}.fp-cpk.sin{background:#fdecea;color:#b42318}
+.fp-cok{background:#e8f5ec;color:#16803c}
+.ag-ffs{display:flex;flex-wrap:wrap;gap:6px}
+.ag-ffs button{font-family:var(--font);font-size:13.5px;font-weight:600;border:1.5px solid rgba(26,26,26,.1);background:#fff;color:#3d3631;border-radius:99px;padding:8px 14px;cursor:pointer}
+.ag-ffs button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}
 </style>
 </head>
 <body>
@@ -6074,7 +6087,7 @@ function agAbrirCita(c,onDone){
   <div class="hz-lab">Estado</div><div class="seg-rap ag-est">${AG_EST.map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
   <label class="ag-lib" hidden><input type="checkbox" ${futuro?'checked':''}> Dejar la hora libre para otro paciente</label>
   <div class="ag-tarde" hidden></div>
-  ${(()=>{const pg=((AG.dia&&AG.dia.pago)||{})[c.id],sin=pg&&pg.t==='sin'&&/REALIZADA/.test(c.estado);
+  ${(()=>{const pg=c._pago||((AG.dia&&AG.dia.pago)||{})[c.id],sin=pg&&pg.t==='sin'&&/REALIZADA/.test(c.estado);
    const est=!pg?'':pg.t==='sin'?(sin?'<b>Sesión sin factura</b><small>No tiene ninguna factura ni pack que la cubra</small>':'<b>Sin pagar todavía</b><small>No tiene factura ni pack para esta sesión</small>'):pg.t==='pack'?`<b>✓ Pack · sesión ${pg.i} de ${pg.n}</b>`:pg.t==='previo'?`<b>✓ Pack pagado fuera del panel · ${pg.i} de ${pg.n}</b>`:'<b>✓ Sesión suelta facturada</b>';
    return `<div class="ag-sinfac${sin?'':pg&&pg.t!=='sin'?' ok':' neu'}"><span>${est||'<b>Cobro</b>'}</span><span class="ag-sfb"><button type="button" class="ag-sf-pk">Tiene pack</button><button type="button" class="ag-sf-co">Facturar</button></span></div>`;})()}
   <button type="button" class="exp-seg ag-conf"><i></i>Confirmada</button>
@@ -6086,7 +6099,7 @@ function agAbrirCita(c,onDone){
   <div class="ag-otras"><button type="button" class="ag-borrar">Borrar cita</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const tg=agEtiquetas(m.querySelector('.ag-tip'),c.tipos),ses=agSesSel(m.querySelector('.ag-ses'),c.sesion||'');
- m.querySelector('.ag-pac').onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.paciente);};
+ m.querySelector('.ag-pac').onclick=()=>{m.remove();if(!c._enFicha)abrirFichaPaciente(c.pacienteId,c.paciente);};
  const lib=m.querySelector('.ag-lib');
  // Cancelación tardía: avisa con menos horas de las de la política (Administración › Ajustes)
  const hPol=CONF&&CONF.cancelacion?Number(CONF.cancelacion.horas):24,tarde=m.querySelector('.ag-tarde');
@@ -6103,7 +6116,7 @@ function agAbrirCita(c,onDone){
   abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
  m.querySelector('.ag-altab').onclick=()=>agAlta(c);
  {const pk=m.querySelector('.ag-sf-pk');if(pk)pk.onclick=()=>marcarPackCita(c.pacienteId,c.paciente,c.id,()=>{m.remove();onDone&&onDone();});
-  const co=m.querySelector('.ag-sf-co');if(co)co.onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.paciente);let k=0;const t=setInterval(()=>{const b=document.querySelector('.fp .fp-cobb');if(b||++k>60){clearInterval(t);if(b)b.click();}},150);};}
+  const co=m.querySelector('.ag-sf-co');if(co)co.onclick=()=>{m.remove();if(!c._enFicha)abrirFichaPaciente(c.pacienteId,c.paciente);let k=0;const t=setInterval(()=>{const b=document.querySelector('.fp .fp-cobb');if(b||++k>60){clearInterval(t);if(b)b.click();}},150);};}
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='REPROGRAMADA'&&!/REPROGRAMADA/.test(c.estado)){m.remove();agMoverCita(c,onDone);return;}est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
@@ -6116,6 +6129,34 @@ function agAbrirCita(c,onDone){
   try{const r=await agPost('seg-agenda-editar',{id:c.id,estado:est!==est0?est:undefined,confirmada:conf!==c.confirmada?conf:undefined,notas:m.querySelector('.ag-not2').value,tipos:tg.get(),sesion:ses.get()!==(c.sesion||'')?ses.get():undefined,liberar:!lib.hidden&&lib.querySelector('input').checked});
    if(!r.ok)throw new Error(r.error||'No se ha podido guardar');toast('Guardado',true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
+}
+function agNuevaCitaPac(p,onDone){
+ const eq=agEquipo(),yo=String((fisioActual&&fisioActual.nombre)||'').split(' ')[0].toLowerCase();
+ let fecha=agHoyIso(),hora='',fisio=eq.includes(p.fisio)?p.fisio:(eq.find(f=>String(f).toLowerCase()===yo)||eq[0]||''),pacInfo='';
+ const m=hzModal(`<div class="hz-top"><div><small>Nueva cita</small><b>${escH(p.nombre||'Paciente')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Día</div><div class="ag-fd"></div>
+  <div class="hz-lab">Fisio</div><div class="ag-ffs">${eq.map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
+  <div class="hz-lab">Hora <span>(verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div><div class="ag-pkinfo" hidden></div>
+  <div class="hz-lab">Tipo de sesión</div><div class="ag-ses"></div>
+  <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n ag-not2" rows="2"></textarea>
+  <div class="hz-bts"><button type="button" class="hz-ok">Dar cita</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const hs=m.querySelector('.ag-hs'),pk=m.querySelector('.ag-pkinfo'),ses=agSesSel(m.querySelector('.ag-ses'),'');
+ // Qué sesión del pack sería (igual que al dar cita en la agenda)
+ const mirarPack=()=>{pk.hidden=true;pacInfo='';if(!hora)return;const k=fecha+hora;
+  fetch(`/api/schedule?action=seg-agenda-pack&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${p.id}&fecha=${fecha}&hora=${encodeURIComponent(hora)}`).then(x=>x.json()).then(r=>{if(k!==fecha+hora||!r||!r.ok||!r.activo)return;
+   pacInfo=r.t==='pack'?`Pack ${r.i}/${r.n}`:r.t==='suelta'?'Sesión suelta pagada':'Sin pagar';pk.hidden=false;pk.className='ag-pkinfo '+(r.t==='sin'?'sin':r.t==='pack'&&r.i===r.n?'ult':'ok');
+   pk.innerHTML=r.t==='pack'?`<b>Sería la sesión ${r.i} de ${r.n} del pack</b>${r.i===r.n?' · la última: toca renovar':''}`:r.t==='suelta'?'<b>Tiene esta sesión pagada</b>':'<b>No consta ningún pago para esta sesión</b>';}).catch(()=>{});};
+ const ch=()=>{hora='';pk.hidden=true;agHorasChips(hs,fecha,fisio,'',h=>{hora=h;mirarPack();});};
+ const pf=()=>m.querySelectorAll('.ag-ffs button').forEach(b=>b.classList.toggle('on',b.dataset.f===fisio));
+ m.querySelectorAll('.ag-ffs button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;pf();ch();});pf();ch();
+ calFijo(m.querySelector('.ag-fd'),fecha,f=>{fecha=f;ch();});
+ const enviar=async(b,forzar)=>{if(!fisio){toast('Elige el fisio',false);return;}if(!hora){toast('Elige la hora',false);return;}b.disabled=true;b.textContent='Dando cita…';
+  try{const r=await agPost('seg-agenda-dar',{pacienteId:p.id,fecha,hora,fisio,quien:miNombreCorto(),notas:m.querySelector('.ag-not2').value.trim(),tipos:[],sesion:ses.get(),forzar});
+   if(r.conflicto){b.disabled=false;b.textContent='Dar cita';if(confirm(r.error+'. ¿Darla igualmente?'))enviar(b,true);return;}
+   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada: ${segFecha(fecha)} a las ${hora}`+(pacInfo?' · '+pacInfo:''),true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
+  catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
+ m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
 }
 function agHorasChips(box,fecha,fisio,horaSel,onPick){
  box.innerHTML='<small class="fp-mu">Cargando horas…</small>';
@@ -8268,10 +8309,28 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   ${salud}
   ${refBlk}
 `;}
- function citas(){const hoy=d.hoy;if(!d.citas.length)return '<div class="fac-vacio">Sin citas</div>';
-  const fila=c=>`<div class="fp-cita"><div class="fp-cd"><b>${escH(segFecha(c.fecha))}</b><span>${escH(c.hora||'')}</span></div><div class="fp-cm"><span class="fp-ce ${cls(c.estado)}">${escH(c.estado?c.estado.charAt(0)+c.estado.slice(1).toLowerCase():'—')}</span>${c.fisio?`<span class="fp-cfi">${escH(c.fisio)}</span>`:''}${c.nota?`<p>${escH(c.nota)}</p>`:''}</div></div>`;
-  const cerr=c=>/REALIZADA|NO ASIST/i.test(c.estado),fut=d.citas.filter(c=>c.fecha>=hoy&&!cerr(c)).reverse(),pas=d.citas.filter(c=>c.fecha<hoy||cerr(c));
-  return `${fut.length?`<div class="fp-sub">Próximas</div>${fut.map(fila).join('')}`:''}${pas.length?`<div class="fp-sub">Pasadas · ${pas.length}</div>${pas.map(fila).join('')}`:''}`;}
+ // Citas: las mismas ventanas que la agenda (abrir, cambiar día u hora, dar cita), con nº de sesión y pack
+ let CX=null; // {citas (formato agenda), num, pago}
+ function citas(){const hoy=d.hoy,L=CX?CX.citas:d.citas;
+  const top=`<button type="button" class="fp-nc"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nueva cita</button>`;
+  if(!L.length)return top+'<div class="fac-vacio">Sin citas</div>';
+  const fila=c=>{const n=CX&&CX.num[c.id],pg=CX&&CX.pago[c.id],nota=c.notas!=null?c.notas:c.nota;
+   const pk=!pg?'':pg.t==='pack'?`<i class="fp-cpk${pg.i===pg.n?' ult':''}">Pack ${pg.i}/${pg.n}</i>`:pg.t==='previo'?`<i class="fp-cpk">Bono ${pg.i}/${pg.n}</i>`:pg.t==='suelta'?'<i class="fp-cpk su">Suelta</i>':/REALIZADA/.test(c.estado)?'<i class="fp-cpk sin">Sin factura</i>':'';
+   return `<button type="button" class="fp-cita fp-cit" data-id="${c.id}"><div class="fp-cd"><b>${escH(segFecha(c.fecha))}</b><span>${escH(c.hora||'')}</span></div><div class="fp-cm"><span class="fp-ce ${cls(c.estado)}">${escH(c.estado?c.estado.charAt(0)+c.estado.slice(1).toLowerCase():'—')}</span>${n?`<i class="fp-cn${n===1?' pri':''}">${n===1?'1ª visita':n+'ª sesión'}</i>`:''}${pk}${c.confirmada&&!/REALIZADA|CANCEL|NO ASIST/.test(c.estado)?'<i class="fp-cok">✓ Confirmada</i>':''}${c.fisio?`<span class="fp-cfi">${escH(agNom(c.fisio))}</span>`:''}${nota?`<p>${escH(nota)}</p>`:''}</div><svg class="fp-cch" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>`;};
+  const cerr=c=>/REALIZADA|NO ASIST/i.test(c.estado),orden=(a,b)=>(b.fecha+b.hora).localeCompare(a.fecha+a.hora);
+  const fut=L.filter(c=>c.fecha>=hoy&&!cerr(c)).sort(orden).reverse(),pas=L.filter(c=>c.fecha<hoy||cerr(c)).sort(orden);
+  return top+`${fut.length?`<div class="fp-sub">Próximas</div>${fut.map(fila).join('')}`:''}${pas.length?`<div class="fp-sub">Pasadas · ${pas.length}</div>${pas.map(fila).join('')}`:''}`;}
+ async function cargarCitas(){const L=d.citas;if(!L.length){CX={citas:[],num:{},pago:{}};return;}
+  const fs=L.map(c=>c.fecha).filter(Boolean).sort(),d1=fs[0],d2=fs[fs.length-1];
+  const [a,n]=await Promise.all([fetch(`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${id}&desde=${d1}&hasta=${d2}`).then(x=>x.json()),
+   fetch(`/api/schedule?action=seg-agenda-num&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${id}&desde=${d1}&hasta=${d2}&pago=1&fresco=1`).then(x=>x.json()).catch(()=>null)]);
+  if(!a||!a.ok)throw 0;CX={citas:(a.citas||[]).filter(c=>c.pacienteId===id),num:(n&&n.num)||{},pago:(n&&n.pago)||{}};}
+ function montarCitas(cont){
+  const recargar=async()=>{try{await cargar();await cargarCitas();}catch(_){}if(tab==='citas'){const y=body.scrollTop;pintar();body.scrollTop=y;}};
+  cont.querySelector('.fp-nc').onclick=()=>agNuevaCitaPac({id,nombre:P.nombre,fisio:((CX?CX.citas:d.citas).slice().sort((a,b)=>(b.fecha).localeCompare(a.fecha))[0]||{}).fisio},recargar);
+  cont.querySelectorAll('.fp-cit').forEach(b=>b.onclick=()=>{const c=CX&&CX.citas.find(x=>x.id===b.dataset.id);if(!c){toast('Un momento, cargando la cita…',true);return;}
+   agAbrirCita(Object.assign({},c,{paciente:c.paciente||P.nombre,_enFicha:true,_pago:CX.pago[c.id]}),recargar);});
+  if(!CX)cargarCitas().then(()=>{if(tab==='citas'&&cont.isConnected){const y=body.scrollTop;pintar();body.scrollTop=y;}}).catch(()=>{});}
  function archivos(){const kb=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
   return `<label class="fp-up"><input type="file" multiple hidden><span>＋ Subir archivo</span>${infoI('PDF o fotos de hasta 3 MB. Se guardan en su ficha de Airtable.')}</label>
   ${P.archivos.length?`<div class="fp-docs">${P.archivos.map(a=>{const ext=(a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase();return `<a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-doc-it">${a.mini?`<img src="${escH(a.mini)}" alt="">`:`<span class="fp-doc-ic ${/PDF/.test(ext)?'pdf':/JPG|JPEG|PNG|HEIC|WEBP/.test(ext)?'img':''}">${escH(ext)}</span>`}<span class="fp-doc-t"><b>${escH(a.nombre)}</b><small>${escH(ext)}${a.tam?' · '+kb(a.tam):''}</small></span><span class="fp-doc-go">›</span></a>`;}).join('')}</div>`:'<div class="fac-vacio">No tiene archivos</div>'}`;}
@@ -8420,7 +8479,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
      if(r.valor==='Alta'&&i>=0)C.salud[i]={k:bt.dataset.k,alta:true,t:'Cáncer (ya de alta)',grave:false};else if(i>=0)C.salud.splice(i,1);
      C.rojo=C.rojo.filter(x=>x!==nom);toast(r.valor==='Alta'?'Cáncer pasado a «de alta»':'Quitado',true);pintar();
     }catch(e){bt.disabled=false;toast('No se ha podido quitar',false);}});}
-  else if(tab==='citas')cont.innerHTML=citas();
+  else if(tab==='citas'){cont.innerHTML=citas();montarCitas(cont);}
   else if(tab==='archivos'){cont.innerHTML=archivos();montarSubida(cont);}
   else if(tab==='informes')fpTabInformes(id,cont,P.nombre,tok);
   else if(tab==='facturas')fpTabFacturas(id,cont,P.nombre,tok);
