@@ -5591,9 +5591,9 @@ function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo){
 
  // ── Contenido ──
  const lineas=String(informe||'').replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
- const esTitulo=l=>/^[A-ZÁÉÍÓÚÑÜ0-9 ,\/·()-]{5,}$/.test(l)&&!/^- /.test(l);
+ const esTitulo=l=>(/^[A-ZÁÉÍÓÚÑÜ0-9 ,\/·()-]{5,}$/.test(l)||(/^[^.;]{3,45}:$/.test(l)&&l.split(/\s+/).length<=5))&&!/^- /.test(l);
  let enSencillo=false,bloque=[],primero=true;
- const titulo=t=>{sitio(20);if(!primero)y+=6;primero=false;set(9,'bold',NAR);txt(t.toUpperCase(),ml,y,{charSpace:.4});y+=7;};
+ const titulo=t=>{t=t.replace(/:$/,'');sitio(20);if(!primero)y+=6;primero=false;set(9,'bold',NAR);txt(t.toUpperCase(),ml,y,{charSpace:.4});y+=7;};
  const parrafo=(t,bullet)=>{
   set(10.5,'normal',TXT);
   const x=bullet?ml+6:ml,ancho=bullet?tw-6:tw;
@@ -9884,7 +9884,7 @@ async function fpTabInformes(pacId, body, pacNombre, tok, abrirJust){
   const ab=c.querySelector('.fp-inf-ed');
   if(ab){ab.remove();c.querySelectorAll('.inf-acc,.ia-borrar').forEach(x=>x.remove());bAbrir.textContent='Abrir';return;}
   const ed=ce('div','fp-inf-ed');
-  ed.innerHTML=`<div class="fp-inf-ayuda">Puedes modificar el texto y luego guardarlo o sacar el PDF.</div><textarea></textarea>`;
+  ed.innerHTML=`<div class="fp-inf-ayuda">Puedes modificar el texto, también los títulos, y luego guardarlo o sacar el PDF. Un título es una línea en MAYÚSCULAS o una línea corta acabada en «:».</div><textarea></textarea>`;
   const ta=ed.querySelector('textarea'); ta.value=inf.informe||'';
   const ajusta=()=>{ta.style.height='auto';ta.style.height=Math.max(220,ta.scrollHeight+4)+'px';};
   ta.oninput=()=>{inf.informe=ta.value;ajusta();};
