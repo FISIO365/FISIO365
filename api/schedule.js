@@ -954,9 +954,10 @@ module.exports = async function handler(req, res) {
   // Medición de velocidad: se apunta en los logs cuánto tarda cada acción (para saber qué pantallas van lentas)
   { const t0 = Date.now(); res.on('finish', () => { const ms = Date.now() - t0; console.log(`TIEMPO ${action || '-'} ${ms}ms${ms > 1500 ? ' LENTO' : ''}`); }); }
   // Respuestas de las consultas pesadas guardadas 60 s en el servidor (cualquier cambio por POST las borra)
-  if (req.method === 'POST') _memo.clear();
-  else if (/^(seg-referidos|seg-referidos-resueltos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|rendimiento|seg-lista)$/.test(action || '')) {
-    const k = req.url, m = _memo.get(k);
+  const postLectura = /^(seg-com-buzon|reporte-dia|compra-lista|seg-sug-lista|seg-sug-contar|seg-com-hilo|seg-wa-ia)$/.test(action || '');
+  if (req.method === 'POST' && !postLectura) _memo.clear(); // solo los cambios borran lo guardado (las consultas por POST no)
+  else if (/^(seg-referidos|seg-referidos-resueltos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|rendimiento|seg-lista|reporte-dia)$/.test(action || '')) {
+    const k = req.method === 'POST' ? action + '|' + JSON.stringify(req.body || {}) : req.url, m = _memo.get(k);
     if (m && Date.now() - m.t < 60000) return res.status(200).json(m.v);
     const j0 = res.json.bind(res);
     res.json = v => { if ((res.statusCode || 200) === 200 && v && v.ok !== false) { if (_memo.size > 60) _memo.clear(); _memo.set(k, { t: Date.now(), v }); } return j0(v); };
