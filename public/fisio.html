@@ -978,7 +978,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
  .main-area>*{overflow-x:clip;max-width:100%}
  .main-area{height:100dvh;overflow-y:auto!important;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
- #sb-rend,#sb-seg,#sb-tar,#sb-com,#sb-sug,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-admin{display:none!important}
+ #sb-rend,#sb-seg,#sb-tar,#sb-com,#sb-sug,#sb-mis,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-admin{display:none!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
  .topbar-t{font-size:21px!important}
  .topbar-s{font-size:12px!important}
@@ -1569,6 +1569,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-ffs{display:flex;flex-wrap:wrap;gap:6px}
 .ag-ffs button{font-family:var(--font);font-size:13.5px;font-weight:600;border:1.5px solid rgba(26,26,26,.1);background:#fff;color:#3d3631;border-radius:99px;padding:8px 14px;cursor:pointer}
 .ag-ffs button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}
+.rc-clas.ro{background:#f3efea!important;color:#8a7f76!important;border-color:transparent!important;cursor:default}
+.rc-clas:disabled{cursor:default}
 </style>
 </head>
 <body>
@@ -1619,6 +1621,9 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  </div>
  <div class="sb-item" id="sb-com" onclick="showSection('com')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg></span><span class="sb-txt">Comunicaciones</span><i id="sb-com-badge" style="display:none"></i>
+ </div>
+ <div class="sb-item" id="sb-mis" onclick="showSection('mis')" style="display:none">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg></span><span class="sb-txt">Mis estadísticas</span>
  </div>
  <div class="sb-item" id="sb-sug" onclick="showSection('sug')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg></span><span class="sb-txt">Sugerencias</span><i id="sb-sug-badge" style="display:none"></i>
@@ -1678,6 +1683,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 <div id="perfilMenu" onclick="if(event.target===this)cerrarPerfilMenu()"><div class="pm-card">
  <div class="pm-head"><div class="pm-av" id="pmAv"></div><div><b id="pmNom"></b><span id="pmRol"></span></div></div>
  <button type="button" class="pm-it" id="pmCom" style="display:none" onclick="cerrarPerfilMenu();showSection('com')"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg>Comunicaciones<i id="pmComN" style="display:none"></i></button>
+ <button type="button" class="pm-it" id="pmMis" style="display:none" onclick="cerrarPerfilMenu();showSection('mis')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Mis estadísticas</button>
  <button type="button" class="pm-it" id="pmSug" onclick="cerrarPerfilMenu();showSection('sug')"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Sugerencias<i id="pmSugN" style="display:none"></i></button>
  <button type="button" class="pm-it" id="pmCall" onclick="cerrarPerfilMenu();showSection('call')"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Call-in</button>
  <button type="button" class="pm-it" id="pmRend" style="display:none" onclick="cerrarPerfilMenu();showSection('rend')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rendimiento</button>
@@ -1754,7 +1760,8 @@ const TOPBAR = {
  ejer: ['Ejercicios','Biblioteca de vídeos'],
  rep: ['Check-list','Marca y envía antes de irte'],
  com: ['Buzón','Comunicaciones internas del equipo'],
- sug: ['Sugerencias','Ideas, mejoras y fallos de la app']
+ sug: ['Sugerencias','Ideas, mejoras y fallos de la app'],
+ mis: ['Mis estadísticas','Tus sesiones, ocupación y horas']
 };
 
 const CFG = {
@@ -1947,7 +1954,7 @@ function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=
 function pintarPerfil(){if(!fisioActual)return;requestAnimationFrame(ajustaTopbar);const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=fisioActual.role==='admin'?'Administración':'Fisioterapeuta';
- const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}try{sugContar();}catch(e){}}
+ const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}try{sugContar();}catch(e){}try{const v=fisioActual.role!=='admin';['sb-mis','pmMis'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
@@ -1979,7 +1986,7 @@ function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
  try{$('btnRend').classList.toggle('activo',sec==='rend');$('btnTar').classList.toggle('activo',sec==='tar');}catch(e){}
- ['anam','prog','agenda','pac','school','msg','rend','seg','tar','call','stats','cap','ejer','rep','admin','com','sug'].forEach(s=>{
+ ['anam','prog','agenda','pac','school','msg','rend','seg','tar','call','stats','cap','ejer','rep','admin','com','sug','mis'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
  const [t,s] = TOPBAR[sec];
@@ -2011,6 +2018,7 @@ function showSection(sec){
  else if(sec==='admin') renderAdmin(wrap);
  else if(sec==='com') renderCom(wrap);
  else if(sec==='sug') renderSug(wrap);
+ else if(sec==='mis') renderRendimiento(wrap,true);
 }
 
 
@@ -9122,24 +9130,27 @@ function isoMadrid(d){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/M
 function rangoRend(k){const hoy=new Date();const iso=n=>isoMadrid(new Date(hoy.getTime()+n*864e5));const dow=(new Date(iso(0)+'T12:00:00').getDay()+6)%7;
  if(k==='hoy')return[iso(0),iso(0)];if(k==='ayer')return[iso(-1),iso(-1)];if(k==='semana')return[iso(-dow),iso(0)];if(k==='semanaPasada')return[iso(-dow-7),iso(-dow-1)];
  const d=iso(0);return[d.slice(0,8)+'01',d];}
-async function renderRendimiento(wrap){
+async function renderRendimiento(wrap,solo){
  const pcs=(a,b)=>b?Math.round(a*100/b)+'%':'—';
+ // solo: «Mis estadísticas» del fisio que ha entrado (sin compañeros ni total del equipo)
+ const yoR=String((fisioActual&&fisioActual.nombre)||'').trim().split(/\s+/)[0].toLowerCase();
+ const esMio=x=>String(x.fisio||'').trim().split(/\s+/)[0].toLowerCase()===yoR,KR=solo?'f365_rend_mis':'f365_rend';
  const box=ce('div','rend');
  box.innerHTML=`<div class="rend-tot"><div class="rt" data-k="ayer"><span>Ayer</span><b>…</b><i></i></div><div class="rt" data-k="semana"><span>Esta semana</span><b>…</b><i></i></div><div class="rt" data-k="mes"><span>Este mes</span><b>…</b><i></i></div></div>
-  <div class="rend-sub">Ocupación del equipo (Sara, Jonathan y Juan)</div><div class="rend-chips">${[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div>
+  <div class="rend-sub">${solo?'Tus sesiones':'Ocupación del equipo (Sara, Jonathan y Juan)'}</div><div class="rend-chips">${[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div>
   <div class="rend-res"></div>`;
  wrap.appendChild(box);
  const res=box.querySelector('.rend-res');
  const cargar=async k=>{
   box.querySelectorAll('.rend-chips button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
-  try{sessionStorage.setItem('f365_rend',k);}catch(e){}
+  try{sessionStorage.setItem(KR,k);}catch(e){}
   res.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Calculando…</div>';
   const [d,h]=rangoRend(k);
   try{
    await cargarSegPac();
    const r=await (await fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`)).json();
    if(!r.ok)throw new Error(r.error||'Error');
-   const L=r.fisios||[];
+   const L=(r.fisios||[]).filter(x=>!solo||esMio(x));
    if(!L.length){res.innerHTML='<div class="fac-vacio">Sin sesiones en este periodo.</div>';return;}
    const horasDe=async x=>{try{const hz=await (await fetch(`/api/schedule?action=horas&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`)).json();x.reg={};(hz.registros||[]).forEach(r=>x.reg[r.fecha]=r);x.banco=Math.round((hz.banco||0)*10)/10;}catch(e){}};
    await Promise.all(L.filter(x=>x.dias).map(horasDe));
@@ -9160,14 +9171,14 @@ async function renderRendimiento(wrap){
     const fila=d=>{const df=d.libre?-d.toca:d.hechas-d.toca,r=reg[d.fecha],t=new Date(d.fecha+'T12:00:00');
      return `<div class="ch-row${r?'':' pend'}"><div class="ch-date"><small>${DSc[t.getDay()]}</small><b>${t.getDate()}</b></div>
       <div class="ch-mid"><b>${d.libre?(r&&r.tipo==='Sin paciente'?'Vino sin pacientes':'No vino'):d.hechas+' de '+d.toca+' h'}</b><small class="${df>0?'mas':'menos'}">${r&&r.tipo==='Sin paciente'?Math.abs(r.horas||df)+' h sin paciente':d.libre?d.toca+' h de su horario':(df>0?df+' h de más':-df+' h de menos')}</small></div>
-      <button type="button" class="rc-clas${r?' hecho':''}" data-fisio="${escH(x.fisio)}" data-fecha="${d.fecha}" data-dif="${df}">${r?`<i class="ch-dot"></i>${escH(r.tipo)}${r.banco?'<em>banco</em>':''}`:'Clasificar'}</button></div>`;};
+      <button type="button" ${solo?'disabled ':''}class="rc-clas${r?' hecho':''}${solo&&!r?' ro':''}" data-fisio="${escH(x.fisio)}" data-fecha="${d.fecha}" data-dif="${df}">${r?`<i class="ch-dot"></i>${escH(r.tipo)}${r.banco?'<em>banco</em>':''}`:'Clasificar'}</button></div>`;};
     return `<div class="ch">
-     <div class="ch-head"><span>Control de horas</span><button type="button" class="rc-inf" data-fisio="${escH(x.fisio)}">Informe <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></button></div>
+     <div class="ch-head"><span>Control de horas</span>${solo?'':`<button type="button" class="rc-inf" data-fisio="${escH(x.fisio)}">Informe <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></button>`}</div>
      <div class="ch-hero"><div><b>${h} h</b><small> de ${tot} h</small></div>${dd?`<em class="rend-dif ${dd>0?'mas':'menos'}">${dd>0?'+':'−'}${Math.abs(dd)} h</em>`:'<em class="rend-dif ok">✓ cuadra</em>'}</div>
      <div class="ch-bar"><i style="width:${tot?Math.min(100,Math.round(h*100/tot)):0}%"></i></div>
      <div class="ch-sub">${x.realizadas} sesiones · ${x.callin||0} h call-in · ${x.videos||0} h vídeos</div>
      <div class="ch-stats"><div class="g"><b>+${extra} h</b><small>Extra</small></div><div class="r"><b>−${menos} h</b><small>De menos</small></div><div class="n"><b>${libres.length}</b><small>Días sin venir</small></div><div class="bk"><b>${bn>0?'+':''}${bn} h</b><small>Banco</small></div></div>
-     ${filas.length?`<div class="ch-lt"><span>Días a revisar</span>${sinClas?`<em>${sinClas} sin clasificar</em>`:'<em class="ok">todo clasificado ✓</em>'}</div><div class="ch-list">${filas.map(fila).join('')}</div>`:'<div class="ch-ok">Todos los días cuadran con su horario ✓</div>'}
+     ${filas.length?`<div class="ch-lt"><span>${solo?'Días que no cuadran':'Días a revisar'}</span>${sinClas?`<em>${sinClas} ${solo?'por revisar (dirección)':'sin clasificar'}</em>`:'<em class="ok">todo clasificado ✓</em>'}</div><div class="ch-list">${filas.map(fila).join('')}</div>`:'<div class="ch-ok">Todos los días cuadran con su horario ✓</div>'}
     </div>`;};
    const card=(x,tot)=>{
     if(x.sinHoras&&!tot)return `<div class="rend-card solo"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc">${x.realizadas} <small>sesiones hechas</small></span></div><div class="rend-conv dos"><div><span>Reagendan</span><b>${pcs(x.reagendan,x.atendidos)}</b></div><div><span>No reagendan</span><b>${pcs(x.atendidos-x.reagendan,x.atendidos)}</b></div></div>${listaNo(x)}</div>`;
@@ -9189,14 +9200,14 @@ async function renderRendimiento(wrap){
  box.querySelectorAll('.rend-tot .rt').forEach(async t=>{
   const [d,h]=rangoRend(t.dataset.k);
   try{const r=await (await fetch(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`)).json();
-   const L=(r.fisios||[]).filter(x=>!x.sinHoras);const hech=L.reduce((a,x)=>a+x.realizadas,0),hue=L.reduce((a,x)=>a+x.huecos,0);
+   const L=(r.fisios||[]).filter(x=>!x.sinHoras&&(!solo||esMio(x)));const hech=L.reduce((a,x)=>a+x.realizadas,0),hue=L.reduce((a,x)=>a+x.huecos,0);
    const oc=hue?Math.round(hech*100/hue):null;
    t.querySelector('b').textContent=oc==null?'—':oc+'%';t.querySelector('b').className=oc==null?'':oc>=85?'ok':oc>=65?'med':'bajo';
    t.querySelector('i').textContent=hue?`${hech} de ${hue} huecos`:'sin huecos';
   }catch(e){t.querySelector('b').textContent='—';}
   t.onclick=()=>cargar(t.dataset.k);
  });
- let k0='ayer';try{k0=sessionStorage.getItem('f365_rend')||'ayer';}catch(e){}
+ let k0=solo?'semana':'ayer';try{k0=sessionStorage.getItem(KR)||k0;}catch(e){}
  cargar(k0);
 }
 // ── FACTURAS (ficha del paciente): emitir en Holded y ver las anteriores ──
