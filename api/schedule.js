@@ -918,6 +918,7 @@ async function listarFacturas(ids, conBorradores) {
   return facturas;
 }
 
+const _memo = new Map(), _pacB = { t: 0, v: null, p: null }; // _pacB: nombres y teléfonos de todos los pacientes (5 min)
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -926,6 +927,14 @@ module.exports = async function handler(req, res) {
   const { patientId, action } = req.query;
   // Medición de velocidad: se apunta en los logs cuánto tarda cada acción (para saber qué pantallas van lentas)
   { const t0 = Date.now(); res.on('finish', () => { const ms = Date.now() - t0; console.log(`TIEMPO ${action || '-'} ${ms}ms${ms > 1500 ? ' LENTO' : ''}`); }); }
+  // Respuestas de las consultas pesadas guardadas 60 s en el servidor (cualquier cambio por POST las borra)
+  if (req.method === 'POST') _memo.clear();
+  else if (/^(seg-referidos|seg-referidos-resueltos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|rendimiento|seg-lista)$/.test(action || '')) {
+    const k = req.url, m = _memo.get(k);
+    if (m && Date.now() - m.t < 60000) return res.status(200).json(m.v);
+    const j0 = res.json.bind(res);
+    res.json = v => { if ((res.statusCode || 200) === 200 && v && v.ok !== false) { if (_memo.size > 60) _memo.clear(); _memo.set(k, { t: Date.now(), v }); } return j0(v); };
+  }
 
   // Versión publicada: el panel la compara al volver a la app para recargarse si hay una nueva
   // Lo llama la automatización de Airtable al entrar una reserva por la web (y el panel al abrir la agenda)
@@ -1561,7 +1570,7 @@ module.exports = async function handler(req, res) {
           const desde = new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10);
           const rs = await todosT(REF, `filterByFormula=${encodeURIComponent(`AND({Nombre de quien recomendó}!='',NOT({IGNORAR}),{CÓDIGO}='',NOT({Regalo entregado}),IS_AFTER({Fecha},'${desde}'))`)}`);
           if (!rs.length) return res.status(200).json({ ok: true, porDar: [] });
-          const cons = await consTodos(), pacsAll = await todosT(PACIENTES, 'fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=TELF');
+          const cons = await consTodos(), pacsAll = await (async () => { if (_pacB.v && Date.now() - _pacB.t < 300000) return _pacB.v; if (!_pacB.p) _pacB.p = todosT(PACIENTES, 'fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=TELF').then(v => { _pacB.v = v; _pacB.t = Date.now(); return v; }).finally(() => { _pacB.p = null; }); return _pacB.p; })();
           const nomP = id => ((pacsAll.find(p => p.id === id) || {}).fields || {})['FULL NAME'] || '';
           const tokP = pacsAll.map(p => ({ id: p.id, t: nomToks(p.fields['FULL NAME'] || ''), creado: p.createdTime, tel: p.fields['WHATSAPP'] || p.fields['TELF'] || '' }));
           // 1) Paciente nuevo: el del formulario de ese día con ese nombre (ya enlazado); si no, por nombre completo
