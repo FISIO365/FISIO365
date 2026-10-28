@@ -1524,13 +1524,12 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sug-it.hecha .sug-resp{opacity:.7}
 .sug-it.nresp{border-color:#c2552e;box-shadow:0 0 0 3px rgba(194,85,46,.08)}
 .sug-rbox{margin-top:12px;padding-top:12px;border-top:1px solid rgba(26,26,26,.07)}
-.sug-res{margin-bottom:10px}
+.sug-res{margin-bottom:0}
 .sug-res button.on[data-e=Aceptada]{color:#3460b0}.sug-res button.on[data-e=Hecha]{color:#2f7a52}.sug-res button.on[data-e=Descartada]{color:#7d726a}
 .sug-rt{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;line-height:1.45;border:1.5px solid rgba(26,26,26,.1);border-radius:12px;padding:10px 12px;min-height:70px;resize:vertical;outline:none;background:#fff}
 .sug-rt:focus{border-color:#c2552e}
-.sug-racc{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px}
-.sug-racc button{font-family:var(--font);font-size:13.5px;font-weight:700;border-radius:12px;padding:11px 16px;width:100%;cursor:pointer;border:1.5px solid rgba(26,26,26,.12);background:#fff;color:#1a1a1a}
-.sug-racc .sug-ro{background:#1e2a38;border-color:#1e2a38;color:#fff}
+.sug-ro{display:block;width:100%;margin-top:8px;font-family:var(--font);font-size:13.5px;font-weight:700;border:none;border-radius:12px;padding:11px;background:#1e2a38;color:#fff;cursor:pointer}
+.sug-esc{margin-top:8px;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;color:#c2552e;padding:4px 2px;cursor:pointer}
 .sug-pie img{cursor:zoom-in}
 .sug-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .sug-tag{font-size:11.5px;font-weight:700;border-radius:99px;padding:3px 10px;background:var(--cream);color:#5e554d}
@@ -6389,23 +6388,20 @@ async function sugLista(body,modo){
   SUG.n.rec=d.sugerencias.filter(x=>x.estado==='Nueva').length;SUG.n.mias=d.mias.filter(x=>x.estado!=='Nueva'&&!x.respuestaVista).length;sugBadge();
   body.innerHTML=L.length?L.map(x=>{const cer=sugCerrada(x),abierta=rec&&SUG.resp===x.id,nuevaResp=!rec&&x.estado!=='Nueva'&&!x.respuestaVista;
    return `<div class="sug-it${cer?' hecha':''}${nuevaResp?' nresp':''}" data-id="${x.id}">
-   ${rec?`<button type="button" class="sug-ck" aria-label="${cer?'Volver a abrir':'Marcar como hecha'}"><svg viewBox="0 0 24 24"><path d="m6 12.5 4 4 8-9"/></svg></button>`:''}
-   <div class="sug-main"><div class="sug-top">${sugTags(x)}${x.estado!=='Nueva'||!rec?`<span class="sug-est ${x.estado}">${!rec&&x.estado==='Nueva'?'Enviada':SUG_EST[x.estado]}</span>`:''}<span class="sug-fe">${escH(sugFecha(x.fecha))}</span></div>
+   <div class="sug-main"><div class="sug-top">${sugTags(x)}${!rec?`<span class="sug-est ${x.estado}">${x.estado==='Nueva'?'Enviada':SUG_EST[x.estado]}</span>`:''}<span class="sug-fe">${escH(sugFecha(x.fecha))}</span></div>
     <div class="sug-tx">${escH(x.texto)}</div>
-    ${x.respuesta?`<div class="sug-resp"><b>${escH(x.respondidoPor||'Dirección')}</b>${escH(x.respuesta)}</div>`:''}
-    <div class="sug-pie">${x.captura?`<img src="${escH(x.captura.mini)}" alt="Captura" data-cap>`:''}${rec?`<span>${escH(x.de||'—')}</span>${x.paciente?'<a href="#" data-ficha>Ver ficha</a>':''}${abierta?'':`<button type="button" class="sug-rb">${x.estado==='Nueva'?'Responder':'Cambiar respuesta'}</button>`}`:''}</div>
-    ${abierta?sugCajaResp(x):''}</div></div>`;}).join('')
+    ${x.respuesta&&!abierta?`<div class="sug-resp"><b>${escH(x.respondidoPor||'Dirección')}</b>${escH(x.respuesta)}</div>`:''}
+    <div class="sug-pie">${x.captura?`<img src="${escH(x.captura.mini)}" alt="Captura" data-cap>`:''}${rec?`<span>${escH(x.de||'—')}</span>${x.paciente?'<a href="#" data-ficha>Ver ficha</a>':''}`:''}</div>
+    ${rec?sugCajaResp(x,abierta):''}</div></div>`;}).join('')
    :`<div class="sug-card sug-vacio">${sugIco('buzon')}${rec?'Todavía no ha llegado ninguna sugerencia.':'Aún no has enviado ninguna sugerencia.'}</div>`;
   body.querySelectorAll('.sug-it').forEach(el=>{const x=base.find(s=>s.id===el.dataset.id);
    const ck=el.querySelector('.sug-ck');if(ck)ck.onclick=()=>guarda(x,{estado:sugCerrada(x)?'Nueva':'Hecha'});
    const c=el.querySelector('[data-cap]');if(c)c.onclick=()=>window.open(x.captura.url,'_blank');
    const f=el.querySelector('[data-ficha]');if(f)f.onclick=ev=>{ev.preventDefault();showSection('pac');abrirFichaPaciente(x.paciente,x.de);};
-   const rb=el.querySelector('.sug-rb');if(rb)rb.onclick=()=>{SUG.resp=x.id;const y=comY();pinta();comSetY(y);const t=el.isConnected&&body.querySelector(`.sug-it[data-id="${x.id}"] .sug-rt`);if(t)t.focus({preventScroll:true});};
-   const caja=el.querySelector('.sug-rbox');if(caja){let est=x.estado==='Nueva'?'':x.estado;
-    const marca=()=>caja.querySelectorAll('[data-e]').forEach(b=>b.classList.toggle('on',b.dataset.e===est));marca();
-    caja.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{est=b.dataset.e;marca();});
-    caja.querySelector('.sug-rx').onclick=()=>{SUG.resp=null;const y=comY();pinta();comSetY(y);};
-    caja.querySelector('.sug-ro').onclick=()=>{if(!est){toast('Elige si se acepta, se ha hecho o no se hará',false);return;}SUG.resp=null;guarda(x,{estado:est,respuesta:caja.querySelector('.sug-rt').value},'Respuesta enviada');};}});};
+   // Un toque = guardado (y le llega a quien la envió). Tocar el que ya está marcado lo quita
+   el.querySelectorAll('.sug-res [data-e]').forEach(b=>b.onclick=()=>{const e=b.dataset.e;guarda(x,{estado:x.estado===e?'Nueva':e},x.estado===e?'Quitado':'Guardado: '+SUG_EST[e]);});
+   const w=el.querySelector('[data-escribir]');if(w)w.onclick=()=>{SUG.resp=x.id;const y=comY();pinta();comSetY(y);const t=body.querySelector(`.sug-it[data-id="${x.id}"] .sug-rt`);if(t)t.focus({preventScroll:true});};
+   const g=el.querySelector('.sug-ro');if(g)g.onclick=()=>{SUG.resp=null;guarda(x,{respuesta:el.querySelector('.sug-rt').value},'Respuesta guardada');};});};
  // Guardar al momento, sin recargar ni moverse de sitio
  const guarda=async(x,cambio,msg)=>{const antes=Object.assign({},x),y=comY();Object.assign(x,cambio,{respondidoPor:String(fisioActual.nombre||'').trim().split(/\s+/)[0]});pinta();comSetY(y);
   try{const r=await comPost('seg-sug-estado',Object.assign({id:x.id},cambio));if(!r.ok)throw new Error(r.error||'No se ha podido guardar');Object.assign(x,r.sugerencia);const y2=comY();pinta();comSetY(y2);if(msg)toast(msg,true);}
@@ -6416,10 +6412,10 @@ async function sugLista(body,modo){
   if(!rec&&r.mias.some(x=>x.estado!=='Nueva'&&!x.respuestaVista)){comPost('seg-sug-visto').catch(()=>{});SUG.n.mias=0;sugBadge();r.mias.forEach(x=>{if(x.estado!=='Nueva')x._vista=true;});}}
  catch(e){if(!SUG.d&&body.isConnected)body.innerHTML=`<div class="sug-card sug-vacio">${escH(e.message)}</div>`;}
 }
-function sugCajaResp(x){return `<div class="sug-rbox">
- <div class="sug-seg sug-res">${[['Aceptada','Aceptada'],['Hecha','Hecha'],['Descartada','No se hará']].map(([k,t])=>`<button type="button" data-e="${k}">${t}</button>`).join('')}</div>
- <textarea class="sug-rt" maxlength="1500" placeholder="${x.origen==='Paciente'?'Respuesta interna (el paciente no la ve)…':'Respuesta para '+escH(x.de||'quien la envió')+' (opcional)…'}">${escH(x.respuesta||'')}</textarea>
- <div class="sug-racc"><button type="button" class="sug-rx">Cancelar</button><button type="button" class="sug-ro">Enviar respuesta</button></div></div>`;}
+function sugCajaResp(x,abierta){return `<div class="sug-rbox">
+ <div class="sug-seg sug-res">${[['Aceptada','Aceptada'],['Hecha','Hecha'],['Descartada','No se hará']].map(([k,t])=>`<button type="button" data-e="${k}" class="${x.estado===k?'on':''}">${t}</button>`).join('')}</div>
+ ${abierta?`<textarea class="sug-rt" maxlength="1500" placeholder="${x.origen==='Paciente'?'Nota interna (el paciente no la ve)…':'Respuesta para '+escH(x.de||'quien la envió')+'…'}">${escH(x.respuesta||'')}</textarea><button type="button" class="sug-ro">Guardar</button>`
+  :`<button type="button" class="sug-esc" data-escribir>${x.respuesta?'Editar respuesta':(x.origen==='Paciente'?'Añadir nota':'Escribir respuesta')}</button>`}</div>`;}
 
 function renderCom(wrap){
  if(!comVe()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección todavía no está disponible.</div></div>';return;}
