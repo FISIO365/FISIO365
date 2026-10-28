@@ -2746,6 +2746,58 @@ module.exports = async function handler(req, res) {
         const d = q.id && /^rec[A-Za-z0-9]{14}$/.test(q.id) ? await at(`${PT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }) : await at(PT, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }], typecast: true }) });
         return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
       }
+      if (action === 'seg-informe-tto') {
+        // Informe fisioterapéutico redactado por la IA con el historial clínico, la anamnesis y las sesiones realizadas.
+        // Se guarda en Informes de la ficha como «solo fisio»: se revisa y se comparte desde ahí.
+        const pid = q.pacienteId; if (!/^rec[A-Za-z0-9]{14}$/.test(pid || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
+        const K = process.env.ANTHROPIC_API_KEY; if (!K) return res.status(200).json({ ok: false, error: 'Falta la clave de la IA' });
+        const [p, ses, infs] = await Promise.all([
+          at(`${PACIENTES}/${pid}`),
+          todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(FIND('${pid}',ARRAYJOIN({PacienteRec})),TRIM({ESTADO})='REALIZADA')`)}&fields[]=FECHA&fields[]=PREF.&sort[0][field]=FECHA&sort[0][direction]=asc`).catch(() => []),
+          todosT(INFORMES_TABLE, `filterByFormula=${encodeURIComponent(`{PacienteId}='${pid}'`)}&fields[]=Protocolo&fields[]=Fecha&fields[]=Informe`).catch(() => [])
+        ]);
+        if (p.error || !p.fields) return res.status(404).json({ ok: false, error: 'Paciente no encontrado' });
+        const F = p.fields, nm = x => (x && x.name) || x || '';
+        const fechas = ses.map(c => String(c.fields['FECHA'] || '').slice(0, 10)).filter(Boolean);
+        const fisios = [...new Set(ses.map(c => String(nm(c.fields['PREF.'])).trim()).filter(Boolean))];
+        const fC = f => f ? f.split('-').reverse().join('/') : '';
+        const ana = infs.filter(r => r.fields['Informe'] && !/sin evoluci|fisioterap[eé]utico/i.test(String(r.fields['Protocolo'] || ''))).map(r => `(${r.fields['Fecha'] || ''} · ${r.fields['Protocolo'] || ''})\n${String(r.fields['Informe']).slice(0, 3000)}`).slice(-2).join('\n\n');
+        const hist = String(F['HISTORIAL CLÍNICO'] || '').replace(/\*\*|`/g, '').trim();
+        if (!hist && !ana) return res.status(200).json({ ok: false, error: 'Este paciente no tiene historial clínico ni anamnesis: no hay de dónde sacar el informe.' });
+        const prompt = `Eres fisioterapeuta en FISIO365 Centro de Fisioterapia (Barcelona). Redacta un INFORME FISIOTERAPÉUTICO profesional para entregar al paciente (puede llevarlo a su médico, mutua o trabajo).
+DATOS
+- Paciente: ${String(F['FULL NAME'] || '').trim()}
+- Sesiones realizadas: ${fechas.length}${fechas.length ? ` (del ${fC(fechas[0])} al ${fC(fechas[fechas.length - 1])})` : ''}
+- Fisioterapeuta(s): ${fisios.join(', ') || 'no consta'}
+- Hoy: ${hoyF}
+- Motivo de visita (ficha): ${String(F['MOTIVO DE VISITA'] || '').trim() || 'no consta'}
+- Anamnesis / valoración:
+${ana || 'no consta'}
+- Historial clínico (notas de cada sesión, en orden):
+${hist.slice(-12000) || 'no consta'}
+ABREVIATURAS DE LAS NOTAS: IH-EH / EHIH = inducción y extracción hídrica con bomba diamagnética; MC = microcontracción; HC = armonización; MK / Medkey = electroterapia dinámica (Medkey); TM = terapia manual; PG = puntos gatillo; ondas focalizadas/desfocalizadas = ondas de choque; bio tendón = programa de bioestimulación tendinosa; TFL = tensor de la fascia lata.
+ESTRUCTURA (cada título en MAYÚSCULAS en su propia línea, sin markdown, sin asteriscos ni almohadillas):
+MOTIVO DE CONSULTA
+VALORACIÓN INICIAL
+TRATAMIENTO REALIZADO
+EVOLUCIÓN
+ESTADO ACTUAL
+RECOMENDACIONES
+REGLAS: español de España, tercera persona, lenguaje clínico claro y conciso (máx. 450 palabras); en TRATAMIENTO REALIZADO indica el nº de sesiones y el periodo y describe las técnicas con su nombre completo, sin abreviaturas; en EVOLUCIÓN resume cómo ha ido cambiando, sin copiar sesión a sesión; usa SOLO lo que está en los datos, no inventes pruebas, diagnósticos médicos, escalas ni cifras; si de algún apartado no hay información suficiente, escribe una frase breve diciéndolo; RECOMENDACIONES solo si se desprenden de las notas (ejercicios, sesiones de mantenimiento, revisión…); no pongas datos de contacto, firma ni saludo. Devuelve solo el texto del informe.`;
+        let texto = '', err = '';
+        for (const model of ['claude-sonnet-4-5', 'claude-haiku-4-5']) {
+          try {
+            const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': K, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: 2000, messages: [{ role: 'user', content: prompt }] }) });
+            const j = await r.json(); texto = String(((j.content || []).find(b => b && b.type === 'text') || {}).text || '').replace(/\*\*|^#+\s*/gm, '').trim();
+            if (texto) break; err = (j.error && j.error.message) || ('HTTP ' + r.status); console.error('seg-informe-tto', model, err);
+          } catch (e) { err = e.message; console.error('seg-informe-tto', model, err); }
+        }
+        if (!texto) return res.status(200).json({ ok: false, error: 'La IA no ha podido redactarlo' + (err ? ': ' + err : '') });
+        const fechaEs = hoyF.split('-').reverse().join('/');
+        const d = await at(INFORMES_TABLE, { method: 'POST', body: JSON.stringify({ typecast: true, records: [{ fields: { PacienteId: pid, PacienteNombre: String(F['FULL NAME'] || '').trim().toUpperCase(), FisioNombre: String(q.quien || fisios[fisios.length - 1] || ''), Fecha: fechaEs, Protocolo: 'Informe fisioterapéutico', Informe: texto, SoloFisio: true } }] }) });
+        if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar: ' + (d.error.message || '') });
+        return res.status(200).json({ ok: true, id: d.records[0].id, sesiones: fechas.length });
+      }
       if (action === 'seg-wa-ia') {
         // Mensaje de WhatsApp personalizado para un paciente de «Por llamar», a partir de sus notas y su situación
         const K = process.env.ANTHROPIC_API_KEY; if (!K) { console.error('seg-wa-ia sin ANTHROPIC_API_KEY'); return res.status(200).json({ ok: false, error: 'Falta la clave de la IA' }); }
