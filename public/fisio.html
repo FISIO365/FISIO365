@@ -1636,10 +1636,14 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rd-gris{font-size:12.5px;color:#7d6a60;font-weight:600}.rd-sinp{font-size:12.5px;color:#b45309;font-weight:600;align-self:center}
 @media(max-width:600px){.rd-row{row-gap:4px}.rd-row>span:first-child{flex:1 1 100%}.rd-row small{text-align:left;flex:1 1 auto}.rd-row .rd-ac{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;align-items:center}}
 .rd-cart{display:block;margin-top:8px;font-family:var(--font);font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:99px;padding:5px 11px;cursor:pointer}.rd-cart:disabled{color:#16803c;background:#eef8f1;border-color:#eef8f1}
-.rd-compra .cp{margin-top:10px}.cp-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px}.cp-h h4{margin:0}.cp-h h4 span{display:inline-block;background:#c2552e;color:#fff;font-size:11px;border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:middle}
+.rd-compra .cp{margin:0 0 12px}.cp-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px}.cp-h h4{margin:0}.cp-h h4 span{display:inline-block;background:#c2552e;color:#fff;font-size:11px;border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:middle}
 .cp-it i{font-style:normal;color:#7d6a60}.cp-x{border:none;background:none;color:#a99d93;font-size:14px;cursor:pointer;padding:4px 6px}
 .cp-hist{margin-top:8px}.cp-hist summary{font-size:12.5px;color:#7d6a60;cursor:pointer;padding:4px 0}.cp-tach{text-decoration:line-through;color:#9a8d84}
 .rp-cp{display:flex;align-items:center;justify-content:space-between;gap:12px}.rp-cp b{display:block;font-size:14.5px}.rp-cp small{font-size:12.5px;color:#7d6a60}.rp-cpb{flex:none;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:#c2552e;color:#fff;border-radius:99px;padding:9px 16px;cursor:pointer}
+.rd-sub{font-size:11.5px;font-weight:500;color:#9a8d84;margin-left:4px}.rd-rojo{color:#b42318!important;font-weight:600}
+.rd-at{border-top:1px solid #f0ebe6;padding:8px 0}.rd-at:first-of-type{border-top:none}.rd-at summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;cursor:pointer;list-style:none;font-size:13.5px}.rd-at summary::-webkit-details-marker{display:none}
+.rd-at summary::before{content:'›';color:#a99d93;font-weight:700;transition:.15s}.rd-at[open] summary::before{transform:rotate(90deg)}.rd-at summary span{color:#5e554d}.rd-at summary em{font-style:normal;font-size:12.5px;color:#7d6a60;margin-left:auto}.rd-at.viejo summary em{color:#b42318;font-weight:600}
+.rd-at .rd-avisar{margin-top:8px}
 </style>
 </head>
 <body>
@@ -12492,7 +12496,7 @@ function rdiaBadge(){try{const b=$('rdiaBadge');if(!b)return;if(!RD_DIR){b.style
 async function renderReporteDia(wrap){
  const card=ce('div','rd');wrap.appendChild(card);
  card.innerHTML=`<div class="rd-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Día anterior">‹</button><div class="rd-ft"><b></b><small></small></div><button type="button" class="ag-nv" data-n="1" aria-label="Día siguiente">›</button></div>
-  <div class="rd-acc"><button type="button" class="rd-pdf"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Descargar PDF</button><button type="button" class="rd-mio">Mi check-list</button></div><div class="rd-body"><div class="fac-vacio">Preparando el reporte…</div></div><div class="rd-compra"></div>`;
+  <div class="rd-acc"><button type="button" class="rd-pdf"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Descargar PDF</button><button type="button" class="rd-mio">Mi check-list</button></div><div class="rd-compra"></div><div class="rd-body"><div class="fac-vacio">Preparando el reporte…</div></div>`;
  compraPintar(card.querySelector('.rd-compra'));
  const body=card.querySelector('.rd-body');
  card.querySelector('.rd-mio').onclick=()=>showSection('rep');
@@ -12527,6 +12531,9 @@ async function renderReporteDia(wrap){
      ${f.pendiente.length?`<div class="rd-lin mal"><b>El panel ve pendiente</b>${f.pendiente.map(c=>`<div>${escH(c.t)}: ${c.items.map(it=>pac(it.id,it.nombre)+(it.extra?` <i>(${escH(it.extra)})</i>`:'')).join(', ')}</div>`).join('')}</div>`:''}
      ${f.nota?`<div class="rd-lin"><b>Nota</b>«${escH(f.nota)}»<button type="button" class="rd-cart" data-fi="${fi}" title="Añadir a la lista de la compra">🛒 Añadir a la compra</button></div>`:''}
      ${avisable(f)?`<button type="button" class="rd-avisar" data-f="${fi}">Avisar a ${escH(String(f.fisio).split(' ')[0])}</button>`:''}</div>`).join('')}</div>`:'<p class="fp-mu">Ese día no trabajó nadie.</p>'}
+   ${R.atrasado&&R.atrasado.length?`<div class="rd-sec ${R.atrasado.some(g=>g.maxDias>3)?'mal':''}"><h4>Atrasado por fisio <span class="rd-sub">ahora mismo · tareas y llamadas sin hacer de días anteriores</span></h4>${R.atrasado.map((g,gi)=>`<details class="rd-at${g.maxDias>3?' viejo':''}"><summary><b>${escH(String(g.fisio).split(' ')[0])}</b><span>${[g.tareas?g.tareas+(g.tareas===1?' tarea':' tareas'):'',g.llamadas?g.llamadas+(g.llamadas===1?' llamada':' llamadas'):''].filter(Boolean).join(' · ')}</span><em>la más antigua de hace ${g.maxDias} ${g.maxDias===1?'día':'días'}</em></summary>
+     ${g.items.map(it=>`<div class="rd-row"><span>${it.tipo==='tarea'?escH(it.texto):'📞 Llamada'}${it.paciente?' · '+pac(it.pacienteId,it.paciente):''}</span><small class="${it.dias>3?'rd-rojo':''}">hace ${it.dias} ${it.dias===1?'día':'días'}</small></div>`).join('')}
+     <button type="button" class="rd-avisar rd-avat" data-g="${gi}">Avisar a ${escH(String(g.fisio).split(' ')[0])}</button></details>`).join('')}</div>`:''}
    ${R.sinFacturar?(R.sinFacturar.length?lista(`⚠️ Sesiones sin facturar ahora mismo (${R.sinFacturar.reduce((t,x)=>t+x.n,0)})`,'mal',R.sinFacturar.map(x=>fila(pac(x.id,x.nombre),escH(x.fisio),x.n,x.id?`<button type="button" class="rd-b" data-p="${escH(x.id)}" data-n="${escH(x.nombre)}">Cobrar</button>`:''))):'<div class="rd-sec ok"><h4>✓ No hay sesiones sin facturar</h4></div>'):''}
    ${lista(`Citas sin marcar (siguen en «Pendiente»): ${R.sinMarcar.length}`,'amb',R.sinMarcar.map(c=>fila(pac(c.pacienteId,c.nombre),escH(c.fisio),escH(c.hora),`<button type="button" class="rd-b ok" data-c="${escH(c.id)}" data-e="REALIZADA">Realizada</button><button type="button" class="rd-b" data-c="${escH(c.id)}" data-e="NO ASISTIÓ">No vino</button>`)))}
    ${lista(`⚠️ Tickets hechos en Holded fuera del panel: ${R.fuera.length}`,'mal',R.fuera.map(d=>fila(escH(d.nombre),'',rdEur(d.total))))}
@@ -12544,7 +12551,9 @@ async function renderReporteDia(wrap){
    const r=await agPost('seg-crear',{pacienteId:b.dataset.ll,fecha:rdHoy(),nota:`Canceló o no vino el ${rdFechaTxt(R.fecha).toLowerCase()} y no tiene otra cita`,responsable:String(b.dataset.fz||'').split(' ')[0]}).catch(()=>({ok:false}));
    if(!r.ok){b.disabled=false;toast('No se ha podido',false);return;}
    b.closest('.rd-ac').innerHTML='<span class="rd-gris">✓ En «Por llamar»</span>';toast('Pasado a «Por llamar»',true);delete RD.cache[RD.fecha];});
-  body.querySelectorAll('.rd-avisar').forEach(b=>b.onclick=()=>rdAvisar(R,R.fisios[+b.dataset.f],b));
+  body.querySelectorAll('.rd-avisar:not(.rd-avat)').forEach(b=>b.onclick=()=>rdAvisar(R,R.fisios[+b.dataset.f],b));
+  body.querySelectorAll('.rd-avat').forEach(b=>b.onclick=()=>{const g=R.atrasado[+b.dataset.g],nom=String(g.fisio).split(' ')[0];
+   rdAvisar(R,{fisio:g.fisio},b,`Hola ${nom}, tienes cosas atrasadas sin hacer:\n\n${g.items.map(it=>'• '+(it.tipo==='tarea'?it.texto:'Llamada de seguimiento')+(it.paciente?' · '+it.paciente:'')+' (hace '+it.dias+(it.dias===1?' día':' días')+')').join('\n')}\n\n¿Te pones con ello hoy, por favor? Gracias.`,'Cosas atrasadas sin hacer');});
   body.querySelectorAll('.rd-cart').forEach(b=>b.onclick=()=>{const f=R.fisios[+b.dataset.fi];compraAnadir({nota:f.nota,por:String(f.fisio).split(' ')[0]},()=>{b.textContent='✓ En la lista';b.disabled=true;compraPintar(card.querySelector('.rd-compra'));});});}
  cargar();
 }
@@ -12577,16 +12586,16 @@ async function compraPintar(box){if(!box)return;
  box.querySelectorAll('.cp-x').forEach(b=>b.onclick=()=>{if(confirm('¿Quitar de la lista?'))act(b.closest('.cp-it').dataset.id,'compra-borrar');});
  box.querySelectorAll('.cp-des').forEach(b=>b.onclick=()=>act(b.dataset.id,'compra-hecho',{hecho:false}));}
 // Avisar al fisio de lo que le falta: le llega como comunicación «Informe» que requiere acción
-function rdAvisar(R,f,btn){const nom=String(f.fisio).split(' ')[0];
+function rdAvisar(R,f,btn,txtPropio,asuntoPropio){const nom=String(f.fisio).split(' ')[0];f=Object.assign({enviado:'x',noMarcados:[],pendiente:[]},f);
  const L=[];if(!f.enviado)L.push('No has enviado el check-list.');if(f.noMarcados.length)L.push('Sin marcar: '+f.noMarcados.join(' · ')+'.');
  f.pendiente.forEach(c=>L.push(c.t+': '+c.items.map(i=>i.nombre+(i.extra?' ('+i.extra+')':'')).join(', ')+'.'));
- const txt=`Hola ${nom}, del ${rdFechaTxt(R.fecha).toLowerCase()} queda pendiente:\n\n${L.map(x=>'• '+x).join('\n')}\n\n¿Lo revisas, por favor? Gracias.`;
+ const txt=txtPropio||`Hola ${nom}, del ${rdFechaTxt(R.fecha).toLowerCase()} queda pendiente:\n\n${L.map(x=>'• '+x).join('\n')}\n\n¿Lo revisas, por favor? Gracias.`;
  const m=hzModal(`<div class="hz-top"><div><small>Daily report · ${escH(rdFechaTxt(R.fecha))}</small><b>Avisar a ${escH(nom)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <p class="ap-txt">Le llega a su buzón de Comunicaciones como tarea que tiene que marcar como hecha. Puedes cambiar el texto.</p><textarea class="seg-n rd-txt" rows="9">${escH(txt)}</textarea>
   <div class="hz-bts"><button type="button" class="hz-ok">Enviar aviso</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;
-  const r=await comPost('seg-com-enviar',{tipo:'Informe',para:[nom],asunto:`Pendiente del ${rdFechaTxt(R.fecha).toLowerCase()}`,cuerpo:m.querySelector('.rd-txt').value.trim(),req:true,limite:rdHoy()}).catch(x=>({ok:false,error:x.message}));
+  const r=await comPost('seg-com-enviar',{tipo:'Informe',para:[nom],asunto:asuntoPropio||`Pendiente del ${rdFechaTxt(R.fecha).toLowerCase()}`,cuerpo:m.querySelector('.rd-txt').value.trim(),req:true,limite:rdHoy()}).catch(x=>({ok:false,error:x.message}));
   if(!r.ok){b.disabled=false;toast(r.error||'No se ha podido enviar',false);return;}
   m.remove();toast(`Aviso enviado a ${nom}`,true);if(btn){btn.textContent=`✓ Avisado`;btn.disabled=true;}};}
 // PDF: el reporte tal cual, listo para imprimir o guardar como PDF

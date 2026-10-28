@@ -95,6 +95,21 @@ async function reporteDia(fecha) {
     fut.forEach(c => { const f = String(c.fields.FECHA || '').slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (!prox[id] || f < prox[id]) prox[id] = f; }); });
     segs.forEach(r => (r.fields.PACIENTE || []).forEach(id => enLlamar.add(id)));
   }
+  // Atrasado por fisio (ahora mismo): tareas y llamadas de seguimiento sin hacer cuya fecha ya ha pasado
+  const atrasado = await (async () => { try {
+    const hoyA = madrid(0).fecha, nm = v => String((v && typeof v === 'object' ? (Array.isArray(v) ? (v[0] && (v[0].name || v[0])) : v.name) : v) || '').trim(), key = v => nm(v).split(/\s+/)[0].toLowerCase();
+    const [tar, seg] = await Promise.all([
+      todos('tblxPpPSvj15NWqNT', `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),IS_BEFORE({FECHA},'${hoyA}'))`)}&fields[]=TAREA&fields[]=PARA&fields[]=PACIENTE&fields[]=FECHA`).catch(() => []),
+      todos('tblu9YxiktpAh5w87', `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),IS_BEFORE({FECHA DE LLAMADA},'${hoyA}'))`)}&fields[]=RESPONSABLE&fields[]=PACIENTE&fields[]=PacRec&fields[]=${encodeURIComponent('FECHA DE LLAMADA')}`).catch(() => [])]);
+    const ids = [...new Set([...tar, ...seg].flatMap(r => [...(r.fields.PACIENTE || []), ...(r.fields.PacRec || [])]).filter(x => typeof x === 'string' && /^rec/.test(x)))];
+    const nomA = {}; for (let i = 0; i < ids.length; i += 40) (await todos(TABLAS.paciente, `filterByFormula=${encodeURIComponent('OR(' + ids.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}`).catch(() => [])).forEach(p => { nomA[p.id] = p.fields['FULL NAME'] || ''; });
+    const dias = f => Math.max(0, Math.round((new Date(hoyA + 'T12:00:00Z') - new Date(String(f).slice(0, 10) + 'T12:00:00Z')) / 864e5));
+    const G = {};
+    const add = (who, it) => { const k = key(who) || 'sin asignar'; const g = G[k] = G[k] || { fisio: nm(who) || 'Sin asignar', tareas: 0, llamadas: 0, maxDias: 0, items: [] }; g[it.tipo === 'tarea' ? 'tareas' : 'llamadas']++; g.maxDias = Math.max(g.maxDias, it.dias); g.items.push(it); };
+    tar.forEach(r => { const pid = (r.fields.PACIENTE || [])[0]; add(r.fields.PARA, { tipo: 'tarea', texto: String(r.fields.TAREA || 'Tarea').slice(0, 120), pacienteId: typeof pid === 'string' ? pid : '', paciente: nomA[pid] || '', dias: dias(r.fields.FECHA) }); });
+    seg.forEach(r => { const pid = (r.fields.PacRec || r.fields.PACIENTE || [])[0]; add(r.fields.RESPONSABLE, { tipo: 'llamada', texto: 'Llamada de seguimiento', pacienteId: typeof pid === 'string' ? pid : '', paciente: nomA[pid] || '', dias: dias(r.fields['FECHA DE LLAMADA']) }); });
+    return Object.values(G).map(g => (g.items.sort((a, b) => b.dias - a.dias), g)).sort((a, b) => b.maxDias - a.maxDias);
+  } catch (e) { return null; } })();
   const hora = t => t ? new Date(t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' }) : '';
   const cita = c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0] || ''; return { id: c.id, pacienteId: pid, proxima: prox[pid] || '', enLlamar: enLlamar.has(pid), nombre: nomP[pid] || c.fields['your-name'] || '', fisio: fisioDe(c.fields['PREF.']), hora: String(c.fields['HORA'] || '').slice(0, 5), estado: D.est(c) }; };
   return {
@@ -102,7 +117,7 @@ async function reporteDia(fecha) {
     fisios: Object.entries(D.rep || {}).map(([f, x]) => { const e = (D.envs || {})[String(f).split(' ')[0].toLowerCase()];
       return { fisio: f, hechas: x.hechas, enviado: e ? hora(e.enviado) : '', noMarcados: e ? String(e.marcados || '').split('\n').filter(l => l.startsWith('✗')).map(l => l.slice(2)) : [], nota: e && e.nota || '',
         pendiente: (x.checks || []).filter(c => !c.aviso && c.items.length).map(c => ({ k: c.k, t: c.t, items: c.items.map(i => ({ id: i.id || '', nombre: i.nombre || '', extra: i.extra || '' })) })) }; }),
-    rendDia: D.rendDia, rendSemana: D.rendSemana,
+    rendDia: D.rendDia, rendSemana: D.rendSemana, atrasado,
     sinFacturar: D.sf && D.sf.activo ? D.sf.lista.map(x => ({ id: x.id || '', nombre: x.nombre, fisio: x.fisio, n: -x.saldo })) : null,
     sinMarcar: D.sinMarcar.map(cita), canceladas: D.canceladas.map(cita),
     fuera: D.fuera.map(d => ({ nombre: d.contact_name || '—', total: SCH.importeDoc ? SCH.importeDoc(d) : Number(d.total || 0) })),
