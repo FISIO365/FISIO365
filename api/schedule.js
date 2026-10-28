@@ -1020,6 +1020,56 @@ module.exports = async function handler(req, res) {
       // ── COMUNICACIONES INTERNAS (com system): comunicaciones formales entre el equipo, con hilo ──
       // Tabla ⚙ APP · COMUNICACIONES. Una fila por mensaje; las respuestas llevan en HILO el id de la original.
       // En la original: LEÍDO {nombre: fecha} (última vez que cada uno abrió el hilo) y HECHO {nombre: fecha} (quién ha confirmado/resuelto).
+      // ── BUZÓN DE SUGERENCIAS: pacientes (app) y equipo (panel). Lo leen quienes tienen acc_sugerencias (Administración › Accesos) ──
+      if (action.startsWith('seg-sug-')) {
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const SUG = 'tbll3K0ar1cZOcVjZ', CAPT = 'fld0coxDWYBc2WvYH', APART = ['App', 'Clínica', 'Otro'], TIPOS_S = ['Mejora', 'Fallo'], ESTADOS_S = ['Nueva', 'Vista', 'Hecha'];
+        const okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || ''), nm = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+        const pila = s => { const p = String(s || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
+        // Quién soy: nombre + contraseña del panel
+        const eq = await todosT(FISIOS_TABLE, 'fields[]=Name&fields[]=Password&fields[]=acc_sugerencias&fields[]=' + encodeURIComponent('FECHA BAJA'));
+        const yoR = eq.find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
+        if (!yoR || !String(q.clave || '').trim() || String(yoR.fields.Password || '').trim() !== String(q.clave || '').trim() || yoR.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
+        const yo = pila(yoR.fields.Name), lector = !!yoR.fields.acc_sugerencias;
+        const vista = r => { const F = r.fields || {}, c = (F.CAPTURA || [])[0];
+          return { id: r.id, texto: F.TEXTO || '', origen: nm(F.ORIGEN) || 'Equipo', apartado: nm(F.APARTADO) || 'General', tipo: nm(F.TIPO), de: F['ANÓNIMA'] ? 'Anónimo' : (F.DE || ''), anonima: !!F['ANÓNIMA'], paciente: F['ANÓNIMA'] ? '' : (F.PACIENTE || ''),
+            captura: c ? { url: c.url, mini: (c.thumbnails && c.thumbnails.large && c.thumbnails.large.url) || c.url } : null, estado: nm(F.ESTADO) || 'Nueva', nota: F.NOTA || '', cambiadoPor: F['CAMBIADO POR'] || '', fecha: F.FECHA || r.createdTime || '' }; };
+        if (action === 'seg-sug-contar') {
+          if (!lector) return res.status(200).json({ ok: true, lector: false, nuevas: 0 });
+          const rs = await todosT(SUG, `fields[]=RESUMEN&filterByFormula=${encodeURIComponent("{ESTADO}='Nueva'")}`);
+          return res.status(200).json({ ok: true, lector: true, nuevas: rs.length });
+        }
+        if (action === 'seg-sug-lista') {
+          const filtro = lector ? '' : `&filterByFormula=${encodeURIComponent(`AND({ORIGEN}='Equipo',{DE}='${yo.replace(/'/g, "\\'")}')`)}`;
+          const rs = await todosT(SUG, `sort[0][field]=FECHA&sort[0][direction]=desc${filtro}`);
+          return res.status(200).json({ ok: true, yo, lector, sugerencias: rs.map(vista) });
+        }
+        if (action === 'seg-sug-enviar') {
+          const texto = String(q.texto || '').trim().slice(0, 3000); if (!texto) return res.status(400).json({ ok: false, error: 'Escribe tu sugerencia' });
+          const apartado = APART.includes(q.apartado) ? q.apartado : 'Otro', tipo = apartado === 'App' && TIPOS_S.includes(q.tipo) ? q.tipo : null;
+          const fields = { RESUMEN: texto.replace(/\s+/g, ' ').slice(0, 80), TEXTO: texto, ORIGEN: 'Equipo', APARTADO: apartado, DE: yo, ESTADO: 'Nueva', FECHA: new Date().toISOString() };
+          if (tipo) fields.TIPO = tipo;
+          const d = await at(SUG, { method: 'POST', body: JSON.stringify({ records: [{ fields }], typecast: true }) });
+          const rec = d.records && d.records[0]; if (!rec) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' });
+          const C = q.captura || null; let sinCaptura = false;
+          if (C && C.file && String(C.file).length < 6e6) {
+            const up = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${rec.id}/${CAPT}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: /^image\/(png|jpeg|webp|gif)$/.test(C.tipo || '') ? C.tipo : 'image/jpeg', file: String(C.file), filename: String(C.nombre || 'captura.jpg').slice(0, 120) }) }).then(x => x.json()).catch(() => ({ error: 1 }));
+            sinCaptura = !!up.error;
+          }
+          return res.status(200).json({ ok: true, id: rec.id, sinCaptura });
+        }
+        if (action === 'seg-sug-estado') {
+          if (!lector) return res.status(403).json({ ok: false, error: 'No tienes acceso al buzón de sugerencias' });
+          if (!okId(q.id)) return res.status(400).json({ ok: false });
+          const fields = {};
+          if (q.estado !== undefined) { if (!ESTADOS_S.includes(q.estado)) return res.status(400).json({ ok: false }); fields.ESTADO = q.estado; fields['CAMBIADO POR'] = yo; }
+          if (q.nota !== undefined) fields.NOTA = String(q.nota || '').slice(0, 3000);
+          const d = await at(`${SUG}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields, typecast: true }) });
+          if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
+          return res.status(200).json({ ok: true, sugerencia: vista(d) });
+        }
+        return res.status(400).json({ ok: false, error: 'Acción no válida' });
+      }
       if (action.startsWith('seg-com-')) {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const COM = 'tbl2qRD3WsvQVPrwX', TIPOS_C = ['Comunicado', 'Solicitud', 'Informe', 'Aviso', 'Ausencia', 'Tareas', 'Incidencia', 'Ayuda'];
@@ -1244,7 +1294,7 @@ module.exports = async function handler(req, res) {
       if (action.startsWith('seg-adm-')) {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const FT = FISIOS_TABLE, AUS = 'tblkezm4bTQ4jJf1X', DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        const ACC = ['agenda', 'pacientes', 'chat', 'checklist', 'callin', 'captacion', 'programas', 'ejercicios', 'anamnesis', 'rendimiento', 'estadisticas', 'school', 'admin'];
+        const ACC = ['agenda', 'pacientes', 'chat', 'checklist', 'callin', 'captacion', 'programas', 'ejercicios', 'anamnesis', 'rendimiento', 'estadisticas', 'school', 'sugerencias', 'admin'];
         const full = await todosT(FT, 'sort[0][field]=Name');
         const yo = full.find(r => r.fields && String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
         if (!yo || String(yo.fields.Password || '').trim() !== String(q.clave || '').trim() || !yo.fields.acc_admin || yo.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Solo dirección puede entrar en Administración. Vuelve a iniciar sesión.' });
@@ -2794,7 +2844,7 @@ module.exports = async function handler(req, res) {
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
   }
   // ── App del paciente: su cuenta (foto de perfil, cambiar PIN) y «la ha abierto» ──
-  if (action === 'mi-cuenta' || action === 'cambiar-pin' || action === 'subir-foto' || action === 'app-visto' || action === 'mis-regalos') {
+  if (action === 'mi-cuenta' || action === 'cambiar-pin' || action === 'subir-foto' || action === 'app-visto' || action === 'mis-regalos' || action === 'mi-sugerencia') {
     if (!/^rec[A-Za-z0-9]{14}$/.test(patientId || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
     const b = req.method === 'POST' ? (req.body || {}) : {};
     try {
@@ -2808,6 +2858,14 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ ok: true, tarjetas });
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      if (action === 'mi-sugerencia') { // buzón de sugerencias de la app (puede ir sin nombre)
+        const texto = String(b.texto || '').trim().slice(0, 3000); if (!texto) return res.status(200).json({ ok: false, error: 'Escribe tu sugerencia' });
+        const anon = !!b.anonimo;
+        const fields = { RESUMEN: texto.replace(/\s+/g, ' ').slice(0, 80), TEXTO: texto, ORIGEN: 'Paciente', APARTADO: 'General', ESTADO: 'Nueva', FECHA: new Date().toISOString(), 'ANÓNIMA': anon };
+        if (!anon) { fields.DE = String(F['FULL NAME'] || '').trim().slice(0, 120); fields.PACIENTE = patientId; }
+        const d = await at('tbll3K0ar1cZOcVjZ', { method: 'POST', body: JSON.stringify({ records: [{ fields }], typecast: true }) });
+        return res.status(200).json({ ok: !!(d.records && d.records[0]), error: d.records ? undefined : 'No se ha podido enviar' });
+      }
       if (action === 'cambiar-pin') {
         const actual = String(b.actual || '').trim(), nuevo = String(b.nuevo || '').trim();
         if (actual !== String(F['PIN'] || '').trim()) return res.status(200).json({ ok: false, error: 'El PIN actual no es correcto' });

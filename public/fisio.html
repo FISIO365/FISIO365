@@ -978,7 +978,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
  .main-area>*{overflow-x:clip;max-width:100%}
  .main-area{height:100dvh;overflow-y:auto!important;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
- #sb-rend,#sb-seg,#sb-tar,#sb-com,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-admin{display:none!important}
+ #sb-rend,#sb-seg,#sb-tar,#sb-com,#sb-sug,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-admin{display:none!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
  .topbar-t{font-size:21px!important}
  .topbar-s{font-size:12px!important}
@@ -1477,6 +1477,61 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-segb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin:12px 0 10px;font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:#3d3530;cursor:pointer}
 .ag-segb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .ag-segb.sug{border-color:#c2552e;background:#fdeee4;color:#c2552e}.ag-segb.ya{border-color:#e8f6ec;background:#e8f6ec;color:#16803c}.ag-borrar{color:#b42318!important}.ag-otras button{font-family:var(--font);font-size:12.5px;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
+
+/* ── Sugerencias ── */
+#sb-sug-badge,#pmSugN{background:#ee2155;color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:2px 7px;margin-left:auto;font-style:normal}
+.sug{max-width:860px}
+.sug-hero{background:#1e2a38;color:#fff;border-radius:24px;padding:22px 24px;margin-bottom:14px;display:flex;align-items:center;gap:16px}
+.sug-hero svg{width:30px;height:30px;fill:none;stroke:#f3c9b5;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sug-hero b{display:block;font-size:17px;font-weight:700;letter-spacing:-.2px}.sug-hero span{display:block;font-size:13px;color:rgba(255,255,255,.62);margin-top:3px;line-height:1.45}
+.sug-card{background:#fff;border:1px solid rgba(26,26,26,.08);border-radius:20px;box-shadow:0 1px 3px rgba(26,26,26,.04);padding:18px;margin-bottom:12px}
+.sug-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8a7f76;margin:0 0 10px}
+.sug-ap{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.sug-ap button{font-family:var(--font);text-align:left;background:var(--cream);border:1.5px solid transparent;border-radius:16px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:6px;color:#1a1a1a}
+.sug-ap button svg{width:22px;height:22px;fill:none;stroke:#c2552e;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.sug-ap button span{display:flex;flex-direction:column;gap:3px}.sug-adj[hidden],.sug-tipo[hidden]{display:none}
+.sug-ap button b{font-size:14px}.sug-ap button small{font-size:12px;color:#7d726a;line-height:1.35}
+.sug-ap button.on{background:#fff;border-color:#c2552e;box-shadow:0 0 0 3px rgba(194,85,46,.1)}
+.sug-seg{display:flex;gap:4px;background:var(--cream);border-radius:14px;padding:4px;margin-bottom:14px}
+.sug-seg button{flex:1;font-family:var(--font);font-size:13.5px;font-weight:600;border:none;background:none;border-radius:11px;padding:9px;cursor:pointer;color:#6b5f57}
+.sug-seg button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(26,26,26,.1)}
+.sug-ta{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14.5px;line-height:1.5;border:1.5px solid rgba(26,26,26,.1);border-radius:14px;padding:12px 14px;min-height:130px;resize:vertical;background:#fff;outline:none;color:#1a1a1a}
+.sug-ta:focus{border-color:#c2552e}
+.sug-adj{display:flex;align-items:center;gap:12px;margin-top:12px}
+.sug-adj-b{font-family:var(--font);font-size:13.5px;font-weight:600;border:1.5px dashed rgba(26,26,26,.18);background:#fff;border-radius:12px;padding:10px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;color:#1a1a1a}
+.sug-adj-b svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.sug-prev{position:relative;width:72px;height:72px;border-radius:12px;overflow:hidden;border:1px solid rgba(26,26,26,.1);flex:none}
+.sug-prev img{width:100%;height:100%;object-fit:cover;display:block}
+.sug-prev button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(20,20,20,.7);color:#fff;font-size:12px;cursor:pointer;line-height:1}
+.sug-env{width:100%;margin-top:16px;font-family:var(--font);font-size:15px;font-weight:700;border:none;border-radius:14px;padding:14px;background:#c2552e;color:#fff;cursor:pointer}
+.sug-env:disabled{opacity:.55;cursor:default}
+.sug-fil{display:flex;gap:6px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
+.sug-fil button{font-family:var(--font);font-size:13px;font-weight:600;white-space:nowrap;border:1px solid rgba(26,26,26,.1);background:#fff;color:#5e554d;border-radius:99px;padding:7px 14px;cursor:pointer}
+.sug-fil button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}
+.sug-it{background:#fff;border:1px solid rgba(26,26,26,.08);border-radius:18px;padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:box-shadow .15s}
+.sug-it:hover{box-shadow:0 4px 16px rgba(26,26,26,.06)}
+.sug-it.nueva{border-left:4px solid #c2552e;padding-left:15px}
+.sug-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.sug-tag{font-size:11.5px;font-weight:700;border-radius:99px;padding:3px 10px;background:var(--cream);color:#5e554d}
+.sug-tag.app{background:#fdebe1;color:#c2552e}.sug-tag.fallo{background:#fde8e8;color:#b42318}.sug-tag.mejora{background:#e3f2e8;color:#2f7a52}.sug-tag.pac{background:#e4ebf3;color:#1e2a38}.sug-tag.cli{background:#e2f3f4;color:#1f7a80}
+.sug-est{font-size:11.5px;font-weight:700;border-radius:99px;padding:3px 10px}
+.sug-est.Nueva{background:#c2552e;color:#fff}.sug-est.Vista{background:#eef0f3;color:#55606e}.sug-est.Hecha{background:#e3f2e8;color:#2f7a52}
+.sug-fe{margin-left:auto;font-size:12px;color:#8a7f76;white-space:nowrap}
+.sug-tx{font-size:14.5px;line-height:1.5;color:#1a1a1a;white-space:pre-wrap;word-break:break-word}
+.sug-it:not(.abierta) .sug-tx{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.sug-pie{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12.5px;color:#7d726a}
+.sug-pie img{width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid rgba(26,26,26,.08)}
+.sug-det{margin-top:14px;padding-top:14px;border-top:1px solid rgba(26,26,26,.07);cursor:default}
+.sug-cap{display:block;max-width:100%;max-height:420px;border-radius:12px;border:1px solid rgba(26,26,26,.08);margin-bottom:14px;cursor:zoom-in}
+.sug-nota{width:100%;box-sizing:border-box;font-family:var(--font);font-size:13.5px;line-height:1.45;border:1.5px solid rgba(26,26,26,.1);border-radius:12px;padding:10px 12px;min-height:64px;resize:vertical;background:var(--cream);outline:none}
+.sug-nota:focus{border-color:#c2552e;background:#fff}
+.sug-acc{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.sug-acc button{font-family:var(--font);font-size:13.5px;font-weight:700;border-radius:12px;padding:10px 16px;cursor:pointer;border:1.5px solid rgba(26,26,26,.12);background:#fff;color:#1a1a1a}
+.sug-acc button.pri{background:#1e2a38;border-color:#1e2a38;color:#fff}
+.sug-quien{font-size:12px;color:#8a7f76;margin-top:8px}
+.sug-vacio{text-align:center;padding:36px 16px;color:#8a7f76;font-size:14px}
+.sug-vacio svg{width:34px;height:34px;fill:none;stroke:#cdbfb3;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 10px}
+@media(max-width:768px){.sug-ap{grid-template-columns:1fr}.sug-ap button{flex-direction:row;align-items:center;gap:12px;padding:12px 14px}.sug-ap button span{display:flex;flex-direction:column;gap:2px}.sug-hero{padding:18px 18px;border-radius:20px}.sug-card{padding:16px}}
 </style>
 </head>
 <body>
@@ -1527,6 +1582,9 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  </div>
  <div class="sb-item" id="sb-com" onclick="showSection('com')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg></span><span class="sb-txt">Comunicaciones</span><i id="sb-com-badge" style="display:none"></i>
+ </div>
+ <div class="sb-item" id="sb-sug" onclick="showSection('sug')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg></span><span class="sb-txt">Sugerencias</span><i id="sb-sug-badge" style="display:none"></i>
  </div>
  <div class="sb-item" id="sb-call" onclick="showSection('call')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="sb-txt">Call-in</span>
@@ -1583,6 +1641,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 <div id="perfilMenu" onclick="if(event.target===this)cerrarPerfilMenu()"><div class="pm-card">
  <div class="pm-head"><div class="pm-av" id="pmAv"></div><div><b id="pmNom"></b><span id="pmRol"></span></div></div>
  <button type="button" class="pm-it" id="pmCom" style="display:none" onclick="cerrarPerfilMenu();showSection('com')"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg>Comunicaciones<i id="pmComN" style="display:none"></i></button>
+ <button type="button" class="pm-it" id="pmSug" onclick="cerrarPerfilMenu();showSection('sug')"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Sugerencias<i id="pmSugN" style="display:none"></i></button>
  <button type="button" class="pm-it" id="pmCall" onclick="cerrarPerfilMenu();showSection('call')"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Call-in</button>
  <button type="button" class="pm-it" id="pmRend" style="display:none" onclick="cerrarPerfilMenu();showSection('rend')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rendimiento</button>
  <button type="button" class="pm-it" id="pmStats" style="display:none" onclick="cerrarPerfilMenu();showSection('stats')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Estadísticas</button>
@@ -1657,7 +1716,8 @@ const TOPBAR = {
  cap: ['Captación','Lista de espera y contactos'],
  ejer: ['Ejercicios','Biblioteca de vídeos'],
  rep: ['Check-list','Marca y envía antes de irte'],
- com: ['Buzón','Comunicaciones internas del equipo']
+ com: ['Buzón','Comunicaciones internas del equipo'],
+ sug: ['Sugerencias','Ideas, mejoras y fallos de la app']
 };
 
 const CFG = {
@@ -1841,7 +1901,7 @@ async function loadBiblio(){
 
 // iPhone: tras un rato en segundo plano, la primera petición a veces falla con «Load failed».
 // Reintentamos solas las peticiones a /api/ que se pueden repetir sin duplicar nada.
-(function(){const f0=window.fetch.bind(window);const NO_REP=/action=(seg-crear|seg-resultado|facturar|horas-guardar|seg-paciente-crear|seg-historial-anadir|seg-tarea-guardar|seg-ficha-archivo|seg-agenda-dar|seg-agenda-mover|seg-agenda-hueco|seg-agenda-huecos|seg-agenda-editar|seg-agenda-borrar|seg-estadisticas-guardar|seg-consent-email|seg-com-enviar|seg-com-responder)\b/;
+(function(){const f0=window.fetch.bind(window);const NO_REP=/action=(seg-crear|seg-resultado|facturar|horas-guardar|seg-paciente-crear|seg-historial-anadir|seg-tarea-guardar|seg-ficha-archivo|seg-agenda-dar|seg-agenda-mover|seg-agenda-hueco|seg-agenda-huecos|seg-agenda-editar|seg-agenda-borrar|seg-estadisticas-guardar|seg-consent-email|seg-com-enviar|seg-com-responder|seg-sug-enviar)\b/;
  window.fetch=async function(u,o){const url=String(u&&u.url||u);
   for(let i=0;;i++){try{return await f0(u,o);}catch(e){if(!/\/api\//.test(url)||NO_REP.test(url)||i>=2)throw new Error(navigator.onLine===false?'Sin conexión. Vuelve a intentarlo.':'No se ha podido conectar. Vuelve a intentarlo.');await new Promise(r=>setTimeout(r,700*(i+1)));}}};})();
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
@@ -1850,7 +1910,7 @@ function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=
 function pintarPerfil(){if(!fisioActual)return;requestAnimationFrame(ajustaTopbar);const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=fisioActual.role==='admin'?'Administración':'Fisioterapeuta';
- const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}}
+ const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}try{sugContar();}catch(e){}}
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
@@ -1882,7 +1942,7 @@ function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
  try{$('btnRend').classList.toggle('activo',sec==='rend');$('btnTar').classList.toggle('activo',sec==='tar');}catch(e){}
- ['anam','prog','agenda','pac','school','msg','rend','seg','tar','call','stats','cap','ejer','rep','admin','com'].forEach(s=>{
+ ['anam','prog','agenda','pac','school','msg','rend','seg','tar','call','stats','cap','ejer','rep','admin','com','sug'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec);
  });
  const [t,s] = TOPBAR[sec];
@@ -1913,6 +1973,7 @@ function showSection(sec){
  else if(sec==='stats') renderStats(wrap);
  else if(sec==='admin') renderAdmin(wrap);
  else if(sec==='com') renderCom(wrap);
+ else if(sec==='sug') renderSug(wrap);
 }
 
 
@@ -6231,6 +6292,111 @@ const comDia=iso=>{if(!iso)return '';const d=new Date(iso),h=new Date(),ay=new D
  if(k(d)===k(h))return 'HOY';if(k(d)===k(ay))return 'AYER';return d.toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'Europe/Madrid'}).replace('.','').toUpperCase()+(d.getFullYear()!==h.getFullYear()?' '+d.getFullYear():'');};
 const comHora=iso=>iso?new Date(iso).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}):'';
 
+// ── BUZÓN DE SUGERENCIAS ─────────────────────────────────────────────────────
+// Todo el equipo envía (App · Clínica · Otro). Leen las recibidas (pacientes y equipo) quienes tienen el acceso «Leer sugerencias».
+const SUG_IC={app:'<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/>',cli:'<path d="M3.5 20.5h17M5 20.5V9l7-5 7 5v11.5"/><path d="M10 20.5v-5h4v5M12 8.5v4M10 10.5h4"/>',otro:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>',bombilla:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',clip:'<path d="m21 11.5-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l8-8"/>',buzon:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/>'};
+const sugIco=k=>`<svg viewBox="0 0 24 24">${SUG_IC[k]}</svg>`;
+const SUG_AP=[['App','app','Cambios, mejoras o fallos del panel o de la app'],['Clínica','cli','Organización, material, instalaciones, trato…'],['Otro','otro','Cualquier otra idea']];
+let SUG={tab:'',fil:'pend',ap:'todo',ab:null,d:null,f:{apartado:'',tipo:'Mejora',texto:'',cap:null}};
+try{const g=JSON.parse(sessionStorage.getItem('f365_sug')||'{}');['tab','fil','ap','ab'].forEach(k=>{if(g[k]!=null)SUG[k]=g[k];});}catch(e){}
+const sugGuarda=()=>{try{sessionStorage.setItem('f365_sug',JSON.stringify({tab:SUG.tab,fil:SUG.fil,ap:SUG.ap,ab:SUG.ab}));}catch(e){}};
+const sugLector=()=>!!(fisioActual&&fisioActual.accesos&&fisioActual.accesos.sugerencias);
+let _sugIv=null;
+async function sugContar(){if(!sugLector()){['sb-sug-badge','pmSugN'].forEach(i=>{const e=$(i);if(e)e.style.display='none';});return;}
+ if(!_sugIv)_sugIv=setInterval(()=>{if(!document.hidden)sugContar();},120000);
+ try{const r=await comPost('seg-sug-contar');if(!r.ok)return;sugBadge(r.nuevas);}catch(e){}}
+function sugBadge(n){[['sb-sug-badge',n],['pmSugN',n]].forEach(([i,v])=>{const e=$(i);if(e){e.textContent=v||'';e.style.display=v?'':'none';}});}
+const sugFecha=iso=>{if(!iso)return '';const d=new Date(iso),h=new Date(),k=x=>x.toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'}),ay=new Date();ay.setDate(h.getDate()-1);const hm=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'});
+ if(k(d)===k(h))return 'Hoy · '+hm;if(k(d)===k(ay))return 'Ayer · '+hm;return d.toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'Europe/Madrid'}).replace('.','')+(d.getFullYear()!==h.getFullYear()?' '+d.getFullYear():'')+' · '+hm;};
+const sugTags=x=>x.origen==='Paciente'?'<span class="sug-tag pac">Paciente</span>':`<span class="sug-tag ${x.apartado==='App'?'app':x.apartado==='Clínica'?'cli':''}">${escH(x.apartado)}</span>${x.tipo?`<span class="sug-tag ${x.tipo==='Fallo'?'fallo':'mejora'}">${escH(x.tipo)}</span>`:''}`;
+
+function renderSug(wrap){
+ const lec=sugLector();if(!SUG.tab||(!lec&&SUG.tab==='rec'))SUG.tab=lec?'rec':'nueva';
+ const box=ce('div','sug');wrap.appendChild(box);
+ box.innerHTML=`<div class="sug-hero">${sugIco('bombilla')}<div><b>Buzón de sugerencias</b><span>${lec?'Lo que proponen pacientes y equipo. Las de la app del paciente llegan aquí también.':'Cuéntanos qué cambiarías o mejorarías, o avísanos de un fallo de la app.'}</span></div></div>
+  <div class="cap-tabs sug-tabs">${lec?'<button type="button" data-t="rec">Recibidas <i data-n style="display:none"></i></button>':''}<button type="button" data-t="nueva">Escribir</button><button type="button" data-t="mias">Enviadas</button></div>
+  <div class="sug-body"></div>`;
+ box.querySelectorAll('.sug-tabs button').forEach(b=>b.onclick=()=>{SUG.tab=b.dataset.t;sugGuarda();pintar();});
+ const body=box.querySelector('.sug-body');
+ function pintar(){box.querySelectorAll('.sug-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===SUG.tab));
+  if(SUG.tab==='nueva')sugForm(body,()=>{SUG.tab='mias';SUG.d=null;sugGuarda();pintar();});else sugLista(body,SUG.tab==='rec',n=>{const i=box.querySelector('.sug-tabs i[data-n]');if(i){i.textContent=n||'';i.style.display=n?'':'none';}});}
+ pintar();
+}
+
+function sugForm(body,alEnviar){const F=SUG.f;
+ body.innerHTML=`<div class="sug-card"><p class="sug-lbl">¿Sobre qué es?</p>
+  <div class="sug-ap">${SUG_AP.map(([k,ic,d])=>`<button type="button" data-a="${k}">${sugIco(ic)}<span><b>${k}</b><small>${d}</small></span></button>`).join('')}</div>
+  <div class="sug-tipo" hidden><p class="sug-lbl">¿Qué es?</p><div class="sug-seg"><button type="button" data-t="Mejora">Una mejora o idea</button><button type="button" data-t="Fallo">Un fallo</button></div></div>
+  <p class="sug-lbl">Cuéntalo</p><textarea class="sug-ta" maxlength="3000"></textarea>
+  <div class="sug-adj" hidden><button type="button" class="sug-adj-b">${sugIco('clip')}Adjuntar captura</button><input type="file" accept="image/*" hidden><div class="sug-prev-w"></div></div>
+  <button type="button" class="sug-env">Enviar sugerencia</button></div>`;
+ const ta=body.querySelector('.sug-ta'),env=body.querySelector('.sug-env'),fi=body.querySelector('input[type=file]'),pw=body.querySelector('.sug-prev-w');
+ ta.value=F.texto;ta.oninput=()=>{F.texto=ta.value;};
+ const pinta=()=>{body.querySelectorAll('.sug-ap button').forEach(b=>b.classList.toggle('on',b.dataset.a===F.apartado));
+  const app=F.apartado==='App';body.querySelector('.sug-tipo').hidden=!app;body.querySelector('.sug-adj').hidden=!app;
+  body.querySelectorAll('.sug-seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===F.tipo));
+  ta.placeholder=!F.apartado?'Elige arriba sobre qué es y escribe aquí…':app&&F.tipo==='Fallo'?'Qué estabas haciendo, qué esperabas que pasara y qué ha pasado…':app?'Qué cambiarías o añadirías, y para qué te serviría…':'Escribe aquí tu sugerencia…';
+  pw.innerHTML=F.cap?`<div class="sug-prev"><img src="data:${F.cap.tipo};base64,${F.cap.file}" alt="Captura"><button type="button" aria-label="Quitar captura">✕</button></div>`:'';
+  const q=pw.querySelector('button');if(q)q.onclick=()=>{F.cap=null;pinta();};
+  body.querySelector('.sug-adj-b').lastChild.textContent=F.cap?'Cambiar captura':'Adjuntar captura';};
+ body.querySelectorAll('.sug-ap button').forEach(b=>b.onclick=()=>{F.apartado=b.dataset.a;pinta();});
+ body.querySelectorAll('.sug-seg button').forEach(b=>b.onclick=()=>{F.tipo=b.dataset.t;pinta();});
+ body.querySelector('.sug-adj-b').onclick=()=>fi.click();
+ fi.onchange=async()=>{const f=fi.files&&fi.files[0];fi.value='';if(!f)return;try{F.cap=await sugReducir(f);pinta();}catch(e){toast('No se ha podido leer la imagen',false);}};
+ env.onclick=async()=>{const t=ta.value.trim();if(!F.apartado){toast('Elige sobre qué es',false);return;}if(!t){ta.focus();toast('Escribe tu sugerencia',false);return;}
+  env.disabled=true;env.textContent='Enviando…';
+  try{const r=await comPost('seg-sug-enviar',{apartado:F.apartado,tipo:F.apartado==='App'?F.tipo:'',texto:t,captura:F.apartado==='App'&&F.cap?F.cap:null});
+   if(!r.ok)throw new Error(r.error||'No se ha podido enviar');
+   toast(r.sinCaptura?'Enviada, pero la captura no se ha podido subir':'¡Gracias! Sugerencia enviada',!r.sinCaptura);SUG.f={apartado:'',tipo:'Mejora',texto:'',cap:null};alEnviar();}
+  catch(e){toast(e.message,false);env.disabled=false;env.textContent='Enviar sugerencia';}};
+ pinta();}
+
+// Captura: se reduce en el móvil/ordenador antes de subirla (máx. 1600 px, JPEG)
+function sugReducir(file){return new Promise((ok,ko)=>{const fr=new FileReader();fr.onerror=ko;fr.onload=()=>{const im=new Image();im.onerror=ko;im.onload=()=>{const m=1600,k=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);ok({file:c.toDataURL('image/jpeg',.85).split(',')[1],tipo:'image/jpeg',nombre:(file.name||'captura').replace(/\.[^.]+$/,'')+'.jpg'});};im.src=fr.result;};fr.readAsDataURL(file);});}
+
+async function sugLista(body,rec,alContar){
+ if(!SUG.d)body.innerHTML='<div class="sug-vacio">Cargando…</div>';
+ const pinta=()=>{const d=SUG.d;if(!d)return;
+  let L=d.sugerencias;
+  if(rec){alContar(L.filter(x=>x.estado==='Nueva').length);sugBadge(L.filter(x=>x.estado==='Nueva').length);}
+  else L=L.filter(x=>x.origen==='Equipo'&&x.de===d.yo);
+  const FIL=[['pend','Pendientes'],['hecha','Hechas'],['todas','Todas']],AP=[['todo','Todo'],['pac','Pacientes'],['App','App'],['Clínica','Clínica'],['Otro','Otro']];
+  if(rec){L=L.filter(x=>SUG.fil==='todas'||(SUG.fil==='hecha'?x.estado==='Hecha':x.estado!=='Hecha'));
+   L=L.filter(x=>SUG.ap==='todo'||(SUG.ap==='pac'?x.origen==='Paciente':x.origen==='Equipo'&&x.apartado===SUG.ap));}
+  const est=x=>rec?x.estado:({Nueva:'Enviada',Vista:'Leída',Hecha:'Hecha'})[x.estado];
+  body.innerHTML=(rec?`<div class="sug-fil">${FIL.map(([k,t])=>`<button type="button" data-f="${k}" class="${SUG.fil===k?'on':''}">${t}</button>`).join('')}</div><div class="sug-fil">${AP.map(([k,t])=>`<button type="button" data-p="${k}" class="${SUG.ap===k?'on':''}">${t}</button>`).join('')}</div>`:'')+
+   (L.length?L.map(x=>`<div class="sug-it${rec&&x.estado==='Nueva'?' nueva':''}${SUG.ab===x.id?' abierta':''}" data-id="${x.id}">
+    <div class="sug-top">${sugTags(x)}<span class="sug-est ${rec||x.estado==='Hecha'?x.estado:'Vista'}">${est(x)}</span><span class="sug-fe">${escH(sugFecha(x.fecha))}</span></div>
+    <div class="sug-tx">${escH(x.texto)}</div>
+    ${SUG.ab===x.id?'':`<div class="sug-pie">${x.captura?`<img src="${escH(x.captura.mini)}" alt="Captura">`:''}${rec?`<span>${escH(x.de||'—')}</span>`:x.nota?'<span>Dirección ha dejado una nota</span>':''}</div>`}
+    ${SUG.ab===x.id?sugDetalle(x,rec):''}</div>`).join(''):`<div class="sug-card sug-vacio">${sugIco('buzon')}${rec?'No hay sugerencias aquí.':'Aún no has enviado ninguna sugerencia.'}</div>`);
+  body.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{SUG.fil=b.dataset.f;sugGuarda();pinta();});
+  body.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{SUG.ap=b.dataset.p;sugGuarda();pinta();});
+  body.querySelectorAll('.sug-it').forEach(el=>{
+   el.onclick=ev=>{if(ev.target.closest('.sug-det'))return;const id=el.dataset.id;SUG.ab=SUG.ab===id?null:id;sugGuarda();
+    const x=SUG.d.sugerencias.find(s=>s.id===id);if(rec&&SUG.ab&&x&&x.estado==='Nueva')cambia(x,{estado:'Vista'},true);else pinta();};
+   const det=el.querySelector('.sug-det');if(!det)return;const x=SUG.d.sugerencias.find(s=>s.id===el.dataset.id);
+   const cap=det.querySelector('.sug-cap');if(cap)cap.onclick=()=>window.open(x.captura.url,'_blank');
+   const fic=det.querySelector('[data-ficha]');if(fic)fic.onclick=()=>{showSection('pac');abrirFichaPaciente(x.paciente,x.de);};
+   const nt=det.querySelector('.sug-nota');if(nt)nt.onchange=()=>cambia(x,{nota:nt.value},false,'Nota guardada');
+   det.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>cambia(x,{estado:b.dataset.e},false,b.dataset.e==='Hecha'?'Marcada como hecha':'Vuelve a pendientes'));});};
+ // Guardar sin recargar: se cambia la tarjeta y se queda donde estaba
+ const cambia=async(x,cambio,silencio,msg)=>{const prev=Object.assign({},x);Object.assign(x,cambio);pinta();
+  try{const r=await comPost('seg-sug-estado',Object.assign({id:x.id},cambio));if(!r.ok)throw new Error(r.error||'No se ha podido guardar');Object.assign(x,r.sugerencia);pinta();if(msg)toast(msg,true);}
+  catch(e){Object.assign(x,prev);pinta();if(!silencio)toast(e.message,false);}};
+ if(SUG.d)pinta();
+ try{const r=await comPost('seg-sug-lista');if(!r.ok)throw new Error(r.error||'No se han podido cargar');SUG.d=r;if(body.isConnected){const y=comY();pinta();comSetY(y);}}
+ catch(e){if(!SUG.d&&body.isConnected)body.innerHTML=`<div class="sug-card sug-vacio">${escH(e.message)}</div>`;}
+}
+function sugDetalle(x,rec){
+ const cap=x.captura?`<img class="sug-cap" src="${escH(x.captura.url)}" alt="Captura adjunta">`:'';
+ if(!rec)return `<div class="sug-det">${cap}${x.nota?`<p class="sug-lbl">Nota de dirección</p><div class="sug-tx">${escH(x.nota)}</div>`:'<div class="sug-quien">Dirección la verá en su buzón.</div>'}</div>`;
+ return `<div class="sug-det">${cap}
+  <div class="sug-quien" style="margin:0 0 12px">De <b>${escH(x.de||'—')}</b>${x.origen==='Paciente'?(x.anonima?' · enviada sin nombre':' · paciente'):''}${x.paciente?` · <a href="#" data-ficha onclick="return false">Ver su ficha</a>`:''}</div>
+  <p class="sug-lbl">Nota interna</p><textarea class="sug-nota" placeholder="Qué se ha decidido, a quién se le ha pasado…">${escH(x.nota)}</textarea>
+  <div class="sug-acc">${x.estado==='Hecha'?'<button type="button" data-e="Vista">Volver a pendientes</button>':'<button type="button" class="pri" data-e="Hecha">Marcar como hecha</button>'}</div>
+  ${x.cambiadoPor?`<div class="sug-quien">Último cambio: ${escH(x.cambiadoPor)}</div>`:''}</div>`;}
+
 function renderCom(wrap){
  if(!comVe()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección todavía no está disponible.</div></div>';return;}
  if(COM.hilo)return comHilo(wrap,COM.hilo);
@@ -6486,7 +6652,7 @@ const ADM={tab:'equipo',d:null};
 // Pregunta de sí/no con el estilo del panel (en vez del cuadro del navegador)
 function admSiNo(txt,si){return new Promise(ok=>{const m=hzModal(`<div class="hz-top"><div><b>¿Seguro?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><p class="adm-nota" style="font-size:14px;color:#3d342e">${escH(txt)}</p><div class="hz-bts"><button type="button" class="adm-gen s-n">Cancelar</button><button type="button" class="hz-ok s-s">${escH(si||'Sí, seguir')}</button></div>`);
  const fin=v=>{m.remove();ok(v);};m.querySelector('.hz-x').onclick=m.querySelector('.s-n').onclick=()=>fin(false);m.querySelector('.s-s').onclick=()=>fin(true);m.onclick=e=>{if(e.target===m)fin(false);};});}
-const ADM_SEC=[['agenda','Agenda'],['pacientes','Pacientes'],['chat','Chat'],['checklist','Check-list'],['callin','Call-in'],['captacion','Captación'],['programas','Programas'],['ejercicios','Ejercicios'],['anamnesis','Anamnesis'],['rendimiento','Rendimiento'],['estadisticas','Estadísticas'],['school','School'],['admin','Administración']];
+const ADM_SEC=[['agenda','Agenda'],['pacientes','Pacientes'],['chat','Chat'],['checklist','Check-list'],['callin','Call-in'],['captacion','Captación'],['programas','Programas'],['ejercicios','Ejercicios'],['anamnesis','Anamnesis'],['rendimiento','Rendimiento'],['estadisticas','Estadísticas'],['school','School'],['sugerencias','Leer sugerencias'],['admin','Administración']];
 const ADM_TIPOS=['Vacaciones','Festivo','Día libre','Menos horas','Baja','Formación','Otro'];
 const ADM_DC={Lunes:'Lun',Martes:'Mar','Miércoles':'Mié',Jueves:'Jue',Viernes:'Vie','Sábado':'Sáb'};
 async function admPost(a,b){return agPost(a,Object.assign({yo:fisioActual.nombre,clave:fisioActual._pwd},b||{}));}

@@ -315,6 +315,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .nav-menu-inner>div:nth-of-type(1),.nav-menu-inner>div:nth-of-type(2){display:none!important}
 .nav-menu-inner>div:nth-of-type(3){border-top:none!important;padding-top:0!important}
 .nm-av{overflow:hidden}.nm-av img,.cu-av img{width:100%;height:100%;object-fit:cover;display:block}.cu-top{display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px 16px;margin-bottom:14px}.cu-av{width:96px;height:96px;border-radius:50%;background:#c2552e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:30px;overflow:hidden}.cu-top b{font-size:17px}.cu-top small{font-size:13px;color:#7d6a60}.cu-bt{font-family:inherit;font-size:14px;font-weight:700;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:12px;padding:10px 16px;cursor:pointer}.cu-box{background:#fff;border:1px solid var(--border);border-radius:20px;padding:16px;margin-bottom:14px}.cu-box h3{font-size:15px;margin:0 0 12px}.cu-box label{display:block;font-size:12.5px;color:#7d6a60;margin:10px 0 5px}.cu-box input{width:100%;box-sizing:border-box;font-family:inherit;font-size:20px;letter-spacing:8px;text-align:center;padding:10px;border:1.5px solid var(--border);border-radius:12px;background:#f5f2ee}.cu-ok{width:100%;margin-top:14px;font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:12px;padding:13px;background:#1a1a1a;color:#fff;cursor:pointer}.cu-err{font-size:13px;color:#c0392b;margin-top:8px;min-height:1px}
+.sg-intro{font-size:14px;line-height:1.5;color:#5e554d;margin:0 0 12px}.sg-ta{width:100%;box-sizing:border-box;font-family:inherit;font-size:15px;line-height:1.5;padding:12px 14px;border:1.5px solid var(--border);border-radius:14px;background:#f5f2ee;resize:vertical;min-height:130px;outline:none;color:#1a1a1a}.sg-ta:focus{border-color:var(--lila)}.cu-box .sg-anon{display:flex;align-items:center;gap:10px;margin:14px 2px 0;font-size:14px;color:#1a1a1a;cursor:pointer;user-select:none}.cu-box .sg-anon input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}.sg-chk{width:22px;height:22px;border-radius:7px;border:1.5px solid #cfc6bc;background:#fff;flex:none;display:flex;align-items:center;justify-content:center;transition:.15s}.cu-box .sg-anon input:checked+.sg-chk{background:#1a1a1a;border-color:#1a1a1a}.cu-box .sg-anon input:checked+.sg-chk::after{content:'';width:10px;height:5px;border:2px solid #fff;border-top:none;border-right:none;transform:rotate(-45deg) translate(1px,-1px)}.sg-gracias{text-align:center;padding:28px 18px}.sg-gracias h3{font-size:18px;margin:10px 0 4px}.sg-gracias p{font-size:14px;color:#5e554d;margin:0 0 16px}.sg-ic{width:52px;height:52px;border-radius:50%;background:var(--lila-light);margin:0 auto;display:flex;align-items:center;justify-content:center}.sg-ic svg{width:24px;height:24px;fill:none;stroke:var(--lila-d);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nm-head{display:flex;align-items:center;gap:11px;padding:4px 6px 14px;margin-bottom:8px;border-bottom:1px solid rgba(0,0,0,.06)}.nm-av{width:40px;height:40px;border-radius:50%;background:#c2552e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}.nm-head b{display:block;font-size:14.5px;line-height:1.2;color:#111}.nm-head span{display:block;font-size:12px;color:#8a817a}
 .nav-menu{width:200px}
 
@@ -654,6 +655,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <button class="nav-item" id="navInstalar" onclick="cerrarMenu();mostrarInstall()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>Instalar app</button>
  <button class="nav-item" onclick="cerrarMenu();abrirReserva()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#c2552e;font-size:14px;font-weight:700;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>Reservar cita</button>
  <button class="nav-item" onclick="cerrarMenu();showSection('promos');pintarPromos()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.5"/></svg>Promociones</button>
+ <button class="nav-item" id="navSugerencias" onclick="showSection('sugerencias');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Sugerencias</button>
  <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Guía</button>
  <button onclick="cerrarSesion()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#bbb;font-size:14px;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</button>
  </div>
@@ -776,6 +778,22 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div id="chatConvWrap" style="display:none;">
   <div class="chat-cab"><button type="button" class="chat-back" onclick="volverChats()" aria-label="Volver a los chats"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><div class="chat-av" id="chatAv">F</div><div><div class="chat-nom" id="chatNom">Equipo FISIO365</div><div class="chat-sub" id="chatSub">Fotos, PDFs y dudas sobre tus ejercicios</div></div></div>
   <div id="chatBox" class="chat-box"></div>
+ </div>
+ </div>
+
+ <div id="vistaSugerencias" style="display:none;">
+ <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Buzón de sugerencias</div><div class="date-sub">Cuéntanos qué mejorarías</div></div>
+ <div class="cu-box sg-box" id="sgForm">
+  <p class="sg-intro">Ideas, cosas que echas en falta o algo que no te ha gustado. Lo leemos todo.</p>
+  <textarea id="sgTexto" class="sg-ta" rows="6" maxlength="3000" placeholder="Escribe aquí tu sugerencia…"></textarea>
+  <label class="sg-anon"><input type="checkbox" id="sgAnon"><span class="sg-chk"></span><span>Enviar sin mi nombre</span></label>
+  <div class="cu-err" id="sgErr"></div>
+  <button type="button" class="cu-ok" id="sgOk" onclick="enviarSugerencia()">Enviar sugerencia</button>
+ </div>
+ <div class="cu-box sg-gracias" id="sgGracias" hidden>
+  <div class="sg-ic"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+  <h3>¡Gracias!</h3><p>Hemos recibido tu sugerencia.</p>
+  <button type="button" class="cu-bt" onclick="otraSugerencia()">Enviar otra</button>
  </div>
  </div>
 
@@ -920,9 +938,9 @@ async function compartirRecomendacion(){
   },2000);
 }
 function showSection(section){
-  ['hoy','notificaciones','citas','progreso','informes','facturas','mensajes','guia','sorteo','promos','cuenta'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
-  ['navHoy','navProgreso','navInformes','navFacturas','navCitas','navMensajes','navGuia'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
-  const navMap={hoy:'navHoy',progreso:'navProgreso',informes:'navInformes',facturas:'navFacturas',citas:'navCitas',mensajes:'navMensajes',guia:'navGuia'};
+  ['hoy','notificaciones','citas','progreso','informes','facturas','mensajes','guia','sorteo','promos','cuenta','sugerencias'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
+  ['navHoy','navProgreso','navInformes','navFacturas','navCitas','navMensajes','navGuia','navSugerencias'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
+  const navMap={hoy:'navHoy',progreso:'navProgreso',informes:'navInformes',facturas:'navFacturas',citas:'navCitas',mensajes:'navMensajes',guia:'navGuia',sugerencias:'navSugerencias'};
   if(section==='facturas')section='informes';
   if(navMap[section]){const el=document.getElementById(navMap[section]);if(el)el.classList.add('active');}
   if(section==='progreso'){initVAS();loadAdherencia('adherenciaSection');}
@@ -1218,6 +1236,14 @@ async function subirFotoPerfil(inp){const f=inp.files&&inp.files[0];inp.value=''
   const d=await (await fetch('/api/schedule?action=subir-foto&patientId='+encodeURIComponent(patient.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({b64})})).json();
   if(!d.ok)throw new Error(d.error||'');patient.foto='data:image/jpeg;base64,'+b64;pintarAvatar();toast('Foto actualizada ✓',true);
  }catch(e){toast(e.message||'No se ha podido subir la foto',false);}}
+async function enviarSugerencia(){const ta=document.getElementById('sgTexto'),err=document.getElementById('sgErr'),b=document.getElementById('sgOk'),t=ta.value.trim();err.textContent='';
+ if(!t){err.textContent='Escribe tu sugerencia';ta.focus();return;}
+ b.disabled=true;b.textContent='Enviando…';
+ try{const d=await (await fetch('/api/schedule?action=mi-sugerencia&patientId='+encodeURIComponent(patient.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto:t,anonimo:document.getElementById('sgAnon').checked})})).json();
+  if(!d.ok){err.textContent=d.error||'No se ha podido enviar';}else{ta.value='';document.getElementById('sgAnon').checked=false;document.getElementById('sgForm').hidden=true;document.getElementById('sgGracias').hidden=false;window.scrollTo(0,0);}}
+ catch(e){err.textContent='Error de conexión. Inténtalo de nuevo';}
+ b.disabled=false;b.textContent='Enviar sugerencia';}
+function otraSugerencia(){document.getElementById('sgGracias').hidden=true;document.getElementById('sgForm').hidden=false;document.getElementById('sgTexto').focus();}
 async function cambiarPin(){const v=id=>document.getElementById(id).value.trim(),err=document.getElementById('cuErr'),b=document.getElementById('cuOk');err.textContent='';
  const a=v('cuPin0'),n1=v('cuPin1'),n2=v('cuPin2');
  if(!/^\d{4}$/.test(n1)){err.textContent='El PIN nuevo tiene que tener 4 números';return;}
