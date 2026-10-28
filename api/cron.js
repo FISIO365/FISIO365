@@ -105,7 +105,8 @@ module.exports = async function handler(req, res) {
   if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) return res.status(401).json({ ok: false });
   // Resumen de facturación: 7:00 UTC (8 h en invierno, 9 h en verano), de las citas de ayer
   if (/resumen=1/.test(req.url || '')) {
-    try { return res.status(200).json({ ok: true, resumen: await resumenFacturacion(madrid(-1)) }); }
+    const etapas = await SCH.repasoEtapas().catch(e => ({ error: e.message })); // Activo → Pendiente de continuar
+    try { return res.status(200).json({ ok: true, etapas, resumen: await resumenFacturacion(madrid(-1)) }); }
     catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   }
   // Recordatorios: 17:00 UTC (19 h en verano, 18 h en invierno)

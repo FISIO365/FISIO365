@@ -175,6 +175,24 @@ const at = async (path, opt = {}) => { for (let i = 0; ; i++) { const r = await 
 // Las demás etiquetas (Valoración, Fin pack, Evolución…, Mantenimiento…) no se tocan.
 // «SESIÓN ÚNICA» no es etapa: convive con Alta o Pendiente de continuar; se pone al hacer la 1ª sesión sin reagendar y se quita si vuelve a tener cita
 const ETAPAS_PAC = ['PACIENTE NUEVO', 'PENDIENTE DE COMENZAR', 'ACTIVO', 'SEGUIMIENTO', 'PENDIENTE DE CONTINUAR', 'ALTA', 'ABANDONO', 'NO ACUDIÓ'];
+// Repaso diario: «Activo» que lleva más de 3 semanas sin venir, sin cita dada y sin estar en «Por llamar» → «Pendiente de continuar»
+const SEMANAS_PDTE_CONTINUAR = 3;
+async function repasoEtapas() {
+  const todo = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
+  const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
+  if (!E['ACTIVO'] || !E['PENDIENTE DE CONTINUAR']) return { cambiados: 0 };
+  const activos = await todo(PACIENTES, `filterByFormula=${encodeURIComponent("FIND('ACTIVO',ARRAYJOIN({ESTADO}))")}&fields[]=ESTADO`);
+  if (!activos.length) return { cambiados: 0 };
+  const dias = SEMANAS_PDTE_CONTINUAR * 7;
+  // Quien ha venido en las últimas semanas o tiene cita dada
+  const recientes = await todo('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(IS_AFTER({FECHA},DATEADD(TODAY(),-${dias + 1},'days')),OR(TRIM({ESTADO})='REALIZADA',TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA',TRIM({ESTADO})='POR REAGENDAR'))`)}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`);
+  const conMovimiento = new Set(recientes.flatMap(r => r.fields['RELACIÓN - CITA'] || []));
+  const enLlamar = new Set((await todo('tblu9YxiktpAh5w87', `filterByFormula=${encodeURIComponent('NOT({HECHO})')}&fields[]=PACIENTE`)).flatMap(r => r.fields['PACIENTE'] || []));
+  const vida = ETAPAS_PAC.map(n => E[n]).filter(Boolean);
+  const cambiar = activos.filter(p => (p.fields['ESTADO'] || []).includes(E['ACTIVO']) && !conMovimiento.has(p.id) && !enLlamar.has(p.id)).slice(0, 150);
+  for (let i = 0; i < cambiar.length; i += 10) await at(PACIENTES, { method: 'PATCH', body: JSON.stringify({ records: cambiar.slice(i, i + 10).map(p => ({ id: p.id, fields: { ESTADO: [...(p.fields['ESTADO'] || []).filter(id => !vida.includes(id)), E['PENDIENTE DE CONTINUAR']] } })) }) });
+  return { cambiados: cambiar.length };
+}
 async function ponerEtapa(pid, evento) {
   if (!/^rec[A-Za-z0-9]{14}$/.test(pid || '')) return null;
   const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
@@ -3123,5 +3141,6 @@ module.exports = async function handler(req, res) {
 }
 module.exports.cierreDia = cierreDia;
 module.exports.emailsResumen = emailsResumen;
+module.exports.repasoEtapas = repasoEtapas;
 module.exports.cierresEnviados = cierresEnviados;
 module.exports.holdedApi = { holded: (...a) => holded(...a), holdedTodos: (...a) => holdedTodos(...a), activo: () => !!HOLDED_KEY };

@@ -1013,6 +1013,10 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .pe-res .pe-n{flex:1;min-width:0}.pe-res strong{color:#c2552e}
 .pe-res .pe-add{flex:none;width:30px;height:30px;border-radius:50%;background:#fbeee7;color:#c2552e;font-size:19px;font-weight:600;display:flex;align-items:center;justify-content:center}
 .pe-res button.sel{background:#fdf1ea}.pe-res button.sel .pe-add{background:#c2552e;color:#fff;font-size:14px}
+.pe-zs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:8px 0 2px;scrollbar-width:none}.pe-zs::-webkit-scrollbar{display:none}
+.pe-zs button{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:#5e554d;border-radius:99px;padding:6px 12px;cursor:pointer;white-space:nowrap}.pe-zs button i{font-style:normal;font-weight:500;color:#a99d93;margin-left:2px}
+.pe-zs button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}.pe-zs button.on i{color:rgba(255,255,255,.6)}
+.pe-znota{font-size:12px;line-height:1.4;color:#8a7f76;background:#faf6f2;padding:9px 12px;border-bottom:1px solid #f0ebe6}
 .pe-res .pe-n small{display:block;font-size:11.5px;color:#9a8d84;margin-top:1px}
 .pe-res .pe-bar{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;background:#fff;border-top:1px solid #efe8e2;padding:10px;box-shadow:0 -6px 14px -8px rgba(26,26,26,.15)}
 .pe-res .pe-bar span{flex:1;font-size:13px;color:#7d6a60;white-space:nowrap}.pe-res .pe-bar button{white-space:nowrap}.pe-res .pe-bar b{color:#1a1a1a}
@@ -2354,19 +2358,27 @@ function peResumen(e){const se=+e.series||0,pl=(n,a,b)=>n===1?a:b,L=[];const r=e
  if(r&&d)L.push(`aguanta ${d} ${pl(d,'segundo','segundos')} en cada repetición`);if(ds&&se>1)L.push(`descansa ${ds} ${pl(ds,'segundo','segundos')} entre series`);
  return L.join(' · ');}
 function montarEditorEjs(el,inicial,onCambio){
- let ejs=(inicial||[]).map(peNorm), nuevo=-1, sel=[];
- el.innerHTML=`<div class="pe-busca"><input type="search" placeholder="Busca y marca los ejercicios que quieras añadir…" autocomplete="off" enterkeyhint="search"><div class="pe-res"></div></div><div class="pe-lista"></div>`;
- const inp=el.querySelector('input'),res=el.querySelector('.pe-res'),lista=el.querySelector('.pe-lista');
+ let ejs=(inicial||[]).map(peNorm), nuevo=-1, sel=[], zona='';
+ el.innerHTML=`<div class="pe-busca"><input type="search" placeholder="Busca y marca los ejercicios que quieras añadir…" autocomplete="off" enterkeyhint="search"><div class="pe-zs"></div><div class="pe-res"></div></div><div class="pe-lista"></div>`;
+ const inp=el.querySelector('input'),res=el.querySelector('.pe-res'),lista=el.querySelector('.pe-lista'),zs=el.querySelector('.pe-zs');
+ // Filtro por zona: chips con las zonas que tienen ejercicios
+ const pintaZonas=()=>{const cnt={};biblio.forEach(e=>{if(e.zona)cnt[e.zona]=(cnt[e.zona]||0)+1;});
+  const L=[...new Set([...(typeof EJ_ZONAS!=='undefined'?EJ_ZONAS:[]),...Object.keys(cnt)])].filter(z=>cnt[z]);
+  zs.innerHTML=L.length?`<button type="button" class="${zona?'':'on'}" data-z="">Todas</button>`+L.map(z=>`<button type="button" class="${z===zona?'on':''}" data-z="${escH(z)}">${escH(z)} <i>${cnt[z]}</i></button>`).join(''):'';
+  zs.querySelectorAll('button').forEach(b=>b.onclick=ev=>{ev.stopPropagation();zona=b.dataset.z;pintaZonas();buscar();});};
+ pintaZonas();if(!biblio.length){let n=0;const iv=setInterval(()=>{n++;if(biblio.length||n>20){clearInterval(iv);if(el.isConnected)pintaZonas();}},500);}
  const avisar=()=>{if(onCambio)onCambio();};
  function buscar(){
+  if(!zs.children.length&&biblio.length)pintaZonas();
   const q=sinTildes(inp.value.trim()),y=res.scrollTop;
-  if(!q&&!sel.length){res.classList.remove('on');res.innerHTML='';return;}
-  // Sin texto pero con ejercicios marcados: se ven los marcados para poder añadirlos
-  const r=q?biblio.filter(e=>sinTildes(e.nombre).includes(q)).slice(0,40):sel.map(id=>biblio.find(e=>e.id===id)).filter(Boolean);
+  if(!q&&!zona&&!sel.length){res.classList.remove('on');res.innerHTML='';return;}
+  // Sin texto ni zona pero con ejercicios marcados: se ven los marcados para poder añadirlos
+  const r=(q||zona)?biblio.filter(e=>(!q||sinTildes(e.nombre).includes(q))&&(!zona||e.zona===zona)).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).slice(0,zona&&!q?200:40):sel.map(id=>biblio.find(e=>e.id===id)).filter(Boolean);
   res.innerHTML=r.length?r.map(e=>{const nm=e.nombre.trim(),i=sinTildes(nm).indexOf(q);const hl=i<0?escH(nm):escH(nm.slice(0,i))+'<strong>'+escH(nm.slice(i,i+q.length))+'</strong>'+escH(nm.slice(i+q.length));const m=peMini(e);
    const ya=ejs.some(x=>x.nombre===nm),on=sel.includes(e.id);
    return `<button type="button" data-id="${e.id}" class="${on?'sel':''}">${m?`<img src="${escH(m)}" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="pe-ph"></span>'}<span class="pe-n">${hl}${ya?'<small>Ya está en el programa</small>':''}</span><span class="pe-add">${on?'✓':'+'}</span></button>`;}).join('')
-   :'<div class="pe-vacio">No hay ningún ejercicio con ese nombre</div>';
+   :`<div class="pe-vacio">No hay ningún ejercicio ${zona?'de '+escH(zona)+(q?' con ese nombre':''):'con ese nombre'}</div>`;
+  if(zona)res.innerHTML=`<div class="pe-znota">Todavía no todos los ejercicios tienen zona. Si no encuentras uno, quita el filtro y búscalo por nombre.</div>`+res.innerHTML;
   if(sel.length)res.innerHTML+=`<div class="pe-bar"><span><b>${sel.length}</b> ${sel.length===1?'marcado':'marcados'}</span><button type="button" class="pe-bar-x">Desmarcar</button><button type="button" class="pe-bar-ok">Añadir ${sel.length}</button></div>`;
   res.classList.add('on');res.scrollTop=y;
  }
