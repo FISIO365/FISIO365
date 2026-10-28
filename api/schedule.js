@@ -2793,8 +2793,13 @@ REGLAS: español de España, tercera persona, lenguaje clínico claro y conciso 
           } catch (e) { err = e.message; console.error('seg-informe-tto', model, err); }
         }
         if (!texto) return res.status(200).json({ ok: false, error: 'La IA no ha podido redactarlo' + (err ? ': ' + err : '') });
+        // Firma el fisio que más sesiones le ha hecho (con su nombre completo, para que salga su nº de colegiado); si no, quien lo crea
+        const cuenta = {}; ses.forEach(c => { const n = String(nm(c.fields['PREF.'])).trim(); if (n) cuenta[n] = (cuenta[n] || 0) + 1; });
+        const top = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a])[0] || '';
+        let firma = String(q.quien || '');
+        if (top) { const fd = await at('tbl2mLUrnaKCFTs6g?fields[]=Name').catch(() => ({})); const f = (fd.records || []).map(r => r.fields || {}).find(x => fisioKey(x.Name) === fisioKey(top)); firma = f ? String(f.Name).trim() : top; }
         const fechaEs = hoyF.split('-').reverse().join('/');
-        const d = await at(INFORMES_TABLE, { method: 'POST', body: JSON.stringify({ typecast: true, records: [{ fields: { PacienteId: pid, PacienteNombre: String(F['FULL NAME'] || '').trim().toUpperCase(), FisioNombre: String(q.quien || fisios[fisios.length - 1] || ''), Fecha: fechaEs, Protocolo: 'Informe fisioterapéutico', Informe: texto, SoloFisio: true } }] }) });
+        const d = await at(INFORMES_TABLE, { method: 'POST', body: JSON.stringify({ typecast: true, records: [{ fields: { PacienteId: pid, PacienteNombre: String(F['FULL NAME'] || '').trim().toUpperCase(), FisioNombre: firma, Fecha: fechaEs, Protocolo: 'Informe fisioterapéutico', Informe: texto, SoloFisio: true } }] }) });
         if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar: ' + (d.error.message || '') });
         return res.status(200).json({ ok: true, id: d.records[0].id, sesiones: fechas.length });
       }
