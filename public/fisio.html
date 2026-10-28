@@ -1602,6 +1602,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-hs button.bmf small{display:block;font-size:10px;font-weight:600;color:#b4321f;line-height:1;margin-top:2px}
 .ag-tgs i.ag-nbm{background:#eef6ff;color:#1d4ed8}
 .ap-txt{font-size:13.5px;line-height:1.45;color:#5e554d;margin:0 0 4px}
+.chatp-fic{display:flex;align-items:center;gap:inherit;gap:10px;border:none;background:none;padding:4px 8px 4px 0;margin:0;font-family:var(--font);text-align:left;cursor:pointer;border-radius:12px;min-width:0;color:inherit}.chatp-fic:hover b{color:#c2552e}.chatp-fic span{color:#c2552e!important}
 </style>
 </head>
 <body>
@@ -12438,7 +12439,8 @@ async function renderMensajes(wrap, abrirPacId){
   wrap.querySelector('.chatp').classList.add('abierto');
   wrap.querySelectorAll('.chatp-item').forEach(x=>x.classList.toggle('on',x.dataset.id===pacId));
   const h=q('.chatp-hilo');
-  h.innerHTML=`<div class="chatp-cab"><button class="chatp-volver" type="button" aria-label="Volver">‹</button><div class="chatp-av">${escH(iniciales(pacNombre))}</div><div><b>${escH(pacNombre)}</b><span>Paciente</span></div></div><div class="chatp-caja"></div>`;
+  h.innerHTML=`<div class="chatp-cab"><button class="chatp-volver" type="button" aria-label="Volver">‹</button><button type="button" class="chatp-fic" title="Abrir su ficha"><div class="chatp-av">${escH(iniciales(pacNombre))}</div><div><b>${escH(pacNombre)}</b><span>Ver ficha ›</span></div></button></div><div class="chatp-caja"></div>`;
+  h.querySelector('.chatp-fic').onclick=()=>abrirFichaPaciente(pacId,pacNombre);
   h.querySelector('.chatp-volver').onclick=()=>{wrap.querySelector('.chatp').classList.remove('abierto');if(ctl)ctl.parar();ctl=null;cargarLista();};
   ctl=FisioChat.montar(h.querySelector('.chatp-caja'),{rol:'fisio',pwd:apiPwd,pacienteId:pacId,pacienteNombre:pacNombre,fisio:{id:fisioActual.id,nombre:fisioActual.nombre},
    onLeido:()=>{checkMensajesBadge();const it=wrap.querySelector(`.chatp-item[data-id="${pacId}"] .chatp-n`);if(it)it.remove();},
