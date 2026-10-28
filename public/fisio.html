@@ -8586,7 +8586,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   const hiloPQ=()=>{const H=[...(P.porQueHist||[]).filter(x=>x&&x.t&&x.t!==P.porQue).map(x=>({f:x.f||'',k:'No reagenda',q:x.q||'',t:x.t})),
     ...(d.llamadas||[]).map(u=>({f:u.fecha||'',k:resTxtG(u.resultado),q:u.quien?quienNom(u.quien):'',t:u.nota||''}))].sort((a,b)=>String(b.f).localeCompare(String(a.f)));
    if(!H.length)return '';const it=x=>`<div class="seg-ultc"><b>${escH(x.k)}</b>${x.f?' · '+escH(segFecha(x.f)):''}${x.q?' · '+escH(x.q):''}${x.t?`<p>${escH(x.t)}</p>`:''}</div>`;
-   return `<details class="fp-pqh"${H.length<=3?' open':''}><summary>Historial de seguimiento (${H.length})</summary><div class="seg-hist fp-llh">${H.map(it).join('')}</div></details>`;};
+   return `<details class="fp-pqh"><summary>Historial de seguimiento (${H.length})</summary><div class="seg-hist fp-llh">${H.map(it).join('')}</div></details>`;};
   const sinCita=!d.citas.some(c=>c.fecha>=d.hoy&&!/CANCEL|REPROGRAM/i.test(c.estado));
   const segPend=()=>(d.seguimiento||[]).find(s=>!s.hecho)||(SEG_PAC[id]?{fecha:SEG_PAC[id].fecha,quien:SEG_PAC[id].quien}:null);
   const post=async(a,b)=>(await fetch('/api/schedule?action='+a,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd},b))})).json();
