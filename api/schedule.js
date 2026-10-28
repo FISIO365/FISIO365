@@ -1031,16 +1031,18 @@ module.exports = async function handler(req, res) {
         const yoR = eq.find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
         if (!yoR || !String(q.clave || '').trim() || String(yoR.fields.Password || '').trim() !== String(q.clave || '').trim() || yoR.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
         const yo = pila(yoR.fields.Name), lector = !!yoR.fields.acc_sugerencias;
+        // Las del apartado App (cambios, mejoras y fallos de la app) solo le llegan a quien la desarrolla
+        const DEV_APP = 'Nora', veApp = yo === DEV_APP, sinApp = "NOT({APARTADO}='App')";
         const vista = r => { const F = r.fields || {}, c = (F.CAPTURA || [])[0];
           return { id: r.id, texto: F.TEXTO || '', origen: nm(F.ORIGEN) || 'Equipo', apartado: nm(F.APARTADO) || 'General', tipo: nm(F.TIPO), de: F['ANÓNIMA'] ? 'Anónimo' : (F.DE || ''), anonima: !!F['ANÓNIMA'], paciente: F['ANÓNIMA'] ? '' : (F.PACIENTE || ''),
             captura: c ? { url: c.url, mini: (c.thumbnails && c.thumbnails.large && c.thumbnails.large.url) || c.url } : null, estado: nm(F.ESTADO) || 'Nueva', nota: F.NOTA || '', cambiadoPor: F['CAMBIADO POR'] || '', fecha: F.FECHA || r.createdTime || '' }; };
         if (action === 'seg-sug-contar') {
           if (!lector) return res.status(200).json({ ok: true, lector: false, nuevas: 0 });
-          const rs = await todosT(SUG, `fields[]=RESUMEN&filterByFormula=${encodeURIComponent("NOT({ESTADO}='Hecha')")}`);
+          const rs = await todosT(SUG, `fields[]=RESUMEN&filterByFormula=${encodeURIComponent(veApp ? "NOT({ESTADO}='Hecha')" : `AND(NOT({ESTADO}='Hecha'),${sinApp})`)}`);
           return res.status(200).json({ ok: true, lector: true, nuevas: rs.length });
         }
         if (action === 'seg-sug-lista') {
-          const filtro = lector ? '' : `&filterByFormula=${encodeURIComponent(`AND({ORIGEN}='Equipo',{DE}='${yo.replace(/'/g, "\\'")}')`)}`;
+          const filtro = lector ? (veApp ? '' : `&filterByFormula=${encodeURIComponent(sinApp)}`) : `&filterByFormula=${encodeURIComponent(`AND({ORIGEN}='Equipo',{DE}='${yo.replace(/'/g, "\\'")}')`)}`;
           const rs = await todosT(SUG, `sort[0][field]=FECHA&sort[0][direction]=desc${filtro}`);
           return res.status(200).json({ ok: true, yo, lector, sugerencias: rs.map(vista) });
         }
@@ -1061,6 +1063,7 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-sug-estado') {
           if (!lector) return res.status(403).json({ ok: false, error: 'No tienes acceso al buzón de sugerencias' });
           if (!okId(q.id)) return res.status(400).json({ ok: false });
+          if (!veApp) { const r0 = await at(`${SUG}/${q.id}`); if (nm((r0.fields || {}).APARTADO) === 'App') return res.status(403).json({ ok: false, error: 'Esta sugerencia es solo para Nora' }); }
           const fields = {};
           if (q.estado !== undefined) { if (!ESTADOS_S.includes(q.estado)) return res.status(400).json({ ok: false }); fields.ESTADO = q.estado; fields['CAMBIADO POR'] = yo; }
           if (q.nota !== undefined) fields.NOTA = String(q.nota || '').slice(0, 3000);
