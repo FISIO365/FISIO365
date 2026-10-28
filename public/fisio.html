@@ -7358,7 +7358,12 @@ function renderStats(wrap){
    ${S.ingresosHolded?`<div class="st-box st-man"><div class="st-bt"><b>Notas de esta semana</b><button type="button" class="fp-ed st-edit">${S.notas?'Editar':'Añadir'}</button></div>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:'<p class="st-p fp-mu">Sin notas.</p>'}</div>`:`<div class="st-box st-man"><div class="st-bt"><b>Datos a mano de esta semana</b><button type="button" class="fp-ed st-edit">Editar</button></div>
     <p class="st-p">Ingresos: <b>${stFmt(S.ingresos,'€')}</b></p>${S.notas?`<p class="st-p fp-mu">${escH(S.notas)}</p>`:''}</div>`}`;
   g.querySelectorAll('.st-k').forEach(b=>b.onclick=e=>{if(e.target.closest('.fp-i,.fp-ipop'))return;if(b.querySelector('.st-ed')&&b.classList.contains('on'))editar();else{ST.met=b.dataset.k;pintar();}});
-  {const tb=g.querySelector('.st-tkb');if(tb)tb.onclick=()=>{const fin=new Date(S.semana+'T12:00:00Z');fin.setUTCDate(fin.getUTCDate()+(agr?S.nSem*7:7)-1);stTickets(S.semana,fin.toISOString().slice(0,10),agr?S.txt:stSemTxt(S.semana));};}
+  {const tb=g.querySelector('.st-tkb');if(tb)tb.onclick=()=>{
+   // En meses, trimestres, semestres y años: fechas exactas del calendario (del día 1 al último), para cuadrar con Holded
+   let d1=S.semana,d2;const p2=n=>String(n).padStart(2,'0'),ult=(y,m)=>new Date(Date.UTC(y,m+1,0)).toISOString().slice(0,10);
+   if(agr){const y=+S.k.slice(0,4),r=S.k.slice(5);let m0=0,m1=11;if(ST.vista==='mes'){m0=m1=+r;}else if(ST.vista==='tri'){m0=(+r.slice(1)-1)*3;m1=m0+2;}else if(ST.vista==='sms'){m0=r==='S1'?0:6;m1=m0+5;}
+    d1=`${y}-${p2(m0+1)}-01`;d2=ult(y,m1);}else{const fin=new Date(S.semana+'T12:00:00Z');fin.setUTCDate(fin.getUTCDate()+6);d2=fin.toISOString().slice(0,10);}
+   const hoy=agHoyIso();if(d2>hoy)d2=hoy;stTickets(d1,d2,agr?S.txt:stSemTxt(S.semana));};}
   g.querySelector('.st-edit').onclick=editar;
   g.querySelectorAll('.st-rt button').forEach(b=>b.onclick=()=>{ST.rk=b.dataset.rk;pintar();});
   g.querySelectorAll('.st-trb').forEach(b=>b.onclick=()=>{const pl=g.querySelector(`.st-pl[data-f="${CSS.escape(b.dataset.f)}"]`);pl.hidden=!pl.hidden;b.classList.toggle('on',!pl.hidden);});
