@@ -1608,6 +1608,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-tgs i.ag-nbm{background:#eef6ff;color:#1d4ed8}
 .ap-txt{font-size:13.5px;line-height:1.45;color:#5e554d;margin:0 0 4px}
 .chatp-fic{display:flex;align-items:center;gap:inherit;gap:10px;border:none;background:none;padding:4px 8px 4px 0;margin:0;font-family:var(--font);text-align:left;cursor:pointer;border-radius:12px;min-width:0;color:inherit}.chatp-fic:hover b{color:#c2552e}.chatp-fic span{color:#c2552e!important}
+.com-res{margin:14px -6px 6px;overflow-x:auto}.com-res>div{padding:0!important;background:none!important}.com-res>div>div{padding:0!important;border-radius:0!important;max-width:none!important}
 </style>
 </head>
 <body>
@@ -1882,7 +1883,7 @@ async function doLogin(silencioso){
  setInterval(checkMensajesBadge, 60000); // revisar cada minuto
  aplicarRole();
  // Respaldo del resumen diario a dirección: si el envío automático de la mañana no ha salido, lo lanza el primero que abre el panel (el servidor solo lo manda una vez)
- try{const hoyR=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'}),hR=+new Date().toLocaleString('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false});if(hR>=8&&localStorage.getItem('f365_resumen2')!==hoyR){localStorage.setItem('f365_resumen2',hoyR);fetch('/api/cron?resumen=1&pwd='+encodeURIComponent(apiPwd)).catch(()=>{});}}catch(e){}
+ try{const hoyR=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'}),hR=+new Date().toLocaleString('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false});if(hR>=8&&localStorage.getItem('f365_resumen3')!==hoyR){localStorage.setItem('f365_resumen3',hoyR);fetch('/api/cron?resumen=1&pwd='+encodeURIComponent(apiPwd)).catch(()=>{});}}catch(e){}
  iniciarAutoUpdate();
  let secIni='agenda';try{const g=sessionStorage.getItem('f365_panel_sec');if(g&&TOPBAR[g]&&!['prog','anam'].includes(g))secIni=g;}catch(e){}
  showSection(secIni);
@@ -6410,7 +6411,7 @@ const COM_TIPO_DESC={Comunicado:'Para informar de algo importante. Quien lo reci
 const COM_CAT_INC=['Comportamiento','Puntualidad','Calidad del trabajo','Material o instalaciones','Otro'];
 const COM_APRUEBAN=['Nora']; // administración: aprueba vacaciones y recibe lo confidencial (si lo pide Nora, va a Ramiro) // quién aprueba vacaciones, días libres y cambios de horario
 const comTipoTxt=t=>({Comunicado:'Informe',Aviso:'Informe',Ausencia:'Vacaciones y horarios',Incidencia:'Para administración',Ayuda:'Necesito ayuda'})[t]||t;
-const comRol=n=>/^(nora|ramiro)$/i.test(n||'')?'Administración · FISIO365':'Fisioterapeuta · FISIO365';
+const comRol=n=>/^(nora|ramiro)$/i.test(n||'')?'Administración · FISIO365':/^fisio365$/i.test(n||'')?'Resumen automático del panel':'Fisioterapeuta · FISIO365';
 const comFechaDia=f=>{if(!f)return '';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][t.getMonth()];};
 const comFechaCarta=iso=>iso?new Date(iso).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Madrid'}):'';
 let COM={tab:'rec',d:null,hilo:null,y:0};
@@ -6676,7 +6677,7 @@ async function comHilo(wrap,id){
    <div class="com-tags">${esAus||esp?'':h.req?`<span class="com-pill ${h.abierta?'nar':'gris'}">${h.abierta?'Requiere acción':'Cerrada'}</span>`:(!h.abierta?'<span class="com-pill gris">Cerrada</span>':'')}${h.limite?`<span class="com-pill ${h.abierta&&h.limite<agHoyIso()?'rojo':'gris'}">Límite ${comLim(h.limite)}</span>`:''}</div>
    <dl class="com-dl"><dt>De</dt><dd>${escH(h.de)}</dd><dt>Para</dt><dd>${escH(comLista(h.para))}</dd><dt>Asunto</dt><dd class="as">${escH(esAus?'Solicitud de '+String(A.que||'ausencia').toLowerCase():h.asunto)}</dd></dl>
    ${sello}${ficha}${h.tipo==='Tareas'?'':fichaEsp}
-   ${m0.cuerpo?`<div class="com-cu">${escH(m0.cuerpo)}</div>`:''}${h.tipo==='Tareas'?fichaEsp:''}
+   ${D.resumen&&D.html?`<div class="com-res">${D.html}</div>`:m0.cuerpo?`<div class="com-cu">${escH(m0.cuerpo)}</div>`:''}${h.tipo==='Tareas'?fichaEsp:''}
    ${firma(m0.de)}
    <footer class="com-pie"><span class="com-logo"><span>FISIO</span>365</span>Fourth Dynamic, S.L. · Gran de Sant Andreu 163, Barcelona</footer>
   </article>

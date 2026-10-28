@@ -96,9 +96,26 @@ async function resumenFacturacion(ayer) {
   ${canceladas.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Citas de ayer canceladas o que no vinieron: ${canceladas.length}</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${canceladas.map(c => fila(escH(c.fields['your-name'] || ''), escH(fisioDe(c.fields['PREF.'])) + ' · ' + escH(est(c).toLowerCase()), escH(String(c.fields['HORA'] || '').slice(0, 5)))).join('')}</table>` : ''}
   ${facs.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Facturas emitidas</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${facs.map(r => fila(escH(r.fields['Nº FACTURA'] || ''), escH([r.fields['CONCEPTO 1'], r.fields['CONCEPTO 2']].filter(Boolean).join(' + ')) + (r.fields['MODO DE PAGO'] ? ' · ' + escH(r.fields['MODO DE PAGO']) : ''), eur(r.fields['TOTAL']))).join('')}</table>` : ''}
   </div></div>`;
+  // 1) Llega por la app: una comunicación «Informe» en el buzón de dirección (Comunicaciones), con el resumen dentro
+  let app = 'no';
+  try {
+    const eq = await todos('tbl2mLUrnaKCFTs6g', `fields[]=Name&fields[]=acc_rendimiento&fields[]=acc_admin&fields[]=${encodeURIComponent('FECHA BAJA')}`);
+    const pila = n => { const x = String(n || '').trim().split(/\s+/)[0]; return x.charAt(0).toUpperCase() + x.slice(1).toLowerCase(); };
+    const para = [...new Set(eq.filter(r => (r.fields.acc_rendimiento || r.fields.acc_admin) && !r.fields['FECHA BAJA']).map(r => pila(r.fields.Name)))].filter(Boolean);
+    if (para.length) {
+      const ahora = new Date().toISOString();
+      const c = await fetch(`https://api.airtable.com/v0/${BASE_ID}/tbl2qRD3WsvQVPrwX`, { method: 'POST', headers: { ...AT, 'Content-Type': 'application/json' }, body: JSON.stringify({ typecast: true, records: [{ fields: {
+        ASUNTO: `Resumen diario · ${fechaTxt}`, TIPO: 'Informe', DE: 'FISIO365', PARA: para.join(', '), FECHA: ahora,
+        CUERPO: `Sesiones hechas: ${hechas} · Facturas emitidas: ${facs.length} (${eur(total)})`, DATOS: JSON.stringify({ resumen: true, html }),
+        'LEÍDO': '{}', HECHO: '{}', ESTADO: 'Abierta' } }] }) });
+      app = c.ok ? 'ok' : 'error ' + c.status + ' ' + (await c.text().catch(() => '')).slice(0, 200);
+    }
+  } catch (e) { app = 'error ' + e.message; }
+  // 2) Y por email (si la clave de Brevo funciona)
   const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: (await (SCH.emailsResumen ? SCH.emailsResumen() : Promise.resolve(String(process.env.RESUMEN_EMAIL || 'fisio365gestion@gmail.com').split(/[,;\s]+/).filter(Boolean)))).map(email => ({ email })), subject: `Resumen ${fechaTxt}${Object.keys(rep).some(f => !envs[String(f).split(' ')[0].toLowerCase()]) ? ' · ✗ falta algún check-list' : ''}${sf.lista.length ? ' · ⚠️ ' + sf.lista.length + ' pacientes sin facturar' : ''}${rendSemana ? ' · + semana' : ''}`, htmlContent: html }) });
-  return r.ok ? 'enviado' : 'error brevo ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 300);
+  const email = r.ok ? 'enviado' : 'error brevo ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 300);
+  return (app === 'ok' || email === 'enviado' ? 'enviado' : 'fallo') + ` (app: ${app} · email: ${email})`;
 }
 
 module.exports = async function handler(req, res) {
@@ -113,7 +130,7 @@ module.exports = async function handler(req, res) {
     if (!/forzar=1/.test(req.url || '') && (await SCH.ajuste('resumen_enviado', '').catch(() => '')) === ayer.fecha) return res.status(200).json({ ok: true, ya: true });
     await SCH.guardarAjuste('resumen_enviado', ayer.fecha, esCron ? 'cron' : 'panel').catch(() => {}); // se apunta antes para no mandarlo dos veces si entran varios a la vez
     const etapas = await SCH.repasoEtapas().catch(e => ({ error: e.message })); // Activo → Pendiente de continuar
-    try { const resumen = await resumenFacturacion(ayer); if (resumen !== 'enviado') await SCH.guardarAjuste('resumen_enviado', '', 'error').catch(() => {}); console.log('resumen', ayer.fecha, resumen, esCron ? 'cron' : 'panel'); return res.status(200).json({ ok: true, etapas, resumen }); }
+    try { const resumen = await resumenFacturacion(ayer); if (!/^enviado/.test(resumen)) await SCH.guardarAjuste('resumen_enviado', '', 'error').catch(() => {}); console.log('resumen', ayer.fecha, resumen, esCron ? 'cron' : 'panel'); return res.status(200).json({ ok: true, etapas, resumen }); }
     catch (e) { await SCH.guardarAjuste('resumen_enviado', '', 'error').catch(() => {}); console.log('resumen error', e.message); return res.status(500).json({ ok: false, error: e.message }); }
   }
   // Recordatorios: 17:00 UTC (19 h en verano, 18 h en invierno)
