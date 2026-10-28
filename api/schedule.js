@@ -1819,7 +1819,7 @@ module.exports = async function handler(req, res) {
           if (con.length < 2) return null;
           const L = [];
           for (const r of con.slice(0, 4)) { const pid = (r.fields['RELACIÓN - CITA'] || [])[0]; let n = ''; try { const p0 = await at(`${PACIENTES}/${pid}`); n = (p0.fields || {})['FULL NAME'] || ''; } catch (e) {} L.push({ p: n, f: nmA(r.fields['PREF.']) }); }
-          return { ok: false, bomba: true, n: con.length, hora: hh(hora), con: L, error: `Ya hay ${con.length} citas con bomba a las ${hh(hora)}` };
+          return { ok: false, bomba: true, n: con.length, hora: hh(hora), con: L, error: `Ya hay ${con.length === 2 ? 'dos' : con.length} pacientes con bomba a las ${hh(hora)}` };
         };
         // Ocupar una hora: si hay un hueco libre en esa hora se usa esa fila; si no, se crea una nueva
         const ocupar = async (fecha, hora, fisio, campos, forzar) => {

@@ -6112,13 +6112,13 @@ function agEtiquetas(box,iniciales){
  box.get=()=>{const v=ti.value.trim();return v&&!sel.some(x=>norm(x)===norm(v))?[...sel,v]:sel.slice();};
  return box;}
 // Bomba diamagnética: solo hay una máquina para dos pacientes a la vez. Si ya hay 2 citas con bomba a esa hora, avisa y pide confirmación
-function agBombaInfo(bx,C,hora){const n=agBombaN(C,hora);bx.innerHTML=n>=2?`<b>Bomba completa a las ${escH(hora)}</b> · ya hay ${n} citas con bomba. Si este paciente la necesita, mejor otra hora.`:n===1?`Bomba: 1 cita a las ${escH(hora)} · queda 1 sitio`:'';bx.className='ag-bmi'+(n>=2?' full':n?' one':'');}
+function agBombaInfo(bx,C,hora){const n=agBombaN(C,hora);bx.innerHTML=n>=2?`<b>Bomba completa a las ${escH(hora)}</b> · ya hay ${n===2?'dos':n} pacientes con bomba${n>2?' (es para dos)':''}. Si este paciente la necesita, mejor otra hora.`:n===1?`Bomba a las ${escH(hora)}: hay un paciente · queda un sitio`:'';bx.className='ag-bmi'+(n>=2?' full':n?' one':'');}
 const agNoBomba=t=>/^\s*(NO|SIN)\s+BOMBA\s*$/i.test(String(t||''));
 // Cuántas citas con bomba hay a esa hora (todos los fisios): activas con paciente y sin «NO BOMBA»
 function agBombaN(C,hora,excluirId){return (C||[]).filter(c=>c.hora===hora&&c.id!==excluirId&&c.pacienteId&&!agEsFuera(c.estado)&&!agEsLibre(c.estado)&&!(c.tipos||[]).some(agNoBomba)).length;}
 function agBombaP(m){const t=m.querySelector('.ag-sbm input');return {sinBomba:!!(t&&t.checked),forzarBomba:!!m._fb};}
 function agAvisoBomba(r){return new Promise(res=>{const L=r.con||[];
- const w=hzModal(`<div class="hz-top"><div><small>Bomba diamagnética</small><b>Ya hay ${r.n||2} citas con bomba a las ${escH(r.hora||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+ const w=hzModal(`<div class="hz-top"><div><small>Bomba diamagnética</small><b>Ya hay ${(r.n||2)===2?'dos':r.n} pacientes con bomba a las ${escH(r.hora||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="ag-bmb">${L.map(x=>`<div><b>${escH(x.p||'Paciente')}</b><span>${escH(agNom(x.f||''))}</span></div>`).join('')}</div>
   <p class="ag-bmt">Si este paciente necesita la bomba, mejor buscar otra hora. Si se le puede atender sin ella, marca «sin bomba» en la cita.</p>
   <div class="hz-bts ag-bmbt"><button type="button" class="hz-no">Buscar otra hora</button><button type="button" class="hz-ok">Darla igualmente</button></div>`);
