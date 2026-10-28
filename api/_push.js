@@ -165,7 +165,12 @@ async function rendimiento(desde, hasta, _fresco, opts) {
     return h; };
   // Sesiones hechas por fisio y día: si un día hace más que su horario, ese día cuenta como las horas que hizo (100 %)
   const realDia = {}; citas.forEach(c => { if (est(c) !== 'REALIZADA' || !pid(c)) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(), f = String(c.fields['FECHA']).slice(0, 10); (realDia[n] = realDia[n] || {})[f] = ((realDia[n] || {})[f] || 0) + 1; });
-  const capacidad = n => { if (!horasDia[n]) return 0; let t = 0; (diasCon[n] || new Set()).forEach(f => { t += Math.max(horasDe(n, f), (realDia[n] || {})[f] || 0); }); return Math.round(t); };
+  // Hoy solo cuenta hasta ahora: las horas ya pasadas desde su primera cita del día (sin pasar de su horario)
+  const hoyMad = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const ahoraMin = (() => { const [h, m] = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()).split(':').map(Number); return h * 60 + m; })();
+  const primeraHoy = {}; citas.forEach(c => { if (String(c.fields['FECHA']).slice(0, 10) !== hoyMad) return; const m = String(c.fields['HORA'] || '').match(/(\d{1,2}):(\d{2})/); if (!m) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(), t = +m[1] * 60 + +m[2]; if (primeraHoy[n] == null || t < primeraHoy[n]) primeraHoy[n] = t; });
+  const horasHasta = (n, f) => { const h = horasDe(n, f); if (f !== hoyMad || primeraHoy[n] == null) return h; return Math.min(h, Math.max(0, Math.floor((ahoraMin - primeraHoy[n]) / 60))); };
+  const capacidad = n => { if (!horasDia[n]) return 0; let t = 0; (diasCon[n] || new Set()).forEach(f => { t += Math.max(horasHasta(n, f), (realDia[n] || {})[f] || 0); }); return Math.round(t); };
   // Control de horas día a día (fisios con «CONTROL HORAS»): horas hechas (sesiones + call-in + vídeos) frente a las que le tocaban
   const control = new Set(fisiosT.filter(f => f.fields['CONTROL HORAS']).map(f => String(f.fields['Name'] || '').split(' ')[0].toLowerCase()));
   const hechasDia = {}; // fisio -> {fecha: horas}
