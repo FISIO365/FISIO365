@@ -1653,6 +1653,19 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rp-av2i{flex:none;width:26px;height:26px;border-radius:50%;background:#c2552e;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
 .rp-av2>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rp-av2 b{font-size:14px}.rp-av2 small{font-size:12.5px;color:#7d6a60;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rp-av2 em{font-style:normal;font-size:12.5px;font-weight:700;color:#c2552e}
 </style>
+<style>
+.idoc{background:#fff;border:1px solid #ece6df;border-radius:6px;box-shadow:0 2px 14px rgba(26,26,26,.07);padding:26px 24px 18px;margin-top:4px;font-family:var(--font)}
+.idoc-cab{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid #e8e1da}
+.idoc-cab img{height:15px;width:auto;display:block}.idoc-cab span{font-size:10.5px;color:#7d7068;text-align:right}
+.idoc-dat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px 0 16px;border-bottom:1px solid #e8e1da}
+.idoc-dat small{display:block;font-size:9.5px;font-weight:500;color:#7d7068;margin-bottom:3px}.idoc-dat b{display:block;font-size:13px;color:#1a1a1a;overflow-wrap:anywhere}.idoc-dat i{display:block;font-style:normal;font-size:10px;color:#7d7068;margin-top:2px}
+.idoc-txt{outline:none;padding:16px 0 8px;min-height:160px;font-size:13.5px;line-height:1.6;color:#3c342f;caret-color:#c2552e}
+.idoc-txt>div{margin:0 0 6px}.idoc-txt>div.t{font-size:11px;font-weight:700;color:#c2552e;letter-spacing:.08em;text-transform:uppercase;margin:18px 0 6px}.idoc-txt>div.t:first-child{margin-top:0}
+.idoc-txt>div.b{padding-left:16px;text-indent:-12px}
+.idoc-txt>div.ph{position:relative;border-bottom:1px dashed #eadfd6;min-height:1.6em}.idoc-txt>div.ph::before{content:'Escribe aquí…';position:absolute;left:0;top:0;color:#c8bbb1;pointer-events:none}
+.idoc-pie{border-top:1px solid #f1ece6;padding-top:10px;margin-top:10px;font-size:9.5px;color:#9a8f87}
+@media(max-width:520px){.idoc{padding:20px 16px 14px}.idoc-dat{grid-template-columns:1fr 1fr}.idoc-dat>div:last-child{grid-column:1/-1}}
+</style>
 </head>
 <body>
 
@@ -9839,6 +9852,34 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
   };
  };
 }
+// Editor del informe con el aspecto del PDF: se escribe encima del documento tal y como quedará
+function infDocEditor(texto,o,onCambio){
+ const esTit=l=>(/^[A-ZÁÉÍÓÚÑÜ0-9 ,\/·()-]{5,}$/.test(l)||(/^[^.;]{3,45}:$/.test(l)&&l.split(/\s+/).length<=5))&&!/^- /.test(l);
+ const esTto=/fisioterap[eé]utico/i.test(o.tipo||'');
+ let col=o.fisioCol;if(!col){const fo=(typeof fisios!=='undefined'?fisios:[]).find(f=>(f.nombre||'').trim().toLowerCase()===String(o.fisioNom||'').trim().toLowerCase())||{};col=fo.colegiado||'';}
+ const fecha=o.fecha||new Date().toLocaleDateString('es-ES');
+ const el=ce('div','idoc');
+ el.innerHTML=`<div class="idoc-cab"><img src="/informe/logo.png" alt="FISIO365"><span>${esTto?'Informe fisioterapéutico':'Informe de valoración'} · ${escH(fecha)}</span></div>
+  <div class="idoc-dat"><div><small>Paciente</small><b>${escH(o.pacNom||'—')}</b></div><div><small>${esTto?'Fecha':'Zona valorada'}</small><b>${escH(esTto?fecha:(o.tipo||'—'))}</b></div><div><small>Fisioterapeuta</small><b>${escH(o.fisioNom||'—')}</b>${col?`<i>Colegiado nº ${escH(col)}</i>`:''}</div></div>
+  <div class="idoc-txt" contenteditable="true" spellcheck="true"></div>
+  <div class="idoc-pie">FISIO365 · Gran de Sant Andreu, 163 · Barcelona · 672 89 39 49 · fisioterapia365.com</div>`;
+ const tx=el.querySelector('.idoc-txt');
+ // Cada línea es un bloque; tras un título sin texto se deja una línea vacía para escribir
+ const ls=String(texto||'').replace(/\r/g,'').split('\n').map(l=>l.trim());const out=[];
+ ls.forEach((l,i)=>{if(l){out.push(l);if(esTit(l)){const sig=ls.slice(i+1).find(x=>x);if(sig===undefined||esTit(sig))out.push('');}}});
+ if(!out.length)out.push('');
+ out.forEach(l=>{const d=document.createElement('div');if(l)d.textContent=l;else d.appendChild(document.createElement('br'));tx.appendChild(d);});
+ const pinta=()=>{
+  [...tx.childNodes].forEach(n=>{if(n.nodeType===3){if(!n.textContent.trim()){n.remove();return;}const d=document.createElement('div');tx.insertBefore(d,n);d.appendChild(n);}});
+  [...tx.children].forEach((d,i,a)=>{const t=d.textContent.trim();d.className=!t?'v':esTit(t)?'t':/^- /.test(t)?'b':'';if(!t&&a[i-1]&&a[i-1].className==='t')d.classList.add('ph');});
+ };
+ pinta();
+ const texto2=()=>[...tx.children].map(d=>d.textContent.replace(/\u00a0/g,' ').trim()).join('\n').replace(/\n{3,}/g,'\n\n').trim();
+ tx.addEventListener('input',()=>{pinta();onCambio&&onCambio(texto2());});
+ tx.addEventListener('focus',()=>{try{document.execCommand('defaultParagraphSeparator',false,'div');}catch(e){}});
+ tx.addEventListener('paste',e=>{e.preventDefault();const t=(e.clipboardData||window.clipboardData).getData('text/plain');document.execCommand('insertText',false,t);});
+ return {el,texto:texto2};
+}
 async function fpTabInformes(pacId, body, pacNombre, tok, abrirJust){
  body.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Cargando...</div>';
  let todos=[];
@@ -9890,12 +9931,12 @@ async function fpTabInformes(pacId, body, pacNombre, tok, abrirJust){
   const ab=c.querySelector('.fp-inf-ed');
   if(ab){ab.remove();c.querySelectorAll('.inf-acc,.ia-borrar').forEach(x=>x.remove());bAbrir.textContent='Abrir';return;}
   const ed=ce('div','fp-inf-ed');
-  ed.innerHTML=`<div class="fp-inf-ayuda">Puedes modificar el texto, también los títulos, y luego guardarlo o sacar el PDF. Un título es una línea en MAYÚSCULAS o una línea corta acabada en «:».</div><textarea></textarea>`;
-  const ta=ed.querySelector('textarea'); ta.value=inf.informe||'';
-  const ajusta=()=>{ta.style.height='auto';ta.style.height=Math.max(220,ta.scrollHeight+4)+'px';};
-  ta.oninput=()=>{inf.informe=ta.value;ajusta();};
-  c.appendChild(ed); setTimeout(ajusta);
-  const bar=accionesInforme(ed,{pacId:pacId,pacNom:pacNombre||inf.pacienteNombre||'',tipo:inf.protocolo||'',fisioNom:inf.fisioNombre||'',fisioCol:inf.fisioCol||'',getTexto:()=>ta.value,recId:/^rec/.test(String(inf.id))?inf.id:'',compartido:!inf.soloFisio});
+  ed.innerHTML=`<div class="fp-inf-ayuda">Escribe directamente en el documento: así es como saldrá. Para un título nuevo, escríbelo en MAYÚSCULAS o acabado en «:».</div>`;
+  const pacN=pacNombre||inf.pacienteNombre||'';
+  const docEd=infDocEditor(inf.informe||'',{pacNom:pacN,tipo:inf.protocolo||'',fisioNom:inf.fisioNombre||'',fisioCol:inf.fisioCol||''},t=>{inf.informe=t;});
+  ed.appendChild(docEd.el);
+  c.appendChild(ed);
+  const bar=accionesInforme(ed,{pacId:pacId,pacNom:pacN,tipo:inf.protocolo||'',fisioNom:inf.fisioNombre||'',fisioCol:inf.fisioCol||'',getTexto:docEd.texto,recId:/^rec/.test(String(inf.id))?inf.id:'',compartido:!inf.soloFisio});
   if(/sin evoluci/i.test(inf.protocolo||'')){const bp=bar&&bar.querySelector('.ia-g[data-d="paciente"]');if(bp)bp.remove();}
   // Borrar: primer toque pide confirmación, el segundo borra (de la app del paciente y de esta ficha)
   const del=ce('button','ia-borrar');del.type='button';del.textContent='Borrar informe';
