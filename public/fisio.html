@@ -153,7 +153,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .inf-acc{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .inf-acc button{font-family:var(--font);font-size:14px;font-weight:600;border-radius:99px;padding:13px;cursor:pointer;border:1.5px solid #1a1a1a}
 .inf-acc .ia-g{background:#c2552e;border-color:#c2552e;color:#fff}.inf-acc .ia-g.hecho{background:#16a34a;border-color:#16a34a}.inf-acc .ia-g{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.2}.ia-g .ia-t{font-weight:600;font-size:14px}.fp-inf-vis{display:inline-block;margin-top:5px;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:#e8f5ec;color:#16803c}.fp-inf-vis.priv{background:#f1ede9;color:#7d6a60}.inf-acc .ia-g.ia-priv:not(.hecho){background:#fff;color:#c2552e}.ia-g .ia-s{font-weight:400;font-size:11.5px;opacity:.85}
-.ia-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ia-row .ia-v,.ia-row .ia-d{background:#fff;color:#1a1a1a}@media(max-width:560px){.ia-row{grid-template-columns:1fr}}
+.ia-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ia-row:has(> :only-child){grid-template-columns:1fr}.ia-row .ia-v,.ia-row .ia-d{background:#fff;color:#1a1a1a}@media(max-width:560px){.ia-row{grid-template-columns:1fr}}
 .ia-est{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px}.ia-est .ok{color:#16a34a;font-weight:600}.ia-est .ko{color:#b91c1c;font-weight:600}
 .ap-sel{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border-radius:12px;font-size:14px}.ap-sel button{margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:99px;padding:5px 12px;cursor:pointer}
 .btn-informe{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:var(--black);color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}
@@ -5520,7 +5520,7 @@ function accionesInforme(anchor,ctx,fisioNom){
  if(typeof ctx==='string'){const tipo=ctx;ctx={pacId:anamPacId,pacNom:anamPacNom,tipo,fisioNom,getTexto:()=>informeGenerado};}
  anchor.parentNode.querySelectorAll(':scope > .inf-acc').forEach(x=>x.remove());
  const bar=ce('div','inf-acc');
- const L={pac:{t:'Compartir con el paciente',s:'Le aparecerá en su app, en «Informes»'},pacUpd:{t:'Actualizar en su app',s:'Ya lo tiene · le llegan los cambios'},pacOk:{t:'✓ Compartido con el paciente',s:'Ya lo tiene en su app'},
+ const L={pac:{t:'Compartir con el paciente',s:'Le aparecerá en su app y firmará el recibí al abrirlo'},pacUpd:{t:'Actualizar en su app',s:'Ya lo tiene · le llegan los cambios'},pacOk:{t:'✓ Compartido con el paciente',s:'Firmará el recibí al abrirlo en su app'},
   priv:{t:'Guardar sin compartir',s:'En Airtable y en su ficha del panel · el paciente no lo ve'},privOk:{t:'✓ Guardado',s:'En Airtable y en su ficha del panel'},load:{t:'Guardando…',s:'Un momento'}};
  const pon=(b,k)=>{b.innerHTML=`<span class="ia-t">${L[k].t}</span><span class="ia-s">${L[k].s}</span>`;};
  bar.innerHTML=`<div class="ia-row"><button type="button" class="ia-g ia-priv" data-d="privado"></button><button type="button" class="ia-g" data-d="paciente"></button></div>
@@ -5543,6 +5543,7 @@ function accionesInforme(anchor,ctx,fisioNom){
    g.disabled=false;
    if(d.app){
     if(d.recordId)ctx.recId=d.recordId;
+    if(dest==='paciente'&&ctx.recId){try{await fetch('/api/schedule?action=seg-inf-entrega',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:ctx.recId,canal:'app',quien:(fisioActual&&fisioActual.nombre)||''})});}catch(_){}}
     ctx.compartido=dest==='paciente'?true:!!(d.compartido&&ctx.compartido);
     if(d.ficha)ctx.pdfTexto=texto;
     pinta();g.classList.add('hecho');pon(g,dest==='paciente'?'pacOk':'privOk');
@@ -10013,7 +10014,7 @@ async function fpTabInformes(pacId, body, pacNombre, tok, abrirJust){
   ed.appendChild(docEd.el);
   c.appendChild(ed);
   const bar=accionesInforme(ed,{pacId:pacId,pacNom:pacN,tipo:inf.protocolo||'',fisioNom:inf.fisioNombre||'',fisioCol:inf.fisioCol||'',getTexto:docEd.texto,recId:/^rec/.test(String(inf.id))?inf.id:'',compartido:!inf.soloFisio});
-  if(/sin evoluci/i.test(inf.protocolo||'')){const bp=bar&&bar.querySelector('.ia-g[data-d="paciente"]');if(bp)bp.remove();}
+  if(/^rec/.test(String(inf.id))||/sin evoluci/i.test(inf.protocolo||'')){const bp=bar&&bar.querySelector('.ia-g[data-d="paciente"]');if(bp)bp.remove();} // en la ficha se comparte desde «Dárselo con recibí»
   // Borrar: primer toque pide confirmación, el segundo borra (de la app del paciente y de esta ficha)
   const del=ce('button','ia-borrar');del.type='button';del.textContent='Borrar informe';
   let armado=false,tm=null;
