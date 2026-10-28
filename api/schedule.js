@@ -1315,7 +1315,7 @@ module.exports = async function handler(req, res) {
         const vista = r => { const F = r.fields || {}, horas = {};
           String(F['HORAS POR DÍA'] || '').split('\n').forEach(l => { const m = l.trim().match(/^(\S+)\s+([\d.,]+)/); if (!m) return; const d = DIAS.find(x => capNorm(x) === capNorm(m[1])); if (d) horas[d] = Number(m[2].replace(',', '.')); });
           return { id: r.id, nombre: F.Name || '', role: F.Role || 'fisio', colegiado: F['NºColegiado'] || '', tel: F['TELÉFONO'] || '', email: F.EMAIL || '', alta: F['FECHA ALTA'] || '', baja: F['FECHA BAJA'] || '', notas: F['NOTAS ADMIN'] || '',
-            horas, semana: F['HORAS SEMANA'] || null, control: !!F['CONTROL HORAS'], accesos: Object.fromEntries(ACC.map(k => [k, !!F['acc_' + k]])), foto: (F.Foto && F.Foto[0] && F.Foto[0].thumbnails && F.Foto[0].thumbnails.large && F.Foto[0].thumbnails.large.url) || '',
+            horas, semana: F['HORAS SEMANA'] || null, control: !!F['CONTROL HORAS'], banco: !!F['BANCO HORAS'], accesos: Object.fromEntries(ACC.map(k => [k, !!F['acc_' + k]])), foto: (F.Foto && F.Foto[0] && F.Foto[0].thumbnails && F.Foto[0].thumbnails.large && F.Foto[0].thumbnails.large.url) || '',
             contrato: { tipo: (F['TIPO CONTRATO'] && F['TIPO CONTRATO'].name) || F['TIPO CONTRATO'] || '', pct: F['PORCENTAJE FISIO'] == null ? null : Number(F['PORCENTAJE FISIO']), coste: F['COSTE EMPRESA MES'] == null ? null : Number(F['COSTE EMPRESA MES']) },
             docs: (F.DOCUMENTOS || []).map(a => ({ id: a.id, nombre: a.filename || 'documento', url: a.url, tipo: a.type || '', size: a.size || 0 })),
             claveDebil: !F.Password || String(F.Password).trim().length < 4 || /^(1234|12345|123456|4321|0000|fisio365)$/i.test(String(F.Password).trim()) || /^(.)\1+$/.test(String(F.Password).trim()) }; };
@@ -1345,7 +1345,7 @@ module.exports = async function handler(req, res) {
           if (otro) return res.status(400).json({ ok: false, error: 'Ya hay alguien con ese nombre' });
           const mismaPila = full.find(r => r.id !== c.id && r.fields && !r.fields['FECHA BAJA'] && pila(r.fields.Name).toLowerCase() === pila(nombre).toLowerCase());
           if (mismaPila) return res.status(400).json({ ok: false, error: `Ya hay otra persona que se llama ${pila(nombre)}. En la agenda se distingue por el nombre de pila: ponle otro (por ejemplo «${pila(nombre)} M.»)` });
-          const f = { Name: nombre, Role: c.role === 'admin' ? 'admin' : 'fisio', 'NºColegiado': String(c.colegiado || '').trim(), 'TELÉFONO': String(c.tel || '').trim(), 'NOTAS ADMIN': String(c.notas || '').slice(0, 5000), 'CONTROL HORAS': !!c.control };
+          const f = { Name: nombre, Role: c.role === 'admin' ? 'admin' : 'fisio', 'NºColegiado': String(c.colegiado || '').trim(), 'TELÉFONO': String(c.tel || '').trim(), 'NOTAS ADMIN': String(c.notas || '').slice(0, 5000), 'CONTROL HORAS': !!c.control, 'BANCO HORAS': !!c.banco };
           const em = String(c.email || '').trim(); f.EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em) ? em : null;
           f['FECHA ALTA'] = /^\d{4}-\d{2}-\d{2}$/.test(c.alta || '') ? c.alta : null;
           const h = c.horas || {}, lin = []; let tot = 0; DIAS.forEach(d => { const n = Math.max(0, Math.min(14, Number(String(h[d] || '').replace(',', '.')) || 0)); if (n) { lin.push(`${d} ${n}`); tot += n; } });

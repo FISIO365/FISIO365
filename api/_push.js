@@ -135,7 +135,7 @@ async function rendimiento(desde, hasta, _fresco, opts) {
   const rango = `AND(IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')),IS_BEFORE({FECHA},DATEADD('${hasta}',1,'days')))`;
   const [citas, fisiosT, ausT] = await Promise.all([
     todosAT(CITAS, `filterByFormula=${encodeURIComponent(rango)}&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=HORA${opts && opts.dinero ? '&fields[]=IMPORTE SESIÓN&fields[]=IMPORTE VERIFICADO' : ''}`),
-    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA&fields[]=HORAS POR DÍA&fields[]=CONTROL HORAS').catch(() => []),
+    todosAT('tbl2mLUrnaKCFTs6g', 'fields[]=Name&fields[]=HORAS SEMANA&fields[]=HORAS POR DÍA&fields[]=CONTROL HORAS&fields[]=BANCO HORAS').catch(() => []),
     // Cambios puntuales de horario (Administración › Vacaciones y horarios)
     todosAT('tblkezm4bTQ4jJf1X', `filterByFormula=${encodeURIComponent(`AND(NOT(IS_BEFORE({HASTA},'${desde}')),NOT(IS_AFTER({DESDE},'${hasta}')))`)}`).catch(() => [])
   ]);
@@ -173,6 +173,7 @@ async function rendimiento(desde, hasta, _fresco, opts) {
   const capacidad = n => { if (!horasDia[n]) return 0; let t = 0; (diasCon[n] || new Set()).forEach(f => { t += Math.max(horasHasta(n, f), (realDia[n] || {})[f] || 0); }); return Math.round(t); };
   // Control de horas día a día (fisios con «CONTROL HORAS»): horas hechas (sesiones + call-in + vídeos) frente a las que le tocaban
   const control = new Set(fisiosT.filter(f => f.fields['CONTROL HORAS']).map(f => String(f.fields['Name'] || '').split(' ')[0].toLowerCase()));
+  const conBanco = new Set(fisiosT.filter(f => f.fields['BANCO HORAS']).map(f => String(f.fields['Name'] || '').split(' ')[0].toLowerCase())); // banco de horas (Administración › Equipo)
   const hechasDia = {}; // fisio -> {fecha: horas}
   citas.forEach(c => { const e = est(c); if (!['REALIZADA', 'CALL-IN', 'VIDEOS', 'VÍDEOS'].includes(e) || (e === 'REALIZADA' && !pid(c))) return; const n = nomFisio(c.fields['PREF.']).toLowerCase(); const f = String(c.fields['FECHA']).slice(0, 10); (hechasDia[n] = hechasDia[n] || {})[f] = ((hechasDia[n] || {})[f] || 0) + 1; });
   const hoyISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -231,7 +232,7 @@ async function rendimiento(desde, hasta, _fresco, opts) {
     r.forEach(p => { nombres[p.id] = { nombre: p.fields['FULL NAME'] || '—', tel: p.fields['WHATSAPP'] || '', nota: p.fields['POR QUÉ NO REAGENDA'] || '', notaFecha: p.fields['POR QUÉ FECHA'] || '', notaFisio: p.fields['POR QUÉ FISIO'] || '' }; });
   }
   Object.values(R).forEach(x => { x.lista = x.lista.map(p => ({ ...p, ...(nombres[p.id] || { nombre: '—' }) })).sort((a, b) => b.ultima.localeCompare(a.ultima)); });
-  return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); const r = { ...x, huecos: capacidad(k), sinHoras: !horasDia[k], dias: diario(k), control: control.has(k) };
+  return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); const r = { ...x, huecos: capacidad(k), sinHoras: !horasDia[k], dias: diario(k), control: control.has(k), bancoOn: conBanco.has(k) };
     if (din) { const L = din.lista.filter(q => q.n === k), S = L.filter(q => q.e === 'REALIZADA'), P = L.filter(q => q.e !== 'REALIZADA'), su = a => Math.round(a.reduce((t, q) => t + (q.eur || 0), 0) * 100) / 100;
       r.dinero = { total: su(S), real: su(S.filter(q => q.real)), estimado: su(S.filter(q => !q.real)), sesReal: S.filter(q => q.real).length, sesEst: S.filter(q => !q.real && q.eur).length, sinPrecio: S.filter(q => !q.eur).length, perdidas: P.length, perdidasEur: su(P), sesiones: L.map(({ n, ...q }) => q) }; }
     return r; }).sort((a, b) => b.realizadas - a.realizadas);
