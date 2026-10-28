@@ -1524,8 +1524,9 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sug-it.hecha .sug-resp{opacity:.7}
 .sug-it.nresp{border-color:#c2552e;box-shadow:0 0 0 3px rgba(194,85,46,.08)}
 .sug-rbox{margin-top:14px;padding-top:14px;border-top:1px solid rgba(26,26,26,.06)}
-.sug-res{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.sug-res button{display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font);font-size:13.5px;font-weight:600;color:#3d3631;background:#fff;border:1.5px solid rgba(26,26,26,.1);border-radius:12px;padding:10px 12px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.sug-res{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sug-res button[data-escribir].on{background:#1e2a38;border-color:#1e2a38;color:#fff}
+.sug-res button{display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;font-family:var(--font);font-size:13.5px;font-weight:600;color:#3d3631;background:#fff;border:1.5px solid rgba(26,26,26,.1);border-radius:12px;padding:10px 12px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
 .sug-res button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sug-res button:hover{border-color:rgba(26,26,26,.22)}
 .sug-res button.on[data-e=Hecha]{background:#e3f2e8;border-color:#2f7a52;color:#2f7a52}
@@ -1554,7 +1555,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sug-quien{font-size:12px;color:#8a7f76;margin-top:8px}
 .sug-vacio{text-align:center;padding:36px 16px;color:#8a7f76;font-size:14px}
 .sug-vacio svg{width:34px;height:34px;fill:none;stroke:#cdbfb3;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 10px}
-@media(max-width:768px){.sug-ap{grid-template-columns:1fr}.sug-ap button{flex-direction:row;align-items:center;gap:12px;padding:12px 14px}.sug-ap button span{display:flex;flex-direction:column;gap:2px}.sug-hero{padding:18px 18px;border-radius:20px}.sug-card{padding:16px}}
+@media(max-width:768px){.sug-res{gap:6px}.sug-res button{font-size:13px;padding:10px 6px;gap:5px}.sug-res button svg{width:14px;height:14px}.sug-ap{grid-template-columns:1fr}.sug-ap button{flex-direction:row;align-items:center;gap:12px;padding:12px 14px}.sug-ap button span{display:flex;flex-direction:column;gap:2px}.sug-hero{padding:18px 18px;border-radius:20px}.sug-card{padding:16px}}
 </style>
 </head>
 <body>
@@ -6404,7 +6405,7 @@ async function sugLista(body,modo){
    const f=el.querySelector('[data-ficha]');if(f)f.onclick=ev=>{ev.preventDefault();showSection('pac');abrirFichaPaciente(x.paciente,x.de);};
    // Un toque = guardado (y le llega a quien la envió). Tocar el que ya está marcado lo quita
    el.querySelectorAll('.sug-res [data-e]').forEach(b=>b.onclick=()=>{const e=b.dataset.e;guarda(x,{estado:x.estado===e?'Nueva':e},x.estado===e?'Quitado':'Guardado: '+SUG_EST[e]);});
-   const w=el.querySelector('[data-escribir]');if(w)w.onclick=()=>{SUG.resp=x.id;const y=comY();pinta();comSetY(y);const t=body.querySelector(`.sug-it[data-id="${x.id}"] .sug-rt`);if(t)t.focus({preventScroll:true});};
+   const w=el.querySelector('[data-escribir]');if(w)w.onclick=()=>{if(SUG.resp===x.id){SUG.resp=null;const y=comY();pinta();comSetY(y);return;}SUG.resp=x.id;const y=comY();pinta();comSetY(y);const t=body.querySelector(`.sug-it[data-id="${x.id}"] .sug-rt`);if(t)t.focus({preventScroll:true});};
    const g=el.querySelector('.sug-ro');if(g)g.onclick=()=>{SUG.resp=null;guarda(x,{respuesta:el.querySelector('.sug-rt').value},'Respuesta guardada');};});};
  // Guardar al momento, sin recargar ni moverse de sitio
  const guarda=async(x,cambio,msg)=>{const antes=Object.assign({},x),y=comY();Object.assign(x,cambio,{respondidoPor:String(fisioActual.nombre||'').trim().split(/\s+/)[0]});pinta();comSetY(y);
@@ -6418,10 +6419,10 @@ async function sugLista(body,modo){
 }
 function sugCajaResp(x,abierta){
  const ic={Hecha:'<path d="m5.5 12.5 4 4 9-9.5"/>',Descartada:'<path d="M7 7l10 10M17 7 7 17"/>',lapiz:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'};
+ const pac=x.origen==='Paciente';
  return `<div class="sug-rbox">
- <div class="sug-res">${[['Hecha','Hecha'],['Descartada','No se hará']].map(([k,t])=>`<button type="button" data-e="${k}" class="${x.estado===k?'on':''}"><svg viewBox="0 0 24 24">${ic[k]}</svg>${t}</button>`).join('')}</div>
- ${abierta?`<textarea class="sug-rt" maxlength="1500" placeholder="${x.origen==='Paciente'?'Nota interna (el paciente no la ve)…':'Respuesta para '+escH(x.de||'quien la envió')+'…'}">${escH(x.respuesta||'')}</textarea><button type="button" class="sug-ro">Guardar</button>`
-  :`<button type="button" class="sug-esc" data-escribir><svg viewBox="0 0 24 24">${ic.lapiz}</svg>${x.respuesta?'Editar respuesta':(x.origen==='Paciente'?'Añadir nota':'Escribir respuesta')}</button>`}</div>`;}
+ <div class="sug-res">${[['Hecha','Hecha'],['Descartada','No se hará']].map(([k,t])=>`<button type="button" data-e="${k}" class="${x.estado===k?'on':''}"><svg viewBox="0 0 24 24">${ic[k]}</svg>${t}</button>`).join('')}<button type="button" data-escribir class="${abierta?'on':''}"><svg viewBox="0 0 24 24">${ic.lapiz}</svg>${pac?'Nota':'Responder'}</button></div>
+ ${abierta?`<textarea class="sug-rt" maxlength="1500" placeholder="${pac?'Nota interna (el paciente no la ve)…':'Respuesta para '+escH(x.de||'quien la envió')+'…'}">${escH(x.respuesta||'')}</textarea><button type="button" class="sug-ro">Guardar</button>`:''}</div>`;}
 
 function renderCom(wrap){
  if(!comVe()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección todavía no está disponible.</div></div>';return;}
