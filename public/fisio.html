@@ -6514,8 +6514,8 @@ async function sugLista(body,modo){
  const pinta=()=>{const d=SUG.d;if(!d)return;
   const base=rec?d.sugerencias:d.mias,orden=x=>x.estado==='Nueva'?0:x.estado==='Aceptada'?1:2;
   const L=base.slice().sort((a,b)=>orden(a)-orden(b)||String(b.fecha).localeCompare(String(a.fecha)));
-  SUG.n.rec=d.sugerencias.filter(x=>x.estado==='Nueva').length;SUG.n.mias=d.mias.filter(x=>x.estado!=='Nueva'&&!x.respuestaVista).length;sugBadge();
-  body.innerHTML=L.length?L.map(x=>{const cer=sugCerrada(x),abierta=rec&&SUG.resp===x.id,nuevaResp=!rec&&x.estado!=='Nueva'&&!x.respuestaVista;
+  SUG.n.rec=d.sugerencias.filter(x=>x.estado==='Nueva').length;SUG.n.mias=d.mias.filter(x=>(x.estado!=='Nueva'||!!x.respuesta)&&!x.respuestaVista).length;sugBadge();
+  body.innerHTML=L.length?L.map(x=>{const cer=sugCerrada(x),abierta=rec&&SUG.resp===x.id,nuevaResp=!rec&&(x.estado!=='Nueva'||!!x.respuesta)&&!x.respuestaVista;
    return `<div class="sug-it${cer?' hecha':''}${nuevaResp?' nresp':''}" data-id="${x.id}">
    <div class="sug-main"><div class="sug-top">${sugTags(x)}${!rec?`<span class="sug-est ${x.estado}">${x.estado==='Nueva'?'Enviada':SUG_EST[x.estado]}</span>`:''}<span class="sug-fe">${rec?`<b>${escH(String(x.de||'—').split(/\s+/).slice(0,2).join(' '))}</b> · `:''}${escH(sugFecha(x.fecha))}</span></div>
     <div class="sug-tx">${escH(x.texto)}</div>
@@ -6538,7 +6538,7 @@ async function sugLista(body,modo){
  if(SUG.d)pinta();
  try{const r=await comPost('seg-sug-lista');if(!r.ok)throw new Error(r.error||'No se han podido cargar');SUG.d=r;if(body.isConnected){const y=comY();pinta();comSetY(y);}
   // Al abrir Enviadas, las respuestas nuevas quedan vistas (se siguen resaltando hasta salir)
-  if(!rec&&r.mias.some(x=>x.estado!=='Nueva'&&!x.respuestaVista)){comPost('seg-sug-visto').catch(()=>{});SUG.n.mias=0;sugBadge();r.mias.forEach(x=>{if(x.estado!=='Nueva')x._vista=true;});}}
+  if(!rec&&r.mias.some(x=>(x.estado!=='Nueva'||!!x.respuesta)&&!x.respuestaVista)){comPost('seg-sug-visto').catch(()=>{});SUG.n.mias=0;sugBadge();r.mias.forEach(x=>{if(x.estado!=='Nueva'||x.respuesta)x._vista=true;});}}
  catch(e){if(!SUG.d&&body.isConnected)body.innerHTML=`<div class="sug-card sug-vacio">${escH(e.message)}</div>`;}
 }
 function sugCajaResp(x,abierta){

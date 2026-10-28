@@ -1024,7 +1024,7 @@ module.exports = async function handler(req, res) {
       if (action.startsWith('seg-sug-')) {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const SUG = 'tbll3K0ar1cZOcVjZ', CAPT = 'fld0coxDWYBc2WvYH', APART = ['App', 'Clínica', 'Otro'], TIPOS_S = ['Mejora', 'Fallo'];
-        const ESTADOS_S = ['Nueva', 'Aceptada', 'Hecha', 'Descartada'], RESPONDIDA = "OR({ESTADO}='Aceptada',{ESTADO}='Hecha',{ESTADO}='Descartada')";
+        const ESTADOS_S = ['Nueva', 'Aceptada', 'Hecha', 'Descartada'], RESPONDIDA = "OR({ESTADO}='Aceptada',{ESTADO}='Hecha',{ESTADO}='Descartada',LEN({NOTA}&'')>0)";
         const okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || ''), nm = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
         const pila = s => { const p = String(s || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
         // Quién soy: nombre + contraseña del panel
