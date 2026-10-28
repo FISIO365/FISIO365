@@ -2276,7 +2276,7 @@ module.exports = async function handler(req, res) {
           global._estCaches = {};
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
         }
-        const N = Math.min(Math.max(+q.semanas || 12, 4), 52);
+        const N = Math.min(Math.max(+q.semanas || 12, 4), 110);
         const lun0 = lunes(hoyF), desde = mv(lun0, -7 * (N - 1)), hasta = mv(lun0, 6), futuro = mv(hoyF, 60);
         const key = `${desde}|${N}`;
         { const ca = (global._estCaches || {})[key]; if (!q.fresco && ca && Date.now() - ca.t < 30 * 60000) return res.status(200).json(ca.data); }
