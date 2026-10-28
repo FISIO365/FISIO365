@@ -170,6 +170,28 @@ const FF = { fecha: 'fldQ17bGOMaS0XaxJ', fechaVieja: 'fldqZyXkxhGRS1qvn', pacien
 let emitiendo = Promise.resolve();
 // Si Airtable dice «demasiadas peticiones» (429), espera y lo reintenta
 const at = async (path, opt = {}) => { for (let i = 0; ; i++) { const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${path}`, { ...opt, headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json', ...(opt.headers || {}) } }); if (r.status === 429 && i < 4) { await new Promise(z => setTimeout(z, 600 * (i + 1))); continue; } return r.json(); } };
+
+// ── ETAPA DEL PACIENTE: solo una a la vez, y se pone sola según lo que pasa ──
+// Las demás etiquetas (Valoración, Fin pack, Evolución…, Mantenimiento…) no se tocan.
+const ETAPAS_PAC = ['PACIENTE NUEVO', 'PENDIENTE DE COMENZAR', 'ACTIVO', 'SEGUIMIENTO', 'PENDIENTE DE CONTINUAR', 'ALTA', 'ABANDONO', 'NO ACUDIÓ', 'SESIÓN ÚNICA'];
+async function ponerEtapa(pid, evento) {
+  if (!/^rec[A-Za-z0-9]{14}$/.test(pid || '')) return null;
+  const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
+  const citasDe = async (cond, n) => ((await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(${cond},FIND('${pid}',ARRAYJOIN({PacienteRec})))`)}&maxRecords=${n}&fields[]=FECHA`)).records || []);
+  const hechas = n => citasDe("TRIM({ESTADO})='REALIZADA'", n);
+  const futura = () => citasDe("OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA'),IS_AFTER({FECHA},DATEADD(TODAY(),-1,'days'))", 1);
+  let nueva = null;
+  if (evento === 'cita') nueva = (await hechas(1)).length ? 'ACTIVO' : 'PACIENTE NUEVO';                       // se le da cita
+  else if (evento === 'realizada') nueva = (await futura()).length ? 'ACTIVO' : (await hechas(2)).length <= 1 ? 'SESIÓN ÚNICA' : null; // hace la sesión: reagenda → Activo; primera y no reagenda → Sesión única
+  else if (evento === 'noasistio') nueva = (await futura()).length ? null : 'NO ACUDIÓ';                       // falta y no tiene otra cita
+  else if (ETAPAS_PAC.includes(evento)) nueva = evento;                                                         // Alta, Seguimiento, Abandono…
+  if (!nueva || !E[nueva]) return null;
+  const pac = await at(`${PACIENTES}/${pid}?fields[]=ESTADO`); const act = (pac.fields && pac.fields['ESTADO']) || [];
+  const vida = ETAPAS_PAC.map(n => E[n]).filter(Boolean);
+  const nuevo = [...act.filter(id => !vida.includes(id)), E[nueva]];
+  if (nuevo.slice().sort().join() !== act.slice().sort().join()) await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: nuevo } }) });
+  return { etapa: nueva, estados: nuevo };
+}
 const holdedPost = async (path, body) => { const r = await fetch(HOLDED_URL + path, { method: 'POST', headers: { Authorization: 'Bearer ' + HOLDED_KEY, accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); if (!r.ok) throw await holdedErr(r, path); return r.json().catch(() => ({})); };
 const pagina = (ok, titulo, texto) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f7f3ef;font-family:Poppins,sans-serif;color:#1a1a1a;padding:16px;box-sizing:border-box}.c{background:#fff;border-radius:20px;padding:32px 28px;max-width:420px;width:100%;text-align:center}.i{width:56px;height:56px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;background:${ok ? '#16a34a' : '#c2552e'}}h1{font-size:20px;margin:0 0 8px}p{margin:0;color:#6b5f57;line-height:1.5}</style></head><body><div class="c"><div class="i">${ok ? '✓' : '!'}</div><h1>${titulo}</h1><p>${texto}</p><p style="margin-top:16px;font-size:13px">Ya puedes cerrar esta pestaña.</p></div></body></html>`;
 const escHtml = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2015,7 +2037,8 @@ module.exports = async function handler(req, res) {
           const f = { 'POR QUÉ NO REAGENDA': String(q.nota || 'Alta: ya no necesita más sesiones').slice(0, 2000), 'POR QUÉ FECHA': hoyF, 'POR QUÉ FISIO': String(q.fisio || '').slice(0, 60) };
           if (e) f.ESTADO = [...new Set([...act, e.id])];
           const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
-          return res.status(200).json({ ok: !d.error, estados: f.ESTADO || act, error: d.error && d.error.message });
+          const et = await ponerEtapa(q.pacienteId, 'ALTA').catch(() => null);
+          return res.status(200).json({ ok: !d.error, estados: (et && et.estados) || f.ESTADO || act, error: d.error && d.error.message });
         }
         if (action === 'seg-agenda-recordatorio') { // marcar (o desmarcar) que se ha enviado el recordatorio de una o varias citas
           const ids = (Array.isArray(q.ids) ? q.ids : [q.id]).filter(okId).slice(0, 10); if (!ids.length) return res.status(400).json({ ok: false });
@@ -2057,7 +2080,8 @@ module.exports = async function handler(req, res) {
           if (r.conflicto) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${r.con || 'otro paciente'}` });
           const rep = await revisarPorReagendar(true).catch(() => 0);
           const seg = await salirDeSeguimiento(q.pacienteId, q.quien, q.fecha, q.hora).catch(() => null);
-          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg });
+          const et = await ponerEtapa(q.pacienteId, 'cita').catch(() => null); if (seg && et) seg.estados = et.estados;
+          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg, etapa: et && et.etapa });
         }
         if (action === 'seg-agenda-huecos') { // abrir varias horas de golpe (libres o bloqueadas), sin pisar lo que ya hay
           const fechas = (q.fechas || []).filter(okF).slice(0, 60), horas = (q.horas || []).map(hh).filter(okH).slice(0, 24);
@@ -2095,6 +2119,7 @@ module.exports = async function handler(req, res) {
             const c = cur.fields; await nueva(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), { ESTADO: 'CITA LIBRE' });
           }
           if (Object.keys(f).length) await patch(q.id, f);
+          { const pidE = (cur.fields['RELACIÓN - CITA'] || [])[0]; if (pidE && /^(REALIZADA|NO ASISTIÓ)$/.test(q.estado || '')) await ponerEtapa(pidE, q.estado === 'REALIZADA' ? 'realizada' : 'noasistio').catch(() => null); }
           return res.status(200).json({ ok: true });
         }
         if (action === 'seg-agenda-mover') { global._sesPac = {}; // cambiar día/hora/fisio: la original queda REPROGRAMADA y se da la nueva
@@ -2557,6 +2582,7 @@ module.exports = async function handler(req, res) {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '') || !/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) return res.status(400).json({ ok: false, error: 'Faltan datos' });
         const fc = { 'FECHA DE LLAMADA': q.fecha, PACIENTE: [q.pacienteId], NOTAS: String(q.nota || '') }; if (q.responsable) fc.RESPONSABLE = String(q.responsable);
         // Si ya está en «Por llamar», se actualiza esa fila en vez de duplicar al paciente
+        await ponerEtapa(q.pacienteId, 'SEGUIMIENTO').catch(() => null);
         const ya = (await todosT(SEG, `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),FIND('${q.pacienteId}',ARRAYJOIN({PacRec})))`)}`).catch(() => []))[0];
         if (ya) { const nota0 = String(ya.fields['NOTAS'] || '').trim(), nota1 = String(q.nota || '').trim(); const f = { 'FECHA DE LLAMADA': q.fecha, NOTAS: nota1 && !nota0.includes(nota1) ? (nota0 ? nota0 + '\n' + nota1 : nota1) : nota0 }; if (q.responsable) f.RESPONSABLE = String(q.responsable);
           const d = await at(`${SEG}/${ya.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }); return res.status(200).json({ ok: !d.error, actualizado: true, error: d.error && d.error.message }); }
@@ -2699,6 +2725,7 @@ module.exports = async function handler(req, res) {
         if (quien) ll['QUIEN LLAMA'] = quien;
         if (q.nuevaFecha) ll['FECHA PDTE LLAMAR'] = q.nuevaFecha;
         if (q.resena) ll['RESEÑA'] = true;
+        if (q.resultado === 'Alta' || q.resultado === 'No volver a llamar') { let pidR = q.pacienteId; if (!/^rec[A-Za-z0-9]{14}$/.test(pidR || '') && /^rec[A-Za-z0-9]{14}$/.test(q.id || '')) { const sr = await at(`${SEG}/${q.id}`).catch(() => ({})); pidR = ((sr.fields || {}).PACIENTE || [])[0]; } await ponerEtapa(pidR, q.resultado === 'Alta' ? 'ALTA' : 'ABANDONO').catch(() => null); }
         const sigue = /^\d{4}-\d{2}-\d{2}$/.test(q.nuevaFecha || '') && ['Volver a llamar', 'No contesta', 'Pendiente de respuesta'].includes(q.resultado);
         if (!q.id) {
           // Llamada suelta (Call-in) sin seguimiento abierto: se apunta la llamada y, si hay que volver a llamar, se crea el seguimiento

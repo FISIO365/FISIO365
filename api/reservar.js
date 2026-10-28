@@ -12,6 +12,17 @@ const DIAS_VISTA = 35;          // cuántos días hacia delante se enseñan
 const TIPO_APP = 'recvCLCoYJ82LcPh9';  // «RESERVADA POR LA APP» en la tabla de tipos de cita
 const MARGEN_MIN = 0;           // se puede reservar hasta la hora de empezar, mientras el hueco esté libre
 
+const ETAPAS_PAC = ['PACIENTE NUEVO', 'PENDIENTE DE COMENZAR', 'ACTIVO', 'SEGUIMIENTO', 'PENDIENTE DE CONTINUAR', 'ALTA', 'ABANDONO', 'NO ACUDIÓ', 'SESIÓN ÚNICA'];
+async function ponerEtapaCita(pid) {
+  const g = async path => (await fetch(`https://api.airtable.com/v0/${BASE_ID}/${path}`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })).json();
+  const est = await g('tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100'); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
+  const h = await g(`${CITAS}?filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',FIND('${pid}',ARRAYJOIN({PacienteRec})))`)}&maxRecords=1&fields[]=FECHA`);
+  const nueva = E[(h.records || []).length ? 'ACTIVO' : 'PACIENTE NUEVO']; if (!nueva) return;
+  const p = await g(`${PACIENTES}/${pid}?fields[]=ESTADO`); const act = (p.fields && p.fields['ESTADO']) || [];
+  const vida = ETAPAS_PAC.map(n => E[n]).filter(Boolean), nuevo = [...act.filter(id => !vida.includes(id)), nueva];
+  if (nuevo.slice().sort().join() !== act.slice().sort().join()) await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES}/${pid}`, { method: 'PATCH', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { ESTADO: nuevo } }) });
+}
+
 const H = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: H });
 const AT = { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
@@ -92,6 +103,8 @@ export default async function handler(req) {
       const rel = v.fields?.['RELACIÓN - CITA'] || [];
       if (!rel.includes(patientId)) return json({ ok: false, ocupado: true, error: 'Vaya, alguien acaba de coger este hueco. Elige otro.' }, 409);
 
+      // Etapa del paciente: si nunca ha hecho una sesión → PACIENTE NUEVO; si ya vino → ACTIVO (quita Alta, Seguimiento…)
+      try { await ponerEtapaCita(patientId); } catch (e) {}
       return json({ ok: true, cita: { id: u.id, fecha: fechaISO(u.fields['FECHA']), hora: String(u.fields['HORA'] || '').slice(0, 5), fisio: fisioDe(u.fields['PREF.']), estado: 'PENDIENTE ' } });
     } catch (e) { return json({ ok: false, error: e.message }, 500); }
   }
