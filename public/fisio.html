@@ -8530,7 +8530,8 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
 }
 // Botón «i» de información: al tocarlo muestra/oculta la explicación (mismo tamaño de letra que el resto)
 function infoI(t){return `<button type="button" class="fp-i" data-info="${escH(t)}" aria-label="Información">i</button>`;}
-document.addEventListener('click',e=>{const b=e.target.closest('.fp-i');if(!b)return;e.preventDefault();e.stopPropagation();const nx=b.parentElement.querySelector(':scope > .fp-ipop');if(nx){nx.remove();return;}const pp=document.createElement('div');pp.className='fp-ipop';pp.textContent=b.dataset.info;b.parentElement.appendChild(pp);},true);
+// «i» de información: se abre al tocarla y se cierra tocando en cualquier otro sitio (o la misma «i»)
+document.addEventListener('click',e=>{const b=e.target.closest('.fp-i');const nx=b?b.parentElement.querySelector(':scope > .fp-ipop'):null;document.querySelectorAll('.fp-ipop').forEach(x=>{if(x!==nx)x.remove();});if(!b)return;e.preventDefault();e.stopPropagation();if(nx){nx.remove();return;}const pp=document.createElement('div');pp.className='fp-ipop';pp.textContent=b.dataset.info;b.parentElement.appendChild(pp);},true);
 // Tocar el nombre de un paciente (con data-ficha) abre su ficha
 document.addEventListener('click',e=>{const t=e.target.closest('[data-ficha]');if(!t||!t.dataset.ficha)return;e.stopPropagation();abrirFichaPaciente(t.dataset.ficha,t.dataset.fn||t.textContent.trim());},true);
 // Nota de evolución de una sesión (se guarda en la cita de Airtable, campo NOTAS)
