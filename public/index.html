@@ -315,7 +315,34 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .nav-menu-inner>div:nth-of-type(1),.nav-menu-inner>div:nth-of-type(2){display:none!important}
 .nav-menu-inner>div:nth-of-type(3){border-top:none!important;padding-top:0!important}
 .nm-av{overflow:hidden}.nm-av img,.cu-av img{width:100%;height:100%;object-fit:cover;display:block}.cu-top{display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px 16px;margin-bottom:14px}.cu-av{width:96px;height:96px;border-radius:50%;background:#c2552e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:30px;overflow:hidden}.cu-top b{font-size:17px}.cu-top small{font-size:13px;color:#7d6a60}.cu-bt{font-family:inherit;font-size:14px;font-weight:700;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:12px;padding:10px 16px;cursor:pointer}.cu-box{background:#fff;border:1px solid var(--border);border-radius:20px;padding:16px;margin-bottom:14px}.cu-box h3{font-size:15px;margin:0 0 12px}.cu-box label{display:block;font-size:12.5px;color:#7d6a60;margin:10px 0 5px}.cu-box input{width:100%;box-sizing:border-box;font-family:inherit;font-size:20px;letter-spacing:8px;text-align:center;padding:10px;border:1.5px solid var(--border);border-radius:12px;background:#f5f2ee}.cu-ok{width:100%;margin-top:14px;font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:12px;padding:13px;background:#1a1a1a;color:#fff;cursor:pointer}.cu-err{font-size:13px;color:#c0392b;margin-top:8px;min-height:1px}
-.sg-intro{font-size:14px;line-height:1.5;color:#5e554d;margin:0 0 12px}.sg-ta{width:100%;box-sizing:border-box;font-family:inherit;font-size:15px;line-height:1.5;padding:12px 14px;border:1.5px solid var(--border);border-radius:14px;background:#f5f2ee;resize:vertical;min-height:130px;outline:none;color:#1a1a1a}.sg-ta:focus{border-color:var(--lila)}.cu-box .sg-anon{display:flex;align-items:center;gap:10px;margin:14px 2px 0;font-size:14px;color:#1a1a1a;cursor:pointer;user-select:none}.cu-box .sg-anon input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}.sg-chk{width:22px;height:22px;border-radius:7px;border:1.5px solid #cfc6bc;background:#fff;flex:none;display:flex;align-items:center;justify-content:center;transition:.15s}.cu-box .sg-anon input:checked+.sg-chk{background:#1a1a1a;border-color:#1a1a1a}.cu-box .sg-anon input:checked+.sg-chk::after{content:'';width:10px;height:5px;border:2px solid #fff;border-top:none;border-right:none;transform:rotate(-45deg) translate(1px,-1px)}.sg-gracias{text-align:center;padding:28px 18px}.sg-gracias h3{font-size:18px;margin:10px 0 4px}.sg-gracias p{font-size:14px;color:#5e554d;margin:0 0 16px}.sg-ic{width:52px;height:52px;border-radius:50%;background:var(--lila-light);margin:0 auto;display:flex;align-items:center;justify-content:center}.sg-ic svg{width:24px;height:24px;fill:none;stroke:var(--lila-d);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sg-hero{background:var(--black);color:var(--cream);border-radius:28px;padding:22px 22px 24px;margin:4px 0 14px;position:relative;overflow:hidden}
+.sg-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,79,.5),rgba(217,119,79,0) 70%)}
+.sg-hero>*{position:relative;z-index:1}
+.sg-hero-ic{width:44px;height:44px;border-radius:14px;background:rgba(245,242,238,.08);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.sg-hero-ic svg{width:22px;height:22px;fill:none;stroke:var(--lila);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.sg-hero-k{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--lila);margin-bottom:6px}
+.sg-hero-t{font-size:26px;font-weight:800;letter-spacing:-.8px;line-height:1.15}
+.sg-hero-s{font-size:14px;line-height:1.5;color:rgba(245,242,238,.62);margin-top:8px}
+.sg-card{background:#fff;border-radius:24px;padding:16px;margin-bottom:14px;box-shadow:var(--sombra)}
+.sg-ta-w{position:relative}
+.sg-ta{display:block;width:100%;box-sizing:border-box;font-family:inherit;font-size:15.5px;line-height:1.55;padding:16px 16px 30px;border:1.5px solid transparent;border-radius:18px;background:var(--cream);resize:none;min-height:170px;outline:none;color:var(--black);transition:border-color .15s,background .15s}
+.sg-ta::placeholder{color:#a69d95}
+.sg-ta:focus{border-color:var(--lila);background:#fff}
+.sg-n{position:absolute;right:14px;bottom:10px;font-size:11.5px;color:#a69d95;pointer-events:none}
+.sg-anon{display:flex;align-items:center;gap:14px;padding:16px 4px 4px;cursor:pointer;user-select:none}
+.sg-anon-t{flex:1;display:flex;flex-direction:column;gap:2px}.sg-anon-t b{font-size:14.5px;font-weight:600;color:var(--black)}.sg-anon-t small{font-size:12.5px;color:var(--muted)}
+.sg-anon input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.sg-sw{flex:none;width:46px;height:28px;border-radius:99px;background:#e4ddd5;position:relative;transition:background .2s}
+.sg-sw::after{content:'';position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,26,26,.2);transition:transform .2s}
+.sg-anon input:checked+.sg-sw{background:var(--black)}.sg-anon input:checked+.sg-sw::after{transform:translateX(18px)}
+.sg-err{font-size:13px;color:#c0392b;min-height:0;margin:4px 4px 0}.sg-err:empty{display:none}
+.sg-ok{width:100%;margin-top:16px;font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:16px;padding:15px;background:var(--lila-d);color:#fff;cursor:pointer;transition:opacity .15s}
+.sg-ok:disabled{opacity:.45;cursor:default}
+.sg-gracias{text-align:center;padding:32px 20px 24px}
+.sg-gracias h3{font-size:20px;font-weight:800;letter-spacing:-.4px;margin:14px 0 6px}.sg-gracias p{font-size:14px;line-height:1.5;color:var(--muted);margin:0 0 20px}
+.sg-ic{width:56px;height:56px;border-radius:50%;background:var(--lila-light);margin:0 auto;display:flex;align-items:center;justify-content:center}
+.sg-ic svg{width:26px;height:26px;fill:none;stroke:var(--lila-d);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sg-otra{font-family:inherit;font-size:14px;font-weight:700;border:1.5px solid var(--border);background:#fff;color:var(--black);border-radius:14px;padding:11px 20px;cursor:pointer}
 .nm-head{display:flex;align-items:center;gap:11px;padding:4px 6px 14px;margin-bottom:8px;border-bottom:1px solid rgba(0,0,0,.06)}.nm-av{width:40px;height:40px;border-radius:50%;background:#c2552e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}.nm-head b{display:block;font-size:14.5px;line-height:1.2;color:#111}.nm-head span{display:block;font-size:12px;color:#8a817a}
 .nav-menu{width:200px}
 
@@ -782,18 +809,19 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  </div>
 
  <div id="vistaSugerencias" style="display:none;">
- <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Buzón de sugerencias</div><div class="date-sub">Cuéntanos qué mejorarías</div></div>
- <div class="cu-box sg-box" id="sgForm">
-  <p class="sg-intro">Ideas, cosas que echas en falta o algo que no te ha gustado. Lo leemos todo.</p>
-  <textarea id="sgTexto" class="sg-ta" rows="6" maxlength="3000" placeholder="Escribe aquí tu sugerencia…"></textarea>
-  <label class="sg-anon"><input type="checkbox" id="sgAnon"><span class="sg-chk"></span><span>Enviar sin mi nombre</span></label>
-  <div class="cu-err" id="sgErr"></div>
-  <button type="button" class="cu-ok" id="sgOk" onclick="enviarSugerencia()">Enviar sugerencia</button>
+ <div class="sg-hero"><div class="sg-hero-ic"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg></div>
+  <div class="sg-hero-k">Buzón de sugerencias</div><div class="sg-hero-t">¿Qué mejorarías?</div>
+  <div class="sg-hero-s">Ideas, cosas que echas en falta o algo que no te ha gustado. Lo leemos todo.</div></div>
+ <div class="sg-card" id="sgForm">
+  <div class="sg-ta-w"><textarea id="sgTexto" class="sg-ta" rows="6" maxlength="1500" placeholder="Escribe aquí tu sugerencia…" oninput="sgCuenta()"></textarea><span class="sg-n" id="sgN">0/1500</span></div>
+  <label class="sg-anon"><span class="sg-anon-t"><b>Enviar sin mi nombre</b><small id="sgAnonS">La verá el equipo con tu nombre</small></span><input type="checkbox" id="sgAnon" onchange="sgCuenta()"><span class="sg-sw"></span></label>
+  <div class="sg-err" id="sgErr"></div>
+  <button type="button" class="sg-ok" id="sgOk" onclick="enviarSugerencia()">Enviar sugerencia</button>
  </div>
- <div class="cu-box sg-gracias" id="sgGracias" hidden>
+ <div class="sg-card sg-gracias" id="sgGracias" hidden>
   <div class="sg-ic"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-  <h3>¡Gracias!</h3><p>Hemos recibido tu sugerencia.</p>
-  <button type="button" class="cu-bt" onclick="otraSugerencia()">Enviar otra</button>
+  <h3 id="sgGrT">¡Gracias!</h3><p>Hemos recibido tu sugerencia. Nos ayuda a mejorar.</p>
+  <button type="button" class="sg-otra" onclick="otraSugerencia()">Enviar otra</button>
  </div>
  </div>
 
@@ -948,6 +976,7 @@ function showSection(section){
   if(section==='notificaciones')pintarAjustesAvisos();
   if(section==='informes')loadInformes();
   if(section==='cuenta')pintarCuenta();
+  if(section==='sugerencias')sgCuenta();
   if(section==='sorteo')loadPuntos();
   if(section==='mensajes')abrirChat();
   document.body.classList.toggle('en-chat',section==='mensajes');
@@ -1236,14 +1265,16 @@ async function subirFotoPerfil(inp){const f=inp.files&&inp.files[0];inp.value=''
   const d=await (await fetch('/api/schedule?action=subir-foto&patientId='+encodeURIComponent(patient.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({b64})})).json();
   if(!d.ok)throw new Error(d.error||'');patient.foto='data:image/jpeg;base64,'+b64;pintarAvatar();toast('Foto actualizada ✓',true);
  }catch(e){toast(e.message||'No se ha podido subir la foto',false);}}
-async function enviarSugerencia(){const ta=document.getElementById('sgTexto'),err=document.getElementById('sgErr'),b=document.getElementById('sgOk'),t=ta.value.trim();err.textContent='';
- if(!t){err.textContent='Escribe tu sugerencia';ta.focus();return;}
+function sgCuenta(){const t=document.getElementById('sgTexto').value,a=document.getElementById('sgAnon').checked;document.getElementById('sgN').textContent=t.length+'/1500';document.getElementById('sgOk').disabled=!t.trim();document.getElementById('sgAnonS').textContent=a?'Nadie sabrá quién la ha escrito':'La verá el equipo con tu nombre';}
+async function enviarSugerencia(){const ta=document.getElementById('sgTexto'),err=document.getElementById('sgErr'),b=document.getElementById('sgOk'),t=ta.value.trim(),anon=document.getElementById('sgAnon').checked;err.textContent='';
+ if(!t){ta.focus();return;}
  b.disabled=true;b.textContent='Enviando…';
- try{const d=await (await fetch('/api/schedule?action=mi-sugerencia&patientId='+encodeURIComponent(patient.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto:t,anonimo:document.getElementById('sgAnon').checked})})).json();
-  if(!d.ok){err.textContent=d.error||'No se ha podido enviar';}else{ta.value='';document.getElementById('sgAnon').checked=false;document.getElementById('sgForm').hidden=true;document.getElementById('sgGracias').hidden=false;window.scrollTo(0,0);}}
- catch(e){err.textContent='Error de conexión. Inténtalo de nuevo';}
- b.disabled=false;b.textContent='Enviar sugerencia';}
-function otraSugerencia(){document.getElementById('sgGracias').hidden=true;document.getElementById('sgForm').hidden=false;document.getElementById('sgTexto').focus();}
+ try{const d=await (await fetch('/api/schedule?action=mi-sugerencia&patientId='+encodeURIComponent(patient.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto:t,anonimo:anon})})).json();
+  if(!d.ok){err.textContent=d.error||'No se ha podido enviar';b.disabled=false;}else{const n=String(patient.nombre||'').trim().split(/\s+/)[0];document.getElementById('sgGrT').textContent=!anon&&n?'¡Gracias, '+n.charAt(0).toUpperCase()+n.slice(1).toLowerCase()+'!':'¡Gracias!';
+   ta.value='';document.getElementById('sgAnon').checked=false;sgCuenta();document.getElementById('sgForm').hidden=true;document.getElementById('sgGracias').hidden=false;window.scrollTo(0,0);}}
+ catch(e){err.textContent='Error de conexión. Inténtalo de nuevo';b.disabled=false;}
+ b.textContent='Enviar sugerencia';}
+function otraSugerencia(){document.getElementById('sgGracias').hidden=true;document.getElementById('sgForm').hidden=false;sgCuenta();document.getElementById('sgTexto').focus();}
 async function cambiarPin(){const v=id=>document.getElementById(id).value.trim(),err=document.getElementById('cuErr'),b=document.getElementById('cuOk');err.textContent='';
  const a=v('cuPin0'),n1=v('cuPin1'),n2=v('cuPin2');
  if(!/^\d{4}$/.test(n1)){err.textContent='El PIN nuevo tiene que tener 4 números';return;}
