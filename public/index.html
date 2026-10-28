@@ -1428,7 +1428,7 @@ function quieroPack(n,p){const t=PACKS[pkTipo];const nom=patient&&patient.nombre
 let inPrompt=null,inOS='';
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();inPrompt=e;});
 window.addEventListener('appinstalled',()=>{inPrompt=null;try{localStorage.setItem('f365_instalada','1');}catch(x){}ocultarBannerInstall(true);});
-const esInstalada=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+const esInstalada=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true||(()=>{try{return sessionStorage.getItem('f365_twa')==='1';}catch(e){return false;}})();
 function detectarOS(){const u=navigator.userAgent||'';const ios=/iPhone|iPad|iPod/.test(u)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
  const inApp=/Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok|Snapchat|LinkedInApp/i.test(u);
  if(ios)return {os:'ios',nav:inApp?'inapp':/CriOS|FxiOS|EdgiOS/.test(u)?'otro':'safari'};
@@ -1448,6 +1448,8 @@ function pasosIOS(nav){let h='';
  h+=paso(2,'Baja y toca <b>«Añadir a pantalla de inicio»</b>','Si no aparece, toca «Ver más» o desliza la lista hacia abajo.','add');
  h+=paso(3,'Toca <b>«Añadir»</b> arriba a la derecha','¡Listo! Ya tienes FISIO365 con las demás apps.','ok');return h;}
 function pasosAndroid(nav){let h='';
+ // La app está en Google Play: es lo más fácil. Lo de Chrome queda como alternativa
+ h+=`<a class="rv-btn" style="display:block;text-align:center;text-decoration:none;border-radius:99px;margin:0 0 8px" href="https://play.google.com/store/apps/details?id=es.fisioterapia365.app" target="_blank" rel="noopener">Descargar en Google Play</a><div style="text-align:center;font-size:12px;color:#8a837b;margin:0 0 14px">O instálala desde Chrome:</div>`;
  if(inPrompt)h+=`<button class="rv-btn" style="border-radius:99px;margin:0 0 12px" onclick="instalarYa()">Instalar ahora</button><div style="text-align:center;font-size:12px;color:#8a837b;margin:-4px 0 12px">Un toque y listo. Si no funciona, sigue estos pasos:</div>`;
  if(nav==='inapp')h+=`<div class="in-aviso">Estás dentro de otra app (Instagram, Facebook…). Primero toca <b>⋮</b> arriba y elige <b>«Abrir en Chrome»</b>.</div>`;
  h+=paso(1,'Toca los <b>tres puntos ⋮</b>',nav==='samsung'?'En Samsung Internet están abajo a la derecha (☰).':'Arriba a la derecha de Chrome.','vdots',1);

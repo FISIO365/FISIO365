@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
         <p style="margin:0 0 6px;color:#000;font-size:14px;font-weight:600;">iPhone</p>
         <p style="margin:0 0 16px;color:#666;font-size:13px;line-height:1.6;">Abre Safari → toca el botón Compartir ↑ → "Añadir a pantalla de inicio"</p>
         <p style="margin:0 0 6px;color:#000;font-size:14px;font-weight:600;">Android</p>
-        <p style="margin:0;color:#666;font-size:13px;line-height:1.6;">Abre Chrome → toca los 3 puntos ⋮ → "Añadir a pantalla de inicio"</p>
+        <p style="margin:0;color:#666;font-size:13px;line-height:1.6;">Descárgala en Google Play: <a href="https://play.google.com/store/apps/details?id=es.fisioterapia365.app" style="color:#c2552e;font-weight:700;">FISIO365 en Google Play</a></p>
       </div>
 
       <p style="color:#aaa;font-size:12px;text-align:center;margin:0;line-height:1.6;">Si tienes alguna duda, contacta con tu fisioterapeuta.<br>FISIO365 — fisioterapia365.com</p>
