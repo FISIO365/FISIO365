@@ -39,6 +39,7 @@ const normDni = t => String(t || '').toUpperCase().replace(/[^0-9A-Z]/g, '').rep
 const soloDigitos = t => String(t || '').replace(/\D/g, '').slice(-9);
 // Importe del ticket: «total» puede venir como texto, número u objeto; si no, se calcula con las líneas
 const aNum = v => { if (v == null) return NaN; if (typeof v === 'object') v = v.amount ?? v.value ?? v.total; return Number(String(v).replace(/\s/g, '').replace(/,(\d{1,2})$/, '.$1')); };
+const importeAbs = d => { for (const k of ['total', 'total_amount', 'amount', 'grand_total']) { const n = Math.abs(aNum(d[k])); if (n > 0) return n; } return importeDoc(d); };
 const importeDoc = d => { for (const k of ['total', 'total_amount', 'amount', 'grand_total']) { const n = aNum(d[k]); if (n > 0) return n; }
   const p = (aNum(d.payments_total) || 0) + (aNum(d.payments_pending) || 0); if (p > 0) return p;
   const l = (d.lines || []).reduce((t, x) => t + (aNum(x.price) || 0) * (aNum(x.units) || 1) * (1 - (aNum(x.discount) || 0) / 100), 0); return Math.round(l * 100) / 100 || 0; };
@@ -83,17 +84,18 @@ async function gastosComprasMeses() {
   try { suma(await holdedTodos('/purchase-refunds?limit=200', 20), -1); } catch (e) {}
   return { fuente: 'compras', meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, b) => a.m.localeCompare(b.m)), error: null };
 }
-// Ingresos por día desde Holded: todos los tickets de venta (también borradores), menos los anulados con
-// rectificativa (salen «Pagado»: en la clínica no se marcan los cobros) y los de pacientes de prueba
+// Ingresos por día desde Holded: todos los tickets de venta (borradores y cobrados incluidos) menos sus rectificativas
 const HOLDED_DESDE = '2026-10-01'; // desde aquí los ingresos salen de Holded; antes, de las tablas que llevabais a mano
 let _ingH = { t: 0, k: '', v: null };
 async function ingresosHoldedDias(desde, hasta) {
   const k = desde + '|' + hasta; if (_ingH.k === k && Date.now() - _ingH.t < 10 * 60e3) return _ingH.v;
-  const tk = await holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40);
+  // Tickets de venta (borradores y cobrados incluidos) menos sus rectificativas (receipt-notes), sin pacientes de prueba
+  const [tk, rn] = await Promise.all([holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40), holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${hasta}`, 20).catch(e => { console.error('receipt-notes', e.message); return []; })]);
   const vistos = new Set(), dias = {};
-  tk.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id);
-    const f = String(d.date || '').slice(0, 10); if (f < desde || f > hasta || d.status === 'completed' || /\btest\b|prueba/i.test(d.contact_name || '')) return;
-    dias[f] = Math.round(((dias[f] || 0) + importeDoc(d)) * 100) / 100; });
+  const suma = (L, sg) => L.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id);
+    const f = String(d.date || '').slice(0, 10); if (f < desde || f > hasta || /\btest\b|prueba/i.test(d.contact_name || '')) return;
+    dias[f] = Math.round(((dias[f] || 0) + sg * importeAbs(d)) * 100) / 100; });
+  suma(tk, 1); suma(rn, -1);
   _ingH = { t: Date.now(), k, v: dias }; return dias;
 }
 // Tickets de Holded (hechos fuera del panel) → sesiones pagadas por paciente, para el valor de cada sesión del informe de horas
@@ -112,7 +114,7 @@ async function cobrosHolded(pacT, yaPanel, desde, hasta) {
   cont.forEach(c => { const id = dni[normDni(c.code || c.vatnumber || c.tax_id || c.nif)] || mail[String(c.email || '').trim().toLowerCase()] || tel[soloDigitos(c.mobile)] || tel[soloDigitos(c.phone)] || porNom(c.name); if (id) contPac[c.id] = id; });
   const out = {}; let ok = 0, sinPac = 0, sinSes = 0;
   tk.forEach(d => {
-    if (!d || !d.id || d.status === 'completed' || yaPanel.has(String(d.id))) return;
+    if (!d || !d.id || yaPanel.has(String(d.id))) return; // «completed» = cobrado (conciliado con el banco): cuenta
     const f = String(d.date || '').slice(0, 10); if (f < desde || f > hasta) return;
     const cid = d.contact_id || (d.contact && typeof d.contact === 'object' ? d.contact.id : d.contact);
     const pid = contPac[cid] || porNom(d.contact_name || d.contactName); if (!pid) { sinPac++; return; }
@@ -2241,11 +2243,12 @@ module.exports = async function handler(req, res) {
         if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded no está conectado' });
         const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
         const desde = q.desde < HOLDED_DESDE ? HOLDED_DESDE : q.desde;
-        const tk = await holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${q.hasta}`, 40);
+        const [tk, rn] = await Promise.all([holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${q.hasta}`, 40), holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${q.hasta}`, 20).catch(() => [])]);
         const vistos = new Set(), L = [];
-        tk.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id); const f = String(d.date || '').slice(0, 10); if (f < desde || f > q.hasta) return;
-          const motivo = d.status === 'completed' ? 'Pagado/anulado (no cuenta)' : /\btest\b|prueba/i.test(d.contact_name || '') ? 'Paciente de prueba' : '';
-          L.push({ f, num: d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: importeDoc(d), estado: String(d.status || ''), borrador: !!(d.draft || d.status === 'draft' || !(d.docNumber || d.doc_number || d.number)), cuenta: !motivo, motivo }); });
+        const mete = (lista, rect) => lista.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id); const f = String(d.date || '').slice(0, 10); if (f < desde || f > q.hasta) return;
+          const motivo = /\btest\b|prueba/i.test(d.contact_name || '') ? 'Paciente de prueba' : '';
+          L.push({ f, num: d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: (rect ? -1 : 1) * importeAbs(d), estado: String(d.status || ''), rect, borrador: !rect && !!(d.draft || d.status === 'draft' || !(d.docNumber || d.doc_number || d.number)), cuenta: !motivo, motivo }); });
+        mete(tk, false); mete(rn, true);
         L.sort((a, b) => a.f.localeCompare(b.f));
         const tot = L.filter(x => x.cuenta).reduce((a, x) => a + x.imp, 0);
         return res.status(200).json({ ok: true, desde, hasta: q.hasta, total: Math.round(tot * 100) / 100, tickets: L, antesHolded: q.desde < HOLDED_DESDE });
