@@ -1675,7 +1675,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ient-res:empty{display:none}.ient-res{margin-top:10px}.ient-msg{background:#f7f3ef;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#3c342f;word-break:break-word}
 .ient-go{display:block;text-align:center;margin-top:8px;border-radius:99px;padding:12px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;background:#c2552e}.ient-go.whatsapp{background:#1f9d55}
 .ient-cp{display:block;width:100%;margin-top:8px;font-family:var(--font);font-size:13px;font-weight:600;border:1.5px solid var(--border);background:#fff;border-radius:99px;padding:10px;cursor:pointer;color:#1a1a1a}
-.ient-err{font-size:12.5px;color:#b42318;margin-top:4px}.ient-hecho{font-size:13px;color:#16803c;font-weight:600}
+.ient-err{font-size:12.5px;color:#b42318;margin-top:4px}.ient-err[hidden]{display:none}.ient-em{width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;border:1.5px solid var(--border);border-radius:12px;padding:11px 13px;outline:none;background:#fff;color:#1a1a1a}.ient-em:focus{border-color:#c2552e}button.ient-go{width:100%;border:none;cursor:pointer;font-family:var(--font)}button.ient-go:disabled{opacity:.6}.ient-hecho{font-size:13px;color:#16803c;font-weight:600}
 .ient-ok{display:flex;flex-direction:column;gap:1px;background:#e8f5ec;border-radius:12px;padding:10px 12px;margin-top:8px}.ient-ok b{color:#16803c;font-size:14px}.ient-ok span{font-size:12px;color:#3d6b4b}
 .ient-rb{display:block;width:100%;margin-top:8px;font-family:var(--font);font-size:13.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;border-radius:99px;padding:11px;cursor:pointer;color:#1a1a1a}
 .ient-mt{font-size:17px;font-weight:700;margin-bottom:2px}.ient-chk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;margin:6px 0 12px;cursor:pointer}.ient-chk input{width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:#c2552e}
@@ -9896,7 +9896,7 @@ function infEntregaBloque(inf,o){
    return;}
   const E=inf.entrega;
   b.innerHTML=`<div class="ient-h">Dárselo con recibí firmado</div><div class="ient-s">${E&&E.canal&&inf.recibiPide?(E.canal==='app'?'Compartido en su app el ':'Enlace '+({whatsapp:'para WhatsApp',email:'para email'}[E.canal]||'')+' creado el ')+infFechaHora(E.enviado)+(E.abierto?' · lo abrió el '+infFechaHora(E.abierto):' · todavía no lo ha abierto')+'. Falta su firma. Puedes volver a mandarlo.':'El paciente firma que lo ha recibido. Queda guardado con la fecha y la hora.'}</div>
-   <div class="ient-ops"><button type="button" data-c="whatsapp"><b>Enlace por WhatsApp</b><small>Le llega un enlace seguro, no el PDF</small></button><button type="button" data-c="email"><b>Enlace por email</b><small>Igual, a su correo</small></button><button type="button" data-c="app"><b>En su app</b><small>Firma al abrirlo en «Mis documentos»</small></button><button type="button" data-c="mano"><b>En mano</b><small>Firma ahora en esta pantalla</small></button></div><div class="ient-res"></div>`;
+   <div class="ient-ops"><button type="button" data-c="whatsapp"><b>Enlace por WhatsApp</b><small>Le llega un enlace seguro, no el PDF</small></button><button type="button" data-c="email"><b>Enlace por email</b><small>Se envía desde info@fisioterapia365.com</small></button><button type="button" data-c="app"><b>En su app</b><small>Firma al abrirlo en «Mis documentos»</small></button><button type="button" data-c="mano"><b>En mano</b><small>Firma ahora en esta pantalla</small></button></div><div class="ient-res"></div>`;
   b.querySelectorAll('.ient-ops button').forEach(bt=>bt.onclick=()=>dar(bt.dataset.c,bt));
  };
  const dar=async(canal,bt)=>{
@@ -9911,7 +9911,15 @@ function infEntregaBloque(inf,o){
   if(canal==='app'){pinta();b.querySelector('.ient-res').innerHTML='<div class="ient-hecho">Listo: le aparece en su app y al abrirlo tendrá que firmar el recibí.</div>';return;}
   let link='';
   if(canal==='whatsapp'){if(!d.tel){res.innerHTML='<div class="ient-err">No tiene teléfono en la ficha. Copia el mensaje y mándaselo como puedas.</div>';}else link=`https://wa.me/${d.tel}?text=${encodeURIComponent(msg)}`;}
-  else{if(!d.email){res.innerHTML='<div class="ient-err">No tiene email en la ficha. Copia el mensaje y mándaselo como puedas.</div>';}else link=`mailto:${encodeURIComponent(d.email)}?subject=${encodeURIComponent('Tu informe de FISIO365')}&body=${encodeURIComponent(msg)}`;}
+  if(canal==='email'){pinta();const r3=b.querySelector('.ient-res');
+   r3.innerHTML=`<div class="ient-s" style="margin:0 0 6px">Se envía desde <b>info@fisioterapia365.com</b>, con un botón «Abrir mi informe».</div><input class="ient-em" type="email" inputmode="email" placeholder="Email del paciente" value="${escH(d.email||'')}"><button type="button" class="ient-go">Enviar email</button><div class="ient-err" hidden></div>`;
+   const ie=r3.querySelector('.ient-em'),go=r3.querySelector('.ient-go'),er=r3.querySelector('.ient-err');
+   go.onclick=async()=>{const to=ie.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){er.hidden=false;er.textContent='Revisa el email';ie.focus();return;}
+    go.disabled=true;go.textContent='Enviando…';er.hidden=true;
+    const x=await post('seg-inf-email',{id:inf.id,to,pila:d.pila,yo,verif:d.verif});
+    if(!x.ok){go.disabled=false;go.textContent='Enviar email';er.hidden=false;er.textContent=x.error||'No se ha podido enviar';return;}
+    r3.innerHTML=`<div class="ient-hecho">✓ Email enviado a ${escH(to)} desde info@fisioterapia365.com</div>`;toast('Email enviado',true);};
+   return;}
   pinta();const r2=b.querySelector('.ient-res');
   r2.innerHTML=`<div class="ient-msg">${escH(msg).replace(/\n/g,'<br>')}</div>${link?`<a class="ient-go ${canal}" href="${link}" target="_blank" rel="noopener">${canal==='whatsapp'?'Abrir WhatsApp':'Abrir el correo'}</a>`:''}<button type="button" class="ient-cp">Copiar mensaje</button>`;
   r2.querySelector('.ient-cp').onclick=async e=>{try{await navigator.clipboard.writeText(msg);e.currentTarget.textContent='✓ Copiado';}catch(_){toast('No se ha podido copiar',false);}};

@@ -2980,6 +2980,31 @@ module.exports = async function handler(req, res) {
         const tel = String(P['WHATSAPP'] || P['TELF'] || '').replace(/\D/g, '');
         return res.status(200).json({ ok: true, url: tk ? `https://app.fisioterapia365.com/i/${tk}` : '', tel: tel.length === 9 ? '34' + tel : tel, email: String(P['EMAIL'] || '').trim(), pila: pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '', verif, firmado: !!F['RECIBI FECHA'] });
       }
+      // Enviar el enlace del informe por email desde info@ (Brevo)
+      if (action === 'seg-inf-email') {
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const id = String(q.id || ''), to = String(q.to || '').trim();
+        if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false, error: 'Informe no válido' });
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return res.status(200).json({ ok: false, error: 'Revisa el email' });
+        const r = await at(`${INFORMES_TABLE}/${id}`); const F = r.fields || {}; const tk = String(F['ENTREGA TOKEN'] || '');
+        if (!tk) return res.status(200).json({ ok: false, error: 'Primero crea el enlace' });
+        const url = `https://app.fisioterapia365.com/i/${tk}`, pila = escHtml(String(q.pila || '')), yo = escHtml(String(q.yo || '').split(' ')[0]);
+        const pide = q.verif === 'nac' ? 'tu fecha de nacimiento' : 'los 4 últimos números de tu DNI';
+        const html = `<!doctype html><html><body style="margin:0;background:#f5f2ee;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a"><div style="max-width:520px;margin:0 auto;padding:28px 18px">
+<img src="https://app.fisioterapia365.com/informe/logo.png" alt="FISIO365" style="height:18px;display:block;margin:0 0 22px">
+<div style="background:#fff;border-radius:18px;padding:26px 24px">
+<p style="font-size:16px;line-height:1.55;margin:0 0 14px">Hola${pila ? ' ' + pila : ''},</p>
+<p style="font-size:15px;line-height:1.6;color:#3c342f;margin:0 0 20px">${yo ? 'Soy ' + yo + ' de FISIO365. ' : ''}Aquí tienes tu informe de fisioterapia. Para abrirlo te pediremos ${pide}, y al final te pediremos que firmes que lo has recibido.</p>
+<a href="${url}" style="display:block;text-align:center;background:#c2552e;color:#fff;text-decoration:none;font-weight:bold;font-size:15px;border-radius:99px;padding:14px">Abrir mi informe</a>
+<p style="font-size:12.5px;line-height:1.5;color:#9a8f87;margin:18px 0 0">El enlace es personal y caduca en 30 días. Si no puedes abrirlo, contesta a este email o llámanos al 672 89 39 49.</p>
+</div><p style="font-size:11.5px;color:#9a8f87;text-align:center;margin:16px 0 0">FISIO365 · Gran de Sant Andreu, 163 · Barcelona</p></div></body></html>`;
+        const b = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com', name: 'FISIO365' }, to: [{ email: to }], subject: 'Tu informe de fisioterapia · FISIO365', htmlContent: html }) });
+        if (!b.ok) { console.error('seg-inf-email brevo', b.status, (await b.text().catch(() => '')).slice(0, 300)); return res.status(200).json({ ok: false, error: 'No se ha podido enviar (' + b.status + ')' }); }
+        let E = {}; try { E = JSON.parse(F['ENTREGA'] || '{}'); } catch (e) {}
+        await at(`${INFORMES_TABLE}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ENTREGA: JSON.stringify({ ...E, canal: 'email', email: to, enviado: new Date().toISOString() }) } }) }).catch(() => {});
+        return res.status(200).json({ ok: true });
+      }
       if (action === 'seg-inf-recibi-mano') {
         const id = String(q.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false, error: 'Informe no válido' });
         if (typeof q.firma !== 'string' || !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(q.firma) || q.firma.length > 95000) return res.status(400).json({ ok: false, error: 'Falta la firma' });
