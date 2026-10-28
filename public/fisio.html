@@ -465,7 +465,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .hz-lab{font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 6px}.hz-lab span{font-weight:400}
 .hz-card input[type=number],.hz-card input[type=month],.hz-card textarea{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px}
 .hz-banco{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;font-weight:600}.hz-banco input{width:20px;height:20px;accent-color:#c2552e}
-.sgw-ctx{margin:10px 0 8px;font-size:13px;line-height:1.4;color:#6b5f57;background:#f7f3ef;border-radius:10px;padding:8px 11px}.sgw-ta{width:100%;box-sizing:border-box;margin-top:8px;min-height:90px;resize:none;font-size:15px;line-height:1.45}.sgw-ta.cargando{opacity:.45}.sgw-ia{margin:8px 0 0;font-size:12.5px;font-weight:600;color:#c2552e}.sgw-ia[hidden]{display:none}.sgw-ia.err{color:#9a8f87;font-weight:500}.sgw-n{margin:8px 0 0;font-size:12px;color:#9a8f87;line-height:1.4}button.tk-wa{border:none;cursor:pointer;font:inherit;padding:0}.hz-bts{display:flex;gap:8px;margin-top:16px}.hz-bts button{flex:1;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer}.hz-bts .hz-ok,.hz-bts .hz-pdf{background:#c2552e;border-color:#c2552e;color:#fff}.hz-del{color:#b42318}
+.sgw-ctx{margin:10px 0 8px;font-size:13px;line-height:1.4;color:#6b5f57;background:#f7f3ef;border-radius:10px;padding:8px 11px}.sgw-ta{width:100%;box-sizing:border-box;margin-top:8px;min-height:90px;resize:none;font-size:15px;line-height:1.45}.sgw-ta.cargando{opacity:.45}.sgw-ia{margin:8px 0 0;font-size:12.5px;font-weight:600;color:#c2552e}.sgw-ia[hidden]{display:none}.sgw-ia.err{color:#9a8f87;font-weight:500}.sgw-op{display:flex;flex-direction:column;gap:7px;margin-top:12px}.sgw-op button{font-family:var(--font);text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:14px;padding:10px 14px;cursor:pointer;display:flex;flex-direction:column;gap:2px}.sgw-op button b{font-size:14px;color:#1a1a1a}.sgw-op button small{font-size:12px;color:#9a8f87}.sgw-op button:first-child{border-color:#1f9d55;background:#f2faf4}.sgw-op button:first-child b{color:#16803c}.sgw-op .sgw-no{align-items:center;border:none;background:none;color:#9a8f87;font-size:13.5px;font-weight:600;padding:8px}.sgw-op button:disabled{opacity:.55}.sgw-n{margin:8px 0 0;font-size:12px;color:#9a8f87;line-height:1.4}button.tk-wa{border:none;cursor:pointer;font:inherit;padding:0}.hz-bts{display:flex;gap:8px;margin-top:16px}.hz-bts button{flex:1;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer}.hz-bts .hz-ok,.hz-bts .hz-pdf{background:#c2552e;border-color:#c2552e;color:#fff}.hz-del{color:#b42318}
 .hz-res{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.hz-res div{background:#f7f3ef;border-radius:10px;padding:8px 10px}.hz-res span{display:block;font-size:11px;color:var(--muted)}.hz-res b{font-size:15px}.hz-res i{font-style:normal}.hz-res .mas{color:#16803c}.hz-res .menos{color:#b42318}
 .hz-tipos-res{display:flex;flex-wrap:wrap;gap:8px;font-size:13px}.hz-tipos-res span{background:#f7f3ef;padding:4px 10px;border-radius:99px}
 .hz-tabla{font-size:12.5px}.hz-tabla div{display:grid;grid-template-columns:1fr 1fr 50px 1.3fr;gap:6px;padding:6px 0;border-bottom:1px solid #f1ede9}.hz-tabla div:not(.dif){color:var(--muted)}.hz-tabla .mas{color:#16803c;font-weight:700}.hz-tabla .menos{color:#b42318;font-weight:700}
@@ -8592,8 +8592,8 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
  function waFicha(){const sp=segAct();const re=(d.citas||[]).filter(c=>c.fecha<=d.hoy&&/REALIZADA/i.test(c.estado)).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))[0];
    const px=(d.citas||[]).filter(c=>c.fecha>=d.hoy&&!/CANCEL|REPROGRAM|REALIZADA|NO ASIST/i.test(c.estado)).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)))[0];
    waPersonal({nombre:P.nombre,tel:P.whatsapp||P.telf||P.tel,pacienteId:id,fisio:re&&re.fisio,ultima:re&&re.fecha,proxima:px&&px.fecha,nota:[sp&&sp.nota,P.porQue].filter(Boolean).join(' · '),ult:d.llamadas&&d.llamadas[0],
-    aviso:sp?'Está en seguimiento: al enviarlo queda como <b>Pendiente de respuesta</b> 7 días.':'',enviarTxt:sp?'Abrir en WhatsApp':'Enviar',
-    alEnviar:sp?async t=>{const r=await agPost('seg-resultado',{pacienteId:id,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,180),nuevaFecha:segIso(7),quien:miNombreCorto()});if(!r||!r.ok)throw 0;toast('✓ Pendiente de respuesta',true);recargarSeg();}:null});}
+    enviarTxt:'Abrir en WhatsApp',
+    alEnviar:async(t,fecha)=>{const r=await agPost('seg-resultado',Object.assign({pacienteId:id,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,180),quien:miNombreCorto()},fecha?{nuevaFecha:fecha}:{}));if(!r||!r.ok)throw 0;toast(fecha?'✓ Volverá a Por llamar el '+segFecha(fecha):'✓ Apuntado en su ficha',true);recargarSeg();}});}
  function verSeg(sp){const it={id:sp.id,pacienteId:id,nombre:P.nombre,fecha:sp.fecha,nota:sp.nota,responsable:sp.quien};
   const mm=hzModal(`<div class="hz-top"><div><small>En seguimiento</small><b>${escH(P.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <div class="fp-sgv">${P.porQue?`<div class="fp-sgpq"><small>No reagenda</small><p>${escH(P.porQue)}</p></div>`:''}<p>Llamar el <b>${escH(segFecha(sp.fecha))}</b>${sp.quien?' · '+escH(sp.quien):''}</p>${sp.nota?`<p class="fp-mu">${escH(sp.nota)}</p>`:''}${(()=>{const u=d.llamadas&&d.llamadas[0];return u?`<p class="fp-mu fp-sgult">Última llamada: <span class="r-${/RECUPERADA|^ALTA/.test(u.resultado)?'ok':/^NC|^VOLVER/.test(u.resultado)?'no':'pe'}">${escH(resTxtG(u.resultado))}</span> · ${escH(segFecha(u.fecha))}${u.quien?' · '+escH(quienNom(u.quien)):''}${u.nota?' — '+escH(u.nota):''}</p>`:'';})()}</div>
@@ -8949,11 +8949,21 @@ function waPersonal(o){
  m.querySelector('.sgw-solo').onclick=()=>{abre('');m.remove();};
  // Abrir WhatsApp no es enviar: solo se marca cuando se confirma que se ha enviado
  m.querySelector('.sgw-env').onclick=()=>{const txt=ta.value;abre(txt);if(!o.alEnviar){m.remove();return;}
-  const bts=m.querySelector('.hz-bts');m.querySelector('.sgw-n').innerHTML='<b>¿Lo has enviado?</b> Si lo has enviado, se marca como pendiente de respuesta. Si no, no se toca nada.';
-  bts.innerHTML='<button type="button" class="sgw-no">No</button><button type="button" class="hz-ok sgw-si">Sí, enviado</button>';
-  bts.querySelector('.sgw-no').onclick=()=>m.remove();
-  bts.querySelector('.sgw-si').onclick=async ev=>{const bt=ev.currentTarget;bt.disabled=true;bt.textContent='Guardando…';
-   try{await o.alEnviar(txt);m.remove();}catch(_){bt.disabled=false;bt.textContent='Sí, enviado';toast('No se ha podido guardar',false);}};};
+  // Tras abrir WhatsApp: tú decides qué pasa con el paciente (nada se apunta si no lo has enviado)
+  const bts=m.querySelector('.hz-bts');m.querySelector('.sgw-n').innerHTML='<b>¿Lo has enviado? ¿Qué hacemos ahora?</b>';
+  bts.className='sgw-op';
+  bts.innerHTML=`<button type="button" data-f="cerrar"><b>Enviado · cerrar</b><small>Sale de la lista. Si contesta, ya pedirá cita.</small></button>
+   <button type="button" data-f="7"><b>Enviado · revisar en 1 semana</b><small>Vuelve a la lista el ${escH(segFecha(segIso(7)))}.</small></button>
+   <button type="button" data-f="30"><b>Enviado · revisar en 1 mes</b><small>Vuelve el ${escH(segFecha(segIso(30)))}.</small></button>
+   <button type="button" data-f="otra"><b>Enviado · otra fecha</b><small>Eliges el día.</small></button>
+   <button type="button" class="sgw-no" data-f="no">No lo he enviado</button>`;
+  const guarda=async(bt,fecha)=>{bts.querySelectorAll('button').forEach(z=>z.disabled=true);const bb=bt.querySelector('b');const t0=bb&&bb.textContent;if(bb)bb.textContent='Guardando…';
+   try{await o.alEnviar(txt,fecha);m.remove();}catch(_){bts.querySelectorAll('button').forEach(z=>z.disabled=false);if(bb)bb.textContent=t0;toast('No se ha podido guardar',false);}};
+  bts.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{const f=bt.dataset.f;
+   if(f==='no'){m.remove();return;}
+   if(f==='cerrar')return guarda(bt,'');
+   if(f==='otra')return miniCal(bt,segIso(14),v=>{if(v&&v>segIso(0))guarda(bt,v);});
+   guarda(bt,segIso(+f));});};
 }
 async function renderSeguimiento(wrap){
  const box=ce('div','seg');wrap.appendChild(box);
@@ -9031,9 +9041,9 @@ async function renderSeguimiento(wrap){
    // También las recuperadas del sistema antiguo: la IA tira de la ficha (historial y notas)
    const notaL=String(x.nota||'').replace(/^Recuperado de las llamadas antiguas[^.:\n]*[.:]?\s*/i,'').trim();
    waPersonal({nombre:x.nombre,tel:x.tel,pacienteId:x.pacienteId,fisio:x.fisio,ultima:x.ultima,nota:notaL,ult:x.ult,
-    aviso:'Cuando lo envíes, queda como <b>Pendiente de respuesta</b> y vuelve a la lista en 7 días si no contesta.',enviarTxt:'Abrir en WhatsApp',
-    alEnviar:async t=>{const r=await agPost('seg-resultado',{id:x.id,pacienteId:x.pacienteId,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,180),nuevaFecha:segIso(7),quien:miNombreCorto()});if(!r||!r.ok)throw 0;
-     const tk=b.closest('.tk');if(tk){tk.style.transition='opacity .3s';tk.style.opacity='.35';}toast(`✓ ${nom}: pendiente de respuesta`,true);setTimeout(()=>{datos.pendientes=datos.pendientes.filter(y=>y.id!==x.id);pinta();},600);}});});
+    enviarTxt:'Abrir en WhatsApp',
+    alEnviar:async(t,fecha)=>{const r=await agPost('seg-resultado',Object.assign({id:x.id,pacienteId:x.pacienteId,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,180),quien:miNombreCorto()},fecha?{nuevaFecha:fecha}:{}));if(!r||!r.ok)throw 0;
+     const tk=b.closest('.tk');if(tk){tk.style.transition='opacity .3s';tk.style.opacity='.35';}toast(fecha?`✓ ${nom}: vuelve el ${segFecha(fecha)}`:`✓ ${nom}: cerrada`,true);setTimeout(()=>{datos.pendientes=datos.pendientes.filter(y=>y.id!==x.id);pinta();},600);}});});
   box.querySelectorAll('.sg-wa2').forEach(b=>b.onclick=e=>{e.stopPropagation();const w=b.closest('.tk').querySelector('.sg-wa');if(w)w.click();});
   box.querySelectorAll('.seg-hecho').forEach(b=>b.onclick=()=>abrirResultadoSeg(P.find(x=>x.id===b.dataset.id),cargar));
   box.querySelectorAll('.seg-ed').forEach(b=>b.onclick=()=>abrirEditarSeg(P.find(x=>x.id===b.dataset.id),cargar));
