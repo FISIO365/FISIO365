@@ -1648,6 +1648,10 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sg-antn{font-size:12.5px;line-height:1.45;color:#5e554d;background:#faf6f2;border-radius:12px;padding:10px 12px;margin:8px 0 4px}
 .tk-tri{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:8px;padding-top:8px;border-top:1px dashed #ece4dc}.tk-tri button{font-family:var(--font);font-size:12.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:99px;padding:6px 12px;cursor:pointer}.tk-tri button.wa{background:#1f9d55;border-color:#1f9d55;color:#fff}.tk-tri button:disabled{opacity:.5}.tk-tri span{font-size:12.5px;font-weight:700;color:#16803c}
 .tk:has(.tk-tri){flex-wrap:wrap}
+.rp-avs{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}.rp-avs:empty{display:none}
+.rp-av2{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:var(--font);border:1.5px solid #f3c9bb;background:#fdf1ea;border-radius:16px;padding:12px 14px;cursor:pointer;color:#1a1a1a}
+.rp-av2i{flex:none;width:26px;height:26px;border-radius:50%;background:#c2552e;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
+.rp-av2>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rp-av2 b{font-size:14px}.rp-av2 small{font-size:12.5px;color:#7d6a60;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rp-av2 em{font-style:normal;font-size:12.5px;font-weight:700;color:#c2552e}
 </style>
 </head>
 <body>
@@ -7562,6 +7566,12 @@ async function borrarFicha(id,nombre,cerrarFicha){
 // ── REPORTE DIARIO: checklist rápida de final de día (tic, tic, tic y enviar) ──
 const negr=t=>escH(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
 async function renderReporte(wrap){
+ // Avisos de dirección pendientes de marcar como hechos: salen arriba del check-list hasta que se resuelven
+ const avs=ce('div','rp-avs');wrap.appendChild(avs);
+ comPost('seg-com-buzon',{}).then(r=>{if(!r||!r.ok||!avs.isConnected)return;const yo0=r.yo;
+  const L=(r.hilos||[]).filter(h=>h.pendienteMio&&h.req&&h.de!==yo0&&h.tipo!=='Ausencia');if(!L.length)return;
+  avs.innerHTML=L.slice(0,4).map(h=>`<button type="button" class="rp-av2" data-id="${escH(h.id)}"><span class="rp-av2i">!</span><span><b>${escH(h.de)} te pide: ${escH(h.asunto)}</b><small>${escH(h.extracto||'')}</small></span><em>Ver</em></button>`).join('');
+  avs.querySelectorAll('.rp-av2').forEach(b=>b.onclick=()=>{COM.hilo=b.dataset.id;try{comGuarda();}catch(e){}showSection('com');});}).catch(()=>{});
  const box=ce('div','rp');wrap.appendChild(box);
  const yo=(fisioActual&&fisioActual.nombre)||'';const esFisio=(fisios||[]).some(f=>String(f.nombre).split(' ')[0].toLowerCase()===yo.split(' ')[0].toLowerCase());
  box.innerHTML='<div class="rp-c" style="color:var(--muted);font-size:13px">Cargando…</div>';
