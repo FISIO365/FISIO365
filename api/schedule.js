@@ -1278,7 +1278,7 @@ module.exports = async function handler(req, res) {
           const tipo = q.tipo, cuerpo = String(q.cuerpo || '').trim().slice(0, 20000);
           let para = [...new Set((Array.isArray(q.para) ? q.para : []).map(pilaC))].filter(p => equipo.includes(p) && p !== yo), datos = {}, asunto = String(q.asunto || '').trim().slice(0, 140);
           if (tipo === 'Tareas') {
-            const items = (Array.isArray(q.items) ? q.items : []).map(t => String(t || '').trim().slice(0, 200)).filter(Boolean).slice(0, 40);
+            const items = (Array.isArray(q.items) ? q.items : []).map(t => String(t || '').trim().slice(0, 400)).filter(Boolean).slice(0, 40);
             if (!items.length) return res.status(400).json({ ok: false, error: 'Añade al menos una tarea' });
             if (!asunto) asunto = items.length === 1 ? items[0] : `${items.length} tareas`;
             datos = { items: items.map(t => ({ t, por: '', en: '' })) };
@@ -2261,7 +2261,7 @@ module.exports = async function handler(req, res) {
         const vistos = new Set(), L = [];
         const mete = (lista, rect) => lista.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id); const f = String(d.date || '').slice(0, 10); if (f < desde || f > q.hasta) return;
           const motivo = /\btest\b|prueba/i.test(d.contact_name || '') ? 'Paciente de prueba' : '';
-          L.push({ f, num: d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: (rect ? -1 : 1) * importeAbs(d), estado: String(d.status || ''), rect, borrador: !rect && !!(d.draft || d.status === 'draft' || !(d.docNumber || d.doc_number || d.number)), cuenta: !motivo, motivo }); });
+          L.push({ f, num: d.document_number || d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: (rect ? -1 : 1) * importeAbs(d), estado: String(d.status || ''), rect, borrador: !rect && !(d.document_number || d.docNumber || d.doc_number || d.number), cuenta: !motivo, motivo }); });
         mete(tk, false); mete(rn, true);
         L.sort((a, b) => a.f.localeCompare(b.f));
         const tot = L.filter(x => x.cuenta).reduce((a, x) => a + x.imp, 0);
@@ -2389,7 +2389,7 @@ module.exports = async function handler(req, res) {
         }
         const nombres = {}; { const ids = [...usados]; const lt = []; for (let i = 0; i < ids.length; i += 50) lt.push(ids.slice(i, i + 50));
           for (let i = 0; i < lt.length; i += 4) (await Promise.all(lt.slice(i, i + 4).map(t => todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + t.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=FULL%20NAME`).catch(() => [])))).forEach(rs => rs.forEach(r => nombres[r.id] = r.fields['FULL NAME'] || '')); }
-        const data = { ok: true, hoy: hoyF, semanas, nombres };
+        const data = { ok: true, hoy: hoyF, semanas, nombres, ingDias: diasH, holdedDesde: HOLDED_DESDE };
         global._estCache = { key, t: Date.now(), data }; (global._estCaches = global._estCaches || {})[key] = global._estCache;
         return res.status(200).json(data);
       }
