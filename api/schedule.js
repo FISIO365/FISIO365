@@ -924,6 +924,8 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { patientId, action } = req.query;
+  // Medición de velocidad: se apunta en los logs cuánto tarda cada acción (para saber qué pantallas van lentas)
+  { const t0 = Date.now(); res.on('finish', () => { const ms = Date.now() - t0; console.log(`TIEMPO ${action || '-'} ${ms}ms${ms > 1500 ? ' LENTO' : ''}`); }); }
 
   // Versión publicada: el panel la compara al volver a la app para recargarse si hay una nueva
   // Lo llama la automatización de Airtable al entrar una reserva por la web (y el panel al abrir la agenda)
