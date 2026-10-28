@@ -8891,11 +8891,13 @@ function abrirResultadoSeg(it,onSave){
 }
 function abrirEditarSeg(it,onSave){
  let resp=it.responsable||'';
+ // La nota automática de las llamadas recuperadas no se enseña (ya sale en Contactos); si no se escribe otra, se conserva
+ const notaAuto=/^Recuperado de las llamadas antiguas/i.test(String(it.nota||''));
  const m=hzModal(`<div class="hz-top"><div><small>Editar seguimiento</small><b>${escH(it.nombre)}</b></div><button type="button" class="hz-x">✕</button></div>
   ${(()=>{const H=[it.ult,...(it.hist||[])].filter(Boolean);return H.length?`<div class="hz-lab">Contactos (${H.length})</div><div class="seg-hist">${H.map(u=>`<div class="seg-ultc"><b>${escH(resTxtG(u.resultado))}</b> · ${escH(segFecha(u.fecha))}${u.quien?' · '+escH(quienNom(u.quien)):''}${u.nota?`<p>${escH(u.nota)}</p>`:''}</div>`).join('')}</div>`:'';})()}
   <div class="hz-lab">Fecha para llamar</div><input type="hidden" class="seg-f" value="${it.fecha}"><button type="button" class="seg-fb"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><span>${escH(it.fecha?segFecha(it.fecha):'Elegir día')}</span></button>
   <div class="hz-lab">¿Quién le contacta?</div><div class="seg-rap seg-resp">${TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('')}</div>
-  <div class="hz-lab">Nota</div><textarea class="seg-n" rows="3">${escH(it.nota||'')}</textarea>
+  <div class="hz-lab">Nota</div><textarea class="seg-n" rows="3" placeholder="Para qué hay que llamarle (opcional)">${escH(notaAuto?'':(it.nota||''))}</textarea>
   <div class="hz-bts"><button type="button" class="seg-resb">Ha contestado</button><button type="button" class="hz-ok">Guardar</button></div>`);
  // Apuntar lo que ha contestado (alta, cita recuperada…) sin salir de aquí: abre «Resultado»
  m.querySelector('.seg-resb').onclick=()=>{m.remove();abrirResultadoSeg(it,onSave);};
@@ -8904,7 +8906,7 @@ function abrirEditarSeg(it,onSave){
  {const fb=m.querySelector('.seg-fb'),fi=m.querySelector('.seg-f');fb.onclick=()=>miniCal(fb,fi.value||segIso(0),v=>{if(!v)return;fi.value=v;fb.querySelector('span').textContent=segFecha(v);});}
  m.querySelector('.hz-x').onclick=()=>m.remove();
  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;
-  try{const d=await (await fetch('/api/schedule?action=seg-editar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,fecha:m.querySelector('.seg-f').value,nota:m.querySelector('.seg-n').value,responsable:resp})})).json();if(!d.ok)throw 0;toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast('No se ha podido guardar',false);}};
+  try{const d=await (await fetch('/api/schedule?action=seg-editar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:it.id,fecha:m.querySelector('.seg-f').value,nota:(notaAuto&&!m.querySelector('.seg-n').value.trim())?it.nota:m.querySelector('.seg-n').value,responsable:resp})})).json();if(!d.ok)throw 0;toast('Guardado',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast('No se ha podido guardar',false);}};
 }
 function abrirEditarLlamada(x,onSave){
  const inv={'CITA RECUPERADA':'Cita recuperada','VOLVER A LLAMAR':'Volver a llamar','NC - VOLVER A LLAMAR':'No contesta','PENDIENTE RESPUESTA':'Pendiente de respuesta','ALTA':'Alta'};
