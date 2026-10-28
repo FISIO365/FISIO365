@@ -1601,6 +1601,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-bmi{font-size:13px;line-height:1.4;border-radius:12px;margin-top:10px}.ag-bmi:empty{display:none}.ag-bmi.full{background:#fdecea;color:#9b2c1f;padding:10px 13px}.ag-bmi.one{color:#7d6a60;padding:2px 2px 0}
 .ag-hs button.bmf small{display:block;font-size:10px;font-weight:600;color:#b4321f;line-height:1;margin-top:2px}
 .ag-tgs i.ag-nbm{background:#eef6ff;color:#1d4ed8}
+.ap-txt{font-size:13.5px;line-height:1.45;color:#5e554d;margin:0 0 4px}
 </style>
 </head>
 <body>
@@ -8534,7 +8535,14 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
     const fuera=ev=>{if(!mn.contains(ev.target)){mn.remove();document.removeEventListener('click',fuera,true);}};setTimeout(()=>document.addEventListener('click',fuera,true),0);
     mn.querySelectorAll('button').forEach(b=>b.onclick=()=>{mn.remove();document.removeEventListener('click',fuera,true);if(b.dataset.k==='_anam'){cerrar();abrirAnamnesisDe({id,nombre:P.nombre});return;}if(b.dataset.k==='_borrar'){borrarFicha(id,P.nombre,cerrar);return;}if(b.dataset.k==='_doc'){abrirJustificante(id,P,d);return;}tab=b.dataset.k;pintar();});};}
   body.querySelector('.fp-estb').onclick=editarEstado;
-  {const ba=body.querySelector('.fp-appb');if(ba)ba.onclick=()=>enviarApp(P);}
+  {const ba=body.querySelector('.fp-appb');if(ba)ba.onclick=()=>{if(P.appUsada){enviarApp(P);return;}
+  // Aún no consta que haya entrado: enviarle cómo entrar o marcar que ya la tiene (así no se le recuerda en los recordatorios)
+  const m=hzModal(`<div class="hz-top"><div><small>App del paciente</small><b>${escH(P.nombre||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   <p class="ap-txt">No consta que haya entrado nunca en la app. Mientras sea así, en el recordatorio de la cita le llega cómo entrar.</p>
+   <div class="ag-ops"><button type="button" class="ap-env"><b>Enviarle la app por WhatsApp</b><small>Enlace, usuario y PIN</small></button><button type="button" class="ap-ya"><b>Ya tiene la app</b><small>No se le volverá a recordar</small></button></div>`);
+  m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.ap-env').onclick=()=>{m.remove();enviarApp(P);};
+  m.querySelector('.ap-ya').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:P.id,campos:{appYa:true}})})).json();if(!r.ok)throw 0;
+   P.appUsada=true;ba.classList.add('on');ba.title='Ya usa la app';ba.querySelector('span').textContent='App ✓';m.remove();toast('Hecho: ya no se le recordará la app',true);}catch(_){b.disabled=false;toast('No se ha podido guardar',false);}};};}
   body.querySelectorAll('.fp-cobb').forEach(bc=>bc.onclick=()=>{tab='facturas';pintar();let n=0;const t=setInterval(()=>{const b=body.querySelector('.fac-nueva');if(b||++n>40){clearInterval(t);if(b&&b.style.display!=='none'){b.click();setTimeout(()=>{const fm=body.querySelector('.fac-form');if(fm)fm.scrollIntoView({behavior:'smooth',block:'start'});},50);}}},150);});
   body.querySelector('.fp-segb').onclick=()=>{const sp=segAct();if(sp){verSeg(sp);return;}abrirNuevoSeg({pacienteId:id,nombre:P.nombre,motivo:P.porQue||'',onSave:recargarSeg});};
   cont.querySelectorAll('.fp-segit').forEach(x=>x.onclick=()=>{const sp=(d.seguimiento||[]).find(s=>s.id===x.dataset.id);if(sp)verSeg(sp);});
