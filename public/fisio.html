@@ -1802,11 +1802,17 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  const POSTREAD=/[?&]action=(seg-com-buzon|reporte-dia|compra-lista|seg-sug-lista|seg-sug-contar)(&|$)/;
  const NEUTRO=/[?&]action=(seg-wa-ia|seg-sug-visto|seg-com-hilo)(&|$)/;
  const LOW=/[?&]action=(seg-referidos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|seg-referidos-resueltos)(&|$)/;
- const MAX=10*60e3,FRESCO=5000;
- const lee=k=>{let c=C.get(k);if(c)return c;try{const v=sessionStorage.getItem(SS+k);if(v){c=JSON.parse(v);C.set(k,c);}}catch(e){}return c||null;};
- const guarda=(k,o)=>{C.set(k,o);try{if(o.txt.length<1500000)sessionStorage.setItem(SS+k,JSON.stringify(o));}catch(e){}};
- const borra=()=>{C.clear();try{Object.keys(sessionStorage).filter(k=>k.indexOf(SS)===0).forEach(k=>sessionStorage.removeItem(k));}catch(e){}};
- let tCambio=0;const cambio=()=>{clearTimeout(tCambio);tCambio=setTimeout(()=>{try{if(document.querySelector('.hz-modal, .pv.fp')||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)))return;window._refrescarVista&&window._refrescarVista(true);}catch(e){}},350);};
+ const MAX=10*60e3,FRESCO=5000,MAXL=24*3600e3,LS='f365_apiL_';
+ // Las pantallas pesadas se guardan también en el navegador (hasta 24 h): al abrir el panel salen al instante y se refrescan por detrás
+ const PERS=/[?&]action=(rendimiento|horas|seg-lista|seg-agenda-dia|seg-agenda-num|seg-tareas|seg-referidos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|seg-ingresos-todo|seg-gastos|seg-conocido|seg-cap|estados|seg-config|seg-ultimas|reporte-dia|seg-com-buzon|compra-lista)(&|$)|^\/api\/pacientes\?pwd=/;
+ const kL=k=>k.replace(/([?&])pwd=[^&\s]*&?/,'$1').replace(/"pwd":"[^"]*",?/,'');
+ const lee=k=>{let c=C.get(k);if(c)return c;try{const v=sessionStorage.getItem(SS+k);if(v){c=JSON.parse(v);C.set(k,c);return c;}}catch(e){}
+  if(PERS.test(k.split(' ')[1]||'')){try{const v=localStorage.getItem(LS+kL(k));if(v){c=JSON.parse(v);C.set(k,c);return c;}}catch(e){}}return null;};
+ const guarda=(k,o)=>{C.set(k,o);try{if(o.txt.length<1500000)sessionStorage.setItem(SS+k,JSON.stringify(o));}catch(e){}
+  if(PERS.test(k.split(' ')[1]||'')&&o.txt.length<1200000){const kk=LS+kL(k),v=JSON.stringify(o);try{localStorage.setItem(kk,v);}catch(e){
+   try{Object.keys(localStorage).filter(x=>x.indexOf(LS)===0).map(x=>{let t=0;try{t=JSON.parse(localStorage.getItem(x)).t;}catch(_){}return [x,t];}).sort((a,b)=>a[1]-b[1]).slice(0,10).forEach(([x])=>localStorage.removeItem(x));localStorage.setItem(kk,v);}catch(_){}}}};
+ const borra=()=>{C.clear();try{Object.keys(sessionStorage).filter(k=>k.indexOf(SS)===0).forEach(k=>sessionStorage.removeItem(k));}catch(e){}try{Object.keys(localStorage).filter(k=>k.indexOf(LS)===0).forEach(k=>localStorage.removeItem(k));}catch(e){}};
+ let tCambio=0;const cambio=()=>{clearTimeout(tCambio);tCambio=setTimeout(()=>{try{if(document.querySelector('.hz-modal, .pv.fp')||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)))return;const hay=[...document.querySelectorAll('.main-area *')].some(e=>typeof e._recargar==='function');window._refrescarVista&&window._refrescarVista(!hay?false:true);}catch(e){}},350);};
  window.__apiCache={clear:borra};
  window.fetch=async function(input,init){
   const url=typeof input==='string'?input:(input&&input.url)||'';
@@ -1821,7 +1827,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
    INF.set(k,p);p.finally(()=>INF.delete(k)).catch(()=>{});return p;};
   const mk=o=>new Response(o.txt,{status:o.st,headers:{'Content-Type':o.ct}});
   const c=lee(k);
-  if(c&&Date.now()-c.t<MAX){if(Date.now()-c.t>FRESCO)red().then(o=>{if(o.st<300&&o.txt!==c.txt)cambio();}).catch(()=>{});return mk(c);}
+  if(c&&Date.now()-c.t<(PERS.test(url)?MAXL:MAX)){if(Date.now()-c.t>FRESCO)red().then(o=>{if(o.st<300&&o.txt!==c.txt)cambio();}).catch(()=>{});return mk(c);}
   return mk(await red());
  };
 })();
@@ -7453,7 +7459,7 @@ function renderStats(wrap){
  g.addEventListener('pointerdown',e=>{if(!e.target.closest('.st-ch'))return;arr=true;e.preventDefault();scrub(e);});
  window.addEventListener('pointermove',e=>{if(arr){e.preventDefault();scrub(e);}},{passive:false});
  window.addEventListener('pointerup',()=>arr=false);window.addEventListener('pointercancel',()=>arr=false);
- card._recargar=()=>cargar(true);
+ card._recargar=()=>cargar();
  if(ST.d){cargarYa();if(ST._viejo){ST._viejo=false;setTimeout(()=>cargaFondo(true),400);}else cargar();}else cargar();
 }
 function renderCallIn(wrap){
