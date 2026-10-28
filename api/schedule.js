@@ -918,6 +918,17 @@ async function listarFacturas(ids, conBorradores) {
   return facturas;
 }
 
+// «No reagenda»: guarda en POR QUÉ HISTORIAL el motivo actual (y el nuevo, si lo hay) antes de cambiarlo o borrarlo
+async function porQueAlHist(pid, nuevo, fisio, hoy) {
+  try {
+    const pr = await at(`${PACIENTES}/${pid}?fields[]=POR QUÉ HISTORIAL&fields[]=POR QUÉ NO REAGENDA&fields[]=POR QUÉ FECHA&fields[]=POR QUÉ FISIO`); const PF = pr.fields || {};
+    const L = String(PF['POR QUÉ HISTORIAL'] || '').split('\n').filter(Boolean), n0 = L.length;
+    const ya = t => L.some(l => { try { return JSON.parse(l).t === t; } catch (e) { return false; } });
+    if (PF['POR QUÉ NO REAGENDA'] && !ya(PF['POR QUÉ NO REAGENDA'])) L.push(JSON.stringify({ f: PF['POR QUÉ FECHA'] || '', q: PF['POR QUÉ FISIO'] || '', t: PF['POR QUÉ NO REAGENDA'] }));
+    if (nuevo && !ya(nuevo.slice(0, 2000))) L.push(JSON.stringify({ f: hoy, q: fisio || '', t: nuevo.slice(0, 2000) }));
+    if (L.length !== n0) await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ HISTORIAL': L.slice(-40).join('\n') } }) });
+  } catch (e) { console.error('porque-hist', e.message); }
+}
 const _memo = new Map(), _pacB = { t: 0, v: null, p: null }; // _pacB: nombres y teléfonos de todos los pacientes (5 min)
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -2099,6 +2110,7 @@ module.exports = async function handler(req, res) {
             await at(`${SEG}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHO: true } }) });
           }
           const nuevo = [...new Set([...act.filter(id => !QUITAR.includes(id)), ...(E['ACTIVO'] ? [E['ACTIVO']] : [])])];
+          await porQueAlHist(pid, '', '', '');
           const f = { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' };
           if (nuevo.join() !== act.join()) f.ESTADO = nuevo;
           await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
@@ -2423,7 +2435,7 @@ module.exports = async function handler(req, res) {
         // Si ya ha vuelto a reservar, el «No reagenda» se desmarca solo
         if (F['POR QUÉ NO REAGENDA']) {
           const vuelve = citas.some(c => { const f = String(c.fields['FECHA'] || '').slice(0, 10), e = String(nm(c.fields['ESTADO'])).toUpperCase(); return (f > hoyF && !/CANCEL|REPROGRAM|NO ASIST/.test(e)) || (f === hoyF && /PENDIENTE/.test(e)); });
-          if (vuelve) { await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) }).catch(() => {}); F['POR QUÉ NO REAGENDA'] = ''; F['POR QUÉ FECHA'] = ''; F['POR QUÉ FISIO'] = ''; }
+          if (vuelve) { await porQueAlHist(q.id, '', '', ''); await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) }).catch(() => {}); F['POR QUÉ NO REAGENDA'] = ''; F['POR QUÉ FECHA'] = ''; F['POR QUÉ FISIO'] = ''; }
         }
         // Recomendaciones: quién le recomendó y a quién ha recomendado (con su tarjeta regalo)
         let referidos = null;
@@ -2442,7 +2454,7 @@ module.exports = async function handler(req, res) {
               haRecomendado: rr.filter(r => (r.fields['RECOMENDÓ'] || []).includes(q.id)).map(r => ({ id: r.id, nombre: nom[(r.fields['PACIENTE'] || [])[0]] || `${r.fields['Nombre'] || ''} ${r.fields['Apellidos'] || ''}`.trim(), fecha: r.fields['Fecha'] || '', codigo: r.fields['CÓDIGO'] || '', caduca: r.fields['CADUCA'] || '', canjeada: r.fields['CANJEADA'] || '', fechaTarjeta: r.fields['FECHA TARJETA'] || '', ignorar: !!r.fields['IGNORAR'], ganada: !r.fields['CÓDIGO'] && !r.fields['IGNORAR'] && vinieron.has((r.fields['PACIENTE'] || [])[0]) })) }; } }
         return res.status(200).json({ ok: true, hoy: hoyF, saldo, consent, referidos,
           paciente: { id: pac.id, pin: F['PIN'] || '', nombre: F['FULL NAME'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', telf: F['TELF'] || '', whatsapp: F['WHATSAPP'] || '', pin: F['PIN'] || '', email: F['EMAIL'] || '', dni: F['DNI'] || '', cumple: F['CUMPLE'] || '', telDescartado: F['TELF FORM DESCARTADO'] || '', foto: (((F['FOTO PERFIL'] || [])[0] || {}).thumbnails || {}).large ? F['FOTO PERFIL'][0].thumbnails.large.url : (((F['FOTO PERFIL'] || [])[0] || {}).url || ''), ultimoAcceso: F['ÚLTIMO ACCESO APP'] || '', appUsada: !!(F['ÚLTIMO ACCESO APP'] || F['PushSubscription']), appInstalada: !!(F['APP INSTALADA'] || F['PushSubscription']), alta: pac.createdTime || '', estados: F['ESTADO'] || [],
-            motivo: F['MOTIVO DE VISITA'] || '', historial: F['HISTORIAL CLÍNICO'] || '', historialMod: F['HISTORIAL ACTUALIZADO'] || '', notas: F['NOTAS'] || '', porQue: F['POR QUÉ NO REAGENDA'] || '', porQueFecha: F['POR QUÉ FECHA'] || '', porQueFisio: F['POR QUÉ FISIO'] || '', bonoPrevio: F['SESIONES BONO PREVIO'] || 0, colab: F['COLAB'] || '', resena: !!F['RESEÑA POSITIVA'],
+            motivo: F['MOTIVO DE VISITA'] || '', historial: F['HISTORIAL CLÍNICO'] || '', historialMod: F['HISTORIAL ACTUALIZADO'] || '', notas: F['NOTAS'] || '', porQue: F['POR QUÉ NO REAGENDA'] || '', porQueFecha: F['POR QUÉ FECHA'] || '', porQueHist: String(F['POR QUÉ HISTORIAL'] || '').split('\n').map(l => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean), porQueFisio: F['POR QUÉ FISIO'] || '', bonoPrevio: F['SESIONES BONO PREVIO'] || 0, colab: F['COLAB'] || '', resena: !!F['RESEÑA POSITIVA'],
             archivos: (F['DOCUS'] || []).map(a => ({ nombre: a.filename || 'archivo', url: a.url, tipo: a.type || '', tam: a.size || 0, mini: (a.thumbnails && ((a.thumbnails.large && a.thumbnails.large.url) || (a.thumbnails.small && a.thumbnails.small.url))) || '' })) },
           citas: citas.map(c => ({ id: c.id, fecha: String(c.fields['FECHA'] || '').slice(0, 10), hora: c.fields['HORA'] || '', estado: String(nm(c.fields['ESTADO'])).trim(), fisio: nm(c.fields['PREF.']), nota: c.fields['NOTAS'] || '' })),
           seguimiento: segs.map(r => ({ id: r.id, fecha: r.fields['FECHA DE LLAMADA'] || '', nota: r.fields['NOTAS'] || '', hecho: !!r.fields['HECHO'], quien: nm(r.fields['RESPONSABLE']) })),
@@ -2871,14 +2883,14 @@ Devuelve solo el texto del mensaje, sin comillas.`;
           if (sigue) { const fc = { 'FECHA DE LLAMADA': q.nuevaFecha, PACIENTE: [q.pacienteId], NOTAS: String(q.nota || '') }; const rq = String(q.quien || '').trim().slice(0, 30); if (rq) fc.RESPONSABLE = rq;
             const c = await at(SEG, { method: 'POST', body: JSON.stringify({ records: [{ fields: fc }], typecast: true }) }); if (!c.error) ll['SEG ID'] = c.records[0].id; }
           const d0 = await at(LLA, { method: 'POST', body: JSON.stringify({ records: [{ fields: ll }], typecast: true }) });
-          if (q.resultado === 'Cita recuperada') await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) }).catch(() => {});
+          if (q.resultado === 'Cita recuperada') await porQueAlHist(q.pacienteId, '', '', ''), await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) }).catch(() => {});
           return res.status(200).json({ ok: !d0.error, error: d0.error && d0.error.message });
         }
         ll['SEG ID'] = q.id;
         await at(LLA, { method: 'POST', body: JSON.stringify({ records: [{ fields: ll }], typecast: true }) });
         const campos = sigue ? { 'FECHA DE LLAMADA': q.nuevaFecha } : { HECHO: true };
         const d = await at(`${SEG}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: campos }) });
-        if (q.resultado === 'Cita recuperada' && /^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) }).catch(() => {});
+        if (q.resultado === 'Cita recuperada' && /^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) await porQueAlHist(q.pacienteId, '', '', ''), await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) }).catch(() => {});
         return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
       }
       if (action === 'seg-editar') {
@@ -2928,6 +2940,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
     if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
     const hoyF = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    // Histórico: cada motivo nuevo (o cambiado) se suma al hilo y no se pierde aunque luego se quite «No reagenda»
+    await porQueAlHist(q.pacienteId, String(q.nota || '').trim(), String(q.fisio || ''), hoyF);
     const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: String(q.nota || '').trim() ? { 'POR QUÉ NO REAGENDA': String(q.nota || '').slice(0, 2000), 'POR QUÉ FECHA': hoyF, 'POR QUÉ FISIO': String(q.fisio || '') } : { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) });
     return res.status(200).json({ ok: !d.error, fecha: hoyF, error: d.error && d.error.message });
   }
