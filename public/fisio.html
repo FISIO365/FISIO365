@@ -1588,6 +1588,10 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .hz-hint{display:block;font-size:12px;color:#8a7f76;margin-top:6px;line-height:1.35}
 .hz-step button{color:#1a1a1a!important;-webkit-text-fill-color:#1a1a1a;font-family:var(--font)!important;font-size:20px!important;font-weight:500!important}
 .ag-cfd{display:none;text-align:center;font-size:14px;font-weight:700;color:#1a1a1a;padding:9px 0 3px;cursor:pointer;position:sticky;left:0}.ag-cabf.fd-on .ag-cfd{display:block}
+.ag-sbm{margin:14px 0 4px;font-size:13.5px;font-weight:500;color:#3d3631}.ag-sbm b{font-weight:700}
+.ag-bmb{display:flex;flex-direction:column;gap:6px;margin:4px 0 12px}.ag-bmb div{display:flex;justify-content:space-between;gap:10px;background:#f7f3ef;border-radius:12px;padding:10px 14px;font-size:14px}.ag-bmb span{color:#7d6a60;font-size:13px}
+.ag-bmt{font-size:13.5px;line-height:1.45;color:#5e554d;margin:0 0 6px}
+.ag-bmbt{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ag-bmbt button{width:100%;margin:0}.ag-bmbt .hz-no{font-family:var(--font);font-weight:600;font-size:14px;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:99px;padding:13px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -6104,6 +6108,15 @@ function agEtiquetas(box,iniciales){
  pinta();agTipos().then(sug);
  box.get=()=>{const v=ti.value.trim();return v&&!sel.some(x=>norm(x)===norm(v))?[...sel,v]:sel.slice();};
  return box;}
+// Bomba diamagnética: solo hay una máquina para dos pacientes a la vez. Si ya hay 2 citas con bomba a esa hora, avisa y pide confirmación
+function agBombaP(m){const t=m.querySelector('.ag-sbm input');return {sinBomba:!!(t&&t.checked),forzarBomba:!!m._fb};}
+function agAvisoBomba(r){return new Promise(res=>{const L=r.con||[];
+ const w=hzModal(`<div class="hz-top"><div><small>Bomba diamagnética</small><b>Ya hay ${r.n||2} citas con bomba a las ${escH(r.hora||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="ag-bmb">${L.map(x=>`<div><b>${escH(x.p||'Paciente')}</b><span>${escH(agNom(x.f||''))}</span></div>`).join('')}</div>
+  <p class="ag-bmt">Si este paciente necesita la bomba, mejor buscar otra hora. Si se le puede atender sin ella, marca «sin bomba» en la cita.</p>
+  <div class="hz-bts ag-bmbt"><button type="button" class="hz-no">Buscar otra hora</button><button type="button" class="hz-ok">Darla igualmente</button></div>`);
+ const fin=v=>{w.remove();res(v);};w.querySelector('.hz-x').onclick=()=>fin(false);w.querySelector('.hz-no').onclick=()=>fin(false);
+ w.querySelector('.hz-ok').onclick=()=>{const mm=[...document.querySelectorAll('.hz-modal')].filter(x=>x!==w&&x.querySelector('.ag-sbm,.ag-hs')).pop();if(mm)mm._fb=true;fin(true);};});}
 function agCab(fecha,hora,fisio){return `${segFecha(fecha)} · ${hora} · ${agNom(fisio)}`;}
 function agAbrirCita(c,onDone){
  const FD=c.fecha||AG.fecha;
@@ -6164,6 +6177,7 @@ function agNuevaCitaPac(p,onDone){
   <div class="hz-lab">Fisio</div><div class="ag-ffs">${eq.map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
   <div class="hz-lab">Hora <span>(verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div><div class="ag-pkinfo" hidden></div>
   <div class="hz-lab">Tipo de sesión</div><div class="ag-ses"></div>
+  <label class="hz-sw ag-sbm"><input type="checkbox"><i></i><span>Se le puede atender <b>sin bomba</b></span></label>
   <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n ag-not2" rows="2"></textarea>
   <div class="hz-bts"><button type="button" class="hz-ok">Dar cita</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
@@ -6178,7 +6192,8 @@ function agNuevaCitaPac(p,onDone){
  m.querySelectorAll('.ag-ffs button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;pf();ch();});pf();ch();
  calFijo(m.querySelector('.ag-fd'),fecha,f=>{fecha=f;ch();});
  const enviar=async(b,forzar)=>{if(!fisio){toast('Elige el fisio',false);return;}if(!hora){toast('Elige la hora',false);return;}b.disabled=true;b.textContent='Dando cita…';
-  try{const r=await agPost('seg-agenda-dar',{pacienteId:p.id,fecha,hora,fisio,quien:miNombreCorto(),notas:m.querySelector('.ag-not2').value.trim(),tipos:[],sesion:ses.get(),forzar});
+  try{const r=await agPost('seg-agenda-dar',{pacienteId:p.id,fecha,hora,fisio,quien:miNombreCorto(),notas:m.querySelector('.ag-not2').value.trim(),tipos:[],sesion:ses.get(),forzar,...agBombaP(m)});
+   if(r.bomba){b.disabled=false;b.textContent='Dar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
    if(r.conflicto){b.disabled=false;b.textContent='Dar cita';if(confirm(r.error+'. ¿Darla igualmente?'))enviar(b,true);return;}
    if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada: ${segFecha(fecha)} a las ${hora}`+(pacInfo?' · '+pacInfo:''),true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
@@ -6246,7 +6261,8 @@ function agMoverCita(c,onDone){
  const ch=()=>{hora='';agHorasChips(hs,fecha,fisio,'',h=>hora=h);};ch();
  calFijo(fd,fecha,f=>{fecha=f;ch();});ff.onchange=()=>{fisio=ff.value;ch();};
  const enviar=async(b,forzar)=>{if(!fecha||!hora){toast('Elige día y hora',false);return;}b.disabled=true;b.textContent='Cambiando…';
-  try{const lb=m.querySelector('.ag-lib input');const r=await agPost('seg-agenda-mover',{id:c.id,fecha,hora,fisio,liberar:!!(lb&&lb.checked),forzar});
+  try{const lb=m.querySelector('.ag-lib input');const r=await agPost('seg-agenda-mover',{id:c.id,fecha,hora,fisio,liberar:!!(lb&&lb.checked),forzar,...agBombaP(m)});
+   if(r.bomba){b.disabled=false;b.textContent='Cambiar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
    if(r.conflicto){b.disabled=false;b.textContent='Cambiar cita';if(confirm(r.error+'. ¿Darla igualmente a la misma hora?'))enviar(b,true);return;}
    if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Cita cambiada al ${segFecha(fecha)} a las ${hora}`,true);m.remove();if(AG.vista==='dia'&&fecha!==AG.fecha&&confirm('¿Ir a ese día en la agenda?'))AG.fecha=fecha;onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Cambiar cita';toast(err.message,false);}};
@@ -6270,6 +6286,7 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
   <div class="hz-lab">Paciente</div><input type="text" class="ag-in ag-bus" placeholder="Busca por nombre, teléfono o email" autocomplete="off"><div class="ag-res2"></div>
   <div class="hz-lab">Tipo de sesión</div><div class="ag-ses"></div>
   <div class="hz-lab">Etiquetas <span>(opcional)</span></div><div class="ag-tip"></div>
+  <label class="hz-sw ag-sbm"><input type="checkbox"><i></i><span>Se le puede atender <b>sin bomba</b></span></label>
   <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n ag-not2" rows="2"></textarea>
   <div class="hz-bts"><button type="button" class="hz-ok">Dar cita</button></div>
   <div class="ag-otras">${hueco?`<button type="button" data-a="del">Quitar este hueco</button>`:`<button type="button" data-a="lib">Dejar libre para la app</button><button type="button" data-a="blq">Bloquear esta hora</button>`}</div>`);
@@ -6317,7 +6334,8 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
   if(!pac){toast('Elige el paciente',false);return;}
   if(quierePack&&packSel&&!packSel.listo()){toast('Completa el pack: de cuántas sesiones y qué sesión es esta',false);return;}
   b.disabled=true;b.textContent='Dando cita…';
-  try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,quien:miNombreCorto(),notas:m.querySelector('.ag-not2').value.trim(),tipos:tg.get(),sesion:ses.get(),forzar});
+  try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,quien:miNombreCorto(),notas:m.querySelector('.ag-not2').value.trim(),tipos:tg.get(),sesion:ses.get(),forzar,...agBombaP(m)});
+   if(r.bomba){b.disabled=false;b.textContent='Dar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
    if(r.conflicto){b.disabled=false;b.textContent='Dar cita';if(confirm(r.error+'. ¿Darla igualmente?'))enviar(b,true);return;}
    if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`+(pacInfo?' · '+pacInfo:'')+(r.reprogramadas?' · su cita «Por reagendar» pasa a Reprogramada':'')+(r.seguimiento?(r.seguimiento.quitado?' · sale de «Por llamar»':'')+' · ahora está Activo':''),true);if(r.seguimiento&&r.seguimiento.estados){try{const pp=(pacs||[]).find(x=>x.id===pac.id);if(pp)pp.estados=r.seguimiento.estados;}catch(_){}}m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();
    // Venía con un pack de antes sin apuntar: se marca ahora con esta cita (sesión X de N)

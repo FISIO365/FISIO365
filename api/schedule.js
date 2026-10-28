@@ -1806,6 +1806,17 @@ module.exports = async function handler(req, res) {
         const enHora = (rows, hora, fisio) => rows.filter(r => hh(r.fields['HORA']) === hh(hora) && String(nmA(r.fields['PREF.'])).toLowerCase() === String(fisio).toLowerCase());
         const nueva = async (fecha, hora, fisio, extra) => { const d = await at(CIT, { method: 'POST', body: JSON.stringify({ records: [{ fields: Object.assign({ FECHA: fecha, HORA: hh(hora), 'PREF.': fisio }, extra) }], typecast: true }) }); if (d.error) throw new Error(d.error.message || 'No se ha podido crear'); return d.records[0]; };
         const patch = async (id, fields) => { const d = await at(`${CIT}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields, typecast: true }) }); if (d.error) throw new Error(d.error.message || 'No se ha podido guardar'); return d; };
+        // Bomba diamagnética: una sola máquina para 2 pacientes. Cuenta las citas activas con paciente a esa hora (todos los fisios) que no lleven «NO BOMBA»
+        const bombaLlena = async (fecha, hora, excluirId) => {
+          const rows = (await delDia(fecha)).filter(r => hh(r.fields['HORA']) === hh(hora) && r.id !== excluirId && (r.fields['RELACIÓN - CITA'] || []).length && ACTIVA(String(nmA(r.fields['ESTADO']))));
+          if (rows.length < 2) return null;
+          const [nb] = await tiposDe(['NO BOMBA']);
+          const con = rows.filter(r => !(r.fields['TIPO DE CITA'] || []).includes(nb));
+          if (con.length < 2) return null;
+          const L = [];
+          for (const r of con.slice(0, 4)) { const pid = (r.fields['RELACIÓN - CITA'] || [])[0]; let n = ''; try { const p0 = await at(`${PACIENTES}/${pid}`); n = (p0.fields || {})['FULL NAME'] || ''; } catch (e) {} L.push({ p: n, f: nmA(r.fields['PREF.']) }); }
+          return { ok: false, bomba: true, n: con.length, hora: hh(hora), con: L, error: `Ya hay ${con.length} citas con bomba a las ${hh(hora)}` };
+        };
         // Ocupar una hora: si hay un hueco libre en esa hora se usa esa fila; si no, se crea una nueva
         const ocupar = async (fecha, hora, fisio, campos, forzar) => {
           const rows = enHora(await delDia(fecha), hora, fisio);
@@ -2033,8 +2044,10 @@ module.exports = async function handler(req, res) {
           if (!okId(q.pacienteId) || !okF(q.fecha) || !okH(q.hora) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
           const campos = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [q.pacienteId] };
           if (q.notas) campos.NOTAS = String(q.notas).slice(0, 2000);
+          if (q.sinBomba) q.tipos = [...(q.tipos || []).filter(t => !/^\s*(NO|SIN)\s+BOMBA\s*$/i.test(t)), 'NO BOMBA'];
           if (q.tipos && q.tipos.length) campos['TIPO DE CITA'] = await tiposDe(q.tipos);
           if (q.sesion) campos['TIPO DE SESIÓN'] = String(q.sesion).trim().slice(0, 60);
+          if (!q.sinBomba && !q.forzarBomba) { const bl = await bombaLlena(q.fecha, q.hora, null); if (bl) return res.status(200).json(bl); }
           const r = await ocupar(q.fecha, q.hora, q.fisio, campos, !!q.forzar);
           if (r.conflicto) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${r.con || 'otro paciente'}` });
           const rep = await revisarPorReagendar(true).catch(() => 0);
@@ -2088,6 +2101,7 @@ module.exports = async function handler(req, res) {
           if (c['TIPO DE CITA']) campos['TIPO DE CITA'] = c['TIPO DE CITA'];
           if (c['TIPO DE SESIÓN']) campos['TIPO DE SESIÓN'] = nmA(c['TIPO DE SESIÓN']);
           if (c.NOTAS) campos.NOTAS = c.NOTAS;
+          if (!q.forzarBomba) { const [nb] = await tiposDe(['NO BOMBA']); if (!(c['TIPO DE CITA'] || []).includes(nb)) { const bl = await bombaLlena(q.fecha, q.hora, q.id); if (bl) return res.status(200).json(bl); } }
           const r = await ocupar(q.fecha, q.hora, q.fisio, campos, !!q.forzar);
           if (r.conflicto) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${r.con || 'otro paciente'}` });
           await patch(q.id, { ESTADO: 'REPROGRAMADA' });
