@@ -2174,6 +2174,11 @@ async function marcarCampana(){const e=await F365Avisos.estado('f365_panel_aviso
 function abrirAvisoPanel(url){try{const u=new URL(url,location.origin);const s=u.searchParams.get('s'),p=u.searchParams.get('p');avisoPendiente='';history.replaceState(null,'',location.pathname);
  if(!fisioActual){avisoPendiente=url;return;}
  if(s==='msg'){showSection('msg');if(/^rec[A-Za-z0-9]{14}$/.test(p||''))renderMensajes($('mainWrap'),p);}}catch(e){}}
+// Puntito/número del icono de la app: lo que queda pendiente de chat, comunicaciones y sugerencias (se quita solo cuando está todo visto)
+(function(){let t=0;const sync=()=>{clearTimeout(t);t=setTimeout(()=>{try{const n=['sb-msg-badge','sb-com-badge','sb-sug-badge'].reduce((a,id)=>{const e=document.getElementById(id);return a+((e&&e.style.display!=='none'&&parseInt(e.textContent,10))||0);},0);
+  if(n>0){navigator.setAppBadge&&navigator.setAppBadge(n).catch(()=>{});}else{navigator.clearAppBadge&&navigator.clearAppBadge().catch(()=>{});try{navigator.serviceWorker&&navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});}catch(_){}}}catch(e){}},400);};
+ const ob=new MutationObserver(sync);const engancha=()=>['sb-msg-badge','sb-com-badge','sb-sug-badge'].forEach(id=>{const e=document.getElementById(id);if(e&&!e._ob){e._ob=1;ob.observe(e,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['style']});}});
+ document.addEventListener('DOMContentLoaded',()=>{engancha();sync();});setInterval(()=>{engancha();sync();},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync();});})();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='ABRIR')abrirAvisoPanel(e.data.url);});}
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
