@@ -1581,6 +1581,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .adm-sw input[type=checkbox]:checked{background:#1e2a38;border-color:#1e2a38}
 .adm-sw input[type=checkbox]:checked::after{content:'';width:9px;height:5px;border:2px solid #fff;border-top:none;border-right:none;transform:rotate(-45deg) translate(1px,-1px)}
 .ch-stats{grid-template-columns:repeat(auto-fit,minmax(0,1fr))!important}
+.hz-exp{font-size:13.5px;line-height:1.45;color:#5f554e;background:#f7f3ef;border-radius:12px;padding:10px 12px;margin:0 0 12px}.hz-exp.pend{background:#fff4e5;color:#8a4b0b}
+.rc-clas.pval{background:#fff4e5!important;color:#8a4b0b!important;border-color:#f3c98b!important}.rc-clas.pval .ch-dot{background:#e08a1e!important}
 </style>
 </head>
 <body>
@@ -8944,25 +8946,28 @@ function hzModal(html){const m=ce('div','hz-modal');m.innerHTML=`<div class="hz-
  m.addEventListener('focusin',e=>{const t=e.target;if(!/INPUT|TEXTAREA/.test(t.tagName))return;setTimeout(()=>{try{t.scrollIntoView({block:'center',behavior:'smooth'});}catch(_){}},350);});
  return m;}
 function hzFecha(f){const t=new Date(f+'T12:00:00');return t.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});}
-function abrirClasificar({fisio,fecha,dif,reg,onSave,conBanco=true}){
+function abrirClasificar({fisio,fecha,dif,reg,onSave,conBanco=true,explica=false}){
+ if(explica)conBanco=false;const valida=!explica&&reg&&reg.pendiente;
  let tipo=reg?reg.tipo:(dif>0?'Horas extra':''),banco=conBanco&&reg?reg.banco:false,horas=reg?reg.horas:dif;
  const m=hzModal(`<div class="hz-top"><div><small>${escH(fisio)}</small><b>${hzFecha(fecha)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-  <div class="hz-lab">¿Qué fue?</div><div class="hz-tipos">${HZ_TIPOS.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
+  ${explica?'<p class="hz-exp">Cuéntale a dirección qué pasó este día. Lo revisarán y lo validarán.</p>':valida?`<p class="hz-exp pend">Explicado por ${escH(fisio)}. Revísalo y pulsa «Validar».</p>`:''}
+  <div class="hz-lab">${explica?'¿Qué pasó?':'¿Qué fue?'}</div><div class="hz-tipos">${HZ_TIPOS.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
   <div class="hz-row"><div><div class="hz-lab">Horas</div><div class="hz-step"><button type="button" data-d="-0.5">−</button><b class="hz-hv"></b><button type="button" data-d="0.5">+</button></div></div>
    ${conBanco?`<label class="hz-sw"><input type="checkbox" ${banco?'checked':''}><i></i><span class="hz-swt"></span></label>`:''}</div>
   <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="hz-nota" rows="2" placeholder="Ej.: médico, se cambió con Jonathan…">${reg?escH(reg.nota):''}</textarea>
-  <div class="hz-bts">${reg?'<button type="button" class="hz-del">Quitar</button>':''}<button type="button" class="hz-ok">Guardar</button></div>`);
+  <div class="hz-bts">${reg?'<button type="button" class="hz-del">Quitar</button>':''}<button type="button" class="hz-ok">${explica?'Enviar a dirección':valida?'Validar':'Guardar'}</button></div>`);
  const pinta=()=>{m.querySelectorAll('.hz-tipos button').forEach(b=>b.classList.toggle('on',b.dataset.v===tipo));const hv=m.querySelector('.hz-hv');hv.textContent=(horas>0?'+':horas<0?'−':'')+Math.abs(horas)+' h';hv.className='hz-hv '+(horas>0?'mas':horas<0?'menos':'');{const sw=m.querySelector('.hz-swt');if(sw)sw.innerHTML=horas<0?'Restar del<br>banco de horas':'Sumar al<br>banco de horas'};};pinta();
  m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{tipo=b.dataset.v;pinta();});
  m.querySelectorAll('.hz-step button').forEach(b=>b.onclick=()=>{horas=Math.round((horas+ +b.dataset.d)*2)/2;pinta();});
  m.querySelector('.hz-x').onclick=()=>m.remove();
- const del=m.querySelector('.hz-del');if(del)del.onclick=async()=>{del.disabled=true;await fetch('/api/schedule?action=horas-borrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:reg.id})});m.remove();onSave&&onSave();};
+ const quien=()=>({yo:(fisioActual&&fisioActual.nombre)||'',clave:(fisioActual&&fisioActual._pwd)||''});
+ const del=m.querySelector('.hz-del');if(del)del.onclick=async()=>{del.disabled=true;try{const r=await (await fetch('/api/schedule?action=horas-borrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:reg.id,fisio,...quien()})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido quitar');m.remove();onSave&&onSave();}catch(err){del.disabled=false;toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=async e=>{
   if(!tipo){toast('Elige qué fue',false);return;}
   const b=e.target;b.disabled=true;b.textContent='Guardando…';
-  try{const r=await (await fetch('/api/schedule?action=horas-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:reg?reg.id:'',fisio,fecha,tipo,horas,banco:!!(m.querySelector('.hz-sw input')||{}).checked,nota:m.querySelector('.hz-nota').value.trim(),por:(fisioActual&&fisioActual.nombre)||''})})).json();
-   if(!r.ok)throw new Error(r.error||'Error');toast('Guardado',true);m.remove();onSave&&onSave();
-  }catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}
+  try{const r=await (await fetch('/api/schedule?action=horas-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:reg?reg.id:'',fisio,fecha,tipo,horas,banco:!!(m.querySelector('.hz-sw input')||{}).checked,nota:m.querySelector('.hz-nota').value.trim(),por:(fisioActual&&fisioActual.nombre)||'',...quien()})})).json();
+   if(!r.ok)throw new Error(r.error||'Error');toast(explica?'Enviado a dirección':valida?'Validado':'Guardado',true);m.remove();onSave&&onSave();
+  }catch(err){b.disabled=false;b.textContent=explica?'Enviar a dirección':valida?'Validar':'Guardar';toast(err.message,false);}
  };
 }
 async function abrirInformeHoras(fisio,conBanco=true){
@@ -9157,7 +9162,7 @@ async function renderRendimiento(wrap,solo){
   canc:'Citas en las que el paciente avisó de que no venía.',
   reag:'De los pacientes atendidos, cuántos tienen ya otra cita reservada después de su última sesión.',
   noreag:'Los que no tienen otra cita reservada. Abajo puedes ver quiénes son y pasarlos a seguimiento.',
-  horas:`Horas hechas (sesiones) frente a las de ${tu} horario. «Extra» y «De menos» son los días que no cuadran.`,
+  horas:`Horas hechas (sesiones) frente a las de ${tu} horario. «Extra» y «De menos» son los días que no cuadran.${solo?' En cada día que no cuadra puedes explicar qué pasó; dirección lo valida.':' Lo que explica el fisio sale «por validar» hasta que lo confirmas.'}`,
   banco:' El banco son las horas que dirección ha guardado para compensar más adelante.'};
  const box=ce('div','rend');
  box.innerHTML=`<div class="rend-tot"><div class="rt" data-k="ayer"><span>Ayer</span><b>…</b><i></i></div><div class="rt" data-k="semana"><span>Esta semana</span><b>…</b><i></i></div><div class="rt" data-k="mes"><span>Este mes</span><b>…</b><i></i></div></div>
@@ -9190,19 +9195,19 @@ async function renderRendimiento(wrap,solo){
     const libres=x.dias.filter(d=>d.libre),dif=x.dias.filter(d=>!d.libre&&d.hechas!==d.toca);
     const extra=dif.filter(d=>d.hechas>d.toca).reduce((a,d)=>a+d.hechas-d.toca,0),menos=dif.filter(d=>d.hechas<d.toca).reduce((a,d)=>a+d.toca-d.hechas,0);
     const filas=[...libres,...dif].sort((a,b)=>a.fecha.localeCompare(b.fecha));
-    const sinClas=filas.filter(d=>!reg[d.fecha]).length;
+    const sinClas=filas.filter(d=>!reg[d.fecha]).length,porVal=filas.filter(d=>reg[d.fecha]&&reg[d.fecha].pendiente).length;
     const h=x.realizadas+(x.callin||0)+(x.videos||0),tot=x.huecos,dd=h-tot,bn=x.banco||0;
     const fila=d=>{const df=d.libre?-d.toca:d.hechas-d.toca,r=reg[d.fecha],t=new Date(d.fecha+'T12:00:00');
      return `<div class="ch-row${r?'':' pend'}"><div class="ch-date"><small>${DSc[t.getDay()]}</small><b>${t.getDate()}</b></div>
       <div class="ch-mid"><b>${d.libre?(r&&r.tipo==='Sin paciente'?'Vino sin pacientes':'No vino'):d.hechas+' de '+d.toca+' h'}</b><small class="${df>0?'mas':'menos'}">${r&&r.tipo==='Sin paciente'?Math.abs(r.horas||df)+' h sin paciente':d.libre?d.toca+' h de su horario':(df>0?df+' h de más':-df+' h de menos')}</small></div>
-      <button type="button" ${solo?'disabled ':''}class="rc-clas${r?' hecho':''}${solo&&!r?' ro':''}" data-fisio="${escH(x.fisio)}" data-fecha="${d.fecha}" data-dif="${df}">${r?`<i class="ch-dot"></i>${escH(r.tipo)}${r.banco&&x.bancoOn?'<em>banco</em>':''}`:'Clasificar'}</button></div>`;};
+      <button type="button" ${solo&&r&&!r.pendiente?'disabled ':''}class="rc-clas${r&&!r.pendiente?' hecho':''}${r&&r.pendiente?' pval':''}${solo&&r&&!r.pendiente?' ro':''}" data-fisio="${escH(x.fisio)}" data-fecha="${d.fecha}" data-dif="${df}">${r?`<i class="ch-dot"></i>${escH(r.tipo)}${r.pendiente?`<em>${solo?'enviado':'validar'}</em>`:''}${r.banco&&x.bancoOn&&!r.pendiente?'<em>banco</em>':''}`:'Clasificar'}</button></div>`;};
     return `<div class="ch">
      <div class="ch-head"><span>Control de horas${infoI((conCV(x)?I.horas.replace('(sesiones)','(sesiones + call-in + vídeos)'):I.horas)+(x.bancoOn?I.banco:''))}</span>${solo?'':`<button type="button" class="rc-inf" data-fisio="${escH(x.fisio)}">Informe <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></button>`}</div>
      <div class="ch-hero"><div><b>${h} h</b><small> de ${tot} h</small></div>${dd?`<em class="rend-dif ${dd>0?'mas':'menos'}">${dd>0?'+':'−'}${Math.abs(dd)} h</em>`:'<em class="rend-dif ok">✓ cuadra</em>'}</div>
      <div class="ch-bar"><i style="width:${tot?Math.min(100,Math.round(h*100/tot)):0}%"></i></div>
      <div class="ch-sub">${x.realizadas} sesiones${conCV(x)?` · ${x.callin||0} h call-in · ${x.videos||0} h vídeos`:''}</div>
      <div class="ch-stats"><div class="g"><b>+${extra} h</b><small>Extra</small></div><div class="r"><b>−${menos} h</b><small>De menos</small></div><div class="n"><b>${libres.length}</b><small>Días sin venir</small></div>${x.bancoOn?`<div class="bk"><b>${bn>0?'+':''}${bn} h</b><small>Banco</small></div>`:''}</div>
-     ${filas.length?`<div class="ch-lt"><span>${solo?'Días que no cuadran':'Días a revisar'}</span>${sinClas?`<em>${sinClas} ${solo?'por revisar (dirección)':'sin clasificar'}</em>`:'<em class="ok">todo clasificado ✓</em>'}</div><div class="ch-list">${filas.map(fila).join('')}</div>`:'<div class="ch-ok">Todos los días cuadran con su horario ✓</div>'}
+     ${filas.length?`<div class="ch-lt"><span>${solo?'Días que no cuadran':'Días a revisar'}</span>${sinClas||porVal?`<em>${[sinClas?sinClas+(solo?' por explicar':' sin clasificar'):'',porVal?porVal+(solo?' pendiente'+(porVal>1?'s':'')+' de validar':' por validar'):''].filter(Boolean).join(' · ')}</em>`:'<em class="ok">todo clasificado ✓</em>'}</div><div class="ch-list">${filas.map(fila).join('')}</div>`:'<div class="ch-ok">Todos los días cuadran con su horario ✓</div>'}
     </div>`;};
    const card=(x,tot)=>{
     if(x.sinHoras&&!tot)return `<div class="rend-card solo"><div class="rend-top"><b>${escH(x.fisio)}</b><span class="rend-oc">${x.realizadas} <small>sesiones hechas</small></span></div><div class="rend-conv dos"><div><span>Reagendan</span><b>${pcs(x.reagendan,x.atendidos)}</b></div><div><span>No reagendan</span><b>${pcs(x.atendidos-x.reagendan,x.atendidos)}</b></div></div>${listaNo(x)}</div>`;
@@ -9212,7 +9217,7 @@ async function renderRendimiento(wrap,solo){
     <div class="rend-grid"><div><span>Sesiones / horas${infoI(I.ses+(conCV(x)?I.sesCV:''))}</span><b>${base+' / '+(x.huecos||'—')}</b></div><div><span>Pacientes atendidos${infoI(I.aten)}</span><b>${x.atendidos}</b></div><div><span>Faltas${infoI(I.faltas)}</span><b>${x.noAsistio+x.perdidas}</b></div><div><span>Canceladas${infoI(I.canc)}</span><b>${x.canceladas}</b></div></div>
     <div class="rend-conv dos"><div><span>Reagendan${infoI(I.reag)}</span><b>${pcs(x.reagendan,x.atendidos)}</b></div><div><span>No reagendan${infoI(I.noreag)}</span><b>${pcs(x.atendidos-x.reagendan,x.atendidos)}</b></div></div>${tot?'':listaNo(x)}${(!tot&&x.dias)?controlHoras(x):''}</div>`;};
    res.innerHTML=(L.length>1?card(T,true):'')+L.filter(x=>!x.sinHoras).map(x=>card(x)).join('')+L.filter(x=>x.sinHoras).map(x=>card(x)).join('');
-   res.querySelectorAll('.rc-clas').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirClasificar({conBanco:!!x.bancoOn,fisio:b.dataset.fisio,fecha:b.dataset.fecha,dif:+b.dataset.dif,reg:(x.reg||{})[b.dataset.fecha],onSave:async()=>{await horasDe(x);mantenScroll(pinta);}});});
+   res.querySelectorAll('.rc-clas').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirClasificar({explica:!!solo,conBanco:!!x.bancoOn,fisio:b.dataset.fisio,fecha:b.dataset.fecha,dif:+b.dataset.dif,reg:(x.reg||{})[b.dataset.fecha],onSave:async()=>{await horasDe(x);mantenScroll(pinta);}});});
    res.querySelectorAll('.rc-inf').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirInformeHoras(b.dataset.fisio,!!(x&&x.bancoOn));});
    res.querySelectorAll('.rn-seg').forEach(b=>b.onclick=()=>SEG_PAC[b.dataset.id]?toast(segYaTxt(b.dataset.id),true):abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,nota:'',motivo:b.dataset.nota||'',onSave:()=>{SEG_PAC[b.dataset.id]={fecha:'',quien:''};b.classList.add('en');b.textContent='✓ En seguimiento';}}));
    };

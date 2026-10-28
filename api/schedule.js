@@ -2741,20 +2741,31 @@ module.exports = async function handler(req, res) {
         const esc = fisio.replace(/'/g, "\\'");
         let recs = [], off = '';
         do { const d = await at(`${T}?filterByFormula=${encodeURIComponent(`LOWER({FISIO})=LOWER('${esc}')`)}&pageSize=100${off ? '&offset=' + off : ''}`); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off);
-        const todos = recs.map(r => ({ id: r.id, fecha: r.fields['FECHA'] || '', tipo: r.fields['TIPO'] || '', horas: Number(r.fields['HORAS'] || 0), banco: !!r.fields['BANCO'], nota: r.fields['NOTA'] || '', por: r.fields['REGISTRADO POR'] || '' }));
+        const todos = recs.map(r => ({ id: r.id, fecha: r.fields['FECHA'] || '', tipo: r.fields['TIPO'] || '', horas: Number(r.fields['HORAS'] || 0), banco: !!r.fields['BANCO'], nota: r.fields['NOTA'] || '', por: r.fields['REGISTRADO POR'] || '', pendiente: !!r.fields['PENDIENTE VALIDAR'] }));
         const { desde, hasta } = q;
-        const banco = todos.filter(r => r.banco && (!hasta || r.fecha <= hasta)).reduce((t, r) => t + r.horas, 0);
+        const banco = todos.filter(r => r.banco && !r.pendiente && (!hasta || r.fecha <= hasta)).reduce((t, r) => t + r.horas, 0);
         const registros = todos.filter(r => (!desde || r.fecha >= desde) && (!hasta || r.fecha <= hasta)).sort((a, b) => a.fecha.localeCompare(b.fecha));
         return res.status(200).json({ ok: true, registros, banco });
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      // Quién guarda: dirección (Rendimiento o Administración) clasifica y valida; el fisio solo explica sus días y queda pendiente de validar
+      let esDir = true, yoN = '';
+      if (q.yo) { const eqH = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_rendimiento&fields[]=acc_admin&pageSize=100`);
+        const yr = (eqH.records || []).find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo).trim().toLowerCase());
+        if (!yr || String(yr.fields.Password || '').trim() !== String(q.clave || '').trim()) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
+        esDir = !!(yr.fields.acc_rendimiento || yr.fields.acc_admin); yoN = String(yr.fields.Name || '').trim().split(/\s+/)[0].toLowerCase(); }
+      const previo = /^rec[A-Za-z0-9]{14}$/.test(q.id || '') ? await at(`${T}/${q.id}`) : null;
+      if (!esDir) {
+        if (fisio.split(/\s+/)[0].toLowerCase() !== yoN) return res.status(403).json({ ok: false, error: 'Solo puedes explicar tus propios días' });
+        if (previo && previo.fields && !previo.fields['PENDIENTE VALIDAR']) return res.status(403).json({ ok: false, error: 'Dirección ya lo ha validado' });
+      }
       if (action === 'horas-borrar') {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
         await fetch(`https://api.airtable.com/v0/${BASE_ID}/${T}/${q.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
         return res.status(200).json({ ok: true });
       }
       if (!fisio || !/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) return res.status(400).json({ ok: false, error: 'Faltan datos' });
-      const campos = { FECHA: q.fecha, FISIO: fisio, TIPO: String(q.tipo || 'Otro'), HORAS: Number(q.horas || 0), BANCO: !!q.banco, NOTA: String(q.nota || ''), 'REGISTRADO POR': String(q.por || '') };
+      const campos = { FECHA: q.fecha, FISIO: fisio, TIPO: String(q.tipo || 'Otro'), HORAS: Number(q.horas || 0), BANCO: esDir ? !!q.banco : false, NOTA: String(q.nota || ''), 'REGISTRADO POR': String(q.por || ''), 'PENDIENTE VALIDAR': !esDir };
       const ex = /^rec[A-Za-z0-9]{14}$/.test(q.id || '');
       const d = await at(`${T}${ex ? '/' + q.id : ''}`, { method: ex ? 'PATCH' : 'POST', body: JSON.stringify(ex ? { fields: campos, typecast: true } : { records: [{ fields: campos }], typecast: true }) });
       if (d.error) return res.status(500).json({ ok: false, error: d.error.message || 'Airtable' });
