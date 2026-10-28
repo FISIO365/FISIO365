@@ -1882,7 +1882,7 @@ async function doLogin(silencioso){
  setInterval(checkMensajesBadge, 60000); // revisar cada minuto
  aplicarRole();
  // Respaldo del resumen diario a dirección: si el envío automático de la mañana no ha salido, lo lanza el primero que abre el panel (el servidor solo lo manda una vez)
- try{const hoyR=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'}),hR=+new Date().toLocaleString('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false});if(hR>=8&&localStorage.getItem('f365_resumen')!==hoyR){localStorage.setItem('f365_resumen',hoyR);fetch('/api/cron?resumen=1&pwd='+encodeURIComponent(apiPwd)).catch(()=>{});}}catch(e){}
+ try{const hoyR=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'}),hR=+new Date().toLocaleString('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false});if(hR>=8&&localStorage.getItem('f365_resumen2')!==hoyR){localStorage.setItem('f365_resumen2',hoyR);fetch('/api/cron?resumen=1&pwd='+encodeURIComponent(apiPwd)).catch(()=>{});}}catch(e){}
  iniciarAutoUpdate();
  let secIni='agenda';try{const g=sessionStorage.getItem('f365_panel_sec');if(g&&TOPBAR[g]&&!['prog','anam'].includes(g))secIni=g;}catch(e){}
  showSection(secIni);
