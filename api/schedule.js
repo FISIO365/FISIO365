@@ -2765,7 +2765,7 @@ Reglas: tutea, español de España, tono cercano y natural, como lo escribiría 
         for (const model of ['claude-haiku-5-5', 'claude-haiku-4-5', 'claude-sonnet-4-5']) {
           try {
             const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': K, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: 300, messages: [{ role: 'user', content: prompt }] }) });
-            const j = await r.json(); const t = String((j.content && j.content[0] && j.content[0].text) || '').trim().replace(/^["«]|["»]$/g, '');
+            const j = await r.json(); const t = String(((j.content || []).find(b => b && b.type === 'text') || {}).text || '').trim().replace(/^["«]|["»]$/g, '');
             if (t) { console.log('seg-wa-ia ok', model, hist ? 'con historial' : 'sin historial'); return res.status(200).json({ ok: true, texto: t, model }); }
             err = (j.error && j.error.message) || ('HTTP ' + r.status); console.error('seg-wa-ia', model, err);
           } catch (e) { err = e.message; console.error('seg-wa-ia', model, err); }
