@@ -8592,7 +8592,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
  function waFicha(){const sp=segAct();const re=(d.citas||[]).filter(c=>c.fecha<=d.hoy&&/REALIZADA/i.test(c.estado)).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)))[0];
    const px=(d.citas||[]).filter(c=>c.fecha>=d.hoy&&!/CANCEL|REPROGRAM|REALIZADA|NO ASIST/i.test(c.estado)).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)))[0];
    waPersonal({nombre:P.nombre,tel:P.whatsapp||P.telf||P.tel,pacienteId:id,fisio:re&&re.fisio,ultima:re&&re.fecha,proxima:px&&px.fecha,nota:[sp&&sp.nota,P.porQue].filter(Boolean).join(' · '),ult:d.llamadas&&d.llamadas[0],
-    aviso:sp?'Está en seguimiento: al enviarlo queda como <b>Pendiente de respuesta</b> 7 días.':'',enviarTxt:'Enviar',
+    aviso:sp?'Está en seguimiento: al enviarlo queda como <b>Pendiente de respuesta</b> 7 días.':'',enviarTxt:sp?'Abrir en WhatsApp':'Enviar',
     alEnviar:sp?async t=>{const r=await agPost('seg-resultado',{pacienteId:id,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,180),nuevaFecha:segIso(7),quien:miNombreCorto()});if(!r||!r.ok)throw 0;toast('✓ Pendiente de respuesta',true);recargarSeg();}:null});}
  function verSeg(sp){const it={id:sp.id,pacienteId:id,nombre:P.nombre,fecha:sp.fecha,nota:sp.nota,responsable:sp.quien};
   const mm=hzModal(`<div class="hz-top"><div><small>En seguimiento</small><b>${escH(P.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
@@ -8947,8 +8947,13 @@ function waPersonal(o){
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const abre=t=>{const tl=segTel(o.tel||'');window.open(`https://wa.me/${tl}${t?'?text='+encodeURIComponent(t):''}`,'_blank');};
  m.querySelector('.sgw-solo').onclick=()=>{abre('');m.remove();};
- m.querySelector('.sgw-env').onclick=async ev=>{const bt=ev.currentTarget;abre(ta.value);if(!o.alEnviar){m.remove();return;}bt.disabled=true;bt.textContent='Guardando…';
-  try{await o.alEnviar(ta.value);m.remove();}catch(_){bt.disabled=false;bt.textContent=o.enviarTxt||'Enviar';toast('Se abrió WhatsApp, pero no se ha podido guardar',false);}};
+ // Abrir WhatsApp no es enviar: solo se marca cuando se confirma que se ha enviado
+ m.querySelector('.sgw-env').onclick=()=>{const txt=ta.value;abre(txt);if(!o.alEnviar){m.remove();return;}
+  const bts=m.querySelector('.hz-bts');m.querySelector('.sgw-n').innerHTML='<b>¿Lo has enviado?</b> Si lo has enviado, se marca como pendiente de respuesta. Si no, no se toca nada.';
+  bts.innerHTML='<button type="button" class="sgw-no">No</button><button type="button" class="hz-ok sgw-si">Sí, enviado</button>';
+  bts.querySelector('.sgw-no').onclick=()=>m.remove();
+  bts.querySelector('.sgw-si').onclick=async ev=>{const bt=ev.currentTarget;bt.disabled=true;bt.textContent='Guardando…';
+   try{await o.alEnviar(txt);m.remove();}catch(_){bt.disabled=false;bt.textContent='Sí, enviado';toast('No se ha podido guardar',false);}};};
 }
 async function renderSeguimiento(wrap){
  const box=ce('div','seg');wrap.appendChild(box);
@@ -9026,7 +9031,7 @@ async function renderSeguimiento(wrap){
    // También las recuperadas del sistema antiguo: la IA tira de la ficha (historial y notas)
    const notaL=String(x.nota||'').replace(/^Recuperado de las llamadas antiguas[^.:\n]*[.:]?\s*/i,'').trim();
    waPersonal({nombre:x.nombre,tel:x.tel,pacienteId:x.pacienteId,fisio:x.fisio,ultima:x.ultima,nota:notaL,ult:x.ult,
-    aviso:'Al enviarlo queda como <b>Pendiente de respuesta</b> y vuelve a la lista en 7 días si no contesta.',enviarTxt:'Enviar y quitar',
+    aviso:'Cuando lo envíes, queda como <b>Pendiente de respuesta</b> y vuelve a la lista en 7 días si no contesta.',enviarTxt:'Abrir en WhatsApp',
     alEnviar:async t=>{const r=await agPost('seg-resultado',{id:x.id,pacienteId:x.pacienteId,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,180),nuevaFecha:segIso(7),quien:miNombreCorto()});if(!r||!r.ok)throw 0;
      const tk=b.closest('.tk');if(tk){tk.style.transition='opacity .3s';tk.style.opacity='.35';}toast(`✓ ${nom}: pendiente de respuesta`,true);setTimeout(()=>{datos.pendientes=datos.pendientes.filter(y=>y.id!==x.id);pinta();},600);}});});
   box.querySelectorAll('.seg-hecho').forEach(b=>b.onclick=()=>abrirResultadoSeg(P.find(x=>x.id===b.dataset.id),cargar));
