@@ -501,6 +501,19 @@ async function esperaLista(forzar) {
   } catch (err) {}
   _espera = { t: Date.now(), v }; return v;
 }
+// Al darle cita a alguien que está en la lista de espera, sale solo de ella («Ya tiene cita»)
+async function salirDeEspera(pid, fecha, hora) {
+  const v = await esperaLista(true); let tel = '';
+  const sinPac = v.filter(e => e.estado === 'ESPERANDO' && e.tabla === 'esperaN');
+  if (sinPac.length) { const p = await at(`${PACIENTES}/${pid}?fields[]=TELF&fields[]=WHATSAPP`).catch(() => ({})); tel = String(((p.fields || {})['WHATSAPP'] || (p.fields || {})['TELF'] || '')).replace(/\D/g, '').slice(-9); }
+  const mios = v.filter(e => e.estado === 'ESPERANDO' && (e.pacienteId === pid || (tel.length === 9 && String(e.tel || '').replace(/\D/g, '').slice(-9) === tel)));
+  const fC = String(fecha).split('-').reverse().join('/');
+  for (const e of mios) { const T = e.tabla === 'esperaP' ? CAP.esperaP : CAP.esperaN;
+    const r = await at(`${T}/${e.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'CITADO', NOTAS: [e.nota, `Cita dada para el ${fC} a las ${hora} (se quitó sola de la lista)`].filter(Boolean).join(' · ') }, typecast: true }) }).catch(() => ({ error: 1 }));
+    if (!r.error) e.estado = 'CITADO'; }
+  if (mios.length) _espera.t = 0;
+  return mios.length;
+}
 const capNorm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const CAP_STOP = /^(farmacia|clinica|clinic|centro|dental|estetica|podologia|podologo|institut|institus|odontologics|barcelona|sant|andreu|gran|de|del|la|el|les|los|y|i)$/;
 
@@ -2131,7 +2144,8 @@ module.exports = async function handler(req, res) {
           const rep = await revisarPorReagendar(true).catch(() => 0);
           const seg = await salirDeSeguimiento(q.pacienteId, q.quien, q.fecha, q.hora).catch(() => null);
           const et = await ponerEtapa(q.pacienteId, 'cita').catch(() => null); if (seg && et) seg.estados = et.estados;
-          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg, etapa: et && et.etapa });
+          const esp = await salirDeEspera(q.pacienteId, q.fecha, q.hora).catch(() => 0);
+          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg, etapa: et && et.etapa, espera: esp });
         }
         if (action === 'seg-agenda-huecos') { // abrir varias horas de golpe (libres o bloqueadas), sin pisar lo que ya hay
           const fechas = (q.fechas || []).filter(okF).slice(0, 60), horas = (q.horas || []).map(hh).filter(okH).slice(0, 24);
