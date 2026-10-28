@@ -252,7 +252,7 @@ export default async function handler(req) {
     const pacId = url.searchParams.get('pacienteId') || '';
     const INFORMES_TABLE_ID = 'tblwvWQxXNJPdR0Iv';
     try {
-      const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo&fields[]=SoloFisio';
+      const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo&fields[]=SoloFisio&fields[]=ENTREGA&fields[]=' + encodeURIComponent('RECIBI PIDE') + '&fields[]=' + encodeURIComponent('RECIBI FECHA');
       let allRecords = [], offset = null;
       do {
         const off = offset ? '&offset='+offset : '';
@@ -271,6 +271,9 @@ export default async function handler(req) {
         informe: rec.fields['Informe'] || '',
         protocolo: rec.fields['Protocolo'] || '',
         soloFisio: !!rec.fields['SoloFisio'],
+        entrega: (() => { try { return JSON.parse(rec.fields['ENTREGA'] || 'null'); } catch (e) { return null; } })(),
+        recibiPide: !!rec.fields['RECIBI PIDE'],
+        recibido: rec.fields['RECIBI FECHA'] || '',
       }));
       if (pacId) informes = informes.filter(i => i.pacienteId === pacId);
       return new Response(JSON.stringify({ ok: true, informes }), { headers: corsHeaders });

@@ -616,6 +616,16 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .ej-exp{margin:6px 0 10px;border-radius:14px;background:#f7f3ef;overflow:hidden}.ej-exp summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;font-weight:600;font-size:13.5px;color:#1E2A38;cursor:pointer}.ej-exp summary::-webkit-details-marker{display:none}
 .ej-exp summary::after{content:'';width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin:-4px 4px 0 0;transition:transform .2s;flex:none}.ej-exp[open] summary::after{transform:rotate(-135deg);margin-top:4px}.pl .ej-exp{margin:0 14px 12px}.ej-exp[open] summary span{color:#c2552e}
 .ej-exp>div{padding:0 14px 12px;font-size:14px;line-height:1.55;color:#3d3530}.ses-exp{margin:12px 0}
+.rcb-av{font-size:13px;color:#8a5a3c;background:#fdf6f2;border-radius:10px;padding:8px 11px;margin:8px 0 10px;line-height:1.4}
+.rcb-m{position:fixed;inset:0;z-index:9999;background:rgba(26,26,26,.45);display:flex;align-items:flex-end;justify-content:center}
+.rcb-c{background:#fff;width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:22px 18px calc(18px + env(safe-area-inset-bottom));font-family:Poppins,sans-serif}
+.rcb-t{font-size:18px;font-weight:700;color:#1a1a1a}.rcb-p{font-size:13.5px;color:#6b5f57;line-height:1.5;margin:4px 0 12px}
+.rcb-chk{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;margin:0 0 12px;color:#1a1a1a}.rcb-chk input{width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:#c2552e}
+.rcb-sw{position:relative}.rcb-sw canvas{display:block;width:100%;height:160px;border:1.5px dashed #e3b9a6;border-radius:14px;background:#fdf9f6;touch-action:none}
+.rcb-sl{position:absolute;left:14px;bottom:10px;font-size:12px;color:#c8b6aa;pointer-events:none}.rcb-b{position:absolute;right:8px;top:8px;border:none;background:#fff;border-radius:99px;font-family:inherit;font-size:12px;font-weight:600;color:#6b5f57;padding:5px 10px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.rcb-e{color:#b42318;font-size:13px;margin-top:8px;min-height:1em}
+.rcb-ok{display:block;width:100%;border:none;font-family:inherit;font-size:15px;font-weight:600;background:#c2552e;color:#fff;border-radius:99px;padding:14px;margin-top:6px}.rcb-ok:disabled{opacity:.45}
+.rcb-no{display:block;width:100%;border:none;background:none;font-family:inherit;font-size:14px;font-weight:600;color:#9a8f87;padding:12px;margin-top:2px}
 </style>
 </head>
 <body>
@@ -1303,7 +1313,7 @@ async function loadInformes(){loadDocumentos();loadRegalos();loadFacturas();
   try{const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);const data=await res.json();const informes=data.informes||[];
   if(!informes.length){wr.style.display='none';return;}
   const tipoLabel={rodilla:'Rodilla',hombro:'Hombro',cervical:'Cervical',codo:'Codo y antebrazo',muneca:'Muñeca y mano',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',hernia:'Columna lumbar',libre:'Valoración libre'};
-  list.innerHTML=informes.map((inf,i)=>`<div class="inf-pac-card"><div class="inf-pac-fecha">${inf.fecha}</div><div class="inf-pac-tipo">${tipoLabel[inf.tipo]||inf.tipo||'Valoración'}</div><div class="inf-pac-fisio">Fisioterapeuta: ${inf.fisioNombre}</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-inf" onclick="toggleInforme(${i})">Ver informe</button><button class="btn-inf pdf" onclick="imprimirInforme(${i})">Descargar PDF</button></div><div class="inf-pac-contenido" id="infCont${i}">${inf.contenido}</div></div>`).join('');
+  list.innerHTML=informes.map((inf,i)=>`<div class="inf-pac-card"><div class="inf-pac-fecha">${inf.fecha}</div><div class="inf-pac-tipo">${tipoLabel[inf.tipo]||inf.tipo||'Valoración'}</div><div class="inf-pac-fisio">Fisioterapeuta: ${inf.fisioNombre}</div>${inf.recibiPide&&!inf.recibido?`<div class="rcb-av">Antes de verlo, confirma que lo has recibido con tu firma.</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-inf pdf" onclick="firmarRecibi(${i})">Firmar y ver mi informe</button></div>`:`<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-inf" onclick="toggleInforme(${i})">Ver informe</button><button class="btn-inf pdf" onclick="imprimirInforme(${i})">Descargar PDF</button></div>`}<div class="inf-pac-contenido" id="infCont${i}">${inf.recibiPide&&!inf.recibido?'':inf.contenido}</div></div>`).join('');
   window._informesPac=informes;wr.style.display='';}catch(e){wr.style.display='none';}
 }
 const escF=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1321,6 +1331,24 @@ async function descargarFactura(id,tipo,btn){const t=btn.textContent;btn.disable
   const url=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));const a=document.createElement('a');a.href=url;a.download=d.nombre||'Factura.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
  }catch(e){toast('No se ha podido descargar la factura',false);}
  btn.disabled=false;btn.textContent=t;}
+// Recibí: el paciente firma que ha recibido el informe antes de verlo
+function firmarRecibi(i){const inf=window._informesPac?.[i];if(!inf||!patient)return;
+ const m=document.createElement('div');m.className='rcb-m';m.innerHTML=`<div class="rcb-c"><div class="rcb-t">Recibí de tu informe</div><p class="rcb-p">Por protección de datos, necesitamos tu firma confirmando que lo has recibido.</p><label class="rcb-chk"><input type="checkbox"><span>Confirmo que he recibido mi informe fisioterapéutico de FISIO365.</span></label><div class="rcb-sw"><canvas></canvas><span class="rcb-sl">Firma aquí con el dedo</span><button type="button" class="rcb-b">Borrar</button></div><div class="rcb-e"></div><button type="button" class="rcb-ok" disabled>Firmar y ver mi informe</button><button type="button" class="rcb-no">Ahora no</button></div>`;
+ document.body.appendChild(m);const cv=m.querySelector('canvas'),ck=m.querySelector('input'),ok=m.querySelector('.rcb-ok'),sl=m.querySelector('.rcb-sl');
+ let cx,dib=false,hay=false;
+ setTimeout(()=>{const r=cv.getBoundingClientRect(),dp=window.devicePixelRatio||1;cv.width=r.width*dp;cv.height=r.height*dp;cx=cv.getContext('2d');cx.scale(dp,dp);cx.lineWidth=2.2;cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle='#1a1a1a';},50);
+ const pt=e=>{const b=cv.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top];};const listo=()=>{ok.disabled=!(hay&&ck.checked);};
+ cv.onpointerdown=e=>{if(!cx)return;dib=true;cv.setPointerCapture(e.pointerId);const[x,y]=pt(e);cx.beginPath();cx.moveTo(x,y);};
+ cv.onpointermove=e=>{if(!dib)return;const[x,y]=pt(e);cx.lineTo(x,y);cx.stroke();if(!hay){hay=true;sl.hidden=true;listo();}};
+ cv.onpointerup=cv.onpointercancel=()=>{dib=false;};ck.onchange=listo;
+ m.querySelector('.rcb-b').onclick=()=>{if(!cx)return;cx.clearRect(0,0,cv.width,cv.height);hay=false;sl.hidden=false;listo();};
+ m.querySelector('.rcb-no').onclick=()=>m.remove();
+ ok.onclick=async()=>{ok.disabled=true;ok.textContent='Guardando…';
+  const w=Math.min(600,cv.width),h=Math.round(cv.height*w/cv.width),c2=document.createElement('canvas');c2.width=w;c2.height=h;const x2=c2.getContext('2d');x2.fillStyle='#fff';x2.fillRect(0,0,w,h);x2.drawImage(cv,0,0,w,h);
+  try{const d=await (await fetch('/api/schedule?action=inf-recibi-app',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,id:inf.id,firma:c2.toDataURL('image/png')})})).json();
+   if(!d.ok)throw new Error(d.error);m.remove();toast('Gracias, ya tienes tu informe',true);loadInformes();}
+  catch(e){m.querySelector('.rcb-e').textContent=(e&&e.message)||'No se ha podido guardar. Inténtalo de nuevo.';ok.disabled=false;ok.textContent='Firmar y ver mi informe';}};
+}
 function toggleInforme(i){const el=document.getElementById(`infCont${i}`);el.classList.toggle('open');const btns=el.previousElementSibling.querySelectorAll('.btn-inf');if(btns[0])btns[0].textContent=el.classList.contains('open')?'Ocultar informe':'Ver informe';}
 function imprimirInforme(i){const inf=window._informesPac?.[i];if(!inf)return;const tipos={rodilla:'Rodilla',fascitis:'Fascitis Plantar',cervical:'Cervical',hombro:'Hombro',tobillo:'Tobillo y pie',cadera:'Cadera y pelvis',codo:'Codo y antebrazo',hernia:'Hernia Discal Lumbar',muneca:'Muñeca y mano',sacro:'Sacroilíaca',lumbar:'Columna lumbar',toracica:'Columna torácica',sueloPelvico:'Suelo pélvico',libre:'Valoración fisioterapéutica'};const zona=tipos[inf.tipo]||(inf.tipo&&inf.tipo!=='-'?inf.tipo:'Valoración fisioterapéutica');const fisio=inf.fisioNombre&&inf.fisioNombre!=='-'?inf.fisioNombre:'';let col=inf.fisioColegiado||'';const fp=window.fisioPlan;if(!col&&fp&&fisio&&(fp.nombre||'').trim().toLowerCase()===fisio.trim().toLowerCase())col=fp.colegiado||'';const go=()=>window.InformePDF.generar({paciente:patient.nombre,informe:inf.contenido,zona,fisio,colegiado:col,fecha:inf.fecha&&inf.fecha!=='-'?inf.fecha:''}).catch(()=>toast('No se pudo crear el PDF. Revisa tu conexión.',false));if(window.InformePDF)go();else{const s=document.createElement('script');s.src='/informe/pdf.js';s.onload=go;s.onerror=()=>toast('No se pudo crear el PDF. Revisa tu conexión.',false);document.head.appendChild(s);}}
 

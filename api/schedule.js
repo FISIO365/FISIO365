@@ -684,6 +684,72 @@ async function pidenConsentimiento(pids, antesDe) {
   pids.forEach(x => { if (!yaVino.has(x) && !firmados.has(x)) out.add(x); });
   out.yaVino = yaVino; return out;
 }
+// Página del enlace del informe (/i/TOKEN): comprueba que es el paciente, enseña el informe y pide firmar el recibí
+function paginaRecibi(tk) {
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu informe · FISIO365</title>
+<link rel="icon" href="/icons/favicon-cara.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f2ee;font-family:Poppins,sans-serif;color:#1a1a1a;-webkit-font-smoothing:antialiased}
+main{max-width:480px;margin:0 auto;padding:26px 16px 40px}.logo{height:16px;display:block;margin:4px 2px 18px}
+.card{background:#fff;border-radius:20px;padding:20px;box-shadow:0 2px 14px rgba(26,26,26,.05)}
+h1{font-size:20px;margin:0 0 6px}p{font-size:14px;line-height:1.55;color:#6b5f57;margin:0 0 14px}
+label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+input{width:100%;font-family:inherit;font-size:20px;letter-spacing:.3em;text-align:center;border:1.5px solid #e4ddd6;border-radius:14px;padding:13px;outline:none;background:#fff;color:#1a1a1a}input:focus{border-color:#c2552e}
+input.fecha{letter-spacing:.06em}
+.bt{display:block;width:100%;border:none;font-family:inherit;font-size:15px;font-weight:600;background:#c2552e;color:#fff;border-radius:99px;padding:14px;margin-top:14px;cursor:pointer}.bt:disabled{opacity:.45}
+.bt2{display:block;width:100%;font-family:inherit;font-size:14px;font-weight:600;background:#fff;color:#1a1a1a;border:1.5px solid #e4ddd6;border-radius:99px;padding:12px;margin-top:10px;cursor:pointer;text-align:center;text-decoration:none}
+.err{color:#b42318;font-size:13px;margin:10px 2px 0;min-height:1em}
+.doc{border:1px solid #ece6df;border-radius:10px;padding:16px;max-height:46vh;overflow:auto;font-size:13px;line-height:1.6;color:#3c342f;background:#fff}
+.doc .t{font-size:10.5px;font-weight:700;color:#c2552e;letter-spacing:.08em;text-transform:uppercase;margin:14px 0 4px}.doc .t:first-child{margin-top:0}.doc p{margin:0 0 6px;font-size:13px;color:#3c342f}
+.dh{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:#7d7068;border-bottom:1px solid #eee6de;padding-bottom:9px;margin-bottom:12px}.dh img{height:11px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;margin:16px 0 12px;cursor:pointer}.chk input{width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:#c2552e}
+.sigw{position:relative}canvas{display:block;width:100%;height:150px;border:1.5px dashed #e3b9a6;border-radius:14px;background:#fdf9f6;touch-action:none}
+.sigl{position:absolute;left:14px;bottom:10px;font-size:12px;color:#c8b6aa;pointer-events:none}.borra{position:absolute;right:8px;top:8px;border:none;background:#fff;border-radius:99px;font-family:inherit;font-size:12px;font-weight:600;color:#6b5f57;padding:5px 10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.ok{width:58px;height:58px;border-radius:50%;background:#e8f5ec;color:#16803c;display:flex;align-items:center;justify-content:center;margin:10px auto 12px}.ok svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.c{text-align:center}.pie{font-size:11.5px;color:#9a8f87;text-align:center;margin-top:18px;line-height:1.5}[hidden]{display:none!important}
+</style></head><body><main><img class="logo" src="/informe/logo.png" alt="FISIO365">
+<div class="card" id="v0"><p>Cargando…</p></div>
+<div class="card" id="v1" hidden><h1 id="hola">Tu informe</h1><p>Para proteger tus datos de salud, confirma que eres tú.</p><label id="lab">4 últimos números de tu DNI</label><input id="dato" inputmode="numeric" autocomplete="off"><div class="err" id="e1"></div><button class="bt" id="b1">Continuar</button></div>
+<div class="card" id="v2" hidden><div class="doc" id="doc"></div><label class="chk"><input type="checkbox" id="acepto"><span id="txtAcepto"></span></label><label>Firma con el dedo</label><div class="sigw"><canvas id="cv"></canvas><span class="sigl" id="sigl">Firma aquí</span><button class="borra" id="borra" type="button">Borrar</button></div><div class="err" id="e2"></div><button class="bt" id="b2" disabled>Firmar y recibir mi informe</button></div>
+<div class="card c" id="v3" hidden><div class="ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h1>Recibido</h1><p id="gracias">Ya puedes descargar tu informe.</p><button class="bt" id="b3">Descargar PDF</button><a class="bt2" href="/">Abrir la app de FISIO365</a></div>
+<div class="pie">FISIO365 · Gran de Sant Andreu, 163 · Barcelona · 672 89 39 49</div></main>
+<script>
+const T=${JSON.stringify(tk)},$=i=>document.getElementById(i);let modo='dni',dato='',D=null;
+const ver=n=>['v0','v1','v2','v3'].forEach(v=>$(v).hidden=v!==n);
+const api=async(a,b)=>{const r=await fetch('/api/schedule?action='+a,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:T,...b})});return r.json().catch(()=>({ok:false,error:'Error de conexión'}));};
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esTit=l=>(/^[A-ZÁÉÍÓÚÑÜ0-9 ,\\/·()-]{5,}$/.test(l)||(/^[^.;]{3,45}:$/.test(l)&&l.split(/\\s+/).length<=5))&&!/^- /.test(l);
+(async()=>{const r=await api('inf-info',{});if(!r.ok){$('v0').innerHTML='<h1>Enlace no válido</h1><p>'+esc(r.error||'')+'</p>';return;}
+ if(r.bloqueado){$('v0').innerHTML='<h1>Enlace bloqueado</h1><p>Por seguridad, se ha bloqueado tras varios intentos. Escríbenos y te mandamos uno nuevo.</p>';return;}
+ if(r.caducado){$('v0').innerHTML='<h1>Enlace caducado</h1><p>Pídenos uno nuevo por WhatsApp y te lo mandamos al momento.</p>';return;}
+ if(r.modo==='ninguno'){$('v0').innerHTML='<h1>No podemos abrirlo así</h1><p>Escríbenos y te damos el informe de otra manera.</p>';return;}
+ modo=r.modo;if(r.pila)$('hola').textContent='Hola, '+r.pila;
+ if(modo==='nac'){$('lab').textContent='Tu fecha de nacimiento (dd/mm/aaaa)';$('dato').classList.add('fecha');$('dato').placeholder='dd/mm/aaaa';}else{$('dato').maxLength=4;$('dato').placeholder='• • • •';}
+ ver('v1');setTimeout(()=>$('dato').focus(),100);})();
+$('dato').addEventListener('keydown',e=>{if(e.key==='Enter')$('b1').click();});
+$('b1').onclick=async()=>{const b=$('b1');dato=$('dato').value.trim();if(!dato)return;b.disabled=true;b.textContent='Comprobando…';$('e1').textContent='';
+ const r=await api('inf-ver',{dato});b.disabled=false;b.textContent='Continuar';
+ if(!r.ok){$('e1').textContent=r.error||'No se ha podido comprobar';if(r.bloqueado||r.quedan===0){b.disabled=true;}return;}
+ D=r;pintaDoc();if(r.firmado){fin();return;}ver('v2');prepFirma();};
+function pintaDoc(){const ls=String(D.informe||'').split('\\n').map(l=>l.trim()).filter(Boolean);
+ $('doc').innerHTML='<div class="dh"><img src="/informe/logo.png" alt=""><span>'+esc(/fisioterap/i.test(D.tipo)?'Informe fisioterapéutico':'Informe')+(D.fecha?' · '+esc(D.fecha):'')+'</span></div>'+ls.map(l=>esTit(l)?'<div class="t">'+esc(l.replace(/:$/,''))+'</div>':'<p>'+esc(l.replace(/^- /,'– '))+'</p>').join('');
+ $('txtAcepto').textContent=D.texto;}
+let cv,cx,dib=false,hay=false;
+function prepFirma(){cv=$('cv');const r=cv.getBoundingClientRect(),dp=window.devicePixelRatio||1;cv.width=r.width*dp;cv.height=r.height*dp;cx=cv.getContext('2d');cx.scale(dp,dp);cx.lineWidth=2.2;cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle='#1a1a1a';
+ const p=e=>{const b=cv.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top];};
+ cv.onpointerdown=e=>{dib=true;cv.setPointerCapture(e.pointerId);const[x,y]=p(e);cx.beginPath();cx.moveTo(x,y);};
+ cv.onpointermove=e=>{if(!dib)return;const[x,y]=p(e);cx.lineTo(x,y);cx.stroke();if(!hay){hay=true;$('sigl').hidden=true;listo();}};
+ cv.onpointerup=cv.onpointercancel=()=>{dib=false;};}
+$('borra').onclick=()=>{if(!cx)return;cx.clearRect(0,0,cv.width,cv.height);hay=false;$('sigl').hidden=false;listo();};
+const listo=()=>{$('b2').disabled=!(hay&&$('acepto').checked);};$('acepto').onchange=listo;
+function firmaPng(){const w=Math.min(600,cv.width),h=Math.round(cv.height*w/cv.width),c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(cv,0,0,w,h);return c.toDataURL('image/png');}
+$('b2').onclick=async()=>{const b=$('b2');b.disabled=true;b.textContent='Guardando…';$('e2').textContent='';
+ const r=await api('inf-firmar',{dato,firma:firmaPng()});if(!r.ok){$('e2').textContent=r.error||'No se ha podido guardar';b.disabled=false;b.textContent='Firmar y recibir mi informe';return;}fin();};
+function fin(){if(D&&D.pila)$('gracias').textContent='Gracias, '+D.pila+'. Ya puedes descargar tu informe.';ver('v3');}
+$('b3').onclick=()=>{const b=$('b3');b.disabled=true;b.textContent='Preparando…';const go=()=>window.InformePDF.generar({paciente:D.paciente,informe:D.informe,zona:D.tipo,fisio:D.fisio,colegiado:D.colegiado,fecha:D.fecha}).catch(()=>alert('No se ha podido crear el PDF')).finally(()=>{b.disabled=false;b.textContent='Descargar PDF';});
+ if(window.InformePDF)go();else{const s=document.createElement('script');s.src='/informe/pdf.js';s.onload=go;document.head.appendChild(s);}};
+</script></body></html>`;
+}
 function firmaCita(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cita:' + id).digest('hex').slice(0, 10); }
 const enlaceConfirmar = id => `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}`;
 function paginaConfirmar(D, C) {
@@ -1017,6 +1083,65 @@ module.exports = async function handler(req, res) {
 <link rel="icon" href="/icons/favicon-cara.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
 <style>body{margin:0;background:#f5f2ee;font-family:Poppins,sans-serif;color:#1a1a1a;display:flex;justify-content:center}main{max-width:440px;width:100%;padding:28px 16px;box-sizing:border-box}img{width:100%;border-radius:20px;box-shadow:0 10px 30px rgba(194,85,46,.25);display:block}h1{font-size:20px;margin:22px 0 6px}p{font-size:15px;line-height:1.5;color:#5c4f47;margin:0 0 18px}a{display:block;text-align:center;background:#1a1a1a;color:#fff;text-decoration:none;font-weight:700;border-radius:14px;padding:14px}.tj{aspect-ratio:1;border-radius:20px;background:linear-gradient(135deg,#de8257,#c2552e);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 10px 30px rgba(194,85,46,.25)}.tj b{font-size:22px}.tj small{font-size:13px;letter-spacing:.2em;opacity:.9;margin-top:4px}.tj strong{font-size:84px;line-height:1.1;margin:14px 0 4px}.tj span{font-size:17px;font-weight:600}.tj em{font-style:normal;font-size:16px;margin-top:22px}.tj i{font-style:normal;font-size:13px;opacity:.85;margin-top:4px}</style></head>
 <body><main>${a ? `<img src="${img}" alt="Tarjeta regalo de ${impP} €">` : `<div class="tj"><b>FISIO365</b><small>TARJETA REGALO</small><strong>${impP} €</strong><span>de descuento en tu próxima sesión</span>${r.fields['Nombre de quien recomendó'] ? `<em>Para ${String(r.fields['Nombre de quien recomendó']).split(' ')[0].replace(/[<>&"]/g, '')}</em>` : ''}${cad ? `<i>Válida hasta el ${cad}</i>` : ''}</div>`}<h1>¡Gracias por recomendarnos!</h1><p>Tienes ${impP} € de descuento en tu próxima sesión${cad ? ', válido hasta el ' + cad : ''}. No tienes que hacer nada: lo tenemos apuntado y te lo descontamos al pagar.</p><a href="https://app.fisioterapia365.com">Abrir mi app de FISIO365</a></main></body></html>`);
+  }
+  // ── RECIBÍ DE INFORMES: enlace /i/TOKEN (WhatsApp o email) y firma desde la app del paciente ──
+  // El enlace no lleva el informe: para verlo hay que poner los 4 últimos números del DNI (o la fecha de nacimiento) y firmar el recibí.
+  if (/^inf-(pagina|info|ver|firmar|recibi-app)$/.test(action || '')) {
+    res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
+    const q = req.method === 'POST' ? (req.body || {}) : req.query;
+    if (action === 'inf-pagina') {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      const tk = String(req.query.t || ''); if (!/^[A-Za-z0-9]{20}$/.test(tk)) return res.status(404).send('Enlace no válido');
+      return res.status(200).send(paginaRecibi(tk));
+    }
+    const ahoraIso = new Date().toISOString();
+    const quienEs = () => ({ ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].trim(), nav: String(req.headers['user-agent'] || '').slice(0, 200) });
+    const firmaOk = f => typeof f === 'string' && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(f) && f.length > 800 && f.length < 95000;
+    const TEXTO_RECIBI = 'Confirmo que he recibido mi informe fisioterapéutico de FISIO365.';
+    if (action === 'inf-recibi-app') {
+      // Desde la app del paciente (ya ha entrado con su usuario)
+      const id = String(q.id || ''), pid = String(q.patientId || '');
+      if (!/^rec[A-Za-z0-9]{14}$/.test(id) || !/^rec[A-Za-z0-9]{14}$/.test(pid)) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
+      if (!firmaOk(q.firma)) return res.status(400).json({ ok: false, error: 'Falta la firma' });
+      const r = await at(`${INFORMES_TABLE}/${id}`); const F = r.fields || {};
+      if (r.error || String(F['PacienteId'] || '') !== pid) return res.status(404).json({ ok: false, error: 'Informe no encontrado' });
+      if (F['RECIBI FECHA']) return res.status(200).json({ ok: true, ya: true });
+      const u = await at(`${INFORMES_TABLE}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECIBI FECHA': ahoraIso, 'RECIBI FIRMA': q.firma, 'RECIBI DATOS': JSON.stringify({ canal: 'app', verificado: 'sesión de la app', texto: TEXTO_RECIBI, ...quienEs() }) } }) });
+      if (u.error) return res.status(500).json({ ok: false, error: 'No se ha podido guardar la firma' });
+      return res.status(200).json({ ok: true });
+    }
+    const tk = String(q.t || ''); if (!/^[A-Za-z0-9]{20}$/.test(tk)) return res.status(404).json({ ok: false, error: 'Enlace no válido' });
+    const rr = await at(`${INFORMES_TABLE}?filterByFormula=${encodeURIComponent(`{ENTREGA TOKEN}='${tk}'`)}&maxRecords=1`);
+    const rec = (rr.records || [])[0]; if (!rec) return res.status(404).json({ ok: false, error: 'Este enlace no es válido o el informe se ha retirado.' });
+    const F = rec.fields || {}; let E = {}; try { E = JSON.parse(F['ENTREGA'] || '{}'); } catch (e) {}
+    const caducado = E.enviado && (Date.now() - new Date(E.enviado).getTime()) > 30 * 864e5 && !F['RECIBI FECHA'];
+    const bloqueado = (E.intentos || 0) >= 5;
+    const pr = await at(`${PACIENTES}/${F['PacienteId']}`).catch(() => ({})); const P = pr.fields || {};
+    const dniDig = String(P['DNI'] || '').replace(/\D/g, ''), nac = String(P['NACIMIENTO'] || '').slice(0, 10);
+    const modo = dniDig.length >= 4 ? 'dni' : /^\d{4}-\d{2}-\d{2}$/.test(nac) ? 'nac' : 'ninguno';
+    const pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || '';
+    const pilaB = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
+    const guardaE = async extra => { E = { ...E, ...extra }; await at(`${INFORMES_TABLE}/${rec.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ENTREGA: JSON.stringify(E) } }) }).catch(() => {}); };
+    if (action === 'inf-info') return res.status(200).json({ ok: true, pila: pilaB, modo, caducado, bloqueado, firmado: !!F['RECIBI FECHA'] });
+    if (caducado) return res.status(200).json({ ok: false, error: 'Este enlace ha caducado. Pídenos uno nuevo por WhatsApp.' });
+    if (bloqueado) return res.status(200).json({ ok: false, bloqueado: true, error: 'Por seguridad, el enlace se ha bloqueado tras varios intentos. Escríbenos y te mandamos uno nuevo.' });
+    if (modo === 'ninguno') return res.status(200).json({ ok: false, error: 'No podemos comprobar tu identidad con este enlace. Escríbenos y te lo damos de otra manera.' });
+    const dato = String(q.dato || '');
+    let ok = false;
+    if (modo === 'dni') { const d = dato.replace(/\D/g, ''); ok = d.length === 4 && d === dniDig.slice(-4); }
+    else { const m = dato.replace(/\s/g, '').match(/^(\d{1,2})[\/.-]?(\d{1,2})[\/.-]?(\d{4})$/); ok = !!m && `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` === nac; }
+    if (!ok) { const n = (E.intentos || 0) + 1; await guardaE({ intentos: n }); return res.status(200).json({ ok: false, mal: true, quedan: Math.max(0, 5 - n), error: n >= 5 ? 'Por seguridad, el enlace se ha bloqueado. Escríbenos y te mandamos uno nuevo.' : (modo === 'dni' ? 'Esos números no coinciden con tu DNI.' : 'Esa fecha no coincide.') + ` Te quedan ${5 - n} intentos.` }); }
+    if (action === 'inf-ver') {
+      if (!E.abierto) await guardaE({ abierto: ahoraIso });
+      let col = ''; try { const fr = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=${encodeURIComponent('NºColegiado')}`); const f = (fr.records || []).find(x => String(x.fields.Name || '').trim().toLowerCase() === String(F['FisioNombre'] || '').trim().toLowerCase()); col = f ? String(f.fields['NºColegiado'] || '') : ''; } catch (e) {}
+      return res.status(200).json({ ok: true, pila: pilaB, paciente: String(P['FULL NAME'] || F['PacienteNombre'] || '').trim(), informe: F['Informe'] || '', tipo: F['Protocolo'] || '', fisio: F['FisioNombre'] || '', colegiado: col, fecha: F['Fecha'] || '', firmado: !!F['RECIBI FECHA'], texto: TEXTO_RECIBI });
+    }
+    // inf-firmar
+    if (F['RECIBI FECHA']) return res.status(200).json({ ok: true, ya: true });
+    if (!firmaOk(q.firma)) return res.status(400).json({ ok: false, error: 'Falta la firma' });
+    const u = await at(`${INFORMES_TABLE}/${rec.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECIBI FECHA': ahoraIso, 'RECIBI FIRMA': q.firma, 'RECIBI DATOS': JSON.stringify({ canal: E.canal || 'enlace', verificado: modo === 'dni' ? '4 últimos números del DNI' : 'fecha de nacimiento', texto: TEXTO_RECIBI, ...quienEs() }) } }) });
+    if (u.error) return res.status(500).json({ ok: false, error: 'No se ha podido guardar la firma. Inténtalo de nuevo.' });
+    return res.status(200).json({ ok: true });
   }
   if (action === 'config-pub') { // lo que la app del paciente necesita saber (sin datos privados)
     const c = await conf().catch(() => CONF_DEF); res.setHeader('Cache-Control', 'public, max-age=300');
@@ -2823,6 +2948,46 @@ module.exports = async function handler(req, res) {
         const d = q.id && /^rec[A-Za-z0-9]{14}$/.test(q.id) ? await at(`${PT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }) : await at(PT, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }], typecast: true }) });
         return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
       }
+      // Dar un informe al paciente pidiendo recibí: en su app, por enlace (WhatsApp / email) o en mano (firma en el panel)
+      if (action === 'seg-inf-entrega') {
+        const id = String(q.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false, error: 'Informe no válido' });
+        const canal = ['app', 'whatsapp', 'email', 'mano'].includes(q.canal) ? q.canal : 'whatsapp';
+        const r = await at(`${INFORMES_TABLE}/${id}`); if (r.error) return res.status(404).json({ ok: false, error: 'Informe no encontrado' });
+        const F = r.fields || {}; let E = {}; try { E = JSON.parse(F['ENTREGA'] || '{}'); } catch (e) {}
+        const pr = await at(`${PACIENTES}/${F['PacienteId']}`).catch(() => ({})); const P = pr.fields || {};
+        const dniDig = String(P['DNI'] || '').replace(/\D/g, ''), nac = String(P['NACIMIENTO'] || '').slice(0, 10);
+        const verif = dniDig.length >= 4 ? 'dni' : /^\d{4}-\d{2}-\d{2}$/.test(nac) ? 'nac' : '';
+        let tk = String(F['ENTREGA TOKEN'] || '');
+        if (canal === 'whatsapp' || canal === 'email') {
+          if (!verif) return res.status(200).json({ ok: false, error: 'Este paciente no tiene DNI ni fecha de nacimiento en su ficha: no podrá abrir el enlace. Añádelos o dáselo en su app o en mano.' });
+          if (!tk) { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'; tk = Array.from(require('crypto').randomBytes(20), b => A[b % A.length]).join(''); }
+        }
+        const fields = { 'RECIBI PIDE': true, ENTREGA: JSON.stringify({ ...E, canal, enviado: new Date().toISOString(), intentos: 0, quien: String(q.quien || '').slice(0, 60) }) };
+        if (tk) fields['ENTREGA TOKEN'] = tk;
+        if (canal !== 'mano') fields.SoloFisio = false; // también le aparece en su app
+        if (typeof q.texto === 'string' && q.texto.trim()) fields.Informe = q.texto.slice(0, 90000); // lo último escrito en el panel
+        const u = await at(`${INFORMES_TABLE}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields }) });
+        if (u.error) return res.status(500).json({ ok: false, error: u.error.message || 'No se ha podido guardar' });
+        const pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || '';
+        const tel = String(P['WHATSAPP'] || P['TELF'] || '').replace(/\D/g, '');
+        return res.status(200).json({ ok: true, url: tk ? `https://app.fisioterapia365.com/i/${tk}` : '', tel: tel.length === 9 ? '34' + tel : tel, email: String(P['EMAIL'] || '').trim(), pila: pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '', verif, firmado: !!F['RECIBI FECHA'] });
+      }
+      if (action === 'seg-inf-recibi-mano') {
+        const id = String(q.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false, error: 'Informe no válido' });
+        if (typeof q.firma !== 'string' || !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(q.firma) || q.firma.length > 95000) return res.status(400).json({ ok: false, error: 'Falta la firma' });
+        const r = await at(`${INFORMES_TABLE}/${id}`); if (r.error) return res.status(404).json({ ok: false, error: 'Informe no encontrado' });
+        let E = {}; try { E = JSON.parse((r.fields || {})['ENTREGA'] || '{}'); } catch (e) {}
+        const u = await at(`${INFORMES_TABLE}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECIBI PIDE': true, 'RECIBI FECHA': new Date().toISOString(), 'RECIBI FIRMA': q.firma, ENTREGA: JSON.stringify({ ...E, canal: 'mano', enviado: E.enviado || new Date().toISOString(), quien: String(q.quien || '').slice(0, 60) }), 'RECIBI DATOS': JSON.stringify({ canal: 'mano', verificado: 'en persona, en la clínica' + (q.quien ? ' (' + String(q.quien).slice(0, 60) + ')' : ''), texto: 'Confirmo que he recibido mi informe fisioterapéutico de FISIO365.' }) } }) });
+        if (u.error) return res.status(500).json({ ok: false, error: u.error.message || 'No se ha podido guardar' });
+        return res.status(200).json({ ok: true });
+      }
+      if (action === 'seg-inf-recibi') {
+        const id = String(q.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false, error: 'Informe no válido' });
+        const r = await at(`${INFORMES_TABLE}/${id}`); const F = r.fields || {};
+        if (!F['RECIBI FECHA']) return res.status(200).json({ ok: false, error: 'Todavía no ha firmado el recibí' });
+        let D = {}; try { D = JSON.parse(F['RECIBI DATOS'] || '{}'); } catch (e) {}
+        return res.status(200).json({ ok: true, fecha: F['RECIBI FECHA'], firma: F['RECIBI FIRMA'] || '', datos: D, paciente: String(F['PacienteNombre'] || ''), tipo: F['Protocolo'] || '', fechaInforme: F['Fecha'] || '', fisio: F['FisioNombre'] || '' });
+      }
       if (action === 'seg-informe-tto') {
         // Informe fisioterapéutico redactado por la IA con el historial clínico, la anamnesis y las sesiones realizadas.
         // Se guarda en Informes de la ficha como «solo fisio»: se revisa y se comparte desde ahí.
@@ -3258,7 +3423,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
   // ── LISTAR INFORMES DEL PACIENTE ─────────────────────────────────────────
   if (action === 'informes') {
     try {
-      const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo&fields[]=SoloFisio';
+      const fields = 'fields[]=PacienteId&fields[]=PacienteNombre&fields[]=FisioNombre&fields[]=Fecha&fields[]=Informe&fields[]=Protocolo&fields[]=SoloFisio&fields[]=' + encodeURIComponent('RECIBI PIDE') + '&fields[]=' + encodeURIComponent('RECIBI FECHA');
       let allRecords = [];
       let offset = null;
       do {
@@ -3266,7 +3431,6 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${INFORMES_TABLE}?${fields}&sort[0][field]=Fecha&sort[0][direction]=desc&pageSize=100${off}`,
           { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
         const data = await r.json();
-        console.log('Airtable response sample:', JSON.stringify(data.records?.[0]?.fields));
         allRecords = allRecords.concat(data.records || []);
         offset = data.offset || null;
       } while (offset);
@@ -3284,7 +3448,9 @@ Devuelve solo el texto del mensaje, sin comillas.`;
           tipo: rec.fields['Protocolo'] || '-',
           fisioNombre: rec.fields['FisioNombre'] || '-',
           fisioColegiado: colPorNombre[String(rec.fields['FisioNombre'] || '').trim().toLowerCase()] || '',
-          contenido: rec.fields['Informe'] || ''
+          contenido: rec.fields['Informe'] || '',
+          recibiPide: !!rec.fields['RECIBI PIDE'],
+          recibido: rec.fields['RECIBI FECHA'] || ''
         }));
       return res.status(200).json({ ok: true, informes });
     } catch(e) {

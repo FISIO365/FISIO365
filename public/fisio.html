@@ -1665,6 +1665,23 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .idoc-txt>div.ph{position:relative;border-bottom:1px dashed #eadfd6;min-height:1.6em}.idoc-txt>div.ph::before{content:'Escribe aquí…';position:absolute;left:0;top:0;color:#c8bbb1;pointer-events:none}
 .idoc-pie{border-top:1px solid #f1ece6;padding-top:10px;margin-top:10px;font-size:9.5px;color:#9a8f87}
 @media(max-width:520px){.idoc{padding:20px 16px 14px}.idoc-dat{grid-template-columns:1fr 1fr}.idoc-dat>div:last-child{grid-column:1/-1}}
+
+.fp-inf-rec{display:inline-block;margin:6px 0 0 6px;font-size:11.5px;font-weight:600;border-radius:99px;padding:3px 10px}.fp-inf-rec.ok{background:#e8f5ec;color:#16803c}.fp-inf-rec.pend{background:#fff4e5;color:#b45309}
+.ient{margin-top:14px;border:1.5px solid #ece6df;border-radius:16px;padding:14px;background:#fff}
+.ient-h{font-size:14px;font-weight:700;color:#1a1a1a}.ient-s{font-size:12.5px;color:#7d6a60;line-height:1.45;margin:3px 0 10px}
+.ient-ops{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ient-ops button{font-family:var(--font);text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:14px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.ient-ops button b{font-size:13.5px;color:#1a1a1a}.ient-ops button small{font-size:11.5px;color:#9a8f87;line-height:1.35}.ient-ops button.on{border-color:#c2552e;background:#fdf6f2}.ient-ops button.on b{color:#c2552e}.ient-ops button:disabled{opacity:.6}
+@media(max-width:420px){.ient-ops{grid-template-columns:1fr}}
+.ient-res:empty{display:none}.ient-res{margin-top:10px}.ient-msg{background:#f7f3ef;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#3c342f;word-break:break-word}
+.ient-go{display:block;text-align:center;margin-top:8px;border-radius:99px;padding:12px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;background:#c2552e}.ient-go.whatsapp{background:#1f9d55}
+.ient-cp{display:block;width:100%;margin-top:8px;font-family:var(--font);font-size:13px;font-weight:600;border:1.5px solid var(--border);background:#fff;border-radius:99px;padding:10px;cursor:pointer;color:#1a1a1a}
+.ient-err{font-size:12.5px;color:#b42318;margin-top:4px}.ient-hecho{font-size:13px;color:#16803c;font-weight:600}
+.ient-ok{display:flex;flex-direction:column;gap:1px;background:#e8f5ec;border-radius:12px;padding:10px 12px;margin-top:8px}.ient-ok b{color:#16803c;font-size:14px}.ient-ok span{font-size:12px;color:#3d6b4b}
+.ient-rb{display:block;width:100%;margin-top:8px;font-family:var(--font);font-size:13.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;border-radius:99px;padding:11px;cursor:pointer;color:#1a1a1a}
+.ient-mt{font-size:17px;font-weight:700;margin-bottom:2px}.ient-chk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;margin:6px 0 12px;cursor:pointer}.ient-chk input{width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:#c2552e}
+.ient-sigw{position:relative}.ient-sigw canvas{display:block;width:100%;height:170px;border:1.5px dashed #e3b9a6;border-radius:14px;background:#fdf9f6;touch-action:none}
+.ient-sigl{position:absolute;left:14px;bottom:10px;font-size:12px;color:#c8b6aa;pointer-events:none}.ient-borra{position:absolute;right:8px;top:8px;border:none;background:#fff;border-radius:99px;font-family:var(--font);font-size:12px;font-weight:600;color:#6b5f57;padding:5px 10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.hz-bts .hz-ok:disabled{opacity:.45}
 </style>
 </head>
 <body>
@@ -9852,6 +9869,65 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
   };
  };
 }
+// ── Recibí del informe: estado y formas de dárselo al paciente ──
+function infFechaHora(iso){const d=new Date(iso);return isNaN(d)?'':d.toLocaleString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
+function infEstadoRecibi(inf){
+ if(inf.recibido)return `<span class="fp-inf-rec ok">✓ Recibí firmado · ${infFechaHora(inf.recibido)}</span>`;
+ const E=inf.entrega;if(!inf.recibiPide||!E||!E.canal)return '';
+ const cn={app:'en su app',whatsapp:'por WhatsApp',email:'por email',mano:'en mano'}[E.canal]||'';
+ return `<span class="fp-inf-rec pend">${E.abierto?'Abierto':'Enviado'} ${cn} · sin firmar</span>`;
+}
+function infFirmaPad(cv,onCambio){
+ const r=cv.getBoundingClientRect(),dp=window.devicePixelRatio||1;cv.width=r.width*dp;cv.height=r.height*dp;const cx=cv.getContext('2d');cx.scale(dp,dp);cx.lineWidth=2.2;cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle='#1a1a1a';
+ let dib=false,hay=false;const p=e=>{const b=cv.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top];};
+ cv.onpointerdown=e=>{dib=true;cv.setPointerCapture(e.pointerId);const[x,y]=p(e);cx.beginPath();cx.moveTo(x,y);};
+ cv.onpointermove=e=>{if(!dib)return;const[x,y]=p(e);cx.lineTo(x,y);cx.stroke();if(!hay){hay=true;onCambio&&onCambio(true);}};
+ cv.onpointerup=cv.onpointercancel=()=>{dib=false;};
+ return{hay:()=>hay,borra:()=>{cx.clearRect(0,0,cv.width,cv.height);hay=false;onCambio&&onCambio(false);},png:()=>{const w=Math.min(600,cv.width),h=Math.round(cv.height*w/cv.width),c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(cv,0,0,w,h);return c.toDataURL('image/png');}};
+}
+function infEntregaBloque(inf,o){
+ const b=ce('div','ient');
+ const post=async(a,x)=>{try{const r=await fetch('/api/schedule?action='+a,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,...x})});return await r.json();}catch(e){return{ok:false,error:'Sin conexión. Inténtalo de nuevo.'};}};
+ const pinta=()=>{
+  if(inf.recibido){b.innerHTML=`<div class="ient-h">Entrega al paciente</div><div class="ient-ok"><b>✓ Recibí firmado</b><span>${infFechaHora(inf.recibido)}${inf.entrega&&inf.entrega.canal?' · '+({app:'en su app',whatsapp:'enlace por WhatsApp',email:'enlace por email',mano:'en mano'}[inf.entrega.canal]||''):''}</span></div><button type="button" class="ient-rb">Descargar el recibí en PDF</button>`;
+   b.querySelector('.ient-rb').onclick=async e=>{const bt=e.currentTarget;bt.disabled=true;bt.textContent='Preparando…';try{const d=await post('seg-inf-recibi',{id:inf.id});if(!d.ok)throw new Error(d.error);await new Promise((ok,ko)=>{if(window.InformePDF&&window.InformePDF.recibi)return ok();const sc=document.createElement('script');sc.src='/informe/pdf.js?v=2';sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc);});await window.InformePDF.recibi(d);}catch(err){toast((err&&err.message)||'No se ha podido crear el PDF',false);}bt.disabled=false;bt.textContent='Descargar el recibí en PDF';};
+   return;}
+  const E=inf.entrega;
+  b.innerHTML=`<div class="ient-h">Dárselo con recibí firmado</div><div class="ient-s">${E&&E.canal&&inf.recibiPide?(E.canal==='app'?'Compartido en su app el ':'Enlace '+({whatsapp:'para WhatsApp',email:'para email'}[E.canal]||'')+' creado el ')+infFechaHora(E.enviado)+(E.abierto?' · lo abrió el '+infFechaHora(E.abierto):' · todavía no lo ha abierto')+'. Falta su firma. Puedes volver a mandarlo.':'El paciente firma que lo ha recibido. Queda guardado con la fecha y la hora.'}</div>
+   <div class="ient-ops"><button type="button" data-c="whatsapp"><b>Enlace por WhatsApp</b><small>Le llega un enlace seguro, no el PDF</small></button><button type="button" data-c="email"><b>Enlace por email</b><small>Igual, a su correo</small></button><button type="button" data-c="app"><b>En su app</b><small>Firma al abrirlo en «Mis documentos»</small></button><button type="button" data-c="mano"><b>En mano</b><small>Firma ahora en esta pantalla</small></button></div><div class="ient-res"></div>`;
+  b.querySelectorAll('.ient-ops button').forEach(bt=>bt.onclick=()=>dar(bt.dataset.c,bt));
+ };
+ const dar=async(canal,bt)=>{
+  if(canal==='mano'){firmaMano();return;}
+  const res=b.querySelector('.ient-res');b.querySelectorAll('.ient-ops button').forEach(x=>x.disabled=true);bt.classList.add('on');res.innerHTML='<div class="ient-s">Preparando…</div>';
+  const d=await post('seg-inf-entrega',{id:inf.id,canal,texto:o.getTexto(),quien:(fisioActual&&fisioActual.nombre)||''});
+  b.querySelectorAll('.ient-ops button').forEach(x=>x.disabled=false);
+  if(!d.ok){res.innerHTML=`<div class="ient-err">${escH(d.error||'No se ha podido preparar')}</div>`;bt.classList.remove('on');return;}
+  inf.recibiPide=true;inf.soloFisio=false;inf.entrega={...(inf.entrega||{}),canal,enviado:new Date().toISOString(),abierto:''};o.onCambio&&o.onCambio();
+  const yo=miNombreCorto(),pide=d.verif==='dni'?'los 4 últimos números de tu DNI':'tu fecha de nacimiento';
+  const msg=`Hola${d.pila?' '+d.pila:''}, soy ${yo} de FISIO365. Aquí tienes tu informe de fisioterapia:\n${d.url}\n\nPara abrirlo te pediremos ${pide}.`;
+  if(canal==='app'){pinta();b.querySelector('.ient-res').innerHTML='<div class="ient-hecho">Listo: le aparece en su app y al abrirlo tendrá que firmar el recibí.</div>';return;}
+  let link='';
+  if(canal==='whatsapp'){if(!d.tel){res.innerHTML='<div class="ient-err">No tiene teléfono en la ficha. Copia el mensaje y mándaselo como puedas.</div>';}else link=`https://wa.me/${d.tel}?text=${encodeURIComponent(msg)}`;}
+  else{if(!d.email){res.innerHTML='<div class="ient-err">No tiene email en la ficha. Copia el mensaje y mándaselo como puedas.</div>';}else link=`mailto:${encodeURIComponent(d.email)}?subject=${encodeURIComponent('Tu informe de FISIO365')}&body=${encodeURIComponent(msg)}`;}
+  pinta();const r2=b.querySelector('.ient-res');
+  r2.innerHTML=`<div class="ient-msg">${escH(msg).replace(/\n/g,'<br>')}</div>${link?`<a class="ient-go ${canal}" href="${link}" target="_blank" rel="noopener">${canal==='whatsapp'?'Abrir WhatsApp':'Abrir el correo'}</a>`:''}<button type="button" class="ient-cp">Copiar mensaje</button>`;
+  r2.querySelector('.ient-cp').onclick=async e=>{try{await navigator.clipboard.writeText(msg);e.currentTarget.textContent='✓ Copiado';}catch(_){toast('No se ha podido copiar',false);}};
+ };
+ const firmaMano=()=>{
+  const m=hzModal(`<div class="ient-mt">Recibí del informe</div><div class="ient-s">${escH(o.pacNom||'')} firma que ha recibido su informe.</div><label class="ient-chk"><input type="checkbox"><span>Confirmo que he recibido mi informe fisioterapéutico de FISIO365.</span></label><div class="ient-sigw"><canvas></canvas><span class="ient-sigl">Firma aquí con el dedo</span><button type="button" class="ient-borra">Borrar</button></div><div class="hz-bts"><button type="button" class="hz-no">Cancelar</button><button type="button" class="hz-ok" disabled>Guardar firma</button></div>`);
+  const ok=m.querySelector('.hz-ok'),ck=m.querySelector('input'),sl=m.querySelector('.ient-sigl');let pad;
+  const listo=()=>{ok.disabled=!(pad&&pad.hay()&&ck.checked);};
+  setTimeout(()=>{pad=infFirmaPad(m.querySelector('canvas'),h=>{sl.hidden=h;listo();});},60);
+  ck.onchange=listo;m.querySelector('.ient-borra').onclick=()=>pad&&pad.borra();m.querySelector('.hz-no').onclick=()=>m.remove();
+  ok.onclick=async()=>{ok.disabled=true;ok.textContent='Guardando…';
+   if(o.getTexto)await post('seg-inf-entrega',{id:inf.id,canal:'mano',texto:o.getTexto(),quien:(fisioActual&&fisioActual.nombre)||''});
+   const d=await post('seg-inf-recibi-mano',{id:inf.id,firma:pad.png(),quien:(fisioActual&&fisioActual.nombre)||''});
+   if(!d.ok){toast(d.error||'No se ha podido guardar',false);ok.disabled=false;ok.textContent='Guardar firma';return;}
+   m.remove();inf.recibiPide=true;inf.recibido=new Date().toISOString();inf.entrega={...(inf.entrega||{}),canal:'mano'};pinta();o.onCambio&&o.onCambio();toast('Recibí firmado y guardado',true);};
+ };
+ pinta();return b;
+}
 // Editor del informe con el aspecto del PDF: se escribe encima del documento tal y como quedará
 function infDocEditor(texto,o,onCambio){
  const esTit=l=>(/^[A-ZÁÉÍÓÚÑÜ0-9 ,\/·()-]{5,}$/.test(l)||(/^[^.;]{3,45}:$/.test(l)&&l.split(/\s+/).length<=5))&&!/^- /.test(l);
@@ -9914,7 +9990,7 @@ async function fpTabInformes(pacId, body, pacNombre, tok, abrirJust){
  }
  todos.forEach(inf=>{
  const c=ce('div','fp-inf-card');
- c.innerHTML=`<div class="fp-inf-top"><div><div class="fp-inf-tipo">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</div><div class="fp-inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+escH(inf.fisioNombre):''}</div>${/^rec/.test(String(inf.id))?`<span class="fp-inf-vis ${inf.soloFisio?'priv':''}">${inf.soloFisio?'Sin compartir':'Compartido con el paciente'}</span>`:''}</div><button type="button" class="fp-btn">Abrir</button></div>`;
+ c.innerHTML=`<div class="fp-inf-top"><div><div class="fp-inf-tipo">${tipoLabel[inf.protocolo]||inf.protocolo||'Valoración'}</div><div class="fp-inf-meta">${inf.fecha||'—'}${inf.fisioNombre?' · '+escH(inf.fisioNombre):''}</div>${/^rec/.test(String(inf.id))?`<span class="fp-inf-vis ${inf.soloFisio?'priv':''}">${inf.soloFisio?'Sin compartir':'Compartido con el paciente'}</span>`:''}${infEstadoRecibi(inf)}</div><button type="button" class="fp-btn">Abrir</button></div>`;
  const bAbrir=c.querySelector('.fp-btn');
  // Papelera en la tarjeta (sin tener que abrirlo): primer toque pide confirmación, el segundo borra
  {const bx=ce('button','fp-inf-x');bx.type='button';bx.title='Borrar informe';bx.setAttribute('aria-label','Borrar informe');
@@ -9951,6 +10027,7 @@ async function fpTabInformes(pacId, body, pacNombre, tok, abrirJust){
    }catch(e){del.disabled=false;armado=false;del.classList.remove('armado');del.textContent='Borrar informe';toast(e.message,false);}
   };
   (bar||ed).insertAdjacentElement('afterend',del);
+  if(/^rec/.test(String(inf.id))){const eb=infEntregaBloque(inf,{pacNom:pacN,getTexto:docEd.texto,onCambio:()=>{const t=c.querySelector('.fp-inf-rec');const h=infEstadoRecibi(inf);if(t)t.outerHTML=h||'';else if(h)c.querySelector('.fp-inf-top>div').insertAdjacentHTML('beforeend',h);}});del.insertAdjacentElement('beforebegin',eb);}
   bAbrir.textContent='Cerrar';
  };
  body.appendChild(c);
