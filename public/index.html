@@ -329,7 +329,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .sg-anon input:checked+.sg-chk::after{content:'';width:9px;height:5px;border:2px solid #fff;border-top:none;border-right:none;transform:rotate(-45deg) translate(1px,-1px)}
 .sg-err{font-size:13px;color:#c0392b;min-height:0;margin:4px 4px 0}.sg-err:empty{display:none}
 .sg-ok{width:100%;margin-top:18px;font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:16px;padding:15px;background:var(--lila-d);color:#fff;cursor:pointer;transition:opacity .15s}
-.sg-ok:disabled{background:#ddd5cc;cursor:default}
+.sg-ok:disabled{opacity:.6;cursor:default}
 .sg-gracias{text-align:center;padding:32px 20px 24px}
 .sg-gracias h3{font-size:20px;font-weight:800;letter-spacing:-.4px;margin:14px 0 6px}.sg-gracias p{font-size:14px;line-height:1.5;color:var(--muted);margin:0 0 20px}
 .sg-ic{width:56px;height:56px;border-radius:50%;background:var(--lila-light);margin:0 auto;display:flex;align-items:center;justify-content:center}
@@ -1255,9 +1255,9 @@ async function subirFotoPerfil(inp){const f=inp.files&&inp.files[0];inp.value=''
   const d=await (await fetch('/api/schedule?action=subir-foto&patientId='+encodeURIComponent(patient.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({b64})})).json();
   if(!d.ok)throw new Error(d.error||'');patient.foto='data:image/jpeg;base64,'+b64;pintarAvatar();toast('Foto actualizada ✓',true);
  }catch(e){toast(e.message||'No se ha podido subir la foto',false);}}
-function sgCuenta(){document.getElementById('sgOk').disabled=!document.getElementById('sgTexto').value.trim();}
+function sgCuenta(){document.getElementById('sgErr').textContent='';}
 async function enviarSugerencia(){const ta=document.getElementById('sgTexto'),err=document.getElementById('sgErr'),b=document.getElementById('sgOk'),t=ta.value.trim(),anon=document.getElementById('sgAnon').checked;err.textContent='';
- if(!t){ta.focus();return;}
+ if(!t){err.textContent='Escribe tu sugerencia antes de enviarla';ta.focus();return;}
  b.disabled=true;b.textContent='Enviando…';
  try{const d=await (await fetch('/api/schedule?action=mi-sugerencia&patientId='+encodeURIComponent(patient.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto:t,anonimo:anon})})).json();
   if(!d.ok){err.textContent=d.error||'No se ha podido enviar';b.disabled=false;}else{const n=String(patient.nombre||'').trim().split(/\s+/)[0];document.getElementById('sgGrT').textContent=!anon&&n?'¡Gracias, '+n.charAt(0).toUpperCase()+n.slice(1).toLowerCase()+'!':'¡Gracias!';
