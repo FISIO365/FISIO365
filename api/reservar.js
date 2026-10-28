@@ -12,14 +12,14 @@ const DIAS_VISTA = 35;          // cuántos días hacia delante se enseñan
 const TIPO_APP = 'recvCLCoYJ82LcPh9';  // «RESERVADA POR LA APP» en la tabla de tipos de cita
 const MARGEN_MIN = 0;           // se puede reservar hasta la hora de empezar, mientras el hueco esté libre
 
-const ETAPAS_PAC = ['PACIENTE NUEVO', 'PENDIENTE DE COMENZAR', 'ACTIVO', 'SEGUIMIENTO', 'PENDIENTE DE CONTINUAR', 'ALTA', 'ABANDONO', 'NO ACUDIÓ', 'SESIÓN ÚNICA'];
+const ETAPAS_PAC = ['PACIENTE NUEVO', 'PENDIENTE DE COMENZAR', 'ACTIVO', 'SEGUIMIENTO', 'PENDIENTE DE CONTINUAR', 'ALTA', 'ABANDONO', 'NO ACUDIÓ'];
 async function ponerEtapaCita(pid) {
   const g = async path => (await fetch(`https://api.airtable.com/v0/${BASE_ID}/${path}`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })).json();
   const est = await g('tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100'); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
   const h = await g(`${CITAS}?filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',FIND('${pid}',ARRAYJOIN({PacienteRec})))`)}&maxRecords=1&fields[]=FECHA`);
   const nueva = E[(h.records || []).length ? 'ACTIVO' : 'PACIENTE NUEVO']; if (!nueva) return;
   const p = await g(`${PACIENTES}/${pid}?fields[]=ESTADO`); const act = (p.fields && p.fields['ESTADO']) || [];
-  const vida = ETAPAS_PAC.map(n => E[n]).filter(Boolean), nuevo = [...act.filter(id => !vida.includes(id)), nueva];
+  const vida = ETAPAS_PAC.map(n => E[n]).filter(Boolean), nuevo = [...act.filter(id => !vida.includes(id) && id !== E['SESIÓN ÚNICA']), nueva];
   if (nuevo.slice().sort().join() !== act.slice().sort().join()) await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES}/${pid}`, { method: 'PATCH', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { ESTADO: nuevo } }) });
 }
 

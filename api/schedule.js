@@ -173,22 +173,26 @@ const at = async (path, opt = {}) => { for (let i = 0; ; i++) { const r = await 
 
 // ── ETAPA DEL PACIENTE: solo una a la vez, y se pone sola según lo que pasa ──
 // Las demás etiquetas (Valoración, Fin pack, Evolución…, Mantenimiento…) no se tocan.
-const ETAPAS_PAC = ['PACIENTE NUEVO', 'PENDIENTE DE COMENZAR', 'ACTIVO', 'SEGUIMIENTO', 'PENDIENTE DE CONTINUAR', 'ALTA', 'ABANDONO', 'NO ACUDIÓ', 'SESIÓN ÚNICA'];
+// «SESIÓN ÚNICA» no es etapa: convive con Alta o Pendiente de continuar; se pone al hacer la 1ª sesión sin reagendar y se quita si vuelve a tener cita
+const ETAPAS_PAC = ['PACIENTE NUEVO', 'PENDIENTE DE COMENZAR', 'ACTIVO', 'SEGUIMIENTO', 'PENDIENTE DE CONTINUAR', 'ALTA', 'ABANDONO', 'NO ACUDIÓ'];
 async function ponerEtapa(pid, evento) {
   if (!/^rec[A-Za-z0-9]{14}$/.test(pid || '')) return null;
   const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
   const citasDe = async (cond, n) => ((await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(${cond},FIND('${pid}',ARRAYJOIN({PacienteRec})))`)}&maxRecords=${n}&fields[]=FECHA`)).records || []);
   const hechas = n => citasDe("TRIM({ESTADO})='REALIZADA'", n);
   const futura = () => citasDe("OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA'),IS_AFTER({FECHA},DATEADD(TODAY(),-1,'days'))", 1);
-  let nueva = null;
-  if (evento === 'cita') nueva = (await hechas(1)).length ? 'ACTIVO' : 'PACIENTE NUEVO';                       // se le da cita
-  else if (evento === 'realizada') nueva = (await futura()).length ? 'ACTIVO' : (await hechas(2)).length <= 1 ? 'SESIÓN ÚNICA' : null; // hace la sesión: reagenda → Activo; primera y no reagenda → Sesión única
-  else if (evento === 'noasistio') nueva = (await futura()).length ? null : 'NO ACUDIÓ';                       // falta y no tiene otra cita
-  else if (ETAPAS_PAC.includes(evento)) nueva = evento;                                                         // Alta, Seguimiento, Abandono…
-  if (!nueva || !E[nueva]) return null;
   const pac = await at(`${PACIENTES}/${pid}?fields[]=ESTADO`); const act = (pac.fields && pac.fields['ESTADO']) || [];
-  const vida = ETAPAS_PAC.map(n => E[n]).filter(Boolean);
-  const nuevo = [...act.filter(id => !vida.includes(id)), E[nueva]];
+  let nueva = null, unica = null; // unica: true = poner «Sesión única», false = quitarla
+  if (evento === 'cita') { nueva = (await hechas(1)).length ? 'ACTIVO' : 'PACIENTE NUEVO'; unica = false; }      // se le da cita
+  else if (evento === 'realizada') { if ((await futura()).length) { nueva = 'ACTIVO'; unica = false; }           // hace la sesión y ya tiene otra → Activo
+    else if ((await hechas(2)).length <= 1) { unica = true; if (act.includes(E['PACIENTE NUEVO'])) nueva = 'ACTIVO'; } } // 1ª sesión y no reagenda → Sesión única
+  else if (evento === 'noasistio') nueva = (await futura()).length ? null : 'NO ACUDIÓ';                       // falta y no tiene otra cita
+  else if (evento === 'SEGUIMIENTO' && act.includes(E['NO ACUDIÓ'])) nueva = null;                             // si no acudió, se queda «No acudió»
+  else if (ETAPAS_PAC.includes(evento)) nueva = evento;                                                         // Alta, Seguimiento, Abandono…
+  if ((!nueva || !E[nueva]) && unica === null) return null;
+  const vida = ETAPAS_PAC.map(n => E[n]).filter(Boolean), U = E['SESIÓN ÚNICA'];
+  let nuevo = nueva && E[nueva] ? [...act.filter(id => !vida.includes(id)), E[nueva]] : act.slice();
+  if (U && unica === true && !nuevo.includes(U)) nuevo.push(U); if (U && unica === false) nuevo = nuevo.filter(id => id !== U);
   if (nuevo.slice().sort().join() !== act.slice().sort().join()) await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: nuevo } }) });
   return { etapa: nueva, estados: nuevo };
 }
