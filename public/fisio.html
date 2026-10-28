@@ -8936,7 +8936,7 @@ function mantenerVista(el,repinta){
 function waPersonal(o){
  // Firma el fisio que le atendió (si no consta, quien lo envía)
  const nom=capTit(String(o.nombre||'').split(' ')[0]),yo1=capTit(String(o.fisio||'').trim().split(' ')[0])||miNombreCorto();
- const gen=o.generico||(o.proxima?`Hola ${nom}, soy ${yo1} de FISIO365 😊 ¿Qué tal sigues? Te recuerdo que nos vemos el ${segFecha(o.proxima)}. Cualquier cosa, escríbenos. ¡Un abrazo!`:`Hola ${nom}, soy ${yo1} de FISIO365 😊 ¿Qué tal sigues desde la última sesión? Si notas cualquier molestia o te apetece hacer una revisión, dime y te buscamos hueco. ¡Un abrazo!`);
+ const gen=o.generico||(o.proxima?`Hola ${nom}, soy ${yo1} de FISIO365. ¿Qué tal sigues? Te recuerdo que nos vemos el ${segFecha(o.proxima)}. Cualquier cosa, escríbenos. ¡Un abrazo!`:`Hola ${nom}, soy ${yo1} de FISIO365. ¿Qué tal sigues desde la última sesión? Si notas cualquier molestia o te apetece hacer una revisión, dime y te buscamos hueco. ¡Un abrazo!`);
  const ultTxt=o.ult?[resTxtG(o.ult.resultado),o.ult.nota].filter(Boolean).join(' — '):'';
  const ctx=[o.nota,o.ult&&o.ult.nota].filter(Boolean).join(' · ');
  const m=hzModal(`<div class="hz-top"><div><small>WhatsApp a</small><b>${escH(o.nombre)}</b></div><button type="button" class="hz-x">✕</button></div>${ctx?`<p class="sgw-ctx">${escH(ctx)}</p>`:''}<p class="sgw-ia" hidden>Personalizando el mensaje…</p><textarea class="fp-ta sgw-ta"></textarea><p class="sgw-n">Retócalo si quieres.${o.aviso?' '+o.aviso:''}</p><div class="hz-bts"><button type="button" class="sgw-solo">${o.alEnviar?'Solo abrir el chat':'Chat vacío'}</button><button type="button" class="hz-ok sgw-env">${escH(o.enviarTxt||'Enviar')}</button></div>`);
@@ -8946,7 +8946,7 @@ function waPersonal(o){
   agPost('seg-wa-ia',{pacienteId:o.pacienteId||'',nombre:o.nombre,yo:yo1,fisio:o.fisio||'',ultima:o.ultima?segFecha(o.ultima):'',proxima:o.proxima?segFecha(o.proxima):'',etapas:o.pacienteId?pacEstados(o.pacienteId).map(estNom).filter(Boolean).join(', '):'',nota:o.nota||'',ultLlamada:ultTxt})
    .then(r=>{if(r&&r.ok&&r.texto){if(!tocado&&m.isConnected){ta.value=r.texto;aj();}ia.hidden=true;}else{ia.textContent='No se ha podido personalizar'+(r&&r.error?': '+r.error:'')+'. Va el mensaje general.';ia.classList.add('err');}}).catch(e=>{ia.textContent='No se ha podido personalizar ('+(e&&e.message||'sin conexión')+'). Va el mensaje general.';ia.classList.add('err');}).finally(()=>{ta.classList.remove('cargando');});}
  m.querySelector('.hz-x').onclick=()=>m.remove();
- const abre=t=>{const tl=segTel(o.tel||'');window.open(`https://wa.me/${tl}${t?'?text='+encodeURIComponent(t):''}`,'_blank');};
+ const abre=t=>{t=String(t||'').replace(/\p{Extended_Pictographic}\uFE0F?/gu,'').replace(/[ \t]{2,}/g,' ');const tl=segTel(o.tel||'');window.open(`https://wa.me/${tl}${t?'?text='+encodeURIComponent(t):''}`,'_blank');};
  m.querySelector('.sgw-solo').onclick=()=>{abre('');m.remove();};
  // Abrir WhatsApp no es enviar: solo se marca cuando se confirma que se ha enviado
  m.querySelector('.sgw-env').onclick=()=>{const txt=ta.value;abre(txt);if(!o.alEnviar){m.remove();return;}
