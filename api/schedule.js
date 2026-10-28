@@ -2304,7 +2304,7 @@ module.exports = async function handler(req, res) {
           if ('notas' in q) f['NOTAS'] = String(q.notas || '');
           const ya = await todosT(EST_T, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({SEMANA},'YYYY-MM-DD')='${sem}'`)}`);
           const d = ya[0] ? await at(`${EST_T}/${ya[0].id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }) : await at(EST_T, { method: 'POST', body: JSON.stringify({ records: [{ fields: Object.assign({ SEMANA: sem }, f) }] }) });
-          global._estCaches = {};
+          global._estCaches = {}; global._estTrozos = {};
           try { const ids = (await todosT('tblLIcIro0ko9VG6G', 'fields[]=CLAVE')).map(r => r.id); for (let i = 0; i < ids.length; i += 10) await at('tblLIcIro0ko9VG6G?' + ids.slice(i, i + 10).map(x => 'records[]=' + x).join('&'), { method: 'DELETE' }); } catch (e) {}
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
         }
@@ -2395,25 +2395,28 @@ module.exports = async function handler(req, res) {
         };
         // Periodos largos: por trimestres de 13 semanas. Los trimestres ya pasados se guardan calculados en Airtable
         // (ESTADISTICAS CACHE) y solo se recalcula lo reciente: así 2 años salen en lo que tardan unas pocas semanas.
+        // Lo reciente también se guarda 15 min en memoria: la carga corta y la de 2 años comparten los mismos trozos
+        global._estTrozos = global._estTrozos || {};
+        const calcM = async (a, b, f, n) => { const k = `${a}|${b}|${n}`, m = global._estTrozos[k]; if (!q.fresco && m && Date.now() - m.t < 15 * 60e3) return m.d; const d = await calc(a, b, f, n); global._estTrozos[k] = { t: Date.now(), d }; return d; };
         let data;
-        if (N <= 16) data = await calc(desde, hasta, futuro, N);
-        else {
+        {
           const CH = 13, EPOCH = '2024-01-01', ECT = 'tblLIcIro0ko9VG6G', VER = 'v1';
           const semK = k => mv(EPOCH, 7 * k), idx = f => Math.round((Date.parse(f + 'T12:00:00Z') - Date.parse(EPOCH + 'T12:00:00Z')) / (7 * 864e5));
-          const i0 = idx(desde), iL = idx(lun0), limiteViejo = mv(lun0, -7 * 8);
-          const mapa = {}; (await todosT(ECT, 'fields[]=CLAVE&fields[]=DATOS').catch(() => [])).forEach(r => { mapa[r.fields.CLAVE] = r.fields.DATOS; });
+          // Trimestres terminados hace más de 3 semanas: guardados. Si son de los últimos 3 meses se refrescan cada semana (la conversión aún puede subir)
+          const i0 = idx(desde), iL = idx(lun0), limiteViejo = mv(lun0, -7 * 3), reciente = mv(lun0, -7 * 13);
+          const mapa = {}, recId = {}; (await todosT(ECT, 'fields[]=CLAVE&fields[]=DATOS').catch(() => [])).forEach(r => { mapa[r.fields.CLAVE] = r.fields.DATOS; recId[r.fields.CLAVE] = r.id; });
           const partes = []; let calculados = 0, faltan = false;
           for (let st = Math.floor(i0 / CH) * CH; st <= iL; st += CH) {
             const ini = semK(st), finSem = semK(st + CH - 1), viejo = finSem < limiteViejo;
             if (viejo) {
               const clave = `${VER}|${ini}|${CH}`;
-              if (mapa[clave]) { try { partes.push(JSON.parse(mapa[clave])); continue; } catch (e) {} }
+              if (mapa[clave]) { try { const o = JSON.parse(mapa[clave]); if (!(finSem > reciente && Date.now() - (o.t || 0) > 7 * 864e5)) { partes.push(o); continue; } } catch (e) {} }
               if (calculados >= 2) { faltan = true; continue; }
-              const d = await calc(ini, mv(finSem, 6), mv(finSem, 66), CH); calculados++;
-              const txt = JSON.stringify({ semanas: d.semanas, nombres: d.nombres });
-              if (txt.length < 95000) await at(ECT, { method: 'POST', body: JSON.stringify({ records: [{ fields: { CLAVE: clave, DATOS: txt } }] }) }).catch(() => {});
+              const d = await calcM(ini, mv(finSem, 6), mv(finSem, 66), CH); calculados++;
+              const txt = JSON.stringify({ t: Date.now(), semanas: d.semanas, nombres: d.nombres });
+              if (txt.length < 95000) await (recId[clave] ? at(`${ECT}/${recId[clave]}`, { method: 'PATCH', body: JSON.stringify({ fields: { DATOS: txt } }) }) : at(ECT, { method: 'POST', body: JSON.stringify({ records: [{ fields: { CLAVE: clave, DATOS: txt } }] }) })).catch(() => {});
               partes.push(d);
-            } else { const a2 = semK(st), b2 = semK(Math.min(st + CH - 1, iL)); partes.push(await calc(a2, mv(b2, 6), futuro, idx(b2) - st + 1)); }
+            } else { const a2 = semK(st), b2 = semK(Math.min(st + CH - 1, iL)); partes.push(await calcM(a2, mv(b2, 6), futuro, idx(b2) - st + 1)); }
           }
           const vistas = new Set(), sems = [], noms = {}; let ingD = {};
           partes.forEach(d => { Object.assign(noms, d.nombres || {}); if (d.ingDias) ingD = d.ingDias; (d.semanas || []).forEach(w => { if (w.semana >= desde && w.semana <= lun0 && !vistas.has(w.semana)) { vistas.add(w.semana); sems.push(w); } }); });
