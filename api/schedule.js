@@ -1108,6 +1108,9 @@ module.exports = async function handler(req, res) {
         const listaPara = t => String(t || '').split(',').map(x => x.trim()).filter(Boolean);
         const okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
         const vistaMsg = r => { const F = r.fields || {}; return { id: r.id, de: F.DE || '', para: listaPara(F.PARA), cuerpo: F.CUERPO || '', fecha: F.FECHA || r.createdTime || '' }; };
+        // Número correlativo por año entre las comunicaciones que existen: si se borra una, las demás se renumeran solas
+        let SEQ_C = {};
+        const numerar = roots => { const m = {}, n = {}; roots.filter(r => !r.fields.HILO && r.fields['Nº']).sort((a, b) => a.fields['Nº'] - b.fields['Nº']).forEach(r => { const y = String(r.fields.FECHA || r.createdTime || '').slice(0, 4); n[y] = (n[y] || 0) + 1; m[r.id] = n[y]; }); SEQ_C = m; };
         const vistaHilo = (root, resp) => {
           const F = root.fields || {}, para = listaPara(F.PARA), de = F.DE || '', leido = json(F['LEÍDO']), hecho = json(F.HECHO);
           const msgs = [root, ...resp].map(vistaMsg).sort((a, b) => a.fecha.localeCompare(b.fecha));
@@ -1116,7 +1119,7 @@ module.exports = async function handler(req, res) {
           const tipo = nmC(F.TIPO) || 'Comunicado', esAus = tipo === 'Ausencia', resolucion = esAus ? (nmC(F['RESOLUCIÓN']) || 'Pendiente') : '';
           const puedeAprobar = esAus && abierta && resolucion === 'Pendiente' && para.includes(yo) && de !== yo;
           return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo, de, para, req, limite: F['FECHA LÍMITE'] || '', abierta,
-            num: F['Nº'] ? `COM-${String(msgs[0].fecha || '').slice(0, 4)}-${String(F['Nº']).padStart(4, '0')}` : '', ausencia: esAus ? json(F.AUSENCIA) : null, datos: json(F.DATOS), resolucion, resueltaPor: F['RESUELTA POR'] || '', puedeAprobar,
+            num: SEQ_C[root.id] ? `COM-${String(msgs[0].fecha || '').slice(0, 4)}-${String(SEQ_C[root.id]).padStart(4, '0')}` : '', ausencia: esAus ? json(F.AUSENCIA) : null, datos: json(F.DATOS), resolucion, resueltaPor: F['RESUELTA POR'] || '', puedeAprobar,
             fecha: msgs[0].fecha, ultima: ult.fecha, ultimoDe: ult.de, nResp: resp.length, extracto: String(ult.cuerpo || '').replace(/\s+/g, ' ').slice(0, 140),
             leido, hecho, faltan,
             noLeido: ult.de !== yo && (!leido[yo] || leido[yo] < ult.fecha),
@@ -1127,7 +1130,7 @@ module.exports = async function handler(req, res) {
         };
         const cargar = async () => {
           const rs = await todosT(COM, 'sort[0][field]=FECHA&sort[0][direction]=asc');
-          const roots = rs.filter(r => !r.fields.HILO), porHilo = {};
+          const roots = rs.filter(r => !r.fields.HILO), porHilo = {}; numerar(roots);
           rs.filter(r => r.fields.HILO).forEach(r => { (porHilo[r.fields.HILO] = porHilo[r.fields.HILO] || []).push(r); });
           return roots.map(r => ({ r, h: vistaHilo(r, porHilo[r.id] || []) }));
         };
@@ -1143,6 +1146,7 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-com-hilo') {
           const root = await buscar(q.id);
           const resp = await todosT(COM, `filterByFormula=${encodeURIComponent(`{HILO}='${root.id}'`)}`);
+          numerar(await todosT(COM, `filterByFormula=${encodeURIComponent("{HILO}=''")}&fields[]=${encodeURIComponent('Nº')}&fields[]=FECHA`));
           let h = vistaHilo(root, resp);
           if (!participa(h)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
           if (h.noLeido || !h.leido[yo]) { await marcar(root, 'LEÍDO'); h = vistaHilo(root, resp); }
