@@ -2739,6 +2739,13 @@ module.exports = async function handler(req, res) {
         // Mensaje de WhatsApp personalizado para un paciente de «Por llamar», a partir de sus notas y su situación
         const K = process.env.ANTHROPIC_API_KEY; if (!K) { console.error('seg-wa-ia sin ANTHROPIC_API_KEY'); return res.status(200).json({ ok: false, error: 'Falta la clave de la IA' }); }
         const c = x => String(x || '').replace(/\s+/g, ' ').trim().slice(0, 400);
+        // Lo último del historial clínico y de las notas de la ficha (antes la info se apuntaba sobre todo ahí)
+        let hist = '', notasF = '', porQue = '';
+        if (/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) { try {
+          const pr = await at(`${PACIENTES}/${q.pacienteId}?returnFieldsByFieldId=true`); const F = (pr && pr.fields) || {};
+          const cola = (t, n) => { t = String(t || '').replace(/\*\*|`/g, '').replace(/\n{3,}/g, '\n\n').trim(); return t.length > n ? '…' + t.slice(-n) : t; };
+          hist = cola(F.fldjBUieOOqXd3Bo6, 1200); notasF = cola(F.fldDkRqKrUOh2DPH1, 600); porQue = String(F.fldULHf1PxwJie889 || '').trim().slice(0, 400);
+        } catch (e) { console.error('seg-wa-ia ficha', e.message); } }
         const prompt = `Escribe un WhatsApp corto (2-3 frases, máx. 280 caracteres) de una clínica de fisioterapia (FISIO365, Barcelona) a un paciente, para saber cómo está y animarle a volver si lo necesita.
 Datos:
 - Nombre del paciente: ${c(q.nombre)}
@@ -2749,14 +2756,17 @@ Datos:
 - Etapa en la clínica: ${c(q.etapas) || 'no consta'}
 - Nota del seguimiento: ${c(q.nota) || 'ninguna'}
 - Última llamada: ${c(q.ultLlamada) || 'ninguna'}
-Reglas: tutea, español de España, tono cercano y natural, como lo escribiría una persona real; empieza con «Hola <nombre de pila>, soy ${c(q.yo)} de FISIO365»; menciona algo concreto de las notas si lo hay (deporte, plantillas, molestia…), sin datos clínicos delicados ni diagnósticos; no inventes nada que no esté en los datos; si las notas indican que el paciente iba a avisar él, pregúntale cómo le ha ido sin presionar; si NO tiene próxima cita, termina ofreciendo buscarle hueco si lo necesita; si YA tiene próxima cita, no ofrezcas hueco: recuérdale la cita con su día y dile que cualquier cosa os escriba. Como mucho un emoji. Devuelve solo el texto del mensaje, sin comillas.`;
+- Por qué no reagenda: ${porQue || 'no consta'}
+- Notas de la ficha (lo más reciente al final): ${notasF || 'ninguna'}
+- Historial clínico (lo más reciente al final; úsalo para saber qué le pasaba y cómo acabó, pero en el mensaje solo nombra la zona o la actividad, en lenguaje sencillo): ${hist || 'no consta'}
+Reglas: tutea, español de España, tono cercano y natural, como lo escribiría una persona real; empieza con «Hola <nombre de pila>, soy ${c(q.yo)} de FISIO365»; el mensaje TIENE que notarse escrito para esta persona: menciona algo concreto y reciente (la zona que se trató —p. ej. la cadera, la rodilla—, su deporte, las plantillas, lo que quedó pendiente…) sacado de las notas o del final del historial (deporte, plantillas, molestia…), sin datos clínicos delicados ni diagnósticos; no inventes nada que no esté en los datos; si las notas indican que el paciente iba a avisar él, pregúntale cómo le ha ido sin presionar; si NO tiene próxima cita, termina ofreciendo buscarle hueco si lo necesita; si YA tiene próxima cita, no ofrezcas hueco: recuérdale la cita con su día y dile que cualquier cosa os escriba. Como mucho un emoji. Devuelve solo el texto del mensaje, sin comillas.`;
         // Se prueban varios modelos por si alguno ya no está disponible; los errores se ven en los logs de Vercel
         let err = '';
         for (const model of ['claude-haiku-5-5', 'claude-haiku-4-5', 'claude-sonnet-4-5']) {
           try {
             const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': K, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: 300, messages: [{ role: 'user', content: prompt }] }) });
             const j = await r.json(); const t = String((j.content && j.content[0] && j.content[0].text) || '').trim().replace(/^["«]|["»]$/g, '');
-            if (t) return res.status(200).json({ ok: true, texto: t, model });
+            if (t) { console.log('seg-wa-ia ok', model, hist ? 'con historial' : 'sin historial'); return res.status(200).json({ ok: true, texto: t, model }); }
             err = (j.error && j.error.message) || ('HTTP ' + r.status); console.error('seg-wa-ia', model, err);
           } catch (e) { err = e.message; console.error('seg-wa-ia', model, err); }
         }
