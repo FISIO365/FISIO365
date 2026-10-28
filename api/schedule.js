@@ -3142,5 +3142,7 @@ module.exports = async function handler(req, res) {
 module.exports.cierreDia = cierreDia;
 module.exports.emailsResumen = emailsResumen;
 module.exports.repasoEtapas = repasoEtapas;
+module.exports.ajuste = (...a) => ajuste(...a);
+module.exports.guardarAjuste = (...a) => guardarAjuste(...a);
 module.exports.cierresEnviados = cierresEnviados;
 module.exports.holdedApi = { holded: (...a) => holded(...a), holdedTodos: (...a) => holdedTodos(...a), activo: () => !!HOLDED_KEY };

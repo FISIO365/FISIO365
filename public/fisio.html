@@ -1013,9 +1013,10 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .pe-res .pe-n{flex:1;min-width:0}.pe-res strong{color:#c2552e}
 .pe-res .pe-add{flex:none;width:30px;height:30px;border-radius:50%;background:#fbeee7;color:#c2552e;font-size:19px;font-weight:600;display:flex;align-items:center;justify-content:center}
 .pe-res button.sel{background:#fdf1ea}.pe-res button.sel .pe-add{background:#c2552e;color:#fff;font-size:14px}
-.pe-zs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:8px 0 2px;scrollbar-width:none}.pe-zs::-webkit-scrollbar{display:none}
-.pe-zs button{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:#5e554d;border-radius:99px;padding:6px 12px;cursor:pointer;white-space:nowrap}.pe-zs button i{font-style:normal;font-weight:500;color:#a99d93;margin-left:2px}
-.pe-zs button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}.pe-zs button.on i{color:rgba(255,255,255,.6)}
+.pe-zs{position:relative;margin-top:8px}.pe-zs:empty{display:none}
+.pe-zb{display:inline-flex;align-items:center;gap:8px;font-family:var(--font);font-size:13px;color:#5e554d;border:1.5px solid var(--border);background:#fff;border-radius:99px;padding:8px 12px 8px 14px;cursor:pointer}.pe-zb b{color:#1a1a1a;font-weight:600}.pe-zb.on{border-color:#c2552e;background:#fdf6f1}.pe-zb svg{width:15px;height:15px;fill:none;stroke:#7d6a60;stroke-width:2}
+.pe-zl{position:absolute;z-index:20;top:calc(100% + 6px);left:0;min-width:240px;max-height:320px;overflow-y:auto;background:#fff;border-radius:14px;box-shadow:0 10px 28px rgba(26,26,26,.16);padding:6px}
+.pe-zl button{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;border:none;background:none;font-family:var(--font);font-size:14px;color:#1a1a1a;text-align:left;padding:9px 12px;border-radius:10px;cursor:pointer}.pe-zl button:hover{background:#faf6f2}.pe-zl button.on{background:#fdf1ea;color:#c2552e;font-weight:600}.pe-zl i{font-style:normal;font-size:12px;color:#a99d93}
 .pe-znota{font-size:12px;line-height:1.4;color:#8a7f76;background:#faf6f2;padding:9px 12px;border-bottom:1px solid #f0ebe6}
 .pe-res .pe-n small{display:block;font-size:11.5px;color:#9a8d84;margin-top:1px}
 .pe-res .pe-bar{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;background:#fff;border-top:1px solid #efe8e2;padding:10px;box-shadow:0 -6px 14px -8px rgba(26,26,26,.15)}
@@ -1880,6 +1881,8 @@ async function doLogin(silencioso){
  checkMensajesBadge();
  setInterval(checkMensajesBadge, 60000); // revisar cada minuto
  aplicarRole();
+ // Respaldo del resumen diario a dirección: si el envío automático de la mañana no ha salido, lo lanza el primero que abre el panel (el servidor solo lo manda una vez)
+ try{const hoyR=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'}),hR=+new Date().toLocaleString('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false});if(hR>=8&&localStorage.getItem('f365_resumen')!==hoyR){localStorage.setItem('f365_resumen',hoyR);fetch('/api/cron?resumen=1&pwd='+encodeURIComponent(apiPwd)).catch(()=>{});}}catch(e){}
  iniciarAutoUpdate();
  let secIni='agenda';try{const g=sessionStorage.getItem('f365_panel_sec');if(g&&TOPBAR[g]&&!['prog','anam'].includes(g))secIni=g;}catch(e){}
  showSection(secIni);
@@ -2364,8 +2367,12 @@ function montarEditorEjs(el,inicial,onCambio){
  // Filtro por zona: chips con las zonas que tienen ejercicios
  const pintaZonas=()=>{const cnt={};biblio.forEach(e=>{if(e.zona)cnt[e.zona]=(cnt[e.zona]||0)+1;});
   const L=[...new Set([...(typeof EJ_ZONAS!=='undefined'?EJ_ZONAS:[]),...Object.keys(cnt)])].filter(z=>cnt[z]);
-  zs.innerHTML=L.length?`<button type="button" class="${zona?'':'on'}" data-z="">Todas</button>`+L.map(z=>`<button type="button" class="${z===zona?'on':''}" data-z="${escH(z)}">${escH(z)} <i>${cnt[z]}</i></button>`).join(''):'';
-  zs.querySelectorAll('button').forEach(b=>b.onclick=ev=>{ev.stopPropagation();zona=b.dataset.z;pintaZonas();buscar();});};
+  // Desplegable propio (no el nativo): botón «Zona: …» y lista
+  zs.innerHTML=L.length?`<button type="button" class="pe-zb${zona?' on':''}"><span>Zona: <b>${escH(zona||'Todas')}</b></span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="pe-zl" hidden><button type="button" class="${zona?'':'on'}" data-z="">Todas las zonas</button>${L.map(z=>`<button type="button" class="${z===zona?'on':''}" data-z="${escH(z)}"><span>${escH(z)}</span><i>${cnt[z]}</i></button>`).join('')}</div>`:'';
+  const zb=zs.querySelector('.pe-zb'),zl=zs.querySelector('.pe-zl');if(!zb)return;
+  zb.onclick=ev=>{ev.stopPropagation();zl.hidden=!zl.hidden;if(!zl.hidden)res.classList.remove('on');};
+  zl.querySelectorAll('button').forEach(b=>b.onclick=ev=>{ev.stopPropagation();zona=b.dataset.z;pintaZonas();buscar();});
+  if(!zs._fuera){zs._fuera=1;document.addEventListener('click',ev=>{const l=zs.querySelector('.pe-zl');if(l&&!ev.composedPath().includes(zs))l.hidden=true;});}};
  pintaZonas();if(!biblio.length){let n=0;const iv=setInterval(()=>{n++;if(biblio.length||n>20){clearInterval(iv);if(el.isConnected)pintaZonas();}},500);}
  const avisar=()=>{if(onCambio)onCambio();};
  function buscar(){

@@ -102,12 +102,19 @@ async function resumenFacturacion(ayer) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) return res.status(401).json({ ok: false });
+  const esCron = req.headers['authorization'] === `Bearer ${process.env.CRON_SECRET}`;
+  // Respaldo: el panel también puede pedir el resumen (con la clave del panel) por si el cron de Vercel no se lanza; solo se envía una vez al día
+  const pwdPanel = String((req.query && req.query.pwd) || '').trim(), esPanel = !!pwdPanel && pwdPanel === String(process.env.FISIO_PASSWORD || '').trim();
+  if (!esCron && !(esPanel && /resumen=1/.test(req.url || ''))) return res.status(401).json({ ok: false });
   // Resumen de facturación: 7:00 UTC (8 h en invierno, 9 h en verano), de las citas de ayer
   if (/resumen=1/.test(req.url || '')) {
+    const ayer = madrid(-1);
+    if (esPanel && horaMadrid() < 8) return res.status(200).json({ ok: true, saltado: 'Aún es pronto' });
+    if (!/forzar=1/.test(req.url || '') && (await SCH.ajuste('resumen_enviado', '').catch(() => '')) === ayer.fecha) return res.status(200).json({ ok: true, ya: true });
+    await SCH.guardarAjuste('resumen_enviado', ayer.fecha, esCron ? 'cron' : 'panel').catch(() => {}); // se apunta antes para no mandarlo dos veces si entran varios a la vez
     const etapas = await SCH.repasoEtapas().catch(e => ({ error: e.message })); // Activo → Pendiente de continuar
-    try { return res.status(200).json({ ok: true, etapas, resumen: await resumenFacturacion(madrid(-1)) }); }
-    catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+    try { const resumen = await resumenFacturacion(ayer); if (resumen !== 'enviado') await SCH.guardarAjuste('resumen_enviado', '', 'error').catch(() => {}); console.log('resumen', ayer.fecha, resumen, esCron ? 'cron' : 'panel'); return res.status(200).json({ ok: true, etapas, resumen }); }
+    catch (e) { await SCH.guardarAjuste('resumen_enviado', '', 'error').catch(() => {}); console.log('resumen error', e.message); return res.status(500).json({ ok: false, error: e.message }); }
   }
   // Recordatorios: 17:00 UTC (19 h en verano, 18 h en invierno)
   if (![18, 19].includes(horaMadrid()) && !/forzar=1/.test(req.url || '')) return res.status(200).json({ ok: true, saltado: 'Fuera de hora' });
