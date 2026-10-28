@@ -2236,6 +2236,20 @@ module.exports = async function handler(req, res) {
           return res.status(200).json(Object.assign({ ok: true }, b, { meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, c) => a.m.localeCompare(c.m)), lista })); }
         catch (e) { _gasH = { t: 0, v: null }; return res.status(200).json({ ok: false, error: /40[13]/.test(e.message) ? 'la clave de Holded todavía no tiene permiso para leer las cuentas bancarias' : e.message }); }
       }
+      if (action === 'seg-ingresos-detalle') {
+        // Desglose de los tickets de Holded de un periodo: cuáles cuentan en Estadísticas y cuáles no (y por qué)
+        if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded no está conectado' });
+        const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
+        const desde = q.desde < HOLDED_DESDE ? HOLDED_DESDE : q.desde;
+        const tk = await holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${q.hasta}`, 40);
+        const vistos = new Set(), L = [];
+        tk.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id); const f = String(d.date || '').slice(0, 10); if (f < desde || f > q.hasta) return;
+          const motivo = d.status === 'completed' ? 'Pagado/anulado (no cuenta)' : /\btest\b|prueba/i.test(d.contact_name || '') ? 'Paciente de prueba' : '';
+          L.push({ f, num: d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: importeDoc(d), estado: String(d.status || ''), borrador: !!(d.draft || d.status === 'draft' || !(d.docNumber || d.doc_number || d.number)), cuenta: !motivo, motivo }); });
+        L.sort((a, b) => a.f.localeCompare(b.f));
+        const tot = L.filter(x => x.cuenta).reduce((a, x) => a + x.imp, 0);
+        return res.status(200).json({ ok: true, desde, hasta: q.hasta, total: Math.round(tot * 100) / 100, tickets: L, antesHolded: q.desde < HOLDED_DESDE });
+      }
       if (action === 'seg-ingresos-todo') {
         const rs = await todosT('tblE7NWfZmxcou5mV', `filterByFormula=${encodeURIComponent('{INGRESOS}!=BLANK()')}&fields[]=SEMANA&fields[]=INGRESOS&sort[0][field]=SEMANA&sort[0][direction]=asc`);
         // Meses: los de la base ESTADISTICAS (INCOME / MONTH), y si no se puede leer, la copia INGRESOS MES de esta base
