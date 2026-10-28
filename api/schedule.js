@@ -3159,6 +3159,7 @@ module.exports = async function handler(req, res) {
 module.exports.cierreDia = cierreDia;
 module.exports.emailsResumen = emailsResumen;
 module.exports.repasoEtapas = repasoEtapas;
+module.exports.importeDoc = d => importeDoc(d);
 module.exports.ajuste = (...a) => ajuste(...a);
 module.exports.guardarAjuste = (...a) => guardarAjuste(...a);
 module.exports.cierresEnviados = cierresEnviados;
