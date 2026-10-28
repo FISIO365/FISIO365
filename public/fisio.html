@@ -1791,6 +1791,40 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="/consent-pdf.js"></script>
 <script>
+// ── Velocidad: las pantallas salen al momento con lo último que se cargó y se actualizan por detrás ──
+// · Lecturas de la API: se guardan (memoria + pestaña) y se enseñan al instante; a la vez se piden de nuevo y,
+//   si algo ha cambiado, se refresca lo que estás viendo sin rehacer la pantalla.
+// · Peticiones iguales a la vez se juntan en una sola. Los avisos secundarios esperan a que cargue lo principal.
+// · Cualquier cambio (guardar, borrar…) borra lo guardado, así lo siguiente que ves ya es lo nuevo.
+(function(){
+ const F=window.fetch.bind(window),C=new Map(),INF=new Map(),T0=Date.now(),SS='f365_api_';
+ const NO=/[?&]action=(version|seg-consent-archivo|seg-consent-doc|conversaciones|get-mensajes|buscar|seg-wa-ia|config-pub)(&|$)/;
+ const POSTREAD=/[?&]action=(seg-com-buzon|reporte-dia|compra-lista|seg-sug-lista|seg-sug-contar)(&|$)/;
+ const NEUTRO=/[?&]action=(seg-wa-ia|seg-sug-visto|seg-com-hilo)(&|$)/;
+ const LOW=/[?&]action=(seg-referidos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|seg-referidos-resueltos)(&|$)/;
+ const MAX=10*60e3,FRESCO=5000;
+ const lee=k=>{let c=C.get(k);if(c)return c;try{const v=sessionStorage.getItem(SS+k);if(v){c=JSON.parse(v);C.set(k,c);}}catch(e){}return c||null;};
+ const guarda=(k,o)=>{C.set(k,o);try{if(o.txt.length<1500000)sessionStorage.setItem(SS+k,JSON.stringify(o));}catch(e){}};
+ const borra=()=>{C.clear();try{Object.keys(sessionStorage).filter(k=>k.indexOf(SS)===0).forEach(k=>sessionStorage.removeItem(k));}catch(e){}};
+ let tCambio=0;const cambio=()=>{clearTimeout(tCambio);tCambio=setTimeout(()=>{try{if(document.querySelector('.hz-modal, .pv.fp')||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)))return;window._refrescarVista&&window._refrescarVista(true);}catch(e){}},350);};
+ window.__apiCache={clear:borra};
+ window.fetch=async function(input,init){
+  const url=typeof input==='string'?input:(input&&input.url)||'';
+  if(url.indexOf('/api/')!==0)return F(input,init);
+  const method=String((init&&init.method)||'GET').toUpperCase();
+  const lectura=method==='GET'?!NO.test(url):POSTREAD.test(url);
+  if(!lectura){const r=await F(input,init);if(method!=='GET'&&!NEUTRO.test(url))borra();return r;}
+  const k=method+' '+url+(method!=='GET'?' '+String((init&&init.body)||''):'');
+  const red=()=>{if(INF.has(k))return INF.get(k);
+   const p=(async()=>{if(LOW.test(url)&&Date.now()-T0<6000)await new Promise(z=>setTimeout(z,2500));
+    const r=await F(input,init);const o={t:Date.now(),txt:await r.text(),st:r.status,ct:r.headers.get('content-type')||'application/json'};if(r.ok)guarda(k,o);return o;})();
+   INF.set(k,p);p.finally(()=>INF.delete(k)).catch(()=>{});return p;};
+  const mk=o=>new Response(o.txt,{status:o.st,headers:{'Content-Type':o.ct}});
+  const c=lee(k);
+  if(c&&Date.now()-c.t<MAX){if(Date.now()-c.t>FRESCO)red().then(o=>{if(o.st<300&&o.txt!==c.txt)cambio();}).catch(()=>{});return mk(c);}
+  return mk(await red());
+ };
+})();
 // ── GLOBALS ──────────────────────────────────────────────────────────────────
 let pwd='', fisios=[], pacs=[], biblio=[];
 let pacSelId=null, pacSelN='', fisioSelId='', ejC=0;
@@ -2041,7 +2075,7 @@ function pintarPerfil(){if(!fisioActual)return;requestAnimationFrame(ajustaTopba
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
-function cerrarSesionPanel(){try{localStorage.removeItem('f365_panel_sesion');sessionStorage.removeItem('f365_panel_sec');}catch(e){}location.reload();}
+function cerrarSesionPanel(){try{window.__apiCache&&window.__apiCache.clear();}catch(e){}try{localStorage.removeItem('f365_panel_sesion');sessionStorage.removeItem('f365_panel_sec');}catch(e){}location.reload();}
 // En móvil el scroll va dentro de .main-area: que window.scrollTo también lo mueva
 (function(){const ws=window.scrollTo.bind(window);window.scrollTo=function(...a){ws(...a);const m=document.querySelector('.main-area');if(m&&m.scrollHeight>m.clientHeight+2){try{m.scrollTo(...a);}catch(e){}}};})();
 // Desplegables con el estilo del panel (en ordenador, en vez de la lista del navegador)
