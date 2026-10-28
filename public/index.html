@@ -315,28 +315,21 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .nav-menu-inner>div:nth-of-type(1),.nav-menu-inner>div:nth-of-type(2){display:none!important}
 .nav-menu-inner>div:nth-of-type(3){border-top:none!important;padding-top:0!important}
 .nm-av{overflow:hidden}.nm-av img,.cu-av img{width:100%;height:100%;object-fit:cover;display:block}.cu-top{display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px 16px;margin-bottom:14px}.cu-av{width:96px;height:96px;border-radius:50%;background:#c2552e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:30px;overflow:hidden}.cu-top b{font-size:17px}.cu-top small{font-size:13px;color:#7d6a60}.cu-bt{font-family:inherit;font-size:14px;font-weight:700;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:12px;padding:10px 16px;cursor:pointer}.cu-box{background:#fff;border:1px solid var(--border);border-radius:20px;padding:16px;margin-bottom:14px}.cu-box h3{font-size:15px;margin:0 0 12px}.cu-box label{display:block;font-size:12.5px;color:#7d6a60;margin:10px 0 5px}.cu-box input{width:100%;box-sizing:border-box;font-family:inherit;font-size:20px;letter-spacing:8px;text-align:center;padding:10px;border:1.5px solid var(--border);border-radius:12px;background:#f5f2ee}.cu-ok{width:100%;margin-top:14px;font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:12px;padding:13px;background:#1a1a1a;color:#fff;cursor:pointer}.cu-err{font-size:13px;color:#c0392b;margin-top:8px;min-height:1px}
-.sg-hero{background:var(--black);color:var(--cream);border-radius:22px;padding:16px 18px;margin:4px 0 12px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
-.sg-hero::after{content:'';position:absolute;right:-50px;top:-70px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,79,.4),rgba(217,119,79,0) 70%)}
-.sg-hero>*{position:relative;z-index:1}
-.sg-hero-ic{flex:none;width:38px;height:38px;border-radius:12px;background:rgba(245,242,238,.08);display:flex;align-items:center;justify-content:center}
-.sg-hero-ic svg{width:20px;height:20px;fill:none;stroke:var(--lila);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.sg-hero-t{font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.2}
-.sg-hero-s{font-size:12.5px;line-height:1.4;color:rgba(245,242,238,.6);margin-top:3px}
+.sg-top{display:flex;align-items:center;gap:12px;margin:6px 0 18px}
+.sg-top-ic{flex:none;width:44px;height:44px;border-radius:50%;background:var(--lila-light);display:flex;align-items:center;justify-content:center}
+.sg-top-ic svg{width:22px;height:22px;fill:none;stroke:var(--lila-d);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.sg-top-t{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1.2}.sg-top-s{font-size:13px;color:var(--muted);margin-top:2px}
 .sg-card{background:#fff;border-radius:24px;padding:16px;margin-bottom:14px;box-shadow:var(--sombra)}
-.sg-ta-w{position:relative}
-.sg-ta{display:block;width:100%;box-sizing:border-box;font-family:inherit;font-size:15.5px;line-height:1.55;padding:16px 16px 30px;border:1.5px solid transparent;border-radius:18px;background:var(--cream);resize:none;min-height:170px;outline:none;color:var(--black);transition:border-color .15s,background .15s}
-.sg-ta::placeholder{color:#a69d95}
-.sg-ta:focus{border-color:var(--lila);background:#fff}
-.sg-n{position:absolute;right:14px;bottom:10px;font-size:11.5px;color:#a69d95;pointer-events:none}
-.sg-anon{display:flex;align-items:center;gap:14px;padding:16px 4px 4px;cursor:pointer;user-select:none}
-.sg-anon-t{flex:1;display:flex;flex-direction:column;gap:2px}.sg-anon-t b{font-size:14.5px;font-weight:600;color:var(--black)}.sg-anon-t small{font-size:12.5px;color:var(--muted)}
+.sg-ta{display:block;width:100%;box-sizing:border-box;font-family:inherit;font-size:16px;line-height:1.55;padding:18px;border:1.5px solid rgba(26,26,26,.08);border-radius:22px;background:#fff;resize:none;min-height:200px;outline:none;color:var(--black);box-shadow:var(--sombra);transition:border-color .15s}
+.sg-ta::placeholder{color:#a69d95}.sg-ta:focus{border-color:var(--lila)}
+.sg-anon{display:flex;align-items:center;gap:10px;margin:14px 4px 0;font-size:14px;color:#5e554d;cursor:pointer;user-select:none;width:max-content}
 .sg-anon input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
-.sg-sw{flex:none;width:46px;height:28px;border-radius:99px;background:#e4ddd5;position:relative;transition:background .2s}
-.sg-sw::after{content:'';position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,26,26,.2);transition:transform .2s}
-.sg-anon input:checked+.sg-sw{background:var(--black)}.sg-anon input:checked+.sg-sw::after{transform:translateX(18px)}
+.sg-chk{flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid #cfc6bc;background:#fff;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+.sg-anon input:checked+.sg-chk{background:var(--black);border-color:var(--black)}
+.sg-anon input:checked+.sg-chk::after{content:'';width:9px;height:5px;border:2px solid #fff;border-top:none;border-right:none;transform:rotate(-45deg) translate(1px,-1px)}
 .sg-err{font-size:13px;color:#c0392b;min-height:0;margin:4px 4px 0}.sg-err:empty{display:none}
-.sg-ok{width:100%;margin-top:16px;font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:16px;padding:15px;background:var(--lila-d);color:#fff;cursor:pointer;transition:opacity .15s}
-.sg-ok:disabled{opacity:.45;cursor:default}
+.sg-ok{width:100%;margin-top:18px;font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:16px;padding:15px;background:var(--lila-d);color:#fff;cursor:pointer;transition:opacity .15s}
+.sg-ok:disabled{background:#ddd5cc;cursor:default}
 .sg-gracias{text-align:center;padding:32px 20px 24px}
 .sg-gracias h3{font-size:20px;font-weight:800;letter-spacing:-.4px;margin:14px 0 6px}.sg-gracias p{font-size:14px;line-height:1.5;color:var(--muted);margin:0 0 20px}
 .sg-ic{width:56px;height:56px;border-radius:50%;background:var(--lila-light);margin:0 auto;display:flex;align-items:center;justify-content:center}
@@ -808,11 +801,10 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  </div>
 
  <div id="vistaSugerencias" style="display:none;">
- <div class="sg-hero"><div class="sg-hero-ic"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg></div>
-  <div><div class="sg-hero-t">¿Qué mejorarías?</div><div class="sg-hero-s">Ideas, cosas que echas en falta o algo que no te ha gustado.</div></div></div>
- <div class="sg-card" id="sgForm">
-  <div class="sg-ta-w"><textarea id="sgTexto" class="sg-ta" rows="6" maxlength="1500" placeholder="Escribe aquí tu sugerencia…" oninput="sgCuenta()"></textarea><span class="sg-n" id="sgN">0/1500</span></div>
-  <label class="sg-anon"><span class="sg-anon-t"><b>Enviar sin mi nombre</b><small id="sgAnonS">La verá el equipo con tu nombre</small></span><input type="checkbox" id="sgAnon" onchange="sgCuenta()"><span class="sg-sw"></span></label>
+ <div class="sg-top"><div class="sg-top-ic"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg></div><div><div class="sg-top-t">Sugerencias</div><div class="sg-top-s">Lo leemos todo el equipo</div></div></div>
+ <div id="sgForm">
+  <textarea id="sgTexto" class="sg-ta" rows="7" maxlength="1500" placeholder="Ideas, cosas que echas en falta o algo que no te ha gustado…" oninput="sgCuenta()"></textarea>
+  <label class="sg-anon"><input type="checkbox" id="sgAnon"><span class="sg-chk"></span><span>Enviar sin mi nombre</span></label>
   <div class="sg-err" id="sgErr"></div>
   <button type="button" class="sg-ok" id="sgOk" onclick="enviarSugerencia()">Enviar sugerencia</button>
  </div>
@@ -1263,7 +1255,7 @@ async function subirFotoPerfil(inp){const f=inp.files&&inp.files[0];inp.value=''
   const d=await (await fetch('/api/schedule?action=subir-foto&patientId='+encodeURIComponent(patient.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({b64})})).json();
   if(!d.ok)throw new Error(d.error||'');patient.foto='data:image/jpeg;base64,'+b64;pintarAvatar();toast('Foto actualizada ✓',true);
  }catch(e){toast(e.message||'No se ha podido subir la foto',false);}}
-function sgCuenta(){const t=document.getElementById('sgTexto').value,a=document.getElementById('sgAnon').checked;document.getElementById('sgN').textContent=t.length+'/1500';document.getElementById('sgOk').disabled=!t.trim();document.getElementById('sgAnonS').textContent=a?'Nadie sabrá quién la ha escrito':'La verá el equipo con tu nombre';}
+function sgCuenta(){document.getElementById('sgOk').disabled=!document.getElementById('sgTexto').value.trim();}
 async function enviarSugerencia(){const ta=document.getElementById('sgTexto'),err=document.getElementById('sgErr'),b=document.getElementById('sgOk'),t=ta.value.trim(),anon=document.getElementById('sgAnon').checked;err.textContent='';
  if(!t){ta.focus();return;}
  b.disabled=true;b.textContent='Enviando…';
