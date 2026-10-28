@@ -1586,6 +1586,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .hz-dia{font-size:14.5px;line-height:1.45;color:#3d3631;background:#fff;border:1.5px solid rgba(26,26,26,.08);border-radius:12px;padding:12px 14px;margin:2px 0 4px}.hz-dia .hz-hv{font-size:14.5px!important;font-weight:700}
 .hz-hint{display:block;font-size:12px;color:#8a7f76;margin-top:6px;line-height:1.35}
 .hz-step button{color:#1a1a1a!important;-webkit-text-fill-color:#1a1a1a;font-family:var(--font)!important;font-size:20px!important;font-weight:500!important}
+.ag-cfd{display:none;text-align:center;font-size:14px;font-weight:700;color:#1a1a1a;padding:9px 0 3px;cursor:pointer;position:sticky;left:0}.ag-cabf.fd-on .ag-cfd{display:block}
 </style>
 </head>
 <body>
@@ -9048,10 +9049,16 @@ async function abrirInformeHoras(fisio,conBanco=true){
 function fmtEur(v){v=Math.round((+v||0)*100)/100;return v.toLocaleString('es-ES',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2})+' €';}
 // Agenda: la fila con los nombres de los fisios (o los días) se queda pegada arriba al bajar y se mueve a la vez que la agenda hacia los lados
 function agCabFija(grid){if(!grid||grid._cab)return;const cab=ce('div','ag-cabf');grid.parentNode.insertBefore(cab,grid);grid._cab=cab;
- const mueve=()=>{const i=cab.firstElementChild;if(!i)return;const x=grid.scrollLeft;i.style.transform=`translateX(${-x}px)`;const c=i.querySelector('.ag-h0');if(c)c.style.transform=`translateX(${x}px)`;};
+ // Fecha del día fija arriba: aparece cuando la barra de la fecha sale de la pantalla al bajar
+ const card=grid.parentNode,ft=card.querySelector('.ag-ft'),bar=card.querySelector('.ag-bar'),fd=ce('div','ag-cfd');
+ const ponF=()=>{fd.textContent=ft?ft.textContent:'';};if(ft)new MutationObserver(ponF).observe(ft,{childList:true,characterData:true,subtree:true});ponF();
+ fd.onclick=()=>{bar&&bar.scrollIntoView({block:'center',behavior:'smooth'});};
+ const vis=()=>{if(!bar)return;const tb=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tb-h'))||0;cab.classList.toggle('fd-on',bar.getBoundingClientRect().bottom<tb+4&&card.getBoundingClientRect().bottom>tb+80);};
+ addEventListener('scroll',vis,{passive:true,capture:true});
+ const mueve=()=>{vis();const i=cab.querySelector(':scope>.ag-tb');if(!i)return;const x=grid.scrollLeft;i.style.transform=`translateX(${-x}px)`;const c=i.querySelector('.ag-h0');if(c)c.style.transform=`translateX(${x}px)`;};
  const sync=()=>{const tb=grid.querySelector(':scope>.ag-tb'),hd=tb&&tb.querySelector(':scope>.ag-hd');if(!hd){cab.style.display='none';cab.innerHTML='';return;}cab.style.display='';hd.classList.add('ag-oc');
   const inner=document.createElement('div');inner.className=tb.className;inner.setAttribute('style',tb.getAttribute('style')||'');inner.style.width=tb.offsetWidth?tb.offsetWidth+'px':'';
-  const cl=hd.cloneNode(true);cl.classList.remove('ag-oc');inner.appendChild(cl);cab.innerHTML='';cab.appendChild(inner);mueve();};
+  const cl=hd.cloneNode(true);cl.classList.remove('ag-oc');inner.appendChild(cl);cab.innerHTML='';cab.appendChild(fd);cab.appendChild(inner);mueve();};
  grid.addEventListener('scroll',mueve,{passive:true});new MutationObserver(sync).observe(grid,{childList:true});addEventListener('resize',sync);
  cab.addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(b){const o=grid.querySelector(`.ag-hd [data-d="${b.dataset.d}"]`);if(o)o.click();}});sync();}
 // Abre la ficha del paciente por encima de las ventanas abiertas (informe…); al cerrarla vuelven tal cual estaban
