@@ -1100,6 +1100,7 @@ module.exports = async function handler(req, res) {
     const quienEs = () => ({ ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].trim(), nav: String(req.headers['user-agent'] || '').slice(0, 200) });
     const firmaOk = f => typeof f === 'string' && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(f) && f.length > 800 && f.length < 95000;
     const TEXTO_RECIBI = 'Confirmo que he recibido mi informe fisioterapéutico de FISIO365.';
+    if ((action === 'inf-firmar' || action === 'inf-recibi-app') && req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Método no permitido' });
     if (action === 'inf-recibi-app') {
       // Desde la app del paciente (ya ha entrado con su usuario)
       const id = String(q.id || ''), pid = String(q.patientId || '');
@@ -1134,7 +1135,7 @@ module.exports = async function handler(req, res) {
     else { const m = dato.replace(/\s/g, '').match(/^(\d{1,2})[\/.-]?(\d{1,2})[\/.-]?(\d{4})$/); ok = !!m && `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` === nac; }
     if (!ok) { const n = (E.intentos || 0) + 1; await guardaE({ intentos: n }); return res.status(200).json({ ok: false, mal: true, quedan: Math.max(0, 5 - n), error: n >= 5 ? 'Por seguridad, el enlace se ha bloqueado. Escríbenos y te mandamos uno nuevo.' : (modo === 'dni' ? 'Esos números no coinciden con tu DNI.' : 'Esa fecha no coincide.') + ` Te quedan ${5 - n} intentos.` }); }
     if (action === 'inf-ver') {
-      if (!E.abierto) await guardaE({ abierto: ahoraIso });
+      if (!E.abierto || E.intentos) await guardaE({ abierto: E.abierto || ahoraIso, intentos: 0 });
       let col = ''; try { const fr = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=${encodeURIComponent('NºColegiado')}`); const f = (fr.records || []).find(x => String(x.fields.Name || '').trim().toLowerCase() === String(F['FisioNombre'] || '').trim().toLowerCase()); col = f ? String(f.fields['NºColegiado'] || '') : ''; } catch (e) {}
       return res.status(200).json({ ok: true, pila: pilaB, paciente: String(P['FULL NAME'] || F['PacienteNombre'] || '').trim(), informe: F['Informe'] || '', tipo: F['Protocolo'] || '', fisio: F['FisioNombre'] || '', colegiado: col, fecha: F['Fecha'] || '', firmado: !!F['RECIBI FECHA'], texto: TEXTO_RECIBI });
     }
