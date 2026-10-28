@@ -2839,10 +2839,10 @@ module.exports = async function handler(req, res) {
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
       // Quién guarda: dirección (Rendimiento o Administración) clasifica y valida; el fisio solo explica sus días y queda pendiente de validar
       let esDir = true, yoN = '';
-      if (q.yo) { const eqH = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_rendimiento&fields[]=acc_admin&pageSize=100`);
+      if (q.yo) { const eqH = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_rendimiento&fields[]=acc_admin&fields[]=${encodeURIComponent('DIRECCIÓN')}&pageSize=100`);
         const yr = (eqH.records || []).find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo).trim().toLowerCase());
         if (!yr || String(yr.fields.Password || '').trim() !== String(q.clave || '').trim()) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
-        esDir = !!(yr.fields.acc_rendimiento || yr.fields.acc_admin); yoN = String(yr.fields.Name || '').trim().split(/\s+/)[0].toLowerCase(); }
+        esDir = !!(yr.fields['DIRECCIÓN'] || yr.fields.acc_rendimiento || yr.fields.acc_admin); yoN = String(yr.fields.Name || '').trim().split(/\s+/)[0].toLowerCase(); }
       const previo = /^rec[A-Za-z0-9]{14}$/.test(q.id || '') ? await at(`${T}/${q.id}`) : null;
       if (!esDir) {
         if (fisio.split(/\s+/)[0].toLowerCase() !== yoN) return res.status(403).json({ ok: false, error: 'Solo puedes explicar tus propios días' });
