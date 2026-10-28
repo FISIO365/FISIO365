@@ -9012,17 +9012,20 @@ async function renderSeguimiento(wrap){
   if(tab==='pend')box.querySelectorAll('.seg-hecho').forEach(b=>{const x=P.find(y=>y.id===b.dataset.id);if(!x||!esAntigua(x))return;const tk=b.closest('.tk');if(!tk||tk.querySelector('.tk-tri'))return;
    const d=ce('div','tk-tri');d.innerHTML=`<button type="button" data-a="cerrar">Cerrar</button><button type="button" data-a="mes">En un mes</button>${x.tel?'<button type="button" data-a="wa" class="wa">WhatsApp</button>':''}`;tk.appendChild(d);
    const fin=t=>{tk.style.opacity='.45';d.innerHTML=`<span>✓ ${t}</span>`;setTimeout(()=>{datos.pendientes=datos.pendientes.filter(y=>y.id!==x.id);pinta();},900);};
-   d.querySelectorAll('button').forEach(bt=>bt.onclick=async e=>{e.stopPropagation();d.querySelectorAll('button').forEach(z=>z.disabled=true);const a=bt.dataset.a;let r;
+   d.querySelectorAll('button').forEach(bt=>bt.onclick=async e=>{e.stopPropagation();const a=bt.dataset.a;
+    if(a==='wa'){const tw=tk.querySelector('.sg-wa');if(tw)tw.click();return;}
+    d.querySelectorAll('button').forEach(z=>z.disabled=true);let r;
     try{if(a==='cerrar')r=await agPost('seg-resultado',{id:x.id,pacienteId:x.pacienteId,resultado:'No volver a llamar',nota:'Cerrada al revisar las llamadas antiguas',quien:miNombreCorto()});
      else if(a==='mes')r=await agPost('seg-editar',{id:x.id,fecha:segIso(30)});
      else{const nom=capTit(String(x.nombre||'').split(' ')[0]);window.open(`https://wa.me/${segTel(x.tel)}?text=${encodeURIComponent(`Hola ${nom}, ¿qué tal sigues? Si te apetece retomar las sesiones, te buscamos hueco esta semana. Un abrazo, FISIO365`)}`,'_blank');
       r=await agPost('seg-resultado',{id:x.id,pacienteId:x.pacienteId,resultado:'Pendiente de respuesta',nota:'WhatsApp para retomar enviado',nuevaFecha:segIso(7),quien:miNombreCorto()});}
      if(!r||!r.ok)throw 0;fin(a==='cerrar'?'Cerrada':a==='mes'?'Para dentro de un mes':'WhatsApp enviado · vuelve en 7 días');}catch(_){d.querySelectorAll('button').forEach(z=>z.disabled=false);toast('No se ha podido guardar',false);}});});
   // WhatsApp con mensaje ya escrito (editable): al enviarlo queda "Pendiente de respuesta" 7 días y sale de la lista
-  if(tab==='pend')box.querySelectorAll('.sg-wa').forEach(b=>b.onclick=e=>{e.stopPropagation();const x=P.find(y=>y.id===b.dataset.id);if(!x)return;const ant=esAntigua(x);
+  if(tab==='pend')box.querySelectorAll('.sg-wa').forEach(b=>b.onclick=e=>{e.stopPropagation();const x=P.find(y=>y.id===b.dataset.id);if(!x)return;
    const nom=capTit(String(x.nombre||'').split(' ')[0]);
-   waPersonal({nombre:x.nombre,tel:x.tel,pacienteId:x.pacienteId,fisio:x.fisio,ultima:x.ultima,nota:ant?'':x.nota,ult:x.ult,ia:!ant,
-    generico:ant?`Hola ${nom}, ¿qué tal sigues? Si te apetece retomar las sesiones, te buscamos hueco esta semana. Un abrazo, FISIO365`:'',
+   // También las recuperadas del sistema antiguo: la IA tira de la ficha (historial y notas)
+   const notaL=String(x.nota||'').replace(/^Recuperado de las llamadas antiguas[^.:\n]*[.:]?\s*/i,'').trim();
+   waPersonal({nombre:x.nombre,tel:x.tel,pacienteId:x.pacienteId,fisio:x.fisio,ultima:x.ultima,nota:notaL,ult:x.ult,
     aviso:'Al enviarlo queda como <b>Pendiente de respuesta</b> y vuelve a la lista en 7 días si no contesta.',enviarTxt:'Enviar y quitar',
     alEnviar:async t=>{const r=await agPost('seg-resultado',{id:x.id,pacienteId:x.pacienteId,resultado:'Pendiente de respuesta',nota:'WhatsApp enviado: '+t.slice(0,180),nuevaFecha:segIso(7),quien:miNombreCorto()});if(!r||!r.ok)throw 0;
      const tk=b.closest('.tk');if(tk){tk.style.transition='opacity .3s';tk.style.opacity='.35';}toast(`✓ ${nom}: pendiente de respuesta`,true);setTimeout(()=>{datos.pendientes=datos.pendientes.filter(y=>y.id!==x.id);pinta();},600);}});});
