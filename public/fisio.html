@@ -6000,7 +6000,7 @@ function renderAgenda(wrap){
    return `<button type="button" class="ag-c ${e.c}${al?' ag-al':''}${sp?' ag-sp':''}" data-id="${c.id}" ${!al&&!sp&&agSesCol(c.sesion)?`style="border-left-color:${agSesCol(c.sesion)}"`:conFisio&&!al&&!sp?`style="border-left-color:${AG_COL[c.fisio]||'#c2552e'}"`:''}>${e.t?`<em class="ag-badge ${e.c}">${e.i} ${e.t}</em>`:''}${c.sesion&&agSesCol(c.sesion)?`<em class="ag-spb" style="--sc:${agSesCol(c.sesion)}" title="${escH(c.sesion)}">${escH(String(c.sesion).replace(/^fisioterapia\s+/i,'').replace(/^./,m=>m.toUpperCase()))}</em>`:''}<b>${escH(c.paciente||'Paciente')}</b>${(()=>{const n=((AG.dia&&AG.dia.num)||{})[c.id],pg=((AG.dia&&AG.dia.pago)||{})[c.id];if(!n&&!pg)return '';
      // En la tarjeta: el pack (sesión x de n) y lo que falta facturar; las sueltas no llevan nada
      const pt=pg&&pg.t==='sin'&&/REALIZADA/.test(c.estado)?'<em class="ag-pg sin">Sin factura</em>':pg&&(pg.t==='pack'||pg.t==='previo')?`<em class="ag-pg pk${pg.i===pg.n?' ult':''}">Pack ${pg.i}/${pg.n}</em>`:'';const _pt=!pg?'':pg.t==='pack'?`<em class="ag-pg pack">Pack ${pg.i}/${pg.n}</em>`:pg.t==='previo'?`<em class="ag-pg pack">Bono antiguo ${pg.i}/${pg.n}</em>`:pg.t==='suelta'?'<em class="ag-pg">Suelta</em>':`<em class="ag-pg sin">${pg.fut?'Por pagar':'Sin pagar'}</em>`;
-     return `<span class="ag-num${n===1?' ag-num1':''}">${n?(n===1?'1ª visita':n+'ª sesión'):''}</span>${pt}`;})()}${al?`<span class="ag-alt">⚠ ${escH(al.join(' · '))}</span>`:''}${conFisio?`<small class="ag-fz" style="color:${AG_COL[c.fisio]||'#7d6a60'}">${escH(agNom(c.fisio))}</small>`:''}${c.tipos.filter(t=>!/^(suelo\s*p[eé]lvico|diastasis|avanzada|convencional)$/i.test(t)).length?`<span class="ag-tgs">${c.tipos.filter(t=>!/^(suelo\s*p[eé]lvico|diastasis|avanzada|convencional)$/i.test(t)).map(t=>agNoBomba(t)?'<i class="ag-nbm">Sin bomba</i>':`<i>${escH(t)}</i>`).join('')}</span>`:''}<span class="ag-ic">${c.confirmada?'<i class="ag-ok">✓ Confirmada</i>':''}${AG.dia&&AG.dia.sinConsent&&AG.dia.sinConsent.has(c.pacienteId)&&c.fecha>=(AG.dia.hoy||'')&&!agEsFuera(c.estado)?'<i class="ag-sc">Sin consentimiento</i>':''}${c.app?'<i class="ag-app">App</i>':''}${c.web?'<i class="ag-app">Web</i>':''}${c.notas?'<i class="ag-not">Nota</i>':''}</span></button>`;}
+     return `<span class="ag-num${n===1?' ag-num1':''}">${n?(n===1?'1ª visita':n+'ª sesión'):''}</span>${pt}`;})()}${al?`<span class="ag-alt">⚠ ${escH(al.join(' · '))}</span>`:''}${conFisio?`<small class="ag-fz" style="color:${AG_COL[c.fisio]||'#7d6a60'}">${escH(agNom(c.fisio))}</small>`:''}${(c.tipos||[]).some(agNoBomba)?'<span class="ag-tgs"><i class="ag-nbm">Sin bomba</i></span>':''}<span class="ag-ic">${c.confirmada?'<i class="ag-ok">✓ Confirmada</i>':''}${AG.dia&&AG.dia.sinConsent&&AG.dia.sinConsent.has(c.pacienteId)&&c.fecha>=(AG.dia.hoy||'')&&!agEsFuera(c.estado)?'<i class="ag-sc">Sin consentimiento</i>':''}${c.app?'<i class="ag-app">App</i>':''}${c.web?'<i class="ag-app">Web</i>':''}${c.notas?'<i class="ag-not">Nota</i>':''}</span></button>`;}
   if(agEsLibre(c.estado)){const ne=AG.dia&&AG.dia.hoy&&(c.fecha||AG.fecha)>=AG.dia.hoy?capPrio(AG.dia.espera||[],{fecha:c.fecha||AG.fecha,hora:c.hora,fisio:c.fisio},AG.dia.hoy).length:0;
    return `<button type="button" class="ag-c lib" data-id="${c.id}">Libre${/SIN BOMBA/.test(c.estado)?' · sin bomba':''}${conFisio?` · ${escH(agNom(c.fisio))}`:''}${ne?`<em class="ag-esp">${ne} en espera</em>`:''}</button>`;}
   return `<button type="button" class="ag-c blq" data-id="${c.id}">${escH(agEstNom(c.estado))}${conFisio?` · ${escH(agNom(c.fisio))}`:''}${c.notas?` · ${escH(c.notas)}`:''}</button>`;};
@@ -6138,13 +6138,12 @@ function agAbrirCita(c,onDone){
   <button type="button" class="exp-seg ag-conf"><i></i>Confirmada</button>
   <label class="hz-sw ag-sbm"><input type="checkbox" ${(c.tipos||[]).some(agNoBomba)?'checked':''}><i></i><span>Se le puede atender <b>sin bomba</b></span></label>
   <div class="hz-lab">Tipo de sesión</div><div class="ag-ses"></div>
-  <div class="hz-lab">Etiquetas</div><div class="ag-tip"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
   <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No necesita más</button></div>
   <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="fp-can ag-cfis">Cambiar fisio</button><button type="button" class="hz-ok">Guardar</button></div>
   <div class="ag-otras"><button type="button" class="ag-borrar">Borrar cita</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
- const tg=agEtiquetas(m.querySelector('.ag-tip'),(c.tipos||[]).filter(t=>!agNoBomba(t))),ses=agSesSel(m.querySelector('.ag-ses'),c.sesion||'');
+ const tg={get:()=>(c.tipos||[]).filter(t=>!agNoBomba(t))},ses=agSesSel(m.querySelector('.ag-ses'),c.sesion||'');
  m.querySelector('.ag-pac').onclick=()=>{m.remove();if(!c._enFicha)abrirFichaPaciente(c.pacienteId,c.paciente);};
  const lib=m.querySelector('.ag-lib');
  // Cancelación tardía: avisa con menos horas de las de la política (Administración › Ajustes)
@@ -6295,12 +6294,11 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
   <div class="hz-lab">Paciente</div><input type="text" class="ag-in ag-bus" placeholder="Busca por nombre, teléfono o email" autocomplete="off"><div class="ag-res2"></div>
   <div class="ag-bmi"></div><label class="hz-sw ag-sbm"><input type="checkbox"><i></i><span>Se le puede atender <b>sin bomba</b></span></label>
   <div class="hz-lab">Tipo de sesión</div><div class="ag-ses"></div>
-  <div class="hz-lab">Etiquetas <span>(opcional)</span></div><div class="ag-tip"></div>
   <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n ag-not2" rows="2"></textarea>
   <div class="hz-bts"><button type="button" class="hz-ok">Dar cita</button></div>
   <div class="ag-otras">${hueco?`<button type="button" data-a="del">Quitar este hueco</button>`:`<button type="button" data-a="lib">Dejar libre para la app</button><button type="button" data-a="blq">Bloquear esta hora</button>`}</div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
- const bus=m.querySelector('.ag-bus'),res=m.querySelector('.ag-res2'),tg=agEtiquetas(m.querySelector('.ag-tip'),[]);
+ const bus=m.querySelector('.ag-bus'),res=m.querySelector('.ag-res2'),tg={get:()=>[]};
  const ses=agSesSel(m.querySelector('.ag-ses'),'');
  if(hueco)agTipoHueco(m,hueco,onDone);
  const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
