@@ -6098,6 +6098,10 @@ function renderAgenda(wrap){
   if(V==='dia')url+=`&fecha=${AG.fecha}`;else{if(d1)url+=`&desde=${d1}`;if(d2)url+=`&hasta=${d2}`;if(V==='lista'&&AG.pac)url+=`&pacienteId=${AG.pac.id}`;if(V==='lista'&&AG.fisio)url+=`&fisio=${encodeURIComponent(AG.fisio)}`;}
   if(V==='lista'&&!d1&&!d2&&!AG.pac&&!AG.fisio){grid.innerHTML='<div class="fac-vacio">Para ver «Todo» elige un paciente o un fisio, o un periodo más corto.</div>';$c('.ag-res').textContent='';AG.dia=null;fs.innerHTML='';opcionesFisio([]);return;}
   try{const d=await (await fetch(url)).json();if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,aus:d.ausencias||[],citas:d.citas||[],limitado:d.limitado,alertas:d.alertas||{},sinConsent:new Set(d.sinConsent||[]),hoy:d.hoy,espera:d.espera||[],clave,num:(AG.dia&&AG.dia.clave===clave&&AG.dia.num)||{},pago:(AG.dia&&AG.dia.clave===clave&&AG.dia.pago)||{}};pintar();
+   // Precarga en segundo plano del día anterior y siguiente (o semana): al cambiar de día sale al momento
+   if(V!=='lista')setTimeout(()=>{if(t!==tok)return;const P=encodeURIComponent(apiPwd);[-1,1].forEach(k=>{const n=V==='dia'?agMover(AG.fecha,k):agMover(lunes(AG.fecha),7*k),a=n,b=V==='dia'?n:agMover(n,6);
+    fetch(V==='dia'?`/api/schedule?action=seg-agenda-dia&pwd=${P}&fecha=${n}`:`/api/schedule?action=seg-agenda-dia&pwd=${P}&desde=${a}&hasta=${b}`).catch(()=>{});
+    fetch(`/api/schedule?action=seg-agenda-num&pwd=${P}&desde=${a}&hasta=${b}&pago=1`).catch(()=>{});});},900);
    // Nº de sesión: se pide aparte para no frenar la agenda (día y semana)
    if(V!=='lista'){const dd=AG.dia;fetch(`/api/schedule?action=seg-agenda-num&pwd=${encodeURIComponent(apiPwd)}&desde=${d1}&hasta=${d2}&pago=1${window.__agFresco?'&fresco=1':''}`).then(x=>x.json()).then(n=>{if(n&&n.ok&&AG.dia===dd&&t===tok){dd.num=n.num||{};dd.pago=n.pago||{};window.__agFresco=false;pintar();}}).catch(()=>{});}if(mismo){const vuelve=()=>{grid.scrollLeft=pos.x;if(ma&&ma.scrollTop!==pos.ym)ma.scrollTop=pos.ym;if(window.scrollY!==pos.y)window.scrollTo(0,pos.y);};vuelve();requestAnimationFrame(vuelve);setTimeout(vuelve,60);}}
   catch(e){if(t!==tok)return;grid.innerHTML=`<div class="fac-vacio">No se ha podido cargar la agenda. <button type="button" class="ag-reint">Reintentar</button></div>`;grid.querySelector('.ag-reint').onclick=cargar;}
@@ -6272,7 +6276,13 @@ function agAbrirCita(c,onDone){
   const qe=est==='CANCELADA'?'Canceló':est==='NO ASISTIÓ'?'No vino a':est==='POR REAGENDAR'?'Hay que reagendar':'';
   const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);
   abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
- m.querySelector('.ag-altab').onclick=()=>agAlta(c);
+ // Alta desde la cita: si has cambiado el estado (p. ej. Cancelada), primero se guarda la cita y luego se da el alta
+ m.querySelector('.ag-altab').onclick=async e=>{const b=e.currentTarget;
+  if(est!==est0||conf!==c.confirmada){b.disabled=true;
+   try{const r=await agPost('seg-agenda-editar',{id:c.id,estado:est!==est0?est:undefined,confirmada:conf!==c.confirmada?conf:undefined,notas:m.querySelector('.ag-not2').value,tipos:[...tg.get().filter(t=>!agNoBomba(t)),...(m.querySelector('.ag-sbm input').checked?['NO BOMBA']:[])],sesion:ses.get()!==(c.sesion||'')?ses.get():undefined,liberar:!lib.hidden&&lib.querySelector('input').checked});
+    if(!r.ok)throw new Error(r.error||'No se ha podido guardar la cita');}catch(err){b.disabled=false;toast(err.message,false);return;}
+   try{_dtC.d=null;_dtC.t=0;}catch(_){}}
+  m.remove();agAlta(c,onDone);};
  {const pk=m.querySelector('.ag-sf-pk'),pg0=c._pago||((AG.dia&&AG.dia.pago)||{})[c.id];if(pk)pk.onclick=()=>marcarPackCita(c.pacienteId,c.paciente,c.id,()=>{m.remove();onDone&&onDone();},pg0&&pg0.t==='previo');
   const co=m.querySelector('.ag-sf-co');if(co)co.onclick=()=>{m.remove();if(!c._enFicha)abrirFichaPaciente(c.pacienteId,c.paciente);let k=0;const t=setInterval(()=>{const b=document.querySelector('.fp .fp-cobb');if(b||++k>60){clearInterval(t);if(b)b.click();}},150);};}
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='REPROGRAMADA'&&!/REPROGRAMADA/.test(c.estado)){m.remove();agMoverCita(c,onDone);return;}est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
@@ -6328,7 +6338,7 @@ function agHorasChips(box,fecha,fisio,horaSel,onPick){
  }).catch(()=>{box.innerHTML='<small class="fp-mu">No se han podido cargar las horas</small>';});
 }
 // Cancela y ya no necesita más sesiones: alta (sin seguimiento) y, si se quiere, pedirle reseña
-function agAlta(c){
+function agAlta(c,onDone){
  const nom=String(c.paciente||'').trim(),pila=capTit(nom.split(/\s+/)[0]||'');
  const m=hzModal(`<div class="hz-top"><div><small>${escH(capTit(nom))}</small><b>¿Ya no necesita más sesiones?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <p class="fp-mu" style="font-size:13.5px;margin:0 0 6px">Se le pone la etiqueta <b>Alta</b> y no pasa a seguimiento ni sale en «sin próxima cita».</p>
@@ -6338,6 +6348,7 @@ function agAlta(c){
  m.querySelector('.al-ok').onclick=async e=>{const b=e.currentTarget;b.disabled=true;
   try{const r=await agPost('seg-agenda-alta',{pacienteId:c.pacienteId,nota:m.querySelector('.al-n').value.trim(),fisio:String((fisioActual&&fisioActual.nombre)||'')});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
    const px=(pacs||[]).find(x=>x.id===c.pacienteId);if(px&&r.estados)px.estados=r.estados;try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}
+   try{onDone&&onDone();}catch(_){}
    const tel=segTel((px&&(px.telefono||px.tel))||'');
    m.querySelector('.hz-card').innerHTML=`<div class="hz-top"><div><small>${escH(capTit(nom))}</small><b>✓ Alta apuntada</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
     <p style="font-size:14px;line-height:1.5;margin:0 0 10px">¿Le pedimos que nos valore?</p>
