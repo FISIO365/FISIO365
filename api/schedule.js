@@ -753,8 +753,11 @@ async function cierreDia(fecha, soloFisio) {
   ]);
   const idFisio = Object.fromEntries((fisT.records || []).map(r => [fisioKey(r.fields.Name), r.id]));
   const conAnam = new Set(anam.map(r => String(r.fields['PacienteID'] || '')));
-  const nomLink = v => (Array.isArray(v) ? v : []).map(x => (x && x.name) || x).filter(Boolean).join(', ');
   const nom = Object.fromEntries(nombres.map(p => [p.id, p.fields['FULL NAME'] || '']));
+  // Llamadas y tareas pueden ser de pacientes que hoy no tenían cita: se buscan sus nombres (Airtable solo devuelve el id)
+  { const faltan = [...new Set([...segPend, ...tarPend].flatMap(r => [...(r.fields['PACIENTE'] || []), ...(r.fields['PacRec'] || [])]).filter(x => typeof x === 'string' && /^rec[A-Za-z0-9]{14}$/.test(x) && !nom[x]))];
+    if (faltan.length) (await lotes(faltan, ids => capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL%20NAME`)).catch(() => [])).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; }); }
+  const nomLink = v => (Array.isArray(v) ? v : []).map(x => (x && x.name) || nom[x] || (/^rec[A-Za-z0-9]{14}$/.test(String(x)) ? '' : x)).filter(Boolean).join(', ');
   const conFutura = new Set([...futuras.flatMap(c => c.fields['PacienteRec'] || []), ...segs.flatMap(r => r.fields['PacRec'] || [])]);
   const usaApp = new Set(nombres.filter(p => p.fields['ÚLTIMO ACCESO APP']).map(p => p.id));
   const yaVino = new Set(previas.flatMap(c => c.fields['PacienteRec'] || []));
@@ -774,7 +777,7 @@ async function cierreDia(fecha, soloFisio) {
       { k: 'ejercicios', t: 'Ejercicios en la app', d: 'Cada paciente de hoy tiene su programa cargado', items: uni(hs.filter(c => !conPlan.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c))) },
       { k: 'consent', t: 'Consentimiento firmado', d: 'Las primeras visitas tienen el consentimiento', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !conCons.has(id); }).map(c => it(c, 'primera visita'))) },
       { k: 'app', t: 'App a los nuevos', d: 'Los pacientes nuevos del día ya han entrado en la app', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !usaApp.has(id); }).map(c => it(c, 'aún no ha entrado'))) },
-      { k: 'anamnesis', t: 'Anamnesis', d: 'Las primeras visitas tienen su anamnesis', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !conAnam.has(id); }).map(c => it(c, 'primera visita'))) },
+      { k: 'anamnesis', t: 'Anamnesis', d: 'Las primeras visitas tienen su anamnesis', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !conAnam.has(id); }).map(c => it(c, 'primera visita sin anamnesis en el panel'))) },
       { k: 'llamadas', t: 'Llamadas de seguimiento', d: 'Llamadas de hoy (o atrasadas) con su resultado', items: segPend.filter(r => fisioKey(nmSel(r.fields['RESPONSABLE'])) === fisioKey(fisio)).map(r => ({ id: (r.fields['PacRec'] || [])[0] || '', nombre: nomLink(r.fields['PACIENTE']) || '—', extra: 'sin resultado' })) },
       { k: 'chat', t: 'Chat', d: 'Mensajes de pacientes sin leer', items: (() => { const fid = idFisio[fisioKey(fisio)]; const v = new Map(); msgs.filter(m => fid && m.fields['FisioId'] === fid).forEach(m => { const id = m.fields['PacienteId'] || ''; const x = v.get(id) || { id, nombre: m.fields['PacienteNombre'] || '—', n: 0 }; x.n++; v.set(id, x); }); return [...v.values()].map(x => ({ id: x.id, nombre: x.nombre, extra: x.n + (x.n > 1 ? ' mensajes' : ' mensaje') })); })() },
       { k: 'tareas', t: 'Tareas', d: 'Tareas de hoy o atrasadas', items: tarPend.filter(r => fisioKey(nmSel(r.fields['PARA'])) === fisioKey(fisio)).map(r => ({ id: '', nombre: String(r.fields['TAREA'] || 'Tarea').slice(0, 60), extra: nomLink(r.fields['PACIENTE']) })) },
