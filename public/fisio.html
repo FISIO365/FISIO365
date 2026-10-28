@@ -8953,7 +8953,12 @@ function waPersonal(o){
   // Tras abrir WhatsApp: tú decides qué pasa con el paciente (nada se apunta si no lo has enviado)
   const bts=m.querySelector('.hz-bts');m.querySelector('.sgw-n').innerHTML='<b>¿Lo has enviado? ¿Qué hacemos ahora?</b>';
   bts.className='sgw-op';
-  bts.innerHTML=`<button type="button" data-f="cerrar"><b>Enviado · cerrar</b><small>Sale de la lista. Si contesta, ya pedirá cita.</small></button>
+  // Segundo WhatsApp sin respuesta: lo normal es cerrar (o, como mucho, una llamada); no se deja programar un tercero
+  const segundo=/^WhatsApp enviado/i.test(String(o.ult&&o.ult.nota||''));
+  bts.innerHTML=segundo?`<button type="button" data-f="cerrar"><b>Enviado · cerrar</b><small>Es el segundo WhatsApp: sale de la lista y queda en su ficha.</small></button>
+   <button type="button" data-f="3"><b>Enviado · llamarle si no contesta</b><small>Vuelve el ${escH(segFecha(segIso(3)))} para una última llamada.</small></button>
+   <button type="button" class="sgw-no" data-f="no">No lo he enviado</button>`
+  :`<button type="button" data-f="cerrar"><b>Enviado · cerrar</b><small>Sale de la lista. Si contesta, ya pedirá cita.</small></button>
    <button type="button" data-f="7"><b>Enviado · revisar en 1 semana</b><small>Vuelve a la lista el ${escH(segFecha(segIso(7)))}.</small></button>
    <button type="button" data-f="30"><b>Enviado · revisar en 1 mes</b><small>Vuelve el ${escH(segFecha(segIso(30)))}.</small></button>
    <button type="button" data-f="otra"><b>Enviado · otra fecha</b><small>Eliges el día.</small></button>
