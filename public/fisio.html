@@ -1515,7 +1515,22 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sug-ck:hover{border-color:#2f7a52}
 .sug-it.hecha .sug-ck{background:#2f7a52;border-color:#2f7a52}.sug-it.hecha .sug-ck svg{opacity:1}
 .sug-it.hecha{background:#faf8f5}.sug-it.hecha .sug-tx{text-decoration:line-through;color:#a39a92}.sug-it.hecha .sug-tag,.sug-it.hecha .sug-pie img{opacity:.55}
-.sug-pie a{color:#c2552e;font-weight:600;text-decoration:none;margin-left:auto}
+.sug-pie a{color:#c2552e;font-weight:600;text-decoration:none}
+.sug-rb{margin-left:auto;font-family:var(--font);font-size:13px;font-weight:700;border:1.5px solid rgba(26,26,26,.12);background:#fff;color:#1a1a1a;border-radius:10px;padding:7px 12px;cursor:pointer}
+.sug .sug-est.Aceptada{background:#e6eefb;color:#3460b0}.sug .sug-est.Descartada{background:#efeae5;color:#7d726a}.sug .sug-est.Nueva{background:#f3efea;color:#7d726a}
+.sug-it.hecha .sug-est{opacity:.8}
+.sug-resp{margin-top:10px;background:var(--cream);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.45;color:#3d3631;white-space:pre-wrap;word-break:break-word}
+.sug-resp b{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#c2552e;margin-bottom:3px}
+.sug-it.hecha .sug-resp{opacity:.7}
+.sug-it.nresp{border-color:#c2552e;box-shadow:0 0 0 3px rgba(194,85,46,.08)}
+.sug-rbox{margin-top:12px;padding-top:12px;border-top:1px solid rgba(26,26,26,.07)}
+.sug-res{margin-bottom:10px}
+.sug-res button.on[data-e=Aceptada]{color:#3460b0}.sug-res button.on[data-e=Hecha]{color:#2f7a52}.sug-res button.on[data-e=Descartada]{color:#7d726a}
+.sug-rt{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;line-height:1.45;border:1.5px solid rgba(26,26,26,.1);border-radius:12px;padding:10px 12px;min-height:70px;resize:vertical;outline:none;background:#fff}
+.sug-rt:focus{border-color:#c2552e}
+.sug-racc{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.sug-racc button{font-family:var(--font);font-size:13.5px;font-weight:700;border-radius:12px;padding:10px 16px;cursor:pointer;border:1.5px solid rgba(26,26,26,.12);background:#fff;color:#1a1a1a}
+.sug-racc .sug-ro{background:#1e2a38;border-color:#1e2a38;color:#fff}
 .sug-pie img{cursor:zoom-in}
 .sug-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .sug-tag{font-size:11.5px;font-weight:700;border-radius:99px;padding:3px 10px;background:var(--cream);color:#5e554d}
@@ -6298,34 +6313,39 @@ const comDia=iso=>{if(!iso)return '';const d=new Date(iso),h=new Date(),ay=new D
 const comHora=iso=>iso?new Date(iso).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}):'';
 
 // ── BUZÓN DE SUGERENCIAS ─────────────────────────────────────────────────────
-// Todo el equipo envía (App · Clínica · Otro). Leen las recibidas (pacientes y equipo) quienes tienen el acceso «Leer sugerencias».
+// Todo el equipo envía (App · Clínica · Otro) y ve sus Enviadas con la respuesta. Leen y responden las Recibidas quienes tienen el acceso «Leer sugerencias» (las de App, solo Nora).
 const SUG_IC={app:'<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/>',cli:'<path d="M3.5 20.5h17M5 20.5V9l7-5 7 5v11.5"/><path d="M10 20.5v-5h4v5M12 8.5v4M10 10.5h4"/>',otro:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>',bombilla:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',clip:'<path d="m21 11.5-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l8-8"/>',buzon:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/>'};
 const sugIco=k=>`<svg viewBox="0 0 24 24">${SUG_IC[k]}</svg>`;
 const SUG_AP=[['App','app','Cambios, mejoras o fallos de la app. Le llega a Nora'],['Clínica','cli','Organización, material, instalaciones, trato…'],['Otro','otro','Cualquier otra idea']];
-let SUG={tab:'',d:null,f:{apartado:'',tipo:'Mejora',texto:'',cap:null}};
+let SUG={tab:'',d:null,n:{rec:0,mias:0},resp:null,f:{apartado:'',tipo:'Mejora',texto:'',cap:null}};
 try{const g=JSON.parse(sessionStorage.getItem('f365_sug')||'{}');if(g.tab)SUG.tab=g.tab;}catch(e){}
 const sugGuarda=()=>{try{sessionStorage.setItem('f365_sug',JSON.stringify({tab:SUG.tab}));}catch(e){}};
 const sugLector=()=>!!(fisioActual&&fisioActual.accesos&&fisioActual.accesos.sugerencias);
 let _sugIv=null;
-async function sugContar(){if(!sugLector()){['sb-sug-badge','pmSugN'].forEach(i=>{const e=$(i);if(e)e.style.display='none';});return;}
+async function sugContar(){if(!fisioActual)return;
  if(!_sugIv)_sugIv=setInterval(()=>{if(!document.hidden)sugContar();},120000);
- try{const r=await comPost('seg-sug-contar');if(!r.ok)return;sugBadge(r.nuevas);}catch(e){}}
-function sugBadge(n){[['sb-sug-badge',n],['pmSugN',n]].forEach(([i,v])=>{const e=$(i);if(e){e.textContent=v||'';e.style.display=v?'':'none';}});}
+ try{const r=await comPost('seg-sug-contar');if(!r.ok)return;SUG.n={rec:r.nuevas||0,mias:r.respuestas||0};sugBadge();}catch(e){}}
+function sugBadge(){const n=(SUG.n.rec||0)+(SUG.n.mias||0);[['sb-sug-badge',n],['pmSugN',n]].forEach(([i,v])=>{const e=$(i);if(e){e.textContent=v||'';e.style.display=v?'':'none';}});
+ document.querySelectorAll('.sug-tabs i[data-n]').forEach(i=>{const v=SUG.n[i.dataset.n]||0;i.textContent=v||'';i.style.display=v?'':'none';});}
 const sugFecha=iso=>{if(!iso)return '';const d=new Date(iso),h=new Date(),k=x=>x.toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'}),ay=new Date();ay.setDate(h.getDate()-1);const hm=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'});
  if(k(d)===k(h))return 'Hoy · '+hm;if(k(d)===k(ay))return 'Ayer · '+hm;return d.toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'Europe/Madrid'}).replace('.','')+(d.getFullYear()!==h.getFullYear()?' '+d.getFullYear():'')+' · '+hm;};
 const sugTags=x=>x.origen==='Paciente'?'<span class="sug-tag pac">Paciente</span>':`<span class="sug-tag ${x.apartado==='App'?'app':x.apartado==='Clínica'?'cli':''}">${escH(x.apartado)}</span>${x.tipo?`<span class="sug-tag ${x.tipo==='Fallo'?'fallo':'mejora'}">${escH(x.tipo)}</span>`:''}`;
 
+// Estados: Nueva (sin responder) · Aceptada (se hará) · Hecha · Descartada («No se hará»)
+const SUG_EST={Nueva:'Nueva',Aceptada:'Aceptada',Hecha:'Hecha',Descartada:'No se hará'};
+const sugCerrada=x=>x.estado==='Hecha'||x.estado==='Descartada';
+
 function renderSug(wrap){
- const lec=sugLector();if(!lec)SUG.tab='nueva';else if(SUG.tab!=='nueva')SUG.tab='rec';
+ const lec=sugLector(),tabs=lec?[['rec','Recibidas'],['mias','Enviadas'],['nueva','Escribir']]:[['mias','Enviadas'],['nueva','Escribir']];
+ if(!tabs.some(t=>t[0]===SUG.tab))SUG.tab=lec?'rec':(SUG.n.mias?'mias':'nueva');
  const box=ce('div','sug');wrap.appendChild(box);
- box.innerHTML=`<div class="sug-hero">${sugIco('bombilla')}<div><b>Buzón de sugerencias</b><span>${lec?'Lo que proponen pacientes y equipo. Márcalas cuando estén hechas.':'Cuéntanos qué cambiarías o mejorarías, o avísanos de un fallo de la app.'}</span></div></div>
-  ${lec?'<div class="cap-tabs sug-tabs"><button type="button" data-t="rec">Recibidas <i data-n style="display:none"></i></button><button type="button" data-t="nueva">Escribir</button></div>':''}
+ box.innerHTML=`<div class="sug-hero">${sugIco('bombilla')}<div><b>Buzón de sugerencias</b><span>${lec?'Lo que proponen pacientes y equipo. Respóndelas y quien la envió verá la respuesta.':'Cuéntanos qué cambiarías o mejorarías, o avísanos de un fallo de la app. En Enviadas verás la respuesta.'}</span></div></div>
+  <div class="cap-tabs sug-tabs">${tabs.map(([k,t])=>`<button type="button" data-t="${k}">${t}${k!=='nueva'?` <i data-n="${k}" style="display:none"></i>`:''}</button>`).join('')}</div>
   <div class="sug-body"></div>`;
- box.querySelectorAll('.sug-tabs button').forEach(b=>b.onclick=()=>{SUG.tab=b.dataset.t;sugGuarda();pintar();});
+ box.querySelectorAll('.sug-tabs button').forEach(b=>b.onclick=()=>{SUG.tab=b.dataset.t;SUG.resp=null;sugGuarda();pintar();});
  const body=box.querySelector('.sug-body');
- const cuenta=n=>{const i=box.querySelector('.sug-tabs i[data-n]');if(i){i.textContent=n||'';i.style.display=n?'':'none';}};
- function pintar(){box.querySelectorAll('.sug-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===SUG.tab));
-  if(SUG.tab==='nueva')sugForm(body,()=>{if(lec){SUG.tab='rec';SUG.d=null;sugGuarda();}pintar();});else sugLista(body,cuenta);}
+ function pintar(){box.querySelectorAll('.sug-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===SUG.tab));sugBadge();
+  if(SUG.tab==='nueva')sugForm(body,()=>{SUG.tab='mias';SUG.d=null;sugGuarda();pintar();});else sugLista(body,SUG.tab);}
  pintar();
 }
 
@@ -6360,29 +6380,46 @@ function sugForm(body,alEnviar){const F=SUG.f;
 // Captura: se reduce en el móvil/ordenador antes de subirla (máx. 1600 px, JPEG)
 function sugReducir(file){return new Promise((ok,ko)=>{const fr=new FileReader();fr.onerror=ko;fr.onload=()=>{const im=new Image();im.onerror=ko;im.onload=()=>{const m=1600,k=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);ok({file:c.toDataURL('image/jpeg',.85).split(',')[1],tipo:'image/jpeg',nombre:(file.name||'captura').replace(/\.[^.]+$/,'')+'.jpg'});};im.src=fr.result;};fr.readAsDataURL(file);});}
 
-async function sugLista(body,alContar){
+async function sugLista(body,modo){
+ const rec=modo==='rec';
  if(!SUG.d)body.innerHTML='<div class="sug-vacio">Cargando…</div>';
  const pinta=()=>{const d=SUG.d;if(!d)return;
-  const pend=d.sugerencias.filter(x=>x.estado!=='Hecha'),hech=d.sugerencias.filter(x=>x.estado==='Hecha'),L=pend.concat(hech);
-  alContar(pend.length);sugBadge(pend.length);
-  body.innerHTML=L.length?L.map(x=>`<div class="sug-it${x.estado==='Hecha'?' hecha':''}" data-id="${x.id}">
-   <button type="button" class="sug-ck" aria-label="${x.estado==='Hecha'?'Desmarcar':'Marcar como hecha'}"><svg viewBox="0 0 24 24"><path d="m6 12.5 4 4 8-9"/></svg></button>
-   <div class="sug-main"><div class="sug-top">${sugTags(x)}<span class="sug-fe">${escH(sugFecha(x.fecha))}</span></div>
+  const base=rec?d.sugerencias:d.mias,orden=x=>x.estado==='Nueva'?0:x.estado==='Aceptada'?1:2;
+  const L=base.slice().sort((a,b)=>orden(a)-orden(b)||String(b.fecha).localeCompare(String(a.fecha)));
+  SUG.n.rec=d.sugerencias.filter(x=>x.estado==='Nueva').length;SUG.n.mias=d.mias.filter(x=>x.estado!=='Nueva'&&!x.respuestaVista).length;sugBadge();
+  body.innerHTML=L.length?L.map(x=>{const cer=sugCerrada(x),abierta=rec&&SUG.resp===x.id,nuevaResp=!rec&&x.estado!=='Nueva'&&!x.respuestaVista;
+   return `<div class="sug-it${cer?' hecha':''}${nuevaResp?' nresp':''}" data-id="${x.id}">
+   ${rec?`<button type="button" class="sug-ck" aria-label="${cer?'Volver a abrir':'Marcar como hecha'}"><svg viewBox="0 0 24 24"><path d="m6 12.5 4 4 8-9"/></svg></button>`:''}
+   <div class="sug-main"><div class="sug-top">${sugTags(x)}${x.estado!=='Nueva'||!rec?`<span class="sug-est ${x.estado}">${!rec&&x.estado==='Nueva'?'Enviada':SUG_EST[x.estado]}</span>`:''}<span class="sug-fe">${escH(sugFecha(x.fecha))}</span></div>
     <div class="sug-tx">${escH(x.texto)}</div>
-    <div class="sug-pie">${x.captura?`<img src="${escH(x.captura.mini)}" alt="Captura" data-cap>`:''}<span>${escH(x.de||'—')}</span>${x.paciente?'<a href="#" data-ficha>Ver ficha</a>':''}</div></div></div>`).join('')
-   :`<div class="sug-card sug-vacio">${sugIco('buzon')}Todavía no ha llegado ninguna sugerencia.</div>`;
-  body.querySelectorAll('.sug-it').forEach(el=>{const x=d.sugerencias.find(s=>s.id===el.dataset.id);
-   el.querySelector('.sug-ck').onclick=()=>marca(x);
+    ${x.respuesta?`<div class="sug-resp"><b>${escH(x.respondidoPor||'Dirección')}</b>${escH(x.respuesta)}</div>`:''}
+    <div class="sug-pie">${x.captura?`<img src="${escH(x.captura.mini)}" alt="Captura" data-cap>`:''}${rec?`<span>${escH(x.de||'—')}</span>${x.paciente?'<a href="#" data-ficha>Ver ficha</a>':''}${abierta?'':`<button type="button" class="sug-rb">${x.estado==='Nueva'?'Responder':'Cambiar respuesta'}</button>`}`:''}</div>
+    ${abierta?sugCajaResp(x):''}</div></div>`;}).join('')
+   :`<div class="sug-card sug-vacio">${sugIco('buzon')}${rec?'Todavía no ha llegado ninguna sugerencia.':'Aún no has enviado ninguna sugerencia.'}</div>`;
+  body.querySelectorAll('.sug-it').forEach(el=>{const x=base.find(s=>s.id===el.dataset.id);
+   const ck=el.querySelector('.sug-ck');if(ck)ck.onclick=()=>guarda(x,{estado:sugCerrada(x)?'Nueva':'Hecha'});
    const c=el.querySelector('[data-cap]');if(c)c.onclick=()=>window.open(x.captura.url,'_blank');
-   const f=el.querySelector('[data-ficha]');if(f)f.onclick=ev=>{ev.preventDefault();showSection('pac');abrirFichaPaciente(x.paciente,x.de);};});};
- // Marcar/desmarcar al momento, sin recargar ni moverse de sitio
- const marca=async x=>{const antes=x.estado,y=comY();x.estado=antes==='Hecha'?'Nueva':'Hecha';pinta();comSetY(y);
-  try{const r=await comPost('seg-sug-estado',{id:x.id,estado:x.estado});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');}
-  catch(e){x.estado=antes;pinta();comSetY(y);toast(e.message,false);}};
+   const f=el.querySelector('[data-ficha]');if(f)f.onclick=ev=>{ev.preventDefault();showSection('pac');abrirFichaPaciente(x.paciente,x.de);};
+   const rb=el.querySelector('.sug-rb');if(rb)rb.onclick=()=>{SUG.resp=x.id;const y=comY();pinta();comSetY(y);const t=el.isConnected&&body.querySelector(`.sug-it[data-id="${x.id}"] .sug-rt`);if(t)t.focus({preventScroll:true});};
+   const caja=el.querySelector('.sug-rbox');if(caja){let est=x.estado==='Nueva'?'':x.estado;
+    const marca=()=>caja.querySelectorAll('[data-e]').forEach(b=>b.classList.toggle('on',b.dataset.e===est));marca();
+    caja.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{est=b.dataset.e;marca();});
+    caja.querySelector('.sug-rx').onclick=()=>{SUG.resp=null;const y=comY();pinta();comSetY(y);};
+    caja.querySelector('.sug-ro').onclick=()=>{if(!est){toast('Elige si se acepta, se ha hecho o no se hará',false);return;}SUG.resp=null;guarda(x,{estado:est,respuesta:caja.querySelector('.sug-rt').value},'Respuesta enviada');};}});};
+ // Guardar al momento, sin recargar ni moverse de sitio
+ const guarda=async(x,cambio,msg)=>{const antes=Object.assign({},x),y=comY();Object.assign(x,cambio,{respondidoPor:String(fisioActual.nombre||'').trim().split(/\s+/)[0]});pinta();comSetY(y);
+  try{const r=await comPost('seg-sug-estado',Object.assign({id:x.id},cambio));if(!r.ok)throw new Error(r.error||'No se ha podido guardar');Object.assign(x,r.sugerencia);const y2=comY();pinta();comSetY(y2);if(msg)toast(msg,true);}
+  catch(e){Object.assign(x,antes);pinta();comSetY(y);toast(e.message,false);}};
  if(SUG.d)pinta();
- try{const r=await comPost('seg-sug-lista');if(!r.ok)throw new Error(r.error||'No se han podido cargar');SUG.d=r;if(body.isConnected){const y=comY();pinta();comSetY(y);}}
+ try{const r=await comPost('seg-sug-lista');if(!r.ok)throw new Error(r.error||'No se han podido cargar');SUG.d=r;if(body.isConnected){const y=comY();pinta();comSetY(y);}
+  // Al abrir Enviadas, las respuestas nuevas quedan vistas (se siguen resaltando hasta salir)
+  if(!rec&&r.mias.some(x=>x.estado!=='Nueva'&&!x.respuestaVista)){comPost('seg-sug-visto').catch(()=>{});SUG.n.mias=0;sugBadge();r.mias.forEach(x=>{if(x.estado!=='Nueva')x._vista=true;});}}
  catch(e){if(!SUG.d&&body.isConnected)body.innerHTML=`<div class="sug-card sug-vacio">${escH(e.message)}</div>`;}
 }
+function sugCajaResp(x){return `<div class="sug-rbox">
+ <div class="sug-seg sug-res">${[['Aceptada','Aceptada'],['Hecha','Hecha'],['Descartada','No se hará']].map(([k,t])=>`<button type="button" data-e="${k}">${t}</button>`).join('')}</div>
+ <textarea class="sug-rt" maxlength="1500" placeholder="${x.origen==='Paciente'?'Respuesta interna (el paciente no la ve)…':'Respuesta para '+escH(x.de||'quien la envió')+' (opcional)…'}">${escH(x.respuesta||'')}</textarea>
+ <div class="sug-racc"><button type="button" class="sug-rx">Cancelar</button><button type="button" class="sug-ro">Enviar respuesta</button></div></div>`;}
 
 function renderCom(wrap){
  if(!comVe()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección todavía no está disponible.</div></div>';return;}

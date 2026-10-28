@@ -1023,7 +1023,8 @@ module.exports = async function handler(req, res) {
       // ── BUZÓN DE SUGERENCIAS: pacientes (app) y equipo (panel). Lo leen quienes tienen acc_sugerencias (Administración › Accesos) ──
       if (action.startsWith('seg-sug-')) {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
-        const SUG = 'tbll3K0ar1cZOcVjZ', CAPT = 'fld0coxDWYBc2WvYH', APART = ['App', 'Clínica', 'Otro'], TIPOS_S = ['Mejora', 'Fallo'], ESTADOS_S = ['Nueva', 'Vista', 'Hecha'];
+        const SUG = 'tbll3K0ar1cZOcVjZ', CAPT = 'fld0coxDWYBc2WvYH', APART = ['App', 'Clínica', 'Otro'], TIPOS_S = ['Mejora', 'Fallo'];
+        const ESTADOS_S = ['Nueva', 'Aceptada', 'Hecha', 'Descartada'], RESPONDIDA = "OR({ESTADO}='Aceptada',{ESTADO}='Hecha',{ESTADO}='Descartada')";
         const okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || ''), nm = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
         const pila = s => { const p = String(s || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
         // Quién soy: nombre + contraseña del panel
@@ -1033,18 +1034,27 @@ module.exports = async function handler(req, res) {
         const yo = pila(yoR.fields.Name), lector = !!yoR.fields.acc_sugerencias;
         // Las del apartado App (cambios, mejoras y fallos de la app) solo le llegan a quien la desarrolla
         const DEV_APP = 'Nora', veApp = yo === DEV_APP, sinApp = "NOT({APARTADO}='App')";
+        const mias = `AND({ORIGEN}='Equipo',{DE}='${yo.replace(/'/g, "\\'")}')`;
         const vista = r => { const F = r.fields || {}, c = (F.CAPTURA || [])[0];
           return { id: r.id, texto: F.TEXTO || '', origen: nm(F.ORIGEN) || 'Equipo', apartado: nm(F.APARTADO) || 'General', tipo: nm(F.TIPO), de: F['ANÓNIMA'] ? 'Anónimo' : (F.DE || ''), anonima: !!F['ANÓNIMA'], paciente: F['ANÓNIMA'] ? '' : (F.PACIENTE || ''),
-            captura: c ? { url: c.url, mini: (c.thumbnails && c.thumbnails.large && c.thumbnails.large.url) || c.url } : null, estado: nm(F.ESTADO) || 'Nueva', nota: F.NOTA || '', cambiadoPor: F['CAMBIADO POR'] || '', fecha: F.FECHA || r.createdTime || '' }; };
+            captura: c ? { url: c.url, mini: (c.thumbnails && c.thumbnails.large && c.thumbnails.large.url) || c.url } : null, estado: nm(F.ESTADO) === 'Vista' ? 'Nueva' : (nm(F.ESTADO) || 'Nueva'), respuesta: F.NOTA || '', respondidoPor: F['CAMBIADO POR'] || '',
+            respuestaVista: !!F['RESPUESTA VISTA'], fecha: F.FECHA || r.createdTime || '' }; };
         if (action === 'seg-sug-contar') {
-          if (!lector) return res.status(200).json({ ok: true, lector: false, nuevas: 0 });
-          const rs = await todosT(SUG, `fields[]=RESUMEN&filterByFormula=${encodeURIComponent(veApp ? "NOT({ESTADO}='Hecha')" : `AND(NOT({ESTADO}='Hecha'),${sinApp})`)}`);
-          return res.status(200).json({ ok: true, lector: true, nuevas: rs.length });
+          const [nuevas, resp] = await Promise.all([
+            lector ? todosT(SUG, `fields[]=RESUMEN&filterByFormula=${encodeURIComponent(veApp ? "OR({ESTADO}='Nueva',{ESTADO}='Vista',{ESTADO}='')" : `AND(OR({ESTADO}='Nueva',{ESTADO}='Vista',{ESTADO}=''),${sinApp})`)}`) : [],
+            todosT(SUG, `fields[]=RESUMEN&filterByFormula=${encodeURIComponent(`AND(${mias},${RESPONDIDA},NOT({RESPUESTA VISTA}))`)}`)]);
+          return res.status(200).json({ ok: true, lector, nuevas: nuevas.length, respuestas: resp.length });
         }
         if (action === 'seg-sug-lista') {
-          const filtro = lector ? (veApp ? '' : `&filterByFormula=${encodeURIComponent(sinApp)}`) : `&filterByFormula=${encodeURIComponent(`AND({ORIGEN}='Equipo',{DE}='${yo.replace(/'/g, "\\'")}')`)}`;
-          const rs = await todosT(SUG, `sort[0][field]=FECHA&sort[0][direction]=desc${filtro}`);
-          return res.status(200).json({ ok: true, yo, lector, sugerencias: rs.map(vista) });
+          const [rec, mi] = await Promise.all([
+            lector ? todosT(SUG, `sort[0][field]=FECHA&sort[0][direction]=desc${veApp ? '' : `&filterByFormula=${encodeURIComponent(sinApp)}`}`) : [],
+            todosT(SUG, `sort[0][field]=FECHA&sort[0][direction]=desc&filterByFormula=${encodeURIComponent(mias)}`)]);
+          return res.status(200).json({ ok: true, yo, lector, sugerencias: rec.map(vista), mias: mi.map(vista) });
+        }
+        if (action === 'seg-sug-visto') { // quien la envió ha visto las respuestas
+          const rs = await todosT(SUG, `fields[]=RESUMEN&filterByFormula=${encodeURIComponent(`AND(${mias},${RESPONDIDA},NOT({RESPUESTA VISTA}))`)}`);
+          for (let i = 0; i < rs.length; i += 10) await at(SUG, { method: 'PATCH', body: JSON.stringify({ records: rs.slice(i, i + 10).map(r => ({ id: r.id, fields: { 'RESPUESTA VISTA': true } })) }) });
+          return res.status(200).json({ ok: true, n: rs.length });
         }
         if (action === 'seg-sug-enviar') {
           const texto = String(q.texto || '').trim().slice(0, 3000); if (!texto) return res.status(400).json({ ok: false, error: 'Escribe tu sugerencia' });
@@ -1060,13 +1070,13 @@ module.exports = async function handler(req, res) {
           }
           return res.status(200).json({ ok: true, id: rec.id, sinCaptura });
         }
-        if (action === 'seg-sug-estado') {
+        if (action === 'seg-sug-estado') { // responder: Aceptada · Hecha · No se hará (Descartada), con respuesta opcional
           if (!lector) return res.status(403).json({ ok: false, error: 'No tienes acceso al buzón de sugerencias' });
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           if (!veApp) { const r0 = await at(`${SUG}/${q.id}`); if (nm((r0.fields || {}).APARTADO) === 'App') return res.status(403).json({ ok: false, error: 'Esta sugerencia es solo para Nora' }); }
-          const fields = {};
-          if (q.estado !== undefined) { if (!ESTADOS_S.includes(q.estado)) return res.status(400).json({ ok: false }); fields.ESTADO = q.estado; fields['CAMBIADO POR'] = yo; }
-          if (q.nota !== undefined) fields.NOTA = String(q.nota || '').slice(0, 3000);
+          const fields = { 'CAMBIADO POR': yo, 'RESPUESTA VISTA': false };
+          if (q.estado !== undefined) { if (!ESTADOS_S.includes(q.estado)) return res.status(400).json({ ok: false }); fields.ESTADO = q.estado; }
+          if (q.respuesta !== undefined) fields.NOTA = String(q.respuesta || '').trim().slice(0, 1500);
           const d = await at(`${SUG}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields, typecast: true }) });
           if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
           return res.status(200).json({ ok: true, sugerencia: vista(d) });
