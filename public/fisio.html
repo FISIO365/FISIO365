@@ -1625,6 +1625,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rd-row{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-top:1px solid #f0ebe6;font-size:13.5px}.rd-row:first-child{border-top:none}.rd-row span{flex:1;min-width:0}.rd-row small{color:#7d6a60;font-size:12.5px;text-align:right}.rd-row b{min-width:60px;text-align:right}
 .rd-tb{overflow-x:auto}.rd-tr{display:grid;grid-template-columns:1.3fr .8fr .8fr 1fr .6fr;gap:6px;font-size:13px;padding:7px 0;border-top:1px solid #f0ebe6;min-width:420px}.rd-tr span:not(:first-child){text-align:right}.rd-tr i{font-style:normal;color:#a99d93;font-size:11.5px}.rd-th{font-size:11px;font-weight:700;text-transform:uppercase;color:#9a8d84;border-top:none}
 .rd-nota{font-size:12.5px;margin:8px 0 0;color:#5e554d}
+.pk-quitar{display:block;margin:14px auto 0;border:none;background:none;font-family:var(--font);font-size:13px;color:#b42318;text-decoration:underline;cursor:pointer}
 </style>
 </head>
 <body>
@@ -6215,7 +6216,7 @@ function agAbrirCita(c,onDone){
   const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);
   abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
  m.querySelector('.ag-altab').onclick=()=>agAlta(c);
- {const pk=m.querySelector('.ag-sf-pk');if(pk)pk.onclick=()=>marcarPackCita(c.pacienteId,c.paciente,c.id,()=>{m.remove();onDone&&onDone();});
+ {const pk=m.querySelector('.ag-sf-pk'),pg0=c._pago||((AG.dia&&AG.dia.pago)||{})[c.id];if(pk)pk.onclick=()=>marcarPackCita(c.pacienteId,c.paciente,c.id,()=>{m.remove();onDone&&onDone();},pg0&&pg0.t==='previo');
   const co=m.querySelector('.ag-sf-co');if(co)co.onclick=()=>{m.remove();if(!c._enFicha)abrirFichaPaciente(c.pacienteId,c.paciente);let k=0;const t=setInterval(()=>{const b=document.querySelector('.fp .fp-cobb');if(b||++k>60){clearInterval(t);if(b)b.click();}},150);};}
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='REPROGRAMADA'&&!/REPROGRAMADA/.test(c.estado)){m.remove();agMoverCita(c,onDone);return;}est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
@@ -9376,14 +9377,18 @@ function packSelector(box){let n=0,ses=0,otro=false;
  inp.oninput=()=>{n=Math.min(40,parseInt(inp.value,10)||0);pinta();};pinta();
  return {get:()=>({n,ses}),listo:()=>!!(n&&ses)};}
 // Desde una cita: «Esta cita es la sesión X de un pack de N» (lo más simple posible)
-function marcarPackCita(pacId,nombre,citaId,onDone){
+function marcarPackCita(pacId,nombre,citaId,onDone,tienePrevio){
  let n=0,ses=0,otro=false;
  const m=hzModal(`<div class="hz-top"><div><small>${escH(capTit(nombre||''))}</small><b>Viene con pack</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Pack de</div><div class="sev-ch c4 pk-ch">${[5,10,20].map(k=>`<button type="button" data-n="${k}">${k}</button>`).join('')}<button type="button" data-n="">Otro</button></div>
   <input type="number" min="1" max="40" inputmode="numeric" class="ag-in pk-n" placeholder="¿Cuántas sesiones?" hidden style="margin-top:8px">
   <div class="pk-s2" hidden><div class="hz-lab">Esta cita es la</div><div class="pk-ses"></div></div>
   <div class="pk-res"></div>
-  <div class="sev-bts"><button type="button" class="sev-b pk-no">Cancelar</button><button type="button" class="sev-b ok pk-ok" disabled>Guardar</button></div>`);
+  <div class="sev-bts"><button type="button" class="sev-b pk-no">Cancelar</button><button type="button" class="sev-b ok pk-ok" disabled>Guardar</button></div>
+  ${tienePrevio?'<button type="button" class="pk-quitar">Quitar el pack apuntado (me he equivocado)</button>':''}`);
+ {const qb=m.querySelector('.pk-quitar');if(qb)qb.onclick=async()=>{if(!confirm('¿Quitar el pack pagado fuera del panel de este paciente?'))return;qb.disabled=true;
+  try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:pacId,bonoPrevio:0})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido quitar');
+   toast('Pack quitado',true);m.remove();onDone&&onDone();}catch(err){qb.disabled=false;toast(err.message,false);}};}
  const inp=m.querySelector('.pk-n'),s2=m.querySelector('.pk-s2'),sb=m.querySelector('.pk-ses'),res=m.querySelector('.pk-res'),ok=m.querySelector('.pk-ok');
  m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.pk-no').onclick=()=>m.remove();
  const pinta=()=>{m.querySelectorAll('.pk-ch button').forEach(b=>b.classList.toggle('on',otro?!b.dataset.n:!!b.dataset.n&&+b.dataset.n===n));inp.hidden=!otro;

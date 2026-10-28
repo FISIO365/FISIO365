@@ -625,7 +625,7 @@ const REPORTE_ITEMS = [
   { k: 'marcar', t: 'He actualizado el **estado de todas mis citas** del día', auto: 'marcar' },
   { k: 'ejercicios', t: 'Mis pacientes tienen su **programa de ejercicios** actualizado en la app', auto: 'ejercicios' },
   { k: 'consent', t: 'Las primeras visitas han firmado el **consentimiento**', auto: 'consent' },
-  { k: 'anamnesis', t: 'He hecho la **anamnesis** a las primeras visitas', auto: 'anamnesis' },
+  { k: 'anamnesis', t: 'He hecho la **anamnesis** a las primeras visitas' }, // sin comprobación automática: a veces se hace fuera de la app
   { k: 'app', t: 'He dado **acceso a la app** a los pacientes nuevos del día y la han **instalado en su móvil**', auto: 'app' },
   { k: 'proxima', t: 'Si alguien **no ha reagendado**, he apuntado por qué y lo he **pasado a seguimiento**', auto: 'proxima' },
   { k: 'llamadas', t: 'He hecho mis **llamadas de seguimiento** de hoy y he apuntado el resultado', auto: 'llamadas' },
@@ -777,7 +777,7 @@ async function cierreDia(fecha, soloFisio) {
       { k: 'ejercicios', t: 'Ejercicios en la app', d: 'Cada paciente de hoy tiene su programa cargado', items: uni(hs.filter(c => !conPlan.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c))) },
       { k: 'consent', t: 'Consentimiento firmado', d: 'Las primeras visitas tienen el consentimiento', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !conCons.has(id); }).map(c => it(c, 'primera visita'))) },
       { k: 'app', t: 'App a los nuevos', d: 'Los pacientes nuevos del día ya han entrado en la app', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !usaApp.has(id); }).map(c => it(c, 'aún no ha entrado'))) },
-      { k: 'anamnesis', t: 'Anamnesis', d: 'Las primeras visitas tienen su anamnesis', items: uni(hs.filter(c => { const id = c.fields['RELACIÓN - CITA'][0]; return !yaVino.has(id) && !conAnam.has(id); }).map(c => it(c, 'primera visita sin anamnesis en el panel'))) },
+      // (la anamnesis no se comprueba: a veces se hace fuera de la app)
       { k: 'llamadas', t: 'Llamadas de seguimiento', d: 'Llamadas de hoy (o atrasadas) con su resultado', items: segPend.filter(r => fisioKey(nmSel(r.fields['RESPONSABLE'])) === fisioKey(fisio)).map(r => ({ id: (r.fields['PacRec'] || [])[0] || '', nombre: nomLink(r.fields['PACIENTE']) || '—', extra: 'sin resultado' })) },
       { k: 'chat', t: 'Chat', d: 'Mensajes de pacientes sin leer', items: (() => { const fid = idFisio[fisioKey(fisio)]; const v = new Map(); msgs.filter(m => fid && m.fields['FisioId'] === fid).forEach(m => { const id = m.fields['PacienteId'] || ''; const x = v.get(id) || { id, nombre: m.fields['PacienteNombre'] || '—', n: 0 }; x.n++; v.set(id, x); }); return [...v.values()].map(x => ({ id: x.id, nombre: x.nombre, extra: x.n + (x.n > 1 ? ' mensajes' : ' mensaje') })); })() },
       { k: 'tareas', t: 'Tareas', d: 'Tareas de hoy o atrasadas', items: tarPend.filter(r => fisioKey(nmSel(r.fields['PARA'])) === fisioKey(fisio)).map(r => ({ id: '', nombre: String(r.fields['TAREA'] || 'Tarea').slice(0, 60), extra: nomLink(r.fields['PACIENTE']) })) },
