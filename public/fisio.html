@@ -8020,11 +8020,13 @@ async function datosTareas(){
  return {por,hoy};
 }
 // Todos los números cuentan lo mismo: lo que toca hoy o está atrasado (lo de próximos días no suma)
-function pintarNumPend(d){const h=d.hoy;const nT=d.items.filter(x=>x.tipo!=='llamar'&&x.fecha<=h).length,nL=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=h).length;
+// Los números de Pendientes son de lo que le toca a cada uno (lo de los demás se ve eligiendo «Todo el equipo»)
+const esMioPend=x=>String(x.quien||'').trim().split(' ')[0].toLowerCase()===String(miNombreCorto()||'').toLowerCase();
+function pintarNumPend(d){const h=d.hoy;const nT=d.items.filter(x=>x.tipo!=='llamar'&&x.fecha<=h&&esMioPend(x)).length,nL=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=h&&esMioPend(x)).length;
  document.querySelectorAll('.tt-n[data-n]').forEach(e=>{const n=e.dataset.n==='seg'?nL:nT;e.textContent=n||'';e.classList.toggle('on',n>0);});
  const b=$('btnTarN');if(b){const n=nT+nL;b.textContent=n>99?'99+':n;b.classList.toggle('on',n>0);}}
 async function contarTareas(){
- try{const d0=await datosTareasTodas();pintarNumPend(d0);const {items,hoy}=d0;const n=items.filter(x=>x.fecha<=hoy).length;
+ try{const d0=await datosTareasTodas();pintarNumPend(d0);const {items,hoy}=d0;const n=items.filter(x=>x.fecha<=hoy&&esMioPend(x)).length;
   const b=$('btnTarN');if(b){b.textContent=n>99?'99+':n;b.classList.toggle('on',n>0);}
  }catch(e){}
 }
@@ -8055,8 +8057,9 @@ async function renderTareas(wrap){
  top.querySelectorAll('button').forEach(b=>b.onclick=()=>ir(b.dataset.v));
  ir(vista);
 }
-let tarFiltro='';
+let tarFiltro=null; // null = aún sin elegir → lo mío
 async function listaTareas(cont,keep){
+ if(tarFiltro===null){let g=null;try{g=sessionStorage.getItem('f365_tarq');}catch(e){}tarFiltro=g!=null?g:miNombreCorto();}
  // keep: recarga sin vaciar la pantalla ni volver arriba (se cambia la lista cuando ya están los datos nuevos)
  const box=ce('div','tar');if(!keep){box.innerHTML='<div class="fac-vacio">Cargando…</div>';cont.appendChild(box);}
  const recargar=()=>{_dtC.t=0;_dtC.d=null;_dtC.fresco=true;listaTareas(cont,{y:window.scrollY});contarTareas();};
@@ -8079,7 +8082,7 @@ async function listaTareas(cont,keep){
  const TIPOS_T=[['sinevo','Sin evolución: decidir cómo seguir'],['tarea','Tareas del equipo'],['anotar','Historia por actualizar'],['explicar','Sin próxima cita'],['consent','Consentimientos'],['consentAnt','Antiguos: subir el consentimiento en papel'],['hueco','Huecos libres para la lista de espera'],['regalo','Tarjetas regalo por dar'],['negocio','Negocios que toca visitar'],['plan','Sin plan de ejercicios en la app'],['app','Sin la app']];
  const grT=x=>x.tipo==='consent'&&x.k&&x.k.antiguo?'consentAnt':x.tipo;
  const grupos=TIPOS_T.map(([k,t])=>[t,k,L.filter(x=>grT(x)===k).sort((a,b)=>a.fecha.localeCompare(b.fecha))]);
- box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todos (${d.items.filter(x=>x.fecha<=hoy).length})</option>${[...new Set(TAR_NOMBRES.concat(quien))].map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
+ box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todo el equipo (${d.items.filter(x=>x.fecha<=hoy).length})</option>${[...new Set(TAR_NOMBRES.concat(quien))].map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
  if(d.fallo)box.insertAdjacentHTML('beforeend','<button type="button" class="tar-ll-av tar-fallo">⚠️ No se han podido cargar los pacientes por explicar. <b>Reintentar</b></button>');
  if(!L.length){box.insertAdjacentHTML('beforeend','<div class="tar-ok">✓ Nada pendiente</div>');}
  grupos.forEach(([t,c,g])=>{if(!g.length)return;
@@ -8161,7 +8164,7 @@ async function listaTareas(cont,keep){
  notasExpandibles(box);
  {const tf=box.querySelector('.tar-fallo');if(tf)tf.onclick=recargar;}
  {const tn=box.querySelector('.tar-nueva');if(tn)tn.onclick=()=>abrirTareaEquipo(null,recargar);}
- {const tq=box.querySelector('.tar-quien');if(tq)tq.onchange=()=>{tarFiltro=tq.value;recargar();};}
+ {const tq=box.querySelector('.tar-quien');if(tq)tq.onchange=()=>{tarFiltro=tq.value;try{sessionStorage.setItem('f365_tarq',tarFiltro);}catch(e){}recargar();};}
  if(keep&&keep.y!=null)requestAnimationFrame(()=>window.scrollTo(0,keep.y));
 }
 // Tarea suelta del equipo (p. ej. «agendar sesión a Jesús la semana que viene»)
@@ -9155,7 +9158,7 @@ function waPersonal(o){
 }
 async function renderSeguimiento(wrap){
  const box=ce('div','seg');wrap.appendChild(box);
- let tab='pend',filtroFisio='',datos=null,perH='30',diaH='',segYaCargo=false,resF='',antF=false,busq='';
+ let tab='pend',filtroFisio=(()=>{try{const g=sessionStorage.getItem('f365_llq');if(g!=null)return g;}catch(e){}return '__yo';})(),datos=null,perH='30',diaH='',segYaCargo=false,resF='',antF=false,busq='';
  const normB=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
  const esAntigua=x=>/^Recuperado de las llamadas antiguas/i.test(String(x&&x.nota||''));
  const RES_K=r=>{r=String(r||'').toUpperCase().trim();return !r?'sin':/^NO VOLVER/.test(r)?'novol':/^NC/.test(r)?'nc':/^VOLVER/.test(r)?'volver':/PENDIENTE/.test(r)?'pend':/RECUPERADA/.test(r)?'rec':/^ALTA/.test(r)?'alta':'otro';};
@@ -9183,7 +9186,7 @@ async function renderSeguimiento(wrap){
   if(tab==='pend'){
    const kP=x=>RES_K(x.ult&&x.ult.resultado);
    // Con búsqueda se mira en toda la lista (cualquier fisio y fecha), sin los demás filtros
-   const L=busq?P.filter(x=>normB(x.nombre).includes(normB(busq))):P.filter(flt).filter(x=>!resF||kP(x)===resF).filter(x=>!antF||esAntigua(x));
+   const L=busq?P.filter(x=>normB(x.nombre).includes(normB(busq))):antF?P.filter(esAntigua).filter(x=>!resF||kP(x)===resF):P.filter(flt).filter(x=>!resF||kP(x)===resF);
    const grupos=[['Atrasados',L.filter(x=>x.fecha<hoy)],['Hoy',L.filter(x=>x.fecha===hoy)],['Esta semana',L.filter(x=>x.fecha>hoy&&x.fecha<=segIso(7))],['Más adelante',L.filter(x=>x.fecha>segIso(7))]];
    const nFut=L.filter(x=>x.fecha>hoy).length;
    html+=grupos.filter(g=>g[1].length).map(([t,g],gi)=>(t==='Esta semana'||(t==='Más adelante'&&!grupos[2][1].length)?`<details class="ll-det ll-fut"${busq?' open':''}><summary>Programadas para más adelante (${nFut})</summary>`:'')+`<div class="seg-gt">${t} <span>${g.length}</span></div><div class="seg-tabla">${g.map(x=>{const ests=pacEstados(x.pacienteId).map(estNom).filter(Boolean);const q=deQuienSeg(x);
@@ -9208,7 +9211,7 @@ async function renderSeguimiento(wrap){
    html+=L.length?(LF.length?`<details class="ll-det"${resF?' open':''}><summary>${resF?`Ver las ${LF.length} llamadas con este resultado`:`Ver las ${L.length} llamadas una a una`}</summary>`+dias.map(dd=>{const Ld=LF.filter(x=>x.fecha===dd);return `<div class="seg-gt">${escH(hzFecha(dd).replace(/^./,c=>c.toUpperCase()))} <span>${Ld.length}</span></div><div class="seg-tabla">${Ld.map(x=>{const c=resCls(x.resultado);return `<div class="tk hecha" data-id="${x.id}"><span class="tk-i r-${c}">${c==='ok'?IC_OK:c==='no'?IC_NO:IC_PE}</span><div class="tk-m"><b>${escH(x.nombre)}</b><p class="tk-meta"><strong class="r-${c}">${escH(resTxt(x.resultado))}</strong></p><p class="tk-meta">${escH((x.quienN?'Llamó '+x.quienN:'')+(x.hora?(x.quienN?' a las ':'A las ')+x.hora:''))}</p>${x.nota?`<p class="tk-nota">${escH(x.nota)}</p>`:''}</div></div>`;}).join('')}</div>`;}).join('')+'</details>':`<div class="fac-vacio">Ninguna llamada con este resultado ${escH(perTxt())}.</div>`):`<div class="fac-vacio">Sin llamadas ${escH(perTxt())}.</div>`;
   }
   box.innerHTML=html;
-  {const sq=box.querySelector('.sg-quien');if(sq)sq.onchange=()=>{filtroFisio=sq.value;pinta();};}
+  {const sq=box.querySelector('.sg-quien');if(sq)sq.onchange=()=>{filtroFisio=sq.value;try{sessionStorage.setItem('f365_llq',filtroFisio);}catch(e){}pinta();};}
   box.querySelectorAll('.sg-seg button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;resF='';try{sessionStorage.setItem('f365_seg',tab);}catch(e){}pinta();});
   box.querySelectorAll('.seg-fis button').forEach(b=>b.onclick=()=>{filtroFisio=b.dataset.f;pinta();});
   {const rs=box.querySelector('.sg-resf');if(rs)rs.onchange=()=>{resF=rs.value;pinta();};}
