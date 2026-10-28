@@ -82,8 +82,21 @@ async function datosDia(ayer, panel) {
 // Para el panel: lo mismo en datos simples
 async function reporteDia(fecha) {
   const ayer = diaDe(fecha), D = await datosDia(ayer, true);
+  // Nombres de los pacientes (el campo de nombre de la cita a veces va vacío) y, de los que cancelaron o no vinieron, si ya tienen otra cita o están en «Por llamar»
+  const pids = [...new Set([...D.sinMarcar, ...D.canceladas].map(c => (c.fields['RELACIÓN - CITA'] || [])[0]).filter(Boolean))];
+  const nomP = {}, prox = {}, enLlamar = new Set();
+  if (pids.length) {
+    const orIds = k => 'OR(' + pids.slice(0, 60).map(id => k(id)).join(',') + ')';
+    const [ps, fut, segs] = await Promise.all([
+      todos(TABLAS.paciente, `filterByFormula=${encodeURIComponent(orIds(id => `RECORD_ID()='${id}'`))}&fields[]=${encodeURIComponent('FULL NAME')}`).catch(() => []),
+      todos(CITAS_TABLE, `filterByFormula=${encodeURIComponent(`AND(IS_AFTER({FECHA},'${fecha}'),OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA'),${orIds(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`)})`)}&fields[]=FECHA&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []),
+      todos('tblu9YxiktpAh5w87', `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),${orIds(id => `FIND('${id}',ARRAYJOIN({PacRec}))`)})`)}&fields[]=PACIENTE`).catch(() => [])]);
+    ps.forEach(p => { nomP[p.id] = p.fields['FULL NAME'] || ''; });
+    fut.forEach(c => { const f = String(c.fields.FECHA || '').slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (!prox[id] || f < prox[id]) prox[id] = f; }); });
+    segs.forEach(r => (r.fields.PACIENTE || []).forEach(id => enLlamar.add(id)));
+  }
   const hora = t => t ? new Date(t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' }) : '';
-  const cita = c => ({ id: c.id, pacienteId: (c.fields['RELACIÓN - CITA'] || [])[0] || '', nombre: c.fields['your-name'] || '', fisio: fisioDe(c.fields['PREF.']), hora: String(c.fields['HORA'] || '').slice(0, 5), estado: D.est(c) });
+  const cita = c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0] || ''; return { id: c.id, pacienteId: pid, proxima: prox[pid] || '', enLlamar: enLlamar.has(pid), nombre: nomP[pid] || c.fields['your-name'] || '', fisio: fisioDe(c.fields['PREF.']), hora: String(c.fields['HORA'] || '').slice(0, 5), estado: D.est(c) }; };
   return {
     fecha, hechas: D.hechas, nFacturas: D.facs.length, total: D.total, caja: D.caja,
     fisios: Object.entries(D.rep || {}).map(([f, x]) => { const e = (D.envs || {})[String(f).split(' ')[0].toLowerCase()];

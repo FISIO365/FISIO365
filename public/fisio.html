@@ -1633,6 +1633,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rd-avisar{align-self:flex-start;font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:#c2552e;color:#fff;border-radius:99px;padding:7px 14px;cursor:pointer}.rd-avisar:disabled{background:#e8f6ec;color:#16803c}
 .rd-lin i{font-style:normal;color:#9a8d84;font-size:12px}
 @media(max-width:768px){#sb-rep{position:relative}#rdiaBadge{position:absolute;top:4px;left:calc(50% + 8px);margin:0!important}}
+.rd-gris{font-size:12.5px;color:#7d6a60;font-weight:600}.rd-sinp{font-size:12.5px;color:#b45309;font-weight:600;align-self:center}
+@media(max-width:600px){.rd-row{row-gap:4px}.rd-row>span:first-child{flex:1 1 100%}.rd-row small{text-align:left;flex:1 1 auto}.rd-row .rd-ac{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;align-items:center}}
 </style>
 </head>
 <body>
@@ -12521,7 +12523,7 @@ async function renderReporteDia(wrap){
    ${lista(`Citas sin marcar (siguen en «Pendiente»): ${R.sinMarcar.length}`,'amb',R.sinMarcar.map(c=>fila(pac(c.pacienteId,c.nombre),escH(c.fisio),escH(c.hora),`<button type="button" class="rd-b ok" data-c="${escH(c.id)}" data-e="REALIZADA">Realizada</button><button type="button" class="rd-b" data-c="${escH(c.id)}" data-e="NO ASISTIÓ">No vino</button>`)))}
    ${lista(`⚠️ Tickets hechos en Holded fuera del panel: ${R.fuera.length}`,'mal',R.fuera.map(d=>fila(escH(d.nombre),'',rdEur(d.total))))}
    ${R.borradores.length?lista(`Tickets en borrador por aprobar en Holded: ${R.borradores.length}`,'amb',[...R.borradores.map(d=>fila(escH(d.nombre),escH(d.fecha.split('-').reverse().join('/')),null)),`<a class="rd-b rd-hold" href="https://app.holded.com/" target="_blank" rel="noopener">Abrir Holded para aprobarlos</a>`]):''}
-   ${lista(`Canceladas o no vinieron: ${R.canceladas.length}`,'',R.canceladas.map(c=>fila(pac(c.pacienteId,c.nombre),escH(c.fisio)+' · '+escH(String(c.estado).toLowerCase()),escH(c.hora))))}
+   ${lista(`Canceladas o no vinieron: ${R.canceladas.length}`,R.canceladas.some(c=>!c.proxima&&!c.enLlamar)?'amb':'',R.canceladas.map(c=>fila(pac(c.pacienteId,c.nombre||'Paciente'),escH(c.fisio)+' · '+escH(String(c.estado).toLowerCase())+' · '+escH(c.hora),null,c.proxima?`<span class="rd-hecho">✓ Cita el ${escH(c.proxima.slice(8)+'/'+c.proxima.slice(5,7))}</span>`:c.enLlamar?'<span class="rd-gris">En «Por llamar»</span>':c.pacienteId?`<span class="rd-sinp">Sin próxima cita</span><button type="button" class="rd-b" data-ll="${escH(c.pacienteId)}" data-fz="${escH(c.fisio)}">Pasar a Por llamar</button>`:'')))}
    ${tablaR(R.rendDia,'Rendimiento del día')}${tablaR(R.rendSemana,'Rendimiento de la semana')}
    ${lista('Facturas emitidas','',R.facturas.map(f=>fila(escH(f.num),escH(f.concepto)+(f.pago?' · '+escH(f.pago):''),rdEur(f.total))))}`;
   // Acción inmediata
@@ -12530,6 +12532,10 @@ async function renderReporteDia(wrap){
    const r=await agPost('seg-agenda-editar',{id:b.dataset.c,estado:b.dataset.e}).catch(()=>({ok:false}));
    if(!r.ok){fila.querySelectorAll('button').forEach(x=>x.disabled=false);toast('No se ha podido guardar',false);return;}
    fila.querySelector('.rd-ac').innerHTML=`<span class="rd-hecho">✓ ${b.dataset.e==='REALIZADA'?'Realizada':'No vino'}</span>`;toast('Guardado',true);delete RD.cache[RD.fecha];});
+  body.querySelectorAll('.rd-b[data-ll]').forEach(b=>b.onclick=async()=>{b.disabled=true;
+   const r=await agPost('seg-crear',{pacienteId:b.dataset.ll,fecha:rdHoy(),nota:`Canceló o no vino el ${rdFechaTxt(R.fecha).toLowerCase()} y no tiene otra cita`,responsable:String(b.dataset.fz||'').split(' ')[0]}).catch(()=>({ok:false}));
+   if(!r.ok){b.disabled=false;toast('No se ha podido',false);return;}
+   b.closest('.rd-ac').innerHTML='<span class="rd-gris">✓ En «Por llamar»</span>';toast('Pasado a «Por llamar»',true);delete RD.cache[RD.fecha];});
   body.querySelectorAll('.rd-avisar').forEach(b=>b.onclick=()=>rdAvisar(R,R.fisios[+b.dataset.f],b));}
  cargar();
 }
