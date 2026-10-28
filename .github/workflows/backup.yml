@@ -2,6 +2,8 @@
 # Se guarda como «artifact» de GitHub y se borra sola a los 7 días.
 # Los domingos incluye también los archivos adjuntos (consentimientos, PDFs, fotos…).
 # Para descargarla: GitHub → Actions → «Copia de seguridad» → la ejecución del día → Artifacts.
+# Va cifrada (AES-256). Para abrirla:
+#   openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in fisio365-backup-AAAA-MM-DD.tar.gz.enc -out copia.tar.gz && tar -xzf copia.tar.gz
 name: Copia de seguridad
 
 on:
@@ -29,19 +31,19 @@ jobs:
           echo "FECHA=$FECHA" >> $GITHUB_ENV
           if [ "$(TZ=Europe/Madrid date +%u)" = "7" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then EXTRA=--adjuntos; fi
           node scripts/backup-airtable.mjs "fisio365-backup-$FECHA" $EXTRA
-      - name: Comprimir (y cifrar si hay contraseña)
+      - name: Comprimir y cifrar (obligatorio)
         env:
           BACKUP_PASSWORD: ${{ secrets.BACKUP_PASSWORD }}
         run: |
+          # El repositorio es público: sin contraseña NO se guarda nada (son datos de pacientes)
+          if [ -z "$BACKUP_PASSWORD" ]; then echo "::error::Falta el secreto BACKUP_PASSWORD: la copia no se guarda sin cifrar"; exit 1; fi
           tar -czf "fisio365-backup-$FECHA.tar.gz" "fisio365-backup-$FECHA"
-          if [ -n "$BACKUP_PASSWORD" ]; then
-            openssl enc -aes-256-cbc -pbkdf2 -salt -in "fisio365-backup-$FECHA.tar.gz" -out "fisio365-backup-$FECHA.tar.gz.enc" -pass env:BACKUP_PASSWORD
-            rm "fisio365-backup-$FECHA.tar.gz"
-          fi
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in "fisio365-backup-$FECHA.tar.gz" -out "fisio365-backup-$FECHA.tar.gz.enc" -pass env:BACKUP_PASSWORD
+          rm -rf "fisio365-backup-$FECHA.tar.gz" "fisio365-backup-$FECHA"
           ls -lh fisio365-backup-$FECHA.tar.gz*
       - uses: actions/upload-artifact@v4
         with:
           name: fisio365-backup-${{ env.FECHA }}
-          path: fisio365-backup-${{ env.FECHA }}.tar.gz*
+          path: fisio365-backup-${{ env.FECHA }}.tar.gz.enc
           retention-days: 7
           compression-level: 0
