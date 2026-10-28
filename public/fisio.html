@@ -6711,8 +6711,9 @@ function renderCom(wrap){
   let html='';
   if(COM.tab==='rec'){const L=H.filter(h=>h.de!==yo&&deQuien(h));html=L.length?porDia(L):vacio('Tu buzón está vacío');}
   else if(COM.tab==='env'){const L=H.filter(h=>h.de===yo&&deQuien(h));html=L.length?porDia(L):vacio('Todavía no has enviado ninguna');}
-  else{const A=H.filter(h=>h.pendienteMio&&deQuien(h)).sort((a,b)=>(a.limite||'9')<(b.limite||'9')?-1:1),B=H.filter(h=>h.esperando&&deQuien(h));
-   html=(A.length?`<div class="com-h">TE TOCA A TI</div><div class="com-card">${A.map(fila).join('')}</div>`:'')+(B.length?`<div class="com-h">ESPERANDO A OTROS</div><div class="com-card">${B.map(fila).join('')}</div>`:'')||vacio('Nada pendiente');}
+  // Pendientes: solo lo que te toca a ti. Lo que has enviado y espera a otros está en «Enviadas» (con su estado)
+  else{const A=H.filter(h=>h.pendienteMio&&deQuien(h)).sort((a,b)=>(a.limite||'9')<(b.limite||'9')?-1:1);
+   html=A.length?`<div class="com-h">TE TOCA A TI</div><div class="com-card">${A.map(fila).join('')}</div>`:vacio('Nada pendiente');}
   list.innerHTML=html;
   list.querySelectorAll('.com-it').forEach(b=>b.onclick=()=>{const hh=H.find(x=>x.id===b.dataset.id);if(hh&&hh.noLeido&&hh.de!==yo)comSobre(hh);COM.y=comY();COM.hilo=b.dataset.id;comGuarda();wrap.innerHTML='';comSetY(0);comHilo(wrap,b.dataset.id);});
   if(COM.y){const y=COM.y;COM.y=0;comSetY(y);}
