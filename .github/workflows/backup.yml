@@ -1,0 +1,47 @@
+# Copia de seguridad diaria de todos los datos de la app (Airtable).
+# Se guarda como «artifact» de GitHub y se borra sola a los 7 días.
+# Los domingos incluye también los archivos adjuntos (consentimientos, PDFs, fotos…).
+# Para descargarla: GitHub → Actions → «Copia de seguridad» → la ejecución del día → Artifacts.
+name: Copia de seguridad
+
+on:
+  schedule:
+    - cron: '23 2 * * *'   # cada noche (≈ 3:23 / 4:23 en Barcelona)
+  workflow_dispatch: {}     # y a mano cuando quieras (botón «Run workflow»)
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Descargar los datos de Airtable
+        env:
+          AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
+        run: |
+          FECHA=$(TZ=Europe/Madrid date +%F)
+          echo "FECHA=$FECHA" >> $GITHUB_ENV
+          if [ "$(TZ=Europe/Madrid date +%u)" = "7" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then EXTRA=--adjuntos; fi
+          node scripts/backup-airtable.mjs "fisio365-backup-$FECHA" $EXTRA
+      - name: Comprimir (y cifrar si hay contraseña)
+        env:
+          BACKUP_PASSWORD: ${{ secrets.BACKUP_PASSWORD }}
+        run: |
+          tar -czf "fisio365-backup-$FECHA.tar.gz" "fisio365-backup-$FECHA"
+          if [ -n "$BACKUP_PASSWORD" ]; then
+            openssl enc -aes-256-cbc -pbkdf2 -salt -in "fisio365-backup-$FECHA.tar.gz" -out "fisio365-backup-$FECHA.tar.gz.enc" -pass env:BACKUP_PASSWORD
+            rm "fisio365-backup-$FECHA.tar.gz"
+          fi
+          ls -lh fisio365-backup-$FECHA.tar.gz*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fisio365-backup-${{ env.FECHA }}
+          path: fisio365-backup-${{ env.FECHA }}.tar.gz*
+          retention-days: 7
+          compression-level: 0
