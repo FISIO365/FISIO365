@@ -2305,12 +2305,14 @@ module.exports = async function handler(req, res) {
           const ya = await todosT(EST_T, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({SEMANA},'YYYY-MM-DD')='${sem}'`)}`);
           const d = ya[0] ? await at(`${EST_T}/${ya[0].id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }) : await at(EST_T, { method: 'POST', body: JSON.stringify({ records: [{ fields: Object.assign({ SEMANA: sem }, f) }] }) });
           global._estCaches = {};
+          try { const ids = (await todosT('tblLIcIro0ko9VG6G', 'fields[]=CLAVE')).map(r => r.id); for (let i = 0; i < ids.length; i += 10) await at('tblLIcIro0ko9VG6G?' + ids.slice(i, i + 10).map(x => 'records[]=' + x).join('&'), { method: 'DELETE' }); } catch (e) {}
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
         }
         const N = Math.min(Math.max(+q.semanas || 12, 4), 110);
         const lun0 = lunes(hoyF), desde = mv(lun0, -7 * (N - 1)), hasta = mv(lun0, 6), futuro = mv(hoyF, 60);
         const key = `${desde}|${N}`;
         { const ca = (global._estCaches || {})[key]; if (!q.fresco && ca && Date.now() - ca.t < 30 * 60000) return res.status(200).json(ca.data); }
+        const calc = async (desde, hasta, futuro, N) => {
         const rangoF = (campo, a, b) => `AND(NOT(IS_BEFORE({${campo}},DATETIME_PARSE('${a}','YYYY-MM-DD'))),NOT(IS_AFTER({${campo}},DATETIME_PARSE('${b}','YYYY-MM-DD'))))`;
         const [citas, nuevosP, llam, man] = await Promise.all([
           (async () => { // por trozos de 2 semanas en paralelo (4 a la vez) para que vaya rápido
@@ -2389,8 +2391,36 @@ module.exports = async function handler(req, res) {
         }
         const nombres = {}; { const ids = [...usados]; const lt = []; for (let i = 0; i < ids.length; i += 50) lt.push(ids.slice(i, i + 50));
           for (let i = 0; i < lt.length; i += 4) (await Promise.all(lt.slice(i, i + 4).map(t => todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + t.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=FULL%20NAME`).catch(() => [])))).forEach(rs => rs.forEach(r => nombres[r.id] = r.fields['FULL NAME'] || '')); }
-        const data = { ok: true, hoy: hoyF, semanas, nombres, ingDias: diasH, holdedDesde: HOLDED_DESDE };
-        global._estCache = { key, t: Date.now(), data }; (global._estCaches = global._estCaches || {})[key] = global._estCache;
+        return { ok: true, hoy: hoyF, semanas, nombres, ingDias: diasH, holdedDesde: HOLDED_DESDE };
+        };
+        // Periodos largos: por trimestres de 13 semanas. Los trimestres ya pasados se guardan calculados en Airtable
+        // (ESTADISTICAS CACHE) y solo se recalcula lo reciente: así 2 años salen en lo que tardan unas pocas semanas.
+        let data;
+        if (N <= 16) data = await calc(desde, hasta, futuro, N);
+        else {
+          const CH = 13, EPOCH = '2024-01-01', ECT = 'tblLIcIro0ko9VG6G', VER = 'v1';
+          const semK = k => mv(EPOCH, 7 * k), idx = f => Math.round((Date.parse(f + 'T12:00:00Z') - Date.parse(EPOCH + 'T12:00:00Z')) / (7 * 864e5));
+          const i0 = idx(desde), iL = idx(lun0), limiteViejo = mv(lun0, -7 * 8);
+          const mapa = {}; (await todosT(ECT, 'fields[]=CLAVE&fields[]=DATOS').catch(() => [])).forEach(r => { mapa[r.fields.CLAVE] = r.fields.DATOS; });
+          const partes = []; let calculados = 0, faltan = false;
+          for (let st = Math.floor(i0 / CH) * CH; st <= iL; st += CH) {
+            const ini = semK(st), finSem = semK(st + CH - 1), viejo = finSem < limiteViejo;
+            if (viejo) {
+              const clave = `${VER}|${ini}|${CH}`;
+              if (mapa[clave]) { try { partes.push(JSON.parse(mapa[clave])); continue; } catch (e) {} }
+              if (calculados >= 2) { faltan = true; continue; }
+              const d = await calc(ini, mv(finSem, 6), mv(finSem, 66), CH); calculados++;
+              const txt = JSON.stringify({ semanas: d.semanas, nombres: d.nombres });
+              if (txt.length < 95000) await at(ECT, { method: 'POST', body: JSON.stringify({ records: [{ fields: { CLAVE: clave, DATOS: txt } }] }) }).catch(() => {});
+              partes.push(d);
+            } else { const a2 = semK(st), b2 = semK(Math.min(st + CH - 1, iL)); partes.push(await calc(a2, mv(b2, 6), futuro, idx(b2) - st + 1)); }
+          }
+          const vistas = new Set(), sems = [], noms = {}; let ingD = {};
+          partes.forEach(d => { Object.assign(noms, d.nombres || {}); if (d.ingDias) ingD = d.ingDias; (d.semanas || []).forEach(w => { if (w.semana >= desde && w.semana <= lun0 && !vistas.has(w.semana)) { vistas.add(w.semana); sems.push(w); } }); });
+          sems.sort((x, y) => x.semana.localeCompare(y.semana));
+          data = { ok: true, hoy: hoyF, semanas: sems, nombres: noms, ingDias: ingD, holdedDesde: HOLDED_DESDE, incompleto: faltan };
+        }
+        if (!data.incompleto) { global._estCache = { key, t: Date.now(), data }; (global._estCaches = global._estCaches || {})[key] = global._estCache; }
         return res.status(200).json(data);
       }
       if (action === 'seg-lista') {

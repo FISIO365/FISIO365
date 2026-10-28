@@ -7331,7 +7331,7 @@ function renderStats(wrap){
  const pideN=async(n,fresco)=>{const d=await (await fetch(`/api/schedule?action=seg-estadisticas&pwd=${encodeURIComponent(apiPwd)}&semanas=${n}${fresco?'&fresco=1':''}`)).json();if(!d.ok)throw new Error(d.error||'Error');return d;};
  // Los 2 años se guardan en este navegador: al entrar se ven al instante y se actualizan por detrás
  const LS='f365_st104',guardaLS=d=>{try{localStorage.setItem(LS,JSON.stringify({t:Date.now(),d}));}catch(e){}};
- let fondo=null;const cargaFondo=(forzar,fresco)=>{if((ST.dN>=104&&!forzar)||fondo)return;fondo=pideN(104,fresco).then(d=>{ST.d=d;ST.dN=104;guardaLS(d);if(card.isConnected&&!arr&&!document.querySelector('.hz-modal'))cargarYa();}).catch(()=>{}).finally(()=>{fondo=null;});};
+ let fondo=null;const cargaFondo=(forzar,fresco)=>{if((ST.dN>=104&&!forzar)||fondo)return;fondo=pideN(104,fresco).then(d=>{if(!(ST.dN>=104&&d.incompleto&&ST.d&&ST.d.semanas.length>d.semanas.length)){ST.d=d;ST.dN=104;}guardaLS(ST.d);if(card.isConnected&&!arr&&!document.querySelector('.hz-modal'))cargarYa();if(d.incompleto&&card.isConnected)setTimeout(()=>cargaFondo(true),1500);}).catch(()=>{}).finally(()=>{fondo=null;});};
  if(!ST.d){try{const c=JSON.parse(localStorage.getItem(LS)||'null');if(c&&c.d&&c.d.ok&&Date.now()-c.t<7*864e5){ST.d=c.d;ST.dN=104;ST._viejo=true;}}catch(e){}}
  async function cargar(fresco){
   if(ST.d&&ST.dN>=104){cargaFondo(true,fresco);if(!g.querySelector('.st-ks'))cargarYa();return;} // ya están los 2 años: se actualiza por detrás
