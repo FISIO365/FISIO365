@@ -1540,7 +1540,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sug-tag.app{background:#fdebe1;color:#c2552e}.sug-tag.fallo{background:#fde8e8;color:#b42318}.sug-tag.mejora{background:#e3f2e8;color:#2f7a52}.sug-tag.pac{background:#e4ebf3;color:#1e2a38}.sug-tag.cli{background:#e2f3f4;color:#1f7a80}
 .sug-est{font-size:11.5px;font-weight:700;border-radius:99px;padding:3px 10px}
 .sug-est.Nueva{background:#c2552e;color:#fff}.sug-est.Vista{background:#eef0f3;color:#55606e}.sug-est.Hecha{background:#e3f2e8;color:#2f7a52}
-.sug-fe{margin-left:auto;font-size:12px;color:#8a7f76;white-space:nowrap}
+.sug-fe{margin-left:auto;font-size:12px;color:#8a7f76;white-space:nowrap}.sug-fe b{font-weight:600;color:#3d3631}
 .sug-tx{font-size:14.5px;line-height:1.5;color:#1a1a1a;white-space:pre-wrap;word-break:break-word}
 .sug-pie{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12.5px;color:#7d726a}
 .sug-pie img{width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid rgba(26,26,26,.08)}
@@ -6392,10 +6392,10 @@ async function sugLista(body,modo){
   SUG.n.rec=d.sugerencias.filter(x=>x.estado==='Nueva').length;SUG.n.mias=d.mias.filter(x=>x.estado!=='Nueva'&&!x.respuestaVista).length;sugBadge();
   body.innerHTML=L.length?L.map(x=>{const cer=sugCerrada(x),abierta=rec&&SUG.resp===x.id,nuevaResp=!rec&&x.estado!=='Nueva'&&!x.respuestaVista;
    return `<div class="sug-it${cer?' hecha':''}${nuevaResp?' nresp':''}" data-id="${x.id}">
-   <div class="sug-main"><div class="sug-top">${sugTags(x)}${!rec?`<span class="sug-est ${x.estado}">${x.estado==='Nueva'?'Enviada':SUG_EST[x.estado]}</span>`:''}<span class="sug-fe">${escH(sugFecha(x.fecha))}</span></div>
+   <div class="sug-main"><div class="sug-top">${sugTags(x)}${!rec?`<span class="sug-est ${x.estado}">${x.estado==='Nueva'?'Enviada':SUG_EST[x.estado]}</span>`:''}<span class="sug-fe">${rec?`<b>${escH(String(x.de||'—').split(/\s+/).slice(0,2).join(' '))}</b> · `:''}${escH(sugFecha(x.fecha))}</span></div>
     <div class="sug-tx">${escH(x.texto)}</div>
     ${x.respuesta&&!abierta?`<div class="sug-resp"><b>${escH(x.respondidoPor||'Dirección')}</b>${escH(x.respuesta)}</div>`:''}
-    <div class="sug-pie">${x.captura?`<img src="${escH(x.captura.mini)}" alt="Captura" data-cap>`:''}${rec?`<span>${escH(x.de||'—')}</span>${x.paciente?'<a href="#" data-ficha>Ver ficha</a>':''}`:''}</div>
+    ${x.captura||(rec&&x.paciente)?`<div class="sug-pie">${x.captura?`<img src="${escH(x.captura.mini)}" alt="Captura" data-cap>`:''}${rec&&x.paciente?'<a href="#" data-ficha>Ver ficha</a>':''}</div>`:''}
     ${rec?sugCajaResp(x,abierta):''}</div></div>`;}).join('')
    :`<div class="sug-card sug-vacio">${sugIco('buzon')}${rec?'Todavía no ha llegado ninguna sugerencia.':'Aún no has enviado ninguna sugerencia.'}</div>`;
   body.querySelectorAll('.sug-it').forEach(el=>{const x=base.find(s=>s.id===el.dataset.id);
