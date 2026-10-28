@@ -685,6 +685,8 @@ async function pidenConsentimiento(pids, antesDe) {
   out.yaVino = yaVino; return out;
 }
 // Página del enlace del informe (/i/TOKEN): comprueba que es el paciente, enseña el informe y pide firmar el recibí
+// Fecha de nacimiento del paciente (el campo se lee por su id)
+async function pacNacimiento(pid) { if (!/^rec[A-Za-z0-9]{14}$/.test(pid || '')) return ''; const r = await at(`${PACIENTES}/${pid}?returnFieldsByFieldId=true`).catch(() => ({})); return String(((r || {}).fields || {}).fldkHQkEdPfWrRdJq || '').slice(0, 10); }
 function paginaRecibi(tk) {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu informe · FISIO365</title>
 <link rel="icon" href="/icons/favicon-cara.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1117,7 +1119,7 @@ module.exports = async function handler(req, res) {
     const caducado = E.enviado && (Date.now() - new Date(E.enviado).getTime()) > 30 * 864e5 && !F['RECIBI FECHA'];
     const bloqueado = (E.intentos || 0) >= 5;
     const pr = await at(`${PACIENTES}/${F['PacienteId']}`).catch(() => ({})); const P = pr.fields || {};
-    const dniDig = String(P['DNI'] || '').replace(/\D/g, ''), nac = String(P['NACIMIENTO'] || '').slice(0, 10);
+    const dniDig = String(P['DNI'] || '').replace(/\D/g, ''), nac = await pacNacimiento(F['PacienteId']);
     const modo = dniDig.length >= 4 ? 'dni' : /^\d{4}-\d{2}-\d{2}$/.test(nac) ? 'nac' : 'ninguno';
     const pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || '';
     const pilaB = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
@@ -2955,7 +2957,7 @@ module.exports = async function handler(req, res) {
         const r = await at(`${INFORMES_TABLE}/${id}`); if (r.error) return res.status(404).json({ ok: false, error: 'Informe no encontrado' });
         const F = r.fields || {}; let E = {}; try { E = JSON.parse(F['ENTREGA'] || '{}'); } catch (e) {}
         const pr = await at(`${PACIENTES}/${F['PacienteId']}`).catch(() => ({})); const P = pr.fields || {};
-        const dniDig = String(P['DNI'] || '').replace(/\D/g, ''), nac = String(P['NACIMIENTO'] || '').slice(0, 10);
+        const dniDig = String(P['DNI'] || '').replace(/\D/g, ''), nac = await pacNacimiento(F['PacienteId']);
         const verif = dniDig.length >= 4 ? 'dni' : /^\d{4}-\d{2}-\d{2}$/.test(nac) ? 'nac' : '';
         let tk = String(F['ENTREGA TOKEN'] || '');
         if (canal === 'whatsapp' || canal === 'email') {
