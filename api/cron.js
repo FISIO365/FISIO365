@@ -83,14 +83,14 @@ async function datosDia(ayer, panel) {
 async function reporteDia(fecha) {
   const ayer = diaDe(fecha), D = await datosDia(ayer, true);
   const hora = t => t ? new Date(t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' }) : '';
-  const cita = c => ({ nombre: c.fields['your-name'] || '', fisio: fisioDe(c.fields['PREF.']), hora: String(c.fields['HORA'] || '').slice(0, 5), estado: D.est(c) });
+  const cita = c => ({ id: c.id, pacienteId: (c.fields['RELACIÓN - CITA'] || [])[0] || '', nombre: c.fields['your-name'] || '', fisio: fisioDe(c.fields['PREF.']), hora: String(c.fields['HORA'] || '').slice(0, 5), estado: D.est(c) });
   return {
     fecha, hechas: D.hechas, nFacturas: D.facs.length, total: D.total, caja: D.caja,
     fisios: Object.entries(D.rep || {}).map(([f, x]) => { const e = (D.envs || {})[String(f).split(' ')[0].toLowerCase()];
       return { fisio: f, hechas: x.hechas, enviado: e ? hora(e.enviado) : '', noMarcados: e ? String(e.marcados || '').split('\n').filter(l => l.startsWith('✗')).map(l => l.slice(2)) : [], nota: e && e.nota || '',
-        pendiente: (x.checks || []).filter(c => !c.aviso && c.items.length).map(c => ({ t: c.t, items: c.items.map(i => i.nombre + (i.extra ? ' (' + i.extra + ')' : '')) })) }; }),
+        pendiente: (x.checks || []).filter(c => !c.aviso && c.items.length).map(c => ({ k: c.k, t: c.t, items: c.items.map(i => ({ id: i.id || '', nombre: i.nombre || '', extra: i.extra || '' })) })) }; }),
     rendDia: D.rendDia, rendSemana: D.rendSemana,
-    sinFacturar: D.sf && D.sf.activo ? D.sf.lista.map(x => ({ nombre: x.nombre, fisio: x.fisio, n: -x.saldo })) : null,
+    sinFacturar: D.sf && D.sf.activo ? D.sf.lista.map(x => ({ id: x.id || '', nombre: x.nombre, fisio: x.fisio, n: -x.saldo })) : null,
     sinMarcar: D.sinMarcar.map(cita), canceladas: D.canceladas.map(cita),
     fuera: D.fuera.map(d => ({ nombre: d.contact_name || '—', total: Number(d.total || 0) })),
     borradores: D.borradores.slice(0, 40).map(d => ({ nombre: d.contact_name || '—', fecha: String(d.date || '').slice(0, 10) })),
