@@ -708,7 +708,8 @@ input.fecha{letter-spacing:.06em}
 .err{color:#b42318;font-size:13px;margin:10px 2px 0;min-height:1em}
 .doc{border:1px solid #ece6df;border-radius:10px;padding:16px;max-height:46vh;overflow:auto;font-size:13px;line-height:1.6;color:#3c342f;background:#fff}
 .doc .t{font-size:10.5px;font-weight:700;color:#c2552e;letter-spacing:.08em;text-transform:uppercase;margin:14px 0 4px}.doc .t:first-child{margin-top:0}.doc p{margin:0 0 6px;font-size:13px;color:#3c342f}
-.dh{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:#7d7068;border-bottom:1px solid #eee6de;padding-bottom:9px;margin-bottom:12px}.dh img{height:11px}
+.dh{border-bottom:1px solid #eee6de;padding-bottom:10px;margin-bottom:14px}.dh1,.dh2{display:flex;justify-content:space-between;align-items:center;gap:10px}.dh1 img{height:12px}.dh1 span{font-size:11px;color:#7d7068}
+.dh2{margin-top:8px}.dh2 b{font-size:12px;font-weight:600;color:#1a1a1a}.dh2 span{font-size:10.5px;color:#7d7068;white-space:nowrap}.nw{white-space:nowrap}
 .chk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;margin:16px 0 12px;cursor:pointer}.chk input{width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:#c2552e}
 .sigw{position:relative}canvas{display:block;width:100%;height:150px;border:1.5px dashed #e3b9a6;border-radius:14px;background:#fdf9f6;touch-action:none}
 .sigl{position:absolute;left:14px;bottom:10px;font-size:12px;color:#c8b6aa;pointer-events:none}.borra{position:absolute;right:8px;top:8px;border:none;background:#fff;border-radius:99px;font-family:inherit;font-size:12px;font-weight:600;color:#6b5f57;padding:5px 10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)}
@@ -739,8 +740,8 @@ $('b1').onclick=async()=>{const b=$('b1');dato=$('dato').value.trim();if(!dato)r
  if(!r.ok){$('e1').textContent=r.error||'No se ha podido comprobar';if(r.bloqueado||r.quedan===0){b.disabled=true;}return;}
  D=r;pintaDoc();if(r.firmado){fin();return;}ver('v2');prepFirma();};
 function pintaDoc(){const ls=String(D.informe||'').split('\\n').map(l=>l.trim()).filter(Boolean);
- $('doc').innerHTML='<div class="dh"><img src="/informe/logo.png" alt=""><span>'+esc(/fisioterap/i.test(D.tipo)?'Informe fisioterapéutico':'Informe')+(D.fecha?' · '+esc(D.fecha):'')+(D.codigo?' · Nº '+esc(D.codigo):'')+'</span></div>'+ls.map(l=>esTit(l)?'<div class="t">'+esc(l.replace(/:$/,''))+'</div>':'<p>'+esc(l.replace(/^- /,'– '))+'</p>').join('');
- $('txtAcepto').textContent=D.texto;}
+ $('doc').innerHTML='<div class="dh"><div class="dh1"><img src="/informe/logo.png" alt=""><span>'+esc(D.fecha||'')+'</span></div><div class="dh2"><b>'+esc(/fisioterap/i.test(D.tipo)?'Informe fisioterapéutico':'Informe')+'</b>'+(D.codigo?'<span>Nº '+esc(D.codigo)+'</span>':'')+'</div></div>'+ls.map(l=>esTit(l)?'<div class="t">'+esc(l.replace(/:$/,''))+'</div>':'<p>'+esc(l.replace(/^- /,'– '))+'</p>').join('');
+ $('txtAcepto').innerHTML=esc(D.texto).replace(/(INF-[A-Z0-9]+)/,'<span class="nw">$1</span>');}
 let cv,cx,dib=false,hay=false;
 function prepFirma(){cv=$('cv');const r=cv.getBoundingClientRect(),dp=window.devicePixelRatio||1;cv.width=r.width*dp;cv.height=r.height*dp;cx=cv.getContext('2d');cx.scale(dp,dp);cx.lineWidth=2.2;cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle='#1a1a1a';
  const p=e=>{const b=cv.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top];};
