@@ -1388,7 +1388,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-in{width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:10px 12px;border:1.5px solid var(--border);border-radius:12px;background:#fff}
 .ag-lib[hidden]{display:none!important}.ag-lib{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:6px 0 4px}.ag-lib input{width:18px;height:18px;accent-color:#c2552e}
 .ag-conf{margin-top:10px}
-.ag-bts{display:flex;gap:8px}.ag-bts .fp-can{flex:1;font-size:13.5px;padding:12px}.ag-bts .hz-ok{flex:1.3}
+.ag-bts{display:flex;flex-wrap:wrap;gap:8px}.ag-bts .fp-can{flex:1;font-size:13.5px;padding:12px}.ag-bts .hz-ok{flex:1 1 100%}
+.ag-cff{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 6px}.ag-cff button{font:600 13.5px Poppins,sans-serif;border:1.5px solid #e3dbd3;background:#fff;color:#3d3530;border-radius:99px;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}.ag-cff button i{width:8px;height:8px;border-radius:50%;background:var(--fc,#c2552e)}.ag-cff button.on{background:#1e2a38;border-color:#1e2a38;color:#fff}.ag-cff button:disabled{opacity:.45;cursor:default}
 .ag-hs{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}.ag-hs button{-webkit-text-fill-color:currentColor;font-family:var(--font);font-size:13px;padding:8px 0;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer}
 .ag-hs button.li{border-color:#6fbf8b;color:#16803c;background:#f3fbf5}.ag-hs button.oc{color:#b8aca3;background:#f5f1ed;border-color:#f5f1ed}.ag-hs button.bq{color:#b8aca3;text-decoration:line-through}.ag-hs button.on{border-color:#c2552e;background:#c2552e;color:#fff}
 .ag-res2{display:flex;flex-direction:column;gap:4px;margin-top:6px}.ag-pi{font-family:var(--font);display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:none;background:#f7f3ef;border-radius:10px;padding:8px 12px;cursor:pointer}.ag-pi b{font-size:13.5px}.ag-pi small{font-size:11.5px;color:#7d6a60}.ag-np{color:#c2552e;font-weight:600;font-size:13px}
@@ -6119,7 +6120,7 @@ function agAbrirCita(c,onDone){
   <div class="hz-lab">Etiquetas</div><div class="ag-tip"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
   <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No necesita más</button></div>
-  <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="hz-ok">Guardar</button></div>
+  <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="fp-can ag-cfis">Cambiar fisio</button><button type="button" class="hz-ok">Guardar</button></div>
   <div class="ag-otras"><button type="button" class="ag-borrar">Borrar cita</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const tg=agEtiquetas(m.querySelector('.ag-tip'),c.tipos),ses=agSesSel(m.querySelector('.ag-ses'),c.sesion||'');
@@ -6144,6 +6145,7 @@ function agAbrirCita(c,onDone){
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='REPROGRAMADA'&&!/REPROGRAMADA/.test(c.estado)){m.remove();agMoverCita(c,onDone);return;}est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
+ {const bf=m.querySelector('.ag-cfis');if(bf)bf.onclick=()=>{m.remove();agFisioCita(c,onDone);};}
  m.querySelector('.ag-borrar').onclick=()=>{const mm=hzModal(`<div class="hz-top"><div><small>${escH(agCab(FD,c.hora,c.fisio))}</small><b>¿Borrar la cita de ${escH(c.paciente||'este paciente')}?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <p class="fp-mu" style="font-size:13.5px">Se borra de Airtable y no queda rastro. Si el paciente avisó de que no viene, mejor ponla como «Cancelada».</p>
    <div class="ag-ops"><button type="button" data-l="1"><b>Borrar y dejar la hora libre</b><small>Queda un hueco libre a esa hora</small></button><button type="button" data-l="0"><b>Solo borrar</b><small>La hora queda vacía</small></button></div>`);
@@ -6211,6 +6213,25 @@ function agAlta(c){
    const hola=`Hola${pila?' '+pila:''},\n\n¡Nos alegra mucho haberte ayudado!`;
    m.querySelectorAll('.al-ops button').forEach(w=>w.onclick=()=>{abrirWA(tel,w.dataset.a==='g'?`${hola} Si tienes un minuto, nos ayudaría muchísimo una reseña tuya en Google:\n${RESENA_GOOGLE}\n\n¡Gracias por confiar en *FISIO365*!`:`${hola} Si tienes un minuto, ¿nos cuentas qué tal tu experiencia en *FISIO365*?\n${ENCUESTA_FELIZ}\n\n¡Gracias por confiar en nosotros!`);m.remove();});
   }catch(err){b.disabled=false;toast(err.message,false);}};
+}
+// Pasar la cita a otro fisio: mismo día y hora, la cita es la misma (no queda «reprogramada»)
+function agFisioCita(c,onDone){
+ const FD=c.fecha||AG.fecha;let fisio='';const futuro=FD>=agHoyIso();
+ const eq=agEquipo().filter(f=>String(f).toLowerCase()!==String(c.fisio||'').toLowerCase());
+ const m=hzModal(`<div class="hz-top"><div><small>Cambiar fisio · ${escH(agCab(FD,c.hora,c.fisio))}</small><b>${escH(c.paciente||'Paciente')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <p class="fp-mu" style="font-size:13.5px;margin:0 0 10px">Mismo día y misma hora. Ahora la tiene <b>${escH(agNom(c.fisio)||'—')}</b>. ¿A quién se la pasas?</p>
+  <div class="ag-cff">${eq.map(f=>`<button type="button" data-f="${escH(f)}" style="--fc:${AG_COL[f]||'#c2552e'}"><i></i>${escH(agNom(f))}</button>`).join('')||'<small class="fp-mu">No hay más fisios en el equipo</small>'}</div>
+  ${futuro?`<label class="ag-lib"><input type="checkbox" checked> Dejar la hora libre a ${escH(agNom(c.fisio))} para otro paciente</label>`:''}
+  <div class="hz-bts"><button type="button" class="hz-ok" disabled>Pasar la cita</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const ok=m.querySelector('.hz-ok');
+ m.querySelectorAll('.ag-cff button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;m.querySelectorAll('.ag-cff button').forEach(x=>x.classList.toggle('on',x===b));ok.disabled=false;ok.textContent=`Pasar la cita a ${agNom(fisio)}`;});
+ const enviar=async forzar=>{if(!fisio)return;ok.disabled=true;const t0=ok.textContent;ok.textContent='Cambiando…';
+  try{const lb=m.querySelector('.ag-lib input');const r=await agPost('seg-agenda-fisio',{id:c.id,fisio,liberar:!!(lb&&lb.checked),forzar});
+   if(r.conflicto){ok.disabled=false;ok.textContent=t0;if(confirm(r.error+'. ¿Pasársela igualmente?'))enviar(true);return;}
+   if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Ahora la cita la lleva ${agNom(fisio)}`,true);m.remove();onDone&&onDone();}
+  catch(err){ok.disabled=false;ok.textContent=t0;toast(err.message,false);}};
+ ok.onclick=()=>enviar(false);
 }
 function agMoverCita(c,onDone){
  const FD=c.fecha||AG.fecha;let fecha=FD,hora='',fisio=c.fisio;const futuro=FD>=agHoyIso();

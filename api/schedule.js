@@ -2094,6 +2094,22 @@ module.exports = async function handler(req, res) {
           if (q.liberar) await nueva(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), { ESTADO: 'CITA LIBRE' });
           return res.status(200).json({ ok: true, id: r.id });
         }
+        if (action === 'seg-agenda-fisio') { global._sesPac = {}; // pasar la cita a otro fisio, mismo día y hora (sin reprogramar). Si el otro tenía esa hora libre, el hueco pasa al fisio de antes
+          if (!okId(q.id) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
+          const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false, error: 'Cita no encontrada' });
+          const c = cur.fields, fecha = String(c.FECHA || '').slice(0, 10), hora = hh(c.HORA), antes = nmA(c['PREF.']);
+          if (String(antes).toLowerCase() === String(q.fisio).toLowerCase()) return res.status(200).json({ ok: true });
+          const rows = enHora(await delDia(fecha), hora, q.fisio).filter(r => r.id !== q.id);
+          const choca = rows.filter(r => ACTIVA(String(nmA(r.fields['ESTADO']))) && (r.fields['RELACIÓN - CITA'] || []).length);
+          if (choca.length && !q.forzar) { const pid = (choca[0].fields['RELACIÓN - CITA'] || [])[0]; let n = ''; if (pid) { const p0 = await at(`${PACIENTES}/${pid}`); n = (p0.fields || {})['FULL NAME'] || ''; } return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${n || 'otro paciente'}` }); }
+          const bloq = rows.find(r => !(r.fields['RELACIÓN - CITA'] || []).length && !LIBRE(nmA(r.fields['ESTADO'])) && !/CANCELADA|REPROGRAMADA|PERDIDA/.test(String(nmA(r.fields['ESTADO']))));
+          if (bloq && !q.forzar) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} la tiene ocupada (${String(nmA(bloq.fields['ESTADO'])).replace(/[^\wÁÉÍÓÚÑáéíóúñ -]/g, '').trim().toLowerCase()})` });
+          await patch(q.id, { 'PREF.': q.fisio });
+          const lib = rows.find(r => !(r.fields['RELACIÓN - CITA'] || []).length && LIBRE(nmA(r.fields['ESTADO'])));
+          if (lib && antes) await patch(lib.id, { 'PREF.': antes });
+          else if (q.liberar && antes) await nueva(fecha, hora, antes, { ESTADO: 'CITA LIBRE' });
+          return res.status(200).json({ ok: true, hueco: !!lib });
+        }
         if (action === 'seg-agenda-borrar') { // solo huecos (libres/bloqueados), nunca citas con paciente
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false });
