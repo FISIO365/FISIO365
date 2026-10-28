@@ -2746,11 +2746,10 @@ module.exports = async function handler(req, res) {
           const cola = (t, n) => { t = String(t || '').replace(/\*\*|`/g, '').replace(/\n{3,}/g, '\n\n').trim(); return t.length > n ? '…' + t.slice(-n) : t; };
           hist = cola(F.fldjBUieOOqXd3Bo6, 1200); notasF = cola(F.fldDkRqKrUOh2DPH1, 600); porQue = String(F.fldULHf1PxwJie889 || '').trim().slice(0, 400);
         } catch (e) { console.error('seg-wa-ia ficha', e.message); } }
-        const prompt = `Escribe un WhatsApp corto (2-3 frases, máx. 280 caracteres) de una clínica de fisioterapia (FISIO365, Barcelona) a un paciente, para saber cómo está y animarle a volver si lo necesita.
+        const prompt = `Escribe un WhatsApp corto (2 frases, máx. 220 caracteres) de un fisio de FISIO365 (Barcelona) a un paciente al que trató. El objetivo es que el paciente CONTESTE: el mensaje termina con UNA pregunta concreta y fácil de responder.
 Datos:
 - Nombre del paciente: ${c(q.nombre)}
-- Quién firma: ${c(q.yo)} (el fisio que le atendió en FISIO365)
-- Su fisio habitual: ${c(q.fisio) || 'no consta'}
+- Quién firma: ${c(q.yo)} (el fisio que le atendió)
 - Última sesión: ${c(q.ultima) || 'no consta'}
 - Próxima cita ya reservada: ${c(q.proxima) || 'ninguna'}
 - Etapa en la clínica: ${c(q.etapas) || 'no consta'}
@@ -2758,8 +2757,14 @@ Datos:
 - Última llamada: ${c(q.ultLlamada) || 'ninguna'}
 - Por qué no reagenda: ${porQue || 'no consta'}
 - Notas de la ficha (lo más reciente al final): ${notasF || 'ninguna'}
-- Historial clínico (lo más reciente al final; úsalo para saber qué le pasaba y cómo acabó, pero en el mensaje solo nombra la zona o la actividad, en lenguaje sencillo): ${hist || 'no consta'}
-Reglas: tutea, español de España, tono cercano y natural, como lo escribiría una persona real; empieza con «Hola <nombre de pila>, soy ${c(q.yo)} de FISIO365»; el mensaje TIENE que notarse escrito para esta persona: menciona algo concreto y reciente (la zona que se trató —p. ej. la cadera, la rodilla—, su deporte, las plantillas, lo que quedó pendiente…) sacado de las notas o del final del historial (deporte, plantillas, molestia…), sin datos clínicos delicados ni diagnósticos; no inventes nada que no esté en los datos; si las notas indican que el paciente iba a avisar él, pregúntale cómo le ha ido sin presionar; si NO tiene próxima cita, termina ofreciendo buscarle hueco si lo necesita; si YA tiene próxima cita, no ofrezcas hueco: recuérdale la cita con su día y dile que cualquier cosa os escriba. No uses emojis. Devuelve solo el texto del mensaje, sin comillas.`;
+- Historial clínico (lo más reciente al final; úsalo para saber qué le pasaba y cómo acabó): ${hist || 'no consta'}
+Cómo escribirlo:
+- Empieza con «Hola <nombre de pila>, soy ${c(q.yo)} de FISIO365.» y tutea, español de España, como lo escribiría el fisio desde su móvil: natural, cercano, nada comercial.
+- Primera frase: algo concreto y reciente de esta persona (la zona que se trató en palabras sencillas —la cadera, la rodilla, la espalda—, su deporte, las plantillas, lo que quedó pendiente…). Sin diagnósticos ni datos clínicos delicados. No inventes nada que no esté en los datos.
+- Termina con UNA pregunta concreta que se conteste en una línea y que, sutilmente, abra la puerta a volver. Ejemplos del estilo: «¿Cómo la notas ahora al levantarte por las mañanas?», «¿Has podido volver al pádel sin molestias?», «¿Te va bien que te guarde un hueco la semana que viene para revisarla?».
+- Si YA tiene próxima cita, no ofrezcas hueco: pregunta algo sobre cómo está y menciona que os veis ese día.
+- PROHIBIDO: «espero que…», «recuerda…», «cualquier cosa nos escribes», «aquí estamos», «no dudes en…», consejos o deberes, despedidas de relleno y emojis. Nada que se pueda leer sin contestar.
+Devuelve solo el texto del mensaje, sin comillas.`;
         // Se prueban varios modelos por si alguno ya no está disponible; los errores se ven en los logs de Vercel
         let err = '';
         for (const model of ['claude-haiku-5-5', 'claude-haiku-4-5', 'claude-sonnet-4-5']) {
