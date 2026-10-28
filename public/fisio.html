@@ -5578,13 +5578,14 @@ function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo){
  // ── Cabecera discreta ──
  if(R&&R.logo){try{doc.addImage('data:image/png;base64,'+R.logo,'PNG',ml,20,26,4.6);}catch(e){set(13,'bold',NAR);txt('FISIO365',ml,24.5);}}
  else{set(13,'bold',NAR);txt('FISIO365',ml,24.5);}
- set(8.5,'normal',GRIS);txt('Informe de valoración · '+fecha,W-mr,24,{align:'right'});
+ const esTto=/fisioterap[eé]utico/i.test(String(tipoLabel||''));
+ set(8.5,'normal',GRIS);txt((esTto?'Informe fisioterapéutico':'Informe de valoración')+' · '+fecha,W-mr,24,{align:'right'});
  doc.setDrawColor(...LINEA);doc.setLineWidth(.3);doc.line(ml,31,W-mr,31);
 
  // ── Datos del paciente ──
  y=42;
  const col=(lab,val,x,extra)=>{set(7.5,'medium',GRIS);txt(lab,x,y);set(11.5,'bold',NEG);txt(doc.splitTextToSize(String(val||'—'),tw/3-6)[0],x,y+6.5);if(extra){set(8,'normal',GRIS);txt(extra,x,y+11.5);}};
- col('Paciente',pacNom,ml);col('Zona valorada',tipoLabel,ml+tw/3);col('Fisioterapeuta',fisioNom||'—',ml+2*tw/3,colNum);
+ col('Paciente',pacNom,ml);if(esTto)col('Fecha',fecha,ml+tw/3);else col('Zona valorada',tipoLabel,ml+tw/3);col('Fisioterapeuta',fisioNom||'—',ml+2*tw/3,colNum);
  y+=24;
  doc.setDrawColor(...LINEA);doc.line(ml,y,W-mr,y);
  y+=13;
@@ -5609,12 +5610,17 @@ function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo){
   set(10.5,'normal',TXT);ls.forEach((l,i)=>txt(l,ml+10,y+19+i*6));
   y+=h+6;
  };
- lineas.forEach(l=>{
+ // Sección sin texto (informe en blanco): deja renglones para escribir a mano
+ const renglones=()=>{doc.setDrawColor(...LINEA);doc.setLineWidth(.25);for(let k=0;k<4;k++){sitio(10);y+=9;doc.line(ml,y,W-mr,y);}y+=6;};
+ lineas.forEach((l,i)=>{
+  if(esTitulo(l)&&!/SENCILL/.test(l)&&i>0&&esTitulo(lineas[i-1])&&!/SENCILL/.test(lineas[i-1]))renglones();
+  if(esTitulo(l)&&!/SENCILL/.test(l)&&(i===lineas.length-1||esTitulo(lineas[i+1])))sitio(66); // título + renglones, juntos en la misma página
   if(esTitulo(l)){if(enSencillo&&bloque.length){cajaSencillo(bloque.join(' '));bloque=[];}enSencillo=/SENCILL/.test(l);if(!enSencillo)titulo(l);return;}
   if(enSencillo){bloque.push(l.replace(/^- /,''));return;}
   if(/^- /.test(l))parrafo(l.slice(2),true);else parrafo(l,false);
  });
  if(enSencillo&&bloque.length)cajaSencillo(bloque.join(' '));
+ if(lineas.length&&esTitulo(lineas[lineas.length-1])&&!enSencillo)renglones();
 
  // ── Pie ──
  const n=doc.getNumberOfPages();
