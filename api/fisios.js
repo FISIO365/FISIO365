@@ -53,6 +53,7 @@ export default async function handler(req) {
           id: rec.id,
           nombre: rec.fields['Name'] || '',
           role: rec.fields['Role'] || 'fisio',
+          direccion: !!rec.fields['DIRECCIÓN'],
           colegiado: rec.fields['NºColegiado'] || '',
           foto: rec.fields['Foto']?.[0]?.url || ''
         }));
@@ -90,6 +91,7 @@ export default async function handler(req) {
         id: rec.id,
         nombre: rec.fields['Name'] || '',
         role: rec.fields['Role'] || 'fisio',
+        direccion: !!rec.fields['DIRECCIÓN'],
         colegiado: rec.fields['NºColegiado'] || '',
         foto: rec.fields['Foto']?.[0]?.url || '',
         accesos

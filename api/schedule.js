@@ -1365,7 +1365,7 @@ module.exports = async function handler(req, res) {
         const pila = s => String(s || '').trim().split(/\s+/)[0];
         const vista = r => { const F = r.fields || {}, horas = {};
           String(F['HORAS POR DÍA'] || '').split('\n').forEach(l => { const m = l.trim().match(/^(\S+)\s+([\d.,]+)/); if (!m) return; const d = DIAS.find(x => capNorm(x) === capNorm(m[1])); if (d) horas[d] = Number(m[2].replace(',', '.')); });
-          return { id: r.id, nombre: F.Name || '', role: F.Role || 'fisio', colegiado: F['NºColegiado'] || '', tel: F['TELÉFONO'] || '', email: F.EMAIL || '', alta: F['FECHA ALTA'] || '', baja: F['FECHA BAJA'] || '', notas: F['NOTAS ADMIN'] || '',
+          return { id: r.id, nombre: F.Name || '', role: F.Role || 'fisio', direccion: !!F['DIRECCIÓN'], colegiado: F['NºColegiado'] || '', tel: F['TELÉFONO'] || '', email: F.EMAIL || '', alta: F['FECHA ALTA'] || '', baja: F['FECHA BAJA'] || '', notas: F['NOTAS ADMIN'] || '',
             horas, semana: F['HORAS SEMANA'] || null, control: !!F['CONTROL HORAS'], banco: !!F['BANCO HORAS'], accesos: Object.fromEntries(ACC.map(k => [k, !!F['acc_' + k]])), foto: (F.Foto && F.Foto[0] && F.Foto[0].thumbnails && F.Foto[0].thumbnails.large && F.Foto[0].thumbnails.large.url) || '',
             contrato: { tipo: (F['TIPO CONTRATO'] && F['TIPO CONTRATO'].name) || F['TIPO CONTRATO'] || '', pct: F['PORCENTAJE FISIO'] == null ? null : Number(F['PORCENTAJE FISIO']), coste: F['COSTE EMPRESA MES'] == null ? null : Number(F['COSTE EMPRESA MES']) },
             docs: (F.DOCUMENTOS || []).map(a => ({ id: a.id, nombre: a.filename || 'documento', url: a.url, tipo: a.type || '', size: a.size || 0 })),
@@ -1396,7 +1396,7 @@ module.exports = async function handler(req, res) {
           if (otro) return res.status(400).json({ ok: false, error: 'Ya hay alguien con ese nombre' });
           const mismaPila = full.find(r => r.id !== c.id && r.fields && !r.fields['FECHA BAJA'] && pila(r.fields.Name).toLowerCase() === pila(nombre).toLowerCase());
           if (mismaPila) return res.status(400).json({ ok: false, error: `Ya hay otra persona que se llama ${pila(nombre)}. En la agenda se distingue por el nombre de pila: ponle otro (por ejemplo «${pila(nombre)} M.»)` });
-          const f = { Name: nombre, Role: c.role === 'admin' ? 'admin' : 'fisio', 'NºColegiado': String(c.colegiado || '').trim(), 'TELÉFONO': String(c.tel || '').trim(), 'NOTAS ADMIN': String(c.notas || '').slice(0, 5000), 'CONTROL HORAS': !!c.control, 'BANCO HORAS': !!c.banco };
+          const f = { Name: nombre, Role: c.role === 'admin' ? 'admin' : 'fisio', 'NºColegiado': String(c.colegiado || '').trim(), 'TELÉFONO': String(c.tel || '').trim(), 'NOTAS ADMIN': String(c.notas || '').slice(0, 5000), 'CONTROL HORAS': !!c.control, 'BANCO HORAS': !!c.banco, 'DIRECCIÓN': !!c.direccion };
           const em = String(c.email || '').trim(); f.EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em) ? em : null;
           f['FECHA ALTA'] = /^\d{4}-\d{2}-\d{2}$/.test(c.alta || '') ? c.alta : null;
           const h = c.horas || {}, lin = []; let tot = 0; DIAS.forEach(d => { const n = Math.max(0, Math.min(14, Number(String(h[d] || '').replace(',', '.')) || 0)); if (n) { lin.push(`${d} ${n}`); tot += n; } });
@@ -2866,10 +2866,10 @@ module.exports = async function handler(req, res) {
   if (action === 'reporte-dia') {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
-    const eqH = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_rendimiento&fields[]=acc_admin&pageSize=100`);
+    const eqH = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_rendimiento&fields[]=acc_admin&fields[]=${encodeURIComponent('DIRECCIÓN')}&pageSize=100`);
     const yr = (eqH.records || []).find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
     if (!yr || String(yr.fields.Password || '').trim() !== String(q.clave || '').trim()) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
-    if (!(yr.fields.acc_rendimiento || yr.fields.acc_admin)) return res.status(403).json({ ok: false, error: 'Solo para dirección' });
+    if (!(yr.fields['DIRECCIÓN'] || yr.fields.acc_rendimiento || yr.fields.acc_admin)) return res.status(403).json({ ok: false, error: 'Solo para dirección' });
     try {
       const CR = require('./cron');
       const fecha = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : await CR.ultimoDiaConCitas();

@@ -1821,7 +1821,7 @@ const TOPBAR = {
  rdia: ['Daily report','Check-lists del equipo y resumen del día'],
  cap: ['Captación','Lista de espera y contactos'],
  ejer: ['Ejercicios','Biblioteca de vídeos'],
- rep: ['Daily report','Tu check-list: marca y envía antes de irte'],
+ rep: ['Check-list','Marca y envía antes de irte'],
  com: ['Buzón','Comunicaciones internas del equipo'],
  sug: ['Sugerencias','Ideas, mejoras y fallos de la app'],
  mis: ['Mis estadísticas','Tus sesiones, ocupación y horas']
@@ -1981,7 +1981,7 @@ function aplicarRole(){
 
  // Nombre en footer
  const isAdmin = fisioActual.role === 'admin';
- $('sb-user').innerHTML = escH(fisioActual.nombre) + (isAdmin ? ' · Admin' : '') + '<br><a href="#" onclick="if(confirmarSalir())cerrarSesionPanel();return false" style="color:inherit;text-decoration:underline;opacity:.8">Cerrar sesión</a>';
+ $('sb-user').innerHTML = escH(fisioActual.nombre) + (fisioActual.direccion ? ' · Dirección' : isAdmin ? ' · Admin' : '') + '<br><a href="#" onclick="if(confirmarSalir())cerrarSesionPanel();return false" style="color:inherit;text-decoration:underline;opacity:.8">Cerrar sesión</a>';
  pintarPerfil();
 }
 
@@ -2016,8 +2016,8 @@ function pavHtml(p,ini){return p&&p.foto?`<img src="${escH(p.foto)}" alt="" oner
 function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
 function pintarPerfil(){if(!fisioActual)return;requestAnimationFrame(ajustaTopbar);const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
- $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=fisioActual.role==='admin'?'Administración':'Fisioterapeuta';
- const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{RD_DIR=['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});if(RD_DIR)$('sb-rep').style.display='';rdiaBadge();}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}try{sugContar();}catch(e){}try{const v=fisioActual.role!=='admin';['sb-mis','pmMis'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
+ $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=(fisioActual.role==='admin'?'Administración':'Fisioterapeuta')+(fisioActual.direccion?' · Dirección':'');
+ const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{RD_DIR=('direccion' in fisioActual)?!!fisioActual.direccion:['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});if(RD_DIR)$('sb-rep').style.display='';const t=$('sb-rep')&&$('sb-rep').querySelector('.sb-txt');if(t)t.textContent=RD_DIR?'Daily report':'Check-list';rdiaBadge();}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}try{sugContar();}catch(e){}try{const v=fisioActual.role!=='admin';['sb-mis','pmMis'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
@@ -6435,7 +6435,7 @@ const COM_TIPO_DESC={Comunicado:'Para informar de algo importante. Quien lo reci
 const COM_CAT_INC=['Comportamiento','Puntualidad','Calidad del trabajo','Material o instalaciones','Otro'];
 const COM_APRUEBAN=['Nora']; // administración: aprueba vacaciones y recibe lo confidencial (si lo pide Nora, va a Ramiro) // quién aprueba vacaciones, días libres y cambios de horario
 const comTipoTxt=t=>({Comunicado:'Informe',Aviso:'Informe',Ausencia:'Vacaciones y horarios',Incidencia:'Para administración',Ayuda:'Necesito ayuda'})[t]||t;
-const comRol=n=>/^(nora|ramiro)$/i.test(n||'')?'Administración · FISIO365':/^fisio365$/i.test(n||'')?'Resumen automático del panel':'Fisioterapeuta · FISIO365';
+const comRol=n=>{if(/^fisio365$/i.test(n||''))return 'Resumen automático del panel';const f=(fisios||[]).find(x=>String(x.nombre||'').split(' ')[0].toLowerCase()===String(n||'').toLowerCase());if(!f)return /^(nora|ramiro)$/i.test(n||'')?'Dirección · FISIO365':'Fisioterapeuta · FISIO365';return (f.role==='admin'?'Administración':'Fisioterapeuta')+(f.direccion?' · Dirección':'')+' · FISIO365';};
 const comFechaDia=f=>{if(!f)return '';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][t.getMonth()];};
 const comFechaCarta=iso=>iso?new Date(iso).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Madrid'}):'';
 let COM={tab:'rec',d:null,hilo:null,y:0};
@@ -6877,7 +6877,7 @@ async function renderAdmin(wrap){
   body.querySelectorAll('.adm-p').forEach(b=>b.onclick=()=>editar(E.find(f=>f.id===b.dataset.id)));}
  function editar(f){const nuevo=!f;f=f||{nombre:'',role:'fisio',colegiado:'',tel:'',email:'',alta:'',notas:'',horas:{},control:false};
   const yo=f.id&&String(f.nombre).toLowerCase()===String(fisioActual.nombre).toLowerCase();
-  const m=hzModal(`<div class="hz-top"><div><small>${nuevo?'Nueva persona en el equipo':escH(f.role==='admin'?'Administración':'Fisioterapeuta')}</small><b>${nuevo?'Añadir persona':escH(f.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  const m=hzModal(`<div class="hz-top"><div><small>${nuevo?'Nueva persona en el equipo':escH((f.role==='admin'?'Administración':'Fisioterapeuta')+(f.direccion?' · Dirección':''))}</small><b>${nuevo?'Añadir persona':escH(f.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <div class="adm-fo"><span class="adm-av lg a-fav">${av(f)}</span><div><label class="adm-gen adm-fb">${f.foto?'Cambiar foto':'Poner foto'}<input type="file" accept="image/*" hidden class="a-fin"></label>${f.foto?'<button type="button" class="adm-fq">Quitar</button>':''}<small>Sale en la app de los pacientes, en el chat y en el panel.</small></div></div>
    <div class="hz-lab">Nombre y apellido</div><input class="ag-in a-nom" value="${escH(f.nombre)}" placeholder="Ej.: Laura García" autocomplete="off">
    <div class="hz-lab">Puesto</div><div class="fac-chips a-rol"><button type="button" data-v="fisio">Fisioterapeuta</button><button type="button" data-v="admin">Administración</button></div>
@@ -6886,6 +6886,7 @@ async function renderAdmin(wrap){
    <div class="hz-lab">Horario: horas de trabajo cada día <span>(1 hora = 1 sesión)</span></div>
    <div class="adm-dias">${ADM.d.dias.map(d=>`<label><span>${ADM_DC[d]||d}</span><input type="number" min="0" max="14" step="0.5" inputmode="decimal" class="ag-in" data-d="${escH(d)}" value="${f.horas&&f.horas[d]!=null?f.horas[d]:''}" placeholder="—"></label>`).join('')}</div>
    <div class="adm-tot"></div>
+   <label class="adm-sw"><input type="checkbox" class="a-dir" ${f.direccion?'checked':''}><span><b>Dirección</b><small>Además de su puesto, forma parte de dirección: ve el Daily report del equipo y lo que es solo de dirección.</small></span></label>
    <label class="adm-sw"><input type="checkbox" class="a-ctl" ${f.control?'checked':''}><span><b>Contar sus horas</b><small>Para contratados: en Rendimiento verás cada día si ha trabajado más o menos horas de las de su horario, y los días que no vino.</small></span></label>
    <label class="adm-sw"><input type="checkbox" class="a-bco" ${f.banco?'checked':''}><span><b>Banco de horas</b><small>Las horas extra o de menos que apruebes se guardan en su banco para compensarlas más adelante.</small></span></label>
    <div class="hz-lab">${nuevo?'Contraseña para entrar al panel':'Nueva contraseña <span>(déjalo vacío para no cambiarla)</span>'}</div>
@@ -6931,7 +6932,7 @@ async function renderAdmin(wrap){
   $m('.adm-cl .adm-gen').onclick=()=>{$m('.a-cl').value=admClave();$m('.a-cl').focus();};
   $m('.hz-ok').onclick=async e=>{const b=e.target,cl=$m('.a-cl').value.trim();b.disabled=true;b.textContent='Guardando…';
    const horas={};m.querySelectorAll('.adm-dias input').forEach(i=>{if(i.value!=='')horas[i.dataset.d]=i.value;});
-   try{const r=await admPost('seg-adm-fisio',{fisio:{id:f.id||'',nombre:$m('.a-nom').value,role:rol,colegiado:$m('.a-col').value,tel:$m('.a-tel').value,email:$m('.a-em').value,alta:$m('.a-alta').value,notas:$m('.a-not').value,horas,banco:$m('.a-bco').checked,control:$m('.a-ctl').checked,clave:cl,foto,quitarFoto,contrato:{tipo:ct.tipo,pct:$m('.a-pct')?$m('.a-pct').value:'',coste:$m('.a-cos')?$m('.a-cos').value:''}}});
+   try{const r=await admPost('seg-adm-fisio',{fisio:{id:f.id||'',nombre:$m('.a-nom').value,role:rol,colegiado:$m('.a-col').value,tel:$m('.a-tel').value,email:$m('.a-em').value,alta:$m('.a-alta').value,notas:$m('.a-not').value,horas,banco:$m('.a-bco').checked,control:$m('.a-ctl').checked,direccion:$m('.a-dir').checked,clave:cl,foto,quitarFoto,contrato:{tipo:ct.tipo,pct:$m('.a-pct')?$m('.a-pct').value:'',coste:$m('.a-cos')?$m('.a-cos').value:''}}});
     if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
     if(yo&&cl){fisioActual._pwd=cl;try{localStorage.setItem('f365_panel_sesion',JSON.stringify({n:fisioActual.nombre,p:cl}));}catch(_){}}
     window._admEq=null;m.remove();await cargar();pinta();loadFisios();
