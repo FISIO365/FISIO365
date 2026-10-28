@@ -7437,9 +7437,10 @@ function renderStats(wrap){
     if(m.querySelector('.st-i'))S.ingresos=m.querySelector('.st-i').value===''?null:+m.querySelector('.st-i').value;S.notas=m.querySelector('.st-n').value;
     toast('Guardado',true);m.remove();pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};}
  // Arrastrar el dedo (o el ratón) por la gráfica para ir semana a semana, sin mover la pantalla
- let arr=false;const scrub=e=>{const ch=g.querySelector('.st-ch');if(!ch||!ST.d)return;const r=ch.getBoundingClientRect(),L=ST.d.semanas,n=L.length;
-  const x=Math.min(Math.max((e.clientX-r.left)/r.width,0),1),j=Math.round((x*640-10)/((640-20)/Math.max(n-1,1)));const k=Math.min(Math.max(j,0),n-1);
-  if(L[k].semana!==ST.sem){ST.sem=L[k].semana;pintar();}};
+ // (usa los mismos puntos que se ven: semanas o meses/trimestres…, y repinta como mucho una vez por fotograma)
+ let arr=false,raf=0,ultX=0;const scrub=e=>{ultX=e.clientX;if(raf)return;raf=requestAnimationFrame(()=>{raf=0;const ch=g.querySelector('.st-ch');if(!ch||!ST.d)return;const r=ch.getBoundingClientRect(),L=stPeriodos(),n=L.length;
+  const x=Math.min(Math.max((ultX-r.left)/r.width,0),1),j=Math.round((x*640-10)/((640-20)/Math.max(n-1,1)));const k=Math.min(Math.max(j,0),n-1);
+  if(L[k].semana!==ST.sem){ST.sem=L[k].semana;pintar();}});};
  g.addEventListener('pointerdown',e=>{if(!e.target.closest('.st-ch'))return;arr=true;e.preventDefault();scrub(e);});
  window.addEventListener('pointermove',e=>{if(arr){e.preventDefault();scrub(e);}},{passive:false});
  window.addEventListener('pointerup',()=>arr=false);window.addEventListener('pointercancel',()=>arr=false);
