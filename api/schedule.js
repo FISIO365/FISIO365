@@ -2737,7 +2737,7 @@ module.exports = async function handler(req, res) {
       }
       if (action === 'seg-wa-ia') {
         // Mensaje de WhatsApp personalizado para un paciente de «Por llamar», a partir de sus notas y su situación
-        const K = process.env.ANTHROPIC_API_KEY; if (!K) return res.status(200).json({ ok: false });
+        const K = process.env.ANTHROPIC_API_KEY; if (!K) { console.error('seg-wa-ia sin ANTHROPIC_API_KEY'); return res.status(200).json({ ok: false, error: 'Falta la clave de la IA' }); }
         const c = x => String(x || '').replace(/\s+/g, ' ').trim().slice(0, 400);
         const prompt = `Escribe un WhatsApp corto (2-3 frases, máx. 280 caracteres) de una clínica de fisioterapia (FISIO365, Barcelona) a un paciente, para saber cómo está y animarle a volver si lo necesita.
 Datos:
@@ -2750,11 +2750,17 @@ Datos:
 - Nota del seguimiento: ${c(q.nota) || 'ninguna'}
 - Última llamada: ${c(q.ultLlamada) || 'ninguna'}
 Reglas: tutea, español de España, tono cercano y natural, como lo escribiría una persona real; empieza con «Hola <nombre de pila>, soy ${c(q.yo)} de FISIO365»; menciona algo concreto de las notas si lo hay (deporte, plantillas, molestia…), sin datos clínicos delicados ni diagnósticos; no inventes nada que no esté en los datos; si las notas indican que el paciente iba a avisar él, pregúntale cómo le ha ido sin presionar; si NO tiene próxima cita, termina ofreciendo buscarle hueco si lo necesita; si YA tiene próxima cita, no ofrezcas hueco: recuérdale la cita con su día y dile que cualquier cosa os escriba. Como mucho un emoji. Devuelve solo el texto del mensaje, sin comillas.`;
-        try {
-          const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': K, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, messages: [{ role: 'user', content: prompt }] }) });
-          const j = await r.json(); const t = String((j.content && j.content[0] && j.content[0].text) || '').trim().replace(/^["«]|["»]$/g, '');
-          return res.status(200).json({ ok: !!t, texto: t });
-        } catch (e) { return res.status(200).json({ ok: false }); }
+        // Se prueban varios modelos por si alguno ya no está disponible; los errores se ven en los logs de Vercel
+        let err = '';
+        for (const model of ['claude-haiku-5-5', 'claude-haiku-4-5', 'claude-sonnet-4-5']) {
+          try {
+            const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': K, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: 300, messages: [{ role: 'user', content: prompt }] }) });
+            const j = await r.json(); const t = String((j.content && j.content[0] && j.content[0].text) || '').trim().replace(/^["«]|["»]$/g, '');
+            if (t) return res.status(200).json({ ok: true, texto: t, model });
+            err = (j.error && j.error.message) || ('HTTP ' + r.status); console.error('seg-wa-ia', model, err);
+          } catch (e) { err = e.message; console.error('seg-wa-ia', model, err); }
+        }
+        return res.status(200).json({ ok: false, error: err });
       }
       if (action === 'seg-resultado') {
         // Desde Call-in puede venir sin fila de seguimiento: se usa la que tenga abierta el paciente, si la hay
