@@ -2827,7 +2827,8 @@ module.exports = async function handler(req, res) {
         // Informe fisioterapéutico redactado por la IA con el historial clínico, la anamnesis y las sesiones realizadas.
         // Se guarda en Informes de la ficha como «solo fisio»: se revisa y se comparte desde ahí.
         const pid = q.pacienteId; if (!/^rec[A-Za-z0-9]{14}$/.test(pid || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
-        const K = process.env.ANTHROPIC_API_KEY; if (!K) return res.status(200).json({ ok: false, error: 'Falta la clave de la IA' });
+        const vacio = !!q.vacio; // plantilla en blanco: solo los títulos de sección, sin IA
+        const K = process.env.ANTHROPIC_API_KEY; if (!K && !vacio) return res.status(200).json({ ok: false, error: 'Falta la clave de la IA' });
         const [p, ses, infs] = await Promise.all([
           at(`${PACIENTES}/${pid}`),
           todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(FIND('${pid}',ARRAYJOIN({PacienteRec})),TRIM({ESTADO})='REALIZADA')`)}&fields[]=FECHA&fields[]=PREF.&sort[0][field]=FECHA&sort[0][direction]=asc`).catch(() => []),
@@ -2840,7 +2841,7 @@ module.exports = async function handler(req, res) {
         const fC = f => f ? f.split('-').reverse().join('/') : '';
         const ana = infs.filter(r => r.fields['Informe'] && !/sin evoluci|fisioterap[eé]utico/i.test(String(r.fields['Protocolo'] || ''))).map(r => `(${r.fields['Fecha'] || ''} · ${r.fields['Protocolo'] || ''})\n${String(r.fields['Informe']).slice(0, 3000)}`).slice(-2).join('\n\n');
         const hist = String(F['HISTORIAL CLÍNICO'] || '').replace(/\*\*|`/g, '').trim();
-        if (!hist && !ana) return res.status(200).json({ ok: false, error: 'Este paciente no tiene historial clínico ni anamnesis: no hay de dónde sacar el informe.' });
+        if (!vacio && !hist && !ana) return res.status(200).json({ ok: false, error: 'Este paciente no tiene historial clínico ni anamnesis: no hay de dónde sacar el informe.' });
         const prompt = `Eres fisioterapeuta en FISIO365 Centro de Fisioterapia (Barcelona). Redacta un INFORME FISIOTERAPÉUTICO profesional para entregar al paciente (puede llevarlo a su médico, mutua o trabajo).
 DATOS
 - Paciente: ${String(F['FULL NAME'] || '').trim()}
@@ -2862,7 +2863,8 @@ ESTADO ACTUAL
 RECOMENDACIONES
 REGLAS: español de España, tercera persona, lenguaje clínico claro y conciso (máx. 450 palabras); en TRATAMIENTO REALIZADO indica el nº de sesiones y el periodo y describe las técnicas con su nombre completo, sin abreviaturas; en EVOLUCIÓN resume cómo ha ido cambiando, sin copiar sesión a sesión; usa SOLO lo que está en los datos, no inventes pruebas, diagnósticos médicos, escalas ni cifras; si de algún apartado no hay información suficiente, escribe una frase breve diciéndolo; RECOMENDACIONES solo si se desprenden de las notas (ejercicios, sesiones de mantenimiento, revisión…); no pongas datos de contacto, firma ni saludo. Devuelve solo el texto del informe.`;
         let texto = '', err = '';
-        for (const model of ['claude-sonnet-4-5', 'claude-haiku-4-5']) {
+        if (vacio) texto = ['MOTIVO DE CONSULTA', 'VALORACIÓN INICIAL', 'TRATAMIENTO REALIZADO', 'EVOLUCIÓN', 'ESTADO ACTUAL', 'RECOMENDACIONES'].join('\n\n\n\n') + '\n\n';
+        else for (const model of ['claude-sonnet-4-5', 'claude-haiku-4-5']) {
           try {
             const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': K, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: 2000, messages: [{ role: 'user', content: prompt }] }) });
             const j = await r.json(); texto = String(((j.content || []).find(b => b && b.type === 'text') || {}).text || '').replace(/\*\*|^#+\s*/gm, '').trim();
@@ -2874,7 +2876,8 @@ REGLAS: español de España, tercera persona, lenguaje clínico claro y conciso 
         const cuenta = {}; ses.forEach(c => { const n = String(nm(c.fields['PREF.'])).trim(); if (n) cuenta[n] = (cuenta[n] || 0) + 1; });
         const top = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a])[0] || '';
         let firma = String(q.quien || '');
-        if (top) { const fd = await at('tbl2mLUrnaKCFTs6g?fields[]=Name').catch(() => ({})); const f = (fd.records || []).map(r => r.fields || {}).find(x => fisioKey(x.Name) === fisioKey(top)); firma = f ? String(f.Name).trim() : top; }
+        if (vacio && firma) { const fd = await at('tbl2mLUrnaKCFTs6g?fields[]=Name').catch(() => ({})); const f = (fd.records || []).map(r => r.fields || {}).find(x => fisioKey(x.Name) === fisioKey(firma)); if (f) firma = String(f.Name).trim(); }
+        else if (top) { const fd = await at('tbl2mLUrnaKCFTs6g?fields[]=Name').catch(() => ({})); const f = (fd.records || []).map(r => r.fields || {}).find(x => fisioKey(x.Name) === fisioKey(top)); firma = f ? String(f.Name).trim() : top; }
         const fechaEs = hoyF.split('-').reverse().join('/');
         const d = await at(INFORMES_TABLE, { method: 'POST', body: JSON.stringify({ typecast: true, records: [{ fields: { PacienteId: pid, PacienteNombre: String(F['FULL NAME'] || '').trim().toUpperCase(), FisioNombre: firma, Fecha: fechaEs, Protocolo: 'Informe fisioterapéutico', Informe: texto, SoloFisio: true } }] }) });
         if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar: ' + (d.error.message || '') });
