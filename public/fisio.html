@@ -12556,18 +12556,20 @@ function compraAnadir(o,onOk){o=o||{};
   ${o.nota?`<p class="ap-txt">Nota de ${escH(o.por||'')}: «${escH(o.nota)}»</p>`:''}
   <div class="hz-lab">Producto</div><input class="ag-in cp-p" placeholder="Ej.: guantes de nitrilo talla M" autocomplete="off">
   <div class="hz-lab">Cantidad <span>(opcional)</span></div><input class="ag-in cp-c" placeholder="Ej.: 2 cajas" autocomplete="off">
+  <div class="hz-lab">Enlace del producto <span>(opcional)</span></div><input class="ag-in cp-l" type="url" inputmode="url" placeholder="Pega aquí el enlace de Fisaude u otra tienda" autocomplete="off">
   <div class="hz-bts"><button type="button" class="hz-ok">Añadir a la lista</button></div>`);
  const p=m.querySelector('.cp-p');setTimeout(()=>p.focus(),60);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;if(!p.value.trim()){toast('Escribe qué falta',false);return;}b.disabled=true;
-  const r=await comPost('compra-anadir',{producto:p.value.trim(),cantidad:m.querySelector('.cp-c').value.trim(),nota:o.nota||'',por:o.por||''}).catch(x=>({ok:false,error:x.message}));
+  const lk=m.querySelector('.cp-l').value.trim();if(lk&&!/^https?:\/\/\S+$/i.test(lk)){b.disabled=false;toast('El enlace tiene que empezar por https://',false);return;}
+  const r=await comPost('compra-anadir',{producto:p.value.trim(),cantidad:m.querySelector('.cp-c').value.trim(),enlace:lk,nota:o.nota||'',por:o.por||''}).catch(x=>({ok:false,error:x.message}));
   if(!r.ok){b.disabled=false;toast(r.error||'No se ha podido',false);return;}m.remove();toast('Añadido a la lista de la compra',true);onOk&&onOk(r.item);};}
 async function compraPintar(box){if(!box)return;
  const r=await comPost('compra-lista',{}).catch(()=>({ok:false}));if(!box.isConnected||!r.ok){box.innerHTML='';return;}
  const fch=t=>{const d=new Date(t);return isNaN(d)?'':d.getDate()+'/'+(d.getMonth()+1);};
  const P=r.pendientes||[],C=r.comprados||[];
  box.innerHTML=`<div class="rd-sec cp"><div class="cp-h"><h4>🛒 Lista de la compra${P.length?` <span>${P.length}</span>`:''}</h4><button type="button" class="rd-b cp-nuevo">+ Añadir</button></div>
-  ${P.length?P.map(x=>`<div class="rd-row cp-it" data-id="${x.id}"><span><b>${escH(x.producto)}</b>${x.cantidad?` <i>· ${escH(x.cantidad)}</i>`:''}</span><small>${escH(x.por)}${x.fecha?' · '+fch(x.fecha):''}</small><span class="rd-ac"><a class="rd-b" href="${FISAUDE(x.producto)}" target="_blank" rel="noopener">Buscar en Fisaude</a><button type="button" class="rd-b ok cp-ok">✓ Comprado</button><button type="button" class="cp-x" aria-label="Quitar">✕</button></span></div>`).join(''):'<p class="fp-mu" style="margin:4px 0 0">No falta nada. Los fisios lo pueden apuntar desde su check-list.</p>'}
+  ${P.length?P.map(x=>`<div class="rd-row cp-it" data-id="${x.id}"><span><b>${escH(x.producto)}</b>${x.cantidad?` <i>· ${escH(x.cantidad)}</i>`:''}</span><small>${escH(x.por)}${x.fecha?' · '+fch(x.fecha):''}</small><span class="rd-ac">${x.enlace?`<a class="rd-b" href="${escH(x.enlace)}" target="_blank" rel="noopener">Abrir producto</a>`:`<a class="rd-b" href="${FISAUDE(x.producto)}" target="_blank" rel="noopener">Buscar en Fisaude</a>`}<button type="button" class="rd-b ok cp-ok">✓ Comprado</button><button type="button" class="cp-x" aria-label="Quitar">✕</button></span></div>`).join(''):'<p class="fp-mu" style="margin:4px 0 0">No falta nada. Los fisios lo pueden apuntar desde su check-list.</p>'}
   ${C.length?`<details class="cp-hist"><summary>Comprado hace poco (${C.length})</summary>${C.map(x=>`<div class="rd-row"><span class="cp-tach">${escH(x.producto)}${x.cantidad?' · '+escH(x.cantidad):''}</span><small>${escH(x.compradoPor)}${x.fechaCompra?' · '+fch(x.fechaCompra):''}</small><span class="rd-ac"><button type="button" class="rd-b cp-des" data-id="${x.id}">Deshacer</button></span></div>`).join('')}</details>`:''}</div>`;
  box.querySelector('.cp-nuevo').onclick=()=>compraAnadir({},()=>compraPintar(box));
  const act=async(id,a,extra)=>{const r=await comPost(a,Object.assign({id},extra||{})).catch(()=>({ok:false}));if(!r.ok){toast('No se ha podido',false);return;}compraPintar(box);};

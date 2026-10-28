@@ -2871,10 +2871,10 @@ module.exports = async function handler(req, res) {
     if (!yc || yc.fields['FECHA BAJA'] || String(yc.fields.Password || '').trim() !== String(q.clave || '').trim()) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
     const dirC = !!(yc.fields['DIRECCIÓN'] || yc.fields.acc_admin), yoC = String(yc.fields.Name || '').trim().split(/\s+/)[0];
     const COMPRA = 'tbl6tWCWWzZfODDns';
-    const vistaC = r => ({ id: r.id, producto: r.fields.PRODUCTO || '', cantidad: r.fields.CANTIDAD || '', por: r.fields['PEDIDO POR'] || '', fecha: r.fields.FECHA || r.createdTime, nota: r.fields.NOTA || '', comprado: !!r.fields.COMPRADO, compradoPor: r.fields['COMPRADO POR'] || '', fechaCompra: r.fields['FECHA COMPRA'] || '' });
+    const vistaC = r => ({ id: r.id, producto: r.fields.PRODUCTO || '', cantidad: r.fields.CANTIDAD || '', por: r.fields['PEDIDO POR'] || '', fecha: r.fields.FECHA || r.createdTime, nota: r.fields.NOTA || '', enlace: r.fields.ENLACE || '', comprado: !!r.fields.COMPRADO, compradoPor: r.fields['COMPRADO POR'] || '', fechaCompra: r.fields['FECHA COMPRA'] || '' });
     if (action === 'compra-anadir') {
       const producto = String(q.producto || '').trim().slice(0, 140); if (!producto) return res.status(400).json({ ok: false, error: 'Escribe qué falta' });
-      const d = await at(COMPRA, { method: 'POST', body: JSON.stringify({ records: [{ fields: { PRODUCTO: producto, CANTIDAD: String(q.cantidad || '').trim().slice(0, 60), 'PEDIDO POR': String(q.por || yoC).slice(0, 40), FECHA: new Date().toISOString(), NOTA: String(q.nota || '').slice(0, 1000) } }] }) });
+      const d = await at(COMPRA, { method: 'POST', body: JSON.stringify({ records: [{ fields: { PRODUCTO: producto, CANTIDAD: String(q.cantidad || '').trim().slice(0, 60), 'PEDIDO POR': String(q.por || yoC).slice(0, 40), FECHA: new Date().toISOString(), NOTA: String(q.nota || '').slice(0, 1000), ENLACE: /^https?:\/\/\S+$/i.test(String(q.enlace || '').trim()) ? String(q.enlace).trim().slice(0, 1000) : null } }] }) });
       return res.status(200).json({ ok: !d.error, item: d.records && vistaC(d.records[0]) });
     }
     if (!dirC) return res.status(403).json({ ok: false, error: 'Solo para dirección' });
