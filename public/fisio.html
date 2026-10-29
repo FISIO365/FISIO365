@@ -6122,7 +6122,7 @@ function agPdfHuecos(){
  function pinta(){if(!huecos)return;const n=elegidos().length;res.innerHTML=n?`<b>${n}</b> hueco${n===1?'':'s'} libre${n===1?'':'s'}`:'No hay huecos libres con estos filtros';m.querySelectorAll('.hl-dl,.hl-wa,.hl-link').forEach(b=>b.disabled=!n);}
  m.querySelector('.hl-link').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const [d1,d2]=rango();
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-huecos-enlace&pwd=${encodeURIComponent(apiPwd)}&desde=${d1}&hasta=${d2}&fisios=${encodeURIComponent([...sel].join(','))}`)).json();if(!r.ok)throw new Error(r.error||'No se ha podido crear el enlace');
-   abrirWA('',`Hola, te paso los huecos libres que tenemos estos días en *FISIO365*. Toca la hora que te vaya bien y queda reservada:\n${r.url}`);}catch(er){toast(er.message,false);}b.disabled=false;};
+   abrirWA('',`Te paso los huecos libres que tenemos estos días en *FISIO365*. Toca la hora que te vaya bien y queda reservada:\n${r.url}`);}catch(er){toast(er.message,false);}b.disabled=false;};
  m.querySelectorAll('.hl-dias button').forEach(b=>b.onclick=()=>{dias=+b.dataset.n;m.querySelectorAll('.hl-dias button').forEach(x=>x.classList.toggle('on',x===b));contar();});
  const fb=m.querySelectorAll('.hl-fis button');fb.forEach(b=>b.onclick=()=>{const f=b.dataset.f;if(!f)sel.clear();else sel.has(f)?sel.delete(f):sel.add(f);fb.forEach(x=>x.classList.toggle('on',x.dataset.f?sel.has(x.dataset.f):!sel.size));pinta();});
  async function hacer(){const J=await cargarJsPDF(),L=elegidos(),[d1,d2]=rango();

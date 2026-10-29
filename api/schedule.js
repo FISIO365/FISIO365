@@ -909,10 +909,19 @@ async function huecosLibres(P) {
   const cap = t => t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : '';
   return recs.map(r => { const h = huecoValido(r.fields || {}, P); return h ? { id: r.id, ...h, nombre: cap(h.fisio.split(' ')[0]) } : null; }).filter(Boolean).sort((x, y) => (x.fecha + x.hora + x.fisio).localeCompare(y.fecha + y.hora + y.fisio));
 }
+function ogHuecosSvg(P) {
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), MS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const f = x => { const d = new Date(x + 'T12:00:00Z'); return `${d.getUTCDate()} ${MS[d.getUTCMonth()]}`; };
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="236" y="150" width="128" height="122" rx="20"/><path d="M236 190h128M270 134v30M330 134v30"/><path d="M276 232l16 16 34-34"/></g>`
+    + ogTexto(O.b, 'Elige tu hueco', 40, 300, 362, 0, K)
+    + ogTexto(O.m, 'Toca la hora y queda reservada', 23, 300, 404, 0, M)
+    + ogTexto(O.m, `Del ${f(P.a)} al ${f(P.b)}`, 21, 300, 450, 0, T) + `</svg>`;
+}
 function paginaHuecos(D) {
   const J = JSON.stringify(D).replace(/</g, '\\u003c');
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Reserva tu cita · FISIO365</title>
-<meta property="og:title" content="Elige tu hueco en FISIO365"><meta property="og:description" content="Toca la hora que te vaya bien y queda reservada."><meta property="og:image" content="https://app.fisioterapia365.com/informe/og-cita-v3.png"><meta property="og:type" content="website">
+<meta property="og:title" content="Elige tu hueco en FISIO365"><meta property="og:description" content="Toca la hora que te vaya bien y queda reservada."><meta property="og:image" content="${D.url}.png?v=1"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
 .c{background:#fff;border-radius:26px;padding:28px 20px 22px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start}
@@ -1523,6 +1532,12 @@ module.exports = async function handler(req, res) {
     return res.status(200).send(paginaApp({ pila, usuario: email || t, pin, url: enlaceApp(id), play: 'https://play.google.com/store/apps/details?id=es.fisioterapia365.app', web: 'https://app.fisioterapia365.com', tel: C.tel || '672 89 39 49' }));
   }
   // Enlace de huecos libres: página para elegir y reservar (GET) y la reserva (POST)
+  if (action === 'huecos-og') {
+    const k = String(req.query.k || ''), sg = String(req.query.s || ''), P = huecosDec(k);
+    if (!P || sg !== firmaHuecos(k)) return res.status(404).send('No encontrado');
+    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogHuecosSvg(P), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+    catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.status(302).end(); }
+  }
   if (action === 'huecos') {
     const k = String(req.query.k || ''), sg = String(req.query.s || ''), P = huecosDec(k);
     res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
