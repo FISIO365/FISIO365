@@ -1655,6 +1655,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rp-av2{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:var(--font);border:1.5px solid #f3c9bb;background:#fdf1ea;border-radius:16px;padding:12px 14px;cursor:pointer;color:#1a1a1a}
 .rp-av2i{flex:none;width:26px;height:26px;border-radius:50%;background:#c2552e;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
 .rp-av2>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rp-av2 b{font-size:14px}.rp-av2 small{font-size:12.5px;color:#7d6a60;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rp-av2 em{font-style:normal;font-size:12.5px;font-weight:700;color:#c2552e}
+.enc-r{display:block;font-size:12px;color:#16803c;margin-top:3px;line-height:1.35}.enc-r.mal{color:#b42318}
 </style>
 <style>
 .idoc{background:#fff;border:1px solid #ece6df;border-radius:6px;box-shadow:0 2px 14px rgba(26,26,26,.07);padding:26px 24px 18px;margin-top:4px;font-family:var(--font)}
@@ -6011,11 +6012,11 @@ async function agRecordatorios(onDone,modoIni){
  const encTexto=c=>{const p=String(c.pila||c.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
   const h=agHoyIso(),cu=c.fecha===agMover(h,-1)?'de ayer':'del '+REC_DIAS[new Date(c.fecha+'T12:00:00').getDay()];
   const fi=String(c.fisio||'').trim().split(' ')[0],fn=fi?' con '+fi.charAt(0).toUpperCase()+fi.slice(1).toLowerCase():'';
-  return `Hola${n?' '+n:''}, ¿qué tal te encuentras después de la sesión ${cu}${fn}?\n\nNos ayudarías mucho valorando tu primera visita aquí:\n${ENCUESTA_1A}\n\n¡Gracias!`;};
+  return `Hola${n?' '+n:''}, ¿qué tal te encuentras después de la sesión ${cu}${fn}?\n\nNos ayudarías mucho valorando tu primera visita aquí (es un toque):\n${c.encLink||ENCUESTA_1A}\n\n¡Gracias!`;};
  function pintaEnc(){const L=encD||[],env=L.filter(c=>c.enviado).length;
   body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="rec-dias"><span>Vinieron el ${escH(fC(encF).toLowerCase())}</span><button type="button" class="rec-otro">Otro día</button></div>
    <div class="rec-pr"><div><b>${env}</b> de ${L.length} enviadas</div></div><div class="rec-bar"><i style="width:${L.length?Math.round(env/L.length*100):0}%"></i></div></div>
-   ${!L.length?'<div class="fac-vacio">Ese día no hubo primeras visitas</div>':`<div class="fp-blk rec-lista">${L.map((c,i)=>{const tel=segTel(c.tel);return `<div class="rec-it${c.enviado?' env':''}" data-i="${i}"><div class="rec-h">${escH(c.hora)}</div><div class="rec-n"><b>${escH(capTit(c.nombre||'—'))}</b><small>${escH(String(c.fisio||'').split(' ')[0])}${c.enviado&&tel.length>=9?' · <button type="button" class="rec-re">Reenviar</button>':''}</small></div>
+   ${!L.length?'<div class="fac-vacio">Ese día no hubo primeras visitas</div>':`<div class="fp-blk rec-lista">${L.map((c,i)=>{const tel=segTel(c.tel);return `<div class="rec-it${c.enviado?' env':''}" data-i="${i}"><div class="rec-h">${escH(c.hora)}</div><div class="rec-n"><b>${escH(capTit(c.nombre||'—'))}</b><small>${escH(String(c.fisio||'').split(' ')[0])}${c.enviado&&tel.length>=9?' · <button type="button" class="rec-re">Reenviar</button>':''}</small>${c.valoracion?`<span class="enc-r ${/Normal|Mejorable/.test(c.valoracion)?'mal':''}">${escH(c.valoracion)}${c.resena?' · abrió Google':''}${c.comentario?' · «'+escH(c.comentario)+'»':''}</span>`:''}</div>
     ${tel.length<9?`<button type="button" class="rec-b sin" data-ficha="${c.pacienteId}" data-fn="${escH(c.nombre)}">Sin teléfono</button>`:c.enviado?'<button type="button" class="rec-b cf on" disabled>✓ Enviada</button>':'<button type="button" class="rec-b env">Enviar</button>'}</div>`;}).join('')}</div>`}`;
   atarTabs();
   const oi=body.querySelector('.rec-otro');oi.onclick=()=>miniCal(oi,encF,f=>{encF=f;cargar();});

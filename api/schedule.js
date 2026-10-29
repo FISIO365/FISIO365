@@ -827,6 +827,70 @@ async function rachaConfirmadas(pid, fecha, hora) {
     return Math.max(1, n);
   } catch (e) { return 1; }
 }
+
+// ── ENCUESTA DE PRIMERA VISITA (página propia, enlace personal por cita) ──
+// Misma lógica que la de Tally: Excelente → reseña en Google (con frases para copiar); el resto → qué podemos mejorar
+const RESENA_URL = 'https://search.google.com/local/writereview?placeid=ChIJCadKnf2G6AIRcmUzdzMr4nk';
+const ENC_AVISO = 'norajimbelzu@gmail.com';
+function firmaEnc(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('enc:' + id).digest('hex').slice(0, 10); }
+const enlaceEncuesta = id => `https://app.fisioterapia365.com/e/${id}-${firmaEnc(id)}`;
+function paginaEncuesta(D) {
+  const e = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const J = JSON.stringify({ pila: D.pila || '', fisio: D.fisio || '', v: D.v || '', url: D.url || '', google: RESENA_URL }).replace(/</g, '\\u003c');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu primera visita · FISIO365</title>
+<meta property="og:title" content="¿Qué tal tu primera visita?"><meta property="og:description" content="Un toque y listo. Nos ayuda muchísimo."><meta property="og:image" content="https://app.fisioterapia365.com/informe/og-cita-v3.png"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.c{background:#fff;border-radius:24px;padding:28px 22px;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
+svg.f{display:block;margin:0 auto}svg.f circle,svg.f path{stroke:#c2552e;fill:none;stroke-width:3;stroke-linecap:round}svg.f .ey{fill:#c2552e;stroke:none}
+.o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s cubic-bezier(.6,0,.2,1) forwards}.dm{stroke-dasharray:44;stroke-dashoffset:44;animation:dr .45s .7s ease-out forwards}.de{opacity:0;animation:fi0 .3s .9s forwards}
+@keyframes dr{to{stroke-dashoffset:0}}@keyframes fi0{to{opacity:1}}
+.fi{opacity:0;transform:translateY(8px);animation:fi .55s forwards}@keyframes fi{to{opacity:1;transform:none}}
+h1{font-size:22px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-size:15px;color:#5c4f47;margin:0;line-height:1.5}
+.caras{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:24px 0 8px}
+.cara{border:1.5px solid #efe6de;background:#fff;border-radius:18px;padding:14px 6px 12px;cursor:pointer;font:600 14px Poppins,sans-serif;color:#2b2420;transition:transform .15s,border-color .2s,background .2s;opacity:0;animation:fi .5s forwards}
+.cara svg{width:46px;height:46px;display:block;margin:0 auto 6px}.cara svg circle,.cara svg path{stroke:#c2552e;fill:none;stroke-width:3.4;stroke-linecap:round}.cara svg .ey{fill:#c2552e;stroke:none}
+.cara.on{background:#fbeee7;border-color:#c2552e;transform:scale(1.04)}.cara.on svg{animation:bote .5s}@keyframes bote{40%{transform:scale(1.18) rotate(-6deg)}}
+.pista{font-size:12.5px;color:#a3968c;margin:10px 0 0}
+.bt{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:16px;cursor:pointer;text-decoration:none;animation:fi .55s 1.2s both,resp 2.6s 2s ease-in-out infinite}
+@keyframes resp{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}50%{box-shadow:0 0 0 7px rgba(194,85,46,.13)}}
+.g{width:20px;height:20px;background:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:700 13px Arial,sans-serif;color:#c2552e}
+.estr{display:flex;gap:6px;justify-content:center;margin:16px 0 4px}.estr svg{width:26px;height:26px;opacity:0;transform:scale(.4);animation:est .4s forwards}.estr path{fill:#c2552e}
+@keyframes est{60%{transform:scale(1.2);opacity:1}to{transform:scale(1);opacity:1}}
+.ideas{text-align:left;margin:20px 0 14px}.ideas small{display:block;font-size:12.5px;color:#8a7d74;margin-bottom:8px;line-height:1.45}
+.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{border:1.5px solid #efe6de;background:#faf7f4;border-radius:99px;padding:8px 13px;font:500 13.5px Poppins,sans-serif;color:#2b2420;cursor:pointer;text-align:left}.chip:active,.chip.on{background:#fbeee7;border-color:#c2552e;color:#c2552e}
+textarea{width:100%;min-height:110px;border:1.5px solid #e6ddd5;border-radius:14px;padding:12px 14px;font:400 15px Poppins,sans-serif;color:#141414;margin:18px 0 12px;resize:vertical;outline:none}textarea:focus{border-color:#c2552e}
+.bt2{width:100%;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:15px;cursor:pointer}.bt2:disabled{opacity:.6}
+.nota{font-size:12.5px;color:#8a7d74;margin:10px 0 0}.err{font-size:13px;color:#b42318;margin:6px 0 0;min-height:18px}
+@media (prefers-reduced-motion:reduce){.o,.dm,.de,.fi,.cara,.bt,.estr svg{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
+<body><div class="c" id="c">${D.error ? `<h1>Vaya…</h1><p class="sub">${e(D.error)}</p>` : ''}</div>
+${D.error ? '' : `<script>(function(){var D=${J},C=document.getElementById('c');
+function ojos(t){return t==='feliz'?'<path d="M25 35 Q30 29 35 35"/><path d="M45 35 Q50 29 55 35"/>':'<ellipse class="ey" cx="30" cy="33" rx="2.6" ry="3.2"/><ellipse class="ey" cx="50" cy="33" rx="2.6" ry="3.2"/>';}
+var CARAS=[['Excelente','feliz','M26 45 Q40 62 54 45'],['Muy buena','n','M29 46 Q40 55 51 46'],['Normal','n','M30 49 Q40 49 50 49'],['Mejorable','n','M30 52 Q40 44 50 52']];
+function grande(o,m){return '<svg class="f" width="84" height="84" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><g class="de">'+ojos(o)+'</g><path class="dm" d="'+m+'"/></svg>';}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function enviar(o){try{return fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o),keepalive:true}).then(function(r){return r.json();});}catch(e){return Promise.reject(e);}}
+var nom=D.pila?', '+esc(D.pila):'';
+function paso1(){C.innerHTML=grande('n','M30 47 Q40 54 50 47')+'<h1 class="fi" style="animation-delay:.9s">Hola'+nom+'</h1><p class="sub fi" style="animation-delay:1s">¿Qué tal tu primera visita'+(D.fisio?' con '+esc(D.fisio):'')+'?</p><div class="caras">'+CARAS.map(function(x,i){return '<button class="cara" data-v="'+x[0]+'" style="animation-delay:'+(1.2+i*.08)+'s"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="32"/>'+ojos(x[1])+'<path d="'+x[2]+'"/></svg>'+x[0]+'</button>';}).join('')+'</div><p class="pista fi" style="animation-delay:1.7s">Un toque y listo.</p>';
+ [].forEach.call(C.querySelectorAll('.cara'),function(b){b.onclick=function(){[].forEach.call(C.querySelectorAll('.cara'),function(x){x.classList.toggle('on',x===b);});var v=b.getAttribute('data-v');enviar({v:v}).catch(function(){});setTimeout(function(){v==='Excelente'?excelente():mejorar(v);},650);};});}
+function copiar(t){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).catch(function(){});return;}}catch(e){}try{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();}catch(e){}}
+function irGoogle(t){if(t)copiar(t);enviar({resena:1}).catch(function(){});setTimeout(function(){location.href=D.google;},t?250:60);}
+function excelente(){var f=D.fisio||'El equipo',F=[f+' es muy profesional',D.fisio?'Me explicó todo muy bien':'Me explicaron todo muy bien','Noté mejoría desde la primera sesión','Trato cercano y muy amable','El centro es precioso'];
+ C.innerHTML=grande('feliz','M26 45 Q40 62 54 45')+'<h1 class="fi" style="animation-delay:.8s">¡Qué alegría'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(D.fisio?'A '+esc(D.fisio)+' le hará muchísima ilusión. ':'')+'¿Nos lo cuentas en Google? Son 20 segundos.</p>'
+ +'<div class="estr">'+[0,1,2,3,4].map(function(i){return '<svg viewBox="0 0 24 24" style="animation-delay:'+(1+i*.12)+'s"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';}).join('')+'</div>'
+ +'<div class="ideas fi" style="animation-delay:1.6s"><small>Toca la frase que más te encaje: la copiamos y te abrimos Google. Solo tienes que pegarla y elegir las 5 estrellas.</small><div class="chips">'+F.map(function(x){return '<button class="chip">'+esc(x)+'</button>';}).join('')+'</div></div>'
+ +'<a class="bt" href="'+D.google+'" id="gb"><span class="g">G</span>Dejar mi reseña en Google</a><p class="nota fi" style="animation-delay:1.8s">O escribe lo que quieras con tus palabras.</p>';
+ [].forEach.call(C.querySelectorAll('.chip'),function(c){c.onclick=function(){c.classList.add('on');irGoogle(c.textContent+'.');};});
+ document.getElementById('gb').onclick=function(ev){ev.preventDefault();irGoogle('');};}
+function mejorar(v){var mal=v!=='Muy buena';C.innerHTML=grande('n',mal?'M31 50 Q40 46 49 50':'M29 46 Q40 55 51 46')
+ +'<h1 class="fi" style="animation-delay:.8s">'+(mal?'Gracias por contárnoslo'+nom:'¡Gracias'+nom+'!')+'</h1><p class="sub fi" style="animation-delay:.95s">'+(mal?'Queremos que tu próxima visita sea excelente. Cuéntanos qué pasó: lo lee dirección hoy mismo.':'¿Qué podemos mejorar para que tu próxima visita sea excelente?')+'</p>'
+ +'<textarea class="fi" id="tx" style="animation-delay:1.1s" placeholder="'+(mal?'Lo que nos quieras contar…':'Cualquier detalle nos ayuda…')+'"></textarea><p class="err" id="er"></p><button class="bt2 fi" id="en" style="animation-delay:1.2s">Enviar</button>';
+ var tx=document.getElementById('tx'),er=document.getElementById('er');tx.oninput=function(){er.textContent='';};
+ document.getElementById('en').onclick=function(){var t=tx.value.trim();if(!t){er.textContent='Escribe aunque sea una frase, por favor.';tx.focus();return;}var b=this;b.disabled=true;b.textContent='Enviando…';
+  enviar({v:v,c:t}).then(function(r){if(!r||!r.ok)throw 0;gracias(mal);}).catch(function(){b.disabled=false;b.textContent='Enviar';er.textContent='No se ha podido enviar. Inténtalo otra vez.';});};}
+function gracias(mal){C.innerHTML=grande('feliz','M28 46 Q40 57 52 46')+'<h1 class="fi" style="animation-delay:.8s">¡Gracias'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(mal?'Lo revisamos hoy mismo y te escribimos si hace falta. Gracias por ayudarnos a mejorar.':'Nos ayuda muchísimo. ¡Nos vemos en tu próxima sesión!')+'</p>';}
+if(D.v==='Excelente')excelente();else if(D.v&&D.yaCom)gracias(D.v!=='Muy buena');else if(D.v)mejorar(D.v);else paso1();})();<\/script>`}</body></html>`;
+}
 function firmaCita(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cita:' + id).digest('hex').slice(0, 10); }
 const enlaceConfirmar = id => `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}`;
 function paginaConfirmar(D, C) {
@@ -1186,6 +1250,39 @@ module.exports = async function handler(req, res) {
     const pide = pid ? await pidenConsentimiento([pid], fecha).catch(() => new Set()) : new Set();
     const extra = conf0 ? { racha: pid ? await rachaConfirmadas(pid, fecha, hora) : 1, cal: { ics: `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}.ics`, google: calendarioCita(D, C).google } } : {};
     return res.status(200).send(paginaConfirmar({ ...D, ...extra, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '' }, C));
+  }
+  // Encuesta de primera visita: página (GET) y respuestas (POST)
+  if (action === 'encuesta') {
+    const id = String(req.query.id || ''), sg = String(req.query.s || '');
+    res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
+    const mal = m => { if (req.method === 'POST') return res.status(400).json({ ok: false }); res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: m })); };
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaEnc(id)) return mal('Este enlace no es válido.');
+    const r = await at(`tblTPlcuiSjQngkaD/${id}`); if (r.error) return mal('No encontramos tu visita.');
+    const F = r.fields || {}, pid = (F['RELACIÓN - CITA'] || [])[0];
+    const f0 = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '').trim().split(' ')[0], fisio = f0 ? f0.charAt(0).toUpperCase() + f0.slice(1).toLowerCase() : '';
+    let pila = '', nombre = '';
+    if (pid) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}; nombre = String(P['FULL NAME'] || '').trim(); pila = (String(P['NOMBRE'] || '').trim() || nombre).split(/\s+/)[0] || ''; }
+    pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
+    const vOld = (F['ENCUESTA VALORACIÓN'] && F['ENCUESTA VALORACIÓN'].name) || F['ENCUESTA VALORACIÓN'] || '';
+    if (req.method === 'POST') {
+      const q = req.body || {}, VAL = ['Excelente', 'Muy buena', 'Normal', 'Mejorable'], f = {};
+      if (q.resena) f['ENCUESTA IR A RESEÑA'] = new Date().toISOString();
+      const v = VAL.includes(q.v) ? q.v : '', c = String(q.c || '').trim().slice(0, 3000);
+      if (v) { f['ENCUESTA VALORACIÓN'] = v; f['ENCUESTA RESPONDIDA'] = new Date().toISOString(); }
+      if (c) f['ENCUESTA COMENTARIO'] = c;
+      if (!Object.keys(f).length) return res.status(400).json({ ok: false });
+      const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
+      // Aviso por email (como hacía Tally): al elegir la carita y, si escribe, con su comentario
+      if (!u.error && process.env.BREVO_API_KEY && ((v && (v !== vOld || c)) )) {
+        const fecha = String(F['FECHA'] || '').slice(0, 10), color = { Excelente: '#16803c', 'Muy buena': '#16803c', Normal: '#b45309', Mejorable: '#b42318' }[v] || '#1a1a1a';
+        const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a;line-height:1.5"><b>Encuesta de primera visita</b><br><br>Paciente: <b>${escHtml(nombre || pila || '—')}</b><br>Primera visita: ${escHtml(fecha)}${fisio ? ' con ' + escHtml(fisio) : ''}<br>Valoración: <b style="color:${color}">${escHtml(v)}</b>${c ? `<br><br>Qué podemos mejorar:<br><i>${escHtml(c)}</i>` : ''}</div>`;
+        await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: [{ email: ENC_AVISO }], subject: `${/Normal|Mejorable/.test(v) ? '⚠️ ' : ''}Encuesta 1ª visita · ${v} · ${nombre || pila || 'paciente'}`, htmlContent: html }) }).catch(() => {});
+      }
+      return res.status(200).json({ ok: !u.error });
+    }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(paginaEncuesta({ pila, fisio, v: vOld, yaCom: !!F['ENCUESTA COMENTARIO'], url: enlaceEncuesta(id) }));
   }
   // Vista previa del enlace de confirmar (la ve WhatsApp): una hoja de calendario con el día y la hora de la cita
   // y el archivo de calendario para «Añadir a mi calendario»
@@ -2328,7 +2425,7 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-agenda-encuestas') {
           // Encuesta de satisfacción: pacientes cuya PRIMERA sesión realizada fue ese día
           const fecha = okF(q.fecha) ? q.fecha : hoyF;
-          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}',TRIM({ESTADO})='REALIZADA')`)}&fields[]=FECHA&fields[]=HORA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('ENCUESTA ENVIADA')}`);
+          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}',TRIM({ESTADO})='REALIZADA')`)}&fields[]=FECHA&fields[]=HORA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('ENCUESTA ENVIADA')}&fields[]=${encodeURIComponent('ENCUESTA VALORACIÓN')}&fields[]=${encodeURIComponent('ENCUESTA COMENTARIO')}&fields[]=${encodeURIComponent('ENCUESTA IR A RESEÑA')}`);
           const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], antes = new Set(), pac = {};
           for (let i = 0; i < pids.length; i += 40) {
             const l = pids.slice(i, i + 40);
@@ -2340,7 +2437,7 @@ module.exports = async function handler(req, res) {
             prev.forEach(c => (c.fields['PacienteRec'] || []).forEach(x => antes.add(x)));
           }
           const nmE = v => (v && typeof v === 'object') ? (v.name || '') : (v || ''), vistos = new Set();
-          const lista = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha, hora: String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: nmE(F['PREF.']), pacienteId: pid, ...(pac[pid] || { nombre: '', pila: '', tel: '' }), enviado: F['ENCUESTA ENVIADA'] || '' }; })
+          const lista = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha, hora: String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: nmE(F['PREF.']), pacienteId: pid, ...(pac[pid] || { nombre: '', pila: '', tel: '' }), enviado: F['ENCUESTA ENVIADA'] || '', encLink: enlaceEncuesta(r.id), valoracion: nmE(F['ENCUESTA VALORACIÓN']), comentario: F['ENCUESTA COMENTARIO'] || '', resena: !!F['ENCUESTA IR A RESEÑA'] }; })
             .filter(c => c.pacienteId && !antes.has(c.pacienteId) && !vistos.has(c.pacienteId) && vistos.add(c.pacienteId)).sort((a, b) => a.hora.localeCompare(b.hora));
           return res.status(200).json({ ok: true, hoy: hoyF, fecha, citas: lista });
         }
