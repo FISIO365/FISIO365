@@ -871,7 +871,7 @@ h1{font-size:23px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-s
 <h1 class="fi" style="animation-delay:.9s">¡Gracias${D.pila ? ', ' + e(D.pila) : ''}!</h1><p class="sub fi" style="animation-delay:1s">Por recomendarnos. Nos hace muchísima ilusión, así que aquí tienes tu regalo.</p>
 <div class="tk"><small>TARJETA REGALO</small><b>${e(D.imp)} €</b><span>de descuento en tu próxima sesión</span><hr>${D.pila ? `<em>Para ${e(D.pila)}</em>` : ''}${D.cad ? `<em>Válida hasta el ${e(D.cad)}</em>` : ''}</div>
 <div class="pasos fi" style="animation-delay:1.8s"><div class="pa"><span><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><div>No tienes que hacer nada<small>Ya lo tenemos apuntado en tu ficha</small></div></div><div class="pa"><span><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h4"/></svg></span><div>Te lo descontamos al pagar<small>En tu próxima sesión con nosotros</small></div></div></div>
-<a class="bt fi" style="animation-delay:2s" href="https://app.fisioterapia365.com">Reservar mi próxima sesión</a><p class="pie">FISIO365 · ${e(D.dir)}</p></div></body></html>`;
+<a class="bt fi" style="animation-delay:2s" href="https://wa.me/34${String(D.tel || '672893949').replace(/\D/g, '').slice(-9)}?text=${encodeURIComponent('Hola, quiero reservar mi próxima sesión (tengo la tarjeta regalo)')}" target="_blank" rel="noopener">Reservar mi próxima sesión</a><p class="sub" style="font-size:12.5px;margin-top:8px">Te abrimos WhatsApp y te buscamos hueco</p><p class="pie">FISIO365 · ${e(D.dir)}</p></div></body></html>`;
 }
 // ── ENLACE PERSONAL DE LA APP (se manda por WhatsApp: ventajas, cómo instalarla y sus datos para entrar) ──
 function firmaApp(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('app:' + id).digest('hex').slice(0, 10); }
@@ -1715,7 +1715,7 @@ module.exports = async function handler(req, res) {
       catch (e) { return res.redirect(302, `https://app.fisioterapia365.com/api/schedule?action=tarjeta-img&id=${id}`); }
     }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(paginaTarjeta({ imp: impP, pila, cad, og: `https://app.fisioterapia365.com/tarjeta/${id}.png?v=1`, dir: ((CF.clinica || CONF_DEF.clinica).direccion) || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
+    return res.status(200).send(paginaTarjeta({ imp: impP, pila, cad, og: `https://app.fisioterapia365.com/tarjeta/${id}.png?v=1`, dir: ((CF.clinica || CONF_DEF.clinica).direccion) || 'C/ Gran de Sant Andreu, 163 · Barcelona', tel: (CF.clinica || CONF_DEF.clinica).tel || '672 89 39 49' }));
   }
   // ── RECIBÍ DE INFORMES: enlace /i/TOKEN (WhatsApp o email) y firma desde la app del paciente ──
   // El enlace no lleva el informe: para verlo hay que poner los 4 últimos números del DNI (o la fecha de nacimiento) y firmar el recibí.
