@@ -6451,13 +6451,17 @@ function agPagoTrasDar(c,motivo){const mm=hzModal(`<div class="hz-top"><div><sma
   <div class="hz-bts"><button type="button" class="fp-can no">Ahora no</button><button type="button" class="hz-ok si">Sí, mandar enlace</button></div>`);
  mm.querySelector('.hz-x').onclick=mm.querySelector('.no').onclick=()=>mm.remove();
  mm.querySelector('.si').onclick=()=>{mm.remove();agPagoPedir(c,()=>{try{_dtC.d=null;_dtC.t=0;}catch(_){}});};}
-// Cancelada con menos de 24 h y sin pack: ¿la próxima la paga antes?
-async function agPreguntaTarde(c,fecha){const ini=new Date(fecha+'T'+String(c.hora).padStart(5,'0')+':00'),h=(ini-new Date())/36e5;if(!c.pacienteId||h>24||h<-12)return false;
- try{const r=await (await fetch(`/api/schedule?action=seg-agenda-pack&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${c.pacienteId}&fecha=${fecha}&hora=${encodeURIComponent(c.hora)}`)).json();if(r&&r.t==='pack')return false;}catch(e){}
- return new Promise(res=>{const mm=hzModal(`<div class="hz-top"><div><small>${escH(c.paciente||'')}</small><b>Ha cancelado con menos de 24 h</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-  <p class="fp-mu" style="font-size:13.5px;margin:0 0 14px">No tiene pack. ¿Su próxima cita la paga por adelantado?</p>
-  <div class="hz-bts"><button type="button" class="fp-can no">No, se lo perdonamos</button><button type="button" class="hz-ok si">Sí</button></div>`);
-  mm.querySelector('.hz-x').onclick=mm.querySelector('.no').onclick=()=>{mm.remove();res(false);};mm.querySelector('.si').onclick=()=>{mm.remove();res(true);};});}
+// Al marcar «Cancelada» con menos de 24 h o «No asistió»: con pack, ¿se le descuenta la sesión?; sin pack y cancelada tarde, ¿paga antes la próxima?
+function agPregunta(t,txt,si,no){return new Promise(res=>{const mm=hzModal(`<div class="hz-top"><div><small>${escH(t)}</small><b>${escH(txt[0])}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <p class="fp-mu" style="font-size:13.5px;margin:0 0 14px">${escH(txt[1])}</p><div class="hz-bts"><button type="button" class="fp-can no">${escH(no)}</button><button type="button" class="hz-ok si">${escH(si)}</button></div>`);
+  mm.querySelector('.hz-x').onclick=()=>{mm.remove();res(null);};mm.querySelector('.no').onclick=()=>{mm.remove();res(false);};mm.querySelector('.si').onclick=()=>{mm.remove();res(true);};});}
+async function agPreguntaFallo(c,fecha,est){const r0={tarde:false,estado:est};if(!c.pacienteId||!/^(CANCELADA|NO ASISTIÓ)$/.test(est))return r0;
+ const ini=new Date(fecha+'T'+String(c.hora).padStart(5,'0')+':00'),h=(ini-new Date())/36e5;if(est==='CANCELADA'&&h>24)return r0;
+ let pk=null;try{pk=await (await fetch(`/api/schedule?action=seg-agenda-pack&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${c.pacienteId}&fecha=${fecha}&hora=${encodeURIComponent(c.hora)}`)).json();}catch(e){}
+ if(pk&&pk.t==='pack'){const a=await agPregunta(c.paciente||'',[est==='CANCELADA'?'Ha cancelado con menos de 24 h':'No ha venido',`Tiene pack${pk.n?` (sería la sesión ${pk.i} de ${pk.n})`:''}. ¿Le descontamos esta sesión del pack?`],'Sí, descontar','No, se lo perdonamos');
+  if(a===null)return null;return {tarde:false,estado:a?'CITA PERDIDA':est};}
+ if(est==='CANCELADA'){const a=await agPregunta(c.paciente||'',['Ha cancelado con menos de 24 h','No tiene pack. ¿Su próxima cita la paga por adelantado?'],'Sí','No, se lo perdonamos');if(a===null)return null;return {tarde:a,estado:est};}
+ return r0;}
 function agPagoAtar(bx,c,onDone){const tel=()=>{const px=(pacs||[]).find(x=>x.id===c.pacienteId)||{};return segTel(px.whatsapp||px.telefono||px.tel||px.telf||'');};
  const quien=String((fisioActual&&fisioActual.nombre)||'');const repinta=()=>{bx.innerHTML=agPagoHtml(c);agPagoAtar(bx,c,onDone);};
  const env=bx.querySelector('.ag-pg-env');if(env)env.onclick=()=>abrirWA(tel(),agPagoTexto(c,c.pago.link));
@@ -6523,9 +6527,9 @@ function agAbrirCita(c,onDone){
   mm.querySelector('.hz-x').onclick=()=>mm.remove();
   mm.querySelectorAll('[data-l]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const r=await agPost('seg-agenda-borrar',{id:c.id,conPaciente:true,liberar:b.dataset.l==='1'});if(!r.ok)throw new Error(r.error||'No se ha podido borrar');toast('Cita borrada',true);mm.remove();m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}catch(err){b.disabled=false;toast(err.message,false);}});};
  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Guardando…';
-  const tarde=est==='CANCELADA'&&est!==est0?await agPreguntaTarde(c,FD):false;
-  try{const r=await agPost('seg-agenda-editar',{id:c.id,tarde,estado:est!==est0?est:undefined,confirmada:conf!==c.confirmada?conf:undefined,notas:m.querySelector('.ag-not2').value,tipos:[...tg.get().filter(t=>!agNoBomba(t)),...(m.querySelector('.ag-sbm input').checked?['NO BOMBA']:[])],sesion:ses.get()!==(c.sesion||'')?ses.get():undefined,liberar:!lib.hidden&&lib.querySelector('input').checked});
-   if(!r.ok)throw new Error(r.error||'No se ha podido guardar');toast(r.debePagar?`Guardado · su próxima cita la pagará por adelantado`:'Guardado',true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
+  const pf=est!==est0?await agPreguntaFallo(c,FD,est):{tarde:false,estado:est};if(!pf){b.disabled=false;b.textContent='Guardar';return;}const tarde=pf.tarde,estF=pf.estado;
+  try{const r=await agPost('seg-agenda-editar',{id:c.id,tarde,estado:est!==est0?estF:undefined,confirmada:conf!==c.confirmada?conf:undefined,notas:m.querySelector('.ag-not2').value,tipos:[...tg.get().filter(t=>!agNoBomba(t)),...(m.querySelector('.ag-sbm input').checked?['NO BOMBA']:[])],sesion:ses.get()!==(c.sesion||'')?ses.get():undefined,liberar:!lib.hidden&&lib.querySelector('input').checked});
+   if(!r.ok)throw new Error(r.error||'No se ha podido guardar');toast(r.debePagar?`Guardado · su próxima cita la pagará por adelantado`:estF==='CITA PERDIDA'&&est!=='CITA PERDIDA'?'Guardado · sesión descontada del pack':'Guardado',true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
 }
 function agNuevaCitaPac(p,onDone){
