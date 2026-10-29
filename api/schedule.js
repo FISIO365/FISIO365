@@ -775,15 +775,29 @@ async function ogFuentes() {
   const F = require('./_fuentes'); _ogFonts = [Buffer.from(F.bold, 'base64'), Buffer.from(F.medium, 'base64')];
   return _ogFonts;
 }
+// Las letras se dibujan como trazos (sin depender de fuentes en el servidor)
+let _ogOT = null;
+function ogTipos() {
+  if (_ogOT) return _ogOT;
+  const ot = require('opentype.js'), F = require('./_fuentes');
+  const ab = b64 => { const b = Buffer.from(b64, 'base64'); return b.buffer.slice(b.byteOffset, b.byteOffset + b.length); };
+  _ogOT = { b: ot.parse(ab(F.bold)), m: ot.parse(ab(F.medium)) }; return _ogOT;
+}
+function ogTexto(font, txt, size, cx, y, ls, color) {
+  const g = font.stringToGlyphs(txt), sc = size / font.unitsPerEm; let w = 0;
+  g.forEach((x, i) => { w += x.advanceWidth * sc + (i < g.length - 1 ? ls : 0); });
+  let x = cx - w / 2, d = '';
+  g.forEach(gl => { d += gl.getPath(x, y, size).toPathData(2); x += gl.advanceWidth * sc + ls; });
+  return `<path d="${d}" fill="${color}"/>`;
+}
 function ogCitaSvg({ fecha, hora, fisio }) {
   const DS = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'], MS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
-  const d = new Date(fecha + 'T12:00:00Z'), e = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const T = '#c2552e', K = '#2b2420', M = '#8a7d74';
+  const d = new Date(fecha + 'T12:00:00Z'), T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos();
   return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/><rect x="60" y="60" width="480" height="96" rx="44" fill="${T}"/><rect x="60" y="112" width="480" height="44" fill="${T}"/>`
-    + `<text x="300" y="122" font-family="Poppins" font-weight="700" font-size="34" letter-spacing="6" text-anchor="middle" fill="#fff">${DS[d.getUTCDay()]} · ${MS[d.getUTCMonth()]}</text>`
-    + `<text x="300" y="330" font-family="Poppins" font-weight="700" font-size="190" text-anchor="middle" fill="${K}">${d.getUTCDate()}</text>`
-    + `<text x="300" y="430" font-family="Poppins" font-weight="700" font-size="66" text-anchor="middle" fill="${T}">${e(hora)}</text>`
-    + (fisio ? `<text x="300" y="490" font-family="Poppins" font-weight="500" font-size="30" text-anchor="middle" fill="${M}">con ${e(fisio)}</text>` : '') + `</svg>`;
+    + ogTexto(O.b, `${DS[d.getUTCDay()]} · ${MS[d.getUTCMonth()]}`, 34, 300, 122, 6, '#fff')
+    + ogTexto(O.b, String(d.getUTCDate()), 190, 300, 330, 0, K)
+    + ogTexto(O.b, hora, 66, 300, 430, 0, T)
+    + (fisio ? ogTexto(O.m, 'con ' + fisio, 30, 300, 490, 0, M) : '') + `</svg>`;
 }
 // Hora de Madrid → instante UTC (para el calendario)
 function madridUTC(fecha, hora) {
@@ -852,7 +866,7 @@ function paginaConfirmar(D, C) {
         : `<form method="post"><button type="submit">¡Allí estaré!</button></form>`}
       ${!D.inactiva && D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : ''}`;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu cita · FISIO365</title>
-<meta property="og:title" content="Tu cita en FISIO365"><meta property="og:description" content="${e(fl ? (fl.charAt(0).toUpperCase() + fl.slice(1)) + ' a las ' + (D.hora || '') : 'Tu cita en FISIO365')}"><meta property="og:image" content="${D.id && D.fecha ? `https://app.fisioterapia365.com/c/${D.id}-${firmaCita(D.id)}.png?g=2&v=${e(D.fecha.replace(/-/g, ''))}${e(String(D.hora || '').replace(':', ''))}${D.fisio ? '-' + e(D.fisio.toLowerCase()) : ''}` : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:image:height" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:type" content="website">
+<meta property="og:title" content="Tu cita en FISIO365"><meta property="og:description" content="${e(fl ? (fl.charAt(0).toUpperCase() + fl.slice(1)) + ' a las ' + (D.hora || '') : 'Tu cita en FISIO365')}"><meta property="og:image" content="${D.id && D.fecha ? `https://app.fisioterapia365.com/c/${D.id}-${firmaCita(D.id)}.png?g=3&v=${e(D.fecha.replace(/-/g, ''))}${e(String(D.hora || '').replace(':', ''))}${D.fisio ? '-' + e(D.fisio.toLowerCase()) : ''}` : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:image:height" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .c{background:#fff;border-radius:24px;padding:28px 22px;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
@@ -1189,7 +1203,7 @@ module.exports = async function handler(req, res) {
     }
     try {
       const { Resvg } = require('@resvg/resvg-js');
-      const png = new Resvg(ogCitaSvg({ fecha, hora, fisio }), { font: { fontBuffers: await ogFuentes(), loadSystemFonts: false, defaultFontFamily: 'Poppins' } }).render().asPng();
+      const png = new Resvg(ogCitaSvg({ fecha, hora, fisio }), { font: { loadSystemFonts: false } }).render().asPng();
       res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400');
       return res.status(200).send(png);
     } catch (e) { res.setHeader('Cache-Control', 'no-store'); res.statusCode = 302; res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.end(); }
