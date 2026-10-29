@@ -1664,6 +1664,14 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .val-mas{margin-top:12px;width:100%;border:1px solid #e6ddd5;background:#fff;border-radius:12px;padding:11px;font:600 13.5px var(--font);color:#2b2420;cursor:pointer}
 .hl-link{display:block;width:100%;text-align:left;border:none;border-radius:14px;background:#c2552e;color:#fff;padding:13px 15px;margin:12px 0 4px;cursor:pointer;font-family:var(--font)}.hl-link b{display:block;font-size:15px}.hl-link small{display:block;font-size:12px;opacity:.85;margin-top:2px;line-height:1.35}.hl-link:disabled{opacity:.5}
 .hl-o{text-align:center;font-size:12px;color:#a3968c;margin:10px 0 2px}
+.ej-tabs{margin-bottom:12px}.ej-tabs i{font-style:normal;margin-left:6px;font-size:11px;font-weight:700;background:#c2552e;color:#fff;border-radius:99px;padding:1px 7px}.ej-tabs i:empty{display:none}
+.ejp-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.ejp-top p{flex:1;min-width:220px;margin:0;font-size:13px;color:#7d6a60}
+.ejp-h{font-size:12.5px;font-weight:600;color:#8a7d74;margin:16px 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.ejp-c{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #efe6de;border-radius:14px;padding:12px 14px;margin-bottom:8px}.ejp-c.grabando{border-color:#f1d9cc;background:#fdf6f2}.ejp-c.grabado{opacity:.75}
+.ejp-tx{flex:1;min-width:0}.ejp-tx b{font-size:14.5px;color:#2b2420}.ejp-z{margin-left:8px;font-size:11.5px;background:#f6f1eb;color:#7d6a60;border-radius:99px;padding:2px 8px}.ejp-tx p{margin:4px 0 0;font-size:13px;color:#5c4f47}.ejp-tx small{display:block;margin-top:4px;font-size:12px;color:#a3968c}
+.ejp-b{display:flex;gap:6px;align-items:center;flex:none}.ejp-b button{border:none;border-radius:10px;padding:8px 12px;font:600 12.5px var(--font);cursor:pointer}.ejp-yo,.ejp-ok{background:#c2552e;color:#fff}.ejp-sol{background:#f6f1eb;color:#7d6a60}.ejp-del{background:none;color:#a3968c;padding:6px 8px!important}.ejp-del.arm{background:#fde8e8;color:#b42318}
+.ejp-hechos{margin-top:16px}.ejp-hechos summary{cursor:pointer;font-size:12.5px;font-weight:600;color:#8a7d74;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+@media(max-width:600px){.ejp-c{flex-wrap:wrap}.ejp-b{width:100%;justify-content:flex-end}}
 </style>
 <style>
 .idoc{background:#fff;border:1px solid #ece6df;border-radius:6px;box-shadow:0 2px 14px rgba(26,26,26,.07);padding:26px 24px 18px;margin-top:4px;font-family:var(--font)}
@@ -7778,7 +7786,51 @@ const ejKey=n=>sinTildes(n).replace(/[^a-z0-9]+/g,' ').trim();
 const ejYt=u=>{const m=String(u||'').match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/);return m?m[1]:'';};
 const ejRepK=e=>ejYt(e.youtubeUrl)||'n:'+ejKey(e.nombre);
 async function ejApi(body){const r=await fetch('/api/ejercicios',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,...body})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'No se ha podido guardar');return d;}
+// Pestañas de Ejercicios: la biblioteca y los pendientes de grabar (se recuerda la última)
+let EJ_TAB=(()=>{try{return sessionStorage.getItem('f365_ej_tab')||'bib';}catch(e){return 'bib';}})(),EJP=null;
 async function renderEjercicios(wrap){
+ const tabs=ce('div','ag-vis ej-tabs');tabs.innerHTML=`<button type="button" data-t="bib">Biblioteca</button><button type="button" data-t="pend">Pendientes de grabar<i class="ej-pn"></i></button>`;wrap.appendChild(tabs);
+ const marca=()=>tabs.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===EJ_TAB));marca();
+ const cont=ce('div','');wrap.appendChild(cont);
+ tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(EJ_TAB===b.dataset.t)return;EJ_TAB=b.dataset.t;try{sessionStorage.setItem('f365_ej_tab',EJ_TAB);}catch(e){}marca();cont.innerHTML='';EJ_TAB==='pend'?renderEjPend(cont,tabs):renderEjBib(cont);});
+ ejpCuenta(tabs);EJ_TAB==='pend'?renderEjPend(cont,tabs):renderEjBib(cont);
+}
+async function ejpCarga(){const r=await (await fetch(`/api/schedule?action=seg-agenda-ejpend&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw new Error(r.error||'Error');EJP=r.lista;return EJP;}
+async function ejpCuenta(tabs){try{const L=EJP||await ejpCarga();const n=L.filter(x=>x.estado!=='GRABADO').length;const i=tabs.querySelector('.ej-pn');if(i)i.textContent=n||'';}catch(e){}}
+function renderEjPend(cont,tabs){
+ const yo=String((fisioActual&&fisioActual.nombre)||'').trim(),yo1=yo.split(' ')[0];
+ cont.innerHTML='<div class="ejp"><div class="ejp-top"><p>Propón ejercicios que haga falta grabar. Si alguien tiene un rato libre, coge uno y lo graba.</p><button type="button" class="seg-add ejp-nuevo">+ Proponer ejercicio</button></div><div class="ejp-l"><p class="ej-n">Cargando…</p></div></div>';
+ const box=cont.querySelector('.ejp-l');
+ const fF=x=>{const d=new Date(x);return d.getDate()+'/'+(d.getMonth()+1);},nom1=n=>capTit(String(n||'').split(' ')[0]);
+ const pinta=()=>{const L=EJP||[];tabs&&ejpCuenta(tabs);
+  const pend=L.filter(x=>x.estado==='PENDIENTE').sort((a,b)=>String(b.creado).localeCompare(String(a.creado))),grab=L.filter(x=>x.estado==='GRABANDO'),hechos=L.filter(x=>x.estado==='GRABADO').sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  const card=x=>`<div class="ejp-c ${x.estado.toLowerCase()}" data-id="${x.id}"><div class="ejp-tx"><b>${escH(x.nombre)}</b>${x.zona?`<span class="ejp-z">${escH(x.zona)}</span>`:''}${x.notas?`<p>${escH(x.notas)}</p>`:''}<small>${x.estado==='GRABADO'?'Grabado por '+escH(nom1(x.graba))+' el '+fF(x.fecha):x.estado==='GRABANDO'?'Lo está grabando '+escH(nom1(x.graba)):'Propuesto por '+escH(nom1(x.quien)||'—')+' el '+fF(x.creado)}</small></div>
+   <div class="ejp-b">${x.estado==='PENDIENTE'?'<button type="button" class="ejp-yo">Lo grabo yo</button>':x.estado==='GRABANDO'?'<button type="button" class="ejp-ok">Ya está grabado</button><button type="button" class="ejp-sol">Soltar</button>':''}${x.estado!=='GRABADO'&&(nom1(x.quien)===capTit(yo1)||esDireccion())?'<button type="button" class="ejp-del" aria-label="Borrar">✕</button>':''}</div></div>`;
+  box.innerHTML=(grab.length?`<div class="ejp-h">Grabándose ahora · ${grab.length}</div>${grab.map(card).join('')}`:'')
+   +`<div class="ejp-h">Pendientes · ${pend.length}</div>${pend.length?pend.map(card).join(''):'<p class="ej-n">No hay ejercicios pendientes. ¡Propón el primero!</p>'}`
+   +(hechos.length?`<details class="ejp-hechos"><summary>Grabados este mes · ${hechos.length}</summary>${hechos.map(card).join('')}</details>`:'');
+  box.querySelectorAll('.ejp-c').forEach(c=>{const x=L.find(y=>y.id===c.dataset.id);
+   const est=async(e,ant)=>{const p=x.estado,g=x.graba;x.estado=e;x.graba=e==='PENDIENTE'?'':yo;x.fecha=new Date().toISOString();pinta();
+    try{const r=await agPost('seg-agenda-ejpend',{op:'estado',id:x.id,estado:e,quien:yo});if(!r.ok)throw 0;}catch(_){x.estado=p;x.graba=g;pinta();toast('No se ha podido guardar',false);}};
+   const b1=c.querySelector('.ejp-yo');if(b1)b1.onclick=()=>est('GRABANDO');
+   const b2=c.querySelector('.ejp-sol');if(b2)b2.onclick=()=>est('PENDIENTE');
+   const b3=c.querySelector('.ejp-ok');if(b3)b3.onclick=()=>{if(!biblio.length)loadBiblio();ejEditar({nombre:x.nombre,zona:x.zona,descripcion:x.notas},()=>{est('GRABADO');});};
+   const b4=c.querySelector('.ejp-del');if(b4)b4.onclick=async()=>{if(!b4.classList.contains('arm')){b4.classList.add('arm');b4.textContent='¿Borrar?';setTimeout(()=>{b4.classList.remove('arm');b4.textContent='✕';},4000);return;}
+    EJP=EJP.filter(y=>y!==x);pinta();try{const r=await agPost('seg-agenda-ejpend',{op:'borrar',id:x.id});if(!r.ok)throw 0;}catch(_){EJP.push(x);pinta();toast('No se ha podido borrar',false);}};});};
+ cont.querySelector('.ejp-nuevo').onclick=()=>{let z='';const zs=[...new Set([...EJ_ZONAS,...biblio.map(x=>x.zona).filter(Boolean)])];
+  const m=hzModal(`<div class="hz-top"><div><small>Pendientes de grabar</small><b>Proponer ejercicio</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   <div class="hz-lab">Nombre</div>${capIn('ejp-nom','Ej.: Sentadilla búlgara con mancuernas','')}
+   <div class="hz-lab">Zona</div><div class="seg-rap ejp-zs">${zs.map(x=>`<button type="button" data-z="${escH(x)}">${escH(x)}</button>`).join('')}</div>
+   <div class="hz-lab">Notas <span>(opcional: cómo se hace, material, para quién…)</span></div><textarea class="seg-n ejp-not" rows="3" placeholder="Ej.: con banco y mancuernas, para readaptación de rodilla"></textarea>
+   <div class="hz-bts"><button type="button" class="hz-ok">Proponer</button></div>`);
+  m.querySelector('.hz-x').onclick=()=>m.remove();
+  m.querySelectorAll('.ejp-zs button').forEach(b=>b.onclick=()=>{z=z===b.dataset.z?'':b.dataset.z;m.querySelectorAll('.ejp-zs button').forEach(x=>x.classList.toggle('on',x.dataset.z===z));});
+  m.querySelector('.hz-ok').onclick=async e=>{const nombre=m.querySelector('.ejp-nom').value.trim();if(nombre.length<2){toast('Pon el nombre del ejercicio',false);return;}e.target.disabled=true;
+   try{const r=await agPost('seg-agenda-ejpend',{op:'crear',nombre,zona:z,notas:m.querySelector('.ejp-not').value.trim(),quien:yo});if(!r.ok)throw new Error(r.error||'');m.remove();toast('Propuesto',true);await ejpCarga();pinta();}catch(er){e.target.disabled=false;toast(er.message||'No se ha podido guardar',false);}};};
+ (EJP?Promise.resolve(EJP):ejpCarga()).then(pinta).catch(()=>{box.innerHTML='<p class="ej-n">No se ha podido cargar.</p>';});
+ ejpCarga().then(pinta).catch(()=>{});
+}
+async function renderEjBib(wrap){
  const box=ce('div','ej');wrap.appendChild(box);
  if(!biblio.length){box.innerHTML='<p class="ej-n">Cargando ejercicios…</p>';await loadBiblio();box.innerHTML='';}
  box.innerHTML=`<div class="ej-top"><input type="search" class="ej-q" placeholder="Buscar ejercicio…" value="${escH(ejQ)}"><button type="button" class="seg-add ej-nuevo">+ Nuevo ejercicio</button></div><div class="ej-zs"></div><p class="ej-n"></p><div class="ej-g"></div>`;

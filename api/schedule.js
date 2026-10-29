@@ -2773,6 +2773,24 @@ module.exports = async function handler(req, res) {
           out.sort((a, b) => (b.ultima || '').localeCompare(a.ultima || '') || a.nombre.localeCompare(b.nombre));
           return res.status(200).json({ ok: true, hoy: hoyF, pacientes: out });
         }
+        if (action === 'seg-agenda-ejpend') {
+          // Ejercicios pendientes de grabar: cualquiera propone; quien tiene un rato, lo graba
+          const EP = 'tblTL6et3dRyod8TZ', op = String(q.op || 'lista'), ahora = new Date().toISOString(), txt = (v, n) => String(v || '').trim().slice(0, n);
+          if (op === 'crear') {
+            const nombre = txt(q.nombre, 120); if (nombre.length < 2) return res.status(400).json({ ok: false, error: 'Pon el nombre del ejercicio' });
+            const d = await at(EP, { method: 'POST', body: JSON.stringify({ records: [{ fields: { NOMBRE: nombre, ZONA: txt(q.zona, 60), NOTAS: txt(q.notas, 2000), 'PROPUESTO POR': txt(q.quien, 60), ESTADO: 'PENDIENTE', 'FECHA ESTADO': ahora } }], typecast: true }) });
+            return res.status(200).json({ ok: !d.error });
+          }
+          if (op === 'estado' || op === 'borrar') {
+            if (!okId(q.id)) return res.status(400).json({ ok: false });
+            if (op === 'borrar') { const d = await at(`${EP}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error }); }
+            const est = ['PENDIENTE', 'GRABANDO', 'GRABADO'].includes(q.estado) ? q.estado : 'PENDIENTE';
+            const d = await at(`${EP}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: est, GRABA: est === 'PENDIENTE' ? '' : txt(q.quien, 60), 'FECHA ESTADO': ahora }, typecast: true }) });
+            return res.status(200).json({ ok: !d.error });
+          }
+          const rs = await todosT(EP, `filterByFormula=${encodeURIComponent(`OR({ESTADO}!='GRABADO',IS_AFTER({FECHA ESTADO},DATEADD(NOW(),-30,'days')))`)}`);
+          return res.status(200).json({ ok: true, lista: rs.map(r => ({ id: r.id, nombre: r.fields.NOMBRE || '', zona: r.fields.ZONA || '', notas: r.fields.NOTAS || '', quien: r.fields['PROPUESTO POR'] || '', estado: nmA(r.fields.ESTADO) || 'PENDIENTE', graba: r.fields.GRABA || '', fecha: r.fields['FECHA ESTADO'] || r.createdTime, creado: r.createdTime })) });
+        }
         if (action === 'seg-agenda-app-enlace') {
           if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false, error: 'Falta el paciente' });
           return res.status(200).json({ ok: true, url: enlaceApp(q.pacienteId) });
