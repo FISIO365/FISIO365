@@ -2139,7 +2139,9 @@ function showSection(sec){
  try{window.__sigueAqui&&window.__sigueAqui.cancela();}catch(e){}
  // Si no tiene acceso a esa sección (Administración › Accesos), a la primera que sí tenga
  try{const SBM={agenda:'sb-agenda',pac:'sb-pac',msg:'sb-msg',rep:'sb-rep',call:'sb-call',cap:'sb-cap',prog:'sb-prog',ejer:'sb-ejer',anam:'sb-anam',rend:'sb-rend',stats:'sb-stats',school:'sb-school',admin:'sb-admin',com:'sb-com'};
-  if(fisioActual&&SBM[sec]){const e=$(SBM[sec]);if(e&&e.style.display==='none'){const alt=Object.keys(SBM).find(k=>{const x=$(SBM[k]);return x&&x.style.display!=='none';});if(alt)sec=alt;}}}catch(e){}
+  // Anamnesis y Programas ya no salen en el menú: se abren desde la ficha del paciente (basta con tener el permiso)
+  const desdeFicha=!!fisioActual&&((sec==='anam'&&(fisioActual.accesos||{}).anamnesis!==false)||(sec==='prog'&&(fisioActual.accesos||{}).programas!==false));
+  if(fisioActual&&SBM[sec]&&!desdeFicha){const e=$(SBM[sec]);if(e&&e.style.display==='none'){const alt=Object.keys(SBM).find(k=>{const x=$(SBM[k]);return x&&x.style.display!=='none';});if(alt)sec=alt;}}}catch(e){}
  try{const pv=sessionStorage.getItem('f365_panel_sec');if(sec==='anam'&&pv&&pv!=='anam')sessionStorage.setItem('f365_panel_prev',pv);}catch(e){}
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
