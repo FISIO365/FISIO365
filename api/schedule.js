@@ -1398,10 +1398,12 @@ async function pagoVerificar(id, F, sid) {
   const est = String((F['ESTADO'] && F['ESTADO'].name) || F['ESTADO'] || '').trim(), f = { 'PAGO ESTADO': 'PAGADO', 'PAGO REF': String(s.payment_intent || sid), 'PAGO REGISTRO': reg.trim(), CONFIR: ['CONFIRMADA'] };
   if (/CANCELADA/.test(est)) f.ESTADO = 'PENDIENTE '; // pagó justo al caducar: se le devuelve la cita si el hueco sigue libre (se revisa a mano)
   await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
+  await pagoQuitarMarca(F);
   const pac = await pagoPaciente(F); const fis = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '');
   await pagoAvisar(fis, `✅ ${pac.pila || 'Un paciente'} ha pagado ${imp.toFixed(2).replace('.', ',')} €`, `Cita del ${String(F['FECHA'] || '').slice(0, 10).split('-').reverse().join('/')} a las ${String(F['HORA'] || '')}: confirmada.${/CANCELADA/.test(est) ? ' Ojo: había caducado, revisa que el hueco siga libre.' : ''}`, 'pago-' + id);
   return true;
 }
+async function pagoQuitarMarca(F) { const pid = (F['RELACIÓN - CITA'] || [])[0]; if (pid) await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO ADELANTADO': false } }) }).catch(() => {}); }
 async function pagoPaciente(F) {
   const pid = (F['RELACIÓN - CITA'] || [])[0]; if (!pid) return { pila: '', nombre: '', email: '' };
   const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}, nombre = String(P['FULL NAME'] || '').trim();
@@ -3349,16 +3351,14 @@ module.exports = async function handler(req, res) {
             } } catch (e) { console.log('agenda-num', e.message); }
           return res.status(200).json({ ok: true, num: numSes, pago, inicio });
         }
-        if (action === 'seg-agenda-pack') {
-          // Al dar una cita: qué sesión del pack sería (mismo reparto que la agenda: los pagos se gastan por orden de fecha)
-          if (!okId(q.pacienteId) || !okF(q.fecha)) return res.status(400).json({ ok: false });
+        const packDe = async (pid, fecha, hora0) => {
           const inicio = await inicioControl().catch(() => '');
-          if (!inicio) return res.status(200).json({ ok: true, activo: false });
-          const hora = okH(q.hora) ? hh(q.hora) : '23:59', clave = q.fecha + ' ' + hora;
+          if (!inicio) return { activo: false };
+          const hora = okH(hora0) ? hh(hora0) : '23:59', clave = fecha + ' ' + hora;
           const [rs, fs, pr] = await Promise.all([
-            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),FIND('${q.pacienteId}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${inicio}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA`),
-            todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${q.pacienteId}')`)}`).catch(() => []),
-            at(`${PACIENTES}/${q.pacienteId}`).catch(() => ({}))
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),FIND('${pid}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${inicio}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA`),
+            todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pid}')`)}`).catch(() => []),
+            at(`${PACIENTES}/${pid}`).catch(() => ({}))
           ]);
           const lotes = [], P = pr.fields || {}, nP = Number(P['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(P['BONO PREVIO YA USADAS'] || 0));
           if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true });
@@ -3371,7 +3371,12 @@ module.exports = async function handler(req, res) {
             if (k === clave) { const lo = lotes[li]; out = !lo ? { t: 'sin' } : lo.n > 1 || lo.previo ? { t: 'pack', i: usado + 1 + (lo.off || 0), n: lo.tot || lo.n } : { t: 'suelta' }; break; }
             if (li < lotes.length) usado++; }
           const total = lotes.reduce((t, l) => t + l.n, 0);
-          return res.status(200).json({ ok: true, activo: true, ...out, quedan: Math.max(0, total - claves.length) });
+          return { activo: true, ...out, quedan: Math.max(0, total - claves.length) };
+        };
+        if (action === 'seg-agenda-pack') {
+          // Al dar una cita: qué sesión del pack sería (mismo reparto que la agenda: los pagos se gastan por orden de fecha)
+          if (!okId(q.pacienteId) || !okF(q.fecha)) return res.status(400).json({ ok: false });
+          return res.status(200).json({ ok: true, ...(await packDe(q.pacienteId, q.fecha, q.hora)) });
         }
         if (action === 'seg-agenda-recordatorios') {
           // Recordatorios por WhatsApp (en un toque): citas pendientes de las fechas pedidas, con teléfono y si ya se envió
@@ -3505,8 +3510,9 @@ module.exports = async function handler(req, res) {
           // Pacientes sin ningún consentimiento enlazado (de después del formulario digital) para marcarlos en la agenda
           const conCons = new Set((consL || []).flatMap(c => c.pac)), sinConsent = consL ? pids.filter(id => !conCons.has(id) && (altaP[id] || '') >= '2026-01-08') : [];
           const ausDia = okF(q.fecha) ? await ausenciasEn(q.fecha, q.fecha).catch(() => []) : [];
+          const debenPagar = {}; if (pids.length) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('{PAGO ADELANTADO}')}&fields[]=${encodeURIComponent('PAGO ADELANTADO MOTIVO')}`).catch(() => [])).forEach(p => { if (pids.includes(p.id)) debenPagar[p.id] = p.fields['PAGO ADELANTADO MOTIVO'] || 'Paga por adelantado'; });
 
-          return res.status(200).json({ ok: true, hoy: hoyF, limitado, ausencias: ausDia, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, pago: nmA(F['PAGO ESTADO']) ? { estado: nmA(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
+          return res.status(200).json({ ok: true, hoy: hoyF, limitado, debenPagar, ausencias: ausDia, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, pago: nmA(F['PAGO ESTADO']) ? { estado: nmA(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'seg-agenda-resena') { // apuntar que se le ha pedido la reseña en Google
@@ -3529,7 +3535,8 @@ module.exports = async function handler(req, res) {
             await patch(q.id, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': imp, 'PAGO LÍMITE': lim, 'PAGO REGISTRO': reg(`Pago pedido (${imp.toFixed(2).replace('.', ',')} €)${quien ? ' por ' + quien : ''}`) });
             return res.status(200).json({ ok: true, link: enlacePago(q.id), limite: lim });
           }
-          if (q.op === 'confirmar') { await patch(q.id, { 'PAGO ESTADO': 'PAGADO', CONFIR: ['CONFIRMADA'], 'PAGO REGISTRO': reg(`Transferencia comprobada${quien ? ' por ' + quien : ''}`) }); return res.status(200).json({ ok: true }); }
+          if (q.op === 'confirmar') { await patch(q.id, { 'PAGO ESTADO': 'PAGADO', CONFIR: ['CONFIRMADA'], 'PAGO REGISTRO': reg(`Transferencia comprobada${quien ? ' por ' + quien : ''}`) }); await pagoQuitarMarca(C0); return res.status(200).json({ ok: true }); }
+          if (q.op === 'perdonar') { if (!okId(q.pacienteId)) return res.status(400).json({ ok: false }); const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO ADELANTADO': false } }) }); return res.status(200).json({ ok: !d.error }); }
           if (q.op === 'quitar') { await patch(q.id, { 'PAGO ESTADO': null, 'PAGO LÍMITE': null, 'PAGO REGISTRO': reg(`Ya no se pide el pago${quien ? ' (' + quien + ')' : ''}`) }); return res.status(200).json({ ok: true }); }
           return res.status(400).json({ ok: false });
         }
@@ -3600,7 +3607,8 @@ module.exports = async function handler(req, res) {
           const seg = await salirDeSeguimiento(q.pacienteId, q.quien, q.fecha, q.hora).catch(() => null);
           const et = await ponerEtapa(q.pacienteId, 'cita').catch(() => null); if (seg && et) seg.estados = et.estados;
           const esp = await salirDeEspera(q.pacienteId, q.fecha, q.hora).catch(() => 0);
-          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg, etapa: et && et.etapa, espera: esp });
+          const pf = await at(`${PACIENTES}/${q.pacienteId}`).catch(() => ({})), debePagar = (pf.fields || {})['PAGO ADELANTADO'] ? (pf.fields['PAGO ADELANTADO MOTIVO'] || 'Tiene que pagar por adelantado') : '';
+          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg, etapa: et && et.etapa, espera: esp, debePagar });
         }
         if (action === 'seg-agenda-huecos') { // abrir varias horas de golpe (libres o bloqueadas), sin pisar lo que ya hay
           const fechas = (q.fechas || []).filter(okF).slice(0, 60), horas = (q.horas || []).map(hh).filter(okH).slice(0, 24);
@@ -3639,7 +3647,12 @@ module.exports = async function handler(req, res) {
           }
           if (Object.keys(f).length) await patch(q.id, f);
           { const pidE = (cur.fields['RELACIÓN - CITA'] || [])[0]; if (pidE && /^(REALIZADA|NO ASISTIÓ)$/.test(q.estado || '')) await ponerEtapa(pidE, q.estado === 'REALIZADA' ? 'realizada' : 'noasistio').catch(() => null); }
-          return res.status(200).json({ ok: true });
+          // Sin pack: si no vino o canceló con menos de 24 h, su próxima cita se paga por adelantado
+          let debePagar = '';
+          { const pidE = (cur.fields['RELACIÓN - CITA'] || [])[0], cF = String(cur.fields.FECHA || '').slice(0, 10), cH = hh(cur.fields.HORA);
+            if (pidE && (q.estado === 'NO ASISTIÓ' || (q.estado === 'CANCELADA' && q.tarde))) { const pk = await packDe(pidE, cF, cH).catch(() => null);
+              if (!pk || pk.t !== 'pack') { debePagar = `${q.estado === 'NO ASISTIÓ' ? 'No asistió' : 'Canceló con menos de 24 h'} el ${cF.split('-').reverse().slice(0, 2).join('/')}`; await at(`${PACIENTES}/${pidE}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO ADELANTADO': true, 'PAGO ADELANTADO MOTIVO': debePagar } }) }).catch(() => {}); } } }
+          return res.status(200).json({ ok: true, debePagar });
         }
         if (action === 'seg-agenda-mover') { global._sesPac = {}; // cambiar día/hora/fisio: la original queda REPROGRAMADA y se da la nueva
           if (!okId(q.id) || !okF(q.fecha) || !okH(q.hora) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
