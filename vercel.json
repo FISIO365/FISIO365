@@ -79,6 +79,14 @@
       "dest": "/api/schedule.js?action=doc-pagina&t=$1"
     },
     {
+      "src": "/c/(rec[A-Za-z0-9]{14})-([a-f0-9]{10})\\.png",
+      "dest": "/api/schedule.js?action=cita-og&id=$1&s=$2"
+    },
+    {
+      "src": "/c/(rec[A-Za-z0-9]{14})-([a-f0-9]{10})\\.ics",
+      "dest": "/api/schedule.js?action=cita-ics&id=$1&s=$2"
+    },
+    {
       "src": "/c/(rec[A-Za-z0-9]{14})-([a-f0-9]{10})",
       "dest": "/api/schedule.js?action=cita-confirmar&id=$1&s=$2"
     },

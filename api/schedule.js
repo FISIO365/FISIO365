@@ -767,6 +767,54 @@ $('b3').onclick=()=>{const b=$('b3');b.disabled=true;b.textContent='Preparando�
  if(window.InformePDF)go();else{const s=document.createElement('script');s.src='/informe/pdf.js?v=3';s.onload=go;document.head.appendChild(s);}};
 </script></body></html>`;
 }
+
+// ── Enlace de confirmar: vista previa con la cita (PNG), calendario (.ics) y racha de citas confirmadas ──
+let _ogFonts = null;
+async function ogFuentes() {
+  if (_ogFonts) return _ogFonts;
+  const base = 'https://app.fisioterapia365.com/informe/';
+  _ogFonts = Promise.all(['Poppins-Bold.ttf', 'Poppins-Medium.ttf', 'Poppins-Regular.ttf'].map(f => fetch(base + f).then(r => { if (!r.ok) throw new Error('fuente'); return r.arrayBuffer(); }).then(b => Buffer.from(b))))
+    .catch(e => { _ogFonts = null; throw e; });
+  return _ogFonts;
+}
+function ogCitaSvg({ fecha, hora, fisio }) {
+  const DS = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'], MS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+  const d = new Date(fecha + 'T12:00:00Z'), e = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/><rect x="60" y="60" width="480" height="96" rx="44" fill="${T}"/><rect x="60" y="112" width="480" height="44" fill="${T}"/>`
+    + `<text x="300" y="122" font-family="Poppins" font-weight="700" font-size="34" letter-spacing="6" text-anchor="middle" fill="#fff">${DS[d.getUTCDay()]} · ${MS[d.getUTCMonth()]}</text>`
+    + `<text x="300" y="330" font-family="Poppins" font-weight="700" font-size="190" text-anchor="middle" fill="${K}">${d.getUTCDate()}</text>`
+    + `<text x="300" y="430" font-family="Poppins" font-weight="700" font-size="66" text-anchor="middle" fill="${T}">${e(hora)}</text>`
+    + (fisio ? `<text x="300" y="490" font-family="Poppins" font-weight="500" font-size="30" text-anchor="middle" fill="${M}">con ${e(fisio)}</text>` : '') + `</svg>`;
+}
+// Hora de Madrid → instante UTC (para el calendario)
+function madridUTC(fecha, hora) {
+  const [y, m, d] = fecha.split('-').map(Number), [hh, mm] = String(hora || '00:00').split(':').map(Number);
+  let t = Date.UTC(y, m - 1, d, hh, mm);
+  for (let i = 0; i < 2; i++) { const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date(t)).map(x => [x.type, x.value]));
+    const comoMadrid = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute); t += Date.UTC(y, m - 1, d, hh, mm) - comoMadrid; }
+  return new Date(t);
+}
+const icsFecha = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+function calendarioCita(D, C) {
+  const ini = madridUTC(D.fecha, D.hora), fin = new Date(ini.getTime() + 60 * 60e3), tit = `Fisioterapia en FISIO365${D.fisio ? ' con ' + D.fisio : ''}`, lug = String(C.direccion || '').replace(/ · /g, ', ');
+  const esc = t => String(t).replace(/([,;\\])/g, '\\$1');
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FISIO365//Citas//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT', `UID:${D.id}@fisioterapia365.com`, `DTSTAMP:${icsFecha(new Date())}`, `DTSTART:${icsFecha(ini)}`, `DTEND:${icsFecha(fin)}`, `SUMMARY:${esc(tit)}`, `LOCATION:${esc(lug)}`, `DESCRIPTION:${esc('Si no puedes venir, llámanos o escríbenos al ' + (C.tel || '') + '.')}`, 'BEGIN:VALARM', 'TRIGGER:-PT2H', 'ACTION:DISPLAY', `DESCRIPTION:${esc(tit)}`, 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const g = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(tit)}&dates=${icsFecha(ini)}/${icsFecha(fin)}&location=${encodeURIComponent(lug)}`;
+  return { ics, google: g };
+}
+// Racha: cuántas citas seguidas (hasta esta) tiene confirmadas el paciente
+async function rachaConfirmadas(pid, fecha, hora) {
+  try {
+    const rs = []; let off = '';
+    do { const d = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(FIND('${pid}',ARRAYJOIN({PacienteRec})),OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE'),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${fecha}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA&fields[]=CONFIR&pageSize=100${off ? '&offset=' + off : ''}`);
+      if (d.error) throw new Error('Airtable'); rs.push(...(d.records || [])); off = d.offset || ''; } while (off && rs.length < 500);
+    const k = c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + String(c.fields.HORA || '').replace(/^(\d):/, '0$1:').slice(0, 5), yo = fecha + ' ' + hora;
+    const L = rs.filter(c => k(c) <= yo).sort((a, b) => k(b).localeCompare(k(a)));
+    let n = 0; for (const c of L) { if ((c.fields.CONFIR || []).some(x => /CONFIRMADA/i.test(x.name || x))) n++; else break; }
+    return Math.max(1, n);
+  } catch (e) { return 1; }
+}
 function firmaCita(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cita:' + id).digest('hex').slice(0, 10); }
 const enlaceConfirmar = id => `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}`;
 function paginaConfirmar(D, C) {
@@ -775,13 +823,22 @@ function paginaConfirmar(D, C) {
   const fl = D.fecha ? (() => { const d = new Date(D.fecha + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} de ${MES[d.getUTCMonth()]}`; })() : '';
   const tel = String(C.tel || '').replace(/\s/g, '');
   const cuerpo = D.error && !D.fecha ? `<h1>Vaya…</h1><p>${e(D.error)}</p>`
+    : D.confirmada && !D.inactiva ? (() => { const r = Math.max(1, D.racha || 1), nd = Math.min(7, Math.max(r, 5)), lleno = Math.min(r, nd);
+      const dc = (() => { const d = new Date(D.fecha + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()}`; })();
+      return `<div class="okv"><svg class="sm" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="c1" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="s1" d="M27 44 Q40 58 53 44"/></svg>
+      <p class="okt fi" style="animation-delay:1.1s">${D.recien ? '¡Confirmada' : 'Cita confirmada'}${D.pila ? ', ' + e(D.pila) : ''}${D.recien ? '!' : ''}</p>
+      <p class="oks fi" style="animation-delay:1.3s">Te esperamos el ${e(dc)} a las ${e(D.hora)}${D.fisio ? ' con ' + e(D.fisio) : ''}.</p>
+      <div class="fi" style="animation-delay:1.8s"><div class="dots">${Array.from({ length: nd }, (_, i) => `<i class="${i < lleno - 1 ? 'on' : i === lleno - 1 ? 'nw' : ''}"></i>`).join('')}</div>
+      <p class="rt">${r > 1 ? `Llevas <b>${r} citas</b> confirmadas seguidas` : '<b>¡Empieza tu racha!</b> Confirma también la próxima'}</p></div>
+      ${D.cal ? `<a class="cal fi" style="animation-delay:2.4s" href="${e(D.cal.ics)}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M16 3v4M8 3v4M4 10h16M12 13v4M10 15h4"/></svg>Añadir a mi calendario</a><a class="gcal fi" style="animation-delay:2.5s" href="${e(D.cal.google)}" target="_blank" rel="noopener">o en Google Calendar</a>` : ''}</div>`; })()
+      + (D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : '')
     : `<p class="hola">${D.pila ? 'Hola, ' + e(D.pila) : 'Hola'} 👋</p><p class="sub">${D.inactiva ? '' : D.confirmada ? '' : 'Te esperamos en FISIO365.'}</p><div class="cita"><small>Tu cita</small><b>${e(fl.charAt(0).toUpperCase() + fl.slice(1))}</b><b>a las ${e(D.hora)}</b>${D.fisio ? `<span>Con ${e(D.fisio)}</span>` : ''}</div>
       ${D.error ? `<p class="err">${e(D.error)}</p>` : ''}
       ${D.inactiva ? `<p>Esta cita ya no está activa.</p>` : D.confirmada ? `<div class="ok">✓ ${D.recien ? '¡Perfecto! Cita confirmada' : 'Tu cita está confirmada'}</div><p class="peq">Te esperamos.</p>`
         : `<form method="post"><button type="submit">¡Allí estaré!</button></form>`}
       ${!D.inactiva && D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : ''}`;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu cita · FISIO365</title>
-<meta property="og:title" content="Tu cita en FISIO365"><meta property="og:description" content="${e(fl ? (fl.charAt(0).toUpperCase() + fl.slice(1)) + ' a las ' + (D.hora || '') : 'Tu cita en FISIO365')}"><meta property="og:image" content="https://app.fisioterapia365.com/informe/og-cita-v3.png"><meta property="og:image:width" content="800"><meta property="og:image:height" content="800"><meta property="og:type" content="website">
+<meta property="og:title" content="Tu cita en FISIO365"><meta property="og:description" content="${e(fl ? (fl.charAt(0).toUpperCase() + fl.slice(1)) + ' a las ' + (D.hora || '') : 'Tu cita en FISIO365')}"><meta property="og:image" content="${D.id && D.fecha ? `https://app.fisioterapia365.com/c/${D.id}-${firmaCita(D.id)}.png?v=${e(D.fecha.replace(/-/g, ''))}${e(String(D.hora || '').replace(':', ''))}${D.fisio ? '-' + e(D.fisio.toLowerCase()) : ''}` : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:image:height" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .c{background:#fff;border-radius:24px;padding:28px 22px;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
@@ -791,8 +848,19 @@ button{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:#fff;
 .ok{background:#e8f6ec;color:#16803c;font-weight:600;border-radius:14px;padding:16px}.err{color:#b42318}.peq{font-size:14px;color:#7d6a60;margin:12px 0 0}
 .cons{margin-top:18px;background:#fbf3ec;border-radius:18px;padding:18px 16px;text-align:left}.cons b{display:block;font-size:16px;margin-bottom:4px}.cons p{margin:0 0 14px;font-size:14px;color:#5c4f47;line-height:1.5}.cons small{display:block;margin-top:10px;font-size:12px;color:#7d6a60}
 .btn2{display:block;text-align:center;text-decoration:none;font-weight:600;font-size:15px;color:#1e2a38;background:#fff;border:1.5px solid #1e2a38;border-radius:14px;padding:13px}
+.okv{padding:4px 0 2px}.sm{display:block;margin:4px auto 0}.sm circle,.sm path{stroke:#c2552e;fill:none;stroke-width:3;stroke-linecap:round}
+.sm .c1{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s cubic-bezier(.6,0,.2,1) forwards}.sm .s1{stroke-dasharray:32;stroke-dashoffset:32;transform-origin:40px 46px;animation:dr .5s .75s cubic-bezier(.3,0,.2,1) forwards,smi .45s 1.25s ease-in-out}
+@keyframes dr{to{stroke-dashoffset:0}}@keyframes smi{50%{transform:scaleX(1.18)}}
+.fi{opacity:0;transform:translateY(6px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}
+.okt{font-size:23px;font-weight:700;margin:14px 0 0}.oks{font-size:15px;color:#5c4f47;margin:6px 0 0}.okv .fi{display:block}.okv a.cal.fi{display:flex}
+.dots{display:flex;gap:8px;justify-content:center;margin:20px 0 8px}.dots i{width:11px;height:11px;border-radius:50%;border:1.5px solid #e2b7a6}.dots i.on{background:#c2552e;border-color:#c2552e}
+.dots i.nw{animation:pop .45s 2.2s forwards}@keyframes pop{0%{transform:scale(1)}60%{transform:scale(1.55);background:#c2552e;border-color:#c2552e}100%{transform:scale(1);background:#c2552e;border-color:#c2552e}}
+.rt{font-size:13.5px;color:#7d6a60;margin:0}.rt b{color:#c2552e}
+.cal{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:22px;text-decoration:none;font-weight:600;font-size:15px;color:#141414;background:#fff;border:1.5px solid #e6ddd5;border-radius:14px;padding:14px}.cal svg{width:19px;height:19px;stroke:#c2552e;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gcal{font-size:13px;color:#7d6a60;margin-top:10px}
+@media (prefers-reduced-motion:reduce){.sm .c1,.sm .s1,.fi,.dots i.nw{animation-duration:.01s!important;animation-delay:0s!important}}
 .pie{margin-top:22px;font-size:12.5px;color:#7d6a60;line-height:1.6}.pie a{color:#7d6a60}h1{font-size:20px}</style></head>
-<body><div class="c"><img class="logo" src="https://app.fisioterapia365.com/icono.png" alt="FISIO365">${cuerpo}<div class="pie">${e(C.direccion || '')}${tel ? `<br>¿Dudas? Llámanos al <a href="tel:+34${e(tel)}">${e(C.tel)}</a>` : ''}</div></div></body></html>`;
+<body><div class="c">${D.confirmada && !D.inactiva ? '' : '<img class="logo" src="https://app.fisioterapia365.com/icono.png" alt="FISIO365">'}${cuerpo}<div class="pie">${e(C.direccion || '')}${tel ? `<br>¿Dudas? Llámanos al <a href="tel:+34${e(tel)}">${e(C.tel)}</a>` : ''}</div></div></body></html>`;
 }
 // Citas antiguas sin «TIPO DE SESIÓN»: se deduce de sus etiquetas de siempre
 const sesionDeEtiquetas = L => { const t = (L || []).map(x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim());
@@ -1064,7 +1132,7 @@ module.exports = async function handler(req, res) {
     const pid = (F['RELACIÓN - CITA'] || [])[0]; let pila = '';
     if (pid) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}; pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; }
     const hoyC = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-    const D = { pila: pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '', fecha, hora, fisio: fisio ? fisio.charAt(0).toUpperCase() + fisio.slice(1).toLowerCase() : '' };
+    const D = { id, pila: pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '', fecha, hora, fisio: fisio ? fisio.charAt(0).toUpperCase() + fisio.slice(1).toLowerCase() : '' };
     if (!/PENDIENTE/.test(est) || fecha < hoyC) return res.status(200).send(paginaConfirmar({ ...D, inactiva: true }, C));
     let conf0 = (F['CONFIR'] || []).some(x => /CONFIRMADA/i.test(x.name || x));
     if (req.method === 'POST' && !conf0) {
@@ -1073,7 +1141,29 @@ module.exports = async function handler(req, res) {
       conf0 = true;
     }
     const pide = pid ? await pidenConsentimiento([pid], fecha).catch(() => new Set()) : new Set();
-    return res.status(200).send(paginaConfirmar({ ...D, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '' }, C));
+    const extra = conf0 ? { racha: pid ? await rachaConfirmadas(pid, fecha, hora) : 1, cal: { ics: `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}.ics`, google: calendarioCita(D, C).google } } : {};
+    return res.status(200).send(paginaConfirmar({ ...D, ...extra, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '' }, C));
+  }
+  // Vista previa del enlace de confirmar (la ve WhatsApp): una hoja de calendario con el día y la hora de la cita
+  // y el archivo de calendario para «Añadir a mi calendario»
+  if (action === 'cita-og' || action === 'cita-ics') {
+    const id = String(req.query.id || ''), sg = String(req.query.s || '');
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaCita(id)) return res.status(404).send('No encontrado');
+    const r = await at(`tblTPlcuiSjQngkaD/${id}`); if (r.error) return res.status(404).send('No encontrado');
+    const F = r.fields || {}, fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5);
+    const f0 = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '').trim().split(' ')[0], fisio = f0 ? f0.charAt(0).toUpperCase() + f0.slice(1).toLowerCase() : '';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return res.status(404).send('No encontrado');
+    if (action === 'cita-ics') {
+      const C = (await conf().catch(() => CONF_DEF)).clinica || CONF_DEF.clinica;
+      res.setHeader('Content-Type', 'text/calendar; charset=utf-8'); res.setHeader('Content-Disposition', 'inline; filename="cita-fisio365.ics"'); res.setHeader('Cache-Control', 'private, no-store');
+      return res.status(200).send(calendarioCita({ id, fecha, hora, fisio }, C).ics);
+    }
+    try {
+      const { Resvg } = require('@resvg/resvg-js');
+      const png = new Resvg(ogCitaSvg({ fecha, hora, fisio }), { font: { fontBuffers: await ogFuentes(), loadSystemFonts: false, defaultFontFamily: 'Poppins' } }).render().asPng();
+      res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.status(200).send(png);
+    } catch (e) { res.setHeader('Cache-Control', 'no-store'); res.statusCode = 302; res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.end(); }
   }
   // Justificante / informe de sesiones (enlace privado que va por WhatsApp)
   if (action === 'doc-pagina') {
@@ -2156,11 +2246,11 @@ module.exports = async function handler(req, res) {
           // Recordatorios por WhatsApp (en un toque): citas pendientes de las fechas pedidas, con teléfono y si ya se envió
           const fechas = String(q.fechas || '').split(',').filter(okF).slice(0, 4);
           if (!fechas.length) return res.status(400).json({ ok: false, error: 'Faltan las fechas' });
-          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(${fechas.map(f => `DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f}'`).join(',')}),FIND('PENDIENTE',UPPER({ESTADO}&'')))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('RECORDATORIO ENVIADO')}&fields[]=${encodeURIComponent('RECORDATORIO POR')}&fields[]=CONFIR`);
+          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(${fechas.map(f => `DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f}'`).join(',')}),FIND('PENDIENTE',UPPER({ESTADO}&'')))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('RECORDATORIO ENVIADO')}&fields[]=${encodeURIComponent('RECORDATORIO POR')}&fields[]=${encodeURIComponent('2º AVISO ENVIADO')}&fields[]=${encodeURIComponent('2º AVISO POR')}&fields[]=CONFIR`);
           const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], pac = {}, acc = {};
           for (let i = 0; i < pids.length; i += 50) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 50).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=EMAIL&fields[]=PIN&fields[]=${encodeURIComponent('APP INSTALADA')}&fields[]=PushSubscription`)).forEach(p => { pac[p.id] = { nombre: p.fields['FULL NAME'] || '', pila: p.fields['NOMBRE'] || '', tel: p.fields['WHATSAPP'] || p.fields['TELF'] || '' }; acc[p.id] = { app: !!(p.fields['APP INSTALADA'] || p.fields['PushSubscription']), pin: String(p.fields['PIN'] || '').trim(), email: String(p.fields['EMAIL'] || '').trim() }; });
           const nmR = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
-          const citas = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: nmR(F['PREF.']), pacienteId: pid, ...(pac[pid] || { nombre: '', pila: '', tel: '' }), enviado: F['RECORDATORIO ENVIADO'] || '', por: F['RECORDATORIO POR'] || '', link: enlaceConfirmar(r.id), confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/i.test(x.name || x)) }; })
+          const citas = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: nmR(F['PREF.']), pacienteId: pid, ...(pac[pid] || { nombre: '', pila: '', tel: '' }), enviado: F['RECORDATORIO ENVIADO'] || '', por: F['RECORDATORIO POR'] || '', aviso2: F['2º AVISO ENVIADO'] || '', por2: F['2º AVISO POR'] || '', link: enlaceConfirmar(r.id), confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/i.test(x.name || x)) }; })
             .filter(c => c.pacienteId).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
           // Primera visita sin consentimiento: el mensaje lleva también el enlace del consentimiento informado
           const pide = await pidenConsentimiento(citas.map(c => c.pacienteId), fechas.slice().sort()[0]).catch(() => new Set());
@@ -2259,6 +2349,11 @@ module.exports = async function handler(req, res) {
           const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
           const et = await ponerEtapa(q.pacienteId, 'ALTA').catch(() => null);
           return res.status(200).json({ ok: !d.error, estados: (et && et.estados) || f.ESTADO || act, error: d.error && d.error.message });
+        }
+        if (action === 'seg-agenda-aviso2') { // 2º aviso a quien no ha confirmado: cuándo y quién
+          const ids = (Array.isArray(q.ids) ? q.ids : [q.id]).filter(okId).slice(0, 10); if (!ids.length) return res.status(400).json({ ok: false });
+          const d = await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: ids.map(id => ({ id, fields: { '2º AVISO ENVIADO': new Date().toISOString(), '2º AVISO POR': String(q.por || '').slice(0, 40) } })) }) });
+          return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
         }
         if (action === 'seg-agenda-recordatorio') { // marcar (o desmarcar) que se ha enviado el recordatorio de una o varias citas
           const ids = (Array.isArray(q.ids) ? q.ids : [q.id]).filter(okId).slice(0, 10); if (!ids.length) return res.status(400).json({ ok: false });
