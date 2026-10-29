@@ -1667,6 +1667,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ej-tabs{display:flex;gap:6px;background:#fff;border:1px solid #efe6de;border-radius:16px;padding:5px;margin-bottom:14px;box-shadow:0 2px 10px rgba(43,36,32,.04)}
 .ej-tabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border:none;background:none;border-radius:12px;padding:12px 10px;font:600 14px var(--font);color:#7d6a60;cursor:pointer;transition:background .2s,color .2s}
 .ej-tabs button:hover{background:#faf7f4}.ej-tabs button.on{background:#c2552e;color:#fff;box-shadow:0 4px 12px rgba(194,85,46,.25)}
+.enc-tabs{margin:0 0 12px}@media(max-width:520px){.enc-tabs button{flex-direction:column;gap:4px;padding:9px 4px;font-size:12.5px}}
 .ej-tabs svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ej-tabs i{font-style:normal;font-size:11px;font-weight:700;background:#c2552e;color:#fff;border-radius:99px;padding:1px 7px}.ej-tabs button.on i{background:#fff;color:#c2552e}.ej-tabs i:empty{display:none}
 .ejp-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.ejp-top p{flex:1;min-width:220px;margin:0;font-size:13px;color:#7d6a60}
@@ -6010,7 +6011,7 @@ async function renderValoraciones(wrap){
 }
 async function agRecordatorios(onDone,modoIni,encFIni){
  let fechas=recFechasDef(),datos=null;
- const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>${modoIni==='enc'?'Encuestas':'Recordatorios por WhatsApp'}</b></div><div class="fp-body"></div>`;
+ const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>${modoIni==='enc'?'Fidelización':'Recordatorios por WhatsApp'}</b></div><div class="fp-body"></div>`;
  document.body.appendChild(m);const ov=document.body.style.overflow;document.body.style.overflow='hidden';
  const cerrar=()=>{m.remove();document.body.style.overflow=ov;onDone&&onDone();};m.querySelector('.pv-x').onclick=cerrar;
  const body=m.querySelector('.fp-body');
@@ -6019,9 +6020,10 @@ async function agRecordatorios(onDone,modoIni,encFIni){
  let modo=modoIni==='enc'?'enc':'rec',encF=encFIni||(()=>{const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return agMover(h,dw===1?-2:dw===0?-1:-1);})(),encD=null;
  // Cada cosa se abre desde su propio botón de la agenda: sin pestañas
  // En Encuestas: pestañas «1ª visita» y «Reseña Google» (Recordatorios va aparte, sin pestañas)
- const TIT={rec:'Recordatorios por WhatsApp',enc:'Encuestas',alt:'Encuestas',res:'Encuestas'};
- const tabs=()=>modo==='rec'?'':`<div class="ag-vis rec-tabs"><button type="button" data-t="enc" class="${modo==='enc'?'on':''}">1ª visita</button><button type="button" data-t="alt" class="${modo==='alt'?'on':''}">Alta</button><button type="button" data-t="res" class="${modo==='res'?'on':''}">Reseña Google</button></div>`;
- const atarTabs=()=>body.querySelectorAll('.rec-tabs button').forEach(b=>b.onclick=()=>{if(modo===b.dataset.t)return;modo=b.dataset.t;m.querySelector('.pv-bar b').textContent=TIT[modo];cargar();});
+ const TIT={rec:'Recordatorios por WhatsApp',enc:'Fidelización',alt:'Fidelización',res:'Fidelización',reg:'Fidelización'};
+ const ETI={enc:['1ª visita','<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>'],alt:['Alta','<path d="M12 3l2.6 2 3.3-.2.9 3.2 2.7 1.9-1.2 3.1 1.2 3.1-2.7 1.9-.9 3.2-3.3-.2L12 23l-2.6-2-3.3.2-.9-3.2-2.7-1.9 1.2-3.1-1.2-3.1 2.7-1.9.9-3.2 3.3.2z" transform="scale(.9) translate(1.3 .2)"/><path d="m8.8 12.3 2.2 2.2 4.3-4.4"/>'],res:['Reseña Google','<path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.6L12 16.4l-5.1 2.7 1-5.6-4.1-4 5.7-.8z"/>'],reg:['Regalos','<rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v7.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V12M12 8v12.5"/><path d="M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z"/>']};
+ const tabs=()=>modo==='rec'?'':`<div class="ej-tabs enc-tabs">${['enc','alt','res','reg'].map(k=>`<button type="button" data-t="${k}" class="${modo===k?'on':''}"><svg viewBox="0 0 24 24" aria-hidden="true">${ETI[k][1]}</svg>${ETI[k][0]}</button>`).join('')}</div>`;
+ const atarTabs=()=>body.querySelectorAll('.enc-tabs button').forEach(b=>b.onclick=()=>{if(modo===b.dataset.t)return;modo=b.dataset.t;m.querySelector('.pv-bar b').textContent=TIT[modo];cargar();});
  let resD=null,resExtra=[],resBus=null;
  async function cargarRes(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-resenas&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw new Error(r.error||'Error');resD=r.pacientes;pintaRes();}
@@ -6096,7 +6098,21 @@ async function agRecordatorios(onDone,modoIni,encFIni){
     if(!link){b.disabled=false;toast('No se ha podido crear el enlace',false);return;}
     abrirWA(segTel(c.tel),altTexto(c,link));if(!c.enviado)c.enviado=new Date().toISOString();pintaAlt();};});
  }
- async function cargar(){if(modo==='enc')return cargarEnc();if(modo==='alt')return cargarAlt();if(modo==='res')return cargarRes();body.innerHTML='<div class="fac-vacio">Cargando…</div>';
+ let regD=null;
+ async function cargarReg(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
+  try{const r=await (await fetch(`/api/schedule?action=seg-referidos&pwd=${encodeURIComponent(apiPwd)}&t=${Date.now()}`)).json();if(r.ok===false)throw new Error(r.error||'Error');regD=r.porDar||[];pintaReg();}
+  catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
+ function pintaReg(){const L=regD||[];
+  body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="rec-pr"><div><b>${L.length}</b> tarjeta${L.length===1?'':'s'} regalo por enviar</div></div><small class="fp-mu" style="display:block;font-size:12px;margin-top:6px">Quien nos recomendó, cuando la persona que nos recomendó ya ha venido a su primera sesión.</small></div>
+   ${!L.length?'<div class="fac-vacio">No hay ninguna tarjeta pendiente 🎉</div>':`<div class="fp-blk rec-lista">${L.map((g,i)=>`<div class="rec-it" data-i="${i}"><div class="rec-n"><b>${g.recomendo?escH(capTit(g.recomendo.nombre||'—')):'¿«'+escH(g.texto||'—')+'»?'}</b><small>recomendó a <u data-ficha="${g.nuevo.id}" data-nom="${escH(g.nuevo.nombre)}" style="cursor:pointer">${escH(capTit(g.nuevo.nombre||''))}</u> · vino el ${escH(sevFC(g.primera))}</small></div>
+    ${g.recomendo?(segTel(g.recomendo.tel).length<9?`<button type="button" class="rec-b sin" data-ficha="${g.recomendo.id}" data-fn="${escH(g.recomendo.nombre)}">Sin teléfono</button>`:'<button type="button" class="rec-b env">Enviar tarjeta</button>'):'<button type="button" class="rec-b otra rg-q">¿Quién es?</button>'}</div>`).join('')}</div>`}`;
+  atarTabs();
+  body.querySelectorAll('.rec-it').forEach(it=>{const g=L[+it.dataset.i],b=it.querySelector('.rec-b.env'),qq=it.querySelector('.rg-q');
+   if(qq)qq.onclick=()=>elegirRecomendo(g,cargarReg);
+   if(b)b.onclick=async()=>{const ok=await enviarTarjeta(g.recomendo.tel,g.recomendo.nombre,g.nuevo.nombre,'',g.id,async()=>{const d=await (await fetch('/api/schedule?action=seg-referido-tarjeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:g.id})})).json();if(!d.ok)throw 0;return d.caduca;});
+    if(ok){regD=regD.filter(x=>x!==g);pintaReg();}};});
+ }
+ async function cargar(){if(modo==='enc')return cargarEnc();if(modo==='alt')return cargarAlt();if(modo==='reg')return cargarReg();if(modo==='res')return cargarRes();body.innerHTML='<div class="fac-vacio">Cargando…</div>';
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-recordatorios&pwd=${encodeURIComponent(apiPwd)}&fechas=${[...new Set([agHoyIso(),...fechas])].join(',')}`)).json();if(!r.ok)throw new Error(r.error||'Error');datos=r.citas;pinta();}
   catch(e){body.innerHTML=`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;body.querySelector('.ag-reint').onclick=cargar;}}
  function pinta(){
@@ -6205,7 +6221,7 @@ function renderAgenda(wrap){
   <button type="button" class="ag-hoy">Hoy</button><button type="button" class="ag-nv" data-n="1" aria-label="Siguiente">›</button></div>
   <div class="ag-lf"><label class="ag-sel ag-w"><span class="ag-pert"></span><select class="ag-per">${AG_PER.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label>
    <span class="ag-rg"><input type="date" class="ag-in ag-d1"><span>a</span><input type="date" class="ag-in ag-d2"></span></div>
-  <div class="ag-bar2"><button type="button" class="ag-recb"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Recordatorios</button><button type="button" class="ag-recb ag-encb"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>Encuestas</button><button type="button" class="ag-recb ag-pdfb"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4M9 15l2 2 4-4"/></svg>Enviar huecos</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><label class="ag-sel ag-fil"><span class="ag-filt"></span><select class="ag-fis">${AG_FIL.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label><span class="ag-res"></span></div>
+  <div class="ag-bar2"><button type="button" class="ag-recb"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Recordatorios</button><button type="button" class="ag-recb ag-encb"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>Fidelización</button><button type="button" class="ag-recb ag-pdfb"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4M9 15l2 2 4-4"/></svg>Enviar huecos</button><label class="ag-sel"><span class="ag-selt"></span><select class="ag-fs"></select></label><label class="ag-sel ag-fil"><span class="ag-filt"></span><select class="ag-fis">${AG_FIL.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label><span class="ag-res"></span></div>
   <button type="button" class="ag-fac" hidden></button>
   <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
  wrap.appendChild(card);
