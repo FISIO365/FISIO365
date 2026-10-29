@@ -67,6 +67,18 @@
   ],
   "routes": [
     {
+      "src": "/consentimiento\\.png",
+      "dest": "/api/schedule.js?action=consentimiento-og"
+    },
+    {
+      "src": "/consentimiento",
+      "dest": "/api/schedule.js?action=consentimiento"
+    },
+    {
+      "src": "/documento/(rec[A-Za-z0-9]{14})-([a-f0-9]{10})",
+      "dest": "/api/schedule.js?action=cdoc&id=$1&s=$2"
+    },
+    {
       "src": "/tarjeta/(rec[A-Za-z0-9]{14})\\.png",
       "dest": "/api/schedule.js?action=tarjeta-og&id=$1"
     },
