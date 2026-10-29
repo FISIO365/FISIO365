@@ -8464,7 +8464,8 @@ function elegirRecomendo(r,onDone){
 // Mensaje de bienvenida a la app (enlace + cómo instalarla + email y PIN), para mandar por WhatsApp
 const APP_URL='https://app.fisioterapia365.com',PLAY_URL='https://play.google.com/store/apps/details?id=es.fisioterapia365.app';
 function mensajeApp(P){const nm=capi(P.nombre);
- return `¡Hola ${nm}! Ya tienes tu app de FISIO365. Ahí encontrarás tus ejercicios con vídeo, tus citas, el chat con tu fisio y tus documentos.\n\nDescárgala:\n- Android: ${PLAY_URL}\n- iPhone: abre ${APP_URL} en Safari, toca Compartir y «Añadir a pantalla de inicio».\n\nTus datos de acceso:\n- ${P.email?'Email: '+P.email:'Teléfono: '+segTel(P.whatsapp||P.telf||P.tel||'').slice(-9)}\n- PIN: ${P.pin}\n\nCualquier duda, nos escribes por aquí. ¡Un abrazo!`;}
+ // Sin emojis: al abrir WhatsApp desde un enlace algunos se ven como «�»
+ return `¡Hola ${nm}! Ya tienes tu *app de FISIO365*: tu fisio te acompaña también entre sesiones.\n\nCon ella tienes:\n- *Tus ejercicios en vídeo*, preparados por tu fisio solo para ti\n- *Chat directo con tu fisio* para cualquier duda\n- *Tus citas* a mano, y reservar cuando quieras\n- *Tus informes y documentos*, siempre contigo\n\n*Descárgala:*\n- Android: ${PLAY_URL}\n- iPhone: abre ${APP_URL} en Safari, toca Compartir y «Añadir a pantalla de inicio».\n\n*Tus datos para entrar:*\n- ${P.email?'Email: '+P.email:'Teléfono: '+segTel(P.whatsapp||P.telf||P.tel||'').slice(-9)}\n- PIN: *${P.pin}*\n\nCualquier duda, nos escribes por aquí. ¡Un abrazo!`;}
 function enviarApp(P){const t=segTel(P.whatsapp||P.telf||P.tel||'');
  if(!P.email&&segTel(P.whatsapp||P.telf||P.tel||'').length<9){toast('Le falta el email o el teléfono para poder entrar',false);return;}
  if(!P.pin){toast('Le falta el PIN: abre su ficha y se le pone solo',false);return;}
