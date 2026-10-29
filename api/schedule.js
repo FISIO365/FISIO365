@@ -3405,6 +3405,26 @@ module.exports = async function handler(req, res) {
           for (const [id, pin] of [...new Map(nuevosPin)].slice(0, 30)) await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: pin } }) }).catch(() => {});
           return res.status(200).json({ ok: true, hoy: hoyF, citas });
         }
+        if (action === 'seg-agenda-pagos') { // pestaña «Pagos» de Mensajes: a quién hay que mandar el enlace, quién no ha pagado aún, transferencias por mirar
+          await caducarPagos().catch(() => 0);
+          const nmP = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+          const [marc, cits] = await Promise.all([
+            todosT(PACIENTES, `filterByFormula=${encodeURIComponent('{PAGO ADELANTADO}')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('PAGO ADELANTADO MOTIVO')}`),
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(NOT(IS_BEFORE({FECHA},'${hoyF}')),IS_BEFORE({FECHA},DATEADD(TODAY(),90,'days')),LEN(ARRAYJOIN({RELACIÓN - CITA}))>0,NOT(FIND('CANCEL',UPPER({ESTADO}&''))))`)}&fields[]=FECHA&fields[]=HORA&fields[]=${encodeURIComponent('PREF.')}&fields[]=ESTADO&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('PAGO ESTADO')}&fields[]=${encodeURIComponent('PAGO IMPORTE')}&fields[]=${encodeURIComponent('PAGO LÍMITE')}`)]);
+          const cita = r => { const F = r.fields; return { id: r.id, estado: nmP(F.ESTADO), pacienteId: (F['RELACIÓN - CITA'] || [])[0] || '', fecha: String(F.FECHA || '').slice(0, 10), hora: hh(F.HORA), fisio: nmP(F['PREF.']), pago: nmP(F['PAGO ESTADO']) ? { estado: nmP(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null }; };
+          const CL = cits.map(cita).filter(c => c.pacienteId && !/LIBRE/i.test(c.estado || '')).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+          const pInfo = {}; marc.forEach(p => { pInfo[p.id] = p.fields; });
+          const faltan = [...new Set(CL.filter(c => c.pago && /PENDIENTE|TRANSFER/.test(c.pago.estado) && !pInfo[c.pacienteId]).map(c => c.pacienteId))];
+          for (let i = 0; i < faltan.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + faltan.slice(i, i + 40).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`)).forEach(p => { pInfo[p.id] = p.fields; });
+          const pac = id => { const F = pInfo[id] || {}; return { pacienteId: id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '' }; };
+          const lista = [], vistos = new Set();
+          CL.filter(c => c.pago && /PENDIENTE|TRANSFER/.test(c.pago.estado)).forEach(c => { vistos.add(c.pacienteId); lista.push({ tipo: /TRANSFER/.test(c.pago.estado) ? 'transfer' : 'pendiente', ...pac(c.pacienteId), cita: c }); });
+          marc.forEach(p => { if (vistos.has(p.id)) return; const prox = CL.find(c => c.pacienteId === p.id && !(c.pago && c.pago.estado === 'PAGADO'));
+            lista.push({ tipo: prox ? 'enviar' : 'sincita', ...pac(p.id), motivo: p.fields['PAGO ADELANTADO MOTIVO'] || '', cita: prox || null }); });
+          const ord = { transfer: 0, enviar: 1, pendiente: 2, sincita: 3 };
+          lista.sort((a, b) => ord[a.tipo] - ord[b.tipo] || ((a.cita ? a.cita.fecha + a.cita.hora : '9') + a.nombre).localeCompare((b.cita ? b.cita.fecha + b.cita.hora : '9') + b.nombre));
+          return res.status(200).json({ ok: true, lista, aviso: lista.filter(x => x.tipo === 'enviar' || x.tipo === 'transfer').length });
+        }
         if (action === 'seg-agenda-altas') { // encuesta de alta: pacientes con el alta apuntada los últimos 30 días
           const ps = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({POR QUÉ FECHA},IS_AFTER({POR QUÉ FECHA},DATEADD(TODAY(),-31,'days')),FIND('ALTA',UPPER(ARRAYJOIN({ESTADO}))))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('POR QUÉ FECHA')}&fields[]=${encodeURIComponent('POR QUÉ FISIO')}&fields[]=${encodeURIComponent('FIN ENVIADA')}&fields[]=${encodeURIComponent('FIN VALORACIÓN')}&fields[]=${encodeURIComponent('FIN COMENTARIO')}&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}&fields[]=${encodeURIComponent('FIN FISIO')}`);
           const nmA = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
@@ -3527,6 +3547,7 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
         }
         if (action === 'seg-agenda-pago') { // pedir pago por adelantado (op: pedir) · confirmar transferencia (op: confirmar) · quitar (op: quitar)
+          if (q.op === 'perdonar') { if (!okId(q.pacienteId)) return res.status(400).json({ ok: false }); const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO ADELANTADO': false } }) }); return res.status(200).json({ ok: !d.error }); }
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false, error: 'Cita no encontrada' });
           const C0 = cur.fields || {}, reg = t => (String(C0['PAGO REGISTRO'] || '') + `\n${pagoAhora()} · ${t}`).trim(), quien = String(q.quien || '').slice(0, 40);
@@ -3537,7 +3558,6 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ ok: true, link: enlacePago(q.id), limite: lim });
           }
           if (q.op === 'confirmar') { await patch(q.id, { 'PAGO ESTADO': 'PAGADO', CONFIR: ['CONFIRMADA'], 'PAGO REGISTRO': reg(`Transferencia comprobada${quien ? ' por ' + quien : ''}`) }); await pagoQuitarMarca(C0); return res.status(200).json({ ok: true }); }
-          if (q.op === 'perdonar') { if (!okId(q.pacienteId)) return res.status(400).json({ ok: false }); const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO ADELANTADO': false } }) }); return res.status(200).json({ ok: !d.error }); }
           if (q.op === 'quitar') { await patch(q.id, { 'PAGO ESTADO': null, 'PAGO LÍMITE': null, 'PAGO REGISTRO': reg(`Ya no se pide el pago${quien ? ' (' + quien + ')' : ''}`) }); return res.status(200).json({ ok: true }); }
           return res.status(400).json({ ok: false });
         }

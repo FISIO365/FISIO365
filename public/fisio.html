@@ -1436,6 +1436,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sev-ayu{display:block;font-size:12px;margin:-6px 0 12px;line-height:1.4}
 .sev-ch.c5 button:last-child:nth-child(odd){grid-column:1/-1}
 .sev-m small.fp-mu{line-height:1.5}
+.ag-nb{font-style:normal;background:#c2552e;color:#fff;font-size:10.5px;font-weight:700;min-width:17px;height:17px;line-height:17px;border-radius:99px;padding:0 5px;box-sizing:border-box;text-align:center;margin-left:2px}.enc-nb{font-style:normal;background:#c2552e;color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;line-height:16px;border-radius:99px;padding:0 4px;box-sizing:border-box;text-align:center;margin-left:4px;display:inline-block}@media(max-width:520px){.enc-nb{position:absolute;top:3px;right:4px;margin:0}.enc-tabs button{position:relative}}.pg-gt{font-size:12px;font-weight:600;color:#8a7a70;margin:14px 4px 6px;text-transform:uppercase;letter-spacing:.04em}
 .ag-recb{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:13px;font-weight:600;color:#16803c;background:#e8f6ec;border:none;border-radius:99px;padding:8px 13px;cursor:pointer}.ag-recb svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .ag-pdfb{color:#c2552e;background:#fdeee4}
 .pk-res{margin-top:12px;font-size:14px;color:#3d3530;min-height:2px}.pk-res b{color:#16803c}
@@ -6021,12 +6022,12 @@ async function agRecordatorios(onDone,modoIni,encFIni){
  const body=m.querySelector('.fp-body');
  const fC=f=>{const t=new Date(f+'T12:00:00');return REC_DIAS[t.getDay()].charAt(0).toUpperCase()+REC_DIAS[t.getDay()].slice(1)+' '+t.getDate()+'/'+(t.getMonth()+1);};
  // Dos pestañas: recordatorios de las citas y encuesta de satisfacción a los de primera visita
- let modo=modoIni==='enc'?'enc':'rec',encF=encFIni||(()=>{const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return agMover(h,dw===1?-2:dw===0?-1:-1);})(),encD=null;
+ let modo=['enc','alt','res','reg','pag'].includes(modoIni)?modoIni:'rec',encF=encFIni||(()=>{const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return agMover(h,dw===1?-2:dw===0?-1:-1);})(),encD=null;
  // Cada cosa se abre desde su propio botón de la agenda: sin pestañas
  // En Encuestas: pestañas «1ª visita» y «Reseña Google» (Recordatorios va aparte, sin pestañas)
- const TIT={rec:'Mensajes a pacientes',enc:'Mensajes a pacientes',alt:'Mensajes a pacientes',res:'Mensajes a pacientes',reg:'Mensajes a pacientes'};
- const ETI={rec:['Avisos','<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M9 12h.01M12.5 12h.01M16 12h.01"/>'],enc:['1ª visita','<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>'],alt:['Alta','<path d="M12 3l2.6 2 3.3-.2.9 3.2 2.7 1.9-1.2 3.1 1.2 3.1-2.7 1.9-.9 3.2-3.3-.2L12 23l-2.6-2-3.3.2-.9-3.2-2.7-1.9 1.2-3.1-1.2-3.1 2.7-1.9.9-3.2 3.3.2z" transform="scale(.9) translate(1.3 .2)"/><path d="m8.8 12.3 2.2 2.2 4.3-4.4"/>'],res:['Reseñas','<path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.6L12 16.4l-5.1 2.7 1-5.6-4.1-4 5.7-.8z"/>'],reg:['Regalos','<rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v7.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V12M12 8v12.5"/><path d="M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z"/>']};
- const tabs=()=>`<div class="ej-tabs enc-tabs">${['rec','enc','alt','res','reg'].map(k=>`<button type="button" data-t="${k}" class="${modo===k?'on':''}"><svg viewBox="0 0 24 24" aria-hidden="true">${ETI[k][1]}</svg>${ETI[k][0]}</button>`).join('')}</div>`;
+ const TIT={rec:'Mensajes a pacientes',enc:'Mensajes a pacientes',alt:'Mensajes a pacientes',res:'Mensajes a pacientes',reg:'Mensajes a pacientes',pag:'Mensajes a pacientes'};
+ const ETI={rec:['Avisos','<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M9 12h.01M12.5 12h.01M16 12h.01"/>'],enc:['1ª visita','<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>'],alt:['Alta','<path d="M12 3l2.6 2 3.3-.2.9 3.2 2.7 1.9-1.2 3.1 1.2 3.1-2.7 1.9-.9 3.2-3.3-.2L12 23l-2.6-2-3.3.2-.9-3.2-2.7-1.9 1.2-3.1-1.2-3.1 2.7-1.9.9-3.2 3.3.2z" transform="scale(.9) translate(1.3 .2)"/><path d="m8.8 12.3 2.2 2.2 4.3-4.4"/>'],res:['Reseñas','<path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.6L12 16.4l-5.1 2.7 1-5.6-4.1-4 5.7-.8z"/>'],pag:['Pagos','<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/>'],reg:['Regalos','<rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v7.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V12M12 8v12.5"/><path d="M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z"/>']};
+ const tabs=()=>`<div class="ej-tabs enc-tabs">${['rec','enc','alt','res','reg','pag'].map(k=>`<button type="button" data-t="${k}" class="${modo===k?'on':''}"><svg viewBox="0 0 24 24" aria-hidden="true">${ETI[k][1]}</svg>${ETI[k][0]}${k==='pag'&&AG_PAGOS_N?`<i class="enc-nb">${AG_PAGOS_N}</i>`:''}</button>`).join('')}</div>`;
  const atarTabs=()=>body.querySelectorAll('.enc-tabs button').forEach(b=>b.onclick=()=>{if(modo===b.dataset.t)return;modo=b.dataset.t;m.querySelector('.pv-bar b').textContent=TIT[modo];cargar();});
  let resD=null,resExtra=[],resBus=null;
  async function cargarRes(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
@@ -6102,6 +6103,35 @@ async function agRecordatorios(onDone,modoIni,encFIni){
     if(!link){b.disabled=false;toast('No se ha podido crear el enlace',false);return;}
     abrirWA(segTel(c.tel),altTexto(c,link));if(!c.enviado)c.enviado=new Date().toISOString();pintaAlt();};});
  }
+
+ let pagD=null;
+ async function cargarPag(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
+  try{const r=await (await fetch(`/api/schedule?action=seg-agenda-pagos&pwd=${encodeURIComponent(apiPwd)}&t=${Date.now()}`)).json();if(!r.ok)throw new Error(r.error||'Error');pagD=r.lista||[];AG_PAGOS_N=r.aviso||0;agPagosBadge(false);pintaPag();}
+  catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
+ const pagCita=x=>{const c=x.cita;if(!c)return '';const d=new Date(c.fecha+'T12:00:00');return REC_DIAS[d.getDay()].slice(0,3)+' '+d.getDate()+'/'+(d.getMonth()+1)+' a las '+c.hora;};
+ const pagEur=v=>String(Math.round((+v||0)*100)/100).replace('.',',')+' €';
+ const pagQueda=l=>{const m=Math.round((new Date(l)-Date.now())/6e4);if(!(m>0))return 'se acaba ya';return m>=60?`le queda${m>=120?'n':''} ${Math.floor(m/60)} h${m%60?' '+(m%60)+' min':''}`:`le quedan ${m} min`;};
+ const pagRecTexto=x=>{const p=String(x.pila||x.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'',c=x.cita,d=new Date(c.fecha+'T12:00:00');
+  const m=Math.max(1,Math.round((new Date(c.pago.limite)-Date.now())/6e4)),q=m>=60?`${Math.floor(m/60)} h${m%60?' y '+(m%60)+' min':''}`:`${m} min`;
+  return `Hola${n?' '+n:''}, te recuerdo que tu cita del *${REC_DIAS[d.getDay()]} ${d.getDate()} a las ${c.hora}* está guardada pero aún falta el pago. Te quedan ${q} para hacerlo aquí:\n${c.pago.link}\n\nSi no, el hueco se libera. ¡Gracias!`;};
+ function pintaPag(){const L=pagD||[],G=[['transfer','Transferencias por mirar en el banco'],['enviar','Hay que mandarles el enlace de pago'],['pendiente','Esperando a que paguen'],['sincita','Pagan antes la próxima (aún sin cita)']];
+  const fila=(x,i)=>{const tel=segTel(x.tel),c=x.cita;let sub='',bt='';
+   if(x.tipo==='transfer'){sub=`dice que ha transferido ${pagEur(c.pago.importe)} · cita el ${pagCita(x)}`;bt='<button type="button" class="rec-b env pg-ok">Ya está en el banco</button>';}
+   else if(x.tipo==='enviar'){sub=`${x.motivo?escH(x.motivo)+' · ':''}cita el ${pagCita(x)}`;bt='<button type="button" class="rec-b env pg-env">Mandar enlace</button>';}
+   else if(x.tipo==='pendiente'){sub=`${pagEur(c.pago.importe)} · ${pagQueda(c.pago.limite)} · cita el ${pagCita(x)}`;bt=tel.length<9?'':'<button type="button" class="rec-b otra pg-rec">Recordar</button>';}
+   else{sub=escH(x.motivo||'Paga por adelantado');bt='<button type="button" class="rec-b otra pg-per">Perdonar</button>';}
+   if(!bt&&tel.length<9)bt=`<button type="button" class="rec-b sin" data-ficha="${x.pacienteId}" data-fn="${escH(x.nombre)}">Sin teléfono</button>`;
+   return `<div class="rec-it" data-i="${i}"><div class="rec-n"><b>${escH(capTit(x.nombre||'—'))}</b><small>${sub}</small></div>${bt}</div>`;};
+  body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="rec-pr"><div><b>${L.filter(x=>x.tipo==='enviar'||x.tipo==='transfer').length}</b> cosa${L.filter(x=>x.tipo==='enviar'||x.tipo==='transfer').length===1?'':'s'} por hacer</div></div><small class="fp-mu" style="display:block;font-size:12px;margin-top:6px">Los pacientes que pagan por adelantado y los pagos que aún no han llegado. Cuando paguen con tarjeta salen solos de aquí.</small></div>
+   ${!L.length?'<div class="fac-vacio">No hay ningún pago pendiente 🎉</div>':G.map(([t,tt])=>{const g=L.map((x,i)=>[x,i]).filter(([x])=>x.tipo===t);return g.length?`<div class="pg-gt">${tt}</div><div class="fp-blk rec-lista">${g.map(([x,i])=>fila(x,i)).join('')}</div>`:'';}).join('')}`;
+  atarTabs();
+  body.querySelectorAll('.rec-it').forEach(it=>{const x=L[+it.dataset.i],c=x.cita,quien=String((fisioActual&&fisioActual.nombre)||'');
+   const b1=it.querySelector('.pg-env');if(b1)b1.onclick=()=>agPagoPedir({id:c.id,pacienteId:x.pacienteId,paciente:x.nombre,fecha:c.fecha,hora:c.hora,fisio:c.fisio,tel:x.tel},()=>cargarPag());
+   const b2=it.querySelector('.pg-rec');if(b2)b2.onclick=()=>abrirWA(segTel(x.tel),pagRecTexto(x));
+   const b3=it.querySelector('.pg-ok');if(b3)b3.onclick=async()=>{b3.disabled=true;try{const r=await agPost('seg-agenda-pago',{op:'confirmar',id:c.id,quien});if(!r.ok)throw 0;toast('Pago apuntado ✓');cargarPag();}catch(e){b3.disabled=false;toast('No se ha podido guardar',false);}};
+   const b4=it.querySelector('.pg-per');if(b4)b4.onclick=async()=>{const ok=await agPregunta(x.nombre||'',['¿Se lo perdonamos?','Ya no tendrá que pagar por adelantado la próxima cita.'],'Sí, perdonar','No');if(!ok)return;
+    try{const r=await agPost('seg-agenda-pago',{op:'perdonar',id:'',pacienteId:x.pacienteId});if(!r.ok)throw 0;toast('Perdonado ✓');cargarPag();}catch(e){toast('No se ha podido guardar',false);}};});
+ }
  let regD=null;
  async function cargarReg(){body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
   try{const r=await (await fetch(`/api/schedule?action=seg-referidos&pwd=${encodeURIComponent(apiPwd)}&t=${Date.now()}`)).json();if(r.ok===false)throw new Error(r.error||'Error');regD=r.porDar||[];pintaReg();}
@@ -6116,7 +6146,7 @@ async function agRecordatorios(onDone,modoIni,encFIni){
    if(b)b.onclick=async()=>{const ok=await enviarTarjeta(g.recomendo.tel,g.recomendo.nombre,g.nuevo.nombre,'',g.id,async()=>{const d=await (await fetch('/api/schedule?action=seg-referido-tarjeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:g.id})})).json();if(!d.ok)throw 0;return d.caduca;});
     if(ok){regD=regD.filter(x=>x!==g);pintaReg();}};});
  }
- async function cargar(){if(modo==='enc')return cargarEnc();if(modo==='alt')return cargarAlt();if(modo==='reg')return cargarReg();if(modo==='res')return cargarRes();body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
+ async function cargar(){if(modo==='enc')return cargarEnc();if(modo==='alt')return cargarAlt();if(modo==='reg')return cargarReg();if(modo==='pag')return cargarPag();if(modo==='res')return cargarRes();body.innerHTML=tabs()+'<div class="fac-vacio">Cargando…</div>';atarTabs();
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-recordatorios&pwd=${encodeURIComponent(apiPwd)}&fechas=${[...new Set([agHoyIso(),...fechas])].join(',')}`)).json();if(!r.ok)throw new Error(r.error||'Error');datos=r.citas;pinta();}
   catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
  function pinta(){
@@ -6237,7 +6267,7 @@ function renderAgenda(wrap){
  card.querySelectorAll('.ag-vis button').forEach(b=>b.onclick=()=>{AG.vista=b.dataset.v;try{localStorage.setItem('f365_ag_vista',AG.vista);}catch(e){}cargar();});
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n*(AG.vista==='semana'?7:1));cargar();});
  $c('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
- $c('.ag-recb:not(.ag-pdfb):not(.ag-encb)').onclick=()=>agRecordatorios(()=>cargar());
+ $c('.ag-recb:not(.ag-pdfb):not(.ag-encb)').onclick=()=>agRecordatorios(()=>{cargar();agPagosBadge(true);});agPagosBadge();
  $c('.ag-pdfb').onclick=()=>agPdfHuecos();
  fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};fi.style.display='none';
  $c('.ag-fe').onclick=e=>{e.preventDefault();miniCal($c('.ag-ft'),AG.fecha,f=>{AG.fecha=f;cargar();});};
@@ -6431,7 +6461,11 @@ function agPagoHtml(c){const p=c.pago,eur=v=>String(Math.round((+v||0)*100)/100)
 function agPagoTexto(c,link){const px=(pacs||[]).find(x=>x.id===c.pacienteId)||{},p=String(px.pila||px.nombre||c.paciente||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
  const d=new Date(c.fecha+'T12:00:00'),dia=REC_DIAS[d.getDay()]+' '+d.getDate(),fi=String(c.fisio||'').trim().split(' ')[0],fn=fi?' con '+fi.charAt(0).toUpperCase()+fi.slice(1).toLowerCase():'';
  return `Hola${n?' '+n:''}, te he reservado la cita del *${dia} a las ${c.hora}*${fn}.\n\nPara guardártela, esta vez la sesión se paga por adelantado. Puedes hacerlo aquí con tarjeta o transferencia (tienes 2 h):\n${link}\n\n¡Gracias!`;}
-function agPagoTel(c){const px=(pacs||[]).find(x=>x.id===c.pacienteId)||{};return segTel(px.whatsapp||px.telefono||px.tel||px.telf||'');}
+let AG_PAGOS_N=0,AG_PAGOS_T=0;
+// Número en el botón «Mensajes»: pacientes a los que hay que mandar el enlace de pago + transferencias por mirar
+async function agPagosBadge(forzar){const pon=()=>document.querySelectorAll('.ag-bar2 .ag-recb:not(.ag-pdfb)').forEach(b=>{let i=b.querySelector('.ag-nb');if(!AG_PAGOS_N){i&&i.remove();return;}if(!i){i=document.createElement('i');i.className='ag-nb';b.appendChild(i);}i.textContent=AG_PAGOS_N;i.title='Pagos por hacer';});
+ pon();if(forzar!==false&&(forzar||Date.now()-AG_PAGOS_T>5*60e3)){AG_PAGOS_T=Date.now();try{const r=await (await fetch(`/api/schedule?action=seg-agenda-pagos&pwd=${encodeURIComponent(apiPwd)}&t=${Date.now()}`)).json();if(r.ok){AG_PAGOS_N=r.aviso||0;pon();}}catch(e){}}}
+function agPagoTel(c){const px=(pacs||[]).find(x=>x.id===c.pacienteId)||{};return segTel(px.whatsapp||px.telefono||px.tel||px.telf||c.tel||'');}
 function agPagoPedir(c,onOk){const tel=agPagoTel(c),quien=String((fisioActual&&fisioActual.nombre)||'');
   const mm=hzModal(`<div class="hz-top"><div><small>${escH(c.paciente||'')}</small><b>Pedir pago por adelantado</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <p class="fp-mu" style="font-size:13.5px;margin:0 0 12px">Le llega un enlace para pagar con tarjeta o transferencia. Tiene 2 h; si no paga, la cita se cancela sola y el hueco queda libre.</p>
