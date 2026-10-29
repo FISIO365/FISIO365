@@ -201,7 +201,7 @@ async function ponerEtapa(pid, evento) {
   const citasDe = async (cond, n) => ((await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(${cond},FIND('${pid}',ARRAYJOIN({PacienteRec})))`)}&maxRecords=${n}&fields[]=FECHA`)).records || []);
   const hechas = n => citasDe("TRIM({ESTADO})='REALIZADA'", n);
   const futura = () => citasDe("OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA'),IS_AFTER({FECHA},DATEADD(TODAY(),-1,'days'))", 1);
-  const pac = await at(`${PACIENTES}/${pid}?fields[]=ESTADO`); const act = (pac.fields && pac.fields['ESTADO']) || [];
+  const pac = await at(`${PACIENTES}/${pid}`); const act = (pac.fields && pac.fields['ESTADO']) || [];
   let nueva = null, unica = null; // unica: true = poner «Sesión única», false = quitarla
   if (evento === 'cita') { nueva = (await hechas(1)).length ? 'ACTIVO' : 'PACIENTE NUEVO'; unica = false; }      // se le da cita
   else if (evento === 'realizada') { if ((await futura()).length) { nueva = 'ACTIVO'; unica = false; }           // hace la sesión y ya tiene otra → Activo
@@ -505,7 +505,7 @@ async function esperaLista(forzar) {
 async function salirDeEspera(pid, fecha, hora) {
   const v = await esperaLista(true); let tel = '';
   const sinPac = v.filter(e => e.estado === 'ESPERANDO' && e.tabla === 'esperaN');
-  if (sinPac.length) { const p = await at(`${PACIENTES}/${pid}?fields[]=TELF&fields[]=WHATSAPP`).catch(() => ({})); tel = String(((p.fields || {})['WHATSAPP'] || (p.fields || {})['TELF'] || '')).replace(/\D/g, '').slice(-9); }
+  if (sinPac.length) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); tel = String(((p.fields || {})['WHATSAPP'] || (p.fields || {})['TELF'] || '')).replace(/\D/g, '').slice(-9); }
   const mios = v.filter(e => e.estado === 'ESPERANDO' && (e.pacienteId === pid || (tel.length === 9 && String(e.tel || '').replace(/\D/g, '').slice(-9) === tel)));
   const fC = String(fecha).split('-').reverse().join('/');
   for (const e of mios) { const T = e.tabla === 'esperaP' ? CAP.esperaP : CAP.esperaN;
@@ -1019,7 +1019,7 @@ async function listarFacturas(ids, conBorradores) {
 // «No reagenda»: guarda en POR QUÉ HISTORIAL el motivo actual (y el nuevo, si lo hay) antes de cambiarlo o borrarlo
 async function porQueAlHist(pid, nuevo, fisio, hoy) {
   try {
-    const pr = await at(`${PACIENTES}/${pid}?fields[]=POR QUÉ HISTORIAL&fields[]=POR QUÉ NO REAGENDA&fields[]=POR QUÉ FECHA&fields[]=POR QUÉ FISIO`); const PF = pr.fields || {};
+    const pr = await at(`${PACIENTES}/${pid}`); const PF = pr.fields || {};
     const L = String(PF['POR QUÉ HISTORIAL'] || '').split('\n').filter(Boolean), n0 = L.length;
     const ya = t => L.some(l => { try { return JSON.parse(l).t === t; } catch (e) { return false; } });
     if (PF['POR QUÉ NO REAGENDA'] && !ya(PF['POR QUÉ NO REAGENDA'])) L.push(JSON.stringify({ f: PF['POR QUÉ FECHA'] || '', q: PF['POR QUÉ FISIO'] || '', t: PF['POR QUÉ NO REAGENDA'] }));
@@ -2137,7 +2137,7 @@ module.exports = async function handler(req, res) {
           const [rs, fs, pr] = await Promise.all([
             todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),FIND('${q.pacienteId}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${inicio}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA`),
             todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${q.pacienteId}')`)}`).catch(() => []),
-            at(`${PACIENTES}/${q.pacienteId}?fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}`).catch(() => ({}))
+            at(`${PACIENTES}/${q.pacienteId}`).catch(() => ({}))
           ]);
           const lotes = [], P = pr.fields || {}, nP = Number(P['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(P['BONO PREVIO YA USADAS'] || 0));
           if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true });
@@ -2269,7 +2269,7 @@ module.exports = async function handler(req, res) {
         const salirDeSeguimiento = async (pid, quienTxt, fecha, hora) => {
           const abiertas = (await todosT(SEG, `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),FIND('${pid}',ARRAYJOIN({PacRec})))`)}`).catch(() => [])).filter(r => (r.fields['PACIENTE'] || []).includes(pid));
           const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
-          const pac = await at(`${PACIENTES}/${pid}?fields[]=ESTADO`); const act = (pac.fields && pac.fields['ESTADO']) || [];
+          const pac = await at(`${PACIENTES}/${pid}`); const act = (pac.fields && pac.fields['ESTADO']) || [];
           const QUITAR = ['SEGUIMIENTO', 'ABANDONO', 'PENDIENTE DE CONTINUAR', 'NO ACUDIÓ', 'ALTA'].map(n => E[n]).filter(Boolean);
           const enSeg = abiertas.length || act.some(id => QUITAR.includes(id));
           if (!enSeg) return null;
@@ -2703,7 +2703,7 @@ module.exports = async function handler(req, res) {
         const etiqueta = async (poner) => {
           const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`);
           const e = (est.records || []).find(r => /SIN EVOLUCI/i.test(String(r.fields['ESTADO'] || ''))); if (!e) return null;
-          const pac = await at(`${PACIENTES}/${pid}?fields[]=ESTADO`); const act = (pac.fields && pac.fields['ESTADO']) || [];
+          const pac = await at(`${PACIENTES}/${pid}`); const act = (pac.fields && pac.fields['ESTADO']) || [];
           const nuevo = poner ? [...new Set([...act, e.id])] : act.filter(x => x !== e.id);
           if (nuevo.length !== act.length) await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: nuevo } }) });
           return nuevo;
@@ -2880,7 +2880,7 @@ module.exports = async function handler(req, res) {
         }
         if (q.bonoPrevio != null || q.bonoSumar != null) {
           let n = Number(q.bonoPrevio);
-          if (q.bonoSumar != null) { const cur = await at(`${PACIENTES}/${q.id}?fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}`); n = Number((cur.fields || {})['SESIONES BONO PREVIO'] || 0) + Number(q.bonoSumar); }
+          if (q.bonoSumar != null) { const cur = await at(`${PACIENTES}/${q.id}`); n = Number((cur.fields || {})['SESIONES BONO PREVIO'] || 0) + Number(q.bonoSumar); }
           if (!Number.isFinite(n) || n < 0 || n > 500) return res.status(400).json({ ok: false, error: 'Nº de sesiones no válido' });
           const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: Object.assign({ 'SESIONES BONO PREVIO': Math.round(n) || null }, q.bonoPrevio != null ? { 'BONO PREVIO YA USADAS': null } : {}) }) });
           global._sesPac = {};
