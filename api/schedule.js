@@ -2012,7 +2012,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).send(paginaHuecos({ huecos, url: `https://app.fisioterapia365.com/h/${k}.${sg}`, tel: C.tel || '672 89 39 49', dir: C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
-  // Encuesta de fin de tratamiento («paciente feliz»): enlace personal por paciente, misma lógica que la de primera visita
+  // Encuesta de alta (antes «paciente feliz» en Tally): enlace personal por paciente, misma lógica que la de primera visita
   if (action === 'fin-og' || action === 'fin') {
     const id = String(req.query.id || ''), sg = String(req.query.s || '');
     res.setHeader('X-Robots-Tag', 'noindex');
@@ -2044,10 +2044,10 @@ module.exports = async function handler(req, res) {
         const url = '/fisio?s=enc', { avisar } = require('./_push');
         const manda = (ids, title, body) => Promise.all([...new Set(ids)].map(fid => avisar('fisio', fid, { title, body, url, tag: 'fin-' + id }).catch(() => false)));
         const conF = fisio ? ` con ${fisio}` : '';
-        if (q.resena && !yaRes && !v) await manda([...dir, ...fis], `⭐ ${quien} va a dejar reseña en Google`, `Fin de tratamiento${conF}: ${vAct || 'Excelente'}.`);
+        if (q.resena && !yaRes && !v) await manda([...dir, ...fis], `⭐ ${quien} va a dejar reseña en Google`, `Alta${conF}: ${vAct || 'Excelente'}.`);
         else if (v && c) await manda(dir, `${/Normal|Mejorable/.test(v) ? '⚠️ ' : ''}${quien}: ${v}`, `«${c.slice(0, 140)}»`);
         else if (v && v !== vOld) {
-          await manda(dir, `${/Normal|Mejorable/.test(v) ? '⚠️ ' : ''}Encuesta fin de tratamiento · ${quien}: ${v}`, `Tratamiento${conF}.${v === 'Excelente' ? ' Le hemos llevado a la reseña de Google.' : ' Le hemos preguntado qué mejorar.'}`);
+          await manda(dir, `${/Normal|Mejorable/.test(v) ? '⚠️ ' : ''}Encuesta de alta · ${quien}: ${v}`, `Tratamiento${conF}.${v === 'Excelente' ? ' Le hemos llevado a la reseña de Google.' : ' Le hemos preguntado qué mejorar.'}`);
           if (/Excelente|Muy buena/.test(v)) await manda(fis.filter(x => !dir.includes(x)), `${quien} ha valorado su tratamiento: ${v}`, v === 'Excelente' ? '¡Enhorabuena! Le hemos invitado a dejar la reseña en Google.' : '¡Bien! Le hemos preguntado qué podríamos mejorar.');
         }
       }
@@ -3346,9 +3346,20 @@ module.exports = async function handler(req, res) {
           const d = await at(`${CIT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ENCUESTA ENVIADA': q.enviado === false ? null : new Date().toISOString() } }) });
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
         }
+        if (action === 'seg-agenda-altas') { // encuesta de alta: pacientes con el alta apuntada los últimos 30 días
+          const ps = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({POR QUÉ FECHA},IS_AFTER({POR QUÉ FECHA},DATEADD(TODAY(),-31,'days')),FIND('ALTA',UPPER(ARRAYJOIN({ESTADO}))))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('POR QUÉ FECHA')}&fields[]=${encodeURIComponent('POR QUÉ FISIO')}&fields[]=${encodeURIComponent('FIN ENVIADA')}&fields[]=${encodeURIComponent('FIN VALORACIÓN')}&fields[]=${encodeURIComponent('FIN COMENTARIO')}&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}&fields[]=${encodeURIComponent('FIN FISIO')}`);
+          const nmA = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+          const lista = ps.map(p => { const F = p.fields, alta = String(F['POR QUÉ FECHA'] || '').slice(0, 10), env = F['FIN ENVIADA'] && String(F['FIN ENVIADA']).slice(0, 10) >= alta ? F['FIN ENVIADA'] : '';
+            return { pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', alta, fisio: F['FIN FISIO'] || F['POR QUÉ FISIO'] || '', enviado: env, valoracion: env ? nmA(F['FIN VALORACIÓN']) : '', comentario: env ? (F['FIN COMENTARIO'] || '') : '', resena: !!(env && F['FIN IR A RESEÑA']) }; })
+            .sort((a, b) => b.alta.localeCompare(a.alta) || a.nombre.localeCompare(b.nombre));
+          return res.status(200).json({ ok: true, pacientes: lista });
+        }
         if (action === 'seg-agenda-fin-enlace') { // encuesta de fin de tratamiento: deja la ficha lista y devuelve el enlace personal
           if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
-          const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'FIN FISIO': String(q.fisio || '').slice(0, 60), 'FIN ENVIADA': new Date().toISOString(), 'FIN VALORACIÓN': null, 'FIN COMENTARIO': '', 'FIN RESPONDIDA': null, 'FIN IR A RESEÑA': null } }) });
+          const p0 = await at(`${PACIENTES}/${q.pacienteId}`); const P0 = p0.fields || {}, viejo = !P0['FIN ENVIADA'] || Date.now() - new Date(P0['FIN ENVIADA']).getTime() > 60 * 864e5;
+          const ff = viejo ? { 'FIN ENVIADA': new Date().toISOString(), 'FIN VALORACIÓN': null, 'FIN COMENTARIO': '', 'FIN RESPONDIDA': null, 'FIN IR A RESEÑA': null } : {};
+          if (q.fisio && (viejo || !P0['FIN FISIO'])) ff['FIN FISIO'] = String(q.fisio).slice(0, 60);
+          const d = Object.keys(ff).length ? await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: ff }) }) : {};
           return res.status(200).json({ ok: !d.error, link: enlaceFin(q.pacienteId), error: d.error && d.error.message });
         }
         if (action === 'seg-agenda-alta') { // cancela y ya no necesita más sesiones: etiqueta ALTA y motivo apuntado (no sale en «sin próxima cita»)
