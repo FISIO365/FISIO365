@@ -1841,13 +1841,14 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 // · Cualquier cambio (guardar, borrar…) borra lo guardado, así lo siguiente que ves ya es lo nuevo.
 (function(){
  const F=window.fetch.bind(window),C=new Map(),INF=new Map(),T0=Date.now(),SS='f365_api_';
- const NO=/[?&]action=(version|seg-consent-archivo|seg-consent-doc|conversaciones|get-mensajes|buscar|seg-wa-ia|config-pub)(&|$)/;
+ // seg-config sin guardar: si alguien cambia las listas en Administración, los demás lo ven al recargar
+ const NO=/[?&]action=(version|seg-consent-archivo|seg-consent-doc|conversaciones|get-mensajes|buscar|seg-wa-ia|config-pub|seg-config)(&|$)/;
  const POSTREAD=/[?&]action=(seg-com-buzon|reporte-dia|compra-lista|seg-sug-lista|seg-sug-contar)(&|$)/;
  const NEUTRO=/[?&]action=(seg-wa-ia|seg-sug-visto|seg-com-hilo)(&|$)/;
  const LOW=/[?&]action=(seg-referidos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|seg-referidos-resueltos)(&|$)/;
  const MAX=10*60e3,FRESCO=5000,MAXL=24*3600e3,LS='f365_apiL_';
  // Las pantallas pesadas se guardan también en el navegador (hasta 24 h): al abrir el panel salen al instante y se refrescan por detrás
- const PERS=/[?&]action=(rendimiento|horas|seg-lista|seg-agenda-dia|seg-agenda-num|seg-tareas|seg-referidos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|seg-ingresos-todo|seg-gastos|seg-conocido|seg-cap|estados|seg-config|seg-ultimas|reporte-dia|seg-com-buzon|compra-lista)(&|$)|^\/api\/pacientes\?pwd=/;
+ const PERS=/[?&]action=(rendimiento|horas|seg-lista|seg-agenda-dia|seg-agenda-num|seg-tareas|seg-referidos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|seg-ingresos-todo|seg-gastos|seg-conocido|seg-cap|estados|seg-ultimas|reporte-dia|seg-com-buzon|compra-lista)(&|$)|^\/api\/pacientes\?pwd=/;
  const kL=k=>k.replace(/([?&])pwd=[^&\s]*&?/,'$1').replace(/"pwd":"[^"]*",?/,'');
  const lee=k=>{let c=C.get(k);if(c)return c;try{const v=sessionStorage.getItem(SS+k);if(v){c=JSON.parse(v);C.set(k,c);return c;}}catch(e){}
   if(PERS.test(k.split(' ')[1]||'')){try{const v=localStorage.getItem(LS+kL(k));if(v){c=JSON.parse(v);C.set(k,c);return c;}}catch(e){}}return null;};
