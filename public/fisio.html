@@ -2224,7 +2224,8 @@ function cerrarAjustesAvisos(){$('avisosModal').classList.remove('on');}
 async function marcarCampana(){const e=await F365Avisos.estado('f365_panel_avisos');['btnAvisos','btnPerfil'].forEach(id=>{const b=$(id);if(b)b.classList.toggle('apagado',e!=='on');});}
 function abrirAvisoPanel(url){try{const u=new URL(url,location.origin);const s=u.searchParams.get('s'),p=u.searchParams.get('p');avisoPendiente='';history.replaceState(null,'',location.pathname);
  if(!fisioActual){avisoPendiente=url;return;}
- if(s==='msg'){showSection('msg');if(/^rec[A-Za-z0-9]{14}$/.test(p||''))renderMensajes($('mainWrap'),p);}}catch(e){}}
+ if(s==='msg'){showSection('msg');if(/^rec[A-Za-z0-9]{14}$/.test(p||''))renderMensajes($('mainWrap'),p);}
+ if(s==='enc'){const f=u.searchParams.get('f');agRecordatorios(null,'enc',/^\d{4}-\d{2}-\d{2}$/.test(f||'')?f:'');}}catch(e){}}
 // Puntito/número del icono de la app: lo que queda pendiente de chat, comunicaciones y sugerencias (se quita solo cuando está todo visto)
 (function(){let t=0;const sync=()=>{clearTimeout(t);t=setTimeout(()=>{try{const n=['sb-msg-badge','sb-com-badge','sb-sug-badge'].reduce((a,id)=>{const e=document.getElementById(id);return a+((e&&e.style.display!=='none'&&parseInt(e.textContent,10))||0);},0);
   if(n>0){navigator.setAppBadge&&navigator.setAppBadge(n).catch(()=>{});}else{navigator.clearAppBadge&&navigator.clearAppBadge().catch(()=>{});try{navigator.serviceWorker&&navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});}catch(_){}}}catch(e){}},400);};
@@ -5955,7 +5956,7 @@ function horaPicker(anchor,valor,ops,onPick){
 function ultSesion(citas,hoy){const ah=new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
  const hh=c=>String(c.hora||'').replace(/^(\d):/,'0$1:').slice(0,5);
  return (citas||[]).filter(c=>c.fecha&&c.fecha<=hoy&&(/REALIZADA/i.test(c.estado)||(c.fecha===hoy&&/PENDIENTE/i.test(c.estado)&&hh(c)&&hh(c)<=ah))).sort((a,b)=>(b.fecha+hh(b)).localeCompare(a.fecha+hh(a)))[0];}
-async function agRecordatorios(onDone,modoIni){
+async function agRecordatorios(onDone,modoIni,encFIni){
  let fechas=recFechasDef(),datos=null;
  const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>${modoIni==='enc'?'Encuestas':'Recordatorios por WhatsApp'}</b></div><div class="fp-body"></div>`;
  document.body.appendChild(m);const ov=document.body.style.overflow;document.body.style.overflow='hidden';
@@ -5963,7 +5964,7 @@ async function agRecordatorios(onDone,modoIni){
  const body=m.querySelector('.fp-body');
  const fC=f=>{const t=new Date(f+'T12:00:00');return REC_DIAS[t.getDay()].charAt(0).toUpperCase()+REC_DIAS[t.getDay()].slice(1)+' '+t.getDate()+'/'+(t.getMonth()+1);};
  // Dos pestañas: recordatorios de las citas y encuesta de satisfacción a los de primera visita
- let modo=modoIni==='enc'?'enc':'rec',encF=(()=>{const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return agMover(h,dw===1?-2:dw===0?-1:-1);})(),encD=null;
+ let modo=modoIni==='enc'?'enc':'rec',encF=encFIni||(()=>{const h=agHoyIso(),dw=new Date(h+'T12:00:00').getDay();return agMover(h,dw===1?-2:dw===0?-1:-1);})(),encD=null;
  // Cada cosa se abre desde su propio botón de la agenda: sin pestañas
  // En Encuestas: pestañas «1ª visita» y «Reseña Google» (Recordatorios va aparte, sin pestañas)
  const TIT={rec:'Recordatorios por WhatsApp',enc:'Encuestas',res:'Encuestas'};
