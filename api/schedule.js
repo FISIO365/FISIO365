@@ -1099,6 +1099,16 @@ lista();})();<\/script></body></html>`;
 }
 
 // ── FORMULARIO DE PRIMERA VISITA PROPIO (sustituye al de Tally b5j1M2, con los mismos textos y la misma lógica) ──
+async function mailCDoc(id, email, nombre) {
+  if (!process.env.BREVO_API_KEY || !email) return { ok: false, error: 'sin clave o email' };
+  const pila = String(nombre || '').trim().split(' ')[0], link = enlaceCDoc(id), t = k => ({ nombre: pila, email })[k] || '';
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com' }, to: [{ email: t('email').toLowerCase() }], subject: 'El teu document de FISIO365 📄',
+          htmlContent: `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a;line-height:1.6;max-width:520px">Hola ${escHtml(pila)},<br><br>T'adjuntem el document amb la informació i el consentiment que vas acceptar durant la teva primera visita a FISIO365. Guarda'l per al teu arxiu i, si tens qualsevol dubte sobre el teu tractament, escriu-nos quan vulguis.<br><br><a href="${link}" style="display:inline-block;background:#c2552e;color:#fff;text-decoration:none;font-weight:bold;border-radius:10px;padding:12px 18px">Veure el meu document</a><br><br>Salutacions,<br>L'equip de FISIO365</div>` }) });
+    const txt = await r.text(); console.log('mailCDoc', r.status, txt.slice(0, 300)); return { ok: r.ok, status: r.status, info: txt.slice(0, 300) };
+  } catch (e) { console.log('mailCDoc error', e.message); return { ok: false, error: e.message }; }
+}
 function firmaCDoc(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cdoc:' + id).digest('hex').slice(0, 10); }
 const enlaceCDoc = id => `https://app.fisioterapia365.com/documento/${id}-${firmaCDoc(id)}`;
 const CF_SALUD = [
@@ -1136,7 +1146,7 @@ const CF_RGPD = [['RESPONSABLE DEL TRATAMIENTO', 'FOURTH DYNAMIC, S.L.<br>Carrer
   ['Destinatarios (cesión de sus datos)', 'Le informamos que los datos recogidos pueden ser comunicados, únicamente cuando sea necesario, a la gestoría, con la finalidad exclusiva de facturar los servicios prestados y cumplir con la legislación fiscal y mercantil vigente.<br><br>Para la gestión de citas, recogida de consentimientos informados, administración de historias clínicas y gestión interna del centro, utilizamos plataformas tecnológicas de gestión y almacenamiento de datos que actúan como encargados del tratamiento, tales como Tally y Airtable, las cuales cumplen con la normativa vigente en materia de protección de datos y ofrecen garantías adecuadas conforme al Reglamento (UE) 2016/679 (RGPD). Dichos proveedores únicamente tratan los datos siguiendo nuestras instrucciones y no los utilizan para fines propios.']];
 const CF_AUT = [['IMAGENES', 'Uso de imágenes', 'Autorizo a FISIO365 a utilizar fotografías o vídeos con fines docentes, informativos o para su presentación en congresos médicos, así como en su web y redes sociales.'],
   ['CITAS', 'Recordatorio de citas', 'Autorizo a FISIO365 a enviarme recordatorios de citas por WhatsApp o llamada telefónica, para ayudarme a organizar mejor mi agenda.'],
-  ['NEWSLETTER', 'Información de salud y novedades del centro', 'Autorizo a FISIO365 a enviarme información de salud, ejercicios, recomendaciones para pacientes, y novedades o promociones del centro.<br><span style="background:#fff0a4">No vamos a llenarte de emails. Solo recibirás información útil e interesante,</span> y puedes retirar tu consentimiento en cualquier momento 🙂']];
+  ['NEWSLETTER', 'Información de salud y novedades del centro', 'Autorizo a FISIO365 a enviarme información de salud, ejercicios, recomendaciones para pacientes, y novedades o promociones del centro.<br><span class="nota">No vamos a llenarte de emails. Solo recibirás información útil e interesante, y puedes retirar tu consentimiento en cualquier momento 🙂</span>']];
 const CF_DER = 'Puede ejercer sus derechos de acceso, rectificación, supresión, limitación, oposición y portabilidad de sus datos dirigiéndose personalmente al centro o mediante el siguiente correo electrónico: info@fisioterapia365.com<br><br>Asimismo, tiene derecho a retirar en cualquier momento los consentimientos otorgados y a presentar una reclamación ante la autoridad de control competente, la Agencia Española de Protección de Datos.<br><br>Mediante el presente documento se cumple con el deber de información legal exigido por la normativa de protección de datos y se informa al paciente del tratamiento de sus datos personales con las finalidades anteriormente indicadas.';
 const CF_CONOCIDO = ['Google', 'Recomendación', 'Médico', 'Redes', 'Ubicación', 'Otro'];
 function paginaConsent(D) {
@@ -1153,15 +1163,17 @@ h1{font-size:22px;font-weight:700;margin:12px 0 4px}.sub{font-size:14px;color:#5
 h2{font-size:18px;margin:6px 0 12px}h3{font-size:14.5px;margin:20px 0 8px;color:#2b2420}
 .q{margin-bottom:16px}.q>label,.ql{display:block;font-size:13.5px;font-weight:500;color:#2b2420;margin-bottom:6px;line-height:1.4}.q small.op{font-weight:400;color:#a3968c}
 input[type=text],input[type=email],input[type=tel],textarea{width:100%;min-width:0;border:1.5px solid #efe6de;background:#faf7f4;border-radius:14px;padding:12px 14px;font:400 16px Poppins,sans-serif;color:#141414;outline:none;transition:border-color .2s,background .2s}input:focus,textarea:focus{border-color:#c2552e;background:#fff}
-.dos{display:flex;gap:10px;align-items:flex-end}.dos>.q{flex:1;min-width:0}
+.dos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto;grid-auto-flow:column;column-gap:10px;margin-bottom:16px}.dos>.q{display:contents}.dos>.q>label{align-self:end}
 .op2{display:flex;flex-wrap:wrap;gap:7px}.op2 button{border:1.5px solid #efe6de;background:#fff;border-radius:12px;padding:10px 16px;font:500 14px Poppins,sans-serif;color:#2b2420;cursor:pointer;transition:all .15s}.op2 button.on{background:#c2552e;border-color:#c2552e;color:#fff;transform:scale(1.03)}
 .sq{background:#faf7f4;border-radius:16px;padding:13px 14px;margin-bottom:8px}.sq .ql{margin-bottom:9px}.sq .op2 button{flex:1;min-width:70px}
 .chk{display:flex;gap:14px;align-items:center;font-size:13.5px;color:#2b2420;cursor:pointer;line-height:1.5;margin:8px 0;padding:14px 16px;background:#faf7f4;border:1.5px solid #efe6de;border-radius:16px;transition:border-color .2s,background .2s}.chk:has(input:checked){border-color:#c2552e;background:#fdf1ea}.chk input{-webkit-appearance:none;appearance:none;flex:none;width:24px;height:24px;margin:0;border:1.8px solid #d9c8bc;border-radius:8px;background:#fff;display:grid;place-content:center;cursor:pointer;transition:all .18s}.chk input:after{content:'';width:6px;height:11px;border:solid #fff;border-width:0 2.4px 2.4px 0;transform:rotate(45deg) scale(0);margin-top:-3px;transition:transform .18s}.chk input:checked{background:#c2552e;border-color:#c2552e}.chk input:checked:after{transform:rotate(45deg) scale(1)}.box .chk{background:#fff}.q>label.chk{display:flex;font-weight:400}
 .tx{font-size:13.5px;color:#5c4f47;line-height:1.6}.tx p{margin:0 0 10px}.box{background:#faf7f4;border-radius:16px;padding:14px 16px;margin-bottom:10px}
-.err{color:#b42318;font-size:12.5px;margin:5px 0 0;min-height:0}.q.mal input,.q.mal .op2 button,.sq.mal{border-color:#f0b4ad}.sq.mal{box-shadow:0 0 0 1.5px #f0b4ad}
+.err{color:#b42318;font-size:12.5px;margin:0;min-height:0}.err:not(:empty){margin-top:5px}.q.mal input,.q.mal .op2 button,.sq.mal{border-color:#f0b4ad}.sq.mal{box-shadow:0 0 0 1.5px #f0b4ad}
 .firma{position:relative;border:1.5px dashed #e6c9bb;background:#fdfaf8;border-radius:16px;height:180px;touch-action:none}.firma canvas{width:100%;height:100%;display:block;border-radius:16px}.firma span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#c9b9ad;font-size:14px;pointer-events:none}.firma.ok span{display:none}
 .bor{border:none;background:none;color:#8a7d74;font:500 12.5px Poppins,sans-serif;padding:6px 0;cursor:pointer}
 .nav{display:flex;gap:8px;margin-top:20px}.bt{flex:1;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:15px;cursor:pointer}.bt:disabled{opacity:.6}.bk{flex:none;font:600 15px Poppins,sans-serif;background:#f6f1eb;color:#7d6a60;border:none;border-radius:14px;padding:15px 18px;cursor:pointer}
+.au .ql{margin-bottom:12px}.au-h{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;color:#2b2420;margin-bottom:6px}.au-h svg{flex:none;width:30px;height:30px;padding:6px;border-radius:10px;background:#fdf1ea;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.au-p{display:block;font-weight:400;font-size:13px;color:#5c4f47;line-height:1.55}.nota{display:block;margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff;border:1px dashed #e6c9bb;color:#7d4a35;font-size:12.5px}
+.fin .c{align-self:center}.fin .ok{padding:34px 0 26px}
 .fecha{background:#fdf1ea;border-radius:14px;padding:12px 14px;font-size:14px;color:#2b2420}
 .fi{opacity:0;transform:translateY(8px);animation:fi .45s forwards}@keyframes fi{to{opacity:1;transform:none}}
 .ok{text-align:center;padding:10px 0}.ok svg{display:block;margin:0 auto}.ok circle,.ok path{fill:none;stroke:#c2552e;stroke-width:3;stroke-linecap:round}.ok .o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s forwards}.ok .m{stroke-dasharray:44;stroke-dashoffset:44;animation:dr .45s .7s forwards}.ok .e{opacity:0;animation:fi .3s .9s forwards}
@@ -1170,7 +1182,7 @@ input[type=text],input[type=email],input[type=tel],textarea{width:100%;min-width
 try{S=JSON.parse(localStorage.getItem(K)||'{}');pg=Math.min(3,S._pg||0);}catch(e){}
 function guarda(){try{var o={};for(var k in S)if(k!=='firma')o[k]=S[k];o._pg=pg;localStorage.setItem(K,JSON.stringify(o));}catch(e){}}
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-function inp(k,l,t,ph,op){return '<div class="q" data-k="'+k+'"><label>'+l+(op?' <small class="op">(opcional)</small>':'')+'</label><input type="'+(t||'text')+'" data-i="'+k+'" value="'+esc(S[k]||'')+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(t==='tel'?' inputmode="tel"':'')+'><p class="err"></p></div>';}
+function inp(k,l,t,ph,op){return '<div class="q" data-k="'+k+'"><label>'+l+(op?' <small class="op">(opcional)</small>':'')+'</label><input type="'+(t||'text')+'" data-i="'+k+'" value="'+esc(S[k]||'')+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(t==='tel'?' inputmode="tel"':'')+(k==='nacimiento'?' inputmode="numeric" maxlength="10" autocomplete="bday"':'')+'><p class="err"></p></div>';}
 function opc(k,l,ops,cls){return '<div class="'+(cls||'q')+'" data-k="'+k+'"><div class="ql">'+l+'</div><div class="op2">'+ops.map(function(o){return '<button type="button" data-v="'+esc(o)+'"'+(S[k]===o?' class="on"':'')+'>'+esc(o)+'</button>';}).join('')+'</div><p class="err"></p></div>';}
 var TIT=['Tus datos','Cuestionario de salud','Información sobre el tratamiento','Privacidad y firma'];
 function cab(){return '<div class="cab"><svg class="doc" viewBox="0 0 48 48" aria-hidden="true"><path class="p" d="M28 5H13a4 4 0 0 0-4 4v30a4 4 0 0 0 4 4h22a4 4 0 0 0 4-4V16z"/><path class="p" d="M28 5v11h11"/><path class="l" style="animation-delay:.8s" d="M16 25h16"/><path class="l" style="animation-delay:.95s" d="M16 31h11"/></svg><h1>Tu primera visita</h1><p class="sub">Un formulario rápido con lo esencial: tus datos, tu salud y el consentimiento para el tratamiento.</p></div>'
@@ -1178,7 +1190,7 @@ function cab(){return '<div class="cab"><svg class="doc" viewBox="0 0 48 48" ari
 function p0(){var r=S.reserva_otro?'':' style="display:none"',q=S.conocido==='Recomendación'?'':' style="display:none"';
  return '<h2>'+TIT[0]+'</h2><div class="dos">'+inp('nombre','Nombre')+inp('apellidos','Apellidos')+'</div>'+inp('tutor','Nombre y apellidos del tutor legal (si procede)','text','',1)
  +'<div class="dos">'+inp('nif','NIF del paciente')+inp('niftutor','NIF del tutor legal (si procede)','text','',1)+'</div>'
- +inp('nacimiento','Fecha de nacimiento','text','DD/MM/AAAA')+inp('email','Email','email')+inp('tel','Número de teléfono (sin espacios)','tel')
+ +inp('nacimiento','Fecha de nacimiento <small class="op">(día / mes / año)</small>','text','DD/MM/AAAA')+inp('email','Email','email')+inp('tel','Número de teléfono (sin espacios)','tel')
  +'<div class="q" data-k="reserva_otro"><div class="ql">Teléfono de la reserva</div><label class="chk"><input type="checkbox" data-c="reserva_otro"'+(S.reserva_otro?' checked':'')+'>La cita se reservó con un teléfono distinto al tuyo (por ejemplo, el de un familiar)</label></div>'
  +'<div id="xres"'+r+'>'+inp('telres','¿Con qué teléfono se reservó la cita?','tel','600123456')+'</div>'
  +opc('conocido','¿Cómo nos has conocido?',D.conocido)
@@ -1192,14 +1204,15 @@ function p1(){var sp=S.sp==='Sí'?'':' style="display:none"';
 function p2(){return '<h2>Información al paciente sobre el tratamiento</h2><div class="box tx">'+D.trat.map(function(t){return '<p>'+t+'</p>';}).join('')+'</div>'
  +'<h3>Política de cancelaciones</h3><div class="box tx"><p>'+D.cancel+'</p></div><h3>Declaro que:</h3><div class="box tx">'+D.decl.map(function(t){return '<p>'+t+'</p>';}).join('')+'</div>';}
 function p3(){return '<h2>'+TIT[3]+'</h2>'+D.rgpd.map(function(x){return '<h3>'+x[0]+'</h3><div class="box tx"><p>'+x[1]+'</p></div>';}).join('')
- +D.aut.map(function(x){return '<h3>'+x[1]+'</h3>'+opc(x[0],'<span class="tx" style="font-weight:400">'+x[2]+'</span>',['Sí','No'],'sq');}).join('')
+ +'<h3>Tus autorizaciones</h3>'+D.aut.map(function(x,i){return opc(x[0],'<span class="au-h"><svg viewBox="0 0 24 24" aria-hidden="true">'+AUI[i]+'</svg>'+x[1]+'</span><span class="au-p">'+x[2]+'</span>',['Sí','No'],'sq au');}).join('')
  +'<h3>Derechos</h3><div class="box tx"><p>'+D.der+'</p></div>'
  +'<h3>Firma</h3><div class="q" data-k="firma"><div class="firma" id="fm"><canvas id="cv"></canvas><span>Firma aquí con el dedo</span></div><button type="button" class="bor" id="bf">Borrar firma</button><p class="err"></p></div>'
  +'<h3>Firmado en Barcelona, a la fecha indicada a continuación:</h3><div class="fecha">'+D.hoyTxt+'</div>';}
+var AUI=['<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>','<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/><path d="M9.5 15l2 2 3.5-3.5"/>','<rect x="3" y="6" width="18" height="13" rx="3"/><path d="M4 8l8 6 8-6"/>'];
 var P=[p0,p1,p2,p3];
 function pinta(){C.innerHTML=cab()+'<div class="fi">'+P[pg]()+'</div><div class="nav">'+(pg?'<button type="button" class="bk" id="atr">Atrás</button>':'')+'<button type="button" class="bt" id="sig">'+(pg<3?'Siguiente':'Enviar')+'</button></div>';ata();window.scrollTo(0,0);}
 function ata(){
- [].forEach.call(C.querySelectorAll('[data-i]'),function(x){x.oninput=function(){var k=x.getAttribute('data-i');S[k]=x.value;guarda();var q=x.closest('.q');if(q){q.classList.remove('mal');q.querySelector('.err').textContent='';}};});
+ [].forEach.call(C.querySelectorAll('[data-i]'),function(x){x.oninput=function(){var k=x.getAttribute('data-i');if(k==='nacimiento'){var d=x.value.replace(/[^0-9]/g,'').slice(0,8),o=d.slice(0,2);if(d.length>2)o+='/'+d.slice(2,4);if(d.length>4)o+='/'+d.slice(4);if(x.value!==o)x.value=o;}S[k]=x.value;guarda();var q=x.closest('.q');if(q){q.classList.remove('mal');q.querySelector('.err').textContent='';}};});
  [].forEach.call(C.querySelectorAll('.op2'),function(g){var w=g.parentNode,k=w.getAttribute('data-k');[].forEach.call(g.querySelectorAll('button'),function(b){b.onclick=function(){S[k]=b.getAttribute('data-v');guarda();[].forEach.call(g.querySelectorAll('button'),function(x){x.classList.toggle('on',x===b);});w.classList.remove('mal');var e=w.querySelector('.err');if(e)e.textContent='';
   if(k==='conocido')document.getElementById('xrec').style.display=S.conocido==='Recomendación'?'':'none';if(k==='sp')document.getElementById('xsp').style.display=S.sp==='Sí'?'':'none';};});});
  [].forEach.call(C.querySelectorAll('[data-c]'),function(x){x.onchange=function(){var k=x.getAttribute('data-c');S[k]=x.checked;guarda();if(k==='reserva_otro')document.getElementById('xres').style.display=x.checked?'':'none';var e=document.getElementById('esp');if(e)e.textContent='';};});
@@ -1219,13 +1232,13 @@ function valida(){var ok=true,f=function(k,t){mal(k,t);ok=false;},v=function(k){
   if(S.reserva_otro&&v('telres').replace(/\\D/g,'').length<9)f('telres','Escribe el teléfono con el que se reservó');if(!S.conocido)f('conocido','Elige una opción');if(S.conocido==='Recomendación'&&!v('recomendo'))f('recomendo','Escribe su nombre y apellido');}
  if(pg===1){D.salud.forEach(function(x){if(!S[x[0]])f(x[0],'Elige una opción');});if(!S.sp)f('sp','Elige una opción');if(S.sp==='Sí'&&!(S.spok0&&S.spok1)){ok=false;var e=document.getElementById('esp');if(e)e.textContent='Marca las dos casillas para continuar';}}
  if(pg===3){D.aut.forEach(function(x){if(!S[x[0]])f(x[0],'Elige una opción');});if(!S.firma)f('firma','Firma en el recuadro');}
- if(!ok){var m=C.querySelector('.mal')||C.querySelector('#esp');if(m)m.scrollIntoView({behavior:'smooth',block:'center'});}return ok;}
+ if(!ok){var m=C.querySelector('.mal input,.mal .op2,.sq.mal')||C.querySelector('#esp');if(m)m.scrollIntoView({behavior:'smooth',block:'center'});}return ok;}
 function sig(){if(!valida())return;if(pg<3){pg++;guarda();pinta();return;}
  var b=document.getElementById('sig');b.disabled=true;b.textContent='Enviando…';
  var o={};for(var k in S)if(k!=='_pg')o[k]=S[k];o.nacimiento=fNac(S.nacimiento);o.firma=document.getElementById('cv').toDataURL('image/png');
  fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(function(r){return r.json();}).then(function(r){if(!r.ok)throw new Error(r.error||'');
   try{localStorage.removeItem(K);}catch(e){}var n=String(S.nombre||'').trim().split(/\\s+/)[0];n=n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';
-  C.innerHTML='<div class="ok"><svg width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="e" d="M25 35 Q30 29 35 35"/><path class="e" d="M45 35 Q50 29 55 35"/><path class="m" d="M26 45 Q40 62 54 45"/></svg><h1 class="fi" style="animation-delay:1s">¡Listo'+(n?', '+esc(n):'')+'!</h1><p class="sub fi" style="animation-delay:1.15s">Ya lo tenemos todo. Cuando llegues, empezamos directamente con tu sesión.<br><br>Te hemos enviado una copia a tu email.</p></div>';window.scrollTo(0,0);})
+  document.body.classList.add('fin');C.innerHTML='<div class="ok"><svg width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="e" d="M25 35 Q30 29 35 35"/><path class="e" d="M45 35 Q50 29 55 35"/><path class="m" d="M26 45 Q40 62 54 45"/></svg><h1 class="fi" style="animation-delay:1s">¡Listo'+(n?', '+esc(n):'')+'!</h1><p class="sub fi" style="animation-delay:1.15s">Ya lo tenemos todo. Cuando llegues, empezamos directamente con tu sesión.<br><br>Te hemos enviado una copia a tu email.</p></div>';window.scrollTo(0,0);})
  .catch(function(e){b.disabled=false;b.textContent='Enviar';alert(e.message||'No se ha podido enviar. Inténtalo de nuevo.');});}
 pinta();})();<\/script></body></html>`;
 }
@@ -1734,6 +1747,16 @@ module.exports = async function handler(req, res) {
     try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogConsSvg(), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
     catch (e) { return res.redirect(302, 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); }
   }
+  // Reenvío de la copia (solo formularios de hoy, una vez por instancia)
+  if (action === 'cdoc-mail') {
+    const id = String(q.id || ''); global._cdocMail = global._cdocMail || {};
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id) || global._cdocMail[id]) return res.status(400).json({ ok: false });
+    const r = await at(`${CONS_T}/${id}`); const F = (r && r.fields) || {};
+    const hoyM = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+    if (String(F['Creada'] || '').slice(0, 10) !== hoyM || !F['EMAIL']) return res.status(400).json({ ok: false });
+    global._cdocMail[id] = 1;
+    return res.status(200).json(await mailCDoc(id, String(F['EMAIL']).trim().toLowerCase(), F['\ufeffNOMBRE'] || F['NOMBRE'] || ''));
+  }
   if (action === 'cdoc') {
     const id = String(req.query.id || ''), sg = String(req.query.s || '');
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
@@ -1782,12 +1805,7 @@ module.exports = async function handler(req, res) {
     // Recomendación → REFERIDOS (como hacía la integración de Tally) para la tarjeta regalo
     if (q.conocido === 'Recomendación') await at('tblr27u3cvtzfyqI6', { method: 'POST', body: JSON.stringify({ records: [{ fields: { 'Nombre': t('nombre'), 'Apellidos': t('apellidos'), 'Fecha': hoy, 'Nombre de quien recomendó': t('recomendo') } }], typecast: true }) }).catch(() => {});
     // Copia para el paciente (como el email de Tally, ahora con enlace a su documento)
-    if (process.env.BREVO_API_KEY) {
-      const pila = t('nombre').split(' ')[0], link = enlaceCDoc(id);
-      await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com' }, to: [{ email: t('email').toLowerCase() }], subject: 'El teu document de FISIO365 📄',
-          htmlContent: `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a;line-height:1.6;max-width:520px">Hola ${escHtml(pila)},<br><br>T'adjuntem el document amb la informació i el consentiment que vas acceptar durant la teva primera visita a FISIO365. Guarda'l per al teu arxiu i, si tens qualsevol dubte sobre el teu tractament, escriu-nos quan vulguis.<br><br><a href="${link}" style="display:inline-block;background:#c2552e;color:#fff;text-decoration:none;font-weight:bold;border-radius:10px;padding:12px 18px">Veure el meu document</a><br><br>Salutacions,<br>L'equip de FISIO365</div>` }) }).catch(() => {});
-    }
+    await mailCDoc(id, t('email').toLowerCase(), t('nombre'));
     _cons.t = 0; _alertas.t = 0;
     return res.status(200).json({ ok: true });
   }
