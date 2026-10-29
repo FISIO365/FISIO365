@@ -13,6 +13,9 @@
   .fc-b.ellos{align-self:flex-start;background:#fff;border-bottom-left-radius:6px;box-shadow:0 1px 2px rgba(26,26,26,.05)}
   .fc-b.yo{align-self:flex-end;background:#1a1a1a;color:#f5f2ee;border-bottom-right-radius:6px}
   .fc-b small{display:block;font-size:10.5px;margin-top:3px;opacity:.55;text-align:right}
+  .fc-b small.fc-t{display:flex;justify-content:flex-end;align-items:center;gap:3px}
+  .fc-tk{display:inline-flex;opacity:1}.fc-tk svg{height:11px;width:auto;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .fc-b.yo small.fc-t{opacity:1;color:rgba(245,242,238,.55)}.fc-tk.visto{color:#4ade80}
   .fc-autor{font-size:11px;font-weight:600;color:#c2552e;margin-bottom:2px}
   .fc-b.yo .fc-autor{color:#efc7b4}
   .fc-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#ffe9e9;color:#c33;border-radius:99px;padding:2px 8px;margin-bottom:4px}
@@ -114,6 +117,10 @@
     });
     function puedeEnviar() { env.disabled = preparando || !(ta.value.trim() || adjunto) || (yo === 'paciente' && !fisio); }
 
+    // Tic de enviado (gris) y doble tic de visto (verde), como en WhatsApp
+    const tic = visto => visto
+      ? '<span class="fc-tk visto" title="Visto"><svg viewBox="0 0 22 12"><path d="M1 6.5l3.5 3.5L12 2.5"/><path d="M8.5 9.5l.5.5L16.5 2.5"/></svg></span>'
+      : '<span class="fc-tk" title="Enviado"><svg viewBox="0 0 14 12"><path d="M1.5 6.5l3.5 3.5L12.5 2.5"/></svg></span>';
     function burbuja(m) {
       const mio = m.de === yo;
       const autor = !mio && m.de === 'fisio' && yo === 'paciente' && m.fisioNombre && !(fisio && m.fisioId === fisio.id) ? `<div class="fc-autor">${esc(m.fisioNombre)}</div>` : '';
@@ -125,7 +132,7 @@
           ? `<button type="button" class="fc-guardar ok" disabled><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Guardado en su ficha</button>`
           : `<button type="button" class="fc-guardar" data-m="${esc(m.id)}" data-i="${i}"><svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg>Guardar en su ficha</button>`) : '')).join('');
       const d = new Date(m.fecha);
-      return `<div class="fc-b ${mio ? 'yo' : 'ellos'}${m._enviando ? ' fc-enviando' : ''}">${autor}${m.etiqueta ? `<span class="fc-tag">${esc(m.etiqueta)}</span><br>` : ''}${adj}${m.texto ? enlaces(m.texto) : ''}<small>${m._enviando ? 'Enviando…' : d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</small></div>`;
+      return `<div class="fc-b ${mio ? 'yo' : 'ellos'}${m._enviando ? ' fc-enviando' : ''}">${autor}${m.etiqueta ? `<span class="fc-tag">${esc(m.etiqueta)}</span><br>` : ''}${adj}${m.texto ? enlaces(m.texto) : ''}<small class="fc-t">${m._enviando ? 'Enviando…' : d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}${mio && !m._enviando ? tic(m.leido) : ''}</small></div>`;
     }
     function pintar(forzarAbajo) {
       const abajo = forzarAbajo || hilo.scrollHeight - hilo.scrollTop - hilo.clientHeight < 80;
@@ -165,7 +172,7 @@
         const filtro = fisio ? `&fisioId=${encodeURIComponent(fisio.id)}${o.sinFisio !== false ? '&sinFisio=1' : ''}` : '';
         const d = await (await fetch(`/api/chat?action=hilo&pacienteId=${encodeURIComponent(o.pacienteId)}${filtro}`, yo === 'fisio' && o.pwd ? { headers: { 'x-fisio-pwd': o.pwd } } : {})).json();
         if (!d.ok) throw new Error(d.error);
-        const nueva = d.mensajes.map(m => m.id + (m.adjuntos || []).length).join('|');
+        const nueva = d.mensajes.map(m => m.id + (m.adjuntos || []).length + (m.de === yo && m.leido ? 'v' : '')).join('|'); // al verlo la otra persona se repinta con el tic verde
         const pendientes = mensajes.filter(m => m._enviando);
         if (nueva !== firma || primera) { firma = nueva; mensajes = d.mensajes.concat(pendientes); pintar(primera); }
         if (yo === 'paciente' && !fisio && d.fisio) { fisio = d.fisio; if (o.onFisio) o.onFisio(fisio); }
