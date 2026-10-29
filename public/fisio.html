@@ -8812,7 +8812,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   const aviso=!u?'':(modD&&modD>=u.fecha)?`<div class="fp-hres ok">✓ Historia actualizada el ${escH(segFecha(modD))}, después de su última sesión</div>`:`<div class="fp-hres mal">⚠️ No se ha actualizado tras la última sesión (${escH(segFecha(u.fecha))}${u.fisio?' · '+escH(u.fisio):''})${modD?`. Última vez: ${escH(segFecha(modD))}`:''}</div>`;
   return `${aviso}
   ${archivosMini()}
-  <div class="fp-blk" data-blk="historial"><div class="fp-bt"><h3>Historia clínica</h3><span class="fp-edbts"><button type="button" class="fp-ok fp-add-ev">＋ Evolución</button><button type="button" class="fp-ed">Editar</button></span></div>
+  <div class="fp-blk" data-blk="historial"><div class="fp-bt"><h3>Historia clínica</h3><span class="fp-edbts"><button type="button" class="fp-ok fp-add-ev">＋ Anotar sesión</button><button type="button" class="fp-ed">Editar</button></span></div>
    <div class="fp-add-slot"></div><div class="fp-txt fp-doc">${P.historial?linea(P.historial):'<em>Todavía no tiene historia clínica</em>'}</div></div>
   <div class="fp-blk" data-blk="notas"><div class="fp-bt"><h3>Notas</h3><button type="button" class="fp-ed">Editar</button></div><div class="fp-txt fp-doc">${P.notas?par(P.notas):'<em>Sin notas</em>'}</div></div>`;}
  function montarPorQue(cont){const box=cont.querySelector('.fp-pq');if(!box)return;
@@ -8870,9 +8870,9 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
  function montarHistoria(cont){
   const b=cont.querySelector('.fp-add-ev');if(!b)return;
   b.onclick=()=>{const slot=cont.querySelector('.fp-add-slot');const u=ultSesion(d.citas,d.hoy);
-   slot.innerHTML=`<div class="fp-ev"><div class="fp-evh"><b>Evolución${u?' · sesión del '+escH(segFecha(u.fecha)):''}</b>${infoI('Se añade al final de la historia clínica con la fecha de la sesión y tu nombre. No borra nada de lo anterior.')}</div><textarea class="fp-ta" rows="6" placeholder="Qué se trabajó, cómo respondió, cambios en el dolor, pauta para casa…"></textarea><div class="fp-edbts" style="justify-content:flex-end;margin-top:8px"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></div></div>`;
+   slot.innerHTML=`<div class="fp-ev"><div class="fp-evh"><b>${u?'Sesión del '+escH(segFecha(u.fecha)):'Anotar sesión'}</b>${infoI('Se añade al final de la historia clínica con la fecha de la sesión y tu nombre. No borra nada de lo anterior.')}</div><textarea class="fp-ta" rows="6" placeholder="Qué se trabajó, cómo respondió, cambios en el dolor, pauta para casa…"></textarea><div class="fp-edbts" style="justify-content:flex-end;margin-top:8px"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></div></div>`;
    const ta=slot.querySelector('.fp-ta');ta.focus();slot.querySelector('.fp-can').onclick=()=>{slot.innerHTML='';};
-   slot.querySelector('.fp-ok').onclick=async e=>{const t=ta.value.trim();if(!t){toast('Escribe la evolución',false);return;}const bt=e.target;bt.disabled=true;bt.textContent='Guardando…';
+   slot.querySelector('.fp-ok').onclick=async e=>{const t=ta.value.trim();if(!t){toast('Escribe qué se ha hecho en la sesión',false);return;}const bt=e.target;bt.disabled=true;bt.textContent='Guardando…';
     try{const r=await (await fetch('/api/schedule?action=seg-historial-anadir',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id,texto:t,fecha:u?u.fecha:'',fisio:miNombreCorto()})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');P.historial=r.historial;P.historialMod=new Date().toISOString();toast('Añadido a la historia',true);pintar();}catch(err){bt.disabled=false;bt.textContent='Guardar';toast(err.message,false);}};};
  }
  function acceso(){return `<div class="fp-blk" data-blk="acceso"><div class="fp-bt"><h3>Acceso a la app</h3><button type="button" class="fp-ed fp-acc-ed">${P.email&&(P.pin||base.pin)?'Editar':'Dar acceso'}</button></div>
@@ -9012,12 +9012,12 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-ficha]');i
 // Nota de evolución de una sesión (se guarda en la cita de Airtable, campo NOTAS)
 function abrirAnotarSesion(c,onSave){
  const m=hzModal(`<div class="hz-top"><div><small>Sesión del ${escH(segFecha(c.fecha))}${c.hora?' · '+escH(c.hora):''}${c.fisio?' · '+escH(c.fisio):''}</small><b>${escH(c.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-  <div class="hz-lab">Evolución de la sesión</div><textarea class="seg-n" rows="7" placeholder="Qué se trabajó, cómo respondió, cambios en el dolor, pauta para casa…"></textarea>
+  <div class="hz-lab">Qué se ha hecho en la sesión</div><textarea class="seg-n" rows="7" placeholder="Qué se trabajó, cómo respondió, cambios en el dolor, pauta para casa…"></textarea>
   <div class="hz-cuando">Se añade al final de su historia clínica con la fecha de la sesión. Si ya la actualizaste en Airtable, ábrela en la ficha y el aviso desaparece solo.</div>
   <div class="hz-bts"><button type="button" class="hz-re hz-ficha">Ver ficha</button><button type="button" class="hz-ok">Añadir a la historia</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  m.querySelector('.hz-ficha').onclick=()=>{m.remove();abrirFichaPaciente(c.pacienteId,c.nombre);};
- m.querySelector('.hz-ok').onclick=async e=>{const t=m.querySelector('.seg-n').value.trim();if(!t){toast('Escribe la evolución',false);return;}const b=e.target;b.disabled=true;
+ m.querySelector('.hz-ok').onclick=async e=>{const t=m.querySelector('.seg-n').value.trim();if(!t){toast('Escribe qué se ha hecho en la sesión',false);return;}const b=e.target;b.disabled=true;
   try{const r=await (await fetch('/api/schedule?action=seg-historial-anadir',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:c.pacienteId,texto:t,fecha:c.fecha,fisio:miNombreCorto()})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');toast('Añadido a la historia',true);m.remove();onSave&&onSave();}catch(err){b.disabled=false;toast(err.message,false);}};
 }
 // ── Nuevo paciente ──
