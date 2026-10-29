@@ -105,6 +105,8 @@ export default async function handler(req) {
 
       // Etapa del paciente: si nunca ha hecho una sesión → PACIENTE NUEVO; si ya vino → ACTIVO (quita Alta, Seguimiento…)
       try { await ponerEtapaCita(patientId); } catch (e) {}
+      // Si tiene que pagar por adelantado, aviso al móvil para mandarle el enlace
+      try { await Promise.race([fetch(new URL(`/api/schedule?action=pago-falta&id=${huecoId}`, req.url)), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
       return json({ ok: true, cita: { id: u.id, fecha: fechaISO(u.fields['FECHA']), hora: String(u.fields['HORA'] || '').slice(0, 5), fisio: fisioDe(u.fields['PREF.']), estado: 'PENDIENTE ' } });
     } catch (e) { return json({ ok: false, error: e.message }, 500); }
   }

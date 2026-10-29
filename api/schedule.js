@@ -1404,6 +1404,20 @@ async function pagoVerificar(id, F, sid) {
   return true;
 }
 async function pagoQuitarMarca(F) { const pid = (F['RELACIÓN - CITA'] || [])[0]; if (pid) await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO ADELANTADO': false } }) }).catch(() => {}); }
+// Un paciente que tiene que pagar por adelantado coge cita él solo (app o enlace de huecos sin pago): aviso al móvil
+// para mandarle el enlace. Solo una vez por cita (queda apuntado en PAGO REGISTRO).
+async function avisoFaltaEnlace(citaId) {
+  try {
+    const c = await at(`tblTPlcuiSjQngkaD/${citaId}`); const F = c.fields || {}; if (c.error || F['PAGO ESTADO']) return false;
+    const pid = (F['RELACIÓN - CITA'] || [])[0]; if (!pid || /Aviso: falta mandar el enlace/.test(String(F['PAGO REGISTRO'] || ''))) return false;
+    const p = await at(`${PACIENTES}/${pid}`); const P = p.fields || {}; if (!P['PAGO ADELANTADO']) return false;
+    await at(`tblTPlcuiSjQngkaD/${citaId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO REGISTRO': (String(F['PAGO REGISTRO'] || '') + `\n${pagoAhora()} · Aviso: falta mandar el enlace de pago`).trim() } }) });
+    const nombre = String(P['FULL NAME'] || '').trim(); let pila = (String(P['NOMBRE'] || '').trim() || nombre).split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : 'Un paciente';
+    const fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || ''), fis = (F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '', d = new Date(fecha + 'T12:00:00Z'), DS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    await pagoAvisar(fis, `💳 ${pila} tiene que pagar antes: mándale el enlace`, `Ha cogido cita el ${DS[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${hora}${fis ? ' con ' + String(fis).charAt(0) + String(fis).slice(1).toLowerCase() : ''}. ${P['PAGO ADELANTADO MOTIVO'] || ''}`.trim(), 'falta-' + citaId);
+    return true;
+  } catch (e) { return false; }
+}
 async function pagoPaciente(F) {
   const pid = (F['RELACIÓN - CITA'] || [])[0]; if (!pid) return { pila: '', nombre: '', email: '' };
   const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}, nombre = String(P['FULL NAME'] || '').trim();
@@ -2125,6 +2139,7 @@ module.exports = async function handler(req, res) {
         const d = new Date(h.fecha + 'T12:00:00Z'), DS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'], fis = h.fisio.charAt(0) + h.fisio.slice(1).toLowerCase();
         await Promise.all(ids.map(fid => avisar('fisio', fid, { title: `📅 Nueva reserva: ${n1} ${n2}${nuevo ? ' (nuevo)' : ''}${P.p > 0 ? ' · pendiente de pago' : ''}`, body: `${DS[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${h.hora} con ${fis.split(' ')[0]}. ${motivo.slice(0, 90)}`, url: '/fisio', tag: 'res-' + id }).catch(() => false)));
       } catch (e) {}
+      if (!(P.p > 0)) await avisoFaltaEnlace(id);
       return res.status(200).json({ ok: true, pago: P.p > 0 ? enlacePago(id) : '' });
     }
     await caducarPagos().catch(() => 0); // libera antes los huecos de quien no pagó
@@ -2134,6 +2149,10 @@ module.exports = async function handler(req, res) {
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
   // Pago por adelantado: página del paciente (GET), tarjeta/transferencia (POST) y vuelta de Stripe (?sid=)
+  if (action === 'pago-falta') { // lo llama la app al reservar (no hace falta clave: solo avisa si de verdad toca, y una vez)
+    const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false });
+    return res.status(200).json({ ok: true, aviso: await avisoFaltaEnlace(id) });
+  }
   if (action === 'pago' || action === 'pago-og') {
     const id = String(req.query.id || ''), sg = String(req.query.s || '');
     res.setHeader('X-Robots-Tag', 'noindex');
