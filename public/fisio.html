@@ -1149,6 +1149,9 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-up{flex-direction:row!important;flex-wrap:wrap;justify-content:center;align-items:center;background:#fff!important;border:1.5px dashed #d9cdc2!important;padding:14px!important}.fp-up span{font-size:14px}
 .fp-evh{display:flex;flex-wrap:wrap;align-items:center;margin-bottom:8px}.fp-evh b{font-size:13.5px}
 .fp-docs{display:flex;flex-direction:column;gap:8px}
+.fp-archb .fp-bt{margin-bottom:10px}.fp-archn{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;background:#f3efea;color:#7d6a60;border-radius:99px;padding:1px 8px;vertical-align:1px}
+.fp-up.fp-upmini{display:inline-flex!important;flex-direction:row!important;padding:6px 14px!important;margin:0!important;border:0!important;border-radius:99px!important;background:#fbeee7!important}.fp-upmini span{font-size:13px!important}
+.fp-archl{display:flex;flex-wrap:wrap;gap:8px}.fp-archi{display:inline-flex;align-items:center;gap:8px;max-width:100%;background:#faf7f4;border:1px solid #f0ebe6;border-radius:12px;padding:6px 12px 6px 6px;text-decoration:none;color:#1a1a1a;font-size:13px}.fp-archi>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}.fp-archi .fp-doc-ic{width:30px;height:30px;font-size:9px;border-radius:8px;flex:none}
 .fp-doc-it{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:10px 14px 10px 10px;text-decoration:none;color:#1a1a1a;box-shadow:0 1px 2px rgba(26,26,26,.05),0 6px 16px rgba(26,26,26,.05)}
 .fp-doc-it img,.fp-doc-ic{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:#f3efea;border:1px solid #ece6e0}
 .fp-doc-ic{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#7d6a60}.fp-doc-ic.pdf{background:#fdecea;color:#b42318;border-color:#f5c2bd}.fp-doc-ic.img{background:#eef2f7;color:#1e2a38}
@@ -8782,6 +8785,10 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
  function archivos(){const kb=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
   return `<label class="fp-up"><input type="file" multiple hidden><span>＋ Subir archivo</span>${infoI('PDF o fotos de hasta 3 MB. Se guardan en su ficha de Airtable.')}</label>
   ${P.archivos.length?`<div class="fp-docs">${P.archivos.map(a=>{const ext=(a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase();return `<a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-doc-it">${a.mini?`<img src="${escH(a.mini)}" alt="">`:`<span class="fp-doc-ic ${/PDF/.test(ext)?'pdf':/JPG|JPEG|PNG|HEIC|WEBP/.test(ext)?'img':''}">${escH(ext)}</span>`}<span class="fp-doc-t"><b>${escH(a.nombre)}</b><small>${escH(ext)}${a.tam?' · '+kb(a.tam):''}</small></span><span class="fp-doc-go">›</span></a>`;}).join('')}</div>`:'<div class="fac-vacio">No tiene archivos</div>'}`;}
+ // Archivos a mano en la pestaña Historia (los mismos que en Más › Archivos)
+ function archivosMini(){const A=P.archivos||[];
+  return `<div class="fp-blk fp-archb"><div class="fp-bt"><h3>Archivos${A.length?' <span class="fp-archn">'+A.length+'</span>':''}</h3><label class="fp-up fp-upmini"><input type="file" multiple hidden><span>＋ Subir</span></label></div>
+   ${A.length?`<div class="fp-archl">${A.map(a=>{const ext=(a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase();return `<a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-archi"><span class="fp-doc-ic ${/PDF/.test(ext)?'pdf':/JPG|JPEG|PNG|HEIC|WEBP/.test(ext)?'img':''}">${escH(ext)}</span><span>${escH(a.nombre)}</span></a>`;}).join('')}</div>`:'<p class="fp-mu" style="margin:0;font-size:13px">Sin archivos todavía: informes, pruebas, fotos…</p>'}</div>`;}
  function historia(){
   const hoy=d.hoy,ses=d.citas.filter(c=>c.fecha<=hoy&&/REALIZADA/i.test(c.estado)),u=ultSesion(d.citas,hoy);
   const modD=P.historialMod?isoMadrid(new Date(P.historialMod)):'';
@@ -8804,6 +8811,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
    return `${txt(intro)?`<div class="fp-intro">${par(txt(intro))}</div>`:''}${ent.length?`<div class="fp-tl">${ent.slice().reverse().map(x=>`<div class="fp-tli"><i></i><div class="fp-tlh"><b>${escH(x.f)}</b>${x.t?`<span>${escH(x.t)}</span>`:''}</div><div class="fp-tlb">${txt(x.b)?par(txt(x.b)):'<em>—</em>'}</div></div>`).join('')}</div>`:''}`;};
   const aviso=!u?'':(modD&&modD>=u.fecha)?`<div class="fp-hres ok">✓ Historia actualizada el ${escH(segFecha(modD))}, después de su última sesión</div>`:`<div class="fp-hres mal">⚠️ No se ha actualizado tras la última sesión (${escH(segFecha(u.fecha))}${u.fisio?' · '+escH(u.fisio):''})${modD?`. Última vez: ${escH(segFecha(modD))}`:''}</div>`;
   return `${aviso}
+  ${archivosMini()}
   <div class="fp-blk" data-blk="historial"><div class="fp-bt"><h3>Historia clínica</h3><span class="fp-edbts"><button type="button" class="fp-ok fp-add-ev">＋ Evolución</button><button type="button" class="fp-ed">Editar</button></span></div>
    <div class="fp-add-slot"></div><div class="fp-txt fp-doc">${P.historial?linea(P.historial):'<em>Todavía no tiene historia clínica</em>'}</div></div>
   <div class="fp-blk" data-blk="notas"><div class="fp-bt"><h3>Notas</h3><button type="button" class="fp-ed">Editar</button></div><div class="fp-txt fp-doc">${P.notas?par(P.notas):'<em>Sin notas</em>'}</div></div>`;}
@@ -8954,7 +8962,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   else if(tab==='racha')fpTabRacha(id,cont,tok);
   else if(tab==='programa')fpTabPrograma(id,cont,tok,P.nombre);
   else if(tab==='acceso'){cont.innerHTML=acceso();montarAcceso(cont);}
-  else if(tab==='historia'){cont.innerHTML=historia();montarEdicion(cont);montarHistoria(cont);}
+  else if(tab==='historia'){cont.innerHTML=historia();montarEdicion(cont);montarHistoria(cont);montarSubida(cont);}
  }
  var histCabFn=null;
  function montarEdicion(cont){
