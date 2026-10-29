@@ -1085,7 +1085,7 @@ var G={};try{G=JSON.parse(localStorage.getItem('f365_res')||'{}');}catch(e){}
 function abrir(h){var f=document.createElement('div');f.className='fondo';f.innerHTML='<div class="hoja"><div class="asa"></div><div class="sel">'+tile(h.fecha)+'<div><small>Tu cita</small><b>'+fl(h.fecha).replace(/^./,function(x){return x.toUpperCase();})+'<br>a las '+h.hora+'</b><small>con '+esc(h.nombre)+'</small></div></div>'
  +'<div class="dos"><div><label>Nombre</label><input id="n1" autocomplete="given-name" value="'+esc(G.n1||'')+'"></div><div><label>Apellidos</label><input id="n2" autocomplete="family-name" value="'+esc(G.n2||'')+'"></div></div>'
  +'<label>Teléfono</label><input id="tl" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(G.tl||'')+'"><label>Motivo de consulta</label><textarea id="mo" placeholder="Ej.: dolor de espalda desde hace unas semanas"></textarea>'
- +(D.pago?'<p class="pgn">Esta cita se paga por adelantado (<b>'+String(D.pago).replace('.',',')+' €</b>). Al reservar te llevamos al pago: tarjeta o transferencia, tienes 24 h.</p>':'')+'<p class="err" id="er"></p><button class="bt" id="rs">'+(D.pago?'Reservar y pagar':'Reservar mi cita')+'</button><button class="cancel" id="cn">Elegir otra hora</button></div>';
+ +(D.pago?'<p class="pgn">Esta cita se paga por adelantado (<b>'+String(D.pago).replace('.',',')+' €</b>). Al reservar te llevamos al pago (tarjeta o transferencia) y te guardamos la hora 2 h.</p>':'')+'<p class="err" id="er"></p><button class="bt" id="rs">'+(D.pago?'Reservar y pagar':'Reservar mi cita')+'</button><button class="cancel" id="cn">Elegir otra hora</button></div>';
  document.body.appendChild(f);requestAnimationFrame(function(){f.classList.add('on');});var q=function(i){return f.querySelector('#'+i);};
  [].forEach.call(f.querySelectorAll('input,textarea'),function(x){x.oninput=function(){q('er').textContent='';};});
  var cerrar=function(){[].forEach.call(C.querySelectorAll('.h.on'),function(x){x.classList.remove('on');});f.classList.remove('on');setTimeout(function(){f.remove();},200);};q('cn').onclick=cerrar;f.onclick=function(e){if(e.target===f)cerrar();};
@@ -2112,7 +2112,7 @@ module.exports = async function handler(req, res) {
       } else if (!String((pac.fields || {})['MOTIVO DE VISITA'] || '').trim()) await at(`${PACIENTES}/${pac.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MOTIVO DE VISITA': motivo } }) }).catch(() => {});
       const nota = `Reserva por enlace de huecos${nuevo ? ' (paciente nuevo)' : ''} · Motivo: ${motivo}`;
       const fR = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', NOTAS: [r.fields.NOTAS, nota].filter(Boolean).join('\n') };
-      if (P.p > 0) { const ini = madridUTC(h.fecha, h.hora).getTime(), lim = Math.max(Date.now() + 3600e3, Math.min(Date.now() + 24 * 3600e3, ini - 2 * 3600e3)); Object.assign(fR, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': P.p, 'PAGO LÍMITE': new Date(lim).toISOString(), 'PAGO REGISTRO': `${pagoAhora()} · Reserva por enlace de huecos con pago por adelantado (${P.p.toFixed(2).replace('.', ',')} €)` }); }
+      if (P.p > 0) { const ini = madridUTC(h.fecha, h.hora).getTime(), lim = Math.max(Date.now() + 30 * 60e3, Math.min(Date.now() + 2 * 3600e3, ini)); Object.assign(fR, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': P.p, 'PAGO LÍMITE': new Date(lim).toISOString(), 'PAGO REGISTRO': `${pagoAhora()} · Reserva por enlace de huecos con pago por adelantado (${P.p.toFixed(2).replace('.', ',')} €)` }); }
       const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: fR, typecast: true }) });
       if (u.error) return res.status(200).json({ ok: false, error: 'No se ha podido reservar. Inténtalo de nuevo.' });
       await new Promise(z => setTimeout(z, 700));
@@ -2127,6 +2127,7 @@ module.exports = async function handler(req, res) {
       } catch (e) {}
       return res.status(200).json({ ok: true, pago: P.p > 0 ? enlacePago(id) : '' });
     }
+    await caducarPagos().catch(() => 0); // libera antes los huecos de quien no pagó
     const huecos = await huecosLibres(P).catch(() => []);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return res.status(200).send(paginaHuecos({ huecos, pago: P.p || 0, url: `https://app.fisioterapia365.com/h/${k}.${sg}`, tel: C.tel || '672 89 39 49', dir: C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
