@@ -1676,6 +1676,10 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ejp-b{display:flex;gap:6px;align-items:center;flex:none}.ejp-b button{border:none;border-radius:10px;padding:8px 12px;font:600 12.5px var(--font);cursor:pointer}.ejp-yo,.ejp-ok{background:#c2552e;color:#fff}.ejp-sol{background:#f6f1eb;color:#7d6a60}.ejp-del{background:none;color:#a3968c;padding:6px 8px!important}.ejp-del.arm{background:#fde8e8;color:#b42318}
 .ejp-hechos{margin-top:16px}.ejp-hechos summary{cursor:pointer;font-size:12.5px;font-weight:600;color:#8a7d74;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
 @media(max-width:600px){.ejp-c{flex-wrap:wrap}.ejp-b{width:100%;justify-content:flex-end}}
+.tj-wa{background:#efe7dd;border-radius:14px;padding:14px}.tj-bub{background:#d9fdd3;border-radius:12px;padding:5px;max-width:330px;margin-left:auto;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.tj-og{background:#fff;border-radius:9px 9px 0 0;aspect-ratio:1.6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}.tj-og svg{width:54px;height:54px;fill:none;stroke:#c2552e;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px}.tj-og b{font-size:17px;color:#c2552e;font-weight:700}.tj-og span{font-size:13px;font-weight:700;color:#2b2420}.tj-og small{font-size:11px;color:#8a7d74}
+.tj-ogt{background:#f0f2f5;border-radius:0 0 9px 9px;padding:8px 10px;margin-bottom:6px}.tj-ogt b{display:block;font-size:13px;color:#111}.tj-ogt small{display:block;font-size:11.5px;color:#555;line-height:1.35}.tj-ogt i{display:block;font-style:normal;font-size:11px;color:#777;margin-top:2px}
+.tj-prev{white-space:pre-wrap;font-size:13.5px;line-height:1.45;color:#111;padding:2px 6px 6px}
 </style>
 <style>
 .idoc{background:#fff;border:1px solid #ece6df;border-radius:6px;box-shadow:0 2px 14px rgba(26,26,26,.07);padding:26px 24px 18px;margin-top:4px;font-family:var(--font)}
@@ -8453,12 +8457,13 @@ function enviarTarjeta(tel,quien,nuevo,cad,refId,crear){return new Promise(fin=>
  const m=hzModal(`<div class="hz-top"><div><small>Tarjeta regalo de ${TJ_IMP()} €</small><b>¿Cómo ponemos los nombres?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Para</div><input type="text" class="tj-q" maxlength="30" value="${escH(pn(quien))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
   <div class="hz-lab">Por recomendarnos a</div><input type="text" class="tj-n" maxlength="30" value="${escH(pn(nuevo))}" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px">
-  <div class="hz-lab">Así le llega</div><img class="tj-img" alt="" style="width:100%;border-radius:12px;display:block"><div class="tj-prev msg-prev"></div>
+  <div class="hz-lab">Así le llega por WhatsApp</div><div class="tj-wa"><div class="tj-bub"><div class="tj-og"><svg viewBox="0 0 96 96" aria-hidden="true"><rect x="18" y="46" width="60" height="40" rx="6"/><path d="M48 46v40"/><rect x="12" y="32" width="72" height="14" rx="5"/><path d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/></svg><b class="tj-oi"></b><span class="tj-og-n"></span><small>por recomendarnos</small></div><div class="tj-ogt"><b class="tj-ot"></b><small>Gracias por recomendarnos. Te lo descontamos en tu próxima sesión.</small><i>app.fisioterapia365.com</i></div><div class="tj-prev"></div></div></div>
   <div class="hz-bts"><button type="button" class="hz-ok">Enviar por WhatsApp</button></div>`);
  m.querySelector('.hz-x').onclick=()=>{m.remove();fin(false);};
- {const cad0=cad||(()=>{const c=new Date();c.setMonth(c.getMonth()+6);return isoMadrid(c);})();let tm=0,url='';
-  const pv=()=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();m.querySelector('.tj-prev').textContent=mensajeTarjeta(q,n,cad0)+'\n\nAquí lo tienes:\nhttps://app.fisioterapia365.com/tarjeta/…';
-   clearTimeout(tm);tm=setTimeout(async()=>{try{const b=await tarjetaImagen(q,n,cad0,'image/jpeg');if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(b);const im=m.querySelector('.tj-img');if(im)im.src=url;}catch(e){}},250);};
+ {const cad0=cad||(()=>{const c=new Date();c.setMonth(c.getMonth()+6);return isoMadrid(c);})();
+  const pv=()=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim(),q1=capi(String(q).split(' ')[0]);
+   m.querySelector('.tj-prev').innerHTML=escH(mensajeTarjeta(q,n,cad0)+'\n\nAquí lo tienes:\nhttps://app.fisioterapia365.com/tarjeta/…').replace(/\*([^*\n]+)\*/g,'<b>$1</b>');
+   m.querySelector('.tj-oi').textContent=TJ_IMP()+' € para ti';m.querySelector('.tj-og-n').textContent='Gracias, '+q1;m.querySelector('.tj-ot').textContent=TJ_IMP()+' € de regalo, '+q1;};
   pv();m.querySelector('.tj-q').oninput=pv;m.querySelector('.tj-n').oninput=pv;}
  m.querySelector('.hz-ok').onclick=async e=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();
   // La tarjeta solo se crea cuando se confirma el envío (si se cierra la ventana no se gasta)
@@ -8468,9 +8473,7 @@ function enviarTarjeta(tel,quien,nuevo,cad,refId,crear){return new Promise(fin=>
 async function enviarTarjeta2(tel,quien,nuevo,cad,refId,w0){let txt=mensajeTarjeta(quien,nuevo,cad);
  // La imagen se guarda y va como enlace: WhatsApp enseña la tarjeta en la vista previa (sin descargar ni adjuntar nada)
  const w=w0||window.open('about:blank','_blank');
- try{const b=await tarjetaImagen(quien,nuevo,cad,'image/jpeg');const b64=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(',')[1]);fr.readAsDataURL(b);});
-  const d=await (await fetch('/api/schedule?action=seg-referido-img',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:refId,b64})})).json();
-  if(!d.ok)console.log('tarjeta img',d);}catch(e){console.log('tarjeta img',e);}
+ // La vista previa de WhatsApp la genera el servidor (/tarjeta/ID.png): ya no hace falta subir imagen
  // El enlace va siempre (la página de la tarjeta se ve aunque la imagen no se haya podido guardar)
  if(refId)txt+=`\n\nAquí lo tienes:\nhttps://app.fisioterapia365.com/tarjeta/${refId}`;
  const t=segTel(tel||''),u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;
