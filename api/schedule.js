@@ -772,9 +772,7 @@ $('b3').onclick=()=>{const b=$('b3');b.disabled=true;b.textContent='Preparando�
 let _ogFonts = null;
 async function ogFuentes() {
   if (_ogFonts) return _ogFonts;
-  const base = 'https://app.fisioterapia365.com/informe/';
-  _ogFonts = Promise.all(['Poppins-Bold.ttf', 'Poppins-Medium.ttf', 'Poppins-Regular.ttf'].map(f => fetch(base + f).then(r => { if (!r.ok) throw new Error('fuente'); return r.arrayBuffer(); }).then(b => Buffer.from(b))))
-    .catch(e => { _ogFonts = null; throw e; });
+  const F = require('./_fuentes'); _ogFonts = [Buffer.from(F.bold, 'base64'), Buffer.from(F.medium, 'base64')];
   return _ogFonts;
 }
 function ogCitaSvg({ fecha, hora, fisio }) {
@@ -854,7 +852,7 @@ function paginaConfirmar(D, C) {
         : `<form method="post"><button type="submit">¡Allí estaré!</button></form>`}
       ${!D.inactiva && D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : ''}`;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu cita · FISIO365</title>
-<meta property="og:title" content="Tu cita en FISIO365"><meta property="og:description" content="${e(fl ? (fl.charAt(0).toUpperCase() + fl.slice(1)) + ' a las ' + (D.hora || '') : 'Tu cita en FISIO365')}"><meta property="og:image" content="${D.id && D.fecha ? `https://app.fisioterapia365.com/c/${D.id}-${firmaCita(D.id)}.png?v=${e(D.fecha.replace(/-/g, ''))}${e(String(D.hora || '').replace(':', ''))}${D.fisio ? '-' + e(D.fisio.toLowerCase()) : ''}` : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:image:height" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:type" content="website">
+<meta property="og:title" content="Tu cita en FISIO365"><meta property="og:description" content="${e(fl ? (fl.charAt(0).toUpperCase() + fl.slice(1)) + ' a las ' + (D.hora || '') : 'Tu cita en FISIO365')}"><meta property="og:image" content="${D.id && D.fecha ? `https://app.fisioterapia365.com/c/${D.id}-${firmaCita(D.id)}.png?g=2&v=${e(D.fecha.replace(/-/g, ''))}${e(String(D.hora || '').replace(':', ''))}${D.fisio ? '-' + e(D.fisio.toLowerCase()) : ''}` : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:image:height" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .c{background:#fff;border-radius:24px;padding:28px 22px;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
