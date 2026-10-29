@@ -799,6 +799,14 @@ function ogCitaSvg({ fecha, hora, fisio }) {
     + ogTexto(O.b, hora, 66, 300, 430, 0, T)
     + (fisio ? ogTexto(O.m, 'con ' + fisio, 30, 300, 490, 0, M) : '') + `</svg>`;
 }
+// Vista previa (WhatsApp) del enlace de la encuesta: carita sonriente + nombre
+function ogEncSvg({ pila, fisio }) {
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `¿Qué tal, ${pila}?` : '¿Qué tal?', sz = t1.length > 14 ? Math.max(36, Math.round(52 * 14 / t1.length)) : 52;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="9" stroke-linecap="round"><circle cx="300" cy="225" r="98"/><path d="M247 205 Q262 187 277 205"/><path d="M323 205 Q338 187 353 205"/><path d="M240 243 Q300 300 360 243"/></g>`
+    + ogTexto(O.b, t1, sz, 300, 405, 0, K)
+    + ogTexto(O.m, fisio ? `Tu primera visita con ${fisio}` : 'Tu primera visita', 30, 300, 458, 0, M) + `</svg>`;
+}
 // Hora de Madrid → instante UTC (para el calendario)
 function madridUTC(fecha, hora) {
   const [y, m, d] = fecha.split('-').map(Number), [hh, mm] = String(hora || '00:00').split(':').map(Number);
@@ -838,7 +846,7 @@ function paginaEncuesta(D) {
   const e = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const J = JSON.stringify({ pila: D.pila || '', fisio: D.fisio || '', v: D.v || '', url: D.url || '', google: RESENA_URL }).replace(/</g, '\\u003c');
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu primera visita · FISIO365</title>
-<meta property="og:title" content="¿Qué tal tu primera visita?"><meta property="og:description" content="Un toque y listo. Nos ayuda muchísimo."><meta property="og:image" content="https://app.fisioterapia365.com/informe/og-cita-v3.png"><meta property="og:type" content="website">
+<meta property="og:title" content="¿Qué tal tu primera visita${D.pila ? ', ' + e(D.pila) : ''}?"><meta property="og:description" content="Un toque y listo. Nos ayuda muchísimo."><meta property="og:image" content="${D.url ? e(D.url) + '.png?v=1' : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .c{background:#fff;border-radius:24px;padding:28px 22px;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
@@ -1286,6 +1294,20 @@ module.exports = async function handler(req, res) {
     return res.status(200).send(paginaConfirmar({ ...D, ...extra, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '', app }, C));
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
+  if (action === 'encuesta-og') {
+    const id = String(req.query.id || ''), sg = String(req.query.s || '');
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaEnc(id)) return res.status(404).send('No encontrado');
+    try {
+      const r = await at(`tblTPlcuiSjQngkaD/${id}`); const F = r.fields || {}, pid = (F['RELACIÓN - CITA'] || [])[0];
+      const f0 = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '').trim().split(' ')[0], fisio = f0 ? f0.charAt(0).toUpperCase() + f0.slice(1).toLowerCase() : '';
+      let pila = ''; if (pid) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}; pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; }
+      pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
+      const { Resvg } = require('@resvg/resvg-js');
+      const png = new Resvg(ogEncSvg({ pila, fisio }), { font: { loadSystemFonts: false } }).render().asPng();
+      res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.status(200).send(png);
+    } catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.status(302).end(); }
+  }
   if (action === 'encuesta') {
     const id = String(req.query.id || ''), sg = String(req.query.s || '');
     res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
