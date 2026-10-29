@@ -937,8 +937,7 @@ function paginaConfirmar(D, C) {
       return `<div class="okv"><svg class="sm" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="c1" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="e1" d="M25 35 Q30 29 35 35"/><path class="e1" d="M45 35 Q50 29 55 35"/><path class="s1" d="M26 45 Q40 62 54 45"/></svg>
       <p class="okt fi" style="animation-delay:1.1s">${D.recien ? '¡Confirmada' : 'Cita confirmada'}${D.pila ? ', ' + e(D.pila) : ''}${D.recien ? '!' : ''}</p>
       <p class="oks fi" style="animation-delay:1.3s">Te esperamos el ${e(dc)} a las ${e(D.hora)}${D.fisio ? ' con ' + e(D.fisio) : ''}.</p>
-      <div class="fi" style="animation-delay:1.8s"><div class="dots">${Array.from({ length: nd }, (_, i) => `<i class="${i < lleno - 1 ? 'on' : i === lleno - 1 ? 'nw' : ''}"></i>`).join('')}</div>
-      <p class="rt">${r > 1 ? `Llevas <b>${r} citas</b> confirmadas seguidas` : '<b>¡Empieza tu racha!</b> Confirma también la próxima'}</p></div>
+      <div class="cuenta fi" style="animation-delay:1.7s"><svg class="mini" viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="11" width="32" height="29" rx="5"/><path d="M8 19h32M16 7v7M32 7v7"/><path class="tk" d="M18 29.5l4.5 4.5L31 25.5"/></svg><p class="rt">${(() => { const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), n = Math.round((Date.parse(D.fecha + 'T12:00:00Z') - Date.parse(hoy + 'T12:00:00Z')) / 864e5); return n <= 0 ? '<b>¡Es hoy!</b> Nos vemos en un ratito' : n === 1 ? '<b>¡Es mañana!</b> Ya queda nada' : `Faltan <b>${n} días</b>`; })()}</p></div>
       ${D.cal ? `<a class="cal fi" style="animation-delay:2.4s" href="${e(D.cal.ics)}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M16 3v4M8 3v4M4 10h16M12 13v4M10 15h4"/></svg>Añadir a mi calendario</a><a class="gcal fi" style="animation-delay:2.5s" href="${e(D.cal.google)}" target="_blank" rel="noopener">o en Google Calendar</a>` : ''}</div>`; })()
       + (D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : '') + appB
     : `<p class="hola">${D.pila ? 'Hola, ' + e(D.pila) : 'Hola'} 👋</p><p class="sub">${D.inactiva ? '' : D.confirmada ? '' : 'Te esperamos en FISIO365.'}</p><div class="cita"><small>Tu cita</small><b>${e(fl.charAt(0).toUpperCase() + fl.slice(1))}</b><b>a las ${e(D.hora)}</b>${D.fisio ? `<span>Con ${e(D.fisio)}</span>` : ''}</div>
@@ -981,9 +980,13 @@ button{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:#fff;
 .dots{display:flex;gap:8px;justify-content:center;margin:20px 0 8px}.dots i{width:11px;height:11px;border-radius:50%;border:1.5px solid #e2b7a6}.dots i.on{background:#c2552e;border-color:#c2552e}
 .dots i.nw{animation:pop .45s 2.2s forwards}@keyframes pop{0%{transform:scale(1)}60%{transform:scale(1.55);background:#c2552e;border-color:#c2552e}100%{transform:scale(1);background:#c2552e;border-color:#c2552e}}
 .rt{font-size:13.5px;color:#7d6a60;margin:0}.rt b{color:#c2552e}
+.cuenta{margin:22px 0 4px}.mini{display:block;width:46px;height:46px;margin:0 auto 8px;transform-origin:24px 7px;animation:col 1.4s 1.9s ease-in-out both,sal 3.2s 4s ease-in-out infinite}.mini rect,.mini path{fill:none;stroke:#c2552e;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.mini .tk{stroke-dasharray:22;stroke-dashoffset:22;animation:dr .45s 2.7s ease-out forwards}
+@keyframes col{0%{transform:rotate(-14deg)}30%{transform:rotate(10deg)}55%{transform:rotate(-6deg)}78%{transform:rotate(3deg)}100%{transform:none}}
+@keyframes sal{0%,70%,100%{transform:none}78%{transform:translateY(-5px) rotate(-4deg)}86%{transform:translateY(0)}92%{transform:translateY(-2px) rotate(3deg)}}
 .cal{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:22px;text-decoration:none;font-weight:600;font-size:15px;color:#141414;background:#fff;border:1.5px solid #e6ddd5;border-radius:14px;padding:14px}.cal svg{width:19px;height:19px;stroke:#c2552e;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .gcal{font-size:13px;color:#7d6a60;margin-top:10px}
-@media (prefers-reduced-motion:reduce){.fc .o,.fc .m,.fc .ey,.fc .br,.fc .ce,.hoja .band,.clk line,.bt,.sm .e1,.sm .c1,.sm .s1,.fi,.dots i.nw{animation-duration:.01s!important;animation-delay:0s!important}}
+@media (prefers-reduced-motion:reduce){.fc .o,.fc .m,.fc .ey,.fc .br,.fc .ce,.hoja .band,.clk line,.bt,.sm .e1,.sm .c1,.sm .s1,.fi,.dots i.nw,.mini,.mini .tk{animation-duration:.01s!important;animation-delay:0s!important}}
 .pie{margin-top:22px;font-size:12.5px;color:#7d6a60;line-height:1.6}.pie a{color:#7d6a60}h1{font-size:20px}</style></head>
 <body><div class="c">${!D.inactiva && D.fecha ? '' : '<img class="logo" src="https://app.fisioterapia365.com/icono.png" alt="FISIO365">'}${cuerpo}<div class="pie">${e(C.direccion || '')}${tel ? `<br>¿Dudas? Llámanos al <a href="tel:+34${e(tel)}">${e(C.tel)}</a>` : ''}</div></div></body></html>`;
 }
@@ -1278,7 +1281,7 @@ module.exports = async function handler(req, res) {
         app = { usuario: email || t, pin, ejercicios: !!(pl.records || []).length };
       }
     }
-    const extra = conf0 ? { racha: pid ? await rachaConfirmadas(pid, fecha, hora) : 1, cal: { ics: `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}.ics`, google: calendarioCita(D, C).google } } : {};
+    const extra = conf0 ? { cal: { ics: `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}.ics`, google: calendarioCita(D, C).google } } : {};
     return res.status(200).send(paginaConfirmar({ ...D, ...extra, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '', app }, C));
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
