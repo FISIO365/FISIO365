@@ -1494,7 +1494,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-segb.sug{border-color:#c2552e;background:#fdeee4;color:#c2552e}.ag-segb.ya{border-color:#e8f6ec;background:#e8f6ec;color:#16803c}.ag-borrar{color:#b42318!important}.ag-otras button{font-family:var(--font);font-size:12.5px;color:#7d6a60;background:none;border:none;text-decoration:underline;cursor:pointer}
 
 /* ── Sugerencias ── */
-#sb-sug-badge,#pmSugN{background:#ee2155;color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:2px 7px;margin-left:auto;font-style:normal}
+#sb-val-badge,#pmValN,#sb-sug-badge,#pmSugN{background:#ee2155;color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:2px 7px;margin-left:auto;font-style:normal}
 .sug{max-width:860px}
 .sug-hero{background:#1e2a38;color:#fff;border-radius:24px;padding:22px 24px;margin-bottom:14px;display:flex;align-items:center;gap:16px}
 .sug-hero svg{width:30px;height:30px;fill:none;stroke:#f3c9b5;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
@@ -1657,10 +1657,11 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rp-av2>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rp-av2 b{font-size:14px}.rp-av2 small{font-size:12.5px;color:#7d6a60;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rp-av2 em{font-style:normal;font-size:12.5px;font-weight:700;color:#c2552e}
 .enc-r{display:block;font-size:12px;color:#16803c;margin-top:3px;line-height:1.35}.enc-r.mal{color:#b42318}
 .rec-t2{color:#c2552e;font-weight:600}.rec-b.av2.toca{background:#c2552e;color:#fff;border-color:#c2552e}
-.ag-encb{position:relative}.ag-encn{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#c2552e;color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}
-.enc-av{margin:10px 0 4px;border:1px solid #efe6de;background:#fbf8f5;border-radius:14px;padding:10px 12px 6px}.enc-av-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}.enc-av-h svg{width:17px;height:17px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linejoin:round}.enc-av-h b{flex:1;font-size:13px;color:#2b2420}
-.enc-av-x{border:none;background:none;color:#a3968c;font-size:14px;cursor:pointer;padding:2px 4px}.enc-av-it{display:flex;gap:9px;align-items:flex-start;width:100%;text-align:left;border:none;background:none;border-top:1px solid #f1ebe5;padding:8px 0;cursor:pointer;font:400 13px var(--font);color:#5c4f47}.enc-av-it:first-of-type{border-top:none}
-.enc-av-it i{flex:none;width:8px;height:8px;border-radius:50%;margin-top:6px;background:#16803c}.enc-av-it i.med{background:#d97706}.enc-av-it i.mal{background:#b42318}.enc-av-it b{color:#2b2420;font-weight:600}.enc-av-it em{font-style:normal;color:#c2552e}.enc-av-it small{display:block;color:#8a7d74;font-size:12px;margin-top:2px}.enc-av-mas{font-size:12px;color:#8a7d74;padding:2px 0 6px 17px}
+.val-res{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}.val-res div{background:#fbf8f5;border:1px solid #efe6de;border-radius:12px;padding:10px 12px}.val-res b{display:block;font-size:20px;color:#2b2420}.val-res span{font-size:12px;color:#8a7d74}
+.val-nota{font-size:12px;color:#a3968c;margin:0 0 6px}.val-it{display:flex;gap:10px;padding:12px 10px;border-top:1px solid #f1ebe5;border-radius:10px}.val-it:first-child{border-top:none}.val-it.nuevo{background:#fdf6f2;border-top-color:transparent;margin-bottom:4px}.val-it.nuevo .val-c{background:#fff}
+.val-it>i{flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px;background:#16803c}.val-it>i.med{background:#d97706}.val-it>i.mal{background:#b42318}.val-tx{flex:1;min-width:0;font-size:13.5px;color:#5c4f47}.val-tx b{color:#2b2420;font-weight:600}
+.val-nv{margin-left:8px;font-size:10.5px;font-weight:700;color:#fff;background:#c2552e;border-radius:99px;padding:1px 7px;vertical-align:1px}.val-m{font-size:12.5px;color:#8a7d74;margin-top:2px}.val-m em{font-style:normal;color:#c2552e}.val-c{margin-top:5px;font-size:13px;color:#5c4f47;background:#faf7f4;border-radius:10px;padding:8px 10px}
+.val-mas{margin-top:12px;width:100%;border:1px solid #e6ddd5;background:#fff;border-radius:12px;padding:11px;font:600 13.5px var(--font);color:#2b2420;cursor:pointer}
 </style>
 <style>
 .idoc{background:#fff;border:1px solid #ece6df;border-radius:6px;box-shadow:0 2px 14px rgba(26,26,26,.07);padding:26px 24px 18px;margin-top:4px;font-family:var(--font)}
@@ -1758,6 +1759,9 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="sb-item" id="sb-mis" onclick="showSection('mis')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg></span><span class="sb-txt">Mis estadísticas</span>
  </div>
+ <div class="sb-item" id="sb-val" onclick="showSection('val')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg></span><span class="sb-txt">Valoraciones</span><i id="sb-val-badge" style="display:none"></i>
+ </div>
  <div class="sb-item" id="sb-sug" onclick="showSection('sug')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg></span><span class="sb-txt">Sugerencias</span><i id="sb-sug-badge" style="display:none"></i>
  </div>
@@ -1817,6 +1821,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
  <div class="pm-head"><div class="pm-av" id="pmAv"></div><div><b id="pmNom"></b><span id="pmRol"></span></div></div>
  <button type="button" class="pm-it" id="pmCom" style="display:none" onclick="cerrarPerfilMenu();showSection('com')"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg>Comunicaciones<i id="pmComN" style="display:none"></i></button>
  <button type="button" class="pm-it" id="pmMis" style="display:none" onclick="cerrarPerfilMenu();showSection('mis')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Mis estadísticas</button>
+ <button type="button" class="pm-it" id="pmVal" onclick="cerrarPerfilMenu();showSection('val')"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>Valoraciones<i id="pmValN" style="display:none"></i></button>
  <button type="button" class="pm-it" id="pmSug" onclick="cerrarPerfilMenu();showSection('sug')"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Sugerencias<i id="pmSugN" style="display:none"></i></button>
  <button type="button" class="pm-it" id="pmCall" onclick="cerrarPerfilMenu();showSection('call')"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Call-in</button>
  <button type="button" class="pm-it" id="pmRend" style="display:none" onclick="cerrarPerfilMenu();showSection('rend')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rendimiento</button>
@@ -1917,6 +1922,7 @@ const $ = id => document.getElementById(id);
 const ce = (t,c) => { const e=document.createElement(t); if(c)e.className=c; return e; };
 
 const TOPBAR = {
+ val: ['Valoraciones','Encuestas de primera visita'],
  admin: ['Dirección','Equipo, horarios y accesos'],
  prog: ['Programas','Ejercicios de tus pacientes'],
  anam: ['Anamnesis clínica','Valoración y protocolos'],
@@ -2130,7 +2136,7 @@ function pintarPerfil(){if(!fisioActual)return;requestAnimationFrame(ajustaTopba
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=(fisioActual.role==='admin'?'Administración':'Fisioterapeuta')+(fisioActual.direccion?' · Dirección':'');
  const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{if('direccion' in fisioActual){const d=!!fisioActual.direccion;[['sb-rend','pmRend'],['sb-stats','pmStats'],['sb-admin','pmAdmin']].forEach(([sb,pm])=>{const a=$(sb),b=$(pm);if(a)a.style.display=d?'':'none';if(b)b.style.display=d?'':'none';});}}catch(e){}// Rendimiento, Estadísticas y Administración: solo dirección (casilla «Dirección» en Equipo)
- try{RD_DIR=('direccion' in fisioActual)?!!fisioActual.direccion:['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});if(RD_DIR)$('sb-rep').style.display='';const t=$('sb-rep')&&$('sb-rep').querySelector('.sb-txt');if(t)t.textContent=RD_DIR?'Daily report':'Check-list';rdiaBadge();}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}try{sugContar();}catch(e){}try{const v=fisioActual.role!=='admin';['sb-mis','pmMis'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
+ try{RD_DIR=('direccion' in fisioActual)?!!fisioActual.direccion:['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});if(RD_DIR)$('sb-rep').style.display='';const t=$('sb-rep')&&$('sb-rep').querySelector('.sb-txt');if(t)t.textContent=RD_DIR?'Daily report':'Check-list';rdiaBadge();}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}try{sugContar();encContar();}catch(e){}try{const v=fisioActual.role!=='admin';['sb-mis','pmMis'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
@@ -2164,7 +2170,7 @@ function showSection(sec){
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
  try{$('btnRend').classList.toggle('activo',sec==='rend');$('btnTar').classList.toggle('activo',sec==='tar');}catch(e){}
- ['anam','prog','agenda','pac','school','msg','rend','seg','tar','call','stats','cap','ejer','rep','admin','com','sug','mis','rdia'].forEach(s=>{
+ ['anam','prog','agenda','pac','school','msg','rend','seg','tar','call','stats','cap','ejer','rep','admin','com','sug','mis','rdia','val'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec||(s==='rep'&&sec==='rdia'));
  });
  const [t,s] = TOPBAR[sec];
@@ -2197,6 +2203,7 @@ function showSection(sec){
  else if(sec==='admin') renderAdmin(wrap);
  else if(sec==='com') renderCom(wrap);
  else if(sec==='sug') renderSug(wrap);
+ else if(sec==='val') renderValoraciones(wrap);
  else if(sec==='mis') renderRendimiento(wrap,true);
 }
 
@@ -2229,11 +2236,11 @@ async function marcarCampana(){const e=await F365Avisos.estado('f365_panel_aviso
 function abrirAvisoPanel(url){try{const u=new URL(url,location.origin);const s=u.searchParams.get('s'),p=u.searchParams.get('p');avisoPendiente='';history.replaceState(null,'',location.pathname);
  if(!fisioActual){avisoPendiente=url;return;}
  if(s==='msg'){showSection('msg');if(/^rec[A-Za-z0-9]{14}$/.test(p||''))renderMensajes($('mainWrap'),p);}
- if(s==='enc'){const f=u.searchParams.get('f');encMarcaVisto();agRecordatorios(null,'enc',/^\d{4}-\d{2}-\d{2}$/.test(f||'')?f:'');}}catch(e){}}
+ if(s==='enc')showSection('val');}catch(e){}}
 // Puntito/número del icono de la app: lo que queda pendiente de chat, comunicaciones y sugerencias (se quita solo cuando está todo visto)
-(function(){let t=0;const sync=()=>{clearTimeout(t);t=setTimeout(()=>{try{const n=['sb-msg-badge','sb-com-badge','sb-sug-badge'].reduce((a,id)=>{const e=document.getElementById(id);return a+((e&&e.style.display!=='none'&&parseInt(e.textContent,10))||0);},0);
+(function(){let t=0;const sync=()=>{clearTimeout(t);t=setTimeout(()=>{try{const n=['sb-msg-badge','sb-com-badge','sb-sug-badge','sb-val-badge'].reduce((a,id)=>{const e=document.getElementById(id);return a+((e&&e.style.display!=='none'&&parseInt(e.textContent,10))||0);},0);
   if(n>0){navigator.setAppBadge&&navigator.setAppBadge(n).catch(()=>{});}else{navigator.clearAppBadge&&navigator.clearAppBadge().catch(()=>{});try{navigator.serviceWorker&&navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});}catch(_){}}}catch(e){}},400);};
- const ob=new MutationObserver(sync);const engancha=()=>['sb-msg-badge','sb-com-badge','sb-sug-badge'].forEach(id=>{const e=document.getElementById(id);if(e&&!e._ob){e._ob=1;ob.observe(e,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['style']});}});
+ const ob=new MutationObserver(sync);const engancha=()=>['sb-msg-badge','sb-com-badge','sb-sug-badge','sb-val-badge'].forEach(id=>{const e=document.getElementById(id);if(e&&!e._ob){e._ob=1;ob.observe(e,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['style']});}});
  document.addEventListener('DOMContentLoaded',()=>{engancha();sync();});setInterval(()=>{engancha();sync();},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync();});})();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='ABRIR')abrirAvisoPanel(e.data.url);});}
 
@@ -5960,31 +5967,30 @@ function horaPicker(anchor,valor,ops,onPick){
 function ultSesion(citas,hoy){const ah=new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
  const hh=c=>String(c.hora||'').replace(/^(\d):/,'0$1:').slice(0,5);
  return (citas||[]).filter(c=>c.fecha&&c.fecha<=hoy&&(/REALIZADA/i.test(c.estado)||(c.fecha===hoy&&/PENDIENTE/i.test(c.estado)&&hh(c)&&hh(c)<=ah))).sort((a,b)=>(b.fecha+hh(b)).localeCompare(a.fecha+hh(a)))[0];}
-// ── AVISOS DE LA ENCUESTA DE 1ª VISITA (dentro del panel) ──
+// ── VALORACIONES (encuesta de 1ª visita) ──
 // Dirección (Ramiro, Nora) ve todas las respuestas; cada fisio, las buenas de sus pacientes. «Visto» se guarda en este dispositivo.
-let ENC_UL=[];
+let ENC_UL=[],_encIv=null;
 const encYo=()=>String((fisioActual&&fisioActual.nombre)||'').split(' ')[0].toLowerCase(),encK=()=>'f365_enc_visto_'+encYo();
 const encT=x=>String(x.resena&&x.resena>x.respondida?x.resena:x.respondida||'');
-function encMarcaVisto(){const m=ENC_UL.reduce((a,x)=>encT(x)>a?encT(x):a,'');if(m)try{localStorage.setItem(encK(),m);}catch(e){}document.querySelectorAll('.enc-av').forEach(e=>e.remove());document.querySelectorAll('.ag-encn').forEach(e=>e.remove());}
-async function encAvisos(card){
- try{const r=await (await fetch(`/api/schedule?action=seg-agenda-enc-nuevas&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok||!card.isConnected)return;
-  const dir=esDireccion(),yo=encYo();
-  ENC_UL=(r.lista||[]).filter(x=>dir||(String(x.fisio).split(' ')[0].toLowerCase()===yo&&/Excelente|Muy buena/.test(x.valoracion)));
-  let visto='';try{visto=localStorage.getItem(encK())||'';}catch(e){}
-  if(!visto){visto=new Date(Date.now()-2*864e5).toISOString();try{localStorage.setItem(encK(),visto);}catch(e){}}
-  const N=ENC_UL.filter(x=>encT(x)>visto);
-  card.querySelectorAll('.enc-av,.ag-encn').forEach(e=>e.remove());if(!N.length)return;
-  const b=card.querySelector('.ag-encb');if(b)b.insertAdjacentHTML('beforeend',`<span class="ag-encn">${N.length}</span>`);
-  const cls=v=>/Excelente|Muy buena/.test(v)?'ok':v==='Normal'?'med':'mal',fn=n=>capTit(String(n||'—').split(' ').slice(0,2).join(' '));
-  const d=document.createElement('div');d.className='enc-av';
-  d.innerHTML=`<div class="enc-av-h"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg><b>${N.length===1?'Nueva valoración':N.length+' valoraciones nuevas'} de primera visita</b><button type="button" class="enc-av-x" aria-label="Marcar como visto">✕</button></div>`
-   +N.slice(0,4).map((x,i)=>`<button type="button" class="enc-av-it" data-i="${i}"><i class="${cls(x.valoracion)}"></i><span><b>${escH(fn(x.nombre))}</b> · ${escH(x.valoracion)}${x.fisio?' · con '+escH(capTit(String(x.fisio).split(' ')[0])):''}${x.resena?' · <em>fue a Google</em>':''}${x.comentario?`<small>«${escH(String(x.comentario).slice(0,90))}${String(x.comentario).length>90?'…':''}»</small>`:''}</span></button>`).join('')
-   +(N.length>4?`<div class="enc-av-mas">y ${N.length-4} más</div>`:'');
-  const bar=card.querySelector('.ag-bar2');bar.parentNode.insertBefore(d,bar.nextSibling);
-  d.querySelector('.enc-av-x').onclick=encMarcaVisto;
-  d.querySelectorAll('.enc-av-it').forEach(it=>it.onclick=()=>{const x=N[+it.dataset.i];encMarcaVisto();agRecordatorios(null,'enc',x.fecha);});
- }catch(e){}
- if(!card._encT){card._encT=setInterval(()=>{if(!card.isConnected)return clearInterval(card._encT);if(!document.hidden)encAvisos(card);},5*60e3);}
+const encVisto=()=>{let v='';try{v=localStorage.getItem(encK())||'';}catch(e){}if(!v){v=new Date(Date.now()-2*864e5).toISOString();try{localStorage.setItem(encK(),v);}catch(e){}}return v;};
+function encBadge(n){[['sb-val-badge',n],['pmValN',n]].forEach(([i,v])=>{const e=$(i);if(e){e.textContent=v||'';e.style.display=v?'':'none';}});}
+async function encCarga(){const r=await (await fetch(`/api/schedule?action=seg-agenda-enc-nuevas&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw new Error(r.error||'Error');
+ const dir=esDireccion(),yo=encYo();ENC_UL=(r.lista||[]).filter(x=>dir||(String(x.fisio).split(' ')[0].toLowerCase()===yo&&/Excelente|Muy buena/.test(x.valoracion)));return ENC_UL;}
+async function encContar(){if(!fisioActual)return;if(!_encIv)_encIv=setInterval(()=>{if(!document.hidden)encContar();},120000);
+ try{await encCarga();const v=encVisto();encBadge(ENC_UL.filter(x=>encT(x)>v).length);}catch(e){}}
+async function renderValoraciones(wrap){
+ const card=ce('div','card');card.innerHTML='<div class="fac-vacio">Cargando…</div>';wrap.appendChild(card);
+ try{await encCarga();}catch(e){card.innerHTML='<div class="fac-vacio">No se han podido cargar las valoraciones.</div>';return;}
+ const v=encVisto(),dir=esDireccion(),fn=n=>capTit(String(n||'—').split(' ').slice(0,2).join(' '));
+ const cls=x=>/Excelente|Muy buena/.test(x)?'ok':x==='Normal'?'med':'mal',fd=f=>{if(!f)return '';const d=new Date(f+'T12:00:00');return d.getDate()+'/'+(d.getMonth()+1);};
+ const L=ENC_UL,ok=L.filter(x=>/Excelente|Muy buena/.test(x.valoracion)).length,go=L.filter(x=>x.resena).length;
+ card.innerHTML=`<div class="val-res"><div><b>${L.length}</b><span>respuestas</span></div><div><b>${ok}</b><span>muy contentos</span></div><div><b>${go}</b><span>a Google</span></div></div>
+  <div class="val-nota">${dir?'Últimos 14 días. Todas las respuestas a la encuesta de primera visita.':'Últimos 14 días. Las valoraciones buenas de tus pacientes.'}</div>
+  ${!L.length?'<div class="fac-vacio">Todavía no hay respuestas estos días</div>':`<div class="val-lista">${L.map(x=>`<div class="val-it${encT(x)>v?' nuevo':''}"><i class="${cls(x.valoracion)}"></i><div class="val-tx"><div><b>${escH(fn(x.nombre))}</b>${encT(x)>v?'<span class="val-nv">Nuevo</span>':''}</div>
+   <div class="val-m">${escH(x.valoracion)}${x.fisio?' · con '+escH(capTit(String(x.fisio).split(' ')[0])):''} · 1ª visita el ${fd(x.fecha)}${x.resena?' · <em>fue a Google</em>':''}</div>${x.comentario?`<div class="val-c">«${escH(x.comentario)}»</div>`:''}</div></div>`).join('')}</div>`}
+  <button type="button" class="val-mas">Ver por días en Encuestas</button>`;
+ card.querySelector('.val-mas').onclick=()=>agRecordatorios(null,'enc');
+ const m=L.reduce((a,x)=>encT(x)>a?encT(x):a,'');if(m)try{localStorage.setItem(encK(),m);}catch(e){}encBadge(0);
 }
 async function agRecordatorios(onDone,modoIni,encFIni){
  let fechas=recFechasDef(),datos=null;
@@ -6178,8 +6184,7 @@ function renderAgenda(wrap){
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n*(AG.vista==='semana'?7:1));cargar();});
  $c('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
  $c('.ag-recb:not(.ag-pdfb):not(.ag-encb)').onclick=()=>agRecordatorios(()=>cargar());
- $c('.ag-encb').onclick=()=>{encMarcaVisto();agRecordatorios(()=>cargar(),'enc');};
- encAvisos(card);
+ $c('.ag-encb').onclick=()=>agRecordatorios(()=>cargar(),'enc');
  $c('.ag-pdfb').onclick=()=>agPdfHuecos();
  fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};fi.style.display='none';
  $c('.ag-fe').onclick=e=>{e.preventDefault();miniCal($c('.ag-ft'),AG.fecha,f=>{AG.fecha=f;cargar();});};
