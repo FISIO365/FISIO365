@@ -6531,7 +6531,8 @@ function agAlta(c,onDone){
    m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.al-no').onclick=()=>m.remove();
    const hola=`Hola${pila?' '+pila:''},\n\n¡Nos alegra mucho haberte ayudado!`;
    m.querySelectorAll('.al-ops button').forEach(w=>w.onclick=async()=>{if(w.dataset.a==='g'){abrirWA(tel,`${hola} Si tienes un minuto, nos ayudaría muchísimo una reseña tuya en Google:\n${RESENA_GOOGLE}\n\n¡Gracias por confiar en *FISIO365*!`);m.remove();return;}
-    w.disabled=true;let link=ENCUESTA_FELIZ;try{const r=await agPost('seg-agenda-fin-enlace',{pacienteId:c.pacienteId,fisio:String((fisioActual&&fisioActual.nombre)||'')});if(r.ok&&r.link)link=r.link;}catch(_){}
+    w.disabled=true;let link='';try{const r=await agPost('seg-agenda-fin-enlace',{pacienteId:c.pacienteId,fisio:String((fisioActual&&fisioActual.nombre)||'')});if(r.ok&&r.link)link=r.link;}catch(_){}
+    if(!link){w.disabled=false;toast('No se ha podido crear el enlace',false);return;}
     abrirWA(tel,`${hola} Si tienes un minuto, ¿nos cuentas qué tal tu experiencia en *FISIO365*? Es un toque:\n${link}\n\n¡Gracias por confiar en nosotros!`);m.remove();});
   }catch(err){b.disabled=false;toast(err.message,false);}};
 }
