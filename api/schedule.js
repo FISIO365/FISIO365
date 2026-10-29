@@ -928,7 +928,6 @@ function paginaConfirmar(D, C) {
       ${D.error ? `<p class="err">${e(D.error)}</p>` : ''}
       <form method="post" id="fcf"><button type="submit" class="bt" id="go">¡Allí estaré!</button></form>
       <p class="pista fi" style="animation-delay:2s">Un toque y lo tenemos</p>
-      ${D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : ''}${appB}
       <script>(function(){var f=document.getElementById('fcf'),ya=false;f.onsubmit=function(ev){if(ya)return;ev.preventDefault();ya=true;var b=document.getElementById('go');b.disabled=true;b.textContent='¡Gracias!';
        var m=document.getElementById('boca');m.style.strokeDasharray='none';m.setAttribute('d','M26 45 Q40 62 54 45');var o=document.getElementById('ojos');o.style.animation='none';
        o.innerHTML='<path d="M25 35 Q30 29 35 35"/><path d="M45 35 Q50 29 55 35"/>';setTimeout(function(){f.submit();},700);};})();</script>`; })()

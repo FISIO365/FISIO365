@@ -5864,7 +5864,7 @@ function recTexto(g){const h=agHoyIso(),t=new Date(g.fecha+'T12:00:00'),dm=t.get
  const horas=g.citas.map(c=>c.hora),fis=[...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]).filter(Boolean))];
  const pila=String(g.pila||g.nombre||'').trim().split(/\s+/)[0],nom=pila?pila.charAt(0).toUpperCase()+pila.slice(1).toLowerCase():'';
  // Sin emojis: al abrir WhatsApp desde un enlace algunos se ven como «�»
- return `Hola${nom?' '+nom:''},\n\nTe esperamos en *FISIO365*:\n*${cuando} a las ${horas.join(' y a las ')}*${fis.length?`\nCon ${fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y ')}`:''}\n\nToca aquí para dejarla confirmada${g.citas.some(c=>c.consent)?' (dentro tienes también el formulario de tu primera visita)':g.citas.some(c=>c.app)?' (dentro tienes también el acceso a tu app)':''}:\n${g.citas[0].link}\n\n${g.fecha===agMover(h,1)?'¡Hasta mañana!':g.fecha===h?'¡Hasta luego!':'¡Hasta el '+dn+'!'}`;}
+ return `Hola${nom?' '+nom:''},\n\nTe esperamos en *FISIO365*:\n*${cuando} a las ${horas.join(' y a las ')}*${fis.length?`\nCon ${fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y ')}`:''}\n\nToca aquí para dejarla confirmada:\n${g.citas[0].link}\n\n${g.fecha===agMover(h,1)?'¡Hasta mañana!':g.fecha===h?'¡Hasta luego!':'¡Hasta el '+dn+'!'}`;}
 // 2º aviso: a quien recibió el recordatorio y aún no ha confirmado
 function recTexto2(g){const h=agHoyIso(),t=new Date(g.fecha+'T12:00:00'),dm=t.getDate()+'/'+(t.getMonth()+1),dn=REC_DIAS[t.getDay()];
  const cuando=g.fecha===agMover(h,1)?`Mañana, ${dn} ${dm}`:g.fecha===h?`Hoy, ${dn} ${dm}`:`El ${dn} ${dm}`;
