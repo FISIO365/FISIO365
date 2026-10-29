@@ -801,11 +801,11 @@ function ogCitaSvg({ fecha, hora, fisio }) {
 }
 // Vista previa (WhatsApp) del enlace de la encuesta: carita sonriente + nombre
 function ogEncSvg({ pila, fisio }) {
-  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `¿Qué tal, ${pila}?` : '¿Qué tal?', sz = t1.length > 14 ? Math.max(36, Math.round(52 * 14 / t1.length)) : 52;
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `¿Qué tal, ${pila}?` : '¿Qué tal?', sz = t1.length > 15 ? Math.max(28, Math.round(40 * 15 / t1.length)) : 40;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
-    + `<g fill="none" stroke="${T}" stroke-width="9" stroke-linecap="round"><circle cx="300" cy="225" r="98"/><path d="M247 205 Q262 187 277 205"/><path d="M323 205 Q338 187 353 205"/><path d="M240 243 Q300 300 360 243"/></g>`
-    + ogTexto(O.b, t1, sz, 300, 405, 0, K)
-    + ogTexto(O.m, fisio ? `Tu primera visita con ${fisio}` : 'Tu primera visita', 30, 300, 458, 0, M) + `</svg>`;
+    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round"><circle cx="300" cy="240" r="72"/><path d="M262 226 Q273 213 284 226"/><path d="M316 226 Q327 213 338 226"/><path d="M257 254 Q300 296 343 254"/></g>`
+    + ogTexto(O.b, t1, sz, 300, 384, 0, K)
+    + ogTexto(O.m, fisio ? `Tu primera visita con ${fisio}` : 'Tu primera visita', 23, 300, 426, 0, M) + `</svg>`;
 }
 // Hora de Madrid → instante UTC (para el calendario)
 function madridUTC(fecha, hora) {
