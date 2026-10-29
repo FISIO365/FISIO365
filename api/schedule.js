@@ -1336,7 +1336,8 @@ module.exports = async function handler(req, res) {
           const faltan = para.filter(p => !hecho[p]);
           const tipo = nmC(F.TIPO) || 'Comunicado', esAus = tipo === 'Ausencia', resolucion = esAus ? (nmC(F['RESOLUCIÓN']) || 'Pendiente') : '';
           const puedeAprobar = esAus && abierta && resolucion === 'Pendiente' && para.includes(yo) && de !== yo;
-          return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo, de, para, req, limite: F['FECHA LÍMITE'] || '', abierta,
+          const modo = ['leer', 'hacer', 'responder'].includes(F.MODO) ? F.MODO : (req ? 'hacer' : 'leer'), recibido = json(F.RECIBIDO);
+          return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo, de, para, req, modo, recibido, limite: F['FECHA LÍMITE'] || '', abierta,
             num: SEQ_C[root.id] ? `COM-${String(msgs[0].fecha || '').slice(0, 4)}-${String(SEQ_C[root.id]).padStart(4, '0')}` : '', ausencia: esAus ? json(F.AUSENCIA) : null, datos: json(F.DATOS), resolucion, resueltaPor: F['RESUELTA POR'] || '', puedeAprobar,
             fecha: msgs[0].fecha, ultima: ult.fecha, ultimoDe: ult.de, nResp: resp.length, extracto: String(ult.cuerpo || '').replace(/\[\[pac:rec[A-Za-z0-9]{14}\|([^\]|]{1,80})(?:\|[a-z]{3,12})?\]\]/g, '@$1').replace(/\[\[sec:[a-z]{2,8}\|([^\]]{1,40})\]\]/g, '@$1').replace(/\s+/g, ' ').slice(0, 140),
             leido, hecho, faltan,
@@ -1485,8 +1486,10 @@ module.exports = async function handler(req, res) {
           if (!cuerpo) return res.status(400).json({ ok: false, error: 'Escribe el contenido' });
           if (!para.length) return res.status(400).json({ ok: false, error: 'Elige a quién se la envías' });
           const tipo = TIPOS_C.includes(q.tipo) && q.tipo !== 'Ausencia' ? q.tipo : 'Comunicado', limite = /^\d{4}-\d{2}-\d{2}$/.test(q.limite || '') ? q.limite : null;
-          const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: asunto, TIPO: tipo, DE: yo, PARA: para.join(', '), CUERPO: cuerpo, FECHA: ahora,
-            'REQUIERE ACCIÓN': !!q.req, 'FECHA LÍMITE': q.req ? limite : null, 'LEÍDO': JSON.stringify({ [yo]: ahora }), HECHO: '{}', ESTADO: 'Abierta' } }], typecast: true }) });
+          // Qué se pide a quien la recibe: que lo lea (acuse de recibo), que lo haga (recibido + hecho) o que conteste (respuesta escrita)
+          const modo = ['leer', 'hacer', 'responder'].includes(q.modo) ? q.modo : (q.req ? 'hacer' : 'leer'), reqM = modo !== 'leer';
+          const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: asunto, TIPO: tipo, DE: yo, PARA: para.join(', '), CUERPO: cuerpo, FECHA: ahora, MODO: modo,
+            'REQUIERE ACCIÓN': reqM, 'FECHA LÍMITE': reqM ? limite : null, 'LEÍDO': JSON.stringify({ [yo]: ahora }), HECHO: '{}', ESTADO: 'Abierta' } }], typecast: true }) });
           if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' });
           return res.status(200).json({ ok: true, id: d.records[0].id });
         }
@@ -1494,12 +1497,15 @@ module.exports = async function handler(req, res) {
           const root = await buscar(q.id), cuerpo = String(q.cuerpo || '').trim().slice(0, 20000);
           const F = root.fields, de = F.DE || '', para0 = listaPara(F.PARA);
           if (de !== yo && !para0.includes(yo)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
-          if (!cuerpo && !q.hecho) return res.status(400).json({ ok: false, error: 'Escribe la respuesta' });
+          if (!cuerpo && !q.hecho && !q.recibido) return res.status(400).json({ ok: false, error: 'Escribe la respuesta' });
+          const modoR = ['leer', 'hacer', 'responder'].includes(F.MODO) ? F.MODO : '';
+          if (cuerpo && de !== yo && modoR !== 'responder' && !['Ausencia', 'Incidencia', 'Ayuda', 'Tareas'].includes(nmC(F.TIPO))) return res.status(400).json({ ok: false, error: 'En esta comunicación no se pide respuesta escrita' });
           // Respuestas escritas: la de un destinatario solo le llega a quien la envió; un comentario de quien la envió, a todos
           if (cuerpo) { const otros = de === yo ? para0.filter(p => p && p !== yo) : [de];
             const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: 'RE: ' + (F.ASUNTO || ''), HILO: root.id, DE: yo, PARA: otros.join(', '), CUERPO: cuerpo, FECHA: ahora } }] }) });
             if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' }); }
           await marcar(root, 'LEÍDO');
+          if (para0.includes(yo) && (q.recibido || q.hecho || cuerpo) && !json(root.fields.RECIBIDO)[yo]) await marcar(root, 'RECIBIDO'); // acuse de recibo
           if (q.hecho && para0.includes(yo) && !['Ausencia', 'Tareas', 'Incidencia', 'Ayuda'].includes(nmC(F.TIPO))) { const hc = json(root.fields.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
             await marcar(root, 'HECHO', todos && F['REQUIERE ACCIÓN'] ? { ESTADO: 'Cerrada' } : null); }
           return res.status(200).json({ ok: true });

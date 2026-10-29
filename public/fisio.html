@@ -1682,6 +1682,11 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ient-sigw{position:relative}.ient-sigw canvas{display:block;width:100%;height:170px;border:1.5px dashed #e3b9a6;border-radius:14px;background:#fdf9f6;touch-action:none}
 .ient-sigl{position:absolute;left:14px;bottom:10px;font-size:12px;color:#c8b6aa;pointer-events:none}.ient-borra{position:absolute;right:8px;top:8px;border:none;background:#fff;border-radius:99px;font-family:var(--font);font-size:12px;font-weight:600;color:#6b5f57;padding:5px 10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .hz-bts .hz-ok:disabled{opacity:.45}
+.com-modos{display:flex;flex-direction:column;gap:8px}.com-modo{display:flex;gap:12px;align-items:flex-start;width:100%;box-sizing:border-box;text-align:left;font-family:var(--font);border:1.5px solid var(--border);border-radius:16px;padding:12px 14px;background:#fff;cursor:pointer}
+.com-modo.on{border-color:#c2552e;background:#fdf6f2}.cm-rd{width:20px;height:20px;border-radius:50%;border:2px solid #d9d1ca;flex:none;margin-top:6px;box-sizing:border-box}.com-modo.on .cm-rd{border:6px solid #c2552e}
+.cm-ic{width:34px;height:34px;border-radius:10px;background:#f7f3ef;display:flex;align-items:center;justify-content:center;flex:none}.com-modo.on .cm-ic{background:#fbe3d7}.cm-ic svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cm-tx b{display:block;font-size:14.5px;color:#1a1a1a}.com-modo.on .cm-tx b{color:#c2552e}.cm-tx small{display:block;font-size:12px;color:#7d6a60;line-height:1.4;margin-top:2px}
+.s-req{margin-top:14px}
 </style>
 </head>
 <body>
@@ -6739,9 +6744,11 @@ function renderCom(wrap){
    if(h.tipo==='Ausencia')return h.resolucion==='Aprobada'?['ok','Aprobada']:h.resolucion==='Rechazada'?['rojo','Rechazada']:!h.abierta?['gris','Retirada']:['nar',h.puedeAprobar?'Por aprobar':'Pendiente'];
    const hechos=h.para.filter(p=>h.hecho[p]).length,todos=hechos===h.para.length;
    const nP=h.para.length,cuenta=(si,no)=>todos?['ok',nP>1?si+' por todos':si]:nP===1?['nar',no]:[hechos?'gris':'nar',hechos?`${si} por ${hechos} de ${nP}`:no];
-   if(!h.req)return env?cuenta('Confirmada','Sin confirmar'):h.hecho[yo]?['ok','Confirmada']:['nar','Por confirmar'];
+   const md=h.modo||(h.req?'hacer':'leer');
+   if(md==='leer')return env?cuenta('Recibida','Sin confirmar'):h.hecho[yo]?['ok','Recibida']:['nar','Confirma que la has leído'];
    if(!h.abierta)return ['gris','Cerrada'];
-   return env?cuenta('Hecha','Pendiente'):h.hecho[yo]?['ok','Hecha']:['nar','Por hacer'];};
+   if(md==='responder')return env?cuenta('Respondida','Sin respuesta'):h.hecho[yo]?['ok','Respondida']:['nar','Te pide respuesta'];
+   return env?cuenta('Hecha','Pendiente'):h.hecho[yo]?['ok','Hecha']:['nar',(h.recibido||{})[yo]?'Por hacer':'Por hacer'];};
   const fila=h=>{const env=h.de===yo,nuevo=h.noLeido,e=env&&h.noLeido?['nar','Respuesta nueva']:est(h),quien=env?'Para '+comLista(h.para):h.de;
    return `<button type="button" class="com-it${nuevo?' nuevo':''}" data-id="${h.id}">${comMini(h,nuevo||(env&&!h.para.some(p=>h.leido[p])))}<span class="com-tx"><span class="com-l1"><b>${escH(quien)}</b><time>${escH(comHora(h.ultima))}</time></span><span class="com-as">${escH(h.tipo==='Ausencia'?String(h.asunto).split(' · ').slice(0,2).join(' · '):h.asunto)}</span><span class="com-l3"><span class="com-ex">${h.nResp&&h.ultimoDe?escH((h.ultimoDe===yo?'Tú':h.ultimoDe)+': '):''}${escH(comLimpia(h.extracto))}</span>${e?`<span class="com-pill ${e[0]}">${escH(e[1])}</span>`:''}</span></span></button>`;};
   const porDia=L=>{const g=[];L.forEach(h=>{const k=comDia(h.ultima);const u=g[g.length-1];if(u&&u[0]===k)u[1].push(h);else g.push([k,[h]]);});return g.map(([k,l])=>`<div class="com-h">${escH(k)}</div><div class="com-card">${l.map(fila).join('')}</div>`).join('');};
@@ -6792,8 +6799,10 @@ async function comHilo(wrap,id){
  if(!r.ok){box.innerHTML=`<button type="button" class="com-volver">‹ Volver</button><div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido abrir')}</div></div>`;box.querySelector('.com-volver').onclick=volver;return;}
  const h=r.hilo,yo=r.yo,env=h.de===yo,esAus=h.tipo==='Ausencia',D=h.datos||{},esp=['Tareas','Incidencia','Ayuda'].includes(h.tipo),miPend=!esAus&&!esp&&h.pendienteMio;
  if(COM.d){const i=COM.d.hilos.findIndex(x=>x.id===h.id);if(i>=0){const{msgs,...s}=h;COM.d.hilos[i]=s;}comContar(COM.d);}
+ const MODO=h.modo||(h.req?'hacer':'leer'),miRec=!!(h.recibido||{})[yo];
  const est=p=>esAus?(h.leido[p]?`<span class="com-pill gris">Leída · ${escH(comFecha(h.leido[p]))}</span>`:'<span class="com-pill gris">Sin leer</span>')
-  :h.hecho[p]&&!esp?`<span class="com-pill ok">${h.req?'Hecha':'Conforme'} · ${escH(comFecha(h.hecho[p]))}</span>`:h.leido[p]?`<span class="com-pill gris">Leída · ${escH(comFecha(h.leido[p]))}</span>`:'<span class="com-pill gris">Sin leer</span>';
+  :h.hecho[p]&&!esp?`<span class="com-pill ok">${{leer:'Recibido',hacer:'Hecho',responder:'Respondida'}[MODO]||'Hecha'} · ${escH(comFecha(h.hecho[p]))}</span>`
+  :!esp&&(h.recibido||{})[p]?`<span class="com-pill nar">Recibido · ${MODO==='responder'?'sin responder':'pendiente'}</span>`:h.leido[p]?`<span class="com-pill gris">Leída · ${escH(comFecha(h.leido[p]))}</span>`:'<span class="com-pill gris">Sin leer</span>';
  const [m0,...resp]=h.msgs;
  const sello=esAus&&h.resolucion!=='Pendiente'?`<div class="com-sello ${h.resolucion==='Aprobada'?'ok':'no'}"><b>${escH(h.resolucion.toUpperCase())}</b><span>${escH(h.resueltaPor)}</span></div>`:'';
  const A=h.ausencia||{};
@@ -6808,7 +6817,12 @@ async function comHilo(wrap,id){
  else if(h.tipo==='Tareas'&&h.para.includes(yo))acc=h.abierta?boton('todas','✓ Marcar todo como hecho'):hecho('Todas las tareas hechas');
  else if(h.tipo==='Incidencia'&&h.para.includes(yo))acc=h.abierta?boton('gest','✓ Marcar como gestionada'):'';
  else if(h.tipo==='Ayuda'&&h.abierta)acc=!D.encargado&&h.para.includes(yo)?boton('encargo','🙋 Me encargo'):(D.encargado===yo||env)?boton('resuelta','✓ Resuelta'):'';
- else if(!esAus&&!esp&&h.para.includes(yo))acc=miH?hecho(`${h.req?'Hecha':'Confirmado'} · ${comFecha(miH)}`):h.abierta?boton('hecho',h.req?'✓ Marcar como hecha':'✓ Recibido y conforme'):'';
+ else if(!esAus&&!esp&&h.para.includes(yo)){
+  if(miH)acc=hecho(`${{leer:'Recibido',hacer:'Hecho',responder:'Respondida'}[MODO]} · ${comFecha(miH)}`);
+  else if(!h.abierta)acc='';
+  else if(MODO==='leer')acc=boton('hecho','✓ Recibido');
+  else if(MODO==='hacer')acc=(miRec?hecho('Recibido · '+comFecha(h.recibido[yo])):`<button type="button" class="com-b sec" data-a="recib">✓ Recibido</button>`)+`<p class="com-acc-t" style="margin:10px 0 6px;text-align:center">${miRec?'Cuando lo tengas hecho:':'y cuando lo tengas hecho:'}</p>`+boton('hecho','✓ Hecho');
+  else acc=miRec?'':`<button type="button" class="com-b sec" data-a="recib">✓ Recibido (contesto luego)</button>`;}
  const firma=n=>`<div class="com-firma"><span>Atentamente,</span><b>${escH(n)}</b><small>${escH(comRol(n))}</small></div>`;
  box.innerHTML=`<button type="button" class="com-volver">‹ Volver</button>
   <article class="com-carta">
@@ -6823,7 +6837,7 @@ async function comHilo(wrap,id){
   ${resp.map(m=>{const resp1=t=>`<article class="com-carta com-r${m.de===yo?' mio':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${comCuHtml(t)}</div></article>`;
    const ev=comEvento(m.cuerpo);if(!ev)return resp1(String(m.cuerpo||''));
    return `<div class="com-ev ${ev.tipo}"><span class="com-ev-i">${comIco(ev.tipo==='no'?'cruz':'check')}</span><div><b>${escH(ev.titulo)}</b><small>${escH([comFecha(m.fecha)].concat(ev.det).join(' · '))}</small></div></div>${ev.ojo.length?`<div class="com-ojo"><b>Citas con paciente que hay que mover</b>${ev.ojo.map(x=>`<span>${escH(x)}</span>`).join('')}</div>`:''}${ev.coment?resp1(ev.coment):''}`;}).join('')}
-  ${(env||h.para.includes(yo))&&!esAus?`<div class="com-card com-resp${puedeResp?'':' plegada'}"><button type="button" class="com-anadir">+ ${env?'Escribir un comentario':'Añadir otra respuesta'}</button><p class="com-acc-t">${env?'Lo verá quien la ha recibido.':'Tu respuesta solo la ve '+escH(h.de)+'.'+(miPend&&h.req?' Al enviarla queda como hecha.':'')}</p><textarea rows="4" placeholder="${env?'Escribe un comentario…':'Escribe tu respuesta…'}"></textarea><div class="com-bts" style="margin-top:8px"><button type="button" class="com-b" data-a="resp">Enviar ${env?'comentario':'respuesta'}</button></div></div>`:''}
+  ${(env&&!esAus)||(!env&&!esAus&&!esp&&MODO==='responder'&&h.para.includes(yo))?`<div class="com-card com-resp${puedeResp||(env&&false)?'':' plegada'}"><button type="button" class="com-anadir">+ ${env?'Escribir un comentario':'Añadir otra respuesta'}</button><p class="com-acc-t">${env?'Lo verá quien la ha recibido.':'Tu respuesta solo la ve '+escH(h.de)+'.'}</p><textarea rows="4" placeholder="${env?'Escribe un comentario…':'Escribe tu respuesta…'}"></textarea><div class="com-bts" style="margin-top:8px"><button type="button" class="com-b" data-a="resp">Enviar ${env?'comentario':'respuesta'}</button></div></div>`:''}
   ${acc?`<div class="com-card com-acc">${acc}</div>`:''}
   ${env?`<div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>`:''}
 
@@ -6838,8 +6852,9 @@ async function comHilo(wrap,id){
    const y=comY();COM.d=null;wrap.innerHTML='';await comHilo(wrap,h.id);comSetY(y);}
   catch(e){bs.forEach(x=>x.disabled=false);b.textContent=t0;toast(e.message,false);}};
  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;
-  if(a==='resp'){const t=ta.value.trim();if(!t){ta.focus();toast('Escribe algo',false);return;}hacer(b,'seg-com-responder',{cuerpo:t,hecho:miPend},miPend&&h.req?'Respuesta enviada · queda como hecha':'Respuesta enviada');}
-  else if(a==='hecho')hacer(b,'seg-com-responder',{cuerpo:'',hecho:true},h.req?'Marcada como hecha':'Confirmado');
+  if(a==='resp'){const t=ta.value.trim();if(!t){ta.focus();toast('Escribe algo',false);return;}hacer(b,'seg-com-responder',{cuerpo:t,hecho:miPend&&MODO==='responder'},'Respuesta enviada');}
+  else if(a==='hecho')hacer(b,'seg-com-responder',{cuerpo:'',hecho:true},{leer:'Recibido',hacer:'Marcado como hecho',responder:'Hecho'}[MODO]||'Hecho');
+  else if(a==='recib')hacer(b,'seg-com-responder',{cuerpo:'',recibido:true},'Recibido');
   else if(a==='todas')hacer(b,'seg-com-tarea',{idx:'todas',hecho:true},'¡Todas hechas!');
   else if(a==='apr')admSiNo(`Se apuntará en Dirección (${String(A.que||'').toLowerCase()} de ${h.de}) y se bloquearán sus huecos libres en la agenda.`,'Sí, aprobar').then(ok=>{if(ok)hacer(b,'seg-com-resolver',{aprobar:true},'Solicitud aprobada');});
   else if(a==='rech')admSiNo('La solicitud quedará rechazada. Si quieres explicar el motivo, escríbelo luego en «¿Dudas o algo que decir?».','Sí, rechazar').then(ok=>{if(ok)hacer(b,'seg-com-resolver',{aprobar:false},'Solicitud rechazada');});
@@ -6866,7 +6881,7 @@ function comNueva(onOk,paraIni){
  const yo=String(fisioActual.nombre||'').trim().split(' ')[0].toLowerCase();
  const eq=((COM.d&&COM.d.equipo)||TAR_NOMBRES).filter(n=>n.toLowerCase()!==yo);
  const dir=COM_APRUEBAN.filter(n=>n.toLowerCase()!==yo);if(!dir.length)dir.push('Ramiro');
- const S={para:(paraIni||[]).filter(n=>eq.includes(n)),tipo:'Comunicado',req:false,limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:'',items:['',''],cat:'',sobre:[],urg:'Esta semana'};
+ const S={para:(paraIni||[]).filter(n=>eq.includes(n)),tipo:'Comunicado',req:false,modo:'leer',limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:'',items:['',''],cat:'',sobre:[],urg:'Esta semana'};
  const NORMAL=['Comunicado','Solicitud'];let paso=1;
  const m=hzModal(`<div class="hz-top"><div><b class="com-tit">Nueva comunicación</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="com-tsel">${COM_TIPOS.map(t=>`<button type="button" class="com-to" data-t="${t}">${comSello({tipo:t,ausencia:{que:'Vacaciones'}})}<span><b>${escH(comTipoTxt(t))}</b><small>${escH(COM_TIPO_DESC[t])}</small></span><em>Cambiar</em></button>`).join('')}</div>
@@ -6886,7 +6901,7 @@ function comNueva(onOk,paraIni){
    <div class="com-2 com-horas"><div><div class="hz-lab com-l-hd">De</div><button type="button" class="com-sel com-hd"><b></b><i>▾</i></button></div><div><div class="hz-lab">A</div><button type="button" class="com-sel com-hh"><b></b><i>▾</i></button></div></div>
   </div>
   <div class="hz-lab com-l-cuerpo">Contenido</div><textarea class="com-in com-cuerpo" rows="7"></textarea><button type="button" class="com-menc"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mencionar paciente <em>o escribe @</em></button>
-  <div class="s-req"><button type="button" class="com-sw"><span class="com-sw-t"><b>Requiere acción</b><small>Quien la recibe tiene que confirmarla o resolverla</small></span><i></i></button></div>
+<div class="s-req"><div class="hz-lab">¿Qué necesitas de quien la recibe?</div><div class="com-modos"><button type="button" class="com-modo" data-m="leer"><span class="cm-rd"></span><span class="cm-ic"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="cm-tx"><b>Que lo lea</b><small>Solo confirma que lo ha recibido</small></span></button><button type="button" class="com-modo" data-m="hacer"><span class="cm-rd"></span><span class="cm-ic"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="cm-tx"><b>Que lo haga</b><small>Confirma que lo ha recibido y luego marca cuando está hecho</small></span></button><button type="button" class="com-modo" data-m="responder"><span class="cm-rd"></span><span class="cm-ic"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="cm-tx"><b>Que te conteste</b><small>Te escribe una respuesta que solo ves tú</small></span></button></div></div>
   <button type="button" class="com-lim s-lim"><span>Fecha límite</span><b>Sin fecha</b></button>
   </div>
   <div class="hz-bts"><button type="button" class="s-n">Cancelar</button><button type="button" class="hz-ok">Enviar</button></div>`);
@@ -6917,10 +6932,10 @@ function comNueva(onOk,paraIni){
   $m('.com-horas').style.display=conHoras()?'':'none';$m('.com-l-hd').textContent=S.que==='Cambio de horario'?'Trabajaría de':'No estaría de';
   const sv=(c,v,ph)=>{$m(c+' b').textContent=v||ph;$m(c).classList.toggle('vacio',!v);};
   sv('.com-desde',S.desde&&comFechaDia(S.desde),'Elegir día');sv('.com-hasta',S.hasta&&comFechaDia(S.hasta),'Mismo día');sv('.com-hd',S.hd,'--:--');sv('.com-hh',S.hh,'--:--');
-  $m('.com-sw').classList.toggle('on',S.req);$m('.com-lim b').textContent=S.limite?hzFecha(S.limite):'Sin fecha';$m('.com-lim').classList.toggle('on',!!S.limite);};
+  S.req=S.modo!=='leer';m.querySelectorAll('.com-modo').forEach(b=>b.classList.toggle('on',b.dataset.m===S.modo));$m('.com-lim b').textContent=S.limite?hzFecha(S.limite):'Sin fecha';$m('.com-lim').classList.toggle('on',!!S.limite);};
  $m('.hz-x').onclick=$m('.s-n').onclick=cerrar;
  m.querySelectorAll('.com-para button').forEach(b=>b.onclick=()=>{const n=b.dataset.n;if(n==='*'){const todos=eq.every(x=>S.para.includes(x));S.para=todos?[]:eq.slice();}else S.para=S.para.includes(n)?S.para.filter(x=>x!==n):S.para.concat(n);pinta();});
- m.querySelectorAll('.com-to').forEach(b=>b.onclick=()=>{if(paso===2){paso=1;pinta();return;}paso=2;S.tipo=b.dataset.t;if(S.tipo==='Solicitud')S.req=true;if(S.tipo==='Ayuda'&&!S.para.length)S.para=eq.slice();pinta();});
+ m.querySelectorAll('.com-to').forEach(b=>b.onclick=()=>{if(paso===2){paso=1;pinta();return;}paso=2;S.tipo=b.dataset.t;if(S.tipo==='Solicitud'&&S.modo==='leer')S.modo='hacer';if(S.tipo==='Ayuda'&&!S.para.length)S.para=eq.slice();pinta();});
  m.querySelectorAll('.com-que button').forEach(b=>b.onclick=()=>{S.que=b.dataset.q;if(!variosDias())S.hasta='';pinta();});
  m.querySelectorAll('.com-cat button').forEach(b=>b.onclick=()=>{S.cat=b.dataset.c;pinta();});
  m.querySelectorAll('.com-sob button').forEach(b=>b.onclick=()=>{const n=b.dataset.n;S.sobre=S.sobre.includes(n)?S.sobre.filter(x=>x!==n):S.sobre.concat(n);pinta();});
@@ -6929,7 +6944,7 @@ function comNueva(onOk,paraIni){
  $m('.com-hasta').onclick=()=>miniCal($m('.com-hasta'),S.hasta||S.desde||agHoyIso(),f=>{S.hasta=f;if(S.desde&&f<S.desde){S.hasta=S.desde;S.desde=f;}pinta();});
  $m('.com-hd').onclick=()=>comHoraPick($m('.com-hd'),S.hd||'09:00',v=>{S.hd=v;pinta();});
  $m('.com-hh').onclick=()=>comHoraPick($m('.com-hh'),S.hh||S.hd||'14:00',v=>{S.hh=v;pinta();});
- $m('.com-sw').onclick=()=>{S.req=!S.req;if(!S.req)S.limite='';pinta();};
+ m.querySelectorAll('.com-modo').forEach(b=>b.onclick=()=>{S.modo=b.dataset.m;if(S.modo==='leer')S.limite='';pinta();});
  $m('.com-lim').onclick=()=>miniCal($m('.com-lim'),S.limite||agHoyIso(),f=>{S.limite=f;pinta();});
  // Mencionar pacientes: se escribe «@Nombre» y, al enviar, se guarda con su ficha para que se pueda abrir con un toque
  const menc=window.__comMenc=[];window.__comUlt=null;mencionesEn($m('.com-cuerpo'),menc);$m('.com-cuerpo').addEventListener('focus',()=>{window.__comUlt=$m('.com-cuerpo');});try{pintaTareas();}catch(_){}
@@ -6943,7 +6958,7 @@ function comNueva(onOk,paraIni){
   else if(T==='Tareas'){const items=S.items.map(x=>conMenc(x.trim())).filter(Boolean);if(!S.para.length)return toast('Elige a quién se las envías',false);if(!items.length)return toast('Escribe al menos una tarea',false);datos={tipo:T,para:S.para,asunto,items,cuerpo,limite:S.limite};}
   else if(T==='Ayuda'){if(!S.para.length)return toast('Elige a quién se la pides',false);if(!asunto){$m('.com-asunto').focus();return toast('Di con qué necesitas ayuda',false);}datos={tipo:T,para:S.para,asunto,urg:S.urg,cuerpo};}
   else{if(!S.para.length)return toast('Elige a quién se la envías',false);if(!asunto){$m('.com-asunto').focus();return toast('Falta el asunto',false);}if(!cuerpo){$m('.com-cuerpo').focus();return toast('Escribe el contenido',false);}
-   datos={para:S.para,tipo:T,asunto,cuerpo,req:S.req,limite:S.limite};}
+   datos={para:S.para,tipo:T,asunto,cuerpo,req:S.modo!=='leer',modo:S.modo,limite:S.limite};}
   b.disabled=true;b.textContent='Enviando…';
   try{const r=await comPost('seg-com-enviar',datos);if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast({Ausencia:'Solicitud enviada a administración',Incidencia:'Enviado a administración',Ayuda:'Petición de ayuda enviada',Tareas:'Tareas enviadas'}[T]||'Comunicación enviada',true);cerrar();onOk&&onOk(r.id);}
   catch(e){b.disabled=false;b.textContent='Enviar';toast(e.message,false);}};
