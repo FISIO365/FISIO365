@@ -5987,9 +5987,7 @@ async function renderValoraciones(wrap){
  card.innerHTML=`<div class="val-res"><div><b>${L.length}</b><span>respuestas</span></div><div><b>${ok}</b><span>muy contentos</span></div><div><b>${go}</b><span>a Google</span></div></div>
   <div class="val-nota">Últimos 14 días. Todas las respuestas a la encuesta de primera visita.</div>
   ${!L.length?'<div class="fac-vacio">Todavía no hay respuestas estos días</div>':`<div class="val-lista">${L.map(x=>`<div class="val-it${encT(x)>v?' nuevo':''}"><i class="${cls(x.valoracion)}"></i><div class="val-tx"><div><b>${escH(fn(x.nombre))}</b>${encT(x)>v?'<span class="val-nv">Nuevo</span>':''}</div>
-   <div class="val-m">${escH(x.valoracion)}${x.fisio?' · con '+escH(capTit(String(x.fisio).split(' ')[0])):''} · 1ª visita el ${fd(x.fecha)}${x.resena?' · <em>fue a Google</em>':''}</div>${x.comentario?`<div class="val-c">«${escH(x.comentario)}»</div>`:''}</div></div>`).join('')}</div>`}
-  <button type="button" class="val-mas">Ver por días en Encuestas</button>`;
- card.querySelector('.val-mas').onclick=()=>agRecordatorios(null,'enc');
+   <div class="val-m">${escH(x.valoracion)}${x.fisio?' · con '+escH(capTit(String(x.fisio).split(' ')[0])):''} · 1ª visita el ${fd(x.fecha)}${x.resena?' · <em>fue a Google</em>':''}</div>${x.comentario?`<div class="val-c">«${escH(x.comentario)}»</div>`:''}</div></div>`).join('')}</div>`}`;
  const m=L.reduce((a,x)=>encT(x)>a?encT(x):a,'');if(m)try{localStorage.setItem(encK(),m);}catch(e){}encBadge(0);
 }
 async function agRecordatorios(onDone,modoIni,encFIni){
