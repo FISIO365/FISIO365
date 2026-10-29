@@ -933,10 +933,10 @@ pinta();})();<\/script></body></html>`;
 function firmaHuecos(k) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('huecos:' + k).digest('hex').slice(0, 8); }
 // Enlace «siempre al día»: {r:30} = desde hoy hasta dentro de 30 días, se calcula al abrirlo
 const huecosDec = k => { try { const o = JSON.parse(Buffer.from(String(k), 'base64url').toString('utf8'));
-    if (o && Number(o.r) > 0) { const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), d = new Date(hoy + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + Math.min(90, Number(o.r))); return { a: hoy, b: d.toISOString().slice(0, 10), f: Array.isArray(o.f) ? o.f.map(String) : [] }; }
-    return o && /^\d{4}-\d{2}-\d{2}$/.test(o.a) && /^\d{4}-\d{2}-\d{2}$/.test(o.b) ? { a: o.a, b: o.b, f: Array.isArray(o.f) ? o.f.map(String) : [] } : null; } catch (e) { return null; } };
+    if (o && Number(o.r) > 0) { const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), d = new Date(hoy + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + Math.min(90, Number(o.r))); return { a: hoy, b: d.toISOString().slice(0, 10), f: Array.isArray(o.f) ? o.f.map(String) : [], p: Number(o.p) > 0 ? Number(o.p) : 0 }; }
+    return o && /^\d{4}-\d{2}-\d{2}$/.test(o.a) && /^\d{4}-\d{2}-\d{2}$/.test(o.b) ? { a: o.a, b: o.b, f: Array.isArray(o.f) ? o.f.map(String) : [], p: Number(o.p) > 0 ? Number(o.p) : 0 } : null; } catch (e) { return null; } };
 const huecosSiempre = (dias, f) => { const k = Buffer.from(JSON.stringify({ r: dias, f: f || [] })).toString('base64url'); return `https://app.fisioterapia365.com/h/${k}.${firmaHuecos(k)}`; };
-const huecosEnlace = (a, b, f) => { const k = Buffer.from(JSON.stringify({ a, b, f: f || [] })).toString('base64url'); return `https://app.fisioterapia365.com/h/${k}.${firmaHuecos(k)}`; };
+const huecosEnlace = (a, b, f, p) => { const k = Buffer.from(JSON.stringify(Object.assign({ a, b, f: f || [] }, p > 0 ? { p } : {}))).toString('base64url'); return `https://app.fisioterapia365.com/h/${k}.${firmaHuecos(k)}`; };
 const HUECO_LIBRE = /^(CITA LIBRE|LIBRE - SIN BOMBA)$/, HUECO_NOFISIO = /^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES|NORA)$/i;
 const madridAhora = () => { const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date()).map(x => [x.type, x.value])); return { f: `${p.year}-${p.month}-${p.day}`, h: `${String(+p.hour % 24).padStart(2, '0')}:${p.minute}` }; };
 function huecoValido(F, P) {
@@ -970,6 +970,7 @@ function paginaHuecos(D) {
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
 .c{background:#fff;border-radius:26px;padding:28px 20px 22px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start}
+.pgn{background:#fdf1ea;color:#7d4a35;border-radius:14px;padding:11px 13px;font-size:13px;line-height:1.5;margin:4px 0 8px;text-align:left}.pgn b{color:#a3441f}
 .cab{text-align:center}.fc{display:block;margin:0 auto}.fc circle,.fc path{stroke:#c2552e;fill:none;stroke-width:3;stroke-linecap:round}
 .fc .o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s cubic-bezier(.6,0,.2,1) forwards}.fc .m{stroke-dasharray:44;stroke-dashoffset:44;animation:dr .45s .7s ease-out forwards}
 .fc .ey{fill:#c2552e;stroke:none;opacity:0;transform-box:fill-box;transform-origin:center;animation:fi0 .3s .9s forwards,blink 5s 3.4s infinite}.fc .ojos{animation:mira 5s 2.4s ease-in-out infinite}
@@ -1084,7 +1085,7 @@ var G={};try{G=JSON.parse(localStorage.getItem('f365_res')||'{}');}catch(e){}
 function abrir(h){var f=document.createElement('div');f.className='fondo';f.innerHTML='<div class="hoja"><div class="asa"></div><div class="sel">'+tile(h.fecha)+'<div><small>Tu cita</small><b>'+fl(h.fecha).replace(/^./,function(x){return x.toUpperCase();})+'<br>a las '+h.hora+'</b><small>con '+esc(h.nombre)+'</small></div></div>'
  +'<div class="dos"><div><label>Nombre</label><input id="n1" autocomplete="given-name" value="'+esc(G.n1||'')+'"></div><div><label>Apellidos</label><input id="n2" autocomplete="family-name" value="'+esc(G.n2||'')+'"></div></div>'
  +'<label>Teléfono</label><input id="tl" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(G.tl||'')+'"><label>Motivo de consulta</label><textarea id="mo" placeholder="Ej.: dolor de espalda desde hace unas semanas"></textarea>'
- +'<p class="err" id="er"></p><button class="bt" id="rs">Reservar mi cita</button><button class="cancel" id="cn">Elegir otra hora</button></div>';
+ +(D.pago?'<p class="pgn">Esta cita se paga por adelantado (<b>'+String(D.pago).replace('.',',')+' €</b>). Al reservar te llevamos al pago: tarjeta o transferencia, tienes 24 h.</p>':'')+'<p class="err" id="er"></p><button class="bt" id="rs">'+(D.pago?'Reservar y pagar':'Reservar mi cita')+'</button><button class="cancel" id="cn">Elegir otra hora</button></div>';
  document.body.appendChild(f);requestAnimationFrame(function(){f.classList.add('on');});var q=function(i){return f.querySelector('#'+i);};
  [].forEach.call(f.querySelectorAll('input,textarea'),function(x){x.oninput=function(){q('er').textContent='';};});
  var cerrar=function(){[].forEach.call(C.querySelectorAll('.h.on'),function(x){x.classList.remove('on');});f.classList.remove('on');setTimeout(function(){f.remove();},200);};q('cn').onclick=cerrar;f.onclick=function(e){if(e.target===f)cerrar();};
@@ -1093,9 +1094,10 @@ function abrir(h){var f=document.createElement('div');f.className='fondo';f.inne
   try{localStorage.setItem('f365_res',JSON.stringify({n1:d.n1,n2:d.n2,tl:d.tl}));}catch(e){}
   var b=this;b.disabled=true;b.textContent='Reservando…';er.textContent='';
   fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:h.id,nombre:d.n1,apellidos:d.n2,tel:d.tl,motivo:d.mo})}).then(function(r){return r.json();}).then(function(r){
+   if(r.ok&&r.pago){b.textContent='Vamos al pago…';location.href=r.pago;return;}
    if(r.ok){f.remove();hecho(h,d.n1);return;}
    if(r.ocupado){D.huecos=D.huecos.filter(function(x){return x.id!==h.id;});f.remove();lista();setTimeout(function(){alertar(r.error);},50);return;}
-   throw new Error(r.error||'');}).catch(function(e){b.disabled=false;b.textContent='Reservar mi cita';er.textContent=e.message||'No se ha podido reservar. Inténtalo de nuevo.';});};}
+   throw new Error(r.error||'');}).catch(function(e){b.disabled=false;b.textContent=D.pago?'Reservar y pagar':'Reservar mi cita';er.textContent=e.message||'No se ha podido reservar. Inténtalo de nuevo.';});};}
 function alertar(t){var p=document.createElement('p');p.className='err';p.style.textAlign='center';p.textContent=t;C.insertBefore(p,C.children[1]);}
 function hecho(h,n){C.innerHTML='<div class="ok"><svg class="fc" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="fi" style="animation-delay:.9s" d="M25 35 Q30 29 35 35"/><path class="fi" style="animation-delay:.9s" d="M45 35 Q50 29 55 35"/><path class="m" d="M26 45 Q40 62 54 45"/></svg>'
  +'<h1 class="fi" style="animation-delay:1s">¡Reservada, '+esc(n.charAt(0).toUpperCase()+n.slice(1))+'!</h1><p class="sub fi" style="animation-delay:1.15s">Te esperamos el '+fl(h.fecha)+' a las '+h.hora+' con '+esc(h.nombre)+'.</p>'+tile(h.fecha)+'<p class="okh fi" style="animation-delay:1.6s">Te guardamos el sitio</p></div>'+dudas+pie;window.scrollTo(0,0);}
@@ -2107,7 +2109,9 @@ module.exports = async function handler(req, res) {
         pac = c.records[0]; nuevo = true;
       } else if (!String((pac.fields || {})['MOTIVO DE VISITA'] || '').trim()) await at(`${PACIENTES}/${pac.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MOTIVO DE VISITA': motivo } }) }).catch(() => {});
       const nota = `Reserva por enlace de huecos${nuevo ? ' (paciente nuevo)' : ''} · Motivo: ${motivo}`;
-      const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', NOTAS: [r.fields.NOTAS, nota].filter(Boolean).join('\n') }, typecast: true }) });
+      const fR = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', NOTAS: [r.fields.NOTAS, nota].filter(Boolean).join('\n') };
+      if (P.p > 0) { const ini = madridUTC(h.fecha, h.hora).getTime(), lim = Math.max(Date.now() + 3600e3, Math.min(Date.now() + 24 * 3600e3, ini - 2 * 3600e3)); Object.assign(fR, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': P.p, 'PAGO LÍMITE': new Date(lim).toISOString(), 'PAGO REGISTRO': `${pagoAhora()} · Reserva por enlace de huecos con pago por adelantado (${P.p.toFixed(2).replace('.', ',')} €)` }); }
+      const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: fR, typecast: true }) });
       if (u.error) return res.status(200).json({ ok: false, error: 'No se ha podido reservar. Inténtalo de nuevo.' });
       await new Promise(z => setTimeout(z, 700));
       const v = await at(`tblTPlcuiSjQngkaD/${id}`).catch(() => u);
@@ -2117,13 +2121,13 @@ module.exports = async function handler(req, res) {
         const fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name'), nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase();
         const ids = (fl.records || []).filter(x => ['ramiro', 'nora', h.fisio.split(' ')[0].toLowerCase()].includes(nom1(x))).map(x => x.id), { avisar } = require('./_push');
         const d = new Date(h.fecha + 'T12:00:00Z'), DS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'], fis = h.fisio.charAt(0) + h.fisio.slice(1).toLowerCase();
-        await Promise.all(ids.map(fid => avisar('fisio', fid, { title: `📅 Nueva reserva: ${n1} ${n2}${nuevo ? ' (nuevo)' : ''}`, body: `${DS[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${h.hora} con ${fis.split(' ')[0]}. ${motivo.slice(0, 90)}`, url: '/fisio', tag: 'res-' + id }).catch(() => false)));
+        await Promise.all(ids.map(fid => avisar('fisio', fid, { title: `📅 Nueva reserva: ${n1} ${n2}${nuevo ? ' (nuevo)' : ''}${P.p > 0 ? ' · pendiente de pago' : ''}`, body: `${DS[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${h.hora} con ${fis.split(' ')[0]}. ${motivo.slice(0, 90)}`, url: '/fisio', tag: 'res-' + id }).catch(() => false)));
       } catch (e) {}
-      return res.status(200).json({ ok: true });
+      return res.status(200).json({ ok: true, pago: P.p > 0 ? enlacePago(id) : '' });
     }
     const huecos = await huecosLibres(P).catch(() => []);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(paginaHuecos({ huecos, url: `https://app.fisioterapia365.com/h/${k}.${sg}`, tel: C.tel || '672 89 39 49', dir: C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
+    return res.status(200).send(paginaHuecos({ huecos, pago: P.p || 0, url: `https://app.fisioterapia365.com/h/${k}.${sg}`, tel: C.tel || '672 89 39 49', dir: C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
   // Pago por adelantado: página del paciente (GET), tarjeta/transferencia (POST) y vuelta de Stripe (?sid=)
@@ -3442,7 +3446,8 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-agenda-huecos-enlace') {
           if (!okF(q.desde) || !okF(q.hasta)) return res.status(400).json({ ok: false, error: 'Faltan las fechas' });
           const f = String(q.fisios || '').split(',').map(x => x.trim()).filter(x => x && x.length < 40);
-          return res.status(200).json({ ok: true, url: huecosEnlace(q.desde, q.hasta, f) });
+          const pg = Math.round(Number(String(q.pago || '').replace(',', '.')) * 100) / 100;
+          return res.status(200).json({ ok: true, url: huecosEnlace(q.desde, q.hasta, f, pg >= 1 && pg <= 2000 ? pg : 0) });
         }
         if (action === 'seg-agenda-enc-nuevas') {
           // Respuestas a la encuesta de primera visita de los últimos 14 días (para los avisos dentro del panel)
