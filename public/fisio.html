@@ -8785,6 +8785,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
    const pal=antes.toLowerCase().replace(/[\-–·:.,]/g,' ').split(/\s+/).filter(Boolean);
    const ok=pal.every(w=>new RegExp('^('+ORD+'|\\d{1,2}(a|ª|º)?(ss)?|ss|s+e+i?s+i?[oó]n|sesi[oó]|visita|primera|'+NOMS.join('|')+')$','i').test(w));
    return ok?{f:m[0],t:[antes,despues].filter(Boolean).join(' · ')}:null;};
+  histCabFn=cab;
   const linea=t=>{const intro=[],ent=[];let cur=null;String(t||'').split('\n').forEach(l=>{if(/^[\s\\_\-—=]{4,}$/.test(l))return;const h=cab(l);if(h){cur={f:h.f,t:h.t,b:h.extra?[h.extra]:[]};ent.push(cur);}else if(cur)cur.b.push(l);else intro.push(l);});
    const txt=a=>a.join('\n').trim();
    return `${txt(intro)?`<div class="fp-intro">${par(txt(intro))}</div>`:''}${ent.length?`<div class="fp-tl">${ent.slice().reverse().map(x=>`<div class="fp-tli"><i></i><div class="fp-tlh"><b>${escH(x.f)}</b>${x.t?`<span>${escH(x.t)}</span>`:''}</div><div class="fp-tlb">${txt(x.b)?par(txt(x.b)):'<em>—</em>'}</div></div>`).join('')}</div>`:''}`;};
@@ -8942,16 +8943,30 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   else if(tab==='acceso'){cont.innerHTML=acceso();montarAcceso(cont);}
   else if(tab==='historia'){cont.innerHTML=historia();montarEdicion(cont);montarHistoria(cont);}
  }
+ var histCabFn=null;
  function montarEdicion(cont){
   cont.querySelectorAll('.fp-blk').forEach(blk=>{const k=blk.dataset.blk,bt=blk.querySelector('.fp-ed');if(!bt)return;
    bt.onclick=()=>{
+    // Historia clínica: elegir entre editar solo la última sesión añadida o toda la historia
+    let histPre=null;
+    if(k==='historial'&&!bt.dataset.todo&&typeof histCabFn==='function'){const L=String(P.historial||'').replace(/\s+$/,'').split('\n');let ix=-1;for(let i=L.length-1;i>=0;i--){if(histCabFn(L[i])){ix=i;break;}}
+     if(ix>0){const txt=blk.querySelector('.fp-txt'),guard=txt.innerHTML;
+      txt.innerHTML=`<div class="rec-modo-l" style="margin-top:0">¿Qué quieres editar?</div><div class="rec-modo fp-edq"><button type="button" data-m="ult"><b>Lo último</b><small>${escH(L[ix].replace(/[*`\\]/g,'').replace(/\s+/g,' ').trim().slice(0,70))}</small></button><button type="button" data-m="todo"><b>Toda la historia</b><small>Todo el texto, desde el principio</small></button></div>`;
+      {const ev=blk.querySelector('.fp-add-ev');if(ev)ev.style.display='none';}
+      const bc=ce('button','fp-can');bc.type='button';bc.textContent='Cancelar';bc.onclick=pintar;bt.style.display='none';bt.after(bc);
+      txt.querySelectorAll('.fp-edq button').forEach(b=>b.onclick=()=>{bc.remove();bt.style.display='';txt.innerHTML=guard;{const ev=blk.querySelector('.fp-add-ev');if(ev)ev.style.display='';}
+       if(b.dataset.m==='todo'){bt.dataset.todo='1';bt.click();delete bt.dataset.todo;return;}
+       bt.dataset.ult=L.slice(0,ix).join('\n').replace(/\s+$/,'');bt.dataset.todo='1';bt.click();delete bt.dataset.todo;});
+      return;}}
+    if(bt.dataset.ult!==undefined){histPre=bt.dataset.ult;delete bt.dataset.ult;}
     if(k==='datos'){blk.querySelector('.fp-fs').innerHTML=[['Nombre','nombre',P.nombre,'text'],['Motivo de visita','motivo',P.motivo,'text'],...(telIgual(P.telf,P.whatsapp)?[['Teléfono','tel',P.whatsapp||P.telf,'tel']]:[['Teléfono','tel',P.telf,'tel'],['WhatsApp','whatsapp',P.whatsapp,'tel']]),['Email','email',P.email,'email'],['DNI','dni',P.dni,'text'],['Cumpleaños','cumple',P.cumple,'date']].map(([l,kk,v,t])=>`<label class="fp-f fp-in"><span>${l}</span><input type="${t}" data-k="${kk}" value="${escH(v||'')}"></label>`).join('');}
-    else{const v=k==='notas'?P.notas:P.historial;blk.querySelector('.fp-txt').innerHTML=`<textarea class="fp-ta" rows="8">${escH(v||'')}</textarea>`;}
+    else{const H=String(P.historial||''),v=k==='notas'?P.notas:histPre!==null?H.replace(/\s+$/,'').slice(histPre.length).replace(/^\s+/,''):H;
+     blk.querySelector('.fp-txt').innerHTML=`${histPre!==null?'<div class="rec-modo-l" style="margin:0 0 6px">Editando solo la última sesión. El resto de la historia no se toca.</div>':''}<textarea class="fp-ta" rows="8">${escH(v||'')}</textarea>`;}
     {const ev=blk.querySelector('.fp-add-ev');if(ev)ev.remove();}
     const bx=ce('span','fp-edbts');bx.innerHTML='<button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok fp-guardar">Guardar</button>';bt.replaceWith(bx);
     bx.querySelector('.fp-can').onclick=pintar;
     bx.querySelector('.fp-guardar').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Guardando…';const campos={};
-     if(k==='datos')blk.querySelectorAll('input[data-k]').forEach(i=>campos[i.dataset.k]=i.value.trim());else campos[k]=blk.querySelector('.fp-ta').value;
+     if(k==='datos')blk.querySelectorAll('input[data-k]').forEach(i=>campos[i.dataset.k]=i.value.trim());else if(histPre!==null){const t=blk.querySelector('.fp-ta').value.trim();campos[k]=histPre+(histPre&&t?'\n\n':'')+t;}else campos[k]=blk.querySelector('.fp-ta').value;
      if(k==='datos'&&campos.tel!==undefined&&campos.whatsapp===undefined)campos.whatsapp=campos.tel; // un solo teléfono: sirve también para WhatsApp
      if(k==='datos'&&!campos.nombre){b.disabled=false;b.textContent='Guardar';toast('El nombre no puede quedar vacío',false);return;}
      try{await guardar(campos);if(k==='datos'){P.telf=campos.tel;P.whatsapp=campos.whatsapp;const pl=(pacs||[]).find(x=>x.id===id);if(pl){pl.nombre=campos.nombre;pl.telefono=campos.whatsapp||campos.tel;}}toast('Guardado',true);pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};};});}
