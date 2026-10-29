@@ -1279,7 +1279,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .hz-nv{margin:8px 0 0;font-size:13px;color:#b42318}.hz-dd2{display:flex;flex-direction:column}.hz-dd2>div{display:grid;grid-template-columns:78px 1fr auto;align-items:center;gap:8px;padding:8px 2px;border-top:1px solid #f1ebe5;font-size:13px}.hz-dd2 b{text-transform:capitalize}.hz-dd2 span{display:flex;flex-direction:column}.hz-dd2 small{font-size:11px;color:#9a8d84}.hz-dd2 i{font-style:normal;font-weight:600}.hz-dd2 .mas{color:#2f6b45}.hz-dd2 .menos{color:#b42318}.hz-dd2 .ok{color:#9a8d84}
 .hz-mesn{display:flex;align-items:center;justify-content:space-between;background:#f7f3ef;border-radius:12px;padding:4px;margin-top:8px}.hz-mesn b{font-size:14px}.hz-mesn button{width:36px;height:36px;border:0;border-radius:10px;background:#fff;font-size:20px;line-height:1;cursor:pointer;color:#1a1a1a;font-family:inherit}.hz-mesn button:disabled{opacity:.3;cursor:default}
 .hz-kp>div.hz-dinc{grid-column:1/-1}.hz-ses summary span{font-weight:500;color:#9a8d84;font-size:12px;margin-left:6px}
-.hz-sl>button{display:grid;grid-template-columns:1fr auto;gap:0 10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid #f3eee9;padding:8px 2px;font-family:inherit;font-size:12.5px;color:inherit;cursor:pointer}.hz-sl>button span{grid-column:1;color:#9a8d84;font-size:11.5px}.hz-sl>button b{grid-column:1;font-weight:600}.hz-sl>button i{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-weight:700;font-size:14px}.hz-sl>button small{grid-column:1/-1;color:#b3a69c;font-size:11px}.hz-sl>button i{background:none!important;padding:0!important;border:0!important;width:auto!important;height:auto!important}.hz-sl i.hz-iok{color:#2f6b45}.hz-sl i.hz-ies{color:#9a8d84}.hz-sl i.hz-iman{color:#c2552e}
+.hz-slro>button{cursor:default!important}.hz-sl>button{display:grid;grid-template-columns:1fr auto;gap:0 10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid #f3eee9;padding:8px 2px;font-family:inherit;font-size:12.5px;color:inherit;cursor:pointer}.hz-sl>button span{grid-column:1;color:#9a8d84;font-size:11.5px}.hz-sl>button b{grid-column:1;font-weight:600}.hz-sl>button i{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-weight:700;font-size:14px}.hz-sl>button small{grid-column:1/-1;color:#b3a69c;font-size:11px}.hz-sl>button i{background:none!important;padding:0!important;border:0!important;width:auto!important;height:auto!important}.hz-sl i.hz-iok{color:#2f6b45}.hz-sl i.hz-ies{color:#9a8d84}.hz-sl i.hz-iman{color:#c2552e}
 .hz-eur{display:flex;align-items:center;gap:8px;background:#f7f3ef;border-radius:12px;padding:6px 14px}.hz-eur input{flex:1;min-width:0;border:0;background:none;font:700 26px Poppins,sans-serif;color:#1a1a1a;outline:none;padding:6px 0}.hz-eur span{font-weight:700;font-size:20px;color:#7d6a60}
 .hz-bts3{display:grid;grid-template-columns:1fr 1fr;gap:8px}.hz-bts3 button{width:100%}.hz-ok2{font-family:inherit;font-weight:600;font-size:14px;padding:13px;border-radius:99px;border:1px solid #e3dbd3;background:#fff;color:#1a1a1a;cursor:pointer}
 .hz-auto{display:block;width:100%;margin-top:8px;background:none!important;border:0!important;color:#9a8d84!important;font:500 13px Poppins,sans-serif;cursor:pointer;padding:8px}.hz-sl small em.hz-ver{font-style:normal;color:#2f6b45;font-weight:600}
@@ -9564,6 +9564,27 @@ async function abrirInformeHoras(fisio,conBanco=true){
  };
  cargarInf();
 }
+// Fisios autónomos: sus sesiones hechas del mes con lo que pagó cada paciente (para hacer su factura). Sin totales ni reparto.
+async function abrirSesionesFactura(fisio){
+ const hoy=isoMadrid(new Date()),mesMax=hoy.slice(0,7);let mes=mesMax;
+ const m=hzModal(`<div class="hz-top"><div><small>Sesiones del mes</small><b>${escH(fisio)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-mesn"><button type="button" data-d="-1" aria-label="Mes anterior">‹</button><b></b><button type="button" data-d="1" aria-label="Mes siguiente">›</button></div><div class="hz-inf"></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const box=m.querySelector('.hz-inf');let tk=0;
+ const cargar=async()=>{const t=++tk;
+  m.querySelector('.hz-mesn b').textContent=new Date(mes+'-15').toLocaleDateString('es-ES',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());m.querySelector('.hz-mesn [data-d="1"]').disabled=mes>=mesMax;
+  box.innerHTML='<div class="fac-vacio">Cargando…</div>';
+  const d=mes+'-01',fin=new Date(+mes.slice(0,4),+mes.slice(5,7),0);let h=mes+'-'+String(fin.getDate()).padStart(2,'0');if(h>hoy)h=hoy;
+  try{const r=await (await fetch(`/api/schedule?action=rendimiento&dinero=1&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`)).json();if(t!==tk)return;if(!r.ok)throw 0;
+   const p1=s=>String(s||'').trim().split(/\s+/)[0].toLowerCase(),x=(r.fisios||[]).find(f=>p1(f.fisio)===p1(fisio));
+   const S=((x&&x.dinero&&x.dinero.sesiones)||[]).filter(q=>q.e==='REALIZADA').sort((a,b)=>(a.f+a.h).localeCompare(b.f+b.h));
+   const ok=q=>q.real||q.ver||q.man,est=S.some(q=>q.o!=='Gratis'&&q.eur&&!ok(q));
+   box.innerHTML=!S.length?'<div class="fac-vacio">No hay sesiones hechas este mes</div>':`<p class="adm-nota" style="margin:2px 0 6px">${S.length} ${S.length===1?'sesión hecha':'sesiones hechas'}${est?' · Las que llevan ≈ aún no están confirmadas por dirección.':''}</p>
+    <div class="hz-sl hz-slro">${S.map(q=>`<button type="button" tabindex="-1"><span>${fdiaCorto(q.f)} · ${escH(q.h||'')}</span><b>${escH(q.pac)}</b><i class="${ok(q)?'hz-iok':'hz-ies'}">${q.o==='Gratis'?'Gratis':q.eur?(ok(q)?'':'≈ ')+fmtEur(q.eur):'—'}</i></button>`).join('')}</div>`;}
+  catch(e){if(t===tk)box.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';}};
+ m.querySelectorAll('.hz-mesn button').forEach(b=>b.onclick=()=>{const dt=new Date(mes+'-15');dt.setMonth(dt.getMonth()+ +b.dataset.d);const n=dt.toISOString().slice(0,7);if(n>mesMax)return;mes=n;cargar();});
+ cargar();
+}
 function fmtEur(v){v=Math.round((+v||0)*100)/100;return v.toLocaleString('es-ES',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2})+' €';}
 // Agenda: la fila con los nombres de los fisios (o los días) se queda pegada arriba al bajar y se mueve a la vez que la agenda hacia los lados
 function agCabFija(grid){if(!grid||grid._cab)return;const cab=ce('div','ag-cabf');grid.parentNode.insertBefore(cab,grid);grid._cab=cab;
@@ -9730,7 +9751,7 @@ async function renderRendimiento(wrap,solo){
       <div class="ch-mid"><b>${d.libre?(r&&r.tipo==='Sin paciente'?'Vino sin pacientes':'No vino'):d.hechas+' de '+d.toca+' h'}</b><small class="${df>0?'mas':'menos'}">${r&&r.tipo==='Sin paciente'?Math.abs(r.horas||df)+' h sin paciente':d.libre?d.toca+' h de su horario':(df>0?df+' h de más':-df+' h de menos')}</small></div>
       <button type="button" ${solo&&r&&!r.pendiente?'disabled ':''}class="rc-clas${r&&!r.pendiente?' hecho':''}${r&&r.pendiente?' pval':''}${solo&&r&&!r.pendiente?' ro':''}" data-fisio="${escH(x.fisio)}" data-fecha="${d.fecha}" data-dif="${df}" data-hechas="${d.libre?0:d.hechas}" data-toca="${d.toca}">${r?`<i class="ch-dot"></i>${escH(r.tipo)}${r.pendiente?`<em>${solo?'enviado':'validar'}</em>`:''}${r.banco&&x.bancoOn&&!r.pendiente?'<em>banco</em>':''}`:'Clasificar'}</button></div>`;};
     return `<div class="ch">
-     <div class="ch-head"><span>Control de horas${infoI((conCV(x)?I.horas.replace('(sesiones)','(sesiones + call-in + vídeos)'):I.horas)+(x.bancoOn?I.banco:''))}</span>${solo?'':`<button type="button" class="rc-inf" data-fisio="${escH(x.fisio)}">Informe <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></button>`}</div>
+     <div class="ch-head"><span>Control de horas${infoI((conCV(x)?I.horas.replace('(sesiones)','(sesiones + call-in + vídeos)'):I.horas)+(x.bancoOn?I.banco:''))}</span>${solo?(fisioActual&&fisioActual.autonomo?`<button type="button" class="rc-inf rc-sesf" data-fisio="${escH(x.fisio)}">Sesiones del mes <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></button>`:''):`<button type="button" class="rc-inf" data-fisio="${escH(x.fisio)}">Informe <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></button>`}</div>
      <div class="ch-hero"><div><b>${h} h</b><small> de ${tot} h</small></div>${dd?`<em class="rend-dif ${dd>0?'mas':'menos'}">${dd>0?'+':'−'}${Math.abs(dd)} h</em>`:'<em class="rend-dif ok">✓ cuadra</em>'}</div>
      <div class="ch-bar"><i style="width:${tot?Math.min(100,Math.round(h*100/tot)):0}%"></i></div>
      <div class="ch-sub">${x.realizadas} sesiones${conCV(x)?` · ${x.callin||0} h call-in · ${x.videos||0} h vídeos`:''}</div>
@@ -9746,7 +9767,7 @@ async function renderRendimiento(wrap,solo){
     <div class="rend-conv dos"><div><span>Reagendan${infoI(I.reag)}</span><b>${pcs(x.reagendan,x.atendidos)}</b></div><div><span>No reagendan${infoI(I.noreag)}</span><b>${pcs(x.atendidos-x.reagendan,x.atendidos)}</b></div></div>${tot?'':listaNo(x)}${(!tot&&x.dias)?controlHoras(x):''}</div>`;};
    res.innerHTML=(L.length>1?card(T,true):'')+L.filter(x=>!x.sinHoras).map(x=>card(x)).join('')+L.filter(x=>x.sinHoras).map(x=>card(x)).join('');
    res.querySelectorAll('.rc-clas').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirClasificar({explica:!!solo,hechas:+b.dataset.hechas,toca:+b.dataset.toca,conBanco:!!x.bancoOn,fisio:b.dataset.fisio,fecha:b.dataset.fecha,dif:+b.dataset.dif,reg:(x.reg||{})[b.dataset.fecha],onSave:async()=>{await horasDe(x);mantenScroll(pinta);}});});
-   res.querySelectorAll('.rc-inf').forEach(b=>b.onclick=()=>{const x=L.find(f=>f.fisio===b.dataset.fisio);abrirInformeHoras(b.dataset.fisio,!!(x&&x.bancoOn));});
+   res.querySelectorAll('.rc-inf').forEach(b=>b.onclick=()=>{if(b.classList.contains('rc-sesf'))return abrirSesionesFactura(b.dataset.fisio);const x=L.find(f=>f.fisio===b.dataset.fisio);abrirInformeHoras(b.dataset.fisio,!!(x&&x.bancoOn));});
    res.querySelectorAll('.rn-wa').forEach(b=>b.onclick=()=>{let p=null,fx=null;L.forEach(x=>(x.lista||[]).forEach(y=>{if(y.id===b.dataset.id&&!p){p=y;fx=x;}}));if(!p)return;
     waPersonal({nombre:p.nombre,tel:p.tel,pacienteId:p.id,fisio:fx&&fx.fisio,ultima:p.ultima,nota:p.nota?'No reagenda: '+p.nota:'No ha vuelto a reservar después de esta sesión'});});
    res.querySelectorAll('.rn-seg').forEach(b=>b.onclick=()=>SEG_PAC[b.dataset.id]?toast(segYaTxt(b.dataset.id),true):abrirNuevoSeg({pacienteId:b.dataset.id,nombre:b.dataset.n,nota:'',motivo:b.dataset.nota||'',onSave:()=>{SEG_PAC[b.dataset.id]={fecha:'',quien:''};b.classList.add('en');b.textContent='✓ En seguimiento';}}));

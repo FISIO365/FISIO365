@@ -92,6 +92,7 @@ export default async function handler(req) {
         nombre: rec.fields['Name'] || '',
         role: rec.fields['Role'] || 'fisio',
         direccion: !!rec.fields['DIRECCIÓN'],
+        autonomo: String((rec.fields['TIPO CONTRATO'] && rec.fields['TIPO CONTRATO'].name) || rec.fields['TIPO CONTRATO'] || '') === 'Autónomo',
         colegiado: rec.fields['NºColegiado'] || '',
         foto: rec.fields['Foto']?.[0]?.url || '',
         accesos
