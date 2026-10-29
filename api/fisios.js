@@ -93,6 +93,7 @@ export default async function handler(req) {
         role: rec.fields['Role'] || 'fisio',
         direccion: !!rec.fields['DIRECCIÓN'],
         autonomo: String((rec.fields['TIPO CONTRATO'] && rec.fields['TIPO CONTRATO'].name) || rec.fields['TIPO CONTRATO'] || '') === 'Autónomo',
+        pct: rec.fields['PORCENTAJE FISIO'] == null ? null : Number(rec.fields['PORCENTAJE FISIO']),
         colegiado: rec.fields['NºColegiado'] || '',
         foto: rec.fields['Foto']?.[0]?.url || '',
         accesos
