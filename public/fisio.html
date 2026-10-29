@@ -5937,6 +5937,10 @@ function horaPicker(anchor,valor,ops,onPick){
  box.querySelectorAll('[data-h]').forEach(b=>b.onclick=e=>{e.stopPropagation();cerrar();onPick(b.dataset.h);});
  setTimeout(()=>document.addEventListener('click',fuera,true),0);addEventListener('resize',coloca);coloca();
 }
+// Última sesión del paciente: la más reciente REALIZADA, o la de hoy aunque siga en PENDIENTE si su hora ya ha pasado
+function ultSesion(citas,hoy){const ah=new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
+ const hh=c=>String(c.hora||'').replace(/^(\d):/,'0$1:').slice(0,5);
+ return (citas||[]).filter(c=>c.fecha&&c.fecha<=hoy&&(/REALIZADA/i.test(c.estado)||(c.fecha===hoy&&/PENDIENTE/i.test(c.estado)&&hh(c)&&hh(c)<=ah))).sort((a,b)=>(b.fecha+hh(b)).localeCompare(a.fecha+hh(a)))[0];}
 async function agRecordatorios(onDone,modoIni){
  let fechas=recFechasDef(),datos=null;
  const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>${modoIni==='enc'?'Encuestas':'Recordatorios por WhatsApp'}</b></div><div class="fp-body"></div>`;
@@ -8766,7 +8770,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   return `<label class="fp-up"><input type="file" multiple hidden><span>＋ Subir archivo</span>${infoI('PDF o fotos de hasta 3 MB. Se guardan en su ficha de Airtable.')}</label>
   ${P.archivos.length?`<div class="fp-docs">${P.archivos.map(a=>{const ext=(a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase();return `<a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-doc-it">${a.mini?`<img src="${escH(a.mini)}" alt="">`:`<span class="fp-doc-ic ${/PDF/.test(ext)?'pdf':/JPG|JPEG|PNG|HEIC|WEBP/.test(ext)?'img':''}">${escH(ext)}</span>`}<span class="fp-doc-t"><b>${escH(a.nombre)}</b><small>${escH(ext)}${a.tam?' · '+kb(a.tam):''}</small></span><span class="fp-doc-go">›</span></a>`;}).join('')}</div>`:'<div class="fac-vacio">No tiene archivos</div>'}`;}
  function historia(){
-  const hoy=d.hoy,ses=d.citas.filter(c=>c.fecha<=hoy&&/REALIZADA/i.test(c.estado)),u=ses[0];
+  const hoy=d.hoy,ses=d.citas.filter(c=>c.fecha<=hoy&&/REALIZADA/i.test(c.estado)),u=ultSesion(d.citas,hoy);
   const modD=P.historialMod?isoMadrid(new Date(P.historialMod)):'';
   const par=t=>String(t||'').split(/\n{2,}/).map(x=>`<p>${mdSimple(x.trim())}</p>`).join('');
   // Línea del tiempo: detecta cada sesión aunque el fisio la escriba distinto
@@ -8843,7 +8847,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   pinta(false);}
  function montarHistoria(cont){
   const b=cont.querySelector('.fp-add-ev');if(!b)return;
-  b.onclick=()=>{const slot=cont.querySelector('.fp-add-slot');const u=d.citas.find(c=>c.fecha<=d.hoy&&/REALIZADA/i.test(c.estado));
+  b.onclick=()=>{const slot=cont.querySelector('.fp-add-slot');const u=ultSesion(d.citas,d.hoy);
    slot.innerHTML=`<div class="fp-ev"><div class="fp-evh"><b>Evolución${u?' · sesión del '+escH(segFecha(u.fecha)):''}</b>${infoI('Se añade al final de la historia clínica con la fecha de la sesión y tu nombre. No borra nada de lo anterior.')}</div><textarea class="fp-ta" rows="6" placeholder="Qué se trabajó, cómo respondió, cambios en el dolor, pauta para casa…"></textarea><div class="fp-edbts" style="justify-content:flex-end;margin-top:8px"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></div></div>`;
    const ta=slot.querySelector('.fp-ta');ta.focus();slot.querySelector('.fp-can').onclick=()=>{slot.innerHTML='';};
    slot.querySelector('.fp-ok').onclick=async e=>{const t=ta.value.trim();if(!t){toast('Escribe la evolución',false);return;}const bt=e.target;bt.disabled=true;bt.textContent='Guardando…';
