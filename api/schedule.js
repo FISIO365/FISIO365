@@ -836,6 +836,87 @@ async function rachaConfirmadas(pid, fecha, hora) {
   } catch (e) { return 1; }
 }
 
+
+// ── RESERVAR DESDE UN ENLACE DE HUECOS LIBRES (se manda por WhatsApp; vale para pacientes y gente nueva) ──
+// El enlace lleva los días y fisios elegidos al mandarlo, firmado para que no se pueda cambiar.
+function firmaHuecos(k) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('huecos:' + k).digest('hex').slice(0, 8); }
+const huecosDec = k => { try { const o = JSON.parse(Buffer.from(String(k), 'base64url').toString('utf8')); return o && /^\d{4}-\d{2}-\d{2}$/.test(o.a) && /^\d{4}-\d{2}-\d{2}$/.test(o.b) ? { a: o.a, b: o.b, f: Array.isArray(o.f) ? o.f.map(String) : [] } : null; } catch (e) { return null; } };
+const huecosEnlace = (a, b, f) => { const k = Buffer.from(JSON.stringify({ a, b, f: f || [] })).toString('base64url'); return `https://app.fisioterapia365.com/h/${k}.${firmaHuecos(k)}`; };
+const HUECO_LIBRE = /^(CITA LIBRE|LIBRE - SIN BOMBA)$/, HUECO_NOFISIO = /^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES|NORA)$/i;
+const madridAhora = () => { const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date()).map(x => [x.type, x.value])); return { f: `${p.year}-${p.month}-${p.day}`, h: `${String(+p.hour % 24).padStart(2, '0')}:${p.minute}` }; };
+function huecoValido(F, P) {
+  const nm = v => (v && typeof v === 'object') ? (v.name || '') : (v || ''), est = String(nm(F['ESTADO'])).trim(), fisio = String(nm(F['PREF.'])).trim();
+  const fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), ya = madridAhora();
+  if (!HUECO_LIBRE.test(est) || !fisio || HUECO_NOFISIO.test(fisio) || !/^\d{2}:\d{2}$/.test(hora)) return null;
+  if (fecha < P.a || fecha > P.b || fecha < ya.f || (fecha === ya.f && hora <= ya.h)) return null;
+  if (P.f.length && !P.f.includes(fisio)) return null;
+  return { fecha, hora, fisio, sb: est === 'LIBRE - SIN BOMBA' };
+}
+async function huecosLibres(P) {
+  const ya = madridAhora(), a = P.a > ya.f ? P.a : ya.f; let recs = [], off = '';
+  do { const d = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO})='CITA LIBRE',TRIM({ESTADO})='LIBRE - SIN BOMBA'),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${a}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${P.b}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&pageSize=100${off ? '&offset=' + off : ''}`);
+    if (d.error) throw new Error('Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off && recs.length < 1500);
+  const cap = t => t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : '';
+  return recs.map(r => { const h = huecoValido(r.fields || {}, P); return h ? { id: r.id, ...h, nombre: cap(h.fisio.split(' ')[0]) } : null; }).filter(Boolean).sort((x, y) => (x.fecha + x.hora + x.fisio).localeCompare(y.fecha + y.hora + y.fisio));
+}
+function paginaHuecos(D) {
+  const J = JSON.stringify(D).replace(/</g, '\\u003c');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Reserva tu cita · FISIO365</title>
+<meta property="og:title" content="Elige tu hueco en FISIO365"><meta property="og:description" content="Toca la hora que te vaya bien y queda reservada."><meta property="og:image" content="https://app.fisioterapia365.com/informe/og-cita-v3.png"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
+.c{background:#fff;border-radius:24px;padding:26px 20px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start}
+.cab{text-align:center}.cab svg{display:block;margin:0 auto}.cab svg rect,.cab svg path{fill:none;stroke:#c2552e;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.mini{width:52px;height:52px;transform-origin:26px 8px;animation:col 1.4s .2s ease-in-out both}@keyframes col{0%{transform:rotate(-14deg)}30%{transform:rotate(10deg)}55%{transform:rotate(-6deg)}78%{transform:rotate(3deg)}100%{transform:none}}
+h1{font-size:22px;font-weight:700;margin:12px 0 4px;line-height:1.25}.sub{font-size:14.5px;color:#5c4f47;margin:0;line-height:1.5}
+.dia{margin-top:22px}.dia h2{font-size:14px;font-weight:600;color:#2b2420;margin:0 0 9px}
+.fis{font-size:12px;color:#8a7d74;margin:8px 0 6px}.hs{display:flex;flex-wrap:wrap;gap:8px}
+.h{border:1.5px solid #efe6de;background:#fdf6f2;color:#c2552e;border-radius:12px;padding:9px 0;width:calc(25% - 6px);font:600 14.5px Poppins,sans-serif;cursor:pointer;transition:transform .12s}.h:active{transform:scale(.96)}.h.sb{background:#fff;border-style:dashed;color:#8a7d74}
+.ley{font-size:11.5px;color:#a3968c;margin:18px 0 0}.vacio{text-align:center;color:#8a7d74;font-size:14.5px;padding:30px 0}
+.fondo{position:fixed;inset:0;background:rgba(20,20,20,.35);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}.fondo.on{opacity:1}
+.hoja{background:#fff;border-radius:22px 22px 0 0;padding:22px 20px 26px;width:100%;max-width:440px;transform:translateY(30px);transition:transform .25s}.fondo.on .hoja{transform:none}
+.sel{background:#fdf1ea;border-radius:14px;padding:12px 14px;margin-bottom:14px}.sel small{display:block;font-size:12px;color:#8a7d74}.sel b{font-size:16px}
+label{display:block;font-size:12.5px;color:#7d6a60;margin:10px 0 4px}input,textarea{width:100%;border:1.5px solid #e6ddd5;border-radius:12px;padding:11px 13px;font:400 15px Poppins,sans-serif;color:#141414;outline:none}input:focus,textarea:focus{border-color:#c2552e}textarea{min-height:74px;resize:vertical}
+.dos{display:flex;gap:8px}.dos>div{flex:1}.err{font-size:13px;color:#b42318;min-height:18px;margin:8px 0 0}
+.bt{width:100%;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:15px;cursor:pointer;margin-top:8px}.bt:disabled{opacity:.6}.cancel{width:100%;background:none;border:none;color:#8a7d74;font:500 14px Poppins,sans-serif;padding:12px;cursor:pointer}
+.ok{text-align:center;padding:10px 0}.ok svg{display:block;margin:0 auto}.ok circle,.ok path{fill:none;stroke:#c2552e;stroke-width:3;stroke-linecap:round}.ok .o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s forwards}.ok .m{stroke-dasharray:44;stroke-dashoffset:44;animation:dr .45s .7s forwards}@keyframes dr{to{stroke-dashoffset:0}}
+.fi{opacity:0;transform:translateY(8px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}.pie{margin-top:18px;font-size:12.5px;color:#7d6a60;line-height:1.6;text-align:center}.pie a{color:#7d6a60}</style></head>
+<body><div class="c" id="c"></div><script>(function(){var D=${J},C=document.getElementById('c');
+var DS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function fl(f){var d=new Date(f+'T12:00:00');return DS[d.getDay()]+' '+d.getDate()+' de '+MS[d.getMonth()];}
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var pie='<div class="pie">'+esc(D.dir)+'<br>¿Dudas? Llámanos al <a href="tel:'+esc(D.tel.replace(/\\s/g,''))+'">'+esc(D.tel)+'</a></div>';
+var cal='<svg class="mini" viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="11" width="32" height="29" rx="5"/><path d="M8 19h32M16 7v7M32 7v7"/></svg>';
+function lista(){var H=D.huecos;if(!H.length){C.innerHTML='<div class="cab">'+cal+'<h1>Vaya, ya no quedan huecos</h1><p class="sub">Se han ocupado todos los de estos días. Escríbenos y te buscamos otro.</p></div>'+pie;return;}
+ var fis={};H.forEach(function(h){fis[h.fisio]=1;});var varios=Object.keys(fis).length>1,dias={};H.forEach(function(h){(dias[h.fecha]=dias[h.fecha]||[]).push(h);});
+ var html='<div class="cab">'+cal+'<h1>Elige tu hueco</h1><p class="sub">Toca la hora que te vaya bien y queda reservada'+(!varios?' con '+esc(H[0].nombre):'')+'.</p></div>';
+ Object.keys(dias).sort().forEach(function(f,i){var L=dias[f];html+='<div class="dia fi" style="animation-delay:'+(.15+i*.06)+'s"><h2>'+fl(f).replace(/^./,function(x){return x.toUpperCase();})+'</h2>';
+  var gr=varios?Object.keys(L.reduce(function(a,h){a[h.nombre]=1;return a;},{})):[''];
+  gr.forEach(function(n){if(varios)html+='<div class="fis">Con '+esc(n)+'</div>';html+='<div class="hs">'+L.filter(function(h){return !varios||h.nombre===n;}).map(function(h){return '<button class="h'+(h.sb?' sb':'')+'" data-id="'+h.id+'">'+h.hora+(h.sb?'*':'')+'</button>';}).join('')+'</div>';});html+='</div>';});
+ if(H.some(function(h){return h.sb;}))html+='<p class="ley">* Hora sin bomba diamagnética</p>';
+ C.innerHTML=html+pie;[].forEach.call(C.querySelectorAll('.h'),function(b){b.onclick=function(){abrir(H.filter(function(h){return h.id===b.getAttribute('data-id');})[0]);};});}
+var G={};try{G=JSON.parse(localStorage.getItem('f365_res')||'{}');}catch(e){}
+function abrir(h){var f=document.createElement('div');f.className='fondo';f.innerHTML='<div class="hoja"><div class="sel"><small>Tu cita</small><b>'+fl(h.fecha).replace(/^./,function(x){return x.toUpperCase();})+' a las '+h.hora+'</b><small>Con '+esc(h.nombre)+'</small></div>'
+ +'<div class="dos"><div><label>Nombre</label><input id="n1" autocomplete="given-name" value="'+esc(G.n1||'')+'"></div><div><label>Apellidos</label><input id="n2" autocomplete="family-name" value="'+esc(G.n2||'')+'"></div></div>'
+ +'<label>Teléfono</label><input id="tl" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(G.tl||'')+'"><label>Motivo de consulta</label><textarea id="mo" placeholder="Ej.: dolor de espalda desde hace unas semanas"></textarea>'
+ +'<p class="err" id="er"></p><button class="bt" id="rs">Reservar</button><button class="cancel" id="cn">Elegir otra hora</button></div>';
+ document.body.appendChild(f);requestAnimationFrame(function(){f.classList.add('on');});var q=function(i){return f.querySelector('#'+i);};
+ [].forEach.call(f.querySelectorAll('input,textarea'),function(x){x.oninput=function(){q('er').textContent='';};});
+ var cerrar=function(){f.classList.remove('on');setTimeout(function(){f.remove();},200);};q('cn').onclick=cerrar;f.onclick=function(e){if(e.target===f)cerrar();};
+ q('rs').onclick=function(){var d={n1:q('n1').value.trim(),n2:q('n2').value.trim(),tl:q('tl').value.trim(),mo:q('mo').value.trim()},er=q('er');
+  if(!d.n1){er.textContent='Escribe tu nombre';return;}if(!d.n2){er.textContent='Escribe tus apellidos';return;}if(d.tl.replace(/\\D/g,'').length<9){er.textContent='Revisa el teléfono';return;}if(!d.mo){er.textContent='Cuéntanos brevemente el motivo de la consulta';return;}
+  try{localStorage.setItem('f365_res',JSON.stringify({n1:d.n1,n2:d.n2,tl:d.tl}));}catch(e){}
+  var b=this;b.disabled=true;b.textContent='Reservando…';er.textContent='';
+  fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:h.id,nombre:d.n1,apellidos:d.n2,tel:d.tl,motivo:d.mo})}).then(function(r){return r.json();}).then(function(r){
+   if(r.ok){f.remove();hecho(h,d.n1);return;}
+   if(r.ocupado){D.huecos=D.huecos.filter(function(x){return x.id!==h.id;});f.remove();lista();setTimeout(function(){alertar(r.error);},50);return;}
+   throw new Error(r.error||'');}).catch(function(e){b.disabled=false;b.textContent='Reservar';er.textContent=e.message||'No se ha podido reservar. Inténtalo de nuevo.';});};}
+function alertar(t){var p=document.createElement('p');p.className='err';p.style.textAlign='center';p.textContent=t;C.insertBefore(p,C.children[1]);}
+function hecho(h,n){C.innerHTML='<div class="ok"><svg width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="fi" style="animation-delay:.9s" d="M25 35 Q30 29 35 35"/><path class="fi" style="animation-delay:.9s" d="M45 35 Q50 29 55 35"/><path class="m" d="M26 45 Q40 62 54 45"/></svg>'
+ +'<h1 class="fi" style="animation-delay:1s">¡Reservada, '+esc(n.charAt(0).toUpperCase()+n.slice(1))+'!</h1><p class="sub fi" style="animation-delay:1.15s">Te esperamos el '+fl(h.fecha)+' a las '+h.hora+' con '+esc(h.nombre)+'.</p></div>'+pie;}
+lista();})();<\/script></body></html>`;
+}
+
 // ── ENCUESTA DE PRIMERA VISITA (página propia, enlace personal por cita) ──
 // Misma lógica que la de Tally: Excelente → reseña en Google (con frases para copiar); el resto → qué podemos mejorar
 const RESENA_URL = 'https://search.google.com/local/writereview?placeid=ChIJCadKnf2G6AIRcmUzdzMr4nk';
@@ -1291,6 +1372,47 @@ module.exports = async function handler(req, res) {
     }
     const extra = conf0 ? { cal: { ics: `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}.ics`, google: calendarioCita(D, C).google } } : {};
     return res.status(200).send(paginaConfirmar({ ...D, ...extra, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '', app }, C));
+  }
+  // Enlace de huecos libres: página para elegir y reservar (GET) y la reserva (POST)
+  if (action === 'huecos') {
+    const k = String(req.query.k || ''), sg = String(req.query.s || ''), P = huecosDec(k);
+    res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
+    if (!P || sg !== firmaHuecos(k)) { if (req.method === 'POST') return res.status(400).json({ ok: false, error: 'Enlace no válido' }); res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: 'Este enlace no es válido.' })); }
+    const C = (await conf().catch(() => CONF_DEF)).clinica || CONF_DEF.clinica;
+    if (req.method === 'POST') {
+      const q = req.body || {}, id = String(q.id || ''), cap = t => String(t || '').trim().replace(/\s+/g, ' ').toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
+      const n1 = cap(q.nombre).slice(0, 60), n2 = cap(q.apellidos).slice(0, 80), tel = String(q.tel || '').replace(/\D/g, '').replace(/^0034|^34(?=\d{9}$)/, ''), motivo = String(q.motivo || '').trim().slice(0, 1500);
+      if (!/^rec[A-Za-z0-9]{14}$/.test(id) || !n1 || !n2 || tel.length < 9 || !motivo) return res.status(400).json({ ok: false, error: 'Revisa los datos, por favor.' });
+      const ocupado = { ok: false, ocupado: true, error: 'Vaya, alguien acaba de coger esa hora. Elige otra, por favor.' };
+      const r = await at(`tblTPlcuiSjQngkaD/${id}`); if (r.error) return res.status(200).json(ocupado);
+      const h = huecoValido(r.fields || {}, P); if (!h) return res.status(200).json(ocupado);
+      // Paciente: por teléfono; si no existe, se crea con nombre, teléfono y motivo
+      const t9 = tel.slice(-9);
+      const ps = await at(`${PACIENTES}?filterByFormula=${encodeURIComponent(`OR(RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${t9}',RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${t9}')`)}&maxRecords=1&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=${encodeURIComponent('MOTIVO DE VISITA')}`).catch(() => ({}));
+      let pac = (ps.records || [])[0] || null, nuevo = false;
+      if (!pac) {
+        const c = await at(PACIENTES, { method: 'POST', body: JSON.stringify({ records: [{ fields: { 'FULL NAME': `${n1} ${n2}`.toUpperCase(), TELF: tel, WHATSAPP: tel, PIN: nuevoPin(), 'MOTIVO DE VISITA': motivo } }], typecast: true }) });
+        if (c.error || !c.records) return res.status(200).json({ ok: false, error: 'No se ha podido reservar. Llámanos y te la apuntamos.' });
+        pac = c.records[0]; nuevo = true;
+      } else if (!String((pac.fields || {})['MOTIVO DE VISITA'] || '').trim()) await at(`${PACIENTES}/${pac.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MOTIVO DE VISITA': motivo } }) }).catch(() => {});
+      const nota = `Reserva por enlace de huecos${nuevo ? ' (paciente nuevo)' : ''} · Motivo: ${motivo}`;
+      const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', NOTAS: [r.fields.NOTAS, nota].filter(Boolean).join('\n') }, typecast: true }) });
+      if (u.error) return res.status(200).json({ ok: false, error: 'No se ha podido reservar. Inténtalo de nuevo.' });
+      await new Promise(z => setTimeout(z, 700));
+      const v = await at(`tblTPlcuiSjQngkaD/${id}`).catch(() => u);
+      if (!((v.fields || {})['RELACIÓN - CITA'] || []).includes(pac.id)) return res.status(200).json(ocupado);
+      // Aviso al móvil: dirección y el fisio de esa hora
+      try {
+        const fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name'), nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase();
+        const ids = (fl.records || []).filter(x => ['ramiro', 'nora', h.fisio.split(' ')[0].toLowerCase()].includes(nom1(x))).map(x => x.id), { avisar } = require('./_push');
+        const d = new Date(h.fecha + 'T12:00:00Z'), DS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'], fis = h.fisio.charAt(0) + h.fisio.slice(1).toLowerCase();
+        await Promise.all(ids.map(fid => avisar('fisio', fid, { title: `📅 Nueva reserva: ${n1} ${n2}${nuevo ? ' (nuevo)' : ''}`, body: `${DS[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${h.hora} con ${fis.split(' ')[0]}. ${motivo.slice(0, 90)}`, url: '/fisio', tag: 'res-' + id }).catch(() => false)));
+      } catch (e) {}
+      return res.status(200).json({ ok: true });
+    }
+    const huecos = await huecosLibres(P).catch(() => []);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(paginaHuecos({ huecos, url: `https://app.fisioterapia365.com/h/${k}.${sg}`, tel: C.tel || '672 89 39 49', dir: C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
   if (action === 'encuesta-og') {
@@ -2486,6 +2608,11 @@ module.exports = async function handler(req, res) {
             const F = p.fields; out.push({ pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', pedida: F['RESEÑA PEDIDA'] || '', dejada: !!F['RESEÑA POSITIVA'], ultima: (ult[p.id] || {}).fecha || '', fisio: (ult[p.id] || {}).fisio || '', extra: !ult[p.id] }); });
           out.sort((a, b) => (b.ultima || '').localeCompare(a.ultima || '') || a.nombre.localeCompare(b.nombre));
           return res.status(200).json({ ok: true, hoy: hoyF, pacientes: out });
+        }
+        if (action === 'seg-agenda-huecos-enlace') {
+          if (!okF(q.desde) || !okF(q.hasta)) return res.status(400).json({ ok: false, error: 'Faltan las fechas' });
+          const f = String(q.fisios || '').split(',').map(x => x.trim()).filter(x => x && x.length < 40);
+          return res.status(200).json({ ok: true, url: huecosEnlace(q.desde, q.hasta, f) });
         }
         if (action === 'seg-agenda-enc-nuevas') {
           // Respuestas a la encuesta de primera visita de los últimos 14 días (para los avisos dentro del panel)
