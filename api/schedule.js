@@ -3235,6 +3235,14 @@ module.exports = async function handler(req, res) {
           for (const [id, pin] of [...new Map(nuevosPin)].slice(0, 30)) await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: pin } }) }).catch(() => {});
           return res.status(200).json({ ok: true, hoy: hoyF, citas });
         }
+        if (action === 'seg-agenda-altas') { // encuesta de alta: pacientes con el alta apuntada los últimos 30 días
+          const ps = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({POR QUÉ FECHA},IS_AFTER({POR QUÉ FECHA},DATEADD(TODAY(),-31,'days')),FIND('ALTA',UPPER(ARRAYJOIN({ESTADO}))))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('POR QUÉ FECHA')}&fields[]=${encodeURIComponent('POR QUÉ FISIO')}&fields[]=${encodeURIComponent('FIN ENVIADA')}&fields[]=${encodeURIComponent('FIN VALORACIÓN')}&fields[]=${encodeURIComponent('FIN COMENTARIO')}&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}&fields[]=${encodeURIComponent('FIN FISIO')}`);
+          const nmA = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+          const lista = ps.map(p => { const F = p.fields, alta = String(F['POR QUÉ FECHA'] || '').slice(0, 10), env = F['FIN ENVIADA'] && String(F['FIN ENVIADA']).slice(0, 10) >= alta ? F['FIN ENVIADA'] : '';
+            return { pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', alta, fisio: F['FIN FISIO'] || F['POR QUÉ FISIO'] || '', enviado: env, valoracion: env ? nmA(F['FIN VALORACIÓN']) : '', comentario: env ? (F['FIN COMENTARIO'] || '') : '', resena: !!(env && F['FIN IR A RESEÑA']) }; })
+            .sort((a, b) => b.alta.localeCompare(a.alta) || a.nombre.localeCompare(b.nombre));
+          return res.status(200).json({ ok: true, pacientes: lista });
+        }
         if (action === 'seg-agenda-resenas') {
           // Pedir reseña en Google: pacientes con sesión realizada los últimos 7 días (o los ids pedidos), con si ya se les pidió / ya la dejaron
           const extra = String(q.ids || '').split(',').filter(okId).slice(0, 20);
@@ -3345,14 +3353,6 @@ module.exports = async function handler(req, res) {
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const d = await at(`${CIT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ENCUESTA ENVIADA': q.enviado === false ? null : new Date().toISOString() } }) });
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
-        }
-        if (action === 'seg-agenda-altas') { // encuesta de alta: pacientes con el alta apuntada los últimos 30 días
-          const ps = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({POR QUÉ FECHA},IS_AFTER({POR QUÉ FECHA},DATEADD(TODAY(),-31,'days')),FIND('ALTA',UPPER(ARRAYJOIN({ESTADO}))))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('POR QUÉ FECHA')}&fields[]=${encodeURIComponent('POR QUÉ FISIO')}&fields[]=${encodeURIComponent('FIN ENVIADA')}&fields[]=${encodeURIComponent('FIN VALORACIÓN')}&fields[]=${encodeURIComponent('FIN COMENTARIO')}&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}&fields[]=${encodeURIComponent('FIN FISIO')}`);
-          const nmA = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
-          const lista = ps.map(p => { const F = p.fields, alta = String(F['POR QUÉ FECHA'] || '').slice(0, 10), env = F['FIN ENVIADA'] && String(F['FIN ENVIADA']).slice(0, 10) >= alta ? F['FIN ENVIADA'] : '';
-            return { pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', alta, fisio: F['FIN FISIO'] || F['POR QUÉ FISIO'] || '', enviado: env, valoracion: env ? nmA(F['FIN VALORACIÓN']) : '', comentario: env ? (F['FIN COMENTARIO'] || '') : '', resena: !!(env && F['FIN IR A RESEÑA']) }; })
-            .sort((a, b) => b.alta.localeCompare(a.alta) || a.nombre.localeCompare(b.nombre));
-          return res.status(200).json({ ok: true, pacientes: lista });
         }
         if (action === 'seg-agenda-fin-enlace') { // encuesta de fin de tratamiento: deja la ficha lista y devuelve el enlace personal
           if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
