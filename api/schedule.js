@@ -850,7 +850,20 @@ h1{font-size:22px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-s
 .caras{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:24px 0 8px}
 .cara{border:1.5px solid #efe6de;background:#fff;border-radius:18px;padding:14px 6px 12px;cursor:pointer;font:600 14px Poppins,sans-serif;color:#2b2420;transition:transform .15s,border-color .2s,background .2s;opacity:0;animation:fi .5s forwards}
 .cara svg{width:46px;height:46px;display:block;margin:0 auto 6px}.cara svg circle,.cara svg path{stroke:#c2552e;fill:none;stroke-width:3.4;stroke-linecap:round}.cara svg .ey{fill:#c2552e;stroke:none}
-.cara.on{background:#fbeee7;border-color:#c2552e;transform:scale(1.04)}.cara.on svg{animation:bote .5s}@keyframes bote{40%{transform:scale(1.18) rotate(-6deg)}}
+.cara svg{transform-origin:50% 60%}.cara .oj ellipse,.cara .oj path{transform-box:fill-box;transform-origin:center}
+.k0{animation:k0 2.4s ease-in-out infinite}.k1{animation:k1 3s .4s ease-in-out infinite}.k1 .oj ellipse{animation:parpa 3.6s 1s infinite}.k2 .oj{animation:lado 3.4s .8s ease-in-out infinite}.k2 .oj ellipse{animation:parpa 4.2s 2s infinite}.k3{animation:k3 3.8s 1.2s ease-in-out infinite}.k3 .bo{transform-box:fill-box;transform-origin:center;animation:tiem 3.8s 1.2s infinite}
+@keyframes k0{0%,100%{transform:none}15%{transform:translateY(-6px) rotate(-8deg) scale(1.06)}30%{transform:translateY(0) rotate(0)}42%{transform:translateY(-3px) rotate(6deg)}55%{transform:none}}
+@keyframes k1{0%,100%{transform:rotate(0)}25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
+@keyframes lado{0%,20%,100%{transform:none}30%,45%{transform:translateX(-3.5px)}60%,75%{transform:translateX(3.5px)}}
+@keyframes k3{0%,60%,100%{transform:none}66%{transform:rotate(-6deg)}72%{transform:rotate(6deg)}78%{transform:rotate(-4deg)}84%{transform:none}}
+@keyframes tiem{0%,60%,100%{transform:none}70%,80%{transform:scaleX(.85) translateY(1px)}}
+@keyframes parpa{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.cara:hover svg{animation-duration:1.2s}
+.cara.on{background:#fbeee7;border-color:#c2552e;transform:scale(1.04)}.cara.on svg{animation:bote .55s}@keyframes bote{30%{transform:scale(1.28) rotate(-10deg)}60%{transform:scale(.95) rotate(6deg)}}
+.cara.off{opacity:.45!important;transform:scale(.96)}
+svg.f .ey{transform-box:fill-box;transform-origin:center}.mira .ojg{animation:miraA 4.5s 2.4s ease-in-out infinite}.mira .ey{animation:fi0 .3s .9s both,parpa 4s 3.2s infinite}
+@keyframes miraA{0%,25%,100%{transform:none}33%,55%{transform:translateY(3.5px)}65%,80%{transform:translate(-2px,1px)}}
+.estr svg:nth-child(n){transform-origin:center}.estr.brilla svg{animation:est .4s forwards,lat 2.4s 2s ease-in-out infinite}@keyframes lat{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 .pista{font-size:12.5px;color:#a3968c;margin:10px 0 0}
 .bt{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:16px;cursor:pointer;text-decoration:none;animation:fi .55s 1.2s both,resp 2.6s 2s ease-in-out infinite}
 @keyframes resp{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}50%{box-shadow:0 0 0 7px rgba(194,85,46,.13)}}
@@ -867,17 +880,17 @@ textarea{width:100%;min-height:110px;border:1.5px solid #e6ddd5;border-radius:14
 ${D.error ? '' : `<script>(function(){var D=${J},C=document.getElementById('c');
 function ojos(t){return t==='feliz'?'<path d="M25 35 Q30 29 35 35"/><path d="M45 35 Q50 29 55 35"/>':'<ellipse class="ey" cx="30" cy="33" rx="2.6" ry="3.2"/><ellipse class="ey" cx="50" cy="33" rx="2.6" ry="3.2"/>';}
 var CARAS=[['Excelente','feliz','M26 45 Q40 62 54 45'],['Muy buena','n','M29 46 Q40 55 51 46'],['Normal','n','M30 49 Q40 49 50 49'],['Mejorable','n','M30 52 Q40 44 50 52']];
-function grande(o,m){return '<svg class="f" width="84" height="84" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><g class="de">'+ojos(o)+'</g><path class="dm" d="'+m+'"/></svg>';}
+function grande(o,m,c){return '<svg class="f'+(c?' '+c:'')+'" width="84" height="84" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><g class="de"><g class="ojg">'+ojos(o)+'</g></g><path class="dm" d="'+m+'"/></svg>';}
 function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function enviar(o){try{return fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o),keepalive:true}).then(function(r){return r.json();});}catch(e){return Promise.reject(e);}}
 var nom=D.pila?', '+esc(D.pila):'';
-function paso1(){C.innerHTML=grande('n','M30 47 Q40 54 50 47')+'<h1 class="fi" style="animation-delay:.9s">Hola'+nom+'</h1><p class="sub fi" style="animation-delay:1s">¿Qué tal tu primera visita'+(D.fisio?' con '+esc(D.fisio):'')+'?</p><div class="caras">'+CARAS.map(function(x,i){return '<button class="cara" data-v="'+x[0]+'" style="animation-delay:'+(1.2+i*.08)+'s"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="32"/>'+ojos(x[1])+'<path d="'+x[2]+'"/></svg>'+x[0]+'</button>';}).join('')+'</div><p class="pista fi" style="animation-delay:1.7s">Un toque y listo.</p>';
- [].forEach.call(C.querySelectorAll('.cara'),function(b){b.onclick=function(){[].forEach.call(C.querySelectorAll('.cara'),function(x){x.classList.toggle('on',x===b);});var v=b.getAttribute('data-v');enviar({v:v}).catch(function(){});setTimeout(function(){v==='Excelente'?excelente():mejorar(v);},650);};});}
+function paso1(){C.innerHTML=grande('n','M30 47 Q40 54 50 47','mira')+'<h1 class="fi" style="animation-delay:.9s">Hola'+nom+'</h1><p class="sub fi" style="animation-delay:1s">¿Qué tal tu primera visita'+(D.fisio?' con '+esc(D.fisio):'')+'?</p><div class="caras">'+CARAS.map(function(x,i){return '<button class="cara" data-v="'+x[0]+'" style="animation-delay:'+(1.2+i*.08)+'s"><svg class="k'+i+'" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="32"/><g class="oj">'+ojos(x[1])+'</g><path class="bo" d="'+x[2]+'"/></svg>'+x[0]+'</button>';}).join('')+'</div><p class="pista fi" style="animation-delay:1.7s">Un toque y listo.</p>';
+ [].forEach.call(C.querySelectorAll('.cara'),function(b){b.onclick=function(){[].forEach.call(C.querySelectorAll('.cara'),function(x){x.classList.toggle('on',x===b);x.classList.toggle('off',x!==b);});var v=b.getAttribute('data-v');enviar({v:v}).catch(function(){});setTimeout(function(){v==='Excelente'?excelente():mejorar(v);},650);};});}
 function copiar(t){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).catch(function(){});return;}}catch(e){}try{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();}catch(e){}}
 function irGoogle(t){if(t)copiar(t);enviar({resena:1}).catch(function(){});setTimeout(function(){location.href=D.google;},t?250:60);}
 function excelente(){var f=D.fisio||'El equipo',F=[f+' es muy profesional',D.fisio?'Me explicó todo muy bien':'Me explicaron todo muy bien','Noté mejoría desde la primera sesión','Trato cercano y muy amable','El centro es precioso'];
  C.innerHTML=grande('feliz','M26 45 Q40 62 54 45')+'<h1 class="fi" style="animation-delay:.8s">¡Qué alegría'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(D.fisio?'A '+esc(D.fisio)+' le hará muchísima ilusión. ':'')+'¿Nos lo cuentas en Google? Son 20 segundos.</p>'
- +'<div class="estr">'+[0,1,2,3,4].map(function(i){return '<svg viewBox="0 0 24 24" style="animation-delay:'+(1+i*.12)+'s"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';}).join('')+'</div>'
+ +'<div class="estr brilla">'+[0,1,2,3,4].map(function(i){return '<svg viewBox="0 0 24 24" style="animation-delay:'+(1+i*.12)+'s"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';}).join('')+'</div>'
  +'<div class="ideas fi" style="animation-delay:1.6s"><small>Toca la frase que más te encaje: la copiamos y te abrimos Google. Solo tienes que pegarla y elegir las 5 estrellas.</small><div class="chips">'+F.map(function(x){return '<button class="chip">'+esc(x)+'</button>';}).join('')+'</div></div>'
  +'<a class="bt" href="'+D.google+'" id="gb"><span class="g">G</span>Dejar mi reseña en Google</a><p class="nota fi" style="animation-delay:1.8s">O escribe lo que quieras con tus palabras.</p>';
  [].forEach.call(C.querySelectorAll('.chip'),function(c){c.onclick=function(){c.classList.add('on');irGoogle(c.textContent+'.');};});
@@ -898,6 +911,10 @@ function paginaConfirmar(D, C) {
   const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'], MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const fl = D.fecha ? (() => { const d = new Date(D.fecha + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} de ${MES[d.getUTCMonth()]}`; })() : '';
   const tel = String(C.tel || '').replace(/\s/g, '');
+  const appB = !D.app ? '' : `<div class="cons app fi" style="animation-delay:2.6s"><b>Tu app de FISIO365</b><p>${D.app.ejercicios ? 'Ahí tienes los ejercicios que te ha preparado tu fisio, con vídeo para hacerlos bien. Hacerlos en casa es lo que más acelera la recuperación.' : 'Puedes ver tus citas, escribir a tu fisio por el chat y tener tus documentos a mano. Y cuando tu fisio te prepare los ejercicios, los tendrás ahí con vídeo.'}</p>
+      <div class="acc"><span>Usuario<b>${e(D.app.usuario)}</b></span><span>PIN<b>${e(D.app.pin)}</b></span></div>
+      <div class="dos"><a class="btn2" href="https://play.google.com/store/apps/details?id=es.fisioterapia365.app" target="_blank" rel="noopener">Android</a><a class="btn2" href="https://app.fisioterapia365.com" target="_blank" rel="noopener">iPhone</a></div>
+      <small>En iPhone: ábrela en Safari, toca Compartir › «Añadir a pantalla de inicio».</small></div>`;
   const cuerpo = D.error && !D.fecha ? `<h1>Vaya…</h1><p>${e(D.error)}</p>`
     : !D.inactiva && !D.confirmada && D.fecha ? (() => {
       const d = new Date(D.fecha + 'T12:00:00Z'), [H, Mi] = String(D.hora || '00:00').split(':').map(Number), gH = (H % 12) * 30 + Mi * .5 + 720, gM = Mi * 6 + 360 * Math.max(2, H % 12);
@@ -911,7 +928,7 @@ function paginaConfirmar(D, C) {
       ${D.error ? `<p class="err">${e(D.error)}</p>` : ''}
       <form method="post" id="fcf"><button type="submit" class="bt" id="go">¡Allí estaré!</button></form>
       <p class="pista fi" style="animation-delay:2s">Un toque y lo tenemos</p>
-      ${D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : ''}
+      ${D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : ''}${appB}
       <script>(function(){var f=document.getElementById('fcf'),ya=false;f.onsubmit=function(ev){if(ya)return;ev.preventDefault();ya=true;var b=document.getElementById('go');b.disabled=true;b.textContent='¡Gracias!';
        var m=document.getElementById('boca');m.style.strokeDasharray='none';m.setAttribute('d','M26 45 Q40 62 54 45');var o=document.getElementById('ojos');o.style.animation='none';
        o.innerHTML='<path d="M25 35 Q30 29 35 35"/><path d="M45 35 Q50 29 55 35"/>';setTimeout(function(){f.submit();},700);};})();</script>`; })()
@@ -923,7 +940,7 @@ function paginaConfirmar(D, C) {
       <div class="fi" style="animation-delay:1.8s"><div class="dots">${Array.from({ length: nd }, (_, i) => `<i class="${i < lleno - 1 ? 'on' : i === lleno - 1 ? 'nw' : ''}"></i>`).join('')}</div>
       <p class="rt">${r > 1 ? `Llevas <b>${r} citas</b> confirmadas seguidas` : '<b>¡Empieza tu racha!</b> Confirma también la próxima'}</p></div>
       ${D.cal ? `<a class="cal fi" style="animation-delay:2.4s" href="${e(D.cal.ics)}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M16 3v4M8 3v4M4 10h16M12 13v4M10 15h4"/></svg>Añadir a mi calendario</a><a class="gcal fi" style="animation-delay:2.5s" href="${e(D.cal.google)}" target="_blank" rel="noopener">o en Google Calendar</a>` : ''}</div>`; })()
-      + (D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : '')
+      + (D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : '') + appB
     : `<p class="hola">${D.pila ? 'Hola, ' + e(D.pila) : 'Hola'} 👋</p><p class="sub">${D.inactiva ? '' : D.confirmada ? '' : 'Te esperamos en FISIO365.'}</p><div class="cita"><small>Tu cita</small><b>${e(fl.charAt(0).toUpperCase() + fl.slice(1))}</b><b>a las ${e(D.hora)}</b>${D.fisio ? `<span>Con ${e(D.fisio)}</span>` : ''}</div>
       ${D.error ? `<p class="err">${e(D.error)}</p>` : ''}
       ${D.inactiva ? `<p>Esta cita ya no está activa.</p>` : D.confirmada ? `<div class="ok">✓ ${D.recien ? '¡Perfecto! Cita confirmada' : 'Tu cita está confirmada'}</div><p class="peq">Te esperamos.</p>`
@@ -939,6 +956,7 @@ function paginaConfirmar(D, C) {
 button{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:16px;cursor:pointer}
 .ok{background:#e8f6ec;color:#16803c;font-weight:600;border-radius:14px;padding:16px}.err{color:#b42318}.peq{font-size:14px;color:#7d6a60;margin:12px 0 0}
 .cons{margin-top:18px;background:#fbf3ec;border-radius:18px;padding:18px 16px;text-align:left}.cons b{display:block;font-size:16px;margin-bottom:4px}.cons p{margin:0 0 14px;font-size:14px;color:#5c4f47;line-height:1.5}.cons small{display:block;margin-top:10px;font-size:12px;color:#7d6a60}
+.app .acc{display:flex;gap:8px;margin:0 0 12px}.app .acc span{flex:1;background:#fff;border-radius:12px;padding:9px 12px;font-size:12px;color:#7d6a60}.app .acc b{display:block;font-size:16px;color:#141414;margin:2px 0 0;word-break:break-all}.app .dos{display:flex;gap:8px}.app .dos .btn2{flex:1}
 .btn2{display:block;text-align:center;text-decoration:none;font-weight:600;font-size:15px;color:#1e2a38;background:#fff;border:1.5px solid #1e2a38;border-radius:14px;padding:13px}
 .fc{display:block;margin:0 auto}.fc circle,.fc path{stroke:#c2552e;fill:none;stroke-width:3;stroke-linecap:round}.fc .ce{stroke-width:2.2}
 .fc .o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s cubic-bezier(.6,0,.2,1) forwards}
@@ -1236,8 +1254,8 @@ module.exports = async function handler(req, res) {
     const F = r.fields || {}, est = String((F['ESTADO'] && F['ESTADO'].name) || F['ESTADO'] || '').toUpperCase();
     const fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5);
     const fisio = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '').trim().split(' ')[0];
-    const pid = (F['RELACIÓN - CITA'] || [])[0]; let pila = '';
-    if (pid) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}; pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; }
+    const pid = (F['RELACIÓN - CITA'] || [])[0]; let pila = '', P = {};
+    if (pid) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); P = p.fields || {}; pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; }
     const hoyC = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     const D = { id, av2: String(req.query.r || '') === '2', pila: pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '', fecha, hora, fisio: fisio ? fisio.charAt(0).toUpperCase() + fisio.slice(1).toLowerCase() : '' };
     if (!/PENDIENTE/.test(est) || fecha < hoyC) return res.status(200).send(paginaConfirmar({ ...D, inactiva: true }, C));
@@ -1248,8 +1266,20 @@ module.exports = async function handler(req, res) {
       conf0 = true;
     }
     const pide = pid ? await pidenConsentimiento([pid], fecha).catch(() => new Set()) : new Set();
+    // Ya ha venido alguna vez y no tiene la app instalada: dentro le damos el acceso (como hacía el recordatorio)
+    let app = null;
+    if (pid && !pide.has(pid) && !(P['APP INSTALADA'] || P['PushSubscription'])) {
+      const email = String(P['EMAIL'] || '').trim(), t = String(P['WHATSAPP'] || P['TELF'] || '').replace(/\D/g, '').slice(-9);
+      const vino = (pide.yaVino && pide.yaVino.has(pid)) || !!(await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',FIND('${pid}',ARRAYJOIN({PacienteRec})))`)}&maxRecords=1&fields[]=FECHA`).catch(() => ({})).then(x => (x.records || []).length));
+      if (vino && (email || t.length >= 9)) {
+        let pin = String(P['PIN'] || '').trim();
+        if (!pin) { pin = nuevoPin(); await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: pin } }) }).catch(() => {}); }
+        const pl = await at(`tblvgE0a4gsrj4Vhp?filterByFormula=${encodeURIComponent(`AND(LEN({Ejercicios}&'')>2,{PacienteID}='${pid}')`)}&maxRecords=1&fields[]=PacienteID`).catch(() => ({}));
+        app = { usuario: email || t, pin, ejercicios: !!(pl.records || []).length };
+      }
+    }
     const extra = conf0 ? { racha: pid ? await rachaConfirmadas(pid, fecha, hora) : 1, cal: { ics: `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}.ics`, google: calendarioCita(D, C).google } } : {};
-    return res.status(200).send(paginaConfirmar({ ...D, ...extra, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '' }, C));
+    return res.status(200).send(paginaConfirmar({ ...D, ...extra, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '', app }, C));
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
   if (action === 'encuesta') {
