@@ -1656,6 +1656,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rp-av2i{flex:none;width:26px;height:26px;border-radius:50%;background:#c2552e;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
 .rp-av2>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rp-av2 b{font-size:14px}.rp-av2 small{font-size:12.5px;color:#7d6a60;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rp-av2 em{font-style:normal;font-size:12.5px;font-weight:700;color:#c2552e}
 .enc-r{display:block;font-size:12px;color:#16803c;margin-top:3px;line-height:1.35}.enc-r.mal{color:#b42318}
+.rec-t2{color:#c2552e;font-weight:600}.rec-b.av2.toca{background:#c2552e;color:#fff;border-color:#c2552e}
 </style>
 <style>
 .idoc{background:#fff;border:1px solid #ece6df;border-radius:6px;box-shadow:0 2px 14px rgba(26,26,26,.07);padding:26px 24px 18px;margin-top:4px;font-family:var(--font)}
@@ -5866,11 +5867,16 @@ function recTexto(g){const h=agHoyIso(),t=new Date(g.fecha+'T12:00:00'),dm=t.get
  // Sin emojis: al abrir WhatsApp desde un enlace algunos se ven como «�»
  return `Hola${nom?' '+nom:''},\n\nTe esperamos en *FISIO365*:\n*${cuando} a las ${horas.join(' y a las ')}*${fis.length?`\nCon ${fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y ')}`:''}\n\nToca aquí para dejarla confirmada:\n${g.citas[0].link}\n\n${g.fecha===agMover(h,1)?'¡Hasta mañana!':g.fecha===h?'¡Hasta luego!':'¡Hasta el '+dn+'!'}`;}
 // 2º aviso: a quien recibió el recordatorio y aún no ha confirmado
-function recTexto2(g){const h=agHoyIso(),t=new Date(g.fecha+'T12:00:00'),dm=t.getDate()+'/'+(t.getMonth()+1),dn=REC_DIAS[t.getDay()];
- const cuando=g.fecha===agMover(h,1)?`Mañana, ${dn} ${dm}`:g.fecha===h?`Hoy, ${dn} ${dm}`:`El ${dn} ${dm}`;
- const horas=g.citas.map(c=>c.hora),fis=[...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]).filter(Boolean))];
+function recTexto2(g){const h=agHoyIso(),dn=REC_DIAS[new Date(g.fecha+'T12:00:00').getDay()];
+ const cuando=g.fecha===h?'hoy':g.fecha===agMover(h,1)?'mañana':'el '+dn;
+ const fis=[...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]).filter(Boolean))].map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase());
  const pila=String(g.pila||g.nombre||'').trim().split(/\s+/)[0],nom=pila?pila.charAt(0).toUpperCase()+pila.slice(1).toLowerCase():'';
- return `Hola${nom?' '+nom:''},\n\nTe escribimos de nuevo desde *FISIO365* porque aún no nos has confirmado tu cita:\n*${cuando} a las ${horas.join(' y a las ')}*${fis.length?`\nCon ${fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y ')}`:''}\n\nConfírmanos que vienes tocando aquí:\n${g.citas[0].link}?r=2\n\n¡Gracias!`;}
+ return `${nom?nom+', s':'Hola, s'}olo nos falta tu confirmación para ${cuando} a las ${g.citas.map(c=>c.hora).join(' y a las ')}${fis.length?' con '+fis.join(' y '):''}. Es un toque:\n${g.citas[0].link}?r=2`;}
+// ¿Toca ya el 2º aviso? Citas de hoy desde las 11:00 → por la mañana (WhatsApp pone «Hoy» entre los dos mensajes).
+// Citas antes de las 11:00 → la tarde anterior, a partir de las 17:00 (por la mañana ya no daría tiempo).
+function recToca2(g){if(!g.enviado||g.conf||g.aviso2)return false;const h=agHoyIso(),h1=g.citas[0].hora||'';
+ if(g.fecha===h)return h1>='11:00';
+ return h1<'11:00'&&g.fecha===recFechasDef()[0]&&new Date().getHours()>=17;}
 // Abrir WhatsApp sin ir dejando una pestaña por paciente:
 // móvil → abre la app directamente; ordenador → siempre la MISMA pestaña de WhatsApp Web (o la app de escritorio si se elige)
 const esMovil=()=>/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
@@ -6022,21 +6028,23 @@ async function agRecordatorios(onDone,modoIni){
     try{const r=await agPost('seg-agenda-encuesta',{id:c.id});if(!r.ok)throw 0;}catch(e){c.enviado='';pintaEnc();toast('No se ha podido marcar como enviada',false);}};});
  }
  async function cargar(){if(modo==='enc')return cargarEnc();if(modo==='res')return cargarRes();body.innerHTML='<div class="fac-vacio">Cargando…</div>';
-  try{const r=await (await fetch(`/api/schedule?action=seg-agenda-recordatorios&pwd=${encodeURIComponent(apiPwd)}&fechas=${fechas.join(',')}`)).json();if(!r.ok)throw new Error(r.error||'Error');datos=r.citas;pinta();}
+  try{const r=await (await fetch(`/api/schedule?action=seg-agenda-recordatorios&pwd=${encodeURIComponent(apiPwd)}&fechas=${[...new Set([agHoyIso(),...fechas])].join(',')}`)).json();if(!r.ok)throw new Error(r.error||'Error');datos=r.citas;pinta();}
   catch(e){body.innerHTML=`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;body.querySelector('.ag-reint').onclick=cargar;}}
  function pinta(){
   // Un mensaje por paciente y día (si tiene dos citas seguidas, van juntas)
   const gr=[];datos.forEach(c=>{let g=gr.find(x=>x.pacienteId===c.pacienteId&&x.fecha===c.fecha);if(!g){g={pacienteId:c.pacienteId,fecha:c.fecha,nombre:c.nombre,pila:c.pila,tel:c.tel,citas:[]};gr.push(g);}g.citas.push(c);});
   gr.forEach(g=>{g.enviado=g.citas.every(c=>c.enviado);g.conf=g.citas.every(c=>c.confirmada);g.por=(g.citas.find(c=>c.por)||{}).por||'';g.cuando=(g.citas.find(c=>c.enviado)||{}).enviado||'';g.aviso2=(g.citas.find(c=>c.aviso2)||{}).aviso2||'';g.por2=(g.citas.find(c=>c.por2)||{}).por2||'';});
-  const env=gr.filter(g=>g.enviado).length,cf=gr.filter(g=>g.conf).length;
-  const def=recFechasDef().join(',')===fechas.join(',');
+  gr.forEach(g=>{g.toca2=recToca2(g);});
+  const grF=gr.filter(g=>fechas.includes(g.fecha)),env=grF.filter(g=>g.enviado).length,cf=grF.filter(g=>g.conf).length;
+  const def=recFechasDef().join(',')===fechas.join(','),T2=def?gr.filter(g=>g.toca2):[];
   body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="rec-dias">${fechas.map(f=>`<span>${escH(fC(f))}</span>`).join('')}<button type="button" class="rec-otro">Otro día</button>${def?'':'<button type="button" class="rec-def">Volver</button>'}</div>
    ${esMovil()?'':`<div class="rec-modo-l">Abrir en</div><div class="rec-modo">${[['web','WhatsApp Web','No hay que instalar nada, pero tarda unos segundos en abrir cada chat.'],['app','App de WhatsApp','Al instante. Necesita WhatsApp instalado en este ordenador.']].map(([k,t,d])=>`<button type="button" data-m="${k}" class="${recModoPC()===k?'on':''}"><b>${t}</b><small>${d}</small></button>`).join('')}</div>`}
-   <div class="rec-pr"><div><b>${env}</b> de ${gr.length} enviados</div><div><b>${cf}</b> confirmados</div></div><div class="rec-bar"><i style="width:${gr.length?Math.round(env/gr.length*100):0}%"></i></div></div>
-   ${!gr.length?'<div class="fac-vacio">No hay citas pendientes esos días</div>':''}
+   <div class="rec-pr"><div><b>${env}</b> de ${grF.length} enviados</div><div><b>${cf}</b> confirmados</div></div><div class="rec-bar"><i style="width:${grF.length?Math.round(env/grF.length*100):0}%"></i></div></div>
+   ${T2.length?`<div class="rec-sub rec-t2">Toca mandar el 2º aviso · ${T2.length}</div><div class="fp-blk rec-lista">${T2.map(g=>{const i=gr.indexOf(g);return `<div class="rec-it" data-i="${i}"><div class="rec-h">${escH(g.citas.map(c=>c.hora).join(' · '))}</div><div class="rec-n"><b>${escH(capTit(g.nombre||'—'))}</b><small>${g.fecha===agHoyIso()?'Cita hoy':'Cita '+escH(fC(g.fecha).toLowerCase())} · aún sin confirmar</small></div><span class="rec-bs"><button type="button" class="rec-b av2 toca">2º aviso</button><button type="button" class="rec-b cf">Confirmar</button></span></div>`;}).join('')}</div>`:''}
+   ${!grF.length?'<div class="fac-vacio">No hay citas pendientes esos días</div>':''}
    ${fechas.map(f=>{const L=gr.filter(g=>g.fecha===f);if(!L.length)return '';return `<div class="rec-sub">${escH(fC(f))} · ${L.length}</div><div class="fp-blk rec-lista">${L.map(g=>{const i=gr.indexOf(g),tel=segTel(g.tel);
     return `<div class="rec-it${g.enviado?' env':''}" data-i="${i}"><div class="rec-h">${escH(g.citas.map(c=>c.hora).join(' · '))}</div><div class="rec-n"><b>${escH(capTit(g.nombre||'—'))}</b><small>${escH([...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]))].join(', '))}${g.citas.some(c=>c.consent)?' · <em class="rec-1a">1ª visita · consentimiento dentro del enlace</em>':''}${g.citas.some(c=>c.app)?' · <em class="rec-1a">app dentro del enlace</em>':''}${g.enviado?` · enviado${g.por?' por '+escH(String(g.por).split(' ')[0]):''}${tel.length>=9?' · <button type="button" class="rec-re">Reenviar</button>':''}${g.aviso2?` · <em class="rec-a2">2º aviso${g.por2?' por '+escH(String(g.por2).split(' ')[0]):''}</em>`:''}`:''}</small></div>
-     ${tel.length<9&&!g.enviado?`<button type="button" class="rec-b sin" data-ficha="${g.pacienteId}" data-fn="${escH(g.nombre)}">Sin teléfono</button>`:g.conf?`<button type="button" class="rec-b cf on">✓ Confirmada</button>`:g.enviado?`<span class="rec-bs"><button type="button" class="rec-b av2${g.aviso2?' hecho':''}">${g.aviso2?'2º aviso ✓':'2º aviso'}</button><button type="button" class="rec-b cf">Confirmar</button></span>`:`<button type="button" class="rec-b env">Enviar</button>`}</div>`;}).join('')}</div>`;}).join('')}`;
+     ${tel.length<9&&!g.enviado?`<button type="button" class="rec-b sin" data-ficha="${g.pacienteId}" data-fn="${escH(g.nombre)}">Sin teléfono</button>`:g.conf?`<button type="button" class="rec-b cf on">✓ Confirmada</button>`:g.enviado?`<span class="rec-bs">${g.aviso2||g.toca2?`<button type="button" class="rec-b av2${g.aviso2?' hecho':' toca'}">${g.aviso2?'2º aviso ✓':'2º aviso'}</button>`:''}<button type="button" class="rec-b cf">Confirmar</button></span>`:`<button type="button" class="rec-b env">Enviar</button>`}</div>`;}).join('')}</div>`;}).join('')}`;
   atarTabs();
   body.querySelectorAll('.rec-modo button').forEach(b=>b.onclick=()=>{try{localStorage.setItem('f365_wa',b.dataset.m);}catch(e){}pinta();});
   const oi=body.querySelector('.rec-otro');oi.onclick=()=>miniCal(oi,fechas[fechas.length-1],f=>{fechas=[f];cargar();});
