@@ -911,10 +911,10 @@ function paginaConfirmar(D, C) {
   const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'], MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const fl = D.fecha ? (() => { const d = new Date(D.fecha + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} de ${MES[d.getUTCMonth()]}`; })() : '';
   const tel = String(C.tel || '').replace(/\s/g, '');
-  const appB = !D.app ? '' : `<div class="cons app fi" style="animation-delay:2.6s"><b>Tu app de FISIO365</b><p>${D.app.ejercicios ? 'Ahí tienes los ejercicios que te ha preparado tu fisio, con vídeo para hacerlos bien. Hacerlos en casa es lo que más acelera la recuperación.' : 'Puedes ver tus citas, escribir a tu fisio por el chat y tener tus documentos a mano. Y cuando tu fisio te prepare los ejercicios, los tendrás ahí con vídeo.'}</p>
-      <div class="acc"><span>Usuario<b>${e(D.app.usuario)}</b></span><span>PIN<b>${e(D.app.pin)}</b></span></div>
-      <div class="dos"><a class="btn2" href="https://play.google.com/store/apps/details?id=es.fisioterapia365.app" target="_blank" rel="noopener">Android</a><a class="btn2" href="https://app.fisioterapia365.com" target="_blank" rel="noopener">iPhone</a></div>
-      <small>En iPhone: ábrela en Safari, toca Compartir › «Añadir a pantalla de inicio».</small></div>`;
+  const appB = !D.app ? '' : `<div class="cons app fi" style="animation-delay:2.6s"><div class="ah"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg><div><b>Tu app de FISIO365</b><p>${D.app.ejercicios ? 'Tus ejercicios con vídeo, tus citas y el chat con tu fisio.' : 'Tus citas, el chat con tu fisio y tus ejercicios con vídeo.'}</p></div></div>
+      <div class="acc"><span class="u">Usuario<b>${e(D.app.usuario)}</b></span><i></i><span>PIN<b>${e(D.app.pin)}</b></span></div>
+      <div class="dos"><a href="https://play.google.com/store/apps/details?id=es.fisioterapia365.app" target="_blank" rel="noopener">Android</a><a href="https://app.fisioterapia365.com" target="_blank" rel="noopener">iPhone</a></div>
+      <small>iPhone: ábrela en Safari › Compartir › «Añadir a pantalla de inicio».</small></div>`;
   const cuerpo = D.error && !D.fecha ? `<h1>Vaya…</h1><p>${e(D.error)}</p>`
     : !D.inactiva && !D.confirmada && D.fecha ? (() => {
       const d = new Date(D.fecha + 'T12:00:00Z'), [H, Mi] = String(D.hora || '00:00').split(':').map(Number), gH = (H % 12) * 30 + Mi * .5 + 720, gM = Mi * 6 + 360 * Math.max(2, H % 12);
@@ -955,7 +955,9 @@ function paginaConfirmar(D, C) {
 button{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:16px;cursor:pointer}
 .ok{background:#e8f6ec;color:#16803c;font-weight:600;border-radius:14px;padding:16px}.err{color:#b42318}.peq{font-size:14px;color:#7d6a60;margin:12px 0 0}
 .cons{margin-top:18px;background:#fbf3ec;border-radius:18px;padding:18px 16px;text-align:left}.cons b{display:block;font-size:16px;margin-bottom:4px}.cons p{margin:0 0 14px;font-size:14px;color:#5c4f47;line-height:1.5}.cons small{display:block;margin-top:10px;font-size:12px;color:#7d6a60}
-.app .acc{display:flex;gap:8px;margin:0 0 12px}.app .acc span{flex:1;background:#fff;border-radius:12px;padding:9px 12px;font-size:12px;color:#7d6a60}.app .acc b{display:block;font-size:16px;color:#141414;margin:2px 0 0;word-break:break-all}.app .dos{display:flex;gap:8px}.app .dos .btn2{flex:1}
+.cons.app{padding:14px 14px 12px;margin-top:16px}.app .ah{display:flex;gap:11px;align-items:center;margin-bottom:10px}.app .ah svg{flex:none;width:34px;height:34px;padding:6px;background:#fff;border-radius:10px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round}.app .ah b{font-size:15px;margin:0}.app .ah p{margin:0;font-size:13px;line-height:1.4}
+.app .acc{display:flex;align-items:center;background:#fff;border-radius:10px;padding:7px 12px;font-size:11px;color:#a3968c;margin-bottom:8px}.app .acc span{display:flex;flex-direction:column;line-height:1.3}.app .acc .u{flex:1;min-width:0}.app .acc b{font-size:13.5px;color:#141414;margin:0;word-break:break-all}.app .acc i{align-self:stretch;width:1px;background:#efe6de;margin:2px 12px}
+.app .dos{display:flex;gap:8px}.app .dos a{flex:1;text-align:center;text-decoration:none;font-weight:600;font-size:13.5px;color:#1e2a38;background:#fff;border:1.2px solid #1e2a38;border-radius:10px;padding:8px}.cons.app small{margin-top:7px;font-size:11.5px}
 .btn2{display:block;text-align:center;text-decoration:none;font-weight:600;font-size:15px;color:#1e2a38;background:#fff;border:1.5px solid #1e2a38;border-radius:14px;padding:13px}
 .fc{display:block;margin:0 auto}.fc circle,.fc path{stroke:#c2552e;fill:none;stroke-width:3;stroke-linecap:round}.fc .ce{stroke-width:2.2}
 .fc .o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s cubic-bezier(.6,0,.2,1) forwards}
@@ -980,12 +982,12 @@ button{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:#fff;
 .dots{display:flex;gap:8px;justify-content:center;margin:20px 0 8px}.dots i{width:11px;height:11px;border-radius:50%;border:1.5px solid #e2b7a6}.dots i.on{background:#c2552e;border-color:#c2552e}
 .dots i.nw{animation:pop .45s 2.2s forwards}@keyframes pop{0%{transform:scale(1)}60%{transform:scale(1.55);background:#c2552e;border-color:#c2552e}100%{transform:scale(1);background:#c2552e;border-color:#c2552e}}
 .rt{font-size:13.5px;color:#7d6a60;margin:0}.rt b{color:#c2552e}
-.cuenta{margin:22px 0 4px}.mini{display:block;width:46px;height:46px;margin:0 auto 8px;transform-origin:24px 7px;animation:col 1.4s 1.9s ease-in-out both,sal 3.2s 4s ease-in-out infinite}.mini rect,.mini path{fill:none;stroke:#c2552e;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.cuenta{margin:18px 0 0}.mini{display:block;width:46px;height:46px;margin:0 auto 8px;transform-origin:24px 7px;animation:col 1.4s 1.9s ease-in-out both,sal 3.2s 4s ease-in-out infinite}.mini rect,.mini path{fill:none;stroke:#c2552e;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .mini .tk{stroke-dasharray:22;stroke-dashoffset:22;animation:dr .45s 2.7s ease-out forwards}
 @keyframes col{0%{transform:rotate(-14deg)}30%{transform:rotate(10deg)}55%{transform:rotate(-6deg)}78%{transform:rotate(3deg)}100%{transform:none}}
 @keyframes sal{0%,70%,100%{transform:none}78%{transform:translateY(-5px) rotate(-4deg)}86%{transform:translateY(0)}92%{transform:translateY(-2px) rotate(3deg)}}
-.cal{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:22px;text-decoration:none;font-weight:600;font-size:15px;color:#141414;background:#fff;border:1.5px solid #e6ddd5;border-radius:14px;padding:14px}.cal svg{width:19px;height:19px;stroke:#c2552e;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.gcal{font-size:13px;color:#7d6a60;margin-top:10px}
+.cal{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;text-decoration:none;font-weight:600;font-size:15px;color:#141414;background:#fff;border:1.5px solid #e6ddd5;border-radius:14px;padding:12px}.cal svg{width:19px;height:19px;stroke:#c2552e;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gcal{font-size:13px;color:#7d6a60;margin-top:8px}
 @media (prefers-reduced-motion:reduce){.fc .o,.fc .m,.fc .ey,.fc .br,.fc .ce,.hoja .band,.clk line,.bt,.sm .e1,.sm .c1,.sm .s1,.fi,.dots i.nw,.mini,.mini .tk{animation-duration:.01s!important;animation-delay:0s!important}}
 .pie{margin-top:22px;font-size:12.5px;color:#7d6a60;line-height:1.6}.pie a{color:#7d6a60}h1{font-size:20px}</style></head>
 <body><div class="c">${!D.inactiva && D.fecha ? '' : '<img class="logo" src="https://app.fisioterapia365.com/icono.png" alt="FISIO365">'}${cuerpo}<div class="pie">${e(C.direccion || '')}${tel ? `<br>¿Dudas? Llámanos al <a href="tel:+34${e(tel)}">${e(C.tel)}</a>` : ''}</div></div></body></html>`;
