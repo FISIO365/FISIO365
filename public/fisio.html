@@ -1487,6 +1487,9 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rec-b{flex:none;width:104px;font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:12px;padding:10px 0;cursor:pointer}.rec-b.env{background:#16803c;color:#fff}.rec-b.otra{background:#f3efea;color:#5f554e}.rec-b.cf{background:#fff;color:#16803c;box-shadow:inset 0 0 0 1.5px #16803c}.rec-bs{display:flex;gap:6px;flex:none}.rec-bs .rec-b{width:92px}.rec-b.av2{background:#fdf3dc;color:#8a5a00;box-shadow:inset 0 0 0 1.5px #f3dfae}.rec-b.av2.hecho{background:#fff;color:#9a8d84;box-shadow:inset 0 0 0 1.5px #ece6e0}.rec-a2{font-style:normal;color:#8a5a00;font-weight:600}@media(max-width:480px){.rec-bs{flex-direction:column;gap:4px}.rec-bs .rec-b{width:92px;padding:7px 0}}.rec-b.cf.on{background:#e8f6ec;box-shadow:none}
 .rec-re{font-family:var(--font);font-size:12px;color:#7d6a60;background:none;border:none;padding:0;text-decoration:underline;cursor:pointer}.rec-b.sin{background:#fff4e5;color:#b45309}
 .ag-otras{display:flex;gap:14px;justify-content:center;margin-top:12px}
+.ag-pago{margin:4px 0 12px}.ag-pg-b{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed #e6c9bb;background:#fdfaf8;color:#c2552e;border-radius:14px;padding:12px;font:600 13.5px var(--font);cursor:pointer}.ag-pg-b svg,.ag-pg svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ag-pg-b.sec{border-style:solid;border-color:#efe6de;background:#fff;color:#7d6a60;padding:10px}
+.ag-pg{display:flex;align-items:center;gap:12px;background:#fdf1ea;color:#a3441f;border-radius:14px;padding:12px 14px;font-size:13px}.ag-pg span{display:flex;flex-direction:column;color:#7d6a60}.ag-pg b{color:#a3441f;font-size:13.5px}.ag-pg.ok{background:#e9f6ee;color:#1f7a45}.ag-pg.ok b{color:#1f7a45}.ag-pg.med{background:#fff7e0;color:#9a6a00}.ag-pg.med b{color:#9a6a00}.ag-pg.off{background:#f4f1ee;color:#8a7d74}.ag-pg.off b{color:#5c4f47}.ag-pg-bs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ag-pg-imp{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}.ag-pg-imp button{border:1.5px solid #efe6de;background:#fff;border-radius:12px;padding:11px;font:600 15px var(--font);color:#2b2420;cursor:pointer}.ag-pg-imp button.on{background:#c2552e;border-color:#c2552e;color:#fff}.ag-pg-imp input{min-width:0;text-align:center}
 .ag-sgr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 10px}.ag-sgr .ag-segb{margin:0!important}.ag-sgr button{white-space:nowrap;font-size:13px!important;gap:6px!important;padding:11px 4px!important;min-width:0}
 .ag-altab{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px 6px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:#3d3530;cursor:pointer}.ag-altab svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .ag-segb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin:12px 0 10px;font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:#3d3530;cursor:pointer}
@@ -6413,6 +6416,37 @@ function agAvisoBomba(r){return new Promise(res=>{const L=r.con||[];
  const fin=v=>{w.remove();res(v);};w.querySelector('.hz-x').onclick=()=>fin(false);w.querySelector('.hz-no').onclick=()=>fin(false);
  w.querySelector('.hz-ok').onclick=()=>{const mm=[...document.querySelectorAll('.hz-modal')].filter(x=>x!==w&&x.querySelector('.ag-sbm,.ag-hs')).pop();if(mm)mm._fb=true;fin(true);};});}
 function agCab(fecha,hora,fisio){return `${segFecha(fecha)} · ${hora} · ${agNom(fisio)}`;}
+// Pago por adelantado (pacientes que han fallado): se pide desde la cita y se manda por WhatsApp
+const PAGO_SVG='<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>';
+function agPagoHtml(c){const p=c.pago,eur=v=>String(Math.round((+v||0)*100)/100).replace('.',',')+' €';
+ if(!p||!p.estado)return `<button type="button" class="ag-pg-b ag-pg-pedir">${PAGO_SVG}Pedir pago por adelantado</button>`;
+ const lim=p.limite?new Date(p.limite):null,fl=lim?lim.toLocaleString('es-ES',{weekday:'short',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+ if(p.estado==='PAGADO')return `<div class="ag-pg ok">${PAGO_SVG}<span><b>Pagado por adelantado</b>${eur(p.importe)}</span></div>`;
+ if(p.estado==='TRANSFERENCIA AVISADA')return `<div class="ag-pg med">${PAGO_SVG}<span><b>Dice que ha transferido ${eur(p.importe)}</b>Mira el banco y confírmalo</span></div><div class="ag-pg-bs"><button type="button" class="ag-pg-b ag-pg-conf">Ya está en el banco</button><button type="button" class="ag-pg-b sec ag-pg-env">Reenviar enlace</button></div>`;
+ if(p.estado==='CADUCADO')return `<div class="ag-pg off">${PAGO_SVG}<span><b>No pagó a tiempo</b>Se canceló sola</span></div>`;
+ return `<div class="ag-pg">${PAGO_SVG}<span><b>Pendiente de pago · ${eur(p.importe)}</b>Hueco guardado hasta el ${escH(fl)}</span></div><div class="ag-pg-bs"><button type="button" class="ag-pg-b sec ag-pg-env">Reenviar enlace</button><button type="button" class="ag-pg-b sec ag-pg-quit">Ya no hace falta</button></div>`;}
+function agPagoTexto(c,link){const px=(pacs||[]).find(x=>x.id===c.pacienteId)||{},p=String(px.pila||px.nombre||c.paciente||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
+ const d=new Date(c.fecha+'T12:00:00'),dia=REC_DIAS[d.getDay()]+' '+d.getDate(),fi=String(c.fisio||'').trim().split(' ')[0],fn=fi?' con '+fi.charAt(0).toUpperCase()+fi.slice(1).toLowerCase():'';
+ return `Hola${n?' '+n:''}, te he reservado la cita del *${dia} a las ${c.hora}*${fn}.\n\nPara guardártela, esta vez la sesión se paga por adelantado. Puedes hacerlo aquí con tarjeta o transferencia (tienes 24 h):\n${link}\n\n¡Gracias!`;}
+function agPagoAtar(bx,c,onDone){const tel=()=>{const px=(pacs||[]).find(x=>x.id===c.pacienteId)||{};return segTel(px.whatsapp||px.telefono||px.tel||px.telf||'');};
+ const quien=String((fisioActual&&fisioActual.nombre)||'');const repinta=()=>{bx.innerHTML=agPagoHtml(c);agPagoAtar(bx,c,onDone);};
+ const env=bx.querySelector('.ag-pg-env');if(env)env.onclick=()=>abrirWA(tel(),agPagoTexto(c,c.pago.link));
+ const conf=bx.querySelector('.ag-pg-conf');if(conf)conf.onclick=async()=>{conf.disabled=true;try{const r=await agPost('seg-agenda-pago',{op:'confirmar',id:c.id,quien});if(!r.ok)throw 0;c.pago.estado='PAGADO';c.confirmada=true;repinta();toast('Pago confirmado',true);onDone&&onDone();}catch(e){conf.disabled=false;toast('No se ha podido guardar',false);}};
+ const qu=bx.querySelector('.ag-pg-quit');if(qu)qu.onclick=async()=>{qu.disabled=true;try{const r=await agPost('seg-agenda-pago',{op:'quitar',id:c.id,quien});if(!r.ok)throw 0;c.pago=null;repinta();onDone&&onDone();}catch(e){qu.disabled=false;toast('No se ha podido guardar',false);}};
+ const pd=bx.querySelector('.ag-pg-pedir');if(pd)pd.onclick=()=>{
+  const mm=hzModal(`<div class="hz-top"><div><small>${escH(c.paciente||'')}</small><b>Pedir pago por adelantado</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   <p class="fp-mu" style="font-size:13.5px;margin:0 0 12px">Le llega un enlace para pagar con tarjeta o transferencia. Tiene 24 h; si no paga, la cita se cancela sola y el hueco queda libre.</p>
+   <div class="hz-lab">Importe</div><div class="ag-pg-imp">${[65,75].map(v=>`<button type="button" data-v="${v}">${v} €</button>`).join('')}<input type="text" inputmode="decimal" placeholder="Otro" class="ag-in"></div>
+   <div class="hz-bts" style="margin-top:14px"><button type="button" class="hz-ok" disabled>Enviar por WhatsApp</button></div>`);
+  let imp=0;const ok=mm.querySelector('.hz-ok'),inp=mm.querySelector('.ag-pg-imp input'),bs=mm.querySelectorAll('.ag-pg-imp button');
+  const set=v=>{imp=v;ok.disabled=!(imp>=1);ok.textContent=imp>=1?`Enviar ${String(imp).replace('.',',')} € por WhatsApp`:'Enviar por WhatsApp';};
+  bs.forEach(b=>b.onclick=()=>{bs.forEach(x=>x.classList.toggle('on',x===b));inp.value='';set(+b.dataset.v);});
+  inp.oninput=()=>{bs.forEach(x=>x.classList.remove('on'));set(Number(inp.value.replace(',','.'))||0);};
+  mm.querySelector('.hz-x').onclick=()=>mm.remove();
+  ok.onclick=async()=>{ok.disabled=true;ok.textContent='Preparando…';try{const r=await agPost('seg-agenda-pago',{op:'pedir',id:c.id,importe:imp,quien});if(!r.ok)throw new Error(r.error||'');
+    c.pago={estado:'PENDIENTE DE PAGO',importe:imp,limite:r.limite,link:r.link};mm.remove();abrirWA(tel(),agPagoTexto(c,r.link));repinta();onDone&&onDone();}
+   catch(e){ok.disabled=false;set(imp);toast(e.message||'No se ha podido crear el enlace',false);}};};
+}
 function agAbrirCita(c,onDone){
  const FD=c.fecha||AG.fecha;
  let est=(AG_EST.find(x=>c.estado.startsWith(x[0]))||[c.estado])[0],conf=c.confirmada;const est0=est;const futuro=FD>=agHoyIso();
@@ -6430,6 +6464,7 @@ function agAbrirCita(c,onDone){
   <div class="hz-lab">Tipo de sesión</div><div class="ag-ses"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
   <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No necesita más</button></div>
+  ${c.pacienteId?`<div class="ag-pago">${agPagoHtml(c)}</div>`:''}
   <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="fp-can ag-cfis">Cambiar fisio</button><button type="button" class="hz-ok">Guardar</button></div>
   <div class="ag-otras"><button type="button" class="ag-borrar">Borrar cita</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
@@ -6462,6 +6497,7 @@ function agAbrirCita(c,onDone){
  const bc=m.querySelector('.ag-conf');bc.classList.toggle('on',conf);bc.onclick=()=>{conf=!conf;bc.classList.toggle('on',conf);};
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
  {const bf=m.querySelector('.ag-cfis');if(bf)bf.onclick=()=>{m.remove();agFisioCita(c,onDone);};}
+ {const bx=m.querySelector('.ag-pago');if(bx)agPagoAtar(bx,c,onDone);}
  m.querySelector('.ag-borrar').onclick=()=>{const mm=hzModal(`<div class="hz-top"><div><small>${escH(agCab(FD,c.hora,c.fisio))}</small><b>¿Borrar la cita de ${escH(c.paciente||'este paciente')}?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <p class="fp-mu" style="font-size:13.5px">Se borra de Airtable y no queda rastro. Si el paciente avisó de que no viene, mejor ponla como «Cancelada».</p>
    <div class="ag-ops"><button type="button" data-l="1"><b>Borrar y dejar la hora libre</b><small>Queda un hueco libre a esa hora</small></button><button type="button" data-l="0"><b>Solo borrar</b><small>La hora queda vacía</small></button></div>`);

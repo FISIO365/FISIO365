@@ -1370,6 +1370,120 @@ ${al ? `<h2>Situación médica actual</h2>${CO_ALTA_SIT.map(t => `<p>${t}</p>`).
 <button class="bt" onclick="print()">Guardar en PDF o imprimir</button></div></body></html>`;
 }
 
+// ── PAGO POR ADELANTADO (pacientes que han fallado): enlace personal por cita, tarjeta (Stripe) o transferencia ──
+const PAGO_IBAN = 'ES14 0182 2392 8002 0302 2638', PAGO_TITULAR = 'Fourth Dynamic, S.L. (FISIO365)';
+function firmaPago(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('pago:' + id).digest('hex').slice(0, 10); }
+const enlacePago = id => `https://app.fisioterapia365.com/pago/${id}-${firmaPago(id)}`;
+async function stripeApi(path, form) {
+  const K = process.env.STRIPE_SECRET_KEY; if (!K) throw new Error('Falta la clave de Stripe');
+  const r = await fetch('https://api.stripe.com/v1/' + path, form ? { method: 'POST', headers: { Authorization: `Bearer ${K}`, 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(form).toString() } : { headers: { Authorization: `Bearer ${K}` } });
+  const d = await r.json().catch(() => ({})); if (!r.ok) { console.log('stripe', path, r.status, JSON.stringify(d).slice(0, 300)); throw new Error((d.error && d.error.message) || 'Stripe ' + r.status); } return d;
+}
+const pagoAhora = () => new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'short', timeStyle: 'short' }).format(new Date());
+// Avisos al móvil de dirección (Ramiro y Nora) y, si se indica, del fisio de la cita
+async function pagoAvisar(fisio, title, body, tag) {
+  try { const fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name'); const nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase(), recs = fl.records || [];
+    const ids = recs.filter(x => ['ramiro', 'nora'].includes(nom1(x)) || (fisio && nom1(x) === String(fisio).split(' ')[0].toLowerCase())).map(x => x.id), { avisar } = require('./_push');
+    await Promise.all([...new Set(ids)].map(fid => avisar('fisio', fid, { title, body, url: '/fisio', tag }).catch(() => false))); } catch (e) {}
+}
+// Comprueba en Stripe si la sesión de pago se ha completado y, si es así, deja la cita pagada y confirmada
+async function pagoVerificar(id, F, sid) {
+  sid = sid || String(F['PAGO REF'] || ''); if (!/^cs_[A-Za-z0-9_]+$/.test(sid)) return false;
+  const s = await stripeApi('checkout/sessions/' + sid).catch(() => null);
+  if (!s || s.payment_status !== 'paid' || (s.metadata || {}).cita !== id) return false;
+  if (((F['PAGO ESTADO'] && F['PAGO ESTADO'].name) || F['PAGO ESTADO']) === 'PAGADO') return true;
+  const imp = (s.amount_total || 0) / 100, reg = String(F['PAGO REGISTRO'] || '') + `\n${pagoAhora()} · Pagado con tarjeta (Stripe) ${imp.toFixed(2).replace('.', ',')} € · ${s.payment_intent || sid}`;
+  const est = String((F['ESTADO'] && F['ESTADO'].name) || F['ESTADO'] || '').trim(), f = { 'PAGO ESTADO': 'PAGADO', 'PAGO REF': String(s.payment_intent || sid), 'PAGO REGISTRO': reg.trim(), CONFIR: ['CONFIRMADA'] };
+  if (/CANCELADA/.test(est)) f.ESTADO = 'PENDIENTE '; // pagó justo al caducar: se le devuelve la cita si el hueco sigue libre (se revisa a mano)
+  await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
+  const pac = await pagoPaciente(F); const fis = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '');
+  await pagoAvisar(fis, `✅ ${pac.pila || 'Un paciente'} ha pagado ${imp.toFixed(2).replace('.', ',')} €`, `Cita del ${String(F['FECHA'] || '').slice(0, 10).split('-').reverse().join('/')} a las ${String(F['HORA'] || '')}: confirmada.${/CANCELADA/.test(est) ? ' Ojo: había caducado, revisa que el hueco siga libre.' : ''}`, 'pago-' + id);
+  return true;
+}
+async function pagoPaciente(F) {
+  const pid = (F['RELACIÓN - CITA'] || [])[0]; if (!pid) return { pila: '', nombre: '', email: '' };
+  const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}, nombre = String(P['FULL NAME'] || '').trim();
+  let pila = (String(P['NOMBRE'] || '').trim() || nombre).split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
+  return { pila, nombre, email: String(P['EMAIL'] || '').trim() };
+}
+// Pagos pendientes que han pasado de las 24 h: se cancela la cita, el hueco vuelve a quedar libre y se avisa a dirección
+let _pagoCad = 0;
+async function caducarPagos() {
+  if (Date.now() - _pagoCad < 5 * 60e3) return 0; _pagoCad = Date.now(); let n = 0;
+  const rs = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND({PAGO ESTADO}='PENDIENTE DE PAGO',IS_BEFORE({PAGO LÍMITE},NOW()))`)}&pageSize=50`).catch(() => ({}));
+  for (const r of (rs.records || [])) { const F = r.fields || {};
+    if (await pagoVerificar(r.id, F).catch(() => false)) continue;
+    const fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || ''), fis = (F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '';
+    const u = await at(`tblTPlcuiSjQngkaD/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'CANCELADA', 'PAGO ESTADO': 'CADUCADO', NOTAS: (String(F['NOTAS'] || '') + '\nCancelada sola: no pagó en 24 h.').trim(), 'PAGO REGISTRO': (String(F['PAGO REGISTRO'] || '') + `\n${pagoAhora()} · Caducado: no pagó en el plazo`).trim() }, typecast: true }) });
+    if (u.error) continue; n++;
+    if (fecha >= new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date())) await at('tblTPlcuiSjQngkaD', { method: 'POST', body: JSON.stringify({ records: [{ fields: { FECHA: fecha, HORA: hora, 'PREF.': fis, ESTADO: 'CITA LIBRE' } }], typecast: true }) }).catch(() => {});
+    const pac = await pagoPaciente(F);
+    await pagoAvisar('', `⏰ ${pac.pila || 'Un paciente'} no ha pagado: cita cancelada`, `${fecha.split('-').reverse().join('/')} a las ${hora}${fis ? ' con ' + fis : ''}. El hueco vuelve a estar libre.`, 'pago-' + r.id);
+  }
+  return n;
+}
+function paginaPago(D) {
+  const e = escHtml, J = JSON.stringify(D).replace(/</g, '\\u003c');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Reserva tu cita · FISIO365</title>
+<meta property="og:title" content="Reserva tu cita${D.pila ? ', ' + e(D.pila) : ''}"><meta property="og:description" content="Confírmala con el pago para guardarte el hueco."><meta property="og:image" content="${e(D.url || '')}.png?v=1"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px 16px}
+.c{background:#fff;border-radius:26px;padding:26px 20px 22px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
+.ic{display:block;margin:0 auto 6px;width:62px;height:62px}.ic *{fill:none;stroke:#c2552e;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.ic .p{stroke-dasharray:160;stroke-dashoffset:160;animation:dr 1s .1s forwards}@keyframes dr{to{stroke-dashoffset:0}}
+h1{font-size:22px;margin:8px 0 4px}.sub{font-size:14.5px;color:#5c4f47;margin:0;line-height:1.5}
+.cita{display:flex;align-items:center;gap:14px;text-align:left;background:#faf7f4;border-radius:18px;padding:14px 16px;margin:20px 0 14px}.cita .d{flex:none;width:54px;border-radius:14px;background:#fff;border:1.5px solid #efe6de;text-align:center;padding:5px 0 6px}.cita .d small{display:block;font-size:10.5px;font-weight:600;color:#c2552e;letter-spacing:.06em}.cita .d b{font-size:22px;line-height:1.1}.cita .t b{display:block;font-size:15px}.cita .t span{font-size:13px;color:#7d6a60}
+.imp{font-size:30px;font-weight:700;margin:4px 0 2px;color:#2b2420}.reloj{display:inline-flex;align-items:center;gap:7px;background:#fdf1ea;color:#a3441f;border-radius:99px;padding:7px 13px;font-size:13px;font-weight:600;margin:6px 0 16px}.reloj svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.pol{text-align:left;background:#faf7f4;border-radius:16px;padding:13px 15px;font-size:13px;color:#5c4f47;line-height:1.55;margin-bottom:10px}.pol b{color:#2b2420}
+.chk{display:flex;gap:12px;align-items:center;text-align:left;font-size:13.5px;line-height:1.45;cursor:pointer;padding:13px 15px;border:1.5px solid #efe6de;border-radius:16px;margin-bottom:14px;transition:all .2s}.chk:has(input:checked){border-color:#c2552e;background:#fdf1ea}.chk input{-webkit-appearance:none;appearance:none;flex:none;width:24px;height:24px;margin:0;border:1.8px solid #d9c8bc;border-radius:8px;background:#fff;display:grid;place-content:center}.chk input:after{content:'';width:6px;height:11px;border:solid #fff;border-width:0 2.4px 2.4px 0;transform:rotate(45deg) scale(0);margin-top:-3px;transition:transform .18s}.chk input:checked{background:#c2552e;border-color:#c2552e}.chk input:checked:after{transform:rotate(45deg) scale(1)}
+.chk.mal{border-color:#f0b4ad;box-shadow:0 0 0 1.5px #f0b4ad}
+.bt{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:16px;cursor:pointer;text-decoration:none}.bt:disabled{opacity:.6}.bt svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bt2{width:100%;font:600 15px Poppins,sans-serif;color:#7d6a60;background:#f6f1eb;border:none;border-radius:14px;padding:14px;cursor:pointer;margin-top:8px}
+.mini{font-size:12px;color:#a3968c;margin:8px 0 0}
+.tr{display:none;text-align:left;margin-top:14px}.tr.on{display:block;animation:fi .4s}.fila{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#faf7f4;border-radius:14px;padding:11px 14px;margin-bottom:8px}.fila small{display:block;font-size:11.5px;color:#8a7d74}.fila>div{min-width:0}.fila b{font-size:14px;overflow-wrap:anywhere}.fila b.ib{font-size:13px;white-space:nowrap;letter-spacing:-.01em}.fila button{flex:none;border:1.5px solid #efe6de;background:#fff;border-radius:10px;padding:7px 11px;font:600 12.5px Poppins,sans-serif;color:#c2552e;cursor:pointer}
+.err{color:#b42318;font-size:13px;min-height:18px;margin:6px 0 0}
+.fi{opacity:0;transform:translateY(8px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}
+.ok circle,.ok path{fill:none;stroke:#c2552e;stroke-width:3;stroke-linecap:round}.ok .o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s forwards}.ok .m{stroke-dasharray:60;stroke-dashoffset:60;animation:dr .5s .7s forwards}
+.wa{display:inline-block;margin-top:16px;color:#c2552e;font-weight:600;font-size:14px;text-decoration:none}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
+<body><div class="c" id="c"></div><script>(function(){var D=${J},C=document.getElementById('c');
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var MS=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'],DL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],ML=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+var dt=new Date(D.fecha+'T12:00:00'),eur=function(v){return (Math.round(v*100)/100).toFixed(2).replace('.',',').replace(',00','')+' €';};
+var cita='<div class="cita fi" style="animation-delay:.5s"><div class="d"><small>'+MS[dt.getMonth()]+'</small><b>'+dt.getDate()+'</b></div><div class="t"><b>'+DL[dt.getDay()].charAt(0).toUpperCase()+DL[dt.getDay()].slice(1)+' '+dt.getDate()+' de '+ML[dt.getMonth()]+'</b><span>A las '+esc(D.hora)+(D.fisio?' · con '+esc(D.fisio):'')+'</span></div></div>';
+var wa='<a class="wa" href="https://wa.me/34672893949" target="_blank" rel="noopener">¿Dudas? Escríbenos por WhatsApp</a>';
+function okSvg(){return '<svg class="ok" width="84" height="84" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="m" d="M27 41l9 9 17-18"/></svg>';}
+function fin(t,s){C.innerHTML=okSvg()+'<h1 class="fi" style="animation-delay:.8s">'+t+'</h1><p class="sub fi" style="animation-delay:.95s">'+s+'</p>'+cita+wa;}
+if(D.estado==='PAGADO')return fin('¡Cita confirmada'+(D.pila?', '+esc(D.pila):'')+'!','Hemos recibido tu pago de '+eur(D.importe)+'. ¡Te esperamos!');
+if(D.estado==='TRANSFERENCIA AVISADA')return fin('¡Gracias'+(D.pila?', '+esc(D.pila):'')+'!','En cuanto veamos la transferencia en el banco te confirmamos la cita. Tu hueco sigue guardado.');
+if(D.estado==='CADUCADO'||D.caducado){C.innerHTML='<h1>El plazo ha terminado</h1><p class="sub">Esta reserva ya no está disponible. Si aún quieres venir, escríbenos y te buscamos otro hueco.</p>'+cita+wa;return;}
+if(D.estado!=='PENDIENTE DE PAGO'){C.innerHTML='<h1>Vaya…</h1><p class="sub">Este enlace ya no está activo. Escríbenos y lo vemos.</p>'+wa;return;}
+var lim=new Date(D.limite);
+function resto(){var ms=lim-new Date();if(ms<=0)return 'Plazo terminado';var h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4);return 'Te guardamos el hueco '+(h?h+' h '+m+' min':m+' min')+' más';}
+C.innerHTML='<svg class="ic" viewBox="0 0 48 48" aria-hidden="true"><rect class="p" x="6" y="11" width="36" height="26" rx="5"/><path class="p" d="M6 19h36M13 29h8"/></svg><h1 class="fi" style="animation-delay:.3s">Reserva tu cita'+(D.pila?', '+esc(D.pila):'')+'</h1><p class="sub fi" style="animation-delay:.4s">Para guardarte el hueco, la sesión se paga por adelantado.</p>'
+ +cita+'<div class="fi" style="animation-delay:.6s"><div class="imp">'+eur(D.importe)+'</div><div class="reloj"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="rl">'+resto()+'</span></div>'
+ +'<div class="pol"><b>Si necesitas cambiar o cancelar</b>, avísanos con <b>24 h de antelación</b> y movemos tu cita sin problema (o te devolvemos el pago). Si no avisas a tiempo o no vienes, la sesión se considera realizada y el pago no se devuelve.</div>'
+ +'<label class="chk" id="ck"><input type="checkbox" id="ac">Entiendo y acepto estas condiciones</label>'
+ +'<button class="bt" id="bt"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>Pagar '+eur(D.importe)+' con tarjeta</button><p class="mini">Tarjeta, Apple Pay o Google Pay · pago seguro con Stripe</p><p class="err" id="er"></p>'
+ +(D.iban?'<button class="bt2" id="bt2">Prefiero pagar por transferencia</button><div class="tr" id="tr"><div class="fila"><div><small>IBAN</small><b class="ib">'+esc(D.iban)+'</b></div><button data-cp="'+esc(D.iban.replace(/ /g,''))+'">Copiar</button></div><div class="fila"><div><small>Titular</small><b>'+esc(D.titular)+'</b></div></div><div class="fila"><div><small>Concepto</small><b>'+esc(D.concepto)+'</b></div><button data-cp="'+esc(D.concepto)+'">Copiar</button></div><div class="fila"><div><small>Importe</small><b>'+eur(D.importe)+'</b></div></div><button class="bt" id="bt3" style="margin-top:6px">Ya he hecho la transferencia</button></div>':'')
+ +'</div>';
+setInterval(function(){var r=document.getElementById('rl');if(r)r.textContent=resto();},30000);
+var ac=document.getElementById('ac'),ck=document.getElementById('ck'),er=document.getElementById('er');ac.onchange=function(){ck.classList.remove('mal');er.textContent='';};
+function acepta(){if(ac.checked)return true;ck.classList.add('mal');er.textContent='Marca la casilla para continuar';ck.scrollIntoView({behavior:'smooth',block:'center'});return false;}
+function post(o){return fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(function(r){return r.json();});}
+document.getElementById('bt').onclick=function(){if(!acepta())return;var b=this;b.disabled=true;b.lastChild.textContent='Abriendo el pago…';
+ post({op:'tarjeta',acepta:1}).then(function(r){if(!r.ok||!r.url)throw new Error(r.error||'');location.href=r.url;}).catch(function(e){b.disabled=false;b.lastChild.textContent='Pagar '+eur(D.importe)+' con tarjeta';er.textContent=e.message||'No se ha podido abrir el pago. Inténtalo otra vez.';});};
+var b2=document.getElementById('bt2');if(b2)b2.onclick=function(){document.getElementById('tr').classList.add('on');b2.style.display='none';document.getElementById('tr').scrollIntoView({behavior:'smooth',block:'center'});};
+[].forEach.call(C.querySelectorAll('[data-cp]'),function(x){x.onclick=function(){try{navigator.clipboard.writeText(x.getAttribute('data-cp'));}catch(e){}x.textContent='¡Copiado!';setTimeout(function(){x.textContent='Copiar';},1500);};});
+var b3=document.getElementById('bt3');if(b3)b3.onclick=function(){if(!acepta())return;b3.disabled=true;b3.textContent='Enviando…';post({op:'transferencia',acepta:1}).then(function(r){if(!r.ok)throw 0;D.estado='TRANSFERENCIA AVISADA';fin('¡Gracias'+(D.pila?', '+esc(D.pila):'')+'!','En cuanto veamos la transferencia en el banco te confirmamos la cita. Tu hueco sigue guardado.');window.scrollTo(0,0);}).catch(function(){b3.disabled=false;b3.textContent='Ya he hecho la transferencia';er.textContent='No se ha podido enviar. Inténtalo otra vez.';});};
+})();<\/script></body></html>`;
+}
+function ogPagoSvg({ pila, importe }) {
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `Reserva tu cita, ${pila}` : 'Reserva tu cita', ancho = O.b.getAdvanceWidth(t1, 100) / 100, sz = Math.min(38, Math.floor(370 / ancho));
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="222" y="160" width="156" height="110" rx="18"/><path d="M222 194h156M246 240h40"/></g>`
+    + ogTexto(O.b, t1, sz, 300, 384, 0, K) + ogTexto(O.m, 'Confírmala con el pago', 23, 300, 426, 0, M) + (importe ? ogTexto(O.m, `${String(Math.round(importe * 100) / 100).replace('.', ',')} € · tarjeta o transferencia`, 21, 300, 466, 0, T) : '') + `</svg>`;
+}
+
 // ── ENCUESTA DE PRIMERA VISITA (página propia, enlace personal por cita) ──
 // Misma lógica que la de Tally: Excelente → reseña en Google (con frases para copiar); el resto → qué podemos mejorar
 const RESENA_URL = 'https://search.google.com/local/writereview?placeid=ChIJCadKnf2G6AIRcmUzdzMr4nk';
@@ -2012,6 +2126,52 @@ module.exports = async function handler(req, res) {
     return res.status(200).send(paginaHuecos({ huecos, url: `https://app.fisioterapia365.com/h/${k}.${sg}`, tel: C.tel || '672 89 39 49', dir: C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
+  // Pago por adelantado: página del paciente (GET), tarjeta/transferencia (POST) y vuelta de Stripe (?sid=)
+  if (action === 'pago' || action === 'pago-og') {
+    const id = String(req.query.id || ''), sg = String(req.query.s || '');
+    res.setHeader('X-Robots-Tag', 'noindex');
+    const mal = m => { if (req.method === 'POST') return res.status(400).json({ ok: false, error: m }); res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: m })); };
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaPago(id)) return mal('Este enlace no es válido.');
+    let r = await at(`tblTPlcuiSjQngkaD/${id}`); if (r.error) return mal('No encontramos tu cita.');
+    let F = r.fields || {}; const pac = await pagoPaciente(F);
+    const f0 = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '').trim().split(' ')[0], fisio = f0 ? f0.charAt(0).toUpperCase() + f0.slice(1).toLowerCase() : '';
+    const importe = Number(F['PAGO IMPORTE'] || 0), fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5);
+    if (action === 'pago-og') {
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogPagoSvg({ pila: pac.pila, importe }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.status(302).end(); }
+    }
+    res.setHeader('Cache-Control', 'private, no-store');
+    const estadoDe = X => String((X['PAGO ESTADO'] && X['PAGO ESTADO'].name) || X['PAGO ESTADO'] || '');
+    let estado = estadoDe(F);
+    const caducado = estado === 'PENDIENTE DE PAGO' && F['PAGO LÍMITE'] && new Date(F['PAGO LÍMITE']) < new Date();
+    if (req.method === 'POST') {
+      const q = req.body || {};
+      if (estado !== 'PENDIENTE DE PAGO' || caducado) return res.status(200).json({ ok: false, error: 'Esta reserva ya no está pendiente de pago.' });
+      if (!q.acepta) return res.status(200).json({ ok: false, error: 'Falta aceptar las condiciones' });
+      const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim(), acept = `${pagoAhora()} · Acepta la política de cancelación (IP ${ip || '—'})`;
+      if (q.op === 'tarjeta') {
+        if (!(importe >= 1)) return res.status(200).json({ ok: false, error: 'Falta el importe' });
+        const lim = F['PAGO LÍMITE'] ? Math.floor(new Date(F['PAGO LÍMITE']).getTime() / 1000) : 0, exp = Math.max(Math.floor(Date.now() / 1000) + 31 * 60, Math.min(lim || 0, Math.floor(Date.now() / 1000) + 23.5 * 3600));
+        const url = enlacePago(id), form = { mode: 'payment', locale: 'es', 'line_items[0][quantity]': '1', 'line_items[0][price_data][currency]': 'eur', 'line_items[0][price_data][unit_amount]': String(Math.round(importe * 100)), 'line_items[0][price_data][product_data][name]': `Sesión de fisioterapia · ${fecha.split('-').reverse().join('/')} ${hora}`, 'metadata[cita]': id, 'payment_intent_data[metadata][cita]': id, 'payment_intent_data[description]': `FISIO365 · ${pac.nombre || 'Paciente'} · ${fecha} ${hora}`, success_url: url + '?sid={CHECKOUT_SESSION_ID}', cancel_url: url, expires_at: String(exp) };
+        if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(pac.email)) form.customer_email = pac.email;
+        let ses; try { ses = await stripeApi('checkout/sessions', form); } catch (e) { return res.status(200).json({ ok: false, error: 'No se ha podido abrir el pago con tarjeta. Prueba con transferencia o escríbenos.' }); }
+        await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO REF': ses.id, 'PAGO REGISTRO': (String(F['PAGO REGISTRO'] || '') + '\n' + acept + ' · abre el pago con tarjeta').trim() } }) });
+        return res.status(200).json({ ok: true, url: ses.url });
+      }
+      if (q.op === 'transferencia') {
+        const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO ESTADO': 'TRANSFERENCIA AVISADA', 'PAGO REGISTRO': (String(F['PAGO REGISTRO'] || '') + '\n' + acept + ' · dice que ha hecho la transferencia').trim() }, typecast: true }) });
+        if (!u.error) await pagoAvisar('', `🏦 ${pac.pila || 'Un paciente'} dice que ha hecho la transferencia`, `${importe.toFixed(2).replace('.', ',')} € · cita del ${fecha.split('-').reverse().join('/')} a las ${hora}. Revisa el banco y confírmala en la agenda.`, 'pago-' + id);
+        return res.status(200).json({ ok: !u.error });
+      }
+      return res.status(400).json({ ok: false });
+    }
+    // Vuelta de Stripe o pago a medias: se comprueba en Stripe
+    if (estado === 'PENDIENTE DE PAGO' && (req.query.sid || F['PAGO REF'])) {
+      if (await pagoVerificar(id, F, String(req.query.sid || '')).catch(() => false)) { estado = 'PAGADO'; }
+    }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(paginaPago({ url: enlacePago(id), pila: pac.pila, fisio, fecha, hora, importe, limite: F['PAGO LÍMITE'] || '', estado, caducado: caducado && estado !== 'PAGADO', iban: PAGO_IBAN, titular: PAGO_TITULAR, concepto: `Cita ${fecha.split('-').reverse().slice(0, 2).join('/')} ${String(pac.nombre || '').toLowerCase().replace(/(^|\s)\S/g, x => x.toUpperCase()).split(' ').slice(0, 2).join(' ')}`.trim().slice(0, 60) }));
+  }
   // Encuesta de alta (antes «paciente feliz» en Tally): enlace personal por paciente, misma lógica que la de primera visita
   if (action === 'fin-og' || action === 'fin') {
     const id = String(req.query.id || ''), sg = String(req.query.s || '');
@@ -3104,7 +3264,7 @@ module.exports = async function handler(req, res) {
         const hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : String(h || ''); };
         const ACTIVA = e => /PENDIENTE|REALIZADA|DUDOSA|POR REAGENDAR/i.test(e || '');
         const LIBRE = e => /^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(String(e || '').trim());
-        const CAMPOS_C = ['FECHA', 'HORA', 'ESTADO', 'PREF.', 'RELACIÓN - CITA', 'TIPO DE CITA', 'TIPO DE SESIÓN', 'NOTAS', 'CONFIR', 'RESERVA'].map(f => 'fields[]=' + encodeURIComponent(f)).join('&');
+        const CAMPOS_C = ['FECHA', 'HORA', 'ESTADO', 'PREF.', 'RELACIÓN - CITA', 'TIPO DE CITA', 'TIPO DE SESIÓN', 'NOTAS', 'CONFIR', 'RESERVA', 'PAGO ESTADO', 'PAGO IMPORTE', 'PAGO LÍMITE'].map(f => 'fields[]=' + encodeURIComponent(f)).join('&');
         const delDia = async (fecha) => todosT(CIT, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}'`)}&${CAMPOS_C}`);
         const enHora = (rows, hora, fisio) => rows.filter(r => hh(r.fields['HORA']) === hh(hora) && String(nmA(r.fields['PREF.'])).toLowerCase() === String(fisio).toLowerCase());
         const nueva = async (fecha, hora, fisio, extra) => { const d = await at(CIT, { method: 'POST', body: JSON.stringify({ records: [{ fields: Object.assign({ FECHA: fecha, HORA: hh(hora), 'PREF.': fisio }, extra) }], typecast: true }) }); if (d.error) throw new Error(d.error.message || 'No se ha podido crear'); return d.records[0]; };
@@ -3317,7 +3477,7 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, hoy: hoyF, fecha, citas: lista });
         }
         if (action === 'seg-agenda-dia') {
-          await Promise.all([procesarWeb().catch(() => {}), revisarPorReagendar().catch(() => 0)]);
+          await Promise.all([procesarWeb().catch(() => {}), revisarPorReagendar().catch(() => 0), caducarPagos().catch(() => 0)]);
           let rows, limitado = false;
           if (okF(q.fecha)) rows = await delDia(q.fecha);
           else { // rango de fechas, un paciente y/o un fisio (vista de lista)
@@ -3341,7 +3501,7 @@ module.exports = async function handler(req, res) {
           const conCons = new Set((consL || []).flatMap(c => c.pac)), sinConsent = consL ? pids.filter(id => !conCons.has(id) && (altaP[id] || '') >= '2026-01-08') : [];
           const ausDia = okF(q.fecha) ? await ausenciasEn(q.fecha, q.fecha).catch(() => []) : [];
 
-          return res.status(200).json({ ok: true, hoy: hoyF, limitado, ausencias: ausDia, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
+          return res.status(200).json({ ok: true, hoy: hoyF, limitado, ausencias: ausDia, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, pago: nmA(F['PAGO ESTADO']) ? { estado: nmA(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'seg-agenda-resena') { // apuntar que se le ha pedido la reseña en Google
@@ -3353,6 +3513,20 @@ module.exports = async function handler(req, res) {
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const d = await at(`${CIT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ENCUESTA ENVIADA': q.enviado === false ? null : new Date().toISOString() } }) });
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+        }
+        if (action === 'seg-agenda-pago') { // pedir pago por adelantado (op: pedir) · confirmar transferencia (op: confirmar) · quitar (op: quitar)
+          if (!okId(q.id)) return res.status(400).json({ ok: false });
+          const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false, error: 'Cita no encontrada' });
+          const C0 = cur.fields || {}, reg = t => (String(C0['PAGO REGISTRO'] || '') + `\n${pagoAhora()} · ${t}`).trim(), quien = String(q.quien || '').slice(0, 40);
+          if (q.op === 'pedir') {
+            const imp = Math.round(Number(String(q.importe || '').replace(',', '.')) * 100) / 100; if (!(imp >= 1 && imp <= 2000)) return res.status(400).json({ ok: false, error: 'Pon el importe' });
+            const yaPend = nmA(C0['PAGO ESTADO']) === 'PENDIENTE DE PAGO', lim = yaPend && C0['PAGO LÍMITE'] && new Date(C0['PAGO LÍMITE']) > new Date() ? C0['PAGO LÍMITE'] : new Date(Date.now() + 24 * 3600e3).toISOString();
+            await patch(q.id, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': imp, 'PAGO LÍMITE': lim, 'PAGO REGISTRO': reg(`Pago pedido (${imp.toFixed(2).replace('.', ',')} €)${quien ? ' por ' + quien : ''}`) });
+            return res.status(200).json({ ok: true, link: enlacePago(q.id), limite: lim });
+          }
+          if (q.op === 'confirmar') { await patch(q.id, { 'PAGO ESTADO': 'PAGADO', CONFIR: ['CONFIRMADA'], 'PAGO REGISTRO': reg(`Transferencia comprobada${quien ? ' por ' + quien : ''}`) }); return res.status(200).json({ ok: true }); }
+          if (q.op === 'quitar') { await patch(q.id, { 'PAGO ESTADO': null, 'PAGO LÍMITE': null, 'PAGO REGISTRO': reg(`Ya no se pide el pago${quien ? ' (' + quien + ')' : ''}`) }); return res.status(200).json({ ok: true }); }
+          return res.status(400).json({ ok: false });
         }
         if (action === 'seg-agenda-fin-enlace') { // encuesta de fin de tratamiento: deja la ficha lista y devuelve el enlace personal
           if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
