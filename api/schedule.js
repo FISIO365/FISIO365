@@ -794,12 +794,12 @@ function ogTexto(font, txt, size, cx, y, ls, color) {
 function ogCitaSvg({ fecha, hora, fisio }) {
   const DL = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'], ML = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], MS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
   const d = new Date(fecha + 'T12:00:00Z'), T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos();
-  const t1 = `${DL[d.getUTCDay()]} ${d.getUTCDate()} de ${ML[d.getUTCMonth()]}`, sz = t1.length > 20 ? Math.max(30, Math.round(40 * 20 / t1.length)) : 40;
+  const t1 = `${DL[d.getUTCDay()]} ${d.getUTCDate()} de ${ML[d.getUTCMonth()]}`, ancho = O.b.getAdvanceWidth(t1, 100) / 100, sz = Math.min(36, Math.floor(360 / ancho));
   const t2 = 'A las ' + hora + (fisio ? ' · con ' + fisio : '');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
     + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="232" y="150" width="136" height="136" rx="22"/><path d="M232 190h136"/><path d="M270 136v28M330 136v28"/></g>`
     + ogTexto(O.m, MS[d.getUTCMonth()], 17, 300, 180, 3, T)
-    + ogTexto(O.b, String(d.getUTCDate()), 62, 300, 266, 0, K)
+    + ogTexto(O.b, String(d.getUTCDate()), 62, 300, 266, 0, T)
     + ogTexto(O.b, t1, sz, 300, 384, 0, K)
     + ogTexto(O.m, t2, 23, 300, 426, 0, M)
     + ogTexto(O.m, 'Toca para confirmar', 21, 300, 466, 0, T) + `</svg>`;
