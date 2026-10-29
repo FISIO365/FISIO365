@@ -870,11 +870,11 @@ svg.f .ey{transform-box:fill-box;transform-origin:center}.mira .ojg{animation:mi
 .g{width:20px;height:20px;background:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:700 13px Arial,sans-serif;color:#c2552e}
 .estr{display:flex;gap:6px;justify-content:center;margin:16px 0 4px}.estr svg{width:26px;height:26px;opacity:0;transform:scale(.4);animation:est .4s forwards}.estr path{fill:#c2552e}
 @keyframes est{60%{transform:scale(1.2);opacity:1}to{transform:scale(1);opacity:1}}
-.ideas{text-align:left;margin:20px 0 14px}.ideas small{display:block;font-size:12.5px;color:#8a7d74;margin-bottom:8px;line-height:1.45}
-.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{border:1.5px solid #efe6de;background:#faf7f4;border-radius:99px;padding:8px 13px;font:500 13.5px Poppins,sans-serif;color:#2b2420;cursor:pointer;text-align:left}.chip:active,.chip.on{background:#fbeee7;border-color:#c2552e;color:#c2552e}
+.ideas{text-align:left;margin:26px 0 30px}.ideas small{display:block;font-size:12.5px;color:#8a7d74;margin-bottom:16px;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:10px 8px}.chip{border:1.5px solid #efe6de;background:#faf7f4;border-radius:99px;padding:8px 13px;font:500 13.5px Poppins,sans-serif;color:#2b2420;cursor:pointer;text-align:left}.chip:active,.chip.on{background:#fbeee7;border-color:#c2552e;color:#c2552e}
 textarea{width:100%;min-height:110px;border:1.5px solid #e6ddd5;border-radius:14px;padding:12px 14px;font:400 15px Poppins,sans-serif;color:#141414;margin:18px 0 12px;resize:vertical;outline:none}textarea:focus{border-color:#c2552e}
 .bt2{width:100%;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:15px;cursor:pointer}.bt2:disabled{opacity:.6}
-.nota{font-size:12.5px;color:#8a7d74;margin:10px 0 0}.err{font-size:13px;color:#b42318;margin:6px 0 0;min-height:18px}
+.nota{font-size:12.5px;color:#8a7d74;margin:14px 0 0}.err{font-size:13px;color:#b42318;margin:6px 0 0;min-height:18px}
 @media (prefers-reduced-motion:reduce){.o,.dm,.de,.fi,.cara,.bt,.estr svg{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
 <body><div class="c" id="c">${D.error ? `<h1>Vaya…</h1><p class="sub">${e(D.error)}</p>` : ''}</div>
 ${D.error ? '' : `<script>(function(){var D=${J},C=document.getElementById('c');
