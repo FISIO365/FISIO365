@@ -1383,9 +1383,9 @@ async function stripeApi(path, form) {
 }
 const pagoAhora = () => new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'short', timeStyle: 'short' }).format(new Date());
 // Avisos al móvil de dirección (Ramiro y Nora) y, si se indica, del fisio de la cita
-async function pagoAvisar(fisio, title, body, tag) {
+async function pagoAvisar(fisio, title, body, tag, solo) {
   try { const fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name'); const nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase(), recs = fl.records || [];
-    const ids = recs.filter(x => ['ramiro', 'nora'].includes(nom1(x)) || (fisio && nom1(x) === String(fisio).split(' ')[0].toLowerCase())).map(x => x.id), { avisar } = require('./_push');
+    const ids = recs.filter(x => solo ? solo.includes(nom1(x)) : ['ramiro', 'nora'].includes(nom1(x)) || (fisio && nom1(x) === String(fisio).split(' ')[0].toLowerCase())).map(x => x.id), { avisar } = require('./_push');
     await Promise.all([...new Set(ids)].map(fid => avisar('fisio', fid, { title, body, url: '/fisio', tag }).catch(() => false))); } catch (e) {}
 }
 // Comprueba en Stripe si la sesión de pago se ha completado y, si es así, deja la cita pagada y confirmada
@@ -1414,7 +1414,7 @@ async function avisoFaltaEnlace(citaId) {
     await at(`tblTPlcuiSjQngkaD/${citaId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO REGISTRO': (String(F['PAGO REGISTRO'] || '') + `\n${pagoAhora()} · Aviso: falta mandar el enlace de pago`).trim() } }) });
     const nombre = String(P['FULL NAME'] || '').trim(); let pila = (String(P['NOMBRE'] || '').trim() || nombre).split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : 'Un paciente';
     const fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || ''), fis = (F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '', d = new Date(fecha + 'T12:00:00Z'), DS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-    await pagoAvisar(fis, `💳 ${pila} tiene que pagar antes: mándale el enlace`, `Ha cogido cita el ${DS[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${hora}${fis ? ' con ' + String(fis).charAt(0) + String(fis).slice(1).toLowerCase() : ''}. ${P['PAGO ADELANTADO MOTIVO'] || ''}`.trim(), 'falta-' + citaId);
+    await pagoAvisar(fis, `💳 ${pila} tiene que pagar antes: mándale el enlace`, `Ha cogido cita el ${DS[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${hora}${fis ? ' con ' + String(fis).charAt(0) + String(fis).slice(1).toLowerCase() : ''}. ${P['PAGO ADELANTADO MOTIVO'] || ''}`.trim(), 'falta-' + citaId, ['nora']);
     return true;
   } catch (e) { return false; }
 }
