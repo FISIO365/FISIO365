@@ -1350,7 +1350,7 @@ module.exports = async function handler(req, res) {
           const rs = await todosT(COM, 'sort[0][field]=FECHA&sort[0][direction]=asc');
           const roots = rs.filter(r => !r.fields.HILO), porHilo = {}; numerar(roots);
           rs.filter(r => r.fields.HILO).forEach(r => { (porHilo[r.fields.HILO] = porHilo[r.fields.HILO] || []).push(r); });
-          return roots.map(r => ({ r, h: vistaHilo(r, porHilo[r.id] || []) }));
+          return roots.map(r => { const de0 = String((r.fields || {}).DE || '').trim(), rs = porHilo[r.id] || []; return { r, h: vistaHilo(r, de0 === yo ? rs : rs.filter(x => [de0, yo].includes(String(x.fields['DE'] || '').trim()))) }; }); // las respuestas de los compañeros solo las ve quien la envió
         };
         const participa = h => h.de === yo || h.para.includes(yo);
         const marcar = async (root, campo, extra) => { const o = json(root.fields[campo]); o[yo] = ahora; const fields = { [campo]: JSON.stringify(o), ...(extra || {}) };
@@ -1367,7 +1367,10 @@ module.exports = async function handler(req, res) {
           numerar(await todosT(COM, `filterByFormula=${encodeURIComponent("{HILO}=''")}&fields[]=${encodeURIComponent('Nº')}&fields[]=FECHA`));
           let h = vistaHilo(root, resp);
           if (!participa(h)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
-          if (h.noLeido || !h.leido[yo]) { await marcar(root, 'LEÍDO'); h = vistaHilo(root, resp); }
+          if (h.noLeido || !h.leido[yo]) await marcar(root, 'LEÍDO');
+          // Las respuestas solo las ve quien envió la comunicación: cada destinatario ve las suyas y las de quien la envió, no las de los compañeros
+          const de0 = String(root.fields['DE'] || '').trim();
+          h = vistaHilo(root, de0 === yo ? resp : resp.filter(r => [de0, yo].includes(String(r.fields['DE'] || '').trim())));
           return res.status(200).json({ ok: true, yo, hilo: h });
         }
         if (action === 'seg-com-enviar' && q.tipo === 'Ausencia') {
@@ -1492,14 +1495,8 @@ module.exports = async function handler(req, res) {
           const F = root.fields, de = F.DE || '', para0 = listaPara(F.PARA);
           if (de !== yo && !para0.includes(yo)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
           if (!cuerpo && !q.hecho) return res.status(400).json({ ok: false, error: 'Escribe la respuesta' });
-          // Sin respuestas escritas: solo los botones de cada tipo
-          if (cuerpo) return res.status(400).json({ ok: false, error: 'Las comunicaciones no se responden; usa los botones' });
-          if (cuerpo) {
-            if (de === yo) return res.status(400).json({ ok: false, error: 'No puedes responder a tu propia comunicación' });
-            const prev = await todosT(COM, `filterByFormula=${encodeURIComponent(`AND({HILO}='${root.id}',{DE}='${yo.replace(/'/g, '')}')`)}&fields[]=CUERPO`);
-            if (prev.some(r => !/^(✓ (Aprobada|Gestionada|Resuelta)|✗ Rechazada|🙋 )/.test(String(r.fields.CUERPO || '')))) return res.status(400).json({ ok: false, error: 'Ya has respondido a esta comunicación' });
-          }
-          if (cuerpo) { const otros = [...new Set([de, ...para0])].filter(p => p && p !== yo);
+          // Respuestas escritas: la de un destinatario solo le llega a quien la envió; un comentario de quien la envió, a todos
+          if (cuerpo) { const otros = de === yo ? para0.filter(p => p && p !== yo) : [de];
             const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: 'RE: ' + (F.ASUNTO || ''), HILO: root.id, DE: yo, PARA: otros.join(', '), CUERPO: cuerpo, FECHA: ahora } }] }) });
             if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' }); }
           await marcar(root, 'LEÍDO');

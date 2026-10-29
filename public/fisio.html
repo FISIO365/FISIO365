@@ -6823,8 +6823,9 @@ async function comHilo(wrap,id){
   ${resp.map(m=>{const resp1=t=>`<article class="com-carta com-r${m.de===yo?' mio':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${comCuHtml(t)}</div></article>`;
    const ev=comEvento(m.cuerpo);if(!ev)return resp1(String(m.cuerpo||''));
    return `<div class="com-ev ${ev.tipo}"><span class="com-ev-i">${comIco(ev.tipo==='no'?'cruz':'check')}</span><div><b>${escH(ev.titulo)}</b><small>${escH([comFecha(m.fecha)].concat(ev.det).join(' · '))}</small></div></div>${ev.ojo.length?`<div class="com-ojo"><b>Citas con paciente que hay que mover</b>${ev.ojo.map(x=>`<span>${escH(x)}</span>`).join('')}</div>`:''}${ev.coment?resp1(ev.coment):''}`;}).join('')}
+  ${(env||h.para.includes(yo))&&!esAus?`<div class="com-card com-resp${puedeResp?'':' plegada'}"><button type="button" class="com-anadir">+ ${env?'Escribir un comentario':'Añadir otra respuesta'}</button><p class="com-acc-t">${env?'Lo verá quien la ha recibido.':'Tu respuesta solo la ve '+escH(h.de)+'.'}</p><textarea rows="4" placeholder="${env?'Escribe un comentario…':'Escribe tu respuesta…'}"></textarea><div class="com-bts" style="margin-top:8px"><button type="button" class="com-b" data-a="resp">Enviar ${env?'comentario':'respuesta'}</button></div></div>`:''}
   ${acc?`<div class="com-card com-acc">${acc}</div>`:''}
-  <div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>
+  ${env?`<div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>`:''}
 
   ${env&&!(esAus&&h.resolucion!=='Pendiente')?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}`;
  box.querySelector('.com-volver').onclick=volver;
