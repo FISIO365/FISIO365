@@ -1001,7 +1001,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 @media(max-width:768px){#btnAvisos{right:14px;top:calc(50% + env(safe-area-inset-top)/2)}}
 
 /* Editor de ejercicios (Programas y ficha) */
-.pe-busca{position:relative;margin-bottom:12px}
+.pe-busca{position:sticky;top:var(--tb-h,0px);z-index:8;background:#fff;margin:-8px 0 12px;padding:8px 0 10px}.fp-body .pe-busca{top:0}
 .pe-busca input{width:100%;box-sizing:border-box;padding:13px 14px 13px 42px;border:1.5px solid var(--border);border-radius:14px;font-size:15px;font-family:var(--font);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2552e' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 14px center/18px;outline:none}
 .pe-busca input:focus{border-color:#c2552e}
 .pe-res{display:none;margin-top:6px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.10);max-height:400px;overflow-y:auto}
