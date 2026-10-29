@@ -864,7 +864,7 @@ function paginaHuecos(D) {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Reserva tu cita · FISIO365</title>
 <meta property="og:title" content="Elige tu hueco en FISIO365"><meta property="og:description" content="Toca la hora que te vaya bien y queda reservada."><meta property="og:image" content="https://app.fisioterapia365.com/informe/og-cita-v3.png"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
+<style>*{box-sizing:border-box}html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
 .c{background:#fff;border-radius:24px;padding:26px 20px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start}
 .cab{text-align:center}.cab svg{display:block;margin:0 auto}.cab svg rect,.cab svg path{fill:none;stroke:#c2552e;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .mini{width:52px;height:52px;transform-origin:26px 8px;animation:col 1.4s .2s ease-in-out both}@keyframes col{0%{transform:rotate(-14deg)}30%{transform:rotate(10deg)}55%{transform:rotate(-6deg)}78%{transform:rotate(3deg)}100%{transform:none}}
@@ -874,10 +874,10 @@ h1{font-size:22px;font-weight:700;margin:12px 0 4px;line-height:1.25}.sub{font-s
 .h{border:1.5px solid #efe6de;background:#fdf6f2;color:#c2552e;border-radius:12px;padding:9px 0;width:calc(25% - 6px);font:600 14.5px Poppins,sans-serif;cursor:pointer;transition:transform .12s}.h:active{transform:scale(.96)}.h.sb{background:#fff;border-style:dashed;color:#8a7d74}
 .ley{font-size:11.5px;color:#a3968c;margin:18px 0 0}.vacio{text-align:center;color:#8a7d74;font-size:14.5px;padding:30px 0}
 .fondo{position:fixed;inset:0;background:rgba(20,20,20,.35);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}.fondo.on{opacity:1}
-.hoja{background:#fff;border-radius:22px 22px 0 0;padding:22px 20px 26px;width:100%;max-width:440px;transform:translateY(30px);transition:transform .25s}.fondo.on .hoja{transform:none}
+.hoja{background:#fff;border-radius:22px 22px 0 0;padding:22px 20px 26px;width:100%;max-width:440px;max-height:92vh;overflow-y:auto;overscroll-behavior:contain;transform:translateY(30px);transition:transform .25s}.fondo.on .hoja{transform:none}
 .sel{background:#fdf1ea;border-radius:14px;padding:12px 14px;margin-bottom:14px}.sel small{display:block;font-size:12px;color:#8a7d74}.sel b{font-size:16px}
-label{display:block;font-size:12.5px;color:#7d6a60;margin:10px 0 4px}input,textarea{width:100%;border:1.5px solid #e6ddd5;border-radius:12px;padding:11px 13px;font:400 15px Poppins,sans-serif;color:#141414;outline:none}input:focus,textarea:focus{border-color:#c2552e}textarea{min-height:74px;resize:vertical}
-.dos{display:flex;gap:8px}.dos>div{flex:1}.err{font-size:13px;color:#b42318;min-height:18px;margin:8px 0 0}
+label{display:block;font-size:12.5px;color:#7d6a60;margin:10px 0 4px}input,textarea{width:100%;min-width:0;border:1.5px solid #e6ddd5;border-radius:12px;padding:11px 13px;font:400 16px Poppins,sans-serif;color:#141414;outline:none}input:focus,textarea:focus{border-color:#c2552e}textarea{min-height:74px;resize:vertical}
+.dos{display:flex;gap:8px}.dos>div{flex:1;min-width:0}.err{font-size:13px;color:#b42318;min-height:18px;margin:8px 0 0}
 .bt{width:100%;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:15px;cursor:pointer;margin-top:8px}.bt:disabled{opacity:.6}.cancel{width:100%;background:none;border:none;color:#8a7d74;font:500 14px Poppins,sans-serif;padding:12px;cursor:pointer}
 .ok{text-align:center;padding:10px 0}.ok svg{display:block;margin:0 auto}.ok circle,.ok path{fill:none;stroke:#c2552e;stroke-width:3;stroke-linecap:round}.ok .o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s forwards}.ok .m{stroke-dasharray:44;stroke-dashoffset:44;animation:dr .45s .7s forwards}@keyframes dr{to{stroke-dashoffset:0}}
 .fi{opacity:0;transform:translateY(8px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}.pie{margin-top:18px;font-size:12.5px;color:#7d6a60;line-height:1.6;text-align:center}.pie a{color:#7d6a60}</style></head>
@@ -960,7 +960,7 @@ svg.f .ey{transform-box:fill-box;transform-origin:center}.mira .ojg{animation:mi
 @keyframes est{60%{transform:scale(1.2);opacity:1}to{transform:scale(1);opacity:1}}
 .ideas{text-align:left;margin:26px 0 30px}.ideas small{display:block;font-size:12.5px;color:#8a7d74;margin-bottom:16px;line-height:1.5}
 .chips{display:flex;flex-wrap:wrap;gap:10px 8px}.chip{border:1.5px solid #efe6de;background:#faf7f4;border-radius:99px;padding:8px 13px;font:500 13.5px Poppins,sans-serif;color:#2b2420;cursor:pointer;text-align:left}.chip:active,.chip.on{background:#fbeee7;border-color:#c2552e;color:#c2552e}
-textarea{width:100%;min-height:110px;border:1.5px solid #e6ddd5;border-radius:14px;padding:12px 14px;font:400 15px Poppins,sans-serif;color:#141414;margin:18px 0 12px;resize:vertical;outline:none}textarea:focus{border-color:#c2552e}
+textarea{width:100%;min-height:110px;border:1.5px solid #e6ddd5;border-radius:14px;padding:12px 14px;font:400 16px Poppins,sans-serif;color:#141414;margin:18px 0 12px;resize:vertical;outline:none}textarea:focus{border-color:#c2552e}
 .bt2{width:100%;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:15px;cursor:pointer}.bt2:disabled{opacity:.6}
 .nota{font-size:12.5px;color:#8a7d74;margin:14px 0 0}.err{font-size:13px;color:#b42318;margin:6px 0 0;min-height:18px}
 @media (prefers-reduced-motion:reduce){.o,.dm,.de,.fi,.cara,.bt,.estr svg{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
