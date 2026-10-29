@@ -1329,7 +1329,7 @@ module.exports = async function handler(req, res) {
       const yaRes = !!F['ENCUESTA IR A RESEÑA'], vAct = v || vOld;
       // Aviso al móvil del fisio (solo lo bueno: lo que haya que mejorar lo lleva dirección)
       const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
-      // Avisos en la app (panel): dirección (Ramiro y Nora) lo ve todo; el fisio, solo lo bueno (lo que haya que mejorar lo lleva dirección)
+      // Notificación al móvil (además del aviso dentro del panel, en la agenda): dirección (Ramiro y Nora) lo ve todo; el fisio, solo lo bueno (lo que haya que mejorar lo lleva dirección)
       if (!u.error) {
         const quien = pila || (nombre || '').split(' ')[0] || 'Tu paciente', fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name').catch(() => ({}));
         const nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase(), recs = fl.records || [];
@@ -2486,6 +2486,16 @@ module.exports = async function handler(req, res) {
             const F = p.fields; out.push({ pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', pedida: F['RESEÑA PEDIDA'] || '', dejada: !!F['RESEÑA POSITIVA'], ultima: (ult[p.id] || {}).fecha || '', fisio: (ult[p.id] || {}).fisio || '', extra: !ult[p.id] }); });
           out.sort((a, b) => (b.ultima || '').localeCompare(a.ultima || '') || a.nombre.localeCompare(b.nombre));
           return res.status(200).json({ ok: true, hoy: hoyF, pacientes: out });
+        }
+        if (action === 'seg-agenda-enc-nuevas') {
+          // Respuestas a la encuesta de primera visita de los últimos 14 días (para los avisos dentro del panel)
+          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA RESPONDIDA},IS_AFTER({ENCUESTA RESPONDIDA},DATEADD(NOW(),-14,'days')))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('ENCUESTA VALORACIÓN')}&fields[]=${encodeURIComponent('ENCUESTA COMENTARIO')}&fields[]=${encodeURIComponent('ENCUESTA IR A RESEÑA')}&fields[]=${encodeURIComponent('ENCUESTA RESPONDIDA')}`);
+          const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], nom = {};
+          for (let i = 0; i < pids.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 40).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}`)).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; });
+          const nmE = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+          const lista = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), fisio: nmE(F['PREF.']), nombre: nom[pid] || '', valoracion: nmE(F['ENCUESTA VALORACIÓN']), comentario: F['ENCUESTA COMENTARIO'] || '', resena: F['ENCUESTA IR A RESEÑA'] || '', respondida: F['ENCUESTA RESPONDIDA'] || '' }; })
+            .filter(x => x.valoracion).sort((a, b) => String(b.respondida).localeCompare(String(a.respondida)));
+          return res.status(200).json({ ok: true, lista });
         }
         if (action === 'seg-agenda-encuestas') {
           // Encuesta de satisfacción: pacientes cuya PRIMERA sesión realizada fue ese día

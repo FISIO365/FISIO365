@@ -1657,6 +1657,10 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rp-av2>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rp-av2 b{font-size:14px}.rp-av2 small{font-size:12.5px;color:#7d6a60;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rp-av2 em{font-style:normal;font-size:12.5px;font-weight:700;color:#c2552e}
 .enc-r{display:block;font-size:12px;color:#16803c;margin-top:3px;line-height:1.35}.enc-r.mal{color:#b42318}
 .rec-t2{color:#c2552e;font-weight:600}.rec-b.av2.toca{background:#c2552e;color:#fff;border-color:#c2552e}
+.ag-encb{position:relative}.ag-encn{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#c2552e;color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}
+.enc-av{margin:10px 0 4px;border:1px solid #efe6de;background:#fbf8f5;border-radius:14px;padding:10px 12px 6px}.enc-av-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}.enc-av-h svg{width:17px;height:17px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linejoin:round}.enc-av-h b{flex:1;font-size:13px;color:#2b2420}
+.enc-av-x{border:none;background:none;color:#a3968c;font-size:14px;cursor:pointer;padding:2px 4px}.enc-av-it{display:flex;gap:9px;align-items:flex-start;width:100%;text-align:left;border:none;background:none;border-top:1px solid #f1ebe5;padding:8px 0;cursor:pointer;font:400 13px var(--font);color:#5c4f47}.enc-av-it:first-of-type{border-top:none}
+.enc-av-it i{flex:none;width:8px;height:8px;border-radius:50%;margin-top:6px;background:#16803c}.enc-av-it i.med{background:#d97706}.enc-av-it i.mal{background:#b42318}.enc-av-it b{color:#2b2420;font-weight:600}.enc-av-it em{font-style:normal;color:#c2552e}.enc-av-it small{display:block;color:#8a7d74;font-size:12px;margin-top:2px}.enc-av-mas{font-size:12px;color:#8a7d74;padding:2px 0 6px 17px}
 </style>
 <style>
 .idoc{background:#fff;border:1px solid #ece6df;border-radius:6px;box-shadow:0 2px 14px rgba(26,26,26,.07);padding:26px 24px 18px;margin-top:4px;font-family:var(--font)}
@@ -1847,7 +1851,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 (function(){
  const F=window.fetch.bind(window),C=new Map(),INF=new Map(),T0=Date.now(),SS='f365_api_';
  // seg-config sin guardar: si alguien cambia las listas en Administración, los demás lo ven al recargar
- const NO=/[?&]action=(version|seg-consent-archivo|seg-consent-doc|conversaciones|get-mensajes|buscar|seg-wa-ia|config-pub|seg-config|seg-agenda-pack)(&|$)/;
+ const NO=/[?&]action=(version|seg-consent-archivo|seg-consent-doc|conversaciones|get-mensajes|buscar|seg-wa-ia|config-pub|seg-config|seg-agenda-pack|seg-agenda-enc-nuevas)(&|$)/;
  const POSTREAD=/[?&]action=(seg-com-buzon|reporte-dia|compra-lista|seg-sug-lista|seg-sug-contar)(&|$)/;
  const NEUTRO=/[?&]action=(seg-wa-ia|seg-sug-visto|seg-com-hilo)(&|$)/;
  const LOW=/[?&]action=(seg-referidos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|seg-referidos-resueltos)(&|$)/;
@@ -2225,7 +2229,7 @@ async function marcarCampana(){const e=await F365Avisos.estado('f365_panel_aviso
 function abrirAvisoPanel(url){try{const u=new URL(url,location.origin);const s=u.searchParams.get('s'),p=u.searchParams.get('p');avisoPendiente='';history.replaceState(null,'',location.pathname);
  if(!fisioActual){avisoPendiente=url;return;}
  if(s==='msg'){showSection('msg');if(/^rec[A-Za-z0-9]{14}$/.test(p||''))renderMensajes($('mainWrap'),p);}
- if(s==='enc'){const f=u.searchParams.get('f');agRecordatorios(null,'enc',/^\d{4}-\d{2}-\d{2}$/.test(f||'')?f:'');}}catch(e){}}
+ if(s==='enc'){const f=u.searchParams.get('f');encMarcaVisto();agRecordatorios(null,'enc',/^\d{4}-\d{2}-\d{2}$/.test(f||'')?f:'');}}catch(e){}}
 // Puntito/número del icono de la app: lo que queda pendiente de chat, comunicaciones y sugerencias (se quita solo cuando está todo visto)
 (function(){let t=0;const sync=()=>{clearTimeout(t);t=setTimeout(()=>{try{const n=['sb-msg-badge','sb-com-badge','sb-sug-badge'].reduce((a,id)=>{const e=document.getElementById(id);return a+((e&&e.style.display!=='none'&&parseInt(e.textContent,10))||0);},0);
   if(n>0){navigator.setAppBadge&&navigator.setAppBadge(n).catch(()=>{});}else{navigator.clearAppBadge&&navigator.clearAppBadge().catch(()=>{});try{navigator.serviceWorker&&navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});}catch(_){}}}catch(e){}},400);};
@@ -5956,6 +5960,32 @@ function horaPicker(anchor,valor,ops,onPick){
 function ultSesion(citas,hoy){const ah=new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
  const hh=c=>String(c.hora||'').replace(/^(\d):/,'0$1:').slice(0,5);
  return (citas||[]).filter(c=>c.fecha&&c.fecha<=hoy&&(/REALIZADA/i.test(c.estado)||(c.fecha===hoy&&/PENDIENTE/i.test(c.estado)&&hh(c)&&hh(c)<=ah))).sort((a,b)=>(b.fecha+hh(b)).localeCompare(a.fecha+hh(a)))[0];}
+// ── AVISOS DE LA ENCUESTA DE 1ª VISITA (dentro del panel) ──
+// Dirección (Ramiro, Nora) ve todas las respuestas; cada fisio, las buenas de sus pacientes. «Visto» se guarda en este dispositivo.
+let ENC_UL=[];
+const encYo=()=>String((fisioActual&&fisioActual.nombre)||'').split(' ')[0].toLowerCase(),encK=()=>'f365_enc_visto_'+encYo();
+const encT=x=>String(x.resena&&x.resena>x.respondida?x.resena:x.respondida||'');
+function encMarcaVisto(){const m=ENC_UL.reduce((a,x)=>encT(x)>a?encT(x):a,'');if(m)try{localStorage.setItem(encK(),m);}catch(e){}document.querySelectorAll('.enc-av').forEach(e=>e.remove());document.querySelectorAll('.ag-encn').forEach(e=>e.remove());}
+async function encAvisos(card){
+ try{const r=await (await fetch(`/api/schedule?action=seg-agenda-enc-nuevas&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok||!card.isConnected)return;
+  const dir=esDireccion(),yo=encYo();
+  ENC_UL=(r.lista||[]).filter(x=>dir||(String(x.fisio).split(' ')[0].toLowerCase()===yo&&/Excelente|Muy buena/.test(x.valoracion)));
+  let visto='';try{visto=localStorage.getItem(encK())||'';}catch(e){}
+  if(!visto){visto=new Date(Date.now()-2*864e5).toISOString();try{localStorage.setItem(encK(),visto);}catch(e){}}
+  const N=ENC_UL.filter(x=>encT(x)>visto);
+  card.querySelectorAll('.enc-av,.ag-encn').forEach(e=>e.remove());if(!N.length)return;
+  const b=card.querySelector('.ag-encb');if(b)b.insertAdjacentHTML('beforeend',`<span class="ag-encn">${N.length}</span>`);
+  const cls=v=>/Excelente|Muy buena/.test(v)?'ok':v==='Normal'?'med':'mal',fn=n=>capTit(String(n||'—').split(' ').slice(0,2).join(' '));
+  const d=document.createElement('div');d.className='enc-av';
+  d.innerHTML=`<div class="enc-av-h"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg><b>${N.length===1?'Nueva valoración':N.length+' valoraciones nuevas'} de primera visita</b><button type="button" class="enc-av-x" aria-label="Marcar como visto">✕</button></div>`
+   +N.slice(0,4).map((x,i)=>`<button type="button" class="enc-av-it" data-i="${i}"><i class="${cls(x.valoracion)}"></i><span><b>${escH(fn(x.nombre))}</b> · ${escH(x.valoracion)}${x.fisio?' · con '+escH(capTit(String(x.fisio).split(' ')[0])):''}${x.resena?' · <em>fue a Google</em>':''}${x.comentario?`<small>«${escH(String(x.comentario).slice(0,90))}${String(x.comentario).length>90?'…':''}»</small>`:''}</span></button>`).join('')
+   +(N.length>4?`<div class="enc-av-mas">y ${N.length-4} más</div>`:'');
+  const bar=card.querySelector('.ag-bar2');bar.parentNode.insertBefore(d,bar.nextSibling);
+  d.querySelector('.enc-av-x').onclick=encMarcaVisto;
+  d.querySelectorAll('.enc-av-it').forEach(it=>it.onclick=()=>{const x=N[+it.dataset.i];encMarcaVisto();agRecordatorios(null,'enc',x.fecha);});
+ }catch(e){}
+ if(!card._encT){card._encT=setInterval(()=>{if(!card.isConnected)return clearInterval(card._encT);if(!document.hidden)encAvisos(card);},5*60e3);}
+}
 async function agRecordatorios(onDone,modoIni,encFIni){
  let fechas=recFechasDef(),datos=null;
  const m=ce('div','pv fp sev-m rec-m');m.innerHTML=`<div class="pv-bar"><button type="button" class="pv-x" aria-label="Cerrar">✕</button><b>${modoIni==='enc'?'Encuestas':'Recordatorios por WhatsApp'}</b></div><div class="fp-body"></div>`;
@@ -6148,7 +6178,8 @@ function renderAgenda(wrap){
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n*(AG.vista==='semana'?7:1));cargar();});
  $c('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
  $c('.ag-recb:not(.ag-pdfb):not(.ag-encb)').onclick=()=>agRecordatorios(()=>cargar());
- $c('.ag-encb').onclick=()=>agRecordatorios(()=>cargar(),'enc');
+ $c('.ag-encb').onclick=()=>{encMarcaVisto();agRecordatorios(()=>cargar(),'enc');};
+ encAvisos(card);
  $c('.ag-pdfb').onclick=()=>agPdfHuecos();
  fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};fi.style.display='none';
  $c('.ag-fe').onclick=e=>{e.preventDefault();miniCal($c('.ag-ft'),AG.fecha,f=>{AG.fecha=f;cargar();});};
