@@ -75,6 +75,22 @@
       "dest": "/api/schedule.js?action=consentimiento"
     },
     {
+      "src": "/suelo-pelvico\\.png",
+      "dest": "/api/schedule.js?action=cons-otro-og&kind=sp"
+    },
+    {
+      "src": "/suelo-pelvico",
+      "dest": "/api/schedule.js?action=cons-otro&kind=sp"
+    },
+    {
+      "src": "/alta-oncologica\\.png",
+      "dest": "/api/schedule.js?action=cons-otro-og&kind=alta"
+    },
+    {
+      "src": "/alta-oncologica",
+      "dest": "/api/schedule.js?action=cons-otro&kind=alta"
+    },
+    {
       "src": "/documento/(rec[A-Za-z0-9]{14})-([a-f0-9]{10})",
       "dest": "/api/schedule.js?action=cdoc&id=$1&s=$2"
     },

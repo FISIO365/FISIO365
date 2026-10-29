@@ -1103,13 +1103,13 @@ lista();})();<\/script></body></html>`;
 }
 
 // ── FORMULARIO DE PRIMERA VISITA PROPIO (sustituye al de Tally b5j1M2, con los mismos textos y la misma lógica) ──
-async function mailCDoc(id, email, nombre) {
+async function mailCDoc(id, email, nombre, que) {
   if (!process.env.BREVO_API_KEY || !email) return { ok: false, error: 'sin clave o email' };
   const pila = String(nombre || '').trim().split(' ')[0], link = enlaceCDoc(id), t = k => ({ nombre: pila, email })[k] || '';
   try {
     const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' },
       body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com' }, to: [{ email: t('email').toLowerCase() }], subject: 'Tu documento de FISIO365 📄',
-          htmlContent: `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a;line-height:1.6;max-width:520px">Hola ${escHtml(pila)},<br><br>Te dejamos aquí el documento con la información y el consentimiento que aceptaste para tu primera visita en FISIO365. Guárdalo para tenerlo a mano y, si tienes cualquier duda sobre tu tratamiento, escríbenos cuando quieras.<br><br><a href="${link}" style="display:inline-block;background:#c2552e;color:#fff;text-decoration:none;font-weight:bold;border-radius:10px;padding:12px 18px">Ver mi documento</a><br><br>Un abrazo,<br>El equipo de FISIO365</div>` }) });
+          htmlContent: `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a;line-height:1.6;max-width:520px">Hola ${escHtml(pila)},<br><br>Te dejamos aquí ${que || 'el documento con la información y el consentimiento que aceptaste para tu primera visita'} en FISIO365. Guárdalo para tenerlo a mano y, si tienes cualquier duda sobre tu tratamiento, escríbenos cuando quieras.<br><br><a href="${link}" style="display:inline-block;background:#c2552e;color:#fff;text-decoration:none;font-weight:bold;border-radius:10px;padding:12px 18px">Ver mi documento</a><br><br>Un abrazo,<br>El equipo de FISIO365</div>` }) });
     const txt = await r.text(); console.log('mailCDoc', r.status, txt.slice(0, 300)); return { ok: r.ok, status: r.status, info: txt.slice(0, 300) };
   } catch (e) { console.log('mailCDoc error', e.message); return { ok: false, error: e.message }; }
 }
@@ -1153,12 +1153,7 @@ const CF_AUT = [['IMAGENES', 'Uso de imágenes', 'Autorizo a FISIO365 a utilizar
   ['NEWSLETTER', 'Información de salud y novedades del centro', 'Autorizo a FISIO365 a enviarme información de salud, ejercicios, recomendaciones para pacientes, y novedades o promociones del centro.<br><span class="nota">No vamos a llenarte de emails. Solo recibirás información útil e interesante, y puedes retirar tu consentimiento en cualquier momento 🙂</span>']];
 const CF_DER = 'Puede ejercer sus derechos de acceso, rectificación, supresión, limitación, oposición y portabilidad de sus datos dirigiéndose personalmente al centro o mediante el siguiente correo electrónico: info@fisioterapia365.com<br><br>Asimismo, tiene derecho a retirar en cualquier momento los consentimientos otorgados y a presentar una reclamación ante la autoridad de control competente, la Agencia Española de Protección de Datos.<br><br>Mediante el presente documento se cumple con el deber de información legal exigido por la normativa de protección de datos y se informa al paciente del tratamiento de sus datos personales con las finalidades anteriormente indicadas.';
 const CF_CONOCIDO = ['Google', 'Recomendación', 'Médico', 'Redes', 'Ubicación', 'Otro'];
-function paginaConsent(D) {
-  const J = JSON.stringify(D).replace(/</g, '\\u003c');
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Primera visita · FISIO365</title>
-<meta property="og:title" content="Formulario de tu primera visita"><meta property="og:description" content="Un formulario rápido con lo esencial: tus datos, tu salud y el consentimiento para el tratamiento."><meta property="og:image" content="https://app.fisioterapia365.com/consentimiento.png?v=1"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
-<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>*{box-sizing:border-box}html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px 40px}
+const CONS_CSS = `*{box-sizing:border-box}html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px 40px}
 .c{background:#fff;border-radius:26px;padding:26px 20px 22px;max-width:520px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start}
 .cab{text-align:center}.doc{display:block;margin:0 auto;width:60px;height:60px}.doc *{fill:none;stroke:#c2552e;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.doc .p{stroke-dasharray:150;stroke-dashoffset:150;animation:dr .9s .1s forwards}.doc .l{stroke-dasharray:20;stroke-dashoffset:20;animation:dr .4s forwards}@keyframes dr{to{stroke-dashoffset:0}}
 h1{font-size:22px;font-weight:700;margin:12px 0 4px}.sub{font-size:14px;color:#5c4f47;margin:0;line-height:1.5}
@@ -1181,7 +1176,15 @@ input[type=text],input[type=email],input[type=tel],textarea{width:100%;min-width
 .fecha{background:#fdf1ea;border-radius:14px;padding:12px 14px;font-size:14px;color:#2b2420}
 .fi{opacity:0;transform:translateY(8px);animation:fi .45s forwards}@keyframes fi{to{opacity:1;transform:none}}
 .ok{text-align:center;padding:10px 0}.ok svg{display:block;margin:0 auto}.ok circle,.ok path{fill:none;stroke:#c2552e;stroke-width:3;stroke-linecap:round}.ok .o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s forwards}.ok .m{stroke-dasharray:44;stroke-dashoffset:44;animation:dr .45s .7s forwards}.ok .e{opacity:0;animation:fi .3s .9s forwards}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}
+.up{display:flex;align-items:center;gap:12px;border:1.5px dashed #e6c9bb;background:#fdfaf8;border-radius:16px;padding:14px 16px;cursor:pointer;font-size:13.5px;color:#5c4f47}.up svg{flex:none;width:30px;height:30px;padding:6px;border-radius:10px;background:#fdf1ea;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.up input{display:none}.q>label.up{display:flex;margin:0;font-weight:400}.fl{list-style:none;margin:8px 0 0;padding:0}.fl li{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#faf7f4;border-radius:12px;padding:9px 12px;margin-top:6px;font-size:13px;color:#2b2420}.fl li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fl button{border:none;background:none;color:#a3968c;font:500 18px Poppins,sans-serif;cursor:pointer;padding:0 4px}
+textarea{min-height:90px;resize:vertical}`;
+function paginaConsent(D) {
+  const J = JSON.stringify(D).replace(/</g, '\\u003c');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Primera visita · FISIO365</title>
+<meta property="og:title" content="Formulario de tu primera visita"><meta property="og:description" content="Un formulario rápido con lo esencial: tus datos, tu salud y el consentimiento para el tratamiento."><meta property="og:image" content="https://app.fisioterapia365.com/consentimiento.png?v=1"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>${CONS_CSS}</style></head>
 <body><div class="c" id="c"></div><script>(function(){var D=${J},C=document.getElementById('c'),K='f365_cons',S={},pg=0;
 try{S=JSON.parse(localStorage.getItem(K)||'{}');pg=Math.min(3,S._pg||0);}catch(e){}
 function guarda(){try{var o={};for(var k in S)if(k!=='firma')o[k]=S[k];o._pg=pg;localStorage.setItem(K,JSON.stringify(o));}catch(e){}}
@@ -1269,6 +1272,101 @@ ${CF_RGPD.map(x => `<h2>${x[0]}</h2><p>${x[1]}</p>`).join('')}
 <h2>Autorizaciones</h2><table>${CF_AUT.map(x => fila(x[1] + ': ' + x[2].replace(/<[^>]+>/g, ''), v(x[0]))).join('')}</table>
 <h2>Derechos</h2><p>${CF_DER}</p>
 <h2>Firma</h2>${firmaSrc ? `<div class="f"><img src="${e(firmaSrc)}" alt="Firma"></div>` : ''}<p>Firmado en Barcelona, a ${e(fN(F['Creada']))}.</p>${F['REGISTRO FIRMA'] ? `<p class="reg">${e(F['REGISTRO FIRMA'])}</p>` : ''}
+<button class="bt" onclick="print()">Guardar en PDF o imprimir</button></div></body></html>`;
+}
+
+// ── FORMULARIOS DE SUELO PÉLVICO Y ALTA ONCOLÓGICA (propios, sustituyen a Tally Gex8jo y Dq4gE5) ──
+const CO_SALUD_SP = [['EMBARAZO', '¿Estás embarazada o en periodo de lactancia?'], ['MARCAPASOS', '¿Tienes marcapasos u otro implante electrónico?'], ['PROBLEMAS CIRCULACIÓN', '¿Tienes problemas circulatorios graves?'], ['HIPERTENSIÓN', '¿Tienes hipertensión no controlada o arritmias significativas?'], ['PRÓTESIS', '¿Tienes prótesis, implantes metálicos u otros materiales en la zona a tratar?'], ['FRACTURAS/CIRUGÍA', '¿Has tenido fracturas o cirugías recientes en la zona a tratar?'], ['CÁNCER', '¿Has sido diagnosticado con cáncer o estás recibiendo tratamiento oncológico?', ['Sí', 'No', 'Alta']], ['ENFERMEDAD NEUROLÓGICA', '¿Tienes enfermedades neurológicas o musculares graves?'], ['MEDICAMENTO CUAGULACIÓN', '¿Tomas medicación que afecte la coagulación o tenga efectos importantes sobre la circulación?'], ['ALERGIA', '¿Tienes alergias graves a medicamentos o materiales?'], ['DOLOR CRÓNICO', '¿Tienes dolor crónico o limitaciones funcionales importantes?']];
+const CO_ALTA_SIT = ['Declaro haber recibido el alta médica en la unidad oncológica correspondiente, no estar actualmente bajo tratamiento activo contra el cáncer (quimioterapia, radioterapia, inmunoterapia u otros), y que no existe contraindicación médica actual para la aplicación de terapias físicas o magnéticas.', 'Declaro asimismo que he informado al profesional de FISIO365 de mi historia clínica relevante y de los tratamientos que sigo actualmente.'];
+const CO_ALTA_TRAT = ['Las terapias físicas y magnéticas (como la bomba diamagnética) son tratamientos no invasivos: no implican cirugía, inyecciones ni radiación ionizante. Su objetivo es favorecer la recuperación de los tejidos, reducir el dolor y mejorar la circulación.', 'Suelen tolerarse bien, aunque de forma excepcional pueden aparecer molestias leves, enrojecimiento, sensación de calor o una reactivación temporal del dolor. Aunque no existe evidencia de riesgo específico para personas con alta oncológica, FISIO365 no puede garantizar una respuesta clínica determinada ni se hace responsable de reacciones individuales imprevisibles.'];
+const CO_ALTA_OK = ['He leído y comprendido la información anterior y he podido resolver mis dudas.', 'Autorizo voluntariamente a FISIO365 a aplicarme estos tratamientos tras mi alta oncológica, bajo mi propia responsabilidad.', 'Eximo al centro y a sus profesionales de cualquier responsabilidad derivada de efectos secundarios no previsibles, recaídas o complicaciones no atribuibles a negligencia.'];
+const CO_KIND = {
+  sp: { tipo: 'Suelo pélvico', ruta: 'suelo-pelvico', titulo: 'Suelo pélvico', sub: 'Este formulario es para empezar el tratamiento de suelo pélvico. Incluye un repaso rápido de tu salud, por si algo ha cambiado desde tu primera visita.', ogSub: 'Tu salud al día y tu firma', que: 'el consentimiento de fisioterapia de suelo pélvico que has firmado' },
+  alta: { tipo: 'Alta oncológica', ruta: 'alta-oncologica', titulo: 'Alta oncológica', sub: 'Este formulario es para pacientes que han tenido cáncer y ya tienen el alta oncológica. Solo te llevará un par de minutos.', ogSub: 'Unos datos y tu firma', que: 'el documento de alta oncológica que has firmado' }
+};
+function paginaConsOtro(D) {
+  const J = JSON.stringify(D).replace(/</g, '\\u003c'), K = CO_KIND[D.kind];
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${K.titulo} · FISIO365</title>
+<meta property="og:title" content="${K.titulo} · FISIO365"><meta property="og:description" content="${escHtml(K.sub)}"><meta property="og:image" content="https://app.fisioterapia365.com/${K.ruta}.png?v=1"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>${CONS_CSS}</style></head>
+<body><div class="c" id="c"></div><script>(function(){var D=${J},C=document.getElementById('c'),K='f365_'+D.kind,S={},pg=0,AL=D.kind==='alta',N=AL?2:3,FI=[];
+try{S=JSON.parse(localStorage.getItem(K)||'{}');pg=Math.min(N-1,S._pg||0);}catch(e){}
+function guarda(){try{var o={};for(var k in S)if(k!=='firma')o[k]=S[k];o._pg=pg;localStorage.setItem(K,JSON.stringify(o));}catch(e){}}
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function inp(k,l,t,ph,op,ayuda){return '<div class="q" data-k="'+k+'"><label>'+l+(op?' <small class="op">(opcional)</small>':'')+'</label>'+(ayuda?'<p class="tx" style="margin:-2px 0 8px;font-size:12.5px">'+ayuda+'</p>':'')+'<input type="'+(t||'text')+'" data-i="'+k+'" value="'+esc(S[k]||'')+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(t==='tel'?' inputmode="tel"':'')+(k==='falta'?' inputmode="numeric" maxlength="10"':'')+'><p class="err"></p></div>';}
+function opc(k,l,ops,cls){return '<div class="'+(cls||'q')+'" data-k="'+k+'"><div class="ql">'+l+'</div><div class="op2">'+ops.map(function(o){return '<button type="button" data-v="'+esc(o)+'"'+(S[k]===o?' class="on"':'')+'>'+esc(o)+'</button>';}).join('')+'</div><p class="err"></p></div>';}
+function chks(arr,p){return arr.map(function(t,i){return '<label class="chk"><input type="checkbox" data-c="'+p+i+'"'+(S[p+i]?' checked':'')+'>'+t+'</label>';}).join('')+'<p class="err" id="eok"></p>';}
+var TIT=AL?['Tus datos','Situación médica y consentimiento']:['Tus datos','Cuestionario de salud','Consentimiento de suelo pélvico'];
+function cab(){return '<div class="cab"><svg class="doc" viewBox="0 0 48 48" aria-hidden="true"><path class="p" d="M28 5H13a4 4 0 0 0-4 4v30a4 4 0 0 0 4 4h22a4 4 0 0 0 4-4V16z"/><path class="p" d="M28 5v11h11"/><path class="l" style="animation-delay:.8s" d="M16 25h16"/><path class="l" style="animation-delay:.95s" d="M16 31h11"/></svg><h1>'+D.titulo+'</h1><p class="sub">'+D.sub+'</p></div>'
+ +'<div class="prog">'+TIT.map(function(x,i){return '<i'+(i<=pg?' class="on"':'')+'></i>';}).join('')+'</div><p class="paso">Paso <b>'+(pg+1)+'</b> de '+N+' · '+TIT[pg]+'</p>';}
+var UPI='<path d="M12 16V5M7.5 9.5 12 5l4.5 4.5"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/>';
+function p0(){return '<h2>'+TIT[0]+'</h2><div class="dos">'+inp('nombre','Nombre')+inp('apellidos','Apellidos')+'</div>'+inp('nif','NIF / NIE')+inp('tel','Número de teléfono (sin espacios)','tel','600123456')+inp('email','Email','email','','','Te enviaremos una copia del documento firmado.')
+ +(AL?inp('falta','Fecha del alta oncológica (aproximada) <small class="op">(opcional · día / mes / año)</small>','text','DD/MM/AAAA')
+  +'<div class="q" data-k="informe"><label>Informe de alta <small class="op">(opcional)</small></label><p class="tx" style="margin:-2px 0 8px;font-size:12.5px">Si lo tienes a mano, puedes subir una foto o el PDF del informe.</p><label class="up"><svg viewBox="0 0 24 24" aria-hidden="true">'+UPI+'</svg><span>Toca para añadir fotos o PDF</span><input type="file" id="fin" accept="image/*,application/pdf" multiple></label><ul class="fl" id="fl"></ul><p class="err"></p></div>':'');}
+function p1(){return '<h2>'+TIT[1]+'</h2><p class="tx">Por favor, marca «sí» o «no» en cada pregunta. Esta información es confidencial y nos ayuda a garantizar tu seguridad durante el tratamiento.</p>'
+ +D.salud.map(function(x){return opc(x[0],x[1],x[2]||['Sí','No'],'sq');}).join('')
+ +'<div class="q" style="margin-top:14px"><label>¿Hay algo más de tu salud que debamos saber? <small class="op">(opcional)</small></label><textarea data-i="notas">'+esc(S.notas||'')+'</textarea></div>';}
+function firmaH(){return '<h3>Firma</h3><div class="q" data-k="firma"><div class="firma" id="fm"><canvas id="cv"></canvas><span>Firma aquí con el dedo</span></div><button type="button" class="bor" id="bf">Borrar firma</button><p class="err"></p></div><h3>Fecha</h3><div class="fecha">'+D.hoyTxt+'</div>';}
+function pSP(){return '<h2>Consentimiento informado – Fisioterapia de suelo pélvico</h2><div class="box tx">'+D.spTxt.map(function(t){return '<p>'+t+'</p>';}).join('')+'</div><h3>Por favor, confirma lo siguiente</h3>'+chks(D.spOk,'ok')+firmaH();}
+function pAL(){return '<h2>Situación médica actual</h2><div class="box tx">'+D.sit.map(function(t){return '<p>'+t+'</p>';}).join('')+'</div><h3>Sobre el tratamiento</h3><div class="box tx">'+D.trat.map(function(t){return '<p>'+t+'</p>';}).join('')+'</div><h3>Declaro que</h3>'+chks(D.okAl,'ok')+firmaH();}
+var P=AL?[p0,pAL]:[p0,p1,pSP],OKS=AL?D.okAl:D.spOk;
+function pintaFI(){var l=document.getElementById('fl');if(!l)return;l.innerHTML=FI.map(function(f,i){return '<li><span>'+esc(f.name)+'</span><button type="button" data-x="'+i+'" aria-label="Quitar">×</button></li>';}).join('');[].forEach.call(l.querySelectorAll('[data-x]'),function(b){b.onclick=function(){FI.splice(+b.getAttribute('data-x'),1);pintaFI();};});}
+function pinta(){C.innerHTML=cab()+'<div class="fi">'+P[pg]()+'</div><div class="nav">'+(pg?'<button type="button" class="bk" id="atr">Atrás</button>':'')+'<button type="button" class="bt" id="sig">'+(pg<N-1?'Siguiente':'Firmar y enviar')+'</button></div>';ata();window.scrollTo(0,0);}
+function ata(){
+ [].forEach.call(C.querySelectorAll('[data-i]'),function(x){x.oninput=function(){var k=x.getAttribute('data-i');if(k==='falta'){var d=x.value.replace(/[^0-9]/g,'').slice(0,8),o=d.slice(0,2);if(d.length>2)o+='/'+d.slice(2,4);if(d.length>4)o+='/'+d.slice(4);if(x.value!==o)x.value=o;}S[k]=x.value;guarda();var q=x.closest('.q');if(q){q.classList.remove('mal');var e=q.querySelector('.err');if(e)e.textContent='';}};});
+ [].forEach.call(C.querySelectorAll('.op2'),function(g){var w=g.parentNode,k=w.getAttribute('data-k');[].forEach.call(g.querySelectorAll('button'),function(b){b.onclick=function(){S[k]=b.getAttribute('data-v');guarda();[].forEach.call(g.querySelectorAll('button'),function(x){x.classList.toggle('on',x===b);});w.classList.remove('mal');var e=w.querySelector('.err');if(e)e.textContent='';};});});
+ [].forEach.call(C.querySelectorAll('[data-c]'),function(x){x.onchange=function(){S[x.getAttribute('data-c')]=x.checked;guarda();var e=document.getElementById('eok');if(e)e.textContent='';};});
+ var fi=document.getElementById('fin');if(fi){fi.onchange=function(){[].forEach.call(fi.files,function(f){if(FI.length<6)FI.push(f);});fi.value='';pintaFI();};pintaFI();}
+ var a=document.getElementById('atr');if(a)a.onclick=function(){pg--;guarda();pinta();};
+ document.getElementById('sig').onclick=sig;
+ if(pg===N-1)firma();}
+function firma(){var cv=document.getElementById('cv'),fm=document.getElementById('fm'),r=cv.getBoundingClientRect(),dp=window.devicePixelRatio||1;cv.width=r.width*dp;cv.height=r.height*dp;var x=cv.getContext('2d');x.scale(dp,dp);x.lineWidth=2.4;x.lineCap='round';x.lineJoin='round';x.strokeStyle='#1e2a38';
+ var dib=false,tr=0,ul=null;function pt(e){var b=cv.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top];}
+ cv.onpointerdown=function(e){dib=true;ul=pt(e);cv.setPointerCapture(e.pointerId);};cv.onpointermove=function(e){if(!dib)return;var p=pt(e);x.beginPath();x.moveTo(ul[0],ul[1]);x.lineTo(p[0],p[1]);x.stroke();tr+=Math.hypot(p[0]-ul[0],p[1]-ul[1]);ul=p;if(tr>30){fm.classList.add('ok');S.firma=1;var q=fm.closest('.q');q.classList.remove('mal');q.querySelector('.err').textContent='';}};
+ cv.onpointerup=cv.onpointercancel=function(){dib=false;};
+ document.getElementById('bf').onclick=function(){x.clearRect(0,0,cv.width,cv.height);tr=0;S.firma=0;fm.classList.remove('ok');};S.firma=0;}
+function mal(k,t){var w=C.querySelector('[data-k="'+k+'"]');if(!w)return;w.classList.add('mal');var e=w.querySelector('.err');if(e)e.textContent=t;}
+function fFe(v){var m=String(v||'').trim().match(/^(\\d{1,2})[\\/\\-. ](\\d{1,2})[\\/\\-. ](\\d{4})$/);if(!m)return '';var d=+m[1],mo=+m[2],y=+m[3],dt=new Date(y,mo-1,d);if(dt.getDate()!==d||dt.getMonth()!==mo-1||y<1950||dt>new Date())return '';return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
+function valida(){var ok=true,f=function(k,t){mal(k,t);ok=false;},v=function(k){return String(S[k]||'').trim();};
+ if(pg===0){if(!v('nombre'))f('nombre','Escribe tu nombre');if(!v('apellidos'))f('apellidos','Escribe tus apellidos');if(v('nif').length<5)f('nif','Escribe el NIF o NIE');
+  if(v('tel').replace(/[^0-9]/g,'').length<9)f('tel','Revisa el teléfono');if(!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(v('email')))f('email','Revisa el email');
+  if(AL&&v('falta')&&!fFe(v('falta')))f('falta','Escríbela así: 25/03/2024');}
+ if(!AL&&pg===1){D.salud.forEach(function(x){if(!S[x[0]])f(x[0],'Elige una opción');});}
+ if(pg===N-1){if(!OKS.every(function(t,i){return S['ok'+i];})){ok=false;var e=document.getElementById('eok');if(e)e.textContent=OKS.length===2?'Marca las dos casillas para continuar':'Marca las tres casillas para continuar';}if(!S.firma)f('firma','Firma en el recuadro');}
+ if(!ok){var m=C.querySelector('.mal input,.mal .op2,.sq.mal,.mal .firma')||document.getElementById('eok');if(m)m.scrollIntoView({behavior:'smooth',block:'center'});}return ok;}
+function b64(file){return new Promise(function(res,rej){if(/^image\\//.test(file.type)&&!/gif/.test(file.type)){var im=new Image(),u=URL.createObjectURL(file);im.onload=function(){var mx=1800,w=im.width,h=im.height,s=Math.min(1,mx/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);res({name:file.name.replace(/\\.[^.]+$/,'')+'.jpg',type:'image/jpeg',data:c.toDataURL('image/jpeg',.82).split(',')[1]});};im.onerror=rej;im.src=u;}
+ else{if(file.size>3.2e6)return rej(new Error('El archivo '+file.name+' es demasiado grande'));var r=new FileReader();r.onload=function(){res({name:file.name,type:file.type||'application/pdf',data:String(r.result).split(',')[1]});};r.onerror=rej;r.readAsDataURL(file);}});}
+function sig(){if(!valida())return;if(pg<N-1){pg++;guarda();pinta();return;}
+ var b=document.getElementById('sig');b.disabled=true;b.textContent='Enviando…';
+ var o={kind:D.kind};for(var k in S)if(k!=='_pg')o[k]=S[k];if(AL)o.falta=fFe(S.falta);o.firma=document.getElementById('cv').toDataURL('image/png');
+ var post=function(x){return fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(x)}).then(function(r){return r.json();});};
+ post(o).then(function(r){if(!r.ok)throw new Error(r.error||'');var ch=Promise.resolve();FI.forEach(function(f,i){ch=ch.then(function(){b.textContent='Subiendo informe '+(i+1)+'/'+FI.length+'…';return b64(f).then(function(x){return post({kind:D.kind,archivo:1,id:r.id,s:r.s,name:x.name,type:x.type,data:x.data});}).catch(function(){});});});
+  return ch.then(function(){return post({kind:D.kind,fin:1,id:r.id,s:r.s});});}).then(function(){
+  try{localStorage.removeItem(K);}catch(e){}var n=String(S.nombre||'').trim().split(/\\s+/)[0];n=n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';
+  document.body.classList.add('fin');C.innerHTML='<div class="ok"><svg width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="e" d="M25 35 Q30 29 35 35"/><path class="e" d="M45 35 Q50 29 55 35"/><path class="m" d="M26 45 Q40 62 54 45"/></svg><h1 class="fi" style="animation-delay:1s">¡Listo'+(n?', '+esc(n):'')+'!</h1><p class="sub fi" style="animation-delay:1.15s">Ya lo tenemos todo. ¡Gracias!<br><br>Te hemos enviado una copia a tu email.</p></div>';window.scrollTo(0,0);})
+ .catch(function(e){b.disabled=false;b.textContent='Firmar y enviar';alert(e.message||'No se ha podido enviar. Inténtalo de nuevo.');});}
+pinta();})();<\/script></body></html>`;
+}
+function ogOtroSvg(kind) {
+  const K = CO_KIND[kind], T = '#c2552e', Kc = '#2b2420', M = '#8a7d74', O = ogTipos();
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><path d="M318 150h-62a14 14 0 0 0-14 14v118a14 14 0 0 0 14 14h88a14 14 0 0 0 14-14v-92z"/><path d="M318 150v40h40"/><path d="M268 226h64M268 252h40"/></g>`
+    + ogTexto(O.b, K.titulo, 40, 300, 384, 0, Kc) + ogTexto(O.m, K.ogSub, 23, 300, 426, 0, M) + ogTexto(O.m, 'Son 2 minutos', 21, 300, 466, 0, T) + `</svg>`;
+}
+function paginaCDocOtro(F, firmaSrc) {
+  const e = escHtml, v = k => cNm(F[k]), tipo = v('TIPO'), al = tipo === 'Alta oncológica', nombre = `${String(F['NOMBRE'] || '').trim()} ${String(F['APELLIDOS'] || '').trim()}`.trim();
+  const fila = (l, x) => x ? `<tr><td>${l}</td><td>${e(x)}</td></tr>` : '';
+  const fN = x => String(x || '').slice(0, 10).split('-').reverse().join('/');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${e(tipo)} · FISIO365</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#1a1a1a;padding:20px 14px}.c{background:#fff;max-width:720px;margin:0 auto;border-radius:22px;padding:28px 24px}h1{font-size:21px;margin:0 0 2px}h2{font-size:15px;margin:22px 0 8px;color:#c2552e}.sub{color:#7d6a60;font-size:13px;margin:0 0 14px}p,li,td{font-size:13px;line-height:1.55;color:#3d3530}table{width:100%;border-collapse:collapse}td{padding:6px 0;border-bottom:1px solid #f1ebe5;vertical-align:top}td:first-child{color:#7d6a60;width:58%;padding-right:12px}.f{border:1px solid #efe6de;border-radius:14px;padding:10px;margin-top:6px;max-width:320px}.f img{width:100%;display:block}.reg{font-size:11.5px;color:#a3968c;white-space:pre-line}.bt{display:inline-block;margin-top:18px;background:#c2552e;color:#fff;border:none;border-radius:12px;padding:12px 18px;font:600 14px Poppins,sans-serif;cursor:pointer}
+@media print{body{background:#fff;padding:0}.c{box-shadow:none;border-radius:0;padding:0}.bt{display:none}}</style></head><body><div class="c">
+<h1>${al ? 'Alta oncológica' : 'Consentimiento informado – Fisioterapia de suelo pélvico'}</h1><p class="sub">FISIO365 · Fourth Dynamic, S.L. · Firmado el ${e(fN(F['FECHA']))}</p>
+<h2>Datos del paciente</h2><table>${fila('Nombre', nombre)}${fila('NIF / NIE', F['DNI'])}${fila('Teléfono', F['TELF'])}${fila('Email', F['EMAIL'])}${al ? fila('Fecha del alta oncológica', fN(F['FECHA ALTA'])) + fila('Informe de alta', (F['INFORME'] || []).length ? (F['INFORME'].length + ' archivo(s) adjunto(s)') : '') : ''}</table>
+${al ? `<h2>Situación médica actual</h2>${CO_ALTA_SIT.map(t => `<p>${t}</p>`).join('')}<h2>Sobre el tratamiento</h2>${CO_ALTA_TRAT.map(t => `<p>${t}</p>`).join('')}<h2>Declaro que</h2>${CO_ALTA_OK.map(t => `<p>☑ ${t}</p>`).join('')}`
+    : `<h2>Cuestionario de salud</h2><table>${CO_SALUD_SP.map(x => fila(x[1], v(x[0]))).join('')}${fila('¿Hay algo más de tu salud que debamos saber?', F['NOTAS SALUD'])}</table><h2>Consentimiento informado</h2>${CF_SP_TXT.map(t => `<p>${t}</p>`).join('')}${F['ACEPTACIÓN S.P.'] ? CF_SP_OK.map(t => `<p>☑ ${t}</p>`).join('') : ''}`}
+<h2>Firma</h2>${firmaSrc ? `<div class="f"><img src="${e(firmaSrc)}" alt="Firma"></div>` : ''}<p>Firmado el ${e(fN(F['FECHA']))}.</p>${F['REGISTRO FIRMA'] ? `<p class="reg">${e(F['REGISTRO FIRMA'])}</p>` : ''}
 <button class="bt" onclick="print()">Guardar en PDF o imprimir</button></div></body></html>`;
 }
 
@@ -1751,6 +1849,57 @@ module.exports = async function handler(req, res) {
     try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogConsSvg(), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
     catch (e) { return res.redirect(302, 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); }
   }
+  // Formularios propios de suelo pélvico y alta oncológica
+  if (action === 'cons-otro-og') {
+    const kind = CO_KIND[req.query.kind] ? req.query.kind : 'sp';
+    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogOtroSvg(kind), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+    catch (e) { return res.redirect(302, 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); }
+  }
+  if (action === 'cons-otro') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    const q0 = req.method === 'POST' ? (req.body || {}) : {}, kind = CO_KIND[req.query.kind] ? req.query.kind : (CO_KIND[q0.kind] ? q0.kind : ''), K = CO_KIND[kind];
+    if (!K) return res.status(404).send('No encontrado');
+    const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), url = 'https://app.fisioterapia365.com/' + K.ruta;
+    if (req.method !== 'POST') {
+      const MS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], d = new Date(hoy + 'T12:00:00Z');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(200).send(paginaConsOtro({ kind, url, titulo: K.titulo, sub: K.sub, hoyTxt: `${d.getUTCDate()} de ${MS[d.getUTCMonth()]} de ${d.getUTCFullYear()}`, salud: CO_SALUD_SP, spTxt: CF_SP_TXT, spOk: CF_SP_OK, sit: CO_ALTA_SIT, trat: CO_ALTA_TRAT, okAl: CO_ALTA_OK }));
+    }
+    const q = q0, t = (k, n) => String(q[k] || '').trim().replace(/\s+/g, ' ').slice(0, n || 120), SN = ['Sí', 'No'], malo = m => res.status(200).json({ ok: false, error: m });
+    // Pasos 2 y 3 del envío: informes adjuntos y cierre (email con la copia)
+    if (q.archivo || q.fin) {
+      const id = String(q.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id) || String(q.s || '') !== firmaCDoc(id)) return malo('Enlace no válido');
+      const r = await at(`${CONS_O}/${id}`); const F = (r && r.fields) || {}; if (r.error || String(F['FECHA'] || '').slice(0, 10) !== hoy) return malo('No encontrado');
+      if (q.archivo) {
+        const data = String(q.data || ''), type = /^(image\/(jpeg|png|webp|heic)|application\/pdf)$/.test(q.type) ? q.type : 'application/octet-stream';
+        if (!/^[A-Za-z0-9+/=]+$/.test(data) || data.length > 4.4e6) return malo('Archivo no válido');
+        const up = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${id}/${encodeURIComponent('INFORME')}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: type, file: data, filename: String(q.name || 'informe').replace(/[^\w.\-áéíóúñÁÉÍÓÚÑ ]/g, '_').slice(0, 80) }) }).catch(() => null);
+        return res.status(200).json({ ok: !!(up && up.ok) });
+      }
+      global._coFin = global._coFin || {}; if (!global._coFin[id]) { global._coFin[id] = 1; await mailCDoc(id, String(F['EMAIL'] || '').trim().toLowerCase(), F['NOMBRE'] || '', K.que); }
+      _cons.t = 0; _alertas.t = 0;
+      return res.status(200).json({ ok: true });
+    }
+    if (!t('nombre') || !t('apellidos')) return malo('Falta el nombre o los apellidos');
+    if (t('nif').length < 5) return malo('Falta el NIF o NIE');
+    const tel = t('tel').replace(/\D/g, ''); if (tel.length < 9) return malo('Revisa el teléfono');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t('email'))) return malo('Revisa el email');
+    const oks = kind === 'alta' ? CO_ALTA_OK : CF_SP_OK; if (!oks.every((x, i) => q['ok' + i])) return malo('Falta marcar las casillas del consentimiento');
+    if (kind === 'sp') for (const x of CO_SALUD_SP) if (!(x[2] || SN).includes(q[x[0]])) return malo('Falta alguna respuesta del cuestionario de salud');
+    const firma = String(q.firma || ''); if (!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(firma) || firma.length < 1500 || firma.length > 900000) return malo('Falta la firma');
+    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim(), nav = String(req.headers['user-agent'] || '').slice(0, 200);
+    const ahora = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'short', timeStyle: 'medium' }).format(new Date());
+    const f = { TIPO: K.tipo, NOMBRE: t('nombre'), APELLIDOS: t('apellidos'), DNI: t('nif').toUpperCase(), TELF: tel, EMAIL: t('email').toLowerCase(), FECHA: hoy, 'FORM ID': 'FISIO365',
+      'REGISTRO FIRMA': `Firmado en el formulario de FISIO365 el ${ahora} (hora de Madrid)\nIP: ${ip || '—'}\nNavegador: ${nav || '—'}` };
+    if (kind === 'sp') { CO_SALUD_SP.forEach(x => { f[x[0]] = q[x[0]]; }); if (t('notas', 2000)) f['NOTAS SALUD'] = String(q.notas || '').trim().slice(0, 2000); f['ACEPTACIÓN S.P.'] = true; }
+    else { f['CÁNCER'] = 'Alta'; if (/^\d{4}-\d{2}-\d{2}$/.test(t('falta'))) f['FECHA ALTA'] = t('falta'); }
+    const c = await at(CONS_O, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }], typecast: true }) });
+    if (c.error || !c.records) { console.log('cons-otro', JSON.stringify(c.error || c).slice(0, 300)); return malo('No se ha podido guardar. Inténtalo de nuevo en un momento.'); }
+    const id = c.records[0].id;
+    try { await fetch(`https://content.airtable.com/v0/${BASE_ID}/${id}/${encodeURIComponent('FIRMA')}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'image/png', file: firma.split(',')[1], filename: 'firma.png' }) }); } catch (e) { console.log('firma otro', e.message); }
+    _cons.t = 0;
+    return res.status(200).json({ ok: true, id, s: firmaCDoc(id) });
+  }
   // Reenvío de la copia (solo formularios de hoy, una vez por instancia)
   if (action === 'cdoc-mail') {
     const id = String(req.query.id || ''); global._cdocMail = global._cdocMail || {};
@@ -1765,10 +1914,10 @@ module.exports = async function handler(req, res) {
     const id = String(req.query.id || ''), sg = String(req.query.s || '');
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
     if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaCDoc(id)) return res.status(404).send(paginaEncuesta({ error: 'Este enlace no es válido.' }));
-    const r = await at(`${CONS_T}/${id}`); if (r.error) return res.status(404).send(paginaEncuesta({ error: 'No encontramos el documento.' }));
+    let r = await at(`${CONS_T}/${id}`), otro = false; if (r.error) { r = await at(`${CONS_O}/${id}`); otro = true; } if (r.error) return res.status(404).send(paginaEncuesta({ error: 'No encontramos el documento.' }));
     let firmaSrc = ''; const a = ((r.fields || {})['FIRMA'] || [])[0];
     if (a && a.url) { try { const im = await fetch(a.url); if (im.ok) firmaSrc = `data:${im.headers.get('content-type') || 'image/png'};base64,` + Buffer.from(await im.arrayBuffer()).toString('base64'); } catch (e) {} }
-    return res.status(200).send(paginaCDoc(r.fields || {}, firmaSrc));
+    return res.status(200).send(otro ? paginaCDocOtro(r.fields || {}, firmaSrc) : paginaCDoc(r.fields || {}, firmaSrc));
   }
   if (action === 'consentimiento') {
     res.setHeader('Cache-Control', 'private, no-store');
