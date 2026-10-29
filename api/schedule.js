@@ -831,7 +831,7 @@ async function rachaConfirmadas(pid, fecha, hora) {
 // ── ENCUESTA DE PRIMERA VISITA (página propia, enlace personal por cita) ──
 // Misma lógica que la de Tally: Excelente → reseña en Google (con frases para copiar); el resto → qué podemos mejorar
 const RESENA_URL = 'https://search.google.com/local/writereview?placeid=ChIJCadKnf2G6AIRcmUzdzMr4nk';
-const ENC_AVISO = 'norajimbelzu@gmail.com';
+const ENC_AVISO = ['norajimbelzu@gmail.com', 'fisio365gestion@gmail.com'];
 function firmaEnc(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('enc:' + id).digest('hex').slice(0, 10); }
 const enlaceEncuesta = id => `https://app.fisioterapia365.com/e/${id}-${firmaEnc(id)}`;
 function paginaEncuesta(D) {
@@ -1305,13 +1305,26 @@ module.exports = async function handler(req, res) {
       if (v) { f['ENCUESTA VALORACIÓN'] = v; f['ENCUESTA RESPONDIDA'] = new Date().toISOString(); }
       if (c) f['ENCUESTA COMENTARIO'] = c;
       if (!Object.keys(f).length) return res.status(400).json({ ok: false });
+      const yaRes = !!F['ENCUESTA IR A RESEÑA'], vAct = v || vOld;
+      // Aviso al móvil del fisio (solo lo bueno: lo que haya que mejorar lo lleva dirección)
+      const pushFisio = async (title, body) => { try { if (!fisio) return; const fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name');
+        const fr = (fl.records || []).find(x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase() === fisio.toLowerCase());
+        if (fr) await require('./_push').avisar('fisio', fr.id, { title, body, url: '/fisio', tag: 'enc-' + id }); } catch (e) {} };
       const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
       // Aviso por email (como hacía Tally): al elegir la carita y, si escribe, con su comentario
+      const quien = (pila || (nombre || '').split(' ')[0] || 'Tu paciente');
+      if (!u.error && q.resena && !yaRes && !v) await pushFisio(`⭐ ${quien} va a dejarte una reseña`, 'Ha abierto Google para contar su primera visita contigo.');
+      if (!u.error && v && v !== vOld && /Excelente|Muy buena/.test(v)) await pushFisio(`${quien} ha valorado su primera visita: ${v}`, v === 'Excelente' ? '¡Enhorabuena! Le hemos invitado a dejar la reseña en Google.' : 'Le hemos preguntado qué podríamos mejorar.');
+      if (!u.error && process.env.BREVO_API_KEY && q.resena && !yaRes && !v) {
+        await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: ENC_AVISO.map(email => ({ email })), subject: `⭐ Ha ido a dejar la reseña en Google · ${nombre || pila || 'paciente'}`,
+            htmlContent: `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a;line-height:1.5"><b>${escHtml(nombre || pila || 'El paciente')}</b> ha valorado su primera visita${fisio ? ' con ' + escHtml(fisio) : ''} como <b style="color:#16803c">${escHtml(vAct || 'Excelente')}</b> y ha abierto Google para dejar la reseña.<br><br><span style="color:#7d6a60;font-size:13px">Google no nos dice si al final la publica: lo verás en las reseñas de Google en unos minutos.</span></div>` }) }).catch(() => {});
+      }
       if (!u.error && process.env.BREVO_API_KEY && ((v && (v !== vOld || c)) )) {
         const fecha = String(F['FECHA'] || '').slice(0, 10), color = { Excelente: '#16803c', 'Muy buena': '#16803c', Normal: '#b45309', Mejorable: '#b42318' }[v] || '#1a1a1a';
-        const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a;line-height:1.5"><b>Encuesta de primera visita</b><br><br>Paciente: <b>${escHtml(nombre || pila || '—')}</b><br>Primera visita: ${escHtml(fecha)}${fisio ? ' con ' + escHtml(fisio) : ''}<br>Valoración: <b style="color:${color}">${escHtml(v)}</b>${c ? `<br><br>Qué podemos mejorar:<br><i>${escHtml(c)}</i>` : ''}</div>`;
+        const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a;line-height:1.5"><b>Encuesta de primera visita</b><br><br>Paciente: <b>${escHtml(nombre || pila || '—')}</b><br>Primera visita: ${escHtml(fecha)}${fisio ? ' con ' + escHtml(fisio) : ''}<br>Valoración: <b style="color:${color}">${escHtml(v)}</b>${c ? `<br><br>Qué podemos mejorar:<br><i>${escHtml(c)}</i>` : ''}${v === 'Excelente' ? '<br><br><span style="color:#7d6a60;font-size:13px">Le hemos llevado a dejar la reseña en Google. Si la abre, te llegará otro aviso.</span>' : ''}</div>`;
         await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: [{ email: ENC_AVISO }], subject: `${/Normal|Mejorable/.test(v) ? '⚠️ ' : ''}Encuesta 1ª visita · ${v} · ${nombre || pila || 'paciente'}`, htmlContent: html }) }).catch(() => {});
+          body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: ENC_AVISO.map(email => ({ email })), subject: `${/Normal|Mejorable/.test(v) ? '⚠️ ' : ''}Encuesta 1ª visita · ${v} · ${nombre || pila || 'paciente'}`, htmlContent: html }) }).catch(() => {});
       }
       return res.status(200).json({ ok: !u.error });
     }
