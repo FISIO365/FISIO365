@@ -6003,9 +6003,9 @@ async function renderValoraciones(wrap){
  const cls=x=>/Excelente|Muy buena/.test(x)?'ok':x==='Normal'?'med':'mal',fd=f=>{if(!f)return '';const d=new Date(f+'T12:00:00');return d.getDate()+'/'+(d.getMonth()+1);};
  const L=ENC_UL,ok=L.filter(x=>/Excelente|Muy buena/.test(x.valoracion)).length,go=L.filter(x=>x.resena).length;
  card.innerHTML=`<div class="val-res"><div><b>${L.length}</b><span>respuestas</span></div><div><b>${ok}</b><span>contentos</span></div><div><b>${go}</b><span>a Google</span></div></div>
-  <div class="val-nota">Últimos 14 días. Todas las respuestas a la encuesta de primera visita.</div>
+  <div class="val-nota">Últimos 14 días. Respuestas a las encuestas de primera visita y de fin de tratamiento.</div>
   ${!L.length?'<div class="fac-vacio">Todavía no hay respuestas estos días</div>':`<div class="val-lista">${L.map(x=>`<div class="val-it${encT(x)>v?' nuevo':''}"><i class="${cls(x.valoracion)}"></i><div class="val-tx"><div><b>${escH(fn(x.nombre))}</b>${encT(x)>v?'<span class="val-nv">Nuevo</span>':''}</div>
-   <div class="val-m">${escH(x.valoracion)}${x.fisio?' · con '+escH(capTit(String(x.fisio).split(' ')[0])):''} · 1ª visita el ${fd(x.fecha)}${x.resena?' · <em>fue a Google</em>':''}</div>${x.comentario?`<div class="val-c">«${escH(x.comentario)}»</div>`:''}</div></div>`).join('')}</div>`}`;
+   <div class="val-m">${escH(x.valoracion)}${x.fisio?' · con '+escH(capTit(String(x.fisio).split(' ')[0])):''} · ${x.tipo==='fin'?'fin de tratamiento':'1ª visita el '+fd(x.fecha)}${x.resena?' · <em>fue a Google</em>':''}</div>${x.comentario?`<div class="val-c">«${escH(x.comentario)}»</div>`:''}</div></div>`).join('')}</div>`}`;
  const m=L.reduce((a,x)=>encT(x)>a?encT(x):a,'');if(m)try{localStorage.setItem(encK(),m);}catch(e){}encBadge(0);
 }
 async function agRecordatorios(onDone,modoIni,encFIni){
@@ -6498,7 +6498,9 @@ function agAlta(c,onDone){
     <div class="sev-bts"><button type="button" class="sev-b al-no">Ahora no</button></div>`;
    m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.al-no').onclick=()=>m.remove();
    const hola=`Hola${pila?' '+pila:''},\n\n¡Nos alegra mucho haberte ayudado!`;
-   m.querySelectorAll('.al-ops button').forEach(w=>w.onclick=()=>{abrirWA(tel,w.dataset.a==='g'?`${hola} Si tienes un minuto, nos ayudaría muchísimo una reseña tuya en Google:\n${RESENA_GOOGLE}\n\n¡Gracias por confiar en *FISIO365*!`:`${hola} Si tienes un minuto, ¿nos cuentas qué tal tu experiencia en *FISIO365*?\n${ENCUESTA_FELIZ}\n\n¡Gracias por confiar en nosotros!`);m.remove();});
+   m.querySelectorAll('.al-ops button').forEach(w=>w.onclick=async()=>{if(w.dataset.a==='g'){abrirWA(tel,`${hola} Si tienes un minuto, nos ayudaría muchísimo una reseña tuya en Google:\n${RESENA_GOOGLE}\n\n¡Gracias por confiar en *FISIO365*!`);m.remove();return;}
+    w.disabled=true;let link=ENCUESTA_FELIZ;try{const r=await agPost('seg-agenda-fin-enlace',{pacienteId:c.pacienteId,fisio:String((fisioActual&&fisioActual.nombre)||'')});if(r.ok&&r.link)link=r.link;}catch(_){}
+    abrirWA(tel,`${hola} Si tienes un minuto, ¿nos cuentas qué tal tu experiencia en *FISIO365*? Es un toque:\n${link}\n\n¡Gracias por confiar en nosotros!`);m.remove();});
   }catch(err){b.disabled=false;toast(err.message,false);}};
 }
 // Pasar la cita a otro fisio: mismo día y hora, la cita es la misma (no queda «reprogramada»)

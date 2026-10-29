@@ -805,12 +805,12 @@ function ogCitaSvg({ fecha, hora, fisio }) {
     + ogTexto(O.m, 'Toca para confirmar', 21, 300, 466, 0, T) + `</svg>`;
 }
 // Vista previa (WhatsApp) del enlace de la encuesta: carita sonriente + nombre
-function ogEncSvg({ pila, fisio }) {
+function ogEncSvg({ pila, fisio, fin }) {
   const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `¿Qué tal, ${pila}?` : '¿Qué tal?', sz = t1.length > 15 ? Math.max(28, Math.round(40 * 15 / t1.length)) : 40;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
     + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round"><circle cx="300" cy="240" r="72"/><path d="M262 226 Q273 213 284 226"/><path d="M316 226 Q327 213 338 226"/><path d="M257 254 Q300 296 343 254"/></g>`
     + ogTexto(O.b, t1, sz, 300, 384, 0, K)
-    + ogTexto(O.m, fisio ? `Tu primera visita con ${fisio}` : 'Tu primera visita', 23, 300, 426, 0, M) + `</svg>`;
+    + ogTexto(O.m, fin ? 'Tu experiencia en FISIO365' : fisio ? `Tu primera visita con ${fisio}` : 'Tu primera visita', 23, 300, 426, 0, M) + `</svg>`;
 }
 // Hora de Madrid → instante UTC (para el calendario)
 function madridUTC(fecha, hora) {
@@ -1375,11 +1375,13 @@ ${al ? `<h2>Situación médica actual</h2>${CO_ALTA_SIT.map(t => `<p>${t}</p>`).
 const RESENA_URL = 'https://search.google.com/local/writereview?placeid=ChIJCadKnf2G6AIRcmUzdzMr4nk';
 function firmaEnc(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('enc:' + id).digest('hex').slice(0, 10); }
 const enlaceEncuesta = id => `https://app.fisioterapia365.com/e/${id}-${firmaEnc(id)}`;
+function firmaFin(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('fin:' + id).digest('hex').slice(0, 10); }
+const enlaceFin = id => `https://app.fisioterapia365.com/v/${id}-${firmaFin(id)}`;
 function paginaEncuesta(D) {
   const e = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const J = JSON.stringify({ pila: D.pila || '', fisio: D.fisio || '', v: D.v || '', url: D.url || '', google: RESENA_URL }).replace(/</g, '\\u003c');
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu primera visita · FISIO365</title>
-<meta property="og:title" content="¿Qué tal tu primera visita${D.pila ? ', ' + e(D.pila) : ''}?"><meta property="og:description" content="Un toque y listo. Nos ayuda muchísimo."><meta property="og:image" content="${D.url ? e(D.url) + '.png?v=1' : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+  const fin = D.modo === 'fin', J = JSON.stringify({ pila: D.pila || '', fisio: D.fisio || '', v: D.v || '', url: D.url || '', google: RESENA_URL, fin }).replace(/</g, '\\u003c');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${fin ? 'Tu experiencia' : 'Tu primera visita'} · FISIO365</title>
+<meta property="og:title" content="${fin ? '¿Qué tal tu experiencia' : '¿Qué tal tu primera visita'}${D.pila ? ', ' + e(D.pila) : ''}?"><meta property="og:description" content="Un toque y listo. Nos ayuda muchísimo."><meta property="og:image" content="${D.url ? e(D.url) + '.png?v=1' : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .c{background:#fff;border-radius:24px;padding:28px 22px;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
@@ -1425,11 +1427,11 @@ function grande(o,m,c){return '<svg class="f'+(c?' '+c:'')+'" width="84" height=
 function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function enviar(o){try{return fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o),keepalive:true}).then(function(r){return r.json();});}catch(e){return Promise.reject(e);}}
 var nom=D.pila?', '+esc(D.pila):'';
-function paso1(){C.innerHTML=grande('n','M30 47 Q40 54 50 47','mira')+'<h1 class="fi" style="animation-delay:.9s">Hola'+nom+'</h1><p class="sub fi" style="animation-delay:1s">¿Qué tal tu primera visita'+(D.fisio?' con '+esc(D.fisio):'')+'?</p><div class="caras">'+CARAS.map(function(x,i){return '<button class="cara" data-v="'+x[0]+'" style="animation-delay:'+(1.2+i*.08)+'s"><svg class="k'+i+'" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="32"/><g class="oj">'+ojos(x[1])+'</g><path class="bo" d="'+x[2]+'"/></svg>'+x[0]+'</button>';}).join('')+'</div><p class="pista fi" style="animation-delay:1.7s">Un toque y listo.</p>';
+function paso1(){C.innerHTML=grande('n','M30 47 Q40 54 50 47','mira')+'<h1 class="fi" style="animation-delay:.9s">Hola'+nom+'</h1><p class="sub fi" style="animation-delay:1s">'+(D.fin?'¿Qué tal ha sido tu experiencia en FISIO365'+(D.fisio?' con '+esc(D.fisio):'')+'?':'¿Qué tal tu primera visita'+(D.fisio?' con '+esc(D.fisio):'')+'?')+'</p><div class="caras">'+CARAS.map(function(x,i){return '<button class="cara" data-v="'+x[0]+'" style="animation-delay:'+(1.2+i*.08)+'s"><svg class="k'+i+'" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="32"/><g class="oj">'+ojos(x[1])+'</g><path class="bo" d="'+x[2]+'"/></svg>'+x[0]+'</button>';}).join('')+'</div><p class="pista fi" style="animation-delay:1.7s">Un toque y listo.</p>';
  [].forEach.call(C.querySelectorAll('.cara'),function(b){b.onclick=function(){[].forEach.call(C.querySelectorAll('.cara'),function(x){x.classList.toggle('on',x===b);x.classList.toggle('off',x!==b);});var v=b.getAttribute('data-v');enviar({v:v}).catch(function(){});setTimeout(function(){v==='Excelente'?excelente():mejorar(v);},650);};});}
 function copiar(t){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).catch(function(){});return;}}catch(e){}try{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();}catch(e){}}
 function irGoogle(t){if(t)copiar(t);enviar({resena:1}).catch(function(){});setTimeout(function(){location.href=D.google;},t?250:60);}
-function excelente(){var f=D.fisio||'El equipo',F=[f+' es muy profesional',D.fisio?'Me explicó todo muy bien':'Me explicaron todo muy bien','Noté mejoría desde la primera sesión','Trato cercano y muy amable','El centro es precioso'];
+function excelente(){var f=D.fisio||'El equipo',F=D.fin?[(D.fisio?'Gracias a '+D.fisio+' estoy':'Estoy')+' mucho mejor',f+' es muy profesional','Me explicaron todo muy bien','Trato cercano y muy amable','100% recomendable']:[f+' es muy profesional',D.fisio?'Me explicó todo muy bien':'Me explicaron todo muy bien','Noté mejoría desde la primera sesión','Trato cercano y muy amable','El centro es precioso'];
  C.innerHTML=grande('feliz','M26 45 Q40 62 54 45')+'<h1 class="fi" style="animation-delay:.8s">¡Qué alegría'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(D.fisio?'A '+esc(D.fisio)+' le hará muchísima ilusión. ':'')+'¿Nos lo cuentas en Google? Son 20 segundos.</p>'
  +'<div class="estr brilla">'+[0,1,2,3,4].map(function(i){return '<svg viewBox="0 0 24 24" style="animation-delay:'+(1+i*.12)+'s"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';}).join('')+'</div>'
  +'<div class="ideas fi" style="animation-delay:1.6s"><small>Toca la frase que más te encaje: la copiamos y te abrimos Google. Solo tienes que pegarla y elegir las 5 estrellas.</small><div class="chips">'+F.map(function(x){return '<button class="chip">'+esc(x)+'</button>';}).join('')+'</div></div>'
@@ -1437,12 +1439,12 @@ function excelente(){var f=D.fisio||'El equipo',F=[f+' es muy profesional',D.fis
  [].forEach.call(C.querySelectorAll('.chip'),function(c){c.onclick=function(){c.classList.add('on');irGoogle(c.textContent+'.');};});
  document.getElementById('gb').onclick=function(ev){ev.preventDefault();irGoogle('');};}
 function mejorar(v){var mal=v!=='Muy buena';C.innerHTML=grande('n',mal?'M31 50 Q40 46 49 50':'M29 46 Q40 55 51 46')
- +'<h1 class="fi" style="animation-delay:.8s">'+(mal?'Gracias por contárnoslo'+nom:'¡Gracias'+nom+'!')+'</h1><p class="sub fi" style="animation-delay:.95s">'+(mal?'Queremos que tu próxima visita sea excelente. Cuéntanos qué pasó: lo lee dirección hoy mismo.':'¿Qué podemos mejorar para que tu próxima visita sea excelente?')+'</p>'
+ +'<h1 class="fi" style="animation-delay:.8s">'+(mal?'Gracias por contárnoslo'+nom:'¡Gracias'+nom+'!')+'</h1><p class="sub fi" style="animation-delay:.95s">'+(mal?(D.fin?'Queremos saber qué podemos hacer mejor. Cuéntanos: lo lee dirección hoy mismo.':'Queremos que tu próxima visita sea excelente. Cuéntanos qué pasó: lo lee dirección hoy mismo.'):(D.fin?'¿Qué podríamos mejorar para que tu experiencia fuera excelente?':'¿Qué podemos mejorar para que tu próxima visita sea excelente?'))+'</p>'
  +'<textarea class="fi" id="tx" style="animation-delay:1.1s" placeholder="'+(mal?'Lo que nos quieras contar…':'Cualquier detalle nos ayuda…')+'"></textarea><p class="err" id="er"></p><button class="bt2 fi" id="en" style="animation-delay:1.2s">Enviar</button>';
  var tx=document.getElementById('tx'),er=document.getElementById('er');tx.oninput=function(){er.textContent='';};
  document.getElementById('en').onclick=function(){var t=tx.value.trim();if(!t){er.textContent='Escribe aunque sea una frase, por favor.';tx.focus();return;}var b=this;b.disabled=true;b.textContent='Enviando…';
   enviar({v:v,c:t}).then(function(r){if(!r||!r.ok)throw 0;gracias(mal);}).catch(function(){b.disabled=false;b.textContent='Enviar';er.textContent='No se ha podido enviar. Inténtalo otra vez.';});};}
-function gracias(mal){C.innerHTML=grande('feliz','M28 46 Q40 57 52 46')+'<h1 class="fi" style="animation-delay:.8s">¡Gracias'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(mal?'Lo revisamos hoy mismo y te escribimos si hace falta. Gracias por ayudarnos a mejorar.':'Nos ayuda muchísimo. ¡Nos vemos en tu próxima sesión!')+'</p>';}
+function gracias(mal){C.innerHTML=grande('feliz','M28 46 Q40 57 52 46')+'<h1 class="fi" style="animation-delay:.8s">¡Gracias'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(mal?'Lo revisamos hoy mismo y te escribimos si hace falta. Gracias por ayudarnos a mejorar.':(D.fin?'Nos ayuda muchísimo. Aquí nos tienes para lo que necesites.':'Nos ayuda muchísimo. ¡Nos vemos en tu próxima sesión!'))+'</p>';}
 if(D.v==='Excelente')excelente();else if(D.v&&D.yaCom)gracias(D.v!=='Muy buena');else if(D.v)mejorar(D.v);else paso1();})();<\/script>`}</body></html>`;
 }
 function firmaCita(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cita:' + id).digest('hex').slice(0, 10); }
@@ -2010,6 +2012,50 @@ module.exports = async function handler(req, res) {
     return res.status(200).send(paginaHuecos({ huecos, url: `https://app.fisioterapia365.com/h/${k}.${sg}`, tel: C.tel || '672 89 39 49', dir: C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
+  // Encuesta de fin de tratamiento («paciente feliz»): enlace personal por paciente, misma lógica que la de primera visita
+  if (action === 'fin-og' || action === 'fin') {
+    const id = String(req.query.id || ''), sg = String(req.query.s || '');
+    res.setHeader('X-Robots-Tag', 'noindex');
+    const mal = m => { if (req.method === 'POST') return res.status(400).json({ ok: false }); res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: m })); };
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaFin(id)) return mal('Este enlace no es válido.');
+    const p = await at(`${PACIENTES}/${id}`); if (p.error) return mal('No encontramos tu ficha.');
+    const P = p.fields || {}, nombre = String(P['FULL NAME'] || '').trim();
+    let pila = (String(P['NOMBRE'] || '').trim() || nombre).split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
+    const f0 = String(P['FIN FISIO'] || '').trim().split(' ')[0], fisio = f0 ? f0.charAt(0).toUpperCase() + f0.slice(1).toLowerCase() : '';
+    if (action === 'fin-og') {
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogEncSvg({ pila, fisio, fin: true }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.status(302).end(); }
+    }
+    res.setHeader('Cache-Control', 'private, no-store');
+    const vOld = (P['FIN VALORACIÓN'] && P['FIN VALORACIÓN'].name) || P['FIN VALORACIÓN'] || '';
+    if (req.method === 'POST') {
+      const q = req.body || {}, VAL = ['Excelente', 'Muy buena', 'Normal', 'Mejorable'], f = {};
+      if (q.resena) f['FIN IR A RESEÑA'] = new Date().toISOString();
+      const v = VAL.includes(q.v) ? q.v : '', c = String(q.c || '').trim().slice(0, 3000);
+      if (v) { f['FIN VALORACIÓN'] = v; f['FIN RESPONDIDA'] = new Date().toISOString(); }
+      if (c) f['FIN COMENTARIO'] = c;
+      if (!Object.keys(f).length) return res.status(400).json({ ok: false });
+      const yaRes = !!P['FIN IR A RESEÑA'], vAct = v || vOld;
+      const u = await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
+      if (!u.error) {
+        const quien = pila || 'Tu paciente', fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name').catch(() => ({}));
+        const nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase(), recs = fl.records || [];
+        const dir = recs.filter(x => ['ramiro', 'nora'].includes(nom1(x))).map(x => x.id), fis = recs.filter(x => fisio && nom1(x) === fisio.toLowerCase()).map(x => x.id);
+        const url = '/fisio?s=enc', { avisar } = require('./_push');
+        const manda = (ids, title, body) => Promise.all([...new Set(ids)].map(fid => avisar('fisio', fid, { title, body, url, tag: 'fin-' + id }).catch(() => false)));
+        const conF = fisio ? ` con ${fisio}` : '';
+        if (q.resena && !yaRes && !v) await manda([...dir, ...fis], `⭐ ${quien} va a dejar reseña en Google`, `Fin de tratamiento${conF}: ${vAct || 'Excelente'}.`);
+        else if (v && c) await manda(dir, `${/Normal|Mejorable/.test(v) ? '⚠️ ' : ''}${quien}: ${v}`, `«${c.slice(0, 140)}»`);
+        else if (v && v !== vOld) {
+          await manda(dir, `${/Normal|Mejorable/.test(v) ? '⚠️ ' : ''}Encuesta fin de tratamiento · ${quien}: ${v}`, `Tratamiento${conF}.${v === 'Excelente' ? ' Le hemos llevado a la reseña de Google.' : ' Le hemos preguntado qué mejorar.'}`);
+          if (/Excelente|Muy buena/.test(v)) await manda(fis.filter(x => !dir.includes(x)), `${quien} ha valorado su tratamiento: ${v}`, v === 'Excelente' ? '¡Enhorabuena! Le hemos invitado a dejar la reseña en Google.' : '¡Bien! Le hemos preguntado qué podríamos mejorar.');
+        }
+      }
+      return res.status(200).json({ ok: !u.error });
+    }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(paginaEncuesta({ modo: 'fin', pila, fisio, v: vOld, yaCom: !!P['FIN COMENTARIO'], url: enlaceFin(id) }));
+  }
   if (action === 'encuesta-og') {
     const id = String(req.query.id || ''), sg = String(req.query.s || '');
     if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaEnc(id)) return res.status(404).send('No encontrado');
@@ -3237,8 +3283,11 @@ module.exports = async function handler(req, res) {
           for (let i = 0; i < pids.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 40).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}`)).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; });
           const nmE = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
           const lista = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), fisio: nmE(F['PREF.']), nombre: nom[pid] || '', valoracion: nmE(F['ENCUESTA VALORACIÓN']), comentario: F['ENCUESTA COMENTARIO'] || '', resena: F['ENCUESTA IR A RESEÑA'] || '', respondida: F['ENCUESTA RESPONDIDA'] || '' }; })
-            .filter(x => x.valoracion).sort((a, b) => String(b.respondida).localeCompare(String(a.respondida)));
-          return res.status(200).json({ ok: true, lista });
+            .filter(x => x.valoracion);
+          const fins = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({FIN RESPONDIDA},IS_AFTER({FIN RESPONDIDA},DATEADD(NOW(),-14,'days')))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=${encodeURIComponent('FIN FISIO')}&fields[]=${encodeURIComponent('FIN VALORACIÓN')}&fields[]=${encodeURIComponent('FIN COMENTARIO')}&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}&fields[]=${encodeURIComponent('FIN RESPONDIDA')}`).catch(() => []);
+          fins.forEach(p => { const F = p.fields; lista.push({ id: p.id, tipo: 'fin', fecha: String(F['FIN RESPONDIDA'] || '').slice(0, 10), fisio: F['FIN FISIO'] || '', nombre: F['FULL NAME'] || '', valoracion: nmE(F['FIN VALORACIÓN']), comentario: F['FIN COMENTARIO'] || '', resena: F['FIN IR A RESEÑA'] || '', respondida: F['FIN RESPONDIDA'] || '' }); });
+          lista.sort((a, b) => String(b.respondida).localeCompare(String(a.respondida)));
+          return res.status(200).json({ ok: true, lista: lista.filter(x => x.valoracion) });
         }
         if (action === 'seg-agenda-encuestas') {
           // Encuesta de satisfacción: pacientes cuya PRIMERA sesión realizada fue ese día
@@ -3296,6 +3345,11 @@ module.exports = async function handler(req, res) {
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const d = await at(`${CIT}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ENCUESTA ENVIADA': q.enviado === false ? null : new Date().toISOString() } }) });
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+        }
+        if (action === 'seg-agenda-fin-enlace') { // encuesta de fin de tratamiento: deja la ficha lista y devuelve el enlace personal
+          if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
+          const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'FIN FISIO': String(q.fisio || '').slice(0, 60), 'FIN ENVIADA': new Date().toISOString(), 'FIN VALORACIÓN': null, 'FIN COMENTARIO': '', 'FIN RESPONDIDA': null, 'FIN IR A RESEÑA': null } }) });
+          return res.status(200).json({ ok: !d.error, link: enlaceFin(q.pacienteId), error: d.error && d.error.message });
         }
         if (action === 'seg-agenda-alta') { // cancela y ya no necesita más sesiones: etiqueta ALTA y motivo apuntado (no sale en «sin próxima cita»)
           if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
