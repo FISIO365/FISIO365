@@ -1001,7 +1001,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 @media(max-width:768px){#btnAvisos{right:14px;top:calc(50% + env(safe-area-inset-top)/2)}}
 
 /* Editor de ejercicios (Programas y ficha) */
-.pe-busca{position:sticky;top:var(--tb-h,0px);z-index:8;background:#fff;margin:-10px 0 12px;padding:10px 0;transition:box-shadow .15s}.fp-body .pe-busca{top:0}.pe-busca.pegada{box-shadow:0 1px 0 #ece6e0,0 8px 10px -8px rgba(26,26,26,.16)}
+.pe-busca{position:relative;margin-bottom:12px}
 .pe-busca input{width:100%;box-sizing:border-box;padding:13px 14px 13px 42px;border:1.5px solid var(--border);border-radius:14px;font-size:15px;font-family:var(--font);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2552e' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 14px center/18px;outline:none}
 .pe-busca input:focus{border-color:#c2552e}
 .pe-res{display:none;margin-top:6px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.10);max-height:400px;overflow-y:auto}
@@ -2498,9 +2498,6 @@ function peResumen(e){const se=+e.series||0,pl=(n,a,b)=>n===1?a:b,L=[];const r=e
 function montarEditorEjs(el,inicial,onCambio){
  let ejs=(inicial||[]).map(peNorm), nuevo=-1, sel=[], zona='';
  el.innerHTML=`<div class="pe-busca"><input type="search" placeholder="Busca y marca los ejercicios que quieras añadir…" autocomplete="off" enterkeyhint="search"><div class="pe-zs"></div><div class="pe-res"></div></div><div class="pe-lista"></div>`;
- // La barra de buscar se queda fija arriba al bajar (sombra solo cuando está pegada)
- {const pb=el.querySelector('.pe-busca'),chk=()=>{if(!pb.isConnected){removeEventListener('scroll',chk,true);return;}const t=parseFloat(getComputedStyle(pb).top)||0,sc=pb.closest('.fp-body'),base=sc?sc.getBoundingClientRect().top:0;
-  pb.classList.toggle('pegada',pb.getBoundingClientRect().top<=base+t+1&&el.getBoundingClientRect().top<base+t-4);};addEventListener('scroll',chk,true);}
  const inp=el.querySelector('input'),res=el.querySelector('.pe-res'),lista=el.querySelector('.pe-lista'),zs=el.querySelector('.pe-zs');
  // Filtro por zona: chips con las zonas que tienen ejercicios
  const pintaZonas=()=>{const cnt={};biblio.forEach(e=>{if(e.zona)cnt[e.zona]=(cnt[e.zona]||0)+1;});
