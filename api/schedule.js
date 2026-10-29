@@ -792,13 +792,17 @@ function ogTexto(font, txt, size, cx, y, ls, color) {
   return `<path d="${d}" fill="${color}"/>`;
 }
 function ogCitaSvg({ fecha, hora, fisio }) {
-  const DS = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'], MS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+  const DL = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'], ML = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], MS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
   const d = new Date(fecha + 'T12:00:00Z'), T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos();
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/><rect x="60" y="60" width="480" height="96" rx="44" fill="${T}"/><rect x="60" y="112" width="480" height="44" fill="${T}"/>`
-    + ogTexto(O.b, `${DS[d.getUTCDay()]} · ${MS[d.getUTCMonth()]}`, 34, 300, 122, 6, '#fff')
-    + ogTexto(O.b, String(d.getUTCDate()), 190, 300, 330, 0, K)
-    + ogTexto(O.b, hora, 66, 300, 430, 0, T)
-    + (fisio ? ogTexto(O.m, 'con ' + fisio, 30, 300, 490, 0, M) : '') + `</svg>`;
+  const t1 = `${DL[d.getUTCDay()]} ${d.getUTCDate()} de ${ML[d.getUTCMonth()]}`, sz = t1.length > 20 ? Math.max(30, Math.round(40 * 20 / t1.length)) : 40;
+  const t2 = 'A las ' + hora + (fisio ? ' · con ' + fisio : '');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="232" y="150" width="136" height="136" rx="22"/><path d="M232 190h136"/><path d="M270 136v28M330 136v28"/></g>`
+    + ogTexto(O.m, MS[d.getUTCMonth()], 17, 300, 180, 3, T)
+    + ogTexto(O.b, String(d.getUTCDate()), 62, 300, 266, 0, K)
+    + ogTexto(O.b, t1, sz, 300, 384, 0, K)
+    + ogTexto(O.m, t2, 23, 300, 426, 0, M)
+    + ogTexto(O.m, 'Toca para confirmar', 21, 300, 466, 0, T) + `</svg>`;
 }
 // Vista previa (WhatsApp) del enlace de la encuesta: carita sonriente + nombre
 function ogEncSvg({ pila, fisio }) {
@@ -1385,7 +1389,7 @@ function paginaConfirmar(D, C) {
         : `<form method="post"><button type="submit">¡Allí estaré!</button></form>`}
       ${!D.inactiva && D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : ''}`;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu cita · FISIO365</title>
-<meta property="og:title" content="Tu cita en FISIO365"><meta property="og:description" content="${e(fl ? (fl.charAt(0).toUpperCase() + fl.slice(1)) + ' a las ' + (D.hora || '') : 'Tu cita en FISIO365')}"><meta property="og:image" content="${D.id && D.fecha ? `https://app.fisioterapia365.com/c/${D.id}-${firmaCita(D.id)}.png?g=3&v=${e(D.fecha.replace(/-/g, ''))}${e(String(D.hora || '').replace(':', ''))}${D.fisio ? '-' + e(D.fisio.toLowerCase()) : ''}` : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:image:height" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:type" content="website">
+<meta property="og:title" content="Tu cita en FISIO365"><meta property="og:description" content="${e(fl ? (fl.charAt(0).toUpperCase() + fl.slice(1)) + ' a las ' + (D.hora || '') : 'Tu cita en FISIO365')}"><meta property="og:image" content="${D.id && D.fecha ? `https://app.fisioterapia365.com/c/${D.id}-${firmaCita(D.id)}.png?g=4&v=${e(D.fecha.replace(/-/g, ''))}${e(String(D.hora || '').replace(':', ''))}${D.fisio ? '-' + e(D.fisio.toLowerCase()) : ''}` : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:image:height" content="${D.id && D.fecha ? 600 : 800}"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .c{background:#fff;border-radius:24px;padding:28px 22px;max-width:400px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
@@ -4510,3 +4514,4 @@ module.exports.ajuste = (...a) => ajuste(...a);
 module.exports.guardarAjuste = (...a) => guardarAjuste(...a);
 module.exports.cierresEnviados = cierresEnviados;
 module.exports.holdedApi = { holded: (...a) => holded(...a), holdedTodos: (...a) => holdedTodos(...a), activo: () => !!HOLDED_KEY };
+module.exports._ogCita = ogCitaSvg;
