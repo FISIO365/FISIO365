@@ -6430,11 +6430,11 @@ function agPagoHtml(c){const p=c.pago,eur=v=>String(Math.round((+v||0)*100)/100)
  return `<div class="ag-pg">${PAGO_SVG}<span><b>Pendiente de pago · ${eur(p.importe)}</b>Hueco guardado hasta el ${escH(fl)}</span></div><div class="ag-pg-bs"><button type="button" class="ag-pg-b sec ag-pg-env">Reenviar enlace</button><button type="button" class="ag-pg-b sec ag-pg-quit">Ya no hace falta</button></div>`;}
 function agPagoTexto(c,link){const px=(pacs||[]).find(x=>x.id===c.pacienteId)||{},p=String(px.pila||px.nombre||c.paciente||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
  const d=new Date(c.fecha+'T12:00:00'),dia=REC_DIAS[d.getDay()]+' '+d.getDate(),fi=String(c.fisio||'').trim().split(' ')[0],fn=fi?' con '+fi.charAt(0).toUpperCase()+fi.slice(1).toLowerCase():'';
- return `Hola${n?' '+n:''}, te he reservado la cita del *${dia} a las ${c.hora}*${fn}.\n\nPara guardártela, esta vez la sesión se paga por adelantado. Puedes hacerlo aquí con tarjeta o transferencia (tienes 24 h):\n${link}\n\n¡Gracias!`;}
+ return `Hola${n?' '+n:''}, te he reservado la cita del *${dia} a las ${c.hora}*${fn}.\n\nPara guardártela, esta vez la sesión se paga por adelantado. Puedes hacerlo aquí con tarjeta o transferencia (tienes 2 h):\n${link}\n\n¡Gracias!`;}
 function agPagoTel(c){const px=(pacs||[]).find(x=>x.id===c.pacienteId)||{};return segTel(px.whatsapp||px.telefono||px.tel||px.telf||'');}
 function agPagoPedir(c,onOk){const tel=agPagoTel(c),quien=String((fisioActual&&fisioActual.nombre)||'');
   const mm=hzModal(`<div class="hz-top"><div><small>${escH(c.paciente||'')}</small><b>Pedir pago por adelantado</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-   <p class="fp-mu" style="font-size:13.5px;margin:0 0 12px">Le llega un enlace para pagar con tarjeta o transferencia. Tiene 24 h; si no paga, la cita se cancela sola y el hueco queda libre.</p>
+   <p class="fp-mu" style="font-size:13.5px;margin:0 0 12px">Le llega un enlace para pagar con tarjeta o transferencia. Tiene 2 h; si no paga, la cita se cancela sola y el hueco queda libre.</p>
    <div class="hz-lab">Importe</div><div class="ag-pg-imp">${[65,75].map(v=>`<button type="button" data-v="${v}">${v} €</button>`).join('')}<input type="text" inputmode="decimal" placeholder="Otro" class="ag-in"></div>
    <div class="hz-bts" style="margin-top:14px"><button type="button" class="hz-ok" disabled>Enviar por WhatsApp</button></div>`);
   let imp=0;const ok=mm.querySelector('.hz-ok'),inp=mm.querySelector('.ag-pg-imp input'),bs=mm.querySelectorAll('.ag-pg-imp button');

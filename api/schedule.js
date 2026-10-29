@@ -1418,11 +1418,11 @@ async function caducarPagos() {
   for (const r of (rs.records || [])) { const F = r.fields || {};
     if (await pagoVerificar(r.id, F).catch(() => false)) continue;
     const fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || ''), fis = (F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '';
-    const u = await at(`tblTPlcuiSjQngkaD/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'CANCELADA', 'PAGO ESTADO': 'CADUCADO', NOTAS: (String(F['NOTAS'] || '') + '\nCancelada sola: no pagó en 24 h.').trim(), 'PAGO REGISTRO': (String(F['PAGO REGISTRO'] || '') + `\n${pagoAhora()} · Caducado: no pagó en el plazo`).trim() }, typecast: true }) });
+    const u = await at(`tblTPlcuiSjQngkaD/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'CANCELADA', 'PAGO ESTADO': 'CADUCADO', NOTAS: (String(F['NOTAS'] || '') + '\nCancelada sola: no pagó en 2 h.').trim(), 'PAGO REGISTRO': (String(F['PAGO REGISTRO'] || '') + `\n${pagoAhora()} · Caducado: no pagó en el plazo`).trim() }, typecast: true }) });
     if (u.error) continue; n++;
     if (fecha >= new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date())) await at('tblTPlcuiSjQngkaD', { method: 'POST', body: JSON.stringify({ records: [{ fields: { FECHA: fecha, HORA: hora, 'PREF.': fis, ESTADO: 'CITA LIBRE' } }], typecast: true }) }).catch(() => {});
     const pac = await pagoPaciente(F);
-    await pagoAvisar('', `⏰ ${pac.pila || 'Un paciente'} no ha pagado: cita cancelada`, `${fecha.split('-').reverse().join('/')} a las ${hora}${fis ? ' con ' + fis : ''}. El hueco vuelve a estar libre.`, 'pago-' + r.id);
+    await pagoAvisar('', `⏰ ${pac.pila || 'Un paciente'} no ha pagado en 2 h: cita cancelada`, `${fecha.split('-').reverse().join('/')} a las ${hora}${fis ? ' con ' + fis : ''}. El hueco vuelve a estar libre.`, 'pago-' + r.id);
   }
   return n;
 }
@@ -2112,7 +2112,7 @@ module.exports = async function handler(req, res) {
       } else if (!String((pac.fields || {})['MOTIVO DE VISITA'] || '').trim()) await at(`${PACIENTES}/${pac.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MOTIVO DE VISITA': motivo } }) }).catch(() => {});
       const nota = `Reserva por enlace de huecos${nuevo ? ' (paciente nuevo)' : ''} · Motivo: ${motivo}`;
       const fR = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', NOTAS: [r.fields.NOTAS, nota].filter(Boolean).join('\n') };
-      if (P.p > 0) { const ini = madridUTC(h.fecha, h.hora).getTime(), lim = Math.max(Date.now() + 30 * 60e3, Math.min(Date.now() + 2 * 3600e3, ini)); Object.assign(fR, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': P.p, 'PAGO LÍMITE': new Date(lim).toISOString(), 'PAGO REGISTRO': `${pagoAhora()} · Reserva por enlace de huecos con pago por adelantado (${P.p.toFixed(2).replace('.', ',')} €)` }); }
+      if (P.p > 0) { const lim = Date.now() + 2 * 3600e3; Object.assign(fR, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': P.p, 'PAGO LÍMITE': new Date(lim).toISOString(), 'PAGO REGISTRO': `${pagoAhora()} · Reserva por enlace de huecos con pago por adelantado (${P.p.toFixed(2).replace('.', ',')} €)` }); }
       const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: fR, typecast: true }) });
       if (u.error) return res.status(200).json({ ok: false, error: 'No se ha podido reservar. Inténtalo de nuevo.' });
       await new Promise(z => setTimeout(z, 700));
@@ -3532,7 +3532,7 @@ module.exports = async function handler(req, res) {
           const C0 = cur.fields || {}, reg = t => (String(C0['PAGO REGISTRO'] || '') + `\n${pagoAhora()} · ${t}`).trim(), quien = String(q.quien || '').slice(0, 40);
           if (q.op === 'pedir') {
             const imp = Math.round(Number(String(q.importe || '').replace(',', '.')) * 100) / 100; if (!(imp >= 1 && imp <= 2000)) return res.status(400).json({ ok: false, error: 'Pon el importe' });
-            const yaPend = nmA(C0['PAGO ESTADO']) === 'PENDIENTE DE PAGO', lim = yaPend && C0['PAGO LÍMITE'] && new Date(C0['PAGO LÍMITE']) > new Date() ? C0['PAGO LÍMITE'] : new Date(Date.now() + 24 * 3600e3).toISOString();
+            const yaPend = nmA(C0['PAGO ESTADO']) === 'PENDIENTE DE PAGO', lim = yaPend && C0['PAGO LÍMITE'] && new Date(C0['PAGO LÍMITE']) > new Date() ? C0['PAGO LÍMITE'] : new Date(Date.now() + 2 * 3600e3).toISOString();
             await patch(q.id, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': imp, 'PAGO LÍMITE': lim, 'PAGO REGISTRO': reg(`Pago pedido (${imp.toFixed(2).replace('.', ',')} €)${quien ? ' por ' + quien : ''}`) });
             return res.status(200).json({ ok: true, link: enlacePago(q.id), limite: lim });
           }
