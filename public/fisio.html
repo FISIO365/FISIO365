@@ -5968,14 +5968,14 @@ function ultSesion(citas,hoy){const ah=new Intl.DateTimeFormat('es-ES',{timeZone
  const hh=c=>String(c.hora||'').replace(/^(\d):/,'0$1:').slice(0,5);
  return (citas||[]).filter(c=>c.fecha&&c.fecha<=hoy&&(/REALIZADA/i.test(c.estado)||(c.fecha===hoy&&/PENDIENTE/i.test(c.estado)&&hh(c)&&hh(c)<=ah))).sort((a,b)=>(b.fecha+hh(b)).localeCompare(a.fecha+hh(a)))[0];}
 // ── VALORACIONES (encuesta de 1ª visita) ──
-// Dirección (Ramiro, Nora) ve todas las respuestas; cada fisio, las buenas de sus pacientes. «Visto» se guarda en este dispositivo.
+// Todo el equipo ve todas las respuestas (panorama del trabajo de todos). «Visto» se guarda en este dispositivo.
 let ENC_UL=[],_encIv=null;
 const encYo=()=>String((fisioActual&&fisioActual.nombre)||'').split(' ')[0].toLowerCase(),encK=()=>'f365_enc_visto_'+encYo();
 const encT=x=>String(x.resena&&x.resena>x.respondida?x.resena:x.respondida||'');
 const encVisto=()=>{let v='';try{v=localStorage.getItem(encK())||'';}catch(e){}if(!v){v=new Date(Date.now()-2*864e5).toISOString();try{localStorage.setItem(encK(),v);}catch(e){}}return v;};
 function encBadge(n){[['sb-val-badge',n],['pmValN',n]].forEach(([i,v])=>{const e=$(i);if(e){e.textContent=v||'';e.style.display=v?'':'none';}});}
 async function encCarga(){const r=await (await fetch(`/api/schedule?action=seg-agenda-enc-nuevas&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw new Error(r.error||'Error');
- const dir=esDireccion(),yo=encYo();ENC_UL=(r.lista||[]).filter(x=>dir||(String(x.fisio).split(' ')[0].toLowerCase()===yo&&/Excelente|Muy buena/.test(x.valoracion)));return ENC_UL;}
+ ENC_UL=r.lista||[];return ENC_UL;}
 async function encContar(){if(!fisioActual)return;if(!_encIv)_encIv=setInterval(()=>{if(!document.hidden)encContar();},120000);
  try{await encCarga();const v=encVisto();encBadge(ENC_UL.filter(x=>encT(x)>v).length);}catch(e){}}
 async function renderValoraciones(wrap){
@@ -5985,7 +5985,7 @@ async function renderValoraciones(wrap){
  const cls=x=>/Excelente|Muy buena/.test(x)?'ok':x==='Normal'?'med':'mal',fd=f=>{if(!f)return '';const d=new Date(f+'T12:00:00');return d.getDate()+'/'+(d.getMonth()+1);};
  const L=ENC_UL,ok=L.filter(x=>/Excelente|Muy buena/.test(x.valoracion)).length,go=L.filter(x=>x.resena).length;
  card.innerHTML=`<div class="val-res"><div><b>${L.length}</b><span>respuestas</span></div><div><b>${ok}</b><span>muy contentos</span></div><div><b>${go}</b><span>a Google</span></div></div>
-  <div class="val-nota">${dir?'Últimos 14 días. Todas las respuestas a la encuesta de primera visita.':'Últimos 14 días. Las valoraciones buenas de tus pacientes.'}</div>
+  <div class="val-nota">Últimos 14 días. Todas las respuestas a la encuesta de primera visita.</div>
   ${!L.length?'<div class="fac-vacio">Todavía no hay respuestas estos días</div>':`<div class="val-lista">${L.map(x=>`<div class="val-it${encT(x)>v?' nuevo':''}"><i class="${cls(x.valoracion)}"></i><div class="val-tx"><div><b>${escH(fn(x.nombre))}</b>${encT(x)>v?'<span class="val-nv">Nuevo</span>':''}</div>
    <div class="val-m">${escH(x.valoracion)}${x.fisio?' · con '+escH(capTit(String(x.fisio).split(' ')[0])):''} · 1ª visita el ${fd(x.fecha)}${x.resena?' · <em>fue a Google</em>':''}</div>${x.comentario?`<div class="val-c">«${escH(x.comentario)}»</div>`:''}</div></div>`).join('')}</div>`}
   <button type="button" class="val-mas">Ver por días en Encuestas</button>`;
