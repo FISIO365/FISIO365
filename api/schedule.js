@@ -823,9 +823,25 @@ function paginaConfirmar(D, C) {
   const fl = D.fecha ? (() => { const d = new Date(D.fecha + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} de ${MES[d.getUTCMonth()]}`; })() : '';
   const tel = String(C.tel || '').replace(/\s/g, '');
   const cuerpo = D.error && !D.fecha ? `<h1>Vaya…</h1><p>${e(D.error)}</p>`
+    : !D.inactiva && !D.confirmada && D.fecha ? (() => {
+      const d = new Date(D.fecha + 'T12:00:00Z'), [H, Mi] = String(D.hora || '00:00').split(':').map(Number), gH = (H % 12) * 30 + Mi * .5 + 720, gM = Mi * 6 + 360 * Math.max(2, H % 12);
+      const ojos = D.av2 ? `<path class="ce" d="M23 27 L32 23.5"/><path class="ce" d="M48 23.5 L57 27"/><ellipse class="ey" cx="30" cy="34" rx="4.3" ry="5.2"/><ellipse class="ey" cx="50" cy="34" rx="4.3" ry="5.2"/><circle class="br" cx="31.6" cy="31.8" r="1.5"/><circle class="br" cx="51.6" cy="31.8" r="1.5"/>` : `<ellipse class="ey" cx="30" cy="33" rx="2.6" ry="3.2"/><ellipse class="ey" cx="50" cy="33" rx="2.6" ry="3.2"/>`;
+      return `<svg class="fc parp" id="cara" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><g class="ojos" id="ojos">${ojos}</g><path class="m" id="boca" d="${D.av2 ? 'M34 50 Q40 53.5 46 50' : 'M30 47 Q40 54 50 47'}"/></svg>
+      <p class="hola fi" style="animation-delay:.9s">${D.av2 ? `¡${D.pila ? e(D.pila) + ', t' : 'T'}e estamos guardando el sitio!` : `Hola${D.pila ? ', ' + e(D.pila) : ''}`}</p>
+      <p class="sub fi" style="animation-delay:1s">Confírmanos que vienes</p>
+      <div class="hoja fi" style="animation-delay:.3s"><div class="band">${e(DIAS[d.getUTCDay()].toUpperCase())} · ${e(MES[d.getUTCMonth()].toUpperCase())}</div><div class="num">${d.getUTCDate()}</div>
+       <div class="row"><svg class="clk" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="12.5"/><line class="hh" x1="15" y1="15" x2="15" y2="9" style="--h:${gH}deg"/><line class="mm" x1="15" y1="15" x2="15" y2="5.5" style="--m:${gM}deg"/></svg><span class="hora">${e(D.hora)}</span></div>
+       ${D.fisio ? `<div class="con">con ${e(D.fisio)}</div>` : '<div class="con"></div>'}</div>
+      ${D.error ? `<p class="err">${e(D.error)}</p>` : ''}
+      <form method="post" id="fcf"><button type="submit" class="bt" id="go">¡Allí estaré!</button></form>
+      <p class="pista fi" style="animation-delay:2s">Un toque y lo tenemos</p>
+      ${D.consent ? `<div class="cons"><b>Como es tu primera visita…</b><p>Puedes ir rellenando ya el consentimiento informado y tus datos de salud. Son 2 minutos y así, cuando llegues, empezamos directamente con tu sesión.</p><a class="btn2" href="${e(D.consent)}" target="_blank" rel="noopener">Rellenar el consentimiento</a><small>Pon tu propio teléfono en el formulario, por favor.</small></div>` : ''}
+      <script>(function(){var f=document.getElementById('fcf'),ya=false;f.onsubmit=function(ev){if(ya)return;ev.preventDefault();ya=true;var b=document.getElementById('go');b.disabled=true;b.textContent='¡Gracias!';
+       var m=document.getElementById('boca');m.style.strokeDasharray='none';m.setAttribute('d','M26 45 Q40 62 54 45');var o=document.getElementById('ojos');o.style.animation='none';
+       o.innerHTML='<path d="M25 35 Q30 29 35 35"/><path d="M45 35 Q50 29 55 35"/>';setTimeout(function(){f.submit();},700);};})();</script>`; })()
     : D.confirmada && !D.inactiva ? (() => { const r = Math.max(1, D.racha || 1), nd = Math.min(7, Math.max(r, 5)), lleno = Math.min(r, nd);
       const dc = (() => { const d = new Date(D.fecha + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()}`; })();
-      return `<div class="okv"><svg class="sm" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="c1" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="s1" d="M27 44 Q40 58 53 44"/></svg>
+      return `<div class="okv"><svg class="sm" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="c1" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="e1" d="M25 35 Q30 29 35 35"/><path class="e1" d="M45 35 Q50 29 55 35"/><path class="s1" d="M26 45 Q40 62 54 45"/></svg>
       <p class="okt fi" style="animation-delay:1.1s">${D.recien ? '¡Confirmada' : 'Cita confirmada'}${D.pila ? ', ' + e(D.pila) : ''}${D.recien ? '!' : ''}</p>
       <p class="oks fi" style="animation-delay:1.3s">Te esperamos el ${e(dc)} a las ${e(D.hora)}${D.fisio ? ' con ' + e(D.fisio) : ''}.</p>
       <div class="fi" style="animation-delay:1.8s"><div class="dots">${Array.from({ length: nd }, (_, i) => `<i class="${i < lleno - 1 ? 'on' : i === lleno - 1 ? 'nw' : ''}"></i>`).join('')}</div>
@@ -848,8 +864,23 @@ button{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:#fff;
 .ok{background:#e8f6ec;color:#16803c;font-weight:600;border-radius:14px;padding:16px}.err{color:#b42318}.peq{font-size:14px;color:#7d6a60;margin:12px 0 0}
 .cons{margin-top:18px;background:#fbf3ec;border-radius:18px;padding:18px 16px;text-align:left}.cons b{display:block;font-size:16px;margin-bottom:4px}.cons p{margin:0 0 14px;font-size:14px;color:#5c4f47;line-height:1.5}.cons small{display:block;margin-top:10px;font-size:12px;color:#7d6a60}
 .btn2{display:block;text-align:center;text-decoration:none;font-weight:600;font-size:15px;color:#1e2a38;background:#fff;border:1.5px solid #1e2a38;border-radius:14px;padding:13px}
+.fc{display:block;margin:0 auto}.fc circle,.fc path{stroke:#c2552e;fill:none;stroke-width:3;stroke-linecap:round}.fc .ce{stroke-width:2.2}
+.fc .o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s cubic-bezier(.6,0,.2,1) forwards}
+.fc .m{stroke-dasharray:40;stroke-dashoffset:40;animation:dr .4s .7s ease-out forwards;transition:d .45s cubic-bezier(.3,1.4,.5,1)}
+.fc .ey{fill:#c2552e;stroke:none;opacity:0;animation:fi0 .3s .9s forwards;transform-box:fill-box;transform-origin:center}.fc .br{fill:#fff;stroke:none;opacity:0;animation:fi0 .3s 1.1s forwards}
+.fc .ce{opacity:0;animation:fi0 .3s 1s forwards}
+.parp .ojos{animation:mira 5s 2.6s ease-in-out infinite}.parp .ey{animation:fi0 .3s .9s forwards,blink 5s 3.8s infinite}
+@keyframes mira{0%,30%,100%{transform:none}38%,62%{transform:translateY(3.5px)}}@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}@keyframes fi0{to{opacity:1}}
+.hoja{margin:22px auto;width:210px;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 0 0 1.5px #efe6de}
+.hoja .band{background:#c2552e;color:#fff;font-weight:700;font-size:12px;letter-spacing:.18em;padding:9px 0;transform:translateY(-100%);animation:band .5s .5s cubic-bezier(.2,.8,.3,1) forwards}@keyframes band{to{transform:none}}
+.hoja .num{font-size:74px;font-weight:700;line-height:1;margin:12px 0 6px;color:#2b2420}.hoja .row{display:flex;align-items:center;justify-content:center;gap:9px;padding:0 0 12px}
+.clk{width:30px;height:30px}.clk circle{fill:none;stroke:#c2552e;stroke-width:1.6}.clk line{stroke:#c2552e;stroke-width:1.8;stroke-linecap:round;transform-origin:15px 15px}
+.clk .hh{animation:hh 1.6s .8s cubic-bezier(.3,0,.2,1) both}.clk .mm{animation:mm 1.6s .8s cubic-bezier(.3,0,.2,1) both}@keyframes hh{from{transform:rotate(0)}to{transform:rotate(var(--h))}}@keyframes mm{from{transform:rotate(0)}to{transform:rotate(var(--m))}}
+.hora{font-size:22px;font-weight:700;color:#c2552e}.con{font-size:13.5px;color:#8a7d74;padding-bottom:16px;min-height:16px}
+.bt{animation:fi .55s 1.6s both,resp 2.6s 2.4s ease-in-out infinite}@keyframes resp{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}50%{box-shadow:0 0 0 7px rgba(194,85,46,.13)}}
+.pista{font-size:12.5px;color:#a3968c;margin:10px 0 0}
 .okv{padding:4px 0 2px}.sm{display:block;margin:4px auto 0}.sm circle,.sm path{stroke:#c2552e;fill:none;stroke-width:3;stroke-linecap:round}
-.sm .c1{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s cubic-bezier(.6,0,.2,1) forwards}.sm .s1{stroke-dasharray:32;stroke-dashoffset:32;transform-origin:40px 46px;animation:dr .5s .75s cubic-bezier(.3,0,.2,1) forwards,smi .45s 1.25s ease-in-out}
+.sm .c1{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s cubic-bezier(.6,0,.2,1) forwards}.sm .e1{stroke-dasharray:14;stroke-dashoffset:14;animation:dr .35s .6s ease-out forwards}.sm .s1{stroke-dasharray:40;stroke-dashoffset:40;transform-origin:40px 46px;animation:dr .5s .75s cubic-bezier(.3,0,.2,1) forwards,smi .45s 1.25s ease-in-out}
 @keyframes dr{to{stroke-dashoffset:0}}@keyframes smi{50%{transform:scaleX(1.18)}}
 .fi{opacity:0;transform:translateY(6px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}
 .okt{font-size:23px;font-weight:700;margin:14px 0 0}.oks{font-size:15px;color:#5c4f47;margin:6px 0 0}.okv .fi{display:block}.okv a.cal.fi{display:flex}
@@ -858,9 +889,9 @@ button{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:#fff;
 .rt{font-size:13.5px;color:#7d6a60;margin:0}.rt b{color:#c2552e}
 .cal{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:22px;text-decoration:none;font-weight:600;font-size:15px;color:#141414;background:#fff;border:1.5px solid #e6ddd5;border-radius:14px;padding:14px}.cal svg{width:19px;height:19px;stroke:#c2552e;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .gcal{font-size:13px;color:#7d6a60;margin-top:10px}
-@media (prefers-reduced-motion:reduce){.sm .c1,.sm .s1,.fi,.dots i.nw{animation-duration:.01s!important;animation-delay:0s!important}}
+@media (prefers-reduced-motion:reduce){.fc .o,.fc .m,.fc .ey,.fc .br,.fc .ce,.hoja .band,.clk line,.bt,.sm .e1,.sm .c1,.sm .s1,.fi,.dots i.nw{animation-duration:.01s!important;animation-delay:0s!important}}
 .pie{margin-top:22px;font-size:12.5px;color:#7d6a60;line-height:1.6}.pie a{color:#7d6a60}h1{font-size:20px}</style></head>
-<body><div class="c">${D.confirmada && !D.inactiva ? '' : '<img class="logo" src="https://app.fisioterapia365.com/icono.png" alt="FISIO365">'}${cuerpo}<div class="pie">${e(C.direccion || '')}${tel ? `<br>¿Dudas? Llámanos al <a href="tel:+34${e(tel)}">${e(C.tel)}</a>` : ''}</div></div></body></html>`;
+<body><div class="c">${!D.inactiva && D.fecha ? '' : '<img class="logo" src="https://app.fisioterapia365.com/icono.png" alt="FISIO365">'}${cuerpo}<div class="pie">${e(C.direccion || '')}${tel ? `<br>¿Dudas? Llámanos al <a href="tel:+34${e(tel)}">${e(C.tel)}</a>` : ''}</div></div></body></html>`;
 }
 // Citas antiguas sin «TIPO DE SESIÓN»: se deduce de sus etiquetas de siempre
 const sesionDeEtiquetas = L => { const t = (L || []).map(x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim());
@@ -1132,7 +1163,7 @@ module.exports = async function handler(req, res) {
     const pid = (F['RELACIÓN - CITA'] || [])[0]; let pila = '';
     if (pid) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}; pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; }
     const hoyC = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-    const D = { id, pila: pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '', fecha, hora, fisio: fisio ? fisio.charAt(0).toUpperCase() + fisio.slice(1).toLowerCase() : '' };
+    const D = { id, av2: String(req.query.r || '') === '2', pila: pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '', fecha, hora, fisio: fisio ? fisio.charAt(0).toUpperCase() + fisio.slice(1).toLowerCase() : '' };
     if (!/PENDIENTE/.test(est) || fecha < hoyC) return res.status(200).send(paginaConfirmar({ ...D, inactiva: true }, C));
     let conf0 = (F['CONFIR'] || []).some(x => /CONFIRMADA/i.test(x.name || x));
     if (req.method === 'POST' && !conf0) {

@@ -5872,7 +5872,7 @@ function recTexto2(g){const h=agHoyIso(),t=new Date(g.fecha+'T12:00:00'),dm=t.ge
  const cuando=g.fecha===agMover(h,1)?`Mañana, ${dn} ${dm}`:g.fecha===h?`Hoy, ${dn} ${dm}`:`El ${dn} ${dm}`;
  const horas=g.citas.map(c=>c.hora),fis=[...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]).filter(Boolean))];
  const pila=String(g.pila||g.nombre||'').trim().split(/\s+/)[0],nom=pila?pila.charAt(0).toUpperCase()+pila.slice(1).toLowerCase():'';
- return `Hola${nom?' '+nom:''},\n\nTe escribimos de nuevo desde *FISIO365* porque aún no nos has confirmado tu cita:\n*${cuando} a las ${horas.join(' y a las ')}*${fis.length?`\nCon ${fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y ')}`:''}\n\n¿Nos la confirmas tocando aquí?\n${g.citas[0].link}\n\nSi al final no puedes venir, contéstanos a este mensaje y te buscamos otro hueco. Así podemos dárselo a otro paciente.\n\n¡Gracias!`;}
+ return `Hola${nom?' '+nom:''},\n\nTe escribimos de nuevo desde *FISIO365* porque aún no nos has confirmado tu cita:\n*${cuando} a las ${horas.join(' y a las ')}*${fis.length?`\nCon ${fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y ')}`:''}\n\n¿Nos la confirmas tocando aquí?\n${g.citas[0].link}?r=2\n\nSi al final no puedes venir, contéstanos a este mensaje y te buscamos otro hueco. Así podemos dárselo a otro paciente.\n\n¡Gracias!`;}
 // Abrir WhatsApp sin ir dejando una pestaña por paciente:
 // móvil → abre la app directamente; ordenador → siempre la MISMA pestaña de WhatsApp Web (o la app de escritorio si se elige)
 const esMovil=()=>/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
