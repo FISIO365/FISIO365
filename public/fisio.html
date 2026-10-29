@@ -7011,7 +7011,7 @@ const ADM={tab:'equipo',d:null};
 // Pregunta de sí/no con el estilo del panel (en vez del cuadro del navegador)
 function admSiNo(txt,si){return new Promise(ok=>{const m=hzModal(`<div class="hz-top"><div><b>¿Seguro?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><p class="adm-nota" style="font-size:14px;color:#3d342e">${escH(txt)}</p><div class="hz-bts"><button type="button" class="adm-gen s-n">Cancelar</button><button type="button" class="hz-ok s-s">${escH(si||'Sí, seguir')}</button></div>`);
  const fin=v=>{m.remove();ok(v);};m.querySelector('.hz-x').onclick=m.querySelector('.s-n').onclick=()=>fin(false);m.querySelector('.s-s').onclick=()=>fin(true);m.onclick=e=>{if(e.target===m)fin(false);};});}
-const ADM_SEC=[['agenda','Agenda'],['pacientes','Pacientes'],['chat','Chat'],['checklist','Check-list'],['callin','Call-in'],['captacion','Captación'],['programas','Programas'],['ejercicios','Ejercicios'],['anamnesis','Anamnesis'],['rendimiento','Rendimiento'],['estadisticas','Estadísticas'],['school','School'],['sugerencias','Leer sugerencias'],['admin','Administración']];
+const ADM_SEC=[['agenda','Agenda'],['pacientes','Pacientes'],['chat','Chat'],['checklist','Check-list'],['callin','Call-in'],['captacion','Captación'],['programas','Programas'],['ejercicios','Ejercicios'],['anamnesis','Anamnesis'],['rendimiento','Rendimiento'],['estadisticas','Estadísticas'],['school','School'],['sugerencias','Leer sugerencias'],['admin','Entrar en Administración'],['direccion','Dirección (ve el Daily report)']];
 const ADM_TIPOS=['Vacaciones','Festivo','Día libre','Menos horas','Baja','Formación','Otro'];
 const ADM_DC={Lunes:'Lun',Martes:'Mar','Miércoles':'Mié',Jueves:'Jue',Viernes:'Vie','Sábado':'Sáb'};
 async function admPost(a,b){return agPost(a,Object.assign({yo:fisioActual.nombre,clave:fisioActual._pwd},b||{}));}
@@ -7353,9 +7353,11 @@ async function renderAdmin(wrap){
  function pintaAcc(){const act=activos();
   body.innerHTML=`<div class="adm-card"><div class="adm-h"><b>Qué secciones ve cada uno</b><small>Se cambia al momento: a la otra persona se le actualiza el menú en un minuto.</small></div>
    <div class="adm-tw"><table class="adm-t"><thead><tr><th></th>${act.map(f=>`<th><span class="adm-av sm">${av(f)}</span>${escH(f.nombre.split(' ')[0])}</th>`).join('')}</tr></thead>
-   <tbody>${ADM_SEC.map(([k,t])=>`<tr><td>${t}</td>${act.map(f=>`<td><button type="button" class="adm-ck${f.accesos[k]?' on':''}" data-id="${f.id}" data-k="${k}" aria-label="${escH(t)} · ${escH(f.nombre)}"></button></td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
-  body.querySelectorAll('.adm-ck').forEach(b=>b.onclick=async()=>{const f=ADM.d.equipo.find(x=>x.id===b.dataset.id),k=b.dataset.k,v=!f.accesos[k];b.classList.toggle('on',v);b.disabled=true;
-   const r=await admPost('seg-adm-acceso',{id:f.id,k,v});b.disabled=false;if(!r.ok){b.classList.toggle('on',!v);toast(r.error||'No se ha podido cambiar',false);return;}f.accesos[k]=v;
+   <tbody>${ADM_SEC.map(([k,t])=>`<tr><td>${t}</td>${act.map(f=>`<td><button type="button" class="adm-ck${(k==='direccion'?f.direccion:f.accesos[k])?' on':''}" data-id="${f.id}" data-k="${k}" aria-label="${escH(t)} · ${escH(f.nombre)}"></button></td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  body.querySelectorAll('.adm-ck').forEach(b=>b.onclick=async()=>{const f=ADM.d.equipo.find(x=>x.id===b.dataset.id),k=b.dataset.k,v=!(k==='direccion'?f.direccion:f.accesos[k]);b.classList.toggle('on',v);b.disabled=true;
+   const r=await admPost('seg-adm-acceso',{id:f.id,k,v});b.disabled=false;if(!r.ok){b.classList.toggle('on',!v);toast(r.error||'No se ha podido cambiar',false);return;}
+   if(k==='direccion'){f.direccion=v;if(String(f.nombre).toLowerCase()===String(fisioActual.nombre).toLowerCase()){fisioActual.direccion=v;aplicarRole();}return;}
+   f.accesos[k]=v;
    if(String(f.nombre).toLowerCase()===String(fisioActual.nombre).toLowerCase()){fisioActual.accesos[k]=v;aplicarRole();}});
  }
  if(await cargar())pinta();

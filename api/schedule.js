@@ -1595,7 +1595,12 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, fisio: vista(d) });
         }
         if (action === 'seg-adm-acceso') { // marcar o desmarcar una sección para una persona
-          const r = full.find(x => x.id === q.id); if (!r || !ACC.includes(q.k)) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
+          const r = full.find(x => x.id === q.id); if (!r || !(ACC.includes(q.k) || q.k === 'direccion')) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
+          if (q.k === 'direccion') { // no es una sección: es el extra «Dirección» (Daily report y lo que es solo de dirección)
+            if (r.id === yo.id && !q.v) return res.status(400).json({ ok: false, error: 'No puedes quitarte a ti mismo Dirección' });
+            const d = await at(`${FT}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'DIRECCIÓN': !!q.v } }) });
+            return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+          }
           if (r.id === yo.id && q.k === 'admin' && !q.v) return res.status(400).json({ ok: false, error: 'No puedes quitarte a ti mismo el acceso a Administración' });
           const d = await at(`${FT}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ['acc_' + q.k]: !!q.v } }) });
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
