@@ -1849,36 +1849,6 @@ module.exports = async function handler(req, res) {
     try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogConsSvg(), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
     catch (e) { return res.redirect(302, 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); }
   }
-  // Copia única: lo que solo estaba en Tally (firma, tutor, recomendación) pasa a Airtable, para poder cerrar Tally
-  if (action === 'tally-backfill') {
-    const KEY = process.env.TALLY_API_KEY; if (!KEY) return res.status(200).json({ ok: false, error: 'sin clave de Tally' });
-    const max = Math.min(60, +req.query.max || 30), FORMS = { b5j1M2: CONS_T, Gex8jo: CONS_O, Dq4gE5: CONS_O }, mapa = {};
-    for (const form of Object.keys(FORMS)) for (let page = 1; page <= 30; page++) {
-      const d = await fetch(`https://api.tally.so/forms/${form}/submissions?filter=completed&page=${page}&limit=50`, { headers: { Authorization: `Bearer ${KEY}` } }).then(x => x.ok ? x.json() : null).catch(() => null);
-      if (!d) break; const qs = d.questions || [], lab = id => { const x = qs.find(z => z.id === id); return capNorm(x && (x.title || x.label) || ''); };
-      const val = a => Array.isArray(a) ? a.map(v => typeof v === 'object' ? '' : v).join(', ') : (typeof a === 'object' ? '' : String(a ?? ''));
-      (d.submissions || []).forEach(sb => { const o = { firma: '', tutor: '', nif: '', rec: '', informe: [] };
-        (sb.responses || []).forEach(x => { const l = lab(x.questionId), a = x.answer !== undefined ? x.answer : x.value, q0 = qs.find(z => z.id === x.questionId) || {};
-          if (/tutor/.test(l) && /nif/.test(l)) o.nif = val(a).trim(); else if (/tutor/.test(l)) o.tutor = val(a).trim(); else if (/recomend/.test(l)) o.rec = val(a).trim();
-          else if (/informe/.test(l) && Array.isArray(a)) o.informe = a.filter(v => v && v.url).map(v => ({ url: v.url, filename: v.name || 'informe' }));
-          if (!o.firma && (/firma|signature/.test(l) || q0.type === 'SIGNATURE')) { const m = JSON.stringify(a || '').match(/https:\/\/storage\.tally\.so\/[^"]+/); if (m) o.firma = m[0].replace(/\\u0026/g, '&'); } });
-        mapa[sb.id] = o; });
-      if (!d.hasMore) break;
-    }
-    const pend = [];
-    for (const T of [CONS_T, CONS_O]) {
-      const rs = await capTodos(T, `filterByFormula=${encodeURIComponent("{SUBMISSION ID}!=''")}`).catch(() => []);
-      rs.forEach(r => { const F = r.fields || {}, o = mapa[String(F['SUBMISSION ID'] || '').trim()]; if (!o) return; const f = {};
-        if (o.firma && !(F['FIRMA'] || []).length) f.FIRMA = [{ url: o.firma, filename: 'firma.png' }];
-        if (T === CONS_T) { if (o.tutor && !F['TUTOR']) f.TUTOR = o.tutor; if (o.nif && !F['NIF TUTOR']) f['NIF TUTOR'] = o.nif.toUpperCase(); if (o.rec && !F['RECOMENDÓ']) f['RECOMENDÓ'] = o.rec; }
-        else if (o.informe.length && !(F['INFORME'] || []).length) f.INFORME = o.informe;
-        if (Object.keys(f).length) pend.push({ T, id: r.id, fields: f }); });
-    }
-    const lote = pend.slice(0, max); let hechos = 0;
-    for (const T of [CONS_T, CONS_O]) { const l = lote.filter(x => x.T === T);
-      for (let i = 0; i < l.length; i += 10) { const r = await at(T, { method: 'PATCH', body: JSON.stringify({ records: l.slice(i, i + 10).map(x => ({ id: x.id, fields: x.fields })), typecast: true }) }); if (!r.error) hechos += l.slice(i, i + 10).length; else console.log('backfill', JSON.stringify(r.error).slice(0, 200)); } }
-    return res.status(200).json({ ok: true, envios: Object.keys(mapa).length, pendientes: pend.length, hechos, quedan: pend.length - hechos, detalle: { firmas: pend.filter(x => x.fields.FIRMA).length, tutores: pend.filter(x => x.fields.TUTOR).length, recomendo: pend.filter(x => x.fields['RECOMENDÓ']).length, informes: pend.filter(x => x.fields.INFORME).length } });
-  }
   // Formularios propios de suelo pélvico y alta oncológica
   if (action === 'cons-otro-og') {
     const kind = CO_KIND[req.query.kind] ? req.query.kind : 'sp';
