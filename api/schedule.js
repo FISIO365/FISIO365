@@ -685,6 +685,15 @@ async function pidenConsentimiento(pids, antesDe) {
   out.yaVino = yaVino; return out;
 }
 // Página del enlace del informe (/i/TOKEN): comprueba que es el paciente, enseña el informe y pide firmar el recibí
+// Sube un archivo (base64) a un campo de adjuntos de Airtable. Fotos, PDF, Word, Excel…
+const TIPOS_ADJ = /^(image\/(png|jpeg|webp|gif|heic|heif)|application\/(pdf|msword|vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet|presentationml\.presentation)|vnd\.ms-excel)|text\/plain)$/;
+async function subirAdjunto(recId, campo, a) {
+  if (!a || !a.file || String(a.file).length > 6e6) return { error: 'El archivo es demasiado grande (máx. 4 MB)' };
+  const tipo = TIPOS_ADJ.test(a.tipo || '') ? a.tipo : 'application/octet-stream';
+  const r = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${recId}/${campo}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: tipo, file: String(a.file), filename: String(a.nombre || 'archivo').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120) }) }).then(x => x.json()).catch(e => ({ error: e.message }));
+  return r.error ? { error: 'No se ha podido subir ' + (a.nombre || 'el archivo') } : { ok: true };
+}
+const verAdj = L => (L || []).map(a => ({ url: a.url, nombre: a.filename || 'archivo', tipo: a.type || '', bytes: a.size || 0, mini: (a.thumbnails && a.thumbnails.large && a.thumbnails.large.url) || '' }));
 // Nº de informe (sale en el PDF del informe y en el recibí) y huella del texto (SHA-256): si el informe cambia después de firmar, ya no coincide
 const infCodigo = id => 'INF-' + String(id || '').slice(3).toUpperCase();
 const infHuella = t => require('crypto').createHash('sha256').update(String(t || '').replace(/\r/g, '').trim(), 'utf8').digest('hex');
@@ -1255,7 +1264,7 @@ module.exports = async function handler(req, res) {
         const mias = `AND({ORIGEN}='Equipo',{DE}='${yo.replace(/'/g, "\\'")}')`;
         const vista = r => { const F = r.fields || {}, c = (F.CAPTURA || [])[0];
           return { id: r.id, texto: F.TEXTO || '', origen: nm(F.ORIGEN) || 'Equipo', apartado: nm(F.APARTADO) || 'General', tipo: nm(F.TIPO), de: F['ANÓNIMA'] ? 'Anónimo' : (F.DE || ''), anonima: !!F['ANÓNIMA'], paciente: F['ANÓNIMA'] ? '' : (F.PACIENTE || ''),
-            captura: c ? { url: c.url, mini: (c.thumbnails && c.thumbnails.large && c.thumbnails.large.url) || c.url } : null, estado: nm(F.ESTADO) === 'Vista' ? 'Nueva' : (nm(F.ESTADO) || 'Nueva'), respuesta: F.NOTA || '', respondidoPor: F['CAMBIADO POR'] || '',
+            captura: c ? { url: c.url, mini: (c.thumbnails && c.thumbnails.large && c.thumbnails.large.url) || c.url } : null, adjuntos: verAdj(F.CAPTURA), estado: nm(F.ESTADO) === 'Vista' ? 'Nueva' : (nm(F.ESTADO) || 'Nueva'), respuesta: F.NOTA || '', respondidoPor: F['CAMBIADO POR'] || '',
             respuestaVista: !!F['RESPUESTA VISTA'], fecha: F.FECHA || r.createdTime || '' }; };
         if (action === 'seg-sug-contar') {
           const [nuevas, resp] = await Promise.all([
@@ -1287,6 +1296,11 @@ module.exports = async function handler(req, res) {
             sinCaptura = !!up.error;
           }
           return res.status(200).json({ ok: true, id: rec.id, sinCaptura });
+        }
+        if (action === 'seg-sug-adjunto') { // fotos y archivos de una sugerencia del equipo (solo quien la envió)
+          if (!okId(q.id)) return res.status(400).json({ ok: false, error: 'Sugerencia no válida' });
+          const r = await at(`${SUG}/${q.id}`); if (r.error || pila((r.fields || {}).DE) !== yo) return res.status(403).json({ ok: false, error: 'No puedes adjuntar aquí' });
+          const u = await subirAdjunto(q.id, CAPT, q.archivo); return res.status(200).json(u.ok ? { ok: true } : { ok: false, error: u.error });
         }
         if (action === 'seg-sug-estado') { // responder: Aceptada · Hecha · No se hará (Descartada), con respuesta opcional
           if (!lector) return res.status(403).json({ ok: false, error: 'No tienes acceso al buzón de sugerencias' });
@@ -1325,7 +1339,7 @@ module.exports = async function handler(req, res) {
         const nmC = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
         const listaPara = t => String(t || '').split(',').map(x => x.trim()).filter(Boolean);
         const okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
-        const vistaMsg = r => { const F = r.fields || {}; return { id: r.id, de: F.DE || '', para: listaPara(F.PARA), cuerpo: F.CUERPO || '', fecha: F.FECHA || r.createdTime || '' }; };
+        const vistaMsg = r => { const F = r.fields || {}; return { id: r.id, de: F.DE || '', para: listaPara(F.PARA), cuerpo: F.CUERPO || '', fecha: F.FECHA || r.createdTime || '', adjuntos: verAdj(F.ADJUNTOS) }; };
         // Número correlativo por año entre las comunicaciones que existen: si se borra una, las demás se renumeran solas
         let SEQ_C = {};
         const numerar = roots => { const m = {}, n = {}; roots.filter(r => !r.fields.HILO && r.fields['Nº']).sort((a, b) => a.fields['Nº'] - b.fields['Nº']).forEach(r => { const y = String(r.fields.FECHA || r.createdTime || '').slice(0, 4); n[y] = (n[y] || 0) + 1; m[r.id] = n[y]; }); SEQ_C = m; };
@@ -1493,6 +1507,11 @@ module.exports = async function handler(req, res) {
           if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' });
           return res.status(200).json({ ok: true, id: d.records[0].id });
         }
+        if (action === 'seg-com-adjunto') { // adjunto de una comunicación o de una respuesta: solo quien la escribió
+          if (!okId(q.id)) return res.status(400).json({ ok: false, error: 'Comunicación no válida' });
+          const r = await at(`${COM}/${q.id}`); if (r.error || String((r.fields || {}).DE || '') !== yo) return res.status(403).json({ ok: false, error: 'No puedes adjuntar aquí' });
+          const u = await subirAdjunto(q.id, 'fldv1YBgbIinCFaiC', q.archivo); return res.status(200).json(u.ok ? { ok: true } : { ok: false, error: u.error });
+        }
         if (action === 'seg-com-responder') {
           const root = await buscar(q.id), cuerpo = String(q.cuerpo || '').trim().slice(0, 20000);
           const F = root.fields, de = F.DE || '', para0 = listaPara(F.PARA);
@@ -1503,12 +1522,12 @@ module.exports = async function handler(req, res) {
           // Respuestas escritas: la de un destinatario solo le llega a quien la envió; un comentario de quien la envió, a todos
           if (cuerpo) { const otros = de === yo ? para0.filter(p => p && p !== yo) : [de];
             const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: 'RE: ' + (F.ASUNTO || ''), HILO: root.id, DE: yo, PARA: otros.join(', '), CUERPO: cuerpo, FECHA: ahora } }] }) });
-            if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' }); }
+            if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' }); q._respId = d.records[0].id; }
           await marcar(root, 'LEÍDO');
           if (para0.includes(yo) && (q.recibido || q.hecho || cuerpo) && !json(root.fields.RECIBIDO)[yo]) await marcar(root, 'RECIBIDO'); // acuse de recibo
           if (q.hecho && para0.includes(yo) && !['Ausencia', 'Tareas', 'Incidencia', 'Ayuda'].includes(nmC(F.TIPO))) { const hc = json(root.fields.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
             await marcar(root, 'HECHO', todos && F['REQUIERE ACCIÓN'] ? { ESTADO: 'Cerrada' } : null); }
-          return res.status(200).json({ ok: true });
+          return res.status(200).json({ ok: true, id: q._respId || '' });
         }
         if (action === 'seg-com-hecho') {
           const root = await buscar(q.id), F = root.fields, para0 = listaPara(F.PARA);

@@ -1687,6 +1687,14 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .cm-ic{width:34px;height:34px;border-radius:10px;background:#f7f3ef;display:flex;align-items:center;justify-content:center;flex:none}.com-modo.on .cm-ic{background:#fbe3d7}.cm-ic svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .cm-tx b{display:block;font-size:14.5px;color:#1a1a1a}.com-modo.on .cm-tx b{color:#c2552e}.cm-tx small{display:block;font-size:12px;color:#7d6a60;line-height:1.4;margin-top:2px}
 .s-req{margin-top:14px}
+.adj-w{margin-top:10px}.adj-b{display:inline-flex;align-items:center;gap:8px;font-family:var(--font);font-size:13.5px;font-weight:600;color:#6b5f57;background:#fff;border:1.5px dashed #d9cfc6;border-radius:99px;padding:8px 14px;cursor:pointer}.adj-b svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.adj-ls{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.adj-ls:empty{display:none}.adj-it{position:relative;display:inline-flex;align-items:center;gap:8px;max-width:100%;background:#f7f3ef;border-radius:12px;padding:7px 30px 7px 8px;font-size:12.5px}
+.adj-it i,.adj-doc i{font-style:normal;flex:none;width:34px;height:40px;border-radius:8px;background:#c2552e;color:#fff;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center}.adj-it b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
+.adj-it.img{padding:0;width:64px;height:64px;border-radius:12px;overflow:hidden}.adj-it.img img{width:100%;height:100%;object-fit:cover;display:block}
+.adj-it button{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(26,26,26,.65);color:#fff;font-size:10px;cursor:pointer;line-height:1}
+.adj-ver{display:flex;flex-direction:column;gap:8px;margin-top:12px}.adj-fotos{display:flex;flex-wrap:wrap;gap:8px}.adj-fotos a{display:block;width:96px;height:96px;border-radius:12px;overflow:hidden;background:#f1ede9}.adj-fotos img{width:100%;height:100%;object-fit:cover;display:block}
+.adj-doc{display:flex;align-items:center;gap:10px;text-decoration:none;color:#1a1a1a;background:#f7f3ef;border-radius:12px;padding:8px 12px 8px 8px;max-width:340px}.adj-doc span{min-width:0}.adj-doc b{display:block;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.adj-doc small{font-size:11.5px;color:#7d6a60}
+.com-adjr .adj-w{margin-top:8px}
 </style>
 </head>
 <body>
@@ -6644,31 +6652,53 @@ function renderSug(wrap){
  pintar();
 }
 
+// ── Adjuntos (fotos y archivos) para Comunicaciones y Sugerencias ──
+// adjSelector(): botón «Adjuntar» + lista; .lista() devuelve [{nombre,tipo,file(base64)}]. Las fotos se reducen (1600 px, JPEG)
+function adjSelector(){
+ const el=ce('div','adj-w'),L=[];
+ el.innerHTML=`<button type="button" class="adj-b"><svg viewBox="0 0 24 24"><path d="M21 11.5l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l9-9a3.7 3.7 0 0 1 5.2 5.2l-9 9a1.8 1.8 0 0 1-2.6-2.6l8.3-8.3"/></svg>Adjuntar fotos o archivos</button><input type="file" multiple accept="image/*,.heic,.heif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" hidden><div class="adj-ls"></div>`;
+ const fi=el.querySelector('input'),ls=el.querySelector('.adj-ls');
+ const pinta=()=>{ls.innerHTML=L.map((a,i)=>a.img?`<span class="adj-it img"><img src="${a.prev}" alt=""><button type="button" data-i="${i}" aria-label="Quitar">✕</button></span>`:`<span class="adj-it"><i>${escH((a.nombre.split('.').pop()||'').toUpperCase().slice(0,4))}</i><b>${escH(a.nombre)}</b><button type="button" data-i="${i}" aria-label="Quitar">✕</button></span>`).join('');
+  ls.querySelectorAll('button').forEach(b=>b.onclick=()=>{L.splice(+b.dataset.i,1);pinta();});
+  el.querySelector('.adj-b').lastChild.textContent=L.length?'Adjuntar más':'Adjuntar fotos o archivos';};
+ const b64=blob=>new Promise((ok,ko)=>{const fr=new FileReader();fr.onerror=ko;fr.onload=()=>ok(String(fr.result).split(',')[1]);fr.readAsDataURL(blob);});
+ el.querySelector('.adj-b').onclick=()=>fi.click();
+ fi.onchange=async()=>{const fs=[...(fi.files||[])];fi.value='';
+  for(const f of fs){if(L.length>=6){toast('Como mucho 6 archivos',false);break;}
+   const esImg=/^image\//.test(f.type)||/\.(heic|heif)$/i.test(f.name);let blob=f,tipo=f.type||'application/octet-stream',nombre=f.name;
+   if(esImg&&f.type!=='image/gif'){try{const bmp=await createImageBitmap(f);const k=Math.min(1,1600/Math.max(bmp.width,bmp.height));const c=document.createElement('canvas');c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.82));if(bl){blob=bl;tipo='image/jpeg';nombre=nombre.replace(/\.\w+$/,'')+'.jpg';}}catch(e){}}
+   if(blob.size>4*1048576){toast(`«${f.name}» pesa más de 4 MB`,false);continue;}
+   try{L.push({nombre,tipo,file:await b64(blob),img:esImg,prev:esImg?URL.createObjectURL(blob):''});}catch(e){toast('No se ha podido leer '+f.name,false);}}
+  pinta();};
+ return{el,lista:()=>L.map(({nombre,tipo,file})=>({nombre,tipo,file})),vaciar:()=>{L.length=0;pinta();}};
+}
+// Sube los adjuntos uno a uno al registro ya creado. Devuelve cuántos han fallado
+async function adjSubir(accion,id,lista){let mal=0;for(const a of lista){try{const r=await comPost(accion,{id,archivo:a});if(!r.ok)mal++;}catch(e){mal++;}}return mal;}
+// Cómo se ven los adjuntos en un mensaje: fotos en miniatura y archivos como ficha
+function adjHtml(L){if(!L||!L.length)return '';const fotos=L.filter(a=>/^image\//.test(a.tipo)),docs=L.filter(a=>!/^image\//.test(a.tipo));
+ return `<div class="adj-ver">${fotos.length?`<div class="adj-fotos">${fotos.map(a=>`<a href="${escH(a.url)}" target="_blank" rel="noopener"><img src="${escH(a.mini||a.url)}" alt="${escH(a.nombre)}" loading="lazy"></a>`).join('')}</div>`:''}${docs.map(a=>`<a class="adj-doc" href="${escH(a.url)}" target="_blank" rel="noopener"><i>${escH((a.nombre.split('.').pop()||'').toUpperCase().slice(0,4))}</i><span><b>${escH(a.nombre)}</b><small>${a.bytes?Math.max(1,Math.round(a.bytes/1024))+' KB · ':''}Toca para abrir</small></span></a>`).join('')}</div>`;}
 function sugForm(body,alEnviar){const F=SUG.f;
  body.innerHTML=`<div class="sug-card"><p class="sug-lbl">¿Sobre qué es?</p>
   <div class="sug-ap">${SUG_AP.map(([k,ic,d])=>`<button type="button" data-a="${k}">${sugIco(ic)}<span><b>${k}</b><small>${d}</small></span></button>`).join('')}</div>
   <div class="sug-tipo" hidden><p class="sug-lbl">¿Qué es?</p><div class="sug-seg"><button type="button" data-t="Mejora">Una mejora o idea</button><button type="button" data-t="Fallo">Un fallo</button></div></div>
   <p class="sug-lbl">Cuéntalo</p><textarea class="sug-ta" maxlength="3000"></textarea>
-  <div class="sug-adj" hidden><button type="button" class="sug-adj-b">${sugIco('clip')}Adjuntar captura</button><input type="file" accept="image/*" hidden><div class="sug-prev-w"></div></div>
+  <div class="sug-adjs"></div>
   <button type="button" class="sug-env">Enviar sugerencia</button></div>`;
- const ta=body.querySelector('.sug-ta'),env=body.querySelector('.sug-env'),fi=body.querySelector('input[type=file]'),pw=body.querySelector('.sug-prev-w');
+ const ta=body.querySelector('.sug-ta'),env=body.querySelector('.sug-env'),adjS=SUG.adj||(SUG.adj=adjSelector());body.querySelector('.sug-adjs').appendChild(adjS.el);
  ta.value=F.texto;ta.oninput=()=>{F.texto=ta.value;};
  const pinta=()=>{body.querySelectorAll('.sug-ap button').forEach(b=>b.classList.toggle('on',b.dataset.a===F.apartado));
-  const app=F.apartado==='App';body.querySelector('.sug-tipo').hidden=!app;body.querySelector('.sug-adj').hidden=!app;
+  const app=F.apartado==='App';body.querySelector('.sug-tipo').hidden=!app;
   body.querySelectorAll('.sug-seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===F.tipo));
   ta.placeholder=!F.apartado?'Elige arriba sobre qué es y escribe aquí…':app&&F.tipo==='Fallo'?'Qué estabas haciendo, qué esperabas que pasara y qué ha pasado…':app?'Qué cambiarías o añadirías, y para qué te serviría…':'Escribe aquí tu sugerencia…';
-  pw.innerHTML=F.cap?`<div class="sug-prev"><img src="data:${F.cap.tipo};base64,${F.cap.file}" alt="Captura"><button type="button" aria-label="Quitar captura">✕</button></div>`:'';
-  const q=pw.querySelector('button');if(q)q.onclick=()=>{F.cap=null;pinta();};
-  body.querySelector('.sug-adj-b').lastChild.textContent=F.cap?'Cambiar captura':'Adjuntar captura';};
+  };
  body.querySelectorAll('.sug-ap button').forEach(b=>b.onclick=()=>{F.apartado=b.dataset.a;pinta();});
  body.querySelectorAll('.sug-seg button').forEach(b=>b.onclick=()=>{F.tipo=b.dataset.t;pinta();});
- body.querySelector('.sug-adj-b').onclick=()=>fi.click();
- fi.onchange=async()=>{const f=fi.files&&fi.files[0];fi.value='';if(!f)return;try{F.cap=await sugReducir(f);pinta();}catch(e){toast('No se ha podido leer la imagen',false);}};
  env.onclick=async()=>{const t=ta.value.trim();if(!F.apartado){toast('Elige sobre qué es',false);return;}if(!t){ta.focus();toast('Escribe tu sugerencia',false);return;}
   env.disabled=true;env.textContent='Enviando…';
-  try{const r=await comPost('seg-sug-enviar',{apartado:F.apartado,tipo:F.apartado==='App'?F.tipo:'',texto:t,captura:F.apartado==='App'&&F.cap?F.cap:null});
+  try{const r=await comPost('seg-sug-enviar',{apartado:F.apartado,tipo:F.apartado==='App'?F.tipo:'',texto:t});
    if(!r.ok)throw new Error(r.error||'No se ha podido enviar');
-   toast(r.sinCaptura?'Enviada, pero la captura no se ha podido subir':'¡Gracias! Sugerencia enviada',!r.sinCaptura);SUG.f={apartado:'',tipo:'Mejora',texto:'',cap:null};alEnviar();}
+   const adjs=adjS.lista();let mal=0;if(adjs.length&&r.id){env.textContent='Subiendo archivos…';mal=await adjSubir('seg-sug-adjunto',r.id,adjs);}
+   toast(mal?'Enviada, pero algún archivo no se ha podido subir':'¡Gracias! Sugerencia enviada',!mal);SUG.f={apartado:'',tipo:'Mejora',texto:'',cap:null};SUG.adj=null;alEnviar();}
   catch(e){toast(e.message,false);env.disabled=false;env.textContent='Enviar sugerencia';}};
  pinta();}
 
@@ -6687,12 +6717,12 @@ async function sugLista(body,modo){
    <div class="sug-main"><div class="sug-top">${sugTags(x)}${!rec?`<span class="sug-est ${x.estado}">${x.estado==='Nueva'?'Enviada':SUG_EST[x.estado]}</span>`:''}<span class="sug-fe">${rec?`<b>${escH(String(x.de||'—').split(/\s+/).slice(0,2).join(' '))}</b> · `:''}${escH(sugFecha(x.fecha))}</span></div>
     <div class="sug-tx">${escH(x.texto)}</div>
     ${x.respuesta&&!abierta?`<div class="sug-resp"><b>${escH(x.respondidoPor||'Dirección')}</b>${escH(x.respuesta)}</div>`:''}
-    ${x.captura||(rec&&x.paciente)?`<div class="sug-pie">${x.captura?`<img src="${escH(x.captura.mini)}" alt="Captura" data-cap>`:''}${rec&&x.paciente?'<a href="#" data-ficha>Ver ficha</a>':''}</div>`:''}
+    ${adjHtml(x.adjuntos)}${rec&&x.paciente?`<div class="sug-pie"><a href="#" data-ficha>Ver ficha</a></div>`:''}
     ${rec?sugCajaResp(x,abierta):''}</div></div>`;}).join('')
    :`<div class="sug-card sug-vacio">${sugIco('buzon')}${rec?'Todavía no ha llegado ninguna sugerencia.':'Aún no has enviado ninguna sugerencia.'}</div>`;
   body.querySelectorAll('.sug-it').forEach(el=>{const x=base.find(s=>s.id===el.dataset.id);
    const ck=el.querySelector('.sug-ck');if(ck)ck.onclick=()=>guarda(x,{estado:sugCerrada(x)?'Nueva':'Hecha'});
-   const c=el.querySelector('[data-cap]');if(c)c.onclick=()=>window.open(x.captura.url,'_blank');
+
    const f=el.querySelector('[data-ficha]');if(f)f.onclick=ev=>{ev.preventDefault();showSection('pac');abrirFichaPaciente(x.paciente,x.de);};
    // Un toque = guardado (y le llega a quien la envió). Tocar el que ya está marcado lo quita
    el.querySelectorAll('.sug-res [data-e]').forEach(b=>b.onclick=()=>{const e=b.dataset.e;guarda(x,{estado:x.estado===e?'Nueva':e},x.estado===e?'Quitado':'Guardado: '+SUG_EST[e]);});
@@ -6832,20 +6862,21 @@ async function comHilo(wrap,id){
    <div class="com-tags">${esAus||esp?'':h.req?`<span class="com-pill ${h.abierta?'nar':'gris'}">${h.abierta?'Requiere acción':'Cerrada'}</span>`:(!h.abierta?'<span class="com-pill gris">Cerrada</span>':'')}${h.limite?`<span class="com-pill ${h.abierta&&h.limite<agHoyIso()?'rojo':'gris'}">Límite ${comLim(h.limite)}</span>`:''}</div>
    <dl class="com-dl"><dt>De</dt><dd>${escH(h.de)}</dd><dt>Para</dt><dd>${escH(comLista(h.para))}</dd><dt>Asunto</dt><dd class="as">${escH(esAus?'Solicitud de '+String(A.que||'ausencia').toLowerCase():h.asunto)}</dd></dl>
    ${sello}${ficha}${h.tipo==='Tareas'?'':fichaEsp}
-   ${D.resumen&&D.html?`<div class="com-res">${D.html}</div>`:m0.cuerpo?`<div class="com-cu">${comCuHtml(m0.cuerpo)}</div>`:''}${h.tipo==='Tareas'?fichaEsp:''}
+   ${D.resumen&&D.html?`<div class="com-res">${D.html}</div>`:m0.cuerpo?`<div class="com-cu">${comCuHtml(m0.cuerpo)}</div>`:''}${adjHtml(m0.adjuntos)}${h.tipo==='Tareas'?fichaEsp:''}
    ${firma(m0.de)}
    <footer class="com-pie"><span class="com-logo"><span>FISIO</span>365</span>Fourth Dynamic, S.L. · Gran de Sant Andreu 163, Barcelona</footer>
   </article>
-  ${resp.map(m=>{const resp1=t=>`<article class="com-carta com-r${m.de===yo?' mio':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${comCuHtml(t)}</div></article>`;
+  ${resp.map(m=>{const resp1=t=>`<article class="com-carta com-r${m.de===yo?' mio':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${comCuHtml(t)}</div>${adjHtml(m.adjuntos)}</article>`;
    const ev=comEvento(m.cuerpo);if(!ev)return resp1(String(m.cuerpo||''));
    return `<div class="com-ev ${ev.tipo}"><span class="com-ev-i">${comIco(ev.tipo==='no'?'cruz':'check')}</span><div><b>${escH(ev.titulo)}</b><small>${escH([comFecha(m.fecha)].concat(ev.det).join(' · '))}</small></div></div>${ev.ojo.length?`<div class="com-ojo"><b>Citas con paciente que hay que mover</b>${ev.ojo.map(x=>`<span>${escH(x)}</span>`).join('')}</div>`:''}${ev.coment?resp1(ev.coment):''}`;}).join('')}
-  ${(env&&!esAus)||(!env&&!esAus&&!esp&&MODO==='responder'&&h.para.includes(yo))?`<div class="com-card com-resp${puedeResp||(env&&false)?'':' plegada'}"><button type="button" class="com-anadir">+ ${env?'Escribir un comentario':'Añadir otra respuesta'}</button><p class="com-acc-t">${env?'Lo verá quien la ha recibido.':'Tu respuesta solo la ve '+escH(h.de)+'.'}</p><textarea rows="4" placeholder="${env?'Escribe un comentario…':'Escribe tu respuesta…'}"></textarea><div class="com-bts" style="margin-top:8px"><button type="button" class="com-b" data-a="resp">Enviar ${env?'comentario':'respuesta'}</button></div></div>`:''}
+  ${(env&&!esAus)||(!env&&!esAus&&!esp&&MODO==='responder'&&h.para.includes(yo))?`<div class="com-card com-resp${puedeResp||(env&&false)?'':' plegada'}"><button type="button" class="com-anadir">+ ${env?'Escribir un comentario':'Añadir otra respuesta'}</button><p class="com-acc-t">${env?'Lo verá quien la ha recibido.':'Tu respuesta solo la ve '+escH(h.de)+'.'}</p><textarea rows="4" placeholder="${env?'Escribe un comentario…':'Escribe tu respuesta…'}"></textarea><div class="com-adjr"></div><div class="com-bts" style="margin-top:8px"><button type="button" class="com-b" data-a="resp">Enviar ${env?'comentario':'respuesta'}</button></div></div>`:''}
   ${acc?`<div class="com-card com-acc">${acc}</div>`:''}
   ${env?`<div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>`:''}
 
   ${env&&!(esAus&&h.resolucion!=='Pendiente')?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}`;
  box.querySelector('.com-volver').onclick=volver;
  const ta=box.querySelector('textarea');
+ const adjR=box.querySelector('.com-adjr')?adjSelector():null;if(adjR)box.querySelector('.com-adjr').appendChild(adjR.el);
  box.querySelectorAll('.com-ta[data-ti]').forEach(b=>b.onclick=async()=>{if(b.disabled)return;const i=+b.dataset.ti,on=!b.classList.contains('on');b.disabled=true;
   try{const r=await comPost('seg-com-tarea',{id:h.id,idx:i,hecho:on});if(!r.ok)throw new Error(r.error||'No se ha podido');if(r.todas)toast('¡Todas hechas!',true);const y=comY();COM.d=null;wrap.innerHTML='';await comHilo(wrap,h.id);comSetY(y);}catch(e){b.disabled=false;toast(e.message,false);}});
  {const rp=box.querySelector('.com-resp'),ad=box.querySelector('.com-anadir');if(ad)ad.onclick=()=>{rp.classList.remove('plegada');ta.focus();};}
@@ -6854,7 +6885,12 @@ async function comHilo(wrap,id){
    const y=comY();COM.d=null;wrap.innerHTML='';await comHilo(wrap,h.id);comSetY(y);}
   catch(e){bs.forEach(x=>x.disabled=false);b.textContent=t0;toast(e.message,false);}};
  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;
-  if(a==='resp'){const t=ta.value.trim();if(!t){ta.focus();toast('Escribe algo',false);return;}hacer(b,'seg-com-responder',{cuerpo:t,hecho:miPend&&MODO==='responder'},'Respuesta enviada');}
+  if(a==='resp'){const adjs=adjR?adjR.lista():[];let t=ta.value.trim();if(!t&&!adjs.length){ta.focus();toast('Escribe algo',false);return;}if(!t)t=adjs.length===1?'Te adjunto un archivo.':'Te adjunto '+adjs.length+' archivos.';
+   (async()=>{const bs=box.querySelectorAll('.com-acc button,.com-resp button,.com-cerrar');bs.forEach(x=>x.disabled=true);const t0=b.textContent;b.textContent='Enviando…';
+    try{const r=await comPost('seg-com-responder',{id:h.id,cuerpo:t,hecho:miPend&&MODO==='responder'});if(!r.ok)throw new Error(r.error||'No se ha podido');
+     let mal=0;if(adjs.length&&r.id){b.textContent='Subiendo archivos…';mal=await adjSubir('seg-com-adjunto',r.id,adjs);}
+     toast(mal?'Enviada, pero algún archivo no se ha podido subir':'Respuesta enviada',!mal);const y=comY();COM.d=null;wrap.innerHTML='';await comHilo(wrap,h.id);comSetY(y);}
+    catch(e){bs.forEach(x=>x.disabled=false);b.textContent=t0;toast(e.message,false);}})();}
   else if(a==='hecho')hacer(b,'seg-com-responder',{cuerpo:'',hecho:true},{leer:'Recibido',hacer:'Marcado como hecho',responder:'Hecho'}[MODO]||'Hecho');
   else if(a==='recib')hacer(b,'seg-com-responder',{cuerpo:'',recibido:true},'Recibido');
   else if(a==='todas')hacer(b,'seg-com-tarea',{idx:'todas',hecho:true},'¡Todas hechas!');
@@ -6949,6 +6985,7 @@ function comNueva(onOk,paraIni){
  m.querySelectorAll('.com-modo').forEach(b=>b.onclick=()=>{S.modo=b.dataset.m;if(S.modo==='leer')S.limite='';pinta();});
  $m('.com-lim').onclick=()=>miniCal($m('.com-lim'),S.limite||agHoyIso(),f=>{S.limite=f;pinta();});
  // Mencionar pacientes: se escribe «@Nombre» y, al enviar, se guarda con su ficha para que se pueda abrir con un toque
+ const adjN=adjSelector();$m('.com-menc').insertAdjacentElement('afterend',adjN.el);
  const menc=window.__comMenc=[];window.__comUlt=null;mencionesEn($m('.com-cuerpo'),menc);$m('.com-cuerpo').addEventListener('focus',()=>{window.__comUlt=$m('.com-cuerpo');});try{pintaTareas();}catch(_){}
  $m('.com-menc').onclick=()=>comElegirPaciente(p=>{const ta=(window.__comUlt&&window.__comUlt.isConnected)?window.__comUlt:$m('.com-cuerpo'),t='@'+capTit(p.nombre),i=ta.selectionStart!=null?ta.selectionStart:ta.value.length;
   ta.value=ta.value.slice(0,i)+(i&&!/\s$/.test(ta.value.slice(0,i))?' ':'')+t+' '+ta.value.slice(i);if(!menc.some(x=>x.id===p.id))menc.push({id:p.id,t});ta.dispatchEvent(new Event('input'));ta.focus();});
@@ -6962,7 +6999,9 @@ function comNueva(onOk,paraIni){
   else{if(!S.para.length)return toast('Elige a quién se la envías',false);if(!asunto){$m('.com-asunto').focus();return toast('Falta el asunto',false);}if(!cuerpo){$m('.com-cuerpo').focus();return toast('Escribe el contenido',false);}
    datos={para:S.para,tipo:T,asunto,cuerpo,req:S.modo!=='leer',modo:S.modo,limite:S.limite};}
   b.disabled=true;b.textContent='Enviando…';
-  try{const r=await comPost('seg-com-enviar',datos);if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast({Ausencia:'Solicitud enviada a administración',Incidencia:'Enviado a administración',Ayuda:'Petición de ayuda enviada',Tareas:'Tareas enviadas'}[T]||'Comunicación enviada',true);cerrar();onOk&&onOk(r.id);}
+  try{const r=await comPost('seg-com-enviar',datos);if(!r.ok)throw new Error(r.error||'No se ha podido enviar');
+   const adjs=adjN.lista();let mal=0;if(adjs.length&&r.id){b.textContent='Subiendo archivos…';mal=await adjSubir('seg-com-adjunto',r.id,adjs);}
+   toast(mal?`Enviada, pero ${mal===1?'un archivo no se ha podido subir':mal+' archivos no se han podido subir'}`:({Ausencia:'Solicitud enviada a administración',Incidencia:'Enviado a administración',Ayuda:'Petición de ayuda enviada',Tareas:'Tareas enviadas'}[T]||'Comunicación enviada'),!mal);cerrar();onOk&&onOk(r.id);}
   catch(e){b.disabled=false;b.textContent='Enviar';toast(e.message,false);}};
  pintaTareas();pinta();
 }
