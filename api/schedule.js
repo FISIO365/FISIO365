@@ -1749,7 +1749,7 @@ module.exports = async function handler(req, res) {
   }
   // Reenvío de la copia (solo formularios de hoy, una vez por instancia)
   if (action === 'cdoc-mail') {
-    const id = String(q.id || ''); global._cdocMail = global._cdocMail || {};
+    const id = String(req.query.id || ''); global._cdocMail = global._cdocMail || {};
     if (!/^rec[A-Za-z0-9]{14}$/.test(id) || global._cdocMail[id]) return res.status(400).json({ ok: false });
     const r = await at(`${CONS_T}/${id}`); const F = (r && r.fields) || {};
     const hoyM = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
