@@ -6104,14 +6104,12 @@ async function agRecordatorios(onDone,modoIni,encFIni){
 function cargarJsPDF(){return new Promise((ok,ko)=>{if(window.jspdf&&window.jspdf.jsPDF)return ok(window.jspdf.jsPDF);const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=()=>window.jspdf&&window.jspdf.jsPDF?ok(window.jspdf.jsPDF):ko(new Error('No se ha podido cargar el PDF'));s.onerror=()=>ko(new Error('No se ha podido cargar el PDF. Revisa la conexión.'));document.head.appendChild(s);});}
 function agPdfHuecos(){
  const eq=agEquipo();let dias=7,sel=new Set();
- const m=hzModal(`<div class="hz-top"><div><small>Agenda</small><b>Huecos libres en PDF</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+ const m=hzModal(`<div class="hz-top"><div><small>Agenda</small><b>Huecos libres</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">¿Qué días?</div><div class="sev-ch c3 hl-dias">${[[3,'3 días'],[7,'7 días'],[14,'14 días']].map(([n,t])=>`<button type="button" data-n="${n}" class="${n===7?'on':''}">Próx. ${t}</button>`).join('')}</div>
   <div class="hz-lab">¿De qué fisio?</div><div class="seg-rap hl-fis"><button type="button" data-f="" class="on">Todos</button>${eq.map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
   <div class="hl-res fp-mu"></div>
-  <button type="button" class="hl-link"><b>Mandar enlace para reservar</b><small>Ven estos huecos, tocan la hora que les va bien y queda reservada en la agenda</small></button>
-  <div class="hl-o">o mandar el PDF</div>
-  <div class="hz-lab">Mensaje para acompañar el PDF</div><textarea class="seg-n hl-msg" rows="3">Hola 👋 Te paso los huecos libres que tenemos estos días en FISIO365. Si te va bien alguno, dímelo y te lo reservo 😊</textarea>
-  <div class="sev-bts"><button type="button" class="sev-b hl-dl">Descargar</button><button type="button" class="sev-b ok hl-wa">Enviar por WhatsApp</button></div>`);
+  <button type="button" class="hl-link"><b>Mandar por WhatsApp</b><small>Le llega un enlace con estos huecos: toca la hora que le va bien y queda reservada en la agenda</small></button>
+`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const res=m.querySelector('.hl-res');let huecos=null,tk=0;
  const rango=()=>{const h=agHoyIso();return [h,agMover(h,dias-1)];};
@@ -6161,10 +6159,6 @@ function agPdfHuecos(){
   const C=(CONF&&CONF.clinica)||{};doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(...G);doc.text(`${C.tel||'672 89 39 49'} · ${C.direccion||'C/ Gran de Sant Andreu, 163 · Barcelona'}`,X,y);y+=5.5;doc.text('También puedes reservar desde la app de FISIO365.',X,y);
   const nom=`Huecos libres FISIO365 ${t1.getDate()}-${t1.getMonth()+1}${fisSel.length===1?' '+fisSel[0]:''}.pdf`;
   return {blob:doc.output('blob'),nom};}
- m.querySelector('.hl-wa').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{const {blob,nom}=await hacer();const file=new File([blob],nom,{type:'application/pdf'});
-   const msg=m.querySelector('.hl-msg').value.trim();try{if(msg)await navigator.clipboard.writeText(msg);}catch(_){}
-   if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share(Object.assign({files:[file],title:nom},msg?{text:msg}:{}));}catch(er){}}else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nom;a.click();toast(msg?'PDF descargado y mensaje copiado: pégalo en WhatsApp':'PDF descargado: adjúntalo en WhatsApp',true);}}catch(er){toast(er.message,false);}b.disabled=false;};
- m.querySelector('.hl-dl').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{const {blob,nom}=await hacer();const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nom;a.click();}catch(er){toast(er.message,false);}b.disabled=false;};
  contar();
 }
 function renderAgenda(wrap){
