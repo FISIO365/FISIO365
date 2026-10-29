@@ -8431,7 +8431,7 @@ async function consDatos(id){if(_consDoc[id])return _consDoc[id];const r=await (
 function pn(n){n=String(n||'').trim().split(/\s+/)[0]||'';return n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';}
 function capi(n){n=String(n||'').trim();if(/[a-záéíóúñ]/.test(n)&&n===n.replace(/^\S/,c=>c.toUpperCase()))return n;n=n.split(' ')[0];return n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';}
 function mensajeTarjeta(quien,nuevo,cad){const nm=capi(quien),nvm=capi(nuevo);
- return `¡Hola ${nm}! Gracias por recomendarnos${nvm?' a '+nvm:''}, nos hace muchísima ilusión.\n\nTe regalamos ${TJ_IMP()} € de descuento en tu próxima sesión (válido hasta el ${String(cad||'').split('-').reverse().join('/')}). No tienes que hacer nada: lo tenemos apuntado en tu ficha y te lo descontamos al pagar.\n\n¡Gracias por confiar en FISIO365!`;}
+ return `¡Hola ${nm}! Gracias por recomendarnos${nvm?' a '+nvm:''}, nos hace muchísima ilusión. Te hemos preparado un regalo: *${TJ_IMP()} € de descuento* en tu próxima sesión (válido hasta el ${String(cad||'').split('-').reverse().join('/')}).`;}
 // Imagen de la tarjeta regalo (para mandarla por WhatsApp)
 async function tarjetaImagen(quien,nuevo,cad,tipo){
  try{await document.fonts.load('800 60px Poppins');await document.fonts.load('600 30px Poppins');}catch(e){}
@@ -8457,7 +8457,7 @@ function enviarTarjeta(tel,quien,nuevo,cad,refId,crear){return new Promise(fin=>
   <div class="hz-bts"><button type="button" class="hz-ok">Enviar por WhatsApp</button></div>`);
  m.querySelector('.hz-x').onclick=()=>{m.remove();fin(false);};
  {const cad0=cad||(()=>{const c=new Date();c.setMonth(c.getMonth()+6);return isoMadrid(c);})();let tm=0,url='';
-  const pv=()=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();m.querySelector('.tj-prev').textContent=mensajeTarjeta(q,n,cad0)+'\n\nAquí tienes tu tarjeta: https://app.fisioterapia365.com/tarjeta/…';
+  const pv=()=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();m.querySelector('.tj-prev').textContent=mensajeTarjeta(q,n,cad0)+'\n\nAquí lo tienes:\nhttps://app.fisioterapia365.com/tarjeta/…';
    clearTimeout(tm);tm=setTimeout(async()=>{try{const b=await tarjetaImagen(q,n,cad0,'image/jpeg');if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(b);const im=m.querySelector('.tj-img');if(im)im.src=url;}catch(e){}},250);};
   pv();m.querySelector('.tj-q').oninput=pv;m.querySelector('.tj-n').oninput=pv;}
  m.querySelector('.hz-ok').onclick=async e=>{const q=m.querySelector('.tj-q').value.trim()||capi(quien),n=m.querySelector('.tj-n').value.trim();
@@ -8472,7 +8472,7 @@ async function enviarTarjeta2(tel,quien,nuevo,cad,refId,w0){let txt=mensajeTarje
   const d=await (await fetch('/api/schedule?action=seg-referido-img',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:refId,b64})})).json();
   if(!d.ok)console.log('tarjeta img',d);}catch(e){console.log('tarjeta img',e);}
  // El enlace va siempre (la página de la tarjeta se ve aunque la imagen no se haya podido guardar)
- if(refId)txt+=`\n\nAquí tienes tu tarjeta: https://app.fisioterapia365.com/tarjeta/${refId}`;
+ if(refId)txt+=`\n\nAquí lo tienes:\nhttps://app.fisioterapia365.com/tarjeta/${refId}`;
  const t=segTel(tel||''),u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;
  if(w)w.location.href=u;else window.open(u,'_blank');}
 function waAbrir(tel,txt){const t=segTel(tel||'');window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');}

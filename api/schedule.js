@@ -837,6 +837,42 @@ async function rachaConfirmadas(pid, fecha, hora) {
 }
 
 
+// ── TARJETA REGALO POR RECOMENDARNOS: página y vista previa (WhatsApp) ──
+function ogTarjetaSvg({ imp, pila }) {
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `Gracias, ${pila}` : '¡Gracias!', sz = t1.length > 15 ? Math.max(28, Math.round(40 * 15 / t1.length)) : 40;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="232" y="176" width="136" height="104" rx="12"/><rect x="220" y="146" width="160" height="34" rx="10"/><path d="M300 146v134"/><path d="M300 146c-14-30-50-30-46-8 3 14 30 10 46 8zM300 146c14-30 50-30 46-8-3 14-30 10-46 8z"/></g>`
+    + ogTexto(O.b, `${imp} € para ti`, 46, 300, 366, 0, T)
+    + ogTexto(O.b, t1, sz - 10, 300, 412, 0, K)
+    + ogTexto(O.m, 'por recomendarnos', 23, 300, 450, 0, M) + `</svg>`;
+}
+function paginaTarjeta(D) {
+  const e = escHtml;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu regalo · FISIO365</title>
+<meta property="og:title" content="${e(D.imp)} € de regalo${D.pila ? ', ' + e(D.pila) : ''}"><meta property="og:description" content="Gracias por recomendarnos. Te lo descontamos en tu próxima sesión."><meta property="og:image" content="${e(D.og)}"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
+.c{background:#fff;border-radius:26px;padding:30px 20px 24px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start;text-align:center}
+.reg{display:block;margin:0 auto;width:96px;height:96px;overflow:visible}.reg *{fill:none;stroke:#c2552e;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.reg .caja{stroke-dasharray:200;stroke-dashoffset:200;animation:dr .8s .1s ease-out forwards}.reg .tapa{transform-origin:48px 34px;animation:dr0 .01s forwards,abre .9s 1s cubic-bezier(.3,1.6,.5,1) both}.reg .lazo{opacity:0;animation:fi0 .3s .8s forwards}
+.reg .tapa,.reg .lazo{stroke-dasharray:none}@keyframes abre{0%{transform:none}40%{transform:translateY(-12px) rotate(-14deg)}100%{transform:translateY(-6px) rotate(-8deg)}}
+@keyframes dr{to{stroke-dashoffset:0}}@keyframes fi0{to{opacity:1}}@keyframes dr0{to{opacity:1}}
+h1{font-size:23px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-size:14.5px;color:#5c4f47;margin:0;line-height:1.5}
+.tk{position:relative;margin:24px auto 0;background:#fdf1ea;border-radius:22px;padding:22px 18px 20px;overflow:hidden;animation:pop .6s 1.4s cubic-bezier(.3,1.5,.5,1) both}
+.tk:before,.tk:after{content:'';position:absolute;top:50%;width:26px;height:26px;margin-top:-13px;border-radius:50%;background:#fff}.tk:before{left:-13px}.tk:after{right:-13px}
+.tk small{display:block;font-size:11px;font-weight:700;letter-spacing:.18em;color:#c2552e}.tk b{display:block;font-size:52px;line-height:1.05;color:#c2552e;margin:6px 0 2px}.tk span{display:block;font-size:14px;color:#2b2420;font-weight:500}
+.tk hr{border:none;border-top:2px dashed #f1d9cc;margin:16px 6px 12px}.tk em{display:block;font-style:normal;font-size:13px;color:#7d6a60}
+@keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+.pasos{margin:22px 0 0;text-align:left}.pa{display:flex;gap:11px;align-items:center;background:#faf7f4;border-radius:14px;padding:11px 12px;margin-bottom:7px;font-size:13.5px;color:#2b2420}.pa span{flex:none;width:32px;height:32px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center}.pa svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.pa small{display:block;font-size:12px;color:#7d6a60}
+.bt{display:flex;align-items:center;justify-content:center;width:100%;margin-top:16px;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border-radius:14px;padding:15px;text-decoration:none;animation:resp 2.6s 2.2s ease-in-out infinite}@keyframes resp{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}50%{box-shadow:0 0 0 7px rgba(194,85,46,.13)}}
+.fi{opacity:0;transform:translateY(8px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}.pie{margin-top:18px;font-size:12.5px;color:#7d6a60}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
+<body><div class="c"><svg class="reg" viewBox="0 0 96 96" aria-hidden="true"><path class="caja" d="M18 46h60v34a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path class="caja" d="M48 46v40"/><g class="tapa"><rect x="12" y="32" width="72" height="14" rx="5"/><path class="lazo" d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/></g></svg>
+<h1 class="fi" style="animation-delay:.9s">¡Gracias${D.pila ? ', ' + e(D.pila) : ''}!</h1><p class="sub fi" style="animation-delay:1s">Por recomendarnos. Nos hace muchísima ilusión, así que aquí tienes tu regalo.</p>
+<div class="tk"><small>TARJETA REGALO</small><b>${e(D.imp)} €</b><span>de descuento en tu próxima sesión</span><hr>${D.pila ? `<em>Para ${e(D.pila)}</em>` : ''}${D.cad ? `<em>Válida hasta el ${e(D.cad)}</em>` : ''}</div>
+<div class="pasos fi" style="animation-delay:1.8s"><div class="pa"><span><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><div>No tienes que hacer nada<small>Ya lo tenemos apuntado en tu ficha</small></div></div><div class="pa"><span><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h4"/></svg></span><div>Te lo descontamos al pagar<small>En tu próxima sesión con nosotros</small></div></div></div>
+<a class="bt fi" style="animation-delay:2s" href="https://app.fisioterapia365.com">Reservar mi próxima sesión</a><p class="pie">FISIO365 · ${e(D.dir)}</p></div></body></html>`;
+}
 // ── ENLACE PERSONAL DE LA APP (se manda por WhatsApp: ventajas, cómo instalarla y sus datos para entrar) ──
 function firmaApp(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('app:' + id).digest('hex').slice(0, 10); }
 const enlaceApp = id => `https://app.fisioterapia365.com/a/${id}-${firmaApp(id)}`;
@@ -1666,21 +1702,20 @@ module.exports = async function handler(req, res) {
     return res.status(200).send(paginaJustificante(D, tk, (await conf().catch(() => CONF_DEF)).clinica));
   }
   // Tarjeta regalo pública (el enlace que va por WhatsApp; la vista previa enseña la imagen)
-  if (action === 'tarjeta-img' || action === 'tarjeta-pagina') {
+  if (action === 'tarjeta-img' || action === 'tarjeta-pagina' || action === 'tarjeta-og') {
     const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(404).end();
     const r = await at(`tblr27u3cvtzfyqI6/${id}`); const a = r.fields && (r.fields['TARJETA IMG'] || [])[0];
-    // Sin la imagen guardada la página se enseña igual (con la tarjeta dibujada); solo falla si la tarjeta no existe
     if (!r.fields || !r.fields['CÓDIGO']) return res.status(404).send('Tarjeta no encontrada');
     if (action === 'tarjeta-img' && !a) return res.redirect(302, 'https://app.fisioterapia365.com/icons/icon-512.png');
     if (action === 'tarjeta-img') { const im = await fetch(a.url); res.setHeader('Content-Type', a.type || 'image/jpeg'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(Buffer.from(await im.arrayBuffer())); }
-    const impP = Number((await conf().catch(() => CONF_DEF)).tarjeta.importe) || 10;
-    const img = `https://app.fisioterapia365.com/api/schedule?action=tarjeta-img&id=${id}`, cad = String(r.fields['CADUCA'] || '').split('-').reverse().join('/');
+    const CF = await conf().catch(() => CONF_DEF), impP = Number(CF.tarjeta.importe) || 10, cad = String(r.fields['CADUCA'] || '').split('-').reverse().join('/');
+    let pila = String(r.fields['Nombre de quien recomendó'] || '').trim().split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
+    if (action === 'tarjeta-og') {
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogTarjetaSvg({ imp: impP, pila }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      catch (e) { return res.redirect(302, `https://app.fisioterapia365.com/api/schedule?action=tarjeta-img&id=${id}`); }
+    }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tarjeta regalo · FISIO365</title>
-<meta property="og:title" content="Tarjeta regalo de ${impP} €"><meta property="og:description" content="FISIO365 · Te lo descontamos en tu próxima sesión"><meta property="og:image" content="${img}"><meta property="og:image:width" content="1080"><meta property="og:image:height" content="1080"><meta property="og:image:type" content="image/jpeg"><meta property="og:type" content="website"><meta name="twitter:card" content="summary">
-<link rel="icon" href="/icons/favicon-cara.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
-<style>body{margin:0;background:#f5f2ee;font-family:Poppins,sans-serif;color:#1a1a1a;display:flex;justify-content:center}main{max-width:440px;width:100%;padding:28px 16px;box-sizing:border-box}img{width:100%;border-radius:20px;box-shadow:0 10px 30px rgba(194,85,46,.25);display:block}h1{font-size:20px;margin:22px 0 6px}p{font-size:15px;line-height:1.5;color:#5c4f47;margin:0 0 18px}a{display:block;text-align:center;background:#1a1a1a;color:#fff;text-decoration:none;font-weight:700;border-radius:14px;padding:14px}.tj{aspect-ratio:1;border-radius:20px;background:linear-gradient(135deg,#de8257,#c2552e);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 10px 30px rgba(194,85,46,.25)}.tj b{font-size:22px}.tj small{font-size:13px;letter-spacing:.2em;opacity:.9;margin-top:4px}.tj strong{font-size:84px;line-height:1.1;margin:14px 0 4px}.tj span{font-size:17px;font-weight:600}.tj em{font-style:normal;font-size:16px;margin-top:22px}.tj i{font-style:normal;font-size:13px;opacity:.85;margin-top:4px}</style></head>
-<body><main>${a ? `<img src="${img}" alt="Tarjeta regalo de ${impP} €">` : `<div class="tj"><b>FISIO365</b><small>TARJETA REGALO</small><strong>${impP} €</strong><span>de descuento en tu próxima sesión</span>${r.fields['Nombre de quien recomendó'] ? `<em>Para ${String(r.fields['Nombre de quien recomendó']).split(' ')[0].replace(/[<>&"]/g, '')}</em>` : ''}${cad ? `<i>Válida hasta el ${cad}</i>` : ''}</div>`}<h1>¡Gracias por recomendarnos!</h1><p>Tienes ${impP} € de descuento en tu próxima sesión${cad ? ', válido hasta el ' + cad : ''}. No tienes que hacer nada: lo tenemos apuntado y te lo descontamos al pagar.</p><a href="https://app.fisioterapia365.com">Abrir mi app de FISIO365</a></main></body></html>`);
+    return res.status(200).send(paginaTarjeta({ imp: impP, pila, cad, og: `https://app.fisioterapia365.com/tarjeta/${id}.png?v=1`, dir: ((CF.clinica || CONF_DEF.clinica).direccion) || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
   }
   // ── RECIBÍ DE INFORMES: enlace /i/TOKEN (WhatsApp o email) y firma desde la app del paciente ──
   // El enlace no lleva el informe: para verlo hay que poner los 4 últimos números del DNI (o la fecha de nacimiento) y firmar el recibí.
