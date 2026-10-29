@@ -7031,7 +7031,7 @@ async function renderAdmin(wrap){
  const av=f=>f.foto?`<img src="${escH(f.foto)}" alt="">`:escH(iniciales(f.nombre));
  function pintaEquipo(){const E=ADM.d.equipo,act=E.filter(f=>!f.baja),bj=E.filter(f=>f.baja);
   const fila=f=>{const hs=Object.entries(f.horas||{});const tot=hs.reduce((t,[,v])=>t+v,0);
-   return `<button type="button" class="adm-p${f.baja?' baja':''}" data-id="${f.id}"><span class="adm-av">${av(f)}</span><span class="adm-pt"><b>${escH(f.nombre)}</b><small>${f.role==='admin'?'Administración':'Fisioterapeuta'}${f.colegiado?' · Nº col. '+escH(f.colegiado):''}${f.baja?' · de baja desde el '+admFecha(f.baja):''}</small>
+   return `<button type="button" class="adm-p${f.baja?' baja':''}" data-id="${f.id}"><span class="adm-av">${av(f)}</span><span class="adm-pt"><b>${escH(f.nombre)}</b><small>${f.role==='admin'?'Administración':'Fisioterapeuta'}${f.direccion?' · Dirección':''}${f.colegiado?' · Nº col. '+escH(f.colegiado):''}${f.baja?' · de baja desde el '+admFecha(f.baja):''}</small>
     ${!f.baja&&hs.length?`<span class="adm-hs">${hs.map(([d,v])=>`<i>${ADM_DC[d]||d} ${v} h</i>`).join('')}<em>${tot} h/sem</em></span>`:''}</span>${!f.baja&&f.claveDebil?'<span class="adm-warn">Contraseña poco segura</span>':''}<span class="adm-chev">›</span></button>`;};
   body.innerHTML=`<div class="adm-card"><div class="adm-h"><b>Equipo</b><button type="button" class="adm-add">＋ Añadir persona</button></div>${act.map(fila).join('')}</div>
    ${bj.length?`<div class="adm-card"><div class="adm-h"><b>De baja</b><small>No pueden entrar ni salen en la agenda. Sus datos se guardan.</small></div>${bj.map(fila).join('')}</div>`:''}`;
