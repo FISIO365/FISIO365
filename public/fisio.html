@@ -9581,9 +9581,18 @@ async function abrirSesionesFactura(fisio){
    const ok=q=>!!q.ver,est=S.some(q=>!ok(q)),nP=S.filter(q=>!ok(q)).length;
    const pct=fisioActual&&fisioActual.pct!=null&&!isNaN(fisioActual.pct)?+fisioActual.pct:null,parte=pct==null?0:Math.round(S.reduce((a,q)=>a+(q.o==='Gratis'?0:(+q.eur||0)),0)*pct)/100;
    box.innerHTML=!S.length?'<div class="fac-vacio">No hay sesiones hechas este mes</div>':`${pct!=null?`<div class="hz-kp" style="grid-template-columns:1fr;margin-bottom:10px"><div><span>Tu parte (${String(pct).replace('.',',')} %)</span><b>${est?'≈ ':''}${fmtEur(parte)}</b><small>${est?'puede cambiar cuando dirección verifique las pendientes':'todo verificado: lo que va en tu factura de este mes'}</small></div></div>`:''}<p class="adm-nota" style="margin:2px 0 6px">${S.length} ${S.length===1?'sesión hecha':'sesiones hechas'} · ${nP?`<b>${nP} pendiente${nP>1?'s':''} de verificar por dirección</b>`:'<b class="ok">todas verificadas por dirección ✓</b>'}</p>
-    <div class="hz-bts" style="margin:4px 0 10px"><button type="button" class="hz-pdf">Ver PDF · guardar</button></div>
+    <div class="hz-bts" style="margin:4px 0 10px"><button type="button" class="hz-pdf">Ver PDF · guardar</button><button type="button" class="hz-pdf hz-xls">Descargar Excel</button></div>
     <div class="hz-sl hz-slro">${S.map(q=>`<button type="button" tabindex="-1"><span>${fdiaCorto(q.f)} · ${escH(q.h||'')}</span><b>${escH(q.pac)}</b><i class="${ok(q)?'hz-iok':'hz-ies'}">${q.o==='Gratis'?'Gratis':q.eur?fmtEur(q.eur):'—'}</i><small>${ok(q)?'<em class="hz-ver">✓ Verificado por dirección</em>':'<em class="hz-pver">Pendiente de verificar por dirección</em>'}</small></button>`).join('')}</div>`;
-   {const bp=box.querySelector('.hz-pdf');if(bp)bp.onclick=()=>{const mt=new Date(mes+'-15').toLocaleDateString('es-ES',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase()),imp=q=>q.o==='Gratis'?'Gratis':q.eur?fmtEur(q.eur):'—',vf=q=>ok(q)?{t:'Verificado',c:'ok'}:{t:'Pendiente',c:'no'};
+   {const bx=box.querySelector('.hz-xls');if(bx)bx.onclick=async()=>{bx.disabled=true;const t0=bx.textContent;bx.textContent='Preparando…';
+    try{await xlsxJs();const X=window.XLSX,mt=new Date(mes+'-15').toLocaleDateString('es-ES',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
+     const filas=[['Sesiones del mes · '+fisio+' · '+mt],[],['Día','Hora','Paciente','Importe (€)','Dirección']].concat(S.map(q=>[new Date(q.f+'T12:00:00'),q.h||'',q.pac||'',q.o==='Gratis'?0:(+q.eur||0),ok(q)?'Verificado':'Pendiente de verificar']));
+     filas.push([]);filas.push(['Sesiones hechas','','',S.length]);if(pct!=null)filas.push([`Tu parte (${String(pct).replace('.',',')} %)`,'','',parte,est?'Aproximado: faltan verificaciones':'Todo verificado']);
+     const ws=X.utils.aoa_to_sheet(filas,{cellDates:true});ws['!cols']=[{wch:12},{wch:7},{wch:32},{wch:12},{wch:30}];
+     for(let r=3;r<3+S.length;r++){const c=ws[X.utils.encode_cell({r,c:0})];if(c){c.t='d';c.z='dd/mm/yyyy';}const e=ws[X.utils.encode_cell({r,c:3})];if(e)e.z='#,##0.00 "€"';}
+     if(pct!=null){const e=ws[X.utils.encode_cell({r:filas.length-1,c:3})];if(e)e.z='#,##0.00 "€"';}
+     const wb=X.utils.book_new();X.utils.book_append_sheet(wb,ws,'Sesiones');X.writeFile(wb,`Sesiones_${fisio}_${mes}.xlsx`);}
+    catch(e){toast('No se ha podido crear el Excel',false);}bx.disabled=false;bx.textContent=t0;};}
+   {const bp=box.querySelector('.hz-pdf:not(.hz-xls)');if(bp)bp.onclick=()=>{const mt=new Date(mes+'-15').toLocaleDateString('es-ES',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase()),imp=q=>q.o==='Gratis'?'Gratis':q.eur?fmtEur(q.eur):'—',vf=q=>ok(q)?{t:'Verificado',c:'ok'}:{t:'Pendiente',c:'no'};
     pdfVista({etiqueta:'FISIO365 · SESIONES DEL MES',titulo:fisio,sub:mt,
      kpis:[['Sesiones hechas',String(S.length)]].concat(pct!=null?[['Tu parte ('+String(pct).replace('.',',')+' %)',(est?'≈ ':'')+fmtEur(parte)]]:[]).concat([['Pendientes de verificar',String(nP)]]),
      secciones:[{titulo:'Sesiones',cols:[['Día',26],['Hora',18],['Paciente',70],['Importe',26],['Dirección',38]],filas:S.map(q=>[fdiaCorto(q.f),q.h||'',q.pac||'',imp(q),vf(q)])}],
@@ -9593,6 +9602,7 @@ async function abrirSesionesFactura(fisio){
  m.querySelectorAll('.hz-mesn button').forEach(b=>b.onclick=()=>{const dt=new Date(mes+'-15');dt.setMonth(dt.getMonth()+ +b.dataset.d);const n=dt.toISOString().slice(0,7);if(n>mesMax)return;mes=n;cargar();});
  cargar();
 }
+function xlsxJs(){if(window.XLSX)return Promise.resolve();return new Promise((ok,ko)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>window.XLSX?ok():ko();s.onerror=ko;document.head.appendChild(s);});}
 function fmtEur(v){v=Math.round((+v||0)*100)/100;return v.toLocaleString('es-ES',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2})+' €';}
 // Agenda: la fila con los nombres de los fisios (o los días) se queda pegada arriba al bajar y se mueve a la vez que la agenda hacia los lados
 function agCabFija(grid){if(!grid||grid._cab)return;const cab=ce('div','ag-cabf');grid.parentNode.insertBefore(cab,grid);grid._cab=cab;
