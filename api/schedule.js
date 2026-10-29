@@ -1567,7 +1567,7 @@ module.exports = async function handler(req, res) {
           if (otro) return res.status(400).json({ ok: false, error: 'Ya hay alguien con ese nombre' });
           const mismaPila = full.find(r => r.id !== c.id && r.fields && !r.fields['FECHA BAJA'] && pila(r.fields.Name).toLowerCase() === pila(nombre).toLowerCase());
           if (mismaPila) return res.status(400).json({ ok: false, error: `Ya hay otra persona que se llama ${pila(nombre)}. En la agenda se distingue por el nombre de pila: ponle otro (por ejemplo «${pila(nombre)} M.»)` });
-          const f = { Name: nombre, Role: c.role === 'admin' ? 'admin' : 'fisio', 'NºColegiado': String(c.colegiado || '').trim(), 'TELÉFONO': String(c.tel || '').trim(), 'NOTAS ADMIN': String(c.notas || '').slice(0, 5000), 'CONTROL HORAS': !!c.control, 'BANCO HORAS': !!c.banco, 'DIRECCIÓN': !!c.direccion };
+          const f = { Name: nombre, Role: c.role === 'admin' ? 'admin' : 'fisio', 'NºColegiado': String(c.colegiado || '').trim(), 'TELÉFONO': String(c.tel || '').trim(), 'NOTAS ADMIN': String(c.notas || '').slice(0, 5000), 'CONTROL HORAS': !!c.control, 'BANCO HORAS': !!c.banco, 'DIRECCIÓN': !!c.direccion, acc_admin: !!c.direccion }; // Dirección = entrar aquí + Daily report
           const em = String(c.email || '').trim(); f.EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em) ? em : null;
           f['FECHA ALTA'] = /^\d{4}-\d{2}-\d{2}$/.test(c.alta || '') ? c.alta : null;
           const h = c.horas || {}, lin = []; let tot = 0; DIAS.forEach(d => { const n = Math.max(0, Math.min(14, Number(String(h[d] || '').replace(',', '.')) || 0)); if (n) { lin.push(`${d} ${n}`); tot += n; } });
@@ -1577,7 +1577,7 @@ module.exports = async function handler(req, res) {
             const n = v => { const x = Number(String(v == null ? '' : v).replace(',', '.')); return String(v == null ? '' : v).trim() === '' || !isFinite(x) ? null : x; };
             const pc = n(c.contrato.pct), co = n(c.contrato.coste);
             f['PORCENTAJE FISIO'] = t === 'Autónomo' && pc != null ? Math.max(0, Math.min(100, pc)) : null; f['COSTE EMPRESA MES'] = t === 'Nómina' && co != null ? Math.max(0, co) : null; }
-          if (c.id === yo.id) f.acc_admin = true; // que nadie se quite a sí mismo el acceso a Administración
+          if (c.id === yo.id) { f.acc_admin = true; f['DIRECCIÓN'] = true; } // que nadie se quite a sí mismo Dirección
           const clave = String(c.clave || '').trim();
           if (clave) { if (clave.length < 4) return res.status(400).json({ ok: false, error: 'La contraseña tiene que tener al menos 4 caracteres' }); f.Password = clave; }
           let d;
@@ -1596,13 +1596,10 @@ module.exports = async function handler(req, res) {
         }
         if (action === 'seg-adm-acceso') { // marcar o desmarcar una sección para una persona
           const r = full.find(x => x.id === q.id); if (!r || !(ACC.includes(q.k) || q.k === 'direccion')) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
-          if (q.k === 'direccion') { // no es una sección: es el extra «Dirección» (Daily report y lo que es solo de dirección)
-            if (r.id === yo.id && !q.v) return res.status(400).json({ ok: false, error: 'No puedes quitarte a ti mismo Dirección' });
-            const d = await at(`${FT}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'DIRECCIÓN': !!q.v } }) });
-            return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
-          }
-          if (r.id === yo.id && q.k === 'admin' && !q.v) return res.status(400).json({ ok: false, error: 'No puedes quitarte a ti mismo el acceso a Administración' });
-          const d = await at(`${FT}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ['acc_' + q.k]: !!q.v } }) });
+          if (r.id === yo.id && (q.k === 'admin' || q.k === 'direccion') && !q.v) return res.status(400).json({ ok: false, error: 'No puedes quitarte a ti mismo Dirección' });
+          // «Dirección» es una sola cosa: entrar en esta sección y ver lo de dirección (Daily report)
+          const campos = q.k === 'admin' || q.k === 'direccion' ? { acc_admin: !!q.v, 'DIRECCIÓN': !!q.v } : { ['acc_' + q.k]: !!q.v };
+          const d = await at(`${FT}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: campos }) });
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
         }
         if (action === 'seg-adm-ajustes') {
