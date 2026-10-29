@@ -837,6 +837,56 @@ async function rachaConfirmadas(pid, fecha, hora) {
 }
 
 
+// ── ENLACE PERSONAL DE LA APP (se manda por WhatsApp: ventajas, cómo instalarla y sus datos para entrar) ──
+function firmaApp(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('app:' + id).digest('hex').slice(0, 10); }
+const enlaceApp = id => `https://app.fisioterapia365.com/a/${id}-${firmaApp(id)}`;
+function ogAppSvg({ pila }) {
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `Tu app, ${pila}` : 'Tu app de FISIO365', sz = t1.length > 15 ? Math.max(28, Math.round(40 * 15 / t1.length)) : 40;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="256" y="160" width="88" height="152" rx="16"/><path d="M288 290h24"/><path d="M276 214 Q300 236 324 214"/><path d="M280 196h.01M320 196h.01" stroke-width="9"/></g>`
+    + ogTexto(O.b, t1, sz, 300, 384, 0, K) + ogTexto(O.m, 'Tu fisio, también entre sesiones', 23, 300, 426, 0, M) + `</svg>`;
+}
+function paginaApp(D) {
+  const J = JSON.stringify(D).replace(/</g, '\\u003c');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu app · FISIO365</title>
+<meta property="og:title" content="Tu app de FISIO365${D.pila ? ', ' + escHtml(D.pila) : ''}"><meta property="og:description" content="Tus ejercicios, el chat con tu fisio y tus citas. Aquí tienes tus datos para entrar."><meta property="og:image" content="${escHtml(D.url)}.png?v=1"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
+.c{background:#fff;border-radius:26px;padding:28px 20px 22px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start}
+.cab{text-align:center}.mv{display:block;margin:0 auto;width:72px;height:96px;animation:sube .8s cubic-bezier(.2,.8,.3,1) both,flota 3.4s 1.4s ease-in-out infinite}.mv rect,.mv path{fill:none;stroke:#c2552e;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.mv .cu{stroke-dasharray:140;stroke-dashoffset:140;animation:dr 1s .1s ease-out forwards}.mv .sm{stroke-dasharray:22;stroke-dashoffset:22;animation:dr .4s .9s ease-out forwards}.mv .oj{opacity:0;animation:fi0 .3s 1s forwards}
+@keyframes sube{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}@keyframes flota{0%,100%{transform:none}50%{transform:translateY(-5px) rotate(-3deg)}}@keyframes dr{to{stroke-dashoffset:0}}@keyframes fi0{to{opacity:1}}
+h1{font-size:23px;font-weight:700;margin:14px 0 4px;line-height:1.25}.sub{font-size:14.5px;color:#5c4f47;margin:0;line-height:1.5}
+.vt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:22px 0 0}.vt div{background:#faf7f4;border-radius:16px;padding:13px 12px}.vt span{display:flex;width:32px;height:32px;border-radius:10px;background:#fff;align-items:center;justify-content:center;margin-bottom:8px}
+.vt svg,.st svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.vt b{display:block;font-size:13.5px;color:#2b2420;line-height:1.3}.vt small{display:block;font-size:12px;color:#7d6a60;line-height:1.4;margin-top:2px}
+h2{font-size:15px;margin:26px 0 10px}
+.acc{background:#fdf1ea;border-radius:16px;padding:2px 14px}.acc>div{display:flex;align-items:center;gap:10px;padding:11px 0}.acc>div+div{border-top:1px solid #f6dfd2}.acc .v{flex:1;min-width:0}.acc small{display:block;font-size:11.5px;color:#8a7d74}.acc b{display:block;font-size:15px;color:#2b2420;overflow-wrap:anywhere}.acc .pin b{font-size:21px;letter-spacing:.14em;color:#c2552e}
+.cp{flex:none;border:none;background:#fff;border-radius:99px;padding:4px 10px;font:600 11.5px Poppins,sans-serif;color:#c2552e;cursor:pointer}
+.so{display:flex;background:#faf7f4;border-radius:12px;padding:3px;gap:3px;margin-bottom:10px}.so button{flex:1;border:none;background:none;border-radius:9px;padding:9px;font:500 13px Poppins,sans-serif;color:#7d6a60;cursor:pointer}.so button.on{background:#c2552e;color:#fff;font-weight:600}
+.bt{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:15px;cursor:pointer;text-decoration:none;animation:resp 2.6s 1.5s ease-in-out infinite}@keyframes resp{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}50%{box-shadow:0 0 0 7px rgba(194,85,46,.13)}}
+.st{display:flex;gap:11px;align-items:center;background:#faf7f4;border-radius:14px;padding:11px 12px;margin-bottom:7px;font-size:13.5px;color:#2b2420}.st i{flex:none;width:24px;height:24px;border-radius:50%;background:#fff;color:#c2552e;font:700 12px Poppins,sans-serif;display:flex;align-items:center;justify-content:center;font-style:normal}.st svg{flex:none;margin-left:auto}
+.nt{font-size:12px;color:#8a7d74;text-align:center;margin:10px 0 0}
+.dud{margin-top:24px;background:#fdf1ea;border-radius:20px;padding:16px;text-align:center}.dud b{font-size:14.5px}.dud p{margin:4px 0 12px;font-size:13px;color:#7d6a60}.dud-b{display:flex;gap:8px}.dud-b a{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:#fff;border-radius:12px;padding:10px;font:600 14px Poppins,sans-serif;color:#2b2420;text-decoration:none}.dud-b svg{width:17px;height:17px;fill:none;stroke:#c2552e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fi{opacity:0;transform:translateY(8px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
+<body><div class="c" id="c"></div><script>(function(){var D=${J},C=document.getElementById('c');
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function sv(p){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+p+'</svg>';}
+var V=[['<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9.5 5 2.5-5 2.5z"/>','Tus ejercicios en vídeo','Preparados por tu fisio solo para ti'],['<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/>','Chat con tu fisio','Para cualquier duda, cuando la tengas'],['<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>','Tus citas','A mano, y reserva cuando quieras'],['<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>','Tus documentos','Informes y justificantes, siempre contigo']];
+var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent)),so=ios?'ios':'and';
+var COMP='<path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8"/>',ADD='<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/>';
+function inst(){return so==='and'?'<a class="bt" href="'+D.play+'" target="_blank" rel="noopener">'+sv('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>').replace('<svg','<svg style="width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"')+'Descargar en Google Play</a><p class="nt">Se instala como cualquier app.</p>'
+ :'<div class="st"><i>1</i><span>Abre <b>app.fisioterapia365.com</b> en Safari</span></div><div class="st"><i>2</i><span>Toca <b>Compartir</b></span>'+sv(COMP)+'</div><div class="st"><i>3</i><span>Elige <b>«Añadir a pantalla de inicio»</b></span>'+sv(ADD)+'</div><a class="bt" href="'+D.web+'" target="_blank" rel="noopener" style="margin-top:10px">Abrir en Safari</a>';}
+function pinta(){C.innerHTML='<div class="cab"><svg class="mv" viewBox="0 0 48 64" aria-hidden="true"><rect class="cu" x="8" y="4" width="32" height="56" rx="7"/><path class="oj" d="M18 22h.01M30 22h.01" stroke-width="3.4"/><path class="sm" d="M17 30 Q24 37 31 30"/><path d="M20 52h8"/></svg>'
+ +'<h1 class="fi" style="animation-delay:.6s">Tu app'+(D.pila?', '+esc(D.pila):'')+'</h1><p class="sub fi" style="animation-delay:.7s">Tu fisio te acompaña también entre sesiones.</p></div>'
+ +'<div class="vt">'+V.map(function(v,i){return '<div class="fi" style="animation-delay:'+(.85+i*.08)+'s"><span>'+sv(v[0])+'</span><b>'+v[1]+'</b><small>'+v[2]+'</small></div>';}).join('')+'</div>'
+ +'<h2 class="fi" style="animation-delay:1.2s">Tus datos para entrar</h2><div class="acc fi" style="animation-delay:1.25s"><div><div class="v"><small>Usuario</small><b>'+esc(D.usuario)+'</b></div><button class="cp" data-c="'+esc(D.usuario)+'">Copiar</button></div><div class="pin"><div class="v"><small>PIN</small><b>'+esc(D.pin)+'</b></div><button class="cp" data-c="'+esc(D.pin)+'">Copiar</button></div></div>'
+ +'<h2 class="fi" style="animation-delay:1.3s">Instálala</h2><div class="fi" style="animation-delay:1.35s"><div class="so"><button data-s="and"'+(so==='and'?' class="on"':'')+'>Android</button><button data-s="ios"'+(so==='ios'?' class="on"':'')+'>iPhone</button></div><div id="in">'+inst()+'</div></div>'
+ +'<div class="dud"><b>¿Te ayudamos a instalarla?</b><p>Escríbenos o llámanos y lo hacemos contigo en un minuto.</p><div class="dud-b"><a href="https://wa.me/34'+D.tel.replace(/\\D/g,'').slice(-9)+'?text='+encodeURIComponent('Hola, necesito ayuda para instalar la app')+'" target="_blank" rel="noopener">'+sv('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/>')+'WhatsApp</a><a href="tel:'+D.tel.replace(/\\s/g,'')+'">'+sv('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>')+'Llamar</a></div></div>';
+ [].forEach.call(C.querySelectorAll('.so button'),function(b){b.onclick=function(){so=b.getAttribute('data-s');[].forEach.call(C.querySelectorAll('.so button'),function(x){x.classList.toggle('on',x===b);});document.getElementById('in').innerHTML=inst();};});
+ [].forEach.call(C.querySelectorAll('.cp'),function(b){b.onclick=function(){var t=b.getAttribute('data-c');try{navigator.clipboard.writeText(t);}catch(e){}b.textContent='¡Copiado!';setTimeout(function(){b.textContent='Copiar';},1500);};});}
+pinta();})();<\/script></body></html>`;
+}
 // ── RESERVAR DESDE UN ENLACE DE HUECOS LIBRES (se manda por WhatsApp; vale para pacientes y gente nueva) ──
 // El enlace lleva los días y fisios elegidos al mandarlo, firmado para que no se pueda cambiar.
 function firmaHuecos(k) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('huecos:' + k).digest('hex').slice(0, 8); }
@@ -1454,6 +1504,23 @@ module.exports = async function handler(req, res) {
     }
     const extra = conf0 ? { cal: { ics: `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}.ics`, google: calendarioCita(D, C).google } } : {};
     return res.status(200).send(paginaConfirmar({ ...D, ...extra, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '', app }, C));
+  }
+  // Enlace personal de la app (página y vista previa)
+  if (action === 'app-pagina' || action === 'app-og') {
+    const id = String(req.query.id || ''), sg = String(req.query.s || '');
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaApp(id)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: 'Este enlace no es válido.' })); }
+    const p = await at(`${PACIENTES}/${id}`); const P = p.fields || {};
+    let pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
+    if (action === 'app-og') {
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogAppSvg({ pila }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.status(302).end(); }
+    }
+    if (p.error) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: 'No encontramos tus datos. Escríbenos y te ayudamos.' })); }
+    let pin = String(P['PIN'] || '').trim(); if (!pin) { pin = nuevoPin(); await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: pin } }) }).catch(() => {}); }
+    const email = String(P['EMAIL'] || '').trim(), t = String(P['WHATSAPP'] || P['TELF'] || '').replace(/\D/g, '').slice(-9);
+    const C = (await conf().catch(() => CONF_DEF)).clinica || CONF_DEF.clinica;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Robots-Tag', 'noindex');
+    return res.status(200).send(paginaApp({ pila, usuario: email || t, pin, url: enlaceApp(id), play: 'https://play.google.com/store/apps/details?id=es.fisioterapia365.app', web: 'https://app.fisioterapia365.com', tel: C.tel || '672 89 39 49' }));
   }
   // Enlace de huecos libres: página para elegir y reservar (GET) y la reserva (POST)
   if (action === 'huecos') {
@@ -2690,6 +2757,10 @@ module.exports = async function handler(req, res) {
             const F = p.fields; out.push({ pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', pedida: F['RESEÑA PEDIDA'] || '', dejada: !!F['RESEÑA POSITIVA'], ultima: (ult[p.id] || {}).fecha || '', fisio: (ult[p.id] || {}).fisio || '', extra: !ult[p.id] }); });
           out.sort((a, b) => (b.ultima || '').localeCompare(a.ultima || '') || a.nombre.localeCompare(b.nombre));
           return res.status(200).json({ ok: true, hoy: hoyF, pacientes: out });
+        }
+        if (action === 'seg-agenda-app-enlace') {
+          if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false, error: 'Falta el paciente' });
+          return res.status(200).json({ ok: true, url: enlaceApp(q.pacienteId) });
         }
         if (action === 'seg-agenda-huecos-enlace') {
           if (!okF(q.desde) || !okF(q.hasta)) return res.status(400).json({ ok: false, error: 'Faltan las fechas' });

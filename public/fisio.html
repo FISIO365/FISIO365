@@ -8297,7 +8297,7 @@ async function listaTareas(cont,keep){
     acc.appendChild(q);
    }else if(x.tipo==='app'||x.tipo==='plan'){
     const b=ce('button','tk-b');b.type='button';
-    if(x.tipo==='app'){b.textContent='Enviar app';b.onclick=()=>enviarApp({nombre:x.a.nombre,tel:x.a.tel,email:x.a.email,pin:x.a.pin});}
+    if(x.tipo==='app'){b.textContent='Enviar app';b.onclick=()=>enviarApp({id:x.a.pacienteId,nombre:x.a.nombre,tel:x.a.tel,email:x.a.email,pin:x.a.pin});}
     else{b.textContent='Ver ficha';b.dataset.ficha=x.a.pacienteId;b.dataset.fn=x.a.nombre;}
     acc.appendChild(b);
     const q=ce('button','tk-q');q.type='button';q.setAttribute('aria-label','Quitar aviso');q.title='No volver a avisar de este paciente';q.innerHTML='✕';let arm=false;
@@ -8466,10 +8466,15 @@ const APP_URL='https://app.fisioterapia365.com',PLAY_URL='https://play.google.co
 function mensajeApp(P){const nm=capi(P.nombre);
  // Sin emojis: al abrir WhatsApp desde un enlace algunos se ven como «�»
  return `¡Hola ${nm}! Ya tienes tu *app de FISIO365*: tu fisio te acompaña también entre sesiones.\n\nCon ella tienes:\n- *Tus ejercicios en vídeo*, preparados por tu fisio solo para ti\n- *Chat directo con tu fisio* para cualquier duda\n- *Tus citas* a mano, y reservar cuando quieras\n- *Tus informes y documentos*, siempre contigo\n\n*Descárgala:*\n- Android: ${PLAY_URL}\n- iPhone: abre ${APP_URL} en Safari, toca Compartir y «Añadir a pantalla de inicio».\n\n*Tus datos para entrar:*\n- ${P.email?'Email: '+P.email:'Teléfono: '+segTel(P.whatsapp||P.telf||P.tel||'').slice(-9)}\n- PIN: *${P.pin}*\n\nCualquier duda, nos escribes por aquí. ¡Un abrazo!`;}
-function enviarApp(P){const t=segTel(P.whatsapp||P.telf||P.tel||'');
- if(!P.email&&segTel(P.whatsapp||P.telf||P.tel||'').length<9){toast('Le falta el email o el teléfono para poder entrar',false);return;}
- if(!P.pin){toast('Le falta el PIN: abre su ficha y se le pone solo',false);return;}
- const txt=mensajeApp(P);window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');}
+// Se manda un enlace personal: página bonita con las ventajas, cómo instalarla y su usuario y PIN (con vista previa en WhatsApp)
+async function enviarApp(P){const t=segTel(P.whatsapp||P.telf||P.tel||'');
+ if(!P.email&&t.length<9){toast('Le falta el email o el teléfono para poder entrar',false);return;}
+ const pid=P.id||P.pacienteId;const w=window.open('about:blank','_blank');
+ const ir=txt=>{const u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;if(w)w.location.href=u;else window.open(u,'_blank');};
+ if(!/^rec[A-Za-z0-9]{14}$/.test(pid||'')){if(!P.pin){if(w)w.close();toast('Le falta el PIN: abre su ficha y se le pone solo',false);return;}ir(mensajeApp(P));return;}
+ try{const r=await (await fetch(`/api/schedule?action=seg-agenda-app-enlace&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${pid}`)).json();if(!r.ok)throw 0;
+  ir(`¡Hola ${capi(P.nombre)}! Aquí tienes tu *app de FISIO365*: tus ejercicios en vídeo, el chat con tu fisio, tus citas y tus documentos.\n\nDentro tienes cómo instalarla y tus datos para entrar:\n${r.url}`);}
+ catch(e){if(P.pin)ir(mensajeApp(P));else{if(w)w.close();toast('No se ha podido crear el enlace',false);}}}
 // Elegir qué formulario de Tally mandar al paciente por WhatsApp
 function enviarFormulario(P){const t=segTel(P.whatsapp||P.telf||P.tel||''),n=String(P.nombre||'').split(' ')[0];
  const F=[['pv','Consentimiento informado','Datos, salud y consentimiento general',`Hola ${n}, antes de tu primera sesión en FISIO365 necesitamos que rellenes este formulario (2 minutos): ${CONSENT_URL} . Pon tu propio teléfono, por favor. ¡Gracias!`],
