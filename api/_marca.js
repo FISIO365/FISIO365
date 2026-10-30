@@ -17,7 +17,8 @@ const DEF = {
   email: 'info@fisioterapia365.com',
   web: 'fisioterapia365.com',
   googlePlace: 'ChIJCadKnf2G6AIRcmUzdzMr4nk',
-  iban: 'ES14 0182 2392 8002 0302 2638'
+  iban: 'ES14 0182 2392 8002 0302 2638',
+  color: '#c2552e'
 };
 const OPC_DEF = { sorteo: true, bomba: true };
 
@@ -32,8 +33,33 @@ function datos(guardado) {
   if (g.tel && !g.wa) { const d = String(g.tel).replace(/\D/g, ''); if (d.length === 9) o.wa = '34' + d; }
   const calle = s => String(s || '').split(/·|,(?=\s*\d{5})/)[0].trim();
   o.calle = calle(o.dirCorta) || calle(o.direccion);
+  o.color = /^#[0-9a-f]{6}$/i.test(String(g.color || '')) ? String(g.color).toLowerCase() : DEF.color;
+  o.logoV = Number(g.logoV) || 0; // versión del logo subido (0 = el de FISIO365)
   o.opciones = Object.assign({}, OPC_DEF, (g.opciones && typeof g.opciones === 'object') ? g.opciones : {});
   return o;
+}
+
+
+// ── Colores: el coral de FISIO365 y sus tonos se cambian por el color de la clínica ──
+const hx = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const aHex = c => '#' + c.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+const mezcla = (c, d, t) => c.map((v, i) => v + (d[i] - v) * t);
+// Tonos del coral que usa la app: [color de FISIO365, cómo se saca del color de la clínica]
+const BASE = hx('#c2552e'), W = [255, 255, 255], K = [0, 0, 0];
+const TONOS = ['#a3441f', '#fdf6ef', '#ab4a27', '#9a3f1f', '#d9774f', '#de8257', '#e0a487', '#e2b7a6', '#e3b9a6', '#e6c9bb', '#e8b597', '#e9cdbd', '#ecd2c4', '#efc7b4', '#f1d9cc', '#f3c9b2', '#f3c9b5', '#f3c9bb', '#f3d9c9', '#f3dccd', '#f3e3da', '#f6d2b8', '#f6dfd2', '#f7e6dd', '#fbe3d7', '#fbeae2', '#fbeee7', '#fbf3ee', '#fdebe1', '#fdeee4', '#fdf0e7', '#fdf0ea', '#fdf1ea', '#fdf1e8', '#fdf3ec', '#fdf6f1', '#fdf6f2', '#fff1ea', '#fff8f4', '#fbe9df', '#f6d5c5', '#e9a98f'];
+function tonoDe(orig, P) { // ¿cuánto blanco/negro tiene este tono respecto al coral? Se aplica lo mismo al color nuevo
+  const o = hx(orig), luzO = o.reduce((a, b) => a + b, 0), luzB = BASE.reduce((a, b) => a + b, 0);
+  if (luzO >= luzB) { const t = (luzO - luzB) / (765 - luzB); return aHex(mezcla(P, W, t)); }
+  const t = (luzB - luzO) / luzB; return aHex(mezcla(P, K, t));
+}
+function paresColor(color) {
+  if (!color || color === DEF.color) return [];
+  const P = hx(color), L = [[DEF.color, color]];
+  TONOS.forEach(t => L.push([t, tonoDe(t, P)]));
+  const out = [];
+  L.forEach(([a, b]) => { out.push([a, b]); out.push([a.toUpperCase(), b]); });
+  out.push(['194,85,46', P.join(',')], ['194, 85, 46', P.join(', ')]);
+  return out;
 }
 
 // Pares «texto de FISIO365 → texto de la clínica», de más largo a más corto. Solo los que cambian.
@@ -64,7 +90,9 @@ function pares(C) {
     ['(Barcelona)', 'ciudad', v => '(' + v + ')'],
     [D.marca, 'marca']
   ];
-  return L.filter(([, k]) => C[k] && C[k] !== D[k]).map(([a, k, f]) => [a, f ? f(C[k]) : C[k]]).filter(([a, b]) => a !== b);
+  const P = L.filter(([, k]) => C[k] && C[k] !== D[k]).map(([a, k, f]) => [a, f ? f(C[k]) : C[k]]).filter(([a, b]) => a !== b);
+  if (C.logoV) P.unshift(['/informe/logo.png', '/api/schedule?action=clinica-logo&v=' + C.logoV]);
+  return P.concat(paresColor(C.color));
 }
 
 // Cambia los textos de FISIO365 por los de la clínica. json=true: el texto va dentro de un JSON (emails, IA)
@@ -77,4 +105,4 @@ function marcar(txt, C, json) {
   return s;
 }
 
-module.exports = { DEF, OPC_DEF, datos, pares, marcar, limpio };
+module.exports = { DEF, OPC_DEF, datos, pares, paresColor, marcar, limpio };

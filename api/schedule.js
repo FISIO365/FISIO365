@@ -2001,7 +2001,12 @@ module.exports = async function handler(req, res) {
   { const _send = res.send.bind(res); res.send = b => _send(typeof b === 'string' && !/json/i.test(String(res.getHeader('Content-Type') || '')) ? MARCA.marcar(b, CLI) : b); }
   if (action === 'clinica-pub') { // lo público de la clínica para la app y el panel (nombre, teléfono, opciones…)
     const C = CLI; res.setHeader('Cache-Control', 'public, max-age=60');
-    return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones }, pares: MARCA.pares(C) });
+    return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones, color: C.color, logo: C.logoV ? '/api/schedule?action=clinica-logo&v=' + C.logoV : '' }, pares: MARCA.pares(C) });
+  }
+  if (action === 'clinica-logo') { // logo subido en Administración › Ajustes
+    const L = await ajuste('clinica-logo', null), m = L && String(L.data || '').match(/^data:(image\/(png|jpeg|webp|svg\+xml));base64,(.+)$/);
+    if (!m) { res.setHeader('Location', '/informe/logo.png'); return res.status(302).end(); }
+    res.setHeader('Content-Type', m[1]); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).end(Buffer.from(m[3], 'base64'));
   }
   // Medición de velocidad: se apunta en los logs cuánto tarda cada acción (para saber qué pantallas van lentas)
   { const t0 = Date.now(); res.on('finish', () => { const ms = Date.now() - t0; console.log(`TIEMPO ${action || '-'} ${ms}ms${ms > 1500 ? ' LENTO' : ''}`); }); }
@@ -2064,7 +2069,7 @@ module.exports = async function handler(req, res) {
     const p = await at(`${PACIENTES}/${id}`); const P = p.fields || {};
     let pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
     if (action === 'app-og') {
-      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogAppSvg({ pila }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogAppSvg({ pila }), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
       catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.status(302).end(); }
     }
     if (p.error) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: 'No encontramos tus datos. Escríbenos y te ayudamos.' })); }
@@ -2076,13 +2081,13 @@ module.exports = async function handler(req, res) {
   }
   // Formulario de primera visita propio (consentimiento + salud + firma) y la copia del paciente
   if (action === 'consentimiento-og') {
-    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogConsSvg(), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogConsSvg(), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
     catch (e) { return res.redirect(302, 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); }
   }
   // Formularios propios de suelo pélvico y alta oncológica
   if (action === 'cons-otro-og') {
     const kind = CO_KIND[req.query.kind] ? req.query.kind : 'sp';
-    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogOtroSvg(kind), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogOtroSvg(kind), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
     catch (e) { return res.redirect(302, 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); }
   }
   if (action === 'cons-otro') {
@@ -2196,7 +2201,7 @@ module.exports = async function handler(req, res) {
   if (action === 'huecos-og') {
     const k = String(req.query.k || ''), sg = String(req.query.s || ''), P = huecosDec(k);
     if (!P || sg !== firmaHuecos(k)) return res.status(404).send('No encontrado');
-    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogHuecosSvg(P), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogHuecosSvg(P), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
     catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.status(302).end(); }
   }
   if (action === 'huecos') {
@@ -2252,7 +2257,7 @@ module.exports = async function handler(req, res) {
     // Queda apuntado si lo abre y si pulsa para ir a Google (para Valoraciones)
     if (req.method === 'POST') { if (P['MEJORA FECHA'] && !P['MEJORA GOOGLE']) await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MEJORA GOOGLE': new Date().toISOString() } }) }).catch(() => {}); return res.status(200).json({ ok: true }); }
     if (action === 'res' && P['MEJORA FECHA'] && !P['MEJORA ABIERTA'] && !/bot|facebookexternalhit|WhatsApp|preview|crawler|spider/i.test(String(req.headers['user-agent'] || ''))) await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MEJORA ABIERTA': new Date().toISOString() } }) }).catch(() => {});
-    if (action === 'res-og') { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogResSvg({ pila }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+    if (action === 'res-og') { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogResSvg({ pila }), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return res.status(200).send(paginaResena({ pila, url: enlaceRes(id), ideas: ideasResena({ tema: String(P['MOTIVO DE VISITA'] || ''), fin: true }) }));
   }
@@ -2262,7 +2267,7 @@ module.exports = async function handler(req, res) {
     try {
       const doc = await holded('/' + docTipo(t) + '/' + id);
       let pila = ''; try { const nm = String(doc.contactName || doc.contact_name || '').trim().split(/\s+/)[0] || ''; pila = nm ? nm.charAt(0).toUpperCase() + nm.slice(1).toLowerCase() : ''; } catch (_) {}
-      if (action === 'fac-og') { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogFacSvg({ pila }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      if (action === 'fac-og') { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogFacSvg({ pila }), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
       const D = facDatos(doc);
       if (req.query.pdf) {
         const pdf = await holdedPdf('/' + docTipo(t) + '/' + id + '/pdf'); if (!pdf) return res.status(502).send('PDF no disponible');
@@ -2287,7 +2292,7 @@ module.exports = async function handler(req, res) {
     const f0 = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '').trim().split(' ')[0], fisio = f0 ? f0.charAt(0).toUpperCase() + f0.slice(1).toLowerCase() : '';
     const importe = Number(F['PAGO IMPORTE'] || 0), fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5);
     if (action === 'pago-og') {
-      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogPagoSvg({ pila: pac.pila, importe }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogPagoSvg({ pila: pac.pila, importe }), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
       catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.status(302).end(); }
     }
     res.setHeader('Cache-Control', 'private, no-store');
@@ -2333,7 +2338,7 @@ module.exports = async function handler(req, res) {
     let pila = (String(P['NOMBRE'] || '').trim() || nombre).split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
     const f0 = String(P['FIN FISIO'] || '').trim().split(' ')[0], fisio = f0 ? f0.charAt(0).toUpperCase() + f0.slice(1).toLowerCase() : '';
     if (action === 'fin-og') {
-      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogEncSvg({ pila, fisio, fin: true }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogEncSvg({ pila, fisio, fin: true }), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
       catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.status(302).end(); }
     }
     res.setHeader('Cache-Control', 'private, no-store');
@@ -2375,7 +2380,7 @@ module.exports = async function handler(req, res) {
       let pila = ''; if (pid) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}; pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; }
       pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
       const { Resvg } = require('@resvg/resvg-js');
-      const png = new Resvg(ogEncSvg({ pila, fisio }), { font: { loadSystemFonts: false } }).render().asPng();
+      const png = new Resvg(MARCA.marcar(ogEncSvg({ pila, fisio }), CLI), { font: { loadSystemFonts: false } }).render().asPng();
       res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400');
       return res.status(200).send(png);
     } catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.status(302).end(); }
@@ -2439,7 +2444,7 @@ module.exports = async function handler(req, res) {
     }
     try {
       const { Resvg } = require('@resvg/resvg-js');
-      const png = new Resvg(ogCitaSvg({ fecha, hora, fisio }), { font: { loadSystemFonts: false } }).render().asPng();
+      const png = new Resvg(MARCA.marcar(ogCitaSvg({ fecha, hora, fisio }), CLI), { font: { loadSystemFonts: false } }).render().asPng();
       res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400');
       return res.status(200).send(png);
     } catch (e) { res.setHeader('Cache-Control', 'no-store'); res.statusCode = 302; res.setHeader('Location', 'https://app.fisioterapia365.com/informe/og-cita-v3.png'); return res.end(); }
@@ -2463,7 +2468,7 @@ module.exports = async function handler(req, res) {
     const CF = await conf().catch(() => CONF_DEF), impP = Number(CF.tarjeta.importe) || 10, cad = String(r.fields['CADUCA'] || '').split('-').reverse().join('/');
     let pila = String(r.fields['Nombre de quien recomendó'] || '').trim().split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
     if (action === 'tarjeta-og') {
-      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogTarjetaSvg({ imp: impP, pila }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogTarjetaSvg({ imp: impP, pila }), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
       catch (e) { return res.redirect(302, `https://app.fisioterapia365.com/api/schedule?action=tarjeta-img&id=${id}`); }
     }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -3008,6 +3013,15 @@ module.exports = async function handler(req, res) {
           if (!E.length) return res.status(400).json({ ok: false, error: 'Deja al menos un email' });
           await guardarAjuste('emails_resumen', E.slice(0, 10), yo.fields.Name); return res.status(200).json({ ok: true, emails: await emailsResumen() });
         }
+        if (action === 'seg-adm-logo') { // subir o quitar el logo de la clínica (imagen pequeña guardada en Ajustes)
+          const cur = (await ajuste('config', null)) || {}; cur.clinica = cur.clinica || {};
+          if (q.quitar) { await guardarAjuste('clinica-logo', null, yo.fields.Name); cur.clinica.logoV = 0; await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() }); }
+          const d = String(q.data || '');
+          if (!/^data:image\/(png|jpeg|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(d)) return res.status(400).json({ ok: false, error: 'La imagen no es válida' });
+          if (d.length > 95000) return res.status(400).json({ ok: false, error: 'La imagen es demasiado grande' });
+          await guardarAjuste('clinica-logo', { data: d }, yo.fields.Name); cur.clinica.logoV = Date.now() % 1e9; await guardarAjuste('config', cur, yo.fields.Name);
+          return res.status(200).json({ ok: true, conf: await conf() });
+        }
         if (action === 'seg-adm-config') { // guardar una parte de «Listas y ajustes»
           const sec = String(q.seccion || ''), v = q.valor || {}, cur = (await ajuste('config', null)) || {};
           const lim = (x, n) => String(x == null ? '' : x).trim().slice(0, n);
@@ -3025,7 +3039,7 @@ module.exports = async function handler(req, res) {
           } else if (sec === 'holded') cur.holded = { borrador: !!v.borrador, rgpd: lim(v.rgpd, 1500) || TEXTO_RGPD };
           else if (sec === 'clinica') { const L = MARCA.limpio, op = v.opciones || {};
             cur.clinica = { marca: L(v.marca, 40), razon: L(v.razon, 80), nif: L(v.nif, 20), direccion: L(v.direccion, 160), dirCorta: L(v.dirCorta, 100), zona: L(v.zona, 40), ciudad: L(v.ciudad, 40), tel: L(v.tel, 30), wa: String(v.wa || '').replace(/\D/g, '').slice(0, 15), email: L(v.email, 80), web: L(v.web, 80), googlePlace: L(v.googlePlace, 80).replace(/\s/g, ''), iban: L(v.iban, 40),
-              opciones: { sorteo: op.sorteo !== false, bomba: op.bomba !== false } }; }
+              opciones: { sorteo: op.sorteo !== false, bomba: op.bomba !== false }, color: /^#[0-9a-f]{6}$/i.test(String(v.color || '')) ? String(v.color).toLowerCase() : '', logoV: (cur.clinica && cur.clinica.logoV) || 0 }; }
           else if (sec === 'cancelacion') { const h = Math.round(Number(v.horas)); if (!(h >= 0 && h <= 168)) return res.status(400).json({ ok: false, error: 'Revisa las horas' }); cur.cancelacion = { horas: h, texto: lim(v.texto, 600) }; }
           else return res.status(400).json({ ok: false, error: 'Sección no válida' });
           await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() });

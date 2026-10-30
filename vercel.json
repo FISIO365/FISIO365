@@ -45,6 +45,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/marca.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "public/racha-ui.js",
       "use": "@vercel/static"
     },
@@ -228,6 +232,10 @@
     {
       "src": "/visor.js",
       "dest": "/public/visor.js"
+    },
+    {
+      "src": "/marca.js",
+      "dest": "/public/marca.js"
     },
     {
       "src": "/racha-ui.js",
