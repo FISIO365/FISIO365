@@ -1377,6 +1377,8 @@ if(!patient)return;try{const res=await fetch(`/api/pacientes?action=get-notifica
 const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
 // ── Avisos (push) ─────────────────────────────────────────────
 const avisosPosibles=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+// Al abrir la app se quita el puntito rojo del icono (lo pone un aviso; ya lo está viendo)
+(function(){const q=()=>{try{navigator.clearAppBadge&&navigator.clearAppBadge().catch(()=>{});navigator.serviceWorker&&navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});}catch(e){}};q();document.addEventListener('visibilitychange',()=>{if(!document.hidden)q();});})();
 async function suscribirAvisos(){const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,subscription:sub})});}
 // Si ya dio permiso, se renueva en silencio; si no, se enseña la tarjeta «Activa los avisos»
 function mirarAvisos(){setTimeout(checkNotifBadge,600);const c=document.getElementById('avisosCard');if(!avisosPosibles()){if(c)c.classList.remove('on');return;}
