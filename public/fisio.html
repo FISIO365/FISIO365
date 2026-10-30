@@ -1012,6 +1012,9 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .pe-res button{display:flex;align-items:center;gap:11px;width:100%;border:none;background:none;border-bottom:1px solid #f0ebe6;padding:8px 10px;font-family:var(--font);font-size:14px;text-align:left;cursor:pointer;color:#1a1a1a}
 .pe-res button:last-child{border-bottom:none}
 .pe-res button:hover{background:#fbf7f4}
+.pe-vth{position:relative;flex:none;display:block;line-height:0;cursor:zoom-in}.pe-vth .pe-ph,.pe-vth img{display:block}.pe-vth i{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}.pe-vth i svg{width:20px;height:20px;padding:4px;border-radius:50%;background:rgba(255,255,255,.92);fill:#c2552e;box-shadow:0 1px 4px rgba(0,0,0,.15)}.pe-vth:hover img{filter:brightness(.92)}
+.pv-m .hz-card{max-width:520px}.pv-vid{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#f3efea;margin:4px 0 14px}.pv-vid iframe,.pv-vid video,.pv-vid img{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}.pv-img img{object-fit:contain;background:#fff}.pv-sin{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#a3968c;font-size:13px}.pv-sin svg{width:36px;height:36px;fill:none;stroke:#c9bcb2;stroke-width:1.4;stroke-linejoin:round}
+.pv-dosis{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#faf6f1;border-radius:12px;padding:11px 14px;font-size:13px;color:#8a7d74;margin-bottom:12px}.pv-dosis b{color:#2b2420;font-size:14px}.pv-desc{font-size:13.5px;line-height:1.6;color:#5c4f47;margin:0 0 14px;white-space:pre-line}.pv-link{display:inline-block;color:#c2552e;font-weight:600;font-size:13.5px;margin-bottom:14px;text-decoration:none}
 .pe-res img,.pe-ph{width:54px;height:40px;border-radius:8px;object-fit:cover;background:#f0ebe6;flex:none}
 .pe-res .pe-n{flex:1;min-width:0}.pe-res strong{color:#c2552e}
 .pe-res .pe-add{flex:none;width:30px;height:30px;border-radius:50%;background:#fbeee7;color:#c2552e;font-size:19px;font-weight:600;display:flex;align-items:center;justify-content:center}
@@ -2547,6 +2550,23 @@ function peResumen(e){const se=+e.series||0,pl=(n,a,b)=>n===1?a:b,L=[];const r=e
  if(r)L.push(`${se} ${pl(se,'serie','series')} de ${r} ${pl(r,'repetición','repeticiones')}`);else if(d)L.push(`${se} ${pl(se,'serie','series')} de ${d} ${pl(d,'segundo','segundos')}`);
  if(r&&d)L.push(`aguanta ${d} ${pl(d,'segundo','segundos')} en cada repetición`);if(ds&&se>1)L.push(`descansa ${ds} ${pl(ds,'segundo','segundos')} entre series`);
  return L.join(' · ');}
+function peTieneMedia(e){return !!(e&&(e.youtubeUrl||e.imagen));}
+// Ver un ejercicio antes de ponerlo en el programa: vídeo (YouTube) o foto, descripción y dosis por defecto
+function peVer(e,o){o=o||{};const yt=String(e.youtubeUrl||'').match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/),url=String(e.youtubeUrl||'');
+ const media=yt?`<div class="pv-vid"><iframe src="https://www.youtube-nocookie.com/embed/${yt[1]}?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=${yt[1]}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`
+  :/\.(mp4|webm|mov)(\?|$)/i.test(url)?`<div class="pv-vid"><video src="${escH(url)}" autoplay muted loop playsinline controls></video></div>`
+  :e.imagen?`<div class="pv-vid pv-img"><img src="${escH(e.imagen)}" alt=""></div>`
+  :`<div class="pv-vid pv-sin"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg><span>Este ejercicio todavía no tiene vídeo ni foto</span></div>`;
+ const n=peNorm(e),dosis=e._dosis||peResumen(n);
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(e.zona||'Ejercicio')}</small><b>${escH(String(e.nombre||'').trim())}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  ${media}
+  <div class="pv-dosis"><span>${e._dosis?'En su programa':'Por defecto'}</span><b>${escH(dosis)}</b></div>
+  ${e.descripcion?`<p class="pv-desc">${escH(e.descripcion)}</p>`:''}
+  ${url&&!yt&&!/\.(mp4|webm|mov)(\?|$)/i.test(url)?`<a class="pv-link" href="${escH(url)}" target="_blank" rel="noopener">Abrir el vídeo</a>`:''}
+  ${o.onMarcar?`<div class="sev-bts"><button type="button" class="sev-b pv-no">Cerrar</button><button type="button" class="sev-b pri pv-ok">${o.marcado?'Desmarcar':o.ya?'Marcar igualmente':'Marcar para añadir'}</button></div>`:''}`);
+ m.classList.add('pv-m');const cerrar=()=>m.remove();
+ m.querySelector('.hz-x').onclick=cerrar;const no=m.querySelector('.pv-no');if(no)no.onclick=cerrar;
+ const ok=m.querySelector('.pv-ok');if(ok)ok.onclick=()=>{cerrar();o.onMarcar();};}
 function montarEditorEjs(el,inicial,onCambio){
  let ejs=(inicial||[]).map(peNorm), nuevo=-1, sel=[], zona='';
  el.innerHTML=`<div class="pe-busca"><input type="search" placeholder="Busca y marca los ejercicios que quieras añadir…" autocomplete="off" enterkeyhint="search"><div class="pe-zs"></div><div class="pe-res"></div></div><div class="pe-lista"></div>`;
@@ -2570,7 +2590,7 @@ function montarEditorEjs(el,inicial,onCambio){
   const r=(q||zona)?biblio.filter(e=>(!q||sinTildes(e.nombre).includes(q))&&(!zona||e.zona===zona)).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).slice(0,zona&&!q?200:40):sel.map(id=>biblio.find(e=>e.id===id)).filter(Boolean);
   res.innerHTML=r.length?r.map(e=>{const nm=e.nombre.trim(),i=sinTildes(nm).indexOf(q);const hl=i<0?escH(nm):escH(nm.slice(0,i))+'<strong>'+escH(nm.slice(i,i+q.length))+'</strong>'+escH(nm.slice(i+q.length));const m=peMini(e);
    const ya=ejs.some(x=>x.nombre===nm),on=sel.includes(e.id);
-   return `<button type="button" data-id="${e.id}" class="${on?'sel':''}">${m?`<img src="${escH(m)}" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="pe-ph"></span>'}<span class="pe-n">${hl}${ya?'<small>Ya está en el programa</small>':''}</span><span class="pe-add">${on?'✓':'+'}</span></button>`;}).join('')
+   return `<button type="button" data-id="${e.id}" class="${on?'sel':''}"><span class="pe-vth" data-ver="${e.id}" title="Ver el ejercicio">${m?`<img src="${escH(m)}" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="pe-ph"></span>'}${peTieneMedia(e)?'<i><svg viewBox="0 0 24 24"><path d="M9 7.5v9l7.5-4.5z"/></svg></i>':''}</span><span class="pe-n">${hl}${ya?'<small>Ya está en el programa</small>':''}</span><span class="pe-add">${on?'✓':'+'}</span></button>`;}).join('')
    :`<div class="pe-vacio">No hay ningún ejercicio ${zona?'de '+escH(zona)+(q?' con ese nombre':''):'con ese nombre'}</div>`;
   if(zona)res.innerHTML=`<div class="pe-znota">Todavía no todos los ejercicios tienen zona. Si no encuentras uno, quita el filtro y búscalo por nombre.</div>`+res.innerHTML;
   if(sel.length)res.innerHTML+=`<div class="pe-bar"><span><b>${sel.length}</b> ${sel.length===1?'marcado':'marcados'}</span><button type="button" class="pe-bar-x">Desmarcar</button><button type="button" class="pe-bar-ok">Añadir ${sel.length}</button></div>`;
@@ -2580,6 +2600,7 @@ function montarEditorEjs(el,inicial,onCambio){
  inp.addEventListener('focus',buscar);
  document.addEventListener('click',ev=>{if(!ev.composedPath().includes(el))res.classList.remove('on');});
  res.addEventListener('click',ev=>{
+  const vt=ev.target.closest('[data-ver]');if(vt){const e=biblio.find(x=>x.id===vt.dataset.ver);if(e){ev.stopPropagation();peVer(e,{marcado:sel.includes(e.id),ya:ejs.some(x=>x.nombre===e.nombre.trim()),onMarcar:()=>{sel=sel.includes(e.id)?sel.filter(x=>x!==e.id):[...sel,e.id];buscar();}});}return;}
   if(ev.target.closest('.pe-bar-x')){sel=[];buscar();return;}
   if(!ev.target.closest('.pe-bar-ok')){
    // Tocar un ejercicio lo marca o desmarca; se pueden marcar varios (también de búsquedas distintas)
@@ -2598,7 +2619,7 @@ function montarEditorEjs(el,inicial,onCambio){
   if(!ejs.length){lista.innerHTML='<div class="pe-vacia">Todavía no hay ejercicios. Búscalos arriba, márcalos y dale a «Añadir».</div>';return;}
   lista.innerHTML=ejs.map((e,i)=>{const m=peMini(e),k=e.modo==='seg'?'seg':'reps',v=e[k];
    return `<div class="pe-ej${i===nuevo?' nuevo':''}" data-i="${i}">
- <div class="pe-top">${m?`<img src="${escH(m)}" onerror="this.style.visibility='hidden'">`:'<span class="pe-ph"></span>'}<div class="pe-nom"><i>${i+1}.</i>${escH(e.nombre)}</div>
+ <div class="pe-top"><span class="pe-vth" data-veri="${i}" title="Ver el ejercicio">${m?`<img src="${escH(m)}" onerror="this.style.visibility='hidden'">`:'<span class="pe-ph"></span>'}${peTieneMedia(e)?'<i><svg viewBox="0 0 24 24"><path d="M9 7.5v9l7.5-4.5z"/></svg></i>':''}</span><div class="pe-nom"><i>${i+1}.</i>${escH(e.nombre)}</div>
   <div class="pe-acc"><button type="button" data-a="up" ${i===0?'disabled':''} aria-label="Subir">↑</button><button type="button" data-a="down" ${i===ejs.length-1?'disabled':''} aria-label="Bajar">↓</button><button type="button" data-a="del" aria-label="Quitar">✕</button></div></div>
  <div class="pe-modo"><button type="button" data-a="modo" data-v="rep" class="${e.modo==='rep'?'on':''}">Repeticiones</button><button type="button" data-a="modo" data-v="seg" class="${e.modo==='seg'?'on':''}">Segundos</button></div>
  <div class="pe-nums">
@@ -2617,6 +2638,7 @@ function montarEditorEjs(el,inicial,onCambio){
   nuevo=-1;
  }
  lista.addEventListener('click',ev=>{
+  const vt=ev.target.closest('[data-veri]');if(vt){const e=ejs[+vt.dataset.veri];if(e){const b0=biblio.find(x=>x.nombre.trim()===String(e.nombre).trim())||{};peVer(Object.assign({},b0,{nombre:e.nombre,youtubeUrl:e.youtubeUrl||b0.youtubeUrl,imagen:e.imagen||b0.imagen,descripcion:e.descripcion||b0.descripcion,zona:e.zona||b0.zona,_dosis:peResumen(e)}),{});}return;}
   const b=ev.target.closest('button[data-a]');if(!b)return;
   const i=+b.closest('.pe-ej').dataset.i,e=ejs[i],a=b.dataset.a,k=b.dataset.k;
   if(a==='del'){ejs.splice(i,1);}
