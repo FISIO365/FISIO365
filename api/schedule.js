@@ -4365,12 +4365,12 @@ module.exports = async function handler(req, res) {
         const url = `https://app.fisioterapia365.com/i/${tk}`, pila = escHtml(String(q.pila || '')), yo = escHtml(String(q.yo || '').split(' ')[0]);
         const pide = q.verif === 'nac' ? 'tu fecha de nacimiento' : 'los 4 últimos números de tu DNI';
         const html = `<!doctype html><html><body style="margin:0;background:#f5f2ee;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a"><div style="max-width:520px;margin:0 auto;padding:28px 18px">
-<img src="https://app.fisioterapia365.com/informe/logo.png" alt="FISIO365" style="height:18px;display:block;margin:0 0 22px">
 <div style="background:#fff;border-radius:18px;padding:26px 24px">
+<img src="https://app.fisioterapia365.com/informe/logo.png" alt="FISIO365" width="120" style="width:120px;height:auto;display:block;margin:0 0 22px;border:0">
 <p style="font-size:16px;line-height:1.55;margin:0 0 14px">Hola${pila ? ' ' + pila : ''},</p>
 <p style="font-size:15px;line-height:1.6;color:#3c342f;margin:0 0 20px">${yo ? 'Soy ' + yo + ' de FISIO365. ' : ''}Aquí tienes tu informe de fisioterapia. Para abrirlo te pediremos ${pide}, y al final te pediremos que firmes que lo has recibido.</p>
 <a href="${url}" style="display:block;text-align:center;background:#c2552e;color:#fff;text-decoration:none;font-weight:bold;font-size:15px;border-radius:99px;padding:14px">Abrir mi informe</a>
-<p style="font-size:12.5px;line-height:1.5;color:#9a8f87;margin:18px 0 0">El enlace es personal y caduca en 30 días. Si no puedes abrirlo, contesta a este email o llámanos al 672 89 39 49.</p>
+<p style="font-size:12.5px;line-height:1.5;color:#9a8f87;margin:18px 0 0">El enlace es personal y caduca en 30 días. Si no puedes abrirlo, contesta a este email o llámanos al <span style="white-space:nowrap">672 89 39 49</span>.</p>
 </div><p style="font-size:11.5px;color:#9a8f87;text-align:center;margin:16px 0 0">FISIO365 · Gran de Sant Andreu, 163 · Barcelona</p></div></body></html>`;
         const b = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com', name: 'FISIO365' }, to: [{ email: to }], subject: 'Tu informe de fisioterapia · FISIO365', htmlContent: html }) });
