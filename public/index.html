@@ -1551,5 +1551,15 @@ async function loadPuntos(){
  <div class="rv-chips" id="pkTabs"></div>
  <div class="pk-body" id="pkBody"></div>
 </div>
+<script>
+// Datos de la clínica: si no es FISIO365, los textos de la app salen con su nombre, teléfono, dirección… (para FISIO365 no cambia nada)
+(function(){try{fetch('/api/schedule?action=clinica-pub').then(function(r){return r.json();}).then(function(d){if(!d||!d.ok)return;window.CLINICA=d.clinica;var P=d.pares||[];if(!P.length)return;
+ var fx=function(t){var s=String(t);P.forEach(function(p){if(s.indexOf(p[0])>-1)s=s.split(p[0]).join(p[1]);});return s;};
+ var walk=function(n){if(!n)return;if(n.nodeType===3){var v=fx(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v;return;}if(n.nodeType!==1||/^(SCRIPT|STYLE|TEXTAREA|INPUT)$/.test(n.tagName))return;
+  ['title','alt','placeholder','aria-label','href'].forEach(function(a){var v=n.getAttribute(a);if(v){var w=fx(v);if(w!==v)n.setAttribute(a,w);}});for(var i=0;i<n.childNodes.length;i++)walk(n.childNodes[i]);};
+ document.title=fx(document.title);walk(document.body);
+ new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==='characterData')walk(m.target);else for(var i=0;i<m.addedNodes.length;i++)walk(m.addedNodes[i]);});}).observe(document.body,{childList:true,subtree:true,characterData:true});
+}).catch(function(){});}catch(e){}})();
+</script>
 </body>
 </html>

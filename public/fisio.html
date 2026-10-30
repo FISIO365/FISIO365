@@ -2058,7 +2058,7 @@ async function doLogin(silencioso){
  $('loginScreen').style.display='none';
  $('panelScreen').style.display='block';
  window.scrollTo({top:0,behavior:'instant'});
- await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso(),loadEstados(),loadConf()]);
+ await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso(),loadEstados(),loadConf(),loadClinica()]);
  checkMensajesBadge();
  setInterval(checkMensajesBadge, 60000); // revisar cada minuto
  aplicarRole();
@@ -2145,6 +2145,11 @@ let CONF=null;const TJ_IMP=()=>{const v=CONF&&CONF.tarjeta&&Number(CONF.tarjeta.
 function aplicarConf(c){if(!c)return;CONF=c;const L=c.listas||{};
  if(Array.isArray(L.conceptos)&&L.conceptos.length){FAC_CONCEPTOS=L.conceptos.map(x=>x.n);FAC_PRECIO={};L.conceptos.forEach(x=>{if(x.p!==''&&x.p!=null)FAC_PRECIO[x.n]=x.p;});}
  if(Array.isArray(L.pagos)&&L.pagos.length)FAC_PAGOS=L.pagos;if(Array.isArray(L.motivos))CAP_MOTIVO=L.motivos;if(Array.isArray(L.negocios))CAP_TIPO=L.negocios;if(Array.isArray(L.zonas)&&L.zonas.length)EJ_ZONAS=L.zonas;if(Array.isArray(L.sesiones)&&L.sesiones.length)AG_SESIONES=L.sesiones;}
+// Datos de la clínica (Administración › Ajustes): nombre, teléfono, reseñas, opciones… Los textos que salen hacia
+// los pacientes (WhatsApp) se cambian con los datos de la clínica; para FISIO365 no cambia nada.
+let CLINICA={marca:'FISIO365',opciones:{sorteo:true,bomba:true}},CLINICA_PARES=[];
+async function loadClinica(){try{const r=await (await fetch('/api/schedule?action=clinica-pub')).json();if(r.ok){CLINICA=r.clinica;CLINICA_PARES=r.pares||[];}}catch(e){}}
+function marcar(t){if(typeof t!=='string'||!CLINICA_PARES.length)return t;let s=t;CLINICA_PARES.forEach(([a,b])=>{if(s.includes(a))s=s.split(a).join(b);});return s;}
 async function loadConf(){try{const r=await (await fetch(`/api/schedule?action=seg-config&pwd=${encodeURIComponent(apiPwd)}`)).json();if(r.ok)aplicarConf(r.conf);}catch(e){}}
 async function loadFisios(){
  try{
@@ -5949,7 +5954,7 @@ function recToca2(g){if(!g.enviado||g.conf||g.aviso2)return false;const h=agHoyI
 // móvil → abre la app directamente; ordenador → siempre la MISMA pestaña de WhatsApp Web (o la app de escritorio si se elige)
 const esMovil=()=>/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
 function recModoPC(){try{return localStorage.getItem('f365_wa')||'web';}catch(e){return 'web';}}
-function abrirWA(tel,texto){const q=`${tel?'phone='+tel+'&':''}text=${encodeURIComponent(texto)}`;
+function abrirWA(tel,texto){texto=marcar(texto);const q=`${tel?'phone='+tel+'&':''}text=${encodeURIComponent(texto)}`;
  if(esMovil()||recModoPC()==='app'){location.href=`whatsapp://send?${q}`;return;}
  const w=window.open(`https://web.whatsapp.com/send?${q}`,'f365_whatsapp');if(w)try{w.focus();}catch(e){}}
 // Mini calendario propio (el del navegador sale sin estilo). Se abre debajo del elemento que se toca.
@@ -6090,7 +6095,7 @@ async function renderValoraciones(wrap){
    ENC_UL=ENC_UL.filter(y=>y!==x);it.remove();toast('Quitado de la lista',true);}
   catch(e){it.style.opacity='';b.disabled=false;toast('No se ha podido quitar',false);}});
  const m=L.reduce((a,x)=>encT(x)>a?encT(x):a,'');if(m)try{localStorage.setItem(encK(),m);}catch(e){}encBadge(0);
- valSorteo(wrap,dir);
+ if(CLINICA.opciones&&CLINICA.opciones.sorteo!==false)valSorteo(wrap,dir);
  if(dir)valPorFisio(wrap);
 }
 // Sorteo mensual: 2 sesiones entre los que han ido a dejar su reseña desde nuestros enlaces (una al azar y otra a la más original)
@@ -7773,7 +7778,7 @@ async function renderAdmin(wrap){
  }
  // ── Ajustes: tarjeta regalo, Holded, datos de la clínica, cancelaciones ──
  async function pintaAjustes(){body.innerHTML='<div class="fac-vacio">Cargando…</div>';const c=await admConf();if(!c||ADM.tab!=='ajustes'){if(!c)body.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
-  const T=c.tarjeta,H=c.holded,C=c.clinica,X=c.cancelacion;
+  const T=c.tarjeta,H=c.holded,C=c.clinica,X=c.cancelacion,K=Object.assign({},CLINICA,C,{opciones:Object.assign({sorteo:true,bomba:true},CLINICA.opciones||{},C.opciones||{})});
   body.innerHTML=`<div class="adm-card"><div class="adm-h"><b>Tarjeta regalo por recomendar</b><small>La que se da a quien nos recomienda cuando el recomendado viene.</small></div>
     <div class="adm-2"><div><div class="hz-lab">Descuento (€)</div><input class="ag-in t-i" inputmode="decimal" value="${escH(String(T.importe).replace('.',','))}"></div><div><div class="hz-lab">Vale durante (meses)</div><input class="ag-in t-m" inputmode="numeric" value="${escH(T.meses)}"></div></div>
     <div class="hz-bts"><button type="button" class="hz-ok t-g">Guardar</button></div></div>
@@ -7781,10 +7786,17 @@ async function renderAdmin(wrap){
     <label class="adm-sw"><input type="checkbox" class="h-b" ${H.borrador?'':'checked'}><span><b>Aprobar los tickets automáticamente</b><small>Si está desmarcado, los tickets del panel se quedan en borrador y hay que aprobarlos en Holded (como ahora). Marcado: salen ya aprobados y el paciente los ve en su app al momento.</small></span></label>
     <div class="hz-lab">Texto de protección de datos (sale abajo del ticket)</div><textarea class="seg-n h-r" rows="5">${escH(H.rgpd)}</textarea>
     <div class="hz-bts"><button type="button" class="hz-ok h-g">Guardar</button></div></div>
-   <div class="adm-card"><div class="adm-h"><b>Datos de la clínica</b><small>Salen en los justificantes e informes de asistencia.</small></div>
-    <div class="adm-2"><div><div class="hz-lab">Razón social</div><input class="ag-in k-r" value="${escH(C.razon)}"></div><div><div class="hz-lab">NIF</div><input class="ag-in k-n" value="${escH(C.nif)}"></div></div>
-    <div class="hz-lab">Dirección</div><input class="ag-in k-d" value="${escH(C.direccion)}" style="width:100%;box-sizing:border-box">
-    <div class="adm-2"><div><div class="hz-lab">Teléfono</div><input class="ag-in k-t" value="${escH(C.tel)}"></div><div><div class="hz-lab">Email</div><input class="ag-in k-e" value="${escH(C.email)}"></div></div>
+   <div class="adm-card"><div class="adm-h"><b>Datos de la clínica</b><small>Salen en todo lo que ven los pacientes: app, enlaces, previews de WhatsApp, emails, justificantes, informes, facturas y consentimientos.</small></div>
+    <div class="adm-2"><div><div class="hz-lab">Nombre de la clínica</div><input class="ag-in k-m" value="${escH(K.marca)}" placeholder="FISIO365"></div><div><div class="hz-lab">Web</div><input class="ag-in k-w" value="${escH(K.web)}" placeholder="fisioterapia365.com"></div></div>
+    <div class="adm-2"><div><div class="hz-lab">Razón social</div><input class="ag-in k-r" value="${escH(K.razon)}"></div><div><div class="hz-lab">NIF</div><input class="ag-in k-n" value="${escH(K.nif)}"></div></div>
+    <div class="hz-lab">Dirección completa</div><input class="ag-in k-d" value="${escH(K.direccion)}" style="width:100%;box-sizing:border-box">
+    <div class="adm-2"><div><div class="hz-lab">Dirección corta <small style="font-weight:400;color:#a3968c">(pie de páginas)</small></div><input class="ag-in k-dc" value="${escH(K.dirCorta)}"></div><div><div class="hz-lab">Barrio o zona <small style="font-weight:400;color:#a3968c">(frases de reseña)</small></div><input class="ag-in k-z" value="${escH(K.zona)}"></div></div>
+    <div class="adm-2"><div><div class="hz-lab">Ciudad</div><input class="ag-in k-ci" value="${escH(K.ciudad)}"></div><div><div class="hz-lab">Email</div><input class="ag-in k-e" value="${escH(K.email)}"></div></div>
+    <div class="adm-2"><div><div class="hz-lab">Teléfono</div><input class="ag-in k-t" value="${escH(K.tel)}"></div><div><div class="hz-lab">WhatsApp <small style="font-weight:400;color:#a3968c">(con prefijo, ej. 34672893949)</small></div><input class="ag-in k-wa" inputmode="numeric" value="${escH(K.wa)}"></div></div>
+    <div class="adm-2"><div><div class="hz-lab">Google Place ID <small style="font-weight:400;color:#a3968c">(enlace de reseñas)</small></div><input class="ag-in k-g2" value="${escH(K.googlePlace)}"></div><div><div class="hz-lab">IBAN <small style="font-weight:400;color:#a3968c">(pagos por transferencia)</small></div><input class="ag-in k-ib" value="${escH(K.iban)}"></div></div>
+    <div class="hz-lab" style="margin-top:6px">Opciones</div>
+    <label class="adm-sw"><input type="checkbox" class="k-os" ${K.opciones.sorteo!==false?'checked':''}><span><b>Sorteo mensual de sesiones por reseña</b><small>La cajita del regalo en las páginas de reseña y la tarjeta «Sorteo del mes» en Valoraciones.</small></span></label>
+    <label class="adm-sw"><input type="checkbox" class="k-ob" ${K.opciones.bomba!==false?'checked':''}><span><b>La clínica trabaja con bomba diamagnética</b><small>Huecos «libre sin bomba» y avisos de bomba en la agenda. (Se queda guardado; quitar la bomba de la agenda llega en el siguiente paso.)</small></span></label>
     <div class="hz-bts"><button type="button" class="hz-ok k-g">Guardar</button></div></div>
    <div class="adm-card"><div class="adm-h"><b>Política de cancelación</b><small>El texto lo ven los pacientes en «Mis citas» de su app. Si alguien cancela con menos horas, al marcarla en la agenda sale un aviso de cancelación tardía.</small></div>
     <div class="hz-lab">Hay que avisar con al menos (horas)</div><input class="ag-in x-h" inputmode="numeric" value="${escH(X.horas)}" style="max-width:140px">
@@ -7793,7 +7805,7 @@ async function renderAdmin(wrap){
   const $b=q=>body.querySelector(q);
   $b('.t-g').onclick=e=>guardarConf('tarjeta',{importe:$b('.t-i').value.replace(',','.'),meses:$b('.t-m').value},e.target);
   $b('.h-g').onclick=async e=>{if($b('.h-b').checked&&H.borrador&&!await admSiNo('Los tickets que se hagan desde el panel saldrán ya aprobados en Holded, con su número definitivo.'))return;guardarConf('holded',{borrador:!$b('.h-b').checked,rgpd:$b('.h-r').value},e.target);};
-  $b('.k-g').onclick=e=>guardarConf('clinica',{razon:$b('.k-r').value,nif:$b('.k-n').value,direccion:$b('.k-d').value,tel:$b('.k-t').value,email:$b('.k-e').value},e.target);
+  $b('.k-g').onclick=async e=>{const v=q=>$b(q).value.trim();await guardarConf('clinica',{marca:v('.k-m'),web:v('.k-w'),razon:v('.k-r'),nif:v('.k-n'),direccion:v('.k-d'),dirCorta:v('.k-dc'),zona:v('.k-z'),ciudad:v('.k-ci'),email:v('.k-e'),tel:v('.k-t'),wa:v('.k-wa'),googlePlace:v('.k-g2'),iban:v('.k-ib'),opciones:{sorteo:$b('.k-os').checked,bomba:$b('.k-ob').checked}},e.target);loadClinica();};
   $b('.x-g').onclick=e=>guardarConf('cancelacion',{horas:$b('.x-h').value,texto:$b('.x-t').value},e.target);
  }
  // A quién llega el resumen diario

@@ -9,6 +9,11 @@ const HOLDED_KEY = process.env.HOLDED_API_KEY;
 const { saldoPaciente, rendimiento, inicioControl, sinFacturar, compartidos, repartoCompartido, citasDeMiembros, pcLeer } = require('./_push').saldo;
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const HOLDED_URL = 'https://api.holded.com/api/v2'; // API nueva de Holded (clave «Bearer»)
+// Marca de la clínica (nombre, dirección, teléfono, reseñas…): ver api/_marca.js
+const MARCA = require('./_marca');
+let CLI = MARCA.datos(null);
+// Emails (Brevo) y textos de la IA salen con los datos de la clínica
+{ const _f = global.fetch; if (_f && !_f._marca) { const nf = (u, o) => { try { if (o && typeof o.body === 'string' && /api\.brevo\.com|api\.anthropic\.com/.test(String(u))) o = Object.assign({}, o, { body: MARCA.marcar(o.body, CLI, true) }); } catch (e) {} return _f(u, o); }; nf._marca = 1; global.fetch = nf; } }
 
 let cacheContactos = null; // (ya no se descargan todos: se buscan por DNI, email o móvil)
 
@@ -785,6 +790,7 @@ function ogTipos() {
   _ogOT = { b: ot.parse(ab(F.bold)), m: ot.parse(ab(F.medium)) }; return _ogOT;
 }
 function ogTexto(font, txt, size, cx, y, ls, color) {
+  txt = MARCA.marcar(String(txt), CLI);
   const g = font.stringToGlyphs(txt), sc = size / font.unitsPerEm; let w = 0;
   g.forEach((x, i) => { w += x.advanceWidth * sc + (i < g.length - 1 ? ls : 0); });
   let x = cx - w / 2, d = '';
@@ -1495,9 +1501,9 @@ h1{font-size:22px;margin:18px 0 10px;line-height:1.25}.sub{font-size:15px;color:
 <svg class="f" width="84" height="84" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><g class="de"><path d="M25 35 Q30 29 35 35"/><path d="M45 35 Q50 29 55 35"/></g><path class="dm" d="M26 45 Q40 62 54 45"/></svg>
 <h1 class="fi" style="animation-delay:.5s">${D.pila ? '¡Qué alegría, ' + e(D.pila) + '!' : '¡Qué alegría!'}</h1>
 <p class="sub fi" style="animation-delay:.65s">Nos encanta saber que estás mejor. Si te apetece contarlo, tu reseña ayuda a otras personas a encontrarnos.</p>
-<div class="reg fi" style="animation-delay:1s"><svg viewBox="0 0 24 24"><g class="caja"><path d="M5 12.5v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7M12 12.5v8"/></g><g class="tapa"><rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M12 8.5C10.5 5 7 4.5 7 6.6 7 8.2 9.5 8.5 12 8.5zM12 8.5c1.5-3.5 5-4 5-1.9 0 1.6-2.5 1.9-5 1.9z"/></g></svg><div><b>2 sesiones gratis cada mes</b>Las sorteamos entre todos los que nos dejáis una reseña en Google: una al azar y otra a la más original.</div></div>
+${CLI.opciones.sorteo ? `<div class="reg fi" style="animation-delay:1s"><svg viewBox="0 0 24 24"><g class="caja"><path d="M5 12.5v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7M12 12.5v8"/></g><g class="tapa"><rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M12 8.5C10.5 5 7 4.5 7 6.6 7 8.2 9.5 8.5 12 8.5zM12 8.5c1.5-3.5 5-4 5-1.9 0 1.6-2.5 1.9-5 1.9z"/></g></svg><div><b>2 sesiones gratis cada mes</b>Las sorteamos entre todos los que nos dejáis una reseña en Google: una al azar y otra a la más original.</div></div>` : ''}
 <a class="b fi" id="ag" style="animation-delay:1.15s" href="${RESENA_URL}"><svg viewBox="0 0 24 24"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#fff" opacity=".7" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.2 1.1 4.6L6.4 14z"/><path fill="#fff" opacity=".85" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4 5.6-4z"/></svg>Escribir mi reseña en Google</a>
-<p class="hint fi" style="animation-delay:1.3s"><b>Cuéntalo a tu manera:</b> cómo llegaste, cómo estás ahora, alguna anécdota… ¡Las más originales tienen premio!</p>
+<p class="hint fi" style="animation-delay:1.3s"><b>Cuéntalo a tu manera:</b> cómo llegaste, cómo estás ahora, alguna anécdota…${CLI.opciones.sorteo ? ' ¡Las más originales tienen premio!' : ''}</p>
 ${(D.ideas || []).length ? `<div class="ideas fi" style="animation-delay:1.45s"><small>¿Con prisa? Toca una frase: la copiamos y solo tienes que pegarla en Google.</small><div class="chips">${D.ideas.map(x => `<button type="button" class="chip">${e(x)}</button>`).join('')}</div></div>` : ''}
 <p class="n">¡Mil gracias por confiar en nosotros!</p></div><script>(function(){var G=document.getElementById('ag'),h=G.href;
 function copiar(t){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).catch(function(){});return;}}catch(e){}try{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();}catch(e){}}
@@ -1644,9 +1650,9 @@ function copiar(t){try{if(navigator.clipboard&&navigator.clipboard.writeText){na
 function irGoogle(t){if(t)copiar(t);enviar({resena:1}).catch(function(){});setTimeout(function(){location.href=D.google;},t?250:60);}
 function excelente(){var f=D.fisio||'El equipo',F=D.ideas&&D.ideas.length?D.ideas:D.fin?[(D.fisio?'Gracias a '+D.fisio+' estoy':'Estoy')+' mucho mejor',f+' es muy profesional','Me explicaron todo muy bien','Trato cercano y muy amable','100% recomendable']:[f+' es muy profesional',D.fisio?'Me explicó todo muy bien':'Me explicaron todo muy bien','Noté mejoría desde la primera sesión','Trato cercano y muy amable','El centro es precioso'];
  C.innerHTML=grande('feliz','M26 45 Q40 62 54 45')+'<h1 class="fi" style="animation-delay:.8s">¡Qué alegría'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(D.fisio?'A '+esc(D.fisio)+' le hará muchísima ilusión. ':'')+'¿Nos lo cuentas en Google? Son 20 segundos.</p>'
- +'<div class="reg fi" style="animation-delay:1.05s"><svg viewBox="0 0 24 24"><g class="caja"><path d="M5 12.5v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7M12 12.5v8"/></g><g class="tapa"><rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M12 8.5C10.5 5 7 4.5 7 6.6 7 8.2 9.5 8.5 12 8.5zM12 8.5c1.5-3.5 5-4 5-1.9 0 1.6-2.5 1.9-5 1.9z"/></g></svg><div><b>2 sesiones gratis cada mes</b>Las sorteamos entre todos los que nos dejáis una reseña en Google: una al azar y otra a la más original.</div></div>'
+ +'${CLI.opciones.sorteo ? '<div class="reg fi" style="animation-delay:1.05s"><svg viewBox="0 0 24 24"><g class="caja"><path d="M5 12.5v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7M12 12.5v8"/></g><g class="tapa"><rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M12 8.5C10.5 5 7 4.5 7 6.6 7 8.2 9.5 8.5 12 8.5zM12 8.5c1.5-3.5 5-4 5-1.9 0 1.6-2.5 1.9-5 1.9z"/></g></svg><div><b>2 sesiones gratis cada mes</b>Las sorteamos entre todos los que nos dejáis una reseña en Google: una al azar y otra a la más original.</div></div>' : ''}'
  +'<a class="bt" href="'+D.google+'" id="gb"><span class="g">G</span>Escribir mi reseña en Google</a>'
- +'<p class="hint fi" style="animation-delay:1.4s"><b>Cuéntalo a tu manera:</b> cómo llegaste, cómo estás ahora, alguna anécdota… ¡Las más originales tienen premio!</p>'
+ +'<p class="hint fi" style="animation-delay:1.4s"><b>Cuéntalo a tu manera:</b> cómo llegaste, cómo estás ahora, alguna anécdota…${CLI.opciones.sorteo ? ' ¡Las más originales tienen premio!' : ''}</p>'
  +'<div class="ideas fi" style="animation-delay:1.8s"><small>¿Con prisa? Toca una frase: la copiamos y solo tienes que pegarla en Google.</small><div class="chips">'+F.map(function(x){return '<button class="chip">'+esc(x)+'</button>';}).join('')+'</div></div><p class="n">¡Mil gracias por confiar en nosotros!</p>';
  [].forEach.call(C.querySelectorAll('.chip'),function(c){c.onclick=function(){c.classList.add('on');irGoogle(c.textContent+'.');};});
  document.getElementById('gb').onclick=function(ev){ev.preventDefault();irGoogle('');};}
@@ -1990,6 +1996,13 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { patientId, action } = req.query;
+  // Datos de la clínica (Administración › Ajustes): las páginas salen con su nombre, dirección, teléfono…
+  try { CLI = MARCA.datos((await conf()).clinica); } catch (e) {}
+  { const _send = res.send.bind(res); res.send = b => _send(typeof b === 'string' && !/json/i.test(String(res.getHeader('Content-Type') || '')) ? MARCA.marcar(b, CLI) : b); }
+  if (action === 'clinica-pub') { // lo público de la clínica para la app y el panel (nombre, teléfono, opciones…)
+    const C = CLI; res.setHeader('Cache-Control', 'public, max-age=60');
+    return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones }, pares: MARCA.pares(C) });
+  }
   // Medición de velocidad: se apunta en los logs cuánto tarda cada acción (para saber qué pantallas van lentas)
   { const t0 = Date.now(); res.on('finish', () => { const ms = Date.now() - t0; console.log(`TIEMPO ${action || '-'} ${ms}ms${ms > 1500 ? ' LENTO' : ''}`); }); }
   // Respuestas de las consultas pesadas guardadas 60 s en el servidor (cualquier cambio por POST las borra)
@@ -3010,7 +3023,9 @@ module.exports = async function handler(req, res) {
             if (!(imp > 0 && imp <= 200) || !(me >= 1 && me <= 36)) return res.status(400).json({ ok: false, error: 'Revisa el importe y los meses' });
             cur.tarjeta = { importe: imp, meses: me };
           } else if (sec === 'holded') cur.holded = { borrador: !!v.borrador, rgpd: lim(v.rgpd, 1500) || TEXTO_RGPD };
-          else if (sec === 'clinica') cur.clinica = { razon: lim(v.razon, 80), nif: lim(v.nif, 20), direccion: lim(v.direccion, 160), tel: lim(v.tel, 30), email: lim(v.email, 80) };
+          else if (sec === 'clinica') { const L = MARCA.limpio, op = v.opciones || {};
+            cur.clinica = { marca: L(v.marca, 40), razon: L(v.razon, 80), nif: L(v.nif, 20), direccion: L(v.direccion, 160), dirCorta: L(v.dirCorta, 100), zona: L(v.zona, 40), ciudad: L(v.ciudad, 40), tel: L(v.tel, 30), wa: String(v.wa || '').replace(/\D/g, '').slice(0, 15), email: L(v.email, 80), web: L(v.web, 80), googlePlace: L(v.googlePlace, 80).replace(/\s/g, ''), iban: L(v.iban, 40),
+              opciones: { sorteo: op.sorteo !== false, bomba: op.bomba !== false } }; }
           else if (sec === 'cancelacion') { const h = Math.round(Number(v.horas)); if (!(h >= 0 && h <= 168)) return res.status(400).json({ ok: false, error: 'Revisa las horas' }); cur.cancelacion = { horas: h, texto: lim(v.texto, 600) }; }
           else return res.status(400).json({ ok: false, error: 'Sección no válida' });
           await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() });
