@@ -1679,6 +1679,21 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .ap-s{background:#faf6f1;border-radius:14px;padding:12px;margin:0 0 10px}.ap-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ap-row>.ag-in{flex:1;min-width:140px}.ap-s textarea{margin:8px 0 0;width:100%;box-sizing:border-box}.ap-eur{display:flex;align-items:center;gap:6px;flex:none}.ap-eur input{width:80px}.ap-eur span{font-size:12.5px;color:#8a7d74}.ap-x{flex:none;width:30px;height:30px;border:none;border-radius:50%;background:transparent;color:#a3968c;cursor:pointer}.ap-x:hover{background:#efe8e1}
 .ap-pks{margin-top:10px;display:flex;flex-direction:column;gap:6px}.ap-pk{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:#5c4f47}.ap-pk input{width:64px}.ap-pk .ap-pp{width:84px}.ap-pk em{font-style:normal;font-size:12px;color:#a3968c;min-width:90px}.ap-add{border:1.5px dashed #ddd2c8;background:#fff;color:#7d6a60;border-radius:99px;padding:7px 14px;font:600 12.5px Poppins,sans-serif;cursor:pointer;align-self:flex-start}.ap-add:hover{border-color:#c2552e;color:#c2552e}
 .ap-seg{display:inline-flex;background:#fff;border-radius:99px;padding:3px;gap:2px;flex-wrap:wrap}.ap-seg button{border:none;background:none;border-radius:99px;padding:6px 11px;font:600 12px Poppins,sans-serif;color:#7d6a60;cursor:pointer}.ap-seg button.on{background:#c2552e;color:#fff}.ap-pr .ap-row+.ap-row,.ap-pr textarea+.ap-row{margin-top:8px}.ap-pr .ap-de,.ap-pr .ap-ha{max-width:180px;min-width:165px}
+.tour-spot{position:fixed;z-index:9998;border-radius:14px;box-shadow:0 0 0 3px #c2552e,0 0 0 9999px rgba(30,20,15,.5);pointer-events:none;transition:all .2s}
+.tour-bub{position:fixed;z-index:9999;background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 10px 34px rgba(0,0,0,.18);font-family:Poppins,sans-serif;box-sizing:border-box;max-width:calc(100vw - 32px)}
+.tour-bub p{margin:0 0 14px;font-size:13.5px;line-height:1.55;color:#2b2420}
+.tour-bts{display:flex;gap:8px}.tour-bts button{flex:1;border:0;border-radius:99px;padding:10px 12px;font:600 13px Poppins,sans-serif;cursor:pointer}
+.tour-ok{background:#c2552e;color:#fff}.tour-back{background:#fdf1ea;color:#a3441f}
+.tour-pill{position:fixed;z-index:9997;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));border:0;border-radius:99px;background:#2b2420;color:#fff;padding:11px 20px;font:600 13px Poppins,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.2);cursor:pointer}
+@media(min-width:769px){.tour-pill{bottom:24px}}
+.tour-ver{display:inline-flex;align-items:center;gap:7px;margin-top:12px;border:1px solid #ecd2c4;background:#fff;color:#a3441f;border-radius:99px;padding:7px 14px;font:600 12.5px Poppins,sans-serif;cursor:pointer}
+.tour-ver:hover{background:#fdf1ea}.tour-ver svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nov-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin:10px 0 4px}
+.nov-h{font-size:13px;font-weight:700;color:var(--black);margin-bottom:8px}
+.nov-it{display:flex;gap:12px;padding:8px 0;border-top:1px solid #f3ece6;align-items:baseline}.nov-it:first-of-type{border-top:0}
+.nov-it span{flex:0 0 46px;font-size:11px;font-weight:600;color:#a3968c}.nov-it p{margin:0;font-size:12.5px;line-height:1.5;color:#3a322d}
+.nov-it.nueva span{color:#c2552e}.nov-it.nueva p{font-weight:500}
+.nov-dot{position:relative}.nov-dot::after{content:'';position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#c2552e;box-shadow:0 0 0 2px #fff}
 .pl-vs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.pl-v{border:1px solid #ecd2c4;background:#fff;color:#a3441f;border-radius:99px;padding:4px 10px;font:500 12px Poppins,sans-serif;cursor:pointer}.pl-v:hover{background:#fdf1ea}
 .lg-s{background:#faf6f1;border-radius:14px;padding:0 14px;margin:0 0 8px}.lg-s summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 0;font-weight:600;font-size:14px}.lg-s summary::-webkit-details-marker{display:none}.lg-s summary em{font-style:normal;font-size:11.5px;font-weight:600;color:#c2552e;background:#fdf1ea;border-radius:99px;padding:3px 9px}.lg-s summary i{font-style:normal;font-size:11.5px;font-weight:500;color:#a3968c}.lg-s small{display:block;font-size:12px;color:#8a7d74;margin:-4px 0 8px}.lg-s textarea{width:100%;box-sizing:border-box;font-size:13px;line-height:1.55}.lg-s .lg-r{margin:8px 0 14px}
 .val-so{margin-top:18px}.so-gs{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){.so-gs{grid-template-columns:1fr}}.so-g{background:#faf6f1;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}.so-h{display:flex;gap:11px;align-items:center}.so-h b{display:block;font-size:14px}.so-h small{font-size:12px;color:var(--muted)}.so-i{flex:none;width:36px;height:36px;border-radius:12px;background:#fdf1ea;display:grid;place-items:center}.so-i svg{width:19px;height:19px;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.so-w b{display:block;font-size:19px;color:#c2552e;font-weight:600}.so-w small{font-size:12px;color:var(--muted)}.so-roll{opacity:.55}.so-pop{animation:soPop .5s}@keyframes soPop{40%{transform:scale(1.12)}}.so-bts{display:flex;gap:8px;margin-top:auto}.so-b{flex:1;border:1.5px solid #efe6de;background:#fff;color:#5f554e;border-radius:99px;padding:9px 12px;font:600 13px Poppins,sans-serif;cursor:pointer}.so-b.pri{background:#c2552e;border-color:#c2552e;color:#fff}.so-b:disabled{opacity:.45;cursor:default}.so-l{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}.so-p{display:inline-flex;align-items:baseline;gap:6px;background:#faf6f1;border-radius:99px;padding:6px 12px;font-size:13px}.so-p small{font-size:11px;color:var(--muted)}.so-mas{border:none;background:none;color:#c2552e;font:600 13px Poppins,sans-serif;padding:8px 0 0;cursor:pointer}.so-el{max-height:55vh;overflow:auto}
@@ -2184,7 +2199,7 @@ async function loadBiblio(){
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function pavHtml(p,ini){return p&&p.foto?`<img src="${escH(p.foto)}" alt="" onerror="this.replaceWith(document.createTextNode('${escH(ini)}'))">`:escH(ini);}
 function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
-function pintarPerfil(){if(!fisioActual)return;requestAnimationFrame(ajustaTopbar);const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
+function pintarPerfil(){if(!fisioActual)return;try{setTimeout(novPunto,0);}catch(e){}requestAnimationFrame(ajustaTopbar);const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=(fisioActual.role==='admin'?'Administración':'Fisioterapeuta')+(fisioActual.direccion?' · Dirección':'');
  const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{if('direccion' in fisioActual){const d=!!fisioActual.direccion;[['sb-rend','pmRend'],['sb-stats','pmStats'],['sb-admin','pmAdmin']].forEach(([sb,pm])=>{const a=$(sb),b=$(pm);if(a)a.style.display=d?'':'none';if(b)b.style.display=d?'':'none';});}}catch(e){}// Rendimiento, Estadísticas y Administración: solo dirección (casilla «Dirección» en Equipo)
@@ -11204,13 +11219,13 @@ let wRutaActual = null;
 
 const WIKI_RUTAS = [
  {
- id: 'appPaciente',
+ id: 'appEquipo',
  categoria: 'centro',
- titulo: 'Cómo funciona FISIO365',
- desc: 'La app del paciente y el panel del fisio, de principio a fin',
+ titulo: 'Cómo funciona la app',
+ desc: 'El panel del equipo y la app del paciente, siempre al día',
  etiqueta: 'Todo el equipo',
- info: `<strong>¿Qué aprenderás aquí?</strong><br><br>Todo lo que un paciente puede ver y hacer en su app — desde que entra con su PIN hasta cómo participa en el sorteo de referidos — y también cómo está organizado el panel que usáis vosotros: anamnesis y protocolos clínicos actuales, asignación de programas, fichas de paciente, informes y mensajes.<br><br><strong>¿Para qué sirve?</strong><br><br>Los pacientes os preguntarán constantemente cosas de su app, y vosotros necesitáis dominar bien vuestra propia herramienta. Este curso cubre ambos lados.<br><br><strong>¿Cuánto dura?</strong><br><br>7 módulos con test interactivo. Puedes completarlo a tu ritmo.`,
- pasos: 7,
+ info: `<strong>¿Qué aprenderás aquí?</strong><br><br>Cómo moverte por el panel (agenda, citas, mensajes, fichas, cobros, pendientes, check-list, valoraciones…) y qué ve y puede hacer el paciente en su app.<br><br><strong>Siempre al día</strong><br><br>Cada vez que cambia la app, se actualiza este curso. En muchas lecciones tienes el botón <b>Enséñamelo</b>: te lleva a la pantalla de verdad y te señala dónde tocar.<br><br><strong>¿Cuánto dura?</strong><br><br>12 módulos cortos con un test al final de cada uno.`,
+ pasos: 12,
  emoji: '',
  imgs: [],
  tits: [],
@@ -11361,7 +11376,49 @@ const WIKI_RUTAS = [
  }
 ];
 
+// ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
+// NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
+const NOVEDADES=[
+ {f:'2026-10-30',t:'Nuevo curso «Cómo funciona la app» en School, con botones «Enséñamelo» que te llevan a la pantalla de verdad.'},
+ {f:'2026-10-30',t:'Dirección › Ajustes › Mensajes a pacientes: ya se pueden cambiar los textos de los WhatsApp (recordatorios, encuestas, reseñas, pagos…).',dir:1},
+ {f:'2026-10-30',t:'Al montar un programa de ejercicios puedes ver el vídeo de cada ejercicio antes de ponerlo.'},
+ {f:'2026-10-30',t:'Valoraciones: con la ✕ quitas de la lista una valoración que no toca.'},
+ {f:'2026-10-29',t:'Sorteo del mes: 2 sesiones gratis entre quienes dejan reseña en Google (una al azar y otra a la más original). Está en Valoraciones.'}
+];
+function novNuevas(){let v='';try{v=localStorage.getItem('f365_nov_visto')||'';}catch(e){}return NOVEDADES.filter(n=>n.f>v&&(!n.dir||esDireccionSeguro())).length;}
+function esDireccionSeguro(){try{return typeof esDireccion==='function'&&esDireccion();}catch(e){return false;}}
+function novMarcarVistas(){try{localStorage.setItem('f365_nov_visto',NOVEDADES[0].f);}catch(e){}novPunto();}
+function novPunto(){const n=novNuevas();['sb-school','pmSchool','btnPerfil'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('nov-dot',n>0);});}
+function novHtml(){const L=NOVEDADES.filter(n=>!n.dir||esDireccionSeguro()).slice(0,6);if(!L.length)return '';let v='';try{v=localStorage.getItem('f365_nov_visto')||'';}catch(e){}
+ const fd=f=>{const d=new Date(f+'T12:00:00');return d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];};
+ return `<div class="nov-card"><div class="nov-h">Novedades</div>${L.map(n=>`<div class="nov-it${n.f>v?' nueva':''}"><span>${fd(n.f)}</span><p>${escH(n.t)}</p></div>`).join('')}</div>`;}
+let tourVolver=null;
+function tourCerrar(todo){document.querySelectorAll('.tour-spot,.tour-bub').forEach(e=>e.remove());window.removeEventListener('scroll',tourPos,true);window.removeEventListener('resize',tourPos);if(todo){const p=$('tourPill');if(p)p.remove();tourVolver=null;}}
+let tourEl=null;
+function tourPos(){const s=document.querySelector('.tour-spot'),b=document.querySelector('.tour-bub');if(!b)return;
+ if(!s||!tourEl){b.style.width=Math.min(320,window.innerWidth-32)+'px';b.style.left='50%';b.style.top='50%';b.style.transform='translate(-50%,-50%)';return;}
+ const r=tourEl.getBoundingClientRect(),p=8;s.style.left=(r.left-p)+'px';s.style.top=(r.top-p)+'px';s.style.width=(r.width+2*p)+'px';s.style.height=(r.height+2*p)+'px';
+ const bw=Math.min(320,window.innerWidth-32),bh=b.offsetHeight||140;let x=r.left+r.width/2-bw/2;x=Math.max(16,Math.min(x,window.innerWidth-bw-16));
+ let y=r.bottom+p+12;if(y+bh>window.innerHeight-16)y=Math.max(16,r.top-p-12-bh);b.style.width=bw+'px';b.style.left=x+'px';b.style.top=y+'px';b.style.transform='none';}
+function tourPill(){if($('tourPill')||!tourVolver)return;const p=ce('button','tour-pill');p.id='tourPill';p.type='button';p.textContent='‹ Volver al curso';
+ p.onclick=()=>{const v=tourVolver;tourCerrar(true);showSection('school');if(v&&v.ruta)renderFormacion($('mainWrap'),v.ruta);};document.body.appendChild(p);}
+function ensename(ver,ruta){tourCerrar(true);tourVolver={ruta};showSection(ver.sec);const t0=Date.now();
+ const vis=e=>{if(!e)return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0;};
+ const busca=()=>{const enSec=$('mainWrap').dataset.sec===ver.sec||(ver.sec==='tar'&&$('mainWrap').dataset.sec==='seg');
+  const el=enSec?[...document.querySelectorAll(ver.el)].find(vis):null;
+  if(!el&&enSec&&Date.now()-t0<3000)return setTimeout(busca,150);
+  pinta(el,enSec);};
+ const pinta=(el,enSec)=>{tourEl=el||null;
+  if(el){el.scrollIntoView({block:'center',behavior:'instant'});const s=ce('div','tour-spot');const rr=parseFloat(getComputedStyle(el).borderTopLeftRadius)||0;s.style.borderRadius=(rr>=el.offsetHeight/2?'999px':(rr+8)+'px');document.body.appendChild(s);}
+  const b=ce('div','tour-bub');
+  b.innerHTML=`<p>${escH(enSec?(el?ver.txt:ver.txt+' (Ahora mismo no se ve en tu pantalla.)'):'Esta pantalla no la tienes en tus accesos. La activa dirección.')}</p><div class="tour-bts"><button type="button" class="tour-ok">Entendido</button><button type="button" class="tour-back">Volver al curso</button></div>`;
+  document.body.appendChild(b);
+  b.querySelector('.tour-ok').onclick=()=>{tourCerrar(false);tourPill();};
+  b.querySelector('.tour-back').onclick=()=>{const v=tourVolver;tourCerrar(true);showSection('school');if(v&&v.ruta)renderFormacion($('mainWrap'),v.ruta);};
+  tourPos();setTimeout(tourPos,60);window.addEventListener('scroll',tourPos,true);window.addEventListener('resize',tourPos);};
+ setTimeout(busca,120);}
 function renderWiki(wrap, rutaForzada){
+ tourCerrar(true);
  wRutaActual = null;
  wrap.innerHTML = '';
  const outer = ce('div','wiki-outer');
@@ -11394,8 +11451,9 @@ function renderWiki(wrap, rutaForzada){
  const hdr = ce('div','wiki-header');
  hdr.style.cssText='text-align:left;width:100%;max-width:560px;margin-bottom:0';
  hdr.innerHTML=`<h2 style="font-size:22px;font-weight:900;letter-spacing:-.4px;margin-bottom:4px">School</h2>
- <p style="font-size:13px;color:var(--muted)">Formación del equipo FISIO365</p>`;
+ <p style="font-size:13px;color:var(--muted)">Formación del equipo ${escH((CLINICA&&CLINICA.marca)||'FISIO365')}</p>`;
  outer.appendChild(hdr);
+ { const nv=novHtml(); if(nv){ const d=ce('div',''); d.style.cssText='width:100%;max-width:560px'; d.innerHTML=nv; outer.appendChild(d); } novMarcarVistas(); }
 
  // ── BARRA DE PROGRESO ─────────────────────────────────────────────────
  const progWrap=ce('div','');
@@ -13258,114 +13316,152 @@ function renderFormacion(wrap, ruta){
  ];
 
  const MODS_APP_PACIENTE = [
- // ═══════════════════════════════════════
- // MÓDULO 1 — Entrar e instalar la app del paciente
- // ═══════════════════════════════════════
- {t:'La app del paciente — entrar e instalarla',sub:'Lo primero que necesita saber el paciente',
+ // ═══ Curso «Cómo funciona la app» · se actualiza con cada cambio de la app (ver CLAUDE.md del proyecto) ═══
+ {t:'El panel: cómo moverte',sub:'Menú, botones de arriba y avisos',
  cards:[
- {ti:'Cómo entra el paciente',icon:'',body:`El paciente accede desde <b>app.fisioterapia365.com</b> (sin "/fisio" — esa dirección es la vuestra). Inicia sesión con su <b>email</b> y un <b>PIN de 4 dígitos</b> que se le asigna al crear su ficha. No necesita contraseña ni registro, solo esos dos datos.`},
- {ti:'Por qué conviene que se la instale',icon:'',body:`Aunque funciona perfectamente desde el navegador, recomienda siempre a los pacientes que se instalen la app en el móvil. Se abre en pantalla completa sin barras del navegador, y mantiene la sesión iniciada — entran directamente sin volver a escribir el PIN cada vez.`},
- {ti:'Cómo se instala en iPhone',icon:'',body:`Abrir en <b>Safari</b>, pulsar el botón de <b>Compartir ↑</b> (abajo en el centro de la pantalla) y elegir <b>"Añadir a pantalla de inicio"</b>. No funciona desde Chrome en iPhone.`},
- {ti:'Cómo se instala en Android',icon:'',body:`La app está en <b>Google Play</b>: basta con buscar <b>FISIO365</b> o abrir el enlace que le llega por WhatsApp, e instalarla como cualquier otra app. (También se puede desde Chrome: tres puntos ⋮ → <b>"Instalar aplicación"</b>.)`},
- {ti:'La propia app tiene una guía interna',icon:'',body:`Dentro de la app del paciente hay una sección llamada "Guía" con los pasos de instalación y un resumen de cada sección. Si un paciente tiene dudas, puedes decirle que la consulte ahí directamente.`}
+ {ti:'Lo que ves depende de tus accesos',body:`Cada persona ve las secciones que dirección le ha activado en <b>Dirección › Accesos</b>. Si echas en falta una pantalla, no es un fallo: pídesela a dirección.`},
+ {ti:'En el ordenador y en el móvil',body:`En el ordenador tienes el <b>menú a la izquierda</b>. En el móvil, abajo salen <b>Agenda, Pacientes, Chat y Check-list</b>; el resto (Valoraciones, Buzón, Sugerencias, School…) está tocando <b>tu foto</b>, arriba a la derecha.`},
+ {ti:'Los botones de arriba',body:`<b>Apuntar a alguien que pregunta</b>: para quien llama o entra a preguntar y no se cita (va a Captación). <b>Pendientes</b>: con el número de cosas que te quedan. <b>Rendimiento</b>: cómo vas. Y la <b>campana</b> (en el móvil, dentro de tu foto): activa los avisos del panel en ese dispositivo.`,ver:{sec:'agenda',el:'#btnAvisos, #btnPerfil',txt:'Aquí activas los avisos del panel en este dispositivo (en el móvil, tocando tu foto › Notificaciones): nuevas reservas, pagos, encuestas y mensajes del chat.'}},
+ {ti:'Activa los avisos',body:`Actívalos en cada ordenador y móvil que uses. Así te enteras al momento de una <b>reserva nueva</b>, un <b>pago</b>, una <b>encuesta</b> o un <b>mensaje del chat</b>.`}
  ],
  qs:[
- {q:'¿Qué necesita el paciente para entrar en su app?',opts:['Solo el email','Email + PIN de 4 dígitos','Una contraseña que él mismo crea'],ok:1,fb:['No es suficiente solo con el email.','¡Correcto! Email + PIN de 4 dígitos asignado al crear su ficha.','No hay sistema de contraseña para el paciente.']},
- {q:'Un paciente con iPhone quiere instalar la app. ¿Desde qué navegador debe abrirla?',opts:['Chrome','Safari','Da igual, cualquiera funciona'],ok:1,fb:['En iPhone, Chrome no permite instalar la app.','¡Correcto! Solo desde Safari se puede instalar en iPhone.','No da igual — en iPhone solo funciona desde Safari.']}
- ]
- },
- // ═══════════════════════════════════════
- // MÓDULO 2 — Mis ejercicios y Mi racha
- // ═══════════════════════════════════════
- {t:'Mis ejercicios y Mi racha',sub:'Lo primero que ve el paciente cada día',
+ {q:'No te sale la sección Estadísticas en el menú. ¿Qué pasa?',opts:['Es un fallo de la app','No la tienes en tus accesos: la activa dirección','Hay que borrar la caché'],ok:1,fb:['No es un fallo: cada uno ve lo que tiene activado.','¡Eso es! Se activa en Dirección › Accesos.','No hace falta: es cosa de accesos.']},
+ {q:'Alguien entra a preguntar precios y no se cita. ¿Dónde lo apuntas?',opts:['En una nota de papel','En el botón de arriba «Apuntar alguien que pregunta»','En el chat'],ok:1,fb:['Así se pierde.','¡Bien! Va a Captación › No citados.','El chat es para pacientes de la app.']}
+ ]},
+
+ {t:'La agenda',sub:'Ver el día, dar citas y huecos',
  cards:[
- {ti:'Mis ejercicios — la pantalla principal',icon:'',body:`Es lo primero que aparece al entrar. Muestra el programa del día: cada ejercicio con su vídeo de YouTube incrustado (se reproduce directamente, sin salir de la app), y pastillas junto al nombre con series, repeticiones y duración.`},
- {ti:'Si un vídeo no se ve',icon:'',body:`Cuando un ejercicio no tiene vídeo vinculado correctamente, aparece un recuadro con un icono de play sin imagen. Esto suele pasar cuando el ejercicio se escribió a mano en el programa sin seleccionarlo del desplegable — hay que revisarlo desde el panel.`},
- {ti:'Marcar como hecho',icon:'',body:`Al terminar, el paciente pulsa <b>"Hecho"</b>. Le aparece la opción de añadir una nota para su fisio — es completamente opcional. Puede marcarlo como hecho sin escribir nada.`},
- {ti:'Mi racha',icon:'',body:`Calendario que muestra los días que ha completado sus ejercicios, la racha actual y la mejor racha. Está pensada para motivar la constancia, igual que cualquier app de hábitos. No registra ni pregunta por el dolor.`}
+ {ti:'Vistas y filtros',body:`Puedes ver el <b>Día</b>, la <b>Semana</b> o una <b>Lista</b>. Toca la fecha para ir a otro día, filtra por fisio o por estado (pendientes sin confirmar, sin factura, huecos libres…) y busca un paciente para ver todas sus citas.`,ver:{sec:'agenda',el:'.ag-vis',txt:'Aquí cambias entre Día, Semana y Lista.'}},
+ {ti:'Dar una cita',body:`Con <b>＋ Cita</b> buscas al paciente y le das hora. También puedes tocar una <b>hora vacía</b>: ahí eliges <b>Dar cita</b>, <b>Abrir hueco libre</b> (sale en la agenda y en la app para que lo reserven), <b>Bloquear</b>, Comida, Vídeos o Call-in.`,ver:{sec:'agenda',el:'.ag-add',txt:'Con este botón das una cita nueva.'}},
+ {ti:'Lo que te dice cada cita',body:`Las etiquetas de la tarjeta te lo cuentan todo de un vistazo: <b>1ª visita</b> o número de sesión, <b>Pack</b> o <b>Sin factura</b>, <b>✓ Confirmada</b>, <b>Sin consentimiento</b>, si reservó por la <b>App</b> o la <b>Web</b>, si hay <b>Nota</b>, y el estado del pago 💳.`,ver:{sec:'agenda',el:'.ag-grid',txt:'Cada tarjeta es una cita. Tócala para abrirla.'}},
+ {ti:'Sesiones sin factura',body:`Arriba de la agenda sale un aviso si hay <b>sesiones hechas sin factura</b>. Tócalo para verlas y cobrarlas. Cuando está todo al día, sale en verde.`,ver:{sec:'agenda',el:'.ag-fac',txt:'Este aviso te dice si quedan sesiones hechas sin facturar.'}}
  ],
  qs:[
- {q:'¿Es obligatorio escribir una nota al pulsar "Hecho"?',opts:['Sí, siempre','No, es completamente opcional','Solo si el fisio lo ha pedido'],ok:1,fb:['No es obligatorio.','¡Correcto! Puede marcarlo como hecho sin escribir nada.','Siempre es opcional, independientemente del fisio.']},
- {q:'¿Qué mide "Mi racha"?',opts:['El nivel de dolor diario','Los días que ha completado sus ejercicios','Las citas que ha tenido'],ok:1,fb:['Ya no se registra el dolor en la app.','¡Correcto! Es un calendario de constancia con los ejercicios.','Las citas se ven en "Mis citas", sección aparte.']}
- ]
- },
- // ═══════════════════════════════════════
- // MÓDULO 3 — Mis citas, Mis informes y Chat
- // ═══════════════════════════════════════
- {t:'Mis citas, Mis informes y Chat',sub:'Seguimiento, documentación y comunicación',
+ {q:'Quieres que un hueco salga en la app para que lo reserve cualquier paciente. ¿Qué haces?',opts:['Bloquearlo','Tocar la hora vacía › Abrir hueco libre','Nada, salen solos'],ok:1,fb:['Bloquear hace lo contrario.','¡Exacto! Queda libre en la agenda y en la app.','Hay que abrirlo.']},
+ {q:'¿Qué significa la etiqueta «Sin factura» en una cita?',opts:['Que el paciente no ha pagado nunca','Que esa sesión aún no está facturada','Que es gratis'],ok:1,fb:['No necesariamente.','¡Bien! Toca cobrarla y facturarla.','No: solo que falta la factura.']}
+ ]},
+
+ {t:'La cita por dentro',sub:'Estados, cancelaciones, pagos y alta',
  cards:[
- {ti:'Mis citas',icon:'',body:`Calendario mensual con un punto en los días con cita. Al tocarlo se despliega el detalle: hora, fisio, tipo y estado. Debajo hay una lista de próximas citas y un historial reciente de las pasadas.`},
- {ti:'Mis informes',icon:'',body:`Aquí aparecen los informes que el fisio ha generado y guardado en su ficha. El paciente puede leerlos dentro de la app o descargarlos en PDF directamente a su móvil. Si un paciente no ve un informe que espera, lo más probable es que el fisio todavía no lo haya guardado en su perfil — generar el informe y guardarlo en el perfil son dos pasos distintos.`},
- {ti:'Chat',icon:'',body:`El paciente puede escribir mensajes a cualquier fisio del equipo y recibir respuestas. Tiene dos pestañas: "De mi fisio" (mensajes recibidos, con opción de responder) y "Enviados". Las notas que añade al marcar "Hecho" también llegan aquí al fisio.`},
- {ti:'Recomienda y gana',icon:'',body:`Sistema de referidos: el paciente comparte un link de WhatsApp y suma <b>+1 papeleta</b> al instante. Si el amigo invitado viene a su primera sesión, el equipo lo marca en el panel y se suman <b>+5 papeletas</b> más. Las papeletas entran en un sorteo mensual.`}
+ {ti:'Marca siempre cómo ha ido',body:`Al tocar la cita eliges su estado: <b>Realizada</b>, <b>No asistió</b>, <b>Cancelada</b>, <b>Reprogramada</b>, <b>Por reagendar</b> o <b>Dudosa</b>. Si se cancela, puedes marcar <b>dejar la hora libre</b> para otro paciente.`},
+ {ti:'Cancelaciones tardías y faltas',body:`Si cancela tarde o no viene, la app te pregunta qué hacer: si tiene pack, <b>descontar la sesión o perdonársela</b>; si no tiene pack, si <b>la próxima la paga por adelantado</b>. Queda apuntado en las notas.`},
+ {ti:'Pago por adelantado',body:`<b>Pedir pago por adelantado › Enviar por WhatsApp</b> le manda un enlace para pagar con tarjeta o transferencia. Tiene <b>2 horas</b>; si no paga, la cita se cancela sola. Cuando llega una transferencia, márcala con <b>Ya está en el banco</b>.`},
+ {ti:'Seguimiento y alta',body:`<b>Seguimiento</b> crea una llamada en Pendientes. <b>No necesita más › Dar el alta</b> cierra el caso y te ofrece mandarle la <b>reseña de Google</b> o la <b>encuesta de alta</b>.`},
+ {ti:'Cambiar o borrar',body:`<b>Cambiar día u hora</b> y <b>Cambiar fisio</b> mueven la cita. <b>Borrar cita</b> te deja elegir entre dejar la hora libre o solo borrarla.`}
  ],
  qs:[
- {q:'Un paciente no ve un informe que espera. ¿Cuál es la causa más probable?',opts:['Un fallo técnico de la app','El fisio generó el informe pero no lo guardó todavía en su perfil','Los informes tardan 24h en aparecer'],ok:1,fb:['No suele ser fallo técnico — hay que comprobar esto primero.','¡Correcto! Generar y guardar en el perfil son dos pasos distintos.','No hay ese retraso — aparece al instante una vez guardado.']},
- {q:'¿Cuántas papeletas suma un paciente al compartir el link, antes de que el amigo venga?',opts:['+5','+1','Ninguna hasta que el amigo venga'],ok:1,fb:['+5 es cuando el amigo completa su primera sesión.','¡Correcto! +1 al instante solo por compartir.','Sí suma algo de inmediato.']}
- ]
- },
- // ═══════════════════════════════════════
- // MÓDULO 4 — El panel del fisio: acceso y estructura
- // ═══════════════════════════════════════
- {t:'El panel del fisio — acceso y estructura',sub:'Cómo entrar y qué tiene cada sección',
+ {q:'Un paciente sin pack no viene a su cita. ¿Qué te propone la app?',opts:['Borrarle la ficha','Que la próxima cita la pague por adelantado','Nada'],ok:1,fb:['¡No!','¡Eso es!','Sí te pregunta.']},
+ {q:'Mandas un enlace de pago por adelantado y no paga. ¿Qué pasa?',opts:['La cita se queda para siempre','A las 2 horas la cita se cancela sola','Se le cobra igual'],ok:1,fb:['No: tiene un plazo.','¡Correcto! Y el hueco queda libre.','No se cobra nada sin que pague.']}
+ ]},
+
+ {t:'Mensajes a pacientes',sub:'Recordatorios, encuestas, reseñas, pagos y huecos',
  cards:[
- {ti:'Cómo se accede',icon:'',body:`El panel está en <b>app.fisioterapia365.com/fisio</b> (con "/fisio" al final). Cada fisio entra con su nombre y contraseña personal. Las secciones visibles dependen del rol asignado — si algo no aparece, es porque el acceso no está activado para ese fisio.`},
- {ti:'Las secciones del panel',icon:'',body:`El panel tiene 5 secciones principales en el menú lateral: <b>Programas</b> (asignar ejercicios a pacientes), <b>Anamnesis</b> (protocolos de valoración clínica con informe por IA), <b>Pacientes</b> (ficha completa de cada paciente), <b>Mensajes</b> (lo que escriben los pacientes) y <b>School</b> (cursos de formación del equipo).`},
- {ti:'Conectado con la app del paciente',icon:'',body:`Todo lo que haces en el panel llega a la app del paciente al instante. Si asignas ejercicios, los ve en su app. Si guardas un informe en su ficha, aparece en "Mis informes". Si le respondes un mensaje, le llega al Chat. No hay que hacer nada especial — es inmediato.`}
+ {ti:'Todo desde un sitio',body:`En la agenda, el botón <b>Mensajes</b> reúne los WhatsApp del día, ya escritos. Tú solo tocas <b>Enviar</b>: se abre WhatsApp con el texto y el enlace, y queda apuntado.`,ver:{sec:'agenda',el:'.ag-recb:not(.ag-pdfb)',txt:'Aquí están todos los mensajes del día preparados: avisos, encuestas, reseñas, regalos y pagos.'}},
+ {ti:'Avisos de cita',body:`El día antes se manda el recordatorio con un enlace para <b>confirmar</b> (el viernes, los de sábado y lunes). En la primera visita, el enlace incluye el <b>consentimiento</b>. Si no confirma, sale el <b>2º aviso</b>. También puedes marcarla <b>confirmada a mano</b>.`},
+ {ti:'Encuestas y reseñas',body:`<b>1ª visita</b>: encuesta al día siguiente. <b>Alta</b>: encuesta a quien ha terminado. <b>Reseñas</b>: pedir reseña en Google a quien ha venido esta semana, con varios mensajes según el caso (general, de alta, está mucho mejor…).`},
+ {ti:'Regalos y pagos',body:`<b>Regalos</b>: tarjetas regalo para quien nos ha recomendado. <b>Pagos</b>: transferencias por mirar en el banco, enlaces por mandar, gente que aún no ha pagado (<b>Recordar</b>) y quien paga antes la próxima.`},
+ {ti:'Enviar huecos libres',body:`<b>Enviar huecos</b> manda por WhatsApp un enlace con los huecos de los próximos días: el paciente toca una hora y queda reservada. Puedes pedir que la <b>pague al reservar</b>.`,ver:{sec:'agenda',el:'.ag-pdfb',txt:'Con este botón mandas los huecos libres para que el paciente reserve solo.'}}
  ],
  qs:[
- {q:'¿En qué dirección entra el fisio al panel?',opts:['app.fisioterapia365.com','app.fisioterapia365.com/fisio','app.fisioterapia365.com/panel'],ok:1,fb:['Esa es la app del paciente.','¡Correcto! Con "/fisio" al final.','Esa ruta no existe.']},
- {q:'¿Cuántas secciones principales tiene el menú lateral del panel?',opts:['3','5','7'],ok:1,fb:['Son más.','¡Correcto! Programas, Anamnesis, Pacientes, Mensajes y School.','Son menos.']}
- ]
- },
- // ═══════════════════════════════════════
- // MÓDULO 5 — Anamnesis y protocolos clínicos
- // ═══════════════════════════════════════
- {t:'Anamnesis y protocolos clínicos',sub:'Valoración guiada y generación de informe por IA',
+ {q:'¿Dónde están los recordatorios de las citas de mañana?',opts:['En el chat','En la agenda › Mensajes › Avisos','Se mandan solos por email'],ok:1,fb:['No, el chat es otra cosa.','¡Bien!','No: se mandan por WhatsApp desde Mensajes.']},
+ {q:'Una paciente nueva aún no ha firmado el consentimiento. ¿Cómo le llega?',opts:['En papel siempre','Dentro del enlace del recordatorio de su 1ª visita','No hace falta'],ok:1,fb:['También se puede, pero no es lo primero.','¡Eso es! Lo firma al confirmar.','Sí hace falta.']}
+ ]},
+
+ {t:'Pacientes y su ficha',sub:'Buscar, historia, ejercicios e informes',
  cards:[
- {ti:'Cómo funciona',icon:'',body:`Eliges el protocolo según la zona o patología, seleccionas al paciente y rellenas los pasos guiados. Al final pulsas <b>"Generar informe"</b> y la IA redacta automáticamente el informe con todos los datos introducidos. No sale de la clínica — la IA procesa los datos y devuelve el texto final.`},
- {ti:'Protocolos disponibles',icon:'',body:`Rodilla, Hombro, Cervical, Codo y antebrazo, Muñeca y mano, Tobillo y pie, Cadera y pelvis, Sacroilíaca, Columna lumbar, <b>Hernia discal lumbar</b> (protocolo específico con Lasègue, Bragard, Slump y marcha en talones/puntillas), Columna torácica, <b>Suelo pélvico</b> y Libre/Otros.`},
- {ti:'Hernia discal — protocolo específico',icon:'',body:`Distinto al genérico de "Columna lumbar". Incluye tests neurodinámicos (Lasègue, Bragard, Slump), marcha en talones (L4-L5) y puntillas (S1), sensibilidad por dermatoma, reflejos y fuerza por raíz nerviosa. Úsalo cuando la sospecha sea específicamente hernia discal.`},
- {ti:'Importante: no salir antes de generar',icon:'',body:`Si sales a otra sección del panel antes de generar el informe, los datos introducidos se pierden. Hay que terminar la valoración sin abandonar la anamnesis.`}
+ {ti:'Buscar y crear',body:`En <b>Pacientes</b> buscas por nombre o email, o creas uno con <b>＋ Nuevo paciente</b>. Desde la agenda también llegas a la ficha tocando el nombre en la cita.`,ver:{sec:'pac',el:'#pacBuscar',txt:'Escribe aquí el nombre o el email del paciente.'}},
+ {ti:'Los botones de la ficha',body:`Arriba tienes <b>Llamar</b>, <b>WhatsApp</b>, <b>Enviar app</b> (si aún no la tiene), <b>Seguimiento</b> y <b>Cobrar</b>. Abajo, las pestañas: Resumen, Historia, Citas, Ejercicios y, en <b>Más</b>, Racha, Informes, Facturas, Acceso a la app y <b>Hacer anamnesis</b>.`},
+ {ti:'Historia y «está mejor»',body:`Anota cada sesión con <b>＋ Anotar sesión</b>. Si el paciente te cuenta que está mejor, toca <b>¿Te cuenta que está mejor?</b>: te prepara el mensaje para pedirle una reseña y lo marca en Valoraciones.`},
+ {ti:'Sin evolución',body:`Si tras 3 sesiones no mejora, marca <b>Sin evolución</b>. Se queda en Pendientes hasta que decidas cómo seguir: crear un informe, verlo o «Ya sé cómo seguir».`},
+ {ti:'Ejercicios, anamnesis e informes',body:`En <b>Ejercicios</b> montas su programa (puedes ver el vídeo de cada ejercicio antes de ponerlo). Al guardar, al paciente le llega un aviso. La <b>anamnesis</b> se hace desde Más › Hacer anamnesis, y en <b>Informes</b> creas informes y justificantes. Revisa bien antes de guardarlos: el paciente los ve en su app.`}
  ],
  qs:[
- {q:'Si sales del protocolo a media valoración sin generar el informe, ¿qué pasa?',opts:['Se guarda automáticamente','Los datos se pierden','Se guarda si el paciente ya tiene ficha'],ok:1,fb:['No — los datos no persisten al salir.','¡Correcto! Hay que terminar antes de cambiar de sección.','No depende de eso — se pierden siempre.']},
- {q:'¿Qué diferencia al protocolo "Hernia discal lumbar" del genérico de "Columna lumbar"?',opts:['Son el mismo formulario','Incluye tests como Lasègue, Bragard, Slump y valoración por raíz nerviosa','El de hernia es más corto'],ok:1,fb:['Son protocolos distintos con contenido diferente.','¡Correcto! Mucho más específico para sospecha de hernia.','Al contrario, es más extenso.']}
- ]
- },
- // ═══════════════════════════════════════
- // MÓDULO 6 — Programas de ejercicios
- // ═══════════════════════════════════════
- {t:'Programas de ejercicios',sub:'Asignar ejercicios y lo que ve el paciente',
+ {q:'¿Desde dónde se hace la anamnesis?',opts:['Desde el menú lateral','Desde la ficha del paciente › Más › Hacer anamnesis','Desde el chat'],ok:1,fb:['Ya no está en el menú.','¡Correcto!','No.']},
+ {q:'Guardas el programa de ejercicios de un paciente. ¿Qué pasa?',opts:['Nada hasta que se lo digas','Le llega un aviso a su app','Se le manda un email'],ok:1,fb:['Se entera solo.','¡Eso es!','No: es un aviso en la app.']}
+ ]},
+
+ {t:'Cobrar y facturar',sub:'Facturas, packs y entrega',
  cards:[
- {ti:'Cómo asignar un programa',icon:'',body:`Selecciona tu nombre como fisio, busca al paciente (si ya tiene programa, se carga para editar) y añade ejercicios desde la biblioteca. Selecciona siempre del desplegable de autocompletado — si escribes el nombre a mano sin seleccionarlo, el vídeo puede no vincularse correctamente y el paciente verá el recuadro vacío.`},
- {ti:'El programa nuevo reemplaza al anterior',icon:'',body:`Si guardas un programa nuevo sin cargar primero el actual, el anterior se pierde. Para añadir ejercicios sin borrar los que ya había: carga primero el programa existente, añade los nuevos y guarda.`},
- {ti:'Ejercicio que no está en la biblioteca',icon:'',body:`Si el ejercicio no existe, grábalo y súbelo a YouTube. Luego ve a Ejercicios en el panel, toca «+ Nuevo ejercicio», pega el link y elige la zona. Añádelo siempre desde el panel (no directamente en Airtable): así avisa si ese vídeo ya está y no se repiten. Desde ese momento lo tiene todo el equipo al asignar programas.`},
- {ti:'Mensaje opcional al paciente',icon:'',body:`Al guardar el programa puedes añadir un mensaje personalizado. Aparece destacado en la app del paciente justo antes de su lista de ejercicios.`}
+ {ti:'Cobrar',body:`Desde la cita (<b>Facturar</b>) o desde la ficha (<b>Cobrar</b>). Eliges el concepto, el fisio, la forma de pago y, si lo pide, su DNI/NIF. Puedes descontar una <b>tarjeta regalo</b>, marcar <b>Es gratis</b> o añadir más líneas. Con <b>Emitir factura</b> se crea en el programa de facturación.`},
+ {ti:'Entregarla',body:`Al emitirla eliges cómo se la das: <b>enlace por WhatsApp</b>, <b>por email</b>, <b>en su app</b> o <b>en mano</b>, con el recibí firmado.`},
+ {ti:'Packs',body:`En la ficha ves el <b>saldo de sesiones</b> y su pack. Un pack se puede <b>compartir con otro paciente</b> (por ejemplo, con su pareja).`},
+ {ti:'Que no se quede nada sin facturar',body:`El aviso de la agenda y el <b>Daily report</b> de dirección muestran las sesiones hechas sin factura. Lo ideal es cobrar al terminar cada sesión.`,ver:{sec:'agenda',el:'.ag-fac',txt:'Si aquí sale un número, hay sesiones hechas sin facturar.'}}
  ],
  qs:[
- {q:'¿Qué pasa si guardas un programa nuevo sin cargar primero el que ya tenía el paciente?',opts:['Se combinan automáticamente','El programa anterior se pierde','Aparece un aviso y no deja guardar'],ok:1,fb:['No se combinan.','¡Correcto! El nuevo reemplaza al anterior — hay que cargar primero el actual.','No hay ese aviso.']},
- {q:'¿Por qué es importante seleccionar el ejercicio del desplegable en vez de escribirlo a mano?',opts:['Solo por estética','Para que el vídeo se vincule correctamente al ejercicio','No hay diferencia real'],ok:1,fb:['No es por estética.','¡Correcto! Sin seleccionarlo del desplegable el vídeo puede no aparecer.','Sí hay diferencia — afecta a si el paciente ve el vídeo o no.']}
- ]
- },
- // ═══════════════════════════════════════
- // MÓDULO 7 — Ficha de paciente e informes
- // ═══════════════════════════════════════
- {t:'Ficha de paciente e informes',sub:'Todo el historial en un solo lugar',
+ {q:'Un paciente quiere la factura en el móvil. ¿Qué opciones tienes?',opts:['Solo en papel','Enlace por WhatsApp, por email o en su app','Ninguna'],ok:1,fb:['Hay más.','¡Bien!','Sí las hay.']},
+ {q:'¿Se puede usar el pack de un paciente para su pareja?',opts:['No, nunca','Sí: se comparte desde la ficha','Solo si lo pide dirección por email'],ok:1,fb:['Sí se puede.','¡Correcto!','No hace falta.']}
+ ]},
+
+ {t:'Chat, Buzón y Sugerencias',sub:'Hablar con pacientes y con el equipo',
  cards:[
- {ti:'La ficha del paciente',icon:'',body:`Desde la sección Pacientes, buscas por nombre o email y accedes a la ficha completa: programa actual, informes generados, racha de constancia, y datos de contraseña/PIN. Todo en un solo lugar.`},
- {ti:'Gestionar informes',icon:'',body:`Cada informe generado en una anamnesis queda en la ficha. Puedes verlo completo, descargarlo en PDF con cabecera FISIO365, o pulsar <b>"Guardar en app"</b> para que el paciente lo vea en su sección "Mis informes". Revisa siempre el contenido antes de guardarlo — una vez hecho, el paciente ya puede verlo.`},
- {ti:'Estructura del informe',icon:'',body:`Todos los informes siguen la misma estructura: MOTIVO DE CONSULTA · EXPLORACIÓN Y HALLAZGOS · DIAGNÓSTICO FISIOTERAPÉUTICO · OBJETIVOS TERAPÉUTICOS · y solo si hay red flags: ALERTAS.`},
- {ti:'Mensajes del paciente',icon:'',body:`Cuando un paciente escribe desde su Chat, aparece en la sección Mensajes del panel con un punto rojo. El punto desaparece al entrar en la sección. Escribes la respuesta y le llega al paciente al instante.`}
+ {ti:'Chat con pacientes',body:`El <b>Chat</b> es para los pacientes que tienen la app. Les llega un aviso cuando les escribes. Con <b>＋ Nuevo</b> empiezas una conversación; también podéis mandaros fotos y PDF.`,ver:{sec:'msg',el:'.chatp-nuevo',txt:'Con este botón empiezas una conversación con un paciente.'}},
+ {ti:'Buzón del equipo',body:`El <b>Buzón</b> es para lo interno: comunicados, solicitudes, tareas, incidencias y ausencias. Al escribir eliges qué esperas del otro: <b>que lo lea</b>, <b>que lo haga</b> o <b>que te conteste</b>. Las ausencias y solicitudes se aprueban o rechazan ahí mismo.`,ver:{sec:'com',el:'.com-esc',txt:'Escribe aquí al equipo o a dirección.'}},
+ {ti:'Sugerencias',body:`¿Una idea o algo que falla? En <b>Sugerencias</b> eliges si es de la app o de la clínica, si es una mejora o un fallo, y puedes adjuntar fotos. Verás la respuesta y si se ha hecho.`,ver:{sec:'sug',el:'.sug-tabs',txt:'Aquí mandas ideas y fallos, y ves cómo van.'}}
  ],
  qs:[
- {q:'¿Qué hay que hacer antes de pulsar "Guardar en app" en un informe?',opts:['Nada, se puede deshacer','Revisar el contenido — el paciente lo verá al instante','Esperar 24h'],ok:1,fb:['No se puede deshacer fácilmente.','¡Correcto! Una vez guardado el paciente tiene acceso inmediato.','No hay espera — revisa antes de guardar.']},
- {q:'¿Qué sección del informe solo aparece si hay señales de alerta clínica?',opts:['OBJETIVOS TERAPÉUTICOS','ALERTAS','MOTIVO DE CONSULTA'],ok:1,fb:['Esa aparece siempre.','¡Correcto! Solo si hay red flags detectadas.','Esa aparece siempre.']}
- ]
- }
+ {q:'Necesitas que un compañero te cubra un turno. ¿Por dónde se lo pides?',opts:['Por el chat de pacientes','Por el Buzón, como solicitud','No se puede'],ok:1,fb:['El chat es para pacientes.','¡Eso es!','Sí se puede.']},
+ {q:'La app hace algo raro. ¿Qué haces?',opts:['Nada','Lo mandas en Sugerencias como «Un fallo», con una foto','Lo comentas en el chat de un paciente'],ok:1,fb:['Mejor contarlo.','¡Perfecto!','No.']}
+ ]},
+
+ {t:'Pendientes, llamadas y captación',sub:'Que no se escape nadie',
+ cards:[
+ {ti:'Tareas',body:`En <b>Pendientes › Tareas</b> está todo lo que queda por hacer: pacientes sin evolución, tareas del equipo, historias por actualizar, pacientes <b>sin próxima cita</b>, consentimientos por arreglar, huecos para la lista de espera, tarjetas regalo, sin plan de ejercicios, sin la app… Marca <b>✓ Hecho</b> cuando lo resuelvas.`,ver:{sec:'tar',el:'.tar-top',txt:'Aquí cambias entre Tareas y Llamadas.'}},
+ {ti:'Llamadas',body:`En <b>Llamadas</b> salen los seguimientos: atrasados, de hoy, de esta semana… Llama o escribe por WhatsApp y apunta el <b>Resultado</b>: cita recuperada, volver a llamar, no contesta, alta… Si pides reseña, márcalo.`},
+ {ti:'Call-in',body:`<b>Call-in</b> saca listas de pacientes para llamar, filtrando por estado y por fisio. También ves la lista de espera para ofrecer huecos.`},
+ {ti:'Captación',body:`<b>En espera</b>: gente que quiere hora en una franja concreta; cuando se libera un hueco, se le avisa por WhatsApp. <b>No citados</b>: quien preguntó y no se citó. <b>Negocios</b>: los del barrio que toca visitar.`}
+ ],
+ qs:[
+ {q:'Llamas a un paciente y te dice que le vuelvas a llamar el lunes. ¿Qué haces?',opts:['Te lo apuntas en el móvil','Resultado › Volver a llamar, con la fecha','Nada'],ok:1,fb:['Mejor en el panel, que lo ve todo el equipo.','¡Eso es!','Se perdería.']},
+ {q:'¿Dónde ves a quien quiere hora pero no hay hueco en su franja?',opts:['Captación › En espera','Valoraciones','Chat'],ok:0,fb:['¡Correcto!','No.','No.']}
+ ]},
+
+ {t:'Fin del día',sub:'Check-list y tus estadísticas',
+ cards:[
+ {ti:'El check-list',body:`Antes de irte, abre <b>Check-list</b>, marca los puntos y toca <b>Enviar check-list</b>. Algunos se rellenan solos (por ejemplo, cuántos pendientes tienes). Arriba te salen también las cosas que te han pedido por el Buzón.`},
+ {ti:'¿Falta material?',body:`En el check-list está <b>¿Falta material?</b>: apúntalo y dirección lo verá en la lista de la compra.`},
+ {ti:'Mis estadísticas',body:`En <b>Mis estadísticas</b> ves tus sesiones, tu ocupación y tus horas. Si un día no cuadra, puedes <b>explicar qué pasó</b> y mandárselo a dirección.`},
+ {ti:'Daily report (dirección)',body:`Dirección ve el resumen del día: sesiones, facturas, caja, citas sin marcar, canceladas y el check-list de cada fisio. Por eso es importante marcar bien las citas y enviar el check-list.`}
+ ],
+ qs:[
+ {q:'¿Cuándo se envía el check-list?',opts:['Una vez a la semana','Cada día antes de irte','Solo si hay problemas'],ok:1,fb:['No.','¡Correcto!','No.']},
+ {q:'Se ha acabado el gel. ¿Dónde lo apuntas?',opts:['En el check-list › ¿Falta material?','En el chat de un paciente','En Sugerencias'],ok:0,fb:['¡Bien!','No.','No: va a la lista de la compra.']}
+ ]},
+
+ {t:'Valoraciones y reseñas',sub:'Lo que opinan los pacientes',
+ cards:[
+ {ti:'Qué sale aquí',body:`En <b>Valoraciones</b> ves las encuestas de los últimos 14 días: cuántas hay, cuántos están contentos, cuántos han ido a Google y los que te han dicho que <b>están mejor</b>.`},
+ {ti:'Escribirle',body:`En cada respuesta tienes <b>Escribirle</b>: te propone un mensaje según lo que ha contestado (si no te gusta, «Otra versión») y lo abre en WhatsApp. Con la <b>✕</b> quitas de la lista una valoración que no toca.`},
+ {ti:'El sorteo del mes',body:`Si la clínica lo tiene activado, cada mes se sortean <b>2 sesiones gratis</b> entre quienes dejan reseña en Google: una al azar y otra para la más original. Dirección hace el sorteo aquí y avisa al ganador.`}
+ ],
+ qs:[
+ {q:'Un paciente contesta la encuesta con una queja. ¿Qué haces?',opts:['Nada','Tocar «Escribirle» y responderle','Borrar su ficha'],ok:1,fb:['Es justo cuando más importa responder.','¡Eso es!','¡No!']},
+ {q:'¿Quién entra en el sorteo del mes?',opts:['Todos los pacientes','Quienes dejan una reseña en Google','Solo los de pack'],ok:1,fb:['No.','¡Correcto!','No.']}
+ ]},
+
+ {t:'La app del paciente',sub:'Lo que ve y puede hacer el paciente',
+ cards:[
+ {ti:'Entrar e instalarla',body:`El paciente entra con su <b>email o teléfono</b> y su <b>PIN</b>. Recomiéndale instalarla: en iPhone desde Safari › Compartir › <b>Añadir a pantalla de inicio</b>; en Android, «Instalar aplicación». Dentro hay una <b>Guía</b> con estos pasos.`},
+ {ti:'Hoy y Racha',body:`En <b>Hoy</b> tiene sus ejercicios con vídeo, su próxima cita y las notas de su fisio. Al terminar puede mandarte un comentario. En <b>Racha</b> ve los días que ha hecho los ejercicios y apunta su <b>dolor de 0 a 10</b>, con su evolución.`},
+ {ti:'Citas',body:`Puede <b>reservar un hueco libre</b> (y a vosotros os llega un aviso). <b>Desde la app no puede cancelar ni cambiar</b>: tiene que escribir por el chat o llamar. Confirma la cita desde el enlace del recordatorio de WhatsApp.`},
+ {ti:'Documentos, chat y packs',body:`En <b>Mis documentos</b> tiene sus facturas, informes, formularios firmados y tarjetas regalo. Por el <b>Chat</b> os escribe a vosotros. En <b>Packs</b> y <b>Promociones</b> ve precios y ofertas.`}
+ ],
+ qs:[
+ {q:'Un paciente quiere cancelar su cita desde la app. ¿Puede?',opts:['Sí, con un botón','No: tiene que escribir por el chat o llamar','Solo con 48 h de antelación'],ok:1,fb:['No hay botón de cancelar.','¡Correcto!','No.']},
+ {q:'¿Dónde apunta el paciente su dolor?',opts:['En Racha','En Citas','No puede'],ok:0,fb:['¡Eso es!','No.','Sí puede.']}
+ ]},
+
+ {t:'Dirección',sub:'Para que sepas qué hay (lo usa dirección)',
+ cards:[
+ {ti:'Equipo, horarios y accesos',body:`En <b>Dirección</b> se da de alta al equipo, se ponen los horarios y vacaciones y se decide qué ve cada uno (<b>Accesos</b>). Quien está de baja no entra ni sale en la agenda, pero no se pierde nada.`,ver:{sec:'admin',el:'.adm-tabs',txt:'Estas son las pestañas de Dirección.'}},
+ {ti:'Listas y ajustes',body:`Ahí también están las listas (conceptos y precios, formas de pago, tipos de sesión…), el check-list de final de día, los datos de la clínica, los precios y packs de la app, la política de cancelación, los <b>textos legales</b> y los <b>mensajes a pacientes</b>.`},
+ {ti:'Números',body:`<b>Rendimiento</b> muestra cómo va cada fisio y el total del centro; <b>Estadísticas</b>, el centro semana a semana. Cada mañana dirección recibe además un <b>resumen por email</b>.`}
+ ],
+ qs:[
+ {q:'¿Dónde se cambian los textos de los WhatsApp que mandamos a los pacientes?',opts:['No se pueden cambiar','Dirección › Ajustes › Mensajes a pacientes','En el chat'],ok:1,fb:['Sí se pueden.','¡Correcto!','No.']}
+ ]}
  ];
 
- const MODS = ruta.id === 'airtable' ? MODS_AIRTABLE : ruta.id === 'manual' ? MODS_MANUAL : ruta.id === 'ultima' ? MODS_ULTIMA : ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : ruta.id === 'appPaciente' ? MODS_APP_PACIENTE : ruta.id === 'sueloPelvicoProtocolo' ? MODS_SUELO_PELVICO_PROTOCOLO : MODS_BOMBA;
+ const MODS = ruta.id === 'airtable' ? MODS_AIRTABLE : ruta.id === 'manual' ? MODS_MANUAL : ruta.id === 'ultima' ? MODS_ULTIMA : ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : ruta.id === 'appEquipo' ? MODS_APP_PACIENTE : ruta.id === 'sueloPelvicoProtocolo' ? MODS_SUELO_PELVICO_PROTOCOLO : MODS_BOMBA;
 
  const lsKey = 'fisio365_school_' + ruta.id + '_' + (fisioActual?.id||'x');
 
@@ -13472,7 +13568,9 @@ function renderFormacion(wrap, ruta){
  return;
  }
  const c=ce('div','card');c.innerHTML=`<div class="ct">${card.icon?card.icon+' ':''}${card.ti}</div>`;
- const body=buildGL(card.body);c.appendChild(body);wrap.appendChild(c);
+ const body=buildGL(card.body);c.appendChild(body);
+ if(card.ver){const vb=ce('button','tour-ver');vb.type='button';vb.innerHTML='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Enséñamelo';vb.onclick=()=>{tt.remove();ensename(card.ver,ruta);};c.appendChild(vb);}
+ wrap.appendChild(c);
  });
 
  // Test del módulo

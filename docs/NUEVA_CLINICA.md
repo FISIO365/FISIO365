@@ -36,5 +36,5 @@ Las claves **nunca** se pegan en el chat ni en el código: se ponen directamente
 - **Listas**, tipos de cita, estados, política de cancelación, check-list, tarjeta regalo.
 
 ## Pendiente (siguientes pasos)
-- Guías y tutoriales del panel por clínica.
+- Cursos de School propios de FISIO365 (protocolos, aparatos): ocultarlos o hacerlos editables por clínica. El curso «Cómo funciona la app» sirve para todas.
 - Icono y nombre de la app instalada (manifest) por clínica.
