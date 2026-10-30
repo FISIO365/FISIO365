@@ -1311,7 +1311,10 @@ async function loadRegalos(){const w=document.getElementById('regPacWrap'),l=doc
 const CFG={tj:'10'};
 (async function(){try{const r=await (await fetch('/api/schedule?action=config-pub')).json();if(!r.ok)return;
  if(r.tarjeta&&r.tarjeta.importe){CFG.tj=String(Math.round(r.tarjeta.importe*100)/100).replace('.',',');document.querySelectorAll('.cf-tj').forEach(e=>e.textContent='-'+CFG.tj+'€');}
- const p=document.getElementById('citasPol');if(p&&r.cancelacion&&String(r.cancelacion.texto||'').trim()){p.textContent=r.cancelacion.texto;p.hidden=false;}}catch(e){}})();
+ const p=document.getElementById('citasPol');if(p&&r.cancelacion&&String(r.cancelacion.texto||'').trim()){p.textContent=r.cancelacion.texto;p.hidden=false;}
+ // Servicios, precios, packs y promociones (Administración › App del paciente)
+ if(r.app){if(Array.isArray(r.app.servicios)&&r.app.servicios.length){const P={};r.app.servicios.forEach((x,i)=>{P['s'+i]={nombre:x.nombre,desc:x.desc||'',suelta:+x.suelta||0,packs:(x.packs||[]).map(q=>[+q[0],+q[1]])};});PACKS=P;if(!PACKS[pkTipo])pkTipo='s0';}
+  if(Array.isArray(r.app.promos)){PROMOS=r.app.promos;try{pintarPromos();}catch(_){}}}}catch(e){}})();
 async function loadInformes(){loadDocumentos();loadRegalos();loadFacturas();
   const list=document.getElementById('infPacList'),wr=document.getElementById('infPacWrap');if(!list)return;window._informesPac=[];
   try{const res=await fetch(`/api/schedule?patientId=${patient.id}&action=informes`);const data=await res.json();const informes=data.informes||[];
@@ -1428,19 +1431,19 @@ if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('messag
 // Para añadir una promo: copia un bloque, cambia los textos y sube los cambios.
 // color: 'Naranja' | 'Negro' | 'Crema'   ·   accion: 'reservar' | 'chat' | un enlace https://…
 // desde / hasta (opcional, 'AAAA-MM-DD'): la promo solo sale entre esas fechas.
-const PROMOS=[
+let PROMOS=[
  {etiqueta:'Siempre disponible',titulo:'Packs de sesiones',texto:'Cada sesión te sale más barata: hasta 280 € de ahorro. Pagas una vez y solo te preocupas de mejorar.',boton:'Ver packs',accion:'packs',color:'Naranja'},
  {etiqueta:'Regalo',titulo:'Regala fisioterapia',texto:'Una tarjeta regalo para quien quieras. La preparas en 2 minutos.',boton:'Regalar',accion:'https://tally.so/r/WOVB0N?origen=app',color:'Negro'},
 ];
 function promosActivas(){const h=new Date().toISOString().slice(0,10);return PROMOS.filter(p=>(!p.desde||p.desde<=h)&&(!p.hasta||p.hasta>=h));}
-function htmlPromo(p,i,solo){const b=p.boton?`<div class="pr-b"><button onclick="accionPromo(${i})">${p.boton}</button></div>`:'';return `<div class="pr ${p.color||'Naranja'}${solo?' solo':''}">${p.etiqueta?`<div class="pr-et">${p.etiqueta}</div>`:''}<h4>${p.titulo}</h4>${p.texto?`<p>${p.texto}</p>`:''}${b}</div>`;}
+function htmlPromo(p,i,solo){const b=p.boton?`<div class="pr-b"><button onclick="accionPromo(${i})">${escF(p.boton)}</button></div>`:'';return `<div class="pr ${p.color==='Negro'?'Negro':'Naranja'}${solo?' solo':''}">${p.etiqueta?`<div class="pr-et">${escF(p.etiqueta)}</div>`:''}<h4>${escF(p.titulo)}</h4>${p.texto?`<p>${escF(p.texto)}</p>`:''}${b}</div>`;}
 function accionPromo(i){const p=PROMOS[i];if(!p)return;if(p.accion==='reservar')return abrirReserva();if(p.accion==='chat')return showSection('mensajes');if(p.accion==='packs')return abrirPacks();if(/^https?:/.test(p.accion||''))window.open(p.accion,'_blank');}
 function pintarPromos(){const act=promosActivas();const H=document.getElementById('promosHoy'),L=document.getElementById('promosLista');
  if(H)H.innerHTML=act.length?`<div class="pr-cab"><b>Promociones</b>${act.length>3?`<button onclick="showSection('promos');pintarPromos()">Ver todas</button>`:''}</div><div class="pr-fila">${act.slice(0,3).map(p=>htmlPromo(p,PROMOS.indexOf(p),act.length===1)).join('')}</div>`:'';
  if(L)L.innerHTML=act.length?act.map(p=>htmlPromo(p,PROMOS.indexOf(p),1)).join(''):'<div class="pr-vacio">Ahora mismo no hay promociones. ¡Vuelve pronto!</div>';}
 
 // ── Packs ─────────────────────────────────────────────────────
-const PACKS={
+let PACKS={
  convencional:{nombre:'Fisioterapia',desc:'Para contracturas, dolor de espalda, tirones y molestias del día a día.',suelta:65,packs:[[5,310],[10,585],[20,1100]]},
  avanzada:{nombre:'Fisioterapia avanzada',desc:'Con tecnología (bomba diamagnética, ondas de choque) para hernias, tendinitis y lesiones que se resisten.',suelta:75,packs:[[5,345],[10,640],[20,1220]]}};
 let pkTipo='convencional';
@@ -1448,16 +1451,16 @@ const eur=n=>{const r=Math.round(n*100)/100;const [e,d]=r.toFixed(r%1?2:0).split
 function abrirPacks(){document.getElementById('packsSheet').classList.add('on');document.body.style.overflow='hidden';pintarPacks();}
 function cerrarPacks(){document.getElementById('packsSheet').classList.remove('on');document.body.style.overflow='';}
 function pintarPacks(){const t=PACKS[pkTipo];
- document.getElementById('pkTabs').innerHTML=Object.keys(PACKS).map(k=>`<button class="rv-chip${k===pkTipo?' on':''}" onclick="pkTipo='${k}';pintarPacks()">${PACKS[k].nombre}</button>`).join('');
- const max=Math.max(...t.packs.map(([n,p])=>n*t.suelta-p));
+ document.getElementById('pkTabs').innerHTML=Object.keys(PACKS).map(k=>`<button class="rv-chip${k===pkTipo?' on':''}" onclick="pkTipo='${k}';pintarPacks()">${escF(PACKS[k].nombre)}</button>`).join('');
+ const max=t.packs.length?Math.max(...t.packs.map(([n,p])=>n*t.suelta-p)):0;
  let h=`<div class="pk-ventajas"><div class="pk-v"><b>Ahorras</b>cada sesión sale más barata</div><div class="pk-v"><b>Cómodo</b>pagas una vez y te olvidas</div><div class="pk-v"><b>Constancia</b>mejores resultados</div></div>`;
- h+=`<div class="pk-tipo">${t.desc} Sesión suelta: <b>${eur(t.suelta)}</b>.</div>`;
+ h+=`<div class="pk-tipo">${escF(t.desc)} Sesión suelta: <b>${eur(t.suelta)}</b>.</div>`;
  h+=t.packs.map(([n,p])=>{const ah=n*t.suelta-p,top=n===10;return `<div class="pk${top?' top':''}">${top?'<div class="pk-tag">RECOMENDADO</div>':''}<div class="pk-n"><b>Pack de ${n} sesiones</b><span>${eur(p/n)} por sesión</span><em>Ahorras ${eur(ah)}</em></div><div class="pk-p"><b>${eur(p)}</b></div></div>`;}).join('');
  h+=`<div class="pk-nota">¿Te interesa alguno? Pregúntanos en el centro o por el chat.</div>`;
  document.getElementById('pkBody').innerHTML=h;}
-function quieroPack(n,p){const t=PACKS[pkTipo];const nom=patient&&patient.nombre?patient.nombre:'';
- const msg=`Hola, soy ${nom||'paciente de FISIO365'}. Quiero el pack de ${n} sesiones de ${t.nombre.toLowerCase()} (${eur(p)}).`;
- window.open('https://wa.me/34672893949?text='+encodeURIComponent(msg),'_blank');}
+function quieroPack(n,p){const t=PACKS[pkTipo];const nom=patient&&patient.nombre?patient.nombre:'';const K=window.CLINICA||{};
+ const msg=`Hola, soy ${nom||'paciente de '+(K.marca||'FISIO365')}. Quiero el pack de ${n} sesiones de ${t.nombre.toLowerCase()} (${eur(p)}).`;
+ window.open('https://wa.me/'+(K.wa||'34672893949')+'?text='+encodeURIComponent(msg),'_blank');}
 // ── Instalar la app ───────────────────────────────────────────
 let inPrompt=null,inOS='';
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();inPrompt=e;});

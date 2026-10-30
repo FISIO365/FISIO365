@@ -1771,7 +1771,18 @@ const CONF_DEF = {
   tarjeta: { importe: 10, meses: 6 },
   holded: { borrador: true, rgpd: TEXTO_RGPD },
   clinica: { razon: 'Fourth Dynamic, S.L.', nif: 'B56503592', direccion: 'C/ Gran de Sant Andreu, 163 · 08030 Barcelona', tel: '672 89 39 49', email: 'info@fisioterapia365.com' },
-  cancelacion: { horas: 24, texto: 'Si no puedes venir, avísanos con al menos 24 horas de antelación para poder dar tu hora a otra persona.' }
+  cancelacion: { horas: 24, texto: 'Si no puedes venir, avísanos con al menos 24 horas de antelación para poder dar tu hora a otra persona.' },
+  // App del paciente: servicios con precios y packs, y promociones (Administración › App del paciente)
+  app: {
+    servicios: [
+      { nombre: 'Fisioterapia', desc: 'Para contracturas, dolor de espalda, tirones y molestias del día a día.', suelta: 65, packs: [[5, 310], [10, 585], [20, 1100]] },
+      { nombre: 'Fisioterapia avanzada', desc: 'Con tecnología (bomba diamagnética, ondas de choque) para hernias, tendinitis y lesiones que se resisten.', suelta: 75, packs: [[5, 345], [10, 640], [20, 1220]] }
+    ],
+    promos: [
+      { etiqueta: 'Siempre disponible', titulo: 'Packs de sesiones', texto: 'Cada sesión te sale más barata: hasta 280 € de ahorro. Pagas una vez y solo te preocupas de mejorar.', boton: 'Ver packs', accion: 'packs', color: 'Naranja' },
+      { etiqueta: 'Regalo', titulo: 'Regala fisioterapia', texto: 'Una tarjeta regalo para quien quieras. La preparas en 2 minutos.', boton: 'Regalar', accion: 'https://tally.so/r/WOVB0N?origen=app', color: 'Negro' }
+    ]
+  }
 };
 async function conf() { const g = await ajuste('config', null) || {}; const o = {}; Object.keys(CONF_DEF).forEach(k => { o[k] = Object.assign({}, CONF_DEF[k], g[k] || {}); }); o.listas = Object.assign({}, CONF_DEF.listas, (g.listas || {})); return o; }
 // Check-list: la guardada en Administración (los puntos de siempre conservan su comprobación automática)
@@ -2535,7 +2546,7 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'config-pub') { // lo que la app del paciente necesita saber (sin datos privados)
     const c = await conf().catch(() => CONF_DEF); res.setHeader('Cache-Control', 'public, max-age=300');
-    return res.status(200).json({ ok: true, tarjeta: c.tarjeta, cancelacion: c.cancelacion, tel: c.clinica.tel });
+    return res.status(200).json({ ok: true, tarjeta: c.tarjeta, cancelacion: c.cancelacion, tel: c.clinica.tel, app: c.app });
   }
   if (action === 'version') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ v: (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 12) }); }
 
@@ -3040,6 +3051,15 @@ module.exports = async function handler(req, res) {
           else if (sec === 'clinica') { const L = MARCA.limpio, op = v.opciones || {};
             cur.clinica = { marca: L(v.marca, 40), razon: L(v.razon, 80), nif: L(v.nif, 20), direccion: L(v.direccion, 160), dirCorta: L(v.dirCorta, 100), zona: L(v.zona, 40), ciudad: L(v.ciudad, 40), tel: L(v.tel, 30), wa: String(v.wa || '').replace(/\D/g, '').slice(0, 15), email: L(v.email, 80), web: L(v.web, 80), googlePlace: L(v.googlePlace, 80).replace(/\s/g, ''), iban: L(v.iban, 40),
               opciones: { sorteo: op.sorteo !== false, bomba: op.bomba !== false }, color: /^#[0-9a-f]{6}$/i.test(String(v.color || '')) ? String(v.color).toLowerCase() : '', logoV: (cur.clinica && cur.clinica.logoV) || 0 }; }
+          else if (sec === 'app') { // servicios, precios, packs y promociones de la app del paciente
+            const num = x => { const n = Number(String(x == null ? '' : x).replace(',', '.')); return isFinite(n) && n >= 0 && n <= 100000 ? Math.round(n * 100) / 100 : null; };
+            const servicios = (Array.isArray(v.servicios) ? v.servicios : []).map(x => ({ nombre: lim(x && x.nombre, 60), desc: lim(x && x.desc, 300), suelta: num(x && x.suelta) || 0,
+              packs: (Array.isArray(x && x.packs) ? x.packs : []).map(p => [Math.round(num(p && p[0]) || 0), num(p && p[1]) || 0]).filter(p => p[0] >= 2 && p[1] > 0).slice(0, 6) })).filter(x => x.nombre).slice(0, 12);
+            const fecha = x => /^\d{4}-\d{2}-\d{2}$/.test(String(x || '')) ? String(x) : '';
+            const promos = (Array.isArray(v.promos) ? v.promos : []).map(x => { const a = String((x && x.accion) || ''); return { etiqueta: lim(x && x.etiqueta, 40), titulo: lim(x && x.titulo, 80), texto: lim(x && x.texto, 300), boton: lim(x && x.boton, 30),
+              accion: /^(packs|reservar|chat)$/.test(a) ? a : /^https:\/\/[^\s"'<>]+$/.test(a) ? a.slice(0, 300) : '', color: x && x.color === 'Negro' ? 'Negro' : 'Naranja', desde: fecha(x && x.desde), hasta: fecha(x && x.hasta) }; }).filter(x => x.titulo).slice(0, 12);
+            cur.app = { servicios, promos };
+          }
           else if (sec === 'cancelacion') { const h = Math.round(Number(v.horas)); if (!(h >= 0 && h <= 168)) return res.status(400).json({ ok: false, error: 'Revisa las horas' }); cur.cancelacion = { horas: h, texto: lim(v.texto, 600) }; }
           else return res.status(400).json({ ok: false, error: 'Sección no válida' });
           await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() });
