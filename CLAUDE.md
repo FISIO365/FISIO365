@@ -2,7 +2,7 @@
 
 - Panel del equipo: `public/fisio.html`. App del paciente: `public/index.html`. Backend: `api/` (Vercel, `vercel.json` con builds + routes: un archivo estático nuevo necesita las dos entradas).
 - Datos: Airtable (base por clínica, ids traducidos en `api/_base.js`). Marca de cada clínica: `api/_marca.js` + `public/marca.js`. Montar otra clínica: `docs/NUEVA_CLINICA.md`.
-- Permisos por ROL, nunca por nombre: dirección = marca «DIRECCIÓN» de su ficha (Dirección › Equipo); administración = Puesto «Administración» (Role admin). Nada de comprobar «Nora» o «Ramiro».
+- Permisos por ROL, nunca por nombre: dirección = el rango en la empresa, marca «DIRECCIÓN» de su ficha (aprueba vacaciones e incidencias, borra fichas, recibe los avisos de dirección); administración = el puesto (recepción: cobros, consentimientos, lista de espera, tarjetas regalo), Puesto «Administración» (Role admin). Nada de comprobar «Nora» o «Ramiro».
 - Nada de ventanas del navegador (confirm, alert, prompt): usar `pregunta()` / `pideTexto()`. Los <select>, fechas y horas ya abren los nuestros solos.
 - Tono: castellano cercano, nada comercial ni forzado. Estética: coral #c2552e, cremas, Poppins, iconos de línea fina, nada de controles nativos sin estilo.
 

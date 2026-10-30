@@ -5305,7 +5305,6 @@ Secciones: PRESENTACIÓN DEL CASO / HALLAZGOS DE LA EXPLORACIÓN / ANÁLISIS NEU
  const d=await r.json();
  if(d.ok&&d.informe){
  informeGenerado=d.informe;
- clearAnamD();
  guardarInformeLocal(anamPacNom,anamPacId,fisioNom,curProto||'hernia',d.informe);
  res.textContent=d.informe;res.style.display='block';
  btn.className='gen-btn';btn.style.background='#2e7d32';
@@ -5647,10 +5646,10 @@ Máx 550 palabras. Profesional, empático y esperanzador.`;
  res.textContent=d.informe;res.style.display='block';
  btn.className='gen-btn';btn.style.background='#2e7d32';
  btn.innerHTML='Informe generado — Descargar PDF';
- btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,tipo);btn.style.display='none';{const bar=accionesInforme(res,tipo,fisioNom);const gp=bar&&bar.querySelector('.ia-priv');if(gp&&anamPacId)setTimeout(()=>gp.click(),300);}
+ btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,tipo);btn.style.display='none';accionesInforme(res,tipo,fisioNom);
  let eb2=$('btnEdit2');if(!eb2){eb2=ce('button','btn');eb2.id='btnEdit2';eb2.style.cssText='margin-top:8px;width:100%;background:white;color:var(--black);border:1.5px solid var(--border);padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)';eb2.textContent='Editar informe';eb2.onclick=()=>editarInforme(res,eb2);res.parentNode.insertBefore(eb2,res.nextSibling);}
  res.scrollIntoView({behavior:'smooth'});
- if(!anamPacId)toast('Informe generado: elige el paciente para guardarlo',false);
+ toast('Informe generado: revísalo y, cuando esté bien, guárdalo o compártelo',true);
  } else {toast(d.error||'Error al generar',false);btn.disabled=false;btn.innerHTML='Generar informe';}
  }catch(e){toast('Error: '+e.message,false);btn.disabled=false;btn.innerHTML='Generar informe';}
  };
@@ -5667,7 +5666,7 @@ Máx 550 palabras. Profesional, empático y esperanzador.`;
 // guardar en la app (y ficha del panel) · guardar PDF en Airtable · ver PDF · descargar
 // ctx = {pacId, pacNom, tipo, fisioNom, fisioCol, getTexto, recId}
 function accionesInforme(anchor,ctx,fisioNom){
- if(typeof ctx==='string'){const tipo=ctx;ctx={pacId:anamPacId,pacNom:anamPacNom,tipo,fisioNom,getTexto:()=>informeGenerado};}
+ if(typeof ctx==='string'){const tipo=ctx;ctx={pacId:anamPacId,pacNom:anamPacNom,tipo,fisioNom,getTexto:()=>informeGenerado,deAnam:true};}
  anchor.parentNode.querySelectorAll(':scope > .inf-acc').forEach(x=>x.remove());
  const bar=ce('div','inf-acc');
  const L={pac:{t:'Compartir con el paciente',s:'Le aparecerá en su app y firmará el recibí al abrirlo'},pacUpd:{t:'Actualizar en su app',s:'Ya lo tiene · le llegan los cambios'},pacOk:{t:'✓ Compartido con el paciente',s:'Firmará el recibí al abrirlo en su app'},
@@ -5696,6 +5695,7 @@ function accionesInforme(anchor,ctx,fisioNom){
     if(dest==='paciente'&&ctx.recId){try{await fetch('/api/schedule?action=seg-inf-entrega',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:ctx.recId,canal:'app',quien:(fisioActual&&fisioActual.nombre)||''})});}catch(_){}}
     ctx.compartido=dest==='paciente'?true:!!(d.compartido&&ctx.compartido);
     if(d.ficha)ctx.pdfTexto=texto;
+    if(ctx.deAnam){try{clearAnamD();}catch(_){}} // ya está guardado: el borrador de la anamnesis ya no hace falta
     pinta();g.classList.add('hecho');pon(g,dest==='paciente'?'pacOk':'privOk');
     setTimeout(()=>{g.classList.remove('hecho');pinta();},5000);
     const aviso=f&&!d.ficha?' (el PDF no se pudo subir a Airtable)':'';
@@ -7039,7 +7039,7 @@ const comVe=()=>!!fisioActual&&(!COM_USUARIOS||COM_USUARIOS.includes(String(fisi
 const COM_TIPOS=['Comunicado','Solicitud','Tareas','Incidencia','Ausencia'];
 const COM_TIPO_DESC={Comunicado:'Para informar de algo importante al equipo.',Solicitud:'Para pedir algo que la otra persona tiene que resolver.',Tareas:'Una lista de tareas que se van marcando a medida que se hacen.',Incidencia:'Para contar algo que crees que hay que corregir.',Ausencia:'Para pedir vacaciones, días libres, horas o un cambio de horario.'};
 const COM_CAT_INC=['Comportamiento','Puntualidad','Calidad del trabajo','Material o instalaciones','Otro'];
-// Por rol, no por nombre: aprueba administración (Puesto «Administración»); si lo pide administración, va a dirección
+// Por rol, no por nombre. Dirección = el rango (marca «Dirección»): aprueba vacaciones e incidencias. Administración = el puesto (recepción): hace las tareas de administración
 const pilaEq=n=>{const p=String(n||'').trim().split(/\s+/)[0]||'';return p.charAt(0).toUpperCase()+p.slice(1).toLowerCase();};
 const comAprueban=()=>[...new Set((fisios||[]).filter(f=>String(f.role||'').toLowerCase()==='admin').map(f=>pilaEq(f.nombre)))];
 const comDireccion=()=>[...new Set((fisios||[]).filter(f=>f.direccion).map(f=>pilaEq(f.nombre)))];
@@ -7401,7 +7401,7 @@ function comHoraPick(anchor,valor,onPick){
 function comNueva(onOk,paraIni){
  const yo=String(fisioActual.nombre||'').trim().split(' ')[0].toLowerCase();
  const eq=((COM.d&&COM.d.equipo)||TAR_NOMBRES).filter(n=>n.toLowerCase()!==yo);
- let dir=comAprueban().filter(n=>n.toLowerCase()!==yo);if(!dir.length)dir=comDireccion().filter(n=>n.toLowerCase()!==yo);
+ let dir=comDireccion().filter(n=>n.toLowerCase()!==yo);if(!dir.length)dir=comDireccion();
  const S={para:(paraIni||[]).filter(n=>eq.includes(n)),tipo:'Comunicado',req:false,modo:'leer',limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:'',items:['',''],cat:'',sobre:[],urg:'Esta semana'};
  const NORMAL=['Comunicado','Solicitud'];let paso=1;
  const m=hzModal(`<div class="hz-top"><div><b class="com-tit">Nueva comunicación</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
@@ -7411,7 +7411,7 @@ function comNueva(onOk,paraIni){
   <div class="s-para"><div class="hz-lab">Para</div><div class="com-chips com-para"><button type="button" data-n="*">Todo el equipo</button>${eq.map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div></div>
   <div class="s-inc">
    <div class="hz-lab">Tema</div><div class="com-chips com-cat">${COM_CAT_INC.map(t=>`<button type="button" data-c="${t}">${t}</button>`).join('')}</div>
-   <div class="hz-lab">¿Sobre alguien? <span>(opcional)</span></div><div class="com-chips com-sob">${eq.filter(n=>!comAprueban().includes(n)).map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div>
+   <div class="hz-lab">¿Sobre alguien? <span>(opcional)</span></div><div class="com-chips com-sob">${eq.filter(n=>!comDireccion().includes(n)).map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div>
   </div>
   <div class="s-urg"><div class="hz-lab">¿Para cuándo?</div><div class="com-chips com-urg">${['Hoy','Esta semana','Cuando se pueda'].map(t=>`<button type="button" data-u="${t}">${t}</button>`).join('')}</div></div>
   <div class="s-asunto"><div class="hz-lab com-l-asunto">Asunto</div><input type="text" class="com-in com-asunto" maxlength="140"></div>
@@ -13649,10 +13649,10 @@ function renderFormacion(wrap, ruta){
  {ti:'Dónde',body:`Desde la ficha › Más › <b>Hacer anamnesis</b>. El paciente ya viene elegido y arriba tienes <b>‹ Volver a la ficha</b>.`,ver:{sec:'pac',pasos:[{el:'.fp-mas',txt:'En Más está «Hacer anamnesis».',click:['#pacResultados .pt-r']}]}},
  {ti:'Protocolos y pasos',body:`Rodilla, hombro, cervical, codo, muñeca, tobillo, cadera, sacroilíaca, lumbar, hernia discal, torácica, libre y suelo pélvico. Pasos: paciente, lesión, dolor, exploración, tests e informe (cervical añade neurológico; hernia y suelo pélvico tienen más).`},
  {ti:'Ayudas',body:`<b>Todo normal</b> marca de un toque lo normal en la exploración. Los tests salen ordenados por fiabilidad y las contraindicaciones en rojo. Si sales a medias, el borrador se guarda en ese dispositivo.`},
- {ti:'El informe',body:`<b>Generar informe con IA</b>: motivo, hallazgos, diagnóstico, objetivos, alertas y una explicación en palabras sencillas. Al generarlo <b>se guarda solo en su ficha, sin compartir</b>. Revísalo: si lo editas, vuelve a darle a <b>Guardar sin compartir</b>; cuando esté bien, <b>Compartir con el paciente</b> (le llega a su app y firma el recibí).`}
+ {ti:'El informe',body:`<b>Generar informe con IA</b>: motivo, hallazgos, diagnóstico, objetivos, alertas y una explicación en palabras sencillas. Revísalo y corrígelo con <b>Editar informe</b>. Cuando esté bien: <b>Guardar sin compartir</b> (queda en su ficha) o <b>Compartir con el paciente</b> (le llega a su app y firma el recibí). Hasta que no le das a uno de los dos, no está en su ficha; si sales antes, tus respuestas siguen guardadas para seguir.`}
  ],
  qs:[
- {q:'Generas el informe de la anamnesis. ¿Lo ve ya el paciente?',opts:['Sí, al momento','No: se guarda en su ficha sin compartir hasta que tocas «Compartir con el paciente»','No se guarda'],ok:1,fb:['Todavía no: primero lo revisas.','¡Correcto!','Sí se guarda, sin compartir.']},
+ {q:'Generas el informe de la anamnesis. ¿Ya está en su ficha?',opts:['Sí, al momento','No: primero lo revisas y luego Guardar sin compartir o Compartir con el paciente','Solo en su app'],ok:1,fb:['Todavía no: primero lo revisas.','¡Correcto!','No.']},
  {q:'¿Dónde empiezas una anamnesis?',opts:['En el menú','En la ficha › Más › Hacer anamnesis','En la agenda'],ok:1,fb:['Ya no está en el menú.','¡Bien!','No.']}
  ]},
 

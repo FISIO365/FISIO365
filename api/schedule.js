@@ -2770,11 +2770,10 @@ module.exports = async function handler(req, res) {
         if (!yoRec || !String(q.clave || '').trim() || String(yoRec.fields.Password || '').trim() !== String(q.clave || '').trim() || yoRec.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
         const yo = pilaC(yoRec.fields.Name);
         const equipo = [...new Set(equipoRecs.filter(r => r.fields.Name && !r.fields['FECHA BAJA']).map(r => pilaC(r.fields.Name)))].sort((a, b) => a.localeCompare(b, 'es'));
-        // Por rol, no por nombre: aprueba administración (Puesto «Administración»); si lo pide administración, va a dirección
+        // Por rango, no por nombre: vacaciones, cambios de horario e incidencias los aprueba dirección (marca «Dirección» en su ficha); si lo pide alguien de dirección, el resto de dirección
         const activosC = equipoRecs.filter(r => r.fields.Name && !r.fields['FECHA BAJA']);
-        const aprueban = [...new Set(activosC.filter(r => String(r.fields.Role || '').toLowerCase() === 'admin').map(r => pilaC(r.fields.Name)))];
-        const direccionC = [...new Set(activosC.filter(r => r.fields['DIRECCIÓN']).map(r => pilaC(r.fields.Name)))];
-        const paraAdmin = () => { const p = aprueban.filter(n => n !== yo); if (p.length) return p; return direccionC.filter(n => n !== yo); };
+        const aprueban = [...new Set(activosC.filter(r => r.fields['DIRECCIÓN']).map(r => pilaC(r.fields.Name)))];
+        const paraAdmin = () => { const p = aprueban.filter(n => n !== yo); return p.length ? p : aprueban; };
         const ahora = new Date().toISOString();
         const MES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
         const fC = f => { const [y, m, d] = String(f || '').split('-').map(Number); return d ? `${d} ${MES_C[m - 1]}` : ''; };
