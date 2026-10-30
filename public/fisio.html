@@ -1697,6 +1697,8 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .nv-dias button.hoy{box-shadow:inset 0 0 0 1.5px #e6c9bb}.nv-dias button.on{background:#c2552e;color:#fff}.nv-dias button:disabled{opacity:.3;cursor:default}
 .nv-pie{display:flex;gap:8px;margin-top:10px}.nv-pie button{flex:1;border:0;border-radius:99px;padding:9px;font:600 13px var(--font);cursor:pointer;background:#fdf1ea;color:#a3441f}.nv-pie .nv-borra{background:#f4f1ec;color:#6f6660}
 .nv-horas{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.nv-horas button{border:0;border-radius:10px;padding:10px 0;background:#faf6f1;font:500 13px var(--font);cursor:pointer;color:var(--black)}.nv-horas button.on{background:#c2552e;color:#fff}
+.mod-hoy{background:#fdf1ea;border-radius:14px;padding:12px 14px;margin:0 0 16px}.mod-hoy b{display:block;font-size:13px;color:#a3441f;margin-bottom:2px}.mod-hoy span{font-size:12.5px;color:#6f5a4e;line-height:1.5}
+.mod-fin{text-align:center;padding:26px 20px!important;margin-top:12px}.mod-fin .mf-ic{width:48px;height:48px;border-radius:50%;background:#c2552e;color:#fff;display:grid;place-items:center;margin:0 auto 12px}.mod-fin svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.mod-fin b{display:block;font-size:17px;margin-bottom:6px}.mod-fin p{margin:0 0 16px;font-size:13px;color:#8a7d74}.mod-fin .mf-ok{border:0;border-radius:99px;background:#c2552e;color:#fff;font:600 14px var(--font);padding:11px 24px;cursor:pointer}
 .curso-av{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #f3d9c9;border-radius:16px;padding:12px 14px 12px 16px;margin:0 auto 12px;max-width:980px;box-sizing:border-box;width:calc(100% - 32px);font-family:Poppins,sans-serif}
 .curso-av-t{flex:1;min-width:0}.curso-av-t b{display:block;font-size:13.5px;font-weight:600;color:#2b2420}.curso-av-t span{display:block;font-size:12px;color:#8a7d74;margin-top:2px}
 .curso-av-go{border:0;border-radius:99px;background:#c2552e;color:#fff;font:600 13px Poppins,sans-serif;padding:9px 18px;cursor:pointer;flex:none}
@@ -11467,8 +11469,8 @@ function serieHoy(){const n=serieN();if(!n)return null;const k=n-1;let o=0;for(c
 function schoolModHecho(curso,i,c,t){try{if(!fisioActual)return;
  fetch('/api/progreso',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fisioId:fisioActual.id,seccion:'wiki_'+curso+'_m'+i,estado:'completado'})}).catch(()=>{});
  const o=serieOff(curso);if(o>=0)comPost('seg-com-school',{k:o+i}).catch(()=>{});}catch(e){}}
-function serieAbrirModulo(c,i){showSection('school');const r=WIKI_RUTAS.find(x=>x.id===c);if(!r)return;try{const key='fisio365_school_'+c+'_'+(fisioActual?.id||'x');const d=JSON.parse(localStorage.getItem(key)||'null')||{};d.curMod=i;localStorage.setItem(key,JSON.stringify(d));}catch(e){}renderFormacion($('mainWrap'),r);}
-function serieAbrirHoy(){const h=serieHoy();showSection('school');if(!h)return;const r=WIKI_RUTAS.find(x=>x.id===h.curso);if(!r)return;try{const key='fisio365_school_'+h.curso+'_'+(fisioActual?.id||'x');const d=JSON.parse(localStorage.getItem(key)||'null')||{};d.curMod=h.i;localStorage.setItem(key,JSON.stringify(d));}catch(e){}renderFormacion($('mainWrap'),r);}
+function serieAbrirModulo(c,i){showSection('school');window.__modHoy={curso:c,i};const r=WIKI_RUTAS.find(x=>x.id===c);if(!r)return;try{const key='fisio365_school_'+c+'_'+(fisioActual?.id||'x');const d=JSON.parse(localStorage.getItem(key)||'null')||{};d.curMod=i;localStorage.setItem(key,JSON.stringify(d));}catch(e){}renderFormacion($('mainWrap'),r);}
+function serieAbrirHoy(){const h=serieHoy();showSection('school');if(!h)return;window.__modHoy={curso:h.curso,i:h.i};const r=WIKI_RUTAS.find(x=>x.id===h.curso);if(!r)return;try{const key='fisio365_school_'+h.curso+'_'+(fisioActual?.id||'x');const d=JSON.parse(localStorage.getItem(key)||'null')||{};d.curMod=h.i;localStorage.setItem(key,JSON.stringify(d));}catch(e){}renderFormacion($('mainWrap'),r);}
 // ── Curso obligatorio «Cómo funciona la app»: aviso hasta terminarlo ──
 const CURSOS_OBL=['appEquipo','appCliente'];let CURSO_OBL='appEquipo';
 function cursoPend(){try{if(!fisioActual||!window.__progOk)return false;const sc=$('sb-school');if(sc&&sc.style.display==='none')return false;const p=CURSOS_OBL.find(id=>WIKI_RUTAS.some(r=>r.id===id)&&(progresoFisio['wiki_'+id]||{}).estado!=='completado');if(p)CURSO_OBL=p;return !!p;}catch(e){return false;}}
@@ -11547,16 +11549,16 @@ function tourPos(){const s=document.querySelector('.tour-spot'),b=document.query
  const bw=Math.min(320,window.innerWidth-32),bh=b.offsetHeight||140;let x=r.left+r.width/2-bw/2;x=Math.max(16,Math.min(x,window.innerWidth-bw-16));
  let y=r.bottom+p+12;if(y+bh>window.innerHeight-16)y=Math.max(16,r.top-p-12-bh);b.style.width=bw+'px';b.style.left=x+'px';b.style.top=y+'px';b.style.transform='none';}
 function tourPill(){if($('tourPill')||!tourVolver)return;const p=ce('button','tour-pill');p.id='tourPill';p.type='button';p.textContent='‹ Volver al curso';
- p.onclick=()=>{const v=tourVolver;tourCerrar(true);tourLimpia();showSection('school');if(v&&v.ruta){renderFormacion($('mainWrap'),v.ruta);tourScroll(v);}};document.body.appendChild(p);}
+ p.onclick=()=>{const v=tourVolver;tourCerrar(true);tourLimpia();showSection('school');if(v&&v.mh)window.__modHoy=v.mh;if(v&&v.ruta){renderFormacion($('mainWrap'),v.ruta);tourScroll(v);}};document.body.appendChild(p);}
 function tourLimpia(){document.querySelectorAll('.hz-modal,.pv.fp,.fp-masmenu').forEach(e=>e.remove());}
-function ensename(ver,ruta){tourCerrar(true);tourLimpia();tourVolver={ruta,y:window.scrollY,w:($('mainWrap')||{}).scrollTop||0};showSection(ver.sec);
+function ensename(ver,ruta){tourCerrar(true);tourLimpia();tourVolver={ruta,mh:window.__modHoy,y:window.scrollY,w:($('mainWrap')||{}).scrollTop||0};showSection(ver.sec);
  // pasos: [{el:'selector || alternativa', txt, click:['selector a tocar antes', …]}] — se salta los que no se ven
  const P=ver.pasos||[{el:ver.el,txt:ver.txt,click:ver.click}];
  const vis=e=>{if(!e)return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0;};
  const enSec=()=>$('mainWrap').dataset.sec===ver.sec||(ver.sec==='tar'&&$('mainWrap').dataset.sec==='seg');
  const halla=q=>{for(const alt of String(q||'').split(' || ')){const e=[...document.querySelectorAll(alt)].reverse().find(vis);if(e)return e;}return null;};
  const espera=(q,ms)=>new Promise(res=>{const t0=Date.now();const f=()=>{const e=halla(q);if(e||Date.now()-t0>ms)return res(e);setTimeout(f,120);};f();});
- const volver=()=>{const v=tourVolver;tourCerrar(true);tourLimpia();showSection('school');if(v&&v.ruta){renderFormacion($('mainWrap'),v.ruta);tourScroll(v);}};
+ const volver=()=>{const v=tourVolver;tourCerrar(true);tourLimpia();showSection('school');if(v&&v.mh)window.__modHoy=v.mh;if(v&&v.ruta){renderFormacion($('mainWrap'),v.ruta);tourScroll(v);}};
  let vistos=0;
  const paso=async i=>{if(i>=P.length){if(vistos){tourCerrar(false);tourPill();return;}if(!vistos)uno(null,(enSec()?P[0].txt+' (Ahora mismo no se ve en tu pantalla: puede que hoy no haya datos para enseñarlo.)':'Esta pantalla no la tienes en tus accesos. La activa dirección.'),'','Entendido',()=>{tourCerrar(false);tourPill();},true);return;}
   if(!enSec())return paso(P.length);
@@ -11574,6 +11576,7 @@ function ensename(ver,ruta){tourCerrar(true);tourLimpia();tourVolver={ruta,y:win
  setTimeout(()=>paso(0),150);}
 function renderWiki(wrap, rutaForzada){
  tourCerrar(true);
+ window.__modHoy=null;
  wRutaActual = null;
  wrap.innerHTML = '';
  const outer = ce('div','wiki-outer');
@@ -14010,6 +14013,8 @@ function renderFormacion(wrap, ruta){
  b.textContent=isDone?'✓ '+(i+1):''+(i+1);b.title=mod.t;b.onclick=()=>{curMod=i;saveScoresToLS();renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};mn.appendChild(b);
  });
  wrap.appendChild(mn);
+ const esHoy=!!(window.__modHoy&&window.__modHoy.curso===ruta.id&&window.__modHoy.i===curMod);
+ if(esHoy){mn.style.display='none';const ay=ce('div','mod-hoy');ay.innerHTML=`<b>Módulo de hoy</b><span>Lee las tarjetas y contesta las preguntas de abajo. Cuando las aciertes todas, has terminado por hoy.</span>`;mn.after(ay);}
  mn.querySelectorAll('button').forEach((b,i)=>{if(i>=ABIERTOS){b.classList.add('mod-lock');b.title='Se abre el '+serieFechaTxt(serieFecha(serieOff(ruta.id)+i));}});
  if(curMod>=ABIERTOS){const f=serieFecha(serieOff(ruta.id)+curMod);const lk=ce('div','card mod-locked');lk.innerHTML=`<div class="ml-ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><b>Este módulo se abre el ${escH(serieFechaTxt(f))} a las 8:30</b><p>Cada día laborable sale uno nuevo. Te avisaremos con una notificación.</p>`;wrap.appendChild(lk);return;}
 
@@ -14066,6 +14071,12 @@ function renderFormacion(wrap, ruta){
  }
  resRef.el.innerHTML=`<div style="font-size:28px;font-weight:700;color:var(--lila)">${corr}/${m.qs.length}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">${Math.round((corr/m.qs.length)*100)}% de aciertos</div>`;
  }
+ // Hecho: si es el de hoy (o el siguiente aún no está abierto), se dice claro que ya está por hoy
+ {const esHoyM=!!(window.__modHoy&&window.__modHoy.curso===ruta.id&&window.__modHoy.i===curMod),sigCerrado=curMod+1>=ABIERTOS&&curMod+1<MODS.length;
+  const old=wrap.querySelector('.mod-fin');if(old)old.remove();
+  if(allAnswered&&allCorrect&&(esHoyM||sigCerrado)){const fin=ce('div','card mod-fin');const f=sigCerrado?serieFecha(serieOff(ruta.id)+curMod+1):'';
+   fin.innerHTML=`<div class="mf-ic"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><b>¡Has terminado por hoy!</b><p>${sigCerrado&&f?'El siguiente módulo se abre el '+escH(serieFechaTxt(f))+' a las 8:30.':'Tu tarea de hoy en Comunicaciones ya está hecha.'}</p><button type="button" class="mf-ok">Volver al panel</button>`;
+   (resRef.el||tHd).after(fin);fin.querySelector('.mf-ok').onclick=()=>{window.__modHoy=null;try{tt.remove();}catch(e){}showSection('agenda');};fin.scrollIntoView({behavior:'smooth',block:'center'});}}
  // Si estamos en el último módulo, re-renderizar el botón de completado
  if(curMod === MODS.length - 1) actualizarBtnCompletado();
  }
@@ -14161,6 +14172,8 @@ function renderFormacion(wrap, ruta){
  bnext.onclick=()=>{curMod++;saveScoresToLS();renderMod();wrap.scrollTop=0;wrap.parentElement&&(wrap.parentElement.scrollTop=0);window.scrollTo(0,0);};
 
  bnav.appendChild(bprev);bnav.appendChild(bctr);bnav.appendChild(bnext);wrap.appendChild(bnav);
+ if(window.__modHoy&&window.__modHoy.curso===ruta.id&&window.__modHoy.i===curMod)bnav.style.display='none'; // en el módulo de hoy no se navega a otros
+ else if(curMod+1>=ABIERTOS)bnext.style.visibility='hidden';
 
  // Botón marcar como completado — solo en el último módulo
  if(curMod === MODS.length - 1){
