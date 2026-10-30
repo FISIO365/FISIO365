@@ -3769,7 +3769,11 @@ module.exports = async function handler(req, res) {
           if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
           const p0 = await at(`${PACIENTES}/${q.pacienteId}`); const P0 = p0.fields || {}, viejo = !P0['FIN ENVIADA'] || Date.now() - new Date(P0['FIN ENVIADA']).getTime() > 60 * 864e5;
           const ff = viejo ? { 'FIN ENVIADA': new Date().toISOString(), 'FIN VALORACIÓN': null, 'FIN COMENTARIO': '', 'FIN RESPONDIDA': null, 'FIN IR A RESEÑA': null } : {};
-          if (q.fisio && (viejo || !P0['FIN FISIO'])) ff['FIN FISIO'] = String(q.fisio).slice(0, 60);
+          // El fisio es quien le ha tratado (su última cita hecha), no quien manda el enlace
+          let quien = '';
+          try { const ul = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',{PREF.},FIND('${q.pacienteId}',ARRAYJOIN({PacienteRec})))`)}&fields[]=FECHA&fields[]=PREF.`); ul.sort((a, b) => String(b.fields.FECHA || '').localeCompare(String(a.fields.FECHA || ''))); const pv = (ul[0] || { fields: {} }).fields['PREF.']; quien = String((pv && typeof pv === 'object') ? (pv.name || '') : (pv || '')).trim(); } catch (e) {}
+          if (quien) ff['FIN FISIO'] = String(quien).slice(0, 60);
+          else if (q.fisio && (viejo || !P0['FIN FISIO'])) ff['FIN FISIO'] = String(q.fisio).slice(0, 60);
           const d = Object.keys(ff).length ? await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: ff }) }) : {};
           return res.status(200).json({ ok: !d.error, link: enlaceFin(q.pacienteId), error: d.error && d.error.message });
         }
