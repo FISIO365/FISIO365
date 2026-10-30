@@ -1679,6 +1679,11 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .ap-s{background:#faf6f1;border-radius:14px;padding:12px;margin:0 0 10px}.ap-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ap-row>.ag-in{flex:1;min-width:140px}.ap-s textarea{margin:8px 0 0;width:100%;box-sizing:border-box}.ap-eur{display:flex;align-items:center;gap:6px;flex:none}.ap-eur input{width:80px}.ap-eur span{font-size:12.5px;color:#8a7d74}.ap-x{flex:none;width:30px;height:30px;border:none;border-radius:50%;background:transparent;color:#a3968c;cursor:pointer}.ap-x:hover{background:#efe8e1}
 .ap-pks{margin-top:10px;display:flex;flex-direction:column;gap:6px}.ap-pk{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:#5c4f47}.ap-pk input{width:64px}.ap-pk .ap-pp{width:84px}.ap-pk em{font-style:normal;font-size:12px;color:#a3968c;min-width:90px}.ap-add{border:1.5px dashed #ddd2c8;background:#fff;color:#7d6a60;border-radius:99px;padding:7px 14px;font:600 12.5px Poppins,sans-serif;cursor:pointer;align-self:flex-start}.ap-add:hover{border-color:#c2552e;color:#c2552e}
 .ap-seg{display:inline-flex;background:#fff;border-radius:99px;padding:3px;gap:2px;flex-wrap:wrap}.ap-seg button{border:none;background:none;border-radius:99px;padding:6px 11px;font:600 12px Poppins,sans-serif;color:#7d6a60;cursor:pointer}.ap-seg button.on{background:#c2552e;color:#fff}.ap-pr .ap-row+.ap-row,.ap-pr textarea+.ap-row{margin-top:8px}.ap-pr .ap-de,.ap-pr .ap-ha{max-width:180px;min-width:165px}
+.curso-av{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #f3d9c9;border-radius:16px;padding:12px 14px 12px 16px;margin:0 auto 12px;max-width:980px;box-sizing:border-box;width:calc(100% - 32px);font-family:Poppins,sans-serif}
+.curso-av-t{flex:1;min-width:0}.curso-av-t b{display:block;font-size:13.5px;font-weight:600;color:#2b2420}.curso-av-t span{display:block;font-size:12px;color:#8a7d74;margin-top:2px}
+.curso-av-go{border:0;border-radius:99px;background:#c2552e;color:#fff;font:600 13px Poppins,sans-serif;padding:9px 18px;cursor:pointer;flex:none}
+.curso-av-x{border:0;background:none;color:#a3968c;font-size:15px;cursor:pointer;padding:6px;flex:none}
+.ce-ok{font-style:normal;color:#c2552e;font-weight:700}.ce-no{font-style:normal;color:#d8cfc8;font-weight:700}
 .tour-spot{position:fixed;z-index:9998;border-radius:14px;box-shadow:0 0 0 3px #c2552e,0 0 0 9999px rgba(30,20,15,.5);pointer-events:none;transition:all .2s}
 .tour-bub{position:fixed;z-index:9999;background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 10px 34px rgba(0,0,0,.18);font-family:Poppins,sans-serif;box-sizing:border-box;max-width:calc(100vw - 32px)}
 .tour-n{display:block;font-size:11px;font-weight:600;color:#a3968c;margin-bottom:4px}
@@ -2249,6 +2254,7 @@ function showSection(sec){
  requestAnimationFrame(ajustaTopbar);
  const wrap=$('mainWrap');
  wrap.innerHTML='';wrap.dataset.sec=sec;
+ try{cursoAviso(sec);}catch(e){}
  if(sec==='prog') renderProg(wrap);
  else if(sec==='anam'){
  // Si hay anamnesis en curso, retomar directamente en lugar de mostrar el hub
@@ -11377,9 +11383,31 @@ const WIKI_RUTAS = [
  }
 ];
 
+// ── Curso obligatorio «Cómo funciona la app»: aviso hasta terminarlo ──
+const CURSO_OBL='appEquipo';
+function cursoPend(){try{if(!fisioActual||!window.__progOk)return false;const sc=$('sb-school');if(sc&&sc.style.display==='none')return false;return (progresoFisio['wiki_'+CURSO_OBL]||{}).estado!=='completado';}catch(e){return false;}}
+function cursoMod(){try{const d=JSON.parse(localStorage.getItem('fisio365_school_'+CURSO_OBL+'_'+(fisioActual?.id||'x'))||'null');return d?((d.scores||[]).filter(x=>x&&x.done).length):0;}catch(e){return 0;}}
+function cursoAviso(sec){let el=$('cursoAv');const hoy=new Date().toISOString().slice(0,10);let oculto=false;try{oculto=localStorage.getItem('f365_curso_av')===hoy;}catch(e){}
+ const ver=cursoPend()&&!oculto&&!['school','anam','prog'].includes(sec);
+ if(!ver){if(el)el.remove();return;}
+ const r=WIKI_RUTAS.find(x=>x.id===CURSO_OBL),n=cursoMod(),tot=(r&&r.pasos)||12;
+ if(!el){el=ce('div','curso-av');el.id='cursoAv';const mw=$('mainWrap');mw.parentNode.insertBefore(el,mw);}
+ el.innerHTML=`<div class="curso-av-t"><b>Tienes pendiente el curso «${escH(r?r.titulo:'Cómo funciona la app')}»</b><span>${n?`Llevas ${n} de ${tot} módulos`:`${tot} módulos cortos · es para todo el equipo`}</span></div><button type="button" class="curso-av-go">${n?'Seguir':'Empezar'}</button><button type="button" class="curso-av-x" aria-label="Ahora no">✕</button>`;
+ el.querySelector('.curso-av-go').onclick=()=>{showSection('school');if(r)renderFormacion($('mainWrap'),r);};
+ el.querySelector('.curso-av-x').onclick=()=>{try{localStorage.setItem('f365_curso_av',hoy);}catch(e){}el.remove();};}
+// Dirección: quién ha hecho el curso
+async function cursoEquipoHtml(box){if(!esDireccionSeguro())return;box.innerHTML='';
+ try{const d=await (await fetch('/api/progreso?seccion=wiki_'+CURSO_OBL)).json();if(!d.ok)return;
+  const hecho={};(d.lista||[]).forEach(x=>{if(x.estado==='completado')hecho[x.fisioId]=x.fecha;});
+  const L=(fisios||[]).filter(f=>f&&f.id&&f.nombre);if(!L.length)return;
+  const fd=f=>{const m=String(f||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${+m[3]}/${+m[2]}`:'';};
+  const ok=L.filter(f=>hecho[f.id]).length;
+  box.innerHTML=`<div class="nov-card"><div class="nov-h" style="display:flex;justify-content:space-between"><span>«Cómo funciona la app» · quién lo ha hecho</span><span style="color:#a3968c;font-weight:600">${ok}/${L.length}</span></div>${L.sort((a,b)=>(!!hecho[b.id])-(!!hecho[a.id])||a.nombre.localeCompare(b.nombre)).map(f=>`<div class="nov-it"><span style="flex-basis:auto">${hecho[f.id]?'<em class="ce-ok">✓</em>':'<em class="ce-no">·</em>'}</span><p style="flex:1">${escH(f.nombre)}</p><span style="flex:0 0 auto">${hecho[f.id]?'Hecho el '+fd(hecho[f.id]):'Pendiente'}</span></div>`).join('')}</div>`;
+ }catch(e){}}
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-10-30',t:'El curso «Cómo funciona la app» es para todo el equipo: preguntas de situaciones reales y, al contestar, «Enséñamelo» te lleva al sitio.'},
  {f:'2026-10-30',t:'Nuevo curso «Cómo funciona la app» en School, con botones «Enséñamelo» que te llevan a la pantalla de verdad.'},
  {f:'2026-10-30',t:'Dirección › Ajustes › Mensajes a pacientes: ya se pueden cambiar los textos de los WhatsApp (recordatorios, encuestas, reseñas, pagos…).',dir:1},
  {f:'2026-10-30',t:'Al montar un programa de ejercicios puedes ver el vídeo de cada ejercicio antes de ponerlo.'},
@@ -11389,11 +11417,12 @@ const NOVEDADES=[
 function novNuevas(){let v='';try{v=localStorage.getItem('f365_nov_visto')||'';}catch(e){}return NOVEDADES.filter(n=>n.f>v&&(!n.dir||esDireccionSeguro())).length;}
 function esDireccionSeguro(){try{return typeof esDireccion==='function'&&esDireccion();}catch(e){return false;}}
 function novMarcarVistas(){try{localStorage.setItem('f365_nov_visto',NOVEDADES[0].f);}catch(e){}novPunto();}
-function novPunto(){const n=novNuevas();['sb-school','pmSchool','btnPerfil'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('nov-dot',n>0);});}
+function novPunto(){const n=novNuevas()+(cursoPend()?1:0);['sb-school','pmSchool','btnPerfil'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('nov-dot',n>0);});}
 function novHtml(){const L=NOVEDADES.filter(n=>!n.dir||esDireccionSeguro()).slice(0,6);if(!L.length)return '';let v='';try{v=localStorage.getItem('f365_nov_visto')||'';}catch(e){}
  const fd=f=>{const d=new Date(f+'T12:00:00');return d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];};
  return `<div class="nov-card"><div class="nov-h">Novedades</div>${L.map(n=>`<div class="nov-it${n.f>v?' nueva':''}"><span>${fd(n.f)}</span><p>${escH(n.t)}</p></div>`).join('')}</div>`;}
 let tourVolver=null;
+function tourScroll(v){const f=()=>{try{window.scrollTo(0,v.y||0);const w=$('mainWrap');if(w)w.scrollTop=v.w||0;}catch(e){}};requestAnimationFrame(f);setTimeout(f,120);}
 function tourCerrar(todo){document.querySelectorAll('.tour-spot,.tour-bub').forEach(e=>e.remove());window.removeEventListener('scroll',tourPos,true);window.removeEventListener('resize',tourPos);if(todo){const p=$('tourPill');if(p)p.remove();tourVolver=null;}}
 let tourEl=null;
 function tourPos(){const s=document.querySelector('.tour-spot'),b=document.querySelector('.tour-bub');if(!b)return;
@@ -11402,16 +11431,16 @@ function tourPos(){const s=document.querySelector('.tour-spot'),b=document.query
  const bw=Math.min(320,window.innerWidth-32),bh=b.offsetHeight||140;let x=r.left+r.width/2-bw/2;x=Math.max(16,Math.min(x,window.innerWidth-bw-16));
  let y=r.bottom+p+12;if(y+bh>window.innerHeight-16)y=Math.max(16,r.top-p-12-bh);b.style.width=bw+'px';b.style.left=x+'px';b.style.top=y+'px';b.style.transform='none';}
 function tourPill(){if($('tourPill')||!tourVolver)return;const p=ce('button','tour-pill');p.id='tourPill';p.type='button';p.textContent='‹ Volver al curso';
- p.onclick=()=>{const v=tourVolver;tourCerrar(true);tourLimpia();showSection('school');if(v&&v.ruta)renderFormacion($('mainWrap'),v.ruta);};document.body.appendChild(p);}
+ p.onclick=()=>{const v=tourVolver;tourCerrar(true);tourLimpia();showSection('school');if(v&&v.ruta){renderFormacion($('mainWrap'),v.ruta);tourScroll(v);}};document.body.appendChild(p);}
 function tourLimpia(){document.querySelectorAll('.hz-modal,.pv.fp,.fp-masmenu').forEach(e=>e.remove());}
-function ensename(ver,ruta){tourCerrar(true);tourLimpia();tourVolver={ruta};showSection(ver.sec);
+function ensename(ver,ruta){tourCerrar(true);tourLimpia();tourVolver={ruta,y:window.scrollY,w:($('mainWrap')||{}).scrollTop||0};showSection(ver.sec);
  // pasos: [{el:'selector || alternativa', txt, click:['selector a tocar antes', …]}] — se salta los que no se ven
  const P=ver.pasos||[{el:ver.el,txt:ver.txt,click:ver.click}];
  const vis=e=>{if(!e)return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0;};
  const enSec=()=>$('mainWrap').dataset.sec===ver.sec||(ver.sec==='tar'&&$('mainWrap').dataset.sec==='seg');
  const halla=q=>{for(const alt of String(q||'').split(' || ')){const e=[...document.querySelectorAll(alt)].reverse().find(vis);if(e)return e;}return null;};
  const espera=(q,ms)=>new Promise(res=>{const t0=Date.now();const f=()=>{const e=halla(q);if(e||Date.now()-t0>ms)return res(e);setTimeout(f,120);};f();});
- const volver=()=>{const v=tourVolver;tourCerrar(true);tourLimpia();showSection('school');if(v&&v.ruta)renderFormacion($('mainWrap'),v.ruta);};
+ const volver=()=>{const v=tourVolver;tourCerrar(true);tourLimpia();showSection('school');if(v&&v.ruta){renderFormacion($('mainWrap'),v.ruta);tourScroll(v);}};
  let vistos=0;
  const paso=async i=>{if(i>=P.length){if(vistos){tourCerrar(false);tourPill();return;}if(!vistos)uno(null,(enSec()?P[0].txt+' (Ahora mismo no se ve en tu pantalla: puede que hoy no haya datos para enseñarlo.)':'Esta pantalla no la tienes en tus accesos. La activa dirección.'),'','Entendido',()=>{tourCerrar(false);tourPill();},true);return;}
   if(!enSec())return paso(P.length);
@@ -11464,6 +11493,7 @@ function renderWiki(wrap, rutaForzada){
  <p style="font-size:13px;color:var(--muted)">Formación del equipo ${escH((CLINICA&&CLINICA.marca)||'FISIO365')}</p>`;
  outer.appendChild(hdr);
  { const nv=novHtml(); if(nv){ const d=ce('div',''); d.style.cssText='width:100%;max-width:560px'; d.innerHTML=nv; outer.appendChild(d); } novMarcarVistas(); }
+ { const cq=ce('div',''); cq.style.cssText='width:100%;max-width:560px'; outer.appendChild(cq); cursoEquipoHtml(cq); }
 
  // ── BARRA DE PROGRESO ─────────────────────────────────────────────────
  const progWrap=ce('div','');
@@ -11726,7 +11756,7 @@ async function loadProgreso(){
  try{
  const r = await fetch(`/api/progreso?fisioId=${encodeURIComponent(fisioActual.id)}`);
  const d = await r.json();
- if(d.ok) progresoFisio = d.progreso || {};
+ if(d.ok){ progresoFisio = d.progreso || {}; window.__progOk=1; try{cursoAviso(($('mainWrap')||{}).dataset?.sec||'');novPunto();}catch(e){} }
  }catch(e){}
 }
 
@@ -13335,8 +13365,9 @@ function renderFormacion(wrap, ruta){
  {ti:'Activa los avisos',body:`Actívalos en cada ordenador y móvil que uses. Así te enteras al momento de una <b>reserva nueva</b>, un <b>pago</b>, una <b>encuesta</b> o un <b>mensaje del chat</b>.`,ver:{sec:'agenda',pasos:[{el:'#btnAvisos || #btnPerfil',txt:'Aquí activas los avisos (en el móvil, tocando tu foto › Notificaciones).'}]}}
  ],
  qs:[
- {q:'No te sale la sección Estadísticas en el menú. ¿Qué pasa?',opts:['Es un fallo de la app','No la tienes en tus accesos: la activa dirección','Hay que borrar la caché'],ok:1,fb:['No es un fallo: cada uno ve lo que tiene activado.','¡Eso es! Se activa en Dirección › Accesos.','No hace falta: es cosa de accesos.']},
- {q:'Alguien entra a preguntar precios y no se cita. ¿Dónde lo apuntas?',opts:['En una nota de papel','En el botón de arriba «Apuntar alguien que pregunta»','En el chat'],ok:1,fb:['Así se pierde.','¡Bien! Va a Captación › No citados.','El chat es para pacientes de la app.']}
+ {q:'Entras al panel desde el móvil y buscas Valoraciones. No está abajo. ¿Dónde la encuentras?',opts:['No la tengo, se lo digo a dirección','Tocando mi foto, arriba a la derecha','En el chat'],ok:1,fb:['Primero mira en tu foto: en el móvil, abajo solo hay 4 secciones.','¡Eso es! En el móvil, el resto de secciones están en tu foto.','No, el chat es para hablar con pacientes.'],ver:{sec:'agenda',pasos:[{el:'#btnPerfil || .sidebar',txt:'En el móvil, aquí está el resto de secciones.'}]}},
+ {q:'Una persona entra a preguntar precios de suelo pélvico y se va sin cita. ¿Qué haces?',opts:['Nada, ya volverá','Botón de arriba «Apuntar a alguien que pregunta» con su motivo','Le creo una ficha de paciente'],ok:1,fb:['Así se pierde: apuntándolo, se le puede llamar.','¡Bien! Queda en Captación › No citados para llamarle.','Todavía no es paciente: mejor apuntarlo como contacto.'],ver:{sec:'agenda',pasos:[{el:'#btnNoCit',txt:'Este botón, para apuntar a quien pregunta y no se cita.'}]}},
+ {q:'Te enteras tarde de las reservas que hacen los pacientes desde la app. ¿Qué te falta?',opts:['Activar los avisos en ese dispositivo','Mirar la agenda cada 5 minutos','Pedir a dirección que te llame'],ok:0,fb:['¡Exacto! Activa los avisos en cada ordenador y móvil que uses.','Con los avisos no hace falta.','No hace falta: los avisos te llegan solos.'],ver:{sec:'agenda',pasos:[{el:'#btnAvisos || #btnPerfil',txt:'Aquí activas los avisos (en el móvil, tu foto › Notificaciones).'}]}}
  ]},
 
  {t:'La agenda',sub:'Ver el día, dar citas y huecos',
@@ -13347,8 +13378,9 @@ function renderFormacion(wrap, ruta){
  {ti:'Sesiones sin factura',body:`Arriba de la agenda sale un aviso si hay <b>sesiones hechas sin factura</b>. Tócalo para verlas y cobrarlas. Cuando está todo al día, sale en verde.`,ver:{sec:'agenda',el:'.ag-fac',txt:'Este aviso te dice si quedan sesiones hechas sin facturar.'}}
  ],
  qs:[
- {q:'Quieres que un hueco salga en la app para que lo reserve cualquier paciente. ¿Qué haces?',opts:['Bloquearlo','Tocar la hora vacía › Abrir hueco libre','Nada, salen solos'],ok:1,fb:['Bloquear hace lo contrario.','¡Exacto! Queda libre en la agenda y en la app.','Hay que abrirlo.']},
- {q:'¿Qué significa la etiqueta «Sin factura» en una cita?',opts:['Que el paciente no ha pagado nunca','Que esa sesión aún no está facturada','Que es gratis'],ok:1,fb:['No necesariamente.','¡Bien! Toca cobrarla y facturarla.','No: solo que falta la factura.']}
+ {q:'Un paciente cancela su cita de mañana a las 18:00 y quieres que otro pueda reservar esa hora desde la app. ¿Qué haces?',opts:['La borro y ya','Marco Cancelada con «dejar la hora libre», o abro un hueco libre en esa hora','Lo dejo como está'],ok:1,fb:['Si solo la borras, la hora no sale libre en la app.','¡Eso es! Así sale como hueco libre y alguien la puede reservar.','Así nadie podrá usar esa hora.']},
+ {q:'Necesitas que nadie te dé cita mañana de 13:00 a 14:00 porque tienes médico. ¿Qué haces?',opts:['Tocar esa hora vacía › Bloquear','Abrir un hueco libre','Decírselo a todos por WhatsApp'],ok:0,fb:['¡Bien! Así queda bloqueada en la agenda.','Eso hace lo contrario: la deja para reservar.','Mejor bloquearla en la agenda, que lo ve todo el mundo.'],ver:{sec:'agenda',pasos:[{el:'.ag-vac',txt:'Toca una hora vacía para ver las opciones (Bloquear, Comida…).'}]}},
+ {q:'Ves en la agenda una cita con la etiqueta «Sin factura» de ayer. ¿Qué significa?',opts:['Que es gratis','Que la sesión está hecha pero aún no se ha cobrado y facturado','Que el paciente no tiene DNI'],ok:1,fb:['No: solo que falta la factura.','¡Correcto! Toca cobrarla y facturarla.','No tiene que ver con el DNI.'],ver:{sec:'agenda',pasos:[{el:'.ag-fac',txt:'Este aviso te lleva a las sesiones sin facturar.'}]}}
  ]},
 
  {t:'La cita por dentro',sub:'Estados, cancelaciones, pagos y alta',
@@ -13360,8 +13392,10 @@ function renderFormacion(wrap, ruta){
  {ti:'Cambiar o borrar',body:`<b>Cambiar día u hora</b> y <b>Cambiar fisio</b> mueven la cita. <b>Borrar cita</b> te deja elegir entre dejar la hora libre o solo borrarla.`,ver:{sec:'agenda',pasos:[{el:'.ag-mov',txt:'Para cambiar el día, la hora o el fisio.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']},{el:'.ag-borrar',txt:'Y aquí la borras (eliges si dejar la hora libre).',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}}
  ],
  qs:[
- {q:'Un paciente sin pack no viene a su cita. ¿Qué te propone la app?',opts:['Borrarle la ficha','Que la próxima cita la pague por adelantado','Nada'],ok:1,fb:['¡No!','¡Eso es!','Sí te pregunta.']},
- {q:'Mandas un enlace de pago por adelantado y no paga. ¿Qué pasa?',opts:['La cita se queda para siempre','A las 2 horas la cita se cancela sola','Se le cobra igual'],ok:1,fb:['No: tiene un plazo.','¡Correcto! Y el hueco queda libre.','No se cobra nada sin que pague.']}
+ {q:'Termina la sesión de las 10:00 y el paciente se va. ¿Qué tienes que hacer en la cita?',opts:['Nada','Marcarla como Realizada (y cobrarla si toca)','Borrarla'],ok:1,fb:['Si no la marcas, sale como «sin marcar» en el resumen del día.','¡Eso es!','¡No! Se perdería la sesión.'],ver:{sec:'agenda',pasos:[{el:'.hz-modal .ag-est',txt:'Aquí marcas cómo ha ido la cita.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
+ {q:'Una paciente con pack no viene y no ha avisado. Marcas «No asistió». La app te pregunta algo. ¿Qué es?',opts:['Si quieres borrar su ficha','Si le descuentas la sesión del pack o se la perdonas','Si quieres llamar a la policía'],ok:1,fb:['No.','¡Correcto! Tú decides según el caso.','No.']},
+ {q:'Un paciente que ya ha faltado dos veces pide cita para el jueves. Quieres asegurarte de que viene. ¿Qué haces?',opts:['Le pido el pago por adelantado desde la cita','Le digo que no hay hueco','Nada'],ok:0,fb:['¡Bien! Le llega un enlace para pagar; si no paga en 2 horas, la cita se cancela sola.','Mejor ofrecerle cita con pago por adelantado.','Puedes protegerte pidiendo el pago antes.'],ver:{sec:'agenda',pasos:[{el:'.ag-pg-pedir || .ag-pago',txt:'Aquí pides el pago por adelantado.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
+ {q:'Un paciente te dice que ya está bien y no necesita volver. ¿Qué haces?',opts:['Nada','En la cita, «No necesita más» › Dar el alta, y le mandas la encuesta o la reseña','Borrar sus citas'],ok:1,fb:['Si no le das el alta, seguirá saliendo en «sin próxima cita».','¡Eso es! Y es el mejor momento para pedirle la reseña.','No hace falta.'],ver:{sec:'agenda',pasos:[{el:'.ag-altab',txt:'Aquí das el alta.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}}
  ]},
 
  {t:'Mensajes a pacientes',sub:'Recordatorios, encuestas, reseñas, pagos y huecos',
@@ -13373,8 +13407,9 @@ function renderFormacion(wrap, ruta){
  {ti:'Enviar huecos libres',body:`<b>Enviar huecos</b> manda por WhatsApp un enlace con los huecos de los próximos días: el paciente toca una hora y queda reservada. Puedes pedir que la <b>pague al reservar</b>.`,ver:{sec:'agenda',pasos:[{el:'.ag-pdfb',txt:'Toca Enviar huecos…'},{el:'.hz-modal .hl-dias',txt:'…elige cuántos días…',click:['.ag-pdfb']},{el:'.hz-modal .hl-pago',txt:'…si quieres que pague al reservar…',click:['.ag-pdfb']},{el:'.hz-modal .hl-link',txt:'…y mándalo por WhatsApp.',click:['.ag-pdfb']}]}}
  ],
  qs:[
- {q:'¿Dónde están los recordatorios de las citas de mañana?',opts:['En el chat','En la agenda › Mensajes › Avisos','Se mandan solos por email'],ok:1,fb:['No, el chat es otra cosa.','¡Bien!','No: se mandan por WhatsApp desde Mensajes.']},
- {q:'Una paciente nueva aún no ha firmado el consentimiento. ¿Cómo le llega?',opts:['En papel siempre','Dentro del enlace del recordatorio de su 1ª visita','No hace falta'],ok:1,fb:['También se puede, pero no es lo primero.','¡Eso es! Lo firma al confirmar.','Sí hace falta.']}
+ {q:'Son las 17:00 y quieres mandar los recordatorios de las citas de mañana. ¿Dónde vas?',opts:['Agenda › Mensajes › Avisos','Chat','Pendientes'],ok:0,fb:['¡Correcto! Toca Enviar en cada uno.','El chat es para conversaciones.','Ahí no están.'],ver:{sec:'agenda',pasos:[{el:'.ag-recb:not(.ag-pdfb)',txt:'Aquí: Mensajes.'}]}},
+ {q:'Una paciente nueva no ha confirmado su primera visita y ya le mandaste el recordatorio. ¿Qué haces?',opts:['Le mando el 2º aviso desde Mensajes › Avisos','Le cancelo la cita','Nada'],ok:0,fb:['¡Bien! Y si contesta por otro lado, la confirmas a mano.','No hace falta cancelar.','Mejor recordárselo con el 2º aviso.']},
+ {q:'Se te han quedado tres huecos libres esta semana. ¿Cómo los llenas rápido?',opts:['«Enviar huecos»: mandas un enlace por WhatsApp y reservan solos','Llamo a todos los pacientes','Nada'],ok:0,fb:['¡Eso es! Puedes mandarlo a quien esté en lista de espera o a quien quieras.','Mejor mandar el enlace: reservan ellos.','Se pueden llenar.'],ver:{sec:'agenda',pasos:[{el:'.ag-pdfb',txt:'Este botón: Enviar huecos.'}]}}
  ]},
 
  {t:'Pacientes y su ficha',sub:'Buscar, historia, ejercicios e informes',
@@ -13386,8 +13421,10 @@ function renderFormacion(wrap, ruta){
  {ti:'Ejercicios, anamnesis e informes',body:`En <b>Ejercicios</b> montas su programa (puedes ver el vídeo de cada ejercicio antes de ponerlo). Al guardar, al paciente le llega un aviso. La <b>anamnesis</b> se hace desde Más › Hacer anamnesis, y en <b>Informes</b> creas informes y justificantes. Revisa bien antes de guardarlos: el paciente los ve en su app.`,ver:{sec:'pac',pasos:[{el:'.fp-seg button[data-t="programa"]',txt:'Aquí montas su programa de ejercicios.',click:['#pacResultados .pt-r']},{el:'.fp-mas',txt:'Y en Más tienes la anamnesis y los informes.',click:['#pacResultados .pt-r']}]}}
  ],
  qs:[
- {q:'¿Desde dónde se hace la anamnesis?',opts:['Desde el menú lateral','Desde la ficha del paciente › Más › Hacer anamnesis','Desde el chat'],ok:1,fb:['Ya no está en el menú.','¡Correcto!','No.']},
- {q:'Guardas el programa de ejercicios de un paciente. ¿Qué pasa?',opts:['Nada hasta que se lo digas','Le llega un aviso a su app','Se le manda un email'],ok:1,fb:['Se entera solo.','¡Eso es!','No: es un aviso en la app.']}
+ {q:'En la sesión, el paciente te dice «estoy mucho mejor, gracias». ¿Qué haces en el panel?',opts:['Nada','En su ficha › Historia, «¿Te cuenta que está mejor?» › Pedir reseña','Le doy el alta'],ok:1,fb:['¡Es el mejor momento para pedir una reseña!','¡Perfecto! Te prepara el mensaje y queda marcado en Valoraciones.','Que esté mejor no significa que haya terminado.'],ver:{sec:'pac',pasos:[{el:'.fp-resb',txt:'Este botón, en la Historia de la ficha.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
+ {q:'Llevas 3 sesiones con un paciente y no mejora. ¿Qué haces?',opts:['Seguir igual','Marcar «Sin evolución» en su ficha y decidir cómo seguir','Darle el alta'],ok:1,fb:['Mejor pararse a pensarlo.','¡Bien! Se queda en Pendientes hasta que decidas (informe, derivar…).','No: no está bien todavía.'],ver:{sec:'pac',pasos:[{el:'.fp-sev',txt:'Aquí, en el Resumen de la ficha.',click:['#pacResultados .pt-r']}]}},
+ {q:'Cambias el programa de ejercicios de un paciente y lo guardas. ¿Se entera?',opts:['No, hay que avisarle por WhatsApp','Sí, le llega un aviso a su app','Solo si entra a mirar'],ok:1,fb:['No hace falta: le llega solo.','¡Correcto!','Le llega un aviso.']},
+ {q:'Una paciente nueva no tiene la app todavía. ¿Cómo se la mandas?',opts:['En su ficha, «Enviar app»','Le digo que la busque en internet','No se puede'],ok:0,fb:['¡Eso es! Le llega por WhatsApp con su acceso.','Mejor mandársela desde la ficha.','Sí se puede.'],ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-acts',txt:'Arriba de la ficha está «Enviar app».',click:['#pacResultados .pt-r']}]}}
  ]},
 
  {t:'Cobrar y facturar',sub:'Facturas, packs y entrega',
@@ -13398,8 +13435,9 @@ function renderFormacion(wrap, ruta){
  {ti:'Que no se quede nada sin facturar',body:`El aviso de la agenda y el <b>Daily report</b> de dirección muestran las sesiones hechas sin factura. Lo ideal es cobrar al terminar cada sesión.`,ver:{sec:'agenda',el:'.ag-fac',txt:'Si aquí sale un número, hay sesiones hechas sin facturar.'}}
  ],
  qs:[
- {q:'Un paciente quiere la factura en el móvil. ¿Qué opciones tienes?',opts:['Solo en papel','Enlace por WhatsApp, por email o en su app','Ninguna'],ok:1,fb:['Hay más.','¡Bien!','Sí las hay.']},
- {q:'¿Se puede usar el pack de un paciente para su pareja?',opts:['No, nunca','Sí: se comparte desde la ficha','Solo si lo pide dirección por email'],ok:1,fb:['Sí se puede.','¡Correcto!','No hace falta.']}
+ {q:'Un paciente paga una sesión suelta con tarjeta y quiere su factura. ¿Qué haces?',opts:['Cobrar desde su ficha (o «Facturar» en la cita), forma de pago Tarjeta, y Emitir factura','Le hago un recibo a mano','Nada'],ok:0,fb:['¡Correcto! Y luego eliges cómo se la das.','Mejor desde el panel: queda registrada.','Hay que facturarla.'],ver:{sec:'pac',pasos:[{el:'.fp-cobb-ic || .fp-cobb-mov',txt:'Aquí cobras y facturas.',click:['#pacResultados .pt-r']}]}},
+ {q:'Un paciente quiere su factura pero ya se ha ido. ¿Qué haces?',opts:['Se la mando por WhatsApp o email, o le aparece en su app','Que vuelva a por ella','No se puede'],ok:0,fb:['¡Bien!','No hace falta.','Sí se puede.']},
+ {q:'Una paciente con pack de 10 quiere que su pareja use dos sesiones. ¿Se puede?',opts:['No','Sí: en su ficha, compartir su pack con otro paciente','Solo pagando aparte'],ok:1,fb:['Sí se puede.','¡Eso es!','No hace falta.']}
  ]},
 
  {t:'Chat, Buzón y Sugerencias',sub:'Hablar con pacientes y con el equipo',
@@ -13409,8 +13447,9 @@ function renderFormacion(wrap, ruta){
  {ti:'Sugerencias',body:`¿Una idea o algo que falla? En <b>Sugerencias</b> eliges si es de la app o de la clínica, si es una mejora o un fallo, y puedes adjuntar fotos. Verás la respuesta y si se ha hecho.`,ver:{sec:'sug',el:'.sug-tabs',txt:'Aquí mandas ideas y fallos, y ves cómo van.'}}
  ],
  qs:[
- {q:'Necesitas que un compañero te cubra un turno. ¿Por dónde se lo pides?',opts:['Por el chat de pacientes','Por el Buzón, como solicitud','No se puede'],ok:1,fb:['El chat es para pacientes.','¡Eso es!','Sí se puede.']},
- {q:'La app hace algo raro. ¿Qué haces?',opts:['Nada','Lo mandas en Sugerencias como «Un fallo», con una foto','Lo comentas en el chat de un paciente'],ok:1,fb:['Mejor contarlo.','¡Perfecto!','No.']}
+ {q:'Un paciente te escribe por el chat de la app preguntando por un ejercicio. ¿Dónde le contestas?',opts:['En Chat','Por WhatsApp personal','En el Buzón'],ok:0,fb:['¡Bien! Y le llega un aviso.','Mejor por el chat de la app.','El Buzón es solo del equipo.'],ver:{sec:'msg',pasos:[{el:'.chatp-items || .chatp-nuevo',txt:'Aquí están las conversaciones.'}]}},
+ {q:'Quieres pedir el viernes libre. ¿Cómo lo pides?',opts:['Por el Buzón, tipo Ausencia','Se lo digo de pasada a alguien','Por el chat de pacientes'],ok:0,fb:['¡Correcto! Dirección lo aprueba o lo rechaza ahí mismo.','Así se olvida: mejor por el Buzón.','No: el chat es para pacientes.'],ver:{sec:'com',pasos:[{el:'.com-esc',txt:'Aquí escribes al equipo.'}]}},
+ {q:'Se te ocurre que sería útil un botón nuevo en la agenda. ¿Qué haces?',opts:['Lo mando en Sugerencias como mejora','Me lo guardo','Lo escribo en una nota'],ok:0,fb:['¡Genial! Así llega a quien mejora la app.','¡Cuéntalo!','Mejor en Sugerencias.'],ver:{sec:'sug',pasos:[{el:'.sug-tabs',txt:'Aquí mandas ideas y fallos.'}]}}
  ]},
 
  {t:'Pendientes, llamadas y captación',sub:'Que no se escape nadie',
@@ -13421,8 +13460,9 @@ function renderFormacion(wrap, ruta){
  {ti:'Captación',body:`<b>En espera</b>: gente que quiere hora en una franja concreta; cuando se libera un hueco, se le avisa por WhatsApp. <b>No citados</b>: quien preguntó y no se citó. <b>Negocios</b>: los del barrio que toca visitar.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'En espera, No citados y Negocios.'}]}}
  ],
  qs:[
- {q:'Llamas a un paciente y te dice que le vuelvas a llamar el lunes. ¿Qué haces?',opts:['Te lo apuntas en el móvil','Resultado › Volver a llamar, con la fecha','Nada'],ok:1,fb:['Mejor en el panel, que lo ve todo el equipo.','¡Eso es!','Se perdería.']},
- {q:'¿Dónde ves a quien quiere hora pero no hay hueco en su franja?',opts:['Captación › En espera','Valoraciones','Chat'],ok:0,fb:['¡Correcto!','No.','No.']}
+ {q:'Llamas a un paciente para que vuelva y no contesta. ¿Qué haces?',opts:['Nada','En Pendientes › Llamadas, Resultado › No contesta (o Volver a llamar con fecha)','Le borro de la lista'],ok:1,fb:['Si no lo apuntas, nadie sabe que ya llamaste.','¡Eso es! Así queda para volver a intentarlo.','No: hay que volver a intentarlo.'],ver:{sec:'tar',pasos:[{el:'.sg-top .seg-add || .tar-top',txt:'Aquí están las llamadas.',click:['.tar-top .seg-tabs button[data-v="seg"]']}]}},
+ {q:'Alguien quiere venir los martes por la tarde pero está todo lleno. ¿Qué haces?',opts:['Le apunto en Captación › En espera con esa franja','Le digo que llame otro día','Le doy cita otro día aunque no pueda'],ok:0,fb:['¡Bien! Cuando se libere un hueco en su franja, se le avisa.','Así se pierde.','Mejor esperar a un hueco que le vaya bien.'],ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'Aquí está la lista de espera.'}]}},
+ {q:'En Pendientes te sale un paciente «sin próxima cita». ¿Qué significa?',opts:['Que ha venido y no tiene ninguna cita más reservada','Que se ha dado de baja','Que no paga'],ok:0,fb:['¡Correcto! Toca llamarle o explicar por qué.','No necesariamente.','No tiene que ver con el pago.'],ver:{sec:'tar',pasos:[{el:'.tar-top',txt:'Aquí: Pendientes › Tareas.'}]}}
  ]},
 
  {t:'Fin del día',sub:'Check-list y tus estadísticas',
@@ -13433,8 +13473,9 @@ function renderFormacion(wrap, ruta){
  {ti:'Daily report (dirección)',body:`Dirección ve el resumen del día: sesiones, facturas, caja, citas sin marcar, canceladas y el check-list de cada fisio. Por eso es importante marcar bien las citas y enviar el check-list.`}
  ],
  qs:[
- {q:'¿Cuándo se envía el check-list?',opts:['Una vez a la semana','Cada día antes de irte','Solo si hay problemas'],ok:1,fb:['No.','¡Correcto!','No.']},
- {q:'Se ha acabado el gel. ¿Dónde lo apuntas?',opts:['En el check-list › ¿Falta material?','En el chat de un paciente','En Sugerencias'],ok:0,fb:['¡Bien!','No.','No: va a la lista de la compra.']}
+ {q:'Te vas a casa. ¿Qué es lo último que haces en el panel?',opts:['Enviar el check-list','Cerrar la sesión','Nada'],ok:0,fb:['¡Eso es!','Antes, envía el check-list.','Falta el check-list.'],ver:{sec:'rep',pasos:[{el:'.rp-env',txt:'Aquí envías el check-list.'}]}},
+ {q:'Se acaban las toallas de papel. ¿Dónde lo apuntas?',opts:['Check-list › ¿Falta material?','En Sugerencias','En el chat'],ok:0,fb:['¡Bien! Va a la lista de la compra.','Mejor en ¿Falta material?.','No.'],ver:{sec:'rep',pasos:[{el:'.rp-cpb',txt:'Aquí apuntas el material que falta.'}]}},
+ {q:'En Mis estadísticas un día no cuadra porque estuviste en una formación. ¿Qué haces?',opts:['Explicar qué pasó ese día y mandarlo a dirección','Nada','Borrar el día'],ok:0,fb:['¡Correcto!','Mejor explicarlo para que cuadren tus horas.','No se puede, ni hace falta.'],ver:{sec:'mis',pasos:[{el:'.rc-clas || .rend-chips',txt:'Aquí explicas los días que no cuadran.'}]}}
  ]},
 
  {t:'Valoraciones y reseñas',sub:'Lo que opinan los pacientes',
@@ -13444,8 +13485,9 @@ function renderFormacion(wrap, ruta){
  {ti:'El sorteo del mes',body:`Si la clínica lo tiene activado, cada mes se sortean <b>2 sesiones gratis</b> entre quienes dejan reseña en Google: una al azar y otra para la más original. Dirección hace el sorteo aquí y avisa al ganador.`,ver:{sec:'val',pasos:[{el:'.val-so',txt:'El sorteo del mes.'}]}}
  ],
  qs:[
- {q:'Un paciente contesta la encuesta con una queja. ¿Qué haces?',opts:['Nada','Tocar «Escribirle» y responderle','Borrar su ficha'],ok:1,fb:['Es justo cuando más importa responder.','¡Eso es!','¡No!']},
- {q:'¿Quién entra en el sorteo del mes?',opts:['Todos los pacientes','Quienes dejan una reseña en Google','Solo los de pack'],ok:1,fb:['No.','¡Correcto!','No.']}
+ {q:'Un paciente contesta la encuesta con una queja sobre la espera. ¿Qué haces?',opts:['Nada','En Valoraciones, «Escribirle» y responderle','Le pido una reseña'],ok:1,fb:['Es justo cuando más importa contestar.','¡Eso es! Te propone un mensaje que puedes cambiar.','No es el momento.'],ver:{sec:'val',pasos:[{el:'.val-wa || .vr',txt:'Aquí le escribes.'}]}},
+ {q:'Ves en Valoraciones un «Está mejor» que marcaste sin querer. ¿Qué haces?',opts:['Lo quito con la ✕','Lo dejo','Borro la ficha'],ok:0,fb:['¡Bien!','Mejor quitarlo para que las cifras salgan bien.','¡No!'],ver:{sec:'val',pasos:[{el:'.val-qx || .vr',txt:'Con la ✕ lo quitas.'}]}},
+ {q:'Un paciente pregunta cómo entrar en el sorteo de sesiones gratis. ¿Qué le dices?',opts:['Dejando una reseña en Google','Comprando un pack','Viniendo más veces'],ok:0,fb:['¡Correcto! Cada mes se sortean 2: una al azar y otra a la más original.','No.','No.']}
  ]},
 
  {t:'La app del paciente',sub:'Lo que ve y puede hacer el paciente',
@@ -13456,8 +13498,9 @@ function renderFormacion(wrap, ruta){
  {ti:'Documentos, chat y packs',body:`En <b>Mis documentos</b> tiene sus facturas, informes, formularios firmados y tarjetas regalo. Por el <b>Chat</b> os escribe a vosotros. En <b>Packs</b> y <b>Promociones</b> ve precios y ofertas.`}
  ],
  qs:[
- {q:'Un paciente quiere cancelar su cita desde la app. ¿Puede?',opts:['Sí, con un botón','No: tiene que escribir por el chat o llamar','Solo con 48 h de antelación'],ok:1,fb:['No hay botón de cancelar.','¡Correcto!','No.']},
- {q:'¿Dónde apunta el paciente su dolor?',opts:['En Racha','En Citas','No puede'],ok:0,fb:['¡Eso es!','No.','Sí puede.']}
+ {q:'Una paciente te dice que no puede entrar en la app. ¿Qué le preguntas primero?',opts:['Si está usando su email o teléfono y su PIN','Si tiene ordenador','Nada, que lo intente mañana'],ok:0,fb:['¡Bien! Si no lo recuerda, en su ficha › Acceso a la app lo ves.','No hace falta ordenador.','Mejor ayudarla.']},
+ {q:'Un paciente quiere cancelar la cita desde la app y no encuentra el botón. ¿Qué le dices?',opts:['Que escriba por el chat o llame','Que borre la app','Que no venga sin avisar'],ok:0,fb:['¡Correcto! Desde la app no se cancela.','¡No!','¡No!']},
+ {q:'Una paciente pregunta dónde ver su factura. ¿Qué le dices?',opts:['En su app, en Mis documentos','Que no se puede','Que la pida en papel'],ok:0,fb:['¡Eso es!','Sí se puede.','No hace falta.']}
  ]},
 
  {t:'Dirección',sub:'Para que sepas qué hay (lo usa dirección)',
@@ -13467,7 +13510,8 @@ function renderFormacion(wrap, ruta){
  {ti:'Números',body:`<b>Rendimiento</b> muestra cómo va cada fisio y el total del centro; <b>Estadísticas</b>, el centro semana a semana. Cada mañana dirección recibe además un <b>resumen por email</b>.`,ver:{sec:'rend',pasos:[{el:'.rend-chips',txt:'Rendimiento: cómo va cada fisio y el total del centro.'}]}}
  ],
  qs:[
- {q:'¿Dónde se cambian los textos de los WhatsApp que mandamos a los pacientes?',opts:['No se pueden cambiar','Dirección › Ajustes › Mensajes a pacientes','En el chat'],ok:1,fb:['Sí se pueden.','¡Correcto!','No.']}
+ {q:'Ha entrado una fisio nueva y no ve la sección Captación. ¿Quién lo arregla?',opts:['Dirección, en Dirección › Accesos','Ella misma','Nadie'],ok:0,fb:['¡Correcto!','No puede: lo activa dirección.','Sí se arregla.'],ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="acc"] || .adm-tabs',txt:'Aquí, en Accesos.'}]}},
+ {q:'Queréis cambiar el texto del recordatorio de cita. ¿Dónde se hace?',opts:['Dirección › Ajustes › Mensajes a pacientes','Hay que pedírselo al informático','No se puede'],ok:0,fb:['¡Eso es!','No hace falta.','Sí se puede.'],ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="ajustes"] || .adm-tabs',txt:'Aquí, en Ajustes.'}]}}
  ]}
  ];
 
@@ -13494,7 +13538,7 @@ function renderFormacion(wrap, ruta){
  let curMod = savedData ? (savedData.curMod||0) : 0;
  let scores = savedData && savedData.scores
  ? MODS.map((_,i)=>{
- const s = savedData.scores[i] || {c:0,done:false,qs:new Array(MODS[i].qs.length).fill(null)};
+ const s0 = savedData.scores[i]; const s = (s0&&Array.isArray(s0.qs)&&s0.qs.length===MODS[i].qs.length) ? s0 : {c:0,done:false,qs:new Array(MODS[i].qs.length).fill(null)};
  // Recalcular done basándose en las respuestas guardadas
  const allAnswered = s.qs && s.qs.every(v=>v!==null);
  const allCorrect = s.qs && s.qs.every((v,qi)=>v===MODS[i].qs[qi].ok);
@@ -13626,7 +13670,7 @@ function renderFormacion(wrap, ruta){
 
  function applyStyle(buttons, chosenOi){
  buttons.forEach((b,oi)=>{
- if(oi===q.ok){
+ if(oi===q.ok&&chosenOi===q.ok){
  b.style.cssText='text-align:left;font-family:var(--font);font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid #9FE1CB;background:#E1F5EE;color:#085041;cursor:default';
  } else if(oi===chosenOi){
  b.style.cssText='text-align:left;font-family:var(--font);font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid #F7C1C1;background:#FCEBEB;color:#791F1F;cursor:pointer';
@@ -13635,6 +13679,7 @@ function renderFormacion(wrap, ruta){
  }
  });
  fb.textContent=(chosenOi===q.ok?'✓ ':'✗ ')+q.fb[chosenOi];
+ if(q.ver){const vb=ce('button','tour-ver');vb.type='button';vb.style.marginTop='8px';vb.style.display='flex';vb.innerHTML='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Enséñamelo';vb.onclick=()=>{tt.remove();ensename(q.ver,ruta);};fb.appendChild(vb);}
  fb.style.cssText=`font-size:12px;margin-top:8px;padding:8px 10px;border-radius:8px;display:block;${chosenOi===q.ok?'background:#E1F5EE;color:#085041':'background:#FCEBEB;color:#791F1F'}`;
  }
 

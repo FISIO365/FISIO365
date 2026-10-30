@@ -18,6 +18,18 @@ export default async function handler(req) {
   if (req.method === 'GET') {
     const url = new URL(req.url);
     const fisioId = url.searchParams.get('fisioId') || '';
+    // Quién ha hecho un curso (para dirección): ?seccion=wiki_xxx
+    const secQ = url.searchParams.get('seccion') || '';
+    if (!fisioId && /^[\w-]{1,60}$/.test(secQ)) {
+      try {
+        const f = encodeURIComponent(`{Seccion}="${secQ}"`);
+        const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PROGRESO_TABLE}?filterByFormula=${f}&pageSize=100`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        const d = await r.json();
+        if (d.error) return new Response(JSON.stringify({ ok: false, error: d.error.message }), { headers: corsHeaders });
+        const lista = (d.records || []).map(x => ({ fisioId: x.fields['FisioId'] || '', estado: x.fields['Estado'] || '', fecha: x.fields['Fecha'] || '' }));
+        return new Response(JSON.stringify({ ok: true, lista }), { headers: corsHeaders });
+      } catch (e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+    }
     if (!fisioId) return new Response(JSON.stringify({ ok: false, error: 'Falta fisioId' }), { status: 400, headers: corsHeaders });
 
     try {
