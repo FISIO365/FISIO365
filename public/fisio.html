@@ -1681,6 +1681,7 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .ap-seg{display:inline-flex;background:#fff;border-radius:99px;padding:3px;gap:2px;flex-wrap:wrap}.ap-seg button{border:none;background:none;border-radius:99px;padding:6px 11px;font:600 12px Poppins,sans-serif;color:#7d6a60;cursor:pointer}.ap-seg button.on{background:#c2552e;color:#fff}.ap-pr .ap-row+.ap-row,.ap-pr textarea+.ap-row{margin-top:8px}.ap-pr .ap-de,.ap-pr .ap-ha{max-width:180px;min-width:165px}
 .tour-spot{position:fixed;z-index:9998;border-radius:14px;box-shadow:0 0 0 3px #c2552e,0 0 0 9999px rgba(30,20,15,.5);pointer-events:none;transition:all .2s}
 .tour-bub{position:fixed;z-index:9999;background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 10px 34px rgba(0,0,0,.18);font-family:Poppins,sans-serif;box-sizing:border-box;max-width:calc(100vw - 32px)}
+.tour-n{display:block;font-size:11px;font-weight:600;color:#a3968c;margin-bottom:4px}
 .tour-bub p{margin:0 0 14px;font-size:13.5px;line-height:1.55;color:#2b2420}
 .tour-bts{display:flex;gap:8px}.tour-bts button{flex:1;border:0;border-radius:99px;padding:10px 12px;font:600 13px Poppins,sans-serif;cursor:pointer}
 .tour-ok{background:#c2552e;color:#fff}.tour-back{background:#fdf1ea;color:#a3441f}
@@ -11403,19 +11404,22 @@ function tourPos(){const s=document.querySelector('.tour-spot'),b=document.query
 function tourPill(){if($('tourPill')||!tourVolver)return;const p=ce('button','tour-pill');p.id='tourPill';p.type='button';p.textContent='‹ Volver al curso';
  p.onclick=()=>{const v=tourVolver;tourCerrar(true);showSection('school');if(v&&v.ruta)renderFormacion($('mainWrap'),v.ruta);};document.body.appendChild(p);}
 function ensename(ver,ruta){tourCerrar(true);tourVolver={ruta};showSection(ver.sec);const t0=Date.now();
+ const P=ver.pasos||[{el:ver.el,txt:ver.txt}];
  const vis=e=>{if(!e)return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0;};
- const busca=()=>{const enSec=$('mainWrap').dataset.sec===ver.sec||(ver.sec==='tar'&&$('mainWrap').dataset.sec==='seg');
-  const el=enSec?[...document.querySelectorAll(ver.el)].find(vis):null;
-  if(!el&&enSec&&Date.now()-t0<3000)return setTimeout(busca,150);
-  pinta(el,enSec);};
- const pinta=(el,enSec)=>{tourEl=el||null;
-  if(el){el.scrollIntoView({block:'center',behavior:'instant'});const s=ce('div','tour-spot');const rr=parseFloat(getComputedStyle(el).borderTopLeftRadius)||0;s.style.borderRadius=(rr>=el.offsetHeight/2?'999px':(rr+8)+'px');document.body.appendChild(s);}
+ const enSec=()=>$('mainWrap').dataset.sec===ver.sec||(ver.sec==='tar'&&$('mainWrap').dataset.sec==='seg');
+ const halla=q=>[...document.querySelectorAll(q.el)].find(vis)||null;
+ const busca=()=>{const ok=enSec(),L=ok?P.map(q=>({q,el:halla(q)})):[];
+  if(ok&&!L.some(x=>x.el)&&Date.now()-t0<3000)return setTimeout(busca,150);
+  const V=L.filter(x=>x.el);
+  if(V.length)paso(V,0);else uno(null,ok?P[0].txt+' (Ahora mismo no se ve en tu pantalla.)':'Esta pantalla no la tienes en tus accesos. La activa dirección.','','Entendido',()=>{tourCerrar(false);tourPill();});};
+ const volver=()=>{const v=tourVolver;tourCerrar(true);showSection('school');if(v&&v.ruta)renderFormacion($('mainWrap'),v.ruta);};
+ const paso=(V,i)=>{const ult=i===V.length-1;uno(V[i].el,V[i].q.txt,V.length>1?(i+1)+'/'+V.length:'',ult?'Entendido':'Siguiente',()=>{if(ult){tourCerrar(false);tourPill();}else paso(V,i+1);});};
+ const uno=(el,txt,num,okTxt,okFn)=>{document.querySelectorAll('.tour-spot,.tour-bub').forEach(e=>e.remove());tourEl=el||null;
+  if(el){el.scrollIntoView({block:'center',behavior:'instant'});const sp=ce('div','tour-spot');const rr=parseFloat(getComputedStyle(el).borderTopLeftRadius)||0;sp.style.borderRadius=(rr>=el.offsetHeight/2?'999px':(rr+8)+'px');document.body.appendChild(sp);}
   const b=ce('div','tour-bub');
-  b.innerHTML=`<p>${escH(enSec?(el?ver.txt:ver.txt+' (Ahora mismo no se ve en tu pantalla.)'):'Esta pantalla no la tienes en tus accesos. La activa dirección.')}</p><div class="tour-bts"><button type="button" class="tour-ok">Entendido</button><button type="button" class="tour-back">Volver al curso</button></div>`;
-  document.body.appendChild(b);
-  b.querySelector('.tour-ok').onclick=()=>{tourCerrar(false);tourPill();};
-  b.querySelector('.tour-back').onclick=()=>{const v=tourVolver;tourCerrar(true);showSection('school');if(v&&v.ruta)renderFormacion($('mainWrap'),v.ruta);};
-  tourPos();setTimeout(tourPos,60);window.addEventListener('scroll',tourPos,true);window.addEventListener('resize',tourPos);};
+  b.innerHTML=`${num?`<span class="tour-n">${num}</span>`:''}<p>${escH(txt)}</p><div class="tour-bts"><button type="button" class="tour-ok">${okTxt}</button><button type="button" class="tour-back">Volver al curso</button></div>`;
+  document.body.appendChild(b);b.querySelector('.tour-ok').onclick=okFn;b.querySelector('.tour-back').onclick=volver;
+  tourPos();setTimeout(tourPos,60);window.removeEventListener('scroll',tourPos,true);window.addEventListener('scroll',tourPos,true);window.removeEventListener('resize',tourPos);window.addEventListener('resize',tourPos);};
  setTimeout(busca,120);}
 function renderWiki(wrap, rutaForzada){
  tourCerrar(true);
@@ -13321,7 +13325,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Lo que ves depende de tus accesos',body:`Cada persona ve las secciones que dirección le ha activado en <b>Dirección › Accesos</b>. Si echas en falta una pantalla, no es un fallo: pídesela a dirección.`},
  {ti:'En el ordenador y en el móvil',body:`En el ordenador tienes el <b>menú a la izquierda</b>. En el móvil, abajo salen <b>Agenda, Pacientes, Chat y Check-list</b>; el resto (Valoraciones, Buzón, Sugerencias, School…) está tocando <b>tu foto</b>, arriba a la derecha.`},
- {ti:'Los botones de arriba',body:`<b>Apuntar a alguien que pregunta</b>: para quien llama o entra a preguntar y no se cita (va a Captación). <b>Pendientes</b>: con el número de cosas que te quedan. <b>Rendimiento</b>: cómo vas. Y la <b>campana</b> (en el móvil, dentro de tu foto): activa los avisos del panel en ese dispositivo.`,ver:{sec:'agenda',el:'#btnAvisos, #btnPerfil',txt:'Aquí activas los avisos del panel en este dispositivo (en el móvil, tocando tu foto › Notificaciones): nuevas reservas, pagos, encuestas y mensajes del chat.'}},
+ {ti:'Los botones de arriba',body:`<b>Apuntar a alguien que pregunta</b>: para quien llama o entra a preguntar y no se cita (va a Captación). <b>Pendientes</b>: tus tareas y llamadas, con el número de lo que te queda. Y los <b>avisos</b>: en el ordenador, la campana; en el móvil, dentro de tu foto › Notificaciones.`,ver:{sec:'agenda',pasos:[{el:'#btnNoCit',txt:'Apuntar a alguien que pregunta: para quien llama o entra a preguntar y no se cita. Va a Captación › No citados.'},{el:'#btnTar, #sb-tar',txt:'Pendientes: tus tareas y llamadas. El número es lo que te queda por hacer.'},{el:'#btnRend',txt:'Rendimiento: cómo vas (sesiones, ocupación y horas).'},{el:'#btnAvisos',txt:'La campana: activa los avisos del panel en este dispositivo.'},{el:'#btnPerfil',txt:'Tu foto: aquí están el resto de secciones (Valoraciones, Buzón, School…) y Notificaciones, para activar los avisos en este móvil.'}]}},
  {ti:'Activa los avisos',body:`Actívalos en cada ordenador y móvil que uses. Así te enteras al momento de una <b>reserva nueva</b>, un <b>pago</b>, una <b>encuesta</b> o un <b>mensaje del chat</b>.`}
  ],
  qs:[
