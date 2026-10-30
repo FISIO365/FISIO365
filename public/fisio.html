@@ -11500,6 +11500,9 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-10-31',t:'Si un paciente no paga por adelantado en 2 horas, su cita se cancela sola y la hora queda libre, a cualquier hora del día.'},
+ {f:'2026-10-31',t:'Los desplegables, fechas, horas y preguntas del panel ya tienen nuestro estilo (también en el móvil).'},
+ {f:'2026-10-31',t:'Las vacaciones y cambios de horario los aprueba dirección.',dir:1},
  {f:'2026-10-30',t:'La ficha del paciente recuerda la pestaña en la que estabas y ya no salta arriba al cambiar de pestaña.'},
  {f:'2026-10-30',t:'Pendientes › Tareas: nuevo grupo «Sin la app», con los pacientes de este mes que aún no la tienen y el botón Enviar app.'},
  {f:'2026-10-30',t:'El lunes 2/11 empieza la formación del panel: un módulo corto cada día laborable a las 8:30, con aviso al móvil. Activa los avisos para que te llegue.'},
@@ -13539,7 +13542,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Cuándo se usa',body:`Para pacientes que ya han faltado o cancelado tarde sin pack, o cuando tú lo decidas. En la cita sale <b>⚠️ Tiene que pagar por adelantado</b> con el motivo, y la tarjeta lleva <b>💳 Tiene que pagar antes</b>. Con <b>Perdonar</b> se le quita.`},
  {ti:'Pedirlo',body:`En la cita, <b>Pedir pago por adelantado</b>: eliges 65 €, 75 € u otro importe y <b>Enviar por WhatsApp</b>. Le llega un enlace para pagar con <b>tarjeta</b> (también Apple o Google Pay) o <b>transferencia</b>. Tiene <b>2 horas</b>.`,ver:{sec:'agenda',pasos:[{el:'.ag-pg-pedir || .ag-pago',txt:'Aquí pides el pago por adelantado.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
- {ti:'Qué pasa después',body:`<b>Paga con tarjeta</b>: queda pagada y confirmada sola, y os llega un aviso. <b>Dice que ha transferido</b>: mira el banco y toca <b>Ya está en el banco</b>. <b>No paga en 2 h</b>: la cita se cancela sola y la hora queda libre. Mientras espera: <b>Reenviar enlace</b> o <b>Ya no hace falta</b>.`},
+ {ti:'Qué pasa después',body:`<b>Paga con tarjeta</b>: queda pagada y confirmada sola, y os llega un aviso. <b>Dice que ha transferido</b>: mira el banco y toca <b>Ya está en el banco</b>. <b>No paga en 2 h</b>: la cita se cancela sola (con el motivo en las notas), la hora queda libre y a dirección le llega un aviso. Pasa a cualquier hora, aunque nadie tenga el panel abierto. Mientras espera: <b>Reenviar enlace</b> o <b>Ya no hace falta</b>.`},
  {ti:'La pestaña Pagos',body:`En <b>Mensajes › Pagos</b> lo tienes todo junto: transferencias por mirar, a quién hay que mandar el enlace, quién está esperando a pagar (con <b>Recordar</b>) y quién paga antes la próxima aunque aún no tenga cita.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="pag"]',txt:'La pestaña Pagos.',click:['.ag-recb:not(.ag-pdfb)']}]}}
  ],
  qs:[
@@ -13575,7 +13578,7 @@ function renderFormacion(wrap, ruta){
  {t:'Huecos libres y lista de espera',sub:'Llenar la agenda',
  cards:[
  {ti:'Enviar huecos',body:`<b>Enviar huecos</b>: eliges los días (próximos 3, 7 o 14), el fisio y si <b>paga al reservar</b> (65 € o 75 €). <b>Mandar por WhatsApp</b> abre WhatsApp sin destinatario: eliges tú a quién.`,ver:{sec:'agenda',pasos:[{el:'.ag-pdfb',txt:'Toca Enviar huecos…'},{el:'.hz-modal .hl-dias',txt:'…elige los días…',click:['.ag-pdfb']},{el:'.hz-modal .hl-pago',txt:'…si paga al reservar…',click:['.ag-pdfb']},{el:'.hz-modal .hl-link',txt:'…y mándalo.',click:['.ag-pdfb']}]}},
- {ti:'Lo que ve el paciente',body:`Los días con sus horas por fisio (las «sin bomba» con un asterisco). Toca una, pone nombre, apellidos, teléfono y motivo, y <b>queda reservada</b>. Si es nuevo, se le crea la ficha. A vosotros os llega un aviso de la reserva.`},
+ {ti:'Lo que ve el paciente',body:`Los días con sus horas por fisio (las «sin bomba» con un asterisco). Toca una, pone nombre, apellidos, teléfono y motivo, y <b>queda reservada</b>. Si es nuevo, se le crea la ficha. A vosotros os llega un aviso de la reserva. Igual que si le das cita tú: sale de «Por llamar» y de la lista de espera, y pasa a Activo (o Paciente nuevo).`},
  {ti:'La lista de espera',body:`En <b>Captación › En espera</b> apuntas a quien quiere hora en unas <b>franjas</b> concretas (días, mañanas, tardes…) y con qué fisio. Cuando se libera un hueco que le encaja, sale <b>Ofrecer a…</b>: primero a quien no se ha avisado en 2 días y lleva más tiempo esperando.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'En espera, No citados y Negocios.'}]}},
  {ti:'Ofrecer un hueco',body:`<b>Ofrecer</b> le escribe por WhatsApp y queda «esperando respuesta». Si dice que sí, <b>Sí, le doy la cita</b>; si no, <b>No puede</b> (ese hueco no se le vuelve a ofrecer).`}
  ],
@@ -13599,7 +13602,7 @@ function renderFormacion(wrap, ruta){
  {ti:'Arriba',body:`Foto o iniciales, nombre y sus <b>estados</b> (toca para poner o quitar; puede tener varios). Botones: <b>Llamar</b>, <b>WhatsApp</b>, <b>Enviar app</b> (o App ✓), <b>Seguimiento</b> y <b>Cobrar</b>.`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-acts',txt:'Los botones de la ficha.',click:['#pacResultados .pt-r']}]}},
  {ti:'WhatsApp desde la ficha',body:`Te prepara un mensaje personalizado con su última sesión y su próxima cita (lo puedes cambiar). Al volver te pregunta si lo has enviado y si hay que revisarlo en una semana, en un mes u otra fecha: queda en sus llamadas.`},
  {ti:'Enviar app',body:`Le manda por WhatsApp el enlace, su usuario y su PIN. Si ya la tiene, el botón sale como <b>App ✓</b> y al tocarlo la reenvía directamente.`},
- {ti:'El resumen',body:`Avisos (viene de parte de un negocio, tiene tarjeta regalo para canjear, alertas de salud), sesiones hechas, próxima cita y última sesión. Sus <b>datos</b> (Editar), su <b>salud</b> del consentimiento y los <b>documentos firmados</b>.`},
+ {ti:'El resumen',body:`Avisos (viene de parte de un negocio, tiene tarjeta regalo para canjear, alertas de salud), sesiones hechas, próxima cita y última sesión. Sus <b>datos</b> (Editar), su <b>salud</b> del consentimiento y los <b>documentos firmados</b>. La ficha recuerda la pestaña en la que estabas.`},
  {ti:'No reagenda',body:`Si no tiene próxima cita, marca <b>No reagenda</b> y explica por qué. Luego eliges: <b>Pasa a seguimiento</b> (cuándo llamarle y quién) o <b>No necesita más</b> (se guarda como alta).`},
  {ti:'Consentimiento',body:`Si no lo tiene: <b>Enviar</b> (WhatsApp con el formulario), <b>En papel</b> (foto o archivo) o <b>Enlazar</b> uno que ya rellenó. Si el formulario lo rellenó alguien con su mismo teléfono, te pregunta si es suyo.`}
  ],
@@ -13695,7 +13698,7 @@ function renderFormacion(wrap, ruta){
  {t:'Pendientes: tareas',sub:'Lo que te toca hacer',
  cards:[
  {ti:'De quién',body:`Por defecto ves <b>lo tuyo</b>; con el filtro, todo el equipo o de cada persona. Lo atrasado sale en rojo. <b>＋ Tarea</b>: qué hay que hacer, para quién, para cuándo y, si quieres, un paciente.`,ver:{sec:'tar',pasos:[{el:'.tar-top',txt:'Tareas y Llamadas.'},{el:'.tar-nueva',txt:'Para apuntar una tarea.'}]}},
- {ti:'Lo que sale solo',body:`<b>Sin evolución</b> por decidir · <b>Historia por actualizar</b> (sesión sin anotar; plazo, el día siguiente) · <b>Sin próxima cita</b> (atendido en 30 días sin otra cita; tienes 2 días para <b>Explicar</b> por qué) · <b>Sin plan de ejercicios</b>.`},
+ {ti:'Lo que sale solo',body:`<b>Sin evolución</b> por decidir · <b>Historia por actualizar</b> (sesión sin anotar; plazo, el día siguiente) · <b>Sin próxima cita</b> (atendido en 30 días sin otra cita; tienes 2 días para <b>Explicar</b> por qué) · <b>Sin plan de ejercicios</b> · <b>Sin la app</b> (han venido este mes y aún no la tienen: <b>Enviar app</b>).`},
  {ti:'Lo de administración',body:`<b>Consentimientos</b> por enlazar o subir, <b>huecos libres</b> para la lista de espera, <b>tarjetas regalo</b> por dar y <b>negocios</b> que toca visitar.`},
  {ti:'Explicar un «sin próxima cita»',body:`<b>Explicar</b>: escribe por qué no ha reagendado y, si toca, déjalo marcado para <b>añadirlo también a seguimiento</b> (cuándo llamarle y quién).`}
  ],
