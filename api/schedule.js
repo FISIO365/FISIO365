@@ -1496,9 +1496,9 @@ h1{font-size:23px;margin:8px 0 6px;line-height:1.25}.sub{font-size:15px;color:#5
 <svg class="st" viewBox="0 0 24 24"><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.6L12 16.4l-5.1 2.7 1-5.6-4.1-4 5.7-.8z"/></svg>
 <h1 class="fi" style="animation-delay:.5s">${D.pila ? '¡Qué alegría, ' + e(D.pila) + '!' : '¡Qué alegría!'}</h1>
 <p class="sub fi" style="animation-delay:.65s">Nos encanta saber que estás mejor. Si te apetece contarlo, tu reseña ayuda a otras personas a encontrarnos.</p>
-<a class="b fi" style="animation-delay:.8s" href="${RESENA_URL}"><svg viewBox="0 0 24 24"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#fff" opacity=".7" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.2 1.1 4.6L6.4 14z"/><path fill="#fff" opacity=".85" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4 5.6-4z"/></svg>Escribir mi reseña en Google</a>
+<a class="b fi" id="ag" style="animation-delay:.8s" href="${RESENA_URL}"><svg viewBox="0 0 24 24"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#fff" opacity=".7" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.2 1.1 4.6L6.4 14z"/><path fill="#fff" opacity=".85" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4 5.6-4z"/></svg>Escribir mi reseña en Google</a>
 <div class="ids fi" style="animation-delay:.95s"><b>¿No sabes qué poner? Por ejemplo:</b><span>Cómo te encontrabas al llegar</span><span>Cómo estás ahora</span><span>Qué tal el trato</span><span>Tu fisio</span></div>
-<p class="n">¡Mil gracias por confiar en nosotros!</p></div></body></html>`;
+<p class="n">¡Mil gracias por confiar en nosotros!</p></div><script>document.getElementById('ag').onclick=function(ev){ev.preventDefault();var h=this.href;try{fetch(location.pathname,{method:'POST',headers:{'Content-Type':'application/json'},body:'{"g":1}',keepalive:true});}catch(e){}setTimeout(function(){location.href=h;},120);};</script></body></html>`;
 }
 function paginaPago(D) {
   const e = escHtml, J = JSON.stringify(D).replace(/</g, '\\u003c');
@@ -2215,7 +2215,10 @@ module.exports = async function handler(req, res) {
   if (action === 'res' || action === 'res-og') {
     const id = String(req.query.id || '');
     if (!/^rec[A-Za-z0-9]{14}$/.test(id) || req.query.s !== firmaRes(id)) { res.setHeader('Location', RESENA_URL); return res.status(302).end(); }
-    let pila = ''; try { const pr = await at(`${PACIENTES}/${id}`); const P = pr.fields || {}; const p0 = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; pila = p0 ? p0.charAt(0).toUpperCase() + p0.slice(1).toLowerCase() : ''; } catch (e) {}
+    let pila = '', P = {}; try { const pr = await at(`${PACIENTES}/${id}`); P = pr.fields || {}; const p0 = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; pila = p0 ? p0.charAt(0).toUpperCase() + p0.slice(1).toLowerCase() : ''; } catch (e) {}
+    // Queda apuntado si lo abre y si pulsa para ir a Google (para Valoraciones)
+    if (req.method === 'POST') { if (P['MEJORA FECHA'] && !P['MEJORA GOOGLE']) await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MEJORA GOOGLE': new Date().toISOString() } }) }).catch(() => {}); return res.status(200).json({ ok: true }); }
+    if (action === 'res' && P['MEJORA FECHA'] && !P['MEJORA ABIERTA'] && !/bot|facebookexternalhit|WhatsApp|preview|crawler|spider/i.test(String(req.headers['user-agent'] || ''))) await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MEJORA ABIERTA': new Date().toISOString() } }) }).catch(() => {});
     if (action === 'res-og') { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogResSvg({ pila }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return res.status(200).send(paginaResena({ pila, url: enlaceRes(id) }));
@@ -3645,6 +3648,9 @@ module.exports = async function handler(req, res) {
             .filter(x => x.valoracion);
           const fins = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({FIN RESPONDIDA},IS_AFTER({FIN RESPONDIDA},DATEADD(NOW(),-14,'days')))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=${encodeURIComponent('FIN FISIO')}&fields[]=${encodeURIComponent('FIN VALORACIÓN')}&fields[]=${encodeURIComponent('FIN COMENTARIO')}&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}&fields[]=${encodeURIComponent('FIN RESPONDIDA')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`).catch(() => []);
           fins.forEach(p => { const F = p.fields; lista.push({ id: p.id, pacienteId: p.id, pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', tipo: 'fin', fecha: String(F['FIN RESPONDIDA'] || '').slice(0, 10), fisio: F['FIN FISIO'] || '', nombre: F['FULL NAME'] || '', valoracion: nmE(F['FIN VALORACIÓN']), comentario: F['FIN COMENTARIO'] || '', resena: F['FIN IR A RESEÑA'] || '', respondida: F['FIN RESPONDIDA'] || '' }); });
+          // «Está mejor» (botón de la historia clínica): quién lo marcó, si abrió el enlace y si fue a Google
+          const mej = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({MEJORA FECHA},IS_AFTER({MEJORA FECHA},DATEADD(NOW(),-14,'days')))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('MEJORA FECHA')}&fields[]=${encodeURIComponent('MEJORA FISIO')}&fields[]=${encodeURIComponent('MEJORA ABIERTA')}&fields[]=${encodeURIComponent('MEJORA GOOGLE')}`).catch(() => []);
+          mej.forEach(p => { const F = p.fields; lista.push({ id: 'm' + p.id, pacienteId: p.id, tipo: 'mejora', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', fecha: String(F['MEJORA FECHA'] || '').slice(0, 10), fisio: F['MEJORA FISIO'] || '', nombre: F['FULL NAME'] || '', valoracion: 'Está mejor', comentario: '', abierta: F['MEJORA ABIERTA'] || '', resena: F['MEJORA GOOGLE'] || '', respondida: F['MEJORA GOOGLE'] || F['MEJORA ABIERTA'] || F['MEJORA FECHA'] || '' }); });
           lista.sort((a, b) => String(b.respondida).localeCompare(String(a.respondida)));
           return res.status(200).json({ ok: true, lista: lista.filter(x => x.valoracion) });
         }
@@ -3700,7 +3706,9 @@ module.exports = async function handler(req, res) {
           if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
           const pr = await at(`${PACIENTES}/${q.pacienteId}`); if (pr.error) return res.status(404).json({ ok: false, error: 'Paciente no encontrado' });
           const P = pr.fields || {}, tel = String(P['WHATSAPP'] || P['TELF'] || '').replace(/\D/g, ''), p0 = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || '';
-          await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RESEÑA PEDIDA': new Date().toISOString() } }) }).catch(() => {});
+          const fm = { 'RESEÑA PEDIDA': new Date().toISOString() };
+          if (q.mejora) Object.assign(fm, { 'MEJORA FECHA': new Date().toISOString(), 'MEJORA FISIO': String(q.fisio || '').slice(0, 40), 'MEJORA ABIERTA': null, 'MEJORA GOOGLE': null });
+          await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: fm }) }).catch(() => {});
           return res.status(200).json({ ok: true, link: enlaceRes(q.pacienteId), tel: tel.length === 9 ? '34' + tel : tel, pila: p0 ? p0.charAt(0).toUpperCase() + p0.slice(1).toLowerCase() : '' });
         }
         if (action === 'seg-agenda-resena') { // apuntar que se le ha pedido la reseña en Google

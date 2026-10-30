@@ -1666,7 +1666,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .enc-r{display:block;font-size:12px;color:#16803c;margin-top:3px;line-height:1.35}.enc-r.mal{color:#b42318}
 .rec-t2{color:#c2552e;font-weight:600}.rec-b.av2.toca{background:#c2552e;color:#fff;border-color:#c2552e}
 .val-res{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}.val-res div{background:#fbf8f5;border:1px solid #efe6de;border-radius:12px;padding:10px 12px}.val-res b{display:block;font-size:20px;color:#2b2420}.val-res span{display:block;font-size:12px;line-height:1.3;color:#8a7d74}
-.val-nota{font-size:12px;color:#a3968c;margin:0 0 6px}.val-it{display:flex;gap:10px;padding:12px;background:#faf7f4;border-radius:12px;margin-bottom:8px}.val-it .val-c{background:#fff}.val-it.nuevo{background:#fdf1ea}.val-wa{flex:none;align-self:center;margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;color:#16803c;background:#f2faf4;border:1.5px solid #cfe9d6;border-radius:99px;padding:7px 13px;cursor:pointer}.val-sc{font-style:italic;color:#8a7d74}.val-tp{display:inline-block;font-size:11px;font-weight:600;color:#a3441f;background:#fdf1ea;border-radius:99px;padding:1px 8px}.val-tp.fin{color:#1f6b45;background:#e9f6ee}
+.val-nota{font-size:12px;color:#a3968c;margin:0 0 6px}.val-it{display:flex;gap:10px;padding:12px;background:#faf7f4;border-radius:12px;margin-bottom:8px}.val-it .val-c{background:#fff}.val-it.nuevo{background:#fdf1ea}.val-wa{flex:none;align-self:center;margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;color:#16803c;background:#f2faf4;border:1.5px solid #cfe9d6;border-radius:99px;padding:7px 13px;cursor:pointer}.val-sc{font-style:italic;color:#8a7d74}.val-tp{display:inline-block;font-size:11px;font-weight:600;color:#a3441f;background:#fdf1ea;border-radius:99px;padding:1px 8px}.val-tp.fin{color:#1f6b45;background:#e9f6ee}.val-tp.mej{color:#7a4a12;background:#f8ebd3}
 .val-it>i{flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px;background:#16803c}.val-it>i.med{background:#d97706}.val-it>i.mal{background:#b42318}.val-tx{flex:1;min-width:0;font-size:13.5px;color:#5c4f47}.val-tx b{color:#2b2420;font-weight:600}
 .val-nv{margin-left:8px;font-size:10.5px;font-weight:700;color:#fff;background:#c2552e;border-radius:99px;padding:1px 7px;vertical-align:1px}.val-m{font-size:12.5px;color:#8a7d74;margin-top:2px}.val-m em{font-style:normal;color:#c2552e}.val-c{margin-top:5px;font-size:13px;color:#5c4f47;background:#faf7f4;border-radius:10px;padding:8px 10px}
 .val-mas{margin-top:12px;width:100%;border:1px solid #e6ddd5;background:#fff;border-radius:12px;padding:11px;font:600 13.5px var(--font);color:#2b2420;cursor:pointer}
@@ -6009,7 +6009,9 @@ async function encContar(){if(!fisioActual)return;if(!_encIv)_encIv=setInterval(
 // Respuesta a quien contestó una encuesta: mensaje según lo que puso (WhatsApp, sin presentarse)
 async function encResponder(x,btn){const p=String(x.pila||x.nombre||'').trim().split(/\s+/)[0],n=p?' '+p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'',fin=x.tipo==='fin',v=x.valoracion||'',c=String(x.comentario||'').trim();
  let t;
- if(v==='Excelente'&&x.resena)t=`¡Hola${n}! Muchísimas gracias por tu valoración y por dejarnos la reseña en Google 🙏 Nos hace muchísima ilusión.\n\n${fin?'Aquí nos tienes para lo que necesites.':'¡Nos vemos en tu próxima sesión!'}`;
+ if(x.tipo==='mejora'){let link=RESENA_GOOGLE;if(btn)btn.disabled=true;try{const r=await agPost('seg-agenda-res-enlace',{pacienteId:x.pacienteId});if(r.ok&&r.link)link=r.link;}catch(e){}if(btn)btn.disabled=false;
+  t=`¡Hola${n}! Te dejo otra vez el enlace por si te apetece contar tu experiencia en Google, nos ayuda muchísimo:\n${link}\n\n¡Gracias!`;}
+ else if(v==='Excelente'&&x.resena)t=`¡Hola${n}! Muchísimas gracias por tu valoración y por dejarnos la reseña en Google 🙏 Nos hace muchísima ilusión.\n\n${fin?'Aquí nos tienes para lo que necesites.':'¡Nos vemos en tu próxima sesión!'}`;
  else if(v==='Excelente'){let link=RESENA_GOOGLE;if(btn)btn.disabled=true;try{const r=await agPost('seg-agenda-res-enlace',{pacienteId:x.pacienteId});if(r.ok&&r.link)link=r.link;}catch(e){}if(btn)btn.disabled=false;
   t=`¡Hola${n}! Mil gracias por tu valoración 😊\n\nSi te apetece contarlo también en Google, nos ayudaría muchísimo a que otras personas nos encuentren (es un minuto):\n${link}\n\n¡Gracias!`;}
  else if(v==='Muy buena')t=`¡Hola${n}! Gracias por tu valoración 😊${c?' Y por tu comentario, lo tenemos muy en cuenta.':''}\n\n¿Hay algo que podamos hacer para que ${fin?'tu experiencia':'la próxima vez'} sea excelente? Nos encantaría saberlo.`;
@@ -6021,12 +6023,12 @@ async function renderValoraciones(wrap){
  const card=ce('div','card');card.innerHTML='<div class="fac-vacio">Cargando…</div>';wrap.appendChild(card);
  try{await encCarga();}catch(e){card.innerHTML='<div class="fac-vacio">No se han podido cargar las valoraciones.</div>';return;}
  const v=encVisto(),dir=esDireccion(),fn=n=>capTit(String(n||'—').split(' ').slice(0,2).join(' '));
- const cls=x=>/Excelente|Muy buena/.test(x)?'ok':x==='Normal'?'med':'mal',fd=f=>{if(!f)return '';const d=new Date(f+'T12:00:00');return d.getDate()+'/'+(d.getMonth()+1);};
+ const cls=x=>/Excelente|Muy buena|Está mejor/.test(x)?'ok':x==='Normal'?'med':'mal',fd=f=>{if(!f)return '';const d=new Date(f+'T12:00:00');return d.getDate()+'/'+(d.getMonth()+1);};
  const L=ENC_UL,ok=L.filter(x=>/Excelente|Muy buena/.test(x.valoracion)).length,go=L.filter(x=>x.resena).length;
  card.innerHTML=`<div class="val-res"><div><b>${L.length}</b><span>respuestas</span></div><div><b>${ok}</b><span>contentos</span></div><div><b>${go}</b><span>a Google</span></div></div>
-  <div class="val-nota">Últimos 14 días. Respuestas a las encuestas de primera visita y de alta.</div>
+  <div class="val-nota">Últimos 14 días. Encuestas de primera visita y de alta, y pacientes que el fisio ha marcado como «está mejor».</div>
   ${!L.length?'<div class="fac-vacio">Todavía no hay respuestas estos días</div>':`<div class="val-lista">${L.map(x=>`<div class="val-it${encT(x)>v?' nuevo':''}"><i class="${cls(x.valoracion)}"></i><div class="val-tx"><div><b>${escH(fn(x.nombre))}</b>${encT(x)>v?'<span class="val-nv">Nuevo</span>':''}</div>
-   <div class="val-m">${escH(x.valoracion)}${x.fisio?' · con '+escH(capTit(String(x.fisio).split(' ')[0])):''} · ${x.tipo==='fin'?'<span class="val-tp fin">Encuesta de alta</span>':'<span class="val-tp">Encuesta de 1ª visita</span> del '+fd(x.fecha)}${x.resena?' · <em>fue a Google</em>':''}</div>${x.comentario?`<div class="val-c">«${escH(x.comentario)}»</div>`:encSinCom(x)?'<div class="val-c val-sc">No dejó comentario</div>':''}</div><button type="button" class="val-wa" data-i="${L.indexOf(x)}">Escribirle</button></div>`).join('')}</div>`}`;
+   <div class="val-m">${x.tipo==='mejora'?`<span class="val-tp mej">Está mejor</span> · lo marcó ${escH(capTit(String(x.fisio||'—').split(' ')[0]))} el ${fd(x.fecha)} · ${x.resena?'<em>fue a Google</em>':x.abierta?'abrió el enlace':'aún no ha abierto el enlace'}`:`${escH(x.valoracion)}${x.fisio?' · con '+escH(capTit(String(x.fisio).split(' ')[0])):''} · ${x.tipo==='fin'?'<span class="val-tp fin">Encuesta de alta</span>':'<span class="val-tp">Encuesta de 1ª visita</span> del '+fd(x.fecha)}${x.resena?' · <em>fue a Google</em>':''}`}</div>${x.comentario?`<div class="val-c">«${escH(x.comentario)}»</div>`:encSinCom(x)?'<div class="val-c val-sc">No dejó comentario</div>':''}</div>${x.tipo==='mejora'&&x.resena?'':`<button type="button" class="val-wa" data-i="${L.indexOf(x)}">${x.tipo==='mejora'?'Recordar':'Escribirle'}</button>`}</div>`).join('')}</div>`}`;
  card.querySelectorAll('.val-wa').forEach(b=>b.onclick=()=>encResponder(L[+b.dataset.i],b));
  const m=L.reduce((a,x)=>encT(x)>a?encT(x):a,'');if(m)try{localStorage.setItem(encK(),m);}catch(e){}encBadge(0);
 }
@@ -9144,7 +9146,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   pinta(false);}
  function montarHistoria(cont){
   const rb=cont.querySelector('.fp-resb');if(rb)rb.onclick=async()=>{rb.disabled=true;
-   try{const r=await agPost('seg-agenda-res-enlace',{pacienteId:id});if(!r.ok)throw new Error(r.error||'');
+   try{const r=await agPost('seg-agenda-res-enlace',{pacienteId:id,mejora:1,fisio:miNombreCorto()});if(!r.ok)throw new Error(r.error||'');
     const yo=miNombreCorto(),n=r.pila||'';
     abrirWA(r.tel,`¡Hola${n?' '+n:''}! Me ha encantado ver lo bien que vas 😊\n\nSi te apetece contarlo, una reseña tuya en Google nos ayuda muchísimo a que otras personas nos encuentren (es un minuto):\n${r.link}\n\n¡Gracias por confiar en nosotros!`);
     toast('Reseña pedida ✓',true);}catch(e){toast(e.message||'No se ha podido preparar el enlace',false);}rb.disabled=false;};
