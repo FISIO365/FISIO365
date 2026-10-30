@@ -166,6 +166,20 @@ module.exports = async function handler(req, res) {
   const esCron = req.headers['authorization'] === `Bearer ${process.env.CRON_SECRET}`;
   const esPanel = false;
   if (!esCron) return res.status(401).json({ ok: false });
+  // Serie de formación (School): 7:30 UTC de lunes a viernes = 8:30 en invierno. Aviso del módulo de hoy a los fisios
+  if (/serie=1/.test(req.url || '')) {
+    const S = require('./_serie.json'), hoy = madrid(0);
+    if (hoy.dia === 0 || hoy.dia === 6) return res.status(200).json({ ok: true, saltado: 'Fin de semana' });
+    let n = 0; for (let d = new Date(S.inicio + 'T12:00:00Z'); d.toISOString().slice(0, 10) <= hoy.fecha; d.setUTCDate(d.getUTCDate() + 1)) { const w = d.getUTCDay(); if (w > 0 && w < 6) n++; }
+    if (n < 1 || n > S.modulos.length) return res.status(200).json({ ok: true, saltado: 'Fuera de la serie' });
+    if (!/forzar=1/.test(req.url || '') && (await SCH.ajuste('serie_enviado', '').catch(() => '')) === hoy.fecha) return res.status(200).json({ ok: true, ya: true });
+    await SCH.guardarAjuste('serie_enviado', hoy.fecha, 'cron').catch(() => {});
+    const F = await todos(TABLAS.fisio, `filterByFormula=${encodeURIComponent('AND({PushSubscription}!="",{FECHA BAJA}="",LOWER({Role})="fisio",NOT({DIRECCIÓN}))')}&fields[]=PushSubscription`).catch(() => []);
+    const titulo = S.modulos[n - 1]; let ok = 0;
+    for (const f of F) { let sub = null; try { sub = JSON.parse(f.fields.PushSubscription); } catch (e) {} if (await enviar(sub, { title: 'School · Módulo de hoy', body: `«${titulo}» (${n} de ${S.modulos.length}). Unos 5 minutos.`, url: '/fisio?s=school', tag: 'serie' })) ok++; }
+    console.log('serie', hoy.fecha, n, titulo, ok + '/' + F.length);
+    return res.status(200).json({ ok: true, n, titulo, enviados: ok, fisios: F.length });
+  }
   // Resumen de facturación: 7:00 UTC (8 h en invierno, 9 h en verano), de las citas de ayer
   if (/resumen=1/.test(req.url || '')) {
     const ayer = madrid(-1);
