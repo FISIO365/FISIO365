@@ -6015,7 +6015,7 @@ async function encPlantilla(x,btn){const p=String(x.pila||x.nombre||'').trim().s
  let t;
  if(x.tipo==='mejora'){let link=RESENA_GOOGLE;if(btn)btn.disabled=true;try{const r=await agPost('seg-agenda-res-enlace',{pacienteId:x.pacienteId});if(r.ok&&r.link)link=r.link;}catch(e){}if(btn)btn.disabled=false;
   t=`¡Hola${n}! Te dejo otra vez el enlace por si te apetece contar tu experiencia en Google, nos ayuda muchísimo:\n${link}\n\n¡Gracias!`;}
- else if(v==='Excelente'&&x.resena)t=`¡Hola${n}! Muchísimas gracias por tu valoración y por dejarnos la reseña en Google 🙏 Nos hace muchísima ilusión.\n\n${fin?'Y esto no es un adiós: para revisiones o mantenimiento, aquí seguimos.':'¡Nos vemos en tu próxima sesión!'}`;
+ else if(v==='Excelente'&&x.resena)t=`¡Hola${n}! Muchísimas gracias por tu valoración y por dejarnos la reseña en Google 🙏 Nos hace muchísima ilusión.\n\n${fin?'Y ya sabes que seguimos aquí para lo que necesites.':'¡Nos vemos en tu próxima sesión!'}`;
  else if(v==='Excelente'){let link=RESENA_GOOGLE;if(btn)btn.disabled=true;try{const r=await agPost('seg-agenda-res-enlace',{pacienteId:x.pacienteId});if(r.ok&&r.link)link=r.link;}catch(e){}if(btn)btn.disabled=false;
   t=`¡Hola${n}! Mil gracias por tu valoración 😊\n\nSi te apetece contarlo también en Google, nos ayudaría muchísimo a que otras personas nos encuentren (es un minuto):\n${link}\n\n¡Gracias!`;}
  else if(v==='Muy buena')t=`¡Hola${n}! Gracias por tu valoración 😊${c?' Y por tu comentario, lo tenemos muy en cuenta.':''}\n\n¿Hay algo que podamos hacer para que ${fin?'tu experiencia':'la próxima vez'} sea excelente? Nos encantaría saberlo.`;
@@ -6148,7 +6148,7 @@ async function agRecordatorios(onDone,modoIni,encFIni){
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-altas&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw new Error(r.error||'Error');altD=r.pacientes;pintaAlt();}
   catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
  const altTexto=(c,link)=>{const p=String(c.pila||c.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
-  return `Hola${n?' '+n:''},\n\n¡Qué alegría ver lo bien que estás! Esto no es un adiós: seguimos aquí para revisiones, mantenimiento o cualquier cosa que notes.\n\nSi tienes un minuto, ¿nos cuentas qué tal ha ido? Es un toque:\n${link}\n\n¡Gracias por confiar en nosotros!`;};
+  return `Hola${n?' '+n:''},\n\nNos alegra mucho que te encuentres mejor. Si tienes un minuto, ¿nos cuentas qué tal ha ido? Es un toque:\n${link}\n\nY ya sabes que seguimos aquí para lo que necesites, una revisión o cualquier cosa que notes.`;};
  function pintaAlt(){const L=altD||[],env=L.filter(c=>c.enviado).length,fC3=f=>f?sevFC(f):'';
   body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="rec-pr"><div><b>${env}</b> de ${L.length} enviadas</div></div><div class="rec-bar"><i style="width:${L.length?Math.round(env/L.length*100):0}%"></i></div><small class="fp-mu" style="display:block;font-size:12px;margin-top:6px">Salen los pacientes con el alta apuntada los últimos 30 días.</small></div>
    ${!L.length?'<div class="fac-vacio">Nadie ha recibido el alta estos días</div>':`<div class="fp-blk rec-lista">${L.map((c,i)=>{const tel=segTel(c.tel);return `<div class="rec-it${c.enviado?' env':''}" data-i="${i}"><div class="rec-n"><b>${escH(capTit(c.nombre||'—'))}</b><small>alta el ${escH(fC3(c.alta))}${c.fisio?' · '+escH(capTit(String(c.fisio).split(' ')[0])):''}${c.enviado&&tel.length>=9?' · <button type="button" class="rec-re">Reenviar</button>':''}</small>${c.valoracion?`<span class="enc-r ${/Normal|Mejorable/.test(c.valoracion)?'mal':''}">${escH(c.valoracion)}${c.resena?' · abrió Google':''}${c.comentario?' · «'+escH(c.comentario)+'»':encSinCom(c)?' · no dejó comentario':''}</span>`:''}</div>
@@ -6683,11 +6683,11 @@ function agAlta(c,onDone){
      <button type="button" data-a="e"><b>Encuesta de alta</b><small>Si responde Excelente, le lleva a Google; si no, os lo cuenta a vosotros.</small></button></div>`}
     <div class="sev-bts"><button type="button" class="sev-b al-no">Ahora no</button></div>`;
    m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.al-no').onclick=()=>m.remove();
-   const hola=`Hola${pila?' '+pila:''},\n\n¡Qué alegría ver lo bien que estás! Esto no es un adiós: seguimos aquí para revisiones, mantenimiento o cualquier cosa que notes.\n\n`;
-   m.querySelectorAll('.al-ops button').forEach(w=>w.onclick=async()=>{if(w.dataset.a==='g'){abrirWA(tel,`${hola}Si tienes un minuto, nos ayudaría muchísimo una reseña tuya en Google:\n${RESENA_GOOGLE}\n\n¡Gracias por confiar en *FISIO365*!`);m.remove();return;}
+   const hola=`Hola${pila?' '+pila:''},\n\nNos alegra mucho que te encuentres mejor. `,cola='\n\nY ya sabes que seguimos aquí para lo que necesites, una revisión o cualquier cosa que notes.';
+   m.querySelectorAll('.al-ops button').forEach(w=>w.onclick=async()=>{if(w.dataset.a==='g'){abrirWA(tel,`${hola}Si tienes un minuto, nos ayudaría muchísimo una reseña tuya en Google:\n${RESENA_GOOGLE}${cola}`);m.remove();return;}
     w.disabled=true;let link='';try{const r=await agPost('seg-agenda-fin-enlace',{pacienteId:c.pacienteId,fisio:String((fisioActual&&fisioActual.nombre)||'')});if(r.ok&&r.link)link=r.link;}catch(_){}
     if(!link){w.disabled=false;toast('No se ha podido crear el enlace',false);return;}
-    abrirWA(tel,`${hola}Si tienes un minuto, ¿nos cuentas qué tal ha ido? Es un toque:\n${link}\n\n¡Gracias por confiar en nosotros!`);m.remove();});
+    abrirWA(tel,`${hola}Si tienes un minuto, ¿nos cuentas qué tal ha ido? Es un toque:\n${link}${cola}`);m.remove();});
   }catch(err){b.disabled=false;toast(err.message,false);}};
 }
 // Pasar la cita a otro fisio: mismo día y hora, la cita es la misma (no queda «reprogramada»)

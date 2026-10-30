@@ -1653,7 +1653,7 @@ function mejorar(v){var mal=v!=='Muy buena';C.innerHTML=grande('n',mal?'M31 50 Q
  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')alSalir();});window.addEventListener('pagehide',alSalir);
  document.getElementById('en').onclick=function(){var t=tx.value.trim();if(!t){er.textContent='Escribe aunque sea una frase, por favor.';tx.focus();return;}var b=this;b.disabled=true;b.textContent='Enviando…';ido=true;
   enviar({v:v,c:t}).then(function(r){if(!r||!r.ok)throw 0;gracias(mal);}).catch(function(){ido=false;b.disabled=false;b.textContent='Enviar';er.textContent='No se ha podido enviar. Inténtalo otra vez.';});};}
-function gracias(mal){C.innerHTML=grande('feliz','M28 46 Q40 57 52 46')+'<h1 class="fi" style="animation-delay:.8s">¡Gracias'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(mal?'Lo revisamos hoy mismo y te escribimos si hace falta. Gracias por ayudarnos a mejorar.':(D.fin?'Nos ayuda muchísimo. Y esto no es un adiós: para revisiones, mantenimiento o lo que notes, aquí seguimos.':'Nos ayuda muchísimo. ¡Nos vemos en tu próxima sesión!'))+'</p>';}
+function gracias(mal){C.innerHTML=grande('feliz','M28 46 Q40 57 52 46')+'<h1 class="fi" style="animation-delay:.8s">¡Gracias'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(mal?'Lo revisamos hoy mismo y te escribimos si hace falta. Gracias por ayudarnos a mejorar.':(D.fin?'Nos ayuda muchísimo. Y ya sabes que seguimos aquí para lo que necesites.':'Nos ayuda muchísimo. ¡Nos vemos en tu próxima sesión!'))+'</p>';}
 if(D.v==='Excelente')excelente();else if(D.v&&D.yaCom)gracias(D.v!=='Muy buena');else if(D.v)mejorar(D.v);else paso1();})();<\/script>`}</body></html>`;
 }
 function firmaCita(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cita:' + id).digest('hex').slice(0, 10); }
@@ -4755,7 +4755,7 @@ Cómo escribirlo:
 - Tutea, español de España, natural y cercano, como lo escribiría alguien de la clínica desde el móvil. Nada comercial.
 - Menciona algo concreto de su caso si ayuda (la zona en palabras sencillas: la espalda, la rodilla…), sin diagnósticos ni datos delicados. No inventes nada que no esté en los datos.
 - Si el objetivo es saber qué mejorar o hablarlo, termina con una pregunta fácil de contestar.
-- PROHIBIDO: «espero que…», «no dudes en…», «cualquier cosa nos escribes», «aquí estamos». Como mucho un emoji.${q.tipo === 'fin' ? '\n- Es el final de su tratamiento, pero que quede claro que NO es una despedida: seguimos ahí para revisiones o mantenimiento (dilo en una frase natural, sin sonar a venta).' : ''}
+- PROHIBIDO: «espero que…», «no dudes en…», «cualquier cosa nos escribes», «aquí estamos». Como mucho un emoji.${q.tipo === 'fin' ? '\n- Es el final de su tratamiento: alégrate de que se encuentre mejor con sencillez, y cierra el mensaje con una frase corta y natural tipo «Y ya sabes que seguimos aquí para lo que necesites». Nada de «esto no es un adiós» ni nada que suene a venta.' : ''}
 Devuelve solo el texto del mensaje, sin comillas.`;
         let err = '';
         for (const model of ['claude-haiku-5-5', 'claude-haiku-4-5', 'claude-sonnet-4-5']) {
