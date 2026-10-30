@@ -1787,6 +1787,7 @@ const CONF_DEF = {
   clinica: { razon: 'Fourth Dynamic, S.L.', nif: 'B56503592', direccion: 'C/ Gran de Sant Andreu, 163 · 08030 Barcelona', tel: '672 89 39 49', email: 'info@fisioterapia365.com' },
   cancelacion: { horas: 24, texto: 'Si no puedes venir, avísanos con al menos 24 horas de antelación para poder dar tu hora a otra persona.' },
   legal: {},
+  plantillas: {}, // mensajes de WhatsApp escritos por la clínica (vacío = los de siempre)
   // App del paciente: servicios con precios y packs, y promociones (Administración › App del paciente)
   app: {
     servicios: [
@@ -2023,11 +2024,12 @@ module.exports = async function handler(req, res) {
 
   const { patientId, action } = req.query;
   // Datos de la clínica (Administración › Ajustes): las páginas salen con su nombre, dirección, teléfono…
-  try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); LEGAL = legalDe(c0.legal); } catch (e) { LEGAL = legalDe(); }
+  let PLANT = {};
+  try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); LEGAL = legalDe(c0.legal); PLANT = c0.plantillas || {}; } catch (e) { LEGAL = legalDe(); }
   { const _send = res.send.bind(res); res.send = b => _send(typeof b === 'string' && !/json/i.test(String(res.getHeader('Content-Type') || '')) ? MARCA.marcar(b, CLI) : b); }
   if (action === 'clinica-pub') { // lo público de la clínica para la app y el panel (nombre, teléfono, opciones…)
     const C = CLI; res.setHeader('Cache-Control', 'public, max-age=60');
-    return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones, color: C.color, logo: C.logoV ? '/api/schedule?action=clinica-logo&v=' + C.logoV : '' }, pares: MARCA.pares(C) });
+    return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones, color: C.color, logo: C.logoV ? '/api/schedule?action=clinica-logo&v=' + C.logoV : '', plantillas: PLANT }, pares: MARCA.pares(C) });
   }
   if (action === 'clinica-logo') { // logo subido en Administración › Ajustes
     const L = await ajuste('clinica-logo', null), m = L && String(L.data || '').match(/^data:(image\/(png|jpeg|webp|svg\+xml));base64,(.+)$/);
@@ -3076,6 +3078,7 @@ module.exports = async function handler(req, res) {
             cur.app = { servicios, promos };
           }
           else if (sec === 'legal') { const L = {}; ['trat', 'decl', 'rgpd', 'der', 'sp', 'altaTrat'].forEach(k => { const t = String(v[k] == null ? '' : v[k]).replace(/\r/g, '').trim().slice(0, 12000); if (t && t !== LEGAL_TXT()[k]) L[k] = t; }); cur.legal = L; }
+          else if (sec === 'plantillas') { const P = {}; Object.keys(v || {}).slice(0, 30).forEach(k => { if (!/^\w{1,20}$/.test(k)) return; const t = String(v[k] == null ? '' : v[k]).replace(/\r/g, '').trim().slice(0, 2000); if (t) P[k] = t; }); cur.plantillas = P; }
           else if (sec === 'cancelacion') { const h = Math.round(Number(v.horas)); if (!(h >= 0 && h <= 168)) return res.status(400).json({ ok: false, error: 'Revisa las horas' }); cur.cancelacion = { horas: h, texto: lim(v.texto, 600) }; }
           else return res.status(400).json({ ok: false, error: 'Sección no válida' });
           await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() });

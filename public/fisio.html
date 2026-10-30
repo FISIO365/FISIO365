@@ -1679,6 +1679,7 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .ap-s{background:#faf6f1;border-radius:14px;padding:12px;margin:0 0 10px}.ap-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ap-row>.ag-in{flex:1;min-width:140px}.ap-s textarea{margin:8px 0 0;width:100%;box-sizing:border-box}.ap-eur{display:flex;align-items:center;gap:6px;flex:none}.ap-eur input{width:80px}.ap-eur span{font-size:12.5px;color:#8a7d74}.ap-x{flex:none;width:30px;height:30px;border:none;border-radius:50%;background:transparent;color:#a3968c;cursor:pointer}.ap-x:hover{background:#efe8e1}
 .ap-pks{margin-top:10px;display:flex;flex-direction:column;gap:6px}.ap-pk{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:#5c4f47}.ap-pk input{width:64px}.ap-pk .ap-pp{width:84px}.ap-pk em{font-style:normal;font-size:12px;color:#a3968c;min-width:90px}.ap-add{border:1.5px dashed #ddd2c8;background:#fff;color:#7d6a60;border-radius:99px;padding:7px 14px;font:600 12.5px Poppins,sans-serif;cursor:pointer;align-self:flex-start}.ap-add:hover{border-color:#c2552e;color:#c2552e}
 .ap-seg{display:inline-flex;background:#fff;border-radius:99px;padding:3px;gap:2px;flex-wrap:wrap}.ap-seg button{border:none;background:none;border-radius:99px;padding:6px 11px;font:600 12px Poppins,sans-serif;color:#7d6a60;cursor:pointer}.ap-seg button.on{background:#c2552e;color:#fff}.ap-pr .ap-row+.ap-row,.ap-pr textarea+.ap-row{margin-top:8px}.ap-pr .ap-de,.ap-pr .ap-ha{max-width:180px;min-width:165px}
+.pl-vs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.pl-v{border:1px solid #ecd2c4;background:#fff;color:#a3441f;border-radius:99px;padding:4px 10px;font:500 12px Poppins,sans-serif;cursor:pointer}.pl-v:hover{background:#fdf1ea}
 .lg-s{background:#faf6f1;border-radius:14px;padding:0 14px;margin:0 0 8px}.lg-s summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 0;font-weight:600;font-size:14px}.lg-s summary::-webkit-details-marker{display:none}.lg-s summary em{font-style:normal;font-size:11.5px;font-weight:600;color:#c2552e;background:#fdf1ea;border-radius:99px;padding:3px 9px}.lg-s summary i{font-style:normal;font-size:11.5px;font-weight:500;color:#a3968c}.lg-s small{display:block;font-size:12px;color:#8a7d74;margin:-4px 0 8px}.lg-s textarea{width:100%;box-sizing:border-box;font-size:13px;line-height:1.55}.lg-s .lg-r{margin:8px 0 14px}
 .val-so{margin-top:18px}.so-gs{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){.so-gs{grid-template-columns:1fr}}.so-g{background:#faf6f1;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}.so-h{display:flex;gap:11px;align-items:center}.so-h b{display:block;font-size:14px}.so-h small{font-size:12px;color:var(--muted)}.so-i{flex:none;width:36px;height:36px;border-radius:12px;background:#fdf1ea;display:grid;place-items:center}.so-i svg{width:19px;height:19px;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.so-w b{display:block;font-size:19px;color:#c2552e;font-weight:600}.so-w small{font-size:12px;color:var(--muted)}.so-roll{opacity:.55}.so-pop{animation:soPop .5s}@keyframes soPop{40%{transform:scale(1.12)}}.so-bts{display:flex;gap:8px;margin-top:auto}.so-b{flex:1;border:1.5px solid #efe6de;background:#fff;color:#5f554e;border-radius:99px;padding:9px 12px;font:600 13px Poppins,sans-serif;cursor:pointer}.so-b.pri{background:#c2552e;border-color:#c2552e;color:#fff}.so-b:disabled{opacity:.45;cursor:default}.so-l{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}.so-p{display:inline-flex;align-items:baseline;gap:6px;background:#faf6f1;border-radius:99px;padding:6px 12px;font-size:13px}.so-p small{font-size:11px;color:var(--muted)}.so-mas{border:none;background:none;color:#c2552e;font:600 13px Poppins,sans-serif;padding:8px 0 0;cursor:pointer}.so-el{max-height:55vh;overflow:auto}
 .val-bts{flex:none;align-self:center;display:flex;align-items:center;gap:6px}.val-bts .val-wa{align-self:auto;margin:0}.val-qx{flex:none;width:32px;height:32px;border-radius:50%;border:none;background:transparent;color:#b3a69c;display:grid;place-items:center;cursor:pointer}.val-qx:hover{background:#f1ebe5;color:#7d6a60}.val-qx svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}@media(max-width:600px){.val-bts{margin-left:21px;align-self:flex-start}}
@@ -5937,6 +5938,21 @@ function agRango(per){const h=agHoyIso(),dow=d=>(new Date(d+'T12:00:00').getDay(
 function agPasaFiltro(c,f){if(!f)return true;const e=c.estado;if(f==='sp')return agEsSP(c);
  if(f==='sinfac'){const pg=((AG.dia&&AG.dia.pago)||{})[c.id];return /REALIZADA/.test(e)&&!!pg&&pg.t==='sin';}
  return f==='pend'?/PENDIENTE/.test(e)&&!!c.pacienteId:f==='sinconf'?/PENDIENTE/.test(e)&&!!c.pacienteId&&!c.confirmada:f==='hecha'?/REALIZADA/.test(e):f==='novino'?/NO ASIST|PERDIDA/.test(e):f==='canc'?/CANCELADA/.test(e):f==='rep'?/REPROGRAMADA/.test(e):f==='reag'?/REAGENDAR/.test(e):f==='dud'?/DUDOSA/.test(e):f==='libre'?agEsLibre(e):true;}
+// ── Plantillas de WhatsApp editables (Administración › Mensajes a pacientes) ──
+// Si la clínica no ha escrito la suya, sale el mensaje de siempre (tal cual). Variables entre llaves: {nombre}, {enlace}…
+const PLANT_DEF={
+ rec:{t:'Recordatorio de cita',v:['nombre','cuando','hora','fisio','enlace'],ej:'Hola {nombre},\n\nTe esperamos en *{clinica}*:\n*{cuando} a las {hora}*\nCon {fisio}\n\nToca aquí para dejarla confirmada:\n{enlace}\n\n¡Hasta pronto!'},
+ rec2:{t:'Segundo aviso (sin confirmar)',v:['nombre','cuando','hora','fisio','enlace'],ej:'{nombre}, solo nos falta tu confirmación para {cuando} a las {hora} con {fisio}. Es un toque:\n{enlace}'},
+ enc:{t:'Encuesta de 1ª visita',v:['nombre','cuando','fisio','enlace'],ej:'Hola {nombre}, ¿qué tal te encuentras después de la sesión {cuando} con {fisio}?\n\nNos ayudarías mucho valorando tu primera visita aquí (es un toque):\n{enlace}\n\n¡Gracias!'},
+ alta:{t:'Encuesta de alta',v:['nombre','enlace'],ej:'Hola {nombre},\n\nNos alegra mucho que te encuentres mejor. Si tienes un minuto, ¿nos cuentas qué tal ha ido? Es un toque:\n{enlace}\n\nY ya sabes que seguimos aquí para lo que necesites, una revisión o cualquier cosa que notes.'},
+ mejor:{t:'«Está mejor» (pedir reseña desde la ficha)',v:['nombre','enlace'],ej:'¡Hola {nombre}! Me ha encantado ver lo bien que vas 😊\n\nSi te apetece contarlo, una reseña tuya en Google nos ayuda muchísimo a que otras personas nos encuentren (es un minuto):\n{enlace}\n\n¡Gracias por confiar en nosotros!'},
+ res:{t:'Pedir reseña en Google',v:['nombre','fisio','enlace'],ej:'Hola {nombre}, ¡gracias por confiar en {clinica}!\n\nSi te está yendo bien con nosotros, nos ayudaría muchísimo una reseña tuya en Google:\n{enlace}\n\n¡Mil gracias!'},
+ pago:{t:'Enlace de pago por adelantado',v:['nombre','dia','hora','fisio','enlace'],ej:'Hola {nombre}, te he reservado la cita del *{dia} a las {hora}* con {fisio}.\n\nPara guardártela, esta vez la sesión se paga por adelantado. Puedes hacerlo aquí con tarjeta o transferencia (tienes 2 h):\n{enlace}\n\n¡Gracias!'},
+ pagoRec:{t:'Recordatorio de pago',v:['nombre','dia','hora','quedan','enlace'],ej:'Hola {nombre}, te recuerdo que tu cita del *{dia} a las {hora}* está guardada pero aún falta el pago. Te quedan {quedan} para hacerlo aquí:\n{enlace}\n\nSi no, el hueco se libera. ¡Gracias!'},
+ huecos:{t:'Huecos libres para reservar',v:['enlace'],ej:'Te paso los huecos libres que tenemos estos días en *{clinica}*. Toca la hora que te vaya bien y queda reservada:\n{enlace}'},
+ factura:{t:'Factura por WhatsApp',v:['nombre','yo','numero','total','enlace'],ej:'Hola {nombre}, soy {yo} de {clinica}. Aquí tienes tu factura {numero} ({total}):\n{enlace}\n\nTambién la tienes siempre en tu app.'}};
+function plantilla(k,def,vars){const t=((CLINICA&&CLINICA.plantillas)||{})[k];if(!t||!String(t).trim())return def;const V=Object.assign({clinica:(CLINICA&&CLINICA.marca)||'FISIO365'},vars||{});
+ return String(t).replace(/\{(\w+)\}/g,(m,v)=>V[v]!=null&&V[v]!==''?String(V[v]):'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();}
 // ── RECORDATORIOS POR WHATSAPP (en un toque) ──
 // Día anterior; el viernes también los del lunes. Cada mensaje lleva el enlace para que el paciente confirme.
 const ENCUESTA_1A='https://tally.so/r/aQqBzX',ENCUESTA_FELIZ='https://tally.so/r/Zj220z',RESENA_GOOGLE='https://search.google.com/local/writereview?placeid=ChIJCadKnf2G6AIRcmUzdzMr4nk';
@@ -5947,13 +5963,13 @@ function recTexto(g){const h=agHoyIso(),t=new Date(g.fecha+'T12:00:00'),dm=t.get
  const horas=g.citas.map(c=>c.hora),fis=[...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]).filter(Boolean))];
  const pila=String(g.pila||g.nombre||'').trim().split(/\s+/)[0],nom=pila?pila.charAt(0).toUpperCase()+pila.slice(1).toLowerCase():'';
  // Sin emojis: al abrir WhatsApp desde un enlace algunos se ven como «�»
- return `Hola${nom?' '+nom:''},\n\nTe esperamos en *FISIO365*:\n*${cuando} a las ${horas.join(' y a las ')}*${fis.length?`\nCon ${fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y ')}`:''}\n\nToca aquí para dejarla confirmada:\n${g.citas[0].link}\n\n${g.fecha===agMover(h,1)?'¡Hasta mañana!':g.fecha===h?'¡Hasta luego!':'¡Hasta el '+dn+'!'}`;}
+ return plantilla('rec',`Hola${nom?' '+nom:''},\n\nTe esperamos en *FISIO365*:\n*${cuando} a las ${horas.join(' y a las ')}*${fis.length?`\nCon ${fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y ')}`:''}\n\nToca aquí para dejarla confirmada:\n${g.citas[0].link}\n\n${g.fecha===agMover(h,1)?'¡Hasta mañana!':g.fecha===h?'¡Hasta luego!':'¡Hasta el '+dn+'!'}`,{nombre:nom,cuando,hora:horas.join(' y a las '),fisio:fis.map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase()).join(' y '),enlace:g.citas[0].link});}
 // 2º aviso: a quien recibió el recordatorio y aún no ha confirmado
 function recTexto2(g){const h=agHoyIso(),dn=REC_DIAS[new Date(g.fecha+'T12:00:00').getDay()];
  const cuando=g.fecha===h?'hoy':g.fecha===agMover(h,1)?'mañana':'el '+dn;
  const fis=[...new Set(g.citas.map(c=>String(c.fisio||'').split(' ')[0]).filter(Boolean))].map(f=>f.charAt(0).toUpperCase()+f.slice(1).toLowerCase());
  const pila=String(g.pila||g.nombre||'').trim().split(/\s+/)[0],nom=pila?pila.charAt(0).toUpperCase()+pila.slice(1).toLowerCase():'';
- return `${nom?nom+', s':'Hola, s'}olo nos falta tu confirmación para ${cuando} a las ${g.citas.map(c=>c.hora).join(' y a las ')}${fis.length?' con '+fis.join(' y '):''}. Es un toque:\n${g.citas[0].link}?r=2`;}
+ return plantilla('rec2',`${nom?nom+', s':'Hola, s'}olo nos falta tu confirmación para ${cuando} a las ${g.citas.map(c=>c.hora).join(' y a las ')}${fis.length?' con '+fis.join(' y '):''}. Es un toque:\n${g.citas[0].link}?r=2`,{nombre:nom,cuando,hora:g.citas.map(c=>c.hora).join(' y a las '),fisio:fis.join(' y '),enlace:g.citas[0].link+'?r=2'});}
 // ¿Toca ya el 2º aviso? Citas de hoy desde las 11:00 → por la mañana (WhatsApp pone «Hoy» entre los dos mensajes).
 // Citas antes de las 11:00 → la tarde anterior, a partir de las 17:00 (por la mañana ya no daría tiempo).
 function recToca2(g){if(!g.enviado||g.conf||g.aviso2)return false;const h=agHoyIso(),h1=g.citas[0].hora||'';
@@ -6185,7 +6201,7 @@ async function agRecordatorios(onDone,modoIni,encFIni){
  let resVar=(()=>{try{return localStorage.getItem('f365_resvar')||'gen';}catch(e){return 'gen';}})();
  const resTexto=c=>{const p=String(c.pila||c.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
   const f0=String(c.fisio||'').trim().split(' ')[0],fi=f0?f0.charAt(0).toUpperCase()+f0.slice(1).toLowerCase():'';
-  return (RES_VAR.find(v=>v[0]===resVar)||RES_VAR[0])[2](`Hola${n?' '+n:''}`,fi);};
+  return plantilla('res',(RES_VAR.find(v=>v[0]===resVar)||RES_VAR[0])[2](`Hola${n?' '+n:''}`,fi),{nombre:n,fisio:fi,enlace:RESENA_GOOGLE});};
  function pintaRes(){
   const fila=(c,i)=>{const tel=segTel(c.tel),fC3=f=>f?sevFC(f):'';
    const sub=[c.ultima?'última sesión el '+fC3(c.ultima):(c.cargando?'':'sin sesiones'),String(c.fisio||'').split(' ')[0]].filter(Boolean).join(' · ');
@@ -6218,7 +6234,7 @@ async function agRecordatorios(onDone,modoIni,encFIni){
  const encTexto=c=>{const p=String(c.pila||c.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
   const h=agHoyIso(),cu=c.fecha===agMover(h,-1)?'de ayer':'del '+REC_DIAS[new Date(c.fecha+'T12:00:00').getDay()];
   const fi=String(c.fisio||'').trim().split(' ')[0],fn=fi?' con '+fi.charAt(0).toUpperCase()+fi.slice(1).toLowerCase():'';
-  return `Hola${n?' '+n:''}, ¿qué tal te encuentras después de la sesión ${cu}${fn}?\n\nNos ayudarías mucho valorando tu primera visita aquí (es un toque):\n${c.encLink||''}\n\n¡Gracias!`;};
+  return plantilla('enc',`Hola${n?' '+n:''}, ¿qué tal te encuentras después de la sesión ${cu}${fn}?\n\nNos ayudarías mucho valorando tu primera visita aquí (es un toque):\n${c.encLink||''}\n\n¡Gracias!`,{nombre:n,cuando:cu,fisio:fn.replace(/^ con /,''),enlace:c.encLink||''});};
  function pintaEnc(){const L=encD||[],env=L.filter(c=>c.enviado).length;
   body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="rec-dias"><span>Vinieron el ${escH(fC(encF).toLowerCase())}</span><button type="button" class="rec-otro">Otro día</button></div>
    <div class="rec-pr"><div><b>${env}</b> de ${L.length} enviadas</div></div><div class="rec-bar"><i style="width:${L.length?Math.round(env/L.length*100):0}%"></i></div></div>
@@ -6236,7 +6252,7 @@ async function agRecordatorios(onDone,modoIni,encFIni){
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-altas&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw new Error(r.error||'Error');altD=r.pacientes;pintaAlt();}
   catch(e){body.innerHTML=tabs()+`<div class="fac-vacio">No se ha podido cargar. <button type="button" class="ag-reint">Reintentar</button></div>`;atarTabs();body.querySelector('.ag-reint').onclick=cargar;}}
  const altTexto=(c,link)=>{const p=String(c.pila||c.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
-  return `Hola${n?' '+n:''},\n\nNos alegra mucho que te encuentres mejor. Si tienes un minuto, ¿nos cuentas qué tal ha ido? Es un toque:\n${link}\n\nY ya sabes que seguimos aquí para lo que necesites, una revisión o cualquier cosa que notes.`;};
+  return plantilla('alta',`Hola${n?' '+n:''},\n\nNos alegra mucho que te encuentres mejor. Si tienes un minuto, ¿nos cuentas qué tal ha ido? Es un toque:\n${link}\n\nY ya sabes que seguimos aquí para lo que necesites, una revisión o cualquier cosa que notes.`,{nombre:n,enlace:link});};
  function pintaAlt(){const L=altD||[],env=L.filter(c=>c.enviado).length,fC3=f=>f?sevFC(f):'';
   body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="rec-pr"><div><b>${env}</b> de ${L.length} enviadas</div></div><div class="rec-bar"><i style="width:${L.length?Math.round(env/L.length*100):0}%"></i></div><small class="fp-mu" style="display:block;font-size:12px;margin-top:6px">Salen los pacientes con el alta apuntada los últimos 30 días.</small></div>
    ${!L.length?'<div class="fac-vacio">Nadie ha recibido el alta estos días</div>':`<div class="fp-blk rec-lista">${L.map((c,i)=>{const tel=segTel(c.tel);return `<div class="rec-it${c.enviado?' env':''}" data-i="${i}"><div class="rec-n"><b>${escH(capTit(c.nombre||'—'))}</b><small>alta el ${escH(fC3(c.alta))}${c.fisio?' · '+escH(capTit(String(c.fisio).split(' ')[0])):''}${c.enviado&&tel.length>=9?' · <button type="button" class="rec-re">Reenviar</button>':''}</small>${c.valoracion?`<span class="enc-r ${/Normal|Mejorable/.test(c.valoracion)?'mal':''}">${escH(c.valoracion)}${c.resena?' · abrió Google':''}${c.comentario?' · «'+escH(c.comentario)+'»':encSinCom(c)?' · no dejó comentario':''}</span>`:''}</div>
@@ -6261,7 +6277,7 @@ async function agRecordatorios(onDone,modoIni,encFIni){
  const pagQueda=l=>{const m=Math.round((new Date(l)-Date.now())/6e4);if(!(m>0))return 'se acaba ya';return m>=60?`le queda${m>=120?'n':''} ${Math.floor(m/60)} h${m%60?' '+(m%60)+' min':''}`:`le quedan ${m} min`;};
  const pagRecTexto=x=>{const p=String(x.pila||x.nombre||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'',c=x.cita,d=new Date(c.fecha+'T12:00:00');
   const m=Math.max(1,Math.round((new Date(c.pago.limite)-Date.now())/6e4)),q=m>=60?`${Math.floor(m/60)} h${m%60?' y '+(m%60)+' min':''}`:`${m} min`;
-  return `Hola${n?' '+n:''}, te recuerdo que tu cita del *${REC_DIAS[d.getDay()]} ${d.getDate()} a las ${c.hora}* está guardada pero aún falta el pago. Te quedan ${q} para hacerlo aquí:\n${c.pago.link}\n\nSi no, el hueco se libera. ¡Gracias!`;};
+  return plantilla('pagoRec',`Hola${n?' '+n:''}, te recuerdo que tu cita del *${REC_DIAS[d.getDay()]} ${d.getDate()} a las ${c.hora}* está guardada pero aún falta el pago. Te quedan ${q} para hacerlo aquí:\n${c.pago.link}\n\nSi no, el hueco se libera. ¡Gracias!`,{nombre:n,dia:REC_DIAS[d.getDay()]+' '+d.getDate(),hora:c.hora,quedan:q,enlace:c.pago.link});};
  function pintaPag(){const L=pagD||[],G=[['transfer','Transferencias por mirar en el banco'],['enviar','Hay que mandarles el enlace de pago'],['pendiente','Esperando a que paguen'],['sincita','Pagan antes la próxima (aún sin cita)']];
   const fila=(x,i)=>{const tel=segTel(x.tel),c=x.cita;let sub='',bt='';
    if(x.tipo==='transfer'){sub=`dice que ha transferido ${pagEur(c.pago.importe)} · cita el ${pagCita(x)}`;bt='<button type="button" class="rec-b env pg-ok">Ya está en el banco</button>';}
@@ -6354,7 +6370,7 @@ function agPdfHuecos(){
  function pinta(){if(!huecos)return;const n=elegidos().length;res.innerHTML=n?`<b>${n}</b> hueco${n===1?'':'s'} libre${n===1?'':'s'}`:'No hay huecos libres con estos filtros';m.querySelectorAll('.hl-dl,.hl-wa,.hl-link').forEach(b=>b.disabled=!n);}
  m.querySelector('.hl-link').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const [d1,d2]=rango();
   try{const r=await (await fetch(`/api/schedule?action=seg-agenda-huecos-enlace&pwd=${encodeURIComponent(apiPwd)}&desde=${d1}&hasta=${d2}&fisios=${encodeURIComponent([...sel].join(','))}&pago=${pago}`)).json();if(!r.ok)throw new Error(r.error||'No se ha podido crear el enlace');
-   abrirWA('',pago?`Te paso los huecos libres que tenemos estos días en *FISIO365*. Toca la hora que te vaya bien: al reservarla, la sesión se paga por adelantado (${pago} €, con tarjeta o transferencia) y queda guardada para ti:\n${r.url}`:`Te paso los huecos libres que tenemos estos días en *FISIO365*. Toca la hora que te vaya bien y queda reservada:\n${r.url}`);}catch(er){toast(er.message,false);}b.disabled=false;};
+   abrirWA('',plantilla('huecos',pago?`Te paso los huecos libres que tenemos estos días en *FISIO365*. Toca la hora que te vaya bien: al reservarla, la sesión se paga por adelantado (${pago} €, con tarjeta o transferencia) y queda guardada para ti:\n${r.url}`:`Te paso los huecos libres que tenemos estos días en *FISIO365*. Toca la hora que te vaya bien y queda reservada:\n${r.url}`,{enlace:r.url,importe:pago||''}));}catch(er){toast(er.message,false);}b.disabled=false;};
  m.querySelectorAll('.hl-pago button').forEach(b=>b.onclick=()=>{pago=+b.dataset.v;m.querySelectorAll('.hl-pago button').forEach(x=>x.classList.toggle('on',x===b));});
  m.querySelectorAll('.hl-dias button').forEach(b=>b.onclick=()=>{dias=+b.dataset.n;m.querySelectorAll('.hl-dias button').forEach(x=>x.classList.toggle('on',x===b));contar();});
  const fb=m.querySelectorAll('.hl-fis button');fb.forEach(b=>b.onclick=()=>{const f=b.dataset.f;if(!f)sel.clear();else sel.has(f)?sel.delete(f):sel.add(f);fb.forEach(x=>x.classList.toggle('on',x.dataset.f?sel.has(x.dataset.f):!sel.size));pinta();});
@@ -6609,7 +6625,7 @@ function agPagoHtml(c){const p=c.pago,eur=v=>String(Math.round((+v||0)*100)/100)
  return `<div class="ag-pg">${PAGO_SVG}<span><b>Pendiente de pago · ${eur(p.importe)}</b>Hueco guardado hasta el ${escH(fl)}</span></div><div class="ag-pg-bs"><button type="button" class="ag-pg-b sec ag-pg-env">Reenviar enlace</button><button type="button" class="ag-pg-b sec ag-pg-quit">Ya no hace falta</button></div>`;}
 function agPagoTexto(c,link){const px=(pacs||[]).find(x=>x.id===c.pacienteId)||{},p=String(px.pila||px.nombre||c.paciente||'').trim().split(/\s+/)[0],n=p?p.charAt(0).toUpperCase()+p.slice(1).toLowerCase():'';
  const d=new Date(c.fecha+'T12:00:00'),dia=REC_DIAS[d.getDay()]+' '+d.getDate(),fi=String(c.fisio||'').trim().split(' ')[0],fn=fi?' con '+fi.charAt(0).toUpperCase()+fi.slice(1).toLowerCase():'';
- return `Hola${n?' '+n:''}, te he reservado la cita del *${dia} a las ${c.hora}*${fn}.\n\nPara guardártela, esta vez la sesión se paga por adelantado. Puedes hacerlo aquí con tarjeta o transferencia (tienes 2 h):\n${link}\n\n¡Gracias!`;}
+ return plantilla('pago',`Hola${n?' '+n:''}, te he reservado la cita del *${dia} a las ${c.hora}*${fn}.\n\nPara guardártela, esta vez la sesión se paga por adelantado. Puedes hacerlo aquí con tarjeta o transferencia (tienes 2 h):\n${link}\n\n¡Gracias!`,{nombre:n,dia,hora:c.hora,fisio:fn.replace(/^ con /,''),enlace:link});}
 let AG_PAGOS_N=0,AG_PAGOS_T=0;
 // Número en el botón «Mensajes»: pacientes a los que hay que mandar el enlace de pago + transferencias por mirar
 async function agPagosBadge(forzar){const pon=()=>document.querySelectorAll('.ag-bar2 .ag-recb:not(.ag-pdfb)').forEach(b=>{let i=b.querySelector('.ag-nb');if(!AG_PAGOS_N){i&&i.remove();return;}if(!i){i=document.createElement('i');i.className='ag-nb';b.appendChild(i);}i.textContent=AG_PAGOS_N;i.title='Pagos por hacer';});
@@ -7710,6 +7726,18 @@ async function renderAdmin(wrap){
  // ── Listas: estados del paciente, tipos de cita, conceptos y precios, formas de pago, motivos, negocios, zonas ──
  // ── Administración › App del paciente: servicios (precio de la sesión y packs) y promociones ──
 // ── Administración › Textos legales del consentimiento (vacío o «Volver al de siempre» = el texto de FISIO365) ──
+function plEditor(card,g,guardarConf){
+ const K=Object.keys(PLANT_DEF);
+ card.innerHTML=`<div class="adm-h"><b>Mensajes a pacientes</b><small>Los WhatsApp que se preparan solos (recordatorios, encuestas, reseñas, pagos…). Si no tocas uno, sale el de siempre. Toca una etiqueta para ponerla donde está el cursor: al enviarlo se cambia por el dato del paciente.</small></div>
+  ${K.map(k=>{const d=PLANT_DEF[k];return `<details class="lg-s"${g[k]?' open':''}><summary><span>${d.t}</span>${g[k]?'<em>Cambiado</em>':'<i>El de siempre</i>'}</summary>
+   <div class="pl-vs">${['clinica'].concat(d.v).map(v=>`<button type="button" class="pl-v" data-k="${k}" data-v="${v}">{${v}}</button>`).join('')}</div>
+   <textarea class="seg-n lg-t pl-t" data-k="${k}" rows="8">${escH(g[k]||d.ej)}</textarea><button type="button" class="ap-add pl-r" data-k="${k}">Volver al de siempre</button></details>`;}).join('')}
+  <div class="hz-bts"><button type="button" class="hz-ok pl-g">Guardar</button></div>`;
+ const ta=k=>card.querySelector(`.pl-t[data-k="${k}"]`);
+ card.querySelectorAll('.pl-v').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>{const t=ta(b.dataset.k),ins='{'+b.dataset.v+'}',a=t.selectionStart??t.value.length,z=t.selectionEnd??a;t.value=t.value.slice(0,a)+ins+t.value.slice(z);t.focus();t.selectionStart=t.selectionEnd=a+ins.length;};});
+ card.querySelectorAll('.pl-r').forEach(b=>b.onclick=()=>{ta(b.dataset.k).value=PLANT_DEF[b.dataset.k].ej;g[b.dataset.k]='';toast('Vuelve al de siempre. Dale a «Guardar».',true);});
+ card.querySelector('.pl-g').onclick=async e=>{const v={};K.forEach(k=>{const t=ta(k).value.trim();if(t&&t!==PLANT_DEF[k].ej.trim())v[k]=t;});
+  if(await guardarConf('plantillas',v,e.target)){if(CLINICA)CLINICA.plantillas=v;plEditor(card,v,guardarConf);}};}
 function lgEditor(card,g,base,guardarConf){
  const SEC=[['trat','Información al paciente sobre el tratamiento','Párrafos separados por una línea en blanco.'],['decl','Declaro que','Cada párrafo es una declaración.'],
   ['rgpd','Protección de datos','Bloques separados por una línea en blanco. La primera línea de cada bloque es el título (responsable, delegado de protección de datos, finalidad…).'],
@@ -7866,7 +7894,8 @@ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule
     <div class="hz-lab">Texto para los pacientes</div><textarea class="seg-n x-t" rows="3">${escH(X.texto)}</textarea>
     <div class="hz-bts"><button type="button" class="hz-ok x-g">Guardar</button></div></div>
    <div class="adm-card ap-card"></div>
-   <div class="adm-card lg-card"></div>`;
+   <div class="adm-card lg-card"></div>
+   <div class="adm-card pl-card"></div>`;
   const $b=q=>body.querySelector(q);
   $b('.t-g').onclick=e=>guardarConf('tarjeta',{importe:$b('.t-i').value.replace(',','.'),meses:$b('.t-m').value},e.target);
   $b('.h-g').onclick=async e=>{if($b('.h-b').checked&&H.borrador&&!await admSiNo('Los tickets que se hagan desde el panel saldrán ya aprobados en Holded, con su número definitivo.'))return;guardarConf('holded',{borrador:!$b('.h-b').checked,rgpd:$b('.h-r').value},e.target);};
@@ -7893,6 +7922,7 @@ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule
   $b('.x-g').onclick=e=>guardarConf('cancelacion',{horas:$b('.x-h').value,texto:$b('.x-t').value},e.target);
   apEditor($b('.ap-card'),c.app||{servicios:[],promos:[]},guardarConf);
   lgEditor($b('.lg-card'),c.legal||{},ADM.legalBase||{},guardarConf);
+  plEditor($b('.pl-card'),c.plantillas||{},guardarConf);
  }
  // A quién llega el resumen diario
  async function pintaMail(){const aj=await ajustesAdm();if(!aj||ADM.tab!=='mail')return;const E=(ADM.mails=ADM.mails||aj.emails.slice());
@@ -9420,7 +9450,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   const rb=cont.querySelector('.fp-resb');if(rb)rb.onclick=async()=>{rb.disabled=true;
    try{const r=await agPost('seg-agenda-res-enlace',{pacienteId:id,mejora:1,fisio:miNombreCorto()});if(!r.ok)throw new Error(r.error||'');
     const yo=miNombreCorto(),n=r.pila||'';
-    abrirWA(r.tel,`¡Hola${n?' '+n:''}! Me ha encantado ver lo bien que vas 😊\n\nSi te apetece contarlo, una reseña tuya en Google nos ayuda muchísimo a que otras personas nos encuentren (es un minuto):\n${r.link}\n\n¡Gracias por confiar en nosotros!`);
+    abrirWA(r.tel,plantilla('mejor',`¡Hola${n?' '+n:''}! Me ha encantado ver lo bien que vas 😊\n\nSi te apetece contarlo, una reseña tuya en Google nos ayuda muchísimo a que otras personas nos encuentren (es un minuto):\n${r.link}\n\n¡Gracias por confiar en nosotros!`,{nombre:n,enlace:r.link}));
     toast('Reseña pedida ✓',true);}catch(e){toast(e.message||'No se ha podido preparar el enlace',false);}rb.disabled=false;};
   const b=cont.querySelector('.fp-add-ev');if(!b)return;
   b.onclick=()=>{const slot=cont.querySelector('.fp-add-slot');const u=ultSesion(d.citas,d.hoy);
@@ -10464,7 +10494,7 @@ async function facEnviar(pacId,id,tipo,btn){
   go.disabled=true;go.textContent='Enviando…';er.hidden=true;const x=await post({op:'email',to,yo});
   if(!x.ok){go.disabled=false;go.textContent='Enviar email';er.hidden=false;er.textContent=x.error||'No se ha podido enviar';return;}
   m.remove();toast('Factura enviada a '+to,true);};
- m.querySelector('.fe-wa').onclick=()=>{m.remove();abrirWA(d.tel,`Hola${d.pila?' '+d.pila:''}, soy ${yo} de FISIO365. Aquí tienes tu factura ${d.numero} (${d.total}):\n${d.url}\n\nTambién la tienes siempre en tu app.`);};
+ m.querySelector('.fe-wa').onclick=()=>{m.remove();abrirWA(d.tel,plantilla('factura',`Hola${d.pila?' '+d.pila:''}, soy ${yo} de FISIO365. Aquí tienes tu factura ${d.numero} (${d.total}):\n${d.url}\n\nTambién la tienes siempre en tu app.`,{nombre:d.pila||'',yo,numero:d.numero,total:d.total,enlace:d.url}));};
 }
 async function fpTabFacturas(pacId, body, pacNombre, tok){
  body.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Cargando...</div>';
