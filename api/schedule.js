@@ -3638,6 +3638,20 @@ module.exports = async function handler(req, res) {
           const pg = Math.round(Number(String(q.pago || '').replace(',', '.')) * 100) / 100;
           return res.status(200).json({ ok: true, url: huecosEnlace(q.desde, q.hasta, f, pg >= 1 && pg <= 2000 ? pg : 0) });
         }
+        if (action === 'seg-agenda-val-fisios') { // Valoraciones por fisio de un mes (solo dirección lo ve en el panel)
+          const mes = /^\d{4}-\d{2}$/.test(q.mes || '') ? q.mes : hoyF.slice(0, 7), enMes = c => `DATETIME_FORMAT(SET_TIMEZONE({${c}},'Europe/Madrid'),'YYYY-MM')='${mes}'`;
+          const nmV = v => (v && typeof v === 'object') ? (v.name || '') : (v || ''), k = f => String(nmV(f) || '').trim().split(' ')[0].toLowerCase();
+          const [c1, c2, c3] = await Promise.all([
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA RESPONDIDA},${enMes('ENCUESTA RESPONDIDA')})`)}&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('ENCUESTA VALORACIÓN')}&fields[]=${encodeURIComponent('ENCUESTA IR A RESEÑA')}`).catch(() => []),
+            todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({FIN RESPONDIDA},${enMes('FIN RESPONDIDA')})`)}&fields[]=${encodeURIComponent('FIN FISIO')}&fields[]=${encodeURIComponent('FIN VALORACIÓN')}&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}`).catch(() => []),
+            todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({MEJORA FECHA},${enMes('MEJORA FECHA')})`)}&fields[]=${encodeURIComponent('MEJORA FISIO')}&fields[]=${encodeURIComponent('MEJORA GOOGLE')}`).catch(() => [])]);
+          const T = {}, de = f => { const x = k(f) || '—'; return (T[x] = T[x] || { fisio: x, enc: 0, exc: 0, mb: 0, mal: 0, google: 0, mej: 0, mejG: 0 }); };
+          const suma = (f, v, g) => { const x = de(f); x.enc++; if (v === 'Excelente') x.exc++; else if (v === 'Muy buena') x.mb++; else if (v) x.mal++; if (g) x.google++; };
+          c1.forEach(r => { const v = nmV(r.fields['ENCUESTA VALORACIÓN']); if (v) suma(r.fields['PREF.'], v, r.fields['ENCUESTA IR A RESEÑA']); });
+          c2.forEach(r => { const v = nmV(r.fields['FIN VALORACIÓN']); if (v) suma(r.fields['FIN FISIO'], v, r.fields['FIN IR A RESEÑA']); });
+          c3.forEach(r => { const x = de(r.fields['MEJORA FISIO']); x.mej++; if (r.fields['MEJORA GOOGLE']) x.mejG++; });
+          return res.status(200).json({ ok: true, mes, fisios: Object.values(T).filter(x => x.fisio !== '—' || x.enc || x.mej).sort((a, b) => (b.enc + b.mej) - (a.enc + a.mej)) });
+        }
         if (action === 'seg-agenda-enc-nuevas') {
           // Respuestas a la encuesta de primera visita de los últimos 14 días (para los avisos dentro del panel)
           const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA RESPONDIDA},IS_AFTER({ENCUESTA RESPONDIDA},DATEADD(NOW(),-14,'days')))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('ENCUESTA VALORACIÓN')}&fields[]=${encodeURIComponent('ENCUESTA COMENTARIO')}&fields[]=${encodeURIComponent('ENCUESTA IR A RESEÑA')}&fields[]=${encodeURIComponent('ENCUESTA RESPONDIDA')}`);
