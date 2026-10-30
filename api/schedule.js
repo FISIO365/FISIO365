@@ -3578,12 +3578,17 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, lista, aviso: lista.filter(x => x.tipo === 'enviar' || x.tipo === 'transfer').length });
         }
         if (action === 'seg-agenda-altas') { // encuesta de alta: pacientes con el alta apuntada los últimos 30 días
-          const ps = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({POR QUÉ FECHA},IS_AFTER({POR QUÉ FECHA},DATEADD(TODAY(),-31,'days')),FIND('ALTA',UPPER(ARRAYJOIN({ESTADO}))))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('POR QUÉ FECHA')}&fields[]=${encodeURIComponent('POR QUÉ FISIO')}&fields[]=${encodeURIComponent('FIN ENVIADA')}&fields[]=${encodeURIComponent('FIN VALORACIÓN')}&fields[]=${encodeURIComponent('FIN COMENTARIO')}&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}&fields[]=${encodeURIComponent('FIN FISIO')}`);
+          const ps = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({POR QUÉ FECHA},IS_AFTER({POR QUÉ FECHA},DATEADD(TODAY(),-31,'days')),FIND('ALTA',UPPER(ARRAYJOIN({ESTADO}))))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('POR QUÉ FECHA')}&fields[]=${encodeURIComponent('POR QUÉ FISIO')}&fields[]=${encodeURIComponent('FIN ENVIADA')}&fields[]=${encodeURIComponent('FIN VALORACIÓN')}&fields[]=${encodeURIComponent('FIN COMENTARIO')}&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}&fields[]=${encodeURIComponent('FIN FISIO')}&fields[]=${encodeURIComponent('FIN QUITADA')}`);
           const nmA = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
-          const lista = ps.map(p => { const F = p.fields, alta = String(F['POR QUÉ FECHA'] || '').slice(0, 10), env = F['FIN ENVIADA'] && String(F['FIN ENVIADA']).slice(0, 10) >= alta ? F['FIN ENVIADA'] : '';
+          const lista = ps.filter(p => !(p.fields['FIN QUITADA'] && String(p.fields['FIN QUITADA']).slice(0, 10) >= String(p.fields['POR QUÉ FECHA'] || '').slice(0, 10))).map(p => { const F = p.fields, alta = String(F['POR QUÉ FECHA'] || '').slice(0, 10), env = F['FIN ENVIADA'] && String(F['FIN ENVIADA']).slice(0, 10) >= alta ? F['FIN ENVIADA'] : '';
             return { pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', alta, fisio: F['FIN FISIO'] || F['POR QUÉ FISIO'] || '', enviado: env, valoracion: env ? nmA(F['FIN VALORACIÓN']) : '', comentario: env ? (F['FIN COMENTARIO'] || '') : '', resena: !!(env && F['FIN IR A RESEÑA']) }; })
             .sort((a, b) => b.alta.localeCompare(a.alta) || a.nombre.localeCompare(b.nombre));
           return res.status(200).json({ ok: true, pacientes: lista });
+        }
+        if (action === 'seg-agenda-fin-quitar') { // Alta: quitar de la lista (ya enviada por otro lado, ya dejó reseña o no hace falta)
+          if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
+          const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'FIN QUITADA': q.volver ? null : new Date().toISOString() } }) });
+          return res.status(200).json({ ok: !d.error });
         }
         if (action === 'seg-agenda-resenas') {
           // Pedir reseña en Google: pacientes con sesión realizada los últimos 7 días (o los ids pedidos), con si ya se les pidió / ya la dejaron
