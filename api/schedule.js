@@ -3400,19 +3400,33 @@ module.exports = async function handler(req, res) {
                 rs.forEach(r => (r.fields['PacienteRec'] || []).forEach(id => { if (L[id]) L[id].citas.push({ id: r.id, k: String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA), e: String(nmA(r.fields.ESTADO)).trim().toUpperCase() }); }));
                 ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0), u = Math.min(n, Number(p.fields['BONO PREVIO YA USADAS'] || 0)); if (L[p.id] && n - u > 0) L[p.id].lotes.push({ f: '', n: n - u, tot: n, off: u, precio: 0, previo: true }); });
                 fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => { const id = r.fields['PacienteId']; if (!L[id]) return;
-                  sesDe(r.fields).forEach(x => L[id].lotes.push({ f: r.fields['FECHA DE COBRO'] || r.fields['FECHA'] || '', n: x.n, precio: x.precio, num: r.fields['Nº FACTURA'] || '' })); });
+                  sesDe(r.fields).forEach(x => L[id].lotes.push({ f: r.fields['FECHA DE COBRO'] || r.fields['FECHA'] || '', n: x.n, precio: x.precio, num: r.fields['Nº FACTURA'] || '', fid: r.id })); });
                 g.forEach(id => { L[id].citas.sort((a, b) => a.k.localeCompare(b.k)); C[id] = { t: ahora, v: L[id] }; }); }));
+              // Packs compartidos: las citas que cubre el pack común salen como «Pack · X de N»; el resto se reparte con lo suyo
+              let cubre = new Map(), quitarLote = {};
+              if (inicio) try {
+                const comp = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent("{PACK COMPARTE}!=''")}&fields[]=${encodeURIComponent('PACK COMPARTE')}`);
+                const S = {}; comp.forEach(p => pcLeer(p.fields['PACK COMPARTE']).forEach(x => { const k = x.t + '|' + x.f; (S[k] = S[k] || { t: x.t, f: x.f, n: Number(x.n) || 0, tot: Number(x.tot) || 0, off: Number(x.off) || 0, d: x.d || '', miembros: [x.t] }).miembros.push(p.id); }));
+                const shares = Object.values(S).filter(x => x.n > 0 && x.miembros.some(m => pv.includes(m)));
+                if (shares.length) {
+                  const todas = await citasDeMiembros([...new Set(shares.flatMap(x => x.miembros))], ['REALIZADA', 'PENDIENTE', 'CITA PERDIDA'], shares.map(x => x.d || '').sort()[0] || '');
+                  cubre = repartoCompartido(shares, todas);
+                  shares.forEach(x => { (quitarLote[x.t] = quitarLote[x.t] || []).push(x.f); });
+                }
+              } catch (e) { console.log('agenda-compartido', e.message); }
               rows.forEach(r => { const pid = (r.fields['RELACIÓN - CITA'] || [])[0]; if (!pid || !C[pid]) return; const e = String(nmA(r.fields['ESTADO'])).trim().toUpperCase();
                 if (/CANCELADA|REPROGRAMADA|NO ASIST/.test(e)) return; const k = String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA);
                 const V = C[pid].v; numSes[r.id] = V.citas.filter(x => x.k < k && x.e !== 'CITA PERDIDA').length + 1;
                 if (!inicio || k.slice(0, 10) < inicio) return; // antes de empezar a cobrar desde el panel no se sabe
                 // Se gastan los pagos por orden (primero el más antiguo) con las citas desde el inicio del control, en orden
-                const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio); let li = 0, usado = 0;
-                for (const x of gastan) { while (li < V.lotes.length && usado >= V.lotes[li].n) { li++; usado = 0; }
-                  if (x.id === r.id) { const lo = V.lotes[li];
+                if (cubre.has(r.id)) { const x = cubre.get(r.id); pago[r.id] = { t: 'pack', i: (x.off || 0) + x.orden.indexOf(r.id) + 1, n: x.tot || x.n, comp: true }; return; }
+                const QL = quitarLote[pid] || [], LO = V.lotes.filter(l => !QL.some(f => f === 'previo' ? l.previo : l.fid === f));
+                const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio && !cubre.has(x.id)); let li = 0, usado = 0;
+                for (const x of gastan) { while (li < LO.length && usado >= LO[li].n) { li++; usado = 0; }
+                  if (x.id === r.id) { const lo = LO[li];
                     pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: usado + 1 + (lo.off || 0), n: lo.tot || lo.n } : lo.n > 1 ? { t: 'pack', i: usado + 1, n: lo.n, v: Math.round(lo.precio * 100) / 100 } : { t: 'suelta', v: lo.precio };
                     break; }
-                  if (li < V.lotes.length) usado++; }
+                  if (li < LO.length) usado++; }
               });
             } } catch (e) { console.log('agenda-num', e.message); }
           return res.status(200).json({ ok: true, num: numSes, pago, inicio });
