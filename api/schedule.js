@@ -3438,6 +3438,7 @@ module.exports = async function handler(req, res) {
         const patch = async (id, fields) => { const d = await at(`${CIT}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields, typecast: true }) }); if (d.error) throw new Error(d.error.message || 'No se ha podido guardar'); return d; };
         // Bomba diamagnética: una sola máquina para 2 pacientes. Cuenta las citas activas con paciente a esa hora (todos los fisios) que no lleven «NO BOMBA»
         const bombaLlena = async (fecha, hora, excluirId) => {
+          if (CLI.opciones && CLI.opciones.bomba === false) return null; // la clínica no trabaja con bomba
           const rows = (await delDia(fecha)).filter(r => hh(r.fields['HORA']) === hh(hora) && r.id !== excluirId && (r.fields['RELACIÓN - CITA'] || []).length && ACTIVA(String(nmA(r.fields['ESTADO']))));
           if (rows.length < 2) return null;
           const [nb] = await tiposDe(['NO BOMBA']);
