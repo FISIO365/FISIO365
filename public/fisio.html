@@ -10146,9 +10146,9 @@ async function facEnviar(pacId,id,tipo,btn){
  if(!d.ok){toast(d.error||'No se ha podido preparar',false);return;}
  const m=hzModal(`<div class="hz-top"><div><small>Factura ${escH(d.numero)} · ${escH(d.total)}</small><b>Enviar al paciente</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Por email · con el PDF adjunto</div><input type="email" inputmode="email" class="ag-in fe-em" placeholder="Email del paciente" value="${escH(d.email||'')}">
-  <button type="button" class="hz-ok fe-go" style="width:100%;margin-top:10px">Enviar email</button><div class="ient-err fe-er" hidden style="margin-top:8px"></div>
+  <div class="hz-bts" style="margin-top:10px"><button type="button" class="hz-ok fe-go">Enviar email</button></div><div class="ient-err fe-er" hidden style="margin-top:8px"></div>
   <div class="hz-lab" style="margin-top:18px">Por WhatsApp · con un enlace para verla y descargarla</div>
-  <button type="button" class="fp-can fe-wa" style="width:100%"${d.tel?'':' disabled'}>${d.tel?'Abrir WhatsApp':'No tiene teléfono en la ficha'}</button>`);
+  <div class="hz-bts" style="margin-top:8px"><button type="button" class="seg-resb fe-wa"${d.tel?'':' disabled'}>${d.tel?'Abrir WhatsApp':'No tiene teléfono en la ficha'}</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const ie=m.querySelector('.fe-em'),go=m.querySelector('.fe-go'),er=m.querySelector('.fe-er'),yo=miNombreCorto();
  go.onclick=async()=>{const to=ie.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){er.hidden=false;er.textContent='Revisa el email';ie.focus();return;}
