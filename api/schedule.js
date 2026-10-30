@@ -1491,13 +1491,14 @@ function paginaResena(D) {
 h1{font-size:23px;margin:8px 0 6px;line-height:1.25}.sub{font-size:15px;color:#5c4f47;margin:0 0 22px;line-height:1.55}
 .b{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#c2552e;color:#fff;text-decoration:none;font-weight:600;font-size:15.5px;border-radius:99px;padding:15px}.b svg{width:20px;height:20px}
 .ids{background:#faf7f4;border-radius:18px;padding:14px 16px;margin:18px 0 0;text-align:left}.ids b{display:block;font-size:13px;color:#8a7d74;font-weight:600;margin-bottom:8px}.ids span{display:inline-block;font-size:13px;background:#fff;border:1px solid #efe6de;border-radius:99px;padding:5px 11px;margin:0 6px 6px 0;color:#5c4f47}
-.n{font-size:12.5px;color:#9a8f87;margin:16px 0 0;line-height:1.5}</style></head><body><div class="c">
+.n{font-size:12.5px;color:#9a8f87;margin:16px 0 0;line-height:1.5}.reg{display:flex;gap:12px;align-items:flex-start;text-align:left;background:#fdf1ea;border-radius:16px;padding:13px 15px;margin:16px 0 0;font-size:12.5px;line-height:1.5;color:#7d5a48}.reg b{display:block;font-size:13px;color:#a3441f;margin-bottom:2px}.reg svg{flex:none;width:26px;height:26px;margin-top:2px;fill:none;stroke:#c2552e;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}</style></head><body><div class="c">
 <img class="lg fi" src="/informe/logo.png" alt="FISIO365">
 <svg class="st" viewBox="0 0 24 24"><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.6L12 16.4l-5.1 2.7 1-5.6-4.1-4 5.7-.8z"/></svg>
 <h1 class="fi" style="animation-delay:.5s">${D.pila ? '¡Qué alegría, ' + e(D.pila) + '!' : '¡Qué alegría!'}</h1>
 <p class="sub fi" style="animation-delay:.65s">Nos encanta saber que estás mejor. Si te apetece contarlo, tu reseña ayuda a otras personas a encontrarnos.</p>
 <a class="b fi" id="ag" style="animation-delay:.8s" href="${RESENA_URL}"><svg viewBox="0 0 24 24"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#fff" opacity=".7" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.2 1.1 4.6L6.4 14z"/><path fill="#fff" opacity=".85" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4 5.6-4z"/></svg>Escribir mi reseña en Google</a>
 <div class="ids fi" style="animation-delay:.95s"><b>¿No sabes qué poner? Por ejemplo:</b><span>Cómo te encontrabas al llegar</span><span>Cómo estás ahora</span><span>Qué tal el trato</span><span>Tu fisio</span></div>
+<div class="reg fi" style="animation-delay:1.05s"><svg viewBox="0 0 24 24"><rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7M12 8.5v12M12 8.5C10.5 5 7 4.5 7 6.6 7 8.2 9.5 8.5 12 8.5zM12 8.5c1.5-3.5 5-4 5-1.9 0 1.6-2.5 1.9-5 1.9z"/></svg><div><b>Un pequeño regalo para daros las gracias</b>Cada mes sorteamos 2 sesiones entre quienes nos ayudáis con vuestra opinión: una al azar y otra para la más original.</div></div>
 <p class="n">¡Mil gracias por confiar en nosotros!</p></div><script>document.getElementById('ag').onclick=function(ev){ev.preventDefault();var h=this.href;try{fetch(location.pathname,{method:'POST',headers:{'Content-Type':'application/json'},body:'{"g":1}',keepalive:true});}catch(e){}setTimeout(function(){location.href=h;},120);};</script></body></html>`;
 }
 function paginaPago(D) {
@@ -1623,7 +1624,7 @@ svg.f .ey{transform-box:fill-box;transform-origin:center}.mira .ojg{animation:mi
 .chips{display:flex;flex-wrap:wrap;gap:10px 8px}.chip{border:1.5px solid #efe6de;background:#faf7f4;border-radius:99px;padding:8px 13px;font:500 13.5px Poppins,sans-serif;color:#2b2420;cursor:pointer;text-align:left}.chip:active,.chip.on{background:#fbeee7;border-color:#c2552e;color:#c2552e}
 textarea{width:100%;min-height:110px;border:1.5px solid #e6ddd5;border-radius:14px;padding:12px 14px;font:400 16px Poppins,sans-serif;color:#141414;margin:18px 0 12px;resize:vertical;outline:none}textarea:focus{border-color:#c2552e}
 .bt2{width:100%;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:14px;padding:15px;cursor:pointer}.bt2:disabled{opacity:.6}
-.nota{font-size:12.5px;color:#8a7d74;margin:14px 0 0}.err{font-size:13px;color:#b42318;margin:6px 0 0;min-height:18px}
+.nota{font-size:12.5px;color:#8a7d74;margin:14px 0 0}.reg{display:flex;gap:12px;align-items:flex-start;text-align:left;background:#fdf1ea;border-radius:16px;padding:13px 15px;margin:16px 0 0;font-size:12.5px;line-height:1.5;color:#7d5a48}.reg b{display:block;font-size:13px;color:#a3441f;margin-bottom:2px}.reg svg{flex:none;width:26px;height:26px;margin-top:2px;fill:none;stroke:#c2552e;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}.err{font-size:13px;color:#b42318;margin:6px 0 0;min-height:18px}
 @media (prefers-reduced-motion:reduce){.o,.dm,.de,.fi,.cara,.bt,.estr svg{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
 <body><div class="c" id="c">${D.error ? `<h1>Vaya…</h1><p class="sub">${e(D.error)}</p>` : ''}</div>
 ${D.error ? '' : `<script>(function(){var D=${J},C=document.getElementById('c');
@@ -1641,7 +1642,7 @@ function excelente(){var f=D.fisio||'El equipo',F=D.ideas&&D.ideas.length?D.idea
  C.innerHTML=grande('feliz','M26 45 Q40 62 54 45')+'<h1 class="fi" style="animation-delay:.8s">¡Qué alegría'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(D.fisio?'A '+esc(D.fisio)+' le hará muchísima ilusión. ':'')+'¿Nos lo cuentas en Google? Son 20 segundos.</p>'
  +'<div class="estr brilla">'+[0,1,2,3,4].map(function(i){return '<svg viewBox="0 0 24 24" style="animation-delay:'+(1+i*.12)+'s"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';}).join('')+'</div>'
  +'<div class="ideas fi" style="animation-delay:1.6s"><small>Toca la frase que más te encaje: la copiamos y te abrimos Google. Solo tienes que pegarla y elegir las 5 estrellas.</small><div class="chips">'+F.map(function(x){return '<button class="chip">'+esc(x)+'</button>';}).join('')+'</div></div>'
- +'<a class="bt" href="'+D.google+'" id="gb"><span class="g">G</span>Dejar mi reseña en Google</a><p class="nota fi" style="animation-delay:1.8s">O escribe lo que quieras con tus palabras.</p>';
+ +'<a class="bt" href="'+D.google+'" id="gb"><span class="g">G</span>Dejar mi reseña en Google</a><p class="nota fi" style="animation-delay:1.8s">O escribe lo que quieras con tus palabras.</p>+'<div class="reg fi" style="animation-delay:2s"><svg viewBox=\"0 0 24 24\"><rect x=\"3.5\" y=\"8.5\" width=\"17\" height=\"4\" rx=\"1\"/><path d=\"M5 12.5v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7M12 8.5v12M12 8.5C10.5 5 7 4.5 7 6.6 7 8.2 9.5 8.5 12 8.5zM12 8.5c1.5-3.5 5-4 5-1.9 0 1.6-2.5 1.9-5 1.9z\"/></svg><div><b>Un pequeño regalo para daros las gracias</b>Cada mes sorteamos 2 sesiones entre quienes nos ayudáis con vuestra opinión: una al azar y otra para la más original.</div></div>';
  [].forEach.call(C.querySelectorAll('.chip'),function(c){c.onclick=function(){c.classList.add('on');irGoogle(c.textContent+'.');};});
  document.getElementById('gb').onclick=function(ev){ev.preventDefault();irGoogle('');};}
 function mejorar(v){var mal=v!=='Muy buena';C.innerHTML=grande('n',mal?'M31 50 Q40 46 49 50':'M29 46 Q40 55 51 46')
@@ -3666,6 +3667,31 @@ module.exports = async function handler(req, res) {
           c2.forEach(r => { const v = nmV(r.fields['FIN VALORACIÓN']); if (v) suma(r.fields['FIN FISIO'], v, r.fields['FIN IR A RESEÑA']); });
           c3.forEach(r => { const x = de(r.fields['MEJORA FISIO']); x.mej++; if (r.fields['MEJORA GOOGLE']) x.mejG++; });
           return res.status(200).json({ ok: true, mes, fisios: Object.values(T).filter(x => x.fisio !== '—' || x.enc || x.mej).sort((a, b) => (b.enc + b.mej) - (a.enc + a.mej)) });
+        }
+        if (action === 'seg-agenda-sorteo') { // Sorteo mensual de 2 sesiones entre quienes han ido a dejar su reseña en Google desde nuestros enlaces
+          const mes = /^\d{4}-\d{2}$/.test(q.mes || '') ? q.mes : hoyF.slice(0, 7), enMes = c => `DATETIME_FORMAT(SET_TIMEZONE({${c}},'Europe/Madrid'),'YYYY-MM')='${mes}'`, clave = 'sorteo-' + mes;
+          const [c1, c2] = await Promise.all([
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA IR A RESEÑA},${enMes('ENCUESTA IR A RESEÑA')})`)}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('ENCUESTA IR A RESEÑA')}`).catch(() => []),
+            todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`OR(AND({FIN IR A RESEÑA},${enMes('FIN IR A RESEÑA')}),AND({MEJORA GOOGLE},${enMes('MEJORA GOOGLE')}))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}&fields[]=${encodeURIComponent('MEJORA GOOGLE')}`).catch(() => [])]);
+          const P = {}, pon = (id, f, cuando) => { if (!okId(id)) return; const x = P[id] = P[id] || { pacienteId: id, nombre: '', pila: '', tel: '', fecha: '' }; if (f) Object.assign(x, { nombre: String(f['FULL NAME'] || '').trim(), pila: String(f['NOMBRE'] || '').trim(), tel: f['WHATSAPP'] || f['TELF'] || '' }); const d = String(cuando || '').slice(0, 10); if (d && (!x.fecha || d < x.fecha)) x.fecha = d; };
+          c2.forEach(r => pon(r.id, r.fields, [r.fields['FIN IR A RESEÑA'], r.fields['MEJORA GOOGLE']].filter(Boolean).sort()[0]));
+          c1.forEach(r => pon((r.fields['RELACIÓN - CITA'] || [])[0], null, r.fields['ENCUESTA IR A RESEÑA']));
+          const falta = Object.values(P).filter(x => !x.nombre).map(x => x.pacienteId);
+          for (let i = 0; i < falta.length; i += 40) { const l = falta.slice(i, i + 40); const d = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`OR(${l.map(id => `RECORD_ID()='${id}'`).join(',')})`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`).catch(() => []); d.forEach(r => pon(r.id, r.fields)); }
+          const lista = Object.values(P).filter(x => x.nombre).sort((a, b) => a.fecha.localeCompare(b.fecha));
+          let gan = await ajuste(clave, {}) || {};
+          if (q.op === 'azar' || q.op === 'elegir' || q.op === 'quitar') {
+            const tipo = q.tipo === 'creativa' ? 'creativa' : 'azar', quien = String(q.quien || '').slice(0, 40);
+            if (q.op === 'quitar') delete gan[tipo];
+            else {
+              let w = null;
+              if (q.op === 'azar') { const otro = gan.creativa && gan.creativa.pacienteId, pool = lista.filter(x => x.pacienteId !== otro && x.pacienteId !== (gan.azar && gan.azar.pacienteId)); const base = pool.length ? pool : lista.filter(x => x.pacienteId !== otro); if (!base.length) return res.status(400).json({ ok: false, error: 'Todavía no hay nadie en el sorteo este mes' }); w = base[require('crypto').randomInt(base.length)]; }
+              else { w = lista.find(x => x.pacienteId === q.pacienteId); if (!w) return res.status(400).json({ ok: false, error: 'Ese paciente no está en el sorteo de este mes' }); }
+              gan[tipo] = { pacienteId: w.pacienteId, nombre: w.nombre, pila: w.pila, tel: w.tel, cuando: new Date().toISOString(), quien };
+            }
+            await guardarAjuste(clave, gan, quien);
+          }
+          return res.status(200).json({ ok: true, mes, participantes: lista, ganadores: gan });
         }
         if (action === 'seg-agenda-enc-nuevas') {
           // Respuestas a la encuesta de primera visita de los últimos 14 días (para los avisos dentro del panel)
