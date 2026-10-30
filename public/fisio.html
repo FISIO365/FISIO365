@@ -1694,6 +1694,8 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 @media(min-width:769px){.tour-pill{bottom:24px}}
 .tour-ver{display:inline-flex;align-items:center;gap:7px;margin-top:12px;border:1px solid #ecd2c4;background:#fff;color:#a3441f;border-radius:99px;padding:7px 14px;font:600 12.5px Poppins,sans-serif;cursor:pointer}
 .tour-ver:hover{background:#fdf1ea}.tour-ver svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nov-hf{display:flex;justify-content:space-between;align-items:center}.nov-ok{border:0;border-radius:99px;background:#fdf1ea;color:#a3441f;font:600 12px Poppins,sans-serif;padding:6px 12px;cursor:pointer}
+.nov-cerr{padding:0 16px}.nov-tog{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:none;padding:13px 0;font:700 13px Poppins,sans-serif;color:var(--black);cursor:pointer}.nov-tog i{font-style:normal;font-weight:600;font-size:12px;color:#a3441f}.nov-cerr .nov-it:last-child{padding-bottom:12px}
 .nov-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin:10px 0 4px}
 .nov-h{font-size:13px;font-weight:700;color:var(--black);margin-bottom:8px}
 .nov-it{display:flex;gap:12px;padding:8px 0;border-top:1px solid #f3ece6;align-items:baseline}.nov-it:first-of-type{border-top:0}
@@ -11416,13 +11418,22 @@ const NOVEDADES=[
  {f:'2026-10-30',t:'Valoraciones: con la ✕ quitas de la lista una valoración que no toca.',ver:{sec:'val',pasos:[{el:'.val-qx',txt:'Con esta ✕ quitas una valoración de la lista.'}]}},
  {f:'2026-10-29',t:'Sorteo del mes: 2 sesiones gratis entre quienes dejan reseña en Google (una al azar y otra a la más original). Está en Valoraciones.',ver:{sec:'val',pasos:[{el:'.val-so',txt:'Aquí está el sorteo del mes.'}]}}
 ];
-function novNuevas(){let v='';try{v=localStorage.getItem('f365_nov_visto')||'';}catch(e){}return NOVEDADES.filter(n=>n.f>v&&(!n.dir||esDireccionSeguro())).length;}
+// Punto: se quita al entrar en School (f365_nov_punto). Tarjeta: las no vistas, hasta tocar «Visto» (f365_nov_visto).
+const novLS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v);}catch(e){return '';}};
 function esDireccionSeguro(){try{return typeof esDireccion==='function'&&esDireccion();}catch(e){return false;}}
-function novMarcarVistas(){try{localStorage.setItem('f365_nov_visto',NOVEDADES[0].f);}catch(e){}novPunto();}
+const novMias=()=>NOVEDADES.filter(n=>!n.dir||esDireccionSeguro());
+function novNuevas(){const v=novLS('f365_nov_punto');return novMias().filter(n=>n.f>v).length;}
+function novMarcarVistas(){novLS('f365_nov_punto',NOVEDADES[0].f);novPunto();}
 function novPunto(){const n=novNuevas();['sb-school','pmSchool','btnPerfil'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('nov-dot',n>0);});}
-function novHtml(){const L=NOVEDADES.filter(n=>!n.dir||esDireccionSeguro()).slice(0,6);if(!L.length)return '';let v='';try{v=localStorage.getItem('f365_nov_visto')||'';}catch(e){}
+function novPinta(box){const v=novLS('f365_nov_visto'),M=novMias(),nuevas=M.filter(n=>n.f>v),abierta=box.dataset.abierta==='1';
  const fd=f=>{const d=new Date(f+'T12:00:00');return d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];};
- return `<div class="nov-card"><div class="nov-h">Novedades</div>${L.map(n=>`<div class="nov-it${n.f>v?' nueva':''}"><span>${fd(n.f)}</span><p>${escH(n.t)}${n.ver?`<button type="button" class="nov-ver" data-i="${NOVEDADES.indexOf(n)}"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Enséñamelo</button>`:''}</p></div>`).join('')}</div>`;}
+ const it=n=>`<div class="nov-it${n.f>v?' nueva':''}"><span>${fd(n.f)}</span><p>${escH(n.t)}${n.ver?`<button type="button" class="nov-ver" data-i="${NOVEDADES.indexOf(n)}"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Enséñamelo</button>`:''}</p></div>`;
+ if(!M.length){box.innerHTML='';return;}
+ if(nuevas.length) box.innerHTML=`<div class="nov-card"><div class="nov-h nov-hf"><span>Novedades</span><button type="button" class="nov-ok">✓ Visto</button></div>${nuevas.map(it).join('')}</div>`;
+ else box.innerHTML=`<div class="nov-card nov-cerr"><button type="button" class="nov-tog"><span>Novedades anteriores</span><i>${abierta?'Ocultar':'Ver'}</i></button>${abierta?M.slice(0,10).map(it).join(''):''}</div>`;
+ box.querySelectorAll('.nov-ver').forEach(b=>b.onclick=()=>{const n=NOVEDADES[+b.dataset.i];if(n&&n.ver)ensename(n.ver,null);});
+ const ok=box.querySelector('.nov-ok');if(ok)ok.onclick=()=>{novLS('f365_nov_visto',NOVEDADES[0].f);box.dataset.abierta='';novPinta(box);};
+ const tg=box.querySelector('.nov-tog');if(tg)tg.onclick=()=>{box.dataset.abierta=abierta?'':'1';novPinta(box);};}
 let tourVolver=null;
 function tourScroll(v){const f=()=>{try{window.scrollTo(0,v.y||0);const w=$('mainWrap');if(w)w.scrollTop=v.w||0;}catch(e){}};requestAnimationFrame(f);setTimeout(f,120);}
 function tourCerrar(todo){document.querySelectorAll('.tour-spot,.tour-bub').forEach(e=>e.remove());window.removeEventListener('scroll',tourPos,true);window.removeEventListener('resize',tourPos);if(todo){const p=$('tourPill');if(p)p.remove();tourVolver=null;}}
@@ -11494,7 +11505,7 @@ function renderWiki(wrap, rutaForzada){
  hdr.innerHTML=`<h2 style="font-size:22px;font-weight:900;letter-spacing:-.4px;margin-bottom:4px">School</h2>
  <p style="font-size:13px;color:var(--muted)">Formación del equipo ${escH((CLINICA&&CLINICA.marca)||'FISIO365')}</p>`;
  outer.appendChild(hdr);
- { const nv=novHtml(); if(nv){ const d=ce('div',''); d.style.cssText='width:100%;max-width:560px'; d.innerHTML=nv; d.querySelectorAll('.nov-ver').forEach(b=>b.onclick=()=>{const n=NOVEDADES[+b.dataset.i];if(n&&n.ver)ensename(n.ver,null);}); outer.appendChild(d); } novMarcarVistas(); }
+ { const d=ce('div',''); d.style.cssText='width:100%;max-width:560px'; novPinta(d); outer.appendChild(d); novMarcarVistas(); }
  { const cq=ce('div',''); cq.style.cssText='width:100%;max-width:560px'; outer.appendChild(cq); cursoEquipoHtml(cq); }
 
  // ── BARRA DE PROGRESO ─────────────────────────────────────────────────
