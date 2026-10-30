@@ -3698,6 +3698,13 @@ module.exports = async function handler(req, res) {
           }
           return res.status(200).json({ ok: true, mes, participantes: lista, ganadores: gan });
         }
+        if (action === 'seg-agenda-val-quitar') { // quitar una fila de Valoraciones («Está mejor» marcado por error, o una encuesta que no hace falta ver)
+          const id = String(q.id || ''), pid = String(q.pacienteId || '');
+          if (q.tipo === 'mejora') { if (!okId(pid)) return res.status(400).json({ ok: false }); const d = await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MEJORA FECHA': null, 'MEJORA FISIO': '', 'MEJORA ABIERTA': null, 'MEJORA GOOGLE': null } }) }); return res.status(200).json({ ok: !d.error }); }
+          if (!okId(id)) return res.status(400).json({ ok: false });
+          const oc = (await ajuste('val-ocultas', [])) || []; if (!oc.includes(id)) oc.push(id);
+          await guardarAjuste('val-ocultas', oc.slice(-400), String(q.quien || '').slice(0, 40)); return res.status(200).json({ ok: true });
+        }
         if (action === 'seg-agenda-enc-nuevas') {
           // Respuestas a la encuesta de primera visita de los últimos 14 días (para los avisos dentro del panel)
           const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA RESPONDIDA},IS_AFTER({ENCUESTA RESPONDIDA},DATEADD(NOW(),-14,'days')))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('ENCUESTA VALORACIÓN')}&fields[]=${encodeURIComponent('ENCUESTA COMENTARIO')}&fields[]=${encodeURIComponent('ENCUESTA IR A RESEÑA')}&fields[]=${encodeURIComponent('ENCUESTA RESPONDIDA')}`);
@@ -3712,7 +3719,8 @@ module.exports = async function handler(req, res) {
           const mej = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({MEJORA FECHA},IS_AFTER({MEJORA FECHA},DATEADD(NOW(),-14,'days')))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=${encodeURIComponent('MEJORA FECHA')}&fields[]=${encodeURIComponent('MEJORA FISIO')}&fields[]=${encodeURIComponent('MEJORA ABIERTA')}&fields[]=${encodeURIComponent('MEJORA GOOGLE')}`).catch(() => []);
           mej.forEach(p => { const F = p.fields; lista.push({ id: 'm' + p.id, pacienteId: p.id, tipo: 'mejora', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', fecha: String(F['MEJORA FECHA'] || '').slice(0, 10), fisio: F['MEJORA FISIO'] || '', nombre: F['FULL NAME'] || '', valoracion: 'Está mejor', comentario: '', abierta: F['MEJORA ABIERTA'] || '', resena: F['MEJORA GOOGLE'] || '', respondida: F['MEJORA GOOGLE'] || F['MEJORA ABIERTA'] || F['MEJORA FECHA'] || '' }); });
           lista.sort((a, b) => String(b.respondida).localeCompare(String(a.respondida)));
-          return res.status(200).json({ ok: true, lista: lista.filter(x => x.valoracion) });
+          const ocV = new Set((await ajuste('val-ocultas', [])) || []);
+          return res.status(200).json({ ok: true, lista: lista.filter(x => x.valoracion && !ocV.has(x.id)) });
         }
         if (action === 'seg-agenda-encuestas') {
           // Encuesta de satisfacción: pacientes cuya PRIMERA sesión realizada fue ese día
