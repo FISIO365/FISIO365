@@ -1633,9 +1633,12 @@ function excelente(){var f=D.fisio||'El equipo',F=D.fin?[(D.fisio?'Gracias a '+D
 function mejorar(v){var mal=v!=='Muy buena';C.innerHTML=grande('n',mal?'M31 50 Q40 46 49 50':'M29 46 Q40 55 51 46')
  +'<h1 class="fi" style="animation-delay:.8s">'+(mal?'Gracias por contárnoslo'+nom:'¡Gracias'+nom+'!')+'</h1><p class="sub fi" style="animation-delay:.95s">'+(mal?(D.fin?'Queremos saber qué podemos hacer mejor. Cuéntanos: lo lee dirección hoy mismo.':'Queremos que tu próxima visita sea excelente. Cuéntanos qué pasó: lo lee dirección hoy mismo.'):(D.fin?'¿Qué podríamos mejorar para que tu experiencia fuera excelente?':'¿Qué podemos mejorar para que tu próxima visita sea excelente?'))+'</p>'
  +'<textarea class="fi" id="tx" style="animation-delay:1.1s" placeholder="'+(mal?'Lo que nos quieras contar…':'Cualquier detalle nos ayuda…')+'"></textarea><p class="err" id="er"></p><button class="bt2 fi" id="en" style="animation-delay:1.2s">Enviar</button>';
- var tx=document.getElementById('tx'),er=document.getElementById('er');tx.oninput=function(){er.textContent='';};
- document.getElementById('en').onclick=function(){var t=tx.value.trim();if(!t){er.textContent='Escribe aunque sea una frase, por favor.';tx.focus();return;}var b=this;b.disabled=true;b.textContent='Enviando…';
-  enviar({v:v,c:t}).then(function(r){if(!r||!r.ok)throw 0;gracias(mal);}).catch(function(){b.disabled=false;b.textContent='Enviar';er.textContent='No se ha podido enviar. Inténtalo otra vez.';});};}
+ var tx=document.getElementById('tx'),er=document.getElementById('er'),ido=false;tx.oninput=function(){er.textContent='';};
+ // Si escribe y cierra sin pulsar «Enviar», se manda igualmente lo que haya escrito
+ var alSalir=function(){var t=tx.value.trim();if(t&&!ido){ido=true;enviar({v:v,c:t}).catch(function(){});}};
+ document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')alSalir();});window.addEventListener('pagehide',alSalir);
+ document.getElementById('en').onclick=function(){var t=tx.value.trim();if(!t){er.textContent='Escribe aunque sea una frase, por favor.';tx.focus();return;}var b=this;b.disabled=true;b.textContent='Enviando…';ido=true;
+  enviar({v:v,c:t}).then(function(r){if(!r||!r.ok)throw 0;gracias(mal);}).catch(function(){ido=false;b.disabled=false;b.textContent='Enviar';er.textContent='No se ha podido enviar. Inténtalo otra vez.';});};}
 function gracias(mal){C.innerHTML=grande('feliz','M28 46 Q40 57 52 46')+'<h1 class="fi" style="animation-delay:.8s">¡Gracias'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(mal?'Lo revisamos hoy mismo y te escribimos si hace falta. Gracias por ayudarnos a mejorar.':(D.fin?'Nos ayuda muchísimo. Aquí nos tienes para lo que necesites.':'Nos ayuda muchísimo. ¡Nos vemos en tu próxima sesión!'))+'</p>';}
 if(D.v==='Excelente')excelente();else if(D.v&&D.yaCom)gracias(D.v!=='Muy buena');else if(D.v)mejorar(D.v);else paso1();})();<\/script>`}</body></html>`;
 }
