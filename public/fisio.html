@@ -1313,7 +1313,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .ag-ausb{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.ag-aus{background:#fff4e8;border:1px solid #f6d3b3;color:#8a4a1f;border-radius:999px;padding:5px 12px;font-size:12.5px}.ag-aus b{font-weight:600}
 .ag-sinf{background:#fff6e8;border-radius:14px;padding:10px 12px;margin-bottom:10px}.ag-sinf>b{display:block;font-size:13.5px;color:#b45309}.ag-sinf>small{display:block;font-size:12px;color:#7d6a60;margin-bottom:8px}
 
-.ag-vis{display:flex;background:#f3efea;border-radius:99px;padding:3px;margin-bottom:10px}.ag-vis button{flex:1;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;border-radius:99px;padding:8px 0;color:#7d6a60;cursor:pointer}.ag-vis button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.ag-top{display:flex;gap:8px;align-items:stretch;margin-bottom:10px}.ag-top .ag-vis{flex:1;margin-bottom:0}.ag-add{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none;font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:99px;padding:0 16px;background:#c2552e;color:#fff;cursor:pointer}.ag-add svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}.ag-otrah{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;color:#7d6a60}.ag-otrah .ag-in{width:96px;text-align:center}.ag-vis{display:flex;background:#f3efea;border-radius:99px;padding:3px;margin-bottom:10px}.ag-vis button{flex:1;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;border-radius:99px;padding:8px 0;color:#7d6a60;cursor:pointer}.ag-vis button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .ag-lf{display:none;gap:8px;flex-wrap:wrap;align-items:center}.ag.es-lista .ag-lf{display:flex}.ag.es-lista .ag-bar,.ag.es-lista .ag-hoy{display:none!important}
 .ag-w{min-width:0}.ag-rg{display:flex;align-items:center;gap:6px;font-size:13px;color:#7d6a60}.ag-rg .ag-in{width:auto;padding:7px 9px;font-size:14px}
 .ag-pf{position:relative;flex:1;min-width:160px}
@@ -6363,7 +6363,7 @@ function renderAgenda(wrap){
  try{AG.vista=AG.vista||localStorage.getItem('f365_ag_vista')||'dia';}catch(e){AG.vista=AG.vista||'dia';}
  AG.per=AG.per||'prox7';AG.fil=AG.fil||'';
  const card=ce('div','ag');
- card.innerHTML=`<div class="ag-vis">${[['dia','Día'],['semana','Semana'],['lista','Lista']].map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
+ card.innerHTML=`<div class="ag-top"><div class="ag-vis">${[['dia','Día'],['semana','Semana'],['lista','Lista']].map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div><button type="button" class="ag-add" aria-label="Añadir cita"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Cita</button></div>
   <div class="ag-pf ag-busca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in ag-pb" placeholder="Buscar paciente…" autocomplete="off"><div class="ag-pr"></div></div>
   <div class="ag-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Anterior">‹</button>
   <label class="ag-fe"><b class="ag-ft"></b><input type="date" class="ag-fi"></label>
@@ -6379,6 +6379,7 @@ function renderAgenda(wrap){
  card.querySelectorAll('.ag-vis button').forEach(b=>b.onclick=()=>{AG.vista=b.dataset.v;try{localStorage.setItem('f365_ag_vista',AG.vista);}catch(e){}cargar();});
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n*(AG.vista==='semana'?7:1));cargar();});
  $c('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
+ $c('.ag-add').onclick=()=>agAnadirCita(AG.vista==='lista'||AG.fecha<agHoyIso()?agHoyIso():AG.fecha,AG.fisio,cargar);
  $c('.ag-recb:not(.ag-pdfb):not(.ag-encb)').onclick=()=>agRecordatorios(()=>{cargar();agPagosBadge(true);});agPagosBadge();
  $c('.ag-pdfb').onclick=()=>agPdfHuecos();
  fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};fi.style.display='none';
@@ -6707,6 +6708,32 @@ function agNuevaCitaPac(p,onDone){
    if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada: ${segFecha(fecha)} a las ${hora}`+(pacInfo?' · '+pacInfo:''),true);m.remove();if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:p.id,paciente:p.nombre},r.debePagar);try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
+}
+// «＋ Cita»: dar cita a cualquier hora (aunque no haya hueco abierto), desde cualquier vista
+function agAnadirCita(fecha0,fisio0,onDone){
+ const eq=agEquipo(),yo=String((fisioActual&&fisioActual.nombre)||'').split(' ')[0].toLowerCase();
+ let fecha=fecha0||agHoyIso(),hora='',fisio=eq.includes(fisio0)?fisio0:(eq.find(f=>String(f).toLowerCase()===yo)||eq[0]||'');
+ const m=hzModal(`<div class="hz-top"><div><small>Agenda</small><b>Añadir cita</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Día</div><div class="ag-fd"></div>
+  <div class="hz-lab">Fisio</div><div class="ag-ffs">${eq.map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
+  <div class="hz-lab">Hora <span>(verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div>
+  <div class="ag-otrah"><span>Otra hora</span><input type="text" class="ag-in ag-oh" inputmode="numeric" placeholder="Ej.: 09:30" maxlength="5"></div>
+  <div class="hz-bts"><button type="button" class="hz-ok">Siguiente</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const hs=m.querySelector('.ag-hs'),oh=m.querySelector('.ag-oh');
+ const ch=()=>{hora='';oh.value='';agHorasChips(hs,fecha,fisio,'',h=>{hora=h;oh.value='';});};
+ const pf=()=>m.querySelectorAll('.ag-ffs button').forEach(b=>b.classList.toggle('on',b.dataset.f===fisio));
+ m.querySelectorAll('.ag-ffs button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;pf();ch();});pf();ch();
+ calFijo(m.querySelector('.ag-fd'),fecha,f=>{fecha=f;ch();});
+ oh.oninput=()=>{let v=oh.value.replace(/[^\d:]/g,'');if(/^\d{3,4}$/.test(v))v=v.padStart(4,'0').replace(/^(\d\d)(\d\d)$/,'$1:$2');oh.value=v;
+  const ok=/^([01]\d|2[0-3]):[0-5]\d$/.test(v);if(ok){hora=v;hs.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.h===v));}else if(!hs.querySelector('button.on'))hora='';};
+ m.querySelector('.hz-ok').onclick=async e=>{if(!fisio){toast('Elige el fisio',false);return;}if(!hora){toast('Elige la hora',false);return;}
+  const b=e.target;b.disabled=true;b.textContent='Mirando la hora…';let hueco=null;
+  try{const d=await agCargarDia(fecha);const rs=((d&&d.citas)||[]).filter(c=>c.fisio===fisio&&c.hora===hora);
+   const oc=rs.find(c=>c.pacienteId&&!agEsFuera(c.estado));
+   if(oc&&!confirm(`A esa hora ${agNom(fisio)} ya tiene a ${capTit(oc.paciente||'otro paciente')}. ¿Añadir otra cita igualmente?`)){b.disabled=false;b.textContent='Siguiente';return;}
+   const li=!oc&&rs.find(c=>agEsLibre(c.estado));if(li)hueco=Object.assign({fecha},li);}catch(_){}
+  m.remove();agDarCita({fecha,hora,fisio,hueco},onDone);};
 }
 function agHorasChips(box,fecha,fisio,horaSel,onPick){
  box.innerHTML='<small class="fp-mu">Cargando horas…</small>';
