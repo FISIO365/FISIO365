@@ -11236,8 +11236,8 @@ const WIKI_RUTAS = [
  titulo: 'Cómo funciona la app',
  desc: 'El panel del equipo y la app del paciente, siempre al día',
  etiqueta: 'Todo el equipo',
- info: `<strong>¿Qué aprenderás aquí?</strong><br><br>Cómo moverte por el panel (agenda, citas, mensajes, fichas, cobros, pendientes, check-list, valoraciones…) y qué ve y puede hacer el paciente en su app.<br><br><strong>Siempre al día</strong><br><br>Cada vez que cambia la app, se actualiza este curso. En muchas lecciones tienes el botón <b>Enséñamelo</b>: te lleva a la pantalla de verdad y te señala dónde tocar.<br><br><strong>¿Cuánto dura?</strong><br><br>12 módulos cortos con un test al final de cada uno.`,
- pasos: 12,
+ info: `<strong>¿Qué aprenderás aquí?</strong><br><br>Cómo moverte por el panel (agenda, citas, mensajes, fichas, cobros, pendientes, check-list, valoraciones…) y qué ve y puede hacer el paciente en su app.<br><br><strong>Siempre al día</strong><br><br>Cada vez que cambia la app, se actualiza este curso. En muchas lecciones tienes el botón <b>Enséñamelo</b>: te lleva a la pantalla de verdad y te señala dónde tocar.<br><br><strong>¿Cuánto dura?</strong><br><br>Módulos cortos con preguntas de situaciones reales al final de cada uno.`,
+ get pasos(){ return esDireccionSeguro()?12:11; },
  emoji: '',
  imgs: [],
  tits: [],
@@ -11257,7 +11257,7 @@ const WIKI_RUTAS = [
  tipo: 'formacion'
  },
  {
- id: 'ultima',
+ id: 'ultima', oculto: true, // retirado: hay que actualizarlo (irá en el curso de protocolos)
  categoria: 'centro',
  titulo: 'Última sesión pagada',
  desc: 'Protocolo de cierre según la situación de cada paciente',
@@ -11283,7 +11283,7 @@ const WIKI_RUTAS = [
  tipo: 'formacion'
  },
  {
- id: 'manual',
+ id: 'manual', oculto: true, // retirado: hay que actualizarlo (irá en el curso de protocolos)
  categoria: 'centro',
  titulo: 'Manual interno de la clínica',
  desc: 'Funcionamiento, atención al paciente y mantenimiento',
@@ -13516,7 +13516,7 @@ function renderFormacion(wrap, ruta){
  {q:'Una paciente pregunta dónde ver su factura. ¿Qué le dices?',opts:['En su app, en Mis documentos','Que no se puede','Que la pida en papel'],ok:0,fb:['¡Eso es!','Sí se puede.','No hace falta.']}
  ]},
 
- {t:'Dirección',sub:'Para que sepas qué hay (lo usa dirección)',
+ {t:'Dirección',sub:'Solo lo ve dirección',dir:1,
  cards:[
  {ti:'Equipo, horarios y accesos',body:`En <b>Dirección</b> se da de alta al equipo, se ponen los horarios y vacaciones y se decide qué ve cada uno (<b>Accesos</b>). Quien está de baja no entra ni sale en la agenda, pero no se pierde nada.`,ver:{sec:'admin',el:'.adm-tabs',txt:'Estas son las pestañas de Dirección.'}},
  {ti:'Listas y ajustes',body:`Ahí también están las listas (conceptos y precios, formas de pago, tipos de sesión…), el check-list de final de día, los datos de la clínica, los precios y packs de la app, la política de cancelación, los <b>textos legales</b> y los <b>mensajes a pacientes</b>.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="listas"]',txt:'Listas: conceptos y precios, formas de pago, tipos de sesión…'},{el:'.adm-tabs [data-k="chk"]',txt:'El check-list de final de día.'},{el:'.adm-tabs [data-k="ajustes"]',txt:'Ajustes: datos de la clínica, app, cancelación, textos legales y mensajes a pacientes.'}]}},
@@ -13528,7 +13528,7 @@ function renderFormacion(wrap, ruta){
  ]}
  ];
 
- const MODS = ruta.id === 'airtable' ? MODS_AIRTABLE : ruta.id === 'manual' ? MODS_MANUAL : ruta.id === 'ultima' ? MODS_ULTIMA : ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : ruta.id === 'appEquipo' ? MODS_APP_PACIENTE : ruta.id === 'sueloPelvicoProtocolo' ? MODS_SUELO_PELVICO_PROTOCOLO : MODS_BOMBA;
+ const MODS = ruta.id === 'airtable' ? MODS_AIRTABLE : ruta.id === 'manual' ? MODS_MANUAL : ruta.id === 'ultima' ? MODS_ULTIMA : ruta.id === 'primera' ? MODS_PRIMERA_VISITA : ruta.id === 'ondas' ? MODS_ONDAS : ruta.id === 'ondas-basico' ? MODS_ONDAS_BASICO : ruta.id === 'medkey' ? MODS_MEDKEY : ruta.id === 'bomba-experto' ? MODS_BOMBA_EXPERTO : ruta.id === 'medkey-basico' ? MODS_MEDKEY_BASICO : ruta.id === 'appEquipo' ? MODS_APP_PACIENTE.filter(m=>!m.dir||esDireccionSeguro()) : ruta.id === 'sueloPelvicoProtocolo' ? MODS_SUELO_PELVICO_PROTOCOLO : MODS_BOMBA;
 
  const lsKey = 'fisio365_school_' + ruta.id + '_' + (fisioActual?.id||'x');
 
