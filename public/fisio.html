@@ -11486,7 +11486,7 @@ function cursoAviso(sec){let el=$('cursoAv');const hoy=new Date().toISOString().
    const x=el.querySelector('.curso-av-x');if(x)x.onclick=()=>{try{localStorage.setItem('f365_curso_av',hoy);}catch(e){}el.remove();};
    return;}
   if(el)el.remove();return;}
- const ver=cursoPend()&&!oculto&&!['school','anam','prog'].includes(sec);
+ const ver=false; // el aviso de «cursos pendientes» ya no sale: lo sustituye la tarea diaria en Comunicaciones
  if(!ver){if(el)el.remove();return;}
  const r=WIKI_RUTAS.find(x=>x.id===CURSO_OBL),n=cursoMod(),tot=(r&&r.pasos)||12;
  if(!el){el=ce('div','curso-av');el.id='cursoAv';const mw=$('mainWrap');mw.parentNode.insertBefore(el,mw);}
