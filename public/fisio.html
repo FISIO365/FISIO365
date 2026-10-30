@@ -9129,7 +9129,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   const rb=cont.querySelector('.fp-resb');if(rb)rb.onclick=async()=>{rb.disabled=true;
    try{const r=await agPost('seg-agenda-res-enlace',{pacienteId:id});if(!r.ok)throw new Error(r.error||'');
     const yo=miNombreCorto(),n=r.pila||'';
-    abrirWA(r.tel,`¡Hola${n?' '+n:''}! Soy ${yo}, de FISIO365 😊\n\nMe ha encantado ver lo bien que vas. Si te apetece contarlo, una reseña tuya en Google nos ayuda muchísimo a que otras personas nos encuentren (es un minuto):\n${r.link}\n\n¡Gracias por confiar en nosotros!`);
+    abrirWA(r.tel,`¡Hola${n?' '+n:''}! Me ha encantado ver lo bien que vas 😊\n\nSi te apetece contarlo, una reseña tuya en Google nos ayuda muchísimo a que otras personas nos encuentren (es un minuto):\n${r.link}\n\n¡Gracias por confiar en nosotros!`);
     toast('Reseña pedida ✓',true);}catch(e){toast(e.message||'No se ha podido preparar el enlace',false);}rb.disabled=false;};
   const b=cont.querySelector('.fp-add-ev');if(!b)return;
   b.onclick=()=>{const slot=cont.querySelector('.fp-add-slot');const u=ultSesion(d.citas,d.hoy);
