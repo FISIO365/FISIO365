@@ -4,7 +4,7 @@
 export const config = { runtime: 'edge' };
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const BASE_ID = 'appsrGnHpFt8sVD5A';
+const { BASE_ID } = require('./_base');
 const CITAS = 'tblTPlcuiSjQngkaD';
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const LIBRES = ['CITA LIBRE']; // «LIBRE - SIN BOMBA» no se ofrece en la app (solo la da la clínica)

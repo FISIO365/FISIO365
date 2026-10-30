@@ -92,6 +92,9 @@ function pares(C) {
   ];
   const P = L.filter(([, k]) => C[k] && C[k] !== D[k]).map(([a, k, f]) => [a, f ? f(C[k]) : C[k]]).filter(([a, b]) => a !== b);
   if (C.logoV) P.unshift(['/informe/logo.png', '/api/schedule?action=clinica-logo&v=' + C.logoV]);
+  // Otra clínica en su propio despliegue: los enlaces apuntan a su app (APP_URL), no a la de FISIO365
+  const app = String(process.env.APP_URL || '').replace(/\/+$/, '');
+  if (/^https:\/\/[a-z0-9.-]+$/i.test(app) && app !== 'https://app.fisioterapia365.com') P.unshift(['https://app.fisioterapia365.com', app]);
   return P.concat(paresColor(C.color));
 }
 

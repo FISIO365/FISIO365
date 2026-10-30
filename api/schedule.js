@@ -1,5 +1,5 @@
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const BASE_ID = 'appsrGnHpFt8sVD5A';
+const { BASE_ID } = require('./_base');
 const PLAN_TABLE = 'tblvgE0a4gsrj4Vhp';
 const FISIOS_TABLE = 'tbl2mLUrnaKCFTs6g';
 const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';

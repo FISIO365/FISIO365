@@ -1,7 +1,7 @@
 export const config = { runtime: 'edge' };
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const BASE_ID = 'appsrGnHpFt8sVD5A';
+const { BASE_ID } = require('./_base');
 const TABLE_PACIENTES = 'tbldBVgClS4HY2mOJ';
 const TABLE_MENSAJES = 'tblIsWo3g6x1QzJyl'; // MENSAJES (por id: la tabla se puede renombrar)
 

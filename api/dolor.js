@@ -1,6 +1,6 @@
 "use strict";
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const BASE_ID = 'appsrGnHpFt8sVD5A';
+const { BASE_ID } = require('./_base');
 const TABLE_ID = 'tblxJmnb7LHML2ZZh';
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

@@ -62,12 +62,13 @@ module.exports = async function handler(req, res) {
         'api-key': BREVO_API_KEY,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
+      // Con los datos de la clínica (Administración › Ajustes); para FISIO365 sale igual
+      body: await (async () => { const M = require('./_marca'); let C = M.datos(null); try { C = M.datos(((await require('./schedule').ajuste('config', null)) || {}).clinica); } catch (e) {} return M.marcar(JSON.stringify({
         sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' },
         to: [{ email, name: nombre }],
         subject: 'Tu área de seguimiento y ejercicios',
         htmlContent
-      })
+      }), C, true); })()
     });
 
     if (response.ok) {

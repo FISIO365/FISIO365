@@ -2,7 +2,7 @@ export const config = { runtime: 'nodejs' };
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
-const BASE_ID = 'appsrGnHpFt8sVD5A';
+const { BASE_ID } = require('./_base');
 const TAREAS_TABLE = 'tblIXYE5ToRNY7MN4';
 
 // Field IDs

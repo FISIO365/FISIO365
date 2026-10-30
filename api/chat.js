@@ -6,7 +6,7 @@ export const config = { runtime: 'edge' };
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
-const BASE_ID = 'appsrGnHpFt8sVD5A';
+const { BASE_ID } = require('./_base');
 const MENSAJES = 'tblIsWo3g6x1QzJyl';
 const CAMPO_ADJUNTOS = 'fldeDjLloaa82SoG7';
 const PACIENTES = 'tbldBVgClS4HY2mOJ';

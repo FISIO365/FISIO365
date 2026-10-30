@@ -3,7 +3,7 @@ export const config = { runtime: 'nodejs', maxDuration: 60 };
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const BASE_ID = 'appsrGnHpFt8sVD5A';
+const { BASE_ID } = require('./_base');
 const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 
 export default async function handler(req, res) {

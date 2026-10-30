@@ -1,7 +1,7 @@
 export const config = { runtime: 'edge' };
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const BASE_ID = 'appsrGnHpFt8sVD5A';
+const { BASE_ID } = require('./_base');
 const CITAS_TABLE = 'tblTPlcuiSjQngkaD';
 const PACIENTES_TABLE = 'tbldBVgClS4HY2mOJ';
 

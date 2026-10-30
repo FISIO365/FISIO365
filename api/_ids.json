@@ -1,0 +1,241 @@
+{
+"t": {
+"tbl8uv04zFAk5L5bA": "CONSENTIMIENTOS",
+"tblTPlcuiSjQngkaD": "CITAS",
+"tbldBVgClS4HY2mOJ": "PACIENTES",
+"tbltoikmBZwHYQcpD": "TIPO DE CITA",
+"tblgsMcknBLDyfWHu": "⚙ APP · CONTACTOS CALL-IN",
+"tblu9YxiktpAh5w87": "⚙ APP · SEGUIMIENTO",
+"tblJw7suXLERn8AFQ": "⚙ APP · FACTURAS",
+"tbl5ksXlpfsSTZk5i": "⚙ APP · LISTA ESPERA PACIENTES",
+"tblAvnUMOvVo4OBne": "⚙ APP · LISTA ESPERA NO PACIENTES",
+"tbldOsLe8iw78Wun7": "⚙ APP · ESTADOS DEL PACIENTE",
+"tbloqn3ts872ueJSE": "⚙ APP · EJERCICIOS",
+"tbla5rZTwMkMpAiaI": "⚙ APP · LLAMADAS",
+"tbl2mLUrnaKCFTs6g": "⚙ APP · FISIO",
+"tblwvWQxXNJPdR0Iv": "⚙ APP · INFORMES",
+"tblIsWo3g6x1QzJyl": "⚙ APP · MENSAJES",
+"tblgexkXJ4S36faPa": "⚙ APP · NOTIFICACIONES",
+"tblvgE0a4gsrj4Vhp": "⚙ APP · PLAN",
+"tblbOukia79RVtTVt": "⚙ APP · PROGRESO",
+"tblIXYE5ToRNY7MN4": "⚙ APP · TAREAS",
+"tblr27u3cvtzfyqI6": "⚙ APP · REFERIDOS",
+"tblO5y1Ikg3LIalic": "⚙ APP · NEGOCIOS DEL BARRIO",
+"tblrLdMdmTXvM84Kt": "⚙ APP · HORAS FISIOS",
+"tblxPpPSvj15NWqNT": "⚙ APP · PENDIENTES EQUIPO",
+"tblE7NWfZmxcou5mV": "⚙ APP · ESTADISTICAS SEMANA",
+"tblBBSyxl2IZMyU7I": "⚙ APP · OTROS CONSENTIMIENTOS",
+"tblmJMoILPnxXzD8w": "⚙ APP · CHECK-LIST DIARIO",
+"tblPXzcT8105MfqvB": "⚙ APP · JUSTIFICANTES",
+"tblSJPZroRyyWphVp": "⚙ APP · INGRESOS MES",
+"tblkezm4bTQ4jJf1X": "⚙ APP · AUSENCIAS",
+"tblMxPEXHLmnaBnYb": "⚙ APP · AJUSTES",
+"tbl0OR8AfBuvWyhTo": "⚙ APP · SIN EVOLUCIÓN",
+"tblvdXDRDmLrThdWZ": "⚙ APP · OTROS GASTOS",
+"tbl2qRD3WsvQVPrwX": "⚙ APP · COMUNICACIONES",
+"tbll3K0ar1cZOcVjZ": "⚙ APP · SUGERENCIAS",
+"tbl6tWCWWzZfODDns": "⚙ APP · COMPRA",
+"tblLIcIro0ko9VG6G": "ESTADISTICAS CACHE",
+"tblTL6et3dRyod8TZ": "EJERCICIOS POR GRABAR",
+"tblF4as0orW1b6KIw": "ANAMNESIS",
+"tblxJmnb7LHML2ZZh": "DOLOR"
+},
+"f": {
+"fld2SaWhieEg0Zosd": [
+"CONSENTIMIENTOS",
+"﻿NOMBRE"
+],
+"fldkDFTcA605QjT7N": [
+"CONSENTIMIENTOS",
+"FIRMA"
+],
+"fldjBUieOOqXd3Bo6": [
+"PACIENTES",
+"HISTORIAL CLÍNICO"
+],
+"fldTMnwMj4c1C2835": [
+"PACIENTES",
+"DOCUS"
+],
+"fldkHQkEdPfWrRdJq": [
+"PACIENTES",
+"CUMPLE"
+],
+"fldDkRqKrUOh2DPH1": [
+"PACIENTES",
+"NOTAS"
+],
+"fld399NbGmV29rfjp": [
+"PACIENTES",
+"CITAS 2"
+],
+"fldULHf1PxwJie889": [
+"PACIENTES",
+"POR QUÉ NO REAGENDA"
+],
+"fldHLMwQ7hVrL4mL3": [
+"PACIENTES",
+"FOTO PERFIL"
+],
+"fldqZyXkxhGRS1qvn": [
+"⚙ APP · FACTURAS",
+"FECHA"
+],
+"fldQ17bGOMaS0XaxJ": [
+"⚙ APP · FACTURAS",
+"FECHA DE COBRO"
+],
+"fldbmNoGhedI6ySSb": [
+"⚙ APP · FACTURAS",
+"PACIENTE"
+],
+"fld3lRaKQbUYcW5qY": [
+"⚙ APP · FACTURAS",
+"CONCEPTO 1"
+],
+"fldWj0dUmJzTn0lgr": [
+"⚙ APP · FACTURAS",
+"Nº SESIONES 1"
+],
+"fldu2QiBD9hM5scRC": [
+"⚙ APP · FACTURAS",
+"PRECIO SESIÓN 1"
+],
+"fldlkX8RO7crsVOye": [
+"⚙ APP · FACTURAS",
+"CONCEPTO 2"
+],
+"fldOW7e0lHx3Tfu4X": [
+"⚙ APP · FACTURAS",
+"Nº SESIONES 2"
+],
+"fldkYc6HBh9E1YjUv": [
+"⚙ APP · FACTURAS",
+"PRECIO SESIÓN 2"
+],
+"fldoi8INIByEPPpMn": [
+"⚙ APP · FACTURAS",
+"NOTAS EN FACTURA"
+],
+"fldafSkOOldJ8gH70": [
+"⚙ APP · FACTURAS",
+"MODO DE PAGO"
+],
+"fldBW06oApJQaNlN9": [
+"⚙ APP · FACTURAS",
+"FACTURAR A · NOMBRE"
+],
+"fld6VO3g0KrFpAi6P": [
+"⚙ APP · FACTURAS",
+"FACTURAR A · DNI/NIF"
+],
+"fldFK7NwsZ5AUY6qp": [
+"⚙ APP · FACTURAS",
+"FACTURAR A · DIRECCIÓN"
+],
+"fldcTFAHH31Lsz53c": [
+"⚙ APP · FACTURAS",
+"Nº FACTURA"
+],
+"fld8jBu2P4sPB21ZC": [
+"⚙ APP · FACTURAS",
+"PDF"
+],
+"fldpruhLn03x1x6zI": [
+"⚙ APP · FACTURAS",
+"PacienteId"
+],
+"fld2nvRuSlR97LhbN": [
+"⚙ APP · FACTURAS",
+"ESTADO"
+],
+"fld4ds1kfoPbbCtVg": [
+"⚙ APP · FACTURAS",
+"HOLDED ID"
+],
+"flda62z2UH2gXmmky": [
+"⚙ APP · EJERCICIOS",
+"Nombre"
+],
+"fld59uaaRP043hTUK": [
+"⚙ APP · EJERCICIOS",
+"Descripcion"
+],
+"fldXYCWY9gPOh657M": [
+"⚙ APP · EJERCICIOS",
+"Imagenes"
+],
+"fldfB2hp9Ndjr0xAP": [
+"⚙ APP · EJERCICIOS",
+"YouTubeURL"
+],
+"fldpL6HNfozN4T9Zw": [
+"⚙ APP · FISIO",
+"Foto"
+],
+"fldSlNzar6AlmEXfP": [
+"⚙ APP · FISIO",
+"DOCUMENTOS"
+],
+"fldDR9XqkJ9oA3WK0": [
+"⚙ APP · INFORMES",
+"PacienteId"
+],
+"fldqoUgXtf81ROqMy": [
+"⚙ APP · INFORMES",
+"PacienteNombre"
+],
+"fld3YeK9QbDKjdSAd": [
+"⚙ APP · INFORMES",
+"FisioNombre"
+],
+"fldHXAL8FC00biu1X": [
+"⚙ APP · INFORMES",
+"Fecha"
+],
+"fldy5HGlff56RYrOa": [
+"⚙ APP · INFORMES",
+"Protocolo"
+],
+"fldL5BxsNuITe2He9": [
+"⚙ APP · INFORMES",
+"Informe"
+],
+"fldeDjLloaa82SoG7": [
+"⚙ APP · MENSAJES",
+"Adjuntos"
+],
+"fld9vav48MeCYpZXA": [
+"⚙ APP · TAREAS",
+"PacienteId"
+],
+"fldMVdTRZUzYsUhZg": [
+"⚙ APP · TAREAS",
+"PacienteNombre"
+],
+"fldZsAjUSEegQk8Xq": [
+"⚙ APP · TAREAS",
+"Fecha"
+],
+"fldOTlWCJgMl074Uo": [
+"⚙ APP · TAREAS",
+"Nota"
+],
+"fldsXb167H8HWe37u": [
+"⚙ APP · REFERIDOS",
+"TARJETA IMG"
+],
+"fldzmytX5WC15qRaR": [
+"⚙ APP · OTROS CONSENTIMIENTOS",
+"ARCHIVO"
+],
+"fldv1YBgbIinCFaiC": [
+"⚙ APP · COMUNICACIONES",
+"ADJUNTOS"
+],
+"fld0coxDWYBc2WvYH": [
+"⚙ APP · SUGERENCIAS",
+"CAPTURA"
+]
+}
+}

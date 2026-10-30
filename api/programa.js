@@ -1,6 +1,6 @@
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
-const BASE_ID = 'appsrGnHpFt8sVD5A';
+const { BASE_ID } = require('./_base');
 const PLAN_TABLE = 'tblvgE0a4gsrj4Vhp';
 
 module.exports = async function handler(req, res) {
