@@ -10188,12 +10188,24 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    try{const otros=x.yoPague?x.con.map(c=>c.id):[pacId];for(const o of otros){const r=await agPost('seg-pack-compartir',{op:'quitar',titular:x.titular,con:o,f:x.f});if(!r.ok)throw 0;}toast('Ya no comparten el pack',true);fpTabFacturas(pacId,body,pacNombre,body.dataset.token);}catch(e){b.disabled=false;toast('No se ha podido guardar',false);}};});
   pcb.querySelector('.fac-pc-add').onclick=()=>{const m=hzModal(`<div class="hz-top"><div><small>${escH(capTit(pacNombre||''))}</small><b>Compartir su pack</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
     <p class="fp-mu" style="font-size:13.5px;margin:0 0 12px">Las sesiones de los dos se descontarán del último pack que pagó ${escH(capTit(pacNombre||'').split(' ')[0])}, por orden de fecha. Cuando se acabe, cada uno vuelve a lo suyo.</p>
-    <div class="ag-pf ag-busca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in pc-in" placeholder="¿Con quién lo comparte?" autocomplete="off"></div><div class="pc-res"></div>`);
+    <div class="ag-pf ag-busca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in ag-pb pc-in" placeholder="¿Con quién lo comparte?" autocomplete="off"></div><div class="pc-res"></div>`);
    m.querySelector('.hz-x').onclick=()=>m.remove();const inp=m.querySelector('.pc-in'),res=m.querySelector('.pc-res'),nrm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();setTimeout(()=>inp.focus(),80);
    inp.oninput=()=>{const q=nrm(inp.value).trim();if(q.length<2){res.innerHTML='';return;}const pal=q.split(/\s+/);const fl=(pacs||[]).filter(p=>p.id!==pacId&&pal.every(w=>nrm(p.nombre).includes(w))).slice(0,8);
     res.innerHTML=fl.map(p=>`<button type="button" class="pc-op" data-id="${p.id}">${escH(capTit(p.nombre))}</button>`).join('')||'<small class="fp-mu">No encontrado</small>';
-    res.querySelectorAll('.pc-op').forEach(b=>b.onclick=async()=>{b.disabled=true;const r=await agPost('seg-pack-compartir',{titular:pacId,con:b.dataset.id}).catch(()=>({ok:false}));
-     if(!r.ok){b.disabled=false;toast(r.error||'No se ha podido compartir',false);return;}m.remove();toast('Pack compartido con '+capTit(b.textContent).split(' ')[0],true);fpTabFacturas(pacId,body,pacNombre,body.dataset.token);});};};
+    res.querySelectorAll('.pc-op').forEach(b=>b.onclick=async()=>{b.disabled=true;const con=b.dataset.id,nomC=capTit(b.textContent).split(' ')[0];
+     const listo=()=>{m.remove();toast('Pack compartido con '+nomC,true);fpTabFacturas(pacId,body,pacNombre,body.dataset.token);};
+     const r=await agPost('seg-pack-compartir',{titular:pacId,con}).catch(()=>({ok:false}));
+     if(r.ok)return listo();
+     if(!r.sinPack){b.disabled=false;toast(r.error||'No se ha podido compartir',false);return;}
+     // Pack cobrado fuera del panel: cuántas sesiones le quedan
+     const card=m.querySelector('.hz-card');card.innerHTML=`<div class="hz-top"><div><small>${escH(capTit(pacNombre||''))} y ${escH(nomC)}</small><b>¿Cuántas sesiones le quedan?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+      <p class="fp-mu" style="font-size:13.5px;margin:0 0 12px">El pack de ${escH(capTit(pacNombre||'').split(' ')[0])} no se cobró desde el panel. Dime cuántas sesiones le quedan y las compartirán a partir de hoy.</p>
+      <div class="ag-pg-imp pc-n">${[2,3,4,5,6,8,10].map(v=>`<button type="button" data-v="${v}">${v}</button>`).join('')}<input type="text" inputmode="numeric" placeholder="Otro" class="ag-in"></div>
+      <div class="hz-bts"><button type="button" class="hz-ok" disabled>Compartir</button></div>`;
+     card.querySelector('.hz-x').onclick=()=>m.remove();let qn=0;const ok=card.querySelector('.hz-ok'),bs=card.querySelectorAll('.pc-n button'),ni=card.querySelector('.pc-n input');
+     const set=v=>{qn=v;ok.disabled=!(qn>0);ok.textContent=qn>0?`Compartir ${qn} sesiones`:'Compartir';};
+     bs.forEach(x=>x.onclick=()=>{bs.forEach(y=>y.classList.toggle('on',y===x));ni.value='';set(+x.dataset.v);});ni.oninput=()=>{bs.forEach(y=>y.classList.remove('on'));set(parseInt(ni.value,10)||0);};
+     ok.onclick=async()=>{ok.disabled=true;const r2=await agPost('seg-pack-compartir',{titular:pacId,con,quedan:qn}).catch(()=>({ok:false}));if(!r2.ok){ok.disabled=false;toast(r2.error||'No se ha podido compartir',false);return;}listo();};});};};
   body.appendChild(pcb);}
  else{const b=ce('div','fac-saldo');b.innerHTML='<b>Saldo de sesiones</b><span>Empezará a contar con la primera factura emitida desde el panel (cuando conectemos Holded).</span>';body.appendChild(b);}
  const nueva=ce('button','fac-nueva');nueva.type='button';nueva.textContent='+ Cobrar y facturar';

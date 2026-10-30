@@ -129,7 +129,7 @@ async function saldoPaciente(pacId) {
     const desde = shares.map(x => x.d || '').sort()[0] || '';
     const todas = await citasDeMiembros([...new Set(shares.flatMap(x => x.miembros))], GASTA, desde).catch(() => []);
     const cubre = repartoCompartido(shares, todas);
-    shares.forEach(x => { if (x.t === pacId) pag -= x.n; extra += x.quedan; });
+    shares.forEach(x => { if (x.t === pacId && !/^ext/.test(x.f)) pag -= x.n; extra += x.quedan; });
     gastadas -= citas.filter(c => cubre.has(c.id)).length;
     compartido = shares.map(x => pcResumen(x, pacId));
   }
@@ -163,7 +163,7 @@ async function sinFacturar() {
       const hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : '00:00'; };
       const cs = citas.map(c => ({ id: c.id, pid: (c.fields['RELACIÓN - CITA'] || [])[0] || '', k: String(c.fields['FECHA'] || '').slice(0, 10) + ' ' + hh(c.fields['HORA']) }));
       const cubre = repartoCompartido(shares, cs);
-      shares.forEach(x => { de(x.t).pagadas -= x.n; });
+      shares.forEach(x => { if (!/^ext/.test(x.f)) de(x.t).pagadas -= x.n; });
       cs.forEach(c => { if (cubre.has(c.id)) de(c.pid).pagadas += 1; });
     }
   } catch (e) { console.log('sinFacturar compartido', e.message); }
