@@ -3450,7 +3450,7 @@ module.exports = async function handler(req, res) {
           const total = lotes.reduce((t, l) => t + l.n, 0);
           return { activo: true, ...out, quedan: Math.max(0, total - claves.length) };
         };
-        if (action === 'seg-pack-compartir') { // compartir el pack de un paciente (titular) con otro · op: quitar para dejar de compartir
+        if (action === 'seg-agenda-pack-compartir') { // compartir el pack de un paciente (titular) con otro · op: quitar para dejar de compartir
           if (!okId(q.titular) || !okId(q.con) || q.titular === q.con) return res.status(400).json({ ok: false, error: 'Elige otro paciente' });
           const pc = await at(`${PACIENTES}/${q.con}`); if (pc.error) return res.status(404).json({ ok: false, error: 'Paciente no encontrado' });
           let L = pcLeer((pc.fields || {})['PACK COMPARTE']);
