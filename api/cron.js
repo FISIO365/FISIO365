@@ -175,7 +175,7 @@ module.exports = async function handler(req, res) {
     if (!/forzar=1/.test(req.url || '') && (await SCH.ajuste('serie_enviado', '').catch(() => '')) === hoy.fecha) return res.status(200).json({ ok: true, ya: true });
     await SCH.guardarAjuste('serie_enviado', hoy.fecha, 'cron').catch(() => {});
     // La tarea del día por Comunicaciones (Pendientes del buzón y del check-list); se marca hecha sola al terminar el módulo
-    const EQ = await todos(TABLAS.fisio, `filterByFormula=${encodeURIComponent('AND({FECHA BAJA}="",LOWER({Role})="fisio",NOT({DIRECCIÓN}))')}&fields[]=Name&fields[]=PushSubscription`).catch(() => []);
+    const EQ = await todos(TABLAS.fisio, `filterByFormula=${encodeURIComponent('AND({FECHA BAJA}="",LOWER({Role})="fisio")')}&fields[]=Name&fields[]=PushSubscription`).catch(() => []);
     const pilaN = x => { const p = String(x || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
     const para = [...new Set(EQ.map(f => pilaN(f.fields.Name)).filter(Boolean))];
     let k = n - 1, curso = '', ii = 0; { let o = 0; for (const [c, len] of S.cursos) { if (k < o + len) { curso = c; ii = k - o; break; } o += len; } }
