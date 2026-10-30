@@ -6716,7 +6716,7 @@ function agAnadirCita(fecha0,fisio0,onDone){
  const m=hzModal(`<div class="hz-top"><div><small>Agenda</small><b>Añadir cita</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Día</div><div class="ag-fd"></div>
   <div class="hz-lab">Fisio</div><div class="ag-ffs">${eq.map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
-  <div class="hz-lab">Hora <span>(verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div>
+  <div class="hz-lab">Hora <span>(sus horas · verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div>
   <div class="ag-alh" hidden></div>
   <div class="ag-otrah"><span>Otra hora</span><input type="text" class="ag-in ag-oh" inputmode="numeric" placeholder="Ej.: 09:30" maxlength="5"></div>
   <div class="hz-bts"><button type="button" class="hz-ok">Siguiente</button></div>`);
@@ -6733,10 +6733,10 @@ function agAnadirCita(fecha0,fisio0,onDone){
   alh.querySelectorAll('.ag-alb').forEach(b=>b.onclick=async()=>{const c=L.find(x=>x.id===b.dataset.id);if(!c)return;const t0=c.tipos||[],sb=t0.some(agNoBomba);
    const nt=sb?t0.filter(t=>!agNoBomba(t)):[...t0,'NO BOMBA'];b.disabled=true;
    try{const r=await agPost('seg-agenda-editar',{id:c.id,tipos:nt});if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');c.tipos=nt;
-    toast(`${capTit(c.paciente||'')}: ${sb?'con bomba':'sin bomba'}`,true);const h0=hora;agHorasChips(hs,fecha,fisio,h0,pick);verHora(h0);cambio=true;}
+    toast(`${capTit(c.paciente||'')}: ${sb?'con bomba':'sin bomba'}`,true);const h0=hora;agHorasChips(hs,fecha,fisio,h0,pick,true);verHora(h0);cambio=true;}
    catch(err){b.disabled=false;toast(err.message,false);}});};
  const pick=h=>{hora=h;oh.value='';verHora(h);};
- const ch=()=>{hora='';oh.value='';alh.hidden=true;agHorasChips(hs,fecha,fisio,'',pick);};
+ const ch=()=>{hora='';oh.value='';alh.hidden=true;agHorasChips(hs,fecha,fisio,'',pick,true);};
  const pf=()=>m.querySelectorAll('.ag-ffs button').forEach(b=>b.classList.toggle('on',b.dataset.f===fisio));
  m.querySelectorAll('.ag-ffs button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;pf();ch();});pf();ch();
  calFijo(m.querySelector('.ag-fd'),fecha,f=>{fecha=f;ch();});
@@ -6750,9 +6750,12 @@ function agAnadirCita(fecha0,fisio0,onDone){
    const li=!oc&&rs.find(c=>agEsLibre(c.estado));if(li)hueco=Object.assign({fecha},li);}catch(_){}
   m.remove();agDarCita({fecha,hora,fisio,hueco},onDone);};
 }
-function agHorasChips(box,fecha,fisio,horaSel,onPick){
+function agHorasChips(box,fecha,fisio,horaSel,onPick,soloSuyas){
  box.innerHTML='<small class="fp-mu">Cargando horas…</small>';
- agCargarDia(fecha).then(d=>{const C=(d&&d.citas)||[];const hs=[];for(let h=7;h<=21;h++)hs.push(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(!hs.includes(c.hora)&&/^\d{2}:\d{2}$/.test(c.hora))hs.push(c.hora);});hs.sort();
+ agCargarDia(fecha).then(d=>{const C=(d&&d.citas)||[];let hs=[];
+  if(soloSuyas){hs=[...new Set(C.filter(c=>c.fisio===fisio&&/^\d{2}:\d{2}$/.test(c.hora)&&!agEsBloq(c.estado)).map(c=>c.hora))].sort();
+   if(!hs.length){box.innerHTML=`<small class="fp-mu">${escH(agNom(fisio))} no tiene horas abiertas este día. Si hace falta, escribe la hora en «Otra hora».</small>`;return;}}
+  else{for(let h=7;h<=21;h++)hs.push(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(!hs.includes(c.hora)&&/^\d{2}:\d{2}$/.test(c.hora))hs.push(c.hora);});hs.sort();}
   box.innerHTML=hs.map(h=>{const rs=C.filter(c=>c.fisio===fisio&&c.hora===h);const ocup=rs.some(c=>c.pacienteId&&!agEsFuera(c.estado)),blq=rs.some(c=>agEsBloq(c.estado)),lib=rs.some(c=>agEsLibre(c.estado));
    const bf=agBombaN(C,h)>=2;return `<button type="button" data-h="${h}" class="${ocup?'oc':blq?'bq':lib?'li':''}${h===horaSel?' on':''}${bf?' bmf':''}">${h}${bf&&!ocup?'<small>bomba llena</small>':''}</button>`;}).join('');
   box.querySelectorAll('button').forEach(b=>b.onclick=()=>{box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));const bi=box.parentNode&&box.parentNode.querySelector('.ag-bmi');if(bi)agBombaInfo(bi,C,b.dataset.h);onPick(b.dataset.h);});
