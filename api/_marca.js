@@ -39,31 +39,32 @@ function datos(guardado) {
 // Pares «texto de FISIO365 → texto de la clínica», de más largo a más corto. Solo los que cambian.
 function pares(C) {
   const D = datos(null), mayus = s => String(s).toUpperCase();
+  // [texto de FISIO365, dato de la clínica del que depende, por qué se cambia]. Solo si ese dato es distinto del de FISIO365.
   const L = [
-    ['Carrer Gran de Sant Andreu, 163<br>Sant Andreu – 08030 Barcelona', C.direccion],
-    ['Carrer Gran de Sant Andreu, 163 · Sant Andreu – 08030 Barcelona', C.direccion],
-    [D.direccion, C.direccion],
-    ['C/ Gran de Sant Andreu 163, 08030 Barcelona', C.direccion],
-    ['C/ Gran de Sant Andreu, 163 · Barcelona', C.dirCorta],
-    [D.dirCorta, C.dirCorta],
-    ['Gran de Sant Andreu 163, Barcelona', C.dirCorta],
-    ['Carrer Gran de Sant Andreu, 163', C.calle],
-    ['Gran de Sant Andreu 163', C.calle],
-    ['Gran de Sant Andreu', C.zona],
-    [mayus(D.razon), mayus(C.razon)],
-    [D.razon, C.razon],
-    [D.nif, C.nif],
-    [D.iban, C.iban],
-    [D.email, C.email],
-    [D.tel, C.tel],
-    ['672 893 949', C.tel],
-    [D.wa, C.wa],
-    [D.googlePlace, C.googlePlace],
-    [D.zona, C.zona],
-    ['(Barcelona)', '(' + C.ciudad + ')'],
-    [D.marca, C.marca]
+    ['Carrer Gran de Sant Andreu, 163<br>Sant Andreu – 08030 Barcelona', 'direccion'],
+    ['Carrer Gran de Sant Andreu, 163 · Sant Andreu – 08030 Barcelona', 'direccion'],
+    [D.direccion, 'direccion'],
+    ['C/ Gran de Sant Andreu 163, 08030 Barcelona', 'direccion'],
+    ['C/ Gran de Sant Andreu, 163 · Barcelona', 'dirCorta'],
+    [D.dirCorta, 'dirCorta'],
+    ['Gran de Sant Andreu 163, Barcelona', 'dirCorta'],
+    ['Carrer Gran de Sant Andreu, 163', 'calle'],
+    ['Gran de Sant Andreu 163', 'calle'],
+    ['Gran de Sant Andreu', 'zona'],
+    [mayus(D.razon), 'razon', mayus],
+    [D.razon, 'razon'],
+    [D.nif, 'nif'],
+    [D.iban, 'iban'],
+    [D.email, 'email'],
+    [D.tel, 'tel'],
+    ['672 893 949', 'tel'],
+    [D.wa, 'wa'],
+    [D.googlePlace, 'googlePlace'],
+    [D.zona, 'zona'],
+    ['(Barcelona)', 'ciudad', v => '(' + v + ')'],
+    [D.marca, 'marca']
   ];
-  return L.filter(([a, b]) => b && a !== b);
+  return L.filter(([, k]) => C[k] && C[k] !== D[k]).map(([a, k, f]) => [a, f ? f(C[k]) : C[k]]).filter(([a, b]) => a !== b);
 }
 
 // Cambia los textos de FISIO365 por los de la clínica. json=true: el texto va dentro de un JSON (emails, IA)
