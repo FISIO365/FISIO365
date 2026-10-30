@@ -76,8 +76,42 @@ async function inicioControl() {
 async function citasGastadas(inicio, pacId) {
   const conds = [`OR(${GASTA.map(e => `TRIM({ESTADO})='${e}'`).join(',')})`, `IS_AFTER({FECHA},DATEADD('${inicio}',-1,'days'))`];
   if (pacId) conds.push(`FIND('${pacId}',ARRAYJOIN({PacienteRec}))`);
-  return todosAT(CITAS, `filterByFormula=${encodeURIComponent('AND(' + conds.join(',') + ')')}&fields[]=FECHA&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA`);
+  return todosAT(CITAS, `filterByFormula=${encodeURIComponent('AND(' + conds.join(',') + ')')}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA`);
 }
+
+// ── Pack compartido ──
+// Quien usa el pack de otro lleva en «PACK COMPARTE» una lista [{t: paciente que pagó, f: id de la factura del pack o 'previo', n: sesiones, d: desde (YYYY-MM-DD)}].
+// Las citas de todos (el que pagó y con quien lo comparte), por orden de fecha y desde «d», gastan primero ese pack; al acabarse, cada uno vuelve a lo suyo.
+const pcLeer = v => { try { const j = JSON.parse(v || 'null'); return Array.isArray(j) ? j : j ? [j] : []; } catch (e) { return []; } };
+async function compartidos(pid) {
+  const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_T}/${pid}`, { headers: { Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}` } }).then(x => x.json()).catch(() => ({}));
+  const mios = pcLeer((r.fields || {})['PACK COMPARTE']), Ts = [...new Set([pid, ...mios.map(x => x.t)])];
+  const recs = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + Ts.map(t => `FIND('"t":"${t}"',{PACK COMPARTE}&'')`).join(',') + ')')}&fields[]=FULL NAME&fields[]=PACK COMPARTE`).catch(() => []);
+  const S = {};
+  recs.forEach(p => pcLeer(p.fields['PACK COMPARTE']).forEach(x => { if (!Ts.includes(x.t)) return; const k = x.t + '|' + x.f; (S[k] = S[k] || { t: x.t, f: x.f, n: Number(x.n) || 0, d: x.d || '', miembros: new Set([x.t]) }).miembros.add(p.id); }));
+  const lista = Object.values(S).filter(x => x.miembros.has(pid) && x.n > 0).map(x => ({ ...x, miembros: [...x.miembros] }));
+  if (!lista.length) return [];
+  const ids = [...new Set(lista.flatMap(x => x.miembros))], nom = {};
+  (await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + ids.map(i => `RECORD_ID()='${i}'`).join(',') + ')')}&fields[]=FULL NAME`).catch(() => [])).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; });
+  lista.forEach(x => { x.nombres = nom; });
+  return lista;
+}
+// Reparte las citas (las de todos los miembros) entre los packs compartidos. citas: [{id, pid, k: 'YYYY-MM-DD HH:MM'}]
+function repartoCompartido(shares, citas) {
+  const cubre = new Map();
+  shares.slice().sort((a, b) => String(a.d).localeCompare(String(b.d))).forEach(x => {
+    const C = citas.filter(c => x.miembros.includes(c.pid) && c.k.slice(0, 10) >= (x.d || '') && !cubre.has(c.id)).sort((a, b) => a.k.localeCompare(b.k));
+    x.orden = C.slice(0, x.n).map(c => c.id); x.orden.forEach(id => cubre.set(id, x)); x.usadas = x.orden.length; x.quedan = Math.max(0, x.n - x.usadas);
+  });
+  return cubre;
+}
+async function citasDeMiembros(miembros, estados, desde) {
+  const conds = [`OR(${estados.map(e => `TRIM({ESTADO}&'')='${e}'`).join(',')})`, `OR(${miembros.map(m => `FIND('${m}',ARRAYJOIN({PacienteRec}))`).join(',')})`];
+  if (desde) conds.push(`IS_AFTER({FECHA},DATEADD('${desde}',-1,'days'))`);
+  const hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : '00:00'; };
+  return (await todosAT(CITAS, `filterByFormula=${encodeURIComponent('AND(' + conds.join(',') + ')')}&fields[]=FECHA&fields[]=HORA&fields[]=RELACIÓN - CITA`)).map(c => ({ id: c.id, pid: (c.fields['RELACIÓN - CITA'] || [])[0] || '', k: String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA) }));
+}
+const pcResumen = (x, pid) => ({ titular: x.t, yoPague: x.t === pid, con: x.miembros.filter(m => m !== pid).map(m => ({ id: m, nombre: x.nombres[m] || '' })), n: x.n, usadas: x.usadas || 0, quedan: x.quedan != null ? x.quedan : x.n, f: x.f });
 
 async function saldoPaciente(pacId) {
   const inicio = await inicioControl();
@@ -89,8 +123,17 @@ async function saldoPaciente(pacId) {
   // Pack pagado fuera del panel: cuenta lo que le quedaba cuando el panel empezó a contar (total − ya usadas antes)
   const previo = Math.max(0, Number((pac.fields || {})['SESIONES BONO PREVIO'] || 0) - Number((pac.fields || {})['BONO PREVIO YA USADAS'] || 0));
   const pagadas = facs.reduce((t, r) => t + sesionesDe(r.fields), 0) + previo;
-  const gastadas = citas.length;
-  return { activo: true, inicio, pagadas, gastadas, saldo: pagadas - gastadas };
+  let gastadas = citas.length, pag = pagadas, extra = 0, compartido = [];
+  const shares = await compartidos(pacId).catch(() => []);
+  if (shares.length) {
+    const desde = shares.map(x => x.d || '').sort()[0] || '';
+    const todas = await citasDeMiembros([...new Set(shares.flatMap(x => x.miembros))], GASTA, desde).catch(() => []);
+    const cubre = repartoCompartido(shares, todas);
+    shares.forEach(x => { if (x.t === pacId) pag -= x.n; extra += x.quedan; });
+    gastadas -= citas.filter(c => cubre.has(c.id)).length;
+    compartido = shares.map(x => pcResumen(x, pacId));
+  }
+  return { activo: true, inicio, pagadas: pag + (compartido.length ? compartido.reduce((t, x) => t + x.n, 0) : 0), gastadas: gastadas + (compartido.length ? compartido.reduce((t, x) => t + x.usadas, 0) : 0), saldo: pag - gastadas + extra, compartido };
 }
 
 // Todos los pacientes con saldo negativo (sesiones hechas sin facturar)
@@ -111,6 +154,19 @@ async function sinFacturar() {
     const f = c.fields['FECHA'] || '';
     if (f >= x.ultima) { x.ultima = f; const pf = c.fields['PREF.']; x.fisio = (pf && typeof pf === 'object' ? pf.name : pf) || ''; }
   });
+  // Packs compartidos: las sesiones de los miembros que cubre el pack cuentan como pagadas; al que pagó se le resta el pack (ya no es solo suyo)
+  try {
+    const comp = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent("{PACK COMPARTE}!=''")}&fields[]=PACK COMPARTE`);
+    const S = {}; comp.forEach(p => pcLeer(p.fields['PACK COMPARTE']).forEach(x => { const k = x.t + '|' + x.f; (S[k] = S[k] || { t: x.t, f: x.f, n: Number(x.n) || 0, d: x.d || '', miembros: [x.t] }).miembros.push(p.id); }));
+    const shares = Object.values(S).filter(x => x.n > 0);
+    if (shares.length) {
+      const hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : '00:00'; };
+      const cs = citas.map(c => ({ id: c.id, pid: (c.fields['RELACIÓN - CITA'] || [])[0] || '', k: String(c.fields['FECHA'] || '').slice(0, 10) + ' ' + hh(c.fields['HORA']) }));
+      const cubre = repartoCompartido(shares, cs);
+      shares.forEach(x => { de(x.t).pagadas -= x.n; });
+      cs.forEach(c => { if (cubre.has(c.id)) de(c.pid).pagadas += 1; });
+    }
+  } catch (e) { console.log('sinFacturar compartido', e.message); }
   const lista = Object.entries(s).map(([id, x]) => ({ id, ...x, saldo: x.pagadas - x.gastadas })).filter(x => x.saldo < 0);
   if (lista.length) {
     const nombres = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + lista.map(x => `RECORD_ID()='${x.id}'`).join(',') + ')')}&fields[]=FULL NAME`).catch(() => []);
@@ -290,5 +346,5 @@ async function valorSesiones(citasRango, hasta, precios, opts) {
   return { lista, ref };
 }
 
-const saldo = { saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };
+const saldo = { compartidos, repartoCompartido, citasDeMiembros, pcLeer, saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };
 module.exports = { leerSub, enviar, avisar, idValido, TABLAS, BASE_ID, saldo };

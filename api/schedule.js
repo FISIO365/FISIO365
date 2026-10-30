@@ -6,7 +6,7 @@ const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 const BIBLIO_TABLE = 'tbloqn3ts872ueJSE';
 
 const HOLDED_KEY = process.env.HOLDED_API_KEY;
-const { saldoPaciente, rendimiento, inicioControl, sinFacturar } = require('./_push').saldo;
+const { saldoPaciente, rendimiento, inicioControl, sinFacturar, compartidos, repartoCompartido, citasDeMiembros, pcLeer } = require('./_push').saldo;
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const HOLDED_URL = 'https://api.holded.com/api/v2'; // API nueva de Holded (clave «Bearer»)
 
@@ -3429,8 +3429,19 @@ module.exports = async function handler(req, res) {
           const lotes = [], P = pr.fields || {}, nP = Number(P['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(P['BONO PREVIO YA USADAS'] || 0));
           if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true });
           fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => {
-            [[r.fields['CONCEPTO 1'], r.fields['Nº SESIONES 1']], [r.fields['CONCEPTO 2'], r.fields['Nº SESIONES 2']]].forEach(([c, n]) => { if (/^Sesi/i.test(nmA(c) || '') && Number(n) > 0) lotes.push({ n: Number(n) }); }); });
-          const claves = rs.map(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA)).filter(k => k !== clave);
+            [[r.fields['CONCEPTO 1'], r.fields['Nº SESIONES 1']], [r.fields['CONCEPTO 2'], r.fields['Nº SESIONES 2']]].forEach(([c, n]) => { if (/^Sesi/i.test(nmA(c) || '') && Number(n) > 0) lotes.push({ n: Number(n), fid: r.id }); }); });
+          let claves = rs.map(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA)).filter(k => k !== clave);
+          // Pack compartido: primero se gasta el pack común (citas de todos por orden de fecha); lo que no cubre va a lo suyo
+          const shares = await compartidos(pid).catch(() => []);
+          if (shares.length) {
+            const todas = await citasDeMiembros([...new Set(shares.flatMap(x => x.miembros))], ['REALIZADA', 'PENDIENTE', 'CITA PERDIDA'], shares.map(x => x.d || '').sort()[0] || '').catch(() => []);
+            const ya = todas.find(c => c.pid === pid && c.k === clave); if (!ya) todas.push({ id: '__nueva', pid, k: clave });
+            const cubre = repartoCompartido(shares, todas), obj = ya ? ya.id : '__nueva';
+            if (cubre.has(obj)) { const x = cubre.get(obj); return { activo: true, t: 'pack', i: x.orden.indexOf(obj) + 1, n: x.n, quedan: x.quedan, compartido: x.miembros.filter(m => m !== pid).map(m => x.nombres[m] || '') }; }
+            const tapadas = new Set(todas.filter(c => c.pid === pid && cubre.has(c.id)).map(c => c.k));
+            claves = claves.filter(k => !tapadas.has(k));
+            shares.filter(x => x.t === pid).forEach(x => { const i = lotes.findIndex(l => x.f === 'previo' ? l.previo : l.fid === x.f); if (i >= 0) lotes.splice(i, 1); });
+          }
           claves.push(clave); claves.sort();
           let li = 0, usado = 0, out = { t: 'sin' };
           for (const k of claves) { while (li < lotes.length && usado >= lotes[li].n) { li++; usado = 0; }
@@ -3439,6 +3450,26 @@ module.exports = async function handler(req, res) {
           const total = lotes.reduce((t, l) => t + l.n, 0);
           return { activo: true, ...out, quedan: Math.max(0, total - claves.length) };
         };
+        if (action === 'seg-pack-compartir') { // compartir el pack de un paciente (titular) con otro · op: quitar para dejar de compartir
+          if (!okId(q.titular) || !okId(q.con) || q.titular === q.con) return res.status(400).json({ ok: false, error: 'Elige otro paciente' });
+          const pc = await at(`${PACIENTES}/${q.con}`); if (pc.error) return res.status(404).json({ ok: false, error: 'Paciente no encontrado' });
+          let L = pcLeer((pc.fields || {})['PACK COMPARTE']);
+          if (q.op === 'quitar') { L = L.filter(x => x.t !== q.titular || (q.f && x.f !== q.f)); }
+          else {
+            const pt = await at(`${PACIENTES}/${q.titular}`); const T = pt.fields || {};
+            if (pcLeer(T['PACK COMPARTE']).length) return res.status(200).json({ ok: false, error: 'Este paciente ya usa el pack de otra persona: compártelo desde la ficha de quien lo pagó' });
+            const fs = await todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${q.titular}')`)}`).catch(() => []);
+            const sesF = f => [[f['CONCEPTO 1'], f['Nº SESIONES 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2']]].reduce((t, [c, n]) => t + (/^Sesi/i.test(nmA(c) || '') ? Number(n) || 0 : 0), 0);
+            const pk = fs.filter(r => sesF(r.fields) > 1).sort((a, b) => String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || '').localeCompare(String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '')))[0];
+            const nP = Number(T['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(T['BONO PREVIO YA USADAS'] || 0));
+            const nuevo = pk ? { t: q.titular, f: pk.id, n: sesF(pk.fields), d: String(pk.fields['FECHA DE COBRO'] || pk.fields['FECHA'] || hoyF).slice(0, 10) } : nP - uP > 1 ? { t: q.titular, f: 'previo', n: nP - uP, d: '' } : null;
+            if (!nuevo) return res.status(200).json({ ok: false, error: 'No tiene ningún pack pagado para compartir. Cóbrale el pack primero.' });
+            if (L.some(x => x.t === nuevo.t && x.f === nuevo.f)) return res.status(200).json({ ok: false, error: 'Ya lo comparten' });
+            L.push(nuevo);
+          }
+          const d = await at(`${PACIENTES}/${q.con}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PACK COMPARTE': L.length ? JSON.stringify(L) : '' } }) });
+          return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
+        }
         if (action === 'seg-agenda-pack') {
           // Al dar una cita: qué sesión del pack sería (mismo reparto que la agenda: los pagos se gastan por orden de fecha)
           if (!okId(q.pacienteId) || !okF(q.fecha)) return res.status(400).json({ ok: false });
