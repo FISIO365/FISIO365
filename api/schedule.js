@@ -1581,8 +1581,8 @@ function ideasResena({ fisio, tema, fin }) {
     : /atm|mandíb|mandib/.test(t) ? 'Muy buenos con la ATM y el dolor de mandíbula'
     : (fin ? 'Llegué con dolor y me voy mucho mejor' : 'Desde la primera sesión noté la mejoría');
   return fin
-    ? [porTema, F ? `Gracias a ${F} estoy mucho mejor` : 'Gracias al equipo estoy mucho mejor', 'Los mejores fisioterapeutas de Sant Andreu', 'Te explican todo y te dan ejercicios para casa', 'Centro de fisioterapia en Barcelona 100% recomendable']
-    : [porTema, F ? `${F}, gran fisioterapeuta` : 'Fisioterapeutas muy profesionales', 'Muy buen centro de fisioterapia en Sant Andreu', 'Te explican todo y te dan ejercicios para casa', 'Fisioterapia en Barcelona muy recomendable'];
+    ? [porTema, 'Un equipo de fisioterapeutas muy profesional y cercano', 'Los mejores fisioterapeutas de Sant Andreu', 'Te explican todo y te dan ejercicios para casa', 'Centro de fisioterapia en Barcelona 100% recomendable']
+    : [porTema, 'Fisioterapeutas muy profesionales y cercanos', 'Muy buen centro de fisioterapia en Sant Andreu', 'Te explican todo y te dan ejercicios para casa', 'Fisioterapia en Barcelona muy recomendable'];
 }
 function paginaEncuesta(D) {
   const e = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
