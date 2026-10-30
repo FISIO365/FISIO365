@@ -3820,6 +3820,16 @@ module.exports = async function handler(req, res) {
           if (q.estado) { if (!/^(PENDIENTE|REALIZADA|NO ASISTIÓ|CANCELADA|POR REAGENDAR|CITA DUDOSA|REPROGRAMADA|CITA PERDIDA|CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|FRANJA BLOQUEADA|DIA BLOQUEADO|CALL-IN|COMIDA|VIDEOS)$/.test(q.estado)) return res.status(400).json({ ok: false, error: 'Estado no válido' }); f.ESTADO = q.estado === 'PENDIENTE' ? 'PENDIENTE ' : q.estado === 'COMIDA' ? await estadoComida() : q.estado; }
           if (q.confirmada != null) f.CONFIR = q.confirmada ? ['CONFIRMADA'] : [];
           if (q.notas != null) f.NOTAS = String(q.notas).slice(0, 2000);
+          // Cancelación tardía: se apunta sola en las notas de la cita (cuántas horas antes avisó y la política)
+          if (q.estado === 'CANCELADA' && !/CANCELADA/.test(String(nmA(cur.fields.ESTADO)).toUpperCase())) {
+            const hPol = Number(((await conf().catch(() => CONF_DEF)).cancelacion || {}).horas) || 24;
+            const ini = madridUTC(String(cur.fields.FECHA || '').slice(0, 10), hh(cur.fields.HORA)).getTime(), faltan = (ini - Date.now()) / 36e5;
+            if (faltan < hPol && faltan > -12) {
+              const tx = `Cancelación tardía: avisó ${faltan <= 0 ? 'a la hora de la cita o después' : faltan < 1 ? 'con menos de 1 h' : 'con unas ' + Math.floor(faltan) + ' h'} (la política pide ${hPol} h). Apuntado el ${new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date())}.`;
+              const base = f.NOTAS != null ? f.NOTAS : String(cur.fields.NOTAS || '');
+              if (!/Cancelación tardía:/.test(base)) f.NOTAS = (base.trim() + (base.trim() ? '\n' : '') + tx).slice(0, 2000);
+            }
+          }
           if (Array.isArray(q.tipos)) f['TIPO DE CITA'] = await tiposDe(q.tipos);
           if (q.sesion !== undefined) f['TIPO DE SESIÓN'] = String(q.sesion || '').trim().slice(0, 60) || null;
           if (q.liberar) { // el paciente queda en su fila (cancelada…) y se crea un hueco libre en esa hora

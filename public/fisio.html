@@ -6535,7 +6535,7 @@ function agAbrirCita(c,onDone){
  // Cancelación tardía: avisa con menos horas de las de la política (Administración › Ajustes)
  const hPol=CONF&&CONF.cancelacion?Number(CONF.cancelacion.horas):24,tarde=m.querySelector('.ag-tarde');
  const faltan=(()=>{const h=String(c.hora||'').match(/^(\d{1,2}):(\d{2})/);if(!h)return null;const t=new Date(`${FD}T${h[1].padStart(2,'0')}:${h[2]}:00`);return (t-Date.now())/36e5;})();
- const pe=()=>{const esT=est==='CANCELADA'&&est0!=='CANCELADA'&&hPol>0&&faltan!=null&&faltan<hPol&&faltan>-12;tarde.hidden=!esT;if(esT)tarde.innerHTML=`<b>Cancelación tardía</b> · ha avisado con ${faltan<1?'menos de 1 hora':'unas '+Math.floor(faltan)+' h'} y la política pide ${hPol} h. Apúntalo en las notas si se le cobra.`;
+ const pe=()=>{const esT=est==='CANCELADA'&&est0!=='CANCELADA'&&hPol>0&&faltan!=null&&faltan<hPol&&faltan>-12;tarde.hidden=!esT;if(esT)tarde.innerHTML=`<b>Cancelación tardía</b> · ha avisado con ${faltan<1?'menos de 1 hora':'unas '+Math.floor(faltan)+' h'} y la política pide ${hPol} h. Al guardar se apunta solo en las notas de la cita.`;
   m.querySelectorAll('.ag-est button').forEach(b=>b.classList.toggle('on',b.dataset.v===est));lib.hidden=!(/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(est)&&!/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(c.estado));};pe();
  // Seguimiento: para los que cancelan, no vienen o hay que reagendar (se puede desde cualquier cita)
  const sb=m.querySelector('.ag-segb');
