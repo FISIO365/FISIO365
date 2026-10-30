@@ -1,0 +1,13 @@
+# Cada 5 minutos: cancela las citas de quien no ha pagado a tiempo (2 h) y deja la hora libre.
+# Funciona aunque nadie tenga el panel ni la app abiertos.
+name: Pagos caducados
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: curl -fsS --max-time 60 "https://app.fisioterapia365.com/api/schedule?action=pagos-tick"
