@@ -1571,18 +1571,17 @@ function firmaFin(id) { return require('crypto').createHmac('sha256', String(pro
 const enlaceFin = id => `https://app.fisioterapia365.com/v/${id}-${firmaFin(id)}`;
 // Frases para la reseña de Google: naturales y con las palabras que la gente busca (fisioterapia + Sant Andreu / Barcelona + su problema)
 function ideasResena({ fisio, tema, fin }) {
-  const t = String(tema || '').toLowerCase(), F = fisio || '';
-  const porTema = /suelo p|pélvic|pelvic|diástasis|diastasis|embaraz|postparto|parto/.test(t) ? (fin ? 'Mi recuperación de suelo pélvico ha sido increíble' : 'Fisioterapia de suelo pélvico con mucha sensibilidad')
-    : /hernia|lumbar|espalda|ciátic|ciatic|lumbago/.test(t) ? (fin ? 'Llegué con dolor de espalda y hoy estoy genial' : 'Vine por dolor de espalda y ya noto la mejoría')
-    : /cervical|cuello/.test(t) ? (fin ? 'Se acabó mi dolor de cuello' : 'Vine por dolor cervical y ya voy mucho mejor')
-    : /rodilla|menisco|ligamento/.test(t) ? (fin ? 'Mi rodilla está como nueva' : 'Me están tratando la rodilla y voy muy bien')
-    : /hombro/.test(t) ? (fin ? 'He recuperado el hombro por completo' : 'Me están tratando el hombro y noto mucha mejoría')
-    : /deport|readapt|lesi|esguince|rotura|tendin/.test(t) ? (fin ? 'Perfecto para volver a entrenar después de una lesión' : 'Ideal para recuperarse de una lesión deportiva')
-    : /atm|mandíb|mandib/.test(t) ? 'Muy buenos con la ATM y el dolor de mandíbula'
-    : (fin ? 'Llegué con dolor y me voy mucho mejor' : 'Desde la primera sesión noté la mejoría');
+  const t = String(tema || '').toLowerCase();
+  const porTema = /suelo p|pélvic|pelvic|diástasis|diastasis|embaraz|postparto|parto/.test(t) ? (fin ? 'Con el suelo pélvico me han ayudado muchísimo' : 'Me sentí muy cómoda en la sesión de suelo pélvico')
+    : /hernia|lumbar|espalda|ciátic|ciatic|lumbago/.test(t) ? (fin ? 'Llegué fatal de la espalda y ahora estoy genial' : 'Vine por la espalda y ya voy mejor')
+    : /cervical|cuello/.test(t) ? (fin ? 'Por fin sin dolor de cuello' : 'Vine por el cuello y ya lo noto')
+    : /rodilla|menisco|ligamento/.test(t) ? (fin ? 'La rodilla, como nueva' : 'Vine por la rodilla y voy muy bien')
+    : /hombro/.test(t) ? (fin ? 'He recuperado el hombro del todo' : 'Vine por el hombro y ya lo noto')
+    : /deport|readapt|lesi|esguince|rotura|tendin/.test(t) ? (fin ? 'Ya he vuelto a entrenar sin molestias' : 'Para lesiones deportivas, de diez')
+    : (fin ? 'Me han ayudado muchísimo' : 'Ya noto la diferencia');
   return fin
-    ? [porTema, 'Un equipo de fisioterapeutas muy profesional y cercano', 'Los mejores fisioterapeutas de Sant Andreu', 'Te explican todo y te dan ejercicios para casa', 'Centro de fisioterapia en Barcelona 100% recomendable']
-    : [porTema, 'Fisioterapeutas muy profesionales y cercanos', 'Muy buen centro de fisioterapia en Sant Andreu', 'Te explican todo y te dan ejercicios para casa', 'Fisioterapia en Barcelona muy recomendable'];
+    ? [porTema, 'Volvería sin dudarlo', 'Trato muy cercano', 'Se nota que saben lo que hacen', 'Si buscas fisio en Sant Andreu, aquí aciertas']
+    : [porTema, 'Muy majos y muy profesionales', 'Me explicaron muy bien qué me pasaba', 'Se nota que saben lo que hacen', 'Un buen fisio en Sant Andreu'];
 }
 function paginaEncuesta(D) {
   const e = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
