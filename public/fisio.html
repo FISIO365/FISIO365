@@ -11244,7 +11244,7 @@ const WIKI_RUTAS = [
  tipo: 'formacion'
  },
  {
- id: 'primera',
+ id: 'primera', oculto: true, // retirado: lo explica el curso «Cómo funciona la app»
  categoria: 'centro',
  titulo: 'Ruta primera visita',
  desc: 'El protocolo completo de la primera visita, paso a paso',
@@ -11270,7 +11270,7 @@ const WIKI_RUTAS = [
  tipo: 'formacion'
  },
  {
- id: 'airtable',
+ id: 'airtable', oculto: true, // retirado: lo explica el curso «Cómo funciona la app»
  categoria: 'centro',
  titulo: 'Airtable — Gestión de la agenda',
  desc: 'Todo lo que necesitas saber para gestionar la agenda de la clínica',
@@ -11386,7 +11386,7 @@ const WIKI_RUTAS = [
  tits: [],
  tipo: 'formacion'
  }
-];
+].filter(r=>!r.oculto);
 
 // ── Curso obligatorio «Cómo funciona la app»: aviso hasta terminarlo ──
 const CURSO_OBL='appEquipo';
@@ -12241,10 +12241,10 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Cuándo dar el alta',icon:'✅',body:`El alta se da cuando el paciente ha alcanzado los objetivos del tratamiento:<br><br>• Dolor resuelto o controlado<br>• Movilidad recuperada<br>• El paciente puede hacer su vida con normalidad<br><br>El alta es una buena noticia — hay que comunicarla como tal.`},
  {ti:'Cómo comunicarlo al paciente',icon:'',body:`El fisio comunica el alta en consulta con claridad y positividad:<br><br><em>«Has terminado el tratamiento, estás muy bien. No necesitas más sesiones por ahora — si vuelve el dolor o necesitas algo, ya sabes dónde estamos.»</em><br><br>El paciente debe salir sintiéndose bien atendido y con confianza en que puede volver si lo necesita.`},
- {ti:'Qué le dice el fisio a recepción',icon:'',body:`Al acompañar al paciente a recepción:<br><br><em>«Alta clínica — ha terminado el tratamiento, está genial. Si pregunta por futuras sesiones, puede volver cuando quiera.»</em><br><br>Recepción actualiza el estado del paciente a <strong>ALTA</strong> y cierra el ciclo.`}
+ {ti:'Qué le dice el fisio a recepción',icon:'',body:`Al acompañar al paciente a recepción:<br><br><em>«Alta clínica — ha terminado el tratamiento, está genial. Si pregunta por futuras sesiones, puede volver cuando quiera.»</em><br><br>En la cita, toca <strong>No necesita más › Dar el alta</strong>: el paciente pasa a ALTA y te ofrece pedirle la reseña o mandarle la encuesta de alta.`}
  ],
  qs:[
- {q:'¿Qué estado se le pone al paciente en Airtable al dar el alta?',opts:['FIN PACK','ACTIVO','ALTA'],ok:2,fb:['FIN PACK es solo cuando acaba el bono de sesiones.','ACTIVO es mientras está en tratamiento.','¡Correcto! ALTA indica que el tratamiento ha concluido satisfactoriamente.']},
+ {q:'¿Qué estado se le pone al paciente al dar el alta?',opts:['FIN PACK','ACTIVO','ALTA'],ok:2,fb:['FIN PACK es solo cuando acaba el bono de sesiones.','ACTIVO es mientras está en tratamiento.','¡Correcto! ALTA indica que el tratamiento ha concluido satisfactoriamente.']},
  {q:'Al dar el alta, ¿qué debe sentir el paciente al salir?',opts:['Que ya no puede volver','Bien atendido y con confianza en que puede volver si lo necesita','Que todavía le queda algo por tratar'],ok:1,fb:['El alta no cierra la puerta — la deja abierta.','¡Correcto! El paciente debe salir con sensación positiva y la puerta abierta.','Si el alta está bien dada, el paciente sale resuelto.']}
  ]
  },
