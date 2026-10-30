@@ -6685,7 +6685,7 @@ function agNuevaCitaPac(p,onDone){
  const m=hzModal(`<div class="hz-top"><div><small>Nueva cita</small><b>${escH(p.nombre||'Paciente')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Día</div><div class="ag-fd"></div>
   <div class="hz-lab">Fisio</div><div class="ag-ffs">${eq.map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
-  <div class="hz-lab">Hora <span>(verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div><div class="ag-pkinfo" hidden></div>
+  ${AG_HORA_HTML}<div class="ag-pkinfo" hidden></div>
   <div class="ag-bmi"></div><label class="hz-sw ag-sbm"><input type="checkbox"><i></i><span>Se le puede atender <b>sin bomba</b></span></label>
   <div class="hz-lab">Tipo de sesión</div><div class="ag-ses"></div>
   <div class="hz-lab">Notas <span>(opcional)</span></div><textarea class="seg-n ag-not2" rows="2"></textarea>
@@ -6697,7 +6697,7 @@ function agNuevaCitaPac(p,onDone){
   fetch(`/api/schedule?action=seg-agenda-pack&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${p.id}&fecha=${fecha}&hora=${encodeURIComponent(hora)}`).then(x=>x.json()).then(r=>{if(k!==fecha+hora||!r||!r.ok||!r.activo)return;
    pacInfo=r.t==='pack'?`Pack ${r.i}/${r.n}`:r.t==='suelta'?'Sesión suelta pagada':'Sin pagar';pk.hidden=false;pk.className='ag-pkinfo '+(r.t==='sin'?'sin':r.t==='pack'&&r.i===r.n?'ult':'ok');
    pk.innerHTML=r.t==='pack'?`<b>Sería la sesión ${r.i} de ${r.n} del pack</b>${r.i===r.n?' · la última: toca renovar':''}`:r.t==='suelta'?'<b>Tiene esta sesión pagada</b>':'<b>No consta ningún pago para esta sesión</b>';}).catch(()=>{});};
- const ch=()=>{hora='';pk.hidden=true;agHorasChips(hs,fecha,fisio,'',h=>{hora=h;mirarPack();});};
+ const ph=agPickerHora(m,{get:()=>({fecha,fisio}),onPick:h=>{hora=h;mirarPack();}}),ch=()=>{pk.hidden=true;ph.ch();};
  const pf=()=>m.querySelectorAll('.ag-ffs button').forEach(b=>b.classList.toggle('on',b.dataset.f===fisio));
  m.querySelectorAll('.ag-ffs button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;pf();ch();});pf();ch();
  calFijo(m.querySelector('.ag-fd'),fecha,f=>{fecha=f;ch();});
@@ -6709,22 +6709,16 @@ function agNuevaCitaPac(p,onDone){
   catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
 }
-// «＋ Cita»: dar cita a cualquier hora (aunque no haya hueco abierto), desde cualquier vista
-function agAnadirCita(fecha0,fisio0,onDone){
- const eq=agEquipo(),yo=String((fisioActual&&fisioActual.nombre)||'').split(' ')[0].toLowerCase();
- let fecha=fecha0||agHoyIso(),hora='',fisio=eq.includes(fisio0)?fisio0:(eq.find(f=>String(f).toLowerCase()===yo)||eq[0]||'');
- const m=hzModal(`<div class="hz-top"><div><small>Agenda</small><b>Añadir cita</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-  <div class="hz-lab">Día</div><div class="ag-fd"></div>
-  <div class="hz-lab">Fisio</div><div class="ag-ffs">${eq.map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
-  <div class="hz-lab">Hora <span>(sus horas · verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div>
+// Selector de hora común (dar cita, «＋ Cita», nueva cita desde la ficha, cambiar cita): solo las horas de ese fisio,
+// quién hay a esa hora (todos los fisios) con la bomba corregible, y «Otra hora»
+const AG_HORA_HTML=`<div class="hz-lab">Hora <span>(sus horas · verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div>
   <div class="ag-alh" hidden></div>
-  <div class="ag-otrah"><span>Otra hora</span><input type="text" class="ag-in ag-oh" inputmode="numeric" placeholder="Ej.: 09:30" maxlength="5"></div>
-  <div class="hz-bts"><button type="button" class="hz-ok">Siguiente</button></div>`);
- let cambio=false;m.querySelector('.hz-x').onclick=()=>{m.remove();if(cambio)onDone&&onDone();};
- const hs=m.querySelector('.ag-hs'),oh=m.querySelector('.ag-oh'),alh=m.querySelector('.ag-alh');
- // Quién hay a esa hora (todos los fisios) y si usa bomba: se puede corregir aquí mismo
- const verHora=async h=>{alh.hidden=true;if(!h)return;const d=await agCargarDia(fecha).catch(()=>null);if(h!==hora||!alh.isConnected)return;
-  const L=((d&&d.citas)||[]).filter(c=>c.hora===h&&c.pacienteId&&!agEsFuera(c.estado)&&!agEsLibre(c.estado));
+  <div class="ag-otrah"><span>Otra hora</span><input type="text" class="ag-in ag-oh" inputmode="numeric" placeholder="Ej.: 09:30" maxlength="5"></div>`;
+function agPickerHora(m,o){// o: get()→{fecha,fisio}, onPick(h|''), excl (id de la cita que se mueve), onCambio()
+ const hs=m.querySelector('.ag-hs'),oh=m.querySelector('.ag-oh'),alh=m.querySelector('.ag-alh');let hora='';
+ const set=h=>{hora=h;o.onPick&&o.onPick(h);};
+ const verHora=async h=>{alh.hidden=true;if(!h)return;const {fecha}=o.get();const d=await agCargarDia(fecha).catch(()=>null);if(h!==hora||!alh.isConnected)return;
+  const L=((d&&d.citas)||[]).filter(c=>c.hora===h&&c.id!==o.excl&&c.pacienteId&&!agEsFuera(c.estado)&&!agEsLibre(c.estado));
   if(!L.length){alh.hidden=false;alh.innerHTML=`<div class="ag-alhh">A las ${escH(h)} no hay ningún paciente · bomba libre</div>`;return;}
   const n=agBombaN(L,h);alh.hidden=false;
   alh.innerHTML=`<div class="ag-alhh">A las ${escH(h)} · <b class="${n>=2?'full':''}">bomba ${n>=2?'llena':n===1?'1 de 2':'libre'}</b></div>`+L.map(c=>{const sb=(c.tipos||[]).some(agNoBomba);
@@ -6733,15 +6727,29 @@ function agAnadirCita(fecha0,fisio0,onDone){
   alh.querySelectorAll('.ag-alb').forEach(b=>b.onclick=async()=>{const c=L.find(x=>x.id===b.dataset.id);if(!c)return;const t0=c.tipos||[],sb=t0.some(agNoBomba);
    const nt=sb?t0.filter(t=>!agNoBomba(t)):[...t0,'NO BOMBA'];b.disabled=true;
    try{const r=await agPost('seg-agenda-editar',{id:c.id,tipos:nt});if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');c.tipos=nt;
-    toast(`${capTit(c.paciente||'')}: ${sb?'con bomba':'sin bomba'}`,true);const h0=hora;agHorasChips(hs,fecha,fisio,h0,pick,true);verHora(h0);cambio=true;}
+    toast(`${capTit(c.paciente||'')}: ${sb?'con bomba':'sin bomba'}`,true);const h0=hora,{fecha:f0,fisio:fi0}=o.get();agHorasChips(hs,f0,fi0,h0,pick,true,o.excl);verHora(h0);o.onCambio&&o.onCambio();}
    catch(err){b.disabled=false;toast(err.message,false);}});};
- const pick=h=>{hora=h;oh.value='';verHora(h);};
- const ch=()=>{hora='';oh.value='';alh.hidden=true;agHorasChips(hs,fecha,fisio,'',pick,true);};
- const pf=()=>m.querySelectorAll('.ag-ffs button').forEach(b=>b.classList.toggle('on',b.dataset.f===fisio));
- m.querySelectorAll('.ag-ffs button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;pf();ch();});pf();ch();
- calFijo(m.querySelector('.ag-fd'),fecha,f=>{fecha=f;ch();});
+ const pick=h=>{oh.value='';set(h);verHora(h);};
  oh.oninput=()=>{let v=oh.value.replace(/[^\d:]/g,'');if(/^\d{3,4}$/.test(v))v=v.padStart(4,'0').replace(/^(\d\d)(\d\d)$/,'$1:$2');oh.value=v;
-  const ok=/^([01]\d|2[0-3]):[0-5]\d$/.test(v);if(ok){hora=v;hs.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.h===v));verHora(v);}else if(!hs.querySelector('button.on')){hora='';alh.hidden=true;}};
+  if(/^([01]\d|2[0-3]):[0-5]\d$/.test(v)){hs.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.h===v));set(v);verHora(v);}
+  else if(!hs.querySelector('button.on')){set('');alh.hidden=true;}};
+ const ch=()=>{oh.value='';alh.hidden=true;set('');const {fecha,fisio}=o.get();agHorasChips(hs,fecha,fisio,'',pick,true,o.excl);};
+ return {ch};
+}
+// «＋ Cita»: dar cita a cualquier hora (aunque no haya hueco abierto), desde cualquier vista
+function agAnadirCita(fecha0,fisio0,onDone){
+ const eq=agEquipo(),yo=String((fisioActual&&fisioActual.nombre)||'').split(' ')[0].toLowerCase();
+ let fecha=fecha0||agHoyIso(),hora='',fisio=eq.includes(fisio0)?fisio0:(eq.find(f=>String(f).toLowerCase()===yo)||eq[0]||''),cambio=false;
+ const m=hzModal(`<div class="hz-top"><div><small>Agenda</small><b>Añadir cita</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Día</div><div class="ag-fd"></div>
+  <div class="hz-lab">Fisio</div><div class="ag-ffs">${eq.map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
+  ${AG_HORA_HTML}
+  <div class="hz-bts"><button type="button" class="hz-ok">Siguiente</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>{m.remove();if(cambio)onDone&&onDone();};
+ const ph=agPickerHora(m,{get:()=>({fecha,fisio}),onPick:h=>hora=h,onCambio:()=>cambio=true});
+ const pf=()=>m.querySelectorAll('.ag-ffs button').forEach(b=>b.classList.toggle('on',b.dataset.f===fisio));
+ m.querySelectorAll('.ag-ffs button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;pf();ph.ch();});pf();ph.ch();
+ calFijo(m.querySelector('.ag-fd'),fecha,f=>{fecha=f;ph.ch();});
  m.querySelector('.hz-ok').onclick=async e=>{if(!fisio){toast('Elige el fisio',false);return;}if(!hora){toast('Elige la hora',false);return;}
   const b=e.target;b.disabled=true;b.textContent='Mirando la hora…';let hueco=null;
   try{const d=await agCargarDia(fecha);const rs=((d&&d.citas)||[]).filter(c=>c.fisio===fisio&&c.hora===hora);
@@ -6750,14 +6758,14 @@ function agAnadirCita(fecha0,fisio0,onDone){
    const li=!oc&&rs.find(c=>agEsLibre(c.estado));if(li)hueco=Object.assign({fecha},li);}catch(_){}
   m.remove();agDarCita({fecha,hora,fisio,hueco},onDone);};
 }
-function agHorasChips(box,fecha,fisio,horaSel,onPick,soloSuyas){
+function agHorasChips(box,fecha,fisio,horaSel,onPick,soloSuyas,excl){
  box.innerHTML='<small class="fp-mu">Cargando horas…</small>';
  agCargarDia(fecha).then(d=>{const C=(d&&d.citas)||[];let hs=[];
   if(soloSuyas){hs=[...new Set(C.filter(c=>c.fisio===fisio&&/^\d{2}:\d{2}$/.test(c.hora)&&!agEsBloq(c.estado)).map(c=>c.hora))].sort();
    if(!hs.length){box.innerHTML=`<small class="fp-mu">${escH(agNom(fisio))} no tiene horas abiertas este día. Si hace falta, escribe la hora en «Otra hora».</small>`;return;}}
   else{for(let h=7;h<=21;h++)hs.push(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(!hs.includes(c.hora)&&/^\d{2}:\d{2}$/.test(c.hora))hs.push(c.hora);});hs.sort();}
   box.innerHTML=hs.map(h=>{const rs=C.filter(c=>c.fisio===fisio&&c.hora===h);const ocup=rs.some(c=>c.pacienteId&&!agEsFuera(c.estado)),blq=rs.some(c=>agEsBloq(c.estado)),lib=rs.some(c=>agEsLibre(c.estado));
-   const bf=agBombaN(C,h)>=2;return `<button type="button" data-h="${h}" class="${ocup?'oc':blq?'bq':lib?'li':''}${h===horaSel?' on':''}${bf?' bmf':''}">${h}${bf&&!ocup?'<small>bomba llena</small>':''}</button>`;}).join('');
+   const bf=agBombaN(C,h,excl)>=2;return `<button type="button" data-h="${h}" class="${ocup?'oc':blq?'bq':lib?'li':''}${h===horaSel?' on':''}${bf?' bmf':''}">${h}${bf&&!ocup?'<small>bomba llena</small>':''}</button>`;}).join('');
   box.querySelectorAll('button').forEach(b=>b.onclick=()=>{box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));const bi=box.parentNode&&box.parentNode.querySelector('.ag-bmi');if(bi)agBombaInfo(bi,C,b.dataset.h);onPick(b.dataset.h);});
  }).catch(()=>{box.innerHTML='<small class="fp-mu">No se han podido cargar las horas</small>';});
 }
@@ -6810,14 +6818,15 @@ function agMoverCita(c,onDone){
  const FD=c.fecha||AG.fecha;let fecha=FD,hora='',fisio=c.fisio;const futuro=FD>=agHoyIso();
  const m=hzModal(`<div class="hz-top"><div><small>Cambiar día u hora · ahora ${escH(agCab(FD,c.hora,c.fisio))}</small><b>${escH(c.paciente||'Paciente')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Día</div><div class="ag-fd"></div>
-  <div class="hz-lab">Fisio</div><select class="ag-in ag-ff">${[...new Set([...agEquipo(),c.fisio])].map(f=>`<option value="${escH(f)}"${f===fisio?' selected':''}>${escH(agNom(f))}</option>`).join('')}</select>
-  <div class="hz-lab">Hora <span>(verde = libre, gris = ocupada)</span></div><div class="ag-hs"></div>
+  <div class="hz-lab">Fisio</div><div class="ag-ffs">${[...new Set([...agEquipo(),c.fisio])].map(f=>`<button type="button" data-f="${escH(f)}">${escH(agNom(f))}</button>`).join('')}</div>
+  ${AG_HORA_HTML}
   ${futuro?'<label class="ag-lib"><input type="checkbox" checked> Dejar la hora de ahora libre para otro paciente</label>':''}
   <div class="hz-bts"><button type="button" class="hz-ok">Cambiar cita</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
- const hs=m.querySelector('.ag-hs'),fd=m.querySelector('.ag-fd'),ff=m.querySelector('.ag-ff');
- const ch=()=>{hora='';agHorasChips(hs,fecha,fisio,'',h=>hora=h);};ch();
- calFijo(fd,fecha,f=>{fecha=f;ch();});ff.onchange=()=>{fisio=ff.value;ch();};
+ const fd=m.querySelector('.ag-fd'),ph=agPickerHora(m,{get:()=>({fecha,fisio}),onPick:h=>hora=h,excl:c.id}),ch=ph.ch;
+ const pf=()=>m.querySelectorAll('.ag-ffs button').forEach(b=>b.classList.toggle('on',b.dataset.f===fisio));
+ m.querySelectorAll('.ag-ffs button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;pf();ch();});pf();ch();
+ calFijo(fd,fecha,f=>{fecha=f;ch();});
  const enviar=async(b,forzar)=>{if(!fecha||!hora){toast('Elige día y hora',false);return;}b.disabled=true;b.textContent='Cambiando…';
   try{const lb=m.querySelector('.ag-lib input');const r=await agPost('seg-agenda-mover',{id:c.id,fecha,hora,fisio,liberar:!!(lb&&lb.checked),forzar,...agBombaP(m)});
    if(r.bomba){b.disabled=false;b.textContent='Cambiar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
