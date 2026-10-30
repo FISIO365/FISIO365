@@ -34,5 +34,15 @@
   "Chat",
   "Documentos y packs",
   "Menú, avisos y guía"
+ ],
+ "cursos": [
+  [
+   "appEquipo",
+   26
+  ],
+  [
+   "appCliente",
+   7
+  ]
  ]
 }

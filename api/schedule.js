@@ -2792,10 +2792,10 @@ module.exports = async function handler(req, res) {
           const msgs = [root, ...resp].map(vistaMsg).sort((a, b) => a.fecha.localeCompare(b.fecha));
           const ult = msgs[msgs.length - 1], req = !!F['REQUIERE ACCIÓN'], abierta = nmC(F.ESTADO) !== 'Cerrada';
           const faltan = para.filter(p => !hecho[p]);
-          const tipo = nmC(F.TIPO) || 'Comunicado', esAus = tipo === 'Ausencia', resolucion = esAus ? (nmC(F['RESOLUCIÓN']) || 'Pendiente') : '';
+          const tipo = json(F.DATOS).school ? 'School' : (nmC(F.TIPO) || 'Comunicado'), esAus = tipo === 'Ausencia', resolucion = esAus ? (nmC(F['RESOLUCIÓN']) || 'Pendiente') : '';
           const puedeAprobar = esAus && abierta && resolucion === 'Pendiente' && para.includes(yo) && de !== yo;
           const modo = ['leer', 'hacer', 'responder'].includes(F.MODO) ? F.MODO : (req ? 'hacer' : 'leer'), recibido = json(F.RECIBIDO);
-          return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo, de, para, req, modo, recibido, limite: F['FECHA LÍMITE'] || '', abierta,
+          return { id: root.id, asunto: F.ASUNTO || '(sin asunto)', tipo, de, para, req, modo, recibido, verSeg: tipo === 'School' && !!(yoRec && yoRec.fields['DIRECCIÓN']), limite: F['FECHA LÍMITE'] || '', abierta,
             num: SEQ_C[root.id] ? `COM-${String(msgs[0].fecha || '').slice(0, 4)}-${String(SEQ_C[root.id]).padStart(4, '0')}` : '', ausencia: esAus ? json(F.AUSENCIA) : null, datos: json(F.DATOS), resolucion, resueltaPor: F['RESUELTA POR'] || '', puedeAprobar,
             fecha: msgs[0].fecha, ultima: ult.fecha, ultimoDe: ult.de, nResp: resp.length, extracto: String(ult.cuerpo || '').replace(/\[\[pac:rec[A-Za-z0-9]{14}\|([^\]|]{1,80})(?:\|[a-z]{3,12})?\]\]/g, '@$1').replace(/\[\[sec:[a-z]{2,8}\|([^\]]{1,40})\]\]/g, '@$1').replace(/\s+/g, ' ').slice(0, 140),
             leido, hecho, faltan,
@@ -2811,7 +2811,8 @@ module.exports = async function handler(req, res) {
           rs.filter(r => r.fields.HILO).forEach(r => { (porHilo[r.fields.HILO] = porHilo[r.fields.HILO] || []).push(r); });
           return roots.map(r => { const de0 = String((r.fields || {}).DE || '').trim(), rs = porHilo[r.id] || []; return { r, h: vistaHilo(r, de0 === yo ? rs : rs.filter(x => [de0, yo].includes(String(x.fields['DE'] || '').trim()))) }; }); // las respuestas de los compañeros solo las ve quien la envió
         };
-        const participa = h => h.de === yo || h.para.includes(yo);
+        const esDirYo = !!(yoRec && yoRec.fields['DIRECCIÓN']);
+        const participa = h => h.de === yo || h.para.includes(yo) || (h.tipo === 'School' && esDirYo); // dirección ve las tareas de School de todos
         const marcar = async (root, campo, extra) => { const o = json(root.fields[campo]); o[yo] = ahora; const fields = { [campo]: JSON.stringify(o), ...(extra || {}) };
           const d = await at(`${COM}/${root.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) }); if (d.error) throw new Error('No se ha podido guardar'); root.fields = d.fields || root.fields; return o; };
         const buscar = async id => { if (!okId(id)) throw new Error('Comunicación no válida'); const d = await at(`${COM}/${id}`); if (d.error || !d.fields || d.fields.HILO) throw new Error('No se encuentra la comunicación'); return d; };
@@ -2961,6 +2962,7 @@ module.exports = async function handler(req, res) {
           const F = root.fields, de = F.DE || '', para0 = listaPara(F.PARA);
           if (de !== yo && !para0.includes(yo)) return res.status(403).json({ ok: false, error: 'No formas parte de esta comunicación' });
           if (!cuerpo && !q.hecho && !q.recibido) return res.status(400).json({ ok: false, error: 'Escribe la respuesta' });
+          if (q.hecho && json(F.DATOS).school) return res.status(400).json({ ok: false, error: 'Se marca sola al terminar el módulo en School' });
           const modoR = ['leer', 'hacer', 'responder'].includes(F.MODO) ? F.MODO : '';
           if (cuerpo && de !== yo && modoR !== 'responder' && !['Ausencia', 'Incidencia', 'Ayuda', 'Tareas'].includes(nmC(F.TIPO))) return res.status(400).json({ ok: false, error: 'En esta comunicación no se pide respuesta escrita' });
           // Respuestas escritas: la de un destinatario solo le llega a quien la envió; un comentario de quien la envió, a todos
@@ -2972,6 +2974,19 @@ module.exports = async function handler(req, res) {
           if (q.hecho && para0.includes(yo) && !['Ausencia', 'Tareas', 'Incidencia', 'Ayuda'].includes(nmC(F.TIPO))) { const hc = json(root.fields.HECHO); hc[yo] = ahora; const todos = para0.every(p => hc[p]);
             await marcar(root, 'HECHO', todos && F['REQUIERE ACCIÓN'] ? { ESTADO: 'Cerrada' } : null); }
           return res.status(200).json({ ok: true, id: q._respId || '' });
+        }
+        // School: al terminar un módulo de la serie, su tarea del día queda hecha sola (para quien la ha hecho)
+        if (action === 'seg-com-school') {
+          const k = Number(q.k); if (!(k >= 0)) return res.status(400).json({ ok: false });
+          const rs = await todosT(COM, `filterByFormula=${encodeURIComponent("AND({HILO}='',FIND('\"school\"',{DATOS}&''))")}`);
+          let n = 0;
+          for (const r of rs) { const F = r.fields || {}, D = json(F.DATOS), para0 = listaPara(F.PARA);
+            if (!D.school || D.school.k !== k || !para0.includes(yo)) continue;
+            const hc = json(F.HECHO); if (hc[yo]) continue; hc[yo] = ahora; const todos = para0.every(p => hc[p]);
+            const le = json(F['LEÍDO']); le[yo] = le[yo] || ahora; const rc = json(F.RECIBIDO); rc[yo] = rc[yo] || ahora;
+            const d = await at(`${COM}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHO: JSON.stringify(hc), 'LEÍDO': JSON.stringify(le), RECIBIDO: JSON.stringify(rc), ...(todos ? { ESTADO: 'Cerrada' } : {}) } }) });
+            if (!d.error) n++; }
+          return res.status(200).json({ ok: true, n });
         }
         if (action === 'seg-com-hecho') {
           const root = await buscar(q.id), F = root.fields, para0 = listaPara(F.PARA);

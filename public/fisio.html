@@ -7046,8 +7046,8 @@ const comDireccion=()=>[...new Set((fisios||[]).filter(f=>f.direccion).map(f=>pi
 const COM_APRUEBAN_X=null;
 // Quien hace las tareas de administración (consentimientos, huecos de la lista de espera, tarjetas regalo): el Puesto «Administración»
 const ADMIN_NOM=()=>comAprueban()[0]||comDireccion()[0]||''; // administración: aprueba vacaciones y recibe lo confidencial (si lo pide Nora, va a Ramiro) // quién aprueba vacaciones, días libres y cambios de horario
-const comTipoTxt=t=>({Comunicado:'Informe',Aviso:'Informe',Ausencia:'Vacaciones y horarios',Incidencia:'Para administración',Ayuda:'Necesito ayuda'})[t]||t;
-const comRol=n=>{if(/^fisio365$/i.test(n||''))return 'Resumen automático del panel';const f=(fisios||[]).find(x=>String(x.nombre||'').split(' ')[0].toLowerCase()===String(n||'').toLowerCase());if(!f)return /^(nora|ramiro)$/i.test(n||'')?'Dirección · FISIO365':'Fisioterapeuta · FISIO365';return (f.role==='admin'?'Administración':'Fisioterapeuta')+(f.direccion?' · Dirección':'')+' · FISIO365';};
+const comTipoTxt=t=>({School:'School · formación',Comunicado:'Informe',Aviso:'Informe',Ausencia:'Vacaciones y horarios',Incidencia:'Para administración',Ayuda:'Necesito ayuda'})[t]||t;
+const comRol=n=>{if(/^fisio365$/i.test(n||''))return 'Resumen automático del panel';if(/^school$/i.test(n||''))return 'Formación del equipo';const f=(fisios||[]).find(x=>String(x.nombre||'').split(' ')[0].toLowerCase()===String(n||'').toLowerCase());if(!f)return /^(nora|ramiro)$/i.test(n||'')?'Dirección · FISIO365':'Fisioterapeuta · FISIO365';return (f.role==='admin'?'Administración':'Fisioterapeuta')+(f.direccion?' · Dirección':'')+' · FISIO365';};
 const comFechaDia=f=>{if(!f)return '';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][t.getMonth()];};
 const comFechaCarta=iso=>iso?new Date(iso).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Madrid'}):'';
 let COM={tab:'rec',d:null,hilo:null,y:0};
@@ -7085,7 +7085,7 @@ const COM_IC={
  lapiz:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'};
 const comIco=(k,c)=>`<svg viewBox="0 0 24 24"${c?` class="${c}"`:''}>${COM_IC[k]||''}</svg>`;
 // Sello de cada tipo: color + icono
-const comSelloDe=h=>{const q=(h.ausencia&&h.ausencia.que)||'';return h.tipo==='Ausencia'?(/Vacaciones|Día libre/.test(q)?['#e3f2e8','#2f7a52','sol']:['#ede9f7','#6b5fb5','reloj']):({Tareas:['#e6eefb','#3460b0','check'],Incidencia:['#f1e8f5','#8a4fa3','candado'],Ayuda:['#e2f3f4','#1f7a80','salvavidas'],Informe:['#e4ebf3','#1e2a38','doc'],Solicitud:['#fdebe1','#c2552e','pregunta'],Aviso:['#e4ebf3','#1e2a38','doc'],Comunicado:['#e4ebf3','#1e2a38','doc']})[h.tipo]||['#e4ebf3','#1e2a38','doc'];};
+const comSelloDe=h=>{const q=(h.ausencia&&h.ausencia.que)||'';return h.tipo==='Ausencia'?(/Vacaciones|Día libre/.test(q)?['#e3f2e8','#2f7a52','sol']:['#ede9f7','#6b5fb5','reloj']):({School:['#fdf1ea','#c2552e','check'],Tareas:['#e6eefb','#3460b0','check'],Incidencia:['#f1e8f5','#8a4fa3','candado'],Ayuda:['#e2f3f4','#1f7a80','salvavidas'],Informe:['#e4ebf3','#1e2a38','doc'],Solicitud:['#fdebe1','#c2552e','pregunta'],Aviso:['#e4ebf3','#1e2a38','doc'],Comunicado:['#e4ebf3','#1e2a38','doc']})[h.tipo]||['#e4ebf3','#1e2a38','doc'];};
 const comSello=h=>{const [bg,c,i]=comSelloDe(h);return `<i class="com-st" style="background:${bg}"><svg viewBox="0 0 24 24" style="stroke:${c}">${COM_IC[i]}</svg></i>`;};
 // Sobrecito: cerrado con lacre si está sin abrir; abierto con la carta asomando si ya se ha leído
 function comMini(h,cerrado){
@@ -7329,6 +7329,7 @@ async function comHilo(wrap,id){
  const hecho=x=>`<div class="com-ok">${comIco('check')}<span>${escH(x)}</span></div>`,boton=(k,t)=>`<button type="button" class="com-b" data-a="${k}">${t}</button>`,miH=h.hecho[yo];
  let acc='';
  if(h.puedeAprobar)acc=`<p class="com-acc-t">Al aprobarla se apunta en Dirección y se bloquean sus huecos libres en la agenda.</p><div class="com-bts"><button type="button" class="com-b sec" data-a="rech">Rechazar</button><button type="button" class="com-b" data-a="apr">Aprobar</button></div>`;
+ else if(D.school&&h.para.includes(yo))acc=miH?hecho('Módulo hecho · '+comFecha(miH)):h.abierta?`<p class="com-acc-t" style="margin:0 0 10px;text-align:center">Se marca como hecha sola cuando terminas el módulo.</p>`+boton('school','Hacer el módulo'):'';
  else if(h.tipo==='Tareas'&&h.para.includes(yo))acc=h.abierta?boton('todas','✓ Marcar todo como hecho'):hecho('Todas las tareas hechas');
  else if(h.tipo==='Incidencia'&&h.para.includes(yo))acc=h.abierta?boton('gest','✓ Marcar como gestionada'):'';
  else if(h.tipo==='Ayuda'&&h.abierta)acc=!D.encargado&&h.para.includes(yo)?boton('encargo','🙋 Me encargo'):(D.encargado===yo||env)?boton('resuelta','✓ Resuelta'):'';
@@ -7354,7 +7355,7 @@ async function comHilo(wrap,id){
    return `<div class="com-ev ${ev.tipo}"><span class="com-ev-i">${comIco(ev.tipo==='no'?'cruz':'check')}</span><div><b>${escH(ev.titulo)}</b><small>${escH([comFecha(m.fecha)].concat(ev.det).join(' · '))}</small></div></div>${ev.ojo.length?`<div class="com-ojo"><b>Citas con paciente que hay que mover</b>${ev.ojo.map(x=>`<span>${escH(x)}</span>`).join('')}</div>`:''}${ev.coment?resp1(ev.coment):''}`;}).join('')}
   ${(env&&!esAus)||(!env&&!esAus&&!esp&&MODO==='responder'&&h.para.includes(yo))?`<div class="com-card com-resp${puedeResp||(env&&false)?'':' plegada'}"><button type="button" class="com-anadir">+ ${env?'Escribir un comentario':'Añadir otra respuesta'}</button><p class="com-acc-t">${env?'Lo verá quien la ha recibido.':'Tu respuesta solo la ve '+escH(h.de)+'.'}</p><textarea rows="4" placeholder="${env?'Escribe un comentario…':'Escribe tu respuesta…'}"></textarea><div class="com-adjr"></div><div class="com-bts" style="margin-top:8px"><button type="button" class="com-b" data-a="resp">Enviar ${env?'comentario':'respuesta'}</button></div></div>`:''}
   ${acc?`<div class="com-card com-acc">${acc}</div>`:''}
-  ${env?`<div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>`:''}
+  ${env||h.verSeg?`<div class="com-card com-est"><div class="com-est-t">Seguimiento</div>${h.para.map(p=>`<div class="com-dr">${comAv(p)}<b>${escH(p)}</b>${est(p)}</div>`).join('')}</div>`:''}
 
   ${env&&!(esAus&&h.resolucion!=='Pendiente')?`<button type="button" class="com-cerrar" data-a="estado">${h.abierta?(esAus&&h.resolucion==='Pendiente'?'Retirar la solicitud':'Cerrar esta comunicación'):'Reabrir esta comunicación'}</button>`:''}`;
  box.querySelector('.com-volver').onclick=volver;
@@ -7376,6 +7377,7 @@ async function comHilo(wrap,id){
     catch(e){bs.forEach(x=>x.disabled=false);b.textContent=t0;toast(e.message,false);}})();}
   else if(a==='hecho')hacer(b,'seg-com-responder',{cuerpo:'',hecho:true},{leer:'Recibido',hacer:'Marcado como hecho',responder:'Hecho'}[MODO]||'Hecho');
   else if(a==='recib')hacer(b,'seg-com-responder',{cuerpo:'',recibido:true},'Recibido');
+  else if(a==='school')serieAbrirModulo(D.school.curso,D.school.i);
   else if(a==='todas')hacer(b,'seg-com-tarea',{idx:'todas',hecho:true},'¡Todas hechas!');
   else if(a==='apr')admSiNo(`Se apuntará en Dirección (${String(A.que||'').toLowerCase()} de ${h.de}) y se bloquearán sus huecos libres en la agenda.`,'Sí, aprobar').then(ok=>{if(ok)hacer(b,'seg-com-resolver',{aprobar:true},'Solicitud aprobada');});
   else if(a==='rech')admSiNo('La solicitud quedará rechazada. Si quieres explicar el motivo, escríbelo luego en «¿Dudas o algo que decir?».','Sí, rechazar').then(ok=>{if(ok)hacer(b,'seg-com-resolver',{aprobar:false},'Solicitud rechazada');});
@@ -11461,6 +11463,11 @@ function serieAbiertos(id,total){if(esDireccionSeguro())return total;const o=ser
 function serieFechaTxt(f){const d=new Date(f+'T12:00:00');return ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1);}
 // El módulo de hoy (el último abierto) y si ya está hecho
 function serieHoy(){const n=serieN();if(!n)return null;const k=n-1;let o=0;for(const [c,len] of SERIE.cursos){if(k<o+len){const i=k-o;let hecho=false;try{const d=JSON.parse(localStorage.getItem('fisio365_school_'+c+'_'+(fisioActual?.id||'x'))||'null');hecho=!!(d&&d.scores&&d.scores[i]&&d.scores[i].done);}catch(e){}return {curso:c,i,k,hecho};}o+=len;}return null;}
+// Módulo terminado: queda apuntado en el servidor (dirección lo ve) y, si es de la serie, su tarea del día en Comunicaciones se marca hecha
+function schoolModHecho(curso,i,c,t){try{if(!fisioActual)return;
+ fetch('/api/progreso',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fisioId:fisioActual.id,seccion:'wiki_'+curso+'_m'+i,estado:'completado'})}).catch(()=>{});
+ const o=serieOff(curso);if(o>=0)comPost('seg-com-school',{k:o+i}).catch(()=>{});}catch(e){}}
+function serieAbrirModulo(c,i){showSection('school');const r=WIKI_RUTAS.find(x=>x.id===c);if(!r)return;try{const key='fisio365_school_'+c+'_'+(fisioActual?.id||'x');const d=JSON.parse(localStorage.getItem(key)||'null')||{};d.curMod=i;localStorage.setItem(key,JSON.stringify(d));}catch(e){}renderFormacion($('mainWrap'),r);}
 function serieAbrirHoy(){const h=serieHoy();showSection('school');if(!h)return;const r=WIKI_RUTAS.find(x=>x.id===h.curso);if(!r)return;try{const key='fisio365_school_'+h.curso+'_'+(fisioActual?.id||'x');const d=JSON.parse(localStorage.getItem(key)||'null')||{};d.curMod=h.i;localStorage.setItem(key,JSON.stringify(d));}catch(e){}renderFormacion($('mainWrap'),r);}
 // ── Curso obligatorio «Cómo funciona la app»: aviso hasta terminarlo ──
 const CURSOS_OBL=['appEquipo','appCliente'];let CURSO_OBL='appEquipo';
@@ -11500,6 +11507,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-02',t:'Formación del panel: cada día laborable te llega a Comunicaciones la tarea «Módulo de hoy». Se marca hecha sola al terminar el módulo.'},
  {f:'2026-10-31',t:'Si un paciente no paga por adelantado en 2 horas, su cita se cancela sola y la hora queda libre, a cualquier hora del día.'},
  {f:'2026-10-31',t:'Los desplegables, fechas, horas y preguntas del panel ya tienen nuestro estilo (también en el móvil).'},
  {f:'2026-10-31',t:'Las vacaciones y cambios de horario los aprueba dirección.',dir:1},
@@ -13471,6 +13479,7 @@ function renderFormacion(wrap, ruta){
  {ti:'En el ordenador y en el móvil',body:`En el ordenador tienes el <b>menú a la izquierda</b>. En el móvil, abajo están <b>Agenda, Pacientes, Chat y Check-list</b>; todo lo demás (Comunicaciones, Mis estadísticas, Valoraciones, Sugerencias, Call-in, Captación, Ejercicios, School, Notificaciones…) está tocando <b>tu foto</b>.`,ver:{sec:'agenda',pasos:[{el:'.sidebar',txt:'Este es tu menú con las secciones que tienes.'},{el:'#btnPerfil',txt:'En el móvil, el resto de secciones están tocando tu foto.'}]}},
  {ti:'Los botones de arriba',body:`<b>Apuntar a alguien que pregunta</b> (el bocadillo con +): para quien llama o entra a preguntar y no se cita; va a Captación › No citados. <b>Pendientes</b> (✓): tus tareas y llamadas, con el número de lo que te toca hoy o tienes atrasado. Y los <b>avisos</b>: en el ordenador la campana; en el móvil, dentro de tu foto › Notificaciones.`,ver:{sec:'agenda',pasos:[{el:'#btnNoCit',txt:'Apuntar a alguien que pregunta y no se cita.'},{el:'#btnTar, #sb-tar',txt:'Pendientes: tus tareas y llamadas.'},{el:'#btnAvisos',txt:'La campana: los avisos del panel.'},{el:'#btnPerfil',txt:'Tu foto: el resto de secciones y Notificaciones.'}]}},
  {ti:'Activa los avisos',body:`Actívalos en <b>cada ordenador y móvil</b> que uses (en iPhone, con el panel instalado en la pantalla de inicio). Te llega un aviso cuando un paciente te escribe por el chat, cuando alguien reserva una hora tuya por un enlace, cuando paga por adelantado y cuando un paciente tuyo contesta una encuesta contento. Y, durante la serie de School, el módulo de cada día.`,ver:{sec:'agenda',pasos:[{el:'#btnAvisos || #btnPerfil',txt:'Aquí activas los avisos (en el móvil, tu foto › Notificaciones).'}]}},
+ {ti:'La formación de cada día',body:`Cada día laborable a las 8:30 te llega una <b>tarea en Comunicaciones</b>: «Módulo de hoy». Tócala, <b>Hacer el módulo</b> (unos 5 minutos) y, al acertar las preguntas, la tarea se marca <b>hecha sola</b>. Mientras no la hagas te sale en Pendientes del buzón y arriba de tu check-list, y dirección ve quién la tiene hecha.`},
  {ti:'La pantalla no se pierde',body:`El panel recuerda dónde estabas: la sección, la vista de la agenda, los filtros y la pestaña de Pendientes. Si cierras y vuelves, sigues donde lo dejaste.`}
  ],
  qs:[
@@ -14043,7 +14052,9 @@ function renderFormacion(wrap, ruta){
  const allCorrect = qState.every(s=>s.correct);
  const allAnswered = savedQs.every(v=>v!==null);
  const corr=qState.filter(s=>s.correct).length;
+ const eraHecho=!!(scores[curMod]&&scores[curMod].done);
  scores[curMod]={c:corr,done:allAnswered&&allCorrect,qs:savedQs};
+ if(!eraHecho&&scores[curMod].done)schoolModHecho(ruta.id,curMod,corr,MODS[curMod].qs.length);
  // Guardar en localStorage para persistir entre sesiones
  saveScoresToLS();
  renderNavPills(mn);

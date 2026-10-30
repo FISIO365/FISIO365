@@ -14,6 +14,7 @@ No hace falta para arreglos internos que nadie nota.
 
 ## Serie de formación (School)
 - Desde el 2/11/2026, un módulo cada día laborable a las 8:30 (Madrid): primero los módulos del curso «Cómo funciona la app» (sin los de dirección) y luego «La app del paciente». Config en `SERIE` de `public/fisio.html`; los módulos de días futuros salen bloqueados (dirección lo ve todo).
+- Tarea diaria: el mismo cron crea una comunicación (DE «School», MODO hacer, límite hoy, `DATOS.school={k,curso,i}`) para los fisios; al terminar el módulo, el panel llama a `seg-com-school` y se marca HECHO sola (no se puede marcar a mano). Dirección ve el seguimiento. Cada módulo hecho se guarda en /api/progreso como `wiki_<curso>_m<i>`.
 - Aviso al móvil a las 8:30: `api/cron.js?serie=1` (cron de lunes a viernes 7:30 UTC) con los títulos de `api/_serie.json`.
 - Si se añaden, quitan o reordenan módulos: actualizar `SERIE.cursos` (número de módulos), `MODS_EQUIPO_TIT`/`MODS_CLIENTE_TIT` y `api/_serie.json`. Un módulo nuevo va al final de la serie para no mover los días ya anunciados.
 - Capturas de la app del paciente para School: `public/img/school/` (datos de prueba). Si cambia una pantalla de la app del paciente, se rehace la captura.

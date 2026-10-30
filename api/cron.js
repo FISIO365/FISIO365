@@ -174,7 +174,16 @@ module.exports = async function handler(req, res) {
     if (n < 1 || n > S.modulos.length) return res.status(200).json({ ok: true, saltado: 'Fuera de la serie' });
     if (!/forzar=1/.test(req.url || '') && (await SCH.ajuste('serie_enviado', '').catch(() => '')) === hoy.fecha) return res.status(200).json({ ok: true, ya: true });
     await SCH.guardarAjuste('serie_enviado', hoy.fecha, 'cron').catch(() => {});
-    const F = await todos(TABLAS.fisio, `filterByFormula=${encodeURIComponent('AND({PushSubscription}!="",{FECHA BAJA}="",LOWER({Role})="fisio",NOT({DIRECCIÓN}))')}&fields[]=PushSubscription`).catch(() => []);
+    // La tarea del día por Comunicaciones (Pendientes del buzón y del check-list); se marca hecha sola al terminar el módulo
+    const EQ = await todos(TABLAS.fisio, `filterByFormula=${encodeURIComponent('AND({FECHA BAJA}="",LOWER({Role})="fisio",NOT({DIRECCIÓN}))')}&fields[]=Name&fields[]=PushSubscription`).catch(() => []);
+    const pilaN = x => { const p = String(x || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
+    const para = [...new Set(EQ.map(f => pilaN(f.fields.Name)).filter(Boolean))];
+    let k = n - 1, curso = '', ii = 0; { let o = 0; for (const [c, len] of S.cursos) { if (k < o + len) { curso = c; ii = k - o; break; } o += len; } }
+    if (para.length) await fetch(`https://api.airtable.com/v0/${BASE_ID}/tbl2qRD3WsvQVPrwX`, { method: 'POST', headers: { ...AT, 'Content-Type': 'application/json' }, body: JSON.stringify({ typecast: true, records: [{ fields: {
+      ASUNTO: `Módulo de hoy: ${S.modulos[n - 1]}`, TIPO: 'Comunicado', DE: 'School', PARA: para.join(', '), FECHA: new Date().toISOString(), MODO: 'hacer', 'REQUIERE ACCIÓN': true, 'FECHA LÍMITE': hoy.fecha,
+      CUERPO: `Hoy toca el módulo ${n} de ${S.modulos.length} de la formación del panel: «${S.modulos[n - 1]}». Son unos 5 minutos, con preguntas al final.\n\nTócalo en «Hacer el módulo». Cuando lo termines, esta tarea se marca como hecha sola.`,
+      DATOS: JSON.stringify({ school: { k, curso, i: ii, titulo: S.modulos[n - 1] } }), 'LEÍDO': '{}', HECHO: '{}', RECIBIDO: '{}', ESTADO: 'Abierta' } }] }) }).catch(() => {});
+    const F = EQ.filter(f => f.fields.PushSubscription);
     const titulo = S.modulos[n - 1]; let ok = 0;
     for (const f of F) { let sub = null; try { sub = JSON.parse(f.fields.PushSubscription); } catch (e) {} if (await enviar(sub, { title: 'School · Módulo de hoy', body: `«${titulo}» (${n} de ${S.modulos.length}). Unos 5 minutos.`, url: '/fisio?s=school', tag: 'serie' })) ok++; }
     console.log('serie', hoy.fecha, n, titulo, ok + '/' + F.length);
