@@ -21,10 +21,20 @@ const CONS_DER='Puede ejercer sus derechos de acceso, rectificación, supresión
 })();
 async function pdfConsentimiento(D){
  await consPdfJs();const F0=await consPdfFuentes();
- const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});let F='helvetica';
+ const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});{const _s=doc.splitTextToSize.bind(doc),_t=doc.text.bind(doc);doc.splitTextToSize=(t,w,o)=>_s(fx(t),w,o);doc.text=(t,...a)=>_t(Array.isArray(t)?t.map(fx):fx(t),...a);}let F='helvetica';
  if(F0){try{doc.addFileToVFS('PR.ttf',F0.r);doc.addFont('PR.ttf','Poppins','normal');doc.addFileToVFS('PB.ttf',F0.b);doc.addFont('PB.ttf','Poppins','bold');F='Poppins';}catch(e){}}
  const W=210,H=297,ml=18,tw=W-36;let y=20;
- const C={nar:[194,85,46],neg:[26,26,26],gris:[125,112,104],lin:[232,225,218],no:[180,35,24],ok:[22,128,60],crema:[247,243,239]};
+ // Datos de la clínica: textos legales editados en el panel, nombre/dirección, color y logo (para FISIO365 sale igual)
+ let LG=null,LGE=[],PR=[],CL={};try{const [a,b]=await Promise.all([fetch('/api/schedule?action=config-pub').then(r=>r.json()),fetch('/api/schedule?action=clinica-pub').then(r=>r.json())]);LG=a&&a.legal;LGE=(a&&a.legalEd)||[];PR=(b&&b.pares)||[];CL=(b&&b.clinica)||{};}catch(e){}
+ const fx=t=>{let s=String(t);PR.forEach(([a,b])=>{if(s.indexOf(a)>-1)s=s.split(a).join(b);});return s;};
+ const plano=h=>String(h).replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+ const ed=k=>LG&&LGE.indexOf(k)>-1;
+ const L_SP=ed('sp')?LG.sp.map(plano):CONS_SP,L_DER=ed('der')?plano(LG.der):CONS_DER;
+ let L_LEGAL=CONS_LEGAL.slice();
+ if(ed('trat'))L_LEGAL[0]=[L_LEGAL[0][0],LG.trat.map(plano)];
+ if(ed('decl'))L_LEGAL[2]=[L_LEGAL[2][0],LG.decl.map(plano)];
+ if(ed('rgpd'))L_LEGAL=L_LEGAL.slice(0,3).concat(LG.rgpd.map(x=>[plano(x[0]),[plano(x[1])]]));
+ const C={nar:(/^#[0-9a-f]{6}$/i.test(CL.color||'')?[1,3,5].map(i=>parseInt(CL.color.slice(i,i+2),16)):[194,85,46]),neg:[26,26,26],gris:[125,112,104],lin:[232,225,218],no:[180,35,24],ok:[22,128,60],crema:[247,243,239]};
  const set=(sz,w,c)=>{doc.setFont(F,w);doc.setFontSize(sz);doc.setTextColor(...(C[c]||C.neg));};
  const salto=h=>{if(y+h>H-18){doc.addPage();y=20;}};
  const par=(t,sz=8.5,w='normal',c='neg',esp=1.6)=>{set(sz,w,c);const L=doc.splitTextToSize(t,tw);const lh=sz*0.42;L.forEach(l=>{salto(lh);doc.text(l,ml,y);y+=lh;});y+=esp;};
@@ -33,7 +43,7 @@ async function pdfConsentimiento(D){
  const fC=f=>f?String(f).slice(0,10).split('-').reverse().join('/'):'—';
  const R=D.resp||{},v=k=>k.split('|').map(x=>R[x]).filter(Boolean),resp=k=>{const a=v(k);return a.some(x=>/^s[ií]$/i.test(x))?'Sí':a[0]||'—';};
  const TIPO=D.tipo||'Primera visita';
- try{const lg=await new Promise((ok,ko)=>{fetch('/informe/logo.png').then(r=>r.blob()).then(b=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=ko;fr.readAsDataURL(b);}).catch(ko);});doc.addImage(lg,'PNG',ml,y-5,26,26*130/751);y+=4;}catch(e){}
+ try{const im=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=CL.logo||'/informe/logo.png';});const cv=document.createElement('canvas');cv.width=im.naturalWidth;cv.height=im.naturalHeight;cv.getContext('2d').drawImage(im,0,0);const lg=cv.toDataURL('image/png'),an=Math.min(40,26*(im.naturalWidth/im.naturalHeight)/(751/130));doc.addImage(lg,'PNG',ml,y-5,an,an*im.naturalHeight/im.naturalWidth);y+=4;}catch(e){}
  set(8.5,'bold','nar');doc.text('CONSENTIMIENTO INFORMADO',ml,y);y+=8;
  set(18,'bold','neg');doc.text(TIPO==='Suelo pélvico'?'Fisioterapia de suelo pélvico':TIPO==='Alta oncológica'?'Alta oncológica':'Consentimiento informado',ml,y);y+=6.5;
  set(10,'normal','gris');doc.text(`${[D.nombre,D.apellidos].filter(Boolean).join(' ')} · firmado el ${fC(D.fecha)}`,ml,y);y+=6;
@@ -42,7 +52,7 @@ async function pdfConsentimiento(D){
   tit('Datos del paciente');[['Nombre',[D.nombre,D.apellidos].filter(Boolean).join(' ')],['NIF / NIE',D.dni],['Teléfono',D.tel],...(TIPO==='Alta oncológica'?[['Fecha del alta oncológica',D.fechaAlta?fC(D.fechaAlta):'—'],['Informe de alta',(D.informe||[]).length?(D.informe.length+' archivo'+(D.informe.length>1?'s':'')+' adjunto'+(D.informe.length>1?'s':'')):'No adjuntado']]:[])].forEach(([l,x])=>fila(l,x));
   if(TIPO==='Suelo pélvico'){tit('Cuestionario de salud');CONS_PREG.filter(([k])=>k!=='SUELO PÉLVICO').forEach(([k,p])=>{const r=resp(k);fila(p,r,/^s[ií]$/i.test(r)||/^alta$/i.test(r)?'no':null);});
    if(D.notasSalud){par('Otros datos de salud: '+D.notasSalud,8.5);}
-   tit('Consentimiento informado – Fisioterapia de suelo pélvico');CONS_SP.forEach(t=>par(t));
+   tit('Consentimiento informado – Fisioterapia de suelo pélvico');L_SP.forEach(t=>par(t));
    chk('He leído y comprendido la información anterior y doy mi consentimiento para la valoración y tratamiento de fisioterapia de suelo pélvico.',D.aceptaSP);chk('Entiendo que puedo retirar mi consentimiento en cualquier momento.',D.aceptaSP);}
   else{tit('Situación médica actual');par('Declaro haber recibido el alta médica en la unidad oncológica correspondiente, no estar actualmente bajo tratamiento activo contra el cáncer (quimioterapia, radioterapia, inmunoterapia u otros), y que no existe contraindicación médica actual para la aplicación de terapias físicas o magnéticas.');par('Declaro asimismo que he informado al profesional de FISIO365 de mi historia clínica relevante y de los tratamientos que sigo actualmente.');
    tit('Sobre el tratamiento');par('Las terapias físicas y magnéticas (como la bomba diamagnética) son tratamientos no invasivos: no implican cirugía, inyecciones ni radiación ionizante. Su objetivo es favorecer la recuperación de los tejidos, reducir el dolor y mejorar la circulación.');par('Suelen tolerarse bien, aunque de forma excepcional pueden aparecer molestias leves, enrojecimiento, sensación de calor o una reactivación temporal del dolor. Aunque no existe evidencia de riesgo específico para personas con alta oncológica, FISIO365 no puede garantizar una respuesta clínica determinada ni se hace responsable de reacciones individuales imprevisibles.');
@@ -53,13 +63,13 @@ async function pdfConsentimiento(D){
  tit('Cuestionario de salud');
  par('Por favor, marque «sí» o «no» en cada pregunta. Esta información es confidencial y nos ayuda a garantizar su seguridad durante el tratamiento.',8,'normal','gris');
  CONS_PREG.forEach(([k,p])=>{const r=resp(k);fila(p,r,/^s[ií]$/i.test(r)||/^alta$/i.test(r)?'no':null);});
- if(/^s[ií]$/i.test(resp('SUELO PÉLVICO'))){tit('Consentimiento informado – Fisioterapia de suelo pélvico');CONS_SP.forEach(t=>par(t));
+ if(/^s[ií]$/i.test(resp('SUELO PÉLVICO'))){tit('Consentimiento informado – Fisioterapia de suelo pélvico');L_SP.forEach(t=>par(t));
   const chk=(t,on)=>{set(8.5,'bold','neg');const L=doc.splitTextToSize(t,tw-6);salto(L.length*3.6+2);doc.setDrawColor(...C.neg);doc.setLineWidth(0.3);doc.rect(ml,y-2.8,3.2,3.2);if(on){doc.setDrawColor(...C.ok);doc.setLineWidth(0.6);doc.line(ml+0.6,y-1.2,ml+1.4,y-0.3);doc.line(ml+1.4,y-0.3,ml+2.8,y-2.3);}L.forEach(l=>{doc.text(l,ml+6,y);y+=3.6;});y+=1.6;};
   chk('He leído y comprendido la información anterior y doy mi consentimiento para la valoración y tratamiento de fisioterapia de suelo pélvico.',D.aceptaSP);
   chk('Entiendo que puedo retirar mi consentimiento en cualquier momento.',D.aceptaSP);}
- CONS_LEGAL.forEach(([t,ps])=>{tit(t);ps.forEach(x=>par(x));});
+ L_LEGAL.forEach(([t,ps])=>{tit(t);ps.forEach(x=>par(x));});
  CONS_AUT.forEach(([k,t,x])=>{salto(34);tit(t);par(x);fila('Respuesta',R[k]||'—');});
- tit('Derechos');par(CONS_DER);
+ tit('Derechos');par(L_DER);
  }
  salto(52);y+=2;tit('Firma');
  if(D.firma){try{const im=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=D.firma;});const r=im.width/im.height,hh=Math.min(30,(tw*0.5)/r);doc.addImage(D.firma,'PNG',ml,y,hh*r,hh);y+=hh+3;}catch(e){par('(Firma no disponible)',8.5,'normal','gris');}}

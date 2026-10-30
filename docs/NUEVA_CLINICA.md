@@ -31,10 +31,10 @@ Las claves **nunca** se pegan en el chat ni en el código: se ponen directamente
 - **Logo y color** de la marca.
 - **Opciones**: sorteo de reseñas, bomba diamagnética.
 - **App del paciente**: servicios, precios, packs y promociones.
+- **Textos legales** del consentimiento (tratamiento, declaraciones, protección de datos, derechos, suelo pélvico, alta oncológica).
 - **Listas**, tipos de cita, estados, política de cancelación, check-list, tarjeta regalo.
 
 ## Pendiente (siguientes pasos)
-- Textos legales editables (consentimientos, protección de datos).
 - Plantillas de mensajes de WhatsApp editables.
 - Guías y tutoriales del panel por clínica.
 - Icono y nombre de la app instalada (manifest) por clínica.

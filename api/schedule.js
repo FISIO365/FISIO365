@@ -1274,11 +1274,11 @@ function paginaCDoc(F, firmaSrc) {
 <h1>Consentimiento informado</h1><p class="sub">FISIO365 · Fourth Dynamic, S.L. · Firmado el ${e(fN(F['Creada']))}</p>
 <h2>Datos del paciente</h2><table>${fila('Nombre', nombre)}${fila('NIF', F['DNI'])}${fila('Fecha de nacimiento', fN(F['NACIMIENTO']))}${fila('Email', F['EMAIL'])}${fila('Teléfono', F['TELF'])}${fila('Tutor legal', F['TUTOR'])}${fila('NIF del tutor', F['NIF TUTOR'])}${fila('Teléfono de la reserva', F['TELF RESERVA'])}${fila('¿Cómo nos has conocido?', v('CONOCIDO'))}${fila('¿Quién te recomendó?', F['RECOMENDÓ'])}</table>
 <h2>Cuestionario de salud</h2><table>${CF_SALUD.map(x => fila(x[1], v(x[0]))).join('')}${fila('¿Tu consulta está relacionada con el suelo pélvico?', v('SUELO PÉLVICO'))}</table>
-${/^s[ií]$/i.test(v('SUELO PÉLVICO')) ? `<h2>Consentimiento informado – Fisioterapia de suelo pélvico</h2>${CF_SP_TXT.map(t => `<p>${t}</p>`).join('')}${F['ACEPTACIÓN S.P.'] ? CF_SP_OK.map(t => `<p>☑ ${t}</p>`).join('') : ''}` : ''}
-<h2>Información al paciente sobre el tratamiento</h2>${CF_TRAT.map(t => `<p>${t}</p>`).join('')}<h2>Política de cancelaciones</h2><p>${CF_CANCEL}</p><h2>Declaro que</h2>${CF_DECL.map(t => `<p>${t}</p>`).join('')}
-${CF_RGPD.map(x => `<h2>${x[0]}</h2><p>${x[1]}</p>`).join('')}
+${/^s[ií]$/i.test(v('SUELO PÉLVICO')) ? `<h2>Consentimiento informado – Fisioterapia de suelo pélvico</h2>${(LEGAL || legalDe()).sp.map(t => `<p>${t}</p>`).join('')}${F['ACEPTACIÓN S.P.'] ? CF_SP_OK.map(t => `<p>☑ ${t}</p>`).join('') : ''}` : ''}
+<h2>Información al paciente sobre el tratamiento</h2>${(LEGAL || legalDe()).trat.map(t => `<p>${t}</p>`).join('')}<h2>Política de cancelaciones</h2><p>${CF_CANCEL}</p><h2>Declaro que</h2>${(LEGAL || legalDe()).decl.map(t => `<p>${t}</p>`).join('')}
+${(LEGAL || legalDe()).rgpd.map(x => `<h2>${x[0]}</h2><p>${x[1]}</p>`).join('')}
 <h2>Autorizaciones</h2><table>${CF_AUT.map(x => fila(x[1] + ': ' + x[2].replace(/<[^>]+>/g, ''), v(x[0]))).join('')}</table>
-<h2>Derechos</h2><p>${CF_DER}</p>
+<h2>Derechos</h2><p>${(LEGAL || legalDe()).der}</p>
 <h2>Firma</h2>${firmaSrc ? `<div class="f"><img src="${e(firmaSrc)}" alt="Firma"></div>` : ''}<p>Firmado en Barcelona, a ${e(fN(F['Creada']))}.</p>${F['REGISTRO FIRMA'] ? `<p class="reg">${e(F['REGISTRO FIRMA'])}</p>` : ''}
 <button class="bt" onclick="print()">Guardar en PDF o imprimir</button></div></body></html>`;
 }
@@ -1288,6 +1288,20 @@ const CO_SALUD_SP = [['EMBARAZO', '¿Estás embarazada o en periodo de lactancia
 const CO_ALTA_SIT = ['Declaro haber recibido el alta médica en la unidad oncológica correspondiente, no estar actualmente bajo tratamiento activo contra el cáncer (quimioterapia, radioterapia, inmunoterapia u otros), y que no existe contraindicación médica actual para la aplicación de terapias físicas o magnéticas.', 'Declaro asimismo que he informado al profesional de FISIO365 de mi historia clínica relevante y de los tratamientos que sigo actualmente.'];
 const CO_ALTA_TRAT = ['Las terapias físicas y magnéticas (como la bomba diamagnética) son tratamientos no invasivos: no implican cirugía, inyecciones ni radiación ionizante. Su objetivo es favorecer la recuperación de los tejidos, reducir el dolor y mejorar la circulación.', 'Suelen tolerarse bien, aunque de forma excepcional pueden aparecer molestias leves, enrojecimiento, sensación de calor o una reactivación temporal del dolor. Aunque no existe evidencia de riesgo específico para personas con alta oncológica, FISIO365 no puede garantizar una respuesta clínica determinada ni se hace responsable de reacciones individuales imprevisibles.'];
 const CO_ALTA_OK = ['He leído y comprendido la información anterior y he podido resolver mis dudas.', 'Autorizo voluntariamente a FISIO365 a aplicarme estos tratamientos tras mi alta oncológica, bajo mi propia responsabilidad.', 'Eximo al centro y a sus profesionales de cualquier responsabilidad derivada de efectos secundarios no previsibles, recaídas o complicaciones no atribuibles a negligencia.'];
+// Textos legales editables (Administración › Textos legales). Vacío = el texto de siempre.
+// Se editan como texto normal: párrafos separados por una línea en blanco; en protección de datos, la 1.ª línea de cada bloque es el título.
+let LEGAL = null;
+const escL = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+const parrafos = t => String(t || '').replace(/\r/g, '').split(/\n\s*\n/).map(x => x.trim()).filter(Boolean);
+function legalDe(g) {
+  g = g || {}; const P = k => parrafos(g[k]).map(escL);
+  const rg = parrafos(g.rgpd).map(b => { const [t, ...r] = b.split('\n'); return [escL(t.trim()), escL(r.join('\n').trim())]; }).filter(x => x[0] && x[1]);
+  return { trat: P('trat').length ? P('trat') : CF_TRAT, decl: P('decl').length ? P('decl') : CF_DECL, rgpd: rg.length ? rg : CF_RGPD,
+    der: P('der').length ? P('der').join('<br><br>') : CF_DER, sp: P('sp').length ? P('sp') : CF_SP_TXT, altaTrat: P('altaTrat').length ? P('altaTrat') : CO_ALTA_TRAT };
+}
+// Lo de siempre en texto normal, para enseñarlo en el editor
+const sinHtml = t => String(t).replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
+const LEGAL_TXT = () => ({ trat: CF_TRAT.map(sinHtml).join('\n\n'), decl: CF_DECL.map(sinHtml).join('\n\n'), rgpd: CF_RGPD.map(x => sinHtml(x[0]) + '\n' + sinHtml(x[1])).join('\n\n'), der: sinHtml(CF_DER), sp: CF_SP_TXT.map(sinHtml).join('\n\n'), altaTrat: CO_ALTA_TRAT.map(sinHtml).join('\n\n') });
 const CO_KIND = {
   sp: { tipo: 'Suelo pélvico', ruta: 'suelo-pelvico', titulo: 'Suelo pélvico', sub: 'Este formulario es para empezar el tratamiento de suelo pélvico. Incluye un repaso rápido de tu salud, por si algo ha cambiado desde tu primera visita.', ogSub: 'Tu salud al día y tu firma', que: 'el consentimiento de fisioterapia de suelo pélvico que has firmado' },
   alta: { tipo: 'Alta oncológica', ruta: 'alta-oncologica', titulo: 'Alta oncológica', sub: 'Este formulario es para pacientes que han tenido cáncer y ya tienen el alta oncológica. Solo te llevará un par de minutos.', ogSub: 'Unos datos y tu firma', que: 'el documento de alta oncológica que has firmado' }
@@ -1372,7 +1386,7 @@ function paginaCDocOtro(F, firmaSrc) {
 @media print{body{background:#fff;padding:0}.c{box-shadow:none;border-radius:0;padding:0}.bt{display:none}}</style></head><body><div class="c">
 <h1>${al ? 'Alta oncológica' : 'Consentimiento informado – Fisioterapia de suelo pélvico'}</h1><p class="sub">FISIO365 · Fourth Dynamic, S.L. · Firmado el ${e(fN(F['FECHA']))}</p>
 <h2>Datos del paciente</h2><table>${fila('Nombre', nombre)}${fila('NIF / NIE', F['DNI'])}${fila('Teléfono', F['TELF'])}${fila('Email', F['EMAIL'])}${al ? fila('Fecha del alta oncológica', fN(F['FECHA ALTA'])) + fila('Informe de alta', (F['INFORME'] || []).length ? (F['INFORME'].length + ' archivo(s) adjunto(s)') : '') : ''}</table>
-${al ? `<h2>Situación médica actual</h2>${CO_ALTA_SIT.map(t => `<p>${t}</p>`).join('')}<h2>Sobre el tratamiento</h2>${CO_ALTA_TRAT.map(t => `<p>${t}</p>`).join('')}<h2>Declaro que</h2>${CO_ALTA_OK.map(t => `<p>☑ ${t}</p>`).join('')}`
+${al ? `<h2>Situación médica actual</h2>${CO_ALTA_SIT.map(t => `<p>${t}</p>`).join('')}<h2>Sobre el tratamiento</h2>${(LEGAL || legalDe()).altaTrat.map(t => `<p>${t}</p>`).join('')}<h2>Declaro que</h2>${CO_ALTA_OK.map(t => `<p>☑ ${t}</p>`).join('')}`
     : `<h2>Cuestionario de salud</h2><table>${CO_SALUD_SP.map(x => fila(x[1], v(x[0]))).join('')}${fila('¿Hay algo más de tu salud que debamos saber?', F['NOTAS SALUD'])}</table><h2>Consentimiento informado</h2>${CF_SP_TXT.map(t => `<p>${t}</p>`).join('')}${F['ACEPTACIÓN S.P.'] ? CF_SP_OK.map(t => `<p>☑ ${t}</p>`).join('') : ''}`}
 <h2>Firma</h2>${firmaSrc ? `<div class="f"><img src="${e(firmaSrc)}" alt="Firma"></div>` : ''}<p>Firmado el ${e(fN(F['FECHA']))}.</p>${F['REGISTRO FIRMA'] ? `<p class="reg">${e(F['REGISTRO FIRMA'])}</p>` : ''}
 <button class="bt" onclick="print()">Guardar en PDF o imprimir</button></div></body></html>`;
@@ -1772,6 +1786,7 @@ const CONF_DEF = {
   holded: { borrador: true, rgpd: TEXTO_RGPD },
   clinica: { razon: 'Fourth Dynamic, S.L.', nif: 'B56503592', direccion: 'C/ Gran de Sant Andreu, 163 · 08030 Barcelona', tel: '672 89 39 49', email: 'info@fisioterapia365.com' },
   cancelacion: { horas: 24, texto: 'Si no puedes venir, avísanos con al menos 24 horas de antelación para poder dar tu hora a otra persona.' },
+  legal: {},
   // App del paciente: servicios con precios y packs, y promociones (Administración › App del paciente)
   app: {
     servicios: [
@@ -2008,7 +2023,7 @@ module.exports = async function handler(req, res) {
 
   const { patientId, action } = req.query;
   // Datos de la clínica (Administración › Ajustes): las páginas salen con su nombre, dirección, teléfono…
-  try { CLI = MARCA.datos((await conf()).clinica); } catch (e) {}
+  try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); LEGAL = legalDe(c0.legal); } catch (e) { LEGAL = legalDe(); }
   { const _send = res.send.bind(res); res.send = b => _send(typeof b === 'string' && !/json/i.test(String(res.getHeader('Content-Type') || '')) ? MARCA.marcar(b, CLI) : b); }
   if (action === 'clinica-pub') { // lo público de la clínica para la app y el panel (nombre, teléfono, opciones…)
     const C = CLI; res.setHeader('Cache-Control', 'public, max-age=60');
@@ -2109,7 +2124,7 @@ module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
       const MS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], d = new Date(hoy + 'T12:00:00Z');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(200).send(paginaConsOtro({ kind, url, titulo: K.titulo, sub: K.sub, hoyTxt: `${d.getUTCDate()} de ${MS[d.getUTCMonth()]} de ${d.getUTCFullYear()}`, salud: CO_SALUD_SP, spTxt: CF_SP_TXT, spOk: CF_SP_OK, sit: CO_ALTA_SIT, trat: CO_ALTA_TRAT, okAl: CO_ALTA_OK }));
+      return res.status(200).send(paginaConsOtro({ kind, url, titulo: K.titulo, sub: K.sub, hoyTxt: `${d.getUTCDate()} de ${MS[d.getUTCMonth()]} de ${d.getUTCFullYear()}`, salud: CO_SALUD_SP, spTxt: LEGAL.sp, spOk: CF_SP_OK, sit: CO_ALTA_SIT, trat: LEGAL.altaTrat, okAl: CO_ALTA_OK }));
     }
     const q = q0, t = (k, n) => String(q[k] || '').trim().replace(/\s+/g, ' ').slice(0, n || 120), SN = ['Sí', 'No'], malo = m => res.status(200).json({ ok: false, error: m });
     // Pasos 2 y 3 del envío: informes adjuntos y cierre (email con la copia)
@@ -2171,7 +2186,7 @@ module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
       const MS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], d = new Date(hoy + 'T12:00:00Z');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(200).send(paginaConsent({ url: 'https://app.fisioterapia365.com/consentimiento', hoyTxt: `${d.getUTCDate()} de ${MS[d.getUTCMonth()]} de ${d.getUTCFullYear()}`, salud: CF_SALUD, spTxt: CF_SP_TXT, spOk: CF_SP_OK, trat: CF_TRAT, cancel: CF_CANCEL, decl: CF_DECL, rgpd: CF_RGPD, aut: CF_AUT, der: CF_DER, conocido: CF_CONOCIDO }));
+      return res.status(200).send(paginaConsent({ url: 'https://app.fisioterapia365.com/consentimiento', hoyTxt: `${d.getUTCDate()} de ${MS[d.getUTCMonth()]} de ${d.getUTCFullYear()}`, salud: CF_SALUD, spTxt: LEGAL.sp, spOk: CF_SP_OK, trat: LEGAL.trat, cancel: CF_CANCEL, decl: LEGAL.decl, rgpd: LEGAL.rgpd, aut: CF_AUT, der: LEGAL.der, conocido: CF_CONOCIDO }));
     }
     const q = req.body || {}, t = (k, n) => String(q[k] || '').trim().replace(/\s+/g, ' ').slice(0, n || 120), SN = ['Sí', 'No'];
     const malo = m => res.status(200).json({ ok: false, error: m });
@@ -2546,7 +2561,7 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'config-pub') { // lo que la app del paciente necesita saber (sin datos privados)
     const c = await conf().catch(() => CONF_DEF); res.setHeader('Cache-Control', 'public, max-age=300');
-    return res.status(200).json({ ok: true, tarjeta: c.tarjeta, cancelacion: c.cancelacion, tel: c.clinica.tel, app: c.app });
+    return res.status(200).json({ ok: true, tarjeta: c.tarjeta, cancelacion: c.cancelacion, tel: c.clinica.tel, app: c.app, legal: legalDe(c.legal), legalEd: Object.keys(c.legal || {}) });
   }
   if (action === 'version') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ v: (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 12) }); }
 
@@ -2930,7 +2945,7 @@ module.exports = async function handler(req, res) {
         }
         return res.status(400).json({ ok: false, error: 'Acción no válida' });
       }
-      if (action === 'seg-config') return res.status(200).json({ ok: true, conf: await conf() });
+      if (action === 'seg-config') return res.status(200).json({ ok: true, conf: await conf(), legalBase: LEGAL_TXT() });
       // ── ADMINISTRACIÓN: equipo, horarios, ausencias, accesos y contraseñas (solo quien tiene acc_admin) ──
       if (action.startsWith('seg-adm-')) {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -3060,6 +3075,7 @@ module.exports = async function handler(req, res) {
               accion: /^(packs|reservar|chat)$/.test(a) ? a : /^https:\/\/[^\s"'<>]+$/.test(a) ? a.slice(0, 300) : '', color: x && x.color === 'Negro' ? 'Negro' : 'Naranja', desde: fecha(x && x.desde), hasta: fecha(x && x.hasta) }; }).filter(x => x.titulo).slice(0, 12);
             cur.app = { servicios, promos };
           }
+          else if (sec === 'legal') { const L = {}; ['trat', 'decl', 'rgpd', 'der', 'sp', 'altaTrat'].forEach(k => { const t = String(v[k] == null ? '' : v[k]).replace(/\r/g, '').trim().slice(0, 12000); if (t && t !== LEGAL_TXT()[k]) L[k] = t; }); cur.legal = L; }
           else if (sec === 'cancelacion') { const h = Math.round(Number(v.horas)); if (!(h >= 0 && h <= 168)) return res.status(400).json({ ok: false, error: 'Revisa las horas' }); cur.cancelacion = { horas: h, texto: lim(v.texto, 600) }; }
           else return res.status(400).json({ ok: false, error: 'Sección no válida' });
           await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() });
