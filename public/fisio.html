@@ -10198,14 +10198,16 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
      if(r.ok)return listo();
      if(!r.sinPack){b.disabled=false;toast(r.error||'No se ha podido compartir',false);return;}
      // Pack cobrado fuera del panel: cuántas sesiones le quedan
-     const card=m.querySelector('.hz-card');card.innerHTML=`<div class="hz-top"><div><small>${escH(capTit(pacNombre||''))} y ${escH(nomC)}</small><b>¿Cuántas sesiones le quedan?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-      <p class="fp-mu" style="font-size:13.5px;margin:0 0 12px">El pack de ${escH(capTit(pacNombre||'').split(' ')[0])} no se cobró desde el panel. Dime cuántas sesiones le quedan y las compartirán a partir de hoy.</p>
-      <div class="ag-pg-imp pc-n">${[2,3,4,5,6,8,10].map(v=>`<button type="button" data-v="${v}">${v}</button>`).join('')}<input type="text" inputmode="numeric" placeholder="Otro" class="ag-in"></div>
+     const card=m.querySelector('.hz-card');card.innerHTML=`<div class="hz-top"><div><small>${escH(capTit(pacNombre||''))} y ${escH(nomC)}</small><b>Su pack</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+      <p class="fp-mu" style="font-size:13.5px;margin:0 0 12px">El pack de ${escH(capTit(pacNombre||'').split(' ')[0])} no se cobró desde el panel. Dime de cuántas sesiones era y cuántas llevan usadas entre los dos.</p>
+      <div class="hz-lab">Sesiones del pack</div><div class="ag-pg-imp pc-n">${[5,10,20].map(v=>`<button type="button" data-v="${v}">${v}</button>`).join('')}<input type="text" inputmode="numeric" placeholder="Otro" class="ag-in"></div>
+      <div class="hz-lab" style="margin-top:12px">Ya usadas</div><div class="ag-pg-imp pc-u">${[0,1,2,3,4].map(v=>`<button type="button" data-v="${v}">${v}</button>`).join('')}<input type="text" inputmode="numeric" placeholder="Otro" class="ag-in"></div>
       <div class="hz-bts"><button type="button" class="hz-ok" disabled>Compartir</button></div>`;
-     card.querySelector('.hz-x').onclick=()=>m.remove();let qn=0;const ok=card.querySelector('.hz-ok'),bs=card.querySelectorAll('.pc-n button'),ni=card.querySelector('.pc-n input');
-     const set=v=>{qn=v;ok.disabled=!(qn>0);ok.textContent=qn>0?`Compartir ${qn} sesiones`:'Compartir';};
-     bs.forEach(x=>x.onclick=()=>{bs.forEach(y=>y.classList.toggle('on',y===x));ni.value='';set(+x.dataset.v);});ni.oninput=()=>{bs.forEach(y=>y.classList.remove('on'));set(parseInt(ni.value,10)||0);};
-     ok.onclick=async()=>{ok.disabled=true;const r2=await agPost('seg-agenda-pack-compartir',{titular:pacId,con,quedan:qn}).catch(()=>({ok:false}));if(!r2.ok){ok.disabled=false;toast(r2.error||'No se ha podido compartir',false);return;}listo();};});};};
+     card.querySelector('.hz-x').onclick=()=>m.remove();let tn=0,un=null;const ok=card.querySelector('.hz-ok');
+     const pinta=()=>{const v=tn>0&&un!==null&&un<tn;ok.disabled=!v;ok.textContent=v?`Compartir · quedan ${tn-un} de ${tn}`:'Compartir';};
+     const grupo=(sel,fn)=>{const bs=card.querySelectorAll(sel+' button'),ni=card.querySelector(sel+' input');bs.forEach(x=>x.onclick=()=>{bs.forEach(y=>y.classList.toggle('on',y===x));ni.value='';fn(+x.dataset.v);pinta();});ni.oninput=()=>{bs.forEach(y=>y.classList.remove('on'));const v=parseInt(ni.value,10);fn(isNaN(v)?(sel==='.pc-u'?null:0):v);pinta();};};
+     grupo('.pc-n',v=>tn=v);grupo('.pc-u',v=>un=v);
+     ok.onclick=async()=>{ok.disabled=true;const r2=await agPost('seg-agenda-pack-compartir',{titular:pacId,con,total:tn,usadas:un}).catch(()=>({ok:false}));if(!r2.ok){ok.disabled=false;toast(r2.error||'No se ha podido compartir',false);return;}listo();};});};};
   body.appendChild(pcb);}
  else{const b=ce('div','fac-saldo');b.innerHTML='<b>Saldo de sesiones</b><span>Empezará a contar con la primera factura emitida desde el panel (cuando conectemos Holded).</span>';body.appendChild(b);}
  const nueva=ce('button','fac-nueva');nueva.type='button';nueva.textContent='+ Cobrar y facturar';

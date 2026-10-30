@@ -3437,7 +3437,7 @@ module.exports = async function handler(req, res) {
             const todas = await citasDeMiembros([...new Set(shares.flatMap(x => x.miembros))], ['REALIZADA', 'PENDIENTE', 'CITA PERDIDA'], shares.map(x => x.d || '').sort()[0] || '').catch(() => []);
             const ya = todas.find(c => c.pid === pid && c.k === clave); if (!ya) todas.push({ id: '__nueva', pid, k: clave });
             const cubre = repartoCompartido(shares, todas), obj = ya ? ya.id : '__nueva';
-            if (cubre.has(obj)) { const x = cubre.get(obj); return { activo: true, t: 'pack', i: x.orden.indexOf(obj) + 1, n: x.n, quedan: x.quedan, compartido: x.miembros.filter(m => m !== pid).map(m => x.nombres[m] || '') }; }
+            if (cubre.has(obj)) { const x = cubre.get(obj); return { activo: true, t: 'pack', i: (x.off || 0) + x.orden.indexOf(obj) + 1, n: x.tot || x.n, quedan: x.quedan, compartido: x.miembros.filter(m => m !== pid).map(m => x.nombres[m] || '') }; }
             const tapadas = new Set(todas.filter(c => c.pid === pid && cubre.has(c.id)).map(c => c.k));
             claves = claves.filter(k => !tapadas.has(k));
             shares.filter(x => x.t === pid).forEach(x => { const i = lotes.findIndex(l => x.f === 'previo' ? l.previo : l.fid === x.f); if (i >= 0) lotes.splice(i, 1); });
@@ -3462,9 +3462,10 @@ module.exports = async function handler(req, res) {
             const sesF = f => [[f['CONCEPTO 1'], f['Nº SESIONES 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2']]].reduce((t, [c, n]) => t + (/^Sesi/i.test(nmA(c) || '') ? Number(n) || 0 : 0), 0);
             const pk = fs.filter(r => sesF(r.fields) > 1).sort((a, b) => String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || '').localeCompare(String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '')))[0];
             const nP = Number(T['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(T['BONO PREVIO YA USADAS'] || 0));
-            const qd = Math.round(Number(q.quedan) || 0);
+            const tt = Math.round(Number(q.total) || 0), us = Math.max(0, Math.round(Number(q.usadas) || 0)), qd = tt > 0 ? tt - us : Math.round(Number(q.quedan) || 0);
+            if (tt > 0 && qd <= 0) return res.status(200).json({ ok: false, error: 'Si ya han usado todas, no queda pack que compartir' });
             // Pack cobrado fuera del panel: se dice cuántas sesiones le quedan y se comparten desde hoy
-            const nuevo = qd > 0 && qd <= 60 ? { t: q.titular, f: 'ext' + Date.now(), n: qd, d: hoyF } : pk ? { t: q.titular, f: pk.id, n: sesF(pk.fields), d: String(pk.fields['FECHA DE COBRO'] || pk.fields['FECHA'] || hoyF).slice(0, 10) } : nP - uP > 1 ? { t: q.titular, f: 'previo', n: nP - uP, d: '' } : null;
+            const nuevo = qd > 0 && qd <= 60 ? { t: q.titular, f: 'ext' + Date.now(), n: qd, tot: tt > 0 ? tt : qd, off: tt > 0 ? us : 0, d: hoyF } : pk ? { t: q.titular, f: pk.id, n: sesF(pk.fields), d: String(pk.fields['FECHA DE COBRO'] || pk.fields['FECHA'] || hoyF).slice(0, 10) } : nP - uP > 1 ? { t: q.titular, f: 'previo', n: nP - uP, d: '' } : null;
             if (!nuevo) return res.status(200).json({ ok: false, sinPack: true, error: 'No tiene ningún pack cobrado desde el panel' });
             if (L.some(x => x.t === nuevo.t && x.f === nuevo.f)) return res.status(200).json({ ok: false, error: 'Ya lo comparten' });
             L.push(nuevo);

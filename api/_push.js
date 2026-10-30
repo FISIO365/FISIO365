@@ -88,7 +88,7 @@ async function compartidos(pid) {
   const mios = pcLeer((r.fields || {})['PACK COMPARTE']), Ts = [...new Set([pid, ...mios.map(x => x.t)])];
   const recs = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + Ts.map(t => `FIND('"t":"${t}"',{PACK COMPARTE}&'')`).join(',') + ')')}&fields[]=FULL NAME&fields[]=PACK COMPARTE`).catch(() => []);
   const S = {};
-  recs.forEach(p => pcLeer(p.fields['PACK COMPARTE']).forEach(x => { if (!Ts.includes(x.t)) return; const k = x.t + '|' + x.f; (S[k] = S[k] || { t: x.t, f: x.f, n: Number(x.n) || 0, d: x.d || '', miembros: new Set([x.t]) }).miembros.add(p.id); }));
+  recs.forEach(p => pcLeer(p.fields['PACK COMPARTE']).forEach(x => { if (!Ts.includes(x.t)) return; const k = x.t + '|' + x.f; (S[k] = S[k] || { t: x.t, f: x.f, n: Number(x.n) || 0, tot: Number(x.tot) || 0, off: Number(x.off) || 0, d: x.d || '', miembros: new Set([x.t]) }).miembros.add(p.id); }));
   const lista = Object.values(S).filter(x => x.miembros.has(pid) && x.n > 0).map(x => ({ ...x, miembros: [...x.miembros] }));
   if (!lista.length) return [];
   const ids = [...new Set(lista.flatMap(x => x.miembros))], nom = {};
@@ -111,7 +111,7 @@ async function citasDeMiembros(miembros, estados, desde) {
   const hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : '00:00'; };
   return (await todosAT(CITAS, `filterByFormula=${encodeURIComponent('AND(' + conds.join(',') + ')')}&fields[]=FECHA&fields[]=HORA&fields[]=RELACIÓN - CITA`)).map(c => ({ id: c.id, pid: (c.fields['RELACIÓN - CITA'] || [])[0] || '', k: String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA) }));
 }
-const pcResumen = (x, pid) => ({ titular: x.t, yoPague: x.t === pid, con: x.miembros.filter(m => m !== pid).map(m => ({ id: m, nombre: x.nombres[m] || '' })), n: x.n, usadas: x.usadas || 0, quedan: x.quedan != null ? x.quedan : x.n, f: x.f });
+const pcResumen = (x, pid) => ({ titular: x.t, yoPague: x.t === pid, con: x.miembros.filter(m => m !== pid).map(m => ({ id: m, nombre: x.nombres[m] || '' })), n: x.tot || x.n, usadas: (x.off || 0) + (x.usadas || 0), quedan: x.quedan != null ? x.quedan : x.n, f: x.f });
 
 async function saldoPaciente(pacId) {
   const inicio = await inicioControl();
@@ -133,7 +133,7 @@ async function saldoPaciente(pacId) {
     gastadas -= citas.filter(c => cubre.has(c.id)).length;
     compartido = shares.map(x => pcResumen(x, pacId));
   }
-  return { activo: true, inicio, pagadas: pag + (compartido.length ? compartido.reduce((t, x) => t + x.n, 0) : 0), gastadas: gastadas + (compartido.length ? compartido.reduce((t, x) => t + x.usadas, 0) : 0), saldo: pag - gastadas + extra, compartido };
+  return { activo: true, inicio, pagadas: pag + shares.reduce((t, x) => t + x.n, 0), gastadas: gastadas + shares.reduce((t, x) => t + (x.usadas || 0), 0), saldo: pag - gastadas + extra, compartido };
 }
 
 // Todos los pacientes con saldo negativo (sesiones hechas sin facturar)
