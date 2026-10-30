@@ -13,7 +13,8 @@ self.addEventListener('push', function (event) {
       renotify: !!d.tag,
       data: { url: d.url || '/' }
     }),
-    navigator.setAppBadge ? navigator.setAppBadge(1).catch(() => {}) : Promise.resolve()
+    // El puntito rojo del icono solo para mensajes del chat (lo que hay que contestar); el resto son avisos informativos
+    (navigator.setAppBadge && /[?&]s=(msg|mensajes)\b/.test(d.url || '')) ? navigator.setAppBadge(1).catch(() => {}) : Promise.resolve()
   ]));
 });
 
