@@ -1698,6 +1698,8 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .nov-h{font-size:13px;font-weight:700;color:var(--black);margin-bottom:8px}
 .nov-it{display:flex;gap:12px;padding:8px 0;border-top:1px solid #f3ece6;align-items:baseline}.nov-it:first-of-type{border-top:0}
 .nov-it span{flex:0 0 46px;font-size:11px;font-weight:600;color:#a3968c}.nov-it p{margin:0;font-size:12.5px;line-height:1.5;color:#3a322d}
+.nov-ver{display:inline-flex;align-items:center;gap:5px;margin:6px 0 0;border:0;background:none;padding:0;color:#a3441f;font:600 12px Poppins,sans-serif;cursor:pointer}.nov-ver svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nov-it p .nov-ver{display:flex}
 .nov-it.nueva span{color:#c2552e}.nov-it.nueva p{font-weight:500}
 .nov-dot{position:relative}.nov-dot::after{content:'';position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#c2552e;box-shadow:0 0 0 2px #fff}
 .pl-vs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.pl-v{border:1px solid #ecd2c4;background:#fff;color:#a3441f;border-radius:99px;padding:4px 10px;font:500 12px Poppins,sans-serif;cursor:pointer}.pl-v:hover{background:#fdf1ea}
@@ -11407,12 +11409,11 @@ async function cursoEquipoHtml(box){if(!esDireccionSeguro())return;box.innerHTML
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
- {f:'2026-10-30',t:'El curso «Cómo funciona la app» es para todo el equipo: preguntas de situaciones reales y, al contestar, «Enséñamelo» te lleva al sitio.'},
- {f:'2026-10-30',t:'Nuevo curso «Cómo funciona la app» en School, con botones «Enséñamelo» que te llevan a la pantalla de verdad.'},
- {f:'2026-10-30',t:'Dirección › Ajustes › Mensajes a pacientes: ya se pueden cambiar los textos de los WhatsApp (recordatorios, encuestas, reseñas, pagos…).',dir:1},
- {f:'2026-10-30',t:'Al montar un programa de ejercicios puedes ver el vídeo de cada ejercicio antes de ponerlo.'},
- {f:'2026-10-30',t:'Valoraciones: con la ✕ quitas de la lista una valoración que no toca.'},
- {f:'2026-10-29',t:'Sorteo del mes: 2 sesiones gratis entre quienes dejan reseña en Google (una al azar y otra a la más original). Está en Valoraciones.'}
+ {f:'2026-10-30',t:'Nuevo curso «Cómo funciona la app», para todo el equipo: preguntas de situaciones reales y botones «Enséñamelo» que te llevan a la pantalla de verdad. Las novedades también lo tienen.'},
+ {f:'2026-10-30',t:'Dirección › Ajustes › Mensajes a pacientes: ya se pueden cambiar los textos de los WhatsApp (recordatorios, encuestas, reseñas, pagos…).',dir:1,ver:{sec:'admin',pasos:[{el:'.pl-card',txt:'Aquí cambias los mensajes. Toca uno para abrirlo y usa las etiquetas como {nombre} o {enlace}.',click:['.adm-tabs [data-k="ajustes"]']}]}},
+ {f:'2026-10-30',t:'Al montar un programa de ejercicios puedes ver el vídeo de cada ejercicio antes de ponerlo.',ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .pe-lista [data-veri] || .pv.fp:not(.rec-m) input[type=search]',txt:'En la pestaña Ejercicios de la ficha: busca un ejercicio y toca el ojo para ver su vídeo antes de añadirlo.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]}},
+ {f:'2026-10-30',t:'Valoraciones: con la ✕ quitas de la lista una valoración que no toca.',ver:{sec:'val',pasos:[{el:'.val-qx',txt:'Con esta ✕ quitas una valoración de la lista.'}]}},
+ {f:'2026-10-29',t:'Sorteo del mes: 2 sesiones gratis entre quienes dejan reseña en Google (una al azar y otra a la más original). Está en Valoraciones.',ver:{sec:'val',pasos:[{el:'.val-so',txt:'Aquí está el sorteo del mes.'}]}}
 ];
 function novNuevas(){let v='';try{v=localStorage.getItem('f365_nov_visto')||'';}catch(e){}return NOVEDADES.filter(n=>n.f>v&&(!n.dir||esDireccionSeguro())).length;}
 function esDireccionSeguro(){try{return typeof esDireccion==='function'&&esDireccion();}catch(e){return false;}}
@@ -11420,7 +11421,7 @@ function novMarcarVistas(){try{localStorage.setItem('f365_nov_visto',NOVEDADES[0
 function novPunto(){const n=novNuevas()+(cursoPend()?1:0);['sb-school','pmSchool','btnPerfil'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('nov-dot',n>0);});}
 function novHtml(){const L=NOVEDADES.filter(n=>!n.dir||esDireccionSeguro()).slice(0,6);if(!L.length)return '';let v='';try{v=localStorage.getItem('f365_nov_visto')||'';}catch(e){}
  const fd=f=>{const d=new Date(f+'T12:00:00');return d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];};
- return `<div class="nov-card"><div class="nov-h">Novedades</div>${L.map(n=>`<div class="nov-it${n.f>v?' nueva':''}"><span>${fd(n.f)}</span><p>${escH(n.t)}</p></div>`).join('')}</div>`;}
+ return `<div class="nov-card"><div class="nov-h">Novedades</div>${L.map(n=>`<div class="nov-it${n.f>v?' nueva':''}"><span>${fd(n.f)}</span><p>${escH(n.t)}${n.ver?`<button type="button" class="nov-ver" data-i="${NOVEDADES.indexOf(n)}"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Enséñamelo</button>`:''}</p></div>`).join('')}</div>`;}
 let tourVolver=null;
 function tourScroll(v){const f=()=>{try{window.scrollTo(0,v.y||0);const w=$('mainWrap');if(w)w.scrollTop=v.w||0;}catch(e){}};requestAnimationFrame(f);setTimeout(f,120);}
 function tourCerrar(todo){document.querySelectorAll('.tour-spot,.tour-bub').forEach(e=>e.remove());window.removeEventListener('scroll',tourPos,true);window.removeEventListener('resize',tourPos);if(todo){const p=$('tourPill');if(p)p.remove();tourVolver=null;}}
@@ -11492,7 +11493,7 @@ function renderWiki(wrap, rutaForzada){
  hdr.innerHTML=`<h2 style="font-size:22px;font-weight:900;letter-spacing:-.4px;margin-bottom:4px">School</h2>
  <p style="font-size:13px;color:var(--muted)">Formación del equipo ${escH((CLINICA&&CLINICA.marca)||'FISIO365')}</p>`;
  outer.appendChild(hdr);
- { const nv=novHtml(); if(nv){ const d=ce('div',''); d.style.cssText='width:100%;max-width:560px'; d.innerHTML=nv; outer.appendChild(d); } novMarcarVistas(); }
+ { const nv=novHtml(); if(nv){ const d=ce('div',''); d.style.cssText='width:100%;max-width:560px'; d.innerHTML=nv; d.querySelectorAll('.nov-ver').forEach(b=>b.onclick=()=>{const n=NOVEDADES[+b.dataset.i];if(n&&n.ver)ensename(n.ver,null);}); outer.appendChild(d); } novMarcarVistas(); }
  { const cq=ce('div',''); cq.style.cssText='width:100%;max-width:560px'; outer.appendChild(cq); cursoEquipoHtml(cq); }
 
  // ── BARRA DE PROGRESO ─────────────────────────────────────────────────
