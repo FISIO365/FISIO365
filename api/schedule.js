@@ -1569,9 +1569,24 @@ function firmaEnc(id) { return require('crypto').createHmac('sha256', String(pro
 const enlaceEncuesta = id => `https://app.fisioterapia365.com/e/${id}-${firmaEnc(id)}`;
 function firmaFin(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('fin:' + id).digest('hex').slice(0, 10); }
 const enlaceFin = id => `https://app.fisioterapia365.com/v/${id}-${firmaFin(id)}`;
+// Frases para la reseña de Google: naturales y con las palabras que la gente busca (fisioterapia + Sant Andreu / Barcelona + su problema)
+function ideasResena({ fisio, tema, fin }) {
+  const t = String(tema || '').toLowerCase(), F = fisio || '';
+  const porTema = /suelo p|pélvic|pelvic|diástasis|diastasis|embaraz|postparto|parto/.test(t) ? (fin ? 'Mi recuperación de suelo pélvico ha sido increíble' : 'Fisioterapia de suelo pélvico con mucha sensibilidad')
+    : /hernia|lumbar|espalda|ciátic|ciatic|lumbago/.test(t) ? (fin ? 'Llegué con dolor de espalda y hoy estoy genial' : 'Vine por dolor de espalda y ya noto la mejoría')
+    : /cervical|cuello/.test(t) ? (fin ? 'Se acabó mi dolor de cuello' : 'Vine por dolor cervical y ya voy mucho mejor')
+    : /rodilla|menisco|ligamento/.test(t) ? (fin ? 'Mi rodilla está como nueva' : 'Me están tratando la rodilla y voy muy bien')
+    : /hombro/.test(t) ? (fin ? 'He recuperado el hombro por completo' : 'Me están tratando el hombro y noto mucha mejoría')
+    : /deport|readapt|lesi|esguince|rotura|tendin/.test(t) ? (fin ? 'Perfecto para volver a entrenar después de una lesión' : 'Ideal para recuperarse de una lesión deportiva')
+    : /atm|mandíb|mandib/.test(t) ? 'Muy buenos con la ATM y el dolor de mandíbula'
+    : (fin ? 'Llegué con dolor y me voy mucho mejor' : 'Desde la primera sesión noté la mejoría');
+  return fin
+    ? [porTema, F ? `Gracias a ${F} estoy mucho mejor` : 'Gracias al equipo estoy mucho mejor', 'Los mejores fisioterapeutas de Sant Andreu', 'Te explican todo y te dan ejercicios para casa', 'Centro de fisioterapia en Barcelona 100% recomendable']
+    : [porTema, F ? `${F}, gran fisioterapeuta` : 'Fisioterapeutas muy profesionales', 'Muy buen centro de fisioterapia en Sant Andreu', 'Te explican todo y te dan ejercicios para casa', 'Fisioterapia en Barcelona muy recomendable'];
+}
 function paginaEncuesta(D) {
   const e = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const fin = D.modo === 'fin', J = JSON.stringify({ pila: D.pila || '', fisio: D.fisio || '', v: D.v || '', url: D.url || '', google: RESENA_URL, fin }).replace(/</g, '\\u003c');
+  const fin = D.modo === 'fin', J = JSON.stringify({ pila: D.pila || '', fisio: D.fisio || '', v: D.v || '', url: D.url || '', google: RESENA_URL, fin, ideas: ideasResena({ fisio: D.fisio, tema: D.tema, fin }) }).replace(/</g, '\\u003c');
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${fin ? 'Tu experiencia' : 'Tu primera visita'} · FISIO365</title>
 <meta property="og:title" content="${fin ? '¿Qué tal tu experiencia' : '¿Qué tal tu primera visita'}${D.pila ? ', ' + e(D.pila) : ''}?"><meta property="og:description" content="Un toque y listo. Nos ayuda muchísimo."><meta property="og:image" content="${D.url ? e(D.url) + '.png?v=1' : 'https://app.fisioterapia365.com/informe/og-cita-v3.png'}"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1623,7 +1638,7 @@ function paso1(){C.innerHTML=grande('n','M30 47 Q40 54 50 47','mira')+'<h1 class
  [].forEach.call(C.querySelectorAll('.cara'),function(b){b.onclick=function(){[].forEach.call(C.querySelectorAll('.cara'),function(x){x.classList.toggle('on',x===b);x.classList.toggle('off',x!==b);});var v=b.getAttribute('data-v');enviar({v:v}).catch(function(){});setTimeout(function(){v==='Excelente'?excelente():mejorar(v);},650);};});}
 function copiar(t){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).catch(function(){});return;}}catch(e){}try{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();}catch(e){}}
 function irGoogle(t){if(t)copiar(t);enviar({resena:1}).catch(function(){});setTimeout(function(){location.href=D.google;},t?250:60);}
-function excelente(){var f=D.fisio||'El equipo',F=D.fin?[(D.fisio?'Gracias a '+D.fisio+' estoy':'Estoy')+' mucho mejor',f+' es muy profesional','Me explicaron todo muy bien','Trato cercano y muy amable','100% recomendable']:[f+' es muy profesional',D.fisio?'Me explicó todo muy bien':'Me explicaron todo muy bien','Noté mejoría desde la primera sesión','Trato cercano y muy amable','El centro es precioso'];
+function excelente(){var f=D.fisio||'El equipo',F=D.ideas&&D.ideas.length?D.ideas:D.fin?[(D.fisio?'Gracias a '+D.fisio+' estoy':'Estoy')+' mucho mejor',f+' es muy profesional','Me explicaron todo muy bien','Trato cercano y muy amable','100% recomendable']:[f+' es muy profesional',D.fisio?'Me explicó todo muy bien':'Me explicaron todo muy bien','Noté mejoría desde la primera sesión','Trato cercano y muy amable','El centro es precioso'];
  C.innerHTML=grande('feliz','M26 45 Q40 62 54 45')+'<h1 class="fi" style="animation-delay:.8s">¡Qué alegría'+nom+'!</h1><p class="sub fi" style="animation-delay:.95s">'+(D.fisio?'A '+esc(D.fisio)+' le hará muchísima ilusión. ':'')+'¿Nos lo cuentas en Google? Son 20 segundos.</p>'
  +'<div class="estr brilla">'+[0,1,2,3,4].map(function(i){return '<svg viewBox="0 0 24 24" style="animation-delay:'+(1+i*.12)+'s"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';}).join('')+'</div>'
  +'<div class="ideas fi" style="animation-delay:1.6s"><small>Toca la frase que más te encaje: la copiamos y te abrimos Google. Solo tienes que pegarla y elegir las 5 estrellas.</small><div class="chips">'+F.map(function(x){return '<button class="chip">'+esc(x)+'</button>';}).join('')+'</div></div>'
@@ -2331,7 +2346,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: !u.error });
     }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(paginaEncuesta({ modo: 'fin', pila, fisio, v: vOld, yaCom: !!P['FIN COMENTARIO'], url: enlaceFin(id) }));
+    return res.status(200).send(paginaEncuesta({ modo: 'fin', pila, fisio, tema: String(P['MOTIVO DE VISITA'] || '') + ' ' + String(P['POR QUÉ NO REAGENDA'] || ''), v: vOld, yaCom: !!P['FIN COMENTARIO'], url: enlaceFin(id) }));
   }
   if (action === 'encuesta-og') {
     const id = String(req.query.id || ''), sg = String(req.query.s || '');
@@ -2356,7 +2371,8 @@ module.exports = async function handler(req, res) {
     const F = r.fields || {}, pid = (F['RELACIÓN - CITA'] || [])[0];
     const f0 = String((F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '').trim().split(' ')[0], fisio = f0 ? f0.charAt(0).toUpperCase() + f0.slice(1).toLowerCase() : '';
     let pila = '', nombre = '';
-    if (pid) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}; nombre = String(P['FULL NAME'] || '').trim(); pila = (String(P['NOMBRE'] || '').trim() || nombre).split(/\s+/)[0] || ''; }
+    let tema = String((F['TIPO DE SESIÓN'] && F['TIPO DE SESIÓN'].name) || F['TIPO DE SESIÓN'] || '') + ' ' + String(F['NOTAS'] || '');
+    if (pid) { const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})); const P = p.fields || {}; nombre = String(P['FULL NAME'] || '').trim(); pila = (String(P['NOMBRE'] || '').trim() || nombre).split(/\s+/)[0] || ''; tema += ' ' + String(P['MOTIVO DE VISITA'] || ''); }
     pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
     const vOld = (F['ENCUESTA VALORACIÓN'] && F['ENCUESTA VALORACIÓN'].name) || F['ENCUESTA VALORACIÓN'] || '';
     if (req.method === 'POST') {
@@ -2387,7 +2403,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: !u.error });
     }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(paginaEncuesta({ pila, fisio, v: vOld, yaCom: !!F['ENCUESTA COMENTARIO'], url: enlaceEncuesta(id) }));
+    return res.status(200).send(paginaEncuesta({ pila, fisio, tema, v: vOld, yaCom: !!F['ENCUESTA COMENTARIO'], url: enlaceEncuesta(id) }));
   }
   // Vista previa del enlace de confirmar (la ve WhatsApp): una hoja de calendario con el día y la hora de la cita
   // y el archivo de calendario para «Añadir a mi calendario»
