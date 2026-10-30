@@ -105,6 +105,8 @@ export default async function handler(req) {
 
       // Etapa del paciente: si nunca ha hecho una sesión → PACIENTE NUEVO; si ya vino → ACTIVO (quita Alta, Seguimiento…)
       try { await ponerEtapaCita(patientId); } catch (e) {}
+      // Sale de «Por llamar» y de la lista de espera, y su «Por reagendar» pasa a Reprogramada (como al dar cita desde el panel)
+      try { await Promise.race([fetch(new URL(`/api/schedule?action=cita-efectos&id=${huecoId}`, req.url)), new Promise(r => setTimeout(r, 4000))]); } catch (e) {}
       // Si tiene que pagar por adelantado, aviso al móvil para mandarle el enlace
       try { await Promise.race([fetch(new URL(`/api/schedule?action=pago-falta&id=${huecoId}`, req.url)), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
       return json({ ok: true, cita: { id: u.id, fecha: fechaISO(u.fields['FECHA']), hora: String(u.fields['HORA'] || '').slice(0, 5), fisio: fisioDe(u.fields['PREF.']), estado: 'PENDIENTE ' } });

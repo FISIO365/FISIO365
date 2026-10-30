@@ -1404,8 +1404,8 @@ async function stripeApi(path, form) {
 const pagoAhora = () => new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'short', timeStyle: 'short' }).format(new Date());
 // Avisos al móvil de dirección (Ramiro y Nora) y, si se indica, del fisio de la cita
 async function pagoAvisar(fisio, title, body, tag, solo) {
-  try { const fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name'); const nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase(), recs = fl.records || [];
-    const ids = recs.filter(x => solo ? solo.includes(nom1(x)) : ['ramiro', 'nora'].includes(nom1(x)) || (fisio && nom1(x) === String(fisio).split(' ')[0].toLowerCase())).map(x => x.id), { avisar } = require('./_push');
+  try { const fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}&fields[]=${encodeURIComponent('FECHA BAJA')}`); const nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase(), recs = (fl.records || []).filter(x => !x.fields['FECHA BAJA']);
+    const ids = recs.filter(x => solo ? solo.includes(nom1(x)) : !!x.fields['DIRECCIÓN'] || (fisio && nom1(x) === String(fisio).split(' ')[0].toLowerCase())).map(x => x.id), { avisar } = require('./_push');
     await Promise.all([...new Set(ids)].map(fid => avisar('fisio', fid, { title, body, url: '/fisio', tag }).catch(() => false))); } catch (e) {}
 }
 // Comprueba en Stripe si la sesión de pago se ha completado y, si es así, deja la cita pagada y confirmada
@@ -2006,6 +2006,32 @@ async function listarFacturas(ids, conBorradores) {
 }
 
 // «No reagenda»: guarda en POR QUÉ HISTORIAL el motivo actual (y el nuevo, si lo hay) antes de cambiarlo o borrarlo
+// Al dar cita (panel, enlace de huecos o app): si estaba en «Por llamar» sale de la lista (cita recuperada) y su etiqueta pasa a ACTIVO
+async function salirDeSeguimiento(pid, quienTxt, fecha, hora, origen) {
+  const SEG = 'tblu9YxiktpAh5w87', LLA = 'tbla5rZTwMkMpAiaI';
+  const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
+          const abiertas = (await todosT(SEG, `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),FIND('${pid}',ARRAYJOIN({PacRec})))`)}`).catch(() => [])).filter(r => (r.fields['PACIENTE'] || []).includes(pid));
+          const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
+          const pac = await at(`${PACIENTES}/${pid}`); const act = (pac.fields && pac.fields['ESTADO']) || [];
+          const QUITAR = ['SEGUIMIENTO', 'ABANDONO', 'PENDIENTE DE CONTINUAR', 'NO ACUDIÓ', 'ALTA'].map(n => E[n]).filter(Boolean);
+          const enSeg = abiertas.length || act.some(id => QUITAR.includes(id));
+          if (!enSeg) return null;
+          const kq = String(quienTxt || '').trim().split(' ')[0].toLowerCase();
+          const quien = ({ jonathan: 'JONY', jony: 'JONY', sara: 'SARA', ramiro: 'RAMIRO', nora: 'NORA', juan: 'JUAN' })[kq] || (kq ? kq.toUpperCase() : '');
+          const [y, mo, d] = String(fecha).split('-');
+          for (const r of abiertas) {
+            const ll = { FECHA: new Date().toISOString(), PACIENTE: [pid], RESULTADO: 'CITA RECUPERADA ', NOTAS: `${origen || 'Cita dada desde la agenda'} para el ${d}/${mo} a las ${String(hora).slice(0, 5)}`, 'SEG ID': r.id };
+            if (quien) ll['QUIEN LLAMA'] = quien;
+            await at(LLA, { method: 'POST', body: JSON.stringify({ records: [{ fields: ll }], typecast: true }) });
+            await at(`${SEG}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHO: true } }) });
+          }
+          const nuevo = [...new Set([...act.filter(id => !QUITAR.includes(id)), ...(E['ACTIVO'] ? [E['ACTIVO']] : [])])];
+          await porQueAlHist(pid, '', '', '');
+          const f = { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' };
+          if (nuevo.join() !== act.join()) f.ESTADO = nuevo;
+          await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
+          return { quitado: abiertas.length, estados: nuevo };
+}
 async function porQueAlHist(pid, nuevo, fisio, hoy) {
   try {
     const pr = await at(`${PACIENTES}/${pid}`); const PF = pr.fields || {};
@@ -2027,6 +2053,17 @@ module.exports = async function handler(req, res) {
   let PLANT = {};
   try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); LEGAL = legalDe(c0.legal); PLANT = c0.plantillas || {}; } catch (e) { LEGAL = legalDe(); }
   { const _send = res.send.bind(res); res.send = b => _send(typeof b === 'string' && !/json/i.test(String(res.getHeader('Content-Type') || '')) ? MARCA.marcar(b, CLI) : b); }
+  if (action === 'cita-efectos') { // reserva desde la app: lo mismo que al dar cita en el panel (Por llamar, lista de espera, Por reagendar)
+    const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false });
+    const c = await at(`tblTPlcuiSjQngkaD/${id}`).catch(() => ({})), F = c.fields || {}, pid = (F['RELACIÓN - CITA'] || [])[0], fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '');
+    const hoyM = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+    if (!pid || String(F['ESTADO'] || '').trim() !== 'PENDIENTE' || fecha < hoyM) return res.status(200).json({ ok: false });
+    await Promise.all([revisarPorReagendar(true).catch(() => 0), salirDeEspera(pid, fecha, hora).catch(() => 0), salirDeSeguimiento(pid, '', fecha, hora, 'Reservó desde la app').catch(() => null)]);
+    return res.status(200).json({ ok: true });
+  }
+  if (action === 'pagos-tick') { // lo llaman el panel (cada 5 min) y la app del paciente al abrirse: cancela las citas de quien no pagó a tiempo
+    res.setHeader('Cache-Control', 'no-store'); const n = await caducarPagos().catch(() => 0); return res.status(200).json({ ok: true, n });
+  }
   if (action === 'clinica-pub') { // lo público de la clínica para la app y el panel (nombre, teléfono, opciones…)
     const C = CLI; res.setHeader('Cache-Control', 'public, max-age=60');
     return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones, color: C.color, logo: C.logoV ? '/api/schedule?action=clinica-logo&v=' + C.logoV : '', plantillas: PLANT }, pares: MARCA.pares(C) });
@@ -2263,11 +2300,15 @@ module.exports = async function handler(req, res) {
       if (!((v.fields || {})['RELACIÓN - CITA'] || []).includes(pac.id)) return res.status(200).json(ocupado);
       // Aviso al móvil: dirección y el fisio de esa hora
       try {
-        const fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name'), nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase();
-        const ids = (fl.records || []).filter(x => ['ramiro', 'nora', h.fisio.split(' ')[0].toLowerCase()].includes(nom1(x))).map(x => x.id), { avisar } = require('./_push');
+        const fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}`), nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase();
+        const ids = (fl.records || []).filter(x => !!x.fields['DIRECCIÓN'] || nom1(x) === h.fisio.split(' ')[0].toLowerCase()).map(x => x.id), { avisar } = require('./_push');
         const d = new Date(h.fecha + 'T12:00:00Z'), DS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'], fis = h.fisio.charAt(0) + h.fisio.slice(1).toLowerCase();
         await Promise.all(ids.map(fid => avisar('fisio', fid, { title: `📅 Nueva reserva: ${n1} ${n2}${nuevo ? ' (nuevo)' : ''}${P.p > 0 ? ' · pendiente de pago' : ''}`, body: `${DS[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${h.hora} con ${fis.split(' ')[0]}. ${motivo.slice(0, 90)}`, url: '/fisio', tag: 'res-' + id }).catch(() => false)));
       } catch (e) {}
+      // Lo mismo que al dar cita desde el panel: sale de «Por llamar» y de la lista de espera, pasa a Activo (o Paciente nuevo) y su «Por reagendar» pasa a Reprogramada
+      await Promise.all([revisarPorReagendar(true).catch(() => 0), salirDeEspera(pac.id, h.fecha, h.hora).catch(() => 0)]);
+      if (!nuevo) await salirDeSeguimiento(pac.id, '', h.fecha, h.hora, 'Reservó por el enlace de huecos').catch(() => null);
+      await ponerEtapa(pac.id, 'cita').catch(() => null);
       if (!(P.p > 0)) await avisoFaltaEnlace(id);
       return res.status(200).json({ ok: true, pago: P.p > 0 ? enlacePago(id) : '' });
     }
@@ -2381,9 +2422,9 @@ module.exports = async function handler(req, res) {
       const yaRes = !!P['FIN IR A RESEÑA'], vAct = v || vOld;
       const u = await at(`${PACIENTES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
       if (!u.error) {
-        const quien = pila || 'Tu paciente', fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name').catch(() => ({}));
+        const quien = pila || 'Tu paciente', fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}`).catch(() => ({}));
         const nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase(), recs = fl.records || [];
-        const dir = recs.filter(x => ['ramiro', 'nora'].includes(nom1(x))).map(x => x.id), fis = recs.filter(x => fisio && nom1(x) === fisio.toLowerCase()).map(x => x.id);
+        const dir = recs.filter(x => !!x.fields['DIRECCIÓN']).map(x => x.id), fis = recs.filter(x => fisio && nom1(x) === fisio.toLowerCase()).map(x => x.id);
         const url = '/fisio?s=enc', { avisar } = require('./_push');
         const manda = (ids, title, body) => Promise.all([...new Set(ids)].map(fid => avisar('fisio', fid, { title, body, url, tag: 'fin-' + id }).catch(() => false)));
         const conF = fisio ? ` con ${fisio}` : '';
@@ -2438,9 +2479,9 @@ module.exports = async function handler(req, res) {
       const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
       // Notificación al móvil (además del aviso dentro del panel, en la agenda): dirección (Ramiro y Nora) lo ve todo; el fisio, solo lo bueno (lo que haya que mejorar lo lleva dirección)
       if (!u.error) {
-        const quien = pila || (nombre || '').split(' ')[0] || 'Tu paciente', fl = await at('tbl2mLUrnaKCFTs6g?fields[]=Name').catch(() => ({}));
+        const quien = pila || (nombre || '').split(' ')[0] || 'Tu paciente', fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}`).catch(() => ({}));
         const nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase(), recs = fl.records || [];
-        const dir = recs.filter(x => ['ramiro', 'nora'].includes(nom1(x))).map(x => x.id), fis = recs.filter(x => fisio && nom1(x) === fisio.toLowerCase()).map(x => x.id);
+        const dir = recs.filter(x => !!x.fields['DIRECCIÓN']).map(x => x.id), fis = recs.filter(x => fisio && nom1(x) === fisio.toLowerCase()).map(x => x.id);
         const url = `/fisio?s=enc&f=${String(F['FECHA'] || '').slice(0, 10)}`, { avisar } = require('./_push');
         const manda = (ids, title, body) => Promise.all([...new Set(ids)].map(fid => avisar('fisio', fid, { title, body, url, tag: 'enc-' + id }).catch(() => false)));
         const conF = fisio ? ` con ${fisio}` : '';
@@ -2721,16 +2762,19 @@ module.exports = async function handler(req, res) {
         const COM = 'tbl2qRD3WsvQVPrwX', TIPOS_C = ['Comunicado', 'Solicitud', 'Informe', 'Aviso', 'Ausencia', 'Tareas', 'Incidencia', 'Ayuda'];
         const CAT_INC = ['Comportamiento', 'Puntualidad', 'Calidad del trabajo', 'Material o instalaciones', 'Otro'], URG_AY = ['Hoy', 'Esta semana', 'Cuando se pueda'];
         // Solicitudes de ausencia (vacaciones, día libre, horas libres, cambio de horario): las aprueba Nora o Ramiro
-        const QUE_AUS = ['Vacaciones', 'Día libre', 'Horas libres', 'Cambio de horario'], APRUEBAN_C = ['Nora'], RESERVA_C = 'Ramiro'; // administración (si lo pide Nora, va a Ramiro)
+        const QUE_AUS = ['Vacaciones', 'Día libre', 'Horas libres', 'Cambio de horario'], APRUEBAN_C = null; // (ver «aprueban»: por rol)
         const pilaC = s => { const p = String(s || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
         // Quién soy: nombre + contraseña del panel (como en Administración)
-        const equipoRecs = await todosT(FISIOS_TABLE, 'fields[]=Name&fields[]=Password&fields[]=' + encodeURIComponent('FECHA BAJA'));
+        const equipoRecs = await todosT(FISIOS_TABLE, 'fields[]=Name&fields[]=Password&fields[]=Role&fields[]=' + encodeURIComponent('DIRECCIÓN') + '&fields[]=' + encodeURIComponent('FECHA BAJA'));
         const yoRec = equipoRecs.find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
         if (!yoRec || !String(q.clave || '').trim() || String(yoRec.fields.Password || '').trim() !== String(q.clave || '').trim() || yoRec.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
         const yo = pilaC(yoRec.fields.Name);
         const equipo = [...new Set(equipoRecs.filter(r => r.fields.Name && !r.fields['FECHA BAJA']).map(r => pilaC(r.fields.Name)))].sort((a, b) => a.localeCompare(b, 'es'));
-        const aprueban = APRUEBAN_C.filter(n => equipo.includes(n));
-        const paraAdmin = () => { const p = aprueban.filter(n => n !== yo); return p.length ? p : (equipo.includes(RESERVA_C) && RESERVA_C !== yo ? [RESERVA_C] : []); };
+        // Por rol, no por nombre: aprueba administración (Puesto «Administración»); si lo pide administración, va a dirección
+        const activosC = equipoRecs.filter(r => r.fields.Name && !r.fields['FECHA BAJA']);
+        const aprueban = [...new Set(activosC.filter(r => String(r.fields.Role || '').toLowerCase() === 'admin').map(r => pilaC(r.fields.Name)))];
+        const direccionC = [...new Set(activosC.filter(r => r.fields['DIRECCIÓN']).map(r => pilaC(r.fields.Name)))];
+        const paraAdmin = () => { const p = aprueban.filter(n => n !== yo); if (p.length) return p; return direccionC.filter(n => n !== yo); };
         const ahora = new Date().toISOString();
         const MES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
         const fC = f => { const [y, m, d] = String(f || '').split('-').map(Number); return d ? `${d} ${MES_C[m - 1]}` : ''; };
@@ -3284,8 +3328,7 @@ module.exports = async function handler(req, res) {
         pids.forEach(id => { const P = info[id]; if (!P || P['SIN AVISO APP']) return;
           const x = { pacienteId: id, nombre: P['FULL NAME'] || '', tel: P['WHATSAPP'] || P['TELF'] || '', email: P['EMAIL'] || '', pin: P['PIN'] || '', ultima: ult[id].fecha, fisio: ult[id].fisio };
           if (!conPlan.has(id)) sinPlan.push(x);
-          else if (!P['ÚLTIMO ACCESO APP'] && !P['PushSubscription'] && !usaApp.has(id) && !x.pin) { x.pin = nuevoPin(); x.pinNuevo = true; }
-          else if (!P['ÚLTIMO ACCESO APP'] && !P['PushSubscription'] && !usaApp.has(id)) sinApp.push(x); });
+          else if (!P['ÚLTIMO ACCESO APP'] && !P['PushSubscription'] && !usaApp.has(id)) { if (!x.pin) { x.pin = nuevoPin(); x.pinNuevo = true; } sinApp.push(x); } });
         for (const x of sinApp.filter(x => x.pinNuevo).slice(0, 20)) await at(`${PACIENTES}/${x.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: x.pin } }) }).catch(() => {});
         return res.status(200).json({ ok: true, sinApp, sinPlan });
       }
@@ -3907,29 +3950,6 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
         }
         // Al dar cita: si estaba en «Por llamar» sale de la lista (se apunta como cita recuperada) y su etiqueta pasa a ACTIVO
-        const salirDeSeguimiento = async (pid, quienTxt, fecha, hora) => {
-          const abiertas = (await todosT(SEG, `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),FIND('${pid}',ARRAYJOIN({PacRec})))`)}`).catch(() => [])).filter(r => (r.fields['PACIENTE'] || []).includes(pid));
-          const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
-          const pac = await at(`${PACIENTES}/${pid}`); const act = (pac.fields && pac.fields['ESTADO']) || [];
-          const QUITAR = ['SEGUIMIENTO', 'ABANDONO', 'PENDIENTE DE CONTINUAR', 'NO ACUDIÓ', 'ALTA'].map(n => E[n]).filter(Boolean);
-          const enSeg = abiertas.length || act.some(id => QUITAR.includes(id));
-          if (!enSeg) return null;
-          const kq = String(quienTxt || '').trim().split(' ')[0].toLowerCase();
-          const quien = ({ jonathan: 'JONY', jony: 'JONY', sara: 'SARA', ramiro: 'RAMIRO', nora: 'NORA', juan: 'JUAN' })[kq] || (kq ? kq.toUpperCase() : '');
-          const [y, mo, d] = String(fecha).split('-');
-          for (const r of abiertas) {
-            const ll = { FECHA: new Date().toISOString(), PACIENTE: [pid], RESULTADO: 'CITA RECUPERADA ', NOTAS: `Cita dada desde la agenda para el ${d}/${mo} a las ${String(hora).slice(0, 5)}`, 'SEG ID': r.id };
-            if (quien) ll['QUIEN LLAMA'] = quien;
-            await at(LLA, { method: 'POST', body: JSON.stringify({ records: [{ fields: ll }], typecast: true }) });
-            await at(`${SEG}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHO: true } }) });
-          }
-          const nuevo = [...new Set([...act.filter(id => !QUITAR.includes(id)), ...(E['ACTIVO'] ? [E['ACTIVO']] : [])])];
-          await porQueAlHist(pid, '', '', '');
-          const f = { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' };
-          if (nuevo.join() !== act.join()) f.ESTADO = nuevo;
-          await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
-          return { quitado: abiertas.length, estados: nuevo };
-        };
         if (action === 'seg-agenda-dar') { global._sesPac = {}; // dar cita en una hora (o en un hueco libre concreto)
           if (!okId(q.pacienteId) || !okF(q.fecha) || !okH(q.hora) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
           const campos = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [q.pacienteId] };
@@ -4565,7 +4585,8 @@ module.exports = async function handler(req, res) {
       }
       // Borrar la ficha de un paciente (solo dirección). paso 'info' → qué tiene; paso 'borrar' → la borra
       if (action === 'seg-paciente-borrar') {
-        if (!/^(nora|ramiro)$/i.test(String(q.quien || '').trim().split(' ')[0])) return res.status(403).json({ ok: false, error: 'Solo dirección puede borrar fichas' });
+        { const eqB = await at(`tbl2mLUrnaKCFTs6g?filterByFormula=${encodeURIComponent(`LOWER(TRIM({Name}))='${String(q.quien || '').trim().toLowerCase().replace(/'/g, "\\'")}'`)}&maxRecords=1`).catch(() => ({})), yB = (eqB.records || [])[0];
+          if (!yB || !yB.fields['DIRECCIÓN'] || yB.fields['FECHA BAJA'] || String(yB.fields.Password || '').trim() !== String(q.clave || '').trim()) return res.status(403).json({ ok: false, error: 'Solo dirección puede borrar fichas' }); }
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
         const pac = await at(`${PACIENTES}/${q.id}`); if (pac.error) return res.status(404).json({ ok: false, error: 'No encontrado' });
         const F = pac.fields || {}, hoyM = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());

@@ -1682,6 +1682,21 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .sh-row{display:flex;gap:20px;align-items:flex-start}.sh-row>div{flex:1;min-width:0}.sh-fig{flex:0 0 200px;margin:0}.sh-fig img{display:block;width:100%;border-radius:22px;border:1px solid #efe7e0;box-shadow:0 6px 20px rgba(26,26,26,.08);cursor:zoom-in}
 @media(max-width:620px){.sh-row{flex-direction:column;gap:14px}.sh-fig{flex:none;width:min(240px,72%);align-self:center}}
 .mod-lock{opacity:.45}.mod-locked{text-align:center;padding:34px 20px!important}.mod-locked .ml-ic{width:48px;height:48px;border-radius:14px;background:#fdf1ea;color:#c2552e;display:grid;place-items:center;margin:0 auto 12px}.mod-locked svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.mod-locked b{display:block;font-size:15px;margin-bottom:6px}.mod-locked p{margin:0;font-size:13px;color:#8a7d74}
+.pq-t{font-size:15px;line-height:1.5;margin:4px 0 16px;color:var(--black)}.pq-in{width:100%;box-sizing:border-box;margin:0 0 14px}.pq-pel{background:#b3261e!important}
+.nv-fondo{position:fixed;inset:0;z-index:10000}.nv-fondo.mov{background:rgba(26,26,26,.35);display:flex;align-items:flex-end}
+.nv-caja{position:fixed;background:#fff;border-radius:16px;box-shadow:0 12px 36px rgba(26,26,26,.18),0 1px 3px rgba(26,26,26,.08);font-family:var(--font);overflow:hidden;box-sizing:border-box}
+.nv-fondo.mov .nv-caja{position:relative;width:100%;border-radius:22px 22px 0 0;padding-bottom:env(safe-area-inset-bottom);max-height:72vh}
+.nv-lista,.nv-horas{max-height:min(340px,60vh);overflow-y:auto;padding:6px}.nv-fondo.mov .nv-lista,.nv-fondo.mov .nv-horas{max-height:62vh;padding:10px 10px 16px}
+.nv-lista button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:none;text-align:left;padding:11px 12px;border-radius:11px;font:500 14px var(--font);color:var(--black);cursor:pointer}
+.nv-lista button:hover{background:#faf6f1}.nv-lista button.on{background:#fdf1ea;color:#a3441f;font-weight:600}.nv-lista button b{color:#c2552e}.nv-lista button:disabled{opacity:.4;cursor:default}
+.nv-g{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#a3968c;padding:10px 12px 4px}
+.nv-cal{padding:14px}.nv-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.nv-cab b{font-size:14px;font-weight:600;text-transform:capitalize}
+.nv-m{width:34px;height:34px;border-radius:50%;border:0;background:#faf6f1;font-size:18px;cursor:pointer;color:var(--black)}
+.nv-sem,.nv-dias{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}.nv-sem span{font-size:11px;font-weight:600;color:#a3968c;padding:4px 0}
+.nv-dias button{aspect-ratio:1;border:0;background:none;border-radius:50%;font:500 13px var(--font);color:var(--black);cursor:pointer}.nv-dias button:hover{background:#faf6f1}
+.nv-dias button.hoy{box-shadow:inset 0 0 0 1.5px #e6c9bb}.nv-dias button.on{background:#c2552e;color:#fff}.nv-dias button:disabled{opacity:.3;cursor:default}
+.nv-pie{display:flex;gap:8px;margin-top:10px}.nv-pie button{flex:1;border:0;border-radius:99px;padding:9px;font:600 13px var(--font);cursor:pointer;background:#fdf1ea;color:#a3441f}.nv-pie .nv-borra{background:#f4f1ec;color:#6f6660}
+.nv-horas{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.nv-horas button{border:0;border-radius:10px;padding:10px 0;background:#faf6f1;font:500 13px var(--font);cursor:pointer;color:var(--black)}.nv-horas button.on{background:#c2552e;color:#fff}
 .curso-av{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #f3d9c9;border-radius:16px;padding:12px 14px 12px 16px;margin:0 auto 12px;max-width:980px;box-sizing:border-box;width:calc(100% - 32px);font-family:Poppins,sans-serif}
 .curso-av-t{flex:1;min-width:0}.curso-av-t b{display:block;font-size:13.5px;font-weight:600;color:#2b2420}.curso-av-t span{display:block;font-size:12px;color:#8a7d74;margin-top:2px}
 .curso-av-go{border:0;border-radius:99px;background:#c2552e;color:#fff;font:600 13px Poppins,sans-serif;padding:9px 18px;cursor:pointer;flex:none}
@@ -1906,7 +1921,7 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  <button type="button" class="pm-it" id="pmEjer" onclick="cerrarPerfilMenu();showSection('ejer')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg>Ejercicios</button>
  <button type="button" class="pm-it" id="pmSchool" onclick="cerrarPerfilMenu();showSection('school')"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg>School</button>
  <button type="button" class="pm-it" onclick="cerrarPerfilMenu();abrirAjustesAvisos()"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones</button>
- <button type="button" class="pm-it salir" onclick="if(confirmarSalir())cerrarSesionPanel()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button>
+ <button type="button" class="pm-it salir" onclick="confirmarSalir()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button>
 </div></div>
 
 <div id="avisosModal" onclick="if(event.target===this)cerrarAjustesAvisos()">
@@ -2099,6 +2114,7 @@ async function doLogin(silencioso){
  await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso(),loadEstados(),loadConf(),loadClinica()]);
  checkMensajesBadge();
  setInterval(checkMensajesBadge, 60000); // revisar cada minuto
+ const tickPagos=()=>fetch('/api/schedule?action=pagos-tick').catch(()=>{});tickPagos();setInterval(tickPagos,5*60e3); // citas de quien no pagó a tiempo
  aplicarRole();
  iniciarAutoUpdate();
  let secIni='agenda';try{const g=sessionStorage.getItem('f365_panel_sec');if(g&&TOPBAR[g]&&!['prog','anam'].includes(g))secIni=g;}catch(e){}
@@ -2174,7 +2190,7 @@ function aplicarRole(){
 
  // Nombre en footer
  const isAdmin = fisioActual.role === 'admin';
- $('sb-user').innerHTML = escH(fisioActual.nombre) + (fisioActual.direccion ? ' · Dirección' : isAdmin ? ' · Admin' : '') + '<br><a href="#" onclick="if(confirmarSalir())cerrarSesionPanel();return false" style="color:inherit;text-decoration:underline;opacity:.8">Cerrar sesión</a>';
+ $('sb-user').innerHTML = escH(fisioActual.nombre) + (fisioActual.direccion ? ' · Dirección' : isAdmin ? ' · Admin' : '') + '<br><a href="#" onclick="confirmarSalir();return false" style="color:inherit;text-decoration:underline;opacity:.8">Cerrar sesión</a>';
  pintarPerfil();
 }
 
@@ -2220,7 +2236,7 @@ function pintarPerfil(){if(!fisioActual)return;try{setTimeout(novPunto,0);}catch
  try{RD_DIR=('direccion' in fisioActual)?!!fisioActual.direccion:['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});if(RD_DIR)$('sb-rep').style.display='';const t=$('sb-rep')&&$('sb-rep').querySelector('.sb-txt');if(t)t.textContent=RD_DIR?'Daily report':'Check-list';rdiaBadge();}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}try{sugContar();encContar();}catch(e){}try{const v=fisioActual.role!=='admin';['sb-mis','pmMis'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
-function confirmarSalir(){return confirm('¿Cerrar sesión en este dispositivo?');}
+function confirmarSalir(){pregunta('¿Cerrar sesión en este dispositivo?',{si:'Cerrar sesión'}).then(ok=>{if(ok)cerrarSesionPanel();});return false;}
 function cerrarSesionPanel(){try{window.__apiCache&&window.__apiCache.clear();}catch(e){}try{localStorage.removeItem('f365_panel_sesion');sessionStorage.removeItem('f365_panel_sec');}catch(e){}location.reload();}
 // En móvil el scroll va dentro de .main-area: que window.scrollTo también lo mueva
 (function(){const ws=window.scrollTo.bind(window);window.scrollTo=function(...a){ws(...a);const m=document.querySelector('.main-area');if(m&&m.scrollHeight>m.clientHeight+2){try{m.scrollTo(...a);}catch(e){}}};})();
@@ -5631,10 +5647,10 @@ Máx 550 palabras. Profesional, empático y esperanzador.`;
  res.textContent=d.informe;res.style.display='block';
  btn.className='gen-btn';btn.style.background='#2e7d32';
  btn.innerHTML='Informe generado — Descargar PDF';
- btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,tipo);btn.style.display='none';accionesInforme(res,tipo,fisioNom);
+ btn.onclick=()=>descargarPDF(anamPacNom,informeGenerado,tipo);btn.style.display='none';{const bar=accionesInforme(res,tipo,fisioNom);const gp=bar&&bar.querySelector('.ia-priv');if(gp&&anamPacId)setTimeout(()=>gp.click(),300);}
  let eb2=$('btnEdit2');if(!eb2){eb2=ce('button','btn');eb2.id='btnEdit2';eb2.style.cssText='margin-top:8px;width:100%;background:white;color:var(--black);border:1.5px solid var(--border);padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)';eb2.textContent='Editar informe';eb2.onclick=()=>editarInforme(res,eb2);res.parentNode.insertBefore(eb2,res.nextSibling);}
  res.scrollIntoView({behavior:'smooth'});
- toast('Informe guardado',true);
+ if(!anamPacId)toast('Informe generado: elige el paciente para guardarlo',false);
  } else {toast(d.error||'Error al generar',false);btn.disabled=false;btn.innerHTML='Generar informe';}
  }catch(e){toast('Error: '+e.message,false);btn.disabled=false;btn.innerHTML='Generar informe';}
  };
@@ -6786,7 +6802,7 @@ function agNuevaCitaPac(p,onDone){
  const enviar=async(b,forzar)=>{if(!fisio){toast('Elige el fisio',false);return;}if(!hora){toast('Elige la hora',false);return;}b.disabled=true;b.textContent='Dando cita…';
   try{const r=await agPost('seg-agenda-dar',{pacienteId:p.id,fecha,hora,fisio,quien:miNombreCorto(),notas:m.querySelector('.ag-not2').value.trim(),tipos:[],sesion:ses.get(),forzar,...agBombaP(m)});
    if(r.bomba){b.disabled=false;b.textContent='Dar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
-   if(r.conflicto){b.disabled=false;b.textContent='Dar cita';if(confirm(r.error+'. ¿Darla igualmente?'))enviar(b,true);return;}
+   if(r.conflicto){b.disabled=false;b.textContent='Dar cita';pregunta(r.error+'. ¿Darla igualmente?',{si:'Darla igualmente'}).then(ok=>{if(ok)enviar(b,true);});return;}
    if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada: ${segFecha(fecha)} a las ${hora}`+(pacInfo?' · '+pacInfo:''),true);m.remove();if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:p.id,paciente:p.nombre},r.debePagar);try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
@@ -6836,7 +6852,7 @@ function agAnadirCita(fecha0,fisio0,onDone){
   const b=e.target;b.disabled=true;b.textContent='Mirando la hora…';let hueco=null;
   try{const d=await agCargarDia(fecha);const rs=((d&&d.citas)||[]).filter(c=>c.fisio===fisio&&c.hora===hora);
    const oc=rs.find(c=>c.pacienteId&&!agEsFuera(c.estado));
-   if(oc&&!confirm(`A esa hora ${agNom(fisio)} ya tiene a ${capTit(oc.paciente||'otro paciente')}. ¿Añadir otra cita igualmente?`)){b.disabled=false;b.textContent='Siguiente';return;}
+   if(oc&&!await pregunta(`A esa hora ${agNom(fisio)} ya tiene a ${capTit(oc.paciente||'otro paciente')}. ¿Añadir otra cita igualmente?`,{si:'Añadir igualmente'})){b.disabled=false;b.textContent='Siguiente';return;}
    const li=!oc&&rs.find(c=>agEsLibre(c.estado));if(li)hueco=Object.assign({fecha},li);}catch(_){}
   m.remove();agDarCita({fecha,hora,fisio,hueco},onDone);};
 }
@@ -6891,7 +6907,7 @@ function agFisioCita(c,onDone){
  m.querySelectorAll('.ag-cff button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;m.querySelectorAll('.ag-cff button').forEach(x=>x.classList.toggle('on',x===b));ok.disabled=false;ok.textContent=`Pasar la cita a ${agNom(fisio)}`;});
  const enviar=async forzar=>{if(!fisio)return;ok.disabled=true;const t0=ok.textContent;ok.textContent='Cambiando…';
   try{const lb=m.querySelector('.ag-lib input');const r=await agPost('seg-agenda-fisio',{id:c.id,fisio,liberar:!!(lb&&lb.checked),forzar});
-   if(r.conflicto){ok.disabled=false;ok.textContent=t0;if(confirm(r.error+'. ¿Pasársela igualmente?'))enviar(true);return;}
+   if(r.conflicto){ok.disabled=false;ok.textContent=t0;pregunta(r.error+'. ¿Pasársela igualmente?',{si:'Pasársela igualmente'}).then(ok=>{if(ok)enviar(true);});return;}
    if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Ahora la cita la lleva ${agNom(fisio)}`,true);m.remove();onDone&&onDone();}
   catch(err){ok.disabled=false;ok.textContent=t0;toast(err.message,false);}};
  ok.onclick=()=>enviar(false);
@@ -6912,8 +6928,8 @@ function agMoverCita(c,onDone){
  const enviar=async(b,forzar)=>{if(!fecha||!hora){toast('Elige día y hora',false);return;}b.disabled=true;b.textContent='Cambiando…';
   try{const lb=m.querySelector('.ag-lib input');const r=await agPost('seg-agenda-mover',{id:c.id,fecha,hora,fisio,liberar:!!(lb&&lb.checked),forzar,...agBombaP(m)});
    if(r.bomba){b.disabled=false;b.textContent='Cambiar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
-   if(r.conflicto){b.disabled=false;b.textContent='Cambiar cita';if(confirm(r.error+'. ¿Darla igualmente a la misma hora?'))enviar(b,true);return;}
-   if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Cita cambiada al ${segFecha(fecha)} a las ${hora}`,true);m.remove();if(AG.vista==='dia'&&fecha!==AG.fecha&&confirm('¿Ir a ese día en la agenda?'))AG.fecha=fecha;onDone&&onDone();}
+   if(r.conflicto){b.disabled=false;b.textContent='Cambiar cita';pregunta(r.error+'. ¿Darla igualmente a la misma hora?',{si:'Darla igualmente'}).then(ok=>{if(ok)enviar(b,true);});return;}
+   if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Cita cambiada al ${segFecha(fecha)} a las ${hora}`,true);m.remove();if(AG.vista==='dia'&&fecha!==AG.fecha){pregunta('¿Ir a ese día en la agenda?',{si:'Ir',no:'Quedarme aquí'}).then(ok=>{if(ok)AG.fecha=fecha;onDone&&onDone();});}else{onDone&&onDone();}}
   catch(err){b.disabled=false;b.textContent='Cambiar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
 }
@@ -6992,7 +7008,7 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
   b.disabled=true;b.textContent='Dando cita…';
   try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,quien:miNombreCorto(),notas:m.querySelector('.ag-not2').value.trim(),tipos:tg.get(),sesion:ses.get(),forzar,...agBombaP(m)});
    if(r.bomba){b.disabled=false;b.textContent='Dar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
-   if(r.conflicto){b.disabled=false;b.textContent='Dar cita';if(confirm(r.error+'. ¿Darla igualmente?'))enviar(b,true);return;}
+   if(r.conflicto){b.disabled=false;b.textContent='Dar cita';pregunta(r.error+'. ¿Darla igualmente?',{si:'Darla igualmente'}).then(ok=>{if(ok)enviar(b,true);});return;}
    if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`+(pacInfo?' · '+pacInfo:'')+(r.reprogramadas?' · su cita «Por reagendar» pasa a Reprogramada':'')+(r.seguimiento?(r.seguimiento.quitado?' · sale de «Por llamar»':'')+' · ahora está Activo':''),true);if(r.seguimiento&&r.seguimiento.estados){try{const pp=(pacs||[]).find(x=>x.id===pac.id);if(pp)pp.estados=r.seguimiento.estados;}catch(_){}}m.remove();if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:pac.id,paciente:pac.nombre},r.debePagar);try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();
    // Venía con un pack de antes sin apuntar: se marca ahora con esta cita (sesión X de N)
    if(quierePack&&packSel&&r.id){const {n,ses}=packSel.get();
@@ -7023,7 +7039,13 @@ const comVe=()=>!!fisioActual&&(!COM_USUARIOS||COM_USUARIOS.includes(String(fisi
 const COM_TIPOS=['Comunicado','Solicitud','Tareas','Incidencia','Ausencia'];
 const COM_TIPO_DESC={Comunicado:'Para informar de algo importante al equipo.',Solicitud:'Para pedir algo que la otra persona tiene que resolver.',Tareas:'Una lista de tareas que se van marcando a medida que se hacen.',Incidencia:'Para contar algo que crees que hay que corregir.',Ausencia:'Para pedir vacaciones, días libres, horas o un cambio de horario.'};
 const COM_CAT_INC=['Comportamiento','Puntualidad','Calidad del trabajo','Material o instalaciones','Otro'];
-const COM_APRUEBAN=['Nora']; // administración: aprueba vacaciones y recibe lo confidencial (si lo pide Nora, va a Ramiro) // quién aprueba vacaciones, días libres y cambios de horario
+// Por rol, no por nombre: aprueba administración (Puesto «Administración»); si lo pide administración, va a dirección
+const pilaEq=n=>{const p=String(n||'').trim().split(/\s+/)[0]||'';return p.charAt(0).toUpperCase()+p.slice(1).toLowerCase();};
+const comAprueban=()=>[...new Set((fisios||[]).filter(f=>String(f.role||'').toLowerCase()==='admin').map(f=>pilaEq(f.nombre)))];
+const comDireccion=()=>[...new Set((fisios||[]).filter(f=>f.direccion).map(f=>pilaEq(f.nombre)))];
+const COM_APRUEBAN_X=null;
+// Quien hace las tareas de administración (consentimientos, huecos de la lista de espera, tarjetas regalo): el Puesto «Administración»
+const ADMIN_NOM=()=>comAprueban()[0]||comDireccion()[0]||''; // administración: aprueba vacaciones y recibe lo confidencial (si lo pide Nora, va a Ramiro) // quién aprueba vacaciones, días libres y cambios de horario
 const comTipoTxt=t=>({Comunicado:'Informe',Aviso:'Informe',Ausencia:'Vacaciones y horarios',Incidencia:'Para administración',Ayuda:'Necesito ayuda'})[t]||t;
 const comRol=n=>{if(/^fisio365$/i.test(n||''))return 'Resumen automático del panel';const f=(fisios||[]).find(x=>String(x.nombre||'').split(' ')[0].toLowerCase()===String(n||'').toLowerCase());if(!f)return /^(nora|ramiro)$/i.test(n||'')?'Dirección · FISIO365':'Fisioterapeuta · FISIO365';return (f.role==='admin'?'Administración':'Fisioterapeuta')+(f.direccion?' · Dirección':'')+' · FISIO365';};
 const comFechaDia=f=>{if(!f)return '';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][t.getMonth()];};
@@ -7379,7 +7401,7 @@ function comHoraPick(anchor,valor,onPick){
 function comNueva(onOk,paraIni){
  const yo=String(fisioActual.nombre||'').trim().split(' ')[0].toLowerCase();
  const eq=((COM.d&&COM.d.equipo)||TAR_NOMBRES).filter(n=>n.toLowerCase()!==yo);
- const dir=COM_APRUEBAN.filter(n=>n.toLowerCase()!==yo);if(!dir.length)dir.push('Ramiro');
+ let dir=comAprueban().filter(n=>n.toLowerCase()!==yo);if(!dir.length)dir=comDireccion().filter(n=>n.toLowerCase()!==yo);
  const S={para:(paraIni||[]).filter(n=>eq.includes(n)),tipo:'Comunicado',req:false,modo:'leer',limite:'',que:'Vacaciones',desde:'',hasta:'',hd:'',hh:'',items:['',''],cat:'',sobre:[],urg:'Esta semana'};
  const NORMAL=['Comunicado','Solicitud'];let paso=1;
  const m=hzModal(`<div class="hz-top"><div><b class="com-tit">Nueva comunicación</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
@@ -7389,7 +7411,7 @@ function comNueva(onOk,paraIni){
   <div class="s-para"><div class="hz-lab">Para</div><div class="com-chips com-para"><button type="button" data-n="*">Todo el equipo</button>${eq.map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div></div>
   <div class="s-inc">
    <div class="hz-lab">Tema</div><div class="com-chips com-cat">${COM_CAT_INC.map(t=>`<button type="button" data-c="${t}">${t}</button>`).join('')}</div>
-   <div class="hz-lab">¿Sobre alguien? <span>(opcional)</span></div><div class="com-chips com-sob">${eq.filter(n=>!COM_APRUEBAN.includes(n)).map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div>
+   <div class="hz-lab">¿Sobre alguien? <span>(opcional)</span></div><div class="com-chips com-sob">${eq.filter(n=>!comAprueban().includes(n)).map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div>
   </div>
   <div class="s-urg"><div class="hz-lab">¿Para cuándo?</div><div class="com-chips com-urg">${['Hoy','Esta semana','Cuando se pueda'].map(t=>`<button type="button" data-u="${t}">${t}</button>`).join('')}</div></div>
   <div class="s-asunto"><div class="hz-lab com-l-asunto">Asunto</div><input type="text" class="com-in com-asunto" maxlength="140"></div>
@@ -7468,7 +7490,8 @@ function comNueva(onOk,paraIni){
 }
 
 // ══ ESTADÍSTICAS DEL CENTRO (solo dirección: Nora y Ramiro) ══
-const esDireccion=()=>{const A=(fisioActual&&fisioActual.accesos)||{};return !!(A.admin||A.estadisticas)||/^(nora|ramiro)$/i.test(String((fisioActual&&fisioActual.nombre)||'').split(' ')[0]);};
+// Dirección = la marca «Dirección» de su ficha en Dirección › Equipo (no por nombre)
+const esDireccion=()=>{const A=(fisioActual&&fisioActual.accesos)||{};return !!((fisioActual&&fisioActual.direccion)||A.admin);};
 let ST={sem:null,met:'sesiones',d:null,vista:'sem',dN:0};
 const stNec=()=>ST.vista==='sem'?ST.n:104;
 const ST_MET=[
@@ -8378,7 +8401,7 @@ function ejEditar(e,onSaved){
 
 // Borrar la ficha de un paciente (solo dirección)
 async function borrarFicha(id,nombre,cerrarFicha){
- const q=b=>fetch('/api/schedule?action=seg-paciente-borrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,quien:(fisioActual&&fisioActual.nombre)||'',id,...b})}).then(r=>r.json());
+ const q=b=>fetch('/api/schedule?action=seg-paciente-borrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,quien:(fisioActual&&fisioActual.nombre)||'',clave:(fisioActual&&fisioActual._pwd)||'',id,...b})}).then(r=>r.json());
  const m=hzModal(`<div class="hz-top"><div><small>Borrar ficha</small><b>${escH(nombre||'Paciente')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="bf-c" style="font-size:13px;color:var(--muted)">Mirando qué tiene…</div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  let d;try{d=await q({paso:'info'});}catch(e){d={ok:false,error:'No se ha podido conectar'};}
@@ -9308,7 +9331,10 @@ async function abrirFichaPaciente(id,nombre,pBase){
  let d;
  const cargar=async()=>{d=await (await fetch(`/api/schedule?action=seg-ficha&pwd=${encodeURIComponent(apiPwd)}&id=${id}`)).json();if(!d.ok)throw 0;};
  try{await cargar();}catch(e){body.innerHTML='<div class="fac-vacio">No se ha podido cargar la ficha</div>';return;}
- const P=d.paciente;let tab=window.__fichaTab||'resumen';if(tab==='archivos')tab='historia';window.__fichaTab='';
+ const P=d.paciente;const KT='f365_ftab_'+id,KY='f365_fy_'+id;let tab=window.__fichaTab||(()=>{try{return sessionStorage.getItem(KT)||'';}catch(e){return '';}})()||'resumen';if(tab==='archivos')tab='historia';window.__fichaTab='';
+ // Cambiar de pestaña sin saltar arriba: el contenido nuevo empieza bajo las pestañas
+ const irTab=k=>{const y=body.scrollTop,tb=body.querySelector('.fp-tabs'),tTop=tb?tb.offsetTop-8:0;tab=k;try{sessionStorage.setItem(KT,k);}catch(e){}pintar();const c=body.querySelector('.fp-cont');if(c)c.style.minHeight=body.clientHeight+'px';body.scrollTop=Math.min(y,tTop);};
+ {let tY=0;body.addEventListener('scroll',()=>{clearTimeout(tY);tY=setTimeout(()=>{try{sessionStorage.setItem(KY,String(body.scrollTop));}catch(e){}},200);},{passive:true});}
  const fch=f=>f?new Date(f+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}):'';
  const cls=e=>/REALIZADA/i.test(e)?'ok':/CANCEL|NO ASIST|PERDIDA/i.test(e)?'no':/PENDIENTE/i.test(e)?'pe':'';
  const guardar=async campos=>{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id,campos})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');Object.assign(P,campos);if(campos.email!=null){const x=(pacs||[]).find(z=>z.id===id);if(x)x.email=campos.email;}};
@@ -9440,7 +9466,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
    const chk=box.querySelector('input[type=checkbox]');
    chk.onchange=async()=>{if(chk.checked){pinta(true);return;}
     if(!P.porQue){pinta(false);return;}
-    if(!confirm('¿Quitar el motivo de no reagenda?')){chk.checked=true;return;}
+    if(!await pregunta('¿Quitar el motivo de no reagenda?',{si:'Quitar'})){chk.checked=true;return;}
     chk.disabled=true;
     try{const r=await post('nota-reagenda',{pacienteId:id,nota:'',fisio:fisioActual.nombre});if(!r.ok)throw new Error(r.error||'No se ha podido quitar');P.porQue='';P.porQueFecha='';P.porQueFisio='';refrescarTareas();toast('Motivo quitado',true);pinta(false);}
     catch(err){chk.checked=true;chk.disabled=false;toast(err.message,false);}};
@@ -9523,14 +9549,14 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
  function pintar(){
   body.innerHTML=cabecera()+'<div class="fp-cont"></div>';
   const cont=body.querySelector('.fp-cont');
-  body.querySelectorAll('.fp-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;pintar();});
+  body.querySelectorAll('.fp-tabs button').forEach(b=>b.onclick=()=>irTab(b.dataset.t));
   {const mb=body.querySelector('.fp-mas');if(mb)mb.onclick=e=>{e.stopPropagation();const ya=document.querySelector('.fp-masmenu');if(ya){ya.remove();return;}
-    const mn=ce('div','fp-masmenu');mn.innerHTML=MAS.map(([k,t])=>`<button type="button" data-k="${k}" class="${tab===k?'on':''}"><span>${t}${k==='archivos'&&P.archivos.length?' <em>'+P.archivos.length+'</em>':''}</span>${tab===k?'<b>✓</b>':''}</button>`).join('')+'<div class="fp-masdiv"></div><button type="button" data-k="_anam" class="fp-masanam"><span>Hacer anamnesis</span><b>›</b></button>'+(esDireccion()?'<button type="button" data-k="_borrar" class="fp-masdel"><span>Borrar ficha</span></button>':'');
+    const mn=ce('div','fp-masmenu');mn.innerHTML=MAS.map(([k,t])=>`<button type="button" data-k="${k}" class="${tab===k?'on':''}"><span>${t}${k==='archivos'&&P.archivos.length?' <em>'+P.archivos.length+'</em>':''}</span>${tab===k?'<b>✓</b>':''}</button>`).join('')+'<div class="fp-masdiv"></div><button type="button" data-k="_anam" class="fp-masanam"><span>Hacer anamnesis</span><b>›</b></button>'+(fisioActual&&fisioActual.direccion?'<button type="button" data-k="_borrar" class="fp-masdel"><span>Borrar ficha</span></button>':'');
     document.body.appendChild(mn);const rc=mb.getBoundingClientRect();mn.style.right=Math.max(12,window.innerWidth-rc.right)+'px';
     // Que el menú se vea entero: si no cabe debajo del botón, se abre hacia arriba (y si tampoco, con scroll)
     {const vh=(window.visualViewport&&visualViewport.height)||innerHeight,hM=mn.offsetHeight;let t=rc.bottom+6;if(t+hM>vh-10)t=rc.top-hM-6>=10?rc.top-hM-6:Math.max(10,vh-hM-10);mn.style.top=t+'px';mn.style.maxHeight=(vh-20)+'px';mn.style.overflowY='auto';}
     const fuera=ev=>{if(!mn.contains(ev.target)){mn.remove();document.removeEventListener('click',fuera,true);}};setTimeout(()=>document.addEventListener('click',fuera,true),0);
-    mn.querySelectorAll('button').forEach(b=>b.onclick=()=>{mn.remove();document.removeEventListener('click',fuera,true);if(b.dataset.k==='_anam'){cerrar();abrirAnamnesisDe({id,nombre:P.nombre});return;}if(b.dataset.k==='_borrar'){borrarFicha(id,P.nombre,cerrar);return;}if(b.dataset.k==='_doc'){abrirJustificante(id,P,d);return;}tab=b.dataset.k;pintar();});};}
+    mn.querySelectorAll('button').forEach(b=>b.onclick=()=>{mn.remove();document.removeEventListener('click',fuera,true);if(b.dataset.k==='_anam'){cerrar();abrirAnamnesisDe({id,nombre:P.nombre});return;}if(b.dataset.k==='_borrar'){borrarFicha(id,P.nombre,cerrar);return;}if(b.dataset.k==='_doc'){abrirJustificante(id,P,d);return;}irTab(b.dataset.k);});};}
   body.querySelector('.fp-estb').onclick=editarEstado;
   {const ba=body.querySelector('.fp-appb');if(ba)ba.onclick=()=>{if(P.appInstalada){enviarApp(P);return;}
   // Aún no consta que haya entrado: enviarle cómo entrar o marcar que ya la tiene (así no se le recuerda en los recordatorios)
@@ -9615,6 +9641,8 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   mm.querySelector('.hz-x').onclick=()=>mm.remove();const sel=selectorEstados(P.estados);mm.querySelector('.est-slot').appendChild(sel);
   mm.querySelector('.hz-ok').onclick=async e=>{e.target.disabled=true;try{await guardarEstados(id,sel.get());P.estados=sel.get();toast('Guardado',true);mm.remove();pintar();}catch(err){e.target.disabled=false;toast('No se ha podido guardar',false);}};}
  pintar();
+ // Vuelve a la altura en que estaba (si se abre la misma ficha en esta sesión)
+ {let y0=0;try{y0=+sessionStorage.getItem(KY)||0;}catch(e){}if(y0>0){let n=0;const iv=setInterval(()=>{n++;if(body.scrollHeight>=y0+body.clientHeight||n>25){clearInterval(iv);body.scrollTop=y0;}},120);}}
  m._refrescar=async()=>{const ed=()=>m.querySelector('textarea, .fp-guardar, input[data-k]')||document.querySelector('.hz-modal');if(ed())return;try{await cargar();Object.assign(P,d.paciente);}catch(_){return;}if(ed())return;const sp=segAct();if(sp)SEG_PAC[id]={fecha:sp.fecha,quien:sp.quien};else delete SEG_PAC[id];const y=body.scrollTop;pintar();body.scrollTop=y;};
 }
 // Botón «i» de información: al tocarlo muestra/oculta la explicación (mismo tamaño de letra que el resto)
@@ -9741,18 +9769,19 @@ async function _datosTareasTodas(fresco){
  ((sa&&sa.sesiones)||[]).filter(c=>c.pacienteId).forEach(c=>{const lim=new Date(c.fecha+'T12:00:00');lim.setDate(lim.getDate()+1);const q=String(c.fisio||'').trim().split(' ')[0];const qn=q?q.charAt(0).toUpperCase()+q.slice(1).toLowerCase():'';items.push({tipo:'anotar',fecha:lim.toISOString().slice(0,10),nombre:c.nombre,quien:TAR_NOMBRES.includes(qn)?qn:(qn||''),c});});
  // Consentimientos: pacientes que ya han venido sin consentimiento enlazado, y formularios que no sabemos de quién son
  // Los antiguos (consentimiento en papel) van por fecha de su 1ª visita: así es como están archivados los papeles
- ((cs&&cs.sinCons)||[]).forEach(k=>items.push({tipo:'consent',fecha:k.antiguo&&/^\d{4}-\d{2}-\d{2}/.test(k.primeraVisita||'')?String(k.primeraVisita).slice(0,10):k.primera,nombre:k.nombre,quien:'Nora',k:{...k,modo:'P'}}));
- ((cs&&cs.huerfanos)||[]).forEach(k=>items.push({tipo:'consent',fecha:k.fecha,nombre:String(k.nombre||'').replace(/\b\w/g,c=>c.toUpperCase()),quien:'Nora',k:{...k,modo:'C'}}));
- ((cs&&cs.revisar)||[]).forEach(k=>items.push({tipo:'consent',fecha:k.fecha,nombre:String(k.nombre||'').replace(/\b\w/g,c=>c.toUpperCase()),quien:'Nora',k:{...k,modo:'R'}}));
+ ((cs&&cs.sinCons)||[]).forEach(k=>items.push({tipo:'consent',fecha:k.antiguo&&/^\d{4}-\d{2}-\d{2}/.test(k.primeraVisita||'')?String(k.primeraVisita).slice(0,10):k.primera,nombre:k.nombre,quien:ADMIN_NOM(),k:{...k,modo:'P'}}));
+ ((cs&&cs.huerfanos)||[]).forEach(k=>items.push({tipo:'consent',fecha:k.fecha,nombre:String(k.nombre||'').replace(/\b\w/g,c=>c.toUpperCase()),quien:ADMIN_NOM(),k:{...k,modo:'C'}}));
+ ((cs&&cs.revisar)||[]).forEach(k=>items.push({tipo:'consent',fecha:k.fecha,nombre:String(k.nombre||'').replace(/\b\w/g,c=>c.toUpperCase()),quien:ADMIN_NOM(),k:{...k,modo:'R'}}));
  // App: pacientes de este mes sin plan de ejercicios, o con plan pero que no han entrado nunca en la app (para su fisio)
  const qFisio=f=>{const q=String(f||'').trim().split(' ')[0];const qn=q?q.charAt(0).toUpperCase()+q.slice(1).toLowerCase():'';return qn;};
  ((ap&&ap.sinPlan)||[]).forEach(a=>items.push({tipo:'plan',fecha:a.ultima,nombre:a.nombre,quien:qFisio(a.fisio),a}));
- // («Sin la app» de momento no se enseña en Tareas)
+ // Sin la app: han venido este mes, tienen plan y nunca han entrado en la app (para su fisio)
+ ((ap&&ap.sinApp)||[]).forEach(a=>items.push({tipo:'app',fecha:a.ultima,nombre:a.nombre,quien:qFisio(a.fisio),a}));
  // Lista de espera: huecos libres de hoy y mañana en los que puede alguien de la lista
- if(cv&&cv.ok){(cv.libres||[]).forEach(h=>{const P=capPrio(cv.espera||[],h,cv.hoy);if(!P.length)return;items.push({tipo:'hueco',fecha:h.fecha,nombre:(h.fecha===cv.hoy?'Hoy':'Mañana')+' '+h.hora+(h.fisio?' · '+capNomF(String(h.fisio).split(' ')[0]):''),quien:'Nora',h,P,esp:cv.espera,hoyC:cv.hoy});});
+ if(cv&&cv.ok){(cv.libres||[]).forEach(h=>{const P=capPrio(cv.espera||[],h,cv.hoy);if(!P.length)return;items.push({tipo:'hueco',fecha:h.fecha,nombre:(h.fecha===cv.hoy?'Hoy':'Mañana')+' '+h.hora+(h.fisio?' · '+capNomF(String(h.fisio).split(' ')[0]):''),quien:ADMIN_NOM(),h,P,esp:cv.espera,hoyC:cv.hoy});});
   (cv.negocios||[]).forEach(n=>items.push({tipo:'negocio',fecha:n.proxima,nombre:n.nombre,quien:'',n}));}
  // Tarjetas regalo: el recomendado ya ha venido a su primera sesión
- ((rf&&rf.porDar)||[]).forEach(g=>items.push({tipo:'regalo',fecha:g.primera,nombre:g.recomendo?g.recomendo.nombre:g.texto,quien:'Nora',g}));
+ ((rf&&rf.porDar)||[]).forEach(g=>items.push({tipo:'regalo',fecha:g.primera,nombre:g.recomendo?g.recomendo.nombre:g.texto,quien:ADMIN_NOM(),g}));
  ((sg&&sg.pendientes)||[]).filter(x=>x.fecha<=iso(7)).forEach(x=>items.push({tipo:'llamar',fecha:x.fecha,nombre:x.nombre,quien:deQuienSeg(x),detalle:x.nota,tel:x.tel,seg:x}));
  ((r&&r.fisios)||[]).forEach(f=>(f.lista||[]).filter(p=>!(p.nota&&p.notaFecha>=p.ultima)).forEach(p=>{
   // Plazo para explicarlo: 2 días después de su última sesión
@@ -10094,6 +10123,15 @@ function verGastos(lista,mes,recarga){
  m.querySelector('.gv-add').onclick=()=>form(null);
  pinta();
 }
+// Preguntas con el estilo del panel (en vez de las ventanas del navegador)
+function pregunta(texto,o={}){return new Promise(res=>{const m=hzModal(`<p class="pq-t">${escH(texto)}</p><div class="hz-bts"><button type="button" class="hz-re pq-no">${escH(o.no||'Cancelar')}</button><button type="button" class="hz-ok pq-si${o.peligro?' pq-pel':''}">${escH(o.si||'Sí')}</button></div>`);
+ let hecho=false;const fin=v=>{if(hecho)return;hecho=true;m.remove();res(v);};
+ m.querySelector('.pq-si').onclick=()=>fin(true);m.querySelector('.pq-no').onclick=()=>fin(false);
+ new MutationObserver((_,ob)=>{if(!m.isConnected){ob.disconnect();fin(false);}}).observe(document.body,{childList:true});});}
+function pideTexto(titulo,defecto=''){return new Promise(res=>{const m=hzModal(`<p class="pq-t">${escH(titulo)}</p><input type="text" class="ag-in pq-in" value="${escH(defecto)}"><div class="hz-bts"><button type="button" class="hz-re pq-no">Cancelar</button><button type="button" class="hz-ok pq-si">Aceptar</button></div>`);
+ const i=m.querySelector('.pq-in');setTimeout(()=>{i.focus();i.select();},50);let hecho=false;const fin=v=>{if(hecho)return;hecho=true;m.remove();res(v);};
+ m.querySelector('.pq-si').onclick=()=>fin(i.value);m.querySelector('.pq-no').onclick=()=>fin(null);i.onkeydown=e=>{if(e.key==='Enter')fin(i.value);};
+ new MutationObserver((_,ob)=>{if(!m.isConnected){ob.disconnect();fin(null);}}).observe(document.body,{childList:true});});}
 function hzModal(html){const m=ce('div','hz-modal');m.innerHTML=`<div class="hz-card">${html}</div>`;m.onclick=e=>{if(e.target===m)m.remove();};document.body.appendChild(m);
  // En el móvil, al abrir el teclado: la hoja se queda pegada encima del teclado y el campo a la vista
  const vv=window.visualViewport;
@@ -10469,7 +10507,7 @@ function marcarPackCita(pacId,nombre,citaId,onDone,tienePrevio){
   <div class="pk-res"></div>
   <div class="sev-bts"><button type="button" class="sev-b pk-no">Cancelar</button><button type="button" class="sev-b ok pk-ok" disabled>Guardar</button></div>
   ${tienePrevio?'<button type="button" class="pk-quitar">Quitar el pack apuntado (me he equivocado)</button>':''}`);
- {const qb=m.querySelector('.pk-quitar');if(qb)qb.onclick=async()=>{if(!confirm('¿Quitar el pack pagado fuera del panel de este paciente?'))return;qb.disabled=true;
+ {const qb=m.querySelector('.pk-quitar');if(qb)qb.onclick=async()=>{if(!await pregunta('¿Quitar el pack pagado fuera del panel de este paciente?',{si:'Quitar',peligro:1}))return;qb.disabled=true;
   try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:pacId,bonoPrevio:0})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido quitar');
    toast('Pack quitado',true);m.remove();onDone&&onDone();}catch(err){qb.disabled=false;toast(err.message,false);}};}
  const inp=m.querySelector('.pk-n'),s2=m.querySelector('.pk-s2'),sb=m.querySelector('.pk-ses'),res=m.querySelector('.pk-res'),ok=m.querySelector('.pk-ok');
@@ -11018,7 +11056,7 @@ async function enviarMensajeFisioAPaciente(pacId, pacNombre, btn){
 
 
 async function borrarInforme(id){
- if(!confirm('¿Eliminar este informe? No se puede deshacer.')) return;
+ if(!await pregunta('¿Eliminar este informe? No se puede deshacer.',{si:'Eliminar',peligro:1})) return;
  try{
  const r=await fetch('/api/pacientes?action=borrar-informe',{
  method:'POST',
@@ -11157,7 +11195,7 @@ async function renderInformes(wrap){
  });
  menuDrop.appendChild(miSave);
  const miDel1=mkMenuItem('Borrar solo del panel del fisio','#b91c1c',async()=>{
- if(!confirm('¿Eliminar este informe del panel? El paciente seguirá teniéndolo en su app.')) return;
+ if(!await pregunta('¿Eliminar este informe del panel? El paciente seguirá teniéndolo en su app.',{si:'Eliminar',peligro:1})) return;
  try{
  const r=await fetch('/api/pacientes?action=borrar-informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:inf.id})});
  const d=await r.json();
@@ -11166,7 +11204,7 @@ async function renderInformes(wrap){
  }catch(e){toast('Error: '+e.message,false);}
  });
  const miDel2=mkMenuItem('Borrar del panel y del perfil del paciente','#b91c1c',async()=>{
- if(!confirm('¿Eliminar este informe del panel Y de la app del paciente? No se puede deshacer.')) return;
+ if(!await pregunta('¿Eliminar este informe del panel y de la app del paciente? No se puede deshacer.',{si:'Eliminar',peligro:1})) return;
  try{
  // Borrar de ANAMNESIS (panel)
  const r1=await fetch('/api/pacientes?action=borrar-informe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:inf.id})});
@@ -11462,6 +11500,8 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-10-30',t:'La ficha del paciente recuerda la pestaña en la que estabas y ya no salta arriba al cambiar de pestaña.'},
+ {f:'2026-10-30',t:'Pendientes › Tareas: nuevo grupo «Sin la app», con los pacientes de este mes que aún no la tienen y el botón Enviar app.'},
  {f:'2026-10-30',t:'El lunes 2/11 empieza la formación del panel: un módulo corto cada día laborable a las 8:30, con aviso al móvil. Activa los avisos para que te llegue.'},
  {f:'2026-10-30',t:'Nuevo curso «La app del paciente», con capturas de cada pantalla: así sabrás contestar cuando te pregunten por su app.'},
  {f:'2026-10-30',t:'Nuevo curso «Cómo funciona la app», para todo el equipo: preguntas de situaciones reales y botones «Enséñamelo» que te llevan a la pantalla de verdad. Las novedades también lo tienen.'},
@@ -13609,10 +13649,10 @@ function renderFormacion(wrap, ruta){
  {ti:'Dónde',body:`Desde la ficha › Más › <b>Hacer anamnesis</b>. El paciente ya viene elegido y arriba tienes <b>‹ Volver a la ficha</b>.`,ver:{sec:'pac',pasos:[{el:'.fp-mas',txt:'En Más está «Hacer anamnesis».',click:['#pacResultados .pt-r']}]}},
  {ti:'Protocolos y pasos',body:`Rodilla, hombro, cervical, codo, muñeca, tobillo, cadera, sacroilíaca, lumbar, hernia discal, torácica, libre y suelo pélvico. Pasos: paciente, lesión, dolor, exploración, tests e informe (cervical añade neurológico; hernia y suelo pélvico tienen más).`},
  {ti:'Ayudas',body:`<b>Todo normal</b> marca de un toque lo normal en la exploración. Los tests salen ordenados por fiabilidad y las contraindicaciones en rojo. Si sales a medias, el borrador se guarda en ese dispositivo.`},
- {ti:'El informe',body:`<b>Generar informe con IA</b>: motivo, hallazgos, diagnóstico, objetivos, alertas y una explicación en palabras sencillas. Revísalo y elige <b>Compartir con el paciente</b> (le llega a su app y firma el recibí) o <b>Guardar sin compartir</b>. Hasta que no le das a uno de los dos, <b>no se guarda</b>.`}
+ {ti:'El informe',body:`<b>Generar informe con IA</b>: motivo, hallazgos, diagnóstico, objetivos, alertas y una explicación en palabras sencillas. Al generarlo <b>se guarda solo en su ficha, sin compartir</b>. Revísalo: si lo editas, vuelve a darle a <b>Guardar sin compartir</b>; cuando esté bien, <b>Compartir con el paciente</b> (le llega a su app y firma el recibí).`}
  ],
  qs:[
- {q:'Generas el informe de la anamnesis y cierras. ¿Está guardado?',opts:['Sí, siempre','No: hay que darle a Compartir o Guardar sin compartir','Solo en la app del paciente'],ok:1,fb:['No: falta guardarlo.','¡Correcto!','No llega a ningún sitio sin guardarlo.']},
+ {q:'Generas el informe de la anamnesis. ¿Lo ve ya el paciente?',opts:['Sí, al momento','No: se guarda en su ficha sin compartir hasta que tocas «Compartir con el paciente»','No se guarda'],ok:1,fb:['Todavía no: primero lo revisas.','¡Correcto!','Sí se guarda, sin compartir.']},
  {q:'¿Dónde empiezas una anamnesis?',opts:['En el menú','En la ficha › Más › Hacer anamnesis','En la agenda'],ok:1,fb:['Ya no está en el menú.','¡Bien!','No.']}
  ]},
 
@@ -14294,7 +14334,7 @@ async function compraPintar(box){if(!box)return;
  box.querySelector('.cp-nuevo').onclick=()=>compraAnadir({},()=>compraPintar(box));
  const act=async(id,a,extra)=>{const r=await comPost(a,Object.assign({id},extra||{})).catch(()=>({ok:false}));if(!r.ok){toast('No se ha podido',false);return;}compraPintar(box);};
  box.querySelectorAll('.cp-ok').forEach(b=>b.onclick=()=>{b.disabled=true;act(b.closest('.cp-it').dataset.id,'compra-hecho',{hecho:true});});
- box.querySelectorAll('.cp-x').forEach(b=>b.onclick=()=>{if(confirm('¿Quitar de la lista?'))act(b.closest('.cp-it').dataset.id,'compra-borrar');});
+ box.querySelectorAll('.cp-x').forEach(b=>b.onclick=()=>{const it=b.closest('.cp-it');pregunta('¿Quitar de la lista?',{si:'Quitar'}).then(ok=>{if(ok)act(it.dataset.id,'compra-borrar');});});
  box.querySelectorAll('.cp-des').forEach(b=>b.onclick=()=>act(b.dataset.id,'compra-hecho',{hecho:false}));}
 // Avisar al fisio de lo que le falta: le llega como comunicación «Informe» que requiere acción
 function rdAvisar(R,f,btn,txtPropio,asuntoPropio){const nom=String(f.fisio).split(' ')[0];f=Object.assign({enviado:'x',noMarcados:[],pendiente:[]},f);
@@ -14574,8 +14614,8 @@ function insertFormato(taId, antes, despues){
   ta.selectionEnd=start+antes.length+(sel||'texto').length;
 }
 
-function insertLink(taId){
-  const url=prompt('URL del enlace:','https://');
+async function insertLink(taId){
+  const url=await pideTexto('URL del enlace:','https://');
   if(!url||url==='https://')return;
   const ta=document.getElementById(taId);
   if(!ta)return;
@@ -14696,5 +14736,70 @@ function cerrarLightbox(){
 <script src="/chat-ui.js?v=2"></script>
 <script src="/racha-ui.js?v=3"></script>
 <script src="/marca.js?v=1"></script>
+<script>
+// ── Desplegables, fechas y horas con el estilo del panel (en vez de las listas del navegador) ──
+// Se engancha a cualquier <select>, <input type=date> y <input type=time> del panel: al tocarlo se abre el nuestro.
+// El campo original sigue ahí (el código lo lee igual): solo cambia la ventanita que se abre.
+(function(){
+ const esMovil=()=>window.innerWidth<620;
+ let abierto=null;
+ const cerrar=()=>{if(abierto){abierto.remove();abierto=null;document.removeEventListener('keydown',tecla,true);}};
+ const tecla=e=>{if(e.key==='Escape'){e.preventDefault();cerrar();}};
+ const lanza=(el,v)=>{if(el.value===v)return;el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));};
+ // Caja flotante: bajo el campo en ordenador, hoja inferior en el móvil
+ function caja(el,html,cls){cerrar();const fondo=document.createElement('div');fondo.className='nv-fondo'+(esMovil()?' mov':'');
+  fondo.innerHTML=`<div class="nv-caja ${cls||''}">${html}</div>`;document.body.appendChild(fondo);abierto=fondo;
+  fondo.addEventListener('pointerdown',e=>{if(e.target===fondo)cerrar();});document.addEventListener('keydown',tecla,true);
+  const c=fondo.querySelector('.nv-caja');
+  if(!esMovil()){const r=el.getBoundingClientRect(),w=Math.max(r.width,cls==='nv-cal'?280:200);c.style.width=Math.min(w,window.innerWidth-24)+'px';
+   let x=Math.min(r.left,window.innerWidth-c.offsetWidth-12);x=Math.max(12,x);let y=r.bottom+6;const h=c.offsetHeight;
+   if(y+h>window.innerHeight-12)y=Math.max(12,r.top-6-h);c.style.left=x+'px';c.style.top=y+'px';}
+  return c;}
+ // Desplegable
+ function abrirSelect(sel){
+  const items=[];[...sel.children].forEach(ch=>{if(ch.tagName==='OPTGROUP'){items.push({g:ch.label});[...ch.children].forEach(o=>items.push({o}));}else if(ch.tagName==='OPTION')items.push({o:ch});});
+  const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const html=`<div class="nv-lista">${items.map((x,i)=>x.g?`<div class="nv-g">${esc(x.g)}</div>`:`<button type="button" data-i="${i}" class="${x.o.selected?'on':''}"${x.o.disabled?' disabled':''}><span>${esc(x.o.textContent.trim()||'—')}</span>${x.o.selected?'<b>✓</b>':''}</button>`).join('')}</div>`;
+  const c=caja(sel,html,'nv-sel');
+  c.querySelectorAll('button[data-i]').forEach(b=>b.onclick=()=>{const o=items[+b.dataset.i].o;cerrar();lanza(sel,o.value);});
+  const on=c.querySelector('.on');if(on)on.scrollIntoView({block:'center'});}
+ // Calendario
+ const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+ const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ function abrirFecha(inp){
+  const hoy=iso(new Date()),min=inp.min||'',max=inp.max||'';let ver=new Date((inp.value||hoy)+'T12:00:00');if(isNaN(ver))ver=new Date();ver.setDate(1);
+  const c=caja(inp,'','nv-cal');
+  const pinta=()=>{const y=ver.getFullYear(),m=ver.getMonth(),pri=(new Date(y,m,1).getDay()+6)%7,dias=new Date(y,m+1,0).getDate();
+   let cel='';for(let i=0;i<pri;i++)cel+='<span></span>';
+   for(let d=1;d<=dias;d++){const f=iso(new Date(y,m,d)),off=(min&&f<min)||(max&&f>max);cel+=`<button type="button" data-f="${f}" class="${f===inp.value?'on':''}${f===hoy?' hoy':''}"${off?' disabled':''}>${d}</button>`;}
+   c.innerHTML=`<div class="nv-cab"><button type="button" class="nv-m" data-d="-1" aria-label="Mes anterior">‹</button><b>${MESES[m]} ${y}</b><button type="button" class="nv-m" data-d="1" aria-label="Mes siguiente">›</button></div>
+    <div class="nv-sem"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div><div class="nv-dias">${cel}</div>
+    <div class="nv-pie"><button type="button" class="nv-hoy"${(min&&hoy<min)||(max&&hoy>max)?' disabled':''}>Hoy</button>${inp.required?'':'<button type="button" class="nv-borra">Borrar</button>'}</div>`;
+   c.querySelectorAll('.nv-m').forEach(b=>b.onclick=()=>{ver.setMonth(ver.getMonth()+ +b.dataset.d);pinta();});
+   c.querySelectorAll('.nv-dias button').forEach(b=>b.onclick=()=>{cerrar();lanza(inp,b.dataset.f);});
+   c.querySelector('.nv-hoy').onclick=()=>{cerrar();lanza(inp,hoy);};
+   const br=c.querySelector('.nv-borra');if(br)br.onclick=()=>{cerrar();lanza(inp,'');};};
+  pinta();}
+ // Hora
+ function abrirHora(inp){
+  const paso=Math.max(5,Math.round((+inp.step||300)/60)),L=[];const [h0,h1]=[inp.min?+inp.min.slice(0,2):7,inp.max?+inp.max.slice(0,2):21];
+  for(let h=h0;h<=h1;h++)for(let mi=0;mi<60;mi+=paso)L.push(String(h).padStart(2,'0')+':'+String(mi).padStart(2,'0'));
+  const v=(inp.value||'').slice(0,5);
+  const c=caja(inp,`<div class="nv-horas">${L.map(t=>`<button type="button" class="${t===v?'on':''}">${t}</button>`).join('')}</div>`,'nv-hor');
+  c.querySelectorAll('button').forEach(b=>b.onclick=()=>{cerrar();lanza(inp,b.textContent);});
+  const on=c.querySelector('.on')||c.querySelector('button:nth-child('+(Math.max(1,L.indexOf('09:00')+1))+')');if(on)on.scrollIntoView({block:'center'});}
+ const quien=t=>{if(!t||!t.closest)return null;const el=t.closest('select,input[type=date],input[type=time]');if(!el||el.disabled||el.multiple||el.dataset.nativo!=null||el.closest('#loginScreen'))return null;return el;};
+ const abre=el=>{if(el.tagName==='SELECT')abrirSelect(el);else if(el.type==='date')abrirFecha(el);else abrirHora(el);};
+ let ult=0;
+ const coge=e=>{const el=quien(e.target);if(!el)return;e.preventDefault();e.stopPropagation();if(e.type==='click'&&Date.now()-ult<500)return;ult=Date.now();try{el.blur();}catch(_){}abre(el);};
+ document.addEventListener('mousedown',coge,true);
+ // En el móvil: se abre al levantar el dedo (si no ha sido para hacer scroll)
+ let t0=null;document.addEventListener('touchstart',e=>{const el=quien(e.target);t0=el?{el,x:e.touches[0].clientX,y:e.touches[0].clientY}:null;},{capture:true,passive:true});
+ document.addEventListener('touchend',e=>{if(!t0)return;const t=e.changedTouches[0],mv=Math.abs(t.clientX-t0.x)+Math.abs(t.clientY-t0.y),el=t0.el;t0=null;if(mv>12||quien(e.target)!==el)return;e.preventDefault();ult=Date.now();try{el.blur();}catch(_){}abre(el);},{capture:true,passive:false});
+ document.addEventListener('click',e=>{if(quien(e.target)){e.preventDefault();e.stopPropagation();if(Date.now()-ult>500){ult=Date.now();abre(quien(e.target));}}},true);
+ // Con el teclado: Intro o espacio también lo abren
+ document.addEventListener('keydown',e=>{const el=quien(e.target);if(el&&(e.key==='Enter'||e.key===' '||(el.type==='date'&&e.key!=='Tab'))){e.preventDefault();abre(el);}},true);
+})();
+</script>
 </body>
 </html>
