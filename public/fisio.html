@@ -10139,6 +10139,24 @@ function marcarPack(pacId,nombre,actual,sumar,onDone,citaId){
   try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({pwd:apiPwd,id:pacId},citaId?{bonoPack:{n,sesion:ses,citaId}}:sumar?{bonoSumar:n}:{bonoPrevio:n}))})).json();if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
    toast(citaId?`Apuntado: esta cita es la ${ses}ª de un pack de ${n}`:r.bonoPrevio?`Apuntado: ${r.bonoPrevio} sesiones de pack pagadas fuera del panel`:'Quitado',true);m.remove();onDone&&onDone(r.bonoPrevio);}catch(err){b.disabled=false;toast(err.message,false);}};
 }
+// Enviar una factura al paciente: email (PDF adjunto, desde info@) o WhatsApp (enlace seguro para verla y descargarla)
+async function facEnviar(pacId,id,tipo,btn){
+ const post=async x=>{try{return await (await fetch('/api/schedule?action=seg-fac-enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id,tipo,pacienteId:pacId,...x})})).json();}catch(e){return{ok:false,error:'Sin conexión. Inténtalo de nuevo.'};}};
+ btn.disabled=true;const d=await post({op:'datos'});btn.disabled=false;
+ if(!d.ok){toast(d.error||'No se ha podido preparar',false);return;}
+ const m=hzModal(`<div class="hz-top"><div><small>Factura ${escH(d.numero)} · ${escH(d.total)}</small><b>Enviar al paciente</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Por email · con el PDF adjunto</div><input type="email" inputmode="email" class="ag-in fe-em" placeholder="Email del paciente" value="${escH(d.email||'')}">
+  <button type="button" class="hz-ok fe-go" style="width:100%;margin-top:10px">Enviar email</button><div class="ient-err fe-er" hidden style="margin-top:8px"></div>
+  <div class="hz-lab" style="margin-top:18px">Por WhatsApp · con un enlace para verla y descargarla</div>
+  <button type="button" class="fp-can fe-wa" style="width:100%"${d.tel?'':' disabled'}>${d.tel?'Abrir WhatsApp':'No tiene teléfono en la ficha'}</button>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const ie=m.querySelector('.fe-em'),go=m.querySelector('.fe-go'),er=m.querySelector('.fe-er'),yo=miNombreCorto();
+ go.onclick=async()=>{const to=ie.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){er.hidden=false;er.textContent='Revisa el email';ie.focus();return;}
+  go.disabled=true;go.textContent='Enviando…';er.hidden=true;const x=await post({op:'email',to,yo});
+  if(!x.ok){go.disabled=false;go.textContent='Enviar email';er.hidden=false;er.textContent=x.error||'No se ha podido enviar';return;}
+  m.remove();toast('Factura enviada a '+to,true);};
+ m.querySelector('.fe-wa').onclick=()=>{m.remove();abrirWA(d.tel,`Hola${d.pila?' '+d.pila:''}, soy ${yo} de FISIO365. Aquí tienes tu factura ${d.numero} (${d.total}):\n${d.url}\n\nTambién la tienes siempre en tu app.`);};
+}
 async function fpTabFacturas(pacId, body, pacNombre, tok){
  body.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Cargando...</div>';
  let d={};
@@ -10167,7 +10185,8 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
   const fs=d.facturas||[];
   if(d.error){lista.innerHTML=`<div class="fac-vacio">${escH(d.error)}</div>`;return;}
   if(!fs.length){lista.innerHTML=`<div class="fac-vacio">${d.enHolded===0?`No encuentro a este paciente en Holded${d.nContactos?` (he mirado ${d.nContactos} contactos)`:''}. Busco por DNI${d.dni?' '+escH(d.dni):''}, email o móvil.`:'Sin facturas todavía.'}</div>`;return;}
-  lista.innerHTML='<div class="fac-tit">Facturas anteriores</div>'+fs.map(f=>`<div class="fac-it"><div><div class="fac-n">${f.borrador?'Borrador <span style="font-size:11px;font-weight:600;color:#c2552e;background:#fdf1e8;border-radius:99px;padding:1px 8px;margin-left:4px">pendiente de aprobar en Holded</span>':'Factura '+escH(f.numero||'')}</div><div class="fac-m">${f.fecha?new Date(f.fecha*1000).toLocaleDateString('es-ES'):''}${f.concepto?' · '+escH(f.concepto):''}</div></div><div class="fac-r"><b>${facEur(f.total)}</b><button type="button" class="fp-btn" data-id="${f.id}" data-t="${f.tipo||'salesreceipt'}">PDF</button></div></div>`).join('');
+  lista.innerHTML='<div class="fac-tit">Facturas anteriores</div>'+fs.map(f=>`<div class="fac-it"><div><div class="fac-n">${f.borrador?'Borrador <span style="font-size:11px;font-weight:600;color:#c2552e;background:#fdf1e8;border-radius:99px;padding:1px 8px;margin-left:4px">pendiente de aprobar en Holded</span>':'Factura '+escH(f.numero||'')}</div><div class="fac-m">${f.fecha?new Date(f.fecha*1000).toLocaleDateString('es-ES'):''}${f.concepto?' · '+escH(f.concepto):''}</div></div><div class="fac-r"><b>${facEur(f.total)}</b>${f.borrador?'':`<button type="button" class="fp-btn fac-env" data-e="${f.id}" data-t="${f.tipo||'salesreceipt'}">Enviar</button>`}<button type="button" class="fp-btn" data-id="${f.id}" data-t="${f.tipo||'salesreceipt'}">PDF</button></div></div>`).join('');
+  lista.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>facEnviar(pacId,b.dataset.e,b.dataset.t,b));
   lista.querySelectorAll('[data-id]').forEach(b=>b.onclick=async()=>{
    const w=window.open('','_blank');b.disabled=true;
    try{const r=await (await fetch(`/api/schedule?action=facturas&patientId=${encodeURIComponent(pacId)}&id=${b.dataset.id}&tipo=${b.dataset.t}`)).json();if(!r.ok)throw 0;

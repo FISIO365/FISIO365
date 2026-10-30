@@ -1440,6 +1440,35 @@ async function caducarPagos() {
   }
   return n;
 }
+// ── FACTURA POR ENLACE (WhatsApp): /f/{r|i}{id}-{firma} → página con el PDF; ?pdf=1 descarga ──
+function firmaFac(t, id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('fac:' + t + ':' + id).digest('hex').slice(0, 10); }
+const enlaceFac = (t, id) => `https://app.fisioterapia365.com/f/${t === 'invoice' ? 'i' : 'r'}${id}-${firmaFac(t === 'invoice' ? 'invoice' : 'salesreceipt', id)}`;
+function ogFacSvg({ pila }) {
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `Tu factura, ${pila}` : 'Tu factura', ancho = O.b.getAdvanceWidth(t1, 100) / 100, sz = Math.min(38, Math.floor(370 / ancho));
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><path d="M250 150h70l40 40v110a14 14 0 0 1-14 14H250a14 14 0 0 1-14-14V164a14 14 0 0 1 14-14z"/><path d="M320 150v40h40M262 230h70M262 258h70M262 286h40"/></g>`
+    + ogTexto(O.b, t1, sz, 300, 390, 0, K) + ogTexto(O.m, 'FISIO365', 23, 300, 432, 0, M) + ogTexto(O.m, 'Toca para verla y descargarla', 21, 300, 470, 0, T) + `</svg>`;
+}
+function paginaFactura(D) {
+  const e = escHtml;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu factura · FISIO365</title>
+<meta property="og:title" content="Tu factura de FISIO365${D.pila ? ', ' + e(D.pila) : ''}"><meta property="og:description" content="${e(D.numero ? 'Factura ' + D.numero + ' · ' : '')}Toca para verla y descargarla."><meta property="og:image" content="${e(D.url)}.png?v=1"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px 16px}
+.c{background:#fff;border-radius:26px;padding:28px 22px 24px;max-width:420px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
+.lg{width:92px;display:block;margin:0 auto 22px}.ic{display:block;margin:0 auto 8px;width:60px;height:60px}.ic *{fill:none;stroke:#c2552e;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+h1{font-size:22px;margin:6px 0 4px}.sub{font-size:14.5px;color:#5c4f47;margin:0;line-height:1.5}
+.f{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;background:#faf7f4;border-radius:18px;padding:14px 16px;margin:20px 0 16px}.f b{display:block;font-size:15px}.f span{font-size:13px;color:#7d6a60}.f .t{font-size:20px;font-weight:700;color:#2b2420;white-space:nowrap}
+.b{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#c2552e;color:#fff;text-decoration:none;font-weight:600;font-size:15.5px;border-radius:99px;padding:15px}.b svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.n{font-size:12.5px;color:#9a8f87;margin:16px 0 0;line-height:1.5}</style></head><body><div class="c">
+<img class="lg" src="/informe/logo.png" alt="FISIO365">
+<svg class="ic" viewBox="0 0 24 24"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 12h6M9 15h6M9 18h3"/></svg>
+<h1>Tu factura${D.pila ? ', ' + e(D.pila) : ''}</h1><p class="sub">Aquí la tienes para verla, guardarla o enviarla a tu seguro.</p>
+<div class="f"><div><b>${D.numero ? 'Factura ' + e(D.numero) : 'Factura'}</b><span>${e(D.fecha || '')}${D.concepto ? ' · ' + e(D.concepto) : ''}</span></div><div class="t">${e(D.total || '')}</div></div>
+<a class="b" href="${e(D.url)}?pdf=1"><svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg>Ver y descargar PDF</a>
+<p class="n">También la tienes siempre en tu app de FISIO365. ¿Alguna duda? Escríbenos al 672 89 39 49.</p></div></body></html>`;
+}
+const facDatos = d => ({ numero: d.document_number || '', fecha: (() => { const v = d.date; if (!v) return ''; const t = /^\d+$/.test(String(v)) ? new Date(+v * 1000) : new Date(String(v).slice(0, 10) + 'T12:00:00Z'); return isNaN(t) ? '' : t.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' }); })(), total: String(Math.round(importeDoc(d) * 100) / 100).replace('.', ',') + ' €', concepto: ((d.lines || [])[0] || {}).name || '' });
 function paginaPago(D) {
   const e = escHtml, J = JSON.stringify(D).replace(/</g, '\\u003c');
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Reserva tu cita · FISIO365</title>
@@ -2149,6 +2178,23 @@ module.exports = async function handler(req, res) {
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
   // Pago por adelantado: página del paciente (GET), tarjeta/transferencia (POST) y vuelta de Stripe (?sid=)
+  if (action === 'fac' || action === 'fac-og') {
+    const t = req.query.t === 'i' ? 'invoice' : 'salesreceipt', id = String(req.query.id || '');
+    if (!/^[a-f0-9]{24}$/i.test(id) || req.query.s !== firmaFac(t, id)) return res.status(404).send('Enlace no válido');
+    try {
+      const doc = await holded('/' + docTipo(t) + '/' + id);
+      let pila = ''; try { const nm = String(doc.contactName || doc.contact_name || '').trim().split(/\s+/)[0] || ''; pila = nm ? nm.charAt(0).toUpperCase() + nm.slice(1).toLowerCase() : ''; } catch (_) {}
+      if (action === 'fac-og') { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogFacSvg({ pila }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      const D = facDatos(doc);
+      if (req.query.pdf) {
+        const pdf = await holdedPdf('/' + docTipo(t) + '/' + id + '/pdf'); if (!pdf) return res.status(502).send('PDF no disponible');
+        res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Content-Disposition', `inline; filename="Factura_${String(D.numero || id).replace(/[^\w-]/g, '_')}.pdf"`); res.setHeader('Cache-Control', 'private, no-store');
+        return res.status(200).send(Buffer.from(pdf, 'base64'));
+      }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(200).send(paginaFactura({ ...D, pila, url: enlaceFac(t, id) }));
+    } catch (e) { console.error('fac', e.message); return res.status(502).send('No se ha podido cargar la factura. Inténtalo en un rato.'); }
+  }
   if (action === 'pago-falta') { // lo llama la app al reservar (no hace falta clave: solo avisa si de verdad toca, y una vez)
     const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false });
     return res.status(200).json({ ok: true, aviso: await avisoFaltaEnlace(id) });
@@ -4377,6 +4423,34 @@ module.exports = async function handler(req, res) {
         if (!b.ok) { console.error('seg-inf-email brevo', b.status, (await b.text().catch(() => '')).slice(0, 300)); return res.status(200).json({ ok: false, error: 'No se ha podido enviar (' + b.status + ')' }); }
         let E = {}; try { E = JSON.parse(F['ENTREGA'] || '{}'); } catch (e) {}
         await at(`${INFORMES_TABLE}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ENTREGA: JSON.stringify({ ...E, canal: 'email', email: to, enviado: new Date().toISOString() }) } }) }).catch(() => {});
+        return res.status(200).json({ ok: true });
+      }
+      // Enviar una factura al paciente: email desde info@ con el PDF adjunto, o enlace para WhatsApp
+      if (action === 'seg-fac-enviar') {
+        const t = q.tipo === 'invoice' ? 'invoice' : 'salesreceipt', id = String(q.id || ''), pid = String(q.pacienteId || '');
+        if (!/^[a-f0-9]{24}$/i.test(id) || !/^rec[A-Za-z0-9]{14}$/.test(pid)) return res.status(400).json({ ok: false, error: 'Factura no válida' });
+        const doc = await holded('/' + docTipo(t) + '/' + id).catch(() => null), ids = await contactosDelPaciente(pid);
+        if (!doc || !ids.includes(doc.contact_id)) return res.status(200).json({ ok: false, error: 'No encuentro esa factura de este paciente' });
+        if (!doc.document_number) return res.status(200).json({ ok: false, error: 'Es un borrador: apruébalo en Holded antes de enviarlo' });
+        const pr = await at(`${PACIENTES}/${pid}`).catch(() => ({})), P = pr.fields || {};
+        const pila0 = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || '', pila = pila0 ? pila0.charAt(0).toUpperCase() + pila0.slice(1).toLowerCase() : '';
+        const tel = String(P['WHATSAPP'] || P['TELF'] || '').replace(/\D/g, ''), D = facDatos(doc), url = enlaceFac(t, id);
+        if (q.op === 'datos') return res.status(200).json({ ok: true, email: String(P['EMAIL'] || '').trim(), tel: tel.length === 9 ? '34' + tel : tel, pila, url, numero: D.numero, total: D.total, fecha: D.fecha });
+        if (q.op !== 'email') return res.status(400).json({ ok: false });
+        const to = String(q.to || '').trim(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return res.status(200).json({ ok: false, error: 'Revisa el email' });
+        const pdf = await holdedPdf('/' + docTipo(t) + '/' + id + '/pdf').catch(() => null); if (!pdf) return res.status(200).json({ ok: false, error: 'Holded no ha dado el PDF. Inténtalo en un rato.' });
+        const yo = escHtml(String(q.yo || '').split(' ')[0]);
+        const html = `<!doctype html><html><body style="margin:0;background:#f5f2ee;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a"><div style="max-width:520px;margin:0 auto;padding:28px 18px">
+<div style="background:#fff;border-radius:18px;padding:26px 24px">
+<img src="https://app.fisioterapia365.com/informe/logo.png" alt="FISIO365" width="92" style="width:92px;height:auto;display:block;margin:4px 0 30px;border:0">
+<p style="font-size:16px;line-height:1.55;margin:0 0 14px">Hola${pila ? ' ' + escHtml(pila) : ''},</p>
+<p style="font-size:15px;line-height:1.6;color:#3c342f;margin:0 0 18px">${yo ? 'Soy ' + yo + ' de FISIO365. ' : ''}Te adjuntamos tu factura en PDF para que la tengas a mano o la envíes a tu seguro.</p>
+<div style="background:#faf7f4;border-radius:14px;padding:14px 16px;margin:0 0 18px"><table role="presentation" width="100%" style="border-collapse:collapse"><tr><td style="font-size:14.5px;color:#1a1a1a"><b>Factura ${escHtml(D.numero)}</b><br><span style="font-size:13px;color:#8a7d74">${escHtml(D.fecha)}${D.concepto ? ' · ' + escHtml(D.concepto) : ''}</span></td><td align="right" style="font-size:18px;font-weight:bold;color:#1a1a1a;white-space:nowrap">${escHtml(D.total)}</td></tr></table></div>
+<p style="font-size:12.5px;line-height:1.5;color:#9a8f87;margin:0">También la tienes siempre en tu app de FISIO365. Si tienes cualquier duda, contesta a este email o llámanos al <span style="white-space:nowrap">672 89 39 49</span>.</p>
+</div><p style="font-size:11.5px;color:#9a8f87;text-align:center;margin:16px 0 0">FISIO365 · Gran de Sant Andreu, 163 · Barcelona</p></div></body></html>`;
+        const b = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com', name: 'FISIO365' }, to: [{ email: to }], subject: `Tu factura ${D.numero} · FISIO365`, htmlContent: html, attachment: [{ content: pdf, name: `Factura_${String(D.numero).replace(/[^\w-]/g, '_')}.pdf` }] }) });
+        if (!b.ok) { console.error('seg-fac-enviar brevo', b.status, (await b.text().catch(() => '')).slice(0, 300)); return res.status(200).json({ ok: false, error: 'No se ha podido enviar (' + b.status + ')' }); }
         return res.status(200).json({ ok: true });
       }
       if (action === 'seg-inf-recibi-mano') {
