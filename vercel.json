@@ -41,6 +41,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/visor.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "public/racha-ui.js",
       "use": "@vercel/static"
     },
@@ -212,6 +216,10 @@
     {
       "src": "/chat-ui.js",
       "dest": "/public/chat-ui.js"
+    },
+    {
+      "src": "/visor.js",
+      "dest": "/public/visor.js"
     },
     {
       "src": "/racha-ui.js",
