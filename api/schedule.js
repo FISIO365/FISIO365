@@ -4724,6 +4724,50 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         }
         return res.status(200).json({ ok: false, error: err });
       }
+      if (action === 'seg-enc-ia') {
+        // Respuesta personalizada a quien contestó una encuesta (o «está mejor»): según lo que puso, su historial y sus notas
+        const K = process.env.ANTHROPIC_API_KEY; if (!K) return res.status(200).json({ ok: false, error: 'Falta la clave de la IA' });
+        const c = (x, n) => String(x || '').replace(/\s+/g, ' ').trim().slice(0, n || 400);
+        let hist = '', notasF = '', motivo = '';
+        if (/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) { try {
+          const pr = await at(`${PACIENTES}/${q.pacienteId}?returnFieldsByFieldId=true`); const F = (pr && pr.fields) || {};
+          const cola = (t, n) => { t = String(t || '').replace(/\*\*|`/g, '').replace(/\n{3,}/g, '\n\n').trim(); return t.length > n ? '…' + t.slice(-n) : t; };
+          hist = cola(F.fldjBUieOOqXd3Bo6, 1200); notasF = cola(F.fldDkRqKrUOh2DPH1, 500);
+          const pn = await at(`${PACIENTES}/${q.pacienteId}?fields[]=${encodeURIComponent('MOTIVO DE VISITA')}`).catch(() => ({})); motivo = c((pn.fields || {})['MOTIVO DE VISITA'], 300);
+        } catch (e) { console.error('seg-enc-ia ficha', e.message); } }
+        const que = q.tipo === 'mejora' ? `Su fisio marcó que está mejor y se le mandó un enlace para dejar una reseña en Google; ${q.resena ? 'ya fue a escribirla' : 'aún no la ha escrito'}.`
+          : `Respondió la encuesta de ${q.tipo === 'fin' ? 'final de tratamiento (alta)' : 'su primera visita'} con «${c(q.valoracion, 30)}»${q.comentario ? ` y escribió: «${c(q.comentario, 500)}»` : ' y no dejó comentario'}${q.resena ? ' y fue a escribir la reseña en Google' : ''}.`;
+        const objetivo = q.tipo === 'mejora' ? (q.resena ? 'Darle las gracias por la reseña.' : 'Animarle con cariño, sin insistir, a dejar la reseña: incluye el texto [ENLACE] en una línea aparte, que luego se sustituye por el enlace.')
+          : q.valoracion === 'Excelente' ? (q.resena ? 'Darle las gracias por la valoración y por la reseña.' : 'Darle las gracias y pedirle, sin presión, que lo cuente en Google: incluye el texto [ENLACE] en una línea aparte, que luego se sustituye por el enlace.')
+          : q.valoracion === 'Muy buena' ? 'Darle las gracias y preguntarle qué haría falta para que fuera excelente.'
+          : q.comentario ? 'Agradecerle que lo cuente, decir que lo estáis revisando (refiriéndote a lo que escribió, sin repetirlo literal) y proponerle hablarlo o ponerle solución. Sin excusas ni justificaciones.'
+          : 'Preguntarle con interés genuino qué podríais haber hecho mejor.';
+        const prompt = `Escribe un WhatsApp corto (máx. 3 frases, ~300 caracteres sin contar el enlace) de la clínica FISIO365 (Barcelona) a un paciente.
+Situación: ${que}
+Objetivo: ${objetivo}
+Datos del paciente (úsalos para que suene personal, nunca para dar detalles clínicos delicados):
+- Nombre de pila: ${c(q.pila || q.nombre, 40)}
+- Motivo de visita: ${motivo || 'no consta'}
+- Notas de la ficha (lo más reciente al final): ${notasF || 'ninguna'}
+- Historial clínico (lo más reciente al final): ${hist || 'no consta'}
+Cómo escribirlo:
+- Empieza con «Hola <nombre de pila>» o «¡Hola <nombre de pila>!». NO te presentes ni firmes con ningún nombre.
+- Tutea, español de España, natural y cercano, como lo escribiría alguien de la clínica desde el móvil. Nada comercial.
+- Menciona algo concreto de su caso si ayuda (la zona en palabras sencillas: la espalda, la rodilla…), sin diagnósticos ni datos delicados. No inventes nada que no esté en los datos.
+- Si el objetivo es saber qué mejorar o hablarlo, termina con una pregunta fácil de contestar.
+- PROHIBIDO: «espero que…», «no dudes en…», «cualquier cosa nos escribes», «aquí estamos». Como mucho un emoji.
+Devuelve solo el texto del mensaje, sin comillas.`;
+        let err = '';
+        for (const model of ['claude-haiku-5-5', 'claude-haiku-4-5', 'claude-sonnet-4-5']) {
+          try {
+            const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': K, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: 350, messages: [{ role: 'user', content: prompt }] }) });
+            const j = await r.json(); const t = String(((j.content || []).find(b => b && b.type === 'text') || {}).text || '').trim().replace(/^["«]|["»]$/g, '').trim();
+            if (t) return res.status(200).json({ ok: true, texto: t });
+            err = (j.error && j.error.message) || ('HTTP ' + r.status); console.error('seg-enc-ia', model, err);
+          } catch (e) { err = e.message; console.error('seg-enc-ia', model, err); }
+        }
+        return res.status(200).json({ ok: false, error: err });
+      }
       if (action === 'seg-resultado') {
         // Desde Call-in puede venir sin fila de seguimiento: se usa la que tenga abierta el paciente, si la hay
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) {
