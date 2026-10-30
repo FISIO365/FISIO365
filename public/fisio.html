@@ -6684,7 +6684,9 @@ function agTipoHueco(m,c,onDone){const box=m.querySelector('.ag-th');if(!box)ret
   catch(err){box.querySelectorAll('button').forEach(x=>x.disabled=false);toast(err.message,false);}});}
 function agDarCita({fecha,hora,fisio,hueco},onDone){
  let pac=null,pacInfo='',quierePack=false,packSel=null,nuevoP=false;
- setTimeout(()=>{const bx=document.querySelector('.hz-modal:last-of-type .ag-bmi')||[...document.querySelectorAll('.ag-bmi')].pop();if(bx)agBombaInfo(bx,(AG.dia&&AG.dia.citas)||[],hora);},0);
+ setTimeout(()=>{const bx=document.querySelector('.hz-modal:last-of-type .ag-bmi')||[...document.querySelectorAll('.ag-bmi')].pop();if(!bx)return;const C0=((AG.dia&&AG.dia.citas)||[]).filter(c=>!c.fecha||c.fecha===fecha);agBombaInfo(bx,C0,hora);
+  // Solo las citas de ESE día (en la vista de semana AG.dia trae toda la semana)
+  agCargarDia(fecha).then(d=>{if(d&&d.citas&&bx.isConnected)agBombaInfo(bx,d.citas,hora);}).catch(()=>{});},0);
  setTimeout(()=>{const eb=document.querySelector('.ag-espb');if(eb)eb.onclick=()=>capOfrecerModal({fecha,hora,fisio},AG.dia.espera||[],AG.dia.hoy,null,x=>{
   // Ha dicho que sí: se queda elegido en «Dar cita»
   const bus=m.querySelector('.ag-bus'),res=m.querySelector('.ag-res2');if(!bus)return;bus.value=x.nombre||'';bus.oninput();
