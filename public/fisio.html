@@ -11475,7 +11475,7 @@ function cursoPend(){try{if(!fisioActual||!window.__progOk)return false;const sc
 function cursoMod(){try{const d=JSON.parse(localStorage.getItem('fisio365_school_'+CURSO_OBL+'_'+(fisioActual?.id||'x'))||'null');return d?((d.scores||[]).filter(x=>x&&x.done).length):0;}catch(e){return 0;}}
 function cursoAviso(sec){let el=$('cursoAv');const hoy=new Date().toISOString().slice(0,10);let oculto=false;try{oculto=localStorage.getItem('f365_curso_av')===hoy;}catch(e){}
  // Durante la serie: «Módulo de hoy» (antes de empezar, aviso de que empieza)
- if(!esDireccionSeguro()&&fisioActual&&window.__progOk&&!['school','anam','prog'].includes(sec)&&serieAhora().f<=serieFecha(serieTotal()-1)){
+ if(fisioActual&&fisioActual.role!=='admin'&&window.__progOk&&!['school','anam','prog'].includes(sec)&&serieAhora().f<=serieFecha(serieTotal()-1)){
   const h=serieHoy(),ini=serieAhora().f<SERIE.inicio;
   if(ini||(h&&!h.hecho)){if(oculto&&ini){if(el)el.remove();return;}
    if(!el){el=ce('div','curso-av');el.id='cursoAv';const mw=$('mainWrap');mw.parentNode.insertBefore(el,mw);}
