@@ -379,7 +379,8 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .fp-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}.fp-k div{background:#f7f3ef;border-radius:12px;padding:10px}.fp-k b{display:block;font-size:15px}.fp-k span{font-size:10.5px;color:#9a8d84}
 .fp-box{border-radius:12px;padding:11px 13px;margin-bottom:12px;background:#f7f3ef;font-size:13px}.fp-box.warn{background:#fff4e5}.fp-box>b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#7d6a60;margin-bottom:4px}.fp-box p{margin:3px 0;line-height:1.45}.fp-box small{color:#9a8d84}
 .fp-blk{border-top:1px solid #f1ede9;padding:14px 0 6px}.fp-bt{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.fp-bt h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#7d6a60}
-.fp-ed{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:6px 13px;cursor:pointer}.fp-edbts{display:flex;gap:6px}.fp-can,.fp-ok{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;border-radius:99px;padding:6px 13px;cursor:pointer}.fp-can{background:#f3efea;color:#5f554e}.fp-ok{background:#c2552e;color:#fff}
+.fp-ed{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:6px 13px;cursor:pointer}.fp-edbts{display:flex;gap:6px}
+.fp-resb{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:var(--font);background:#fdf6ef;border:1.5px solid #f3dccd;border-radius:14px;padding:11px 12px;margin:2px 0 12px;cursor:pointer;color:#2b2420}.fp-resb svg{flex:none;width:22px;height:22px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linejoin:round}.fp-resb span{flex:1;min-width:0}.fp-resb b{display:block;font-size:13.5px}.fp-resb small{display:block;font-size:12px;color:#8a7d74}.fp-resb i{flex:none;font-style:normal;font-size:12.5px;font-weight:600;color:#fff;background:#c2552e;border-radius:99px;padding:7px 12px}.fp-resb:disabled{opacity:.6}.fp-can,.fp-ok{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;border-radius:99px;padding:6px 13px;cursor:pointer}.fp-can{background:#f3efea;color:#5f554e}.fp-ok{background:#c2552e;color:#fff}
 .fp-fs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 14px}.fp-f span{display:block;font-size:11px;color:#9a8d84;margin-bottom:2px}.fp-v{font-size:14px;font-weight:600;overflow-wrap:anywhere;min-width:0}.fp-v em,.fp-txt em{font-style:normal;color:#c9c0b8;font-weight:500}
 .fp-in input{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;-webkit-appearance:none;background:#fff;min-height:40px}
 .fp-txt{font-size:13.5px;line-height:1.55;color:#2b2420;overflow-wrap:anywhere}.fp-ta{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;line-height:1.5;padding:10px 12px;border:1.5px solid var(--border);border-radius:12px}
@@ -9067,6 +9068,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   return `${aviso}
   ${archivosMini()}
   <div class="fp-blk" data-blk="historial"><div class="fp-bt"><h3>Historia clínica</h3><span class="fp-edbts"><button type="button" class="fp-ok fp-add-ev">＋ Anotar sesión</button><button type="button" class="fp-ed">Editar</button></span></div>
+   <button type="button" class="fp-resb"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.6L12 16.4l-5.1 2.7 1-5.6-4.1-4 5.7-.8z"/></svg><span><b>¿Te cuenta que está mejor?</b><small>Mándale la reseña de Google ahora, en caliente</small></span><i>Pedir reseña</i></button>
    <div class="fp-add-slot"></div><div class="fp-txt fp-doc">${P.historial?linea(P.historial):'<em>Todavía no tiene historia clínica</em>'}</div></div>
   <div class="fp-blk" data-blk="notas"><div class="fp-bt"><h3>Notas</h3><button type="button" class="fp-ed">Editar</button></div><div class="fp-txt fp-doc">${P.notas?par(P.notas):'<em>Sin notas</em>'}</div></div>`;}
  function montarPorQue(cont){const box=cont.querySelector('.fp-pq');if(!box)return;
@@ -9122,6 +9124,11 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
     catch(err){bt.disabled=false;bt.textContent=t0;toast(err.message,false);}};};
   pinta(false);}
  function montarHistoria(cont){
+  const rb=cont.querySelector('.fp-resb');if(rb)rb.onclick=async()=>{rb.disabled=true;
+   try{const r=await agPost('seg-agenda-res-enlace',{pacienteId:id});if(!r.ok)throw new Error(r.error||'');
+    const yo=miNombreCorto(),n=r.pila||'';
+    abrirWA(r.tel,`¡Hola${n?' '+n:''}! Soy ${yo}, de FISIO365 😊\n\nMe ha encantado ver lo bien que vas. Si te apetece contarlo, una reseña tuya en Google nos ayuda muchísimo a que otras personas nos encuentren (es un minuto):\n${r.link}\n\n¡Gracias por confiar en nosotros!`);
+    toast('Reseña pedida ✓',true);}catch(e){toast(e.message||'No se ha podido preparar el enlace',false);}rb.disabled=false;};
   const b=cont.querySelector('.fp-add-ev');if(!b)return;
   b.onclick=()=>{const slot=cont.querySelector('.fp-add-slot');const u=ultSesion(d.citas,d.hoy);
    slot.innerHTML=`<div class="fp-ev"><div class="fp-evh"><b>${u?'Sesión del '+escH(segFecha(u.fecha)):'Anotar sesión'}</b>${infoI('Se añade al final de la historia clínica con la fecha de la sesión y tu nombre. No borra nada de lo anterior.')}</div><textarea class="fp-ta" rows="6" placeholder="Qué se trabajó, cómo respondió, cambios en el dolor, pauta para casa…"></textarea><div class="fp-edbts" style="justify-content:flex-end;margin-top:8px"><button type="button" class="fp-can">Cancelar</button><button type="button" class="fp-ok">Guardar</button></div></div>`;

@@ -1469,6 +1469,37 @@ h1{font-size:22px;margin:6px 0 4px}.sub{font-size:14.5px;color:#5c4f47;margin:0;
 <p class="n">También la tienes siempre en tu app de FISIO365. ¿Alguna duda? Escríbenos al 672 89 39 49.</p></div></body></html>`;
 }
 const facDatos = d => ({ numero: d.document_number || '', fecha: (() => { const v = d.date; if (!v) return ''; const t = /^\d+$/.test(String(v)) ? new Date(+v * 1000) : new Date(String(v).slice(0, 10) + 'T12:00:00Z'); return isNaN(t) ? '' : t.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' }); })(), total: String(Math.round(importeDoc(d) * 100) / 100).replace('.', ',') + ' €', concepto: ((d.lines || [])[0] || {}).name || '' });
+// ── RESEÑA EN GOOGLE con preview propia: /g/{pacId}-{firma} → página bonita con el botón a Google ──
+function firmaRes(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('res:' + id).digest('hex').slice(0, 10); }
+const enlaceRes = id => `https://app.fisioterapia365.com/g/${id}-${firmaRes(id)}`;
+function ogResSvg({ pila }) {
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `¡Qué bien, ${pila}!` : '¡Qué bien que estés mejor!', ancho = O.b.getAdvanceWidth(t1, 100) / 100, sz = Math.min(40, Math.floor(370 / ancho));
+  const est = (cx, cy, r) => { let d = ''; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; d += (i ? 'L' : 'M') + (cx + rr * Math.cos(a)).toFixed(1) + ' ' + (cy + rr * Math.sin(a)).toFixed(1); } return d + 'Z'; };
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="4" stroke-linejoin="round"><path d="${est(300, 214, 66)}"/></g>`
+    + ogTexto(O.b, t1, sz, 300, 384, 0, K) + ogTexto(O.m, '¿Nos cuentas tu experiencia?', 23, 300, 428, 0, M) + ogTexto(O.m, 'Un minuto en Google · FISIO365', 21, 300, 468, 0, T) + `</svg>`;
+}
+function paginaResena(D) {
+  const e = escHtml;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu reseña · FISIO365</title>
+<meta property="og:title" content="${D.pila ? '¡Qué bien, ' + e(D.pila) + '!' : '¡Qué bien que estés mejor!'}"><meta property="og:description" content="¿Nos cuentas tu experiencia en Google? Es un minuto y nos ayuda muchísimo."><meta property="og:image" content="${e(D.url)}.png?v=1"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-app-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px 16px}
+.c{background:#fff;border-radius:26px;padding:30px 22px 24px;max-width:420px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);text-align:center}
+.lg{width:92px;display:block;margin:0 auto 20px}.st{display:block;margin:0 auto 6px;width:84px;height:84px}.st path{fill:none;stroke:#c2552e;stroke-width:.9;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:80;animation:dr 1.1s .15s cubic-bezier(.6,0,.2,1) forwards}
+@keyframes dr{to{stroke-dashoffset:0}}.fi{opacity:0;transform:translateY(8px);animation:fi .55s forwards}@keyframes fi{to{opacity:1;transform:none}}
+h1{font-size:23px;margin:8px 0 6px;line-height:1.25}.sub{font-size:15px;color:#5c4f47;margin:0 0 22px;line-height:1.55}
+.b{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#c2552e;color:#fff;text-decoration:none;font-weight:600;font-size:15.5px;border-radius:99px;padding:15px}.b svg{width:20px;height:20px}
+.ids{background:#faf7f4;border-radius:18px;padding:14px 16px;margin:18px 0 0;text-align:left}.ids b{display:block;font-size:13px;color:#8a7d74;font-weight:600;margin-bottom:8px}.ids span{display:inline-block;font-size:13px;background:#fff;border:1px solid #efe6de;border-radius:99px;padding:5px 11px;margin:0 6px 6px 0;color:#5c4f47}
+.n{font-size:12.5px;color:#9a8f87;margin:16px 0 0;line-height:1.5}</style></head><body><div class="c">
+<img class="lg fi" src="/informe/logo.png" alt="FISIO365">
+<svg class="st" viewBox="0 0 24 24"><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.6L12 16.4l-5.1 2.7 1-5.6-4.1-4 5.7-.8z"/></svg>
+<h1 class="fi" style="animation-delay:.5s">${D.pila ? '¡Qué alegría, ' + e(D.pila) + '!' : '¡Qué alegría!'}</h1>
+<p class="sub fi" style="animation-delay:.65s">Nos encanta saber que estás mejor. Si te apetece contarlo, tu reseña ayuda a otras personas a encontrarnos.</p>
+<a class="b fi" style="animation-delay:.8s" href="${RESENA_URL}"><svg viewBox="0 0 24 24"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#fff" opacity=".7" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.2 1.1 4.6L6.4 14z"/><path fill="#fff" opacity=".85" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4 5.6-4z"/></svg>Escribir mi reseña en Google</a>
+<div class="ids fi" style="animation-delay:.95s"><b>¿No sabes qué poner? Por ejemplo:</b><span>Cómo te encontrabas al llegar</span><span>Cómo estás ahora</span><span>Qué tal el trato</span><span>Tu fisio</span></div>
+<p class="n">¡Mil gracias por confiar en nosotros!</p></div></body></html>`;
+}
 function paginaPago(D) {
   const e = escHtml, J = JSON.stringify(D).replace(/</g, '\\u003c');
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Reserva tu cita · FISIO365</title>
@@ -2178,6 +2209,14 @@ module.exports = async function handler(req, res) {
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
   // Pago por adelantado: página del paciente (GET), tarjeta/transferencia (POST) y vuelta de Stripe (?sid=)
+  if (action === 'res' || action === 'res-og') {
+    const id = String(req.query.id || '');
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id) || req.query.s !== firmaRes(id)) { res.setHeader('Location', RESENA_URL); return res.status(302).end(); }
+    let pila = ''; try { const pr = await at(`${PACIENTES}/${id}`); const P = pr.fields || {}; const p0 = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; pila = p0 ? p0.charAt(0).toUpperCase() + p0.slice(1).toLowerCase() : ''; } catch (e) {}
+    if (action === 'res-og') { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(ogResSvg({ pila }), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(paginaResena({ pila, url: enlaceRes(id) }));
+  }
   if (action === 'fac' || action === 'fac-og') {
     const t = req.query.t === 'i' ? 'invoice' : 'salesreceipt', id = String(req.query.id || '');
     if (!/^[a-f0-9]{24}$/i.test(id) || req.query.s !== firmaFac(t, id)) return res.status(404).send('Enlace no válido');
@@ -3649,6 +3688,13 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, hoy: hoyF, limitado, debenPagar, ausencias: ausDia, alertas: alertasDia, sinConsent, espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, pago: nmA(F['PAGO ESTADO']) ? { estado: nmA(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'seg-agenda-res-enlace') { // historia clínica: «está mejor» → enlace a la reseña (con preview) y se apunta como pedida
+          if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
+          const pr = await at(`${PACIENTES}/${q.pacienteId}`); if (pr.error) return res.status(404).json({ ok: false, error: 'Paciente no encontrado' });
+          const P = pr.fields || {}, tel = String(P['WHATSAPP'] || P['TELF'] || '').replace(/\D/g, ''), p0 = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || '';
+          await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RESEÑA PEDIDA': new Date().toISOString() } }) }).catch(() => {});
+          return res.status(200).json({ ok: true, link: enlaceRes(q.pacienteId), tel: tel.length === 9 ? '34' + tel : tel, pila: p0 ? p0.charAt(0).toUpperCase() + p0.slice(1).toLowerCase() : '' });
+        }
         if (action === 'seg-agenda-resena') { // apuntar que se le ha pedido la reseña en Google
           if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
           const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RESEÑA PEDIDA': q.enviado === false ? null : new Date().toISOString() } }) });
