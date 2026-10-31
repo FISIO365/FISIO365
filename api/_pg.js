@@ -443,4 +443,4 @@ if (ACTIVO && global.fetch && !global.fetch._pg) {
   nf._pg = 1; nf._marca = _fetch && _fetch._marca; nf._base = 1; global.fetch = nf;
 }
 
-module.exports = { ACTIVO, responder, archivo, SQL_INIT, T, campo, _cache: CACHE, filas, iniciar };
+module.exports = { ACTIVO, responder, archivo, SQL_INIT, T, campo, _cache: CACHE, filas, iniciar, db, fetchReal: _fetch };

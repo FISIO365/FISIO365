@@ -27,6 +27,12 @@
   const b = (await db.query('select count(*)::int n from registros where id = $1', [borrado])).rows[0].n;
   console.log('segunda pasada: cambio copiado =', n1 === 'Nombre Cambiado', '· borrado quitado =', b === 0, '· tombstone =', (await db.query('select count(*)::int n from borrados where id = $1', [borrado])).rows[0].n === 1);
   const cnt = (await db.query("select * from contadores")).rows; console.log('contadores autonuméricos:', cnt.length);
+  // Por trozos (como en Vercel): cada llamada hace una página y sigue donde lo dejó
+  { const { migrarPaso } = require('../../api/_migrar.js'); datos[PAC][2].fields['FULL NAME'] = 'Por Trozos'; let desde = null, n = 0, r;
+    do { r = await migrarPaso({ db, fetch: fakeFetch, token: 'x', desde, hasta: Date.now() + 1 }); desde = r.sigue; n++; } while (!r.hecho && n < 2000);
+    const pt = (await db.query('select fields from registros where id = $1', [datos[PAC][2].id])).rows[0].fields['FULL NAME'];
+    const c2 = (await db.query('select count(*)::int n from registros')).rows[0].n, esperado = Object.values(datos).reduce((s, L) => s + L.length, 0);
+    console.log('por trozos:', n, 'llamadas · cambio copiado =', pt === 'Por Trozos', '· registros =', c2, 'de', esperado); }
   global.__CAMPO_NUEVO__ = true; let paro = '';
   try { await migrar({ db, fetch: fakeFetch, token: 'x', log: () => {} }); } catch (e) { paro = e.message; }
   console.log('campo nuevo en Airtable → se para:', /NUEVO/.test(paro));

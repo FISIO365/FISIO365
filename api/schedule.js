@@ -2478,6 +2478,16 @@ module.exports = async function handler(req, res) {
     const r = await PG.responder(String(b.url), { method: b.method || 'GET', body: b.body || undefined });
     res.setHeader('Content-Type', 'application/json'); res.setHeader('Cache-Control', 'no-store'); return res.status(r.status).send(await r.text());
   }
+  if (action === 'pg-migrar') { // copiar Airtable → Postgres por trozos (~40 s cada llamada). Solo con DB_URL y la clave MIGRAR_KEY
+    const PG = require('./_pg'), K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
+    if (!PG.ACTIVO || K.length < 24 || k.length !== K.length || !require('crypto').timingSafeEqual(Buffer.from(k), Buffer.from(K))) return res.status(404).end();
+    res.setHeader('Cache-Control', 'no-store');
+    try {
+      const { migrarPaso } = require('./_migrar');
+      const r = await migrarPaso({ db: PG.db(), fetch: PG.fetchReal, token: process.env.AIRTABLE_TOKEN, desde: req.query.t ? { t: String(req.query.t), off: String(req.query.off || '') } : null, hasta: Date.now() + 38000, adjuntos: req.query.adj !== '0' });
+      return res.status(200).json({ ok: true, ...r });
+    } catch (e) { return res.status(200).json({ ok: false, error: String(e && e.message || e) }); }
+  }
   // Datos de la clínica (Administración › Ajustes): las páginas salen con su nombre, dirección, teléfono…
   let PLANT = {};
   try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); LEGAL = legalDe(c0.legal); PLANT = c0.plantillas || {}; } catch (e) { LEGAL = legalDe(); }
