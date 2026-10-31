@@ -40,6 +40,7 @@ function datos(guardado, deFisio365) {
   o.color = /^#[0-9a-f]{6}$/i.test(String(g.color || '')) ? String(g.color).toLowerCase() : DEF.color;
   o.logoV = Number(g.logoV) || 0; // versión del logo subido (0 = el de FISIO365)
   o.iconoV = Number(g.iconoV) || 0; // versión del icono de la app subido (0 = ninguno)
+  o.iconoPV = Number(g.iconoPV) || 0; // versión del icono del panel subido (0 = el mismo que la app)
   o.opciones = Object.assign({}, OPC_DEF, (g.opciones && typeof g.opciones === 'object') ? g.opciones : {});
   return o;
 }
@@ -120,6 +121,6 @@ function marcar(txt, C, json) {
 
 // Icono de la app instalada: el subido en Ajustes o, si la clínica no es FISIO365, uno hecho con su nombre y su color
 function iconoPropio(C) { return !!(C && (C.iconoV || (C.marca && C.marca !== DEF.marca))); }
-function iconoVer(C) { let h = 0; String([C.iconoV, C.marca, C.color].join('|')).split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return h.toString(36); }
-function iconoUrl(C, s, m) { return '/api/schedule?action=app-icono&s=' + (s || 512) + (m ? '&m=1' : '') + '&v=' + iconoVer(C); }
+function iconoVer(C) { let h = 0; String([C.iconoV, C.iconoPV, C.marca, C.color].join('|')).split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return h.toString(36); }
+function iconoUrl(C, s, m, p) { return '/api/schedule?action=app-icono&s=' + (s || 512) + (m ? '&m=1' : '') + (p && C.iconoPV ? '&p=1' : '') + '&v=' + iconoVer(C); }
 module.exports = { OTRA_CLINICA, DEF, OPC_DEF, datos, pares, paresColor, marcar, limpio, iconoPropio, iconoUrl };

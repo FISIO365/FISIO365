@@ -12,7 +12,11 @@
         if (document.title.indexOf('FISIO365') > -1) document.title = document.title.split('FISIO365').join(C.marca);
         var mt = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (mt) mt.setAttribute('content', mt.getAttribute('content').split('FISIO365').join(C.marca));
       }
-      if (C.icono) document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(function (l) { l.setAttribute('href', C.icono); });
+      var ic = /^\/fisio/.test(location.pathname) ? (C.iconoPanel || C.icono) : C.icono; // el panel puede tener su propio icono
+      if (ic) {
+        document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(function (l) { l.setAttribute('href', ic); });
+        document.querySelectorAll('link[rel="icon"]').forEach(function (l) { l.setAttribute('href', ic.replace('s=512', 's=96')); l.setAttribute('type', 'image/png'); l.removeAttribute('sizes'); });
+      }
     } catch (e) {}
     // Pares de color (empiezan por # o son el rgb del coral) y, en la app, también los de texto
     var col = P.filter(function (p) { return /^#[0-9a-fA-F]{6}$/.test(p[0]) || /^194, ?85, ?46$/.test(p[0]); });
@@ -25,7 +29,13 @@
       (root.querySelectorAll ? root : document).querySelectorAll('.sb-logo-t,.logo-fisio,.topbar-logo,.com-logo').forEach(function (el) {
         if (el.dataset.marca) return; el.dataset.marca = 1;
         if (C.logo) el.innerHTML = '<img src="' + C.logo + '" alt="" style="height:1.6em;max-width:180px;object-fit:contain;display:block">';
-        else el.textContent = C.marca;
+        else { // sin logo subido: el nombre como logotipo («CLÍNICA» pequeño encima y el nombre grande, con un punto de color)
+          var es = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+          var w = String(C.marca || '').trim().split(/\s+/), pre = w.length > 1 && /^(cl[ií]nica|centro|fisioterapia|fisio|espai|centre)$/i.test(w[0]) ? w[0] : '', main = pre ? w.slice(1).join(' ') : w.join(' ');
+          var big = parseFloat(getComputedStyle(el).fontSize) >= 30;
+          el.innerHTML = (pre && big ? '<small style="display:block;font-size:.27em;font-weight:600;letter-spacing:.34em;text-transform:uppercase;opacity:.7;margin:0 0 .35em .34em;line-height:1">' + es(pre) + '</small>' : '')
+            + '<b style="font-weight:inherit;white-space:nowrap">' + es(big || !pre ? main : C.marca) + '</b><span>.</span>';
+        }
       });
       if (C.logo) (root.querySelectorAll ? root : document).querySelectorAll('img[src$="/informe/logo.png"]').forEach(function (im) { im.src = C.logo; });
     };

@@ -2545,7 +2545,7 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'clinica-pub') { // lo público de la clínica para la app y el panel (nombre, teléfono, opciones…)
     const C = CLI; res.setHeader('Cache-Control', 'public, max-age=60');
-    return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones, color: C.color, logo: C.logoV ? '/api/schedule?action=clinica-logo&v=' + C.logoV : '', icono: MARCA.iconoPropio(C) ? MARCA.iconoUrl(C, 512) : '', iconoSubido: !!C.iconoV, plantillas: PLANT }, pares: MARCA.pares(C) });
+    return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones, color: C.color, logo: C.logoV ? '/api/schedule?action=clinica-logo&v=' + C.logoV : '', icono: MARCA.iconoPropio(C) ? MARCA.iconoUrl(C, 512) : '', iconoPanel: MARCA.iconoPropio(C) ? MARCA.iconoUrl(C, 512, 0, 1) : '', iconoSubido: !!C.iconoV, iconoPanelSubido: !!C.iconoPV, plantillas: PLANT }, pares: MARCA.pares(C) });
   }
   if (action === 'archivo') { // adjunto guardado en Postgres (ver api/_pg.js): el enlace lleva una clave secreta, como los de Airtable
     const PG = require('./_pg'); if (!PG.ACTIVO) return res.status(404).end();
@@ -2562,7 +2562,8 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'manifest') { // manifest de la app instalada (paciente o panel): nombre, color e icono de la clínica
     const C = CLI, panel = req.query.app === 'panel', prop = MARCA.iconoPropio(C);
-    const ic = prop ? [{ src: MARCA.iconoUrl(C, 192), sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512), sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512, 1), sizes: '512x512', type: 'image/png', purpose: 'maskable' }]
+    const ic = prop && panel ? [{ src: MARCA.iconoUrl(C, 192, 0, 1), sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512, 0, 1), sizes: '512x512', type: 'image/png', purpose: 'any' }]
+      : prop ? [{ src: MARCA.iconoUrl(C, 192), sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512), sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512, 1), sizes: '512x512', type: 'image/png', purpose: 'maskable' }]
       : panel ? [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }]
       : [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }];
     const M = panel
@@ -2573,7 +2574,7 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'app-icono') { // icono cuadrado de la app (PNG): el subido o uno con el nombre y el color de la clínica
     const C = CLI, S = Math.max(48, Math.min(1024, parseInt(req.query.s, 10) || 512)), mask = req.query.m === '1';
-    const I = C.iconoV ? await ajuste('clinica-icono', null) : null, d = I && String(I.data || '');
+    const I = (req.query.p === '1' && C.iconoPV) ? await ajuste('clinica-icono-panel', null) : C.iconoV ? await ajuste('clinica-icono', null) : null, d = I && String(I.data || '');
     if (!/^data:image\//.test(d || '') && !MARCA.iconoPropio(C)) { res.setHeader('Location', mask ? '/icons/icon-maskable-512.png' : S <= 192 ? '/icons/icon-192.png' : '/icons/icon-512.png'); return res.status(302).end(); }
     let svg;
     if (/^data:image\//.test(d || '')) { const pad = mask ? Math.round(S * 0.1) : 0;
@@ -3701,11 +3702,12 @@ module.exports = async function handler(req, res) {
         }
         if (action === 'seg-adm-icono') { // subir o quitar el icono de la app instalada (cuadrado)
           const cur = (await ajuste('config', null)) || {}; cur.clinica = cur.clinica || {};
-          if (q.quitar) { await guardarAjuste('clinica-icono', null, yo.fields.Name); cur.clinica.iconoV = 0; await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() }); }
+          const AJ = q.panel ? 'clinica-icono-panel' : 'clinica-icono', VK = q.panel ? 'iconoPV' : 'iconoV'; // el del panel es opcional (si no hay, se usa el de la app)
+          if (q.quitar) { await guardarAjuste(AJ, null, yo.fields.Name); cur.clinica[VK] = 0; await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() }); }
           const d = String(q.data || '');
           if (!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(d)) return res.status(400).json({ ok: false, error: 'La imagen no es válida' });
           if (d.length > 95000) return res.status(400).json({ ok: false, error: 'La imagen es demasiado grande' });
-          await guardarAjuste('clinica-icono', { data: d }, yo.fields.Name); cur.clinica.iconoV = Date.now() % 1e9; await guardarAjuste('config', cur, yo.fields.Name);
+          await guardarAjuste(AJ, { data: d }, yo.fields.Name); cur.clinica[VK] = Date.now() % 1e9; await guardarAjuste('config', cur, yo.fields.Name);
           return res.status(200).json({ ok: true, conf: await conf() });
         }
         if (action === 'seg-adm-logo') { // subir o quitar el logo de la clínica (imagen pequeña guardada en Ajustes)
@@ -3742,7 +3744,7 @@ module.exports = async function handler(req, res) {
           } else if (sec === 'holded') cur.holded = { borrador: !!v.borrador, rgpd: lim(v.rgpd, 1500) || TEXTO_RGPD };
           else if (sec === 'clinica') { const L = MARCA.limpio, op = v.opciones || {};
             cur.clinica = { marca: L(v.marca, 40), razon: L(v.razon, 80), nif: L(v.nif, 20), direccion: L(v.direccion, 160), dirCorta: L(v.dirCorta, 100), zona: L(v.zona, 40), ciudad: L(v.ciudad, 40), tel: L(v.tel, 30), wa: String(v.wa || '').replace(/\D/g, '').slice(0, 15), email: L(v.email, 80), web: L(v.web, 80), googlePlace: L(v.googlePlace, 80).replace(/\s/g, ''), iban: L(v.iban, 40),
-              opciones: { sorteo: op.sorteo !== false, bomba: op.bomba !== false }, color: /^#[0-9a-f]{6}$/i.test(String(v.color || '')) ? String(v.color).toLowerCase() : '', logoV: (cur.clinica && cur.clinica.logoV) || 0, iconoV: (cur.clinica && cur.clinica.iconoV) || 0 }; }
+              opciones: { sorteo: op.sorteo !== false, bomba: op.bomba !== false }, color: /^#[0-9a-f]{6}$/i.test(String(v.color || '')) ? String(v.color).toLowerCase() : '', logoV: (cur.clinica && cur.clinica.logoV) || 0, iconoV: (cur.clinica && cur.clinica.iconoV) || 0, iconoPV: (cur.clinica && cur.clinica.iconoPV) || 0 }; }
           else if (sec === 'app') { // servicios, precios, packs y promociones de la app del paciente
             const num = x => { const n = Number(String(x == null ? '' : x).replace(',', '.')); return isFinite(n) && n >= 0 && n <= 100000 ? Math.round(n * 100) / 100 : null; };
             const servicios = (Array.isArray(v.servicios) ? v.servicios : []).map(x => ({ nombre: lim(x && x.nombre, 60), desc: lim(x && x.desc, 300), suelta: num(x && x.suelta) || 0,
