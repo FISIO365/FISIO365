@@ -2526,6 +2526,25 @@ module.exports = async function handler(req, res) {
     try { return res.status(200).json(await require('./_demo').demo({ at, db: require('./_pg').db(), op: String(req.query.op || 'sembrar'), guardarAjuste })); }
     catch (e) { return res.status(200).json({ ok: false, error: String(e.message || e) }); }
   }
+  // Buzón «a los creadores de la app»: otra clínica nos manda una sugerencia (sug-externa, aquí en FISIO365) y le devolvemos la respuesta (sug-respuesta, en esa clínica)
+  if ((action === 'sug-externa' || action === 'sug-respuesta') && req.method === 'POST') {
+    const b = req.body || {}, K = String(process.env.SUG_KEY || ''), k = String(b.k || ''), SUG = 'tbll3K0ar1cZOcVjZ', t = (x, n) => String(x || '').trim().slice(0, n);
+    if (K.length < 24 || k.length !== K.length || !require('crypto').timingSafeEqual(Buffer.from(k), Buffer.from(K))) return res.status(404).end();
+    if (action === 'sug-externa') {
+      if (MARCA.OTRA_CLINICA) return res.status(404).end();
+      const url = t(b.url, 200), id = t(b.id, 20), texto = t(b.texto, 3000);
+      if (!/^https:\/\/[a-z0-9.-]+$/.test(url) || !/^rec[A-Za-z0-9]{14}$/.test(id) || !texto) return res.status(400).json({ ok: false });
+      const fields = { RESUMEN: `ext|${url}|${id}`, TEXTO: texto, ORIGEN: 'Otra clínica', APARTADO: 'App', DE: `${t(b.de, 40)} · ${t(b.clinica, 60) || 'Otra clínica'}`, ESTADO: 'Nueva', FECHA: new Date().toISOString() };
+      if (['Mejora', 'Fallo'].includes(b.tipo)) fields.TIPO = b.tipo;
+      const d = await at(SUG, { method: 'POST', body: JSON.stringify({ records: [{ fields }], typecast: true }) });
+      return res.status(200).json({ ok: !!(d.records && d.records[0]) });
+    }
+    if (!MARCA.OTRA_CLINICA || !/^rec[A-Za-z0-9]{14}$/.test(String(b.id || ''))) return res.status(404).end();
+    const fields = { 'CAMBIADO POR': 'Creadores de la app', 'RESPUESTA VISTA': false, NOTA: t(b.respuesta, 1500) };
+    if (['Nueva', 'Aceptada', 'Hecha', 'Descartada'].includes(b.estado)) fields.ESTADO = b.estado;
+    const d = await at(`${SUG}/${b.id}`, { method: 'PATCH', body: JSON.stringify({ fields, typecast: true }) });
+    return res.status(200).json({ ok: !d.error });
+  }
   // Alta de una clínica nueva: solo mientras no haya ningún usuario. Crea el primero (dirección, con todos los accesos) y los datos básicos
   if (action === 'alta-estado') { res.setHeader('Cache-Control', 'no-store'); const d = await at('tbl2mLUrnaKCFTs6g?pageSize=1&fields[]=Name').catch(() => ({})); return res.status(200).json({ ok: true, vacia: !!(d && Array.isArray(d.records) && !d.records.length) }); }
   if (action === 'alta-clinica' && req.method === 'POST') {
@@ -2564,7 +2583,7 @@ module.exports = async function handler(req, res) {
     const C = CLI, panel = req.query.app === 'panel', prop = MARCA.iconoPropio(C);
     const ic = prop && panel ? [{ src: MARCA.iconoUrl(C, 192, 0, 1), sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512, 0, 1), sizes: '512x512', type: 'image/png', purpose: 'any' }]
       : prop ? [{ src: MARCA.iconoUrl(C, 192), sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512), sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512, 1), sizes: '512x512', type: 'image/png', purpose: 'maskable' }]
-      : panel ? [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }]
+      : panel ? [{ src: '/icons/panel-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icons/panel-512.png', sizes: '512x512', type: 'image/png' }]
       : [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }];
     const M = panel
       ? { name: C.marca + ' Panel', short_name: C.marca === 'FISIO365' ? 'Panel Fisio' : C.marca.slice(0, 12).trim(), description: 'Panel del fisioterapeuta', start_url: '/fisio', display: 'standalone', background_color: '#000000', theme_color: '#000000', icons: ic }
@@ -3328,6 +3347,13 @@ module.exports = async function handler(req, res) {
           if (tipo) fields.TIPO = tipo;
           const d = await at(SUG, { method: 'POST', body: JSON.stringify({ records: [{ fields }], typecast: true }) });
           const rec = d.records && d.records[0]; if (!rec) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' });
+          // En otras clínicas, las del apartado App les llegan también a los creadores de la app (al panel de FISIO365); su respuesta vuelve aquí
+          if (MARCA.OTRA_CLINICA && apartado === 'App' && process.env.SUG_KEY && process.env.APP_URL) {
+            const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 6000);
+            await fetch(String(process.env.CREADORES_URL || 'https://app.fisioterapia365.com') + '/api/schedule?action=sug-externa', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ k: process.env.SUG_KEY, clinica: CLI.marca || '', de: yo, texto, tipo: tipo || '', url: String(process.env.APP_URL).replace(/\/+$/, ''), id: rec.id }) }).catch(() => null);
+            clearTimeout(tm);
+          }
           const C = q.captura || null; let sinCaptura = false;
           if (C && C.file && String(C.file).length < 6e6) {
             const up = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${rec.id}/${CAPT}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: /^image\/(png|jpeg|webp|gif)$/.test(C.tipo || '') ? C.tipo : 'image/jpeg', file: String(C.file), filename: String(C.nombre || 'captura.jpg').slice(0, 120) }) }).then(x => x.json()).catch(() => ({ error: 1 }));
@@ -3349,6 +3375,9 @@ module.exports = async function handler(req, res) {
           if (q.respuesta !== undefined) fields.NOTA = String(q.respuesta || '').trim().slice(0, 1500);
           const d = await at(`${SUG}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields, typecast: true }) });
           if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
+          const ext = String((d.fields || {}).RESUMEN || '').match(/^ext\|(https:\/\/[a-z0-9.-]+)\|(rec[A-Za-z0-9]{14})$/); // sugerencia de otra clínica: le devolvemos la respuesta
+          if (ext && process.env.SUG_KEY) { const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 6000);
+            await fetch(ext[1] + '/api/schedule?action=sug-respuesta', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ k: process.env.SUG_KEY, id: ext[2], estado: nm(d.fields.ESTADO), respuesta: d.fields.NOTA || '' }) }).catch(() => null); clearTimeout(tm); }
           return res.status(200).json({ ok: true, sugerencia: vista(d) });
         }
         return res.status(400).json({ ok: false, error: 'Acción no válida' });

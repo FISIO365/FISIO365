@@ -75,7 +75,12 @@ async function demo({ at, db, op, guardarAjuste }) {
   const msgs = [];
   CHATS.forEach(([i, d, L]) => L.forEach(([de, h, Texto], n) => { const [fid, fn] = fp(i), ult = n === L.length - 1; msgs.push({ PacienteId: pids[i], PacienteNombre: NOMBRES[i], FisioId: fid, FisioNombre: fn, Texto, Fecha: hora(d, h), Tipo: 'chat', De: de, Visto: de === 'fisio' || !(ult && d === 0), RespuestaLeida: de !== 'fisio' || !ult }); }));
   await lote('tblIsWo3g6x1QzJyl', msgs);
-  // 6. Datos de la clínica (otro color, para ver que la marca cambia)
+  // 6. Buzón de sugerencias: una ya respondida por los creadores de la app y otra de la clínica
+  const ahora = d => new Date(Date.now() + d * 864e5).toISOString();
+  await lote('tbll3K0ar1cZOcVjZ', [
+    { RESUMEN: 'Saber qué pacientes aún no tienen la app', TEXTO: 'Estaría genial tener una lista de los pacientes que aún no tienen la app instalada, para acordarnos de enseñársela en la próxima sesión.', ORIGEN: 'Equipo', APARTADO: 'App', TIPO: 'Mejora', DE: 'Marc', ESTADO: 'Hecha', NOTA: '¡Hecho! Ya lo tenéis en Tareas › «Sin la app». Gracias por la idea 🙌', 'CAMBIADO POR': 'Creadores de la app', 'RESPUESTA VISTA': true, FECHA: ahora(-6) },
+    { RESUMEN: 'Comprar otra camilla eléctrica', TEXTO: 'La camilla de la sala 2 empieza a fallar al subir. ¿Podríamos mirar una nueva?', ORIGEN: 'Equipo', APARTADO: 'Clínica', DE: 'Ana', ESTADO: 'Nueva', FECHA: ahora(-1) }]);
+  // 7. Datos de la clínica (otro color, para ver que la marca cambia)
   const IC = require('./_demo_iconos.json'); // iconos de la demo (hoja de arce): la app en verde y el panel en claro, a juego
   await guardarAjuste('clinica-icono', { data: IC.app }, 'Demo'); await guardarAjuste('clinica-icono-panel', { data: IC.panel }, 'Demo');
   await guardarAjuste('config', { clinica: { iconoV: 1, iconoPV: 1, marca: 'Clínica Arce', razon: 'Clínica Arce Fisioterapia, S.L.', nif: 'B00000000', direccion: 'C/ de Ejemplo, 10 · 08001 Barcelona', dirCorta: 'C/ de Ejemplo, 10 · Barcelona', zona: 'Ciutat Vella', ciudad: 'Barcelona', tel: '600 000 000', email: 'hola@clinicaarce.es', web: 'clinicaarce.es', color: '#2e6e6a' } }, 'Demo');

@@ -8,7 +8,7 @@
 <link rel="icon" type="image/svg+xml" href="/icons/favicon-panel.svg?v=4">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-panel-192.png?v=4">
 <link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-panel-48.png?v=4">
-<link rel="apple-touch-icon" href="/icons/icon-512.png">
+<link rel="apple-touch-icon" href="/icons/panel-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -7183,7 +7183,8 @@ const comHora=iso=>iso?new Date(iso).toLocaleTimeString('es-ES',{hour:'2-digit',
 // Todo el equipo envía (App · Clínica · Otro) y ve sus Enviadas con la respuesta. Leen y responden las Recibidas quienes tienen el acceso «Leer sugerencias» (las de App, solo Nora).
 const SUG_IC={app:'<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/>',cli:'<path d="M3.5 20.5h17M5 20.5V9l7-5 7 5v11.5"/><path d="M10 20.5v-5h4v5M12 8.5v4M10 10.5h4"/>',otro:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>',bombilla:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',clip:'<path d="m21 11.5-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l8-8"/>',buzon:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/>'};
 const sugIco=k=>`<svg viewBox="0 0 24 24">${SUG_IC[k]}</svg>`;
-const SUG_AP=[['App','app','Cambios, mejoras o fallos de la app. Le llega a '+((window.CLINICA&&CLINICA.marca&&CLINICA.marca!=='FISIO365')?'dirección':'Nora')],['Clínica','cli','Organización, material, instalaciones, trato…'],['Otro','otro','Cualquier otra idea']];
+const sugAp=()=>{const otra=typeof CLINICA!=='undefined'&&CLINICA&&CLINICA.marca&&CLINICA.marca!=='FISIO365';
+ return [['App','app',otra?'Mejoras o fallos de la app. Les llega a los creadores de la app, que te responden aquí.':'Cambios, mejoras o fallos de la app. Le llega a Nora',otra?'A los creadores de la app':'App'],['Clínica','cli','Organización, material, instalaciones, trato…'],['Otro','otro','Cualquier otra idea']];};
 let SUG={tab:'',d:null,n:{rec:0,mias:0},resp:null,f:{apartado:'',tipo:'Mejora',texto:'',cap:null}};
 try{const g=JSON.parse(sessionStorage.getItem('f365_sug')||'{}');if(g.tab)SUG.tab=g.tab;}catch(e){}
 const sugGuarda=()=>{try{sessionStorage.setItem('f365_sug',JSON.stringify({tab:SUG.tab}));}catch(e){}};
@@ -7243,7 +7244,7 @@ function adjHtml(L){if(!L||!L.length)return '';const fotos=L.filter(a=>/^image\/
  return `<div class="adj-ver">${fotos.length?`<div class="adj-fotos">${fotos.map(a=>`<a href="${escH(a.url)}" target="_blank" rel="noopener"><img src="${escH(a.mini||a.url)}" alt="${escH(a.nombre)}" loading="lazy"></a>`).join('')}</div>`:''}${docs.map(a=>`<a class="adj-doc" href="${escH(a.url)}" target="_blank" rel="noopener"><i>${escH((a.nombre.split('.').pop()||'').toUpperCase().slice(0,4))}</i><span><b>${escH(a.nombre)}</b><small>${a.bytes?Math.max(1,Math.round(a.bytes/1024))+' KB · ':''}Toca para abrir</small></span></a>`).join('')}</div>`;}
 function sugForm(body,alEnviar){const F=SUG.f;
  body.innerHTML=`<div class="sug-card"><p class="sug-lbl">¿Sobre qué es?</p>
-  <div class="sug-ap">${SUG_AP.map(([k,ic,d])=>`<button type="button" data-a="${k}">${sugIco(ic)}<span><b>${k}</b><small>${d}</small></span></button>`).join('')}</div>
+  <div class="sug-ap">${sugAp().map(([k,ic,d,lb])=>`<button type="button" data-a="${k}">${sugIco(ic)}<span><b>${lb||k}</b><small>${d}</small></span></button>`).join('')}</div>
   <div class="sug-tipo" hidden><p class="sug-lbl">¿Qué es?</p><div class="sug-seg"><button type="button" data-t="Mejora">Una mejora o idea</button><button type="button" data-t="Fallo">Un fallo</button></div></div>
   <p class="sug-lbl">Cuéntalo</p><textarea class="sug-ta" maxlength="3000"></textarea>
   <div class="sug-adjs"></div>
