@@ -2519,6 +2519,12 @@ module.exports = async function handler(req, res) {
   if (action === 'pagos-tick') { // lo llaman el panel (cada 5 min) y la app del paciente al abrirse: cancela las citas de quien no pagó a tiempo
     res.setHeader('Cache-Control', 'no-store'); const n = await caducarPagos().catch(() => 0); return res.status(200).json({ ok: true, n });
   }
+  if (action === 'demo-datos') { // Clínica Demo: borrar / sembrar datos inventados (solo con CLINICA=demo y la clave)
+    const K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
+    if (String(process.env.CLINICA || '') !== 'demo' || !process.env.SIN_ENVIOS || K.length < 24 || k.length !== K.length || !require('crypto').timingSafeEqual(Buffer.from(k), Buffer.from(K))) return res.status(404).end();
+    try { return res.status(200).json(await require('./_demo').demo({ at, db: require('./_pg').db(), op: String(req.query.op || 'sembrar'), guardarAjuste })); }
+    catch (e) { return res.status(200).json({ ok: false, error: String(e.message || e) }); }
+  }
   // Alta de una clínica nueva: solo mientras no haya ningún usuario. Crea el primero (dirección, con todos los accesos) y los datos básicos
   if (action === 'alta-estado') { res.setHeader('Cache-Control', 'no-store'); const d = await at('tbl2mLUrnaKCFTs6g?pageSize=1&fields[]=Name').catch(() => ({})); return res.status(200).json({ ok: true, vacia: !!(d && Array.isArray(d.records) && !d.records.length) }); }
   if (action === 'alta-clinica' && req.method === 'POST') {
@@ -2530,7 +2536,7 @@ module.exports = async function handler(req, res) {
     if (!/^\d{4,8}$/.test(pin)) return res.status(400).json({ ok: false, error: 'El PIN tiene que tener de 4 a 8 números' });
     if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ ok: false, error: 'El email no parece correcto' });
     const acc = {}; ['programas', 'anamnesis', 'pacientes', 'school', 'checklist', 'rendimiento', 'seguimiento', 'agenda', 'chat', 'callin', 'captacion', 'recordatorios', 'ejercicios', 'estadisticas', 'admin', 'sugerencias'].forEach(k => { acc['acc_' + k] = true; });
-    const c = await at('tbl2mLUrnaKCFTs6g', { method: 'POST', body: JSON.stringify({ records: [{ fields: { Name: nombre, Password: pin, Role: 'admin', 'DIRECCIÓN': true, EMAIL: email || undefined, TELÉFONO: tel || undefined, 'FECHA ALTA': new Date().toISOString().slice(0, 10), ...acc } }], typecast: true }) });
+    const c = await at('tbl2mLUrnaKCFTs6g', { method: 'POST', body: JSON.stringify({ records: [{ fields: { Name: nombre, Password: pin, Role: 'fisio', 'DIRECCIÓN': true, EMAIL: email || undefined, TELÉFONO: tel || undefined, 'FECHA ALTA': new Date().toISOString().slice(0, 10), ...acc } }], typecast: true }) });
     if (c.error) return res.status(500).json({ ok: false, error: c.error.message || 'No se ha podido crear' });
     const cur = (await ajuste('config', null)) || {}; cur.clinica = Object.assign({}, cur.clinica || {}, { marca, tel, email, direccion: t('direccion', 160), ciudad: t('ciudad', 60) });
     await guardarAjuste('config', cur, nombre).catch(() => {});
