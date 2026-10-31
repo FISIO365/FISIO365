@@ -1034,70 +1034,94 @@ async function valesDelDia() {
 }
 // Vista previa cuadrada (WhatsApp): regalo, sesiones y para quién, lejos de los bordes
 function ogValeSvg(F) {
-  const l = valeLang(F), T = VALE_T[l], oc = valeOc(F), OC = VALE_OC[oc], G = VALE_GR[oc] || VALE_GR.clasico, W = '#fff7ef', O = ogTipos();
+  const l = valeLang(F), T = VALE_T[l], oc = valeOc(F), OC = VALE_OC[oc], K = VALE_EST[oc] || VALE_EST.clasico, W = K.ink, O = ogTipos();
   const t1 = T.ses(F.SESIONES || 1), t2 = valeTipo(F.TIPO, l), t3 = F.PARA ? `${T.para} ${F.PARA}` : OC.t[l].tk;
   const fit = (t, base, max) => Math.max(18, Math.min(base, Math.round(base * max / Math.max(max, String(t).length))));
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${G[1]}"/><stop offset="1" stop-color="${G[0]}"/></linearGradient><clipPath id="k"><rect x="70" y="70" width="460" height="460" rx="40"/></clipPath></defs>`
-    + `<rect width="600" height="600" fill="${OC.bg}"/><rect x="70" y="70" width="460" height="460" rx="40" fill="url(#g)"/>`
-    + `<g clip-path="url(#k)" opacity=".12">${valeDib(oc, 330, 330, 260, W, 1.6)}</g>`
-    + `<rect x="86" y="86" width="428" height="428" rx="28" fill="none" stroke="${W}" stroke-opacity=".32" stroke-width="1.5"/>`
-    + valeDib(oc, 268, 120, 64, W, 2.6)
-    + ogTexto(O.m, OC.t[l].tk, OC.t[l].tk.length > 16 ? 15 : 17, 300, 232, 4, W)
-    + ogTexto(O.b, t3, fit(t3, 40, 14), 300, 300, 0, W)
-    + ogTexto(O.b, t1, fit(t1, 50, 11), 300, 372, 0, W)
-    + ogTexto(O.m, t2, fit(t2, 22, 26), 300, 410, 0, W)
-    + ogTexto(O.b, 'FISIO365', 15, 300, 474, 4, W) + `</svg>`;
+  const ilu = (VALE_ILU[oc] || '').replace(/ pathLength="1"/g, '').replace(/class="luz[^"]*"/g, `fill="${K.acc}"`).replace(/class="llama"/g, `fill="${K.acc === '#141414' ? '#fff7ef' : '#c2552e'}"`);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#efebe5"/><rect x="70" y="70" width="460" height="460" rx="40" fill="${K.bg}"/>`
+    + `<rect x="86" y="86" width="428" height="428" rx="28" fill="none" stroke="${W}" stroke-opacity=".25" stroke-width="1.5"/>`
+    + `<g transform="translate(250 104) scale(.8333)" fill="none" stroke="${W}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ilu}</g>`
+    + ogTexto(O.m, OC.t[l].tk, OC.t[l].tk.length > 16 ? 14 : 16, 300, 252, 4, W)
+    + ogTexto(O.b, t3, fit(t3, 38, 14), 300, 314, 0, W)
+    + ogTexto(O.b, t1, fit(t1, 50, 11), 300, 384, 0, K.acc === '#141414' ? W : '#c2552e')
+    + ogTexto(O.m, t2, fit(t2, 22, 26), 300, 422, 0, W)
+    + ogTexto(O.b, 'FISIO365', 15, 300, 478, 4, W) + `</svg>`;
 }
 // La tarjeta (página pública firmada). p=1: versión para imprimir
-// Colores de la tarjeta por ocasión: [oscuro, claro] del degradado
-const VALE_GR = { clasico: ['#9e3f1e', '#c95f36'], navidad: ['#173f2f', '#2f6b4f'], madre: ['#8f3a55', '#c26a84'], padre: ['#172b45', '#34557c'], cumple: ['#7d5410', '#b98a2c'], sanvalentin: ['#7c1d2b', '#b83a4a'] };
+// Colores de la tarjeta por ocasión (solo los de la marca: terracota, negro y crema). VALE_GR se usa en los botones de «Diseño»
+const VALE_EST = {
+  clasico: { bg: '#c2552e', ink: '#fff7ef', sub: 'rgba(255,247,239,.78)', acc: '#141414', ln: 'rgba(255,247,239,.35)' },
+  navidad: { bg: '#141414', ink: '#f3efea', sub: 'rgba(243,239,234,.65)', acc: '#e0703f', ln: 'rgba(243,239,234,.22)' },
+  madre: { bg: '#f3efea', ink: '#141414', sub: '#6b5d54', acc: '#c2552e', ln: 'rgba(20,20,20,.14)' },
+  padre: { bg: '#141414', ink: '#f3efea', sub: 'rgba(243,239,234,.65)', acc: '#e0703f', ln: 'rgba(243,239,234,.22)' },
+  cumple: { bg: '#c2552e', ink: '#fff7ef', sub: 'rgba(255,247,239,.78)', acc: '#141414', ln: 'rgba(255,247,239,.35)' },
+  sanvalentin: { bg: '#f3efea', ink: '#141414', sub: '#6b5d54', acc: '#c2552e', ln: 'rgba(20,20,20,.14)' }
+};
+const VALE_GR = Object.fromEntries(Object.entries(VALE_EST).map(([k, v]) => [k, [v.bg, v.bg]]));
+// Dibujos grandes de la tarjeta (viewBox 120): se dibujan solos al abrirla y luego se mueven un poco
+const VALE_ILU = {
+  clasico: '<g class="mv lazo"><path pathLength="1" d="M60 44c-9-17-30-17-27-5 2 8 17 6 27 5zM60 44c9-17 30-17 27-5-2 8-17 6-27 5z"/></g><rect pathLength="1" x="24" y="44" width="72" height="15" rx="5"/><path pathLength="1" d="M30 59h60v36a6 6 0 0 1-6 6H36a6 6 0 0 1-6-6z"/><path pathLength="1" d="M60 44v57"/>',
+  navidad: '<path pathLength="1" d="M60 16 40 44h10L33 68h13L28 94h64L74 68h13L70 44h10z"/><path pathLength="1" d="M60 94v12"/><circle class="luz l1" cx="51" cy="52" r="2.6"/><circle class="luz l2" cx="67" cy="60" r="2.6"/><circle class="luz l3" cx="46" cy="78" r="2.6"/><circle class="luz l4" cx="63" cy="84" r="2.6"/><circle class="luz l5" cx="76" cy="80" r="2.6"/><circle class="luz l6" cx="57" cy="70" r="2.6"/><circle class="luz l1" cx="60" cy="11" r="3.4"/>',
+  madre: '<g class="mv flor"><path pathLength="1" d="M60 106V58"/><path pathLength="1" d="M60 90c-12-1-19-10-19-19 10 0 17 8 19 19zM60 80c10-1 16-8 16-15-9 0-15 6-16 15z"/><path pathLength="1" d="M43 26c0 21 7 33 17 33s17-12 17-33l-8.5 8.5L60 20l-8.5 14.5z"/></g>',
+  padre: '<g class="mv corbata"><path pathLength="1" d="M50 18h20l-5 13H55z"/><path pathLength="1" d="M55 31 47 82l13 17 13-17-8-51"/><path pathLength="1" d="M51 53l17-7M49 68l21-9"/></g>',
+  cumple: '<rect pathLength="1" x="24" y="68" width="72" height="34" rx="5"/><rect pathLength="1" x="33" y="47" width="54" height="21" rx="4"/><path pathLength="1" d="M24 80c9 0 9 5 18 5s9-5 18-5 9 5 18 5 9-5 18-5"/><rect pathLength="1" x="57" y="31" width="6" height="16" rx="2"/><path class="llama" d="M60 13c-6 7-6 12 0 15 6-3 6-8 0-15z"/>',
+  sanvalentin: '<g class="mv latido"><path pathLength="1" d="M60 100C27 79 16 59 26 43c9-14 27-13 34 1 7-14 25-15 34-1 10 16-1 36-34 57z"/><path pathLength="1" d="M45 52c2-5 6-7 10-6"/></g>'
+};
 function paginaVale(F, id, imprimir) {
-  const e = escHtml, l = valeLang(F), T = VALE_T[l], C = CLI, url = enlaceVale(id), cad = valeFechaTxt(F.CADUCA, l), tel = C.tel || '672 89 39 49', wa = String(C.wa || '34672893949').replace(/\D/g, '');
-  const tipo = valeTipo(F.TIPO, l), msg = String(F.MENSAJE || ''), oc = valeOc(F), OC = VALE_OC[oc], A = OC.acc, G = VALE_GR[oc] || VALE_GR.clasico, hola = n => OC.t[l].hola(n);
+  const e = escHtml, l = valeLang(F), T = VALE_T[l], C = CLI, url = enlaceVale(id), tel = C.tel || '672 89 39 49', wa = String(C.wa || '34672893949').replace(/\D/g, '');
+  const tipo = valeTipo(F.TIPO, l), msg = String(F.MENSAJE || ''), oc = valeOc(F), OC = VALE_OC[oc], K = VALE_EST[oc] || VALE_EST.clasico, hola = n => OC.t[l].hola(n);
   const cadC = (() => { const d = new Date(String(F.CADUCA || '').slice(0, 10) + 'T12:00:00Z'); return isNaN(d) ? '' : new Intl.DateTimeFormat({ es: 'es-ES', ca: 'ca-ES', en: 'en-GB' }[l], { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(d).replace(/\./g, ''); })();
-  const n = Number(F.SESIONES || 1) || 1, sesTxt = T.ses(n).replace(/^\d+\s*/, '');
-  const dib = `<svg viewBox="0 0 96 96" aria-hidden="true">${OC.d}</svg>`;
-  const tarjeta = `<div class="cardw"><div class="card"><i class="tex"></i><i class="sh"></i><div class="fr"></div><div class="big">${dib}</div>
-<div class="ct"><div class="row"><small>${OC.t[l].tk}</small><span class="mini">${dib}</span></div>
+  const n = Number(F.SESIONES || 1) || 1, sesTxt = T.ses(n).replace(/^\d+\s*/, ''), cod = String(F['CÓDIGO'] || '');
+  const marca = C.marca === 'FISIO365' || !C.marca ? '<span class="lg">FISIO<i>365</i></span>' : `<span class="lg">${e(C.marca)}</span>`;
+  const reservar = huecosSiempre(21, [], cod), pend = F.ESTADO !== 'PAGADO';
+  const BT = { es: ['Reservar mi sesión', 'Elige el día y la hora que te vayan bien', 'WhatsApp', 'Guardar o imprimir'], ca: ['Reservar la meva sessió', 'Tria el dia i l\'hora que et vagin bé', 'WhatsApp', 'Desar o imprimir'], en: ['Book my session', 'Pick the day and time that suit you', 'WhatsApp', 'Save or print'] }[l];
+  const nieve = oc === 'navidad' && !imprimir ? `<div class="nieve">${Array.from({ length: 22 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:-${(i * 1.7) % 9}s;animation-duration:${8 + (i % 5)}s;width:${2 + (i % 3)}px;height:${2 + (i % 3)}px"></i>`).join('')}</div>` : '';
+  const tarjeta = `<div class="cardw"><div class="card">${nieve}<i class="sh"></i><div class="fr"></div>
+<div class="row">${marca}<small>${OC.t[l].tk}</small></div>
+<svg class="ilu" viewBox="0 0 120 120" aria-hidden="true">${VALE_ILU[oc] || VALE_ILU.clasico}</svg>
 ${F.PARA ? `<div class="para"><em>${T.para}</em><b>${e(F.PARA)}</b></div>` : ''}
 <div class="num"><b>${n}</b><span><strong>${e(sesTxt)}</strong><small>${e(T.de)} ${e(tipo)}</small></span></div>
 ${msg ? `<p class="msg">${e(msg)}</p>` : ''}
-<div class="pie2">${F.DE ? `<span><em>${T.dep}</em>${e(F.DE)}</span>` : '<span></span>'}<span class="mk">FISIO365</span></div></div></div>
-<div class="stub"><div><em>${T.cod}</em><code>${e(F['CÓDIGO'] || '')}</code></div>${cadC ? `<div class="r"><em>${T.val.replace(/ (el|al)$/,'')}</em><span>${e(cadC)}</span></div>` : ''}</div></div>`;
-  const pend = F.ESTADO !== 'PAGADO';
-  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="theme-color" content="${G[0]}"><title>${T.tit} · FISIO365</title>
-<meta property="og:title" content="${e(F.PARA ? hola(F.PARA) : T.tit)}"><meta property="og:description" content="${e(T.ses(n) + ' ' + T.de + ' ' + tipo)} · FISIO365"><meta property="og:image" content="${e(url)}.png?v=2"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+${F.DE ? `<p class="de"><em>${T.dep}</em> ${e(F.DE)}</p>` : ''}</div>
+<div class="stub"><div><em>${T.cod}</em><code>${e(cod)}</code></div>${cadC ? `<div class="r"><em>${T.val.replace(/ (el|al)$/, '')}</em><span>${e(cadC)}</span></div>` : ''}</div></div>`;
+  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="theme-color" content="#efebe5"><title>${T.tit} · FISIO365</title>
+<meta property="og:title" content="${e(F.PARA ? hola(F.PARA) : T.tit)}"><meta property="og:description" content="${e(T.ses(n) + ' ' + T.de + ' ' + tipo)} · FISIO365"><meta property="og:image" content="${e(url)}.png?v=3"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-<style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#141414;min-height:100vh;background:${OC.bg};background-image:radial-gradient(ellipse at 50% -10%,#fff 0,rgba(255,255,255,0) 60%);display:flex;justify-content:center;padding:28px 18px 40px}
+<style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#141414;min-height:100vh;background:#efebe5;display:flex;justify-content:center;padding:26px 18px 44px}
 .c{max-width:400px;width:100%;text-align:center}
-.hi{font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:${A};margin:0}h1{font-size:25px;font-weight:700;margin:6px 0 22px;line-height:1.25;color:#2b2420}
-.cardw{position:relative;filter:drop-shadow(0 22px 34px rgba(30,20,15,.22));animation:sube .9s cubic-bezier(.2,.8,.2,1) both}
-.card{position:relative;overflow:hidden;border-radius:26px 26px 0 0;background:linear-gradient(150deg,${G[1]} 0%,${G[0]} 100%);color:#fff7ef;text-align:left;aspect-ratio:4/4.6;min-height:400px}
-.tex{position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 9px)}
-.card:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 18% 12%,rgba(255,255,255,.22),rgba(255,255,255,0) 45%)}
-.sh{position:absolute;top:-20%;bottom:-20%;width:45%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-18deg);animation:brilla 2.4s 1s ease-in-out both}
-.fr{position:absolute;inset:12px 12px 0;border:1px solid rgba(255,247,239,.32);border-bottom:0;border-radius:18px 18px 0 0}
-.big{position:absolute;right:-38px;bottom:-58px;width:210px;height:210px;opacity:.12}.big svg,.mini svg{width:100%;height:100%;display:block}.card svg *{fill:none;stroke:#fff7ef;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.mini svg *{stroke-width:3}
-.ct{position:relative;height:100%;display:flex;flex-direction:column;padding:30px 30px 26px}
-.row{display:flex;align-items:center;justify-content:space-between}.row small{font-size:11px;font-weight:700;letter-spacing:.24em;opacity:.85}.mini{width:30px;height:30px;opacity:.9}
-.para{margin-top:auto}.para em,.pie2 em,.stub em{display:block;font-style:normal;font-size:10.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;opacity:.7}.para b{display:block;font-size:34px;font-weight:700;line-height:1.1;margin-top:2px;letter-spacing:-.01em;word-break:break-word}
-.num{display:flex;align-items:center;gap:14px;margin-top:14px}.num>b{font-size:84px;font-weight:800;line-height:.85;letter-spacing:-.04em}.num span{display:flex;flex-direction:column}.num strong{font-size:22px;font-weight:600;line-height:1.1}.num small{font-size:13.5px;opacity:.85;margin-top:3px;line-height:1.3}
-.msg{font-size:15px;font-style:italic;line-height:1.45;margin:18px 0 0;opacity:.95;max-width:92%}.msg:before{content:'“';font-style:normal;font-size:34px;line-height:0;vertical-align:-11px;margin-right:3px;opacity:.6}
-.pie2{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:auto;padding-top:20px;font-size:15px;font-weight:600}.pie2 .mk{font-size:12px;font-weight:700;letter-spacing:.2em;opacity:.9}
-.stub{position:relative;display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fffaf5;border-radius:0 0 26px 26px;padding:20px 26px 22px;text-align:left;border-top:2px dashed ${OC.ln}}
-.stub:before,.stub:after{content:'';position:absolute;top:-13px;width:24px;height:24px;border-radius:50%;background:${OC.bg}}.stub:before{left:-12px}.stub:after{right:-12px}
-.stub em{color:#9a8a7f;opacity:1}.stub>div:first-child{flex:none}.stub code{display:block;font:700 20px Poppins,sans-serif;letter-spacing:.12em;color:#2b2420;margin-top:3px;white-space:nowrap}.stub .r{text-align:right}.stub .r{flex:1;min-width:0}.stub .r span{display:block;font-size:13px;font-weight:600;color:#2b2420;margin-top:4px;white-space:nowrap}
-.res{font-size:13.5px;color:#5c4f47;margin:24px 4px 0;line-height:1.55}.bt{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;font:600 15px Poppins,sans-serif;color:#fff;background:${G[0]};border:0;border-radius:16px;padding:15px;text-decoration:none;cursor:pointer}
-.bt.sec{background:#fff;color:#2b2420;box-shadow:0 1px 3px rgba(0,0,0,.06)}.pend{background:#fff6e5;color:#8a5a00;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:16px}
-@keyframes sube{from{opacity:0;transform:translateY(26px) scale(.97)}to{opacity:1;transform:none}}@keyframes brilla{from{left:-60%}to{left:130%}}
-@media(prefers-reduced-motion:reduce){.cardw,.sh{animation:none}.sh{display:none}}
-@media(max-width:360px){.ct{padding:26px 24px 22px}.para b{font-size:29px}.num>b{font-size:70px}}
-${imprimir ? '@page{size:A5;margin:12mm}body{background:#fff;padding:0}.c{max-width:none}.np{display:none!important}.cardw{filter:none;animation:none;max-width:118mm;margin:0 auto}.sh{display:none}.stub{border:1px solid #eee;border-top:2px dashed #ddd}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}' : '@media print{body{background:#fff;padding:0}.np{display:none!important}.cardw{filter:none;animation:none}.sh{display:none}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'}
+.hi{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#c2552e;margin:0}h1{font-size:25px;font-weight:700;margin:6px 0 22px;line-height:1.25;letter-spacing:-.01em}
+.cardw{position:relative;filter:drop-shadow(0 24px 30px rgba(20,20,20,.18));animation:sube .9s cubic-bezier(.2,.8,.2,1) both}
+.card{position:relative;overflow:hidden;border-radius:28px 28px 0 0;background:${K.bg};color:${K.ink};padding:26px 28px 28px;text-align:left}
+.fr{position:absolute;inset:11px 11px 0;border:1px solid ${K.ln};border-bottom:0;border-radius:19px 19px 0 0;pointer-events:none}
+.sh{position:absolute;top:-20%;bottom:-20%;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,${K.bg === '#f3efea' ? '.7' : '.16'}),transparent);transform:skewX(-18deg);animation:brilla 2.2s 1.6s ease-in-out both;pointer-events:none}
+.row{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px}.row small{font-size:10px;font-weight:700;letter-spacing:.22em;color:${K.sub};text-align:right}
+.lg{font-size:19px;font-weight:800;letter-spacing:-.02em;color:${K.ink}}.lg i{font-style:normal;color:${K.acc === '#141414' ? '#141414' : '#c2552e'}}
+.ilu{display:block;width:150px;height:150px;margin:18px auto 6px;overflow:visible}.ilu path,.ilu rect{fill:none;stroke:${K.ink};stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:dibuja 1.6s .5s cubic-bezier(.6,0,.2,1) forwards}
+.ilu .llama{stroke:none;fill:${K.acc === '#141414' ? '#fff7ef' : '#c2552e'};transform-box:fill-box;transform-origin:50% 100%;opacity:0;animation:aparece .4s 1.9s forwards,llama 1.1s 2.3s ease-in-out infinite}
+.ilu .luz{fill:${K.acc};opacity:0;animation:aparece .3s 2s forwards,luz 2.4s 2.4s ease-in-out infinite}.ilu .l2{animation-delay:2.1s,2.8s}.ilu .l3{animation-delay:2.2s,3.2s}.ilu .l4{animation-delay:2.3s,3.6s}.ilu .l5{animation-delay:2.4s,4s}.ilu .l6{animation-delay:2.5s,4.4s}
+.mv{transform-box:view-box}.lazo{transform-origin:60px 44px;animation:lazo 3s 2.2s ease-in-out infinite}.flor{transform-origin:60px 106px;animation:flor 4s 2.2s ease-in-out infinite}.corbata{transform-origin:60px 24px;animation:flor 3.4s 2.2s ease-in-out infinite}.latido{transform-origin:60px 70px;animation:latido 1.6s 2.2s ease-in-out infinite}
+.para{position:relative;text-align:center}.para em,.stub em{display:block;font-style:normal;font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:${K.sub}}.para b{display:block;font-size:34px;font-weight:700;line-height:1.1;margin-top:2px;letter-spacing:-.02em;word-break:break-word}
+.num{position:relative;display:flex;align-items:center;justify-content:center;gap:12px;margin-top:16px}.num>b{font-size:76px;font-weight:800;line-height:.85;letter-spacing:-.05em;color:${K.acc === '#141414' ? K.ink : '#c2552e'}}.num span{display:flex;flex-direction:column;text-align:left}.num strong{font-size:21px;font-weight:600;line-height:1.1}.num small{font-size:13px;color:${K.sub};margin-top:3px;line-height:1.3;max-width:170px}
+.msg{position:relative;font-size:15px;font-style:italic;line-height:1.5;margin:18px auto 0;text-align:center;max-width:300px}.msg:before,.msg:after{content:'«';font-style:normal;color:${K.sub}}.msg:after{content:'»'}
+.de{position:relative;text-align:center;margin:14px 0 0;font-size:14.5px;font-weight:600}.de em{font-style:normal;font-weight:500;color:${K.sub}}
+.nieve{position:absolute;inset:0;pointer-events:none}.nieve i{position:absolute;top:-6px;border-radius:50%;background:#f3efea;opacity:.55;animation:cae linear infinite}
+.stub{position:relative;display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fffaf5;border-radius:0 0 28px 28px;padding:19px 26px 21px;text-align:left;border-top:2px dashed #e4d9cf}
+.stub:before,.stub:after{content:'';position:absolute;top:-13px;width:24px;height:24px;border-radius:50%;background:#efebe5}.stub:before{left:-12px}.stub:after{right:-12px}
+.stub em{color:#9a8a7f}.stub>div:first-child{flex:none}.stub code{display:block;font:700 20px Poppins,sans-serif;letter-spacing:.12em;color:#141414;margin-top:3px;white-space:nowrap}.stub .r{flex:1;min-width:0;text-align:right}.stub .r span{display:block;font-size:13px;font-weight:600;color:#141414;margin-top:4px;white-space:nowrap}
+.go{display:block;margin-top:22px;background:#c2552e;color:#fff;border-radius:18px;padding:16px 18px;text-decoration:none;text-align:center;box-shadow:0 10px 22px rgba(194,85,46,.28);animation:sube .7s 1.2s both}.go b{display:block;font-size:17px;font-weight:700}.go small{display:block;font-size:12.5px;opacity:.88;margin-top:2px}
+.lnk{display:flex;gap:10px;margin-top:12px}.lnk a,.lnk button{flex:1;font:600 13.5px Poppins,sans-serif;color:#141414;background:#fff;border:0;border-radius:14px;padding:13px 10px;text-decoration:none;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.res{font-size:12.5px;color:#6b5d54;margin:18px 4px 0;line-height:1.55}.pend{background:#fff6e5;color:#8a5a00;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:16px}
+@keyframes sube{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}@keyframes brilla{from{left:-60%}to{left:130%}}@keyframes dibuja{to{stroke-dashoffset:0}}@keyframes aparece{to{opacity:1}}
+@keyframes lazo{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}@keyframes flor{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}@keyframes latido{0%,40%,100%{transform:scale(1)}20%{transform:scale(1.07)}30%{transform:scale(.98)}}
+@keyframes llama{0%,100%{transform:scale(1,1)}50%{transform:scale(.88,1.12)}}@keyframes luz{0%,100%{opacity:1}50%{opacity:.25}}@keyframes cae{from{transform:translateY(0)}to{transform:translateY(720px)}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;animation-delay:0s!important}.nieve,.sh{display:none}}
+@media(max-width:360px){.card{padding:24px 22px 24px}.para b{font-size:29px}.num>b{font-size:64px}}
+${imprimir ? '@page{size:A5;margin:12mm}body{background:#fff;padding:0}.c{max-width:none}.np{display:none!important}.cardw{filter:none;animation:none;max-width:118mm;margin:0 auto}.sh,.nieve{display:none}.ilu *{animation:none!important;stroke-dashoffset:0!important;opacity:1!important}.stub{border:1px solid #eee;border-top:2px dashed #ddd}.stub:before,.stub:after{background:#fff}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}' : '@media print{body{background:#fff;padding:0}.np{display:none!important}.cardw{filter:none;animation:none}.sh,.nieve{display:none}.ilu *{animation:none!important;stroke-dashoffset:0!important;opacity:1!important}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'}
 </style></head><body><div class="c">${imprimir ? '' : `<p class="hi np">${T.tit}</p><h1 class="np">${e(F.PARA ? hola(F.PARA) : T.tit)}</h1>`}
 ${tarjeta}
 ${pend && !imprimir ? '<p class="pend np">Esta tarjeta aún está pendiente de pago.</p>' : ''}
+${imprimir ? '' : `<a class="go np" href="${e(reservar)}"><b>${BT[0]}</b><small>${BT[1]}</small></a><div class="lnk np"><a href="https://wa.me/${wa}?text=${encodeURIComponent(T.wa(cod))}" target="_blank" rel="noopener">${BT[2]}</a><button type="button" onclick="window.print()">${BT[3]}</button></div>`}
 <p class="res">${e(T.res(tel)).replace(/(\d) (?=\d)/g, '$1&nbsp;')}<br>${e(C.dirCorta || C.direccion || '')}</p>
-${imprimir ? '' : `<a class="bt np" href="https://wa.me/${wa}?text=${encodeURIComponent(T.wa(F['CÓDIGO'] || ''))}" target="_blank" rel="noopener">${T.resv}</a><button type="button" class="bt sec np" onclick="window.print()">${T.imp}</button>`}
 </div>${imprimir ? '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' : ''}</body></html>`;
 }
 // La página para comprar el vale (paso a paso, en el estilo de la app)
@@ -1133,7 +1157,7 @@ input.i,textarea.i{width:100%;font:500 16px Poppins,sans-serif;color:#141414;bac
 .res{background:#fdf1ea;border-radius:18px;padding:16px;margin:4px 0 6px}.res .r1{font-size:12px;font-weight:700;letter-spacing:.14em;color:#c2552e}.res .r2{font-size:19px;font-weight:700;margin:4px 0 2px}.res .r3{font-size:13.5px;color:#5c4f47;line-height:1.5}.res .tot{display:flex;justify-content:space-between;align-items:baseline;border-top:2px dashed #f1d9cc;margin-top:12px;padding-top:10px;font-weight:600}.res .tot b{font-size:22px;color:#c2552e}
 .ib{background:#faf7f4;border-radius:14px;padding:6px 14px;font-size:14px;margin-top:10px;text-align:left}.ibr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #efe6df}.ibr:last-child{border-bottom:0}.ibr div{flex:1;min-width:0;overflow-wrap:anywhere}.ibr small{display:block;font-size:11.5px;color:#7d6a60}.ibr b{font-weight:600}.cp{flex:none;border:0;background:#fff;border-radius:8px;padding:5px 10px;font:600 12px Poppins,sans-serif;color:#c2552e;cursor:pointer}
 .ok{text-align:center}.ok .ic{width:84px;height:84px}.pie{margin-top:18px;font-size:12px;color:#7d6a60;text-align:center}
-.dz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.dz button{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:18px;border:0;border-radius:18px;padding:16px 14px 14px;min-height:118px;cursor:pointer;font:600 13.5px Poppins,sans-serif;color:#fff7ef;text-align:left;transition:transform .15s}.dz button i{position:absolute;inset:7px;border:1px solid rgba(255,247,239,.3);border-radius:13px;pointer-events:none}.dz button svg{width:30px;height:30px}.dz button svg *{fill:none;stroke:#fff7ef;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.dz button.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #2b2420;transform:scale(1.02)}.dz button.on:after{content:'✓';position:absolute;top:12px;right:14px;width:22px;height:22px;border-radius:50%;background:#fff7ef;color:#2b2420;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.dz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.dz button{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:18px;border:0;border-radius:18px;padding:16px 14px 14px;min-height:118px;cursor:pointer;font:600 13.5px Poppins,sans-serif;text-align:left;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.06)}.dz button i{position:absolute;inset:7px;border:1px solid rgba(255,247,239,.3);border-radius:13px;pointer-events:none}.dz button svg{width:30px;height:30px}.dz button svg *{fill:none;stroke:inherit;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.dz button.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #2b2420;transform:scale(1.02)}.dz button.on:after{content:'✓';position:absolute;top:12px;right:14px;width:22px;height:22px;border-radius:50%;background:#fff7ef;color:#2b2420;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .fi{animation:fi .35s both}@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style></head>
 <body><div class="c" id="C"></div><script>(function(){var D=${J};var C=document.getElementById('C');
 var S={};try{S=JSON.parse(sessionStorage.getItem('f365_regalo')||'{}')||{};}catch(e){}if(D.nuevo){S={};}
@@ -1156,7 +1180,7 @@ function pinta(){var h=cab(),i=PASOS.indexOf(paso);G=gi();
   +'<button type="button" class="bt" id="sig">Empezar</button><p class="err" id="er"></p><p class="priv">Al seguir, aceptas nuestra <a href="'+esc(D.privacidad)+'" target="_blank" rel="noopener">política de privacidad</a>.</p>';}
  if(paso==='tipo'){h+='<h2>¿Qué le regalas?</h2><p class="sub">Elige el tipo de fisioterapia.</p>'+D.servicios.map(function(s,k){return op('data-k="'+k+'"',S.tipo===k,'<b>'+esc(s.nombre)+'</b>'+(s.desc?'<small>'+esc(s.desc)+'</small>':''));}).join('');}
  if(paso==='sesiones'){var s=servicio();h+='<h2>¿Cuántas sesiones?</h2><p class="sub">Con los packs, cada sesión sale más barata.</p>'+s.ops.map(function(o,k){return op('data-k="'+k+'"',S.op===k,'<b>'+(o.pack?'Pack '+o.n+' sesiones':ses(o.n))+'</b>'+(o.ah?'<br><span class="ah">Ahorras '+eur(o.ah)+'</span>':'')).replace('</span></button>','</span><span class="pr">'+eur(o.p)+'</span></button>');}).join('');}
- if(paso==='diseno'){h+='<h2>El diseño de la tarjeta</h2><p class="sub">Elige la ocasión. Cambia el dibujo, el color y los mensajes.</p><div class="dz">'+D.ocs.map(function(o){return '<button type="button" data-o="'+o.k+'" class="'+(S.oc===o.k?'on':'')+'" style="background:linear-gradient(150deg,'+o.gr[1]+','+o.gr[0]+')"><i></i><svg viewBox="0 0 96 96" aria-hidden="true">'+o.d+'</svg><span>'+esc(o.nom)+'</span></button>';}).join('')+'</div><button type="button" class="bt" id="sig">Seguir</button>';}
+ if(paso==='diseno'){h+='<h2>El diseño de la tarjeta</h2><p class="sub">Elige la ocasión. Cambia el dibujo, el color y los mensajes.</p><div class="dz">'+D.ocs.map(function(o){return '<button type="button" data-o="'+o.k+'" class="'+(S.oc===o.k?'on':'')+'" style="background:'+o.es.bg+';color:'+o.es.ink+'"><i style="border-color:'+o.es.ln+'"></i><svg viewBox="0 0 96 96" aria-hidden="true" style="stroke:'+o.es.ink+'">'+o.d+'</svg><span>'+esc(o.nom)+'</span></button>';}).join('')+'</div><button type="button" class="bt" id="sig">Seguir</button>';}
  if(paso==='tarjeta'){var L=S.idioma||'es';h+='<h2>La tarjeta</h2><p class="sub">¿En qué idioma la quieres?</p><div class="ch" id="idi">'+IDI.map(function(x){return '<button type="button" data-l="'+x[1]+'" class="'+(L===x[1]?'on':'')+'">'+x[0]+'</button>';}).join('')+'</div>'
   +'<label class="l">Elige el mensaje</label>'+MSG[S.oc][L].map(function(m,k){return op('data-m="'+k+'"',S.msg===k,esc(m));}).join('')+op('data-m="-1"',S.msg===-1,'Prefiero escribir mi propio mensaje')
   +(S.msg===-1?'<textarea class="i" id="propio" maxlength="220" placeholder="Escribe lo que quieras que ponga la tarjeta">'+esc(S.propio||'')+'</textarea>':'')+'<button type="button" class="bt" id="sig"'+(S.msg==null?' disabled':'')+'>Seguir</button><p class="err" id="er"></p>';}
@@ -1284,7 +1308,7 @@ function firmaHuecos(k) { return require('crypto').createHmac('sha256', String(p
 const huecosDec = k => { try { const o = JSON.parse(Buffer.from(String(k), 'base64url').toString('utf8'));
     if (o && Number(o.r) > 0) { const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), d = new Date(hoy + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + Math.min(90, Number(o.r))); return { a: hoy, b: d.toISOString().slice(0, 10), f: Array.isArray(o.f) ? o.f.map(String) : [], p: Number(o.p) > 0 ? Number(o.p) : 0 }; }
     return o && /^\d{4}-\d{2}-\d{2}$/.test(o.a) && /^\d{4}-\d{2}-\d{2}$/.test(o.b) ? { a: o.a, b: o.b, f: Array.isArray(o.f) ? o.f.map(String) : [], p: Number(o.p) > 0 ? Number(o.p) : 0 } : null; } catch (e) { return null; } };
-const huecosSiempre = (dias, f) => { const k = Buffer.from(JSON.stringify({ r: dias, f: f || [] })).toString('base64url'); return `https://app.fisioterapia365.com/h/${k}.${firmaHuecos(k)}`; };
+const huecosSiempre = (dias, f, v) => { const k = Buffer.from(JSON.stringify(Object.assign({ r: dias, f: f || [] }, v ? { v } : {}))).toString('base64url'); return `https://app.fisioterapia365.com/h/${k}.${firmaHuecos(k)}`; };
 const huecosEnlace = (a, b, f, p) => { const k = Buffer.from(JSON.stringify(Object.assign({ a, b, f: f || [] }, p > 0 ? { p } : {}))).toString('base64url'); return `https://app.fisioterapia365.com/h/${k}.${firmaHuecos(k)}`; };
 const HUECO_LIBRE = /^(CITA LIBRE|LIBRE - SIN BOMBA)$/, HUECO_NOFISIO = /^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES|NORA)$/i;
 const madridAhora = () => { const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date()).map(x => [x.type, x.value])); return { f: `${p.year}-${p.month}-${p.day}`, h: `${String(+p.hour % 24).padStart(2, '0')}:${p.minute}` }; };
@@ -1434,7 +1458,7 @@ var G={};try{G=JSON.parse(localStorage.getItem('f365_res')||'{}');}catch(e){}
 function abrir(h){var f=document.createElement('div');f.className='fondo';f.innerHTML='<div class="hoja"><div class="asa"></div><div class="sel">'+tile(h.fecha)+'<div><small>Tu cita</small><b>'+fl(h.fecha).replace(/^./,function(x){return x.toUpperCase();})+'<br>a las '+h.hora+'</b><small>con '+esc(h.nombre)+'</small></div></div>'
  +'<div class="dos"><div><label>Nombre</label><input id="n1" autocomplete="given-name" value="'+esc(G.n1||'')+'"></div><div><label>Apellidos</label><input id="n2" autocomplete="family-name" value="'+esc(G.n2||'')+'"></div></div>'
  +'<label>Teléfono</label><input id="tl" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(G.tl||'')+'"><label>Motivo de consulta</label><textarea id="mo" placeholder="Ej.: dolor de espalda desde hace unas semanas"></textarea>'
- +(D.pago?'<p class="pgn">Esta cita se paga por adelantado (<b>'+String(D.pago).replace('.',',')+' €</b>). Al reservar te llevamos al pago (tarjeta o transferencia) y te guardamos la hora 2 h.</p>':'')+'<p class="err" id="er"></p><button class="bt" id="rs">'+(D.pago?'Reservar y pagar':'Reservar mi cita')+'</button><button class="cancel" id="cn">Elegir otra hora</button></div>';
+ +(D.vale?'<p class="pgn">🎁 Reservas con tu <b>tarjeta regalo '+D.vale+'</b>. No tienes que pagar nada.</p>':'') +(D.pago?'<p class="pgn">Esta cita se paga por adelantado (<b>'+String(D.pago).replace('.',',')+' €</b>). Al reservar te llevamos al pago (tarjeta o transferencia) y te guardamos la hora 2 h.</p>':'')+'<p class="err" id="er"></p><button class="bt" id="rs">'+(D.pago?'Reservar y pagar':'Reservar mi cita')+'</button><button class="cancel" id="cn">Elegir otra hora</button></div>';
  document.body.appendChild(f);requestAnimationFrame(function(){f.classList.add('on');});var q=function(i){return f.querySelector('#'+i);};
  [].forEach.call(f.querySelectorAll('input,textarea'),function(x){x.oninput=function(){q('er').textContent='';};});
  var cerrar=function(){[].forEach.call(C.querySelectorAll('.h.on'),function(x){x.classList.remove('on');});f.classList.remove('on');setTimeout(function(){f.remove();},200);};q('cn').onclick=cerrar;f.onclick=function(e){if(e.target===f)cerrar();};
@@ -2663,7 +2687,7 @@ module.exports = async function handler(req, res) {
         if (c.error || !c.records) return res.status(200).json({ ok: false, error: 'No se ha podido reservar. Llámanos y te la apuntamos.' });
         pac = c.records[0]; nuevo = true;
       } else if (!String((pac.fields || {})['MOTIVO DE VISITA'] || '').trim()) await at(`${PACIENTES}/${pac.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MOTIVO DE VISITA': motivo } }) }).catch(() => {});
-      const nota = `Reserva por enlace de huecos${nuevo ? ' (paciente nuevo)' : ''} · Motivo: ${motivo}`;
+      const nota = `Reserva por enlace de huecos${nuevo ? ' (paciente nuevo)' : ''} · Motivo: ${motivo}${P.v ? ` · 🎁 Tarjeta regalo ${String(P.v).slice(0, 20)}` : ''}`;
       const fR = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', NOTAS: [r.fields.NOTAS, nota].filter(Boolean).join('\n') };
       if (P.p > 0) { const lim = Date.now() + 2 * 3600e3; Object.assign(fR, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': P.p, 'PAGO LÍMITE': new Date(lim).toISOString(), 'PAGO REGISTRO': `${pagoAhora()} · Reserva por enlace de huecos con pago por adelantado (${P.p.toFixed(2).replace('.', ',')} €)` }); }
       const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: fR, typecast: true }) });
@@ -2688,7 +2712,7 @@ module.exports = async function handler(req, res) {
     await caducarPagos().catch(() => 0); // libera antes los huecos de quien no pagó
     const huecos = await huecosLibres(P).catch(() => []);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(paginaHuecos({ huecos, pago: P.p || 0, url: `https://app.fisioterapia365.com/h/${k}.${sg}`, tel: C.tel || '672 89 39 49', dir: C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
+    return res.status(200).send(paginaHuecos({ huecos, vale: P.v ? String(P.v).slice(0, 20) : '', pago: P.p || 0, url: `https://app.fisioterapia365.com/h/${k}.${sg}`, tel: C.tel || '672 89 39 49', dir: C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona' }));
   }
   // Encuesta de primera visita: página (GET) y respuestas (POST)
   // Pago por adelantado: página del paciente (GET), tarjeta/transferencia (POST) y vuelta de Stripe (?sid=)
@@ -2952,7 +2976,7 @@ module.exports = async function handler(req, res) {
       if (q.pago === 'transferencia') await valeMail(f.EMAIL, 'Tu tarjeta regalo: datos para la transferencia', `Hola ${escHtml(f.COMPRADOR.split(/\s+/)[0])},`, `¡Gracias por tu regalo para <b>${escHtml(f.PARA)}</b>! En cuanto nos llegue la transferencia te enviamos la tarjeta (menos de 24 h).<br><br>Titular: <b>${escHtml(CLI.razon || '')}</b><br>IBAN: <b>${escHtml(CLI.iban || '')}</b><br>Importe: <b>${valeEur(o.p)}</b><br>Concepto: <b>Vale regalo - ${escHtml(f.COMPRADOR)}</b>`, '', '');
       return res.status(200).json({ ok: true, id, s: firmaVale(id), codigo: F['CÓDIGO'] });
     }
-    const D = { marca: CLI.marca, servicios: OPS, tarjeta: !!process.env.STRIPE_SECRET_KEY, razon: CLI.razon, iban: CLI.iban, tel: CLI.tel, dir: CLI.dirCorta || CLI.direccion || '', privacidad: `${APPU()}/privacidad`, post: '/api/schedule?action=regalo-pagina', oc: VALE_OC[String(req.query.o || '')] ? String(req.query.o) : valeOcHoy(), fijo: !!VALE_OC[String(req.query.o || '')], ocs: VALE_OCS.map(k => ({ k, gr: VALE_GR[k], nom: VALE_OC[k].nom, acc: VALE_OC[k].acc, bg: VALE_OC[k].bg, d: VALE_OC[k].d, tk: VALE_OC[k].t.es.tk })) };
+    const D = { marca: CLI.marca, servicios: OPS, tarjeta: !!process.env.STRIPE_SECRET_KEY, razon: CLI.razon, iban: CLI.iban, tel: CLI.tel, dir: CLI.dirCorta || CLI.direccion || '', privacidad: `${APPU()}/privacidad`, post: '/api/schedule?action=regalo-pagina', oc: VALE_OC[String(req.query.o || '')] ? String(req.query.o) : valeOcHoy(), fijo: !!VALE_OC[String(req.query.o || '')], ocs: VALE_OCS.map(k => ({ k, es: VALE_EST[k], nom: VALE_OC[k].nom, acc: VALE_OC[k].acc, bg: VALE_OC[k].bg, d: VALE_OC[k].d, tk: VALE_OC[k].t.es.tk })) };
     const m = String(req.query.v || '').match(/^(rec[A-Za-z0-9]{14})-([a-f0-9]{10})$/);
     if (m && sigOk(m[1], m[2])) { // vuelta de Stripe (pagado o cancelado)
       const r = await at(`${VALES}/${m[1]}`); let F = r.fields || {};
