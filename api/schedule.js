@@ -5343,6 +5343,11 @@ module.exports = async function handler(req, res) {
         const d = await at(`${T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [q.campo]: nuevo }, typecast: true }) });
         _alertas.t = 0; _cons.t = 0; return res.status(200).json({ ok: !d.error, valor: nuevo });
       }
+      if (action === 'seg-etapa') { // cerrar un caso desde el Daily report: alta, dejó el tratamiento o no llegó a venir (no hace falta llamarlo)
+        const et = { alta: 'ALTA', abandono: 'ABANDONO', noacudio: 'NO ACUDIÓ' }[q.etapa];
+        if (!et || !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
+        const r = await ponerEtapa(q.pacienteId, et); return res.status(200).json({ ok: !!r });
+      }
       if (action === 'seg-tarea-guardar' || action === 'seg-tarea-hecha' || action === 'seg-tarea-borrar') {
         const PT = 'tblxPpPSvj15NWqNT';
         if (action === 'seg-tarea-hecha' || action === 'seg-tarea-borrar') { if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
