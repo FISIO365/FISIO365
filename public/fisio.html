@@ -1500,7 +1500,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rec-it.env .rec-h,.rec-it.env .rec-n b{color:#9a8d84}
 .rec-b{flex:none;width:104px;font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:12px;padding:10px 0;cursor:pointer}.rec-b.env{background:#16803c;color:#fff}.rec-b.pg-env,.rec-b.pg-ok,.rec-b.pg-rec,.rec-b.pg-per{width:auto;min-width:104px;padding:10px 18px;white-space:nowrap}.rec-b.otra{background:#f3efea;color:#5f554e}.rec-b.cf{background:#fff;color:#16803c;box-shadow:inset 0 0 0 1.5px #16803c}.rec-bs{display:flex;gap:6px;flex:none}.rec-bs .rec-b{width:92px}.rec-b.av2{background:#fdf3dc;color:#8a5a00;box-shadow:inset 0 0 0 1.5px #f3dfae}.rec-b.av2.hecho{background:#fff;color:#9a8d84;box-shadow:inset 0 0 0 1.5px #ece6e0}.rec-a2{font-style:normal;color:#8a5a00;font-weight:600}@media(max-width:480px){.rec-bs{flex-direction:column;gap:4px}.rec-bs .rec-b{width:92px;padding:7px 0}}.rec-b.cf.on{background:#e8f6ec;box-shadow:none}
 .rec-re{font-family:var(--font);font-size:12px;color:#7d6a60;background:none;border:none;padding:0;text-decoration:underline;cursor:pointer}.rec-b.sin{background:#fff4e5;color:#b45309}
-.ag-otras{display:flex;gap:14px;justify-content:center;margin-top:12px}
+.ag-otras{display:flex;gap:14px;justify-content:center;margin-top:12px}.ag-otras .ag-envc{color:#c2552e!important;font-weight:600}
 .ag-pgt{display:inline-block;margin-top:3px;font-size:11px;font-weight:600;color:#a3441f;background:#fdf1ea;border-radius:99px;padding:2px 8px}.ag-pgt.ok{color:#1f7a45;background:#e9f6ee}.ag-pg-deb{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:#a3441f;margin:0 0 8px}.ag-pg-deb button{border:none;background:none;color:#7d6a60;text-decoration:underline;font:500 12px var(--font);cursor:pointer}
 .ag-pago{margin:4px 0 12px}.ag-pg-b{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed #e6c9bb;background:#fdfaf8;color:#c2552e;border-radius:14px;padding:12px;font:600 13.5px var(--font);cursor:pointer}.ag-pg-b svg,.ag-pg svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ag-pg-b.sec{border-style:solid;border-color:#efe6de;background:#fff;color:#7d6a60;padding:10px}
 .ag-pg{display:flex;align-items:center;gap:12px;background:#fdf1ea;color:#a3441f;border-radius:14px;padding:12px 14px;font-size:13px}.ag-pg span{display:flex;flex-direction:column;color:#7d6a60}.ag-pg b{color:#a3441f;font-size:13.5px}.ag-pg.ok{background:#e9f6ee;color:#1f7a45}.ag-pg.ok b{color:#1f7a45}.ag-pg.med{background:#fff7e0;color:#9a6a00}.ag-pg.med b{color:#9a6a00}.ag-pg.off{background:#f4f1ee;color:#8a7d74}.ag-pg.off b{color:#5c4f47}.ag-pg-bs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
@@ -6813,7 +6813,7 @@ function agAbrirCita(c,onDone){
   <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No necesita más</button></div>
   ${c.pacienteId?`<div class="ag-pago">${agPagoHtml(c)}</div>`:''}
   <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="fp-can ag-cfis">Cambiar fisio</button><button type="button" class="hz-ok">Guardar</button></div>
-  <div class="ag-otras"><button type="button" class="ag-borrar">Borrar cita</button></div>`);
+  <div class="ag-otras">${c.pacienteId?'<button type="button" class="ag-envc">Enviarle sus citas</button>':''}<button type="button" class="ag-borrar">Borrar cita</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
  const tg={get:()=>(c.tipos||[]).filter(t=>!agNoBomba(t))},ses=agSesSel(m.querySelector('.ag-ses'),c.sesion||'');
  m.querySelector('.ag-pac').onclick=()=>{m.remove();if(!c._enFicha)abrirFichaPaciente(c.pacienteId,c.paciente);};
@@ -6845,6 +6845,7 @@ function agAbrirCita(c,onDone){
  m.querySelector('.ag-mov').onclick=()=>{m.remove();agMoverCita(c,onDone);};
  {const bf=m.querySelector('.ag-cfis');if(bf)bf.onclick=()=>{m.remove();agFisioCita(c,onDone);};}
  {const bx=m.querySelector('.ag-pago');if(bx)agPagoAtar(bx,c,onDone);}
+ {const be=m.querySelector('.ag-envc');if(be)be.onclick=()=>enviarCitasDe(c.pacienteId);}
  m.querySelector('.ag-borrar').onclick=()=>{const mm=hzModal(`<div class="hz-top"><div><small>${escH(agCab(FD,c.hora,c.fisio))}</small><b>¿Borrar la cita de ${escH(c.paciente||'este paciente')}?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <p class="fp-mu" style="font-size:13.5px">Se borra de Airtable y no queda rastro. Si el paciente avisó de que no viene, mejor ponla como «Cancelada».</p>
    <div class="ag-ops"><button type="button" data-l="1"><b>Borrar y dejar la hora libre</b><small>Queda un hueco libre a esa hora</small></button><button type="button" data-l="0"><b>Solo borrar</b><small>La hora queda vacía</small></button></div>`);
@@ -9211,16 +9212,22 @@ async function enviarApp(P){const t=segTel(P.whatsapp||P.telf||P.tel||'');
   ir(`¡Hola ${capi(P.nombre)}! Aquí tienes tu *app de FISIO365*: tus ejercicios en vídeo, el chat con tu fisio, tus citas y tus documentos.\n\nDentro tienes cómo instalarla y tus datos para entrar:\n${r.url}`);}
  catch(e){if(P.pin)ir(mensajeApp(P));else{if(w)w.close();toast('No se ha podido crear el enlace',false);}}}
 // Mandar al paciente sus próximas citas por WhatsApp, con el enlace de su app (para que las tenga siempre a mano)
-async function enviarCitas(P,citas){const t=segTel(P.whatsapp||P.telf||P.tel||'');
- if(t.length<9){toast('Le falta el teléfono',false);return;}
+async function enviarCitas(P,citas,w0){const t=segTel(P.whatsapp||P.telf||P.tel||'');
+ if(t.length<9){if(w0)w0.close();toast('Le falta el teléfono',false);return;}
  const L=(citas||[]).filter(c=>c.fecha&&!/CANCEL|REPROGRAM|REALIZADA|NO ASIST|LIBRE|BLOQUE/i.test(c.estado||'')).sort((a,b)=>(a.fecha+(a.hora||'')).localeCompare(b.fecha+(b.hora||'')));
- if(!L.length){toast('No tiene citas próximas',false);return;}
+ if(!L.length){if(w0)w0.close();toast('No tiene citas próximas',false);return;}
  const DS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
  const fl=c=>{const d=new Date(c.fecha+'T12:00:00'),fi=String(c.fisio||'').trim().split(' ')[0];return `• ${DS[d.getDay()].charAt(0).toUpperCase()+DS[d.getDay()].slice(1)} ${d.getDate()} de ${MS[d.getMonth()]}${c.hora?', a las '+String(c.hora).slice(0,5):''}${fi&&!AG_NOFISIO.test(fi)?' · con '+capi(fi):''}`;};
- const w=window.open('about:blank','_blank');let url='';
+ const w=w0||window.open('about:blank','_blank');let url='';
  try{const pid=P.id||P.pacienteId;if(/^rec[A-Za-z0-9]{14}$/.test(pid||'')){const r=await (await fetch(`/api/schedule?action=seg-agenda-app-enlace&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${pid}`)).json();if(r.ok)url=r.url;}}catch(_){}
  const txt=`¡Hola ${capi(String(P.nombre||'').split(' ')[0])}! Estas son tus próximas citas en *FISIO365*:\n\n${L.map(fl).join('\n')}\n\n`+(url?(P.appInstalada?`Las tienes también en tu app, con tus ejercicios y el chat con tu fisio:\n${url}`:`Las tienes también en tu app, con tus ejercicios y el chat con tu fisio. Aquí tienes cómo instalarla y tus datos para entrar:\n${url}`):'¡Te esperamos!');
  const u=`https://wa.me/${t}?text=${encodeURIComponent(txt)}`;if(w)w.location.href=(window.marcaUrl?marcaUrl(u):u);else window.open(u,'_blank');}
+// Lo mismo desde la agenda (sin la ficha abierta): carga sus datos y sus citas
+async function enviarCitasDe(pid){if(!/^rec[A-Za-z0-9]{14}$/.test(pid||'')){toast('Esta cita no tiene paciente',false);return;}
+ const w=window.open('about:blank','_blank');
+ try{const d=await (await fetch(`/api/schedule?action=seg-ficha&pwd=${encodeURIComponent(apiPwd)}&id=${pid}`)).json();if(!d.ok)throw 0;
+  await enviarCitas(Object.assign({id:pid},d.paciente||{}),(d.citas||[]).filter(c=>c.fecha>=d.hoy),w);}
+ catch(e){if(w)w.close();toast('No se han podido cargar sus citas',false);}}
 // Elegir qué formulario de Tally mandar al paciente por WhatsApp
 function enviarFormulario(P){const t=segTel(P.whatsapp||P.telf||P.tel||''),n=String(P.nombre||'').split(' ')[0];
  const F=[['pv','Consentimiento informado','Datos, salud y consentimiento general',`Hola ${n}, antes de tu primera sesión en FISIO365 necesitamos que rellenes este formulario (2 minutos): ${CONSENT_URL} . Pon tu propio teléfono, por favor. ¡Gracias!`],
@@ -9744,8 +9751,8 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   // Aún no consta que haya entrado: enviarle cómo entrar o marcar que ya la tiene (así no se le recuerda en los recordatorios)
   const m=hzModal(`<div class="hz-top"><div><small>App del paciente</small><b>${escH(P.nombre||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <p class="ap-txt">${P.appUsada?'Ha entrado en la app, pero <b>no consta que la tenga instalada</b> en el móvil.':'No consta que haya entrado nunca en la app.'} Mientras no la tenga instalada, en el recordatorio de la cita le llega cómo entrar.</p>
-   <div class="ag-ops"><button type="button" class="ap-env"><b>Enviarle la app por WhatsApp</b><small>Enlace, usuario y PIN</small></button><button type="button" class="ap-ya"><b>Ya la tiene instalada</b><small>No se le volverá a recordar</small></button></div>`);
-  m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.ap-env').onclick=()=>{m.remove();enviarApp(P);};
+   <div class="ag-ops"><button type="button" class="ap-env"><b>Enviarle la app por WhatsApp</b><small>Enlace, usuario y PIN</small></button><button type="button" class="ap-citas"><b>Enviarle sus citas y la app</b><small>Sus próximas citas, con el enlace de la app</small></button><button type="button" class="ap-ya"><b>Ya la tiene instalada</b><small>No se le volverá a recordar</small></button></div>`);
+  m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelector('.ap-env').onclick=()=>{m.remove();enviarApp(P);};m.querySelector('.ap-citas').onclick=()=>{m.remove();enviarCitas(Object.assign({id},P),(d.citas||[]).filter(c=>c.fecha>=d.hoy));};
   m.querySelector('.ap-ya').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:P.id,campos:{appYa:true}})})).json();if(!r.ok)throw 0;
    P.appUsada=true;P.appInstalada=true;ba.classList.add('on');ba.title='Tiene la app instalada';ba.querySelector('span').textContent='App ✓';m.remove();toast('Hecho: ya no se le recordará la app',true);}catch(_){b.disabled=false;toast('No se ha podido guardar',false);}};};}
   body.querySelectorAll('.fp-cobb').forEach(bc=>bc.onclick=()=>{tab='facturas';pintar();let n=0;const t=setInterval(()=>{const b=body.querySelector('.fac-nueva');if(b||++n>40){clearInterval(t);if(b&&b.style.display!=='none'){b.click();setTimeout(()=>{const fm=body.querySelector('.fac-form');if(fm)fm.scrollIntoView({behavior:'smooth',block:'start'});},50);}}},150);});
@@ -11687,7 +11694,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
- {f:'2026-10-31',aviso:1,t:'Ficha del paciente › Citas › «Enviárselas»: le mandas por WhatsApp todas sus próximas citas junto con el enlace de su app.',ver:{sec:'pac',pasos:[{el:'.fp-envc',txt:'Con este botón le mandas sus próximas citas y la app.',click:['#pacResultados .pt-r','.fp-seg button[data-t="citas"]']}]}},
+ {f:'2026-10-31',aviso:1,t:'Para mandarle a un paciente todas sus próximas citas por WhatsApp, junto con el enlace de su app: en la agenda, abre una de sus citas › «Enviarle sus citas» (o en su ficha › Citas › «Enviárselas»).',ver:{sec:'pac',pasos:[{el:'.fp-envc',txt:'Con este botón le mandas sus próximas citas y la app.',click:['#pacResultados .pt-r','.fp-seg button[data-t="citas"]']}]}},
  {f:'2026-11-02',aviso:1,t:'Tarjetas regalo: se compran en la app en 5 pasos y se pagan con tarjeta o en el centro. Para venderlas, Mensajes › Regalos › «Vender tarjetas regalo» y mandas el enlace por WhatsApp. Quien la recibe reserva desde su tarjeta y la cita entra con el código en las notas.',ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="reg"]',txt:'Toca Regalos.',click:['.ag-recb:not(.ag-pdfb)']},{el:'.rec-m .rg-wa',txt:'Aquí mandas el enlace para que la compren.',click:['.ag-recb:not(.ag-pdfb)','.rec-m .enc-tabs button[data-t="reg"]']},{el:'.rec-m .vl-box',txt:'Y aquí ves las que se han comprado.',click:['.ag-recb:not(.ag-pdfb)','.rec-m .enc-tabs button[data-t="reg"]']}]}},
  {f:'2026-11-02',t:'El curso «Cómo funciona la app», rehecho: cada tarjeta parte de una situación real (cuándo, qué haces y para qué), con capturas del panel y «Enséñamelo».'},
  {f:'2026-11-02',aviso:1,t:'Formación del panel: cada día laborable te llega a Comunicaciones la tarea «Módulo de hoy». Se marca hecha sola al terminar el módulo.'},
@@ -13813,7 +13820,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Lo de arriba: hablar con él',shot:'/img/school/panel-a-10-ficha.jpg',body:`Debajo del nombre están sus <b>estados</b> (toca para cambiarlos).<br><br>Y los botones: <b>Llamar</b>, <b>WhatsApp</b>, <b>Enviar app</b>, <b>Seguimiento</b> y <b>Cobrar y facturar</b>.`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-acts',txt:'Los botones de la ficha.',click:['#pacResultados .pt-r']}]}},
  {ti:'Le escribes por WhatsApp',body:`<b>Qué haces:</b> botón <b>WhatsApp</b>. Te prepara un mensaje con su última sesión y su próxima cita; lo puedes cambiar.<br><br>Al volver te pregunta si lo has enviado y si hay que revisarlo más adelante: así queda en sus llamadas.`},
- {ti:'No tiene la app',body:`<b>Enviar app</b> le manda por WhatsApp el enlace, su usuario y su PIN.<br><br>Si ya la tiene, el botón pone <b>App ✓</b>; tocándolo se la reenvías.<br><br>Y en la pestaña <b>Citas</b>, <b>Enviárselas</b> le manda por WhatsApp todas sus próximas citas con el enlace de la app, para que las tenga ahí.`},
+ {ti:'No tiene la app',body:`<b>Enviar app</b> le manda por WhatsApp el enlace, su usuario y su PIN.<br><br>Si ya la tiene, el botón pone <b>App ✓</b>; tocándolo se la reenvías.<br><br>Y en la pestaña <b>Citas</b> (o abriendo una de sus citas en la agenda › <b>Enviarle sus citas</b>), <b>Enviárselas</b> le manda por WhatsApp todas sus próximas citas con el enlace de la app, para que las tenga ahí.`},
  {ti:'El resumen de un vistazo',shot:'/img/school/panel-a-11-resumen.jpg',body:`Sesiones hechas, <b>próxima cita</b> y <b>última sesión</b>. Debajo, sus <b>datos</b> (Editar), su <b>salud</b> del consentimiento y los documentos firmados.<br><br>Arriba salen los avisos importantes: alertas de salud, tarjeta regalo por canjear…`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-tabs',txt:'Resumen, Historia, Citas, Ejercicios y Más.',click:['#pacResultados .pt-r']}]}},
  {ti:'Se va sin próxima cita',body:`<b>Cuándo:</b> el paciente no reserva la siguiente.<br><br><b>Qué haces:</b> marca <b>No reagenda</b> y explica por qué. Luego eliges: <b>Pasa a seguimiento</b> (cuándo llamarle y quién) o <b>No necesita más</b> (queda como alta).<br><br><b>Para qué:</b> que nadie se quede sin llamar.`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-pqchk',txt:'Aquí: No reagenda.',click:['#pacResultados .pt-r']}]}},
  {ti:'Le falta el consentimiento',body:`En Salud: <b>Enviar</b> (le llega por WhatsApp), <b>En papel</b> (subes una foto) o <b>Enlazar</b> uno que ya rellenó.<br><br>Si lo rellenó alguien con su mismo teléfono, te pregunta si es suyo.`}
