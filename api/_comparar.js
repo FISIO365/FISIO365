@@ -72,7 +72,8 @@ async function lista(F, P) { // P: { pwd, self }
     ['progreso', '', `/api/progreso?pacienteId=${p}`], ['schedule', '', `/api/schedule?patientId=${p}`]);
   return R.map(([fn, a, ruta]) => ruta || `/api/${fn}?action=${a}`);
 }
-async function comparar({ fetch: F, pwd, self, desde = 0, cuantas = 25, rutas = null, ver = null, campo = null }) {
+async function comparar({ fetch: F, pwd, self, desde = 0, cuantas = 25, rutas = null, ver = null, campo = null, solo = false }) {
+  if (ver && solo) { const r = await pedir(self, ver.replace('pwd=…', 'pwd=' + encodeURIComponent(pwd)), F); return { estado: r.st, ms: r.ms, nueva: r.j ?? r.txt }; } // solo esta versión (p. ej. probar una acción)
   if (ver) { // las dos respuestas de una ruta (con campo = solo esa parte, p. ej. «negocios»)
     const ruta = ver.replace('pwd=…', 'pwd=' + encodeURIComponent(pwd)); const [a, b] = await Promise.all([pedir(PROD, ruta, F), pedir(self, ruta, F)]);
     const sel = j => { if (!j || !campo) return j; let x = j; const [ruta, cl] = campo.split(':'); for (const k of ruta.split('.')) x = x && x[k]; if (cl && Array.isArray(x)) x = x.map(e => cl.split(',').map(c => e && e[c]).join(' · ')); return x; };
