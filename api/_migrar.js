@@ -41,6 +41,24 @@ async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, 
       if (Date.now() > hasta) return { sigue: { t: t.id, off }, resumen };
       const d = await pide(`https://api.airtable.com/v0/${t.base || BASE}/${t.id}?pageSize=100${off ? '&offset=' + off : ''}`);
       const filas = [], maxAuto = {}; let cortar = false;
+      // 1) Adjuntos de toda la página: los que aún no están en Postgres se bajan de 8 en 8
+      const adjF = new Set(t.fields.filter(f => f.type === 'multipleAttachments').map(f => f.name));
+      const todos = adjuntos && adjF.size ? d.records.flatMap(r => Object.entries(r.fields || {}).filter(([k, v]) => adjF.has(k) && Array.isArray(v)).flatMap(([, v]) => v)) : [];
+      const yaEn = async ids => ids.length ? new Map((await db.query('select id, clave, bytes from archivos where id = any($1::text[])', [ids])).rows.map(x => [x.id, x])) : new Map();
+      let hay = await yaEn([...new Set(todos.map(a => 'att' + a.id.slice(3)))]);
+      const bajar = [...new Map(todos.filter(a => !hay.has('att' + a.id.slice(3))).map(a => [a.id, a])).values()];
+      for (let j = 0; j < bajar.length; j += 8) {
+        if (Date.now() > hasta + 8000) { cortar = true; break; } // demasiado tiempo: la página se repite en la siguiente llamada (lo ya bajado no se vuelve a bajar)
+        await Promise.all(bajar.slice(j, j + 8).map(async a => {
+          const rr = await F(a.url).catch(() => null); if (!rr || !rr.ok) { log(`  ! no se pudo bajar ${a.filename} (${t.name})`); return; }
+          const buf = Buffer.from(await rr.arrayBuffer());
+          await db.query('insert into archivos (id, clave, nombre, tipo, bytes, datos) values ($1,$2,$3,$4,$5,$6) on conflict (id) do nothing', ['att' + a.id.slice(3), crypto.randomBytes(16).toString('hex'), a.filename, a.type, buf.length, buf]);
+          R.adjuntos++;
+        }));
+      }
+      if (cortar) return { sigue: { t: t.id, off }, resumen };
+      if (bajar.length) hay = await yaEn([...new Set(todos.map(a => 'att' + a.id.slice(3)))]);
+      // 2) Los registros
       for (const r of d.records) {
         const out = {};
         for (const [k, v] of Object.entries(r.fields || {})) {
@@ -52,24 +70,14 @@ async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, 
             if (!adjuntos) { out[k] = v.map(a => ({ id: a.id, url: a.url, filename: a.filename, size: a.size, type: a.type })); continue; }
             const L = [];
             for (const a of v) {
-              const id = 'att' + a.id.slice(3);
-              let ya = (await db.query('select clave, bytes from archivos where id = $1', [id])).rows[0];
-              if (!ya) {
-                if (Date.now() > hasta + 12000) { cortar = true; break; } // demasiado tiempo: esta página se repite en la siguiente llamada (lo ya bajado no se vuelve a bajar)
-                const rr = await F(a.url); if (!rr.ok) { log(`  ! no se pudo bajar ${a.filename} (${t.name} ${r.id})`); continue; }
-                const buf = Buffer.from(await rr.arrayBuffer());
-                await db.query('insert into archivos (id, clave, nombre, tipo, bytes, datos) values ($1,$2,$3,$4,$5,$6) on conflict (id) do nothing', [id, crypto.randomBytes(16).toString('hex'), a.filename, a.type, buf.length, buf]);
-                ya = (await db.query('select clave, bytes from archivos where id = $1', [id])).rows[0]; R.adjuntos++;
-              }
+              const id = 'att' + a.id.slice(3), ya = hay.get(id); if (!ya) continue; // no se pudo bajar
               const u = `/api/schedule?action=archivo&id=${id}&k=${ya.clave}`;
               L.push({ id, url: u, filename: a.filename, size: ya.bytes, type: a.type, ...(/^image\//.test(a.type || '') ? { thumbnails: { small: { url: u }, large: { url: u }, full: { url: u } } } : {}) });
             }
-            if (cortar) break;
             if (L.length) out[k] = L; continue;
           }
           out[k] = v;
         }
-        if (cortar) break;
         filas.push({ id: r.id, f: out, c: r.createdTime });
       }
       if (cortar) return { sigue: { t: t.id, off }, resumen };
