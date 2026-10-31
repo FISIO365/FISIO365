@@ -272,7 +272,7 @@ async function almacen(op, body) {
   const r = await _fetch(ALM.url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-clave': ALM.clave }, body: JSON.stringify({ op, ...body }) });
   const d = await r.json().catch(() => ({ ok: false, error: 'HTTP ' + r.status })); if (!d.ok) throw new Error('Almacén: ' + (d.error || r.status)); return d;
 }
-const rutaDe = (id, nombre) => id + '/' + (String(nombre || 'archivo').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]+/g, '_').replace(/^[._-]+/, '').slice(0, 120) || 'archivo');
+const rutaDe = (id, nombre) => id + '/' + (String(nombre || 'archivo').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]+/g, '_').replace(/\.{2,}/g, '.').replace(/^[._-]+/, '').slice(0, 120) || 'archivo');
 async function guardarArchivo(c, buf, nombre, tipo) {
   const id = nuevoId('att'), clave = crypto.randomBytes(16).toString('hex');
   if (ALM.url) { const ruta = rutaDe(id, nombre); await almacen('subir', { ruta, tipo: tipo || 'application/octet-stream', b64: buf.toString('base64') });
