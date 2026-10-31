@@ -2488,6 +2488,13 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, ...r });
     } catch (e) { return res.status(200).json({ ok: false, error: String(e && e.message || e) }); }
   }
+  if (action === 'pg-comparar') { // compara lecturas de la app de verdad con esta versión (ver api/_comparar.js)
+    const PG = require('./_pg'), K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
+    if (!PG.ACTIVO || K.length < 24 || k.length !== K.length || !require('crypto').timingSafeEqual(Buffer.from(k), Buffer.from(K))) return res.status(404).end();
+    res.setHeader('Cache-Control', 'no-store');
+    const r = await require('./_comparar').comparar({ fetch: PG.fetchReal, pwd: process.env.FISIO_PASSWORD || '', self: String(process.env.APP_URL || '').replace(/\/+$/, ''), desde: +req.query.desde || 0, cuantas: Math.min(+req.query.n || 20, 40) });
+    return res.status(200).json(r);
+  }
   // Datos de la clínica (Administración › Ajustes): las páginas salen con su nombre, dirección, teléfono…
   let PLANT = {};
   try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); LEGAL = legalDe(c0.legal); PLANT = c0.plantillas || {}; } catch (e) { LEGAL = legalDe(); }
