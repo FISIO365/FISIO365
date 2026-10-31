@@ -11810,6 +11810,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-10-31',t:'App del paciente: debajo de los ejercicios ya no salen los packs, solo una tarjeta «Regala fisioterapia» con dibujo animado (cambia según la época). Los packs siguen en el menú › Promociones.'},
  {f:'2026-10-31',dir:1,t:'Sorteo del mes: ahora el sorteo sale con ruleta y confeti, y al elegir la reseña más original podéis pegar su reseña para que le salga en su premio. El ganador también ve su propia animación al abrir el enlace.'},
  {f:'2026-10-31',dir:1,t:'Valoraciones › Por fisio: «Ver las reseñas de cada fisio y cambiarlas» muestra quién ha puesto reseña con cada fisio, y puedes pasar una reseña a otro fisio si no es justo.'},
  {f:'2026-10-31',aviso:1,t:'Sorteo del mes: ahora solo entra quien ha dejado la reseña de verdad. En Valoraciones › Sorteo, comprobad en Google y marcad «La puso» o «No» a cada uno.',ver:{sec:'val',pasos:[{el:'.val-so',txt:'Aquí marcáis quién puso la reseña.'}]}},
@@ -14241,7 +14242,7 @@ function renderFormacion(wrap, ruta){
 
  {t:'Hoy: sus ejercicios',sub:'La pantalla principal',
  cards:[
- {ti:'La pantalla de Hoy',shot:'/img/school/app-02-hoy.jpg',body:`Es lo primero que ve: <b>su programa de hoy</b> (cuántos ejercicios lleva hechos), <b>su fisio y su próxima cita</b> (con «Reservar otra») y, si le has dejado una, la <b>nota de su fisio</b>.<br><br>Debajo, cada ejercicio con sus series, el descanso y tus <b>indicaciones</b>.`},
+ {ti:'La pantalla de Hoy',shot:'/img/school/app-02-hoy.jpg',body:`Es lo primero que ve: <b>su programa de hoy</b> (cuántos ejercicios lleva hechos), <b>su fisio y su próxima cita</b> (con «Reservar otra») y, si le has dejado una, la <b>nota de su fisio</b>.<br><br>Debajo, cada ejercicio con sus series, el descanso y tus <b>indicaciones</b>. Al final sale la tarjeta <b>«Regala fisioterapia»</b> (cambia en Navidad, San Valentín, Día del Padre y de la Madre); los packs y el resto de promociones están en su menú › Promociones.`},
  {ti:'Hacer la sesión',shot:'/img/school/app-03-ejercicio.jpg',body:`Al tocar un ejercicio se abre la <b>sesión guiada</b>: vídeo, series, un <b>temporizador</b> y «Hecho · Siguiente» para pasar al siguiente. Lo que marca como hecho cuenta para su racha.<br><br>Al terminar, la app le pregunta si quiere <b>comunicar algo a su fisio</b> («hoy me ha molestado la rodilla…»).`},
  {ti:'Si le cambias los ejercicios',body:`Cuando guardas un programa nuevo desde su ficha, <b>sustituye al anterior</b> y le llega un aviso. Si un vídeo no carga, que pruebe con otra conexión o te escriba por el chat.`}
  ],
