@@ -647,14 +647,13 @@ const REPORTE_ITEMS = [
   { k: 'marcar', t: 'He actualizado el **estado de todas mis citas** del día', auto: 'marcar' },
   { k: 'ejercicios', t: 'Mis pacientes tienen su **programa de ejercicios** actualizado en la app', auto: 'ejercicios' },
   { k: 'consent', t: 'Las primeras visitas han firmado el **consentimiento**', auto: 'consent' },
-  { k: 'anamnesis', t: 'He hecho la **anamnesis** a las primeras visitas' }, // sin comprobación automática: a veces se hace fuera de la app
   { k: 'app', t: 'He dado **acceso a la app** a los pacientes nuevos del día y la han **instalado en su móvil**', auto: 'app' },
   { k: 'proxima', t: 'Si alguien **no ha reagendado**, he apuntado por qué y lo he **pasado a seguimiento**', auto: 'proxima' },
   { k: 'llamadas', t: 'He hecho mis **llamadas de seguimiento** de hoy y he apuntado el resultado', auto: 'llamadas' },
   { k: 'chat', t: 'He contestado los **mensajes del chat** de mis pacientes', auto: 'chat' },
   { k: 'tareas', t: 'He hecho mis **tareas pendientes** de hoy', auto: 'tareas' },
   { k: 'nomejora', t: 'Si algún paciente **no mejora como se esperaba**, he empezado el **protocolo de no mejora** (si no hay ninguno, márcalo igual)' },
-  { k: 'historia', t: 'He actualizado todas las **historias clínicas** de hoy' },
+  { k: 'historia', t: 'He actualizado todas las **historias clínicas** de hoy', auto: 'historia' },
   { k: 'manana', t: 'He revisado mi **agenda de mañana** (primeras visitas, citas por confirmar y huecos)' },
   { k: 'limpieza', t: 'He dejado la **cabina limpia** y lista para mañana', sub: ['**Mesa y muebles** limpios y sin polvo', '**Grifo** limpio', '**Papelera** vacía', '**Papelera, rulo y taburete** sobre la camilla', '**Trapo** doblado en su sitio (se cambia cada semana)', '**Toalla de manos** colgada en su sitio (se cambia cada semana)', '**Cables** bien recogidos, ninguno por el suelo', '**Máquinas** apagadas y en su sitio', '**Carrito** ordenado y bien presentado'] },
 ];
@@ -2228,7 +2227,8 @@ async function checklistTodos() {
   const g = await ajuste('checklist', null); if (!Array.isArray(g) || !g.length) return REPORTE_ITEMS.map(x => Object.assign({}, x));
   return g.filter(x => x && x.k && x.t).map(x => { const b = REPORTE_ITEMS.find(y => y.k === x.k); return { k: String(x.k), t: String(x.t), sub: Array.isArray(x.sub) && x.sub.length ? x.sub.map(String) : undefined, auto: b && b.auto, off: !!x.off }; });
 }
-const checklistItems = async () => (await checklistTodos()).filter(x => !x.off).map(({ off, ...x }) => x);
+const CHK_QUITADOS = ['anamnesis']; // fuera del check-list de momento (aunque estén en la lista guardada)
+const checklistItems = async () => (await checklistTodos()).filter(x => !x.off && !CHK_QUITADOS.includes(x.k)).map(({ off, ...x }) => x);
 const EMAILS_DEF = () => String(process.env.RESUMEN_EMAIL || 'fisio365gestion@gmail.com').split(/[,;\s]+/).filter(Boolean);
 async function emailsResumen() { const e = await ajuste('emails_resumen', null); return Array.isArray(e) && e.length ? e : EMAILS_DEF(); }
 const nmSel = v => String((v && typeof v === 'object') ? (v.name || '') : (v || '')).trim();
@@ -2243,7 +2243,7 @@ async function cierreDia(fecha, soloFisio) {
   const P = [...new Set(hechas.map(c => c.fields['RELACIÓN - CITA'][0]))];
   const todosP = [...new Set(conPac.map(c => c.fields['RELACIÓN - CITA'][0]))];
   const [nombres, segs, futuras, previas, planes, sf, cons] = await Promise.all([
-    lotes(todosP, ids => capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=ÚLTIMO ACCESO APP`), 40).catch(() => []),
+    lotes(todosP, ids => capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=ÚLTIMO ACCESO APP&fields[]=HISTORIAL ACTUALIZADO`), 40).catch(() => []),
     lotes(P, ids => capTodos('tblu9YxiktpAh5w87', `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),${orIds(ids, 'PacRec')})`)}&fields[]=PacRec`)).catch(() => []),
     lotes(P, ids => capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='PENDIENTE',IS_AFTER({FECHA},'${fecha}'),${orIds(ids, 'PacienteRec')})`)}&fields[]=PacienteRec`)).catch(() => []),
     lotes(P, ids => capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_BEFORE({FECHA},'${fecha}'),${orIds(ids, 'PacienteRec')})`)}&fields[]=PacienteRec`)).catch(() => []),
@@ -2269,6 +2269,9 @@ async function cierreDia(fecha, soloFisio) {
   const nomLink = v => (Array.isArray(v) ? v : []).map(x => (x && x.name) || nom[x] || (/^rec[A-Za-z0-9]{14}$/.test(String(x)) ? '' : x)).filter(Boolean).join(', ');
   const conFutura = new Set([...futuras.flatMap(c => c.fields['PacienteRec'] || []), ...segs.flatMap(r => r.fields['PacRec'] || [])]);
   const usaApp = new Set(nombres.filter(p => p.fields['ÚLTIMO ACCESO APP']).map(p => p.id));
+  // Historia actualizada: la última vez que se tocó su historial es de ese día o posterior
+  const diaMadH = x => x ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : '';
+  const histOk = new Set(nombres.filter(p => diaMadH(p.fields['HISTORIAL ACTUALIZADO']) >= fecha).map(p => p.id));
   const yaVino = new Set(previas.flatMap(c => c.fields['PacienteRec'] || []));
   const conPlan = new Set(planes.map(r => String(r.fields['PacienteID'] || '')));
   const debe = new Map((sf.lista || []).map(x => [x.id, -x.saldo]));
@@ -2281,6 +2284,7 @@ async function cierreDia(fecha, soloFisio) {
     const hs = cs.filter(c => est(c) === 'REALIZADA');
     const uni = arr => { const v = new Set(); return arr.filter(x => !v.has(x.id) && v.add(x.id)); };
     const checks = [
+      { k: 'historia', t: 'Historias clínicas', d: 'La historia de cada paciente atendido está actualizada ese día', items: uni(hs.filter(c => !histOk.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c, 'historia sin actualizar'))) },
       { k: 'marcar', t: 'Citas marcadas', d: 'Todas las citas del día con su estado (hecha, no vino…)', items: cs.filter(c => ['PENDIENTE', 'CITA DUDOSA'].includes(est(c))).map(c => it(c)) },
       { k: 'cobrar', t: 'Todo cobrado', d: sf.activo ? 'Cada sesión hecha está pagada (pack o cobro desde el panel)' : 'El control de cobros empezará con el primer cobro desde el panel', items: sf.activo ? uni(hs.filter(c => debe.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c, debe.get(c.fields['RELACIÓN - CITA'][0]) + ' sin cobrar'))) : [] },
       { k: 'ejercicios', t: 'Ejercicios en la app', d: 'Cada paciente de hoy tiene su programa cargado', items: uni(hs.filter(c => !conPlan.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c))) },
