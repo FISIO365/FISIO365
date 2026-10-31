@@ -4539,7 +4539,8 @@ module.exports = async function handler(req, res) {
             for (let i = 0; i < okIds.length; i += 40) { const l = okIds.slice(i, i + 40);
               (await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',NOT(IS_AFTER({FECHA},'${fin}')),OR(${l.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []))
                 .forEach(c => { const f = String(c.fields.FECHA || '').slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (l.includes(id) && (!ult[id] || f > ult[id].f)) ult[id] = { f, fisio: c.fields['PREF.'] }; }); }); }
-            Object.values(ult).forEach(u => { de(u.fisio).resena++; }); }
+            const nomR = {}; for (let i = 0; i < okIds.length; i += 40) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + okIds.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}`).catch(() => [])).forEach(r => { nomR[r.id] = String(r.fields['FULL NAME'] || '').trim(); });
+            Object.entries(ult).forEach(([id, u]) => { const x = de(u.fisio); x.resena++; (x.resenaQuien = x.resenaQuien || []).push(nomR[id] || 'Paciente'); }); }
           return res.status(200).json({ ok: true, mes, fisios: Object.values(T).filter(x => x.fisio !== '—' || x.enc || x.mej || x.resena).sort((a, b) => (b.enc + b.mej) - (a.enc + a.mej)) });
         }
         if (action === 'seg-agenda-sorteo') { // Sorteo mensual de 2 sesiones entre quienes han ido a dejar su reseña en Google desde nuestros enlaces
