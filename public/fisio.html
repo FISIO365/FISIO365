@@ -1097,7 +1097,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .pm-it{display:flex;align-items:center;gap:12px;width:100%;border:none;background:none;padding:12px;border-radius:14px;font-family:var(--font);font-size:14.5px;font-weight:600;color:#1a1a1a;cursor:pointer;text-align:left}
 .pm-it:hover{background:#f5f2ee}
 .pm-it svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:#c2552e}
-.pm-it.salir{color:#7d6a60}.pm-it.salir svg{color:#7d6a60}
+.pm-it.salir{color:#7d6a60}.pm-off{display:none;margin-left:auto;font-size:11.5px;font-weight:600;color:#c2552e;background:#fdf1ea;border-radius:99px;padding:3px 9px}#pmAvisos.apagado .pm-off{display:inline-block}.pm-it.salir svg{color:#7d6a60}
 .pe-res-txt{margin:9px 2px 0;font-size:12px;color:#9a8d84;line-height:1.4}.pe-res-txt b{font-weight:600;color:#7d6a60}
 #avisoPanel{position:fixed;right:20px;bottom:20px;z-index:900;display:flex;align-items:center;gap:12px;background:#fff;border-radius:22px;padding:12px 12px 12px 14px;box-shadow:0 12px 36px rgba(26,26,26,.18);max-width:420px;font-family:inherit}
 #avisoPanel .ap-ic{width:44px;height:44px;border-radius:14px;background:#fbeee7;display:flex;align-items:center;justify-content:center;flex:none}
@@ -1973,7 +1973,7 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  <button type="button" class="pm-it" id="pmCap" onclick="cerrarPerfilMenu();showSection('cap')"><svg viewBox="0 0 24 24"><path d="M3 11l15-6v14L3 13z"/><path d="M7 12.5V18a2 2 0 0 0 4 0v-4"/><path d="M21 9.5v5"/></svg>Captación</button>
  <button type="button" class="pm-it" id="pmEjer" onclick="cerrarPerfilMenu();showSection('ejer')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg>Ejercicios</button>
  <button type="button" class="pm-it" id="pmSchool" onclick="cerrarPerfilMenu();showSection('school')"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg>School</button>
- <button type="button" class="pm-it" onclick="cerrarPerfilMenu();abrirAjustesAvisos()"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones</button>
+ <button type="button" class="pm-it" id="pmAvisos" onclick="cerrarPerfilMenu();abrirAjustesAvisos()"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones<span class="pm-off">Desactivadas</span></button>
  <button type="button" class="pm-it salir" onclick="confirmarSalir()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button>
 </div></div>
 
@@ -2393,7 +2393,7 @@ const avisosOpts=()=>({clave:'f365_panel_avisos',datos:()=>({fisioId:fisioActual
  onCambio:r=>{if(r==='on')toast('Avisos activados',true);else if(r==='off')toast('Avisos desactivados',true);else if(r==='error')toast('No se ha podido cambiar. Inténtalo de nuevo',false);marcarCampana();mirarAvisosPanel();}});
 function abrirAjustesAvisos(){if(!fisioActual)return;$('avisosModal').classList.add('on');F365Avisos.pintar($('avisosAjustes'),avisosOpts());}
 function cerrarAjustesAvisos(){$('avisosModal').classList.remove('on');}
-async function marcarCampana(){const e=await F365Avisos.estado('f365_panel_avisos');['btnAvisos','btnPerfil'].forEach(id=>{const b=$(id);if(b)b.classList.toggle('apagado',e!=='on');});}
+async function marcarCampana(){const e=await F365Avisos.estado('f365_panel_avisos');['btnAvisos','btnPerfil','pmAvisos'].forEach(id=>{const b=$(id);if(b)b.classList.toggle('apagado',e!=='on');});}
 function abrirAvisoPanel(url){try{const u=new URL(url,location.origin);const s=u.searchParams.get('s'),p=u.searchParams.get('p');avisoPendiente='';history.replaceState(null,'',location.pathname);
  if(!fisioActual){avisoPendiente=url;return;}
  if(s==='msg'){showSection('msg');if(/^rec[A-Za-z0-9]{14}$/.test(p||''))renderMensajes($('mainWrap'),p);}
