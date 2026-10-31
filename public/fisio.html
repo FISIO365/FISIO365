@@ -1640,6 +1640,9 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rd-esth{display:flex;flex-direction:column;gap:3px;margin-bottom:4px}.rd-esth b{font-size:17px;letter-spacing:-.2px;color:#b42318}.rd-est.ok .rd-esth b{color:#16803c}.rd-esth small{font-size:12.5px;color:#7d6a60;line-height:1.45}
 .rd-eit{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:var(--font);background:#fbf8f5;border:none;border-radius:14px;padding:11px 12px;cursor:pointer;border-left:4px solid #e0b089}.rd-eit.mal{border-left-color:#b42318}
 .rd-eic{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9a6a52;background:#f3e6dc;border-radius:99px;padding:4px 8px;min-width:62px;text-align:center}.rd-etx{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0}.rd-etx b{font-size:14px}.rd-etx small{font-size:12px;color:#7d6a60;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rd-ego{font-size:20px;color:#c2552e}
+.rd-etar{font-size:12px;font-weight:700;color:#c2552e;background:#fff;border:1px solid rgba(194,85,46,.35);border-radius:99px;padding:5px 10px;white-space:nowrap}
+.rd-up{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));z-index:900;display:flex;align-items:center;gap:8px;font-family:var(--font);font-size:13.5px;font-weight:700;color:#fff;background:#1a1714;border:none;border-radius:99px;padding:11px 18px;box-shadow:0 8px 24px rgba(0,0,0,.22);cursor:pointer}.rd-up svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.rd-tl{display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow:auto;margin:6px 0 4px}.rd-tli{display:flex;gap:10px;align-items:flex-start;background:#fbf8f5;border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.4;cursor:pointer}.rd-tli input{margin-top:3px;accent-color:#c2552e}.rd-tli b{display:block;font-size:12px;color:#c2552e;text-transform:uppercase;letter-spacing:.3px}
 .rd-luz{box-shadow:0 0 0 3px rgba(194,85,46,.35)!important;transition:box-shadow .3s}
 .rd-ks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}@media(max-width:600px){.rd-ks{grid-template-columns:1fr 1fr}}
 .rd-k{background:#fff;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:2px}.rd-k b{font-size:22px;letter-spacing:-.4px}.rd-k span{font-size:12px;color:#7d6a60}.rd-k.mal b{color:#b42318}
@@ -14606,8 +14609,14 @@ async function renderReporteDia(wrap){
    noEnv.length&&['Equipo',pl(noEnv.length,'check-list sin enviar','check-lists sin enviar'),noEnv.map(f=>String(f.fisio).split(' ')[0]).join(', '),'fis','mal'],
    conPend.length&&['Equipo',pl(conPend.length,'fisio con cosas por hacer','fisios con cosas por hacer'),conPend.map(f=>String(f.fisio).split(' ')[0]).join(', '),'fis','amb'],
    atViejo.length&&['Atrasos','Tareas o llamadas atrasadas más de 3 días',atViejo.map(g=>/^sin asignar$/i.test(g.fisio)?'sin asignar':String(g.fisio).split(' ')[0]).join(', '),'at','amb'],
-   R.borradores.length&&['Cobros',pl(R.borradores.length,'ticket en borrador por aprobar','tickets en borrador por aprobar'),'En Holded','bo','amb']].filter(Boolean);
-  const estado=FALTA.length?`<div class="rd-est"><div class="rd-esth"><b>Faltan ${FALTA.length} ${FALTA.length===1?'cosa':'cosas'} para cerrar el día</b><small>Toca cada una para arreglarla. Cuando no quede nada, el día está al 100%.</small></div>${FALTA.map(([ic,t,sub,k,c])=>`<button type="button" class="rd-eit ${c}" data-ir="${k}"><span class="rd-eic">${ic}</span><span class="rd-etx"><b>${escH(t)}</b><small>${escH(sub)}</small></span><span class="rd-ego">›</span></button>`).join('')}</div>`
+   null].concat([R.borradores.length&&['Cobros',pl(R.borradores.length,'ticket en borrador por aprobar','tickets en borrador por aprobar'),'En Holded','bo','amb']]).filter(Boolean);
+  // Tareas que se pueden mandar desde cada línea (a quien le toca), con el paciente enlazado
+  const p1=f=>{const n=String(f||'').trim().split(' ')[0];return n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';},dTxt=rdFechaTxt(R.fecha).toLowerCase();
+  const TAREAS={sf:SF.filter(x=>x.fisio).map(x=>({para:p1(x.fisio),texto:`Cobrar las sesiones sin facturar de ${capTit(x.nombre)}`,pacienteId:x.id})),
+   sm:R.sinMarcar.map(c=>({para:p1(c.fisio),texto:`Marcar la cita del ${dTxt} a las ${c.hora} de ${capTit(c.nombre)} (¿vino o no vino?)`,pacienteId:c.pacienteId})),
+   ca:cSin.map(c=>({para:p1(c.fisio),texto:`${capTit(c.nombre||'Paciente')} canceló o no vino el ${dTxt}: darle otra cita o pasarlo a «Por llamar»`,pacienteId:c.pacienteId})),
+   fis:[...noEnv.map(f=>({para:p1(f.fisio),texto:`Enviar el check-list del ${dTxt}`})),...conPend.flatMap(f=>f.pendiente.map(c=>({para:p1(f.fisio),texto:`${c.t} (${dTxt}): ${c.items.map(i=>i.nombre).slice(0,6).join(', ')}`,pacienteId:c.items.length===1?c.items[0].id:''})))]};
+  const estado=FALTA.length?`<div class="rd-est"><div class="rd-esth"><b>Faltan ${FALTA.length} ${FALTA.length===1?'cosa':'cosas'} para cerrar el día</b><small>Toca cada una para arreglarla, o mándasela como tarea a quien le toca. Cuando no quede nada, el día está al 100%.</small></div>${FALTA.map(([ic,t,sub,k,c])=>`<button type="button" class="rd-eit ${c}" data-ir="${k}"><span class="rd-eic">${ic}</span><span class="rd-etx"><b>${escH(t)}</b><small>${escH(sub)}</small></span>${(TAREAS[k]||[]).filter(x=>x.para).length?`<span class="rd-etar" data-t="${k}" role="button">+ Tarea</span>`:''}<span class="rd-ego">›</span></button>`).join('')}</div>`
    :`<div class="rd-est ok"><div class="rd-esth"><b>✓ Todo hecho. El día está cerrado al 100%.</b><small>Cobros, citas, check-lists y seguimientos, en orden.</small></div></div>`;
   body.innerHTML=estado+`<h3 class="rd-h">Números del día</h3><div class="rd-ks">${kpi(R.hechas,'sesiones hechas')}${kpi(R.nFacturas,'facturas emitidas')}${kpi(rdEur(R.total),'facturado')}${kpi(nf?env+'/'+nf:'—','check-lists enviados',nf&&env<nf?'mal':'')}</div>
    ${caja.length?`<div class="rd-caja">${caja.map(([m,t])=>`<span>${escH(m)} <b>${rdEur(t)}</b></span>`).join('')}</div>`:''}
@@ -14628,9 +14637,10 @@ async function renderReporteDia(wrap){
    ${tablaR(R.rendDia,'Rendimiento del día')}${tablaR(R.rendSemana,'Rendimiento de la semana')}
    ${lista('Facturas emitidas','',R.facturas.map(f=>fila(escH(f.num),escH(f.concepto)+(f.pago?' · '+escH(f.pago):''),rdEur(f.total))))}`;
   // «Para cerrar el día»: ir a donde se arregla
+  body.querySelectorAll('.rd-etar').forEach(t=>t.onclick=e=>{e.stopPropagation();rdTareas((TAREAS[t.dataset.t]||[]).filter(x=>x.para),t);});
   body.querySelectorAll('.rd-eit').forEach(b=>b.onclick=()=>{const k=b.dataset.ir,el=body.querySelector(`[data-k="${k}"]`);if(!el)return;
    if(k==='at')el.querySelectorAll('details').forEach(x=>x.open=true);
-   el.scrollIntoView({behavior:'smooth',block:'start'});const hl=k==='fis'?el.nextElementSibling:el;if(hl){hl.classList.add('rd-luz');setTimeout(()=>hl.classList.remove('rd-luz'),1800);}});
+   el.scrollIntoView({behavior:'smooth',block:'start'});rdVolverPill(body);const hl=k==='fis'?el.nextElementSibling:el;if(hl){hl.classList.add('rd-luz');setTimeout(()=>hl.classList.remove('rd-luz'),1800);}});
   // Acción inmediata
   body.querySelectorAll('.rd-pac,.rd-b[data-p]').forEach(b=>b.onclick=()=>abrirFichaPaciente(b.dataset.p,b.dataset.n));
   body.querySelectorAll('.rd-b[data-c]').forEach(b=>b.onclick=async()=>{const fila=b.closest('.rd-row');fila.querySelectorAll('button').forEach(x=>x.disabled=true);
@@ -14689,6 +14699,22 @@ function rdAvisar(R,f,btn,txtPropio,asuntoPropio){const nom=String(f.fisio).spli
   const r=await comPost('seg-com-enviar',{tipo:'Informe',para:[nom],asunto:asuntoPropio||`Pendiente del ${rdFechaTxt(R.fecha).toLowerCase()}`,cuerpo:m.querySelector('.rd-txt').value.trim(),req:true,limite:rdHoy()}).catch(x=>({ok:false,error:x.message}));
   if(!r.ok){b.disabled=false;toast(r.error||'No se ha podido enviar',false);return;}
   m.remove();toast(`Aviso enviado a ${nom}`,true);if(btn){btn.textContent=`✓ Avisado`;btn.disabled=true;}};}
+// Botón flotante para volver a «Lo que falta» (sale al bajar desde una línea y se va al volver arriba)
+function rdVolverPill(body){let p=document.querySelector('.rd-up');if(!p){p=ce('button','rd-up');p.type='button';p.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Volver a lo que falta';document.body.appendChild(p);}
+ const top=body.querySelector('.rd-est');p.onclick=()=>{if(top)top.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>p.remove(),400);};
+ if(top&&'IntersectionObserver' in window){const io=new IntersectionObserver(es=>{if(es[0].isIntersecting&&p._listo){p.remove();io.disconnect();}},{threshold:.4});io.observe(top);setTimeout(()=>p._listo=1,900);}
+ const quita=()=>{if(!body.isConnected){p.remove();clearInterval(iv);}};const iv=setInterval(quita,1000);}
+// Crear tareas (Pendientes › Tareas) a quien le toca, desde el Daily report
+function rdTareas(L,btn){if(!L.length)return;
+ const m=hzModal(`<div class="hz-top"><div><small>Daily report</small><b>Mandar ${L.length===1?'tarea':L.length+' tareas'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <p class="ap-txt">Les sale en sus Tareas, en su check-list y, si no la hacen, en «Atrasado». Quita las que no quieras mandar.</p>
+  <div class="rd-tl">${L.map((x,i)=>`<label class="rd-tli"><input type="checkbox" checked data-i="${i}"><span><b>${escH(x.para)}</b>${escH(x.texto)}</span></label>`).join('')}</div>
+  <div class="hz-bts"><button type="button" class="hz-ok">Mandar</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelector('.hz-ok').onclick=async e=>{const b=e.target,sel=[...m.querySelectorAll('.rd-tli input:checked')].map(i=>L[+i.dataset.i]);if(!sel.length){toast('Elige al menos una',false);return;}
+  b.disabled=true;b.textContent='Mandando…';let ok=0;
+  for(const x of sel){const r=await agPost('seg-tarea-guardar',{texto:x.texto.slice(0,300),para:x.para,pacienteId:x.pacienteId||'',fecha:rdHoy(),creadaPor:miNombreCorto()}).catch(()=>({ok:false}));if(r&&r.ok)ok++;}
+  m.remove();if(ok){toast(`✓ ${ok===1?'Tarea mandada':ok+' tareas mandadas'}`,true);if(btn){btn.textContent='✓ Mandada';btn.style.pointerEvents='none';}}else toast('No se han podido mandar',false);};}
 // PDF: el reporte tal cual, listo para imprimir o guardar como PDF
 function rdPdf(card){const b=card.querySelector('.rd-body');if(!b||!RD.fecha)return;
  const css=[...document.querySelectorAll('style')].map(x=>x.textContent).join('\n');
