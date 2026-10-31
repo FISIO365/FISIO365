@@ -8725,15 +8725,17 @@ async function renderReporte(wrap,ultimo){
  pinta();
 }
 
-// ── Recordatorio del check-list: a partir de las 19:00, a quien hoy ha tenido citas y aún no lo ha enviado ──
+// ── Recordatorio del check-list: cuando ha terminado su última cita del día (cada uno sale a una hora), si aún no lo ha enviado ──
 // Punto en «Check-list» del menú y, una vez al día, un aviso abajo con lo que le falta. Al tocarlo, va a su check-list.
 let _chkT=0;
 async function chkRecordar(){try{
  if(!fisioActual||!apiPwd||fisioActual.role==='admin')return;
- const h=+new Date().toLocaleString('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false});if(h<19){chkPinta(0);return;}
+ const ahora=new Date().toLocaleTimeString('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hour12:false});if(ahora<'13:00'){chkPinta(0);return;}
  if(Date.now()-_chkT<10*60000)return;_chkT=Date.now();
  const d=await (await fetch(`/api/schedule?action=seg-cierre&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(fisioActual.nombre||'')}`)).json();
  if(!d.ok||d.enviado||!(d.dia&&d.dia.citas)){chkPinta(0);return;}
+ const fin=(()=>{const u=String(d.dia.ultima||'');if(!/^\d{2}:\d{2}$/.test(u))return '23:59';const t=+u.slice(0,2)*60+ +u.slice(3)+60;return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');})(); // su última cita + 1 hora
+ if(ahora<fin){chkPinta(0);return;}
  const falta=(d.dia.checks||[]).filter(c=>c.items&&c.items.length&&!c.aviso).length;chkPinta(1);
  let ya='';try{ya=localStorage.getItem('f365_chk_av')||'';}catch(_){}
  if(ya===d.fecha||document.querySelector('.chk-av'))return;try{localStorage.setItem('f365_chk_av',d.fecha);}catch(_){}
@@ -11754,7 +11756,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 const NOVEDADES=[
  {f:'2026-10-31',aviso:1,t:'Ejercicios en la app: si un paciente no los lleva por un motivo de peso (mayor, sin móvil…), en tu check-list toca «¿Alguno no lleva?» y apunta el motivo. Deja de salir como pendiente y dirección lo ve en el Daily report.'},
  {f:'2026-10-31',aviso:1,t:'En la cita, «No necesita más» ahora es «No hace falta»: eliges si está de alta, si no llegó a venir (no es paciente) o si ha dejado el tratamiento. Así no sale como pendiente ni para llamar.',ver:{sec:'agenda',pasos:[{el:'.ag-altab',txt:'Aquí.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
- {f:'2026-10-31',aviso:1,t:'Check-list: cada punto te dice si el panel lo ve hecho (✓) o qué te falta, con un botón «Arreglarlo» que te lleva directo. Lo que ya está bien se marca solo. Y a partir de las 19:00, si no lo has enviado, te lo recuerda.',ver:{sec:'rep',pasos:[{el:'.rp-c .rp-it',txt:'Cada punto te dice si te falta algo y te lleva a arreglarlo.'}]}},
+ {f:'2026-10-31',aviso:1,t:'Check-list: cada punto te dice si el panel lo ve hecho (✓) o qué te falta, con un botón «Arreglarlo» que te lleva directo. Lo que ya está bien se marca solo. Y cuando acabas tu última cita del día, si no lo has enviado, te lo recuerda.',ver:{sec:'rep',pasos:[{el:'.rp-c .rp-it',txt:'Cada punto te dice si te falta algo y te lleva a arreglarlo.'}]}},
  {f:'2026-10-31',aviso:1,dir:1,t:'Daily report: arriba del todo, «Faltan X cosas para cerrar el día», con todo lo pendiente en una lista (cobros, citas sin marcar, check-lists, atrasos). Toca cada una y te lleva a arreglarla. Si no falta nada: «Todo hecho».',ver:{sec:'rdia',pasos:[{el:'.rd-est',txt:'Aquí ves de un vistazo qué falta para cerrar el día al 100%.'}]}},
  {f:'2026-10-31',aviso:1,t:'Para mandarle a un paciente todas sus próximas citas por WhatsApp, junto con el enlace de su app: en la agenda, abre una de sus citas › «Enviarle sus citas» (o en su ficha › Citas › «Enviárselas»).',ver:{sec:'pac',pasos:[{el:'.fp-envc',txt:'Con este botón le mandas sus próximas citas y la app.',click:['#pacResultados .pt-r','.fp-seg button[data-t="citas"]']}]}},
  {f:'2026-11-02',aviso:1,t:'Tarjetas regalo: se compran en la app en 5 pasos y se pagan con tarjeta o en el centro. Para venderlas, Mensajes › Regalos › «Vender tarjetas regalo» y mandas el enlace por WhatsApp. Quien la recibe reserva desde su tarjeta y la cita entra con el código en las notas.',ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="reg"]',txt:'Toca Regalos.',click:['.ag-recb:not(.ag-pdfb)']},{el:'.rec-m .rg-wa',txt:'Aquí mandas el enlace para que la compren.',click:['.ag-recb:not(.ag-pdfb)','.rec-m .enc-tabs button[data-t="reg"]']},{el:'.rec-m .vl-box',txt:'Y aquí ves las que se han comprado.',click:['.ag-recb:not(.ag-pdfb)','.rec-m .enc-tabs button[data-t="reg"]']}]}},

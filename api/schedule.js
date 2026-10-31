@@ -2298,7 +2298,8 @@ async function cierreDia(fecha, soloFisio) {
       { k: 'tareas', t: 'Tareas', d: 'Tareas de hoy o atrasadas', items: tarPend.filter(r => fisioKey(nmSel(r.fields['PARA'])) === fisioKey(fisio)).map(r => ({ id: '', nombre: String(r.fields['TAREA'] || 'Tarea').slice(0, 60), extra: nomLink(r.fields['PACIENTE']) })) },
       { k: 'proxima', t: 'Próxima cita o seguimiento', d: 'Quien no reagenda, pasa a seguimiento con el motivo', items: uni(hs.filter(c => !conFutura.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c, 'sin cita ni seguimiento'))) },
     ];
-    out[fisio] = { citas: cs.length, hechas: hs.length, checks, pendientes: checks.filter(x => !x.aviso).reduce((t, x) => t + x.items.length, 0) };
+    const ultima = cs.map(c => String(c.fields['HORA'] || '').slice(0, 5)).filter(h => /^\d{1,2}:\d{2}$/.test(h)).map(h => h.padStart(5, '0')).sort().pop() || ''; // hora de su última cita del día
+    out[fisio] = { citas: cs.length, hechas: hs.length, ultima, checks, pendientes: checks.filter(x => !x.aviso).reduce((t, x) => t + x.items.length, 0) };
   }
   return out;
 }
