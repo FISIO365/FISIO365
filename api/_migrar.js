@@ -45,7 +45,7 @@ async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, 
       // 1) Adjuntos de toda la página: los que aún no están en Postgres se bajan de 8 en 8
       const adjF = new Set(t.fields.filter(f => f.type === 'multipleAttachments').map(f => f.name));
       const todos = adjuntos && adjF.size ? d.records.flatMap(r => Object.entries(r.fields || {}).filter(([k, v]) => adjF.has(k) && Array.isArray(v)).flatMap(([, v]) => v)) : [];
-      const yaEn = async ids => ids.length ? new Map((await db.query('select id, clave, bytes from archivos where id = any($1::text[])', [ids])).rows.map(x => [x.id, x])) : new Map();
+      const yaEn = async ids => ids.length ? new Map((await db.query(`select id, clave, bytes from archivos where id = any($1::text[])${ALM && ALM.url ? ' and ruta is not null' : ''}`, [ids])).rows.map(x => [x.id, x])) : new Map(); // con almacén, los guardados dentro de Postgres se vuelven a copiar
       let hay = await yaEn([...new Set(todos.map(a => 'att' + a.id.slice(3)))]);
       const bajar = [...new Map(todos.filter(a => !hay.has('att' + a.id.slice(3))).map(a => [a.id, a])).values()];
       for (let j = 0; j < bajar.length; j += 8) {
@@ -56,7 +56,7 @@ async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, 
             const ruta = PGM.rutaDe(id, a.filename);
             const r = await PGM.almacen('copiar', { ruta, url: a.url, tipo: a.type }).catch(e => ({ error: e.message }));
             if (!r.ok) { R.fallos = (R.fallos || 0) + 1; (R.sinCopiar = R.sinCopiar || []).push(`${a.filename} (${Math.round((a.size || 0) / 1e6)} MB): ${String(r.error || '').slice(0, 80)}`); return; }
-            await db.query('insert into archivos (id, clave, nombre, tipo, bytes, ruta) values ($1,$2,$3,$4,$5,$6) on conflict (id) do nothing', [id, clave, a.filename, a.type, r.bytes || a.size || 0, ruta]);
+            await db.query('insert into archivos (id, clave, nombre, tipo, bytes, ruta) values ($1,$2,$3,$4,$5,$6) on conflict (id) do update set ruta = excluded.ruta, bytes = excluded.bytes, datos = null', [id, clave, a.filename, a.type, r.bytes || a.size || 0, ruta]);
             R.adjuntos++; return;
           }
           const rr = await F(a.url).catch(() => null); if (!rr || !rr.ok) { log(`  ! no se pudo bajar ${a.filename} (${t.name})`); return; }
