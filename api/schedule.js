@@ -877,12 +877,29 @@ h1{font-size:23px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-s
 .pasos{margin:22px 0 0;text-align:left}.pa{display:flex;gap:11px;align-items:center;background:#faf7f4;border-radius:14px;padding:11px 12px;margin-bottom:7px;font-size:13.5px;color:#2b2420}.pa span{flex:none;width:32px;height:32px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center}.pa svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.pa small{display:block;font-size:12px;color:#7d6a60}
 .bt{display:flex;align-items:center;justify-content:center;width:100%;margin-top:16px;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border-radius:14px;padding:15px;text-decoration:none;animation:resp 2.6s 2.2s ease-in-out infinite}@keyframes resp{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}50%{box-shadow:0 0 0 7px rgba(194,85,46,.13)}}
 .fi{opacity:0;transform:translateY(8px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}.pie{margin-top:18px;font-size:12.5px;color:#7d6a60}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
-<body><div class="c"><svg class="reg" viewBox="0 0 96 96" aria-hidden="true"><path class="caja" d="M18 46h60v34a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path class="caja" d="M48 46v40"/><g class="tapa"><rect x="12" y="32" width="72" height="14" rx="5"/><path class="lazo" d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/></g></svg>
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}
+.fr{margin:18px 0 0;background:#faf7f4;border-radius:16px;padding:16px 16px 14px;text-align:left;font-size:14px;line-height:1.55;color:#2b2420;font-style:italic;position:relative}.fr:before{content:'“';position:absolute;top:-14px;left:12px;font:700 46px Georgia,serif;color:#c2552e;font-style:normal}.fr small{display:block;margin-top:8px;font-style:normal;font-size:12px;color:#7d6a60}
+body.in .c,body.in .c *{animation-play-state:paused!important}
+#ov{position:fixed;inset:0;z-index:5;background:#efebe5;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;transition:opacity .6s}#ov.fu{opacity:0;pointer-events:none}
+#ov small{font-size:12px;font-weight:700;letter-spacing:.18em;color:#c2552e}#ov p{margin:6px 0 22px;font-size:14px;color:#5c4f47}
+.rl{width:min(300px,80vw);height:84px;overflow:hidden;background:#fff;border-radius:22px;box-shadow:0 10px 30px rgba(20,20,20,.07);position:relative}.rl:before,.rl:after{content:'';position:absolute;left:0;right:0;height:22px;z-index:1}.rl:before{top:0;background:linear-gradient(#fff,rgba(255,255,255,0))}.rl:after{bottom:0;background:linear-gradient(rgba(255,255,255,0),#fff)}
+.rs{transition:transform 3.2s cubic-bezier(.12,.8,.2,1)}.rs div{height:84px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;color:#b9aca2}.rs div.w{font-size:26px;font-weight:700;color:#c2552e}
+.st{display:flex;gap:8px;margin:4px 0 18px}.st svg{width:38px;height:38px;fill:#f1e4da;transform:scale(.6);opacity:0;animation:sti .45s cubic-bezier(.3,1.6,.5,1) forwards}@keyframes sti{to{opacity:1;transform:none;fill:#e9a23b}}
+.nm{font-size:30px;font-weight:700;color:#c2552e;opacity:0;animation:pop .6s 2.6s cubic-bezier(.3,1.5,.5,1) forwards}
+.cf{position:fixed;top:-12px;width:8px;height:12px;border-radius:2px;z-index:6;pointer-events:none;animation:cae linear forwards}@keyframes cae{to{transform:translateY(110vh) rotate(720deg)}}</style></head>
+<body${G.intro ? ' class="in"' : ''}>${G.intro ? (G.intro.tipo === 'creativa'
+  ? `<div id="ov"><small>LA RESEÑA DE ${e(String(G.intro.mes || '').toUpperCase())}</small><p>De todas las reseñas del mes, la que más nos ha gustado es…</p><div class="st">${[0, 1, 2, 3, 4].map(i => `<svg viewBox="0 0 24 24" style="animation-delay:${0.3 + i * 0.3}s"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>`).join('')}</div><div class="nm">${e(G.intro.pila || '¡La tuya!')}</div></div>`
+  : `<div id="ov"><small>SORTEO DE ${e(String(G.intro.mes || '').toUpperCase())}</small><p>${G.intro.n > 1 ? `Entre las ${G.intro.n} personas que nos habéis dejado reseña…` : 'Entre quienes nos habéis dejado reseña…'}</p><div class="rl"><div class="rs" id="rs"></div></div></div>`) : ''}
+<div class="c"><svg class="reg" viewBox="0 0 96 96" aria-hidden="true"><path class="caja" d="M18 46h60v34a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path class="caja" d="M48 46v40"/><g class="tapa"><rect x="12" y="32" width="72" height="14" rx="5"/><path class="lazo" d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/></g></svg>
 <h1 class="fi" style="animation-delay:.9s">${e(G.h1)}</h1><p class="sub fi" style="animation-delay:1s">${e(G.sub)}</p>
 <div class="tk"><small>${e(G.tkS)}</small><b>${e(G.tkB)}</b><span>${e(G.tkSpan)}</span><hr>${(G.ems || []).map(x => `<em>${e(x)}</em>`).join('')}</div>
-<div class="pasos fi" style="animation-delay:1.8s">${(G.pasos || []).map(([ic, t, sm]) => `<div class="pa"><span><svg viewBox="0 0 24 24">${ic}</svg></span><div>${e(t)}<small>${e(sm)}</small></div></div>`).join('')}</div>
-<a class="bt fi" style="animation-delay:2s" href="${huecosSiempre(30)}">${e(G.btn)}</a><p class="sub" style="font-size:12.5px;margin-top:10px">¿Prefieres que te lo busquemos nosotros? <a href="https://wa.me/34${String(G.tel || '672893949').replace(/\D/g, '').slice(-9)}?text=${encodeURIComponent(G.waTxt)}" target="_blank" rel="noopener" style="color:#c2552e;font-weight:600">Escríbenos</a></p><p class="pie">FISIO365 · ${e(G.dir)}</p></div></body></html>`;
+${G.intro && G.intro.frase ? `<div class="fr fi" style="animation-delay:1.7s">${e(G.intro.frase)}<small>Tu reseña en Google</small></div>` : ''}<div class="pasos fi" style="animation-delay:1.8s">${(G.pasos || []).map(([ic, t, sm]) => `<div class="pa"><span><svg viewBox="0 0 24 24">${ic}</svg></span><div>${e(t)}<small>${e(sm)}</small></div></div>`).join('')}</div>
+<a class="bt fi" style="animation-delay:2s" href="${huecosSiempre(30)}">${e(G.btn)}</a><p class="sub" style="font-size:12.5px;margin-top:10px">¿Prefieres que te lo busquemos nosotros? <a href="https://wa.me/34${String(G.tel || '672893949').replace(/\D/g, '').slice(-9)}?text=${encodeURIComponent(G.waTxt)}" target="_blank" rel="noopener" style="color:#c2552e;font-weight:600">Escríbenos</a></p><p class="pie">FISIO365 · ${e(G.dir)}</p></div>${G.intro ? `<script>(function(){var b=document.body,ov=document.getElementById('ov'),rd=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+function cf(){if(rd)return;var C=['#c2552e','#e9a23b','#f3c9b1','#2b2420','#7fb08a'];for(var i=0;i<70;i++){var d=document.createElement('i');d.className='cf';d.style.left=Math.random()*100+'vw';d.style.background=C[i%C.length];d.style.animationDuration=(2.2+Math.random()*1.8)+'s';d.style.animationDelay=Math.random()*.6+'s';d.style.transform='rotate('+Math.random()*180+'deg)';b.appendChild(d);setTimeout(function(x){return function(){x.remove();};}(d),5000);}}
+function fin(){ov.classList.add('fu');b.classList.remove('in');cf();setTimeout(function(){ov.remove();},700);}
+if(rd||!ov){b.classList.remove('in');if(ov)ov.remove();return;}ov.onclick=fin;
+var rs=document.getElementById('rs');if(rs){var n=${Math.min(Math.max(Number(G.intro.n) || 12, 6), 99)},h='';for(var i=0;i<28;i++)h+='<div>Reseña nº '+(1+Math.floor(Math.random()*n))+'</div>';h+='<div class="w">${e(G.intro.pila || '¡Tú!')}</div>';rs.innerHTML=h;
+ requestAnimationFrame(function(){requestAnimationFrame(function(){rs.style.transform='translateY(-'+(28*84)+'px)';});});setTimeout(fin,4300);}else setTimeout(fin,3900);})();</script>` : ''}</body></html>`;
 }
 function paginaTarjeta(D) {
   return paginaDetalle({ titulo: 'Tu regalo', ogTitle: `${D.imp} € de regalo${D.pila ? ', ' + D.pila : ''}`, ogDesc: 'Gracias por recomendarnos. Te lo descontamos en tu próxima sesión.', og: D.og,
@@ -898,7 +915,8 @@ function paginaPremio(D) {
     h1: `¡Enhorabuena${D.pila ? ', ' + D.pila : ''}!`, sub: D.tipo === 'creativa' ? `Tu reseña ha sido la que más nos ha gustado en ${mesTxt}. Gracias por tus palabras: nos dan muchísima energía.` : `Cada mes sorteamos una sesión entre quienes nos dejáis vuestra opinión en Google, y en ${mesTxt} has salido tú.`,
     tkS: D.tipo === 'creativa' ? 'LA RESEÑA DEL MES' : 'SORTEO DEL MES', tkB: '1 sesión', tkSpan: 'de fisioterapia, gratis para ti', ems: [D.pila ? `Para ${D.pila}` : '', `Premio de ${mesTxt}`].filter(Boolean),
     pasos: [['<path d="m5 12.5 4.5 4.5L19 7.5"/>', 'Es tuya, sin hacer nada más', 'Solo dinos que vienes con el premio'], ['<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>', 'Elige cuándo te va bien', 'Reserva en la app o escríbenos']],
-    btn: 'Reservar mi sesión gratis', waTxt: 'Hola, me ha tocado la sesión gratis del sorteo y quiero reservarla', tel: D.tel, dir: D.dir });
+    btn: 'Reservar mi sesión gratis', waTxt: 'Hola, me ha tocado la sesión gratis del sorteo y quiero reservarla', tel: D.tel, dir: D.dir,
+    intro: { tipo: D.tipo, pila: D.pila, n: D.n, frase: D.frase, mes: mesTxt.split(' ')[0] } });
 }
 function ogPremioSvg({ pila, tipo, mesTxt }) {
   const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `para ti, ${pila}` : 'para ti', sz = t1.length > 16 ? Math.max(24, Math.round(34 * 16 / t1.length)) : 34;
@@ -3189,7 +3207,7 @@ module.exports = async function handler(req, res) {
     }
     const C0 = (await conf().catch(() => CONF_DEF)).clinica || CONF_DEF.clinica;
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(MARCA.marcar(paginaPremio({ pila, tipo: t, mesTxt, og: `${APPU()}/premio/${m}-${t}-${sg}.png`, dir: C0.direccion || '', tel: C0.tel || '' }), CLI));
+    return res.status(200).send(MARCA.marcar(paginaPremio({ pila, tipo: t, mesTxt, n: Number(g.n) || 0, frase: String(g.frase || ''), og: `${APPU()}/premio/${m}-${t}-${sg}.png`, dir: C0.direccion || '', tel: C0.tel || '' }), CLI));
   }
   if (action === 'tarjeta-img' || action === 'tarjeta-pagina' || action === 'tarjeta-og') {
     const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(404).end();
@@ -4575,7 +4593,7 @@ module.exports = async function handler(req, res) {
               let w = null;
               if (q.op === 'azar') { const otro = gan.creativa && gan.creativa.pacienteId, pool = lista.filter(x => x.pacienteId !== otro && x.pacienteId !== (gan.azar && gan.azar.pacienteId)); const base = pool.length ? pool : lista.filter(x => x.pacienteId !== otro); if (!base.length) return res.status(400).json({ ok: false, error: 'Todavía no hay nadie con la reseña comprobada este mes' }); w = base[require('crypto').randomInt(base.length)]; }
               else { w = lista.find(x => x.pacienteId === q.pacienteId); if (!w) return res.status(400).json({ ok: false, error: 'Ese paciente no está en el sorteo de este mes (¿has comprobado que puso la reseña?)' }); }
-              gan[tipo] = { pacienteId: w.pacienteId, nombre: w.nombre, pila: w.pila, tel: w.tel, cuando: new Date().toISOString(), quien };
+              gan[tipo] = { pacienteId: w.pacienteId, nombre: w.nombre, pila: w.pila, tel: w.tel, cuando: new Date().toISOString(), quien, n: lista.length, frase: tipo === 'creativa' ? String(q.frase || '').trim().slice(0, 600) : '' };
             }
             await guardarAjuste(clave, gan, quien);
           }
