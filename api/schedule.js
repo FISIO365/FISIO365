@@ -3449,9 +3449,21 @@ module.exports = async function handler(req, res) {
           const d = await at(`${COM}/${root.id}`, { method: 'PATCH', body: JSON.stringify({ fields }) }); if (d.error) throw new Error('No se ha podido guardar'); root.fields = d.fields || root.fields; return o; };
         const buscar = async id => { if (!okId(id)) throw new Error('Comunicación no válida'); const d = await at(`${COM}/${id}`); if (d.error || !d.fields || d.fields.HILO) throw new Error('No se encuentra la comunicación'); return d; };
 
+        // Las tareas de School de prueba (antes de que empiece la serie, el 2/11/2026): dirección puede borrarlas de golpe
+        const esPruebaSchool = r => String((r.fields || {}).DE || '').trim() === 'School' && String((r.fields || {}).FECHA || '') < '2026-11-02';
         if (action === 'seg-com-buzon') {
-          const hs = (await cargar()).map(x => x.h).filter(participa).map(({ msgs, ...h }) => h).sort((a, b) => b.ultima.localeCompare(a.ultima));
-          return res.status(200).json({ ok: true, yo, equipo, hilos: hs });
+          const todo = await cargar();
+          const hs = todo.map(x => x.h).filter(participa).map(({ msgs, ...h }) => h).sort((a, b) => b.ultima.localeCompare(a.ultima));
+          return res.status(200).json({ ok: true, yo, equipo, hilos: hs, pruebasSchool: esDirYo ? todo.filter(x => esPruebaSchool(x.r)).length : 0 });
+        }
+        if (action === 'seg-com-borrar') { // solo dirección: borrar una comunicación (con sus respuestas) o las pruebas de School
+          if (!esDirYo) return res.status(403).json({ ok: false, error: 'Solo dirección puede borrar comunicaciones' });
+          const rs = await todosT(COM, 'fields[]=HILO&fields[]=DE&fields[]=FECHA');
+          const raices = q.pruebasSchool ? rs.filter(r => !r.fields.HILO && esPruebaSchool(r)).map(r => r.id) : (okId(q.id) && rs.some(r => r.id === q.id && !r.fields.HILO) ? [q.id] : []);
+          if (!raices.length) return res.status(200).json({ ok: true, n: 0 });
+          const ids = [...raices, ...rs.filter(r => raices.includes(r.fields.HILO)).map(r => r.id)];
+          for (let i = 0; i < ids.length; i += 10) await at(`${COM}?${ids.slice(i, i + 10).map(x => 'records[]=' + x).join('&')}`, { method: 'DELETE' });
+          return res.status(200).json({ ok: true, n: raices.length });
         }
         if (action === 'seg-com-hilo') {
           const root = await buscar(q.id);
@@ -4488,20 +4500,24 @@ module.exports = async function handler(req, res) {
           c1.forEach(r => pon((r.fields['RELACIÓN - CITA'] || [])[0], null, r.fields['ENCUESTA IR A RESEÑA']));
           const falta = Object.values(P).filter(x => !x.nombre).map(x => x.pacienteId);
           for (let i = 0; i < falta.length; i += 40) { const l = falta.slice(i, i + 40); const d = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`OR(${l.map(id => `RECORD_ID()='${id}'`).join(',')})`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`).catch(() => []); d.forEach(r => pon(r.id, r.fields)); }
-          const lista = Object.values(P).filter(x => x.nombre).sort((a, b) => a.fecha.localeCompare(b.fecha));
+          // Ir a Google no es lo mismo que dejar la reseña: el equipo comprueba en Google si la ha puesto. Solo entran en el sorteo las comprobadas
+          const claveV = 'resenas-ok-' + mes; let ver = await ajuste(claveV, {}) || {};
+          if (q.op === 'verificar' && okId(q.pacienteId)) { if (q.v === true || q.v === false) ver[q.pacienteId] = { ok: q.v, quien: String(q.quien || '').slice(0, 40), cuando: new Date().toISOString() }; else delete ver[q.pacienteId]; await guardarAjuste(claveV, ver, String(q.quien || '')); }
+          const listaTodos = Object.values(P).filter(x => x.nombre).sort((a, b) => a.fecha.localeCompare(b.fecha)).map(x => Object.assign(x, { resena: ver[x.pacienteId] ? (ver[x.pacienteId].ok ? 'si' : 'no') : '' }));
+          const lista = listaTodos.filter(x => x.resena === 'si');
           let gan = await ajuste(clave, {}) || {};
           if (q.op === 'azar' || q.op === 'elegir' || q.op === 'quitar') {
             const tipo = q.tipo === 'creativa' ? 'creativa' : 'azar', quien = String(q.quien || '').slice(0, 40);
             if (q.op === 'quitar') delete gan[tipo];
             else {
               let w = null;
-              if (q.op === 'azar') { const otro = gan.creativa && gan.creativa.pacienteId, pool = lista.filter(x => x.pacienteId !== otro && x.pacienteId !== (gan.azar && gan.azar.pacienteId)); const base = pool.length ? pool : lista.filter(x => x.pacienteId !== otro); if (!base.length) return res.status(400).json({ ok: false, error: 'Todavía no hay nadie en el sorteo este mes' }); w = base[require('crypto').randomInt(base.length)]; }
-              else { w = lista.find(x => x.pacienteId === q.pacienteId); if (!w) return res.status(400).json({ ok: false, error: 'Ese paciente no está en el sorteo de este mes' }); }
+              if (q.op === 'azar') { const otro = gan.creativa && gan.creativa.pacienteId, pool = lista.filter(x => x.pacienteId !== otro && x.pacienteId !== (gan.azar && gan.azar.pacienteId)); const base = pool.length ? pool : lista.filter(x => x.pacienteId !== otro); if (!base.length) return res.status(400).json({ ok: false, error: 'Todavía no hay nadie con la reseña comprobada este mes' }); w = base[require('crypto').randomInt(base.length)]; }
+              else { w = lista.find(x => x.pacienteId === q.pacienteId); if (!w) return res.status(400).json({ ok: false, error: 'Ese paciente no está en el sorteo de este mes (¿has comprobado que puso la reseña?)' }); }
               gan[tipo] = { pacienteId: w.pacienteId, nombre: w.nombre, pila: w.pila, tel: w.tel, cuando: new Date().toISOString(), quien };
             }
             await guardarAjuste(clave, gan, quien);
           }
-          return res.status(200).json({ ok: true, mes, participantes: lista, ganadores: gan });
+          return res.status(200).json({ ok: true, mes, participantes: listaTodos, ganadores: gan });
         }
         if (action === 'seg-agenda-val-quitar') { // quitar una fila de Valoraciones («Está mejor» marcado por error, o una encuesta que no hace falta ver)
           const id = String(q.id || ''), pid = String(q.pacienteId || '');
