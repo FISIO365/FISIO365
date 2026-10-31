@@ -51,7 +51,9 @@ alter table registros enable row level security;
 alter table borrados enable row level security;
 alter table archivos enable row level security;
 alter table contadores enable row level security;
-alter table archivos add column if not exists ruta text;`;
+alter table archivos add column if not exists ruta text;
+alter table registros add column if not exists orden bigint not null default (extract(epoch from clock_timestamp()) * 1000000)::bigint;`;
+// orden = el orden en que Airtable devuelve los registros sin «sort» (los nuevos, al final, como allí)
 // RLS activado y sin reglas: la API pública de Supabase (clave anon) no puede leer nada; solo el servidor, que entra con DB_URL
 
 // ── Caché por tabla (en cada instancia del servidor) ──
@@ -65,14 +67,14 @@ async function filas(tb) {
   c.cargando = (async () => {
     const D = db();
     if (!c.hasta || Date.now() - c.t > 15 * 60000) { // primera carga (o cada 15 min, por seguridad)
-      const r = await D.query('select id, fields, creado, modificado from registros where tabla = $1', [tb]);
+      const r = await D.query('select id, fields, creado, modificado, orden from registros where tabla = $1', [tb]);
       c.rows = new Map(); let mx = 0;
       r.rows.forEach(x => { c.rows.set(x.id, fila(x)); mx = Math.max(mx, +new Date(x.modificado)); });
       c.hasta = mx ? new Date(mx) : new Date(0); c.t = Date.now();
     } else {
       const desde = new Date(c.hasta.getTime() - MARGEN);
-      const r = await D.query(`select id, fields, creado, modificado, false as borrado from registros where tabla = $1 and modificado > $2
-        union all select id, null, null, t, true from borrados where tabla = $1 and t > $2`, [tb, desde]);
+      const r = await D.query(`select id, fields, creado, modificado, orden, false as borrado from registros where tabla = $1 and modificado > $2
+        union all select id, null, null, t, null, true from borrados where tabla = $1 and t > $2`, [tb, desde]);
       let mx = c.hasta.getTime();
       r.rows.forEach(x => { if (x.borrado) { const ya = c.rows.get(x.id); if (!ya || +new Date(x.modificado) >= +ya.modificado) c.rows.delete(x.id); } else c.rows.set(x.id, fila(x)); mx = Math.max(mx, +new Date(x.modificado)); });
       c.hasta = new Date(mx);
@@ -81,7 +83,8 @@ async function filas(tb) {
   })();
   try { return await c.cargando; } finally { c.cargando = null; }
 }
-const fila = x => ({ id: x.id, fields: typeof x.fields === 'string' ? JSON.parse(x.fields) : (x.fields || {}), creado: new Date(x.creado), modificado: new Date(x.modificado) });
+const porOrden = (a, b) => (a.orden - b.orden) || (a.creado - b.creado) || (a.id < b.id ? -1 : 1);
+const fila = x => ({ id: x.id, fields: typeof x.fields === 'string' ? JSON.parse(x.fields) : (x.fields || {}), creado: new Date(x.creado), modificado: new Date(x.modificado), orden: x.orden != null ? Number(x.orden) : new Date(x.creado).getTime() * 1000 });
 function fueraCache(tb, id) { const c = CACHE[tb]; if (c && c.hasta) c.rows.delete(id); }
 
 // ── Valores de campo ──
@@ -199,15 +202,15 @@ async function listar(tb, q) {
     catch (e) { return err(422, e.tipo || 'INVALID_FILTER_BY_FORMULA', e.message); }
     L = out;
   }
-  // Orden: sort[i][field] / sort[i][direction]; sin orden, por fecha de creación (como la vista por defecto)
+  // Orden: sort[i][field] / sort[i][direction]; sin orden (y en los empates), el de Airtable
   const so = [];
   for (const [k, v] of q.entries()) { const m = k.match(/^sort\[(\d+)\]\[(field|direction)\]$/); if (m) { so[+m[1]] = so[+m[1]] || {}; so[+m[1]][m[2]] = v; } }
   const S = so.filter(Boolean).filter(s => s.field);
   if (S.length) {
     const keys = new Map();
     for (const r of L) { const ks = []; for (const s of S) { const f = campo(tb, s.field); if (!f) return err(422, 'INVALID_SORT_FIELD', 'Unknown field ' + s.field); ks.push(valorFormula(tb, r, f, ctx)); } keys.set(r.id, ks); }
-    L.sort((a, b) => { const A = keys.get(a.id), B = keys.get(b.id); for (let i = 0; i < S.length; i++) { const d = cmpOrden(A[i], B[i]) * (String(S[i].direction).toLowerCase() === 'desc' ? -1 : 1); if (d) return d; } return a.creado - b.creado; });
-  } else L.sort((a, b) => a.creado - b.creado || (a.id < b.id ? -1 : 1));
+    L.sort((a, b) => { const A = keys.get(a.id), B = keys.get(b.id); for (let i = 0; i < S.length; i++) { const d = cmpOrden(A[i], B[i]) * (String(S[i].direction).toLowerCase() === 'desc' ? -1 : 1); if (d) return d; } return porOrden(a, b); });
+  } else L.sort(porOrden);
   const max = +q.get('maxRecords') || 0; if (max > 0) L = L.slice(0, max);
   const ps = Math.min(100, Math.max(1, +q.get('pageSize') || 100)), off = +(q.get('offset') || 0) || 0;
   const pag = L.slice(off, off + ps);
@@ -244,7 +247,7 @@ async function aGuardar(tb, f, v, typecast, c) {
         // typecast: busca por el campo principal y, si no está, lo crea
         const lt = f.o.link, rows = await filas(lt), p = T[lt].prim;
         let hit = null; for (const r of rows.values()) if (FX.texto(r.fields[p.name]).trim() === String(x).trim()) { hit = r; break; }
-        if (!hit) { hit = { id: nuevoId(), fields: { [p.name]: String(x) }, creado: new Date(), modificado: new Date() }; await c.query('insert into registros (tabla, id, fields, creado, modificado) values ($1,$2,$3,clock_timestamp(),clock_timestamp())', [lt, hit.id, JSON.stringify(hit.fields)]); if (c.__tocadas) c.__tocadas.add(lt); }
+        if (!hit) { hit = { id: nuevoId(), fields: { [p.name]: String(x) }, creado: new Date(), modificado: new Date(), orden: Date.now() * 1000 }; await c.query('insert into registros (tabla, id, fields, creado, modificado) values ($1,$2,$3,clock_timestamp(),clock_timestamp())', [lt, hit.id, JSON.stringify(hit.fields)]); if (c.__tocadas) c.__tocadas.add(lt); }
         out.push(hit.id);
       }
       return [...new Set(out)];

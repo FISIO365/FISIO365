@@ -91,9 +91,13 @@ async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, 
       }
       if (cortar) return { sigue: { t: t.id, off }, resumen };
       if (filas.length) {
-        await db.query(`insert into registros (tabla, id, fields, creado, modificado)
-          select $1, x.id, x.f, x.c::timestamptz, clock_timestamp() from jsonb_to_recordset($2::jsonb) as x(id text, f jsonb, c text)
-          on conflict (id) do update set fields = excluded.fields, modificado = clock_timestamp() where registros.fields is distinct from excluded.fields`, [t.id, JSON.stringify(filas)]);
+        // orden: el de Airtable (páginas en orden; dentro de la página, su posición). Microsegundos, como los registros nuevos
+        const base = Date.now() * 1000; filas.forEach((x, i) => { x.o = base + i; });
+        await db.query(`insert into registros (tabla, id, fields, creado, modificado, orden)
+          select $1, x.id, x.f, x.c::timestamptz, clock_timestamp(), x.o from jsonb_to_recordset($2::jsonb) as x(id text, f jsonb, c text, o bigint)
+          on conflict (id) do update set fields = excluded.fields, orden = excluded.orden,
+            modificado = case when registros.fields is distinct from excluded.fields then clock_timestamp() else registros.modificado end`, [t.id, JSON.stringify(filas)]);
+        await espera(1); // que la página siguiente tenga un «base» mayor
         await db.query('insert into migrar_vistos (tabla, id) select $1, unnest($2::text[]) on conflict do nothing', [t.id, filas.map(x => x.id)]);
       }
       for (const [fid, mx] of Object.entries(maxAuto)) await db.query('insert into contadores (tabla, campo, n) values ($1,$2,$3) on conflict (tabla, campo) do update set n = greatest(contadores.n, excluded.n)', [t.id, fid, mx]);
