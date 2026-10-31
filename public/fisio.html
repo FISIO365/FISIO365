@@ -427,7 +427,10 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .rp-it{display:flex;align-items:flex-start;gap:12px;width:100%;box-sizing:border-box;text-align:left;font-family:var(--font);background:none;border:none;border-top:1px solid #f1ede9;padding:14px 2px;cursor:pointer}.rp-it:first-of-type{border-top:none}
 .rp-ck{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid #d9cfc7;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700;transition:all .15s}.rp-it.on .rp-ck{background:#16803c;border-color:#16803c}
 .rp-tx{flex:1;min-width:0;font-size:14.5px;line-height:1.35;color:#1e2a38;padding-top:2px}.rp-it.on .rp-tx{color:#7d6a60}
-.rp-av{display:block;margin-top:6px;font-size:12.5px;color:#b45309;background:#fdf1e8;border-radius:10px;padding:7px 10px;line-height:1.45}.rp-av u{text-decoration:none;font-weight:600;color:#c2552e;cursor:pointer}.rp-av.ok{color:#16803c;background:#e8f5ec}
+.chk-av{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));z-index:900;width:min(520px,calc(100% - 24px));display:flex;align-items:stretch;background:#1a1714;color:#f4f0ea;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}.chk-avb{flex:1;text-align:left;background:none;border:none;color:inherit;font-family:var(--font);padding:14px 16px;display:flex;flex-direction:column;gap:3px;cursor:pointer}.chk-avb b{font-size:15px;color:#f3a37c}.chk-avb span{font-size:13px;line-height:1.4;color:#e6ddd3}.chk-avx{background:none;border:none;color:#bdb3a8;font-size:16px;padding:0 16px;cursor:pointer}
+.chk-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ee2155;margin-left:6px;vertical-align:middle}
+.rp-res{margin:10px 0 4px;font-size:13px;line-height:1.45;border-radius:12px;padding:10px 12px}.rp-res.mal{background:#fdecea;color:#9b1c13}.rp-res.ok{background:#e8f5ec;color:#16803c}.rp-okp{display:block;margin-top:5px;font-size:12px;font-weight:600;color:#16803c}.rp-arr{display:inline-block;margin-left:6px;font-style:normal;font-weight:700;color:#fff;background:#c2552e;border-radius:99px;padding:3px 10px;font-size:12px;cursor:pointer}
+.rp-av{display:block;margin-top:6px;font-size:12.5px;color:#9b1c13;background:#fdecea;border-radius:10px;padding:7px 10px;line-height:1.45}.rp-av u{text-decoration:none;font-weight:600;color:#c2552e;cursor:pointer}.rp-av.ok{color:#16803c;background:#e8f5ec}
 .rp-sub{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:12.5px;color:#7d6a60;line-height:1.35}.rp-tx b{font-weight:700;color:#1e2a38}.rp-it.on .rp-tx b{color:#7d6a60}.rp-sub b{color:#5c4f47}.rp-sub span::before{content:'· ';color:#c2552e;font-weight:700}
 .rp-nota{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:12px;resize:vertical;margin-top:4px}
 .rp-env{display:block;width:100%;margin-top:12px;padding:14px;border:none;border-radius:14px;background:#c2552e;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer}.rp-env.armado{background:#1e2a38}.rp-env:disabled{opacity:.6}
@@ -2271,7 +2274,7 @@ function pintarPerfil(){if(!fisioActual)return;try{setTimeout(novPunto,0);}catch
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=(fisioActual.role==='admin'?'Administración':'Fisioterapeuta')+(fisioActual.direccion?' · Dirección':'');
  const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{if('direccion' in fisioActual){const d=!!fisioActual.direccion;[['sb-rend','pmRend'],['sb-stats','pmStats'],['sb-admin','pmAdmin']].forEach(([sb,pm])=>{const a=$(sb),b=$(pm);if(a)a.style.display=d?'':'none';if(b)b.style.display=d?'':'none';});}}catch(e){}// Rendimiento, Estadísticas y Administración: solo dirección (casilla «Dirección» en Equipo)
- try{RD_DIR=('direccion' in fisioActual)?!!fisioActual.direccion:['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});if(RD_DIR)$('sb-rep').style.display='';const t=$('sb-rep')&&$('sb-rep').querySelector('.sb-txt');if(t)t.textContent=RD_DIR?'Daily report':'Check-list';rdiaBadge();}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}try{sugContar();encContar();}catch(e){}try{const v=fisioActual.role!=='admin';['sb-mis','pmMis'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
+ try{RD_DIR=('direccion' in fisioActual)?!!fisioActual.direccion:['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});if(RD_DIR)$('sb-rep').style.display='';const t=$('sb-rep')&&$('sb-rep').querySelector('.sb-txt');if(t)t.textContent=RD_DIR?'Daily report':'Check-list';rdiaBadge();}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{comVisibilidad();}catch(e){}try{sugContar();encContar();}catch(e){}setTimeout(()=>{try{chkRecordar();}catch(e){}},4000);try{const v=fisioActual.role!=='admin';['sb-mis','pmMis'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
 function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){pregunta('¿Cerrar sesión en este dispositivo?',{si:'Cerrar sesión'}).then(ok=>{if(ok)cerrarSesionPanel();});return false;}
@@ -8660,6 +8663,12 @@ async function renderReporte(wrap){
  const KEY='f365_rep_'+d.fecha+'_'+yo;let marc=new Set();try{marc=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'));}catch(_){}
  if(d.enviado&&d.enviado.marcados&&!marc.size)String(d.enviado.marcados).split('\n').forEach(l=>{if(l.startsWith('✓')){const it=(d.items||[]).find(x=>l.slice(2)===x.t.replace(/\*\*/g,''));if(it)marc.add(it.k);}});
  const guarda=()=>{try{localStorage.setItem(KEY,JSON.stringify([...marc]));}catch(_){}};
+ // Lo que el panel comprueba y ve hecho se marca solo (una vez: si alguien lo desmarca, se respeta)
+ {const chk0=Object.fromEntries(((d.dia&&d.dia.checks)||[]).map(c=>[c.k,c]));let auto=[];try{auto=JSON.parse(localStorage.getItem(KEY+'_auto')||'[]');}catch(_){}
+  (d.items||[]).forEach(x=>{const c=x.auto&&chk0[x.auto];if(c&&!c.items.length&&!c.aviso&&!auto.includes(x.k)&&d.dia&&d.dia.citas){marc.add(x.k);auto.push(x.k);}});
+  try{localStorage.setItem(KEY+'_auto',JSON.stringify(auto));}catch(_){}guarda();}
+ // A dónde ir para arreglar cada punto
+ const IR={marcar:()=>showSection('agenda'),consent:()=>showSection('tar'),app:()=>showSection('tar'),proxima:()=>showSection('tar'),llamadas:()=>showSection('seg'),chat:()=>showSection('msg'),tareas:()=>showSection('tar')};
  const fechaTxt=new Date(d.fecha+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
  const hora=t=>t?new Date(t).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
  const pinta=()=>{
@@ -8669,17 +8678,19 @@ async function renderReporte(wrap){
 }
   if(esFisio){
    const items=d.items||[],chk=Object.fromEntries(((d.dia&&d.dia.checks)||[]).map(c=>[c.k,c]));
-   const n=items.filter(x=>marc.has(x.k)).length,tot=items.length,todo=n===tot;
+   const n=items.filter(x=>marc.has(x.k)).length,tot=items.length,todo=n===tot,nFalta=items.filter(x=>{const c=x.auto&&chk[x.auto];return c&&c.items.length;}).length;
    if(d.enviado)h+=`<div class="rp-ok">✓ Check-list enviado a las ${hora(d.enviado.enviado)}${todo?'':' · puedes volver a enviarlo'}</div>`;
-   h+=`<div class="rp-c"><div class="rp-h"><div><b>Mi check-list de hoy</b><small>${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}${d.dia&&d.dia.citas?' · '+d.dia.hechas+(d.dia.hechas===1?' sesión hecha':' sesiones hechas'):' · hoy no tienes citas'}</small></div><span class="rp-n${todo?' ok':''}">${n}/${tot}</span></div><div class="rp-bar${todo?' ok':''}"><i style="width:${Math.round(n/tot*100)}%"></i></div>`+
+   h+=`<div class="rp-c"><div class="rp-h"><div><b>Mi check-list de hoy</b><small>${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}${d.dia&&d.dia.citas?' · '+d.dia.hechas+(d.dia.hechas===1?' sesión hecha':' sesiones hechas'):' · hoy no tienes citas'}</small></div><span class="rp-n${todo?' ok':''}">${n}/${tot}</span></div><div class="rp-bar${todo?' ok':''}"><i style="width:${Math.round(n/tot*100)}%"></i></div>${d.dia&&d.dia.citas?(nFalta?`<div class="rp-res mal">El panel ve <b>${nFalta} ${nFalta===1?'cosa':'cosas'} sin hacer</b>. Las tienes marcadas en rojo, con el botón para arreglarlas.</div>`:'<div class="rp-res ok">✓ El panel no ve nada pendiente tuyo. Revisa el resto y envíalo.</div>'):''}`+
     items.map(x=>{const c=x.auto&&chk[x.auto];const pend=c&&c.items.length?c.items:null;
-     return `<button type="button" class="rp-it${marc.has(x.k)?' on':''}" data-k="${x.k}"><span class="rp-ck">${marc.has(x.k)?'✓':''}</span><span class="rp-tx">${negr(x.t)}${x.sub&&x.sub.length?`<span class="rp-sub">${x.sub.map(z=>`<span>${negr(z)}</span>`).join('')}</span>`:''}${pend?`<span class="rp-av">${c.aviso?'Ojo':'Tengo '+pend.length+' pendiente'+(pend.length>1?'s':'')}: ${pend.slice(0,6).map(i=>(i.id?`<u data-ficha="${i.id}" data-nom="${escH(i.nombre)}">${escH(capTit(i.nombre))}</u>`:`<b>${escH(i.nombre)}</b>`)+(i.extra?' ('+escH(i.extra)+')':'')).join(', ')}${pend.length>6?' y '+(pend.length-6)+' más':''}</span>`:''}</span></button>`;}).join('')+
+     return `<button type="button" class="rp-it${marc.has(x.k)?' on':''}" data-k="${x.k}"><span class="rp-ck">${marc.has(x.k)?'✓':''}</span><span class="rp-tx">${negr(x.t)}${x.sub&&x.sub.length?`<span class="rp-sub">${x.sub.map(z=>`<span>${negr(z)}</span>`).join('')}</span>`:''}${c&&!pend&&d.dia&&d.dia.citas?'<span class="rp-okp">✓ El panel lo ve hecho</span>':''}${pend?`<span class="rp-av">${c.aviso?'Ojo':'Te falta'+(pend.length>1?'n ':' ')+pend.length}: ${pend.slice(0,6).map(i=>(i.id?`<u data-ficha="${i.id}" data-nom="${escH(i.nombre)}">${escH(capTit(i.nombre))}</u>`:`<b>${escH(i.nombre)}</b>`)+(i.extra?' ('+escH(i.extra)+')':'')).join(', ')}${pend.length>6?' y '+(pend.length-6)+' más':''}${IR[x.auto]||((x.auto==='cobrar'||x.auto==='ejercicios')&&pend[0]&&pend[0].id)?`<em class="rp-arr" data-ir="${x.auto}">Arreglarlo ›</em>`:''}</span>`:''}</span></button>`;}).join('')+
     `<div class="hz-lab" style="margin-top:14px">¿Algo que contar? <span>(opcional)</span></div><textarea class="rp-nota" rows="2" placeholder="Ej.: falta gel, la camilla 2 hace ruido…">${escH((d.enviado&&d.enviado.nota)||'')}</textarea>
     <button type="button" class="rp-env">${d.enviado?'Volver a enviar':'Enviar check-list'}</button></div>`;
    h+=`<div class="rp-c rp-cp"><div><b>🛒 ¿Falta material?</b><small>Apúntalo y le llega a dirección para el próximo pedido.</small></div><button type="button" class="rp-cpb">Apuntar</button></div>`;
   } else if(!d.resumen) h+='<div class="rp-c">El check-list es para los fisios.</div>';
   box.innerHTML=h;
-  box.querySelectorAll('.rp-it').forEach(b=>b.onclick=e=>{if(e.target.closest('u'))return;const k=b.dataset.k;marc.has(k)?marc.delete(k):marc.add(k);guarda();const nota=box.querySelector('.rp-nota');const v=nota?nota.value:'';pinta();const n2=box.querySelector('.rp-nota');if(n2)n2.value=v;});
+  box.querySelectorAll('.rp-arr').forEach(a=>a.onclick=e=>{e.stopPropagation();const k=a.dataset.ir;if(IR[k]){IR[k]();window.scrollTo(0,0);return;}
+   const c=((d.dia&&d.dia.checks)||[]).find(z=>z.k===k),p=c&&c.items.find(i=>i.id);if(p){window.__fichaTab=k==='cobrar'?'facturas':'programa';abrirFichaPaciente(p.id,p.nombre);}});
+  box.querySelectorAll('.rp-it').forEach(b=>b.onclick=e=>{if(e.target.closest('u,.rp-arr'))return;const k=b.dataset.k;marc.has(k)?marc.delete(k):marc.add(k);guarda();const nota=box.querySelector('.rp-nota');const v=nota?nota.value:'';pinta();const n2=box.querySelector('.rp-nota');if(n2)n2.value=v;});
   box.querySelectorAll('u[data-ficha]').forEach(u=>u.onclick=e=>{e.stopPropagation();abrirFichaPaciente(u.dataset.ficha,u.dataset.nom);});
   {const cb=box.querySelector('.rp-cpb');if(cb)cb.onclick=()=>compraAnadir({por:String(yo).split(' ')[0]});}
   const env=box.querySelector('.rp-env');if(!env)return;let armado=false;
@@ -8692,6 +8703,24 @@ async function renderReporte(wrap){
  };
  pinta();
 }
+
+// ── Recordatorio del check-list: a partir de las 19:00, a quien hoy ha tenido citas y aún no lo ha enviado ──
+// Punto en «Check-list» del menú y, una vez al día, un aviso abajo con lo que le falta. Al tocarlo, va a su check-list.
+let _chkT=0;
+async function chkRecordar(){try{
+ if(!fisioActual||!apiPwd||fisioActual.role==='admin')return;
+ const h=+new Date().toLocaleString('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false});if(h<19){chkPinta(0);return;}
+ if(Date.now()-_chkT<10*60000)return;_chkT=Date.now();
+ const d=await (await fetch(`/api/schedule?action=seg-cierre&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(fisioActual.nombre||'')}`)).json();
+ if(!d.ok||d.enviado||!(d.dia&&d.dia.citas)){chkPinta(0);return;}
+ const falta=(d.dia.checks||[]).filter(c=>c.items&&c.items.length&&!c.aviso).length;chkPinta(1);
+ let ya='';try{ya=localStorage.getItem('f365_chk_av')||'';}catch(_){}
+ if(ya===d.fecha||document.querySelector('.chk-av'))return;try{localStorage.setItem('f365_chk_av',d.fecha);}catch(_){}
+ const b=ce('div','chk-av');b.innerHTML=`<button type="button" class="chk-avb"><b>Cierra tu día</b><span>${falta?`El panel ve ${falta} ${falta===1?'cosa':'cosas'} sin hacer. Mira cuáles en tu check-list.`:'Tu check-list de hoy está sin enviar. Te lleva 1 minuto.'}</span></button><button type="button" class="chk-avx" aria-label="Cerrar">✕</button>`;
+ document.body.appendChild(b);b.querySelector('.chk-avx').onclick=()=>b.remove();b.querySelector('.chk-avb').onclick=()=>{b.remove();showSection('rep');window.scrollTo(0,0);};
+}catch(e){}}
+function chkPinta(on){const s=$('sb-rep');if(!s)return;let i=s.querySelector('.chk-dot');if(on&&!i){i=ce('i','chk-dot');s.appendChild(i);}if(!on&&i)i.remove();}
+setInterval(()=>{if(document.visibilityState==='visible')chkRecordar();},15*60000);
 
 // ── Justificante de asistencia / informe de sesiones (solo sesiones «Realizada» de la agenda) ──
 function abrirJustificante(pacId,P,d){
@@ -11699,6 +11728,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-10-31',aviso:1,t:'Check-list: cada punto te dice si el panel lo ve hecho (✓) o qué te falta, con un botón «Arreglarlo» que te lleva directo. Lo que ya está bien se marca solo. Y a partir de las 19:00, si no lo has enviado, te lo recuerda.',ver:{sec:'rep',pasos:[{el:'.rp-c .rp-it',txt:'Cada punto te dice si te falta algo y te lleva a arreglarlo.'}]}},
  {f:'2026-10-31',aviso:1,dir:1,t:'Daily report: arriba del todo, «Faltan X cosas para cerrar el día», con todo lo pendiente en una lista (cobros, citas sin marcar, check-lists, atrasos). Toca cada una y te lleva a arreglarla. Si no falta nada: «Todo hecho».',ver:{sec:'rdia',pasos:[{el:'.rd-est',txt:'Aquí ves de un vistazo qué falta para cerrar el día al 100%.'}]}},
  {f:'2026-10-31',aviso:1,t:'Para mandarle a un paciente todas sus próximas citas por WhatsApp, junto con el enlace de su app: en la agenda, abre una de sus citas › «Enviarle sus citas» (o en su ficha › Citas › «Enviárselas»).',ver:{sec:'pac',pasos:[{el:'.fp-envc',txt:'Con este botón le mandas sus próximas citas y la app.',click:['#pacResultados .pt-r','.fp-seg button[data-t="citas"]']}]}},
  {f:'2026-11-02',aviso:1,t:'Tarjetas regalo: se compran en la app en 5 pasos y se pagan con tarjeta o en el centro. Para venderlas, Mensajes › Regalos › «Vender tarjetas regalo» y mandas el enlace por WhatsApp. Quien la recibe reserva desde su tarjeta y la cita entra con el código en las notas.',ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="reg"]',txt:'Toca Regalos.',click:['.ag-recb:not(.ag-pdfb)']},{el:'.rec-m .rg-wa',txt:'Aquí mandas el enlace para que la compren.',click:['.ag-recb:not(.ag-pdfb)','.rec-m .enc-tabs button[data-t="reg"]']},{el:'.rec-m .vl-box',txt:'Y aquí ves las que se han comprado.',click:['.ag-recb:not(.ag-pdfb)','.rec-m .enc-tabs button[data-t="reg"]']}]}},
@@ -14566,7 +14596,7 @@ async function renderReporteDia(wrap){
   const caja=Object.entries(R.caja||{});
   const avisable=f=>!f.enviado||f.noMarcados.length||f.pendiente.length;
   // «Para cerrar el día»: todo lo que falta, en una lista, por orden de importancia. Cada línea lleva a donde se arregla.
-  const pl=(n,a,b)=>n+' '+(n===1?a:b),SF=R.sinFacturar||[],nSF=SF.reduce((t,x)=>t+x.n,0),cSin=R.canceladas.filter(c=>c.pacienteId&&!c.proxima&&!c.enLlamar);
+  const pl=(n,a,b)=>n+' '+(n===1?a:b),SF=R.sinFacturar||[],nSF=SF.reduce((t,x)=>t+x.n,0),cSin=R.canceladas.filter(c=>c.pacienteId&&!c.proxima&&!c.enLlamar&&!c.alta);
   const noEnv=R.fisios.filter(f=>!f.enviado),conPend=R.fisios.filter(f=>f.enviado&&(f.noMarcados.length||f.pendiente.length)),atViejo=(R.atrasado||[]).filter(g=>g.maxDias>3);
   const FALTA=[
    nSF&&['Cobros',pl(nSF,'sesión sin facturar','sesiones sin facturar'),SF.map(x=>x.nombre).slice(0,4).join(', ')+(SF.length>4?'…':''),'sf','mal'],
@@ -14594,7 +14624,7 @@ async function renderReporteDia(wrap){
    ${lista(`Citas sin marcar (siguen en «Pendiente»): ${R.sinMarcar.length}`,'amb',R.sinMarcar.map(c=>fila(pac(c.pacienteId,c.nombre),escH(c.fisio),escH(c.hora),`<button type="button" class="rd-b ok" data-c="${escH(c.id)}" data-e="REALIZADA">Realizada</button><button type="button" class="rd-b" data-c="${escH(c.id)}" data-e="NO ASISTIÓ">No vino</button>`),'sm'))}
    ${lista(`⚠️ Tickets hechos en Holded fuera del panel: ${R.fuera.length}`,'mal',R.fuera.map(d=>fila(escH(d.nombre),'',rdEur(d.total))),'fu')}
    ${R.borradores.length?lista(`Tickets en borrador por aprobar en Holded: ${R.borradores.length}`,'amb',[...R.borradores.map(d=>fila(escH(d.nombre),escH(d.fecha.split('-').reverse().join('/')),null)),`<a class="rd-b rd-hold" href="https://app.holded.com/" target="_blank" rel="noopener">Abrir Holded para aprobarlos</a>`],'bo'):''}
-   ${lista(`Canceladas o no vinieron: ${R.canceladas.length}`,R.canceladas.some(c=>!c.proxima&&!c.enLlamar)?'amb':'',R.canceladas.map(c=>fila(pac(c.pacienteId,c.nombre||'Paciente'),escH(c.fisio)+' · '+escH(String(c.estado).toLowerCase())+' · '+escH(c.hora),null,c.proxima?`<span class="rd-hecho">✓ Cita el ${escH(c.proxima.slice(8)+'/'+c.proxima.slice(5,7))}</span>`:c.enLlamar?'<span class="rd-gris">En «Por llamar»</span>':c.pacienteId?`<span class="rd-sinp">Sin próxima cita</span><button type="button" class="rd-b" data-ll="${escH(c.pacienteId)}" data-fz="${escH(c.fisio)}">Pasar a Por llamar</button>`:'')),'ca')}
+   ${lista(`Canceladas o no vinieron: ${R.canceladas.length}`,R.canceladas.some(c=>!c.proxima&&!c.enLlamar&&!c.alta)?'amb':'',R.canceladas.map(c=>fila(pac(c.pacienteId,c.nombre||'Paciente'),escH(c.fisio)+' · '+escH(String(c.estado).toLowerCase())+' · '+escH(c.hora),null,c.proxima?`<span class="rd-hecho">✓ Cita el ${escH(c.proxima.slice(8)+'/'+c.proxima.slice(5,7))}</span>`:c.enLlamar?'<span class="rd-gris">En «Por llamar»</span>':c.alta?'<span class="rd-gris">De alta</span>':c.pacienteId?`<span class="rd-sinp">Sin próxima cita</span><button type="button" class="rd-b" data-ll="${escH(c.pacienteId)}" data-fz="${escH(c.fisio)}">Pasar a Por llamar</button>`:'')),'ca')}
    ${tablaR(R.rendDia,'Rendimiento del día')}${tablaR(R.rendSemana,'Rendimiento de la semana')}
    ${lista('Facturas emitidas','',R.facturas.map(f=>fila(escH(f.num),escH(f.concepto)+(f.pago?' · '+escH(f.pago):''),rdEur(f.total))))}`;
   // «Para cerrar el día»: ir a donde se arregla
@@ -14987,6 +15017,7 @@ function cerrarLightbox(){
   try{_dtC.d=null;_dtC.t=0;_dtC.p=null;_dtC.fresco=true;}catch(e){}
   await Promise.all([loadPacientes(),loadEstados(),cargarSegPac()]).catch(()=>{});
   try{contarTareas();}catch(e){}
+  try{chkRecordar();}catch(e){}
   const ficha=document.querySelector('.pv.fp');
   if(ficha&&ficha._refrescar){ficha._refrescar();return;}
   if(ocupado())return;
