@@ -103,6 +103,8 @@ function pares(C) {
   // Otra clínica en su propio despliegue: los enlaces apuntan a su app (APP_URL), no a la de FISIO365
   const app = String(process.env.APP_URL || '').replace(/\/+$/, '');
   if (/^https:\/\/[a-z0-9.-]+$/i.test(app) && app !== 'https://app.fisioterapia365.com') P.unshift(['https://app.fisioterapia365.com', app]);
+  // La app de Google Play es la de FISIO365: en otra clínica se cambia por su app (la que se instala desde el navegador)
+  if (OTRA_CLINICA) P.unshift(['https://play.google.com/store/apps/details?id=es.fisioterapia365.app', /^https:\/\/[a-z0-9.-]+$/i.test(app) ? app : 'https://app.fisioterapia365.com']);
   return P.concat(paresColor(C.color));
 }
 

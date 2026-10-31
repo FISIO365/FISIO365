@@ -1,41 +1,54 @@
-# Poner la app en otra clínica (piloto)
+# Dar de alta una clínica nueva (marca blanca)
 
-Cada clínica tiene **su propio despliegue** en Vercel (el mismo código, otro proyecto) y **su propia base de Airtable**.
-El código es el mismo para todas: lo que cambia son las variables de entorno y los ajustes que la clínica rellena en el panel.
+Cada clínica tiene **su propio despliegue** en Vercel (el mismo código, conectado al mismo repositorio: se actualiza sola con cada cambio)
+y **su propio espacio** en la base de datos de Supabase (proyecto «Clínica», organización FISIO365). Sin coste extra por clínica.
+Ejemplo completo funcionando: **Clínica Demo** (proyecto Vercel `clinica-demo`, https://demo-clinica-panel.vercel.app, entra Laura / 1234).
 
-## 1. Base de datos
-1. En Airtable, **duplicar la base de FISIO365 sin los datos** (solo estructura) en la cuenta de la clínica.
-2. Crear un token de Airtable de la clínica con permisos `data.records:read`, `data.records:write` y `schema.bases:read` sobre esa base.
-3. Dar de alta los fisios en la tabla «⚙ APP · FISIO» (nombre, PIN, accesos).
+## 1. Base de datos (Supabase › SQL) — 2 minutos
+Un espacio (schema) y una llave (rol) por clínica. La llave solo ve su espacio: ni FISIO365 ve a la clínica ni la clínica a FISIO365.
+```sql
+create role app_<clinica> with login password '<contraseña larga aleatoria>';
+grant app_<clinica> to postgres;
+create schema <clinica> authorization app_<clinica>;
+revoke all on schema <clinica> from public;
+alter role app_<clinica> set search_path = <clinica>;
+alter role app_<clinica> set statement_timeout = '30s';
+```
+Las tablas se crean solas la primera vez que se abre la app.
 
-Los ids de tablas y campos cambian al duplicar una base: el código los traduce solo buscándolos por nombre (`api/_base.js`).
-Por eso **no hay que renombrar tablas ni campos** en la copia.
+## 2. Archivos
+En la función `archivos` de Supabase, añadir a `CLAVES` la huella (SHA-256) de una clave nueva → carpeta `clinicas/<clinica>/`.
+Cada clínica solo puede leer y escribir en su carpeta.
 
-## 2. Proyecto en Vercel (variables de entorno)
-| Variable | Qué es |
+## 3. Proyecto en Vercel (mismo repositorio FISIO365/FISIO365)
+| Variable | Valor |
 |---|---|
-| `AIRTABLE_BASE_ID` | id de la base de la clínica (`app…`) |
-| `AIRTABLE_TOKEN` | token de Airtable de la clínica |
-| `APP_URL` | dirección de su app, p. ej. `https://app.suclinica.es` |
-| `BREVO_API_KEY` | su cuenta de Brevo (emails). El remitente es el email de «Datos de la clínica» y tiene que estar verificado en su Brevo |
-| `STRIPE_SECRET_KEY` | su Stripe (cobros por adelantado) |
-| `HOLDED_API_KEY` | su Holded (tickets y facturas), opcional |
-| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | claves de notificaciones (generar unas nuevas) |
-| `ANTHROPIC_API_KEY` | IA de los mensajes |
-| `RESUMEN_EMAIL` | a quién llega el resumen diario |
+| `CLINICA` | id corto, p. ej. `fisiomar` (**imprescindible**: así nunca hereda datos de FISIO365) |
+| `CLINICA_NOMBRE` | nombre provisional hasta que lo pongan en Ajustes |
+| `DB_URL` | `postgresql://app_<clinica>.nxfhsachzmxylejrcxwb:<contraseña>@aws-0-eu-west-1.pooler.supabase.com:6543/postgres` |
+| `ARCHIVOS_URL` | `https://nxfhsachzmxylejrcxwb.supabase.co/functions/v1/archivos` |
+| `ARCHIVOS_CLAVE` / `ARCHIVOS_PREFIJO` | la clave del paso 2 / `clinicas/<clinica>/` |
+| `APP_URL` | su dirección, p. ej. `https://app.fisiomar.es` |
+| `FISIO_PASSWORD`, `AIRTABLE_TOKEN`, `CRON_SECRET` | valores aleatorios largos (`AIRTABLE_TOKEN` ya no es de Airtable: firma los enlaces) |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | claves nuevas de notificaciones |
+| `BREVO_API_KEY` | su Brevo (emails; remitente verificado = el email de la clínica) |
+| `STRIPE_SECRET_KEY`, `HOLDED_API_KEY`, `ANTHROPIC_API_KEY` | opcionales: cobros, facturas, IA |
+| `SIN_ENVIOS` | **solo para demos**: no manda emails, avisos, cobros ni nada a Holded |
 
-Las claves **nunca** se pegan en el chat ni en el código: se ponen directamente en Vercel.
+Las claves **nunca** se pegan en el chat ni en el código: van directamente en Vercel.
+Protección de despliegues: «solo previews» (la de producción tiene que ser pública para los pacientes).
 
-## 3. En el panel (Administración › Ajustes)
-- **Datos de la clínica**: nombre, razón social, NIF, dirección, teléfono, WhatsApp, email, enlace de reseñas (Google Place ID), IBAN.
-- **Logo y color** de la marca.
-- **Icono de la app**: el que sale en el móvil al instalar la app y el panel (cuadrado, 512×512). Si no se sube, se hace uno solo con el nombre y el color de la clínica. El nombre de la app instalada es el «Nombre de la clínica».
-- **Opciones**: sorteo de reseñas, bomba diamagnética.
-- **App del paciente**: servicios, precios, packs y promociones.
-- **Mensajes a pacientes**: los WhatsApp que prepara el panel (recordatorios, encuestas, reseñas, pagos, huecos, facturas), con etiquetas como `{nombre}` o `{enlace}`.
-- **Textos legales** del consentimiento (tratamiento, declaraciones, protección de datos, derechos, suelo pélvico, alta oncológica).
-- **Listas**, tipos de cita, estados, política de cancelación, check-list, tarjeta regalo.
+## 4. La clínica entra por primera vez
+Al abrir `/fisio` sin ningún usuario sale **«Crea tu clínica»**: nombre de la clínica, su nombre y PIN (queda como dirección, con todos los accesos).
+Luego, en **Administración › Ajustes**: datos de la clínica (razón social, NIF, dirección, IBAN, reseñas), logo, color, icono, textos legales,
+servicios y precios de la app, mensajes a pacientes. Y da de alta a su equipo.
 
-## Lo que ya va solo
-- Los cursos técnicos de School (protocolos y aparatos de FISIO365) no salen en otra clínica; los de la bomba, solo si tiene la bomba activada. «Cómo funciona la app» y «La app del paciente» sirven para todas.
-- La app de Google Play es de FISIO365: otra clínica usa la app instalada desde el navegador (con su nombre e icono).
+## Qué ya va solo
+- Nombre, logo, color, icono, teléfono, dirección y datos legales salen de Ajustes en el panel, la app, las páginas, los PDF y los emails.
+- Todo lo que sale hacia pacientes (WhatsApp, email, copiar, compartir) va con los datos de la clínica.
+- Lo que no hayan rellenado sale **vacío**, nunca con los datos de FISIO365 (ni su IBAN ni su teléfono).
+- Cursos técnicos de FISIO365 ocultos; los de la bomba, solo si la tienen activada.
+- App del paciente: se instala desde el navegador con su nombre e icono. La app de Google Play es solo de FISIO365.
+
+## Demo
+`/api/schedule?action=demo-datos&op=borrar|sembrar&k=<MIGRAR_KEY>` (solo con `CLINICA=demo`) vacía o vuelve a llenar la demo con datos inventados.

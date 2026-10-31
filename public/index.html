@@ -1493,7 +1493,7 @@ function pasosIOS(nav){let h='';
  h+=paso(3,'Toca <b>«Añadir»</b> arriba a la derecha','¡Listo! Ya tienes FISIO365 con las demás apps.','ok');return h;}
 function pasosAndroid(nav){let h='';
  // La app está en Google Play: es lo más fácil. Lo de Chrome queda como alternativa
- h+=`<a class="rv-btn" style="text-align:center;text-decoration:none;border-radius:99px;margin:0 0 8px" href="https://play.google.com/store/apps/details?id=es.fisioterapia365.app" target="_blank" rel="noopener">Descargar en Google Play</a><div style="text-align:center;font-size:12px;color:#8a837b;margin:0 0 14px">O instálala desde Chrome:</div>`;
+ if(!window.CLINICA||!CLINICA.marca||CLINICA.marca==='FISIO365')h+=`<a class="rv-btn" style="text-align:center;text-decoration:none;border-radius:99px;margin:0 0 8px" href="https://play.google.com/store/apps/details?id=es.fisioterapia365.app" target="_blank" rel="noopener">Descargar en Google Play</a><div style="text-align:center;font-size:12px;color:#8a837b;margin:0 0 14px">O instálala desde Chrome:</div>`;
  if(inPrompt)h+=`<button class="rv-btn" style="border-radius:99px;margin:0 0 12px" onclick="instalarYa()">Instalar ahora</button><div style="text-align:center;font-size:12px;color:#8a837b;margin:-4px 0 12px">Un toque y listo. Si no funciona, sigue estos pasos:</div>`;
  if(nav==='inapp')h+=`<div class="in-aviso">Estás dentro de otra app (Instagram, Facebook…). Primero toca <b>⋮</b> arriba y elige <b>«Abrir en Chrome»</b>.</div>`;
  h+=paso(1,'Toca los <b>tres puntos ⋮</b>',nav==='samsung'?'En Samsung Internet están abajo a la derecha (☰).':'Arriba a la derecha de Chrome.','vdots',1);
