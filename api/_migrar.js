@@ -5,6 +5,7 @@ const S = require('./_schema.json');
 const BASE = process.env.AIRTABLE_BASE_ID || S.baseId;
 const CALC = new Set(['formula', 'multipleLookupValues', 'rollup', 'count', 'createdTime', 'lastModifiedTime', 'createdBy', 'lastModifiedBy', 'button']);
 const crypto = require('crypto');
+let PGM = null, ALM = null; try { PGM = require('./_pg.js'); ALM = PGM.ALM; } catch (_) {}
 const espera = ms => new Promise(r => setTimeout(r, ms));
 
 // Si en Airtable hay campos o tablas que no están en api/_schema.json se para (si no, no se copiarían y se perderían sin avisar)
@@ -50,9 +51,17 @@ async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, 
       for (let j = 0; j < bajar.length; j += 8) {
         if (Date.now() > hasta + 8000) { cortar = true; break; } // demasiado tiempo: la página se repite en la siguiente llamada (lo ya bajado no se vuelve a bajar)
         await Promise.all(bajar.slice(j, j + 8).map(async a => {
+          const id = 'att' + a.id.slice(3), clave = crypto.randomBytes(16).toString('hex');
+          if (ALM && ALM.url) { // al almacén de archivos: lo baja y lo guarda la función de Supabase (los bytes no pasan por aquí)
+            const ruta = PGM.rutaDe(id, a.filename);
+            const r = await PGM.almacen('copiar', { ruta, url: a.url, tipo: a.type }).catch(e => ({ error: e.message }));
+            if (!r.ok) { R.fallos = (R.fallos || 0) + 1; (R.sinCopiar = R.sinCopiar || []).push(`${a.filename} (${Math.round((a.size || 0) / 1e6)} MB): ${String(r.error || '').slice(0, 80)}`); return; }
+            await db.query('insert into archivos (id, clave, nombre, tipo, bytes, ruta) values ($1,$2,$3,$4,$5,$6) on conflict (id) do nothing', [id, clave, a.filename, a.type, r.bytes || a.size || 0, ruta]);
+            R.adjuntos++; return;
+          }
           const rr = await F(a.url).catch(() => null); if (!rr || !rr.ok) { log(`  ! no se pudo bajar ${a.filename} (${t.name})`); return; }
           const buf = Buffer.from(await rr.arrayBuffer());
-          await db.query('insert into archivos (id, clave, nombre, tipo, bytes, datos) values ($1,$2,$3,$4,$5,$6) on conflict (id) do nothing', ['att' + a.id.slice(3), crypto.randomBytes(16).toString('hex'), a.filename, a.type, buf.length, buf]);
+          await db.query('insert into archivos (id, clave, nombre, tipo, bytes, datos) values ($1,$2,$3,$4,$5,$6) on conflict (id) do nothing', [id, clave, a.filename, a.type, buf.length, buf]);
           R.adjuntos++;
         }));
       }

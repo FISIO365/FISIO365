@@ -2510,6 +2510,7 @@ module.exports = async function handler(req, res) {
   if (action === 'archivo') { // adjunto guardado en Postgres (ver api/_pg.js): el enlace lleva una clave secreta, como los de Airtable
     const PG = require('./_pg'); if (!PG.ACTIVO) return res.status(404).end();
     const A = await PG.archivo(String(req.query.id || ''), String(req.query.k || '')); if (!A) return res.status(404).end();
+    if (A.redirigir) { res.setHeader('Cache-Control', 'private, max-age=1800'); res.setHeader('Location', A.redirigir); return res.status(302).end(); }
     res.setHeader('Content-Type', A.tipo || 'application/octet-stream'); res.setHeader('Cache-Control', 'private, max-age=86400');
     res.setHeader('Content-Disposition', `inline; filename="${String(A.nombre || 'archivo').replace(/[^\w.\- ]/g, '_')}"`);
     return res.status(200).end(A.datos);

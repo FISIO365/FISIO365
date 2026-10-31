@@ -50,7 +50,8 @@ create table if not exists contadores (tabla text not null, campo text not null,
 alter table registros enable row level security;
 alter table borrados enable row level security;
 alter table archivos enable row level security;
-alter table contadores enable row level security;`;
+alter table contadores enable row level security;
+alter table archivos add column if not exists ruta text;`;
 // RLS activado y sin reglas: la API pública de Supabase (clave anon) no puede leer nada; solo el servidor, que entra con DB_URL
 
 // ── Caché por tabla (en cada instancia del servidor) ──
@@ -263,9 +264,20 @@ async function aGuardar(tb, f, v, typecast, c) {
 }
 const adjDe = r => ({ id: r.id, url: `/api/schedule?action=archivo&id=${r.id}&k=${r.clave}`, filename: r.nombre || 'archivo', size: r.bytes || 0, type: r.tipo || 'application/octet-stream',
   ...(/^image\//.test(r.tipo || '') ? { width: undefined, height: undefined, thumbnails: { small: { url: `/api/schedule?action=archivo&id=${r.id}&k=${r.clave}` }, large: { url: `/api/schedule?action=archivo&id=${r.id}&k=${r.clave}` }, full: { url: `/api/schedule?action=archivo&id=${r.id}&k=${r.clave}` } } } : {}) });
+// Almacén de archivos (Supabase Storage, privado) a través de la función «archivos» de Supabase: ARCHIVOS_URL + ARCHIVOS_CLAVE.
+// Sin esas variables (pruebas), los archivos se guardan dentro de Postgres (columna datos).
+const ALM = { url: process.env.ARCHIVOS_URL || '', clave: process.env.ARCHIVOS_CLAVE || '' };
+async function almacen(op, body) {
+  if (!ALM.url) throw new Error('Sin almacén de archivos');
+  const r = await _fetch(ALM.url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-clave': ALM.clave }, body: JSON.stringify({ op, ...body }) });
+  const d = await r.json().catch(() => ({ ok: false, error: 'HTTP ' + r.status })); if (!d.ok) throw new Error('Almacén: ' + (d.error || r.status)); return d;
+}
+const rutaDe = (id, nombre) => id + '/' + (String(nombre || 'archivo').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]+/g, '_').replace(/^[._-]+/, '').slice(0, 120) || 'archivo');
 async function guardarArchivo(c, buf, nombre, tipo) {
   const id = nuevoId('att'), clave = crypto.randomBytes(16).toString('hex');
-  await c.query('insert into archivos (id, clave, nombre, tipo, bytes, datos) values ($1,$2,$3,$4,$5,$6)', [id, clave, nombre || 'archivo', tipo || 'application/octet-stream', buf.length, buf]);
+  if (ALM.url) { const ruta = rutaDe(id, nombre); await almacen('subir', { ruta, tipo: tipo || 'application/octet-stream', b64: buf.toString('base64') });
+    await c.query('insert into archivos (id, clave, nombre, tipo, bytes, ruta) values ($1,$2,$3,$4,$5,$6)', [id, clave, nombre || 'archivo', tipo || 'application/octet-stream', buf.length, ruta]); }
+  else await c.query('insert into archivos (id, clave, nombre, tipo, bytes, datos) values ($1,$2,$3,$4,$5,$6)', [id, clave, nombre || 'archivo', tipo || 'application/octet-stream', buf.length, buf]);
   return adjDe({ id, clave, nombre, tipo, bytes: buf.length });
 }
 async function guardarArchivoUrl(c, url, nombre) {
@@ -273,8 +285,10 @@ async function guardarArchivoUrl(c, url, nombre) {
   const m = String(url).match(/^data:([^;,]+)?(;base64)?,(.*)$/s);
   if (m) { tipo = m[1] || 'application/octet-stream'; buf = m[2] ? Buffer.from(m[3], 'base64') : Buffer.from(decodeURIComponent(m[3])); }
   else {
-    const p = String(url).match(/[?&]action=archivo&id=(att[A-Za-z0-9]{14})&k=([0-9a-f]+)/); // un adjunto nuestro: se copia
-    if (p) { const r = await c.query('select nombre, tipo, datos from archivos where id = $1 and clave = $2', [p[1], p[2]]); if (r.rows[0]) return guardarArchivo(c, Buffer.from(r.rows[0].datos), nombre || r.rows[0].nombre, r.rows[0].tipo); }
+    const p = String(url).match(/[?&]action=archivo&id=(att[A-Za-z0-9]{14})&k=([0-9a-f]+)/); // un adjunto nuestro: se copia (en el almacén, apunta al mismo archivo)
+    if (p) { const r = await c.query('select nombre, tipo, bytes, datos, ruta from archivos where id = $1 and clave = $2', [p[1], p[2]]); const x = r.rows[0];
+      if (x && x.ruta) { const id = nuevoId('att'), clave = crypto.randomBytes(16).toString('hex'); await c.query('insert into archivos (id, clave, nombre, tipo, bytes, ruta) values ($1,$2,$3,$4,$5,$6)', [id, clave, nombre || x.nombre, x.tipo, x.bytes, x.ruta]); return adjDe({ id, clave, nombre: nombre || x.nombre, tipo: x.tipo, bytes: x.bytes }); }
+      if (x) return guardarArchivo(c, Buffer.from(x.datos), nombre || x.nombre, x.tipo); }
     const r = await _fetch(url); if (!r.ok) throw Object.assign(new Error('No se ha podido descargar el adjunto'), { tipo: 'INVALID_ATTACHMENT_OBJECT' });
     buf = Buffer.from(await r.arrayBuffer()); tipo = r.headers.get('content-type') || 'application/octet-stream';
   }
@@ -385,10 +399,19 @@ async function subirAdjunto(recId, campoId, body) {
   return ok({ id: recId, createdTime: out.createdTime, fields: out.fields });
 }
 // Adjunto guardado (lo sirve schedule.js en ?action=archivo)
+// Para servir un adjunto: si está en el almacén, un enlace temporal firmado (se guarda 50 min); si no, el contenido
+const _firmas = new Map();
 async function archivo(id, k) {
   if (!/^att[A-Za-z0-9]{14}$/.test(String(id || '')) || !/^[0-9a-f]{32}$/.test(String(k || ''))) return null;
-  const r = await db().query('select nombre, tipo, datos from archivos where id = $1 and clave = $2', [id, k]);
-  return r.rows[0] ? { nombre: r.rows[0].nombre, tipo: r.rows[0].tipo, datos: Buffer.from(r.rows[0].datos) } : null;
+  const r = await db().query('select nombre, tipo, ruta, case when ruta is null then datos end as datos from archivos where id = $1 and clave = $2', [id, k]);
+  const x = r.rows[0]; if (!x) return null;
+  if (x.ruta) {
+    const f = _firmas.get(x.ruta); if (f && f.t > Date.now()) return { nombre: x.nombre, tipo: x.tipo, redirigir: f.u };
+    const d = await almacen('firmar', { rutas: [x.ruta], segundos: 3600 }); const u = d.urls && d.urls[x.ruta]; if (!u) return null;
+    if (_firmas.size > 2000) _firmas.clear(); _firmas.set(x.ruta, { u, t: Date.now() + 50 * 60000 });
+    return { nombre: x.nombre, tipo: x.tipo, redirigir: u };
+  }
+  return { nombre: x.nombre, tipo: x.tipo, datos: Buffer.from(x.datos || []) };
 }
 
 // ── Respuestas con forma de fetch ──
@@ -443,4 +466,4 @@ if (ACTIVO && global.fetch && !global.fetch._pg) {
   nf._pg = 1; nf._marca = _fetch && _fetch._marca; nf._base = 1; global.fetch = nf;
 }
 
-module.exports = { ACTIVO, responder, archivo, SQL_INIT, T, campo, _cache: CACHE, filas, iniciar, db, fetchReal: _fetch };
+module.exports = { ACTIVO, responder, archivo, SQL_INIT, T, campo, _cache: CACHE, filas, iniciar, db, fetchReal: _fetch, almacen, rutaDe, ALM };
