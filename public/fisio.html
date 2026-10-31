@@ -384,6 +384,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .fp-fs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 14px}.fp-f span{display:block;font-size:11px;color:#9a8d84;margin-bottom:2px}.fp-v{font-size:14px;font-weight:600;overflow-wrap:anywhere;min-width:0}.fp-v em,.fp-txt em{font-style:normal;color:#c9c0b8;font-weight:500}
 .fp-in input{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;-webkit-appearance:none;background:#fff;min-height:40px}
 .fp-txt{font-size:13.5px;line-height:1.55;color:#2b2420;overflow-wrap:anywhere}.fp-ta{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;line-height:1.5;padding:10px 12px;border:1.5px solid var(--border);border-radius:12px}
+.fp-pqcie{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.fp-pqcie button{font-family:var(--font);font-size:12.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:#3d3530;border-radius:99px;padding:7px 12px;cursor:pointer}.fp-pqcie button.on{border-color:#c2552e;background:#fdeee4;color:#c2552e}.fp-pqcx{display:block}
 .fp-sub{font-size:11px;font-weight:700;color:#9a8d84;text-transform:uppercase;letter-spacing:.4px;margin:6px 0 2px}
 .fp-cita{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1ede9}.fp-cd{width:78px;flex:none}.fp-cd b{display:block;font-size:13px}.fp-cd span{font-size:12px;color:#9a8d84}.fp-cm{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}.fp-cm p{flex-basis:100%;margin:2px 0 0;font-size:12.5px;color:#5f554e}
 .fp-ce{font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:99px;background:#f3efea;color:#7d6a60}.fp-ce.ok{background:#e8f5ec;color:#16803c}.fp-ce.no{background:#fdecea;color:#b42318}.fp-ce.pe{background:#fff4e5;color:#b45309}.fp-cfi{font-size:12px;color:#7d6a60}
@@ -9696,7 +9697,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
    box.innerHTML=`<div class="fp-pqrow"><label class="fp-pqchk"><input type="checkbox" ${on?'checked':''}><span>No reagenda</span>${sinCita&&!on?'<em>Sin próxima cita</em>':''}</label>${!editando&&P.porQue&&sp?'<button type="button" class="fp-ed fp-pq-ed">Editar</button>':''}</div>`+
     (editando?`<textarea class="fp-ta fp-pqmot" rows="3" placeholder="¿Por qué? Ej.: alta, se va de viaje, le cuesta pagar…">${escH(P.porQue||'')}</textarea>
      <div class="hz-lab">Estado del paciente</div><div class="fp-pqest"></div>
-     ${sp?`<div class="fp-pqya">✓ Ya está en seguimiento${sp.fecha?' · llamar el '+segFecha(sp.fecha):''}${sp.quien?' · '+escH(sp.quien):''}</div>`:`<div class="fp-pqmodo"><button type="button" data-m="seg">Pasa a seguimiento</button><button type="button" data-m="alta"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No necesita más</button></div><div class="fp-pqalt" hidden>Se le pone la etiqueta <b>Alta</b> y no pasa a seguimiento ni sale en «sin próxima cita».</div><div class="fp-pqseg">
+     ${sp?`<div class="fp-pqya">✓ Ya está en seguimiento${sp.fecha?' · llamar el '+segFecha(sp.fecha):''}${sp.quien?' · '+escH(sp.quien):''}</div>`:`<div class="fp-pqmodo"><button type="button" data-m="seg">Pasa a seguimiento</button><button type="button" data-m="alta"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No hace falta</button></div><div class="fp-pqalt" hidden><div class="fp-pqcie"><button type="button" data-c="alta" class="on">Está de alta</button><button type="button" data-c="noacudio">No llegó a venir</button><button type="button" data-c="abandono">Dejó el tratamiento</button></div><span class="fp-pqcx">Se le pone ese estado y no pasa a seguimiento ni sale en «sin próxima cita».</span></div><div class="fp-pqseg">
       <div class="hz-lab">Pasa a seguimiento · ¿cuándo llamar?</div><div class="seg-rap fp-pqcu">${[['Mañana',1],['En 1 semana',7],['En 2 semanas',14],['En 1 mes',30]].map(([t,n])=>`<button type="button" data-d="${n}">${t}</button>`).join('')}</div>
       <input type="date" class="fp-pqf" value="${segIso(7)}" min="${segIso(0)}">
       <div class="hz-lab">¿Quién le contacta?</div><div class="seg-rap fp-pqre">${TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('')}</div>
@@ -9725,9 +9726,11 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
    // ¿Seguimiento o alta? Si es alta no se manda a seguimiento
    let alta=false;const mb=box.querySelector('.fp-pqmodo'),okB=box.querySelector('.fp-ok');
    const bAlta=()=>[...selE.querySelectorAll('button')].find(b=>/^alta$/i.test(b.textContent.trim()));
+   let cierre='alta';const TXT_C={alta:'Guardar como alta',noacudio:'Guardar: no llegó a venir',abandono:'Guardar: dejó el tratamiento'};
+   box.querySelectorAll('.fp-pqcie button').forEach(b=>b.onclick=()=>{cierre=b.dataset.c;box.querySelectorAll('.fp-pqcie button').forEach(x=>x.classList.toggle('on',x===b));okB.textContent=TXT_C[cierre];const ba=bAlta();if(ba&&ba.classList.contains('on')!==(cierre==='alta'))ba.click();});
    const modo=(a,auto)=>{alta=a;mb.querySelectorAll('button').forEach(b=>b.classList.toggle('on',(b.dataset.m==='alta')===a));
-    sb.hidden=a;box.querySelector('.fp-pqalt').hidden=!a;okB.textContent=a?'Guardar como alta':'Guardar y pasar a seguimiento';
-    const ba=bAlta();if(ba&&!auto&&ba.classList.contains('on')!==a)ba.click();};
+    sb.hidden=a;box.querySelector('.fp-pqalt').hidden=!a;okB.textContent=a?TXT_C[cierre]:'Guardar y pasar a seguimiento';
+    const ba=bAlta();if(ba&&!auto&&ba.classList.contains('on')!==(a&&cierre==='alta'))ba.click();};
    if(mb){mb.querySelectorAll('button').forEach(b=>b.onclick=()=>modo(b.dataset.m==='alta'));modo(/^\s*alta\b/i.test(ta.value),true);
     ta.addEventListener('input',()=>{const es=/^\s*alta\b/i.test(ta.value);if(es&&!alta)modo(true);});}
    box.querySelector('.fp-ok').onclick=async e=>{const t=ta.value.trim();if(!t){toast('Escribe el motivo',false);return;}
@@ -9736,11 +9739,12 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
     try{const r=await post('nota-reagenda',{pacienteId:id,nota:t,fisio:fisioActual.nombre});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
      P.porQue=t;P.porQueFecha=r.fecha||d.hoy;P.porQueFisio=fisioActual.nombre;
      {const nv=selE.get();if(nv.slice().sort().join()!==est0.slice().sort().join()){await guardarEstados(id,nv);P.estados=nv;}}
-     if(sb&&alta){const r3=await post('seg-agenda-alta',{pacienteId:id,nota:t,fisio:fisioActual.nombre});if(!r3.ok)throw new Error('Motivo guardado, pero no se ha podido dar el alta');if(r3.estados)P.estados=r3.estados;}
+     if(sb&&alta&&cierre==='alta'){const r3=await post('seg-agenda-alta',{pacienteId:id,nota:t,fisio:fisioActual.nombre});if(!r3.ok)throw new Error('Motivo guardado, pero no se ha podido dar el alta');if(r3.estados)P.estados=r3.estados;}
+     if(sb&&alta&&cierre!=='alta'){const r4=await post('seg-etapa',{pacienteId:id,etapa:cierre});if(!r4.ok)throw new Error('Motivo guardado, pero no se ha podido cambiar el estado');}
      if(conSeg){const fecha=sb.querySelector('.fp-pqf').value,nota=sb.querySelector('.fp-pqn').value.trim();
       const r2=await post('seg-crear',{pacienteId:id,fecha,nota,responsable:resp});if(!r2.ok)throw new Error('Motivo guardado, pero no se ha podido pasar a seguimiento');
       SEG_PAC[id]={fecha,quien:resp};(d.seguimiento=d.seguimiento||[]).unshift({fecha,nota,hecho:false,quien:resp});}
-     toast(conSeg?'Guardado y pasado a seguimiento':alta?'Alta apuntada · no pasa a seguimiento':'Guardado',true);if(conSeg)recargarSeg();else{refrescarTareas();pintar();}}
+     toast(conSeg?'Guardado y pasado a seguimiento':alta?(cierre==='alta'?'Alta apuntada':cierre==='noacudio'?'Apuntado: no llegó a venir':'Apuntado: dejó el tratamiento')+' · no pasa a seguimiento':'Guardado',true);if(conSeg)recargarSeg();else{refrescarTareas();pintar();}}
     catch(err){bt.disabled=false;bt.textContent=t0;toast(err.message,false);}};};
   pinta(false);}
  function montarHistoria(cont){
