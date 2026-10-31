@@ -22,6 +22,7 @@ async function leerSub(tipo, id) {
 // Envía un aviso. url = a dónde lleva al tocarlo. Devuelve true/false
 async function enviar(sub, { title, body, url, tag }) {
   if (!sub) return false;
+  if (process.env.SIN_ENVIOS) { console.log('SIN_ENVIOS: aviso', title); return true; } // versión de prueba: no se manda
   try {
     await webpush.sendNotification(sub, JSON.stringify({ title: title || 'FISIO365', body: body || '', url: url || '/', tag: tag || '' }));
     return true;

@@ -55,6 +55,7 @@ module.exports = async function handler(req, res) {
 </body>
 </html>`;
 
+  if (process.env.SIN_ENVIOS) return res.status(200).json({ ok: true, prueba: true }); // versión de prueba: no se manda
   try {
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',

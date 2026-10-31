@@ -455,6 +455,8 @@ const ACTIVO = !!(DB_URL || global.__PG_TEST__);
 if (ACTIVO && global.fetch && !global.fetch._pg) {
   const nf = async (u, o) => {
     const url = String(u && u.url ? u.url : u);
+    // Versión de prueba (SIN_ENVIOS=1): no sale ningún email, cobro ni cambio en Holded; se hace como si hubiera ido bien
+    if (process.env.SIN_ENVIOS && /^https:\/\/api\.(brevo|stripe|holded)\.com\//.test(url) && String((o && o.method) || 'GET').toUpperCase() !== 'GET') { console.log('SIN_ENVIOS:', url.split('?')[0]); return new Response(JSON.stringify({ messageId: 'prueba', id: 'prueba' }), { status: 201, headers: { 'Content-Type': 'application/json' } }); }
     const nuestra = /^https:\/\/api\.airtable\.com\/v0\//.test(url) || /^https:\/\/content\.airtable\.com\/v0\//.test(url);
     // Otra base de Airtable (no la de la clínica) con una tabla que no tenemos: se deja pasar si aún hay token
     if (!nuestra) return _fetch(u, o);
