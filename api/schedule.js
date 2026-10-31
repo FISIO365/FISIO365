@@ -3827,11 +3827,17 @@ module.exports = async function handler(req, res) {
             const cu = fechaOk(x.cumple); if (cu) f.CUMPLE = cu;
             const notas = String(x.notas || '').trim(); if (notas) f.NOTAS = notas.slice(0, 5000);
             if (x.historial) f['HISTORIAL CLÍNICO'] = String(x.historial).slice(0, 20000);
+            // Pack del programa anterior: total y ya hechas (o solo las que le quedan) → cuentan en su saldo de sesiones
+            const num = v => { const n = parseInt(String(v || '').replace(/[^\d]/g, ''), 10); return n > 0 && n < 500 ? n : 0; };
+            const bono = num(x.bono), usadas = num(x.usadas), quedan = num(x.quedan);
+            if (bono) { f['SESIONES BONO PREVIO'] = bono; if (usadas) f['BONO PREVIO YA USADAS'] = Math.min(usadas, bono); }
+            else if (quedan) f['SESIONES BONO PREVIO'] = quedan;
             nuevos.push(f);
           }
           let creados = 0;
           if (!prueba) for (let i = 0; i < nuevos.length; i += 10) { const d = await at(PACIENTES, { method: 'POST', body: JSON.stringify({ records: nuevos.slice(i, i + 10).map(fields => ({ fields })), typecast: true }) }).catch(() => ({ error: 1 })); if (d.error || !d.records) { malos.push({ nombre: `Filas ${i + 1}–${Math.min(i + 10, nuevos.length)}`, motivo: 'No se han podido guardar' }); continue; } creados += d.records.length; }
-          return res.status(200).json({ ok: true, prueba, nuevos: nuevos.length, creados, repetidos: repes.length, repes: repes.slice(0, 50), malos });
+          const conPack = nuevos.filter(f => f['SESIONES BONO PREVIO'] > (f['BONO PREVIO YA USADAS'] || 0)).length;
+          return res.status(200).json({ ok: true, prueba, conPack, nuevos: nuevos.length, creados, repetidos: repes.length, repes: repes.slice(0, 50), malos });
         }
         if (action === 'seg-adm-icono') { // subir o quitar el icono de la app instalada (cuadrado)
           const cur = (await ajuste('config', null)) || {}; cur.clinica = cur.clinica || {};
