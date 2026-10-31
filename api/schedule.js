@@ -1105,11 +1105,13 @@ function pngARgb(buf) {
     prev = row; }
   return { w, h, rgb: out };
 }
-function pdfImagen(img, ancho, alto) { // una página (puntos) con la imagen a página completa
+function pdfImagen(img, ancho, alto, caja) { // una página (puntos) con la imagen a página completa, o en «caja» [x,y,w,h] con marcas de corte
   const data = require('zlib').deflateSync(img.rgb), ob = [], obj = t => { ob.push(t); return ob.length; };
   obj('<< /Type /Catalog /Pages 2 0 R >>'); obj('<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
   obj(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${ancho} ${alto}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`);
-  const cont = `q ${ancho} 0 0 ${alto} 0 0 cm /Im0 Do Q`;
+  let cont = `q ${ancho} 0 0 ${alto} 0 0 cm /Im0 Do Q`;
+  if (caja) { const [x, y, w, h] = caja, m = 8, L = 18, ln = (x1, y1, x2, y2) => `${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S `;
+    cont = `q ${w} 0 0 ${h} ${x} ${y} cm /Im0 Do Q q 0.4 G 0.5 w ` + [[x, y], [x + w, y], [x, y + h], [x + w, y + h]].map(([cx, cy]) => { const sx = cx === x ? -1 : 1, sy = cy === y ? -1 : 1; return ln(cx + sx * m, cy, cx + sx * (m + L), cy) + ln(cx, cy + sy * m, cx, cy + sy * (m + L)); }).join('') + 'Q'; }
   const partes = [Buffer.from('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n', 'binary')], off = []; let pos = partes[0].length;
   const add = b => { partes.push(b); pos += b.length; };
   ob.forEach((t, i) => { off.push(pos); add(Buffer.from(`${i + 1} 0 obj\n${t}\nendobj\n`, 'binary')); });
@@ -3043,7 +3045,7 @@ module.exports = async function handler(req, res) {
     if (r.error || !F['CÓDIGO']) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: 'No encontramos esta tarjeta regalo. Escríbenos y te ayudamos.' })); }
     if (action === 'vale-pdf') {
       try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(valePrintSvg(F), CLI), { font: { loadSystemFonts: false } }).render().asPng();
-        const pdf = pdfImagen(pngARgb(png), 419.53, 595.28), nom = `tarjeta-regalo-${String(F['CÓDIGO'] || 'fisio').replace(/[^\w-]/g, '')}.pdf`;
+        const A6 = [297.64, 419.53], pdf = req.query.imp === '1' ? pdfImagen(pngARgb(png), 595.28, 841.89, [(595.28 - A6[0]) / 2, (841.89 - A6[1]) / 2, A6[0], A6[1]]) : pdfImagen(pngARgb(png), 419.53, 595.28), nom = `tarjeta-regalo-${String(F['CÓDIGO'] || 'fisio').replace(/[^\w-]/g, '')}.pdf`;
         res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Content-Disposition', `inline; filename="${nom}"`); res.setHeader('Cache-Control', 'private, max-age=300'); return res.status(200).send(pdf); }
       catch (e) { console.log('vale-pdf', e.message); res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(500).send(paginaEncuesta({ error: 'No se ha podido preparar el PDF. Inténtalo de nuevo.' })); }
     }
