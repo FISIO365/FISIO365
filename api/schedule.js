@@ -1406,8 +1406,8 @@ function firmaHuecos(k) { return require('crypto').createHmac('sha256', String(p
 const huecosDec = k => { try { const o = JSON.parse(Buffer.from(String(k), 'base64url').toString('utf8'));
     if (o && Number(o.r) > 0) { const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), d = new Date(hoy + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + Math.min(90, Number(o.r))); return { a: hoy, b: d.toISOString().slice(0, 10), f: Array.isArray(o.f) ? o.f.map(String) : [], p: Number(o.p) > 0 ? Number(o.p) : 0 }; }
     return o && /^\d{4}-\d{2}-\d{2}$/.test(o.a) && /^\d{4}-\d{2}-\d{2}$/.test(o.b) ? { a: o.a, b: o.b, f: Array.isArray(o.f) ? o.f.map(String) : [], p: Number(o.p) > 0 ? Number(o.p) : 0 } : null; } catch (e) { return null; } };
-const huecosSiempre = (dias, f, v) => { const k = Buffer.from(JSON.stringify(Object.assign({ r: dias, f: f || [] }, v ? { v } : {}))).toString('base64url'); return `https://app.fisioterapia365.com/h/${k}.${firmaHuecos(k)}`; };
-const huecosEnlace = (a, b, f, p) => { const k = Buffer.from(JSON.stringify(Object.assign({ a, b, f: f || [] }, p > 0 ? { p } : {}))).toString('base64url'); return `https://app.fisioterapia365.com/h/${k}.${firmaHuecos(k)}`; };
+const huecosSiempre = (dias, f, v) => { const k = Buffer.from(JSON.stringify(Object.assign({ r: dias, f: f || [] }, v ? { v } : {}))).toString('base64url'); return `${APPU()}/h/${k}.${firmaHuecos(k)}`; };
+const huecosEnlace = (a, b, f, p) => { const k = Buffer.from(JSON.stringify(Object.assign({ a, b, f: f || [] }, p > 0 ? { p } : {}))).toString('base64url'); return `${APPU()}/h/${k}.${firmaHuecos(k)}`; };
 const HUECO_LIBRE = /^(CITA LIBRE|LIBRE - SIN BOMBA)$/, HUECO_NOFISIO = /^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES|NORA)$/i;
 const madridAhora = () => { const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date()).map(x => [x.type, x.value])); return { f: `${p.year}-${p.month}-${p.day}`, h: `${String(+p.hour % 24).padStart(2, '0')}:${p.minute}` }; };
 function huecoValido(F, P) {
@@ -3708,7 +3708,7 @@ module.exports = async function handler(req, res) {
         }
         return res.status(400).json({ ok: false, error: 'Acción no válida' });
       }
-      if (action === 'seg-config') return res.status(200).json({ ok: true, conf: await conf(), legalBase: LEGAL_TXT(), personalizar: (await ajuste('personalizar', null)) || {}, demo: String(process.env.CLINICA || '') === 'demo' && !!process.env.SIN_ENVIOS,
+      if (action === 'seg-config') return res.status(200).json({ ok: true, reservasWeb: huecosSiempre(30), conf: await conf(), legalBase: LEGAL_TXT(), personalizar: (await ajuste('personalizar', null)) || {}, demo: String(process.env.CLINICA || '') === 'demo' && !!process.env.SIN_ENVIOS,
         conexiones: { emails: !!process.env.BREVO_API_KEY, cobros: !!process.env.STRIPE_SECRET_KEY, holded: !!process.env.HOLDED_API_KEY, ia: !!process.env.ANTHROPIC_API_KEY, avisos: !!process.env.VAPID_PUBLIC_KEY, dominio: !/vercel\.app/.test(String(process.env.APP_URL || 'https://app.fisioterapia365.com')) } });
       if (action === 'seg-personalizar' && req.method === 'POST') { // «Personaliza tu app»: lo que dirección marca como revisado
         const cur = (await ajuste('personalizar', null)) || {}, k = String(q.k || '').slice(0, 40); if (!/^[a-z0-9-]+$/.test(k)) return res.status(400).json({ ok: false });
