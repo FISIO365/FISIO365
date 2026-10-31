@@ -2262,7 +2262,7 @@ const CONF_DEF = {
     ],
     promos: [
       { etiqueta: 'Siempre disponible', titulo: 'Packs de sesiones', texto: 'Cada sesión te sale más barata: hasta 280 € de ahorro. Pagas una vez y solo te preocupas de mejorar.', boton: 'Ver packs', accion: 'packs', color: 'Naranja' },
-      { etiqueta: 'Regalo', titulo: 'Regala fisioterapia', texto: 'Una tarjeta regalo para quien quieras. La preparas en 2 minutos.', boton: 'Regalar', accion: 'https://app.fisioterapia365.com/regalo', color: 'Negro' }
+      { etiqueta: 'Regalo', titulo: 'Regala fisioterapia', texto: 'Una tarjeta regalo para quien quieras. La preparas en 2 minutos.', boton: 'Regalar', accion: '/regalo', color: 'Negro' }
     ]
   }
 };
