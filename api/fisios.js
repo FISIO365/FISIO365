@@ -76,9 +76,11 @@ export default async function handler(req) {
         headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
       });
       const data = await r.json();
-      const rec = (data.records || []).find(r =>
-        (r.fields['Name'] || '').trim().toLowerCase() === nombre.trim().toLowerCase()
-      );
+      // Nombre completo o solo el nombre de pila (si no hay dos iguales), sin importar mayúsculas ni acentos
+      const norm = x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().replace(/\s+/g, ' ').toLowerCase();
+      const L = (data.records || []).filter(r => !r.fields['FECHA BAJA'] || norm(r.fields['Name']) === norm(nombre)), q = norm(nombre);
+      let rec = (data.records || []).find(r => norm(r.fields['Name']) === q);
+      if (!rec) { const pila = L.filter(r => norm(r.fields['Name']).split(' ')[0] === q); if (pila.length === 1) rec = pila[0]; }
       if (!rec) return new Response(JSON.stringify({ ok: false, error: 'Usuario no encontrado' }), { headers: corsHeaders });
       if (rec.fields['FECHA BAJA']) return new Response(JSON.stringify({ ok: false, baja: true, error: 'Este usuario está dado de baja' }), { headers: corsHeaders });
       const pwdAirtable = (rec.fields['Password'] || '').trim();
