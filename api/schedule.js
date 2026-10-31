@@ -2492,7 +2492,7 @@ module.exports = async function handler(req, res) {
     const PG = require('./_pg'), K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
     if (!PG.ACTIVO || K.length < 24 || k.length !== K.length || !require('crypto').timingSafeEqual(Buffer.from(k), Buffer.from(K))) return res.status(404).end();
     res.setHeader('Cache-Control', 'no-store');
-    const r = await require('./_comparar').comparar({ fetch: PG.fetchReal, pwd: process.env.FISIO_PASSWORD || '', self: String(process.env.APP_URL || '').replace(/\/+$/, ''), desde: +req.query.desde || 0, cuantas: Math.min(+req.query.n || 20, 40) });
+    const r = await require('./_comparar').comparar({ fetch: PG.fetchReal, pwd: process.env.FISIO_PASSWORD || '', self: String(process.env.APP_URL || '').replace(/\/+$/, ''), desde: +req.query.desde || 0, cuantas: Math.min(+req.query.n || 20, 40), ver: req.query.ver ? String(req.query.ver) : null, campo: req.query.campo ? String(req.query.campo) : null });
     return res.status(200).json(r);
   }
   // Datos de la clínica (Administración › Ajustes): las páginas salen con su nombre, dirección, teléfono…
