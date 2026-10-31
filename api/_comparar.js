@@ -75,7 +75,7 @@ async function lista(F, P) { // P: { pwd, self }
 async function comparar({ fetch: F, pwd, self, desde = 0, cuantas = 25, rutas = null, ver = null, campo = null }) {
   if (ver) { // las dos respuestas de una ruta (con campo = solo esa parte, p. ej. «negocios»)
     const ruta = ver.replace('pwd=…', 'pwd=' + encodeURIComponent(pwd)); const [a, b] = await Promise.all([pedir(PROD, ruta, F), pedir(self, ruta, F)]);
-    const sel = j => { if (!j || !campo) return j; let x = j; for (const k of campo.split('.')) x = x && x[k]; return x; };
+    const sel = j => { if (!j || !campo) return j; let x = j; const [ruta, cl] = campo.split(':'); for (const k of ruta.split('.')) x = x && x[k]; if (cl && Array.isArray(x)) x = x.map(e => cl.split(',').map(c => e && e[c]).join(' · ')); return x; };
     return { de_verdad: sel(a.j) ?? a.txt, nueva: sel(b.j) ?? b.txt };
   }
   const L = rutas || await lista(F, { pwd, self });
