@@ -1189,11 +1189,10 @@ function pinta(){document.body.classList.remove('fin');var h=cab(),i=PASOS.index
   +'<label class="ck"><input type="checkbox" id="fck"'+(S.fac?' checked':'')+'> Necesito factura</label>'
   +(S.fac?'<label class="l" for="fr">Nombre o razón social</label><input class="i" id="fr" value="'+esc(S.razon||'')+'" maxlength="80"><label class="l" for="fn">NIF / CIF</label><input class="i" id="fn" value="'+esc(S.nif||'')+'" maxlength="20"><label class="l" for="fd">Dirección fiscal</label><input class="i" id="fd" value="'+esc(S.dirf||'')+'" maxlength="140">':'')
   +'<button type="button" class="bt" id="sig">Seguir</button><p class="err" id="er"></p>';}
- if(paso==='pago'){var s2=servicio(),o2=opcion(),ms=S.msg===-1?S.propio:MSG[S.oc][S.idioma||'es'][S.msg];
+ if(paso==='pago'){if(S.pago==='transferencia')S.pago=null;var s2=servicio(),o2=opcion(),ms=S.msg===-1?S.propio:MSG[S.oc][S.idioma||'es'][S.msg];
   h+='<h2>Tu regalo</h2><div class="res" style="background:#fbf7f1;border:1.5px solid #efe6df"><div class="r1" style="color:#c2552e">'+esc(OC().tk)+'</div><div class="r2">'+(o2.pack?'Pack '+o2.n+' sesiones':ses(o2.n))+'</div><div class="r3">de '+esc(s2.nombre)+'<br>Para <b>'+esc(S.para)+'</b>, de parte de <b>'+esc(S.de)+'</b>'+(ms?'<br>«'+esc(ms)+'»':'')+'<br>'+(S.entrega==='yo'?'Digital, a tu email':S.entrega==='su'?'A '+esc(S.emailDestino)+' el '+fl(S.fecha):'Impresa, la recoges en el centro')+'</div><div class="tot"><span>Total</span><b>'+eur(o2.p)+'</b></div></div>'
   +'<label class="l">¿Cómo quieres pagar?</label>'
   +(D.tarjeta?op('data-p="tarjeta"',S.pago==='tarjeta','<b>Con tarjeta, ahora</b><small>Pago 100% seguro con Stripe</small>'):'')
-  +op('data-p="transferencia"',S.pago==='transferencia','<b>Transferencia bancaria</b><small>Te la enviamos cuando llegue</small>')
   +op('data-p="centro"',S.pago==='centro','<b>En el centro</b><small>Con tarjeta o en efectivo</small>')
   +'<button type="button" class="bt" id="sig"'+(S.pago?'':' disabled')+'>'+(S.pago==='tarjeta'?'Pagar '+eur(o2.p):'Confirmar el regalo')+'</button><p class="err" id="er"></p>';}
  C.innerHTML='<div class="fi">'+h+'</div>';ata();}
