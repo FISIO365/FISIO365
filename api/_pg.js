@@ -209,7 +209,7 @@ async function listar(tb, q) {
   if (S.length) {
     const keys = new Map();
     for (const r of L) { const ks = []; for (const s of S) { const f = campo(tb, s.field); if (!f) return err(422, 'INVALID_SORT_FIELD', 'Unknown field ' + s.field); ks.push(valorFormula(tb, r, f, ctx)); } keys.set(r.id, ks); }
-    L.sort((a, b) => { const A = keys.get(a.id), B = keys.get(b.id); for (let i = 0; i < S.length; i++) { const d = cmpOrden(A[i], B[i]) * (String(S[i].direction).toLowerCase() === 'desc' ? -1 : 1); if (d) return d; } return porOrden(a, b); });
+    L.sort((a, b) => { const A = keys.get(a.id), B = keys.get(b.id); for (let i = 0; i < S.length; i++) { const d = cmpOrden(A[i], B[i]) * (String(S[i].direction).toLowerCase() === 'desc' ? -1 : 1); if (d) return d; } return (a.creado - b.creado) || porOrden(a, b); }); // empates: por fecha de creación (como Airtable)
   } else L.sort(porOrden);
   const max = +q.get('maxRecords') || 0; if (max > 0) L = L.slice(0, max);
   const ps = Math.min(100, Math.max(1, +q.get('pageSize') || 100)), off = +(q.get('offset') || 0) || 0;
