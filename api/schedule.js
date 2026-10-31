@@ -2066,12 +2066,42 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'clinica-pub') { // lo público de la clínica para la app y el panel (nombre, teléfono, opciones…)
     const C = CLI; res.setHeader('Cache-Control', 'public, max-age=60');
-    return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones, color: C.color, logo: C.logoV ? '/api/schedule?action=clinica-logo&v=' + C.logoV : '', plantillas: PLANT }, pares: MARCA.pares(C) });
+    return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones, color: C.color, logo: C.logoV ? '/api/schedule?action=clinica-logo&v=' + C.logoV : '', icono: MARCA.iconoPropio(C) ? MARCA.iconoUrl(C, 512) : '', iconoSubido: !!C.iconoV, plantillas: PLANT }, pares: MARCA.pares(C) });
   }
   if (action === 'clinica-logo') { // logo subido en Administración › Ajustes
     const L = await ajuste('clinica-logo', null), m = L && String(L.data || '').match(/^data:(image\/(png|jpeg|webp|svg\+xml));base64,(.+)$/);
     if (!m) { res.setHeader('Location', '/informe/logo.png'); return res.status(302).end(); }
     res.setHeader('Content-Type', m[1]); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).end(Buffer.from(m[3], 'base64'));
+  }
+  if (action === 'manifest') { // manifest de la app instalada (paciente o panel): nombre, color e icono de la clínica
+    const C = CLI, panel = req.query.app === 'panel', prop = MARCA.iconoPropio(C);
+    const ic = prop ? [{ src: MARCA.iconoUrl(C, 192), sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512), sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512, 1), sizes: '512x512', type: 'image/png', purpose: 'maskable' }]
+      : panel ? [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }]
+      : [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }];
+    const M = panel
+      ? { name: C.marca + ' Panel', short_name: C.marca === 'FISIO365' ? 'Panel Fisio' : C.marca.slice(0, 12).trim(), description: 'Panel del fisioterapeuta', start_url: '/fisio', display: 'standalone', background_color: '#000000', theme_color: '#000000', icons: ic }
+      : { name: C.marca, short_name: C.marca.slice(0, 12).trim(), description: `Tus ejercicios, tus citas y el chat con tu fisio de ${C.marca}.`, start_url: '/', display: 'standalone', background_color: C.color || '#c2552e', theme_color: '#000000', icons: ic, id: '/', lang: 'es', dir: 'ltr', scope: '/', orientation: 'portrait', categories: ['health', 'medical', 'fitness'] };
+    res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.status(200).send(JSON.stringify(M));
+  }
+  if (action === 'app-icono') { // icono cuadrado de la app (PNG): el subido o uno con el nombre y el color de la clínica
+    const C = CLI, S = Math.max(48, Math.min(1024, parseInt(req.query.s, 10) || 512)), mask = req.query.m === '1';
+    const I = C.iconoV ? await ajuste('clinica-icono', null) : null, d = I && String(I.data || '');
+    if (!/^data:image\//.test(d || '') && !MARCA.iconoPropio(C)) { res.setHeader('Location', mask ? '/icons/icon-maskable-512.png' : S <= 192 ? '/icons/icon-192.png' : '/icons/icon-512.png'); return res.status(302).end(); }
+    let svg;
+    if (/^data:image\//.test(d || '')) { const pad = mask ? Math.round(S * 0.1) : 0;
+      svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}"><rect width="${S}" height="${S}" fill="${mask ? (C.color || '#c2552e') : 'none'}"/><image x="${pad}" y="${pad}" width="${S - 2 * pad}" height="${S - 2 * pad}" preserveAspectRatio="xMidYMid slice" xlink:href="${d}" href="${d}"/></svg>`;
+    } else {
+      const T = ogTipos(), nom = String(C.marca || '').trim() || 'App', ancho = S * (mask ? 0.62 : 0.78);
+      const w1 = (t, sz) => T.b.stringToGlyphs(t).reduce((a, g) => a + g.advanceWidth * sz / T.b.unitsPerEm, 0);
+      const pal = nom.split(/\s+/); let L = [nom];
+      if (pal.length > 1 && w1(nom, S * 0.2) > ancho) { let best = null; for (let i = 1; i < pal.length; i++) { const a = pal.slice(0, i).join(' '), b = pal.slice(i).join(' '), m = Math.max(w1(a, 1), w1(b, 1)); if (!best || m < best[0]) best = [m, [a, b]]; } L = best[1]; }
+      let sz = Math.min(S * (L.length > 1 ? 0.2 : 0.26), ...L.map(t => ancho / Math.max(1e-6, w1(t, 1))));
+      const lh = sz * 1.08, y0 = S / 2 - (L.length - 1) * lh / 2 + sz * 0.36;
+      svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}"><rect width="${S}" height="${S}" fill="${C.color || '#c2552e'}"/>${L.map((t, i) => ogTexto(T.b, t, sz, S / 2, y0 + i * lh, 0, '#ffffff')).join('')}</svg>`;
+    }
+    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(svg, { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+    catch (e) { res.setHeader('Location', '/icons/icon-512.png'); return res.status(302).end(); }
   }
   // Medición de velocidad: se apunta en los logs cuánto tarda cada acción (para saber qué pantallas van lentas)
   { const t0 = Date.now(); res.on('finish', () => { const ms = Date.now() - t0; console.log(`TIEMPO ${action || '-'} ${ms}ms${ms > 1500 ? ' LENTO' : ''}`); }); }
@@ -3099,6 +3129,15 @@ module.exports = async function handler(req, res) {
           if (!E.length) return res.status(400).json({ ok: false, error: 'Deja al menos un email' });
           await guardarAjuste('emails_resumen', E.slice(0, 10), yo.fields.Name); return res.status(200).json({ ok: true, emails: await emailsResumen() });
         }
+        if (action === 'seg-adm-icono') { // subir o quitar el icono de la app instalada (cuadrado)
+          const cur = (await ajuste('config', null)) || {}; cur.clinica = cur.clinica || {};
+          if (q.quitar) { await guardarAjuste('clinica-icono', null, yo.fields.Name); cur.clinica.iconoV = 0; await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() }); }
+          const d = String(q.data || '');
+          if (!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(d)) return res.status(400).json({ ok: false, error: 'La imagen no es válida' });
+          if (d.length > 95000) return res.status(400).json({ ok: false, error: 'La imagen es demasiado grande' });
+          await guardarAjuste('clinica-icono', { data: d }, yo.fields.Name); cur.clinica.iconoV = Date.now() % 1e9; await guardarAjuste('config', cur, yo.fields.Name);
+          return res.status(200).json({ ok: true, conf: await conf() });
+        }
         if (action === 'seg-adm-logo') { // subir o quitar el logo de la clínica (imagen pequeña guardada en Ajustes)
           const cur = (await ajuste('config', null)) || {}; cur.clinica = cur.clinica || {};
           if (q.quitar) { await guardarAjuste('clinica-logo', null, yo.fields.Name); cur.clinica.logoV = 0; await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() }); }
@@ -3125,7 +3164,7 @@ module.exports = async function handler(req, res) {
           } else if (sec === 'holded') cur.holded = { borrador: !!v.borrador, rgpd: lim(v.rgpd, 1500) || TEXTO_RGPD };
           else if (sec === 'clinica') { const L = MARCA.limpio, op = v.opciones || {};
             cur.clinica = { marca: L(v.marca, 40), razon: L(v.razon, 80), nif: L(v.nif, 20), direccion: L(v.direccion, 160), dirCorta: L(v.dirCorta, 100), zona: L(v.zona, 40), ciudad: L(v.ciudad, 40), tel: L(v.tel, 30), wa: String(v.wa || '').replace(/\D/g, '').slice(0, 15), email: L(v.email, 80), web: L(v.web, 80), googlePlace: L(v.googlePlace, 80).replace(/\s/g, ''), iban: L(v.iban, 40),
-              opciones: { sorteo: op.sorteo !== false, bomba: op.bomba !== false }, color: /^#[0-9a-f]{6}$/i.test(String(v.color || '')) ? String(v.color).toLowerCase() : '', logoV: (cur.clinica && cur.clinica.logoV) || 0 }; }
+              opciones: { sorteo: op.sorteo !== false, bomba: op.bomba !== false }, color: /^#[0-9a-f]{6}$/i.test(String(v.color || '')) ? String(v.color).toLowerCase() : '', logoV: (cur.clinica && cur.clinica.logoV) || 0, iconoV: (cur.clinica && cur.clinica.iconoV) || 0 }; }
           else if (sec === 'app') { // servicios, precios, packs y promociones de la app del paciente
             const num = x => { const n = Number(String(x == null ? '' : x).replace(',', '.')); return isFinite(n) && n >= 0 && n <= 100000 ? Math.round(n * 100) / 100 : null; };
             const servicios = (Array.isArray(v.servicios) ? v.servicios : []).map(x => ({ nombre: lim(x && x.nombre, 60), desc: lim(x && x.desc, 300), suelta: num(x && x.suelta) || 0,

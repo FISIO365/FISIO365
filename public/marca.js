@@ -6,6 +6,14 @@
     if (!d || !d.ok) return;
     window.CLINICA = d.clinica;
     var P = d.pares || [], C = d.clinica || {};
+    // Nombre e icono de la app instalada (al añadirla a la pantalla de inicio)
+    try {
+      if (C.marca && C.marca !== 'FISIO365') {
+        if (document.title.indexOf('FISIO365') > -1) document.title = document.title.split('FISIO365').join(C.marca);
+        var mt = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (mt) mt.setAttribute('content', mt.getAttribute('content').split('FISIO365').join(C.marca));
+      }
+      if (C.icono) document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(function (l) { l.setAttribute('href', C.icono); });
+    } catch (e) {}
     // Pares de color (empiezan por # o son el rgb del coral) y, en la app, también los de texto
     var col = P.filter(function (p) { return /^#[0-9a-fA-F]{6}$/.test(p[0]) || /^194, ?85, ?46$/.test(p[0]); });
     var txt = TEXTO ? P.filter(function (p) { return col.indexOf(p) < 0; }) : [];

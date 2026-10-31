@@ -29,12 +29,13 @@ Las claves **nunca** se pegan en el chat ni en el código: se ponen directamente
 ## 3. En el panel (Administración › Ajustes)
 - **Datos de la clínica**: nombre, razón social, NIF, dirección, teléfono, WhatsApp, email, enlace de reseñas (Google Place ID), IBAN.
 - **Logo y color** de la marca.
+- **Icono de la app**: el que sale en el móvil al instalar la app y el panel (cuadrado, 512×512). Si no se sube, se hace uno solo con el nombre y el color de la clínica. El nombre de la app instalada es el «Nombre de la clínica».
 - **Opciones**: sorteo de reseñas, bomba diamagnética.
 - **App del paciente**: servicios, precios, packs y promociones.
 - **Mensajes a pacientes**: los WhatsApp que prepara el panel (recordatorios, encuestas, reseñas, pagos, huecos, facturas), con etiquetas como `{nombre}` o `{enlace}`.
 - **Textos legales** del consentimiento (tratamiento, declaraciones, protección de datos, derechos, suelo pélvico, alta oncológica).
 - **Listas**, tipos de cita, estados, política de cancelación, check-list, tarjeta regalo.
 
-## Pendiente (siguientes pasos)
-- Cursos de School propios de FISIO365 (protocolos, aparatos): ocultarlos o hacerlos editables por clínica. El curso «Cómo funciona la app» sirve para todas.
-- Icono y nombre de la app instalada (manifest) por clínica.
+## Lo que ya va solo
+- Los cursos técnicos de School (protocolos y aparatos de FISIO365) no salen en otra clínica; los de la bomba, solo si tiene la bomba activada. «Cómo funciona la app» y «La app del paciente» sirven para todas.
+- La app de Google Play es de FISIO365: otra clínica usa la app instalada desde el navegador (con su nombre e icono).

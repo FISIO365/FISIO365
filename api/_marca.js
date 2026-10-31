@@ -35,6 +35,7 @@ function datos(guardado) {
   o.calle = calle(o.dirCorta) || calle(o.direccion);
   o.color = /^#[0-9a-f]{6}$/i.test(String(g.color || '')) ? String(g.color).toLowerCase() : DEF.color;
   o.logoV = Number(g.logoV) || 0; // versión del logo subido (0 = el de FISIO365)
+  o.iconoV = Number(g.iconoV) || 0; // versión del icono de la app subido (0 = ninguno)
   o.opciones = Object.assign({}, OPC_DEF, (g.opciones && typeof g.opciones === 'object') ? g.opciones : {});
   return o;
 }
@@ -92,6 +93,7 @@ function pares(C) {
   ];
   const P = L.filter(([, k]) => C[k] && C[k] !== D[k]).map(([a, k, f]) => [a, f ? f(C[k]) : C[k]]).filter(([a, b]) => a !== b);
   if (C.logoV) P.unshift(['/informe/logo.png', '/api/schedule?action=clinica-logo&v=' + C.logoV]);
+  if (iconoPropio(C)) P.unshift(['/icons/icon-512.png', iconoUrl(C, 512)], ['/icons/icon-192.png', iconoUrl(C, 192)], ['/icono.png', iconoUrl(C, 192)]);
   // Otra clínica en su propio despliegue: los enlaces apuntan a su app (APP_URL), no a la de FISIO365
   const app = String(process.env.APP_URL || '').replace(/\/+$/, '');
   if (/^https:\/\/[a-z0-9.-]+$/i.test(app) && app !== 'https://app.fisioterapia365.com') P.unshift(['https://app.fisioterapia365.com', app]);
@@ -108,4 +110,8 @@ function marcar(txt, C, json) {
   return s;
 }
 
-module.exports = { DEF, OPC_DEF, datos, pares, paresColor, marcar, limpio };
+// Icono de la app instalada: el subido en Ajustes o, si la clínica no es FISIO365, uno hecho con su nombre y su color
+function iconoPropio(C) { return !!(C && (C.iconoV || (C.marca && C.marca !== DEF.marca))); }
+function iconoVer(C) { let h = 0; String([C.iconoV, C.marca, C.color].join('|')).split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return h.toString(36); }
+function iconoUrl(C, s, m) { return '/api/schedule?action=app-icono&s=' + (s || 512) + (m ? '&m=1' : '') + '&v=' + iconoVer(C); }
+module.exports = { DEF, OPC_DEF, datos, pares, paresColor, marcar, limpio, iconoPropio, iconoUrl };

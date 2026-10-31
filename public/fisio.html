@@ -1672,7 +1672,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .val-nota{font-size:12.5px;color:#a3968c;margin:4px 2px 14px}.val-it{display:flex;gap:12px;padding:16px 18px;background:#faf7f4;border-radius:14px;margin-bottom:10px;align-items:flex-start}.val-it .val-c{background:#fff}.val-it.nuevo{background:#fdf1ea}.val-wa{flex:none;align-self:center;margin-top:0;margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;color:#16803c;background:#f2faf4;border:1.5px solid #cfe9d6;border-radius:99px;padding:7px 13px;cursor:pointer}.val-sc{font-style:italic;color:#8a7d74}.val-tp{display:inline-block;font-size:11px;font-weight:600;color:#a3441f;background:#fdf1ea;border-radius:99px;padding:1px 8px}.val-tp.fin{color:#1f6b45;background:#e9f6ee}.val-tp.mej{color:#7a4a12;background:#f8ebd3}
 .val-qs{background:#fbf8f5;border:1px solid #efe6de;border-radius:14px;padding:0 14px;margin:0 0 20px}.val-qs summary{display:flex;align-items:center;gap:8px;list-style:none;cursor:pointer;font-size:13px;font-weight:600;color:#5f554e;padding:10px 0}.val-qs summary::-webkit-details-marker{display:none}.val-qs summary svg{width:17px;height:17px;fill:none;stroke:#c2552e;stroke-width:1.8;stroke-linecap:round}.val-qsl{display:flex;flex-direction:column;gap:8px;padding:2px 0 12px}.qs-it{background:#fff;border-radius:10px;padding:10px 12px}.qs-t{font-size:13px;font-weight:600;color:#2b2420;margin-bottom:3px}.qs-d{font-size:12.5px;color:#7d6a60;line-height:1.5}
 .vr{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px}.vr-t{background:#fdf6ef;border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:2px;min-width:0}.vr-h{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:#7d6a60}.vr-i{display:flex;color:#c2552e}.vr-i svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.vr-t b{font-size:30px;line-height:1.15;color:#c2552e;font-weight:700;margin-top:4px}.vr-t small{font-size:11.5px;color:#a3968c;line-height:1.35}@media(max-width:600px){.vr{grid-template-columns:repeat(2,1fr);gap:8px}}
-.mk-logo{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}.mk-lprev{width:150px;height:64px;border-radius:12px;background:#faf6f1;display:grid;place-items:center;padding:8px;box-sizing:border-box}.mk-lprev img{max-width:100%;max-height:100%;object-fit:contain}.mk-ltxt{font-size:20px;font-weight:800;color:#1e2a38;letter-spacing:-.5px}.mk-ltxt b{color:#1e2a38}.mk-lbts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.mk-lbts small{width:100%;font-size:12px;color:#a3968c}
+.mk-iprev{width:64px;height:64px;border-radius:16px;overflow:hidden;flex:none;box-shadow:0 2px 8px rgba(26,26,26,.12)}.mk-iprev img{width:100%;height:100%;object-fit:cover;display:block}.mk-logo{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}.mk-lprev{width:150px;height:64px;border-radius:12px;background:#faf6f1;display:grid;place-items:center;padding:8px;box-sizing:border-box}.mk-lprev img{max-width:100%;max-height:100%;object-fit:contain}.mk-ltxt{font-size:20px;font-weight:800;color:#1e2a38;letter-spacing:-.5px}.mk-ltxt b{color:#1e2a38}.mk-lbts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.mk-lbts small{width:100%;font-size:12px;color:#a3968c}
 .mk-col{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.mk-sw{display:flex;gap:8px;flex-wrap:wrap}.mk-sw button{width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6);transition:transform .15s}.mk-sw button.on{transform:scale(1.12);box-shadow:0 0 0 2px #fff,0 0 0 4px currentColor;color:#d6cdc4}.mk-hex{display:flex;align-items:center;gap:8px}.mk-dot{width:22px;height:22px;border-radius:50%;flex:none}.mk-hex input{width:104px;font-family:ui-monospace,monospace}
 .mk-prev{display:flex;align-items:center;gap:10px;margin:12px 0 4px}.mk-pb{border:none;border-radius:99px;color:#fff;font:600 13px Poppins,sans-serif;padding:9px 16px;cursor:default}.mk-pt{font-size:12px;font-weight:600;border-radius:99px;padding:4px 10px}
 body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN BOMBA"],body.sin-bomba [data-t="LIBRE - SIN BOMBA"],body.sin-bomba .ag-sbm,body.sin-bomba .ag-bmi,body.sin-bomba .ag-alb,body.sin-bomba .ag-alnt{display:none!important}
@@ -7938,6 +7938,8 @@ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule
     <div class="adm-2"><div><div class="hz-lab">Google Place ID <small style="font-weight:400;color:#a3968c">(enlace de reseñas)</small></div><input class="ag-in k-g2" value="${escH(K.googlePlace)}"></div><div><div class="hz-lab">IBAN <small style="font-weight:400;color:#a3968c">(pagos por transferencia)</small></div><input class="ag-in k-ib" value="${escH(K.iban)}"></div></div>
     <div class="hz-lab" style="margin-top:6px">Logo</div>
     <div class="mk-logo"><div class="mk-lprev">${K.logo?`<img src="${escH(K.logo)}" alt="">`:`<span class="mk-ltxt"><b>FISIO</b>365</span>`}</div><div class="mk-lbts"><button type="button" class="hz-ok mk-up">${K.logo?'Cambiar logo':'Subir logo'}</button>${K.logo?'<button type="button" class="sev-b mk-del">Quitar</button>':''}<small>PNG, JPG o SVG. Mejor horizontal y con fondo transparente.</small></div><input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="mk-file" hidden></div>
+    <div class="hz-lab" style="margin-top:6px">Icono de la app</div>
+    <div class="mk-logo"><div class="mk-iprev"><img src="${escH(K.icono||'/icons/icon-192.png')}" alt=""></div><div class="mk-lbts"><button type="button" class="hz-ok mk-iup">${(K.iconoSubido||K.iconoV)?'Cambiar icono':'Subir icono'}</button>${(K.iconoSubido||K.iconoV)?'<button type="button" class="sev-b mk-idel">Quitar</button>':''}<small>Es el que sale en el móvil al instalar la app y el panel. Cuadrado, de 512×512 o más. Si no subes ninguno, se hace uno con el nombre y el color de la clínica.</small></div><input type="file" accept="image/png,image/jpeg,image/webp" class="mk-ifile" hidden></div>
     <div class="hz-lab" style="margin-top:6px">Color de la marca</div>
     <div class="mk-col"><div class="mk-sw">${['#c2552e','#d9774f','#b8860b','#2f7a52','#1f8a8a','#2e6bc2','#5b4bc4','#b03a7a','#1e2a38','#3d3530'].map(c=>`<button type="button" data-c="${c}" style="background:${c}" class="${(K.color||'#c2552e')===c?'on':''}" aria-label="${c}"></button>`).join('')}</div>
      <div class="mk-hex"><span class="mk-dot" style="background:${escH(K.color||'#c2552e')}"></span><input class="ag-in k-col" value="${escH(K.color||'#c2552e')}" maxlength="7" spellcheck="false"></div></div>
@@ -7974,6 +7976,19 @@ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule
     const r=await admPost('seg-adm-logo',{data:d});if(!r.ok)throw new Error(r.error||'No se ha podido subir');
     toast('Logo guardado',true);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}pintaAjustes();}
    catch(e){toast(e.message||'No se ha podido subir',false);bt.disabled=false;bt.textContent='Subir logo';}};
+  // Icono de la app: cuadrado, se recorta al centro y se reduce a 512×512 en el navegador
+  const ifi=$b('.mk-ifile');$b('.mk-iup').onclick=()=>ifi.click();
+  ifi.onchange=async()=>{const f=ifi.files&&ifi.files[0];if(!f)return;const bt=$b('.mk-iup');bt.disabled=true;bt.textContent='Subiendo…';
+   try{const url=await new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=ko;r.readAsDataURL(f);});
+    const im=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=url;});
+    const w=im.naturalWidth||512,h=im.naturalHeight||512,l=Math.min(w,h),S=Math.min(512,l);
+    const cv=document.createElement('canvas');cv.width=S;cv.height=S;cv.getContext('2d').drawImage(im,(w-l)/2,(h-l)/2,l,l,0,0,S,S);
+    let d=cv.toDataURL('image/png');if(d.length>90000){for(const q of [.92,.85,.75,.6]){d=cv.toDataURL('image/jpeg',q);if(d.length<90000)break;}}
+    if(d.length>90000)throw new Error('La imagen es demasiado grande');
+    const r=await admPost('seg-adm-icono',{data:d});if(!r.ok)throw new Error(r.error||'No se ha podido subir');
+    toast('Icono guardado',true);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}pintaAjustes();}
+   catch(e){toast(e.message||'No se ha podido subir',false);bt.disabled=false;bt.textContent='Subir icono';}};
+  const idl=$b('.mk-idel');if(idl)idl.onclick=async()=>{idl.disabled=true;const r=await admPost('seg-adm-icono',{quitar:1});if(r.ok){toast('Icono quitado',true);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}pintaAjustes();}else{idl.disabled=false;toast('No se ha podido quitar',false);}};
   const dl=$b('.mk-del');if(dl)dl.onclick=async()=>{dl.disabled=true;const r=await admPost('seg-adm-logo',{quitar:1});if(r.ok){toast('Logo quitado',true);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}pintaAjustes();}else{dl.disabled=false;toast('No se ha podido quitar',false);}};
   $b('.k-g').onclick=async e=>{const v=q=>$b(q).value.trim();await guardarConf('clinica',{marca:v('.k-m'),web:v('.k-w'),razon:v('.k-r'),nif:v('.k-n'),direccion:v('.k-d'),dirCorta:v('.k-dc'),zona:v('.k-z'),ciudad:v('.k-ci'),email:v('.k-e'),tel:v('.k-t'),wa:v('.k-wa'),googlePlace:v('.k-g2'),iban:v('.k-ib'),opciones:{sorteo:$b('.k-os').checked,bomba:$b('.k-ob').checked},color:(()=>{let c=v('.k-col');if(c&&c[0]!=='#')c='#'+c;return colOk(c)?c.toLowerCase():'';})()},e.target);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}toast('Para ver el color nuevo en todo el panel, recarga la página',true);};
   $b('.x-g').onclick=e=>guardarConf('cancelacion',{horas:$b('.x-h').value,texto:$b('.x-t').value},e.target);
@@ -11354,7 +11369,7 @@ const WIKI_RUTAS = [
  tipo: 'formacion'
  },
  {
- id: 'sueloPelvicoProtocolo',
+ id: 'sueloPelvicoProtocolo', soloFisio365:1,
  categoria: 'clinico',
  titulo: 'Protocolo de Suelo Pélvico',
  desc: 'Consentimiento, anamnesis, sesión y registro en Airtable',
@@ -11367,7 +11382,7 @@ const WIKI_RUTAS = [
  tipo: 'formacion'
  },
  {
- id: 'bomba',
+ id: 'bomba', soloFisio365:1, bomba:1,
  categoria: 'clinico',
  titulo: 'Bomba diamagnética · Nivel Básico',
  desc: 'Fundamentos, mecanismos, patologías, contraindicaciones y FAQ',
@@ -11380,7 +11395,7 @@ const WIKI_RUTAS = [
  tipo: 'formacion'
  },
  {
- id: 'bomba-experto',
+ id: 'bomba-experto', soloFisio365:1, bomba:1,
  categoria: 'clinico',
  titulo: 'Bomba diamagnética · Nivel Experto',
  desc: 'Física del campo, mecanismos celulares, push and pull, implante molecular y pain control',
@@ -11393,7 +11408,7 @@ const WIKI_RUTAS = [
  tipo: 'formacion'
  },
  {
- id: 'ondas-basico',
+ id: 'ondas-basico', soloFisio365:1,
  categoria: 'clinico',
  titulo: 'Ondas de Choque · Nivel Básico',
  desc: 'Qué es, para qué sirve, cómo explicarlo y qué preguntar al paciente',
@@ -11583,7 +11598,8 @@ function renderWiki(wrap, rutaForzada){
  const outer = ce('div','wiki-outer');
 
  // ── Todos los cursos, agrupados por categoría — visibles para todo el equipo ──
- const TODOS_LOS_CURSOS = WIKI_RUTAS;
+ // Los cursos técnicos son propios de FISIO365 (sus protocolos y aparatos): en otra clínica no salen; los de la bomba, solo si la clínica la tiene
+ const TODOS_LOS_CURSOS = WIKI_RUTAS.filter(r=>(!(r.soloFisio365||r.categoria==='clinico')||(CLINICA.marca||'FISIO365')==='FISIO365')&&(!r.bomba||conBomba()));
  const cursosAdministrativos = TODOS_LOS_CURSOS.filter(r=>r.categoria==='centro');
  const cursosTecnicos = TODOS_LOS_CURSOS.filter(r=>r.categoria==='clinico');
 
@@ -14829,7 +14845,7 @@ function cerrarLightbox(){
 </script>
 <script src="/chat-ui.js?v=2"></script>
 <script src="/racha-ui.js?v=3"></script>
-<script src="/marca.js?v=1"></script>
+<script src="/marca.js?v=2"></script>
 <script>
 // ── Desplegables, fechas y horas con el estilo del panel (en vez de las listas del navegador) ──
 // Se engancha a cualquier <select>, <input type=date> y <input type=time> del panel: al tocarlo se abre el nuestro.

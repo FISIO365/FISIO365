@@ -251,11 +251,11 @@
     },
     {
       "src": "/manifest.json",
-      "dest": "/public/manifest.json"
+      "dest": "/api/schedule.js?action=manifest&app=paciente"
     },
     {
       "src": "/manifest-fisio.json",
-      "dest": "/public/manifest-fisio.json"
+      "dest": "/api/schedule.js?action=manifest&app=panel"
     },
     {
       "src": "/icono.png",

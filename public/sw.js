@@ -6,7 +6,7 @@ self.addEventListener('push', function (event) {
   event.waitUntil(Promise.all([
     self.registration.showNotification(title, {
       body: d.body || '',
-      icon: '/icono.png',
+      icon: '/api/schedule?action=app-icono&s=192',
       badge: '/icono.png',
       vibrate: [200, 100, 200],
       tag: d.tag || undefined,
