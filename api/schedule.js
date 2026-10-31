@@ -857,10 +857,10 @@ function ogTarjetaSvg({ imp, pila }) {
     + ogTexto(O.b, t1, sz - 10, 300, 412, 0, K)
     + ogTexto(O.m, 'por recomendarnos', 23, 300, 450, 0, M) + `</svg>`;
 }
-function paginaTarjeta(D) {
+function paginaRegalo(G) {
   const e = escHtml;
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Tu regalo · FISIO365</title>
-<meta property="og:title" content="${e(D.imp)} € de regalo${D.pila ? ', ' + e(D.pila) : ''}"><meta property="og:description" content="Gracias por recomendarnos. Te lo descontamos en tu próxima sesión."><meta property="og:image" content="${e(D.og)}"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${e(G.titulo)} · FISIO365</title>
+<meta property="og:title" content="${e(G.ogTitle)}"><meta property="og:description" content="${e(G.ogDesc)}"><meta property="og:image" content="${e(G.og)}"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
 .c{background:#fff;border-radius:26px;padding:30px 20px 24px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start;text-align:center}
@@ -879,11 +879,38 @@ h1{font-size:23px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-s
 .fi{opacity:0;transform:translateY(8px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}.pie{margin-top:18px;font-size:12.5px;color:#7d6a60}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
 <body><div class="c"><svg class="reg" viewBox="0 0 96 96" aria-hidden="true"><path class="caja" d="M18 46h60v34a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path class="caja" d="M48 46v40"/><g class="tapa"><rect x="12" y="32" width="72" height="14" rx="5"/><path class="lazo" d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/></g></svg>
-<h1 class="fi" style="animation-delay:.9s">¡Gracias${D.pila ? ', ' + e(D.pila) : ''}!</h1><p class="sub fi" style="animation-delay:1s">Por recomendarnos. Nos hace muchísima ilusión, así que aquí tienes tu regalo.</p>
-<div class="tk"><small>TARJETA REGALO</small><b>${e(D.imp)} €</b><span>de descuento en tu próxima sesión</span><hr>${D.pila ? `<em>Para ${e(D.pila)}</em>` : ''}${D.cad ? `<em>Válida hasta el ${e(D.cad)}</em>` : ''}</div>
-<div class="pasos fi" style="animation-delay:1.8s"><div class="pa"><span><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><div>No tienes que hacer nada<small>Ya lo tenemos apuntado en tu ficha</small></div></div><div class="pa"><span><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h4"/></svg></span><div>Te lo descontamos al pagar<small>En tu próxima sesión con nosotros</small></div></div></div>
-<a class="bt fi" style="animation-delay:2s" href="${huecosSiempre(30)}">Reservar mi próxima sesión</a><p class="sub" style="font-size:12.5px;margin-top:10px">¿Prefieres que te lo busquemos nosotros? <a href="https://wa.me/34${String(D.tel || '672893949').replace(/\D/g, '').slice(-9)}?text=${encodeURIComponent('Hola, quiero reservar mi próxima sesión (tengo la tarjeta regalo)')}" target="_blank" rel="noopener" style="color:#c2552e;font-weight:600">Escríbenos</a></p><p class="pie">FISIO365 · ${e(D.dir)}</p></div></body></html>`;
+<h1 class="fi" style="animation-delay:.9s">${e(G.h1)}</h1><p class="sub fi" style="animation-delay:1s">${e(G.sub)}</p>
+<div class="tk"><small>${e(G.tkS)}</small><b>${e(G.tkB)}</b><span>${e(G.tkSpan)}</span><hr>${(G.ems || []).map(x => `<em>${e(x)}</em>`).join('')}</div>
+<div class="pasos fi" style="animation-delay:1.8s">${(G.pasos || []).map(([ic, t, sm]) => `<div class="pa"><span><svg viewBox="0 0 24 24">${ic}</svg></span><div>${e(t)}<small>${e(sm)}</small></div></div>`).join('')}</div>
+<a class="bt fi" style="animation-delay:2s" href="${huecosSiempre(30)}">${e(G.btn)}</a><p class="sub" style="font-size:12.5px;margin-top:10px">¿Prefieres que te lo busquemos nosotros? <a href="https://wa.me/34${String(G.tel || '672893949').replace(/\D/g, '').slice(-9)}?text=${encodeURIComponent(G.waTxt)}" target="_blank" rel="noopener" style="color:#c2552e;font-weight:600">Escríbenos</a></p><p class="pie">FISIO365 · ${e(G.dir)}</p></div></body></html>`;
 }
+function paginaTarjeta(D) {
+  return paginaRegalo({ titulo: 'Tu regalo', ogTitle: `${D.imp} € de regalo${D.pila ? ', ' + D.pila : ''}`, ogDesc: 'Gracias por recomendarnos. Te lo descontamos en tu próxima sesión.', og: D.og,
+    h1: `¡Gracias${D.pila ? ', ' + D.pila : ''}!`, sub: 'Por recomendarnos. Nos hace muchísima ilusión, así que aquí tienes tu regalo.', tkS: 'TARJETA REGALO', tkB: `${D.imp} €`, tkSpan: 'de descuento en tu próxima sesión',
+    ems: [D.pila ? `Para ${D.pila}` : '', D.cad ? `Válida hasta el ${D.cad}` : ''].filter(Boolean),
+    pasos: [['<path d="m5 12.5 4.5 4.5L19 7.5"/>', 'No tienes que hacer nada', 'Ya lo tenemos apuntado en tu ficha'], ['<rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h4"/>', 'Te lo descontamos al pagar', 'En tu próxima sesión con nosotros']],
+    btn: 'Reservar mi próxima sesión', waTxt: 'Hola, quiero reservar mi próxima sesión (tengo la tarjeta regalo)', tel: D.tel, dir: D.dir });
+}
+// Premio del sorteo mensual de reseñas: página bonita para mandar por WhatsApp (con vista previa cuadrada)
+function paginaPremio(D) {
+  const mesTxt = D.mesTxt;
+  return paginaRegalo({ titulo: 'Tu premio', ogTitle: `¡Te ha tocado una sesión gratis${D.pila ? ', ' + D.pila : ''}!`, ogDesc: D.tipo === 'creativa' ? `Tu reseña ha sido la que más nos ha gustado en ${mesTxt}.` : `Sorteo de ${mesTxt} entre quienes nos dejáis reseña.`, og: D.og,
+    h1: `¡Enhorabuena${D.pila ? ', ' + D.pila : ''}!`, sub: D.tipo === 'creativa' ? `Tu reseña ha sido la que más nos ha gustado en ${mesTxt}. Gracias por tus palabras: nos dan muchísima energía.` : `Cada mes sorteamos una sesión entre quienes nos dejáis vuestra opinión en Google, y en ${mesTxt} has salido tú.`,
+    tkS: D.tipo === 'creativa' ? 'LA RESEÑA DEL MES' : 'SORTEO DEL MES', tkB: '1 sesión', tkSpan: 'de fisioterapia, gratis para ti', ems: [D.pila ? `Para ${D.pila}` : '', `Premio de ${mesTxt}`].filter(Boolean),
+    pasos: [['<path d="m5 12.5 4.5 4.5L19 7.5"/>', 'Es tuya, sin hacer nada más', 'Solo dinos que vienes con el premio'], ['<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>', 'Elige cuándo te va bien', 'Reserva en la app o escríbenos']],
+    btn: 'Reservar mi sesión gratis', waTxt: 'Hola, me ha tocado la sesión gratis del sorteo y quiero reservarla', tel: D.tel, dir: D.dir });
+}
+function ogPremioSvg({ pila, tipo, mesTxt }) {
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos(), t1 = pila ? `para ti, ${pila}` : 'para ti', sz = t1.length > 16 ? Math.max(24, Math.round(34 * 16 / t1.length)) : 34;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="232" y="166" width="136" height="104" rx="12"/><rect x="220" y="136" width="160" height="34" rx="10"/><path d="M300 136v134"/><path d="M300 136c-14-30-50-30-46-8 3 14 30 10 46 8zM300 136c14-30 50-30 46-8-3 14-30 10-46 8z"/></g>`
+    + ogTexto(O.m, tipo === 'creativa' ? 'LA RESEÑA DEL MES' : 'SORTEO DEL MES', 20, 300, 318, 3, M)
+    + ogTexto(O.b, 'Sesión gratis', 50, 300, 378, 0, T)
+    + ogTexto(O.b, t1, sz, 300, 424, 0, K)
+    + ogTexto(O.m, mesTxt.charAt(0).toUpperCase() + mesTxt.slice(1), 22, 300, 462, 0, M) + `</svg>`;
+}
+function firmaPremio(m, t, pid) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('premio:' + m + ':' + t + ':' + pid).digest('hex').slice(0, 10); }
+const enlacePremio = (m, t, pid) => `${APPU()}/premio/${m}-${t}-${firmaPremio(m, t, pid)}`;
 // ── VALES REGALO: se compran en /regalo (sustituye al formulario de Tally), se pagan con tarjeta, transferencia o en el centro ──
 // La tarjeta es una página con su enlace firmado (/vale/rec…-firma), en castellano, catalán o inglés, con vista previa cuadrada y versión para imprimir.
 const VALES = 'tblTCNp81M8vBFe7q';
@@ -3150,6 +3177,20 @@ module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).send(paginaVale(F, id, req.query.p === '1', req.query.c === '1'));
   }
+  if (action === 'premio-pagina' || action === 'premio-og') { // premio del sorteo de reseñas: /premio/AAAA-MM-tipo-firma
+    const m = String(req.query.m || ''), t = req.query.t === 'creativa' ? 'creativa' : 'azar', sg = String(req.query.s || '');
+    if (!/^\d{4}-\d{2}$/.test(m)) return res.status(404).end();
+    const g = ((await ajuste('sorteo-' + m, {})) || {})[t]; if (!g || !g.pacienteId || firmaPremio(m, t, g.pacienteId) !== sg) return res.status(404).send('Premio no encontrado');
+    const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], mesTxt = MESES[+m.slice(5) - 1] + ' de ' + m.slice(0, 4);
+    let pila = String(g.pila || g.nombre || '').trim().split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
+    if (action === 'premio-og') {
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogPremioSvg({ pila, tipo: t, mesTxt }), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      catch (e) { return res.redirect(302, APPU() + '/icons/icon-512.png'); }
+    }
+    const C0 = (await conf().catch(() => CONF_DEF)).clinica || CONF_DEF.clinica;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(MARCA.marcar(paginaPremio({ pila, tipo: t, mesTxt, og: `${APPU()}/premio/${m}-${t}-${sg}.png`, dir: C0.direccion || '', tel: C0.tel || '' }), CLI));
+  }
   if (action === 'tarjeta-img' || action === 'tarjeta-pagina' || action === 'tarjeta-og') {
     const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(404).end();
     const r = await at(`tblr27u3cvtzfyqI6/${id}`); const a = r.fields && (r.fields['TARJETA IMG'] || [])[0];
@@ -4532,6 +4573,7 @@ module.exports = async function handler(req, res) {
             }
             await guardarAjuste(clave, gan, quien);
           }
+          Object.entries(gan).forEach(([t, g]) => { if (g && g.pacienteId) g.url = enlacePremio(mes, t, g.pacienteId); });
           return res.status(200).json({ ok: true, mes, participantes: listaTodos, ganadores: gan });
         }
         if (action === 'seg-agenda-val-quitar') { // quitar una fila de Valoraciones («Está mejor» marcado por error, o una encuesta que no hace falta ver)

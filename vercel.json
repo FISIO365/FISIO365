@@ -1,6 +1,8 @@
 {
   "version": 2,
-  "regions": ["dub1"],
+  "regions": [
+    "dub1"
+  ],
   "builds": [
     {
       "src": "api/*.js",
@@ -102,6 +104,14 @@
     {
       "src": "/documento/(rec[A-Za-z0-9]{14})-([a-f0-9]{10})",
       "dest": "/api/schedule.js?action=cdoc&id=$1&s=$2"
+    },
+    {
+      "src": "/premio/(\\d{4}-\\d{2})-(azar|creativa)-([a-f0-9]{10})\\.png",
+      "dest": "/api/schedule.js?action=premio-og&m=$1&t=$2&s=$3"
+    },
+    {
+      "src": "/premio/(\\d{4}-\\d{2})-(azar|creativa)-([a-f0-9]{10})",
+      "dest": "/api/schedule.js?action=premio-pagina&m=$1&t=$2&s=$3"
     },
     {
       "src": "/tarjeta/(rec[A-Za-z0-9]{14})\\.png",
