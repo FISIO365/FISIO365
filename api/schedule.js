@@ -4502,8 +4502,12 @@ module.exports = async function handler(req, res) {
           for (let i = 0; i < falta.length; i += 40) { const l = falta.slice(i, i + 40); const d = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`OR(${l.map(id => `RECORD_ID()='${id}'`).join(',')})`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`).catch(() => []); d.forEach(r => pon(r.id, r.fields)); }
           // Ir a Google no es lo mismo que dejar la reseña: el equipo comprueba en Google si la ha puesto. Solo entran en el sorteo las comprobadas
           const claveV = 'resenas-ok-' + mes; let ver = await ajuste(claveV, {}) || {};
+          // Añadir a mano a quien ha dejado reseña por su cuenta (sin encuesta ni enlace): entra ya comprobada
+          if (q.op === 'anadir' && okId(q.pacienteId)) { ver[q.pacienteId] = { ok: true, manual: true, quien: String(q.quien || '').slice(0, 40), cuando: new Date().toISOString() }; await guardarAjuste(claveV, ver, String(q.quien || '')); }
+          { const man = Object.keys(ver).filter(id => ver[id] && ver[id].manual && !P[id] && okId(id));
+            for (let i = 0; i < man.length; i += 40) { const l = man.slice(i, i + 40); (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`OR(${l.map(id => `RECORD_ID()='${id}'`).join(',')})`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`).catch(() => [])).forEach(r => pon(r.id, r.fields, String(ver[r.id].cuando || '').slice(0, 10))); } }
           if (q.op === 'verificar' && okId(q.pacienteId)) { if (q.v === true || q.v === false) ver[q.pacienteId] = { ok: q.v, quien: String(q.quien || '').slice(0, 40), cuando: new Date().toISOString() }; else delete ver[q.pacienteId]; await guardarAjuste(claveV, ver, String(q.quien || '')); }
-          const listaTodos = Object.values(P).filter(x => x.nombre).sort((a, b) => a.fecha.localeCompare(b.fecha)).map(x => Object.assign(x, { resena: ver[x.pacienteId] ? (ver[x.pacienteId].ok ? 'si' : 'no') : '' }));
+          const listaTodos = Object.values(P).filter(x => x.nombre).sort((a, b) => a.fecha.localeCompare(b.fecha)).map(x => Object.assign(x, { resena: ver[x.pacienteId] ? (ver[x.pacienteId].ok ? 'si' : 'no') : '', manual: !!(ver[x.pacienteId] && ver[x.pacienteId].manual) }));
           const lista = listaTodos.filter(x => x.resena === 'si');
           let gan = await ajuste(clave, {}) || {};
           if (q.op === 'azar' || q.op === 'elegir' || q.op === 'quitar') {
