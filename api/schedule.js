@@ -2235,6 +2235,8 @@ const nmSel = v => String((v && typeof v === 'object') ? (v.name || '') : (v || 
 const fisioKey = n => String(n || '').trim().split(' ')[0].toLowerCase();
 const orIds = (ids, campo) => 'OR(' + ids.map(id => `FIND('${id}',ARRAYJOIN({${campo}}))`).join(',') + ')';
 async function lotes(ids, fn, n = 15) { const out = []; for (let i = 0; i < ids.length; i += n) out.push(...await fn(ids.slice(i, i + n))); return out; }
+// Pacientes que no llevan ejercicios en la app por un motivo (mayores, sin móvil…): { pid: { motivo, por, fecha, nombre } }
+async function sinEjercicios() { const v = await ajuste('sin_ejercicios', null); return v && typeof v === 'object' ? v : {}; }
 async function cierreDia(fecha, soloFisio) {
   const citas = await capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}'`)}&fields[]=ESTADO&fields[]=HORA&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=your-name`);
   const conPac = citas.filter(c => (c.fields['RELACIÓN - CITA'] || []).length && nmSel(c.fields['PREF.']) && (!soloFisio || fisioKey(nmSel(c.fields['PREF.'])) === fisioKey(soloFisio)));
@@ -2273,7 +2275,7 @@ async function cierreDia(fecha, soloFisio) {
   const diaMadH = x => x ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : '';
   const histOk = new Set(nombres.filter(p => diaMadH(p.fields['HISTORIAL ACTUALIZADO']) >= fecha).map(p => p.id));
   const yaVino = new Set(previas.flatMap(c => c.fields['PacienteRec'] || []));
-  const conPlan = new Set(planes.map(r => String(r.fields['PacienteID'] || '')));
+  const conPlan = new Set([...planes.map(r => String(r.fields['PacienteID'] || '')), ...Object.keys(await sinEjercicios())]); // los que tienen motivo para no llevar ejercicios en la app cuentan como hechos
   const debe = new Map((sf.lista || []).map(x => [x.id, -x.saldo]));
   const conCons = new Set(cons.flatMap(c => c.pac || []));
   const porFisio = {};
@@ -4013,7 +4015,7 @@ module.exports = async function handler(req, res) {
         const [planes, dolor] = await Promise.all([
           todosT('tblvgE0a4gsrj4Vhp', `filterByFormula=${encodeURIComponent("LEN({Ejercicios}&'')>2")}&fields[]=PacienteID`).catch(() => []),
           todosT('tblxJmnb7LHML2ZZh', 'fields[]=PacienteID').catch(() => [])]);
-        const conPlan = new Set(planes.map(r => r.fields['PacienteID'])), usaApp = new Set(dolor.map(r => r.fields['PacienteID']));
+        const conPlan = new Set([...planes.map(r => r.fields['PacienteID']), ...Object.keys(await sinEjercicios())]), usaApp = new Set(dolor.map(r => r.fields['PacienteID']));
         const sinApp = [], sinPlan = [];
         pids.forEach(id => { const P = info[id]; if (!P || P['SIN AVISO APP']) return;
           const x = { pacienteId: id, nombre: P['FULL NAME'] || '', tel: P['WHATSAPP'] || P['TELF'] || '', email: P['EMAIL'] || '', pin: P['PIN'] || '', ultima: ult[id].fecha, fisio: ult[id].fisio };
@@ -5343,6 +5345,14 @@ module.exports = async function handler(req, res) {
         const d = await at(`${T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [q.campo]: nuevo }, typecast: true }) });
         _alertas.t = 0; _cons.t = 0; return res.status(200).json({ ok: !d.error, valor: nuevo });
       }
+      if (action === 'seg-sin-ejercicios') { // marcar (o quitar) que un paciente no lleva ejercicios en la app, con el motivo: lo ve dirección en el Daily report
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
+        const cur = await sinEjercicios();
+        if (q.quitar) delete cur[q.pacienteId];
+        else { const motivo = String(q.motivo || '').trim().slice(0, 200); if (!motivo) return res.status(400).json({ ok: false, error: 'Escribe el motivo' });
+          cur[q.pacienteId] = { motivo, por: String(q.quien || '').slice(0, 40), fecha: hoyF, nombre: String(q.nombre || '').slice(0, 80) }; }
+        await guardarAjuste('sin_ejercicios', cur, String(q.quien || '')); return res.status(200).json({ ok: true });
+      }
       if (action === 'seg-etapa') { // cerrar un caso desde el Daily report: alta, dejó el tratamiento o no llegó a venir (no hace falta llamarlo)
         const et = { alta: 'ALTA', abandono: 'ABANDONO', noacudio: 'NO ACUDIÓ' }[q.etapa];
         if (!et || !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
@@ -5769,7 +5779,9 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     try {
       const CR = require('./cron');
       const fecha = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : await CR.ultimoDiaConCitas();
-      return res.status(200).json({ ok: true, reporte: await CR.reporteDia(fecha) });
+      const rep = await CR.reporteDia(fecha), SE = await sinEjercicios();
+      rep.sinEjercicios = Object.entries(SE).map(([id, x]) => Object.assign({ id }, x)).filter(x => x.fecha >= fecha); // los que se marcaron ese día (o después) se marcaron sin ejercicios en la app, con su motivo
+      return res.status(200).json({ ok: true, reporte: rep });
     } catch (e) { return res.status(500).json({ ok: false, error: 'No se ha podido preparar el reporte' }); }
   }
   // ── PANEL: facturas de la ficha y emitir desde el panel ──
