@@ -900,6 +900,58 @@ const VALE_T = {
   ca: { tk: 'TARGETA REGAL', ses: n => n === 1 ? '1 sessió' : `${n} sessions`, de: 'de', para: 'Per a', dep: 'De part de', cod: 'Codi', val: 'Vàlida fins al', res: tel => `Per reservar, truca o escriu per WhatsApp al ${tel}`, tit: 'El teu regal', hola: n => `${n}, tens un regal!`, imp: 'Imprimir', resv: 'Reservar per WhatsApp', wa: c => `Hola, tinc una targeta regal (codi ${c}) i vull reservar` },
   en: { tk: 'GIFT CARD', ses: n => n === 1 ? '1 session' : `${n} sessions`, de: 'of', para: 'For', dep: 'From', cod: 'Code', val: 'Valid until', res: tel => `To book, call or WhatsApp us on ${tel}`, tit: 'Your gift', hola: n => `${n}, you have a gift!`, imp: 'Print', resv: 'Book on WhatsApp', wa: c => `Hi, I have a gift card (code ${c}) and I'd like to book` }
 };
+// Formatos de la tarjeta (ocasiones): color, dibujo de línea fina, titular y mensajes en los 3 idiomas.
+// El enlace /regalo?o=navidad (o madre, padre, cumple, sanvalentin) lo deja elegido; sin ?o= se elige solo según la fecha.
+const VALE_OC = {
+  clasico: { nom: 'Clásico', acc: '#c2552e', bg: '#fdf1ea', ln: '#f1d9cc',
+    d: '<path d="M18 46h60v34a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path d="M48 46v40"/><rect x="12" y="32" width="72" height="14" rx="5"/><path d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/>',
+    t: { es: { tk: 'TARJETA REGALO', hola: n => `¡${n}, tienes un regalo!`, og: 'La preparas en 2 minutos' }, ca: { tk: 'TARGETA REGAL', hola: n => `${n}, tens un regal!` }, en: { tk: 'GIFT CARD', hola: n => `${n}, you have a gift!` } },
+    msg: VALE_MSG },
+  navidad: { nom: 'Navidad', acc: '#2f6b4f', bg: '#eef4ef', ln: '#d3e3d8',
+    d: '<path d="M48 12 31 36h9L26 56h12L22 78h52L58 56h12L56 36h9z"/><path d="M48 78v10"/><path d="M41 47h.01M55 63h.01M44 68h.01" stroke-width="4.2"/>',
+    t: { es: { tk: 'REGALO DE NAVIDAD', hola: n => `¡Feliz Navidad, ${n}!`, og: 'Esta Navidad' }, ca: { tk: 'REGAL DE NADAL', hola: n => `Bon Nadal, ${n}!` }, en: { tk: 'CHRISTMAS GIFT', hola: n => `Merry Christmas, ${n}!` } },
+    msg: { es: ['Que estas fiestas te traigan calma y te cuiden como mereces', 'Un regalo para empezar el año sintiéndote bien', 'Para que el año que viene te muevas sin dolor', 'Porque cuidarte también es celebrar'],
+      ca: ['Que aquestes festes et portin calma i et cuidin com et mereixes', 'Un regal per començar l\'any sentint-te bé', 'Perquè l\'any que ve et moguis sense dolor', 'Perquè cuidar-te també és celebrar'],
+      en: ['May these holidays bring you calm and the care you deserve', 'A gift to start the year feeling good', 'So next year you can move without pain', 'Because looking after yourself is worth celebrating too'] } },
+  madre: { nom: 'Día de la Madre', acc: '#b4536d', bg: '#fbeef1', ln: '#f1d4dc',
+    d: '<path d="M34 22c0 17 6 26 14 26s14-9 14-26l-7 7-7-12-7 12z"/><path d="M48 48v38"/><path d="M48 76c-11-1-17-9-17-17 9 0 15 7 17 17zM48 68c9-1 14-7 14-13-8 0-13 5-14 13z"/>',
+    t: { es: { tk: 'DÍA DE LA MADRE', hola: n => `¡Feliz Día de la Madre, ${n}!`, og: 'Para el Día de la Madre' }, ca: { tk: 'DIA DE LA MARE', hola: n => `Feliç Dia de la Mare, ${n}!` }, en: { tk: 'MOTHER\'S DAY', hola: n => `Happy Mother's Day, ${n}!` } },
+    msg: { es: ['Gracias por cuidarnos siempre: ahora te toca a ti', 'Para la persona que siempre está ahí', 'Te lo mereces todo, empezando por esto', 'Un rato solo para ti, que ya toca'],
+      ca: ['Gràcies per cuidar-nos sempre: ara et toca a tu', 'Per a la persona que sempre hi és', 'T\'ho mereixes tot, començant per això', 'Una estona només per a tu, que ja toca'],
+      en: ['Thank you for always looking after us: now it\'s your turn', 'For the person who\'s always there', 'You deserve everything, starting with this', 'Some time just for you, it\'s about time'] } },
+  padre: { nom: 'Día del Padre', acc: '#2e4a6b', bg: '#edf2f7', ln: '#d4dfea',
+    d: '<path d="M40 14h16l-4 11h-8z"/><path d="M44 25 37 66l11 14 11-14-7-41"/><path d="M41 44l13-6M39 56l17-8"/>',
+    t: { es: { tk: 'DÍA DEL PADRE', hola: n => `¡Feliz Día del Padre, ${n}!`, og: 'Para el Día del Padre' }, ca: { tk: 'DIA DEL PARE', hola: n => `Feliç Dia del Pare, ${n}!` }, en: { tk: 'FATHER\'S DAY', hola: n => `Happy Father's Day, ${n}!` } },
+    msg: { es: ['Gracias por estar siempre: ahora cuídate tú', 'Para que esa espalda descanse un poco', 'Por todo lo que has cargado por nosotros', 'Un regalo para que te sientas como nuevo'],
+      ca: ['Gràcies per ser-hi sempre: ara cuida\'t tu', 'Perquè aquesta esquena descansi una mica', 'Per tot el que has carregat per nosaltres', 'Un regal perquè et sentis com nou'],
+      en: ['Thanks for always being there: now take care of yourself', 'So that back of yours can rest a little', 'For everything you\'ve carried for us', 'A gift to make you feel like new'] } },
+  cumple: { nom: 'Cumpleaños', acc: '#a8741a', bg: '#fbf4e4', ln: '#efe0bd',
+    d: '<path d="M20 60h56v22H20z"/><path d="M26 44h44v16H26z"/><path d="M20 70c7 0 7 4 14 4s7-4 14-4 7 4 14 4 7-4 14-4"/><path d="M48 30v14"/><path d="M48 16c-4 5-4 9 0 10 4-1 4-5 0-10z"/>',
+    t: { es: { tk: 'REGALO DE CUMPLEAÑOS', hola: n => `¡Feliz cumpleaños, ${n}!`, og: 'Para su cumpleaños' }, ca: { tk: 'REGAL D\'ANIVERSARI', hola: n => `Per molts anys, ${n}!` }, en: { tk: 'BIRTHDAY GIFT', hola: n => `Happy birthday, ${n}!` } },
+    msg: { es: ['Hoy es tu día y esto se ha de celebrar', 'Un año más, y que lo vivas sin dolor', 'Para que lo celebres moviéndote a gusto', 'Que este año te cuides tanto como cuidas de los demás'],
+      ca: ['Avui és el teu dia i s\'ha de celebrar', 'Un any més, i que el visquis sense dolor', 'Perquè ho celebris movent-te a gust', 'Que aquest any et cuidis tant com cuides dels altres'],
+      en: ['Today is your day and it deserves celebrating', 'Another year, and may you live it pain-free', 'So you can celebrate moving with ease', 'This year, look after yourself as much as you look after others'] } },
+  sanvalentin: { nom: 'San Valentín', acc: '#b23a48', bg: '#fbeced', ln: '#f2d2d5',
+    d: '<path d="M48 80C22 62 14 46 22 33c7-11 21-10 26 1 5-11 19-12 26-1 8 13 0 29-26 47z"/>',
+    t: { es: { tk: 'SAN VALENTÍN', hola: n => `¡Feliz San Valentín, ${n}!`, og: 'Para San Valentín' }, ca: { tk: 'SANT VALENTÍ', hola: n => `Feliç Sant Valentí, ${n}!` }, en: { tk: 'VALENTINE\'S DAY', hola: n => `Happy Valentine's Day, ${n}!` } },
+    msg: { es: ['Porque quiero que estés bien, hoy y siempre', 'Un regalo para cuidarte, como tú me cuidas', 'Para que nos queden muchos paseos juntos', 'Te quiero, y también a tu espalda'],
+      ca: ['Perquè vull que estiguis bé, avui i sempre', 'Un regal per cuidar-te, com tu em cuides', 'Perquè ens quedin molts passejos junts', 'T\'estimo, i també la teva esquena'],
+      en: ['Because I want you to feel good, today and always', 'A gift to look after you, the way you look after me', 'So we have many more walks together', 'I love you, and your back too'] } }
+};
+const VALE_OCS = Object.keys(VALE_OC);
+// La ocasión que toca por fecha (Madrid): Navidad 15/11–6/1, San Valentín 25/1–14/2, Padre 1–19/3, Madre 15/4–primer domingo de mayo
+function valeOcHoy(d) {
+  const iso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(d || new Date()), y = +iso.slice(0, 4), md = iso.slice(5);
+  if (md >= '11-15' || md <= '01-06') return 'navidad';
+  if (md >= '01-25' && md <= '02-14') return 'sanvalentin';
+  if (md >= '03-01' && md <= '03-19') return 'padre';
+  const m1 = new Date(Date.UTC(y, 4, 1)), dom = 1 + ((7 - m1.getUTCDay()) % 7), fin = '05-' + String(dom).padStart(2, '0');
+  if (md >= '04-15' && md <= fin) return 'madre';
+  return 'clasico';
+}
+const valeOc = F => VALE_OC[String((F && F['OCASIÓN']) || '').trim()] ? String(F['OCASIÓN']).trim() : 'clasico';
+// Dibujo de la ocasión dentro de un SVG (viewBox 96): x,y = esquina, s = tamaño, w = grosor
+const valeDib = (oc, x, y, s, col, w) => `<g transform="translate(${x} ${y}) scale(${s / 96})" fill="none" stroke="${col}" stroke-width="${w || 2.4}" stroke-linecap="round" stroke-linejoin="round">${VALE_OC[oc].d}</g>`;
 // El nombre del tratamiento en el idioma de la tarjeta (lo que se pueda traducir; si no, tal cual)
 function valeTipo(t, l) {
   let s = String(t || '');
@@ -917,7 +969,7 @@ function valeOpciones(CF) {
     .concat((s.packs || []).filter(x => x && x[0] > 3 && x[1] > 0).map(([n, p]) => ({ n, p, pack: 1, ah: Math.max(0, Math.round((s.suelta * n - p) * 100) / 100) }))) }));
 }
 const valeCodigo = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; const b = require('crypto').randomBytes(6); for (let i = 0; i < 6; i++) s += A[b[i] % A.length]; return 'R-' + s; };
-const valeVista = r => { const F = r.fields || {}; return { id: r.id, codigo: F['CÓDIGO'] || '', para: F.PARA || '', de: F.DE || '', comprador: F.COMPRADOR || '', email: F.EMAIL || '', tel: F['TELÉFONO'] || '', tipo: F.TIPO || '', n: F.SESIONES || 0, importe: F.IMPORTE || 0, idioma: F.IDIOMA || '', entrega: F.ENTREGA || '', emailDestino: F['EMAIL DESTINO'] || '', fecha: F['FECHA ENVÍO'] || '', pago: F.PAGO || '', estado: F.ESTADO || '', pagado: F.PAGADO || '', enviada: F.ENVIADA || '', enviadaDestino: F['ENVIADA DESTINO'] || '', canjeada: F.CANJEADA || '', caduca: F.CADUCA || '', creado: F.CREADO || '', factura: F.FACTURA || '', link: enlaceVale(r.id) }; };
+const valeVista = r => { const F = r.fields || {}; return { id: r.id, codigo: F['CÓDIGO'] || '', para: F.PARA || '', de: F.DE || '', comprador: F.COMPRADOR || '', email: F.EMAIL || '', tel: F['TELÉFONO'] || '', tipo: F.TIPO || '', n: F.SESIONES || 0, importe: F.IMPORTE || 0, idioma: F.IDIOMA || '', entrega: F.ENTREGA || '', emailDestino: F['EMAIL DESTINO'] || '', fecha: F['FECHA ENVÍO'] || '', pago: F.PAGO || '', estado: F.ESTADO || '', pagado: F.PAGADO || '', enviada: F.ENVIADA || '', enviadaDestino: F['ENVIADA DESTINO'] || '', canjeada: F.CANJEADA || '', caduca: F.CADUCA || '', creado: F.CREADO || '', factura: F.FACTURA || '', ocasion: valeOc(F), link: enlaceVale(r.id) }; };
 // Email (Brevo) con el botón para ver la tarjeta
 async function valeMail(to, subject, saludo, texto, boton, url) {
   if (!process.env.BREVO_API_KEY || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(to || ''))) return false;
@@ -944,6 +996,7 @@ async function valeMailDestino(id, F) {
   const S = { es: [`🎁 ${F.DE || 'Alguien'} te ha hecho un regalo`, `Hola${para ? ' ' + para : ''},`, `<b>${de || 'Alguien que te quiere'}</b> te ha regalado ${escHtml(VALE_T.es.ses(F.SESIONES || 1))} de ${escHtml(valeTipo(F.TIPO, 'es'))} en FISIO365.`, 'Ver mi regalo'],
     ca: [`🎁 ${F.DE || 'Algú'} t'ha fet un regal`, `Hola${para ? ' ' + para : ''},`, `<b>${de || 'Algú que t\'estima'}</b> t'ha regalat ${escHtml(VALE_T.ca.ses(F.SESIONES || 1))} de ${escHtml(valeTipo(F.TIPO, 'ca'))} a FISIO365.`, 'Veure el meu regal'],
     en: [`🎁 ${F.DE || 'Someone'} sent you a gift`, `Hi${para ? ' ' + para : ''},`, `<b>${de || 'Someone who cares about you'}</b> has given you ${escHtml(VALE_T.en.ses(F.SESIONES || 1))} of ${escHtml(valeTipo(F.TIPO, 'en'))} at FISIO365.`, 'See my gift'] }[l];
+  const oc = valeOc(F); if (oc !== 'clasico' && para) S[1] = escHtml(VALE_OC[oc].t[l].hola(F.PARA || ''));
   return valeMail(F['EMAIL DESTINO'], S[0], S[1], S[2], S[3], enlaceVale(id));
 }
 // Entrega tras el pago: email a quien lo compró y, si toca hoy, a quien lo recibe
@@ -981,69 +1034,91 @@ async function valesDelDia() {
 }
 // Vista previa cuadrada (WhatsApp): regalo, sesiones y para quién, lejos de los bordes
 function ogValeSvg(F) {
-  const l = valeLang(F), T = VALE_T[l], C = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos();
-  const t1 = T.ses(F.SESIONES || 1), t2 = valeTipo(F.TIPO, l), t3 = F.PARA ? `${T.para} ${F.PARA}` : T.tk;
+  const l = valeLang(F), T = VALE_T[l], oc = valeOc(F), OC = VALE_OC[oc], G = VALE_GR[oc] || VALE_GR.clasico, W = '#fff7ef', O = ogTipos();
+  const t1 = T.ses(F.SESIONES || 1), t2 = valeTipo(F.TIPO, l), t3 = F.PARA ? `${T.para} ${F.PARA}` : OC.t[l].tk;
   const fit = (t, base, max) => Math.max(18, Math.min(base, Math.round(base * max / Math.max(max, String(t).length))));
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
-    + `<g fill="none" stroke="${C}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="246" y="160" width="108" height="84" rx="10"/><rect x="236" y="136" width="128" height="28" rx="8"/><path d="M300 136v108"/><path d="M300 136c-12-24-40-24-37-6 2 11 24 8 37 6zM300 136c12-24 40-24 37-6-2 11-24 8-37 6z"/></g>`
-    + ogTexto(O.m, T.tk, 18, 300, 300, 3, C)
-    + ogTexto(O.b, t1, fit(t1, 44, 11), 300, 352, 0, K)
-    + ogTexto(O.m, t2, fit(t2, 24, 24), 300, 392, 0, M)
-    + ogTexto(O.b, t3, fit(t3, 28, 20), 300, 448, 0, C) + `</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${G[1]}"/><stop offset="1" stop-color="${G[0]}"/></linearGradient><clipPath id="k"><rect x="70" y="70" width="460" height="460" rx="40"/></clipPath></defs>`
+    + `<rect width="600" height="600" fill="${OC.bg}"/><rect x="70" y="70" width="460" height="460" rx="40" fill="url(#g)"/>`
+    + `<g clip-path="url(#k)" opacity=".12">${valeDib(oc, 330, 330, 260, W, 1.6)}</g>`
+    + `<rect x="86" y="86" width="428" height="428" rx="28" fill="none" stroke="${W}" stroke-opacity=".32" stroke-width="1.5"/>`
+    + valeDib(oc, 268, 120, 64, W, 2.6)
+    + ogTexto(O.m, OC.t[l].tk, OC.t[l].tk.length > 16 ? 15 : 17, 300, 232, 4, W)
+    + ogTexto(O.b, t3, fit(t3, 40, 14), 300, 300, 0, W)
+    + ogTexto(O.b, t1, fit(t1, 50, 11), 300, 372, 0, W)
+    + ogTexto(O.m, t2, fit(t2, 22, 26), 300, 410, 0, W)
+    + ogTexto(O.b, 'FISIO365', 15, 300, 474, 4, W) + `</svg>`;
 }
 // La tarjeta (página pública firmada). p=1: versión para imprimir
+// Colores de la tarjeta por ocasión: [oscuro, claro] del degradado
+const VALE_GR = { clasico: ['#9e3f1e', '#c95f36'], navidad: ['#173f2f', '#2f6b4f'], madre: ['#8f3a55', '#c26a84'], padre: ['#172b45', '#34557c'], cumple: ['#7d5410', '#b98a2c'], sanvalentin: ['#7c1d2b', '#b83a4a'] };
 function paginaVale(F, id, imprimir) {
   const e = escHtml, l = valeLang(F), T = VALE_T[l], C = CLI, url = enlaceVale(id), cad = valeFechaTxt(F.CADUCA, l), tel = C.tel || '672 89 39 49', wa = String(C.wa || '34672893949').replace(/\D/g, '');
-  const tipo = valeTipo(F.TIPO, l), msg = String(F.MENSAJE || '');
-  const tarjeta = `<div class="tk"><small>${T.tk}</small><b>${e(T.ses(F.SESIONES || 1))}</b><span>${e(T.de)} ${e(tipo)}</span>${msg ? `<p class="msg">«${e(msg)}»</p>` : ''}<hr>
-<div class="dd">${F.PARA ? `<div><em>${T.para}</em>${e(F.PARA)}</div>` : ''}${F.DE ? `<div><em>${T.dep}</em>${e(F.DE)}</div>` : ''}</div>
-<div class="cd"><em>${T.cod}</em><code>${e(F['CÓDIGO'] || '')}</code></div>${cad ? `<p class="cad">${T.val} ${e(cad)}</p>` : ''}<p class="mk">FISIO365</p></div>`;
+  const tipo = valeTipo(F.TIPO, l), msg = String(F.MENSAJE || ''), oc = valeOc(F), OC = VALE_OC[oc], A = OC.acc, G = VALE_GR[oc] || VALE_GR.clasico, hola = n => OC.t[l].hola(n);
+  const cadC = (() => { const d = new Date(String(F.CADUCA || '').slice(0, 10) + 'T12:00:00Z'); return isNaN(d) ? '' : new Intl.DateTimeFormat({ es: 'es-ES', ca: 'ca-ES', en: 'en-GB' }[l], { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(d).replace(/\./g, ''); })();
+  const n = Number(F.SESIONES || 1) || 1, sesTxt = T.ses(n).replace(/^\d+\s*/, '');
+  const dib = `<svg viewBox="0 0 96 96" aria-hidden="true">${OC.d}</svg>`;
+  const tarjeta = `<div class="cardw"><div class="card"><i class="tex"></i><i class="sh"></i><div class="fr"></div><div class="big">${dib}</div>
+<div class="ct"><div class="row"><small>${OC.t[l].tk}</small><span class="mini">${dib}</span></div>
+${F.PARA ? `<div class="para"><em>${T.para}</em><b>${e(F.PARA)}</b></div>` : ''}
+<div class="num"><b>${n}</b><span><strong>${e(sesTxt)}</strong><small>${e(T.de)} ${e(tipo)}</small></span></div>
+${msg ? `<p class="msg">${e(msg)}</p>` : ''}
+<div class="pie2">${F.DE ? `<span><em>${T.dep}</em>${e(F.DE)}</span>` : '<span></span>'}<span class="mk">FISIO365</span></div></div></div>
+<div class="stub"><div><em>${T.cod}</em><code>${e(F['CÓDIGO'] || '')}</code></div>${cadC ? `<div class="r"><em>${T.val.replace(/ (el|al)$/,'')}</em><span>${e(cadC)}</span></div>` : ''}</div></div>`;
   const pend = F.ESTADO !== 'PAGADO';
-  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${T.tit} · FISIO365</title>
-<meta property="og:title" content="${e(F.PARA ? T.hola(F.PARA) : T.tit)}"><meta property="og:description" content="${e(T.ses(F.SESIONES || 1) + ' ' + T.de + ' ' + tipo)} · FISIO365"><meta property="og:image" content="${e(url)}.png?v=1"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
-<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
-.c{background:#fff;border-radius:26px;padding:28px 20px 22px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start;text-align:center}
-.reg{display:block;margin:0 auto;width:84px;height:84px}.reg *{fill:none;stroke:#c2552e;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-h1{font-size:22px;font-weight:700;margin:12px 0 4px;line-height:1.25}.sub{font-size:14px;color:#5c4f47;margin:0;line-height:1.5}
-.tk{position:relative;margin:20px auto 0;background:#fdf1ea;border-radius:22px;padding:22px 18px 18px;overflow:hidden}
-.tk:before,.tk:after{content:'';position:absolute;top:58%;width:26px;height:26px;margin-top:-13px;border-radius:50%;background:#fff}.tk:before{left:-13px}.tk:after{right:-13px}
-.tk small{display:block;font-size:11px;font-weight:700;letter-spacing:.18em;color:#c2552e}.tk b{display:block;font-size:40px;line-height:1.1;color:#c2552e;margin:8px 0 2px}.tk span{display:block;font-size:15px;color:#2b2420;font-weight:500}
-.msg{font-size:14px;color:#5c4f47;margin:12px 4px 0;line-height:1.45}.tk hr{border:none;border-top:2px dashed #f1d9cc;margin:16px 6px 14px}
-.dd{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;font-size:15px;font-weight:600;color:#2b2420}.dd em,.cd em{display:block;font-style:normal;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#a08f84;margin-bottom:2px}
-.cd{margin-top:14px}.cd code{font:700 18px Poppins,sans-serif;letter-spacing:.12em;color:#141414;background:#fff;border-radius:10px;padding:5px 12px;display:inline-block}
-.cad{font-size:12.5px;color:#7d6a60;margin:12px 0 0}.mk{font-size:12px;font-weight:700;letter-spacing:.12em;color:#c2552e;margin:12px 0 0}
-.res{font-size:13.5px;color:#5c4f47;margin:18px 4px 0;line-height:1.5}.bt{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;font:600 15px Poppins,sans-serif;color:#fff;background:#c2552e;border:0;border-radius:14px;padding:14px;text-decoration:none;cursor:pointer}
-.bt.sec{background:#f6f1eb;color:#2b2420}.pend{background:#fff6e5;color:#8a5a00;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:14px}
-.pie{margin-top:16px;font-size:12px;color:#7d6a60}
-${imprimir ? '@page{size:A5;margin:12mm}body{background:#fff;padding:0}.c{box-shadow:none;max-width:none;padding:0}.np{display:none!important}.tk{-webkit-print-color-adjust:exact;print-color-adjust:exact}' : '@media print{body{background:#fff;padding:0}.c{box-shadow:none}.np{display:none!important}.tk{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'}
-</style></head><body><div class="c">${imprimir ? '' : `<svg class="reg np" viewBox="0 0 96 96" aria-hidden="true"><path d="M18 46h60v34a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path d="M48 46v40"/><rect x="12" y="32" width="72" height="14" rx="5"/><path d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/></svg>
-<h1 class="np">${e(F.PARA ? T.hola(F.PARA) : T.tit)}</h1>`}
+  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="theme-color" content="${G[0]}"><title>${T.tit} · FISIO365</title>
+<meta property="og:title" content="${e(F.PARA ? hola(F.PARA) : T.tit)}"><meta property="og:description" content="${e(T.ses(n) + ' ' + T.de + ' ' + tipo)} · FISIO365"><meta property="og:image" content="${e(url)}.png?v=2"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#141414;min-height:100vh;background:${OC.bg};background-image:radial-gradient(ellipse at 50% -10%,#fff 0,rgba(255,255,255,0) 60%);display:flex;justify-content:center;padding:28px 18px 40px}
+.c{max-width:400px;width:100%;text-align:center}
+.hi{font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:${A};margin:0}h1{font-size:25px;font-weight:700;margin:6px 0 22px;line-height:1.25;color:#2b2420}
+.cardw{position:relative;filter:drop-shadow(0 22px 34px rgba(30,20,15,.22));animation:sube .9s cubic-bezier(.2,.8,.2,1) both}
+.card{position:relative;overflow:hidden;border-radius:26px 26px 0 0;background:linear-gradient(150deg,${G[1]} 0%,${G[0]} 100%);color:#fff7ef;text-align:left;aspect-ratio:4/4.6;min-height:400px}
+.tex{position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 9px)}
+.card:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 18% 12%,rgba(255,255,255,.22),rgba(255,255,255,0) 45%)}
+.sh{position:absolute;top:-20%;bottom:-20%;width:45%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-18deg);animation:brilla 2.4s 1s ease-in-out both}
+.fr{position:absolute;inset:12px 12px 0;border:1px solid rgba(255,247,239,.32);border-bottom:0;border-radius:18px 18px 0 0}
+.big{position:absolute;right:-38px;bottom:-58px;width:210px;height:210px;opacity:.12}.big svg,.mini svg{width:100%;height:100%;display:block}.card svg *{fill:none;stroke:#fff7ef;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.mini svg *{stroke-width:3}
+.ct{position:relative;height:100%;display:flex;flex-direction:column;padding:30px 30px 26px}
+.row{display:flex;align-items:center;justify-content:space-between}.row small{font-size:11px;font-weight:700;letter-spacing:.24em;opacity:.85}.mini{width:30px;height:30px;opacity:.9}
+.para{margin-top:auto}.para em,.pie2 em,.stub em{display:block;font-style:normal;font-size:10.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;opacity:.7}.para b{display:block;font-size:34px;font-weight:700;line-height:1.1;margin-top:2px;letter-spacing:-.01em;word-break:break-word}
+.num{display:flex;align-items:center;gap:14px;margin-top:14px}.num>b{font-size:84px;font-weight:800;line-height:.85;letter-spacing:-.04em}.num span{display:flex;flex-direction:column}.num strong{font-size:22px;font-weight:600;line-height:1.1}.num small{font-size:13.5px;opacity:.85;margin-top:3px;line-height:1.3}
+.msg{font-size:15px;font-style:italic;line-height:1.45;margin:18px 0 0;opacity:.95;max-width:92%}.msg:before{content:'“';font-style:normal;font-size:34px;line-height:0;vertical-align:-11px;margin-right:3px;opacity:.6}
+.pie2{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:auto;padding-top:20px;font-size:15px;font-weight:600}.pie2 .mk{font-size:12px;font-weight:700;letter-spacing:.2em;opacity:.9}
+.stub{position:relative;display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fffaf5;border-radius:0 0 26px 26px;padding:20px 26px 22px;text-align:left;border-top:2px dashed ${OC.ln}}
+.stub:before,.stub:after{content:'';position:absolute;top:-13px;width:24px;height:24px;border-radius:50%;background:${OC.bg}}.stub:before{left:-12px}.stub:after{right:-12px}
+.stub em{color:#9a8a7f;opacity:1}.stub>div:first-child{flex:none}.stub code{display:block;font:700 20px Poppins,sans-serif;letter-spacing:.12em;color:#2b2420;margin-top:3px;white-space:nowrap}.stub .r{text-align:right}.stub .r{flex:1;min-width:0}.stub .r span{display:block;font-size:13px;font-weight:600;color:#2b2420;margin-top:4px;white-space:nowrap}
+.res{font-size:13.5px;color:#5c4f47;margin:24px 4px 0;line-height:1.55}.bt{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;font:600 15px Poppins,sans-serif;color:#fff;background:${G[0]};border:0;border-radius:16px;padding:15px;text-decoration:none;cursor:pointer}
+.bt.sec{background:#fff;color:#2b2420;box-shadow:0 1px 3px rgba(0,0,0,.06)}.pend{background:#fff6e5;color:#8a5a00;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:16px}
+@keyframes sube{from{opacity:0;transform:translateY(26px) scale(.97)}to{opacity:1;transform:none}}@keyframes brilla{from{left:-60%}to{left:130%}}
+@media(prefers-reduced-motion:reduce){.cardw,.sh{animation:none}.sh{display:none}}
+@media(max-width:360px){.ct{padding:26px 24px 22px}.para b{font-size:29px}.num>b{font-size:70px}}
+${imprimir ? '@page{size:A5;margin:12mm}body{background:#fff;padding:0}.c{max-width:none}.np{display:none!important}.cardw{filter:none;animation:none;max-width:118mm;margin:0 auto}.sh{display:none}.stub{border:1px solid #eee;border-top:2px dashed #ddd}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}' : '@media print{body{background:#fff;padding:0}.np{display:none!important}.cardw{filter:none;animation:none}.sh{display:none}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'}
+</style></head><body><div class="c">${imprimir ? '' : `<p class="hi np">${T.tit}</p><h1 class="np">${e(F.PARA ? hola(F.PARA) : T.tit)}</h1>`}
 ${tarjeta}
 ${pend && !imprimir ? '<p class="pend np">Esta tarjeta aún está pendiente de pago.</p>' : ''}
-<p class="res">${e(T.res(tel))}<br>${e(C.dirCorta || C.direccion || '')}</p>
+<p class="res">${e(T.res(tel)).replace(/(\d) (?=\d)/g, '$1&nbsp;')}<br>${e(C.dirCorta || C.direccion || '')}</p>
 ${imprimir ? '' : `<a class="bt np" href="https://wa.me/${wa}?text=${encodeURIComponent(T.wa(F['CÓDIGO'] || ''))}" target="_blank" rel="noopener">${T.resv}</a><button type="button" class="bt sec np" onclick="window.print()">${T.imp}</button>`}
-</div>${imprimir ? '<script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>' : ''}</body></html>`;
+</div>${imprimir ? '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' : ''}</body></html>`;
 }
 // La página para comprar el vale (paso a paso, en el estilo de la app)
-function ogRegaloSvg() {
-  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos();
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
-    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="232" y="176" width="136" height="96" rx="14"/><path d="M220 176h160v-28H220z"/><path d="M300 148v124"/><path d="M300 148c-14-30-52-30-46-6 4 14 30 6 46 6zM300 148c14-30 52-30 46-6-4 14-30 6-46 6z"/></g>`
+function ogRegaloSvg(oc) {
+  oc = VALE_OC[oc] ? oc : 'clasico'; const OC = VALE_OC[oc], T = OC.acc, K = '#2b2420', M = '#8a7d74', O = ogTipos();
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="${oc === 'clasico' ? '#f6f1eb' : OC.bg}"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + valeDib(oc, 240, 118, 120, T, 2.3)
     + ogTexto(O.b, 'Regala salud', 42, 300, 362, 0, K)
     + ogTexto(O.m, 'Una tarjeta regalo de fisioterapia', 23, 300, 404, 0, M)
-    + ogTexto(O.m, 'La preparas en 2 minutos', 21, 300, 450, 0, T) + `</svg>`;
+    + ogTexto(O.m, OC.t.es.og, 21, 300, 450, 0, T) + `</svg>`;
 }
 function paginaRegalo(D) {
   const J = JSON.stringify(D).replace(/</g, '\\u003c');
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Regala salud · FISIO365</title>
-<meta name="description" content="Una tarjeta regalo de fisioterapia en FISIO365. La preparas en 2 minutos."><meta property="og:title" content="Regala salud · FISIO365"><meta property="og:description" content="Una tarjeta regalo de fisioterapia, el regalo que de verdad se nota. La preparas en 2 minutos."><meta property="og:image" content="https://app.fisioterapia365.com/api/schedule?action=regalo-og&v=1"><meta property="og:type" content="website">
+<meta name="description" content="Una tarjeta regalo de fisioterapia en FISIO365. La preparas en 2 minutos."><meta property="og:title" content="${{ clasico: 'Regala salud', navidad: 'Regala salud esta Navidad', madre: 'Regala salud el Día de la Madre', padre: 'Regala salud el Día del Padre', cumple: 'Regala salud por su cumpleaños', sanvalentin: 'Regala salud por San Valentín' }[D.oc] || 'Regala salud'} · FISIO365"><meta property="og:description" content="Una tarjeta regalo de fisioterapia, el regalo que de verdad se nota. La preparas en 2 minutos."><meta property="og:image" content="https://app.fisioterapia365.com/api/schedule?action=regalo-og&o=${D.oc}&v=2"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px 40px}
 .c{background:#fff;border-radius:26px;padding:22px 20px 22px;max-width:460px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start}
 .top{display:flex;align-items:center;gap:10px;margin-bottom:18px}.atr{width:38px;height:38px;border-radius:12px;border:0;background:#f6f1eb;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}.atr svg{width:18px;height:18px;fill:none;stroke:#2b2420;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.atr[hidden]{visibility:hidden;display:flex}
 .bar{flex:1;height:5px;border-radius:9px;background:#f1e8e1;overflow:hidden}.bar i{display:block;height:100%;background:#c2552e;border-radius:9px;transition:width .35s}
-.ic{display:block;width:64px;height:64px;margin:4px auto 6px}.ic *{fill:none;stroke:#c2552e;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ic{display:block;width:64px;height:64px;margin:4px auto 6px}.ic *{fill:none;stroke:var(--a,#c2552e);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 h1{font-size:23px;font-weight:700;margin:6px 0 6px;line-height:1.25;text-align:center}h2{font-size:19px;font-weight:700;margin:0 0 4px;line-height:1.3}.sub{font-size:14px;color:#5c4f47;margin:0 0 16px;line-height:1.5}.cen{text-align:center}
 label.l{display:block;font-size:13px;font-weight:600;color:#2b2420;margin:14px 0 6px}
 input.i,textarea.i{width:100%;font:500 16px Poppins,sans-serif;color:#141414;background:#faf7f4;border:1.5px solid #efe6df;border-radius:14px;padding:13px 14px;outline:none}input.i:focus,textarea.i:focus{border-color:#c2552e;background:#fff}textarea.i{min-height:96px;resize:vertical}
@@ -1058,6 +1133,7 @@ input.i,textarea.i{width:100%;font:500 16px Poppins,sans-serif;color:#141414;bac
 .res{background:#fdf1ea;border-radius:18px;padding:16px;margin:4px 0 6px}.res .r1{font-size:12px;font-weight:700;letter-spacing:.14em;color:#c2552e}.res .r2{font-size:19px;font-weight:700;margin:4px 0 2px}.res .r3{font-size:13.5px;color:#5c4f47;line-height:1.5}.res .tot{display:flex;justify-content:space-between;align-items:baseline;border-top:2px dashed #f1d9cc;margin-top:12px;padding-top:10px;font-weight:600}.res .tot b{font-size:22px;color:#c2552e}
 .ib{background:#faf7f4;border-radius:14px;padding:6px 14px;font-size:14px;margin-top:10px;text-align:left}.ibr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #efe6df}.ibr:last-child{border-bottom:0}.ibr div{flex:1;min-width:0;overflow-wrap:anywhere}.ibr small{display:block;font-size:11.5px;color:#7d6a60}.ibr b{font-weight:600}.cp{flex:none;border:0;background:#fff;border-radius:8px;padding:5px 10px;font:600 12px Poppins,sans-serif;color:#c2552e;cursor:pointer}
 .ok{text-align:center}.ok .ic{width:84px;height:84px}.pie{margin-top:18px;font-size:12px;color:#7d6a60;text-align:center}
+.dz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.dz button{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:18px;border:0;border-radius:18px;padding:16px 14px 14px;min-height:118px;cursor:pointer;font:600 13.5px Poppins,sans-serif;color:#fff7ef;text-align:left;transition:transform .15s}.dz button i{position:absolute;inset:7px;border:1px solid rgba(255,247,239,.3);border-radius:13px;pointer-events:none}.dz button svg{width:30px;height:30px}.dz button svg *{fill:none;stroke:#fff7ef;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.dz button.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #2b2420;transform:scale(1.02)}.dz button.on:after{content:'✓';position:absolute;top:12px;right:14px;width:22px;height:22px;border-radius:50%;background:#fff7ef;color:#2b2420;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .fi{animation:fi .35s both}@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style></head>
 <body><div class="c" id="C"></div><script>(function(){var D=${J};var C=document.getElementById('C');
 var S={};try{S=JSON.parse(sessionStorage.getItem('f365_regalo')||'{}')||{};}catch(e){}if(D.nuevo){S={};}
@@ -1065,22 +1141,24 @@ function guarda(){try{sessionStorage.setItem('f365_regalo',JSON.stringify(S));}c
 function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function eur(n){var r=Math.round(n*100)/100,e=Math.floor(r),d=Math.round((r-e)*100);return String(e).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'.')+(d?','+String(d).padStart(2,'0'):'')+' €';}
 function ses(n){return n===1?'1 sesión':n+' sesiones';}
-var MSG=${JSON.stringify(VALE_MSG)},IDI=[['Castellano','es'],['Català','ca'],['English','en']];
-var G='<svg class="ic" viewBox="0 0 96 96" aria-hidden="true"><path d="M18 46h60v34a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path d="M48 46v40"/><rect x="12" y="32" width="72" height="14" rx="5"/><path d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/></svg>';
-var PASOS=['inicio','tipo','sesiones','tarjeta','entrega','datos','pago'];var paso=PASOS.indexOf(S.paso)>-1?S.paso:'inicio';
+var MSG=${JSON.stringify(Object.fromEntries(VALE_OCS.map(k => [k, VALE_OC[k].msg])))},IDI=[['Castellano','es'],['Català','ca'],['English','en']];
+if(D.fijo||!S.oc)S.oc=D.oc;function OC(){for(var k=0;k<D.ocs.length;k++)if(D.ocs[k].k===S.oc)return D.ocs[k];return D.ocs[0];}
+function gi(){var o=OC();return '<svg class="ic" style="--a:'+o.acc+'" viewBox="0 0 96 96" aria-hidden="true">'+o.d+'</svg>';}var G=gi();
+var PASOS=['inicio','tipo','sesiones','diseno','tarjeta','entrega','datos','pago'];var paso=PASOS.indexOf(S.paso)>-1?S.paso:'inicio';
 function servicio(){return D.servicios[S.tipo]||null;}function opcion(){var s=servicio();return s&&s.ops[S.op]||null;}
 function cab(){var i=PASOS.indexOf(paso);return '<div class="top"><button type="button" class="atr" id="atr" aria-label="Atrás"'+(i?'':' hidden')+'><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="bar"><i style="width:'+Math.round((i+1)*100/PASOS.length)+'%"></i></div></div>';}
 function ir(p){paso=p;S.paso=p;guarda();pinta();window.scrollTo(0,0);}
 function op(sel,on,html){return '<button type="button" class="op'+(on?' on':'')+'" '+sel+'><span class="rd"></span><span style="flex:1;min-width:0">'+html+'</span></button>';}
-function pinta(){var h=cab(),i=PASOS.indexOf(paso);
+function pinta(){var h=cab(),i=PASOS.indexOf(paso);G=gi();
  if(paso==='inicio'){h+=G+'<h1>Regala salud</h1><p class="sub cen">Una tarjeta regalo de fisioterapia en <b>'+esc(D.marca)+'</b>, el regalo que de verdad se nota. La preparas en 2 minutos.</p>'
   +'<label class="l" for="para">¿Para quién es el regalo?</label><input class="i" id="para" placeholder="Su nombre" value="'+esc(S.para||'')+'" autocomplete="off" maxlength="40">'
   +'<label class="l" for="de">¿De parte de quién?</label><input class="i" id="de" placeholder="Tu nombre, o «Tus amigas»…" value="'+esc(S.de||'')+'" autocomplete="off" maxlength="50">'
   +'<button type="button" class="bt" id="sig">Empezar</button><p class="err" id="er"></p><p class="priv">Al seguir, aceptas nuestra <a href="'+esc(D.privacidad)+'" target="_blank" rel="noopener">política de privacidad</a>.</p>';}
  if(paso==='tipo'){h+='<h2>¿Qué le regalas?</h2><p class="sub">Elige el tipo de fisioterapia.</p>'+D.servicios.map(function(s,k){return op('data-k="'+k+'"',S.tipo===k,'<b>'+esc(s.nombre)+'</b>'+(s.desc?'<small>'+esc(s.desc)+'</small>':''));}).join('');}
  if(paso==='sesiones'){var s=servicio();h+='<h2>¿Cuántas sesiones?</h2><p class="sub">Con los packs, cada sesión sale más barata.</p>'+s.ops.map(function(o,k){return op('data-k="'+k+'"',S.op===k,'<b>'+(o.pack?'Pack '+o.n+' sesiones':ses(o.n))+'</b>'+(o.ah?'<br><span class="ah">Ahorras '+eur(o.ah)+'</span>':'')).replace('</span></button>','</span><span class="pr">'+eur(o.p)+'</span></button>');}).join('');}
+ if(paso==='diseno'){h+='<h2>El diseño de la tarjeta</h2><p class="sub">Elige la ocasión. Cambia el dibujo, el color y los mensajes.</p><div class="dz">'+D.ocs.map(function(o){return '<button type="button" data-o="'+o.k+'" class="'+(S.oc===o.k?'on':'')+'" style="background:linear-gradient(150deg,'+o.gr[1]+','+o.gr[0]+')"><i></i><svg viewBox="0 0 96 96" aria-hidden="true">'+o.d+'</svg><span>'+esc(o.nom)+'</span></button>';}).join('')+'</div><button type="button" class="bt" id="sig">Seguir</button>';}
  if(paso==='tarjeta'){var L=S.idioma||'es';h+='<h2>La tarjeta</h2><p class="sub">¿En qué idioma la quieres?</p><div class="ch" id="idi">'+IDI.map(function(x){return '<button type="button" data-l="'+x[1]+'" class="'+(L===x[1]?'on':'')+'">'+x[0]+'</button>';}).join('')+'</div>'
-  +'<label class="l">Elige el mensaje</label>'+MSG[L].map(function(m,k){return op('data-m="'+k+'"',S.msg===k,esc(m));}).join('')+op('data-m="-1"',S.msg===-1,'Prefiero escribir mi propio mensaje')
+  +'<label class="l">Elige el mensaje</label>'+MSG[S.oc][L].map(function(m,k){return op('data-m="'+k+'"',S.msg===k,esc(m));}).join('')+op('data-m="-1"',S.msg===-1,'Prefiero escribir mi propio mensaje')
   +(S.msg===-1?'<textarea class="i" id="propio" maxlength="220" placeholder="Escribe lo que quieras que ponga la tarjeta">'+esc(S.propio||'')+'</textarea>':'')+'<button type="button" class="bt" id="sig"'+(S.msg==null?' disabled':'')+'>Seguir</button><p class="err" id="er"></p>';}
  if(paso==='entrega'){h+='<h2>¿Cómo quieres que le llegue?</h2><p class="sub">Elige la que mejor te venga.</p>'
   +op('data-e="yo"',S.entrega==='yo','<b>Digital, a mi email</b><small>Te la mandamos y se la das tú</small>')
@@ -1095,8 +1173,8 @@ function pinta(){var h=cab(),i=PASOS.indexOf(paso);
   +'<label class="l">¿Necesitas factura?</label><div class="ch" id="fac"><button type="button" data-f="0" class="'+(!S.fac?'on':'')+'">No</button><button type="button" data-f="1" class="'+(S.fac?'on':'')+'">Sí</button></div>'
   +(S.fac?'<label class="l" for="fr">Nombre o razón social</label><input class="i" id="fr" value="'+esc(S.razon||'')+'" maxlength="80"><label class="l" for="fn">NIF / CIF</label><input class="i" id="fn" value="'+esc(S.nif||'')+'" maxlength="20"><label class="l" for="fd">Dirección fiscal</label><input class="i" id="fd" value="'+esc(S.dirf||'')+'" maxlength="140">':'')
   +'<button type="button" class="bt" id="sig">Seguir</button><p class="err" id="er"></p>';}
- if(paso==='pago'){var s2=servicio(),o2=opcion(),ms=S.msg===-1?S.propio:MSG[S.idioma||'es'][S.msg];
-  h+='<h2>Tu regalo</h2><div class="res"><div class="r1">TARJETA REGALO</div><div class="r2">'+(o2.pack?'Pack '+o2.n+' sesiones':ses(o2.n))+'</div><div class="r3">de '+esc(s2.nombre)+'<br>Para <b>'+esc(S.para)+'</b>, de parte de <b>'+esc(S.de)+'</b>'+(ms?'<br>«'+esc(ms)+'»':'')+'<br>'+(S.entrega==='yo'?'Digital, a tu email':S.entrega==='su'?'A '+esc(S.emailDestino)+' el '+fl(S.fecha):'Impresa, la recoges en el centro')+'</div><div class="tot"><span>Total</span><b>'+eur(o2.p)+'</b></div></div>'
+ if(paso==='pago'){var s2=servicio(),o2=opcion(),ms=S.msg===-1?S.propio:MSG[S.oc][S.idioma||'es'][S.msg];
+  h+='<h2>Tu regalo</h2><div class="res" style="background:'+OC().bg+'"><div class="r1" style="color:'+OC().acc+'">'+esc(OC().tk)+'</div><div class="r2">'+(o2.pack?'Pack '+o2.n+' sesiones':ses(o2.n))+'</div><div class="r3">de '+esc(s2.nombre)+'<br>Para <b>'+esc(S.para)+'</b>, de parte de <b>'+esc(S.de)+'</b>'+(ms?'<br>«'+esc(ms)+'»':'')+'<br>'+(S.entrega==='yo'?'Digital, a tu email':S.entrega==='su'?'A '+esc(S.emailDestino)+' el '+fl(S.fecha):'Impresa, la recoges en el centro')+'</div><div class="tot"><span>Total</span><b>'+eur(o2.p)+'</b></div></div>'
   +'<label class="l">¿Cómo quieres pagar?</label>'
   +(D.tarjeta?op('data-p="tarjeta"',S.pago==='tarjeta','<b>Con tarjeta, ahora</b><small>Pago 100% seguro con Stripe</small>'):'')
   +op('data-p="transferencia"',S.pago==='transferencia','<b>Transferencia bancaria</b><small>Te la enviamos cuando llegue</small>')
@@ -1117,7 +1195,8 @@ function ata(){var at=document.getElementById('atr');if(at)at.onclick=function()
  var sig=document.getElementById('sig');
  if(paso==='inicio')sig.onclick=function(){S.para=val('para');S.de=val('de');if(!S.para)return er('Escribe para quién es');if(!S.de)return er('Escribe de parte de quién');ir('tipo');};
  if(paso==='tipo')C.querySelectorAll('.op').forEach(function(b){b.onclick=function(){if(S.tipo!==+b.dataset.k){S.op=null;}S.tipo=+b.dataset.k;guarda();ir('sesiones');};});
- if(paso==='sesiones')C.querySelectorAll('.op').forEach(function(b){b.onclick=function(){S.op=+b.dataset.k;guarda();ir('tarjeta');};});
+ if(paso==='sesiones')C.querySelectorAll('.op').forEach(function(b){b.onclick=function(){S.op=+b.dataset.k;guarda();ir('diseno');};});
+ if(paso==='diseno'){C.querySelectorAll('.dz button').forEach(function(b){b.onclick=function(){if(S.oc!==b.dataset.o&&S.msg!==-1)S.msg=null;S.oc=b.dataset.o;guarda();pinta();};});sig.onclick=function(){ir('tarjeta');};}
  if(paso==='tarjeta'){C.querySelectorAll('#idi button').forEach(function(b){b.onclick=function(){S.idioma=b.dataset.l;guarda();pinta();};});
   C.querySelectorAll('.op').forEach(function(b){b.onclick=function(){S.msg=+b.dataset.m;guarda();pinta();var t=document.getElementById('propio');if(t)t.focus();};});
   var t=document.getElementById('propio');if(t)t.oninput=function(){S.propio=t.value;guarda();};
@@ -1130,7 +1209,7 @@ function ata(){var at=document.getElementById('atr');if(at)at.onclick=function()
   sig.onclick=function(){lee();if(!S.nombre)return er('Escribe tu nombre');if(!emOk(S.email))return er('Revisa tu email');if(String(S.tel).replace(/\\D/g,'').length<9)return er('Revisa tu teléfono');if(S.fac&&(!S.razon||!S.nif||!S.dirf))return er('Completa los datos de la factura');ir('pago');};}
  if(paso==='pago'){C.querySelectorAll('.op').forEach(function(b){b.onclick=function(){S.pago=b.dataset.p;guarda();pinta();};});
   sig.onclick=function(){sig.disabled=true;sig.textContent=S.pago==='tarjeta'?'Abriendo el pago…':'Un momento…';er('');
-   var body={para:S.para,de:S.de,tipo:S.tipo,op:S.op,idioma:S.idioma||'es',msg:S.msg,propio:S.propio||'',entrega:S.entrega,emailDestino:S.emailDestino||'',fecha:S.fecha||'',nombre:S.nombre,email:S.email,tel:S.tel,factura:S.fac?{razon:S.razon,nif:S.nif,dir:S.dirf}:null,pago:S.pago,previo:S.previo||null,acepta:true};
+   var body={para:S.para,de:S.de,tipo:S.tipo,op:S.op,oc:S.oc,idioma:S.idioma||'es',msg:S.msg,propio:S.propio||'',entrega:S.entrega,emailDestino:S.emailDestino||'',fecha:S.fecha||'',nombre:S.nombre,email:S.email,tel:S.tel,factura:S.fac?{razon:S.razon,nif:S.nif,dir:S.dirf}:null,pago:S.pago,previo:S.previo||null,acepta:true};
    fetch(D.post,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(r){
     if(!r.ok)throw new Error(r.error||'');S.hecho={id:r.id,s:r.s,pago:S.pago,importe:opcion().p,codigo:r.codigo};guarda();
     if(r.url){location.href=r.url;return;}fin(S.hecho);})
@@ -2824,7 +2903,7 @@ module.exports = async function handler(req, res) {
   // Tarjeta regalo pública (el enlace que va por WhatsApp; la vista previa enseña la imagen)
   // ── Vales regalo: página para comprarlo (/regalo), la tarjeta (/vale/…) y su vista previa ──
   if (action === 'regalo-og') {
-    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogRegaloSvg(), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogRegaloSvg(String(req.query.o || '')), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
     catch (e) { res.setHeader('Location', '/regalo/preview.jpg'); return res.status(302).end(); }
   }
   if (action === 'regalo-pagina') {
@@ -2856,11 +2935,12 @@ module.exports = async function handler(req, res) {
       const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
       if (q.entrega === 'su' && (!emOk(q.emailDestino) || !/^\d{4}-\d{2}-\d{2}$/.test(String(q.fecha || '')) || q.fecha < hoy)) return res.status(200).json({ ok: false, error: 'Revisa su email y el día.' });
       if (!['tarjeta', 'transferencia', 'centro'].includes(q.pago) || (q.pago === 'tarjeta' && !process.env.STRIPE_SECRET_KEY)) return res.status(200).json({ ok: false, error: 'Elige cómo pagar.' });
-      const msg = +q.msg === -1 ? L(q.propio, 220) : (VALE_MSG[lang][+q.msg] || '');
+      const oc = VALE_OC[String(q.oc || '')] ? String(q.oc) : 'clasico';
+      const msg = +q.msg === -1 ? L(q.propio, 220) : (VALE_OC[oc].msg[lang][+q.msg] || '');
       const fa = q.factura && typeof q.factura === 'object' ? `${L(q.factura.razon, 80)}\nNIF: ${L(q.factura.nif, 20)}\n${L(q.factura.dir, 140)}` : '';
       const cad = new Date(hoy + 'T12:00:00Z'); cad.setUTCFullYear(cad.getUTCFullYear() + 1);
       const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-      const f = { 'CÓDIGO': valeCodigo(), PARA: L(q.para, 40), DE: L(q.de, 50), COMPRADOR: L(q.nombre, 60), EMAIL: String(q.email).trim().toLowerCase(), 'TELÉFONO': L(q.tel, 30), TIPO: s.nombre, SESIONES: o.n, IMPORTE: o.p, IDIOMA: idi, MENSAJE: msg,
+      const f = { 'CÓDIGO': valeCodigo(), PARA: L(q.para, 40), DE: L(q.de, 50), COMPRADOR: L(q.nombre, 60), EMAIL: String(q.email).trim().toLowerCase(), 'TELÉFONO': L(q.tel, 30), TIPO: s.nombre, SESIONES: o.n, IMPORTE: o.p, IDIOMA: idi, MENSAJE: msg, 'OCASIÓN': oc,
         ENTREGA: q.entrega, 'EMAIL DESTINO': q.entrega === 'su' ? String(q.emailDestino).trim().toLowerCase() : '', 'FECHA ENVÍO': q.entrega === 'su' ? q.fecha : null, FACTURA: fa, PAGO: q.pago, ESTADO: 'PENDIENTE DE PAGO',
         CADUCA: cad.toISOString().slice(0, 10), CREADO: new Date().toISOString(), REGISTRO: `${pagoAhora()} · Comprado en la web (${q.pago}) · acepta la política de privacidad (IP ${ip || '—'})` };
       // Si vuelve de un pago con tarjeta que no terminó y elige otra forma, se reutiliza el mismo vale
@@ -2872,7 +2952,7 @@ module.exports = async function handler(req, res) {
       if (q.pago === 'transferencia') await valeMail(f.EMAIL, 'Tu tarjeta regalo: datos para la transferencia', `Hola ${escHtml(f.COMPRADOR.split(/\s+/)[0])},`, `¡Gracias por tu regalo para <b>${escHtml(f.PARA)}</b>! En cuanto nos llegue la transferencia te enviamos la tarjeta (menos de 24 h).<br><br>Titular: <b>${escHtml(CLI.razon || '')}</b><br>IBAN: <b>${escHtml(CLI.iban || '')}</b><br>Importe: <b>${valeEur(o.p)}</b><br>Concepto: <b>Vale regalo - ${escHtml(f.COMPRADOR)}</b>`, '', '');
       return res.status(200).json({ ok: true, id, s: firmaVale(id), codigo: F['CÓDIGO'] });
     }
-    const D = { marca: CLI.marca, servicios: OPS, tarjeta: !!process.env.STRIPE_SECRET_KEY, razon: CLI.razon, iban: CLI.iban, tel: CLI.tel, dir: CLI.dirCorta || CLI.direccion || '', privacidad: `${APPU()}/privacidad`, post: '/api/schedule?action=regalo-pagina' };
+    const D = { marca: CLI.marca, servicios: OPS, tarjeta: !!process.env.STRIPE_SECRET_KEY, razon: CLI.razon, iban: CLI.iban, tel: CLI.tel, dir: CLI.dirCorta || CLI.direccion || '', privacidad: `${APPU()}/privacidad`, post: '/api/schedule?action=regalo-pagina', oc: VALE_OC[String(req.query.o || '')] ? String(req.query.o) : valeOcHoy(), fijo: !!VALE_OC[String(req.query.o || '')], ocs: VALE_OCS.map(k => ({ k, gr: VALE_GR[k], nom: VALE_OC[k].nom, acc: VALE_OC[k].acc, bg: VALE_OC[k].bg, d: VALE_OC[k].d, tk: VALE_OC[k].t.es.tk })) };
     const m = String(req.query.v || '').match(/^(rec[A-Za-z0-9]{14})-([a-f0-9]{10})$/);
     if (m && sigOk(m[1], m[2])) { // vuelta de Stripe (pagado o cancelado)
       const r = await at(`${VALES}/${m[1]}`); let F = r.fields || {};
