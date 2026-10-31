@@ -2206,6 +2206,7 @@ const CONF_DEF = {
   tarjeta: { importe: 10, meses: 6 },
   holded: { borrador: true, rgpd: TEXTO_RGPD },
   clinica: MARCA.OTRA_CLINICA ? {} : { razon: 'Fourth Dynamic, S.L.', nif: 'B56503592', direccion: 'C/ Gran de Sant Andreu, 163 · 08030 Barcelona', tel: '672 89 39 49', email: 'info@fisioterapia365.com' }, // otra clínica: vacío hasta que lo rellene
+  agenda: { desde: 7, hasta: 21 }, // primera y última hora que sale en la agenda (Administración › Ajustes › Horario de la clínica)
   cancelacion: { horas: 24, texto: 'Si no puedes venir, avísanos con al menos 24 horas de antelación para poder dar tu hora a otra persona.' },
   legal: {},
   plantillas: {}, // mensajes de WhatsApp escritos por la clínica (vacío = los de siempre)
@@ -3599,7 +3600,12 @@ module.exports = async function handler(req, res) {
         }
         return res.status(400).json({ ok: false, error: 'Acción no válida' });
       }
-      if (action === 'seg-config') return res.status(200).json({ ok: true, conf: await conf(), legalBase: LEGAL_TXT() });
+      if (action === 'seg-config') return res.status(200).json({ ok: true, conf: await conf(), legalBase: LEGAL_TXT(), personalizar: (await ajuste('personalizar', null)) || {}, demo: String(process.env.CLINICA || '') === 'demo' && !!process.env.SIN_ENVIOS,
+        conexiones: { emails: !!process.env.BREVO_API_KEY, cobros: !!process.env.STRIPE_SECRET_KEY, holded: !!process.env.HOLDED_API_KEY, ia: !!process.env.ANTHROPIC_API_KEY, avisos: !!process.env.VAPID_PUBLIC_KEY, dominio: !/vercel\.app/.test(String(process.env.APP_URL || 'https://app.fisioterapia365.com')) } });
+      if (action === 'seg-personalizar' && req.method === 'POST') { // «Personaliza tu app»: lo que dirección marca como revisado
+        const cur = (await ajuste('personalizar', null)) || {}, k = String(q.k || '').slice(0, 40); if (!/^[a-z0-9-]+$/.test(k)) return res.status(400).json({ ok: false });
+        if (q.v) cur[k] = new Date().toISOString().slice(0, 10); else delete cur[k]; await guardarAjuste('personalizar', cur, String(q.quien || '')); return res.status(200).json({ ok: true, personalizar: cur });
+      }
       // ── ADMINISTRACIÓN: equipo, horarios, ausencias, accesos y contraseñas (solo quien tiene acc_admin) ──
       if (action.startsWith('seg-adm-')) {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -3711,6 +3717,14 @@ module.exports = async function handler(req, res) {
           await guardarAjuste('clinica-logo', { data: d }, yo.fields.Name); cur.clinica.logoV = Date.now() % 1e9; await guardarAjuste('config', cur, yo.fields.Name);
           return res.status(200).json({ ok: true, conf: await conf() });
         }
+        if (action === 'seg-adm-demo-reset') { // Solo en la demo: dejarla como recién estrenada (modo 'demo') o vacía del todo (modo 'vacia', sale «Crea tu clínica»)
+          if (String(process.env.CLINICA || '') !== 'demo' || !process.env.SIN_ENVIOS || !yo.fields['DIRECCIÓN']) return res.status(403).json({ ok: false, error: 'Solo se puede en la demo' });
+          const D = require('./_demo'), db = require('./_pg').db();
+          await D.demo({ at, db, op: 'borrar', guardarAjuste }); _aj = { t: 0, v: null };
+          if (q.modo === 'vacia') return res.status(200).json({ ok: true, vacia: true });
+          const r = await D.demo({ at, db, op: 'sembrar', guardarAjuste }); _aj = { t: 0, v: null };
+          return res.status(r.ok ? 200 : 500).json(r);
+        }
         if (action === 'seg-adm-config') { // guardar una parte de «Listas y ajustes»
           const sec = String(q.seccion || ''), v = q.valor || {}, cur = (await ajuste('config', null)) || {};
           const lim = (x, n) => String(x == null ? '' : x).trim().slice(0, n);
@@ -3740,6 +3754,7 @@ module.exports = async function handler(req, res) {
           }
           else if (sec === 'legal') { const L = {}; ['trat', 'decl', 'rgpd', 'der', 'sp', 'altaTrat'].forEach(k => { const t = String(v[k] == null ? '' : v[k]).replace(/\r/g, '').trim().slice(0, 12000); if (t && t !== LEGAL_TXT()[k]) L[k] = t; }); cur.legal = L; }
           else if (sec === 'plantillas') { const P = {}; Object.keys(v || {}).slice(0, 30).forEach(k => { if (!/^\w{1,20}$/.test(k)) return; const t = String(v[k] == null ? '' : v[k]).replace(/\r/g, '').trim().slice(0, 2000); if (t) P[k] = t; }); cur.plantillas = P; }
+          else if (sec === 'agenda') { const d = Math.round(Number(v.desde)), h = Math.round(Number(v.hasta)); if (!(d >= 5 && d <= 14 && h >= 12 && h <= 23 && h > d)) return res.status(400).json({ ok: false, error: 'Revisa el horario' }); cur.agenda = { desde: d, hasta: h }; }
           else if (sec === 'cancelacion') { const h = Math.round(Number(v.horas)); if (!(h >= 0 && h <= 168)) return res.status(400).json({ ok: false, error: 'Revisa las horas' }); cur.cancelacion = { horas: h, texto: lim(v.texto, 600) }; }
           else return res.status(400).json({ ok: false, error: 'Sección no válida' });
           await guardarAjuste('config', cur, yo.fields.Name); return res.status(200).json({ ok: true, conf: await conf() });

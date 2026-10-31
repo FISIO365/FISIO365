@@ -1223,6 +1223,13 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .st-barra{display:block;height:4px;background:#efe8e1;border-radius:9px;margin-top:3px;overflow:hidden}.st-barra i{display:block;height:100%;background:#c2552e;border-radius:9px}
 /* Agenda */
 .adm{max-width:860px}.adm-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.adm-tabs button{font-family:var(--font);font-size:13px;font-weight:600;color:#5f554e;background:#fff;border:1px solid #ece6e0;border-radius:99px;padding:8px 14px;cursor:pointer}.adm-tabs button.on{color:#fff;background:#1e2a38;border-color:#1e2a38}
+.pz-demo{border:1.5px dashed #c9d6d4;background:#f6faf9}.pz-dbts{display:flex;gap:8px;flex-wrap:wrap}.pz-dbts button{flex:1 1 180px}.pz-top{padding-bottom:14px}.pz-pct{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.pz-pct b{font-size:30px;font-weight:800;color:#c2552e;letter-spacing:-.5px}.pz-pct span{font-size:14px;font-weight:600}
+.pz-bar{height:6px;border-radius:99px;background:#f1ece6;overflow:hidden;margin-bottom:10px}.pz-bar i{display:block;height:100%;background:#c2552e;border-radius:99px;transition:width .6s}.pz-top small{font-size:12.5px;color:var(--muted);line-height:1.5}
+.pz-f{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid #f3eee8}.adm-h+.pz-f{border-top:none}.pz-c{flex:0 0 22px;height:22px;border-radius:50%;border:1.5px solid #d8d0c7;display:flex;align-items:center;justify-content:center}
+.pz-f.ok .pz-c{background:#2f7d4f;border-color:#2f7d4f}.pz-c svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.pz-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pz-t b{font-size:13.5px;font-weight:600}.pz-t b em{font-style:normal;font-weight:500;font-size:11px;color:var(--muted);margin-left:4px}.pz-t small{font-size:12px;color:var(--muted);line-height:1.45}
+.pz-rev{display:inline-flex;align-items:center;gap:6px;font-size:12px;margin-top:4px;cursor:pointer;color:var(--black)}.pz-ir{flex:0 0 auto;border:1.5px solid #e7e0d8;background:#fff;border-radius:99px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--black)}.pz-f:not(.ok) .pz-ir{border-color:#c2552e;color:#c2552e}
+.adm-card.pz-luz{box-shadow:0 0 0 2px #c2552e;transition:box-shadow .3s}
 .adm-card{background:#fff;border-radius:18px;padding:16px 16px 10px;margin-bottom:14px;box-shadow:0 1px 2px rgba(30,42,56,.04)}.adm-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;margin-bottom:8px}.adm-h b{font-size:15px}.adm-h small{flex-basis:100%;font-size:12px;color:var(--muted)}
 .adm-add{font-family:var(--font);font-size:13px;font-weight:600;color:#c2552e;background:#fdf0e7;border:none;border-radius:99px;padding:8px 14px;cursor:pointer}
 .adm-p{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:none;border-top:1px solid #f1ece7;padding:12px 2px;cursor:pointer;font-family:var(--font);color:inherit}.adm-p:first-of-type{border-top:none}.adm-p.baja{opacity:.6}
@@ -5973,6 +5980,8 @@ async function fpTabPrograma(pacId, body, tok, pacNombre){
 let callSel=[];
 // ══ AGENDA: el día de cada fisio (tabla CITAS: una fila = una hora). Dar, mover, cancelar y bloquear citas ══
 const AG_FISIOS=['Ramiro','Jonathan','Sara','Paola','Juan','ELENA'];
+// Horario de la clínica (Administración › Ajustes): de qué hora a qué hora sale la agenda
+const agDesde=()=>{const v=Number(CONF&&CONF.agenda&&CONF.agenda.desde);return v>=5&&v<=14?v:7;},agHasta=()=>{const v=Number(CONF&&CONF.agenda&&CONF.agenda.hasta);return v>=12&&v<=23?v:21;};
 const AG_NOFISIO=/^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES|NORA)$/i;
 const AG_EST=[['PENDIENTE','Pendiente'],['REALIZADA','Realizada'],['NO ASISTIÓ','No asistió'],['CANCELADA','Cancelada'],['REPROGRAMADA','Reprogramada'],['POR REAGENDAR','Por reagendar'],['CITA DUDOSA','Dudosa']];
 const agNom=f=>{f=String(f||'');return f.charAt(0).toUpperCase()+f.slice(1).toLowerCase();};
@@ -6629,14 +6638,14 @@ function renderAgenda(wrap){
    grid.innerHTML=`<div class="ag-lista">${html}</div>`;abrir();return;}
   if(V==='semana'){
    const [d1]=rango(),dias=[0,1,2,3,4,5,6].map(i=>agMover(d1,i)).filter((d,i)=>i<5||todas.some(c=>c.fecha===d));
-   const horas=new Set();for(let h=7;h<=21;h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
+   const horas=new Set();for(let h=agDesde();h<=agHasta();h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
    const DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
    grid.innerHTML=`<div class="ag-tb ag-sem" style="--n:${dias.length}"><div class="ag-hd"><div class="ag-h0"></div>${dias.map(d=>`<button type="button" class="ag-hf ag-hdia${d===agHoyIso()?' hoy':''}" data-d="${d}">${DN[new Date(d+'T12:00:00').getDay()]} ${+d.slice(8)}</button>`).join('')}</div>${[...horas].sort().map(h=>`<div class="ag-row"><div class="ag-h"><span class="ag-hp">${h}</span></div>${dias.map(d=>{const rs=C.filter(c=>c.fecha===d&&c.hora===h);const pr=rs.filter(c=>!agEsFuera(c.estado)),fu=rs.filter(c=>agEsFuera(c.estado));
     return `<div class="ag-cell">${pr.map(c=>tarjeta(c,!AG.fisio)).join('')}${fu.map(fuera).join('')}${!pr.length&&AG.fisio?`<button type="button" class="ag-vac" data-f="${escH(AG.fisio)}" data-h="${h}" data-d="${d}" aria-label="Hora vacía">＋</button>`:''}</div>`;}).join('')}</div>`).join('')}</div>`;
    grid.querySelectorAll('.ag-hdia').forEach(b=>b.onclick=()=>{AG.fecha=b.dataset.d;AG.vista='dia';cargar();});
    grid.querySelectorAll('.ag-vac').forEach(b=>b.onclick=()=>agVacio({fecha:b.dataset.d,hora:b.dataset.h,fisio:b.dataset.f},cargar));abrir();return;}
   // Día
-  const horas=new Set();for(let h=7;h<=21;h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
+  const horas=new Set();for(let h=agDesde();h<=agHasta();h++)horas.add(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(/^\d{2}:\d{2}$/.test(c.hora))horas.add(c.hora);});
   const ahora=AG.fecha===agHoyIso()?new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false}).format(new Date())+':00':'';
   const celda=(f,h)=>{const rs=C.filter(c=>c.fisio===f&&c.hora===h),pr=rs.filter(c=>!agEsFuera(c.estado)),fu=rs.filter(c=>agEsFuera(c.estado));
    return (pr.length?'':`<button type="button" class="ag-vac" data-f="${escH(f)}" data-h="${h}" aria-label="Hora vacía">＋</button>`)+pr.map(c=>tarjeta(c,false)).join('')+fu.map(fuera).join('');};
@@ -6664,7 +6673,7 @@ function agVacio({fecha,hora,fisio},onDone){
 }
 function agAbrirHuecos({fecha,fisio},onDone){
  const eq=agEquipo();let tipo='CITA LIBRE';
- const HS=[];for(let h=7;h<=21;h++)HS.push(String(h).padStart(2,'0')+':00');
+ const HS=[];for(let h=agDesde();h<=agHasta();h++)HS.push(String(h).padStart(2,'0')+':00');
  const m=hzModal(`<div class="hz-top"><div><small>Agenda</small><b>Abrir huecos</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Fisio</div><select class="ag-in ag-hf2">${eq.map(f=>`<option value="${escH(f)}"${f===fisio?' selected':''}>${escH(agNom(f))}</option>`).join('')}</select>
   <div class="hz-lab">Qué abrir</div><div class="seg-rap ag-tipo">${[['CITA LIBRE','Libre'],['LIBRE - SIN BOMBA','Libre sin bomba'],['CITA BLOQUEADA','Bloqueado'],['DIA BLOQUEADO','Día bloqueado (vacaciones…)']].map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
@@ -6933,7 +6942,7 @@ function agHorasChips(box,fecha,fisio,horaSel,onPick,soloSuyas,excl){
  agCargarDia(fecha).then(d=>{const C=(d&&d.citas)||[];let hs=[];
   if(soloSuyas){hs=[...new Set(C.filter(c=>c.fisio===fisio&&/^\d{2}:\d{2}$/.test(c.hora)&&!agEsBloq(c.estado)).map(c=>c.hora))].sort();
    if(!hs.length){box.innerHTML=`<small class="fp-mu">${escH(agNom(fisio))} no tiene horas abiertas este día. Si hace falta, escribe la hora en «Otra hora».</small>`;return;}}
-  else{for(let h=7;h<=21;h++)hs.push(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(!hs.includes(c.hora)&&/^\d{2}:\d{2}$/.test(c.hora))hs.push(c.hora);});hs.sort();}
+  else{for(let h=agDesde();h<=agHasta();h++)hs.push(String(h).padStart(2,'0')+':00');C.forEach(c=>{if(!hs.includes(c.hora)&&/^\d{2}:\d{2}$/.test(c.hora))hs.push(c.hora);});hs.sort();}
   box.innerHTML=hs.map(h=>{const rs=C.filter(c=>c.fisio===fisio&&c.hora===h);const ocup=rs.some(c=>c.pacienteId&&!agEsFuera(c.estado)),blq=rs.some(c=>agEsBloq(c.estado)),lib=rs.some(c=>agEsLibre(c.estado));
    const bf=agBombaN(C,h,excl)>=2;return `<button type="button" data-h="${h}" class="${ocup?'oc':blq?'bq':lib?'li':''}${h===horaSel?' on':''}${bf?' bmf':''}">${h}${bf&&!ocup?'<small>bomba llena</small>':''}</button>`;}).join('');
   box.querySelectorAll('button').forEach(b=>b.onclick=()=>{box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));const bi=box.parentNode&&box.parentNode.querySelector('.ag-bmi');if(bi)agBombaInfo(bi,C,b.dataset.h);onPick(b.dataset.h);});
@@ -7622,7 +7631,7 @@ function stRanking(L,S){const sem=ST.rk!=='per'?[S]:L,acc={};
   Object.entries(w.porFisio||{}).forEach(([f,x])=>{const k=String(f).toLowerCase();if(!acc[k])return;acc[k].vin+=x.vinieron;acc[k].rep+=x.reagendaron;});});
  return Object.entries(acc).filter(([k,a])=>a.cap||a.ses).map(([k,a])=>({nombre:agNom(k),oc:a.ocup,cap:a.cap,extra:a.extra,ses:a.ses,ocup:a.cap?Math.round(a.ocup*100/a.cap):null,conv:a.vin?Math.round(a.rep*100/a.vin):null,vin:a.vin,rep:a.rep})).sort((x,y)=>(y.ocup??-1)-(x.ocup??-1)||y.ses-x.ses);}
 // ══ ADMINISTRACIÓN: equipo, horarios, vacaciones y festivos, accesos y contraseñas (solo quien tiene acceso «admin») ══
-const ADM={tab:'equipo',d:null};
+const ADM={tab:'',d:null};
 // Pregunta de sí/no con el estilo del panel (en vez del cuadro del navegador)
 function admSiNo(txt,si){return new Promise(ok=>{const m=hzModal(`<div class="hz-top"><div><b>¿Seguro?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><p class="adm-nota" style="font-size:14px;color:#3d342e">${escH(txt)}</p><div class="hz-bts"><button type="button" class="adm-gen s-n">Cancelar</button><button type="button" class="hz-ok s-s">${escH(si||'Sí, seguir')}</button></div>`);
  const fin=v=>{m.remove();ok(v);};m.querySelector('.hz-x').onclick=m.querySelector('.s-n').onclick=()=>fin(false);m.querySelector('.s-s').onclick=()=>fin(true);m.onclick=e=>{if(e.target===m)fin(false);};});}
@@ -7635,12 +7644,13 @@ function admClave(){let s;do{s=String(Math.floor(Math.random()*10000)).padStart(
 async function renderAdmin(wrap){
  const card=ce('div','adm');wrap.appendChild(card);
  const A=fisioActual.accesos||{};if(!A.admin){card.innerHTML='<div class="card"><div class="fac-vacio">Esta sección es solo para dirección.</div></div>';return;}
- card.innerHTML=`<div class="adm-tabs">${[['equipo','Equipo'],['aus','Vacaciones y horarios'],['acc','Accesos'],['chk','Check-list'],['listas','Listas'],['ajustes','Ajustes'],['mail','Emails']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div><div class="adm-body"><div class="fac-vacio">Cargando…</div></div>`;
+ card.innerHTML=`<div class="adm-tabs">${[['pers','Personaliza tu app'],['equipo','Equipo'],['aus','Vacaciones y horarios'],['acc','Accesos'],['chk','Check-list'],['listas','Listas'],['ajustes','Ajustes'],['mail','Emails']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div><div class="adm-body"><div class="fac-vacio">Cargando…</div></div>`;
  const body=card.querySelector('.adm-body');
+ if(!ADM.tab)ADM.tab=(CLINICA&&CLINICA.marca&&CLINICA.marca!=='FISIO365')?'pers':'equipo';
  card.querySelectorAll('.adm-tabs button').forEach(b=>b.onclick=()=>{ADM.tab=b.dataset.k;pinta();});
  async function cargar(){try{const r=await admPost('seg-adm-equipo');if(!r.ok)throw new Error(r.error||'No se ha podido cargar');ADM.d=r;}catch(e){body.innerHTML=`<div class="fac-vacio">${escH(e.message)}</div>`;return false;}return true;}
  function pinta(){card.querySelectorAll('.adm-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===ADM.tab));if(!ADM.d)return;
-  if(ADM.tab==='equipo')pintaEquipo();else if(ADM.tab==='aus')pintaAus();else if(ADM.tab==='chk')pintaChk();else if(ADM.tab==='mail')pintaMail();else if(ADM.tab==='listas')pintaListas();else if(ADM.tab==='ajustes')pintaAjustes();else pintaAcc();}
+  if(ADM.tab==='pers')pintaPers();else if(ADM.tab==='equipo')pintaEquipo();else if(ADM.tab==='aus')pintaAus();else if(ADM.tab==='chk')pintaChk();else if(ADM.tab==='mail')pintaMail();else if(ADM.tab==='listas')pintaListas();else if(ADM.tab==='ajustes')pintaAjustes();else pintaAcc();}
  async function ajustesAdm(){if(!ADM.aj){body.innerHTML='<div class="fac-vacio">Cargando…</div>';const r=await admPost('seg-adm-ajustes');if(!r.ok){body.innerHTML=`<div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div>`;return null;}ADM.aj=r;}return ADM.aj;}
  const activos=()=>ADM.d.equipo.filter(f=>!f.baja);
  const av=f=>f.foto?`<img src="${escH(f.foto)}" alt="">`:escH(iniciales(f.nombre));
@@ -7911,7 +7921,7 @@ function apEditor(card,app,guardarConf){
   card.querySelector('.ap-g').onclick=e=>{lee();const malS=S.find(x=>!x.nombre);if(malS){toast('Pon nombre a todos los servicios',false);return;}
    guardarConf('app',{servicios:S,promos:P.filter(x=>x.titulo)},e.target);};};
  pinta();}
-async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule?action=seg-config&pwd=${encodeURIComponent(apiPwd)}`)).json().catch(()=>({}));if(!r.ok)return null;ADM.conf=r.conf;ADM.legalBase=r.legalBase||{};}return ADM.conf;}
+async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule?action=seg-config&pwd=${encodeURIComponent(apiPwd)}`)).json().catch(()=>({}));if(!r.ok)return null;ADM.conf=r.conf;ADM.legalBase=r.legalBase||{};ADM.cx=r.conexiones||{};ADM.rev=r.personalizar||{};ADM.demo=!!r.demo;}return ADM.conf;}
  async function guardarConf(seccion,valor,b){const t0=b.textContent;b.disabled=true;b.textContent='Guardando…';const r=await admPost('seg-adm-config',{seccion,valor});b.disabled=false;b.textContent=t0;
   if(!r.ok){toast(r.error||'No se ha podido guardar',false);return false;}ADM.conf=r.conf;aplicarConf(r.conf);toast('Guardado',true);return true;}
  async function pintaListas(){body.innerHTML='<div class="fac-vacio">Cargando…</div>';const c=await admConf();if(!c||ADM.tab!=='listas'){if(!c)body.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
@@ -7989,6 +7999,67 @@ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule
    admPost('seg-adm-etiquetas',{tabla:t,op:'ver'}).then(r=>{E=r.ok?r.etiquetas:[];p();});});
  }
  // ── Ajustes: tarjeta regalo, Holded, datos de la clínica, cancelaciones ──
+ // ── PERSONALIZA TU APP: todo lo que cambia de una clínica a otra, en una lista, con lo que falta y un botón a cada sitio ──
+ async function pintaPers(){body.innerHTML='<div class="fac-vacio">Cargando…</div>';const c=await admConf();if(!c||ADM.tab!=='pers'){if(!c)body.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
+  const C=c.clinica||{},L=c.listas||{},act=activos(),fis=act.filter(f=>f.role!=='admin'),cx=ADM.cx||{},R=ADM.rev||{},ok=v=>!!String(v||'').trim();
+  // [clave, título, explicación, hecho (null = se marca a mano), [pestaña, tarjeta], opcional]
+  const B=[
+   ['Tu marca','Cómo se ve la app: en el panel, en la app de tus pacientes, en los PDF y en los mensajes.',[
+    ['nombre','Nombre de la clínica','Sale en todo: app, mensajes, facturas, justificantes.',ok(C.marca),['ajustes','Datos de la clínica']],
+    ['logo','Logo','Arriba en el panel, en la app y en los documentos.',!!C.logoV,['ajustes','Datos de la clínica']],
+    ['color','Color de la marca','Botones, detalles y documentos con tu color.',ok(C.color),['ajustes','Datos de la clínica']],
+    ['icono','Icono de la app','El que sale en el móvil al instalarla. Si no subes uno, se hace con tu nombre y tu color.',!!C.iconoV,['ajustes','Datos de la clínica'],1]]],
+   ['Datos de la clínica','Lo que ven los pacientes y lo que sale en facturas y documentos legales.',[
+    ['legales','Razón social y NIF','Facturas, justificantes y consentimientos.',ok(C.razon)&&ok(C.nif),['ajustes','Datos de la clínica']],
+    ['direccion','Dirección','En la app, los recordatorios y los documentos.',ok(C.direccion),['ajustes','Datos de la clínica']],
+    ['tel','Teléfono y WhatsApp','Para que los pacientes te llamen o te escriban.',ok(C.tel),['ajustes','Datos de la clínica']],
+    ['email','Email','Respuestas de los pacientes y avisos.',ok(C.email),['ajustes','Datos de la clínica']],
+    ['web','Web','Opcional.',ok(C.web),['ajustes','Datos de la clínica'],1],
+    ['resenas','Reseñas de Google','Para pedir reseñas a los pacientes contentos (el código de tu ficha de Google).',ok(C.googlePlace),['ajustes','Datos de la clínica']],
+    ['iban','Cuenta para transferencias (IBAN)','Si dejas pagar por transferencia. Si no, déjalo vacío.',ok(C.iban),['ajustes','Datos de la clínica'],1]]],
+   ['Equipo','Quién trabaja en la clínica y qué puede ver cada uno.',[
+    ['equipo','Tu equipo dado de alta','Cada persona entra con su nombre y su PIN.',act.length>1,['equipo','Equipo']],
+    ['horarios','Horario de cada fisio','Las horas de trabajo de cada día (para la ocupación y las estadísticas).',fis.length>0&&fis.every(f=>Object.keys(f.horas||{}).length),['equipo','Equipo']],
+    ['colegiados','Nº de colegiado de los fisios','Sale en las facturas y los justificantes (las mutuas lo piden).',fis.length>0&&fis.every(f=>ok(f.colegiado)),['equipo','Equipo']],
+    ['fotos','Fotos del equipo','Las ven los pacientes en la app y en el chat.',act.length>0&&act.every(f=>ok(f.foto)),['equipo','Equipo'],1],
+    ['accesos','Qué ve cada uno','Las secciones del panel de cada persona.',null,['acc','Qué secciones ve cada uno']]]],
+   ['Agenda y citas','Cómo trabajáis con las citas.',[
+    ['horario','Horario de la clínica','Desde qué hora hasta qué hora sale la agenda.',null,['ajustes','Horario de la clínica']],
+    ['tiposes','Tipos de sesión','Las sesiones que ofrecéis (convencional, suelo pélvico, readaptación…).',null,['listas','Tipos de sesión']],
+    ['cancelacion','Política de cancelación','Las horas de aviso y el texto que ven los pacientes.',null,['ajustes','Política de cancelación']],
+    ['opciones','Opciones de la clínica','Sorteo de sesiones por reseña y bomba diamagnética: actívalas solo si las usáis.',null,['ajustes','Datos de la clínica']],
+    ['estados','Estados del paciente','Las etiquetas de la ficha (Activo, Alta…).',null,['listas','Estados del paciente'],1]]],
+   ['Cobros y precios','Lo que cobráis y cómo.',[
+    ['precios','Conceptos y precios al cobrar','Lo que sale al cobrar una sesión o un pack.',null,['listas','Conceptos y precios al cobrar']],
+    ['pagos','Formas de pago','Tarjeta, efectivo, Bizum, transferencia…',null,['listas','Formas de pago']],
+    ['tarjeta','Premio por recomendar','El descuento que se da a quien os recomienda.',null,['ajustes','Tarjeta regalo por recomendar'],1],
+    ['holdedt','Facturas en Holded','Si se aprueban solas o se quedan en borrador.',null,['ajustes','Tickets de Holded'],1]]],
+   ['App de tus pacientes','Lo que ven en su móvil.',[
+    ['app','Servicios, packs y promociones','Precios y packs que ven en la app (vienen de ejemplo: ponlos a tu medida).',null,['chk','App del paciente']],
+    ['mensajes','Mensajes a pacientes','Los WhatsApp que prepara el panel: recordatorios, encuestas, reseñas, pagos…',null,['chk','Mensajes a pacientes']],
+    ['legal','Textos legales del consentimiento','Tratamiento, protección de datos, derechos… Revísalos con tu asesoría.',null,['chk','Textos legales']],
+    ['ejercicios','Biblioteca de ejercicios','Los ejercicios que mandáis a casa, con foto o vídeo. Añade los vuestros.',null,['sec:ejer',''],1]]],
+   ['Día a día','Para el control de la clínica.',[
+    ['checklist','Check-list de final de día','Lo que cada fisio marca antes de irse.',null,['chk','Check-list de final de día'],1],
+    ['resumen','Resumen diario por email','A quién le llega el resumen de cada día.',null,['mail','Resumen diario por email'],1]]]];
+  const CX=[['emails','Emails a pacientes','Brevo',cx.emails],['cobros','Cobros por adelantado con tarjeta','Stripe',cx.cobros],['holded','Facturas automáticas','Holded',cx.holded],['ia','Inteligencia artificial (informes y mensajes)','IA',cx.ia],['dominio','Dirección propia de la app','p. ej. app.tuclinica.es',cx.dominio]];
+  const est=it=>it[3]===null?!!R[it[0]]:!!it[3];
+  const cuenta=B.flatMap(b=>b[2]).filter(it=>!it[5]),hechos=cuenta.filter(est).length,pct=Math.round(hechos*100/Math.max(1,cuenta.length));
+  const fila=it=>{const h=est(it),man=it[3]===null;return `<div class="pz-f${h?' ok':''}"><span class="pz-c">${h?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>':''}</span><span class="pz-t"><b>${escH(it[1])}${it[5]?' <em>opcional</em>':''}</b><small>${escH(it[2])}</small>${man?`<label class="pz-rev"><input type="checkbox" data-k="${it[0]}" ${h?'checked':''}> Revisado</label>`:''}</span><button type="button" class="pz-ir" data-t="${it[4][0]}" data-c="${escH(it[4][1])}">${h?'Ver':'Configurar'} ›</button></div>`;};
+  const demoBox=ADM.demo?`<div class="adm-card pz-demo"><div class="adm-h"><b>Modo demo</b><small>Cuando acabes de enseñarla, déjala como nueva para la siguiente clínica. Se borra todo lo que se haya tocado (también lo personalizado).</small></div><div class="pz-dbts"><button type="button" class="hz-ok pz-reset" data-m="demo">Reiniciar la demo</button><button type="button" class="hz-re pz-reset" data-m="vacia">Empezar de cero (clínica nueva)</button></div></div>`:'';
+  body.innerHTML=demoBox+`<div class="adm-card pz-top"><div class="pz-pct"><b>${pct}%</b><span>Tu app está al ${pct}%</span></div><div class="pz-bar"><i style="width:${pct}%"></i></div><small>${hechos===cuenta.length?'¡Todo listo! Puedes volver aquí cuando quieras cambiar algo.':`Te quedan ${cuenta.length-hechos} cosas. Lo que se rellena solo se marca solo; lo demás, márcalo como «Revisado» cuando lo hayas mirado.`}</small></div>
+   ${B.map(b=>`<div class="adm-card"><div class="adm-h"><b>${escH(b[0])}</b><small>${escH(b[1])}</small></div>${b[2].map(fila).join('')}</div>`).join('')}
+   <div class="adm-card"><div class="adm-h"><b>Conexiones</b><small>Servicios externos de tu clínica. Las conectamos nosotros: pídenoslo y te decimos qué hace falta.</small></div>${CX.map(([k,t,sub,v])=>`<div class="pz-f${v?' ok':''}"><span class="pz-c">${v?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>':''}</span><span class="pz-t"><b>${escH(t)}</b><small>${escH(sub)} · ${v?'Conectado':'Sin conectar'}</small></span></div>`).join('')}</div>`;
+  body.querySelectorAll('.pz-ir').forEach(b=>b.onclick=()=>admIr(b.dataset.t,b.dataset.c));
+  body.querySelectorAll('.pz-reset').forEach(b=>b.onclick=async()=>{const vac=b.dataset.m==='vacia';
+   if(!await pregunta(vac?'Se borra todo y la demo queda vacía: al entrar saldrá «Crea tu clínica» para empezar desde cero. ¿Seguimos?':'La demo vuelve a estar como al principio: con su equipo, pacientes y citas de ejemplo, y sin nada personalizado. ¿Seguimos?',{si:vac?'Dejarla vacía':'Reiniciar',peligro:true}))return;
+   body.querySelectorAll('.pz-reset').forEach(x=>x.disabled=true);b.textContent='Reiniciando… (unos segundos)';
+   try{const r=await admPost('seg-adm-demo-reset',{modo:vac?'vacia':'demo'});if(!r.ok)throw new Error(r.error||'');toast(vac?'Demo vacía':'Demo reiniciada');setTimeout(cerrarSesionPanel,900);}
+   catch(e){toast('No se ha podido reiniciar'+(e.message?': '+e.message:''),false);mantenScroll(pintaPers);}});
+  body.querySelectorAll('.pz-rev input').forEach(i=>i.onchange=async()=>{i.disabled=true;try{const r=await agPost('seg-personalizar',{k:i.dataset.k,v:i.checked?1:0,quien:miNombreCorto()});if(!r.ok)throw 0;ADM.rev=r.personalizar||{};mantenScroll(pintaPers);}catch(e){i.checked=!i.checked;i.disabled=false;toast('No se ha podido guardar',false);}});}
+ // Ir a una pestaña y a una tarjeta concreta (desde «Personaliza tu app»)
+ function admIr(tab,titulo){if(String(tab).startsWith('sec:')){showSection(tab.slice(4));window.scrollTo(0,0);return;}ADM.tab=tab;pinta();const t0=Date.now();const busca=()=>{const h=[...body.querySelectorAll('.adm-card .adm-h b')].find(b=>b.textContent.trim().toLowerCase().startsWith(String(titulo).toLowerCase()));
+   if(h){const cd=h.closest('.adm-card');cd.scrollIntoView({behavior:'smooth',block:'start'});cd.classList.add('pz-luz');setTimeout(()=>cd.classList.remove('pz-luz'),1800);return;}if(Date.now()-t0<4000)setTimeout(busca,120);};setTimeout(busca,60);}
  async function pintaAjustes(){body.innerHTML='<div class="fac-vacio">Cargando…</div>';const c=await admConf();if(!c||ADM.tab!=='ajustes'){if(!c)body.innerHTML='<div class="fac-vacio">No se ha podido cargar</div>';return;}
   const T=c.tarjeta,H=c.holded,C=c.clinica,X=c.cancelacion,K=Object.assign({},CLINICA,C,{opciones:Object.assign({sorteo:true,bomba:true},CLINICA.opciones||{},C.opciones||{})});
   body.innerHTML=`<div class="adm-card"><div class="adm-h"><b>Tarjeta regalo por recomendar</b><small>La que se da a quien nos recomienda cuando el recomendado viene.</small></div>
@@ -8018,6 +8089,9 @@ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule
     <label class="adm-sw"><input type="checkbox" class="k-os" ${K.opciones.sorteo!==false?'checked':''}><span><b>Sorteo mensual de sesiones por reseña</b><small>La cajita del regalo en las páginas de reseña y la tarjeta «Sorteo del mes» en Valoraciones.</small></span></label>
     <label class="adm-sw"><input type="checkbox" class="k-ob" ${K.opciones.bomba!==false?'checked':''}><span><b>La clínica trabaja con bomba diamagnética</b><small>Huecos «libre sin bomba» y avisos de bomba en la agenda.</small></span></label>
     <div class="hz-bts"><button type="button" class="hz-ok k-g">Guardar</button></div></div>
+   <div class="adm-card"><div class="adm-h"><b>Horario de la clínica</b><small>La primera y la última hora que salen en la agenda y en las horas para dar cita.</small></div>
+    <div class="adm-2"><div><div class="hz-lab">Abre a las</div><input class="ag-in a-de" inputmode="numeric" value="${escH((c.agenda||{}).desde||7)}"></div><div><div class="hz-lab">Última cita a las</div><input class="ag-in a-ha" inputmode="numeric" value="${escH((c.agenda||{}).hasta||21)}"></div></div>
+    <div class="hz-bts"><button type="button" class="hz-ok a-hg">Guardar</button></div></div>
    <div class="adm-card"><div class="adm-h"><b>Política de cancelación</b><small>El texto lo ven los pacientes en «Mis citas» de su app. Si alguien cancela con menos horas, al marcarla en la agenda sale un aviso de cancelación tardía.</small></div>
     <div class="hz-lab">Hay que avisar con al menos (horas)</div><input class="ag-in x-h" inputmode="numeric" value="${escH(X.horas)}" style="max-width:140px">
     <div class="hz-lab">Texto para los pacientes</div><textarea class="seg-n x-t" rows="3">${escH(X.texto)}</textarea>
@@ -8061,6 +8135,7 @@ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule
   const idl=$b('.mk-idel');if(idl)idl.onclick=async()=>{idl.disabled=true;const r=await admPost('seg-adm-icono',{quitar:1});if(r.ok){toast('Icono quitado',true);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}pintaAjustes();}else{idl.disabled=false;toast('No se ha podido quitar',false);}};
   const dl=$b('.mk-del');if(dl)dl.onclick=async()=>{dl.disabled=true;const r=await admPost('seg-adm-logo',{quitar:1});if(r.ok){toast('Logo quitado',true);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}pintaAjustes();}else{dl.disabled=false;toast('No se ha podido quitar',false);}};
   $b('.k-g').onclick=async e=>{const v=q=>$b(q).value.trim();await guardarConf('clinica',{marca:v('.k-m'),web:v('.k-w'),razon:v('.k-r'),nif:v('.k-n'),direccion:v('.k-d'),dirCorta:v('.k-dc'),zona:v('.k-z'),ciudad:v('.k-ci'),email:v('.k-e'),tel:v('.k-t'),wa:v('.k-wa'),googlePlace:v('.k-g2'),iban:v('.k-ib'),opciones:{sorteo:$b('.k-os').checked,bomba:$b('.k-ob').checked},color:(()=>{let c=v('.k-col');if(c&&c[0]!=='#')c='#'+c;return colOk(c)?c.toLowerCase():'';})()},e.target);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}toast('Para ver el color nuevo en todo el panel, recarga la página',true);};
+  $b('.a-hg').onclick=e=>guardarConf('agenda',{desde:parseInt($b('.a-de').value,10),hasta:parseInt($b('.a-ha').value,10)},e.target);
   $b('.x-g').onclick=e=>guardarConf('cancelacion',{horas:$b('.x-h').value,texto:$b('.x-t').value},e.target);
   apEditor($b('.ap-card'),c.app||{servicios:[],promos:[]},guardarConf);
   lgEditor($b('.lg-card'),c.legal||{},ADM.legalBase||{},guardarConf);
