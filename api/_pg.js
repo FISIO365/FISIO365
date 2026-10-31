@@ -223,8 +223,10 @@ async function listar(tb, q) {
 function cmpOrden(a, b) {
   const va = FX.vacio(a) || a === false, vb = FX.vacio(b) || b === false;
   if (va && vb) return 0; if (va) return -1; if (vb) return 1;
+  if (typeof a === 'string' && typeof b === 'string') return COLL.compare(a, b); // como Airtable: sin distinguir mayúsculas ni acentos
   const d = FX.compara(a, b); return isNaN(d) ? 0 : d;
 }
+const COLL = new Intl.Collator('es', { sensitivity: 'base' });
 
 // ── Escritura ──
 const nuevoId = (p = 'rec') => { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', b = crypto.randomBytes(14); let s = p; for (let i = 0; i < 14; i++) s += A[b[i] % 62]; return s; };
