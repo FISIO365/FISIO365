@@ -28,7 +28,9 @@ function difs(a, b, p = '', out = []) {
 }
 async function pedir(base, ruta, F) {
   const t0 = Date.now(), byp = base !== PROD && process.env.VERCEL_AUTOMATION_BYPASS_SECRET ? { 'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET } : {};
-  try { const r = await F(base + ruta, { headers: { 'x-comparar': '1', ...byp } }); const txt = await r.text(); let j = null; try { j = JSON.parse(txt); } catch (_) {}
+  let o = { headers: { 'x-comparar': '1', ...byp } };
+  if (ruta.startsWith('POST ')) { const u = new URL('http://x' + ruta.slice(5)); const b = {}; for (const [k, v] of u.searchParams) if (k !== 'action') b[k] = v; ruta = u.pathname + '?action=' + (u.searchParams.get('action') || ''); o = { method: 'POST', headers: { ...o.headers, 'Content-Type': 'application/json' }, body: JSON.stringify(b) }; }
+  try { const r = await F(base + ruta, o); const txt = await r.text(); let j = null; try { j = JSON.parse(txt); } catch (_) {}
     return { st: r.status, j, txt: j ? '' : txt.slice(0, 120), ms: Date.now() - t0 }; }
   catch (e) { return { st: 0, txt: String(e.message || e).slice(0, 120), ms: Date.now() - t0 }; }
 }
