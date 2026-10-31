@@ -5989,12 +5989,12 @@ function agPasaFiltro(c,f){if(!f)return true;const e=c.estado;if(f==='sp')return
 // ── Plantillas de WhatsApp editables (Administración › Mensajes a pacientes) ──
 // Si la clínica no ha escrito la suya, sale el mensaje de siempre (tal cual). Variables entre llaves: {nombre}, {enlace}…
 // Formatos de la tarjeta regalo (los mismos que en /regalo): se elige solo el que toca por fecha
-const REG_OC=[['clasico','Clásico'],['navidad','Navidad'],['madre','Día de la Madre'],['padre','Día del Padre'],['cumple','Cumpleaños'],['sanvalentin','San Valentín']];
-const REG_OC_NOM=Object.fromEntries(REG_OC);
+const REG_OC=[['clasico','General (eligen ellos)'],['navidad','Navidad'],['madre','Día de la Madre'],['padre','Día del Padre'],['cumple','Cumpleaños'],['sanvalentin','San Valentín']];
+const REG_OC_NOM=Object.assign(Object.fromEntries(REG_OC),{clasico:'Clásico'});
 function regaloOcHoy(){const iso=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid'}).format(new Date()),y=+iso.slice(0,4),md=iso.slice(5);
  if(md>='11-15'||md<='01-06')return 'navidad';if(md>='01-25'&&md<='02-14')return 'sanvalentin';if(md>='03-01'&&md<='03-19')return 'padre';
  const d=1+((7-new Date(Date.UTC(y,4,1)).getUTCDay())%7);if(md>='04-15'&&md<='05-'+String(d).padStart(2,'0'))return 'madre';return 'clasico';}
-let regOc=regaloOcHoy();
+let regOc='clasico';
 const PLANT_DEF={
  rec:{t:'Recordatorio de cita',v:['nombre','cuando','hora','fisio','enlace'],ej:'Hola {nombre},\n\nTe esperamos en *{clinica}*:\n*{cuando} a las {hora}*\nCon {fisio}\n\nToca aquí para dejarla confirmada:\n{enlace}\n\n¡Hasta pronto!'},
  rec2:{t:'Segundo aviso (sin confirmar)',v:['nombre','cuando','hora','fisio','enlace'],ej:'{nombre}, solo nos falta tu confirmación para {cuando} a las {hora} con {fisio}. Es un toque:\n{enlace}'},
