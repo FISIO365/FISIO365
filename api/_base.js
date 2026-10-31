@@ -49,7 +49,7 @@ if (typeof EdgeRuntime !== 'undefined' && process.env.DB_URL && globalThis.fetch
   const nf = async (u, o) => {
     const url = String(u && u.url ? u.url : u);
     if (!/^https:\/\/(api|content)\.airtable\.com\/v0\//.test(url)) return _f(u, o);
-    return _f(APP + '/api/schedule?action=pg-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-PG-Proxy': await laClave() }, body: JSON.stringify({ url, method: (o && o.method) || 'GET', body: o && typeof o.body === 'string' ? o.body : null }) });
+    return _f(APP + '/api/schedule?action=pg-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-PG-Proxy': await laClave(), ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET ? { 'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET } : {}) }, body: JSON.stringify({ url, method: (o && o.method) || 'GET', body: o && typeof o.body === 'string' ? o.body : null }) });
   };
   nf._pgEdge = 1; nf._base = 1; nf._marca = _f._marca; globalThis.fetch = nf;
 }
