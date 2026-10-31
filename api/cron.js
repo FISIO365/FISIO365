@@ -193,6 +193,8 @@ module.exports = async function handler(req, res) {
   if (/resumen=1/.test(req.url || '')) {
     const ayer = madrid(-1);
     if (esPanel && horaMadrid() < 8) return res.status(200).json({ ok: true, saltado: 'Aún es pronto' });
+    // Vales regalo que hoy hay que mandar a quien los recibe (cada vale se manda una sola vez)
+    try { const nv = SCH.valesDelDia ? await SCH.valesDelDia() : 0; if (nv) console.log('vales regalo enviados', nv); } catch (e) { console.log('vales regalo', e.message); }
     if (!/forzar=1/.test(req.url || '') && (await SCH.ajuste('resumen_enviado', '').catch(() => '')) === ayer.fecha) return res.status(200).json({ ok: true, ya: true });
     await SCH.guardarAjuste('resumen_enviado', ayer.fecha, esCron ? 'cron' : 'panel').catch(() => {}); // se apunta antes para no mandarlo dos veces si entran varios a la vez
     const etapas = await SCH.repasoEtapas().catch(e => ({ error: e.message })); // Activo → Pendiente de continuar

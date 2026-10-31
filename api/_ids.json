@@ -38,7 +38,8 @@
 "tblLIcIro0ko9VG6G": "ESTADISTICAS CACHE",
 "tblTL6et3dRyod8TZ": "EJERCICIOS POR GRABAR",
 "tblF4as0orW1b6KIw": "ANAMNESIS",
-"tblxJmnb7LHML2ZZh": "DOLOR"
+"tblxJmnb7LHML2ZZh": "DOLOR",
+"tblTCNp81M8vBFe7q": "⚙ APP · VALES REGALO"
 },
 "f": {
 "fld2SaWhieEg0Zosd": [
@@ -236,6 +237,106 @@
 "fld0coxDWYBc2WvYH": [
 "⚙ APP · SUGERENCIAS",
 "CAPTURA"
+],
+"fldyjTRBuBomnd31D": [
+"⚙ APP · VALES REGALO",
+"CÓDIGO"
+],
+"fldktuP9njyLsolny": [
+"⚙ APP · VALES REGALO",
+"PARA"
+],
+"fld92v7mvv0dNHOMC": [
+"⚙ APP · VALES REGALO",
+"DE"
+],
+"fldqbPPMkAPYKj7so": [
+"⚙ APP · VALES REGALO",
+"COMPRADOR"
+],
+"fld0Ygnw8lwyALKOB": [
+"⚙ APP · VALES REGALO",
+"EMAIL"
+],
+"fldyS4oLIxW0lfGS2": [
+"⚙ APP · VALES REGALO",
+"TELÉFONO"
+],
+"fldg1s1BJVNvFru5t": [
+"⚙ APP · VALES REGALO",
+"TIPO"
+],
+"fld6ajQKzCepKGXOZ": [
+"⚙ APP · VALES REGALO",
+"SESIONES"
+],
+"fldSN5zUQ59NH4eNF": [
+"⚙ APP · VALES REGALO",
+"IMPORTE"
+],
+"fldIZp41IM81vKf42": [
+"⚙ APP · VALES REGALO",
+"IDIOMA"
+],
+"fldqd8r3SpwRcFg5c": [
+"⚙ APP · VALES REGALO",
+"MENSAJE"
+],
+"fldj7yw6nGPRuJXIG": [
+"⚙ APP · VALES REGALO",
+"ENTREGA"
+],
+"fldQMZfcUERSDu0ZG": [
+"⚙ APP · VALES REGALO",
+"EMAIL DESTINO"
+],
+"fldosFF1Bew0gkHjO": [
+"⚙ APP · VALES REGALO",
+"FECHA ENVÍO"
+],
+"fldLkfhLhmqgne18c": [
+"⚙ APP · VALES REGALO",
+"FACTURA"
+],
+"fldqVPuuUDak2ZHUB": [
+"⚙ APP · VALES REGALO",
+"PAGO"
+],
+"fldTHpoP2xIKdPj8Q": [
+"⚙ APP · VALES REGALO",
+"ESTADO"
+],
+"fldSBGCImIfZsHNSN": [
+"⚙ APP · VALES REGALO",
+"STRIPE"
+],
+"fld4GwXwq9C4Nghlk": [
+"⚙ APP · VALES REGALO",
+"PAGADO"
+],
+"fldl8WZRX47zoefqZ": [
+"⚙ APP · VALES REGALO",
+"ENVIADA"
+],
+"fldKqGj9c24FGhbHm": [
+"⚙ APP · VALES REGALO",
+"ENVIADA DESTINO"
+],
+"fld0rVTCjIIXaZrdP": [
+"⚙ APP · VALES REGALO",
+"CANJEADA"
+],
+"fld21SlWzCwoD1Mxe": [
+"⚙ APP · VALES REGALO",
+"CADUCA"
+],
+"fldYYdFoLnPU22XG1": [
+"⚙ APP · VALES REGALO",
+"CREADO"
+],
+"fld46aBIVwmUtpiA2": [
+"⚙ APP · VALES REGALO",
+"REGISTRO"
 ]
 }
 }

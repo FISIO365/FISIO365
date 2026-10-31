@@ -884,6 +884,262 @@ h1{font-size:23px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-s
 <div class="pasos fi" style="animation-delay:1.8s"><div class="pa"><span><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><div>No tienes que hacer nada<small>Ya lo tenemos apuntado en tu ficha</small></div></div><div class="pa"><span><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h4"/></svg></span><div>Te lo descontamos al pagar<small>En tu próxima sesión con nosotros</small></div></div></div>
 <a class="bt fi" style="animation-delay:2s" href="${huecosSiempre(30)}">Reservar mi próxima sesión</a><p class="sub" style="font-size:12.5px;margin-top:10px">¿Prefieres que te lo busquemos nosotros? <a href="https://wa.me/34${String(D.tel || '672893949').replace(/\D/g, '').slice(-9)}?text=${encodeURIComponent('Hola, quiero reservar mi próxima sesión (tengo la tarjeta regalo)')}" target="_blank" rel="noopener" style="color:#c2552e;font-weight:600">Escríbenos</a></p><p class="pie">FISIO365 · ${e(D.dir)}</p></div></body></html>`;
 }
+// ── VALES REGALO: se compran en /regalo (sustituye al formulario de Tally), se pagan con tarjeta, transferencia o en el centro ──
+// La tarjeta es una página con su enlace firmado (/vale/rec…-firma), en castellano, catalán o inglés, con vista previa cuadrada y versión para imprimir.
+const VALES = 'tblTCNp81M8vBFe7q';
+const APPU = () => (/^https:\/\/[a-z0-9.-]+$/i.test(String(process.env.APP_URL || '').replace(/\/+$/, '')) ? String(process.env.APP_URL).replace(/\/+$/, '') : 'https://app.fisioterapia365.com');
+function firmaVale(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('vale:' + id).digest('hex').slice(0, 10); }
+const enlaceVale = id => `${APPU()}/vale/${id}-${firmaVale(id)}`;
+const VALE_MSG = {
+  es: ['Hoy es tu día y esto se ha de celebrar', 'Porque sí, no hay mejor motivo', 'Quiero darte las gracias por ser cómo eres', 'Para que te cuides tanto como cuidas de los demás'],
+  ca: ['Avui és el teu dia i s\'ha de celebrar', 'Perquè sí, no hi ha millor motiu', 'Et vull donar les gràcies per ser com ets', 'Perquè et cuidis tant com cuides dels altres'],
+  en: ['Today is your day and it deserves celebrating', 'Just because, there\'s no better reason', 'To thank you for being who you are', 'So you look after yourself as much as you look after others']
+};
+const VALE_T = {
+  es: { tk: 'TARJETA REGALO', ses: n => n === 1 ? '1 sesión' : `${n} sesiones`, de: 'de', para: 'Para', dep: 'De parte de', cod: 'Código', val: 'Válida hasta el', res: tel => `Para reservar, llama o escribe por WhatsApp al ${tel}`, tit: 'Tu regalo', hola: n => `¡${n}, tienes un regalo!`, imp: 'Imprimir', resv: 'Reservar por WhatsApp', wa: c => `Hola, tengo una tarjeta regalo (código ${c}) y quiero reservar` },
+  ca: { tk: 'TARGETA REGAL', ses: n => n === 1 ? '1 sessió' : `${n} sessions`, de: 'de', para: 'Per a', dep: 'De part de', cod: 'Codi', val: 'Vàlida fins al', res: tel => `Per reservar, truca o escriu per WhatsApp al ${tel}`, tit: 'El teu regal', hola: n => `${n}, tens un regal!`, imp: 'Imprimir', resv: 'Reservar per WhatsApp', wa: c => `Hola, tinc una targeta regal (codi ${c}) i vull reservar` },
+  en: { tk: 'GIFT CARD', ses: n => n === 1 ? '1 session' : `${n} sessions`, de: 'of', para: 'For', dep: 'From', cod: 'Code', val: 'Valid until', res: tel => `To book, call or WhatsApp us on ${tel}`, tit: 'Your gift', hola: n => `${n}, you have a gift!`, imp: 'Print', resv: 'Book on WhatsApp', wa: c => `Hi, I have a gift card (code ${c}) and I'd like to book` }
+};
+// El nombre del tratamiento en el idioma de la tarjeta (lo que se pueda traducir; si no, tal cual)
+function valeTipo(t, l) {
+  let s = String(t || '');
+  if (l === 'ca') s = s.replace(/Fisioterapia/g, 'Fisioteràpia').replace(/avanzada/g, 'avançada').replace(/Suelo pélvico/g, 'Sòl pelvià').replace(/deportiva/g, 'esportiva');
+  if (l === 'en') { const m = { 'fisioterapia avanzada': 'Advanced physiotherapy', 'fisioterapia convencional': 'Physiotherapy', 'fisioterapia': 'Physiotherapy', 'suelo pélvico': 'Pelvic floor physiotherapy', 'readaptación deportiva': 'Sports rehabilitation' }; s = m[s.toLowerCase()] || s; }
+  return s;
+}
+const valeLang = F => ({ 'Català': 'ca', 'English': 'en' })[String(F['IDIOMA'] || '')] || 'es';
+const valeFechaTxt = (iso, l) => { const d = new Date(String(iso || '').slice(0, 10) + 'T12:00:00Z'); if (isNaN(d)) return ''; return new Intl.DateTimeFormat({ es: 'es-ES', ca: 'ca-ES', en: 'en-GB' }[l] || 'es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(d); };
+const valeEur = n => { const r = Math.round(Number(n || 0) * 100) / 100, e = Math.floor(r), d = Math.round((r - e) * 100); return String(e).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (d ? ',' + String(d).padStart(2, '0') : '') + ' €'; };
+// Lo que se puede regalar: los servicios y packs de Ajustes › App del paciente (si no hay, los de siempre)
+function valeOpciones(CF) {
+  const S = ((CF && CF.app && Array.isArray(CF.app.servicios) && CF.app.servicios.length) ? CF.app.servicios : CONF_DEF.app.servicios).filter(s => s && s.nombre && Number(s.suelta) > 0);
+  return S.map(s => ({ nombre: s.nombre, desc: s.desc || '', ops: [1, 2, 3].map(n => ({ n, p: Math.round(s.suelta * n * 100) / 100, pack: 0, ah: 0 }))
+    .concat((s.packs || []).filter(x => x && x[0] > 3 && x[1] > 0).map(([n, p]) => ({ n, p, pack: 1, ah: Math.max(0, Math.round((s.suelta * n - p) * 100) / 100) }))) }));
+}
+const valeCodigo = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; const b = require('crypto').randomBytes(6); for (let i = 0; i < 6; i++) s += A[b[i] % A.length]; return 'R-' + s; };
+const valeVista = r => { const F = r.fields || {}; return { id: r.id, codigo: F['CÓDIGO'] || '', para: F.PARA || '', de: F.DE || '', comprador: F.COMPRADOR || '', email: F.EMAIL || '', tel: F['TELÉFONO'] || '', tipo: F.TIPO || '', n: F.SESIONES || 0, importe: F.IMPORTE || 0, idioma: F.IDIOMA || '', entrega: F.ENTREGA || '', emailDestino: F['EMAIL DESTINO'] || '', fecha: F['FECHA ENVÍO'] || '', pago: F.PAGO || '', estado: F.ESTADO || '', pagado: F.PAGADO || '', enviada: F.ENVIADA || '', enviadaDestino: F['ENVIADA DESTINO'] || '', canjeada: F.CANJEADA || '', caduca: F.CADUCA || '', creado: F.CREADO || '', factura: F.FACTURA || '', link: enlaceVale(r.id) }; };
+// Email (Brevo) con el botón para ver la tarjeta
+async function valeMail(to, subject, saludo, texto, boton, url) {
+  if (!process.env.BREVO_API_KEY || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(to || ''))) return false;
+  const C = CLI, html = `<!doctype html><html><body style="margin:0;background:#f5f2ee;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a"><div style="max-width:520px;margin:0 auto;padding:28px 18px"><div style="background:#fff;border-radius:18px;padding:26px 24px">
+<img src="https://app.fisioterapia365.com/informe/logo.png" alt="FISIO365" width="92" style="width:92px;height:auto;display:block;margin:4px 0 30px;border:0">
+<p style="font-size:16px;line-height:1.55;margin:0 0 14px">${saludo}</p><p style="font-size:15px;line-height:1.6;color:#3c342f;margin:0 0 22px">${texto}</p>
+${url ? `<a href="${url}" style="display:block;text-align:center;background:#c2552e;color:#fff;text-decoration:none;font-weight:bold;font-size:15px;border-radius:99px;padding:14px">${boton}</a>` : ''}
+</div><p style="font-size:11.5px;color:#9a8f87;text-align:center;margin:16px 0 0">FISIO365 · ${escHtml(C.dirCorta || 'Gran de Sant Andreu, 163 · Barcelona')} · ${escHtml(C.tel || '672 89 39 49')}</p></div></body></html>`;
+  try {
+    const b = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com', name: 'FISIO365' }, to: [{ email: String(to).trim().toLowerCase() }], subject, htmlContent: html }) });
+    if (!b.ok) console.log('vale mail', b.status, (await b.text().catch(() => '')).slice(0, 200)); return b.ok;
+  } catch (e) { console.log('vale mail', e.message); return false; }
+}
+// A quien lo compró: su tarjeta y cómo le llega a la otra persona
+async function valeMailComprador(id, F) {
+  const pila = escHtml(String(F.COMPRADOR || '').trim().split(/\s+/)[0]), para = escHtml(F.PARA || ''), ent = String(F.ENTREGA || '');
+  const extra = ent === 'su' ? `Se la enviaremos a <b>${escHtml(F['EMAIL DESTINO'] || '')}</b> el <b>${escHtml(valeFechaTxt(F['FECHA ENVÍO'], 'es'))}</b>. Aquí la tienes también para verla tú.` : ent === 'impresa' ? 'Te la tendremos impresa en el centro en menos de 24 h. Aquí la tienes también en digital.' : 'Aquí la tienes: puedes reenviarle el enlace o imprimirla para dársela.';
+  return valeMail(F.EMAIL, `Tu tarjeta regalo para ${F.PARA || ''} 🎁`, `Hola${pila ? ' ' + pila : ''},`, `¡Gracias! Tu regalo para <b>${para}</b> ya está listo: ${escHtml(VALE_T.es.ses(F.SESIONES || 1))} de ${escHtml(F.TIPO || '')}.<br><br>${extra}`, 'Ver la tarjeta regalo', enlaceVale(id));
+}
+// A quien lo recibe (el día que eligió quien lo compró), en el idioma de la tarjeta
+async function valeMailDestino(id, F) {
+  const l = valeLang(F), de = escHtml(F.DE || ''), para = escHtml(F.PARA || '');
+  const S = { es: [`🎁 ${F.DE || 'Alguien'} te ha hecho un regalo`, `Hola${para ? ' ' + para : ''},`, `<b>${de || 'Alguien que te quiere'}</b> te ha regalado ${escHtml(VALE_T.es.ses(F.SESIONES || 1))} de ${escHtml(valeTipo(F.TIPO, 'es'))} en FISIO365.`, 'Ver mi regalo'],
+    ca: [`🎁 ${F.DE || 'Algú'} t'ha fet un regal`, `Hola${para ? ' ' + para : ''},`, `<b>${de || 'Algú que t\'estima'}</b> t'ha regalat ${escHtml(VALE_T.ca.ses(F.SESIONES || 1))} de ${escHtml(valeTipo(F.TIPO, 'ca'))} a FISIO365.`, 'Veure el meu regal'],
+    en: [`🎁 ${F.DE || 'Someone'} sent you a gift`, `Hi${para ? ' ' + para : ''},`, `<b>${de || 'Someone who cares about you'}</b> has given you ${escHtml(VALE_T.en.ses(F.SESIONES || 1))} of ${escHtml(valeTipo(F.TIPO, 'en'))} at FISIO365.`, 'See my gift'] }[l];
+  return valeMail(F['EMAIL DESTINO'], S[0], S[1], S[2], S[3], enlaceVale(id));
+}
+// Entrega tras el pago: email a quien lo compró y, si toca hoy, a quien lo recibe
+async function valeEntregar(id, F, forzar) {
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), f = {};
+  if (forzar || !F.ENVIADA) { if (await valeMailComprador(id, F)) f.ENVIADA = pagoAhora() + ' · ' + String(F.EMAIL || '').trim(); }
+  if (F.ENTREGA === 'su' && F['EMAIL DESTINO'] && (forzar ? !!F['ENVIADA DESTINO'] || String(F['FECHA ENVÍO'] || '') <= hoy : !F['ENVIADA DESTINO'] && String(F['FECHA ENVÍO'] || '') <= hoy)) { if (await valeMailDestino(id, F)) f['ENVIADA DESTINO'] = pagoAhora() + ' · ' + String(F['EMAIL DESTINO']).trim(); }
+  if (Object.keys(f).length) await at(`${VALES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }).catch(() => {});
+  return Object.assign({}, F, f);
+}
+async function valePagado(id, F, via, quien) {
+  if (F.ESTADO === 'PAGADO') return F;
+  const reg = (String(F.REGISTRO || '') + `\n${pagoAhora()} · Pagado (${via})${quien ? ' · apuntado por ' + quien : ''}`).trim();
+  const u = await at(`${VALES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'PAGADO', PAGADO: `${pagoAhora()} · ${via}`, REGISTRO: reg } }) });
+  if (u.error) throw new Error(u.error.message || 'Airtable');
+  const F2 = await valeEntregar(id, u.fields || Object.assign({}, F, { ESTADO: 'PAGADO' }));
+  if (!quien) await pagoAvisar('', `🎁 Vale regalo pagado: ${valeEur(F.IMPORTE)}`, `Para ${F.PARA || '—'}, de ${F.COMPRADOR || '—'} · ${VALE_T.es.ses(F.SESIONES || 1)} de ${F.TIPO || ''}${F.ENTREGA === 'impresa' ? ' · hay que imprimirla' : ''}.`, 'vale-' + id);
+  return F2;
+}
+async function valeVerificarStripe(id, F, sid) {
+  sid = sid || String(F.STRIPE || ''); if (!/^cs_[A-Za-z0-9_]+$/.test(sid) || F.ESTADO === 'PAGADO') return F.ESTADO === 'PAGADO';
+  const s = await stripeApi('checkout/sessions/' + sid).catch(() => null);
+  if (!s || s.payment_status !== 'paid' || (s.metadata || {}).vale !== id) return false;
+  await valePagado(id, Object.assign({}, F, { REGISTRO: (String(F.REGISTRO || '') + `\n${pagoAhora()} · Stripe ${s.payment_intent || sid}`).trim() }), 'tarjeta');
+  return true;
+}
+// Lo llama el resumen diario (cron): los vales que hay que mandar hoy a quien los recibe
+async function valesDelDia() {
+  try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); } catch (e) {}
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+  const f = `AND({ESTADO}='PAGADO',{ENTREGA}='su',{ENVIADA DESTINO}='',{EMAIL DESTINO}!='',NOT(IS_AFTER({FECHA ENVÍO},'${hoy}')))`;
+  const d = await at(`${VALES}?filterByFormula=${encodeURIComponent(f)}&pageSize=50`); let n = 0;
+  for (const r of (d.records || [])) { const F = r.fields || {}; if (await valeMailDestino(r.id, F)) { n++; await at(`${VALES}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ENVIADA DESTINO': pagoAhora() + ' · ' + String(F['EMAIL DESTINO']).trim() } }) }).catch(() => {}); } }
+  return n;
+}
+// Vista previa cuadrada (WhatsApp): regalo, sesiones y para quién, lejos de los bordes
+function ogValeSvg(F) {
+  const l = valeLang(F), T = VALE_T[l], C = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos();
+  const t1 = T.ses(F.SESIONES || 1), t2 = valeTipo(F.TIPO, l), t3 = F.PARA ? `${T.para} ${F.PARA}` : T.tk;
+  const fit = (t, base, max) => Math.max(18, Math.min(base, Math.round(base * max / Math.max(max, String(t).length))));
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${C}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="246" y="160" width="108" height="84" rx="10"/><rect x="236" y="136" width="128" height="28" rx="8"/><path d="M300 136v108"/><path d="M300 136c-12-24-40-24-37-6 2 11 24 8 37 6zM300 136c12-24 40-24 37-6-2 11-24 8-37 6z"/></g>`
+    + ogTexto(O.m, T.tk, 18, 300, 300, 3, C)
+    + ogTexto(O.b, t1, fit(t1, 44, 11), 300, 352, 0, K)
+    + ogTexto(O.m, t2, fit(t2, 24, 24), 300, 392, 0, M)
+    + ogTexto(O.b, t3, fit(t3, 28, 20), 300, 448, 0, C) + `</svg>`;
+}
+// La tarjeta (página pública firmada). p=1: versión para imprimir
+function paginaVale(F, id, imprimir) {
+  const e = escHtml, l = valeLang(F), T = VALE_T[l], C = CLI, url = enlaceVale(id), cad = valeFechaTxt(F.CADUCA, l), tel = C.tel || '672 89 39 49', wa = String(C.wa || '34672893949').replace(/\D/g, '');
+  const tipo = valeTipo(F.TIPO, l), msg = String(F.MENSAJE || '');
+  const tarjeta = `<div class="tk"><small>${T.tk}</small><b>${e(T.ses(F.SESIONES || 1))}</b><span>${e(T.de)} ${e(tipo)}</span>${msg ? `<p class="msg">«${e(msg)}»</p>` : ''}<hr>
+<div class="dd">${F.PARA ? `<div><em>${T.para}</em>${e(F.PARA)}</div>` : ''}${F.DE ? `<div><em>${T.dep}</em>${e(F.DE)}</div>` : ''}</div>
+<div class="cd"><em>${T.cod}</em><code>${e(F['CÓDIGO'] || '')}</code></div>${cad ? `<p class="cad">${T.val} ${e(cad)}</p>` : ''}<p class="mk">FISIO365</p></div>`;
+  const pend = F.ESTADO !== 'PAGADO';
+  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${T.tit} · FISIO365</title>
+<meta property="og:title" content="${e(F.PARA ? T.hola(F.PARA) : T.tit)}"><meta property="og:description" content="${e(T.ses(F.SESIONES || 1) + ' ' + T.de + ' ' + tipo)} · FISIO365"><meta property="og:image" content="${e(url)}.png?v=1"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
+.c{background:#fff;border-radius:26px;padding:28px 20px 22px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start;text-align:center}
+.reg{display:block;margin:0 auto;width:84px;height:84px}.reg *{fill:none;stroke:#c2552e;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+h1{font-size:22px;font-weight:700;margin:12px 0 4px;line-height:1.25}.sub{font-size:14px;color:#5c4f47;margin:0;line-height:1.5}
+.tk{position:relative;margin:20px auto 0;background:#fdf1ea;border-radius:22px;padding:22px 18px 18px;overflow:hidden}
+.tk:before,.tk:after{content:'';position:absolute;top:58%;width:26px;height:26px;margin-top:-13px;border-radius:50%;background:#fff}.tk:before{left:-13px}.tk:after{right:-13px}
+.tk small{display:block;font-size:11px;font-weight:700;letter-spacing:.18em;color:#c2552e}.tk b{display:block;font-size:40px;line-height:1.1;color:#c2552e;margin:8px 0 2px}.tk span{display:block;font-size:15px;color:#2b2420;font-weight:500}
+.msg{font-size:14px;color:#5c4f47;margin:12px 4px 0;line-height:1.45}.tk hr{border:none;border-top:2px dashed #f1d9cc;margin:16px 6px 14px}
+.dd{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;font-size:15px;font-weight:600;color:#2b2420}.dd em,.cd em{display:block;font-style:normal;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#a08f84;margin-bottom:2px}
+.cd{margin-top:14px}.cd code{font:700 18px Poppins,sans-serif;letter-spacing:.12em;color:#141414;background:#fff;border-radius:10px;padding:5px 12px;display:inline-block}
+.cad{font-size:12.5px;color:#7d6a60;margin:12px 0 0}.mk{font-size:12px;font-weight:700;letter-spacing:.12em;color:#c2552e;margin:12px 0 0}
+.res{font-size:13.5px;color:#5c4f47;margin:18px 4px 0;line-height:1.5}.bt{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;font:600 15px Poppins,sans-serif;color:#fff;background:#c2552e;border:0;border-radius:14px;padding:14px;text-decoration:none;cursor:pointer}
+.bt.sec{background:#f6f1eb;color:#2b2420}.pend{background:#fff6e5;color:#8a5a00;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:14px}
+.pie{margin-top:16px;font-size:12px;color:#7d6a60}
+${imprimir ? '@page{size:A5;margin:12mm}body{background:#fff;padding:0}.c{box-shadow:none;max-width:none;padding:0}.np{display:none!important}.tk{-webkit-print-color-adjust:exact;print-color-adjust:exact}' : '@media print{body{background:#fff;padding:0}.c{box-shadow:none}.np{display:none!important}.tk{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'}
+</style></head><body><div class="c">${imprimir ? '' : `<svg class="reg np" viewBox="0 0 96 96" aria-hidden="true"><path d="M18 46h60v34a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path d="M48 46v40"/><rect x="12" y="32" width="72" height="14" rx="5"/><path d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/></svg>
+<h1 class="np">${e(F.PARA ? T.hola(F.PARA) : T.tit)}</h1>`}
+${tarjeta}
+${pend && !imprimir ? '<p class="pend np">Esta tarjeta aún está pendiente de pago.</p>' : ''}
+<p class="res">${e(T.res(tel))}<br>${e(C.dirCorta || C.direccion || '')}</p>
+${imprimir ? '' : `<a class="bt np" href="https://wa.me/${wa}?text=${encodeURIComponent(T.wa(F['CÓDIGO'] || ''))}" target="_blank" rel="noopener">${T.resv}</a><button type="button" class="bt sec np" onclick="window.print()">${T.imp}</button>`}
+</div>${imprimir ? '<script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>' : ''}</body></html>`;
+}
+// La página para comprar el vale (paso a paso, en el estilo de la app)
+function paginaRegalo(D) {
+  const J = JSON.stringify(D).replace(/</g, '\\u003c');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Regala salud · FISIO365</title>
+<meta name="description" content="Una tarjeta regalo de fisioterapia en FISIO365. La preparas en 2 minutos."><meta property="og:title" content="Regala salud · FISIO365"><meta property="og:description" content="Una tarjeta regalo de fisioterapia, el regalo que de verdad se nota. La preparas en 2 minutos."><meta property="og:image" content="https://app.fisioterapia365.com/regalo/preview.jpg"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px 40px}
+.c{background:#fff;border-radius:26px;padding:22px 20px 22px;max-width:460px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:18px}.atr{width:38px;height:38px;border-radius:12px;border:0;background:#f6f1eb;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}.atr svg{width:18px;height:18px;fill:none;stroke:#2b2420;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.atr[hidden]{visibility:hidden;display:flex}
+.bar{flex:1;height:5px;border-radius:9px;background:#f1e8e1;overflow:hidden}.bar i{display:block;height:100%;background:#c2552e;border-radius:9px;transition:width .35s}
+.ic{display:block;width:64px;height:64px;margin:4px auto 6px}.ic *{fill:none;stroke:#c2552e;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+h1{font-size:23px;font-weight:700;margin:6px 0 6px;line-height:1.25;text-align:center}h2{font-size:19px;font-weight:700;margin:0 0 4px;line-height:1.3}.sub{font-size:14px;color:#5c4f47;margin:0 0 16px;line-height:1.5}.cen{text-align:center}
+label.l{display:block;font-size:13px;font-weight:600;color:#2b2420;margin:14px 0 6px}
+input.i,textarea.i{width:100%;font:500 16px Poppins,sans-serif;color:#141414;background:#faf7f4;border:1.5px solid #efe6df;border-radius:14px;padding:13px 14px;outline:none}input.i:focus,textarea.i:focus{border-color:#c2552e;background:#fff}textarea.i{min-height:96px;resize:vertical}
+.op{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#faf7f4;border:1.5px solid #efe6df;border-radius:16px;padding:13px 14px;margin-bottom:8px;font:500 15px Poppins,sans-serif;color:#141414;cursor:pointer}
+.op.on{border-color:#c2552e;background:#fdf1ea}.op b{font-weight:600}.op small{display:block;font-size:12.5px;color:#7d6a60;font-weight:400;margin-top:2px;line-height:1.4}.op .pr{margin-left:auto;font-weight:700;white-space:nowrap}.op .ah{display:inline-block;font-size:11.5px;font-weight:600;color:#2f7a52;background:#e6f4ec;border-radius:99px;padding:2px 8px;margin-top:4px}
+.op .rd{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid #d9cbc1;display:flex;align-items:center;justify-content:center}.op.on .rd{border-color:#c2552e}.op.on .rd:after{content:'';width:10px;height:10px;border-radius:50%;background:#c2552e}
+.ch{display:flex;flex-wrap:wrap;gap:8px}.ch button{font:500 14.5px Poppins,sans-serif;background:#faf7f4;border:1.5px solid #efe6df;border-radius:99px;padding:10px 16px;cursor:pointer;color:#141414}.ch button.on{border-color:#c2552e;background:#fdf1ea;color:#c2552e;font-weight:600}
+.bt{display:flex;align-items:center;justify-content:center;width:100%;margin-top:20px;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:0;border-radius:14px;padding:15px;cursor:pointer;text-decoration:none}.bt:disabled{opacity:.45;cursor:default}.bt.sec{background:#f6f1eb;color:#2b2420}
+.err{color:#b42318;font-size:13px;margin:10px 0 0;text-align:center;min-height:1em}.priv{font-size:11.5px;color:#9a8f87;text-align:center;margin:14px 0 0}.priv a{color:#9a8f87}
+.cal{background:#faf7f4;border:1.5px solid #efe6df;border-radius:16px;padding:10px;margin-top:6px}.cal .cb{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.cal .cb b{font-size:14.5px}.cal .cb button{width:34px;height:34px;border:0;border-radius:10px;background:#fff;cursor:pointer;font-size:18px;color:#2b2420}
+.cal .sem,.cal .dias{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.cal .sem span{font-size:11px;color:#a08f84;font-weight:600;padding:4px 0}.cal .dias button{aspect-ratio:1;border:0;border-radius:10px;background:transparent;font:500 14px Poppins,sans-serif;color:#141414;cursor:pointer}.cal .dias button.on{background:#c2552e;color:#fff;font-weight:700}.cal .dias button:disabled{color:#cfc4bc;cursor:default}
+.res{background:#fdf1ea;border-radius:18px;padding:16px;margin:4px 0 6px}.res .r1{font-size:12px;font-weight:700;letter-spacing:.14em;color:#c2552e}.res .r2{font-size:19px;font-weight:700;margin:4px 0 2px}.res .r3{font-size:13.5px;color:#5c4f47;line-height:1.5}.res .tot{display:flex;justify-content:space-between;align-items:baseline;border-top:2px dashed #f1d9cc;margin-top:12px;padding-top:10px;font-weight:600}.res .tot b{font-size:22px;color:#c2552e}
+.ib{background:#faf7f4;border-radius:14px;padding:6px 14px;font-size:14px;margin-top:10px;text-align:left}.ibr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #efe6df}.ibr:last-child{border-bottom:0}.ibr div{flex:1;min-width:0;overflow-wrap:anywhere}.ibr small{display:block;font-size:11.5px;color:#7d6a60}.ibr b{font-weight:600}.cp{flex:none;border:0;background:#fff;border-radius:8px;padding:5px 10px;font:600 12px Poppins,sans-serif;color:#c2552e;cursor:pointer}
+.ok{text-align:center}.ok .ic{width:84px;height:84px}.pie{margin-top:18px;font-size:12px;color:#7d6a60;text-align:center}
+.fi{animation:fi .35s both}@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style></head>
+<body><div class="c" id="C"></div><script>(function(){var D=${J};var C=document.getElementById('C');
+var S={};try{S=JSON.parse(sessionStorage.getItem('f365_regalo')||'{}')||{};}catch(e){}if(D.nuevo){S={};}
+function guarda(){try{sessionStorage.setItem('f365_regalo',JSON.stringify(S));}catch(e){}}
+function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function eur(n){var r=Math.round(n*100)/100,e=Math.floor(r),d=Math.round((r-e)*100);return String(e).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'.')+(d?','+String(d).padStart(2,'0'):'')+' €';}
+function ses(n){return n===1?'1 sesión':n+' sesiones';}
+var MSG=${JSON.stringify(VALE_MSG)},IDI=[['Castellano','es'],['Català','ca'],['English','en']];
+var G='<svg class="ic" viewBox="0 0 96 96" aria-hidden="true"><path d="M18 46h60v34a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path d="M48 46v40"/><rect x="12" y="32" width="72" height="14" rx="5"/><path d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/></svg>';
+var PASOS=['inicio','tipo','sesiones','tarjeta','entrega','datos','pago'];var paso=PASOS.indexOf(S.paso)>-1?S.paso:'inicio';
+function servicio(){return D.servicios[S.tipo]||null;}function opcion(){var s=servicio();return s&&s.ops[S.op]||null;}
+function cab(){var i=PASOS.indexOf(paso);return '<div class="top"><button type="button" class="atr" id="atr" aria-label="Atrás"'+(i?'':' hidden')+'><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="bar"><i style="width:'+Math.round((i+1)*100/PASOS.length)+'%"></i></div></div>';}
+function ir(p){paso=p;S.paso=p;guarda();pinta();window.scrollTo(0,0);}
+function op(sel,on,html){return '<button type="button" class="op'+(on?' on':'')+'" '+sel+'><span class="rd"></span><span style="flex:1;min-width:0">'+html+'</span></button>';}
+function pinta(){var h=cab(),i=PASOS.indexOf(paso);
+ if(paso==='inicio'){h+=G+'<h1>Regala salud</h1><p class="sub cen">Una tarjeta regalo de fisioterapia en <b>'+esc(D.marca)+'</b>, el regalo que de verdad se nota. La preparas en 2 minutos.</p>'
+  +'<label class="l" for="para">¿Para quién es el regalo?</label><input class="i" id="para" placeholder="Su nombre" value="'+esc(S.para||'')+'" autocomplete="off" maxlength="40">'
+  +'<label class="l" for="de">¿De parte de quién?</label><input class="i" id="de" placeholder="Tu nombre, o «Tus amigas»…" value="'+esc(S.de||'')+'" autocomplete="off" maxlength="50">'
+  +'<button type="button" class="bt" id="sig">Empezar</button><p class="err" id="er"></p><p class="priv">Al seguir, aceptas nuestra <a href="'+esc(D.privacidad)+'" target="_blank" rel="noopener">política de privacidad</a>.</p>';}
+ if(paso==='tipo'){h+='<h2>¿Qué le regalas?</h2><p class="sub">Elige el tipo de fisioterapia.</p>'+D.servicios.map(function(s,k){return op('data-k="'+k+'"',S.tipo===k,'<b>'+esc(s.nombre)+'</b>'+(s.desc?'<small>'+esc(s.desc)+'</small>':''));}).join('');}
+ if(paso==='sesiones'){var s=servicio();h+='<h2>¿Cuántas sesiones?</h2><p class="sub">Con los packs, cada sesión sale más barata.</p>'+s.ops.map(function(o,k){return op('data-k="'+k+'"',S.op===k,'<b>'+(o.pack?'Pack '+o.n+' sesiones':ses(o.n))+'</b>'+(o.ah?'<br><span class="ah">Ahorras '+eur(o.ah)+'</span>':'')).replace('</span></button>','</span><span class="pr">'+eur(o.p)+'</span></button>');}).join('');}
+ if(paso==='tarjeta'){var L=S.idioma||'es';h+='<h2>La tarjeta</h2><p class="sub">¿En qué idioma la quieres?</p><div class="ch" id="idi">'+IDI.map(function(x){return '<button type="button" data-l="'+x[1]+'" class="'+(L===x[1]?'on':'')+'">'+x[0]+'</button>';}).join('')+'</div>'
+  +'<label class="l">Elige el mensaje</label>'+MSG[L].map(function(m,k){return op('data-m="'+k+'"',S.msg===k,esc(m));}).join('')+op('data-m="-1"',S.msg===-1,'Prefiero escribir mi propio mensaje')
+  +(S.msg===-1?'<textarea class="i" id="propio" maxlength="220" placeholder="Escribe lo que quieras que ponga la tarjeta">'+esc(S.propio||'')+'</textarea>':'')+'<button type="button" class="bt" id="sig"'+(S.msg==null?' disabled':'')+'>Seguir</button><p class="err" id="er"></p>';}
+ if(paso==='entrega'){h+='<h2>¿Cómo quieres que le llegue?</h2><p class="sub">Elige la que mejor te venga.</p>'
+  +op('data-e="yo"',S.entrega==='yo','<b>Digital, a mi email</b><small>Te la mandamos y se la das tú</small>')
+  +op('data-e="su"',S.entrega==='su','<b>Digital, a su email</b><small>Le llega sola el día que elijas</small>')
+  +op('data-e="impresa"',S.entrega==='impresa','<b>Impresa</b><small>La recoges en el centro'+(D.dir?' ('+esc(D.dir)+')':'')+'</small>');
+  if(S.entrega==='su'){h+='<label class="l" for="ed">Su email</label><input class="i" id="ed" type="email" inputmode="email" placeholder="su@email.com" value="'+esc(S.emailDestino||'')+'" autocomplete="off"><label class="l">¿Qué día se la enviamos?</label><div class="cal" id="cal"></div>';}
+  h+='<button type="button" class="bt" id="sig"'+(S.entrega?'':' disabled')+'>Seguir</button><p class="err" id="er"></p>';}
+ if(paso==='datos'){h+='<h2>Tus datos</h2><p class="sub">Para enviarte la tarjeta y avisarte si hace falta.</p>'
+  +'<label class="l" for="nom">Tu nombre</label><input class="i" id="nom" autocomplete="name" value="'+esc(S.nombre||'')+'" maxlength="60">'
+  +'<label class="l" for="em">Tu email</label><input class="i" id="em" type="email" inputmode="email" autocomplete="email" value="'+esc(S.email||'')+'">'
+  +'<label class="l" for="tel">Tu teléfono</label><input class="i" id="tel" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(S.tel||'')+'">'
+  +'<label class="l">¿Necesitas factura?</label><div class="ch" id="fac"><button type="button" data-f="0" class="'+(!S.fac?'on':'')+'">No</button><button type="button" data-f="1" class="'+(S.fac?'on':'')+'">Sí</button></div>'
+  +(S.fac?'<label class="l" for="fr">Nombre o razón social</label><input class="i" id="fr" value="'+esc(S.razon||'')+'" maxlength="80"><label class="l" for="fn">NIF / CIF</label><input class="i" id="fn" value="'+esc(S.nif||'')+'" maxlength="20"><label class="l" for="fd">Dirección fiscal</label><input class="i" id="fd" value="'+esc(S.dirf||'')+'" maxlength="140">':'')
+  +'<button type="button" class="bt" id="sig">Seguir</button><p class="err" id="er"></p>';}
+ if(paso==='pago'){var s2=servicio(),o2=opcion(),ms=S.msg===-1?S.propio:MSG[S.idioma||'es'][S.msg];
+  h+='<h2>Tu regalo</h2><div class="res"><div class="r1">TARJETA REGALO</div><div class="r2">'+(o2.pack?'Pack '+o2.n+' sesiones':ses(o2.n))+'</div><div class="r3">de '+esc(s2.nombre)+'<br>Para <b>'+esc(S.para)+'</b>, de parte de <b>'+esc(S.de)+'</b>'+(ms?'<br>«'+esc(ms)+'»':'')+'<br>'+(S.entrega==='yo'?'Digital, a tu email':S.entrega==='su'?'A '+esc(S.emailDestino)+' el '+fl(S.fecha):'Impresa, la recoges en el centro')+'</div><div class="tot"><span>Total</span><b>'+eur(o2.p)+'</b></div></div>'
+  +'<label class="l">¿Cómo quieres pagar?</label>'
+  +(D.tarjeta?op('data-p="tarjeta"',S.pago==='tarjeta','<b>Con tarjeta, ahora</b><small>Pago 100% seguro con Stripe</small>'):'')
+  +op('data-p="transferencia"',S.pago==='transferencia','<b>Transferencia bancaria</b><small>Te la enviamos cuando llegue</small>')
+  +op('data-p="centro"',S.pago==='centro','<b>En el centro</b><small>Con tarjeta o en efectivo</small>')
+  +'<button type="button" class="bt" id="sig"'+(S.pago?'':' disabled')+'>'+(S.pago==='tarjeta'?'Pagar '+eur(o2.p):'Confirmar el regalo')+'</button><p class="err" id="er"></p>';}
+ C.innerHTML='<div class="fi">'+h+'</div>';ata();}
+function fl(f){if(!f)return '';var d=new Date(f+'T12:00:00');return d.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});}
+function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function er(t){var e=document.getElementById('er');if(e)e.textContent=t||'';}
+var emOk=function(x){return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(x);};
+function cal(){var b=document.getElementById('cal');if(!b)return;var hoy=new Date();hoy.setHours(12,0,0,0);var iso=function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+ var v=S.calM?new Date(S.calM+'-01T12:00:00'):new Date(hoy.getFullYear(),hoy.getMonth(),1,12);var y=v.getFullYear(),m=v.getMonth(),pri=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate(),h='';
+ for(var k=0;k<pri;k++)h+='<span></span>';for(var d=1;d<=n;d++){var f=iso(new Date(y,m,d,12));h+='<button type="button" data-f="'+f+'" class="'+(S.fecha===f?'on':'')+'"'+(f<iso(hoy)?' disabled':'')+'>'+d+'</button>';}
+ b.innerHTML='<div class="cb"><button type="button" data-d="-1" aria-label="Mes anterior">‹</button><b>'+(function(t){return t.charAt(0).toUpperCase()+t.slice(1);})(new Date(y,m,1).toLocaleDateString('es-ES',{month:'long',year:'numeric'}))+'</b><button type="button" data-d="1" aria-label="Mes siguiente">›</button></div><div class="sem"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div><div class="dias">'+h+'</div>';
+ b.querySelectorAll('.cb button').forEach(function(x){x.onclick=function(){var z=new Date(y,m+(+x.dataset.d),1,12);S.calM=z.getFullYear()+'-'+String(z.getMonth()+1).padStart(2,'0');guarda();cal();};});
+ b.querySelectorAll('.dias button').forEach(function(x){x.onclick=function(){S.emailDestino=val('ed');S.fecha=x.dataset.f;guarda();cal();};});}
+function ata(){var at=document.getElementById('atr');if(at)at.onclick=function(){var i=PASOS.indexOf(paso);if(i>0)ir(PASOS[i-1]);};
+ var sig=document.getElementById('sig');
+ if(paso==='inicio')sig.onclick=function(){S.para=val('para');S.de=val('de');if(!S.para)return er('Escribe para quién es');if(!S.de)return er('Escribe de parte de quién');ir('tipo');};
+ if(paso==='tipo')C.querySelectorAll('.op').forEach(function(b){b.onclick=function(){if(S.tipo!==+b.dataset.k){S.op=null;}S.tipo=+b.dataset.k;guarda();ir('sesiones');};});
+ if(paso==='sesiones')C.querySelectorAll('.op').forEach(function(b){b.onclick=function(){S.op=+b.dataset.k;guarda();ir('tarjeta');};});
+ if(paso==='tarjeta'){C.querySelectorAll('#idi button').forEach(function(b){b.onclick=function(){S.idioma=b.dataset.l;guarda();pinta();};});
+  C.querySelectorAll('.op').forEach(function(b){b.onclick=function(){S.msg=+b.dataset.m;guarda();pinta();var t=document.getElementById('propio');if(t)t.focus();};});
+  var t=document.getElementById('propio');if(t)t.oninput=function(){S.propio=t.value;guarda();};
+  sig.onclick=function(){if(S.msg===-1&&!String(S.propio||'').trim())return er('Escribe tu mensaje');ir('entrega');};}
+ if(paso==='entrega'){C.querySelectorAll('.op').forEach(function(b){b.onclick=function(){S.emailDestino=val('ed')||S.emailDestino;S.entrega=b.dataset.e;guarda();pinta();};});cal();
+  var ed=document.getElementById('ed');if(ed)ed.oninput=function(){S.emailDestino=ed.value.trim();guarda();};
+  sig.onclick=function(){if(S.entrega==='su'){S.emailDestino=val('ed');guarda();if(!emOk(S.emailDestino))return er('Revisa su email');if(!S.fecha)return er('Elige el día');}ir('datos');};}
+ if(paso==='datos'){var lee=function(){S.nombre=val('nom');S.email=val('em');S.tel=val('tel');if(S.fac){S.razon=val('fr');S.nif=val('fn');S.dirf=val('fd');}guarda();};
+  C.querySelectorAll('#fac button').forEach(function(b){b.onclick=function(){lee();S.fac=b.dataset.f==='1';guarda();pinta();};});
+  sig.onclick=function(){lee();if(!S.nombre)return er('Escribe tu nombre');if(!emOk(S.email))return er('Revisa tu email');if(String(S.tel).replace(/\\D/g,'').length<9)return er('Revisa tu teléfono');if(S.fac&&(!S.razon||!S.nif||!S.dirf))return er('Completa los datos de la factura');ir('pago');};}
+ if(paso==='pago'){C.querySelectorAll('.op').forEach(function(b){b.onclick=function(){S.pago=b.dataset.p;guarda();pinta();};});
+  sig.onclick=function(){sig.disabled=true;sig.textContent=S.pago==='tarjeta'?'Abriendo el pago…':'Un momento…';er('');
+   var body={para:S.para,de:S.de,tipo:S.tipo,op:S.op,idioma:S.idioma||'es',msg:S.msg,propio:S.propio||'',entrega:S.entrega,emailDestino:S.emailDestino||'',fecha:S.fecha||'',nombre:S.nombre,email:S.email,tel:S.tel,factura:S.fac?{razon:S.razon,nif:S.nif,dir:S.dirf}:null,pago:S.pago,previo:S.previo||null,acepta:true};
+   fetch(D.post,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(r){
+    if(!r.ok)throw new Error(r.error||'');S.hecho={id:r.id,s:r.s,pago:S.pago,importe:opcion().p,codigo:r.codigo};guarda();
+    if(r.url){location.href=r.url;return;}fin(S.hecho);})
+   .catch(function(e){sig.disabled=false;sig.textContent=S.pago==='tarjeta'?'Pagar '+eur(opcion().p):'Confirmar el regalo';er(e.message||'No se ha podido guardar. Inténtalo de nuevo.');});};}}
+function copia(b,t){try{navigator.clipboard.writeText(t);b.textContent='Copiado';setTimeout(function(){b.textContent='Copiar';},1500);}catch(e){}}
+function fin(H){var p=H.pago,h='<div class="ok fi">'+G;
+ if(p==='tarjeta'&&H.pagado){h+='<h1>¡Gracias! Ya está pagada</h1><p class="sub">'+(H.entrega==='su'?'Le llegará a su email el día que elegiste. ':'')+'Te hemos enviado la tarjeta a tu email.</p><a class="bt" href="'+esc(H.link)+'">Ver la tarjeta regalo</a>';}
+ else if(p==='tarjeta'){h+='<h1>El pago no se ha completado</h1><p class="sub">No se ha hecho ningún cargo. Puedes volver a intentarlo o elegir otra forma de pago.</p><button type="button" class="bt" id="rei">Volver a intentarlo</button><button type="button" class="bt sec" id="otra">Elegir otra forma de pago</button>';}
+ else if(p==='transferencia'){var con='Vale regalo - '+(H.nombre||S.nombre||'');h+='<h1>¡Gracias, ya casi está!</h1><p class="sub">Haz la transferencia y te enviamos la tarjeta en cuanto llegue (menos de 24 h).</p><div class="ib"><div class="ibr"><div><small>Titular</small><b>'+esc(D.razon)+'</b></div></div><div class="ibr"><div><small>IBAN</small><b>'+esc(D.iban)+'</b></div><button type="button" class="cp" data-c="'+esc(String(D.iban).replace(/\\s/g,''))+'">Copiar</button></div><div class="ibr"><div><small>Importe</small><b>'+eur(H.importe)+'</b></div></div><div class="ibr"><div><small>Concepto</small><b>'+esc(con)+'</b></div><button type="button" class="cp" data-c="'+esc(con)+'">Copiar</button></div></div>';}
+ else{h+='<h1>¡Perfecto!</h1><p class="sub">Pásate por '+esc(D.marca)+(D.dir?' ('+esc(D.dir)+')':'')+' y pagas con tarjeta o efectivo, como te venga mejor. En cuanto esté pagada, te la preparamos en menos de 24 h.</p>';}
+ h+='<p class="pie">¿Dudas? Escríbenos por WhatsApp al '+esc(D.tel)+'.</p></div>';C.innerHTML=h;window.scrollTo(0,0);
+ C.querySelectorAll('.cp').forEach(function(b){b.onclick=function(){copia(b,b.dataset.c);};});
+ var rei=document.getElementById('rei');if(rei)rei.onclick=function(){rei.disabled=true;fetch(D.post,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reintentar:H.id,s:H.s})}).then(function(r){return r.json();}).then(function(r){if(r.url)location.href=r.url;else throw 0;}).catch(function(){rei.disabled=false;});};
+ var ot=document.getElementById('otra');if(ot)ot.onclick=function(){S.previo={id:H.id,s:H.s};S.hecho=null;S.pago=null;guarda();paso='pago';pinta();};
+ if(H.pagado||p!=='tarjeta'){try{sessionStorage.removeItem('f365_regalo');}catch(e){}S={};}}
+if(D.vuelta){fin(D.vuelta);}else pinta();})();<\/script></body></html>`;
+}
 // ── ENLACE PERSONAL DE LA APP (se manda por WhatsApp: ventajas, cómo instalarla y sus datos para entrar) ──
 function firmaApp(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('app:' + id).digest('hex').slice(0, 10); }
 const enlaceApp = id => `https://app.fisioterapia365.com/a/${id}-${firmaApp(id)}`;
@@ -1796,11 +2052,11 @@ const CONF_DEF = {
     ],
     promos: [
       { etiqueta: 'Siempre disponible', titulo: 'Packs de sesiones', texto: 'Cada sesión te sale más barata: hasta 280 € de ahorro. Pagas una vez y solo te preocupas de mejorar.', boton: 'Ver packs', accion: 'packs', color: 'Naranja' },
-      { etiqueta: 'Regalo', titulo: 'Regala fisioterapia', texto: 'Una tarjeta regalo para quien quieras. La preparas en 2 minutos.', boton: 'Regalar', accion: 'https://tally.so/r/WOVB0N?origen=app', color: 'Negro' }
+      { etiqueta: 'Regalo', titulo: 'Regala fisioterapia', texto: 'Una tarjeta regalo para quien quieras. La preparas en 2 minutos.', boton: 'Regalar', accion: 'https://app.fisioterapia365.com/regalo', color: 'Negro' }
     ]
   }
 };
-async function conf() { const g = await ajuste('config', null) || {}; const o = {}; Object.keys(CONF_DEF).forEach(k => { o[k] = Object.assign({}, CONF_DEF[k], g[k] || {}); }); o.listas = Object.assign({}, CONF_DEF.listas, (g.listas || {})); return o; }
+async function conf() { const g = await ajuste('config', null) || {}; const o = {}; Object.keys(CONF_DEF).forEach(k => { o[k] = Object.assign({}, CONF_DEF[k], g[k] || {}); }); o.listas = Object.assign({}, CONF_DEF.listas, (g.listas || {})); if (o.app && Array.isArray(o.app.promos)) o.app = Object.assign({}, o.app, { promos: o.app.promos.map(p => p && /tally\.so\/r\/WOVB0N/.test(String(p.accion || '')) ? Object.assign({}, p, { accion: 'https://app.fisioterapia365.com/regalo' }) : p) }); return o; }
 // Check-list: la guardada en Administración (los puntos de siempre conservan su comprobación automática)
 async function checklistTodos() {
   const g = await ajuste('checklist', null); if (!Array.isArray(g) || !g.length) return REPORTE_ITEMS.map(x => Object.assign({}, x));
@@ -2558,6 +2814,73 @@ module.exports = async function handler(req, res) {
     return res.status(200).send(paginaJustificante(D, tk, (await conf().catch(() => CONF_DEF)).clinica));
   }
   // Tarjeta regalo pública (el enlace que va por WhatsApp; la vista previa enseña la imagen)
+  // ── Vales regalo: página para comprarlo (/regalo), la tarjeta (/vale/…) y su vista previa ──
+  if (action === 'regalo-pagina') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    const CF = await conf().catch(() => CONF_DEF), OPS = valeOpciones(CF), sigOk = (id, s) => /^rec[A-Za-z0-9]{14}$/.test(String(id || '')) && String(s || '') === firmaVale(id);
+    const stripeVale = async (id, F) => {
+      const sg = firmaVale(id), u = `${APPU()}/regalo?v=${id}-${sg}`;
+      const form = { mode: 'payment', locale: 'es', 'line_items[0][quantity]': '1', 'line_items[0][price_data][currency]': 'eur', 'line_items[0][price_data][unit_amount]': String(Math.round(Number(F.IMPORTE) * 100)),
+        'line_items[0][price_data][product_data][name]': `Tarjeta regalo · ${VALE_T.es.ses(F.SESIONES || 1)} de ${F.TIPO || ''}`, 'metadata[vale]': id, 'payment_intent_data[metadata][vale]': id,
+        'payment_intent_data[description]': `FISIO365 · Tarjeta regalo ${F['CÓDIGO'] || ''} · ${F.COMPRADOR || ''}`, success_url: u + '&sid={CHECKOUT_SESSION_ID}', cancel_url: u + '&c=1' };
+      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(F.EMAIL || ''))) form.customer_email = String(F.EMAIL).trim();
+      const ses = await stripeApi('checkout/sessions', form);
+      await at(`${VALES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { STRIPE: ses.id, REGISTRO: (String(F.REGISTRO || '') + `\n${pagoAhora()} · abre el pago con tarjeta`).trim() } }) }).catch(() => {});
+      return ses.url;
+    };
+    if (req.method === 'POST') {
+      const q = req.body || {};
+      if (q.reintentar) { // vuelve a abrir el pago con tarjeta de un vale que aún no está pagado
+        if (!sigOk(q.reintentar, q.s)) return res.status(200).json({ ok: false });
+        const r = await at(`${VALES}/${q.reintentar}`); const F = r.fields || {}; if (r.error || F.ESTADO === 'PAGADO') return res.status(200).json({ ok: false });
+        try { return res.status(200).json({ ok: true, url: await stripeVale(r.id, F) }); } catch (e) { return res.status(200).json({ ok: false, error: 'No se ha podido abrir el pago con tarjeta.' }); }
+      }
+      const L = (v, n) => String(v == null ? '' : v).replace(/[\r\t]+/g, ' ').trim().slice(0, n);
+      const s = OPS[+q.tipo], o = s && s.ops[+q.op], idi = ({ es: 'Castellano', ca: 'Català', en: 'English' })[q.idioma] || 'Castellano', lang = ({ Castellano: 'es', 'Català': 'ca', English: 'en' })[idi];
+      const emOk = x => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(x || '').trim());
+      if (!q.acepta || !s || !o) return res.status(200).json({ ok: false, error: 'Revisa el regalo y vuelve a intentarlo.' });
+      if (!L(q.para, 40) || !L(q.de, 50) || !L(q.nombre, 60) || !emOk(q.email) || String(q.tel || '').replace(/\D/g, '').length < 9) return res.status(200).json({ ok: false, error: 'Revisa tus datos.' });
+      if (!['yo', 'su', 'impresa'].includes(q.entrega)) return res.status(200).json({ ok: false, error: 'Elige cómo le llega.' });
+      const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+      if (q.entrega === 'su' && (!emOk(q.emailDestino) || !/^\d{4}-\d{2}-\d{2}$/.test(String(q.fecha || '')) || q.fecha < hoy)) return res.status(200).json({ ok: false, error: 'Revisa su email y el día.' });
+      if (!['tarjeta', 'transferencia', 'centro'].includes(q.pago) || (q.pago === 'tarjeta' && !process.env.STRIPE_SECRET_KEY)) return res.status(200).json({ ok: false, error: 'Elige cómo pagar.' });
+      const msg = +q.msg === -1 ? L(q.propio, 220) : (VALE_MSG[lang][+q.msg] || '');
+      const fa = q.factura && typeof q.factura === 'object' ? `${L(q.factura.razon, 80)}\nNIF: ${L(q.factura.nif, 20)}\n${L(q.factura.dir, 140)}` : '';
+      const cad = new Date(hoy + 'T12:00:00Z'); cad.setUTCFullYear(cad.getUTCFullYear() + 1);
+      const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+      const f = { 'CÓDIGO': valeCodigo(), PARA: L(q.para, 40), DE: L(q.de, 50), COMPRADOR: L(q.nombre, 60), EMAIL: String(q.email).trim().toLowerCase(), 'TELÉFONO': L(q.tel, 30), TIPO: s.nombre, SESIONES: o.n, IMPORTE: o.p, IDIOMA: idi, MENSAJE: msg,
+        ENTREGA: q.entrega, 'EMAIL DESTINO': q.entrega === 'su' ? String(q.emailDestino).trim().toLowerCase() : '', 'FECHA ENVÍO': q.entrega === 'su' ? q.fecha : null, FACTURA: fa, PAGO: q.pago, ESTADO: 'PENDIENTE DE PAGO',
+        CADUCA: cad.toISOString().slice(0, 10), CREADO: new Date().toISOString(), REGISTRO: `${pagoAhora()} · Comprado en la web (${q.pago}) · acepta la política de privacidad (IP ${ip || '—'})` };
+      // Si vuelve de un pago con tarjeta que no terminó y elige otra forma, se reutiliza el mismo vale
+      let id = '', F = f;
+      if (q.previo && sigOk(q.previo.id, q.previo.s)) { const p0 = await at(`${VALES}/${q.previo.id}`); if (!p0.error && (p0.fields || {}).ESTADO !== 'PAGADO') { delete f['CÓDIGO']; f.REGISTRO = (String((p0.fields || {}).REGISTRO || '') + '\n' + f.REGISTRO).trim(); const u = await at(`${VALES}/${p0.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }); if (!u.error) { id = u.id; F = u.fields; } } }
+      if (!id) { const c = await at(VALES, { method: 'POST', body: JSON.stringify({ fields: f }) }); if (c.error || !c.id) return res.status(200).json({ ok: false, error: 'No se ha podido guardar. Inténtalo de nuevo.' }); id = c.id; F = c.fields || f; }
+      if (q.pago === 'tarjeta') { try { return res.status(200).json({ ok: true, id, s: firmaVale(id), codigo: F['CÓDIGO'], url: await stripeVale(id, F) }); } catch (e) { return res.status(200).json({ ok: false, error: 'No se ha podido abrir el pago con tarjeta. Prueba con transferencia o en el centro.' }); } }
+      await pagoAvisar('', `🎁 Nuevo vale regalo · ${valeEur(o.p)}`, `Para ${f.PARA}, de ${f.COMPRADOR} · ${q.pago === 'transferencia' ? 'hará una transferencia' : 'pagará en el centro'}. Cuando esté pagado, márcalo en Mensajes › Regalos.`, 'vale-' + id);
+      if (q.pago === 'transferencia') await valeMail(f.EMAIL, 'Tu tarjeta regalo: datos para la transferencia', `Hola ${escHtml(f.COMPRADOR.split(/\s+/)[0])},`, `¡Gracias por tu regalo para <b>${escHtml(f.PARA)}</b>! En cuanto nos llegue la transferencia te enviamos la tarjeta (menos de 24 h).<br><br>Titular: <b>${escHtml(CLI.razon || '')}</b><br>IBAN: <b>${escHtml(CLI.iban || '')}</b><br>Importe: <b>${valeEur(o.p)}</b><br>Concepto: <b>Vale regalo - ${escHtml(f.COMPRADOR)}</b>`, '', '');
+      return res.status(200).json({ ok: true, id, s: firmaVale(id), codigo: F['CÓDIGO'] });
+    }
+    const D = { marca: CLI.marca, servicios: OPS, tarjeta: !!process.env.STRIPE_SECRET_KEY, razon: CLI.razon, iban: CLI.iban, tel: CLI.tel, dir: CLI.dirCorta || CLI.direccion || '', privacidad: `${APPU()}/privacidad`, post: '/api/schedule?action=regalo-pagina' };
+    const m = String(req.query.v || '').match(/^(rec[A-Za-z0-9]{14})-([a-f0-9]{10})$/);
+    if (m && sigOk(m[1], m[2])) { // vuelta de Stripe (pagado o cancelado)
+      const r = await at(`${VALES}/${m[1]}`); let F = r.fields || {};
+      let pagado = F.ESTADO === 'PAGADO'; if (!pagado && !req.query.c) pagado = await valeVerificarStripe(r.id, F, String(req.query.sid || '')).catch(() => false);
+      D.vuelta = { id: r.id, s: m[2], nombre: F.COMPRADOR || '', pago: F.PAGO || 'tarjeta', importe: F.IMPORTE || 0, pagado, link: enlaceVale(r.id), entrega: F.ENTREGA || '' };
+    } else if (req.query.nuevo) D.nuevo = 1;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(200).send(paginaRegalo(D));
+  }
+  if (action === 'vale' || action === 'vale-og') {
+    const id = String(req.query.id || ''), sg = String(req.query.s || '');
+    if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaVale(id)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: 'Este enlace no es válido.' })); }
+    const r = await at(`${VALES}/${id}`); const F = r.fields || {};
+    if (r.error || !F['CÓDIGO']) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: 'No encontramos esta tarjeta regalo. Escríbenos y te ayudamos.' })); }
+    if (action === 'vale-og') {
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogValeSvg(F), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/regalo/preview.jpg'); return res.status(302).end(); }
+    }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
+    return res.status(200).send(paginaVale(F, id, req.query.p === '1'));
+  }
   if (action === 'tarjeta-img' || action === 'tarjeta-pagina' || action === 'tarjeta-og') {
     const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(404).end();
     const r = await at(`tblr27u3cvtzfyqI6/${id}`); const a = r.fields && (r.fields['TARJETA IMG'] || [])[0];
@@ -3268,6 +3591,24 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ ok: true, res: r.map(c => ({ id: c.id, tipo: c.tipo, nombre: c.nombre, fecha: c.fecha, tel: c.tel, email: c.email, de: c.pac.map(id => nom[id] || '').filter(Boolean).join(', ') })) });
       }
       // ── REFERIDOS: tarjeta regalo de 10 € para quien recomienda, cuando el recomendado viene a su primera sesión ──
+      // Vales regalo comprados (Mensajes › Regalos): lista y acciones (pagado, reenviar, canjeado)
+      if (action === 'seg-vales') {
+        const d = await todosT(VALES, 'sort[0][field]=CREADO&sort[0][direction]=desc').catch(() => []);
+        return res.status(200).json({ ok: true, vales: d.map(valeVista) });
+      }
+      if (action === 'seg-vale-op') {
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const id = String(q.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false });
+        const r = await at(`${VALES}/${id}`); if (r.error) return res.status(404).json({ ok: false, error: 'No encontrado' }); let F = r.fields || {};
+        const quien = String(q.quien || '').trim().split(/\s+/)[0];
+        if (q.op === 'pagado') { const via = q.via === 'centro' ? 'en el centro' : q.via === 'tarjeta' ? 'tarjeta' : 'transferencia'; await valePagado(id, F, via, quien || 'el panel'); }
+        else if (q.op === 'reenviar') { if (F.ESTADO !== 'PAGADO') return res.status(200).json({ ok: false, error: 'Aún no está pagado' }); await valeEntregar(id, F, true); }
+        else if (q.op === 'canjear' || q.op === 'descanjear') {
+          const v = q.op === 'canjear' ? hoyF : null;
+          await at(`${VALES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { CANJEADA: v, REGISTRO: (String(F.REGISTRO || '') + `\n${pagoAhora()} · ${v ? 'Canjeado' : 'Canje deshecho'}${quien ? ' · ' + quien : ''}`).trim() } }) });
+        } else return res.status(400).json({ ok: false });
+        const r2 = await at(`${VALES}/${id}`); return res.status(200).json({ ok: true, vale: valeVista(r2) });
+      }
       if (action.startsWith('seg-referido')) {
         const REF = 'tblr27u3cvtzfyqI6', okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
         if (action === 'seg-referidos') {
@@ -5406,6 +5747,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
   }
 }
 module.exports.cierreDia = cierreDia;
+module.exports.valesDelDia = valesDelDia;
 module.exports.emailsResumen = emailsResumen;
 module.exports.repasoEtapas = repasoEtapas;
 module.exports.importeDoc = d => importeDoc(d);
