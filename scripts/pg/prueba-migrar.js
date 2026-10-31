@@ -8,6 +8,7 @@
   datos['tblTPlcuiSjQngkaD'].forEach(r => { r.fields.PacienteRec = r.fields['RELACIÓN - CITA'] || []; });
   const fakeFetch = async (u) => {
     if (u === 'https://fake/a.pdf') return new Response(Buffer.from('PDF'), { status: 200, headers: { 'content-type': 'application/pdf' } });
+    if (/\/v0\/meta\/bases\//.test(u)) { const b = u.split('/bases/')[1].split('/')[0]; return new Response(JSON.stringify({ tables: S.tables.filter(t => (t.base || S.baseId) === b).map(t => ({ id: t.id, name: t.name, fields: global.__CAMPO_NUEVO__ && t.id === 'tblTCNp81M8vBFe7q' ? [...t.fields, { id: 'fldNUEVOxxxxxxxxx', name: 'NUEVO', type: 'singleLineText' }] : t.fields })) }), { status: 200 }); }
     const m = u.match(/\/v0\/[^/]+\/([^?]+)\?pageSize=100(?:&offset=(\d+))?/); const L = datos[m[1]] || []; const o = +(m[2] || 0);
     return new Response(JSON.stringify({ records: L.slice(o, o + 100).map(r => ({ id: r.id, createdTime: r.creado, fields: r.fields })), ...(o + 100 < L.length ? { offset: String(o + 100) } : {}) }), { status: 200 });
   };
@@ -26,5 +27,8 @@
   const b = (await db.query('select count(*)::int n from registros where id = $1', [borrado])).rows[0].n;
   console.log('segunda pasada: cambio copiado =', n1 === 'Nombre Cambiado', '· borrado quitado =', b === 0, '· tombstone =', (await db.query('select count(*)::int n from borrados where id = $1', [borrado])).rows[0].n === 1);
   const cnt = (await db.query("select * from contadores")).rows; console.log('contadores autonuméricos:', cnt.length);
+  global.__CAMPO_NUEVO__ = true; let paro = '';
+  try { await migrar({ db, fetch: fakeFetch, token: 'x', log: () => {} }); } catch (e) { paro = e.message; }
+  console.log('campo nuevo en Airtable → se para:', /NUEVO/.test(paro));
   process.exit(0);
 })().catch(e => { console.error('FALLO', e.message, String(e.stack).split('\n').slice(1, 4).join(' | ')); process.exit(1); });

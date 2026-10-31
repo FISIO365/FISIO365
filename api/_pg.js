@@ -46,7 +46,12 @@ create index if not exists registros_tabla_mod on registros (tabla, modificado);
 create table if not exists borrados (tabla text not null, id text not null, t timestamptz not null default now());
 create index if not exists borrados_tabla_t on borrados (tabla, t);
 create table if not exists archivos (id text primary key, clave text not null, nombre text, tipo text, bytes integer, datos bytea, creado timestamptz not null default now());
-create table if not exists contadores (tabla text not null, campo text not null, n bigint not null default 0, primary key (tabla, campo));`;
+create table if not exists contadores (tabla text not null, campo text not null, n bigint not null default 0, primary key (tabla, campo));
+alter table registros enable row level security;
+alter table borrados enable row level security;
+alter table archivos enable row level security;
+alter table contadores enable row level security;`;
+// RLS activado y sin reglas: la API pública de Supabase (clave anon) no puede leer nada; solo el servidor, que entra con DB_URL
 
 // ── Caché por tabla (en cada instancia del servidor) ──
 // Se carga entera la primera vez y luego solo se piden los cambios (modificado > última vez, con 30 s de margen

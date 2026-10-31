@@ -18,6 +18,17 @@ async function migrar({ db, fetch: F = FETCH0, token = process.env.AIRTABLE_TOKE
   const H = { Authorization: `Bearer ${token}` };
   const espera = ms => new Promise(r => setTimeout(r, ms));
   const pide = async u => { for (let i = 0; ; i++) { const r = await F(u, { headers: H }); if (r.status === 429 && i < 8) { await espera(1000 * (i + 1)); continue; } const d = await r.json(); if (d.error) throw new Error(JSON.stringify(d.error)); return d; } };
+  // Antes de copiar: si en Airtable hay campos o tablas que no están en api/_schema.json, se pararía aquí
+  // (si no, esos campos no se copiarían y se perderían sin avisar)
+  if (!tabla && !process.argv.includes('--sin-comprobar')) {
+    const vivas = [];
+    for (const b of [...new Set(S.tables.map(t => t.base || BASE))]) { const m = await pide(`https://api.airtable.com/v0/meta/bases/${b}/tables`); for (const t of m.tables || []) vivas.push({ b, t }); }
+    const mio = new Map(S.tables.map(t => [t.id, t])), faltan = [];
+    for (const { b, t } of vivas) { const s = mio.get(t.id); if (!s) { if (b === BASE) faltan.push(`tabla «${t.name}» (${t.id})`); continue; }
+      const ids = new Set(s.fields.map(f => f.id)); for (const f of t.fields) if (!ids.has(f.id)) faltan.push(`${t.name} › «${f.name}» (${f.type}, ${f.id})`); }
+    if (faltan.length) throw new Error('Faltan en api/_schema.json (añádelos antes de copiar):\n  ' + faltan.join('\n  '));
+    log('Esquema: al día');
+  }
   const adjCache = new Map(); // id de Airtable → nuestro adjunto (si el mismo archivo está en varios sitios)
   const resumen = {};
   for (const t of S.tables) {
