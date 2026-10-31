@@ -118,6 +118,26 @@ async function reporteDia(fecha) {
     seg.forEach(r => { const pid = (r.fields.PacRec || r.fields.PACIENTE || [])[0]; add(r.fields.RESPONSABLE, { tipo: 'llamada', texto: 'Llamada de seguimiento', pacienteId: typeof pid === 'string' ? pid : '', paciente: nomA[pid] || '', dias: dias(r.fields['FECHA DE LLAMADA']) }); });
     return Object.values(G).map(g => (g.items.sort((a, b) => b.dias - a.dias), g)).sort((a, b) => b.maxDias - a.maxDias);
   } catch (e) { return null; } })();
+  // «No han reagendado»: por qué (lo que apuntó el fisio) y cómo está ahora (en seguimiento, con cita, de alta… o sin explicar)
+  await (async () => { try {
+    const L = [...(D.rendDia || []), ...(D.rendSemana || [])].flatMap(x => x.lista || []), ids = [...new Set(L.map(p => p.id).filter(id => /^rec[A-Za-z0-9]{14}$/.test(id || '')))];
+    if (!ids.length) return;
+    const orI = (l, k) => 'OR(' + l.map(id => k(id)).join(',') + ')', info = {}, conSeg = new Set(), conCita = new Set();
+    for (let i = 0; i < ids.length; i += 40) { const l = ids.slice(i, i + 40);
+      const [ps, sg, ct, es] = await Promise.all([
+        todos(TABLAS.paciente, `filterByFormula=${encodeURIComponent(orI(l, id => `RECORD_ID()='${id}'`))}&fields[]=${encodeURIComponent('POR QUÉ NO REAGENDA')}&fields[]=ESTADO`).catch(() => []),
+        todos('tblu9YxiktpAh5w87', `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),${orI(l, id => `FIND('${id}',ARRAYJOIN({PacRec}))`)})`)}&fields[]=PacRec`).catch(() => []),
+        todos(CITAS_TABLE, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA'),NOT(IS_BEFORE({FECHA},TODAY())),${orI(l, id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`)})`)}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []),
+        i ? Promise.resolve(null) : todos('tbldOsLe8iw78Wun7', 'fields[]=ESTADO').catch(() => [])]);
+      if (es) es.forEach(e => { info['_e' + e.id] = String(e.fields.ESTADO || '').trim().toUpperCase(); });
+      ps.forEach(p => { info[p.id] = { porQue: String(p.fields['POR QUÉ NO REAGENDA'] || '').trim(), est: (p.fields.ESTADO || []).map(x => info['_e' + x] || '') }; });
+      sg.forEach(r => (r.fields.PacRec || []).forEach(id => conSeg.add(id))); ct.forEach(c => (c.fields['RELACIÓN - CITA'] || []).forEach(id => conCita.add(id)));
+    }
+    L.forEach(p => { const x = info[p.id] || { porQue: '', est: [] };
+      p.porQue = x.porQue;
+      p.situacion = conCita.has(p.id) ? 'Ya tiene cita' : conSeg.has(p.id) ? 'En seguimiento' : x.est.includes('ALTA') ? 'De alta' : x.est.includes('ABANDONO') ? 'Dejó el tratamiento' : x.est.includes('NO ACUDIÓ') ? 'No llegó a venir' : '';
+    });
+  } catch (e) {} })();
   const hora = t => t ? new Date(t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' }) : '';
   const cita = c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0] || ''; return { id: c.id, pacienteId: pid, proxima: prox[pid] || '', enLlamar: enLlamar.has(pid), alta: cerrado[pid] || '', nuncaVino: !!pid && !vino.has(pid), nombre: nomP[pid] || c.fields['your-name'] || '', fisio: fisioDe(c.fields['PREF.']), hora: String(c.fields['HORA'] || '').slice(0, 5), estado: D.est(c) }; };
   return {
