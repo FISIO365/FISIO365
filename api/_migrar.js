@@ -20,7 +20,9 @@ async function comprobarEsquema(pide) {
 
 // Un trozo de la copia. desde = { t: id de tabla, off: offset de Airtable } (null = empezar). hasta = hora límite (ms).
 // Devuelve { hecho: true, resumen } o { sigue: { t, off }, resumen } para seguir en la siguiente llamada.
-async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, desde = null, hasta = Infinity, comprobar = true, log = () => {} }) {
+async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, desde = null, hasta = Infinity, comprobar = true, cambiosDesde = null, log = () => {} }) {
+  // cambiosDesde (ISO): solo lo creado o modificado en Airtable desde esa hora, y NO se borra nada (para después del cambio)
+  const fCambios = cambiosDesde ? '&filterByFormula=' + encodeURIComponent(`OR(IS_AFTER(LAST_MODIFIED_TIME(),'${cambiosDesde}'),IS_AFTER(CREATED_TIME(),'${cambiosDesde}'))`) : '';
   const H = { Authorization: `Bearer ${token}` };
   const pide = async u => { for (let i = 0; ; i++) { const r = await F(u, { headers: H }); if (r.status === 429 && i < 8) { await espera(1000 * (i + 1)); continue; } const d = await r.json(); if (d.error) throw new Error(JSON.stringify(d.error)); return d; } };
   if (!desde) {
@@ -37,10 +39,10 @@ async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, 
   for (; i < tablas.length; i++, off = '') {
     const t = tablas[i], campos = new Map(t.fields.map(f => [f.name, f]));
     const R = resumen[t.name] = resumen[t.name] || { registros: 0, adjuntos: 0, borrados: 0 };
-    if (!off) await db.query('delete from migrar_vistos where tabla = $1', [t.id]);
+    if (!off && !cambiosDesde) await db.query('delete from migrar_vistos where tabla = $1', [t.id]);
     do {
       if (Date.now() > hasta) return { sigue: { t: t.id, off }, resumen };
-      const d = await pide(`https://api.airtable.com/v0/${t.base || BASE}/${t.id}?pageSize=100${off ? '&offset=' + off : ''}`);
+      const d = await pide(`https://api.airtable.com/v0/${t.base || BASE}/${t.id}?pageSize=100${fCambios}${off ? '&offset=' + off : ''}`);
       const filas = [], maxAuto = {}; let cortar = false;
       // 1) Adjuntos de toda la página: los que aún no están en Postgres se bajan de 8 en 8
       const adjF = new Set(t.fields.filter(f => f.type === 'multipleAttachments').map(f => f.name));
@@ -94,9 +96,9 @@ async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, 
         // orden: el de Airtable (páginas en orden; dentro de la página, su posición). Microsegundos, como los registros nuevos
         const base = Date.now() * 1000; filas.forEach((x, i) => { x.o = base + i; });
         await db.query(`insert into registros (tabla, id, fields, creado, modificado, orden)
-          select $1, x.id, x.f, x.c::timestamptz, clock_timestamp(), x.o from jsonb_to_recordset($2::jsonb) as x(id text, f jsonb, c text, o bigint)
-          on conflict (id) do update set fields = excluded.fields, orden = excluded.orden,
-            modificado = case when registros.fields is distinct from excluded.fields then clock_timestamp() else registros.modificado end`, [t.id, JSON.stringify(filas)]);
+          select $1, x.id, x.f, x.c::timestamptz, clock_timestamp(), x.o from jsonb_to_recordset($2::jsonb) as x(id text, f jsonb, c text, o bigint) where $3::boolean is not null
+          on conflict (id) do update set fields = excluded.fields, orden = case when $3::boolean then registros.orden else excluded.orden end,
+            modificado = case when registros.fields is distinct from excluded.fields then clock_timestamp() else registros.modificado end`, [t.id, JSON.stringify(filas), !!cambiosDesde]);
         await espera(1); // que la página siguiente tenga un «base» mayor
         await db.query('insert into migrar_vistos (tabla, id) select $1, unnest($2::text[]) on conflict do nothing', [t.id, filas.map(x => x.id)]);
       }
@@ -105,6 +107,7 @@ async function migrarPaso({ db, fetch: F, token, adjuntos = true, tabla = null, 
       off = d.offset || '';
       if (off) await espera(220); // Airtable: máximo 5 peticiones por segundo
     } while (off);
+    if (cambiosDesde) { R.total = (await db.query('select count(*)::int n from registros where tabla = $1', [t.id])).rows[0].n; continue; } // sin borrar
     // Lo que ya no está en Airtable se borra también aquí
     const ya = (await db.query('select r.id from registros r where r.tabla = $1 and not exists (select 1 from migrar_vistos v where v.tabla = $1 and v.id = r.id)', [t.id])).rows.map(x => x.id);
     for (const id of ya) { await db.query('delete from registros where id = $1', [id]); await db.query('insert into borrados (tabla, id, t) values ($1,$2,clock_timestamp())', [t.id, id]); }

@@ -2484,7 +2484,9 @@ module.exports = async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store');
     try {
       const { migrarPaso } = require('./_migrar');
-      const r = await migrarPaso({ db: PG.db(), fetch: PG.fetchReal, token: process.env.AIRTABLE_TOKEN, desde: req.query.t ? { t: String(req.query.t), off: String(req.query.off || '') } : null, hasta: Date.now() + 38000, adjuntos: req.query.adj !== '0' });
+      const cambiosDesde = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(String(req.query.cambios || '')) ? String(req.query.cambios) : null;
+      if (!process.env.SIN_ENVIOS && !cambiosDesde) return res.status(400).json({ ok: false, error: 'En la app de verdad solo se pueden copiar los cambios (cambios=ISO), sin borrar' });
+      const r = await migrarPaso({ db: PG.db(), fetch: PG.fetchReal, token: process.env.AIRTABLE_TOKEN, desde: req.query.t ? { t: String(req.query.t), off: String(req.query.off || '') } : null, hasta: Date.now() + 38000, adjuntos: req.query.adj !== '0', cambiosDesde, comprobar: !cambiosDesde });
       return res.status(200).json({ ok: true, ...r });
     } catch (e) { return res.status(200).json({ ok: false, error: String(e && e.message || e) }); }
   }
