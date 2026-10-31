@@ -6822,7 +6822,7 @@ function agAbrirCita(c,onDone){
   <label class="hz-sw ag-sbm"><input type="checkbox" ${(c.tipos||[]).some(agNoBomba)?'checked':''}><i></i><span>Se le puede atender <b>sin bomba</b></span></label>
   <div class="hz-lab">Tipo de sesión</div><div class="ag-ses"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
-  <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No necesita más</button></div>
+  <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No hace falta</button></div>
   ${c.pacienteId?`<div class="ag-pago">${agPagoHtml(c)}</div>`:''}
   <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="fp-can ag-cfis">Cambiar fisio</button><button type="button" class="hz-ok">Guardar</button></div>
   <div class="ag-otras">${c.pacienteId?'<button type="button" class="ag-envc">Enviarle sus citas</button>':''}<button type="button" class="ag-borrar">Borrar cita</button></div>`);
@@ -6849,7 +6849,7 @@ function agAbrirCita(c,onDone){
    try{const r=await agPost('seg-agenda-editar',{id:c.id,estado:est!==est0?est:undefined,confirmada:conf!==c.confirmada?conf:undefined,notas:m.querySelector('.ag-not2').value,tipos:[...tg.get().filter(t=>!agNoBomba(t)),...(m.querySelector('.ag-sbm input').checked?['NO BOMBA']:[])],sesion:ses.get()!==(c.sesion||'')?ses.get():undefined,liberar:!lib.hidden&&lib.querySelector('input').checked});
     if(!r.ok)throw new Error(r.error||'No se ha podido guardar la cita');}catch(err){b.disabled=false;toast(err.message,false);return;}
    try{_dtC.d=null;_dtC.t=0;}catch(_){}}
-  m.remove();agAlta(c,onDone);};
+  m.remove();agCerrar(c,onDone);};
  {const pk=m.querySelector('.ag-sf-pk'),pg0=c._pago||((AG.dia&&AG.dia.pago)||{})[c.id];if(pk)pk.onclick=()=>marcarPackCita(c.pacienteId,c.paciente,c.id,()=>{m.remove();onDone&&onDone();},pg0&&pg0.t==='previo');
   const co=m.querySelector('.ag-sf-co');if(co)co.onclick=()=>{m.remove();if(!c._enFicha)abrirFichaPaciente(c.pacienteId,c.paciente);let k=0;const t=setInterval(()=>{const b=document.querySelector('.fp .fp-cobb');if(b||++k>60){clearInterval(t);if(b)b.click();}},150);};}
  m.querySelectorAll('.ag-est button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='REPROGRAMADA'&&!/REPROGRAMADA/.test(c.estado)){m.remove();agMoverCita(c,onDone);return;}est=b.dataset.v;pe();pSeg();});pSeg();if(!Object.keys(SEG_PAC).length)cargarSegPac().then(()=>{if(m.isConnected)pSeg();});
@@ -6963,6 +6963,16 @@ function agHorasChips(box,fecha,fisio,horaSel,onPick,soloSuyas,excl){
  }).catch(()=>{box.innerHTML='<small class="fp-mu">No se han podido cargar las horas</small>';});
 }
 // Cancela y ya no necesita más sesiones: alta (sin seguimiento) y, si se quiere, pedirle reseña
+// «No hace falta»: alta, no llegó a venir (no es paciente) o dejó el tratamiento. Así no sale como pendiente ni para llamar
+function agCerrar(c,onDone){const nom=capTit(String(c.paciente||'').trim());
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(nom)}</small><b>No hace falta seguir con él</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <p class="ap-txt">Elige por qué. No pasará a seguimiento ni saldrá como pendiente.</p>
+  <div class="ag-ops"><button type="button" data-et="alta"><b>Está de alta</b><small>Ya no necesita más sesiones</small></button><button type="button" data-et="noacudio"><b>No llegó a venir</b><small>No es paciente: canceló o faltó a su primera visita</small></button><button type="button" data-et="abandono"><b>Ha dejado el tratamiento</b><small>No quiere seguir</small></button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ m.querySelectorAll('[data-et]').forEach(o=>o.onclick=async()=>{const et=o.dataset.et;if(et==='alta'){m.remove();agAlta(c,onDone);return;}
+  o.disabled=true;const r=await agPost('seg-etapa',{pacienteId:c.pacienteId,etapa:et}).catch(()=>({ok:false}));
+  if(!r||!r.ok){o.disabled=false;toast('No se ha podido guardar',false);return;}
+  m.remove();toast(et==='noacudio'?'Apuntado: no llegó a venir':'Apuntado: ha dejado el tratamiento',true);try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}try{onDone&&onDone();}catch(_){}});}
 function agAlta(c,onDone){
  const nom=String(c.paciente||'').trim(),pila=capTit(nom.split(/\s+/)[0]||'');
  const m=hzModal(`<div class="hz-top"><div><small>${escH(capTit(nom))}</small><b>¿Ya no necesita más sesiones?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
@@ -11736,6 +11746,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-10-31',aviso:1,t:'En la cita, «No necesita más» ahora es «No hace falta»: eliges si está de alta, si no llegó a venir (no es paciente) o si ha dejado el tratamiento. Así no sale como pendiente ni para llamar.',ver:{sec:'agenda',pasos:[{el:'.ag-altab',txt:'Aquí.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
  {f:'2026-10-31',aviso:1,t:'Check-list: cada punto te dice si el panel lo ve hecho (✓) o qué te falta, con un botón «Arreglarlo» que te lleva directo. Lo que ya está bien se marca solo. Y a partir de las 19:00, si no lo has enviado, te lo recuerda.',ver:{sec:'rep',pasos:[{el:'.rp-c .rp-it',txt:'Cada punto te dice si te falta algo y te lleva a arreglarlo.'}]}},
  {f:'2026-10-31',aviso:1,dir:1,t:'Daily report: arriba del todo, «Faltan X cosas para cerrar el día», con todo lo pendiente en una lista (cobros, citas sin marcar, check-lists, atrasos). Toca cada una y te lleva a arreglarla. Si no falta nada: «Todo hecho».',ver:{sec:'rdia',pasos:[{el:'.rd-est',txt:'Aquí ves de un vistazo qué falta para cerrar el día al 100%.'}]}},
  {f:'2026-10-31',aviso:1,t:'Para mandarle a un paciente todas sus próximas citas por WhatsApp, junto con el enlace de su app: en la agenda, abre una de sus citas › «Enviarle sus citas» (o en su ficha › Citas › «Enviárselas»).',ver:{sec:'pac',pasos:[{el:'.fp-envc',txt:'Con este botón le mandas sus próximas citas y la app.',click:['#pacResultados .pt-r','.fp-seg button[data-t="citas"]']}]}},
@@ -13779,11 +13790,11 @@ function renderFormacion(wrap, ruta){
  {ti:'¿Está cobrada?',shot:'/img/school/panel-16-cobro.jpg',body:`Al abrir la cita te dice si está <b>cubierta por un pack</b>, <b>pagada como suelta</b> o <b>sin pagar</b>.<br><br>¿Sin pagar? <b>Facturar</b> te lleva a cobrarla. ¿Trae un bono de antes? <b>Tiene pack</b>.`,ver:{sec:'agenda',pasos:[{el:'.ag-sinfac || .hz-modal .ag-est',txt:'Aquí ves si la sesión está cobrada.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
  {ti:'Te contesta «ok» por WhatsApp',body:`Toca <b>Confirmada</b> en la cita. Así todo el equipo sabe que viene.`,ver:{sec:'agenda',pasos:[{el:'.ag-conf',txt:'Confirmada a mano.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
  {ti:'Hay que llamarle más adelante',shot:'/img/school/panel-17-botones.jpg',body:`<b>Cuándo:</b> cancela, está por reagendar o quieres saber cómo sigue.<br><br><b>Qué haces:</b> <b>Seguimiento</b>, con una nota. Pasa a Pendientes › Llamadas para que alguien le llame.`,ver:{sec:'agenda',pasos:[{el:'.ag-segb',txt:'Seguimiento.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
- {ti:'Ya está bien: el alta',shot:'/img/school/panel-13-alta.jpg',body:`<b>Cuándo:</b> el paciente ya no necesita más sesiones.<br><br><b>Qué haces:</b> <b>No necesita más › Dar el alta</b>. Después te ofrece mandarle la <b>reseña de Google</b> o la <b>encuesta de alta</b>.<br><br><b>Para qué:</b> así no sale como «sin próxima cita» ni le llamáis para nada.`,ver:{sec:'agenda',pasos:[{el:'.ag-altab',txt:'Aquí das el alta.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
+ {ti:'Ya está bien: el alta',shot:'/img/school/panel-13-alta.jpg',body:`<b>Cuándo:</b> el paciente ya no necesita más sesiones.<br><br><b>Qué haces:</b> <b>No hace falta › Está de alta</b> (o «No llegó a venir» si nunca fue paciente, o «Ha dejado el tratamiento»). Después te ofrece mandarle la <b>reseña de Google</b> o la <b>encuesta de alta</b>.<br><br><b>Para qué:</b> así no sale como «sin próxima cita» ni le llamáis para nada.`,ver:{sec:'agenda',pasos:[{el:'.ag-altab',txt:'Aquí das el alta.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
  {ti:'Cambiar día, hora o fisio',body:`<b>Cambiar día u hora:</b> la original queda como Reprogramada y se crea la nueva con todo copiado.<br><b>Cambiar fisio:</b> misma hora, otro fisio.`,ver:{sec:'agenda',pasos:[{el:'.ag-mov',txt:'Cambiar día u hora.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}}
  ],
  qs:[
- {q:'Un paciente te dice que ya está bien y no necesita volver. ¿Qué haces?',opts:['Nada','«No necesita más» › Dar el alta, y le mando la reseña o la encuesta','Borrar sus citas'],ok:1,fb:['Seguiría saliendo en «sin próxima cita».','¡Eso es!','No hace falta.']},
+ {q:'Un paciente te dice que ya está bien y no necesita volver. ¿Qué haces?',opts:['Nada','«No hace falta» › Está de alta, y le mando la reseña o la encuesta','Borrar sus citas'],ok:1,fb:['Seguiría saliendo en «sin próxima cita».','¡Eso es!','No hace falta.']},
  {q:'Un paciente cancela y no sabe cuándo podrá volver. ¿Cómo te aseguras de que alguien le llame?',opts:['Me lo apunto en un papel','Seguimiento, con una nota','Nada, ya llamará él'],ok:1,fb:['Se pierde fácil: mejor en el panel.','¡Bien! Pasa a Pendientes › Llamadas.','Muchos no llaman.']},
  {q:'Un paciente trae un bono de 10 pagado antes de cobrar por el panel. ¿Qué haces en su cita?',opts:['Tiene pack: pack de 10 y qué sesión es','Le cobro otra vez','Nada'],ok:0,fb:['¡Bien! Así sus sesiones cuentan bien.','¡No!','Saldría como «sin pagar».']},
  {q:'Te contesta «perfecto, allí estaré» por WhatsApp. ¿Qué haces?',opts:['Nada','Toco Confirmada en su cita','Le doy otra cita'],ok:1,fb:['Así nadie sabe que viene.','¡Eso es!','No hace falta.']}
