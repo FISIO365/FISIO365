@@ -987,8 +987,8 @@ ${url ? `<a href="${url}" style="display:block;text-align:center;background:#c25
 // A quien lo compró: su tarjeta y cómo le llega a la otra persona
 async function valeMailComprador(id, F) {
   const pila = escHtml(String(F.COMPRADOR || '').trim().split(/\s+/)[0]), para = escHtml(F.PARA || ''), ent = String(F.ENTREGA || '');
-  const extra = ent === 'su' ? `Se la enviaremos a <b>${escHtml(F['EMAIL DESTINO'] || '')}</b> el <b>${escHtml(valeFechaTxt(F['FECHA ENVÍO'], 'es'))}</b>. Aquí la tienes también para verla tú.` : ent === 'impresa' ? 'Te la tendremos impresa en el centro en menos de 24 h. Aquí la tienes también en digital.' : 'Aquí la tienes: puedes reenviarle el enlace o imprimirla para dársela.';
-  return valeMail(F.EMAIL, `Tu tarjeta regalo para ${F.PARA || ''} 🎁`, `Hola${pila ? ' ' + pila : ''},`, `¡Gracias! Tu regalo para <b>${para}</b> ya está listo: ${escHtml(VALE_T.es.ses(F.SESIONES || 1))} de ${escHtml(F.TIPO || '')}.<br><br>${extra}`, 'Ver la tarjeta regalo', enlaceVale(id));
+  const extra = ent === 'su' ? `Se la enviaremos a <b>${escHtml(F['EMAIL DESTINO'] || '')}</b> el <b>${escHtml(valeFechaTxt(F['FECHA ENVÍO'], 'es'))}</b>. Aquí la tienes también para verla tú.` : ent === 'impresa' ? 'Te la tendremos impresa en el centro en menos de 24 h. Aquí la tienes también en digital.' : `Ábrela y toca <b>«Enviársela a ${para}»</b>: se la mandas por WhatsApp en un momento. También la puedes descargar en PDF para imprimirla.`;
+  return valeMail(F.EMAIL, `Tu tarjeta regalo para ${F.PARA || ''} 🎁`, `Hola${pila ? ' ' + pila : ''},`, `¡Gracias! Tu regalo para <b>${para}</b> ya está listo: ${escHtml(VALE_T.es.ses(F.SESIONES || 1))} de ${escHtml(F.TIPO || '')}.<br><br>${extra}`, ent === 'su' ? 'Ver la tarjeta regalo' : `Enviársela a ${F.PARA || 'su destinatario'}`, enlaceVale(id) + '?c=1');
 }
 // A quien lo recibe (el día que eligió quien lo compró), en el idioma de la tarjeta
 async function valeMailDestino(id, F) {
@@ -1120,7 +1120,7 @@ function pdfImagen(img, ancho, alto, caja) { // una página (puntos) con la imag
   const xref = pos; add(Buffer.from(`xref\n0 6\n0000000000 65535 f \n${off.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('')}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`, 'binary'));
   return Buffer.concat(partes);
 }
-function paginaVale(F, id, imprimir) {
+function paginaVale(F, id, imprimir, comprador) {
   const e = escHtml, l = valeLang(F), T = VALE_T[l], C = CLI, url = enlaceVale(id), tel = C.tel || '672 89 39 49', wa = String(C.wa || '34672893949').replace(/\D/g, '');
   const tipo = valeTipo(F.TIPO, l), msg = String(F.MENSAJE || ''), oc = valeOc(F), OC = VALE_OC[oc], K = VALE_EST[oc] || VALE_EST.clasico, hola = n => OC.t[l].hola(n);
   const cadC = (() => { const d = new Date(String(F.CADUCA || '').slice(0, 10) + 'T12:00:00Z'); return isNaN(d) ? '' : new Intl.DateTimeFormat({ es: 'es-ES', ca: 'ca-ES', en: 'en-GB' }[l], { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(d).replace(/\./g, ''); })();
@@ -1161,7 +1161,7 @@ ${F.DE ? `<p class="de"><em>${T.dep}</em> ${e(F.DE)}</p>` : ''}</div>
 .stub{position:relative;display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fffaf5;border-radius:0 0 28px 28px;padding:19px 26px 21px;text-align:left;border-top:2px dashed #e4d9cf}
 
 .stub em{color:#9a8a7f}.stub>div:first-child{flex:none}.stub code{display:block;font:700 20px Poppins,sans-serif;letter-spacing:.12em;color:#141414;margin-top:3px;white-space:nowrap}.stub .r{flex:1;min-width:0;text-align:right}.stub .r span{display:block;font-size:13px;font-weight:600;color:#141414;margin-top:4px;white-space:nowrap}
-.go{display:block;margin-top:22px;background:#c2552e;color:#fff;border-radius:18px;padding:16px 18px;text-decoration:none;text-align:center;box-shadow:0 10px 22px rgba(194,85,46,.28);animation:sube .7s 1.2s both}.go b{display:block;font-size:17px;font-weight:700}.go small{display:block;font-size:12.5px;opacity:.88;margin-top:2px}
+.env{background:#fff;border:1.5px solid #c2552e;border-radius:18px;padding:14px 14px 12px;margin:0 0 18px;text-align:center}.env b{display:block;font-size:14.5px;color:#2b2420;margin-bottom:10px}.envb{display:flex;gap:8px;flex-wrap:wrap}.envb a,.envb button{flex:1 1 30%;font:600 13.5px Poppins,sans-serif;border:0;border-radius:12px;padding:11px 8px;cursor:pointer;text-decoration:none;background:#f6f1eb;color:#2b2420}.envb .w{background:#c2552e;color:#fff}.go{display:block;margin-top:22px;background:#c2552e;color:#fff;border-radius:18px;padding:16px 18px;text-decoration:none;text-align:center;box-shadow:0 10px 22px rgba(194,85,46,.28);animation:sube .7s 1.2s both}.go b{display:block;font-size:17px;font-weight:700}.go small{display:block;font-size:12.5px;opacity:.88;margin-top:2px}
 .lnk{display:flex;gap:10px;margin-top:12px}.lnk a,.lnk button{flex:1;font:600 13.5px Poppins,sans-serif;color:#141414;background:#fff;border:0;border-radius:14px;padding:13px 10px;text-decoration:none;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .res{font-size:12.5px;color:#6b5d54;margin:18px 4px 0;line-height:1.55}.pend{background:#fff6e5;color:#8a5a00;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:16px}
 @keyframes sube{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}@keyframes brilla{from{left:-60%}to{left:130%}}@keyframes dibuja{to{stroke-dashoffset:0}}@keyframes aparece{to{opacity:1}}
@@ -1171,6 +1171,7 @@ ${F.DE ? `<p class="de"><em>${T.dep}</em> ${e(F.DE)}</p>` : ''}</div>
 @media(max-width:360px){.card{padding:24px 22px 24px}.para b{font-size:29px}.num>b{font-size:64px}}
 ${imprimir ? '@page{size:A5;margin:12mm}body{background:#fff;padding:0}.c{max-width:none}.np{display:none!important}.cardw{filter:none;animation:none;max-width:118mm;margin:0 auto}.sh,.nieve{display:none}.ilu *{animation:none!important;stroke-dashoffset:0!important;opacity:1!important}.stub{border:1px solid #eee;border-top:2px dashed #ddd}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}' : '@media print{body{background:#fff;padding:0}.np{display:none!important}.cardw{filter:none;animation:none}.sh,.nieve{display:none}.ilu *{animation:none!important;stroke-dashoffset:0!important;opacity:1!important}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'}
 </style></head><body><div class="c">${imprimir ? '' : `<p class="hi np">${T.tit}</p><h1 class="np">${e(F.PARA ? hola(F.PARA) : T.tit)}</h1>`}
+${comprador && !imprimir ? `<div class="env np"><b>${e(({ es: 'Así la verá ', ca: 'Així la veurà ', en: 'This is how ' })[l] + (F.PARA || '') + ({ es: '. Envíasela:', ca: '. Envia-la:', en: ' will see it. Send it:' })[l])}</b><div class="envb"><a class="w" href="https://wa.me/?text=${encodeURIComponent(({ es: `🎁 ¡${F.PARA || ''}, tienes un regalo! Ábrelo aquí: `, ca: `🎁 ${F.PARA || ''}, tens un regal! Obre'l aquí: `, en: `🎁 ${F.PARA || ''}, you have a gift! Open it here: ` })[l] + url)}" target="_blank" rel="noopener">${({ es: 'Por WhatsApp', ca: 'Per WhatsApp', en: 'On WhatsApp' })[l]}</a><button type="button" id="comp">${({ es: 'Otra app', ca: 'Una altra app', en: 'Another app' })[l]}</button><button type="button" id="cop">${({ es: 'Copiar enlace', ca: 'Copiar enllaç', en: 'Copy link' })[l]}</button></div></div><script>(function(){var u=${JSON.stringify(url)},t=${JSON.stringify(F.PARA ? hola(F.PARA) : T.tit)};var c=document.getElementById('comp');if(!navigator.share)c.style.display='none';c.onclick=function(){navigator.share({title:t,url:u}).catch(function(){});};var k=document.getElementById('cop');k.onclick=function(){try{navigator.clipboard.writeText(u);k.textContent='✓';}catch(e){}};})();<\/script>` : ''}
 ${tarjeta}
 ${pend && !imprimir ? '<p class="pend np">Esta tarjeta aún está pendiente de pago.</p>' : ''}
 ${imprimir ? '' : `<a class="go np" href="${e(reservar)}"><b>${BT[0]}</b><small>${BT[1]}</small></a><div class="lnk np"><a href="https://wa.me/${wa}?text=${encodeURIComponent(T.wa(cod))}" target="_blank" rel="noopener">${BT[2]}</a><a href="${e(url)}.pdf" target="_blank" rel="noopener">${BT[3]}</a></div>`}
@@ -1293,7 +1294,7 @@ function ata(){var at=document.getElementById('atr');if(at)at.onclick=function()
    .catch(function(e){sig.disabled=false;sig.textContent=S.pago==='tarjeta'?'Pagar '+eur(opcion().p):'Confirmar el regalo';er(e.message||'No se ha podido guardar. Inténtalo de nuevo.');});};}}
 function copia(b,t){try{navigator.clipboard.writeText(t);b.textContent='Copiado';setTimeout(function(){b.textContent='Copiar';},1500);}catch(e){}}
 function fin(H){document.body.classList.add('fin');var p=H.pago,h='<div class="ok fi">'+G;
- if(p==='tarjeta'&&H.pagado){h+='<h1>¡Gracias! Ya está pagada</h1><p class="sub">'+(H.entrega==='su'?'Le llegará a su email el día que elegiste. ':'')+'Te hemos enviado la tarjeta a tu email.</p><a class="bt" href="'+esc(H.link)+'">Ver la tarjeta regalo</a>';}
+ if(p==='tarjeta'&&H.pagado){h+='<h1>¡Gracias! Ya está pagada</h1><p class="sub">'+(H.entrega==='su'?'Le llegará a su email el día que elegiste. ':'')+'Te hemos enviado la tarjeta a tu email.</p><a class="bt" href="'+esc(H.link)+'">Ver la tarjeta y enviársela</a>';}
  else if(p==='tarjeta'){h+='<h1>El pago no se ha completado</h1><p class="sub">No se ha hecho ningún cargo. Puedes volver a intentarlo o elegir otra forma de pago.</p><button type="button" class="bt" id="rei">Volver a intentarlo</button><button type="button" class="bt sec" id="otra">Elegir otra forma de pago</button>';}
  else if(p==='transferencia'){var con='Vale regalo - '+(H.nombre||S.nombre||'');h+='<h1>¡Gracias, ya casi está!</h1><p class="sub">Haz la transferencia y te enviamos la tarjeta en cuanto llegue (menos de 24 h).</p><div class="ib"><div class="ibr"><div><small>Titular</small><b>'+esc(D.razon)+'</b></div></div><div class="ibr"><div><small>IBAN</small><b>'+esc(D.iban)+'</b></div><button type="button" class="cp" data-c="'+esc(String(D.iban).replace(/\\s/g,''))+'">Copiar</button></div><div class="ibr"><div><small>Importe</small><b>'+eur(H.importe)+'</b></div></div><div class="ibr"><div><small>Concepto</small><b>'+esc(con)+'</b></div><button type="button" class="cp" data-c="'+esc(con)+'">Copiar</button></div></div>';}
  else{h+='<h1>¡Perfecto!</h1><p class="sub">Pásate por '+esc(D.marca)+(D.dir?' ('+esc(D.dir)+')':'')+' y pagas con tarjeta o efectivo, como te venga mejor. En cuanto esté pagada, te la preparamos en menos de 24 h.</p>';}
@@ -3034,7 +3035,7 @@ module.exports = async function handler(req, res) {
     if (m && sigOk(m[1], m[2])) { // vuelta de Stripe (pagado o cancelado)
       const r = await at(`${VALES}/${m[1]}`); let F = r.fields || {};
       let pagado = F.ESTADO === 'PAGADO'; if (!pagado && !req.query.c) pagado = await valeVerificarStripe(r.id, F, String(req.query.sid || '')).catch(() => false);
-      D.vuelta = { id: r.id, s: m[2], nombre: F.COMPRADOR || '', pago: F.PAGO || 'tarjeta', importe: F.IMPORTE || 0, pagado, link: enlaceVale(r.id), entrega: F.ENTREGA || '' };
+      D.vuelta = { id: r.id, s: m[2], nombre: F.COMPRADOR || '', pago: F.PAGO || 'tarjeta', importe: F.IMPORTE || 0, pagado, link: enlaceVale(r.id) + '?c=1', entrega: F.ENTREGA || '' };
     } else if (req.query.nuevo) D.nuevo = 1;
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(200).send(paginaRegalo(D));
   }
@@ -3054,7 +3055,7 @@ module.exports = async function handler(req, res) {
       catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/regalo/preview.jpg'); return res.status(302).end(); }
     }
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
-    return res.status(200).send(paginaVale(F, id, req.query.p === '1'));
+    return res.status(200).send(paginaVale(F, id, req.query.p === '1', req.query.c === '1'));
   }
   if (action === 'tarjeta-img' || action === 'tarjeta-pagina' || action === 'tarjeta-og') {
     const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(404).end();
