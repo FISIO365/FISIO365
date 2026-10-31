@@ -37,7 +37,7 @@ html{overflow-x:clip}body{font-family:var(--font);background:var(--cream);color:
 .li::placeholder{color:rgba(255,255,255,0.25)}.li:focus{border-color:var(--lila)}
 .lbtn{width:100%;font-family:var(--font);font-size:14px;font-weight:700;padding:13px;background:white;color:black;border:none;border-radius:var(--r-sm);cursor:pointer;transition:opacity .2s}
 .lbtn:hover{opacity:.9}.lbtn:disabled{opacity:.4}
-.lerr{font-size:12px;color:#ff6b6b;margin-top:10px;text-align:center;min-height:18px}
+.lerr{font-size:12px;color:#ff6b6b;margin-top:10px;text-align:center;min-height:18px}.lalt{display:block;width:100%;margin-top:14px;background:none;border:0;color:#7d6a60;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:3px}.lcod-t{color:#1a1a1a;font-size:20px;font-weight:700;text-align:center;margin:-1.2rem 0 .4rem}.lcod-s{color:#7d6a60;font-size:13px;text-align:center;line-height:1.5;margin-bottom:1.4rem}.lcod-in{letter-spacing:8px;text-align:center;font-size:22px}
 
 /* PANEL LAYOUT */
 #panelScreen{display:none}
@@ -1844,8 +1844,8 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  <div class="lb">
  <div class="logo-fisio" style="font-size:48px;font-weight:800;color:#f5f2ee;letter-spacing:-1px;margin-bottom:2.5rem;text-align:center">FISIO<span style="color:var(--lila)">365</span></div>
  <div id="altaBox" hidden>
- <div style="color:#f5f2ee;font-size:20px;font-weight:700;text-align:center;margin:-1.2rem 0 .4rem">Crea tu clínica</div>
- <div style="color:#bdb6ae;font-size:13px;text-align:center;line-height:1.5;margin-bottom:1.6rem">Es la primera vez que se abre el panel. Tú serás el primer usuario, con acceso a todo. Lo demás se completa luego en Administración › Ajustes.</div>
+ <div style="color:#1a1a1a;font-size:20px;font-weight:700;text-align:center;margin:-1.2rem 0 .4rem">Crea tu clínica</div>
+ <div style="color:#7d6a60;font-size:13px;text-align:center;line-height:1.5;margin-bottom:1.6rem">Es la primera vez que se abre el panel. Tú serás el primer usuario, con acceso a todo. Lo demás se completa luego en Administración › Ajustes.</div>
  <label class="llbl">Nombre de la clínica</label><input class="li" type="text" id="altaClinica" autocomplete="organization" placeholder="Ej.: Fisioterapia Mar">
  <label class="llbl">Tu nombre</label><input class="li" type="text" id="altaNombre" autocomplete="name" autocapitalize="words" placeholder="Con el que entrarás">
  <label class="llbl">Tu PIN (4 a 8 números)</label><input class="li" type="password" id="altaPin" inputmode="numeric" maxlength="8" placeholder="••••">
@@ -1868,6 +1868,17 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  </div>
  <button class="lbtn" id="loginBtn" onclick="doLogin()">Entrar al panel</button>
  <div class="lerr" id="loginErr"></div>
+ <button class="lalt" type="button" onclick="codigoVer(1)">¿No te acuerdas? Entra con un código por email</button>
+ </div>
+ <div id="codigoBox" hidden>
+ <div class="lcod-t">Entra con un código</div>
+ <div class="lcod-s" id="codS">Escribe tu email y te mandamos un código de 6 números.</div>
+ <label class="llbl">Tu email</label>
+ <input class="li" type="email" id="codEmail" autocomplete="email" inputmode="email" placeholder="tu@email.com">
+ <div id="codPaso2" hidden><label class="llbl">Código</label><input class="li lcod-in" type="text" id="codNum" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······"></div>
+ <button class="lbtn" id="codBtn" type="button" onclick="codigoPaso()">Enviarme el código</button>
+ <div class="lerr" id="codErr"></div>
+ <button class="lalt" type="button" onclick="codigoVer(0)">Volver a entrar con contraseña</button>
  </div>
  </div>
 </div>
@@ -2153,6 +2164,17 @@ function togglePwd(){
  }
 }
 
+// Entrar con un código por email: se pide, llega al email del equipo (el de su ficha) y con él se entra como siempre
+function codigoVer(on){$('loginBox').hidden=!!on;$('codigoBox').hidden=!on;$('codErr').textContent='';if(on){$('codPaso2').hidden=true;$('codBtn').textContent='Enviarme el código';$('codS').textContent='Escribe tu email y te mandamos un código de 6 números.';setTimeout(()=>$('codEmail').focus(),50);}}
+async function codigoPaso(){const email=$('codEmail').value.trim(),b=$('codBtn'),paso2=!$('codPaso2').hidden;$('codErr').textContent='';
+ if(!email){$('codErr').textContent='Escribe tu email';return;}
+ b.disabled=true;const t0=b.textContent;b.textContent=paso2?'Comprobando…':'Enviando…';
+ try{if(!paso2){const r=await (await fetch('/api/schedule?action=panel-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})})).json();
+   if(!r.ok)throw new Error(r.error||'');$('codS').textContent=r.msg||'Te hemos enviado el código.';$('codPaso2').hidden=false;b.textContent='Entrar';setTimeout(()=>$('codNum').focus(),50);}
+  else{const r=await (await fetch('/api/schedule?action=panel-codigo-ok',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo:$('codNum').value})})).json();
+   if(!r.ok)throw new Error(r.error||'');$('loginNombre').value=r.nombre;$('loginPwd').value=r.clave;codigoVer(0);await doLogin();return;}}
+ catch(e){$('codErr').textContent=e.message||'Error de conexión';b.textContent=t0;}
+ b.disabled=false;}
 async function doLogin(silencioso){
  const nombre=($('loginNombre').value||'').trim();
  const password=($('loginPwd').value||'').trim();
@@ -11872,6 +11894,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-10-31',t:'¿No te acuerdas de la contraseña? En la pantalla de entrada, «Entra con un código por email»: te llega un código de 6 números al email de tu ficha y entras con él.'},
  {f:'2026-10-31',dir:1,t:'Administración › Ajustes › «Importar pacientes»: sube el Excel o CSV de otro programa y se crean las fichas sin duplicar a los que ya tienes.'},
  {f:'2026-10-31',dir:1,t:'Administración › Ajustes › «Reservas desde tu web»: tu enlace para que los pacientes reserven solos y un botón «Pide tu cita» ya hecho para pegar en la web, Google o Instagram.'},
  {f:'2026-10-31',t:'Sorteo de reseñas: al ganador se le apunta la sesión gratis en su ficha (arriba, en el resumen). Cuando venga a usarla, dale a «Descontar». Si tiene pack, decides tú si se la descuentas.'},

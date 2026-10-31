@@ -2561,6 +2561,36 @@ module.exports = async function handler(req, res) {
   let PLANT = {};
   try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); LEGAL = legalDe(c0.legal); PLANT = c0.plantillas || {}; } catch (e) { LEGAL = legalDe(); }
   { const _send = res.send.bind(res); res.send = b => _send(typeof b === 'string' && !/json/i.test(String(res.getHeader('Content-Type') || '')) ? MARCA.marcar(b, CLI) : b); }
+  // Entrar al panel con un código por email (sin acordarse de la contraseña): se pide el código y se comprueba
+  if (action === 'panel-codigo' || action === 'panel-codigo-ok') {
+    if (req.method !== 'POST') return res.status(405).json({ ok: false });
+    const q = req.body || {}, email = String(q.email || '').trim().toLowerCase(), cr = require('crypto');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(200).json({ ok: false, error: 'Escribe tu email' });
+    const hash = c => cr.createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('login:' + email + ':' + c).digest('hex');
+    const COD = (await ajuste('login-codigos', {})) || {}, ahora = Date.now();
+    Object.keys(COD).forEach(k => { if (!COD[k] || COD[k].exp < ahora - 3600e3) delete COD[k]; });
+    if (action === 'panel-codigo') {
+      if (COD[email] && ahora - COD[email].t < 45e3) return res.status(200).json({ ok: false, error: 'Ya te lo hemos enviado. Espera un minuto antes de pedir otro.' });
+      const eq = await todosT(FISIOS_TABLE, `fields[]=Name&fields[]=EMAIL&fields[]=${encodeURIComponent('FECHA BAJA')}&fields[]=Password`).catch(() => []);
+      const yo = eq.find(r => String(r.fields.EMAIL || '').trim().toLowerCase() === email && !r.fields['FECHA BAJA'] && r.fields.Password);
+      const enviado = 'Si tu email está en el equipo, te llega un código en un momento. Mira también en «Spam».';
+      if (!yo) return res.status(200).json({ ok: true, msg: enviado });
+      const codigo = String(cr.randomInt(100000, 1000000));
+      COD[email] = { h: hash(codigo), exp: ahora + 10 * 60e3, t: ahora, n: 0 }; await guardarAjuste('login-codigos', COD, '');
+      if (process.env.SIN_ENVIOS) return res.status(200).json({ ok: true, msg: `Esto es la demo: no se envían emails. Tu código es ${codigo}.` });
+      await valeMail(email, `Tu código para entrar: ${codigo}`, `Hola, ${String(yo.fields.Name || '').split(' ')[0]}:`, `Tu código para entrar en el panel es <b style="font-size:26px;letter-spacing:4px;color:#1a1a1a">${codigo}</b><br><br>Caduca en 10 minutos. Si no lo has pedido tú, ignora este email.`, '', '');
+      return res.status(200).json({ ok: true, msg: enviado });
+    }
+    const x = COD[email], c = String(q.codigo || '').replace(/\D/g, '');
+    if (!x || x.exp < ahora) return res.status(200).json({ ok: false, error: 'El código ha caducado. Pide otro.' });
+    if (x.n >= 5) return res.status(200).json({ ok: false, error: 'Demasiados intentos. Pide otro código.' });
+    if (c.length !== 6 || !cr.timingSafeEqual(Buffer.from(hash(c)), Buffer.from(x.h))) { x.n++; await guardarAjuste('login-codigos', COD, ''); return res.status(200).json({ ok: false, error: 'Ese código no es correcto' }); }
+    delete COD[email]; await guardarAjuste('login-codigos', COD, '');
+    const eq = await todosT(FISIOS_TABLE, `fields[]=Name&fields[]=EMAIL&fields[]=${encodeURIComponent('FECHA BAJA')}&fields[]=Password`).catch(() => []);
+    const yo = eq.find(r => String(r.fields.EMAIL || '').trim().toLowerCase() === email && !r.fields['FECHA BAJA'] && r.fields.Password);
+    if (!yo) return res.status(200).json({ ok: false, error: 'No se ha encontrado tu usuario' });
+    return res.status(200).json({ ok: true, nombre: yo.fields.Name, clave: String(yo.fields.Password).trim() });
+  }
   if (action === 'cita-efectos') { // reserva desde la app: lo mismo que al dar cita en el panel (Por llamar, lista de espera, Por reagendar)
     const id = String(req.query.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false });
     const c = await at(`tblTPlcuiSjQngkaD/${id}`).catch(() => ({})), F = c.fields || {}, pid = (F['RELACIÓN - CITA'] || [])[0], fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '');
