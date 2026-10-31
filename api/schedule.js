@@ -2205,7 +2205,7 @@ const CONF_DEF = {
   },
   tarjeta: { importe: 10, meses: 6 },
   holded: { borrador: true, rgpd: TEXTO_RGPD },
-  clinica: { razon: 'Fourth Dynamic, S.L.', nif: 'B56503592', direccion: 'C/ Gran de Sant Andreu, 163 · 08030 Barcelona', tel: '672 89 39 49', email: 'info@fisioterapia365.com' },
+  clinica: MARCA.OTRA_CLINICA ? {} : { razon: 'Fourth Dynamic, S.L.', nif: 'B56503592', direccion: 'C/ Gran de Sant Andreu, 163 · 08030 Barcelona', tel: '672 89 39 49', email: 'info@fisioterapia365.com' }, // otra clínica: vacío hasta que lo rellene
   cancelacion: { horas: 24, texto: 'Si no puedes venir, avísanos con al menos 24 horas de antelación para poder dar tu hora a otra persona.' },
   legal: {},
   plantillas: {}, // mensajes de WhatsApp escritos por la clínica (vacío = los de siempre)
@@ -2518,6 +2518,23 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'pagos-tick') { // lo llaman el panel (cada 5 min) y la app del paciente al abrirse: cancela las citas de quien no pagó a tiempo
     res.setHeader('Cache-Control', 'no-store'); const n = await caducarPagos().catch(() => 0); return res.status(200).json({ ok: true, n });
+  }
+  // Alta de una clínica nueva: solo mientras no haya ningún usuario. Crea el primero (dirección, con todos los accesos) y los datos básicos
+  if (action === 'alta-estado') { res.setHeader('Cache-Control', 'no-store'); const d = await at('tbl2mLUrnaKCFTs6g?pageSize=1&fields[]=Name').catch(() => ({})); return res.status(200).json({ ok: true, vacia: !!(d && Array.isArray(d.records) && !d.records.length) }); }
+  if (action === 'alta-clinica' && req.method === 'POST') {
+    const b = req.body || {}, t = (k, n) => String(b[k] || '').trim().replace(/\s+/g, ' ').slice(0, n || 80);
+    const d0 = await at('tbl2mLUrnaKCFTs6g?pageSize=1&fields[]=Name'); if (!d0 || !Array.isArray(d0.records)) return res.status(500).json({ ok: false, error: 'No se ha podido comprobar' });
+    if (d0.records.length) return res.status(403).json({ ok: false, error: 'Esta clínica ya está dada de alta' });
+    const marca = t('clinica', 60), nombre = t('nombre', 60), pin = String(b.pin || '').trim(), tel = t('tel', 20), email = t('email', 80).toLowerCase();
+    if (marca.length < 2 || nombre.length < 2) return res.status(400).json({ ok: false, error: 'Escribe el nombre de la clínica y el tuyo' });
+    if (!/^\d{4,8}$/.test(pin)) return res.status(400).json({ ok: false, error: 'El PIN tiene que tener de 4 a 8 números' });
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ ok: false, error: 'El email no parece correcto' });
+    const acc = {}; ['programas', 'anamnesis', 'pacientes', 'school', 'checklist', 'rendimiento', 'seguimiento', 'agenda', 'chat', 'callin', 'captacion', 'recordatorios', 'ejercicios', 'estadisticas', 'admin', 'sugerencias'].forEach(k => { acc['acc_' + k] = true; });
+    const c = await at('tbl2mLUrnaKCFTs6g', { method: 'POST', body: JSON.stringify({ records: [{ fields: { Name: nombre, Password: pin, Role: 'admin', 'DIRECCIÓN': true, EMAIL: email || undefined, TELÉFONO: tel || undefined, 'FECHA ALTA': new Date().toISOString().slice(0, 10), ...acc } }], typecast: true }) });
+    if (c.error) return res.status(500).json({ ok: false, error: c.error.message || 'No se ha podido crear' });
+    const cur = (await ajuste('config', null)) || {}; cur.clinica = Object.assign({}, cur.clinica || {}, { marca, tel, email, direccion: t('direccion', 160), ciudad: t('ciudad', 60) });
+    await guardarAjuste('config', cur, nombre).catch(() => {});
+    return res.status(200).json({ ok: true, nombre });
   }
   if (action === 'clinica-pub') { // lo público de la clínica para la app y el panel (nombre, teléfono, opciones…)
     const C = CLI; res.setHeader('Cache-Control', 'public, max-age=60');

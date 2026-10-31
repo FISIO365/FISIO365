@@ -1804,7 +1804,19 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 <!-- LOGIN -->
 <div id="loginScreen">
  <div class="lb">
- <div style="font-size:48px;font-weight:800;color:#f5f2ee;letter-spacing:-1px;margin-bottom:2.5rem;text-align:center">FISIO<span style="color:var(--lila)">365</span></div>
+ <div class="logo-fisio" style="font-size:48px;font-weight:800;color:#f5f2ee;letter-spacing:-1px;margin-bottom:2.5rem;text-align:center">FISIO<span style="color:var(--lila)">365</span></div>
+ <div id="altaBox" hidden>
+ <div style="color:#f5f2ee;font-size:20px;font-weight:700;text-align:center;margin:-1.2rem 0 .4rem">Crea tu clínica</div>
+ <div style="color:#bdb6ae;font-size:13px;text-align:center;line-height:1.5;margin-bottom:1.6rem">Es la primera vez que se abre el panel. Tú serás el primer usuario, con acceso a todo. Lo demás se completa luego en Administración › Ajustes.</div>
+ <label class="llbl">Nombre de la clínica</label><input class="li" type="text" id="altaClinica" autocomplete="organization" placeholder="Ej.: Fisioterapia Mar">
+ <label class="llbl">Tu nombre</label><input class="li" type="text" id="altaNombre" autocomplete="name" autocapitalize="words" placeholder="Con el que entrarás">
+ <label class="llbl">Tu PIN (4 a 8 números)</label><input class="li" type="password" id="altaPin" inputmode="numeric" maxlength="8" placeholder="••••">
+ <label class="llbl">Teléfono de la clínica</label><input class="li" type="tel" id="altaTel" autocomplete="tel" placeholder="Opcional">
+ <label class="llbl">Email de la clínica</label><input class="li" type="email" id="altaEmail" autocomplete="email" placeholder="Opcional">
+ <button class="lbtn" id="altaBtn" type="button">Crear mi clínica</button>
+ <div class="lerr" id="altaErr"></div>
+ </div>
+ <div id="loginBox">
  <label class="llbl">Nombre</label>
  <input class="li" type="text" id="loginNombre" placeholder="" autocomplete="off" autocapitalize="words">
  <label class="llbl">Contraseña</label>
@@ -1818,6 +1830,7 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  </div>
  <button class="lbtn" id="loginBtn" onclick="doLogin()">Entrar al panel</button>
  <div class="lerr" id="loginErr"></div>
+ </div>
  </div>
 </div>
 
@@ -2060,6 +2073,16 @@ document.addEventListener('DOMContentLoaded',()=>{
  // Sesión guardada: entrar directamente (así no se cierra al recargar o al actualizar la app)
  try{const ses=JSON.parse(localStorage.getItem('f365_panel_sesion')||'null');if(ses&&ses.n&&ses.p){$('loginNombre').value=ses.n;$('loginPwd').value=ses.p;$('loginBtn').textContent='Entrando…';doLogin(true);}}catch(e){}
  document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarLightbox();});
+ // Clínica nueva sin ningún usuario: en vez del login, «Crea tu clínica»
+ fetch('/api/schedule?action=alta-estado').then(r=>r.json()).then(d=>{if(!d||!d.vacia)return;$('loginBox').hidden=true;$('altaBox').hidden=false;$('altaClinica').focus();}).catch(()=>{});
+ $('altaBtn').onclick=async()=>{const b=$('altaBtn'),v=id=>($(id).value||'').trim(),e=$('altaErr');e.textContent='';
+  const body={clinica:v('altaClinica'),nombre:v('altaNombre'),pin:v('altaPin'),tel:v('altaTel'),email:v('altaEmail')};
+  if(body.clinica.length<2||body.nombre.length<2){e.textContent='Escribe el nombre de la clínica y el tuyo';return;}
+  if(!/^\d{4,8}$/.test(body.pin)){e.textContent='El PIN tiene que tener de 4 a 8 números';return;}
+  b.disabled=true;b.textContent='Creando…';
+  try{const d=await (await fetch('/api/schedule?action=alta-clinica',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();if(!d.ok)throw new Error(d.error||'No se ha podido crear');
+   $('loginNombre').value=d.nombre;$('loginPwd').value=body.pin;$('altaBox').hidden=true;$('loginBox').hidden=false;doLogin();}
+  catch(err){b.disabled=false;b.textContent='Crear mi clínica';e.textContent=err.message;}};
 });
 
 function toggleWikiInfo(i){

@@ -25,10 +25,14 @@ const OPC_DEF = { sorteo: true, bomba: true };
 // Limpia un valor para poder meterlo en HTML, JS y JSON sin romper nada
 const limpio = (v, n) => String(v == null ? '' : v).replace(/[\r\n\t]+/g, ' ').replace(/["'`\\<>$]/g, '').trim().slice(0, n || 160);
 
-// Junta lo guardado con lo de siempre (lo vacío vuelve al valor de FISIO365)
-function datos(guardado) {
-  const g = guardado || {}, o = {};
-  Object.keys(DEF).forEach(k => { const v = limpio(g[k], 200); o[k] = v || DEF[k]; });
+// ¿Es otra clínica (no FISIO365)? Se indica con la variable CLINICA en su despliegue (p. ej. CLINICA=demo).
+// En otra clínica lo que no haya rellenado queda VACÍO (nunca los datos de FISIO365: ni su IBAN, ni su teléfono…).
+const OTRA_CLINICA = !!process.env.CLINICA && String(process.env.CLINICA).toLowerCase() !== 'fisio365';
+const VACIO = k => k === 'color' ? DEF.color : k === 'marca' ? limpio(process.env.CLINICA_NOMBRE || 'Tu clínica', 60) : '';
+// Junta lo guardado con lo de siempre (lo vacío vuelve al valor de FISIO365; en otra clínica, a vacío)
+function datos(guardado, deFisio365) {
+  const g = guardado || {}, o = {}, otra = OTRA_CLINICA && !deFisio365;
+  Object.keys(DEF).forEach(k => { const v = limpio(g[k], 200); o[k] = v || (otra ? VACIO(k) : DEF[k]); });
   // Compatibilidad con los nombres antiguos de «Datos de la clínica»
   if (g.tel && !g.wa) { const d = String(g.tel).replace(/\D/g, ''); if (d.length === 9) o.wa = '34' + d; }
   const calle = s => String(s || '').split(/·|,(?=\s*\d{5})/)[0].trim();
@@ -65,7 +69,7 @@ function paresColor(color) {
 
 // Pares «texto de FISIO365 → texto de la clínica», de más largo a más corto. Solo los que cambian.
 function pares(C) {
-  const D = datos(null), mayus = s => String(s).toUpperCase();
+  const D = datos(null, true), mayus = s => String(s).toUpperCase();
   // [texto de FISIO365, dato de la clínica del que depende, por qué se cambia]. Solo si ese dato es distinto del de FISIO365.
   const L = [
     ['Carrer Gran de Sant Andreu, 163<br>Sant Andreu – 08030 Barcelona', 'direccion'],
@@ -91,7 +95,8 @@ function pares(C) {
     ['(Barcelona)', 'ciudad', v => '(' + v + ')'],
     [D.marca, 'marca']
   ];
-  const P = L.filter(([, k]) => C[k] && C[k] !== D[k]).map(([a, k, f]) => [a, f ? f(C[k]) : C[k]]).filter(([a, b]) => a !== b);
+  // En otra clínica también se cambian aunque su dato esté vacío (mejor un hueco que el teléfono o el IBAN de FISIO365)
+  const P = L.filter(([a, k]) => a && (C[k] || OTRA_CLINICA) && C[k] !== D[k]).map(([a, k, f]) => [a, f ? (C[k] ? f(C[k]) : '') : (C[k] || '')]).filter(([a, b]) => a !== b);
   if (C.logoV) P.unshift(['/informe/logo.png', '/api/schedule?action=clinica-logo&v=' + C.logoV]);
   if (iconoPropio(C)) P.unshift(['/icons/icon-512.png', iconoUrl(C, 512)], ['/icons/icon-192.png', iconoUrl(C, 192)], ['/icono.png', iconoUrl(C, 192)]);
   // Otra clínica en su propio despliegue: los enlaces apuntan a su app (APP_URL), no a la de FISIO365
@@ -114,4 +119,4 @@ function marcar(txt, C, json) {
 function iconoPropio(C) { return !!(C && (C.iconoV || (C.marca && C.marca !== DEF.marca))); }
 function iconoVer(C) { let h = 0; String([C.iconoV, C.marca, C.color].join('|')).split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return h.toString(36); }
 function iconoUrl(C, s, m) { return '/api/schedule?action=app-icono&s=' + (s || 512) + (m ? '&m=1' : '') + '&v=' + iconoVer(C); }
-module.exports = { DEF, OPC_DEF, datos, pares, paresColor, marcar, limpio, iconoPropio, iconoUrl };
+module.exports = { OTRA_CLINICA, DEF, OPC_DEF, datos, pares, paresColor, marcar, limpio, iconoPropio, iconoUrl };
