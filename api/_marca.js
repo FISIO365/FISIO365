@@ -72,6 +72,7 @@ function pares(C) {
   const D = datos(null, true), mayus = s => String(s).toUpperCase();
   // [texto de FISIO365, dato de la clínica del que depende, por qué se cambia]. Solo si ese dato es distinto del de FISIO365.
   const L = [
+    ['Calle Malalts 74, bajos 2, 08030 Barcelona', 'direccion'], // domicilio social de FISIO365 (política de privacidad)
     ['Carrer Gran de Sant Andreu, 163<br>Sant Andreu – 08030 Barcelona', 'direccion'],
     ['Carrer Gran de Sant Andreu, 163 · Sant Andreu – 08030 Barcelona', 'direccion'],
     [D.direccion, 'direccion'],
