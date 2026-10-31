@@ -1452,9 +1452,11 @@ let PROMOS=[
 function regaloOcHoy(){const iso=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid'}).format(new Date()),y=+iso.slice(0,4),md=iso.slice(5);
  if(md>='11-15'||md<='01-06')return 'navidad';if(md>='01-25'&&md<='02-14')return 'sanvalentin';if(md>='03-01'&&md<='03-19')return 'padre';
  const d=1+((7-new Date(Date.UTC(y,4,1)).getUTCDay())%7);if(md>='04-15'&&md<='05-'+String(d).padStart(2,'0'))return 'madre';return 'clasico';}
-function promoRegalo(p){if(!p||!/^\/regalo\/?$/.test(p.accion||''))return p;const o=regaloOcHoy();if(o==='clasico')return p;
+// El enlace de la tarjeta regalo puede venir como /regalo o con la web delante (https://…/regalo)
+const esRegalo=a=>/^(https?:\/\/[^/]+)?\/regalo\/?(\?.*)?$/.test(String(a||'').trim());
+function promoRegalo(p){if(!p||!esRegalo(p.accion))return p;const o=regaloOcHoy();if(o==='clasico')return p;
  const T={navidad:'Regala fisioterapia esta Navidad',sanvalentin:'Regala fisioterapia por San Valentín',padre:'Regala fisioterapia el Día del Padre',madre:'Regala fisioterapia el Día de la Madre'};
- return Object.assign({},p,{titulo:/^Regala fisioterapia$/i.test(String(p.titulo||'').trim())?T[o]:p.titulo,accion:'/regalo?o='+o});}
+ return Object.assign({},p,{titulo:/^Regala fisioterapia$/i.test(String(p.titulo||'').trim())?T[o]:p.titulo,accion:String(p.accion).trim().replace(/\?.*$/,'').replace(/\/$/,'')+'?o='+o});}
 // Tarjeta «Regala fisioterapia» de Hoy: el mismo dibujo de línea fina de /regalo (según la ocasión), que se dibuja solo y se mueve
 const RG_ILU = {
   clasico: '<g class="mv lazo"><path pathLength="1" d="M60 48c-4-10-16-14-18-8s10 8 18 8zM60 48c4-10 16-14 18-8s-10 8-18 8z"/></g><rect pathLength="1" x="24" y="48" width="72" height="14" rx="4"/><path pathLength="1" d="M30 62h60v34a5 5 0 0 1-5 5H35a5 5 0 0 1-5-5z"/><path pathLength="1" d="M60 48v14M60 62v39"/>',
@@ -1472,7 +1474,7 @@ function htmlPromo(p,i,solo){p=promoRegalo(p);const b=p.boton?`<div class="pr-b"
 function accionPromo(i){const p=promoRegalo(PROMOS[i]);if(!p)return;if(p.accion==='reservar')return abrirReserva();if(p.accion==='chat')return showSection('mensajes');if(p.accion==='packs')return abrirPacks();if(/^(https?:|\/)/.test(p.accion||''))window.open(p.accion,'_blank');}
 function pintarPromos(){const act=promosActivas();const H=document.getElementById('promosHoy'),L=document.getElementById('promosLista');
  // En Hoy solo sale la tarjeta regalo (bonita); los packs y el resto de promociones están en el menú › Promociones
- if(H){const rg=act.filter(p=>/^\/regalo\/?$/.test(p.accion||''));H.innerHTML=rg.length?htmlRegaloHoy(rg[0],PROMOS.indexOf(rg[0])):'';}
+ if(H){const rg=act.filter(p=>esRegalo(p.accion));H.innerHTML=rg.length?htmlRegaloHoy(rg[0],PROMOS.indexOf(rg[0])):'';}
  if(L)L.innerHTML=act.length?act.map(p=>htmlPromo(p,PROMOS.indexOf(p),1)).join(''):'<div class="pr-vacio">Ahora mismo no hay promociones. ¡Vuelve pronto!</div>';}
 
 // ── Packs ─────────────────────────────────────────────────────
