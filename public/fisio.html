@@ -429,6 +429,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .rp-tx{flex:1;min-width:0;font-size:14.5px;line-height:1.35;color:#1e2a38;padding-top:2px}.rp-it.on .rp-tx{color:#7d6a60}
 .chk-av{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));z-index:900;width:min(520px,calc(100% - 24px));display:flex;align-items:stretch;background:#1a1714;color:#f4f0ea;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}.chk-avb{flex:1;text-align:left;background:none;border:none;color:inherit;font-family:var(--font);padding:14px 16px;display:flex;flex-direction:column;gap:3px;cursor:pointer}.chk-avb b{font-size:15px;color:#f3a37c}.chk-avb span{font-size:13px;line-height:1.4;color:#e6ddd3}.chk-avx{background:none;border:none;color:#bdb3a8;font-size:16px;padding:0 16px;cursor:pointer}
 .chk-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ee2155;margin-left:6px;vertical-align:middle}
+.rp-sinc{display:flex;align-items:center;gap:12px;justify-content:space-between}.rp-sinc small{display:block;font-size:12.5px;color:#7d6a60;margin-top:2px;line-height:1.4}.rp-ult{font-family:var(--font);font-size:13px;font-weight:700;color:#fff;background:#c2552e;border:none;border-radius:99px;padding:9px 14px;white-space:nowrap;cursor:pointer}
 .rp-res{margin:10px 0 4px;font-size:13px;line-height:1.45;border-radius:12px;padding:10px 12px}.rp-res.mal{background:#fdecea;color:#9b1c13}.rp-res.ok{background:#e8f5ec;color:#16803c}.rp-okp{display:block;margin-top:5px;font-size:12px;font-weight:600;color:#16803c}.rp-arr{display:inline-block;margin-left:6px;font-style:normal;font-weight:700;color:#fff;background:#c2552e;border-radius:99px;padding:3px 10px;font-size:12px;cursor:pointer}
 .rp-av{display:block;margin-top:6px;font-size:12.5px;color:#9b1c13;background:#fdecea;border-radius:10px;padding:7px 10px;line-height:1.45}.rp-av u{text-decoration:none;font-weight:600;color:#c2552e;cursor:pointer}.rp-av.ok{color:#16803c;background:#e8f5ec}
 .rp-sub{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:12.5px;color:#7d6a60;line-height:1.35}.rp-tx b{font-weight:700;color:#1e2a38}.rp-it.on .rp-tx b{color:#7d6a60}.rp-sub b{color:#5c4f47}.rp-sub span::before{content:'· ';color:#c2552e;font-weight:700}
@@ -8651,7 +8652,7 @@ function comElegirPaciente(cb){
   res.querySelectorAll('button').forEach(b=>b.onclick=()=>{const p=L.find(x=>x.id===b.dataset.id);m.remove();cb(p);});};
  inp.oninput=pinta;pinta();setTimeout(()=>inp.focus(),50);if(!(pacs||[]).length)loadPacientes().then(pinta).catch(()=>{});
 }
-async function renderReporte(wrap){
+async function renderReporte(wrap,ultimo){
  // Avisos de dirección pendientes de marcar como hechos: salen arriba del check-list hasta que se resuelven
  const avs=ce('div','rp-avs');wrap.appendChild(avs);
  comPost('seg-com-buzon',{}).then(r=>{if(!r||!r.ok||!avs.isConnected)return;const yo0=r.yo;
@@ -8661,7 +8662,7 @@ async function renderReporte(wrap){
  const box=ce('div','rp');wrap.appendChild(box);
  const yo=(fisioActual&&fisioActual.nombre)||'';const esFisio=(fisios||[]).some(f=>String(f.nombre).split(' ')[0].toLowerCase()===yo.split(' ')[0].toLowerCase());
  box.innerHTML='<div class="rp-c" style="color:var(--muted);font-size:13px">Cargando…</div>';
- let d;try{d=await (await fetch(`/api/schedule?action=seg-cierre&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(yo)}${esDireccion()?'&todos=1':''}`)).json();}catch(e){d={ok:false};}
+ let d;try{d=await (await fetch(`/api/schedule?action=seg-cierre&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(yo)}${esDireccion()?'&todos=1':''}${ultimo?'&ultimo=1':''}`)).json();}catch(e){d={ok:false};}
  if(!d.ok){box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
  const KEY='f365_rep_'+d.fecha+'_'+yo;let marc=new Set();try{marc=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'));}catch(_){}
  if(d.enviado&&d.enviado.marcados&&!marc.size)String(d.enviado.marcados).split('\n').forEach(l=>{if(l.startsWith('✓')){const it=(d.items||[]).find(x=>l.slice(2)===x.t.replace(/\*\*/g,''));if(it)marc.add(it.k);}});
@@ -8682,6 +8683,9 @@ async function renderReporte(wrap){
   if(esFisio){
    const items=d.items||[],chk=Object.fromEntries(((d.dia&&d.dia.checks)||[]).map(c=>[c.k,c]));
    const n=items.filter(x=>marc.has(x.k)).length,tot=items.length,todo=n===tot,nFalta=items.filter(x=>{const c=x.auto&&chk[x.auto];return c&&c.items.length;}).length;
+   const esHoy=d.fecha===new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'});
+   if(!(d.dia&&d.dia.citas)&&!ultimo)h+=`<div class="rp-c rp-sinc"><div><b>Hoy no tienes citas</b><small>El check-list se rellena con lo de cada día. Puedes ver el del último día que trabajaste.</small></div><button type="button" class="rp-ult">Ver el último</button></div>`;
+   if(!esHoy)h+=`<div class="rp-res mal" style="background:#fdf1e8;color:#9a4a16">Estás viendo el check-list del <b>${escH(fechaTxt)}</b>, el último día que tuviste citas.</div>`;
    if(d.enviado)h+=`<div class="rp-ok">✓ Check-list enviado a las ${hora(d.enviado.enviado)}${todo?'':' · puedes volver a enviarlo'}</div>`;
    h+=`<div class="rp-c"><div class="rp-h"><div><b>Mi check-list de hoy</b><small>${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}${d.dia&&d.dia.citas?' · '+d.dia.hechas+(d.dia.hechas===1?' sesión hecha':' sesiones hechas'):' · hoy no tienes citas'}</small></div><span class="rp-n${todo?' ok':''}">${n}/${tot}</span></div><div class="rp-bar${todo?' ok':''}"><i style="width:${Math.round(n/tot*100)}%"></i></div>${d.dia&&d.dia.citas?(nFalta?`<div class="rp-res mal">El panel ve <b>${nFalta} ${nFalta===1?'cosa':'cosas'} sin hacer</b>. Las tienes marcadas en rojo, con el botón para arreglarlas.</div>`:'<div class="rp-res ok">✓ El panel no ve nada pendiente tuyo. Revisa el resto y envíalo.</div>'):''}`+
     items.map(x=>{const c=x.auto&&chk[x.auto];const pend=c&&c.items.length?c.items:null;
@@ -8695,12 +8699,13 @@ async function renderReporte(wrap){
    const c=((d.dia&&d.dia.checks)||[]).find(z=>z.k===k),p=c&&c.items.find(i=>i.id);if(p){window.__fichaTab=k==='cobrar'?'facturas':'programa';abrirFichaPaciente(p.id,p.nombre);}});
   box.querySelectorAll('.rp-it').forEach(b=>b.onclick=e=>{if(e.target.closest('u,.rp-arr'))return;const k=b.dataset.k;marc.has(k)?marc.delete(k):marc.add(k);guarda();const nota=box.querySelector('.rp-nota');const v=nota?nota.value:'';pinta();const n2=box.querySelector('.rp-nota');if(n2)n2.value=v;});
   box.querySelectorAll('u[data-ficha]').forEach(u=>u.onclick=e=>{e.stopPropagation();abrirFichaPaciente(u.dataset.ficha,u.dataset.nom);});
+  {const bu=box.querySelector('.rp-ult');if(bu)bu.onclick=()=>{const w=box.parentNode;w.innerHTML='';renderReporte(w,true);};}
   {const cb=box.querySelector('.rp-cpb');if(cb)cb.onclick=()=>compraAnadir({por:String(yo).split(' ')[0]});}
   const env=box.querySelector('.rp-env');if(!env)return;let armado=false;
   env.onclick=async()=>{const falta=(d.items||[]).filter(x=>!marc.has(x.k)).length;
    if(falta&&!armado){armado=true;env.classList.add('armado');env.textContent=`Faltan ${falta} sin marcar · toca otra vez para enviar igual`;setTimeout(()=>{if(armado){armado=false;env.classList.remove('armado');env.textContent=d.enviado?'Volver a enviar':'Enviar check-list';}},5000);return;}
    armado=false;env.disabled=true;env.textContent='Enviando…';
-   try{const r=await (await fetch('/api/schedule?action=seg-cierre-enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,fisio:yo,marcados:[...marc],nota:(box.querySelector('.rp-nota')||{}).value||''})})).json();
+   try{const r=await (await fetch('/api/schedule?action=seg-cierre-enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,fisio:yo,fecha:d.fecha,marcados:[...marc],nota:(box.querySelector('.rp-nota')||{}).value||''})})).json();
     if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast('Check-list enviado. ¡Buen trabajo!',true);showSection('rep');}
    catch(e){env.disabled=false;env.textContent=d.enviado?'Volver a enviar':'Enviar check-list';toast(e.message,false);}};
  };

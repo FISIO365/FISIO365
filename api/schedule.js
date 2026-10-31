@@ -5157,9 +5157,15 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ ok: true, sesiones: out.sort((a, b) => a.fecha.localeCompare(b.fecha)) });
       }
       if (action === 'seg-cierre') {
-        const fecha = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyF;
-        const todos = await cierreDia(fecha, q.fisio || '');
-        const k = Object.keys(todos).find(f => fisioKey(f) === fisioKey(q.fisio)) || '';
+        let fecha = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyF;
+        let todos = await cierreDia(fecha, q.fisio || '');
+        let k = Object.keys(todos).find(f => fisioKey(f) === fisioKey(q.fisio)) || '';
+        // «ultimo»: si ese día no tuvo citas, el último día (de la semana anterior) en que sí las tuvo
+        if (q.ultimo && !(todos[k] && todos[k].citas)) for (let i = 1; i <= 7; i++) {
+          const f = new Date(new Date(fecha + 'T12:00:00Z').getTime() - i * 864e5).toISOString().slice(0, 10);
+          const t2 = await cierreDia(f, q.fisio || ''), k2 = Object.keys(t2).find(x => fisioKey(x) === fisioKey(q.fisio)) || '';
+          if (t2[k2] && t2[k2].citas) { fecha = f; todos = t2; k = k2; break; }
+        }
         const env = (await cierresEnviados(fecha))[fisioKey(q.fisio)] || null;
         const resumen = q.todos ? { fisios: Object.entries(todos).map(([f, x]) => ({ fisio: f, citas: x.citas, pendientes: x.pendientes })), enviados: await cierresEnviados(fecha) } : null;
         return res.status(200).json({ ok: true, fecha, fisio: k || q.fisio || '', items: await checklistItems(), dia: todos[k] || { citas: 0, hechas: 0, checks: [], pendientes: 0 }, enviado: env, resumen });
