@@ -3713,6 +3713,11 @@ module.exports = async function handler(req, res) {
         const quien = String(q.quien || '').trim().split(/\s+/)[0];
         if (q.op === 'pagado') { const via = q.via === 'centro' ? 'en el centro' : q.via === 'tarjeta' ? 'tarjeta' : 'transferencia'; await valePagado(id, F, via, quien || 'el panel'); }
         else if (q.op === 'reenviar') { if (F.ESTADO !== 'PAGADO') return res.status(200).json({ ok: false, error: 'Aún no está pagado' }); await valeEntregar(id, F, true); }
+        else if (q.op === 'borrar') { // solo dirección: quita el vale de la lista (p. ej. una prueba o un duplicado)
+          const eqB = await at(`tbl2mLUrnaKCFTs6g?filterByFormula=${encodeURIComponent(`LOWER(TRIM({Name}))='${String(q.nombre || '').trim().toLowerCase().replace(/'/g, "\\'")}'`)}&maxRecords=1`).catch(() => ({})), yB = (eqB.records || [])[0];
+          if (!yB || !yB.fields['DIRECCIÓN'] || yB.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Solo dirección puede borrar vales' });
+          const d = await at(`${VALES}/${id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error, borrado: true });
+        }
         else if (q.op === 'canjear' || q.op === 'descanjear') {
           const v = q.op === 'canjear' ? hoyF : null;
           await at(`${VALES}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { CANJEADA: v, REGISTRO: (String(F.REGISTRO || '') + `\n${pagoAhora()} · ${v ? 'Canjeado' : 'Canje deshecho'}${quien ? ' · ' + quien : ''}`).trim() } }) });
