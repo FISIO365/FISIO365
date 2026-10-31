@@ -1026,10 +1026,18 @@ ${imprimir ? '' : `<a class="bt np" href="https://wa.me/${wa}?text=${encodeURICo
 </div>${imprimir ? '<script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>' : ''}</body></html>`;
 }
 // La página para comprar el vale (paso a paso, en el estilo de la app)
+function ogRegaloSvg() {
+  const T = '#c2552e', K = '#2b2420', M = '#8a7d74', O = ogTipos();
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g fill="none" stroke="${T}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><rect x="232" y="176" width="136" height="96" rx="14"/><path d="M220 176h160v-28H220z"/><path d="M300 148v124"/><path d="M300 148c-14-30-52-30-46-6 4 14 30 6 46 6zM300 148c14-30 52-30 46-6-4 14-30 6-46 6z"/></g>`
+    + ogTexto(O.b, 'Regala salud', 42, 300, 362, 0, K)
+    + ogTexto(O.m, 'Una tarjeta regalo de fisioterapia', 23, 300, 404, 0, M)
+    + ogTexto(O.m, 'La preparas en 2 minutos', 21, 300, 450, 0, T) + `</svg>`;
+}
 function paginaRegalo(D) {
   const J = JSON.stringify(D).replace(/</g, '\\u003c');
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Regala salud · FISIO365</title>
-<meta name="description" content="Una tarjeta regalo de fisioterapia en FISIO365. La preparas en 2 minutos."><meta property="og:title" content="Regala salud · FISIO365"><meta property="og:description" content="Una tarjeta regalo de fisioterapia, el regalo que de verdad se nota. La preparas en 2 minutos."><meta property="og:image" content="https://app.fisioterapia365.com/regalo/preview.jpg"><meta property="og:type" content="website">
+<meta name="description" content="Una tarjeta regalo de fisioterapia en FISIO365. La preparas en 2 minutos."><meta property="og:title" content="Regala salud · FISIO365"><meta property="og:description" content="Una tarjeta regalo de fisioterapia, el regalo que de verdad se nota. La preparas en 2 minutos."><meta property="og:image" content="https://app.fisioterapia365.com/api/schedule?action=regalo-og&v=1"><meta property="og:type" content="website">
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px 40px}
 .c{background:#fff;border-radius:26px;padding:22px 20px 22px;max-width:460px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start}
@@ -2815,6 +2823,10 @@ module.exports = async function handler(req, res) {
   }
   // Tarjeta regalo pública (el enlace que va por WhatsApp; la vista previa enseña la imagen)
   // ── Vales regalo: página para comprarlo (/regalo), la tarjeta (/vale/…) y su vista previa ──
+  if (action === 'regalo-og') {
+    try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogRegaloSvg(), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+    catch (e) { res.setHeader('Location', '/regalo/preview.jpg'); return res.status(302).end(); }
+  }
   if (action === 'regalo-pagina') {
     res.setHeader('Cache-Control', 'private, no-store');
     const CF = await conf().catch(() => CONF_DEF), OPS = valeOpciones(CF), sigOk = (id, s) => /^rec[A-Za-z0-9]{14}$/.test(String(id || '')) && String(s || '') === firmaVale(id);
