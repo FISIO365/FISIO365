@@ -597,6 +597,11 @@ async function _procesarWeb() {
         sinHueco++;
       }
       hechas++;
+      // Aviso al móvil (dirección y el fisio de esa hora), como con el enlace de huecos
+      try { const fisio = libre ? nm(libre.fields['PREF.']) : '', fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}`), n1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase();
+        const ids = (fl.records || []).filter(x => !!x.fields['DIRECCIÓN'] || (fisio && n1(x) === fisio.split(' ')[0].toLowerCase())).map(x => x.id), { avisar } = require('./_push');
+        const dd = fecha ? new Date(fecha + 'T12:00:00Z') : null, DS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+        await Promise.all(ids.map(fid => avisar('fisio', fid, { title: `📅 Reserva desde la web: ${nombre || 'Paciente'}`, body: `${dd ? DS[dd.getUTCDay()] + ' ' + dd.getUTCDate() + '/' + (dd.getUTCMonth() + 1) : ''} ${hora}${fisio ? ' · ' + fisio.charAt(0) + fisio.slice(1).toLowerCase() : ' · sin hueco libre: recolócala'}`.trim(), url: '/fisio' }).catch(() => {}))); } catch (e) {}
     } catch (e) { console.log('reserva web', r.id, e.message); }
   }
   return { hechas, sinHueco };
@@ -2614,7 +2619,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ ok: true });
   }
   if (action === 'pagos-tick') { // lo llaman el panel (cada 5 min) y la app del paciente al abrirse: cancela las citas de quien no pagó a tiempo
-    res.setHeader('Cache-Control', 'no-store'); const n = await caducarPagos().catch(() => 0); return res.status(200).json({ ok: true, n });
+    res.setHeader('Cache-Control', 'no-store'); const [n] = await Promise.all([caducarPagos().catch(() => 0), procesarWeb().catch(() => null)]); return res.status(200).json({ ok: true, n });
   }
   if (action === 'demo-datos') { // Clínica Demo: borrar / sembrar datos inventados (solo con CLINICA=demo y la clave)
     const K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
