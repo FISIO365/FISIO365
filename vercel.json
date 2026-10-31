@@ -210,6 +210,10 @@
       "dest": "/api/schedule.js?action=regalo-pagina"
     },
     {
+      "src": "/vale/(rec[A-Za-z0-9]{14})-([a-f0-9]{10})\\.pdf",
+      "dest": "/api/schedule.js?action=vale-pdf&id=$1&s=$2"
+    },
+    {
       "src": "/vale/(rec[A-Za-z0-9]{14})-([a-f0-9]{10})\\.png",
       "dest": "/api/schedule.js?action=vale-og&id=$1&s=$2"
     },

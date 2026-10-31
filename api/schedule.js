@@ -1061,6 +1061,63 @@ const VALE_ILU = {
   cumple: '<rect pathLength="1" x="24" y="68" width="72" height="34" rx="5"/><rect pathLength="1" x="33" y="47" width="54" height="21" rx="4"/><path pathLength="1" d="M26 80c8 0 8 5 17 5s8-5 17-5 8 5 17 5 8-5 17-5"/><rect pathLength="1" x="57" y="31" width="6" height="16" rx="2"/><path class="llama" d="M60 13c-6 7-6 12 0 15 6-3 6-8 0-15z"/>',
   sanvalentin: '<g class="mv latido"><path pathLength="1" d="M60 98C30 80 16 62 18 46c2-14 14-20 24-18 8 1 14 7 18 14 4-7 10-13 18-14 10-2 22 4 24 18 2 16-12 34-42 52z"/></g>'
 };
+// ── PDF de la tarjeta regalo (A5, para imprimir o guardar): se dibuja como imagen y se mete en un PDF mínimo ──
+function valePrintSvg(F) {
+  const l = valeLang(F), T = VALE_T[l], oc = valeOc(F), OC = VALE_OC[oc], O = ogTipos(), TC = '#c2552e', INK = '#2b2420', M = '#8a7a70', C = CLI;
+  const W = 1480, H = 2100, n = Number(F.SESIONES || 1) || 1, tipo = valeTipo(F.TIPO, l), msg = String(F.MENSAJE || '');
+  const anchoTxt = (font, t, size, ls) => font.stringToGlyphs(String(t)).reduce((a, g, i, A) => a + g.advanceWidth * size / font.unitsPerEm + (i < A.length - 1 ? (ls || 0) : 0), 0);
+  const fit = (font, t, base, max) => { let sz = base; while (sz > 20 && anchoTxt(font, t, sz) > max) sz -= 2; return sz; };
+  const lineas = (t, size, max) => { const w = String(t).split(/\s+/), L = []; let cur = ''; w.forEach(x => { const c = cur ? cur + ' ' + x : x; if (anchoTxt(O.m, c, size) > max && cur) { L.push(cur); cur = x; } else cur = c; }); if (cur) L.push(cur); return L.slice(0, 3); };
+  const marca = String(C.marca || 'FISIO365'), es365 = marca === 'FISIO365';
+  const logo = es365 ? (() => { const a = anchoTxt(O.b, 'FISIO', 46), b = anchoTxt(O.b, '365', 46), x0 = W / 2 - (a + b) / 2; return ogTexto(O.b, 'FISIO', 46, x0 + a / 2, 250, 0, INK) + ogTexto(O.b, '365', 46, x0 + a + b / 2, 250, 0, TC); })() : ogTexto(O.b, marca, 46, W / 2, 250, 0, INK);
+  const ilu = (VALE_ILU[oc] || VALE_ILU.clasico).replace(/ pathLength="1"/g, '').replace(/class="luz[^"]*"/g, `fill="${TC}" stroke="none"`).replace(/class="llama"/g, `fill="${TC}" stroke="none"`).replace(/class="cab[^"]*"/g, `fill="#fbf7f1"`).replace(/class="[^"]*"/g, '');
+  const para = F.PARA ? String(F.PARA) : '', sesTxt = T.ses(n).replace(/^\d+\s*/, '');
+  const ml = msg ? lineas(msg, 38, 1050) : [];
+  let y = 0, out = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="${W}" height="${H}" fill="#fbf7f1"/>`
+    + `<rect x="60" y="60" width="${W - 120}" height="${H - 120}" rx="44" fill="none" stroke="${TC}" stroke-width="3"/><rect x="82" y="82" width="${W - 164}" height="${H - 164}" rx="30" fill="none" stroke="${TC}" stroke-opacity=".35" stroke-width="2"/>`
+    + logo + ogTexto(O.m, OC.t[l].tk, 30, W / 2, 316, 9, M)
+    + `<g transform="translate(${W / 2 - 230} 380) scale(3.833)" fill="none" stroke="${TC}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ilu}</g>`;
+  y = 930;
+  if (para) { out += ogTexto(O.m, T.para.toUpperCase(), 30, W / 2, y, 8, M); y += 110; out += ogTexto(O.b, para, fit(O.b, para, 110, 1100), W / 2, y, 0, INK); y += 150; }
+  const nB = String(n), wN = anchoTxt(O.b, nB, 190), wS = Math.max(anchoTxt(O.b, sesTxt, 66), anchoTxt(O.m, T.de + ' ' + tipo, 38)), x0 = W / 2 - (wN + 34 + wS) / 2;
+  out += ogTexto(O.b, nB, 190, x0 + wN / 2, y + 120, 0, TC) + `<g>${ogTexto(O.b, sesTxt, 66, x0 + wN + 34 + anchoTxt(O.b, sesTxt, 66) / 2, y + 40, 0, INK)}${ogTexto(O.m, T.de + ' ' + tipo, 38, x0 + wN + 34 + anchoTxt(O.m, T.de + ' ' + tipo, 38) / 2, y + 100, 0, M)}</g>`;
+  y += 230;
+  ml.forEach(t => { out += ogTexto(O.m, t, 38, W / 2, y, 0, '#4a3e37'); y += 56; });
+  if (F.DE) { y += 24; const t = `${T.dep} ${F.DE}`; out += ogTexto(O.m, t, fit(O.m, t, 38, 1100), W / 2, y, 0, M); }
+  const yC = 1740;
+  out += `<path d="M150 ${yC - 70}H${W - 150}" stroke="${TC}" stroke-opacity=".4" stroke-width="3" stroke-dasharray="14 12"/>`
+    + ogTexto(O.m, T.cod.toUpperCase(), 28, 360, yC, 8, M) + ogTexto(O.b, String(F['CÓDIGO'] || ''), 64, 360, yC + 80, 10, INK);
+  const cad = valeFechaTxt(F.CADUCA, l);
+  if (cad) out += ogTexto(O.m, T.val.toUpperCase(), 28, W - 360, yC, 6, M) + ogTexto(O.b, cad, fit(O.b, cad, 40, 520), W - 360, yC + 70, 0, INK);
+  out += ogTexto(O.m, T.res(C.tel || '672 89 39 49'), 28, W / 2, H - 170, 0, M) + ogTexto(O.m, String(C.dirCorta || C.direccion || ''), 28, W / 2, H - 126, 0, M);
+  return out + '</svg>';
+}
+// PNG (RGBA) → RGB sin filtros, para meterlo en el PDF
+function pngARgb(buf) {
+  const zlib = require('zlib'); let p = 8, w = 0, h = 0, ct = 6; const idat = [];
+  while (p < buf.length) { const len = buf.readUInt32BE(p), tp = buf.toString('ascii', p + 4, p + 8), d = buf.slice(p + 8, p + 8 + len); if (tp === 'IHDR') { w = d.readUInt32BE(0); h = d.readUInt32BE(4); ct = d[9]; } else if (tp === 'IDAT') idat.push(d); p += 12 + len; }
+  const raw = zlib.inflateSync(Buffer.concat(idat)), bpp = ct === 6 ? 4 : 3, st = w * bpp, out = Buffer.alloc(w * h * 3); let prev = Buffer.alloc(st);
+  for (let y = 0; y < h; y++) { const f = raw[y * (st + 1)], row = Buffer.from(raw.slice(y * (st + 1) + 1, (y + 1) * (st + 1)));
+    for (let i = 0; i < st; i++) { const a = i >= bpp ? row[i - bpp] : 0, b = prev[i], c = i >= bpp ? prev[i - bpp] : 0;
+      if (f === 1) row[i] = (row[i] + a) & 255; else if (f === 2) row[i] = (row[i] + b) & 255; else if (f === 3) row[i] = (row[i] + ((a + b) >> 1)) & 255;
+      else if (f === 4) { const pp = a + b - c, pa = Math.abs(pp - a), pb = Math.abs(pp - b), pc = Math.abs(pp - c); row[i] = (row[i] + (pa <= pb && pa <= pc ? a : pb <= pc ? b : c)) & 255; } }
+    for (let x = 0; x < w; x++) { const al = bpp === 4 ? row[x * 4 + 3] / 255 : 1; for (let k = 0; k < 3; k++) out[(y * w + x) * 3 + k] = Math.round(row[x * bpp + k] * al + 255 * (1 - al)); }
+    prev = row; }
+  return { w, h, rgb: out };
+}
+function pdfImagen(img, ancho, alto) { // una página (puntos) con la imagen a página completa
+  const data = require('zlib').deflateSync(img.rgb), ob = [], obj = t => { ob.push(t); return ob.length; };
+  obj('<< /Type /Catalog /Pages 2 0 R >>'); obj('<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+  obj(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${ancho} ${alto}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`);
+  const cont = `q ${ancho} 0 0 ${alto} 0 0 cm /Im0 Do Q`;
+  const partes = [Buffer.from('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n', 'binary')], off = []; let pos = partes[0].length;
+  const add = b => { partes.push(b); pos += b.length; };
+  ob.forEach((t, i) => { off.push(pos); add(Buffer.from(`${i + 1} 0 obj\n${t}\nendobj\n`, 'binary')); });
+  off.push(pos); add(Buffer.from(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${img.w} /Height ${img.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${data.length} >>\nstream\n`, 'binary')); add(data); add(Buffer.from('\nendstream\nendobj\n', 'binary'));
+  off.push(pos); add(Buffer.from(`5 0 obj\n<< /Length ${cont.length} >>\nstream\n${cont}\nendstream\nendobj\n`, 'binary'));
+  const xref = pos; add(Buffer.from(`xref\n0 6\n0000000000 65535 f \n${off.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('')}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`, 'binary'));
+  return Buffer.concat(partes);
+}
 function paginaVale(F, id, imprimir) {
   const e = escHtml, l = valeLang(F), T = VALE_T[l], C = CLI, url = enlaceVale(id), tel = C.tel || '672 89 39 49', wa = String(C.wa || '34672893949').replace(/\D/g, '');
   const tipo = valeTipo(F.TIPO, l), msg = String(F.MENSAJE || ''), oc = valeOc(F), OC = VALE_OC[oc], K = VALE_EST[oc] || VALE_EST.clasico, hola = n => OC.t[l].hola(n);
@@ -1068,7 +1125,7 @@ function paginaVale(F, id, imprimir) {
   const n = Number(F.SESIONES || 1) || 1, sesTxt = T.ses(n).replace(/^\d+\s*/, ''), cod = String(F['CÓDIGO'] || '');
   const marca = C.marca === 'FISIO365' || !C.marca ? '<span class="lg">FISIO<i>365</i></span>' : `<span class="lg">${e(C.marca)}</span>`;
   const reservar = huecosSiempre(21, [], cod), pend = F.ESTADO !== 'PAGADO';
-  const BT = { es: ['Reservar mi sesión', 'Elige el día y la hora que te vayan bien', 'WhatsApp', 'Guardar o imprimir'], ca: ['Reservar la meva sessió', 'Tria el dia i l\'hora que et vagin bé', 'WhatsApp', 'Desar o imprimir'], en: ['Book my session', 'Pick the day and time that suit you', 'WhatsApp', 'Save or print'] }[l];
+  const BT = { es: ['Reservar mi sesión', 'Elige el día y la hora que te vayan bien', 'WhatsApp', 'Descargar PDF'], ca: ['Reservar la meva sessió', 'Tria el dia i l\'hora que et vagin bé', 'WhatsApp', 'Descarregar PDF'], en: ['Book my session', 'Pick the day and time that suit you', 'WhatsApp', 'Download PDF'] }[l];
   const nieve = oc === 'navidad' && !imprimir ? `<div class="nieve">${Array.from({ length: 22 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:-${(i * 1.7) % 9}s;animation-duration:${8 + (i % 5)}s;width:${2 + (i % 3)}px;height:${2 + (i % 3)}px"></i>`).join('')}</div>` : '';
   const tarjeta = `<div class="cardw"><div class="card">${nieve}<i class="sh"></i><div class="fr"></div>
 <div class="row">${marca}<small>${OC.t[l].tk}</small></div>
@@ -1114,7 +1171,7 @@ ${imprimir ? '@page{size:A5;margin:12mm}body{background:#fff;padding:0}.c{max-wi
 </style></head><body><div class="c">${imprimir ? '' : `<p class="hi np">${T.tit}</p><h1 class="np">${e(F.PARA ? hola(F.PARA) : T.tit)}</h1>`}
 ${tarjeta}
 ${pend && !imprimir ? '<p class="pend np">Esta tarjeta aún está pendiente de pago.</p>' : ''}
-${imprimir ? '' : `<a class="go np" href="${e(reservar)}"><b>${BT[0]}</b><small>${BT[1]}</small></a><div class="lnk np"><a href="https://wa.me/${wa}?text=${encodeURIComponent(T.wa(cod))}" target="_blank" rel="noopener">${BT[2]}</a><button type="button" onclick="window.print()">${BT[3]}</button></div>`}
+${imprimir ? '' : `<a class="go np" href="${e(reservar)}"><b>${BT[0]}</b><small>${BT[1]}</small></a><div class="lnk np"><a href="https://wa.me/${wa}?text=${encodeURIComponent(T.wa(cod))}" target="_blank" rel="noopener">${BT[2]}</a><a href="${e(url)}.pdf" target="_blank" rel="noopener">${BT[3]}</a></div>`}
 <p class="res">${e(T.res(tel)).replace(/(\d) (?=\d)/g, '$1&nbsp;')}<br>${e(C.dirCorta || C.direccion || '')}</p>
 </div>${imprimir ? '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' : ''}</body></html>`;
 }
@@ -2979,11 +3036,17 @@ module.exports = async function handler(req, res) {
     } else if (req.query.nuevo) D.nuevo = 1;
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(200).send(paginaRegalo(D));
   }
-  if (action === 'vale' || action === 'vale-og') {
+  if (action === 'vale' || action === 'vale-og' || action === 'vale-pdf') {
     const id = String(req.query.id || ''), sg = String(req.query.s || '');
     if (!/^rec[A-Za-z0-9]{14}$/.test(id) || sg !== firmaVale(id)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: 'Este enlace no es válido.' })); }
     const r = await at(`${VALES}/${id}`); const F = r.fields || {};
     if (r.error || !F['CÓDIGO']) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send(paginaEncuesta({ error: 'No encontramos esta tarjeta regalo. Escríbenos y te ayudamos.' })); }
+    if (action === 'vale-pdf') {
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(valePrintSvg(F), CLI), { font: { loadSystemFonts: false } }).render().asPng();
+        const pdf = pdfImagen(pngARgb(png), 419.53, 595.28), nom = `tarjeta-regalo-${String(F['CÓDIGO'] || 'fisio').replace(/[^\w-]/g, '')}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Content-Disposition', `inline; filename="${nom}"`); res.setHeader('Cache-Control', 'private, max-age=300'); return res.status(200).send(pdf); }
+      catch (e) { console.log('vale-pdf', e.message); res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(500).send(paginaEncuesta({ error: 'No se ha podido preparar el PDF. Inténtalo de nuevo.' })); }
+    }
     if (action === 'vale-og') {
       try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogValeSvg(F), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
       catch (e) { res.setHeader('Location', 'https://app.fisioterapia365.com/regalo/preview.jpg'); return res.status(302).end(); }
