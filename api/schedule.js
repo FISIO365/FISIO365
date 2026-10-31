@@ -3608,7 +3608,7 @@ module.exports = async function handler(req, res) {
       }
       // ── ADMINISTRACIÓN: equipo, horarios, ausencias, accesos y contraseñas (solo quien tiene acc_admin) ──
       if (action.startsWith('seg-adm-')) {
-        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (req.method !== 'POST' && !(action === 'seg-adm-demo-reset' && String(process.env.CLINICA || '') === 'demo')) return res.status(405).json({ ok: false });
         const FT = FISIOS_TABLE, AUS = 'tblkezm4bTQ4jJf1X', DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
         const ACC = ['agenda', 'pacientes', 'chat', 'checklist', 'callin', 'captacion', 'programas', 'ejercicios', 'anamnesis', 'rendimiento', 'estadisticas', 'school', 'sugerencias', 'admin'];
         const full = await todosT(FT, 'sort[0][field]=Name');
