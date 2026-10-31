@@ -4480,15 +4480,26 @@ module.exports = async function handler(req, res) {
           const mes = /^\d{4}-\d{2}$/.test(q.mes || '') ? q.mes : hoyF.slice(0, 7), enMes = c => `DATETIME_FORMAT(SET_TIMEZONE({${c}},'Europe/Madrid'),'YYYY-MM')='${mes}'`;
           const nmV = v => (v && typeof v === 'object') ? (v.name || '') : (v || ''), k = f => String(nmV(f) || '').trim().split(' ')[0].toLowerCase();
           const [c1, c2, c3] = await Promise.all([
-            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA RESPONDIDA},${enMes('ENCUESTA RESPONDIDA')})`)}&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('ENCUESTA VALORACIÓN')}&fields[]=${encodeURIComponent('ENCUESTA IR A RESEÑA')}`).catch(() => []),
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA RESPONDIDA},${enMes('ENCUESTA RESPONDIDA')})`)}&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('ENCUESTA VALORACIÓN')}&fields[]=${encodeURIComponent('ENCUESTA IR A RESEÑA')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []),
             todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({FIN RESPONDIDA},${enMes('FIN RESPONDIDA')})`)}&fields[]=${encodeURIComponent('FIN FISIO')}&fields[]=${encodeURIComponent('FIN VALORACIÓN')}&fields[]=${encodeURIComponent('FIN IR A RESEÑA')}`).catch(() => []),
             todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND({MEJORA FECHA},${enMes('MEJORA FECHA')})`)}&fields[]=${encodeURIComponent('MEJORA FISIO')}&fields[]=${encodeURIComponent('MEJORA GOOGLE')}`).catch(() => [])]);
-          const T = {}, de = f => { const x = k(f) || '—'; return (T[x] = T[x] || { fisio: x, enc: 0, exc: 0, mb: 0, mal: 0, google: 0, mej: 0, mejG: 0 }); };
-          const suma = (f, v, g) => { const x = de(f); x.enc++; if (v === 'Excelente') x.exc++; else if (v === 'Muy buena') x.mb++; else if (v) x.mal++; if (g) x.google++; };
-          c1.forEach(r => { const v = nmV(r.fields['ENCUESTA VALORACIÓN']); if (v) suma(r.fields['PREF.'], v, r.fields['ENCUESTA IR A RESEÑA']); });
-          c2.forEach(r => { const v = nmV(r.fields['FIN VALORACIÓN']); if (v) suma(r.fields['FIN FISIO'], v, r.fields['FIN IR A RESEÑA']); });
-          c3.forEach(r => { const x = de(r.fields['MEJORA FISIO']); x.mej++; if (r.fields['MEJORA GOOGLE']) x.mejG++; });
-          return res.status(200).json({ ok: true, mes, fisios: Object.values(T).filter(x => x.fisio !== '—' || x.enc || x.mej).sort((a, b) => (b.enc + b.mej) - (a.enc + a.mej)) });
+          // Reseñas: solo las comprobadas en el sorteo («La puso»), una por paciente
+          const ver = (await ajuste('resenas-ok-' + mes, {})) || {}, puso = id => !!(id && ver[id] && ver[id].ok), RS = {};
+          const T = {}, de = f => { const x = k(f) || '—'; return (T[x] = T[x] || { fisio: x, enc: 0, exc: 0, mb: 0, mal: 0, google: 0, resena: 0, mej: 0, mejG: 0 }); };
+          const resena = (f, id) => { if (!puso(id)) return; const x = de(f); (RS[x.fisio] = RS[x.fisio] || new Set()).add(id); x.resena = RS[x.fisio].size; };
+          const suma = (f, v, g, id) => { const x = de(f); x.enc++; if (v === 'Excelente') x.exc++; else if (v === 'Muy buena') x.mb++; else if (v) x.mal++; if (g) { x.google++; resena(f, id); } };
+          c1.forEach(r => { const v = nmV(r.fields['ENCUESTA VALORACIÓN']); if (v) suma(r.fields['PREF.'], v, r.fields['ENCUESTA IR A RESEÑA'], (r.fields['RELACIÓN - CITA'] || [])[0]); });
+          c2.forEach(r => { const v = nmV(r.fields['FIN VALORACIÓN']); if (v) suma(r.fields['FIN FISIO'], v, r.fields['FIN IR A RESEÑA'], r.id); });
+          c3.forEach(r => { const x = de(r.fields['MEJORA FISIO']); x.mej++; if (r.fields['MEJORA GOOGLE']) { x.mejG++; resena(r.fields['MEJORA FISIO'], r.id); } });
+          // La reseña cuenta para el fisio que le atendió en su última sesión (también las añadidas a mano)
+          Object.values(T).forEach(x => { x.resena = 0; });
+          const okIds = Object.keys(ver).filter(id => puso(id) && okId(id));
+          if (okIds.length) { const fin = mes + '-31', ult = {};
+            for (let i = 0; i < okIds.length; i += 40) { const l = okIds.slice(i, i + 40);
+              (await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',NOT(IS_AFTER({FECHA},'${fin}')),OR(${l.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []))
+                .forEach(c => { const f = String(c.fields.FECHA || '').slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (l.includes(id) && (!ult[id] || f > ult[id].f)) ult[id] = { f, fisio: c.fields['PREF.'] }; }); }); }
+            Object.values(ult).forEach(u => { de(u.fisio).resena++; }); }
+          return res.status(200).json({ ok: true, mes, fisios: Object.values(T).filter(x => x.fisio !== '—' || x.enc || x.mej || x.resena).sort((a, b) => (b.enc + b.mej) - (a.enc + a.mej)) });
         }
         if (action === 'seg-agenda-sorteo') { // Sorteo mensual de 2 sesiones entre quienes han ido a dejar su reseña en Google desde nuestros enlaces
           const mes = /^\d{4}-\d{2}$/.test(q.mes || '') ? q.mes : hoyF.slice(0, 7), enMes = c => `DATETIME_FORMAT(SET_TIMEZONE({${c}},'Europe/Madrid'),'YYYY-MM')='${mes}'`, clave = 'sorteo-' + mes;
