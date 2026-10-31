@@ -2488,6 +2488,13 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, ...r });
     } catch (e) { return res.status(200).json({ ok: false, error: String(e && e.message || e) }); }
   }
+  if (action === 'pg-probar') { // escrituras de prueba (solo en la versión de prueba: SIN_ENVIOS)
+    const PG = require('./_pg'), K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
+    if (!PG.ACTIVO || !process.env.SIN_ENVIOS || K.length < 24 || k.length !== K.length || !require('crypto').timingSafeEqual(Buffer.from(k), Buffer.from(K))) return res.status(404).end();
+    res.setHeader('Cache-Control', 'no-store');
+    const r = await require('./_probar').probar({ fetch: PG.fetchReal, pwd: process.env.FISIO_PASSWORD || '', self: String(process.env.APP_URL || '').replace(/\/+$/, '') });
+    return res.status(200).json({ bien: r.filter(x => x.ok).length, mal: r.filter(x => !x.ok), pasos: r.map(x => (x.ok ? '✓ ' : '✗ ') + x.paso) });
+  }
   if (action === 'pg-comparar') { // compara lecturas de la app de verdad con esta versión (ver api/_comparar.js)
     const PG = require('./_pg'), K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
     if (!PG.ACTIVO || K.length < 24 || k.length !== K.length || !require('crypto').timingSafeEqual(Buffer.from(k), Buffer.from(K))) return res.status(404).end();
