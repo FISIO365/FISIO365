@@ -4596,9 +4596,25 @@ module.exports = async function handler(req, res) {
               gan[tipo] = { pacienteId: w.pacienteId, nombre: w.nombre, pila: w.pila, tel: w.tel, cuando: new Date().toISOString(), quien, n: lista.length, frase: tipo === 'creativa' ? String(q.frase || '').trim().slice(0, 600) : '' };
             }
             await guardarAjuste(clave, gan, quien);
+            // La sesión gratis queda apuntada en la ficha del ganador (si se cambia o se quita, se borra la que no se haya usado)
+            { const PR = (await ajuste('premios-sorteo', {})) || {}, k = mes + '-' + tipo;
+              Object.keys(PR).forEach(pid => { PR[pid] = (PR[pid] || []).filter(x => x.k !== k || x.usado || (gan[tipo] && gan[tipo].pacienteId === pid)); if (!PR[pid].length) delete PR[pid]; });
+              const g = gan[tipo]; if (g && g.pacienteId) { const l = PR[g.pacienteId] = PR[g.pacienteId] || []; if (!l.some(x => x.k === k)) l.push({ k, mes, tipo, desde: new Date().toISOString().slice(0, 10) }); }
+              await guardarAjuste('premios-sorteo', PR, quien); }
           }
+          { const PR = (await ajuste('premios-sorteo', {})) || {}; let cambia = false; // ganadores de antes de existir la sesión en la ficha
+            Object.entries(gan).forEach(([t, g]) => { if (!g || !g.pacienteId) return; const k = mes + '-' + t, l = PR[g.pacienteId] = PR[g.pacienteId] || []; if (!l.some(x => x.k === k)) { l.push({ k, mes, tipo: t, desde: String(g.cuando || '').slice(0, 10) || hoyF }); cambia = true; } });
+            if (cambia) await guardarAjuste('premios-sorteo', PR, ''); }
           Object.entries(gan).forEach(([t, g]) => { if (g && g.pacienteId) g.url = enlacePremio(mes, t, g.pacienteId); });
           return res.status(200).json({ ok: true, mes, participantes: listaTodos, ganadores: gan });
+        }
+        if (action === 'seg-premio-usar') { // descontar (o deshacer) a mano la sesión gratis del sorteo
+          if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
+          const PR = (await ajuste('premios-sorteo', {})) || {}, x = (PR[q.pacienteId] || []).find(p => p.k === q.k);
+          if (!x) return res.status(404).json({ ok: false, error: 'No se ha encontrado la sesión gratis' });
+          if (q.deshacer) { delete x.usado; delete x.usadoPor; } else { x.usado = hoyF; x.usadoPor = String(q.quien || '').slice(0, 40); }
+          await guardarAjuste('premios-sorteo', PR, String(q.quien || ''));
+          return res.status(200).json({ ok: true, premios: PR[q.pacienteId] });
         }
         if (action === 'seg-agenda-val-quitar') { // quitar una fila de Valoraciones («Está mejor» marcado por error, o una encuesta que no hace falta ver)
           const id = String(q.id || ''), pid = String(q.pacienteId || '');
@@ -5141,7 +5157,9 @@ module.exports = async function handler(req, res) {
               if (ng) deNegocio = { nombre: ng.fields['NOMBRE'] || '' }; }
             referidos = { deNegocio, leRecomendo: vino ? { id: (vino.fields['RECOMENDÓ'] || [])[0] || '', nombre: nom[(vino.fields['RECOMENDÓ'] || [])[0]] || String(vino.fields['Nombre de quien recomendó'] || '').trim() } : null,
               haRecomendado: rr.filter(r => (r.fields['RECOMENDÓ'] || []).includes(q.id)).map(r => ({ id: r.id, nombre: nom[(r.fields['PACIENTE'] || [])[0]] || `${r.fields['Nombre'] || ''} ${r.fields['Apellidos'] || ''}`.trim(), fecha: r.fields['Fecha'] || '', codigo: r.fields['CÓDIGO'] || '', caduca: r.fields['CADUCA'] || '', canjeada: r.fields['CANJEADA'] || '', fechaTarjeta: r.fields['FECHA TARJETA'] || '', ignorar: !!r.fields['IGNORAR'], ganada: !r.fields['CÓDIGO'] && !r.fields['IGNORAR'] && vinieron.has((r.fields['PACIENTE'] || [])[0]) })) }; } }
-        return res.status(200).json({ ok: true, hoy: hoyF, saldo, consent, referidos,
+        // Sesiones gratis ganadas en el sorteo de reseñas (se descuentan a mano con el botón)
+        const premios = (((await ajuste('premios-sorteo', {})) || {})[q.id] || []);
+        return res.status(200).json({ ok: true, hoy: hoyF, saldo, consent, referidos, premios,
           paciente: { id: pac.id, pin: F['PIN'] || '', nombre: F['FULL NAME'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', telf: F['TELF'] || '', whatsapp: F['WHATSAPP'] || '', pin: F['PIN'] || '', email: F['EMAIL'] || '', dni: F['DNI'] || '', cumple: F['CUMPLE'] || '', telDescartado: F['TELF FORM DESCARTADO'] || '', foto: (((F['FOTO PERFIL'] || [])[0] || {}).thumbnails || {}).large ? F['FOTO PERFIL'][0].thumbnails.large.url : (((F['FOTO PERFIL'] || [])[0] || {}).url || ''), ultimoAcceso: F['ÚLTIMO ACCESO APP'] || '', appUsada: !!(F['ÚLTIMO ACCESO APP'] || F['PushSubscription']), appInstalada: !!(F['APP INSTALADA'] || F['PushSubscription']), alta: pac.createdTime || '', estados: F['ESTADO'] || [],
             motivo: F['MOTIVO DE VISITA'] || '', historial: F['HISTORIAL CLÍNICO'] || '', historialMod: F['HISTORIAL ACTUALIZADO'] || '', notas: F['NOTAS'] || '', porQue: F['POR QUÉ NO REAGENDA'] || '', porQueFecha: F['POR QUÉ FECHA'] || '', porQueHist: String(F['POR QUÉ HISTORIAL'] || '').split('\n').map(l => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean), porQueFisio: F['POR QUÉ FISIO'] || '', bonoPrevio: F['SESIONES BONO PREVIO'] || 0, colab: F['COLAB'] || '', resena: !!F['RESEÑA POSITIVA'],
             archivos: (F['DOCUS'] || []).map(a => ({ nombre: a.filename || 'archivo', url: a.url, tipo: a.type || '', tam: a.size || 0, mini: (a.thumbnails && ((a.thumbnails.large && a.thumbnails.large.url) || (a.thumbnails.small && a.thumbnails.small.url))) || '' })) },
