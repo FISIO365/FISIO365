@@ -11509,6 +11509,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-02',t:'El curso «Cómo funciona la app», rehecho: cada tarjeta parte de una situación real (cuándo, qué haces y para qué), con capturas del panel y «Enséñamelo».'},
  {f:'2026-11-02',t:'Formación del panel: cada día laborable te llega a Comunicaciones la tarea «Módulo de hoy». Se marca hecha sola al terminar el módulo.'},
  {f:'2026-10-31',t:'Si un paciente no paga por adelantado en 2 horas, su cita se cancela sola y la hora queda libre, a cualquier hora del día.'},
  {f:'2026-10-31',t:'Los desplegables, fechas, horas y preguntas del panel ya tienen nuestro estilo (también en el móvil).'},
@@ -13567,286 +13568,347 @@ function renderFormacion(wrap, ruta){
  {q:'¿Dónde ves de un vistazo quién tiene pagos pendientes?',opts:['En Mensajes › Pagos','En el chat','En Pacientes'],ok:0,fb:['¡Eso es!','No.','Ahí irías uno a uno.']}
  ]},
 
- {t:'Mensajes: los recordatorios',sub:'Avisos de cita y confirmación',
+ {t:'Mensajes: los recordatorios',sub:'Que nadie se olvide de su cita',
  cards:[
- {ti:'Mensajes',body:`El botón <b>Mensajes</b> de la agenda reúne los WhatsApp del día ya escritos. Tocas <b>Enviar</b>, se abre WhatsApp con el texto y el enlace, y queda apuntado quién y cuándo. En el ordenador eliges una vez <b>WhatsApp Web</b> o <b>la app de WhatsApp</b>.`,ver:{sec:'agenda',pasos:[{el:'.ag-recb:not(.ag-pdfb)',txt:'Aquí: Mensajes.'}]}},
- {ti:'Avisos: qué días salen',body:`De lunes a jueves, los de <b>mañana</b>. El <b>viernes, los de sábado y lunes</b>. Sábado y domingo, los de lunes. Con <b>Otro día</b> eliges otro. Si un paciente tiene dos citas el mismo día, van en un solo mensaje.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="rec"]',txt:'Avisos: los recordatorios.',click:['.ag-recb:not(.ag-pdfb)']}]}},
- {ti:'Lo que lleva el enlace',body:`El paciente toca <b>«¡Allí estaré!»</b> y su cita queda <b>Confirmada</b>; puede añadirla a su calendario. Si es su <b>1ª visita</b>, el enlace le pide el <b>consentimiento</b>. Si ya vino y no tiene la app, le da su <b>usuario y PIN</b>. Desde el enlace <b>no puede cancelar</b>.`},
- {ti:'Confirmar a mano y 2º aviso',body:`Si te contesta «ok» por WhatsApp, <b>Confirmar</b>. A quien no ha confirmado le sale el <b>2º aviso</b>: para citas de hoy desde las 11:00 se manda por la mañana; para citas antes de las 11, a partir de las 17 h del día anterior.`}
+ {ti:'Cada día: manda los recordatorios',shot:'/img/school/panel-a-01-avisos.jpg',body:`<b>Cuándo:</b> cada día, una vez.<br><br><b>Qué haces:</b> en la agenda, <b>Mensajes › Avisos</b>. Salen los pacientes con cita y su mensaje ya escrito. Toca <b>Enviar</b>: se abre WhatsApp con el texto y el enlace.<br><br><b>Para qué:</b> menos gente que se olvida y no viene.`,ver:{sec:'agenda',pasos:[{el:'.ag-recb:not(.ag-pdfb)',txt:'Aquí: Mensajes.'},{el:'.rec-m .enc-tabs button[data-t="rec"]',txt:'Avisos: los recordatorios de las citas.',click:['.ag-recb:not(.ag-pdfb)']}]}},
+ {ti:'¿De qué día salen?',body:`De lunes a jueves, los de <b>mañana</b>.<br>El <b>viernes</b>, los del <b>sábado y el lunes</b>.<br>Sábado y domingo, los del lunes.<br><br>¿Necesitas otro día? <b>Otro día</b>. Si alguien tiene dos citas el mismo día, van en un solo mensaje.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .rec-otro',txt:'Con «Otro día» eliges otra fecha.',click:['.ag-recb:not(.ag-pdfb)']}]}},
+ {ti:'Lo que hace el enlace',body:`El paciente toca <b>«¡Allí estaré!»</b> y su cita queda <b>Confirmada</b> sola.<br><br>Si es su <b>1ª visita</b>, el mismo enlace le pide el <b>consentimiento</b>. Si no tiene la app, le da su usuario y PIN.<br><br>Desde el enlace <b>no puede cancelar</b>: si quiere cambiar, os escribe.`},
+ {ti:'Te contesta «ok» por WhatsApp',body:`<b>Cuándo:</b> responde al mensaje pero no toca el enlace.<br><br><b>Qué haces:</b> en Avisos, <b>Confirmar</b> en su fila.<br><br><b>Para qué:</b> si no, sigue saliendo como sin confirmar.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .rec-lista',txt:'En cada fila: Enviar, Confirmar o ✓ Confirmada.',click:['.ag-recb:not(.ag-pdfb)']}]}},
+ {ti:'No ha confirmado: 2º aviso',body:`A quien no ha confirmado le sale el botón <b>2º aviso</b>, en el momento de mandarlo:<br>• Cita de hoy a partir de las 11:00 → esa misma mañana.<br>• Cita antes de las 11:00 → desde las 17 h del día anterior.`}
  ],
  qs:[
- {q:'Es viernes. ¿Qué recordatorios salen en Avisos?',opts:['Solo los del sábado','Los del sábado y los del lunes','Los del lunes'],ok:1,fb:['También los del lunes.','¡Correcto!','También los del sábado.']},
- {q:'Una paciente nueva no ha firmado el consentimiento. ¿Cómo le llega?',opts:['En papel siempre','Dentro del enlace del recordatorio de su 1ª visita','No hace falta'],ok:1,fb:['También se puede, pero primero va en el enlace.','¡Eso es!','Sí hace falta.']},
- {q:'Un paciente contesta «ok» al recordatorio por WhatsApp sin tocar el enlace. ¿Qué haces?',opts:['Nada','Le doy a Confirmar en Avisos','Le mando otro'],ok:1,fb:['Seguiría saliendo sin confirmar.','¡Bien!','No hace falta.']}
+ {q:'Es viernes. ¿Qué recordatorios te salen en Avisos?',opts:['Solo los del sábado','Los del sábado y los del lunes','Los del lunes'],ok:1,fb:['También los del lunes.','¡Correcto!','También los del sábado.']},
+ {q:'Una paciente nueva no ha firmado el consentimiento. ¿Cómo le llega?',opts:['Solo en papel, cuando venga','Dentro del enlace del recordatorio de su 1ª visita','No hace falta'],ok:1,fb:['También se puede, pero ya le llega en el enlace.','¡Eso es!','Sí hace falta.']},
+ {q:'Un paciente contesta «perfecto, allí estaré» al recordatorio, sin tocar el enlace. ¿Qué haces?',opts:['Nada','En Avisos, Confirmar en su fila','Le mando otro recordatorio'],ok:1,fb:['Seguiría saliendo sin confirmar.','¡Bien!','No hace falta.'],ver:{sec:'agenda',pasos:[{el:'.rec-m .rec-lista',txt:'Aquí, en su fila.',click:['.ag-recb:not(.ag-pdfb)']}]}},
+ {q:'Un paciente escribe por el enlace del recordatorio que quiere cancelar. ¿Puede hacerlo desde ahí?',opts:['Sí, se cancela sola','No: desde el enlace no se cancela, os tiene que escribir','Solo si es su primera visita'],ok:1,fb:['No: el enlace solo confirma.','¡Correcto! Lo cancelas tú en la agenda.','No, nunca desde el enlace.']}
  ]},
 
- {t:'Mensajes: encuestas, reseñas y regalos',sub:'Las demás pestañas',
+ {t:'Mensajes: encuestas, reseñas y regalos',sub:'Saber qué tal ha ido y que nos recomienden',
  cards:[
- {ti:'1ª visita',body:`Pacientes cuya <b>primera sesión fue ayer</b> (el lunes, los del sábado). <b>Enviar</b> les manda su encuesta. Cuando contestan ves su valoración, si fueron a Google y su comentario, y <b>Escribirle</b> te propone una respuesta según lo que dijo.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="enc"]',txt:'1ª visita.',click:['.ag-recb:not(.ag-pdfb)']}]}},
- {ti:'Alta',body:`Pacientes dados de alta en los últimos 30 días. <b>Enviar</b> la encuesta de alta o <b>Ya está</b> para quitarlo de la lista.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="alt"]',txt:'Alta.',click:['.ag-recb:not(.ag-pdfb)']}]}},
- {ti:'Reseñas',body:`Pacientes con sesión en los últimos 7 días (con el buscador, cualquiera). Eliges el mensaje: <b>General</b>, <b>De alta</b>, <b>Está mucho mejor</b> o <b>Viene hace tiempo</b>. Sale «✓ Ya dejó reseña» si consta.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="res"]',txt:'Reseñas.',click:['.ag-recb:not(.ag-pdfb)']}]}},
- {ti:'Regalos',body:`Tarjetas regalo para quien nos ha recomendado, cuando la persona recomendada ya ha hecho su primera sesión. <b>Enviar tarjeta</b> (revisas los nombres y se genera la imagen) o <b>¿Quién es?</b> si no se sabe quién recomendó.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="reg"]',txt:'Regalos.',click:['.ag-recb:not(.ag-pdfb)']}]}}
+ {ti:'Al día siguiente de la 1ª visita',shot:'/img/school/panel-a-02-primera.jpg',body:`<b>Cuándo:</b> el día después de su primera sesión (el lunes, los del sábado).<br><br><b>Qué haces:</b> <b>Mensajes › 1ª visita</b> › <b>Enviar</b>: le llega una encuesta cortita.<br><br><b>Para qué:</b> enterarnos pronto si algo no le ha gustado. Cuando contesta ves su nota y su comentario, y <b>Escribirle</b> te propone qué responderle.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="enc"]',txt:'1ª visita.',click:['.ag-recb:not(.ag-pdfb)']}]}},
+ {ti:'Le das el alta',shot:'/img/school/panel-a-03-alta.jpg',body:`En <b>Alta</b> salen los que han tenido el alta los últimos 30 días.<br><br><b>Enviar</b> le manda la encuesta de alta. <b>Ya está</b> lo quita de la lista.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="alt"]',txt:'Alta.',click:['.ag-recb:not(.ag-pdfb)']}]}},
+ {ti:'Está contento: pídele una reseña',shot:'/img/school/panel-a-04-resenas.jpg',body:`<b>Cuándo:</b> notas que está contento con el tratamiento.<br><br><b>Qué haces:</b> <b>Mensajes › Reseñas</b>. Elige el mensaje que encaja (<b>General</b>, <b>De alta</b>, <b>Está mucho mejor</b> o <b>Viene hace tiempo</b>) y <b>Enviar</b>.<br><br>Salen los de los últimos 7 días; a otro, búscalo arriba. Si ya la dejó, pone <b>✓ Ya dejó reseña</b>.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="res"]',txt:'Reseñas.',click:['.ag-recb:not(.ag-pdfb)']}]}},
+ {ti:'Nos ha recomendado: tarjeta regalo',shot:'/img/school/panel-a-05-regalos.jpg',body:`<b>Cuándo:</b> la persona que vino recomendada ya ha hecho su primera sesión.<br><br><b>Qué haces:</b> <b>Mensajes › Regalos</b> › <b>Enviar tarjeta</b> a quien le recomendó.<br><br>¿No se sabe quién es? <b>¿Quién es?</b> y lo eliges.`,ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="reg"]',txt:'Regalos.',click:['.ag-recb:not(.ag-pdfb)']}]}}
  ],
  qs:[
  {q:'¿Cuándo se manda la encuesta de 1ª visita?',opts:['El mismo día','Al día siguiente de su primera sesión','A la semana'],ok:1,fb:['Mejor al día siguiente.','¡Correcto!','No, al día siguiente.']},
- {q:'Una paciente vino recomendada por Marta y hoy ha hecho su primera sesión. ¿Qué le toca a Marta?',opts:['Nada','Una tarjeta regalo: sale en Mensajes › Regalos','Un descuento en su pack'],ok:1,fb:['Sí le toca algo.','¡Eso es!','No: una tarjeta regalo.']}
+ {q:'Un paciente te dice que ya casi no le duele y está encantado. ¿Qué haces?',opts:['Nada','Mensajes › Reseñas › «Está mucho mejor» › Enviar','Le doy el alta'],ok:1,fb:['¡Es el mejor momento para pedirla!','¡Eso es!','Si aún no ha terminado, no.'],ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="res"]',txt:'Reseñas.',click:['.ag-recb:not(.ag-pdfb)']}]}},
+ {q:'Una paciente vino recomendada por Marta y hoy ha hecho su primera sesión. ¿Qué le toca a Marta?',opts:['Nada','Una tarjeta regalo: sale en Mensajes › Regalos','Un descuento en su pack'],ok:1,fb:['Sí le toca algo.','¡Eso es!','No: una tarjeta regalo.']},
+ {q:'Un paciente contesta la encuesta de 1ª visita con una nota baja. ¿Qué haces?',opts:['Nada, es solo una encuesta','«Escribirle»: te propone una respuesta y le escribes','Borrar la encuesta'],ok:1,fb:['Justo para esto sirve: para arreglarlo a tiempo.','¡Bien!','No.']}
  ]},
 
- {t:'Huecos libres y lista de espera',sub:'Llenar la agenda',
+ {t:'Huecos libres y lista de espera',sub:'Hay huecos sin llenar: cómo llenarlos',
  cards:[
- {ti:'Enviar huecos',body:`<b>Enviar huecos</b>: eliges los días (próximos 3, 7 o 14), el fisio y si <b>paga al reservar</b> (65 € o 75 €). <b>Mandar por WhatsApp</b> abre WhatsApp sin destinatario: eliges tú a quién.`,ver:{sec:'agenda',pasos:[{el:'.ag-pdfb',txt:'Toca Enviar huecos…'},{el:'.hz-modal .hl-dias',txt:'…elige los días…',click:['.ag-pdfb']},{el:'.hz-modal .hl-pago',txt:'…si paga al reservar…',click:['.ag-pdfb']},{el:'.hz-modal .hl-link',txt:'…y mándalo.',click:['.ag-pdfb']}]}},
- {ti:'Lo que ve el paciente',body:`Los días con sus horas por fisio (las «sin bomba» con un asterisco). Toca una, pone nombre, apellidos, teléfono y motivo, y <b>queda reservada</b>. Si es nuevo, se le crea la ficha. A vosotros os llega un aviso de la reserva. Igual que si le das cita tú: sale de «Por llamar» y de la lista de espera, y pasa a Activo (o Paciente nuevo).`},
- {ti:'La lista de espera',body:`En <b>Captación › En espera</b> apuntas a quien quiere hora en unas <b>franjas</b> concretas (días, mañanas, tardes…) y con qué fisio. Cuando se libera un hueco que le encaja, sale <b>Ofrecer a…</b>: primero a quien no se ha avisado en 2 días y lleva más tiempo esperando.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'En espera, No citados y Negocios.'}]}},
- {ti:'Ofrecer un hueco',body:`<b>Ofrecer</b> le escribe por WhatsApp y queda «esperando respuesta». Si dice que sí, <b>Sí, le doy la cita</b>; si no, <b>No puede</b> (ese hueco no se le vuelve a ofrecer).`}
+ {ti:'Te quedan huecos libres',shot:'/img/school/panel-a-06-huecos.jpg',body:`<b>Cuándo:</b> ves huecos sin llenar en los próximos días.<br><br><b>Qué haces:</b> <b>Enviar huecos</b>. Elige los días, el fisio y si <b>paga al reservar</b>. <b>Mandar por WhatsApp</b>: tú eliges a quién.<br><br><b>Para qué:</b> el paciente toca la hora que le va bien y queda reservada sola.`,ver:{sec:'agenda',pasos:[{el:'.ag-pdfb',txt:'Toca Enviar huecos…'},{el:'.hz-modal .hl-dias',txt:'…elige los días…',click:['.ag-pdfb']},{el:'.hz-modal .hl-pago',txt:'…si paga al reservar…',click:['.ag-pdfb']},{el:'.hz-modal .hl-link',txt:'…y mándalo.',click:['.ag-pdfb']}]}},
+ {ti:'Cuando reserva por el enlace',body:`Pone su nombre, teléfono y motivo y <b>queda en la agenda</b>. Os llega un aviso.<br><br>Si es nuevo, se le crea la ficha. Y pasa lo mismo que si le das cita tú: sale de Por llamar y de la lista de espera.`},
+ {ti:'Quiere hora y no hay',shot:'/img/school/panel-a-07-espera.jpg',body:`<b>Cuándo:</b> alguien quiere venir en unos días u horas concretos y está todo lleno.<br><br><b>Qué haces:</b> <b>Captación › En espera › + Añadir</b>, con sus <b>franjas</b> (días, mañanas, tardes…) y fisio si tiene preferencia.<br><br><b>Para qué:</b> cuando se libera un hueco que le encaja, el panel te lo dice.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'En espera, No citados y Negocios.'},{el:'.cap-add',txt:'Aquí le añades.'}]}},
+ {ti:'Se libera un hueco: ofrécelo',body:`En <b>En espera</b>, cada hueco libre te dice <b>a quién ofrecérselo primero</b>: quien más lleva esperando y no se le ha avisado en 2 días.<br><br><b>Ofrecer a…</b> le escribe por WhatsApp. Si dice que sí, le das la cita. Si no puede, <b>No puede</b>: ese hueco no se le vuelve a ofrecer.`,ver:{sec:'cap',pasos:[{el:'.cap-sem || .cap-tabs',txt:'Los huecos de esta semana y a quién ofrecérselos.'}]}}
  ],
  qs:[
- {q:'Se te han quedado tres huecos libres esta semana. ¿Cómo los llenas rápido?',opts:['«Enviar huecos»: mando un enlace y reservan solos','Llamo a todos','Nada'],ok:0,fb:['¡Eso es!','Mejor el enlace.','Se pueden llenar.'],ver:{sec:'agenda',pasos:[{el:'.ag-pdfb',txt:'Enviar huecos.'}]}},
- {q:'Alguien quiere venir los martes por la tarde y está todo lleno. ¿Qué haces?',opts:['Le apunto en Captación › En espera con esa franja','Que llame otro día','Nada'],ok:0,fb:['¡Bien! Cuando se libere, se le ofrece.','Así se pierde.','Mejor apuntarlo.'],ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'Aquí está la lista de espera.'}]}}
+ {q:'Se te han quedado tres huecos libres esta semana. ¿Cómo los llenas rápido?',opts:['«Enviar huecos»: mando el enlace y reservan solos','Llamo a todos los pacientes','Nada'],ok:0,fb:['¡Eso es!','Mucho más rápido con el enlace.','Se pueden llenar.'],ver:{sec:'agenda',pasos:[{el:'.ag-pdfb',txt:'Enviar huecos.'}]}},
+ {q:'Alguien quiere venir los martes por la tarde y está todo lleno. ¿Qué haces?',opts:['Le apunto en Captación › En espera con esa franja','Que vuelva a llamar otro día','Nada'],ok:0,fb:['¡Bien! Cuando se libere, se le ofrece.','Así se pierde.','Mejor apuntarlo.'],ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'Aquí está la lista de espera.'}]}},
+ {q:'Le ofreces un hueco a Rosa y te dice que ese día no puede. ¿Qué haces?',opts:['La borro de la lista','«No puede»: sigue en espera y ese hueco no se le vuelve a ofrecer','Nada'],ok:1,fb:['Sigue queriendo hora: no la borres.','¡Eso es!','Se le seguiría ofreciendo el mismo hueco.']},
+ {q:'Mandas huecos y alguien reserva uno por el enlace. ¿Tienes que apuntarlo en la agenda?',opts:['Sí, a mano','No: queda en la agenda solo y os llega un aviso','Solo si es nuevo'],ok:1,fb:['No hace falta.','¡Correcto!','Tampoco: si es nuevo, se le crea la ficha sola.']}
  ]},
 
- {t:'Pacientes: buscar y crear',sub:'La lista de pacientes',
+ {t:'Pacientes: buscar y crear',sub:'Encontrar una ficha o crear una nueva',
  cards:[
- {ti:'Buscar',body:`En <b>Pacientes</b> busca por nombre (todas las palabras, sin importar tildes), por email o por teléfono (4 cifras o más). Si no está en la lista, lo busca también en la base de datos y lo añade. Ordena por más recientes, más antiguos o A–Z.`,ver:{sec:'pac',pasos:[{el:'#pacBuscar',txt:'Escribe aquí el nombre, email o teléfono.'}]}},
- {ti:'＋ Nuevo paciente',body:`Nombre y apellidos, teléfono (obligatorios), email, DNI, fecha de nacimiento y estado. Con <b>Darle acceso a la app</b> (marcado) el email es obligatorio y se le crea un <b>PIN</b>. Si ya hay uno con el mismo teléfono, email o nombre, te avisa: <b>Abrir</b> el que existe o crear igualmente.`,ver:{sec:'pac',pasos:[{el:'.np-btn',txt:'Aquí creas un paciente nuevo.'}]}}
+ {ti:'Buscas a un paciente',shot:'/img/school/panel-a-08-pacientes.jpg',body:`<b>Qué haces:</b> en <b>Pacientes</b>, escribe su nombre (sin preocuparte de tildes), su email o <b>4 cifras de su teléfono</b>.<br><br>Si no sale en la lista, el panel lo busca también en la base de datos.<br><br>Puedes ordenar por más recientes, más antiguos o A–Z.`,ver:{sec:'pac',pasos:[{el:'#pacBuscar',txt:'Escribe aquí nombre, email o teléfono.'}]}},
+ {ti:'Llega alguien nuevo',shot:'/img/school/panel-a-09-nuevo.jpg',body:`<b>Qué haces:</b> <b>＋ Nuevo paciente</b>. Nombre y teléfono son obligatorios.<br><br>Con <b>Darle acceso a la app</b> marcado, pon también su <b>email</b>: se le crea un PIN para entrar.`,ver:{sec:'pac',pasos:[{el:'.np-btn',txt:'Aquí creas un paciente nuevo.'}]}},
+ {ti:'«Ya hay un paciente parecido»',body:`<b>Cuándo:</b> al crear, hay otro con el mismo teléfono, email o nombre.<br><br><b>Qué haces:</b> mira si es la misma persona. Si lo es, <b>Abrir</b> esa ficha. Si no, crea igualmente.<br><br><b>Para qué:</b> una persona, una ficha. Si no, su historia y sus pagos quedan repartidos.`}
  ],
  qs:[
- {q:'Vas a crear un paciente y te sale «Ya hay un paciente parecido». ¿Qué haces?',opts:['Lo creo igualmente siempre','Miro si es el mismo y, si lo es, abro ese','Cancelo'],ok:1,fb:['Así se duplican fichas.','¡Correcto!','Mejor comprobarlo.']},
- {q:'Solo te acuerdas de los 4 últimos números del teléfono de un paciente. ¿Lo encuentras?',opts:['Sí, escribiéndolos en el buscador','No','Solo por nombre'],ok:0,fb:['¡Eso es!','Sí se puede.','También por teléfono.']}
+ {q:'Vas a crear un paciente y te sale «Ya hay un paciente parecido». ¿Qué haces?',opts:['Lo creo igualmente siempre','Miro si es el mismo y, si lo es, abro esa ficha','Cancelo y no hago nada'],ok:1,fb:['Así se duplican fichas.','¡Correcto!','Mejor comprobarlo.']},
+ {q:'Solo te acuerdas de los 4 últimos números del teléfono de un paciente. ¿Lo encuentras?',opts:['Sí, escribiéndolos en el buscador','No','Solo por nombre'],ok:0,fb:['¡Eso es!','Sí se puede.','También por teléfono.'],ver:{sec:'pac',pasos:[{el:'#pacBuscar',txt:'Escríbelos aquí.'}]}},
+ {q:'Creas un paciente nuevo con «Darle acceso a la app» marcado, pero no tienes su email. ¿Qué pasa?',opts:['Se crea igual','Te pide el email: para la app hace falta','Se le manda por SMS'],ok:1,fb:['No: sin email no se le puede dar acceso.','¡Eso es! Pídeselo o desmarca la casilla.','No.']},
+ {q:'Buscas a «María José Núñez» escribiendo «maria nunez». ¿Sale?',opts:['No, hay que poner las tildes','Sí: busca todas las palabras sin importar tildes','Solo si escribes el nombre completo'],ok:1,fb:['No hacen falta.','¡Correcto!','No hace falta.']}
  ]},
 
  {t:'La ficha: botones y resumen',sub:'Todo lo del paciente en un sitio',
  cards:[
- {ti:'Arriba',body:`Foto o iniciales, nombre y sus <b>estados</b> (toca para poner o quitar; puede tener varios). Botones: <b>Llamar</b>, <b>WhatsApp</b>, <b>Enviar app</b> (o App ✓), <b>Seguimiento</b> y <b>Cobrar</b>.`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-acts',txt:'Los botones de la ficha.',click:['#pacResultados .pt-r']}]}},
- {ti:'WhatsApp desde la ficha',body:`Te prepara un mensaje personalizado con su última sesión y su próxima cita (lo puedes cambiar). Al volver te pregunta si lo has enviado y si hay que revisarlo en una semana, en un mes u otra fecha: queda en sus llamadas.`},
- {ti:'Enviar app',body:`Le manda por WhatsApp el enlace, su usuario y su PIN. Si ya la tiene, el botón sale como <b>App ✓</b> y al tocarlo la reenvía directamente.`},
- {ti:'El resumen',body:`Avisos (viene de parte de un negocio, tiene tarjeta regalo para canjear, alertas de salud), sesiones hechas, próxima cita y última sesión. Sus <b>datos</b> (Editar), su <b>salud</b> del consentimiento y los <b>documentos firmados</b>. La ficha recuerda la pestaña en la que estabas.`},
- {ti:'No reagenda',body:`Si no tiene próxima cita, marca <b>No reagenda</b> y explica por qué. Luego eliges: <b>Pasa a seguimiento</b> (cuándo llamarle y quién) o <b>No necesita más</b> (se guarda como alta).`},
- {ti:'Consentimiento',body:`Si no lo tiene: <b>Enviar</b> (WhatsApp con el formulario), <b>En papel</b> (foto o archivo) o <b>Enlazar</b> uno que ya rellenó. Si el formulario lo rellenó alguien con su mismo teléfono, te pregunta si es suyo.`}
+ {ti:'Lo de arriba: hablar con él',shot:'/img/school/panel-a-10-ficha.jpg',body:`Debajo del nombre están sus <b>estados</b> (toca para cambiarlos).<br><br>Y los botones: <b>Llamar</b>, <b>WhatsApp</b>, <b>Enviar app</b>, <b>Seguimiento</b> y <b>Cobrar y facturar</b>.`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-acts',txt:'Los botones de la ficha.',click:['#pacResultados .pt-r']}]}},
+ {ti:'Le escribes por WhatsApp',body:`<b>Qué haces:</b> botón <b>WhatsApp</b>. Te prepara un mensaje con su última sesión y su próxima cita; lo puedes cambiar.<br><br>Al volver te pregunta si lo has enviado y si hay que revisarlo más adelante: así queda en sus llamadas.`},
+ {ti:'No tiene la app',body:`<b>Enviar app</b> le manda por WhatsApp el enlace, su usuario y su PIN.<br><br>Si ya la tiene, el botón pone <b>App ✓</b>; tocándolo se la reenvías.`},
+ {ti:'El resumen de un vistazo',shot:'/img/school/panel-a-11-resumen.jpg',body:`Sesiones hechas, <b>próxima cita</b> y <b>última sesión</b>. Debajo, sus <b>datos</b> (Editar), su <b>salud</b> del consentimiento y los documentos firmados.<br><br>Arriba salen los avisos importantes: alertas de salud, tarjeta regalo por canjear…`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-tabs',txt:'Resumen, Historia, Citas, Ejercicios y Más.',click:['#pacResultados .pt-r']}]}},
+ {ti:'Se va sin próxima cita',body:`<b>Cuándo:</b> el paciente no reserva la siguiente.<br><br><b>Qué haces:</b> marca <b>No reagenda</b> y explica por qué. Luego eliges: <b>Pasa a seguimiento</b> (cuándo llamarle y quién) o <b>No necesita más</b> (queda como alta).<br><br><b>Para qué:</b> que nadie se quede sin llamar.`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-pqchk',txt:'Aquí: No reagenda.',click:['#pacResultados .pt-r']}]}},
+ {ti:'Le falta el consentimiento',body:`En Salud: <b>Enviar</b> (le llega por WhatsApp), <b>En papel</b> (subes una foto) o <b>Enlazar</b> uno que ya rellenó.<br><br>Si lo rellenó alguien con su mismo teléfono, te pregunta si es suyo.`}
  ],
  qs:[
- {q:'Un paciente no ha reservado otra cita y te dice que se va un mes de viaje. ¿Qué haces?',opts:['Nada','No reagenda: «se va de viaje», Pasa a seguimiento y llamarle en 1 mes','Darle el alta'],ok:1,fb:['Seguiría saliendo en «sin próxima cita».','¡Perfecto!','No ha terminado.']},
- {q:'Una paciente firmó el consentimiento en papel. ¿Qué haces?',opts:['Lo guardo en un cajón','En su ficha, En papel: le hago una foto y lo subo','Nada'],ok:1,fb:['Mejor subirlo.','¡Bien!','Hay que subirlo.']}
+ {q:'Un paciente no reserva otra cita porque se va un mes de viaje. ¿Qué haces?',opts:['Nada','No reagenda: «se va de viaje» › Pasa a seguimiento, llamarle en 1 mes','Darle el alta'],ok:1,fb:['Se quedaría sin llamar.','¡Perfecto!','No ha terminado.'],ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-pqchk',txt:'Aquí.',click:['#pacResultados .pt-r']}]}},
+ {q:'Una paciente firmó el consentimiento en papel. ¿Qué haces?',opts:['Lo guardo en un cajón','En su ficha, En papel: le hago una foto y lo subo','Nada'],ok:1,fb:['Mejor subirlo: así lo ve todo el equipo.','¡Bien!','Hay que subirlo.']},
+ {q:'Un paciente ha perdido su PIN de la app. ¿Qué haces?',opts:['Le creo otra ficha','En su ficha, el botón App ✓: se la reenvía con su usuario y PIN','Le digo que se registre'],ok:1,fb:['¡No! Se duplicaría.','¡Eso es!','No hay registro: entra con su PIN.'],ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-appb',txt:'Este botón.',click:['#pacResultados .pt-r']}]}},
+ {q:'Abres la ficha antes de la sesión. ¿Dónde ves si tiene alguna alerta de salud?',opts:['En el Resumen: arriba los avisos y abajo su Salud','En el chat','No se ve'],ok:0,fb:['¡Eso es!','No.','Sí se ve.']}
  ]},
 
- {t:'Sin evolución',sub:'Cuando un paciente no mejora',
+ {t:'Sin evolución',sub:'Un paciente no mejora: qué haces',
  cards:[
- {ti:'Cuándo',body:`Si tras <b>3 sesiones</b> no mejora, marca <b>Sin evolución</b> en el Resumen de su ficha.`,ver:{sec:'pac',pasos:[{el:'.fp-sev',txt:'Aquí, en el Resumen de la ficha.',click:['#pacResultados .pt-r']}]}},
- {ti:'El formulario',body:`La app rellena sola lo que ya sabe (edad, motivo, sesiones, si hace los ejercicios…). Tú completas el diagnóstico, los síntomas, el tratamiento hecho, las banderas rojas y tu hipótesis, y <b>Crear informe</b>.`},
- {ti:'Lo que pasa después',body:`Se crea un informe <b>solo para el equipo</b> (el paciente no lo ve), con un texto para comentarlo en el grupo técnico. El caso queda en <b>Pendientes</b> hasta que decidas.`},
- {ti:'Ya sé cómo seguir',body:`Elige: <b>cambiar enfoque</b>, <b>cambiar de fisio</b>, <b>derivar al médico</b>, <b>pedir pruebas</b> o <b>alta</b>, y escribe qué vas a hacer. <b>Tarea hecha</b> cierra el caso.`}
+ {ti:'Lleva 3 sesiones y no mejora',shot:'/img/school/panel-b-sev-check.jpg',body:`<b>Cuándo:</b> tras <b>3 sesiones</b> el paciente sigue igual.<br><br><b>Qué haces:</b> en su ficha › Resumen, marca <b>Sin evolución</b>.<br><br><b>Para qué:</b> para que el caso no se quede en el aire y el equipo te ayude a decidir.`,ver:{sec:'pac',pasos:[{el:'.fp-sev',txt:'Aquí, en el Resumen de la ficha.',click:['#pacResultados .pt-r']}]}},
+ {ti:'El formulario se rellena casi solo',shot:'/img/school/panel-b-sev-form.jpg',body:`La app pone lo que ya sabe: edad, motivo, sesiones, ejercicios, si los hace y cuántas sesiones le quedan. Si algo no cuadra, corrígelo.<br><br>Tú completas el <b>diagnóstico</b>, los <b>síntomas</b>, el <b>tratamiento hecho</b>, las <b>banderas rojas</b> y <b>tu hipótesis</b>. Luego, <b>Crear informe</b>.`},
+ {ti:'Lo comentáis en equipo',body:`Se crea un informe <b>solo para el equipo</b>: el paciente no lo ve.<br><br>Te da el texto listo para pegarlo en el <b>grupo técnico</b> de WhatsApp. El caso queda en tus <b>Pendientes</b> hasta que decidas.`},
+ {ti:'Ya sabes cómo seguir',body:`En su ficha, <b>Ya sé cómo seguir</b>. Elige: <b>cambiar enfoque</b>, <b>cambiar de fisio</b>, <b>derivar al médico</b>, <b>pedir pruebas</b> o <b>alta</b>, y escribe qué vas a hacer.<br><br><b>Tarea hecha</b> cierra el caso. Si sigue sin mejorar, vuelve a marcarlo.`,ver:{sec:'pac',pasos:[{el:'.fp-sev',txt:'Cuando hay un caso abierto, aquí sale «Ya sé cómo seguir».',click:['#pacResultados .pt-r']}]}}
  ],
  qs:[
+ {q:'Un paciente lleva 3 sesiones con el mismo dolor. ¿Qué haces?',opts:['Sigo igual, ya mejorará','Marco «Sin evolución» en su ficha y relleno el formulario','Le doy el alta'],ok:1,fb:['Mejor pararse a pensarlo con el equipo.','¡Eso es!','No ha mejorado: el alta no toca.'],ver:{sec:'pac',pasos:[{el:'.fp-sev',txt:'Aquí.',click:['#pacResultados .pt-r']}]}},
  {q:'¿El paciente ve el informe de «Sin evolución»?',opts:['Sí, en su app','No, es solo para el equipo','Solo si lo pide'],ok:1,fb:['No: es interno.','¡Correcto!','Es interno.']},
- {q:'Ya has decidido derivarle al traumatólogo. ¿Cómo cierras el caso?',opts:['Ya sé cómo seguir › Derivar al médico › Tarea hecha','Desmarcando la casilla','No se cierra'],ok:0,fb:['¡Eso es!','Mientras está abierto no se desmarca.','Sí se cierra.']}
+ {q:'Has creado el informe. ¿Dónde lo comentáis?',opts:['Se lo mando al paciente','Pego el texto en el grupo técnico de WhatsApp','En ningún sitio'],ok:1,fb:['No: es para el equipo.','¡Bien!','Para eso sirve: para decidir entre todos.']},
+ {q:'Ya has decidido derivarle al traumatólogo. ¿Cómo cierras el caso?',opts:['Ya sé cómo seguir › Derivar al médico › Tarea hecha','Desmarco la casilla','No se cierra'],ok:0,fb:['¡Eso es!','Mientras está abierto no se desmarca.','Sí se cierra.']}
  ]},
 
- {t:'Historia y archivos',sub:'Lo que pasa en cada sesión',
+ {t:'Historia y archivos',sub:'Acabas la sesión: apúntala',
  cards:[
- {ti:'¿Está al día?',body:`Arriba de la Historia sale si está <b>actualizada</b> después de su última sesión o <b>⚠️ no se ha actualizado</b>. Si no la actualizas, te sale en Pendientes al día siguiente.`},
- {ti:'＋ Anotar sesión',body:`Escribe qué hiciste: se añade al final con la fecha de la sesión y tu nombre, sin borrar nada. <b>Editar</b> te deja cambiar solo lo último o toda la historia.`,ver:{sec:'pac',pasos:[{el:'.fp-add-ev',txt:'Aquí anotas la sesión.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
- {ti:'Archivos',body:`<b>＋ Subir</b>: pruebas, informes de su médico, fotos… (PDF o fotos, hasta 3 MB cada uno). Si te los manda por el chat, desde ahí tienes <b>Guardar en su ficha</b>.`},
- {ti:'¿Te cuenta que está mejor?',body:`Si te dice que está mejor, toca <b>Pedir reseña</b>: te prepara el WhatsApp con el enlace a Google y queda marcado en Valoraciones como «Está mejor».`,ver:{sec:'pac',pasos:[{el:'.fp-resb',txt:'Este botón.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}}
+ {ti:'Acabas la sesión: anótala',shot:'/img/school/panel-b-anotar.jpg',body:`<b>Cuándo:</b> al acabar cada sesión.<br><br><b>Qué haces:</b> ficha › <b>Historia</b> › <b>＋ Anotar sesión</b>. Qué trabajaste, cómo respondió, la pauta para casa.<br><br><b>Para qué:</b> si otro fisio le atiende, sabe por dónde vais.`,ver:{sec:'pac',pasos:[{el:'.fp-add-ev',txt:'Aquí anotas la sesión.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
+ {ti:'Si se te olvida, te avisa',shot:'/img/school/panel-b-historia.jpg',body:`Arriba de la Historia sale en rojo <b>⚠️ No se ha actualizado</b> tras su última sesión.<br><br>Y al día siguiente te sale en tus <b>Pendientes</b> hasta que la anotes.<br><br>Se añade al final con fecha y tu nombre, sin borrar lo anterior.`},
+ {ti:'Trae una prueba o un informe',body:`<b>Cuándo:</b> te enseña una resonancia, un informe de su médico, una foto…<br><br><b>Qué haces:</b> Historia › Archivos › <b>＋ Subir</b> (PDF o fotos, hasta 3 MB).<br><br>¿Te lo manda por el chat? Ahí mismo tienes <b>Guardar en su ficha</b>.`,ver:{sec:'pac',pasos:[{el:'.fp-archb',txt:'Aquí subes sus pruebas e informes.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
+ {ti:'Te dice «estoy mucho mejor»',body:`Es el mejor momento para pedir la reseña.<br><br>Toca <b>Pedir reseña</b> en su Historia: te prepara el WhatsApp con el enlace a Google y queda apuntado en Valoraciones.`,ver:{sec:'pac',pasos:[{el:'.fp-resb',txt:'Este botón.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}}
  ],
  qs:[
- {q:'Terminas la sesión. ¿Qué haces en su ficha?',opts:['Nada','Historia › ＋ Anotar sesión','Lo apunto en una libreta'],ok:1,fb:['Te saldrá en Pendientes.','¡Bien!','Mejor en la ficha, que lo ve todo el equipo.']},
- {q:'En la sesión, el paciente te dice «estoy mucho mejor». ¿Qué haces?',opts:['Nada','Historia › ¿Te cuenta que está mejor? › Pedir reseña','Darle el alta'],ok:1,fb:['¡Es el mejor momento para la reseña!','¡Perfecto!','No necesariamente ha terminado.']}
+ {q:'Terminas la sesión con Laura. ¿Qué haces en su ficha?',opts:['Nada','Historia › ＋ Anotar sesión','Lo apunto en una libreta'],ok:1,fb:['Mañana te saldrá en Pendientes.','¡Bien!','Mejor en la ficha: lo ve todo el equipo.'],ver:{sec:'pac',pasos:[{el:'.fp-add-ev',txt:'Aquí.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
+ {q:'Te sale en rojo «No se ha actualizado tras la última sesión». ¿Qué significa?',opts:['Que falta anotar su última sesión','Que ha cambiado de teléfono','Que no ha pagado'],ok:0,fb:['¡Eso es! Anótala.','No.','No tiene que ver con el pago.']},
+ {q:'Un paciente te trae en papel el informe de su traumatólogo. ¿Qué haces?',opts:['Se lo devuelvo','Le hago una foto y lo subo en Historia › Archivos','Lo guardo en un cajón'],ok:1,fb:['Mejor que quede en su ficha.','¡Bien!','Así nadie más lo ve.']},
+ {q:'En la sesión, el paciente te dice «estoy mucho mejor». ¿Qué haces?',opts:['Nada','Pedir reseña desde su Historia','Darle el alta'],ok:1,fb:['¡Es el mejor momento para la reseña!','¡Perfecto!','No necesariamente ha terminado.']}
  ]},
 
  {t:'El programa de ejercicios',sub:'Lo que hace en casa',
  cards:[
- {ti:'Buscar y añadir',body:`En la ficha › <b>Ejercicios</b>, busca (puedes filtrar por zona) y <b>toca para marcar</b> los que quieras, aunque sean de búsquedas distintas; luego <b>Añadir</b>. Con la miniatura ▶ ves el vídeo antes de ponerlo.`,ver:{sec:'pac',pasos:[{el:'.fp-seg button[data-t="programa"]',txt:'La pestaña Ejercicios.',click:['#pacResultados .pt-r']}]}},
- {ti:'Ajustar cada ejercicio',body:`Ordénalos con ↑ ↓. Elige <b>Repeticiones</b> o <b>Segundos</b>, series y reps (con atajos), e <b>Indicaciones</b>. En <b>Más opciones</b>: descanso, zona y segundos por repetición. Debajo ves cómo lo verá el paciente.`},
- {ti:'Guardar',body:`Añade un <b>mensaje para el paciente</b> si quieres y <b>Guardar programa</b>. Sustituye al anterior y al paciente le llega un aviso: «Tienes ejercicios nuevos» o «Tus ejercicios han cambiado».`},
- {ti:'Si no está el ejercicio',body:`Ponlo igualmente con su nombre e indicaciones y propónlo en <b>Ejercicios › Pendientes de grabar</b>.`}
+ {ti:'Quieres que haga ejercicios en casa',shot:'/img/school/panel-b-ejer.jpg',body:`<b>Qué haces:</b> ficha › <b>Ejercicios</b>. Busca (puedes filtrar por zona), <b>toca para marcar</b> los que quieras y <b>Añadir</b>.<br><br>Con la miniatura ▶ ves el vídeo antes de ponerlo.`,ver:{sec:'pac',pasos:[{el:'.fp-seg button[data-t="programa"]',txt:'La pestaña Ejercicios.',click:['#pacResultados .pt-r']},{el:'.pe-busca',txt:'Aquí buscas y marcas los ejercicios.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]}},
+ {ti:'Ajusta cada uno',body:`<b>Repeticiones</b> o <b>Segundos</b>, cuántas series y cuántas reps (con atajos: 5, 8, 10, 12…). Añade <b>Indicaciones</b> si hace falta.<br><br>Debajo ves cómo lo verá el paciente: «3 series de 12 repeticiones».`},
+ {ti:'Guarda: le llega solo',shot:'/img/school/panel-b-ejer-guardar.jpg',body:`Escribe un <b>mensaje</b> si quieres y <b>Guardar programa</b>.<br><br>Sustituye al anterior y al paciente le llega un aviso: «Tienes ejercicios nuevos». No hace falta que se lo mandes tú.`},
+ {ti:'No está el ejercicio que buscas',body:`Ponlo igualmente con su nombre e indicaciones.<br><br>Y propónlo en <b>Ejercicios › Pendientes de grabar</b> para que se grabe el vídeo.`}
  ],
  qs:[
  {q:'Guardas el programa nuevo de un paciente. ¿Se entera?',opts:['No, hay que avisarle','Sí, le llega un aviso a su app','Solo si entra'],ok:1,fb:['Le llega solo.','¡Correcto!','Le llega un aviso.']},
- {q:'Quieres que haga una plancha de 30 segundos, no repeticiones. ¿Cómo?',opts:['En ese ejercicio, modo Segundos y 30','No se puede','Lo escribo en el nombre'],ok:0,fb:['¡Eso es!','Sí se puede.','Mejor con el modo Segundos.']}
+ {q:'Quieres que haga una plancha de 30 segundos. ¿Cómo lo pones?',opts:['En ese ejercicio, Segundos y 30','No se puede','Lo escribo en el nombre'],ok:0,fb:['¡Eso es!','Sí se puede.','Mejor con el modo Segundos.']},
+ {q:'No sabes si un ejercicio es el que quieres. ¿Cómo lo compruebas?',opts:['Lo pongo y ya','Toco la miniatura ▶ y veo el vídeo','Le pregunto al paciente'],ok:1,fb:['Mejor verlo antes.','¡Bien!','Mejor compruébalo tú antes.'],ver:{sec:'pac',pasos:[{el:'.pe-busca',txt:'Busca aquí y mira el vídeo.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]}},
+ {q:'Necesitas un ejercicio que no está en la biblioteca. ¿Qué haces?',opts:['No se lo pongo','Lo pongo con su nombre e indicaciones y lo propongo en Pendientes de grabar','Le mando un vídeo de YouTube'],ok:1,fb:['Sí se puede poner.','¡Eso es!','Mejor que lo grabemos nosotros.']}
  ]},
 
- {t:'La anamnesis',sub:'La valoración guiada',
+ {t:'La anamnesis',sub:'Primera visita: la valoración guiada',
  cards:[
- {ti:'Dónde',body:`Desde la ficha › Más › <b>Hacer anamnesis</b>. El paciente ya viene elegido y arriba tienes <b>‹ Volver a la ficha</b>.`,ver:{sec:'pac',pasos:[{el:'.fp-mas',txt:'En Más está «Hacer anamnesis».',click:['#pacResultados .pt-r']}]}},
- {ti:'Protocolos y pasos',body:`Rodilla, hombro, cervical, codo, muñeca, tobillo, cadera, sacroilíaca, lumbar, hernia discal, torácica, libre y suelo pélvico. Pasos: paciente, lesión, dolor, exploración, tests e informe (cervical añade neurológico; hernia y suelo pélvico tienen más).`},
- {ti:'Ayudas',body:`<b>Todo normal</b> marca de un toque lo normal en la exploración. Los tests salen ordenados por fiabilidad y las contraindicaciones en rojo. Si sales a medias, el borrador se guarda en ese dispositivo.`},
- {ti:'El informe',body:`<b>Generar informe con IA</b>: motivo, hallazgos, diagnóstico, objetivos, alertas y una explicación en palabras sencillas. Revísalo y corrígelo con <b>Editar informe</b>. Cuando esté bien: <b>Guardar sin compartir</b> (queda en su ficha) o <b>Compartir con el paciente</b> (le llega a su app y firma el recibí). Hasta que no le das a uno de los dos, no está en su ficha; si sales antes, tus respuestas siguen guardadas para seguir.`}
+ {ti:'Llega una 1ª visita',shot:'/img/school/panel-b-mas.jpg',body:`<b>Cuándo:</b> en su primera sesión (o si viene por algo nuevo).<br><br><b>Qué haces:</b> en su ficha › <b>Más</b> › <b>Hacer anamnesis</b>. El paciente ya viene elegido.`,ver:{sec:'pac',pasos:[{el:'.fp-mas',txt:'Toca Más…',click:['#pacResultados .pt-r']},{el:'.fp-masmenu .fp-masanam',txt:'…y Hacer anamnesis.',click:['#pacResultados .pt-r','.fp-mas']}]}},
+ {ti:'Elige la zona y sigue los pasos',shot:'/img/school/panel-b-anam.jpg',body:`Rodilla, hombro, cervical, lumbar, hernia discal, suelo pélvico, libre…<br><br>Te guía paso a paso: paciente, lesión, dolor, exploración, tests e informe. Arriba tienes <b>‹ Volver a la ficha</b>.`},
+ {ti:'Te ayuda por el camino',body:`<b>Todo normal</b> marca de un toque lo normal en la exploración.<br><br>Los tests salen ordenados por fiabilidad y las contraindicaciones, en rojo.`},
+ {ti:'El informe: primero lo revisas',body:`<b>Generar informe con IA</b> lo redacta. Léelo y corrige lo que haga falta con <b>Editar informe</b>.<br><br>Cuando esté bien: <b>Guardar sin compartir</b> (queda en su ficha) o <b>Compartir con el paciente</b> (le llega a su app).<br><br>Hasta entonces <b>no está en su ficha</b>. Si sales a medias, lo que has rellenado se queda guardado en ese móvil u ordenador para seguir.`}
  ],
  qs:[
- {q:'Generas el informe de la anamnesis. ¿Ya está en su ficha?',opts:['Sí, al momento','No: primero lo revisas y luego Guardar sin compartir o Compartir con el paciente','Solo en su app'],ok:1,fb:['Todavía no: primero lo revisas.','¡Correcto!','No.']},
- {q:'¿Dónde empiezas una anamnesis?',opts:['En el menú','En la ficha › Más › Hacer anamnesis','En la agenda'],ok:1,fb:['Ya no está en el menú.','¡Bien!','No.']}
+ {q:'Llega una paciente nueva por dolor de hombro. ¿Dónde empiezas la anamnesis?',opts:['En el menú','En su ficha › Más › Hacer anamnesis','En la agenda'],ok:1,fb:['No está en el menú.','¡Bien!','No.'],ver:{sec:'pac',pasos:[{el:'.fp-mas',txt:'Aquí, en Más.',click:['#pacResultados .pt-r']}]}},
+ {q:'Generas el informe. ¿Ya está en su ficha?',opts:['Sí, al momento','No: lo reviso y luego Guardar sin compartir o Compartir con el paciente','Solo en su app'],ok:1,fb:['Todavía no: primero se revisa.','¡Correcto!','No.']},
+ {q:'El informe dice algo que no es exacto. ¿Qué haces?',opts:['Lo comparto igual','Editar informe y lo corrijo antes de guardar','Lo borro todo'],ok:1,fb:['El paciente lo leería así.','¡Eso es!','No hace falta.']},
+ {q:'Te interrumpen a mitad de la anamnesis. ¿Pierdes lo que llevas?',opts:['Sí, todo','No: si vuelves desde el mismo móvil u ordenador, sigue ahí','Solo si cierras la app'],ok:1,fb:['No se pierde.','¡Eso es! Puedes seguir luego.','Tampoco.']}
  ]},
 
- {t:'Informes y justificantes',sub:'Lo que el paciente se lleva por escrito',
+ {t:'Informes y justificantes',sub:'Te piden un papel: cómo se lo das',
  cards:[
- {ti:'Dónde están',body:`Ficha › Más › <b>Informes y justificantes</b>. Tres tipos: <b>Informe fisioterapéutico</b> (lo redacta la IA con su historial y sus anamnesis), <b>Informe en blanco</b> y <b>Justificante o listado de sesiones</b>.`,ver:{sec:'pac',pasos:[{el:'.fp-masmenu button[data-k="informes"] || .fp-mas',txt:'Aquí, en Más › Informes y justificantes.',click:['#pacResultados .pt-r','.fp-mas']}]}},
- {ti:'Revisar y guardar',body:`Se abre para que lo revises y lo edites. <b>Guardar sin compartir</b>, <b>Ver PDF</b> o <b>Descargar PDF</b>. Lo que compartes lo ve el paciente al momento: revisa nombre y fechas.`},
- {ti:'Dárselo con recibí firmado',body:`<b>Enlace por WhatsApp</b> o <b>por email</b> (al abrirlo le pide DNI o fecha de nacimiento), <b>En su app</b> (firma al abrirlo) o <b>En mano</b> (firma con el dedo en la pantalla). Luego ves si está enviado, abierto o firmado.`},
- {ti:'Justificantes',body:`<b>Justificante</b> de asistencia (marca la última sesión) o <b>Listado de sesiones</b> (todas). Puedes incluir su DNI y verlo o mandarlo por WhatsApp.`}
+ {ti:'Te piden un informe',shot:'/img/school/panel-b-inf.jpg',body:`<b>Qué haces:</b> ficha › Más › <b>Informes y justificantes</b>.<br><br><b>Informe fisioterapéutico:</b> lo redacta la IA con su historial. <b>Informe en blanco:</b> lo escribes tú. <b>Justificante:</b> para el trabajo, la mutua…`,ver:{sec:'pac',pasos:[{el:'.fp-mas',txt:'Toca Más…',click:['#pacResultados .pt-r']},{el:'.fp-masmenu button[data-k="informes"]',txt:'…y Informes y justificantes.',click:['#pacResultados .pt-r','.fp-mas']}]}},
+ {ti:'Revísalo antes de darlo',body:`Se abre para que lo leas y lo edites. Mira bien el <b>nombre</b> y las <b>fechas</b>: lo que compartes lo ve el paciente al momento.<br><br>Luego: <b>Guardar sin compartir</b>, <b>Ver PDF</b> o <b>Descargar PDF</b>.`},
+ {ti:'Dárselo y que firme el recibí',body:`<b>Por WhatsApp o email:</b> le llega un enlace (al abrirlo le pide DNI o fecha de nacimiento).<br><b>En su app:</b> lo firma al abrirlo.<br><b>En mano:</b> firma con el dedo en la pantalla.<br><br>Luego ves si está enviado, abierto o firmado.`},
+ {ti:'«Necesito un justificante para el trabajo»',body:`<b>Justificante</b> de asistencia: marca la sesión de hoy.<br><b>Listado de sesiones:</b> todas las que ha hecho.<br><br>Puedes incluir su DNI y enseñárselo o mandárselo por WhatsApp.`}
  ],
  qs:[
- {q:'Un paciente necesita para su trabajo un papel que diga que ha venido hoy. ¿Qué le haces?',opts:['Un justificante desde su ficha','Una nota a mano','Nada'],ok:0,fb:['¡Eso es!','Mejor desde el panel.','Sí se puede.'],ver:{sec:'pac',pasos:[{el:'.fp-masmenu button[data-k="informes"] || .fp-mas',txt:'Aquí haces el justificante.',click:['#pacResultados .pt-r','.fp-mas']}]}},
- {q:'Entregas un informe en mano. ¿Cómo queda constancia?',opts:['No queda','Firma el recibí con el dedo en la pantalla','Me lo apunto'],ok:1,fb:['Sí puede quedar.','¡Correcto!','Mejor que firme.']}
+ {q:'Un paciente necesita para su trabajo un papel que diga que ha venido hoy. ¿Qué haces?',opts:['Un justificante desde su ficha','Una nota a mano','Nada'],ok:0,fb:['¡Eso es!','Mejor desde el panel.','Sí se puede.'],ver:{sec:'pac',pasos:[{el:'.fp-masmenu button[data-k="informes"] || .fp-mas',txt:'Aquí haces el justificante.',click:['#pacResultados .pt-r','.fp-mas']}]}},
+ {q:'La mutua le pide un informe de su tratamiento. ¿Cuál haces?',opts:['Informe fisioterapéutico: lo redacta con su historial y lo reviso','Un justificante','Le copio la historia en un email'],ok:0,fb:['¡Bien!','El justificante solo dice que vino.','Mejor el informe, revisado.']},
+ {q:'Entregas un informe en mano. ¿Cómo queda constancia?',opts:['No queda','Firma el recibí con el dedo en la pantalla','Me lo apunto'],ok:1,fb:['Sí puede quedar.','¡Correcto!','Mejor que firme.']},
+ {q:'Antes de compartir un informe, ¿qué miras?',opts:['Nada, lo hace la IA','Que el nombre, las fechas y el contenido estén bien','Solo el título'],ok:1,fb:['Siempre se revisa: el paciente lo ve al momento.','¡Eso es!','Mejor todo.']}
  ]},
 
- {t:'Cobrar y facturar',sub:'Facturas, packs y saldo',
+ {t:'Cobrar y facturar',sub:'El paciente va a pagar: cómo lo cobras',
  cards:[
- {ti:'Cobrar y facturar',body:`Desde la cita (<b>Facturar</b>) o la ficha (<b>Cobrar</b>). Eliges el <b>concepto</b> (el precio sale solo), cuántas sesiones, la <b>forma de pago</b>, el <b>fisio</b> que le atiende (o «No poner fisio»), la fecha y notas. Puedes <b>Facturar a otra persona o empresa</b>.`,ver:{sec:'pac',pasos:[{el:'.fp-cobb-ic || .fp-cobb-mov',txt:'Aquí cobras y facturas.',click:['#pacResultados .pt-r']}]}},
- {ti:'Emitir',body:`<b>Emitir factura</b> pide dos toques («Confirmar: emitir por X €»). Se crea en el programa de facturación y le llega a su app. Si tiene <b>tarjeta regalo</b>, la descuentas ahí. <b>Es gratis</b> apunta la sesión a 0 € sin ticket.`},
- {ti:'Enviársela',body:`En <b>Facturas anteriores</b>, <b>Enviar</b> por email (con el PDF) o por WhatsApp (enlace), o <b>PDF</b>. También la tiene siempre en su app.`},
- {ti:'Saldo y packs',body:`Arriba de Facturas ves si tiene <b>sesiones sin facturar</b> o <b>cuántas le quedan pagadas</b>. Un pack se puede <b>compartir con otro paciente</b> (las sesiones de los dos se descuentan del mismo pack).`}
+ {ti:'Va a pagar: Cobrar y facturar',shot:'/img/school/panel-b-cobrar.jpg',body:`<b>Desde dónde:</b> la cita (<b>Facturar</b>) o la ficha (<b>Cobrar y facturar</b>).<br><br><b>Qué haces:</b> elige el <b>concepto</b> (el precio sale solo), cuántas sesiones, la <b>forma de pago</b> y el <b>fisio</b> que le atiende.`,ver:{sec:'pac',pasos:[{el:'.fp-cobb-ic || .fp-cobb-mov',txt:'Aquí cobras y facturas.',click:['#pacResultados .pt-r']}]}},
+ {ti:'Emite la factura',body:`<b>Emitir factura</b> pide dos toques («Confirmar: emitir por X €»), para que no se te escape una.<br><br>Se crea en el programa de facturación y le llega a su app.<br><br>¿Tiene <b>tarjeta regalo</b>? Te sale para descontarla ahí.`},
+ {ti:'Una sesión de cortesía',body:`<b>Cuándo:</b> no le cobras esa sesión.<br><br><b>Qué haces:</b> marca <b>Es gratis</b>. Queda pagada a 0 € y sin ticket.<br><br><b>Para qué:</b> si no, saldría como «sin factura».`},
+ {ti:'¿Cuántas le quedan?',shot:'/img/school/panel-b-fac.jpg',body:`Arriba de Facturas ves si le <b>quedan sesiones pagadas</b> o tiene <b>sesiones sin facturar</b>.<br><br>¿Te pide la factura? <b>Enviar</b> (email o WhatsApp) o <b>PDF</b>. También la tiene en su app.<br><br>Un pack se puede <b>compartir con otro paciente</b>.`,ver:{sec:'pac',pasos:[{el:'.fp-mas',txt:'En Más › Facturas.',click:['#pacResultados .pt-r']}]}}
  ],
  qs:[
- {q:'Un paciente paga una sesión suelta con tarjeta. ¿Qué haces?',opts:['Cobrar › concepto, Tarjeta, fisio › Emitir factura','Un recibo a mano','Nada'],ok:0,fb:['¡Correcto!','Mejor desde el panel.','Hay que facturarla.']},
+ {q:'Un paciente paga una sesión suelta con tarjeta. ¿Qué haces?',opts:['Cobrar y facturar › concepto, Tarjeta, fisio › Emitir factura','Un recibo a mano','Nada'],ok:0,fb:['¡Correcto!','Mejor desde el panel.','Hay que facturarla.'],ver:{sec:'pac',pasos:[{el:'.fp-cobb-ic || .fp-cobb-mov',txt:'Aquí.',click:['#pacResultados .pt-r']}]}},
  {q:'Una paciente con pack de 10 quiere que su pareja use dos sesiones. ¿Se puede?',opts:['No','Sí: compartir su pack con otro paciente','Solo pagando aparte'],ok:1,fb:['Sí se puede.','¡Eso es!','No hace falta.']},
- {q:'Le das una sesión de cortesía a un paciente. ¿Cómo la apuntas?',opts:['Cobrar › Es gratis','No la apunto','La cobro a 1 €'],ok:0,fb:['¡Bien! Así no sale como «sin factura».','Saldría como sin factura.','No hace falta.']}
+ {q:'Le das una sesión de cortesía a un paciente. ¿Cómo la apuntas?',opts:['Es gratis','No la apunto','La cobro a 1 €'],ok:0,fb:['¡Bien! Así no sale como «sin factura».','Saldría como sin factura.','No hace falta.']},
+ {q:'Un paciente te pregunta cuántas sesiones le quedan del pack. ¿Dónde lo miras?',opts:['En su ficha › Facturas, arriba','Se lo pregunto a dirección','Cuento sus citas una a una'],ok:0,fb:['¡Eso es!','Lo puedes ver tú.','Mucho más rápido en Facturas.']}
  ]},
 
- {t:'El chat con pacientes',sub:'Hablar con ellos desde el panel',
+ {t:'El chat con pacientes',sub:'Te escribe un paciente: cómo le contestas',
  cards:[
- {ti:'Las conversaciones',body:`En <b>Chat</b> ves tus conversaciones, la última primero, con los no leídos. <b>＋ Nuevo</b> para escribir a un paciente. Dentro tienes <b>Ver ficha</b>.`,ver:{sec:'msg',pasos:[{el:'.chatp-items || .chatp-nuevo',txt:'Tus conversaciones.'},{el:'.chatp-nuevo',txt:'Para escribir a un paciente.'}]}},
- {ti:'Fotos y PDF',body:`Con el clip mandas fotos o PDF (hasta 2,5 MB). Si el paciente te manda una prueba, toca <b>Guardar en su ficha</b>.`},
- {ti:'Leído y avisos',body:`Un tic gris es enviado y el doble tic verde es visto. Al paciente le llega un aviso cuando le escribes, y a ti cuando te escribe.`},
- {ti:'Quién ve qué',body:`Cada fisio ve sus conversaciones. El paciente elige a quién escribe: a su fisio o a administración.`}
+ {ti:'Te escribe un paciente',shot:'/img/school/panel-b-chat.jpg',body:`Te llega un aviso y lo ves en <b>Chat</b>: la última conversación arriba, con los mensajes sin leer.<br><br>¿Quieres escribirle tú? <b>＋ Nuevo</b> y busca al paciente.`,ver:{sec:'msg',pasos:[{el:'.chatp-items || .chatp-nuevo',txt:'Tus conversaciones.'},{el:'.chatp-nuevo',txt:'Para escribir a un paciente.'}]}},
+ {ti:'Te manda una prueba',shot:'/img/school/panel-b-hilo.jpg',body:`<b>Cuándo:</b> te manda una foto o un PDF (una resonancia, un informe…).<br><br><b>Qué haces:</b> toca <b>Guardar en su ficha</b>.<br><br><b>Para qué:</b> así queda en sus archivos y lo ve todo el equipo.`},
+ {ti:'Mandarle algo tú',body:`Con el <b>clip</b> mandas fotos o PDF (hasta 2,5 MB).<br><br>Desde la conversación, <b>Ver ficha</b> te lleva a su ficha.`},
+ {ti:'¿Lo ha leído?',body:`Un tic gris: enviado. Doble tic verde: visto.<br><br>Cada fisio ve sus conversaciones. El paciente elige a quién escribe: a su fisio o a administración.`}
  ],
  qs:[
- {q:'Un paciente te manda por el chat la foto de su resonancia. ¿Qué haces?',opts:['La miro y ya','La miro y «Guardar en su ficha»','Le pido que la traiga'],ok:1,fb:['Mejor guardarla en su ficha.','¡Bien!','No hace falta.']}
+ {q:'Un paciente te manda por el chat la foto de su resonancia. ¿Qué haces?',opts:['La miro y ya','La miro y toco «Guardar en su ficha»','Le pido que la traiga'],ok:1,fb:['Mejor guardarla en su ficha.','¡Bien!','No hace falta.']},
+ {q:'Quieres escribir a un paciente que nunca te ha escrito. ¿Cómo?',opts:['Chat › ＋ Nuevo y lo busco','No se puede','Desde su email'],ok:0,fb:['¡Eso es!','Sí se puede.','Mejor por el chat de la app.'],ver:{sec:'msg',pasos:[{el:'.chatp-nuevo',txt:'Aquí.'}]}},
+ {q:'Ves un doble tic verde en tu mensaje. ¿Qué significa?',opts:['Que lo ha visto','Que no le ha llegado','Que ha contestado'],ok:0,fb:['¡Correcto!','El tic gris es enviado; el verde, visto.','Visto, no contestado.']},
+ {q:'Estás en el chat y quieres ver su historia. ¿Cómo vas rápido?',opts:['Salgo y lo busco en Pacientes','Toco «Ver ficha» arriba de la conversación','No se puede'],ok:1,fb:['Más rápido desde el chat.','¡Eso es!','Sí se puede.']}
  ]},
 
- {t:'Pendientes: tareas',sub:'Lo que te toca hacer',
+ {t:'Pendientes: tareas',sub:'Lo que te toca hacer hoy',
  cards:[
- {ti:'De quién',body:`Por defecto ves <b>lo tuyo</b>; con el filtro, todo el equipo o de cada persona. Lo atrasado sale en rojo. <b>＋ Tarea</b>: qué hay que hacer, para quién, para cuándo y, si quieres, un paciente.`,ver:{sec:'tar',pasos:[{el:'.tar-top',txt:'Tareas y Llamadas.'},{el:'.tar-nueva',txt:'Para apuntar una tarea.'}]}},
- {ti:'Lo que sale solo',body:`<b>Sin evolución</b> por decidir · <b>Historia por actualizar</b> (sesión sin anotar; plazo, el día siguiente) · <b>Sin próxima cita</b> (atendido en 30 días sin otra cita; tienes 2 días para <b>Explicar</b> por qué) · <b>Sin plan de ejercicios</b> · <b>Sin la app</b> (han venido este mes y aún no la tienen: <b>Enviar app</b>).`},
- {ti:'Lo de administración',body:`<b>Consentimientos</b> por enlazar o subir, <b>huecos libres</b> para la lista de espera, <b>tarjetas regalo</b> por dar y <b>negocios</b> que toca visitar.`},
- {ti:'Explicar un «sin próxima cita»',body:`<b>Explicar</b>: escribe por qué no ha reagendado y, si toca, déjalo marcado para <b>añadirlo también a seguimiento</b> (cuándo llamarle y quién).`}
+ {ti:'Empiezas el día: mira Pendientes',shot:'/img/school/panel-b-tar.jpg',body:`<b>Cuándo:</b> al empezar y al acabar el día.<br><br><b>Qué ves:</b> <b>lo tuyo</b>, agrupado. Lo atrasado sale en rojo. Con el filtro ves lo de otra persona o de todo el equipo.`,ver:{sec:'tar',pasos:[{el:'.tar-top',txt:'Tareas y Llamadas.'},{el:'.tar-nueva',txt:'Para apuntar una tarea.'}]}},
+ {ti:'Hay que hacer algo: ＋ Tarea',body:`<b>Cuándo:</b> algo que no puede olvidarse (pedir una autorización a la mutua, llamar a un médico…).<br><br><b>Qué haces:</b> <b>＋ Tarea</b>: qué hay que hacer, para quién, para cuándo y, si quieres, el paciente. Cuando esté, <b>✓ Hecho</b>.`,ver:{sec:'tar',pasos:[{el:'.tar-nueva',txt:'Aquí.'}]}},
+ {ti:'Lo que sale solo',shot:'/img/school/panel-b-tar-auto.jpg',body:`<b>Historia por actualizar</b> → anota la sesión.<br><b>Sin próxima cita</b> → explica por qué (tienes 2 días).<br><b>Sin plan de ejercicios</b> → pónselo.<br><b>Sin la app</b> → Enviar app.<br><b>Sin evolución</b> → decide cómo seguir.`},
+ {ti:'«Sin próxima cita»: Explicar',body:`<b>Cuándo:</b> atendiste a alguien en los últimos 30 días y no tiene otra cita.<br><br><b>Qué haces:</b> <b>Explicar</b>: por qué no ha vuelto a reservar. Si toca, déjalo marcado para <b>añadirlo a seguimiento</b> (cuándo llamarle y quién).`}
  ],
  qs:[
  {q:'Te sale en Pendientes «Historia por actualizar». ¿Qué significa?',opts:['Que tienes una sesión hecha sin anotar en su historia','Que el paciente ha cambiado de datos','Nada'],ok:0,fb:['¡Eso es! Toca Actualizar.','No.','Sí significa algo.']},
- {q:'Un paciente tuyo de la semana pasada no tiene otra cita. ¿Qué tienes que hacer?',opts:['Nada','Explicar por qué y, si toca, pasarlo a seguimiento','Borrarlo'],ok:1,fb:['Te saldrá en Pendientes hasta que lo expliques.','¡Bien!','¡No!']}
+ {q:'Un paciente tuyo de la semana pasada no tiene otra cita. ¿Qué tienes que hacer?',opts:['Nada','Explicar por qué y, si toca, pasarlo a seguimiento','Borrarlo'],ok:1,fb:['Te saldrá en Pendientes hasta que lo expliques.','¡Bien!','¡No!']},
+ {q:'Tienes que pedir a la mutua la autorización de un paciente mañana. ¿Cómo no se te olvida?',opts:['Me lo apunto en el móvil','＋ Tarea, para mí y para mañana','Se lo digo a alguien'],ok:1,fb:['Mejor en el panel: lo ves en Pendientes.','¡Eso es!','Así se olvida fácil.'],ver:{sec:'tar',pasos:[{el:'.tar-nueva',txt:'Aquí.'}]}},
+ {q:'Te sale «Sin la app» con una paciente que vino ayer. ¿Qué haces?',opts:['Nada','Enviar app: le llega por WhatsApp con su PIN','Le doy de baja'],ok:1,fb:['Sin la app no ve sus ejercicios.','¡Bien!','¡No!']}
  ]},
 
- {t:'Pendientes: llamadas',sub:'Seguimiento de pacientes',
+ {t:'Pendientes: llamadas',sub:'Hay que llamar a un paciente: cómo se hace',
  cards:[
- {ti:'Por llamar',body:`Atrasados, hoy y, plegado, lo programado más adelante. Filtra por quién y por resultado. En cada uno: llamar, WhatsApp (mensaje preparado), <b>Editar</b> y <b>Resultado</b>. Con <b>＋ Añadir</b> metes a alguien.`,ver:{sec:'tar',pasos:[{el:'.sg-top .seg-add || .tar-top',txt:'Las llamadas.',click:['.tar-top .seg-tabs button[data-v="seg"]']}]}},
- {ti:'Resultado',body:`<b>Cita recuperada</b> (se cierra) · <b>Volver a llamar</b>, <b>No contesta</b> o <b>Pendiente de respuesta</b> (eliges cuándo volver) · <b>Alta</b> · <b>No volver a llamar</b> (pasa a abandono). Marca <b>Le he pedido reseña</b> si lo has hecho.`},
- {ti:'Ya hechas',body:`Las llamadas del periodo y la <b>productividad</b> de cada uno: llamadas, citas recuperadas, reseñas pedidas y % de objetivo.`}
+ {ti:'Tus llamadas de hoy',shot:'/img/school/panel-c-llam.jpg',body:`<b>Cuándo:</b> al empezar el día y en los ratos libres.<br><br><b>Qué haces:</b> botón <b>✓</b> de arriba › <b>Llamadas</b>. Salen primero las <b>atrasadas</b> (en rojo) y luego las de <b>hoy</b>. Las de más adelante están plegadas.<br><br>Por defecto ves las tuyas («Míos»); con el filtro, las de otro o las de todo el equipo.`,ver:{sec:'tar',pasos:[{el:'.tar-top .seg-tabs button[data-v="seg"]',txt:'Aquí están las llamadas.'},{el:'.sg-seg',txt:'Por llamar y Ya hechas.',click:['.tar-top .seg-tabs button[data-v="seg"]']}]}},
+ {ti:'Llamas: apunta qué ha pasado',body:`Toca el teléfono para llamar o <b>WhatsApp</b> (el mensaje sale preparado). Después, siempre <b>Resultado</b>:<br>• <b>Cita recuperada</b> → se cierra.<br>• <b>No contesta</b>, <b>Volver a llamar</b> o <b>Pendiente de respuesta</b> → eliges cuándo volver a llamar.<br>• <b>Alta</b> o <b>No volver a llamar</b>.<br><br><b>Para qué:</b> así el siguiente sabe qué pasó y nadie llama dos veces.`},
+ {ti:'¿Le has pedido reseña?',body:`Si en la llamada le pides que os deje una reseña en Google, marca <b>Le he pedido reseña</b> al apuntar el resultado. Cuenta para el objetivo.`},
+ {ti:'Alguien que hay que llamar más adelante',body:`<b>＋ Añadir</b>: eliges el paciente, <b>cuándo hay que llamar</b>, <b>quién le contacta</b> y una nota.<br><br>También se añade desde la cita o la ficha con <b>Seguimiento</b>.`,ver:{sec:'tar',pasos:[{el:'.sg-top .seg-add',txt:'＋ Añadir: alguien a quien llamar.',click:['.tar-top .seg-tabs button[data-v="seg"]']}]}},
+ {ti:'Ya hechas: cómo vas',body:`En <b>Ya hechas</b> ves las llamadas del periodo y la productividad de cada uno: llamadas, citas recuperadas, reseñas pedidas y % de objetivo.<br><br>Objetivo = se recuperó la cita o se pidió reseña.`}
  ],
  qs:[
- {q:'Llamas a un paciente y no contesta. ¿Qué haces?',opts:['Nada','Resultado › No contesta, con cuándo volver a llamar','Lo borro'],ok:1,fb:['Si no lo apuntas, nadie sabe que llamaste.','¡Eso es!','No.']},
- {q:'Un paciente te dice que no quiere que le llaméis más. ¿Qué pones?',opts:['No volver a llamar','No contesta','Nada'],ok:0,fb:['¡Correcto! Pasa a abandono.','No es lo mismo.','Hay que apuntarlo.']}
+ {q:'Llamas a un paciente y no lo coge. ¿Qué haces?',opts:['Nada, ya lo intentaré','Resultado › No contesta, con cuándo volver a llamar','Lo borro de la lista'],ok:1,fb:['Si no lo apuntas, nadie sabe que llamaste.','¡Eso es!','Así se pierde.']},
+ {q:'Recuperas la cita de una paciente por teléfono y ya le has dado hora. ¿Qué apuntas?',opts:['Resultado › Cita recuperada','Volver a llamar','Nada'],ok:0,fb:['¡Bien! La llamada se cierra.','Ya no hace falta volver a llamar.','Seguiría saliendo para llamar.']},
+ {q:'Un paciente te dice que no quiere que le llaméis más. ¿Qué pones?',opts:['No contesta','No volver a llamar','Nada'],ok:1,fb:['No es lo mismo: le volverían a llamar.','¡Correcto!','Hay que apuntarlo.']},
+ {q:'Empiezas el día. ¿Dónde ves a quién te toca llamar?',opts:['En el chat','Pendientes (✓) › Llamadas','En la agenda'],ok:1,fb:['No.','¡Eso es! Primero las atrasadas.','En la agenda están las citas.'],ver:{sec:'tar',pasos:[{el:'.tar-top .seg-tabs button[data-v="seg"]',txt:'Aquí.'}]}}
  ]},
 
- {t:'Call-in y Captación',sub:'Buscar pacientes y gente nueva',
+ {t:'Call-in y Captación',sub:'Hay tiempo libre: a quién llamar',
  cards:[
- {ti:'Call-in',body:`Para hacer listas de llamadas: eliges uno o varios <b>estados</b> (deben tenerlos todos) y el <b>fisio de la última sesión</b>. En cada uno: llamar, WhatsApp, cambiar estado, añadir a seguimiento o apuntar el resultado.`,ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Elige los estados…'},{el:'.ci-ddf',txt:'…y el fisio.'}]}},
- {ti:'No citados',body:`Quien preguntó y no se citó (por llamada, WhatsApp, puerta, redes o email) y <b>por qué no</b>. Arriba ves cuántos preguntan, cuántos se citan y los motivos. Acciones: WhatsApp, Editar, Archivar o «Se citó».`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'No citados está aquí.'}]}},
- {ti:'Negocios',body:`Los negocios del barrio con los que colaboramos: cuándo toca visitarlos, si tienen flyers, si ofrecen un 10 % a sus clientes y cuántos pacientes nos han mandado. <b>Visitado</b> apunta la visita y cuándo volver.`}
+ {ti:'Tienes un hueco: Call-in',shot:'/img/school/panel-c-callin.jpg',body:`<b>Cuándo:</b> te ha quedado una hora libre o dirección te pide una tanda de llamadas.<br><br><b>Qué haces:</b> en <b>Call-in</b> elige uno o varios <b>estados</b> (por ejemplo «pendiente de continuar») y el <b>fisio de la última sesión</b>. Sale la lista para llamar.`,ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Elige los estados…'},{el:'.ci-ddf',txt:'…y el fisio de la última sesión.'}]}},
+ {ti:'En cada paciente de la lista',body:`Llamar, <b>WhatsApp</b>, cambiarle el estado, añadirle a seguimiento o apuntar el resultado.<br><br>Si eliges varios estados, salen solo los que los tienen todos.`},
+ {ti:'Alguien preguntó y no se citó',body:`En <b>Captación › No citados</b> está la gente que apuntasteis con el bocadillo con + de arriba: por dónde preguntó y <b>por qué no se citó</b>.<br><br>Desde ahí: WhatsApp, Editar, Archivar o <b>Se citó</b> si al final viene.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'En espera, No citados y Negocios.'}]}},
+ {ti:'Negocios del barrio',body:`En <b>Captación › Negocios</b> están los negocios con los que colaboramos: cuándo toca visitarlos, si tienen flyers y cuántos pacientes nos han mandado.<br><br>Al ir, toca <b>Visitado</b>: se apunta la visita y cuándo volver.`}
  ],
  qs:[
- {q:'Quieres llamar a todos los pacientes en «pendiente de continuar» de Sara. ¿Dónde?',opts:['Call-in: estado y fisio de la última sesión','Agenda','Chat'],ok:0,fb:['¡Eso es!','No.','No.'],ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Aquí eliges el estado.'}]}}
+ {q:'Te queda una hora libre y quieres llamar a los pacientes de Sara que están en «pendiente de continuar». ¿Dónde?',opts:['Call-in: estado y fisio de la última sesión','En la agenda','En el chat'],ok:0,fb:['¡Eso es!','Ahí están las citas, no las listas.','No.'],ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Aquí eliges el estado.'}]}},
+ {q:'Una persona que preguntó la semana pasada y no se citó, hoy viene a su primera sesión. ¿Qué haces en No citados?',opts:['Nada','La marco como «Se citó»','La borro'],ok:1,fb:['Seguiría saliendo como no citada.','¡Bien! Así se cuenta bien.','Mejor marcarla: así sabemos que funcionó.']},
+ {q:'Vuelves de dejar flyers en la farmacia de al lado. ¿Qué haces?',opts:['Captación › Negocios › Visitado','Nada','Se lo digo a alguien'],ok:0,fb:['¡Eso es! Queda la visita y cuándo volver.','Así nadie sabe que fuiste.','Mejor apuntarlo en el panel.'],ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'Negocios está aquí.'}]}},
+ {q:'En Call-in eliges dos estados a la vez. ¿Quién sale?',opts:['Los que tienen cualquiera de los dos','Solo los que tienen los dos','Todos los pacientes'],ok:1,fb:['No: deben tenerlos todos.','¡Correcto!','No.']}
  ]},
 
- {t:'Buzón y Sugerencias',sub:'Comunicación del equipo',
+ {t:'Buzón y Sugerencias',sub:'Hablar con el equipo y proponer mejoras',
  cards:[
- {ti:'Escribir',body:`En <b>Comunicaciones</b>, <b>Escribir</b> y eliges: <b>Informe</b> o <b>Solicitud</b> (a quien sea), <b>Tareas</b> (lista que se marca una a una), <b>Para administración</b> (incidencias) o <b>Vacaciones y horarios</b>.`,ver:{sec:'com',pasos:[{el:'.com-esc',txt:'Aquí escribes.'}]}},
- {ti:'Qué esperas del otro',body:`<b>Que lo lea</b> (confirma «Recibido»), <b>Que lo haga</b> («Recibido» y luego «Hecho») o <b>Que te conteste</b> (solo lo ves tú). Puedes poner fecha límite, mencionar pacientes con @ y adjuntar archivos. Lo que te piden que hagas sale arriba de tu check-list.`},
- {ti:'Vacaciones y horarios',body:`Pides vacaciones, día libre, horas libres o cambio de horario. Dirección lo <b>aprueba o rechaza</b>; al aprobarlo, tus huecos libres se bloquean y te dice qué citas hay que mover.`},
- {ti:'Sugerencias',body:`Ideas o fallos: de la <b>App</b> (mejora o fallo), de la <b>Clínica</b> u <b>Otro</b>, con fotos. En Enviadas ves la respuesta y si se ha hecho.`,ver:{sec:'sug',pasos:[{el:'.sug-tabs',txt:'Aquí mandas ideas y fallos.'}]}}
+ {ti:'Te llega algo del equipo',shot:'/img/school/panel-c-buzon.jpg',body:`Todo lo del equipo llega a <b>Comunicaciones</b> (tu foto › Comunicaciones): avisos, peticiones y tareas. El número grande son las cartas sin abrir.<br><br>Cada una te dice qué esperan de ti: <b>Confirma que la has leído</b>, <b>Por hacer</b> o <b>Te pide respuesta</b>. En <b>Pendientes</b> tienes solo lo que te toca a ti.`,ver:{sec:'com',pasos:[{el:'.com-bz',txt:'Tu buzón: lo que tienes sin abrir.'},{el:'.com-tabs',txt:'Entrada, Salida y Pendientes.'}]}},
+ {ti:'Tienes que contarle algo a alguien',shot:'/img/school/panel-c-escribir.jpg',body:`<b>Escribir</b> y eliges:<br>• <b>Informe</b>: contar algo importante.<br>• <b>Solicitud</b>: pedir algo que el otro tiene que resolver.<br>• <b>Tareas</b>: una lista que se va marcando.<br>• <b>Para administración</b>: algo que hay que corregir.<br>• <b>Vacaciones y horarios</b>.`,ver:{sec:'com',pasos:[{el:'.com-esc',txt:'Aquí escribes.'}]}},
+ {ti:'Di qué esperas del otro',body:`Al escribir eliges: <b>Que lo lea</b>, <b>Que lo haga</b> o <b>Que te conteste</b>. Puedes poner fecha límite, mencionar pacientes con @ y adjuntar archivos.<br><br>En <b>Salida</b> ves si ya lo han leído o hecho.`},
+ {ti:'Quieres un día libre',body:`<b>Escribir › Vacaciones y horarios</b>: vacaciones, día libre, unas horas o un cambio de horario.<br><br>Dirección lo <b>aprueba o rechaza</b> ahí mismo. Al aprobarlo, tus huecos libres se bloquean solos.`},
+ {ti:'El módulo de School',body:`La formación de cada día también llega aquí, como <b>Por hacer</b>. Ábrela y <b>Hacer el módulo</b>: al acabar, se marca hecha sola.`},
+ {ti:'Una idea o algo que falla',shot:'/img/school/panel-c-sug.jpg',body:`En <b>Sugerencias › Escribir</b>: elige si es de la <b>App</b>, de la <b>Clínica</b> u <b>Otro</b>, cuéntalo y, si ayuda, adjunta una foto.<br><br>En <b>Enviadas</b> ves la respuesta y si se ha hecho.`,ver:{sec:'sug',pasos:[{el:'.sug-tabs',txt:'Enviadas y Escribir.'}]}}
  ],
  qs:[
- {q:'Quieres pedir el viernes libre. ¿Cómo?',opts:['Comunicaciones › Vacaciones y horarios','Se lo digo a alguien','Por el chat de pacientes'],ok:0,fb:['¡Correcto! Y dirección lo aprueba ahí.','Así se olvida.','No.'],ver:{sec:'com',pasos:[{el:'.com-esc',txt:'Escribir › Vacaciones y horarios.'}]}},
- {q:'La app hace algo raro. ¿Qué haces?',opts:['Sugerencias › App › Un fallo, con una foto','Nada','Lo comento por el chat'],ok:0,fb:['¡Perfecto!','Mejor contarlo.','No.']}
+ {q:'Quieres pedir el viernes libre. ¿Cómo?',opts:['Comunicaciones › Escribir › Vacaciones y horarios','Se lo digo a alguien en el pasillo','Por el chat de pacientes'],ok:0,fb:['¡Correcto! Y dirección lo aprueba ahí.','Así se olvida.','No: ese chat es para pacientes.'],ver:{sec:'com',pasos:[{el:'.com-esc',txt:'Escribir › Vacaciones y horarios.'}]}},
+ {q:'Necesitas que un compañero revise un informe y quieres saber cuándo lo ha hecho. ¿Qué eliges al escribir?',opts:['Que lo lea','Que lo haga','Nada'],ok:1,fb:['Solo confirmaría que lo ha leído.','¡Eso es! Te dirá cuándo está hecho.','Así no sabrás si lo hizo.']},
+ {q:'Te llega una comunicación que pone «Confirma que la has leído». ¿Qué haces?',opts:['La abro y confirmo','Nada','La borro'],ok:0,fb:['¡Bien! Así quien la mandó sabe que te ha llegado.','Seguirá saliendo como pendiente.','No se borra.']},
+ {q:'La app hace algo raro al guardar una cita. ¿Qué haces?',opts:['Sugerencias › App, con una foto','Nada','Lo comento por el chat de pacientes'],ok:0,fb:['¡Perfecto!','Si no se cuenta, no se arregla.','No: eso es para pacientes.'],ver:{sec:'sug',pasos:[{el:'.sug-tabs',txt:'Aquí.'}]}}
  ]},
 
- {t:'Fin del día: el check-list',sub:'Antes de irte',
+ {t:'Fin del día: el check-list',sub:'Antes de irte: qué revisar',
  cards:[
- {ti:'Mi check-list de hoy',body:`Cobros, estado de citas, ejercicios, consentimientos, anamnesis, app de los nuevos, no reagendados, llamadas, chat, tareas, no mejora, historias, agenda de mañana y cabina limpia. Algunos los comprueba la app y te dice <b>«Tengo N pendientes»</b> con los nombres.`,ver:{sec:'rep',pasos:[{el:'.rp-env',txt:'Marca y envía antes de irte.'}]}},
- {ti:'Enviar',body:`Marca, añade una nota si quieres y <b>Enviar check-list</b>. Si falta algo, te pide un segundo toque. Lo marcado se guarda en ese dispositivo hasta que lo envías.`},
- {ti:'¿Falta material?',body:`Apúntalo en <b>¿Falta material?</b> y va a la lista de la compra de dirección.`,ver:{sec:'rep',pasos:[{el:'.rp-cpb',txt:'Aquí apuntas lo que falta.'}]}},
- {ti:'Lo que te piden',body:`Arriba del check-list salen las comunicaciones en las que te piden algo («X te pide…»).`}
+ {ti:'Antes de irte',shot:'/img/school/panel-c-check.jpg',body:`<b>Cuándo:</b> cada día, antes de irte.<br><br><b>Qué haces:</b> en <b>Check-list</b> repasa cada punto (cobros, estado de las citas, ejercicios, consentimientos, anamnesis, app, llamadas, chat, tareas, historias, agenda de mañana y cabina) y márcalo.<br><br><b>Para qué:</b> que no se quede nada a medias.`,ver:{sec:'rep',pasos:[{el:'.rp-it',txt:'Marca cada punto.'},{el:'.rp-env',txt:'Y envía antes de irte.'}]}},
+ {ti:'«Tengo 1 pendiente»',body:`Algunos puntos los comprueba el panel solo. Si ves <b>Tengo N pendientes</b>, salen los nombres: tócalos para abrir su ficha y arreglarlo.<br><br>Por ejemplo, un cobro sin registrar o alguien que no ha reagendado.`},
+ {ti:'Enviar',body:`Marca, añade una nota si quieres y <b>Enviar check-list</b>. Si falta algo por marcar, te pide confirmarlo.<br><br>Lo que vas marcando se guarda en ese móvil u ordenador hasta que lo envías.`,ver:{sec:'rep',pasos:[{el:'.rp-env',txt:'Enviar check-list.'}]}},
+ {ti:'Se acaba algo',body:`Apúntalo en <b>¿Falta material?</b>: va a la lista de la compra de dirección.`,ver:{sec:'rep',pasos:[{el:'.rp-cpb',txt:'Aquí apuntas lo que falta.'}]}}
  ],
  qs:[
- {q:'¿Cuándo se envía el check-list?',opts:['Una vez a la semana','Cada día antes de irte','Solo si hay problemas'],ok:1,fb:['No.','¡Correcto!','No.']},
- {q:'Se acaban las toallas de papel. ¿Dónde lo apuntas?',opts:['Check-list › ¿Falta material?','Sugerencias','Chat'],ok:0,fb:['¡Bien!','No.','No.']}
+ {q:'¿Cuándo se envía el check-list?',opts:['Una vez a la semana','Cada día antes de irte','Solo si hay problemas'],ok:1,fb:['No: cada día.','¡Correcto!','Siempre, aunque todo esté bien.']},
+ {q:'En «cobros» te sale «Tengo 1 pendiente: Jordi Vidal». ¿Qué haces?',opts:['Lo marco igual','Toco su nombre, abro su ficha y lo cobro','Nada'],ok:1,fb:['Así se queda sin cobrar.','¡Eso es!','Se quedaría sin cobrar.']},
+ {q:'Se acaban las toallas de papel. ¿Dónde lo apuntas?',opts:['Check-list › ¿Falta material?','Sugerencias','Chat'],ok:0,fb:['¡Bien! Llega a la lista de la compra.','Mejor en ¿Falta material?','No.'],ver:{sec:'rep',pasos:[{el:'.rp-cpb',txt:'Aquí.'}]}},
+ {q:'Vas marcando el check-list en el móvil y te interrumpen. ¿Se pierde lo marcado?',opts:['Sí, hay que empezar otra vez','No, se guarda en ese móvil hasta que lo envías','Se envía solo'],ok:1,fb:['No se pierde.','¡Correcto!','No: hay que enviarlo tú.']}
  ]},
 
- {t:'Tus números',sub:'Mis estadísticas: sesiones, horas y lo que cobras',
+ {t:'Tus números',sub:'Mis estadísticas: cómo vas y tus horas',
  cards:[
- {ti:'Tu ocupación',body:`En <b>Mis estadísticas</b>: tu <b>ocupación</b> de ayer, esta semana y este mes (sesiones hechas ÷ horas de tu horario; 1 hora = 1 sesión). <b>Verde</b> desde 85 %, <b>naranja</b> desde 65 %, <b>rojo</b> por debajo. Debajo eliges el periodo.`,ver:{sec:'mis',pasos:[{el:'.rend-tot',txt:'Tu ocupación.'},{el:'.rend-chips',txt:'El periodo.'}]}},
- {ti:'Tu tarjeta',body:`<b>Sesiones / horas</b>, <b>pacientes atendidos</b>, <b>faltas</b>, <b>canceladas</b> y qué % <b>reagenda</b>. Toca la <b>i</b> de cada dato para ver cómo se calcula. En <b>Ver quién no ha reagendado</b> puedes escribirles o pasarlos a seguimiento.`,ver:{sec:'mis',pasos:[{el:'.rend-card',txt:'Tu tarjeta.'}]}},
- {ti:'Control de horas',body:`Tus <b>horas hechas</b> frente a las de tu horario: <b>extra</b>, <b>de menos</b>, <b>días sin venir</b> y, si lo tienes, tu <b>banco de horas</b>.`,ver:{sec:'mis',pasos:[{el:'.ch',txt:'Tu control de horas.'}]}},
- {ti:'Explicar un día',body:`Toca un día que no cuadra, elige <b>qué pasó</b> (sin paciente, cubrió a un compañero, más pacientes, horas extra, asuntos propios, vacaciones, baja, festivo, salida anticipada…), una nota si quieres y <b>Enviar a dirección</b>. Sale <b>enviado</b> hasta que dirección lo <b>valida</b>.`,ver:{sec:'mis',pasos:[{el:'.rc-clas || .ch',txt:'Toca un día para explicarlo.'}]}},
- {ti:'Si eres autónomo',body:`<b>Sesiones del mes</b>: cada sesión con el día, el paciente y lo que pagó, <b>Verificada por dirección</b> o <b>Pendiente</b>. Arriba, <b>tu parte</b> (tu %): con <b>≈</b> mientras falten por verificar; sin él, es lo que va en tu factura. PDF para guardarlo.`,ver:{sec:'mis',pasos:[{el:'.rc-sesf || .ch',txt:'Tus sesiones del mes y tu parte.'}]}}
+ {ti:'¿Cómo voy?',shot:'/img/school/panel-c-mis.jpg',body:`En <b>Mis estadísticas</b> (tu foto) ves tu <b>ocupación</b> de ayer, esta semana y este mes: sesiones hechas entre las horas de tu horario.<br><br><b>Verde</b> desde 85 %, <b>naranja</b> desde 65 %, <b>rojo</b> por debajo.`,ver:{sec:'mis',pasos:[{el:'.rend-tot',txt:'Tu ocupación.'},{el:'.rend-chips',txt:'Y aquí eliges el periodo.'}]}},
+ {ti:'Tu tarjeta',body:`Sesiones / horas, <b>pacientes atendidos</b>, <b>faltas</b>, <b>canceladas</b> y qué % <b>reagenda</b>. La <b>i</b> de cada dato te explica cómo se calcula.<br><br>En <b>Ver quién no ha reagendado</b> puedes escribirles o pasarlos a seguimiento.`,ver:{sec:'mis',pasos:[{el:'.rend-card',txt:'Tu tarjeta.'}]}},
+ {ti:'Tus horas',body:`En <b>Control de horas</b>: horas hechas frente a las de tu horario, <b>extra</b>, <b>de menos</b> y días sin venir.<br><br>Debajo, los <b>días que no cuadran</b>.`,ver:{sec:'mis',pasos:[{el:'.ch',txt:'Tu control de horas.'}]}},
+ {ti:'Un día no cuadra: explícalo',shot:'/img/school/panel-c-clas.jpg',body:`<b>Cuándo:</b> cubriste a un compañero, viniste sin pacientes, hiciste horas extra…<br><br><b>Qué haces:</b> toca ese día, elige <b>qué pasó</b>, una nota si quieres y <b>Enviar a dirección</b>.<br><br>Sale «enviado» hasta que dirección lo valida.`,ver:{sec:'mis',pasos:[{el:'.rc-clas || .ch',txt:'Toca un día para explicarlo.'}]}},
+ {ti:'Si eres autónomo',body:`Botón <b>Sesiones del mes</b>: cada sesión con el día, el paciente y lo que pagó, y si está <b>verificada por dirección</b>.<br><br>Arriba, <b>tu parte</b>: con <b>≈</b> mientras falten sesiones por verificar; sin él, es lo que va en tu factura.`,ver:{sec:'mis',pasos:[{el:'.rc-sesf || .ch',txt:'Tus sesiones del mes.'}]}}
  ],
  qs:[
- {q:'Tu ocupación de la semana sale en naranja. ¿Qué significa?',opts:['Entre el 65 % y el 85 %','Que algo está mal','Más del 100 %'],ok:0,fb:['¡Eso es!','No es un error.','No.']},
- {q:'El martes hiciste 2 horas de más porque cubriste a una compañera. ¿Qué haces?',opts:['Nada','Lo explico en Mis estadísticas y lo envío a dirección','Se lo digo de palabra'],ok:1,fb:['Saldría como que no cuadra.','¡Bien!','Mejor por escrito en la app.'],ver:{sec:'mis',pasos:[{el:'.rc-clas || .ch',txt:'Aquí lo explicas.'}]}},
- {q:'Eres autónomo y tu parte sale con «≈». ¿Por qué?',opts:['Hay sesiones pendientes de verificar por dirección','Está mal','No has hecho sesiones'],ok:0,fb:['¡Correcto!','No: es aproximado hasta verificar.','No.']}
+ {q:'Tu ocupación de la semana sale en naranja. ¿Qué significa?',opts:['Que está entre el 65 % y el 85 %','Que algo está mal','Que pasas del 100 %'],ok:0,fb:['¡Eso es!','No es un error.','No.']},
+ {q:'El martes hiciste 2 horas de más porque cubriste a una compañera. ¿Qué haces?',opts:['Nada','Toco ese día, «Cubrió a un compañero» y lo envío a dirección','Se lo digo de palabra'],ok:1,fb:['Saldría como un día que no cuadra.','¡Bien!','Mejor en el panel: queda apuntado.'],ver:{sec:'mis',pasos:[{el:'.rc-clas || .ch',txt:'Aquí lo explicas.'}]}},
+ {q:'Eres autónomo y tu parte sale con «≈». ¿Por qué?',opts:['Hay sesiones que dirección aún no ha verificado','Está mal calculada','No has hecho sesiones'],ok:0,fb:['¡Correcto! Es aproximada hasta que se verifiquen.','No: es aproximada hasta verificar.','No.']},
+ {q:'Quieres saber quién no ha vuelto a reservar después de su sesión contigo. ¿Dónde?',opts:['Mis estadísticas › Ver quién no ha reagendado','En el chat','No se puede'],ok:0,fb:['¡Eso es! Y desde ahí les escribes.','No.','Sí se puede.'],ver:{sec:'mis',pasos:[{el:'.rend-card',txt:'Dentro de tu tarjeta.'}]}}
  ]},
 
- {t:'Valoraciones y reseñas',sub:'Lo que opinan los pacientes',
+ {t:'Valoraciones y reseñas',sub:'Un paciente opina: qué hacer',
  cards:[
- {ti:'Qué sale',body:`Los <b>últimos 14 días</b>: encuestas de 1ª visita y de alta, y los «Está mejor». Arriba: encuestas, % de contentos, cuántos han ido a Google y cuántos están mejor.`,ver:{sec:'val',pasos:[{el:'.vr',txt:'El resumen.'}]}},
- {ti:'Escribirle y quitar',body:`<b>Escribirle</b> te propone un mensaje según lo que contestó y lo abre en WhatsApp. Con la <b>✕</b> quitas una valoración que no toca.`,ver:{sec:'val',pasos:[{el:'.val-wa',txt:'Escribirle.'},{el:'.val-qx',txt:'Quitar.'}]}},
- {ti:'El sorteo del mes',body:`Cada mes se sortean <b>2 sesiones gratis</b> entre quienes dejan reseña en Google desde nuestros enlaces: una al azar y otra a la más original. Dirección sortea; todos podéis <b>Avisarle</b>.`,ver:{sec:'val',pasos:[{el:'.val-so',txt:'El sorteo del mes.'}]}}
+ {ti:'Qué opinan tus pacientes',shot:'/img/school/panel-c-val.jpg',body:`En <b>Valoraciones</b> (tu foto) salen los <b>últimos 14 días</b>: encuestas de 1ª visita y de alta, y los pacientes marcados como «Está mejor».<br><br>Arriba: cuántas encuestas, % de contentos, cuántos fueron a Google y cuántos están mejor.`,ver:{sec:'val',pasos:[{el:'.vr',txt:'El resumen.'}]}},
+ {ti:'Contesta: Escribirle',body:`<b>Cuándo:</b> sobre todo si alguien no ha quedado contento.<br><br><b>Qué haces:</b> <b>Escribirle</b>. Te propone un mensaje según lo que contestó y lo abre en WhatsApp.<br><br>Si puso Excelente y aún no fue a Google, el mensaje lleva el enlace para la reseña.`,ver:{sec:'val',pasos:[{el:'.val-wa',txt:'Escribirle.'}]}},
+ {ti:'Algo que no toca',body:`Con la <b>✕</b> quitas de la lista una valoración que no toca (por ejemplo, un «Está mejor» marcado por error).`,ver:{sec:'val',pasos:[{el:'.val-qx',txt:'Quitar de la lista.'}]}},
+ {ti:'El sorteo del mes',body:`Cada mes se sortean <b>2 sesiones gratis</b> entre quienes dejan reseña en Google desde nuestros enlaces: una al azar y otra a la más original.<br><br>Cuéntaselo a tus pacientes: es un buen motivo para que la dejen.`,ver:{sec:'val',pasos:[{el:'.val-so',txt:'El sorteo del mes.'}]}}
  ],
  qs:[
- {q:'Un paciente contesta la encuesta con una queja. ¿Qué haces?',opts:['Nada','Escribirle y responderle','Pedirle una reseña'],ok:1,fb:['Es cuando más importa contestar.','¡Eso es!','No es el momento.']},
- {q:'¿Quién entra en el sorteo?',opts:['Todos los pacientes','Quien deja reseña en Google desde nuestros enlaces','Los de pack'],ok:1,fb:['No.','¡Correcto!','No.']}
+ {q:'Un paciente contesta la encuesta con «Normal» y una queja. ¿Qué haces?',opts:['Nada','Escribirle y responderle','Pedirle una reseña'],ok:1,fb:['Es cuando más importa contestar.','¡Eso es!','No es el momento.']},
+ {q:'Una paciente pone «Excelente» pero no ha ido a Google. ¿Qué haces?',opts:['Escribirle: el mensaje le lleva el enlace de la reseña','Nada','La quito de la lista'],ok:0,fb:['¡Bien!','Es la mejor ocasión para pedirla.','No hace falta.']},
+ {q:'¿Quién entra en el sorteo del mes?',opts:['Todos los pacientes','Quien deja reseña en Google desde nuestros enlaces','Los que tienen pack'],ok:1,fb:['No.','¡Correcto!','No.']},
+ {q:'Marcaste «Está mejor» a un paciente por error. ¿Cómo lo quitas?',opts:['Con la ✕ en Valoraciones','No se puede','Borrando al paciente'],ok:0,fb:['¡Eso es!','Sí se puede.','¡No!'],ver:{sec:'val',pasos:[{el:'.val-qx',txt:'Esta ✕.'}]}}
  ]},
 
- {t:'La biblioteca de ejercicios',sub:'Los vídeos que ven los pacientes',
+ {t:'La biblioteca de ejercicios',sub:'Falta un vídeo: cómo se añade',
  cards:[
- {ti:'Biblioteca',body:`En <b>Ejercicios</b> están todos, con buscador y zonas. <b>＋ Nuevo ejercicio</b>: nombre, enlace de YouTube, zona, cómo se hace (lo lee el paciente) y foto. No deja repetir un vídeo que ya está.`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Biblioteca y Pendientes de grabar.'}]}},
- {ti:'Pendientes de grabar',body:`<b>＋ Proponer ejercicio</b>. Quien lo graba toca <b>Lo grabo yo</b> (o <b>Soltar</b>) y, al subirlo, <b>Ya está grabado</b>, que abre el alta en la biblioteca.`}
+ {ti:'Buscar un ejercicio',body:`En <b>Ejercicios › Biblioteca</b> están todos los vídeos que ven los pacientes, con buscador y por zonas.`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Biblioteca y Pendientes de grabar.'}]}},
+ {ti:'Ya tienes el vídeo grabado',body:`<b>＋ Nuevo ejercicio</b>: nombre, enlace de YouTube, zona, cómo se hace (lo lee el paciente) y foto.<br><br>Si ese vídeo ya está en la biblioteca, no deja repetirlo.`},
+ {ti:'Hace falta uno que no está',shot:'/img/school/panel-c-ejer.jpg',body:`<b>Cuándo:</b> quieres mandar un ejercicio y no hay vídeo.<br><br><b>Qué haces:</b> <b>Pendientes de grabar › ＋ Proponer ejercicio</b>.<br><br>Si tienes un rato libre, coge uno: <b>Lo grabo yo</b>. Al subirlo, <b>Ya está grabado</b> (te abre el alta en la biblioteca). ¿Al final no puedes? <b>Soltar</b>.`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Pendientes de grabar.'},{el:'.ejp-nuevo',txt:'Proponer ejercicio.',click:['.ej-tabs button[data-t="pend"]']}]}}
  ],
  qs:[
- {q:'Te comprometes a grabar un ejercicio propuesto. ¿Qué tocas?',opts:['Lo grabo yo','Nada','Soltar'],ok:0,fb:['¡Bien!','Mejor marcarlo.','Eso es para dejarlo.']}
+ {q:'Quieres mandar un ejercicio que no tiene vídeo. ¿Qué haces?',opts:['Pendientes de grabar › Proponer ejercicio','Nada','Se lo explico de palabra y ya'],ok:0,fb:['¡Bien! Así alguien lo graba.','Así nunca estará.','Mejor que quede en vídeo.']},
+ {q:'Tienes un rato libre y ves un ejercicio pendiente. ¿Qué tocas?',opts:['Lo grabo yo','Soltar','Nada'],ok:0,fb:['¡Eso es! Así nadie más lo graba a la vez.','Eso es para dejarlo.','Mejor cogerlo.']},
+ {q:'Acabas de subir el vídeo a YouTube. ¿Qué haces?',opts:['Ya está grabado, y lo doy de alta en la biblioteca','Nada','Soltar'],ok:0,fb:['¡Correcto!','Seguiría saliendo como pendiente.','No: Soltar es para dejarlo.']},
+ {q:'Intentas añadir un vídeo que ya está en la biblioteca. ¿Qué pasa?',opts:['Se duplica','El panel no deja repetirlo','Se borra el otro'],ok:1,fb:['No se duplica.','¡Correcto!','No.']}
  ]},
 
  {t:'Dirección: equipo y accesos',sub:'Solo lo ve dirección',dir:1,
  cards:[
- {ti:'Equipo',body:`La ficha de cada persona: foto, puesto, colegiado, <b>horario</b> (1 hora = 1 sesión; sin horario no cuenta en ocupación), <b>Dirección</b>, <b>Contar sus horas</b>, <b>Banco de horas</b>, contraseña (Generar), <b>contrato</b> (autónomo con su % o nómina con su coste), documentos y notas. <b>Dar de baja</b>: no entra ni sale en la agenda, pero se guarda todo.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="equipo"] || .adm-tabs',txt:'Equipo.'}]}},
- {ti:'Vacaciones y horarios',body:`La semana de cada uno, con lo que cambia resaltado. Toca un día: su horario normal, otro horario, falta unas horas o no trabaja. <b>Apuntar varios días</b> (también para toda la clínica: festivo). Los huecos libres se bloquean y te avisa de las citas que hay que mover.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="aus"] || .adm-tabs',txt:'Vacaciones y horarios.'}]}},
- {ti:'Accesos',body:`Qué secciones ve cada uno. Marcar Dirección le da también el Daily report.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="acc"] || .adm-tabs',txt:'Accesos.'}]}}
+ {ti:'Entra alguien nuevo',shot:'/img/school/panel-c-equipo.jpg',body:`<b>Dirección › Equipo › ＋ Añadir persona</b>: nombre, puesto, colegiado, <b>horario</b>, contraseña (<b>Generar</b>) y <b>contrato</b> (autónomo con su % o nómina con su coste).<br><br>Sin horario no cuenta en la ocupación (1 hora = 1 sesión).`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="equipo"] || .adm-tabs',txt:'Equipo.'}]}},
+ {ti:'Las opciones de cada persona',body:`<b>Dirección</b>: además de su puesto, forma parte de dirección.<br><b>Contar sus horas</b>: ves cada día si trabajó más o menos de su horario.<br><b>Banco de horas</b>: las horas que apruebes se guardan para compensarlas.<br><br>Si se va: <b>Dar de baja</b>. No entra ni sale en la agenda, pero se guarda todo.`},
+ {ti:'Alguien coge vacaciones',shot:'/img/school/panel-c-aus.jpg',body:`En <b>Vacaciones y horarios</b> ves la semana de cada uno. Toca un día: otro horario, falta unas horas o no trabaja.<br><br>Para varios días o un festivo de toda la clínica: <b>Apuntar varios días</b>. Los huecos libres se bloquean y te avisa de las citas que hay que mover.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="aus"] || .adm-tabs',txt:'Vacaciones y horarios.'}]}},
+ {ti:'Alguien no ve una sección',shot:'/img/school/panel-c-acc.jpg',body:`En <b>Accesos</b> marcas qué secciones ve cada uno. Se le actualiza el menú en un minuto.<br><br>Marcar <b>Dirección</b> le da también esta sección y el Daily report.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="acc"] || .adm-tabs',txt:'Accesos.'}]}}
  ],
  qs:[
- {q:'Una fisio nueva no ve Captación. ¿Dónde se arregla?',opts:['Dirección › Accesos','Ella misma','Nadie'],ok:0,fb:['¡Correcto!','Lo activa dirección.','Sí se arregla.']},
- {q:'Un fisio no cuenta en la ocupación. ¿Qué le falta?',opts:['Su horario en Dirección › Equipo','Hacer más sesiones','Nada'],ok:0,fb:['¡Eso es!','No.','Le falta el horario.']}
+ {q:'Una fisio nueva no ve Captación. ¿Dónde se arregla?',opts:['Dirección › Accesos','Lo cambia ella','No se puede'],ok:0,fb:['¡Correcto!','Lo activa dirección.','Sí se puede.'],ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="acc"] || .adm-tabs',txt:'Accesos.'}]}},
+ {q:'Un fisio no sale en la ocupación del equipo. ¿Qué le falta?',opts:['Su horario en Dirección › Equipo','Hacer más sesiones','Nada'],ok:0,fb:['¡Eso es!','No.','Le falta el horario.']},
+ {q:'Un fisio se va de la clínica. ¿Qué haces?',opts:['Le borro','Dar de baja: se guardan sus datos','Nada'],ok:1,fb:['Mejor no: se perdería su historial.','¡Correcto!','Seguiría saliendo en la agenda.']},
+ {q:'Jonathan se coge del 22 al 26 de diciembre. ¿Dónde lo apuntas?',opts:['Vacaciones y horarios › Apuntar varios días','En la agenda, hora a hora','En el chat'],ok:0,fb:['¡Eso es! Y te avisa de las citas a mover.','Mucho más lento.','No.'],ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="aus"] || .adm-tabs',txt:'Vacaciones y horarios.'}]}}
  ]},
 
  {t:'Dirección: listas y ajustes',sub:'Solo lo ve dirección',dir:1,
  cards:[
- {ti:'Check-list',body:`Edita los puntos del check-list del equipo (con sub-puntos), ordénalos u ocúltalos. «Volver a la original» lo deshace.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="chk"] || .adm-tabs',txt:'Check-list.'}]}},
- {ti:'Listas',body:`Estados del paciente y tipos de cita (renombrar, juntar, borrar), <b>conceptos y precios</b> al cobrar, formas de pago, motivos de no citarse, tipos de negocio, zonas de ejercicios y tipos de sesión.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="listas"] || .adm-tabs',txt:'Listas.'}]}},
- {ti:'Ajustes',body:`Tarjeta regalo, facturación (aprobar tickets solos), <b>datos de la clínica</b> (logo, color, reseñas, IBAN), opciones (sorteo, bomba), <b>política de cancelación</b>, <b>app del paciente</b> (servicios, packs, promociones), <b>textos legales</b> y <b>mensajes a pacientes</b>.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="ajustes"] || .adm-tabs',txt:'Ajustes.'}]}},
- {ti:'Emails',body:`Quién recibe el <b>resumen diario por email</b> cada mañana.`}
+ {ti:'Cambiar el check-list',body:`En <b>Dirección › Check-list</b> editas los puntos del check-list del equipo (con sub-puntos), los ordenas o los ocultas.<br><br>¿Te has liado? <b>Volver a la original</b>.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="chk"] || .adm-tabs',txt:'Check-list.'}]}},
+ {ti:'Cambia un precio o un concepto',body:`En <b>Listas</b>: los <b>conceptos y precios</b> al cobrar, formas de pago, estados del paciente, tipos de cita y de sesión, motivos de no citarse, tipos de negocio y zonas de ejercicios.<br><br>Puedes renombrar, juntar o borrar.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="listas"] || .adm-tabs',txt:'Listas.'}]}},
+ {ti:'Lo de la clínica y los pacientes',body:`En <b>Ajustes</b>: datos de la clínica (logo, color, reseñas, IBAN), tarjeta regalo, facturación, opciones (sorteo, bomba), <b>política de cancelación</b>, la <b>app del paciente</b> (servicios, packs, promociones), <b>textos legales</b> y <b>mensajes a pacientes</b>.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="ajustes"] || .adm-tabs',txt:'Ajustes.'}]}},
+ {ti:'El email de cada mañana',body:`En <b>Emails</b> eliges quién recibe el <b>resumen diario</b> por email.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="mail"] || .adm-tabs',txt:'Emails.'}]}}
  ],
  qs:[
- {q:'Queréis cambiar el texto del recordatorio de cita. ¿Dónde?',opts:['Dirección › Ajustes › Mensajes a pacientes','No se puede','Pidiéndoselo a alguien'],ok:0,fb:['¡Eso es!','Sí se puede.','No hace falta.']}
+ {q:'Queréis cambiar el texto del recordatorio de cita. ¿Dónde?',opts:['Dirección › Ajustes › Mensajes a pacientes','No se puede','En el chat'],ok:0,fb:['¡Eso es!','Sí se puede.','No.']},
+ {q:'Sube el precio de la sesión suelta. ¿Dónde lo cambias para que salga al cobrar?',opts:['Dirección › Listas › Conceptos y precios','En cada factura a mano','No se puede'],ok:0,fb:['¡Correcto!','Así te equivocarás.','Sí se puede.'],ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="listas"] || .adm-tabs',txt:'Listas.'}]}},
+ {q:'Queréis añadir «revisar la bomba» al check-list de todos. ¿Dónde?',opts:['Dirección › Check-list','Cada fisio en el suyo','No se puede'],ok:0,fb:['¡Eso es!','Es el mismo para todos: se cambia en Dirección.','Sí se puede.']},
+ {q:'Cambiáis la política de cancelación de 24 h a 48 h. ¿Dónde?',opts:['Dirección › Ajustes › Política de cancelación','En la agenda','No se puede'],ok:0,fb:['¡Correcto!','No.','Sí se puede.']}
  ]},
 
  {t:'Dirección: horas, sesiones y dinero',sub:'Solo lo ve dirección',dir:1,
  cards:[
- {ti:'Rendimiento del equipo',body:`Lo mismo que cada fisio en Mis estadísticas, pero de <b>todo el equipo</b> y con el <b>total del centro</b>. En cada fisio, su control de horas y <b>Informe</b>.`,ver:{sec:'rend',pasos:[{el:'.rend-card',txt:'El total y cada fisio.'},{el:'.rc-inf',txt:'El informe de horas.'}]}},
- {ti:'Validar las horas',body:`Los días que explica un fisio salen <b>por validar</b>: revisa qué pasó y cuántas horas cuentan, <b>Validar</b>, y si tiene banco, <b>sumar o restar del banco</b>.`},
- {ti:'Verificar sesiones',body:`En el <b>Informe</b>, <b>Lo que pagó cada paciente</b>: cada sesión con su importe (real o aproximado). Filtra <b>Por verificar</b> y toca un importe para corregirlo. Es lo que el autónomo ve como «Verificado por dirección».`},
- {ti:'Reparto',body:`Con el contrato en Equipo: <b>autónomo</b>, lo que le toca con su % y lo que queda a la clínica; <b>nómina</b>, lo que cuesta y lo que deja.`}
+ {ti:'Cómo va el equipo',shot:'/img/school/panel-c-rend.jpg',body:`En <b>Rendimiento</b> ves lo mismo que cada fisio en Mis estadísticas, pero de <b>todo el equipo</b>, con el <b>total del centro</b> arriba.<br><br>En cada fisio, su control de horas y <b>Informe</b>.`,ver:{sec:'rend',pasos:[{el:'.rend-card',txt:'El total del centro y cada fisio.'},{el:'.rc-inf',txt:'El informe de cada uno.'}]}},
+ {ti:'Un fisio explica un día',body:`Los días que explica un fisio salen <b>por validar</b>. Revisa qué pasó y cuántas horas cuentan y <b>Validar</b>.<br><br>Si tiene banco de horas, eliges <b>sumar o restar del banco</b>.`,ver:{sec:'rend',pasos:[{el:'.rc-clas || .rend-card',txt:'Toca el día para validarlo.'}]}},
+ {ti:'Verificar lo que pagó cada paciente',body:`En el <b>Informe</b> de cada fisio, <b>Lo que pagó cada paciente</b>: cada sesión con su importe. Filtra <b>Por verificar</b> y toca un importe para corregirlo.<br><br><b>Para qué:</b> es lo que el autónomo ve como «Verificado por dirección» y lo que va en su factura.`,ver:{sec:'rend',pasos:[{el:'.rc-inf',txt:'Abre su informe.'}]}},
+ {ti:'El reparto',body:`Con el contrato puesto en Equipo: si es <b>autónomo</b>, lo que le toca con su % y lo que queda a la clínica; si es <b>nómina</b>, lo que cuesta y lo que deja.`}
  ],
  qs:[
- {q:'Un autónomo pregunta por qué su parte sale con «≈». ¿Qué te falta?',opts:['Verificar sus sesiones en su informe','Nada','Cambiarle el %'],ok:0,fb:['¡Eso es!','Falta verificarlas.','No.'],ver:{sec:'rend',pasos:[{el:'.rc-inf',txt:'Abre su informe.'}]}},
- {q:'No te sale el reparto de un fisio. ¿Qué falta?',opts:['Su contrato en Dirección › Equipo','Que haga más sesiones','Nada'],ok:0,fb:['¡Correcto!','No.','Falta el contrato.']}
+ {q:'Un autónomo pregunta por qué su parte sale con «≈». ¿Qué te falta?',opts:['Verificar sus sesiones en su Informe','Nada','Cambiarle el %'],ok:0,fb:['¡Eso es!','Faltan sesiones por verificar.','No.'],ver:{sec:'rend',pasos:[{el:'.rc-inf',txt:'Abre su informe.'}]}},
+ {q:'Un fisio explica que el martes cubrió 2 horas a una compañera. ¿Qué haces?',opts:['Validar el día (y, si tiene banco, sumarlo)','Nada','Borrarlo'],ok:0,fb:['¡Correcto!','Seguiría por validar.','No.']},
+ {q:'No te sale el reparto de un fisio. ¿Qué falta?',opts:['Su contrato en Dirección › Equipo','Que haga más sesiones','Nada'],ok:0,fb:['¡Correcto!','No.','Falta el contrato.']},
+ {q:'¿Dónde ves la ocupación de todo el centro esta semana?',opts:['Rendimiento › Esta semana','En la agenda','En Valoraciones'],ok:0,fb:['¡Eso es!','No.','No.']}
  ]},
 
  {t:'Dirección: el día y el centro',sub:'Solo lo ve dirección',dir:1,
  cards:[
- {ti:'Daily report',body:`Por días: sesiones, facturas, caja por forma de pago, check-list de cada fisio, <b>atrasado por fisio</b> (con «Avisar a…»), sesiones sin facturar (Cobrar), citas sin marcar, tickets fuera del panel o en borrador, canceladas y la <b>lista de la compra</b>. Se puede descargar en PDF.`,ver:{sec:'rdia',pasos:[{el:'#mainWrap .card || #mainWrap',txt:'El Daily report.'}]}},
- {ti:'Estadísticas',body:`Por semana, mes, trimestre, semestre o año: sesiones, ocupación, pacientes nuevos, conversión e ingresos; primeras visitas por fisio, ranking, banco (ingresos y gastos) y cómo nos conocen.`,ver:{sec:'stats',pasos:[{el:'.st-vis || #mainWrap .card',txt:'Elige el periodo.'}]}},
- {ti:'El email de cada mañana',body:`A primera hora llega el resumen del día anterior. El asunto avisa si falta algún check-list o hay pacientes sin facturar. Además, los pacientes activos que llevan 3 semanas sin cita pasan solos a «pendiente de continuar».`},
- {ti:'Quién ha hecho los cursos',body:`En School ves quién ha terminado cada curso obligatorio y cuándo.`}
+ {ti:'Cada mañana: el Daily report',shot:'/img/school/panel-c-rdia.jpg',body:`<b>Cuándo:</b> a primera hora, para repasar el día anterior.<br><br><b>Qué ves:</b> sesiones, facturas, caja por forma de pago, la lista de la compra y el <b>check-list de cada fisio</b>: si lo envió, qué no marcó y qué ve pendiente el panel.<br><br>Si falta algo, <b>Avisar a…</b>`,ver:{sec:'rdia',pasos:[{el:'.rd-ks',txt:'El resumen del día.'},{el:'.rd-fis',txt:'El check-list de cada fisio.'}]}},
+ {ti:'Lo que hay que arreglar',shot:'/img/school/panel-c-rdia2.jpg',body:`Debajo: <b>atrasado por fisio</b> (tareas y llamadas sin hacer), <b>sesiones sin facturar</b> (con <b>Cobrar</b>), <b>citas sin marcar</b> (márcalas ahí mismo), tickets hechos fuera del panel o en borrador y canceladas.<br><br>Con ‹ › ves otros días; también en PDF.`,ver:{sec:'rdia',pasos:[{el:'.rd-sec',txt:'Lo que queda por arreglar.'}]}},
+ {ti:'Las cifras del centro',body:`En <b>Estadísticas</b>, por semana, mes, trimestre, semestre o año: sesiones, ocupación, pacientes nuevos, conversión, ingresos, primeras visitas por fisio y cómo nos conocen.`,ver:{sec:'stats',pasos:[{el:'.st-vis || #mainWrap .card',txt:'Elige el periodo.'}]}},
+ {ti:'El email de cada mañana',body:`A primera hora llega el resumen del día anterior. El asunto avisa si falta algún check-list o hay sesiones sin facturar.<br><br>Además, los pacientes activos que llevan 3 semanas sin cita pasan solos a «pendiente de continuar».`},
+ {ti:'Quién ha hecho los cursos',body:`En <b>School</b> ves quién ha terminado cada curso obligatorio y cuándo. Y en Comunicaciones, el seguimiento del módulo de cada día.`}
  ],
  qs:[
- {q:'¿Dónde ves rápido si a un fisio se le han quedado citas sin marcar ayer?',opts:['En el Daily report','En Valoraciones','En el chat'],ok:0,fb:['¡Eso es!','No.','No.']}
- ]}
+ {q:'¿Dónde ves rápido si a un fisio se le quedaron citas sin marcar ayer?',opts:['En el Daily report','En Valoraciones','En el chat'],ok:0,fb:['¡Eso es! Y las marcas ahí mismo.','No.','No.'],ver:{sec:'rdia',pasos:[{el:'.rd-sec',txt:'Aquí.'}]}},
+ {q:'Juan no envió ayer su check-list. ¿Qué haces?',opts:['Avisar a Juan desde el Daily report','Nada','Lo envío yo'],ok:0,fb:['¡Bien!','Mejor avisarle.','Lo tiene que revisar él.']},
+ {q:'Quieres comparar cuántos pacientes nuevos hubo este trimestre y el anterior. ¿Dónde?',opts:['Estadísticas › Trimestre','En la agenda','En Rendimiento'],ok:0,fb:['¡Eso es!','No.','Rendimiento es por fisio y sesiones.']},
+ {q:'Un paciente activo lleva 3 semanas sin cita. ¿Qué pasa?',opts:['Nada','Pasa solo a «pendiente de continuar»','Se le da de alta'],ok:1,fb:['Sí pasa algo.','¡Correcto!','No.']}
+ ]},
  ];
  const MODS_APP_CLIENTE = [
  // ═══ Curso «La app del paciente» · capturas en /img/school/ (datos de prueba) · se actualiza con cada cambio de la app ═══
