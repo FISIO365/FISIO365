@@ -1590,6 +1590,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sug-vacio svg{width:34px;height:34px;fill:none;stroke:#cdbfb3;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 10px}
 @media(max-width:768px){.sug-res{gap:6px}.sug-res button{font-size:13px;padding:10px 6px;gap:5px}.sug-res button svg{width:14px;height:14px}.sug-ap{grid-template-columns:1fr}.sug-ap button{flex-direction:row;align-items:center;gap:12px;padding:12px 14px}.sug-ap button span{display:flex;flex-direction:column;gap:2px}.sug-hero{padding:18px 18px;border-radius:20px}.sug-card{padding:16px}}
 /* Ficha › Citas: como en la agenda */
+.fp-subenv{display:flex;align-items:center;justify-content:space-between;gap:8px}.fp-envc{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:12.5px;font-weight:700;border:1px solid rgba(194,85,46,.35);background:#fff;color:#c2552e;border-radius:99px;padding:6px 12px;cursor:pointer;text-transform:none;letter-spacing:0}.fp-envc svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .fp-nc{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-family:var(--font);font-size:14px;font-weight:700;border:1.5px dashed rgba(194,85,46,.45);background:#fff;color:#c2552e;border-radius:14px;padding:12px;margin:2px 0 12px;cursor:pointer}
 .fp-nc svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .fp-cit{width:100%;text-align:left;font-family:var(--font);cursor:pointer;align-items:center;color:inherit}
@@ -9209,6 +9210,17 @@ async function enviarApp(P){const t=segTel(P.whatsapp||P.telf||P.tel||'');
  try{const r=await (await fetch(`/api/schedule?action=seg-agenda-app-enlace&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${pid}`)).json();if(!r.ok)throw 0;
   ir(`¡Hola ${capi(P.nombre)}! Aquí tienes tu *app de FISIO365*: tus ejercicios en vídeo, el chat con tu fisio, tus citas y tus documentos.\n\nDentro tienes cómo instalarla y tus datos para entrar:\n${r.url}`);}
  catch(e){if(P.pin)ir(mensajeApp(P));else{if(w)w.close();toast('No se ha podido crear el enlace',false);}}}
+// Mandar al paciente sus próximas citas por WhatsApp, con el enlace de su app (para que las tenga siempre a mano)
+async function enviarCitas(P,citas){const t=segTel(P.whatsapp||P.telf||P.tel||'');
+ if(t.length<9){toast('Le falta el teléfono',false);return;}
+ const L=(citas||[]).filter(c=>c.fecha&&!/CANCEL|REPROGRAM|REALIZADA|NO ASIST|LIBRE|BLOQUE/i.test(c.estado||'')).sort((a,b)=>(a.fecha+(a.hora||'')).localeCompare(b.fecha+(b.hora||'')));
+ if(!L.length){toast('No tiene citas próximas',false);return;}
+ const DS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+ const fl=c=>{const d=new Date(c.fecha+'T12:00:00'),fi=String(c.fisio||'').trim().split(' ')[0];return `• ${DS[d.getDay()].charAt(0).toUpperCase()+DS[d.getDay()].slice(1)} ${d.getDate()} de ${MS[d.getMonth()]}${c.hora?', a las '+String(c.hora).slice(0,5):''}${fi&&!AG_NOFISIO.test(fi)?' · con '+capi(fi):''}`;};
+ const w=window.open('about:blank','_blank');let url='';
+ try{const pid=P.id||P.pacienteId;if(/^rec[A-Za-z0-9]{14}$/.test(pid||'')){const r=await (await fetch(`/api/schedule?action=seg-agenda-app-enlace&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${pid}`)).json();if(r.ok)url=r.url;}}catch(_){}
+ const txt=`¡Hola ${capi(String(P.nombre||'').split(' ')[0])}! Estas son tus próximas citas en *FISIO365*:\n\n${L.map(fl).join('\n')}\n\n`+(url?(P.appInstalada?`Las tienes también en tu app, con tus ejercicios y el chat con tu fisio:\n${url}`:`Las tienes también en tu app, con tus ejercicios y el chat con tu fisio. Aquí tienes cómo instalarla y tus datos para entrar:\n${url}`):'¡Te esperamos!');
+ const u=`https://wa.me/${t}?text=${encodeURIComponent(txt)}`;if(w)w.location.href=(window.marcaUrl?marcaUrl(u):u);else window.open(u,'_blank');}
 // Elegir qué formulario de Tally mandar al paciente por WhatsApp
 function enviarFormulario(P){const t=segTel(P.whatsapp||P.telf||P.tel||''),n=String(P.nombre||'').split(' ')[0];
  const F=[['pv','Consentimiento informado','Datos, salud y consentimiento general',`Hola ${n}, antes de tu primera sesión en FISIO365 necesitamos que rellenes este formulario (2 minutos): ${CONSENT_URL} . Pon tu propio teléfono, por favor. ¡Gracias!`],
@@ -9564,7 +9576,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
    return `<button type="button" class="fp-cita fp-cit" data-id="${c.id}"><div class="fp-cd"><b>${escH(segFecha(c.fecha))}</b><span>${escH(c.hora||'')}</span></div><div class="fp-cm"><span class="fp-ce ${cls(c.estado)}">${escH(c.estado?c.estado.charAt(0)+c.estado.slice(1).toLowerCase():'—')}</span>${n?`<i class="fp-cn${n===1?' pri':''}">${n===1?'1ª visita':n+'ª sesión'}</i>`:''}${pk}${c.confirmada&&!/REALIZADA|CANCEL|NO ASIST/.test(c.estado)?'<i class="fp-cok">✓ Confirmada</i>':''}${c.fisio?`<span class="fp-cfi">${escH(agNom(c.fisio))}</span>`:''}${nota?`<p>${escH(nota)}</p>`:''}</div><svg class="fp-cch" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>`;};
   const cerr=c=>/REALIZADA|NO ASIST/i.test(c.estado),orden=(a,b)=>(b.fecha+b.hora).localeCompare(a.fecha+a.hora);
   const fut=L.filter(c=>c.fecha>=hoy&&!cerr(c)).sort(orden).reverse(),pas=L.filter(c=>c.fecha<hoy||cerr(c)).sort(orden);
-  return top+`${fut.length?`<div class="fp-sub">Próximas</div>${fut.map(fila).join('')}`:''}${pas.length?`<div class="fp-sub">Pasadas · ${pas.length}</div>${pas.map(fila).join('')}`:''}`;}
+  return top+`${fut.length?`<div class="fp-sub fp-subenv"><span>Próximas</span><button type="button" class="fp-envc"><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Enviárselas</button></div>${fut.map(fila).join('')}`:''}${pas.length?`<div class="fp-sub">Pasadas · ${pas.length}</div>${pas.map(fila).join('')}`:''}`;}
  async function cargarCitas(){const L=d.citas;if(!L.length){CX={citas:[],num:{},pago:{}};return;}
   const fs=L.map(c=>c.fecha).filter(Boolean).sort(),d1=fs[0],d2=fs[fs.length-1];
   const [a,n]=await Promise.all([fetch(`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${id}&desde=${d1}&hasta=${d2}`).then(x=>x.json()),
@@ -9573,6 +9585,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
  function montarCitas(cont){
   const recargar=async()=>{try{await cargar();await cargarCitas();}catch(_){}if(tab==='citas'){const y=body.scrollTop;pintar();body.scrollTop=y;}};
   cont.querySelector('.fp-nc').onclick=()=>agNuevaCitaPac({id,nombre:P.nombre,fisio:((CX?CX.citas:d.citas).slice().sort((a,b)=>(b.fecha).localeCompare(a.fecha))[0]||{}).fisio},recargar);
+  {const be=cont.querySelector('.fp-envc');if(be)be.onclick=()=>{const hoy=d.hoy,L=(CX?CX.citas:d.citas).filter(c=>c.fecha>=hoy);enviarCitas(P,L);};}
   cont.querySelectorAll('.fp-cit').forEach(b=>b.onclick=()=>{const c=CX&&CX.citas.find(x=>x.id===b.dataset.id);if(!c){toast('Un momento, cargando la cita…',true);return;}
    agAbrirCita(Object.assign({},c,{paciente:c.paciente||P.nombre,_enFicha:true,_pago:CX.pago[c.id]}),recargar);});
   if(!CX)cargarCitas().then(()=>{if(tab==='citas'&&cont.isConnected){const y=body.scrollTop;pintar();body.scrollTop=y;}}).catch(()=>{});}
@@ -11674,37 +11687,41 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
- {f:'2026-11-02',t:'Tarjetas regalo: se compran en la app en 5 pasos y se pagan con tarjeta o en el centro. Para venderlas, Mensajes › Regalos › «Vender tarjetas regalo» y mandas el enlace por WhatsApp. Quien la recibe reserva desde su tarjeta y la cita entra con el código en las notas.',ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="reg"]',txt:'Toca Regalos.',click:['.ag-recb:not(.ag-pdfb)']},{el:'.rec-m .rg-wa',txt:'Aquí mandas el enlace para que la compren.',click:['.ag-recb:not(.ag-pdfb)','.rec-m .enc-tabs button[data-t="reg"]']},{el:'.rec-m .vl-box',txt:'Y aquí ves las que se han comprado.',click:['.ag-recb:not(.ag-pdfb)','.rec-m .enc-tabs button[data-t="reg"]']}]}},
+ {f:'2026-10-31',aviso:1,t:'Ficha del paciente › Citas › «Enviárselas»: le mandas por WhatsApp todas sus próximas citas junto con el enlace de su app.',ver:{sec:'pac',pasos:[{el:'.fp-envc',txt:'Con este botón le mandas sus próximas citas y la app.',click:['#pacResultados .pt-r','.fp-seg button[data-t="citas"]']}]}},
+ {f:'2026-11-02',aviso:1,t:'Tarjetas regalo: se compran en la app en 5 pasos y se pagan con tarjeta o en el centro. Para venderlas, Mensajes › Regalos › «Vender tarjetas regalo» y mandas el enlace por WhatsApp. Quien la recibe reserva desde su tarjeta y la cita entra con el código en las notas.',ver:{sec:'agenda',pasos:[{el:'.rec-m .enc-tabs button[data-t="reg"]',txt:'Toca Regalos.',click:['.ag-recb:not(.ag-pdfb)']},{el:'.rec-m .rg-wa',txt:'Aquí mandas el enlace para que la compren.',click:['.ag-recb:not(.ag-pdfb)','.rec-m .enc-tabs button[data-t="reg"]']},{el:'.rec-m .vl-box',txt:'Y aquí ves las que se han comprado.',click:['.ag-recb:not(.ag-pdfb)','.rec-m .enc-tabs button[data-t="reg"]']}]}},
  {f:'2026-11-02',t:'El curso «Cómo funciona la app», rehecho: cada tarjeta parte de una situación real (cuándo, qué haces y para qué), con capturas del panel y «Enséñamelo».'},
- {f:'2026-11-02',t:'Formación del panel: cada día laborable te llega a Comunicaciones la tarea «Módulo de hoy». Se marca hecha sola al terminar el módulo.'},
- {f:'2026-10-31',t:'Si un paciente no paga por adelantado en 2 horas, su cita se cancela sola y la hora queda libre, a cualquier hora del día.'},
+ {f:'2026-11-02',aviso:1,t:'Formación del panel: cada día laborable te llega a Comunicaciones la tarea «Módulo de hoy». Se marca hecha sola al terminar el módulo.'},
+ {f:'2026-10-31',aviso:1,t:'Si un paciente no paga por adelantado en 2 horas, su cita se cancela sola y la hora queda libre, a cualquier hora del día.'},
  {f:'2026-10-31',t:'Los desplegables, fechas, horas y preguntas del panel ya tienen nuestro estilo (también en el móvil).'},
  {f:'2026-10-31',t:'Las vacaciones y cambios de horario los aprueba dirección.',dir:1},
  {f:'2026-10-30',t:'La ficha del paciente recuerda la pestaña en la que estabas y ya no salta arriba al cambiar de pestaña.'},
- {f:'2026-10-30',t:'Pendientes › Tareas: nuevo grupo «Sin la app», con los pacientes de este mes que aún no la tienen y el botón Enviar app.'},
+ {f:'2026-10-30',aviso:1,t:'Pendientes › Tareas: nuevo grupo «Sin la app», con los pacientes de este mes que aún no la tienen y el botón Enviar app.'},
  {f:'2026-10-30',t:'El lunes 2/11 empieza la formación del panel: un módulo corto cada día laborable a las 8:30, con aviso al móvil. Activa los avisos para que te llegue.'},
  {f:'2026-10-30',t:'Nuevo curso «La app del paciente», con capturas de cada pantalla: así sabrás contestar cuando te pregunten por su app.'},
  {f:'2026-10-30',t:'Nuevo curso «Cómo funciona la app», para todo el equipo: preguntas de situaciones reales y botones «Enséñamelo» que te llevan a la pantalla de verdad. Las novedades también lo tienen.'},
- {f:'2026-10-30',t:'Dirección › Ajustes › Mensajes a pacientes: ya se pueden cambiar los textos de los WhatsApp (recordatorios, encuestas, reseñas, pagos…).',dir:1,ver:{sec:'admin',pasos:[{el:'.pl-card',txt:'Aquí cambias los mensajes. Toca uno para abrirlo y usa las etiquetas como {nombre} o {enlace}.',click:['.adm-tabs [data-k="ajustes"]']}]}},
+ {f:'2026-10-30',aviso:1,t:'Dirección › Ajustes › Mensajes a pacientes: ya se pueden cambiar los textos de los WhatsApp (recordatorios, encuestas, reseñas, pagos…).',dir:1,ver:{sec:'admin',pasos:[{el:'.pl-card',txt:'Aquí cambias los mensajes. Toca uno para abrirlo y usa las etiquetas como {nombre} o {enlace}.',click:['.adm-tabs [data-k="ajustes"]']}]}},
  {f:'2026-10-30',t:'Al montar un programa de ejercicios puedes ver el vídeo de cada ejercicio antes de ponerlo.',ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .pe-lista [data-veri] || .pv.fp:not(.rec-m) input[type=search]',txt:'En la pestaña Ejercicios de la ficha: busca un ejercicio y toca el ojo para ver su vídeo antes de añadirlo.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]}},
  {f:'2026-10-30',t:'Valoraciones: con la ✕ quitas de la lista una valoración que no toca.',ver:{sec:'val',pasos:[{el:'.val-qx',txt:'Con esta ✕ quitas una valoración de la lista.'}]}},
  {f:'2026-10-29',t:'Sorteo del mes: 2 sesiones gratis entre quienes dejan reseña en Google (una al azar y otra a la más original). Está en Valoraciones.',ver:{sec:'val',pasos:[{el:'.val-so',txt:'Aquí está el sorteo del mes.'}]}}
 ];
-// Punto: se quita al entrar en School (f365_nov_punto). Tarjeta: las no vistas, hasta tocar «Visto» (f365_nov_visto).
+// Solo avisan (punto y tarjeta) las marcadas con aviso:1, las que cambian cómo trabaja el equipo; el resto va al historial.
+// Punto: se quita al entrar en School (f365_nov_punto). Tarjeta: sale una vez; la siguiente vez que entras ya no está (f365_nov_visto).
+const novMax=()=>NOVEDADES.reduce((m,n)=>n.f>m?n.f:m,''); // la fecha más nueva (no tiene por qué ser la primera)
 const novLS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v);}catch(e){return '';}};
 function esDireccionSeguro(){try{return typeof esDireccion==='function'&&esDireccion();}catch(e){return false;}}
 const novMias=()=>NOVEDADES.filter(n=>!n.dir||esDireccionSeguro());
-function novNuevas(){const v=novLS('f365_nov_punto');return novMias().filter(n=>n.f>v).length;}
-function novMarcarVistas(){novLS('f365_nov_punto',NOVEDADES[0].f);novPunto();}
+function novNuevas(){const v=novLS('f365_nov_punto');return novMias().filter(n=>n.aviso&&n.f>v).length;}
+function novMarcarVistas(){novLS('f365_nov_punto',novMax());novPunto();}
 function novPunto(){const n=novNuevas();['sb-school','pmSchool','btnPerfil'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('nov-dot',n>0);});}
-function novPinta(box){const v=novLS('f365_nov_visto'),M=novMias(),nuevas=M.filter(n=>n.f>v),abierta=box.dataset.abierta==='1';
+function novPinta(box){if(box.dataset.v0===undefined){box.dataset.v0=novLS('f365_nov_visto');novLS('f365_nov_visto',novMax());} // se ven esta vez y ya cuentan como vistas
+ const v=box.dataset.v0,M=novMias(),nuevas=M.filter(n=>n.aviso&&n.f>v),abierta=box.dataset.abierta==='1';
  const fd=f=>{const d=new Date(f+'T12:00:00');return d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];};
- const it=n=>`<div class="nov-it${n.f>v?' nueva':''}"><span>${fd(n.f)}</span><p>${escH(n.t)}${n.ver?`<button type="button" class="nov-ver" data-i="${NOVEDADES.indexOf(n)}"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Enséñamelo</button>`:''}</p></div>`;
+ const it=n=>`<div class="nov-it${n.aviso&&n.f>v?' nueva':''}"><span>${fd(n.f)}</span><p>${escH(n.t)}${n.ver?`<button type="button" class="nov-ver" data-i="${NOVEDADES.indexOf(n)}"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Enséñamelo</button>`:''}</p></div>`;
  if(!M.length){box.innerHTML='';return;}
  if(nuevas.length) box.innerHTML=`<div class="nov-card"><div class="nov-h nov-hf"><span>Novedades</span><button type="button" class="nov-ok">✓ Visto</button></div>${nuevas.map(it).join('')}</div>`;
- else box.innerHTML=`<div class="nov-card nov-cerr"><button type="button" class="nov-tog"><span>Novedades anteriores</span><i>${abierta?'Ocultar':'Ver'}</i></button>${abierta?M.slice(0,10).map(it).join(''):''}</div>`;
+ else box.innerHTML=`<div class="nov-card nov-cerr"><button type="button" class="nov-tog"><span>Novedades anteriores</span><i>${abierta?'Ocultar':'Ver'}</i></button>${abierta?M.slice(0,6).map(it).join(''):''}</div>`;
  box.querySelectorAll('.nov-ver').forEach(b=>b.onclick=()=>{const n=NOVEDADES[+b.dataset.i];if(n&&n.ver)ensename(n.ver,null);});
- const ok=box.querySelector('.nov-ok');if(ok)ok.onclick=()=>{novLS('f365_nov_visto',NOVEDADES[0].f);box.dataset.abierta='';novPinta(box);};
+ const ok=box.querySelector('.nov-ok');if(ok)ok.onclick=()=>{novLS('f365_nov_visto',novMax());box.dataset.v0=novMax();box.dataset.abierta='';novPinta(box);};
  const tg=box.querySelector('.nov-tog');if(tg)tg.onclick=()=>{box.dataset.abierta=abierta?'':'1';novPinta(box);};}
 let tourVolver=null;
 function tourScroll(v){const f=()=>{try{window.scrollTo(0,v.y||0);const w=$('mainWrap');if(w)w.scrollTop=v.w||0;}catch(e){}};requestAnimationFrame(f);setTimeout(f,120);}
@@ -13796,7 +13813,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Lo de arriba: hablar con él',shot:'/img/school/panel-a-10-ficha.jpg',body:`Debajo del nombre están sus <b>estados</b> (toca para cambiarlos).<br><br>Y los botones: <b>Llamar</b>, <b>WhatsApp</b>, <b>Enviar app</b>, <b>Seguimiento</b> y <b>Cobrar y facturar</b>.`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-acts',txt:'Los botones de la ficha.',click:['#pacResultados .pt-r']}]}},
  {ti:'Le escribes por WhatsApp',body:`<b>Qué haces:</b> botón <b>WhatsApp</b>. Te prepara un mensaje con su última sesión y su próxima cita; lo puedes cambiar.<br><br>Al volver te pregunta si lo has enviado y si hay que revisarlo más adelante: así queda en sus llamadas.`},
- {ti:'No tiene la app',body:`<b>Enviar app</b> le manda por WhatsApp el enlace, su usuario y su PIN.<br><br>Si ya la tiene, el botón pone <b>App ✓</b>; tocándolo se la reenvías.`},
+ {ti:'No tiene la app',body:`<b>Enviar app</b> le manda por WhatsApp el enlace, su usuario y su PIN.<br><br>Si ya la tiene, el botón pone <b>App ✓</b>; tocándolo se la reenvías.<br><br>Y en la pestaña <b>Citas</b>, <b>Enviárselas</b> le manda por WhatsApp todas sus próximas citas con el enlace de la app, para que las tenga ahí.`},
  {ti:'El resumen de un vistazo',shot:'/img/school/panel-a-11-resumen.jpg',body:`Sesiones hechas, <b>próxima cita</b> y <b>última sesión</b>. Debajo, sus <b>datos</b> (Editar), su <b>salud</b> del consentimiento y los documentos firmados.<br><br>Arriba salen los avisos importantes: alertas de salud, tarjeta regalo por canjear…`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-tabs',txt:'Resumen, Historia, Citas, Ejercicios y Más.',click:['#pacResultados .pt-r']}]}},
  {ti:'Se va sin próxima cita',body:`<b>Cuándo:</b> el paciente no reserva la siguiente.<br><br><b>Qué haces:</b> marca <b>No reagenda</b> y explica por qué. Luego eliges: <b>Pasa a seguimiento</b> (cuándo llamarle y quién) o <b>No necesita más</b> (queda como alta).<br><br><b>Para qué:</b> que nadie se quede sin llamar.`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-pqchk',txt:'Aquí: No reagenda.',click:['#pacResultados .pt-r']}]}},
  {ti:'Le falta el consentimiento',body:`En Salud: <b>Enviar</b> (le llega por WhatsApp), <b>En papel</b> (subes una foto) o <b>Enlazar</b> uno que ya rellenó.<br><br>Si lo rellenó alguien con su mismo teléfono, te pregunta si es suyo.`}

@@ -9,7 +9,7 @@
 ## Norma: el curso «Cómo funciona la app» va siempre al día
 Cada cambio que note el equipo (pantalla, botón, flujo, texto que ve el paciente) se hace **junto con**, en el mismo commit:
 1. **El curso** — `MODS_APP_PACIENTE` en `public/fisio.html` (School › «Cómo funciona la app», id `appEquipo`). Actualiza la lección que toque o añade una. Si el cambio tiene un sitio claro en pantalla, pon `ver:{sec, el, txt}` en la tarjeta para el botón «Enséñamelo» (`sec` = sección de `showSection`, `el` = selector que exista con la sección abierta). Si un módulo nuevo cambia el total, sube `pasos` en `WIKI_RUTAS`.
-2. **Novedades** — añade una línea arriba del todo en `NOVEDADES` (`{f:'AAAA-MM-DD', t:'…'}`; `dir:1` si solo interesa a dirección; `ver:{sec,pasos:[…]}` para que tenga «Enséñamelo», igual que en el curso). Una frase, en el idioma del equipo: qué hay nuevo y dónde está.
+2. **Novedades** — añade una línea arriba del todo en `NOVEDADES` (`{f:'AAAA-MM-DD', t:'…'}`; `dir:1` si solo interesa a dirección; `ver:{sec,pasos:[…]}` para que tenga «Enséñamelo», igual que en el curso). Una frase, en el idioma del equipo: qué hay nuevo y dónde está. Pon `aviso:1` SOLO si cambia cómo trabaja el equipo (algo nuevo que tienen que hacer o usar): solo esas avisan con punto y tarjeta, y salen una sola vez. Los retoques pequeños van sin `aviso` (solo quedan en el historial).
 No hace falta para arreglos internos que nadie nota.
 
 ## Serie de formación (School)
