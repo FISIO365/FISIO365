@@ -3807,6 +3807,32 @@ module.exports = async function handler(req, res) {
           if (!E.length) return res.status(400).json({ ok: false, error: 'Deja al menos un email' });
           await guardarAjuste('emails_resumen', E.slice(0, 10), yo.fields.Name); return res.status(200).json({ ok: true, emails: await emailsResumen() });
         }
+        if (action === 'seg-adm-importar') { // importar pacientes de otro programa (filas ya leídas del Excel/CSV en el panel)
+          const filas = (Array.isArray(q.filas) ? q.filas : []).slice(0, 3000), prueba = !!q.prueba;
+          const nueve = v => String(v || '').replace(/\D/g, '').replace(/^0034|^34(?=\d{9}$)/, '').slice(-9), low = v => String(v || '').trim().toLowerCase();
+          const ex = await todosT(PACIENTES, `fields[]=${encodeURIComponent('FULL NAME')}&fields[]=TELF&fields[]=WHATSAPP&fields[]=EMAIL&fields[]=DNI`);
+          const T9 = new Set(), EM = new Set(), DN = new Set();
+          ex.forEach(r => { const F = r.fields || {}; [F.TELF, F.WHATSAPP].forEach(t => { const n = nueve(t); if (n.length === 9) T9.add(n); }); if (F.EMAIL) EM.add(low(F.EMAIL)); if (F.DNI) DN.add(low(F.DNI)); });
+          const cap = t => String(t || '').trim().replace(/\s+/g, ' ').toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
+          const fechaOk = v => { v = String(v || '').trim(); let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`; m = v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/); if (m) { const y = m[3].length === 2 ? (+m[3] > 30 ? '19' : '20') + m[3] : m[3]; return `${y}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; } return ''; };
+          const nuevos = [], repes = [], malos = [];
+          for (const x of filas) {
+            const nombre = cap([x.nombre, x.apellidos].filter(Boolean).join(' ')).slice(0, 120), tel = nueve(x.tel), email = low(x.email), dni = String(x.dni || '').trim().toUpperCase();
+            if (nombre.length < 2) { malos.push({ nombre: nombre || '(sin nombre)', motivo: 'Sin nombre' }); continue; }
+            if ((tel.length === 9 && T9.has(tel)) || (email && EM.has(email)) || (dni && DN.has(low(dni)))) { repes.push({ nombre }); continue; }
+            const f = { 'FULL NAME': nombre, PIN: nuevoPin() };
+            if (tel.length === 9) { f.TELF = tel; f.WHATSAPP = tel; T9.add(tel); }
+            if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { f.EMAIL = email; EM.add(email); }
+            if (dni) { f.DNI = dni; DN.add(low(dni)); }
+            const cu = fechaOk(x.cumple); if (cu) f.CUMPLE = cu;
+            const notas = String(x.notas || '').trim(); if (notas) f.NOTAS = notas.slice(0, 5000);
+            if (x.historial) f['HISTORIAL CLÍNICO'] = String(x.historial).slice(0, 20000);
+            nuevos.push(f);
+          }
+          let creados = 0;
+          if (!prueba) for (let i = 0; i < nuevos.length; i += 10) { const d = await at(PACIENTES, { method: 'POST', body: JSON.stringify({ records: nuevos.slice(i, i + 10).map(fields => ({ fields })), typecast: true }) }).catch(() => ({ error: 1 })); if (d.error || !d.records) { malos.push({ nombre: `Filas ${i + 1}–${Math.min(i + 10, nuevos.length)}`, motivo: 'No se han podido guardar' }); continue; } creados += d.records.length; }
+          return res.status(200).json({ ok: true, prueba, nuevos: nuevos.length, creados, repetidos: repes.length, repes: repes.slice(0, 50), malos });
+        }
         if (action === 'seg-adm-icono') { // subir o quitar el icono de la app instalada (cuadrado)
           const cur = (await ajuste('config', null)) || {}; cur.clinica = cur.clinica || {};
           const AJ = q.panel ? 'clinica-icono-panel' : 'clinica-icono', VK = q.panel ? 'iconoPV' : 'iconoV'; // el del panel es opcional (si no hay, se usa el de la app)
