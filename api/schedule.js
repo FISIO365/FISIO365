@@ -532,6 +532,20 @@ const CIT_T = 'tblTPlcuiSjQngkaD';
 let webEnCurso = null;
 function procesarWeb() { if (!webEnCurso) webEnCurso = _procesarWeb().finally(() => { webEnCurso = null; }); return webEnCurso; }
 async function _procesarWeb() {
+  // El formulario de la web (WordPress) sigue escribiendo en Airtable: las reservas nuevas se traen aquí (a la agenda de verdad) y se procesan como siempre
+  try { const PG = require('./_pg');
+    if (PG.ACTIVO && PG.fetchReal) {
+      const hechas = (await ajuste('web-airtable-ok', [])) || [], f = `AND({your-name}!='',IS_AFTER(CREATED_TIME(),'2026-10-31T12:00:00.000Z'))`;
+      const d = await (await PG.fetchReal(`https://api.airtable.com/v0/${BASE_ID}/${CIT_T}?filterByFormula=${encodeURIComponent(f)}&pageSize=50`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })).json();
+      const nuevas = (d.records || []).filter(r => !hechas.includes(r.id));
+      for (const r of nuevas) { const F = r.fields || {}, fl = {};
+        ['your-name', 'your-phone', 'your-email', 'your-message', 'HORA'].forEach(k => { if (F[k]) fl[k] = String(F[k]); });
+        if (F.FECHA) fl.FECHA = String(F.FECHA).slice(0, 10);
+        if ((F['your-file'] || []).length) fl['your-file'] = F['your-file'].filter(a => a.url).map(a => ({ url: a.url, filename: a.filename }));
+        const c = await at(CIT_T, { method: 'POST', body: JSON.stringify({ records: [{ fields: fl }], typecast: true }) }).catch(() => ({ error: 1 }));
+        if (!c.error) hechas.push(r.id); else console.log('web airtable', r.id, JSON.stringify(c.error).slice(0, 200)); }
+      if (nuevas.length) await guardarAjuste('web-airtable-ok', hechas.slice(-500), 'web');
+    } } catch (e) { console.log('web airtable', e.message); }
   const todosW = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error || d.errors) throw new Error((d.error && d.error.message) || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
   const nm = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
   const pend = await todosW(CIT_T, `filterByFormula=${encodeURIComponent(`AND({your-name}!='',ARRAYJOIN({RELACIÓN - CITA})='',{RESERVA}='',{ESTADO}='',IS_AFTER(CREATED_TIME(),DATEADD(TODAY(),-60,'days')))`)}`);
