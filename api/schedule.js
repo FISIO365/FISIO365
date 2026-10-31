@@ -1,5 +1,6 @@
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const { BASE_ID } = require('./_base');
+require('./_pg'); // con DB_URL, los datos salen de Postgres en vez de Airtable (api/_pg.js)
 const PLAN_TABLE = 'tblvgE0a4gsrj4Vhp';
 const FISIOS_TABLE = 'tbl2mLUrnaKCFTs6g';
 const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
@@ -2469,6 +2470,14 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { patientId, action } = req.query;
+  if (action === 'pg-proxy') { // las funciones «edge» piden aquí lo que antes pedían a Airtable (ver api/_base.js)
+    const PG = require('./_pg'); if (!PG.ACTIVO || req.method !== 'POST') return res.status(404).end();
+    const k = require('crypto').createHash('sha256').update('pg-proxy:' + (process.env.PG_PROXY_KEY || process.env.DB_URL)).digest('hex');
+    if (String(req.headers['x-pg-proxy'] || '') !== k) return res.status(401).json({ error: { type: 'AUTHENTICATION_REQUIRED', message: 'No autorizado' } });
+    const b = req.body || {}; if (!/^https:\/\/(api|content)\.airtable\.com\/v0\//.test(String(b.url || ''))) return res.status(400).end();
+    const r = await PG.responder(String(b.url), { method: b.method || 'GET', body: b.body || undefined });
+    res.setHeader('Content-Type', 'application/json'); res.setHeader('Cache-Control', 'no-store'); return res.status(r.status).send(await r.text());
+  }
   // Datos de la clínica (Administración › Ajustes): las páginas salen con su nombre, dirección, teléfono…
   let PLANT = {};
   try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); LEGAL = legalDe(c0.legal); PLANT = c0.plantillas || {}; } catch (e) { LEGAL = legalDe(); }
@@ -2487,6 +2496,13 @@ module.exports = async function handler(req, res) {
   if (action === 'clinica-pub') { // lo público de la clínica para la app y el panel (nombre, teléfono, opciones…)
     const C = CLI; res.setHeader('Cache-Control', 'public, max-age=60');
     return res.status(200).json({ ok: true, clinica: { marca: C.marca, tel: C.tel, wa: C.wa, email: C.email, web: C.web, direccion: C.direccion, dirCorta: C.dirCorta, zona: C.zona, ciudad: C.ciudad, resena: 'https://search.google.com/local/writereview?placeid=' + C.googlePlace, opciones: C.opciones, color: C.color, logo: C.logoV ? '/api/schedule?action=clinica-logo&v=' + C.logoV : '', icono: MARCA.iconoPropio(C) ? MARCA.iconoUrl(C, 512) : '', iconoSubido: !!C.iconoV, plantillas: PLANT }, pares: MARCA.pares(C) });
+  }
+  if (action === 'archivo') { // adjunto guardado en Postgres (ver api/_pg.js): el enlace lleva una clave secreta, como los de Airtable
+    const PG = require('./_pg'); if (!PG.ACTIVO) return res.status(404).end();
+    const A = await PG.archivo(String(req.query.id || ''), String(req.query.k || '')); if (!A) return res.status(404).end();
+    res.setHeader('Content-Type', A.tipo || 'application/octet-stream'); res.setHeader('Cache-Control', 'private, max-age=86400');
+    res.setHeader('Content-Disposition', `inline; filename="${String(A.nombre || 'archivo').replace(/[^\w.\- ]/g, '_')}"`);
+    return res.status(200).end(A.datos);
   }
   if (action === 'clinica-logo') { // logo subido en Administración › Ajustes
     const L = await ajuste('clinica-logo', null), m = L && String(L.data || '').match(/^data:(image\/(png|jpeg|webp|svg\+xml));base64,(.+)$/);

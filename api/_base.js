@@ -40,4 +40,17 @@ if (OTRA && global.fetch && !global.fetch._base) {
   };
   nf._base = 1; nf._marca = _f._marca; global.fetch = nf;
 }
+// Funciones «edge» (chat, citas, pacientes…): no pueden conectarse a Postgres, así que con DB_URL mandan
+// cada llamada a Airtable a /api/schedule?action=pg-proxy, que la responde desde Postgres (ver api/_pg.js).
+if (typeof EdgeRuntime !== 'undefined' && process.env.DB_URL && global.fetch && !global.fetch._pgEdge) {
+  const _f = global.fetch, APP = String(process.env.APP_URL || 'https://app.fisioterapia365.com').replace(/\/+$/, '');
+  let clave = null;
+  const laClave = async () => { if (clave) return clave; const k = process.env.PG_PROXY_KEY || process.env.DB_URL; const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('pg-proxy:' + k)); clave = [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join(''); return clave; };
+  const nf = async (u, o) => {
+    const url = String(u && u.url ? u.url : u);
+    if (!/^https:\/\/(api|content)\.airtable\.com\/v0\//.test(url)) return _f(u, o);
+    return _f(APP + '/api/schedule?action=pg-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-PG-Proxy': await laClave() }, body: JSON.stringify({ url, method: (o && o.method) || 'GET', body: o && typeof o.body === 'string' ? o.body : null }) });
+  };
+  nf._pgEdge = 1; nf._base = 1; nf._marca = _f._marca; global.fetch = nf;
+}
 module.exports = { BASE_ID, DEF_BASE, OTRA };

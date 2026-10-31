@@ -4,6 +4,7 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const { BASE_ID } = require('./_base');
+require('./_pg'); // con DB_URL, los datos salen de Postgres en vez de Airtable (api/_pg.js)
 const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 
 export default async function handler(req, res) {

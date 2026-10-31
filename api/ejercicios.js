@@ -1,6 +1,7 @@
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'fisio2024';
 const { BASE_ID } = require('./_base');
+require('./_pg'); // con DB_URL, los datos salen de Postgres en vez de Airtable (api/_pg.js)
 const TABLE_ID = 'tbloqn3ts872ueJSE';
 
 module.exports = async function handler(req, res) {

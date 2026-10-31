@@ -3,6 +3,7 @@
 const webpush = require('web-push');
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const { BASE_ID } = require('./_base');
+require('./_pg'); // con DB_URL, los datos salen de Postgres en vez de Airtable (api/_pg.js)
 const TABLAS = { paciente: 'tbldBVgClS4HY2mOJ', fisio: 'tbl2mLUrnaKCFTs6g' };
 webpush.setVapidDetails('mailto:info@fisioterapia365.com', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
 

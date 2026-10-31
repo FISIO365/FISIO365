@@ -4,6 +4,7 @@
   "dependencies": {
     "web-push": "^3.6.7",
     "@resvg/resvg-js": "2.6.2",
-    "opentype.js": "1.3.4"
+    "opentype.js": "1.3.4",
+    "pg": "8.23.1"
   }
 }

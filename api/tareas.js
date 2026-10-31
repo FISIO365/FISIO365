@@ -3,6 +3,7 @@ export const config = { runtime: 'nodejs' };
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const FISIO_PASSWORD = process.env.FISIO_PASSWORD || 'FISIO365App';
 const { BASE_ID } = require('./_base');
+require('./_pg'); // con DB_URL, los datos salen de Postgres en vez de Airtable (api/_pg.js)
 const TAREAS_TABLE = 'tblIXYE5ToRNY7MN4';
 
 // Field IDs
