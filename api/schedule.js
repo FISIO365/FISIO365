@@ -857,7 +857,7 @@ function ogTarjetaSvg({ imp, pila }) {
     + ogTexto(O.b, t1, sz - 10, 300, 412, 0, K)
     + ogTexto(O.m, 'por recomendarnos', 23, 300, 450, 0, M) + `</svg>`;
 }
-function paginaRegalo(G) {
+function paginaDetalle(G) {
   const e = escHtml;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${e(G.titulo)} · FISIO365</title>
 <meta property="og:title" content="${e(G.ogTitle)}"><meta property="og:description" content="${e(G.ogDesc)}"><meta property="og:image" content="${e(G.og)}"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
@@ -885,7 +885,7 @@ h1{font-size:23px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-s
 <a class="bt fi" style="animation-delay:2s" href="${huecosSiempre(30)}">${e(G.btn)}</a><p class="sub" style="font-size:12.5px;margin-top:10px">¿Prefieres que te lo busquemos nosotros? <a href="https://wa.me/34${String(G.tel || '672893949').replace(/\D/g, '').slice(-9)}?text=${encodeURIComponent(G.waTxt)}" target="_blank" rel="noopener" style="color:#c2552e;font-weight:600">Escríbenos</a></p><p class="pie">FISIO365 · ${e(G.dir)}</p></div></body></html>`;
 }
 function paginaTarjeta(D) {
-  return paginaRegalo({ titulo: 'Tu regalo', ogTitle: `${D.imp} € de regalo${D.pila ? ', ' + D.pila : ''}`, ogDesc: 'Gracias por recomendarnos. Te lo descontamos en tu próxima sesión.', og: D.og,
+  return paginaDetalle({ titulo: 'Tu regalo', ogTitle: `${D.imp} € de regalo${D.pila ? ', ' + D.pila : ''}`, ogDesc: 'Gracias por recomendarnos. Te lo descontamos en tu próxima sesión.', og: D.og,
     h1: `¡Gracias${D.pila ? ', ' + D.pila : ''}!`, sub: 'Por recomendarnos. Nos hace muchísima ilusión, así que aquí tienes tu regalo.', tkS: 'TARJETA REGALO', tkB: `${D.imp} €`, tkSpan: 'de descuento en tu próxima sesión',
     ems: [D.pila ? `Para ${D.pila}` : '', D.cad ? `Válida hasta el ${D.cad}` : ''].filter(Boolean),
     pasos: [['<path d="m5 12.5 4.5 4.5L19 7.5"/>', 'No tienes que hacer nada', 'Ya lo tenemos apuntado en tu ficha'], ['<rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h4"/>', 'Te lo descontamos al pagar', 'En tu próxima sesión con nosotros']],
@@ -894,7 +894,7 @@ function paginaTarjeta(D) {
 // Premio del sorteo mensual de reseñas: página bonita para mandar por WhatsApp (con vista previa cuadrada)
 function paginaPremio(D) {
   const mesTxt = D.mesTxt;
-  return paginaRegalo({ titulo: 'Tu premio', ogTitle: `¡Te ha tocado una sesión gratis${D.pila ? ', ' + D.pila : ''}!`, ogDesc: D.tipo === 'creativa' ? `Tu reseña ha sido la que más nos ha gustado en ${mesTxt}.` : `Sorteo de ${mesTxt} entre quienes nos dejáis reseña.`, og: D.og,
+  return paginaDetalle({ titulo: 'Tu premio', ogTitle: `¡Te ha tocado una sesión gratis${D.pila ? ', ' + D.pila : ''}!`, ogDesc: D.tipo === 'creativa' ? `Tu reseña ha sido la que más nos ha gustado en ${mesTxt}.` : `Sorteo de ${mesTxt} entre quienes nos dejáis reseña.`, og: D.og,
     h1: `¡Enhorabuena${D.pila ? ', ' + D.pila : ''}!`, sub: D.tipo === 'creativa' ? `Tu reseña ha sido la que más nos ha gustado en ${mesTxt}. Gracias por tus palabras: nos dan muchísima energía.` : `Cada mes sorteamos una sesión entre quienes nos dejáis vuestra opinión en Google, y en ${mesTxt} has salido tú.`,
     tkS: D.tipo === 'creativa' ? 'LA RESEÑA DEL MES' : 'SORTEO DEL MES', tkB: '1 sesión', tkSpan: 'de fisioterapia, gratis para ti', ems: [D.pila ? `Para ${D.pila}` : '', `Premio de ${mesTxt}`].filter(Boolean),
     pasos: [['<path d="m5 12.5 4.5 4.5L19 7.5"/>', 'Es tuya, sin hacer nada más', 'Solo dinos que vienes con el premio'], ['<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>', 'Elige cuándo te va bien', 'Reserva en la app o escríbenos']],
