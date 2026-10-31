@@ -1047,15 +1047,8 @@ function ogValeSvg(F) {
     + ogTexto(O.m, t3, fit(t3, 20, 26), 300, 428, 0, M) + `</svg>`;
 }
 // La tarjeta (página pública firmada). p=1: versión para imprimir
-// Cada ocasión: terracota + su color propio (c2), con un fondo suave (tint) para el ticket
-const VALE_COL = {
-  clasico: { c2: '#c2552e', tint: '#fdf1ea', ln: '#f1d9cc' },
-  navidad: { c2: '#2f7a52', tint: '#eef6f0', ln: '#cfe5d7' },
-  madre: { c2: '#d9658a', tint: '#fdeff3', ln: '#f6d3de' },
-  padre: { c2: '#3a6ea8', tint: '#eef3fa', ln: '#d3e0ef' },
-  cumple: { c2: '#e0a020', tint: '#fdf6e6', ln: '#f3e2b5' },
-  sanvalentin: { c2: '#c8283c', tint: '#fdeef0', ln: '#f5cfd5' }
-};
+// Todas las ocasiones en los colores de la marca (naranja y crema): cambia solo el dibujo y los textos
+const VALE_COL = Object.fromEntries(['clasico', 'navidad', 'madre', 'padre', 'cumple', 'sanvalentin'].map(k => [k, { c2: '#c2552e', tint: '#fdf1ea', ln: '#f1d9cc' }]));
 const VALE_EST = Object.fromEntries(Object.entries(VALE_COL).map(([k, v]) => [k, { bg: v.tint, ink: '#2b2420', ln: v.ln, acc: v.c2 }]));
 const VALE_GR = Object.fromEntries(Object.entries(VALE_COL).map(([k, v]) => [k, [v.tint, v.tint]]));
 // Dibujos de línea (viewBox 96) con su pequeña historia: «.a» se dibuja en terracota, «.b» va en el color de la ocasión
