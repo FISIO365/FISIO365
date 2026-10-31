@@ -1034,77 +1034,89 @@ async function valesDelDia() {
 }
 // Vista previa cuadrada (WhatsApp): regalo, sesiones y para quién, lejos de los bordes
 function ogValeSvg(F) {
-  const l = valeLang(F), T = VALE_T[l], oc = valeOc(F), OC = VALE_OC[oc], K = VALE_COL[oc] || VALE_COL.clasico, O = ogTipos(), TC = '#c2552e', INK = '#2b2420', M = '#8a7d74';
-  const t1 = F.PARA ? OC.t[l].hola(F.PARA) : OC.t[l].tk, t2 = T.ses(F.SESIONES || 1), t3 = valeTipo(F.TIPO, l);
+  const l = valeLang(F), T = VALE_T[l], oc = valeOc(F), OC = VALE_OC[oc], K = VALE_EST[oc] || VALE_EST.clasico, W = K.ink, O = ogTipos();
+  const t1 = T.ses(F.SESIONES || 1), t2 = valeTipo(F.TIPO, l), t3 = F.PARA ? `${T.para} ${F.PARA}` : OC.t[l].tk;
   const fit = (t, base, max) => Math.max(18, Math.min(base, Math.round(base * max / Math.max(max, String(t).length))));
-  const ilu = (VALE_ILU[oc] || '').replace(/class="(a0|a)"/g, `stroke="${TC}"`).replace(/class="b[^"]*"/g, m => /llama|late|class="b p/.test(m) ? `fill="${K.c2}" stroke="none"` : `stroke="${K.c2}"`).replace(/class="[^"]*"/g, '');
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
-    + `<g transform="translate(240 92) scale(1.25)" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ilu}</g>`
-    + ogTexto(O.b, t1, fit(t1, 34, 18), 300, 268, 0, INK)
-    + `<rect x="130" y="296" width="340" height="168" rx="26" fill="#fff" stroke="#c2552e" stroke-width="2.5"/>`
-    + ogTexto(O.m, OC.t[l].tk, OC.t[l].tk.length > 16 ? 13 : 15, 300, 334, 3, K.c2)
-    + ogTexto(O.b, t2, fit(t2, 46, 11), 300, 392, 0, TC)
-    + ogTexto(O.m, t3, fit(t3, 20, 26), 300, 428, 0, M) + `</svg>`;
+  const ilu = (VALE_ILU[oc] || '').replace(/ pathLength="1"/g, '').replace(/class="luz[^"]*"/g, `fill="${K.acc}"`).replace(/class="llama"/g, `fill="${K.acc === '#141414' ? '#fff7ef' : '#c2552e'}"`);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#efebe5"/><rect x="70" y="70" width="460" height="460" rx="40" fill="${K.bg}"/>`
+    + `<rect x="86" y="86" width="428" height="428" rx="28" fill="none" stroke="${W}" stroke-opacity=".25" stroke-width="1.5"/>`
+    + `<g transform="translate(250 104) scale(.8333)" fill="none" stroke="${W}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ilu}</g>`
+    + ogTexto(O.m, OC.t[l].tk, OC.t[l].tk.length > 16 ? 14 : 16, 300, 252, 4, W)
+    + ogTexto(O.b, t3, fit(t3, 38, 14), 300, 314, 0, W)
+    + ogTexto(O.b, t1, fit(t1, 50, 11), 300, 384, 0, K.acc === '#141414' ? W : '#c2552e')
+    + ogTexto(O.m, t2, fit(t2, 22, 26), 300, 422, 0, W)
+    + ogTexto(O.b, 'FISIO365', 15, 300, 478, 4, W) + `</svg>`;
 }
 // La tarjeta (página pública firmada). p=1: versión para imprimir
-// Todas las ocasiones en los colores de la marca (naranja y crema): cambia solo el dibujo y los textos
-const VALE_COL = Object.fromEntries(['clasico', 'navidad', 'madre', 'padre', 'cumple', 'sanvalentin'].map(k => [k, { c2: '#c2552e', tint: '#fdf1ea', ln: '#f1d9cc' }]));
-const VALE_EST = Object.fromEntries(Object.entries(VALE_COL).map(([k, v]) => [k, { bg: v.tint, ink: '#2b2420', ln: v.ln, acc: v.c2 }]));
-const VALE_GR = Object.fromEntries(Object.entries(VALE_COL).map(([k, v]) => [k, [v.tint, v.tint]]));
-// Dibujos de línea (viewBox 96) con su pequeña historia: «.a» se dibuja en terracota, «.b» va en el color de la ocasión
+// Todas las tarjetas en crema con los colores de la marca; cambia el dibujo (que se dibuja solo y se mueve) y los textos
+const VALE_EST = Object.fromEntries(['clasico', 'navidad', 'madre', 'padre', 'cumple', 'sanvalentin'].map(k => [k, { bg: '#fbf7f1', ink: '#141414', sub: '#6b5d54', acc: '#c2552e', ln: 'rgba(20,20,20,.14)' }]));
+const VALE_COL = Object.fromEntries(Object.keys(VALE_EST).map(k => [k, { c2: '#c2552e', tint: '#fdf1ea', ln: '#f1d9cc' }]));
+const VALE_GR = Object.fromEntries(Object.entries(VALE_EST).map(([k, v]) => [k, [v.bg, v.bg]]));
+// Dibujos grandes de la tarjeta (viewBox 120): se dibujan solos al abrirla y luego se mueven un poco
 const VALE_ILU = {
-  clasico: '<path class="a" d="M18 46h60v34a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path class="a" d="M48 46v40"/><g class="tapa"><rect class="a0" x="12" y="32" width="72" height="14" rx="5"/><path class="b lazo" d="M48 32c-6-14-24-14-22-4 1.5 7 14 5 22 4zM48 32c6-14 24-14 22-4-1.5 7-14 5-22 4z"/></g>',
-  navidad: '<path class="a" d="M48 12 31 36h9L26 56h12L22 78h52L58 56h12L56 36h9z"/><path class="a" d="M48 78v10"/><circle class="b p p1" cx="41" cy="47" r="3.2"/><circle class="b p p2" cx="56" cy="62" r="3.2"/><circle class="b p p3" cx="40" cy="69" r="3.2"/><circle class="b p p4" cx="60" cy="72" r="2.6"/><circle class="b p p5 tw" cx="48" cy="8" r="3.6"/>',
-  madre: '<path class="a" d="M48 86V52"/><path class="a" d="M48 74c-10 0-16-7-16-15 9 0 15 6 16 15z"/><g class="flor"><path class="b" d="M34 24c0 17 6 26 14 26s14-9 14-26l-7 7-7-12-7 12z"/></g><path class="b p p3 sube" d="M70 40c-5-3-6-7-3-9 2-1 3 0 3 2 0-2 1-3 3-2 3 2 2 6-3 9z"/>',
-  padre: '<path class="a" d="M26 40h40v26a14 14 0 0 1-14 14H40a14 14 0 0 1-14-14z"/><path class="a" d="M66 46a8 8 0 0 1 0 16"/><path class="a" d="M22 86h52"/><g class="vapor"><path class="b v v1" d="M38 32c-4-5 4-8 0-14"/><path class="b v v2" d="M48 32c-4-5 4-8 0-14"/><path class="b v v3" d="M58 32c-4-5 4-8 0-14"/></g>',
-  cumple: '<path class="a" d="M20 60h56v22H20z"/><path class="a" d="M26 44h44v16H26z"/><path class="a" d="M20 70c7 0 7 4 14 4s7-4 14-4 7 4 14 4 7-4 14-4"/><path class="a" d="M48 30v14"/><path class="b llama" d="M48 14c-5 6-5 10 0 13 5-3 5-7 0-13z"/>',
-  sanvalentin: '<path class="a" d="M44 84C18 66 10 48 19 35c8-11 21-10 25 0 4-10 17-11 25 0 9 13 1 31-25 49z"/><g class="late"><path class="b" d="M70 46C58 38 54 30 58 24c3.5-5 10-4.5 12 .5 2-5 8.5-5.5 12-.5 4 6 0 14-12 22z"/></g>'
+  clasico: '<g class="mv lazo"><path pathLength="1" d="M60 44c-9-17-30-17-27-5 2 8 17 6 27 5zM60 44c9-17 30-17 27-5-2 8-17 6-27 5z"/></g><rect pathLength="1" x="24" y="44" width="72" height="15" rx="5"/><path pathLength="1" d="M30 59h60v36a6 6 0 0 1-6 6H36a6 6 0 0 1-6-6z"/><path pathLength="1" d="M60 44v57"/>',
+  navidad: '<path pathLength="1" d="M60 16 40 44h10L33 68h13L28 94h64L74 68h13L70 44h10z"/><path pathLength="1" d="M60 94v12"/><circle class="luz l1" cx="51" cy="52" r="2.6"/><circle class="luz l2" cx="67" cy="60" r="2.6"/><circle class="luz l3" cx="46" cy="78" r="2.6"/><circle class="luz l4" cx="63" cy="84" r="2.6"/><circle class="luz l5" cx="76" cy="80" r="2.6"/><circle class="luz l6" cx="57" cy="70" r="2.6"/><circle class="luz l1" cx="60" cy="11" r="3.4"/>',
+  madre: '<g class="mv flor"><path pathLength="1" d="M60 106V58"/><path pathLength="1" d="M60 90c-12-1-19-10-19-19 10 0 17 8 19 19zM60 80c10-1 16-8 16-15-9 0-15 6-16 15z"/><path pathLength="1" d="M43 26c0 21 7 33 17 33s17-12 17-33l-8.5 8.5L60 20l-8.5 14.5z"/></g>',
+  padre: '<g class="mv corbata"><path pathLength="1" d="M50 18h20l-5 13H55z"/><path pathLength="1" d="M55 31 47 82l13 17 13-17-8-51"/><path pathLength="1" d="M51 53l17-7M49 68l21-9"/></g>',
+  cumple: '<rect pathLength="1" x="24" y="68" width="72" height="34" rx="5"/><rect pathLength="1" x="33" y="47" width="54" height="21" rx="4"/><path pathLength="1" d="M24 80c9 0 9 5 18 5s9-5 18-5 9 5 18 5 9-5 18-5"/><rect pathLength="1" x="57" y="31" width="6" height="16" rx="2"/><path class="llama" d="M60 13c-6 7-6 12 0 15 6-3 6-8 0-15z"/>',
+  sanvalentin: '<g class="mv latido"><path pathLength="1" d="M60 100C27 79 16 59 26 43c9-14 27-13 34 1 7-14 25-15 34-1 10 16-1 36-34 57z"/><path pathLength="1" d="M45 52c2-5 6-7 10-6"/></g>'
 };
 function paginaVale(F, id, imprimir) {
   const e = escHtml, l = valeLang(F), T = VALE_T[l], C = CLI, url = enlaceVale(id), tel = C.tel || '672 89 39 49', wa = String(C.wa || '34672893949').replace(/\D/g, '');
-  const tipo = valeTipo(F.TIPO, l), msg = String(F.MENSAJE || ''), oc = valeOc(F), OC = VALE_OC[oc], K = VALE_COL[oc] || VALE_COL.clasico, hola = n => OC.t[l].hola(n);
-  const cadC = (() => { const d = new Date(String(F.CADUCA || '').slice(0, 10) + 'T12:00:00Z'); return isNaN(d) ? '' : new Intl.DateTimeFormat({ es: 'es-ES', ca: 'ca-ES', en: 'en-GB' }[l], { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(d); })();
-  const n = Number(F.SESIONES || 1) || 1, cod = String(F['CÓDIGO'] || ''), reservar = huecosSiempre(21, [], cod), pend = F.ESTADO !== 'PAGADO';
-  const X = { es: { sub: d => d ? `De parte de ${d}` : 'Tienes un regalo', p1: ['Reserva cuando quieras', 'Eliges el día y la hora que te vayan bien'], p2: ['No pagas nada', 'Di tu código al llegar o ya va en la reserva'], bt: 'Reservar mi sesión', esc: '¿Prefieres que te lo busquemos nosotros?', escb: 'Escríbenos', imp: 'Guardar o imprimir' },
-    ca: { sub: d => d ? `De part de ${d}` : 'Tens un regal', p1: ['Reserva quan vulguis', 'Tries el dia i l\'hora que et vagin bé'], p2: ['No pagues res', 'Digues el teu codi en arribar o ja va a la reserva'], bt: 'Reservar la meva sessió', esc: 'Prefereixes que t\'ho busquem nosaltres?', escb: 'Escriu-nos', imp: 'Desar o imprimir' },
-    en: { sub: d => d ? `From ${d}` : 'You have a gift', p1: ['Book whenever you like', 'Pick the day and time that suit you'], p2: ['Nothing to pay', 'Just give your code when you arrive'], bt: 'Book my session', esc: 'Would you rather we found you a slot?', escb: 'Message us', imp: 'Save or print' } }[l];
-  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${T.tit} · FISIO365</title>
-<meta property="og:title" content="${e(F.PARA ? hola(F.PARA) : T.tit)}"><meta property="og:description" content="${e(T.ses(n) + ' ' + T.de + ' ' + tipo)} · FISIO365"><meta property="og:image" content="${e(url)}.png?v=4"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
-<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px 36px}
-.c{background:#fff;border-radius:26px;padding:32px 22px 26px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start;text-align:center}
-.reg{display:block;margin:0 auto;width:150px;height:150px;overflow:visible}.reg *{fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.reg .a,.reg .a0{stroke:#c2552e}.reg .b{stroke:${K.c2}}
-.reg .a{stroke-dasharray:240;stroke-dashoffset:240;animation:dr .9s .1s ease-out forwards}
-.reg .p{fill:${K.c2};stroke:none;opacity:0;transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.3,1.8,.5,1) forwards}.p1{animation-delay:1s!important}.p2{animation-delay:1.15s!important}.p3{animation-delay:1.3s!important}.p4{animation-delay:1.45s!important}.p5{animation-delay:1.6s!important}
-.reg .tw{animation:pop .45s 1.6s cubic-bezier(.3,1.8,.5,1) forwards,tw 2.4s 2.4s ease-in-out infinite}
-.tapa{transform-origin:48px 34px;animation:abre .9s 1s cubic-bezier(.3,1.6,.5,1) both}.lazo{opacity:0;animation:fi0 .3s .8s forwards}@keyframes abre{0%{transform:none}40%{transform:translateY(-12px) rotate(-14deg)}100%{transform:translateY(-6px) rotate(-8deg)}}
-.flor{transform-origin:48px 50px;opacity:0;animation:fi0 .3s .9s forwards,mece 3.6s 1.4s ease-in-out infinite}@keyframes mece{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
-.sube{animation:pop .45s 1.3s forwards,flota 3s 1.8s ease-in-out infinite!important}@keyframes flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-.v{opacity:0;animation:vapor 2.6s ease-in-out infinite}.v1{animation-delay:1s}.v2{animation-delay:1.6s}.v3{animation-delay:2.2s}@keyframes vapor{0%{opacity:0;transform:translateY(6px)}40%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
-.llama{fill:${K.c2}!important;stroke:none!important;opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:pop .4s 1s forwards,llama 1s 1.4s ease-in-out infinite alternate}@keyframes llama{from{transform:scale(1)}to{transform:scale(.82,1.16)}}
-.late{opacity:0;transform-box:fill-box;transform-origin:center;animation:pop .5s 1s cubic-bezier(.3,1.8,.5,1) forwards,late 1.6s 1.6s ease-in-out infinite}@keyframes late{0%,40%,100%{transform:scale(1)}20%{transform:scale(1.15)}}
-@keyframes dr{to{stroke-dashoffset:0}}@keyframes fi0{to{opacity:1}}@keyframes pop{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}@keyframes tw{0%,100%{opacity:1}50%{opacity:.35}}
-h1{font-size:23px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-size:14.5px;color:#5c4f47;margin:0;line-height:1.5}
-.tk{position:relative;margin:22px auto 0;background:#fff;border:1.5px solid #c2552e;border-radius:22px;padding:22px 18px 18px;animation:pop2 .6s 1.4s cubic-bezier(.3,1.5,.5,1) both}
-
-.tk small{display:block;font-size:11px;font-weight:700;letter-spacing:.18em;color:${K.c2}}.tk b{display:block;font-size:46px;line-height:1.05;color:#c2552e;margin:6px 0 2px}.tk span{display:block;font-size:14px;color:#2b2420;font-weight:500}
-.tk .m{font-size:14px;font-style:italic;color:#5c4f47;margin:12px 6px 0;line-height:1.5}
-.tk hr{border:none;border-top:1.5px dashed #ecd3c5;margin:16px 6px 12px}.tk em{display:block;font-style:normal;font-size:12.5px;color:#7d6a60}.tk code{display:inline-block;font:700 18px Poppins,sans-serif;letter-spacing:.12em;color:#141414;background:#faf7f4;border-radius:10px;padding:4px 12px;margin:4px 0 8px}
-@keyframes pop2{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
-.pasos{margin:22px 0 0;text-align:left}.pa{display:flex;gap:11px;align-items:center;background:#faf7f4;border-radius:14px;padding:11px 12px;margin-bottom:7px;font-size:13.5px;color:#2b2420}.pa span{flex:none;width:32px;height:32px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center}.pa svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.pa small{display:block;font-size:12px;color:#7d6a60}
-.bt{display:flex;align-items:center;justify-content:center;width:100%;margin-top:16px;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border-radius:14px;padding:15px;text-decoration:none;animation:resp 2.6s 2.2s ease-in-out infinite}@keyframes resp{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}50%{box-shadow:0 0 0 7px rgba(194,85,46,.13)}}
-.fi{opacity:0;transform:translateY(8px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}.pie{margin-top:18px;font-size:12.5px;color:#7d6a60}.lk{color:#c2552e;font-weight:600}.imp{background:none;border:0;font:500 12.5px Poppins,sans-serif;color:#7d6a60;text-decoration:underline;cursor:pointer;margin-top:6px}
-.pend{background:#fff6e5;color:#8a5a00;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:14px}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important;animation-iteration-count:1!important}}
-${imprimir ? '@page{size:A5;margin:12mm}body{background:#fff;padding:0}.c{box-shadow:none;max-width:none}.np{display:none!important}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}' : '@media print{body{background:#fff;padding:0}.c{box-shadow:none}.np{display:none!important}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'}</style></head>
-<body><div class="c"><svg class="reg" viewBox="0 0 96 96" aria-hidden="true">${VALE_ILU[oc] || VALE_ILU.clasico}</svg>
-<h1 class="fi" style="animation-delay:.9s">${e(F.PARA ? hola(F.PARA) : T.tit)}</h1><p class="sub fi" style="animation-delay:1s">${e(X.sub(F.DE))}</p>
-<div class="tk"><small>${OC.t[l].tk}</small><b>${e(T.ses(n))}</b><span>${e(T.de)} ${e(tipo)}</span>${msg ? `<p class="m">«${e(msg)}»</p>` : ''}<hr><em>${T.cod}</em><code>${e(cod)}</code>${cadC ? `<em>${T.val} ${e(cadC)}</em>` : ''}</div>
+  const tipo = valeTipo(F.TIPO, l), msg = String(F.MENSAJE || ''), oc = valeOc(F), OC = VALE_OC[oc], K = VALE_EST[oc] || VALE_EST.clasico, hola = n => OC.t[l].hola(n);
+  const cadC = (() => { const d = new Date(String(F.CADUCA || '').slice(0, 10) + 'T12:00:00Z'); return isNaN(d) ? '' : new Intl.DateTimeFormat({ es: 'es-ES', ca: 'ca-ES', en: 'en-GB' }[l], { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(d).replace(/\./g, ''); })();
+  const n = Number(F.SESIONES || 1) || 1, sesTxt = T.ses(n).replace(/^\d+\s*/, ''), cod = String(F['CÓDIGO'] || '');
+  const marca = C.marca === 'FISIO365' || !C.marca ? '<span class="lg">FISIO<i>365</i></span>' : `<span class="lg">${e(C.marca)}</span>`;
+  const reservar = huecosSiempre(21, [], cod), pend = F.ESTADO !== 'PAGADO';
+  const BT = { es: ['Reservar mi sesión', 'Elige el día y la hora que te vayan bien', 'WhatsApp', 'Guardar o imprimir'], ca: ['Reservar la meva sessió', 'Tria el dia i l\'hora que et vagin bé', 'WhatsApp', 'Desar o imprimir'], en: ['Book my session', 'Pick the day and time that suit you', 'WhatsApp', 'Save or print'] }[l];
+  const nieve = oc === 'navidad' && !imprimir ? `<div class="nieve">${Array.from({ length: 22 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:-${(i * 1.7) % 9}s;animation-duration:${8 + (i % 5)}s;width:${2 + (i % 3)}px;height:${2 + (i % 3)}px"></i>`).join('')}</div>` : '';
+  const tarjeta = `<div class="cardw"><div class="card">${nieve}<i class="sh"></i><div class="fr"></div>
+<div class="row">${marca}<small>${OC.t[l].tk}</small></div>
+<svg class="ilu" viewBox="0 0 120 120" aria-hidden="true">${VALE_ILU[oc] || VALE_ILU.clasico}</svg>
+${F.PARA ? `<div class="para"><em>${T.para}</em><b>${e(F.PARA)}</b></div>` : ''}
+<div class="num"><b>${n}</b><span><strong>${e(sesTxt)}</strong><small>${e(T.de)} ${e(tipo)}</small></span></div>
+${msg ? `<p class="msg">${e(msg)}</p>` : ''}
+${F.DE ? `<p class="de"><em>${T.dep}</em> ${e(F.DE)}</p>` : ''}</div>
+<div class="stub"><div><em>${T.cod}</em><code>${e(cod)}</code></div>${cadC ? `<div class="r"><em>${T.val.replace(/ (el|al)$/, '')}</em><span>${e(cadC)}</span></div>` : ''}</div></div>`;
+  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="theme-color" content="#efebe5"><title>${T.tit} · FISIO365</title>
+<meta property="og:title" content="${e(F.PARA ? hola(F.PARA) : T.tit)}"><meta property="og:description" content="${e(T.ses(n) + ' ' + T.de + ' ' + tipo)} · FISIO365"><meta property="og:image" content="${e(url)}.png?v=3"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#141414;min-height:100vh;background:#efebe5;display:flex;justify-content:center;padding:26px 18px 44px}
+.c{max-width:400px;width:100%;text-align:center}
+.hi{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#c2552e;margin:0}h1{font-size:25px;font-weight:700;margin:6px 0 22px;line-height:1.25;letter-spacing:-.01em}
+.cardw{position:relative;filter:drop-shadow(0 24px 30px rgba(20,20,20,.18));animation:sube .9s cubic-bezier(.2,.8,.2,1) both}
+.card{position:relative;overflow:hidden;border-radius:28px 28px 0 0;background:${K.bg};color:${K.ink};padding:26px 28px 28px;text-align:left}
+.fr{position:absolute;inset:11px 11px 0;border:1px solid ${K.ln};border-bottom:0;border-radius:19px 19px 0 0;pointer-events:none}
+.sh{position:absolute;top:-20%;bottom:-20%;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);transform:skewX(-18deg);animation:brilla 2.2s 1.6s ease-in-out both;pointer-events:none}
+.row{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px}.row small{font-size:10px;font-weight:700;letter-spacing:.22em;color:${K.sub};text-align:right}
+.lg{font-size:19px;font-weight:800;letter-spacing:-.02em;color:${K.ink}}.lg i{font-style:normal;color:${K.acc === '#141414' ? '#141414' : '#c2552e'}}
+.ilu{display:block;width:150px;height:150px;margin:18px auto 6px;overflow:visible}.ilu path,.ilu rect{fill:none;stroke:#c2552e;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:dibuja 1.6s .5s cubic-bezier(.6,0,.2,1) forwards}
+.ilu .llama{stroke:none;fill:${K.acc === '#141414' ? '#fff7ef' : '#c2552e'};transform-box:fill-box;transform-origin:50% 100%;opacity:0;animation:aparece .4s 1.9s forwards,llama 1.1s 2.3s ease-in-out infinite}
+.ilu .luz{fill:${K.acc};opacity:0;animation:aparece .3s 2s forwards,luz 2.4s 2.4s ease-in-out infinite}.ilu .l2{animation-delay:2.1s,2.8s}.ilu .l3{animation-delay:2.2s,3.2s}.ilu .l4{animation-delay:2.3s,3.6s}.ilu .l5{animation-delay:2.4s,4s}.ilu .l6{animation-delay:2.5s,4.4s}
+.mv{transform-box:view-box}.lazo{transform-origin:60px 44px;animation:lazo 3s 2.2s ease-in-out infinite}.flor{transform-origin:60px 106px;animation:flor 4s 2.2s ease-in-out infinite}.corbata{transform-origin:60px 24px;animation:flor 3.4s 2.2s ease-in-out infinite}.latido{transform-origin:60px 70px;animation:latido 1.6s 2.2s ease-in-out infinite}
+.para{position:relative;text-align:center}.para em,.stub em{display:block;font-style:normal;font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:${K.sub}}.para b{display:block;font-size:34px;font-weight:700;line-height:1.1;margin-top:2px;letter-spacing:-.02em;word-break:break-word}
+.num{position:relative;display:flex;align-items:center;justify-content:center;gap:12px;margin-top:16px}.num>b{font-size:76px;font-weight:800;line-height:.85;letter-spacing:-.05em;color:${K.acc === '#141414' ? K.ink : '#c2552e'}}.num span{display:flex;flex-direction:column;text-align:left}.num strong{font-size:21px;font-weight:600;line-height:1.1}.num small{font-size:13px;color:${K.sub};margin-top:3px;line-height:1.3;max-width:170px}
+.msg{position:relative;font-size:15px;font-style:italic;line-height:1.5;margin:18px auto 0;text-align:center;max-width:300px}.msg:before,.msg:after{content:'«';font-style:normal;color:${K.sub}}.msg:after{content:'»'}
+.de{position:relative;text-align:center;margin:14px 0 0;font-size:14.5px;font-weight:600}.de em{font-style:normal;font-weight:500;color:${K.sub}}
+.nieve{position:absolute;inset:0;pointer-events:none}.nieve i{position:absolute;top:-6px;border-radius:50%;background:#c2552e;opacity:.25;animation:cae linear infinite}
+.stub{position:relative;display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fffaf5;border-radius:0 0 28px 28px;padding:19px 26px 21px;text-align:left;border-top:2px dashed #e4d9cf}
+.stub:before,.stub:after{content:'';position:absolute;top:-13px;width:24px;height:24px;border-radius:50%;background:#efebe5}.stub:before{left:-12px}.stub:after{right:-12px}
+.stub em{color:#9a8a7f}.stub>div:first-child{flex:none}.stub code{display:block;font:700 20px Poppins,sans-serif;letter-spacing:.12em;color:#141414;margin-top:3px;white-space:nowrap}.stub .r{flex:1;min-width:0;text-align:right}.stub .r span{display:block;font-size:13px;font-weight:600;color:#141414;margin-top:4px;white-space:nowrap}
+.go{display:block;margin-top:22px;background:#c2552e;color:#fff;border-radius:18px;padding:16px 18px;text-decoration:none;text-align:center;box-shadow:0 10px 22px rgba(194,85,46,.28);animation:sube .7s 1.2s both}.go b{display:block;font-size:17px;font-weight:700}.go small{display:block;font-size:12.5px;opacity:.88;margin-top:2px}
+.lnk{display:flex;gap:10px;margin-top:12px}.lnk a,.lnk button{flex:1;font:600 13.5px Poppins,sans-serif;color:#141414;background:#fff;border:0;border-radius:14px;padding:13px 10px;text-decoration:none;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.res{font-size:12.5px;color:#6b5d54;margin:18px 4px 0;line-height:1.55}.pend{background:#fff6e5;color:#8a5a00;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:16px}
+@keyframes sube{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}@keyframes brilla{from{left:-60%}to{left:130%}}@keyframes dibuja{to{stroke-dashoffset:0}}@keyframes aparece{to{opacity:1}}
+@keyframes lazo{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}@keyframes flor{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}@keyframes latido{0%,40%,100%{transform:scale(1)}20%{transform:scale(1.07)}30%{transform:scale(.98)}}
+@keyframes llama{0%,100%{transform:scale(1,1)}50%{transform:scale(.88,1.12)}}@keyframes luz{0%,100%{opacity:1}50%{opacity:.25}}@keyframes cae{from{transform:translateY(0)}to{transform:translateY(720px)}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;animation-delay:0s!important}.nieve,.sh{display:none}}
+@media(max-width:360px){.card{padding:24px 22px 24px}.para b{font-size:29px}.num>b{font-size:64px}}
+${imprimir ? '@page{size:A5;margin:12mm}body{background:#fff;padding:0}.c{max-width:none}.np{display:none!important}.cardw{filter:none;animation:none;max-width:118mm;margin:0 auto}.sh,.nieve{display:none}.ilu *{animation:none!important;stroke-dashoffset:0!important;opacity:1!important}.stub{border:1px solid #eee;border-top:2px dashed #ddd}.stub:before,.stub:after{background:#fff}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}' : '@media print{body{background:#fff;padding:0}.np{display:none!important}.cardw{filter:none;animation:none}.sh,.nieve{display:none}.ilu *{animation:none!important;stroke-dashoffset:0!important;opacity:1!important}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'}
+</style></head><body><div class="c">${imprimir ? '' : `<p class="hi np">${T.tit}</p><h1 class="np">${e(F.PARA ? hola(F.PARA) : T.tit)}</h1>`}
+${tarjeta}
 ${pend && !imprimir ? '<p class="pend np">Esta tarjeta aún está pendiente de pago.</p>' : ''}
-<div class="pasos fi np" style="animation-delay:1.8s"><div class="pa"><span><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><div>${X.p1[0]}<small>${X.p1[1]}</small></div></div><div class="pa"><span><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><div>${X.p2[0]}<small>${X.p2[1]}</small></div></div></div>
-<a class="bt fi np" style="animation-delay:2s" href="${e(reservar)}">${X.bt}</a><p class="sub np" style="font-size:12.5px;margin-top:10px">${X.esc} <a class="lk" href="https://wa.me/${wa}?text=${encodeURIComponent(T.wa(cod))}" target="_blank" rel="noopener">${X.escb}</a></p>
-<button type="button" class="imp np" onclick="window.print()">${X.imp}</button>
-<p class="pie">${e(C.marca || 'FISIO365')} · ${e(C.dirCorta || C.direccion || '')}</p></div>${imprimir ? '<script>window.onload=function(){setTimeout(function(){window.print();},2600);};<\/script>' : ''}</body></html>`;
+${imprimir ? '' : `<a class="go np" href="${e(reservar)}"><b>${BT[0]}</b><small>${BT[1]}</small></a><div class="lnk np"><a href="https://wa.me/${wa}?text=${encodeURIComponent(T.wa(cod))}" target="_blank" rel="noopener">${BT[2]}</a><button type="button" onclick="window.print()">${BT[3]}</button></div>`}
+<p class="res">${e(T.res(tel)).replace(/(\d) (?=\d)/g, '$1&nbsp;')}<br>${e(C.dirCorta || C.direccion || '')}</p>
+</div>${imprimir ? '<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>' : ''}</body></html>`;
 }
 // La página para comprar el vale (paso a paso, en el estilo de la app)
 function ogRegaloSvg(oc) {
