@@ -1039,9 +1039,9 @@ function ogValeSvg(F) {
   const fit = (t, base, max) => Math.max(18, Math.min(base, Math.round(base * max / Math.max(max, String(t).length))));
   const ilu = (VALE_ILU[oc] || '').replace(/class="(a0|a)"/g, `stroke="${TC}"`).replace(/class="b[^"]*"/g, m => /llama|late|class="b p/.test(m) ? `fill="${K.c2}" stroke="none"` : `stroke="${K.c2}"`).replace(/class="[^"]*"/g, '');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
-    + `<g transform="translate(250 104) scale(1.0417)" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ilu}</g>`
+    + `<g transform="translate(240 92) scale(1.25)" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ilu}</g>`
     + ogTexto(O.b, t1, fit(t1, 34, 18), 300, 268, 0, INK)
-    + `<rect x="130" y="296" width="340" height="168" rx="26" fill="${K.tint}"/>`
+    + `<rect x="130" y="296" width="340" height="168" rx="26" fill="#fff" stroke="#c2552e" stroke-width="2.5"/>`
     + ogTexto(O.m, OC.t[l].tk, OC.t[l].tk.length > 16 ? 13 : 15, 300, 334, 3, K.c2)
     + ogTexto(O.b, t2, fit(t2, 46, 11), 300, 392, 0, TC)
     + ogTexto(O.m, t3, fit(t3, 20, 26), 300, 428, 0, M) + `</svg>`;
@@ -1065,7 +1065,7 @@ const VALE_ILU = {
   madre: '<path class="a" d="M48 86V52"/><path class="a" d="M48 74c-10 0-16-7-16-15 9 0 15 6 16 15z"/><g class="flor"><path class="b" d="M34 24c0 17 6 26 14 26s14-9 14-26l-7 7-7-12-7 12z"/></g><path class="b p p3 sube" d="M70 40c-5-3-6-7-3-9 2-1 3 0 3 2 0-2 1-3 3-2 3 2 2 6-3 9z"/>',
   padre: '<path class="a" d="M26 40h40v26a14 14 0 0 1-14 14H40a14 14 0 0 1-14-14z"/><path class="a" d="M66 46a8 8 0 0 1 0 16"/><path class="a" d="M22 86h52"/><g class="vapor"><path class="b v v1" d="M38 32c-4-5 4-8 0-14"/><path class="b v v2" d="M48 32c-4-5 4-8 0-14"/><path class="b v v3" d="M58 32c-4-5 4-8 0-14"/></g>',
   cumple: '<path class="a" d="M20 60h56v22H20z"/><path class="a" d="M26 44h44v16H26z"/><path class="a" d="M20 70c7 0 7 4 14 4s7-4 14-4 7 4 14 4 7-4 14-4"/><path class="a" d="M48 30v14"/><path class="b llama" d="M48 14c-5 6-5 10 0 13 5-3 5-7 0-13z"/>',
-  sanvalentin: '<path class="a" d="M48 82C22 64 14 48 22 35c7-11 21-10 26 1 5-11 19-12 26-1 8 13 0 29-26 47z"/><path class="b late" d="M48 62C38 55 35 49 38 44c2.6-4 7.6-3.6 10 .4 2.4-4 7.4-4.4 10-.4 3 5 0 11-10 18z"/>'
+  sanvalentin: '<path class="a" d="M44 84C18 66 10 48 19 35c8-11 21-10 25 0 4-10 17-11 25 0 9 13 1 31-25 49z"/><g class="late"><path class="b" d="M70 46C58 38 54 30 58 24c3.5-5 10-4.5 12 .5 2-5 8.5-5.5 12-.5 4 6 0 14-12 22z"/></g>'
 };
 function paginaVale(F, id, imprimir) {
   const e = escHtml, l = valeLang(F), T = VALE_T[l], C = CLI, url = enlaceVale(id), tel = C.tel || '672 89 39 49', wa = String(C.wa || '34672893949').replace(/\D/g, '');
@@ -1080,7 +1080,7 @@ function paginaVale(F, id, imprimir) {
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px 36px}
 .c{background:#fff;border-radius:26px;padding:32px 22px 26px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start;text-align:center}
-.reg{display:block;margin:0 auto;width:100px;height:100px;overflow:visible}.reg *{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.reg .a,.reg .a0{stroke:#c2552e}.reg .b{stroke:${K.c2}}
+.reg{display:block;margin:0 auto;width:150px;height:150px;overflow:visible}.reg *{fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.reg .a,.reg .a0{stroke:#c2552e}.reg .b{stroke:${K.c2}}
 .reg .a{stroke-dasharray:240;stroke-dashoffset:240;animation:dr .9s .1s ease-out forwards}
 .reg .p{fill:${K.c2};stroke:none;opacity:0;transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.3,1.8,.5,1) forwards}.p1{animation-delay:1s!important}.p2{animation-delay:1.15s!important}.p3{animation-delay:1.3s!important}.p4{animation-delay:1.45s!important}.p5{animation-delay:1.6s!important}
 .reg .tw{animation:pop .45s 1.6s cubic-bezier(.3,1.8,.5,1) forwards,tw 2.4s 2.4s ease-in-out infinite}
@@ -1089,14 +1089,14 @@ function paginaVale(F, id, imprimir) {
 .sube{animation:pop .45s 1.3s forwards,flota 3s 1.8s ease-in-out infinite!important}@keyframes flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 .v{opacity:0;animation:vapor 2.6s ease-in-out infinite}.v1{animation-delay:1s}.v2{animation-delay:1.6s}.v3{animation-delay:2.2s}@keyframes vapor{0%{opacity:0;transform:translateY(6px)}40%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
 .llama{fill:${K.c2}!important;stroke:none!important;opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:pop .4s 1s forwards,llama 1s 1.4s ease-in-out infinite alternate}@keyframes llama{from{transform:scale(1)}to{transform:scale(.82,1.16)}}
-.late{fill:${K.c2}!important;stroke:none!important;opacity:0;transform-box:fill-box;transform-origin:center;animation:pop .5s 1s cubic-bezier(.3,1.8,.5,1) forwards,late 1.5s 1.6s ease-in-out infinite}@keyframes late{0%,40%,100%{transform:scale(1)}20%{transform:scale(1.18)}}
+.late{opacity:0;transform-box:fill-box;transform-origin:center;animation:pop .5s 1s cubic-bezier(.3,1.8,.5,1) forwards,late 1.6s 1.6s ease-in-out infinite}@keyframes late{0%,40%,100%{transform:scale(1)}20%{transform:scale(1.15)}}
 @keyframes dr{to{stroke-dashoffset:0}}@keyframes fi0{to{opacity:1}}@keyframes pop{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}@keyframes tw{0%,100%{opacity:1}50%{opacity:.35}}
 h1{font-size:23px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-size:14.5px;color:#5c4f47;margin:0;line-height:1.5}
-.tk{position:relative;margin:22px auto 0;background:${K.tint};border-radius:22px;padding:22px 18px 18px;overflow:hidden;animation:pop2 .6s 1.4s cubic-bezier(.3,1.5,.5,1) both}
-.tk:before,.tk:after{content:'';position:absolute;top:62%;width:26px;height:26px;margin-top:-13px;border-radius:50%;background:#fff}.tk:before{left:-13px}.tk:after{right:-13px}
+.tk{position:relative;margin:22px auto 0;background:#fff;border:1.5px solid #c2552e;border-radius:22px;padding:22px 18px 18px;animation:pop2 .6s 1.4s cubic-bezier(.3,1.5,.5,1) both}
+
 .tk small{display:block;font-size:11px;font-weight:700;letter-spacing:.18em;color:${K.c2}}.tk b{display:block;font-size:46px;line-height:1.05;color:#c2552e;margin:6px 0 2px}.tk span{display:block;font-size:14px;color:#2b2420;font-weight:500}
 .tk .m{font-size:14px;font-style:italic;color:#5c4f47;margin:12px 6px 0;line-height:1.5}
-.tk hr{border:none;border-top:2px dashed ${K.ln};margin:16px 6px 12px}.tk em{display:block;font-style:normal;font-size:12.5px;color:#7d6a60}.tk code{display:inline-block;font:700 18px Poppins,sans-serif;letter-spacing:.12em;color:#141414;background:#fff;border-radius:10px;padding:4px 12px;margin:4px 0 8px}
+.tk hr{border:none;border-top:1.5px dashed #ecd3c5;margin:16px 6px 12px}.tk em{display:block;font-style:normal;font-size:12.5px;color:#7d6a60}.tk code{display:inline-block;font:700 18px Poppins,sans-serif;letter-spacing:.12em;color:#141414;background:#faf7f4;border-radius:10px;padding:4px 12px;margin:4px 0 8px}
 @keyframes pop2{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
 .pasos{margin:22px 0 0;text-align:left}.pa{display:flex;gap:11px;align-items:center;background:#faf7f4;border-radius:14px;padding:11px 12px;margin-bottom:7px;font-size:13.5px;color:#2b2420}.pa span{flex:none;width:32px;height:32px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center}.pa svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.pa small{display:block;font-size:12px;color:#7d6a60}
 .bt{display:flex;align-items:center;justify-content:center;width:100%;margin-top:16px;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border-radius:14px;padding:15px;text-decoration:none;animation:resp 2.6s 2.2s ease-in-out infinite}@keyframes resp{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}50%{box-shadow:0 0 0 7px rgba(194,85,46,.13)}}
@@ -1169,7 +1169,7 @@ function pinta(){document.body.classList.remove('fin');var h=cab(),i=PASOS.index
   +'<button type="button" class="bt" id="sig">Empezar</button><p class="err" id="er"></p><p class="priv">Al seguir, aceptas nuestra <a href="'+esc(D.privacidad)+'" target="_blank" rel="noopener">política de privacidad</a>.</p>';}
  if(paso==='tipo'){h+='<h2>¿Qué le regalas?</h2><p class="sub">Elige el tipo de fisioterapia.</p>'+D.servicios.map(function(s,k){return op('data-k="'+k+'"',S.tipo===k,'<b>'+esc(s.nombre)+'</b>'+(s.desc?'<small>'+esc(s.desc)+'</small>':''));}).join('');}
  if(paso==='sesiones'){var s=servicio();h+='<h2>¿Cuántas sesiones?</h2><p class="sub">Con los packs, cada sesión sale más barata.</p>'+s.ops.map(function(o,k){return op('data-k="'+k+'"',S.op===k,'<b>'+(o.pack?'Pack '+o.n+' sesiones':ses(o.n))+'</b>'+(o.ah?'<br><span class="ah">Ahorras '+eur(o.ah)+'</span>':'')).replace('</span></button>','</span><span class="pr">'+eur(o.p)+'</span></button>');}).join('');}
- if(paso==='diseno'){h+='<h2>El diseño de la tarjeta</h2><p class="sub">Elige la ocasión. Cambia el dibujo, el color y los mensajes.</p><div class="dz">'+D.ocs.map(function(o){return '<button type="button" data-o="'+o.k+'" class="'+(S.oc===o.k?'on':'')+'" style="background:'+o.es.bg+(S.oc===o.k?';border-color:'+o.es.acc:'')+'"><svg class="mv-'+o.k+'" viewBox="0 0 96 96" aria-hidden="true" style="--b:'+o.es.acc+'">'+o.d+'</svg><span>'+esc(o.nom)+'</span></button>';}).join('')+'</div><button type="button" class="bt" id="sig">Seguir</button>';}
+ if(paso==='diseno'){h+='<h2>El diseño de la tarjeta</h2><p class="sub">Elige la ocasión. Cambia el dibujo, el color y los mensajes.</p><div class="dz">'+D.ocs.map(function(o){return '<button type="button" data-o="'+o.k+'" class="'+(S.oc===o.k?'on':'')+'"><svg class="mv-'+o.k+'" viewBox="0 0 96 96" aria-hidden="true" style="--b:'+o.es.acc+'">'+o.d+'</svg><span>'+esc(o.nom)+'</span></button>';}).join('')+'</div><button type="button" class="bt" id="sig">Seguir</button>';}
  if(paso==='tarjeta'){var L=S.idioma||'es';h+='<h2>La tarjeta</h2><p class="sub">¿En qué idioma la quieres?</p><div class="ch" id="idi">'+IDI.map(function(x){return '<button type="button" data-l="'+x[1]+'" class="'+(L===x[1]?'on':'')+'">'+x[0]+'</button>';}).join('')+'</div>'
   +'<label class="l">Elige el mensaje</label>'+MSG[S.oc][L].map(function(m,k){return op('data-m="'+k+'"',S.msg===k,esc(m));}).join('')+op('data-m="-1"',S.msg===-1,'Prefiero escribir mi propio mensaje')
   +(S.msg===-1?'<textarea class="i" id="propio" maxlength="220" placeholder="Escribe lo que quieras que ponga la tarjeta">'+esc(S.propio||'')+'</textarea>':'')+'<button type="button" class="bt" id="sig"'+(S.msg==null?' disabled':'')+'>Seguir</button><p class="err" id="er"></p>';}
