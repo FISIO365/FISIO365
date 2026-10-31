@@ -6874,9 +6874,12 @@ function agPickerHora(m,o){// o: get()→{fecha,fisio}, onPick(h|''), excl (id d
     toast(`${capTit(c.paciente||'')}: ${sb?'con bomba':'sin bomba'}`,true);const h0=hora,{fecha:f0,fisio:fi0}=o.get();agHorasChips(hs,f0,fi0,h0,pick,true,o.excl);verHora(h0);o.onCambio&&o.onCambio();}
    catch(err){b.disabled=false;toast(err.message,false);}});};
  const pick=h=>{oh.value='';set(h);verHora(h);};
- oh.oninput=()=>{let v=oh.value.replace(/[^\d:]/g,'');if(/^\d{3,4}$/.test(v))v=v.padStart(4,'0').replace(/^(\d\d)(\d\d)$/,'$1:$2');oh.value=v;
-  if(/^([01]\d|2[0-3]):[0-5]\d$/.test(v)){hs.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.h===v));set(v);verHora(v);}
-  else if(!hs.querySelector('button.on')){set('');alh.hidden=true;}};
+ // Acepta 0930, 930, 9:30, 09:30, 9.30 o 9h30 → «09:30» (antes, al escribir «093» se convertía en «00:93» y no dejaba seguir)
+ const ohNorm=v=>{const m=String(v||'').trim().replace(/[.,h]/gi,':').match(/^(\d{1,2}):?(\d{2})$/);if(!m)return '';const H=+m[1],M=+m[2];return H<24&&M<60?String(H).padStart(2,'0')+':'+m[2]:'';};
+ oh.oninput=()=>{let v=oh.value.replace(/[^\d:.,hH]/g,'');if(/^\d{4}$/.test(v))v=v.slice(0,2)+':'+v.slice(2);oh.value=v;const h=ohNorm(v);
+  if(h){hs.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.h===h));if(h!==hora){set(h);verHora(h);}}
+  else{hs.querySelectorAll('button.on').forEach(x=>x.classList.remove('on'));set('');alh.hidden=true;}};
+ oh.onblur=()=>{const h=ohNorm(oh.value);if(h)oh.value=h;};
  const ch=()=>{oh.value='';alh.hidden=true;set('');const {fecha,fisio}=o.get();agHorasChips(hs,fecha,fisio,'',pick,true,o.excl);};
  return {ch};
 }
