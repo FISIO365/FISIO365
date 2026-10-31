@@ -29,6 +29,20 @@
       });
       if (C.logo) (root.querySelectorAll ? root : document).querySelectorAll('img[src$="/informe/logo.png"]').forEach(function (im) { im.src = C.logo; });
     };
+    // Mensajes que salen de la app (WhatsApp, email, SMS, copiar): también con los datos de la clínica
+    window.marcaTexto = function (t) { return txt.length ? fx(txt, String(t == null ? '' : t)) : t; };
+    window.marcaUrl = function (u) {
+      if (!txt.length || typeof u !== 'string' || !/^(https:\/\/(wa\.me|api\.whatsapp\.com|web\.whatsapp\.com)\/|whatsapp:\/\/|mailto:|sms:)/i.test(u)) return u;
+      var q = u.indexOf('?'); if (q < 0) return u;
+      return u.slice(0, q + 1) + u.slice(q + 1).split('&').map(function (kv) { var i = kv.indexOf('='); if (i < 0) return kv; var k = kv.slice(0, i), v = kv.slice(i + 1);
+        if (!/^(text|body|subject)$/i.test(k)) return kv; var d; try { d = decodeURIComponent(v.replace(/\+/g, '%20')); } catch (e) { return kv; } return k + '=' + encodeURIComponent(fx(txt, d)); }).join('&');
+    };
+    if (txt.length && !window.__marcaSalida) {
+      window.__marcaSalida = 1;
+      var abrir = window.open; window.open = function (u) { var a = Array.prototype.slice.call(arguments); if (typeof a[0] === 'string') a[0] = window.marcaUrl(a[0]); return abrir.apply(window, a); };
+      try { var cb = navigator.clipboard, wt = cb && cb.writeText && cb.writeText.bind(cb); if (wt) cb.writeText = function (t) { return wt(window.marcaTexto(t)); }; } catch (e) {}
+      try { if (navigator.share) { var sh = navigator.share.bind(navigator); navigator.share = function (o) { o = Object.assign({}, o || {}); if (o.text) o.text = window.marcaTexto(o.text); if (o.title) o.title = window.marcaTexto(o.title); return sh(o); }; } } catch (e) {}
+    }
     if (!todos.length) { logos(document); return; }
     // Hojas de estilo
     var estilos = function () { document.querySelectorAll('style').forEach(function (st) { if (st.dataset.marca) return; var v = fx(col, st.textContent); if (v !== st.textContent) st.textContent = v; st.dataset.marca = 1; }); };
@@ -40,7 +54,7 @@
       if (n.tagName === 'STYLE') { var s = fx(col, n.textContent); if (s !== n.textContent) n.textContent = s; return; }
       if (/^(SCRIPT|TEXTAREA|INPUT)$/.test(n.tagName)) return;
       ATR.forEach(function (a) { var v = n.getAttribute(a); if (v) { var w = fx(col, v); if (w !== v) n.setAttribute(a, w); } });
-      if (txt.length) ATR_T.forEach(function (a) { var v = n.getAttribute(a); if (v) { var w = fx(txt, v); if (w !== v) n.setAttribute(a, w); } });
+      if (txt.length) ATR_T.forEach(function (a) { var v = n.getAttribute(a); if (v) { var w = a === 'href' && /^(https:\/\/(wa\.me|api\.whatsapp\.com|web\.whatsapp\.com)\/|mailto:|sms:)/i.test(v) ? window.marcaUrl(v) : fx(txt, v); if (w !== v) n.setAttribute(a, w); } });
       for (var i = 0; i < n.childNodes.length; i++) walk(n.childNodes[i]);
     };
     estilos();

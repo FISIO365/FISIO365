@@ -5989,7 +5989,7 @@ async function agPost(a,b){const r=await (await fetch('/api/schedule?action='+a,
 async function agCargarDia(f){return (await fetch(`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}&fecha=${f}`)).json();}
 // Columnas de la agenda: los fisios en activo (rol fisio) del equipo, con el nombre de pila como en la agenda (Administración los da de alta y de baja)
 function agEquipo(){const eq=[];(fisios||[]).filter(f=>String(f.role||'fisio').toLowerCase()==='fisio').forEach(f=>{const p=String(f.nombre||f.name||'').trim().split(' ')[0];if(!p)return;const ya=AG_FISIOS.find(n=>n.toLowerCase()===p.toLowerCase());const n=ya||(p.charAt(0).toUpperCase()+p.slice(1));if(!eq.includes(n))eq.push(n);});
- if(!eq.length)return ['Ramiro','Jonathan','Sara','Juan'];eq.forEach((n,i)=>{if(!AG_COL[n])AG_COL[n]=['#db2777','#0d9488','#7c3aed','#b45309','#4f46e5','#059669'][i%6];if(!AG_FISIOS.includes(n))AG_FISIOS.push(n);});return eq;}
+ if(!eq.length)return (window.CLINICA&&CLINICA.marca&&CLINICA.marca!=='FISIO365')?[]:['Ramiro','Jonathan','Sara','Juan'];eq.forEach((n,i)=>{if(!AG_COL[n])AG_COL[n]=['#db2777','#0d9488','#7c3aed','#b45309','#4f46e5','#059669'][i%6];if(!AG_FISIOS.includes(n))AG_FISIOS.push(n);});return eq;}
 let AG_COL={Ramiro:'#8b5cf6',Jonathan:'#0891b2',Sara:'#ea7a2a',Juan:'#16a34a',Paola:'#ca8a04',ELENA:'#2563eb'};
 const AG_PER=[['prox7','Próximos 7 días'],['hoy','Hoy'],['manana','Mañana'],['semana','Esta semana'],['semanaP','Semana pasada'],['ult7','Últimos 7 días'],['mes','Este mes'],['mesP','Mes pasado'],['ult30','Últimos 30 días'],['desdehoy','Desde hoy'],['todo','Todo (desde el principio)'],['rango','Elegir fechas…']];
 // Tipo de sesión de cada cita (Administración › Listas). Cada tipo con su color en la agenda; suelo pélvico y diástasis además en rosa
@@ -6064,7 +6064,7 @@ function recToca2(g){if(!g.enviado||g.conf||g.aviso2)return false;const h=agHoyI
 const esMovil=()=>/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
 function recModoPC(){try{return localStorage.getItem('f365_wa')||'web';}catch(e){return 'web';}}
 function abrirWA(tel,texto){texto=marcar(texto);const q=`${tel?'phone='+tel+'&':''}text=${encodeURIComponent(texto)}`;
- if(esMovil()||recModoPC()==='app'){location.href=`whatsapp://send?${q}`;return;}
+ if(esMovil()||recModoPC()==='app'){location.href=(window.marcaUrl||String)(`whatsapp://send?${q}`);return;}
  const w=window.open(`https://web.whatsapp.com/send?${q}`,'f365_whatsapp');if(w)try{w.focus();}catch(e){}}
 // Mini calendario propio (el del navegador sale sin estilo). Se abre debajo del elemento que se toca.
 function miniCal(anchor,valor,onPick){
@@ -7174,7 +7174,7 @@ const comHora=iso=>iso?new Date(iso).toLocaleTimeString('es-ES',{hour:'2-digit',
 // Todo el equipo envía (App · Clínica · Otro) y ve sus Enviadas con la respuesta. Leen y responden las Recibidas quienes tienen el acceso «Leer sugerencias» (las de App, solo Nora).
 const SUG_IC={app:'<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/>',cli:'<path d="M3.5 20.5h17M5 20.5V9l7-5 7 5v11.5"/><path d="M10 20.5v-5h4v5M12 8.5v4M10 10.5h4"/>',otro:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>',bombilla:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',clip:'<path d="m21 11.5-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l8-8"/>',buzon:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/>'};
 const sugIco=k=>`<svg viewBox="0 0 24 24">${SUG_IC[k]}</svg>`;
-const SUG_AP=[['App','app','Cambios, mejoras o fallos de la app. Le llega a Nora'],['Clínica','cli','Organización, material, instalaciones, trato…'],['Otro','otro','Cualquier otra idea']];
+const SUG_AP=[['App','app','Cambios, mejoras o fallos de la app. Le llega a '+((window.CLINICA&&CLINICA.marca&&CLINICA.marca!=='FISIO365')?'dirección':'Nora')],['Clínica','cli','Organización, material, instalaciones, trato…'],['Otro','otro','Cualquier otra idea']];
 let SUG={tab:'',d:null,n:{rec:0,mias:0},resp:null,f:{apartado:'',tipo:'Mejora',texto:'',cap:null}};
 try{const g=JSON.parse(sessionStorage.getItem('f365_sug')||'{}');if(g.tab)SUG.tab=g.tab;}catch(e){}
 const sugGuarda=()=>{try{sessionStorage.setItem('f365_sug',JSON.stringify({tab:SUG.tab}));}catch(e){}};
@@ -8629,7 +8629,7 @@ function abrirJustificante(pacId,P,d){
    if(!r.ok)throw new Error(r.error||'No se ha podido crear');
    const nom=String(P.nombre||'').trim().split(' ')[0];const nomBonito=nom?nom.charAt(0).toUpperCase()+nom.slice(1).toLowerCase():'';
    const txt=`Hola${nomBonito?' '+nomBonito:''}, te enviamos tu ${tipo==='informe'?'informe de sesiones':'justificante de asistencia'} de FISIO365. Puedes verlo y descargarlo en PDF aquí: ${r.url}`;
-   if(wa){const t=segTel(P.whatsapp||P.tel||P.telf||'');if(w)w.location.href=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;else waAbrir(P.whatsapp||P.tel||P.telf,txt);}
+   if(wa){const t=segTel(P.whatsapp||P.tel||P.telf||'');if(w)w.location.href=(window.marcaUrl||String)(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`);else waAbrir(P.whatsapp||P.tel||P.telf,txt);}
    else{if(w)w.location.href=r.url;else window.open(r.url,'_blank');}
    toast(wa?'Listo: se abre WhatsApp con el enlace':'Documento creado',true);m.remove();
   }catch(e){if(w)w.close();btn.disabled=false;btn.textContent=t0;toast(e.message,false);}};
@@ -9072,7 +9072,7 @@ async function enviarTarjeta2(tel,quien,nuevo,cad,refId,w0){let txt=mensajeTarje
  // El enlace va siempre (la página de la tarjeta se ve aunque la imagen no se haya podido guardar)
  if(refId)txt+=`\n\nAquí lo tienes:\nhttps://app.fisioterapia365.com/tarjeta/${refId}`;
  const t=segTel(tel||''),u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;
- if(w)w.location.href=u;else window.open(u,'_blank');}
+ if(w)w.location.href=(window.marcaUrl?marcaUrl(u):u);else window.open(u,'_blank');}
 function waAbrir(tel,txt){const t=segTel(tel||'');window.open(t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');}
 // Qué le damos a un negocio que nos recomienda (cambia el mensaje de WhatsApp)
 const REG_NEG=[['Gracias','Si alguna vez podemos ayudaros a vosotros o a vuestros clientes, aquí estamos.'],
@@ -9112,7 +9112,7 @@ function elegirRecomendo(r,onDone){
   const w=window.open('about:blank','_blank');e.target.disabled=true;
   try{const d=await post('seg-referido-negocio',{nombre,tel,regalo:REG_NEG[regI][0]});if(!d.ok)throw 0;
    const txt=msgNegocio(regI);
-   const t=segTel(d.tel||tel),u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;if(w)w.location.href=u;else window.open(u,'_blank');
+   const t=segTel(d.tel||tel),u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;if(w)w.location.href=(window.marcaUrl?marcaUrl(u):u);else window.open(u,'_blank');
    toast('Apuntado en Negocios del barrio',true);m.remove();onDone&&onDone();}catch(err){if(w)w.close();e.target.disabled=false;toast('No se ha podido guardar',false);}};
  m.querySelector('.er-no').onclick=async()=>{try{const d=await post('seg-referido-ignorar');if(!d.ok)throw 0;toast('Vale, no toca tarjeta',true);m.remove();onDone&&onDone();}catch(e){toast('No se ha podido guardar',false);}};}
 // Mensaje de bienvenida a la app (enlace + cómo instalarla + email y PIN), para mandar por WhatsApp
@@ -9124,7 +9124,7 @@ function mensajeApp(P){const nm=capi(P.nombre);
 async function enviarApp(P){const t=segTel(P.whatsapp||P.telf||P.tel||'');
  if(!P.email&&t.length<9){toast('Le falta el email o el teléfono para poder entrar',false);return;}
  const pid=P.id||P.pacienteId;const w=window.open('about:blank','_blank');
- const ir=txt=>{const u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;if(w)w.location.href=u;else window.open(u,'_blank');};
+ const ir=txt=>{const u=t?`https://wa.me/${t}?text=${encodeURIComponent(txt)}`:`https://wa.me/?text=${encodeURIComponent(txt)}`;if(w)w.location.href=(window.marcaUrl?marcaUrl(u):u);else window.open(u,'_blank');};
  if(!/^rec[A-Za-z0-9]{14}$/.test(pid||'')){if(!P.pin){if(w)w.close();toast('Le falta el PIN: abre su ficha y se le pone solo',false);return;}ir(mensajeApp(P));return;}
  try{const r=await (await fetch(`/api/schedule?action=seg-agenda-app-enlace&pwd=${encodeURIComponent(apiPwd)}&pacienteId=${pid}`)).json();if(!r.ok)throw 0;
   ir(`¡Hola ${capi(P.nombre)}! Aquí tienes tu *app de FISIO365*: tus ejercicios en vídeo, el chat con tu fisio, tus citas y tus documentos.\n\nDentro tienes cómo instalarla y tus datos para entrar:\n${r.url}`);}
@@ -9184,7 +9184,7 @@ async function consArchivo(accion,{consentId,paciente,email,tel,tipo}){
  toast('Abriendo el documento…',true);
  try{const r=await (await fetch(`/api/schedule?action=seg-consent-archivo&pwd=${encodeURIComponent(apiPwd)}&id=${consentId}`)).json();if(!r.ok)throw new Error(r.error||'No se ha podido abrir');
   const bin=atob(r.b64),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const blob=new Blob([u8],{type:r.tipo}),nom=r.nombre;
-  if(accion==='ver'){const u=URL.createObjectURL(blob);if(win)win.location.href=u;else{const a=document.createElement('a');a.href=u;a.download=nom;document.body.appendChild(a);a.click();a.remove();}setTimeout(()=>URL.revokeObjectURL(u),60000);return;}
+  if(accion==='ver'){const u=URL.createObjectURL(blob);if(win)win.location.href=(window.marcaUrl?marcaUrl(u):u);else{const a=document.createElement('a');a.href=u;a.download=nom;document.body.appendChild(a);a.click();a.remove();}setTimeout(()=>URL.revokeObjectURL(u),60000);return;}
   if(accion==='wa'){const file=new File([blob],nom,{type:r.tipo});if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:nom});}catch(e){}return;}
    const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=nom;document.body.appendChild(a);a.click();a.remove();const t=segTel(tel||'');window.open(t?`https://wa.me/${t}`:'https://wa.me/','_blank');toast('Archivo descargado: adjúntalo en el chat',true);return;}
   if(accion==='email'){const m=hzModal(`<div class="hz-top"><div><small>Enviar por email</small><b>${escH(paciente||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="hz-lab">Email</div><input type="email" class="ag-in cs-mail" value="${escH(email||'')}" autocomplete="off"><div class="hz-bts"><button type="button" class="hz-ok">Enviar</button></div>`);
@@ -9198,7 +9198,7 @@ async function consAccion(accion,{consentId,paciente,email,tel,tipo,papel}){
  let win=null;if(accion==='ver'&&!(navigator.standalone||matchMedia('(display-mode: standalone)').matches))win=window.open('','_blank');
  toast('Preparando el PDF…',true);
  try{const r=await consDatos(consentId);const P=await pdfConsentimiento(r.doc);
-  if(accion==='ver'){const u=URL.createObjectURL(P.blob);if(win){win.location.href=u;}else{const a=document.createElement('a');a.href=u;a.download=P.nombre;document.body.appendChild(a);a.click();a.remove();}setTimeout(()=>URL.revokeObjectURL(u),60000);return;}
+  if(accion==='ver'){const u=URL.createObjectURL(P.blob);if(win){win.location.href=(window.marcaUrl?marcaUrl(u):u);}else{const a=document.createElement('a');a.href=u;a.download=P.nombre;document.body.appendChild(a);a.click();a.remove();}setTimeout(()=>URL.revokeObjectURL(u),60000);return;}
   if(accion==='wa'){const file=new File([P.blob],P.nombre,{type:'application/pdf'});
    if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:P.nombre,text:'Tu consentimiento de FISIO365'});}catch(e){}return;}
    const u=URL.createObjectURL(P.blob),a=document.createElement('a');a.href=u;a.download=P.nombre;document.body.appendChild(a);a.click();a.remove();
@@ -10715,7 +10715,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    const w=window.open('','_blank');b.disabled=true;
    try{const r=await (await fetch(`/api/schedule?action=facturas&patientId=${encodeURIComponent(pacId)}&id=${b.dataset.id}&tipo=${b.dataset.t}`)).json();if(!r.ok)throw 0;
     const bin=atob(r.pdf),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
-    const u=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));if(w)w.location.href=u;else window.open(u,'_blank');
+    const u=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));if(w)w.location.href=(window.marcaUrl?marcaUrl(u):u);else window.open(u,'_blank');
    }catch(e){if(w)w.close();toast('No se ha podido abrir el PDF',false);}
    b.disabled=false;});
  };
@@ -14917,7 +14917,7 @@ function cerrarLightbox(){
 </script>
 <script src="/chat-ui.js?v=2"></script>
 <script src="/racha-ui.js?v=3"></script>
-<script src="/marca.js?v=2"></script>
+<script>window.MARCA_TEXTOS=1;</script><script src="/marca.js?v=3"></script>
 <script>
 // ── Desplegables, fechas y horas con el estilo del panel (en vez de las listas del navegador) ──
 // Se engancha a cualquier <select>, <input type=date> y <input type=time> del panel: al tocarlo se abre el nuestro.

@@ -3296,7 +3296,7 @@ module.exports = async function handler(req, res) {
         if (!yoR || !String(q.clave || '').trim() || String(yoR.fields.Password || '').trim() !== String(q.clave || '').trim() || yoR.fields['FECHA BAJA']) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
         const yo = pila(yoR.fields.Name), lector = !!yoR.fields.acc_sugerencias;
         // Las del apartado App (cambios, mejoras y fallos de la app) solo le llegan a quien la desarrolla
-        const DEV_APP = 'Nora', veApp = yo === DEV_APP, sinApp = "NOT({APARTADO}='App')";
+        const DEV_APP = 'Nora', veApp = MARCA.OTRA_CLINICA ? !!yoR.fields['DIRECCIÓN'] : yo === DEV_APP, sinApp = "NOT({APARTADO}='App')";
         const mias = `AND({ORIGEN}='Equipo',{DE}='${yo.replace(/'/g, "\\'")}')`;
         const vista = r => { const F = r.fields || {}, c = (F.CAPTURA || [])[0];
           return { id: r.id, texto: F.TEXTO || '', origen: nm(F.ORIGEN) || 'Equipo', apartado: nm(F.APARTADO) || 'General', tipo: nm(F.TIPO), de: F['ANÓNIMA'] ? 'Anónimo' : (F.DE || ''), anonima: !!F['ANÓNIMA'], paciente: F['ANÓNIMA'] ? '' : (F.PACIENTE || ''),
