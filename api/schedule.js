@@ -2039,6 +2039,20 @@ async function reabrir1101() {
   console.log('reabrir-1101', JSON.stringify(hechos));
 }
 // Una sola vez (1-nov-2026): las llamadas cerradas hoy con «Cerrar» sin motivo eran porque no contestaban
+const PG_ON = () => { try { return !!require('./_pg').ACTIVO; } catch (e) { return false; } };
+// Una sola vez: los ingresos por mes de la base ESTADISTICAS de Airtable pasan a «INGRESOS MES» de la base nueva (para poder borrar Airtable)
+async function ingresosMes1101() {
+  if (!PG_ON() || await ajuste('fix-ingresos-mes', null)) return;
+  const M = { '2025-05': 12162.17, '2025-06': 18434.5, '2025-07': 16128.5, '2025-08': 13358, '2025-09': 16276, '2025-10': 18718.5, '2025-11': 19002.2, '2025-12': 22933.6, '2026-01': 29335, '2026-02': 24141, '2026-03': 32595.5, '2026-04': 37000, '2026-05': 26135.65, '2026-06': 37898, '2026-07': 38066, '2026-08': 31046.75, '2026-09': 36882.57 };
+  let ya = [], off = ''; do { const d = await at(`tblSJPZroRyyWphVp?pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error('ingresos'); ya = ya.concat(d.records || []); off = d.offset || ''; } while (off);
+  const porMes = {}; ya.forEach(r => { const m = String((r.fields || {}).MES || '').slice(0, 7); if (m) porMes[m] = r; });
+  let n = 0;
+  for (const [m, v] of Object.entries(M)) { const r = porMes[m];
+    if (!r) { await at('tblSJPZroRyyWphVp', { method: 'POST', body: JSON.stringify({ records: [{ fields: { MES: m + '-01', IMPORTE: v } }], typecast: true }) }); n++; }
+    else if (Number(r.fields.IMPORTE || 0) !== v) { await at(`tblSJPZroRyyWphVp/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { IMPORTE: v } }) }); n++; } }
+  await guardarAjuste('fix-ingresos-mes', { t: new Date().toISOString(), n, antes: ya.length });
+  console.log('ingresos-mes', n, 'cambios de', Object.keys(M).length, '· había', ya.length);
+}
 async function motivoCierres1101() {
   if (await ajuste('fix-cierres-1101b', null)) return;
   let L = [], off = ''; do { const d = await at(`tbla5rZTwMkMpAiaI?filterByFormula=${encodeURIComponent(`{NOTAS}='Cerrada al revisar las llamadas antiguas'`)}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error('lla'); L = L.concat(d.records || []); off = d.offset || ''; } while (off);
@@ -2742,7 +2756,7 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'ver') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ v: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 12) }); } // versión publicada: el panel se actualiza solo al volver
   if (action === 'pagos-tick') { // lo llaman el panel (cada 5 min) y la app del paciente al abrirse: cancela las citas de quien no pagó a tiempo
-    res.setHeader('Cache-Control', 'no-store'); const [n] = await Promise.all([caducarPagos().catch(() => 0), procesarWeb().catch(() => null), motivoCierres1101().catch(e => console.log('cierres', e.message)), reabrir1101().catch(e => console.log('reabrir', e.message)), reabrir1101b().catch(e => console.log('reabrir2', e.message))]); return res.status(200).json({ ok: true, n });
+    res.setHeader('Cache-Control', 'no-store'); const [n] = await Promise.all([caducarPagos().catch(() => 0), procesarWeb().catch(() => null), motivoCierres1101().catch(e => console.log('cierres', e.message)), reabrir1101().catch(e => console.log('reabrir', e.message)), reabrir1101b().catch(e => console.log('reabrir2', e.message)), ingresosMes1101().catch(e => console.log('ingresos-mes', e.message))]); return res.status(200).json({ ok: true, n });
   }
   if (action === 'demo-datos') { // Clínica Demo: borrar / sembrar datos inventados (solo con CLINICA=demo y la clave)
     const K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
@@ -5136,7 +5150,7 @@ module.exports = async function handler(req, res) {
         const rs = await todosT('tblE7NWfZmxcou5mV', `filterByFormula=${encodeURIComponent('{INGRESOS}!=BLANK()')}&fields[]=SEMANA&fields[]=INGRESOS&sort[0][field]=SEMANA&sort[0][direction]=asc`);
         // Meses: los de la base ESTADISTICAS (INCOME / MONTH), y si no se puede leer, la copia INGRESOS MES de esta base
         let ms = [], fuente = 'ESTADISTICAS';
-        try { const r = await fetch(`https://api.airtable.com/v0/appR5HDJuhjQG504R/tbloIpGtMu3QVOqoU?pageSize=100`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }); const d = await r.json(); if (d.error) throw 0; ms = (d.records || []).map(x => ({ m: String(x.fields['MES'] || '').slice(0, 7), v: Number(x.fields['IMPORTE'] || 0) })); }
+        try { if (PG_ON()) throw 0; const r = await fetch(`https://api.airtable.com/v0/appR5HDJuhjQG504R/tbloIpGtMu3QVOqoU?pageSize=100`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } }); const d = await r.json(); if (d.error) throw 0; ms = (d.records || []).map(x => ({ m: String(x.fields['MES'] || '').slice(0, 7), v: Number(x.fields['IMPORTE'] || 0) })); }
         catch (e) { fuente = 'INGRESOS MES'; ms = (await todosT('tblSJPZroRyyWphVp', 'fields[]=MES&fields[]=IMPORTE').catch(() => [])).map(x => ({ m: String(x.fields['MES'] || '').slice(0, 7), v: Number(x.fields['IMPORTE'] || 0) })); }
         ms = ms.filter(x => x.m && x.v).sort((a, b) => a.m.localeCompare(b.m));
         // Desde octubre 2026 los meses salen de Holded (tickets de venta del mes, lunes a domingo da igual aquí: mes natural)
