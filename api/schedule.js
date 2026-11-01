@@ -1539,11 +1539,16 @@ label{display:block;font-size:12.5px;font-weight:500;color:#7d6a60;margin:12px 0
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}
 .emb,.emb body{background:transparent}.emb body{padding:0;min-height:0;display:block}.emb .c{box-shadow:none;margin:0 auto;padding:6px 4px 14px;max-width:880px;background:transparent}
 .emb .c{padding-top:22px}.emb .cab .fc{width:52px;height:52px}.emb .cab h1{font-size:24px;margin:6px 0 2px}
-@media(min-width:540px){.emb .c{padding-top:40px}.emb .cab .fc{display:block;width:64px;height:64px;margin-bottom:6px}.emb .cab h1{font-size:32px;margin:8px 0 6px}.emb .cab .sub{font-size:16px}}
+@media(min-width:540px){.emb .cab h1{font-size:32px;margin:8px 0 6px}.emb .cab .sub{font-size:16px}}
 @media(min-width:540px){.emb .cd{height:52px;font-size:17px;border-radius:14px}.emb .cg .ws{font-size:13px}.emb .cm b{font-size:18px}.emb .hrt b{font-size:19px}.emb .hrt span{font-size:13px}.emb .fr{font-size:12.5px}.emb .hs .h{font-size:18px;padding:15px 0}.emb .faq h3{font-size:18px}.emb .faq summary{font-size:15.5px;padding:14px 16px}.emb .fpb{font-size:14px}.emb .ley{font-size:13px}.emb .dud b{font-size:17px}.emb .dud p{font-size:14.5px}}
 .emb .tr{gap:2px 10px;margin:8px 0 14px}.emb .tr span{background:none;padding:2px 0;font-size:12px;color:#7d6a60}
 .emb .pri{padding:10px 12px;margin-top:4px;border-radius:14px}.emb .pri small{font-size:9.5px}.emb .pri b{font-size:14.5px}.emb .pri .go{font-size:12.5px;padding:7px 12px;border-radius:9px}
 @media(min-width:540px){.emb .tr{gap:4px 16px;margin:10px 0 22px}.emb .tr span{font-size:13.5px;padding:2px 0}.emb .pri{padding:12px 16px}.emb .pri small{font-size:10.5px}.emb .pri b{font-size:16px}.emb .pri .go{font-size:14px;padding:9px 14px}}
+.emb .c,.emb .c[class]{padding-top:2px!important}
+.emb .cab{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 10px}.emb .cab h1{width:auto!important;flex:none}.emb .cab .sub{flex-basis:100%;margin-top:4px!important}
+.emb .cab .fc,.emb .cab .fc[width]{display:none!important}.emb .cab h1{margin:0!important;text-align:left}
+.emb .pri,.emb .pri[type]{background:#fff;border:1.5px solid #f1d9cc;padding:7px 7px 7px 14px!important;border-radius:14px}.emb .pri small{display:block}@media(min-width:540px){.emb .pri small{display:inline;margin-right:8px}.emb .pri b{display:inline}}.emb .pri:after{display:none}
+
 .cal.ani .cd.si{opacity:0;animation:pop .4s cubic-bezier(.2,.9,.3,1.3) forwards}
 .pri{position:relative;overflow:hidden}.pri:after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);animation:brillo 4.5s 2s ease-in-out infinite}
 @keyframes brillo{0%,70%{left:-60%}100%{left:130%}}
