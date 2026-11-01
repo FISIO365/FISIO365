@@ -1042,6 +1042,7 @@ async function valeMail(to, subject, saludo, texto, boton, url) {
 <p style="font-size:16px;line-height:1.55;margin:0 0 14px">${saludo}</p><p style="font-size:15px;line-height:1.6;color:#3c342f;margin:0 0 22px">${texto}</p>
 ${url ? `<a href="${url}" style="display:block;text-align:center;background:#c2552e;color:#fff;text-decoration:none;font-weight:bold;font-size:15px;border-radius:99px;padding:14px">${boton}</a>` : ''}
 </div><p style="font-size:11.5px;color:#9a8f87;text-align:center;margin:16px 0 0">FISIO365 · ${escHtml(C.dirCorta || 'Gran de Sant Andreu, 163 · Barcelona')} · ${escHtml(C.tel || '672 89 39 49')}</p></div></body></html>`;
+  if (mk !== 'FISIO365' && !C.logoV) html = html.replace(/<img src="https:\/\/app\.fisioterapia365\.com\/informe\/logo\.png"[^>]*>/, `<div style="font-weight:bold;font-size:22px;color:#c2552e;margin:4px 0 26px">${escHtml(mk)}</div>`); // sin logo subido: su nombre
   html = MARCA.marcar(html, C); // marca blanca: logo, color, nombre, dirección y teléfono de la clínica
   try {
     const b = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
