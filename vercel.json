@@ -138,6 +138,10 @@
       "dest": "/api/schedule.js?action=app-pagina&id=$1&s=$2"
     },
     {
+      "src": "/reserva/?",
+      "dest": "/api/schedule.js?action=pide-cita"
+    },
+    {
       "src": "/h/([A-Za-z0-9_-]+)\\.([a-f0-9]{8})\\.png",
       "dest": "/api/schedule.js?action=huecos-og&k=$1&s=$2"
     },
