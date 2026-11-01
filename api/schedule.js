@@ -1531,11 +1531,13 @@ label{display:block;font-size:12.5px;font-weight:500;color:#7d6a60;margin:12px 0
 .cd.on{background:#c2552e;color:#fff;box-shadow:none}.cd.on:after{background:#fff}.cd.hoy:not(.on){color:#c2552e}
 .hrs{margin-top:18px}.hrt{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 4px}.hrt b{font-size:15.5px;color:#2b2420}.hrt span{flex:none;font-size:11.5px;color:#16803c;font-weight:600;background:#ecf8f0;border-radius:99px;padding:3px 9px}
 .fr{font-size:11px;font-weight:600;color:#a3968c;margin:12px 2px 7px;letter-spacing:.08em;text-transform:uppercase}
-.hs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.hs .h{width:auto}
+.hs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.hs .h{width:auto;padding:12px 0;font-size:16px;border-radius:14px}
 .fp{margin-top:18px;text-align:center}.fpb{border:none;background:none;font:500 13px Poppins,sans-serif;color:#7d6a60;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px}
 .fch{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}.fch button{border:1.5px solid #efe6de;background:#fff;border-radius:99px;padding:7px 14px;font:500 13px Poppins,sans-serif;color:#5c4f47;cursor:pointer}.fch button.on{background:#2b2420;border-color:#2b2420;color:#fff}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}
-.emb,.emb body{background:transparent}.emb body{padding:0;min-height:0;display:block}.emb .c{box-shadow:none;margin:0 auto;padding:22px 14px 18px}
+.emb,.emb body{background:transparent}.emb body{padding:0;min-height:0;display:block}.emb .c{box-shadow:none;margin:0 auto;padding:6px 4px 14px;max-width:880px;background:transparent}
+.emb .cab .fc{display:none}.emb .cab h1{font-size:24px;margin:0 0 2px}.emb .tr{margin-top:10px}.emb .tr span{font-size:11.5px;padding:4px 9px}
+@media(min-width:640px){.emb #z{display:grid;grid-template-columns:1.1fr 1fr;gap:4px 20px;align-items:start}.emb #z>.pri,.emb #z>.fp,.emb #z>.ley,.emb #z>p.sub{grid-column:1/-1}.emb #z>.hrs{margin-top:12px;background:#faf7f4;border-radius:20px;padding:14px 12px}.emb #z .hs{grid-template-columns:repeat(3,1fr)}}
 .emb .fondo{position:static;background:none;opacity:1;display:block;z-index:auto}.emb .hoja{transform:none;max-height:none;margin:0 auto;border-radius:26px;padding:20px 18px 22px}.emb .asa{display:none}</style></head>
 <body><div class="c" id="c"></div><script>(function(){var D=${J},C=document.getElementById('c');
 // Dentro de la web (iframe): sin fondo, avisa de su altura y el formulario sale en la página (no como hoja de abajo)
@@ -1623,7 +1625,7 @@ function pinta(){var z=document.getElementById('z');if(!z)return;var H=vis();
  html+='</div>'+(L.some(function(h){return h.sb;})?'<p class="ley">* Hora sin bomba diamagnética</p>':'');
  z.innerHTML=html+fpick();ata(z);}
 function ata(z){[].forEach.call(z.querySelectorAll('.h,.pri'),function(b){b.onclick=function(){[].forEach.call(z.querySelectorAll('.h'),function(x){x.classList.toggle('on',x===b);});abrir(porId(b.getAttribute('data-id')));};});
- [].forEach.call(z.querySelectorAll('.cd.si'),function(b){b.onclick=function(){SEL=b.getAttribute('data-f');pinta();var r=document.querySelector('.hrs');if(r&&r.getBoundingClientRect().top>window.innerHeight*.6)r.scrollIntoView({behavior:'smooth',block:'start'});};});
+ [].forEach.call(z.querySelectorAll('.cd.si'),function(b){b.onclick=function(){SEL=b.getAttribute('data-f');pinta();var r=document.querySelector('.hrs');if(EMB){if(r&&window.matchMedia('(max-width:639px)').matches)try{parent.postMessage({f365y:Math.round(r.getBoundingClientRect().top+window.scrollY)},'*');}catch(e){}}else if(r&&r.getBoundingClientRect().top>window.innerHeight*.6)r.scrollIntoView({behavior:'smooth',block:'start'});};});
  var pv=z.querySelector('.pv'),nx=z.querySelector('.nx'),mv=function(n){var y=+MES.slice(0,4),m=+MES.slice(5,7)-1+n,dm=new Date(y,m,1);MES=ymd(dm).slice(0,7);var H=vis().filter(function(h){return h.fecha.slice(0,7)===MES;});if(H.length)SEL=H[0].fecha;pinta();};
  if(pv)pv.onclick=function(){mv(-1);};if(nx)nx.onclick=function(){mv(1);};
  var fb=z.querySelector('.fpb');if(fb)fb.onclick=function(){FPO=1;pinta();};
