@@ -1534,8 +1534,15 @@ label{display:block;font-size:12.5px;font-weight:500;color:#7d6a60;margin:12px 0
 .hs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.hs .h{width:auto}
 .fp{margin-top:18px;text-align:center}.fpb{border:none;background:none;font:500 13px Poppins,sans-serif;color:#7d6a60;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px}
 .fch{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}.fch button{border:1.5px solid #efe6de;background:#fff;border-radius:99px;padding:7px 14px;font:500 13px Poppins,sans-serif;color:#5c4f47;cursor:pointer}.fch button.on{background:#2b2420;border-color:#2b2420;color:#fff}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}
+.emb,.emb body{background:transparent}.emb body{padding:0;min-height:0;display:block}.emb .c{box-shadow:none;margin:0 auto;padding:22px 14px 18px}
+.emb .fondo{position:static;background:none;opacity:1;display:block;z-index:auto}.emb .hoja{transform:none;max-height:none;margin:0 auto;border-radius:26px;padding:20px 18px 22px}.emb .asa{display:none}</style></head>
 <body><div class="c" id="c"></div><script>(function(){var D=${J},C=document.getElementById('c');
+// Dentro de la web (iframe): sin fondo, avisa de su altura y el formulario sale en la página (no como hoja de abajo)
+var EMB=window.self!==window.top||/[?&]embed=1/.test(location.search);
+function alto(){try{var bd=document.body,h0=0;[].forEach.call(bd.children,function(x){if(x.tagName!=='SCRIPT'){var r=x.getBoundingClientRect();h0=Math.max(h0,r.bottom+window.scrollY);}});parent.postMessage({f365h:Math.ceil(h0)+4},'*');}catch(e){}}
+function arriba(){try{parent.postMessage({f365top:1},'*');}catch(e){}window.scrollTo(0,0);}
+if(EMB){document.documentElement.classList.add('emb');try{new ResizeObserver(alto).observe(document.body);}catch(e){setInterval(alto,800);}window.addEventListener('load',alto);document.addEventListener('toggle',alto,true);}
 var DS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function fl(f){var d=new Date(f+'T12:00:00');return DS[d.getDay()]+' '+d.getDate()+' de '+MS[d.getMonth()];}
 var DA=['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'],MA=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -1627,21 +1634,21 @@ function abrir(h){var f=document.createElement('div');f.className='fondo';f.inne
  +'<div class="dos"><div><label>Nombre</label><input id="n1" autocomplete="given-name" value="'+esc(G.n1||'')+'"></div><div><label>Apellidos</label><input id="n2" autocomplete="family-name" value="'+esc(G.n2||'')+'"></div></div>'
  +'<label>Teléfono</label><input id="tl" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(G.tl||'')+'">'+(RS.email===false?'':'<label>Email <small style="font-weight:400;color:#a3968c">(te mandamos la confirmación)</small></label><input id="em" type="email" inputmode="email" autocomplete="email" value="'+esc(G.em||'')+'">')+'<label>Motivo de consulta'+(RS.motivo===false?' <small style="font-weight:400;color:#a3968c">(opcional)</small>':'')+'</label><textarea id="mo" placeholder="Ej.: dolor de espalda desde hace unas semanas"></textarea>'
  +(D.vale?'<p class="pgn">🎁 Reservas con tu <b>tarjeta regalo '+D.vale+'</b>. No tienes que pagar nada.</p>':'') +(D.pago?'<p class="pgn">Esta cita se paga por adelantado (<b>'+String(D.pago).replace('.',',')+' €</b>). Al reservar te llevamos al pago (tarjeta o transferencia) y te guardamos la hora 2 h. También te mandamos el enlace de pago por email.</p>':'')+'<p class="err" id="er"></p><button class="bt" id="rs">'+(D.pago?'Reservar y pagar':'Reservar mi cita')+'</button><button class="cancel" id="cn">Elegir otra hora</button></div>';
- document.body.appendChild(f);requestAnimationFrame(function(){f.classList.add('on');});var q=function(i){return f.querySelector('#'+i);};
+ if(EMB){C.style.display='none';document.body.insertBefore(f,C);f.classList.add('on');arriba();setTimeout(alto,50);}else{document.body.appendChild(f);requestAnimationFrame(function(){f.classList.add('on');});}var q=function(i){return f.querySelector('#'+i);};
  [].forEach.call(f.querySelectorAll('input,textarea'),function(x){x.oninput=function(){q('er').textContent='';};});
- var cerrar=function(){[].forEach.call(C.querySelectorAll('.h.on'),function(x){x.classList.remove('on');});f.classList.remove('on');setTimeout(function(){f.remove();},200);};q('cn').onclick=cerrar;f.onclick=function(e){if(e.target===f)cerrar();};
+ var cerrar=function(){[].forEach.call(C.querySelectorAll('.h.on'),function(x){x.classList.remove('on');});if(EMB){f.remove();C.style.display='';var hr=document.querySelector('.hrs');if(hr)hr.scrollIntoView();setTimeout(alto,50);return;}f.classList.remove('on');setTimeout(function(){f.remove();},200);};q('cn').onclick=cerrar;f.onclick=function(e){if(e.target===f)cerrar();};
  q('rs').onclick=function(){var d={n1:q('n1').value.trim(),n2:q('n2').value.trim(),tl:q('tl').value.trim(),em:q('em')?q('em').value.trim():'',mo:q('mo').value.trim()},er=q('er');
   if(!d.n1){er.textContent='Escribe tu nombre';return;}if(!d.n2){er.textContent='Escribe tus apellidos';return;}if(d.tl.replace(/\\D/g,'').length<9){er.textContent='Revisa el teléfono';return;}if(RS.email!==false&&!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(d.em)){er.textContent='Revisa el email';return;}if(!d.mo&&RS.motivo!==false){er.textContent='Cuéntanos brevemente el motivo de la consulta';return;}
   try{localStorage.setItem('f365_res',JSON.stringify({n1:d.n1,n2:d.n2,tl:d.tl,em:d.em}));}catch(e){}
   var b=this;b.disabled=true;b.textContent='Reservando…';er.textContent='';
   fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:h.id,nombre:d.n1,apellidos:d.n2,tel:d.tl,email:d.em,motivo:d.mo})}).then(function(r){return r.json();}).then(function(r){
-   if(r.ok&&r.pago){b.textContent='Vamos al pago…';location.href=r.pago;return;}
-   if(r.ok){f.remove();hecho(h,d.n1,r.conf,d.em);return;}
-   if(r.ocupado){D.huecos=D.huecos.filter(function(x){return x.id!==h.id;});f.remove();lista();setTimeout(function(){alertar(r.error);},50);return;}
+   if(r.ok&&r.pago){b.textContent='Vamos al pago…';if(EMB){try{window.top.location.href=r.pago;}catch(e){location.href=r.pago;}}else location.href=r.pago;return;}
+   if(r.ok){f.remove();C.style.display='';hecho(h,d.n1,r.conf,d.em);if(EMB){arriba();setTimeout(alto,50);}return;}
+   if(r.ocupado){D.huecos=D.huecos.filter(function(x){return x.id!==h.id;});f.remove();C.style.display='';lista();setTimeout(function(){alertar(r.error);},50);return;}
    throw new Error(r.error||'');}).catch(function(e){b.disabled=false;b.textContent=D.pago?'Reservar y pagar':'Reservar mi cita';er.textContent=e.message||'No se ha podido reservar. Inténtalo de nuevo.';});};}
 function alertar(t){var p=document.createElement('p');p.className='err';p.style.textAlign='center';p.textContent=t;C.insertBefore(p,C.children[1]);}
 function hecho(h,n,cf,em){C.innerHTML='<div class="ok"><svg class="fc" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="fi" style="animation-delay:.9s" d="M25 35 Q30 29 35 35"/><path class="fi" style="animation-delay:.9s" d="M45 35 Q50 29 55 35"/><path class="m" d="M26 45 Q40 62 54 45"/></svg>'
- +'<h1 class="fi" style="animation-delay:1s">¡Reservada, '+esc(n.charAt(0).toUpperCase()+n.slice(1))+'!</h1><p class="sub fi" style="animation-delay:1.15s">Te esperamos el '+fl(h.fecha)+' a las '+h.hora+(ELEG?' con '+esc(h.nombre):'')+'.</p>'+tile(h.fecha)+'<p class="okh fi" style="animation-delay:1.6s">Te guardamos el sitio</p></div>'+(cf?'<div class="fi" style="animation-delay:1.8s;text-align:center"><a class="bt" style="display:block;text-decoration:none;margin-top:18px;animation:none" href="'+esc(cf)+'">Confirmar mi cita</a>'+(em?'<p class="sub" style="font-size:12.5px;margin-top:10px">También te lo hemos enviado a <b>'+esc(em)+'</b></p>':'')+'</div>':'')+dudas+pie;window.scrollTo(0,0);}
+ +'<h1 class="fi" style="animation-delay:1s">¡Reservada, '+esc(n.charAt(0).toUpperCase()+n.slice(1))+'!</h1><p class="sub fi" style="animation-delay:1.15s">Te esperamos el '+fl(h.fecha)+' a las '+h.hora+(ELEG?' con '+esc(h.nombre):'')+'.</p>'+tile(h.fecha)+'<p class="okh fi" style="animation-delay:1.6s">Te guardamos el sitio</p></div>'+(cf?'<div class="fi" style="animation-delay:1.8s;text-align:center"><a class="bt" style="display:block;text-decoration:none;margin-top:18px;animation:none" target="_top" href="'+esc(cf)+'">Confirmar mi cita</a>'+(em?'<p class="sub" style="font-size:12.5px;margin-top:10px">También te lo hemos enviado a <b>'+esc(em)+'</b></p>':'')+'</div>':'')+dudas+pie;window.scrollTo(0,0);}
 lista();})();<\/script></body></html>`;
 }
 
@@ -2994,7 +3001,7 @@ module.exports = async function handler(req, res) {
   }
   // Enlace de huecos libres: página para elegir y reservar (GET) y la reserva (POST)
   // Enlace fijo para el botón de la web (shortcode de WordPress): siempre los huecos de los próximos 30 días
-  if (action === 'pide-cita') { res.setHeader('Cache-Control', 'no-store'); res.setHeader('Location', huecosSiempre(30)); return res.status(302).end(); }
+  if (action === 'pide-cita') { res.setHeader('Cache-Control', 'no-store'); res.setHeader('Location', huecosSiempre(30) + (req.query.embed ? '?embed=1' : '')); return res.status(302).end(); }
   if (action === 'huecos-og') {
     const k = String(req.query.k || ''), sg = String(req.query.s || ''), P = huecosDec(k);
     if (!P || sg !== firmaHuecos(k)) return res.status(404).send('No encontrado');
