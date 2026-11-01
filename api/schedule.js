@@ -1977,9 +1977,9 @@ async function pagoPaciente(F) {
 let _pagoCad = 0;
 // Una sola vez (1-nov-2026): las llamadas cerradas hoy con «Cerrar» sin motivo eran porque no contestaban
 async function motivoCierres1101() {
-  if (await ajuste('fix-cierres-1101', null)) return;
+  if (await ajuste('fix-cierres-1101b', null)) return;
   let L = [], off = ''; do { const d = await at(`tbla5rZTwMkMpAiaI?filterByFormula=${encodeURIComponent(`{NOTAS}='Cerrada al revisar las llamadas antiguas'`)}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error('lla'); L = L.concat(d.records || []); off = d.offset || ''; } while (off);
-  await guardarAjuste('fix-cierres-1101', { t: new Date().toISOString() });
+  await guardarAjuste('fix-cierres-1101b', { t: new Date().toISOString() });
   const hoy = L.filter(r => { const f = (r.fields || {}).FECHA; return f && new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(f)) === '2026-11-01'; });
   const nombres = [];
   for (const r of hoy) { await at(`tbla5rZTwMkMpAiaI/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { NOTAS: 'Cerrada: No contesta (llamadas ni WhatsApp)' } }) });
