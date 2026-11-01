@@ -1531,6 +1531,8 @@ label{display:block;font-size:12.5px;font-weight:500;color:#7d6a60;margin:12px 0
 .cd.on{background:#c2552e;color:#fff;box-shadow:none}.cd.on:after{background:#fff}.cd.hoy:not(.on){color:#c2552e}
 .hrs{margin-top:18px}.hrt{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 4px}.hrt b{font-size:15.5px;color:#2b2420}.hrt span{flex:none;font-size:11.5px;color:#16803c;font-weight:600;background:#ecf8f0;border-radius:99px;padding:3px 9px}
 .fr{font-size:11px;font-weight:600;color:#a3968c;margin:12px 2px 7px;letter-spacing:.08em;text-transform:uppercase}
+.vcal{display:inline-flex;align-items:center;gap:4px;border:none;background:#fdf1ea;color:#a3441f;border-radius:99px;padding:6px 12px 6px 8px;font:600 12.5px Poppins,sans-serif;cursor:pointer;margin:0 0 10px}.vcal svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+@media(min-width:540px){.emb .vcal{display:none}}
 .hs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.hs .h{width:auto;padding:12px 0;font-size:16px;border-radius:14px}
 .fp{margin-top:18px;text-align:center}.fpb{border:none;background:none;font:500 13px Poppins,sans-serif;color:#7d6a60;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px}
 .fch{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}.fch button{border:1.5px solid #efe6de;background:#fff;border-radius:99px;padding:7px 14px;font:500 13px Poppins,sans-serif;color:#5c4f47;cursor:pointer}.fch button.on{background:#2b2420;border-color:#2b2420;color:#fff}
@@ -1620,7 +1622,7 @@ function pinta(){var z=document.getElementById('z');if(!z)return;var H=vis();
  for(var d=1;d<=nd;d++){var f=MES+'-'+(d<10?'0':'')+d,si=!!dias[f];html+='<button type="button" class="cd'+(si?' si':'')+(f===SEL?' on':'')+(f===HOY?' hoy':'')+'"'+(si?' data-f="'+f+'"':' disabled')+'>'+d+'</button>';}
  html+='</div></div>';
  var L=dias[SEL],dd=new Date(SEL+'T12:00:00'),G=[['Mañana',L.filter(function(h){return h.hora<'14:00';})],['Tarde',L.filter(function(h){return h.hora>='14:00';})]];
- html+='<div class="hrs"><div class="hrt"><b>'+capf(DS[dd.getDay()])+' '+dd.getDate()+' de '+MS[dd.getMonth()]+'</b><span>'+(L.length===1?'Queda 1 hora':L.length+' horas libres')+'</span></div>';
+ html+='<div class="hrs"><button type="button" class="vcal"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>Cambiar de día</button><div class="hrt"><b>'+capf(DS[dd.getDay()])+' '+dd.getDate()+' de '+MS[dd.getMonth()]+'</b><span>'+(L.length===1?'Queda 1 hora':L.length+' horas libres')+'</span></div>';
  G.forEach(function(g){if(!g[1].length)return;html+='<p class="fr">'+g[0]+'</p><div class="hs">'+g[1].map(function(h,j){return '<button type="button" class="h'+(h.sb?' sb':'')+'" style="animation-delay:'+(j*.03)+'s" data-id="'+h.id+'">'+h.hora+(h.sb?'*':'')+'</button>';}).join('')+'</div>';});
  html+='</div>'+(L.some(function(h){return h.sb;})?'<p class="ley">* Hora sin bomba diamagnética</p>':'');
  z.innerHTML=html+fpick();ata(z);}
@@ -1629,6 +1631,7 @@ function ata(z){[].forEach.call(z.querySelectorAll('.h,.pri'),function(b){b.oncl
  var pv=z.querySelector('.pv'),nx=z.querySelector('.nx'),mv=function(n){var y=+MES.slice(0,4),m=+MES.slice(5,7)-1+n,dm=new Date(y,m,1);MES=ymd(dm).slice(0,7);var H=vis().filter(function(h){return h.fecha.slice(0,7)===MES;});if(H.length)SEL=H[0].fecha;pinta();};
  if(pv)pv.onclick=function(){mv(-1);};if(nx)nx.onclick=function(){mv(1);};
  var fb=z.querySelector('.fpb');if(fb)fb.onclick=function(){FPO=1;pinta();};
+ var vc=z.querySelector('.vcal');if(vc)vc.onclick=function(){var c=z.querySelector('.cal');if(!c)return;if(EMB){try{parent.postMessage({f365y:Math.round(c.getBoundingClientRect().top+window.scrollY)},'*');}catch(e){}}else c.scrollIntoView({behavior:'smooth',block:'start'});};
  [].forEach.call(z.querySelectorAll('.fch button'),function(b){b.onclick=function(){ELEG=b.getAttribute('data-n');SEL=null;MES=null;pinta();};});}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.tabs button');if(!b)return;var w=b.closest('.fa');[].forEach.call(w.querySelectorAll('.tabs button'),function(x){x.classList.toggle('on',x===b);});[].forEach.call(w.querySelectorAll('.pks'),function(x){x.hidden=x.getAttribute('data-p')!==b.getAttribute('data-t');});});
 var G={};try{G=JSON.parse(localStorage.getItem('f365_res')||'{}');}catch(e){}
