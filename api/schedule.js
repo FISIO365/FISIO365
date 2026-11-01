@@ -530,7 +530,13 @@ const CAP_STOP = /^(farmacia|clinica|clinic|centro|dental|estetica|podologia|pod
 // libre de esa hora si lo hay (y se borra la fila nueva) y los archivos pasan a los documentos del paciente.
 const CIT_T = 'tblTPlcuiSjQngkaD';
 let webEnCurso = null;
-function procesarWeb() { if (!webEnCurso) webEnCurso = _procesarWeb().finally(() => { webEnCurso = null; }); return webEnCurso; }
+// Un solo proceso a la vez en todos los servidores (candado de Postgres): si no, dos paneles a la vez duplicaban las reservas de la web
+function procesarWeb() { if (!webEnCurso) webEnCurso = conCandadoWeb().finally(() => { webEnCurso = null; }); return webEnCurso; }
+async function conCandadoWeb() {
+  let PG = null; try { PG = require('./_pg'); } catch (e) {}
+  if (!PG || !PG.ACTIVO || !PG.db) return _procesarWeb();
+  return PG.db().tx(async c => { const r = await c.query('select pg_try_advisory_xact_lock(365365) as ok'); if (!r.rows[0] || !r.rows[0].ok) return { ocupado: true }; return _procesarWeb(); });
+}
 async function _procesarWeb() {
   // El formulario de la web (WordPress) sigue escribiendo en Airtable: las reservas nuevas se traen aquí (a la agenda de verdad) y se procesan como siempre
   try { const PG = require('./_pg');
