@@ -1627,7 +1627,7 @@ function pinta(){var z=document.getElementById('z');if(!z)return;var H=vis();
  var ni=0;for(var d=1;d<=nd;d++){var f=MES+'-'+(d<10?'0':'')+d,si=!!dias[f];html+='<button type="button" class="cd'+(si?' si':'')+(f===SEL?' on':'')+(f===HOY?' hoy':'')+'"'+(si?' data-f="'+f+'"'+(ANI?' style="animation-delay:'+(1.1+(ni++)*.035).toFixed(2)+'s"':''):' disabled')+'>'+d+'</button>';}
  html+='</div></div>';
  var L=dias[SEL],dd=new Date(SEL+'T12:00:00'),G=[['Mañana',L.filter(function(h){return h.hora<'14:00';})],['Tarde',L.filter(function(h){return h.hora>='14:00';})]];
- html+='<div class="hrs"><button type="button" class="vcal"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>Volver al calendario</button><div class="hrt"><b>'+capf(DS[dd.getDay()])+' '+dd.getDate()+' de '+MS[dd.getMonth()]+'</b><span>'+(L.length===1?'Queda 1 hora':L.length+' horas libres')+'</span></div>';
+ html+='<div class="hrs"><button type="button" class="vcal"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Volver al calendario</button><div class="hrt"><b>'+capf(DS[dd.getDay()])+' '+dd.getDate()+' de '+MS[dd.getMonth()]+'</b><span>'+(L.length===1?'Queda 1 hora':L.length+' horas libres')+'</span></div>';
  G.forEach(function(g){if(!g[1].length)return;html+='<p class="fr">'+g[0]+'</p><div class="hs">'+g[1].map(function(h,j){return '<button type="button" class="h'+(h.sb?' sb':'')+'" style="animation-delay:'+(j*.03)+'s" data-id="'+h.id+'">'+h.hora+(h.sb?'*':'')+'</button>';}).join('')+'</div>';});
  html+='</div>'+(L.some(function(h){return h.sb;})?'<p class="ley">* Hora sin bomba diamagnética</p>':'');
  z.innerHTML=html+fpick();ata(z);ANI=false;}
