@@ -540,7 +540,8 @@ async function conCandadoWeb() {
 async function _procesarWeb() {
   // El formulario de la web (WordPress) sigue escribiendo en Airtable: las reservas nuevas se traen aquí (a la agenda de verdad) y se procesan como siempre
   try { const PG = require('./_pg');
-    if (PG.ACTIVO && PG.fetchReal) {
+    // Apagado el 1-nov-2026: la web ya reserva con la página propia (fisioterapia365.com/cita), sin pasar por Airtable
+    if (false && PG.ACTIVO && PG.fetchReal) {
       const hechas = (await ajuste('web-airtable-ok', [])) || [], f = `AND({your-name}!='',IS_AFTER(CREATED_TIME(),'2026-10-31T12:00:00.000Z'))`;
       const d = await (await PG.fetchReal(`https://api.airtable.com/v0/${BASE_ID}/${CIT_T}?filterByFormula=${encodeURIComponent(f)}&pageSize=50`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })).json();
       const nuevas = (d.records || []).filter(r => !hechas.includes(r.id));
