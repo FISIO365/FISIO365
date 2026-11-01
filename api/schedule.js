@@ -1985,7 +1985,7 @@ async function reabrir1101() {
   for (const r of L) { const F = r.fields || {}, sid = F['SEG ID'], pid = (F.PACIENTE || [])[0];
     if (/^rec[A-Za-z0-9]{14}$/.test(sid || '')) await at(`${SEG}/${sid}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHO: false } }) });
     await at(`tbla5rZTwMkMpAiaI/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { NOTAS: 'Cerrada por error y vuelta a la lista' } }) });
-    if (pid) await ponerEtapa(pid, 'SEGUIMIENTO').catch(() => null); hechos.push(sid || r.id); }
+    hechos.push(sid || r.id); }
   console.log('reabrir-1101', JSON.stringify(hechos));
 }
 // Una sola vez (1-nov-2026): las llamadas cerradas hoy con «Cerrar» sin motivo eran porque no contestaban
