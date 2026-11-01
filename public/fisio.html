@@ -11924,7 +11924,10 @@ function cursoPend(){try{if(!fisioActual||!window.__progOk)return false;const sc
 function cursoMod(){try{const d=JSON.parse(localStorage.getItem('fisio365_school_'+CURSO_OBL+'_'+(fisioActual?.id||'x'))||'null');return d?((d.scores||[]).filter(x=>x&&x.done).length):0;}catch(e){return 0;}}
 // El aviso va en una caja con las mismas medidas que el contenido de la sección (así queda alineado con lo de debajo)
 function cursoPon(el){const mw=$('mainWrap');if(!mw)return;let h=$('cursoHold');if(!h){h=ce('div','');h.id='cursoHold';mw.parentNode.insertBefore(h,mw);}h.className=mw.className+' curso-hold';if(el.parentNode!==h)h.appendChild(el);cursoMide();}
-function cursoMide(){const mw=$('mainWrap'),h=$('cursoHold');if(!mw||!h)return;const c=getComputedStyle(mw);['maxWidth','width','marginLeft','marginRight','paddingLeft','paddingRight'].forEach(k=>{h.style[k]=c[k];});h.style.boxSizing=c.boxSizing;}
+function cursoMide(){const mw=$('mainWrap'),h=$('cursoHold');if(!mw||!h)return;const c=getComputedStyle(mw);['maxWidth','width','marginLeft','marginRight','paddingLeft','paddingRight'].forEach(k=>{h.style[k]=c[k];});h.style.boxSizing=c.boxSizing;
+ // Mismo ancho y borde que la primera tarjeta de la sección (en algunas secciones el contenido es más estrecho que la zona)
+ const el=$('cursoAv'),k=[...mw.children].find(x=>x.offsetWidth>0&&!/fixed|absolute/.test(getComputedStyle(x).position));
+ if(el&&k){const r=k.getBoundingClientRect(),hr=h.getBoundingClientRect(),pl=parseFloat(getComputedStyle(h).paddingLeft)||0;el.style.marginLeft=Math.max(0,Math.round(r.left-hr.left-pl))+'px';el.style.width=Math.round(r.width)+'px';el.style.maxWidth='none';}}
 window.addEventListener('resize',()=>{try{cursoMide();}catch(e){}});setInterval(()=>{try{if($('cursoAv'))cursoMide();}catch(e){}},1500);
 function cursoAviso(sec){let el=$('cursoAv');const hoy=new Date().toISOString().slice(0,10);let oculto=false;try{oculto=localStorage.getItem('f365_curso_av')===hoy;}catch(e){}
  // Durante la serie: «Módulo de hoy» (antes de empezar, aviso de que empieza)
