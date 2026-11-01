@@ -1616,23 +1616,23 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
 var G={};try{G=JSON.parse(localStorage.getItem('f365_res')||'{}');}catch(e){}
 function abrir(h){var f=document.createElement('div');f.className='fondo';f.innerHTML='<div class="hoja"><div class="asa"></div><div class="sel">'+tile(h.fecha)+'<div><small>Tu cita</small><b>'+fl(h.fecha).replace(/^./,function(x){return x.toUpperCase();})+'<br>a las '+h.hora+'</b>'+(ELEG?'<small>con '+esc(h.nombre)+'</small>':'')+'</div></div>'
  +'<div class="dos"><div><label>Nombre</label><input id="n1" autocomplete="given-name" value="'+esc(G.n1||'')+'"></div><div><label>Apellidos</label><input id="n2" autocomplete="family-name" value="'+esc(G.n2||'')+'"></div></div>'
- +'<label>Teléfono</label><input id="tl" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(G.tl||'')+'"><label>Motivo de consulta</label><textarea id="mo" placeholder="Ej.: dolor de espalda desde hace unas semanas"></textarea>'
+ +'<label>Teléfono</label><input id="tl" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(G.tl||'')+'"><label>Email <small style="font-weight:400;color:#a3968c">(te mandamos la confirmación)</small></label><input id="em" type="email" inputmode="email" autocomplete="email" value="'+esc(G.em||'')+'"><label>Motivo de consulta</label><textarea id="mo" placeholder="Ej.: dolor de espalda desde hace unas semanas"></textarea>'
  +(D.vale?'<p class="pgn">🎁 Reservas con tu <b>tarjeta regalo '+D.vale+'</b>. No tienes que pagar nada.</p>':'') +(D.pago?'<p class="pgn">Esta cita se paga por adelantado (<b>'+String(D.pago).replace('.',',')+' €</b>). Al reservar te llevamos al pago (tarjeta o transferencia) y te guardamos la hora 2 h.</p>':'')+'<p class="err" id="er"></p><button class="bt" id="rs">'+(D.pago?'Reservar y pagar':'Reservar mi cita')+'</button><button class="cancel" id="cn">Elegir otra hora</button></div>';
  document.body.appendChild(f);requestAnimationFrame(function(){f.classList.add('on');});var q=function(i){return f.querySelector('#'+i);};
  [].forEach.call(f.querySelectorAll('input,textarea'),function(x){x.oninput=function(){q('er').textContent='';};});
  var cerrar=function(){[].forEach.call(C.querySelectorAll('.h.on'),function(x){x.classList.remove('on');});f.classList.remove('on');setTimeout(function(){f.remove();},200);};q('cn').onclick=cerrar;f.onclick=function(e){if(e.target===f)cerrar();};
- q('rs').onclick=function(){var d={n1:q('n1').value.trim(),n2:q('n2').value.trim(),tl:q('tl').value.trim(),mo:q('mo').value.trim()},er=q('er');
-  if(!d.n1){er.textContent='Escribe tu nombre';return;}if(!d.n2){er.textContent='Escribe tus apellidos';return;}if(d.tl.replace(/\\D/g,'').length<9){er.textContent='Revisa el teléfono';return;}if(!d.mo){er.textContent='Cuéntanos brevemente el motivo de la consulta';return;}
-  try{localStorage.setItem('f365_res',JSON.stringify({n1:d.n1,n2:d.n2,tl:d.tl}));}catch(e){}
+ q('rs').onclick=function(){var d={n1:q('n1').value.trim(),n2:q('n2').value.trim(),tl:q('tl').value.trim(),em:q('em').value.trim(),mo:q('mo').value.trim()},er=q('er');
+  if(!d.n1){er.textContent='Escribe tu nombre';return;}if(!d.n2){er.textContent='Escribe tus apellidos';return;}if(d.tl.replace(/\\D/g,'').length<9){er.textContent='Revisa el teléfono';return;}if(!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(d.em)){er.textContent='Revisa el email';return;}if(!d.mo){er.textContent='Cuéntanos brevemente el motivo de la consulta';return;}
+  try{localStorage.setItem('f365_res',JSON.stringify({n1:d.n1,n2:d.n2,tl:d.tl,em:d.em}));}catch(e){}
   var b=this;b.disabled=true;b.textContent='Reservando…';er.textContent='';
-  fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:h.id,nombre:d.n1,apellidos:d.n2,tel:d.tl,motivo:d.mo})}).then(function(r){return r.json();}).then(function(r){
+  fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:h.id,nombre:d.n1,apellidos:d.n2,tel:d.tl,email:d.em,motivo:d.mo})}).then(function(r){return r.json();}).then(function(r){
    if(r.ok&&r.pago){b.textContent='Vamos al pago…';location.href=r.pago;return;}
-   if(r.ok){f.remove();hecho(h,d.n1);return;}
+   if(r.ok){f.remove();hecho(h,d.n1,r.conf,d.em);return;}
    if(r.ocupado){D.huecos=D.huecos.filter(function(x){return x.id!==h.id;});f.remove();lista();setTimeout(function(){alertar(r.error);},50);return;}
    throw new Error(r.error||'');}).catch(function(e){b.disabled=false;b.textContent=D.pago?'Reservar y pagar':'Reservar mi cita';er.textContent=e.message||'No se ha podido reservar. Inténtalo de nuevo.';});};}
 function alertar(t){var p=document.createElement('p');p.className='err';p.style.textAlign='center';p.textContent=t;C.insertBefore(p,C.children[1]);}
-function hecho(h,n){C.innerHTML='<div class="ok"><svg class="fc" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="fi" style="animation-delay:.9s" d="M25 35 Q30 29 35 35"/><path class="fi" style="animation-delay:.9s" d="M45 35 Q50 29 55 35"/><path class="m" d="M26 45 Q40 62 54 45"/></svg>'
- +'<h1 class="fi" style="animation-delay:1s">¡Reservada, '+esc(n.charAt(0).toUpperCase()+n.slice(1))+'!</h1><p class="sub fi" style="animation-delay:1.15s">Te esperamos el '+fl(h.fecha)+' a las '+h.hora+(ELEG?' con '+esc(h.nombre):'')+'.</p>'+tile(h.fecha)+'<p class="okh fi" style="animation-delay:1.6s">Te guardamos el sitio</p></div>'+dudas+pie;window.scrollTo(0,0);}
+function hecho(h,n,cf,em){C.innerHTML='<div class="ok"><svg class="fc" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="fi" style="animation-delay:.9s" d="M25 35 Q30 29 35 35"/><path class="fi" style="animation-delay:.9s" d="M45 35 Q50 29 55 35"/><path class="m" d="M26 45 Q40 62 54 45"/></svg>'
+ +'<h1 class="fi" style="animation-delay:1s">¡Reservada, '+esc(n.charAt(0).toUpperCase()+n.slice(1))+'!</h1><p class="sub fi" style="animation-delay:1.15s">Te esperamos el '+fl(h.fecha)+' a las '+h.hora+(ELEG?' con '+esc(h.nombre):'')+'.</p>'+tile(h.fecha)+'<p class="okh fi" style="animation-delay:1.6s">Te guardamos el sitio</p></div>'+(cf?'<div class="fi" style="animation-delay:1.8s;text-align:center"><a class="bt" style="display:block;text-decoration:none;margin-top:18px;animation:none" href="'+esc(cf)+'">Confirmar mi cita</a>'+(em?'<p class="sub" style="font-size:12.5px;margin-top:10px">También te lo hemos enviado a <b>'+esc(em)+'</b></p>':'')+'</div>':'')+dudas+pie;window.scrollTo(0,0);}
 lista();})();<\/script></body></html>`;
 }
 
@@ -2956,20 +2956,21 @@ module.exports = async function handler(req, res) {
     const C = (await conf().catch(() => CONF_DEF)).clinica || CONF_DEF.clinica;
     if (req.method === 'POST') {
       const q = req.body || {}, id = String(q.id || ''), cap = t => String(t || '').trim().replace(/\s+/g, ' ').toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
-      const n1 = cap(q.nombre).slice(0, 60), n2 = cap(q.apellidos).slice(0, 80), tel = String(q.tel || '').replace(/\D/g, '').replace(/^0034|^34(?=\d{9}$)/, ''), motivo = String(q.motivo || '').trim().slice(0, 1500);
+      const n1 = cap(q.nombre).slice(0, 60), n2 = cap(q.apellidos).slice(0, 80), tel = String(q.tel || '').replace(/\D/g, '').replace(/^0034|^34(?=\d{9}$)/, ''), motivo = String(q.motivo || '').trim().slice(0, 1500), email = String(q.email || '').trim().toLowerCase().slice(0, 120);
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: 'Revisa el email, por favor.' });
       if (!/^rec[A-Za-z0-9]{14}$/.test(id) || !n1 || !n2 || tel.length < 9 || !motivo) return res.status(400).json({ ok: false, error: 'Revisa los datos, por favor.' });
       const ocupado = { ok: false, ocupado: true, error: 'Vaya, alguien acaba de coger esa hora. Elige otra, por favor.' };
       const r = await at(`tblTPlcuiSjQngkaD/${id}`); if (r.error) return res.status(200).json(ocupado);
       const h = huecoValido(r.fields || {}, P); if (!h) return res.status(200).json(ocupado);
       // Paciente: por teléfono; si no existe, se crea con nombre, teléfono y motivo
       const t9 = tel.slice(-9);
-      const ps = await at(`${PACIENTES}?filterByFormula=${encodeURIComponent(`OR(RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${t9}',RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${t9}')`)}&maxRecords=1&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=${encodeURIComponent('MOTIVO DE VISITA')}`).catch(() => ({}));
+      const ps = await at(`${PACIENTES}?filterByFormula=${encodeURIComponent(`OR(RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${t9}',RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${t9}')`)}&maxRecords=1&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=${encodeURIComponent('MOTIVO DE VISITA')}&fields[]=EMAIL`).catch(() => ({}));
       let pac = (ps.records || [])[0] || null, nuevo = false;
       if (!pac) {
-        const c = await at(PACIENTES, { method: 'POST', body: JSON.stringify({ records: [{ fields: { 'FULL NAME': `${n1} ${n2}`.toUpperCase(), TELF: tel, WHATSAPP: tel, PIN: nuevoPin(), 'MOTIVO DE VISITA': motivo } }], typecast: true }) });
+        const c = await at(PACIENTES, { method: 'POST', body: JSON.stringify({ records: [{ fields: { 'FULL NAME': `${n1} ${n2}`.toUpperCase(), TELF: tel, WHATSAPP: tel, PIN: nuevoPin(), 'MOTIVO DE VISITA': motivo, ...(email ? { EMAIL: email } : {}) } }], typecast: true }) });
         if (c.error || !c.records) return res.status(200).json({ ok: false, error: 'No se ha podido reservar. Llámanos y te la apuntamos.' });
         pac = c.records[0]; nuevo = true;
-      } else if (!String((pac.fields || {})['MOTIVO DE VISITA'] || '').trim()) await at(`${PACIENTES}/${pac.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'MOTIVO DE VISITA': motivo } }) }).catch(() => {});
+      } else { const pf = pac.fields || {}, fx = {}; if (!String(pf['MOTIVO DE VISITA'] || '').trim()) fx['MOTIVO DE VISITA'] = motivo; if (email && !String(pf.EMAIL || '').trim()) fx.EMAIL = email; if (Object.keys(fx).length) await at(`${PACIENTES}/${pac.id}`, { method: 'PATCH', body: JSON.stringify({ fields: fx }) }).catch(() => {}); }
       const nota = `Reserva por enlace de huecos${nuevo ? ' (paciente nuevo)' : ''} · Motivo: ${motivo}${P.v ? ` · 🎁 Tarjeta regalo ${String(P.v).slice(0, 20)}` : ''}`;
       const fR = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', NOTAS: [r.fields.NOTAS, nota].filter(Boolean).join('\n') };
       if (P.p > 0) { const lim = Date.now() + 2 * 3600e3; Object.assign(fR, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': P.p, 'PAGO LÍMITE': new Date(lim).toISOString(), 'PAGO REGISTRO': `${pagoAhora()} · Reserva por enlace de huecos con pago por adelantado (${P.p.toFixed(2).replace('.', ',')} €)` }); }
@@ -2990,7 +2991,10 @@ module.exports = async function handler(req, res) {
       if (!nuevo) await salirDeSeguimiento(pac.id, '', h.fecha, h.hora, 'Reservó por el enlace de huecos').catch(() => null);
       await ponerEtapa(pac.id, 'cita').catch(() => null);
       if (!(P.p > 0)) await avisoFaltaEnlace(id);
-      return res.status(200).json({ ok: true, pago: P.p > 0 ? enlacePago(id) : '' });
+      // Email de confirmación (Brevo) con el botón para confirmar la cita y añadirla al calendario
+      if (email && !(P.p > 0)) { try { const MSX = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], DSX = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'], dx = new Date(h.fecha + 'T12:00:00Z'), cuando = `${DSX[dx.getUTCDay()]} ${dx.getUTCDate()} de ${MSX[dx.getUTCMonth()]} a las ${h.hora}`;
+        await valeMail(email, `Tu cita: ${cuando}`, `Hola ${escHtml(n1)},`, `Tu cita está reservada para el <b>${cuando}</b>.<br><br>📍 ${escHtml(C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona')}<br><br>Toca el botón para <b>confirmarla</b> y añadirla a tu calendario. Si te surge algo y no puedes venir, avísanos por WhatsApp al ${escHtml(C.tel || '672 89 39 49')}.`, 'Confirmar mi cita', enlaceConfirmar(id)); } catch (e) { console.log('mail reserva', e.message); } }
+      return res.status(200).json({ ok: true, pago: P.p > 0 ? enlacePago(id) : '', conf: P.p > 0 ? '' : enlaceConfirmar(id) });
     }
     await caducarPagos().catch(() => 0); // libera antes los huecos de quien no pagó
     const huecos = await huecosLibres(P).catch(() => []);
