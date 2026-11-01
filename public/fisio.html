@@ -1692,6 +1692,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .sg-antn{font-size:12.5px;line-height:1.45;color:#5e554d;background:#faf6f2;border-radius:12px;padding:10px 12px;margin:8px 0 4px}
 .tk-tri{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:8px;padding-top:8px;border-top:1px dashed #ece4dc}.tk-tri button{font-family:var(--font);font-size:12.5px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:99px;padding:6px 12px;cursor:pointer}.tk-b.tk-bwa{background:#1f9d55;min-width:0}.tk-tri button.wa{background:#1f9d55;border-color:#1f9d55;color:#fff}.tk-tri button:disabled{opacity:.5}.tk-tri span{font-size:12.5px;font-weight:700;color:#16803c}
 .tk:has(.tk-tri){flex-wrap:wrap}
+.tk-mo{width:100%;display:flex;flex-direction:column;gap:8px}.tk-mo>b{font-size:13px}.tk-mos{display:flex;flex-wrap:wrap;gap:6px}.tk-mos button.on{background:var(--ink,#1e2a38);color:#fff;border-color:var(--ink,#1e2a38)}.tk-mo textarea{width:100%;box-sizing:border-box}.tk-mob{display:flex;gap:6px}.tk-mob .tk-ok{background:#c2552e;color:#fff;border-color:#c2552e}.tk-mob .tk-ok:disabled{opacity:.5}
 .rp-avs{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}.rp-avs:empty{display:none}
 .rp-av2{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:var(--font);border:1.5px solid #f3c9bb;background:#fdf1ea;border-radius:16px;padding:12px 14px;cursor:pointer;color:#1a1a1a}
 .rp-av2i{flex:none;width:26px;height:26px;border-radius:50%;background:#c2552e;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
@@ -10437,6 +10438,17 @@ async function renderSeguimiento(wrap){
    const fin=t=>{tk.style.opacity='.45';d.innerHTML=`<span>✓ ${t}</span>`;setTimeout(()=>{datos.pendientes=datos.pendientes.filter(y=>y.id!==x.id);pinta();},900);};
    d.querySelectorAll('button').forEach(bt=>bt.onclick=async e=>{e.stopPropagation();const a=bt.dataset.a;
     if(a==='wa'){const tw=tk.querySelector('.sg-wa');if(tw)tw.click();return;}
+    // Cerrar: primero el motivo (queda en su historial de llamadas)
+    if(a==='cerrar'){const M=['No contesta (llamadas ni WhatsApp)','Ya está bien','No quiere seguir','Se ha ido a otro centro','Está de viaje / fuera','Otro motivo'];let mot='';
+     d.innerHTML=`<div class="tk-mo"><b>¿Por qué la cierras?</b><div class="tk-mos">${M.map(t=>`<button type="button" data-m="${escH(t)}">${escH(t)}</button>`).join('')}</div><textarea class="seg-n tk-mot" rows="2" placeholder="Algo más (opcional)"></textarea><div class="tk-mob"><button type="button" class="tk-ok" disabled>Cerrar</button><button type="button" class="tk-no">Cancelar</button></div></div>`;
+     d.querySelectorAll('[data-m]').forEach(m=>m.onclick=ev=>{ev.stopPropagation();mot=m.dataset.m;d.querySelectorAll('[data-m]').forEach(z=>z.classList.toggle('on',z===m));d.querySelector('.tk-ok').disabled=false;if(mot==='Otro motivo')d.querySelector('.tk-mot').focus();});
+     d.querySelector('.tk-mot').onclick=ev=>ev.stopPropagation();
+     d.querySelector('.tk-no').onclick=ev=>{ev.stopPropagation();pinta();};
+     d.querySelector('.tk-ok').onclick=async ev=>{ev.stopPropagation();const extra=d.querySelector('.tk-mot').value.trim();if(mot==='Otro motivo'&&!extra){toast('Escribe el motivo',false);return;}
+      const nota=[mot==='Otro motivo'?'':'Cerrada: '+mot,extra].filter(Boolean).join(' · ')||'Cerrada';const ok=d.querySelector('.tk-ok');ok.disabled=true;ok.textContent='Guardando…';
+      const r=await agPost('seg-resultado',{id:x.id,pacienteId:x.pacienteId,resultado:'No volver a llamar',nota,quien:miNombreCorto()}).catch(()=>null);
+      if(!r||!r.ok){ok.disabled=false;ok.textContent='Cerrar';toast('No se ha podido guardar',false);return;}fin('Cerrada · '+(mot==='Otro motivo'?extra:mot));};
+     return;}
     d.querySelectorAll('button').forEach(z=>z.disabled=true);let r;
     try{if(a==='cerrar')r=await agPost('seg-resultado',{id:x.id,pacienteId:x.pacienteId,resultado:'No volver a llamar',nota:'Cerrada al revisar las llamadas antiguas',quien:miNombreCorto()});
      else if(a==='mes')r=await agPost('seg-editar',{id:x.id,fecha:segIso(30)});
@@ -11938,6 +11950,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-01',t:'Pendientes: al tocar «Cerrar» te pregunta el motivo (no contesta, ya está bien, no quiere seguir, otro centro…) y lo deja apuntado en su historial de llamadas.'},
  {f:'2026-11-01',dir:1,t:'Página de reservas: en cada pregunta frecuente, «✎ Cambiar el texto» para poner tu propia pregunta y respuesta.'},
  {f:'2026-11-01',dir:1,t:'Ajustes › «Página de reservas»: cambia el título, los sellos de confianza, si se pide email, si el motivo es obligatorio y qué preguntas frecuentes salen (y añade las tuyas, como «¿Hay parking?»).'},
  {f:'2026-11-01',dir:1,t:'Ajustes › «Reservas desde tu web»: enlace fijo y corto (…/reserva) y el shortcode [pide_cita] para WordPress, listo para copiar.'},
