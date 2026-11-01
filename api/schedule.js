@@ -1975,6 +1975,19 @@ async function pagoPaciente(F) {
 }
 // Pagos pendientes que han pasado de las 24 h: se cancela la cita, el hueco vuelve a quedar libre y se avisa a dirección
 let _pagoCad = 0;
+// Una sola vez (1-nov-2026): Nora pide volver a la lista las 4 cerradas sin motivo esta mañana, para cerrarlas ella con su motivo
+async function reabrir1101() {
+  if (await ajuste('fix-reabrir-1101', null)) return;
+  const L = ((await at(`tbla5rZTwMkMpAiaI?filterByFormula=${encodeURIComponent(`{NOTAS}='Cerrada: No contesta (llamadas ni WhatsApp)'`)}&pageSize=100`)).records || [])
+    .filter(r => { const f = (r.fields || {}).FECHA; return f && f >= '2026-11-01T00:00' && f < '2026-11-01T09:50'; });
+  await guardarAjuste('fix-reabrir-1101', { t: new Date().toISOString(), n: L.length });
+  const SEG = 'tblu9YxiktpAh5w87', hechos = [];
+  for (const r of L) { const F = r.fields || {}, sid = F['SEG ID'], pid = (F.PACIENTE || [])[0];
+    if (/^rec[A-Za-z0-9]{14}$/.test(sid || '')) await at(`${SEG}/${sid}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHO: false } }) });
+    await at(`tbla5rZTwMkMpAiaI/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { NOTAS: 'Cerrada por error y vuelta a la lista' } }) });
+    if (pid) await ponerEtapa(pid, 'SEGUIMIENTO').catch(() => null); hechos.push(sid || r.id); }
+  console.log('reabrir-1101', JSON.stringify(hechos));
+}
 // Una sola vez (1-nov-2026): las llamadas cerradas hoy con «Cerrar» sin motivo eran porque no contestaban
 async function motivoCierres1101() {
   if (await ajuste('fix-cierres-1101b', null)) return;
@@ -2678,7 +2691,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ ok: true });
   }
   if (action === 'pagos-tick') { // lo llaman el panel (cada 5 min) y la app del paciente al abrirse: cancela las citas de quien no pagó a tiempo
-    res.setHeader('Cache-Control', 'no-store'); const [n] = await Promise.all([caducarPagos().catch(() => 0), procesarWeb().catch(() => null), motivoCierres1101().catch(e => console.log('cierres', e.message))]); return res.status(200).json({ ok: true, n });
+    res.setHeader('Cache-Control', 'no-store'); const [n] = await Promise.all([caducarPagos().catch(() => 0), procesarWeb().catch(() => null), motivoCierres1101().catch(e => console.log('cierres', e.message)), reabrir1101().catch(e => console.log('reabrir', e.message))]); return res.status(200).json({ ok: true, n });
   }
   if (action === 'demo-datos') { // Clínica Demo: borrar / sembrar datos inventados (solo con CLINICA=demo y la clave)
     const K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
