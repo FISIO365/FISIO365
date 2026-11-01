@@ -2311,7 +2311,7 @@ function paginaConfirmar(D, C) {
       <p class="pista fi" style="animation-delay:2s">Un toque y lo tenemos</p>
       <script>(function(){var f=document.getElementById('fcf'),ya=false;f.onsubmit=function(ev){if(ya)return;ev.preventDefault();ya=true;var b=document.getElementById('go');b.disabled=true;b.textContent='¡Gracias!';
        var m=document.getElementById('boca');m.style.strokeDasharray='none';m.setAttribute('d','M26 45 Q40 62 54 45');var o=document.getElementById('ojos');o.style.animation='none';
-       o.innerHTML='<path d="M25 35 Q30 29 35 35"/><path d="M45 35 Q50 29 55 35"/>';setTimeout(function(){f.submit();},700);};if(/[?&]a=1/.test(location.search))setTimeout(function(){f.onsubmit({preventDefault:function(){}});},900);})();</script>`; })()
+       o.innerHTML='<path d="M25 35 Q30 29 35 35"/><path d="M45 35 Q50 29 55 35"/>';setTimeout(function(){f.submit();},700);};})();</script>`; })()
     : D.confirmada && !D.inactiva ? (() => { const r = Math.max(1, D.racha || 1), nd = Math.min(7, Math.max(r, 5)), lleno = Math.min(r, nd);
       const dc = (() => { const d = new Date(D.fecha + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()}`; })();
       return `<div class="okv"><svg class="sm" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="c1" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="e1" d="M25 35 Q30 29 35 35"/><path class="e1" d="M45 35 Q50 29 55 35"/><path class="s1" d="M26 45 Q40 62 54 45"/></svg>
@@ -2866,7 +2866,9 @@ module.exports = async function handler(req, res) {
     const D = { id, av2: String(req.query.r || '') === '2', pila: pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '', fecha, hora, fisio: fisio ? fisio.charAt(0).toUpperCase() + fisio.slice(1).toLowerCase() : '' };
     if (!/PENDIENTE/.test(est) || fecha < hoyC) return res.status(200).send(paginaConfirmar({ ...D, inactiva: true }, C));
     let conf0 = (F['CONFIR'] || []).some(x => /CONFIRMADA/i.test(x.name || x));
-    if (req.method === 'POST' && !conf0) {
+    // Desde el email o la página de reserva (?a=1): se confirma ya al abrirlo (no los robots que revisan enlaces)
+    const auto = req.method === 'GET' && String(req.query.a || '') === '1' && !/bot|crawler|spider|preview|facebookexternalhit|whatsapp|slack|telegram|google-safety|safelinks|microsoft|outlook|barracuda|proofpoint|mimecast|scanner|curl|python|headless/i.test(String(req.headers['user-agent'] || ''));
+    if ((req.method === 'POST' || auto) && !conf0) {
       const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { CONFIR: ['CONFIRMADA'] } }) });
       if (u.error) return res.status(500).send(paginaConfirmar({ ...D, error: 'No se ha podido confirmar. Inténtalo de nuevo en un momento.' }, C));
       conf0 = true;
@@ -2885,7 +2887,7 @@ module.exports = async function handler(req, res) {
       }
     }
     const extra = conf0 ? { cal: { ics: `https://app.fisioterapia365.com/c/${id}-${firmaCita(id)}.ics`, google: calendarioCita(D, C).google } } : {};
-    return res.status(200).send(paginaConfirmar({ ...D, ...extra, confirmada: conf0, recien: req.method === 'POST', consent: pide.has(pid) ? CONSENT_URL : '', app }, C));
+    return res.status(200).send(paginaConfirmar({ ...D, ...extra, confirmada: conf0, recien: req.method === 'POST' || auto, consent: pide.has(pid) ? CONSENT_URL : '', app }, C));
   }
   // Enlace personal de la app (página y vista previa)
   if (action === 'app-pagina' || action === 'app-og') {
