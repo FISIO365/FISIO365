@@ -1976,6 +1976,19 @@ async function pagoPaciente(F) {
 // Pagos pendientes que han pasado de las 24 h: se cancela la cita, el hueco vuelve a quedar libre y se avisa a dirección
 let _pagoCad = 0;
 // Una sola vez (1-nov-2026): Nora pide volver a la lista las 4 cerradas sin motivo esta mañana, para cerrarlas ella con su motivo
+// Las cerradas hoy con la versión vieja del panel (sin motivo): vuelven a la lista (Vicente Palacios…)
+async function reabrir1101b() {
+  if (await ajuste('fix-reabrir-1101b', null)) return;
+  const L = ((await at(`tbla5rZTwMkMpAiaI?filterByFormula=${encodeURIComponent(`{NOTAS}='Cerrada al revisar las llamadas antiguas'`)}&pageSize=100`)).records || [])
+    .filter(r => { const f = (r.fields || {}).FECHA; return f && f >= '2026-11-01T09:50' && f < '2026-11-02'; });
+  await guardarAjuste('fix-reabrir-1101b', { t: new Date().toISOString(), n: L.length });
+  const out = [];
+  for (const r of L) { const F = r.fields || {}, sid = F['SEG ID'], pid = (F.PACIENTE || [])[0];
+    if (/^rec[A-Za-z0-9]{14}$/.test(sid || '')) await at(`tblu9YxiktpAh5w87/${sid}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHO: false } }) });
+    await at(`tbla5rZTwMkMpAiaI/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { NOTAS: 'Cerrada por error y vuelta a la lista' } }) });
+    if (pid) { const pa = await at(`${PACIENTES}/${pid}`).catch(() => ({})); out.push(String((pa.fields || {})['FULL NAME'] || pid)); } }
+  console.log('reabrir-1101b', JSON.stringify(out));
+}
 async function reabrir1101() {
   if (await ajuste('fix-reabrir-1101', null)) return;
   const L = ((await at(`tbla5rZTwMkMpAiaI?filterByFormula=${encodeURIComponent(`{NOTAS}='Cerrada: No contesta (llamadas ni WhatsApp)'`)}&pageSize=100`)).records || [])
@@ -2690,8 +2703,9 @@ module.exports = async function handler(req, res) {
     await Promise.all([revisarPorReagendar(true).catch(() => 0), salirDeEspera(pid, fecha, hora).catch(() => 0), salirDeSeguimiento(pid, '', fecha, hora, 'Reservó desde la app').catch(() => null)]);
     return res.status(200).json({ ok: true });
   }
+  if (action === 'ver') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ v: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 12) }); } // versión publicada: el panel se actualiza solo al volver
   if (action === 'pagos-tick') { // lo llaman el panel (cada 5 min) y la app del paciente al abrirse: cancela las citas de quien no pagó a tiempo
-    res.setHeader('Cache-Control', 'no-store'); const [n] = await Promise.all([caducarPagos().catch(() => 0), procesarWeb().catch(() => null), motivoCierres1101().catch(e => console.log('cierres', e.message)), reabrir1101().catch(e => console.log('reabrir', e.message))]); return res.status(200).json({ ok: true, n });
+    res.setHeader('Cache-Control', 'no-store'); const [n] = await Promise.all([caducarPagos().catch(() => 0), procesarWeb().catch(() => null), motivoCierres1101().catch(e => console.log('cierres', e.message)), reabrir1101().catch(e => console.log('reabrir', e.message)), reabrir1101b().catch(e => console.log('reabrir2', e.message))]); return res.status(200).json({ ok: true, n });
   }
   if (action === 'demo-datos') { // Clínica Demo: borrar / sembrar datos inventados (solo con CLINICA=demo y la clave)
     const K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
