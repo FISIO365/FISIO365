@@ -1538,7 +1538,7 @@ label{display:block;font-size:12.5px;font-weight:500;color:#7d6a60;margin:12px 0
 .fch{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}.fch button{border:1.5px solid #efe6de;background:#fff;border-radius:99px;padding:7px 14px;font:500 13px Poppins,sans-serif;color:#5c4f47;cursor:pointer}.fch button.on{background:#2b2420;border-color:#2b2420;color:#fff}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}
 .emb,.emb body{background:transparent}.emb body{padding:0;min-height:0;display:block}.emb .c{box-shadow:none;margin:0 auto;padding:6px 4px 14px;max-width:880px;background:transparent}
-.emb .cab .fc{display:none}.emb .cab h1{font-size:24px;margin:0 0 2px}
+.emb .c{padding-top:22px}.emb .cab .fc{width:52px;height:52px}.emb .cab h1{font-size:24px;margin:6px 0 2px}
 @media(min-width:540px){.emb .c{padding-top:40px}.emb .cab .fc{display:block;width:64px;height:64px;margin-bottom:6px}.emb .cab h1{font-size:32px;margin:8px 0 6px}.emb .cab .sub{font-size:16px}.emb .tr{margin:16px 0 26px}.emb .tr span{font-size:12.5px;padding:6px 12px}}
 @media(min-width:540px){.emb .cd{height:52px;font-size:17px;border-radius:14px}.emb .cg .ws{font-size:13px}.emb .cm b{font-size:18px}.emb .hrt b{font-size:19px}.emb .hrt span{font-size:13px}.emb .fr{font-size:12.5px}.emb .hs .h{font-size:18px;padding:15px 0}.emb .pri b{font-size:18px}.emb .pri small{font-size:11.5px}.emb .pri .go{font-size:15px;padding:11px 16px}.emb .faq h3{font-size:18px}.emb .faq summary{font-size:15.5px;padding:14px 16px}.emb .fpb{font-size:14px}.emb .ley{font-size:13px}.emb .dud b{font-size:17px}.emb .dud p{font-size:14.5px}}
 .cal.ani .cd.si{opacity:0;animation:pop .4s cubic-bezier(.2,.9,.3,1.3) forwards}
@@ -1627,7 +1627,7 @@ function pinta(){var z=document.getElementById('z');if(!z)return;var H=vis();
  var ni=0;for(var d=1;d<=nd;d++){var f=MES+'-'+(d<10?'0':'')+d,si=!!dias[f];html+='<button type="button" class="cd'+(si?' si':'')+(f===SEL?' on':'')+(f===HOY?' hoy':'')+'"'+(si?' data-f="'+f+'"'+(ANI?' style="animation-delay:'+(1.1+(ni++)*.035).toFixed(2)+'s"':''):' disabled')+'>'+d+'</button>';}
  html+='</div></div>';
  var L=dias[SEL],dd=new Date(SEL+'T12:00:00'),G=[['Mañana',L.filter(function(h){return h.hora<'14:00';})],['Tarde',L.filter(function(h){return h.hora>='14:00';})]];
- html+='<div class="hrs"><button type="button" class="vcal"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>Cambiar de día</button><div class="hrt"><b>'+capf(DS[dd.getDay()])+' '+dd.getDate()+' de '+MS[dd.getMonth()]+'</b><span>'+(L.length===1?'Queda 1 hora':L.length+' horas libres')+'</span></div>';
+ html+='<div class="hrs"><button type="button" class="vcal"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>Volver al calendario</button><div class="hrt"><b>'+capf(DS[dd.getDay()])+' '+dd.getDate()+' de '+MS[dd.getMonth()]+'</b><span>'+(L.length===1?'Queda 1 hora':L.length+' horas libres')+'</span></div>';
  G.forEach(function(g){if(!g[1].length)return;html+='<p class="fr">'+g[0]+'</p><div class="hs">'+g[1].map(function(h,j){return '<button type="button" class="h'+(h.sb?' sb':'')+'" style="animation-delay:'+(j*.03)+'s" data-id="'+h.id+'">'+h.hora+(h.sb?'*':'')+'</button>';}).join('')+'</div>';});
  html+='</div>'+(L.some(function(h){return h.sb;})?'<p class="ley">* Hora sin bomba diamagnética</p>':'');
  z.innerHTML=html+fpick();ata(z);ANI=false;}
