@@ -18,3 +18,8 @@ No hace falta para arreglos internos que nadie nota.
 - Aviso al móvil a las 8:30 (todos los fisios, también los de dirección; administración no): `api/cron.js?serie=1` (cron de lunes a viernes 7:30 UTC) con los títulos de `api/_serie.json`.
 - Si se añaden, quitan o reordenan módulos: actualizar `SERIE.cursos` (número de módulos), `MODS_EQUIPO_TIT`/`MODS_CLIENTE_TIT` y `api/_serie.json`. Un módulo nuevo va al final de la serie para no mover los días ya anunciados.
 - Capturas de la app del paciente para School: `public/img/school/` (datos de prueba). Si cambia una pantalla de la app del paciente, se rehace la captura.
+
+## Idiomas de la app del paciente
+- La app del paciente (`public/index.html` y sus .js) se escribe en castellano y `public/i18n.js` la traduce en pantalla a catalán e inglés.
+- Cada texto nuevo que vea el paciente se añade al diccionario `D` de `public/i18n.js` con su traducción `[catalán, inglés]` (`{}` = trozo que cambia: nombre, número…). Si no está, sale en castellano.
+- Lo que escribe la gente (chat, notas, ejercicios del fisio) no se traduce.
