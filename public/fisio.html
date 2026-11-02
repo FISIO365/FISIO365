@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="FISIO365 Panel">
 <meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{--cream:#f5f2ee;--black:#000;--white:#fff;--lila:#d9774f;--lila-light:#f7e6dd;--muted:#888;--border:rgba(0,0,0,0.1);--font:'Poppins',sans-serif;--r:14px;--r-sm:8px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -442,11 +442,13 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .pb-sec{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#7d6a60;margin:6px 2px 2px}
 .pb-vac{font-size:13.5px;color:#7d6a60;text-align:center;padding:14px 6px;line-height:1.5}
 .pb-prox summary{cursor:pointer;font-size:13.5px;font-weight:600;color:#1e2a38;list-style:none;display:flex;justify-content:space-between;align-items:center}.pb-prox summary::-webkit-details-marker{display:none}.pb-prox summary em{font-style:normal;color:#7d6a60;font-weight:500}.pb-prox[open] summary{margin-bottom:6px}
-.rp-c.pb-hoja{position:relative;padding:0 0 22px;overflow:hidden;background:#fffdfa;--pb-l:#e3eaf2}
-.rp-c.pb-hoja::before{content:'';position:absolute;top:0;bottom:0;left:56px;width:1.5px;background:#f0c2b2;pointer-events:none;z-index:1}
+.rp-c.pb-hoja{position:relative;padding:0 0 22px;overflow:hidden;background:#fffcf6;--pb-l:#e6edf5}
+.rp-c.pb-hoja::after{content:'';position:absolute;left:18px;top:30px;bottom:30px;width:12px;background:radial-gradient(circle at 6px 6px,#ece6df 4.6px,rgba(26,26,26,.13) 5.2px,transparent 5.9px) 0 0/12px 92px repeat-y;pointer-events:none;z-index:1}
+.rp-c.pb-hoja::before{content:'';position:absolute;top:0;bottom:0;left:56px;width:4px;border-left:1px solid #f2c4b4;border-right:1px solid #f2c4b4;box-sizing:border-box;pointer-events:none;z-index:1}
 .rp-c.pb-hoja>*{position:relative}
-.pb-fe{min-height:52px;box-sizing:border-box;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 18px 7px 72px;border-bottom:1px solid var(--pb-l);font-size:13.5px;font-weight:500;color:#c2552e;letter-spacing:.01em}
-.pb-hoja .pb-it{border-top:none;border-bottom:1px solid var(--pb-l);min-height:48px;box-sizing:border-box;padding:9px 12px 9px 16px;gap:30px}
+.pb-fe{min-height:52px;box-sizing:border-box;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 20px 3px 72px;border-bottom:1px solid var(--pb-l);font-family:'Caveat',cursive;font-size:25px;font-weight:600;line-height:1;color:#c2552e}
+.pb-hoja .pb-it{border-top:none;border-bottom:1px solid var(--pb-l);min-height:48px;box-sizing:border-box;padding:9px 12px 9px 72px;gap:12px}
+.pb-hoja .pb-sec{font-family:'Caveat',cursive;font-size:20px;font-weight:600;letter-spacing:0;text-transform:none;color:#16803c;padding-bottom:4px!important}
 .pb-hoja .pb-sec{min-height:48px;box-sizing:border-box;display:flex;align-items:flex-end;margin:0;padding:0 12px 7px 72px;border-bottom:1px solid var(--pb-l)}
 .pb-hoja .pb-vac{min-height:48px;box-sizing:border-box;text-align:left;padding:14px 12px 7px 72px;border-bottom:1px solid var(--pb-l)}
 .pb-lin{height:48px;border-bottom:1px solid var(--pb-l)}
@@ -12167,7 +12169,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
- {f:'2026-11-02',t:'Mi día › Plan: las tareas del día salen como una hoja de cuaderno, con la fecha arriba.'},
+ {f:'2026-11-02',t:'Mi día › Plan: las tareas del día salen como una hoja de cuaderno, con la fecha escrita arriba.'},
  {f:'2026-11-02',aviso:1,t:'Por reagendar: nueva opción «Avisará · tiene pack» para quien tiene la sesión pagada y nos dirá cuándo puede venir. Explicas por qué; si en 7 días no ha dicho nada, pasa sola a Por llamar. Al cambiar día u hora ya no pide nada.'},
  {f:'2026-11-02',t:'«No hace falta» ya no vale solo: hay que elegir por qué (ya tiene otra cita, alta, no llegó a venir o dejó el tratamiento) y explicarlo. También al marcar «No asistió».'},
  {f:'2026-11-02',dir:1,t:'Más › Últimos cambios: lo que se ha tocado en las últimas 48 horas (citas o todo), con «Deshacer» para volver atrás un cambio hecho por error.',ver:{sec:'camb',pasos:[{el:'.cb-l',txt:'Aquí, con Deshacer en cada cambio.'}]}},
