@@ -5267,7 +5267,14 @@ module.exports = async function handler(req, res) {
           Object.entries(dias).forEach(([f, v]) => { g[f.slice(0, 7)] = (g[f.slice(0, 7)] || 0) + v; });
           holdedMeses = Object.entries(g).map(([m, v]) => ({ m, v: Math.round(v * 100) / 100 })); } catch (e) {}
         ms = ms.filter(x => x.m < HOLDED_DESDE.slice(0, 7)).concat(holdedMeses).sort((a, b) => a.m.localeCompare(b.m));
-        return res.status(200).json({ ok: true, fuente, meses: ms, semanas: rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s) });
+        // Semanas (de lunes a domingo): las enteras desde que hay Holded salen solas de los tickets; las de antes, de la tabla que se llevaba a mano
+        let sems = rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s);
+        if (HOLDED_KEY) try { const dias = await ingresosHoldedDias(HOLDED_DESDE, hoyF), W = {};
+          const lunes = f => { const d = new Date(f + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); };
+          const primera = (() => { const l = lunes(HOLDED_DESDE); return l < HOLDED_DESDE ? (d => { d.setUTCDate(d.getUTCDate() + 7); return d.toISOString().slice(0, 10); })(new Date(l + 'T12:00:00Z')) : l; })();
+          Object.entries(dias).forEach(([f, v]) => { const l = lunes(f); if (l >= primera) W[l] = Math.round(((W[l] || 0) + v) * 100) / 100; });
+          sems = sems.filter(x => x.s < primera).concat(Object.entries(W).map(([s, v]) => ({ s, v }))).sort((a, b) => a.s.localeCompare(b.s)); } catch (e) {}
+        return res.status(200).json({ ok: true, fuente, meses: ms, semanas: sems });
       }
       // Cómo nos han conocido: respuestas del formulario de primera visita (CONSENTIMIENTOS) en el periodo
       if (action === 'seg-conocido') {
