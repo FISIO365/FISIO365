@@ -10,7 +10,9 @@ const OUT = process.argv[2] || 'backup';
 const ADJ = process.argv.includes('--adjuntos');
 const BASES = {
   appsrGnHpFt8sVD5A: 'FISIO365',
-  appR5HDJuhjQG504R: 'ESTADISTICAS'
+  appR5HDJuhjQG504R: 'ESTADISTICAS',
+  appzqTWVPiajdRANu: 'AGENDA_JUNIO_2025',
+  app6GoQDYSVtgSHGF: 'UNTITLED_BASE'
 };
 // Por si el token no puede leer el esquema: las tablas que usa la app
 const TABLAS_APP = 'tbl0OR8AfBuvWyhTo tbl2mLUrnaKCFTs6g tbl2qRD3WsvQVPrwX tbl5ksXlpfsSTZk5i tbl6tWCWWzZfODDns tbl8uv04zFAk5L5bA tblAvnUMOvVo4OBne tblBBSyxl2IZMyU7I tblE7NWfZmxcou5mV tblF4as0orW1b6KIw tblIXYE5ToRNY7MN4 tblIsWo3g6x1QzJyl tblJw7suXLERn8AFQ tblLIcIro0ko9VG6G tblMxPEXHLmnaBnYb tblO5y1Ikg3LIalic tblPXzcT8105MfqvB tblSJPZroRyyWphVp tblTPlcuiSjQngkaD tbla5rZTwMkMpAiaI tblbOukia79RVtTVt tbldBVgClS4HY2mOJ tbldOsLe8iw78Wun7 tblgexkXJ4S36faPa tblgsMcknBLDyfWHu tblkezm4bTQ4jJf1X tbll3K0ar1cZOcVjZ tblmJMoILPnxXzD8w tbloqn3ts872ueJSE tblr27u3cvtzfyqI6 tblrLdMdmTXvM84Kt tbltoikmBZwHYQcpD tblu9YxiktpAh5w87 tblvdXDRDmLrThdWZ tblvgE0a4gsrj4Vhp tblwvWQxXNJPdR0Iv tblxJmnb7LHML2ZZh tblxPpPSvj15NWqNT'.split(' ');
@@ -41,7 +43,7 @@ for (const [baseId, baseNom] of Object.entries(BASES)) {
     fs.writeFileSync(path.join(dir, '_esquema.json'), JSON.stringify(m, null, 1));
   } catch (e) {
     console.warn(`[${baseNom}] sin acceso al esquema (${e.message}); uso la lista de la app`);
-    tablas = baseId === 'appsrGnHpFt8sVD5A' ? TABLAS_APP.map(id => ({ id, name: id })) : [{ id: 'tbloIpGtMu3QVOqoU', name: 'INCOME_MONTH' }];
+    tablas = baseId === 'appsrGnHpFt8sVD5A' ? TABLAS_APP.map(id => ({ id, name: id })) : baseId === 'appR5HDJuhjQG504R' ? [{ id: 'tbloIpGtMu3QVOqoU', name: 'INCOME_MONTH' }] : [];
   }
   resumen.bases[baseNom] = {};
   for (const t of tablas) {
