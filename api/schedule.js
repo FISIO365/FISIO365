@@ -427,21 +427,21 @@ async function consentDe(P, pacId, altaPac) {
   return out;
 }
 // Pacientes con marcapasos, embarazo o cáncer (para marcarlos en rojo en la agenda). Se guarda 20 min.
-let _alertas = { t: 0, m: null, p: null };
+let _alertas = { t: 0, m: null, p: null }, _saludTodo = {}; // _saludTodo: todo lo de salud que marcó en el consentimiento (no solo lo grave)
 async function alertasSalud() {
   if (_alertas.m && Date.now() - _alertas.t < 20 * 60e3) return _alertas.m;
   if (_alertas.p) return _alertas.p;
   _alertas.p = (async () => {
     const todos = async (t, q2) => { let recs = [], off = ''; do { const d = await at(`${t}?${q2}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error || d.errors) throw new Error((d.error && d.error.message) || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
-    const lista = await consTodos(), m = {}, porPac = {};
+    const lista = await consTodos(), m = {}, porPac = {}, sal = {};
     lista.forEach(c => c.pac.forEach(id => { (porPac[id] = porPac[id] || []).push(c); }));
-    Object.entries(porPac).forEach(([id, cs]) => { const r = resumenPaciente(cs); if (r && r.rojo.length) m[id] = r.rojo; });
+    Object.entries(porPac).forEach(([id, cs]) => { const r = resumenPaciente(cs); if (r && r.rojo.length) m[id] = r.rojo; if (r && r.salud.length) sal[id] = r.salud.map(x => x.t); });
     const cs = lista.filter(c => !c.pac.length && c.rojo.length);
     const conds = []; cs.forEach(c => { if (c.email) conds.push(`LOWER(TRIM({EMAIL}))='${cEsc(c.email)}'`); if (c.dni.length >= 6) conds.push(`SUBSTITUTE(LOWER(TRIM({DNI})),' ','')='${cEsc(c.dni)}'`); c.tels.forEach(t => conds.push(`RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${t}'`, `RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${t}'`)); });
     const pacs = []; for (let i = 0; i < conds.length; i += 40) pacs.push(...await todos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + conds.slice(i, i + 40).join(',') + ')')}&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP`));
     pacs.forEach(p => { if (porPac[p.id]) return; const F = p.fields, e = cTxt(F['EMAIL']), d = cTxt(F['DNI']).replace(/\s/g, ''), ts = [cDig(F['TELF']), cDig(F['WHATSAPP'])].filter(t => t.length === 9);
-      cs.forEach(c => { if ((e && c.email === e) || (d.length >= 6 && c.dni === d) || c.tels.some(t => ts.includes(t))) m[p.id] = [...new Set([...(m[p.id] || []), ...c.rojo])]; }); });
-    _alertas = { t: Date.now(), m, p: null }; return m;
+      cs.forEach(c => { if ((e && c.email === e) || (d.length >= 6 && c.dni === d) || c.tels.some(t => ts.includes(t))) { m[p.id] = [...new Set([...(m[p.id] || []), ...c.rojo])]; sal[p.id] = [...new Set([...(sal[p.id] || []), ...(c.salud || []).map(x => x.t)])]; } }); });
+    _saludTodo = sal; _alertas = { t: Date.now(), m, p: null }; return m;
   })().catch(e => { _alertas.p = null; return _alertas.m || {}; });
   return _alertas.p;
 }
@@ -4971,7 +4971,7 @@ module.exports = async function handler(req, res) {
           const ausDia = okF(q.fecha) ? await ausenciasEn(q.fecha, q.fecha).catch(() => []) : [];
           const debenPagar = {}; if (pids.length) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('{PAGO ADELANTADO}')}&fields[]=${encodeURIComponent('PAGO ADELANTADO MOTIVO')}`).catch(() => [])).forEach(p => { if (pids.includes(p.id)) debenPagar[p.id] = p.fields['PAGO ADELANTADO MOTIVO'] || 'Paga por adelantado'; });
 
-          return res.status(200).json({ ok: true, hoy: hoyF, limitado, debenPagar, ausencias: ausDia, alertas: alertasDia, sinConsent, conConsent: consL ? pids.filter(id => conCons.has(id)) : [], espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, pago: nmA(F['PAGO ESTADO']) ? { estado: nmA(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
+          return res.status(200).json({ ok: true, hoy: hoyF, limitado, debenPagar, ausencias: ausDia, alertas: alertasDia, salud: Object.fromEntries(pids.filter(id => _saludTodo[id]).map(id => [id, _saludTodo[id]])), sinConsent, conConsent: consL ? pids.filter(id => conCons.has(id)) : [], espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, pago: nmA(F['PAGO ESTADO']) ? { estado: nmA(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'seg-agenda-res-enlace') { // historia clínica: «está mejor» → enlace a la reseña (con preview) y se apunta como pedida
