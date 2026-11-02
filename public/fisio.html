@@ -1365,6 +1365,12 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .ag-ausb{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.ag-aus{background:#fff4e8;border:1px solid #f6d3b3;color:#8a4a1f;border-radius:999px;padding:5px 12px;font-size:12.5px}.ag-aus b{font-weight:600}
 .ag-sinf{background:#fff6e8;border-radius:14px;padding:10px 12px;margin-bottom:10px}.ag-sinf>b{display:block;font-size:13.5px;color:#b45309}.ag-sinf>small{display:block;font-size:12px;color:#7d6a60;margin-bottom:8px}
 
+.ag-onl{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;margin:0 0 10px;padding:10px 14px;border:1px solid rgba(26,26,26,.07);border-radius:14px;background:#fff;font-family:var(--font);font-size:13px;color:#7d6a60;cursor:pointer;text-align:left}.ag-onl[hidden]{display:none}
+.ag-onl svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ag-onl span{flex:1;min-width:0}.ag-onl em{font-style:normal;font-weight:600;color:#c2552e}
+.ag-onl.nuevo{background:#c2552e;border-color:#c2552e;color:#fff}.ag-onl.nuevo em{color:#fff}.ag-onl.nuevo b{font-weight:700}
+.onl-l{display:flex;flex-direction:column;max-height:65vh;overflow-y:auto;margin-top:6px}.onl-it{display:flex;align-items:center;gap:10px;width:100%;border:none;border-top:1px solid #f1ede9;background:none;padding:12px 2px;font-family:var(--font);text-align:left;cursor:pointer}.onl-it:first-child{border-top:none}
+.onl-n{flex:1;min-width:0}.onl-n b{display:block;font-size:14px;color:#1e2a38}.onl-n small{display:block;font-size:12.5px;color:#7d6a60;margin-top:2px;text-transform:capitalize}.onl-it.anul .onl-n b{color:#a0928a;text-decoration:line-through}
+.onl-d{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}.onl-t{display:flex;gap:4px}.onl-d i{font-style:normal;font-size:11px;font-weight:600;border-radius:99px;padding:2px 8px;background:#f3efea;color:#7d6a60}.onl-d i.nv{background:#c2552e;color:#fff}.onl-d small{font-size:11px;color:#a0928a}
 .ag-top{display:flex;gap:8px;align-items:stretch;margin-bottom:10px}.ag-top .ag-vis{flex:1;margin-bottom:0}.ag-add{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none;font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:99px;padding:0 16px;background:#c2552e;color:#fff;cursor:pointer}.ag-add svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}.ag-alh{margin-top:10px;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px}.ag-alh[hidden]{display:none}.ag-alhh{font-size:13px;color:#7d6a60;margin-bottom:4px}.ag-alhh b{color:#16803c}.ag-alhh b.full{color:#b42318}.ag-alhh+.ag-alr{border-top:none}.ag-alr{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid #f0ebe6}.ag-alr span{min-width:0}.ag-alr b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ag-alr small{font-size:12px;color:#7d6a60}.ag-alb{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;border-radius:99px;padding:6px 12px;border:1.5px solid var(--border);background:#fff;color:#7d6a60;cursor:pointer}.ag-alb.on{border-color:#c2552e;background:#fdeee4;color:#c2552e}.ag-alnt{display:block;margin-top:6px;font-size:11.5px;color:#9a8f87}.ag-otrah{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;color:#7d6a60}.ag-otrah .ag-in{width:96px;text-align:center}.ag-vis{display:flex;background:#f3efea;border-radius:99px;padding:3px;margin-bottom:10px}.ag-vis button{flex:1;font-family:var(--font);font-size:13px;font-weight:600;border:none;background:none;border-radius:99px;padding:8px 0;color:#7d6a60;cursor:pointer}.ag-vis button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .ag-lf{display:none;gap:8px;flex-wrap:wrap;align-items:center}.ag.es-lista .ag-lf{display:flex}.ag.es-lista .ag-bar,.ag.es-lista .ag-hoy{display:none!important}
 .ag-w{min-width:0}.ag-rg{display:flex;align-items:center;gap:6px;font-size:13px;color:#7d6a60}.ag-rg .ag-in{width:auto;padding:7px 9px;font-size:14px}
@@ -6107,13 +6113,29 @@ const agEsSP=c=>/^(suelo pelvico|diastasis)$/.test(agSesN(c.sesion));
 function agSesSel(box,ini){let v=ini||'';const opts=[...new Set([...AG_SESIONES,...(v?[v]:[])])];
  const p=()=>{box.innerHTML=opts.map(o=>{const c=agSesCol(o);return `<button type="button" data-v="${escH(o)}" class="${o===v?'on':''}" style="${c?`--sc:${c}`:''}">${escH(o)}</button>`;}).join('');
   box.querySelectorAll('button').forEach(b=>b.onclick=()=>{v=v===b.dataset.v?'':b.dataset.v;p();});};p();return {get:()=>v};}
-const AG_FIL=[['','Todos los estados'],['sp','Suelo pélvico'],['sinfac','Sin factura'],['pend','Pendientes'],['sinconf','Pendientes sin confirmar'],['hecha','Hechas'],['novino','No vino'],['canc','Canceladas'],['rep','Reprogramadas'],['reag','Por reagendar'],['dud','Dudosas'],['libre','Huecos libres']];
+const AG_FIL=[['','Todos los estados'],['sp','Suelo pélvico'],['sinfac','Sin factura'],['pend','Pendientes'],['sinconf','Pendientes sin confirmar'],['hecha','Hechas'],['novino','No vino'],['canc','Canceladas'],['rep','Reprogramadas'],['reag','Por reagendar'],['dud','Dudosas'],['online','Reservadas por internet'],['libre','Huecos libres']];
 function agRango(per){const h=agHoyIso(),dow=d=>(new Date(d+'T12:00:00').getDay()+6)%7,lun=agMover(h,-dow(h)),m1=h.slice(0,8)+'01';
  const finMes=f=>{const d=new Date(f+'T12:00:00Z');d.setUTCMonth(d.getUTCMonth()+1,0);return d.toISOString().slice(0,10);};const mp=(()=>{const d=new Date(m1+'T12:00:00Z');d.setUTCMonth(d.getUTCMonth()-1);return d.toISOString().slice(0,10);})();
  return {hoy:[h,h],manana:[agMover(h,1),agMover(h,1)],prox7:[h,agMover(h,6)],semana:[lun,agMover(lun,6)],semanaP:[agMover(lun,-7),agMover(lun,-1)],ult7:[agMover(h,-6),h],mes:[m1,finMes(m1)],mesP:[mp,finMes(mp)],ult30:[agMover(h,-29),h],desdehoy:[h,''],todo:['',''] }[per]||[h,h];}
 function agPasaFiltro(c,f){if(!f)return true;const e=c.estado;if(f==='sp')return agEsSP(c);
  if(f==='sinfac'){const pg=((AG.dia&&AG.dia.pago)||{})[c.id];return /REALIZADA/.test(e)&&!!pg&&pg.t==='sin';}
- return f==='pend'?/PENDIENTE/.test(e)&&!!c.pacienteId:f==='sinconf'?/PENDIENTE/.test(e)&&!!c.pacienteId&&!c.confirmada:f==='hecha'?/REALIZADA/.test(e):f==='novino'?/NO ASIST|PERDIDA/.test(e):f==='canc'?/CANCELADA/.test(e):f==='rep'?/REPROGRAMADA/.test(e):f==='reag'?/REAGENDAR/.test(e):f==='dud'?/DUDOSA/.test(e):f==='libre'?agEsLibre(e):true;}
+ return f==='pend'?/PENDIENTE/.test(e)&&!!c.pacienteId:f==='sinconf'?/PENDIENTE/.test(e)&&!!c.pacienteId&&!c.confirmada:f==='hecha'?/REALIZADA/.test(e):f==='novino'?/NO ASIST|PERDIDA/.test(e):f==='canc'?/CANCELADA/.test(e):f==='rep'?/REPROGRAMADA/.test(e):f==='reag'?/REAGENDAR/.test(e):f==='dud'?/DUDOSA/.test(e):f==='online'?agOnlineC(c):f==='libre'?agEsLibre(e):true;}
+// Reservas que entran solas (web o app): franja arriba de la agenda; en coral si hay alguna que aún no has visto
+function agOnline(b,irA){if(!b)return;
+ fetch(`/api/schedule?action=seg-agenda-online&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).then(r=>{if(!b.isConnected||!r||!r.ok)return;const L=r.reservas||[];
+  let visto='';try{visto=localStorage.getItem('f365_onl_visto')||'';}catch(e){}
+  const nuevas=L.filter(x=>x.cuando&&x.cuando>visto);if(!L.length){b.hidden=true;return;}
+  b.hidden=false;b.classList.toggle('nuevo',nuevas.length>0);
+  b.innerHTML=`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><span>${nuevas.length?`<b>${nuevas.length===1?'1 reserva nueva':nuevas.length+' reservas nuevas'}</b> por internet`:'Reservas por internet'}</span><em>Ver</em>`;
+  b.onclick=()=>{try{localStorage.setItem('f365_onl_visto',new Date().toISOString());}catch(e){}b.classList.remove('nuevo');b.querySelector('span').textContent='Reservas por internet';
+   const hace=t=>{if(!t)return '';const m=Math.round((Date.now()-new Date(t))/6e4);return m<60?`hace ${Math.max(1,m)} min`:m<1440?`hace ${Math.round(m/60)} h`:m<2880?'ayer':`hace ${Math.round(m/1440)} días`;};
+   const dia=f=>new Date(f+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'numeric'});
+   const m=hzModal(`<div class="hz-top"><div><small>Últimos 14 días</small><b>Reservas por internet</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+    <div class="onl-l">${L.map(x=>{const nueva=x.cuando&&x.cuando>visto,anul=/CANCELADA|REPROGRAMADA/.test(x.estado);return `<button type="button" class="onl-it${anul?' anul':''}" data-f="${x.fecha}"><span class="onl-n"><b>${escH(capTit(x.paciente||'Paciente'))}</b><small>${escH(dia(x.fecha))} · ${escH(x.hora)}${x.fisio?' · '+escH(agNom(x.fisio)):''}${anul?' · '+(/CANCELADA/.test(x.estado)?'cancelada':'cambiada'):''}</small></span><span class="onl-d"><span class="onl-t">${nueva?'<i class="nv">Nueva</i>':''}<i>${x.origen}</i></span><small>${escH(hace(x.cuando))}</small></span></button>`;}).join('')}</div>`);
+   m.querySelector('.hz-x').onclick=()=>m.remove();
+   m.querySelectorAll('.onl-it').forEach(x=>x.onclick=()=>{m.remove();irA(x.dataset.f);});};
+ }).catch(()=>{});}
+const agOnlineC=c=>!!(c.web||c.app||(c.tipos||[]).some(t=>/RESERVADA POR LA APP/i.test(t)));
 // ── Plantillas de WhatsApp editables (Administración › Mensajes a pacientes) ──
 // Si la clínica no ha escrito la suya, sale el mensaje de siempre (tal cual). Variables entre llaves: {nombre}, {enlace}…
 // Formatos de la tarjeta regalo (los mismos que en /regalo): se elige solo el que toca por fecha
@@ -6672,6 +6694,7 @@ function renderAgenda(wrap){
  AG.per=AG.per||'prox7';AG.fil=AG.fil||'';
  const card=ce('div','ag');
  card.innerHTML=`<div class="ag-top"><div class="ag-vis">${[['dia','Día'],['semana','Semana'],['lista','Lista']].map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div><button type="button" class="ag-add" aria-label="Añadir cita"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Cita</button></div>
+  <button type="button" class="ag-onl" hidden></button>
   <div class="ag-pf ag-busca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in ag-pb" placeholder="Buscar paciente…" autocomplete="off"><div class="ag-pr"></div></div>
   <div class="ag-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Anterior">‹</button>
   <label class="ag-fe"><b class="ag-ft"></b><input type="date" class="ag-fi"></label>
@@ -6682,6 +6705,7 @@ function renderAgenda(wrap){
   <button type="button" class="ag-fac" hidden></button>
   <div class="ag-grid"><div class="fac-vacio">Cargando agenda…</div></div>`;
  wrap.appendChild(card);
+ try{agOnline(card.querySelector('.ag-onl'),f=>{AG.vista='dia';AG.fecha=f;cargar();});}catch(e){}
  const $c=q=>card.querySelector(q),fi=$c('.ag-fi'),fs=$c('.ag-fs'),grid=$c('.ag-grid');try{window.__ponAltos&&window.__ponAltos();agCabFija(grid);}catch(e){}
  const lunes=f=>agMover(f,-((new Date(f+'T12:00:00').getDay()+6)%7));
  card.querySelectorAll('.ag-vis button').forEach(b=>b.onclick=()=>{AG.vista=b.dataset.v;try{localStorage.setItem('f365_ag_vista',AG.vista);}catch(e){}cargar();});
@@ -12018,6 +12042,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-02',aviso:1,t:'Reservas por internet: arriba de la Agenda sale una franja con las citas que entran solas por la web o la app (en naranja si hay alguna nueva). Tocas una y te lleva a su día. También en el filtro de la agenda: «Reservadas por internet».',ver:{sec:'agenda',pasos:[{el:'.ag-onl',txt:'Las reservas que entran solas.'}]}},
  {f:'2026-11-02',aviso:1,t:'Menú nuevo: abajo tienes Agenda, Pacientes, Mi día, Chat y Más. En Mi día está todo lo que te toca hoy (Plan, Pendientes y Check-list). El resto está en Más. Para apuntar a alguien que pregunta y se va sin cita: el + de la Agenda.',ver:{sec:'plan',pasos:[{el:'.dia-tabs',txt:'Mi día: Plan, Pendientes y Check-list.'}]}},
  {f:'2026-11-02',dir:1,t:'Estadísticas por fisio: arriba eliges «Todo el centro» o un fisio y ves sus sesiones, ocupación, pacientes atendidos, conversión y faltas, semana a semana o por meses.',ver:{sec:'stats',pasos:[{el:'.st-fis',txt:'Elige el fisio.'}]}},
  {f:'2026-11-02',aviso:1,t:'Nuevo: Plan de batalla. Apunta tus tareas del día y márcalas al hacerlas; lo que no hagas pasa solo al día siguiente. Dirección también te puede poner tareas. Está en Mi día › Plan.',ver:{sec:'plan',pasos:[{el:'.pb-add',txt:'Escribe la tarea y toca +.'}]}},
@@ -14053,6 +14078,7 @@ function renderFormacion(wrap, ruta){
  {t:'La agenda: dar citas',sub:'Un paciente quiere hora: cómo se la das',
  cards:[
  {ti:'Te piden hora: ＋ Cita',shot:'/img/school/panel-08-anadir.jpg',body:`<b>Cuándo:</b> llama alguien o, al acabar la sesión, el paciente quiere la siguiente.<br><br><b>Qué haces:</b> toca <b>＋ Cita</b>, elige el <b>día</b> y el <b>fisio</b> y toca una hora: verde libre, gris ocupada.<br><br>¿No tiene horas abiertas ese día? Escribe la hora en <b>Otra hora</b> («930» = 09:30).`,ver:{sec:'agenda',pasos:[{el:'.ag-add',txt:'Con ＋ Cita das una cita nueva.'}]}},
+ {ti:'Reservas que entran solas',body:`Cuando un paciente reserva por la <b>web</b> o por la <b>app</b>, además del aviso, sale arriba de la Agenda en <b>Reservas por internet</b> (en naranja si hay alguna nueva).<br><br>Tocas la reserva y te lleva a su día. Para verlas todas en la agenda: filtro <b>Reservadas por internet</b>.`,ver:{sec:'agenda',pasos:[{el:'.ag-onl',txt:'Aquí están las reservas por internet.'}]}},
  {ti:'Elige al paciente',shot:'/img/school/panel-12-dar.jpg',body:`Escribe su nombre o su teléfono y tócalo. Elige el <b>tipo de sesión</b> y <b>Dar cita</b>.<br><br>¿Es nuevo? <b>＋ Nuevo paciente</b>. Si se parece a uno que ya existe, el panel te lo enseña: así no se duplica.`},
  {ti:'Mira lo que te dice del pack',body:`Al elegir al paciente te avisa: <b>«sería la sesión 3 de 5 del pack»</b>, <b>«tiene la sesión pagada»</b> o <b>«no consta ningún pago»</b>.<br><br>¿Trae un bono pagado antes de cobrar por el panel? Toca <b>Tiene pack</b> y di de cuántas y qué sesión es: así sus sesiones cuentan bien.`},
  {ti:'La bomba: máximo 2 a la vez',body:`La bomba solo da para <b>2 pacientes a la misma hora</b>, sumando todos los fisios. Al elegir hora ves «bomba libre», «1 de 2» o «llena».<br><br>¿Llena? Busca otra hora o, si a ese paciente se le puede tratar sin ella, marca <b>Se le puede atender sin bomba</b>.`},

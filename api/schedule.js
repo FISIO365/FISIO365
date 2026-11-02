@@ -583,7 +583,7 @@ async function _procesarWeb() {
       const fecha = String(F.FECHA || '').slice(0, 10), m = String(F.HORA || '').match(/(\d{1,2}):(\d{2})/), hora = m ? m[1].padStart(2, '0') + ':' + m[2] : '';
       const msg = String(F['your-message'] || '').trim();
       const nota = ['Reserva web', msg].filter(Boolean).join(': ');
-      const base = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB' };
+      const base = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', 'RESERVADA EL': new Date().toISOString() };
       let libre = null;
       if (fecha && hora) {
         const dia = await todosW(CIT_T, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}'`)}&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=NOTAS&fields[]=RELACI%C3%93N%20-%20CITA`);
@@ -3071,7 +3071,7 @@ module.exports = async function handler(req, res) {
         pac = c.records[0]; nuevo = true;
       } else { const pf = pac.fields || {}, fx = {}; if (!String(pf['MOTIVO DE VISITA'] || '').trim()) fx['MOTIVO DE VISITA'] = motivo; if (email && !String(pf.EMAIL || '').trim()) fx.EMAIL = email; if (!pinApp) { pinApp = nuevoPin(); fx.PIN = pinApp; } if (Object.keys(fx).length) await at(`${PACIENTES}/${pac.id}`, { method: 'PATCH', body: JSON.stringify({ fields: fx }) }).catch(() => {}); }
       const nota = `Reserva por enlace de huecos${nuevo ? ' (paciente nuevo)' : ''} · Motivo: ${motivo}${P.v ? ` · 🎁 Tarjeta regalo ${String(P.v).slice(0, 20)}` : ''}`;
-      const fR = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', NOTAS: [r.fields.NOTAS, nota].filter(Boolean).join('\n') };
+      const fR = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', 'RESERVADA EL': new Date().toISOString(), NOTAS: [r.fields.NOTAS, nota].filter(Boolean).join('\n') };
       if (P.p > 0) { const lim = Date.now() + 2 * 3600e3; Object.assign(fR, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': P.p, 'PAGO LÍMITE': new Date(lim).toISOString(), 'PAGO REGISTRO': `${pagoAhora()} · Reserva por enlace de huecos con pago por adelantado (${P.p.toFixed(2).replace('.', ',')} €)` }); }
       const u = await at(`tblTPlcuiSjQngkaD/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: fR, typecast: true }) });
       if (u.error) return res.status(200).json({ ok: false, error: 'No se ha podido reservar. Inténtalo de nuevo.' });
@@ -4550,6 +4550,14 @@ module.exports = async function handler(req, res) {
 
         // La opción de comida en Airtable lleva emoji y un carácter invisible: se copia tal cual de una fila que ya la tenga
         const estadoComida = async () => { if (global._estCom) return global._estCom; const d = await at(`${CIT}?filterByFormula=${encodeURIComponent("FIND('COMIDA',{ESTADO}&'')")}&maxRecords=1&fields[]=ESTADO`); const e = d.records && d.records[0] && nmA(d.records[0].fields.ESTADO); return (global._estCom = e || 'COMIDAAA 🥗\u200B'); };
+        if (action === 'seg-agenda-online') { // reservas que han entrado solas (web o app): las de los últimos 14 días, la más nueva primero
+          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({RESERVA}!='',OR(IS_AFTER({RESERVADA EL},DATEADD(TODAY(),-14,'days')),AND({RESERVADA EL}='',NOT(IS_BEFORE({FECHA},DATEADD(TODAY(),-2,'days'))))))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=RESERVA&fields[]=${encodeURIComponent('RESERVADA EL')}`);
+          const pids = [...new Set(rows.map(r => (r.fields['RELACIÓN - CITA'] || [])[0]).filter(Boolean))], nom = {};
+          for (let i = 0; i < pids.length; i += 50) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 50).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=FULL%20NAME`).catch(() => [])).forEach(p => nom[p.id] = p.fields['FULL NAME'] || '');
+          const L = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F.FECHA || '').slice(0, 10), hora: hh(F.HORA), fisio: nmA(F['PREF.']), estado: String(nmA(F.ESTADO)).trim(), pacienteId: pid, paciente: nom[pid] || '', origen: /APP/.test(nmA(F.RESERVA)) ? 'App' : 'Web', cuando: F['RESERVADA EL'] || '' }; })
+            .filter(x => x.pacienteId).sort((a, b) => String(b.cuando || b.fecha).localeCompare(String(a.cuando || a.fecha)));
+          return res.status(200).json({ ok: true, reservas: L.slice(0, 100) });
+        }
         if (action === 'seg-agenda-tipos') { // etiquetas de tipo de cita, las más usadas primero
           const rs = await todosT(TIP, `fields[]=Name&fields[]=CITAS`);
           const tipos = rs.map(r => ({ n: String(r.fields.Name || '').trim(), u: (r.fields.CITAS || []).length })).filter(t => t.n && t.n.length <= 30 && /[A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/.test(t.n) && !/^[.0!]+$/.test(t.n));
