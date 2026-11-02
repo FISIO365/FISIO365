@@ -52,7 +52,11 @@ alter table borrados enable row level security;
 alter table archivos enable row level security;
 alter table contadores enable row level security;
 alter table archivos add column if not exists ruta text;
-alter table registros add column if not exists orden bigint not null default (extract(epoch from clock_timestamp()) * 1000000)::bigint;`;
+alter table registros add column if not exists orden bigint not null default (extract(epoch from clock_timestamp()) * 1000000)::bigint;
+create table if not exists cambios (n bigserial primary key, tabla text not null, id text not null, accion text not null, antes jsonb, despues jsonb, t timestamptz not null default clock_timestamp(), deshecho timestamptz);
+create index if not exists cambios_t on cambios (t);
+alter table cambios enable row level security;`;
+// cambios = historial de escrituras (los últimos 30 días) para poder ver qué se tocó y deshacerlo
 // orden = el orden en que Airtable devuelve los registros sin «sort» (los nuevos, al final, como allí)
 // RLS activado y sin reglas: la API pública de Supabase (clave anon) no puede leer nada; solo el servidor, que entra con DB_URL
 
@@ -315,6 +319,51 @@ async function enlaces(c, tb, id, f, antes, despues, tocadas) {
 }
 async function contador(c, tb, f) { const r = await c.query('insert into contadores (tabla, campo, n) values ($1,$2,1) on conflict (tabla, campo) do update set n = contadores.n + 1 returning n', [tb, f.id]); return +r.rows[0].n; }
 
+// ── Historial de cambios (para «Deshacer») ──
+async function apuntarCambio(c, tb, id, accion, antes, despues) {
+  try {
+    await c.query('insert into cambios (tabla, id, accion, antes, despues) values ($1,$2,$3,$4,$5)', [tb, id, accion, antes == null ? null : JSON.stringify(antes), despues == null ? null : JSON.stringify(despues)]);
+    if (Math.random() < 0.01) await c.query("delete from cambios where t < now() - interval '30 days'");
+  } catch (e) { console.log('cambios', e.message); } // si falla el historial, la escritura sigue
+}
+const jsonDe = v => v == null ? null : typeof v === 'string' ? JSON.parse(v) : v;
+async function cambiosRecientes({ horas = 48, limite = 300 } = {}) {
+  await iniciar();
+  const r = await db().query("select n, tabla, id, accion, antes, despues, t, deshecho from cambios where t > now() - ($1::text || ' hours')::interval order by n desc limit $2", [String(Math.min(+horas || 48, 720)), Math.min(+limite || 300, 1000)]);
+  return r.rows.map(x => ({ n: Number(x.n), tabla: x.tabla, id: x.id, accion: x.accion, antes: jsonDe(x.antes), despues: jsonDe(x.despues), t: new Date(x.t).toISOString(), deshecho: x.deshecho ? new Date(x.deshecho).toISOString() : null }));
+}
+// Registros que cambiaron hace poco (también los de antes de existir el historial)
+async function modificadosRecientes(tb, horas = 6) {
+  await iniciar();
+  const r = await db().query("select id, fields, modificado from registros where tabla = $1 and modificado > now() - ($2::text || ' hours')::interval order by modificado desc limit 100", [tb, String(Math.min(+horas || 6, 72))]);
+  return r.rows.map(x => ({ id: x.id, fields: jsonDe(x.fields), modificado: new Date(x.modificado).toISOString() }));
+}
+// Deshacer un cambio: una edición vuelve a como estaba; algo creado se borra. Lo borrado no se recupera desde aquí.
+async function deshacerCambio(n) {
+  await iniciar();
+  const r = await db().query('select * from cambios where n = $1', [n]); const x = r.rows[0];
+  if (!x) return { ok: false, error: 'No encuentro ese cambio' };
+  if (x.deshecho) return { ok: false, error: 'Ya estaba deshecho' };
+  let res;
+  if (x.accion === 'crear') {
+    res = await borrar(x.tabla, [x.id]);
+  } else if (x.accion === 'editar') {
+    const antes = jsonDe(x.antes) || {}, act = await db().query('select fields from registros where tabla = $1 and id = $2', [x.tabla, x.id]);
+    if (!act.rows[0]) return { ok: false, error: 'Ese registro ya no existe' };
+    const ahora = jsonDe(act.rows[0].fields) || {}, fields = {};
+    const vale = k => { if (k.startsWith('__')) return false; const f = campo(x.tabla, k); return f && !CALC.has(f.type) && f.type !== 'multipleAttachments'; };
+    for (const k of new Set([...Object.keys(antes), ...Object.keys(ahora)])) {
+      if (!vale(k) || JSON.stringify(antes[k]) === JSON.stringify(ahora[k])) continue;
+      fields[k] = antes[k] === undefined ? null : antes[k];
+    }
+    if (!Object.keys(fields).length) { await db().query('update cambios set deshecho = clock_timestamp() where n = $1', [n]); return { ok: true, nada: true }; }
+    res = await escribir(x.tabla, 'PATCH', { fields, typecast: true }, x.id);
+  } else return { ok: false, error: 'Lo borrado no se puede recuperar desde aquí' };
+  const st = res && res.status, j = res && typeof res.json === 'function' ? await res.clone().json().catch(() => ({})) : {};
+  if (st && st >= 300) return { ok: false, error: (j.error && j.error.message) || 'No se ha podido deshacer' };
+  await db().query('update cambios set deshecho = clock_timestamp() where n = $1', [n]);
+  return { ok: true };
+}
 async function escribir(tb, metodo, body, idUrl) {
   const D = db(), typecast = !!body.typecast, unico = !!(body.fields && !body.records);
   const items = unico ? [{ id: idUrl, fields: body.fields }] : (body.records || []);
@@ -354,6 +403,7 @@ async function escribir(tb, metodo, body, idUrl) {
         }
         if (nuevo) await c.query('insert into registros (tabla, id, fields, creado, modificado) values ($1,$2,$3,clock_timestamp(),clock_timestamp())', [tb, id, JSON.stringify(F)]);
         else await c.query('update registros set fields = $3, modificado = clock_timestamp() where tabla = $1 and id = $2', [tb, id, JSON.stringify(F)]);
+        if (nuevo || JSON.stringify(prev) !== JSON.stringify(F)) await apuntarCambio(c, tb, id, nuevo ? 'crear' : 'editar', nuevo ? null : prev, F);
         for (const f of t.campos.values()) if (f.type === 'multipleRecordLinks' && JSON.stringify(prev[f.name] || []) !== JSON.stringify(F[f.name] || [])) await enlaces(c, tb, id, f, prev[f.name], F[f.name], tocadas);
         out.push(id);
       }
@@ -377,6 +427,7 @@ async function borrar(tb, ids) {
         if (!r.rows[0]) throw Object.assign(new Error('Could not find record ' + id), { tipo: 'NOT_FOUND', st: 404 });
         const F = typeof r.rows[0].fields === 'string' ? JSON.parse(r.rows[0].fields) : r.rows[0].fields;
         await c.query('insert into borrados (tabla, id, t) values ($1,$2,clock_timestamp())', [tb, id]);
+        await apuntarCambio(c, tb, id, 'borrar', F, null);
         for (const f of T[tb].campos.values()) if (f.type === 'multipleRecordLinks' && (F[f.name] || []).length) await enlaces(c, tb, id, f, F[f.name], [], tocadas);
         hechos.push(id);
       }
@@ -473,4 +524,4 @@ if (ACTIVO && global.fetch && !global.fetch._pg) {
   nf._pg = 1; nf._marca = _fetch && _fetch._marca; nf._base = 1; global.fetch = nf;
 }
 
-module.exports = { ACTIVO, responder, archivo, SQL_INIT, T, campo, _cache: CACHE, filas, iniciar, db, fetchReal: _fetch, almacen, rutaDe, ALM };
+module.exports = { ACTIVO, cambiosRecientes, modificadosRecientes, deshacerCambio, responder, archivo, SQL_INIT, T, campo, _cache: CACHE, filas, iniciar, db, fetchReal: _fetch, almacen, rutaDe, ALM };

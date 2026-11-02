@@ -6263,6 +6263,32 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     const d = await at(`${PLAN}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHA: hecho, 'FECHA HECHA': hecho ? new Date().toISOString() : null } }) });
     return res.status(200).json({ ok: !d.error });
   }
+  // ── PANEL: «Últimos cambios» y deshacer (solo dirección). Necesita Postgres: allí se guarda el historial de 30 días ──
+  if (action === 'cambios-lista' || action === 'cambios-deshacer') {
+    const q = req.method === 'POST' ? (req.body || {}) : req.query;
+    if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const eqH = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_admin&fields[]=${encodeURIComponent('DIRECCIÓN')}&pageSize=100`);
+    const yr = (eqH.records || []).find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
+    if (!yr || String(yr.fields.Password || '').trim() !== String(q.clave || '').trim()) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
+    if (!(yr.fields['DIRECCIÓN'] || yr.fields.acc_admin)) return res.status(403).json({ ok: false, error: 'Solo dirección' });
+    const PG = require('./_pg'); if (!PG.ACTIVO) return res.status(200).json({ ok: false, error: 'El historial de cambios necesita la base de datos nueva' });
+    if (action === 'cambios-deshacer') { const r = await PG.deshacerCambio(Number(q.n)); if (r.ok) { try { global._sesPac = {}; } catch (e) {} } return res.status(200).json(r); }
+    const CIT = 'tblTPlcuiSjQngkaD', nomT = t => (PG.T[t] && PG.T[t].name) || t;
+    const L = await PG.cambiosRecientes({ horas: q.horas || 48 });
+    const pids = new Set(); const pidDe = F => ((F && F['RELACIÓN - CITA']) || [])[0];
+    L.forEach(x => { if (x.tabla === CIT) { const p = pidDe(x.despues) || pidDe(x.antes); if (p) pids.add(p); } });
+    const sinCopia = (await PG.modificadosRecientes(CIT, 6).catch(() => [])).filter(m => !L.some(x => x.tabla === CIT && x.id === m.id));
+    sinCopia.forEach(m => { const p = pidDe(m.fields); if (p) pids.add(p); });
+    const nombres = {}; await Promise.all([...pids].slice(0, 150).map(async id => { const p = await at(`${PACIENTES}/${id}`).catch(() => ({})); const F = p.fields || {}; nombres[id] = String(F['FULL NAME'] || [F['NOMBRE'], F['APELLIDOS']].filter(Boolean).join(' ') || '').trim(); }));
+    const cita = F => F ? { fecha: String(F['FECHA'] || '').slice(0, 10), hora: String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: cNm(F['PREF.']), estado: String(cNm(F['ESTADO']) || '').trim(), paciente: nombres[pidDe(F)] || '', pacienteId: pidDe(F) || '' } : null;
+    const difs = (a, b) => [...new Set([...Object.keys(a || {}), ...Object.keys(b || {})])].filter(k => !k.startsWith('__') && JSON.stringify((a || {})[k]) !== JSON.stringify((b || {})[k]));
+    const prim = (t, F) => { const p = PG.T[t] && PG.T[t].prim; return p && F ? String(F[p.name] || '').slice(0, 60) : ''; };
+    const cambios = L.map(x => ({ n: x.n, t: x.t, accion: x.accion, deshecho: x.deshecho, tabla: nomT(x.tabla), esCita: x.tabla === CIT, id: x.id,
+      antes: x.tabla === CIT ? cita(x.antes) : null, despues: x.tabla === CIT ? cita(x.despues) : null,
+      que: x.tabla === CIT ? '' : prim(x.tabla, x.despues || x.antes), campos: difs(x.antes, x.despues).slice(0, 8) }))
+      .filter(c => c.accion !== 'editar' || c.campos.length);
+    return res.status(200).json({ ok: true, cambios, sinCopia: sinCopia.map(m => ({ id: m.id, t: m.modificado, cita: cita(m.fields) })) });
+  }
   // ── PANEL: «Reporte diario» (solo dirección: Rendimiento o Administración) ──
   if (action === 'reporte-dia') {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
