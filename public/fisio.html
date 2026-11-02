@@ -458,7 +458,8 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .pb-in{flex:1;min-width:0;outline:none;padding:6px 0;font-family:var(--font);font-size:14.5px;line-height:1.35;color:#1e2a38;cursor:text;word-break:break-word}.pb-in:empty::before{content:attr(data-ph);color:#b3a79e;pointer-events:none}
 .pb-fmt{display:none;gap:2px;flex:none;background:#fff;border:1px solid #efe7df;border-radius:10px;padding:2px;box-shadow:0 2px 8px rgba(26,26,26,.06)}
 .pb-esc.foco .pb-fmt,.pb-esc.con .pb-fmt,.pb-edb .pb-fmt{display:flex}
-.pb-fmt button{width:30px;height:28px;border:none;background:none;border-radius:8px;cursor:pointer;color:#5c4f47;font-family:var(--font);font-size:14px;display:flex;align-items:center;justify-content:center;padding:0}.pb-fmt button:hover{background:#f6f1eb;color:#c2552e}.pb-fmt button.on{background:#fbeee8;color:#c2552e}
+.pb-fmt button{width:30px;height:28px;border:none;background:none;border-radius:8px;cursor:pointer;color:#5c4f47;font-family:var(--font);font-size:14px;display:flex;align-items:center;justify-content:center;padding:0}.adm-sinem{display:block;font-style:normal;font-size:11.5px;font-weight:600;color:#b4531f;margin-top:3px}
+.pb-fmt button:hover{background:#f6f1eb;color:#c2552e}.pb-fmt button.on{background:#fbeee8;color:#c2552e}
 .pb-fmt button b{font-weight:800}.pb-fmt button u{text-decoration-color:#c2552e;text-underline-offset:3px}.pb-fmt svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.pb-fmt button[data-f="h"] svg path:first-child{fill:#ffe680}
 .pb-esc .pb-mas,.pb-edb .pb-mas{width:32px;height:32px;border-radius:50%;flex:none}.pb-esc .pb-mas{display:none}.pb-esc.con .pb-mas{display:flex}.pb-esc .pb-mas svg,.pb-edb .pb-mas svg{width:16px;height:16px;stroke-width:2.6;stroke-linejoin:round}
 .pb-edb{display:flex;gap:8px;align-items:center;flex:none}
@@ -7983,7 +7984,7 @@ async function renderAdmin(wrap){
  const av=f=>f.foto?`<img src="${escH(f.foto)}" alt="">`:escH(iniciales(f.nombre));
  function pintaEquipo(){const E=ADM.d.equipo,act=E.filter(f=>!f.baja),bj=E.filter(f=>f.baja);
   const fila=f=>{const hs=Object.entries(f.horas||{});const tot=hs.reduce((t,[,v])=>t+v,0);
-   return `<button type="button" class="adm-p${f.baja?' baja':''}" data-id="${f.id}"><span class="adm-av">${av(f)}</span><span class="adm-pt"><b>${escH(f.nombre)}</b><small>${f.role==='admin'?'Administración':'Fisioterapeuta'}${f.direccion?' · Dirección':''}${f.colegiado?' · Nº col. '+escH(f.colegiado):''}${f.baja?' · de baja desde el '+admFecha(f.baja):''}</small>
+   return `<button type="button" class="adm-p${f.baja?' baja':''}" data-id="${f.id}"><span class="adm-av">${av(f)}</span><span class="adm-pt"><b>${escH(f.nombre)}</b><small>${f.role==='admin'?'Administración':'Fisioterapeuta'}${f.direccion?' · Dirección':''}${f.colegiado?' · Nº col. '+escH(f.colegiado):''}${f.baja?' · de baja desde el '+admFecha(f.baja):''}</small>${!f.baja&&!String(f.email||'').trim()?'<em class="adm-sinem">Sin email: no podrá entrar con código si olvida la contraseña</em>':''}
     ${!f.baja&&hs.length?`<span class="adm-hs">${hs.map(([d,v])=>`<i>${ADM_DC[d]||d} ${v} h</i>`).join('')}<em>${tot} h/sem</em></span>`:''}</span>${!f.baja&&f.claveDebil?'<span class="adm-warn">Contraseña poco segura</span>':''}<span class="adm-chev">›</span></button>`;};
   body.innerHTML=`<div class="adm-card"><div class="adm-h"><b>Equipo</b><button type="button" class="adm-add">＋ Añadir persona</button></div>${act.map(fila).join('')}</div>
    ${bj.length?`<div class="adm-card"><div class="adm-h"><b>De baja</b><small>No pueden entrar ni salen en la agenda. Sus datos se guardan.</small></div>${bj.map(fila).join('')}</div>`:''}`;
@@ -7996,7 +7997,7 @@ async function renderAdmin(wrap){
    <div class="hz-lab">Nombre y apellido</div><input class="ag-in a-nom" value="${escH(f.nombre)}" placeholder="Ej.: Laura García" autocomplete="off">
    <div class="hz-lab">Puesto</div><div class="fac-chips a-rol"><button type="button" data-v="fisio">Fisioterapeuta</button><button type="button" data-v="admin">Administración</button></div>
    <div class="adm-2"><div><div class="hz-lab">Nº de colegiado</div><input class="ag-in a-col" value="${escH(f.colegiado)}" inputmode="numeric"></div><div><div class="hz-lab">Teléfono</div><input class="ag-in a-tel" value="${escH(f.tel)}" inputmode="tel"></div></div>
-   <div class="adm-2"><div><div class="hz-lab">Email</div><input class="ag-in a-em" value="${escH(f.email)}" inputmode="email" autocomplete="off"></div><div><div class="hz-lab">Trabaja aquí desde</div><input type="date" class="ag-in a-alta" value="${escH(f.alta)}"></div></div>
+   <div class="adm-2"><div><div class="hz-lab">Email <span>(para entrar con código si olvida la contraseña)</span></div><input class="ag-in a-em" value="${escH(f.email)}" inputmode="email" autocomplete="off"></div><div><div class="hz-lab">Trabaja aquí desde</div><input type="date" class="ag-in a-alta" value="${escH(f.alta)}"></div></div>
    <div class="hz-lab">Horario: horas de trabajo cada día <span>(1 hora = 1 sesión)</span></div>
    <div class="adm-dias">${ADM.d.dias.map(d=>`<label><span>${ADM_DC[d]||d}</span><input type="number" min="0" max="14" step="0.5" inputmode="decimal" class="ag-in" data-d="${escH(d)}" value="${f.horas&&f.horas[d]!=null?f.horas[d]:''}" placeholder="—"></label>`).join('')}</div>
    <div class="adm-tot"></div>

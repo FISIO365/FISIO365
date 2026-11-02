@@ -2782,8 +2782,8 @@ module.exports = async function handler(req, res) {
       if (COD[email] && ahora - COD[email].t < 45e3) return res.status(200).json({ ok: false, error: 'Ya te lo hemos enviado. Espera un minuto antes de pedir otro.' });
       const eq = await todosT(FISIOS_TABLE, `fields[]=Name&fields[]=EMAIL&fields[]=${encodeURIComponent('FECHA BAJA')}&fields[]=Password`).catch(() => []);
       const yo = eq.find(r => String(r.fields.EMAIL || '').trim().toLowerCase() === email && !r.fields['FECHA BAJA'] && r.fields.Password);
-      const enviado = 'Si tu email está en el equipo, te llega un código en un momento. Mira también en «Spam».';
-      if (!yo) return res.status(200).json({ ok: true, msg: enviado });
+      const enviado = 'Te hemos enviado un código. Mira también en «Spam».';
+      if (!yo) return res.status(200).json({ ok: false, error: 'Ese email no está en ninguna ficha del equipo. Pide a dirección que lo ponga en Dirección › Equipo (o que te cambie la contraseña).' });
       const codigo = String(cr.randomInt(100000, 1000000));
       COD[email] = { h: hash(codigo), exp: ahora + 10 * 60e3, t: ahora, n: 0 }; await guardarAjuste('login-codigos', COD, '');
       if (process.env.SIN_ENVIOS) return res.status(200).json({ ok: true, msg: `Esto es la demo: no se envían emails. Tu código es ${codigo}.` });
