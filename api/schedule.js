@@ -2851,7 +2851,7 @@ module.exports = async function handler(req, res) {
   // Medición de velocidad: se apunta en los logs cuánto tarda cada acción (para saber qué pantallas van lentas)
   { const t0 = Date.now(); res.on('finish', () => { const ms = Date.now() - t0; console.log(`TIEMPO ${action || '-'} ${ms}ms${ms > 1500 ? ' LENTO' : ''}`); }); }
   // Respuestas de las consultas pesadas guardadas 60 s en el servidor (cualquier cambio por POST las borra)
-  const postLectura = /^(seg-com-buzon|reporte-dia|compra-lista|seg-sug-lista|seg-sug-contar|seg-com-hilo|seg-wa-ia)$/.test(action || '');
+  const postLectura = /^(seg-com-buzon|reporte-dia|compra-lista|plan-dia|seg-sug-lista|seg-sug-contar|seg-com-hilo|seg-wa-ia)$/.test(action || '');
   if (req.method === 'POST' && !postLectura) _memo.clear(); // solo los cambios borran lo guardado (las consultas por POST no)
   else if (/^(seg-referidos|seg-referidos-resueltos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|rendimiento|seg-lista|reporte-dia)$/.test(action || '')) {
     const k = req.method === 'POST' ? action + '|' + JSON.stringify(req.body || {}) : req.url, m = _memo.get(k);
@@ -6120,6 +6120,59 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     if (action === 'compra-borrar') { const d = await at(`${COMPRA}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error }); }
     const hecho = q.hecho !== false;
     const d = await at(`${COMPRA}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { COMPRADO: hecho, 'COMPRADO POR': hecho ? yoC : '', 'FECHA COMPRA': hecho ? new Date().toISOString() : null } }) });
+    return res.status(200).json({ ok: !d.error });
+  }
+  // ── PLAN DE BATALLA: las tareas del día de cada persona. Cada uno se apunta las suyas; dirección puede ponérselas a cualquiera.
+  // Lo que no se hace pasa solo al día siguiente (sale hasta que se marca). Lo hecho se ve el día que se hizo.
+  if (/^plan-(dia|anadir|hecho|borrar|mover)$/.test(action || '')) {
+    const q = req.method === 'POST' ? (req.body || {}) : req.query;
+    if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const eqP = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_admin&fields[]=${encodeURIComponent('DIRECCIÓN')}&fields[]=${encodeURIComponent('FECHA BAJA')}&pageSize=100`);
+    const activos = (eqP.records || []).filter(r => r.fields.Name && !r.fields['FECHA BAJA']);
+    const yp = activos.find(r => String(r.fields.Name || '').trim().toLowerCase() === String(q.yo || '').trim().toLowerCase());
+    if (!yp || String(yp.fields.Password || '').trim() !== String(q.clave || '').trim()) return res.status(403).json({ ok: false, error: 'Vuelve a iniciar sesión.' });
+    const dirP = !!(yp.fields['DIRECCIÓN'] || yp.fields.acc_admin), yoP = String(yp.fields.Name).trim();
+    const PLAN = 'tblRJxsijhD6ywhSp';
+    const hoyP = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+    const diaOk = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')) ? String(s) : hoyP;
+    // De quién: uno mismo, o (solo dirección) cualquiera del equipo
+    const quien = (() => { const p = String(q.persona || '').trim(); if (!p || p.toLowerCase() === yoP.toLowerCase()) return yoP; if (!dirP) return null; const r = activos.find(x => String(x.fields.Name).trim().toLowerCase() === p.toLowerCase()); return r ? String(r.fields.Name).trim() : null; })();
+    if (!quien) return res.status(403).json({ ok: false, error: 'Solo dirección puede ver el plan de otra persona' });
+    const vistaP = r => { const F = r.fields || {}; return { id: r.id, t: F.TAREA || '', dia: F.DIA || '', hecha: !!F.HECHA, hechaEn: F['FECHA HECHA'] || '', por: F['PUESTA POR'] || '', dir: !!F.DIRECCION }; };
+    if (action === 'plan-anadir') {
+      const t = String(q.tarea || '').trim().slice(0, 200); if (!t) return res.status(400).json({ ok: false, error: 'Escribe la tarea' });
+      const dia = diaOk(q.dia) < hoyP ? hoyP : diaOk(q.dia);
+      const d = await at(PLAN, { method: 'POST', body: JSON.stringify({ records: [{ fields: { TAREA: t, PERSONA: quien, DIA: dia, HECHA: false, 'PUESTA POR': yoP, DIRECCION: dirP && quien !== yoP, CREADA: new Date().toISOString() } }] }) });
+      if (d.error) return res.status(500).json({ ok: false, error: d.error.message || 'No se ha podido' });
+      return res.status(200).json({ ok: true, item: vistaP(d.records[0]) });
+    }
+    if (action === 'plan-dia') {
+      const esc = s => String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      const L = []; let off = '';
+      do { const d = await at(`${PLAN}?filterByFormula=${encodeURIComponent(`AND({PERSONA}='${esc(quien)}',OR(NOT({HECHA}),IS_AFTER({FECHA HECHA},DATEADD(TODAY(),-2,'days'))))`)}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) return res.status(500).json({ ok: false, error: d.error.message }); L.push(...(d.records || [])); off = d.offset || ''; } while (off);
+      const T = L.map(vistaP), hechoHoy = x => x.hechaEn && new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x.hechaEn)) === hoyP;
+      const orden = (a, b) => (b.dir - a.dir) || String(a.dia).localeCompare(String(b.dia));
+      return res.status(200).json({ ok: true, hoy: hoyP, persona: quien, dir: dirP,
+        equipo: dirP ? activos.map(r => String(r.fields.Name).trim()).sort((a, b) => a.localeCompare(b, 'es')) : [],
+        pendientes: T.filter(x => !x.hecha && x.dia <= hoyP).sort(orden),
+        hechas: T.filter(x => x.hecha && hechoHoy(x)).sort((a, b) => String(a.hechaEn).localeCompare(String(b.hechaEn))),
+        proximas: T.filter(x => !x.hecha && x.dia > hoyP).sort(orden) });
+    }
+    if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+    const reg = await at(`${PLAN}/${q.id}`);
+    if (reg.error || !reg.fields) return res.status(404).json({ ok: false, error: 'Esa tarea ya no existe' });
+    const Fp = reg.fields, mia = String(Fp.PERSONA || '').trim().toLowerCase() === yoP.toLowerCase();
+    if (!mia && !dirP) return res.status(403).json({ ok: false, error: 'No es tuya' });
+    if (action === 'plan-borrar') {
+      if (Fp.DIRECCION && !dirP) return res.status(403).json({ ok: false, error: 'La ha puesto dirección: márcala cuando la hagas' });
+      const d = await at(`${PLAN}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error });
+    }
+    if (action === 'plan-mover') { // cambiar el día (p. ej. «para mañana»)
+      if (Fp.DIRECCION && !dirP) return res.status(403).json({ ok: false, error: 'La ha puesto dirección' });
+      const d = await at(`${PLAN}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { DIA: diaOk(q.dia) < hoyP ? hoyP : diaOk(q.dia) } }) }); return res.status(200).json({ ok: !d.error });
+    }
+    const hecho = q.hecho !== false && q.hecho !== 'false';
+    const d = await at(`${PLAN}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHA: hecho, 'FECHA HECHA': hecho ? new Date().toISOString() : null } }) });
     return res.status(200).json({ ok: !d.error });
   }
   // ── PANEL: «Reporte diario» (solo dirección: Rendimiento o Administración) ──

@@ -39,7 +39,8 @@
 "tblTL6et3dRyod8TZ": "EJERCICIOS POR GRABAR",
 "tblF4as0orW1b6KIw": "ANAMNESIS",
 "tblxJmnb7LHML2ZZh": "DOLOR",
-"tblTCNp81M8vBFe7q": "⚙ APP · VALES REGALO"
+"tblTCNp81M8vBFe7q": "⚙ APP · VALES REGALO",
+"tblRJxsijhD6ywhSp": "⚙ APP · PLAN DE BATALLA"
 },
 "f": {
 "fld2SaWhieEg0Zosd": [
@@ -242,7 +243,10 @@
 "⚙ APP · VALES REGALO",
 "CÓDIGO"
 ],
-"fldFOPBIdacLA4Y60": ["⚙ APP · VALES REGALO", "OCASIÓN"],
+"fldFOPBIdacLA4Y60": [
+"⚙ APP · VALES REGALO",
+"OCASIÓN"
+],
 "fldktuP9njyLsolny": [
 "⚙ APP · VALES REGALO",
 "PARA"
@@ -338,6 +342,38 @@
 "fld46aBIVwmUtpiA2": [
 "⚙ APP · VALES REGALO",
 "REGISTRO"
+],
+"fldBaN9Z58s01ultH": [
+"⚙ APP · PLAN DE BATALLA",
+"TAREA"
+],
+"fld4fdognquqQyq3c": [
+"⚙ APP · PLAN DE BATALLA",
+"PERSONA"
+],
+"fld5zPM4Mw2L5umIj": [
+"⚙ APP · PLAN DE BATALLA",
+"DIA"
+],
+"fldrnysGxC0U63QfC": [
+"⚙ APP · PLAN DE BATALLA",
+"HECHA"
+],
+"fldiLLEzGSusmeIYi": [
+"⚙ APP · PLAN DE BATALLA",
+"FECHA HECHA"
+],
+"fldGb3L45snchFGYK": [
+"⚙ APP · PLAN DE BATALLA",
+"PUESTA POR"
+],
+"flda4UzcdzBtsv2p9": [
+"⚙ APP · PLAN DE BATALLA",
+"DIRECCION"
+],
+"fldh9Nym0MOvXZfXD": [
+"⚙ APP · PLAN DE BATALLA",
+"CREADA"
 ]
 }
 }
