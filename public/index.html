@@ -223,8 +223,13 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .btn-primary{background:var(--black);color:var(--cream);border-radius:99px;height:56px;font-size:15px;margin-bottom:0}
 .login-err{color:#c0392b}
 .btn-install{display:flex;align-items:center;justify-content:center;gap:8px;color:#c2552e;background:#fff;border-radius:99px;font-size:14px;font-weight:700;max-width:380px;margin-top:16px;padding:13px 18px;box-shadow:0 1px 2px rgba(26,26,26,.05),0 6px 18px rgba(26,26,26,.06)}
-.login-langs{text-align:center;margin-top:6px;color:#cfcac3;font-size:12px}
-.login-langs .lang-btn{flex:none;padding:4px 6px;font-size:12px;background:none}
+.idi-pill{display:inline-flex;align-items:center;gap:2px;background:#fff;border:1px solid #ebe5df;border-radius:99px;padding:3px 3px 3px 10px;box-shadow:0 2px 8px rgba(26,26,26,.05)}
+.idi-pill svg{width:16px;height:16px;fill:none;stroke:#c2552e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-right:4px}
+.idi-pill .lang-btn{border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:600!important;color:#8a7f77!important;border-radius:99px;padding:6px 11px;cursor:pointer}
+.idi-pill .lang-btn.on{background:#1a1a1a;color:#fff!important}
+.idi-login{position:absolute;top:calc(14px + env(safe-area-inset-top));right:16px;z-index:5}
+.idi-menu{display:flex;width:100%;box-sizing:border-box;margin:0 0 12px}.idi-menu .lang-btn{flex:1}
+#loginScreen{position:relative}
 /* Barra superior */
 .topbar{background:rgba(245,242,238,.88);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);height:auto;padding:calc(10px + env(safe-area-inset-top)) 20px 10px}
 .topbar-logo{color:var(--black);font-size:20px;font-weight:800;letter-spacing:-.8px}
@@ -642,7 +647,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .rcb-e{color:#b42318;font-size:13px;margin-top:8px;min-height:1em}
 .rcb-ok{display:block;width:100%;border:none;font-family:inherit;font-size:15px;font-weight:600;background:#c2552e;color:#fff;border-radius:99px;padding:14px;margin-top:6px}.rcb-ok:disabled{opacity:.45}
 .rcb-no{display:block;width:100%;border:none;background:none;font-family:inherit;font-size:14px;font-weight:600;color:#9a8f87;padding:12px;margin-top:2px}
-.cu-idi{display:flex;gap:6px}.cu-idi .lang-btn{flex:1;border:1.5px solid #ebe5df;background:#fff;border-radius:99px;padding:10px 4px;font-family:inherit;font-size:13.5px;cursor:pointer}
+.cu-idi{display:flex;gap:6px}.cu-idi .lang-btn{flex:1;border:1.5px solid #ebe5df;background:#fff;border-radius:99px;padding:10px 4px;font-family:inherit;font-size:13.5px;cursor:pointer}.cu-idi .lang-btn.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff!important}
 .login-alt{display:block;width:100%;margin-top:14px;border:none;background:none;font-family:inherit;font-size:13.5px;font-weight:600;color:#c2552e;cursor:pointer;padding:6px;line-height:1.4}.login-ok{font-size:13px;color:#6b5f57;text-align:center;margin-top:10px;line-height:1.45}#codBox[hidden]{display:none}#codBox .btn-primary{margin-top:14px}
 </style>
 <script src="/i18n.js?v=1"></script>
@@ -650,6 +655,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 </head>
 <body>
 <div id="loginScreen" class="screen active">
+ <div class="idi-pill idi-login no-tr" role="group" aria-label="Idioma"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><button type="button" class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button><button type="button" class="lang-btn" data-lang="cat" onclick="setLang('cat')">CAT</button><button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button></div>
  <div class="login-top">
   <div class="logo-fisio">FISIO<span>365</span></div>
   <div class="login-saludo">Tu fisio, también en casa.</div>
@@ -671,9 +677,6 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  </div>
  <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app?</button>
 <script>try{if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.getElementById('installBtn').style.display='none';}catch(e){}</script>
- <div class="login-langs">
- <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button><span>·</span><button class="lang-btn" data-lang="cat" onclick="setLang('cat')">CAT</button><span>·</span><button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
- </div>
 </div>
 
 <div id="appScreen">
@@ -690,6 +693,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div class="nav-menu" id="navMenu">
  <div class="nav-menu-inner" style="background:white;border-radius:16px;padding:16px;">
  <header class="nm-head" onclick="showSection('cuenta');cerrarMenu()" role="button" tabindex="0" style="cursor:pointer"><div class="nm-av" id="nmAv"></div><div><b id="nmNom"></b><span>Mi cuenta ›</span></div></header>
+ <section class="idi-pill idi-menu no-tr" role="group" aria-label="Idioma"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><button type="button" class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button><button type="button" class="lang-btn" data-lang="cat" onclick="setLang('cat')">CAT</button><button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button></section>
  <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:12px;">
  <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Mis ejercicios</button>
  <button class="nav-item" id="navProgreso" onclick="showSection('progreso');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H3V5h3M18 9h3V5h-3"/><path d="M6 5h12v7a6 6 0 0 1-12 0V5z"/><path d="M12 17v4M8 21h8"/></svg>Mi racha</button>
@@ -890,7 +894,7 @@ let modalTipo=null,modalTexto='',fisiosCache=null;
 const i18n={es:{entrar:"Entrar",entrando:"Entrando...",instalarApp:"¿Cómo instalo la app?",errorEmail:"Introduce tu email",errorPin:"Introduce los 4 dígitos del PIN",errorConexion:"Error de conexión",programaHoy:"Tu programa de ejercicios",progresoHoy:"Progreso de hoy",sesionCompletada:"¡Sesión completada!",sesionSub:"Has terminado tu programa de hoy.",sesionMsg:"Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana!",miProgreso:"Mi progreso",cuantoDolor:"¿Cuánto dolor tienes hoy?",sinDolor:"Sin dolor",dolorMaximo:"Dolor máximo",guardar:"Guardar",salir:"Salir",sinPrograma:"Sin programa asignado",sinProgramaDesc:"Tu fisioterapeuta todavía no ha asignado ejercicios.",dolorBajo:function(pct){return "Tu dolor ha bajado un "+pct+"% respecto a ayer. ¡Vas por muy buen camino!";},dolorEstable:"Tu dolor se mantiene estable. ¡Sigue con tus ejercicios!",dolorSubio:"No te preocupes, los altibajos son normales. ¿Has cambiado algo en tu rutina?",dolorRegistrado:"Dolor registrado ✓"},cat:{entrar:"Entrar",entrando:"Entrant...",instalarApp:"Com instal·lo l'app?",errorEmail:"Introdueix el teu email",errorPin:"Introdueix els 4 dígits del PIN",errorConexion:"Error de connexió",programaHoy:"El teu programa d'exercicis",progresoHoy:"Progrés d'avui",sesionCompletada:"Sessió completada!",sesionSub:"Has acabat el teu programa d'avui.",sesionMsg:"Cada dia que entrenes és un pas cap a la teva recuperació. Torna demà!",miProgreso:"El meu progrés",cuantoDolor:"Quant dolor tens avui?",sinDolor:"Sense dolor",dolorMaximo:"Dolor màxim",guardar:"Guardar",salir:"Sortir",sinPrograma:"Sense programa assignat",sinProgramaDesc:"El teu fisioterapeuta encara no ha assignat exercicis.",dolorBajo:function(pct){return "El teu dolor ha baixat un "+pct+"% respecte a ahir.";},dolorEstable:"El teu dolor es manté estable. Segueix!",dolorSubio:"No et preocupis, els alts i baixos són normals.",dolorRegistrado:"Dolor registrat ✓"},en:{entrar:"Log in",entrando:"Logging in...",instalarApp:"How do I install the app?",errorEmail:"Please enter your email",errorPin:"Please enter all 4 PIN digits",errorConexion:"Connection error",programaHoy:"Your exercise program",progresoHoy:"Today's progress",sesionCompletada:"Session completed!",sesionSub:"You finished today's program.",sesionMsg:"Every day you train is a step towards your recovery. Come back tomorrow!",miProgreso:"My progress",cuantoDolor:"How much pain do you have today?",sinDolor:"No pain",dolorMaximo:"Maximum pain",guardar:"Save",salir:"Log out",sinPrograma:"No program assigned",sinProgramaDesc:"Your physiotherapist has not yet assigned any exercises.",dolorBajo:function(pct){return "Your pain decreased "+pct+"% since yesterday!";},dolorEstable:"Your pain is stable. Keep going!",dolorSubio:"Don't worry, ups and downs are normal.",dolorRegistrado:"Pain recorded ✓"}};
 
 function t(key,...args){const val=i18n[lang]?.[key];return typeof val==='function'?val(...args):(val||i18n.es[key]||key);}
-function setLang(l){lang=l;localStorage.setItem('fisio365_lang',l);try{window.T365&&T365.cambia(l);}catch(e){}document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===l?'#1a1a1a':'#a8a39b';b.style.fontWeight=b.dataset.lang===l?'700':'400';});applyTranslations();}
+function setLang(l){lang=l;localStorage.setItem('fisio365_lang',l);try{window.T365&&T365.cambia(l);}catch(e){}document.querySelectorAll('.lang-btn').forEach(b=>{b.classList.toggle('on',b.dataset.lang===l);b.style.color=b.dataset.lang===l?'#1a1a1a':'#a8a39b';b.style.fontWeight=b.dataset.lang===l?'700':'400';});applyTranslations();}
 function applyTranslations(){const lb=document.getElementById('loginBtn');const li=document.getElementById('installBtn');if(lb&&!lb.disabled)lb.textContent=t('entrar');if(li)li.textContent=t('instalarApp');const vasQ=document.querySelector('.vas-question');if(vasQ)vasQ.textContent=t('cuantoDolor');const vasLabels=document.querySelectorAll('.vas-labels span');if(vasLabels.length>=2){vasLabels[0].textContent=t('sinDolor');vasLabels[1].textContent=t('dolorMaximo');}const btnVas=document.getElementById('btnVas');if(btnVas)btnVas.textContent=t('guardar');document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});}
 
 let vasSeleccionado=null,vasRegistros=[],vasPeriodo=7;
@@ -899,7 +903,7 @@ const TODAY=new Date().toISOString().split('T')[0];
 window.addEventListener('load',()=>{
   const savedLang=localStorage.getItem('fisio365_lang');if(savedLang)lang=savedLang;
   applyTranslations();
-  document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===lang?'#1a1a1a':'#a8a39b';b.style.fontWeight=b.dataset.lang===lang?'700':'400';});
+  document.querySelectorAll('.lang-btn').forEach(b=>{b.classList.toggle('on',b.dataset.lang===lang);b.style.color=b.dataset.lang===lang?'#1a1a1a':'#a8a39b';b.style.fontWeight=b.dataset.lang===lang?'700':'400';});
   const saved=localStorage.getItem('fisio365_patient');
   if(saved){try{patient=JSON.parse(saved);const lastDay=localStorage.getItem('fisio365_lastday');if(lastDay!==TODAY){localStorage.setItem('fisio365_lastday',TODAY);Object.keys(localStorage).forEach(k=>{if(k.startsWith('hechos_'))localStorage.removeItem(k);});}initApp();}catch(e){localStorage.removeItem('fisio365_patient');}}
 });

@@ -2732,7 +2732,7 @@ module.exports = async function handler(req, res) {
     const COD = (await ajuste('login-codigos-app', {})) || {}, ahora = Date.now();
     Object.keys(COD).forEach(x => { if (!COD[x] || COD[x].exp < ahora - 3600e3) delete COD[x]; });
     const busca = async () => { const f = tel ? `OR(RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)="${tel}",RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)="${tel}")` : `LOWER({EMAIL})="${u}"`;
-      const L0 = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(f)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=EMAIL&fields[]=PIN`).catch(() => []);
+      const L0 = await capTodos(PACIENTES, `filterByFormula=${encodeURIComponent(f)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=EMAIL&fields[]=PIN`).catch(() => []);
       return L0.find(r => /@/.test(String(r.fields.EMAIL || ''))) || null; };
     if (action === 'app-codigo') {
       if (COD[k] && ahora - COD[k].t < 45e3) return res.status(200).json({ ok: false, error: TX.esp });
