@@ -44,6 +44,7 @@ html{overflow-x:clip}body{font-family:var(--font);background:var(--cream);color:
 .panel-wrap{display:flex;min-height:100vh;width:100%;overflow-x:clip}
 
 /* SIDEBAR */
+.sb-grp>span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#a0928a;padding:14px 14px 4px}#sb-mas{display:none}#sb-dia-badge,#sb-mas-badge{background:#ee2155;color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:auto;font-style:normal}
 .sidebar{width:200px;background:#000;flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto}
 .sb-logo{padding:18px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08)}
 .sb-logo-t{font-size:17px;font-weight:800;color:#f5f2ee;letter-spacing:-0.3px}.logo-fisio span{color:var(--lila)}
@@ -422,6 +423,9 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .fp-cobb-mov{display:none!important}.fp-hero .fp-ic.fp-cobb-ic{background:#c2552e!important;color:#fff!important}.fp-hero .fp-ic.fp-cobb-ic svg{color:#fff!important}
 @media(max-width:560px){.fp-cobb-mov{display:flex!important}.fp-hero .fp-ic.fp-cobb-ic{display:none!important}}
 .fp-cobb-mov{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin-top:8px;padding:11px;border:none;border-radius:14px;background:#c2552e;color:#fff;font-family:var(--font);font-size:13.5px;font-weight:600;cursor:pointer}.fp-cobb:hover{background:#ab4a27}.fp-cobb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dia-tabs{display:flex;gap:4px;max-width:640px;margin:0 auto 14px;background:#fff;border:1px solid rgba(26,26,26,.06);border-radius:16px;padding:4px}
+.dia-tabs button{flex:1;font-family:var(--font);font-size:13.5px;font-weight:600;color:#7d6a60;background:none;border:none;border-radius:12px;padding:10px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.dia-tabs button.on{background:#c2552e;color:#fff}.dia-tabs i{font-style:normal;font-size:10.5px;font-weight:700;min-width:18px;height:18px;border-radius:99px;background:#ee2155;color:#fff;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box}.dia-tabs button.on i{background:#fff;color:#c2552e}
 .pb{max-width:640px;margin:0 auto}
 .pb-who{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 12px;padding:2px}.pb-who::-webkit-scrollbar{display:none}
 .pb-who button{flex:none;font-family:var(--font);font-size:13px;font-weight:600;color:#7d6a60;background:#fff;border:1px solid rgba(26,26,26,.08);border-radius:99px;padding:7px 14px;cursor:pointer}.pb-who button.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
@@ -461,6 +465,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 @media(min-width:769px){#pmCap,#pmEjer{display:none!important}}
 @media(min-width:769px){.sidebar .sb-item{padding:7px 12px!important;font-size:13.5px!important;border-radius:11px!important}.sidebar .sb-ico svg{width:18px;height:18px}.sb-logo{padding:18px 22px 10px!important}.sb-grp{height:1px;background:rgba(26,26,26,.08);margin:6px 12px}#sidebar #sb-school,.sidebar #sb-school{margin-top:0!important;border-top:none!important;padding-top:7px!important;border-radius:11px!important}.sb-footer{padding-top:8px!important;padding-bottom:8px!important}}
 @media(max-width:768px){.sb-grp{display:none!important}}
+@media(min-width:769px){.sidebar .sb-grp{height:auto;background:none;margin:8px 0 0}.sidebar .sb-grp>span{padding:10px 12px 4px}}
 .jd-tipo{display:grid;grid-template-columns:1fr 1fr;gap:8px}.jd-tipo button{font-family:var(--font);text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:14px;padding:11px 12px;cursor:pointer}.jd-tipo button b{display:block;font-size:13.5px;color:#1e2a38}.jd-tipo button span{font-size:11.5px;color:#7d6a60;line-height:1.35}.jd-tipo button.on{border-color:#c2552e;background:#fdf1e8}
 .jd-l{max-height:42vh;overflow-y:auto;border:1px solid var(--border);border-radius:14px}.jd-s{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;font-family:var(--font);text-align:left;background:none;border:none;border-top:1px solid #f1ede9;padding:10px 12px;cursor:pointer}.jd-s:first-child{border-top:none}.jd-s i{flex:none;width:20px;height:20px;border-radius:6px;border:2px solid #d9cfc7;display:flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:12px;font-weight:700}.jd-s.on i{background:#c2552e;border-color:#c2552e}.jd-s b{font-size:13.5px;color:#1e2a38;font-weight:600}.jd-s span{font-size:12px;color:#7d6a60;margin-left:auto;text-align:right}
 .jd-acc{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7d6a60;margin:6px 2px 0}.jd-acc button{font-family:var(--font);font-size:12px;font-weight:600;color:#c2552e;background:none;border:none;cursor:pointer;padding:4px 0}
@@ -1005,7 +1010,9 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
  .main-area>*{overflow-x:clip;max-width:100%}
  .main-area{height:100dvh;overflow-y:auto!important;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
- #sb-rdia,#sb-plan,#sb-rend,#sb-seg,#sb-tar,#sb-com,#sb-sug,#sb-val,#sb-mis,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-admin{display:none!important}
+ #sb-rdia,#sb-rend,#sb-com,#sb-sug,#sb-val,#sb-mis,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-admin,#sb-school,.sb-grp{display:none!important}
+ #sb-mas{display:flex!important}
+ #sb-dia-badge,#sb-mas-badge{position:absolute;top:3px;left:calc(50% + 6px);margin:0!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
  .topbar-t{font-size:21px!important}
  .topbar-s{font-size:12px!important}
@@ -1096,7 +1103,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .tb-b.on{display:flex}.tb-b svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tb-b.on.activo{background:#c2552e;color:#fff}
 .tb-n{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;border-radius:99px;background:#b42318;color:#fff;font-size:10.5px;font-weight:700;font-style:normal;display:none;align-items:center;justify-content:center;padding:0 4px;box-sizing:border-box;border:2px solid var(--cream);top:-5px;right:-5px}.tb-n.on{display:flex}.tb-b.activo .tb-n{background:#1e2a38;color:#fff}
-.topbar-t,.topbar-s{padding-right:112px!important}.topbar:has(#btnPlan.on) .topbar-t,.topbar:has(#btnPlan.on) .topbar-s{padding-right:162px!important}}
+.topbar-t,.topbar-s{padding-right:112px!important}}
 #btnPerfil{display:none}
 @media(max-width:768px){#btnAvisos{display:none!important}
 #btnPerfil{display:flex;position:absolute;right:14px;top:calc(50% + env(safe-area-inset-top)/2);transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:none;background:#1a1a1a;color:#fff;font-family:var(--font);font-size:14px;font-weight:700;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;box-shadow:0 2px 10px rgba(26,26,26,.12)}
@@ -1107,6 +1114,13 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 #sb-school{display:none!important}}
 #perfilMenu{position:fixed;inset:0;z-index:960;display:none;background:rgba(26,26,26,.25)}
 #perfilMenu.on{display:block}
+#perfilMenu.mas .pm-head,#perfilMenu.mas .pm-yo,#perfilMenu.yo .pm-gr{display:none!important}
+.pm-gt{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#a0928a;padding:12px 12px 4px}
+#perfilMenu.mas .pm-card{top:auto;bottom:calc(98px + env(safe-area-inset-bottom));left:16px;right:16px;width:auto;max-height:calc(100dvh - 140px);overflow-y:auto;padding:6px 8px 10px}
+#perfilMenu.mas .pm-its{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+#perfilMenu.mas .pm-it{flex-direction:column;justify-content:center;gap:7px;padding:12px 4px;font-size:12px;font-weight:600;text-align:center;position:relative;line-height:1.2}
+#perfilMenu.mas .pm-it svg{width:22px;height:22px}
+#perfilMenu.mas .pm-it i{position:absolute;top:6px;right:calc(50% - 26px);margin:0!important}
 #perfilMenu .pm-card{position:absolute;right:12px;top:calc(70px + env(safe-area-inset-top));width:260px;background:#fff;border-radius:22px;padding:8px;box-shadow:0 18px 44px rgba(0,0,0,.2)}
 .pm-head{display:flex;align-items:center;gap:12px;padding:12px 12px 14px;border-bottom:1px solid #f0ebe6;margin-bottom:6px}
 .pm-av{width:44px;height:44px;border-radius:50%;background:#1a1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;overflow:hidden;flex:none}
@@ -1695,7 +1709,7 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .rd-hold{margin-top:8px}.rd-hecho{font-size:12.5px;font-weight:700;color:#16803c}
 .rd-avisar{align-self:flex-start;font-family:var(--font);font-size:12.5px;font-weight:600;border:none;background:#c2552e;color:#fff;border-radius:99px;padding:7px 14px;cursor:pointer}.rd-avisar:disabled{background:#e8f6ec;color:#16803c}
 .rd-lin i{font-style:normal;color:#9a8d84;font-size:12px}
-@media(max-width:768px){#sb-rep{position:relative}#rdiaBadge{position:absolute;top:4px;left:calc(50% + 8px);margin:0!important}}
+
 .rd-gris{font-size:12.5px;color:#7d6a60;font-weight:600}.rd-sinp{font-size:12.5px;color:#b45309;font-weight:600;align-self:center}
 @media(max-width:600px){.rd-row{row-gap:4px}.rd-row>span:first-child{flex:1 1 100%}.rd-row small{text-align:left;flex:1 1 auto}.rd-row .rd-ac{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;align-items:center}}
 .rd-cart{display:block;margin-top:8px;font-family:var(--font);font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:#1a1a1a;border-radius:99px;padding:5px 11px;cursor:pointer}.rd-cart:disabled{color:#16803c;background:#eef8f1;border-color:#eef8f1}
@@ -1779,6 +1793,8 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .nov-it.nueva span{color:#c2552e}.nov-it.nueva p{font-weight:500}
 .nov-dot{position:relative}.nov-dot::after{content:'';position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#c2552e;box-shadow:0 0 0 2px #fff}
 .pm-it.nov-dot::after,.sb-item.nov-dot::after{position:static;display:inline-block;flex:none;margin-left:8px;align-self:center;box-shadow:none}.pm-it.nov-dot::after{margin-left:-4px}
+#perfilMenu.mas .pm-it.nov-dot::after{position:absolute;top:9px;right:calc(50% - 22px);margin:0}
+@media(max-width:768px){#sb-mas.nov-dot::after{position:absolute;top:5px;left:calc(50% + 9px);right:auto;margin:0;box-shadow:0 0 0 2px #fff}#sb-mas.nov-dot #sb-mas-badge:not([style*=none])~*{}}
 .pl-vs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.pl-v{border:1px solid #ecd2c4;background:#fff;color:#a3441f;border-radius:99px;padding:4px 10px;font:500 12px Poppins,sans-serif;cursor:pointer}.pl-v:hover{background:#fdf1ea}
 .lg-s{background:#faf6f1;border-radius:14px;padding:0 14px;margin:0 0 8px}.lg-s summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 0;font-weight:600;font-size:14px}.lg-s summary::-webkit-details-marker{display:none}.lg-s summary em{font-style:normal;font-size:11.5px;font-weight:600;color:#c2552e;background:#fdf1ea;border-radius:99px;padding:3px 9px}.lg-s summary i{font-style:normal;font-size:11.5px;font-weight:500;color:#a3968c}.lg-s small{display:block;font-size:12px;color:#8a7d74;margin:-4px 0 8px}.lg-s textarea{width:100%;box-sizing:border-box;font-size:13px;line-height:1.55}.lg-s .lg-r{margin:8px 0 14px}
 .val-so{margin-top:18px}.so-add{display:block;width:100%;margin:10px 0 2px;font-family:var(--font);font-size:13px;font-weight:700;color:#c2552e;background:#fff;border:1.5px dashed rgba(194,85,46,.45);border-radius:12px;padding:11px;cursor:pointer}.so-pend{background:#fdf1e8;color:#9a4a16;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.45;margin:12px 0 4px}.so-gl{display:block;margin-top:6px;font-weight:700;color:#c2552e;text-decoration:none}.so-p{display:flex;align-items:center;gap:8px}.so-p>span:first-child{flex:1;min-width:0}.so-p.so-no>span:first-child{text-decoration:line-through;color:#a3968c}.so-ok{font-style:normal;font-size:12px;font-weight:700;color:#16803c}.so-nok{font-style:normal;font-size:12px;color:#a3968c}.so-vb{display:flex;gap:6px}.so-v{font-family:var(--font);font-size:12px;font-weight:700;border:1px solid var(--border);background:#fff;color:#3d3530;border-radius:99px;padding:5px 10px;cursor:pointer}.so-v.si{border-color:#16803c;color:#16803c}.so-vx{border:none;background:none;color:#a3968c;font-size:15px;cursor:pointer;padding:2px 4px}.so-gs{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){.so-gs{grid-template-columns:1fr}}.so-g{background:#faf6f1;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}.so-h{display:flex;gap:11px;align-items:center}.so-h b{display:block;font-size:14px}.so-h small{font-size:12px;color:var(--muted)}.so-i{flex:none;width:36px;height:36px;border-radius:12px;background:#fdf1ea;display:grid;place-items:center}.so-i svg{width:19px;height:19px;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.so-w b{display:block;font-size:19px;color:#c2552e;font-weight:600}.so-w small{font-size:12px;color:var(--muted)}.so-roll{opacity:.55}.so-pop{animation:soPop .5s}@keyframes soPop{40%{transform:scale(1.12)}}.so-bts{display:flex;gap:8px;margin-top:auto}.so-b{flex:1;border:1.5px solid #efe6de;background:#fff;color:#5f554e;border-radius:99px;padding:9px 12px;font:600 13px Poppins,sans-serif;cursor:pointer}.so-b.pri{background:#c2552e;border-color:#c2552e;color:#fff}.so-b:disabled{opacity:.45;cursor:default}.so-l{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}.so-p{display:inline-flex;align-items:baseline;gap:6px;background:#faf6f1;border-radius:99px;padding:6px 12px;font-size:13px}.so-p small{font-size:11px;color:var(--muted)}.so-mas{border:none;background:none;color:#c2552e;font:600 13px Poppins,sans-serif;padding:8px 0 0;cursor:pointer}.so-el{max-height:55vh;overflow:auto}.so-del{border:none;background:none;font:600 12px Poppins,sans-serif;color:#a3968c;cursor:pointer;padding:0;align-self:center}.so-el button:first-child{border-color:var(--border);background:#fff}.so-el button.on{border-color:#c2552e;background:#fdf1ea}.so-fr{margin-top:12px;display:flex;flex-direction:column;gap:8px}.so-fr label{font-size:13px;font-weight:600}.so-fr label small{font-weight:400;color:var(--muted)}.so-fr textarea{font-family:var(--font);font-size:14px;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;min-height:90px;resize:vertical;outline:none}.so-fr textarea:focus{border-color:#c2552e}
@@ -1921,48 +1937,46 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  <div class="sb-item" id="sb-pac" onclick="showSection('pac')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg></span><span class="sb-txt">Pacientes</span>
  </div>
+ <div class="sb-item" id="sb-dia" onclick="showSection('dia')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><span class="sb-txt">Mi día</span><i id="sb-dia-badge" style="display:none"></i>
+ </div>
  <div class="sb-item" id="sb-msg" onclick="showSection('msg')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="sb-txt">Chat</span><span id="sb-msg-badge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:middle"></span>
  </div>
- <div class="sb-item" id="sb-rep" onclick="irDaily()">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M8.6 12.3l2.3 2.3 4.5-4.9"/></svg></span><span class="sb-txt">Daily report</span><span id="rdiaBadge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:middle">1</span>
+ <div class="sb-item" id="sb-mas" onclick="abrirMas()">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg></span><span class="sb-txt">Más</span><i id="sb-mas-badge" style="display:none"></i>
  </div>
- <div class="sb-item" id="sb-plan" onclick="showSection('plan')">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg></span><span class="sb-txt">Plan de batalla</span><i id="sb-plan-badge" style="display:none"></i>
- </div>
- <div class="sb-grp"></div>
- <div class="sb-item" id="sb-tar" onclick="showSection('tar')" style="display:none">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></span><span class="sb-txt">Pendientes</span>
- </div>
+ <div class="sb-grp"><span>Equipo</span></div>
  <div class="sb-item" id="sb-com" onclick="showSection('com')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg></span><span class="sb-txt">Comunicaciones</span><i id="sb-com-badge" style="display:none"></i>
- </div>
- <div class="sb-item" id="sb-mis" onclick="showSection('mis')" style="display:none">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg></span><span class="sb-txt">Mis estadísticas</span>
- </div>
- <div class="sb-item" id="sb-val" onclick="showSection('val')">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg></span><span class="sb-txt">Valoraciones</span><i id="sb-val-badge" style="display:none"></i>
  </div>
  <div class="sb-item" id="sb-sug" onclick="showSection('sug')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg></span><span class="sb-txt">Sugerencias</span><i id="sb-sug-badge" style="display:none"></i>
  </div>
- <div class="sb-item" id="sb-call" onclick="showSection('call')">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="sb-txt">Call-in</span>
+ <div class="sb-item" id="sb-school" onclick="showSection('school')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg></span><span class="sb-txt">School</span>
  </div>
+ <div class="sb-grp"><span>Clínica</span></div>
  <div class="sb-item" id="sb-cap" onclick="showSection('cap')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 11l15-6v14L3 13z"/><path d="M7 12.5V18a2 2 0 0 0 4 0v-4"/><path d="M21 9.5v5"/></svg></span><span class="sb-txt">Captación</span>
  </div>
- <div class="sb-grp"></div>
- <div class="sb-item" id="sb-prog" onclick="showSection('prog')" style="display:none"><!-- Programas y Anamnesis se usan desde la ficha del paciente -->
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span><span class="sb-txt">Programas</span>
+ <div class="sb-item" id="sb-call" onclick="showSection('call')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="sb-txt">Call-in</span>
  </div>
  <div class="sb-item" id="sb-ejer" onclick="showSection('ejer')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg></span><span class="sb-txt">Ejercicios</span>
  </div>
- <div class="sb-item" id="sb-anam" onclick="showSection('anam')" style="display:none">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 3h6v3H9z"/><path d="M8 4.5H6a2 2 0 0 0-2 2V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6.5a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h5"/></svg></span><span class="sb-txt">Anamnesis</span>
+ <div class="sb-item" id="sb-val" onclick="showSection('val')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg></span><span class="sb-txt">Valoraciones</span><i id="sb-val-badge" style="display:none"></i>
  </div>
- <div class="sb-grp" id="sb-g-dir" style="display:none"></div>
+ <div class="sb-grp" id="sb-g-mio"><span>Lo mío</span></div>
+ <div class="sb-item" id="sb-mis" onclick="showSection('mis')" style="display:none">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg></span><span class="sb-txt">Mis estadísticas</span>
+ </div>
+ <div class="sb-grp" id="sb-g-dir" style="display:none"><span>Dirección</span></div>
+ <div class="sb-item" id="sb-rdia" onclick="showSection('rdia')" style="display:none">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M8.6 12.3l2.3 2.3 4.5-4.9"/></svg></span><span class="sb-txt">Daily report</span><span id="rdiaBadge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:middle">1</span>
+ </div>
  <div class="sb-item" id="sb-rend" onclick="showSection('rend')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="sb-txt">Rendimiento</span>
  </div>
@@ -1972,9 +1986,11 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  <div class="sb-item" id="sb-admin" onclick="showSection('admin')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span><span class="sb-txt">Dirección</span>
  </div>
- <div class="sb-grp"></div>
- <div class="sb-item" id="sb-school" onclick="showSection('school')">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg></span><span class="sb-txt">School</span>
+ <div class="sb-item" id="sb-prog" onclick="showSection('prog')" style="display:none"><!-- Programas y Anamnesis se usan desde la ficha del paciente -->
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span><span class="sb-txt">Programas</span>
+ </div>
+ <div class="sb-item" id="sb-anam" onclick="showSection('anam')" style="display:none">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 3h6v3H9z"/><path d="M8 4.5H6a2 2 0 0 0-2 2V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6.5a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h5"/></svg></span><span class="sb-txt">Anamnesis</span>
  </div>
  </div>
  <div class="sb-footer" id="sb-user">Panel fisioterapeuta</div>
@@ -1983,11 +1999,8 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  <!-- MAIN -->
  <div class="main-area">
  <div class="topbar">
- <button type="button" id="btnPerfil" onclick="abrirPerfilMenu()" aria-label="Mi perfil"></button>
+ <button type="button" id="btnPerfil" onclick="abrirPerfilMenu('yo')" aria-label="Mi perfil"></button>
  <div id="topBtns">
- <button type="button" class="tb-b on" id="btnNoCit" onclick="editContactoG(null,()=>{try{if(sessionStorage.getItem('f365_panel_sec')==='cap')showSection('cap');}catch(e){}})" aria-label="Apuntar alguien que pregunta" title="Apuntar alguien que pregunta (no citado)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg></button>
- <button type="button" class="tb-b" id="btnPlan" onclick="showSection('plan')" aria-label="Plan de batalla"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><i class="tb-n" id="btnPlanN"></i></button>
- <button type="button" class="tb-b" id="btnTar" onclick="showSection('tar')" aria-label="Pendientes"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><i class="tb-n" id="btnTarN"></i></button>
  <button type="button" class="tb-b" id="btnRend" onclick="showSection('rend')" aria-label="Rendimiento" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
  </div>
  <button type="button" id="btnAvisos" onclick="abrirAjustesAvisos()" aria-label="Notificaciones"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><i id="btnAvisosDot"></i></button>
@@ -2001,20 +2014,11 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 
 <div id="perfilMenu" onclick="if(event.target===this)cerrarPerfilMenu()"><div class="pm-card">
  <div class="pm-head"><div class="pm-av" id="pmAv"></div><div><b id="pmNom"></b><span id="pmRol"></span></div></div>
- <button type="button" class="pm-it" id="pmPlan" onclick="cerrarPerfilMenu();showSection('plan')"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>Plan de batalla<i id="pmPlanN" style="display:none"></i></button>
- <button type="button" class="pm-it" id="pmCom" style="display:none" onclick="cerrarPerfilMenu();showSection('com')"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg>Comunicaciones<i id="pmComN" style="display:none"></i></button>
- <button type="button" class="pm-it" id="pmMis" style="display:none" onclick="cerrarPerfilMenu();showSection('mis')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Mis estadísticas</button>
- <button type="button" class="pm-it" id="pmVal" onclick="cerrarPerfilMenu();showSection('val')"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>Valoraciones<i id="pmValN" style="display:none"></i></button>
- <button type="button" class="pm-it" id="pmSug" onclick="cerrarPerfilMenu();showSection('sug')"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Sugerencias<i id="pmSugN" style="display:none"></i></button>
- <button type="button" class="pm-it" id="pmCall" onclick="cerrarPerfilMenu();showSection('call')"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Call-in</button>
- <button type="button" class="pm-it" id="pmRend" style="display:none" onclick="cerrarPerfilMenu();showSection('rend')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rendimiento</button>
-  <button type="button" class="pm-it" id="pmStats" style="display:none" onclick="cerrarPerfilMenu();showSection('stats')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Estadísticas</button>
- <button type="button" class="pm-it" id="pmAdmin" style="display:none" onclick="cerrarPerfilMenu();showSection('admin')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Dirección</button>
- <button type="button" class="pm-it" id="pmCap" onclick="cerrarPerfilMenu();showSection('cap')"><svg viewBox="0 0 24 24"><path d="M3 11l15-6v14L3 13z"/><path d="M7 12.5V18a2 2 0 0 0 4 0v-4"/><path d="M21 9.5v5"/></svg>Captación</button>
- <button type="button" class="pm-it" id="pmEjer" onclick="cerrarPerfilMenu();showSection('ejer')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg>Ejercicios</button>
- <button type="button" class="pm-it" id="pmSchool" onclick="cerrarPerfilMenu();showSection('school')"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg>School</button>
- <button type="button" class="pm-it" id="pmAvisos" onclick="cerrarPerfilMenu();abrirAjustesAvisos()"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones<span class="pm-off">Desactivadas</span></button>
- <button type="button" class="pm-it salir" onclick="confirmarSalir()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button>
+ <div class="pm-gr"><div class="pm-gt">Equipo</div><div class="pm-its"><button type="button" class="pm-it" id="pmCom" style="display:none" onclick="cerrarPerfilMenu();showSection('com')"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg>Comunicaciones<i id="pmComN" style="display:none"></i></button><button type="button" class="pm-it" id="pmSug" onclick="cerrarPerfilMenu();showSection('sug')"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Sugerencias<i id="pmSugN" style="display:none"></i></button><button type="button" class="pm-it" id="pmSchool" onclick="cerrarPerfilMenu();showSection('school')"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg>School</button></div></div>
+ <div class="pm-gr"><div class="pm-gt">Clínica</div><div class="pm-its"><button type="button" class="pm-it" id="pmCap" onclick="cerrarPerfilMenu();showSection('cap')"><svg viewBox="0 0 24 24"><path d="M3 11l15-6v14L3 13z"/><path d="M7 12.5V18a2 2 0 0 0 4 0v-4"/><path d="M21 9.5v5"/></svg>Captación</button><button type="button" class="pm-it" id="pmCall" onclick="cerrarPerfilMenu();showSection('call')"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Call-in</button><button type="button" class="pm-it" id="pmEjer" onclick="cerrarPerfilMenu();showSection('ejer')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg>Ejercicios</button><button type="button" class="pm-it" id="pmVal" onclick="cerrarPerfilMenu();showSection('val')"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>Valoraciones<i id="pmValN" style="display:none"></i></button></div></div>
+ <div class="pm-gr"><div class="pm-gt">Lo mío</div><div class="pm-its"><button type="button" class="pm-it" id="pmMis" style="display:none" onclick="cerrarPerfilMenu();showSection('mis')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Mis estadísticas</button></div></div>
+ <div class="pm-gr"><div class="pm-gt">Dirección</div><div class="pm-its"><button type="button" class="pm-it" id="pmRdia" style="display:none" onclick="cerrarPerfilMenu();showSection('rdia')"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M8.6 12.3l2.3 2.3 4.5-4.9"/></svg>Daily report</button><button type="button" class="pm-it" id="pmRend" style="display:none" onclick="cerrarPerfilMenu();showSection('rend')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rendimiento</button><button type="button" class="pm-it" id="pmStats" style="display:none" onclick="cerrarPerfilMenu();showSection('stats')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Estadísticas</button><button type="button" class="pm-it" id="pmAdmin" style="display:none" onclick="cerrarPerfilMenu();showSection('admin')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Dirección</button></div></div>
+ <div class="pm-yo"><button type="button" class="pm-it" id="pmAvisos" onclick="cerrarPerfilMenu();abrirAjustesAvisos()"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones<span class="pm-off">Desactivadas</span></button><button type="button" class="pm-it salir" onclick="confirmarSalir()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button></div>
 </div></div>
 
 <div id="avisosModal" onclick="if(event.target===this)cerrarAjustesAvisos()">
@@ -2114,16 +2118,16 @@ const TOPBAR = {
  school: ['School','Formación del equipo'],
  msg: ['Chat','Mensajes con pacientes'],
  rend: ['Rendimiento','Cómo va cada fisio'],
- seg: ['Pendientes','Tareas y llamadas'],
- tar: ['Pendientes','Tareas y llamadas'],
+ seg: ['Mi día','Tus tareas y llamadas'],
+ tar: ['Mi día','Tus tareas y llamadas'],
  call: ['Call-in','Pacientes para llamar'],
  agenda: ['Agenda','Citas del día'],
  stats: ['Estadísticas','El centro semana a semana'],
  rdia: ['Daily report','Check-lists del equipo y resumen del día'],
  cap: ['Captación','Lista de espera y contactos'],
  ejer: ['Ejercicios','Biblioteca de vídeos'],
- rep: ['Check-list','Marca y envía antes de irte'],
- plan: ['Plan de batalla','Lo que toca hacer hoy'],
+ rep: ['Mi día','El check-list antes de irte'],
+ plan: ['Mi día','Tu plan de batalla'],
  com: ['Buzón','Comunicaciones internas del equipo'],
  sug: ['Sugerencias','Ideas, mejoras y fallos de la app'],
  mis: ['Mis estadísticas','Tus sesiones, ocupación y horas']
@@ -2271,7 +2275,7 @@ function aplicarRole(){
  'agenda': 'sb-agenda',
  'pacientes': 'sb-pac',
  'chat': 'sb-msg',
- 'checklist': 'sb-rep',
+ 'checklist': 'sb-fuera', // el check-list va dentro de «Mi día»
  'callin': 'sb-call',
  'captacion': 'sb-cap',
  'programas': 'sb-fuera', // ya no sale en el menú (va en la ficha)
@@ -2347,9 +2351,16 @@ function iniciales(n){return String(n||'').trim().split(/\s+/).slice(0,2).map(w=
 function pintarPerfil(){if(!fisioActual)return;try{setTimeout(novPunto,0);}catch(e){}requestAnimationFrame(ajustaTopbar);const av=fisioActual.foto?`<img src="${escH(fisioActual.foto)}" alt="">`:escH(iniciales(fisioActual.nombre));
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=(fisioActual.role==='admin'?'Administración':'Fisioterapeuta')+(fisioActual.direccion?' · Dirección':'');
- const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';$('btnTar').classList.add('on');$('btnPlan').classList.add('on');['sb-tar'].forEach(i=>{const e=$(i);if(e)e.style.display='';});try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{if('direccion' in fisioActual){const d=!!fisioActual.direccion;[['sb-rend','pmRend'],['sb-stats','pmStats'],['sb-admin','pmAdmin']].forEach(([sb,pm])=>{const a=$(sb),b=$(pm);if(a)a.style.display=d?'':'none';if(b)b.style.display=d?'':'none';});}}catch(e){}// Rendimiento, Estadísticas y Administración: solo dirección (casilla «Dirección» en Equipo)
- try{RD_DIR=('direccion' in fisioActual)?!!fisioActual.direccion:['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});if(RD_DIR)$('sb-rep').style.display='';const t=$('sb-rep')&&$('sb-rep').querySelector('.sb-txt');if(t)t.textContent=RD_DIR?'Daily report':'Check-list';rdiaBadge();}catch(e){}try{const v=['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{planContar();}catch(e){}try{comVisibilidad();}catch(e){}try{sugContar();encContar();}catch(e){}setTimeout(()=>{try{chkRecordar();}catch(e){}},4000);try{const v=fisioActual.role!=='admin';['sb-mis','pmMis'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
-function abrirPerfilMenu(){pintarPerfil();$('perfilMenu').classList.add('on');}
+ const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{if('direccion' in fisioActual){const d=!!fisioActual.direccion;[['sb-rend','pmRend'],['sb-stats','pmStats'],['sb-admin','pmAdmin']].forEach(([sb,pm])=>{const a=$(sb),b=$(pm);if(a)a.style.display=d?'':'none';if(b)b.style.display=d?'':'none';});}}catch(e){}// Rendimiento, Estadísticas y Administración: solo dirección (casilla «Dirección» en Equipo)
+ try{RD_DIR=('direccion' in fisioActual)?!!fisioActual.direccion:['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});['sb-rdia','pmRdia'].forEach(i=>{const e=$(i);if(e)e.style.display=RD_DIR?'':'none';});rdiaBadge();}catch(e){}try{const v=RD_DIR||['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{planContar();}catch(e){}try{comVisibilidad();}catch(e){}try{sugContar();encContar();}catch(e){}setTimeout(()=>{try{chkRecordar();}catch(e){}},4000);try{const v=fisioActual.role!=='admin';['sb-mis','pmMis','sb-g-mio'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
+function abrirPerfilMenu(modo){pintarPerfil();const m=$('perfilMenu');m.classList.toggle('mas',modo==='mas');m.classList.toggle('yo',modo!=='mas');
+ // Un bloque sin nada que mostrar no sale
+ m.querySelectorAll('.pm-gr').forEach(g=>{g.style.display=[...g.querySelectorAll('.pm-it')].some(b=>b.style.display!=='none')?'':'none';});m.classList.add('on');}
+function abrirMas(){abrirPerfilMenu('mas');}
+// El número de «Más»: lo nuevo que hay dentro (comunicaciones, sugerencias, valoraciones, daily report)
+function masBadge(){try{const n=['pmComN','pmSugN','pmValN','rdiaBadge'].reduce((a,i)=>{const e=$(i);return a+((e&&e.style.display!=='none'&&e.textContent.trim())?(parseInt(e.textContent)||1):0);},0);
+ const b=$('sb-mas-badge');if(b){const t=n?(n>99?'99+':String(n)):'';if(b.textContent!==t)b.textContent=t;const d=n?'':'none';if(b.style.display!==d)b.style.display=d;}}catch(e){}}
+setTimeout(()=>{try{['pmComN','pmSugN','pmValN','rdiaBadge'].forEach(i=>{const e=$(i);if(e)new MutationObserver(masBadge).observe(e,{attributes:true,childList:true,characterData:true,subtree:true});});masBadge();}catch(e){}},0);
 function cerrarPerfilMenu(){$('perfilMenu').classList.remove('on');}
 function confirmarSalir(){pregunta('¿Cerrar sesión en este dispositivo?',{si:'Cerrar sesión'}).then(ok=>{if(ok)cerrarSesionPanel();});return false;}
 function cerrarSesionPanel(){try{window.__apiCache&&window.__apiCache.clear();}catch(e){}try{localStorage.removeItem('f365_panel_sesion');sessionStorage.removeItem('f365_panel_sec');}catch(e){}location.reload();}
@@ -2374,16 +2385,18 @@ window.addEventListener('resize',()=>ajustaTopbar());
 function showSection(sec){
  try{window.__sigueAqui&&window.__sigueAqui.cancela();}catch(e){}
  // Si no tiene acceso a esa sección (Administración › Accesos), a la primera que sí tenga
- try{const SBM={agenda:'sb-agenda',pac:'sb-pac',msg:'sb-msg',rep:'sb-rep',call:'sb-call',cap:'sb-cap',prog:'sb-prog',ejer:'sb-ejer',anam:'sb-anam',rend:'sb-rend',stats:'sb-stats',school:'sb-school',admin:'sb-admin',com:'sb-com'};
+ try{const SBM={agenda:'sb-agenda',pac:'sb-pac',msg:'sb-msg',call:'sb-call',cap:'sb-cap',prog:'sb-prog',ejer:'sb-ejer',anam:'sb-anam',rend:'sb-rend',stats:'sb-stats',school:'sb-school',admin:'sb-admin',com:'sb-com'};
   // Anamnesis y Programas ya no salen en el menú: se abren desde la ficha del paciente (basta con tener el permiso)
   const desdeFicha=!!fisioActual&&((sec==='anam'&&(fisioActual.accesos||{}).anamnesis!==false)||(sec==='prog'&&(fisioActual.accesos||{}).programas!==false));
   if(fisioActual&&SBM[sec]&&!desdeFicha){const e=$(SBM[sec]);if(e&&e.style.display==='none'){const alt=Object.keys(SBM).find(k=>{const x=$(SBM[k]);return x&&x.style.display!=='none';});if(alt)sec=alt;}}}catch(e){}
  try{const pv=sessionStorage.getItem('f365_panel_sec');if(sec==='anam'&&pv&&pv!=='anam')sessionStorage.setItem('f365_panel_prev',pv);}catch(e){}
  try{sessionStorage.setItem('f365_panel_sec',sec);}catch(e){}
  try{$('mainWrap').classList.remove('anam');}catch(e){}
- try{$('btnRend').classList.toggle('activo',sec==='rend');$('btnTar').classList.toggle('activo',sec==='tar');$('btnPlan').classList.toggle('activo',sec==='plan');}catch(e){}
- ['anam','prog','agenda','pac','school','msg','rend','seg','tar','call','stats','cap','ejer','rep','admin','com','sug','mis','rdia','val','plan'].forEach(s=>{
- const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec||(s==='rep'&&sec==='rdia'));
+ try{$('btnRend').classList.toggle('activo',sec==='rend');}catch(e){}
+ if(sec==='dia'){let t='plan';try{t=sessionStorage.getItem('f365_dia')||'plan';}catch(e){}sec=DIA_TABS().some(x=>x[0]===t)?t:'plan';}
+ const enDia=DIA_SECS.includes(sec);
+ ['anam','prog','agenda','pac','school','msg','rend','call','stats','cap','ejer','admin','com','sug','mis','rdia','val','dia'].forEach(s=>{
+ const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec||(s==='dia'&&enDia));
  });
  const [t,s] = TOPBAR[sec];
  $('topbar-t').textContent=t;
@@ -2404,13 +2417,11 @@ function showSection(sec){
  else if(sec==='msg') renderMensajes(wrap);
  else if(sec==='school') renderWiki(wrap);
  else if(sec==='rend') renderRendimiento(wrap);
- else if(sec==='seg'){try{sessionStorage.setItem('f365_tar','seg');}catch(e){}renderTareas(wrap);}
- else if(sec==='tar') renderTareas(wrap);
+ else if(enDia) renderMiDia(wrap,sec);
  else if(sec==='call') renderCallIn(wrap);
  else if(sec==='agenda') renderAgenda(wrap);
  else if(sec==='cap') renderCaptacion(wrap);
  else if(sec==='ejer') renderEjercicios(wrap);
- else if(sec==='rep') renderReporte(wrap);
  else if(sec==='stats') renderStats(wrap);
  else if(sec==='rdia') renderReporteDia(wrap);
  else if(sec==='admin') renderAdmin(wrap);
@@ -2418,7 +2429,6 @@ function showSection(sec){
  else if(sec==='sug') renderSug(wrap);
  else if(sec==='val') renderValoraciones(wrap);
  else if(sec==='mis') renderRendimiento(wrap,true);
- else if(sec==='plan') renderPlan(wrap);
 }
 
 
@@ -6675,7 +6685,7 @@ function renderAgenda(wrap){
  card.querySelectorAll('.ag-vis button').forEach(b=>b.onclick=()=>{AG.vista=b.dataset.v;try{localStorage.setItem('f365_ag_vista',AG.vista);}catch(e){}cargar();});
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{AG.fecha=agMover(AG.fecha,+b.dataset.n*(AG.vista==='semana'?7:1));cargar();});
  $c('.ag-hoy').onclick=()=>{AG.fecha=agHoyIso();cargar();};
- $c('.ag-add').onclick=()=>agAnadirCita(AG.vista==='lista'||AG.fecha<agHoyIso()?agHoyIso():AG.fecha,AG.fisio,cargar);
+ $c('.ag-add').onclick=e=>{const b=e.currentTarget;ddMenuG(b,[{v:'cita',t:'Nueva cita'},{v:'pregunta',t:'Alguien pregunta y se va sin cita'}],v=>{if(v==='cita')agAnadirCita(AG.vista==='lista'||AG.fecha<agHoyIso()?agHoyIso():AG.fecha,AG.fisio,cargar);else editContactoG(null,()=>{});});};
  $c('.ag-recb:not(.ag-pdfb):not(.ag-encb)').onclick=()=>agRecordatorios(()=>{cargar();agPagosBadge(true);});agPagosBadge();
  $c('.ag-pdfb').onclick=()=>agPdfHuecos();
  fi.onchange=()=>{if(fi.value){AG.fecha=fi.value;cargar();}};fi.style.display='none';
@@ -8971,7 +8981,7 @@ async function chkRecordar(){try{
  const b=ce('div','chk-av');b.innerHTML=`<button type="button" class="chk-avb"><b>Cierra tu día</b><span>${falta?`El panel ve ${falta} ${falta===1?'cosa':'cosas'} sin hacer. Mira cuáles en tu check-list.`:'Tu check-list de hoy está sin enviar. Te lleva 1 minuto.'}</span></button><button type="button" class="chk-avx" aria-label="Cerrar">✕</button>`;
  document.body.appendChild(b);b.querySelector('.chk-avx').onclick=()=>b.remove();b.querySelector('.chk-avb').onclick=()=>{b.remove();showSection('rep');window.scrollTo(0,0);};
 }catch(e){}}
-function chkPinta(on){const s=$('sb-rep');if(!s)return;let i=s.querySelector('.chk-dot');if(on&&!i){i=ce('i','chk-dot');s.appendChild(i);}if(!on&&i)i.remove();}
+function chkPinta(on){const s=$('sb-dia');if(!s)return;let i=s.querySelector('.chk-dot');if(on&&!i){i=ce('i','chk-dot');s.appendChild(i);}if(!on&&i)i.remove();}
 setInterval(()=>{if(document.visibilityState==='visible')chkRecordar();},15*60000);
 
 // ── Justificante de asistencia / informe de sesiones (solo sesiones «Realizada» de la agenda) ──
@@ -9216,10 +9226,10 @@ async function datosTareas(){
 const esMioPend=x=>String(x.quien||'').trim().split(' ')[0].toLowerCase()===String(miNombreCorto()||'').toLowerCase();
 function pintarNumPend(d){const h=d.hoy;const nT=d.items.filter(x=>x.tipo!=='llamar'&&x.fecha<=h&&esMioPend(x)).length,nL=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=h&&esMioPend(x)).length;
  document.querySelectorAll('.tt-n[data-n]').forEach(e=>{const n=e.dataset.n==='seg'?nL:nT;e.textContent=n||'';e.classList.toggle('on',n>0);});
- const b=$('btnTarN');if(b){const n=nT+nL;b.textContent=n>99?'99+':n;b.classList.toggle('on',n>0);}}
+ window._tarN=nT+nL;diaBadge();}
 async function contarTareas(){
  try{const d0=await datosTareasTodas();pintarNumPend(d0);const {items,hoy}=d0;const n=items.filter(x=>x.fecha<=hoy&&esMioPend(x)).length;
-  const b=$('btnTarN');if(b){b.textContent=n>99?'99+':n;b.classList.toggle('on',n>0);}
+  window._tarN=n;diaBadge();
  }catch(e){}
 }
 function itemExplicar(p,onDone){
@@ -9245,7 +9255,7 @@ async function renderTareas(wrap){
  const top=ce('div','tar-top');top.innerHTML=`<div class="seg-tabs"><button type="button" data-v="tareas">Tareas <i class="tt-n" data-n="tareas"></i></button><button type="button" data-v="seg">Llamadas <i class="tt-n" data-n="seg"></i></button></div>`;wrap.appendChild(top);
  datosTareasTodas().then(pintarNumPend).catch(()=>{});
  const cont=ce('div','');wrap.appendChild(cont);
- const ir=v=>{vista=v;try{sessionStorage.setItem('f365_tar',v);}catch(e){}top.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));cont.innerHTML='';try{const [tt,ts]=v==='seg'?TOPBAR.seg:TOPBAR.tar;$('topbar-t').textContent=tt;$('topbar-s').textContent=ts;}catch(e){}if(v==='seg')renderSeguimiento(cont);else listaTareas(cont);};
+ const ir=v=>{vista=v;try{sessionStorage.setItem('f365_tar',v);}catch(e){}top.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));cont.innerHTML='';if(v==='seg')renderSeguimiento(cont);else listaTareas(cont);};
  top.querySelectorAll('button').forEach(b=>b.onclick=()=>ir(b.dataset.v));
  ir(vista);
 }
@@ -12006,8 +12016,9 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-02',aviso:1,t:'Menú nuevo: abajo tienes Agenda, Pacientes, Mi día, Chat y Más. En Mi día está todo lo que te toca hoy (Plan, Pendientes y Check-list). El resto está en Más. Para apuntar a alguien que pregunta y se va sin cita: el + de la Agenda.',ver:{sec:'plan',pasos:[{el:'.dia-tabs',txt:'Mi día: Plan, Pendientes y Check-list.'}]}},
  {f:'2026-11-02',dir:1,t:'Estadísticas por fisio: arriba eliges «Todo el centro» o un fisio y ves sus sesiones, ocupación, pacientes atendidos, conversión y faltas, semana a semana o por meses.',ver:{sec:'stats',pasos:[{el:'.st-fis',txt:'Elige el fisio.'}]}},
- {f:'2026-11-02',aviso:1,t:'Nuevo: Plan de batalla. Apunta tus tareas del día y márcalas al hacerlas; lo que no hagas pasa solo al día siguiente. Dirección también te puede poner tareas. En el móvil, la bandera de arriba.',ver:{sec:'plan',pasos:[{el:'.pb-add',txt:'Escribe la tarea y toca +.'}]}},
+ {f:'2026-11-02',aviso:1,t:'Nuevo: Plan de batalla. Apunta tus tareas del día y márcalas al hacerlas; lo que no hagas pasa solo al día siguiente. Dirección también te puede poner tareas. Está en Mi día › Plan.',ver:{sec:'plan',pasos:[{el:'.pb-add',txt:'Escribe la tarea y toca +.'}]}},
  {f:'2026-11-01',t:'Reservas desde la web: el email de la cita incluye ahora el acceso a la app (usuario y PIN) y avisa de que en la primera visita su fisio le asignará su programa de ejercicios.'},
  {f:'2026-11-01',t:'Mensajes a pacientes: si el paciente ya confirmó su cita (por el email o el enlace), sale «✓ Confirmada» y el botón «Recordar» manda un WhatsApp que dice que ya la tiene confirmada y solo se la recordamos.'},
  {f:'2026-11-01',dir:1,t:'Ajustes › «Reservas desde tu web»: «Calendario dentro de tu web». Tu página de reservar enseña el calendario directamente, sin pulsar otro botón.'},
@@ -12056,7 +12067,7 @@ function esDireccionSeguro(){try{return typeof esDireccion==='function'&&esDirec
 const novMias=()=>NOVEDADES.filter(n=>!n.dir||esDireccionSeguro());
 function novNuevas(){const v=novLS('f365_nov_punto');return novMias().filter(n=>n.aviso&&n.f>v).length;}
 function novMarcarVistas(){novLS('f365_nov_punto',novMax());novPunto();}
-function novPunto(){const n=novNuevas();['sb-school','pmSchool','btnPerfil'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('nov-dot',n>0);});}
+function novPunto(){const n=novNuevas();['sb-school','pmSchool','sb-mas'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('nov-dot',n>0);});}
 function novPinta(box){if(box.dataset.v0===undefined){box.dataset.v0=novLS('f365_nov_visto');novLS('f365_nov_visto',novMax());} // se ven esta vez y ya cuentan como vistas
  const v=box.dataset.v0,M=novMias(),nuevas=M.filter(n=>n.aviso&&n.f>v),abierta=box.dataset.abierta==='1';
  const fd=f=>{const d=new Date(f+'T12:00:00');return d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];};
@@ -14007,18 +14018,18 @@ function renderFormacion(wrap, ruta){
  // ═══ Curso «Cómo funciona la app» · un módulo al día en la serie · se actualiza con cada cambio (ver CLAUDE.md) ═══
  {t:'El panel: cómo moverte',sub:'Tu primer día con el panel',
  cards:[
- {ti:'Al entrar: tu agenda',shot:'/img/school/panel-01-inicio.jpg',body:`Siempre aterrizas en la <b>Agenda</b>: las citas de hoy de todo el equipo.<br><br>Abajo tienes lo que más vas a usar: <b>Agenda, Pacientes, Chat y Check-list</b>. En el ordenador, eso mismo está en el menú de la izquierda.`,ver:{sec:'agenda',pasos:[{el:'.sidebar',txt:'Aquí tienes las secciones que más usarás.'}]}},
- {ti:'¿Buscas otra cosa? Toca tu foto',shot:'/img/school/panel-02-foto.jpg',body:`Comunicaciones, tus estadísticas, Valoraciones, School… está todo tocando <b>tu foto</b>, arriba a la derecha.<br><br>¿Echas algo en falta? No es un fallo: cada uno ve lo que necesita. Pídeselo a dirección.`,ver:{sec:'agenda',pasos:[{el:'#btnPerfil || .sidebar',txt:'Toca tu foto: aquí está el resto de secciones.'}]}},
- {ti:'Alguien pregunta y se va sin cita',shot:'/img/school/panel-03-pregunta.jpg',body:`<b>Cuándo:</b> llama o entra alguien, pregunta precios o por un dolor, y no se cita.<br><br><b>Qué haces:</b> toca el <b>bocadillo con +</b> de arriba y apunta nombre, teléfono y por qué no se citó.<br><br><b>Para qué:</b> así se le puede llamar después en vez de perderlo.`,ver:{sec:'agenda',pasos:[{el:'#btnNoCit',txt:'Este bocadillo: apuntar a alguien que pregunta.'}]}},
- {ti:'Lo que te toca hacer: Pendientes',body:`El botón <b>✓</b> de arriba son <b>tus tareas y llamadas</b>. El número es lo que te toca hoy o llevas atrasado.<br><br>Míralo al empezar y al acabar el día.`,ver:{sec:'agenda',pasos:[{el:'#btnTar, #sb-tar',txt:'Pendientes: tus tareas y llamadas.'}]}},
- {ti:'Tu Plan de batalla',body:`Las cosas que tienes que hacer hoy, apuntadas por ti: escribe la tarea, «Hoy» o «Mañana», y <b>+</b>. Al hacerla, tócale el círculo.<br><br>Lo que no hagas <b>pasa solo al día siguiente</b> («Viene de ayer»), hasta que lo marques. Las que pone dirección salen en negro: «De dirección».<br><br>En el móvil es la <b>bandera</b> de arriba; el número es lo que te queda hoy.`,ver:{sec:'plan',pasos:[{el:'.pb-add',txt:'Aquí apuntas lo que tienes que hacer.'}]}},
+ {ti:'Al entrar: tu agenda',body:`Siempre aterrizas en la <b>Agenda</b>: las citas de hoy de todo el equipo.<br><br>Abajo tienes lo de cada día: <b>Agenda, Pacientes, Mi día, Chat</b> y <b>Más</b>. En el ordenador, lo mismo está en el menú de la izquierda.`,ver:{sec:'agenda',pasos:[{el:'.sidebar',txt:'Aquí tienes las secciones que más usarás.'}]}},
+ {ti:'¿Buscas otra cosa? Toca Más',body:`Comunicaciones, Sugerencias, School, Captación, Valoraciones, tus estadísticas… está todo en <b>Más</b>, abajo a la derecha, ordenado en bloques.<br><br><b>Tu foto</b>, arriba, es solo para lo tuyo: notificaciones y cerrar sesión.<br><br>¿Echas algo en falta? No es un fallo: cada uno ve lo que necesita. Pídeselo a dirección.`,ver:{sec:'agenda',pasos:[{el:'#sb-mas || .sidebar',txt:'Toca Más: aquí está el resto de secciones.'}]}},
+ {ti:'Alguien pregunta y se va sin cita',body:`<b>Cuándo:</b> llama o entra alguien, pregunta precios o por un dolor, y no se cita.<br><br><b>Qué haces:</b> en la Agenda, toca el <b>+</b> › <b>Alguien pregunta y se va sin cita</b>, y apunta nombre, teléfono y por qué no se citó.<br><br><b>Para qué:</b> así se le puede llamar después en vez de perderlo.`,ver:{sec:'agenda',pasos:[{el:'.ag-add',txt:'El +: nueva cita o alguien que pregunta.'}]}},
+ {ti:'Lo que te toca hacer: Mi día',body:`En <b>Mi día</b> está todo lo que te toca hoy, en tres pestañas: tu <b>Plan</b>, tus <b>Pendientes</b> (tareas y llamadas) y el <b>Check-list</b> antes de irte. El número es lo que te queda hoy o llevas atrasado.<br><br>Míralo al empezar y al acabar el día.`,ver:{sec:'plan',pasos:[{el:'.dia-tabs',txt:'Plan, Pendientes y Check-list.'}]}},
+ {ti:'Tu Plan de batalla',body:`Las cosas que tienes que hacer hoy, apuntadas por ti: escribe la tarea, «Hoy» o «Mañana», y <b>+</b>. Al hacerla, tócale el círculo.<br><br>Lo que no hagas <b>pasa solo al día siguiente</b> («Viene de ayer»), hasta que lo marques. Las que pone dirección salen en negro: «De dirección».<br><br>Está en <b>Mi día › Plan</b>.`,ver:{sec:'plan',pasos:[{el:'.pb-add',txt:'Aquí apuntas lo que tienes que hacer.'}]}},
  {ti:'Para enterarte a tiempo: los avisos',body:`<b>Cuándo:</b> la primera vez que usas un móvil u ordenador.<br><br><b>Para qué:</b> si no, no te enteras cuando un paciente te escribe, reserva una hora tuya o paga.<br><br>En el móvil: <b>tu foto › Notificaciones › Activar</b>. En iPhone, con el panel añadido a la pantalla de inicio.`,ver:{sec:'agenda',pasos:[{el:'#btnAvisos || #btnPerfil',txt:'Aquí activas los avisos (en el móvil, tu foto › Notificaciones).'}]}},
  {ti:'Cada mañana, un módulo',body:`A las 8:30 te llega una tarea en Comunicaciones: <b>«Módulo de hoy»</b>. Unos 5 minutos. Al acertar las preguntas se marca hecha sola.<br><br>Solo uno al día: cuando lo acabas, has terminado por hoy.`}
  ],
  qs:[
- {q:'Estás con el móvil y buscas Valoraciones. Abajo no está. ¿Dónde miras?',opts:['No la tengo, se lo digo a dirección','Tocando mi foto, arriba a la derecha','En el chat'],ok:1,fb:['Antes mira en tu foto: abajo solo están las 4 que más se usan.','¡Eso es!','No, el chat es para hablar con pacientes.'],ver:{sec:'agenda',pasos:[{el:'#btnPerfil || .sidebar',txt:'En el móvil, aquí está el resto de secciones.'}]}},
- {q:'Una persona entra a preguntar precios de suelo pélvico y se va sin cita. ¿Qué haces?',opts:['Nada, ya volverá','El bocadillo con + de arriba: la apunto con su motivo','Le creo una ficha de paciente'],ok:1,fb:['Así se pierde: apuntándola, se le puede llamar.','¡Bien! Queda apuntada para llamarla.','Todavía no es paciente: se apunta como contacto.'],ver:{sec:'agenda',pasos:[{el:'#btnNoCit',txt:'Este botón.'}]}},
- {q:'Empiezas el día. ¿Dónde miras qué llamadas y tareas te tocan?',opts:['En el Chat','En Pendientes (el ✓ de arriba)','En la Agenda'],ok:1,fb:['El chat es para pacientes.','¡Eso es! El número es lo que te toca hoy.','En la agenda están las citas, no las tareas.'],ver:{sec:'agenda',pasos:[{el:'#btnTar, #sb-tar',txt:'Aquí.'}]}},
+ {q:'Estás con el móvil y buscas Valoraciones. Abajo no está. ¿Dónde miras?',opts:['No la tengo, se lo digo a dirección','En Más, abajo a la derecha','En el chat'],ok:1,fb:['Antes mira en Más: abajo solo está lo de cada día.','¡Eso es!','No, el chat es para hablar con pacientes.'],ver:{sec:'agenda',pasos:[{el:'#sb-mas || .sidebar',txt:'Aquí está el resto de secciones.'}]}},
+ {q:'Una persona entra a preguntar precios de suelo pélvico y se va sin cita. ¿Qué haces?',opts:['Nada, ya volverá','El + de la Agenda › Alguien pregunta: la apunto con su motivo','Le creo una ficha de paciente'],ok:1,fb:['Así se pierde: apuntándola, se le puede llamar.','¡Bien! Queda apuntada para llamarla.','Todavía no es paciente: se apunta como contacto.'],ver:{sec:'agenda',pasos:[{el:'.ag-add',txt:'Este +.'}]}},
+ {q:'Empiezas el día. ¿Dónde miras qué llamadas y tareas te tocan?',opts:['En el Chat','En Mi día › Pendientes','En la Agenda'],ok:1,fb:['El chat es para pacientes.','¡Eso es! El número es lo que te toca hoy.','En la agenda están las citas, no las tareas.'],ver:{sec:'tar',pasos:[{el:'.dia-tabs',txt:'Aquí.'}]}},
  {q:'Te enteras tarde de lo que te escriben los pacientes. ¿Qué te falta?',opts:['Activar los avisos en ese móvil u ordenador','Mirar el chat cada 5 minutos','Nada'],ok:0,fb:['¡Exacto! En cada móvil y ordenador que uses.','Con los avisos no hace falta.','Sí: activar los avisos.']}
  ]},
 
@@ -14270,7 +14281,7 @@ function renderFormacion(wrap, ruta){
 
  {t:'Pendientes: tareas',sub:'Lo que te toca hacer hoy',
  cards:[
- {ti:'Empiezas el día: mira Pendientes',shot:'/img/school/panel-b-tar.jpg',body:`<b>Cuándo:</b> al empezar y al acabar el día.<br><br><b>Qué ves:</b> <b>lo tuyo</b>, agrupado. Lo atrasado sale en rojo. Con el filtro ves lo de otra persona o de todo el equipo.`,ver:{sec:'tar',pasos:[{el:'.tar-top',txt:'Tareas y Llamadas.'},{el:'.tar-nueva',txt:'Para apuntar una tarea.'}]}},
+ {ti:'Empiezas el día: Mi día › Pendientes',shot:'/img/school/panel-b-tar.jpg',body:`<b>Cuándo:</b> al empezar y al acabar el día.<br><br><b>Qué ves:</b> <b>lo tuyo</b>, agrupado. Lo atrasado sale en rojo. Con el filtro ves lo de otra persona o de todo el equipo.`,ver:{sec:'tar',pasos:[{el:'.tar-top',txt:'Tareas y Llamadas.'},{el:'.tar-nueva',txt:'Para apuntar una tarea.'}]}},
  {ti:'Hay que hacer algo: ＋ Tarea',body:`<b>Cuándo:</b> algo que no puede olvidarse (pedir una autorización a la mutua, llamar a un médico…).<br><br><b>Qué haces:</b> <b>＋ Tarea</b>: qué hay que hacer, para quién, para cuándo y, si quieres, el paciente. Cuando esté, <b>✓ Hecho</b>.`,ver:{sec:'tar',pasos:[{el:'.tar-nueva',txt:'Aquí.'}]}},
  {ti:'Lo que sale solo',shot:'/img/school/panel-b-tar-auto.jpg',body:`<b>Historia por actualizar</b> → anota la sesión.<br><b>Sin próxima cita</b> → explica por qué (tienes 2 días).<br><b>Sin plan de ejercicios</b> → pónselo.<br><b>Sin la app</b> → Enviar app.<br><b>Sin evolución</b> → decide cómo seguir.`},
  {ti:'«Sin próxima cita»: Explicar',body:`<b>Cuándo:</b> atendiste a alguien en los últimos 30 días y no tiene otra cita.<br><br><b>Qué haces:</b> <b>Explicar</b>: por qué no ha vuelto a reservar. Si toca, déjalo marcado para <b>añadirlo a seguimiento</b> (cuándo llamarle y quién).`}
@@ -14294,14 +14305,14 @@ function renderFormacion(wrap, ruta){
  {q:'Llamas a un paciente y no lo coge. ¿Qué haces?',opts:['Nada, ya lo intentaré','Resultado › No contesta, con cuándo volver a llamar','Lo borro de la lista'],ok:1,fb:['Si no lo apuntas, nadie sabe que llamaste.','¡Eso es!','Así se pierde.']},
  {q:'Recuperas la cita de una paciente por teléfono y ya le has dado hora. ¿Qué apuntas?',opts:['Resultado › Cita recuperada','Volver a llamar','Nada'],ok:0,fb:['¡Bien! La llamada se cierra.','Ya no hace falta volver a llamar.','Seguiría saliendo para llamar.']},
  {q:'Un paciente te dice que no quiere que le llaméis más. ¿Qué pones?',opts:['No contesta','No volver a llamar','Nada'],ok:1,fb:['No es lo mismo: le volverían a llamar.','¡Correcto!','Hay que apuntarlo.']},
- {q:'Empiezas el día. ¿Dónde ves a quién te toca llamar?',opts:['En el chat','Pendientes (✓) › Llamadas','En la agenda'],ok:1,fb:['No.','¡Eso es! Primero las atrasadas.','En la agenda están las citas.'],ver:{sec:'tar',pasos:[{el:'.tar-top .seg-tabs button[data-v="seg"]',txt:'Aquí.'}]}}
+ {q:'Empiezas el día. ¿Dónde ves a quién te toca llamar?',opts:['En el chat','Mi día › Pendientes › Llamadas','En la agenda'],ok:1,fb:['No.','¡Eso es! Primero las atrasadas.','En la agenda están las citas.'],ver:{sec:'tar',pasos:[{el:'.tar-top .seg-tabs button[data-v="seg"]',txt:'Aquí.'}]}}
  ]},
 
  {t:'Call-in y Captación',sub:'Hay tiempo libre: a quién llamar',
  cards:[
  {ti:'Tienes un hueco: Call-in',shot:'/img/school/panel-c-callin.jpg',body:`<b>Cuándo:</b> te ha quedado una hora libre o dirección te pide una tanda de llamadas.<br><br><b>Qué haces:</b> en <b>Call-in</b> elige uno o varios <b>estados</b> (por ejemplo «pendiente de continuar») y el <b>fisio de la última sesión</b>. Sale la lista para llamar.`,ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Elige los estados…'},{el:'.ci-ddf',txt:'…y el fisio de la última sesión.'}]}},
  {ti:'En cada paciente de la lista',body:`Llamar, <b>WhatsApp</b>, cambiarle el estado, añadirle a seguimiento o apuntar el resultado.<br><br>Si eliges varios estados, salen solo los que los tienen todos.`},
- {ti:'Alguien preguntó y no se citó',body:`En <b>Captación › No citados</b> está la gente que apuntasteis con el bocadillo con + de arriba: por dónde preguntó y <b>por qué no se citó</b>.<br><br>Desde ahí: WhatsApp, Editar, Archivar o <b>Se citó</b> si al final viene.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'En espera, No citados y Negocios.'}]}},
+ {ti:'Alguien preguntó y no se citó',body:`En <b>Captación › No citados</b> está la gente que apuntasteis con el + de la Agenda (Alguien pregunta): por dónde preguntó y <b>por qué no se citó</b>.<br><br>Desde ahí: WhatsApp, Editar, Archivar o <b>Se citó</b> si al final viene.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'En espera, No citados y Negocios.'}]}},
  {ti:'Negocios del barrio',body:`En <b>Captación › Negocios</b> están los negocios con los que colaboramos: cuándo toca visitarlos, si tienen flyers y cuántos pacientes nos han mandado.<br><br>Al ir, toca <b>Visitado</b>: se apunta la visita y cuándo volver.`}
  ],
  qs:[
@@ -14313,7 +14324,7 @@ function renderFormacion(wrap, ruta){
 
  {t:'Buzón y Sugerencias',sub:'Hablar con el equipo y proponer mejoras',
  cards:[
- {ti:'Te llega algo del equipo',shot:'/img/school/panel-c-buzon.jpg',body:`Todo lo del equipo llega a <b>Comunicaciones</b> (tu foto › Comunicaciones): avisos, peticiones y tareas. El número grande son las cartas sin abrir.<br><br>Cada una te dice qué esperan de ti: <b>Confirma que la has leído</b>, <b>Por hacer</b> o <b>Te pide respuesta</b>. En <b>Pendientes</b> tienes solo lo que te toca a ti.`,ver:{sec:'com',pasos:[{el:'.com-bz',txt:'Tu buzón: lo que tienes sin abrir.'},{el:'.com-tabs',txt:'Entrada, Salida y Pendientes.'}]}},
+ {ti:'Te llega algo del equipo',shot:'/img/school/panel-c-buzon.jpg',body:`Todo lo del equipo llega a <b>Comunicaciones</b> (Más › Comunicaciones): avisos, peticiones y tareas. El número grande son las cartas sin abrir.<br><br>Cada una te dice qué esperan de ti: <b>Confirma que la has leído</b>, <b>Por hacer</b> o <b>Te pide respuesta</b>. En <b>Pendientes</b> tienes solo lo que te toca a ti.`,ver:{sec:'com',pasos:[{el:'.com-bz',txt:'Tu buzón: lo que tienes sin abrir.'},{el:'.com-tabs',txt:'Entrada, Salida y Pendientes.'}]}},
  {ti:'Tienes que contarle algo a alguien',shot:'/img/school/panel-c-escribir.jpg',body:`<b>Escribir</b> y eliges:<br>• <b>Informe</b>: contar algo importante.<br>• <b>Solicitud</b>: pedir algo que el otro tiene que resolver.<br>• <b>Tareas</b>: una lista que se va marcando.<br>• <b>Para administración</b>: algo que hay que corregir.<br>• <b>Vacaciones y horarios</b>.`,ver:{sec:'com',pasos:[{el:'.com-esc',txt:'Aquí escribes.'}]}},
  {ti:'Di qué esperas del otro',body:`Al escribir eliges: <b>Que lo lea</b>, <b>Que lo haga</b> o <b>Que te conteste</b>. Puedes poner fecha límite, mencionar pacientes con @ y adjuntar archivos.<br><br>En <b>Salida</b> ves si ya lo han leído o hecho.`},
  {ti:'Quieres un día libre',body:`<b>Escribir › Vacaciones y horarios</b>: vacaciones, día libre, unas horas o un cambio de horario.<br><br>Dirección lo <b>aprueba o rechaza</b> ahí mismo. Al aprobarlo, tus huecos libres se bloquean solos.`},
@@ -14329,7 +14340,7 @@ function renderFormacion(wrap, ruta){
 
  {t:'Fin del día: el check-list',sub:'Antes de irte: qué revisar',
  cards:[
- {ti:'Antes de irte',shot:'/img/school/panel-c-check.jpg',body:`<b>Cuándo:</b> cada día, antes de irte.<br><br><b>Qué haces:</b> en <b>Check-list</b> repasa cada punto (cobros, estado de las citas, ejercicios, consentimientos, anamnesis, app, llamadas, chat, tareas, historias, agenda de mañana y cabina) y márcalo.<br><br><b>Para qué:</b> que no se quede nada a medias.`,ver:{sec:'rep',pasos:[{el:'.rp-it',txt:'Marca cada punto.'},{el:'.rp-env',txt:'Y envía antes de irte.'}]}},
+ {ti:'Antes de irte',shot:'/img/school/panel-c-check.jpg',body:`<b>Cuándo:</b> cada día, antes de irte.<br><br><b>Qué haces:</b> en <b>Mi día › Check-list</b> repasa cada punto (cobros, estado de las citas, ejercicios, consentimientos, anamnesis, app, llamadas, chat, tareas, historias, agenda de mañana y cabina) y márcalo.<br><br><b>Para qué:</b> que no se quede nada a medias.`,ver:{sec:'rep',pasos:[{el:'.rp-it',txt:'Marca cada punto.'},{el:'.rp-env',txt:'Y envía antes de irte.'}]}},
  {ti:'«Tengo 1 pendiente»',body:`Algunos puntos los comprueba el panel solo. Si ves <b>Tengo N pendientes</b>, salen los nombres: tócalos para abrir su ficha y arreglarlo.<br><br>Por ejemplo, un cobro sin registrar o alguien que no ha reagendado.`},
  {ti:'Enviar',body:`Marca, añade una nota si quieres y <b>Enviar check-list</b>. Si falta algo por marcar, te pide confirmarlo.<br><br>Lo que vas marcando se guarda en ese móvil u ordenador hasta que lo envías.`,ver:{sec:'rep',pasos:[{el:'.rp-env',txt:'Enviar check-list.'}]}},
  {ti:'Se acaba algo',body:`Apúntalo en <b>¿Falta material?</b>: va a la lista de la compra de dirección.`,ver:{sec:'rep',pasos:[{el:'.rp-cpb',txt:'Aquí apuntas lo que falta.'}]}}
@@ -14337,13 +14348,13 @@ function renderFormacion(wrap, ruta){
  qs:[
  {q:'¿Cuándo se envía el check-list?',opts:['Una vez a la semana','Cada día antes de irte','Solo si hay problemas'],ok:1,fb:['No: cada día.','¡Correcto!','Siempre, aunque todo esté bien.']},
  {q:'En «cobros» te sale «Tengo 1 pendiente: Jordi Vidal». ¿Qué haces?',opts:['Lo marco igual','Toco su nombre, abro su ficha y lo cobro','Nada'],ok:1,fb:['Así se queda sin cobrar.','¡Eso es!','Se quedaría sin cobrar.']},
- {q:'Se acaban las toallas de papel. ¿Dónde lo apuntas?',opts:['Check-list › ¿Falta material?','Sugerencias','Chat'],ok:0,fb:['¡Bien! Llega a la lista de la compra.','Mejor en ¿Falta material?','No.'],ver:{sec:'rep',pasos:[{el:'.rp-cpb',txt:'Aquí.'}]}},
+ {q:'Se acaban las toallas de papel. ¿Dónde lo apuntas?',opts:['Mi día › Check-list › ¿Falta material?','Sugerencias','Chat'],ok:0,fb:['¡Bien! Llega a la lista de la compra.','Mejor en ¿Falta material?','No.'],ver:{sec:'rep',pasos:[{el:'.rp-cpb',txt:'Aquí.'}]}},
  {q:'Vas marcando el check-list en el móvil y te interrumpen. ¿Se pierde lo marcado?',opts:['Sí, hay que empezar otra vez','No, se guarda en ese móvil hasta que lo envías','Se envía solo'],ok:1,fb:['No se pierde.','¡Correcto!','No: hay que enviarlo tú.']}
  ]},
 
  {t:'Tus números',sub:'Mis estadísticas: cómo vas y tus horas',
  cards:[
- {ti:'¿Cómo voy?',shot:'/img/school/panel-c-mis.jpg',body:`En <b>Mis estadísticas</b> (tu foto) ves tu <b>ocupación</b> de ayer, esta semana y este mes: sesiones hechas entre las horas de tu horario.<br><br><b>Verde</b> desde 85 %, <b>naranja</b> desde 65 %, <b>rojo</b> por debajo.`,ver:{sec:'mis',pasos:[{el:'.rend-tot',txt:'Tu ocupación.'},{el:'.rend-chips',txt:'Y aquí eliges el periodo.'}]}},
+ {ti:'¿Cómo voy?',shot:'/img/school/panel-c-mis.jpg',body:`En <b>Mis estadísticas</b> (Más) ves tu <b>ocupación</b> de ayer, esta semana y este mes: sesiones hechas entre las horas de tu horario.<br><br><b>Verde</b> desde 85 %, <b>naranja</b> desde 65 %, <b>rojo</b> por debajo.`,ver:{sec:'mis',pasos:[{el:'.rend-tot',txt:'Tu ocupación.'},{el:'.rend-chips',txt:'Y aquí eliges el periodo.'}]}},
  {ti:'Tu tarjeta',body:`Sesiones / horas, <b>pacientes atendidos</b>, <b>faltas</b>, <b>canceladas</b> y qué % <b>reagenda</b>. La <b>i</b> de cada dato te explica cómo se calcula.<br><br>En <b>Ver quién no ha reagendado</b> puedes escribirles o pasarlos a seguimiento.`,ver:{sec:'mis',pasos:[{el:'.rend-card',txt:'Tu tarjeta.'}]}},
  {ti:'Tus horas',body:`En <b>Control de horas</b>: horas hechas frente a las de tu horario, <b>extra</b>, <b>de menos</b> y días sin venir.<br><br>Debajo, los <b>días que no cuadran</b>.`,ver:{sec:'mis',pasos:[{el:'.ch',txt:'Tu control de horas.'}]}},
  {ti:'Un día no cuadra: explícalo',shot:'/img/school/panel-c-clas.jpg',body:`<b>Cuándo:</b> cubriste a un compañero, viniste sin pacientes, hiciste horas extra…<br><br><b>Qué haces:</b> toca ese día, elige <b>qué pasó</b>, una nota si quieres y <b>Enviar a dirección</b>.<br><br>Sale «enviado» hasta que dirección lo valida.`,ver:{sec:'mis',pasos:[{el:'.rc-clas || .ch',txt:'Toca un día para explicarlo.'}]}},
@@ -14358,7 +14369,7 @@ function renderFormacion(wrap, ruta){
 
  {t:'Valoraciones y reseñas',sub:'Un paciente opina: qué hacer',
  cards:[
- {ti:'Qué opinan tus pacientes',shot:'/img/school/panel-c-val.jpg',body:`En <b>Valoraciones</b> (tu foto) salen los <b>últimos 14 días</b>: encuestas de 1ª visita y de alta, y los pacientes marcados como «Está mejor».<br><br>Arriba: cuántas encuestas, % de contentos, cuántos fueron a Google y cuántos están mejor.`,ver:{sec:'val',pasos:[{el:'.vr',txt:'El resumen.'}]}},
+ {ti:'Qué opinan tus pacientes',shot:'/img/school/panel-c-val.jpg',body:`En <b>Valoraciones</b> (Más) salen los <b>últimos 14 días</b>: encuestas de 1ª visita y de alta, y los pacientes marcados como «Está mejor».<br><br>Arriba: cuántas encuestas, % de contentos, cuántos fueron a Google y cuántos están mejor.`,ver:{sec:'val',pasos:[{el:'.vr',txt:'El resumen.'}]}},
  {ti:'Contesta: Escribirle',body:`<b>Cuándo:</b> sobre todo si alguien no ha quedado contento.<br><br><b>Qué haces:</b> <b>Escribirle</b>. Te propone un mensaje según lo que contestó y lo abre en WhatsApp.<br><br>Si puso Excelente y aún no fue a Google, el mensaje lleva el enlace para la reseña.`,ver:{sec:'val',pasos:[{el:'.val-wa',txt:'Escribirle.'}]}},
  {ti:'Algo que no toca',body:`Con la <b>✕</b> quitas de la lista una valoración que no toca (por ejemplo, un «Está mejor» marcado por error).`,ver:{sec:'val',pasos:[{el:'.val-qx',txt:'Quitar de la lista.'}]}},
  {ti:'El sorteo del mes',body:`Cada mes se sortean <b>2 sesiones gratis</b> entre quienes dejan reseña en Google desde nuestros enlaces: una al azar y otra a la más original.<br><br>Cuéntaselo a tus pacientes: es un buen motivo para que la dejen.<br><br><b>Ojo:</b> ir a Google no basta. Comprobad en Google que la ha dejado y marcad <b>«La puso»</b>: solo entran en el sorteo las comprobadas.`,ver:{sec:'val',pasos:[{el:'.val-so',txt:'El sorteo del mes.'}]}}
@@ -14860,7 +14871,7 @@ function parseFechaMsg(s){
 // ── REPORTE DIARIO (solo dirección): check-list de cada fisio y resumen del día ──
 const RD={fecha:'',cache:{}};let RD_DIR=false;
 // «Daily report»: los fisios van a su check-list; dirección, al reporte del equipo
-function irDaily(){showSection(RD_DIR?'rdia':'rep');}
+function irDaily(){showSection(RD_DIR?'rdia':'rep');} // dirección: Daily report; el resto, su check-list (en Mi día)
 const rdHoy=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'});
 const rdMas=(f,n)=>{const d=new Date(f+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
 const rdFechaTxt=f=>{const d=new Date(f+'T12:00:00Z');return ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][d.getUTCDay()]+' '+d.getUTCDate()+' de '+['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][d.getUTCMonth()];};
@@ -15010,8 +15021,20 @@ const pbDias=(a,b)=>Math.round((new Date(b+'T12:00:00Z')-new Date(a+'T12:00:00Z'
 function pbViene(dia,hoy){const n=pbDias(dia,hoy);if(n<=0)return '';if(n===1)return 'Viene de ayer';
  if(n<7)return 'Viene del '+new Date(dia+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long'});return 'Lleva '+n+' días';}
 async function planContar(){try{const r=await comPost('plan-dia',{});if(!r||!r.ok)return;const n=(r.pendientes||[]).length;
- [['sb-plan-badge',n],['pmPlanN',n]].forEach(([i,v])=>{const e=$(i);if(e){e.textContent=v||'';e.style.display=v?'':'none';}});
- const b=$('btnPlanN');if(b){b.textContent=n>99?'99+':n;b.classList.toggle('on',n>0);}}catch(e){}}
+ window._planN=n;diaBadge();}catch(e){}}
+// ── MI DÍA: lo que te toca hoy en un solo sitio · Plan de batalla · Pendientes (tareas y llamadas) · Check-list
+const DIA_SECS=['plan','tar','seg','rep'];
+const DIA_TABS=()=>{const A=(fisioActual&&fisioActual.accesos)||{};return [['plan','Plan'],['tar','Pendientes'],...(A.checklist===false?[]:[['rep','Check-list']])];};
+function diaBadge(){const n=(window._planN||0)+(window._tarN||0);const b=$('sb-dia-badge');if(b){b.textContent=n?(n>99?'99+':String(n)):'';b.style.display=n?'':'none';}
+ document.querySelectorAll('.dia-tabs i[data-n]').forEach(e=>{const v=e.dataset.n==='plan'?(window._planN||0):(window._tarN||0);e.textContent=v||'';e.style.display=v?'':'none';});}
+function renderMiDia(wrap,sec){const tab=sec==='seg'?'tar':sec;
+ if(sec==='seg'){try{sessionStorage.setItem('f365_tar','seg');}catch(e){}}
+ try{sessionStorage.setItem('f365_dia',tab);}catch(e){}
+ const top=ce('div','dia-tabs');top.innerHTML=DIA_TABS().map(([k,t])=>`<button type="button" data-t="${k}" class="${k===tab?'on':''}">${t}${k==='rep'?'':`<i data-n="${k}" style="display:none"></i>`}</button>`).join('');
+ wrap.appendChild(top);diaBadge();
+ top.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.dataset.t!==tab)showSection(b.dataset.t);});
+ const cont=ce('div','dia-c');wrap.appendChild(cont);
+ if(tab==='plan')renderPlan(cont);else if(tab==='tar')renderTareas(cont);else renderReporte(cont);}
 function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
  box.innerHTML='<div class="rp-c" style="color:var(--muted);font-size:13px">Cargando…</div>';
  const yo=(fisioActual&&fisioActual.nombre)||'';
