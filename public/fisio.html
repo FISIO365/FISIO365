@@ -2057,7 +2057,7 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 (function(){
  const F=window.fetch.bind(window),C=new Map(),INF=new Map(),T0=Date.now(),SS='f365_api_';
  // seg-config sin guardar: si alguien cambia las listas en Administración, los demás lo ven al recargar
- const NO=/[?&]action=(version|seg-consent-archivo|seg-consent-doc|conversaciones|get-mensajes|buscar|seg-wa-ia|config-pub|seg-config|seg-agenda-pack|seg-agenda-enc-nuevas)(&|$)/;
+ const NO=/[?&]action=(version|seg-agenda-online|seg-consent-archivo|seg-consent-doc|conversaciones|get-mensajes|buscar|seg-wa-ia|config-pub|seg-config|seg-agenda-pack|seg-agenda-enc-nuevas)(&|$)/;
  const POSTREAD=/[?&]action=(seg-com-buzon|reporte-dia|compra-lista|plan-dia|seg-sug-lista|seg-sug-contar)(&|$)/;
  const NEUTRO=/[?&]action=(seg-wa-ia|seg-sug-visto|seg-com-hilo)(&|$)/;
  const LOW=/[?&]action=(seg-referidos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|seg-referidos-resueltos)(&|$)/;
@@ -6128,6 +6128,7 @@ function agPasaFiltro(c,f){if(!f)return true;const e=c.estado;if(f==='sp')return
  return f==='pend'?/PENDIENTE/.test(e)&&!!c.pacienteId:f==='sinconf'?/PENDIENTE/.test(e)&&!!c.pacienteId&&!c.confirmada:f==='hecha'?/REALIZADA/.test(e):f==='novino'?/NO ASIST|PERDIDA/.test(e):f==='canc'?/CANCELADA/.test(e):f==='rep'?/REPROGRAMADA/.test(e):f==='reag'?/REAGENDAR/.test(e):f==='dud'?/DUDOSA/.test(e):f==='online'?agOnlineC(c):f==='libre'?agEsLibre(e):true;}
 // Reservas que entran solas (web o app): franja arriba de la agenda; en coral si hay alguna que aún no has visto
 function agOnline(b,irA){if(!b)return;
+ if(!b._iv){b._iv=setInterval(()=>{if(!b.isConnected){clearInterval(b._iv);return;}if(!document.hidden&&!document.querySelector('.hz-modal'))agOnline(b,irA);},60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&b.isConnected)agOnline(b,irA);});}
  fetch(`/api/schedule?action=seg-agenda-online&pwd=${encodeURIComponent(apiPwd)}`).then(x=>x.json()).then(r=>{if(!b.isConnected||!r||!r.ok)return;const L=r.reservas||[];
   let visto='';try{visto=localStorage.getItem('f365_onl_visto')||'';}catch(e){}
   const nuevas=L.filter(x=>x.cuando&&x.cuando>visto);if(!L.length){b.hidden=true;return;}
