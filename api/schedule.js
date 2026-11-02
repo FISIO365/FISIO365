@@ -5254,7 +5254,9 @@ module.exports = async function handler(req, res) {
           const durH = x => { const [h1, m1] = String(x.hd).split(':').map(Number), [h2, m2] = String(x.hh).split(':').map(Number); return Math.max(0, (h2 * 60 + m2 - h1 * 60 - m1) / 60); };
           const horasDe = (k, f, base) => { let h = base; ausS.filter(x => x.desde <= f && x.hasta >= f && (x.fisio === 'Toda la clínica' || String(x.fisio).toLowerCase() === k)).forEach(x => {
             if (x.tipo === 'Cambio de horario' && x.hd) h = durH(x); else if (x.hd) h = Math.max(0, h - durH(x)); else h = 0; }); return h; };
-          const pf = {}; EQUIPO.forEach(k => pf[k] = { ses: real.filter(c => String(c.fisio).toLowerCase() === k).length, ocup: 0, cap: 0, extra: 0 });
+          const pf = {}; EQUIPO.forEach(k => { const de = c => String(c.fisio).toLowerCase() === k, rk = real.filter(de);
+            // Por fisio también: pacientes distintos que atendió, faltas (no vino / cita perdida) y cancelaciones de sus citas
+            pf[k] = { ses: rk.length, ocup: 0, cap: 0, extra: 0, aten: new Set(rk.map(c => c.pid).filter(Boolean)).size, nov: enS.filter(c => de(c) && c.pid && /NO ASIST|PERDIDA/.test(c.e)).length, can: enS.filter(c => de(c) && c.pid && /CANCELADA/.test(c.e)).length }; });
           let cap = 0, ocup = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
             const n = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k && hecha(c)).length;
             if (!n) return; // sin sesiones hechas ese día: no cuenta (no estaba trabajando)
@@ -5279,7 +5281,7 @@ module.exports = async function handler(req, res) {
         const calcM = async (a, b, f, n) => { const k = `${a}|${b}|${n}`, m = global._estTrozos[k]; if (!q.fresco && m && Date.now() - m.t < 15 * 60e3) return m.d; const d = await calc(a, b, f, n); global._estTrozos[k] = { t: Date.now(), d }; return d; };
         let data;
         {
-          const CH = 13, EPOCH = '2024-01-01', ECT = 'tblLIcIro0ko9VG6G', VER = 'v1';
+          const CH = 13, EPOCH = '2024-01-01', ECT = 'tblLIcIro0ko9VG6G', VER = 'v2'; // v2: por fisio también atendidos, faltas y cancelaciones
           const semK = k => mv(EPOCH, 7 * k), idx = f => Math.round((Date.parse(f + 'T12:00:00Z') - Date.parse(EPOCH + 'T12:00:00Z')) / (7 * 864e5));
           // Trimestres terminados hace más de 3 semanas: guardados. Si son de los últimos 3 meses se refrescan cada semana (la conversión aún puede subir)
           const i0 = idx(desde), iL = idx(lun0), limiteViejo = mv(lun0, -7 * 3), reciente = mv(lun0, -7 * 13);
