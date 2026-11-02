@@ -4641,11 +4641,11 @@ module.exports = async function handler(req, res) {
                 const [rs, fs, ps] = await Promise.all([
                   todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),OR(${g.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PacienteRec`),
                   inicio ? todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',OR(${g.map(id => `{PacienteId}='${id}'`).join(',')}))`)}`).catch(() => []) : Promise.resolve([]),
-                  conPago ? todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}`).catch(() => []) : Promise.resolve([])
+                  conPago ? todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}&fields[]=${encodeURIComponent('BONO PREVIO VALE')}`).catch(() => []) : Promise.resolve([])
                 ]);
                 const L = {}; g.forEach(id => L[id] = { citas: [], lotes: [] });
                 rs.forEach(r => (r.fields['PacienteRec'] || []).forEach(id => { if (L[id]) L[id].citas.push({ id: r.id, k: String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA), e: String(nmA(r.fields.ESTADO)).trim().toUpperCase() }); }));
-                ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0), u = Math.min(n, Number(p.fields['BONO PREVIO YA USADAS'] || 0)); if (L[p.id] && n - u > 0) L[p.id].lotes.push({ f: '', n: n - u, tot: n, off: u, precio: 0, previo: true }); });
+                ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0), u = Math.min(n, Number(p.fields['BONO PREVIO YA USADAS'] || 0)); if (L[p.id] && n - u > 0) L[p.id].lotes.push({ f: '', n: n - u, tot: n, off: u, precio: 0, previo: true, vale: !!p.fields['BONO PREVIO VALE'] }); });
                 fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => { const id = r.fields['PacienteId']; if (!L[id]) return;
                   sesDe(r.fields).forEach(x => L[id].lotes.push({ f: r.fields['FECHA DE COBRO'] || r.fields['FECHA'] || '', n: x.n, precio: x.precio, num: r.fields['Nº FACTURA'] || '', fid: r.id })); });
                 g.forEach(id => { L[id].citas.sort((a, b) => a.k.localeCompare(b.k)); C[id] = { t: ahora, v: L[id] }; }); }));
@@ -4671,7 +4671,7 @@ module.exports = async function handler(req, res) {
                 const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio && !cubre.has(x.id)); let li = 0, usado = 0;
                 for (const x of gastan) { while (li < LO.length && usado >= LO[li].n) { li++; usado = 0; }
                   if (x.id === r.id) { const lo = LO[li];
-                    pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: usado + 1 + (lo.off || 0), n: lo.tot || lo.n } : lo.n > 1 ? { t: 'pack', i: usado + 1, n: lo.n, v: Math.round(lo.precio * 100) / 100 } : { t: 'suelta', v: lo.precio };
+                    pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: usado + 1 + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : lo.n > 1 ? { t: 'pack', i: usado + 1, n: lo.n, v: Math.round(lo.precio * 100) / 100 } : { t: 'suelta', v: lo.precio };
                     break; }
                   if (li < LO.length) usado++; }
               });
@@ -4688,7 +4688,7 @@ module.exports = async function handler(req, res) {
             at(`${PACIENTES}/${pid}`).catch(() => ({}))
           ]);
           const lotes = [], P = pr.fields || {}, nP = Number(P['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(P['BONO PREVIO YA USADAS'] || 0));
-          if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true });
+          if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true, vale: !!P['BONO PREVIO VALE'] });
           fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => {
             [[r.fields['CONCEPTO 1'], r.fields['Nº SESIONES 1']], [r.fields['CONCEPTO 2'], r.fields['Nº SESIONES 2']]].forEach(([c, n]) => { if (/^Sesi/i.test(nmA(c) || '') && Number(n) > 0) lotes.push({ n: Number(n), fid: r.id }); }); });
           let claves = rs.map(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA)).filter(k => k !== clave);
@@ -4706,7 +4706,7 @@ module.exports = async function handler(req, res) {
           claves.push(clave); claves.sort();
           let li = 0, usado = 0, out = { t: 'sin' };
           for (const k of claves) { while (li < lotes.length && usado >= lotes[li].n) { li++; usado = 0; }
-            if (k === clave) { const lo = lotes[li]; out = !lo ? { t: 'sin' } : lo.n > 1 || lo.previo ? { t: 'pack', i: usado + 1 + (lo.off || 0), n: lo.tot || lo.n } : { t: 'suelta' }; break; }
+            if (k === clave) { const lo = lotes[li]; out = !lo ? { t: 'sin' } : lo.n > 1 || lo.previo ? { t: 'pack', i: usado + 1 + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : { t: 'suelta' }; break; }
             if (li < lotes.length) usado++; }
           const total = lotes.reduce((t, l) => t + l.n, 0);
           return { activo: true, ...out, quedan: Math.max(0, total - claves.length) };
@@ -5691,7 +5691,7 @@ module.exports = async function handler(req, res) {
           if (inicio) { const cs = await todosT('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),FIND('${q.id}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${inicio}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA`);
             m = cs.filter(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh2(c.fields.HORA) < clave).length; }
           const usadas = Math.max(0, (k - 1) - m);
-          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'SESIONES BONO PREVIO': n, 'BONO PREVIO YA USADAS': usadas || null } }) });
+          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'SESIONES BONO PREVIO': n, 'BONO PREVIO YA USADAS': usadas || null, 'BONO PREVIO VALE': !!q.bonoPack.vale } }) });
           global._sesPac = {};
           return res.status(200).json({ ok: !d.error, bonoPrevio: n, usadas, error: d.error && (d.error.message || d.error.type) });
         }
@@ -5699,7 +5699,7 @@ module.exports = async function handler(req, res) {
           let n = Number(q.bonoPrevio);
           if (q.bonoSumar != null) { const cur = await at(`${PACIENTES}/${q.id}`); n = Number((cur.fields || {})['SESIONES BONO PREVIO'] || 0) + Number(q.bonoSumar); }
           if (!Number.isFinite(n) || n < 0 || n > 500) return res.status(400).json({ ok: false, error: 'Nº de sesiones no válido' });
-          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: Object.assign({ 'SESIONES BONO PREVIO': Math.round(n) || null }, q.bonoPrevio != null ? { 'BONO PREVIO YA USADAS': null } : {}) }) });
+          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: Object.assign({ 'SESIONES BONO PREVIO': Math.round(n) || null }, q.bonoPrevio != null ? { 'BONO PREVIO YA USADAS': null, 'BONO PREVIO VALE': false } : {}) }) });
           global._sesPac = {};
           return res.status(200).json({ ok: !d.error, bonoPrevio: Math.round(n), error: d.error && (d.error.message || d.error.type) });
         }
