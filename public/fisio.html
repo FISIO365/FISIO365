@@ -1565,6 +1565,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .cb-it{display:flex;align-items:center;gap:12px;border-top:1px solid #f3eee9;padding:11px 0}.cb-sec+.cb-it,.cb-nota+.cb-it,.cb-l>.cb-it:first-child{border-top:none}.cb-it.off{opacity:.55}
 .cb-h{flex:none;width:58px;font-size:12px;color:#a0928a;font-variant-numeric:tabular-nums}.cb-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.cb-tx>b{font-size:14px;font-weight:600;color:#1a1a1a}.cb-tx small{font-size:12.5px;color:#7d6a60;line-height:1.4}.cb-tx small b{color:#1a1a1a;font-weight:600}
 .cb-un{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}.cb-ok{flex:none;font-style:normal;font-size:12px;font-weight:600;color:#16803c}
+.ag-sgr .ag-pkb{grid-column:1/-1}.ag-pkb{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font);font-size:13px;font-weight:600;padding:11px 6px;border-radius:12px;border:1.5px dashed var(--border);background:#fff;color:#3d3530;cursor:pointer}.ag-pkb[hidden]{display:none}.ag-pkb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ag-pkn{margin:-2px 0 8px}.ag-pkn .nh-txt{margin-top:6px}.ag-pkx{display:block;font-size:12px;color:#7d6a60;margin-top:6px}
 .ag-noh{margin:-2px 0 8px}.nh .nh-txt{margin-top:8px}.nh.falta{animation:agFalta .45s}.nh.falta .nh-mot button:not(.on),.nh.falta .nh-txt{border-color:#b42318!important}
 .ag-decl{font-size:13px;font-weight:600;color:#1a1a1a;margin:14px 0 -4px}.ag-decl span{font-weight:500;color:#c2552e;margin-left:4px}
 .ag-sgr.elige button{border-style:dashed}.ag-sgr.elige button.on{border-style:solid;border-color:#c2552e!important;background:#fdeee4!important;color:#c2552e!important}
@@ -7019,8 +7021,9 @@ function agAbrirCita(c,onDone){
   <div class="hz-lab">Tipo de sesión</div><div class="ag-ses"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
   <div class="ag-decl" hidden>¿Y ahora? <span>Elige una para poder guardar</span></div>
-  <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No hace falta</button></div>
+  <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No hace falta</button><button type="button" class="ag-pkb" hidden><svg viewBox="0 0 24 24"><rect x="3.5" y="7" width="17" height="12.5" rx="2.5"/><path d="M8.5 7V5.5a1.5 1.5 0 0 1 1.5-1.5h4a1.5 1.5 0 0 1 1.5 1.5V7"/></svg>Avisará · tiene pack</button></div>
   <div class="ag-noh" hidden>${nohHtml(true)}</div>
+  <div class="ag-pkn nh" hidden><div class="hz-lab">Explica por qué no puede venir</div><textarea class="seg-n nh-txt" rows="2" placeholder="Ej.: está con gripe, nos escribe cuando esté bien (obligatorio)"></textarea><small class="ag-pkx">Si en 7 días no ha dicho nada, pasa sola a Por llamar.</small></div>
   ${c.pacienteId?`<div class="ag-pago">${agPagoHtml(c)}</div>`:''}
   <div class="hz-bts ag-bts"><button type="button" class="fp-can ag-mov">Cambiar día u hora</button><button type="button" class="fp-can ag-cfis">Cambiar fisio</button><button type="button" class="hz-ok">Guardar</button></div>
   <div class="ag-otras">${c.pacienteId?'<button type="button" class="ag-envc">Enviarle sus citas</button>':''}<button type="button" class="ag-borrar">Borrar cita</button></div>`);
@@ -7038,10 +7041,11 @@ function agAbrirCita(c,onDone){
  const sb=m.querySelector('.ag-segb'),ab=m.querySelector('.ag-altab'),sgr=m.querySelector('.ag-sgr'),decl=m.querySelector('.ag-decl');
  // Al cancelar o dejar «Por reagendar» hay que elegir Seguimiento o No hace falta (ninguna marcada de entrada): así no se pasa nadie
  let dec='';const hayQueElegir=()=>!!c.pacienteId&&est!==est0&&/^(CANCELADA|NO ASISTIÓ|POR REAGENDAR)$/.test(est)&&!SEG_PAC[c.pacienteId];
- const noh=m.querySelector('.ag-noh'),nohLee=nohAtar(noh);
+ const noh=m.querySelector('.ag-noh'),nohLee=nohAtar(noh),pkb=m.querySelector('.ag-pkb'),pkn=m.querySelector('.ag-pkn');
  const pSeg=()=>{const ya=!!SEG_PAC[c.pacienteId],ob=hayQueElegir(),sug=!ob&&/CANCELADA|NO ASIST|POR REAGENDAR/.test(est);if(!ob)dec='';
   sb.classList.toggle('ya',ya);sb.classList.toggle('sug',!ya&&sug);decl.hidden=!ob;sgr.classList.toggle('elige',ob);if(!ob)sgr.classList.remove('falta');
-  sb.classList.toggle('on',ob&&dec==='seg');ab.classList.toggle('on',ob&&dec==='no');noh.hidden=!(ob&&dec==='no');
+  const conPk=ob&&est==='POR REAGENDAR';if(!conPk&&dec==='pack')dec='';pkb.hidden=!conPk;sgr.classList.toggle('tres',conPk);
+  sb.classList.toggle('on',ob&&dec==='seg');ab.classList.toggle('on',ob&&dec==='no');pkb.classList.toggle('on',dec==='pack');noh.hidden=!(ob&&dec==='no');pkn.hidden=dec!=='pack';
   sb.innerHTML=ya?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>En seguimiento':'<svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Seguimiento';};
  const segNota=()=>{const qe=est==='CANCELADA'?'Canceló':est==='NO ASISTIÓ'?'No vino a':est==='POR REAGENDAR'?'Hay que reagendar':'';const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);return qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'';};
  sb.onclick=()=>{if(hayQueElegir()){dec=dec==='seg'?'':'seg';sgr.classList.remove('falta');pSeg();return;}
@@ -7050,6 +7054,7 @@ function agAbrirCita(c,onDone){
   const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);
   abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
  // Alta desde la cita: si has cambiado el estado (p. ej. Cancelada), primero se guarda la cita y luego se da el alta
+ pkb.onclick=()=>{dec=dec==='pack'?'':'pack';sgr.classList.remove('falta');pSeg();if(dec==='pack')setTimeout(()=>pkn.querySelector('textarea').focus(),50);};
  m.querySelector('.ag-altab').onclick=async e=>{const b=e.currentTarget;
   if(hayQueElegir()){dec=dec==='no'?'':'no';sgr.classList.remove('falta');pSeg();return;}
   if(est!==est0||conf!==c.confirmada){b.disabled=true;
@@ -7071,15 +7076,20 @@ function agAbrirCita(c,onDone){
   mm.querySelector('.hz-x').onclick=()=>mm.remove();
   mm.querySelectorAll('[data-l]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const r=await agPost('seg-agenda-borrar',{id:c.id,conPaciente:true,liberar:b.dataset.l==='1'});if(!r.ok)throw new Error(r.error||'No se ha podido borrar');toast('Cita borrada',true);mm.remove();m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}catch(err){b.disabled=false;toast(err.message,false);}});};
  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;
-  if(hayQueElegir()&&!dec){sgr.classList.remove('falta');void sgr.offsetWidth;sgr.classList.add('falta');sgr.scrollIntoView({behavior:'smooth',block:'center'});toast('Elige «Seguimiento» o «No hace falta»',false);return;}
+  if(hayQueElegir()&&!dec){sgr.classList.remove('falta');void sgr.offsetWidth;sgr.classList.add('falta');sgr.scrollIntoView({behavior:'smooth',block:'center'});toast(est==='POR REAGENDAR'?'Elige una: Seguimiento, No hace falta o Avisará · tiene pack':'Elige «Seguimiento» o «No hace falta»',false);return;}
   const dec0=hayQueElegir()?dec:'',nota0=segNota(),nv=dec0==='no'?nohLee():null;
   if(nv&&!nohValida(noh,nv))return;
+  const pkTxt=dec0==='pack'?pkn.querySelector('textarea').value.trim():'';
+  if(dec0==='pack'&&pkTxt.length<3){pkn.classList.remove('falta');void pkn.offsetWidth;pkn.classList.add('falta');pkn.querySelector('textarea').focus();toast('Explica por qué no puede venir',false);return;}
+  if(dec0==='pack'){const ta=m.querySelector('.ag-not2');ta.value=[ta.value.trim(),'Avisará cuando pueda (tiene pack): '+pkTxt].filter(Boolean).join('\n');}
   if(nv&&nv.mot==='otra'){const ta=m.querySelector('.ag-not2');ta.value=[ta.value.trim(),'No hace falta seguimiento: ya tiene otra cita. '+nv.txt].filter(Boolean).join('\n');}
   b.disabled=true;b.textContent='Guardando…';
   const pf=est!==est0?await agPreguntaFallo(c,FD,est):{tarde:false,estado:est};if(!pf){b.disabled=false;b.textContent='Guardar';return;}const tarde=pf.tarde,estF=pf.estado;
   try{const r=await agPost('seg-agenda-editar',{id:c.id,tarde,estado:est!==est0?estF:undefined,confirmada:conf!==c.confirmada?conf:undefined,notas:m.querySelector('.ag-not2').value,tipos:[...tg.get().filter(t=>!agNoBomba(t)),...(m.querySelector('.ag-sbm input').checked?['NO BOMBA']:[])],sesion:ses.get()!==(c.sesion||'')?ses.get():undefined,liberar:!lib.hidden&&lib.querySelector('input').checked});
    if(!r.ok)throw new Error(r.error||'No se ha podido guardar');toast(r.debePagar?`Guardado · su próxima cita la pagará por adelantado`:estF==='CITA PERDIDA'&&est!=='CITA PERDIDA'?'Guardado · sesión descontada del pack':'Guardado',true);m.remove();try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();
    if(dec0==='seg')abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:nota0,onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});
+   else if(dec0==='pack'){const f7=new Date(Date.now()+7*864e5).toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'});
+    fetch('/api/schedule?action=seg-crear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:c.pacienteId,fecha:f7,nota:`${nota0}Tiene pack y dijo que avisaría: ${pkTxt}. Si no ha dicho nada, escríbele.`,responsable:miNombreCorto()})}).then(x=>x.json()).then(d=>{if(!d.ok)throw 0;SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:f7,quien:''};try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}).catch(()=>toast('La cita está guardada, pero no se ha podido apuntar el aviso de 7 días',false));}
    else if(nv&&nv.mot!=='otra')nohAplicar(c,nv).then(ok=>{if(!ok)toast('La cita está guardada, pero no se ha podido apuntar el motivo. Hazlo desde su ficha',false);else{try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}onDone&&onDone();}});}
   catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
 }
@@ -7254,24 +7264,21 @@ function agMoverCita(c,onDone){
   ${AG_HORA_HTML}
   ${futuro?'<label class="ag-lib"><input type="checkbox" checked> Dejar la hora de ahora libre para otro paciente</label>':''}
   ${agTardeTxt(c,FD)?`<div class="ag-tarde">${agTardeTxt(c,FD)}</div>`:''}
-  ${c.pacienteId&&!SEG_PAC[c.pacienteId]?`<div class="ag-decl">¿Y ahora? <span>Elige una para poder cambiarla</span></div><div class="ag-sgr elige"><button type="button" class="ag-segb" data-d="seg"><svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Seguimiento</button><button type="button" class="ag-altab" data-d="no"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No hace falta</button></div>`:''}
   <div class="hz-bts"><button type="button" class="hz-ok">Cambiar cita</button></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
- let dec='';const sgr=m.querySelector('.ag-sgr');
- if(sgr)sgr.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{dec=dec===b.dataset.d?'':b.dataset.d;sgr.classList.remove('falta');sgr.querySelectorAll('[data-d]').forEach(x=>x.classList.toggle('on',x.dataset.d===dec));});
+
  const fd=m.querySelector('.ag-fd'),ph=agPickerHora(m,{get:()=>({fecha,fisio}),onPick:h=>hora=h,excl:c.id}),ch=ph.ch;
  const pf=()=>m.querySelectorAll('.ag-ffs button').forEach(b=>b.classList.toggle('on',b.dataset.f===fisio));
  m.querySelectorAll('.ag-ffs button').forEach(b=>b.onclick=()=>{fisio=b.dataset.f;pf();ch();});pf();ch();
  calFijo(fd,fecha,f=>{fecha=f;ch();});
  let pf0=null;
  const enviar=async(b,forzar)=>{if(!fecha||!hora){toast('Elige día y hora',false);return;}
-  if(sgr&&!dec){sgr.classList.remove('falta');void sgr.offsetWidth;sgr.classList.add('falta');sgr.scrollIntoView({behavior:'smooth',block:'center'});toast('Elige «Seguimiento» o «No hace falta»',false);return;}
   if(!pf0){pf0=await agPreguntaFallo(c,FD,'REPROGRAMADA');if(!pf0)return;}
   b.disabled=true;b.textContent='Cambiando…';
   try{const lb=m.querySelector('.ag-lib input');const r=await agPost('seg-agenda-mover',{id:c.id,fecha,hora,fisio,liberar:!!(lb&&lb.checked),forzar,tarde:!!pf0.tarde,perdida:pf0.estado==='CITA PERDIDA',...agBombaP(m)});
    if(r.bomba){b.disabled=false;b.textContent='Cambiar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
    if(r.conflicto){b.disabled=false;b.textContent='Cambiar cita';pregunta(r.error+'. ¿Darla igualmente a la misma hora?',{si:'Darla igualmente'}).then(ok=>{if(ok)enviar(b,true);});return;}
-   if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Cita cambiada al ${segFecha(fecha)} a las ${hora}`+(pf0.estado==='CITA PERDIDA'?' · sesión descontada del pack':''),true);m.remove();if(dec==='seg'){const f1=d=>+d.slice(8)+'/'+ +d.slice(5,7);abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:`Cambió la cita del ${f1(FD)} a las ${c.hora} al ${f1(fecha)} a las ${hora}. `,onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});}if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:c.pacienteId,paciente:c.paciente},r.debePagar);if(AG.vista==='dia'&&fecha!==AG.fecha){pregunta('¿Ir a ese día en la agenda?',{si:'Ir',no:'Quedarme aquí'}).then(ok=>{if(ok)AG.fecha=fecha;onDone&&onDone();});}else{onDone&&onDone();}}
+   if(!r.ok)throw new Error(r.error||'No se ha podido cambiar');toast(`Cita cambiada al ${segFecha(fecha)} a las ${hora}`+(pf0.estado==='CITA PERDIDA'?' · sesión descontada del pack':''),true);m.remove();if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:c.pacienteId,paciente:c.paciente},r.debePagar);if(AG.vista==='dia'&&fecha!==AG.fecha){pregunta('¿Ir a ese día en la agenda?',{si:'Ir',no:'Quedarme aquí'}).then(ok=>{if(ok)AG.fecha=fecha;onDone&&onDone();});}else{onDone&&onDone();}}
   catch(err){b.disabled=false;b.textContent='Cambiar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
 }
@@ -12152,6 +12159,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-02',aviso:1,t:'Por reagendar: nueva opción «Avisará · tiene pack» para quien tiene la sesión pagada y nos dirá cuándo puede venir. Explicas por qué; si en 7 días no ha dicho nada, pasa sola a Por llamar. Al cambiar día u hora ya no pide nada.'},
  {f:'2026-11-02',t:'«No hace falta» ya no vale solo: hay que elegir por qué (ya tiene otra cita, alta, no llegó a venir o dejó el tratamiento) y explicarlo. También al marcar «No asistió».'},
  {f:'2026-11-02',dir:1,t:'Más › Últimos cambios: lo que se ha tocado en las últimas 48 horas (citas o todo), con «Deshacer» para volver atrás un cambio hecho por error.',ver:{sec:'camb',pasos:[{el:'.cb-l',txt:'Aquí, con Deshacer en cada cambio.'}]}},
  {f:'2026-11-02',aviso:1,t:'Al cancelar una cita, dejarla «Por reagendar» o cambiarle el día u hora, ahora tienes que elegir «Seguimiento» o «No hace falta». Ninguna sale marcada: así no se nos pasa nadie.',ver:{sec:'agenda',pasos:[{el:'.ag-grid',txt:'Abre una cita y cámbiale el estado.'}]}},
@@ -14213,9 +14221,9 @@ function renderFormacion(wrap, ruta){
  {t:'La cita: estados y cancelaciones',sub:'Acaba la sesión, o alguien no viene',
  cards:[
  {ti:'Acabas la sesión: márcala',shot:'/img/school/panel-10-cita.jpg',body:`<b>Cuándo:</b> siempre, al acabar cada sesión.<br><br><b>Qué haces:</b> toca la cita › <b>Realizada</b> › Guardar.<br><br><b>Para qué:</b> así se descuenta del pack, cuenta en tus números y no sale como «sin marcar» en el resumen del día.`,ver:{sec:'agenda',pasos:[{el:'.hz-modal .ag-est',txt:'Aquí marcas cómo ha ido la cita.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
- {ti:'Avisa que no viene',shot:'/img/school/panel-11-estados.jpg',body:`Marca <b>Cancelada</b> y deja marcado <b>Dejar la hora libre</b>: la hora vuelve a estar disponible para otro.<br><br>Si avisa con menos de 24 h, el panel te lo dice y lo apunta solo en las notas.<br><br>¿Quiere otro día? Mejor <b>Reprogramada</b>: te lleva directo a cambiar día u hora.<br><br>Al cancelar, marcar No asistió o cambiar la cita tienes que elegir <b>Seguimiento</b> (alguien le llamará) o <b>No hace falta</b>. Si no hace falta, eliges por qué (otra cita, alta, no llegó a venir, dejó el tratamiento) y lo explicas. Sin eso no se guarda.`},
+ {ti:'Avisa que no viene',shot:'/img/school/panel-11-estados.jpg',body:`Marca <b>Cancelada</b> y deja marcado <b>Dejar la hora libre</b>: la hora vuelve a estar disponible para otro.<br><br>Si avisa con menos de 24 h, el panel te lo dice y lo apunta solo en las notas.<br><br>¿Quiere otro día? Mejor <b>Reprogramada</b>: te lleva directo a cambiar día u hora.<br><br>Al cancelar o marcar No asistió tienes que elegir <b>Seguimiento</b> (alguien le llamará) o <b>No hace falta</b>. Si no hace falta, eliges por qué (otra cita, alta, no llegó a venir, dejó el tratamiento) y lo explicas. Sin eso no se guarda.`},
  {ti:'No se presenta',body:`Marca <b>No asistió</b>.<br><br><b>Con pack:</b> te pregunta si le <b>descuentas la sesión</b> o <b>se la perdonas</b>. Decides tú según el caso.<br><b>Sin pack:</b> se le marca solo que la próxima la <b>paga por adelantado</b>.`},
- {ti:'Por reagendar y Dudosa',body:`<b>Por reagendar:</b> no puede venir y aún no sabe cuándo. Antes de guardar eliges <b>Seguimiento</b> (para que alguien le llame) o <b>No hace falta</b>.<br><br><b>Dudosa:</b> no está claro si vendrá.`},
+ {ti:'Por reagendar y Dudosa',body:`<b>Por reagendar:</b> no puede venir y aún no sabe cuándo. Antes de guardar eliges <b>Seguimiento</b> (para que alguien le llame), <b>No hace falta</b> o, si tiene la sesión pagada y nos dirá cuándo puede, <b>Avisará · tiene pack</b>: explicas por qué y, si en 7 días no ha dicho nada, pasa sola a Por llamar.<br><br><b>Dudosa:</b> no está claro si vendrá.`},
  {ti:'No borres, cancela',body:`<b>Borrar cita</b> la elimina sin dejar rastro: se pierde el historial del paciente. Si avisó, márcala <b>Cancelada</b>. Borra solo lo que se creó por error.`}
  ],
  qs:[
