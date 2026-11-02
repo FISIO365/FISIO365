@@ -2775,6 +2775,12 @@ module.exports = async function handler(req, res) {
   }
   // TEMPORAL (solo lectura): revisar el pack de unos pacientes. Se quita al terminar
   if (action === 'diag-pack' && process.env.DIAG_KEY && String(req.query.k || '') === process.env.DIAG_KEY) {
+    if (req.query.m === 'mov') { const cs = await holdedTodos('/treasury/accounts?limit=100', 3); const c = cs.find(x => /2638$/.test(String(x.iban || '').replace(/\s/g, ''))) || cs[0]; const id = c.id || c._id; const R = { cuenta: Object.fromEntries(Object.entries(c).filter(([k, v]) => typeof v !== 'object')) };
+      for (const qq of ['', '?limit=200', '?limit=200&sort=-date', '?limit=200&order=desc', '?start_date=2026-10-20&end_date=2026-11-03', '?from=2026-10-20&to=2026-11-03', '?date_from=2026-10-20&date_to=2026-11-03', '?status=pending', '?reconciled=false']) {
+        try { const d = await holded(`/treasury/accounts/${id}/bank-movements${qq}`); const L = Array.isArray(d) ? d : (d.items || d.data || []); const fs = L.map(fechaMov).filter(Boolean).sort();
+          R[qq || 'base'] = { claves: Array.isArray(d) ? 'array' : Object.keys(d), n: L.length, has_more: d.has_more, cursor: !!d.cursor, primera: fs[0], ultima: fs[fs.length - 1], ej: L[0] && Object.fromEntries(Object.entries(L[0]).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v).slice(0, 80) : v])) }; }
+        catch (e) { R[qq || 'base'] = { error: e.message.slice(0, 200) }; } }
+      return res.status(200).json(R); }
     if (req.query.m === 'banco') { _gasH = { t: 0, v: null }; _ingH = { t: 0, k: '', v: null }; const b = await gastosBancoMeses().catch(e => ({ error: e.message }));
       const ing = await ingresosHoldedDias(HOLDED_DESDE, new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date())).catch(e => ({ error: e.message }));
       const sem = await todosT('tblE7NWfZmxcou5mV', 'fields[]=SEMANA&fields[]=INGRESOS&sort[0][field]=SEMANA&sort[0][direction]=desc').catch(e => [{ error: e.message }]);
