@@ -672,7 +672,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  </div>
  <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
  <div class="login-err" id="loginErr"></div>
- <div id="codBox" hidden><label class="lbl" for="codIn">Código del email</label><input class="inp" type="tel" id="codIn" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······" style="letter-spacing:6px;text-align:center;font-size:20px"><button class="btn-primary" id="codOk" type="button" onclick="codEntrar()">Entrar</button><div class="login-ok" id="codMsg"></div></div>
+ <div id="codBox" hidden><p class="login-ok" id="codInfo">Escribe arriba tu email o tu teléfono y te mandamos un código al email para entrar.</p><button class="btn-primary" id="codEnv" type="button" onclick="codEnviar()">Enviarme el código</button>
+ <div id="codPaso2" hidden><div class="login-ok" id="codMsg" style="margin:0 0 14px"></div><label class="lbl" for="codIn">Código del email</label><input class="inp" type="tel" id="codIn" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······" style="letter-spacing:6px;text-align:center;font-size:20px"><button class="btn-primary" id="codOk" type="button" onclick="codEntrar()">Entrar</button><button class="login-alt" type="button" id="codOtra" onclick="codEnviar()">Enviarme otro código</button></div></div>
  <button class="login-alt" id="codLink" type="button" onclick="codPedir()">¿No te acuerdas del PIN? Entra con un código por email</button>
  </div>
  <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app?</button>
@@ -912,16 +913,18 @@ const pids=['p1','p2','p3','p4'];
 pids.forEach((id,i)=>{const el=document.getElementById(id);el.addEventListener('input',()=>{const v=el.value.replace(/[^0-9]/g,'');el.value=v.slice(-1);if(v&&i<3)document.getElementById(pids[i+1]).focus();});el.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!el.value&&i>0)document.getElementById(pids[i-1]).focus();if(e.key==='Enter')doLogin();});});
 document.getElementById('emailInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('p1').focus();});
 
-// Entrar con un código por email (si no se acuerda del PIN): se pide con el email o el teléfono escrito arriba
-async function codPedir(){const u=document.getElementById('emailInput').value.trim(),err=document.getElementById('loginErr'),lk=document.getElementById('codLink');err.textContent='';
+// Entrar con un código por email (si no se acuerda del PIN): se cambia a «modo código» y se pide con el email o el teléfono
+const pinVis=v=>{document.querySelector('.pin-wrap').style.display=v?'':'none';const lb=document.querySelectorAll('.login-card > .lbl')[1];if(lb)lb.style.display=v?'':'none';document.getElementById('loginBtn').style.display=v?'':'none';};
+function codPedir(){pinVis(false);const cb=document.getElementById('codBox');cb.hidden=false;document.getElementById('codPaso2').hidden=true;document.getElementById('codEnv').style.display='';document.getElementById('codInfo').style.display='';document.getElementById('codMsg').textContent='';document.getElementById('loginErr').textContent='';
+ const lk=document.getElementById('codLink');lk.textContent='Volver a entrar con el PIN';lk.onclick=codVolver;const e=document.getElementById('emailInput');if(!e.value.trim())e.focus();}
+async function codEnviar(){const u=document.getElementById('emailInput').value.trim(),err=document.getElementById('loginErr'),b=document.getElementById('codEnv'),otra=document.getElementById('codOtra');err.textContent='';
  if(!u){err.textContent='Escribe arriba tu email o tu teléfono';document.getElementById('emailInput').focus();return;}
- lk.disabled=true;const t0=lk.textContent;lk.textContent='Enviando…';
+ b.disabled=true;otra.disabled=true;const t0=b.textContent;b.textContent='Enviando…';
  try{const r=await (await fetch('/api/schedule?action=app-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario:u,lang})})).json();
-  if(!r.ok){err.textContent=r.error||'Error de conexión';}else{document.querySelector('.pin-wrap').style.display='none';document.querySelectorAll('.login-card > .lbl')[1].style.display='none';document.getElementById('loginBtn').style.display='none';
-   document.getElementById('codBox').hidden=false;document.getElementById('codMsg').textContent=r.msg||'';lk.textContent='Volver a entrar con el PIN';lk.onclick=codVolver;lk.disabled=false;setTimeout(()=>document.getElementById('codIn').focus(),50);return;}}
+  if(!r.ok){err.textContent=r.error||'Error de conexión';}else{b.style.display='none';document.getElementById('codInfo').style.display='none';document.getElementById('codPaso2').hidden=false;document.getElementById('codMsg').textContent=r.msg||'';setTimeout(()=>document.getElementById('codIn').focus(),50);}}
  catch(e){err.textContent='Error de conexión';}
- lk.disabled=false;lk.textContent=t0;}
-function codVolver(){document.querySelector('.pin-wrap').style.display='';document.querySelectorAll('.login-card > .lbl')[1].style.display='';document.getElementById('loginBtn').style.display='';document.getElementById('codBox').hidden=true;document.getElementById('loginErr').textContent='';const lk=document.getElementById('codLink');lk.textContent='¿No te acuerdas del PIN? Entra con un código por email';lk.onclick=codPedir;}
+ b.disabled=false;otra.disabled=false;b.textContent=t0;}
+function codVolver(){pinVis(true);document.getElementById('codBox').hidden=true;document.getElementById('loginErr').textContent='';const lk=document.getElementById('codLink');lk.textContent='¿No te acuerdas del PIN? Entra con un código por email';lk.onclick=codPedir;}
 async function codEntrar(){const u=document.getElementById('emailInput').value.trim(),c=document.getElementById('codIn').value.replace(/\D/g,''),err=document.getElementById('loginErr'),b=document.getElementById('codOk');err.textContent='';
  if(c.length!==6){err.textContent='Escribe los 6 números del código';return;}
  b.disabled=true;b.textContent='Entrando...';

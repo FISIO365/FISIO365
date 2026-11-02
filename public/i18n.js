@@ -2375,6 +2375,18 @@
 "¿Qué cuenta la racha?": [
 "Què compta la ratxa?",
 "What counts towards the streak?"
+],
+"Escribe arriba tu email o tu teléfono y te mandamos un código al email para entrar.": [
+"Escriu a dalt el teu email o el teu telèfon i t'enviem un codi a l'email per entrar.",
+"Enter your email or phone above and we'll email you a code to log in."
+],
+"Enviarme el código": [
+"Envia'm el codi",
+"Send me the code"
+],
+"Enviarme otro código": [
+"Envia'm un altre codi",
+"Send me another code"
 ]
 };
   var IDX = { cat: 0, en: 1 };
