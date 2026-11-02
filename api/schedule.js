@@ -6212,7 +6212,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
   }
   // ── PLAN DE BATALLA: las tareas del día de cada persona. Cada uno se apunta las suyas; dirección puede ponérselas a cualquiera.
   // Lo que no se hace pasa solo al día siguiente (sale hasta que se marca). Lo hecho se ve el día que se hizo.
-  if (/^plan-(dia|anadir|hecho|borrar|mover)$/.test(action || '')) {
+  if (/^plan-(dia|anadir|hecho|borrar|mover|editar)$/.test(action || '')) {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
     const eqP = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_admin&fields[]=${encodeURIComponent('DIRECCIÓN')}&fields[]=${encodeURIComponent('FECHA BAJA')}&pageSize=100`);
@@ -6228,7 +6228,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     if (!quien) return res.status(403).json({ ok: false, error: 'Solo dirección puede ver el plan de otra persona' });
     const vistaP = r => { const F = r.fields || {}; return { id: r.id, t: F.TAREA || '', dia: F.DIA || '', hecha: !!F.HECHA, hechaEn: F['FECHA HECHA'] || '', por: F['PUESTA POR'] || '', dir: !!F.DIRECCION }; };
     if (action === 'plan-anadir') {
-      const t = String(q.tarea || '').trim().slice(0, 200); if (!t) return res.status(400).json({ ok: false, error: 'Escribe la tarea' });
+      const t = String(q.tarea || '').trim().slice(0, 600); if (!t.replace(/\*\*|__|==/g, '').trim()) return res.status(400).json({ ok: false, error: 'Escribe la tarea' });
       const dia = diaOk(q.dia) < hoyP ? hoyP : diaOk(q.dia);
       const d = await at(PLAN, { method: 'POST', body: JSON.stringify({ records: [{ fields: { TAREA: t, PERSONA: quien, DIA: dia, HECHA: false, 'PUESTA POR': yoP, DIRECCION: dirP && quien !== yoP, CREADA: new Date().toISOString() } }] }) });
       if (d.error) return res.status(500).json({ ok: false, error: d.error.message || 'No se ha podido' });
@@ -6254,6 +6254,13 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     if (action === 'plan-borrar') {
       if (Fp.DIRECCION && !dirP) return res.status(403).json({ ok: false, error: 'La ha puesto dirección: márcala cuando la hagas' });
       const d = await at(`${PLAN}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error });
+    }
+    if (action === 'plan-editar') { // cambiar el texto o el formato (**negrita**, __subrayado__, ==fosforito==)
+      const t = String(q.tarea || '').trim().slice(0, 600), sin = x => String(x || '').replace(/\*\*|__|==/g, '').replace(/\s+/g, ' ').trim();
+      if (!sin(t)) return res.status(400).json({ ok: false, error: 'Escribe la tarea' });
+      // Las de dirección: quien no es dirección solo puede darles formato, no cambiar lo que pone
+      if (Fp.DIRECCION && !dirP && sin(t) !== sin(Fp.TAREA)) return res.status(403).json({ ok: false, error: 'La ha puesto dirección: solo puedes darle formato' });
+      const d = await at(`${PLAN}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { TAREA: t } }) }); return res.status(200).json({ ok: !d.error });
     }
     if (action === 'plan-mover') { // cambiar el día (p. ej. «para mañana»)
       if (Fp.DIRECCION && !dirP) return res.status(403).json({ ok: false, error: 'La ha puesto dirección' });

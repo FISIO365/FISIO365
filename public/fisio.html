@@ -453,12 +453,35 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .pb-hoja .pb-vac{min-height:48px;box-sizing:border-box;text-align:left;padding:14px 12px 7px 72px;border-bottom:1px solid var(--pb-l)}
 .pb-lin{height:48px;border-bottom:1px solid var(--pb-l)}
 .pb-esc{display:flex;align-items:center;gap:12px;min-height:48px;box-sizing:border-box;padding:6px 12px 6px 72px;border-bottom:1px solid var(--pb-l)}
-.pb-ck0{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px dashed #d9cfc7;display:flex;align-items:center;justify-content:center;color:#c9bdb4;box-sizing:border-box}.pb-ck0 svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
-.pb-esc .pb-in{flex:1;min-width:0;border:none;background:none;outline:none;padding:6px 0;font-family:var(--font);font-size:14.5px;color:#1e2a38}.pb-esc .pb-in::placeholder{color:#b3a79e}
-.pb-esc:focus-within .pb-ck0{border-color:#c2552e;color:#c2552e}
-.pb-esc .pb-cu{display:flex;gap:2px;margin:0;flex:none}.pb-esc .pb-cu button{font-family:'Caveat',cursive;font-size:19px;font-weight:600;line-height:1;color:#b3a79e;background:none;border:none;border-radius:8px;padding:3px 7px;cursor:pointer}.pb-esc .pb-cu button.on{color:#c2552e;background:#fbeee8}
-.pb-esc .pb-mas{width:32px;height:32px;border-radius:50%;flex:none;display:none}.pb-esc.con .pb-mas{display:flex}.pb-esc .pb-mas svg{width:16px;height:16px;stroke-width:2.6;stroke-linejoin:round}
-@media(max-width:600px){.pb-esc{flex-wrap:wrap;row-gap:2px}.pb-esc .pb-in{flex-basis:calc(100% - 38px)}.pb-esc .pb-cu{margin-left:38px}.pb-esc .pb-mas{margin-left:auto}}
+.pb-ck0{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px dashed #d9cfc7;display:flex;align-items:center;justify-content:center;color:#c9bdb4;box-sizing:border-box;transition:all .15s}.pb-ck0 svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.pb-esc.foco .pb-ck0{border-color:#c2552e;color:#c2552e}
+.pb-in{flex:1;min-width:0;outline:none;padding:6px 0;font-family:var(--font);font-size:14.5px;line-height:1.35;color:#1e2a38;cursor:text;word-break:break-word}.pb-in:empty::before{content:attr(data-ph);color:#b3a79e;pointer-events:none}
+.pb-fmt{display:none;gap:2px;flex:none;background:#fff;border:1px solid #efe7df;border-radius:10px;padding:2px;box-shadow:0 2px 8px rgba(26,26,26,.06)}
+.pb-esc.foco .pb-fmt,.pb-esc.con .pb-fmt,.pb-edb .pb-fmt{display:flex}
+.pb-fmt button{width:30px;height:28px;border:none;background:none;border-radius:8px;cursor:pointer;color:#5c4f47;font-family:var(--font);font-size:14px;display:flex;align-items:center;justify-content:center;padding:0}.pb-fmt button:hover{background:#f6f1eb;color:#c2552e}
+.pb-fmt button b{font-weight:800}.pb-fmt button u{text-decoration-color:#c2552e;text-underline-offset:3px}.pb-fmt svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.pb-fmt button[data-f="h"] svg path:first-child{fill:#ffe680}
+.pb-esc .pb-mas,.pb-edb .pb-mas{width:32px;height:32px;border-radius:50%;flex:none}.pb-esc .pb-mas{display:none}.pb-esc.con .pb-mas{display:flex}.pb-esc .pb-mas svg,.pb-edb .pb-mas svg{width:16px;height:16px;stroke-width:2.6;stroke-linejoin:round}
+.pb-edb{display:flex;gap:8px;align-items:center;flex:none}
+.pb-t{outline:none;cursor:text;border-radius:4px}.pb-it.ok .pb-t{cursor:default}
+.pb-tx b,.pb-in b{font-weight:700}
+.pb-tx u,.pb-in u{text-decoration:underline;text-decoration-color:#c2552e;text-decoration-thickness:1.5px;text-underline-offset:3px}
+.pb-tx mark,.pb-in mark{color:inherit;background:linear-gradient(100deg,rgba(255,220,70,.2),rgba(255,220,70,.75) 6%,rgba(255,214,60,.6) 94%,rgba(255,220,70,.15));border-radius:4px 2px 5px 3px;padding:1px 3px;margin:0 -1px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.pb-it.ok .pb-tx mark{background:rgba(255,220,70,.25)}.pb-it.ok .pb-tx{text-decoration-color:rgba(194,85,46,.55)}
+.pb-bien{min-height:48px;box-sizing:border-box;display:flex;align-items:flex-end;padding:0 12px 6px 72px;border-bottom:1px solid var(--pb-l);font-family:'Caveat',cursive;font-size:21px;font-weight:600;color:#16803c}
+.pb-ag{display:flex;align-items:center;gap:6px;margin-top:14px}
+.pb-fl{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid #efe7df;background:#fff;color:#7d6a60;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}.pb-fl svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.pb-fl:hover:not(:disabled){color:#c2552e;border-color:#e8c3b4}.pb-fl:disabled{opacity:.35;cursor:default}
+.pb-sem{flex:1;min-width:0}.pb-mes{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#a3968c;text-align:center;margin-bottom:6px}
+.pb-dias{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.pb-dias button{font-family:var(--font);border:1px solid transparent;background:none;border-radius:14px;padding:6px 0 5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;color:#1e2a38;transition:background .15s}
+.pb-dias button:hover:not(:disabled):not(.on){background:#f6f1eb}
+.pb-dias small{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#a3968c}.pb-dias b{font-size:16px;font-weight:600;line-height:1.3}
+.pb-dias i{display:flex;gap:2px;height:5px;align-items:center}.pb-dias em{width:4px;height:4px;border-radius:50%;background:#c2552e}
+.pb-dias button.hoy{border-color:#e8c3b4}.pb-dias button.hoy small{color:#c2552e}
+.pb-dias button.on{background:#c2552e;border-color:#c2552e;color:#fff}.pb-dias button.on small{color:rgba(255,255,255,.8)}.pb-dias button.on em{background:#fff}
+.pb-dias button.pas{opacity:.35;cursor:default}
+.pb-hoy{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fbeee8;border:none;border-radius:99px;padding:6px 12px;cursor:pointer}
+.pb-cab .rp-bar{margin-top:12px}
+@media(max-width:600px){.rp-c.pb-hoja::before{left:36px}.rp-c.pb-hoja::after{left:10px}.pb-hoja .pb-it,.pb-esc{padding-left:48px!important;padding-right:8px}.pb-fe,.pb-hoja .pb-sec,.pb-bien{padding-left:48px!important;padding-right:14px}.pb-hoja .pb-it{gap:10px}.pb-ac button{width:28px;height:28px}.pb-esc{flex-wrap:wrap;row-gap:6px}.pb-esc .pb-in{flex-basis:calc(100% - 38px)}.pb-esc .pb-fmt{margin-left:38px}.pb-esc .pb-mas{margin-left:auto}.pb-it.ed{flex-wrap:wrap;row-gap:6px}.pb-it.ed .pb-tx{flex-basis:calc(100% - 42px)}.pb-edb{margin-left:38px;width:calc(100% - 38px);justify-content:space-between}.pb-ag{gap:2px}.pb-fl{width:28px;height:28px}.pb-dias{gap:2px}.pb-dias b{font-size:15px}}
 .pb-dia{font-size:12px;font-weight:600;color:#c2552e;margin:10px 2px 0}.pb-dia::first-letter{text-transform:uppercase}.pb-dia+.pb-it{border-top:none}
 #sb-plan-badge,#pmPlanN{background:#ee2155;color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:2px 7px;margin-left:auto;font-style:normal}
 .rp{width:100%}.rp-c{background:#fff;border:1px solid rgba(26,26,26,.08);box-shadow:0 1px 3px rgba(26,26,26,.05);border-radius:20px;padding:16px;margin-bottom:12px}
@@ -12176,7 +12199,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
- {f:'2026-11-02',t:'Mi día › Plan: las tareas del día salen como una hoja de cuaderno, con la fecha escrita arriba. Las nuevas se escriben directamente en la hoja.'},
+ {f:'2026-11-02',t:'Mi día › Plan: tu plan es ahora una hoja de cuaderno. Escribes directamente en ella, eliges el día en la agenda de arriba y puedes poner negrita, subrayar o marcar con fosforito (toca una tarea para cambiarla).',ver:{sec:'plan',pasos:[{el:'.pb-ag',txt:'Elige el día.'},{el:'.pb-esc',txt:'Escribe aquí la tarea.'}]}},
  {f:'2026-11-02',aviso:1,t:'Por reagendar: nueva opción «Avisará · tiene pack» para quien tiene la sesión pagada y nos dirá cuándo puede venir. Explicas por qué; si en 7 días no ha dicho nada, pasa sola a Por llamar. Al cambiar día u hora ya no pide nada.'},
  {f:'2026-11-02',t:'«No hace falta» ya no vale solo: hay que elegir por qué (ya tiene otra cita, alta, no llegó a venir o dejó el tratamiento) y explicarlo. También al marcar «No asistió».'},
  {f:'2026-11-02',dir:1,t:'Más › Últimos cambios: lo que se ha tocado en las últimas 48 horas (citas o todo), con «Deshacer» para volver atrás un cambio hecho por error.',ver:{sec:'camb',pasos:[{el:'.cb-l',txt:'Aquí, con Deshacer en cada cambio.'}]}},
@@ -14192,7 +14215,7 @@ function renderFormacion(wrap, ruta){
  {ti:'¿Buscas otra cosa? Toca Más',body:`Comunicaciones, Sugerencias, School, Captación, Valoraciones… está todo en <b>Más</b>, abajo a la derecha, ordenado en bloques.<br><br><b>Tu foto</b>, arriba, es para lo tuyo: tus estadísticas, notificaciones y cerrar sesión.<br><br>¿Echas algo en falta? No es un fallo: cada uno ve lo que necesita. Pídeselo a dirección.`,ver:{sec:'agenda',pasos:[{el:'#sb-mas || .sidebar',txt:'Toca Más: aquí está el resto de secciones.'}]}},
  {ti:'Alguien pregunta y se va sin cita',body:`<b>Cuándo:</b> llama o entra alguien, pregunta precios o por un dolor, y no se cita.<br><br><b>Qué haces:</b> en la Agenda o en Pacientes, toca el <b>+</b> › <b>Alguien pregunta y se va sin cita</b>, y apunta nombre, teléfono y por qué no se citó.<br><br><b>Para qué:</b> así se le puede llamar después en vez de perderlo. Queda en <b>Pacientes › Sin cita</b> y sale sola de ahí cuando le das cita.`,ver:{sec:'agenda',pasos:[{el:'.ag-add',txt:'El +: nueva cita o alguien que pregunta.'}]}},
  {ti:'Lo que te toca hacer: Mi día',body:`En <b>Mi día</b> está todo lo que te toca hoy, en tres pestañas: tu <b>Plan</b>, tus <b>Pendientes</b> (tareas y llamadas) y el <b>Check-list</b> antes de irte. El número es lo que te queda hoy o llevas atrasado.<br><br>Míralo al empezar y al acabar el día.`,ver:{sec:'plan',pasos:[{el:'.dia-tabs',txt:'Plan, Pendientes y Check-list.'}]}},
- {ti:'Tu Plan de batalla',body:`Las cosas que tienes que hacer hoy, apuntadas por ti como en un cuaderno: escribe la tarea en el primer renglón libre de la hoja, elige «Hoy» o «Mañana» y dale a Intro (o al ✓). Al hacerla, tócale el círculo.<br><br>Lo que no hagas <b>pasa solo al día siguiente</b> («Viene de ayer»), hasta que lo marques. Las que pone dirección salen en negro: «De dirección».<br><br>Está en <b>Mi día › Plan</b>.`,ver:{sec:'plan',pasos:[{el:'.pb-esc',txt:'Aquí escribes lo que tienes que hacer.'}]}},
+ {ti:'Tu Plan de batalla',body:`Tus cosas del día, apuntadas como en un cuaderno: escribe en el primer renglón libre de la hoja y dale a Intro (o al ✓). Se apunta en <b>hoy</b>, salvo que elijas otro día en la agenda de arriba.<br><br>Para resaltar: selecciona palabras y usa <b>B</b> (negrita), <b>S</b> (subrayar) o el <b>fosforito</b>. Para cambiar una tarea, tócala y escribe encima. Al hacerla, tócale el círculo.<br><br>Lo que no hagas <b>pasa solo al día siguiente</b> («Viene de ayer»), hasta que lo marques. Las que pone dirección salen en negro: «De dirección».<br><br>Está en <b>Mi día › Plan</b>.`,ver:{sec:'plan',pasos:[{el:'.pb-esc',txt:'Aquí escribes lo que tienes que hacer.'},{el:'.pb-ag',txt:'Aquí eliges el día.'}]}},
  {ti:'Para enterarte a tiempo: los avisos',body:`<b>Cuándo:</b> la primera vez que usas un móvil u ordenador.<br><br><b>Para qué:</b> si no, no te enteras cuando un paciente te escribe, reserva una hora tuya o paga.<br><br>En el móvil: <b>tu foto › Notificaciones › Activar</b>. En iPhone, con el panel añadido a la pantalla de inicio.`,ver:{sec:'agenda',pasos:[{el:'#btnAvisos || #btnPerfil',txt:'Aquí activas los avisos (en el móvil, tu foto › Notificaciones).'}]}},
  {ti:'Cada mañana, un módulo',body:`A las 8:30 te llega una tarea en Comunicaciones: <b>«Módulo de hoy»</b>. Unos 5 minutos. Al acertar las preguntas se marca hecha sola.<br><br>Solo uno al día: cuando lo acabas, has terminado por hoy.`}
  ],
@@ -15222,8 +15245,8 @@ async function compraPintar(box){if(!box)return;
  box.querySelectorAll('.cp-des').forEach(b=>b.onclick=()=>act(b.dataset.id,'compra-hecho',{hecho:false}));}
 // ── PLAN DE BATALLA: las tareas del día de cada uno. Lo que no se hace pasa solo al día siguiente.
 // Cada uno se apunta las suyas; dirección elige a quién mira y le puede poner tareas (salen marcadas «De dirección»).
-const PB={persona:'',dia:'hoy',d:null};
-try{const v=JSON.parse(sessionStorage.getItem('f365_plan')||'{}');PB.persona=v.persona||'';PB.dia=v.dia||'hoy';}catch(e){}
+const PB={persona:'',dia:'',d:null,sem:0};
+try{const v=JSON.parse(sessionStorage.getItem('f365_plan')||'{}');PB.persona=v.persona||'';PB.dia=/^\d{4}-\d{2}-\d{2}$/.test(v.dia||'')?v.dia:'';}catch(e){}
 const pbGuarda=()=>{try{sessionStorage.setItem('f365_plan',JSON.stringify({persona:PB.persona,dia:PB.dia}));}catch(e){}};
 const pbIso=(iso,n)=>{const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
 const pbDias=(a,b)=>Math.round((new Date(b+'T12:00:00Z')-new Date(a+'T12:00:00Z'))/864e5);
@@ -15251,52 +15274,96 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   if(!r.ok){if(PB.persona){PB.persona='';pbGuarda();return carga();}box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
   PB.d=r;pinta();if(!PB.persona||PB.persona.toLowerCase()===String(r.persona).toLowerCase())planContar();};
  box._recargar=carga;
+ // Formato de las tareas: **negrita**, __subrayado__, ==fosforito==
+ const fmt=t=>escH(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/__(.+?)__/g,'<u>$1</u>').replace(/==(.+?)==/g,'<mark>$1</mark>');
+ const herr=`<span class="pb-fmt"><button type="button" data-f="b" title="Negrita" aria-label="Negrita"><b>B</b></button><button type="button" data-f="u" title="Subrayar" aria-label="Subrayar"><u>S</u></button><button type="button" data-f="h" title="Fosforito" aria-label="Fosforito"><svg viewBox="0 0 24 24"><path d="m14.5 4.5 5 5L11 18l-5.5.5L6 13z"/><path d="M4 21h7"/></svg></button></span>`;
  const fila=(x,hoy)=>{const tags=[];if(x.dir)tags.push(`<i class="dir">De dirección${x.por?' · '+escH(String(x.por).split(' ')[0]):''}</i>`);else if(x.por&&r0().persona&&x.por.toLowerCase()!==r0().persona.toLowerCase())tags.push(`<i>Puesta por ${escH(String(x.por).split(' ')[0])}</i>`);
   const v=!x.hecha&&pbViene(x.dia,hoy);if(v)tags.push(`<i class="arr">${v}</i>`);
   const puede=!x.dir||r0().dir;
   return `<div class="pb-it${x.hecha?' ok':''}" data-id="${x.id}"><button type="button" class="pb-ck" aria-label="${x.hecha?'Desmarcar':'Hecha'}"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
-   <div class="pb-tx">${escH(x.t)}${tags.length?`<div class="pb-tg">${tags.join('')}</div>`:''}</div>
-   ${!x.hecha&&puede?`<div class="pb-ac">${x.dia<=hoy?`<button type="button" class="pb-man" title="Pasar a mañana" aria-label="Pasar a mañana"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:''}<button type="button" class="pb-del" title="Quitar" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`:''}</div>`;};
+   <div class="pb-tx"><div class="pb-t"${x.hecha?'':' title="Toca para escribir o dar formato"'}>${fmt(x.t)}</div>${tags.length?`<div class="pb-tg">${tags.join('')}</div>`:''}</div>
+   ${!x.hecha?`<div class="pb-ac">${puede?`<button type="button" class="pb-man" title="Pasar al día siguiente" aria-label="Pasar al día siguiente"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:''}${puede?`<button type="button" class="pb-del" title="Quitar" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`:''}</div>`:''}</div>`;};
  const r0=()=>PB.d||{};
- const pinta=()=>{const r=r0(),hoy=r.hoy,P=r.pendientes||[],H=r.hechas||[],X=r.proximas||[];
-  const tot=P.length+H.length,yoMismo=String(r.persona).toLowerCase()===yo.toLowerCase();
-  const fechaTxt=new Date(hoy+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+ // Lee lo escrito (con su formato) y lo pasa a texto con marcas
+ const lee=el=>{const R=[],st=n=>{let b=false,u=false,h=false;for(let e=n.parentElement;e&&e!==el.parentElement;e=e.parentElement){const c=getComputedStyle(e);if(!b&&(+c.fontWeight>=600||c.fontWeight==='bold'))b=true;if(String(c.textDecorationLine||c.textDecoration).includes('underline'))u=true;if(e!==el&&((c.backgroundColor&&!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(c.backgroundColor))||(c.backgroundImage&&c.backgroundImage!=='none')))h=true;if(e===el)break;}return {b,u,h};};
+  const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const s=n.nodeValue.replace(/\s+/g,' ');if(!s)continue;const e=st(n),l=R[R.length-1];if(l&&l.b===e.b&&l.u===e.u&&l.h===e.h)l.t+=s;else R.push({...e,t:s});}
+  return R.map(r=>{let t=r.t.replace(/\*\*|__|==/g,'');if(!t.trim())return t;const a=t.match(/^\s*/)[0],z=t.match(/\s*$/)[0];t=t.trim();if(r.h)t='=='+t+'==';if(r.u)t='__'+t+'__';if(r.b)t='**'+t+'**';return a+t+z;}).join('').replace(/\s+/g,' ').trim();};
+ const limpio=t=>String(t||'').replace(/\*\*|__|==/g,'').trim();
+ // Herramientas de formato sobre lo seleccionado (si no hay nada seleccionado, se aplica a lo que escribas después)
+ const formatea=(ed,f)=>{ed.focus();try{document.execCommand('styleWithCSS',false,f==='h');}catch(_){}
+  if(f==='h'){const s=getSelection();let on=false;if(s.rangeCount){let e=s.anchorNode&&(s.anchorNode.nodeType===3?s.anchorNode.parentElement:s.anchorNode);for(;e&&e!==ed;e=e.parentElement){const c=getComputedStyle(e);if(e.tagName==='MARK'||!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(c.backgroundColor)){on=true;break;}}}
+   if(on){const s2=getSelection();if(s2.rangeCount&&!s2.isCollapsed){const fr=s2.getRangeAt(0).extractContents();fr.querySelectorAll('mark,span').forEach(m=>{m.style&&(m.style.backgroundColor='transparent',m.style.backgroundImage='none');});const sp=document.createElement('span');sp.style.backgroundColor='transparent';sp.style.backgroundImage='none';sp.appendChild(fr);s2.getRangeAt(0).insertNode(sp);}else document.execCommand('hiliteColor',false,'transparent');}
+   else document.execCommand('hiliteColor',false,'#ffe680');}
+  else document.execCommand(f==='b'?'bold':'underline');
+  ed.dispatchEvent(new Event('input'));};
+ const prepara=(ed,bar,guarda,cancela)=>{
+  bar.querySelectorAll('.pb-fmt button').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>formatea(ed,b.dataset.f);});
+  ed.addEventListener('paste',e=>{e.preventDefault();const t=(e.clipboardData||window.clipboardData).getData('text/plain').replace(/\s+/g,' ');document.execCommand('insertText',false,t);});
+  ed.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();guarda();}else if(e.key==='Escape'&&cancela){e.preventDefault();cancela();}
+   else if((e.ctrlKey||e.metaKey)&&['b','u'].includes(e.key.toLowerCase())){e.preventDefault();formatea(ed,e.key.toLowerCase());}});};
+ const pinta=()=>{const r=r0(),hoy=r.hoy,X0=r.proximas||[];
+  if(!PB.dia||PB.dia<hoy)PB.dia=hoy;
+  if(!PB._ini){PB._ini=1;const l0=pbIso(hoy,-((new Date(hoy+'T12:00:00').getDay()+6)%7));PB.sem=Math.max(0,Math.floor((new Date(PB.dia+'T12:00:00Z')-new Date(l0+'T12:00:00Z'))/6048e5));}
+  const sel=PB.dia,enHoy=sel===hoy,enMan=!enHoy,man=pbIso(sel,1);
+  const P=enHoy?(r.pendientes||[]):X0.filter(x=>x.dia===sel),H=enHoy?(r.hechas||[]):[];
+  const totH=(r.pendientes||[]).length+(r.hechas||[]).length,hechH=(r.hechas||[]).length,yoMismo=String(r.persona).toLowerCase()===yo.toLowerCase();
   const nom=String(r.persona).split(' ')[0];
+  const diaV=sel,fechaTxt=new Date(diaV+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   let h='';
   if(r.dir&&(r.equipo||[]).length>1)h+=`<div class="pb-who">${[...r.equipo].sort((a,b)=>(b.toLowerCase()===yo.toLowerCase())-(a.toLowerCase()===yo.toLowerCase())).map(n=>`<button type="button" data-p="${escH(n)}" class="${n.toLowerCase()===String(r.persona).toLowerCase()?'on':''}">${n.toLowerCase()===yo.toLowerCase()?'Yo':escH(String(n).split(' ')[0])}</button>`).join('')}</div>`;
-  h+=`<div class="rp-c"><div class="pb-hd"><div><small>Plan de batalla</small><b>${yoMismo?'Tu plan de hoy':'Plan de '+escH(nom)}</b></div>${tot?`<span class="rp-n${!P.length?' ok':''}">${H.length} de ${tot}</span>`:''}</div>
-   ${tot?`<div class="rp-bar${!P.length?' ok':''}"><i style="width:${Math.round(H.length/tot*100)}%"></i></div>`:''}
-</div>`;
-  // La lista de hoy es una hoja de cuaderno: la fecha arriba a la derecha, renglones y margen. Se escribe en el primer renglón libre
-  const nLin=P.length+H.length+(H.length?1:0)+1,lineas='<div class="pb-lin"></div>'.repeat(Math.max(0,6-nLin));
-  const esc=`<div class="pb-esc"><span class="pb-ck0"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span><input type="text" class="pb-in" maxlength="200" placeholder="${yoMismo?'Escribe una tarea…':'Tarea para '+escH(nom)+'…'}" autocomplete="off" enterkeyhint="done"><span class="pb-cu"><button type="button" data-d="hoy" class="${PB.dia==='hoy'?'on':''}">Hoy</button><button type="button" data-d="man" class="${PB.dia==='man'?'on':''}">Mañana</button></span><button type="button" class="pb-mas" aria-label="Apuntar"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></div>`;
-  h+=`<div class="rp-c pb-hoja"><div class="pb-fe">${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}</div>
+  // Agenda: la semana con sus días; se elige el día y se ve (y se escribe en) su hoja
+  const lun=pbIso(hoy,-((new Date(hoy+'T12:00:00').getDay()+6)%7)+7*PB.sem),D7=[...Array(7)].map((_,i)=>pbIso(lun,i));
+  const cuenta=d=>d===hoy?(r.pendientes||[]).length:X0.filter(x=>x.dia===d).length;
+  const mesTxt=(()=>{const a=new Date(D7[0]+'T12:00:00'),b=new Date(D7[6]+'T12:00:00'),m=x=>x.toLocaleDateString('es-ES',{month:'long'});return m(a)===m(b)?m(a):m(a)+' – '+m(b);})();
+  h+=`<div class="rp-c pb-cab"><div class="pb-hd"><div><small>Plan de batalla</small><b>${yoMismo?'Tu plan':'Plan de '+escH(nom)}</b></div>${enHoy&&totH?`<span class="rp-n${hechH===totH?' ok':''}">${hechH} de ${totH}</span>`:(!enHoy||PB.sem?`<button type="button" class="pb-hoy">Volver a hoy</button>`:'')}</div>
+   <div class="pb-ag"><button type="button" class="pb-fl" data-s="-1" aria-label="Semana anterior"${PB.sem<=0?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div class="pb-sem"><div class="pb-mes">${escH(mesTxt)}</div><div class="pb-dias">${D7.map(d=>{const dt=new Date(d+'T12:00:00'),n=cuenta(d),pas=d<hoy;return `<button type="button" data-d="${d}" class="${d===sel?'on ':''}${d===hoy?'hoy ':''}${pas?'pas':''}"${pas?' disabled':''}><small>${dt.toLocaleDateString('es-ES',{weekday:'short'}).replace('.','').slice(0,3)}</small><b>${dt.getDate()}</b><i>${n&&!pas?'<em></em>'.repeat(Math.min(n,3)):''}</i></button>`;}).join('')}</div></div>
+    <button type="button" class="pb-fl" data-s="1" aria-label="Semana siguiente"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
+   ${enHoy&&totH?`<div class="rp-bar${hechH===totH?' ok':''}"><i style="width:${Math.round(hechH/totH*100)}%"></i></div>`:''}</div>`;
+  // La hoja de cuaderno del día: fecha arriba a la derecha, renglones y margen. Se escribe en el primer renglón libre
+  const nLin=P.length+H.length+(H.length?1:0)+1+(!enMan&&!P.length&&H.length?1:0),lineas='<div class="pb-lin"></div>'.repeat(Math.max(0,7-nLin));
+  const esc=`<div class="pb-esc"><span class="pb-ck0"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span><div class="pb-in" contenteditable="true" role="textbox" spellcheck="true" data-ph="${yoMismo?'Escribe una tarea…':'Tarea para '+escH(nom)+'…'}"></div>${herr}<button type="button" class="pb-mas" aria-label="Apuntar"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></div>`;
+  h+=`<div class="rp-c pb-hoja${enMan?' man':''}"><div class="pb-fe">${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}</div>
    ${P.map(x=>fila(x,hoy)).join('')}${esc}
-   ${!P.length&&H.length?`<div class="pb-vac" style="padding-top:4px">${yoMismo?'¡Todo hecho por hoy!':'Lo ha hecho todo.'}</div>`:''}
+   ${!enMan&&!P.length&&H.length?`<div class="pb-bien">${yoMismo?'¡Todo hecho por hoy!':'Lo ha hecho todo.'}</div>`:''}
    ${H.length?`<div class="pb-sec">Hecho hoy</div>${H.map(x=>fila(x,hoy)).join('')}`:''}${lineas}</div>`;
-  if(X.length){const G={};X.forEach(x=>(G[x.dia]=G[x.dia]||[]).push(x));
-   h+=`<div class="rp-c"><details class="pb-prox"><summary>Próximos días <em>${X.length}</em></summary>${Object.keys(G).sort().map(d=>`<div class="pb-dia">${pbDias(hoy,d)===1?'Mañana':new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'})}</div>${G[d].map(x=>fila(x,hoy)).join('')}`).join('')}</details></div>`;}
-  const abierto=!!box.querySelector('.pb-prox[open]'),txt=(box.querySelector('.pb-in')||{}).value||'',foco=document.activeElement&&document.activeElement.classList.contains('pb-in');
+  const abierto=!!box.querySelector('.pb-prox[open]'),ed0=box.querySelector('.pb-esc .pb-in'),html0=ed0?ed0.innerHTML:'',foco=document.activeElement===ed0;
   box.innerHTML=h;
   if(abierto){const d=box.querySelector('.pb-prox');if(d)d.open=true;}
-  const inp=box.querySelector('.pb-in');inp.value=txt;if(foco)inp.focus();
-  const escF=box.querySelector('.pb-esc'),llena=()=>escF.classList.toggle('con',!!inp.value.trim());llena();inp.addEventListener('input',llena);
+  const escF=box.querySelector('.pb-esc'),inp=escF.querySelector('.pb-in');inp.innerHTML=html0;
+  const llena=()=>{const t=limpio(inp.textContent);escF.classList.toggle('con',!!t);if(!t&&!inp.querySelector('br,b,u,span,mark'))inp.innerHTML='';};llena();inp.addEventListener('input',llena);
+  if(foco){inp.focus();const s=getSelection();s.selectAllChildren(inp);s.collapseToEnd();}
+  inp.addEventListener('focus',()=>escF.classList.add('foco'));inp.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==inp)escF.classList.remove('foco');},150));
   box.querySelectorAll('.pb-who button').forEach(b=>b.onclick=()=>{PB.persona=b.dataset.p.toLowerCase()===yo.toLowerCase()?'':b.dataset.p;pbGuarda();box.querySelectorAll('.pb-who button').forEach(x=>x.classList.toggle('on',x===b));carga();});
-  box.querySelectorAll('.pb-cu button').forEach(b=>b.onclick=()=>{PB.dia=b.dataset.d;pbGuarda();box.querySelectorAll('.pb-cu button').forEach(x=>x.classList.toggle('on',x===b));inp.focus();});
-  const mas=box.querySelector('.pb-mas');
-  const anade=async()=>{const t=inp.value.trim();if(!t){inp.focus();return;}mas.disabled=true;
-   const res=await comPost('plan-anadir',{tarea:t,persona:PB.persona,dia:PB.dia==='man'?pbIso(hoy,1):hoy}).catch(x=>({ok:false,error:x.message}));
+  box.querySelectorAll('.pb-dias button').forEach(b=>b.onclick=()=>{if(PB.dia===b.dataset.d)return;PB.dia=b.dataset.d;pbGuarda();pinta();});
+  box.querySelectorAll('.pb-fl').forEach(b=>b.onclick=()=>{PB.sem=Math.max(0,PB.sem+ +b.dataset.s);pinta();});
+  {const b=box.querySelector('.pb-hoy');if(b)b.onclick=()=>{PB.dia=hoy;PB.sem=0;pbGuarda();pinta();};}
+  const mas=escF.querySelector('.pb-mas');
+  const anade=async()=>{const t=lee(inp);if(!limpio(t)){inp.focus();return;}if(limpio(t).length>200){toast('Demasiado larga: máximo 200 letras',false);return;}mas.disabled=true;
+   const res=await comPost('plan-anadir',{tarea:t,persona:PB.persona,dia:sel}).catch(x=>({ok:false,error:x.message}));
    mas.disabled=false;if(!res.ok){toast(res.error||'No se ha podido',false);return;}
-   inp.value='';llena();const it=res.item;if(it.dia>hoy){(PB.d.proximas=PB.d.proximas||[]).push(it);toast('Apuntada para mañana',true);}else PB.d.pendientes.push(it);pinta();box.querySelector('.pb-in').focus();if(!PB.persona)planContar();};
-  mas.onclick=anade;inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();anade();}};
+   inp.innerHTML='';const it=res.item;if(it.dia>hoy)(PB.d.proximas=PB.d.proximas||[]).push(it);else PB.d.pendientes.push(it);pinta();const n=box.querySelector('.pb-esc .pb-in');n&&n.focus();if(!PB.persona)planContar();};
+  mas.onmousedown=e=>e.preventDefault();mas.onclick=anade;prepara(inp,escF,anade);
   const buscar=id=>{const L=[PB.d.pendientes,PB.d.hechas,PB.d.proximas];for(const l of L){const i=(l||[]).findIndex(x=>x.id===id);if(i>=0)return [l,i];}return [null,-1];};
   const act=async(a,id,extra)=>{const res=await comPost(a,Object.assign({id,persona:PB.persona},extra||{})).catch(()=>({ok:false}));if(!res.ok){toast(res.error||'No se ha podido',false);carga();return false;}if(!PB.persona)planContar();return true;};
   box.querySelectorAll('.pb-ck').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id,[l,i]=buscar(id);if(!l)return;const x=l[i];
    x.hecha=!x.hecha;x.hechaEn=x.hecha?new Date().toISOString():'';l.splice(i,1);
    if(x.hecha)PB.d.hechas.push(x);else (x.dia>hoy?PB.d.proximas:PB.d.pendientes).push(x);
    b.closest('.pb-it').classList.toggle('ok',x.hecha);setTimeout(pinta,x.hecha?350:0);act('plan-hecho',id,{hecho:x.hecha});});
-  box.querySelectorAll('.pb-man').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id,[l,i]=buscar(id);if(!l)return;const x=l.splice(i,1)[0];x.dia=pbIso(hoy,1);(PB.d.proximas=PB.d.proximas||[]).push(x);pinta();act('plan-mover',id,{dia:x.dia}).then(ok=>ok&&toast('Pasada a mañana',true));});
+  box.querySelectorAll('.pb-man').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id,[l,i]=buscar(id);if(!l)return;const x=l.splice(i,1)[0];x.dia=pbIso(x.dia<hoy?hoy:x.dia,1);(PB.d.proximas=PB.d.proximas||[]).push(x);pinta();act('plan-mover',id,{dia:x.dia}).then(ok=>ok&&toast('Pasada al día siguiente',true));});
   box.querySelectorAll('.pb-del').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id;pregunta('¿Quitar esta tarea del plan?',{si:'Quitar'}).then(ok=>{if(!ok)return;const [l,i]=buscar(id);if(l)l.splice(i,1);pinta();act('plan-borrar',id);});});
+  // Tocar una tarea: se escribe encima, como en el cuaderno, y se le puede dar formato
+  box.querySelectorAll('.pb-it:not(.ok) .pb-t').forEach(tx=>tx.onclick=()=>{const it=tx.closest('.pb-it');if(it.classList.contains('ed'))return;const [l,i]=buscar(it.dataset.id);if(!l)return;const x=l[i];
+   box.querySelectorAll('.pb-it.ed').forEach(o=>o!==it&&o._fuera&&o._fuera());
+   it.classList.add('ed');tx.contentEditable='true';tx.spellcheck=true;const ac=it.querySelector('.pb-ac');const bar=document.createElement('div');bar.className='pb-edb';bar.innerHTML=herr+'<button type="button" class="pb-mas" aria-label="Guardar"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>';
+   if(ac)ac.style.display='none';it.appendChild(bar);tx.focus();const s=getSelection();s.selectAllChildren(tx);s.collapseToEnd();
+   let hecho=false;const fin=()=>{hecho=true;tx.contentEditable='false';it.classList.remove('ed');bar.remove();if(ac)ac.style.display='';delete it._fuera;};
+   const guarda=async()=>{if(hecho)return;const t=lee(tx);if(!limpio(t)){toast('Escribe la tarea (o quítala con la ✕)',false);tx.focus();return;}if(t===x.t){fin();tx.innerHTML=fmt(x.t);return;}
+    if(limpio(t).length>200){toast('Demasiado larga: máximo 200 letras',false);return;}
+    const ant=x.t;x.t=t;fin();tx.innerHTML=fmt(t);if(!(await act('plan-editar',x.id,{tarea:t}))){x.t=ant;}};
+   const cancela=()=>{fin();tx.innerHTML=fmt(x.t);};
+   it._fuera=guarda;bar.querySelector('.pb-mas').onmousedown=e=>e.preventDefault();bar.querySelector('.pb-mas').onclick=guarda;prepara(tx,bar,guarda,cancela);
+   tx.addEventListener('blur',()=>setTimeout(()=>{if(!hecho&&!it.contains(document.activeElement))guarda();},200));});
  };
  carga();}
 
