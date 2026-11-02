@@ -2775,6 +2775,10 @@ module.exports = async function handler(req, res) {
   }
   // TEMPORAL (solo lectura): revisar el pack de unos pacientes. Se quita al terminar
   if (action === 'diag-pack' && process.env.DIAG_KEY && String(req.query.k || '') === process.env.DIAG_KEY) {
+    if (req.query.m === 'banco') { _gasH = { t: 0, v: null }; _ingH = { t: 0, k: '', v: null }; const b = await gastosBancoMeses().catch(e => ({ error: e.message }));
+      const ing = await ingresosHoldedDias(HOLDED_DESDE, new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date())).catch(e => ({ error: e.message }));
+      const sem = await todosT('tblE7NWfZmxcou5mV', 'fields[]=SEMANA&fields[]=INGRESOS&sort[0][field]=SEMANA&sort[0][direction]=desc').catch(e => [{ error: e.message }]);
+      return res.status(200).json({ det: b.det, cuentas: b.cuentas, error: b.error, entradas: (b.entradas || []).slice(-4), gastos: (b.meses || []).slice(-4), ingDias: ing, semanas: sem.slice(0, 6).map(r => r.fields || r) }); }
     const qs = String(req.query.q || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean).slice(0, 4);
     const ps = (await todosT(PACIENTES, `fields[]=${encodeURIComponent('FULL NAME')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}&fields[]=${encodeURIComponent('BONO PREVIO VALE')}&fields[]=${encodeURIComponent('PACK COMPARTE')}`)).filter(p => qs.some(x => String(p.fields['FULL NAME'] || '').toLowerCase().includes(x)));
     const out = [];
