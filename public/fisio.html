@@ -15675,6 +15675,8 @@ function cerrarLightbox(){
  window._refrescarVista=refrescarVista;
  document.addEventListener('visibilitychange',()=>{if(document.hidden){ocultaDesde=Date.now();try{sessionStorage.setItem('f365_vista',JSON.stringify({sec:sessionStorage.getItem('f365_panel_sec')||'',y:window.scrollY,t:Date.now()}));}catch(e){}return;}if(ocultaDesde&&Date.now()-ocultaDesde>3000)alVolver();ocultaDesde=0;});
  window.addEventListener('pageshow',e=>{if(e.persisted)alVolver();});
+ // Con el panel abierto y a la vista: cada 3 minutos mira si hay versión nueva y avisa (una vez por versión)
+ let verAvisada='';setInterval(async()=>{if(document.hidden||!fisioActual)return;const v=await getVer();if(v&&ver&&v!==ver&&v!==verAvisada){verAvisada=v;avisoVersionNueva();}},180000);
  // Versión nueva publicada: al volver al panel se recarga solo (guarda y recupera la sección y el scroll)
  (function(){let v0='';const ver=()=>fetch('/api/schedule?action=ver',{cache:'no-store'}).then(r=>r.json()).then(j=>j.v||'').catch(()=>'');ver().then(v=>{v0=v;});
   document.addEventListener('visibilitychange',async()=>{if(document.hidden||!v0)return;const v=await ver();if(!v||v===v0)return;
