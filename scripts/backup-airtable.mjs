@@ -31,7 +31,7 @@ async function api(url) {
 }
 const limpio = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 _-]/g, '').trim().replace(/\s+/g, '_').slice(0, 60) || 'tabla';
 
-let totalAdj = 0; const MAX_ADJ = 400 * 1024 * 1024;
+let totalAdj = 0; const MAX_ADJ = 4000 * 1024 * 1024;
 const resumen = { fecha: new Date().toISOString(), bases: {} };
 
 for (const [baseId, baseNom] of Object.entries(BASES)) {
