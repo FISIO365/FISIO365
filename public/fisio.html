@@ -1205,6 +1205,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-doc-t{flex:1;min-width:0}.fp-doc-t b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fp-doc-t small{font-size:11.5px;color:#9a8d84}
 .fp-doc-go{font-size:20px;color:#c9bdb3}
 .fp-hero .fp-ic svg{width:17px!important;height:17px!important;flex:none}
+.psc:empty{display:none}.psc{margin:0 0 12px}.psc-h{width:100%;display:flex;align-items:center;gap:8px;font-family:var(--font);background:#f7f3ef;border:none;border-radius:14px;padding:11px 14px;cursor:pointer;text-align:left;color:var(--black)}.psc-t{font-size:13.5px;font-weight:600}.psc-h i{font-style:normal;font-size:11.5px;font-weight:700;background:#c2552e;color:#fff;border-radius:99px;padding:1px 8px}.psc-h small{flex:1;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.psc-h svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;transition:transform .2s;flex:none}.psc-h.on svg{transform:rotate(180deg)}.psc-l{margin-top:10px}
 .np-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.np-btn{font-family:var(--font);font-size:13px;font-weight:600;border:none;border-radius:99px;background:#c2552e;color:#fff;padding:9px 14px;cursor:pointer;white-space:nowrap}
 .exp-seg span small{display:block;font-size:11.5px;font-weight:500;opacity:.8;margin-top:1px}
 .np-accw{display:flex;flex-wrap:wrap;align-items:center;gap:0 4px;margin-top:14px}.np-accw .exp-seg{flex:1;margin:0}
@@ -2596,7 +2597,8 @@ let pacFiltroEst='';
 function renderPac(wrap){
  cargarSegPac().then(()=>{const i=document.getElementById('pacBuscar');if(i&&(i.value||pacFiltroEst)&&i.oninput)i.oninput();});
  const card=ce('div','card');
- card.innerHTML=`<div class="np-top"><div class="ct" style="margin:0">Buscar paciente</div><button type="button" class="np-btn">＋ Nuevo paciente</button></div>
+ card.innerHTML=`<div class="np-top"><div class="ct" style="margin:0">Buscar paciente</div><button type="button" class="np-btn">＋ Añadir</button></div>
+ <div class="psc" id="pacSinCita"></div>
  <div class="si"><input type="text" id="pacBuscar" placeholder="Escribe nombre o email..." autocomplete="off"></div>
  <div id="pacResultados" style="margin-top:8px"></div>`;
  wrap.appendChild(card);
@@ -2604,8 +2606,27 @@ function renderPac(wrap){
  const lista=document.getElementById('pacResultados');
  renderPacTodos(lista);
  input.oninput=()=>renderPacLista(input.value, lista);
- card.querySelector('.np-btn').onclick=()=>abrirNuevoPaciente(input.value);
+ const sc=card.querySelector('#pacSinCita');pacSinCita(sc);
+ card.querySelector('.np-btn').onclick=e=>ddMenuG(e.currentTarget,[{v:'pac',t:'Nuevo paciente'},{v:'pregunta',t:'Alguien pregunta y se va sin cita'}],v=>{if(v==='pac')abrirNuevoPaciente(input.value);else editContactoG(null,()=>{PSC_ABIERTO=true;pacSinCita(sc);});});
  input.focus();
+}
+// «Sin cita»: gente que preguntó y no se citó. Al darle cita (panel, web o app) sale sola de aquí
+let PSC_ABIERTO=false;try{PSC_ABIERTO=localStorage.getItem('f365_psc')==='1';}catch(e){}
+async function pacSinCita(box){
+ let L=[];try{const d=await (await fetch(`/api/schedule?action=seg-cap-contactos&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!d.ok)throw 0;L=d.contactos||[];}catch(e){return;}
+ if(!box.isConnected)return;
+ const pinta=()=>{if(!L.length){box.innerHTML='';return;}
+  box.innerHTML=`<button type="button" class="psc-h${PSC_ABIERTO?' on':''}"><span class="psc-t">Sin cita</span><i>${L.length}</i><small>Preguntaron y no se citaron</small><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+   ${PSC_ABIERTO?`<div class="cap-list psc-l">${L.map(c=>`<div class="cap-it" data-id="${c.id}"><span class="cap-av">${escH(capIni(c.nombre||'?'))}</span><div class="cap-m"><div class="cap-h"><b>${escH(capTit(c.nombre)||'Sin nombre')}</b>${c.motivoTipo?`<em class="cap-tag no">${escH(c.motivoTipo)}</em>`:''}</div><div class="cap-ch">${c.medio?`<span>${escH(capNomF(c.medio))}</span>`:''}<small>${escH([capFe(c.fecha),c.por?'apuntó '+c.por:''].filter(Boolean).join(' · '))}</small></div>${c.mensaje?`<p class="cap-nota">${escH(c.mensaje)}</p>`:''}</div>
+    <div class="cap-a">${c.tel?`<button type="button" class="cap-ic wa cap-wa" title="WhatsApp">${IC_WA}</button>`:''}<button type="button" class="cap-ic cap-ed" title="Ver / editar">${IC_ED}</button><button type="button" class="cap-ic cap-arc" title="Archivar (no se borra)"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg></button><button type="button" class="cap-b cap-cit">Se citó</button></div></div>`).join('')}</div>`:''}`;
+  box.querySelector('.psc-h').onclick=()=>{PSC_ABIERTO=!PSC_ABIERTO;try{localStorage.setItem('f365_psc',PSC_ABIERTO?'1':'0');}catch(e){}pinta();};
+  const fuera=id=>{L=L.filter(x=>x.id!==id);pinta();};
+  box.querySelectorAll('.cap-it').forEach(r=>{const c=L.find(e=>e.id===r.dataset.id);
+   const wa=r.querySelector('.cap-wa');if(wa)wa.onclick=()=>waAbrir(c.tel,`¡Hola${c.nombre?' '+capNomF(String(c.nombre).split(' ')[0]):''}! Te escribimos de FISIO365. Hace unos días nos preguntaste por una cita, ¿quieres que te busquemos un hueco esta semana?`);
+   r.querySelector('.cap-ed').onclick=()=>editContactoG(c,()=>pacSinCita(box));
+   capConf(r.querySelector('.cap-arc'),'¿Archivar?',async()=>{await capGuardar('contacto',{archivado:true},c.id);toast('Archivado',true);fuera(c.id);});
+   capConf(r.querySelector('.cap-cit'),'¿Se citó?',async()=>{await capGuardar('contacto',{citado:'SÍ'},c.id);toast('Fuera de «Sin cita»',true);fuera(c.id);});});};
+ pinta();
 }
 
 // Lista completa de pacientes (como en Airtable), con fecha de alta y orden
@@ -7280,7 +7301,7 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
   try{const r=await agPost('seg-agenda-dar',{pacienteId:pac.id,fecha,hora,fisio,quien:miNombreCorto(),notas:m.querySelector('.ag-not2').value.trim(),tipos:tg.get(),sesion:ses.get(),forzar,...agBombaP(m)});
    if(r.bomba){b.disabled=false;b.textContent='Dar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
    if(r.conflicto){b.disabled=false;b.textContent='Dar cita';pregunta(r.error+'. ¿Darla igualmente?',{si:'Darla igualmente'}).then(ok=>{if(ok)enviar(b,true);});return;}
-   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`+(pacInfo?' · '+pacInfo:'')+(r.reprogramadas?' · su cita «Por reagendar» pasa a Reprogramada':'')+(r.seguimiento?(r.seguimiento.quitado?' · sale de «Por llamar»':'')+' · ahora está Activo':''),true);if(r.seguimiento&&r.seguimiento.estados){try{const pp=(pacs||[]).find(x=>x.id===pac.id);if(pp)pp.estados=r.seguimiento.estados;}catch(_){}}m.remove();if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:pac.id,paciente:pac.nombre},r.debePagar);try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();
+   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`+(pacInfo?' · '+pacInfo:'')+(r.reprogramadas?' · su cita «Por reagendar» pasa a Reprogramada':'')+(r.noCitados?' · sale de «Sin cita»':'')+(r.seguimiento?(r.seguimiento.quitado?' · sale de «Por llamar»':'')+' · ahora está Activo':''),true);if(r.seguimiento&&r.seguimiento.estados){try{const pp=(pacs||[]).find(x=>x.id===pac.id);if(pp)pp.estados=r.seguimiento.estados;}catch(_){}}m.remove();if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:pac.id,paciente:pac.nombre},r.debePagar);try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();
    // Venía con un pack de antes sin apuntar: se marca ahora con esta cita (sesión X de N)
    if(quierePack&&packSel&&r.id){const {n,ses}=packSel.get();
     fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:pac.id,bonoPack:{n,sesion:ses,citaId:r.id}})}).then(x=>x.json()).then(k=>{if(!k.ok)throw 0;toast(`Pack apuntado: sesión ${ses} de ${n}`,true);onDone&&onDone();}).catch(()=>toast('La cita está dada, pero no se ha podido apuntar el pack. Hazlo desde la cita',false));}}
@@ -12081,6 +12102,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-02',t:'Pacientes: el + ahora también sirve para apuntar a alguien que pregunta y se va sin cita. Arriba verás «Sin cita» con esa gente; cuando les das cita (en el panel, la web o la app) salen solos de la lista.'},
  {f:'2026-11-02',t:'Ejercicios › Pendientes de grabar: los ejercicios que ya están en la biblioteca sin vídeo salen solos en la lista («Ya está · falta vídeo»). Al grabarlo, solo pegas el link. Si alguno no lo necesita, «No hace falta vídeo».',ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Pendientes de grabar.'}]}},
  {f:'2026-11-02',t:'Cambiar una cita con menos de 24 h cuenta como cancelación tardía: te avisa y pregunta lo mismo que al cancelar (descontar del pack o pago por adelantado), y lo apunta en las notas.'},
  {f:'2026-11-02',t:'Al abrir una cita en la agenda ves lo importante de su salud (marcapasos, embarazo, cáncer en rojo; el resto de lo que marcó en el consentimiento, «A tener en cuenta») y si tiene el consentimiento firmado; si le falta, «Enviárselo» desde ahí mismo.'},
@@ -14089,7 +14111,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Al entrar: tu agenda',body:`Siempre aterrizas en la <b>Agenda</b>: las citas de hoy de todo el equipo.<br><br>Abajo tienes lo de cada día: <b>Agenda, Pacientes, Mi día, Chat</b> y <b>Más</b>. En el ordenador, lo mismo está en el menú de la izquierda.`,ver:{sec:'agenda',pasos:[{el:'.sidebar',txt:'Aquí tienes las secciones que más usarás.'}]}},
  {ti:'¿Buscas otra cosa? Toca Más',body:`Comunicaciones, Sugerencias, School, Captación, Valoraciones… está todo en <b>Más</b>, abajo a la derecha, ordenado en bloques.<br><br><b>Tu foto</b>, arriba, es para lo tuyo: tus estadísticas, notificaciones y cerrar sesión.<br><br>¿Echas algo en falta? No es un fallo: cada uno ve lo que necesita. Pídeselo a dirección.`,ver:{sec:'agenda',pasos:[{el:'#sb-mas || .sidebar',txt:'Toca Más: aquí está el resto de secciones.'}]}},
- {ti:'Alguien pregunta y se va sin cita',body:`<b>Cuándo:</b> llama o entra alguien, pregunta precios o por un dolor, y no se cita.<br><br><b>Qué haces:</b> en la Agenda, toca el <b>+</b> › <b>Alguien pregunta y se va sin cita</b>, y apunta nombre, teléfono y por qué no se citó.<br><br><b>Para qué:</b> así se le puede llamar después en vez de perderlo.`,ver:{sec:'agenda',pasos:[{el:'.ag-add',txt:'El +: nueva cita o alguien que pregunta.'}]}},
+ {ti:'Alguien pregunta y se va sin cita',body:`<b>Cuándo:</b> llama o entra alguien, pregunta precios o por un dolor, y no se cita.<br><br><b>Qué haces:</b> en la Agenda o en Pacientes, toca el <b>+</b> › <b>Alguien pregunta y se va sin cita</b>, y apunta nombre, teléfono y por qué no se citó.<br><br><b>Para qué:</b> así se le puede llamar después en vez de perderlo. Queda en <b>Pacientes › Sin cita</b> y sale sola de ahí cuando le das cita.`,ver:{sec:'agenda',pasos:[{el:'.ag-add',txt:'El +: nueva cita o alguien que pregunta.'}]}},
  {ti:'Lo que te toca hacer: Mi día',body:`En <b>Mi día</b> está todo lo que te toca hoy, en tres pestañas: tu <b>Plan</b>, tus <b>Pendientes</b> (tareas y llamadas) y el <b>Check-list</b> antes de irte. El número es lo que te queda hoy o llevas atrasado.<br><br>Míralo al empezar y al acabar el día.`,ver:{sec:'plan',pasos:[{el:'.dia-tabs',txt:'Plan, Pendientes y Check-list.'}]}},
  {ti:'Tu Plan de batalla',body:`Las cosas que tienes que hacer hoy, apuntadas por ti: escribe la tarea, «Hoy» o «Mañana», y <b>+</b>. Al hacerla, tócale el círculo.<br><br>Lo que no hagas <b>pasa solo al día siguiente</b> («Viene de ayer»), hasta que lo marques. Las que pone dirección salen en negro: «De dirección».<br><br>Está en <b>Mi día › Plan</b>.`,ver:{sec:'plan',pasos:[{el:'.pb-add',txt:'Aquí apuntas lo que tienes que hacer.'}]}},
  {ti:'Para enterarte a tiempo: los avisos',body:`<b>Cuándo:</b> la primera vez que usas un móvil u ordenador.<br><br><b>Para qué:</b> si no, no te enteras cuando un paciente te escribe, reserva una hora tuya o paga.<br><br>En el móvil: <b>tu foto › Notificaciones › Activar</b>. En iPhone, con el panel añadido a la pantalla de inicio.`,ver:{sec:'agenda',pasos:[{el:'#btnAvisos || #btnPerfil',txt:'Aquí activas los avisos (en el móvil, tu foto › Notificaciones).'}]}},
@@ -14226,7 +14248,7 @@ function renderFormacion(wrap, ruta){
  {t:'Pacientes: buscar y crear',sub:'Encontrar una ficha o crear una nueva',
  cards:[
  {ti:'Buscas a un paciente',shot:'/img/school/panel-a-08-pacientes.jpg',body:`<b>Qué haces:</b> en <b>Pacientes</b>, escribe su nombre (sin preocuparte de tildes), su email o <b>4 cifras de su teléfono</b>.<br><br>Si no sale en la lista, el panel lo busca también en la base de datos.<br><br>Puedes ordenar por más recientes, más antiguos o A–Z.`,ver:{sec:'pac',pasos:[{el:'#pacBuscar',txt:'Escribe aquí nombre, email o teléfono.'}]}},
- {ti:'Llega alguien nuevo',shot:'/img/school/panel-a-09-nuevo.jpg',body:`<b>Qué haces:</b> <b>＋ Nuevo paciente</b>. Nombre y teléfono son obligatorios.<br><br>Con <b>Darle acceso a la app</b> marcado, pon también su <b>email</b>: se le crea un PIN para entrar.`,ver:{sec:'pac',pasos:[{el:'.np-btn',txt:'Aquí creas un paciente nuevo.'}]}},
+ {ti:'Llega alguien nuevo',shot:'/img/school/panel-a-09-nuevo.jpg',body:`<b>Qué haces:</b> en Pacientes, <b>＋ Añadir</b> › <b>Nuevo paciente</b>. Nombre y teléfono son obligatorios.<br><br>Con <b>Darle acceso a la app</b> marcado, pon también su <b>email</b>: se le crea un PIN para entrar.`,ver:{sec:'pac',pasos:[{el:'.np-btn',txt:'+ Añadir › Nuevo paciente.'}]}},
  {ti:'«Ya hay un paciente parecido»',body:`<b>Cuándo:</b> al crear, hay otro con el mismo teléfono, email o nombre.<br><br><b>Qué haces:</b> mira si es la misma persona. Si lo es, <b>Abrir</b> esa ficha. Si no, crea igualmente.<br><br><b>Para qué:</b> una persona, una ficha. Si no, su historia y sus pagos quedan repartidos.`}
  ],
  qs:[

@@ -509,6 +509,20 @@ async function esperaLista(forzar) {
   _espera = { t: Date.now(), v }; return v;
 }
 // Al darle cita a alguien que está en la lista de espera, sale solo de ella («Ya tiene cita»)
+// Al darle cita (panel, web o app), quien preguntó y no se citó sale solo de «Sin cita» (mismo teléfono o mismo nombre completo)
+async function salirDeNoCitados(pid, fecha, hora) {
+  const desde = new Date(Date.now() - 180 * 864e5).toISOString().slice(0, 10);
+  const L = await capTodos(CAP.contacto, `filterByFormula=${encodeURIComponent(`AND({CITADO}!='SÍ',NOT({ARCHIVADO}),IS_AFTER({FECHA},'${desde}'))`)}&fields[]=TELF&fields[]=NOMBRE&fields[]=MENSAJE`).catch(() => []);
+  if (!L.length) return 0;
+  const p = await at(`${PACIENTES}/${pid}`).catch(() => ({})), F = p.fields || {};
+  const tel = String(F['WHATSAPP'] || F['TELF'] || '').replace(/\D/g, '').slice(-9);
+  const nom = capNorm(F['FULL NAME'] || [F['NOMBRE'] || '', F['APELLIDOS'] || ''].join(' ')).replace(/\s+/g, ' ').trim();
+  const mios = L.filter(r => { const t = String(r.fields['TELF'] || '').replace(/\D/g, '').slice(-9), n = capNorm(r.fields['NOMBRE']).replace(/\s+/g, ' ').trim();
+    return (tel.length === 9 && t === tel) || (!t && nom.includes(' ') && n === nom); });
+  const fC = String(fecha).split('-').reverse().join('/');
+  for (const r of mios) await at(`${CAP.contacto}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { CITADO: 'SÍ', MENSAJE: [r.fields['MENSAJE'], `Cita dada para el ${fC} a las ${hora} (salió sola de la lista)`].filter(Boolean).join(' · ').slice(0, 2000) }, typecast: true }) }).catch(() => null);
+  return mios.length;
+}
 async function salirDeEspera(pid, fecha, hora) {
   const v = await esperaLista(true); let tel = '';
   const sinPac = v.filter(e => e.estado === 'ESPERANDO' && e.tabla === 'esperaN');
@@ -2791,7 +2805,7 @@ module.exports = async function handler(req, res) {
     const c = await at(`tblTPlcuiSjQngkaD/${id}`).catch(() => ({})), F = c.fields || {}, pid = (F['RELACIÓN - CITA'] || [])[0], fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '');
     const hoyM = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
     if (!pid || String(F['ESTADO'] || '').trim() !== 'PENDIENTE' || fecha < hoyM) return res.status(200).json({ ok: false });
-    await Promise.all([revisarPorReagendar(true).catch(() => 0), salirDeEspera(pid, fecha, hora).catch(() => 0), salirDeSeguimiento(pid, '', fecha, hora, 'Reservó desde la app').catch(() => null)]);
+    await Promise.all([revisarPorReagendar(true).catch(() => 0), salirDeEspera(pid, fecha, hora).catch(() => 0), salirDeNoCitados(pid, fecha, hora).catch(() => 0), salirDeSeguimiento(pid, '', fecha, hora, 'Reservó desde la app').catch(() => null)]);
     return res.status(200).json({ ok: true });
   }
   if (action === 'ver') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ v: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 12) }); } // versión publicada: el panel se actualiza solo al volver
@@ -3126,7 +3140,7 @@ module.exports = async function handler(req, res) {
         await Promise.all(ids.map(fid => avisar('fisio', fid, { title: `📅 Nueva reserva: ${n1} ${n2}${nuevo ? ' (nuevo)' : ''}${P.p > 0 ? ' · pendiente de pago' : ''}`, body: `${DS[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${h.hora} con ${fis.split(' ')[0]}. ${motivo.slice(0, 90)}`, url: '/fisio', tag: 'res-' + id }).catch(() => false)));
       } catch (e) {}
       // Lo mismo que al dar cita desde el panel: sale de «Por llamar» y de la lista de espera, pasa a Activo (o Paciente nuevo) y su «Por reagendar» pasa a Reprogramada
-      await Promise.all([revisarPorReagendar(true).catch(() => 0), salirDeEspera(pac.id, h.fecha, h.hora).catch(() => 0)]);
+      await Promise.all([revisarPorReagendar(true).catch(() => 0), salirDeEspera(pac.id, h.fecha, h.hora).catch(() => 0), salirDeNoCitados(pac.id, h.fecha, h.hora).catch(() => 0)]);
       if (!nuevo) await salirDeSeguimiento(pac.id, '', h.fecha, h.hora, 'Reservó por el enlace de huecos').catch(() => null);
       await ponerEtapa(pac.id, 'cita').catch(() => null);
       if (!(P.p > 0)) await avisoFaltaEnlace(id);
@@ -4508,6 +4522,11 @@ module.exports = async function handler(req, res) {
             contactos: con.map(r => { const F = r.fields; return { id: r.id, fecha: F['FECHA'] || r.createdTime, nombre: F['NOMBRE'] || '', medio: cNm(F['MEDIO']), mensaje: F['MENSAJE'] || '', citado: cNm(F['CITADO']), motivo: F['MOTIVO'] || '', motivoTipo: cNm(F['MOTIVO TIPO']), tel: F['TELF'] || '', por: F['REGISTRADO POR'] || '', archivado: !!F['ARCHIVADO'] }; }),
             espera: esp, negocios, libres });
         }
+        if (action === 'seg-cap-contactos') { // «Sin cita» en Pacientes: quien preguntó y aún no se citó (ni está archivado)
+          const desde = new Date(Date.now() - 180 * 864e5).toISOString().slice(0, 10);
+          const con = await capTodos(CAP.contacto, `filterByFormula=${encodeURIComponent(`AND({CITADO}!='SÍ',NOT({ARCHIVADO}),IS_AFTER({FECHA},'${desde}'))`)}&sort[0][field]=FECHA&sort[0][direction]=desc`);
+          return res.status(200).json({ ok: true, hoy: hoyF, contactos: con.map(r => { const F = r.fields; return { id: r.id, fecha: F['FECHA'] || r.createdTime, nombre: F['NOMBRE'] || '', medio: cNm(F['MEDIO']), mensaje: F['MENSAJE'] || '', citado: cNm(F['CITADO']), motivo: F['MOTIVO'] || '', motivoTipo: cNm(F['MOTIVO TIPO']), tel: F['TELF'] || '', por: F['REGISTRADO POR'] || '', archivado: !!F['ARCHIVADO'] }; }) });
+        }
         if (action === 'seg-cap-avisos') {
           const fin = new Date(Date.now() + 2 * 864e5).toISOString().slice(0, 10), ayer = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
           const [esp, lib, neg] = await Promise.all([esperaLista(), capTodos('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO})='CITA LIBRE',TRIM({ESTADO})='LIBRE - SIN BOMBA'),IS_AFTER({FECHA},'${ayer}'),IS_BEFORE({FECHA},'${fin}'))`)}&fields[]=FECHA&fields[]=HORA&fields[]=PREF.&fields[]=ESTADO`).catch(() => []),
@@ -5063,9 +5082,9 @@ module.exports = async function handler(req, res) {
           const rep = await revisarPorReagendar(true).catch(() => 0);
           const seg = await salirDeSeguimiento(q.pacienteId, q.quien, q.fecha, q.hora).catch(() => null);
           const et = await ponerEtapa(q.pacienteId, 'cita').catch(() => null); if (seg && et) seg.estados = et.estados;
-          const esp = await salirDeEspera(q.pacienteId, q.fecha, q.hora).catch(() => 0);
+          const [esp, noCit] = await Promise.all([salirDeEspera(q.pacienteId, q.fecha, q.hora).catch(() => 0), salirDeNoCitados(q.pacienteId, q.fecha, q.hora).catch(() => 0)]);
           const pf = await at(`${PACIENTES}/${q.pacienteId}`).catch(() => ({})), debePagar = (pf.fields || {})['PAGO ADELANTADO'] ? (pf.fields['PAGO ADELANTADO MOTIVO'] || 'Tiene que pagar por adelantado') : '';
-          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg, etapa: et && et.etapa, espera: esp, debePagar });
+          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg, etapa: et && et.etapa, espera: esp, noCitados: noCit, debePagar });
         }
         if (action === 'seg-agenda-huecos') { // abrir varias horas de golpe (libres o bloqueadas), sin pisar lo que ya hay
           const fechas = (q.fechas || []).filter(okF).slice(0, 60), horas = (q.horas || []).map(hh).filter(okH).slice(0, 24);
