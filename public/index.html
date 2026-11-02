@@ -642,7 +642,10 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .rcb-e{color:#b42318;font-size:13px;margin-top:8px;min-height:1em}
 .rcb-ok{display:block;width:100%;border:none;font-family:inherit;font-size:15px;font-weight:600;background:#c2552e;color:#fff;border-radius:99px;padding:14px;margin-top:6px}.rcb-ok:disabled{opacity:.45}
 .rcb-no{display:block;width:100%;border:none;background:none;font-family:inherit;font-size:14px;font-weight:600;color:#9a8f87;padding:12px;margin-top:2px}
+.cu-idi{display:flex;gap:6px}.cu-idi .lang-btn{flex:1;border:1.5px solid #ebe5df;background:#fff;border-radius:99px;padding:10px 4px;font-family:inherit;font-size:13.5px;cursor:pointer}
+.login-alt{display:block;width:100%;margin-top:14px;border:none;background:none;font-family:inherit;font-size:13.5px;font-weight:600;color:#c2552e;cursor:pointer;padding:6px;line-height:1.4}.login-ok{font-size:13px;color:#6b5f57;text-align:center;margin-top:10px;line-height:1.45}#codBox[hidden]{display:none}#codBox .btn-primary{margin-top:14px}
 </style>
+<script src="/i18n.js?v=1"></script>
 <script src="/visor.js?v=1"></script>
 </head>
 <body>
@@ -663,6 +666,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  </div>
  <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
  <div class="login-err" id="loginErr"></div>
+ <div id="codBox" hidden><label class="lbl" for="codIn">Código del email</label><input class="inp" type="tel" id="codIn" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······" style="letter-spacing:6px;text-align:center;font-size:20px"><button class="btn-primary" id="codOk" type="button" onclick="codEntrar()">Entrar</button><div class="login-ok" id="codMsg"></div></div>
+ <button class="login-alt" id="codLink" type="button" onclick="codPedir()">¿No te acuerdas del PIN? Entra con un código por email</button>
  </div>
  <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app?</button>
 <script>try{if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.getElementById('installBtn').style.display='none';}catch(e){}</script>
@@ -794,6 +799,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  <div id="vistaCuenta" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mi cuenta</div></div>
  <div class="cu-top"><div class="cu-av" id="cuAv"></div><b id="cuNom"></b><small id="cuMail"></small><button type="button" class="cu-bt" onclick="document.getElementById('cuFile').click()">Cambiar foto</button><input type="file" id="cuFile" accept="image/*" style="display:none" onchange="subirFotoPerfil(this)"></div>
+ <div class="cu-box no-tr"><h3>Idioma · Idioma · Language</h3><div class="cu-idi"><button type="button" class="lang-btn" data-lang="es" onclick="setLang('es')">Castellano</button><button type="button" class="lang-btn" data-lang="cat" onclick="setLang('cat')">Català</button><button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">English</button></div></div>
  <div class="cu-box"><h3>Cambiar mi PIN</h3>
   <label for="cuPin0">PIN actual</label><input id="cuPin0" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password">
   <label for="cuPin1">PIN nuevo (4 números)</label><input id="cuPin1" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password">
@@ -884,7 +890,7 @@ let modalTipo=null,modalTexto='',fisiosCache=null;
 const i18n={es:{entrar:"Entrar",entrando:"Entrando...",instalarApp:"¿Cómo instalo la app?",errorEmail:"Introduce tu email",errorPin:"Introduce los 4 dígitos del PIN",errorConexion:"Error de conexión",programaHoy:"Tu programa de ejercicios",progresoHoy:"Progreso de hoy",sesionCompletada:"¡Sesión completada!",sesionSub:"Has terminado tu programa de hoy.",sesionMsg:"Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana!",miProgreso:"Mi progreso",cuantoDolor:"¿Cuánto dolor tienes hoy?",sinDolor:"Sin dolor",dolorMaximo:"Dolor máximo",guardar:"Guardar",salir:"Salir",sinPrograma:"Sin programa asignado",sinProgramaDesc:"Tu fisioterapeuta todavía no ha asignado ejercicios.",dolorBajo:function(pct){return "Tu dolor ha bajado un "+pct+"% respecto a ayer. ¡Vas por muy buen camino!";},dolorEstable:"Tu dolor se mantiene estable. ¡Sigue con tus ejercicios!",dolorSubio:"No te preocupes, los altibajos son normales. ¿Has cambiado algo en tu rutina?",dolorRegistrado:"Dolor registrado ✓"},cat:{entrar:"Entrar",entrando:"Entrant...",instalarApp:"Com instal·lo l'app?",errorEmail:"Introdueix el teu email",errorPin:"Introdueix els 4 dígits del PIN",errorConexion:"Error de connexió",programaHoy:"El teu programa d'exercicis",progresoHoy:"Progrés d'avui",sesionCompletada:"Sessió completada!",sesionSub:"Has acabat el teu programa d'avui.",sesionMsg:"Cada dia que entrenes és un pas cap a la teva recuperació. Torna demà!",miProgreso:"El meu progrés",cuantoDolor:"Quant dolor tens avui?",sinDolor:"Sense dolor",dolorMaximo:"Dolor màxim",guardar:"Guardar",salir:"Sortir",sinPrograma:"Sense programa assignat",sinProgramaDesc:"El teu fisioterapeuta encara no ha assignat exercicis.",dolorBajo:function(pct){return "El teu dolor ha baixat un "+pct+"% respecte a ahir.";},dolorEstable:"El teu dolor es manté estable. Segueix!",dolorSubio:"No et preocupis, els alts i baixos són normals.",dolorRegistrado:"Dolor registrat ✓"},en:{entrar:"Log in",entrando:"Logging in...",instalarApp:"How do I install the app?",errorEmail:"Please enter your email",errorPin:"Please enter all 4 PIN digits",errorConexion:"Connection error",programaHoy:"Your exercise program",progresoHoy:"Today's progress",sesionCompletada:"Session completed!",sesionSub:"You finished today's program.",sesionMsg:"Every day you train is a step towards your recovery. Come back tomorrow!",miProgreso:"My progress",cuantoDolor:"How much pain do you have today?",sinDolor:"No pain",dolorMaximo:"Maximum pain",guardar:"Save",salir:"Log out",sinPrograma:"No program assigned",sinProgramaDesc:"Your physiotherapist has not yet assigned any exercises.",dolorBajo:function(pct){return "Your pain decreased "+pct+"% since yesterday!";},dolorEstable:"Your pain is stable. Keep going!",dolorSubio:"Don't worry, ups and downs are normal.",dolorRegistrado:"Pain recorded ✓"}};
 
 function t(key,...args){const val=i18n[lang]?.[key];return typeof val==='function'?val(...args):(val||i18n.es[key]||key);}
-function setLang(l){lang=l;localStorage.setItem('fisio365_lang',l);document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===l?'#1a1a1a':'#a8a39b';b.style.fontWeight=b.dataset.lang===l?'700':'400';});applyTranslations();}
+function setLang(l){lang=l;localStorage.setItem('fisio365_lang',l);try{window.T365&&T365.cambia(l);}catch(e){}document.querySelectorAll('.lang-btn').forEach(b=>{b.style.color=b.dataset.lang===l?'#1a1a1a':'#a8a39b';b.style.fontWeight=b.dataset.lang===l?'700':'400';});applyTranslations();}
 function applyTranslations(){const lb=document.getElementById('loginBtn');const li=document.getElementById('installBtn');if(lb&&!lb.disabled)lb.textContent=t('entrar');if(li)li.textContent=t('instalarApp');const vasQ=document.querySelector('.vas-question');if(vasQ)vasQ.textContent=t('cuantoDolor');const vasLabels=document.querySelectorAll('.vas-labels span');if(vasLabels.length>=2){vasLabels[0].textContent=t('sinDolor');vasLabels[1].textContent=t('dolorMaximo');}const btnVas=document.getElementById('btnVas');if(btnVas)btnVas.textContent=t('guardar');document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});}
 
 let vasSeleccionado=null,vasRegistros=[],vasPeriodo=7;
@@ -902,6 +908,24 @@ const pids=['p1','p2','p3','p4'];
 pids.forEach((id,i)=>{const el=document.getElementById(id);el.addEventListener('input',()=>{const v=el.value.replace(/[^0-9]/g,'');el.value=v.slice(-1);if(v&&i<3)document.getElementById(pids[i+1]).focus();});el.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!el.value&&i>0)document.getElementById(pids[i-1]).focus();if(e.key==='Enter')doLogin();});});
 document.getElementById('emailInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('p1').focus();});
 
+// Entrar con un código por email (si no se acuerda del PIN): se pide con el email o el teléfono escrito arriba
+async function codPedir(){const u=document.getElementById('emailInput').value.trim(),err=document.getElementById('loginErr'),lk=document.getElementById('codLink');err.textContent='';
+ if(!u){err.textContent='Escribe arriba tu email o tu teléfono';document.getElementById('emailInput').focus();return;}
+ lk.disabled=true;const t0=lk.textContent;lk.textContent='Enviando…';
+ try{const r=await (await fetch('/api/schedule?action=app-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario:u,lang})})).json();
+  if(!r.ok){err.textContent=r.error||'Error de conexión';}else{document.querySelector('.pin-wrap').style.display='none';document.querySelectorAll('.login-card > .lbl')[1].style.display='none';document.getElementById('loginBtn').style.display='none';
+   document.getElementById('codBox').hidden=false;document.getElementById('codMsg').textContent=r.msg||'';lk.textContent='Volver a entrar con el PIN';lk.onclick=codVolver;lk.disabled=false;setTimeout(()=>document.getElementById('codIn').focus(),50);return;}}
+ catch(e){err.textContent='Error de conexión';}
+ lk.disabled=false;lk.textContent=t0;}
+function codVolver(){document.querySelector('.pin-wrap').style.display='';document.querySelectorAll('.login-card > .lbl')[1].style.display='';document.getElementById('loginBtn').style.display='';document.getElementById('codBox').hidden=true;document.getElementById('loginErr').textContent='';const lk=document.getElementById('codLink');lk.textContent='¿No te acuerdas del PIN? Entra con un código por email';lk.onclick=codPedir;}
+async function codEntrar(){const u=document.getElementById('emailInput').value.trim(),c=document.getElementById('codIn').value.replace(/\D/g,''),err=document.getElementById('loginErr'),b=document.getElementById('codOk');err.textContent='';
+ if(c.length!==6){err.textContent='Escribe los 6 números del código';return;}
+ b.disabled=true;b.textContent='Entrando...';
+ try{const r=await (await fetch('/api/schedule?action=app-codigo-ok',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario:u,codigo:c,lang})})).json();
+  if(!r.ok){err.textContent=r.error||'Error de conexión';}else{document.getElementById('emailInput').value=r.usuario;String(r.pin).split('').forEach((d,i)=>{const el=document.getElementById(pids[i]);if(el)el.value=d;});codVolver();b.disabled=false;b.textContent='Entrar';return doLogin();}}
+ catch(e){err.textContent='Error de conexión';}
+ b.disabled=false;b.textContent='Entrar';}
+document.addEventListener('DOMContentLoaded',()=>{const ci=document.getElementById('codIn');if(ci)ci.addEventListener('keydown',e=>{if(e.key==='Enter')codEntrar();});});
 async function doLogin(){
   const email=document.getElementById('emailInput').value.trim();const pin=pids.map(id=>document.getElementById(id).value).join('');const errEl=document.getElementById('loginErr');errEl.textContent='';
   if(!email){errEl.textContent='Introduce tu email o teléfono';return;}if(pin.length!==4){errEl.textContent='Introduce los 4 dígitos del PIN';return;}

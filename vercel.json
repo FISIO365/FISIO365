@@ -48,6 +48,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/i18n.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "public/marca.js",
       "use": "@vercel/static"
     },
@@ -263,6 +267,10 @@
     {
       "src": "/visor.js",
       "dest": "/public/visor.js"
+    },
+    {
+      "src": "/i18n.js",
+      "dest": "/public/i18n.js"
     },
     {
       "src": "/marca.js",

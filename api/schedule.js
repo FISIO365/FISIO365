@@ -2717,6 +2717,44 @@ module.exports = async function handler(req, res) {
   try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); LEGAL = legalDe(c0.legal); PLANT = c0.plantillas || {}; } catch (e) { LEGAL = legalDe(); }
   { const _send = res.send.bind(res); res.send = b => _send(typeof b === 'string' && !/json/i.test(String(res.getHeader('Content-Type') || '')) ? MARCA.marcar(b, CLI) : b); }
   // Entrar al panel con un código por email (sin acordarse de la contraseña): se pide el código y se comprueba
+  // ── App del paciente: entrar con un código por email (si no se acuerda del PIN). Se pide con su email o su teléfono;
+  // el código llega al email de su ficha. Al acertarlo, el servidor devuelve su PIN y la app entra como siempre.
+  if (action === 'app-codigo' || action === 'app-codigo-ok') {
+    if (req.method !== 'POST') return res.status(405).json({ ok: false });
+    const q = req.body || {}, cr = require('crypto'), L = ['es', 'cat', 'en'].includes(q.lang) ? q.lang : 'es';
+    const TX = { es: { usu: 'Escribe tu email o tu teléfono', esp: 'Ya te lo hemos enviado. Espera un minuto antes de pedir otro.', noEmail: 'No tenemos tu email. Pide el PIN a tu fisio o escríbenos.', env: m => `Te hemos enviado un código a ${m}. Mira también en «Spam».`, cad: 'El código ha caducado. Pide otro.', mas: 'Demasiados intentos. Pide otro código.', mal: 'Ese código no es correcto', asunto: c => `Tu código para entrar en la app: ${c}`, hola: n => `Hola, ${n}:`, cuerpo: c => `Tu código para entrar en la app es <b style="font-size:26px;letter-spacing:4px;color:#1a1a1a">${c}</b><br><br>Caduca en 10 minutos. Si no lo has pedido tú, ignora este email.` },
+      cat: { usu: 'Escriu el teu email o el teu telèfon', esp: 'Ja te l\'hem enviat. Espera un minut abans de demanar-ne un altre.', noEmail: 'No tenim el teu email. Demana el PIN al teu fisio o escriu-nos.', env: m => `T'hem enviat un codi a ${m}. Mira també a «Spam».`, cad: 'El codi ha caducat. Demana\'n un altre.', mas: 'Massa intents. Demana un altre codi.', mal: 'Aquest codi no és correcte', asunto: c => `El teu codi per entrar a l'app: ${c}`, hola: n => `Hola, ${n}:`, cuerpo: c => `El teu codi per entrar a l'app és <b style="font-size:26px;letter-spacing:4px;color:#1a1a1a">${c}</b><br><br>Caduca en 10 minuts. Si no l'has demanat tu, ignora aquest email.` },
+      en: { usu: 'Enter your email or phone number', esp: 'We\'ve just sent it. Wait a minute before asking for another one.', noEmail: 'We don\'t have your email. Ask your physio for your PIN or write to us.', env: m => `We've sent a code to ${m}. Check your spam folder too.`, cad: 'The code has expired. Ask for a new one.', mas: 'Too many attempts. Ask for a new code.', mal: 'That code is not correct', asunto: c => `Your code to log in to the app: ${c}`, hola: n => `Hi ${n},`, cuerpo: c => `Your code to log in to the app is <b style="font-size:26px;letter-spacing:4px;color:#1a1a1a">${c}</b><br><br>It expires in 10 minutes. If you didn't ask for it, just ignore this email.` } }[L];
+    const u = String(q.usuario || '').trim().toLowerCase().replace(/"/g, ''), tel = u.includes('@') ? '' : u.replace(/\D/g, '').slice(-9);
+    if (!u || (!u.includes('@') && tel.length !== 9)) return res.status(200).json({ ok: false, error: TX.usu });
+    const k = u.includes('@') ? u : 'tel:' + tel;
+    const hash = c => cr.createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('app:' + k + ':' + c).digest('hex');
+    const COD = (await ajuste('login-codigos-app', {})) || {}, ahora = Date.now();
+    Object.keys(COD).forEach(x => { if (!COD[x] || COD[x].exp < ahora - 3600e3) delete COD[x]; });
+    const busca = async () => { const f = tel ? `OR(RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)="${tel}",RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)="${tel}")` : `LOWER({EMAIL})="${u}"`;
+      const L0 = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(f)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=EMAIL&fields[]=PIN`).catch(() => []);
+      return L0.find(r => /@/.test(String(r.fields.EMAIL || ''))) || null; };
+    if (action === 'app-codigo') {
+      if (COD[k] && ahora - COD[k].t < 45e3) return res.status(200).json({ ok: false, error: TX.esp });
+      const p = await busca();
+      if (!p) return res.status(200).json({ ok: false, error: TX.noEmail });
+      const em = String(p.fields.EMAIL).trim(), [a, d] = em.split('@'), tapado = a.slice(0, 2) + '•••@' + d;
+      const codigo = String(cr.randomInt(100000, 1000000));
+      COD[k] = { h: hash(codigo), exp: ahora + 10 * 60e3, t: ahora, n: 0, id: p.id }; await guardarAjuste('login-codigos-app', COD, '');
+      if (process.env.SIN_ENVIOS) return res.status(200).json({ ok: true, msg: `Versión de prueba: no se envían emails. Tu código es ${codigo}.` });
+      await valeMail(em, TX.asunto(codigo), TX.hola((n0 => n0.charAt(0).toUpperCase() + n0.slice(1).toLowerCase())(String(p.fields['FULL NAME'] || '').trim().split(/\s+/)[0] || '')), TX.cuerpo(codigo), '', '');
+      return res.status(200).json({ ok: true, msg: TX.env(tapado) });
+    }
+    const x = COD[k], c = String(q.codigo || '').replace(/\D/g, '');
+    if (!x || x.exp < ahora) return res.status(200).json({ ok: false, error: TX.cad });
+    if (x.n >= 5) return res.status(200).json({ ok: false, error: TX.mas });
+    if (c.length !== 6 || !cr.timingSafeEqual(Buffer.from(hash(c)), Buffer.from(x.h))) { x.n++; await guardarAjuste('login-codigos-app', COD, ''); return res.status(200).json({ ok: false, error: TX.mal }); }
+    delete COD[k]; await guardarAjuste('login-codigos-app', COD, '');
+    const p = await at(`${PACIENTES}/${x.id}`).catch(() => ({}));
+    let pin = String((p.fields || {}).PIN || '').trim();
+    if (!/^\d{4}$/.test(pin)) { pin = nuevoPin(); await at(`${PACIENTES}/${x.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: pin } }) }); }
+    return res.status(200).json({ ok: true, usuario: u, pin });
+  }
   if (action === 'panel-codigo' || action === 'panel-codigo-ok') {
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     const q = req.body || {}, email = String(q.email || '').trim().toLowerCase(), cr = require('crypto');
