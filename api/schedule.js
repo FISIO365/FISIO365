@@ -2770,6 +2770,21 @@ module.exports = async function handler(req, res) {
     if (!/^\d{4}$/.test(pin)) { pin = nuevoPin(); await at(`${PACIENTES}/${x.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: pin } }) }); }
     return res.status(200).json({ ok: true, usuario: u, pin });
   }
+  // TEMPORAL (solo lectura): revisar el pack de unos pacientes. Se quita al terminar
+  if (action === 'diag-pack' && process.env.DIAG_KEY && String(req.query.k || '') === process.env.DIAG_KEY) {
+    const qs = String(req.query.q || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean).slice(0, 4);
+    const ps = (await todosT(PACIENTES, `fields[]=${encodeURIComponent('FULL NAME')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}&fields[]=${encodeURIComponent('BONO PREVIO VALE')}&fields[]=${encodeURIComponent('PACK COMPARTE')}`)).filter(p => qs.some(x => String(p.fields['FULL NAME'] || '').toLowerCase().includes(x)));
+    const out = [];
+    for (const p of ps.slice(0, 6)) {
+      const fs = await todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`{PacienteId}='${p.id}'`)}`).catch(e => [{ error: e.message }]);
+      const cs = await todosT('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`FIND('${p.id}',ARRAYJOIN({PacienteRec}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO`).catch(() => []);
+      const citas = cs.map(c => ({ id: c.id, f: String(c.fields.FECHA || '').slice(0, 10), h: c.fields.HORA, e: String(c.fields.ESTADO || '').trim() })).sort((a, b) => (a.f + a.h).localeCompare(b.f + b.h));
+      out.push({ id: p.id, nombre: p.fields['FULL NAME'], previo: p.fields['SESIONES BONO PREVIO'], previoUsadas: p.fields['BONO PREVIO YA USADAS'], vale: p.fields['BONO PREVIO VALE'], comparte: p.fields['PACK COMPARTE'],
+        facturas: fs.map(r => ({ id: r.id, ...Object.fromEntries(Object.entries(r.fields || {}).filter(([k]) => /ESTADO|FECHA|CONCEPTO|SESIONES|TOTAL|IMPORTE|N[ÚU]MERO|HOLDED/i.test(k))) })),
+        nCitas: citas.length, citas: citas.slice(-15), saldo: await saldoPaciente(p.id).catch(e => ({ error: e.message })) });
+    }
+    return res.status(200).json({ ok: true, inicio: await inicioControl().catch(() => ''), out });
+  }
   if (action === 'panel-codigo' || action === 'panel-codigo-ok') {
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     const q = req.body || {}, email = String(q.email || '').trim().toLowerCase(), cr = require('crypto');
