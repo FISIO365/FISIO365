@@ -65,7 +65,11 @@ async function datosDia(ayer, panel) {
   const facs = facsTodas.filter(r => saldo.fechaCobro(r.fields) === ayer.fecha);
   const canceladas = citas.filter(c => /CANCEL|NO ASIST|PERDIDA/i.test(est(c)) && (c.fields['RELACIÓN - CITA'] || []).length);
   // Caja por forma de pago
-  const caja = {}; facs.forEach(r => { const m = (r.fields['MODO DE PAGO'] && r.fields['MODO DE PAGO'].name) || r.fields['MODO DE PAGO'] || 'Sin indicar'; caja[m] = (caja[m] || 0) + Number(r.fields['TOTAL'] || 0); });
+  const caja = {}; facs.forEach(r => { const m = (r.fields['MODO DE PAGO'] && r.fields['MODO DE PAGO'].name) || r.fields['MODO DE PAGO'] || 'Sin indicar';
+    // «Varias»: cada parte a su forma de pago (PAGO DESGLOSE = «Tarjeta: 300 · Efectivo: 190»)
+    const D = String(r.fields['PAGO DESGLOSE'] || '').split('·').map(x => x.split(':')).filter(x => x.length === 2 && Number(x[1]) > 0);
+    if (m === 'Varias' && D.length) D.forEach(([k, v]) => { k = k.trim(); caja[k] = (caja[k] || 0) + Number(v); });
+    else caja[m] = (caja[m] || 0) + Number(r.fields['TOTAL'] || 0); });
   // Reporte diario de cada fisio (lo que marcó y lo que ve el panel)
   let rep = {}, envs = {};
   try { [rep, envs] = await Promise.all([SCH.cierreDia(ayer.fecha), SCH.cierresEnviados(ayer.fecha)]); } catch (e) { console.log('reporte', e.message); }
@@ -150,7 +154,7 @@ async function reporteDia(fecha) {
     sinMarcar: D.sinMarcar.map(cita), canceladas: D.canceladas.map(cita),
     fuera: D.fuera.map(d => ({ nombre: d.contact_name || '—', total: SCH.importeDoc ? SCH.importeDoc(d) : Number(d.total || 0) })),
     borradores: D.borradores.slice(0, 40).map(d => ({ nombre: d.contact_name || '—', fecha: String(d.date || '').slice(0, 10) })),
-    facturas: D.facs.map(r => ({ num: r.fields['Nº FACTURA'] || '', concepto: [r.fields['CONCEPTO 1'], r.fields['CONCEPTO 2']].filter(Boolean).join(' + '), pago: (r.fields['MODO DE PAGO'] && r.fields['MODO DE PAGO'].name) || r.fields['MODO DE PAGO'] || '', total: Number(r.fields['TOTAL'] || 0) }))
+    facturas: D.facs.map(r => ({ num: r.fields['Nº FACTURA'] || '', concepto: [r.fields['CONCEPTO 1'], r.fields['CONCEPTO 2']].filter(Boolean).join(' + '), pago: r.fields['PAGO DESGLOSE'] || (r.fields['MODO DE PAGO'] && r.fields['MODO DE PAGO'].name) || r.fields['MODO DE PAGO'] || '', total: Number(r.fields['TOTAL'] || 0) }))
   };
 }
 // Último día con citas antes de hoy (para abrir el reporte en el último día de trabajo)

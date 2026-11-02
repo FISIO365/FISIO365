@@ -174,6 +174,7 @@ const FACTURAS_TABLE = 'tblJw7suXLERn8AFQ';
 const HOLDED_BORRADOR = true;
 // Texto legal que va en cada ticket (Holded no pone el de su plantilla cuando se crea por la API)
 const TEXTO_RGPD = 'Protección de datos: Responsable: Fourth Dynamic, S.L., C/ Gran de Sant Andreu 163, 08030 Barcelona. Finalidad: gestionar la relación contractual y la facturación. Puede ejercer sus derechos de acceso, rectificación, supresión, limitación, portabilidad y oposición escribiendo a info@fisioterapia365.com, y reclamar ante la AEPD. (RGPD UE 2016/679 y LOPDGDD 3/2018)';
+const FF_PK = { grupo: 'fldbQDldxWm1Qm9rF', total: 'fldyTyrziNt1zwmgU', antes: 'fldOHwlbDoheMEgYB', desglose: 'fld2HKagjU7T5kUjE' };
 const FF = { fecha: 'fldQ17bGOMaS0XaxJ', fechaVieja: 'fldqZyXkxhGRS1qvn', paciente: 'fldbmNoGhedI6ySSb', c1: 'fld3lRaKQbUYcW5qY', n1: 'fldWj0dUmJzTn0lgr', p1: 'fldu2QiBD9hM5scRC', c2: 'fldlkX8RO7crsVOye', n2: 'fldOW7e0lHx3Tfu4X', p2: 'fldkYc6HBh9E1YjUv', notas: 'fldoi8INIByEPPpMn', estado: 'fld2nvRuSlR97LhbN', num: 'fldcTFAHH31Lsz53c', pdf: 'fld8jBu2P4sPB21ZC', aNombre: 'fldBW06oApJQaNlN9', aNif: 'fld6VO3g0KrFpAi6P', aDir: 'fldFK7NwsZ5AUY6qp', holdedId: 'fld4ds1kfoPbbCtVg' };
 let emitiendo = Promise.resolve();
 // Si Airtable dice «demasiadas peticiones» (429), espera y lo reintenta
@@ -2556,6 +2557,16 @@ async function fisioDelPaciente(pacId, quien, elegido) {
   return 'Fisioterapeuta: ' + f.Name.trim() + (f['NºColegiado'] ? ' · Nº de colegiado ' + String(f['NºColegiado']).trim() : '');
 }
 
+// Packs pagados en partes que aún no están pagados enteros
+async function packAMedias(pac) {
+  const fs = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{PACK GRUPO}!='')`)}`).catch(() => []);
+  const G = {}; fs.forEach(r => { const F = r.fields, g = String(F['PACK GRUPO'] || ''); (G[g] = G[g] || []).push(r); });
+  const nm = v => (v && typeof v === 'object' ? v.name : v) || '';
+  return Object.entries(G).map(([g, L]) => { const pri = L.find(r => r.id === g); if (!pri) return null; const P = pri.fields;
+    const total = Number(P['PACK TOTAL'] || 0), antes = Number(P['PACK ANTES'] || 0), pagado = Math.round((antes + L.reduce((t, r) => t + Number(r.fields['TOTAL'] || 0), 0)) * 100) / 100;
+    return { grupo: g, concepto: nm(P['CONCEPTO 1']), sesiones: Number(P['Nº SESIONES 1'] || 0), total, antes, pagado, falta: Math.max(0, Math.round((total - pagado) * 100) / 100), fecha: String(P['FECHA DE COBRO'] || P['FECHA'] || '').slice(0, 10), pagos: L.length }; })
+    .filter(x => x && x.falta > 0.009).sort((a, b) => b.fecha.localeCompare(a.fecha));
+}
 async function emitirFactura(recId, quien, fisioSel, descuento) {
   const CF = await conf().catch(() => CONF_DEF), borradorH = CF.holded.borrador !== false, rgpdH = String(CF.holded.rgpd || TEXTO_RGPD);
   const rec = await at(`${FACTURAS_TABLE}/${recId}?returnFieldsByFieldId=true`);
@@ -2574,6 +2585,7 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
   }
   if (!lineas.length) throw new Error('Falta la línea 1 (concepto, nº de sesiones y precio)');
   const notas = String(f[FF.notas] || '').trim();
+  if (Math.round(lineas.reduce((t, l) => t + l.uds * l.precio, 0) * 100) <= 0) throw new Error('El total tiene que ser mayor que 0');
 
   // Fecha: hoy, o la de la fila si es anterior a hoy y no anterior al último ticket emitido
   const isoMad = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
@@ -2615,7 +2627,15 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
   }
 
   const fisioTxt = await fisioDelPaciente(pacId, quien, fisioSel).catch(() => '');
-  const items = lineas.map(l => { const it = { name: l.concepto === 'Otros' && notas ? notas.split('\n')[0].slice(0, 120) : l.concepto, units: l.uds, price: l.precio }; if (taxes) it.taxes = taxes; return it; });
+  let items = lineas.map(l => { const it = { name: l.concepto === 'Otros' && notas ? notas.split('\n')[0].slice(0, 120) : l.concepto, units: l.uds, price: l.precio }; if (taxes) it.taxes = taxes; return it; });
+  const grupoP = String(f[FF_PK.grupo] || '').trim();
+  if (grupoP) { // pack en partes: una sola línea con lo que paga hoy
+    const pr0 = grupoP === recId ? f : ((await at(`${FACTURAS_TABLE}/${grupoP}?returnFieldsByFieldId=true`).catch(() => ({}))).fields || {});
+    const con = nombreSel(pr0[FF.c1]) || 'Sesiones', nS = Number(pr0[FF.n1] || 0), hoyImp = Math.round(lineas.reduce((t, l) => t + l.uds * l.precio, 0) * 100) / 100;
+    const otras = grupoP === recId ? [] : await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PACK GRUPO}='${grupoP}')`)}`).catch(() => []);
+    const tot = Number(pr0[FF_PK.total] || 0), antes = Number(pr0[FF_PK.antes] || 0), pagado = antes + hoyImp + otras.reduce((t, r) => t + Number(r.fields['TOTAL'] || 0), 0);
+    const que = pagado >= tot - 0.009 ? (grupoP === recId && !antes ? '' : ' · pago del resto') : ' · pago a cuenta';
+    const it = { name: `${con} · pack de ${nS} sesiones${que}`.slice(0, 150), units: 1, price: hoyImp }; if (taxes) it.taxes = taxes; items = [it]; }
   if (descuento) { const it = { name: descuento.texto, units: 1, price: -Math.abs(descuento.importe) }; if (taxes) it.taxes = taxes; items.push(it); }
   const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas, rgpdH].filter(Boolean).join('\n\n\n'), currency: 'EUR', language: 'es', items });
   const docId = doc.id;
@@ -6342,10 +6362,11 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const tarjetas = await tarjetasActivas(pr.fields || {}).catch(() => []);
       const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
       const bonoPrevio = Number((pr.fields || {})['SESIONES BONO PREVIO'] || 0);
+      const aMedias = await packAMedias(pac).catch(() => []);
       // Sesiones gratis (no van a Holded): se ven en la ficha junto a las facturas
       const gratis = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{MODO DE PAGO}='Gratis')`)}`).catch(() => [])).map(r => { const f = r.fields;
         return { id: r.id, fecha: String(f['FECHA DE COBRO'] || f['FECHA'] || String(r.createdTime).slice(0, 10)).slice(0, 10), lineas: [[f['CONCEPTO 1'], f['Nº SESIONES 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2']]].filter(([c]) => c).map(([c, n]) => ({ c: (c && c.name) || c, n: Number(n) || 1 })), nota: f['NOTAS'] || '' }; }).sort((a, b) => b.fecha.localeCompare(a.fecha));
-      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, bonoPrevio, tarjetas, gratis, facturas: [] });
+      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, bonoPrevio, tarjetas, gratis, aMedias, facturas: [] });
       try {
         const ids = await contactosDelPaciente(pac); const facturas = await listarFacturas(ids, true);
         // Tickets borrados en Holded → su fila de FACTURAS pasa a «Anulada» y deja de contar en el saldo
@@ -6357,14 +6378,47 @@ Devuelve solo el texto del mensaje, sin comillas.`;
           for (let i = 0; i < muertas.length; i += 10) await at(FACTURAS_TABLE, { method: 'PATCH', body: JSON.stringify({ typecast: true, records: muertas.slice(i, i + 10).map(r => ({ id: r.id, fields: { [FF.estado]: 'Anulada' } })) }) });
           if (muertas.length) saldo2 = await saldoPaciente(pac).catch(() => saldo);
         } catch (e) {}
-        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, bonoPrevio, tarjetas, gratis, enHolded: ids.length, facturas });
+        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, bonoPrevio, tarjetas, gratis, aMedias, enHolded: ids.length, facturas });
       }
-      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, bonoPrevio, tarjetas, gratis, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, bonoPrevio, tarjetas, gratis, aMedias, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado (falta la clave en Vercel).' });
-    const lineas = (Array.isArray(q.lineas) ? q.lineas : []).slice(0, 2);
+    let lineas = (Array.isArray(q.lineas) ? q.lineas : []).slice(0, 2);
+    // Pack pagado en partes: cada pago es su propio ticket (lo que entra ese día) y queda unido al pack.
+    // El primero lleva las sesiones del pack (cuentan desde ya); los siguientes solo el importe.
+    const r2 = x => Math.round(Number(x) * 100) / 100;
+    let pk = null;
+    if (q.pack) {
+      const P = q.pack, imp = r2(String(P.importe || '').replace(',', '.'));
+      if (!(imp > 0)) return res.status(400).json({ ok: false, error: 'Pon cuánto paga ahora' });
+      if (P.grupo) {
+        if (!/^rec[A-Za-z0-9]{14}$/.test(P.grupo)) return res.status(400).json({ ok: false, error: 'Pack no válido' });
+        const g = await packAMedias(pac).then(L => L.find(x => x.grupo === P.grupo)).catch(() => null);
+        if (!g) return res.status(200).json({ ok: false, error: 'No encuentro ese pack a medias' });
+        if (imp > r2(g.falta) + 0.001) return res.status(200).json({ ok: false, error: `Solo faltan ${g.falta} € de ese pack` });
+        lineas = [{ concepto: 'Otros', uds: 1, precio: imp }];
+        pk = { grupo: P.grupo, total: g.total, concepto: g.concepto, sesiones: g.sesiones, pagado: r2(g.pagado + imp), resto: r2(g.falta - imp) };
+      } else {
+        const n = Math.round(Number(P.sesiones)), tot = r2(String(P.total || '').replace(',', '.')), antes = r2(String(P.antes || 0).replace(',', '.')) || 0, con = String(P.concepto || '');
+        if (!/^Sesi/i.test(con)) return res.status(400).json({ ok: false, error: 'Elige el tipo de sesión del pack' });
+        if (!(n >= 2 && n <= 60) || !(tot > 0)) return res.status(400).json({ ok: false, error: 'Pon de cuántas sesiones es el pack y su precio' });
+        if (antes < 0 || antes + imp > tot + 0.001) return res.status(200).json({ ok: false, error: `Lo pagado (${r2(antes + imp)} €) es más que el pack (${tot} €)` });
+        const pu = r2(tot / n), resto = r2(imp - pu * n);
+        lineas = [{ concepto: con, uds: n, precio: pu }]; if (Math.abs(resto) >= 0.01) lineas.push({ concepto: 'Otros', uds: 1, precio: resto });
+        pk = { grupo: '', total: tot, antes, concepto: con, sesiones: n, pagado: r2(antes + imp), resto: r2(tot - antes - imp) };
+      }
+    }
     if (!lineas.length) return res.status(400).json({ ok: false, error: 'Falta el concepto' });
+    // Varias formas de pago (p. ej. parte con tarjeta y parte en efectivo): la suma tiene que dar el total
+    let desglose = '';
+    if (Array.isArray(q.desglose) && q.desglose.length) {
+      const D = q.desglose.map(x => ({ m: String(x.m || '').trim().slice(0, 30), v: r2(String(x.v || '').replace(',', '.')) })).filter(x => x.m && x.v > 0);
+      const totL = r2(lineas.reduce((t, l) => t + Number(l.uds || 0) * Number(l.precio || 0), 0));
+      if (D.length < 2) return res.status(400).json({ ok: false, error: 'Pon al menos dos formas de pago con su importe' });
+      if (Math.abs(r2(D.reduce((t, x) => t + x.v, 0)) - totL) > 0.01 && !q.tarjetaId) return res.status(200).json({ ok: false, error: `Las formas de pago suman ${r2(D.reduce((t, x) => t + x.v, 0))} € y el total es ${totL} €` });
+      desglose = D.map(x => `${x.m}: ${x.v}`).join(' · '); q.modoPago = 'Varias';
+    }
     if (q.dni && normDni(q.dni).length >= 8) await at(`${PACIENTES}/${pac}`, { method: 'PATCH', body: JSON.stringify({ fields: { DNI: String(q.dni).trim().toUpperCase() } }) });
     let descuento = null, tarjeta = null;
     if (q.tarjetaId) {
@@ -6378,6 +6432,10 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     const fa = q.facturarA || {};
     const campos = { [FF.paciente]: [pac], 'fldpruhLn03x1x6zI': pac, [FF.notas]: String(q.notas || ''), [FF.estado]: 'Pendiente' };
     if (q.modoPago) campos['fldafSkOOldJ8gH70'] = q.modoPago;
+    if (desglose) campos['PAGO DESGLOSE'] = desglose;
+    if (pk) { campos['PACK TOTAL'] = pk.total; if (pk.grupo) campos['PACK GRUPO'] = pk.grupo; else if (pk.antes) campos['PACK ANTES'] = pk.antes;
+      const eur = v => String(v).replace('.', ',') + ' €';
+      campos[FF.notas] = [`Pack de ${pk.sesiones} sesiones (${eur(pk.total)}) · pagado ${eur(pk.pagado)}${pk.resto > 0 ? ' · pendiente ' + eur(pk.resto) : ' · pack pagado entero'}`, String(q.notas || '').trim()].filter(Boolean).join('\n'); }
     if (/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) campos[FF.fecha] = q.fecha;
     if (fa.nombre) { campos[FF.aNombre] = String(fa.nombre); campos[FF.aNif] = String(fa.nif || ''); campos[FF.aDir] = String(fa.direccion || ''); }
     [[FF.c1, FF.n1, FF.p1], [FF.c2, FF.n2, FF.p2]].forEach(([c, n, pr], i) => { const l = lineas[i]; if (!l) return; campos[c] = String(l.concepto || ''); campos[n] = Number(l.uds || 0); campos[pr] = Number(l.precio || 0); });
@@ -6393,6 +6451,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     global._sesPac = {}; const cr = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
     const rec = cr.records && cr.records[0] && cr.records[0].id;
     if (!rec) return res.status(500).json({ ok: false, error: (cr.error && cr.error.message) || 'No se ha podido guardar en Airtable' });
+    if (pk && !pk.grupo) await at(`${FACTURAS_TABLE}/${rec}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PACK GRUPO': rec } }) });
     const turno = emitiendo.then(() => emitirFactura(rec, q.quien, q.fisioElegido ? String(q.fisio || '') : undefined, descuento));
     emitiendo = turno.catch(() => {});
     try { const r = await turno;

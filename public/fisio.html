@@ -545,6 +545,10 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .hz-tabla{font-size:12.5px}.hz-tabla div{display:grid;grid-template-columns:1fr 1fr 50px 1.3fr;gap:6px;padding:6px 0;border-bottom:1px solid #f1ede9}.hz-tabla div:not(.dif){color:var(--muted)}.hz-tabla .mas{color:#16803c;font-weight:700}.hz-tabla .menos{color:#b42318;font-weight:700}
 .rend-ley{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.5}
 .fac-saldo{border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#f1ede9;display:flex;flex-direction:column;gap:2px;font-size:14px}.fac-saldo span{font-size:12px;color:var(--muted)}.fac-saldo.neg{background:#fdecea;color:#b42318}.fac-saldo.pos{background:#e8f5ec;color:#16803c}
+.fac-pkb{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}.fac-pka{display:flex;flex-direction:column;gap:2px;text-align:left;font-family:var(--font);background:#fff;border:1.5px solid #e6dfd8;border-radius:14px;padding:11px 13px;cursor:pointer;color:#1a1a1a}.fac-pka b{font-size:14px}.fac-pka span{font-size:12.5px;color:#7d6a60}.fac-pka em{font-style:normal;color:#c2552e;font-weight:600}.fac-pka.on{border-color:#c2552e;background:#fdeee4}
+.fac-pkn{align-items:center}.fac-pkno{width:72px;font-family:var(--font);font-size:13px;border:1.5px solid #e6dfd8;border-radius:99px;padding:7px 10px;text-align:center}.fac-pkres{font-size:13px;color:#7d6a60}.fac-pkres .no{color:#b42318}
+.fac-des{display:flex;flex-direction:column;gap:6px;margin-top:10px;background:#faf8f5;border-radius:12px;padding:10px 12px}.fac-des small{font-size:12px;color:#7d6a60}.fac-campo .fac-dl{display:flex!important;align-items:center;gap:8px;font-size:13.5px;margin:0!important;font-weight:500;color:#1a1a1a}.fac-campo .fac-dl input{width:100px!important;flex:none;margin:0!important}.fac-dl span{flex:1}.fac-dl input{width:90px;font-family:var(--font);font-size:14px;border:1.5px solid #e6dfd8;border-radius:10px;padding:7px 9px;text-align:right}.fac-dl em{font-style:normal;color:#7d6a60}.fac-dsum{font-size:12.5px;color:#7d6a60}.fac-dsum .ok{color:#16803c}
+.fac-amed{display:flex;flex-direction:column;gap:6px;margin:0 0 12px}.fac-amed div{display:flex;flex-direction:column;gap:2px;background:#fdeee4;border-radius:12px;padding:10px 12px;font-size:13px;color:#7d6a60}.fac-amed div>b{color:#1a1a1a;font-size:13.5px}
 .fac-nueva{width:100%;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;border-radius:99px;border:none;background:#c2552e;color:#fff;cursor:pointer;margin-bottom:12px}
 .fac-form{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--sombra);margin-bottom:14px}
 .fac-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:15px}.fac-x{border:none;background:none;font-size:16px;cursor:pointer;color:var(--muted)}
@@ -11308,6 +11312,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
  const grBox=ce('div','fac-grl');lista.before(grBox);
  const pintarGratis=()=>{const G=d.gratis||[];grBox.innerHTML=G.length?`<div class="fac-tit">Sesiones gratis</div>${G.map(g=>`<div class="fac-it fac-git"><div><div class="fac-n">${escH(g.lineas.map(l=>l.c+(l.n>1?' ×'+l.n:'')).join(' + ')||'Sesión')}</div><div class="fac-m">${escH(g.fecha.split('-').reverse().join('/'))}${g.nota?' · '+escH(g.nota):''}</div></div><span class="fac-gb">Gratis</span></div>`).join('')}`:'';};
  pintarGratis();
+ if((d.aMedias||[]).length){const am=ce('div','fac-amed');am.innerHTML=d.aMedias.map(a=>`<div><b>Pack a medias · ${escH(a.concepto.replace(/^Sesión de /,''))} · ${a.sesiones} sesiones</b><span>Pagado ${facEur(a.pagado)} de ${facEur(a.total)} · faltan <b>${facEur(a.falta)}</b></span></div>`).join('');nueva.before(am);}
  const pintarLista=()=>{
   if(d.holded===false){lista.innerHTML='<div class="fac-vacio">Holded todavía no está conectado.</div>';return;}
   const fs=d.facturas||[];
@@ -11332,9 +11337,12 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
   f.innerHTML=`<div class="fac-h"><b>Nueva factura</b><button type="button" class="fac-x" aria-label="Cerrar">✕</button></div>
    ${d.dni?'':`<div class="fac-campo fac-aviso"><label>DNI del paciente <span>(opcional · no lo tiene en su ficha; si lo pones, se guarda)</span></label><input class="fac-dni" placeholder="12345678A"></div>`}
    <button type="button" class="fac-gr"><i></i><span><b>Es gratis</b>No se cobra ni se hace ticket: la sesión queda apuntada como pagada a 0 €</span></button>
+   <button type="button" class="fac-gr fac-pkt fac-sinG"><i></i><span><b>Paga un pack en partes</b>${(d.aMedias||[]).length?`Tiene ${d.aMedias.length===1?'un pack':'packs'} a medias: este pago se une a él`:'Este pago es una parte del pack: el ticket es de lo que paga hoy'}</span></button>
+   <div class="fac-pkb" hidden></div>
    <div class="fac-lineas"></div>
    <button type="button" class="fac-add">+ Añadir otra línea</button>
-   <div class="fac-campo fac-sinG"><label>Modo de pago</label><div class="fac-chips fac-pago">${FAC_PAGOS.map(m=>`<button type="button" data-v="${m}">${m}</button>`).join('')}</div></div>
+   <div class="fac-campo fac-sinG"><label>Modo de pago</label><div class="fac-chips fac-pago">${FAC_PAGOS.map(m=>`<button type="button" data-v="${m}">${m}</button>`).join('')}<button type="button" data-v="Varias">Varias</button></div>
+    <div class="fac-des" hidden><small>¿Cuánto con cada una? Tiene que sumar el total.</small>${FAC_PAGOS.map(m=>`<label class="fac-dl"><span>${m}</span><input inputmode="decimal" data-m="${m}" placeholder="0"><em>€</em></label>`).join('')}<div class="fac-dsum"></div></div></div>
    <div class="fac-campo fac-sinG"><label>Fisio que le atiende <span>(sale en el ticket con su nº de colegiado)</span></label><div class="fac-chips fac-fisio">${(fisios||[]).map(x=>`<button type="button" data-v="${escH(x.nombre)}">${escH(String(x.nombre).split(' ')[0])}</button>`).join('')}<button type="button" data-v="">No poner fisio</button></div></div>
    <div class="fac-campo"><label>Fecha de cobro</label><input type="date" class="fac-fecha" value="${hoyIso}" max="${hoyIso}"></div>
    <div class="fac-campo"><label>Notas en la factura <span>(opcional, salen impresas)</span></label><textarea class="fac-notas" rows="2"></textarea></div>
@@ -11348,13 +11356,41 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    <div class="fac-nota">Se crea en Holded con el siguiente número de la serie y le aparece al paciente en su app.</div>`;
   formBox.appendChild(f);
   const lineasBox=f.querySelector('.fac-lineas'),addBtn=f.querySelector('.fac-add');
-  let pago='',fisioSel=null,usarTj=false,gratis=false;
+  let pago='',fisioSel=null,usarTj=false,gratis=false,enPack=false,pkSel=(d.aMedias||[])[0]?d.aMedias[0].grupo:'nuevo',pkCon='',pkN=0;
+  const pkb=f.querySelector('.fac-pkb'),num=v=>+String(v||'').replace(',','.')||0;
+  const pintaPk=()=>{const A=d.aMedias||[],eur=v=>facEur(v);
+   pkb.innerHTML=`${A.map(a=>`<button type="button" class="fac-pka${pkSel===a.grupo?' on':''}" data-g="${a.grupo}"><b>${escH(a.concepto.replace(/^Sesión de /,'').replace(/^./,x=>x.toUpperCase()))} · ${a.sesiones} sesiones</b><span>Pagado ${eur(a.pagado)} de ${eur(a.total)} · <em>faltan ${eur(a.falta)}</em></span></button>`).join('')}
+    <button type="button" class="fac-pka${pkSel==='nuevo'?' on':''}" data-g="nuevo"><b>${A.length?'Otro pack nuevo':'Pack nuevo'}</b><span>Primer pago de un pack</span></button>
+    ${pkSel==='nuevo'?`<div class="fac-campo"><label>Tipo de sesión</label><div class="fac-chips fac-pkc">${FAC_CONCEPTOS.filter(c=>/^Sesi/i.test(c)).map(c=>`<button type="button" data-v="${escH(c)}" class="${pkCon===c?'on':''}">${escH(c.replace(/^Sesión de /,'').replace(/^./,x=>x.toUpperCase()))}</button>`).join('')}</div></div>
+     <div class="fac-campo"><label>Pack de</label><div class="fac-chips fac-pkn">${[5,10,20].map(n=>`<button type="button" data-n="${n}" class="${pkN===n?'on':''}">${n} sesiones</button>`).join('')}<input class="fac-pkno" inputmode="numeric" placeholder="Otro" value="${pkN&&![5,10,20].includes(pkN)?pkN:''}"></div></div>
+     <div class="fl-row"><div class="fac-campo"><label>Precio del pack (€)</label><input class="fac-pkt2" inputmode="decimal" placeholder="640"></div><div class="fac-campo"><label>Ya pagado antes <span>(otro ticket o fuera del panel)</span></label><input class="fac-pkan" inputmode="decimal" placeholder="0"></div></div>`:''}
+    <div class="fac-campo"><label>Paga ahora (€)</label><input class="fac-pkim" inputmode="decimal" placeholder="150"></div><div class="fac-pkres"></div>`;
+   const keep={};['fac-pkt2','fac-pkan','fac-pkim'].forEach(k=>{const e=pkb.querySelector('.'+k);if(e&&pintaPk._v&&pintaPk._v[k]!=null)e.value=pintaPk._v[k];});
+   pkb.querySelectorAll('.fac-pka').forEach(b=>b.onclick=()=>{guardaPk();pkSel=b.dataset.g;if(pkSel!=='nuevo'){const a=A.find(x=>x.grupo===pkSel);pintaPk._v={'fac-pkim':String(a.falta).replace('.',',')};}pintaPk();});
+   pkb.querySelectorAll('.fac-pkc button').forEach(b=>b.onclick=()=>{guardaPk();pkCon=b.dataset.v;pintaPk();});
+   pkb.querySelectorAll('.fac-pkn button').forEach(b=>b.onclick=()=>{guardaPk();pkN=+b.dataset.n;pintaPk();});
+   const no=pkb.querySelector('.fac-pkno');if(no)no.oninput=()=>{pkN=parseInt(no.value,10)||0;pkb.querySelectorAll('.fac-pkn button').forEach(x=>x.classList.remove('on'));resPk();};
+   pkb.querySelectorAll('input:not(.fac-pkno)').forEach(i=>i.oninput=()=>{resPk();total();});resPk();total();};
+  const guardaPk=()=>{pintaPk._v={};['fac-pkt2','fac-pkan','fac-pkim'].forEach(k=>{const e=pkb.querySelector('.'+k);if(e)pintaPk._v[k]=e.value;});};
+  const leePk=()=>{const g=k=>{const e=pkb.querySelector('.'+k);return e?num(e.value):0;};const A=d.aMedias||[];
+   if(pkSel!=='nuevo'){const a=A.find(x=>x.grupo===pkSel)||{};return {grupo:pkSel,importe:g('fac-pkim'),a};}
+   return {concepto:pkCon,sesiones:pkN,total:g('fac-pkt2'),antes:g('fac-pkan'),importe:g('fac-pkim')};};
+  const resPk=()=>{const x=leePk(),el=pkb.querySelector('.fac-pkres');if(!el)return;let tot,pag;
+   if(x.grupo){tot=x.a.total;pag=(x.a.pagado||0)+x.importe;}else{tot=x.total;pag=x.antes+x.importe;}
+   el.innerHTML=tot&&x.importe?(pag>tot+0.001?`<span class="no">Es más de lo que cuesta el pack (${facEur(tot)})</span>`:tot-pag<0.01?'<b>Con este pago queda el pack pagado entero</b>':`Después de este pago faltarán <b>${facEur(tot-pag)}</b>`):'';};
+  {const t=f.querySelector('.fac-pkt');t.onclick=()=>{enPack=!enPack;t.classList.toggle('on',enPack);pkb.hidden=!enPack;
+   f.querySelectorAll('.fac-lineas,.fac-add,.fac-gr:not(.fac-pkt),.fac-tj').forEach(x=>x.hidden=enPack);if(!enPack){f.querySelector('.fac-add').hidden=false;}
+   if(enPack){if(pkSel!=='nuevo'&&!pintaPk._v){const a=(d.aMedias||[])[0];pintaPk._v={'fac-pkim':String(a.falta).replace('.',',')};}pintaPk();}total();};}
+  // Varias formas de pago
+  const des=f.querySelector('.fac-des'),desLee=()=>[...des.querySelectorAll('input')].map(i=>({m:i.dataset.m,v:num(i.value)})).filter(x=>x.v>0);
+  const desSum=()=>{const t=total(),s=desLee().reduce((a,x)=>a+x.v,0),el=f.querySelector('.fac-dsum');el.innerHTML=s?(Math.abs(s-t)<0.01?'<b class="ok">✓ Suma el total</b>':`Suman ${facEur(s)} · ${s>t?'sobran':'faltan'} <b>${facEur(Math.abs(t-s))}</b>`):'';};
+  des.querySelectorAll('input').forEach(i=>i.oninput=desSum);
   {const g=f.querySelector('.fac-gr');g.onclick=()=>{gratis=!gratis;g.classList.toggle('on',gratis);f.querySelectorAll('.fac-sinG,.fac-tj').forEach(x=>x.hidden=gratis);
     lineasBox.querySelectorAll('.fl-p').forEach(i=>{i.disabled=gratis;if(gratis){i.dataset.ant=i.value;i.value='0';}else{i.value=i.dataset.ant||'';}});
     f.querySelector('.fac-emitir').textContent=gratis?'Apuntar sesión gratis':'Emitir factura';f.querySelector('.fac-nota').textContent=gratis?'No se hace ticket en Holded. Cuenta en sus sesiones pagadas (a 0 €).':'Se crea en Holded con el siguiente número de la serie y le aparece al paciente en su app.';total();};}
   {const tj=f.querySelector('.fac-tj');if(tj)tj.onclick=()=>{usarTj=!usarTj;tj.classList.toggle('on',usarTj);total();};}
   f.querySelectorAll('.fac-fisio button').forEach(b=>b.onclick=()=>{f.querySelectorAll('.fac-fisio button').forEach(x=>x.classList.toggle('on',x===b));fisioSel=b.dataset.v;});
-  const total=()=>{let t=0;lineasBox.querySelectorAll('.fac-linea').forEach(l=>{t+=(+l.querySelector('.fl-n').value||0)*(+String(l.querySelector('.fl-p').value).replace(',','.')||0);});if(usarTj)t=Math.max(0,t-TJ_IMP());f.querySelector('.fac-total b').textContent=facEur(t);return t;};
+  const total=()=>{let t=0;if(enPack)t=leePk().importe;else{lineasBox.querySelectorAll('.fac-linea').forEach(l=>{t+=(+l.querySelector('.fl-n').value||0)*(+String(l.querySelector('.fl-p').value).replace(',','.')||0);});if(usarTj)t=Math.max(0,t-TJ_IMP());}f.querySelector('.fac-total b').textContent=facEur(t);const ds=f.querySelector('.fac-dsum');if(ds&&!des.hidden&&total._ok!==false){total._ok=false;try{desSum();}finally{total._ok=true;}}return t;};
   const addLinea=()=>{
    const l=ce('div','fac-linea');const num=lineasBox.children.length+1;
    l.innerHTML=`<div class="fl-top"><span>Línea ${num}</span>${num>1?'<button type="button" class="fl-del">Quitar</button>':''}</div>
@@ -11371,11 +11407,18 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    if(gratis){const pi=l.querySelector('.fl-p');pi.value='0';pi.disabled=true;}
   };
   addLinea();addBtn.onclick=addLinea;
-  f.querySelectorAll('.fac-pago button').forEach(b=>b.onclick=()=>{f.querySelectorAll('.fac-pago button').forEach(x=>x.classList.toggle('on',x===b));pago=b.dataset.v;});
+  f.querySelectorAll('.fac-pago button').forEach(b=>b.onclick=()=>{f.querySelectorAll('.fac-pago button').forEach(x=>x.classList.toggle('on',x===b));pago=b.dataset.v;des.hidden=pago!=='Varias';if(pago==='Varias')desSum();});
   f.querySelector('.fac-x').onclick=()=>{formBox.innerHTML='';nueva.style.display='';};
   const em=f.querySelector('.fac-emitir');let armado=false;
   em.onclick=async()=>{
-   const lineas=[...lineasBox.querySelectorAll('.fac-linea')].map(l=>({concepto:l.dataset.c||'',uds:+l.querySelector('.fl-n').value||0,precio:+String(l.querySelector('.fl-p').value).replace(',','.')||0}));
+   let lineas=[...lineasBox.querySelectorAll('.fac-linea')].map(l=>({concepto:l.dataset.c||'',uds:+l.querySelector('.fl-n').value||0,precio:+String(l.querySelector('.fl-p').value).replace(',','.')||0}));
+   let pack=null;
+   if(enPack){const x=leePk();
+    if(!x.grupo){if(!x.concepto){toast('Elige el tipo de sesión del pack',false);return;}if(!(x.sesiones>=2)){toast('Elige de cuántas sesiones es el pack',false);return;}if(!x.total){toast('Pon el precio del pack',false);return;}}
+    if(!x.importe){toast('Pon cuánto paga ahora',false);return;}
+    const tot=x.grupo?x.a.total:x.total,pag=x.grupo?(x.a.pagado+x.importe):(x.antes+x.importe);if(pag>tot+0.001){toast('Es más de lo que cuesta el pack',false);return;}
+    pack=x.grupo?{grupo:x.grupo,importe:x.importe}:{concepto:x.concepto,sesiones:x.sesiones,total:x.total,antes:x.antes,importe:x.importe};
+    lineas=[{concepto:'Otros',uds:1,precio:x.importe}];}
    if(lineas.some(l=>!l.concepto)){toast('Elige el concepto',false);return;}
    if(gratis){if(lineas.some(l=>!l.uds)){toast('Pon el nº de sesiones',false);return;}
     em.disabled=true;em.textContent='Apuntando…';
@@ -11384,6 +11427,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
     catch(e){em.disabled=false;em.textContent='Apuntar sesión gratis';toast(e.message,false);}return;}
    if(lineas.some(l=>!l.uds||!l.precio)){toast('Pon el nº de sesiones y el precio',false);return;}
    if(!pago){toast('Elige el modo de pago',false);return;}
+   let desglose=null;if(pago==='Varias'){desglose=desLee();const sm=desglose.reduce((a,x)=>a+x.v,0);if(desglose.length<2){toast('Pon el importe de al menos dos formas de pago',false);return;}if(Math.abs(sm-total())>0.01){toast(`Las formas de pago suman ${facEur(sm)} y el total es ${facEur(total())}`,false);return;}}
    if(fisioSel===null){toast('Elige el fisio (o «No poner fisio»)',false);return;}
    const dniIn=f.querySelector('.fac-dni');const an=f.querySelector('.fac-an').value.trim();
    if(an&&!f.querySelector('.fac-anif').value.trim()){toast('Falta el DNI/NIF de a quién se factura',false);return;}
@@ -11391,7 +11435,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    if(!armado){armado=true;em.classList.add('armado');em.textContent='Confirmar: emitir por '+facEur(total());setTimeout(()=>{if(armado){armado=false;em.classList.remove('armado');em.textContent='Emitir factura';}},6000);return;}
    armado=false;em.disabled=true;em.textContent='Emitiendo…';
    try{
-    const r=await (await fetch('/api/schedule?action=facturar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,quien:(fisioActual&&fisioActual.nombre)||'',fisio:fisioSel,fisioElegido:true,tarjetaId:usarTj&&d.tarjetas&&d.tarjetas[0]?d.tarjetas[0].id:'',pacienteId:pacId,lineas,modoPago:pago,fecha:f.querySelector('.fac-fecha').value,notas:f.querySelector('.fac-notas').value.trim(),dni:dniIn?dniIn.value.trim():'',facturarA:an?{nombre:an,nif:f.querySelector('.fac-anif').value.trim(),direccion:f.querySelector('.fac-adir').value.trim()}:null})})).json();
+    const r=await (await fetch('/api/schedule?action=facturar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,quien:(fisioActual&&fisioActual.nombre)||'',fisio:fisioSel,fisioElegido:true,tarjetaId:!pack&&usarTj&&d.tarjetas&&d.tarjetas[0]?d.tarjetas[0].id:'',pacienteId:pacId,lineas,modoPago:pago,pack,desglose,fecha:f.querySelector('.fac-fecha').value,notas:f.querySelector('.fac-notas').value.trim(),dni:dniIn?dniIn.value.trim():'',facturarA:an?{nombre:an,nif:f.querySelector('.fac-anif').value.trim(),direccion:f.querySelector('.fac-adir').value.trim()}:null})})).json();
     if(!r.ok)throw new Error(r.error||'No se ha podido emitir');
     toast(r.borrador?'Ticket creado en Holded como borrador · apruébalo allí y le saldrá en su app':'Factura '+r.num+' emitida'+(r.otro?'':' · ya la tiene en su app'),true);
     formBox.innerHTML='';nueva.style.display='';
@@ -12205,6 +12249,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-02',aviso:1,t:'Cobrar y facturar: ahora se puede pagar con varias formas a la vez (Forma de pago › Varias) y pagar un pack en partes (cada día el ticket de lo que entra, unido al mismo pack; te dice cuánto falta).',ver:{sec:'pac',pasos:[{el:'.fp-cobb-ic || .fp-cobb-mov',txt:'Cobrar y facturar.',click:['#pacResultados .pt-r']}]}},
  {f:'2026-11-02',dir:1,t:'Estadísticas › Banco: si Holded lleva días sin recibir movimientos del banco, ahora te avisa (hay que renovar la conexión del banco en Holded).'},
  {f:'2026-11-02',t:'Agenda › cita: si una sesión ya cubierta por una factura en realidad era de un pack anterior pagado fuera del panel, «Era de otro pack» y eliges qué sesión del pack era.'},
  {f:'2026-11-02',t:'Compartir un pack cobrado fuera del panel: en «Usadas» pon solo las de antes de hoy. La de hoy (y las siguientes) se descuentan solas.'},
@@ -14458,7 +14503,7 @@ function renderFormacion(wrap, ruta){
 
  {t:'Cobrar y facturar',sub:'El paciente va a pagar: cómo lo cobras',
  cards:[
- {ti:'Va a pagar: Cobrar y facturar',shot:'/img/school/panel-b-cobrar.jpg',body:`<b>Desde dónde:</b> la cita (<b>Facturar</b>) o la ficha (<b>Cobrar y facturar</b>).<br><br><b>Qué haces:</b> elige el <b>concepto</b> (el precio sale solo), cuántas sesiones, la <b>forma de pago</b> y el <b>fisio</b> que le atiende.`,ver:{sec:'pac',pasos:[{el:'.fp-cobb-ic || .fp-cobb-mov',txt:'Aquí cobras y facturas.',click:['#pacResultados .pt-r']}]}},
+ {ti:'Va a pagar: Cobrar y facturar',shot:'/img/school/panel-b-cobrar.jpg',body:`<b>Desde dónde:</b> la cita (<b>Facturar</b>) o la ficha (<b>Cobrar y facturar</b>).<br><br><b>Qué haces, en este orden:</b> 1) el <b>concepto</b> (el precio sale solo) y cuántas sesiones, 2) la <b>forma de pago</b>, 3) el <b>fisio</b> que le atiende, 4) <b>Emitir</b>.<br><br><b>¿Paga con tarjeta y en efectivo?</b> Forma de pago › <b>Varias</b> y pones cuánto con cada una.<br><br><b>¿Paga el pack en partes?</b> Activa <b>Paga un pack en partes</b>: el primer día eliges el pack y cuánto paga; los días siguientes te sale el pack a medias y solo pones lo que paga. Cada día se hace el ticket de lo que entra, y queda unido al mismo pack.`,ver:{sec:'pac',pasos:[{el:'.fp-cobb-ic || .fp-cobb-mov',txt:'Aquí cobras y facturas.',click:['#pacResultados .pt-r']}]}},
  {ti:'Emite la factura',body:`<b>Emitir factura</b> pide dos toques («Confirmar: emitir por X €»), para que no se te escape una.<br><br>Se crea en el programa de facturación y le llega a su app.<br><br>¿Tiene <b>tarjeta regalo</b>? Te sale para descontarla ahí.`},
  {ti:'Una sesión de cortesía',body:`<b>Cuándo:</b> no le cobras esa sesión.<br><br><b>Qué haces:</b> marca <b>Es gratis</b>. Queda pagada a 0 € y sin ticket.<br><br><b>Para qué:</b> si no, saldría como «sin factura».`},
  {ti:'¿Cuántas le quedan?',shot:'/img/school/panel-b-fac.jpg',body:`Arriba de Facturas ves si le <b>quedan sesiones pagadas</b> o tiene <b>sesiones sin facturar</b>.<br><br>¿Te pide la factura? <b>Enviar</b> (email o WhatsApp) o <b>PDF</b>. También la tiene en su app.<br><br>Un pack se puede <b>compartir con otro paciente</b>.`,ver:{sec:'pac',pasos:[{el:'.fp-mas',txt:'En Más › Facturas.',click:['#pacResultados .pt-r']}]}}
