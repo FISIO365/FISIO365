@@ -648,6 +648,11 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .rcb-ok{display:block;width:100%;border:none;font-family:inherit;font-size:15px;font-weight:600;background:#c2552e;color:#fff;border-radius:99px;padding:14px;margin-top:6px}.rcb-ok:disabled{opacity:.45}
 .rcb-no{display:block;width:100%;border:none;background:none;font-family:inherit;font-size:14px;font-weight:600;color:#9a8f87;padding:12px;margin-top:2px}
 .cu-idi{display:flex;gap:6px}.cu-idi .lang-btn{flex:1;border:1.5px solid #ebe5df;background:#fff;border-radius:99px;padding:10px 4px;font-family:inherit;font-size:13.5px;cursor:pointer}.cu-idi .lang-btn.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff!important}
+#codHead{text-align:center;margin:-4px 0 18px}#codHead[hidden]{display:none}#codHead b{display:block;font-size:18px;font-weight:700;color:var(--black);margin-top:10px}#codHead small{display:block;font-size:13px;color:var(--muted);margin-top:3px}
+.cod-ic{display:inline-flex;width:46px;height:46px;border-radius:50%;background:#fbeee7;align-items:center;justify-content:center}.cod-ic svg{width:22px;height:22px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.cod-env{font-size:13px;color:#6b5f57;text-align:center;background:#f7f3ef;border-radius:14px;padding:10px 12px;margin:2px 0 16px;line-height:1.45}
+.cod-dig{gap:7px;margin-bottom:18px}.cod-dig .pin-d{height:54px;font-size:20px;text-align:center}
+.login-alt.peq{font-size:12.5px;font-weight:500;color:var(--muted);margin-top:8px}.login-err:empty{min-height:0;margin:0}
 .login-alt{display:block;width:100%;margin-top:14px;border:none;background:none;font-family:inherit;font-size:13.5px;font-weight:600;color:#c2552e;cursor:pointer;padding:6px;line-height:1.4}.login-ok{font-size:13px;color:#6b5f57;text-align:center;margin-top:10px;line-height:1.45}#codBox[hidden]{display:none}#codBox .btn-primary{margin-top:14px}
 </style>
 <script src="/i18n.js?v=1"></script>
@@ -661,6 +666,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
   <div class="login-saludo">Tu fisio, también en casa.</div>
  </div>
  <div class="login-card">
+ <div id="codHead" hidden><span class="cod-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 19 4M16 7l2.5 2.5M14 9l2 2"/></svg></span><b>Entra con un código</b><small>Te lo mandamos a tu email, sin PIN.</small></div>
  <label class="lbl" for="emailInput">Email o teléfono</label>
  <input class="inp" type="text" id="emailInput" placeholder="tu@email.com o 600123456" autocomplete="username" autocapitalize="off" spellcheck="false" />
  <label class="lbl">PIN</label>
@@ -672,8 +678,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  </div>
  <button class="btn-primary" id="loginBtn" onclick="doLogin()">Entrar</button>
  <div class="login-err" id="loginErr"></div>
- <div id="codBox" hidden><p class="login-ok" id="codInfo">Escribe arriba tu email o tu teléfono y te mandamos un código al email para entrar.</p><button class="btn-primary" id="codEnv" type="button" onclick="codEnviar()">Enviarme el código</button>
- <div id="codPaso2" hidden><div class="login-ok" id="codMsg" style="margin:0 0 14px"></div><label class="lbl" for="codIn">Código del email</label><input class="inp" type="tel" id="codIn" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······" style="letter-spacing:6px;text-align:center;font-size:20px"><button class="btn-primary" id="codOk" type="button" onclick="codEntrar()">Entrar</button><button class="login-alt" type="button" id="codOtra" onclick="codEnviar()">Enviarme otro código</button></div></div>
+ <div id="codBox" hidden><button class="btn-primary" id="codEnv" type="button" onclick="codEnviar()">Enviarme el código</button>
+ <div id="codPaso2" hidden><div class="cod-env" id="codMsg"></div><label class="lbl">Código</label><div class="pin-wrap cod-dig" id="codDig"><input class="pin-d" type="tel" inputmode="numeric" aria-label="Código 1" autocomplete="one-time-code"><input class="pin-d" type="tel" inputmode="numeric" aria-label="Código 2"><input class="pin-d" type="tel" inputmode="numeric" aria-label="Código 3"><input class="pin-d" type="tel" inputmode="numeric" aria-label="Código 4"><input class="pin-d" type="tel" inputmode="numeric" aria-label="Código 5"><input class="pin-d" type="tel" inputmode="numeric" aria-label="Código 6"></div><button class="btn-primary" id="codOk" type="button" onclick="codEntrar()">Entrar</button><button class="login-alt peq" type="button" id="codOtra" onclick="codEnviar()">No me ha llegado · enviar otro</button></div></div>
  <button class="login-alt" id="codLink" type="button" onclick="codPedir()">¿No te acuerdas del PIN? Entra con un código por email</button>
  </div>
  <button class="btn-install" id="installBtn" onclick="mostrarInstall()">¿Cómo instalo la app?</button>
@@ -915,24 +921,27 @@ document.getElementById('emailInput').addEventListener('keydown',e=>{if(e.key===
 
 // Entrar con un código por email (si no se acuerda del PIN): se cambia a «modo código» y se pide con el email o el teléfono
 const pinVis=v=>{document.querySelector('.pin-wrap').style.display=v?'':'none';const lb=document.querySelectorAll('.login-card > .lbl')[1];if(lb)lb.style.display=v?'':'none';document.getElementById('loginBtn').style.display=v?'':'none';};
-function codPedir(){pinVis(false);const cb=document.getElementById('codBox');cb.hidden=false;document.getElementById('codPaso2').hidden=true;document.getElementById('codEnv').style.display='';document.getElementById('codInfo').style.display='';document.getElementById('codMsg').textContent='';document.getElementById('loginErr').textContent='';
+function codPedir(){pinVis(false);document.getElementById('codHead').hidden=false;const cb=document.getElementById('codBox');cb.hidden=false;document.getElementById('codPaso2').hidden=true;document.getElementById('codEnv').style.display='';document.getElementById('codMsg').textContent='';document.getElementById('loginErr').textContent='';
  const lk=document.getElementById('codLink');lk.textContent='Volver a entrar con el PIN';lk.onclick=codVolver;const e=document.getElementById('emailInput');if(!e.value.trim())e.focus();}
 async function codEnviar(){const u=document.getElementById('emailInput').value.trim(),err=document.getElementById('loginErr'),b=document.getElementById('codEnv'),otra=document.getElementById('codOtra');err.textContent='';
  if(!u){err.textContent='Escribe arriba tu email o tu teléfono';document.getElementById('emailInput').focus();return;}
  b.disabled=true;otra.disabled=true;const t0=b.textContent;b.textContent='Enviando…';
  try{const r=await (await fetch('/api/schedule?action=app-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario:u,lang})})).json();
-  if(!r.ok){err.textContent=r.error||'Error de conexión';}else{b.style.display='none';document.getElementById('codInfo').style.display='none';document.getElementById('codPaso2').hidden=false;document.getElementById('codMsg').textContent=r.msg||'';setTimeout(()=>document.getElementById('codIn').focus(),50);}}
+  if(!r.ok){err.textContent=r.error||'Error de conexión';}else{b.style.display='none';document.getElementById('codPaso2').hidden=false;document.getElementById('codMsg').textContent=r.msg||'';codCasillas().forEach(x=>x.value='');setTimeout(()=>codCasillas()[0].focus(),50);}}
  catch(e){err.textContent='Error de conexión';}
  b.disabled=false;otra.disabled=false;b.textContent=t0;}
-function codVolver(){pinVis(true);document.getElementById('codBox').hidden=true;document.getElementById('loginErr').textContent='';const lk=document.getElementById('codLink');lk.textContent='¿No te acuerdas del PIN? Entra con un código por email';lk.onclick=codPedir;}
-async function codEntrar(){const u=document.getElementById('emailInput').value.trim(),c=document.getElementById('codIn').value.replace(/\D/g,''),err=document.getElementById('loginErr'),b=document.getElementById('codOk');err.textContent='';
+function codVolver(){pinVis(true);document.getElementById('codHead').hidden=true;document.getElementById('codBox').hidden=true;document.getElementById('loginErr').textContent='';const lk=document.getElementById('codLink');lk.textContent='¿No te acuerdas del PIN? Entra con un código por email';lk.onclick=codPedir;}
+async function codEntrar(){const u=document.getElementById('emailInput').value.trim(),c=codCasillas().map(x=>x.value).join('').replace(/\D/g,''),err=document.getElementById('loginErr'),b=document.getElementById('codOk');err.textContent='';
  if(c.length!==6){err.textContent='Escribe los 6 números del código';return;}
  b.disabled=true;b.textContent='Entrando...';
  try{const r=await (await fetch('/api/schedule?action=app-codigo-ok',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario:u,codigo:c,lang})})).json();
   if(!r.ok){err.textContent=r.error||'Error de conexión';}else{document.getElementById('emailInput').value=r.usuario;String(r.pin).split('').forEach((d,i)=>{const el=document.getElementById(pids[i]);if(el)el.value=d;});codVolver();b.disabled=false;b.textContent='Entrar';return doLogin();}}
  catch(e){err.textContent='Error de conexión';}
  b.disabled=false;b.textContent='Entrar';}
-document.addEventListener('DOMContentLoaded',()=>{const ci=document.getElementById('codIn');if(ci)ci.addEventListener('keydown',e=>{if(e.key==='Enter')codEntrar();});});
+const codCasillas=()=>[...document.querySelectorAll('#codDig .pin-d')];
+document.addEventListener('DOMContentLoaded',()=>{const L=codCasillas();L.forEach((el,i)=>{
+ el.addEventListener('input',()=>{const v=el.value.replace(/\D/g,'');if(v.length>1){v.slice(0,6).split('').forEach((d,k)=>{if(L[k])L[k].value=d;});(L[Math.min(v.length,6)-1]||el).focus();if(v.length>=6)codEntrar();return;}el.value=v;if(v&&i<5)L[i+1].focus();if(v&&i===5)codEntrar();});
+ el.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!el.value&&i>0)L[i-1].focus();if(e.key==='Enter')codEntrar();});});});
 async function doLogin(){
   const email=document.getElementById('emailInput').value.trim();const pin=pids.map(id=>document.getElementById(id).value).join('');const errEl=document.getElementById('loginErr');errEl.textContent='';
   if(!email){errEl.textContent='Introduce tu email o teléfono';return;}if(pin.length!==4){errEl.textContent='Introduce los 4 dígitos del PIN';return;}

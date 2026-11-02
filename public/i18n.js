@@ -2387,6 +2387,26 @@
 "Enviarme otro código": [
 "Envia'm un altre codi",
 "Send me another code"
+],
+"Entra con un código": [
+"Entra amb un codi",
+"Log in with a code"
+],
+"Te lo mandamos a tu email, sin PIN.": [
+"T'enviem un codi a l'email, sense PIN.",
+"We'll email it to you, no PIN needed."
+],
+"Código": [
+"Codi",
+"Code"
+],
+"No me ha llegado · enviar otro": [
+"No m'ha arribat · envia'n un altre",
+"Didn't get it? · send another"
+],
+"Código {}": [
+"Codi {}",
+"Code {}"
 ]
 };
   var IDX = { cat: 0, en: 1 };

@@ -2729,6 +2729,7 @@ module.exports = async function handler(req, res) {
     if (!u || (!u.includes('@') && tel.length !== 9)) return res.status(200).json({ ok: false, error: TX.usu });
     const k = u.includes('@') ? u : 'tel:' + tel;
     const hash = c => cr.createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('app:' + k + ':' + c).digest('hex');
+    _aj = { t: 0, v: null }; // los códigos se leen siempre al momento (si no, otra copia del servidor puede no ver el que se acaba de enviar)
     const COD = (await ajuste('login-codigos-app', {})) || {}, ahora = Date.now();
     Object.keys(COD).forEach(x => { if (!COD[x] || COD[x].exp < ahora - 3600e3) delete COD[x]; });
     const busca = async () => { const f = tel ? `OR(RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)="${tel}",RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)="${tel}")` : `LOWER({EMAIL})="${u}"`;
@@ -2760,6 +2761,7 @@ module.exports = async function handler(req, res) {
     const q = req.body || {}, email = String(q.email || '').trim().toLowerCase(), cr = require('crypto');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(200).json({ ok: false, error: 'Escribe tu email' });
     const hash = c => cr.createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('login:' + email + ':' + c).digest('hex');
+    _aj = { t: 0, v: null }; // al momento, igual que en la app del paciente
     const COD = (await ajuste('login-codigos', {})) || {}, ahora = Date.now();
     Object.keys(COD).forEach(k => { if (!COD[k] || COD[k].exp < ahora - 3600e3) delete COD[k]; });
     if (action === 'panel-codigo') {
