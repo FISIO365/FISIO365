@@ -4801,6 +4801,13 @@ module.exports = async function handler(req, res) {
             const d = await at(EP, { method: 'POST', body: JSON.stringify({ records: [{ fields: { NOMBRE: nombre, ZONA: txt(q.zona, 60), NOTAS: txt(q.notas, 2000), 'PROPUESTO POR': txt(q.quien, 60), ESTADO: q.estado === 'GRABANDO' ? 'GRABANDO' : 'PENDIENTE', ...(q.estado === 'GRABANDO' ? { GRABA: txt(q.quien, 60) } : {}), 'FECHA ESTADO': ahora } }], typecast: true }) });
             return res.status(200).json({ ok: !d.error });
           }
+          if (op === 'novideo') { // ejercicio de la biblioteca que no necesita vídeo: deja de salir en la lista (v:false lo devuelve)
+            if (!okId(q.ejId)) return res.status(400).json({ ok: false });
+            const NV = (await ajuste('ej-sin-video-ok', {})) || {};
+            if (q.v === false) delete NV[q.ejId]; else NV[q.ejId] = { quien: txt(q.quien, 60), cuando: ahora };
+            await guardarAjuste('ej-sin-video-ok', NV, txt(q.quien, 60));
+            return res.status(200).json({ ok: true, noVideo: NV });
+          }
           if (op === 'estado' || op === 'borrar') {
             if (!okId(q.id)) return res.status(400).json({ ok: false });
             if (op === 'borrar') { const d = await at(`${EP}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error }); }
@@ -4809,7 +4816,8 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ ok: !d.error });
           }
           const rs = await todosT(EP, `filterByFormula=${encodeURIComponent(`OR({ESTADO}!='GRABADO',IS_AFTER({FECHA ESTADO},DATEADD(NOW(),-30,'days')))`)}`);
-          return res.status(200).json({ ok: true, lista: rs.map(r => ({ id: r.id, nombre: r.fields.NOMBRE || '', zona: r.fields.ZONA || '', notas: r.fields.NOTAS || '', quien: r.fields['PROPUESTO POR'] || '', estado: nmA(r.fields.ESTADO) || 'PENDIENTE', graba: r.fields.GRABA || '', fecha: r.fields['FECHA ESTADO'] || r.createdTime, creado: r.createdTime })) });
+          const noVideo = (await ajuste('ej-sin-video-ok', {})) || {};
+          return res.status(200).json({ ok: true, noVideo, lista: rs.map(r => ({ id: r.id, nombre: r.fields.NOMBRE || '', zona: r.fields.ZONA || '', notas: r.fields.NOTAS || '', quien: r.fields['PROPUESTO POR'] || '', estado: nmA(r.fields.ESTADO) || 'PENDIENTE', graba: r.fields.GRABA || '', fecha: r.fields['FECHA ESTADO'] || r.createdTime, creado: r.createdTime })) });
         }
         if (action === 'seg-agenda-app-enlace') {
           if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false, error: 'Falta el paciente' });
