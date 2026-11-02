@@ -2648,6 +2648,9 @@ async function listarFacturas(ids, conBorradores) {
   return facturas;
 }
 
+// Leer todos los registros de una tabla (paginado). Las funciones que tienen la suya la siguen usando; esta es para el resto (p. ej. entrar con código)
+const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
+
 // «No reagenda»: guarda en POR QUÉ HISTORIAL el motivo actual (y el nuevo, si lo hay) antes de cambiarlo o borrarlo
 // Al dar cita (panel, enlace de huecos o app): si estaba en «Por llamar» sale de la lista (cita recuperada) y su etiqueta pasa a ACTIVO
 async function salirDeSeguimiento(pid, quienTxt, fecha, hora, origen) {
