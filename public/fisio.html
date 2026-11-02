@@ -444,7 +444,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .pb-prox summary{cursor:pointer;font-size:13.5px;font-weight:600;color:#1e2a38;list-style:none;display:flex;justify-content:space-between;align-items:center}.pb-prox summary::-webkit-details-marker{display:none}.pb-prox summary em{font-style:normal;color:#7d6a60;font-weight:500}.pb-prox[open] summary{margin-bottom:6px}
 .rp-c.pb-hoja{position:relative;padding:0 0 22px;overflow:hidden;background:#fffcf6;--pb-l:#e6edf5}
 .rp-c.pb-hoja::after{content:'';position:absolute;left:18px;top:30px;bottom:30px;width:12px;background:radial-gradient(circle at 6px 6px,#ece6df 4.6px,rgba(26,26,26,.13) 5.2px,transparent 5.9px) 0 0/12px 92px repeat-y;pointer-events:none;z-index:1}
-.rp-c.pb-hoja::before{content:'';position:absolute;top:0;bottom:0;left:56px;width:4px;border-left:1px solid #f2c4b4;border-right:1px solid #f2c4b4;box-sizing:border-box;pointer-events:none;z-index:1}
+.rp-c.pb-hoja::before{content:'';position:absolute;top:0;bottom:0;left:56px;width:4px;border-left:1px solid #ecab95;border-right:1px solid #ecab95;box-sizing:border-box;pointer-events:none;z-index:1}
 .rp-c.pb-hoja>*{position:relative}
 .pb-fe{min-height:52px;box-sizing:border-box;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 20px 3px 72px;border-bottom:1px solid var(--pb-l);font-family:'Caveat',cursive;font-size:25px;font-weight:600;line-height:1;color:#c2552e}
 .pb-hoja .pb-it{border-top:none;border-bottom:1px solid var(--pb-l);min-height:48px;box-sizing:border-box;padding:9px 12px 9px 72px;gap:12px}
@@ -452,6 +452,13 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .pb-hoja .pb-sec{min-height:48px;box-sizing:border-box;display:flex;align-items:flex-end;margin:0;padding:0 12px 7px 72px;border-bottom:1px solid var(--pb-l)}
 .pb-hoja .pb-vac{min-height:48px;box-sizing:border-box;text-align:left;padding:14px 12px 7px 72px;border-bottom:1px solid var(--pb-l)}
 .pb-lin{height:48px;border-bottom:1px solid var(--pb-l)}
+.pb-esc{display:flex;align-items:center;gap:12px;min-height:48px;box-sizing:border-box;padding:6px 12px 6px 72px;border-bottom:1px solid var(--pb-l)}
+.pb-ck0{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px dashed #d9cfc7;display:flex;align-items:center;justify-content:center;color:#c9bdb4;box-sizing:border-box}.pb-ck0 svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.pb-esc .pb-in{flex:1;min-width:0;border:none;background:none;outline:none;padding:6px 0;font-family:var(--font);font-size:14.5px;color:#1e2a38}.pb-esc .pb-in::placeholder{color:#b3a79e}
+.pb-esc:focus-within .pb-ck0{border-color:#c2552e;color:#c2552e}
+.pb-esc .pb-cu{display:flex;gap:2px;margin:0;flex:none}.pb-esc .pb-cu button{font-family:'Caveat',cursive;font-size:19px;font-weight:600;line-height:1;color:#b3a79e;background:none;border:none;border-radius:8px;padding:3px 7px;cursor:pointer}.pb-esc .pb-cu button.on{color:#c2552e;background:#fbeee8}
+.pb-esc .pb-mas{width:32px;height:32px;border-radius:50%;flex:none;display:none}.pb-esc.con .pb-mas{display:flex}.pb-esc .pb-mas svg{width:16px;height:16px;stroke-width:2.6;stroke-linejoin:round}
+@media(max-width:600px){.pb-esc{flex-wrap:wrap;row-gap:2px}.pb-esc .pb-in{flex-basis:calc(100% - 38px)}.pb-esc .pb-cu{margin-left:38px}.pb-esc .pb-mas{margin-left:auto}}
 .pb-dia{font-size:12px;font-weight:600;color:#c2552e;margin:10px 2px 0}.pb-dia::first-letter{text-transform:uppercase}.pb-dia+.pb-it{border-top:none}
 #sb-plan-badge,#pmPlanN{background:#ee2155;color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:2px 7px;margin-left:auto;font-style:normal}
 .rp{width:100%}.rp-c{background:#fff;border:1px solid rgba(26,26,26,.08);box-shadow:0 1px 3px rgba(26,26,26,.05);border-radius:20px;padding:16px;margin-bottom:12px}
@@ -12169,7 +12176,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
- {f:'2026-11-02',t:'Mi día › Plan: las tareas del día salen como una hoja de cuaderno, con la fecha escrita arriba.'},
+ {f:'2026-11-02',t:'Mi día › Plan: las tareas del día salen como una hoja de cuaderno, con la fecha escrita arriba. Las nuevas se escriben directamente en la hoja.'},
  {f:'2026-11-02',aviso:1,t:'Por reagendar: nueva opción «Avisará · tiene pack» para quien tiene la sesión pagada y nos dirá cuándo puede venir. Explicas por qué; si en 7 días no ha dicho nada, pasa sola a Por llamar. Al cambiar día u hora ya no pide nada.'},
  {f:'2026-11-02',t:'«No hace falta» ya no vale solo: hay que elegir por qué (ya tiene otra cita, alta, no llegó a venir o dejó el tratamiento) y explicarlo. También al marcar «No asistió».'},
  {f:'2026-11-02',dir:1,t:'Más › Últimos cambios: lo que se ha tocado en las últimas 48 horas (citas o todo), con «Deshacer» para volver atrás un cambio hecho por error.',ver:{sec:'camb',pasos:[{el:'.cb-l',txt:'Aquí, con Deshacer en cada cambio.'}]}},
@@ -12181,7 +12188,7 @@ const NOVEDADES=[
  {f:'2026-11-02',aviso:1,t:'Reservas por internet: arriba de la Agenda sale una franja con las citas que entran solas por la web o la app (en naranja si hay alguna nueva). Tocas una y te lleva a su día. También en el filtro de la agenda: «Reservadas por internet».',ver:{sec:'agenda',pasos:[{el:'.ag-onl',txt:'Las reservas que entran solas.'}]}},
  {f:'2026-11-02',aviso:1,t:'Menú nuevo: abajo tienes Agenda, Pacientes, Mi día, Chat y Más. En Mi día está todo lo que te toca hoy (Plan, Pendientes y Check-list). El resto está en Más. Para apuntar a alguien que pregunta y se va sin cita: el + de la Agenda.',ver:{sec:'plan',pasos:[{el:'.dia-tabs',txt:'Mi día: Plan, Pendientes y Check-list.'}]}},
  {f:'2026-11-02',dir:1,t:'Estadísticas por fisio: arriba eliges «Todo el centro» o un fisio y ves sus sesiones, ocupación, pacientes atendidos, conversión y faltas, semana a semana o por meses.',ver:{sec:'stats',pasos:[{el:'.st-fis',txt:'Elige el fisio.'}]}},
- {f:'2026-11-02',aviso:1,t:'Nuevo: Plan de batalla. Apunta tus tareas del día y márcalas al hacerlas; lo que no hagas pasa solo al día siguiente. Dirección también te puede poner tareas. Está en Mi día › Plan.',ver:{sec:'plan',pasos:[{el:'.pb-add',txt:'Escribe la tarea y toca +.'}]}},
+ {f:'2026-11-02',aviso:1,t:'Nuevo: Plan de batalla. Apunta tus tareas del día y márcalas al hacerlas; lo que no hagas pasa solo al día siguiente. Dirección también te puede poner tareas. Está en Mi día › Plan.',ver:{sec:'plan',pasos:[{el:'.pb-esc',txt:'Escribe la tarea en la hoja y dale a Intro.'}]}},
  {f:'2026-11-01',t:'Reservas desde la web: el email de la cita incluye ahora el acceso a la app (usuario y PIN) y avisa de que en la primera visita su fisio le asignará su programa de ejercicios.'},
  {f:'2026-11-01',t:'Mensajes a pacientes: si el paciente ya confirmó su cita (por el email o el enlace), sale «✓ Confirmada» y el botón «Recordar» manda un WhatsApp que dice que ya la tiene confirmada y solo se la recordamos.'},
  {f:'2026-11-01',dir:1,t:'Ajustes › «Reservas desde tu web»: «Calendario dentro de tu web». Tu página de reservar enseña el calendario directamente, sin pulsar otro botón.'},
@@ -14185,7 +14192,7 @@ function renderFormacion(wrap, ruta){
  {ti:'¿Buscas otra cosa? Toca Más',body:`Comunicaciones, Sugerencias, School, Captación, Valoraciones… está todo en <b>Más</b>, abajo a la derecha, ordenado en bloques.<br><br><b>Tu foto</b>, arriba, es para lo tuyo: tus estadísticas, notificaciones y cerrar sesión.<br><br>¿Echas algo en falta? No es un fallo: cada uno ve lo que necesita. Pídeselo a dirección.`,ver:{sec:'agenda',pasos:[{el:'#sb-mas || .sidebar',txt:'Toca Más: aquí está el resto de secciones.'}]}},
  {ti:'Alguien pregunta y se va sin cita',body:`<b>Cuándo:</b> llama o entra alguien, pregunta precios o por un dolor, y no se cita.<br><br><b>Qué haces:</b> en la Agenda o en Pacientes, toca el <b>+</b> › <b>Alguien pregunta y se va sin cita</b>, y apunta nombre, teléfono y por qué no se citó.<br><br><b>Para qué:</b> así se le puede llamar después en vez de perderlo. Queda en <b>Pacientes › Sin cita</b> y sale sola de ahí cuando le das cita.`,ver:{sec:'agenda',pasos:[{el:'.ag-add',txt:'El +: nueva cita o alguien que pregunta.'}]}},
  {ti:'Lo que te toca hacer: Mi día',body:`En <b>Mi día</b> está todo lo que te toca hoy, en tres pestañas: tu <b>Plan</b>, tus <b>Pendientes</b> (tareas y llamadas) y el <b>Check-list</b> antes de irte. El número es lo que te queda hoy o llevas atrasado.<br><br>Míralo al empezar y al acabar el día.`,ver:{sec:'plan',pasos:[{el:'.dia-tabs',txt:'Plan, Pendientes y Check-list.'}]}},
- {ti:'Tu Plan de batalla',body:`Las cosas que tienes que hacer hoy, apuntadas por ti: escribe la tarea, «Hoy» o «Mañana», y <b>+</b>. Al hacerla, tócale el círculo.<br><br>Lo que no hagas <b>pasa solo al día siguiente</b> («Viene de ayer»), hasta que lo marques. Las que pone dirección salen en negro: «De dirección».<br><br>Está en <b>Mi día › Plan</b>.`,ver:{sec:'plan',pasos:[{el:'.pb-add',txt:'Aquí apuntas lo que tienes que hacer.'}]}},
+ {ti:'Tu Plan de batalla',body:`Las cosas que tienes que hacer hoy, apuntadas por ti como en un cuaderno: escribe la tarea en el primer renglón libre de la hoja, elige «Hoy» o «Mañana» y dale a Intro (o al ✓). Al hacerla, tócale el círculo.<br><br>Lo que no hagas <b>pasa solo al día siguiente</b> («Viene de ayer»), hasta que lo marques. Las que pone dirección salen en negro: «De dirección».<br><br>Está en <b>Mi día › Plan</b>.`,ver:{sec:'plan',pasos:[{el:'.pb-esc',txt:'Aquí escribes lo que tienes que hacer.'}]}},
  {ti:'Para enterarte a tiempo: los avisos',body:`<b>Cuándo:</b> la primera vez que usas un móvil u ordenador.<br><br><b>Para qué:</b> si no, no te enteras cuando un paciente te escribe, reserva una hora tuya o paga.<br><br>En el móvil: <b>tu foto › Notificaciones › Activar</b>. En iPhone, con el panel añadido a la pantalla de inicio.`,ver:{sec:'agenda',pasos:[{el:'#btnAvisos || #btnPerfil',txt:'Aquí activas los avisos (en el móvil, tu foto › Notificaciones).'}]}},
  {ti:'Cada mañana, un módulo',body:`A las 8:30 te llega una tarea en Comunicaciones: <b>«Módulo de hoy»</b>. Unos 5 minutos. Al acertar las preguntas se marca hecha sola.<br><br>Solo uno al día: cuando lo acabas, has terminado por hoy.`}
  ],
@@ -15259,12 +15266,12 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   if(r.dir&&(r.equipo||[]).length>1)h+=`<div class="pb-who">${[...r.equipo].sort((a,b)=>(b.toLowerCase()===yo.toLowerCase())-(a.toLowerCase()===yo.toLowerCase())).map(n=>`<button type="button" data-p="${escH(n)}" class="${n.toLowerCase()===String(r.persona).toLowerCase()?'on':''}">${n.toLowerCase()===yo.toLowerCase()?'Yo':escH(String(n).split(' ')[0])}</button>`).join('')}</div>`;
   h+=`<div class="rp-c"><div class="pb-hd"><div><small>Plan de batalla</small><b>${yoMismo?'Tu plan de hoy':'Plan de '+escH(nom)}</b></div>${tot?`<span class="rp-n${!P.length?' ok':''}">${H.length} de ${tot}</span>`:''}</div>
    ${tot?`<div class="rp-bar${!P.length?' ok':''}"><i style="width:${Math.round(H.length/tot*100)}%"></i></div>`:''}
-   <div class="pb-add"><input type="text" class="pb-in" maxlength="200" placeholder="${yoMismo?'¿Qué tienes que hacer?':'Tarea para '+escH(nom)}" autocomplete="off"><button type="button" class="pb-mas" aria-label="Añadir"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
-   <div class="pb-cu"><span>Para</span><button type="button" data-d="hoy" class="${PB.dia==='hoy'?'on':''}">Hoy</button><button type="button" data-d="man" class="${PB.dia==='man'?'on':''}">Mañana</button></div></div>`;
-  // La lista de hoy es una hoja de cuaderno: la fecha arriba a la derecha, renglones y margen
-  const nLin=P.length+H.length+(H.length?1:0)+(P.length||H.length?0:1),lineas='<div class="pb-lin"></div>'.repeat(Math.max(0,6-nLin));
-  h+=`<div class="rp-c pb-hoja"><div class="pb-fe">${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}</div>${P.length||H.length?'':`<div class="pb-vac">${yoMismo?'Nada en el plan de hoy. Apunta lo primero que tienes que hacer.':escH(nom)+' no tiene nada para hoy.'}</div>`}
-   ${P.map(x=>fila(x,hoy)).join('')}
+</div>`;
+  // La lista de hoy es una hoja de cuaderno: la fecha arriba a la derecha, renglones y margen. Se escribe en el primer renglón libre
+  const nLin=P.length+H.length+(H.length?1:0)+1,lineas='<div class="pb-lin"></div>'.repeat(Math.max(0,6-nLin));
+  const esc=`<div class="pb-esc"><span class="pb-ck0"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span><input type="text" class="pb-in" maxlength="200" placeholder="${yoMismo?'Escribe una tarea…':'Tarea para '+escH(nom)+'…'}" autocomplete="off" enterkeyhint="done"><span class="pb-cu"><button type="button" data-d="hoy" class="${PB.dia==='hoy'?'on':''}">Hoy</button><button type="button" data-d="man" class="${PB.dia==='man'?'on':''}">Mañana</button></span><button type="button" class="pb-mas" aria-label="Apuntar"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></div>`;
+  h+=`<div class="rp-c pb-hoja"><div class="pb-fe">${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}</div>
+   ${P.map(x=>fila(x,hoy)).join('')}${esc}
    ${!P.length&&H.length?`<div class="pb-vac" style="padding-top:4px">${yoMismo?'¡Todo hecho por hoy!':'Lo ha hecho todo.'}</div>`:''}
    ${H.length?`<div class="pb-sec">Hecho hoy</div>${H.map(x=>fila(x,hoy)).join('')}`:''}${lineas}</div>`;
   if(X.length){const G={};X.forEach(x=>(G[x.dia]=G[x.dia]||[]).push(x));
@@ -15273,13 +15280,14 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   box.innerHTML=h;
   if(abierto){const d=box.querySelector('.pb-prox');if(d)d.open=true;}
   const inp=box.querySelector('.pb-in');inp.value=txt;if(foco)inp.focus();
+  const escF=box.querySelector('.pb-esc'),llena=()=>escF.classList.toggle('con',!!inp.value.trim());llena();inp.addEventListener('input',llena);
   box.querySelectorAll('.pb-who button').forEach(b=>b.onclick=()=>{PB.persona=b.dataset.p.toLowerCase()===yo.toLowerCase()?'':b.dataset.p;pbGuarda();box.querySelectorAll('.pb-who button').forEach(x=>x.classList.toggle('on',x===b));carga();});
   box.querySelectorAll('.pb-cu button').forEach(b=>b.onclick=()=>{PB.dia=b.dataset.d;pbGuarda();box.querySelectorAll('.pb-cu button').forEach(x=>x.classList.toggle('on',x===b));inp.focus();});
   const mas=box.querySelector('.pb-mas');
   const anade=async()=>{const t=inp.value.trim();if(!t){inp.focus();return;}mas.disabled=true;
    const res=await comPost('plan-anadir',{tarea:t,persona:PB.persona,dia:PB.dia==='man'?pbIso(hoy,1):hoy}).catch(x=>({ok:false,error:x.message}));
    mas.disabled=false;if(!res.ok){toast(res.error||'No se ha podido',false);return;}
-   inp.value='';const it=res.item;if(it.dia>hoy)(PB.d.proximas=PB.d.proximas||[]).push(it);else PB.d.pendientes.push(it);pinta();box.querySelector('.pb-in').focus();if(!PB.persona)planContar();};
+   inp.value='';llena();const it=res.item;if(it.dia>hoy){(PB.d.proximas=PB.d.proximas||[]).push(it);toast('Apuntada para mañana',true);}else PB.d.pendientes.push(it);pinta();box.querySelector('.pb-in').focus();if(!PB.persona)planContar();};
   mas.onclick=anade;inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();anade();}};
   const buscar=id=>{const L=[PB.d.pendientes,PB.d.hechas,PB.d.proximas];for(const l of L){const i=(l||[]).findIndex(x=>x.id===id);if(i>=0)return [l,i];}return [null,-1];};
   const act=async(a,id,extra)=>{const res=await comPost(a,Object.assign({id,persona:PB.persona},extra||{})).catch(()=>({ok:false}));if(!res.ok){toast(res.error||'No se ha podido',false);carga();return false;}if(!PB.persona)planContar();return true;};
