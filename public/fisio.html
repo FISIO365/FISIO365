@@ -1010,7 +1010,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
  html,body{height:100%;overflow:hidden!important;overscroll-behavior:none}
  .main-area>*{overflow-x:clip;max-width:100%}
  .main-area{height:100dvh;overflow-y:auto!important;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
- #sb-rdia,#sb-rend,#sb-com,#sb-sug,#sb-val,#sb-mis,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-admin,#sb-school,.sb-grp{display:none!important}
+ #sb-rdia,#sb-camb,#sb-rend,#sb-com,#sb-sug,#sb-val,#sb-mis,#sb-call,#sb-prog,#sb-anam,#sb-stats,#sb-ejer,#sb-cap,#sb-admin,#sb-school,.sb-grp{display:none!important}
  #sb-mas{display:flex!important}
  #sb-dia-badge,#sb-mas-badge{position:absolute;top:3px;left:calc(50% + 6px);margin:0!important}
  .topbar{padding:calc(14px + env(safe-area-inset-top)) 16px 10px!important}
@@ -1560,8 +1560,8 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .ag-pago{margin:4px 0 12px}.ag-pg-b{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed #e6c9bb;background:#fdfaf8;color:#c2552e;border-radius:14px;padding:12px;font:600 13.5px var(--font);cursor:pointer}.ag-pg-b svg,.ag-pg svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ag-pg-b.sec{border-style:solid;border-color:#efe6de;background:#fff;color:#7d6a60;padding:10px}
 .ag-pg{display:flex;align-items:center;gap:12px;background:#fdf1ea;color:#a3441f;border-radius:14px;padding:12px 14px;font-size:13px}.ag-pg span{display:flex;flex-direction:column;color:#7d6a60}.ag-pg b{color:#a3441f;font-size:13.5px}.ag-pg.ok{background:#e9f6ee;color:#1f7a45}.ag-pg.ok b{color:#1f7a45}.ag-pg.med{background:#fff7e0;color:#9a6a00}.ag-pg.med b{color:#9a6a00}.ag-pg.off{background:#f4f1ee;color:#8a7d74}.ag-pg.off b{color:#5c4f47}.ag-pg-bs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .ag-pg-imp{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}.ag-pg-imp button{border:1.5px solid #efe6de;background:#fff;border-radius:12px;padding:11px;font:600 15px var(--font);color:#2b2420;cursor:pointer}.ag-pg-imp button.on{background:#c2552e;border-color:#c2552e;color:#fff}.ag-pg-imp input{min-width:0;text-align:center}
-.cb-f{display:flex;gap:2px;background:#f5f0eb;border-radius:99px;padding:3px;margin:2px 0 10px;width:max-content}.cb-f button{font-family:var(--font);font-size:12.5px;font-weight:600;color:#7d6a60;background:none;border:none;border-radius:99px;padding:6px 14px;cursor:pointer}.cb-f button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 2px rgba(26,26,26,.1)}
-.cb-l{max-height:62vh;overflow-y:auto;margin:0 -4px;padding:0 4px}.cb-sec{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#c2552e;margin:12px 0 4px}.cb-nota{font-size:12.5px;color:#7d6a60;margin:0 0 4px;line-height:1.45}
+.cb-f{display:flex;gap:2px;background:#ebe4dd;border-radius:99px;padding:3px;margin:0 0 12px;width:max-content}.cb-f button{font-family:var(--font);font-size:12.5px;font-weight:600;color:#7d6a60;background:none;border:none;border-radius:99px;padding:6px 14px;cursor:pointer}.cb-f button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 2px rgba(26,26,26,.1)}
+.cb{width:100%}.cb-l{padding-top:6px;padding-bottom:6px}.cb-sec{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#c2552e;margin:12px 0 4px}.cb-nota{font-size:12.5px;color:#7d6a60;margin:0 0 4px;line-height:1.45}
 .cb-it{display:flex;align-items:center;gap:12px;border-top:1px solid #f3eee9;padding:11px 0}.cb-sec+.cb-it,.cb-nota+.cb-it,.cb-l>.cb-it:first-child{border-top:none}.cb-it.off{opacity:.55}
 .cb-h{flex:none;width:58px;font-size:12px;color:#a0928a;font-variant-numeric:tabular-nums}.cb-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.cb-tx>b{font-size:14px;font-weight:600;color:#1a1a1a}.cb-tx small{font-size:12.5px;color:#7d6a60;line-height:1.4}.cb-tx small b{color:#1a1a1a;font-weight:600}
 .cb-un{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}.cb-ok{flex:none;font-style:normal;font-size:12px;font-weight:600;color:#16803c}
@@ -2001,6 +2001,9 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  <div class="sb-item" id="sb-rdia" onclick="showSection('rdia')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M8.6 12.3l2.3 2.3 4.5-4.9"/></svg></span><span class="sb-txt">Daily report</span><span id="rdiaBadge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:middle">1</span>
  </div>
+ <div class="sb-item" id="sb-camb" onclick="showSection('camb')" style="display:none">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span><span class="sb-txt">Últimos cambios</span>
+ </div>
  <div class="sb-item" id="sb-rend" onclick="showSection('rend')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="sb-txt">Rendimiento</span>
  </div>
@@ -2040,7 +2043,7 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  <div class="pm-head"><div class="pm-av" id="pmAv"></div><div><b id="pmNom"></b><span id="pmRol"></span></div></div>
  <div class="pm-gr"><div class="pm-gt">Equipo</div><div class="pm-its"><button type="button" class="pm-it" id="pmCom" style="display:none" onclick="cerrarPerfilMenu();showSection('com')"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></svg>Comunicaciones<i id="pmComN" style="display:none"></i></button><button type="button" class="pm-it" id="pmSug" onclick="cerrarPerfilMenu();showSection('sug')"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Sugerencias<i id="pmSugN" style="display:none"></i></button><button type="button" class="pm-it" id="pmSchool" onclick="cerrarPerfilMenu();showSection('school')"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg>School</button></div></div>
  <div class="pm-gr"><div class="pm-gt">Clínica</div><div class="pm-its"><button type="button" class="pm-it" id="pmCap" onclick="cerrarPerfilMenu();showSection('cap')"><svg viewBox="0 0 24 24"><path d="M3 11l15-6v14L3 13z"/><path d="M7 12.5V18a2 2 0 0 0 4 0v-4"/><path d="M21 9.5v5"/></svg>Captación</button><button type="button" class="pm-it" id="pmCall" onclick="cerrarPerfilMenu();showSection('call')"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Call-in</button><button type="button" class="pm-it" id="pmEjer" onclick="cerrarPerfilMenu();showSection('ejer')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M10.5 8.2v5.6l4.6-2.8z"/><path d="M7 21h10"/></svg>Ejercicios</button><button type="button" class="pm-it" id="pmVal" onclick="cerrarPerfilMenu();showSection('val')"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>Valoraciones<i id="pmValN" style="display:none"></i></button></div></div>
- <div class="pm-gr"><div class="pm-gt">Gestión</div><div class="pm-its"><button type="button" class="pm-it" id="pmRdia" style="display:none" onclick="cerrarPerfilMenu();showSection('rdia')"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M8.6 12.3l2.3 2.3 4.5-4.9"/></svg>Daily report</button><button type="button" class="pm-it" id="pmRend" style="display:none" onclick="cerrarPerfilMenu();showSection('rend')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rendimiento</button><button type="button" class="pm-it" id="pmStats" style="display:none" onclick="cerrarPerfilMenu();showSection('stats')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Estadísticas</button><button type="button" class="pm-it" id="pmAdmin" style="display:none" onclick="cerrarPerfilMenu();showSection('admin')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Dirección</button></div></div>
+ <div class="pm-gr"><div class="pm-gt">Gestión</div><div class="pm-its"><button type="button" class="pm-it" id="pmRdia" style="display:none" onclick="cerrarPerfilMenu();showSection('rdia')"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M8.6 12.3l2.3 2.3 4.5-4.9"/></svg>Daily report</button><button type="button" class="pm-it" id="pmCamb" style="display:none" onclick="cerrarPerfilMenu();showSection('camb')"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Últimos cambios</button><button type="button" class="pm-it" id="pmRend" style="display:none" onclick="cerrarPerfilMenu();showSection('rend')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rendimiento</button><button type="button" class="pm-it" id="pmStats" style="display:none" onclick="cerrarPerfilMenu();showSection('stats')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Estadísticas</button><button type="button" class="pm-it" id="pmAdmin" style="display:none" onclick="cerrarPerfilMenu();showSection('admin')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Dirección</button></div></div>
  <div class="pm-yo"><button type="button" class="pm-it" id="pmMis" style="display:none" onclick="cerrarPerfilMenu();showSection('mis')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>Mis estadísticas</button><button type="button" class="pm-it" id="pmAvisos" onclick="cerrarPerfilMenu();abrirAjustesAvisos()"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones<span class="pm-off">Desactivadas</span></button><button type="button" class="pm-it salir" onclick="confirmarSalir()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button></div>
 </div></div>
 
@@ -2147,6 +2150,7 @@ const TOPBAR = {
  agenda: ['Agenda','Citas del día'],
  stats: ['Estadísticas','El centro semana a semana'],
  rdia: ['Daily report','Check-lists del equipo y resumen del día'],
+ camb: ['Últimos cambios','Lo que se ha tocado en las últimas 48 horas'],
  cap: ['Captación','Lista de espera y contactos'],
  ejer: ['Ejercicios','Biblioteca de vídeos'],
  rep: ['Mi día','El check-list antes de irte'],
@@ -2375,7 +2379,7 @@ function pintarPerfil(){if(!fisioActual)return;try{setTimeout(novPunto,0);}catch
  const b=$('btnPerfil');if(b)b.innerHTML=av;const a=$('pmAv');if(a)a.innerHTML=av;
  $('pmNom').textContent=fisioActual.nombre;$('pmRol').textContent=(fisioActual.role==='admin'?'Administración':'Fisioterapeuta')+(fisioActual.direccion?' · Dirección':'');
  const sc=$('sb-school');$('pmSchool').style.display=(sc&&sc.style.display==='none')?'none':'';const sr=$('sb-rend');const okR=!(sr&&sr.style.display==='none');$('pmRend').style.display='none';$('btnRend').classList.remove('on');$('pmRend').style.display=okR?'':'none';try{const A=fisioActual.accesos||{};const dir=('estadisticas' in A)?!!A.estadisticas:esDireccion();$('sb-stats').style.display=dir?'':'none';[['pmStats','sb-stats'],['pmAdmin','sb-admin'],['pmCall','sb-call'],['pmCap','sb-cap'],['pmEjer','sb-ejer']].forEach(([pm,sb])=>{const a=$(pm),b=$(sb);if(a&&b)a.style.display=b.style.display==='none'?'none':'';});}catch(e){}try{if('direccion' in fisioActual){const d=!!fisioActual.direccion;[['sb-rend','pmRend'],['sb-stats','pmStats'],['sb-admin','pmAdmin']].forEach(([sb,pm])=>{const a=$(sb),b=$(pm);if(a)a.style.display=d?'':'none';if(b)b.style.display=d?'':'none';});}}catch(e){}// Rendimiento, Estadísticas y Administración: solo dirección (casilla «Dirección» en Equipo)
- try{RD_DIR=('direccion' in fisioActual)?!!fisioActual.direccion:['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});['sb-rdia','pmRdia'].forEach(i=>{const e=$(i);if(e)e.style.display=RD_DIR?'':'none';});rdiaBadge();}catch(e){}try{const v=RD_DIR||['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{planContar();}catch(e){}try{comVisibilidad();}catch(e){}try{sugContar();encContar();}catch(e){}setTimeout(()=>{try{chkRecordar();}catch(e){}},4000);try{const v=fisioActual.role!=='admin';['sb-mis','pmMis','sb-g-mio'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
+ try{RD_DIR=('direccion' in fisioActual)?!!fisioActual.direccion:['sb-rend','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});['sb-rdia','pmRdia','sb-camb','pmCamb'].forEach(i=>{const e=$(i);if(e)e.style.display=RD_DIR?'':'none';});rdiaBadge();}catch(e){}try{const v=RD_DIR||['sb-rend','sb-stats','sb-admin'].some(i=>{const e=$(i);return e&&e.style.display!=='none';});$('sb-g-dir').style.display=v?'':'none';}catch(e){}contarTareas();try{planContar();}catch(e){}try{comVisibilidad();}catch(e){}try{sugContar();encContar();}catch(e){}setTimeout(()=>{try{chkRecordar();}catch(e){}},4000);try{const v=fisioActual.role!=='admin';['sb-mis','pmMis','sb-g-mio'].forEach(i=>{const e=$(i);if(e)e.style.display=v?'':'none';});}catch(e){}}
 function abrirPerfilMenu(modo){pintarPerfil();const m=$('perfilMenu');m.classList.toggle('mas',modo==='mas');m.classList.toggle('yo',modo!=='mas');
  // Un bloque sin nada que mostrar no sale
  m.querySelectorAll('.pm-gr').forEach(g=>{g.style.display=[...g.querySelectorAll('.pm-it')].some(b=>b.style.display!=='none')?'':'none';});m.classList.add('on');}
@@ -2418,7 +2422,7 @@ function showSection(sec){
  try{$('btnRend').classList.toggle('activo',sec==='rend');}catch(e){}
  if(sec==='dia'){let t='plan';try{t=sessionStorage.getItem('f365_dia')||'plan';}catch(e){}sec=DIA_TABS().some(x=>x[0]===t)?t:'plan';}
  const enDia=DIA_SECS.includes(sec);
- ['anam','prog','agenda','pac','school','msg','rend','call','stats','cap','ejer','admin','com','sug','mis','rdia','val','dia'].forEach(s=>{
+ ['anam','prog','agenda','pac','school','msg','rend','call','stats','cap','ejer','admin','com','sug','mis','rdia','camb','val','dia'].forEach(s=>{
  const el=$(`sb-${s}`); if(el) el.classList.toggle('active', s===sec||(s==='dia'&&enDia));
  });
  const [t,s] = TOPBAR[sec];
@@ -2447,6 +2451,7 @@ function showSection(sec){
  else if(sec==='ejer') renderEjercicios(wrap);
  else if(sec==='stats') renderStats(wrap);
  else if(sec==='rdia') renderReporteDia(wrap);
+ else if(sec==='camb') renderCambios(wrap);
  else if(sec==='admin') renderAdmin(wrap);
  else if(sec==='com') renderCom(wrap);
  else if(sec==='sug') renderSug(wrap);
@@ -12127,7 +12132,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
- {f:'2026-11-02',dir:1,t:'Daily report › Últimos cambios: lo que se ha tocado en las últimas 48 horas (citas o todo), con «Deshacer» para volver atrás un cambio hecho por error.',ver:{sec:'rdia',pasos:[{el:'.rd-camb',txt:'Aquí.'}]}},
+ {f:'2026-11-02',dir:1,t:'Más › Últimos cambios: lo que se ha tocado en las últimas 48 horas (citas o todo), con «Deshacer» para volver atrás un cambio hecho por error.',ver:{sec:'camb',pasos:[{el:'.cb-l',txt:'Aquí, con Deshacer en cada cambio.'}]}},
  {f:'2026-11-02',aviso:1,t:'Al cancelar una cita, dejarla «Por reagendar» o cambiarle el día u hora, ahora tienes que elegir «Seguimiento» o «No hace falta». Ninguna sale marcada: así no se nos pasa nadie.',ver:{sec:'agenda',pasos:[{el:'.ag-grid',txt:'Abre una cita y cámbiale el estado.'}]}},
  {f:'2026-11-02',t:'Pacientes: el + ahora también sirve para apuntar a alguien que pregunta y se va sin cita. Arriba verás «Sin cita» con esa gente; cuando les das cita (en el panel, la web o la app) salen solos de la lista.'},
  {f:'2026-11-02',t:'Ejercicios › Pendientes de grabar: los ejercicios que ya están en la biblioteca sin vídeo salen solos en la lista («Ya está · falta vídeo»). Al grabarlo, solo pegas el link. Si alguno no lo necesita, «No hace falta vídeo».',ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Pendientes de grabar.'}]}},
@@ -14560,7 +14565,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Cada mañana: el Daily report',shot:'/img/school/panel-c-rdia.jpg',body:`<b>Cuándo:</b> a primera hora, para repasar el día anterior.<br><br><b>Qué ves:</b> sesiones, facturas, caja por forma de pago, la lista de la compra y el <b>check-list de cada fisio</b>: si lo envió, qué no marcó y qué ve pendiente el panel.<br><br>Si falta algo, <b>Avisar a…</b>`,ver:{sec:'rdia',pasos:[{el:'.rd-ks',txt:'El resumen del día.'},{el:'.rd-fis',txt:'El check-list de cada fisio.'}]}},
  {ti:'Lo que hay que arreglar',shot:'/img/school/panel-c-rdia2.jpg',body:`Debajo: <b>atrasado por fisio</b> (tareas y llamadas sin hacer), <b>sesiones sin facturar</b> (con <b>Cobrar</b>), <b>citas sin marcar</b> (márcalas ahí mismo), tickets hechos fuera del panel o en borrador y canceladas.<br><br>Con ‹ › ves otros días; también en PDF.`,ver:{sec:'rdia',pasos:[{el:'.rd-sec',txt:'Lo que queda por arreglar.'}]}},
- {ti:'Me he equivocado: Últimos cambios',body:`En el <b>Daily report</b>, <b>Últimos cambios</b> enseña lo que se ha tocado en las últimas 48 horas: qué cita, de qué estado a cuál y a qué hora.<br><br>Si algo se hizo por error, <b>Deshacer</b> lo deja como estaba. Lo que se creó se borra; lo borrado no se puede recuperar desde aquí.`,ver:{sec:'rdia',pasos:[{el:'.rd-camb',txt:'Aquí.'}]}},
+ {ti:'Me he equivocado: Últimos cambios',body:`En <b>Más › Últimos cambios</b> ves lo que se ha tocado en las últimas 48 horas: qué cita, de qué estado a cuál y a qué hora.<br><br>Si algo se hizo por error, <b>Deshacer</b> lo deja como estaba. Lo que se creó se borra; lo borrado no se puede recuperar desde aquí.`,ver:{sec:'camb',pasos:[{el:'.cb-l',txt:'Aquí, con Deshacer en cada cambio.'}]}},
  {ti:'Las cifras del centro',body:`En <b>Estadísticas</b>, por semana, mes, trimestre, semestre o año: sesiones, ocupación, pacientes nuevos, conversión, ingresos, primeras visitas por fisio y cómo nos conocen.<br><br>Arriba eliges <b>Todo el centro</b> o un fisio: con un fisio ves sus sesiones, ocupación, pacientes atendidos, conversión y faltas, con su evolución.`,ver:{sec:'stats',pasos:[{el:'.st-vis || #mainWrap .card',txt:'Elige el periodo.'}]}},
  {ti:'El email de cada mañana',body:`A primera hora llega el resumen del día anterior. El asunto avisa si falta algún check-list o hay sesiones sin facturar.<br><br>Además, los pacientes activos que llevan 3 semanas sin cita pasan solos a «pendiente de continuar».`},
  {ti:'Quién ha hecho los cursos',body:`En <b>School</b> ves quién ha terminado cada curso obligatorio y cuándo. Y en Comunicaciones, el seguimiento del módulo de cada día.`}
@@ -15001,26 +15006,27 @@ const rdEur=n=>Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maxi
 function rdiaBadge(){try{const b=$('rdiaBadge');if(!b)return;if(!RD_DIR){b.style.display='none';return;}const ay=rdMas(rdHoy(),-1),v=localStorage.getItem('f365_rdia_visto')||'';b.style.display=v<ay?'':'none';}catch(e){}}
 // ── Últimos cambios (dirección): qué se ha tocado en las últimas 48 h, con «Deshacer» ──
 let CAMB_TODO=false;
-function cambiosModal(){
- const m=hzModal(`<div class="hz-top"><div><small>Últimas 48 horas</small><b>Últimos cambios</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-  <div class="cb-f"><button type="button" data-t="0">Citas</button><button type="button" data-t="1">Todo</button></div><div class="cb-l"><div class="fac-vacio">Cargando…</div></div>`);
- m.querySelector('.hz-x').onclick=()=>m.remove();
+function renderCambios(wrap){
+ if(!esDireccion()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección es solo para dirección.</div></div>';return;}
+ const m=ce('div','cb');wrap.appendChild(m);
+ m.innerHTML=`<div class="cb-f"><button type="button" data-t="0">Citas</button><button type="button" data-t="1">Todo</button></div><div class="card cb-l"><div class="fac-vacio">Cargando…</div></div>`;
  const box=m.querySelector('.cb-l');let D=null;
  const estN=e=>{e=String(e||'').trim();const x=AG_EST.find(a=>e.startsWith(a[0]));return x?x[1]:e?agEstNom(e):'—';};
  const fC=f=>f?+f.slice(8)+'/'+ +f.slice(5,7):'';
  const hora=t=>{const d=new Date(t),hoy=new Date().toDateString(),ay=new Date(Date.now()-864e5).toDateString();const h=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});return d.toDateString()===hoy?h:d.toDateString()===ay?'Ayer '+h:d.toLocaleDateString('es-ES',{day:'numeric',month:'numeric'})+' '+h;};
- const quien=c=>c&&c.paciente?capTit(c.paciente):c&&c.pacienteId?'Paciente':'';
+ const may=t=>String(t||'').toLowerCase().replace(/(^|[\s-])([a-záéíóúñü])/g,(x,a,b)=>a+b.toUpperCase());
+ const quien=c=>c&&c.paciente?may(c.paciente):c&&c.pacienteId?'Paciente':'';
  const desc=x=>{const a=x.antes,d=x.despues,c=d||a;
   if(!x.esCita)return {tit:`${escH(x.tabla)}${x.que?' · '+escH(x.que):''}`,sub:x.accion==='crear'?'Creado':x.accion==='borrar'?'Borrado':'Cambió: '+escH(x.campos.join(', '))};
-  const cab=`${escH(quien(c)||estN(c.estado))}`,cuando=`${fC(c.fecha)} ${escH(c.hora)}${c.fisio?' · '+escH(agNom(c.fisio)):''}`;
-  if(x.accion==='crear')return {tit:cab,sub:(c.pacienteId?'Cita creada · ':'Hueco creado · ')+cuando};
-  if(x.accion==='borrar')return {tit:cab,sub:'Cita borrada · '+cuando};
+  const cab=c.pacienteId?escH(quien(c)):'Hueco '+escH(estN(c.estado).toLowerCase()),cuando=`${fC(c.fecha)} ${escH(c.hora)}${c.fisio?' · '+escH(agNom(c.fisio)):''}`;
+  if(x.accion==='crear')return {tit:cab,sub:cuando+' · <b>'+(c.pacienteId?'Cita creada':'Creado')+'</b>'};
+  if(x.accion==='borrar')return {tit:cab,sub:cuando+' · <b>Borrada</b>'};
   const L=[];if(a.estado!==d.estado)L.push(`<b>${escH(estN(a.estado))} → ${escH(estN(d.estado))}</b>`);
   if(a.fecha!==d.fecha||a.hora!==d.hora)L.push(`${fC(a.fecha)} ${escH(a.hora)} → ${fC(d.fecha)} ${escH(d.hora)}`);
   if(a.fisio!==d.fisio)L.push(`${escH(agNom(a.fisio))} → ${escH(agNom(d.fisio))}`);
   if(a.pacienteId!==d.pacienteId)L.push(d.pacienteId?'Se le puso paciente':'Se le quitó el paciente');
   const otros=x.campos.filter(k=>!['ESTADO','FECHA','HORA','PREF.','RELACIÓN - CITA'].includes(k));if(otros.length&&!L.length)L.push('Cambió: '+escH(otros.join(', ').toLowerCase()));else if(otros.length)L.push('y '+escH(otros.join(', ').toLowerCase()));
-  return {tit:quien(c)?escH(quien(c))+' · '+cuando:cuando,sub:L.join(' · ')};};
+  return {tit:cab,sub:cuando+(L.length?'<br>'+L.join(' · '):'')};};
  const pinta=()=>{m.querySelectorAll('.cb-f button').forEach(b=>b.classList.toggle('on',(b.dataset.t==='1')===CAMB_TODO));
   const C=D.cambios.filter(x=>CAMB_TODO||x.esCita),S=D.sinCopia||[];
   box.innerHTML=(S.length?`<div class="cb-sec">Citas tocadas en las últimas 6 h, sin copia de antes</div><p class="cb-nota">Son de antes de que existiera el historial: se ve cómo están ahora, pero no se pueden deshacer desde aquí.</p>${S.map(x=>{const c=x.cita||{};return `<div class="cb-it"><span class="cb-h">${hora(x.t)}</span><div class="cb-tx"><b>${escH(quien(c)||'Sin paciente')}</b><small>${fC(c.fecha)} ${escH(c.hora)}${c.fisio?' · '+escH(agNom(c.fisio)):''} · ahora <b>${escH(estN(c.estado))}</b></small></div></div>`;}).join('')}`:'')
@@ -15029,7 +15035,7 @@ function cambiosModal(){
    if(!await pregunta(`¿Deshacer este cambio? ${x.accion==='crear'?'Se borra lo que se creó.':'Vuelve a quedar como estaba antes.'}`,{si:'Deshacer'}))return;
    b.disabled=true;b.textContent='…';const r=await comPost('cambios-deshacer',{n}).catch(e=>({ok:false,error:e.message}));
    if(!r.ok){b.disabled=false;b.textContent='Deshacer';toast(r.error||'No se ha podido deshacer',false);return;}
-   toast('Deshecho',true);try{_dtC.d=null;_dtC.t=0;}catch(_){}cargar();});};
+   toast('Deshecho',true);try{_dtC.d=null;_dtC.t=0;}catch(_){}const y=window.scrollY;await cargar();window.scrollTo(0,y);});};
  m.querySelectorAll('.cb-f button').forEach(b=>b.onclick=()=>{CAMB_TODO=b.dataset.t==='1';if(D)pinta();});
  const cargar=async()=>{const r=await comPost('cambios-lista',{}).catch(e=>({ok:false,error:e.message}));if(!m.isConnected)return;
   if(!r.ok){box.innerHTML=`<div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div>`;return;}D=r;pinta();};
@@ -15037,11 +15043,10 @@ function cambiosModal(){
 async function renderReporteDia(wrap){
  const card=ce('div','rd');wrap.appendChild(card);
  card.innerHTML=`<div class="rd-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Día anterior">‹</button><div class="rd-ft"><b></b><small></small></div><button type="button" class="ag-nv" data-n="1" aria-label="Día siguiente">›</button></div>
-  <div class="rd-acc"><button type="button" class="rd-pdf"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Descargar PDF</button><button type="button" class="rd-mio">Mi check-list</button><button type="button" class="rd-mio rd-camb">Últimos cambios</button></div><div class="rd-compra"></div><div class="rd-body"><div class="fac-vacio">Preparando el reporte…</div></div>`;
+  <div class="rd-acc"><button type="button" class="rd-pdf"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Descargar PDF</button><button type="button" class="rd-mio">Mi check-list</button></div><div class="rd-compra"></div><div class="rd-body"><div class="fac-vacio">Preparando el reporte…</div></div>`;
  compraPintar(card.querySelector('.rd-compra'));
  const body=card.querySelector('.rd-body');
- card.querySelector('.rd-mio:not(.rd-camb)').onclick=()=>showSection('rep');
- card.querySelector('.rd-camb').onclick=()=>cambiosModal();
+ card.querySelector('.rd-mio').onclick=()=>showSection('rep');
  card.querySelector('.rd-pdf').onclick=()=>rdPdf(card);
  const pinta=()=>{card.querySelector('.rd-ft b').textContent=RD.fecha?rdFechaTxt(RD.fecha):'Último día';card.querySelector('.rd-ft small').textContent=RD.fecha===rdHoy()?'Hoy · el día aún no ha terminado':RD.fecha===rdMas(rdHoy(),-1)?'Ayer':'';
   card.querySelector('[data-n="1"]').disabled=!RD.fecha||RD.fecha>=rdHoy();};
