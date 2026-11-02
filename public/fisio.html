@@ -423,7 +423,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .fp-cobb-mov{display:none!important}.fp-hero .fp-ic.fp-cobb-ic{background:#c2552e!important;color:#fff!important}.fp-hero .fp-ic.fp-cobb-ic svg{color:#fff!important}
 @media(max-width:560px){.fp-cobb-mov{display:flex!important}.fp-hero .fp-ic.fp-cobb-ic{display:none!important}}
 .fp-cobb-mov{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin-top:8px;padding:11px;border:none;border-radius:14px;background:#c2552e;color:#fff;font-family:var(--font);font-size:13.5px;font-weight:600;cursor:pointer}.fp-cobb:hover{background:#ab4a27}.fp-cobb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.dia-tabs{display:flex;gap:4px;max-width:640px;margin:0 auto 14px;background:#fff;border:1px solid rgba(26,26,26,.06);border-radius:16px;padding:4px}
+.dia-tabs{display:flex;gap:4px;margin:0 0 14px;background:#fff;border:1px solid rgba(26,26,26,.06);border-radius:16px;padding:4px}
 .dia-tabs button{flex:1;font-family:var(--font);font-size:13.5px;font-weight:600;color:#7d6a60;background:none;border:none;border-radius:12px;padding:10px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
 .dia-tabs button.on{background:#c2552e;color:#fff}.dia-tabs i{font-style:normal;font-size:10.5px;font-weight:700;min-width:18px;height:18px;border-radius:99px;background:#ee2155;color:#fff;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box}.dia-tabs button.on i{background:#fff;color:#c2552e}
 .pb{max-width:640px;margin:0 auto}
@@ -1838,7 +1838,7 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .ejp-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.ejp-top p{flex:1;min-width:220px;margin:0;font-size:13px;color:#7d6a60}
 .ejp-h{font-size:12.5px;font-weight:600;color:#8a7d74;margin:16px 0 8px;text-transform:uppercase;letter-spacing:.04em}
 .ejp-c{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #efe6de;border-radius:14px;padding:12px 14px;margin-bottom:8px}.ejp-c.grabando{border-color:#f1d9cc;background:#fdf6f2}.ejp-c.grabado{opacity:.75}
-.ejp-tx{flex:1;min-width:0}.ejp-tx b{font-size:14.5px;color:#2b2420}.ejp-z{margin-left:8px;font-size:11.5px;background:#f6f1eb;color:#7d6a60;border-radius:99px;padding:2px 8px}.ejp-tx p{margin:4px 0 0;font-size:13px;color:#5c4f47}.ejp-tx small{display:block;margin-top:4px;font-size:12px;color:#a3968c}
+.ejp-tx{flex:1;min-width:0}.ejp-tx b{font-size:14.5px;color:#2b2420}.ejp-z{margin-left:8px;font-size:11.5px;background:#f6f1eb;color:#7d6a60;border-radius:99px;padding:2px 8px}.ejp-sv{margin-left:8px;font-size:11.5px;font-weight:600;background:#fbe9e2;color:#c2552e;border-radius:99px;padding:2px 8px}.ejp-tx p{margin:4px 0 0;font-size:13px;color:#5c4f47}.ejp-tx small{display:block;margin-top:4px;font-size:12px;color:#a3968c}
 .ejp-b{display:flex;gap:6px;align-items:center;flex:none}.ejp-b button{border:none;border-radius:10px;padding:8px 12px;font:600 12.5px var(--font);cursor:pointer}.ejp-yo,.ejp-ok{background:#c2552e;color:#fff}.ejp-sol{background:#f6f1eb;color:#7d6a60}.ejp-del{background:none;color:#a3968c;padding:6px 8px!important}.ejp-del.arm{background:#fde8e8;color:#b42318}
 .ejp-hechos{margin-top:16px}.ejp-hechos summary{cursor:pointer;font-size:12.5px;font-weight:600;color:#8a7d74;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
 @media(max-width:600px){.ejp-c{flex-wrap:wrap}.ejp-b{width:100%;justify-content:flex-end}}
@@ -8791,25 +8791,33 @@ async function renderEjercicios(wrap){
  ejpCuenta(tabs);EJ_TAB==='pend'?renderEjPend(cont,tabs):renderEjBib(cont);
 }
 async function ejpCarga(){const r=await (await fetch(`/api/schedule?action=seg-agenda-ejpend&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw new Error(r.error||'Error');EJP=r.lista;return EJP;}
-async function ejpCuenta(tabs){try{const L=EJP||await ejpCarga();const n=L.filter(x=>x.estado!=='GRABADO').length;const i=tabs.querySelector('.ej-pn');if(i)i.textContent=n||'';}catch(e){}}
+// Ejercicios que ya están en la biblioteca pero sin vídeo: salen solos en Pendientes de grabar (si nadie los tiene ya en la lista)
+const ejSinVideo=()=>biblio.filter(e=>!ejYt(e.youtubeUrl));
+function ejpSinVideo(L){const ya=new Set((L||[]).filter(x=>x.estado!=='GRABADO').map(x=>ejKey(x.nombre)));
+ return ejSinVideo().filter(e=>!ya.has(ejKey(e.nombre))).map(e=>({id:'bib-'+e.id,bib:e,nombre:e.nombre,zona:e.zona||'',notas:'',estado:'PENDIENTE',sinVideo:1,creado:''}));}
+async function ejpCuenta(tabs){try{const L=EJP||await ejpCarga();if(!biblio.length)await loadBiblio();const n=L.filter(x=>x.estado!=='GRABADO').length+ejpSinVideo(L).length;const i=tabs.querySelector('.ej-pn');if(i)i.textContent=n||'';}catch(e){}}
+const ejpBib=x=>!x.sinVideo&&x.estado!=='GRABADO'&&biblio.find(e=>!ejYt(e.youtubeUrl)&&ejKey(e.nombre)===ejKey(x.nombre));
 function renderEjPend(cont,tabs){
  const yo=String((fisioActual&&fisioActual.nombre)||'').trim(),yo1=yo.split(' ')[0];
  cont.innerHTML='<div class="ejp"><div class="ejp-top"><p>Propón ejercicios que haga falta grabar. Si alguien tiene un rato libre, coge uno y lo graba.</p><button type="button" class="seg-add ejp-nuevo">+ Proponer ejercicio</button></div><div class="ejp-l"><p class="ej-n">Cargando…</p></div></div>';
  const box=cont.querySelector('.ejp-l');
  const fF=x=>{const d=new Date(x);return d.getDate()+'/'+(d.getMonth()+1);},nom1=n=>capTit(String(n||'').split(' ')[0]);
  const pinta=()=>{const L=EJP||[];tabs&&ejpCuenta(tabs);
-  const pend=L.filter(x=>x.estado==='PENDIENTE').sort((a,b)=>String(b.creado).localeCompare(String(a.creado))),grab=L.filter(x=>x.estado==='GRABANDO'),hechos=L.filter(x=>x.estado==='GRABADO').sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
-  const card=x=>`<div class="ejp-c ${x.estado.toLowerCase()}" data-id="${x.id}"><div class="ejp-tx"><b>${escH(x.nombre)}</b>${x.zona?`<span class="ejp-z">${escH(x.zona)}</span>`:''}${x.notas?`<p>${escH(x.notas)}</p>`:''}<small>${x.estado==='GRABADO'?'Grabado por '+escH(nom1(x.graba))+' el '+fF(x.fecha):x.estado==='GRABANDO'?'Lo está grabando '+escH(nom1(x.graba)):'Propuesto por '+escH(nom1(x.quien)||'—')+' el '+fF(x.creado)}</small></div>
-   <div class="ejp-b">${x.estado==='PENDIENTE'?'<button type="button" class="ejp-yo">Lo grabo yo</button>':x.estado==='GRABANDO'?'<button type="button" class="ejp-ok">Ya está grabado</button><button type="button" class="ejp-sol">Soltar</button>':''}${x.estado!=='GRABADO'&&(nom1(x.quien)===capTit(yo1)||esDireccion())?'<button type="button" class="ejp-del" aria-label="Borrar">✕</button>':''}</div></div>`;
+  const sv=ejpSinVideo(L),pend=L.filter(x=>x.estado==='PENDIENTE').sort((a,b)=>String(b.creado).localeCompare(String(a.creado))).concat(sv),grab=L.filter(x=>x.estado==='GRABANDO'),hechos=L.filter(x=>x.estado==='GRABADO').sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  const card=x=>`<div class="ejp-c ${x.estado.toLowerCase()}" data-id="${x.id}"><div class="ejp-tx"><b>${escH(x.nombre)}</b>${x.zona?`<span class="ejp-z">${escH(x.zona)}</span>`:''}${x.sinVideo||ejpBib(x)?'<span class="ejp-sv">Ya está · falta vídeo</span>':''}${x.notas?`<p>${escH(x.notas)}</p>`:''}<small>${x.sinVideo?'Está en la biblioteca sin vídeo':x.estado==='GRABADO'?'Grabado por '+escH(nom1(x.graba))+' el '+fF(x.fecha):x.estado==='GRABANDO'?'Lo está grabando '+escH(nom1(x.graba)):'Propuesto por '+escH(nom1(x.quien)||'—')+' el '+fF(x.creado)}</small></div>
+   <div class="ejp-b">${x.estado==='PENDIENTE'?'<button type="button" class="ejp-yo">Lo grabo yo</button>':x.estado==='GRABANDO'?'<button type="button" class="ejp-ok">Ya está grabado</button><button type="button" class="ejp-sol">Soltar</button>':''}${x.estado!=='GRABADO'&&!x.sinVideo&&(nom1(x.quien)===capTit(yo1)||esDireccion())?'<button type="button" class="ejp-del" aria-label="Borrar">✕</button>':''}</div></div>`;
   box.innerHTML=(grab.length?`<div class="ejp-h">Grabándose ahora · ${grab.length}</div>${grab.map(card).join('')}`:'')
    +`<div class="ejp-h">Pendientes · ${pend.length}</div>${pend.length?pend.map(card).join(''):'<p class="ej-n">No hay ejercicios pendientes. ¡Propón el primero!</p>'}`
    +(hechos.length?`<details class="ejp-hechos"><summary>Grabados este mes · ${hechos.length}</summary>${hechos.map(card).join('')}</details>`:'');
-  box.querySelectorAll('.ejp-c').forEach(c=>{const x=L.find(y=>y.id===c.dataset.id);
+  box.querySelectorAll('.ejp-c').forEach(c=>{const x=L.find(y=>y.id===c.dataset.id)||sv.find(y=>y.id===c.dataset.id);
+   // Uno de la biblioteca sin vídeo: «Lo grabo yo» lo apunta en la lista a tu nombre
+   if(x.sinVideo){const b=c.querySelector('.ejp-yo');if(b)b.onclick=async()=>{b.disabled=true;
+     try{const r=await agPost('seg-agenda-ejpend',{op:'crear',nombre:x.nombre,zona:x.zona,notas:'',quien:yo,estado:'GRABANDO'});if(!r.ok)throw 0;await ejpCarga();pinta();}catch(_){b.disabled=false;toast('No se ha podido guardar',false);}};return;}
    const est=async(e,ant)=>{const p=x.estado,g=x.graba;x.estado=e;x.graba=e==='PENDIENTE'?'':yo;x.fecha=new Date().toISOString();pinta();
     try{const r=await agPost('seg-agenda-ejpend',{op:'estado',id:x.id,estado:e,quien:yo});if(!r.ok)throw 0;}catch(_){x.estado=p;x.graba=g;pinta();toast('No se ha podido guardar',false);}};
    const b1=c.querySelector('.ejp-yo');if(b1)b1.onclick=()=>est('GRABANDO');
    const b2=c.querySelector('.ejp-sol');if(b2)b2.onclick=()=>est('PENDIENTE');
-   const b3=c.querySelector('.ejp-ok');if(b3)b3.onclick=()=>{if(!biblio.length)loadBiblio();ejEditar({nombre:x.nombre,zona:x.zona,descripcion:x.notas},()=>{est('GRABADO');});};
+   const b3=c.querySelector('.ejp-ok');if(b3)b3.onclick=()=>{if(!biblio.length)loadBiblio();const bb=ejpBib(x);ejEditar(bb||{nombre:x.nombre,zona:x.zona,descripcion:x.notas},()=>{est('GRABADO');});};
    const b4=c.querySelector('.ejp-del');if(b4)b4.onclick=async()=>{if(!b4.classList.contains('arm')){b4.classList.add('arm');b4.textContent='¿Borrar?';setTimeout(()=>{b4.classList.remove('arm');b4.textContent='✕';},4000);return;}
     EJP=EJP.filter(y=>y!==x);pinta();try{const r=await agPost('seg-agenda-ejpend',{op:'borrar',id:x.id});if(!r.ok)throw 0;}catch(_){EJP.push(x);pinta();toast('No se ha podido borrar',false);}};});};
  cont.querySelector('.ejp-nuevo').onclick=()=>{let z='';const zs=[...new Set([...EJ_ZONAS,...biblio.map(x=>x.zona).filter(Boolean)])];
@@ -8822,7 +8830,7 @@ function renderEjPend(cont,tabs){
   m.querySelectorAll('.ejp-zs button').forEach(b=>b.onclick=()=>{z=z===b.dataset.z?'':b.dataset.z;m.querySelectorAll('.ejp-zs button').forEach(x=>x.classList.toggle('on',x.dataset.z===z));});
   m.querySelector('.hz-ok').onclick=async e=>{const nombre=m.querySelector('.ejp-nom').value.trim();if(nombre.length<2){toast('Pon el nombre del ejercicio',false);return;}e.target.disabled=true;
    try{const r=await agPost('seg-agenda-ejpend',{op:'crear',nombre,zona:z,notas:m.querySelector('.ejp-not').value.trim(),quien:yo});if(!r.ok)throw new Error(r.error||'');m.remove();toast('Propuesto',true);await ejpCarga();pinta();}catch(er){e.target.disabled=false;toast(er.message||'No se ha podido guardar',false);}};};
- (EJP?Promise.resolve(EJP):ejpCarga()).then(pinta).catch(()=>{box.innerHTML='<p class="ej-n">No se ha podido cargar.</p>';});
+ (EJP?Promise.resolve(EJP):ejpCarga()).then(async L=>{if(!biblio.length)await loadBiblio();return L;}).then(pinta).catch(()=>{box.innerHTML='<p class="ej-n">No se ha podido cargar.</p>';});
  ejpCarga().then(pinta).catch(()=>{});
 }
 async function renderEjBib(wrap){
@@ -12065,6 +12073,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-02',t:'Ejercicios › Pendientes de grabar: los ejercicios que ya están en la biblioteca sin vídeo salen solos en la lista («Ya está · falta vídeo»). Al grabarlo, solo pegas el link.',ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Pendientes de grabar.'}]}},
  {f:'2026-11-02',t:'Cambiar una cita con menos de 24 h cuenta como cancelación tardía: te avisa y pregunta lo mismo que al cancelar (descontar del pack o pago por adelantado), y lo apunta en las notas.'},
  {f:'2026-11-02',t:'Al abrir una cita en la agenda ves lo importante de su salud (marcapasos, embarazo, cáncer en rojo; el resto de lo que marcó en el consentimiento, «A tener en cuenta») y si tiene el consentimiento firmado; si le falta, «Enviárselo» desde ahí mismo.'},
  {f:'2026-11-02',aviso:1,t:'Reservas por internet: arriba de la Agenda sale una franja con las citas que entran solas por la web o la app (en naranja si hay alguna nueva). Tocas una y te lleva a su día. También en el filtro de la agenda: «Reservadas por internet».',ver:{sec:'agenda',pasos:[{el:'.ag-onl',txt:'Las reservas que entran solas.'}]}},
@@ -14439,7 +14448,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Buscar un ejercicio',body:`En <b>Ejercicios › Biblioteca</b> están todos los vídeos que ven los pacientes, con buscador y por zonas.`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Biblioteca y Pendientes de grabar.'}]}},
  {ti:'Ya tienes el vídeo grabado',body:`<b>＋ Nuevo ejercicio</b>: nombre, enlace de YouTube, zona, cómo se hace (lo lee el paciente) y foto.<br><br>Si ese vídeo ya está en la biblioteca, no deja repetirlo.`},
- {ti:'Hace falta uno que no está',shot:'/img/school/panel-c-ejer.jpg',body:`<b>Cuándo:</b> quieres mandar un ejercicio y no hay vídeo.<br><br><b>Qué haces:</b> <b>Pendientes de grabar › ＋ Proponer ejercicio</b>.<br><br>Si tienes un rato libre, coge uno: <b>Lo grabo yo</b>. Al subirlo, <b>Ya está grabado</b> (te abre el alta en la biblioteca). ¿Al final no puedes? <b>Soltar</b>.`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Pendientes de grabar.'},{el:'.ejp-nuevo',txt:'Proponer ejercicio.',click:['.ej-tabs button[data-t="pend"]']}]}}
+ {ti:'Hace falta uno que no está',shot:'/img/school/panel-c-ejer.jpg',body:`<b>Cuándo:</b> quieres mandar un ejercicio y no hay vídeo.<br><br><b>Qué haces:</b> <b>Pendientes de grabar › ＋ Proponer ejercicio</b>.<br><br>Si tienes un rato libre, coge uno: <b>Lo grabo yo</b>. Al subirlo, <b>Ya está grabado</b> (te abre el alta en la biblioteca). ¿Al final no puedes? <b>Soltar</b>.<br><br>Los ejercicios que ya están en la biblioteca pero sin vídeo salen solos en la lista, con <b>Ya está · falta vídeo</b>: al grabarlo solo pegas el link.`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Pendientes de grabar.'},{el:'.ejp-nuevo',txt:'Proponer ejercicio.',click:['.ej-tabs button[data-t="pend"]']}]}}
  ],
  qs:[
  {q:'Quieres mandar un ejercicio que no tiene vídeo. ¿Qué haces?',opts:['Pendientes de grabar › Proponer ejercicio','Nada','Se lo explico de palabra y ya'],ok:0,fb:['¡Bien! Así alguien lo graba.','Así nunca estará.','Mejor que quede en vídeo.']},

@@ -4798,7 +4798,7 @@ module.exports = async function handler(req, res) {
           const EP = 'tblTL6et3dRyod8TZ', op = String(q.op || 'lista'), ahora = new Date().toISOString(), txt = (v, n) => String(v || '').trim().slice(0, n);
           if (op === 'crear') {
             const nombre = txt(q.nombre, 120); if (nombre.length < 2) return res.status(400).json({ ok: false, error: 'Pon el nombre del ejercicio' });
-            const d = await at(EP, { method: 'POST', body: JSON.stringify({ records: [{ fields: { NOMBRE: nombre, ZONA: txt(q.zona, 60), NOTAS: txt(q.notas, 2000), 'PROPUESTO POR': txt(q.quien, 60), ESTADO: 'PENDIENTE', 'FECHA ESTADO': ahora } }], typecast: true }) });
+            const d = await at(EP, { method: 'POST', body: JSON.stringify({ records: [{ fields: { NOMBRE: nombre, ZONA: txt(q.zona, 60), NOTAS: txt(q.notas, 2000), 'PROPUESTO POR': txt(q.quien, 60), ESTADO: q.estado === 'GRABANDO' ? 'GRABANDO' : 'PENDIENTE', ...(q.estado === 'GRABANDO' ? { GRABA: txt(q.quien, 60) } : {}), 'FECHA ESTADO': ahora } }], typecast: true }) });
             return res.status(200).json({ ok: !d.error });
           }
           if (op === 'estado' || op === 'borrar') {
