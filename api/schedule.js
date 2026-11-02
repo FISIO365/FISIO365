@@ -5125,9 +5125,20 @@ module.exports = async function handler(req, res) {
           if (!q.forzarBomba) { const [nb] = await tiposDe(['NO BOMBA']); if (!(c['TIPO DE CITA'] || []).includes(nb)) { const bl = await bombaLlena(q.fecha, q.hora, q.id); if (bl) return res.status(200).json(bl); } }
           const r = await ocupar(q.fecha, q.hora, q.fisio, campos, !!q.forzar);
           if (r.conflicto) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${r.con || 'otro paciente'}` });
-          await patch(q.id, { ESTADO: 'REPROGRAMADA' });
+          // Cambio con menos horas de las de la política = cancelación tardía: se apunta en la cita de antes y, según lo que se eligió,
+          // se descuenta del pack (CITA PERDIDA) o la nueva cita se paga por adelantado (sin pack)
+          const fOrig = {}; let debePagar = '';
+          { const hPol = Number(((await conf().catch(() => CONF_DEF)).cancelacion || {}).horas) || 24, cF = String(c.FECHA || '').slice(0, 10);
+            const faltan = (madridUTC(cF, hh(c.HORA)).getTime() - Date.now()) / 36e5;
+            if (faltan < hPol && faltan > -12) {
+              const tx = `Cambio tardío: avisó ${faltan <= 0 ? 'a la hora de la cita o después' : faltan < 1 ? 'con menos de 1 h' : 'con unas ' + Math.floor(faltan) + ' h'} (la política pide ${hPol} h) y se pasó al ${q.fecha.split('-').reverse().slice(0, 2).join('/')} a las ${hh(q.hora)}.${q.perdida ? ' Sesión descontada del pack.' : ''}`;
+              fOrig.NOTAS = (String(c.NOTAS || '').trim() + (String(c.NOTAS || '').trim() ? '\n' : '') + tx).slice(0, 2000);
+              if (q.tarde) { const pk = await packDe(pid, cF, hh(c.HORA)).catch(() => null);
+                if (!pk || pk.t !== 'pack') { debePagar = `Cambió la cita con menos de ${hPol} h el ${cF.split('-').reverse().slice(0, 2).join('/')}`; await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO ADELANTADO': true, 'PAGO ADELANTADO MOTIVO': debePagar } }) }).catch(() => {}); } }
+            } }
+          await patch(q.id, Object.assign({ ESTADO: q.perdida ? 'CITA PERDIDA' : 'REPROGRAMADA' }, fOrig));
           if (q.liberar) await nueva(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), { ESTADO: 'CITA LIBRE' });
-          return res.status(200).json({ ok: true, id: r.id });
+          return res.status(200).json({ ok: true, id: r.id, debePagar });
         }
         if (action === 'seg-agenda-fisio') { global._sesPac = {}; // pasar la cita a otro fisio, mismo día y hora (sin reprogramar). Si el otro tenía esa hora libre, el hueco pasa al fisio de antes
           if (!okId(q.id) || !q.fisio) return res.status(400).json({ ok: false, error: 'Faltan datos' });
