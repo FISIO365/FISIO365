@@ -458,7 +458,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .pb-in{flex:1;min-width:0;outline:none;padding:6px 0;font-family:var(--font);font-size:14.5px;line-height:1.35;color:#1e2a38;cursor:text;word-break:break-word}.pb-in:empty::before{content:attr(data-ph);color:#b3a79e;pointer-events:none}
 .pb-fmt{display:none;gap:2px;flex:none;background:#fff;border:1px solid #efe7df;border-radius:10px;padding:2px;box-shadow:0 2px 8px rgba(26,26,26,.06)}
 .pb-esc.foco .pb-fmt,.pb-esc.con .pb-fmt,.pb-edb .pb-fmt{display:flex}
-.pb-fmt button{width:30px;height:28px;border:none;background:none;border-radius:8px;cursor:pointer;color:#5c4f47;font-family:var(--font);font-size:14px;display:flex;align-items:center;justify-content:center;padding:0}.pb-fmt button:hover{background:#f6f1eb;color:#c2552e}
+.pb-fmt button{width:30px;height:28px;border:none;background:none;border-radius:8px;cursor:pointer;color:#5c4f47;font-family:var(--font);font-size:14px;display:flex;align-items:center;justify-content:center;padding:0}.pb-fmt button:hover{background:#f6f1eb;color:#c2552e}.pb-fmt button.on{background:#fbeee8;color:#c2552e}
 .pb-fmt button b{font-weight:800}.pb-fmt button u{text-decoration-color:#c2552e;text-underline-offset:3px}.pb-fmt svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.pb-fmt button[data-f="h"] svg path:first-child{fill:#ffe680}
 .pb-esc .pb-mas,.pb-edb .pb-mas{width:32px;height:32px;border-radius:50%;flex:none}.pb-esc .pb-mas{display:none}.pb-esc.con .pb-mas{display:flex}.pb-esc .pb-mas svg,.pb-edb .pb-mas svg{width:16px;height:16px;stroke-width:2.6;stroke-linejoin:round}
 .pb-edb{display:flex;gap:8px;align-items:center;flex:none}
@@ -15285,17 +15285,31 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
    ${!x.hecha?`<div class="pb-ac">${puede?`<button type="button" class="pb-man" title="Pasar al día siguiente" aria-label="Pasar al día siguiente"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:''}${puede?`<button type="button" class="pb-del" title="Quitar" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`:''}</div>`:''}</div>`;};
  const r0=()=>PB.d||{};
  // Lee lo escrito (con su formato) y lo pasa a texto con marcas
- const lee=el=>{const R=[],st=n=>{let b=false,u=false,h=false;for(let e=n.parentElement;e&&e!==el.parentElement;e=e.parentElement){const c=getComputedStyle(e);if(!b&&(+c.fontWeight>=600||c.fontWeight==='bold'))b=true;if(String(c.textDecorationLine||c.textDecoration).includes('underline'))u=true;if(e!==el&&((c.backgroundColor&&!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(c.backgroundColor))||(c.backgroundImage&&c.backgroundImage!=='none')))h=true;if(e===el)break;}return {b,u,h};};
+ const lee=el=>{const R=[],st=n=>{let b=false,u=false,h=false;for(let e=n.parentElement;e&&e!==el.parentElement;e=e.parentElement){const c=getComputedStyle(e);if(!b&&(+c.fontWeight>=600||c.fontWeight==='bold'))b=true;if(String(c.textDecorationLine||c.textDecoration).includes('underline'))u=true;if(e===el)break;}h=fosAnc(n.parentElement,el)!=null;return {b,u,h};};
   const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const s=n.nodeValue.replace(/\s+/g,' ');if(!s)continue;const e=st(n),l=R[R.length-1];if(l&&l.b===e.b&&l.u===e.u&&l.h===e.h)l.t+=s;else R.push({...e,t:s});}
   return R.map(r=>{let t=r.t.replace(/\*\*|__|==/g,'');if(!t.trim())return t;const a=t.match(/^\s*/)[0],z=t.match(/\s*$/)[0];t=t.trim();if(r.h)t='=='+t+'==';if(r.u)t='__'+t+'__';if(r.b)t='**'+t+'**';return a+t+z;}).join('').replace(/\s+/g,' ').trim();};
+ // ¿Está con fosforito? El elemento más cercano que lo decida: <mark> o fondo de color = sí; fondo quitado a mano = no
+ const fosAnc=(e,ed)=>{for(;e&&e!==ed&&ed.contains(e);e=e.parentElement){const st=e.style||{};if(st.backgroundColor==='transparent'||st.backgroundImage==='none')return null;if(e.tagName==='MARK')return e;const c=getComputedStyle(e).backgroundColor;if(c&&!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(c))return e;}return null;};
  const limpio=t=>String(t||'').replace(/\*\*|__|==/g,'').trim();
  // Herramientas de formato sobre lo seleccionado (si no hay nada seleccionado, se aplica a lo que escribas después)
  const formatea=(ed,f)=>{ed.focus();try{document.execCommand('styleWithCSS',false,f==='h');}catch(_){}
-  if(f==='h'){const s=getSelection();let on=false;if(s.rangeCount){let e=s.anchorNode&&(s.anchorNode.nodeType===3?s.anchorNode.parentElement:s.anchorNode);for(;e&&e!==ed;e=e.parentElement){const c=getComputedStyle(e);if(e.tagName==='MARK'||!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(c.backgroundColor)){on=true;break;}}}
-   if(on){const s2=getSelection();if(s2.rangeCount&&!s2.isCollapsed){const fr=s2.getRangeAt(0).extractContents();fr.querySelectorAll('mark,span').forEach(m=>{m.style&&(m.style.backgroundColor='transparent',m.style.backgroundImage='none');});const sp=document.createElement('span');sp.style.backgroundColor='transparent';sp.style.backgroundImage='none';sp.appendChild(fr);s2.getRangeAt(0).insertNode(sp);}else document.execCommand('hiliteColor',false,'transparent');}
-   else document.execCommand('hiliteColor',false,'#ffe680');}
+  if(f==='h'){const sel=getSelection();if(!sel.rangeCount)return;const rg=sel.getRangeAt(0),nd=x=>x&&(x.nodeType===3?x.parentElement:x);
+   const a1=fosAnc(nd(rg.startContainer),ed),a2=fosAnc(nd(rg.endContainer),ed);
+   let hay=!!(a1||a2);if(!hay&&!rg.collapsed){const w=document.createTreeWalker(ed,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode()))if(rg.intersectsNode(n)&&n.nodeValue.trim()&&fosAnc(n.parentElement,ed)){hay=true;break;}}
+   if(!hay){if(!rg.collapsed)document.execCommand('hiliteColor',false,'#ffe680');}
+   else if(rg.collapsed){const m=a1;if(m){const pa=m.parentNode;while(m.firstChild)pa.insertBefore(m.firstChild,m);pa.removeChild(m);pa.normalize();}}
+   else{ // quitar el fosforito de lo seleccionado: se saca del <mark> y se marca como «sin fosforito»
+    const fr=rg.extractContents();fr.querySelectorAll('mark').forEach(m=>{while(m.firstChild)m.parentNode.insertBefore(m.firstChild,m);m.remove();});fr.querySelectorAll('span').forEach(x=>{x.style.backgroundColor='';});
+    const sp=document.createElement('span');sp.style.backgroundColor='transparent';sp.style.backgroundImage='none';sp.appendChild(fr);rg.insertNode(sp);
+    // si estaba todo dentro de un mismo <mark>, se parte en dos para que quede limpio
+    const m=fosAnc(sp.parentElement,ed);if(m&&m.tagName==='MARK'){const r2=document.createRange();r2.setStartAfter(sp);r2.setEndAfter(m.lastChild||sp);const der=r2.extractContents();const pa=m.parentNode;pa.insertBefore(sp,m.nextSibling);if(der.textContent){const m2=document.createElement('mark');m2.appendChild(der);pa.insertBefore(m2,sp.nextSibling);}if(!m.textContent)m.remove();}
+    sel.removeAllRanges();const r3=document.createRange();r3.selectNodeContents(sp);sel.addRange(r3);}}
   else document.execCommand(f==='b'?'bold':'underline');
-  ed.dispatchEvent(new Event('input'));};
+  ed.dispatchEvent(new Event('input'));marcaHerr();};
+ // Los botones se encienden si lo que tienes seleccionado ya tiene ese formato
+ const marcaHerr=()=>{const sel=getSelection();if(!sel.rangeCount)return;const n=sel.anchorNode,e=n&&(n.nodeType===3?n.parentElement:n),ed=e&&e.closest&&e.closest('.pb-in,.pb-t[contenteditable="true"]');if(!ed)return;const bar=ed.closest('.pb-esc,.pb-it');if(!bar)return;
+  const on={b:document.queryCommandState('bold'),u:document.queryCommandState('underline'),h:!!fosAnc(e,ed)};bar.querySelectorAll('.pb-fmt button').forEach(b=>b.classList.toggle('on',!!on[b.dataset.f]));};
+ if(!window._pbSelOn){window._pbSelOn=1;document.addEventListener('selectionchange',()=>{try{marcaHerr();}catch(_){}});}
  const prepara=(ed,bar,guarda,cancela)=>{
   bar.querySelectorAll('.pb-fmt button').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>formatea(ed,b.dataset.f);});
   ed.addEventListener('paste',e=>{e.preventDefault();const t=(e.clipboardData||window.clipboardData).getData('text/plain').replace(/\s+/g,' ');document.execCommand('insertText',false,t);});
@@ -15353,10 +15367,13 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   box.querySelectorAll('.pb-man').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id,[l,i]=buscar(id);if(!l)return;const x=l.splice(i,1)[0];x.dia=pbIso(x.dia<hoy?hoy:x.dia,1);(PB.d.proximas=PB.d.proximas||[]).push(x);pinta();act('plan-mover',id,{dia:x.dia}).then(ok=>ok&&toast('Pasada al día siguiente',true));});
   box.querySelectorAll('.pb-del').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id;pregunta('¿Quitar esta tarea del plan?',{si:'Quitar'}).then(ok=>{if(!ok)return;const [l,i]=buscar(id);if(l)l.splice(i,1);pinta();act('plan-borrar',id);});});
   // Tocar una tarea: se escribe encima, como en el cuaderno, y se le puede dar formato
-  box.querySelectorAll('.pb-it:not(.ok) .pb-t').forEach(tx=>tx.onclick=()=>{const it=tx.closest('.pb-it');if(it.classList.contains('ed'))return;const [l,i]=buscar(it.dataset.id);if(!l)return;const x=l[i];
+  box.querySelectorAll('.pb-it:not(.ok) .pb-t').forEach(tx=>tx.onclick=ev=>{const it=tx.closest('.pb-it');if(it.classList.contains('ed'))return;const [l,i]=buscar(it.dataset.id);if(!l)return;const x=l[i];
    box.querySelectorAll('.pb-it.ed').forEach(o=>o!==it&&o._fuera&&o._fuera());
    it.classList.add('ed');tx.contentEditable='true';tx.spellcheck=true;const ac=it.querySelector('.pb-ac');const bar=document.createElement('div');bar.className='pb-edb';bar.innerHTML=herr+'<button type="button" class="pb-mas" aria-label="Guardar"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>';
-   if(ac)ac.style.display='none';it.appendChild(bar);tx.focus();const s=getSelection();s.selectAllChildren(tx);s.collapseToEnd();
+   if(ac)ac.style.display='none';it.appendChild(bar);tx.focus();const s=getSelection();
+   // el cursor se queda donde has tocado (para poder quitar el formato de esa palabra)
+   let rp=null;try{rp=document.caretRangeFromPoint?document.caretRangeFromPoint(ev.clientX,ev.clientY):(()=>{const c=document.caretPositionFromPoint(ev.clientX,ev.clientY);if(!c)return null;const r=document.createRange();r.setStart(c.offsetNode,c.offset);return r;})();}catch(_){}
+   if(rp&&tx.contains(rp.startContainer)){s.removeAllRanges();s.addRange(rp);}else{s.selectAllChildren(tx);s.collapseToEnd();}
    let hecho=false;const fin=()=>{hecho=true;tx.contentEditable='false';it.classList.remove('ed');bar.remove();if(ac)ac.style.display='';delete it._fuera;};
    const guarda=async()=>{if(hecho)return;const t=lee(tx);if(!limpio(t)){toast('Escribe la tarea (o quítala con la ✕)',false);tx.focus();return;}if(t===x.t){fin();tx.innerHTML=fmt(x.t);return;}
     if(limpio(t).length>200){toast('Demasiado larga: máximo 200 letras',false);return;}
