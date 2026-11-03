@@ -76,12 +76,12 @@ async function cargaEquipo(){const [e,m,p,x]=await Promise.all([sb.from('pb_equi
 sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'){S.yo=null;pantallaEntrar();}});
 
 // ── Entrar / crear equipo
-const ICONO='<svg viewBox="0 0 24 24"><path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M9.5 8.5l1.5 1.5 3-3M9.5 14.5l1.5 1.5 3-3"/></svg>';
+const ICONO='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/><path d="M12 3v1.6M12 19.4V21M3 12h1.6M19.4 12H21"/></svg>';
 // La hojita de cuaderno de la entrada: las tareas se van tachando solas
 function hojita(){const f=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',timeZone:'Europe/Madrid'});
  const T=['Llamar a la gestoría','Revisar la <mark>agenda</mark>','<b>Plan de la semana</b>'];
  return `<div class="hj"><div class="hj-f">${escH(f.charAt(0).toUpperCase()+f.slice(1))}</div>${T.map((t,i)=>`<div class="hj-l" style="--d:${.6+i*.9}s"><span class="hj-c">${IC.ck}</span><span class="hj-t">${t}</span></div>`).join('')}<div class="hj-l"></div></div>`;}
-function pantallaEntrar(){$app.innerHTML=`<div class="ent"><div class="box">${hojita()}<h1>Plan de <em>batalla</em></h1><p class="sub">Tus tareas del día. Lo que no hagas pasa solo al día siguiente.</p>
+function pantallaEntrar(){$app.innerHTML=`<div class="ent"><div class="box">${hojita()}<h1><em>Rumbo</em></h1><p class="sub">Tu plan del día, tus estadísticas y tu equipo, en un solo sitio.</p>
  <form id="fe" class="ent-c"><label class="l">Email</label><input class="i" type="email" name="email" autocomplete="email" required>
  <label class="l">Contraseña</label><input class="i" type="password" name="pass" autocomplete="current-password" required>
  <button class="bt full" style="margin-top:18px">Entrar</button><div class="err"></div>
@@ -110,7 +110,7 @@ function pantallaSinEquipo(user,me){if(me&&!me.activo){$app.innerHTML=`<div clas
 const pinta0=()=>pinta();
 function pinta(){
  const n=window._pend||0;
- $app.innerHTML=`<div class="wrap"><div class="top"><div class="top-e">${S.equipo&&S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<button type="button" class="top-n" id="topN" aria-label="Cambiar el nombre del equipo"><small>Plan de batalla</small><b>${escH(S.equipo?S.equipo.nombre:'')}${S.yo.admin?'<svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>':''}</b></button></div><div class="top-d"><button class="cd-btn" id="cdB" aria-label="Condiciones" title="Condiciones"><svg viewBox="0 0 24 24"><path d="M4 13l2.4-7.4A2.2 2.2 0 0 1 8.5 4h7a2.2 2.2 0 0 1 2.1 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4.5l1.5 2.5h4l1.5-2.5H20"/></svg><i id="nCd" hidden></i></button><button class="yo-btn" id="yo" aria-label="Tu cuenta">${S.yo.foto?`<img src="${escH(S.yo.foto)}" alt="">`:escH(ini(S.yo.nombre))}</button></div></div>
+ $app.innerHTML=`<div class="wrap"><div class="top"><div class="top-e">${S.equipo&&S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<button type="button" class="top-n" id="topN" aria-label="Cambiar el nombre del equipo"><small>Rumbo</small><b>${escH(S.equipo?S.equipo.nombre:'')}${S.yo.admin?'<svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>':''}</b></button></div><div class="top-d"><button class="cd-btn" id="cdB" aria-label="Condiciones" title="Condiciones"><svg viewBox="0 0 24 24"><path d="M4 13l2.4-7.4A2.2 2.2 0 0 1 8.5 4h7a2.2 2.2 0 0 1 2.1 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4.5l1.5 2.5h4l1.5-2.5H20"/></svg><i id="nCd" hidden></i></button><button class="yo-btn" id="yo" aria-label="Tu cuenta">${S.yo.foto?`<img src="${escH(S.yo.foto)}" alt="">`:escH(ini(S.yo.nombre))}</button></div></div>
   <div id="cont"></div></div>
   <nav class="nav" style="grid-template-columns:repeat(${verEst().length>1?5:4},1fr)">${[
    ['plan','Plan','<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M9.5 8.5l1.5 1.5 3-3M9.5 14.5l1.5 1.5 3-3"/>'],
@@ -425,7 +425,7 @@ function altaMiembro(){const jefes=new Set([S.yo.id]),L=S.miembros.filter(x=>x.a
    if(r.id&&jefes.size)await sb.from('pb_permisos').upsert([...jefes].map(q=>({equipo_id:S.yo.equipo_id,quien:q,a_quien:r.id})),{onConflict:'quien,a_quien',ignoreDuplicates:true});
    await cargaEquipo();renderEquipoOtraVez();
    acceso(v('nombre'),v('email'),r.existia?'':v('pass'));}catch(x){b.disabled=false;m.querySelector('.err').textContent=x.message;}};}
-function acceso(nombre,email,pass){const txt=`Hola ${pri(nombre)}, ya tienes tu Plan de batalla 💪\n\nEntra aquí: ${location.origin}\nEmail: ${email}\n${pass?'Contraseña: '+pass+'\n\nCuando entres, puedes cambiarla tocando tu inicial (arriba a la derecha).':'Contraseña: la de tu cuenta de siempre.'}`;
+function acceso(nombre,email,pass){const txt=`Hola ${pri(nombre)}, ya tienes Rumbo, la app del equipo 💪\n\nEntra aquí: ${location.origin}\nEmail: ${email}\n${pass?'Contraseña: '+pass+'\n\nCuando entres, puedes cambiarla tocando tu inicial (arriba a la derecha).':'Contraseña: la de tu cuenta de siempre.'}`;
  const m=modal(`<h3>Listo, ${escH(pri(nombre))} ya está en el equipo</h3><p>Pásale esto para que entre:</p><div class="msg">${escH(txt)}</div>
  <div class="bts"><button class="bt sec" data-c>Copiar</button><a class="bt" style="text-decoration:none;justify-content:center" href="https://wa.me/?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener">WhatsApp</a></div>
  <button class="lnk" data-x>Cerrar</button>`);

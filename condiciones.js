@@ -157,7 +157,7 @@ async function pdfBase(der){await cargaJs('/lib/jspdf.umd.min.js');const {jsPDF}
  const W=595.28,H=841.89,X=50,CW=W-2*X,CO=[194,85,46],INK=[26,26,26],MUT=[128,118,110],CR=[245,242,238],TX=[40,36,33],eq=(S.equipo&&S.equipo.nombre)||'';
  const P={doc,W,H,X,CW,CO,INK,MUT,CR,TX,y:96};
  P.f=(s,z,col)=>{doc.setFont(F,st[s]);doc.setFontSize(z);doc.setTextColor(...(col||INK));};
- P.cab=()=>{doc.setFillColor(...CO);doc.rect(0,0,W,6,'F');P.f('m',8,CO);doc.text(('Plan de batalla'+(eq?' · '+eq:'')).toUpperCase(),X,40,{charSpace:1.2});P.f('r',8.5,MUT);doc.text(der,W-X,40,{align:'right'});};
+ P.cab=()=>{doc.setFillColor(...CO);doc.rect(0,0,W,6,'F');P.f('m',8,CO);doc.text(('Rumbo'+(eq?' · '+eq:'')).toUpperCase(),X,40,{charSpace:1.2});P.f('r',8.5,MUT);doc.text(der,W-X,40,{align:'right'});};
  P.salto=n=>{if(P.y+n>H-60){doc.addPage();P.cab();P.y=80;}};
  P.titulo=t=>{P.f('m',9,CO);doc.text(t.toUpperCase(),X,P.y,{charSpace:1.2});P.y+=8;doc.setDrawColor(...CO);doc.setLineWidth(.8);doc.line(X,P.y,X+28,P.y);P.y+=22;};
  // Un párrafo con negrita/subrayado/fosforito, partido en líneas
