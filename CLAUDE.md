@@ -1,6 +1,6 @@
 # Rumbo · la app del equipo (antes «Plan de batalla»)
 
-- Web estática (sin build) en Vercel, proyecto `plan-de-batalla`, rama `plan-de-batalla` del repo FISIO365/FISIO365. Dirección: rumbo-equipos.vercel.app (también plan-de-batalla.vercel.app). Rumbo no es de la clínica: textos y ejemplos genéricos (oficina, empresa), nunca de fisioterapia.
+- Web estática (sin build) en Vercel, proyecto `plan-de-batalla`, rama `plan-de-batalla` del repo FISIO365/FISIO365. Dirección: rumbo-expansion.vercel.app (también plan-de-batalla.vercel.app). Rumbo no es de la clínica: textos y ejemplos genéricos (oficina, empresa), nunca de fisioterapia.
 - Datos: Supabase (proyecto de Fisio School), tablas `pb_*` con RLS. Función edge `plan-equipo` para crear equipo, altas y contraseñas.
 - Archivos: `app.js` (entrada, plan, equipo, permisos), `estadisticas.js`, `condiciones.js` (condiciones, bandeja, PDF), `archivos.js`, `partes.js` (BP/7R y Control), `guia.js` (guía), `app.css`. Al cambiar algo, subir `?v=` en `index.html`.
 - Permisos: una sola persona administra el equipo. Lo que ve cada uno se decide en «Quién ve qué»; ver no es poder cambiar.
