@@ -70,18 +70,21 @@ async function arranca(){const {data:{session}}=await sb.auth.getSession();if(!s
  const {data:me,error}=await sb.from('pb_miembros').select('*').eq('user_id',session.user.id).maybeSingle();
  if(error){$app.innerHTML='<div class="cargando">No se ha podido cargar. Revisa la conexión y vuelve a abrir.</div>';return;}
  if(!me||!me.activo)return pantallaSinEquipo(session.user,me);
- S.yo=me;await cargaEquipo();pinta();}
+ S.yo=me;await cargaEquipo();pinta();guiaPrimeraVez();}
 async function cargaEquipo(){const [e,m,p,x]=await Promise.all([sb.from('pb_equipos').select('*').eq('id',S.yo.equipo_id).single(),sb.from('pb_miembros').select('*').eq('equipo_id',S.yo.equipo_id),sb.from('pb_permisos').select('*').eq('equipo_id',S.yo.equipo_id),sb.from('pb_ve_extra').select('*').eq('equipo_id',S.yo.equipo_id)]);
  S.equipo=e.data;S.miembros=m.data||[];S.permisos=p.data||[];S.veExtra=(x.data)||[];S.yo=M(S.yo.id)||S.yo;}
 sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'){S.yo=null;pantallaEntrar();}});
 
 // ── Entrar / crear equipo
 const ICONO='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/><path d="M12 3v1.6M12 19.4V21M3 12h1.6M19.4 12H21"/></svg>';
-// La hojita de cuaderno de la entrada: las tareas se van tachando solas
-function hojita(){const f=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',timeZone:'Europe/Madrid'});
- const T=['Llamar a la gestoría','Revisar la <mark>agenda</mark>','<b>Plan de la semana</b>'];
- return `<div class="hj"><div class="hj-f">${escH(f.charAt(0).toUpperCase()+f.slice(1))}</div>${T.map((t,i)=>`<div class="hj-l" style="--d:${.6+i*.9}s"><span class="hj-c">${IC.ck}</span><span class="hj-t">${t}</span></div>`).join('')}<div class="hj-l"></div></div>`;}
-function pantallaEntrar(){$app.innerHTML=`<div class="ent"><div class="box">${hojita()}<h1><em>Rumbo</em></h1><p class="sub">Tu plan del día, tus estadísticas y tu equipo, en un solo sitio.</p>
+// La brújula de la entrada: la aguja gira, busca el rumbo y se queda apuntando (luego se mece un poco)
+function brujula(){return `<div class="br" aria-hidden="true"><svg viewBox="0 0 120 120">
+ <circle cx="60" cy="60" r="54" class="br-f"/><circle cx="60" cy="60" r="50" class="br-o"/><circle cx="60" cy="60" r="41" class="br-i"/>
+ <g class="br-t"><path d="M60 13v7M60 100v7M13 60h7M100 60h7"/><path d="M93.2 26.8l-3.5 3.5M26.8 93.2l3.5-3.5M26.8 26.8l3.5 3.5M93.2 93.2l-3.5-3.5" class="br-t2"/></g>
+ <text x="60" y="33" class="br-n">N</text>
+ <g class="br-a"><path d="M60 24l6.5 36h-13z" class="br-a1"/><path d="M60 96l6.5-36h-13z" class="br-a2"/></g>
+ <circle cx="60" cy="60" r="4.2" class="br-c"/></svg></div>`;}
+function pantallaEntrar(){$app.innerHTML=`<div class="ent"><div class="box">${brujula()}<h1>Rumbo</h1><p class="sub">Tu plan del día, tus estadísticas y tu equipo, en un solo sitio.</p>
  <form id="fe" class="ent-c"><label class="l">Email</label><input class="i" type="email" name="email" autocomplete="email" required>
  <label class="l">Contraseña</label><input class="i" type="password" name="pass" autocomplete="current-password" required>
  <button class="bt full" style="margin-top:18px">Entrar</button><div class="err"></div>
@@ -91,7 +94,7 @@ function pantallaEntrar(){$app.innerHTML=`<div class="ent"><div class="box">${ho
   const {error}=await sb.auth.signInWithPassword({email:f.email.value.trim(),password:f.pass.value});b.disabled=false;
   if(error){er.textContent=/invalid/i.test(error.message)?'Email o contraseña incorrectos':'No se ha podido entrar';return;}arranca();};
  $app.querySelector('#nuevo').onclick=()=>pantallaCrear(null);ojos($app);}
-function pantallaCrear(user){$app.innerHTML=`<div class="ent"><div class="box">${hojita()}<h1>Crea tu <em>equipo</em></h1><p class="sub">Tú serás quien lo administra: añades a la gente y decides quién revisa a quién.</p>
+function pantallaCrear(user){$app.innerHTML=`<div class="ent"><div class="box">${brujula()}<h1>Crea tu <em>equipo</em></h1><p class="sub">Tú serás quien lo administra: añades a la gente y decides quién revisa a quién.</p>
  <form id="fc" class="ent-c"><label class="l">Nombre del equipo</label><input class="i" name="equipo" maxlength="60" placeholder="Ej.: Clínica, Casa, Oficina…" required>
  <label class="l">Tu nombre</label><input class="i" name="nombre" maxlength="40" autocomplete="given-name" required>
  ${user?'':`<label class="l">Tu email</label><input class="i" type="email" name="email" autocomplete="email" required>
@@ -125,10 +128,12 @@ function pinta(){
 function badge(n){window._pend=n;const e=document.getElementById('nPend');if(e){e.textContent=n;e.hidden=!n;}}
 
 function menuCuenta(){const m=modal(`<h3>${escH(S.yo.nombre)}</h3><p>${escH(S.yo.email)}</p><div style="margin-top:10px">
+ <button class="op" data-a="guia"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.1-2.4 3.6M12 17.2v.1"/></svg>Cómo funciona Rumbo</button>
  <button class="op" data-a="foto"><svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>${S.yo.foto?'Cambiar mi foto':'Poner mi foto'}</button>
  <button class="op" data-a="clave"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Cambiar mi contraseña</button>
  <button class="op" data-a="inst"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Instalar en el móvil</button>
  <button class="op rojo" data-a="salir"><svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></svg>Salir</button></div>`);
+ m.querySelector('[data-a="guia"]').onclick=()=>{m.remove();guia();};
  m.querySelector('[data-a="salir"]').onclick=()=>{m.remove();sb.auth.signOut();};
  m.querySelector('[data-a="foto"]').onclick=async()=>{m.remove();const u=await subirFoto('p-'+S.yo.id);if(!u)return;const {error}=await sb.rpc('pb_mi_foto',{url:u});if(error){toast('No se ha podido guardar',false);return;}await cargaEquipo();pinta();toast('Foto puesta');};
  m.querySelector('[data-a="inst"]').onclick=()=>{m.remove();modal(`<h3>Instalar en el móvil</h3><p><b>iPhone:</b> en Safari, toca el botón Compartir y luego «Añadir a pantalla de inicio».<br><br><b>Android:</b> en Chrome, toca los tres puntos y luego «Instalar aplicación» o «Añadir a pantalla de inicio».</p><div class="bts"><button class="bt" onclick="this.closest('.mod').remove()">Entendido</button></div>`);};
@@ -311,7 +316,7 @@ function renderEquipo(wrap){const adm=S.yo.admin;
   <div class="rp-c"><div class="eq-h"><div><small>Permisos</small><b>Quién ve qué</b></div></div>
    <p class="eq-p">${adm?'Cada uno ve el plan, las estadísticas y los archivos de las personas que elijas aquí. Toca a alguien para cambiarlo.':'Lo que ve cada uno lo decide quien administra el equipo.'}</p>
    <div class="qv">${act.map(m=>`<button type="button" class="qv-f" data-q="${m.id}"${adm&&!m.admin?'':' disabled'}>${avHTML(m)}<span class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <i>(tú)</i>':''}</b><small>${escH(veTxt(m))}</small></span>${adm&&!m.admin?'<svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>':''}</button>`).join('')}</div></div>
-  <div class="rp-c eq-ayuda"><b>¿Cómo funciona?</b><p>Quien tiene a alguien <b>a su cargo</b> ve su plan de batalla y sus estadísticas, y le puede poner tareas (esa persona solo las puede marcar como hechas).</p>
+  <div class="rp-c eq-ayuda"><b>¿Cómo funciona?</b><p><button type="button" class="lnk" style="display:inline;padding:0" onclick="guia('equipo')">Abrir la guía de Rumbo →</button></p><p>Quien tiene a alguien <b>a su cargo</b> ve su plan de batalla y sus estadísticas, y le puede poner tareas (esa persona solo las puede marcar como hechas).</p>
    ${adm?'<p>Para poner a alguien bajo otra persona, toca los <b>⋯</b> de esa persona y elige <b>«Depende de»</b>. O al revés: en los ⋯ de la jefa o el jefe, <b>«A su cargo»</b>.</p><p>Lo que ve cada uno se elige en <b>«Quién ve qué»</b>: solo su gente directa, toda su rama (su gente y la gente de su gente) o todo el equipo, y además personas sueltas. Ver no es poder cambiar: las tareas y las estadísticas de alguien solo las toca su jefe directo o esa persona.</p>':'<p>Las altas, bajas, puestos y quién está a cargo de quién los lleva quien administra el equipo.</p>'}</div>`;
  organigrama(wrap.querySelector('#org'),adm,act);
  wrap.querySelectorAll('.qv-f:not([disabled])').forEach(b=>b.onclick=()=>queVe(M(b.dataset.q)));
