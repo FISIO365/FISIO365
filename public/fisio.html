@@ -437,7 +437,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .pb-it{display:flex;align-items:center;gap:12px;border-top:1px solid #f1ede9;padding:12px 2px}.pb-it:first-child,.pb-sec+.pb-it{border-top:none}
 .pb-ck{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid #d9cfc7;background:none;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;padding:0;transition:all .15s}.pb-ck svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
 .pb-it.ok .pb-ck{background:#16803c;border-color:#16803c}.pb-it.ok .pb-ck svg{opacity:1}
-.pb-tx{flex:1;min-width:0;font-size:14.5px;line-height:1.35;color:#1e2a38;word-break:break-word}.pb-it.ok .pb-tx{color:#a0928a;text-decoration:line-through}
+.pb-tx{flex:1;min-width:0;font-size:14.5px;line-height:1.35;color:#1e2a38;word-break:break-word}.pb-it.ok .pb-tx{color:#a0928a}.pb-it.ok .pb-t{text-decoration:line-through}
 .pb-tg{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.pb-tg i{font-style:normal;font-size:11px;font-weight:600;border-radius:99px;padding:2px 8px;background:#f3efea;color:#7d6a60}.pb-tg i.dir{background:#1a1a1a;color:#fff}.pb-tg i.arr{background:#fdecea;color:#9b1c13}
 .pb-ac{flex:none;display:flex;gap:4px}.pb-ac button{width:32px;height:32px;border-radius:50%;border:none;background:none;color:#b3a59c;cursor:pointer;display:flex;align-items:center;justify-content:center}.pb-ac button:hover{background:#f3efea;color:#c2552e}.pb-ac svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .pb-sec{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#7d6a60;margin:6px 2px 2px}
@@ -470,7 +470,7 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .pb-tx b,.pb-in b{font-weight:700}
 .pb-tx u,.pb-in u{text-decoration:underline;text-decoration-color:#c2552e;text-decoration-thickness:1.5px;text-underline-offset:3px}
 .pb-tx mark,.pb-in mark{color:inherit;background:linear-gradient(100deg,rgba(255,220,70,.2),rgba(255,220,70,.75) 6%,rgba(255,214,60,.6) 94%,rgba(255,220,70,.15));border-radius:4px 2px 5px 3px;padding:1px 3px;margin:0 -1px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-.pb-it.ok .pb-tx mark{background:rgba(255,220,70,.25)}.pb-it.ok .pb-tx{text-decoration-color:rgba(194,85,46,.55)}
+.pb-it.ok .pb-tx mark{background:rgba(255,220,70,.25)}.pb-it.ok .pb-t{text-decoration-color:rgba(194,85,46,.55)}
 .pb-bien{min-height:48px;box-sizing:border-box;display:flex;align-items:flex-end;padding:0 12px 6px 72px;border-bottom:1px solid var(--pb-l);font-family:'Caveat',cursive;font-size:21px;font-weight:600;color:#16803c}
 .pb-ag{display:flex;align-items:center;gap:6px;margin-top:14px}
 .pb-fl{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid #efe7df;background:#fff;color:#7d6a60;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}.pb-fl svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.pb-fl:hover:not(:disabled){color:#c2552e;border-color:#e8c3b4}.pb-fl:disabled{opacity:.35;cursor:default}
@@ -482,10 +482,10 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 .pb-dias i{display:flex;gap:2px;height:5px;align-items:center}.pb-dias em{width:4px;height:4px;border-radius:50%;background:#c2552e}
 .pb-dias button.hoy{border-color:#e8c3b4}.pb-dias button.hoy small{color:#c2552e}
 .pb-dias button.on{background:#c2552e;border-color:#c2552e;color:#fff}.pb-dias button.on small{color:rgba(255,255,255,.8)}.pb-dias button.on em{background:#fff}
-.pb-dias button.pas{opacity:.35;cursor:default}
+.pb-dias button.pas{opacity:.55}.pb-dias button.pas.on{opacity:1}.pb-it.solo .pb-ck{cursor:default}.pb-hoja.pas .pb-sec{color:#7d6a60}
 .pb-hoy{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fbeee8;border:none;border-radius:99px;padding:6px 12px;cursor:pointer}
 .pb-cab .rp-bar{margin-top:12px}
-@media(max-width:600px){.rp-c.pb-hoja::before{left:36px}.rp-c.pb-hoja::after{left:10px}.pb-hoja .pb-it,.pb-esc{padding-left:48px!important;padding-right:8px}.pb-fe,.pb-hoja .pb-sec,.pb-bien{padding-left:48px!important;padding-right:14px}.pb-hoja .pb-it{gap:10px}.pb-ac button{width:28px;height:28px}.pb-esc{flex-wrap:wrap;row-gap:6px}.pb-esc .pb-in{flex-basis:calc(100% - 38px)}.pb-esc .pb-fmt{margin-left:38px}.pb-esc .pb-mas{margin-left:auto}.pb-it.ed{flex-wrap:wrap;row-gap:6px}.pb-it.ed .pb-tx{flex-basis:calc(100% - 42px)}.pb-edb{margin-left:38px;width:calc(100% - 38px);justify-content:space-between}.pb-ag{gap:2px}.pb-fl{width:28px;height:28px}.pb-dias{gap:2px}.pb-dias b{font-size:15px}}
+@media(max-width:600px){.rp-c.pb-hoja::before{left:36px}.rp-c.pb-hoja::after{left:10px}.pb-hoja .pb-it,.pb-esc{padding-left:48px!important;padding-right:8px}.pb-fe,.pb-hoja .pb-sec,.pb-bien{padding-left:48px!important;padding-right:14px}.pb-hoja .pb-it{gap:10px}.pb-ac button{width:28px;height:28px}.pb-esc,.pb-hoja .pb-it.ed{gap:6px}.pb-fmt button{width:26px;height:26px;font-size:13px}.pb-fmt svg{width:14px;height:14px}.pb-esc .pb-mas,.pb-edb .pb-mas{width:30px;height:30px}.pb-edb{gap:4px}.pb-it.ed .pb-ac{display:none}.pb-ag{gap:2px}.pb-fl{width:28px;height:28px}.pb-dias{gap:2px}.pb-dias b{font-size:15px}}
 .pb-dia{font-size:12px;font-weight:600;color:#c2552e;margin:10px 2px 0}.pb-dia::first-letter{text-transform:uppercase}.pb-dia+.pb-it{border-top:none}
 #sb-plan-badge,#pmPlanN{background:#ee2155;color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:2px 7px;margin-left:auto;font-style:normal}
 .rp{width:100%}.rp-c{background:#fff;border:1px solid rgba(26,26,26,.08);box-shadow:0 1px 3px rgba(26,26,26,.05);border-radius:20px;padding:16px;margin-bottom:12px}
@@ -12294,6 +12294,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-03',t:'Mi día › Plan: ahora puedes volver a días pasados (toca el día en la agenda o usa la flecha de la izquierda) y ver lo que se hizo, con la hora. En el móvil, la negrita, el subrayado y el fosforito salen al lado del texto.',ver:{sec:'plan',pasos:[{el:'.pb-ag',txt:'Toca un día pasado para ver lo que se hizo.'}]}},
  {f:'2026-11-02',t:'Ejercicios en la ficha: si cambias algo y no le das a «Guardar programa», el botón te avisa («hay cambios sin guardar») y al salir te pregunta si guardar. Así el paciente siempre ve lo último.'},
  {f:'2026-11-02',dir:1,t:'Estadísticas › Banco: toca la barra verde o la roja de un mes y ves los ingresos o los gastos de ese mes, uno a uno, con buscador y la fecha hasta la que Holded tiene el banco al día.'},
  {f:'2026-11-02',aviso:1,t:'Cobrar y facturar: ahora se puede pagar con varias formas a la vez (Forma de pago › Varias) y pagar un pack en partes (cada día el ticket de lo que entra, unido al mismo pack; te dice cuánto falta).',ver:{sec:'pac',pasos:[{el:'.fp-cobb-ic || .fp-cobb-mov',txt:'Cobrar y facturar.',click:['#pacResultados .pt-r']}]}},
@@ -14317,7 +14318,7 @@ function renderFormacion(wrap, ruta){
  {ti:'¿Buscas otra cosa? Toca Más',body:`Comunicaciones, Sugerencias, School, Captación, Valoraciones… está todo en <b>Más</b>, abajo a la derecha, ordenado en bloques.<br><br><b>Tu foto</b>, arriba, es para lo tuyo: tus estadísticas, notificaciones y cerrar sesión.<br><br>¿Echas algo en falta? No es un fallo: cada uno ve lo que necesita. Pídeselo a dirección.`,ver:{sec:'agenda',pasos:[{el:'#sb-mas || .sidebar',txt:'Toca Más: aquí está el resto de secciones.'}]}},
  {ti:'Alguien pregunta y se va sin cita',body:`<b>Cuándo:</b> llama o entra alguien, pregunta precios o por un dolor, y no se cita.<br><br><b>Qué haces:</b> en la Agenda o en Pacientes, toca el <b>+</b> › <b>Alguien pregunta y se va sin cita</b>, y apunta nombre, teléfono y por qué no se citó.<br><br><b>Para qué:</b> así se le puede llamar después en vez de perderlo. Queda en <b>Pacientes › Sin cita</b> y sale sola de ahí cuando le das cita.`,ver:{sec:'agenda',pasos:[{el:'.ag-add',txt:'El +: nueva cita o alguien que pregunta.'}]}},
  {ti:'Lo que te toca hacer: Mi día',body:`En <b>Mi día</b> está todo lo que te toca hoy, en tres pestañas: tu <b>Plan</b>, tus <b>Pendientes</b> (tareas y llamadas) y el <b>Check-list</b> antes de irte. El número es lo que te queda hoy o llevas atrasado.<br><br>Míralo al empezar y al acabar el día.`,ver:{sec:'plan',pasos:[{el:'.dia-tabs',txt:'Plan, Pendientes y Check-list.'}]}},
- {ti:'Tu Plan de batalla',body:`Tus cosas del día, apuntadas como en un cuaderno: escribe en el primer renglón libre de la hoja y dale a Intro (o al ✓). Se apunta en <b>hoy</b>, salvo que elijas otro día en la agenda de arriba.<br><br>Para resaltar: selecciona palabras y usa <b>B</b> (negrita), <b>S</b> (subrayar) o el <b>fosforito</b>. Para cambiar una tarea, tócala y escribe encima. Al hacerla, tócale el círculo.<br><br>Lo que no hagas <b>pasa solo al día siguiente</b> («Viene de ayer»), hasta que lo marques. Las que pone dirección salen en negro: «De dirección».<br><br>Está en <b>Mi día › Plan</b>.`,ver:{sec:'plan',pasos:[{el:'.pb-esc',txt:'Aquí escribes lo que tienes que hacer.'},{el:'.pb-ag',txt:'Aquí eliges el día.'}]}},
+ {ti:'Tu Plan de batalla',body:`Tus cosas del día, apuntadas como en un cuaderno: escribe en el primer renglón libre de la hoja y dale a Intro (o al ✓). Se apunta en <b>hoy</b>, salvo que elijas otro día en la agenda de arriba.<br><br>Para resaltar: selecciona palabras y usa <b>B</b> (negrita), <b>S</b> (subrayar) o el <b>fosforito</b>. Para cambiar una tarea, tócala y escribe encima. Al hacerla, tócale el círculo.<br><br>Lo que no hagas <b>pasa solo al día siguiente</b> («Viene de ayer»), hasta que lo marques. Las que pone dirección salen en negro: «De dirección».<br><br>Para ver lo que hiciste otro día, toca ese día en la agenda (con las flechas vas a semanas anteriores): sale lo que se marcó como hecho, con la hora.<br><br>Está en <b>Mi día › Plan</b>.`,ver:{sec:'plan',pasos:[{el:'.pb-esc',txt:'Aquí escribes lo que tienes que hacer.'},{el:'.pb-ag',txt:'Aquí eliges el día.'}]}},
  {ti:'Para enterarte a tiempo: los avisos',body:`<b>Cuándo:</b> la primera vez que usas un móvil u ordenador.<br><br><b>Para qué:</b> si no, no te enteras cuando un paciente te escribe, reserva una hora tuya o paga.<br><br>En el móvil: <b>tu foto › Notificaciones › Activar</b>. En iPhone, con el panel añadido a la pantalla de inicio.`,ver:{sec:'agenda',pasos:[{el:'#btnAvisos || #btnPerfil',txt:'Aquí activas los avisos (en el móvil, tu foto › Notificaciones).'}]}},
  {ti:'Cada mañana, un módulo',body:`A las 8:30 te llega una tarea en Comunicaciones: <b>«Módulo de hoy»</b>. Unos 5 minutos. Al acertar las preguntas se marca hecha sola.<br><br>Solo uno al día: cuando lo acabas, has terminado por hoy.`}
  ],
@@ -15374,15 +15375,15 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
  const yo=(fisioActual&&fisioActual.nombre)||'';
  const carga=async()=>{const r=await comPost('plan-dia',{persona:PB.persona}).catch(()=>({ok:false}));if(!box.isConnected)return;
   if(!r.ok){if(PB.persona){PB.persona='';pbGuarda();return carga();}box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
-  PB.d=r;pinta();if(!PB.persona||PB.persona.toLowerCase()===String(r.persona).toLowerCase())planContar();};
+  PB.d=r;PB.pas={};pinta();if(!PB.persona||PB.persona.toLowerCase()===String(r.persona).toLowerCase())planContar();};
  box._recargar=carga;
  // Formato de las tareas: **negrita**, __subrayado__, ==fosforito==
  const fmt=t=>escH(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/__(.+?)__/g,'<u>$1</u>').replace(/==(.+?)==/g,'<mark>$1</mark>');
  const herr=`<span class="pb-fmt"><button type="button" data-f="b" title="Negrita" aria-label="Negrita"><b>B</b></button><button type="button" data-f="u" title="Subrayar" aria-label="Subrayar"><u>S</u></button><button type="button" data-f="h" title="Fosforito" aria-label="Fosforito"><svg viewBox="0 0 24 24"><path d="m14.5 4.5 5 5L11 18l-5.5.5L6 13z"/><path d="M4 21h7"/></svg></button></span>`;
- const fila=(x,hoy)=>{const tags=[];if(x.dir)tags.push(`<i class="dir">De dirección${x.por?' · '+escH(String(x.por).split(' ')[0]):''}</i>`);else if(x.por&&r0().persona&&x.por.toLowerCase()!==r0().persona.toLowerCase())tags.push(`<i>Puesta por ${escH(String(x.por).split(' ')[0])}</i>`);
+ const fila=(x,hoy,solo)=>{const tags=[];if(solo&&x.hechaEn)tags.push(`<i>${new Date(x.hechaEn).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'})}</i>`);if(x.dir)tags.push(`<i class="dir">De dirección${x.por?' · '+escH(String(x.por).split(' ')[0]):''}</i>`);else if(x.por&&r0().persona&&x.por.toLowerCase()!==r0().persona.toLowerCase())tags.push(`<i>Puesta por ${escH(String(x.por).split(' ')[0])}</i>`);
   const v=!x.hecha&&pbViene(x.dia,hoy);if(v)tags.push(`<i class="arr">${v}</i>`);
   const puede=!x.dir||r0().dir;
-  return `<div class="pb-it${x.hecha?' ok':''}" data-id="${x.id}"><button type="button" class="pb-ck" aria-label="${x.hecha?'Desmarcar':'Hecha'}"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  return `<div class="pb-it${x.hecha?' ok':''}${solo?' solo':''}" data-id="${x.id}"><button type="button" class="pb-ck" aria-label="${x.hecha?'Desmarcar':'Hecha'}"${solo?' disabled':''}><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
    <div class="pb-tx"><div class="pb-t"${x.hecha?'':' title="Toca para escribir o dar formato"'}>${fmt(x.t)}</div>${tags.length?`<div class="pb-tg">${tags.join('')}</div>`:''}</div>
    ${!x.hecha?`<div class="pb-ac">${puede?`<button type="button" class="pb-man" title="Pasar al día siguiente" aria-label="Pasar al día siguiente"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:''}${puede?`<button type="button" class="pb-del" title="Quitar" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`:''}</div>`:''}</div>`;};
  const r0=()=>PB.d||{};
@@ -15418,10 +15419,13 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   ed.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();guarda();}else if(e.key==='Escape'&&cancela){e.preventDefault();cancela();}
    else if((e.ctrlKey||e.metaKey)&&['b','u'].includes(e.key.toLowerCase())){e.preventDefault();formatea(ed,e.key.toLowerCase());}});};
  const pinta=()=>{const r=r0(),hoy=r.hoy,X0=r.proximas||[];
-  if(!PB.dia||PB.dia<hoy)PB.dia=hoy;
-  if(!PB._ini){PB._ini=1;const l0=pbIso(hoy,-((new Date(hoy+'T12:00:00').getDay()+6)%7));PB.sem=Math.max(0,Math.floor((new Date(PB.dia+'T12:00:00Z')-new Date(l0+'T12:00:00Z'))/6048e5));}
-  const sel=PB.dia,enHoy=sel===hoy,enMan=!enHoy,man=pbIso(sel,1);
-  const P=enHoy?(r.pendientes||[]):X0.filter(x=>x.dia===sel),H=enHoy?(r.hechas||[]):[];
+  if(!PB.dia||(!PB._ini&&PB.dia<hoy))PB.dia=hoy;
+  if(!PB._ini){PB._ini=1;const l0=pbIso(hoy,-((new Date(hoy+'T12:00:00').getDay()+6)%7));PB.sem=(Math.floor((new Date(PB.dia+'T12:00:00Z')-new Date(l0+'T12:00:00Z'))/6048e5));}
+  const sel=PB.dia,enHoy=sel===hoy,enPas=sel<hoy,enMan=sel>hoy,man=pbIso(sel,1);
+  // Un día pasado: se ve lo que se hizo ese día (se pide una vez y se guarda)
+  PB.pas=PB.pas||{};if(enPas&&!PB.pas[sel]){PB.pas[sel]='cargando';comPost('plan-pasado',{persona:PB.persona,dia:sel}).then(x=>{PB.pas[sel]=x&&x.ok?x.hechas||[]:[];if(box.isConnected&&PB.dia===sel)pinta();}).catch(()=>{PB.pas[sel]=[];toast('No se ha podido cargar ese día',false);});}
+  const PH=enPas&&Array.isArray(PB.pas[sel])?PB.pas[sel]:[];
+  const P=enHoy?(r.pendientes||[]):enPas?[]:X0.filter(x=>x.dia===sel),H=enHoy?(r.hechas||[]):enPas?PH:[];
   const totH=(r.pendientes||[]).length+(r.hechas||[]).length,hechH=(r.hechas||[]).length,yoMismo=String(r.persona).toLowerCase()===yo.toLowerCase();
   const nom=String(r.persona).split(' ')[0];
   const diaV=sel,fechaTxt=new Date(diaV+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
@@ -15432,29 +15436,29 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   const cuenta=d=>d===hoy?(r.pendientes||[]).length:X0.filter(x=>x.dia===d).length;
   const mesTxt=(()=>{const a=new Date(D7[0]+'T12:00:00'),b=new Date(D7[6]+'T12:00:00'),m=x=>x.toLocaleDateString('es-ES',{month:'long'});return m(a)===m(b)?m(a):m(a)+' – '+m(b);})();
   h+=`<div class="rp-c pb-cab"><div class="pb-hd"><div><small>Plan de batalla</small><b>${yoMismo?'Tu plan':'Plan de '+escH(nom)}</b></div>${enHoy&&totH?`<span class="rp-n${hechH===totH?' ok':''}">${hechH} de ${totH}</span>`:(!enHoy||PB.sem?`<button type="button" class="pb-hoy">Volver a hoy</button>`:'')}</div>
-   <div class="pb-ag"><button type="button" class="pb-fl" data-s="-1" aria-label="Semana anterior"${PB.sem<=0?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
-    <div class="pb-sem"><div class="pb-mes">${escH(mesTxt)}</div><div class="pb-dias">${D7.map(d=>{const dt=new Date(d+'T12:00:00'),n=cuenta(d),pas=d<hoy;return `<button type="button" data-d="${d}" class="${d===sel?'on ':''}${d===hoy?'hoy ':''}${pas?'pas':''}"${pas?' disabled':''}><small>${dt.toLocaleDateString('es-ES',{weekday:'short'}).replace('.','').slice(0,3)}</small><b>${dt.getDate()}</b><i>${n&&!pas?'<em></em>'.repeat(Math.min(n,3)):''}</i></button>`;}).join('')}</div></div>
+   <div class="pb-ag"><button type="button" class="pb-fl" data-s="-1" aria-label="Semana anterior"${PB.sem<=-104?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div class="pb-sem"><div class="pb-mes">${escH(mesTxt)}</div><div class="pb-dias">${D7.map(d=>{const dt=new Date(d+'T12:00:00'),n=cuenta(d),pas=d<hoy;return `<button type="button" data-d="${d}" class="${d===sel?'on ':''}${d===hoy?'hoy ':''}${pas?'pas':''}"><small>${dt.toLocaleDateString('es-ES',{weekday:'short'}).replace('.','').slice(0,3)}</small><b>${dt.getDate()}</b><i>${n&&!pas?'<em></em>'.repeat(Math.min(n,3)):''}</i></button>`;}).join('')}</div></div>
     <button type="button" class="pb-fl" data-s="1" aria-label="Semana siguiente"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
    ${enHoy&&totH?`<div class="rp-bar${hechH===totH?' ok':''}"><i style="width:${Math.round(hechH/totH*100)}%"></i></div>`:''}</div>`;
   // La hoja de cuaderno del día: fecha arriba a la derecha, renglones y margen. Se escribe en el primer renglón libre
-  const nLin=P.length+H.length+(H.length?1:0)+1+(!enMan&&!P.length&&H.length?1:0),lineas='<div class="pb-lin"></div>'.repeat(Math.max(0,7-nLin));
+  const nLin=enPas?H.length+2:P.length+H.length+(H.length?1:0)+1+(enHoy&&!P.length&&H.length?1:0),lineas='<div class="pb-lin"></div>'.repeat(Math.max(0,7-nLin));
   const esc=`<div class="pb-esc"><span class="pb-ck0"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span><div class="pb-in" contenteditable="true" role="textbox" spellcheck="true" data-ph="${yoMismo?'Escribe una tarea…':'Tarea para '+escH(nom)+'…'}"></div>${herr}<button type="button" class="pb-mas" aria-label="Apuntar"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></div>`;
-  h+=`<div class="rp-c pb-hoja${enMan?' man':''}"><div class="pb-fe">${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}</div>
-   ${P.map(x=>fila(x,hoy)).join('')}${esc}
-   ${!enMan&&!P.length&&H.length?`<div class="pb-bien">${yoMismo?'¡Todo hecho por hoy!':'Lo ha hecho todo.'}</div>`:''}
-   ${H.length?`<div class="pb-sec">Hecho hoy</div>${H.map(x=>fila(x,hoy)).join('')}`:''}${lineas}</div>`;
+  h+=`<div class="rp-c pb-hoja${enMan?' man':''}${enPas?' pas':''}"><div class="pb-fe">${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}</div>
+   ${enPas?`<div class="pb-sec">${PB.pas[sel]==='cargando'?'Cargando…':H.length?'Lo que se hizo este día':'Este día no se marcó nada como hecho'}</div>${H.map(x=>fila(x,hoy,true)).join('')}`:`${P.map(x=>fila(x,hoy)).join('')}${esc}
+   ${enHoy&&!P.length&&H.length?`<div class="pb-bien">${yoMismo?'¡Todo hecho por hoy!':'Lo ha hecho todo.'}</div>`:''}
+   ${H.length?`<div class="pb-sec">Hecho hoy</div>${H.map(x=>fila(x,hoy)).join('')}`:''}`}${lineas}</div>`;
   const abierto=!!box.querySelector('.pb-prox[open]'),ed0=box.querySelector('.pb-esc .pb-in'),html0=ed0?ed0.innerHTML:'',foco=document.activeElement===ed0;
   box.innerHTML=h;
   if(abierto){const d=box.querySelector('.pb-prox');if(d)d.open=true;}
-  const escF=box.querySelector('.pb-esc'),inp=escF.querySelector('.pb-in');inp.innerHTML=html0;
+  const escF=box.querySelector('.pb-esc')||ce('div'),inp=escF.querySelector('.pb-in')||ce('div');inp.innerHTML=html0;
   const llena=()=>{const t=limpio(inp.textContent);escF.classList.toggle('con',!!t);if(!t&&!inp.querySelector('br,b,u,span,mark'))inp.innerHTML='';};llena();inp.addEventListener('input',llena);
   if(foco){inp.focus();const s=getSelection();s.selectAllChildren(inp);s.collapseToEnd();}
   inp.addEventListener('focus',()=>escF.classList.add('foco'));inp.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==inp)escF.classList.remove('foco');},150));
   box.querySelectorAll('.pb-who button').forEach(b=>b.onclick=()=>{PB.persona=b.dataset.p.toLowerCase()===yo.toLowerCase()?'':b.dataset.p;pbGuarda();box.querySelectorAll('.pb-who button').forEach(x=>x.classList.toggle('on',x===b));carga();});
   box.querySelectorAll('.pb-dias button').forEach(b=>b.onclick=()=>{if(PB.dia===b.dataset.d)return;PB.dia=b.dataset.d;pbGuarda();pinta();});
-  box.querySelectorAll('.pb-fl').forEach(b=>b.onclick=()=>{PB.sem=Math.max(0,PB.sem+ +b.dataset.s);pinta();});
+  box.querySelectorAll('.pb-fl').forEach(b=>b.onclick=()=>{PB.sem=Math.max(-104,PB.sem+ +b.dataset.s);pinta();});
   {const b=box.querySelector('.pb-hoy');if(b)b.onclick=()=>{PB.dia=hoy;PB.sem=0;pbGuarda();pinta();};}
-  const mas=escF.querySelector('.pb-mas');
+  const mas=escF.querySelector('.pb-mas')||ce('button');
   const anade=async()=>{const t=lee(inp);if(!limpio(t)){inp.focus();return;}if(limpio(t).length>200){toast('Demasiado larga: máximo 200 letras',false);return;}mas.disabled=true;
    const res=await comPost('plan-anadir',{tarea:t,persona:PB.persona,dia:sel}).catch(x=>({ok:false,error:x.message}));
    mas.disabled=false;if(!res.ok){toast(res.error||'No se ha podido',false);return;}
@@ -15462,7 +15466,7 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   mas.onmousedown=e=>e.preventDefault();mas.onclick=anade;prepara(inp,escF,anade);
   const buscar=id=>{const L=[PB.d.pendientes,PB.d.hechas,PB.d.proximas];for(const l of L){const i=(l||[]).findIndex(x=>x.id===id);if(i>=0)return [l,i];}return [null,-1];};
   const act=async(a,id,extra)=>{const res=await comPost(a,Object.assign({id,persona:PB.persona},extra||{})).catch(()=>({ok:false}));if(!res.ok){toast(res.error||'No se ha podido',false);carga();return false;}if(!PB.persona)planContar();return true;};
-  box.querySelectorAll('.pb-ck').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id,[l,i]=buscar(id);if(!l)return;const x=l[i];
+  box.querySelectorAll('.pb-it:not(.solo) .pb-ck').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id,[l,i]=buscar(id);if(!l)return;const x=l[i];
    x.hecha=!x.hecha;x.hechaEn=x.hecha?new Date().toISOString():'';l.splice(i,1);
    if(x.hecha)PB.d.hechas.push(x);else (x.dia>hoy?PB.d.proximas:PB.d.pendientes).push(x);
    b.closest('.pb-it').classList.toggle('ok',x.hecha);setTimeout(pinta,x.hecha?350:0);act('plan-hecho',id,{hecho:x.hecha});});

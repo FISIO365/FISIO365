@@ -2943,7 +2943,7 @@ module.exports = async function handler(req, res) {
   // Medición de velocidad: se apunta en los logs cuánto tarda cada acción (para saber qué pantallas van lentas)
   { const t0 = Date.now(); res.on('finish', () => { const ms = Date.now() - t0; console.log(`TIEMPO ${action || '-'} ${ms}ms${ms > 1500 ? ' LENTO' : ''}`); }); }
   // Respuestas de las consultas pesadas guardadas 60 s en el servidor (cualquier cambio por POST las borra)
-  const postLectura = /^(seg-com-buzon|reporte-dia|compra-lista|plan-dia|seg-sug-lista|seg-sug-contar|seg-com-hilo|seg-wa-ia)$/.test(action || '');
+  const postLectura = /^(seg-com-buzon|reporte-dia|compra-lista|plan-dia|plan-pasado|seg-sug-lista|seg-sug-contar|seg-com-hilo|seg-wa-ia)$/.test(action || '');
   if (req.method === 'POST' && !postLectura) _memo.clear(); // solo los cambios borran lo guardado (las consultas por POST no)
   else if (/^(seg-referidos|seg-referidos-resueltos|seg-consent-pendientes|seg-app-pendientes|seg-sin-anotar|seg-cap-avisos|seg-sinevo-lista|rendimiento|seg-lista|reporte-dia)$/.test(action || '')) {
     const k = req.method === 'POST' ? action + '|' + JSON.stringify(req.body || {}) : req.url, m = _memo.get(k);
@@ -6250,7 +6250,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
   }
   // ── PLAN DE BATALLA: las tareas del día de cada persona. Cada uno se apunta las suyas; dirección puede ponérselas a cualquiera.
   // Lo que no se hace pasa solo al día siguiente (sale hasta que se marca). Lo hecho se ve el día que se hizo.
-  if (/^plan-(dia|anadir|hecho|borrar|mover|editar)$/.test(action || '')) {
+  if (/^plan-(dia|pasado|anadir|hecho|borrar|mover|editar)$/.test(action || '')) {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
     const eqP = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_admin&fields[]=${encodeURIComponent('DIRECCIÓN')}&fields[]=${encodeURIComponent('FECHA BAJA')}&pageSize=100`);
@@ -6271,6 +6271,14 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const d = await at(PLAN, { method: 'POST', body: JSON.stringify({ records: [{ fields: { TAREA: t, PERSONA: quien, DIA: dia, HECHA: false, 'PUESTA POR': yoP, DIRECCION: dirP && quien !== yoP, CREADA: new Date().toISOString() } }] }) });
       if (d.error) return res.status(500).json({ ok: false, error: d.error.message || 'No se ha podido' });
       return res.status(200).json({ ok: true, item: vistaP(d.records[0]) });
+    }
+    // Un día ya pasado: lo que se marcó como hecho ese día (solo para verlo)
+    if (action === 'plan-pasado') {
+      const dia = diaOk(q.dia), esc = s => String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      if (dia >= hoyP) return res.status(400).json({ ok: false, error: 'Ese día no ha pasado' });
+      const L = []; let off = '';
+      do { const d = await at(`${PLAN}?filterByFormula=${encodeURIComponent(`AND({PERSONA}='${esc(quien)}',{HECHA},DATETIME_FORMAT(SET_TIMEZONE({FECHA HECHA},'Europe/Madrid'),'YYYY-MM-DD')='${dia}')`)}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) return res.status(500).json({ ok: false, error: d.error.message }); L.push(...(d.records || [])); off = d.offset || ''; } while (off);
+      return res.status(200).json({ ok: true, dia, persona: quien, hechas: L.map(vistaP).sort((a, b) => String(a.hechaEn).localeCompare(String(b.hechaEn))) });
     }
     if (action === 'plan-dia') {
       const esc = s => String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
