@@ -83,6 +83,22 @@ function grafica7R(e,A,ahora,corte){const W=340,H=130,L=8,R=8,T=10,B=22,ini=perI
  s+=`<path d="${esc(pa)}" class="es-7a"/><path d="${esc(pe)}" class="es-7e"/><line x1="${xc}" x2="${xc}" y1="${T-4}" y2="${H-B}" class="es-7c"/>`;
  return `<svg class="es-g es-7g" viewBox="0 0 ${W} ${H}">${s}</svg>`;}
 
+// Apuntar algo que se hizo otro día (si se olvidó apuntarlo en su momento)
+const dia0=L=>{const d=new Date(L);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());};
+function cuTxt(L,ahora){const n=Math.round((dia0(ahora)-dia0(L))/HD);return (n===0?'hoy':n===1?'ayer':'el '+dLargo(L))+' a las '+hhmm(L);}
+function eligeCuando(cu,ahora,ok){const h0=dia0(ahora),hA=new Date(ahora).getUTCHours();let dia=cu?dia0(cu):h0-HD,hora=cu?new Date(cu).getUTCHours():12;
+ const D=[...Array(14)].map((_,i)=>h0-i*HD),nom=d=>{const n=Math.round((h0-d)/HD);return n===0?'Hoy':n===1?'Ayer':dLargo(d);};
+ const m=modal(`<h3>¿Cuándo lo hiciste?</h3><p>Si se te olvidó apuntarlo en su momento, elige el día y la hora. Así cuenta en la semana que le toca.</p>
+  <label class="l">Día</label><div class="chs es-cdia">${D.map(d=>`<button type="button" data-d="${d}" class="${d===dia?'on':''}">${IC.ck}${escH(nom(d))}</button>`).join('')}</div>
+  <label class="l">Hora</label><div class="es-per es-chora"><button type="button" class="pb-fl" data-h="-1" aria-label="Una hora antes"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button><b></b><button type="button" class="pb-fl" data-h="1" aria-label="Una hora después"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button></div>
+  <div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Listo</button></div>`);
+ const pon=()=>{if(dia===h0&&hora>hA)hora=hA;m.querySelector('.es-chora b').textContent=String(hora).padStart(2,'0')+':00';
+  m.querySelector('[data-h="1"]').disabled=hora>=23||(dia===h0&&hora>=hA);m.querySelector('[data-h="-1"]').disabled=hora<=0;};pon();
+ m.querySelectorAll('.es-cdia [data-d]').forEach(b=>b.onclick=()=>{dia=+b.dataset.d;m.querySelectorAll('.es-cdia button').forEach(x=>x.classList.toggle('on',x===b));pon();});
+ m.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{hora=Math.max(0,Math.min(23,hora+ +b.dataset.h));pon();});
+ m.querySelector('[data-x]').onclick=()=>m.remove();
+ m.querySelector('[data-ok]').onclick=()=>{m.remove();ok(Math.min(ahora,dia+hora*36e5));};}
+
 async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChild(box);box.innerHTML='<div class="rp-c" style="color:var(--mut);font-size:13px">Cargando…</div>';
  const yo=S.yo.id;if(ES.persona&&ES.persona!=='*'&&!visibles().some(m=>m.id===ES.persona)){ES.persona='';ES.abierta='';esGuarda();}
  if(ES.persona==='*'&&visibles().length<2){ES.persona='';esGuarda();}
@@ -132,13 +148,14 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
   let ver=ES.ver[e.id]||actual;if(ver>actual)ver=actual;
   const cu=ES.cuando[e.id]||null;
   // Semana día a día (7R): se puede tocar un día para ver cómo ibas ese día a esta hora
-  let r7='';if(e.periodo==='semana'){const d0=new Date(actual),dA=new Date(ahora),m0=Date.UTC(d0.getUTCFullYear(),d0.getUTCMonth(),d0.getUTCDate()),mA=Date.UTC(dA.getUTCFullYear(),dA.getUTCMonth(),dA.getUTCDate()),hoyI=Math.round((mA-m0)/HD),tod=ahora-mA;
-   let di=ES.dia7[e.id];if(di==null||di>hoyI)di=hoyI;
-   const corte=Math.min(ahora,Math.max(actual,m0+di*HD+tod)),R=sieteR(e,A,ahora,corte),b7=bueno(e,R.d);
-   r7=`<p class="eq-p" style="margin-top:0">Toca un día: cuánto llevabas ese día a esta hora, frente al mismo día de la semana pasada.</p>
-    <div class="chs es-7d">${[...Array(hoyI+1)].map((_,i)=>`<button type="button" data-i="${i}" class="${i===di?'on':''}">${DSEM[new Date(m0+i*HD).getUTCDay()]} ${new Date(m0+i*HD).getUTCDate()}</button>`).join('')}</div>
-    <div class="es-7l"><span>${escH(dLargo(corte))}, ${hhmm(corte)}: <b>${num(R.este)}</b></span><span>Semana pasada: <b>${num(R.antes)}</b></span><span style="color:${colorDe(b7)}">${R.d?(R.d>0?'▲ ':'▼ ')+num(Math.abs(R.d)):'='}</span></div>
-    ${grafica7R(e,A,ahora,corte)}<div class="es-ley"><span><i style="background:var(--c)"></i>Esta semana</span><span><i class="dash"></i>Semana pasada</span></div>`;}
+  // 7R día a día: lo que llevabas acumulado al final de cada día, frente al mismo día de la semana pasada
+  let r7='';if(e.periodo==='semana'){const d0=new Date(actual),m0=Date.UTC(d0.getUTCFullYear(),d0.getUTCMonth(),d0.getUTCDate()),finS=perSig('semana',actual);let filas='';
+   for(let k=0;k<=7;k++){const a=Math.max(actual,m0+k*HD),z=Math.min(finS,m0+(k+1)*HD);if(z<=a)continue;
+    const fut=a>ahora,hoyF=!fut&&z>ahora,cor=hoyF?ahora:z,an=suma(A,actual-HS,cor-HS-1),es=fut?null:suma(A,actual,cor-1),dd=fut?0:es-an,bb=bueno(e,dd);
+    const dia=DSEM[new Date(a).getUTCDay()]+' '+new Date(a).getUTCDate(),nota=hoyF?'hasta ahora':k===0?'desde las 14:00':z===finS?'hasta las 14:00':'';
+    filas+=`<div class="r7f${hoyF?' hoy':''}${fut?' fut':''}"><span>${escH(dia)}${nota?`<em${hoyF?'':' class="g"'}>${nota}</em>`:''}</span><b>${fut?'—':num(es)}</b><b class="ant">${num(an)}</b><i style="color:${fut?'var(--mut)':colorDe(bb)}">${fut?'':dd?(dd>0?'▲ ':'▼ ')+num(Math.abs(dd)):'='}</i></div>`;}
+   r7=`<p class="eq-p" style="margin-top:0">Lo que llevas sumado cada día de esta semana, al lado de lo que llevabas el mismo día de la semana pasada. Si vas por encima, vas bien.</p>
+    <div class="r7t"><div class="r7f cab"><span>Día</span><b>Esta semana</b><b class="ant">La pasada</b><i></i></div>${filas}</div>`;}
   const fin=perSig(e.periodo,ver),Av=A.filter(x=>x.L>=ver&&x.L<fin).sort((a,b)=>b.L-a.L),totV=Av.reduce((t,x)=>t+Number(x.cantidad),0);
   const o=M(e.persona)||{nombre:'—'},comp=e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado';
   let meta='';if(e.periodo==='semana'){const totAnt=suma(A,prev,actual-1),falta=totAnt-este+(e.sentido==='positiva'?1:0),cierra=dLargo(perSig('semana',actual))+', 14:00';
@@ -151,14 +168,12 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
      <div class="es-vs" style="color:${colorDe(b)}"><b>${d?(d>0?'▲ ':'▼ ')+num(Math.abs(d)):'='}</b><small>vs. ${comp} a esta hora (${num(antes)})</small></div></div>
     ${meta?`<p class="es-meta">${meta}</p>`:''}
     <div class="es-in"><input class="i" inputmode="decimal" autocomplete="off" placeholder="¿Cuántos sumas?" value="${escH(ES.cant[e.id]||'')}"><button class="bt" id="esGuardar">+ Apuntar</button></div>
-    ${cu?`<div class="es-mo"><small>Lo apuntas el</small><div class="es-per"><button type="button" class="pb-fl" data-d="-1" aria-label="Día anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${escH(dLargo(cu))}</b><button type="button" class="pb-fl" data-d="1" aria-label="Día siguiente"${cu+HD>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
-     <div class="es-per"><button type="button" class="pb-fl" data-h="-1" aria-label="Una hora antes"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button><b>a las ${hhmm(cu)}</b><button type="button" class="pb-fl" data-h="1" aria-label="Una hora después"${cu+36e5>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button></div>
-     <button type="button" class="lnk" data-c="ahora" style="margin-top:4px">Mejor apuntarlo ahora</button></div>`:`<button type="button" class="lnk es-otro" data-c="otro">¿Fue otro día?</button>`}</div>
+    <div class="es-cuando">Se apunta <b>${cu?escH(cuTxt(cu,ahora)):'hoy, ahora'}</b> · <button type="button" class="lnk" data-cw>${cu?'cambiar':'¿fue otro día?'}</button>${cu?' · <button type="button" class="lnk" data-c="ahora">mejor ahora</button>':''}</div></div>
    ${e.periodo==='semana'?condTarjeta(e,A,ahora,CO[e.id]||[]):''}
    <div class="rp-c"><div class="es-gh"><b>Por ${e.periodo==='semana'?'semanas':e.periodo==='dia'?'días':'meses'}</b>${A.length?`<span style="color:${tt.c}">${escH(tt.txt)}</span>`:''}</div>
     ${grafica(e,T,ahora,false)}
     <div class="es-ley"><span><i style="background:${VERDE}"></i>Sube bien</span><span><i style="background:${ROJO}"></i>Va mal</span><span><i class="dash"></i>Tendencia</span></div></div>
-   ${r7?`<details class="rp-c es-mas" data-k="7r"${ES.abre['7r']?' open':''}><summary>Día a día (7R)</summary>${r7}</details>`:''}
+   ${r7?`<details class="rp-c es-mas" data-k="7r"${ES.abre['7r']?' open':''}><summary>Día a día frente a la semana pasada (7R)</summary>${r7}</details>`:''}
    <details class="rp-c es-mas" data-k="ap"${ES.abre.ap?' open':''}><summary>Lo apuntado</summary><div class="es-per"><button type="button" class="pb-fl" data-v="-1" aria-label="Anterior"${!T.length||ver<=T[0].s?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${escH(perLargo(e.periodo,ver,ahora))}<small>Total: ${num(totV)}</small></b><button type="button" class="pb-fl" data-v="1" aria-label="Siguiente"${ver>=actual?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
     ${Av.length?Av.map(x=>`<div class="es-fila" data-id="${x.id}"><span>${escH(dLargo(x.L))} · ${hhmm(x.L)}${x.por&&x.por!==e.persona?` <em>· ${escH(pri(nomDe(x.por)))}</em>`:''}</span><b>${Number(x.cantidad)>0?'+':''}${num(x.cantidad)}</b><button type="button" class="es-x" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join(''):'<p class="vacio">Aún no hay nada apuntado aquí.</p>'}</details>`;
   box.querySelectorAll('details.es-mas').forEach(x=>x.addEventListener('toggle',()=>{ES.abre[x.dataset.k]=x.open;guardaLS('es_abre',ES.abre);}));
@@ -167,9 +182,8 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
   box.querySelectorAll('.cd-card [data-cv]').forEach(b=>b.onclick=()=>abreCond(b.dataset.cv));
   box.querySelectorAll('.es-7d [data-i]').forEach(b=>b.onclick=()=>{ES.dia7[e.id]=+b.dataset.i;detalle(e);});
   box.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{ES.ver[e.id]=+b.dataset.v<0?perAnt(e.periodo,ver):perSig(e.periodo,ver);detalle(e);});
-  box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ES.cuando[e.id]=b.dataset.c==='otro'?(Math.floor(ahora/36e5)*36e5-HD):null;detalle(e);});
-  box.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ES.cuando[e.id]=Math.min(ahora,cu+ +b.dataset.d*HD);detalle(e);});
-  box.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{ES.cuando[e.id]=Math.min(ahora,cu+ +b.dataset.h*36e5);detalle(e);});
+  box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ES.cuando[e.id]=null;detalle(e);});
+  {const b=box.querySelector('[data-cw]');if(b)b.onclick=()=>eligeCuando(cu,ahora,v=>{ES.cuando[e.id]=v;detalle(e);});}
   const inp=box.querySelector('.es-in input'),bt=box.querySelector('#esGuardar');inp.oninput=()=>{ES.cant[e.id]=inp.value;};
   const guarda=async()=>{const t=inp.value.trim().replace(/\s/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.');const v=Number(t);if(!t||!isFinite(v)){toast('Escribe cuántos (un número)',false);inp.focus();return;}bt.disabled=true;
    const en=cu?new Date(realMs(cu)).toISOString():new Date().toISOString();
