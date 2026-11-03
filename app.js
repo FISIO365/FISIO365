@@ -230,42 +230,51 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
  };
  carga();}
 
-// ── EQUIPO: la gente del equipo y quién revisa a quién
+// ── EQUIPO: la gente del equipo y quién está a cargo de quién.
+// Tener a alguien a cargo = ver su plan y sus estadísticas y poder ponerle tareas. Lo cambia solo quien administra.
+const aCargo=q=>S.permisos.filter(x=>x.quien===q&&(M(x.a_quien)||{}).activo).map(x=>x.a_quien);
+const dependeDe=p=>S.permisos.filter(x=>x.a_quien===p&&(M(x.quien)||{}).activo).map(x=>x.quien);
+const nombres=L=>L.map(id=>escH(pri(nomDe(id)))).join(', ');
 function renderEquipo(wrap){const adm=S.yo.admin;
  const act=S.miembros.filter(m=>m.activo).sort((a,b)=>(b.id===S.yo.id)-(a.id===S.yo.id)||a.nombre.localeCompare(b.nombre,'es'));
  const baja=S.miembros.filter(m=>!m.activo).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
- const fila=m=>`<div class="mi${m.activo?'':' baja'}" data-id="${m.id}"><span class="av">${escH(ini(m.nombre))}</span><div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b><small>${escH([m.puesto,m.email].filter(Boolean).join(' · '))}</small>${m.activo&&S.permisos.some(x=>x.quien===m.id)?`<small class="rv-a">Revisa a ${S.permisos.filter(x=>x.quien===m.id&&(M(x.a_quien)||{}).activo).map(x=>escH(pri(nomDe(x.a_quien)))).join(', ')}</small>`:''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;
- const tiene=(q,a)=>S.permisos.some(x=>x.quien===q&&x.a_quien===a);
- const rev=act.map(q=>{const otros=act.filter(a=>a.id!==q.id);const todos=otros.length&&otros.every(a=>tiene(q.id,a.id));
-  if(!adm&&!otros.some(a=>tiene(q.id,a.id)))return '';
-  return `<div class="rv" data-q="${q.id}"><div class="rv-q"><span class="av">${escH(ini(q.nombre))}</span><div><b>${escH(pri(q.nombre))}</b> <span>revisa y pone tareas a:</span></div></div>
-   <div class="chs">${otros.map(a=>`<button type="button" data-a="${a.id}" class="${tiene(q.id,a.id)?'on':''}"${adm?'':' disabled'}>${IC.ck}${escH(pri(a.nombre))}</button>`).join('')}${adm&&otros.length>1?`<button type="button" class="todos" data-todos="${todos?0:1}">${todos?'Quitar todos':'Todos'}</button>`:''}${!otros.length?'<span class="eq-p" style="margin:0">Aún no hay nadie más en el equipo.</span>':''}</div></div>`;}).join('');
+ const fila=m=>{const ac=m.activo?aCargo(m.id):[],de=m.activo?dependeDe(m.id):[];
+  return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}"><span class="av">${escH(ini(m.nombre))}</span><div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b><small>${escH([m.puesto,m.email].filter(Boolean).join(' · '))}</small>
+   ${de.length?`<small class="rv-d">Depende de ${nombres(de)}</small>`:''}${ac.length?`<small class="rv-a">A su cargo: ${nombres(ac)}</small>`:''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;};
  wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
    <div style="margin-top:10px">${act.map(fila).join('')}${baja.length&&adm?`<details style="margin-top:6px"><summary class="eq-p" style="cursor:pointer">De baja (${baja.length})</summary>${baja.map(fila).join('')}</details>`:''}</div></div>
-  <div class="rp-c"><div class="eq-h"><div><small>Permisos</small><b>Quién revisa a quién</b></div></div>
-   <p class="eq-p">Quien revisa a otra persona ve su plan de batalla y sus estadísticas, y le puede poner tareas (esa persona solo las puede marcar como hechas). No va en cascada: si tú revisas a Ana y Ana revisa a Luis, tú no ves a Luis salvo que lo marques aquí.${adm?'':' Las altas, bajas, puestos y permisos los lleva quien administra el equipo.'}</p>
-   ${act.length<2?'<p class="vacio">Añade a la gente de tu equipo para decidir quién revisa a quién.</p>':rev||'<p class="vacio">De momento nadie revisa a nadie.</p>'}</div>`;
+  <div class="rp-c eq-ayuda"><b>¿Cómo funciona?</b><p>Quien tiene a alguien <b>a su cargo</b> ve su plan de batalla y sus estadísticas, y le puede poner tareas (esa persona solo las puede marcar como hechas).</p>
+   ${adm?'<p>Para poner a alguien bajo otra persona, toca los <b>⋯</b> de esa persona y elige <b>«Depende de»</b>. O al revés: en los ⋯ de la jefa o el jefe, <b>«A su cargo»</b>.</p><p>No va en cascada: si tú tienes a Ramiro a tu cargo y Ramiro tiene a Ana, tú no ves a Ana salvo que también la pongas a tu cargo.</p>':'<p>Las altas, bajas, puestos y quién está a cargo de quién los lleva quien administra el equipo.</p>'}</div>`;
  if(!adm)return;
  wrap.querySelector('#alta').onclick=altaMiembro;
- wrap.querySelectorAll('.mas3').forEach(b=>b.onclick=()=>opcionesMiembro(M(b.closest('.mi').dataset.id)));
- wrap.querySelectorAll('.rv').forEach(rv=>{const q=rv.dataset.q;
-  rv.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a,on=!b.classList.contains('on');b.classList.toggle('on',on);
-   const res=on?await sb.from('pb_permisos').insert({equipo_id:S.yo.equipo_id,quien:q,a_quien:a}):await sb.from('pb_permisos').delete().eq('quien',q).eq('a_quien',a);
-   if(res.error&&!/duplicate/i.test(res.error.message)){b.classList.toggle('on',!on);toast('No se ha podido guardar',false);return;}
-   if(on)S.permisos.push({equipo_id:S.yo.equipo_id,quien:q,a_quien:a});else S.permisos=S.permisos.filter(x=>!(x.quien===q&&x.a_quien===a));renderEquipoOtraVez();});
-  const t=rv.querySelector('[data-todos]');if(t)t.onclick=async()=>{const pon=t.dataset.todos==='1',otros=act.filter(a=>a.id!==q);t.disabled=true;
-   const res=pon?await sb.from('pb_permisos').upsert(otros.filter(a=>!tiene(q,a.id)).map(a=>({equipo_id:S.yo.equipo_id,quien:q,a_quien:a.id})),{onConflict:'quien,a_quien',ignoreDuplicates:true}):await sb.from('pb_permisos').delete().eq('quien',q);
-   if(res.error){toast('No se ha podido guardar',false);}await cargaEquipo();renderEquipoOtraVez();};});}
+ wrap.querySelectorAll('.mas3').forEach(b=>b.onclick=()=>opcionesMiembro(M(b.closest('.mi').dataset.id)));}
+// Elegir varias personas (chips). Devuelve la lista elegida o null si se cancela
+function eligePersonas(titulo,sub,ini,excluir){return new Promise(res=>{const sel=new Set(ini);const L=S.miembros.filter(m=>m.activo&&m.id!==excluir).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+ const m=modal(`<h3>${escH(titulo)}</h3><p>${escH(sub)}</p><div class="chs" style="margin-top:14px">${L.map(p=>`<button type="button" data-p="${p.id}" class="${sel.has(p.id)?'on':''}">${IC.ck}${escH(p.nombre)}</button>`).join('')||'<span class="eq-p">Aún no hay nadie más en el equipo.</span>'}</div>
+  <div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
+ m.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const id=b.dataset.p;sel.has(id)?sel.delete(id):sel.add(id);b.classList.toggle('on',sel.has(id));});
+ m.querySelector('[data-x]').onclick=()=>{m.remove();res(null);};m.querySelector('[data-ok]').onclick=()=>{m.remove();res([...sel]);};
+ m.addEventListener('click',e=>{if(e.target===m)res(null);});});}
+// Guarda quién está a cargo de quién: pares [jefe, persona] que tienen que quedar y los que hay que quitar
+async function guardaCargos(poner,quitar){let ok=true;
+ if(poner.length){const r=await sb.from('pb_permisos').upsert(poner.map(([q,a])=>({equipo_id:S.yo.equipo_id,quien:q,a_quien:a})),{onConflict:'quien,a_quien',ignoreDuplicates:true});if(r.error)ok=false;}
+ for(const [q,a] of quitar){const r=await sb.from('pb_permisos').delete().eq('quien',q).eq('a_quien',a);if(r.error)ok=false;}
+ await cargaEquipo();renderEquipoOtraVez();toast(ok?'Guardado':'No se ha podido guardar todo',ok);}
 function renderEquipoOtraVez(){const c=document.getElementById('cont');if(!c||S.tab!=='equipo')return;const y=window.scrollY;c.innerHTML='';renderEquipo(c);window.scrollTo(0,y);}
 const claveSug=()=>'batalla'+String(Math.floor(1000+Math.random()*9000));
-function altaMiembro(){const m=modal(`<h3>Añadir a alguien</h3><p>Le creas la cuenta y le pasas el acceso por WhatsApp.</p>
+function altaMiembro(){const jefes=new Set([S.yo.id]),L=S.miembros.filter(x=>x.activo).sort((a,b)=>(b.id===S.yo.id)-(a.id===S.yo.id)||a.nombre.localeCompare(b.nombre,'es'));
+ const m=modal(`<h3>Añadir a alguien</h3><p>Le creas la cuenta y le pasas el acceso por WhatsApp.</p>
  <label class="l">Nombre</label><input class="i" name="nombre" maxlength="40" autocomplete="off">
  <label class="l">Email</label><input class="i" name="email" type="email" autocomplete="off">
  <label class="l">Contraseña para entrar (la puede cambiar luego)</label><input class="i" name="pass" value="${claveSug()}" autocomplete="off">
+ <label class="l">¿De quién depende? <span style="font-weight:500;color:var(--mut)">(lo tendrá a su cargo)</span></label><div class="chs" id="jefes">${L.map(p=>`<button type="button" data-p="${p.id}" class="${jefes.has(p.id)?'on':''}">${IC.ck}${p.id===S.yo.id?'Yo':escH(pri(p.nombre))}</button>`).join('')}</div>
  <div class="err"></div><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Añadir</button></div>`);
+ m.querySelectorAll('#jefes [data-p]').forEach(b=>b.onclick=()=>{const id=b.dataset.p;jefes.has(id)?jefes.delete(id):jefes.add(id);b.classList.toggle('on',jefes.has(id));});
  m.querySelector('[data-x]').onclick=()=>m.remove();
  m.querySelector('[data-ok]').onclick=async e=>{const b=e.target,v=n=>m.querySelector(`[name="${n}"]`).value.trim();b.disabled=true;m.querySelector('.err').textContent='';
-  try{const r=await fn({accion:'alta',nombre:v('nombre'),email:v('email'),password:v('pass')});m.remove();await cargaEquipo();renderEquipoOtraVez();
+  try{const r=await fn({accion:'alta',nombre:v('nombre'),email:v('email'),password:v('pass')});m.remove();
+   if(r.id&&jefes.size)await sb.from('pb_permisos').upsert([...jefes].map(q=>({equipo_id:S.yo.equipo_id,quien:q,a_quien:r.id})),{onConflict:'quien,a_quien',ignoreDuplicates:true});
+   await cargaEquipo();renderEquipoOtraVez();
    acceso(v('nombre'),v('email'),r.existia?'':v('pass'));}catch(x){b.disabled=false;m.querySelector('.err').textContent=x.message;}};}
 function acceso(nombre,email,pass){const txt=`Hola ${pri(nombre)}, ya tienes tu Plan de batalla 💪\n\nEntra aquí: ${location.origin}\nEmail: ${email}\n${pass?'Contraseña: '+pass+'\n\nCuando entres, puedes cambiarla tocando tu inicial (arriba a la derecha).':'Contraseña: la de tu cuenta de siempre.'}`;
  const m=modal(`<h3>Listo, ${escH(pri(nombre))} ya está en el equipo</h3><p>Pásale esto para que entre:</p><div class="msg">${escH(txt)}</div>
@@ -275,6 +284,8 @@ function acceso(nombre,email,pass){const txt=`Hola ${pri(nombre)}, ya tienes tu 
  m.querySelector('[data-c]').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(txt).then(()=>toast('Copiado'),()=>toast('No se ha podido copiar',false));};}
 function opcionesMiembro(p){if(!p)return;const yo=p.id===S.yo.id;
  const m=modal(`<h3>${escH(p.nombre)}</h3><p>${escH(p.email)}</p><div style="margin-top:10px">
+  ${p.activo?`<button class="op" data-a="dep"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Depende de…${dependeDe(p.id).length?` <em class="op-v">${nombres(dependeDe(p.id))}</em>`:''}</button>
+  <button class="op" data-a="car"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>A su cargo…${aCargo(p.id).length?` <em class="op-v">${nombres(aCargo(p.id))}</em>`:''}</button>`:''}
   ${p.activo&&!yo?`<button class="op" data-a="adm"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg>Pasarle la administración</button>`:''}
   ${yo?'':`<button class="op" data-a="clave"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Ponerle una contraseña nueva</button>`}
   <button class="op" data-a="nom"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>Cambiar el nombre</button>
@@ -282,6 +293,10 @@ function opcionesMiembro(p){if(!p)return;const yo=p.id===S.yo.id;
   ${yo?'':(p.activo?`<button class="op rojo" data-a="baja"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM17 8l5 5M22 8l-5 5"/></svg>Dar de baja</button>`:`<button class="op" data-a="alta"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Volver a dar de alta</button>`)}</div>`);
  const upd=async(campos,ok)=>{m.remove();const {error}=await sb.from('pb_miembros').update(campos).eq('id',p.id);if(error){toast(/administrador/.test(error.message)?'Tiene que quedar al menos un administrador':'No se ha podido',false);return;}toast(ok);await cargaEquipo();if(p.id===S.yo.id)pinta();else renderEquipoOtraVez();};
  const on=(a,f)=>{const b=m.querySelector(`[data-a="${a}"]`);if(b)b.onclick=f;};
+ on('dep',()=>{m.remove();const ant=dependeDe(p.id);eligePersonas('¿De quién depende '+pri(p.nombre)+'?','Quien elijas lo tendrá a su cargo: verá su plan y sus estadísticas y le podrá poner tareas.',ant,p.id).then(L=>{if(!L)return;
+  guardaCargos(L.filter(q=>!ant.includes(q)).map(q=>[q,p.id]),ant.filter(q=>!L.includes(q)).map(q=>[q,p.id]));});});
+ on('car',()=>{m.remove();const ant=aCargo(p.id);eligePersonas('¿Quién está a cargo de '+pri(p.nombre)+'?','Verá su plan y sus estadísticas y les podrá poner tareas.',ant,p.id).then(L=>{if(!L)return;
+  guardaCargos(L.filter(a=>!ant.includes(a)).map(a=>[p.id,a]),ant.filter(a=>!L.includes(a)).map(a=>[p.id,a]));});});
  on('adm',()=>{m.remove();pregunta('¿Pasarle la administración a '+pri(p.nombre)+'?',{sub:'Será quien dé de alta y de baja, cambie puestos y decida quién revisa a quién. Tú dejarás de poder hacerlo.',si:'Pasársela'}).then(async ok=>{if(!ok)return;
   const a=await sb.from('pb_miembros').update({admin:true}).eq('id',p.id);if(a.error){toast('No se ha podido',false);return;}
   const b=await sb.from('pb_miembros').update({admin:false}).eq('id',S.yo.id);if(b.error){toast('No se ha podido',false);}
