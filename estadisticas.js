@@ -97,7 +97,7 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
   const y=window.scrollY,ahora=madMs(Date.now()),yoMismo=persona()===yo,nom=pri(nomDe(persona()));
   const act=E.filter(e=>!e.archivada),arc=E.filter(e=>e.archivada);
   const tarj=e=>{const A=AP[e.id]||[],T=totales(e,A,ahora),tt=textoTendencia(e,T),cur=T.length?T[T.length-1]:null;
-   let der='';if(e.periodo==='semana'){const r=sieteR(e,A,ahora,ahora);der=`<div class="es-ult"><b>${num(r.este)}</b>${r.d?`<i style="color:${colorDe(bueno(e,r.d))}">${r.d>0?'▲':'▼'} ${num(Math.abs(r.d))} <span>7R</span></i>`:'<i style="color:'+GRIS+'">= <span>7R</span></i>'}<small>Esta semana</small></div>`;}
+   let der='';if(e.periodo==='semana'){const r=sieteR(e,A,ahora,ahora);der=`<div class="es-ult"><b>${num(r.este)}</b><small>esta semana</small><i style="color:${colorDe(bueno(e,r.d))}">${r.d?(r.d>0?'▲ ':'▼ ')+num(Math.abs(r.d)):'='} vs. semana pasada</i></div>`;}
    else if(cur){der=`<div class="es-ult"><b>${num(cur.v)}</b><small>${escH(perLargo(e.periodo,cur.s,ahora))}</small></div>`;}
    return `<button type="button" class="rp-c es-c" data-e="${e.id}"><div class="es-ch"><div><small>${escH(e.puesto||'Estadística')}</small><b>${escH(e.nombre)}</b></div>${der}</div>${grafica(e,T,ahora,true)}<div class="es-pie"><span style="color:${tt.c}">${escH(tt.txt)}</span><em>${escH(e.eje_y)} · ${PER[e.periodo].n.toLowerCase()}</em></div></button>`;};
   box.innerHTML=quien()+`<div class="rp-c"><div class="eq-h"><div><small>Estadísticas</small><b>${yoMismo?'Tus estadísticas':'Estadísticas de '+escH(nom)}</b></div><button class="bt" id="esNueva">+ Nueva</button></div>
@@ -107,50 +107,51 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
   box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{ES.abierta=b.dataset.e;esGuarda();pinta3();window.scrollTo(0,0);});
   window.scrollTo(0,y);};
 
- // Una estadística en grande: gráfica, 7R, apuntar y lo apuntado
+ // Una estadística en grande. Arriba lo importante: cuánto llevas y cuánto llevabas la semana pasada a esta misma hora (7R).
  const detalle=e=>{if(!e){ES.abierta='';esGuarda();return pinta3();}
-  const y=window.scrollY,ahora=madMs(Date.now()),A=AP[e.id]||[],T=totales(e,A,ahora),tt=textoTendencia(e,T),actual=perIni(e.periodo,ahora);
+  const y=window.scrollY,ahora=madMs(Date.now()),A=AP[e.id]||[],T=totales(e,A,ahora),tt=textoTendencia(e,T),actual=perIni(e.periodo,ahora),prev=perAnt(e.periodo,actual);
+  const P={semana:['Esta semana','La semana pasada a esta hora'],dia:['Hoy','Ayer a esta hora'],mes:['Este mes','El mes pasado a esta altura']}[e.periodo];
+  const este=suma(A,actual,ahora),antes=suma(A,prev,prev+(ahora-actual)),d=este-antes,b=bueno(e,d);
   let ver=ES.ver[e.id]||actual;if(ver>actual)ver=actual;
-  // 7R: el día que se mira (por defecto hoy) a la hora de ahora
-  let r7='';if(e.periodo==='semana'){const ini=actual,nd=Math.floor((ahora-ini)/HD+1e-9),hoyI=Math.floor((Date.UTC(new Date(ahora).getUTCFullYear(),new Date(ahora).getUTCMonth(),new Date(ahora).getUTCDate())-Date.UTC(new Date(ini).getUTCFullYear(),new Date(ini).getUTCMonth(),new Date(ini).getUTCDate()))/HD);
-   const tod=ahora-Date.UTC(new Date(ahora).getUTCFullYear(),new Date(ahora).getUTCMonth(),new Date(ahora).getUTCDate());
-   let di=ES.dia7[e.id];if(di==null||di>hoyI)di=hoyI;
-   const diaIni=i=>Date.UTC(new Date(ini).getUTCFullYear(),new Date(ini).getUTCMonth(),new Date(ini).getUTCDate()+i);
-   const corte=Math.min(ahora,Math.max(ini,diaIni(di)+tod)),R=sieteR(e,A,ahora,corte),b=bueno(e,R.d);
-   r7=`<div class="rp-c es-7"><div class="eq-h"><div><small>7R</small><b>Cómo vamos frente a la semana pasada</b></div></div>
-    <div class="chs es-7d">${[...Array(hoyI+1)].map((_,i)=>`<button type="button" data-i="${i}" class="${i===di?'on':''}">${DSEM[new Date(diaIni(i)).getUTCDay()]} ${new Date(diaIni(i)).getUTCDate()}</button>`).join('')}</div>
-    <div class="es-7n"><div><small>Esta semana · hasta el ${escH(dLargo(corte))} a las ${hhmm(corte)}</small><b>${num(R.este)}</b></div><div><small>La semana pasada · hasta el ${escH(dLargo(corte-HS))} a las ${hhmm(corte-HS)}</small><b class="ant">${num(R.antes)}</b></div></div>
-    <div class="es-7r" style="color:${colorDe(b)}">${R.d?`${R.d>0?'▲':'▼'} ${num(Math.abs(R.d))} ${R.d>0?'más':'menos'} que la semana pasada a estas horas${b?' · bien':' · a mejorar'}`:'Igual que la semana pasada a estas horas'}</div>
-    ${grafica7R(e,A,ahora,corte)}<div class="es-ley"><span><i style="background:var(--c)"></i>Esta semana</span><span><i class="dash"></i>Semana pasada</span></div>
-    <p class="es-not">La semana va de jueves a las 14:00 a jueves a las 14:00.</p></div>`;}
-  // Lo apuntado en el periodo que se mira
-  const fin=perSig(e.periodo,ver),Av=A.filter(x=>x.L>=ver&&x.L<fin).sort((a,b)=>b.L-a.L),totV=Av.reduce((t,x)=>t+Number(x.cantidad),0);
   const cu=ES.cuando[e.id]||null;
+  // Semana día a día (7R): se puede tocar un día para ver cómo ibas ese día a esta hora
+  let r7='';if(e.periodo==='semana'){const d0=new Date(actual),dA=new Date(ahora),m0=Date.UTC(d0.getUTCFullYear(),d0.getUTCMonth(),d0.getUTCDate()),mA=Date.UTC(dA.getUTCFullYear(),dA.getUTCMonth(),dA.getUTCDate()),hoyI=Math.round((mA-m0)/HD),tod=ahora-mA;
+   let di=ES.dia7[e.id];if(di==null||di>hoyI)di=hoyI;
+   const corte=Math.min(ahora,Math.max(actual,m0+di*HD+tod)),R=sieteR(e,A,ahora,corte),b7=bueno(e,R.d);
+   r7=`<div class="rp-c"><div class="eq-h"><div><small>7R · día a día</small><b>Esta semana frente a la pasada</b></div></div>
+    <p class="eq-p">Toca un día para ver cuánto llevabas ese día a esta hora, comparado con el mismo día de la semana pasada.</p>
+    <div class="chs es-7d">${[...Array(hoyI+1)].map((_,i)=>`<button type="button" data-i="${i}" class="${i===di?'on':''}">${DSEM[new Date(m0+i*HD).getUTCDay()]} ${new Date(m0+i*HD).getUTCDate()}</button>`).join('')}</div>
+    <div class="es-7l"><span>${escH(dLargo(corte))}, ${hhmm(corte)}: <b>${num(R.este)}</b></span><span>Semana pasada: <b>${num(R.antes)}</b></span><span style="color:${colorDe(b7)}">${R.d?(R.d>0?'▲ ':'▼ ')+num(Math.abs(R.d)):'='}</span></div>
+    ${grafica7R(e,A,ahora,corte)}<div class="es-ley"><span><i style="background:var(--c)"></i>Esta semana</span><span><i class="dash"></i>Semana pasada</span></div></div>`;}
+  const fin=perSig(e.periodo,ver),Av=A.filter(x=>x.L>=ver&&x.L<fin).sort((a,b)=>b.L-a.L),totV=Av.reduce((t,x)=>t+Number(x.cantidad),0);
   box.innerHTML=quien()+`<button type="button" class="es-atras"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>Estadísticas</button>
    <div class="rp-c"><div class="eq-h"><div><small>${escH(e.puesto||'Estadística')}</small><b>${escH(e.nombre)}</b></div><button class="mas3" aria-label="Opciones">⋯</button></div>
-    <div class="es-sen"><span class="es-tag ${e.sentido}">${e.sentido==='positiva'?'Positiva · si sube, es bueno':'Negativa · si sube, es malo'}</span>${A.length?`<span style="color:${tt.c};font-weight:600">${escH(tt.txt)}</span>`:''}</div></div>
-   <div class="rp-c"><div class="es-ap"><small>Apuntar ${escH(e.eje_y.toLowerCase())}</small>
-    <div class="es-in"><input class="i" inputmode="decimal" autocomplete="off" placeholder="¿Cuántos? Ej.: 1" value="${escH(ES.cant[e.id]||'')}"><button class="bt" id="esGuardar">Apuntar</button></div>
-    <div class="es-cu"><span>Cuándo:</span><div class="chs"><button type="button" data-c="ahora" class="${cu?'':'on'}">${IC.ck}Ahora</button><button type="button" data-c="otro" class="${cu?'on':''}">${IC.ck}Otro momento</button></div></div>
-    ${cu?`<div class="es-mo"><div class="es-per"><button type="button" class="pb-fl" data-d="-1" aria-label="Día anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${escH(dLargo(cu))}</b><button type="button" class="pb-fl" data-d="1" aria-label="Día siguiente"${cu+HD>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
-     <div class="es-per"><button type="button" class="pb-fl" data-h="-1" aria-label="Una hora antes"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button><b>${hhmm(cu)}</b><button type="button" class="pb-fl" data-h="1" aria-label="Una hora después"${cu+36e5>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button></div></div>`:''}</div></div>
-   ${r7&&A.length?r7:''}
-   ${A.length?`<div class="rp-c"><div class="eq-h"><div><small>Gráfica</small><b>${escH(e.eje_y)} por ${e.periodo==='semana'?'semana':e.periodo==='dia'?'día':'mes'}</b></div></div><div class="es-gw"><span class="es-ey">${escH(e.eje_y)}</span>${grafica(e,T,ahora,false)}</div><div class="es-ex">${PER[e.periodo].n}${e.periodo==='semana'?' (de jueves 14:00 a jueves 14:00)':''}</div>
-    <div class="es-ley"><span><i style="background:${VERDE}"></i>Va bien</span><span><i style="background:${ROJO}"></i>Va mal</span><span><i class="dash"></i>Tendencia</span><span><i class="hue"></i>En curso</span></div></div>`:`<div class="rp-c eq-ayuda"><b>¿Cómo funciona?</b><p>Cada vez que hagas algo de esta estadística, apúntalo arriba (por ejemplo, <b>1</b> por cada curso completado). La app lo suma por ${e.periodo==='semana'?'semanas (de jueves a las 14:00 a jueves a las 14:00)':e.periodo==='dia'?'días':'meses'} y hace la gráfica con su tendencia${e.periodo==='semana'?', y te compara con la semana pasada a la misma hora (7R)':''}.</p></div>`}
-   ${A.length?`<div class="rp-c"><div class="es-per"><button type="button" class="pb-fl" data-v="-1" aria-label="Anterior"${T.length&&ver<=T[0].s?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${escH(perLargo(e.periodo,ver,ahora))}<small>Total: ${num(totV)}</small></b><button type="button" class="pb-fl" data-v="1" aria-label="Siguiente"${ver>=actual?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
-    ${Av.length?Av.map(x=>`<div class="es-fila" data-id="${x.id}"><span>${escH(dLargo(x.L))} · ${hhmm(x.L)}${x.por&&x.por!==e.persona?` <em>· ${escH(pri(nomDe(x.por)))}</em>`:''}</span><b>${Number(x.cantidad)>0?'+':''}${num(x.cantidad)}</b><button type="button" class="es-x" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join(''):'<p class="vacio">Nada apuntado en este periodo.</p>'}</div>`:''}`;
+    <div class="es-7n"><div><small>${P[0]}</small><b>${num(este)}</b></div><div><small>${P[1]}</small><b class="ant">${num(antes)}</b></div></div>
+    <div class="es-7r" style="color:${colorDe(b)}">${d?`${d>0?'▲':'▼'} ${num(Math.abs(d))} ${d>0?'más':'menos'} que ${e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado'} a esta hora${b?' · bien':' · a mejorar'}`:`Igual que ${e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado'} a esta hora`}</div>
+    <div class="es-in"><input class="i" inputmode="decimal" autocomplete="off" placeholder="Sumar ${escH(e.eje_y)}…" value="${escH(ES.cant[e.id]||'')}"><button class="bt" id="esGuardar">+ Apuntar</button></div>
+    ${cu?`<div class="es-mo"><small>Lo apuntas el</small><div class="es-per"><button type="button" class="pb-fl" data-d="-1" aria-label="Día anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${escH(dLargo(cu))}</b><button type="button" class="pb-fl" data-d="1" aria-label="Día siguiente"${cu+HD>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
+     <div class="es-per"><button type="button" class="pb-fl" data-h="-1" aria-label="Una hora antes"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button><b>a las ${hhmm(cu)}</b><button type="button" class="pb-fl" data-h="1" aria-label="Una hora después"${cu+36e5>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button></div>
+     <button type="button" class="lnk" data-c="ahora" style="margin-top:4px">Mejor apuntarlo ahora</button></div>`:`<button type="button" class="lnk es-otro" data-c="otro">¿Lo hiciste otro día? Elige cuándo</button>`}
+    <div class="es-sen" style="margin-top:12px"><span class="es-tag ${e.sentido}">${e.sentido==='positiva'?'Positiva · si sube, es bueno':'Negativa · si sube, es malo'}</span></div></div>
+   <div class="rp-c"><div class="eq-h"><div><small>Gráfica</small><b>${escH(e.eje_y.charAt(0).toUpperCase()+e.eje_y.slice(1))} por ${e.periodo==='semana'?'semana':e.periodo==='dia'?'día':'mes'}</b></div></div>
+    ${A.length?`<div class="es-tt" style="color:${tt.c}">${escH(tt.txt)}</div>`:''}
+    <div class="es-gw"><span class="es-ey">${escH(e.eje_y)}</span>${grafica(e,T,ahora,false)}</div><div class="es-ex">${PER[e.periodo].n}${e.periodo==='semana'?' (de jueves 14:00 a jueves 14:00)':''}</div>
+    <div class="es-ley"><span><i style="background:${VERDE}"></i>Va bien</span><span><i style="background:${ROJO}"></i>Va mal</span><span><i class="dash"></i>Tendencia</span><span><i class="hue"></i>En curso</span></div></div>
+   ${r7}
+   <div class="rp-c"><div class="es-per"><button type="button" class="pb-fl" data-v="-1" aria-label="Anterior"${!T.length||ver<=T[0].s?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>Apuntado · ${escH(perLargo(e.periodo,ver,ahora).toLowerCase())}<small>Total: ${num(totV)}</small></b><button type="button" class="pb-fl" data-v="1" aria-label="Siguiente"${ver>=actual?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
+    ${Av.length?Av.map(x=>`<div class="es-fila" data-id="${x.id}"><span>${escH(dLargo(x.L))} · ${hhmm(x.L)}${x.por&&x.por!==e.persona?` <em>· ${escH(pri(nomDe(x.por)))}</em>`:''}</span><b>${Number(x.cantidad)>0?'+':''}${num(x.cantidad)}</b><button type="button" class="es-x" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join(''):'<p class="vacio">Aún no has apuntado nada aquí.</p>'}</div>`;
   box.querySelector('.es-atras').onclick=()=>{ES.abierta='';esGuarda();pinta3();};chipsQuien();
   box.querySelectorAll('.es-7d [data-i]').forEach(b=>b.onclick=()=>{ES.dia7[e.id]=+b.dataset.i;detalle(e);});
   box.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{ES.ver[e.id]=+b.dataset.v<0?perAnt(e.periodo,ver):perSig(e.periodo,ver);detalle(e);});
-  box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ES.cuando[e.id]=b.dataset.c==='otro'?(Math.floor(ahora/36e5)*36e5):null;detalle(e);});
+  box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ES.cuando[e.id]=b.dataset.c==='otro'?(Math.floor(ahora/36e5)*36e5-HD):null;detalle(e);});
   box.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ES.cuando[e.id]=Math.min(ahora,cu+ +b.dataset.d*HD);detalle(e);});
   box.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{ES.cuando[e.id]=Math.min(ahora,cu+ +b.dataset.h*36e5);detalle(e);});
   const inp=box.querySelector('.es-in input'),bt=box.querySelector('#esGuardar');inp.oninput=()=>{ES.cant[e.id]=inp.value;};
-  const guarda=async()=>{const t=inp.value.trim().replace(/\s/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.');const v=Number(t);if(!t||!isFinite(v)){toast('Escribe un número',false);inp.focus();return;}bt.disabled=true;
+  const guarda=async()=>{const t=inp.value.trim().replace(/\s/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.');const v=Number(t);if(!t||!isFinite(v)){toast('Escribe cuántos (un número)',false);inp.focus();return;}bt.disabled=true;
    const en=cu?new Date(realMs(cu)).toISOString():new Date().toISOString();
    const {data,error}=await sb.from('pb_apuntes').insert({estadistica_id:e.id,en,cantidad:v,por:yo}).select().single();
    bt.disabled=false;if(error){toast('No se ha podido apuntar',false);return;}
-   data.L=madMs(data.en);A.push(data);AP[e.id]=A;ES.cant[e.id]='';ES.ver[e.id]=perIni(e.periodo,data.L);toast('Apuntado');detalle(e);};
+   data.L=madMs(data.en);A.push(data);AP[e.id]=A;ES.cant[e.id]='';ES.cuando[e.id]=null;ES.ver[e.id]=perIni(e.periodo,data.L);toast('Apuntado: '+(v>0?'+':'')+num(v));detalle(e);};
   bt.onclick=guarda;inp.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();guarda();}};
   box.querySelectorAll('.es-x').forEach(b=>b.onclick=()=>{const id=b.closest('.es-fila').dataset.id,x=A.find(z=>z.id===id);if(!x)return;
    pregunta('¿Quitar este apunte ('+num(x.cantidad)+')?',{si:'Quitar'}).then(async ok=>{if(!ok)return;const {error}=await sb.from('pb_apuntes').delete().eq('id',id);if(error){toast('No se ha podido',false);return;}AP[e.id]=A.filter(z=>z.id!==id);detalle(e);});});
