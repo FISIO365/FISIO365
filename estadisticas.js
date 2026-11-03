@@ -3,7 +3,7 @@
 // La semana va de jueves a las 14:00 a jueves a las 14:00 (hora de Madrid).
 // 7R: cómo vamos esta semana comparado con la semana pasada justo en este mismo punto.
 // Las ve y las rellena la propia persona y quien la revisa (los mismos permisos que el plan de batalla).
-const ES={persona:leeLS('es_persona',''),abierta:leeLS('es_abierta',''),ver:{},dia7:{},cuando:{},cant:{}};
+const ES={abre:leeLS('es_abre',{}),persona:leeLS('es_persona',''),abierta:leeLS('es_abierta',''),ver:{},dia7:{},cuando:{},cant:{}};
 const esGuarda=()=>{guardaLS('es_persona',ES.persona);guardaLS('es_abierta',ES.abierta);};
 const PER={dia:{n:'Días'},semana:{n:'Semanas'},mes:{n:'Meses'}};
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -54,7 +54,7 @@ function grafica(e,T,ahora,mini){const W=mini?300:340,H=mini?84:210,L=mini?6:30,
  if(!T.length)return `<svg class="es-g${mini?' mini':''}" viewBox="0 0 ${W} ${H}"><text x="${W/2}" y="${H/2+4}" text-anchor="middle" class="es-vacia">Aún sin datos</text></svg>`;
  const pts=T.map(x=>({x:perIdx(e.periodo,x.s),y:x.v,a:x.actual,s:x.s}));
  const x0=pts[0].x,x1=Math.max(pts[pts.length-1].x,x0+1);
- let y0=Math.min(...pts.map(p=>p.y)),y1=Math.max(...pts.map(p=>p.y));if(y0>=0)y0=0;if(y0===y1)y1=y0+1;y1+=(y1-y0)*.08;
+ let y0=Math.min(...pts.map(p=>p.y)),y1=Math.max(...pts.map(p=>p.y));if(y0>=0&&!mini)y0=0;if(mini){const r=(y1-y0)||1;y0-=r*.15;}if(y0===y1)y1=y0+1;y1+=(y1-y0)*.08;
  const X=x=>L+(x-x0)/(x1-x0)*(W-L-R),Y=y=>Tp+(1-(y-y0)/(y1-y0))*(H-Tp-B);
  let s='';
  if(!mini){for(let i=0;i<=3;i++){const v=y0+(y1-y0)*i/3,y=Y(v);s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" class="es-rej"/><text x="${L-6}" y="${y+3.5}" text-anchor="end" class="es-ej">${num(y1-y0>3?Math.round(v):Math.round(v*10)/10)}</text>`;}
@@ -106,16 +106,16 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
  const pinta3=()=>{if(ES.abierta)return detalle(E.find(e=>e.id===ES.abierta));
   const y=window.scrollY,ahora=madMs(Date.now()),yoMismo=persona()===yo,nom=pri(nomDe(persona()));
   const act=E.filter(e=>!e.archivada),arc=E.filter(e=>e.archivada);
-  const tarj=e=>{const A=AP[e.id]||[],T=totales(e,A,ahora),tt=textoTendencia(e,T),cur=T.length?T[T.length-1]:null;
-   let der='';if(e.periodo==='semana'){const r=sieteR(e,A,ahora,ahora);der=`<div class="es-ult"><b>${num(r.este)}</b><small>esta semana</small><i style="color:${colorDe(bueno(e,r.d))}">${r.d?(r.d>0?'▲ ':'▼ ')+num(Math.abs(r.d)):'='} vs. semana pasada</i></div>`;}
-   else if(cur){der=`<div class="es-ult"><b>${num(cur.v)}</b><small>${escH(perLargo(e.periodo,cur.s,ahora))}</small></div>`;}
-   return `<button type="button" class="rp-c es-c" data-e="${e.id}"><div class="es-ch"><div><small>${escH(e.puesto||'Estadística')}</small><b>${escH(e.nombre)}</b>${(()=>{const cc=e.periodo==='semana'&&(CO[e.id]||[]).find(c=>c.semana===ymd(perIni('semana',ahora))&&c.persona===e.persona);return cc?condChip(cc.condicion,'sm'):'';})()}</div>${der}</div>${grafica(e,T,ahora,true)}<div class="es-pie"><span style="color:${tt.c}">${escH(tt.txt)}</span><em>${escH(e.eje_y)} · ${PER[e.periodo].n.toLowerCase()}</em></div></button>`;};
+  const tarj=e=>{const A=AP[e.id]||[],T=totales(e,A,ahora),cur=T.length?T[T.length-1]:null;
+   const cc=e.periodo==='semana'&&(CO[e.id]||[]).find(c=>c.semana===ymd(perIni('semana',ahora))&&c.persona===e.persona);
+   let der='';if(e.periodo==='semana'){const r=sieteR(e,A,ahora,ahora);der=`<div class="es-ult"><b>${num(r.este)}</b><i style="color:${colorDe(bueno(e,r.d))}">${r.d?(r.d>0?'▲ ':'▼ ')+num(Math.abs(r.d)):'= igual'}</i></div>`;}
+   else if(cur){der=`<div class="es-ult"><b>${num(cur.v)}</b><i style="color:var(--mut)">${escH(perLargo(e.periodo,cur.s,ahora).toLowerCase())}</i></div>`;}
+   return `<button type="button" class="rp-c es-c" data-e="${e.id}"><div class="es-ch"><div><b>${escH(e.nombre)}</b><small>${escH(e.eje_y)}${e.periodo==='semana'?' · esta semana':''}</small>${cc?condChip(cc.condicion,'sm'):''}</div>${der}</div>${grafica(e,T,ahora,true)}</button>`;};
   if(todos()){const G=suyos().map(id=>({id,L:act.filter(e=>e.persona===id)}));
    box.innerHTML=quien()+`${G.map(g=>`<div class="es-gr">${avHTML(M(g.id))}<div><b>${escH(nomDe(g.id))}</b>${pTag(M(g.id))}<small>${g.L.length} estadística${g.L.length===1?'':'s'}</small></div><button class="bt sec es-nv2" data-n="${g.id}">+ Nueva</button></div>${g.L.map(tarj).join('')||'<p class="vacio" style="padding-top:0">Aún no tiene estadísticas.</p>'}`).join('')}`;
    chipsQuien();box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>abre(b.dataset.e));box.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>editarEst(null,b.dataset.n));window.scrollTo(0,y);return;}
-  box.innerHTML=quien()+`<div class="rp-c"><div class="eq-h"><div><small>Estadísticas</small><b>${yoMismo?'Tus estadísticas':'Estadísticas de '+escH(nom)}</b>${pTag(M(persona()))}</div><button class="bt" id="esNueva">+ Nueva</button></div>
-   ${act.length?`<p class="eq-p">${act.length} estadística${act.length===1?'':'s'}. Puedes tener todas las que quieras: crea otra con «+ Nueva».</p>`:''}
-   ${!act.length?`<p class="eq-p">${yoMismo?'Crea tu primera estadística: lo que produce tu puesto (cursos completados, pacientes nuevos…). Vas apuntando lo que haces y se grafea sola, semana a semana (de jueves a las 14:00 a jueves a las 14:00), con su tendencia y su 7R.':'Aún no tiene estadísticas. Puedes crearle una.'}</p>`:''}</div>
+  box.innerHTML=quien()+`<div class="es-cab"><div><b>${yoMismo?'Tus estadísticas':'Estadísticas de '+escH(nom)}</b>${pTag(M(persona()))}</div><button class="bt" id="esNueva">+ Nueva</button></div>
+   ${!act.length?`<div class="rp-c">`:''}${!act.length?`<p class="eq-p">${yoMismo?'Crea tu primera estadística: lo que produce tu puesto (cursos completados, pacientes nuevos…). Vas apuntando lo que haces y se grafea sola, semana a semana (de jueves a las 14:00 a jueves a las 14:00), con su tendencia y su 7R.':'Aún no tiene estadísticas. Puedes crearle una.'}</p></div>`:''}
    ${(()=>{if(!yoMismo)return '';const pend=act.filter(e=>{if(e.periodo!=='semana')return false;const cs=condSemana(e,AP[e.id]||[],ahora);return cs.hay&&!(CO[e.id]||[]).some(c=>c.semana===cs.semana&&c.persona===yo);});
      return pend.length?`<div class="rp-c cd-ban"><small class="cd-k">Ha cerrado la semana · jueves 14:00</small><b>Elige tu condición</b><p class="eq-p">La eliges, la escribes y se la envías a quien quieras en PDF. Te falta${pend.length>1?'n':''}:</p><div class="cd-banl">${pend.map(e=>`<button type="button" data-ce="${e.id}"><span>${escH(e.nombre)}</span><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div></div>`:'';})()}
    ${act.map(tarj).join('')}${arc.length?`<details class="es-arc"><summary>Archivadas (${arc.length})</summary>${arc.map(tarj).join('')}</details>`:''}`;
@@ -135,31 +135,33 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
   let r7='';if(e.periodo==='semana'){const d0=new Date(actual),dA=new Date(ahora),m0=Date.UTC(d0.getUTCFullYear(),d0.getUTCMonth(),d0.getUTCDate()),mA=Date.UTC(dA.getUTCFullYear(),dA.getUTCMonth(),dA.getUTCDate()),hoyI=Math.round((mA-m0)/HD),tod=ahora-mA;
    let di=ES.dia7[e.id];if(di==null||di>hoyI)di=hoyI;
    const corte=Math.min(ahora,Math.max(actual,m0+di*HD+tod)),R=sieteR(e,A,ahora,corte),b7=bueno(e,R.d);
-   r7=`<div class="rp-c"><div class="eq-h"><div><small>7R · día a día</small><b>Esta semana frente a la pasada</b></div></div>
-    <p class="eq-p">Toca un día para ver cuánto llevabas ese día a esta hora, comparado con el mismo día de la semana pasada.</p>
+   r7=`<p class="eq-p" style="margin-top:0">Toca un día: cuánto llevabas ese día a esta hora, frente al mismo día de la semana pasada.</p>
     <div class="chs es-7d">${[...Array(hoyI+1)].map((_,i)=>`<button type="button" data-i="${i}" class="${i===di?'on':''}">${DSEM[new Date(m0+i*HD).getUTCDay()]} ${new Date(m0+i*HD).getUTCDate()}</button>`).join('')}</div>
     <div class="es-7l"><span>${escH(dLargo(corte))}, ${hhmm(corte)}: <b>${num(R.este)}</b></span><span>Semana pasada: <b>${num(R.antes)}</b></span><span style="color:${colorDe(b7)}">${R.d?(R.d>0?'▲ ':'▼ ')+num(Math.abs(R.d)):'='}</span></div>
-    ${grafica7R(e,A,ahora,corte)}<div class="es-ley"><span><i style="background:var(--c)"></i>Esta semana</span><span><i class="dash"></i>Semana pasada</span></div></div>`;}
+    ${grafica7R(e,A,ahora,corte)}<div class="es-ley"><span><i style="background:var(--c)"></i>Esta semana</span><span><i class="dash"></i>Semana pasada</span></div>`;}
   const fin=perSig(e.periodo,ver),Av=A.filter(x=>x.L>=ver&&x.L<fin).sort((a,b)=>b.L-a.L),totV=Av.reduce((t,x)=>t+Number(x.cantidad),0);
+  const o=M(e.persona)||{nombre:'—'},comp=e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado';
+  let meta='';if(e.periodo==='semana'){const totAnt=suma(A,prev,actual-1),falta=totAnt-este+(e.sentido==='positiva'?1:0),cierra=dLargo(perSig('semana',actual))+', 14:00';
+   meta=e.sentido==='positiva'?(falta>0?`Te faltan <b>${num(falta)}</b> para superar la semana pasada (${num(totAnt)}). Cierra el ${escH(cierra)}.`:`Ya has superado la semana pasada (${num(totAnt)}). Cierra el ${escH(cierra)}.`)
+    :(este<=totAnt?`Estadística negativa: no pases de ${num(totAnt)}, como la semana pasada. Cierra el ${escH(cierra)}.`:`Estadística negativa: ya has pasado la semana pasada (${num(totAnt)}). Cierra el ${escH(cierra)}.`);}
   box.innerHTML=quien()+`<button type="button" class="es-atras"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>Estadísticas</button>
-   <div class="rp-c">${(()=>{const o=M(e.persona)||{nombre:'—'};return `<div class="es-due">${avHTML(o)}<div><b>${e.persona===yo?'Tuya':'De '+escH(o.nombre)}</b>${pTag(o)}</div></div>`;})()}<div class="eq-h"><div><small>Estadística</small><b>${escH(e.nombre)}</b></div><button class="mas3" aria-label="Opciones">⋯</button></div>
-    <div class="es-7n"><div><small>${P[0]}</small><b>${num(este)}</b></div><div><small>${P[1]}</small><b class="ant">${num(antes)}</b></div></div>
-    <div class="es-7r" style="color:${colorDe(b)}">${d?`${d>0?'▲':'▼'} ${num(Math.abs(d))} ${d>0?'más':'menos'} que ${e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado'} a esta hora${b?' · bien':' · a mejorar'}`:`Igual que ${e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado'} a esta hora`}</div>
-    ${e.periodo==='semana'?(()=>{const totAnt=suma(A,prev,actual-1),falta=totAnt-este+(e.sentido==='positiva'?1:0),fin=perSig('semana',actual);
-      return `<div class="es-obj"><span>Esta semana acaba el ${escH(dLargo(fin))} a las 14:00.</span><span>${e.sentido==='positiva'?(falta>0?`La semana pasada acabó con <b>${num(totAnt)}</b>: te faltan <b>${num(falta)}</b> para superarla.`:`La semana pasada acabó con <b>${num(totAnt)}</b>: ya la has superado.`):(este<=totAnt?`La semana pasada acabó con <b>${num(totAnt)}</b>: para no empeorar, no pases de ahí (te quedan <b>${num(totAnt-este)}</b>).`:`La semana pasada acabó con <b>${num(totAnt)}</b>: ya la has pasado.`)}</span></div>`;})():''}
-    <div class="es-in"><input class="i" inputmode="decimal" autocomplete="off" placeholder="Sumar ${escH(e.eje_y)}…" value="${escH(ES.cant[e.id]||'')}"><button class="bt" id="esGuardar">+ Apuntar</button></div>
+   <div class="rp-c es-hero"><div class="es-hh"><div class="es-due">${avHTML(o)}<div><b>${escH(o.nombre)}${e.persona===yo?' <i>(tú)</i>':''}</b>${pTag(o)}</div></div><button class="mas3" aria-label="Opciones">⋯</button></div>
+    <h2 class="es-tit">${escH(e.nombre)}</h2>
+    <div class="es-big"><div><b>${num(este)}</b><small>${escH(e.eje_y)} · ${P[0].toLowerCase()}</small></div>
+     <div class="es-vs" style="color:${colorDe(b)}"><b>${d?(d>0?'▲ ':'▼ ')+num(Math.abs(d)):'='}</b><small>vs. ${comp} a esta hora (${num(antes)})</small></div></div>
+    ${meta?`<p class="es-meta">${meta}</p>`:''}
+    <div class="es-in"><input class="i" inputmode="decimal" autocomplete="off" placeholder="¿Cuántos sumas?" value="${escH(ES.cant[e.id]||'')}"><button class="bt" id="esGuardar">+ Apuntar</button></div>
     ${cu?`<div class="es-mo"><small>Lo apuntas el</small><div class="es-per"><button type="button" class="pb-fl" data-d="-1" aria-label="Día anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${escH(dLargo(cu))}</b><button type="button" class="pb-fl" data-d="1" aria-label="Día siguiente"${cu+HD>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
      <div class="es-per"><button type="button" class="pb-fl" data-h="-1" aria-label="Una hora antes"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button><b>a las ${hhmm(cu)}</b><button type="button" class="pb-fl" data-h="1" aria-label="Una hora después"${cu+36e5>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button></div>
-     <button type="button" class="lnk" data-c="ahora" style="margin-top:4px">Mejor apuntarlo ahora</button></div>`:`<button type="button" class="lnk es-otro" data-c="otro">¿Lo hiciste otro día? Elige cuándo</button>`}
-    <div class="es-sen" style="margin-top:12px"><span class="es-tag ${e.sentido}">${e.sentido==='positiva'?'Positiva · si sube, es bueno':'Negativa · si sube, es malo'}</span></div></div>
+     <button type="button" class="lnk" data-c="ahora" style="margin-top:4px">Mejor apuntarlo ahora</button></div>`:`<button type="button" class="lnk es-otro" data-c="otro">¿Fue otro día?</button>`}</div>
    ${e.periodo==='semana'?condTarjeta(e,A,ahora,CO[e.id]||[]):''}
-   <div class="rp-c"><div class="eq-h"><div><small>Gráfica</small><b>${escH(e.eje_y.charAt(0).toUpperCase()+e.eje_y.slice(1))} por ${e.periodo==='semana'?'semana':e.periodo==='dia'?'día':'mes'}</b></div></div>
-    ${A.length?`<div class="es-tt" style="color:${tt.c}">${escH(tt.txt)}</div>`:''}
-    <div class="es-gw"><span class="es-ey">${escH(e.eje_y)}</span>${grafica(e,T,ahora,false)}</div><div class="es-ex">${PER[e.periodo].n}${e.periodo==='semana'?' (de jueves 14:00 a jueves 14:00)':''}</div>
-    <div class="es-ley"><span><i style="background:${VERDE}"></i>Va bien</span><span><i style="background:${ROJO}"></i>Va mal</span><span><i class="dash"></i>Tendencia</span><span><i class="hue"></i>En curso</span></div></div>
-   ${r7}
-   <div class="rp-c"><div class="es-per"><button type="button" class="pb-fl" data-v="-1" aria-label="Anterior"${!T.length||ver<=T[0].s?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>Apuntado · ${escH(perLargo(e.periodo,ver,ahora).toLowerCase())}<small>Total: ${num(totV)}</small></b><button type="button" class="pb-fl" data-v="1" aria-label="Siguiente"${ver>=actual?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
-    ${Av.length?Av.map(x=>`<div class="es-fila" data-id="${x.id}"><span>${escH(dLargo(x.L))} · ${hhmm(x.L)}${x.por&&x.por!==e.persona?` <em>· ${escH(pri(nomDe(x.por)))}</em>`:''}</span><b>${Number(x.cantidad)>0?'+':''}${num(x.cantidad)}</b><button type="button" class="es-x" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join(''):'<p class="vacio">Aún no has apuntado nada aquí.</p>'}</div>`;
+   <div class="rp-c"><div class="es-gh"><b>Por ${e.periodo==='semana'?'semanas':e.periodo==='dia'?'días':'meses'}</b>${A.length?`<span style="color:${tt.c}">${escH(tt.txt)}</span>`:''}</div>
+    ${grafica(e,T,ahora,false)}
+    <div class="es-ley"><span><i style="background:${VERDE}"></i>Sube bien</span><span><i style="background:${ROJO}"></i>Va mal</span><span><i class="dash"></i>Tendencia</span></div></div>
+   ${r7?`<details class="rp-c es-mas" data-k="7r"${ES.abre['7r']?' open':''}><summary>Día a día (7R)</summary>${r7}</details>`:''}
+   <details class="rp-c es-mas" data-k="ap"${ES.abre.ap?' open':''}><summary>Lo apuntado</summary><div class="es-per"><button type="button" class="pb-fl" data-v="-1" aria-label="Anterior"${!T.length||ver<=T[0].s?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${escH(perLargo(e.periodo,ver,ahora))}<small>Total: ${num(totV)}</small></b><button type="button" class="pb-fl" data-v="1" aria-label="Siguiente"${ver>=actual?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
+    ${Av.length?Av.map(x=>`<div class="es-fila" data-id="${x.id}"><span>${escH(dLargo(x.L))} · ${hhmm(x.L)}${x.por&&x.por!==e.persona?` <em>· ${escH(pri(nomDe(x.por)))}</em>`:''}</span><b>${Number(x.cantidad)>0?'+':''}${num(x.cantidad)}</b><button type="button" class="es-x" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join(''):'<p class="vacio">Aún no hay nada apuntado aquí.</p>'}</details>`;
+  box.querySelectorAll('details.es-mas').forEach(x=>x.addEventListener('toggle',()=>{ES.abre[x.dataset.k]=x.open;guardaLS('es_abre',ES.abre);}));
   box.querySelector('.es-atras').onclick=()=>{ES.abierta='';if(ES.volverTodos){ES.volverTodos=0;ES.persona='*';esGuarda();carga();return;}esGuarda();pinta3();};chipsQuien();
   {const b=box.querySelector('.cd-elige');if(b)b.onclick=()=>escribeCond(e,A,()=>carga());}
   box.querySelectorAll('.cd-card [data-cv]').forEach(b=>b.onclick=()=>abreCond(b.dataset.cv));
