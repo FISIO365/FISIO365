@@ -48,6 +48,15 @@ const S={yo:null,equipo:null,miembros:[],permisos:[],tab:leeLS('tab','plan')};
 const M=id=>S.miembros.find(m=>m.id===id);
 const nomDe=id=>(M(id)||{}).nombre||'Alguien';
 const supervisa=p=>S.permisos.some(x=>x.quien===S.yo.id&&x.a_quien===p&&(M(p)||{}).activo);
+// Quien administra (o a quien se lo da) ve las estadísticas de todo el equipo; solo las rellena quien la lleva o su jefe
+const veTodo=()=>!!(S.yo&&(S.yo.admin||S.yo.ve_todo));
+const puedeEst=p=>p===S.yo.id||supervisa(p);
+// Todo el equipo en el orden del organigrama (cada jefe con su gente debajo)
+function ordenOrg(){const act=S.miembros.filter(m=>m.activo),ids=new Set(act.map(m=>m.id)),jefe={};
+ act.forEach(m=>{const d=S.permisos.filter(x=>x.a_quien===m.id&&ids.has(x.quien)).map(x=>x.quien).sort((a,b)=>nomDe(a).localeCompare(nomDe(b),'es'));jefe[m.id]=d[0]||null;});
+ act.forEach(m=>{const v=new Set([m.id]);let p=jefe[m.id];while(p){if(v.has(p)){jefe[m.id]=null;break;}v.add(p);p=jefe[p];}});
+ const R=[],va=(id,n)=>{act.filter(m=>jefe[m.id]===id).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).forEach(m=>{R.push(m);m._niv=n;va(m.id,n+1);});};va(null,0);return R;}
+const verEst=()=>veTodo()?[S.yo,...ordenOrg().filter(m=>m.id!==S.yo.id)]:visibles();
 const visibles=()=>[S.yo,...S.miembros.filter(m=>m.id!==S.yo.id&&m.activo&&supervisa(m.id)).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'))];
 
 async function arranca(){const {data:{session}}=await sb.auth.getSession();if(!session)return pantallaEntrar();
@@ -270,7 +279,7 @@ function renderEquipo(wrap){const adm=S.yo.admin;
  const act=S.miembros.filter(m=>m.activo).sort((a,b)=>(b.id===S.yo.id)-(a.id===S.yo.id)||a.nombre.localeCompare(b.nombre,'es'));
  const baja=S.miembros.filter(m=>!m.activo).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
  const fila=m=>{const ac=m.activo?aCargo(m.id):[],de=m.activo?dependeDe(m.id):[];
-  return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}">${avHTML(m)}<div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b>${pTag(m,adm&&m.activo)}<small>${escH(m.email||'')}</small>
+  return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}">${avHTML(m)}<div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${!m.admin&&m.ve_todo&&m.activo?'<i class="bdg off">VE TODO</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b>${pTag(m,adm&&m.activo)}<small>${escH(m.email||'')}</small>
    ${m.grupo?`<small class="rv-g">Grupo: ${escH(m.grupo)}</small>`:''}${de.length?`<small class="rv-d">Depende de ${nombres(de)}</small>`:''}${ac.length?`<small class="rv-a">A su cargo: ${nombres(ac)}</small>`:''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;};
  wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div class="top-e">${S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div><button class="eq-lapiz" id="eqMas" aria-label="Cambiar el nombre o la foto del equipo"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg></button></div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
    <div style="margin-top:10px">${act.map(fila).join('')}${baja.length&&adm?`<details style="margin-top:6px"><summary class="eq-p" style="cursor:pointer">De baja (${baja.length})</summary>${baja.map(fila).join('')}</details>`:''}</div></div>
@@ -369,6 +378,7 @@ function opcionesMiembro(p){if(!p)return;const yo=p.id===S.yo.id;
   ${p.activo?`<button class="op" data-a="dep"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Depende de…${dependeDe(p.id).length?` <em class="op-v">${nombres(dependeDe(p.id))}</em>`:''}</button>
   <button class="op" data-a="car"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>A su cargo…${aCargo(p.id).length?` <em class="op-v">${nombres(aCargo(p.id))}</em>`:''}</button>`:''}
   ${p.activo&&!yo?`<button class="op" data-a="adm"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg>Pasarle la administración</button>`:''}
+  ${p.activo&&!p.admin?`<button class="op" data-a="vt"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>${p.ve_todo?'Que deje de ver todas las estadísticas':'Que vea las estadísticas de todo el equipo'}</button>`:''}
   ${yo?'':`<button class="op" data-a="clave"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Ponerle una contraseña nueva</button>`}
   <button class="op" data-a="nom"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>Cambiar el nombre</button>
   <button class="op" data-a="fot"><svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>${p.foto?'Cambiar la foto':'Ponerle una foto'}</button>
@@ -377,6 +387,7 @@ function opcionesMiembro(p){if(!p)return;const yo=p.id===S.yo.id;
   ${yo?'':(p.activo?`<button class="op rojo" data-a="baja"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM17 8l5 5M22 8l-5 5"/></svg>Dar de baja</button>`:`<button class="op" data-a="alta"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Volver a dar de alta</button>`)}</div>`);
  const upd=async(campos,ok)=>{m.remove();const {error}=await sb.from('pb_miembros').update(campos).eq('id',p.id);if(error){toast(/administrador/.test(error.message)?'Tiene que quedar al menos un administrador':'No se ha podido',false);return;}toast(ok);await cargaEquipo();if(p.id===S.yo.id)pinta();else renderEquipoOtraVez();};
  const on=(a,f)=>{const b=m.querySelector(`[data-a="${a}"]`);if(b)b.onclick=f;};
+ on('vt',()=>{const v=!p.ve_todo;m.remove();(async()=>{const {error}=await sb.from('pb_miembros').update({ve_todo:v}).eq('id',p.id);if(error){toast('No se ha podido',false);return;}toast(v?pri(p.nombre)+' ya ve todas las estadísticas':pri(p.nombre)+' solo verá las de su gente');await cargaEquipo();renderEquipoOtraVez();})();});
  on('dep',()=>{m.remove();const ant=dependeDe(p.id);eligePersonas('¿De quién depende '+pri(p.nombre)+'?','Quien elijas lo tendrá a su cargo: verá su plan y sus estadísticas y le podrá poner tareas.',ant,p.id).then(L=>{if(!L)return;
   guardaCargos(L.filter(q=>!ant.includes(q)).map(q=>[q,p.id]),ant.filter(q=>!L.includes(q)).map(q=>[q,p.id]));});});
  on('car',()=>{m.remove();const ant=aCargo(p.id);eligePersonas('¿Quién está a cargo de '+pri(p.nombre)+'?','Verá su plan y sus estadísticas y les podrá poner tareas.',ant,p.id).then(L=>{if(!L)return;

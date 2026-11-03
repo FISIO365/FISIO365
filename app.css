@@ -381,3 +381,4 @@ input.i:focus{border-color:var(--c);background:#fff}
 .cd-txt div{min-height:1em}
 
 .cd-txt p{margin:0;min-height:1em}
+.es-solo{font-size:12.5px;color:var(--mut);background:#faf8f5;border-radius:12px;padding:10px 12px;margin:14px 0 0}
