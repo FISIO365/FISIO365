@@ -15,7 +15,10 @@ function ojos(root){(root||document).querySelectorAll('input[type="password"]:no
  const b=ce('button','pw-b');b.type='button';b.setAttribute('aria-label','Ver la contraseña');b.innerHTML=OJO;w.appendChild(b);
  b.onmousedown=e=>e.preventDefault();b.onclick=()=>{const ver=i.type==='password';i.type=ver?'text':'password';b.innerHTML=ver?OJO_NO:OJO;b.setAttribute('aria-label',ver?'Ocultar la contraseña':'Ver la contraseña');};});}
 function toast(t,ok){const e=ce('div','toast '+(ok===false?'err':'ok'));e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2600);}
-function modal(html){const m=ce('div','mod');m.innerHTML=`<div class="hoja">${html}</div>`;m.addEventListener('click',e=>{if(e.target===m)m.remove();});document.body.appendChild(m);return m;}
+function modal(html){const m=ce('div','mod');m.innerHTML=`<div class="hoja">${html}</div>`;m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+ // Una X fija arriba en todas las ventanas: siempre se puede salir, aunque la hoja ocupe toda la pantalla
+ const h=m.querySelector('.hoja'),ponX=()=>{if(h.querySelector(':scope>.mod-x'))return;const b=ce('button','mod-x');b.type='button';b.setAttribute('aria-label','Cerrar');b.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';b.onclick=()=>m.remove();h.prepend(b);};
+ ponX();new MutationObserver(ponX).observe(h,{childList:true});document.body.appendChild(m);return m;}
 function pregunta(txt,o){o=o||{};return new Promise(res=>{const m=modal(`<h3>${escH(txt)}</h3>${o.sub?`<p>${escH(o.sub)}</p>`:''}<div class="bts"><button class="bt sec" data-r="0">Cancelar</button><button class="bt" data-r="1">${escH(o.si||'Sí')}</button></div>`);
  m.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{m.remove();res(b.dataset.r==='1');});m.addEventListener('click',e=>{if(e.target===m)res(false);});});}
 
