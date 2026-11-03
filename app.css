@@ -197,3 +197,17 @@ input.i:focus{border-color:var(--c);background:#fff}
 .eq-ayuda b{font-size:14.5px}.eq-ayuda p{font-size:13px;color:var(--mut);line-height:1.55;margin:6px 0 0}.eq-ayuda p b{font-size:inherit;color:var(--ink)}
 .op-v{font-style:normal;margin-left:auto;font-size:13px;color:var(--c);font-weight:600;text-align:right}
 .es-ayu{font-size:12px;color:var(--mut);margin:6px 2px 0}
+
+/* Organigrama */
+.org{margin-top:12px}
+.org-n{position:relative}
+.org-k{margin-left:18px;padding-left:16px;border-left:1.5px solid #ecdcd2}
+.org-k>.org-n::before{content:"";position:absolute;left:-16px;top:24px;width:14px;border-top:1.5px solid #ecdcd2}
+.org-c{display:flex;align-items:center;gap:10px;background:#faf8f5;border:1.5px solid #efe7df;border-radius:14px;padding:8px 10px;margin:6px 0;transition:border-color .15s,background .15s,opacity .15s}
+.org-c .av{width:32px;height:32px;font-size:13px}
+.org-t{flex:1;min-width:0}.org-t b{display:block;font-size:14px;font-weight:600}.org-t b i{font-style:normal;font-weight:500;color:var(--mut)}.org-t small{display:block;font-size:12px;color:var(--mut)}
+.org-h{flex:none;width:26px;height:32px;display:flex;align-items:center;justify-content:center;color:#b3a59c;font-size:18px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.org-c.sobre,.org-raiz.sobre{border-color:var(--c);background:#fbeee8}
+.org-c.org-fuera{opacity:.35}
+.org-g{position:fixed;z-index:80;pointer-events:none;margin:0;box-shadow:0 10px 30px rgba(26,26,26,.18);background:#fff;transform:rotate(-1.5deg)}
+.org-raiz{border:1.5px dashed #e3d8ce;border-radius:14px;padding:10px;text-align:center;font-size:12.5px;font-weight:600;color:var(--mut);margin-bottom:6px;transition:all .15s}

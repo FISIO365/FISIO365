@@ -243,11 +243,36 @@ function renderEquipo(wrap){const adm=S.yo.admin;
    ${de.length?`<small class="rv-d">Depende de ${nombres(de)}</small>`:''}${ac.length?`<small class="rv-a">A su cargo: ${nombres(ac)}</small>`:''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;};
  wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
    <div style="margin-top:10px">${act.map(fila).join('')}${baja.length&&adm?`<details style="margin-top:6px"><summary class="eq-p" style="cursor:pointer">De baja (${baja.length})</summary>${baja.map(fila).join('')}</details>`:''}</div></div>
+  <div class="rp-c"><div class="eq-h"><div><small>Organigrama</small><b>Quién depende de quién</b></div></div>
+   <p class="eq-p">${adm?'Arrastra a cada persona (cógela por <b>⠿</b>) y suéltala encima de quien la lleva. Para quitarle el jefe, suéltala en «Arriba del todo».':'Así está organizado el equipo.'}</p><div id="org" class="org"></div></div>
   <div class="rp-c eq-ayuda"><b>¿Cómo funciona?</b><p>Quien tiene a alguien <b>a su cargo</b> ve su plan de batalla y sus estadísticas, y le puede poner tareas (esa persona solo las puede marcar como hechas).</p>
    ${adm?'<p>Para poner a alguien bajo otra persona, toca los <b>⋯</b> de esa persona y elige <b>«Depende de»</b>. O al revés: en los ⋯ de la jefa o el jefe, <b>«A su cargo»</b>.</p><p>No va en cascada: si tú tienes a Ramiro a tu cargo y Ramiro tiene a Ana, tú no ves a Ana salvo que también la pongas a tu cargo.</p>':'<p>Las altas, bajas, puestos y quién está a cargo de quién los lleva quien administra el equipo.</p>'}</div>`;
+ organigrama(wrap.querySelector('#org'),adm,act);
  if(!adm)return;
  wrap.querySelector('#alta').onclick=altaMiembro;
  wrap.querySelectorAll('.mas3').forEach(b=>b.onclick=()=>opcionesMiembro(M(b.closest('.mi').dataset.id)));}
+// ── ORGANIGRAMA: cada persona cuelga de su jefe (la primera persona de quien depende). Se arrastra para cambiarlo.
+function organigrama(box,adm,act){
+ const ids=new Set(act.map(m=>m.id));
+ const jefe={};act.forEach(m=>{const d=dependeDe(m.id).filter(q=>ids.has(q)).sort((a,b)=>nomDe(a).localeCompare(nomDe(b),'es'));jefe[m.id]=d[0]||null;});
+ // Evitar círculos (A depende de B y B de A): el que cierra el círculo pasa arriba
+ act.forEach(m=>{const vis=new Set([m.id]);let p=jefe[m.id];while(p){if(vis.has(p)){jefe[m.id]=null;break;}vis.add(p);p=jefe[p];}});
+ const hijos=p=>act.filter(m=>jefe[m.id]===p).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+ const otros=p=>dependeDe(p).filter(q=>ids.has(q)&&q!==jefe[p]);
+ const nodo=m=>{const H=hijos(m.id),o=otros(m.id);return `<div class="org-n"><div class="org-c" data-id="${m.id}">${adm?'<span class="org-h" aria-label="Arrastrar">⠿</span>':''}<span class="av">${escH(ini(m.nombre))}</span><span class="org-t"><b>${escH(m.nombre)}${m.id===S.yo.id?' <i>(tú)</i>':''}</b>${m.puesto||o.length?`<small>${escH(m.puesto||'')}${m.puesto&&o.length?' · ':''}${o.length?'también de '+nombres(o):''}</small>`:''}</span></div>${H.length?`<div class="org-k">${H.map(nodo).join('')}</div>`:''}</div>`;};
+ box.innerHTML=`${adm?'<div class="org-raiz" data-id="">Arriba del todo</div>':''}${hijos(null).map(nodo).join('')||'<p class="vacio">Aún no hay nadie.</p>'}`;
+ if(!adm)return;
+ const desc=(a,b)=>{let p=jefe[b];while(p){if(p===a)return true;p=jefe[p];}return false;};
+ box.querySelectorAll('.org-h').forEach(h=>{h.addEventListener('pointerdown',ev=>{ev.preventDefault();const c=h.closest('.org-c'),id=c.dataset.id;
+  const g=c.cloneNode(true);g.classList.add('org-g');document.body.appendChild(g);const r=c.getBoundingClientRect(),dx=ev.clientX-r.left,dy=ev.clientY-r.top;g.style.width=r.width+'px';
+  const mueve=e=>{g.style.left=(e.clientX-dx)+'px';g.style.top=(e.clientY-dy)+'px';g.style.display='none';const t=document.elementFromPoint(e.clientX,e.clientY);g.style.display='';
+   box.querySelectorAll('.sobre').forEach(x=>x.classList.remove('sobre'));const d=t&&t.closest('.org-c,.org-raiz');if(d&&box.contains(d)&&d.dataset.id!==id&&!(d.dataset.id&&desc(id,d.dataset.id)))d.classList.add('sobre');
+   if(e.clientY<60)window.scrollBy(0,-12);else if(e.clientY>innerHeight-60)window.scrollBy(0,12);};
+  mueve(ev);c.classList.add('org-fuera');
+  const suelta=async()=>{document.removeEventListener('pointermove',mueve);document.removeEventListener('pointerup',suelta);document.removeEventListener('pointercancel',suelta);g.remove();c.classList.remove('org-fuera');
+   const d=box.querySelector('.sobre');if(!d)return;d.classList.remove('sobre');const nuevo=d.dataset.id||null;if(nuevo===jefe[id]&&!otros(id).length)return;
+   const ant=dependeDe(id);await guardaCargos(nuevo&&!ant.includes(nuevo)?[[nuevo,id]]:[],ant.filter(q=>q!==nuevo).map(q=>[q,id]));};
+  document.addEventListener('pointermove',mueve);document.addEventListener('pointerup',suelta);document.addEventListener('pointercancel',suelta);});});}
 // Elegir varias personas (chips). Devuelve la lista elegida o null si se cancela
 function eligePersonas(titulo,sub,ini,excluir){return new Promise(res=>{const sel=new Set(ini);const L=S.miembros.filter(m=>m.activo&&m.id!==excluir).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
  const m=modal(`<h3>${escH(titulo)}</h3><p>${escH(sub)}</p><div class="chs" style="margin-top:14px">${L.map(p=>`<button type="button" data-p="${p.id}" class="${sel.has(p.id)?'on':''}">${IC.ck}${escH(p.nombre)}</button>`).join('')||'<span class="eq-p">Aún no hay nadie más en el equipo.</span>'}</div>
