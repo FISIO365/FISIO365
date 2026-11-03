@@ -145,16 +145,16 @@ function menuCuenta(){const m=modal(`<h3>${escH(S.yo.nombre)}</h3><p>${escH(S.yo
 // Cada uno se apunta las suyas; quien tiene permiso elige a quién mira y le puede poner tareas.
 const PB={persona:leeLS('persona',''),dia:leeLS('dia',''),d:null,sem:0};
 const pbGuarda=()=>{guardaLS('persona',PB.persona);guardaLS('dia',PB.dia);};
-async function datosPlan(p){const hoy=hoyMad(),cols='id,persona,dia,texto,hecha,hecha_en,por,creado';
+async function datosPlan(p){const hoy=hoyMad(),cols='id,persona,dia,texto,hecha,hecha_en,por,creado,nota';
  const [a,b]=await Promise.all([sb.from('pb_tareas').select(cols).eq('persona',p).eq('hecha',false).order('dia').order('creado'),
   sb.from('pb_tareas').select(cols).eq('persona',p).eq('hecha',true).gte('hecha_en',new Date(Date.now()-40*36e5).toISOString()).order('hecha_en')]);
  if(a.error||b.error)throw new Error('carga');
- const it=x=>({id:x.id,persona:x.persona,dia:x.dia,t:x.texto,hecha:x.hecha,hechaEn:x.hecha_en,por:x.por});
+ const it=x=>({id:x.id,persona:x.persona,dia:x.dia,t:x.texto,hecha:x.hecha,hechaEn:x.hecha_en,por:x.por,nota:x.nota||''});
  const P=(a.data||[]).map(it);
  return {hoy,persona:p,pendientes:P.filter(x=>x.dia<=hoy),proximas:P.filter(x=>x.dia>hoy),hechas:(b.data||[]).map(it).filter(x=>diaMad(x.hechaEn)===hoy)};}
 async function datosPasado(p,dia){const ini=new Date(pbIso(dia,-1)+'T00:00:00Z').toISOString(),fin=new Date(pbIso(dia,2)+'T00:00:00Z').toISOString();
- const {data,error}=await sb.from('pb_tareas').select('id,persona,dia,texto,hecha,hecha_en,por').eq('persona',p).eq('hecha',true).gte('hecha_en',ini).lt('hecha_en',fin).order('hecha_en');
- if(error)throw new Error('carga');return (data||[]).filter(x=>diaMad(x.hecha_en)===dia).map(x=>({id:x.id,persona:x.persona,dia:x.dia,t:x.texto,hecha:true,hechaEn:x.hecha_en,por:x.por}));}
+ const {data,error}=await sb.from('pb_tareas').select('id,persona,dia,texto,hecha,hecha_en,por,nota').eq('persona',p).eq('hecha',true).gte('hecha_en',ini).lt('hecha_en',fin).order('hecha_en');
+ if(error)throw new Error('carga');return (data||[]).filter(x=>diaMad(x.hecha_en)===dia).map(x=>({id:x.id,persona:x.persona,dia:x.dia,t:x.texto,hecha:true,hechaEn:x.hecha_en,por:x.por,nota:x.nota||''}));}
 async function contarMias(){try{const {count}=await sb.from('pb_tareas').select('id',{count:'exact',head:true}).eq('persona',S.yo.id).eq('hecha',false).lte('dia',hoyMad());badge(count||0);}catch(e){}}
 
 function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
@@ -195,7 +195,8 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   const v=!x.hecha&&pbViene(x.dia,hoy);if(v)tags.push(`<i class="arr">${v}</i>`);
   const p=puede(x);
   return `<div class="pb-it${x.hecha?' ok':''}${solo?' solo':''}" data-id="${x.id}"><button type="button" class="pb-ck" aria-label="${x.hecha?'Desmarcar':'Hecha'}"${solo?' disabled':''}>${IC.ck}</button>
-   <div class="pb-tx"><div class="pb-t${p?'':' fija'}"${x.hecha||!p?'':' title="Toca para escribir o dar formato"'}>${fmt(x.t)}</div>${tags.length?`<div class="pb-tg">${tags.join('')}</div>`:''}</div>
+   <div class="pb-tx"><div class="pb-t${p?'':' fija'}"${x.hecha||!p?'':' title="Toca para escribir o dar formato"'}>${fmt(x.t)}</div>${tags.length?`<div class="pb-tg">${tags.join('')}</div>`:''}${x.nota?`<button type="button" class="pb-nv"><svg viewBox="0 0 24 24"><path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M9 11h6M9 15h6"/></svg><span>${escH(x.nota)}</span></button>`:''}</div>
+   ${puedeEst(x.persona)||x.nota?`<button type="button" class="pb-nb${x.nota?' con':''}" title="${x.nota?'Ver la nota':'Añadir una nota'}" aria-label="Nota"><svg viewBox="0 0 24 24"><path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M9 11h6M9 15h4"/></svg></button>`:''}
    ${!x.hecha&&p?`<div class="pb-ac"><button type="button" class="pb-man" title="Pasar al día siguiente" aria-label="Pasar al día siguiente"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button type="button" class="pb-del" title="Quitar" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`:''}</div>`;};
  // Lee lo escrito (con su formato) y lo pasa a texto con marcas
  const lee=el=>{const R=[],st=n=>{let b=false,u=false,h=false;for(let e=n.parentElement;e&&e!==el.parentElement;e=e.parentElement){const c=getComputedStyle(e);if(!b&&(+c.fontWeight>=600||c.fontWeight==='bold'))b=true;if(String(c.textDecorationLine||c.textDecoration).includes('underline'))u=true;if(e===el)break;}h=fosAnc(n.parentElement,el)!=null;return {b,u,h};};
@@ -281,6 +282,14 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   box.querySelectorAll('.pb-man').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id,[l,i]=buscar(id);if(!l)return;const x=l.splice(i,1)[0];x.dia=pbIso(x.dia<hoy?hoy:x.dia,1);PB.d.proximas.push(x);pinta2();
    guardaBD(sb.from('pb_tareas').update({dia:x.dia}).eq('id',id)).then(ok=>ok&&toast('Pasada al día siguiente'));});
   box.querySelectorAll('.pb-del').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id;pregunta('¿Quitar esta tarea del plan?',{si:'Quitar'}).then(ok=>{if(!ok)return;const [l,i]=buscar(id);if(l)l.splice(i,1);pinta2();guardaBD(sb.from('pb_tareas').delete().eq('id',id));});});
+  // Nota de la tarea: todo lo que haya que tener en cuenta, sin el límite de la tarea
+  box.querySelectorAll('.pb-nb,.pb-nv').forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.closest('.pb-it').dataset.id;let x=null;const [l,i]=buscar(id);if(l)x=l[i];else{const L=Array.isArray(PB.pas&&PB.pas[PB.dia])?PB.pas[PB.dia]:[];x=L.find(y=>y.id===id);}if(!x)return;
+   const ed=puedeEst(x.persona);
+   const m=modal(`<small class="cd-k">Nota de la tarea</small><h3>${fmt(x.t)}</h3>${ed?`<textarea class="i pb-nt" rows="9" maxlength="5000" placeholder="Todo lo que haya que tener en cuenta…">${escH(x.nota||'')}</textarea>`:`<div class="pb-nl">${escH(x.nota||'')}</div>`}<div class="bts">${ed?(x.nota?'<button class="bt sec" data-q>Borrar nota</button>':'<button class="bt sec" data-x>Cancelar</button>'):''}${ed?'<button class="bt" data-ok>Guardar</button>':'<button class="bt sec" data-x>Cerrar</button>'}</div>`);
+   {const c=m.querySelector('[data-x]');if(c)c.onclick=()=>m.remove();}if(!ed)return;
+   const ta=m.querySelector('.pb-nt');setTimeout(()=>ta.focus(),60);
+   const guarda=async v=>{m.remove();if(v===(x.nota||''))return;const ant=x.nota;x.nota=v;pinta2();if(!(await guardaBD(sb.from('pb_tareas').update({nota:v||null}).eq('id',x.id)))){x.nota=ant;pinta2();}else toast(v?'Nota guardada':'Nota borrada');};
+   m.querySelector('[data-ok]').onclick=()=>guarda(ta.value.trim());{const q=m.querySelector('[data-q]');if(q)q.onclick=()=>guarda('');}});
   // Tocar una tarea: se escribe encima, como en el cuaderno, y se le puede dar formato
   box.querySelectorAll('.pb-it:not(.ok) .pb-t:not(.fija)').forEach(tx=>tx.onclick=ev=>{const it=tx.closest('.pb-it');if(it.classList.contains('ed'))return;const [l,i]=buscar(it.dataset.id);if(!l)return;const x=l[i];
    box.querySelectorAll('.pb-it.ed').forEach(o=>o!==it&&o._fuera&&o._fuera());

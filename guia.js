@@ -15,6 +15,7 @@ const GUIA=[
   h:`<p>Tu <b>plan de batalla</b>: las tareas de cada día en una hoja de cuaderno.</p>
    <ul><li>Escribe en el primer renglón libre y pulsa ✓. Con la barra de al lado puedes poner <b>negrita</b>, <u>subrayado</u> o <mark>fosforito</mark>.</li>
    <li>Toca el círculo para tacharla. La flecha la pasa al día siguiente y la ✕ la quita.</li>
+   <li>Si hay algo largo que tener en cuenta, toca la <b>hojita</b> de la derecha y escríbelo en la <b>nota</b> de la tarea (sin límite de letras). Se ve debajo de la tarea, también cuando ya está hecha.</li>
    <li>En la semana de arriba eliges el día: los días pasados muestran lo que se hizo y a qué hora.</li>
    <li>Las tareas que te pone tu senior salen con «Puesta por…» y solo las puedes marcar como hechas.</li>
    <li>Al final de la hoja de hoy está el botón para <b>pasar tu BP/7R</b>.</li>
