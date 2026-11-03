@@ -2728,6 +2728,43 @@ module.exports = async function handler(req, res) {
     const r = await PG.responder(String(b.url), { method: b.method || 'GET', body: b.body || undefined });
     res.setHeader('Content-Type', 'application/json'); res.setHeader('Cache-Control', 'no-store'); return res.status(r.status).send(await r.text());
   }
+  if (action === 'copia-seguridad') { // La copia de cada noche (GitHub Actions, .github/workflows/backup.yml) lee aquí la base de datos. Sin claves: solo vale el token OIDC de esa acción de este repo
+    const PG = require('./_pg'); if (!PG.ACTIVO || req.method !== 'POST') return res.status(404).end();
+    const cr = require('crypto'); res.setHeader('Cache-Control', 'no-store');
+    try {
+      const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''); const [h64, p64, s64] = tok.split('.');
+      const dec = x => JSON.parse(Buffer.from(String(x || ''), 'base64url').toString('utf8'));
+      const H = dec(h64), P = dec(p64), ahora = Date.now() / 1000;
+      global.__jwksGH = global.__jwksGH && global.__jwksGH.t > Date.now() ? global.__jwksGH : { t: Date.now() + 6e5, j: await (await PG.fetchReal('https://token.actions.githubusercontent.com/.well-known/jwks')).json() };
+      const jwk = (global.__jwksGH.j.keys || []).find(k => k.kid === H.kid); if (!jwk || H.alg !== 'RS256') return res.status(401).json({ ok: false });
+      const okF = cr.verify('RSA-SHA256', Buffer.from(h64 + '.' + p64), cr.createPublicKey({ key: jwk, format: 'jwk' }), Buffer.from(s64, 'base64url'));
+      if (!okF || P.iss !== 'https://token.actions.githubusercontent.com' || P.aud !== 'fisio365-copia' || String(P.repository || '').toLowerCase() !== 'fisio365/fisio365' || P.ref !== 'refs/heads/main' || !/\/\.github\/workflows\/backup\.yml@refs\/heads\/main$/.test(String(P.workflow_ref || '')) || !(P.exp > ahora)) return res.status(401).json({ ok: false });
+      const b = req.body || {}, D = PG.db();
+      if (b.que === 'tablas') {
+        const r = (await D.query('select tabla, count(*)::int n from registros group by tabla')).rows;
+        const nom = Object.fromEntries(Object.values(PG.T).map(t => [t.id, t.name]));
+        const c = (await D.query('select tabla, campo, n from contadores')).rows;
+        const ar = (await D.query('select count(*)::int n, coalesce(sum(bytes),0)::bigint b from archivos')).rows[0];
+        return res.status(200).json({ ok: true, tablas: r.map(x => ({ id: x.tabla, nombre: nom[x.tabla] || x.tabla, n: x.n })), contadores: c, archivos: ar });
+      }
+      if (b.que === 'registros') { // de 1000 en 1000, por id
+        const r = (await D.query('select id, fields, creado, modificado from registros where tabla = $1 and id > $2 order by id limit 1000', [String(b.tabla || ''), String(b.desde || '')])).rows;
+        return res.status(200).json({ ok: true, registros: r.map(x => ({ id: x.id, createdTime: new Date(x.creado).toISOString(), modificado: new Date(x.modificado).toISOString(), fields: typeof x.fields === 'string' ? JSON.parse(x.fields) : x.fields })) });
+      }
+      if (b.que === 'archivos') { // lista de 500 en 500, por id
+        const r = (await D.query('select id, nombre, tipo, bytes, creado from archivos where id > $1 order by id limit 500', [String(b.desde || '')])).rows;
+        return res.status(200).json({ ok: true, archivos: r });
+      }
+      if (b.que === 'bajar') { // hasta 20 archivos: enlace firmado (almacén) o el contenido en base64 si está en la base
+        const ids = (Array.isArray(b.ids) ? b.ids : []).filter(x => /^att[A-Za-z0-9]{14}$/.test(x)).slice(0, 20);
+        const r = (await D.query('select id, ruta, case when ruta is null then datos end as datos from archivos where id = any($1::text[])', [ids])).rows;
+        const rutas = r.filter(x => x.ruta).map(x => x.ruta);
+        const fir = rutas.length ? ((await PG.almacen('firmar', { rutas, segundos: 900 })).urls || {}) : {};
+        return res.status(200).json({ ok: true, archivos: r.map(x => x.ruta ? { id: x.id, url: fir[x.ruta] || '' } : { id: x.id, b64: Buffer.from(x.datos || []).toString('base64') }) });
+      }
+      return res.status(400).json({ ok: false });
+    } catch (e) { return res.status(500).json({ ok: false, error: String(e && e.message || e).slice(0, 200) }); }
+  }
   if (action === 'pg-migrar') { // copiar Airtable → Postgres por trozos (~40 s cada llamada). Solo con DB_URL y la clave MIGRAR_KEY
     const PG = require('./_pg'), K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
     if (!PG.ACTIVO || K.length < 24 || k.length !== K.length || !require('crypto').timingSafeEqual(Buffer.from(k), Buffer.from(K))) return res.status(404).end();

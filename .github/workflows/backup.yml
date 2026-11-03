@@ -1,4 +1,5 @@
-# Copia de seguridad diaria de todos los datos de la app (Airtable).
+# Copia de seguridad diaria de todos los datos de la app (la base de datos de la clínica, Postgres en Supabase).
+# Lee la base a través de la app con un token OIDC de GitHub (no hay ninguna clave guardada).
 # Se guarda como «artifact» de GitHub y se borra sola a los 7 días.
 # Los domingos incluye también los archivos adjuntos (consentimientos, PDFs, fotos…).
 # Para descargarla: GitHub → Actions → «Copia de seguridad» → la ejecución del día → Artifacts.
@@ -13,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   backup:
@@ -23,14 +25,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Descargar los datos de Airtable
-        env:
-          AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
+      - name: Descargar los datos de la base
         run: |
           FECHA=$(TZ=Europe/Madrid date +%F)
           echo "FECHA=$FECHA" >> $GITHUB_ENV
           if [ "$(TZ=Europe/Madrid date +%u)" = "7" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then EXTRA=--adjuntos; fi
-          node scripts/backup-airtable.mjs "fisio365-backup-$FECHA" $EXTRA
+          export OIDC_TOKEN=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=fisio365-copia" | jq -r .value)
+          node scripts/backup-pg.mjs "fisio365-backup-$FECHA" $EXTRA
       - name: Comprimir y cifrar (obligatorio)
         env:
           BACKUP_PASSWORD: ${{ secrets.BACKUP_PASSWORD }}
