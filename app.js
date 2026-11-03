@@ -155,12 +155,18 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
  // Mi equipo: la gente a tu cargo, con su puesto y cómo va hoy. Tocas a alguien y ves su plan
  const pintaEq=async()=>{const L=verEst().filter(m=>m.id!==yo);
   box.innerHTML=tabsP()+'<div class="rp-c" style="color:var(--mut);font-size:13px">Cargando…</div>';tabsOn();
-  const hoy=hoyMad(),ids=L.map(m=>m.id);let a,b;
-  try{[a,b]=await Promise.all([sb.from('pb_tareas').select('persona').in('persona',ids).eq('hecha',false).lte('dia',hoy),sb.from('pb_tareas').select('persona,hecha_en').in('persona',ids).eq('hecha',true).gte('hecha_en',new Date(Date.now()-40*36e5).toISOString())]);if(a.error||b.error)throw 0;}
+  const hoy=hoyMad(),ids=L.map(m=>m.id),cd=PB.ctl&&PB.ctl<=hoy?PB.ctl:hoy;let a,b,K={bp:{},co:{}};
+  try{[a,b,K]=await Promise.all([sb.from('pb_tareas').select('persona').in('persona',ids).eq('hecha',false).lte('dia',hoy),sb.from('pb_tareas').select('persona,hecha_en').in('persona',ids).eq('hecha',true).gte('hecha_en',new Date(Date.now()-40*36e5).toISOString()),controlDe(ids,cd)]);if(a.error||b.error)throw 0;}
   catch(e){if(box.isConnected){box.innerHTML=tabsP()+'<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';tabsOn();}return;}
   if(!box.isConnected||PB.persona!=='*')return;
   const P={},H={};(a.data||[]).forEach(x=>P[x.persona]=(P[x.persona]||0)+1);(b.data||[]).filter(x=>diaMad(x.hecha_en)===hoy).forEach(x=>H[x.persona]=(H[x.persona]||0)+1);
-  box.innerHTML=tabsP()+`<div class="rp-c pb-eq">${L.map(m=>{const p=P[m.id]||0,h=H[m.id]||0,t=p+h;return `<button type="button" class="pb-eqf" data-p="${m.id}" style="padding-left:${Math.min(3,m._niv||0)*12}px">${avHTML(m)}<span class="tx"><b>${escH(m.nombre)}</b>${pTag(m)}</span><span class="pb-eqn">${t?`<b>${h} de ${t}</b><span class="rp-bar${h===t?' ok':''}"><i style="width:${Math.round(h/t*100)}%"></i></span>`:'<em>Sin tareas hoy</em>'}</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`;}).join('')}</div>`;
+  const nBP=L.filter(m=>K.bp[m.id]).length,conE=L.filter(m=>K.co[m.id]&&K.co[m.id].tot),nCo=conE.filter(m=>K.co[m.id].hechas>=K.co[m.id].tot).length,dTx=cd===hoy?'hoy':cd===pbIso(hoy,-1)?'ayer':dLargoIso(cd);
+  box.innerHTML=tabsP()+`<div class="rp-c ctl"><small class="cd-k">Control</small>
+    <div class="ctl-f"><span><b>BP/7R de ${escH(dTx)}</b><small>Lo han pasado ${nBP} de ${L.length}</small></span><div class="es-per"><button type="button" class="pb-fl" data-cd="-1" aria-label="Día anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button type="button" class="pb-fl" data-cd="1" aria-label="Día siguiente"${cd>=hoy?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div></div>
+    <div class="ctl-f"><span><b>Condiciones del ${escH(fechaSem(K.sem||hoy))}</b><small>${conE.length?`Las tienen todas ${nCo} de ${conE.length}`:'Nadie tiene estadísticas semanales'}</small></span></div></div>
+   <div class="rp-c pb-eq">${L.map(m=>{const p=P[m.id]||0,h=H[m.id]||0,t=p+h,bp=K.bp[m.id],co=K.co[m.id]||{tot:0,hechas:0};return `<button type="button" class="pb-eqf" data-p="${m.id}" style="padding-left:${Math.min(3,m._niv||0)*12}px">${avHTML(m)}<span class="tx"><b>${escH(m.nombre)}</b>${pTag(m)}<span class="ctl-p"><i class="${bp?'si':'no'}" ${bp?`data-bp="${bp.id}"`:''}>${bp?'BP/7R '+horaMad(bp.creado):'Sin BP/7R'}</i>${co.tot?`<i class="${co.hechas>=co.tot?'si':'no'}">Condición ${co.hechas}/${co.tot}</i>`:''}</span></span><span class="pb-eqn">${t?`<b>${h} de ${t}</b><span class="rp-bar${h===t?' ok':''}"><i style="width:${Math.round(h/t*100)}%"></i></span>`:'<em>Sin tareas hoy</em>'}</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`;}).join('')}</div>`;
+  box.querySelectorAll('[data-cd]').forEach(b=>b.onclick=()=>{PB.ctl=pbIso(cd,+b.dataset.cd);if(PB.ctl>hoy)PB.ctl=hoy;pintaEq();});
+  box.querySelectorAll('[data-bp]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();abreParte(b.dataset.bp);});
   tabsOn();box.querySelectorAll('.pb-eqf').forEach(x=>x.onclick=()=>{PB.persona=x.dataset.p;PB.dia='';PB._ini=0;pbGuarda();carga();});contarMias();};
  const carga=async()=>{if(PB.persona==='*')return pintaEq();let r;try{r=await datosPlan(persona());}catch(e){if(!box.isConnected)return;box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
   if(!box.isConnected)return;PB.d=r;PB.pas={};pinta2();contarMias();};
@@ -236,7 +242,9 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
    ${enHoy&&!P.length&&H.length?`<div class="pb-bien">${yoMismo?'¡Todo hecho por hoy!':'Lo ha hecho todo.'}</div>`:''}
    ${H.length?`<div class="pb-sec">Hecho hoy</div>${H.map(x=>fila(x,hoy,!edPl)).join('')}`:''}`}${lineas}</div>`;
   const ed0=box.querySelector('.pb-esc .pb-in'),html0=ed0?ed0.innerHTML:'',foco=document.activeElement===ed0;
+  if(enHoy&&yoMismo)h+='<div id="pbBP"></div>';
   box.innerHTML=h;
+  if(enHoy&&yoMismo)pintaBP(box.querySelector('#pbBP'),r);
   const escF=box.querySelector('.pb-esc')||ce('div'),inp=escF.querySelector('.pb-in')||ce('div');inp.innerHTML=html0;
   const llena=()=>{const t=limpio(inp.textContent);escF.classList.toggle('con',!!t);if(!t&&!inp.querySelector('br,b,u,span,mark'))inp.innerHTML='';};llena();inp.addEventListener('input',llena);
   if(foco){inp.focus();const s=getSelection();s.selectAllChildren(inp);s.collapseToEnd();}

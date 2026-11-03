@@ -118,21 +118,25 @@ function verCond(c){const yo=S.yo.id,p=M(c.persona)||{nombre:'—'},d=Number(c.v
 
 // Bandeja: las que te han enviado y las que has enviado tú
 let _cdTab='rec';
-async function bandejaCond(){const yo=S.yo.id,m=modal('<h3>Condiciones</h3><p>Cargando…</p>');m.querySelector('.hoja').classList.add('ancha');
- const {data,error}=await sb.from('pb_condiciones').select('id,persona,est_nombre,semana,condicion,para,leida,creado').order('creado',{ascending:false}).limit(150);
- if(!m.isConnected)return;if(error){m.querySelector('.hoja').innerHTML='<h3>Condiciones</h3><p>No se ha podido cargar.</p>';return;}
+async function bandejaCond(){const yo=S.yo.id,m=modal('<h3>Bandeja</h3><p>Cargando…</p>');m.querySelector('.hoja').classList.add('ancha');
+ const [r1,r2]=await Promise.all([sb.from('pb_condiciones').select('id,persona,est_nombre,semana,condicion,para,leida,creado').or(`persona.eq.${yo},para.cs.{${yo}}`).order('creado',{ascending:false}).limit(150),
+  sb.from('pb_partes').select('id,persona,dia,para,leida,creado').or(`persona.eq.${yo},para.cs.{${yo}}`).order('creado',{ascending:false}).limit(150)]);
+ const error=r1.error||r2.error,data=[...(r1.data||[]),...(r2.data||[]).map(x=>({...x,bp:1}))].sort((a,b)=>a.creado<b.creado?1:-1);
+ if(!m.isConnected)return;if(error){m.querySelector('.hoja').innerHTML='<h3>Bandeja</h3><p>No se ha podido cargar.</p>';return;}
  const R=(data||[]).filter(c=>(c.para||[]).includes(yo)),E=(data||[]).filter(c=>c.persona===yo),nuevas=R.filter(c=>!(c.leida||[]).includes(yo)).length;
  const pinta=()=>{const L=_cdTab==='rec'?R:E;
-  m.querySelector('.hoja').innerHTML=`<h3>Condiciones</h3><div class="es-tabs" style="margin-top:12px"><button type="button" data-t="rec" class="${_cdTab==='rec'?'on':''}">Recibidas${nuevas?' · '+nuevas+' nueva'+(nuevas>1?'s':''):''}</button><button type="button" data-t="env" class="${_cdTab==='env'?'on':''}">Mías</button></div>
+  m.querySelector('.hoja').innerHTML=`<h3>Bandeja</h3><p>Los BP/7R de cada noche y las condiciones de los jueves.</p><div class="es-tabs" style="margin-top:12px"><button type="button" data-t="rec" class="${_cdTab==='rec'?'on':''}">Recibidas${nuevas?' · '+nuevas+' nueva'+(nuevas>1?'s':''):''}</button><button type="button" data-t="env" class="${_cdTab==='env'?'on':''}">Mías</button></div>
    ${L.length?`<div class="cd-band">${L.map(c=>{const p=M(c.persona)||{nombre:'—'},nu=_cdTab==='rec'&&!(c.leida||[]).includes(yo);
-    return `<button type="button" class="cd-f${nu?' nu':''}" data-cv="${c.id}">${avHTML(p)}<span class="tx"><b>${_cdTab==='rec'?escH(p.nombre):(c.para||[]).length?'Para '+c.para.map(id=>escH(pri(nomDe(id)))).join(', '):'Guardada'}</b>${_cdTab==='rec'?pTag(p):''}<small>${escH(c.est_nombre)} · semana del ${escH(fechaSem(c.semana))}</small></span>${condChip(c.condicion)}</button>`;}).join('')}</div>`
+    return `<button type="button" class="cd-f${nu?' nu':''}" data-${c.bp?'bp':'cv'}="${c.id}">${avHTML(p)}<span class="tx"><b>${_cdTab==='rec'?escH(p.nombre):(c.para||[]).length?'Para '+c.para.map(id=>escH(pri(nomDe(id)))).join(', '):'Guardada'}</b>${_cdTab==='rec'?pTag(p):''}<small>${c.bp?'BP/7R · '+escH(fechaLarga(c.dia)):escH(c.est_nombre)+' · semana del '+escH(fechaSem(c.semana))}</small></span>${c.bp?'<span class="cd-chip bp">BP/7R</span>':condChip(c.condicion)}</button>`;}).join('')}</div>`
    :`<p class="vacio">${_cdTab==='rec'?'Aún no te han enviado ninguna. Cuando alguien te envíe su condición, te llega aquí.':'Aún no tienes ninguna. Los jueves a las 14:00, cuando cierra la semana, la eliges desde cada estadística.'}</p>`}
    <div class="bts"><button class="bt sec" data-x>Cerrar</button></div>`;
   m.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{_cdTab=b.dataset.t;pinta();});
   m.querySelector('[data-x]').onclick=()=>m.remove();
-  m.querySelectorAll('[data-cv]').forEach(b=>b.onclick=()=>{m.remove();abreCond(b.dataset.cv);});};
+  m.querySelectorAll('[data-cv]').forEach(b=>b.onclick=()=>{m.remove();abreCond(b.dataset.cv);});
+  m.querySelectorAll('[data-bp]').forEach(b=>b.onclick=()=>{m.remove();abreParte(b.dataset.bp);});};
  if(!R.length&&E.length)_cdTab='env';pinta();}
-async function contarCond(){try{const yo=S.yo.id;const {count}=await sb.from('pb_condiciones').select('id',{count:'exact',head:true}).contains('para',[yo]).not('leida','cs',`{${yo}}`);
+async function contarCond(){try{const yo=S.yo.id;const [a,b]=await Promise.all([sb.from('pb_condiciones').select('id',{count:'exact',head:true}).contains('para',[yo]).not('leida','cs',`{${yo}}`),
+  sb.from('pb_partes').select('id',{count:'exact',head:true}).contains('para',[yo]).not('leida','cs',`{${yo}}`)]);const count=(a.count||0)+(b.count||0);
  const e=document.getElementById('nCd');if(e){e.textContent=count||0;e.hidden=!count;}}catch(_){}}
 
 // ── PDF (jsPDF con Poppins, todo en local)
