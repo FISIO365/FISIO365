@@ -9,6 +9,11 @@ const IC={ck:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
 const guardaLS=(k,v)=>{try{localStorage.setItem('pb_'+k,JSON.stringify(v));}catch(e){}};
 const leeLS=(k,d)=>{try{const v=localStorage.getItem('pb_'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}};
 
+// Contraseñas: botón del ojo para ver lo que has escrito
+const OJO='<svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',OJO_NO='<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 4.4-1.1M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+function ojos(root){(root||document).querySelectorAll('input[type="password"]:not([data-ojo])').forEach(i=>{i.dataset.ojo=1;const w=ce('span','pw');i.parentNode.insertBefore(w,i);w.appendChild(i);
+ const b=ce('button','pw-b');b.type='button';b.setAttribute('aria-label','Ver la contraseña');b.innerHTML=OJO;w.appendChild(b);
+ b.onmousedown=e=>e.preventDefault();b.onclick=()=>{const ver=i.type==='password';i.type=ver?'text':'password';b.innerHTML=ver?OJO_NO:OJO;b.setAttribute('aria-label',ver?'Ocultar la contraseña':'Ver la contraseña');};});}
 function toast(t,ok){const e=ce('div','toast '+(ok===false?'err':'ok'));e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2600);}
 function modal(html){const m=ce('div','mod');m.innerHTML=`<div class="hoja">${html}</div>`;m.addEventListener('click',e=>{if(e.target===m)m.remove();});document.body.appendChild(m);return m;}
 function pregunta(txt,o){o=o||{};return new Promise(res=>{const m=modal(`<h3>${escH(txt)}</h3>${o.sub?`<p>${escH(o.sub)}</p>`:''}<div class="bts"><button class="bt sec" data-r="0">Cancelar</button><button class="bt" data-r="1">${escH(o.si||'Sí')}</button></div>`);
@@ -53,7 +58,7 @@ function pantallaEntrar(){$app.innerHTML=`<div class="ent"><div class="box"><div
  const f=$app.querySelector('#fe');f.onsubmit=async e=>{e.preventDefault();const b=f.querySelector('button'),er=f.querySelector('.err');b.disabled=true;er.textContent='';
   const {error}=await sb.auth.signInWithPassword({email:f.email.value.trim(),password:f.pass.value});b.disabled=false;
   if(error){er.textContent=/invalid/i.test(error.message)?'Email o contraseña incorrectos':'No se ha podido entrar';return;}arranca();};
- $app.querySelector('#nuevo').onclick=()=>pantallaCrear(null);}
+ $app.querySelector('#nuevo').onclick=()=>pantallaCrear(null);ojos($app);}
 function pantallaCrear(user){$app.innerHTML=`<div class="ent"><div class="box"><div class="ic">${ICONO}</div><h1>Crea tu equipo</h1><p class="sub">Tú serás quien lo administra: añades a la gente y decides quién revisa a quién.</p>
  <form id="fc"><label class="l">Nombre del equipo</label><input class="i" name="equipo" maxlength="60" placeholder="Ej.: Clínica, Casa, Oficina…" required>
  <label class="l">Tu nombre</label><input class="i" name="nombre" maxlength="40" autocomplete="given-name" required>
@@ -65,7 +70,7 @@ function pantallaCrear(user){$app.innerHTML=`<div class="ent"><div class="box"><
   try{await fn({accion:'crear-equipo',equipo:f.equipo.value,nombre:f.nombre.value,email:user?undefined:f.email.value,password:user?undefined:f.pass.value});
    if(!user){const {error}=await sb.auth.signInWithPassword({email:f.email.value.trim(),password:f.pass.value});if(error)throw error;}
    arranca();}catch(x){b.disabled=false;er.textContent=x.message;}};
- $app.querySelector('#vol').onclick=()=>user?sb.auth.signOut():pantallaEntrar();}
+ $app.querySelector('#vol').onclick=()=>user?sb.auth.signOut():pantallaEntrar();ojos($app);}
 function pantallaSinEquipo(user,me){if(me&&!me.activo){$app.innerHTML=`<div class="ent"><div class="box"><div class="ic">${ICONO}</div><h1>Sin acceso</h1><p class="sub">Te han dado de baja del equipo. Si es un error, habla con quien lo administra.</p><button class="bt full" id="sal">Salir</button></div></div>`;$app.querySelector('#sal').onclick=()=>sb.auth.signOut();return;}
  pantallaCrear(user);}
 
@@ -86,7 +91,7 @@ function menuCuenta(){const m=modal(`<h3>${escH(S.yo.nombre)}</h3><p>${escH(S.yo
  m.querySelector('[data-a="salir"]').onclick=()=>{m.remove();sb.auth.signOut();};
  m.querySelector('[data-a="inst"]').onclick=()=>{m.remove();modal(`<h3>Instalar en el móvil</h3><p><b>iPhone:</b> en Safari, toca el botón Compartir y luego «Añadir a pantalla de inicio».<br><br><b>Android:</b> en Chrome, toca los tres puntos y luego «Instalar aplicación» o «Añadir a pantalla de inicio».</p><div class="bts"><button class="bt" onclick="this.closest('.mod').remove()">Entendido</button></div>`);};
  m.querySelector('[data-a="clave"]').onclick=()=>{m.remove();const k=modal(`<h3>Cambiar mi contraseña</h3><label class="l">Contraseña nueva (mínimo 8)</label><input class="i" type="password" minlength="8" autocomplete="new-password"><div class="err"></div><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
-  k.querySelector('[data-x]').onclick=()=>k.remove();k.querySelector('[data-ok]').onclick=async e=>{const v=k.querySelector('input').value;if(v.length<8){k.querySelector('.err').textContent='Mínimo 8 caracteres';return;}e.target.disabled=true;
+  ojos(k);k.querySelector('[data-x]').onclick=()=>k.remove();k.querySelector('[data-ok]').onclick=async e=>{const v=k.querySelector('input').value;if(v.length<8){k.querySelector('.err').textContent='Mínimo 8 caracteres';return;}e.target.disabled=true;
    const {error}=await sb.auth.updateUser({password:v});if(error){e.target.disabled=false;k.querySelector('.err').textContent='No se ha podido cambiar';return;}k.remove();toast('Contraseña cambiada');};};}
 
 // ── PLAN DE BATALLA: las tareas del día de cada uno. Lo que no se hace pasa solo al día siguiente.
@@ -238,7 +243,7 @@ function renderEquipo(wrap){const adm=S.yo.admin;
  wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
    <div style="margin-top:10px">${act.map(fila).join('')}${baja.length&&adm?`<details style="margin-top:6px"><summary class="eq-p" style="cursor:pointer">De baja (${baja.length})</summary>${baja.map(fila).join('')}</details>`:''}</div></div>
   <div class="rp-c"><div class="eq-h"><div><small>Permisos</small><b>Quién revisa a quién</b></div></div>
-   <p class="eq-p">Quien revisa a otra persona ve su plan de batalla y sus estadísticas, y le puede poner tareas (esa persona solo las puede marcar como hechas). No va en cascada: si tú revisas a Ana y Ana revisa a Luis, tú no ves a Luis salvo que lo marques aquí.${adm?'':' Esto lo decide quien administra el equipo.'}</p>
+   <p class="eq-p">Quien revisa a otra persona ve su plan de batalla y sus estadísticas, y le puede poner tareas (esa persona solo las puede marcar como hechas). No va en cascada: si tú revisas a Ana y Ana revisa a Luis, tú no ves a Luis salvo que lo marques aquí.${adm?'':' Las altas, bajas, puestos y permisos los lleva quien administra el equipo.'}</p>
    ${act.length<2?'<p class="vacio">Añade a la gente de tu equipo para decidir quién revisa a quién.</p>':rev||'<p class="vacio">De momento nadie revisa a nadie.</p>'}</div>`;
  if(!adm)return;
  wrap.querySelector('#alta').onclick=altaMiembro;
@@ -270,14 +275,17 @@ function acceso(nombre,email,pass){const txt=`Hola ${pri(nombre)}, ya tienes tu 
  m.querySelector('[data-c]').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(txt).then(()=>toast('Copiado'),()=>toast('No se ha podido copiar',false));};}
 function opcionesMiembro(p){if(!p)return;const yo=p.id===S.yo.id;
  const m=modal(`<h3>${escH(p.nombre)}</h3><p>${escH(p.email)}</p><div style="margin-top:10px">
-  ${p.activo?`<button class="op" data-a="adm"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg>${p.admin?'Quitar de administradores':'Hacer administrador'}</button>`:''}
+  ${p.activo&&!yo?`<button class="op" data-a="adm"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg>Pasarle la administración</button>`:''}
   ${yo?'':`<button class="op" data-a="clave"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Ponerle una contraseña nueva</button>`}
   <button class="op" data-a="nom"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>Cambiar el nombre</button>
   <button class="op" data-a="pue"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>${p.puesto?'Cambiar el puesto':'Ponerle un puesto'}</button>
   ${yo?'':(p.activo?`<button class="op rojo" data-a="baja"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM17 8l5 5M22 8l-5 5"/></svg>Dar de baja</button>`:`<button class="op" data-a="alta"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Volver a dar de alta</button>`)}</div>`);
  const upd=async(campos,ok)=>{m.remove();const {error}=await sb.from('pb_miembros').update(campos).eq('id',p.id);if(error){toast(/administrador/.test(error.message)?'Tiene que quedar al menos un administrador':'No se ha podido',false);return;}toast(ok);await cargaEquipo();if(p.id===S.yo.id)pinta();else renderEquipoOtraVez();};
  const on=(a,f)=>{const b=m.querySelector(`[data-a="${a}"]`);if(b)b.onclick=f;};
- on('adm',()=>upd({admin:!p.admin},p.admin?'Ya no es administrador':'Ahora es administrador'));
+ on('adm',()=>{m.remove();pregunta('¿Pasarle la administración a '+pri(p.nombre)+'?',{sub:'Será quien dé de alta y de baja, cambie puestos y decida quién revisa a quién. Tú dejarás de poder hacerlo.',si:'Pasársela'}).then(async ok=>{if(!ok)return;
+  const a=await sb.from('pb_miembros').update({admin:true}).eq('id',p.id);if(a.error){toast('No se ha podido',false);return;}
+  const b=await sb.from('pb_miembros').update({admin:false}).eq('id',S.yo.id);if(b.error){toast('No se ha podido',false);}
+  toast('Ahora administra '+pri(p.nombre));await cargaEquipo();pinta();});});
  on('baja',()=>{m.remove();pregunta('¿Dar de baja a '+pri(p.nombre)+'?',{sub:'Ya no podrá entrar. Sus tareas se guardan por si vuelve.',si:'Dar de baja'}).then(ok=>ok&&upd({activo:false},'Dado de baja'));});
  on('alta',()=>upd({activo:true},'Vuelve a estar en el equipo'));
  on('nom',()=>{m.remove();const k=modal(`<h3>Cambiar el nombre</h3><label class="l">Nombre</label><input class="i" maxlength="40" value="${escH(p.nombre)}"><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
