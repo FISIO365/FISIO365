@@ -3683,7 +3683,7 @@ module.exports = async function handler(req, res) {
         const vista = r => { const F = r.fields || {}, c = (F.CAPTURA || [])[0];
           return { id: r.id, texto: F.TEXTO || '', origen: nm(F.ORIGEN) || 'Equipo', apartado: nm(F.APARTADO) || 'General', tipo: nm(F.TIPO), de: F['ANÓNIMA'] ? 'Anónimo' : (F.DE || ''), anonima: !!F['ANÓNIMA'], paciente: F['ANÓNIMA'] ? '' : (F.PACIENTE || ''),
             captura: c ? { url: c.url, mini: (c.thumbnails && c.thumbnails.large && c.thumbnails.large.url) || c.url } : null, adjuntos: verAdj(F.CAPTURA), estado: nm(F.ESTADO) === 'Vista' ? 'Nueva' : (nm(F.ESTADO) || 'Nueva'), respuesta: F.NOTA || '', respondidoPor: F['CAMBIADO POR'] || '',
-            respuestaVista: !!F['RESPUESTA VISTA'], fecha: F.FECHA || r.createdTime || '' }; };
+            respuestaVista: !!F['RESPUESTA VISTA'], respAdjuntos: verAdj(F['ADJUNTOS RESPUESTA']), fecha: F.FECHA || r.createdTime || '' }; };
         if (action === 'seg-sug-contar') {
           const [nuevas, resp] = await Promise.all([
             lector ? todosT(SUG, `fields[]=RESUMEN&filterByFormula=${encodeURIComponent(veApp ? "OR({ESTADO}='Nueva',{ESTADO}='Vista',{ESTADO}='')" : `AND(OR({ESTADO}='Nueva',{ESTADO}='Vista',{ESTADO}=''),${sinApp})`)}`) : [],
@@ -3726,6 +3726,15 @@ module.exports = async function handler(req, res) {
           if (!okId(q.id)) return res.status(400).json({ ok: false, error: 'Sugerencia no válida' });
           const r = await at(`${SUG}/${q.id}`); if (r.error || pila((r.fields || {}).DE) !== yo) return res.status(403).json({ ok: false, error: 'No puedes adjuntar aquí' });
           const u = await subirAdjunto(q.id, CAPT, q.archivo); return res.status(200).json(u.ok ? { ok: true } : { ok: false, error: u.error });
+        }
+        if (action === 'seg-sug-adjunto-resp') { // archivos de la respuesta (quien lee el buzón)
+          if (!lector || !okId(q.id)) return res.status(403).json({ ok: false, error: 'No tienes acceso al buzón de sugerencias' });
+          if (!veApp) { const r0 = await at(`${SUG}/${q.id}`); if (nm((r0.fields || {}).APARTADO) === 'App') return res.status(403).json({ ok: false, error: 'Esta sugerencia es solo para Nora' }); }
+          if (q.quitar) { const r0 = await at(`${SUG}/${q.id}`); const L = ((r0.fields || {})['ADJUNTOS RESPUESTA'] || []).filter(a => a.url !== q.quitar).map(a => ({ id: a.id }));
+            const d = await at(`${SUG}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ADJUNTOS RESPUESTA': L } }) }); return res.status(200).json({ ok: !d.error, sugerencia: d.error ? null : vista(d) }); }
+          const u = await subirAdjunto(q.id, 'fldtSRiSZehqZzxqV', q.archivo); if (!u.ok) return res.status(200).json({ ok: false, error: u.error });
+          await at(`${SUG}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'CAMBIADO POR': yo, 'RESPUESTA VISTA': false } }) });
+          const r1 = await at(`${SUG}/${q.id}`); return res.status(200).json({ ok: true, sugerencia: vista(r1) });
         }
         if (action === 'seg-sug-estado') { // responder: Aceptada · Hecha · No se hará (Descartada), con respuesta opcional
           if (!lector) return res.status(403).json({ ok: false, error: 'No tienes acceso al buzón de sugerencias' });
