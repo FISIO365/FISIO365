@@ -1320,7 +1320,7 @@ function cab(){var i=PASOS.indexOf(paso);return '<div class="top"><button type="
 function ir(p){paso=p;S.paso=p;guarda();pinta();arriba();}
 function op(sel,on,html){return '<button type="button" class="op'+(on?' on':'')+'" '+sel+'><span class="rd"></span><span style="flex:1;min-width:0">'+html+'</span></button>';}
 function pinta(){document.body.classList.remove('fin');var h=cab(),i=PASOS.indexOf(paso);G=gi();
- if(paso==='inicio'){h+=G+'<h1>Regala salud</h1><p class="sub cen">Una tarjeta regalo de fisioterapia en <b>'+esc(D.marca)+'</b>, el regalo que de verdad se nota. La preparas en 2 minutos.</p>'
+ if(paso==='inicio'){h+=(EMB?'<h2 class="cen" style="margin:0 0 4px">Prepara su tarjeta</h2><p class="sub cen" style="margin-bottom:6px">Paso a paso, en 2 minutos.</p>':G+'<h1>Regala salud</h1><p class="sub cen">Una tarjeta regalo de fisioterapia en <b>'+esc(D.marca)+'</b>, el regalo que de verdad se nota. La preparas en 2 minutos.</p>')
   +'<label class="l" for="para">¿Para quién es el regalo?</label><input class="i" id="para" placeholder="Su nombre" value="'+esc(S.para||'')+'" autocomplete="off" maxlength="40">'
   +'<label class="l" for="de">¿De parte de quién?</label><input class="i" id="de" placeholder="Tu nombre, o «Tus amigas»…" value="'+esc(S.de||'')+'" autocomplete="off" maxlength="50">'
   +'<button type="button" class="bt" id="sig">Empezar</button><p class="err" id="er"></p><p class="priv">Al seguir, aceptas nuestra <a href="'+esc(D.privacidad)+'" target="_blank" rel="noopener">política de privacidad</a>.</p>';}
