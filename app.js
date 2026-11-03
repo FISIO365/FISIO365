@@ -49,18 +49,22 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'){S.yo=null;pantallaEntrar();
 
 // ── Entrar / crear equipo
 const ICONO='<svg viewBox="0 0 24 24"><path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M9.5 8.5l1.5 1.5 3-3M9.5 14.5l1.5 1.5 3-3"/></svg>';
-function pantallaEntrar(){$app.innerHTML=`<div class="ent"><div class="box"><div class="ic">${ICONO}</div><h1>Plan de batalla</h1><p class="sub">Tus tareas del día. Lo que no hagas pasa solo al día siguiente.</p>
- <form id="fe"><label class="l">Email</label><input class="i" type="email" name="email" autocomplete="email" required>
+// La hojita de cuaderno de la entrada: las tareas se van tachando solas
+function hojita(){const f=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',timeZone:'Europe/Madrid'});
+ const T=['Llamar a la gestoría','Revisar la <mark>agenda</mark>','<b>Plan de la semana</b>'];
+ return `<div class="hj"><div class="hj-f">${escH(f.charAt(0).toUpperCase()+f.slice(1))}</div>${T.map((t,i)=>`<div class="hj-l" style="--d:${.6+i*.9}s"><span class="hj-c">${IC.ck}</span><span class="hj-t">${t}</span></div>`).join('')}<div class="hj-l"></div></div>`;}
+function pantallaEntrar(){$app.innerHTML=`<div class="ent"><div class="box">${hojita()}<h1>Plan de <em>batalla</em></h1><p class="sub">Tus tareas del día. Lo que no hagas pasa solo al día siguiente.</p>
+ <form id="fe" class="ent-c"><label class="l">Email</label><input class="i" type="email" name="email" autocomplete="email" required>
  <label class="l">Contraseña</label><input class="i" type="password" name="pass" autocomplete="current-password" required>
- <button class="bt full" style="margin-top:18px">Entrar</button><div class="err"></div></form>
- <p class="nota">¿No recuerdas la contraseña? Pídele a quien administra tu equipo que te ponga una nueva.</p>
+ <button class="bt full" style="margin-top:18px">Entrar</button><div class="err"></div>
+ <p class="nota">¿No recuerdas la contraseña? Pídele a quien administra tu equipo que te ponga una nueva.</p></form>
  <button class="lnk" id="nuevo">Crear un equipo nuevo</button></div></div>`;
  const f=$app.querySelector('#fe');f.onsubmit=async e=>{e.preventDefault();const b=f.querySelector('button'),er=f.querySelector('.err');b.disabled=true;er.textContent='';
   const {error}=await sb.auth.signInWithPassword({email:f.email.value.trim(),password:f.pass.value});b.disabled=false;
   if(error){er.textContent=/invalid/i.test(error.message)?'Email o contraseña incorrectos':'No se ha podido entrar';return;}arranca();};
  $app.querySelector('#nuevo').onclick=()=>pantallaCrear(null);ojos($app);}
-function pantallaCrear(user){$app.innerHTML=`<div class="ent"><div class="box"><div class="ic">${ICONO}</div><h1>Crea tu equipo</h1><p class="sub">Tú serás quien lo administra: añades a la gente y decides quién revisa a quién.</p>
- <form id="fc"><label class="l">Nombre del equipo</label><input class="i" name="equipo" maxlength="60" placeholder="Ej.: Clínica, Casa, Oficina…" required>
+function pantallaCrear(user){$app.innerHTML=`<div class="ent"><div class="box">${hojita()}<h1>Crea tu <em>equipo</em></h1><p class="sub">Tú serás quien lo administra: añades a la gente y decides quién revisa a quién.</p>
+ <form id="fc" class="ent-c"><label class="l">Nombre del equipo</label><input class="i" name="equipo" maxlength="60" placeholder="Ej.: Clínica, Casa, Oficina…" required>
  <label class="l">Tu nombre</label><input class="i" name="nombre" maxlength="40" autocomplete="given-name" required>
  ${user?'':`<label class="l">Tu email</label><input class="i" type="email" name="email" autocomplete="email" required>
  <label class="l">Contraseña (mínimo 8)</label><input class="i" type="password" name="pass" minlength="8" autocomplete="new-password" required>`}
