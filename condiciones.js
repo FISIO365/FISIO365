@@ -58,10 +58,8 @@ function verCond(c){const yo=S.yo.id,p=M(c.persona)||{nombre:'—'},d=Number(c.v
  if(c.para&&c.para.includes(yo)&&!(c.leida||[]).includes(yo)){sb.rpc('pb_cond_leida',{c:c.id}).then(()=>contarCond());}
  const comp=!!(navigator.canShare&&navigator.canShare({files:[new File([''],'a.pdf',{type:'application/pdf'})]}));
  const m=modal(`<div class="cv"><small class="cd-k">Condición · semana que cerró el ${escH(fechaSem(c.semana))}</small>
-  <div class="cv-n" style="--k:${condColor(c.condicion)}">${escH(c.condicion)}</div>
-  <div class="cv-p">${avHTML(p)}<div><b>${escH(p.nombre)}</b>${pTag(p)}</div></div>
-  <div class="cd-nums"><div><small>Estadística</small><b class="tx">${escH(c.est_nombre)}</b></div><div><small>Cerró con</small><b>${num(c.valor)}</b></div><div><small>La anterior</small><b class="ant">${num(c.valor_ant)}</b></div></div>
-  ${(c.puntos||[]).length?`<div class="cd-g">${graficaCond(c)}</div>`:''}
+  <div class="cv-p">${avHTML(p)}<div><small>De</small><b>${escH(p.nombre)}${c.persona===yo?' <i>(tú)</i>':''}</b>${pTag(p)}</div></div>
+  <div class="cv-dos"><div><small>Estadística</small><b>${escH(c.est_nombre)}</b></div><div><small>Condición</small><b class="cv-n" style="--k:${condColor(c.condicion)}">${escH(c.condicion)}</b></div></div>
   <div class="cv-t">${escH(c.texto).replace(/\n/g,'<br>')}</div>
   <p class="cv-pie">${c.persona===yo?'Enviada a ':'Para '}${(c.para||[]).map(id=>id===yo?'ti':escH(pri(nomDe(id)))).join(', ')} · ${escH(new Date(c.creado).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}))}</p>
   <div class="bts"><button class="bt${comp?' sec':''}" data-pdf>Descargar PDF</button>${comp?'<button class="bt" data-sh>Compartir</button>':''}</div>
@@ -110,24 +108,20 @@ async function condPDF(c){await cargaJs('/lib/jspdf.umd.min.js');const {jsPDF}=w
  const p=M(c.persona)||{nombre:'—'},eq=(S.equipo&&S.equipo.nombre)||'';
  const cab=()=>{doc.setFillColor(...CO);doc.rect(0,0,W,6,'F');f('m',8,CO);doc.text(('Plan de batalla'+(eq?' · '+eq:'')).toUpperCase(),X,40,{charSpace:1.2});
   f('r',8.5,MUT);doc.text('Semana que cerró el '+fechaSem(c.semana)+' a las 14:00',W-X,40,{align:'right'});};
- cab();let y=92;
- f('m',9,MUT);doc.text('CONDICIÓN',X,y,{charSpace:1.2});y+=34;
- f('b',32,K);doc.text(c.condicion,X,y);y+=30;
- // Persona y puesto
- f('m',13,INK);doc.text(p.nombre,X,y);
- if(p.puesto){const wn=doc.getTextWidth(p.nombre);f('m',9,CO);const wp=doc.getTextWidth(p.puesto)+16;doc.setFillColor(249,231,223);doc.roundedRect(X+wn+10,y-11,wp,16,8,8,'F');doc.text(p.puesto,X+wn+18,y);}
+ cab();let y=96;
+ // De quién es y su puesto
+ f('m',9,MUT);doc.text('DE',X,y,{charSpace:1.2});y+=30;
+ f('b',26,INK);doc.text(p.nombre,X,y);y+=14;
+ if(p.puesto){f('m',10,CO);const wp=doc.getTextWidth(p.puesto)+20;doc.setFillColor(249,231,223);doc.roundedRect(X,y,wp,20,10,10,'F');doc.text(p.puesto,X+10,y+14);y+=20;}
  y+=22;
- // Datos de la semana
- doc.setFillColor(...CR);doc.roundedRect(X,y,CW,66,12,12,'F');
- const d=Number(c.valor)-Number(c.valor_ant),bn=bueno({sentido:c.sentido},d),col=bn===null?MUT:bn?[22,128,60]:[192,57,43];
- const cel=(i,lab,val,cc,sub)=>{const cx=X+18+i*(CW-36)/3;f('m',7.5,MUT);doc.text(lab.toUpperCase(),cx,y+22,{charSpace:.8});f('b',i===0?11:17,cc||INK);
-  const v=i===0?doc.splitTextToSize(val,(CW-36)/3-12).slice(0,2):[val];doc.text(v,cx,y+(i===0&&v.length>1?37:43));if(sub){f('r',8,MUT);doc.text(sub,cx,y+56);}};
- cel(0,'Estadística',c.est_nombre);cel(1,'Cerró con',num(c.valor),INK,c.eje_y||'');cel(2,'La anterior',num(c.valor_ant),MUT,(d>0?'+':d<0?'−':'')+num(Math.abs(d))+' de diferencia');
- y+=88;
- // Gráfica
- if((c.puntos||[]).length){const png=await svgPNG(graficaCond(c),340,210);if(png){const gh=CW*226/340*.72,gw=gh*340/226;doc.addImage(png,'PNG',X+(CW-gw)/2,y,gw,gh);y+=gh+26;}}
+ // La estadística y la condición
+ doc.setFillColor(...CR);doc.roundedRect(X,y,CW,82,12,12,'F');const cw=(CW-40)/2,c2=X+20+cw+10;
+ f('m',7.5,MUT);doc.text('ESTADÍSTICA',X+20,y+26,{charSpace:.8});doc.text('CONDICIÓN',c2,y+26,{charSpace:.8});
+ f('b',14,INK);const en=doc.splitTextToSize(c.est_nombre,cw-10).slice(0,2);doc.text(en,X+20,y+(en.length>1?46:52));
+ doc.setFillColor(...K);doc.circle(c2+5,y+47,4.5,'F');f('b',20,K);doc.text(c.condicion,c2+16,y+54);
+ y+=110;
  // Lo escrito
- f('m',9,CO);doc.text('MI CONDICIÓN',X,y,{charSpace:1.2});y+=8;doc.setDrawColor(...CO);doc.setLineWidth(.8);doc.line(X,y,X+28,y);y+=22;
+ f('m',9,CO);doc.text(('Lo que escribe '+pri(p.nombre)).toUpperCase(),X,y,{charSpace:1.2});y+=8;doc.setDrawColor(...CO);doc.setLineWidth(.8);doc.line(X,y,X+28,y);y+=22;
  f('r',11,[40,36,33]);const LH=17.5;
  for(const par of String(c.texto).split(/\n/)){const L=par.trim()?doc.splitTextToSize(par,CW):[''];for(const l of L){if(y>H-72){doc.addPage();cab();y=80;f('r',11,[40,36,33]);}doc.text(l,X,y);y+=LH;}y+=par.trim()?5:0;}
  // Pie en todas las páginas

@@ -272,15 +272,16 @@ function renderEquipo(wrap){const adm=S.yo.admin;
  const fila=m=>{const ac=m.activo?aCargo(m.id):[],de=m.activo?dependeDe(m.id):[];
   return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}">${avHTML(m)}<div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b>${pTag(m,adm&&m.activo)}<small>${escH(m.email||'')}</small>
    ${m.grupo?`<small class="rv-g">Grupo: ${escH(m.grupo)}</small>`:''}${de.length?`<small class="rv-d">Depende de ${nombres(de)}</small>`:''}${ac.length?`<small class="rv-a">A su cargo: ${nombres(ac)}</small>`:''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;};
- wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div class="top-e">${S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div>${adm?'<button class="mas3" id="eqMas" aria-label="Opciones del equipo">⋯</button>':''}</div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
+ wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div class="top-e">${S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div><button class="eq-lapiz" id="eqMas" aria-label="Cambiar el nombre o la foto del equipo"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg></button></div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
    <div style="margin-top:10px">${act.map(fila).join('')}${baja.length&&adm?`<details style="margin-top:6px"><summary class="eq-p" style="cursor:pointer">De baja (${baja.length})</summary>${baja.map(fila).join('')}</details>`:''}</div></div>
   <div class="rp-c"><div class="eq-h"><div><small>Organigrama</small><b>Quién depende de quién</b></div></div>
    <p class="eq-p">${adm?'Cada persona sale debajo de su jefe, con más margen cuanto más abajo está. Para cambiar a alguien de sitio, <b>tócala</b> y elige debajo de quién va (o arrástrala por <b>⠿</b>).':'Así está organizado el equipo: cada persona sale debajo de su jefe.'}</p><div id="org" class="org"></div></div>
   <div class="rp-c eq-ayuda"><b>¿Cómo funciona?</b><p>Quien tiene a alguien <b>a su cargo</b> ve su plan de batalla y sus estadísticas, y le puede poner tareas (esa persona solo las puede marcar como hechas).</p>
    ${adm?'<p>Para poner a alguien bajo otra persona, toca los <b>⋯</b> de esa persona y elige <b>«Depende de»</b>. O al revés: en los ⋯ de la jefa o el jefe, <b>«A su cargo»</b>.</p><p>No va en cascada: si tú tienes a Ramiro a tu cargo y Ramiro tiene a Ana, tú no ves a Ana salvo que también la pongas a tu cargo.</p>':'<p>Las altas, bajas, puestos y quién está a cargo de quién los lleva quien administra el equipo.</p>'}</div>`;
  organigrama(wrap.querySelector('#org'),adm,act);
+ wrap.querySelector('#eqMas').onclick=adm?opcionesEquipo:soloAdmin;
  if(!adm)return;
- wrap.querySelector('#alta').onclick=altaMiembro;wrap.querySelector('#eqMas').onclick=opcionesEquipo;
+ wrap.querySelector('#alta').onclick=altaMiembro;
  wrap.querySelectorAll('.mi .mas3').forEach(b=>b.onclick=()=>opcionesMiembro(M(b.closest('.mi').dataset.id)));}
 // ── ORGANIGRAMA: cada persona cuelga de su jefe (la primera persona de quien depende). Se arrastra para cambiarlo.
 function organigrama(box,adm,act){
@@ -290,11 +291,12 @@ function organigrama(box,adm,act){
  act.forEach(m=>{const vis=new Set([m.id]);let p=jefe[m.id];while(p){if(vis.has(p)){jefe[m.id]=null;break;}vis.add(p);p=jefe[p];}});
  const hijos=p=>act.filter(m=>jefe[m.id]===p).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
  const otros=p=>dependeDe(p).filter(q=>ids.has(q)&&q!==jefe[p]);
- const nodo=m=>{const H=hijos(m.id),o=otros(m.id);return `<div class="org-n"><div class="org-c" data-id="${m.id}">${adm?'<span class="org-h" aria-label="Arrastrar">⠿</span>':''}${avHTML(m)}<span class="org-t"><b>${escH(m.nombre)}${m.id===S.yo.id?' <i>(tú)</i>':''}</b>${pTag(m)}${o.length?`<small>también de ${nombres(o)}</small>`:''}</span></div>${H.length?`<div class="org-k">${m.grupo?`<div class="org-gr">${escH(m.grupo)}</div>`:''}${H.map(nodo).join('')}</div>`:''}</div>`;};
+ const nodo=m=>{const H=hijos(m.id),o=otros(m.id);return `<div class="org-n"><div class="org-c" data-id="${m.id}">${adm?'<span class="org-h" aria-label="Arrastrar">⠿</span>':''}${avHTML(m)}<span class="org-t"><b>${escH(m.nombre)}${m.id===S.yo.id?' <i>(tú)</i>':''}</b>${pTag(m)}${o.length?`<small>también de ${nombres(o)}</small>`:''}</span></div>${H.length?`<div class="org-k">${m.grupo?`<button type="button" class="org-gr" data-g="${m.id}"${adm?'':' disabled'}>${escH(m.grupo)}${adm?'<svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>':''}</button>`:adm?`<button type="button" class="org-gr vac" data-g="${m.id}">+ Nombre de su grupo</button>`:''}${H.map(nodo).join('')}</div>`:''}</div>`;};
  box.innerHTML=`${adm?'<div class="org-raiz" data-id="">Arriba del todo</div>':''}${hijos(null).map(nodo).join('')||'<p class="vacio">Aún no hay nadie.</p>'}`;
  if(!adm)return;
  const desc=(a,b)=>{let p=jefe[b];while(p){if(p===a)return true;p=jefe[p];}return false;};
  const mover=async(id,nuevo)=>{const ant=dependeDe(id);if(nuevo===jefe[id]&&!otros(id).length)return;await guardaCargos(nuevo&&!ant.includes(nuevo)?[[nuevo,id]]:[],ant.filter(q=>q!==nuevo).map(q=>[q,id]));};
+ box.querySelectorAll('.org-gr[data-g]').forEach(g=>g.onclick=ev=>{ev.stopPropagation();if(adm)editaGrupo(M(g.dataset.g));});
  box.querySelectorAll('.org-c').forEach(c=>c.addEventListener('click',ev=>{if(ev.target.closest('.org-h'))return;const id=c.dataset.id,p=M(id);
   const L=act.filter(m=>m.id!==id&&!desc(id,m.id)).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
   const m=modal(`<h3>¿Debajo de quién va ${escH(pri(p.nombre))}?</h3><p>Quien elijas la tendrá a su cargo. La gente que ${escH(pri(p.nombre))} tiene debajo se mueve con ella.</p><div style="margin-top:10px">
@@ -311,6 +313,12 @@ function organigrama(box,adm,act){
    const d=box.querySelector('.sobre');if(!d)return;d.classList.remove('sobre');mover(id,d.dataset.id||null);};
   document.addEventListener('pointermove',mueve);document.addEventListener('pointerup',suelta);document.addEventListener('pointercancel',suelta);});});}
 // El equipo: cambiarle el nombre o la foto (quien administra)
+// Lo que solo cambia quien administra: se explica a los demás en vez de esconderlo
+function soloAdmin(){const a=S.miembros.find(x=>x.admin&&x.activo);modal(`<h3>Lo cambia ${a?escH(pri(a.nombre)):'quien administra'}</h3><p>El nombre del equipo, la foto, los grupos y los puestos los cambia ${a?escH(a.nombre)+', que administra el equipo':'quien administra el equipo'}. Pídeselo a ${a?escH(pri(a.nombre)):'esa persona'}.</p><div class="bts"><button class="bt" onclick="this.closest('.mod').remove()">Entendido</button></div>`);}
+// Nombre del grupo de gente que lleva una persona (sale en el organigrama y en «Mi equipo»)
+function editaGrupo(p){const k=modal(`<h3>Grupo de ${escH(pri(p.nombre))}</h3><p>El nombre del grupo de gente que lleva ${escH(pri(p.nombre))} (por ejemplo «Recepción» o «Fisios mañana»).</p><label class="l">Nombre del grupo</label><input class="i" maxlength="40" value="${escH(p.grupo||'')}" placeholder="Ej.: Recepción"><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
+ k.querySelector('input').focus();k.querySelector('[data-x]').onclick=()=>k.remove();
+ k.querySelector('[data-ok]').onclick=async()=>{const v=k.querySelector('input').value.trim();k.remove();const {error}=await sb.from('pb_miembros').update({grupo:v||null}).eq('id',p.id);if(error){toast('No se ha podido',false);return;}toast(v?'Grupo guardado':'Grupo quitado');await cargaEquipo();if(p.id===S.yo.id)pinta();else renderEquipoOtraVez();};}
 function opcionesEquipo(){const m=modal(`<h3>${escH(S.equipo.nombre)}</h3><div style="margin-top:10px">
  <button class="op" data-a="nom"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>Cambiar el nombre del equipo</button>
  <button class="op" data-a="foto"><svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>${S.equipo.foto?'Cambiar la foto del equipo':'Poner una foto o logo del equipo'}</button>

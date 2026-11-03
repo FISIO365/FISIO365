@@ -142,7 +142,7 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
     ${grafica7R(e,A,ahora,corte)}<div class="es-ley"><span><i style="background:var(--c)"></i>Esta semana</span><span><i class="dash"></i>Semana pasada</span></div></div>`;}
   const fin=perSig(e.periodo,ver),Av=A.filter(x=>x.L>=ver&&x.L<fin).sort((a,b)=>b.L-a.L),totV=Av.reduce((t,x)=>t+Number(x.cantidad),0);
   box.innerHTML=quien()+`<button type="button" class="es-atras"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>Estadísticas</button>
-   <div class="rp-c"><div class="eq-h"><div><small>${escH(e.puesto||'Estadística')}</small><b>${escH(e.nombre)}</b></div><button class="mas3" aria-label="Opciones">⋯</button></div>
+   <div class="rp-c">${(()=>{const o=M(e.persona)||{nombre:'—'};return `<div class="es-due">${avHTML(o)}<div><b>${e.persona===yo?'Tuya':'De '+escH(o.nombre)}</b>${pTag(o)}</div></div>`;})()}<div class="eq-h"><div><small>Estadística</small><b>${escH(e.nombre)}</b></div><button class="mas3" aria-label="Opciones">⋯</button></div>
     <div class="es-7n"><div><small>${P[0]}</small><b>${num(este)}</b></div><div><small>${P[1]}</small><b class="ant">${num(antes)}</b></div></div>
     <div class="es-7r" style="color:${colorDe(b)}">${d?`${d>0?'▲':'▼'} ${num(Math.abs(d))} ${d>0?'más':'menos'} que ${e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado'} a esta hora${b?' · bien':' · a mejorar'}`:`Igual que ${e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado'} a esta hora`}</div>
     ${e.periodo==='semana'?(()=>{const totAnt=suma(A,prev,actual-1),falta=totAnt-este+(e.sentido==='positiva'?1:0),fin=perSig('semana',actual);
