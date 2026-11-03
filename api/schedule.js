@@ -5825,6 +5825,8 @@ module.exports = async function handler(req, res) {
         // Quitar embarazo o cáncer de su consentimiento (cáncer activo → «de alta» → nada)
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '') || !['EMBARAZO', 'CÁNCER'].includes(q.campo)) return res.status(400).json({ ok: false });
         let r = await at(`${CONS_T}/${q.id}`); if (r.error) r = await at(`${CONS_O}/${q.id}`); if (r.error) return res.status(404).json({ ok: false }); const T = (r.fields && (r.fields['TIPO'] || r.fields['FECHA ALTA'] !== undefined || r.fields['Creada'] === undefined && r.fields['FECHA'])) ? CONS_O : CONS_T; // Airtable devuelve el registro aunque la tabla de la URL no sea la suya
+        // «Es lactancia»: en los firmados con la pregunta junta, el «sí» era de lactancia y no de embarazo
+        if (q.a === 'lactancia' && q.campo === 'EMBARAZO') { const d = await at(`${T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { EMBARAZO: 'No', LACTANCIA: 'Sí' }, typecast: true }) }); _alertas.t = 0; _cons.t = 0; return res.status(200).json({ ok: !d.error, valor: 'Lactancia' }); }
         const ahora = cNm(r.fields[q.campo]).trim(), nuevo = q.campo === 'CÁNCER' && /^s[ií]$/i.test(ahora) ? 'Alta' : 'No';
         const d = await at(`${T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [q.campo]: nuevo }, typecast: true }) });
         _alertas.t = 0; _cons.t = 0; return res.status(200).json({ ok: !d.error, valor: nuevo });
