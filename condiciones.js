@@ -24,6 +24,48 @@ function condTarjeta(e,A,ahora,L){const yo=S.yo.id,propio=e.persona===yo,cs=cond
  if(ant.length)h+=`<div class="cd-hist"><small>Anteriores</small>${ant.map(c=>`<button type="button" data-cv="${c.id}"><span>${escH(fechaSem(c.semana))}</span>${condChip(c.condicion)}</button>`).join('')}</div>`;
  return h+'</div>';}
 
+// ── Texto con formato, como un documento: **negrita**, __subrayado__, ==fosforito==, «# » título y «- » lista
+const condIn=t=>escH(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/__(.+?)__/g,'<u>$1</u>').replace(/==(.+?)==/g,'<mark>$1</mark>');
+function condHTML(t){let h='',ul=false;for(const l of String(t||'').split('\n')){
+ if(/^- /.test(l)){if(!ul){h+='<ul>';ul=true;}h+=`<li>${condIn(l.slice(2))||'<br>'}</li>`;continue;}
+ if(ul){h+='</ul>';ul=false;}h+=/^# /.test(l)?`<h3>${condIn(l.slice(2))}</h3>`:`<div>${condIn(l)||'<br>'}</div>`;}
+ return h+(ul?'</ul>':'');}
+// Del editor a texto con marcas (se lee una copia, con sus estilos reales)
+function condMarks(ed){const cp=ed.cloneNode(true);cp.removeAttribute('contenteditable');cp.style.cssText='position:fixed;left:-9999px;top:0;width:500px';document.body.appendChild(cp);
+ const fondo=e=>{const c=getComputedStyle(e).backgroundColor;return c&&!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(c);};
+ const inl=blk=>{const R=[],w=document.createTreeWalker(blk,NodeFilter.SHOW_TEXT);let n;
+  while((n=w.nextNode())){const t=n.nodeValue.replace(/\s+/g,' ');if(!t)continue;let b=false,u=false,h=false;
+   for(let e=n.parentElement;e&&e!==blk;e=e.parentElement){const c=getComputedStyle(e);if(+c.fontWeight>=600)b=true;if(String(c.textDecorationLine||c.textDecoration).includes('underline'))u=true;if(fondo(e))h=true;}
+   const l=R[R.length-1];if(l&&l.b===b&&l.u===u&&l.h===h)l.t+=t;else R.push({b,u,h,t});}
+  return R.map(r=>{let t=r.t.replace(/\*\*|__|==/g,'');if(!t.trim())return t;const a=t.match(/^\s*/)[0],z=t.match(/\s*$/)[0];t=t.trim();if(r.h)t='=='+t+'==';if(r.u)t='__'+t+'__';if(r.b)t='**'+t+'**';return a+t+z;}).join('').replace(/ +/g,' ').trim();};
+ const out=[],BLK=/^(DIV|P|H[1-6]|UL|OL|LI|BLOCKQUOTE)$/;let suelto=null;
+ const corta=()=>{if(suelto){out.push(inl(suelto));suelto.remove();suelto=null;}};
+ const va=par=>{[...par.childNodes].forEach(nd=>{
+  if(nd.nodeType===1&&BLK.test(nd.tagName)){corta();
+   if(nd.tagName==='UL'||nd.tagName==='OL'){[...nd.children].forEach(li=>out.push('- '+inl(li)));return;}
+   if([...nd.children].some(x=>BLK.test(x.tagName))){va(nd);return;}
+   out.push((/^H/.test(nd.tagName)?'# ':nd.tagName==='LI'?'- ':'')+inl(nd));return;}
+  if(nd.nodeType===1&&nd.tagName==='BR'&&!suelto){out.push('');return;}
+  if(!suelto){suelto=document.createElement('div');par.insertBefore(suelto,nd);}suelto.appendChild(nd);});corta();};
+ va(cp);cp.remove();
+ while(out.length&&!out[out.length-1].replace(/^[#-] /,'').trim())out.pop();
+ return out.map(l=>/^[#-] $/.test(l)?'':l).join('\n');}
+// Barra de formato del documento
+function condBarra(bar,ed){
+ const fos=()=>{const s=getSelection();if(!s.rangeCount)return false;let e=s.anchorNode;e=e&&(e.nodeType===3?e.parentElement:e);for(;e&&e!==ed;e=e.parentElement){if(e.tagName==='MARK')return true;const c=getComputedStyle(e).backgroundColor;if(c&&!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(c))return true;}return false;};
+ const blq=()=>{const s=getSelection();if(!s.rangeCount)return '';let e=s.anchorNode;e=e&&(e.nodeType===3?e.parentElement:e);for(;e&&e!==ed;e=e.parentElement)if(/^(H3|LI)$/.test(e.tagName))return e.tagName;return '';};
+ const marca=()=>{if(!ed.contains(getSelection().anchorNode))return;const on={b:document.queryCommandState('bold'),u:document.queryCommandState('underline'),h:fos(),t:blq()==='H3',l:blq()==='LI'};bar.querySelectorAll('button').forEach(b=>b.classList.toggle('on',!!on[b.dataset.f]));};
+ bar.querySelectorAll('button').forEach(b=>{b.onmousedown=ev=>ev.preventDefault();b.onclick=()=>{ed.focus();const f=b.dataset.f;
+  try{document.execCommand('styleWithCSS',false,f==='h');}catch(_){}
+  if(f==='b')document.execCommand('bold');else if(f==='u')document.execCommand('underline');
+  else if(f==='h')document.execCommand('hiliteColor',false,fos()?'transparent':'#ffe680');
+  else if(f==='t')document.execCommand('formatBlock',false,blq()==='H3'?'p':'h3');
+  else if(f==='l')document.execCommand('insertUnorderedList');
+  ed.dispatchEvent(new Event('input'));marca();};});
+ // Como en Word: después de un título, la línea siguiente ya es texto normal
+ ed.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.shiftKey&&blq()==='H3')setTimeout(()=>{if(blq()==='H3'){document.execCommand('formatBlock',false,'p');if(document.queryCommandState('bold'))document.execCommand('bold');marca();}},0);});
+ document.addEventListener('selectionchange',marca);}
+
 // Escribir la condición y enviarla
 function escribeCond(e,A,hecho){const yo=S.yo.id,ahora=madMs(Date.now()),cs=condSemana(e,A,ahora),d=cs.valor-cs.ant,b=bueno(e,d);
  const para=new Set(dependeDe(yo)),gente=S.miembros.filter(m=>m.activo&&m.id!==yo).sort((a,b)=>(para.has(b.id)-para.has(a.id))||a.nombre.localeCompare(b.nombre,'es'));
@@ -32,20 +74,25 @@ function escribeCond(e,A,hecho){const yo=S.yo.id,ahora=madMs(Date.now()),cs=cond
   <div class="cd-nums"><div><small>Cerró con</small><b>${num(cs.valor)}</b></div><div><small>La anterior</small><b class="ant">${num(cs.ant)}</b></div><div><small>Diferencia</small><b style="color:${colorDe(b)}">${d>0?'+':d<0?'−':''}${num(Math.abs(d))}</b></div></div>
   <div class="cd-g">${graficaCond({puntos:cs.puntos,sentido:e.sentido})}</div>
   <label class="l">¿En qué condición estás?</label><div class="cd-lista">${COND.map(([n,k])=>`<button type="button" data-c="${escH(n)}" style="--k:${k}" class="${n===elegida?'on':''}"><i></i>${escH(n)}</button>`).join('')}</div>
-  <div class="cd-esc"${elegida?'':' hidden'}><label class="l">Escribe tu condición</label><textarea class="i cd-ta" rows="7" maxlength="20000" placeholder="Escríbela aquí…"></textarea>
+  <div class="cd-esc"${elegida?'':' hidden'}><label class="l">Escribe tu condición</label><div class="cd-doc"><div class="cd-bar">
+   <button type="button" data-f="b" title="Negrita" aria-label="Negrita"><b>B</b></button><button type="button" data-f="u" title="Subrayar" aria-label="Subrayar"><u>S</u></button>
+   <button type="button" data-f="h" title="Fosforito" aria-label="Fosforito"><svg viewBox="0 0 24 24"><path d="m14.5 4.5 5 5L11 18l-5.5.5L6 13z"/><path d="M4 21h7"/></svg></button><i></i>
+   <button type="button" data-f="t" title="Título" aria-label="Título"><svg viewBox="0 0 24 24"><path d="M5 6h14M12 6v13"/></svg></button><button type="button" data-f="l" title="Lista" aria-label="Lista"><svg viewBox="0 0 24 24"><circle cx="5" cy="7" r="1.2"/><circle cx="5" cy="12" r="1.2"/><circle cx="5" cy="17" r="1.2"/><path d="M9.5 7H20M9.5 12H20M9.5 17H20"/></svg></button></div>
+   <div class="cd-ed cd-txt" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true" data-ph="Escríbela aquí. Puedes poner títulos, listas, negrita…"></div></div>
   <label class="l">¿A quién se la envías?</label><div class="chs cd-para">${gente.map(p=>`<button type="button" data-p="${p.id}" class="${para.has(p.id)?'on':''}">${IC.ck}${escH(pri(p.nombre))}${p.puesto?` <em class="op-v">${escH(p.puesto)}</em>`:''}</button>`).join('')}</div></div>
   <div class="err"></div><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok${elegida?'':' disabled'}>Enviar</button></div></div>`);
  m.querySelector('.hoja').classList.add('ancha');
- const ta=m.querySelector('.cd-ta'),k='cd_borr_'+e.id+cs.semana;ta.value=leeLS(k,'');
- const crece=()=>{ta.style.height='auto';ta.style.height=Math.max(150,ta.scrollHeight+2)+'px';};
- ta.oninput=()=>{guardaLS(k,ta.value);crece();};
+ const ed=m.querySelector('.cd-ed'),k='cd_borr_'+e.id+cs.semana;ed.innerHTML=condHTML(leeLS(k,''));
+ const vacio=()=>ed.classList.toggle('vacio',!ed.textContent.trim()&&!ed.querySelector('li'));vacio();
+ ed.addEventListener('input',()=>{vacio();guardaLS(k,condMarks(ed));});
+ ed.addEventListener('paste',ev=>{ev.preventDefault();document.execCommand('insertText',false,(ev.clipboardData||window.clipboardData).getData('text/plain'));});
+ condBarra(m.querySelector('.cd-bar'),ed);
  m.querySelectorAll('.cd-lista button').forEach(x=>x.onclick=()=>{elegida=x.dataset.c;guardaLS(k+'_c',elegida);m.querySelectorAll('.cd-lista button').forEach(y=>y.classList.toggle('on',y===x));
-  const w=m.querySelector('.cd-esc'),nuevo=w.hidden;w.hidden=false;m.querySelector('[data-ok]').disabled=false;if(nuevo){crece();setTimeout(()=>{w.scrollIntoView({behavior:'smooth',block:'start'});ta.focus({preventScroll:true});},60);}});
- if(elegida)setTimeout(crece,0);
+  const w=m.querySelector('.cd-esc'),nuevo=w.hidden;w.hidden=false;m.querySelector('[data-ok]').disabled=false;if(nuevo)setTimeout(()=>w.scrollIntoView({behavior:'smooth',block:'start'}),60);});
  m.querySelectorAll('.cd-para [data-p]').forEach(x=>x.onclick=()=>{const id=x.dataset.p;para.has(id)?para.delete(id):para.add(id);x.classList.toggle('on',para.has(id));});
  m.querySelector('[data-x]').onclick=()=>m.remove();
- m.querySelector('[data-ok]').onclick=async ev=>{const er=m.querySelector('.err'),t=ta.value.trim();er.textContent='';
-  if(!elegida){er.textContent='Elige la condición';return;}if(!t){er.textContent='Escribe tu condición';ta.focus();return;}if(!para.size){er.textContent='Elige a quién se la envías';return;}
+ m.querySelector('[data-ok]').onclick=async ev=>{const er=m.querySelector('.err'),t=condMarks(ed).trim();er.textContent='';
+  if(!elegida){er.textContent='Elige la condición';return;}if(!t.replace(/\*\*|__|==|^[#-] /gm,'').trim()){er.textContent='Escribe tu condición';ed.focus();return;}if(!para.size){er.textContent='Elige a quién se la envías';return;}
   ev.target.disabled=true;
   const fila={equipo_id:S.yo.equipo_id,persona:yo,estadistica_id:e.id,est_nombre:e.nombre,eje_y:e.eje_y,sentido:e.sentido,semana:cs.semana,valor:cs.valor,valor_ant:cs.ant,puntos:cs.puntos,condicion:elegida,texto:t,para:[...para]};
   const {data,error}=await sb.from('pb_condiciones').insert(fila).select().single();
@@ -60,7 +107,7 @@ function verCond(c){const yo=S.yo.id,p=M(c.persona)||{nombre:'—'},d=Number(c.v
  const m=modal(`<div class="cv"><small class="cd-k">Condición · semana que cerró el ${escH(fechaSem(c.semana))}</small>
   <div class="cv-p">${avHTML(p)}<div><small>De</small><b>${escH(p.nombre)}${c.persona===yo?' <i>(tú)</i>':''}</b>${pTag(p)}</div></div>
   <div class="cv-dos"><div><small>Estadística</small><b>${escH(c.est_nombre)}</b></div><div><small>Condición</small><b class="cv-n" style="--k:${condColor(c.condicion)}">${escH(c.condicion)}</b></div></div>
-  <div class="cv-t">${escH(c.texto).replace(/\n/g,'<br>')}</div>
+  <div class="cv-t cd-txt">${condHTML(c.texto)}</div>
   <p class="cv-pie">${c.persona===yo?'Enviada a ':'Para '}${(c.para||[]).map(id=>id===yo?'ti':escH(pri(nomDe(id)))).join(', ')} · ${escH(new Date(c.creado).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}))}</p>
   <div class="bts"><button class="bt${comp?' sec':''}" data-pdf>Descargar PDF</button>${comp?'<button class="bt" data-sh>Compartir</button>':''}</div>
   ${c.persona===yo?'<button class="lnk cv-bo" data-bo>Borrar esta condición</button>':''}</div>`);
@@ -122,8 +169,25 @@ async function condPDF(c){await cargaJs('/lib/jspdf.umd.min.js');const {jsPDF}=w
  y+=110;
  // Lo escrito
  f('m',9,CO);doc.text(('Lo que escribe '+pri(p.nombre)).toUpperCase(),X,y,{charSpace:1.2});y+=8;doc.setDrawColor(...CO);doc.setLineWidth(.8);doc.line(X,y,X+28,y);y+=22;
- f('r',11,[40,36,33]);const LH=17.5;
- for(const par of String(c.texto).split(/\n/)){const L=par.trim()?doc.splitTextToSize(par,CW):[''];for(const l of L){if(y>H-72){doc.addPage();cab();y=80;f('r',11,[40,36,33]);}doc.text(l,X,y);y+=LH;}y+=par.trim()?5:0;}
+ const TX=[40,36,33],LH=17.5;
+ const salto=n=>{if(y+n>H-60){doc.addPage();cab();y=80;}};
+ const linea=(txt,x0,ancho,base)=>{ // pinta un párrafo con negrita/subrayado/fosforito, partiendo en líneas
+  const P=String(txt).split(/(\*\*|__|==)/);let b=false,u=false,h=false;const W=[];
+  for(const t of P){if(t==='**'){b=!b;continue;}if(t==='__'){u=!u;continue;}if(t==='=='){h=!h;continue;}t.split(/(\s+)/).forEach(w=>{if(w)W.push({w,b:b||base.b,u,h});});}
+  let x=x0;salto(LH);const fin=()=>{y+=base.lh;x=x0;salto(base.lh);};
+  for(const it of W){const sp=/^\s+$/.test(it.w);f(it.b?'b':'r',base.z,base.col);const ww=doc.getTextWidth(sp?' ':it.w);
+   if(sp){if(x>x0)x+=ww;continue;}if(x+ww>x0+ancho&&x>x0)fin();
+   if(it.h){doc.setFillColor(255,230,128);doc.rect(x-1,y-base.z*.82,ww+2,base.z*1.12,'F');}
+   f(it.b?'b':'r',base.z,base.col);doc.text(it.w,x,y);
+   if(it.u){doc.setDrawColor(...base.col);doc.setLineWidth(.6);doc.line(x,y+2,x+ww,y+2);}
+   x+=ww;}
+  y+=base.lh;};
+ const norm={z:11,lh:LH,col:TX};
+ for(const l of String(c.texto).split('\n')){
+  if(/^# /.test(l)){y+=6;salto(30);linea(l.slice(2),X,CW,{z:13.5,lh:20,col:INK,b:true});y+=2;}
+  else if(/^- /.test(l)){salto(LH);f('b',11,CO);doc.text('•',X+3,y);linea(l.slice(2),X+16,CW-16,norm);}
+  else if(!l.trim())y+=LH*.6;
+  else{linea(l,X,CW,norm);y+=4;}}
  // Pie en todas las páginas
  const n=doc.getNumberOfPages(),fc=new Date(c.creado),cuando=(isNaN(fc)||fc.getFullYear()<2000?new Date():fc).toLocaleString('es-ES',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'});
  const pie=`${p.nombre} · ${cuando} · Para ${(c.para||[]).map(id=>nomDe(id)).join(', ')}`;

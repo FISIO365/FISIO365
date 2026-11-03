@@ -57,7 +57,7 @@ function grafica(e,T,ahora,mini){const W=mini?300:340,H=mini?84:210,L=mini?6:30,
  let y0=Math.min(...pts.map(p=>p.y)),y1=Math.max(...pts.map(p=>p.y));if(y0>=0&&!mini)y0=0;if(mini){const r=(y1-y0)||1;y0-=r*.15;}if(y0===y1)y1=y0+1;y1+=(y1-y0)*.08;
  const X=x=>L+(x-x0)/(x1-x0)*(W-L-R),Y=y=>Tp+(1-(y-y0)/(y1-y0))*(H-Tp-B);
  let s='';
- if(!mini){for(let i=0;i<=3;i++){const v=y0+(y1-y0)*i/3,y=Y(v);s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" class="es-rej"/><text x="${L-6}" y="${y+3.5}" text-anchor="end" class="es-ej">${num(y1-y0>3?Math.round(v):Math.round(v*10)/10)}</text>`;}
+ if(!mini){const pa=(()=>{const r=(y1-y0)/3,p=Math.pow(10,Math.floor(Math.log10(r||1))),n=r/p;return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p;})();for(let v=Math.ceil(y0/pa)*pa;v<=y1+1e-9;v+=pa){const y=Y(v);if(y<Tp-2)continue;s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" class="es-rej"/><text x="${L-6}" y="${y+3.5}" text-anchor="end" class="es-ej">${num(Math.round(v*100)/100)}</text>`;}
   const paso=Math.ceil(pts.length/7);pts.forEach((p,i)=>{if((pts.length-1-i)%paso)return;s+=`<text x="${X(p.x)}" y="${H-8}" text-anchor="middle" class="es-ej">${escH(perFin(e.periodo,p.s))}</text>`;});}
  const C=pts.filter(p=>!p.a),t=tendencia(C);
  if(t){const xa=C[0].x,xb=x1;s+=`<line x1="${X(xa)}" y1="${Y(t.m*xa+t.b)}" x2="${X(xb)}" y2="${Y(t.m*xb+t.b)}" stroke="${colorDe(bueno(e,t.m))}" class="es-ten"/>`;}
@@ -158,15 +158,19 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
     <div class="r7t"><div class="r7f cab"><span>Día</span><b>Esta semana</b><b class="ant">La pasada</b><i></i></div>${filas}</div>`;}
   const fin=perSig(e.periodo,ver),Av=A.filter(x=>x.L>=ver&&x.L<fin).sort((a,b)=>b.L-a.L),totV=Av.reduce((t,x)=>t+Number(x.cantidad),0);
   const o=M(e.persona)||{nombre:'—'},comp=e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado';
-  let meta='';if(e.periodo==='semana'){const totAnt=suma(A,prev,actual-1),falta=totAnt-este+(e.sentido==='positiva'?1:0),cierra=dLargo(perSig('semana',actual))+', 14:00';
-   meta=e.sentido==='positiva'?(falta>0?`Te faltan <b>${num(falta)}</b> para superar la semana pasada (${num(totAnt)}). Cierra el ${escH(cierra)}.`:`Ya has superado la semana pasada (${num(totAnt)}). Cierra el ${escH(cierra)}.`)
-    :(este<=totAnt?`Estadística negativa: no pases de ${num(totAnt)}, como la semana pasada. Cierra el ${escH(cierra)}.`:`Estadística negativa: ya has pasado la semana pasada (${num(totAnt)}). Cierra el ${escH(cierra)}.`);}
+  const pos=e.sentido==='positiva',totAnt=suma(A,prev,actual-1),corteAnt=prev+(ahora-actual),cierra=perSig(e.periodo,actual);
+  const NOM={semana:['La semana pasada, a estas alturas','La semana pasada entera','Esta semana cierra el '+dLargo(cierra)+' a las 14:00'],dia:['Ayer a esta misma hora','Ayer entero','Hoy cierra a las 24:00'],mes:['El mes pasado, a estas alturas','El mes pasado entero','Este mes cierra el '+dLargo(cierra)]}[e.periodo];
+  const f1=d?`${d>0?'▲':'▼'} ${num(Math.abs(d))} ${d>0?'más':'menos'}`:'Igual';
+  const fa=totAnt-este,f2=pos?(fa>=0?`Te faltan ${num(fa+1)}`:'¡Superada!'):(fa>=0?`Margen: ${num(fa)}`:`Te has pasado ${num(-fa)}`),b2=pos?fa<0:fa>=0;
   box.innerHTML=quien()+`<button type="button" class="es-atras"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>Estadísticas</button>
    <div class="rp-c es-hero"><div class="es-hh"><div class="es-due">${avHTML(o)}<div><b>${escH(o.nombre)}${e.persona===yo?' <i>(tú)</i>':''}</b>${pTag(o)}</div></div><button class="mas3" aria-label="Opciones">⋯</button></div>
     <h2 class="es-tit">${escH(e.nombre)}</h2>
-    <div class="es-big"><div><b>${num(este)}</b><small>${escH(e.eje_y)} · ${P[0].toLowerCase()}</small></div>
-     <div class="es-vs" style="color:${colorDe(b)}"><b>${d?(d>0?'▲ ':'▼ ')+num(Math.abs(d)):'='}</b><small>vs. ${comp} a esta hora (${num(antes)})</small></div></div>
-    ${meta?`<p class="es-meta">${meta}</p>`:''}
+    <div class="es-big"><b>${num(este)}</b><small>${escH(e.eje_y)} · ${P[0].toLowerCase()}</small></div>
+    <div class="es-cmp">
+     <div><span>${NOM[0]}<small>${escH(dLargo(corteAnt))}, ${hhmm(corteAnt)}</small></span><b>${num(antes)}</b><i style="color:${colorDe(b)}">${f1}</i></div>
+     <div><span>${NOM[1]}<small>${e.periodo==='semana'?'cerró el '+escH(dLargo(actual))+', 14:00':'&nbsp;'}</small></span><b>${num(totAnt)}</b><i style="color:${b2?VERDE:pos?'var(--c)':ROJO}">${f2}</i></div>
+    </div>
+    <p class="es-cierra">${escH(NOM[2])}${pos?'':' · estadística negativa: cuanto menos, mejor'}</p>
     <div class="es-in"><input class="i" inputmode="decimal" autocomplete="off" placeholder="¿Cuántos sumas?" value="${escH(ES.cant[e.id]||'')}"><button class="bt" id="esGuardar">+ Apuntar</button></div>
     <div class="es-cuando">Se apunta <b>${cu?escH(cuTxt(cu,ahora)):'hoy, ahora'}</b> · <button type="button" class="lnk" data-cw>${cu?'cambiar':'¿fue otro día?'}</button>${cu?' · <button type="button" class="lnk" data-c="ahora">mejor ahora</button>':''}</div></div>
    ${e.periodo==='semana'?condTarjeta(e,A,ahora,CO[e.id]||[]):''}
