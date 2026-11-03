@@ -248,3 +248,18 @@ input.i:focus{border-color:var(--c);background:#fff}
 @keyframes hjTa{to{width:100%}}
 @media (prefers-reduced-motion:reduce){.hj,.hj-c,.hj-c svg,.hj-t::after{animation-duration:.01s!important;animation-delay:0s!important}}
 .es-gr{display:flex;align-items:center;gap:10px;margin:18px 4px 10px}.es-gr .av{width:30px;height:30px;font-size:12px}.es-gr b{font-size:15px}.es-gr em{font-style:normal;font-size:12.5px;color:var(--mut);margin-left:auto}
+
+/* Fotos */
+.av{overflow:hidden}.av img{width:100%;height:100%;object-fit:cover;display:block}
+.yo-btn{overflow:hidden;padding:0}.yo-btn img{width:100%;height:100%;object-fit:cover;display:block}
+.top-e{display:flex;align-items:center;gap:10px;min-width:0}.top-f{width:40px;height:40px;border-radius:12px;object-fit:cover;flex:none;border:1px solid var(--line)}
+.eq-h .top-e .mas3{margin-left:2px}
+.rv-g{color:var(--ink)!important;font-weight:600}
+.org-gr{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c);margin:6px 0 -2px 2px}
+/* Estadísticas: pestañas Yo / Mi equipo */
+.es-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#fff;border:1px solid rgba(26,26,26,.08);border-radius:14px;padding:4px;margin-bottom:12px}
+.es-tabs button{border:0;background:none;border-radius:10px;padding:9px;font-size:13.5px;font-weight:600;color:var(--mut);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.es-tabs button.on{background:var(--c);color:#fff}
+.es-gr{display:flex;align-items:center;gap:10px;margin:6px 2px 10px}.es-gr .av{width:36px;height:36px}.es-gr>div{flex:1;min-width:0}.es-gr b{display:block;font-size:15px}.es-gr small{display:block;font-size:12px;color:var(--mut)}
+.es-gr .es-nv2{padding:8px 12px;font-size:13px}
+.es-gr~.es-gr{margin-top:22px}

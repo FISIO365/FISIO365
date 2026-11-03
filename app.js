@@ -19,6 +19,17 @@ function modal(html){const m=ce('div','mod');m.innerHTML=`<div class="hoja">${ht
 function pregunta(txt,o){o=o||{};return new Promise(res=>{const m=modal(`<h3>${escH(txt)}</h3>${o.sub?`<p>${escH(o.sub)}</p>`:''}<div class="bts"><button class="bt sec" data-r="0">Cancelar</button><button class="bt" data-r="1">${escH(o.si||'Sí')}</button></div>`);
  m.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{m.remove();res(b.dataset.r==='1');});m.addEventListener('click',e=>{if(e.target===m)res(false);});});}
 
+// Foto o inicial
+const avHTML=(m,st)=>`<span class="av"${st?` style="${st}"`:''}>${m&&m.foto?`<img src="${escH(m.foto)}" alt="">`:escH(ini(m?m.nombre:'?'))}</span>`;
+function eligeFoto(){return new Promise(res=>{const i=ce('input');i.type='file';i.accept='image/*';i.onchange=()=>res(i.files&&i.files[0]||null);i.click();});}
+async function subirFoto(nombre){const f=await eligeFoto();if(!f)return null;
+ const img=await new Promise((ok,ko)=>{const u=URL.createObjectURL(f),x=new Image();x.onload=()=>ok(x);x.onerror=ko;x.src=u;});
+ const t=320,c=document.createElement('canvas');c.width=c.height=t;const lado=Math.min(img.width,img.height);
+ c.getContext('2d').drawImage(img,(img.width-lado)/2,(img.height-lado)/2,lado,lado,0,0,t,t);
+ const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));const ruta=`${S.yo.equipo_id}/${nombre}-${Date.now()}.jpg`;
+ const {error}=await sb.storage.from('pb-fotos').upload(ruta,blob,{contentType:'image/jpeg',upsert:true});if(error){toast('No se ha podido subir la foto',false);return null;}
+ return sb.storage.from('pb-fotos').getPublicUrl(ruta).data.publicUrl;}
+
 // Hoy en Madrid
 const hoyMad=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid'}).format(new Date());
 const diaMad=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid'}).format(new Date(iso)):'';
@@ -81,7 +92,7 @@ function pantallaSinEquipo(user,me){if(me&&!me.activo){$app.innerHTML=`<div clas
 // ── Pantalla principal
 function pinta(){
  const n=window._pend||0;
- $app.innerHTML=`<div class="wrap"><div class="top"><div><small>Plan de batalla</small><b>${escH(S.equipo?S.equipo.nombre:'')}</b></div><button class="yo-btn" id="yo" aria-label="Tu cuenta">${escH(ini(S.yo.nombre))}</button></div>
+ $app.innerHTML=`<div class="wrap"><div class="top"><div class="top-e">${S.equipo&&S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<div><small>Plan de batalla</small><b>${escH(S.equipo?S.equipo.nombre:'')}</b></div></div><button class="yo-btn" id="yo" aria-label="Tu cuenta">${S.yo.foto?`<img src="${escH(S.yo.foto)}" alt="">`:escH(ini(S.yo.nombre))}</button></div>
   <div class="tabs"><button data-t="plan" class="${S.tab==='plan'?'on':''}">Plan <i id="nPend"${n?'':' hidden'}>${n}</i></button><button data-t="est" class="${S.tab==='est'?'on':''}">Estadísticas</button><button data-t="equipo" class="${S.tab==='equipo'?'on':''}">Equipo</button></div><div id="cont"></div></div>`;
  $app.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(S.tab===b.dataset.t)return;S.tab=b.dataset.t;guardaLS('tab',S.tab);pinta();});
  $app.querySelector('#yo').onclick=menuCuenta;
@@ -89,10 +100,12 @@ function pinta(){
 function badge(n){window._pend=n;const e=document.getElementById('nPend');if(e){e.textContent=n;e.hidden=!n;}}
 
 function menuCuenta(){const m=modal(`<h3>${escH(S.yo.nombre)}</h3><p>${escH(S.yo.email)}</p><div style="margin-top:10px">
+ <button class="op" data-a="foto"><svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>${S.yo.foto?'Cambiar mi foto':'Poner mi foto'}</button>
  <button class="op" data-a="clave"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Cambiar mi contraseña</button>
  <button class="op" data-a="inst"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Instalar en el móvil</button>
  <button class="op rojo" data-a="salir"><svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></svg>Salir</button></div>`);
  m.querySelector('[data-a="salir"]').onclick=()=>{m.remove();sb.auth.signOut();};
+ m.querySelector('[data-a="foto"]').onclick=async()=>{m.remove();const u=await subirFoto('p-'+S.yo.id);if(!u)return;const {error}=await sb.rpc('pb_mi_foto',{url:u});if(error){toast('No se ha podido guardar',false);return;}await cargaEquipo();pinta();toast('Foto puesta');};
  m.querySelector('[data-a="inst"]').onclick=()=>{m.remove();modal(`<h3>Instalar en el móvil</h3><p><b>iPhone:</b> en Safari, toca el botón Compartir y luego «Añadir a pantalla de inicio».<br><br><b>Android:</b> en Chrome, toca los tres puntos y luego «Instalar aplicación» o «Añadir a pantalla de inicio».</p><div class="bts"><button class="bt" onclick="this.closest('.mod').remove()">Entendido</button></div>`);};
  m.querySelector('[data-a="clave"]').onclick=()=>{m.remove();const k=modal(`<h3>Cambiar mi contraseña</h3><label class="l">Contraseña nueva (mínimo 8)</label><input class="i" type="password" minlength="8" autocomplete="new-password"><div class="err"></div><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
   ojos(k);k.querySelector('[data-x]').onclick=()=>k.remove();k.querySelector('[data-ok]').onclick=async e=>{const v=k.querySelector('input').value;if(v.length<8){k.querySelector('.err').textContent='Mínimo 8 caracteres';return;}e.target.disabled=true;
@@ -243,9 +256,9 @@ function renderEquipo(wrap){const adm=S.yo.admin;
  const act=S.miembros.filter(m=>m.activo).sort((a,b)=>(b.id===S.yo.id)-(a.id===S.yo.id)||a.nombre.localeCompare(b.nombre,'es'));
  const baja=S.miembros.filter(m=>!m.activo).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
  const fila=m=>{const ac=m.activo?aCargo(m.id):[],de=m.activo?dependeDe(m.id):[];
-  return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}"><span class="av">${escH(ini(m.nombre))}</span><div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b><small>${escH([m.puesto,m.email].filter(Boolean).join(' · '))}</small>
-   ${de.length?`<small class="rv-d">Depende de ${nombres(de)}</small>`:''}${ac.length?`<small class="rv-a">A su cargo: ${nombres(ac)}</small>`:''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;};
- wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
+  return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}">${avHTML(m)}<div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b><small>${escH([m.puesto,m.email].filter(Boolean).join(' · '))}</small>
+   ${m.grupo?`<small class="rv-g">Grupo: ${escH(m.grupo)}</small>`:''}${de.length?`<small class="rv-d">Depende de ${nombres(de)}</small>`:''}${ac.length?`<small class="rv-a">A su cargo: ${nombres(ac)}</small>`:''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;};
+ wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div class="top-e">${S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div>${adm?'<button class="mas3" id="eqMas" aria-label="Opciones del equipo">⋯</button>':''}</div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
    <div style="margin-top:10px">${act.map(fila).join('')}${baja.length&&adm?`<details style="margin-top:6px"><summary class="eq-p" style="cursor:pointer">De baja (${baja.length})</summary>${baja.map(fila).join('')}</details>`:''}</div></div>
   <div class="rp-c"><div class="eq-h"><div><small>Organigrama</small><b>Quién depende de quién</b></div></div>
    <p class="eq-p">${adm?'Cada persona sale debajo de su jefe, con más margen cuanto más abajo está. Para cambiar a alguien de sitio, <b>tócala</b> y elige debajo de quién va (o arrástrala por <b>⠿</b>).':'Así está organizado el equipo: cada persona sale debajo de su jefe.'}</p><div id="org" class="org"></div></div>
@@ -253,8 +266,8 @@ function renderEquipo(wrap){const adm=S.yo.admin;
    ${adm?'<p>Para poner a alguien bajo otra persona, toca los <b>⋯</b> de esa persona y elige <b>«Depende de»</b>. O al revés: en los ⋯ de la jefa o el jefe, <b>«A su cargo»</b>.</p><p>No va en cascada: si tú tienes a Ramiro a tu cargo y Ramiro tiene a Ana, tú no ves a Ana salvo que también la pongas a tu cargo.</p>':'<p>Las altas, bajas, puestos y quién está a cargo de quién los lleva quien administra el equipo.</p>'}</div>`;
  organigrama(wrap.querySelector('#org'),adm,act);
  if(!adm)return;
- wrap.querySelector('#alta').onclick=altaMiembro;
- wrap.querySelectorAll('.mas3').forEach(b=>b.onclick=()=>opcionesMiembro(M(b.closest('.mi').dataset.id)));}
+ wrap.querySelector('#alta').onclick=altaMiembro;wrap.querySelector('#eqMas').onclick=opcionesEquipo;
+ wrap.querySelectorAll('.mi .mas3').forEach(b=>b.onclick=()=>opcionesMiembro(M(b.closest('.mi').dataset.id)));}
 // ── ORGANIGRAMA: cada persona cuelga de su jefe (la primera persona de quien depende). Se arrastra para cambiarlo.
 function organigrama(box,adm,act){
  const ids=new Set(act.map(m=>m.id));
@@ -263,7 +276,7 @@ function organigrama(box,adm,act){
  act.forEach(m=>{const vis=new Set([m.id]);let p=jefe[m.id];while(p){if(vis.has(p)){jefe[m.id]=null;break;}vis.add(p);p=jefe[p];}});
  const hijos=p=>act.filter(m=>jefe[m.id]===p).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
  const otros=p=>dependeDe(p).filter(q=>ids.has(q)&&q!==jefe[p]);
- const nodo=m=>{const H=hijos(m.id),o=otros(m.id);return `<div class="org-n"><div class="org-c" data-id="${m.id}">${adm?'<span class="org-h" aria-label="Arrastrar">⠿</span>':''}<span class="av">${escH(ini(m.nombre))}</span><span class="org-t"><b>${escH(m.nombre)}${m.id===S.yo.id?' <i>(tú)</i>':''}</b>${m.puesto||o.length?`<small>${escH(m.puesto||'')}${m.puesto&&o.length?' · ':''}${o.length?'también de '+nombres(o):''}</small>`:''}</span></div>${H.length?`<div class="org-k">${H.map(nodo).join('')}</div>`:''}</div>`;};
+ const nodo=m=>{const H=hijos(m.id),o=otros(m.id);return `<div class="org-n"><div class="org-c" data-id="${m.id}">${adm?'<span class="org-h" aria-label="Arrastrar">⠿</span>':''}${avHTML(m)}<span class="org-t"><b>${escH(m.nombre)}${m.id===S.yo.id?' <i>(tú)</i>':''}</b>${m.puesto||o.length?`<small>${escH(m.puesto||'')}${m.puesto&&o.length?' · ':''}${o.length?'también de '+nombres(o):''}</small>`:''}</span></div>${H.length?`<div class="org-k">${m.grupo?`<div class="org-gr">${escH(m.grupo)}</div>`:''}${H.map(nodo).join('')}</div>`:''}</div>`;};
  box.innerHTML=`${adm?'<div class="org-raiz" data-id="">Arriba del todo</div>':''}${hijos(null).map(nodo).join('')||'<p class="vacio">Aún no hay nadie.</p>'}`;
  if(!adm)return;
  const desc=(a,b)=>{let p=jefe[b];while(p){if(p===a)return true;p=jefe[p];}return false;};
@@ -272,7 +285,7 @@ function organigrama(box,adm,act){
   const L=act.filter(m=>m.id!==id&&!desc(id,m.id)).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
   const m=modal(`<h3>¿Debajo de quién va ${escH(pri(p.nombre))}?</h3><p>Quien elijas la tendrá a su cargo. La gente que ${escH(pri(p.nombre))} tiene debajo se mueve con ella.</p><div style="margin-top:10px">
    <button class="op${!jefe[id]?' on':''}" data-j=""><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Arriba del todo (sin jefe)</button>
-   ${L.map(x=>`<button class="op${jefe[id]===x.id?' on':''}" data-j="${x.id}"><span class="av" style="width:28px;height:28px;font-size:12px">${escH(ini(x.nombre))}</span>${escH(x.nombre)}${x.puesto?` <em class="op-v">${escH(x.puesto)}</em>`:''}</button>`).join('')}</div>`);
+   ${L.map(x=>`<button class="op${jefe[id]===x.id?' on':''}" data-j="${x.id}">${avHTML(x,'width:28px;height:28px;font-size:12px')}${escH(x.nombre)}${x.puesto?` <em class="op-v">${escH(x.puesto)}</em>`:''}</button>`).join('')}</div>`);
   m.querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>{m.remove();mover(id,b.dataset.j||null);});}));
  box.querySelectorAll('.org-h').forEach(h=>{h.addEventListener('pointerdown',ev=>{ev.preventDefault();const c=h.closest('.org-c'),id=c.dataset.id;
   const g=c.cloneNode(true);g.classList.add('org-g');document.body.appendChild(g);const r=c.getBoundingClientRect(),dx=ev.clientX-r.left,dy=ev.clientY-r.top;g.style.width=r.width+'px';
@@ -283,6 +296,16 @@ function organigrama(box,adm,act){
   const suelta=async()=>{document.removeEventListener('pointermove',mueve);document.removeEventListener('pointerup',suelta);document.removeEventListener('pointercancel',suelta);g.remove();c.classList.remove('org-fuera');
    const d=box.querySelector('.sobre');if(!d)return;d.classList.remove('sobre');mover(id,d.dataset.id||null);};
   document.addEventListener('pointermove',mueve);document.addEventListener('pointerup',suelta);document.addEventListener('pointercancel',suelta);});});}
+// El equipo: cambiarle el nombre o la foto (quien administra)
+function opcionesEquipo(){const m=modal(`<h3>${escH(S.equipo.nombre)}</h3><div style="margin-top:10px">
+ <button class="op" data-a="nom"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>Cambiar el nombre del equipo</button>
+ <button class="op" data-a="foto"><svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>${S.equipo.foto?'Cambiar la foto del equipo':'Poner una foto o logo del equipo'}</button>
+ ${S.equipo.foto?'<button class="op rojo" data-a="sinfoto"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>Quitar la foto del equipo</button>':''}</div>`);
+ const guarda=async(c,ok)=>{const {error}=await sb.from('pb_equipos').update(c).eq('id',S.equipo.id);if(error){toast('No se ha podido',false);return;}await cargaEquipo();pinta();toast(ok);};
+ m.querySelector('[data-a="nom"]').onclick=()=>{m.remove();const k=modal(`<h3>Nombre del equipo</h3><label class="l">Nombre</label><input class="i" maxlength="60" value="${escH(S.equipo.nombre)}"><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
+  k.querySelector('[data-x]').onclick=()=>k.remove();k.querySelector('[data-ok]').onclick=()=>{const v=k.querySelector('input').value.trim();if(!v)return;k.remove();guarda({nombre:v},'Nombre cambiado');};};
+ m.querySelector('[data-a="foto"]').onclick=async()=>{m.remove();const u=await subirFoto('equipo');if(u)guarda({foto:u},'Foto puesta');};
+ const q=m.querySelector('[data-a="sinfoto"]');if(q)q.onclick=()=>{m.remove();guarda({foto:null},'Foto quitada');};}
 // Elegir varias personas (chips). Devuelve la lista elegida o null si se cancela
 function eligePersonas(titulo,sub,ini,excluir){return new Promise(res=>{const sel=new Set(ini);const L=S.miembros.filter(m=>m.activo&&m.id!==excluir).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
  const m=modal(`<h3>${escH(titulo)}</h3><p>${escH(sub)}</p><div class="chs" style="margin-top:14px">${L.map(p=>`<button type="button" data-p="${p.id}" class="${sel.has(p.id)?'on':''}">${IC.ck}${escH(p.nombre)}</button>`).join('')||'<span class="eq-p">Aún no hay nadie más en el equipo.</span>'}</div>
@@ -324,6 +347,8 @@ function opcionesMiembro(p){if(!p)return;const yo=p.id===S.yo.id;
   ${p.activo&&!yo?`<button class="op" data-a="adm"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg>Pasarle la administración</button>`:''}
   ${yo?'':`<button class="op" data-a="clave"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Ponerle una contraseña nueva</button>`}
   <button class="op" data-a="nom"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>Cambiar el nombre</button>
+  <button class="op" data-a="fot"><svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>${p.foto?'Cambiar la foto':'Ponerle una foto'}</button>
+  <button class="op" data-a="gru"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c0-3 2.7-5 6-5s6 2 6 5M15 14.5c2.8 0 5 1.6 5 4"/></svg>${p.grupo?'Cambiar el nombre de su grupo':'Ponerle nombre a su grupo'}${p.grupo?` <em class="op-v">${escH(p.grupo)}</em>`:''}</button>
   <button class="op" data-a="pue"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>${p.puesto?'Cambiar el puesto':'Ponerle un puesto'}</button>
   ${yo?'':(p.activo?`<button class="op rojo" data-a="baja"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM17 8l5 5M22 8l-5 5"/></svg>Dar de baja</button>`:`<button class="op" data-a="alta"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Volver a dar de alta</button>`)}</div>`);
  const upd=async(campos,ok)=>{m.remove();const {error}=await sb.from('pb_miembros').update(campos).eq('id',p.id);if(error){toast(/administrador/.test(error.message)?'Tiene que quedar al menos un administrador':'No se ha podido',false);return;}toast(ok);await cargaEquipo();if(p.id===S.yo.id)pinta();else renderEquipoOtraVez();};
@@ -340,6 +365,9 @@ function opcionesMiembro(p){if(!p)return;const yo=p.id===S.yo.id;
  on('alta',()=>upd({activo:true},'Vuelve a estar en el equipo'));
  on('nom',()=>{m.remove();const k=modal(`<h3>Cambiar el nombre</h3><label class="l">Nombre</label><input class="i" maxlength="40" value="${escH(p.nombre)}"><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
   k.querySelector('[data-x]').onclick=()=>k.remove();k.querySelector('[data-ok]').onclick=()=>{const v=k.querySelector('input').value.trim();if(!v)return;k.remove();upd({nombre:v},'Nombre cambiado');};});
+ on('fot',async()=>{m.remove();const u=await subirFoto('p-'+p.id);if(u)upd({foto:u},'Foto puesta');});
+ on('gru',()=>{m.remove();const k=modal(`<h3>Grupo de ${escH(pri(p.nombre))}</h3><p>El nombre del grupo de gente que lleva ${escH(pri(p.nombre))} (por ejemplo «Recepción» o «Fisios mañana»). Sale en el organigrama.</p><label class="l">Nombre del grupo</label><input class="i" maxlength="40" value="${escH(p.grupo||'')}" placeholder="Ej.: Recepción"><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
+  k.querySelector('[data-x]').onclick=()=>k.remove();k.querySelector('[data-ok]').onclick=()=>{const v=k.querySelector('input').value.trim();k.remove();upd({grupo:v||null},v?'Grupo guardado':'Grupo quitado');};});
  on('pue',()=>{m.remove();const k=modal(`<h3>Puesto de ${escH(pri(p.nombre))}</h3><p>Sale en su ficha y en sus estadísticas. Si cambia de puesto, lo cambias aquí.</p><label class="l">Puesto</label><input class="i" maxlength="60" value="${escH(p.puesto||'')}" placeholder="Ej.: Recepción, Coordinación…"><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
   k.querySelector('[data-x]').onclick=()=>k.remove();k.querySelector('[data-ok]').onclick=()=>{const v=k.querySelector('input').value.trim();k.remove();upd({puesto:v||null},'Puesto guardado');};});
  on('clave',()=>{m.remove();const pass=claveSug();const k=modal(`<h3>Contraseña nueva para ${escH(pri(p.nombre))}</h3><label class="l">Contraseña</label><input class="i" value="${pass}" autocomplete="off"><div class="err"></div><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);

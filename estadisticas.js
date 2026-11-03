@@ -86,6 +86,8 @@ function grafica7R(e,A,ahora,corte){const W=340,H=130,L=8,R=8,T=10,B=22,ini=perI
 async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChild(box);box.innerHTML='<div class="rp-c" style="color:var(--mut);font-size:13px">Cargando…</div>';
  const yo=S.yo.id;if(ES.persona&&ES.persona!=='*'&&!visibles().some(m=>m.id===ES.persona)){ES.persona='';ES.abierta='';esGuarda();}
  if(ES.persona==='*'&&visibles().length<2){ES.persona='';esGuarda();}
+ if(ES.persona&&ES.persona!=='*'&&!ES.abierta){ES.persona='*';esGuarda();}
+ if(ES.persona&&ES.persona!=='*'&&ES.abierta)ES.volverTodos=1;
  const todos=()=>ES.persona==='*',suyos=()=>visibles().filter(m=>m.id!==yo).map(m=>m.id);
  const persona=()=>ES.persona||yo;
  let E=[],AP={};
@@ -96,8 +98,8 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
   if(ES.abierta&&!E.some(e=>e.id===ES.abierta)){ES.abierta='';esGuarda();}
   pinta3();};
  window._esRecargar=carga;
- const quien=()=>{const V=visibles();return V.length>1?`<div class="pb-who">${V.map(m=>`<button type="button" data-p="${m.id}" class="${m.id===persona()?'on':''}">${m.id===yo?'Yo':escH(pri(m.nombre))}</button>`).join('').replace('</button>','</button><button type="button" data-p="*" class="'+(todos()?'on':'')+'">Todo mi equipo</button>')}</div>`:'';};
- const chipsQuien=()=>box.querySelectorAll('.pb-who button').forEach(b=>b.onclick=()=>{ES.persona=b.dataset.p===yo?'':b.dataset.p;ES.abierta='';esGuarda();carga();});
+ const quien=()=>visibles().length>1?`<div class="es-tabs"><button type="button" data-p="${yo}" class="${persona()===yo?'on':''}">Yo</button><button type="button" data-p="*" class="${persona()!==yo?'on':''}">Mi equipo${S.yo.grupo?' · '+escH(S.yo.grupo):''}</button></div>`:'';
+const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclick=()=>{ES.persona=b.dataset.p===yo?'':b.dataset.p;ES.abierta='';esGuarda();carga();});
  const abre=(eid)=>{const e=E.find(x=>x.id===eid);if(todos()&&e){ES.volverTodos=1;ES.persona=e.persona;}ES.abierta=eid;esGuarda();todos()?carga():pinta3();window.scrollTo(0,0);};
  const pinta3=()=>{if(ES.abierta)return detalle(E.find(e=>e.id===ES.abierta));
   const y=window.scrollY,ahora=madMs(Date.now()),yoMismo=persona()===yo,nom=pri(nomDe(persona()));
@@ -107,9 +109,8 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
    else if(cur){der=`<div class="es-ult"><b>${num(cur.v)}</b><small>${escH(perLargo(e.periodo,cur.s,ahora))}</small></div>`;}
    return `<button type="button" class="rp-c es-c" data-e="${e.id}"><div class="es-ch"><div><small>${escH(e.puesto||'Estadística')}</small><b>${escH(e.nombre)}</b></div>${der}</div>${grafica(e,T,ahora,true)}<div class="es-pie"><span style="color:${tt.c}">${escH(tt.txt)}</span><em>${escH(e.eje_y)} · ${PER[e.periodo].n.toLowerCase()}</em></div></button>`;};
   if(todos()){const G=suyos().map(id=>({id,L:act.filter(e=>e.persona===id)}));
-   box.innerHTML=quien()+`<div class="rp-c"><div class="eq-h"><div><small>Estadísticas</small><b>Todo mi equipo</b></div></div><p class="eq-p">Las estadísticas de la gente que tienes a tu cargo. Toca una para verla en grande; para crearle una nueva a alguien, elige su nombre arriba.</p></div>
-    ${G.map(g=>`<div class="es-gr"><span class="av">${escH(ini(nomDe(g.id)))}</span><b>${escH(nomDe(g.id))}</b><em>${g.L.length} estadística${g.L.length===1?'':'s'}</em></div>${g.L.map(tarj).join('')||'<p class="vacio" style="padding-top:0">Aún no tiene estadísticas.</p>'}`).join('')}`;
-   chipsQuien();box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>abre(b.dataset.e));window.scrollTo(0,y);return;}
+   box.innerHTML=quien()+`${G.map(g=>`<div class="es-gr">${avHTML(M(g.id))}<div><b>${escH(nomDe(g.id))}</b><small>${escH((M(g.id)||{}).puesto||'')}${(M(g.id)||{}).puesto?' · ':''}${g.L.length} estadística${g.L.length===1?'':'s'}</small></div><button class="bt sec es-nv2" data-n="${g.id}">+ Nueva</button></div>${g.L.map(tarj).join('')||'<p class="vacio" style="padding-top:0">Aún no tiene estadísticas.</p>'}`).join('')}`;
+   chipsQuien();box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>abre(b.dataset.e));box.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>editarEst(null,b.dataset.n));window.scrollTo(0,y);return;}
   box.innerHTML=quien()+`<div class="rp-c"><div class="eq-h"><div><small>Estadísticas</small><b>${yoMismo?'Tus estadísticas':'Estadísticas de '+escH(nom)}</b></div><button class="bt" id="esNueva">+ Nueva</button></div>
    ${act.length?`<p class="eq-p">${act.length} estadística${act.length===1?'':'s'}. Puedes tener todas las que quieras: crea otra con «+ Nueva».</p>`:''}
    ${!act.length?`<p class="eq-p">${yoMismo?'Crea tu primera estadística: lo que produce tu puesto (cursos completados, pacientes nuevos…). Vas apuntando lo que haces y se grafea sola, semana a semana (de jueves a las 14:00 a jueves a las 14:00), con su tendencia y su 7R.':'Aún no tiene estadísticas. Puedes crearle una.'}</p>`:''}</div>
@@ -178,7 +179,7 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
   window.scrollTo(0,y);};
 
  // Crear o cambiar una estadística
- const editarEst=e=>{const per=persona(),pm=M(per)||{},v={puesto:e?e.puesto:(pm.puesto||''),nombre:e?e.nombre:'',eje_y:e?e.eje_y:'',periodo:e?e.periodo:'semana',sentido:e?e.sentido:'positiva'};
+ const editarEst=(e,perX)=>{const per=perX||(e&&e.persona)||persona(),pm=M(per)||{},v={puesto:e?e.puesto:(pm.puesto||''),nombre:e?e.nombre:'',eje_y:e?e.eje_y:'',periodo:e?e.periodo:'semana',sentido:e?e.sentido:'positiva'};
   const m=modal(`<h3>${e?'Cambiar la estadística':'Nueva estadística'}${per===yo?'':' para '+escH(pri(pm.nombre))}</h3>
    <label class="l">Puesto</label><input class="i" name="puesto" maxlength="60" value="${escH(v.puesto||'')}" placeholder="Ej.: Recepción, Fisioterapeuta…">
    <label class="l">Nombre de la estadística</label><input class="i" name="nombre" maxlength="80" value="${escH(v.nombre)}" placeholder="Ej.: Cursos completados">
@@ -196,5 +197,5 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
    const campos={puesto:v.puesto||null,nombre:v.nombre,eje_y:v.eje_y,periodo:v.periodo,sentido:v.sentido};
    const r=e?await sb.from('pb_estadisticas').update(campos).eq('id',e.id).select().single():await sb.from('pb_estadisticas').insert({...campos,equipo_id:S.yo.equipo_id,persona:per,por:yo}).select().single();
    if(r.error){ev.target.disabled=false;m.querySelector('.err').textContent='No se ha podido guardar';return;}
-   m.remove();toast(e?'Guardada':'Creada');ES.abierta=(r.data&&r.data.id)||(e&&e.id)||'';esGuarda();carga();};};
+   m.remove();toast(e?'Guardada':'Creada');if(per!==yo){ES.persona=per;ES.volverTodos=1;}ES.abierta=(r.data&&r.data.id)||(e&&e.id)||'';esGuarda();carga();};};
  carga();}
