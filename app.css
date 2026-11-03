@@ -247,3 +247,4 @@ input.i:focus{border-color:var(--c);background:#fff}
 @keyframes hjOp{to{opacity:1}}
 @keyframes hjTa{to{width:100%}}
 @media (prefers-reduced-motion:reduce){.hj,.hj-c,.hj-c svg,.hj-t::after{animation-duration:.01s!important;animation-delay:0s!important}}
+.es-gr{display:flex;align-items:center;gap:10px;margin:18px 4px 10px}.es-gr .av{width:30px;height:30px;font-size:12px}.es-gr b{font-size:15px}.es-gr em{font-style:normal;font-size:12.5px;color:var(--mut);margin-left:auto}

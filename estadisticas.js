@@ -84,18 +84,21 @@ function grafica7R(e,A,ahora,corte){const W=340,H=130,L=8,R=8,T=10,B=22,ini=perI
  return `<svg class="es-g es-7g" viewBox="0 0 ${W} ${H}">${s}</svg>`;}
 
 async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChild(box);box.innerHTML='<div class="rp-c" style="color:var(--mut);font-size:13px">Cargando…</div>';
- const yo=S.yo.id;if(ES.persona&&!visibles().some(m=>m.id===ES.persona)){ES.persona='';ES.abierta='';esGuarda();}
+ const yo=S.yo.id;if(ES.persona&&ES.persona!=='*'&&!visibles().some(m=>m.id===ES.persona)){ES.persona='';ES.abierta='';esGuarda();}
+ if(ES.persona==='*'&&visibles().length<2){ES.persona='';esGuarda();}
+ const todos=()=>ES.persona==='*',suyos=()=>visibles().filter(m=>m.id!==yo).map(m=>m.id);
  const persona=()=>ES.persona||yo;
  let E=[],AP={};
- const carga=async()=>{const {data,error}=await sb.from('pb_estadisticas').select('*').eq('persona',persona()).order('creado');
+ const carga=async()=>{const q=sb.from('pb_estadisticas').select('*');const {data,error}=await (todos()?q.in('persona',suyos()):q.eq('persona',persona())).order('creado');
   if(!box.isConnected)return;if(error){box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
   E=data||[];AP={};E.forEach(e=>AP[e.id]=[]);
   if(E.length){const {data:a}=await sb.from('pb_apuntes').select('*').in('estadistica_id',E.map(e=>e.id)).order('en');(a||[]).forEach(x=>{x.L=madMs(x.en);(AP[x.estadistica_id]=AP[x.estadistica_id]||[]).push(x);});}
   if(ES.abierta&&!E.some(e=>e.id===ES.abierta)){ES.abierta='';esGuarda();}
   pinta3();};
  window._esRecargar=carga;
- const quien=()=>{const V=visibles();return V.length>1?`<div class="pb-who">${V.map(m=>`<button type="button" data-p="${m.id}" class="${m.id===persona()?'on':''}">${m.id===yo?'Yo':escH(pri(m.nombre))}</button>`).join('')}</div>`:'';};
+ const quien=()=>{const V=visibles();return V.length>1?`<div class="pb-who">${V.map(m=>`<button type="button" data-p="${m.id}" class="${m.id===persona()?'on':''}">${m.id===yo?'Yo':escH(pri(m.nombre))}</button>`).join('').replace('</button>','</button><button type="button" data-p="*" class="'+(todos()?'on':'')+'">Todo mi equipo</button>')}</div>`:'';};
  const chipsQuien=()=>box.querySelectorAll('.pb-who button').forEach(b=>b.onclick=()=>{ES.persona=b.dataset.p===yo?'':b.dataset.p;ES.abierta='';esGuarda();carga();});
+ const abre=(eid)=>{const e=E.find(x=>x.id===eid);if(todos()&&e){ES.volverTodos=1;ES.persona=e.persona;}ES.abierta=eid;esGuarda();todos()?carga():pinta3();window.scrollTo(0,0);};
  const pinta3=()=>{if(ES.abierta)return detalle(E.find(e=>e.id===ES.abierta));
   const y=window.scrollY,ahora=madMs(Date.now()),yoMismo=persona()===yo,nom=pri(nomDe(persona()));
   const act=E.filter(e=>!e.archivada),arc=E.filter(e=>e.archivada);
@@ -103,11 +106,16 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
    let der='';if(e.periodo==='semana'){const r=sieteR(e,A,ahora,ahora);der=`<div class="es-ult"><b>${num(r.este)}</b><small>esta semana</small><i style="color:${colorDe(bueno(e,r.d))}">${r.d?(r.d>0?'▲ ':'▼ ')+num(Math.abs(r.d)):'='} vs. semana pasada</i></div>`;}
    else if(cur){der=`<div class="es-ult"><b>${num(cur.v)}</b><small>${escH(perLargo(e.periodo,cur.s,ahora))}</small></div>`;}
    return `<button type="button" class="rp-c es-c" data-e="${e.id}"><div class="es-ch"><div><small>${escH(e.puesto||'Estadística')}</small><b>${escH(e.nombre)}</b></div>${der}</div>${grafica(e,T,ahora,true)}<div class="es-pie"><span style="color:${tt.c}">${escH(tt.txt)}</span><em>${escH(e.eje_y)} · ${PER[e.periodo].n.toLowerCase()}</em></div></button>`;};
+  if(todos()){const G=suyos().map(id=>({id,L:act.filter(e=>e.persona===id)}));
+   box.innerHTML=quien()+`<div class="rp-c"><div class="eq-h"><div><small>Estadísticas</small><b>Todo mi equipo</b></div></div><p class="eq-p">Las estadísticas de la gente que tienes a tu cargo. Toca una para verla en grande; para crearle una nueva a alguien, elige su nombre arriba.</p></div>
+    ${G.map(g=>`<div class="es-gr"><span class="av">${escH(ini(nomDe(g.id)))}</span><b>${escH(nomDe(g.id))}</b><em>${g.L.length} estadística${g.L.length===1?'':'s'}</em></div>${g.L.map(tarj).join('')||'<p class="vacio" style="padding-top:0">Aún no tiene estadísticas.</p>'}`).join('')}`;
+   chipsQuien();box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>abre(b.dataset.e));window.scrollTo(0,y);return;}
   box.innerHTML=quien()+`<div class="rp-c"><div class="eq-h"><div><small>Estadísticas</small><b>${yoMismo?'Tus estadísticas':'Estadísticas de '+escH(nom)}</b></div><button class="bt" id="esNueva">+ Nueva</button></div>
+   ${act.length?`<p class="eq-p">${act.length} estadística${act.length===1?'':'s'}. Puedes tener todas las que quieras: crea otra con «+ Nueva».</p>`:''}
    ${!act.length?`<p class="eq-p">${yoMismo?'Crea tu primera estadística: lo que produce tu puesto (cursos completados, pacientes nuevos…). Vas apuntando lo que haces y se grafea sola, semana a semana (de jueves a las 14:00 a jueves a las 14:00), con su tendencia y su 7R.':'Aún no tiene estadísticas. Puedes crearle una.'}</p>`:''}</div>
    ${act.map(tarj).join('')}${arc.length?`<details class="es-arc"><summary>Archivadas (${arc.length})</summary>${arc.map(tarj).join('')}</details>`:''}`;
   chipsQuien();box.querySelector('#esNueva').onclick=()=>editarEst(null);
-  box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{ES.abierta=b.dataset.e;esGuarda();pinta3();window.scrollTo(0,0);});
+  box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>abre(b.dataset.e));
   window.scrollTo(0,y);};
 
  // Una estadística en grande. Arriba lo importante: cuánto llevas y cuánto llevabas la semana pasada a esta misma hora (7R).
@@ -145,7 +153,7 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
    ${r7}
    <div class="rp-c"><div class="es-per"><button type="button" class="pb-fl" data-v="-1" aria-label="Anterior"${!T.length||ver<=T[0].s?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>Apuntado · ${escH(perLargo(e.periodo,ver,ahora).toLowerCase())}<small>Total: ${num(totV)}</small></b><button type="button" class="pb-fl" data-v="1" aria-label="Siguiente"${ver>=actual?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
     ${Av.length?Av.map(x=>`<div class="es-fila" data-id="${x.id}"><span>${escH(dLargo(x.L))} · ${hhmm(x.L)}${x.por&&x.por!==e.persona?` <em>· ${escH(pri(nomDe(x.por)))}</em>`:''}</span><b>${Number(x.cantidad)>0?'+':''}${num(x.cantidad)}</b><button type="button" class="es-x" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join(''):'<p class="vacio">Aún no has apuntado nada aquí.</p>'}</div>`;
-  box.querySelector('.es-atras').onclick=()=>{ES.abierta='';esGuarda();pinta3();};chipsQuien();
+  box.querySelector('.es-atras').onclick=()=>{ES.abierta='';if(ES.volverTodos){ES.volverTodos=0;ES.persona='*';esGuarda();carga();return;}esGuarda();pinta3();};chipsQuien();
   box.querySelectorAll('.es-7d [data-i]').forEach(b=>b.onclick=()=>{ES.dia7[e.id]=+b.dataset.i;detalle(e);});
   box.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{ES.ver[e.id]=+b.dataset.v<0?perAnt(e.periodo,ver):perSig(e.periodo,ver);detalle(e);});
   box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ES.cuando[e.id]=b.dataset.c==='otro'?(Math.floor(ahora/36e5)*36e5-HD):null;detalle(e);});
