@@ -511,3 +511,5 @@ input.i:focus{border-color:var(--c);background:#fff}
 @keyframes brAguja{0%{transform:rotate(-150deg)}35%{transform:rotate(70deg)}55%{transform:rotate(15deg)}72%{transform:rotate(42deg)}86%{transform:rotate(30deg)}100%{transform:rotate(35deg)}}
 @keyframes brMece{0%,100%{transform:rotate(35deg)}50%{transform:rotate(29deg)}}
 @media (prefers-reduced-motion:reduce){.br-o,.br-t,.br-n,.br-a{animation:none!important;stroke-dashoffset:0;opacity:1}.br-a{transform:rotate(35deg)}.br-i{animation:none}}
+.pb-eqf .tx .pto,.mi .tx .pto,.org-t .pto,.ct-c .tx .pto,.cd-f .tx .pto,.cv-p .pto,.es-due .pto,.ar-cab .pto,.es-cab .pto,.qv-f .pto{display:block;width:fit-content;max-width:100%}
+.pb-eqf .tx .pto,.mi .tx .pto,.ct-c .tx .pto,.cd-f .tx .pto,.qv-f .pto{white-space:normal;overflow:visible;line-height:1.35;padding-top:2px;padding-bottom:2px}
