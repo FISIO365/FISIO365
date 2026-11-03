@@ -1056,6 +1056,16 @@ function valeOpciones(CF) {
   return S.map(s => ({ nombre: s.nombre, desc: s.desc || '', ops: [1, 2, 3].map(n => ({ n, p: Math.round(s.suelta * n * 100) / 100, pack: 0, ah: 0 }))
     .concat((s.packs || []).filter(x => x && x[0] > 3 && x[0] <= 5 && x[1] > 0).map(([n, p]) => ({ n, p, pack: 1, ah: Math.max(0, Math.round((s.suelta * n - p) * 100) / 100) }))) }));
 }
+function repartirLotes(claves, lotes) {
+  const pre = lotes.find(l => l.previo && l.desde), resto = lotes.filter(l => l !== pre), out = [];
+  let li = 0, usado = 0, pu = 0;
+  for (const k of claves) {
+    if (pre && k >= pre.desde && pu < pre.n) { out.push({ lo: pre, i: pu + 1 + (pre.off || 0) }); pu++; continue; }
+    while (li < resto.length && usado >= resto[li].n) { li++; usado = 0; }
+    const lo = resto[li]; out.push(lo ? { lo, i: usado + 1 } : null); if (lo) usado++;
+  }
+  return out;
+}
 const valeCodigo = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; const b = require('crypto').randomBytes(6); for (let i = 0; i < 6; i++) s += A[b[i] % A.length]; return 'R-' + s; };
 const valeVista = r => { const F = r.fields || {}; return { id: r.id, codigo: F['CÓDIGO'] || '', para: F.PARA || '', de: F.DE || '', comprador: F.COMPRADOR || '', email: F.EMAIL || '', tel: F['TELÉFONO'] || '', tipo: F.TIPO || '', n: F.SESIONES || 0, importe: F.IMPORTE || 0, idioma: F.IDIOMA || '', entrega: F.ENTREGA || '', emailDestino: F['EMAIL DESTINO'] || '', fecha: F['FECHA ENVÍO'] || '', pago: F.PAGO || '', estado: F.ESTADO || '', pagado: F.PAGADO || '', enviada: F.ENVIADA || '', enviadaDestino: F['ENVIADA DESTINO'] || '', canjeada: F.CANJEADA || '', caduca: F.CADUCA || '', creado: F.CREADO || '', factura: F.FACTURA || '', ocasion: valeOc(F), link: enlaceVale(r.id) }; };
 // Email (Brevo) con el botón para ver la tarjeta
@@ -4734,11 +4744,11 @@ module.exports = async function handler(req, res) {
                 const [rs, fs, ps] = await Promise.all([
                   todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),OR(${g.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PacienteRec`),
                   inicio ? todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',OR(${g.map(id => `{PacienteId}='${id}'`).join(',')}))`)}`).catch(() => []) : Promise.resolve([]),
-                  conPago ? todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}&fields[]=${encodeURIComponent('BONO PREVIO VALE')}`).catch(() => []) : Promise.resolve([])
+                  conPago ? todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}&fields[]=${encodeURIComponent('BONO PREVIO VALE')}&fields[]=${encodeURIComponent('BONO PREVIO DESDE')}`).catch(() => []) : Promise.resolve([])
                 ]);
                 const L = {}; g.forEach(id => L[id] = { citas: [], lotes: [] });
                 rs.forEach(r => (r.fields['PacienteRec'] || []).forEach(id => { if (L[id]) L[id].citas.push({ id: r.id, k: String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA), e: String(nmA(r.fields.ESTADO)).trim().toUpperCase() }); }));
-                ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0), u = Math.min(n, Number(p.fields['BONO PREVIO YA USADAS'] || 0)); if (L[p.id] && n - u > 0) L[p.id].lotes.push({ f: '', n: n - u, tot: n, off: u, precio: 0, previo: true, vale: !!p.fields['BONO PREVIO VALE'] }); });
+                ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0), u = Math.min(n, Number(p.fields['BONO PREVIO YA USADAS'] || 0)); if (L[p.id] && n - u > 0) L[p.id].lotes.push({ f: '', n: n - u, tot: n, off: u, precio: 0, previo: true, vale: !!p.fields['BONO PREVIO VALE'], desde: String(p.fields['BONO PREVIO DESDE'] || '') }); });
                 fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => { const id = r.fields['PacienteId']; if (!L[id]) return;
                   sesDe(r.fields).forEach(x => L[id].lotes.push({ f: r.fields['FECHA DE COBRO'] || r.fields['FECHA'] || '', n: x.n, precio: x.precio, num: r.fields['Nº FACTURA'] || '', fid: r.id })); });
                 g.forEach(id => { L[id].citas.sort((a, b) => a.k.localeCompare(b.k)); C[id] = { t: ahora, v: L[id] }; }); }));
@@ -4761,12 +4771,9 @@ module.exports = async function handler(req, res) {
                 // Se gastan los pagos por orden (primero el más antiguo) con las citas desde el inicio del control, en orden
                 if (cubre.has(r.id)) { const x = cubre.get(r.id); pago[r.id] = { t: 'pack', i: (x.off || 0) + x.orden.indexOf(r.id) + 1, n: x.tot || x.n, comp: true }; return; }
                 const QL = quitarLote[pid] || [], LO = V.lotes.filter(l => !QL.some(f => f === 'previo' ? l.previo : l.fid === f));
-                const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio && !cubre.has(x.id)); let li = 0, usado = 0;
-                for (const x of gastan) { while (li < LO.length && usado >= LO[li].n) { li++; usado = 0; }
-                  if (x.id === r.id) { const lo = LO[li];
-                    pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: usado + 1 + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : lo.n > 1 ? { t: 'pack', i: usado + 1, n: lo.n, v: Math.round(lo.precio * 100) / 100 } : { t: 'suelta', v: lo.precio };
-                    break; }
-                  if (li < LO.length) usado++; }
+                const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio && !cubre.has(x.id)), rep = repartirLotes(gastan.map(x => x.k), LO), j = gastan.findIndex(x => x.id === r.id);
+                if (j >= 0) { const a = rep[j], lo = a && a.lo;
+                  pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: lo.desde ? a.i : a.i + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : lo.n > 1 ? { t: 'pack', i: a.i, n: lo.n, v: Math.round(lo.precio * 100) / 100 } : { t: 'suelta', v: lo.precio }; }
               });
             } } catch (e) { console.log('agenda-num', e.message); }
           return res.status(200).json({ ok: true, num: numSes, pago, inicio });
@@ -4781,7 +4788,7 @@ module.exports = async function handler(req, res) {
             at(`${PACIENTES}/${pid}`).catch(() => ({}))
           ]);
           const lotes = [], P = pr.fields || {}, nP = Number(P['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(P['BONO PREVIO YA USADAS'] || 0));
-          if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true, vale: !!P['BONO PREVIO VALE'] });
+          if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true, vale: !!P['BONO PREVIO VALE'], desde: String(P['BONO PREVIO DESDE'] || '') });
           fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => {
             (r.fields['EN PACK'] ? [] : [[r.fields['CONCEPTO 1'], r.fields['Nº SESIONES 1']], [r.fields['CONCEPTO 2'], r.fields['Nº SESIONES 2']]]).forEach(([c, n]) => { if (/^Sesi/i.test(nmA(c) || '') && Number(n) > 0) lotes.push({ n: Number(n), fid: r.id }); }); });
           let claves = rs.map(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA)).filter(k => k !== clave);
@@ -4797,10 +4804,8 @@ module.exports = async function handler(req, res) {
             shares.filter(x => x.t === pid).forEach(x => { const i = lotes.findIndex(l => x.f === 'previo' ? l.previo : l.fid === x.f); if (i >= 0) lotes.splice(i, 1); });
           }
           claves.push(clave); claves.sort();
-          let li = 0, usado = 0, out = { t: 'sin' };
-          for (const k of claves) { while (li < lotes.length && usado >= lotes[li].n) { li++; usado = 0; }
-            if (k === clave) { const lo = lotes[li]; out = !lo ? { t: 'sin' } : lo.n > 1 || lo.previo ? { t: 'pack', i: usado + 1 + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : { t: 'suelta' }; break; }
-            if (li < lotes.length) usado++; }
+          let out = { t: 'sin' }; { const rep = repartirLotes(claves, lotes), a = rep[claves.indexOf(clave)], lo = a && a.lo;
+            out = !lo ? { t: 'sin' } : lo.n > 1 || lo.previo ? { t: 'pack', i: lo.previo && lo.desde ? a.i : a.i + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : { t: 'suelta' }; }
           const total = lotes.reduce((t, l) => t + l.n, 0);
           return { activo: true, ...out, quedan: Math.max(0, total - claves.length) };
         };
@@ -5779,12 +5784,9 @@ module.exports = async function handler(req, res) {
           if (!(n > 0 && n <= 200) || !(k >= 1 && k <= n)) return res.status(400).json({ ok: false, error: 'Revisa el nº de sesiones' });
           const cit = await at(`tblTPlcuiSjQngkaD/${q.bonoPack.citaId}`); if (cit.error) return res.status(404).json({ ok: false, error: 'Cita no encontrada' });
           const hh2 = h => String(h || '').replace(/^(\d):/, '0$1:').slice(0, 5), clave = String(cit.fields.FECHA || '').slice(0, 10) + ' ' + hh2(cit.fields.HORA);
-          const inicio = await inicioControl().catch(() => '');
-          let m = 0;
-          if (inicio) { const cs = await todosT('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),FIND('${q.id}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${inicio}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA`);
-            m = cs.filter(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh2(c.fields.HORA) < clave).length; }
-          const usadas = Math.max(0, (k - 1) - m);
-          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'SESIONES BONO PREVIO': n, 'BONO PREVIO YA USADAS': usadas || null, 'BONO PREVIO VALE': !!q.bonoPack.vale } }) });
+          // Esta cita es la sesión k del pack: el pack la cubre a ella y a las siguientes (las k-1 de antes ya se hicieron)
+          const usadas = k - 1;
+          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'SESIONES BONO PREVIO': n, 'BONO PREVIO YA USADAS': usadas || null, 'BONO PREVIO VALE': !!q.bonoPack.vale, 'BONO PREVIO DESDE': clave } }) });
           global._sesPac = {};
           return res.status(200).json({ ok: !d.error, bonoPrevio: n, usadas, error: d.error && (d.error.message || d.error.type) });
         }
@@ -5792,7 +5794,7 @@ module.exports = async function handler(req, res) {
           let n = Number(q.bonoPrevio);
           if (q.bonoSumar != null) { const cur = await at(`${PACIENTES}/${q.id}`); n = Number((cur.fields || {})['SESIONES BONO PREVIO'] || 0) + Number(q.bonoSumar); }
           if (!Number.isFinite(n) || n < 0 || n > 500) return res.status(400).json({ ok: false, error: 'Nº de sesiones no válido' });
-          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: Object.assign({ 'SESIONES BONO PREVIO': Math.round(n) || null }, q.bonoPrevio != null ? { 'BONO PREVIO YA USADAS': null, 'BONO PREVIO VALE': false } : {}) }) });
+          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: Object.assign({ 'SESIONES BONO PREVIO': Math.round(n) || null }, q.bonoPrevio != null ? { 'BONO PREVIO YA USADAS': null, 'BONO PREVIO VALE': false, 'BONO PREVIO DESDE': null } : {}) }) });
           global._sesPac = {};
           return res.status(200).json({ ok: !d.error, bonoPrevio: Math.round(n), error: d.error && (d.error.message || d.error.type) });
         }
