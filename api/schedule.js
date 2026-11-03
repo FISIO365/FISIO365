@@ -1054,7 +1054,7 @@ const valeEur = n => { const r = Math.round(Number(n || 0) * 100) / 100, e = Mat
 function valeOpciones(CF) {
   const S = ((CF && CF.app && Array.isArray(CF.app.servicios) && CF.app.servicios.length) ? CF.app.servicios : CONF_DEF.app.servicios).filter(s => s && s.nombre && Number(s.suelta) > 0);
   return S.map(s => ({ nombre: s.nombre, desc: s.desc || '', ops: [1, 2, 3].map(n => ({ n, p: Math.round(s.suelta * n * 100) / 100, pack: 0, ah: 0 }))
-    .concat((s.packs || []).filter(x => x && x[0] > 3 && x[1] > 0).map(([n, p]) => ({ n, p, pack: 1, ah: Math.max(0, Math.round((s.suelta * n - p) * 100) / 100) }))) }));
+    .concat((s.packs || []).filter(x => x && x[0] > 3 && x[0] <= 5 && x[1] > 0).map(([n, p]) => ({ n, p, pack: 1, ah: Math.max(0, Math.round((s.suelta * n - p) * 100) / 100) }))) }));
 }
 const valeCodigo = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; const b = require('crypto').randomBytes(6); for (let i = 0; i < 6; i++) s += A[b[i] % A.length]; return 'R-' + s; };
 const valeVista = r => { const F = r.fields || {}; return { id: r.id, codigo: F['CÓDIGO'] || '', para: F.PARA || '', de: F.DE || '', comprador: F.COMPRADOR || '', email: F.EMAIL || '', tel: F['TELÉFONO'] || '', tipo: F.TIPO || '', n: F.SESIONES || 0, importe: F.IMPORTE || 0, idioma: F.IDIOMA || '', entrega: F.ENTREGA || '', emailDestino: F['EMAIL DESTINO'] || '', fecha: F['FECHA ENVÍO'] || '', pago: F.PAGO || '', estado: F.ESTADO || '', pagado: F.PAGADO || '', enviada: F.ENVIADA || '', enviadaDestino: F['ENVIADA DESTINO'] || '', canjeada: F.CANJEADA || '', caduca: F.CADUCA || '', creado: F.CREADO || '', factura: F.FACTURA || '', ocasion: valeOc(F), link: enlaceVale(r.id) }; };
