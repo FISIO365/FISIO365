@@ -6278,7 +6278,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
   }
   // ── PLAN DE BATALLA: las tareas del día de cada persona. Cada uno se apunta las suyas; dirección puede ponérselas a cualquiera.
   // Lo que no se hace pasa solo al día siguiente (sale hasta que se marca). Lo hecho se ve el día que se hizo.
-  if (/^plan-(dia|pasado|anadir|hecho|borrar|mover|editar)$/.test(action || '')) {
+  if (/^plan-(dia|pasado|anadir|hecho|borrar|mover|editar|nota)$/.test(action || '')) {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
     const eqP = await at(`${FISIOS_TABLE}?fields[]=Name&fields[]=Password&fields[]=acc_admin&fields[]=${encodeURIComponent('DIRECCIÓN')}&fields[]=${encodeURIComponent('FECHA BAJA')}&pageSize=100`);
@@ -6292,7 +6292,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     // De quién: uno mismo, o (solo dirección) cualquiera del equipo
     const quien = (() => { const p = String(q.persona || '').trim(); if (!p || p.toLowerCase() === yoP.toLowerCase()) return yoP; if (!dirP) return null; const r = activos.find(x => String(x.fields.Name).trim().toLowerCase() === p.toLowerCase()); return r ? String(r.fields.Name).trim() : null; })();
     if (!quien) return res.status(403).json({ ok: false, error: 'Solo dirección puede ver el plan de otra persona' });
-    const vistaP = r => { const F = r.fields || {}; return { id: r.id, t: F.TAREA || '', dia: F.DIA || '', hecha: !!F.HECHA, hechaEn: F['FECHA HECHA'] || '', por: F['PUESTA POR'] || '', dir: !!F.DIRECCION }; };
+    const vistaP = r => { const F = r.fields || {}; return { id: r.id, t: F.TAREA || '', dia: F.DIA || '', hecha: !!F.HECHA, hechaEn: F['FECHA HECHA'] || '', por: F['PUESTA POR'] || '', dir: !!F.DIRECCION, nota: F.NOTA || '' }; };
     if (action === 'plan-anadir') {
       const t = String(q.tarea || '').trim().slice(0, 600); if (!t.replace(/\*\*|__|==/g, '').trim()) return res.status(400).json({ ok: false, error: 'Escribe la tarea' });
       const dia = diaOk(q.dia) < hoyP ? hoyP : diaOk(q.dia);
@@ -6340,6 +6340,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (Fp.DIRECCION && !dirP) return res.status(403).json({ ok: false, error: 'La ha puesto dirección' });
       const d = await at(`${PLAN}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { DIA: diaOk(q.dia) < hoyP ? hoyP : diaOk(q.dia) } }) }); return res.status(200).json({ ok: !d.error });
     }
+    if (action === 'plan-nota') { // notas de la tarea (lo que haya que tener en cuenta), sin límite corto
+      const d = await at(`${PLAN}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { NOTA: String(q.nota || '').trim().slice(0, 5000) } }) }); return res.status(200).json({ ok: !d.error }); }
     const hecho = q.hecho !== false && q.hecho !== 'false';
     const d = await at(`${PLAN}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHA: hecho, 'FECHA HECHA': hecho ? new Date().toISOString() : null } }) });
     return res.status(200).json({ ok: !d.error });
