@@ -180,7 +180,17 @@ async function sinFacturar() {
       cs.forEach(c => { if (cubre.has(c.id)) de(c.pid).pagadas += 1; });
     }
   } catch (e) { console.log('sinFacturar compartido', e.message); }
-  const lista = Object.entries(s).map(([id, x]) => ({ id, ...x, saldo: x.pagadas - x.gastadas })).filter(x => x.saldo < 0);
+  // Packs cobrados enteros que se facturan por sesión: las sesiones hechas desde el cobro que aún no tienen su factura cuentan como «sin facturar»
+  try {
+    const hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : '00:00'; };
+    facs.filter(r => r.fields['POR SESION'] && !r.fields['EN PACK']).forEach(r => {
+      const id = r.fields['PacienteId'], n = Number(r.fields['Nº SESIONES 1'] || 0), d0 = fechaCobro(r.fields); if (!id || !n) return;
+      const hechas = citas.filter(c => (c.fields['RELACIÓN - CITA'] || [])[0] === id && String(c.fields['FECHA'] || '').slice(0, 10) >= d0).length;
+      const fac = facs.filter(x => x.fields['PACK GRUPO'] === r.id && x.id !== r.id).length, pend = Math.min(n, hechas) - fac;
+      if (pend > 0) de(id).psPend = (de(id).psPend || 0) + pend;
+    });
+  } catch (e) { console.log('sinFacturar por sesión', e.message); }
+  const lista = Object.entries(s).map(([id, x]) => ({ id, ...x, saldo: Math.min(0, x.pagadas - x.gastadas) - (x.psPend || 0) })).filter(x => x.saldo < 0);
   if (lista.length) {
     const nombres = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + lista.map(x => `RECORD_ID()='${x.id}'`).join(',') + ')')}&fields[]=FULL NAME`).catch(() => []);
     const n = Object.fromEntries(nombres.map(p => [p.id, p.fields['FULL NAME'] || '']));

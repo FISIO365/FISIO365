@@ -62,10 +62,12 @@ async function datosDia(ayer, panel) {
   const hechas = citas.filter(c => ['REALIZADA', 'CITA PERDIDA'].includes(est(c))).length;
   const sinMarcar = citas.filter(c => est(c) === 'PENDIENTE' && (c.fields['RELACIÓN - CITA'] || []).length);
   const facsTodas = await saldo.facturasEmitidas('');
-  const facs = facsTodas.filter(r => saldo.fechaCobro(r.fields) === ayer.fecha);
+  const delDia = facsTodas.filter(r => saldo.fechaCobro(r.fields) === ayer.fecha);
+  // Packs «con factura por sesión»: el cobro entra en caja el día que paga (sin ticket); los tickets de cada sesión no son dinero nuevo
+  const facs = delDia.filter(r => !(r.fields['POR SESION'] && !r.fields['EN PACK'])), cobros = delDia.filter(r => !(r.fields['POR SESION'] && r.fields['EN PACK']));
   const canceladas = citas.filter(c => /CANCEL|NO ASIST|PERDIDA/i.test(est(c)) && (c.fields['RELACIÓN - CITA'] || []).length);
   // Caja por forma de pago
-  const caja = {}; facs.forEach(r => { const m = (r.fields['MODO DE PAGO'] && r.fields['MODO DE PAGO'].name) || r.fields['MODO DE PAGO'] || 'Sin indicar';
+  const caja = {}; cobros.forEach(r => { const m = (r.fields['MODO DE PAGO'] && r.fields['MODO DE PAGO'].name) || r.fields['MODO DE PAGO'] || 'Sin indicar';
     // «Varias»: cada parte a su forma de pago (PAGO DESGLOSE = «Tarjeta: 300 · Efectivo: 190»)
     const D = String(r.fields['PAGO DESGLOSE'] || '').split('·').map(x => x.split(':')).filter(x => x.length === 2 && Number(x[1]) > 0);
     if (m === 'Varias' && D.length) D.forEach(([k, v]) => { k = k.trim(); caja[k] = (caja[k] || 0) + Number(v); });

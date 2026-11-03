@@ -174,6 +174,7 @@ const FACTURAS_TABLE = 'tblJw7suXLERn8AFQ';
 const HOLDED_BORRADOR = true;
 // Texto legal que va en cada ticket (Holded no pone el de su plantilla cuando se crea por la API)
 const TEXTO_RGPD = 'Protección de datos: Responsable: Fourth Dynamic, S.L., C/ Gran de Sant Andreu 163, 08030 Barcelona. Finalidad: gestionar la relación contractual y la facturación. Puede ejercer sus derechos de acceso, rectificación, supresión, limitación, portabilidad y oposición escribiendo a info@fisioterapia365.com, y reclamar ante la AEPD. (RGPD UE 2016/679 y LOPDGDD 3/2018)';
+const FF_PS = 'fldghw7FSkRUyhVjd'; // FACTURAS · POR SESION: pack cobrado entero que se factura sesión a sesión
 const FF_PK = { grupo: 'fldbQDldxWm1Qm9rF', total: 'fldyTyrziNt1zwmgU', antes: 'fldOHwlbDoheMEgYB', desglose: 'fld2HKagjU7T5kUjE' };
 const FF = { fecha: 'fldQ17bGOMaS0XaxJ', fechaVieja: 'fldqZyXkxhGRS1qvn', paciente: 'fldbmNoGhedI6ySSb', c1: 'fld3lRaKQbUYcW5qY', n1: 'fldWj0dUmJzTn0lgr', p1: 'fldu2QiBD9hM5scRC', c2: 'fldlkX8RO7crsVOye', n2: 'fldOW7e0lHx3Tfu4X', p2: 'fldkYc6HBh9E1YjUv', notas: 'fldoi8INIByEPPpMn', estado: 'fld2nvRuSlR97LhbN', num: 'fldcTFAHH31Lsz53c', pdf: 'fld8jBu2P4sPB21ZC', aNombre: 'fldBW06oApJQaNlN9', aNif: 'fld6VO3g0KrFpAi6P', aDir: 'fldFK7NwsZ5AUY6qp', holdedId: 'fld4ds1kfoPbbCtVg' };
 let emitiendo = Promise.resolve();
@@ -2586,6 +2587,25 @@ async function packAMedias(pac) {
     return { grupo: g, concepto: nm(P['CONCEPTO 1']), sesiones: Number(P['Nº SESIONES 1'] || 0), total, antes, pagado, falta: Math.max(0, Math.round((total - pagado) * 100) / 100), fecha: String(P['FECHA DE COBRO'] || P['FECHA'] || '').slice(0, 10), pagos: L.length }; })
     .filter(x => x && x.falta > 0.009).sort((a, b) => b.fecha.localeCompare(a.fecha));
 }
+// Pack cobrado entero que se factura sesión a sesión: emite el ticket de la siguiente sesión (precio del pack ÷ sesiones; la última ajusta los céntimos)
+async function facturarSesionPack(pac, grupo, fecha, quien, fisioSel) {
+  const H = await at(`${FACTURAS_TABLE}/${grupo}`), F = H.fields || {};
+  if (H.error || !F['POR SESION'] || F['PacienteId'] !== pac || nmA(F['ESTADO']) !== 'Emitida') throw new Error('No encuentro ese pack');
+  const n = Number(F['Nº SESIONES 1'] || 0), tot = Number(F['PACK TOTAL'] || F['TOTAL'] || 0), con = nmA(F['CONCEPTO 1']) || 'Sesión de fisioterapia';
+  const ya = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({PACK GRUPO}='${grupo}',{EN PACK},OR({ESTADO}='Emitida',{ESTADO}='Pendiente'))`)}`).catch(() => [])).filter(r => r.id !== grupo);
+  if (ya.length >= n) throw new Error('Ya están facturadas todas las sesiones de este pack');
+  const r2 = x => Math.round(Number(x) * 100) / 100, pu = r2(tot / n), imp = ya.length === n - 1 ? r2(tot - pu * (n - 1)) : pu;
+  const fc = String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10).split('-').reverse().join('/');
+  const campos = { [FF.paciente]: [pac], 'fldpruhLn03x1x6zI': pac, [FF.estado]: 'Pendiente', [FF.c1]: con, [FF.n1]: 1, [FF.p1]: imp, 'PACK GRUPO': grupo, 'EN PACK': true, 'POR SESION': true,
+    [FF.notas]: `Sesión ${ya.length + 1} de ${n} del pack de ${n} sesiones (${String(tot).replace('.', ',')} €, pagado el ${fc})` };
+  const mp = nmA(F['MODO DE PAGO']); if (mp) campos['fldafSkOOldJ8gH70'] = mp === 'Varias' ? 'Tarjeta' : mp;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(fecha || '')) campos[FF.fecha] = fecha;
+  global._sesPac = {}; const cr = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
+  const rec = cr.records && cr.records[0] && cr.records[0].id; if (!rec) throw new Error((cr.error && cr.error.message) || 'No se ha podido guardar');
+  const turno = emitiendo.then(() => emitirFactura(rec, quien, fisioSel)); emitiendo = turno.catch(() => {});
+  try { const x = await turno; return Object.assign({ k: ya.length + 1, n, importe: imp }, x); }
+  catch (e) { await at(`${FACTURAS_TABLE}/${rec}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.estado]: 'Error' }, typecast: true }) }).catch(() => {}); throw e; }
+}
 async function emitirFactura(recId, quien, fisioSel, descuento) {
   const CF = await conf().catch(() => CONF_DEF), borradorH = CF.holded.borrador !== false, rgpdH = String(CF.holded.rgpd || TEXTO_RGPD);
   const rec = await at(`${FACTURAS_TABLE}/${recId}?returnFieldsByFieldId=true`);
@@ -2654,7 +2674,7 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
     const otras = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PACK GRUPO}='${grupoP}')`)}`).catch(() => [])).filter(r => r.id !== recId);
     const tot = Number(pr0[FF_PK.total] || 0), antes = Number(pr0[FF_PK.antes] || 0), pagado = antes + hoyImp + otras.reduce((t, r) => t + Number(r.fields['TOTAL'] || 0), 0);
     const que = pagado >= tot - 0.009 ? (grupoP === recId && !antes && !otras.length ? '' : ' · pago del resto') : ' · pago a cuenta';
-    const it = { name: `${con} · pack de ${nS} sesiones${que}`.slice(0, 150), units: 1, price: hoyImp }; if (taxes) it.taxes = taxes; items = [it]; }
+    const it = { name: (f[FF_PS] && grupoP !== recId ? `${con} · sesión ${otras.length} de ${nS} del pack` : `${con} · pack de ${nS} sesiones${que}`).slice(0, 150), units: 1, price: hoyImp }; if (taxes) it.taxes = taxes; items = [it]; }
   if (descuento) { const it = { name: descuento.texto, units: 1, price: -Math.abs(descuento.importe) }; if (taxes) it.taxes = taxes; items.push(it); }
   const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas, rgpdH].filter(Boolean).join('\n\n\n'), currency: 'EUR', language: 'es', items });
   const docId = doc.id;
@@ -4750,7 +4770,8 @@ module.exports = async function handler(req, res) {
                 rs.forEach(r => (r.fields['PacienteRec'] || []).forEach(id => { if (L[id]) L[id].citas.push({ id: r.id, k: String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA), e: String(nmA(r.fields.ESTADO)).trim().toUpperCase() }); }));
                 ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0), u = Math.min(n, Number(p.fields['BONO PREVIO YA USADAS'] || 0)); if (L[p.id] && n - u > 0) L[p.id].lotes.push({ f: '', n: n - u, tot: n, off: u, precio: 0, previo: true, vale: !!p.fields['BONO PREVIO VALE'], desde: String(p.fields['BONO PREVIO DESDE'] || '') }); });
                 fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => { const id = r.fields['PacienteId']; if (!L[id]) return;
-                  sesDe(r.fields).forEach(x => L[id].lotes.push({ f: r.fields['FECHA DE COBRO'] || r.fields['FECHA'] || '', n: x.n, precio: x.precio, num: r.fields['Nº FACTURA'] || '', fid: r.id })); });
+                  const psF = r.fields['POR SESION'] && !r.fields['EN PACK'] ? fs.filter(x => x.id !== r.id && x.fields['PACK GRUPO'] === r.id).length : null;
+                  sesDe(r.fields).forEach(x => L[id].lotes.push({ f: r.fields['FECHA DE COBRO'] || r.fields['FECHA'] || '', n: x.n, precio: x.precio, num: r.fields['Nº FACTURA'] || '', fid: r.id, psF })); });
                 g.forEach(id => { L[id].citas.sort((a, b) => a.k.localeCompare(b.k)); C[id] = { t: ahora, v: L[id] }; }); }));
               // Packs compartidos: las citas que cubre el pack común salen como «Pack · X de N»; el resto se reparte con lo suyo
               let cubre = new Map(), quitarLote = {};
@@ -4773,7 +4794,7 @@ module.exports = async function handler(req, res) {
                 const QL = quitarLote[pid] || [], LO = V.lotes.filter(l => !QL.some(f => f === 'previo' ? l.previo : l.fid === f));
                 const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio && !cubre.has(x.id)), rep = repartirLotes(gastan.map(x => x.k), LO), j = gastan.findIndex(x => x.id === r.id);
                 if (j >= 0) { const a = rep[j], lo = a && a.lo;
-                  pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: lo.desde ? a.i : a.i + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : lo.n > 1 ? { t: 'pack', i: a.i, n: lo.n, v: Math.round(lo.precio * 100) / 100 } : { t: 'suelta', v: lo.precio }; }
+                  pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: lo.desde ? a.i : a.i + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : lo.n > 1 ? Object.assign({ t: 'pack', i: a.i, n: lo.n, v: Math.round(lo.precio * 100) / 100 }, lo.psF != null ? { ps: lo.fid, psF: lo.psF } : {}) : { t: 'suelta', v: lo.precio }; }
               });
             } } catch (e) { console.log('agenda-num', e.message); }
           return res.status(200).json({ ok: true, num: numSes, pago, inicio });
@@ -6432,7 +6453,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     } catch (e) { return res.status(500).json({ ok: false, error: 'No se ha podido preparar el reporte' }); }
   }
   // ── PANEL: facturas de la ficha y emitir desde el panel ──
-  if (action === 'ficha-facturas' || action === 'facturar') {
+  if (action === 'ficha-facturas' || action === 'facturar' || action === 'facturar-sesion-pack') {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
     const pac = q.pacienteId || patientId;
@@ -6450,10 +6471,14 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       filasP.forEach(r => { const F = r.fields, s0 = sesFila(F); if (!s0) return; const x = { id: r.id, ses: s0, total: Number(F['TOTAL'] || 0), num: F['Nº FACTURA'] || '', fecha: String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10), enPack: !!F['EN PACK'], grupo: F['PACK GRUPO'] || '' };
         if (F['HOLDED ID']) facPanel[F['HOLDED ID']] = x; if (!x.enPack && !x.grupo && s0 <= 3) sueltos.push(x); });
       sueltos.sort((a, b) => b.fecha.localeCompare(a.fecha));
+      // Packs cobrados enteros que se facturan por sesión: cuántas sesiones llevan factura
+      const porSesion = filasP.filter(r => r.fields['POR SESION'] && !r.fields['EN PACK']).map(r => { const F = r.fields, fac = filasP.filter(x => x.id !== r.id && x.fields['PACK GRUPO'] === r.id).length;
+        return { grupo: r.id, concepto: nmA(F['CONCEPTO 1']) || '', n: Number(F['Nº SESIONES 1'] || 0), total: Number(F['PACK TOTAL'] || F['TOTAL'] || 0), fecha: String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10), facturadas: fac, modo: nmA(F['MODO DE PAGO']) || '' }; })
+        .sort((a, b) => b.fecha.localeCompare(a.fecha));
       // Sesiones gratis (no van a Holded): se ven en la ficha junto a las facturas
       const gratis = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{MODO DE PAGO}='Gratis')`)}`).catch(() => [])).map(r => { const f = r.fields;
         return { id: r.id, fecha: String(f['FECHA DE COBRO'] || f['FECHA'] || String(r.createdTime).slice(0, 10)).slice(0, 10), lineas: [[f['CONCEPTO 1'], f['Nº SESIONES 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2']]].filter(([c]) => c).map(([c, n]) => ({ c: (c && c.name) || c, n: Number(n) || 1 })), nota: f['NOTAS'] || '' }; }).sort((a, b) => b.fecha.localeCompare(a.fecha));
-      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, bonoPrevio, tarjetas, gratis, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [] });
+      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [] });
       try {
         const ids = await contactosDelPaciente(pac); const facturas = await listarFacturas(ids, true);
         // Tickets borrados en Holded → su fila de FACTURAS pasa a «Anulada» y deja de contar en el saldo
@@ -6465,11 +6490,17 @@ Devuelve solo el texto del mensaje, sin comillas.`;
           for (let i = 0; i < muertas.length; i += 10) await at(FACTURAS_TABLE, { method: 'PATCH', body: JSON.stringify({ typecast: true, records: muertas.slice(i, i + 10).map(r => ({ id: r.id, fields: { [FF.estado]: 'Anulada' } })) }) });
           if (muertas.length) saldo2 = await saldoPaciente(pac).catch(() => saldo);
         } catch (e) {}
-        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, bonoPrevio, tarjetas, gratis, aMedias, sueltos: sueltos.slice(0, 8), facPanel, enHolded: ids.length, facturas });
+        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, enHolded: ids.length, facturas });
       }
-      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, bonoPrevio, tarjetas, gratis, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
+    if (action === 'facturar-sesion-pack') { // emite la factura de una sesión de un pack cobrado entero «con factura por sesión»
+      if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado.' });
+      if (!/^rec[A-Za-z0-9]{14}$/.test(q.grupo || '')) return res.status(400).json({ ok: false });
+      try { const x = await facturarSesionPack(pac, q.grupo, q.fecha, q.quien, q.fisioElegido ? String(q.fisio || '') : undefined); return res.status(200).json({ ok: true, ...x }); }
+      catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
+    }
     if (q.enPack !== undefined) { // «Va dentro de un pack»: ese cobro ya lo cubre un pack, sus sesiones no cuentan aparte
       if (!/^rec[A-Za-z0-9]{14}$/.test(q.facturaId || '')) return res.status(400).json({ ok: false });
       const x = await at(`${FACTURAS_TABLE}/${q.facturaId}`); if (x.error || (x.fields || {})['PacienteId'] !== pac) return res.status(404).json({ ok: false });
@@ -6508,6 +6539,16 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         pk = { grupo: '', total: tot, antes, concepto: con, sesiones: n, pagado: r2(antes + yaAbs + imp), resto: r2(tot - antes - yaAbs - imp), absorber };
       }
     }
+    // Pack cobrado entero con factura por sesión: hoy se apunta el cobro (sin ticket) y cada sesión tendrá su factura
+    let ps = null;
+    if (q.porSesion && !q.pack) {
+      const P = q.porSesion, n = Math.round(Number(P.sesiones)), tot = r2(String(P.total || '').replace(',', '.')), con = String(P.concepto || '');
+      if (!/^Sesi/i.test(con)) return res.status(400).json({ ok: false, error: 'Elige el tipo de sesión del pack' });
+      if (!(n >= 2 && n <= 60) || !(tot > 0)) return res.status(400).json({ ok: false, error: 'Pon de cuántas sesiones es el pack y su precio' });
+      const pu = r2(tot / n), resto = r2(tot - pu * n);
+      lineas = [{ concepto: con, uds: n, precio: pu }]; if (Math.abs(resto) >= 0.01) lineas.push({ concepto: 'Otros', uds: 1, precio: resto });
+      ps = { n, tot, con, hoy: P.hoy !== false };
+    }
     if (!lineas.length) return res.status(400).json({ ok: false, error: 'Falta el concepto' });
     // Varias formas de pago (p. ej. parte con tarjeta y parte en efectivo): la suma tiene que dar el total
     let desglose = '';
@@ -6538,6 +6579,17 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     if (/^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '')) campos[FF.fecha] = q.fecha;
     if (fa.nombre) { campos[FF.aNombre] = String(fa.nombre); campos[FF.aNif] = String(fa.nif || ''); campos[FF.aDir] = String(fa.direccion || ''); }
     [[FF.c1, FF.n1, FF.p1], [FF.c2, FF.n2, FF.p2]].forEach(([c, n, pr], i) => { const l = lineas[i]; if (!l) return; campos[c] = String(l.concepto || ''); campos[n] = Number(l.uds || 0); campos[pr] = Number(l.precio || 0); });
+    if (ps) { // el cobro queda apuntado (cuenta como pagado: cubre las sesiones del pack) y sin ticket; los tickets salen sesión a sesión
+      const hoyS = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), fS = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyS, eur = v => String(v).replace('.', ',') + ' €';
+      Object.assign(campos, { [FF.estado]: 'Emitida', [FF.fecha]: fS, [FF.fechaVieja]: fS, 'POR SESION': true, 'PACK TOTAL': ps.tot,
+        [FF.notas]: [`Pack de ${ps.n} sesiones cobrado entero (${eur(ps.tot)}) · se factura por sesión`, String(q.notas || '').trim()].filter(Boolean).join('\n') });
+      global._sesPac = {}; const g = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
+      const gid = g.records && g.records[0] && g.records[0].id; if (!gid) return res.status(200).json({ ok: false, error: (g.error && g.error.message) || 'No se ha podido apuntar el cobro' });
+      await at(`${FACTURAS_TABLE}/${gid}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PACK GRUPO': gid } }) });
+      let primera = null, aviso = '';
+      if (ps.hoy) try { primera = await facturarSesionPack(pac, gid, fS, q.quien, q.fisioElegido ? String(q.fisio || '') : undefined); } catch (e) { aviso = 'El cobro está apuntado, pero no se ha podido emitir la factura de hoy: ' + e.message; }
+      return res.status(200).json({ ok: true, porSesion: true, grupo: gid, primera, aviso });
+    }
     // Sesión gratis: no se cobra ni se hace ticket en Holded; queda apuntada (a 0 €) para que la sesión cuente como pagada
     if (q.gratis) {
       const hoyG = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), fG = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyG;
