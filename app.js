@@ -20,6 +20,7 @@ function pregunta(txt,o){o=o||{};return new Promise(res=>{const m=modal(`<h3>${e
  m.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{m.remove();res(b.dataset.r==='1');});m.addEventListener('click',e=>{if(e.target===m)res(false);});});}
 
 // Foto o inicial
+const pTag=(m,vac)=>m&&m.puesto?`<span class="pto">${escH(m.puesto)}</span>`:(vac?'<span class="pto vac">Sin puesto</span>':'');
 const avHTML=(m,st)=>`<span class="av"${st?` style="${st}"`:''}>${m&&m.foto?`<img src="${escH(m.foto)}" alt="">`:escH(ini(m?m.nombre:'?'))}</span>`;
 function eligeFoto(){return new Promise(res=>{const i=ce('input');i.type='file';i.accept='image/*';i.onchange=()=>res(i.files&&i.files[0]||null);i.click();});}
 async function subirFoto(nombre){const f=await eligeFoto();if(!f)return null;
@@ -130,9 +131,22 @@ async function contarMias(){try{const {count}=await sb.from('pb_tareas').select(
 function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
  box.innerHTML='<div class="rp-c" style="color:var(--mut);font-size:13px">Cargando…</div>';
  const yo=S.yo.id;
- if(PB.persona&&!visibles().some(m=>m.id===PB.persona)){PB.persona='';pbGuarda();}
+ if(PB.persona&&(PB.persona==='*'?visibles().length<2:!visibles().some(m=>m.id===PB.persona))){PB.persona='';pbGuarda();}
  const persona=()=>PB.persona||yo;
- const carga=async()=>{let r;try{r=await datosPlan(persona());}catch(e){if(!box.isConnected)return;box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
+ // Pestañas «Yo» / «Mi equipo» (solo si tienes gente a tu cargo)
+ const tabsP=()=>visibles().length>1?`<div class="es-tabs pb-tabs"><button type="button" data-p="" class="${!PB.persona?'on':''}">Yo</button><button type="button" data-p="*" class="${PB.persona?'on':''}">Mi equipo${S.yo.grupo?' · '+escH(S.yo.grupo):''}</button></div>`:'';
+ const tabsOn=()=>box.querySelectorAll('.pb-tabs button').forEach(b=>b.onclick=()=>{if(PB.persona===b.dataset.p)return;PB.persona=b.dataset.p;PB.dia='';PB._ini=0;pbGuarda();carga();});
+ // Mi equipo: la gente a tu cargo, con su puesto y cómo va hoy. Tocas a alguien y ves su plan
+ const pintaEq=async()=>{const L=visibles().filter(m=>m.id!==yo);
+  box.innerHTML=tabsP()+'<div class="rp-c" style="color:var(--mut);font-size:13px">Cargando…</div>';tabsOn();
+  const hoy=hoyMad(),ids=L.map(m=>m.id);let a,b;
+  try{[a,b]=await Promise.all([sb.from('pb_tareas').select('persona').in('persona',ids).eq('hecha',false).lte('dia',hoy),sb.from('pb_tareas').select('persona,hecha_en').in('persona',ids).eq('hecha',true).gte('hecha_en',new Date(Date.now()-40*36e5).toISOString())]);if(a.error||b.error)throw 0;}
+  catch(e){if(box.isConnected){box.innerHTML=tabsP()+'<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';tabsOn();}return;}
+  if(!box.isConnected||PB.persona!=='*')return;
+  const P={},H={};(a.data||[]).forEach(x=>P[x.persona]=(P[x.persona]||0)+1);(b.data||[]).filter(x=>diaMad(x.hecha_en)===hoy).forEach(x=>H[x.persona]=(H[x.persona]||0)+1);
+  box.innerHTML=tabsP()+`<div class="rp-c pb-eq">${L.map(m=>{const p=P[m.id]||0,h=H[m.id]||0,t=p+h;return `<button type="button" class="pb-eqf" data-p="${m.id}">${avHTML(m)}<span class="tx"><b>${escH(m.nombre)}</b>${pTag(m)}</span><span class="pb-eqn">${t?`<b>${h} de ${t}</b><span class="rp-bar${h===t?' ok':''}"><i style="width:${Math.round(h/t*100)}%"></i></span>`:'<em>Sin tareas hoy</em>'}</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`;}).join('')}</div>`;
+  tabsOn();box.querySelectorAll('.pb-eqf').forEach(x=>x.onclick=()=>{PB.persona=x.dataset.p;PB.dia='';PB._ini=0;pbGuarda();carga();});contarMias();};
+ const carga=async()=>{if(PB.persona==='*')return pintaEq();let r;try{r=await datosPlan(persona());}catch(e){if(!box.isConnected)return;box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
   if(!box.isConnected)return;PB.d=r;PB.pas={};pinta2();contarMias();};
  box._recargar=carga;window._planRecargar=carga;
  // Formato de las tareas: **negrita**, __subrayado__, ==fosforito==
@@ -188,12 +202,12 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   const nom=pri(nomDe(r.persona));
   const fechaTxt=new Date(sel+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   let h='';const V=visibles();
-  if(V.length>1)h+=`<div class="pb-who">${V.map(m=>`<button type="button" data-p="${m.id}" class="${m.id===r.persona?'on':''}">${m.id===yo?'Yo':escH(pri(m.nombre))}</button>`).join('')}</div>`;
+  h+=tabsP();if(!yoMismo)h+=`<button type="button" class="pb-vol"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>Mi equipo</button>`;
   // Agenda: la semana con sus días; se elige el día y se ve (y se escribe en) su hoja
   const lun=pbIso(hoy,-((new Date(hoy+'T12:00:00').getDay()+6)%7)+7*PB.sem),D7=[...Array(7)].map((_,i)=>pbIso(lun,i));
   const cuenta=d=>d===hoy?(r.pendientes||[]).length:X0.filter(x=>x.dia===d).length;
   const mesTxt=(()=>{const a=new Date(D7[0]+'T12:00:00'),b=new Date(D7[6]+'T12:00:00'),m=x=>x.toLocaleDateString('es-ES',{month:'long'});return m(a)===m(b)?m(a):m(a)+' – '+m(b);})();
-  h+=`<div class="rp-c pb-cab"><div class="pb-hd"><div><small>Plan de batalla</small><b>${yoMismo?'Tu plan':'Plan de '+escH(nom)}</b></div>${enHoy&&totH?`<span class="rp-n${hechH===totH?' ok':''}">${hechH} de ${totH}</span>`:(!enHoy||PB.sem?`<button type="button" class="pb-hoy">Volver a hoy</button>`:'')}</div>
+  h+=`<div class="rp-c pb-cab"><div class="pb-hd"><div class="pb-hq">${yoMismo?'':avHTML(M(r.persona))}<div><small>Plan de batalla</small><b>${yoMismo?'Tu plan':'Plan de '+escH(nom)}</b>${pTag(M(r.persona))}</div></div>${enHoy&&totH?`<span class="rp-n${hechH===totH?' ok':''}">${hechH} de ${totH}</span>`:(!enHoy||PB.sem?`<button type="button" class="pb-hoy">Volver a hoy</button>`:'')}</div>
    <div class="pb-ag"><button type="button" class="pb-fl" data-s="-1" aria-label="Semana anterior"${PB.sem<=-104?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
     <div class="pb-sem"><div class="pb-mes">${escH(mesTxt)}</div><div class="pb-dias">${D7.map(d=>{const dt=new Date(d+'T12:00:00'),n=cuenta(d),pas=d<hoy;return `<button type="button" data-d="${d}" class="${d===sel?'on ':''}${d===hoy?'hoy ':''}${pas?'pas':''}"><small>${dt.toLocaleDateString('es-ES',{weekday:'short'}).replace('.','').slice(0,3)}</small><b>${dt.getDate()}</b><i>${n&&!pas?'<em></em>'.repeat(Math.min(n,3)):''}</i></button>`;}).join('')}</div></div>
     <button type="button" class="pb-fl" data-s="1" aria-label="Semana siguiente"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
@@ -211,7 +225,7 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   const llena=()=>{const t=limpio(inp.textContent);escF.classList.toggle('con',!!t);if(!t&&!inp.querySelector('br,b,u,span,mark'))inp.innerHTML='';};llena();inp.addEventListener('input',llena);
   if(foco){inp.focus();const s=getSelection();s.selectAllChildren(inp);s.collapseToEnd();}
   inp.addEventListener('focus',()=>escF.classList.add('foco'));inp.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==inp)escF.classList.remove('foco');},150));
-  box.querySelectorAll('.pb-who button').forEach(b=>b.onclick=()=>{PB.persona=b.dataset.p===yo?'':b.dataset.p;pbGuarda();box.querySelectorAll('.pb-who button').forEach(x=>x.classList.toggle('on',x===b));carga();});
+  tabsOn();{const b=box.querySelector('.pb-vol');if(b)b.onclick=()=>{PB.persona='*';PB.dia='';PB._ini=0;pbGuarda();carga();};}
   box.querySelectorAll('.pb-dias button').forEach(b=>b.onclick=()=>{if(PB.dia===b.dataset.d)return;PB.dia=b.dataset.d;pbGuarda();pinta2();});
   box.querySelectorAll('.pb-fl').forEach(b=>b.onclick=()=>{PB.sem=Math.max(-104,PB.sem+ +b.dataset.s);pinta2();});
   {const b=box.querySelector('.pb-hoy');if(b)b.onclick=()=>{PB.dia=hoy;PB.sem=0;pbGuarda();pinta2();};}
@@ -256,7 +270,7 @@ function renderEquipo(wrap){const adm=S.yo.admin;
  const act=S.miembros.filter(m=>m.activo).sort((a,b)=>(b.id===S.yo.id)-(a.id===S.yo.id)||a.nombre.localeCompare(b.nombre,'es'));
  const baja=S.miembros.filter(m=>!m.activo).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
  const fila=m=>{const ac=m.activo?aCargo(m.id):[],de=m.activo?dependeDe(m.id):[];
-  return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}">${avHTML(m)}<div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b><small>${escH([m.puesto,m.email].filter(Boolean).join(' · '))}</small>
+  return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}">${avHTML(m)}<div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b>${pTag(m,adm&&m.activo)}<small>${escH(m.email||'')}</small>
    ${m.grupo?`<small class="rv-g">Grupo: ${escH(m.grupo)}</small>`:''}${de.length?`<small class="rv-d">Depende de ${nombres(de)}</small>`:''}${ac.length?`<small class="rv-a">A su cargo: ${nombres(ac)}</small>`:''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;};
  wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div class="top-e">${S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div>${adm?'<button class="mas3" id="eqMas" aria-label="Opciones del equipo">⋯</button>':''}</div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
    <div style="margin-top:10px">${act.map(fila).join('')}${baja.length&&adm?`<details style="margin-top:6px"><summary class="eq-p" style="cursor:pointer">De baja (${baja.length})</summary>${baja.map(fila).join('')}</details>`:''}</div></div>
@@ -276,7 +290,7 @@ function organigrama(box,adm,act){
  act.forEach(m=>{const vis=new Set([m.id]);let p=jefe[m.id];while(p){if(vis.has(p)){jefe[m.id]=null;break;}vis.add(p);p=jefe[p];}});
  const hijos=p=>act.filter(m=>jefe[m.id]===p).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
  const otros=p=>dependeDe(p).filter(q=>ids.has(q)&&q!==jefe[p]);
- const nodo=m=>{const H=hijos(m.id),o=otros(m.id);return `<div class="org-n"><div class="org-c" data-id="${m.id}">${adm?'<span class="org-h" aria-label="Arrastrar">⠿</span>':''}${avHTML(m)}<span class="org-t"><b>${escH(m.nombre)}${m.id===S.yo.id?' <i>(tú)</i>':''}</b>${m.puesto||o.length?`<small>${escH(m.puesto||'')}${m.puesto&&o.length?' · ':''}${o.length?'también de '+nombres(o):''}</small>`:''}</span></div>${H.length?`<div class="org-k">${m.grupo?`<div class="org-gr">${escH(m.grupo)}</div>`:''}${H.map(nodo).join('')}</div>`:''}</div>`;};
+ const nodo=m=>{const H=hijos(m.id),o=otros(m.id);return `<div class="org-n"><div class="org-c" data-id="${m.id}">${adm?'<span class="org-h" aria-label="Arrastrar">⠿</span>':''}${avHTML(m)}<span class="org-t"><b>${escH(m.nombre)}${m.id===S.yo.id?' <i>(tú)</i>':''}</b>${pTag(m)}${o.length?`<small>también de ${nombres(o)}</small>`:''}</span></div>${H.length?`<div class="org-k">${m.grupo?`<div class="org-gr">${escH(m.grupo)}</div>`:''}${H.map(nodo).join('')}</div>`:''}</div>`;};
  box.innerHTML=`${adm?'<div class="org-raiz" data-id="">Arriba del todo</div>':''}${hijos(null).map(nodo).join('')||'<p class="vacio">Aún no hay nadie.</p>'}`;
  if(!adm)return;
  const desc=(a,b)=>{let p=jefe[b];while(p){if(p===a)return true;p=jefe[p];}return false;};
@@ -323,6 +337,7 @@ const claveSug=()=>'batalla'+String(Math.floor(1000+Math.random()*9000));
 function altaMiembro(){const jefes=new Set([S.yo.id]),L=S.miembros.filter(x=>x.activo).sort((a,b)=>(b.id===S.yo.id)-(a.id===S.yo.id)||a.nombre.localeCompare(b.nombre,'es'));
  const m=modal(`<h3>Añadir a alguien</h3><p>Le creas la cuenta y le pasas el acceso por WhatsApp.</p>
  <label class="l">Nombre</label><input class="i" name="nombre" maxlength="40" autocomplete="off">
+ <label class="l">Puesto</label><input class="i" name="puesto" maxlength="60" autocomplete="off" placeholder="Ej.: Recepción, Fisioterapeuta, Coordinación…">
  <label class="l">Email</label><input class="i" name="email" type="email" autocomplete="off">
  <label class="l">Contraseña para entrar (la puede cambiar luego)</label><input class="i" name="pass" value="${claveSug()}" autocomplete="off">
  <label class="l">¿De quién depende? <span style="font-weight:500;color:var(--mut)">(lo tendrá a su cargo)</span></label><div class="chs" id="jefes">${L.map(p=>`<button type="button" data-p="${p.id}" class="${jefes.has(p.id)?'on':''}">${IC.ck}${p.id===S.yo.id?'Yo':escH(pri(p.nombre))}</button>`).join('')}</div>
@@ -331,6 +346,7 @@ function altaMiembro(){const jefes=new Set([S.yo.id]),L=S.miembros.filter(x=>x.a
  m.querySelector('[data-x]').onclick=()=>m.remove();
  m.querySelector('[data-ok]').onclick=async e=>{const b=e.target,v=n=>m.querySelector(`[name="${n}"]`).value.trim();b.disabled=true;m.querySelector('.err').textContent='';
   try{const r=await fn({accion:'alta',nombre:v('nombre'),email:v('email'),password:v('pass')});m.remove();
+   if(r.id&&v('puesto'))await sb.from('pb_miembros').update({puesto:v('puesto')}).eq('id',r.id);
    if(r.id&&jefes.size)await sb.from('pb_permisos').upsert([...jefes].map(q=>({equipo_id:S.yo.equipo_id,quien:q,a_quien:r.id})),{onConflict:'quien,a_quien',ignoreDuplicates:true});
    await cargaEquipo();renderEquipoOtraVez();
    acceso(v('nombre'),v('email'),r.existia?'':v('pass'));}catch(x){b.disabled=false;m.querySelector('.err').textContent=x.message;}};}
