@@ -3704,7 +3704,7 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-sug-enviar') {
           const texto = String(q.texto || '').trim().slice(0, 3000); if (!texto) return res.status(400).json({ ok: false, error: 'Escribe tu sugerencia' });
           const apartado = APART.includes(q.apartado) ? q.apartado : 'Otro', tipo = apartado === 'App' && TIPOS_S.includes(q.tipo) ? q.tipo : null;
-          const fields = { RESUMEN: texto.replace(/\s+/g, ' ').slice(0, 80), TEXTO: texto, ORIGEN: 'Equipo', APARTADO: apartado, DE: yo, ESTADO: 'Nueva', FECHA: new Date().toISOString() };
+          const fields = { RESUMEN: texto.replace(/\[\[(?:pac|sec):[^|\]]+\|([^\]|]+)(?:\|[a-z]+)?\]\]/g, '@$1').replace(/\s+/g, ' ').slice(0, 80), TEXTO: texto, ORIGEN: 'Equipo', APARTADO: apartado, DE: yo, ESTADO: 'Nueva', FECHA: new Date().toISOString() };
           if (tipo) fields.TIPO = tipo;
           const d = await at(SUG, { method: 'POST', body: JSON.stringify({ records: [{ fields }], typecast: true }) });
           const rec = d.records && d.records[0]; if (!rec) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' });

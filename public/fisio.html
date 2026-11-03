@@ -357,6 +357,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .pem-bus{width:100%;box-sizing:border-box;margin-bottom:8px}.pem-l{max-height:60vh;overflow-y:auto}.pem-it{border-top:1px solid #f3eee9;padding:12px 0}.pem-it:first-child{border-top:none}.pem-h{display:flex;flex-direction:column;gap:1px;margin-bottom:6px}.pem-h b{font-size:14.5px}.pem-h small{font-size:12px;color:#7d6a60}
 .pem-rq{margin-top:8px;background:#fdeee4;border-radius:12px;padding:9px 11px}.pem-rq small{display:block;font-size:12.5px;color:#7d6a60;margin-bottom:7px}.pem-a{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pem-a button{font-family:var(--font);font-size:13px;font-weight:600;background:#fff;border:1.5px solid #e6dfd8;border-radius:10px;padding:8px 4px;cursor:pointer;color:#1a1a1a}
 .fp-alr:has(.fp-alrb){display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.fp-alrb{display:flex;gap:6px}.fp-alrb button{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;border-radius:99px;background:rgba(255,255,255,.95);color:#b42318;padding:6px 12px;cursor:pointer}.fp-alrb button+button{background:rgba(255,255,255,.18);color:#fff}
+.sug-menc,.sug-rmenc{margin-top:8px}.sug-menc small,.sug-rmenc small{font-weight:500;color:#a0928a;margin-left:4px}.sug-tx .com-pac,.sug-resp .com-pac{vertical-align:baseline}
 .sug-radj{margin:8px 0}.sug-rya{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.sug-resp .adj-ver{margin-top:8px}
 .fp-sall{font-family:var(--font);font-size:11.5px;font-weight:600;border:none;border-radius:99px;background:#fff;color:#c2552e;padding:3px 9px;margin-left:6px;cursor:pointer}
 .pv-x{width:36px;height:36px;border-radius:50%;border:none;background:#f3efea;font-size:15px;cursor:pointer;color:#1a1a1a}
@@ -7616,10 +7617,13 @@ function sugForm(body,alEnviar){const F=SUG.f;
   <div class="sug-ap">${sugAp().map(([k,ic,d,lb])=>`<button type="button" data-a="${k}">${sugIco(ic)}<span><b>${lb||k}</b><small>${d}</small></span></button>`).join('')}</div>
   <div class="sug-tipo" hidden><p class="sug-lbl">¿Qué es?</p><div class="sug-seg"><button type="button" data-t="Mejora">Una mejora o idea</button><button type="button" data-t="Fallo">Un fallo</button></div></div>
   <p class="sug-lbl">Cuéntalo</p><textarea class="sug-ta" maxlength="3000"></textarea>
+  <button type="button" class="com-menc sug-menc"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mencionar paciente o sección <small>(o escribe @)</small></button>
   <div class="sug-adjs"></div>
   <button type="button" class="sug-env">Enviar sugerencia</button></div>`;
  const ta=body.querySelector('.sug-ta'),env=body.querySelector('.sug-env'),adjS=SUG.adj||(SUG.adj=adjSelector());body.querySelector('.sug-adjs').appendChild(adjS.el);
  ta.value=F.texto;ta.oninput=()=>{F.texto=ta.value;};
+ F.menc=F.menc||[];mencionesEn(ta,F.menc);
+ body.querySelector('.sug-menc').onclick=()=>comElegirPaciente(p=>{const t='@'+capTit(p.nombre),i=ta.selectionStart!=null?ta.selectionStart:ta.value.length;ta.value=ta.value.slice(0,i)+(i&&!/\s$/.test(ta.value.slice(0,i))?' ':'')+t+' '+ta.value.slice(i);if(!F.menc.some(x=>x.id===p.id))F.menc.push({id:p.id,t});ta.dispatchEvent(new Event('input'));ta.focus();});
  const pinta=()=>{body.querySelectorAll('.sug-ap button').forEach(b=>b.classList.toggle('on',b.dataset.a===F.apartado));
   const app=F.apartado==='App';body.querySelector('.sug-tipo').hidden=!app;
   body.querySelectorAll('.sug-seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===F.tipo));
@@ -7629,10 +7633,10 @@ function sugForm(body,alEnviar){const F=SUG.f;
  body.querySelectorAll('.sug-seg button').forEach(b=>b.onclick=()=>{F.tipo=b.dataset.t;pinta();});
  env.onclick=async()=>{const t=ta.value.trim();if(!F.apartado){toast('Elige sobre qué es',false);return;}if(!t){ta.focus();toast('Escribe tu sugerencia',false);return;}
   env.disabled=true;env.textContent='Enviando…';
-  try{const r=await comPost('seg-sug-enviar',{apartado:F.apartado,tipo:F.apartado==='App'?F.tipo:'',texto:t});
+  try{const r=await comPost('seg-sug-enviar',{apartado:F.apartado,tipo:F.apartado==='App'?F.tipo:'',texto:comConMenc(t,F.menc||[])});
    if(!r.ok)throw new Error(r.error||'No se ha podido enviar');
    const adjs=adjS.lista();let mal=0;if(adjs.length&&r.id){env.textContent='Subiendo archivos…';mal=await adjSubir('seg-sug-adjunto',r.id,adjs);}
-   toast(mal?'Enviada, pero algún archivo no se ha podido subir':'¡Gracias! Sugerencia enviada',!mal);SUG.f={apartado:'',tipo:'Mejora',texto:'',cap:null};SUG.adj=null;alEnviar();}
+   toast(mal?'Enviada, pero algún archivo no se ha podido subir':'¡Gracias! Sugerencia enviada',!mal);SUG.f={apartado:'',tipo:'Mejora',texto:'',cap:null,menc:[]};SUG.adj=null;alEnviar();}
   catch(e){toast(e.message,false);env.disabled=false;env.textContent='Enviar sugerencia';}};
  pinta();}
 
@@ -7649,8 +7653,8 @@ async function sugLista(body,modo){
   body.innerHTML=L.length?L.map(x=>{const cer=sugCerrada(x),abierta=rec&&SUG.resp===x.id,nuevaResp=!rec&&(x.estado!=='Nueva'||!!x.respuesta)&&!x.respuestaVista;
    return `<div class="sug-it${cer?' hecha':''}${nuevaResp?' nresp':''}" data-id="${x.id}">
    <div class="sug-main"><div class="sug-top">${sugTags(x)}${!rec?`<span class="sug-est ${x.estado}">${x.estado==='Nueva'?'Enviada':SUG_EST[x.estado]}</span>`:''}<span class="sug-fe">${rec?`<b>${escH(String(x.de||'—').split(/\s+/).slice(0,2).join(' '))}</b> · `:''}${escH(sugFecha(x.fecha))}</span></div>
-    <div class="sug-tx">${escH(x.texto)}</div>
-    ${(x.respuesta||(x.respAdjuntos||[]).length)&&!abierta?`<div class="sug-resp"><b>${escH(x.respondidoPor||'Dirección')}</b>${escH(x.respuesta||'')}${adjHtml(x.respAdjuntos)}</div>`:''}
+    <div class="sug-tx">${comCuHtml(x.texto)}</div>
+    ${(x.respuesta||(x.respAdjuntos||[]).length)&&!abierta?`<div class="sug-resp"><b>${escH(x.respondidoPor||'Dirección')}</b>${comCuHtml(x.respuesta||'')}${adjHtml(x.respAdjuntos)}</div>`:''}
     ${adjHtml(x.adjuntos)}${rec&&x.paciente?`<div class="sug-pie"><a href="#" data-ficha>Ver ficha</a></div>`:''}
     ${rec?sugCajaResp(x,abierta):''}</div></div>`;}).join('')
    :`<div class="sug-card sug-vacio">${sugIco('buzon')}${rec?'Todavía no ha llegado ninguna sugerencia.':'Aún no has enviado ninguna sugerencia.'}</div>`;
@@ -7662,9 +7666,11 @@ async function sugLista(body,modo){
    el.querySelectorAll('.sug-res [data-e]').forEach(b=>b.onclick=()=>{const e=b.dataset.e;guarda(x,{estado:x.estado===e?'Nueva':e},x.estado===e?'Quitado':'Guardado: '+SUG_EST[e]);});
    const w=el.querySelector('[data-escribir]');if(w)w.onclick=()=>{if(SUG.resp===x.id){SUG.resp=null;const y=comY();pinta();comSetY(y);return;}SUG.resp=x.id;const y=comY();pinta();comSetY(y);const t=body.querySelector(`.sug-it[data-id="${x.id}"] .sug-rt`);if(t)t.focus({preventScroll:true});};
    // Archivos de la respuesta: se suben al guardar
+   const rt=el.querySelector('.sug-rt');if(rt){const mr=[];String(x.respuesta||'').replace(COM_PAC_RE,(_,id,n,tb)=>{mr.push({id,t:'@'+n,tab:tb||undefined});}).replace(COM_SEC_RE,(_,k,n)=>{mr.push({sec:k,t:'@'+n});});x._menc=mr;mencionesEn(rt,mr);
+    el.querySelector('.sug-rmenc').onclick=()=>comElegirPaciente(p=>{const t='@'+capTit(p.nombre),i=rt.selectionStart!=null?rt.selectionStart:rt.value.length;rt.value=rt.value.slice(0,i)+(i&&!/\s$/.test(rt.value.slice(0,i))?' ':'')+t+' '+rt.value.slice(i);if(!mr.some(z=>z.id===p.id))mr.push({id:p.id,t});rt.focus();});}
    const ra=el.querySelector('.sug-radj');if(ra){if(!SUG.radj||SUG.radj.id!==x.id)SUG.radj={id:x.id,s:adjSelector()};ra.appendChild(SUG.radj.s.el);}
    el.querySelectorAll('.sug-rq').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const r=await comPost('seg-sug-adjunto-resp',{id:x.id,quitar:b.dataset.u});if(!r.ok)throw 0;Object.assign(x,r.sugerencia);const y=comY();pinta();comSetY(y);}catch(e){b.disabled=false;toast('No se ha podido quitar',false);}});
-   const g=el.querySelector('.sug-ro');if(g)g.onclick=async()=>{const adjs=SUG.radj&&SUG.radj.id===x.id?SUG.radj.s.lista():[];const txt=el.querySelector('.sug-rt').value;
+   const g=el.querySelector('.sug-ro');if(g)g.onclick=async()=>{const adjs=SUG.radj&&SUG.radj.id===x.id?SUG.radj.s.lista():[];const txt=comConMenc(el.querySelector('.sug-rt').value,x._menc||[]);
     if(adjs.length){g.disabled=true;g.textContent='Subiendo archivos…';const mal=await adjSubir('seg-sug-adjunto-resp',x.id,adjs);if(mal)toast('Algún archivo no se ha podido subir',false);SUG.radj=null;
      try{const r=await comPost('seg-sug-lista');if(r.ok){SUG.d=r;const nx=r.sugerencias.find(z=>z.id===x.id);if(nx)Object.assign(x,nx);}}catch(e){}}
     SUG.resp=null;guarda(x,{respuesta:txt},'Respuesta guardada');};});};
@@ -7683,7 +7689,7 @@ function sugCajaResp(x,abierta){
  const pac=x.origen==='Paciente';
  return `<div class="sug-rbox">
  <div class="sug-res">${[['Hecha','Hecha'],['Descartada','No se hará']].map(([k,t])=>`<button type="button" data-e="${k}" class="${x.estado===k?'on':''}"><svg viewBox="0 0 24 24">${ic[k]}</svg>${t}</button>`).join('')}<button type="button" data-escribir class="${abierta?'on':''}"><svg viewBox="0 0 24 24">${ic.lapiz}</svg>${pac?'Nota':'Responder'}</button></div>
- ${abierta?`<textarea class="sug-rt" maxlength="1500" placeholder="${pac?'Nota interna (el paciente no la ve)…':'Respuesta para '+escH(x.de||'quien la envió')+'…'}">${escH(x.respuesta||'')}</textarea>${(x.respAdjuntos||[]).length?`<div class="sug-rya">${x.respAdjuntos.map(a=>`<span class="adj-it"><i>${escH((a.nombre.split('.').pop()||'').toUpperCase().slice(0,4))}</i><b>${escH(a.nombre)}</b><button type="button" class="sug-rq" data-u="${escH(a.url)}" aria-label="Quitar">✕</button></span>`).join('')}</div>`:''}<div class="sug-radj"></div><button type="button" class="sug-ro">Guardar</button>`:''}</div>`;}
+ ${abierta?`<textarea class="sug-rt" maxlength="1500" placeholder="${pac?'Nota interna (el paciente no la ve)…':'Respuesta para '+escH(x.de||'quien la envió')+'…'}">${escH(comLimpia(x.respuesta||''))}</textarea><button type="button" class="com-menc sug-rmenc"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mencionar paciente o sección <small>(o escribe @)</small></button>${(x.respAdjuntos||[]).length?`<div class="sug-rya">${x.respAdjuntos.map(a=>`<span class="adj-it"><i>${escH((a.nombre.split('.').pop()||'').toUpperCase().slice(0,4))}</i><b>${escH(a.nombre)}</b><button type="button" class="sug-rq" data-u="${escH(a.url)}" aria-label="Quitar">✕</button></span>`).join('')}</div>`:''}<div class="sug-radj"></div><button type="button" class="sug-ro">Guardar</button>`:''}</div>`;}
 
 function renderCom(wrap){
  if(!comVe()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección todavía no está disponible.</div></div>';return;}
@@ -12348,7 +12354,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
- {f:'2026-11-03',t:'Sugerencias: al responder también puedes adjuntar fotos o archivos. Quien la envió los ve junto a la respuesta.'},
+ {f:'2026-11-03',t:'Sugerencias: al escribir y al responder puedes mencionar pacientes y secciones (con @ o el botón) y adjuntar fotos o archivos. Al tocar la mención se abre la ficha o la sección.'},
  {f:'2026-11-03',t:'Consentimientos (primera visita y suelo pélvico): «¿Estás embarazada?» y «¿Estás en periodo de lactancia?» ahora son dos preguntas. La lactancia sale como dato a tener en cuenta, sin el aviso rojo de embarazo. En los firmados antes con la pregunta junta, en Pacientes › «Salud marcada» salen todas las que marcaron sí, para decir si era embarazo o lactancia. Ahí ves también quién tiene marcado marcapasos, cáncer, etc.'},
  {f:'2026-11-03',t:'Mi día › Plan: ahora puedes volver a días pasados (toca el día en la agenda o usa la flecha de la izquierda) y ver lo que se hizo, con la hora. En el móvil, la negrita, el subrayado y el fosforito salen al lado del texto.',ver:{sec:'plan',pasos:[{el:'.pb-ag',txt:'Toca un día pasado para ver lo que se hizo.'}]}},
  {f:'2026-11-02',t:'Ejercicios en la ficha: si cambias algo y no le das a «Guardar programa», el botón te avisa («hay cambios sin guardar») y al salir te pregunta si guardar. Así el paciente siempre ve lo último.'},
