@@ -403,3 +403,6 @@ input.i:focus{border-color:var(--c);background:#fff}
 .tabs button{font-size:12.5px;letter-spacing:-.1px}
 .ar-f .cd-chip{font-size:11px;padding:2px 8px 2px 7px;flex:none;max-width:42%;overflow:hidden;text-overflow:ellipsis}
 .ar-f .tx b{white-space:normal}
+.top-n{border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer;min-width:0}
+.top-n b{display:flex;align-items:center;gap:7px}.top-n b svg{width:15px;height:15px;flex:none;fill:none;stroke:var(--c);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pb-solo{margin:10px 14px 10px 44px}

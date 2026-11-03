@@ -102,10 +102,10 @@ function pantallaSinEquipo(user,me){if(me&&!me.activo){$app.innerHTML=`<div clas
 // ── Pantalla principal
 function pinta(){
  const n=window._pend||0;
- $app.innerHTML=`<div class="wrap"><div class="top"><div class="top-e">${S.equipo&&S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<div><small>Plan de batalla</small><b>${escH(S.equipo?S.equipo.nombre:'')}</b></div></div><div class="top-d"><button class="cd-btn" id="cdB" aria-label="Condiciones" title="Condiciones"><svg viewBox="0 0 24 24"><path d="M4 13l2.4-7.4A2.2 2.2 0 0 1 8.5 4h7a2.2 2.2 0 0 1 2.1 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4.5l1.5 2.5h4l1.5-2.5H20"/></svg><i id="nCd" hidden></i></button><button class="yo-btn" id="yo" aria-label="Tu cuenta">${S.yo.foto?`<img src="${escH(S.yo.foto)}" alt="">`:escH(ini(S.yo.nombre))}</button></div></div>
+ $app.innerHTML=`<div class="wrap"><div class="top"><div class="top-e">${S.equipo&&S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<button type="button" class="top-n" id="topN" aria-label="Cambiar el nombre del equipo"><small>Plan de batalla</small><b>${escH(S.equipo?S.equipo.nombre:'')}${S.yo.admin?'<svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>':''}</b></button></div><div class="top-d"><button class="cd-btn" id="cdB" aria-label="Condiciones" title="Condiciones"><svg viewBox="0 0 24 24"><path d="M4 13l2.4-7.4A2.2 2.2 0 0 1 8.5 4h7a2.2 2.2 0 0 1 2.1 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4.5l1.5 2.5h4l1.5-2.5H20"/></svg><i id="nCd" hidden></i></button><button class="yo-btn" id="yo" aria-label="Tu cuenta">${S.yo.foto?`<img src="${escH(S.yo.foto)}" alt="">`:escH(ini(S.yo.nombre))}</button></div></div>
   <div class="tabs"><button data-t="plan" class="${S.tab==='plan'?'on':''}">Plan <i id="nPend"${n?'':' hidden'}>${n}</i></button><button data-t="est" class="${S.tab==='est'?'on':''}">Estadísticas</button><button data-t="arch" class="${S.tab==='arch'?'on':''}">Archivos</button><button data-t="equipo" class="${S.tab==='equipo'?'on':''}">Equipo</button></div><div id="cont"></div></div>`;
  $app.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(S.tab===b.dataset.t)return;S.tab=b.dataset.t;guardaLS('tab',S.tab);pinta();});
- $app.querySelector('#yo').onclick=menuCuenta;$app.querySelector('#cdB').onclick=bandejaCond;contarCond();
+ $app.querySelector('#yo').onclick=menuCuenta;$app.querySelector('#cdB').onclick=bandejaCond;$app.querySelector('#topN').onclick=()=>S.yo.admin?nombreEquipo():soloAdmin();contarCond();
  const c=$app.querySelector('#cont');if(S.tab==='equipo')renderEquipo(c);else if(S.tab==='est')renderEstadisticas(c);else if(S.tab==='arch')renderArchivos(c);else renderPlan(c);}
 function badge(n){window._pend=n;const e=document.getElementById('nPend');if(e){e.textContent=n;e.hidden=!n;}}
 
@@ -140,20 +140,20 @@ async function contarMias(){try{const {count}=await sb.from('pb_tareas').select(
 function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
  box.innerHTML='<div class="rp-c" style="color:var(--mut);font-size:13px">Cargando…</div>';
  const yo=S.yo.id;
- if(PB.persona&&(PB.persona==='*'?visibles().length<2:!visibles().some(m=>m.id===PB.persona))){PB.persona='';pbGuarda();}
+ if(PB.persona&&(PB.persona==='*'?verEst().length<2:!verEst().some(m=>m.id===PB.persona))){PB.persona='';pbGuarda();}
  const persona=()=>PB.persona||yo;
  // Pestañas «Yo» / «Mi equipo» (solo si tienes gente a tu cargo)
- const tabsP=()=>visibles().length>1?`<div class="es-tabs pb-tabs"><button type="button" data-p="" class="${!PB.persona?'on':''}">Yo</button><button type="button" data-p="*" class="${PB.persona?'on':''}">Mi equipo${S.yo.grupo?' · '+escH(S.yo.grupo):''}</button></div>`:'';
+ const tabsP=()=>verEst().length>1?`<div class="es-tabs pb-tabs"><button type="button" data-p="" class="${!PB.persona?'on':''}">Yo</button><button type="button" data-p="*" class="${PB.persona?'on':''}">${veTodo()?'Todo el equipo':'Mi equipo'+(S.yo.grupo?' · '+escH(S.yo.grupo):'')}</button></div>`:'';
  const tabsOn=()=>box.querySelectorAll('.pb-tabs button').forEach(b=>b.onclick=()=>{if(PB.persona===b.dataset.p)return;PB.persona=b.dataset.p;PB.dia='';PB._ini=0;pbGuarda();carga();});
  // Mi equipo: la gente a tu cargo, con su puesto y cómo va hoy. Tocas a alguien y ves su plan
- const pintaEq=async()=>{const L=visibles().filter(m=>m.id!==yo);
+ const pintaEq=async()=>{const L=verEst().filter(m=>m.id!==yo);
   box.innerHTML=tabsP()+'<div class="rp-c" style="color:var(--mut);font-size:13px">Cargando…</div>';tabsOn();
   const hoy=hoyMad(),ids=L.map(m=>m.id);let a,b;
   try{[a,b]=await Promise.all([sb.from('pb_tareas').select('persona').in('persona',ids).eq('hecha',false).lte('dia',hoy),sb.from('pb_tareas').select('persona,hecha_en').in('persona',ids).eq('hecha',true).gte('hecha_en',new Date(Date.now()-40*36e5).toISOString())]);if(a.error||b.error)throw 0;}
   catch(e){if(box.isConnected){box.innerHTML=tabsP()+'<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';tabsOn();}return;}
   if(!box.isConnected||PB.persona!=='*')return;
   const P={},H={};(a.data||[]).forEach(x=>P[x.persona]=(P[x.persona]||0)+1);(b.data||[]).filter(x=>diaMad(x.hecha_en)===hoy).forEach(x=>H[x.persona]=(H[x.persona]||0)+1);
-  box.innerHTML=tabsP()+`<div class="rp-c pb-eq">${L.map(m=>{const p=P[m.id]||0,h=H[m.id]||0,t=p+h;return `<button type="button" class="pb-eqf" data-p="${m.id}">${avHTML(m)}<span class="tx"><b>${escH(m.nombre)}</b>${pTag(m)}</span><span class="pb-eqn">${t?`<b>${h} de ${t}</b><span class="rp-bar${h===t?' ok':''}"><i style="width:${Math.round(h/t*100)}%"></i></span>`:'<em>Sin tareas hoy</em>'}</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`;}).join('')}</div>`;
+  box.innerHTML=tabsP()+`<div class="rp-c pb-eq">${L.map(m=>{const p=P[m.id]||0,h=H[m.id]||0,t=p+h;return `<button type="button" class="pb-eqf" data-p="${m.id}" style="padding-left:${Math.min(3,m._niv||0)*12}px">${avHTML(m)}<span class="tx"><b>${escH(m.nombre)}</b>${pTag(m)}</span><span class="pb-eqn">${t?`<b>${h} de ${t}</b><span class="rp-bar${h===t?' ok':''}"><i style="width:${Math.round(h/t*100)}%"></i></span>`:'<em>Sin tareas hoy</em>'}</span><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`;}).join('')}</div>`;
   tabsOn();box.querySelectorAll('.pb-eqf').forEach(x=>x.onclick=()=>{PB.persona=x.dataset.p;PB.dia='';PB._ini=0;pbGuarda();carga();});contarMias();};
  const carga=async()=>{if(PB.persona==='*')return pintaEq();let r;try{r=await datosPlan(persona());}catch(e){if(!box.isConnected)return;box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
   if(!box.isConnected)return;PB.d=r;PB.pas={};pinta2();contarMias();};
@@ -210,8 +210,8 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   const totH=(r.pendientes||[]).length+(r.hechas||[]).length,hechH=(r.hechas||[]).length,yoMismo=r.persona===yo;
   const nom=pri(nomDe(r.persona));
   const fechaTxt=new Date(sel+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
-  let h='';const V=visibles();
-  h+=tabsP();if(!yoMismo)h+=`<button type="button" class="pb-vol"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>Mi equipo</button>`;
+  let h='';const edPl=puedeEst(r.persona);
+  h+=tabsP();if(!yoMismo)h+=`<button type="button" class="pb-vol"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>${veTodo()?'Todo el equipo':'Mi equipo'}</button>`;
   // Agenda: la semana con sus días; se elige el día y se ve (y se escribe en) su hoja
   const lun=pbIso(hoy,-((new Date(hoy+'T12:00:00').getDay()+6)%7)+7*PB.sem),D7=[...Array(7)].map((_,i)=>pbIso(lun,i));
   const cuenta=d=>d===hoy?(r.pendientes||[]).length:X0.filter(x=>x.dia===d).length;
@@ -225,9 +225,9 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   const nLin=enPas?H.length+2:P.length+H.length+(H.length?1:0)+1+(enHoy&&!P.length&&H.length?1:0),lineas='<div class="pb-lin"></div>'.repeat(Math.max(0,7-nLin));
   const esc=`<div class="pb-esc"><span class="pb-ck0"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span><div class="pb-in" contenteditable="true" role="textbox" spellcheck="true" data-ph="${yoMismo?'Escribe una tarea…':'Tarea para '+escH(nom)+'…'}"></div>${herr}<button type="button" class="pb-mas" aria-label="Apuntar">${IC.ck.replace('<svg','<svg')}</button></div>`;
   h+=`<div class="rp-c pb-hoja${enMan?' man':''}${enPas?' pas':''}"><div class="pb-fe">${escH(fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1))}</div>
-   ${enPas?`<div class="pb-sec">${PB.pas[sel]==='cargando'?'Cargando…':H.length?'Lo que se hizo este día':'Este día no se marcó nada como hecho'}</div>${H.map(x=>fila(x,hoy,true)).join('')}`:`${P.map(x=>fila(x,hoy)).join('')}${esc}
+   ${enPas?`<div class="pb-sec">${PB.pas[sel]==='cargando'?'Cargando…':H.length?'Lo que se hizo este día':'Este día no se marcó nada como hecho'}</div>${H.map(x=>fila(x,hoy,true)).join('')}`:`${P.map(x=>fila(x,hoy,!edPl)).join('')}${edPl?esc:`<p class="es-solo pb-solo">Solo lo puedes ver: el plan de ${escH(nom)} lo lleva ${escH(nom)} o quien lo tiene a su cargo.</p>`}
    ${enHoy&&!P.length&&H.length?`<div class="pb-bien">${yoMismo?'¡Todo hecho por hoy!':'Lo ha hecho todo.'}</div>`:''}
-   ${H.length?`<div class="pb-sec">Hecho hoy</div>${H.map(x=>fila(x,hoy)).join('')}`:''}`}${lineas}</div>`;
+   ${H.length?`<div class="pb-sec">Hecho hoy</div>${H.map(x=>fila(x,hoy,!edPl)).join('')}`:''}`}${lineas}</div>`;
   const ed0=box.querySelector('.pb-esc .pb-in'),html0=ed0?ed0.innerHTML:'',foco=document.activeElement===ed0;
   box.innerHTML=h;
   const escF=box.querySelector('.pb-esc')||ce('div'),inp=escF.querySelector('.pb-in')||ce('div');inp.innerHTML=html0;
@@ -328,13 +328,17 @@ function soloAdmin(){const a=S.miembros.find(x=>x.admin&&x.activo);modal(`<h3>Lo
 function editaGrupo(p){const k=modal(`<h3>Grupo de ${escH(pri(p.nombre))}</h3><p>El nombre del grupo de gente que lleva ${escH(pri(p.nombre))} (por ejemplo «Recepción» o «Fisios mañana»).</p><label class="l">Nombre del grupo</label><input class="i" maxlength="40" value="${escH(p.grupo||'')}" placeholder="Ej.: Recepción"><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
  k.querySelector('input').focus();k.querySelector('[data-x]').onclick=()=>k.remove();
  k.querySelector('[data-ok]').onclick=async()=>{const v=k.querySelector('input').value.trim();k.remove();const {error}=await sb.from('pb_miembros').update({grupo:v||null}).eq('id',p.id);if(error){toast('No se ha podido',false);return;}toast(v?'Grupo guardado':'Grupo quitado');await cargaEquipo();if(p.id===S.yo.id)pinta();else renderEquipoOtraVez();};}
+async function guardaEquipo(c,ok){const {data,error}=await sb.from('pb_equipos').update(c).eq('id',S.equipo.id).select('id');if(error||!data||!data.length){toast(error?'No se ha podido guardar':'Solo lo puede cambiar quien administra el equipo',false);return false;}await cargaEquipo();pinta();toast(ok);return true;}
+function nombreEquipo(){const k=modal(`<h3>Nombre del equipo</h3><p>Sale arriba del todo, en los PDF y en la ficha del equipo.</p><label class="l">Nombre</label><input class="i" maxlength="60" value="${escH(S.equipo.nombre)}"><div class="err"></div><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
+ const i=k.querySelector('input');i.focus();i.select();k.querySelector('[data-x]').onclick=()=>k.remove();
+ const ok=async()=>{const v=i.value.trim();if(!v){k.querySelector('.err').textContent='Escribe un nombre';return;}k.remove();await guardaEquipo({nombre:v},'Nombre del equipo cambiado');};
+ k.querySelector('[data-ok]').onclick=ok;i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ok();}};}
 function opcionesEquipo(){const m=modal(`<h3>${escH(S.equipo.nombre)}</h3><div style="margin-top:10px">
  <button class="op" data-a="nom"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>Cambiar el nombre del equipo</button>
  <button class="op" data-a="foto"><svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>${S.equipo.foto?'Cambiar la foto del equipo':'Poner una foto o logo del equipo'}</button>
  ${S.equipo.foto?'<button class="op rojo" data-a="sinfoto"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>Quitar la foto del equipo</button>':''}</div>`);
- const guarda=async(c,ok)=>{const {error}=await sb.from('pb_equipos').update(c).eq('id',S.equipo.id);if(error){toast('No se ha podido',false);return;}await cargaEquipo();pinta();toast(ok);};
- m.querySelector('[data-a="nom"]').onclick=()=>{m.remove();const k=modal(`<h3>Nombre del equipo</h3><label class="l">Nombre</label><input class="i" maxlength="60" value="${escH(S.equipo.nombre)}"><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
-  k.querySelector('[data-x]').onclick=()=>k.remove();k.querySelector('[data-ok]').onclick=()=>{const v=k.querySelector('input').value.trim();if(!v)return;k.remove();guarda({nombre:v},'Nombre cambiado');};};
+ const guarda=guardaEquipo;
+ m.querySelector('[data-a="nom"]').onclick=()=>{m.remove();nombreEquipo();};
  m.querySelector('[data-a="foto"]').onclick=async()=>{m.remove();const u=await subirFoto('equipo');if(u)guarda({foto:u},'Foto puesta');};
  const q=m.querySelector('[data-a="sinfoto"]');if(q)q.onclick=()=>{m.remove();guarda({foto:null},'Foto quitada');};}
 // Elegir varias personas (chips). Devuelve la lista elegida o null si se cancela
