@@ -25,6 +25,7 @@ function perIni(p,L){const d=new Date(L),y=d.getUTCFullYear(),m=d.getUTCMonth(),
 function perSig(p,s){if(p==='mes'){const d=new Date(s);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1);}return s+(p==='semana'?HS:HD);}
 function perAnt(p,s){if(p==='mes'){const d=new Date(s);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth()-1,1);}return s-(p==='semana'?HS:HD);}
 function perIdx(p,s){if(p==='mes'){const d=new Date(s);return d.getUTCFullYear()*12+d.getUTCMonth();}return Math.round(s/(p==='semana'?HS:HD));}
+function perFin(p,s){const d=new Date(p==='semana'?s+HS:s);return p==='mes'?MESES[d.getUTCMonth()]:d.getUTCDate()+'/'+(d.getUTCMonth()+1);}
 function perCorto(p,s){const d=new Date(s);return p==='mes'?MESES[d.getUTCMonth()]+' '+String(d.getUTCFullYear()).slice(2):d.getUTCDate()+' '+MESES[d.getUTCMonth()];}
 function perLargo(p,s,ahora){const ini=perIni(p,ahora);
  if(s===ini)return p==='dia'?'Hoy':p==='semana'?'Esta semana':'Este mes';
@@ -49,19 +50,21 @@ function textoTendencia(e,T){const C=T.filter(x=>!x.actual),t=tendencia(C.map(x=
  return {txt:(t.m>0?'Tendencia al alza':'Tendencia a la baja')+(b?' · bien':' · a mejorar'),c:colorDe(b)};}
 
 // La gráfica (SVG). mini = la pequeña de la tarjeta. El periodo en curso sale con el punto hueco
-function grafica(e,T,ahora,mini){const W=mini?300:340,H=mini?84:200,L=mini?4:38,R=mini?6:10,Tp=mini?8:12,B=mini?8:30;
+function grafica(e,T,ahora,mini){const W=mini?300:340,H=mini?84:210,L=mini?6:30,R=mini?6:16,Tp=mini?8:24,B=mini?8:30;
  if(!T.length)return `<svg class="es-g${mini?' mini':''}" viewBox="0 0 ${W} ${H}"><text x="${W/2}" y="${H/2+4}" text-anchor="middle" class="es-vacia">Aún sin datos</text></svg>`;
  const pts=T.map(x=>({x:perIdx(e.periodo,x.s),y:x.v,a:x.actual,s:x.s}));
  const x0=pts[0].x,x1=Math.max(pts[pts.length-1].x,x0+1);
  let y0=Math.min(...pts.map(p=>p.y)),y1=Math.max(...pts.map(p=>p.y));if(y0>=0)y0=0;if(y0===y1)y1=y0+1;y1+=(y1-y0)*.08;
  const X=x=>L+(x-x0)/(x1-x0)*(W-L-R),Y=y=>Tp+(1-(y-y0)/(y1-y0))*(H-Tp-B);
  let s='';
- if(!mini){for(let i=0;i<=3;i++){const v=y0+(y1-y0)*i/3,y=Y(v);s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" class="es-rej"/><text x="${L-6}" y="${y+3.5}" text-anchor="end" class="es-ej">${num(Math.round(v*10)/10)}</text>`;}
-  s+=`<text x="${L}" y="${H-8}" class="es-ej">${escH(perCorto(e.periodo,pts[0].s))}</text><text x="${W-R}" y="${H-8}" text-anchor="end" class="es-ej">${escH(perCorto(e.periodo,pts[pts.length-1].s))}</text>`;}
+ if(!mini){for(let i=0;i<=3;i++){const v=y0+(y1-y0)*i/3,y=Y(v);s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" class="es-rej"/><text x="${L-6}" y="${y+3.5}" text-anchor="end" class="es-ej">${num(y1-y0>3?Math.round(v):Math.round(v*10)/10)}</text>`;}
+  const paso=Math.ceil(pts.length/7);pts.forEach((p,i)=>{if((pts.length-1-i)%paso)return;s+=`<text x="${X(p.x)}" y="${H-8}" text-anchor="middle" class="es-ej">${escH(perFin(e.periodo,p.s))}</text>`;});}
  const C=pts.filter(p=>!p.a),t=tendencia(C);
  if(t){const xa=C[0].x,xb=x1;s+=`<line x1="${X(xa)}" y1="${Y(t.m*xa+t.b)}" x2="${X(xb)}" y2="${Y(t.m*xb+t.b)}" stroke="${colorDe(bueno(e,t.m))}" class="es-ten"/>`;}
  for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];s+=b.a?`<line x1="${X(a.x)}" y1="${Y(a.y)}" x2="${X(b.x)}" y2="${Y(b.y)}" class="es-lin enc"/>`:`<line x1="${X(a.x)}" y1="${Y(a.y)}" x2="${X(b.x)}" y2="${Y(b.y)}" stroke="${colorDe(bueno(e,b.y-a.y))}" class="es-lin"/>`;}
- pts.forEach((p,i)=>{if(mini&&!p.a&&i<pts.length-1&&pts.length>12)return;s+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${mini?2.6:3.6}" class="es-pt${p.a?' enc':''}"/>`;});
+ const pasoN=Math.ceil(pts.length/(mini?6:10));
+ pts.forEach((p,i)=>{if(mini&&!p.a&&i<pts.length-1&&pts.length>12)return;s+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${mini?2.6:3.6}" class="es-pt${p.a?' enc':''}"/>`;
+  if(!mini&&!((pts.length-1-i)%pasoN))s+=`<text x="${X(p.x)}" y="${Y(p.y)-9}" text-anchor="middle" class="es-nv${p.a?' enc':''}">${num(p.y)}</text>`;});
  return `<svg class="es-g${mini?' mini':''}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${s}</svg>`;}
 
 // 7R: esta semana hasta el corte, comparada con la semana pasada hasta el mismo punto
@@ -128,6 +131,8 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
    <div class="rp-c"><div class="eq-h"><div><small>${escH(e.puesto||'Estadística')}</small><b>${escH(e.nombre)}</b></div><button class="mas3" aria-label="Opciones">⋯</button></div>
     <div class="es-7n"><div><small>${P[0]}</small><b>${num(este)}</b></div><div><small>${P[1]}</small><b class="ant">${num(antes)}</b></div></div>
     <div class="es-7r" style="color:${colorDe(b)}">${d?`${d>0?'▲':'▼'} ${num(Math.abs(d))} ${d>0?'más':'menos'} que ${e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado'} a esta hora${b?' · bien':' · a mejorar'}`:`Igual que ${e.periodo==='semana'?'la semana pasada':e.periodo==='dia'?'ayer':'el mes pasado'} a esta hora`}</div>
+    ${e.periodo==='semana'?(()=>{const totAnt=suma(A,prev,actual-1),falta=totAnt-este+(e.sentido==='positiva'?1:0),fin=perSig('semana',actual);
+      return `<div class="es-obj"><span>Esta semana acaba el ${escH(dLargo(fin))} a las 14:00.</span><span>${e.sentido==='positiva'?(falta>0?`La semana pasada acabó con <b>${num(totAnt)}</b>: te faltan <b>${num(falta)}</b> para superarla.`:`La semana pasada acabó con <b>${num(totAnt)}</b>: ya la has superado.`):(este<=totAnt?`La semana pasada acabó con <b>${num(totAnt)}</b>: para no empeorar, no pases de ahí (te quedan <b>${num(totAnt-este)}</b>).`:`La semana pasada acabó con <b>${num(totAnt)}</b>: ya la has pasado.`)}</span></div>`;})():''}
     <div class="es-in"><input class="i" inputmode="decimal" autocomplete="off" placeholder="Sumar ${escH(e.eje_y)}…" value="${escH(ES.cant[e.id]||'')}"><button class="bt" id="esGuardar">+ Apuntar</button></div>
     ${cu?`<div class="es-mo"><small>Lo apuntas el</small><div class="es-per"><button type="button" class="pb-fl" data-d="-1" aria-label="Día anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${escH(dLargo(cu))}</b><button type="button" class="pb-fl" data-d="1" aria-label="Día siguiente"${cu+HD>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
      <div class="es-per"><button type="button" class="pb-fl" data-h="-1" aria-label="Una hora antes"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button><b>a las ${hhmm(cu)}</b><button type="button" class="pb-fl" data-h="1" aria-label="Una hora después"${cu+36e5>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button></div>
