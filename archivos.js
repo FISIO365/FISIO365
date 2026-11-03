@@ -15,15 +15,20 @@ function renderArchivos(wrap){const box=ce('div','ar');wrap.appendChild(box);con
   box.innerHTML=tabs()+`<div class="rp-c pb-eq">${L.map(m=>`<button type="button" class="pb-eqf" data-p="${m.id}" style="padding-left:${Math.min(3,m._niv||0)*12}px">${avHTML(m)}<span class="tx"><b>${escH(m.nombre)}</b>${pTag(m)}</span><svg class="ar-car" viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div>`;
   tabsOn();box.querySelectorAll('[data-p]').forEach(b=>{if(b.closest('.ar-tabs'))return;b.onclick=()=>{AR.persona=b.dataset.p;arGuarda();pinta1();window.scrollTo(0,0);};});};
  // La carpeta de una persona
- const carpeta=async p=>{const m=M(p)||{nombre:'—'},yoMismo=p===yo;
+ // Si algo falla o tarda, se dice y se puede reintentar (nunca se queda en «Cargando…»)
+ const carpeta=async p=>{const tk=AR.tk=(AR.tk||0)+1;let hecho=false;
+  setTimeout(()=>{if(!hecho&&AR.tk===tk&&box.isConnected)fallo(p,'Está tardando más de lo normal.');},12000);
+  try{await carpeta2(p,tk);}catch(e){if(AR.tk===tk&&box.isConnected)fallo(p,'No se ha podido cargar ('+(e&&e.message||e)+').');}finally{hecho=true;}};
+ const fallo=(p,txt)=>{const c=box.querySelector('.ar-carga');if(!c)return;c.innerHTML=`${escH(txt)} <button type="button" class="lnk" style="display:inline;padding:0">Reintentar</button>`;c.querySelector('button').onclick=()=>carpeta(p);};
+ const carpeta2=async(p,tk)=>{const m=M(p)||{nombre:'—'},yoMismo=p===yo;
   const cabH=`${tabs()}${yoMismo?'':`<button type="button" class="pb-vol"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>${veTodo()?'Todo el equipo':'Mi equipo'}</button>`}
    <div class="ar-cab">${avHTML(m)}<div><small>Archivos</small><b>${yoMismo?'Tus archivos':escH(m.nombre)}</b>${pTag(m)}</div></div>`;
-  box.innerHTML=cabH+'<div class="rp-c" style="color:var(--mut);font-size:13px">Cargando…</div>';const on=()=>{tabsOn();const v=box.querySelector('.pb-vol');if(v)v.onclick=()=>{AR.persona='*';arGuarda();pinta1();};};on();
+  box.innerHTML=cabH+'<div class="rp-c ar-carga" style="color:var(--mut);font-size:13px">Cargando…</div>';const on=()=>{tabsOn();const v=box.querySelector('.pb-vol');if(v)v.onclick=()=>{AR.persona='*';arGuarda();pinta1();};};on();
   const desde=new Date(Date.now()-26*7*864e5).toISOString();
   const [c,t,pe]=await Promise.all([sb.from('pb_condiciones').select('id,persona,est_nombre,semana,condicion,para,creado').eq('persona',p).order('semana',{ascending:false}).limit(200),
    sb.from('pb_tareas').select('id,texto,hecha_en,dia').eq('persona',p).eq('hecha',true).gte('hecha_en',desde).order('hecha_en'),
    sb.from('pb_tareas').select('id,texto,dia').eq('persona',p).eq('hecha',false).lte('dia',hoyMad()).order('dia')]);
-  if(!box.isConnected||(AR.persona||yo)!==p)return;
+  if(!box.isConnected||AR.tk!==tk)return;
   if(c.error||t.error){box.innerHTML=cabH+'<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';on();return;}
   const C=(c.data||[]).sort((a,b)=>a.semana<b.semana?1:a.semana>b.semana?-1:0);
   // Planes por semana (de lunes a domingo), la más reciente arriba
