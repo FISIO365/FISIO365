@@ -5236,11 +5236,14 @@ module.exports = async function handler(req, res) {
           if (q.confirmada != null) f.CONFIR = q.confirmada ? ['CONFIRMADA'] : [];
           if (q.notas != null) f.NOTAS = String(q.notas).slice(0, 2000);
           // Cancelación tardía: se apunta sola en las notas de la cita (cuántas horas antes avisó y la política)
-          if (q.estado === 'CANCELADA' && !/CANCELADA/.test(String(nmA(cur.fields.ESTADO)).toUpperCase())) {
+          // «No asistió» también cuenta como cancelación tardía. Si se descontó del pack llega como CITA PERDIDA con fallo = lo que se marcó
+          const fallo = /^(CANCELADA|NO ASISTIÓ)$/.test(q.fallo || '') ? q.fallo : q.estado;
+          if ((fallo === 'CANCELADA' || fallo === 'NO ASISTIÓ') && !/CANCELADA|NO ASIST|PERDIDA/.test(String(nmA(cur.fields.ESTADO)).toUpperCase())) {
             const hPol = Number(((await conf().catch(() => CONF_DEF)).cancelacion || {}).horas) || 24;
             const ini = madridUTC(String(cur.fields.FECHA || '').slice(0, 10), hh(cur.fields.HORA)).getTime(), faltan = (ini - Date.now()) / 36e5;
-            if (faltan < hPol && faltan > -12) {
-              const tx = `Cancelación tardía: avisó ${faltan <= 0 ? 'a la hora de la cita o después' : faltan < 1 ? 'con menos de 1 h' : 'con unas ' + Math.floor(faltan) + ' h'} (la política pide ${hPol} h). Apuntado el ${new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date())}.`;
+            if (fallo === 'NO ASISTIÓ' || (faltan < hPol && faltan > -12)) {
+              const cuando = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date());
+              const tx = (fallo === 'NO ASISTIÓ' ? `Cancelación tardía: no vino a la cita sin avisar a tiempo (la política pide ${hPol} h).` : `Cancelación tardía: avisó ${faltan <= 0 ? 'a la hora de la cita o después' : faltan < 1 ? 'con menos de 1 h' : 'con unas ' + Math.floor(faltan) + ' h'} (la política pide ${hPol} h).`) + (q.estado === 'CITA PERDIDA' ? ' Sesión descontada del pack.' : q.tarde ? ' Su próxima cita la paga por adelantado.' : '') + ` Apuntado el ${cuando}.`;
               const base = f.NOTAS != null ? f.NOTAS : String(cur.fields.NOTAS || '');
               if (!/Cancelación tardía:/.test(base)) f.NOTAS = (base.trim() + (base.trim() ? '\n' : '') + tx).slice(0, 2000);
             }
@@ -5255,7 +5258,7 @@ module.exports = async function handler(req, res) {
           // Sin pack: si no vino o canceló con menos de 24 h, su próxima cita se paga por adelantado
           let debePagar = '';
           { const pidE = (cur.fields['RELACIÓN - CITA'] || [])[0], cF = String(cur.fields.FECHA || '').slice(0, 10), cH = hh(cur.fields.HORA);
-            if (pidE && (q.estado === 'NO ASISTIÓ' || (q.estado === 'CANCELADA' && q.tarde))) { const pk = await packDe(pidE, cF, cH).catch(() => null);
+            if (pidE && q.tarde && /^(NO ASISTIÓ|CANCELADA)$/.test(q.estado || '')) { const pk = await packDe(pidE, cF, cH).catch(() => null);
               if (!pk || pk.t !== 'pack') { debePagar = `${q.estado === 'NO ASISTIÓ' ? 'No asistió' : 'Canceló con menos de 24 h'} el ${cF.split('-').reverse().slice(0, 2).join('/')}`; await at(`${PACIENTES}/${pidE}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO ADELANTADO': true, 'PAGO ADELANTADO MOTIVO': debePagar } }) }).catch(() => {}); } } }
           return res.status(200).json({ ok: true, debePagar });
         }
