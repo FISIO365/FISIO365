@@ -244,7 +244,7 @@ function renderEquipo(wrap){const adm=S.yo.admin;
  wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
    <div style="margin-top:10px">${act.map(fila).join('')}${baja.length&&adm?`<details style="margin-top:6px"><summary class="eq-p" style="cursor:pointer">De baja (${baja.length})</summary>${baja.map(fila).join('')}</details>`:''}</div></div>
   <div class="rp-c"><div class="eq-h"><div><small>Organigrama</small><b>Quién depende de quién</b></div></div>
-   <p class="eq-p">${adm?'Arrastra a cada persona (cógela por <b>⠿</b>) y suéltala encima de quien la lleva. Para quitarle el jefe, suéltala en «Arriba del todo».':'Así está organizado el equipo.'}</p><div id="org" class="org"></div></div>
+   <p class="eq-p">${adm?'Cada persona sale debajo de su jefe, con más margen cuanto más abajo está. Para cambiar a alguien de sitio, <b>tócala</b> y elige debajo de quién va (o arrástrala por <b>⠿</b>).':'Así está organizado el equipo: cada persona sale debajo de su jefe.'}</p><div id="org" class="org"></div></div>
   <div class="rp-c eq-ayuda"><b>¿Cómo funciona?</b><p>Quien tiene a alguien <b>a su cargo</b> ve su plan de batalla y sus estadísticas, y le puede poner tareas (esa persona solo las puede marcar como hechas).</p>
    ${adm?'<p>Para poner a alguien bajo otra persona, toca los <b>⋯</b> de esa persona y elige <b>«Depende de»</b>. O al revés: en los ⋯ de la jefa o el jefe, <b>«A su cargo»</b>.</p><p>No va en cascada: si tú tienes a Ramiro a tu cargo y Ramiro tiene a Ana, tú no ves a Ana salvo que también la pongas a tu cargo.</p>':'<p>Las altas, bajas, puestos y quién está a cargo de quién los lleva quien administra el equipo.</p>'}</div>`;
  organigrama(wrap.querySelector('#org'),adm,act);
@@ -263,6 +263,13 @@ function organigrama(box,adm,act){
  box.innerHTML=`${adm?'<div class="org-raiz" data-id="">Arriba del todo</div>':''}${hijos(null).map(nodo).join('')||'<p class="vacio">Aún no hay nadie.</p>'}`;
  if(!adm)return;
  const desc=(a,b)=>{let p=jefe[b];while(p){if(p===a)return true;p=jefe[p];}return false;};
+ const mover=async(id,nuevo)=>{const ant=dependeDe(id);if(nuevo===jefe[id]&&!otros(id).length)return;await guardaCargos(nuevo&&!ant.includes(nuevo)?[[nuevo,id]]:[],ant.filter(q=>q!==nuevo).map(q=>[q,id]));};
+ box.querySelectorAll('.org-c').forEach(c=>c.addEventListener('click',ev=>{if(ev.target.closest('.org-h'))return;const id=c.dataset.id,p=M(id);
+  const L=act.filter(m=>m.id!==id&&!desc(id,m.id)).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  const m=modal(`<h3>¿Debajo de quién va ${escH(pri(p.nombre))}?</h3><p>Quien elijas la tendrá a su cargo. La gente que ${escH(pri(p.nombre))} tiene debajo se mueve con ella.</p><div style="margin-top:10px">
+   <button class="op${!jefe[id]?' on':''}" data-j=""><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Arriba del todo (sin jefe)</button>
+   ${L.map(x=>`<button class="op${jefe[id]===x.id?' on':''}" data-j="${x.id}"><span class="av" style="width:28px;height:28px;font-size:12px">${escH(ini(x.nombre))}</span>${escH(x.nombre)}${x.puesto?` <em class="op-v">${escH(x.puesto)}</em>`:''}</button>`).join('')}</div>`);
+  m.querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>{m.remove();mover(id,b.dataset.j||null);});}));
  box.querySelectorAll('.org-h').forEach(h=>{h.addEventListener('pointerdown',ev=>{ev.preventDefault();const c=h.closest('.org-c'),id=c.dataset.id;
   const g=c.cloneNode(true);g.classList.add('org-g');document.body.appendChild(g);const r=c.getBoundingClientRect(),dx=ev.clientX-r.left,dy=ev.clientY-r.top;g.style.width=r.width+'px';
   const mueve=e=>{g.style.left=(e.clientX-dx)+'px';g.style.top=(e.clientY-dy)+'px';g.style.display='none';const t=document.elementFromPoint(e.clientX,e.clientY);g.style.display='';
@@ -270,8 +277,7 @@ function organigrama(box,adm,act){
    if(e.clientY<60)window.scrollBy(0,-12);else if(e.clientY>innerHeight-60)window.scrollBy(0,12);};
   mueve(ev);c.classList.add('org-fuera');
   const suelta=async()=>{document.removeEventListener('pointermove',mueve);document.removeEventListener('pointerup',suelta);document.removeEventListener('pointercancel',suelta);g.remove();c.classList.remove('org-fuera');
-   const d=box.querySelector('.sobre');if(!d)return;d.classList.remove('sobre');const nuevo=d.dataset.id||null;if(nuevo===jefe[id]&&!otros(id).length)return;
-   const ant=dependeDe(id);await guardaCargos(nuevo&&!ant.includes(nuevo)?[[nuevo,id]]:[],ant.filter(q=>q!==nuevo).map(q=>[q,id]));};
+   const d=box.querySelector('.sobre');if(!d)return;d.classList.remove('sobre');mover(id,d.dataset.id||null);};
   document.addEventListener('pointermove',mueve);document.addEventListener('pointerup',suelta);document.addEventListener('pointercancel',suelta);});});}
 // Elegir varias personas (chips). Devuelve la lista elegida o null si se cancela
 function eligePersonas(titulo,sub,ini,excluir){return new Promise(res=>{const sel=new Set(ini);const L=S.miembros.filter(m=>m.activo&&m.id!==excluir).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));

@@ -201,7 +201,9 @@ input.i:focus{border-color:var(--c);background:#fff}
 /* Organigrama */
 .org{margin-top:12px}
 .org-n{position:relative}
-.org-k{margin-left:18px;padding-left:16px;border-left:1.5px solid #ecdcd2}
+.org-k{margin-left:18px;padding-left:16px}
+.org-k>.org-n::after{content:"";position:absolute;left:-16px;top:-6px;bottom:0;border-left:1.5px solid #ecdcd2}
+.org-k>.org-n:last-child::after{bottom:auto;height:30px}
 .org-k>.org-n::before{content:"";position:absolute;left:-16px;top:24px;width:14px;border-top:1.5px solid #ecdcd2}
 .org-c{display:flex;align-items:center;gap:10px;background:#faf8f5;border:1.5px solid #efe7df;border-radius:14px;padding:8px 10px;margin:6px 0;transition:border-color .15s,background .15s,opacity .15s}
 .org-c .av{width:32px;height:32px;font-size:13px}
@@ -219,3 +221,4 @@ input.i:focus{border-color:var(--c);background:#fff}
 .es-tt{font-size:13px;font-weight:600;margin-top:4px}
 .es-7l{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--mut);margin-top:10px}.es-7l b{color:var(--ink)}.es-7l span:last-child{font-weight:700}
 .es-ult i{display:block;font-style:normal;font-size:11.5px;font-weight:700;margin-top:2px}
+.org-c{cursor:pointer}.op.on{color:var(--c);font-weight:600}
