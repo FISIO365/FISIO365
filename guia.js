@@ -57,10 +57,22 @@ const GUIA=[
  {k:'bandeja',t:'Bandeja',ic:'<path d="M4 13l2.4-7.4A2.2 2.2 0 0 1 8.5 4h7a2.2 2.2 0 0 1 2.1 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4.5l1.5 2.5h4l1.5-2.5H20"/>',
   h:`<p>El botón de arriba a la derecha. Ahí te llegan los <b>BP/7R</b> y las <b>condiciones</b> que te envían, con un número cuando hay alguno sin leer. En «Mías» tienes las tuyas.</p>`}];
 
-function guia(abre){guardaLS('guia_vista',GUIA_VER);const m=modal(`<small class="cd-k">Guía</small><h3>Cómo funciona Rumbo</h3><p>Toca cada apartado para ver qué es y cómo se usa.</p>
- <div class="gu">${GUIA.filter(g=>g.k!=='ctl'||verEst().length>1).map(g=>`<details class="gu-i"${g.k===(abre||'que')?' open':''}><summary><span class="gu-ic"><svg viewBox="0 0 24 24">${g.ic}</svg></span>${escH(g.t)}</summary><div class="gu-t cd-txt">${g.h}${g.tab?`<button type="button" class="lnk gu-ir" data-tab="${g.tab}">Ir a ${escH(g.t.replace(/ \(.*\)/,''))} →</button>`:''}</div></details>`).join('')}</div>
+// «Ver en la app»: te lleva a la sección, marca la parte que explica y deja un botón para volver a la guía
+const GUIA_VER_EN={plan:{tab:'plan',el:'.pb-hoja'},est:{tab:'est',el:'.es-c'},cond:{tab:'est',el:'.cd-ban,.cd-card,.es-c'},bp:{tab:'plan',el:'#pbBP .rp-c'},
+ ctl:{tab:'ctl',el:'.ct-t'},arch:{tab:'arch',el:'.ar-cab'},equipo:{tab:'equipo',el:'#org'},bandeja:{fn:()=>bandejaCond()},que:{tab:'plan',el:'.nav'},ritmo:{tab:'plan',el:'#pbEst .rp-c'}};
+function guiaVer(k){const v=GUIA_VER_EN[k];if(!v)return;document.querySelectorAll('.mod').forEach(m=>m.remove());
+ if(v.tab){if(v.tab==='plan'){PB.persona='';PB.dia='';PB._ini=0;pbGuarda();}if(v.tab==='est'){ES.persona='';ES.abierta='';esGuarda();}if(v.tab==='arch'){AR.persona='';arGuarda();}
+  S.tab=v.tab;guardaLS('tab',S.tab);pinta0();window.scrollTo(0,0);}
+ if(v.fn)setTimeout(v.fn,50);
+ if(v.el){let n=0;const busca=()=>{const e=document.querySelector(v.el);if(e&&e.offsetHeight){e.scrollIntoView({behavior:'smooth',block:'center'});e.classList.remove('gu-luz');void e.offsetWidth;e.classList.add('gu-luz');setTimeout(()=>e.classList.remove('gu-luz'),2600);}else if(n++<20)setTimeout(busca,150);};setTimeout(busca,250);}
+ const g=GUIA.find(x=>x.k===k);let b=document.getElementById('guVuelve');if(b)b.remove();
+ b=ce('div','gu-vuelve');b.id='guVuelve';b.innerHTML=`<button type="button" class="gu-v1"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>Volver a la guía</button><span>${escH(g?g.t.replace(/ \(.*\)/,''):'')}</span><button type="button" class="gu-x" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+ document.body.appendChild(b);b.querySelector('.gu-v1').onclick=()=>{b.remove();document.querySelectorAll('.mod').forEach(m=>m.remove());guia(k);};b.querySelector('.gu-x').onclick=()=>b.remove();}
+function guia(abre){{const b=document.getElementById('guVuelve');if(b)b.remove();}guardaLS('guia_vista',GUIA_VER);const m=modal(`<small class="cd-k">Guía</small><h3>Cómo funciona Rumbo</h3><p>Toca cada apartado para ver qué es y cómo se usa. Con «Ver en la app» vas a esa parte y luego vuelves a la guía.</p>
+ <div class="gu">${GUIA.filter(g=>g.k!=='ctl'||verEst().length>1).map(g=>`<details class="gu-i"${g.k===(abre||'que')?' open':''}><summary><span class="gu-ic"><svg viewBox="0 0 24 24">${g.ic}</svg></span>${escH(g.t)}</summary><div class="gu-t cd-txt">${g.h}${GUIA_VER_EN[g.k]?`<button type="button" class="gu-ver" data-ver="${g.k}"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>Ver en la app</button>`:''}</div></details>`).join('')}</div>
  <div class="bts"><button class="bt" data-x>Entendido</button></div>`);
  m.querySelector('.hoja').classList.add('ancha');m.querySelector('[data-x]').onclick=()=>m.remove();
- m.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{m.remove();S.tab=b.dataset.tab;guardaLS('tab',S.tab);pinta0();window.scrollTo(0,0);});}
+ m.querySelectorAll('[data-ver]').forEach(b=>b.onclick=()=>guiaVer(b.dataset.ver));
+ if(abre&&abre!=='que')setTimeout(()=>{const d=m.querySelector('.gu-i[open]');if(d)d.scrollIntoView({block:'start'});},60);}
 // La primera vez que alguien entra, se le abre sola (y otra vez si la guía cambia)
 function guiaPrimeraVez(){const v=+leeLS('guia_vista',0);if(v<GUIA_VER)setTimeout(()=>{if(!document.querySelector('.mod'))guia();},600);}
