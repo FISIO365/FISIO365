@@ -1576,6 +1576,14 @@
 "Setembre",
 "September"
 ],
+"Si eres mujer, ¿estás embarazada?": [
+"Si ets dona, estàs embarassada?",
+"If you're a woman, are you pregnant?"
+],
+"Si eres mujer, ¿estás en periodo de lactancia?": [
+"Si ets dona, estàs en període de lactància?",
+"If you're a woman, are you breastfeeding?"
+],
 "Si eres mujer, ¿embarazada o en periodo de lactancia?": [
 "Si ets dona, estàs embarassada o en període de lactància?",
 "If you're a woman, are you pregnant or breastfeeding?"

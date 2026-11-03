@@ -42,6 +42,8 @@ async function pdfConsentimiento(D){
  const fila=(l,v,c)=>{set(8.5,'normal','gris');const L=doc.splitTextToSize(l,tw*0.68);set(8.5,'bold',c||'neg');const V=doc.splitTextToSize(String(v||'—'),tw*0.3);const h=Math.max(L.length,V.length)*3.7+2.2;salto(h);set(8.5,'normal','gris');doc.text(L,ml,y);set(8.5,'bold',c||'neg');doc.text(V,ml+tw,y,{align:'right'});y+=h-1;doc.setDrawColor(...C.lin);doc.setLineWidth(0.15);doc.line(ml,y-2.4,ml+tw,y-2.4);y+=1;};
  const fC=f=>f?String(f).slice(0,10).split('-').reverse().join('/'):'—';
  const R=D.resp||{},v=k=>k.split('|').map(x=>R[x]).filter(Boolean),resp=k=>{const a=v(k);return a.some(x=>/^s[ií]$/i.test(x))?'Sí':a[0]||'—';};
+ // Embarazo y lactancia van por separado; en los firmados antes, la pregunta va junta
+ const PREG=R.LACTANCIA?CONS_PREG.flatMap(x=>x[0]==='EMBARAZO'?[['EMBARAZO','Si eres mujer, ¿estás embarazada?'],['LACTANCIA','Si eres mujer, ¿estás en periodo de lactancia?']]:[x]):CONS_PREG;
  const TIPO=D.tipo||'Primera visita';
  try{const im=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=CL.logo||'/informe/logo.png';});const cv=document.createElement('canvas');cv.width=im.naturalWidth;cv.height=im.naturalHeight;cv.getContext('2d').drawImage(im,0,0);const lg=cv.toDataURL('image/png'),an=Math.min(40,26*(im.naturalWidth/im.naturalHeight)/(751/130));doc.addImage(lg,'PNG',ml,y-5,an,an*im.naturalHeight/im.naturalWidth);y+=4;}catch(e){}
  set(8.5,'bold','nar');doc.text('CONSENTIMIENTO INFORMADO',ml,y);y+=8;
@@ -50,7 +52,7 @@ async function pdfConsentimiento(D){
  const chk=(t,on)=>{set(8.5,'bold','neg');const L=doc.splitTextToSize(t,tw-6);salto(L.length*3.6+2);doc.setDrawColor(...C.neg);doc.setLineWidth(0.3);doc.rect(ml,y-2.8,3.2,3.2);if(on){doc.setDrawColor(...C.ok);doc.setLineWidth(0.6);doc.line(ml+0.6,y-1.2,ml+1.4,y-0.3);doc.line(ml+1.4,y-0.3,ml+2.8,y-2.3);}L.forEach(l=>{doc.text(l,ml+6,y);y+=3.6;});y+=1.6;};
  if(TIPO!=='Primera visita'){
   tit('Datos del paciente');[['Nombre',[D.nombre,D.apellidos].filter(Boolean).join(' ')],['NIF / NIE',D.dni],['Teléfono',D.tel],...(TIPO==='Alta oncológica'?[['Fecha del alta oncológica',D.fechaAlta?fC(D.fechaAlta):'—'],['Informe de alta',(D.informe||[]).length?(D.informe.length+' archivo'+(D.informe.length>1?'s':'')+' adjunto'+(D.informe.length>1?'s':'')):'No adjuntado']]:[])].forEach(([l,x])=>fila(l,x));
-  if(TIPO==='Suelo pélvico'){tit('Cuestionario de salud');CONS_PREG.filter(([k])=>k!=='SUELO PÉLVICO').forEach(([k,p])=>{const r=resp(k);fila(p,r,/^s[ií]$/i.test(r)||/^alta$/i.test(r)?'no':null);});
+  if(TIPO==='Suelo pélvico'){tit('Cuestionario de salud');PREG.filter(([k])=>k!=='SUELO PÉLVICO').forEach(([k,p])=>{const r=resp(k);fila(p,r,/^s[ií]$/i.test(r)||/^alta$/i.test(r)?'no':null);});
    if(D.notasSalud){par('Otros datos de salud: '+D.notasSalud,8.5);}
    tit('Consentimiento informado – Fisioterapia de suelo pélvico');L_SP.forEach(t=>par(t));
    chk('He leído y comprendido la información anterior y doy mi consentimiento para la valoración y tratamiento de fisioterapia de suelo pélvico.',D.aceptaSP);chk('Entiendo que puedo retirar mi consentimiento en cualquier momento.',D.aceptaSP);}
@@ -62,7 +64,7 @@ async function pdfConsentimiento(D){
  [['Nombre',[D.nombre,D.apellidos].filter(Boolean).join(' ')],['NIF',D.dni],['Fecha de nacimiento',fC(D.nacimiento)],['Email',D.email],['Teléfono',D.tel],...(D.tutor?[['Tutor legal',D.tutor],['NIF del tutor',D.tutorNif]]:[]),['¿Cómo nos has conocido?',R['CONOCIDO']||'—'],...(D.recomendo?[['¿Quién te recomendó?',D.recomendo]]:[])].forEach(([l,x])=>fila(l,x));
  tit('Cuestionario de salud');
  par('Por favor, marque «sí» o «no» en cada pregunta. Esta información es confidencial y nos ayuda a garantizar su seguridad durante el tratamiento.',8,'normal','gris');
- CONS_PREG.forEach(([k,p])=>{const r=resp(k);fila(p,r,/^s[ií]$/i.test(r)||/^alta$/i.test(r)?'no':null);});
+ PREG.forEach(([k,p])=>{const r=resp(k);fila(p,r,/^s[ií]$/i.test(r)||/^alta$/i.test(r)?'no':null);});
  if(/^s[ií]$/i.test(resp('SUELO PÉLVICO'))){tit('Consentimiento informado – Fisioterapia de suelo pélvico');L_SP.forEach(t=>par(t));
   const chk=(t,on)=>{set(8.5,'bold','neg');const L=doc.splitTextToSize(t,tw-6);salto(L.length*3.6+2);doc.setDrawColor(...C.neg);doc.setLineWidth(0.3);doc.rect(ml,y-2.8,3.2,3.2);if(on){doc.setDrawColor(...C.ok);doc.setLineWidth(0.6);doc.line(ml+0.6,y-1.2,ml+1.4,y-0.3);doc.line(ml+1.4,y-0.3,ml+2.8,y-2.3);}L.forEach(l=>{doc.text(l,ml+6,y);y+=3.6;});y+=1.6;};
   chk('He leído y comprendido la información anterior y doy mi consentimiento para la valoración y tratamiento de fisioterapia de suelo pélvico.',D.aceptaSP);

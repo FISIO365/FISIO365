@@ -251,7 +251,7 @@ async function revisarPorReagendar(forzar) {
 // Se emparejan con el paciente por email, DNI o teléfono (últimos 9 dígitos) y nombre, y quedan enlazados (columna PACIENTE).
 const CONS_T = 'tbl8uv04zFAk5L5bA', CONS_O = 'tblBBSyxl2IZMyU7I';
 const TALLY_FORMS = { Gex8jo: 'Suelo pélvico', Dq4gE5: 'Alta oncológica' };
-const C_SALUD = [['MARCAPASOS', 'Marcapasos'], ['EMBARAZO', 'Embarazo'], ['CÁNCER', 'Cáncer'], ['MEDICAMENTO CUAGULACIÓN', 'Toma anticoagulantes'], ['ARRITMIAS', 'Arritmias'], ['HIPERTENSIÓN', 'Hipertensión'], ['PROBLEMAS CIRCULACIÓN', 'Problemas de circulación'], ['PRÓTESIS', 'Prótesis'], ['FRACTURAS/CIRUGÍA', 'Fracturas o cirugías'], ['ENFERMEDAD NEUROLÓGICA', 'Enfermedad neurológica'], ['ALERGIA', 'Alergias'], ['DOLOR CRÓNICO', 'Dolor crónico']];
+const C_SALUD = [['MARCAPASOS', 'Marcapasos'], ['EMBARAZO', 'Embarazo'], ['LACTANCIA', 'Lactancia'], ['CÁNCER', 'Cáncer'], ['MEDICAMENTO CUAGULACIÓN', 'Toma anticoagulantes'], ['ARRITMIAS', 'Arritmias'], ['HIPERTENSIÓN', 'Hipertensión'], ['PROBLEMAS CIRCULACIÓN', 'Problemas de circulación'], ['PRÓTESIS', 'Prótesis'], ['FRACTURAS/CIRUGÍA', 'Fracturas o cirugías'], ['ENFERMEDAD NEUROLÓGICA', 'Enfermedad neurológica'], ['ALERGIA', 'Alergias'], ['DOLOR CRÓNICO', 'Dolor crónico']];
 const nuevoPin = () => String(1000 + Math.floor(Math.random() * 9000));
 const cNm = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
 const cDig = v => String(v || '').replace(/\D/g, '').slice(-9);
@@ -267,6 +267,7 @@ function consentResumen(r, tabla) {
   const salud = [], rojo = [];
   C_SALUD.forEach(([k, t]) => { const v = cNm(F[k]).trim(); if (!/^s[ií]$|^alta$/i.test(v)) return;
     if (k === 'EMBARAZO' && viejo) { salud.push({ k, t: 'Embarazo (marcado el ' + fBr(fecha) + ')', grave: false }); return; }
+    if (k === 'LACTANCIA') { salud.push({ k, t: viejo ? 'Lactancia (marcado el ' + fBr(fecha) + ')' : 'Lactancia', grave: false }); return; }
     if (k === 'ARRITMIAS' && salud.some(x => x.k === 'HIPERTENSIÓN')) return;
     const alta = /^alta$/i.test(v); salud.push({ k, alta, t: alta ? t + ' (ya de alta)' : t, grave: !alta && ['MARCAPASOS', 'EMBARAZO', 'CÁNCER'].includes(k) });
     if (!alta && ['MARCAPASOS', 'EMBARAZO', 'CÁNCER'].includes(k)) rojo.push(t); });
@@ -1703,9 +1704,12 @@ async function mailCDoc(id, email, nombre, que) {
   } catch (e) { console.log('mailCDoc error', e.message); return { ok: false, error: e.message }; }
 }
 function firmaCDoc(id) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cdoc:' + id).digest('hex').slice(0, 10); }
+// Cuestionario en el documento: los firmados antes de separar embarazo y lactancia llevan la pregunta junta
+const saludDoc = (L, v) => { const junto = !v('LACTANCIA'); return L.filter(x => !(junto && x[0] === 'LACTANCIA')).map(x => junto && x[0] === 'EMBARAZO' ? [x[0], /^Si eres/.test(x[1]) ? 'Si eres mujer, ¿embarazada o en periodo de lactancia?' : '¿Estás embarazada o en periodo de lactancia?'] : x); };
 const enlaceCDoc = id => `https://app.fisioterapia365.com/documento/${id}-${firmaCDoc(id)}`;
 const CF_SALUD = [
-  ['EMBARAZO', 'Si eres mujer, ¿embarazada o en periodo de lactancia?', ['Sí', 'No', 'No aplica (hombre)']],
+  ['EMBARAZO', 'Si eres mujer, ¿estás embarazada?', ['Sí', 'No', 'No aplica (hombre)']],
+  ['LACTANCIA', 'Si eres mujer, ¿estás en periodo de lactancia?', ['Sí', 'No', 'No aplica (hombre)']],
   ['MARCAPASOS', '¿Tienes marcapasos u otro implante electrónico?'],
   ['PROBLEMAS CIRCULACIÓN', '¿Tienes problemas circulatorios graves?'],
   ['HIPERTENSIÓN', '¿Tienes hipertensión no controlada o arritmias significativas?'],
@@ -1854,7 +1858,7 @@ function paginaCDoc(F, firmaSrc) {
 @media print{body{background:#fff;padding:0}.c{box-shadow:none;border-radius:0;padding:0}.bt{display:none}}</style></head><body><div class="c">
 <h1>Consentimiento informado</h1><p class="sub">FISIO365 · Fourth Dynamic, S.L. · Firmado el ${e(fN(F['Creada']))}</p>
 <h2>Datos del paciente</h2><table>${fila('Nombre', nombre)}${fila('NIF', F['DNI'])}${fila('Fecha de nacimiento', fN(F['NACIMIENTO']))}${fila('Email', F['EMAIL'])}${fila('Teléfono', F['TELF'])}${fila('Tutor legal', F['TUTOR'])}${fila('NIF del tutor', F['NIF TUTOR'])}${fila('Teléfono de la reserva', F['TELF RESERVA'])}${fila('¿Cómo nos has conocido?', v('CONOCIDO'))}${fila('¿Quién te recomendó?', F['RECOMENDÓ'])}</table>
-<h2>Cuestionario de salud</h2><table>${CF_SALUD.map(x => fila(x[1], v(x[0]))).join('')}${fila('¿Tu consulta está relacionada con el suelo pélvico?', v('SUELO PÉLVICO'))}</table>
+<h2>Cuestionario de salud</h2><table>${saludDoc(CF_SALUD, v).map(x => fila(x[1], v(x[0]))).join('')}${fila('¿Tu consulta está relacionada con el suelo pélvico?', v('SUELO PÉLVICO'))}</table>
 ${/^s[ií]$/i.test(v('SUELO PÉLVICO')) ? `<h2>Consentimiento informado – Fisioterapia de suelo pélvico</h2>${(LEGAL || legalDe()).sp.map(t => `<p>${t}</p>`).join('')}${F['ACEPTACIÓN S.P.'] ? CF_SP_OK.map(t => `<p>☑ ${t}</p>`).join('') : ''}` : ''}
 <h2>Información al paciente sobre el tratamiento</h2>${(LEGAL || legalDe()).trat.map(t => `<p>${t}</p>`).join('')}<h2>Política de cancelaciones</h2><p>${CF_CANCEL}</p><h2>Declaro que</h2>${(LEGAL || legalDe()).decl.map(t => `<p>${t}</p>`).join('')}
 ${(LEGAL || legalDe()).rgpd.map(x => `<h2>${x[0]}</h2><p>${x[1]}</p>`).join('')}
@@ -1865,7 +1869,7 @@ ${(LEGAL || legalDe()).rgpd.map(x => `<h2>${x[0]}</h2><p>${x[1]}</p>`).join('')}
 }
 
 // ── FORMULARIOS DE SUELO PÉLVICO Y ALTA ONCOLÓGICA (propios, sustituyen a Tally Gex8jo y Dq4gE5) ──
-const CO_SALUD_SP = [['EMBARAZO', '¿Estás embarazada o en periodo de lactancia?'], ['MARCAPASOS', '¿Tienes marcapasos u otro implante electrónico?'], ['PROBLEMAS CIRCULACIÓN', '¿Tienes problemas circulatorios graves?'], ['HIPERTENSIÓN', '¿Tienes hipertensión no controlada o arritmias significativas?'], ['PRÓTESIS', '¿Tienes prótesis, implantes metálicos u otros materiales en la zona a tratar?'], ['FRACTURAS/CIRUGÍA', '¿Has tenido fracturas o cirugías recientes en la zona a tratar?'], ['CÁNCER', '¿Has sido diagnosticado con cáncer o estás recibiendo tratamiento oncológico?', ['Sí', 'No', 'Alta']], ['ENFERMEDAD NEUROLÓGICA', '¿Tienes enfermedades neurológicas o musculares graves?'], ['MEDICAMENTO CUAGULACIÓN', '¿Tomas medicación que afecte la coagulación o tenga efectos importantes sobre la circulación?'], ['ALERGIA', '¿Tienes alergias graves a medicamentos o materiales?'], ['DOLOR CRÓNICO', '¿Tienes dolor crónico o limitaciones funcionales importantes?']];
+const CO_SALUD_SP = [['EMBARAZO', '¿Estás embarazada?'], ['LACTANCIA', '¿Estás en periodo de lactancia?'], ['MARCAPASOS', '¿Tienes marcapasos u otro implante electrónico?'], ['PROBLEMAS CIRCULACIÓN', '¿Tienes problemas circulatorios graves?'], ['HIPERTENSIÓN', '¿Tienes hipertensión no controlada o arritmias significativas?'], ['PRÓTESIS', '¿Tienes prótesis, implantes metálicos u otros materiales en la zona a tratar?'], ['FRACTURAS/CIRUGÍA', '¿Has tenido fracturas o cirugías recientes en la zona a tratar?'], ['CÁNCER', '¿Has sido diagnosticado con cáncer o estás recibiendo tratamiento oncológico?', ['Sí', 'No', 'Alta']], ['ENFERMEDAD NEUROLÓGICA', '¿Tienes enfermedades neurológicas o musculares graves?'], ['MEDICAMENTO CUAGULACIÓN', '¿Tomas medicación que afecte la coagulación o tenga efectos importantes sobre la circulación?'], ['ALERGIA', '¿Tienes alergias graves a medicamentos o materiales?'], ['DOLOR CRÓNICO', '¿Tienes dolor crónico o limitaciones funcionales importantes?']];
 const CO_ALTA_SIT = ['Declaro haber recibido el alta médica en la unidad oncológica correspondiente, no estar actualmente bajo tratamiento activo contra el cáncer (quimioterapia, radioterapia, inmunoterapia u otros), y que no existe contraindicación médica actual para la aplicación de terapias físicas o magnéticas.', 'Declaro asimismo que he informado al profesional de FISIO365 de mi historia clínica relevante y de los tratamientos que sigo actualmente.'];
 const CO_ALTA_TRAT = ['Las terapias físicas y magnéticas (como la bomba diamagnética) son tratamientos no invasivos: no implican cirugía, inyecciones ni radiación ionizante. Su objetivo es favorecer la recuperación de los tejidos, reducir el dolor y mejorar la circulación.', 'Suelen tolerarse bien, aunque de forma excepcional pueden aparecer molestias leves, enrojecimiento, sensación de calor o una reactivación temporal del dolor. Aunque no existe evidencia de riesgo específico para personas con alta oncológica, FISIO365 no puede garantizar una respuesta clínica determinada ni se hace responsable de reacciones individuales imprevisibles.'];
 const CO_ALTA_OK = ['He leído y comprendido la información anterior y he podido resolver mis dudas.', 'Autorizo voluntariamente a FISIO365 a aplicarme estos tratamientos tras mi alta oncológica, bajo mi propia responsabilidad.', 'Eximo al centro y a sus profesionales de cualquier responsabilidad derivada de efectos secundarios no previsibles, recaídas o complicaciones no atribuibles a negligencia.'];
@@ -1968,7 +1972,7 @@ function paginaCDocOtro(F, firmaSrc) {
 <h1>${al ? 'Alta oncológica' : 'Consentimiento informado – Fisioterapia de suelo pélvico'}</h1><p class="sub">FISIO365 · Fourth Dynamic, S.L. · Firmado el ${e(fN(F['FECHA']))}</p>
 <h2>Datos del paciente</h2><table>${fila('Nombre', nombre)}${fila('NIF / NIE', F['DNI'])}${fila('Teléfono', F['TELF'])}${fila('Email', F['EMAIL'])}${al ? fila('Fecha del alta oncológica', fN(F['FECHA ALTA'])) + fila('Informe de alta', (F['INFORME'] || []).length ? (F['INFORME'].length + ' archivo(s) adjunto(s)') : '') : ''}</table>
 ${al ? `<h2>Situación médica actual</h2>${CO_ALTA_SIT.map(t => `<p>${t}</p>`).join('')}<h2>Sobre el tratamiento</h2>${(LEGAL || legalDe()).altaTrat.map(t => `<p>${t}</p>`).join('')}<h2>Declaro que</h2>${CO_ALTA_OK.map(t => `<p>☑ ${t}</p>`).join('')}`
-    : `<h2>Cuestionario de salud</h2><table>${CO_SALUD_SP.map(x => fila(x[1], v(x[0]))).join('')}${fila('¿Hay algo más de tu salud que debamos saber?', F['NOTAS SALUD'])}</table><h2>Consentimiento informado</h2>${CF_SP_TXT.map(t => `<p>${t}</p>`).join('')}${F['ACEPTACIÓN S.P.'] ? CF_SP_OK.map(t => `<p>☑ ${t}</p>`).join('') : ''}`}
+    : `<h2>Cuestionario de salud</h2><table>${saludDoc(CO_SALUD_SP, v).map(x => fila(x[1], v(x[0]))).join('')}${fila('¿Hay algo más de tu salud que debamos saber?', F['NOTAS SALUD'])}</table><h2>Consentimiento informado</h2>${CF_SP_TXT.map(t => `<p>${t}</p>`).join('')}${F['ACEPTACIÓN S.P.'] ? CF_SP_OK.map(t => `<p>☑ ${t}</p>`).join('') : ''}`}
 <h2>Firma</h2>${firmaSrc ? `<div class="f"><img src="${e(firmaSrc)}" alt="Firma"></div>` : ''}<p>Firmado el ${e(fN(F['FECHA']))}.</p>${F['REGISTRO FIRMA'] ? `<p class="reg">${e(F['REGISTRO FIRMA'])}</p>` : ''}
 <button class="bt" onclick="print()">Guardar en PDF o imprimir</button></div></body></html>`;
 }
