@@ -254,6 +254,7 @@ const TALLY_FORMS = { Gex8jo: 'Suelo pélvico', Dq4gE5: 'Alta oncológica' };
 const C_SALUD = [['MARCAPASOS', 'Marcapasos'], ['EMBARAZO', 'Embarazo'], ['LACTANCIA', 'Lactancia'], ['CÁNCER', 'Cáncer'], ['MEDICAMENTO CUAGULACIÓN', 'Toma anticoagulantes'], ['ARRITMIAS', 'Arritmias'], ['HIPERTENSIÓN', 'Hipertensión'], ['PROBLEMAS CIRCULACIÓN', 'Problemas de circulación'], ['PRÓTESIS', 'Prótesis'], ['FRACTURAS/CIRUGÍA', 'Fracturas o cirugías'], ['ENFERMEDAD NEUROLÓGICA', 'Enfermedad neurológica'], ['ALERGIA', 'Alergias'], ['DOLOR CRÓNICO', 'Dolor crónico']];
 const nuevoPin = () => String(1000 + Math.floor(Math.random() * 9000));
 const cNm = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+const nmA = cNm; // nombre de un desplegable (vale también fuera de los bloques que tienen el suyo)
 const cDig = v => String(v || '').replace(/\D/g, '').slice(-9);
 const cTxt = v => String(v || '').trim().toLowerCase();
 const cEsc = v => String(v || '').replace(/\\/g, '').replace(/'/g, "\\'");
@@ -2636,9 +2637,9 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
   if (grupoP) { // pack en partes: una sola línea con lo que paga hoy
     const pr0 = grupoP === recId ? f : ((await at(`${FACTURAS_TABLE}/${grupoP}?returnFieldsByFieldId=true`).catch(() => ({}))).fields || {});
     const con = nombreSel(pr0[FF.c1]) || 'Sesiones', nS = Number(pr0[FF.n1] || 0), hoyImp = Math.round(lineas.reduce((t, l) => t + l.uds * l.precio, 0) * 100) / 100;
-    const otras = grupoP === recId ? [] : await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PACK GRUPO}='${grupoP}')`)}`).catch(() => []);
+    const otras = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PACK GRUPO}='${grupoP}')`)}`).catch(() => [])).filter(r => r.id !== recId);
     const tot = Number(pr0[FF_PK.total] || 0), antes = Number(pr0[FF_PK.antes] || 0), pagado = antes + hoyImp + otras.reduce((t, r) => t + Number(r.fields['TOTAL'] || 0), 0);
-    const que = pagado >= tot - 0.009 ? (grupoP === recId && !antes ? '' : ' · pago del resto') : ' · pago a cuenta';
+    const que = pagado >= tot - 0.009 ? (grupoP === recId && !antes && !otras.length ? '' : ' · pago del resto') : ' · pago a cuenta';
     const it = { name: `${con} · pack de ${nS} sesiones${que}`.slice(0, 150), units: 1, price: hoyImp }; if (taxes) it.taxes = taxes; items = [it]; }
   if (descuento) { const it = { name: descuento.texto, units: 1, price: -Math.abs(descuento.importe) }; if (taxes) it.taxes = taxes; items.push(it); }
   const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas, rgpdH].filter(Boolean).join('\n\n\n'), currency: 'EUR', language: 'es', items });
@@ -4687,7 +4688,7 @@ module.exports = async function handler(req, res) {
               inicio = conPago ? await inicioControl().catch(() => '') : '';
               global._sesPac = global._sesPac || {}; const C = global._sesPac, ahora = Date.now(), falta = pv.filter(id => q.fresco || !C[id] || ahora - C[id].t > 3 * 60e3);
               const grupos = []; for (let i = 0; i < falta.length; i += 15) grupos.push(falta.slice(i, i + 15));
-              const sesDe = f => [[f['CONCEPTO 1'], f['Nº SESIONES 1'], f['PRECIO SESIÓN 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2'], f['PRECIO SESIÓN 2']]].filter(([c, n]) => /^Sesi/i.test(nmA(c) || '') && Number(n) > 0).map(([c, n, pr]) => ({ n: Number(n), precio: Number(pr) || 0, concepto: nmA(c) }));
+              const sesDe = f => (f['EN PACK'] ? [] : [[f['CONCEPTO 1'], f['Nº SESIONES 1'], f['PRECIO SESIÓN 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2'], f['PRECIO SESIÓN 2']]]).filter(([c, n]) => /^Sesi/i.test(nmA(c) || '') && Number(n) > 0).map(([c, n, pr]) => ({ n: Number(n), precio: Number(pr) || 0, concepto: nmA(c) }));
               for (let k = 0; k < grupos.length; k += 3) await Promise.all(grupos.slice(k, k + 3).map(async g => {
                 const [rs, fs, ps] = await Promise.all([
                   todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),OR(${g.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PacienteRec`),
@@ -4741,7 +4742,7 @@ module.exports = async function handler(req, res) {
           const lotes = [], P = pr.fields || {}, nP = Number(P['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(P['BONO PREVIO YA USADAS'] || 0));
           if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true, vale: !!P['BONO PREVIO VALE'] });
           fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => {
-            [[r.fields['CONCEPTO 1'], r.fields['Nº SESIONES 1']], [r.fields['CONCEPTO 2'], r.fields['Nº SESIONES 2']]].forEach(([c, n]) => { if (/^Sesi/i.test(nmA(c) || '') && Number(n) > 0) lotes.push({ n: Number(n), fid: r.id }); }); });
+            (r.fields['EN PACK'] ? [] : [[r.fields['CONCEPTO 1'], r.fields['Nº SESIONES 1']], [r.fields['CONCEPTO 2'], r.fields['Nº SESIONES 2']]]).forEach(([c, n]) => { if (/^Sesi/i.test(nmA(c) || '') && Number(n) > 0) lotes.push({ n: Number(n), fid: r.id }); }); });
           let claves = rs.map(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA)).filter(k => k !== clave);
           // Pack compartido: primero se gasta el pack común (citas de todos por orden de fecha); lo que no cubre va a lo suyo
           const shares = await compartidos(pid).catch(() => []);
@@ -4771,7 +4772,7 @@ module.exports = async function handler(req, res) {
             const pt = await at(`${PACIENTES}/${q.titular}`); const T = pt.fields || {};
             if (pcLeer(T['PACK COMPARTE']).length) return res.status(200).json({ ok: false, error: 'Este paciente ya usa el pack de otra persona: compártelo desde la ficha de quien lo pagó' });
             const fs = await todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${q.titular}')`)}`).catch(() => []);
-            const sesF = f => [[f['CONCEPTO 1'], f['Nº SESIONES 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2']]].reduce((t, [c, n]) => t + (/^Sesi/i.test(nmA(c) || '') ? Number(n) || 0 : 0), 0);
+            const sesF = f => (f['EN PACK'] ? [] : [[f['CONCEPTO 1'], f['Nº SESIONES 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2']]]).reduce((t, [c, n]) => t + (/^Sesi/i.test(nmA(c) || '') ? Number(n) || 0 : 0), 0);
             const pk = fs.filter(r => sesF(r.fields) > 1).sort((a, b) => String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || '').localeCompare(String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '')))[0];
             const nP = Number(T['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(T['BONO PREVIO YA USADAS'] || 0));
             const tt = Math.round(Number(q.total) || 0), us = Math.max(0, Math.round(Number(q.usadas) || 0)), qd = tt > 0 ? tt - us : Math.round(Number(q.quedan) || 0);
@@ -6398,10 +6399,16 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
       const bonoPrevio = Number((pr.fields || {})['SESIONES BONO PREVIO'] || 0);
       const aMedias = await packAMedias(pac).catch(() => []);
+      const filasP = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}')`)}`).catch(() => []);
+      const sesFila = F => [[F['CONCEPTO 1'], F['Nº SESIONES 1']], [F['CONCEPTO 2'], F['Nº SESIONES 2']]].reduce((t2, [c, n]) => t2 + (/^Sesi/i.test(nmA(c) || '') ? Number(n) || 0 : 0), 0);
+      const facPanel = {}, sueltos = [];
+      filasP.forEach(r => { const F = r.fields, s0 = sesFila(F); if (!s0) return; const x = { id: r.id, ses: s0, total: Number(F['TOTAL'] || 0), num: F['Nº FACTURA'] || '', fecha: String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10), enPack: !!F['EN PACK'], grupo: F['PACK GRUPO'] || '' };
+        if (F['HOLDED ID']) facPanel[F['HOLDED ID']] = x; if (!x.enPack && !x.grupo && s0 <= 3) sueltos.push(x); });
+      sueltos.sort((a, b) => b.fecha.localeCompare(a.fecha));
       // Sesiones gratis (no van a Holded): se ven en la ficha junto a las facturas
       const gratis = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{MODO DE PAGO}='Gratis')`)}`).catch(() => [])).map(r => { const f = r.fields;
         return { id: r.id, fecha: String(f['FECHA DE COBRO'] || f['FECHA'] || String(r.createdTime).slice(0, 10)).slice(0, 10), lineas: [[f['CONCEPTO 1'], f['Nº SESIONES 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2']]].filter(([c]) => c).map(([c, n]) => ({ c: (c && c.name) || c, n: Number(n) || 1 })), nota: f['NOTAS'] || '' }; }).sort((a, b) => b.fecha.localeCompare(a.fecha));
-      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, bonoPrevio, tarjetas, gratis, aMedias, facturas: [] });
+      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, saldo, bonoPrevio, tarjetas, gratis, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [] });
       try {
         const ids = await contactosDelPaciente(pac); const facturas = await listarFacturas(ids, true);
         // Tickets borrados en Holded → su fila de FACTURAS pasa a «Anulada» y deja de contar en el saldo
@@ -6413,11 +6420,16 @@ Devuelve solo el texto del mensaje, sin comillas.`;
           for (let i = 0; i < muertas.length; i += 10) await at(FACTURAS_TABLE, { method: 'PATCH', body: JSON.stringify({ typecast: true, records: muertas.slice(i, i + 10).map(r => ({ id: r.id, fields: { [FF.estado]: 'Anulada' } })) }) });
           if (muertas.length) saldo2 = await saldoPaciente(pac).catch(() => saldo);
         } catch (e) {}
-        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, bonoPrevio, tarjetas, gratis, aMedias, enHolded: ids.length, facturas });
+        return res.status(200).json({ ok: true, holded: true, dni, saldo: saldo2, bonoPrevio, tarjetas, gratis, aMedias, sueltos: sueltos.slice(0, 8), facPanel, enHolded: ids.length, facturas });
       }
-      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, bonoPrevio, tarjetas, gratis, aMedias, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, saldo, bonoPrevio, tarjetas, gratis, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
+    if (q.enPack !== undefined) { // «Va dentro de un pack»: ese cobro ya lo cubre un pack, sus sesiones no cuentan aparte
+      if (!/^rec[A-Za-z0-9]{14}$/.test(q.facturaId || '')) return res.status(400).json({ ok: false });
+      const x = await at(`${FACTURAS_TABLE}/${q.facturaId}`); if (x.error || (x.fields || {})['PacienteId'] !== pac) return res.status(404).json({ ok: false });
+      const d = await at(`${FACTURAS_TABLE}/${q.facturaId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'EN PACK': !!q.enPack } }) }); global._sesPac = {};
+      return res.status(200).json({ ok: !d.error }); }
     if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado (falta la clave en Vercel).' });
     let lineas = (Array.isArray(q.lineas) ? q.lineas : []).slice(0, 2);
     // Pack pagado en partes: cada pago es su propio ticket (lo que entra ese día) y queda unido al pack.
@@ -6438,10 +6450,17 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const n = Math.round(Number(P.sesiones)), tot = r2(String(P.total || '').replace(',', '.')), antes = r2(String(P.antes || 0).replace(',', '.')) || 0, con = String(P.concepto || '');
         if (!/^Sesi/i.test(con)) return res.status(400).json({ ok: false, error: 'Elige el tipo de sesión del pack' });
         if (!(n >= 2 && n <= 60) || !(tot > 0)) return res.status(400).json({ ok: false, error: 'Pon de cuántas sesiones es el pack y su precio' });
-        if (antes < 0 || antes + imp > tot + 0.001) return res.status(200).json({ ok: false, error: `Lo pagado (${r2(antes + imp)} €) es más que el pack (${tot} €)` });
+        // Cobros de sesiones sueltas de antes que pasan a ser parte del pack (sus sesiones dejan de contar aparte)
+        const absorber = [];
+        for (const fid of (Array.isArray(P.absorber) ? P.absorber : []).slice(0, 10)) { if (!/^rec[A-Za-z0-9]{14}$/.test(fid)) continue;
+          const x = await at(`${FACTURAS_TABLE}/${fid}`).catch(() => ({})), X = x.fields || {};
+          if (x.error || X['PacienteId'] !== pac || nmA(X['ESTADO']) !== 'Emitida' || X['EN PACK'] || X['PACK GRUPO']) return res.status(200).json({ ok: false, error: 'Ese cobro anterior ya no se puede unir al pack' });
+          absorber.push({ id: fid, total: Number(X['TOTAL'] || 0) }); }
+        const yaAbs = r2(absorber.reduce((t2, x) => t2 + x.total, 0));
+        if (antes < 0 || antes + yaAbs + imp > tot + 0.001) return res.status(200).json({ ok: false, error: `Lo pagado (${r2(antes + yaAbs + imp)} €) es más que el pack (${tot} €)` });
         const pu = r2(tot / n), resto = r2(imp - pu * n);
         lineas = [{ concepto: con, uds: n, precio: pu }]; if (Math.abs(resto) >= 0.01) lineas.push({ concepto: 'Otros', uds: 1, precio: resto });
-        pk = { grupo: '', total: tot, antes, concepto: con, sesiones: n, pagado: r2(antes + imp), resto: r2(tot - antes - imp) };
+        pk = { grupo: '', total: tot, antes, concepto: con, sesiones: n, pagado: r2(antes + yaAbs + imp), resto: r2(tot - antes - yaAbs - imp), absorber };
       }
     }
     if (!lineas.length) return res.status(400).json({ ok: false, error: 'Falta el concepto' });
@@ -6486,7 +6505,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     global._sesPac = {}; const cr = await at(FACTURAS_TABLE, { method: 'POST', body: JSON.stringify({ records: [{ fields: campos }], typecast: true }) });
     const rec = cr.records && cr.records[0] && cr.records[0].id;
     if (!rec) return res.status(500).json({ ok: false, error: (cr.error && cr.error.message) || 'No se ha podido guardar en Airtable' });
-    if (pk && !pk.grupo) await at(`${FACTURAS_TABLE}/${rec}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PACK GRUPO': rec } }) });
+    if (pk && !pk.grupo) { await at(`${FACTURAS_TABLE}/${rec}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PACK GRUPO': rec } }) });
+      for (const x of pk.absorber || []) await at(`${FACTURAS_TABLE}/${x.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PACK GRUPO': rec, 'EN PACK': true } }) }); }
     const turno = emitiendo.then(() => emitirFactura(rec, q.quien, q.fisioElegido ? String(q.fisio || '') : undefined, descuento));
     emitiendo = turno.catch(() => {});
     try { const r = await turno;

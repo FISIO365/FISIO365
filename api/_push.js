@@ -58,7 +58,7 @@ async function todosAT(tabla, query) {
   return recs;
 }
 const sesionesDe = f => {
-  let n = 0;
+  let n = 0; if (f['EN PACK']) return 0; // pagado como parte de un pack: sus sesiones ya las cuenta el pack
   if (/^Sesi/i.test(f['CONCEPTO 1'] || '')) n += Number(f['Nº SESIONES 1'] || 0);
   if (/^Sesi/i.test(f['CONCEPTO 2'] || '')) n += Number(f['Nº SESIONES 2'] || 0);
   return n;
@@ -327,7 +327,7 @@ async function valorSesiones(citasRango, hasta, precios, opts) {
   // Cobros del panel
   const yaHolded = new Set();
   facs.forEach(r => { const f = r.fields, id = f['PacienteId']; if (f['HOLDED ID']) yaHolded.add(String(f['HOLDED ID'])); if (!id || !pacs.includes(id)) return; const fc = fechaCobro(f);
-    [[f['CONCEPTO 1'], f['Nº SESIONES 1'], f['PRECIO SESIÓN 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2'], f['PRECIO SESIÓN 2']]].forEach(([c, n, p]) => { if (!/^Sesi/i.test(String(c || ''))) return;
+    (f['EN PACK'] ? [] : [[f['CONCEPTO 1'], f['Nº SESIONES 1'], f['PRECIO SESIÓN 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2'], f['PRECIO SESIÓN 2']]]).forEach(([c, n, p]) => { if (!/^Sesi/i.test(String(c || ''))) return;
       n = num(n); p = num(p); const gr = String((f['MODO DE PAGO'] && f['MODO DE PAGO'].name) || f['MODO DE PAGO'] || '') === 'Gratis'; for (let i = 0; i < n; i++) mete(id, gr ? { f: fc, p: 0, gratis: true, o: 'Gratis' } : { f: fc, p, o: 'Cobro del panel' + (n > 1 ? ` · pack de ${n}` : '') }); }); });
   // Tickets de Holded hechos fuera del panel
   if (opts.cobros) { try { const h = await opts.cobros(pacT, yaHolded); Object.entries(h).forEach(([id, us]) => us.forEach(u => mete(id, u))); } catch (e) { console.log('cobros Holded', e.message); } }
