@@ -468,3 +468,13 @@ input.i:focus{border-color:var(--c);background:#fff}
 .pb-es.si{background:#eef8f1}.pb-es.si span{background:#16803c}
 .pb-es.no{background:#fff4ef}.pb-es.no span{border:1.8px dashed #e0a28c}.pb-es.no small{color:#b03a2e;font-weight:600}
 .pb-est:has(.pb-es:only-child){grid-template-columns:1fr}
+/* Menú abajo, como una app */
+.wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:640px;box-sizing:border-box;display:grid;gap:2px;padding:7px 10px calc(7px + env(safe-area-inset-bottom));background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid #eee7e0;z-index:40}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;padding:5px 0 3px;border-radius:12px;cursor:pointer;font:500 10.5px Poppins,sans-serif;color:#9a8d83;min-width:0;white-space:nowrap}
+.nav-i{position:relative;width:44px;height:28px;border-radius:99px;display:grid;place-items:center;transition:background .15s}
+.nav-i svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nav button.on{color:var(--c);font-weight:600}.nav button.on .nav-i{background:#f9e7df}
+.nav-i i{position:absolute;top:-3px;right:2px;min-width:16px;height:16px;border-radius:99px;background:var(--c);color:#fff;font:700 9.5px/16px Poppins,sans-serif;font-style:normal;text-align:center;padding:0 4px;border:2px solid #fff}
+.nav-i i[hidden]{display:none}
+.toast{bottom:calc(86px + env(safe-area-inset-bottom))}

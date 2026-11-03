@@ -111,8 +111,15 @@ const pinta0=()=>pinta();
 function pinta(){
  const n=window._pend||0;
  $app.innerHTML=`<div class="wrap"><div class="top"><div class="top-e">${S.equipo&&S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<button type="button" class="top-n" id="topN" aria-label="Cambiar el nombre del equipo"><small>Plan de batalla</small><b>${escH(S.equipo?S.equipo.nombre:'')}${S.yo.admin?'<svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>':''}</b></button></div><div class="top-d"><button class="cd-btn" id="cdB" aria-label="Condiciones" title="Condiciones"><svg viewBox="0 0 24 24"><path d="M4 13l2.4-7.4A2.2 2.2 0 0 1 8.5 4h7a2.2 2.2 0 0 1 2.1 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4.5l1.5 2.5h4l1.5-2.5H20"/></svg><i id="nCd" hidden></i></button><button class="yo-btn" id="yo" aria-label="Tu cuenta">${S.yo.foto?`<img src="${escH(S.yo.foto)}" alt="">`:escH(ini(S.yo.nombre))}</button></div></div>
-  <div class="tabs" style="grid-template-columns:repeat(${verEst().length>1?5:4},1fr)"><button data-t="plan" class="${S.tab==='plan'?'on':''}">Plan <i id="nPend"${n?'':' hidden'}>${n}</i></button><button data-t="est" class="${S.tab==='est'?'on':''}">Estadísticas</button>${verEst().length>1?`<button data-t="ctl" class="${S.tab==='ctl'?'on':''}">Control</button>`:''}<button data-t="arch" class="${S.tab==='arch'?'on':''}">Archivos</button><button data-t="equipo" class="${S.tab==='equipo'?'on':''}">Equipo</button></div><div id="cont"></div></div>`;
- $app.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(S.tab===b.dataset.t)return;S.tab=b.dataset.t;guardaLS('tab',S.tab);pinta();});
+  <div id="cont"></div></div>
+  <nav class="nav" style="grid-template-columns:repeat(${verEst().length>1?5:4},1fr)">${[
+   ['plan','Plan','<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M9.5 8.5l1.5 1.5 3-3M9.5 14.5l1.5 1.5 3-3"/>'],
+   ['est','Estadísticas','<path d="M4 4v16h16"/><path d="M7.5 15l3.5-4 3 2.5L19 8"/>'],
+   verEst().length>1?['ctl','Control','<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 11l1.5 1.5 3-3M8.5 16.5h7"/>']:null,
+   ['arch','Archivos','<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>'],
+   ['equipo','Equipo','<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.8a3 3 0 0 1 0 5.4M17.5 14a5.5 5.5 0 0 1 3 5"/>']
+  ].filter(Boolean).map(([k,t,ic])=>`<button data-t="${k}" class="${S.tab===k?'on':''}"><span class="nav-i"><svg viewBox="0 0 24 24">${ic}</svg>${k==='plan'?`<i id="nPend"${n?'':' hidden'}>${n}</i>`:''}</span>${t}</button>`).join('')}</nav>`;
+ $app.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(S.tab===b.dataset.t){window.scrollTo({top:0,behavior:'smooth'});return;}S.tab=b.dataset.t;guardaLS('tab',S.tab);pinta();window.scrollTo(0,0);});
  $app.querySelector('#yo').onclick=menuCuenta;$app.querySelector('#cdB').onclick=bandejaCond;$app.querySelector('#topN').onclick=()=>S.yo.admin?nombreEquipo():soloAdmin();contarCond();
  const c=$app.querySelector('#cont');if(S.tab==='equipo')renderEquipo(c);else if(S.tab==='est')renderEstadisticas(c);else if(S.tab==='arch')renderArchivos(c);else if(S.tab==='ctl'&&verEst().length>1)renderControl(c);else renderPlan(c);}
 function badge(n){window._pend=n;const e=document.getElementById('nPend');if(e){e.textContent=n;e.hidden=!n;}}
