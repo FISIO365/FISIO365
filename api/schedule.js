@@ -273,7 +273,7 @@ function consentResumen(r, tabla) {
     if (!alta && ['MARCAPASOS', 'EMBARAZO', 'CÁNCER'].includes(k)) rojo.push(t); });
   const sp = cNm(F['SUELO PÉLVICO']).trim();
   const nombre = String(F['﻿NOMBRE'] || F['NOMBRE'] || '') + ' ' + String(F['APELLIDOS'] || '');
-  return { id: r.id, tabla: otro ? CONS_O : CONS_T, tipo, fecha, salud, rojo, sueloPelvico: tipo === 'Suelo pélvico' || /^s[ií]$/i.test(sp), aceptaSP: !!F['ACEPTACIÓN S.P.'],
+  return { id: r.id, tabla: otro ? CONS_O : CONS_T, tipo, fecha, salud, rojo, emb: cNm(F['EMBARAZO']).trim(), lact: cNm(F['LACTANCIA']).trim(), sueloPelvico: tipo === 'Suelo pélvico' || /^s[ií]$/i.test(sp), aceptaSP: !!F['ACEPTACIÓN S.P.'],
     fechaAlta: F['FECHA ALTA'] || '', notasSalud: F['NOTAS SALUD'] || '', sub: String(F['SUBMISSION ID'] || '').trim(), papel: !!F['PAPEL'], ignorar: !!F['IGNORAR'], noDe: String(F['NO ES DE'] || '').split(/[\s,]+/).filter(Boolean),
     marketing: otro ? null : { conocido: cNm(F['CONOCIDO']), newsletter: cNm(F['NEWSLETTER']), imagenes: cNm(F['IMAGENES']), citas: cNm(F['CITAS']) },
     email: cTxt(F['EMAIL']), dni: cTxt(F['DNI']).replace(/\s/g, ''), tel: cDig(F['TELF']), telRes: cDig(F['TELF RESERVA']), tels: [cDig(F['TELF']), cDig(F['TELF RESERVA'])].filter((t, i, a) => t.length === 9 && a.indexOf(t) === i), telRaw: String(F['TELF'] || '').trim(), raw: { DNI: F['DNI'] || '', EMAIL: F['EMAIL'] || '', NACIMIENTO: F['NACIMIENTO'] || '', TELF: F['TELF'] || '' }, nombre: cTxt(nombre).replace(/\s+/g, ' ') };
@@ -5821,12 +5821,24 @@ module.exports = async function handler(req, res) {
         const d = await r.json().catch(() => ({}));
         return res.status(200).json({ ok: r.ok && !d.error, error: d.error && (d.error.message || d.error.type) });
       }
+      if (action === 'seg-consent-salud') { // todo lo de salud que han marcado en el consentimiento, paciente a paciente
+        const lista = (await consTodos()).filter(c => !c.ignorar), porPac = {}, sueltos = [];
+        lista.forEach(c => { if (c.pac && c.pac.length) c.pac.forEach(id => (porPac[id] = porPac[id] || []).push(c)); else if (c.salud.length) sueltos.push(c); });
+        const ids = Object.keys(porPac), nom = {};
+        for (let i = 0; i < ids.length; i += 50) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.slice(i, i + 50).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=FULL%20NAME`).catch(() => [])).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; });
+        const fila = (c, pid, sal, nombre) => ({ id: c.id, tipo: c.tipo, fecha: c.fecha, pacienteId: pid, nombre, salud: sal.map(x => ({ k: x.k, t: x.t, grave: !!x.grave })), revisar: /^s[ií]$/i.test(c.emb || '') && !c.lact });
+        const out = ids.map(id => { const r = resumenPaciente(porPac[id]); if (!r || !r.salud.length) return null; return fila(r, id, r.salud, nom[id] || r.nombre || ''); }).filter(Boolean)
+          .concat(sueltos.map(c => Object.assign(fila(c, '', c.salud, c.nombre || ''), { sinFicha: true })));
+        return res.status(200).json({ ok: true, lista: out.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))) });
+      }
       if (action === 'seg-consent-quitar') {
         // Quitar embarazo o cáncer de su consentimiento (cáncer activo → «de alta» → nada)
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '') || !['EMBARAZO', 'CÁNCER'].includes(q.campo)) return res.status(400).json({ ok: false });
         let r = await at(`${CONS_T}/${q.id}`); if (r.error) r = await at(`${CONS_O}/${q.id}`); if (r.error) return res.status(404).json({ ok: false }); const T = (r.fields && (r.fields['TIPO'] || r.fields['FECHA ALTA'] !== undefined || r.fields['Creada'] === undefined && r.fields['FECHA'])) ? CONS_O : CONS_T; // Airtable devuelve el registro aunque la tabla de la URL no sea la suya
         // «Es lactancia»: en los firmados con la pregunta junta, el «sí» era de lactancia y no de embarazo
-        if (q.a === 'lactancia' && q.campo === 'EMBARAZO') { const d = await at(`${T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { EMBARAZO: 'No', LACTANCIA: 'Sí' }, typecast: true }) }); _alertas.t = 0; _cons.t = 0; return res.status(200).json({ ok: !d.error, valor: 'Lactancia' }); }
+        // Revisar los firmados con la pregunta junta: era embarazo, era lactancia o ninguna de las dos
+        const REV = { lactancia: [{ EMBARAZO: 'No', LACTANCIA: 'Sí' }, 'Lactancia'], embarazo: [{ EMBARAZO: 'Sí', LACTANCIA: 'No' }, 'Embarazo'], ninguna: [{ EMBARAZO: 'No', LACTANCIA: 'No' }, 'Ninguna'] };
+        if (REV[q.a] && q.campo === 'EMBARAZO') { const d = await at(`${T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: REV[q.a][0], typecast: true }) }); _alertas.t = 0; _cons.t = 0; return res.status(200).json({ ok: !d.error, valor: REV[q.a][1] }); }
         const ahora = cNm(r.fields[q.campo]).trim(), nuevo = q.campo === 'CÁNCER' && /^s[ií]$/i.test(ahora) ? 'Alta' : 'No';
         const d = await at(`${T}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [q.campo]: nuevo }, typecast: true }) });
         _alertas.t = 0; _cons.t = 0; return res.status(200).json({ ok: !d.error, valor: nuevo });
