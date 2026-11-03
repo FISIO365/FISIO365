@@ -107,11 +107,22 @@ function repartoCompartido(shares, citas) {
   });
   return cubre;
 }
-async function citasDeMiembros(miembros, estados, desde) {
+async function _citasDeMiembros(miembros, estados, desde) {
   const conds = [`OR(${estados.map(e => `TRIM({ESTADO}&'')='${e}'`).join(',')})`, `OR(${miembros.map(m => `FIND('${m}',ARRAYJOIN({PacienteRec}))`).join(',')})`];
   if (desde) conds.push(`IS_AFTER({FECHA},DATEADD('${desde}',-1,'days'))`);
   const hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : '00:00'; };
   return (await todosAT(CITAS, `filterByFormula=${encodeURIComponent('AND(' + conds.join(',') + ')')}&fields[]=FECHA&fields[]=HORA&fields[]=RELACIÓN - CITA`)).map(c => ({ id: c.id, pid: (c.fields['RELACIÓN - CITA'] || [])[0] || '', k: String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA) }));
+}
+// Las citas que un miembro tiene cubiertas por su propio pack de fuera marcado desde una cita («Era de otro pack») no gastan del pack compartido
+async function citasDeMiembros(miembros, estados, desde) {
+  const L = await _citasDeMiembros(miembros, estados, desde);
+  try {
+    const ps = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('AND({BONO PREVIO DESDE}!=\'\',OR(' + miembros.map(m => `RECORD_ID()='${m}'`).join(',') + '))')}&fields[]=SESIONES BONO PREVIO&fields[]=BONO PREVIO YA USADAS&fields[]=BONO PREVIO DESDE`);
+    const fuera = new Set();
+    ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0) - Number(p.fields['BONO PREVIO YA USADAS'] || 0), d0 = String(p.fields['BONO PREVIO DESDE'] || ''); if (n <= 0 || !d0) return;
+      L.filter(c => c.pid === p.id && c.k >= d0).sort((a, b) => a.k.localeCompare(b.k)).slice(0, n).forEach(c => fuera.add(c.id)); });
+    return fuera.size ? L.filter(c => !fuera.has(c.id)) : L;
+  } catch (e) { return L; }
 }
 const pcResumen = (x, pid) => ({ titular: x.t, yoPague: x.t === pid, con: x.miembros.filter(m => m !== pid).map(m => ({ id: m, nombre: x.nombres[m] || '' })), n: x.tot || x.n, usadas: (x.off || 0) + (x.usadas || 0), quedan: x.quedan != null ? x.quedan : x.n, f: x.f });
 
