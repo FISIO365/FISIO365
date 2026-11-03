@@ -16,34 +16,49 @@ async function pintaBP(el,r){if(!el)return;const yo=S.yo.id,hoy=hoyMad();
  const {data}=await sb.from('pb_partes').select('id,para,creado').eq('persona',yo).eq('dia',hoy).maybeSingle();if(!el.isConnected)return;
  const tarde=new Date().getHours()>=18;
  el.innerHTML=data?`<div class="rp-c bp-ok"><span class="bp-ic ok">${IC.ck}</span><div><b>BP/7R de hoy enviado</b><small>${(data.para||[]).length?'A '+data.para.map(id=>escH(pri(nomDe(id)))).join(', ')+' · ':''}a las ${horaMad(data.creado)}</small></div><button type="button" class="lnk" data-v>Ver</button><button type="button" class="lnk" data-e>Reenviar</button></div>`
-  :`<div class="rp-c bp-env${tarde?' urge':''}"><div class="bp-t"><span class="bp-ic"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z"/><path d="M11.5 13.5L20 4"/></svg></span><div><b>Pasa tu BP/7R de hoy</b><small>Al acabar el día, envía a tu senior lo que has hecho y cómo vas frente a la semana pasada.</small></div></div><button type="button" class="bt full" data-e>Enviar mi BP/7R</button></div>`;
+  :`<div class="rp-c bp-env${tarde?' urge':''}"><div class="bp-t"><span class="bp-ic"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z"/><path d="M11.5 13.5L20 4"/></svg></span><div><b>Pasa tu BP/7R de hoy</b><small>Al acabar el día, envía a tu senior tu plan de mañana, lo que has hecho hoy y tu 7R.</small></div></div><button type="button" class="bt full" data-e>Enviar mi BP/7R</button></div>`;
  const e=el.querySelector('[data-e]');if(e)e.onclick=()=>enviarBP(r,()=>pintaBP(el,r));
  const v=el.querySelector('[data-v]');if(v)v.onclick=()=>abreParte(data.id);}
 
+// El siguiente día de trabajo (el viernes, el sábado y el domingo apuntan al lunes)
+const diaSig=d=>{const w=new Date(d+'T12:00:00Z').getUTCDay();return pbIso(d,w===5?3:w===6?2:1);};
 async function enviarBP(r,hecho){const yo=S.yo.id,hoy=hoyMad(),jefes=new Set(dependeDe(yo));
  const gente=S.miembros.filter(m=>m.activo&&m.id!==yo).sort((a,b)=>(jefes.has(b.id)-jefes.has(a.id))||a.nombre.localeCompare(b.nombre,'es'));
  const m=modal('<h3>Tu BP/7R de hoy</h3><p>Preparándolo…</p>');m.querySelector('.hoja').classList.add('ancha');
  let R7=[];try{R7=await datos7R(yo);}catch(_){}
- const hechas=(r.hechas||[]).map(x=>({t:x.t,h:x.hechaEn})),pend=(r.pendientes||[]).map(x=>({t:x.t}));
- const pt={persona:yo,dia:hoy,hechas,pendientes:pend,sieter:R7,creado:new Date().toISOString(),para:[...jefes]};
+ const dm=diaSig(hoy),hechas=(r.hechas||[]).map(x=>({t:x.t,h:x.hechaEn})),pend=(r.pendientes||[]).map(x=>({t:x.t}));
+ // El plan de mañana: lo que ya tienes para ese día y lo que hoy queda sin hacer (pasa solo)
+ const manana=()=>[...(r.proximas||[]).filter(x=>x.dia<=dm).map(x=>({t:x.t})),...pend.map(x=>({t:x.t,v:1}))];
+ const pt={persona:yo,dia:hoy,dia_manana:dm,hechas,pendientes:pend,manana:manana(),sieter:R7,creado:new Date().toISOString(),para:[...jefes]};
  m.querySelector('.hoja').innerHTML=`<small class="cd-k">BP/7R · ${escH(fechaLarga(hoy))}</small><h3 style="margin-top:4px">Esto es lo que vas a enviar</h3>
   <div class="bp-cuerpo">${cuerpoParte(pt)}</div>
+  <div class="bp-add"><label class="l">Añade lo que harás ${escH(nomDia(dm,hoy))}</label><div class="es-in"><input class="i" maxlength="200" placeholder="Una tarea para ${escH(nomDia(dm,hoy))}…"><button type="button" class="bt">+ Añadir</button></div></div>
   <label class="l">¿Quieres añadir algo? <span style="font-weight:500;color:var(--mut)">(opcional)</span></label><textarea class="i bp-nota" rows="3" maxlength="5000" placeholder="Algo que tu senior deba saber…"></textarea>
   <label class="l">¿A quién se lo envías?</label><div class="chs cd-para">${gente.map(p=>`<button type="button" data-p="${p.id}" class="${jefes.has(p.id)?'on':''}">${IC.ck}${escH(pri(p.nombre))}${p.puesto?` <em class="op-v">${escH(p.puesto)}</em>`:''}</button>`).join('')}</div>
   <div class="err"></div><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Enviar</button></div>`;
+ const ai=m.querySelector('.bp-add input'),ab=m.querySelector('.bp-add button');
+ const anade=async()=>{const t=ai.value.trim();if(!t){ai.focus();return;}ab.disabled=true;
+  const {data,error}=await sb.from('pb_tareas').insert({equipo_id:S.yo.equipo_id,persona:yo,dia:dm,texto:t,por:yo}).select('id,dia,texto').single();ab.disabled=false;
+  if(error){toast('No se ha podido añadir',false);return;}(r.proximas=r.proximas||[]).push({id:data.id,persona:yo,dia:data.dia,t:data.texto,hecha:false,por:yo});
+  ai.value='';pt.manana=manana();m.querySelector('.bp-cuerpo').innerHTML=cuerpoParte(pt);ai.focus();};
+ ab.onclick=anade;ai.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();anade();}};
  const para=jefes;m.querySelectorAll('.cd-para [data-p]').forEach(b=>b.onclick=()=>{const id=b.dataset.p;para.has(id)?para.delete(id):para.add(id);b.classList.toggle('on',para.has(id));});
  m.querySelector('[data-x]').onclick=()=>m.remove();
  m.querySelector('[data-ok]').onclick=async ev=>{if(!para.size){m.querySelector('.err').textContent='Elige a quién se lo envías (normalmente, tu senior)';return;}ev.target.disabled=true;
-  const fila={equipo_id:S.yo.equipo_id,persona:yo,dia:hoy,para:[...para],leida:[],nota:m.querySelector('.bp-nota').value.trim()||null,hechas,pendientes:pend,sieter:R7,creado:new Date().toISOString()};
+  const fila={equipo_id:S.yo.equipo_id,persona:yo,dia:hoy,para:[...para],leida:[],nota:m.querySelector('.bp-nota').value.trim()||null,hechas,pendientes:pend,manana:manana(),dia_manana:dm,sieter:R7,creado:new Date().toISOString()};
   const {error}=await sb.from('pb_partes').upsert(fila,{onConflict:'persona,dia'});
   if(error){ev.target.disabled=false;m.querySelector('.err').textContent='No se ha podido enviar';return;}
   m.remove();toast('BP/7R enviado a '+[...para].map(id=>pri(nomDe(id))).join(', '));hecho&&hecho();};}
 
 // Lo que lleva un BP/7R: su 7R, lo hecho (con la hora), lo pendiente y la nota
-function cuerpoParte(pt){const R=pt.sieter||[],H=pt.hechas||[],P=pt.pendientes||[];
+const nomDia=(d,hoy)=>{const x=new Date(d+'T12:00:00Z');return (d===pbIso(hoy,1)?'mañana':'el '+DSEM[x.getUTCDay()]+' '+x.getUTCDate());};
+function cuerpoParte(pt){const R=pt.sieter||[],H=pt.hechas||[],P=pt.pendientes||[],MN=pt.manana||[],dm=pt.dia_manana;
+ const fila=(x,ok,h)=>`<div class="ar-t${ok?'':' pe'}"><span class="ok">${ok?IC.ck:''}</span><span class="tx">${condIn(x.t)}${x.v?' <i class="bp-v">viene de hoy</i>':''}</span>${h?`<em>${horaMad(h)}</em>`:''}</div>`;
  return `${R.length?`<div class="bp-sec">7R · cómo va la semana</div><div class="bp-7r"><div class="r7f cab"><span>Estadística</span><b>Esta semana</b><b class="ant">La pasada a esta hora</b><i></i></div>${R.map(x=>{const d=Number(x.este)-Number(x.antes),b=bueno({sentido:x.sentido},d);return `<div class="r7f"><span>${x.principal?'<em class="g">★ principal</em>':''}${escH(x.nombre)}</span><b>${num(x.este)}</b><b class="ant">${num(x.antes)}</b><i style="color:${colorDe(b)}">${d?(d>0?'▲ ':'▼ ')+num(Math.abs(d)):'='}</i></div>`;}).join('')}</div>`:''}
-  <div class="bp-sec">Hecho hoy · ${H.length}</div>${H.length?H.map(x=>`<div class="ar-t"><span class="ok">${IC.ck}</span><span class="tx">${condIn(x.t)}</span><em>${x.h?horaMad(x.h):''}</em></div>`).join(''):'<p class="vacio" style="padding:6px 0">Hoy no se ha marcado nada como hecho.</p>'}
-  ${P.length?`<div class="bp-sec">Sin hacer · ${P.length}</div>${P.map(x=>`<div class="ar-t pe"><span class="ok"></span><span class="tx">${condIn(x.t)}</span></div>`).join('')}`:''}
+  <div class="bp-bl"><div class="bp-bt">Plan de batalla de hoy</div>
+   <div class="bp-sub">Hecho · ${H.length}</div>${H.length?H.map(x=>fila(x,1,x.h)).join(''):'<p class="vacio" style="padding:4px 0">Hoy no se ha marcado nada como hecho.</p>'}
+   ${P.length?`<div class="bp-sub">Sin hacer · ${P.length}</div>${P.map(x=>fila(x,0)).join('')}`:''}</div>
+  ${dm||MN.length?`<div class="bp-bl man"><div class="bp-bt">Plan de batalla de ${dm?escH(nomDia(dm,pt.dia)):'mañana'}</div>${MN.length?MN.map(x=>fila(x,0)).join(''):'<p class="vacio" style="padding:4px 0">Aún no hay nada apuntado.</p>'}</div>`:''}
   ${pt.nota?`<div class="bp-sec">Nota</div><p class="bp-nt">${escH(pt.nota).replace(/\n/g,'<br>')}</p>`:''}`;}
 
 async function abreParte(id){const {data,error}=await sb.from('pb_partes').select('*').eq('id',id).maybeSingle();if(error||!data){toast('No se ha podido abrir',false);return;}verParte(data);}

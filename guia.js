@@ -1,14 +1,14 @@
 // ── GUÍA DE RUMBO: qué es la app y para qué sirve cada sección.
 // NORMA: cada cambio que note el equipo (pantalla, botón, flujo o texto) se actualiza aquí en el mismo cambio.
 // Si la guía cambia de verdad, sube GUIA_VER: a quien ya la vio le sale «Novedades en la guía» una vez.
-const GUIA_VER=1;
+const GUIA_VER=2;
 const GUIA=[
  {k:'que',t:'¿Qué es Rumbo?',ic:'<circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/>',
   h:`<p>Rumbo es la app del equipo. En un solo sitio tienes <b>lo que tienes que hacer hoy</b>, <b>cómo van tus números</b> y <b>lo que se pasa a tu senior</b>.</p>
    <p>Cada persona tiene su puesto y su jefe directo (su senior). Lo que ve cada uno lo decide quien administra el equipo.</p>`},
  {k:'ritmo',t:'El ritmo: cada día, cada noche y cada jueves',ic:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
   h:`<ul><li><b>Durante el día:</b> apuntas tus tareas en el Plan y las vas tachando. Lo que no hagas pasa solo al día siguiente.</li>
-   <li><b>Cada noche:</b> pasas tu <b>BP/7R</b> a tu senior: lo que has hecho, lo pendiente y cómo vas frente a la semana pasada.</li>
+   <li><b>Cada noche:</b> pasas tu <b>BP/7R</b> a tu senior: tu plan de batalla de mañana, lo que has hecho hoy y cómo vas frente a la semana pasada.</li>
    <li><b>Cada jueves desde las 14:00:</b> cierra la semana. Eliges la <b>condición</b> de cada estadística, la escribes y la guardas o se la envías a quien quieras.</li></ul>
    <p>Arriba de tu Plan ves siempre si ya has pasado el BP/7R de hoy y las condiciones de la semana.</p>`},
  {k:'plan',tab:'plan',t:'Plan',ic:'<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M9.5 8.5l1.5 1.5 3-3M9.5 14.5l1.5 1.5 3-3"/>',
@@ -34,7 +34,8 @@ const GUIA=[
    <li>Cada condición sale en <b>PDF</b> con tu nombre, tu puesto, la estadística y la condición.</li></ul>`},
  {k:'bp',t:'BP/7R (cada noche)',ic:'<path d="M4 12l16-8-6 16-2.5-6.5z"/><path d="M11.5 13.5L20 4"/>',
   h:`<p>Al acabar el día, en tu Plan pulsa <b>«Enviar mi BP/7R»</b>. Se prepara solo con:</p>
-   <ul><li>la <b>7R</b> de cada estadística (esta semana frente a la pasada a esta hora),</li><li>lo <b>hecho hoy</b>, con la hora,</li><li>lo que queda <b>sin hacer</b>,</li><li>y una nota, si quieres.</li></ul>
+   <ul><li>la <b>7R</b> de cada estadística (esta semana frente a la pasada a esta hora),</li><li>tu <b>plan de batalla de hoy</b>: lo hecho, con la hora, y lo que queda sin hacer,</li><li>tu <b>plan de batalla de mañana</b>: lo que ya tienes apuntado y lo que pasa de hoy. Ahí mismo puedes añadir tareas para mañana,</li><li>y una nota, si quieres.</li></ul>
+   <p>El viernes, «mañana» es el lunes.</p>
    <p>Tu senior sale ya marcado. Si haces más cosas después, puedes reenviarlo.</p>`},
  {k:'ctl',tab:'ctl',t:'Control',ic:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 11l1.5 1.5 3-3M8.5 16.5h7"/>',
   h:`<p>Solo para quien tiene gente a su cargo. De un vistazo ves:</p>

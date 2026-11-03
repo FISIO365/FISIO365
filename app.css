@@ -523,3 +523,9 @@ input.i:focus{border-color:var(--c);background:#fff}
 .gu-x{border:0;background:none;color:#c9d2dc;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none}
 .gu-luz{animation:guLuz 2.4s ease;border-radius:18px}
 @keyframes guLuz{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}15%,70%{box-shadow:0 0 0 4px rgba(194,85,46,.55),0 0 0 10px rgba(194,85,46,.15)}}
+.bp-bl{margin-top:14px;border:1px solid #f1ede9;border-radius:14px;padding:10px 14px 6px}
+.bp-bl.man{background:#fffaf7;border-color:color-mix(in srgb,var(--c) 30%,#fff)}
+.bp-bt{font-size:14.5px;font-weight:700;color:var(--ink);margin:2px 0 4px}.bp-bl.man .bp-bt{color:var(--c)}
+.bp-sub{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:10px 0 2px}
+.bp-v{font-style:normal;font-size:11px;font-weight:600;color:var(--c);background:#f9e7df;border-radius:99px;padding:1px 7px;margin-left:4px;white-space:nowrap}
+.bp-add{margin-top:6px}
