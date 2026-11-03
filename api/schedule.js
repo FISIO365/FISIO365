@@ -2728,36 +2728,6 @@ module.exports = async function handler(req, res) {
     const r = await PG.responder(String(b.url), { method: b.method || 'GET', body: b.body || undefined });
     res.setHeader('Content-Type', 'application/json'); res.setHeader('Cache-Control', 'no-store'); return res.status(r.status).send(await r.text());
   }
-  if (action === 'pg-restaurar-programas') { // Una vez: programas de ejercicios que se guardaron en Airtable tras pasar a Postgres (programa.js no estaba enganchado), desde la copia de seguridad cifrada. Solo la acción de GitHub de este repo (token OIDC, sin claves)
-    const PG = require('./_pg'); if (!PG.ACTIVO || req.method !== 'POST') return res.status(404).end();
-    const cr = require('crypto'); res.setHeader('Cache-Control', 'no-store');
-    try {
-      const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''); const [h64, p64, s64] = tok.split('.');
-      const dec = x => JSON.parse(Buffer.from(String(x || ''), 'base64url').toString('utf8'));
-      const H = dec(h64), P = dec(p64);
-      const jw = await (await PG.fetchReal('https://token.actions.githubusercontent.com/.well-known/jwks')).json();
-      const jwk = (jw.keys || []).find(k => k.kid === H.kid); if (!jwk || H.alg !== 'RS256') return res.status(401).json({ ok: false });
-      const okF = cr.verify('RSA-SHA256', Buffer.from(h64 + '.' + p64), cr.createPublicKey({ key: jwk, format: 'jwk' }), Buffer.from(s64, 'base64url'));
-      const ahora = Date.now() / 1000;
-      if (!okF || P.iss !== 'https://token.actions.githubusercontent.com' || P.aud !== 'fisio365-restaurar' || String(P.repository || '').toLowerCase() !== 'fisio365/fisio365' || P.ref !== 'refs/heads/main' || !/\/\.github\/workflows\/restaurar-programas\.yml@refs\/heads\/main$/.test(String(P.workflow_ref || '')) || !(P.exp > ahora) || !(P.nbf <= ahora + 60)) return res.status(401).json({ ok: false });
-      const b = req.body || {}, aplicar = b.modo === 'aplicar', copiaEn = String(b.copiaEn || ''), T = 'tblvgE0a4gsrj4Vhp';
-      if (!/^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(copiaEn)) return res.status(400).json({ ok: false, error: 'copiaEn' });
-      const recs = (Array.isArray(b.records) ? b.records : []).filter(r => /^rec[A-Za-z0-9]{14}$/.test(r.id || '') && r.fields && r.fields.PacienteID);
-      const porPac = new Map(); recs.forEach(r => { const k = String(r.fields.PacienteID); if (!porPac.has(k)) porPac.set(k, []); porPac.get(k).push(r); });
-      const D = PG.db(), out = { pacientes: porPac.size, yaEstaban: 0, masNuevoEnApp: 0, restaurados: 0, fechas: {} };
-      for (const [pid, L] of porPac) {
-        const ya = (await D.query("select id, creado from registros where tabla = $1 and fields->>'PacienteID' = $2", [T, pid])).rows;
-        const ids = new Set(ya.map(x => x.id));
-        if (L.every(r => ids.has(r.id))) { out.yaEstaban++; continue; }
-        if (ya.some(x => new Date(x.creado).toISOString() > copiaEn)) { out.masNuevoEnApp++; continue; } // guardado en la app después de la copia: manda lo de la app
-        const f = String(L[0].fields.FechaAsignacion || '').slice(0, 10); out.fechas[f] = (out.fechas[f] || 0) + 1; out.restaurados++;
-        if (!aplicar) continue;
-        for (const x of ya) await fetch(`https://api.airtable.com/v0/${BASE_ID}/${T}/${x.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-        for (const r of L) await D.query('insert into registros (tabla, id, fields, creado, modificado) values ($1, $2, $3, $4, now()) on conflict (id) do nothing', [T, r.id, JSON.stringify(r.fields), r.createdTime || new Date().toISOString()]);
-      }
-      return res.status(200).json({ ok: true, modo: aplicar ? 'aplicar' : 'probar', ...out });
-    } catch (e) { return res.status(500).json({ ok: false, error: String(e && e.message || e).slice(0, 200) }); }
-  }
   if (action === 'pg-migrar') { // copiar Airtable → Postgres por trozos (~40 s cada llamada). Solo con DB_URL y la clave MIGRAR_KEY
     const PG = require('./_pg'), K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
     if (!PG.ACTIVO || K.length < 24 || k.length !== K.length || !require('crypto').timingSafeEqual(Buffer.from(k), Buffer.from(K))) return res.status(404).end();
