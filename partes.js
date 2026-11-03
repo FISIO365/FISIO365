@@ -64,3 +64,45 @@ async function controlDe(ids,dia){const ahora=madMs(Date.now()),sem=ymd(perIni('
  const bp={},co={};(a.data||[]).forEach(x=>bp[x.persona]=x);
  ids.forEach(id=>{const E=(b.data||[]).filter(x=>x.persona===id),C=new Set((c.data||[]).filter(x=>x.persona===id).map(x=>x.estadistica_id));co[id]={tot:E.length,hechas:E.filter(e=>C.has(e.id)).length};});
  return {bp,co,sem};}
+
+// ── CONTROL: quién ha pasado el BP/7R cada día de la semana y quién tiene las condiciones del jueves
+const CT={sem:0};
+function renderControl(wrap){const box=ce('div','ct');wrap.appendChild(box);const yo=S.yo.id;
+ const pinta=async()=>{const L=verEst().filter(m=>m.id!==yo),ids=L.map(m=>m.id),hoy=hoyMad(),lun=pbIso(lunesDe(hoy),7*CT.sem),D=[...Array(7)].map((_,i)=>pbIso(lun,i));
+  // El jueves de esa semana: si aún no han dado las 14:00, el de la semana anterior
+  let ju=D[3];const ahoraM=madMs(Date.now());if(ju>hoy||(ju===hoy&&new Date(ahoraM).getUTCHours()<14))ju=pbIso(ju,-7);
+  const cab=`<div class="es-cab"><div><b>Control</b><small class="ct-sub">Quién ha pasado su BP/7R y su condición</small></div></div>
+   <div class="rp-c ct-sem"><button type="button" class="pb-fl" data-s="-1" aria-label="Semana anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${CT.sem===0?'Esta semana':'Semana del '+escH(dLargoIso(lun))}<small>del ${escH(dLargoIso(lun))} al ${escH(dLargoIso(D[6]))}</small></b><button type="button" class="pb-fl" data-s="1" aria-label="Semana siguiente"${CT.sem>=0?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>`;
+  const nav=()=>box.querySelectorAll('.ct-sem [data-s]').forEach(b=>b.onclick=()=>{CT.sem=Math.min(0,CT.sem+ +b.dataset.s);pinta();});
+  if(!L.length){box.innerHTML=cab+'<div class="rp-c"><p class="vacio">No tienes a nadie a tu cargo. Lo que ve cada uno lo decide quien administra, en Equipo › Quién ve qué.</p></div>';nav();return;}
+  box.innerHTML=cab+'<div class="rp-c" style="color:var(--mut);font-size:13px">Cargando…</div>';nav();
+  const [a,b,c]=await Promise.all([sb.from('pb_partes').select('id,persona,dia,creado').in('persona',ids).gte('dia',D[0]).lte('dia',D[6]),
+   sb.from('pb_estadisticas').select('id,persona').in('persona',ids).eq('periodo','semana').eq('archivada',false),
+   sb.from('pb_condiciones').select('id,persona,estadistica_id').in('persona',ids).eq('semana',ju)]);
+  if(!box.isConnected)return;
+  if(a.error||b.error||c.error){box.innerHTML=cab+'<div class="rp-c">No se ha podido cargar. <button type="button" class="lnk" style="display:inline;padding:0" data-r>Reintentar</button></div>';nav();box.querySelector('[data-r]').onclick=pinta;return;}
+  const BP={};(a.data||[]).forEach(x=>BP[x.persona+'|'+x.dia]=x);
+  const hoyBP=L.filter(m=>BP[m.id+'|'+hoy]).length;
+  const co=id=>{const E=(b.data||[]).filter(x=>x.persona===id),C=(c.data||[]).filter(x=>x.persona===id),H=new Set(C.map(x=>x.estadistica_id));return {tot:E.length,h:E.filter(e=>H.has(e.id)).length,C};};
+  const conE=L.filter(m=>co(m.id).tot),okC=conE.filter(m=>{const x=co(m.id);return x.h>=x.tot;}).length;
+  box.innerHTML=cab+`<div class="rp-c"><div class="ct-h"><div><small class="cd-k">Cada noche</small><b>BP/7R</b></div>${CT.sem===0?`<span class="ct-n${hoyBP===L.length?' ok':''}">Hoy ${hoyBP} de ${L.length}</span>`:''}</div>
+    <div class="ct-t"><div class="ct-r cab"><span></span>${D.map(d=>`<i class="${d===hoy?'hoy':''}">${DSEM[new Date(d+'T12:00:00Z').getUTCDay()].slice(0,1).toUpperCase()}<small>${new Date(d+'T12:00:00Z').getUTCDate()}</small></i>`).join('')}</div>
+    ${L.map(m=>`<div class="ct-r"><span class="ct-q">${avHTML(m)}<span><b>${escH(pri(m.nombre))}</b>${m.puesto?`<small>${escH(m.puesto)}</small>`:''}</span></span>${D.map(d=>{const x=BP[m.id+'|'+d];
+      return x?`<button type="button" class="ct-d si" data-bp="${x.id}" title="Enviado a las ${horaMad(x.creado)}">${IC.ck}</button>`:d>hoy?'<i class="ct-d fut"></i>':d===hoy?'<i class="ct-d pen" title="Aún no lo ha enviado"></i>':'<i class="ct-d no" title="No lo envió"><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></i>';}).join('')}</div>`).join('')}</div>
+    <div class="ct-ley"><span><i class="ct-d si">${IC.ck}</i>Enviado (tócalo para verlo)</span><span><i class="ct-d no"><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></i>No lo envió</span><span><i class="ct-d pen"></i>Hoy, aún no</span></div></div>
+   <div class="rp-c"><div class="ct-h"><div><small class="cd-k">Los jueves desde las 14:00</small><b>Condiciones del ${escH(fechaSem(ju))}</b></div>${conE.length?`<span class="ct-n${okC===conE.length?' ok':''}">${okC} de ${conE.length}</span>`:''}</div>
+    ${L.map(m=>{const x=co(m.id);return `<button type="button" class="ct-c" data-a="${m.id}">${avHTML(m)}<span class="tx"><b>${escH(m.nombre)}</b>${pTag(m)}</span>${x.tot?`<span class="ct-st ${x.h>=x.tot?'si':'no'}">${x.h>=x.tot?'✓ ':''}${x.h} de ${x.tot}</span>`:'<span class="ct-st na">Sin estadísticas</span>'}</button>`;}).join('')}</div>`;
+  nav();box.querySelectorAll('[data-bp]').forEach(b=>b.onclick=()=>abreParte(b.dataset.bp));
+  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const x=co(b.dataset.a);if(x.C.length===1)return abreCond(x.C[0].id);AR.persona=b.dataset.a;arGuarda();S.tab='arch';guardaLS('tab','arch');pinta0();});};
+ pinta();}
+
+// Arriba de tu plan de hoy: lo que ya has enviado y lo que te falta
+async function pintaEstado(el){if(!el)return;const yo=S.yo.id,hoy=hoyMad(),ahoraM=madMs(Date.now()),ju=ymd(perIni('semana',ahoraM));
+ const [a,b,c]=await Promise.all([sb.from('pb_partes').select('id,creado').eq('persona',yo).eq('dia',hoy).maybeSingle(),
+  sb.from('pb_estadisticas').select('id').eq('persona',yo).eq('periodo','semana').eq('archivada',false),
+  sb.from('pb_condiciones').select('estadistica_id').eq('persona',yo).eq('semana',ju)]);
+ if(!el.isConnected)return;const bp=a.data,tot=(b.data||[]).length,H=new Set((c.data||[]).map(x=>x.estadistica_id)),h=(b.data||[]).filter(e=>H.has(e.id)).length;
+ el.innerHTML=`<div class="rp-c pb-est"><button type="button" class="pb-es ${bp?'si':'no'}" data-k="bp"><span>${bp?IC.ck:'<i></i>'}</span><b>BP/7R de hoy</b><small>${bp?'Enviado a las '+horaMad(bp.creado):'Sin enviar'}</small></button>
+  ${tot?`<button type="button" class="pb-es ${h>=tot?'si':'no'}" data-k="co"><span>${h>=tot?IC.ck:'<i></i>'}</span><b>Condiciones</b><small>${h>=tot?'Hechas · jue '+new Date(ju+'T12:00:00Z').getUTCDate():h+' de '+tot+' · jue '+new Date(ju+'T12:00:00Z').getUTCDate()}</small></button>`:''}</div>`;
+ el.querySelector('[data-k="bp"]').onclick=()=>{const t=document.querySelector('#pbBP');if(t)t.scrollIntoView({behavior:'smooth',block:'center'});};
+ const k=el.querySelector('[data-k="co"]');if(k)k.onclick=()=>{S.tab='est';guardaLS('tab','est');ES.persona='';ES.abierta='';esGuarda();pinta0();};}
