@@ -90,11 +90,13 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
  if(ES.persona&&ES.persona!=='*'&&ES.abierta)ES.volverTodos=1;
  const todos=()=>ES.persona==='*',suyos=()=>visibles().filter(m=>m.id!==yo).map(m=>m.id);
  const persona=()=>ES.persona||yo;
- let E=[],AP={};
+ let E=[],AP={},CO={};
  const carga=async()=>{const q=sb.from('pb_estadisticas').select('*');const {data,error}=await (todos()?q.in('persona',suyos()):q.eq('persona',persona())).order('creado');
   if(!box.isConnected)return;if(error){box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
   E=data||[];AP={};E.forEach(e=>AP[e.id]=[]);
   if(E.length){const {data:a}=await sb.from('pb_apuntes').select('*').in('estadistica_id',E.map(e=>e.id)).order('en');(a||[]).forEach(x=>{x.L=madMs(x.en);(AP[x.estadistica_id]=AP[x.estadistica_id]||[]).push(x);});}
+  CO={};if(E.length){const {data:co}=await sb.from('pb_condiciones').select('id,estadistica_id,persona,semana,condicion,creado').in('estadistica_id',E.map(e=>e.id)).order('semana',{ascending:false});(co||[]).sort((a,b)=>a.semana<b.semana?1:-1).forEach(c=>(CO[c.estadistica_id]=CO[c.estadistica_id]||[]).push(c));}
+  if(!box.isConnected)return;
   if(ES.abierta&&!E.some(e=>e.id===ES.abierta)){ES.abierta='';esGuarda();}
   pinta3();};
  window._esRecargar=carga;
@@ -107,15 +109,18 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
   const tarj=e=>{const A=AP[e.id]||[],T=totales(e,A,ahora),tt=textoTendencia(e,T),cur=T.length?T[T.length-1]:null;
    let der='';if(e.periodo==='semana'){const r=sieteR(e,A,ahora,ahora);der=`<div class="es-ult"><b>${num(r.este)}</b><small>esta semana</small><i style="color:${colorDe(bueno(e,r.d))}">${r.d?(r.d>0?'▲ ':'▼ ')+num(Math.abs(r.d)):'='} vs. semana pasada</i></div>`;}
    else if(cur){der=`<div class="es-ult"><b>${num(cur.v)}</b><small>${escH(perLargo(e.periodo,cur.s,ahora))}</small></div>`;}
-   return `<button type="button" class="rp-c es-c" data-e="${e.id}"><div class="es-ch"><div><small>${escH(e.puesto||'Estadística')}</small><b>${escH(e.nombre)}</b></div>${der}</div>${grafica(e,T,ahora,true)}<div class="es-pie"><span style="color:${tt.c}">${escH(tt.txt)}</span><em>${escH(e.eje_y)} · ${PER[e.periodo].n.toLowerCase()}</em></div></button>`;};
+   return `<button type="button" class="rp-c es-c" data-e="${e.id}"><div class="es-ch"><div><small>${escH(e.puesto||'Estadística')}</small><b>${escH(e.nombre)}</b>${(()=>{const cc=e.periodo==='semana'&&(CO[e.id]||[]).find(c=>c.semana===ymd(perIni('semana',ahora))&&c.persona===e.persona);return cc?condChip(cc.condicion,'sm'):'';})()}</div>${der}</div>${grafica(e,T,ahora,true)}<div class="es-pie"><span style="color:${tt.c}">${escH(tt.txt)}</span><em>${escH(e.eje_y)} · ${PER[e.periodo].n.toLowerCase()}</em></div></button>`;};
   if(todos()){const G=suyos().map(id=>({id,L:act.filter(e=>e.persona===id)}));
    box.innerHTML=quien()+`${G.map(g=>`<div class="es-gr">${avHTML(M(g.id))}<div><b>${escH(nomDe(g.id))}</b>${pTag(M(g.id))}<small>${g.L.length} estadística${g.L.length===1?'':'s'}</small></div><button class="bt sec es-nv2" data-n="${g.id}">+ Nueva</button></div>${g.L.map(tarj).join('')||'<p class="vacio" style="padding-top:0">Aún no tiene estadísticas.</p>'}`).join('')}`;
    chipsQuien();box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>abre(b.dataset.e));box.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>editarEst(null,b.dataset.n));window.scrollTo(0,y);return;}
   box.innerHTML=quien()+`<div class="rp-c"><div class="eq-h"><div><small>Estadísticas</small><b>${yoMismo?'Tus estadísticas':'Estadísticas de '+escH(nom)}</b>${pTag(M(persona()))}</div><button class="bt" id="esNueva">+ Nueva</button></div>
    ${act.length?`<p class="eq-p">${act.length} estadística${act.length===1?'':'s'}. Puedes tener todas las que quieras: crea otra con «+ Nueva».</p>`:''}
    ${!act.length?`<p class="eq-p">${yoMismo?'Crea tu primera estadística: lo que produce tu puesto (cursos completados, pacientes nuevos…). Vas apuntando lo que haces y se grafea sola, semana a semana (de jueves a las 14:00 a jueves a las 14:00), con su tendencia y su 7R.':'Aún no tiene estadísticas. Puedes crearle una.'}</p>`:''}</div>
+   ${(()=>{if(!yoMismo)return '';const pend=act.filter(e=>{if(e.periodo!=='semana')return false;const cs=condSemana(e,AP[e.id]||[],ahora);return cs.hay&&!(CO[e.id]||[]).some(c=>c.semana===cs.semana&&c.persona===yo);});
+     return pend.length?`<div class="rp-c cd-ban"><small class="cd-k">Ha cerrado la semana · jueves 14:00</small><b>Elige tu condición</b><p class="eq-p">La eliges, la escribes y se la envías a quien quieras en PDF. Te falta${pend.length>1?'n':''}:</p><div class="cd-banl">${pend.map(e=>`<button type="button" data-ce="${e.id}"><span>${escH(e.nombre)}</span><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div></div>`:'';})()}
    ${act.map(tarj).join('')}${arc.length?`<details class="es-arc"><summary>Archivadas (${arc.length})</summary>${arc.map(tarj).join('')}</details>`:''}`;
   chipsQuien();box.querySelector('#esNueva').onclick=()=>editarEst(null);
+  box.querySelectorAll('[data-ce]').forEach(b=>b.onclick=()=>{const e=E.find(x=>x.id===b.dataset.ce);if(e)escribeCond(e,AP[e.id]||[],()=>carga());});
   box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>abre(b.dataset.e));
   window.scrollTo(0,y);};
 
@@ -147,6 +152,7 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
      <div class="es-per"><button type="button" class="pb-fl" data-h="-1" aria-label="Una hora antes"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button><b>a las ${hhmm(cu)}</b><button type="button" class="pb-fl" data-h="1" aria-label="Una hora después"${cu+36e5>ahora?' disabled':''}><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button></div>
      <button type="button" class="lnk" data-c="ahora" style="margin-top:4px">Mejor apuntarlo ahora</button></div>`:`<button type="button" class="lnk es-otro" data-c="otro">¿Lo hiciste otro día? Elige cuándo</button>`}
     <div class="es-sen" style="margin-top:12px"><span class="es-tag ${e.sentido}">${e.sentido==='positiva'?'Positiva · si sube, es bueno':'Negativa · si sube, es malo'}</span></div></div>
+   ${e.periodo==='semana'?condTarjeta(e,A,ahora,CO[e.id]||[]):''}
    <div class="rp-c"><div class="eq-h"><div><small>Gráfica</small><b>${escH(e.eje_y.charAt(0).toUpperCase()+e.eje_y.slice(1))} por ${e.periodo==='semana'?'semana':e.periodo==='dia'?'día':'mes'}</b></div></div>
     ${A.length?`<div class="es-tt" style="color:${tt.c}">${escH(tt.txt)}</div>`:''}
     <div class="es-gw"><span class="es-ey">${escH(e.eje_y)}</span>${grafica(e,T,ahora,false)}</div><div class="es-ex">${PER[e.periodo].n}${e.periodo==='semana'?' (de jueves 14:00 a jueves 14:00)':''}</div>
@@ -155,6 +161,8 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
    <div class="rp-c"><div class="es-per"><button type="button" class="pb-fl" data-v="-1" aria-label="Anterior"${!T.length||ver<=T[0].s?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>Apuntado · ${escH(perLargo(e.periodo,ver,ahora).toLowerCase())}<small>Total: ${num(totV)}</small></b><button type="button" class="pb-fl" data-v="1" aria-label="Siguiente"${ver>=actual?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
     ${Av.length?Av.map(x=>`<div class="es-fila" data-id="${x.id}"><span>${escH(dLargo(x.L))} · ${hhmm(x.L)}${x.por&&x.por!==e.persona?` <em>· ${escH(pri(nomDe(x.por)))}</em>`:''}</span><b>${Number(x.cantidad)>0?'+':''}${num(x.cantidad)}</b><button type="button" class="es-x" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join(''):'<p class="vacio">Aún no has apuntado nada aquí.</p>'}</div>`;
   box.querySelector('.es-atras').onclick=()=>{ES.abierta='';if(ES.volverTodos){ES.volverTodos=0;ES.persona='*';esGuarda();carga();return;}esGuarda();pinta3();};chipsQuien();
+  {const b=box.querySelector('.cd-elige');if(b)b.onclick=()=>escribeCond(e,A,()=>carga());}
+  box.querySelectorAll('.cd-card [data-cv]').forEach(b=>b.onclick=()=>abreCond(b.dataset.cv));
   box.querySelectorAll('.es-7d [data-i]').forEach(b=>b.onclick=()=>{ES.dia7[e.id]=+b.dataset.i;detalle(e);});
   box.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{ES.ver[e.id]=+b.dataset.v<0?perAnt(e.periodo,ver):perSig(e.periodo,ver);detalle(e);});
   box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ES.cuando[e.id]=b.dataset.c==='otro'?(Math.floor(ahora/36e5)*36e5-HD):null;detalle(e);});
