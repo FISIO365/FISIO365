@@ -49,14 +49,21 @@ const M=id=>S.miembros.find(m=>m.id===id);
 const nomDe=id=>(M(id)||{}).nombre||'Alguien';
 const supervisa=p=>S.permisos.some(x=>x.quien===S.yo.id&&x.a_quien===p&&(M(p)||{}).activo);
 // Quien administra (o a quien se lo da) ve las estadísticas de todo el equipo; solo las rellena quien la lleva o su jefe
-const veTodo=()=>!!(S.yo&&(S.yo.admin||S.yo.ve_todo));
+// Quién ve a quién (lo elige quien administra): su gente directa, toda su rama, todo el equipo, y además personas sueltas
+const veTodo=()=>!!(S.yo&&(S.yo.admin||S.yo.ve==='todos'));
+const rama=id=>{const R=new Set(),va=q=>S.permisos.filter(x=>x.quien===q).forEach(x=>{const m=M(x.a_quien);if(m&&m.activo&&!R.has(x.a_quien)&&x.a_quien!==id){R.add(x.a_quien);va(x.a_quien);}});va(id);return R;};
+function veA(m){const act=S.miembros.filter(x=>x.activo&&x.id!==m.id);if(m.admin||m.ve==='todos')return new Set(act.map(x=>x.id));
+ const R=m.ve==='rama'?rama(m.id):new Set(S.permisos.filter(x=>x.quien===m.id&&(M(x.a_quien)||{}).activo).map(x=>x.a_quien));
+ (S.veExtra||[]).filter(x=>x.quien===m.id&&(M(x.a_quien)||{}).activo).forEach(x=>R.add(x.a_quien));return R;}
+const veTxt=m=>{if(m.admin)return 'Ve a todo el equipo (administra)';const n=veA(m).size,ex=(S.veExtra||[]).filter(x=>x.quien===m.id).length;
+ return (m.ve==='todos'?'Ve a todo el equipo':m.ve==='rama'?'Ve toda su rama':'Ve a su gente directa')+(ex&&m.ve!=='todos'?' y '+ex+' más':'')+(m.ve==='todos'?'':` · ${n} persona${n===1?'':'s'}`);};
 const puedeEst=p=>p===S.yo.id||supervisa(p);
 // Todo el equipo en el orden del organigrama (cada jefe con su gente debajo)
 function ordenOrg(){const act=S.miembros.filter(m=>m.activo),ids=new Set(act.map(m=>m.id)),jefe={};
  act.forEach(m=>{const d=S.permisos.filter(x=>x.a_quien===m.id&&ids.has(x.quien)).map(x=>x.quien).sort((a,b)=>nomDe(a).localeCompare(nomDe(b),'es'));jefe[m.id]=d[0]||null;});
  act.forEach(m=>{const v=new Set([m.id]);let p=jefe[m.id];while(p){if(v.has(p)){jefe[m.id]=null;break;}v.add(p);p=jefe[p];}});
  const R=[],va=(id,n)=>{act.filter(m=>jefe[m.id]===id).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).forEach(m=>{R.push(m);m._niv=n;va(m.id,n+1);});};va(null,0);return R;}
-const verEst=()=>veTodo()?[S.yo,...ordenOrg().filter(m=>m.id!==S.yo.id)]:visibles();
+const verEst=()=>{const v=veA(S.yo);return [S.yo,...ordenOrg().filter(m=>v.has(m.id))];};
 const visibles=()=>[S.yo,...S.miembros.filter(m=>m.id!==S.yo.id&&m.activo&&supervisa(m.id)).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'))];
 
 async function arranca(){const {data:{session}}=await sb.auth.getSession();if(!session)return pantallaEntrar();
@@ -64,8 +71,8 @@ async function arranca(){const {data:{session}}=await sb.auth.getSession();if(!s
  if(error){$app.innerHTML='<div class="cargando">No se ha podido cargar. Revisa la conexión y vuelve a abrir.</div>';return;}
  if(!me||!me.activo)return pantallaSinEquipo(session.user,me);
  S.yo=me;await cargaEquipo();pinta();}
-async function cargaEquipo(){const [e,m,p]=await Promise.all([sb.from('pb_equipos').select('*').eq('id',S.yo.equipo_id).single(),sb.from('pb_miembros').select('*').eq('equipo_id',S.yo.equipo_id),sb.from('pb_permisos').select('*').eq('equipo_id',S.yo.equipo_id)]);
- S.equipo=e.data;S.miembros=m.data||[];S.permisos=p.data||[];S.yo=M(S.yo.id)||S.yo;}
+async function cargaEquipo(){const [e,m,p,x]=await Promise.all([sb.from('pb_equipos').select('*').eq('id',S.yo.equipo_id).single(),sb.from('pb_miembros').select('*').eq('equipo_id',S.yo.equipo_id),sb.from('pb_permisos').select('*').eq('equipo_id',S.yo.equipo_id),sb.from('pb_ve_extra').select('*').eq('equipo_id',S.yo.equipo_id)]);
+ S.equipo=e.data;S.miembros=m.data||[];S.permisos=p.data||[];S.veExtra=(x.data)||[];S.yo=M(S.yo.id)||S.yo;}
 sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'){S.yo=null;pantallaEntrar();}});
 
 // ── Entrar / crear equipo
@@ -279,15 +286,19 @@ function renderEquipo(wrap){const adm=S.yo.admin;
  const act=S.miembros.filter(m=>m.activo).sort((a,b)=>(b.id===S.yo.id)-(a.id===S.yo.id)||a.nombre.localeCompare(b.nombre,'es'));
  const baja=S.miembros.filter(m=>!m.activo).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
  const fila=m=>{const ac=m.activo?aCargo(m.id):[],de=m.activo?dependeDe(m.id):[];
-  return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}">${avHTML(m)}<div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${!m.admin&&m.ve_todo&&m.activo?'<i class="bdg off">VE TODO</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b>${pTag(m,adm&&m.activo)}<small>${escH(m.email||'')}</small>
+  return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}">${avHTML(m)}<div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b>${pTag(m,adm&&m.activo)}<small>${escH(m.email||'')}</small>
    ${m.grupo?`<small class="rv-g">Grupo: ${escH(m.grupo)}</small>`:''}${de.length?`<small class="rv-d">Depende de ${nombres(de)}</small>`:''}${ac.length?`<small class="rv-a">A su cargo: ${nombres(ac)}</small>`:''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;};
  wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div class="top-e">${S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div><button class="eq-lapiz" id="eqMas" aria-label="Cambiar el nombre o la foto del equipo"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg></button></div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
    <div style="margin-top:10px">${act.map(fila).join('')}${baja.length&&adm?`<details style="margin-top:6px"><summary class="eq-p" style="cursor:pointer">De baja (${baja.length})</summary>${baja.map(fila).join('')}</details>`:''}</div></div>
   <div class="rp-c"><div class="eq-h"><div><small>Organigrama</small><b>Quién depende de quién</b></div></div>
    <p class="eq-p">${adm?'Cada persona sale debajo de su jefe, con más margen cuanto más abajo está. Para cambiar a alguien de sitio, <b>tócala</b> y elige debajo de quién va (o arrástrala por <b>⠿</b>).':'Así está organizado el equipo: cada persona sale debajo de su jefe.'}</p><div id="org" class="org"></div></div>
+  <div class="rp-c"><div class="eq-h"><div><small>Permisos</small><b>Quién ve qué</b></div></div>
+   <p class="eq-p">${adm?'Cada uno ve el plan, las estadísticas y los archivos de las personas que elijas aquí. Toca a alguien para cambiarlo.':'Lo que ve cada uno lo decide quien administra el equipo.'}</p>
+   <div class="qv">${act.map(m=>`<button type="button" class="qv-f" data-q="${m.id}"${adm&&!m.admin?'':' disabled'}>${avHTML(m)}<span class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <i>(tú)</i>':''}</b><small>${escH(veTxt(m))}</small></span>${adm&&!m.admin?'<svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>':''}</button>`).join('')}</div></div>
   <div class="rp-c eq-ayuda"><b>¿Cómo funciona?</b><p>Quien tiene a alguien <b>a su cargo</b> ve su plan de batalla y sus estadísticas, y le puede poner tareas (esa persona solo las puede marcar como hechas).</p>
-   ${adm?'<p>Para poner a alguien bajo otra persona, toca los <b>⋯</b> de esa persona y elige <b>«Depende de»</b>. O al revés: en los ⋯ de la jefa o el jefe, <b>«A su cargo»</b>.</p><p>No va en cascada: si tú tienes a Ramiro a tu cargo y Ramiro tiene a Ana, tú no ves a Ana salvo que también la pongas a tu cargo.</p>':'<p>Las altas, bajas, puestos y quién está a cargo de quién los lleva quien administra el equipo.</p>'}</div>`;
+   ${adm?'<p>Para poner a alguien bajo otra persona, toca los <b>⋯</b> de esa persona y elige <b>«Depende de»</b>. O al revés: en los ⋯ de la jefa o el jefe, <b>«A su cargo»</b>.</p><p>Lo que ve cada uno se elige en <b>«Quién ve qué»</b>: solo su gente directa, toda su rama (su gente y la gente de su gente) o todo el equipo, y además personas sueltas. Ver no es poder cambiar: las tareas y las estadísticas de alguien solo las toca su jefe directo o esa persona.</p>':'<p>Las altas, bajas, puestos y quién está a cargo de quién los lleva quien administra el equipo.</p>'}</div>`;
  organigrama(wrap.querySelector('#org'),adm,act);
+ wrap.querySelectorAll('.qv-f:not([disabled])').forEach(b=>b.onclick=()=>queVe(M(b.dataset.q)));
  wrap.querySelector('#eqMas').onclick=adm?opcionesEquipo:soloAdmin;
  if(!adm)return;
  wrap.querySelector('#alta').onclick=altaMiembro;
@@ -322,6 +333,33 @@ function organigrama(box,adm,act){
    const d=box.querySelector('.sobre');if(!d)return;d.classList.remove('sobre');mover(id,d.dataset.id||null);};
   document.addEventListener('pointermove',mueve);document.addEventListener('pointerup',suelta);document.addEventListener('pointercancel',suelta);});});}
 // El equipo: cambiarle el nombre o la foto (quien administra)
+// ¿A quién ve esta persona? Tres opciones claras + personas sueltas, y debajo la lista de a quién verá
+function queVe(p){if(!p)return;let ve=p.ve||'directos';const ex=new Set((S.veExtra||[]).filter(x=>x.quien===p.id).map(x=>x.a_quien));
+ const otros=S.miembros.filter(m=>m.activo&&m.id!==p.id).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')),dir=new Set(aCargo(p.id)),ram=rama(p.id);
+ const OP=[['directos','Su gente directa','Las personas que tiene a su cargo',dir.size],['rama','Toda su rama','Su gente y la gente de su gente, hasta abajo',ram.size],['todos','Todo el equipo','Todas las personas del equipo',otros.length]];
+ const m=modal(`<h3>¿A quién ve ${escH(pri(p.nombre))}?</h3><p>Verá su plan de batalla, sus estadísticas y sus archivos. Ver no es poder cambiar.</p>
+  <div class="qv-op">${OP.map(([k,t,d,n])=>`<button type="button" data-v="${k}"><i></i><span><b>${t}</b><small>${d}</small></span><em>${n}</em></button>`).join('')}</div>
+  <div class="qv-ex"><label class="l">Y además, estas personas</label><div class="chs" id="qvEx">${otros.map(o=>`<button type="button" data-p="${o.id}">${IC.ck}${escH(pri(o.nombre))}</button>`).join('')}</div></div>
+  <div class="qv-res"></div>
+  <div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`);
+ m.querySelector('.hoja').classList.add('ancha');
+ const pinta=()=>{m.querySelectorAll('.qv-op button').forEach(b=>b.classList.toggle('on',b.dataset.v===ve));
+  const base=ve==='todos'?new Set(otros.map(o=>o.id)):ve==='rama'?ram:dir;
+  m.querySelector('.qv-ex').hidden=ve==='todos';
+  m.querySelectorAll('#qvEx [data-p]').forEach(b=>{const id=b.dataset.p,inc=base.has(id);b.classList.toggle('on',inc||ex.has(id));b.disabled=inc;});
+  const fin=otros.filter(o=>base.has(o.id)||(ve!=='todos'&&ex.has(o.id)));
+  m.querySelector('.qv-res').innerHTML=`<small>${escH(pri(p.nombre))} verá a ${fin.length===otros.length?'todo el equipo':fin.length?fin.length+' persona'+(fin.length>1?'s':''):'nadie más'}</small>${fin.length&&fin.length<otros.length?`<div>${fin.map(o=>`<span>${avHTML(o)}${escH(pri(o.nombre))}</span>`).join('')}</div>`:''}`;};
+ m.querySelectorAll('.qv-op button').forEach(b=>b.onclick=()=>{ve=b.dataset.v;pinta();});
+ m.querySelectorAll('#qvEx [data-p]').forEach(b=>b.onclick=()=>{const id=b.dataset.p;ex.has(id)?ex.delete(id):ex.add(id);pinta();});
+ m.querySelector('[data-x]').onclick=()=>m.remove();
+ m.querySelector('[data-ok]').onclick=async ev=>{ev.target.disabled=true;
+  const r1=await sb.from('pb_miembros').update({ve}).eq('id',p.id).select('id');
+  const ant=new Set((S.veExtra||[]).filter(x=>x.quien===p.id).map(x=>x.a_quien)),pon=[...ex].filter(id=>!ant.has(id)),qui=[...ant].filter(id=>!ex.has(id));
+  const r2=qui.length?await sb.from('pb_ve_extra').delete().eq('quien',p.id).in('a_quien',qui):{};
+  const r3=pon.length?await sb.from('pb_ve_extra').insert(pon.map(a=>({equipo_id:S.yo.equipo_id,quien:p.id,a_quien:a}))):{};
+  if(r1.error||r2.error||r3.error||!(r1.data||[]).length){ev.target.disabled=false;toast('No se ha podido guardar',false);return;}
+  m.remove();toast('Guardado: '+pri(p.nombre)+' '+veTxt({...p,ve}).charAt(0).toLowerCase()+veTxt({...p,ve}).slice(1).replace(/ · .*/,''));await cargaEquipo();renderEquipoOtraVez();};
+ pinta();}
 // Lo que solo cambia quien administra: se explica a los demás en vez de esconderlo
 function soloAdmin(){const a=S.miembros.find(x=>x.admin&&x.activo);modal(`<h3>Lo cambia ${a?escH(pri(a.nombre)):'quien administra'}</h3><p>El nombre del equipo, la foto, los grupos y los puestos los cambia ${a?escH(a.nombre)+', que administra el equipo':'quien administra el equipo'}. Pídeselo a ${a?escH(pri(a.nombre)):'esa persona'}.</p><div class="bts"><button class="bt" onclick="this.closest('.mod').remove()">Entendido</button></div>`);}
 // Nombre del grupo de gente que lleva una persona (sale en el organigrama y en «Mi equipo»)
@@ -382,7 +420,7 @@ function opcionesMiembro(p){if(!p)return;const yo=p.id===S.yo.id;
   ${p.activo?`<button class="op" data-a="dep"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Depende de…${dependeDe(p.id).length?` <em class="op-v">${nombres(dependeDe(p.id))}</em>`:''}</button>
   <button class="op" data-a="car"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>A su cargo…${aCargo(p.id).length?` <em class="op-v">${nombres(aCargo(p.id))}</em>`:''}</button>`:''}
   ${p.activo&&!yo?`<button class="op" data-a="adm"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg>Pasarle la administración</button>`:''}
-  ${p.activo&&!p.admin?`<button class="op" data-a="vt"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>${p.ve_todo?'Que deje de ver todas las estadísticas':'Que vea las estadísticas de todo el equipo'}</button>`:''}
+  ${p.activo&&!p.admin?`<button class="op" data-a="vt"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>Qué puede ver… <em class="op-v">${escH(veTxt(p))}</em></button>`:''}
   ${yo?'':`<button class="op" data-a="clave"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Ponerle una contraseña nueva</button>`}
   <button class="op" data-a="nom"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>Cambiar el nombre</button>
   <button class="op" data-a="fot"><svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>${p.foto?'Cambiar la foto':'Ponerle una foto'}</button>
@@ -391,7 +429,7 @@ function opcionesMiembro(p){if(!p)return;const yo=p.id===S.yo.id;
   ${yo?'':(p.activo?`<button class="op rojo" data-a="baja"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM17 8l5 5M22 8l-5 5"/></svg>Dar de baja</button>`:`<button class="op" data-a="alta"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Volver a dar de alta</button>`)}</div>`);
  const upd=async(campos,ok)=>{m.remove();const {error}=await sb.from('pb_miembros').update(campos).eq('id',p.id);if(error){toast(/administrador/.test(error.message)?'Tiene que quedar al menos un administrador':'No se ha podido',false);return;}toast(ok);await cargaEquipo();if(p.id===S.yo.id)pinta();else renderEquipoOtraVez();};
  const on=(a,f)=>{const b=m.querySelector(`[data-a="${a}"]`);if(b)b.onclick=f;};
- on('vt',()=>{const v=!p.ve_todo;m.remove();(async()=>{const {error}=await sb.from('pb_miembros').update({ve_todo:v}).eq('id',p.id);if(error){toast('No se ha podido',false);return;}toast(v?pri(p.nombre)+' ya ve todas las estadísticas':pri(p.nombre)+' solo verá las de su gente');await cargaEquipo();renderEquipoOtraVez();})();});
+ on('vt',()=>{m.remove();queVe(p);});
  on('dep',()=>{m.remove();const ant=dependeDe(p.id);eligePersonas('¿De quién depende '+pri(p.nombre)+'?','Quien elijas lo tendrá a su cargo: verá su plan y sus estadísticas y le podrá poner tareas.',ant,p.id).then(L=>{if(!L)return;
   guardaCargos(L.filter(q=>!ant.includes(q)).map(q=>[q,p.id]),ant.filter(q=>!L.includes(q)).map(q=>[q,p.id]));});});
  on('car',()=>{m.remove();const ant=aCargo(p.id);eligePersonas('¿Quién está a cargo de '+pri(p.nombre)+'?','Verá su plan y sus estadísticas y les podrá poner tareas.',ant,p.id).then(L=>{if(!L)return;

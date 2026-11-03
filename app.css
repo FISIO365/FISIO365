@@ -406,3 +406,16 @@ input.i:focus{border-color:var(--c);background:#fff}
 .top-n{border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer;min-width:0}
 .top-n b{display:flex;align-items:center;gap:7px}.top-n b svg{width:15px;height:15px;flex:none;fill:none;stroke:var(--c);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .pb-solo{margin:10px 14px 10px 44px}
+/* Quién ve qué */
+.qv{margin-top:6px}.qv-f{display:flex;align-items:center;gap:11px;width:100%;border:0;border-top:1px solid #f1ede9;background:none;padding:11px 0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.qv-f:first-child{border-top:0}.qv-f[disabled]{cursor:default}.qv-f .av{width:36px;height:36px;flex:none}.qv-f .tx{flex:1;min-width:0}.qv-f b{display:block;font-size:14px}.qv-f b i{font-style:normal;font-weight:500;color:var(--mut)}.qv-f small{display:block;font-size:12px;color:var(--mut)}
+.qv-op{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.qv-op button{display:flex;align-items:center;gap:12px;border:1.5px solid #ece5de;background:#fff;border-radius:14px;padding:12px 14px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.qv-op button i{width:20px;height:20px;border-radius:50%;border:1.5px solid #cfc6be;flex:none;position:relative}
+.qv-op button.on{border-color:var(--c);background:#fffaf7}.qv-op button.on i{border-color:var(--c)}.qv-op button.on i::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--c)}
+.qv-op span{flex:1}.qv-op b{display:block;font-size:14.5px}.qv-op small{display:block;font-size:12px;color:var(--mut)}
+.qv-op em{font-style:normal;font-size:12px;font-weight:700;color:var(--mut);background:#f5f2ee;border-radius:99px;padding:2px 9px}
+.qv-ex{margin-top:6px}.qv-ex[hidden]{display:none}.qv-ex .chs{flex-wrap:wrap}.qv-ex .chs button[disabled]{opacity:.55;cursor:default}
+.qv-res{margin-top:14px;background:#f5f2ee;border-radius:14px;padding:12px 14px}.qv-res small{display:block;font-size:13px;font-weight:600}
+.qv-res div{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px}.qv-res span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px}.qv-res .av{width:22px;height:22px;font-size:10px}
+.qv-f .chev{width:16px;height:16px;flex:none;fill:none;stroke:#b9b2ab;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
