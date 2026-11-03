@@ -109,7 +109,7 @@ async function renderEstadisticas(wrap){const box=ce('div','es');wrap.appendChil
  let E=[],AP={},CO={};
  const carga=async()=>{const q=sb.from('pb_estadisticas').select('*');const {data,error}=await (todos()?q.in('persona',suyos()):q.eq('persona',persona())).order('creado');
   if(!box.isConnected)return;if(error){box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
-  E=data||[];AP={};E.forEach(e=>AP[e.id]=[]);
+  E=(data||[]).sort((a,b)=>(b.principal?1:0)-(a.principal?1:0));AP={};E.forEach(e=>AP[e.id]=[]);
   if(E.length){const {data:a}=await sb.from('pb_apuntes').select('*').in('estadistica_id',E.map(e=>e.id)).order('en');(a||[]).forEach(x=>{x.L=madMs(x.en);(AP[x.estadistica_id]=AP[x.estadistica_id]||[]).push(x);});}
   CO={};if(E.length){const {data:co}=await sb.from('pb_condiciones').select('id,estadistica_id,persona,semana,condicion,creado').in('estadistica_id',E.map(e=>e.id)).order('semana',{ascending:false});(co||[]).sort((a,b)=>a.semana<b.semana?1:-1).forEach(c=>(CO[c.estadistica_id]=CO[c.estadistica_id]||[]).push(c));}
   if(!box.isConnected)return;
@@ -126,14 +126,14 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
    const cc=e.periodo==='semana'&&(CO[e.id]||[]).find(c=>c.semana===ymd(perIni('semana',ahora))&&c.persona===e.persona);
    let der='';if(e.periodo==='semana'){const r=sieteR(e,A,ahora,ahora);der=`<div class="es-ult"><b>${num(r.este)}</b><i style="color:${colorDe(bueno(e,r.d))}">${r.d?(r.d>0?'▲ ':'▼ ')+num(Math.abs(r.d)):'= igual'}</i></div>`;}
    else if(cur){der=`<div class="es-ult"><b>${num(cur.v)}</b><i style="color:var(--mut)">${escH(perLargo(e.periodo,cur.s,ahora).toLowerCase())}</i></div>`;}
-   return `<button type="button" class="rp-c es-c" data-e="${e.id}"><div class="es-ch"><div><b>${escH(e.nombre)}</b><small>${escH(e.eje_y)}${e.periodo==='semana'?' · esta semana':''}</small>${cc?condChip(cc.condicion,'sm'):''}</div>${der}</div>${grafica(e,T,ahora,true)}</button>`;};
+   return `<button type="button" class="rp-c es-c${e.principal?' pri':''}" data-e="${e.id}"><div class="es-ch"><div>${e.principal?'<span class="es-pri">★ Principal</span>':''}<b>${escH(e.nombre)}</b><small>${escH(e.eje_y)}${e.periodo==='semana'?' · esta semana':''}</small>${cc?condChip(cc.condicion,'sm'):''}</div>${der}</div>${grafica(e,T,ahora,true)}</button>`;};
   if(todos()){const G=suyos().map(id=>({id,L:act.filter(e=>e.persona===id)}));
-   box.innerHTML=quien()+`${G.map(g=>`<div class="es-gr" style="margin-left:${Math.min(3,(M(g.id)||{})._niv||0)*14}px">${avHTML(M(g.id))}<div><b>${escH(nomDe(g.id))}</b>${pTag(M(g.id))}<small>${g.L.length} estadística${g.L.length===1?'':'s'}</small></div>${puedeEst(g.id)?`<button class="bt sec es-nv2" data-n="${g.id}">+ Nueva</button>`:''}</div>${g.L.map(tarj).join('')||'<p class="vacio" style="padding-top:0">Aún no tiene estadísticas.</p>'}`).join('')}`;
+   box.innerHTML=quien()+`${G.map(g=>`<div class="es-gr" style="margin-left:${Math.min(3,(M(g.id)||{})._niv||0)*14}px">${avHTML(M(g.id))}<div><b>${escH(nomDe(g.id))}</b>${pTag(M(g.id))}<small>${g.L.length?(g.L.some(x=>x.principal)?'1 principal'+(g.L.length>1?' y '+(g.L.length-1)+' más':''):g.L.length+' estadística'+(g.L.length===1?'':'s')):'Sin estadísticas'}</small></div>${puedeEst(g.id)?`<button class="bt sec es-nv2" data-n="${g.id}">+ Nueva</button>`:''}</div>${g.L.map(tarj).join('')||'<p class="vacio" style="padding-top:0">Aún no tiene estadísticas.</p>'}`).join('')}`;
    chipsQuien();box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>abre(b.dataset.e));box.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>editarEst(null,b.dataset.n));window.scrollTo(0,y);return;}
   box.innerHTML=quien()+`<div class="es-cab"><div><b>${yoMismo?'Tus estadísticas':'Estadísticas de '+escH(nom)}</b>${pTag(M(persona()))}</div><button class="bt" id="esNueva">+ Nueva</button></div>
    ${!act.length?`<div class="rp-c">`:''}${!act.length?`<p class="eq-p">${yoMismo?'Crea tu primera estadística: lo que produce tu puesto (cursos completados, pacientes nuevos…). Vas apuntando lo que haces y se grafea sola, semana a semana (de jueves a las 14:00 a jueves a las 14:00), con su tendencia y su 7R.':'Aún no tiene estadísticas. Puedes crearle una.'}</p></div>`:''}
    ${(()=>{if(!yoMismo)return '';const pend=act.filter(e=>{if(e.periodo!=='semana')return false;const cs=condSemana(e,AP[e.id]||[],ahora);return cs.hay&&!(CO[e.id]||[]).some(c=>c.semana===cs.semana&&c.persona===yo);});
-     return pend.length?`<div class="rp-c cd-ban"><small class="cd-k">Ha cerrado la semana · jueves 14:00</small><b>Elige tu condición</b><p class="eq-p">La eliges, la escribes y se la envías a quien quieras en PDF. Te falta${pend.length>1?'n':''}:</p><div class="cd-banl">${pend.map(e=>`<button type="button" data-ce="${e.id}"><span>${escH(e.nombre)}</span><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div></div>`:'';})()}
+     return pend.length?`<div class="rp-c cd-ban"><small class="cd-k">Ha cerrado la semana · jueves 14:00</small><b>Elige tu condición</b><p class="eq-p">La eliges, la escribes y la guardas (o se la envías a quien quieras). Te falta${pend.length>1?'n':''}:</p><div class="cd-banl">${pend.map(e=>`<button type="button" data-ce="${e.id}"><span>${escH(e.nombre)}</span><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div></div>`:'';})()}
    ${act.map(tarj).join('')}${arc.length?`<details class="es-arc"><summary>Archivadas (${arc.length})</summary>${arc.map(tarj).join('')}</details>`:''}`;
   chipsQuien();box.querySelector('#esNueva').onclick=()=>editarEst(null);
   box.querySelectorAll('[data-ce]').forEach(b=>b.onclick=()=>{const e=E.find(x=>x.id===b.dataset.ce);if(e)escribeCond(e,AP[e.id]||[],()=>carga());});
@@ -164,7 +164,7 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
   const fa=totAnt-este,f2=pos?(fa>=0?`Te faltan ${num(fa+1)}`:'¡Superada!'):(fa>=0?`Margen: ${num(fa)}`:`Te has pasado ${num(-fa)}`),b2=pos?fa<0:fa>=0;
   box.innerHTML=quien()+`<button type="button" class="es-atras"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>Estadísticas</button>
    <div class="rp-c es-hero"><div class="es-hh"><div class="es-due">${avHTML(o)}<div><b>${escH(o.nombre)}${e.persona===yo?' <i>(tú)</i>':''}</b>${pTag(o)}</div></div>${edita?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>
-    <h2 class="es-tit">${escH(e.nombre)}</h2>
+    <h2 class="es-tit">${e.principal?'<span class="es-pri">★ Principal</span><br>':''}${escH(e.nombre)}</h2>
     <div class="es-big"><b>${num(este)}</b><small>${escH(e.eje_y)} · ${P[0].toLowerCase()}</small></div>
     <div class="es-cmp">
      <div><span>${NOM[0]}<small>${escH(dLargo(corteAnt))}, ${hhmm(corteAnt)}</small></span><b>${num(antes)}</b><i style="color:${colorDe(b)}">${f1}</i></div>
@@ -199,9 +199,11 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
    pregunta('¿Quitar este apunte ('+num(x.cantidad)+')?',{si:'Quitar'}).then(async ok=>{if(!ok)return;const {error}=await sb.from('pb_apuntes').delete().eq('id',id);if(error){toast('No se ha podido',false);return;}AP[e.id]=A.filter(z=>z.id!==id);detalle(e);});});
   if(box.querySelector('.mas3'))box.querySelector('.mas3').onclick=()=>{const m=modal(`<h3>${escH(e.nombre)}</h3><div style="margin-top:10px">
    <button class="op" data-a="ed"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg>Cambiar la estadística</button>
+   ${e.principal?'':'<button class="op" data-a="pr"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>Que sea su estadística principal</button>'}
    <button class="op" data-a="ar"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM2 3h20v4H2zM10 12h4"/></svg>${e.archivada?'Sacar de archivadas':'Archivar'}</button>
    <button class="op rojo" data-a="bo"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Borrar con todos sus datos</button></div>`);
    m.querySelector('[data-a="ed"]').onclick=()=>{m.remove();editarEst(e);};
+   {const b=m.querySelector('[data-a="pr"]');if(b)b.onclick=async()=>{m.remove();await sb.from('pb_estadisticas').update({principal:false}).eq('persona',e.persona).eq('principal',true);const {error}=await sb.from('pb_estadisticas').update({principal:true}).eq('id',e.id);if(error){toast('No se ha podido',false);return;}toast('«'+e.nombre+'» es ahora la principal');carga();};}
    m.querySelector('[data-a="ar"]').onclick=async()=>{m.remove();const {error}=await sb.from('pb_estadisticas').update({archivada:!e.archivada}).eq('id',e.id);if(error){toast('No se ha podido',false);return;}e.archivada=!e.archivada;toast(e.archivada?'Archivada':'Vuelve a estar activa');ES.abierta='';esGuarda();pinta3();};
    m.querySelector('[data-a="bo"]').onclick=()=>{m.remove();pregunta('¿Borrar «'+e.nombre+'» y todos sus datos?',{sub:'No se puede deshacer. Si solo quieres que no salga, archívala.',si:'Borrar'}).then(async ok=>{if(!ok)return;const {error}=await sb.from('pb_estadisticas').delete().eq('id',e.id);if(error){toast('No se ha podido',false);return;}ES.abierta='';esGuarda();carga();});};};
   window.scrollTo(0,y);};
@@ -223,7 +225,7 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
    if(!v.nombre||!v.eje_y){m.querySelector('.err').textContent='Pon el nombre y qué cuentas';return;}
    if(/^[\d\s.,]+$/.test(v.eje_y)){m.querySelector('.err').textContent='En «¿Qué cuentas?» va lo que cuentas (por ejemplo «nº de cursos»), no una cantidad';return;}ev.target.disabled=true;
    const campos={puesto:v.puesto||null,nombre:v.nombre,eje_y:v.eje_y,periodo:v.periodo,sentido:v.sentido};
-   const r=e?await sb.from('pb_estadisticas').update(campos).eq('id',e.id).select().single():await sb.from('pb_estadisticas').insert({...campos,equipo_id:S.yo.equipo_id,persona:per,por:yo}).select().single();
+   const r=e?await sb.from('pb_estadisticas').update(campos).eq('id',e.id).select().single():await sb.from('pb_estadisticas').insert({...campos,principal:!E.some(x=>x.persona===per&&!x.archivada),equipo_id:S.yo.equipo_id,persona:per,por:yo}).select().single();
    if(r.error){ev.target.disabled=false;m.querySelector('.err').textContent='No se ha podido guardar';return;}
    m.remove();toast(e?'Guardada':'Creada');if(per!==yo){ES.persona=per;ES.volverTodos=1;}ES.abierta=(r.data&&r.data.id)||(e&&e.id)||'';esGuarda();carga();};};
  carga();}
