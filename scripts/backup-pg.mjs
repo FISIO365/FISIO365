@@ -53,12 +53,13 @@ if (ADJ) {
   const nom = new Map(lista.map(a => [a.id, a]));
   for (let i = 0; i < lista.length; i += 20) {
     const j = await pide({ que: 'bajar', ids: lista.slice(i, i + 20).map(a => a.id) });
-    await Promise.all(j.archivos.map(async x => {
+    const baja = async x => {
       try {
-        let buf; if (x.url) { const r = await fetch(x.url); if (!r.ok) throw 'almacén ' + r.status; buf = Buffer.from(await r.arrayBuffer()); } else if (x.b64 != null) buf = Buffer.from(x.b64, 'base64'); else throw 'sin enlace';
+        let buf; if (x.url) { let r; for (let k = 0; k < 6; k++) { r = await fetch(x.url); if (r.ok || (r.status !== 429 && r.status < 500)) break; await espera(1500 * 2 ** k); } if (!r.ok) throw 'almacén ' + r.status; buf = Buffer.from(await r.arrayBuffer()); } else if (x.b64 != null) buf = Buffer.from(x.b64, 'base64'); else throw 'sin enlace';
         fs.writeFileSync(path.join(ad, `${x.id}__${String((nom.get(x.id) || {}).nombre || 'archivo').replace(/[\\/:*?"<>|]/g, '_')}`), buf); n++; mb += buf.length / 1048576;
       } catch (e) { fallos++; F.push({ id: x.id, motivo: String(e || 'error') }); }
-    }));
+    };
+    for (let k = 0; k < j.archivos.length; k += 4) await Promise.all(j.archivos.slice(k, k + 4).map(baja));
   }
   // Dónde se usa cada archivo que no se ha podido bajar (tabla y campo; sin datos de pacientes en el registro público)
   const donde = new Map();
