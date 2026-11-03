@@ -49,17 +49,27 @@ if (total === 0) { console.error('La copia ha salido vacía'); process.exit(1); 
 const lista = []; { let desde = ''; for (;;) { const j = await pide({ que: 'archivos', desde }); lista.push(...j.archivos); if (j.archivos.length < 500) break; desde = j.archivos[j.archivos.length - 1].id; } }
 fs.writeFileSync(path.join(dir, '_archivos.json'), JSON.stringify(lista));
 if (ADJ) {
-  const ad = path.join(dir, '_adjuntos'); fs.mkdirSync(ad, { recursive: true }); let n = 0, mb = 0, fallos = 0;
+  const ad = path.join(dir, '_adjuntos'); fs.mkdirSync(ad, { recursive: true }); let n = 0, mb = 0, fallos = 0; const F = [];
   const nom = new Map(lista.map(a => [a.id, a]));
   for (let i = 0; i < lista.length; i += 20) {
     const j = await pide({ que: 'bajar', ids: lista.slice(i, i + 20).map(a => a.id) });
     await Promise.all(j.archivos.map(async x => {
       try {
-        let buf; if (x.url) { const r = await fetch(x.url); if (!r.ok) throw 0; buf = Buffer.from(await r.arrayBuffer()); } else buf = Buffer.from(x.b64 || '', 'base64');
+        let buf; if (x.url) { const r = await fetch(x.url); if (!r.ok) throw 'almacén ' + r.status; buf = Buffer.from(await r.arrayBuffer()); } else if (x.b64 != null) buf = Buffer.from(x.b64, 'base64'); else throw 'sin enlace';
         fs.writeFileSync(path.join(ad, `${x.id}__${String((nom.get(x.id) || {}).nombre || 'archivo').replace(/[\\/:*?"<>|]/g, '_')}`), buf); n++; mb += buf.length / 1048576;
-      } catch (e) { fallos++; }
+      } catch (e) { fallos++; F.push({ id: x.id, motivo: String(e || 'error') }); }
     }));
   }
+  // Dónde se usa cada archivo que no se ha podido bajar (tabla y campo; sin datos de pacientes en el registro público)
+  const donde = new Map();
+  for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'))) {
+    const tn = f.replace(/__tbl.*$/, ''); for (const r of JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))) for (const [k, v] of Object.entries(r.fields || {})) if (Array.isArray(v)) for (const a of v) if (a && a.id) { const id = 'att' + String(a.id).slice(3); if (!donde.has(id)) donde.set(id, { tabla: tn, campo: k, registro: r.id, fecha: r.createdTime }); }
+  }
+  F.forEach(f => Object.assign(f, donde.get(f.id) || { tabla: '(no se usa en ningún registro)' }, { tipo: (nom.get(f.id) || {}).tipo, bytes: (nom.get(f.id) || {}).bytes, subido: (nom.get(f.id) || {}).creado }));
+  fs.writeFileSync(path.join(dir, '_fallos_archivos.json'), JSON.stringify(F, null, 1));
+  const cuenta = {}; F.forEach(f => { const k = `${f.tabla} · ${f.campo || '-'} · ${f.motivo}`; cuenta[k] = (cuenta[k] || 0) + 1; });
+  console.log('Archivos que no se han podido bajar:'); Object.entries(cuenta).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => console.log(`  ${v} × ${k}`));
+  F.forEach(f => console.log(`  FALLO ${f.id} ${f.tabla} · ${f.campo || '-'} · ${String(f.fecha || f.subido || '').slice(0, 10)} · ${f.tipo || ''} · ${f.bytes || 0} B · ${f.motivo}`));
   resumen.adjuntos = { bajados: n, MB: Math.round(mb), fallos }; console.log('Archivos:', JSON.stringify(resumen.adjuntos));
 }
 fs.writeFileSync(path.join(OUT, 'RESUMEN.json'), JSON.stringify(resumen, null, 1));
