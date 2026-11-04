@@ -2107,6 +2107,24 @@ async function motivoCierres1101() {
     const pid = ((r.fields || {}).PACIENTE || [])[0]; if (pid) { const pa = await at(`${PACIENTES}/${pid}`).catch(() => ({})); nombres.push(String((pa.fields || {})['FULL NAME'] || pid)); } }
   console.log('cierres-1101', hoy.length, 'de', L.length, JSON.stringify(nombres));
 }
+// Recordatorio antes de que caduque el plazo de pago: entre 12 h y 1 h antes del límite, de 9 a 21 h,
+// solo una vez y solo si el pago se pidió hace más de 3 h (si el plazo es corto, no hace falta)
+async function pagoRecordar() {
+  const rs = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`{PAGO ESTADO}='PENDIENTE DE PAGO'`)}&pageSize=100`).catch(() => ({}));
+  const ahora = Date.now(), hM = +new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hour: '2-digit', hourCycle: 'h23' }).format(new Date());
+  if (hM < 9 || hM >= 21) return 0; let n = 0;
+  for (const r of (rs.records || [])) { const F = r.fields || {}, lim = new Date(F['PAGO LÍMITE'] || 0).getTime(), reg = String(F['PAGO REGISTRO'] || '');
+    if (!lim || lim - ahora > 12 * 3600e3 || lim - ahora < 3600e3 || /Recordatorio de pago/.test(reg)) continue;
+    const m = [...reg.matchAll(/(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})/g)].pop();
+    if (m) { const y = +m[3] < 100 ? 2000 + +m[3] : +m[3], g = Date.UTC(y, +m[2] - 1, +m[1], +m[4], +m[5]); if (ahora - (g - madridOffMs(g)) < 3 * 3600e3) continue; }
+    const pac = await pagoPaciente(F), pid = (F['RELACIÓN - CITA'] || [])[0], fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '');
+    const d = new Date(fecha + 'T12:00:00Z'), cuando = `${['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][d.getUTCDay()]} ${d.getUTCDate()} a las ${hora}`, hasta = pagoLimTxt(F['PAGO LÍMITE']);
+    const u = await at(`tblTPlcuiSjQngkaD/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO REGISTRO': (reg + `\n${pagoAhora()} · Recordatorio de pago enviado`).trim() } }) }); if (u.error) continue; n++;
+    if (pid) { try { const { avisar } = require('./_push'); await avisar('paciente', pid, { title: 'Falta el pago de tu cita', body: `Te guardamos la hora del ${cuando} hasta el ${hasta}.`, url: enlacePago(r.id), tag: 'pago-' + r.id }); } catch (e) {} }
+    if (pac.email) { try { await valeMail(pac.email, `Recuerda: falta el pago de tu cita del ${cuando}`, `Hola${pac.pila ? ' ' + escHtml(pac.pila) : ''},`, `Te seguimos guardando la hora del <b>${cuando}</b>, pero aún falta el pago (<b>${String(F['PAGO IMPORTE'] || '').replace('.', ',')} €</b>).<br><br>Tienes <b>hasta el ${hasta}</b>; si para entonces no se ha completado, la hora vuelve a quedar libre.<br><br>¿Dudas? Escríbenos por WhatsApp al 672 89 39 49.`, 'Pagar ahora', enlacePago(r.id)); } catch (e) {} }
+  }
+  return n;
+}
 async function caducarPagos() {
   if (Date.now() - _pagoCad < 5 * 60e3) return 0; _pagoCad = Date.now(); let n = 0;
   const rs = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND({PAGO ESTADO}='PENDIENTE DE PAGO',IS_BEFORE({PAGO LÍMITE},NOW()))`)}&pageSize=50`).catch(() => ({}));
@@ -2119,6 +2137,7 @@ async function caducarPagos() {
     const pac = await pagoPaciente(F);
     await pagoAvisar('', `⏰ ${pac.pila || 'Un paciente'} no ha pagado a tiempo: cita cancelada`, `${fecha.split('-').reverse().join('/')} a las ${hora}${fis ? ' con ' + fis : ''}. El hueco vuelve a estar libre.`, 'pago-' + r.id);
   }
+  await pagoRecordar().catch(e => console.log('pago-recordar', e.message));
   return n;
 }
 // ── FACTURA POR ENLACE (WhatsApp): /f/{r|i}{id}-{firma} → página con el PDF; ?pdf=1 descarga ──
