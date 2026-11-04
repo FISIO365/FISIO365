@@ -310,5 +310,78 @@
 "email": "cemguinardo@igebcn.cat",
 "notas": "Datos del listado municipal de 2017: confirmar.",
 "fuente": "barcelona.cat/lesportinclou"
+},
+{
+"nombre": "Futbol Club Martinenc",
+"deporte": "Fútbol",
+"tipo": "Club",
+"barrio": "Guinardó",
+"direccion": "C/ Telègraf, 31-57 (CEM Guinardó)",
+"tel": "934 364 746",
+"email": "fcmartinenc@fcmartinenc.cat",
+"web": "https://fcmartinenc.cat/",
+"notas": "Club centenario, mucho fútbol base (juvenil en Lliga Elit) y campus. También básquet y natación artística en el CEM Guinardó.",
+"fuente": "guia.barcelona.cat"
+},
+{
+"nombre": "Club Horta Futbol Sala",
+"deporte": "Fútbol sala",
+"tipo": "Club",
+"barrio": "Horta",
+"direccion": "Pg. Universal, 18",
+"tel": "695 598 997",
+"email": "clubhortafutbolsala@hotmail.com",
+"web": "https://www.hortafutbolsala.org/",
+"instagram": "@horta_futsal",
+"fuente": "guia.barcelona.cat"
+},
+{
+"nombre": "CCD Turó de la Peira",
+"deporte": "Fútbol",
+"tipo": "Club",
+"barrio": "Turó de la Peira",
+"direccion": "Camp Municipal Turó de la Peira",
+"contacto": "Fermín Díaz (portavoz del club)",
+"notas": "Centre Cultural Esportiu Turó de la Peira: fútbol base (juvenil en Lliga Elit). Falta teléfono o email.",
+"fuente": "beteve.cat"
+},
+{
+"nombre": "CE Júpiter",
+"deporte": "Fútbol",
+"tipo": "Club",
+"barrio": "La Verneda",
+"direccion": "Camp Municipal de La Verneda",
+"notas": "Club histórico de Sant Martí con fútbol base y la Fundació Júpiter. Para llegar a ellos, el CEM Júpiter (933 148 820).",
+"fuente": "beteve.cat"
+},
+{
+"nombre": "Sant Andreu CrossFit",
+"deporte": "CrossFit",
+"tipo": "Box/CrossFit",
+"barrio": "Sant Andreu de Palomar",
+"direccion": "C/ Segre, 71",
+"tel": "650 602 290",
+"email": "a_gil25@hotmail.com",
+"notas": "Box de más de 1.000 m². Mucha lesión de hombro y lumbar: buen público para fisio.",
+"fuente": "crossfit.com"
+},
+{
+"nombre": "CrossFit Garage La Sagrera",
+"deporte": "CrossFit",
+"tipo": "Box/CrossFit",
+"barrio": "La Sagrera",
+"direccion": "A 30 m del metro La Sagrera",
+"notas": "Falta teléfono o email (está en Urban Sports Club).",
+"fuente": "urbansportsclub.com"
+},
+{
+"nombre": "Gimnàs Puro Impacto",
+"deporte": "Artes marciales y boxeo",
+"tipo": "Gimnasio",
+"barrio": "Navas",
+"direccion": "C/ Garcilaso, 171",
+"web": "http://www.puroimpacto.com/",
+"notas": "Gimnasio de deportes de contacto.",
+"fuente": "shbarcelona.com"
 }
 ]
