@@ -475,7 +475,21 @@ async function datosConsent(id) {
 }
 
 // ── CAPTACIÓN: contactos sin cita, lista de espera y negocios del barrio ─────
-const CAP = { contacto: 'tblgsMcknBLDyfWHu', esperaP: 'tbl5ksXlpfsSTZk5i', esperaN: 'tblAvnUMOvVo4OBne', negocio: 'tblO5y1Ikg3LIalic', referidos: 'tblr27u3cvtzfyqI6' };
+const CAP = { contacto: 'tblgsMcknBLDyfWHu', esperaP: 'tbl5ksXlpfsSTZk5i', esperaN: 'tblAvnUMOvVo4OBne', negocio: 'tblO5y1Ikg3LIalic', referidos: 'tblr27u3cvtzfyqI6', club: 'tblClubsDeporti01' };
+// Clubs deportivos de la zona: la lista inicial está en api/_clubs.json. Se añaden solos los que aún no se han importado
+// (las claves importadas se guardan en AJUSTES › clubs_semilla, así un club borrado no vuelve a salir)
+const clubClave = n => String(n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+async function clubsSemilla() {
+  let semilla = []; try { semilla = require('./_clubs.json'); } catch (_) { return; }
+  const ya = new Set(await ajuste('clubs_semilla', [])), nuevos = semilla.filter(c => c && c.nombre && !ya.has(clubClave(c.nombre)));
+  if (!nuevos.length) return;
+  for (let i = 0; i < nuevos.length; i += 10) {
+    const d = await at(CAP.club, { method: 'POST', body: JSON.stringify({ typecast: true, records: nuevos.slice(i, i + 10).map(c => ({ fields: { NOMBRE: c.nombre, DEPORTE: c.deporte || '', TIPO: c.tipo || 'Club', BARRIO: c.barrio || '', 'DIRECCIÓN': c.direccion || '', TELF: c.tel || '', EMAIL: c.email || '', WEB: c.web || '', INSTAGRAM: c.instagram || '', CONTACTO: c.contacto || '', ESTADO: 'POR CONTACTAR', NOTAS: c.notas || '', FUENTE: c.fuente || '', CLAVE: clubClave(c.nombre) } })) }) });
+    if (d.error) throw new Error(d.error.message || 'No se han podido añadir los clubs');
+    nuevos.slice(i, i + 10).forEach(c => ya.add(clubClave(c.nombre)));
+    await guardarAjuste('clubs_semilla', [...ya], 'Lista inicial');
+  }
+}
 const capTodos = async (t, q2) => { let recs = [], off = ''; do { const d = await at(`${t}?${q2}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error || d.errors) throw new Error((d.error && d.error.message) || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
 let _espera = { t: 0, v: null };
 async function esperaLista(forzar) {
@@ -4656,6 +4670,8 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-cap') {
           const desde = new Date(Date.now() - 180 * 864e5).toISOString().slice(0, 10);
           const fin = new Date(Date.now() + 8 * 864e5).toISOString().slice(0, 10), ayer = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+          try { await clubsSemilla(); } catch (e) { console.error('clubs semilla', e.message); }
+          const clubsP = capTodos(CAP.club, 'sort[0][field]=NOMBRE&sort[0][direction]=asc').catch(() => []);
           const [con, esp, neg, ref, lib] = await Promise.all([
             capTodos(CAP.contacto, `filterByFormula=${encodeURIComponent(`IS_AFTER({FECHA},'${desde}')`)}&sort[0][field]=FECHA&sort[0][direction]=desc`),
             esperaLista(true),
@@ -4671,7 +4687,8 @@ module.exports = async function handler(req, res) {
             return { id: r.id, nombre: F['NOMBRE'] || '', tipo: cNm(F['TIPO NEGOCIO']), estado: cNm(F['ESTADO']) || 'PENDIENTE', fecha: F['FECHA'] || '', flyers: !!F['FLAYERS ENTREGADOS'], notas: F['NOTAS'] || '', direccion: F['DIRECCIÓN'] || '', contacto: F['CONTACTO'] || '', tel: F['TELF'] || '', proxima: F['PRÓXIMA VISITA'] || '', historial: F['HISTORIAL'] || '', diez: !!F['10% A SUS CLIENTES'], vienen }; });
           return res.status(200).json({ ok: true, hoy: hoyF,
             contactos: con.map(r => { const F = r.fields; return { id: r.id, fecha: F['FECHA'] || r.createdTime, nombre: F['NOMBRE'] || '', medio: cNm(F['MEDIO']), mensaje: F['MENSAJE'] || '', citado: cNm(F['CITADO']), motivo: F['MOTIVO'] || '', motivoTipo: cNm(F['MOTIVO TIPO']), tel: F['TELF'] || '', por: F['REGISTRADO POR'] || '', archivado: !!F['ARCHIVADO'] }; }),
-            espera: esp, negocios, libres });
+            espera: esp, negocios, libres,
+            clubs: (await clubsP).map(r => { const F = r.fields; return { id: r.id, nombre: F['NOMBRE'] || '', deporte: F['DEPORTE'] || '', tipo: F['TIPO'] || '', barrio: F['BARRIO'] || '', direccion: F['DIRECCIÓN'] || '', tel: F['TELF'] || '', email: F['EMAIL'] || '', web: F['WEB'] || '', instagram: F['INSTAGRAM'] || '', contacto: F['CONTACTO'] || '', estado: F['ESTADO'] || 'POR CONTACTAR', proximo: F['PRÓXIMO CONTACTO'] || '', ultimo: F['ÚLTIMO CONTACTO'] || '', historial: F['HISTORIAL'] || '', notas: F['NOTAS'] || '' }; }) });
         }
         if (action === 'seg-cap-contactos') { // «Sin cita» en Pacientes: quien preguntó y aún no se citó (ni está archivado)
           const desde = new Date(Date.now() - 180 * 864e5).toISOString().slice(0, 10);
@@ -4687,7 +4704,7 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, hoy: hoyF, espera: esp.filter(e => e.estado === 'ESPERANDO'), libres, negocios: neg.map(r => ({ id: r.id, nombre: r.fields['NOMBRE'] || '', proxima: r.fields['PRÓXIMA VISITA'] || '', tel: r.fields['TELF'] || '', contacto: r.fields['CONTACTO'] || '' })) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
-        const T = { contacto: CAP.contacto, esperaP: CAP.esperaP, esperaN: CAP.esperaN, negocio: CAP.negocio }[q.tabla];
+        const T = { contacto: CAP.contacto, esperaP: CAP.esperaP, esperaN: CAP.esperaN, negocio: CAP.negocio, club: CAP.club }[q.tabla];
         if (!T) return res.status(400).json({ ok: false, error: 'Tabla' });
         if (action === 'seg-cap-borrar') { if (!okId(q.id)) return res.status(400).json({ ok: false }); const d = await at(`${T}/${q.id}`, { method: 'DELETE' }); if (T !== CAP.contacto && T !== CAP.negocio) _espera.t = 0; return res.status(200).json({ ok: !d.error }); }
         if (action === 'seg-cap-guardar') {
@@ -4699,6 +4716,10 @@ module.exports = async function handler(req, res) {
             if (c.medio !== undefined) f['MEDIO'] = c.medio || null; if (c.citado !== undefined) f['CITADO'] = c.citado || null; if (c.motivoTipo !== undefined) f['MOTIVO TIPO'] = c.motivoTipo || null;
             if (c.tel !== undefined) f['TELF'] = String(c.tel || '').slice(0, 30); if (c.archivado !== undefined) f['ARCHIVADO'] = !!c.archivado;
             if (!q.id && !f['FECHA']) f['FECHA'] = new Date().toISOString();
+          } else if (q.tabla === 'club') {
+            txt('NOMBRE', c.nombre, 150); txt('DEPORTE', c.deporte, 80); txt('TIPO', c.tipo, 40); txt('BARRIO', c.barrio, 80); txt('DIRECCIÓN', c.direccion, 200); txt('TELF', c.tel, 60); txt('EMAIL', c.email, 120); txt('WEB', c.web, 300); txt('INSTAGRAM', c.instagram, 120); txt('CONTACTO', c.contacto, 150); txt('ESTADO', c.estado, 40); txt('NOTAS', c.notas, 5000); txt('HISTORIAL', c.historial, 30000);
+            if (c.proximo !== undefined) f['PRÓXIMO CONTACTO'] = okF(c.proximo) ? c.proximo : null; if (c.ultimo !== undefined) f['ÚLTIMO CONTACTO'] = okF(c.ultimo) ? c.ultimo : null;
+            if (c.nombre !== undefined) f['CLAVE'] = clubClave(c.nombre);
           } else if (q.tabla === 'negocio') {
             txt('NOMBRE', c.nombre, 120); txt('NOTAS', c.notas); txt('DIRECCIÓN', c.direccion, 200); txt('CONTACTO', c.contacto, 120); txt('HISTORIAL', c.historial, 20000);
             if (c.tel !== undefined) f['TELF'] = String(c.tel || '').slice(0, 30);

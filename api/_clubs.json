@@ -1,0 +1,314 @@
+[
+{
+"nombre": "UE Sant Andreu",
+"deporte": "Fútbol",
+"tipo": "Club",
+"barrio": "Sant Andreu de Palomar",
+"direccion": "C/ Santa Coloma, 39 (Camp Narcís Sala)",
+"tel": "933 112 954",
+"email": "informacio@uesantandreu.cat",
+"web": "http://www.uesantandreu.cat",
+"instagram": "@uesantandreu",
+"notas": "El club grande del barrio: primer equipo en Segunda Federación y mucho fútbol base.",
+"fuente": "guia.barcelona.cat"
+},
+{
+"nombre": "Club Natació Sant Andreu",
+"deporte": "Natación y waterpolo",
+"tipo": "Club",
+"barrio": "Sant Andreu de Palomar",
+"direccion": "Rambla de Fabra i Puig, 47",
+"tel": "933 456 789",
+"email": "gerencia@cnsandreu.com",
+"web": "https://www.cnsantandreu.com/",
+"notas": "Waterpolo (también femenino), natación, pádel y frontón. También gestiona el CEM Sant Andreu y el CEM La Sagrera.",
+"fuente": "guia.barcelona.cat"
+},
+{
+"nombre": "Associació Esportiva Sant Andreu",
+"deporte": "Polideportivo",
+"tipo": "Club",
+"barrio": "Sant Andreu",
+"direccion": "C/ Virgili, 2 (Poliesportiu Camp del Ferro)",
+"tel": "933 464 601",
+"email": "info@aesantandreu.com",
+"web": "https://www.aesantandreu.org/",
+"notas": "AE Dte. IX Sant Andreu: escuelas deportivas y campus; gestiona el Camp del Ferro, el Pavelló Francisco Calvo y el campo de Baró de Viver.",
+"fuente": "agenda500.barcelona.cat"
+},
+{
+"nombre": "Club Patí Independent La Sagrera",
+"deporte": "Hockey patines",
+"tipo": "Club",
+"barrio": "La Sagrera",
+"direccion": "C/ Hondures, 18 (Pista Poliesportiva La Sagrera)",
+"tel": "639 836 480",
+"email": "info@cpisagrera.cat",
+"web": "https://cpisagrera.cat/",
+"notas": "CPI La Sagrera: hockey patines de base, campus de verano.",
+"fuente": "agenda500.barcelona.cat"
+},
+{
+"nombre": "Agrupació Esportiva Bon Pastor",
+"deporte": "Fútbol y polideportivo",
+"tipo": "Club",
+"barrio": "Bon Pastor",
+"direccion": "C/ Costa Daurada, 12 (CEM Bon Pastor)",
+"tel": "933 120 702",
+"email": "info@aebonpastor.org",
+"web": "https://cembonpastor.cat/",
+"notas": "Fútbol en Tercera Catalana y gestiona el CEM Bon Pastor (piscina, gimnasio, pabellón).",
+"fuente": "guia.barcelona.cat"
+},
+{
+"nombre": "Secció Esportiva Sant Joan de Mata",
+"deporte": "Básquet",
+"tipo": "Club",
+"barrio": "Sant Andreu de Palomar",
+"direccion": "Pg. Torras i Bages, 170-172 (Pavelló Torras i Bages)",
+"tel": "933 119 009",
+"notas": "Club de básquet con muchos equipos; gestiona el Pavelló Torras i Bages (el teléfono es el del pabellón).",
+"fuente": "guia.barcelona.cat"
+},
+{
+"nombre": "CB Fènix Andreuenc (UE Sant Andreu Bàsquet)",
+"deporte": "Básquet",
+"tipo": "Club",
+"barrio": "Sant Andreu de Palomar",
+"direccion": "Escola Segre, C/ Segre, 35",
+"notas": "Juega como «UE Sant Andreu» en la Federació Catalana de Bàsquet (Escola Segre y Poliesportiu Bon Pastor). Falta buscar teléfono o email.",
+"fuente": "basquetcatala.cat"
+},
+{
+"nombre": "Club Handbol Sant Andreu de Palomar",
+"deporte": "Balonmano",
+"tipo": "Club",
+"barrio": "Sant Andreu de Palomar",
+"contacto": "Pere Checa (presidente)",
+"notas": "Sin pabellón propio: entrena en el CEM Bon Pastor, Escola Pegaso, Jesús-Maria y Mare de Déu de la Soledat. Tiene equipo femenino. Falta teléfono o email.",
+"fuente": "beteve.cat"
+},
+{
+"nombre": "CF Besòs Baró de Viver",
+"deporte": "Fútbol",
+"tipo": "Club",
+"barrio": "Baró de Viver",
+"direccion": "C/ Ciutat d'Asunción, 73-81 (Camp Municipal Baró de Viver)",
+"tel": "619 845 140",
+"email": "dinamitzaciobarodeviver@aesantandreu.org",
+"notas": "El teléfono y el email son los del campo (lo gestiona la AE Sant Andreu): pedir el contacto del club.",
+"fuente": "guia.barcelona.cat"
+},
+{
+"nombre": "Pista Poliesportiva Municipal La Sagrera",
+"deporte": "Instalación deportiva",
+"tipo": "Centro deportivo",
+"barrio": "La Sagrera",
+"direccion": "C/ Hondures, 18",
+"tel": "934 082 365",
+"email": "info@uteesportiulasagrera.com",
+"notas": "Pista donde juegan el CPI La Sagrera y otros equipos del barrio.",
+"fuente": "guia.barcelona.cat"
+},
+{
+"nombre": "CEM Trinitat Vella",
+"deporte": "Centro deportivo",
+"tipo": "Centro deportivo",
+"barrio": "Trinitat Vella",
+"direccion": "Via de Bàrcino, 84-86",
+"tel": "933 113 701",
+"email": "cemtrinitatvella@asme.cat",
+"web": "https://www.asme.cat/cemtrinitat/",
+"notas": "Lo gestiona la Associació Sant Martí Esport. Aquí entrena Barcelona Roller Derby.",
+"fuente": "guia.barcelona.cat"
+},
+{
+"nombre": "CEM Sant Andreu y CEM La Sagrera",
+"deporte": "Centro deportivo",
+"tipo": "Centro deportivo",
+"barrio": "Sant Andreu de Palomar",
+"direccion": "C/ Santa Coloma, 25",
+"tel": "933 112 106",
+"email": "cemsantandreu-lasagrera@cnsantandreu.com",
+"notas": "Gestionados por el CN Sant Andreu. Datos del listado municipal de 2017: confirmar.",
+"fuente": "barcelona.cat/lesportinclou"
+},
+{
+"nombre": "Barcelona Roller Derby",
+"deporte": "Roller derby",
+"tipo": "Club",
+"barrio": "Trinitat Vella",
+"instagram": "@barcelonarollerderby",
+"notas": "Entrena en el CEM Trinitat Vella. Equipos femeninos sobre todo.",
+"fuente": "timeout.es"
+},
+{
+"nombre": "Club Esportiu Sagrerenc",
+"deporte": "Fútbol",
+"tipo": "Club",
+"barrio": "La Sagrera",
+"notas": "Club de fútbol de La Sagrera (está en el Consell d'Esports del distrito). Falta teléfono o email.",
+"fuente": "Acta Consell d'Esports Sant Andreu 2024"
+},
+{
+"nombre": "CF Trinidad",
+"deporte": "Fútbol",
+"tipo": "Club",
+"barrio": "Trinitat Vella",
+"notas": "Fútbol base en Trinitat Vella (Consell d'Esports del distrito). Falta teléfono o email.",
+"fuente": "Acta Consell d'Esports Sant Andreu 2024"
+},
+{
+"nombre": "Club Voleibol Sant Andreu",
+"deporte": "Voleibol",
+"tipo": "Club",
+"barrio": "Sant Andreu",
+"notas": "Está en el Consell d'Esports del distrito. Falta teléfono o email.",
+"fuente": "Acta Consell d'Esports Sant Andreu 2024"
+},
+{
+"nombre": "Club Gimnàstic Sant Andreu",
+"deporte": "Gimnasia",
+"tipo": "Club",
+"barrio": "Sant Andreu",
+"notas": "Está en el Consell d'Esports del distrito. Falta teléfono o email.",
+"fuente": "Acta Consell d'Esports Sant Andreu 2024"
+},
+{
+"nombre": "Futbol Sala BEX",
+"deporte": "Fútbol sala",
+"tipo": "Club",
+"barrio": "Sant Andreu",
+"notas": "Está en el Consell d'Esports del distrito. Falta teléfono o email.",
+"fuente": "Acta Consell d'Esports Sant Andreu 2024"
+},
+{
+"nombre": "Sant Andreu Cricket Club",
+"deporte": "Cricket",
+"tipo": "Club",
+"barrio": "Sant Andreu de Palomar",
+"notas": "Falta teléfono o email.",
+"fuente": "timeout.es"
+},
+{
+"nombre": "Club de Futbol Sala Montsant",
+"deporte": "Fútbol sala",
+"tipo": "Club",
+"barrio": "Turó de la Peira",
+"direccion": "C/ Sant Iscle, 50",
+"tel": "677 554 671",
+"email": "montsantsala@gmail.com",
+"web": "http://montsantfs.blogspot.com",
+"fuente": "agenda500.barcelona.cat"
+},
+{
+"nombre": "Congrés Club Esportiu",
+"deporte": "Fútbol",
+"tipo": "Club",
+"barrio": "Turó de la Peira",
+"direccion": "Camp Municipal Turó de la Peira",
+"notas": "Fútbol base (comparte campo con el Turó de la Peira). Falta teléfono o email.",
+"fuente": "timeout.es"
+},
+{
+"nombre": "Club d'Atletisme Nou Barris",
+"deporte": "Atletismo",
+"tipo": "Club",
+"barrio": "Prosperitat",
+"direccion": "Via Favència, 446-448",
+"tel": "933 544 046",
+"email": "info@canb.cat",
+"web": "http://www.canb.cat",
+"notas": "Entrena en la pista de Can Dragó. Mucho corredor popular y atletismo base.",
+"fuente": "agenda500.barcelona.cat"
+},
+{
+"nombre": "CEM Can Dragó",
+"deporte": "Centro deportivo",
+"tipo": "Centro deportivo",
+"barrio": "Porta",
+"direccion": "C/ Rosselló i Porcel, 7-11",
+"tel": "932 760 480",
+"email": "atencioclients.candrago@eurofitness.com",
+"web": "https://eurofitness.com/centres/eurofitness-can-drago-cem-can-drago/",
+"notas": "Piscinas, gimnasio, pista de atletismo y campo de fútbol (aquí juega el CE Europa de forma alternativa).",
+"fuente": "guia.barcelona.cat"
+},
+{
+"nombre": "CEM Turó de la Peira",
+"deporte": "Centro deportivo",
+"tipo": "Centro deportivo",
+"barrio": "Turó de la Peira",
+"direccion": "C/ Sant Iscle, 50-54",
+"tel": "937 865 053",
+"email": "turo@egora.cat",
+"web": "https://www.egoraturo.cat/",
+"fuente": "agenda500.barcelona.cat"
+},
+{
+"nombre": "CEM Artesania",
+"deporte": "Centro deportivo",
+"tipo": "Centro deportivo",
+"barrio": "Nou Barris",
+"direccion": "C/ Artesania, 63",
+"tel": "933 500 172",
+"email": "artesania@eurofitness.com",
+"notas": "Datos del listado municipal de 2017: confirmar.",
+"fuente": "barcelona.cat/lesportinclou"
+},
+{
+"nombre": "CEM Cotxeres Borbó",
+"deporte": "Centro deportivo",
+"tipo": "Centro deportivo",
+"barrio": "Nou Barris",
+"direccion": "C/ Ramon Albó, 41-57",
+"tel": "932 760 102",
+"email": "cotxeresborbo@duetsports.com",
+"notas": "Datos del listado municipal de 2017: confirmar.",
+"fuente": "barcelona.cat/lesportinclou"
+},
+{
+"nombre": "CEM La Verneda",
+"deporte": "Centro deportivo",
+"tipo": "Centro deportivo",
+"barrio": "La Verneda",
+"direccion": "C/ Binèfar, 10-14",
+"tel": "933 054 959",
+"email": "verneda@asme.cat",
+"notas": "Datos del listado municipal de 2017: confirmar.",
+"fuente": "barcelona.cat/lesportinclou"
+},
+{
+"nombre": "CEM Júpiter",
+"deporte": "Centro deportivo",
+"tipo": "Centro deportivo",
+"barrio": "Sant Martí",
+"direccion": "C/ Agricultura, 232",
+"tel": "933 148 820",
+"email": "info@jupitersport.cat",
+"notas": "Datos del listado municipal de 2017: confirmar.",
+"fuente": "barcelona.cat/lesportinclou"
+},
+{
+"nombre": "CEM Horta",
+"deporte": "Centro deportivo",
+"tipo": "Centro deportivo",
+"barrio": "Horta",
+"direccion": "C/ Feliu i Codina, 27-29",
+"tel": "934 276 479",
+"email": "info@hortaesportiva.cat",
+"notas": "Casa de la UE Horta (fútbol y básquet). Datos de 2017: confirmar.",
+"fuente": "barcelona.cat/lesportinclou"
+},
+{
+"nombre": "CEM Guinardó",
+"deporte": "Centro deportivo",
+"tipo": "Centro deportivo",
+"barrio": "Guinardó",
+"direccion": "C/ Telègraf, 31-45",
+"tel": "934 464 260",
+"email": "cemguinardo@igebcn.cat",
+"notas": "Datos del listado municipal de 2017: confirmar.",
+"fuente": "barcelona.cat/lesportinclou"
+}
+]
