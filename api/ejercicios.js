@@ -22,6 +22,39 @@ module.exports = async function handler(req, res) {
         for (let i = 0; i < L.length; i += 10) { const d = await at(TABLE_ID, { method: 'PATCH', body: JSON.stringify({ records: L.slice(i, i + 10).map(x => ({ id: x.id, fields: { Zona: String(x.zona || '').slice(0, 60) } })) }) }); if (!d.error) n += Math.min(10, L.length - i); }
         return res.status(200).json({ ok: true, n });
       }
+      if (q.accion === 'ia-sp') { // Redacta la explicación de suelo pélvico de un ejercicio (la revisa el fisio antes de guardar)
+        const K = process.env.ANTHROPIC_API_KEY; if (!K) return res.status(200).json({ ok: false, error: 'Falta la clave de la IA' });
+        const nombre = String(q.nombre || '').trim().slice(0, 150), desc = String(q.descripcion || '').trim().slice(0, 1500);
+        if (!nombre) return res.status(400).json({ ok: false, error: 'Pon el nombre del ejercicio' });
+        const prompt = `Eres fisioterapeuta especialista en suelo pélvico. Escribe cómo tiene que gestionar la respiración y el suelo pélvico un paciente al hacer este ejercicio.
+
+EJERCICIO: ${nombre}
+${desc ? 'CÓMO SE HACE (explicación general): ' + desc : ''}
+
+EJEMPLO (sentadilla), copia este formato y este tono:
+1. Al bajar: inspira despacio hacia costillas y abdomen, dejando el suelo pélvico relajado y suelto.
+2. Abajo: mantén la relajación, sin empujar hacia abajo ni apretar.
+3. Al subir: exhala y contrae suavemente el suelo pélvico. Hazlo antes de empezar a empujar, no a mitad del esfuerzo.
+4. Arriba: relájalo del todo.
+
+REGLAS:
+- Pasos numerados según las fases reales de ESTE ejercicio (de 2 a 5), cada uno empieza por la fase («Al subir:», «Al estirar:», «Mientras aguantas:»…).
+- Inspira en la fase fácil con el suelo pélvico relajado; exhala y contrae suavemente el suelo pélvico justo antes del esfuerzo, no a mitad; al terminar el esfuerzo, relájalo del todo.
+- Si es un ejercicio sin esfuerzo (estiramiento, movilidad, postura mantenida): respiración tranquila y suelo pélvico relajado, sin aguantar el aire.
+- Nunca empujar hacia abajo ni aguantar la respiración.
+- No expliques la técnica general del ejercicio ni añadas repeticiones, avisos ni introducción: solo los pasos.
+- Español de España, tuteando, frases cortas y cercanas. Máximo 70 palabras. Texto plano, sin negritas.`;
+        let texto = '', err = '';
+        for (const model of ['claude-sonnet-4-5', 'claude-haiku-4-5']) {
+          try {
+            const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': K, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: 500, messages: [{ role: 'user', content: prompt }] }) });
+            const j = await r.json(); texto = String(((j.content || []).find(b => b && b.type === 'text') || {}).text || '').replace(/\*\*|^#+\s*/gm, '').trim();
+            if (texto) break; err = (j.error && j.error.message) || ('HTTP ' + r.status);
+          } catch (e) { err = e.message; }
+        }
+        if (!texto) return res.status(200).json({ ok: false, error: 'La IA no ha podido redactarlo' + (err ? ': ' + err : '') });
+        return res.status(200).json({ ok: true, texto });
+      }
       const c = q.campos || {}, f = {};
       if (c.nombre !== undefined) f.Nombre = String(c.nombre || '').trim().slice(0, 150);
       if (c.zona !== undefined) f.Zona = String(c.zona || '').slice(0, 60);
