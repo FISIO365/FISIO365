@@ -6763,6 +6763,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         dur: parseInt(ej.duracion) || 0,
         descanso: ej.v2 ? (parseInt(ej.descanso) || 0) : 0, // los programas antiguos traían 30 s puestos solos
         desc: ej.descripcion || '',
+        sp: ej.sp ? 1 : 0,
         ytId,
         imagen: ej.imagen || '',
       };
@@ -6772,24 +6773,26 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     {
       try {
         const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
-        const F_NOMBRE = 'flda62z2UH2gXmmky', F_IMG = 'fldXYCWY9gPOh657M', F_YT = 'fldfB2hp9Ndjr0xAP', F_DESC = 'fld59uaaRP043hTUK';
+        const F_NOMBRE = 'flda62z2UH2gXmmky', F_IMG = 'fldXYCWY9gPOh657M', F_YT = 'fldfB2hp9Ndjr0xAP', F_DESC = 'fld59uaaRP043hTUK', F_DESC_SP = 'fldDescSuPelv01Ab';
         let biblio = global._biblioApp && Date.now() - global._biblioApp.t < 10 * 60e3 ? global._biblioApp.v : null;
         let offset = null;
         if (!biblio) { biblio = {}; do {
-          const u = `https://api.airtable.com/v0/${BASE_ID}/${BIBLIO_TABLE}?returnFieldsByFieldId=true&fields[]=${F_NOMBRE}&fields[]=${F_IMG}&fields[]=${F_YT}&fields[]=${F_DESC}&pageSize=100${offset ? '&offset=' + offset : ''}`;
+          const u = `https://api.airtable.com/v0/${BASE_ID}/${BIBLIO_TABLE}?returnFieldsByFieldId=true&fields[]=${F_NOMBRE}&fields[]=${F_IMG}&fields[]=${F_YT}&fields[]=${F_DESC}&fields[]=${F_DESC_SP}&pageSize=100${offset ? '&offset=' + offset : ''}`;
           const br = await fetch(u, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
           const bd = await br.json();
           (bd.records || []).forEach(rec => {
             const f = rec.fields || {};
             const k = norm(f[F_NOMBRE]);
-            if (k) biblio[k] = { yt: f[F_YT] || '', img: f[F_IMG]?.[0]?.url || '', explica: String(f[F_DESC] || '').trim() };
+            if (k) biblio[k] = { yt: f[F_YT] || '', img: f[F_IMG]?.[0]?.url || '', explica: String(f[F_DESC] || '').trim(), explicaSP: String(f[F_DESC_SP] || '').trim() };
           });
           offset = bd.offset || null;
         } while (offset); global._biblioApp = { t: Date.now(), v: biblio }; }
         ejercicios = ejercicios.map(ej => {
           const b = biblio[norm(ej.name)];
           if (!b) return ej;
-          if (b.explica && b.explica !== ej.desc) ej = { ...ej, explica: b.explica };
+          // Ejercicio general usado en suelo pélvico: si el fisio lo marcó en el programa, sale su explicación propia
+          const ex = (ej.sp && b.explicaSP) ? b.explicaSP : b.explica;
+          if (ex && ex !== ej.desc) ej = { ...ej, explica: ex };
           if (ej.ytId) return ej;
           const m = (b.yt || '').trim().match(/(?:v=|youtu\.be\/|shorts\/)\s*([\w-]{6,})/);
           return { ...ej, ytId: m ? m[1].trim() : '', imagen: ej.imagen || b.img };

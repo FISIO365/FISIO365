@@ -26,6 +26,7 @@ module.exports = async function handler(req, res) {
       if (c.nombre !== undefined) f.Nombre = String(c.nombre || '').trim().slice(0, 150);
       if (c.zona !== undefined) f.Zona = String(c.zona || '').slice(0, 60);
       if (c.descripcion !== undefined) f.Descripcion = String(c.descripcion || '').slice(0, 5000);
+      if (c.descripcionSP !== undefined) f['Descripcion suelo pelvico'] = String(c.descripcionSP || '').slice(0, 5000);
       if (c.youtube !== undefined) f.YouTubeURL = String(c.youtube || '').trim().slice(0, 300) || null;
       if (!okId(q.id) && !f.Nombre) return res.status(400).json({ ok: false, error: 'Falta el nombre' });
       const d = okId(q.id) ? await at(`${TABLE_ID}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }) : await at(TABLE_ID, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }] }) });
@@ -56,6 +57,7 @@ module.exports = async function handler(req, res) {
       nombre: rec.fields['Nombre'] || rec.fields['Name'] || '—',
       zona: rec.fields['Zona'] || '',
       descripcion: rec.fields['Descripcion'] || '',
+      descripcionSP: rec.fields['Descripcion suelo pelvico'] || '',
       youtubeUrl: rec.fields['YouTubeURL'] || '',
       imagen: rec.fields['Imagenes']?.[0]?.thumbnails?.large?.url || rec.fields['Imagenes']?.[0]?.url || '',
       creado: rec.createdTime || '',

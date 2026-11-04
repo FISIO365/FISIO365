@@ -389,6 +389,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .fp-box{border-radius:12px;padding:11px 13px;margin-bottom:12px;background:#f7f3ef;font-size:13px}.fp-box.warn{background:#fff4e5}.fp-box>b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#7d6a60;margin-bottom:4px}.fp-box p{margin:3px 0;line-height:1.45}.fp-box small{color:#9a8d84}
 .fp-blk{border-top:1px solid #f1ede9;padding:14px 0 6px}.fp-bt{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.fp-bt h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#7d6a60}
 .fp-ed{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:6px 13px;cursor:pointer}.fp-edbts{display:flex;gap:6px}
+.pe-sp{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font-family:var(--font);background:#fff;border:1.5px solid #efe4da;border-radius:12px;padding:9px 11px;margin:8px 0;cursor:pointer;color:#2b2420}.pe-sp i{flex:none;width:34px;height:20px;border-radius:99px;background:#e6ddd5;position:relative;transition:background .2s}.pe-sp i::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.15);transition:transform .2s}.pe-sp.on{border-color:#f3dccd;background:#fdf6ef}.pe-sp.on i{background:#c2552e}.pe-sp.on i::after{transform:translateX(14px)}.pe-sp span{flex:1;min-width:0}.pe-sp b{display:block;font-size:13px}.pe-sp small{display:block;font-size:11.5px;color:#8a7d74}.ej-spw{margin:0 0 6px}.ej-spt{color:#c2552e!important;font-weight:600}
 .fp-msgc{background:#fdf6ef;border:1.5px solid #f3dccd;border-radius:14px;padding:11px 12px 12px;margin:-4px 0 12px}.fp-msgc>b{display:block;font-size:13.5px;margin:0 0 9px;color:#2b2420}.fp-msgc>div{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fp-msgc button{display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font);font-size:13px;font-weight:600;color:#c2552e;background:#fff;border:1.5px solid #f3dccd;border-radius:99px;padding:9px 8px;cursor:pointer}.fp-msgc button:disabled{opacity:.45;cursor:default}.fp-msgc button.sin{color:#8a7d74}.fp-msgc svg{flex:none;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.fp-msgc>small{display:block;font-size:11.5px;color:#8a7d74;margin-top:8px;text-align:center}
 .fp-resb{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:var(--font);background:#fdf6ef;border:1.5px solid #f3dccd;border-radius:14px;padding:11px 12px;margin:2px 0 12px;cursor:pointer;color:#2b2420}.fp-resb svg{flex:none;width:22px;height:22px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linejoin:round}.fp-resb span{flex:1;min-width:0}.fp-resb b{display:block;font-size:13.5px}.fp-resb small{display:block;font-size:12px;color:#8a7d74}.fp-resb i{flex:none;font-style:normal;font-size:12.5px;font-weight:600;color:#fff;background:#c2552e;border-radius:99px;padding:7px 12px}.fp-resb:disabled{opacity:.6}.fp-can,.fp-ok{font-family:var(--font);font-size:12.5px;font-weight:600;border:none;border-radius:99px;padding:6px 13px;cursor:pointer}.fp-can{background:#f3efea;color:#5f554e}.fp-ok{background:#c2552e;color:#fff}
 .fp-fs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 14px}.fp-f span{display:block;font-size:11px;color:#9a8d84;margin-bottom:2px}.fp-v{font-size:14px;font-weight:600;overflow-wrap:anywhere;min-width:0}.fp-v em,.fp-txt em{font-style:normal;color:#c9c0b8;font-weight:500}
@@ -2882,7 +2883,7 @@ function peNorm(e){
  const reps=+e.reps||0, dur=+e.duracion||+e.dur||0;
  const seg=dur>0&&!reps;
  return {nombre:String(e.nombre||'').trim(),modo:seg?'seg':'rep',series:+e.series||3,reps:reps||10,seg:seg?dur:30,aguantar:(!seg&&dur)?dur:0,
-  descanso:(e.v2||e._nuevo)?(+e.descanso||0):0,zona:e.zona||'',descripcion:e.descripcion||e.desc||'',youtubeUrl:e.youtubeUrl||lib.youtubeUrl||'',imagen:e.imagen||lib.imagen||''};
+  descanso:(e.v2||e._nuevo)?(+e.descanso||0):0,zona:e.zona||'',descripcion:e.descripcion||e.desc||'',youtubeUrl:e.youtubeUrl||lib.youtubeUrl||'',imagen:e.imagen||lib.imagen||'',sp:e.sp?1:0};
 }
 function peResumen(e){const se=+e.series||0,pl=(n,a,b)=>n===1?a:b,L=[];const r=e.modo==='rep'?(+e.reps||0):0,d=e.modo==='seg'?(+e.seg||0):(+e.aguantar||0),ds=+e.descanso||0;
  if(r)L.push(`${se} ${pl(se,'serie','series')} de ${r} ${pl(r,'repetición','repeticiones')}`);else if(d)L.push(`${se} ${pl(se,'serie','series')} de ${d} ${pl(d,'segundo','segundos')}`);
@@ -2966,6 +2967,7 @@ function montarEditorEjs(el,inicial,onCambio){
  </div>
  <div class="pe-chips">${CHIPS[e.modo].map(c=>`<button type="button" data-a="set" data-k="${k}" data-v="${c}" class="${+v===c?'on':''}">${c}${e.modo==='seg'?' s':''}</button>`).join('')}</div>
  <div class="pe-res-txt">Verá: <b>${escH(peResumen(e))}</b></div>
+ ${(()=>{const lb=biblio.find(x=>x.nombre.trim()===String(e.nombre).trim());return lb&&lb.descripcionSP?`<button type="button" class="pe-sp${e.sp?' on':''}" data-a="sp"><i></i><span><b>Explicación de suelo pélvico</b><small>${e.sp?'Verá la explicación propia de suelo pélvico':'Ahora verá la explicación general'}</small></span></button>`:'';})()}
  <input class="pe-ind" data-k="descripcion" value="${escH(e.descripcion)}" placeholder="Indicaciones (opcional)">
  <details class="pe-mas"${e.aguantar?' open':''}><summary>Más opciones</summary><div class="pe-mas-g">
   <div><label>Descanso (s)</label><input type="number" inputmode="numeric" data-k="descanso" value="${e.descanso||''}" placeholder="—"></div>
@@ -2976,13 +2978,14 @@ function montarEditorEjs(el,inicial,onCambio){
   nuevo=-1;
  }
  lista.addEventListener('click',ev=>{
-  const vt=ev.target.closest('[data-veri]');if(vt){const e=ejs[+vt.dataset.veri];if(e){const b0=biblio.find(x=>x.nombre.trim()===String(e.nombre).trim())||{};peVer(Object.assign({},b0,{nombre:e.nombre,youtubeUrl:e.youtubeUrl||b0.youtubeUrl,imagen:e.imagen||b0.imagen,descripcion:e.descripcion||b0.descripcion,zona:e.zona||b0.zona,_dosis:peResumen(e)}),{});}return;}
+  const vt=ev.target.closest('[data-veri]');if(vt){const e=ejs[+vt.dataset.veri];if(e){const b0=biblio.find(x=>x.nombre.trim()===String(e.nombre).trim())||{};peVer(Object.assign({},b0,{nombre:e.nombre,youtubeUrl:e.youtubeUrl||b0.youtubeUrl,imagen:e.imagen||b0.imagen,descripcion:e.descripcion||(e.sp&&b0.descripcionSP)||b0.descripcion,zona:e.zona||b0.zona,_dosis:peResumen(e)}),{});}return;}
   const b=ev.target.closest('button[data-a]');if(!b)return;
   const i=+b.closest('.pe-ej').dataset.i,e=ejs[i],a=b.dataset.a,k=b.dataset.k;
   if(a==='del'){ejs.splice(i,1);}
   else if(a==='up'&&i>0){[ejs[i-1],ejs[i]]=[ejs[i],ejs[i-1]];}
   else if(a==='down'&&i<ejs.length-1){[ejs[i+1],ejs[i]]=[ejs[i],ejs[i+1]];}
   else if(a==='modo'){e.modo=b.dataset.v;}
+  else if(a==='sp'){e.sp=e.sp?0:1;}
   else if(a==='set'){e[k]=+b.dataset.v;}
   else if(a==='mas'||a==='menos'){const paso=k==='seg'?5:1,min=k==='seg'?5:1;e[k]=Math.max(min,(+e[k]||0)+(a==='mas'?paso:-paso));}
   pintar();avisar();
@@ -2997,7 +3000,7 @@ function montarEditorEjs(el,inicial,onCambio){
  lista.addEventListener('change',ev=>{const t=ev.target;if(t.type==='number'&&['series','reps','seg'].includes(t.dataset.k)){const e=ejs[+t.closest('.pe-ej').dataset.i];if(!(+e[t.dataset.k]>0)){e[t.dataset.k]=t.dataset.k==='seg'?30:t.dataset.k==='reps'?10:3;pintar();}}});
  pintar();
  return {
-  get:()=>ejs.map(e=>({v2:1,nombre:e.nombre,series:+e.series||1,reps:e.modo==='rep'?(+e.reps||1):0,duracion:e.modo==='seg'?(+e.seg||30):(+e.aguantar||0),descanso:+e.descanso||0,zona:(e.zona||'').trim(),descripcion:(e.descripcion||'').trim(),youtubeUrl:e.youtubeUrl||'',imagen:e.imagen||''})),
+  get:()=>ejs.map(e=>({v2:1,nombre:e.nombre,series:+e.series||1,reps:e.modo==='rep'?(+e.reps||1):0,duracion:e.modo==='seg'?(+e.seg||30):(+e.aguantar||0),descanso:+e.descanso||0,zona:(e.zona||'').trim(),descripcion:(e.descripcion||'').trim(),youtubeUrl:e.youtubeUrl||'',imagen:e.imagen||'',...(e.sp?{sp:1}:{})})),
   set:l=>{ejs=(l||[]).map(peNorm);pintar();avisar();}
  };
 }
@@ -9077,7 +9080,7 @@ async function renderEjBib(wrap){
   const g=box.querySelector('.ej-g');g.innerHTML='';
   if(!L.length){g.innerHTML='<p class="ej-n">No hay ejercicios con ese filtro.</p>';}
   L.slice(0,ejMax).forEach(e=>{const c=ce('button','ej-c');c.type='button';const th=peMini(e);const n=rep[ejRepK(e)];
-   c.innerHTML=`<div class="ej-th" ${th?`style="background-image:url('${escH(th)}')"`:''}>${th?'':'Sin vídeo'}${n>1?`<em>×${n}</em>`:''}</div><div class="ej-b"><b>${escH(e.nombre)}</b>${e.zona?`<span>${escH(e.zona)}</span>`:'<span class="sz">Sin zona</span>'}</div>`;
+   c.innerHTML=`<div class="ej-th" ${th?`style="background-image:url('${escH(th)}')"`:''}>${th?'':'Sin vídeo'}${n>1?`<em>×${n}</em>`:''}</div><div class="ej-b"><b>${escH(e.nombre)}</b>${e.zona?`<span>${escH(e.zona)}</span>`:'<span class="sz">Sin zona</span>'}${e.descripcionSP?'<span class="ej-spt">+ suelo pélvico</span>':''}</div>`;
    c.onclick=()=>ejEditar(e,pinta);g.appendChild(c);});
   if(L.length>ejMax){const b=ce('button','ej-mas');b.type='button';b.textContent=`Ver más (${L.length-ejMax})`;b.onclick=()=>{ejMax+=60;pinta();};g.after(b);}
   box.querySelectorAll('.ej-mas').forEach((b,i,a)=>{if(L.length<=ejMax||i<a.length-1)b.remove();});
@@ -9094,16 +9097,19 @@ function ejEditar(e,onSaved){
   <div class="hz-lab">Link de YouTube</div>${capIn('ej-yt','https://youtu.be/…',e.youtubeUrl,'url')}
   <div class="hz-lab">Zona</div><div class="seg-rap ej-z"></div>
   <div class="hz-lab">Cómo se hace <span>(opcional, lo ve el paciente)</span></div><textarea class="seg-n ej-des" rows="3" placeholder="Ej.: Tumbado boca arriba, rodillas dobladas. Sube la cadera apretando glúteos…">${escH(e.descripcion||'')}</textarea>
+  <button type="button" class="pe-sp ej-spb${e.descripcionSP?' on':''}"><i></i><span><b>Explicación para suelo pélvico</b><small>Para cuando este ejercicio se usa en suelo pélvico y se explica distinto</small></span></button>
+  <div class="ej-spw"${e.descripcionSP?'':' hidden'}><textarea class="seg-n ej-dsp" rows="3" placeholder="Cómo se explica en suelo pélvico: respiración, activación del suelo pélvico…">${escH(e.descripcionSP||'')}</textarea></div>
   <div class="hz-lab">Foto <span>(opcional, si no hay vídeo)</span></div><div class="ej-foto"><label>Elegir foto<input type="file" accept="image/*" hidden></label><span class="ej-fn">${e.imagen?'Ya tiene foto':''}</span></div>
   <div class="hz-bts">${nuevo?'':'<button type="button" class="hz-re ej-del">Borrar</button>'}<button type="button" class="hz-ok">${nuevo?'Añadir':'Guardar'}</button></div></div>`);
  m.querySelector('.hz-x').onclick=()=>m.remove();
+ {const sb=m.querySelector('.ej-spb'),sw=m.querySelector('.ej-spw');sb.onclick=()=>{const on=!sb.classList.contains('on');sb.classList.toggle('on',on);sw.hidden=!on;if(on)setTimeout(()=>sw.querySelector('textarea').focus(),50);};}
  const zs=[...new Set([...EJ_ZONAS,...biblio.map(x=>x.zona).filter(Boolean)])];
  const gZ=capChips(m.querySelector('.ej-z'),zs,e.zona||'',false,Object.fromEntries(zs.map(z=>[z,z])));
  const vid=m.querySelector('.ej-vid'),yt=m.querySelector('.ej-yt');
  const pv=()=>{const id=ejYt(yt.value);if(id){vid.style.display='';if(vid.dataset.id!==id){vid.dataset.id=id;vid.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>`;}}else if(foto||e.imagen){vid.style.display='';vid.dataset.id='';vid.innerHTML=`<img src="${escH(foto?foto.url:e.imagen)}" alt="">`;}else{vid.style.display='none';vid.innerHTML='';vid.dataset.id='';}};
  pv();yt.addEventListener('input',pv);
  m.querySelector('.ej-foto input').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const img=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=URL.createObjectURL(f);});const k=Math.min(1,1200/Math.max(img.width,img.height));const cv=document.createElement('canvas');cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);const url=cv.toDataURL('image/jpeg',.82);foto={url,b64:url.split(',')[1],tipo:'image/jpeg'};m.querySelector('.ej-fn').textContent=f.name;pv();}catch(_){toast('No se ha podido leer la foto',false);}};
- m.querySelector('.hz-ok').onclick=async ev=>{const b=ev.target;const campos={nombre:m.querySelector('.ej-nom').value.trim(),youtube:yt.value.trim(),zona:gZ()||'',descripcion:m.querySelector('.ej-des').value.trim()};
+ m.querySelector('.hz-ok').onclick=async ev=>{const b=ev.target;const campos={nombre:m.querySelector('.ej-nom').value.trim(),youtube:yt.value.trim(),zona:gZ()||'',descripcion:m.querySelector('.ej-des').value.trim(),descripcionSP:m.querySelector('.ej-spb').classList.contains('on')?m.querySelector('.ej-dsp').value.trim():''};
   if(!campos.nombre){toast('Pon el nombre del ejercicio',false);return;}
   if(campos.youtube&&!ejYt(campos.youtube)){toast('Ese link no parece de YouTube',false);return;}
   const vid0=ejYt(campos.youtube),mismoV=vid0&&biblio.find(x=>x.id!==e.id&&ejYt(x.youtubeUrl)===vid0);
@@ -12430,6 +12436,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-04',aviso:1,t:'Ejercicios: un ejercicio general puede tener además su «Explicación para suelo pélvico» (Biblioteca › el ejercicio). Al ponerlo en un programa, activa «Explicación de suelo pélvico» y el paciente verá esa.',ver:{sec:'ejer',pasos:[{el:'.ej-g .ej-c',txt:'Abre un ejercicio y activa «Explicación para suelo pélvico».'}]}},
  {f:'2026-11-04',t:'Ficha › Historia: botón «Enviarle un mensaje» para escribir al paciente por WhatsApp o por el chat de su app sin subir arriba.',ver:{sec:'pac',pasos:[{el:'.fp-msgc',txt:'Aquí lo tienes.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
  {f:'2026-11-03',dir:1,t:'El número rojo de «Más» en el móvil ahora también se ve en el Daily report cuando tienes el de ayer sin mirar.'},
  {f:'2026-11-03',t:'Al cancelar o marcar «No asistió» y elegir «Seguimiento», las opciones (cuándo llamar, quién y nota) salen ya en la misma cita.'},
@@ -14829,6 +14836,7 @@ function renderFormacion(wrap, ruta){
 
  {t:'La biblioteca de ejercicios',sub:'Falta un vídeo: cómo se añade',
  cards:[
+ {ti:'Explicación para suelo pélvico',body:`Si un ejercicio general también se usa en suelo pélvico y allí se explica distinto, no hace falta subirlo otra vez: ábrelo en la <b>Biblioteca</b> y activa <b>Explicación para suelo pélvico</b>.<br><br>Luego, en el programa del paciente, activa <b>Explicación de suelo pélvico</b> en ese ejercicio y verá esa explicación en vez de la general.`,ver:{sec:'ejer',pasos:[{el:'.ej-g .ej-c',txt:'Abre el ejercicio.'}]}},
  {ti:'Buscar un ejercicio',body:`En <b>Ejercicios › Biblioteca</b> están todos los vídeos que ven los pacientes, con buscador y por zonas.`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Biblioteca y Pendientes de grabar.'}]}},
  {ti:'Ya tienes el vídeo grabado',body:`<b>＋ Nuevo ejercicio</b>: nombre, enlace de YouTube, zona, cómo se hace (lo lee el paciente) y foto.<br><br>Si ese vídeo ya está en la biblioteca, no deja repetirlo.`},
  {ti:'Hace falta uno que no está',shot:'/img/school/panel-c-ejer.jpg',body:`<b>Cuándo:</b> quieres mandar un ejercicio y no hay vídeo.<br><br><b>Qué haces:</b> <b>Pendientes de grabar › ＋ Proponer ejercicio</b>.<br><br>Si tienes un rato libre, coge uno: <b>Lo grabo yo</b>. Al subirlo, <b>Ya está grabado</b> (te abre el alta en la biblioteca). ¿Al final no puedes? <b>Soltar</b>.<br><br>Los ejercicios que ya están en la biblioteca pero sin vídeo salen solos en la lista, con <b>Ya está · falta vídeo</b>: al grabarlo solo pegas el link. Si no lo necesita, <b>No hace falta vídeo</b> y deja de salir (se puede deshacer abajo).`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Pendientes de grabar.'},{el:'.ejp-nuevo',txt:'Proponer ejercicio.',click:['.ej-tabs button[data-t="pend"]']}]}}
