@@ -479,9 +479,29 @@ const CAP = { contacto: 'tblgsMcknBLDyfWHu', esperaP: 'tbl5ksXlpfsSTZk5i', esper
 // Clubs deportivos de la zona: la lista inicial está en api/_clubs.json. Se añaden solos los que aún no se han importado
 // (las claves importadas se guardan en AJUSTES › clubs_semilla, así un club borrado no vuelve a salir)
 const clubClave = n => String(n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+// Emails encontrados después (una vez por versión de la lista): rellena el email, la web o el teléfono de los clubs ya importados
+// si están vacíos, o si el email es el antiguo de la lista (emailAntes). Nunca pisa lo que haya escrito el equipo.
+const CLUBS_EMAILS_V = 2;
+async function clubsEmails(semilla) {
+  if ((await ajuste('clubs_emails_v', 0)) >= CLUBS_EMAILS_V) return;
+  const recs = await capTodos(CAP.club, 'fields[]=NOMBRE&fields[]=EMAIL&fields[]=WEB&fields[]=TELF');
+  const por = new Map(semilla.filter(c => c && c.nombre).map(c => [clubClave(c.nombre), c]));
+  const cambios = [];
+  for (const r of recs) {
+    const c = por.get(clubClave(r.fields['NOMBRE'])); if (!c) continue;
+    const F = r.fields || {}, f = {};
+    if (c.email && (!F['EMAIL'] || (c.emailAntes && F['EMAIL'] === c.emailAntes))) f['EMAIL'] = c.email;
+    if (c.web && !F['WEB']) f['WEB'] = c.web;
+    if (c.tel && !F['TELF']) f['TELF'] = c.tel;
+    if (Object.keys(f).length) cambios.push({ id: r.id, fields: f });
+  }
+  for (let i = 0; i < cambios.length; i += 10) { const d = await at(CAP.club, { method: 'PATCH', body: JSON.stringify({ records: cambios.slice(i, i + 10) }) }); if (d.error) throw new Error(d.error.message || 'No se han podido poner los emails'); }
+  await guardarAjuste('clubs_emails_v', CLUBS_EMAILS_V, 'Lista inicial');
+}
 async function clubsSemilla() {
   let semilla = []; try { semilla = require('./_clubs.json'); } catch (_) { return; }
   const ya = new Set(await ajuste('clubs_semilla', [])), nuevos = semilla.filter(c => c && c.nombre && !ya.has(clubClave(c.nombre)));
+  await clubsEmails(semilla).catch(e => console.error('clubs emails', e.message));
   if (!nuevos.length) return;
   for (let i = 0; i < nuevos.length; i += 10) {
     const d = await at(CAP.club, { method: 'POST', body: JSON.stringify({ typecast: true, records: nuevos.slice(i, i + 10).map(c => ({ fields: { NOMBRE: c.nombre, DEPORTE: c.deporte || '', TIPO: c.tipo || 'Club', BARRIO: c.barrio || '', 'DIRECCIÓN': c.direccion || '', TELF: c.tel || '', EMAIL: c.email || '', WEB: c.web || '', INSTAGRAM: c.instagram || '', CONTACTO: c.contacto || '', ESTADO: 'POR CONTACTAR', NOTAS: c.notas || '', FUENTE: c.fuente || '', CLAVE: clubClave(c.nombre) } })) }) });
