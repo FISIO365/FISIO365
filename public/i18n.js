@@ -4,6 +4,78 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Tu entrenador, al día": [
+"El teu entrenador, al dia",
+"Your coach, up to date"
+],
+"Si juegas en un club, tu fisio puede contarle a tu entrenador cómo va tu recuperación. Tú decides.": [
+"Si jugues en un club, el teu fisio pot explicar al teu entrenador com va la teva recuperació. Tu decideixes.",
+"If you play for a club, your physio can tell your coach how your recovery is going. You decide."
+],
+"Tu fisio prepara tu parte": [
+"El teu fisio prepara el teu informe",
+"Your physio prepares your report"
+],
+"Qué tienes y cuándo vuelves": [
+"Què tens i quan tornes",
+"What you have and when you're back"
+],
+"Tú lo aceptas aquí": [
+"Tu ho acceptes aquí",
+"You agree here"
+],
+"Si tienes menos de 16 años, tus padres": [
+"Si tens menys de 16 anys, els teus pares",
+"If you're under 16, your parents"
+],
+"Tu entrenador lo ve en su app": [
+"El teu entrenador ho veu a la seva app",
+"Your coach sees it in their app"
+],
+"Y sabe cómo cuidarte en los entrenos": [
+"I sap com cuidar-te als entrenaments",
+"And knows how to look after you in training"
+],
+"Así lo ve tu entrenador": [
+"Així ho veu el teu entrenador",
+"This is what your coach sees"
+],
+"Ejemplo": [
+"Exemple",
+"Example"
+],
+"Tobillo derecho": [
+"Turmell dret",
+"Right ankle"
+],
+"En recuperación": [
+"En recuperació",
+"Recovering"
+],
+"Vuelve en 12 días": [
+"Torna d'aquí a 12 dies",
+"Back in 12 days"
+],
+"Puede hacer: carrera suave y bici": [
+"Pot fer: córrer suau i bici",
+"Can do: easy running and cycling"
+],
+"Tu historia clínica no la ve": [
+"La teva història clínica no la veu",
+"Your medical history stays private"
+],
+"Lo dejas de compartir cuando quieras": [
+"Ho deixes de compartir quan vulguis",
+"Stop sharing whenever you like"
+],
+"Escríbele por el chat y te añade a tu club.": [
+"Escriu-li pel xat i t'afegeix al teu club.",
+"Message them in the chat and they'll add you to your club."
+],
+"Como tiene menos de 16 años, lo tiene que aceptar su padre, su madre o su tutor": [
+"Com que té menys de 16 anys, ho ha d'acceptar el seu pare, la seva mare o el seu tutor",
+"As they're under 16, a parent or guardian has to agree"
+],
 "Clubs deportivos": [
 "Clubs esportius",
 "Sports clubs"
@@ -23,10 +95,6 @@
 "Solo si tú lo aceptas": [
 "Només si tu ho acceptes",
 "Only if you agree"
-],
-"Si tienes menos de 14 años, lo aceptan tus padres": [
-"Si tens menys de 14 anys, ho accepten els teus pares",
-"If you're under 14, your parents agree"
 ],
 "Tu historia clínica no se comparte": [
 "La teva història clínica no es comparteix",
@@ -527,10 +595,6 @@
 "Hecho: tu club ya no ve tu parte": [
 "Fet: el teu club ja no veu el teu parte",
 "Done: your club can no longer see your report"
-],
-"Como tiene menos de 14 años, lo tiene que aceptar su padre, su madre o su tutor": [
-"Com que té menys de 14 anys, ho ha d'acceptar el pare, la mare o el tutor",
-"As they're under 14, a parent or guardian has to agree"
 ],
 "Escribe el nombre del padre, la madre o el tutor": [
 "Escriu el nom del pare, la mare o el tutor",

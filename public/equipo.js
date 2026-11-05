@@ -48,12 +48,19 @@
     const box = el('miClubBox'); if (!box) return;
     if (!S.cargado) { box.innerHTML = '<div class="eq-vac">Cargando…</div>'; cargar().then(pintarClub); return; }
     if (!S.partes.length) {
-      const pt = (ic, t) => `<div class="eqh-b"><div class="eq-cic">${ic}</div><div><b>${t[0]}</b><span>${t[1]}</span></div></div>`;
-      box.innerHTML = `<div class="eq-card"><div class="eq-ch"><div class="eq-cic">${IC.club}</div><div><b>¿Juegas en un club?</b><small>Para deportistas que se tratan con nosotros</small></div></div>
-        <p class="eq-p">Si juegas en un club o en un equipo, tu fisio puede compartir con tu entrenador un resumen de tu recuperación: qué tienes, cuándo se prevé que vuelvas y qué puedes hacer mientras tanto. Así sabe cómo cuidarte en los entrenos.</p>
-        <div class="eqh-bens eq-mcb">${pt(ICP.ok, ['Solo si tú lo aceptas', 'Si tienes menos de 14 años, lo aceptan tus padres'])}${pt(ICP.no, ['Tu historia clínica no se comparte', 'Solo el parte: cómo vas y cuándo vuelves'])}${pt(ICP.evo, ['Lo dejas de compartir cuando quieras', 'Desde aquí, con un botón'])}</div>
+      const LOCK = '<svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>';
+      const paso = (n, ic, t, sub) => `<div class="mcl-p" style="animation-delay:${0.15 + n * 0.15}s"><div class="mcl-pi">${ic}<i>${n}</i></div><div><b>${t}</b><span>${sub}</span></div></div>`;
+      box.innerHTML = `<div class="eq-card mcl">
+        <div class="mcl-hero"><div class="mcl-hic">${IC.club}</div><b>Tu entrenador, al día</b><span>Si juegas en un club, tu fisio puede contarle a tu entrenador cómo va tu recuperación. Tú decides.</span></div>
+        <div class="mcl-ps">${paso(1, ICP.pdf, 'Tu fisio prepara tu parte', 'Qué tienes y cuándo vuelves')}${paso(2, ICP.ok, 'Tú lo aceptas aquí', 'Si tienes menos de 16 años, tus padres')}${paso(3, IC.club, 'Tu entrenador lo ve en su app', 'Y sabe cómo cuidarte en los entrenos')}</div>
+        <div class="mcl-ej"><div class="mcl-ejh"><span>Así lo ve tu entrenador</span><em>Ejemplo</em></div>
+          <div class="mcl-pc"><div class="mcl-pt"><b>Tobillo derecho</b><i>En recuperación</i></div>
+            <div class="mcl-bar"><i></i></div><div class="mcl-vu">${ICP.cal}<span>Vuelve en 12 días</span></div>
+            <div class="mcl-pu">${ICP.si}<span>Puede hacer: carrera suave y bici</span></div>
+            <div class="mcl-no">${LOCK}<span>Tu historia clínica no la ve</span></div></div></div>
+        <div class="mcl-ga">${ICP.evo}<span>Lo dejas de compartir cuando quieras</span></div>
         <button type="button" class="eq-ok eq-mcf">Díselo a tu fisio</button>
-        <p class="eqh-nota" style="margin-bottom:0">Si tu fisio te añade a tu club, aquí verás tu parte y podrás decidir si lo compartes.</p></div>`;
+        <p class="eqh-nota" style="margin-bottom:0">Escríbele por el chat y te añade a tu club.</p></div>`;
       box.querySelector('.eq-mcf').onclick = () => window.showSection('mensajes');
       try { window.applyTranslations && applyTranslations(); } catch (e) {}
       return;

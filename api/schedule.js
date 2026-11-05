@@ -1142,6 +1142,8 @@ function ogPremioSvg({ pila, tipo, mesTxt }) {
 }
 function firmaPremio(m, t, pid) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('premio:' + m + ':' + t + ':' + pid).digest('hex').slice(0, 10); }
 const enlacePremio = (m, t, pid) => `${APPU()}/premio/${m}-${t}-${firmaPremio(m, t, pid)}`;
+// Mi equipo: con menos de 16 años el parte para el club lo acepta su padre, su madre o su tutor
+const menorDe16 = c => { c = String(c || '').slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(c)) return false; const h = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); return (+h.slice(0, 4) - +c.slice(0, 4) - (h.slice(5) < c.slice(5) ? 1 : 0)) < 16; };
 // ── CUMPLEAÑOS: tarjeta animada para mandar por WhatsApp (/cumple/recID-R-firma; R=1 lleva el regalo del 10 % del mes) ──
 function firmaCumple(pid, r) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cumple:' + pid + ':' + (r ? 1 : 0)).digest('hex').slice(0, 10); }
 const enlaceCumple = (pid, r) => `${APPU()}/cumple/${pid}-${r ? 1 : 0}-${firmaCumple(pid, r)}`;
@@ -5068,7 +5070,7 @@ module.exports = async function handler(req, res) {
           if (ya.length) return res.status(200).json({ ok: false, error: 'Ya está en este club' });
           const [p, cl] = await Promise.all([at(`${PACIENTES}/${q.pac}`), at(`${CAP.club}/${q.club}`)]);
           if (!p || p.error || !cl || cl.error) return res.status(404).json({ ok: false, error: 'No encontrado' });
-          const cumple = String(p.fields['CUMPLE'] || '').slice(0, 10), menor14 = /^\d{4}-\d{2}-\d{2}$/.test(cumple) && new Date(cumple + 'T12:00:00') > new Date(Date.now() - 14 * 365.25 * 864e5);
+          const cumple = String(p.fields['CUMPLE'] || '').slice(0, 10), menor14 = menorDe16(cumple);
           const d = await at(EQ.par, { method: 'POST', body: JSON.stringify({ records: [{ fields: { JUGADOR: String(p.fields['FULL NAME'] || '').trim(), PACIENTE: q.pac, CLUB: q.club, EQUIPO: String(q.equipo || '').trim().slice(0, 80), ACTIVO: true, CONSENTIMIENTO: 'Pendiente', MENOR: !!q.menor || menor14, CREADO: ahoraI, 'VINCULADO POR': quien } }], typecast: true }) });
           const r = d.records && d.records[0]; if (!r) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
           let avisado = false;
@@ -7329,15 +7331,17 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     try {
       if (action === 'eq-mio') {
         const pars = await eqPartes(`AND({PACIENTE}='${pid}',{ACTIVO})`);
+        const men16 = pars.length ? menorDe16(String((((await at(`${PACIENTES}/${pid}`).catch(() => ({}))) || {}).fields || {})['CUMPLE'] || '')) : false;
         const nom = await eqNombresClubs(pars.map(r => r.fields['CLUB']));
         return res.status(200).json({ ok: true,
-          partes: pars.filter(r => nom[r.fields['CLUB']]).map(r => { const x = eqParte(r), cn = nom[x.club].nombre; return { id: x.id, club: cn, equipo: x.equipo, consentimiento: x.consentimiento, consFecha: x.consFecha, consQuien: x.consQuien, menor: x.menor, texto: eqTexto(cn), parte: eqParteJugador(r) }; }) });
+          partes: pars.filter(r => nom[r.fields['CLUB']]).map(r => { const x = eqParte(r), cn = nom[x.club].nombre; return { id: x.id, club: cn, equipo: x.equipo, consentimiento: x.consentimiento, consFecha: x.consFecha, consQuien: x.consQuien, menor: x.menor || men16, texto: eqTexto(cn), parte: eqParteJugador(r) }; }) });
       }
       if (req.method !== 'POST' || !EQX.okId(b.id)) return res.status(400).json({ ok: false });
       const r = await at(`${EQ.par}/${b.id}`); const F = (r && r.fields) || {};
       if (!r || r.error || F['PACIENTE'] !== pid || !F['ACTIVO']) return res.status(403).json({ ok: false, error: 'No autorizado' });
       const acepta = !!b.acepta, tutor = String(b.tutor || '').trim().slice(0, 120), esTutor = b.quien === 'tutor';
-      if (acepta && F['MENOR'] && !esTutor) return res.status(200).json({ ok: false, error: 'Como tiene menos de 14 años, lo tiene que aceptar su padre, su madre o su tutor' });
+      const menorYa = !!F['MENOR'] || menorDe16(String((((await at(`${PACIENTES}/${pid}`).catch(() => ({}))) || {}).fields || {})['CUMPLE'] || ''));
+      if (acepta && menorYa && !esTutor) return res.status(200).json({ ok: false, error: 'Como tiene menos de 16 años, lo tiene que aceptar su padre, su madre o su tutor' });
       if (acepta && esTutor && tutor.length < 3) return res.status(200).json({ ok: false, error: 'Escribe el nombre del padre, la madre o el tutor' });
       const cl = await at(`${CAP.club}/${F['CLUB']}`).catch(() => ({})), cn = ((cl && cl.fields) || {})['NOMBRE'] || 'su club';
       const ahoraI = new Date().toISOString(), ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim(), nav = String(req.headers['user-agent'] || '').slice(0, 160);
@@ -7348,7 +7352,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (!d || d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
       if (acepta && F['CONSENTIMIENTO'] !== 'Aceptado') await eqAvisarClub(F['CLUB'], { title: cn, body: `${String(F['JUGADOR'] || '').trim().split(/\s+/)[0] || 'Un jugador'} ya comparte su parte contigo`, url: `/?s=miequipo&p=${b.id}`, tag: 'eqp-' + b.id }, F['EQUIPO']).catch(() => 0);
       const x = eqParte(d);
-      return res.status(200).json({ ok: true, parte: { id: x.id, club: cn, equipo: x.equipo, consentimiento: x.consentimiento, consFecha: x.consFecha, consQuien: x.consQuien, menor: x.menor, texto: eqTexto(cn), parte: eqParteJugador(d) } });
+      return res.status(200).json({ ok: true, parte: { id: x.id, club: cn, equipo: x.equipo, consentimiento: x.consentimiento, consFecha: x.consFecha, consQuien: x.consQuien, menor: x.menor || menorYa, texto: eqTexto(cn), parte: eqParteJugador(d) } });
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
   }
   // Un paciente que también es entrenador activa «Mi equipo» en su cuenta con la clave que le dio la clínica
