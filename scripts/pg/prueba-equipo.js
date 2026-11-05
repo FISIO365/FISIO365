@@ -101,7 +101,10 @@
     await llamar(S, { action: 'seg-eq-parte', pwd, id: pr.id, quien: 'Sara', campos: { semaforo: 'verde', nota: 'ok' } }, 'POST');
   }
   const verEq = async a => { const l = (await llamar(L, { email: a.email, pin: a.pin })).j.patient.equipo; return (await llamar(S, { action: 'eq-equipo', a: l.map(x => x.id).join(','), t: l.map(x => x.tok).join(',') })).j; };
-  let ve = await verEq(ent); ver('entrenador del Juvenil A: solo su equipo', ve.ok && ve.clubs[0].jugadores.length === 1 && ve.clubs[0].jugadores[0].equipo === 'Juvenil A', ve);
+  const hoyR = new Date(); for (let i = 0; i < 4; i++) { const d = new Date(hoyR - i * 864e5).toISOString().slice(0, 10); await ins('tblIXYE5ToRNY7MN4', 'recTarPrueba0000' + i, { PacienteId: 'recPacPrueba00004', Fecha: d }); }
+  await ins('tblIXYE5ToRNY7MN4', 'recTarPrueba00009', { PacienteId: 'recPacPrueba00099', Fecha: hoyR.toISOString().slice(0, 10) });
+  let ve = await verEq(ent);
+  ver('el entrenador ve la racha de su jugador', ve.ok && ve.clubs[0].jugadores[0].racha.length === 4, ve.clubs && ve.clubs[0].jugadores); ver('entrenador del Juvenil A: solo su equipo', ve.ok && ve.clubs[0].jugadores.length === 1 && ve.clubs[0].jugadores[0].equipo === 'Juvenil A', ve);
   ve = await verEq(coo); ver('coordinador: todo el club', ve.ok && ve.clubs[0].jugadores.length === 2, ve);
   r = await llamar(S, { action: 'seg-eq-club', pwd, club: CLUB2 });
   ver('lista de equipos del club', r.j.ok && r.j.equipos.join('|') === 'Infantil B|Juvenil A', r.j.equipos);

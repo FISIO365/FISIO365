@@ -497,7 +497,7 @@ const capTodos = async (t, q2) => { let recs = [], off = ''; do { const d = awai
 const EQX = require('./_equipo'), EQ = EQX.EQ;
 const EQ_SEM = { rojo: 'No entrena', amarillo: 'Entrena con limitaciones', verde: 'Puede jugar' };
 const EQ_FASES = ['Valoración', 'Tratamiento', 'Readaptación', 'Vuelta progresiva', 'Alta'];
-const eqTexto = club => `Acepto que FISIO365 comparta con ${club || 'mi club'} (sus entrenadores y coordinadores con acceso a «Mi equipo») el parte de mi recuperación: el diagnóstico explicado de forma sencilla, la fase en la que estoy, la previsión de vuelta, qué puedo y qué no puedo hacer, cómo volver a entrenar y cómo evoluciono. Mi historia clínica no se comparte. Puedo dejar de compartirlo cuando quiera desde la app.`;
+const eqTexto = club => `Acepto que FISIO365 comparta con ${club || 'mi club'} (sus entrenadores y coordinadores con acceso a «Mi equipo») el parte de mi recuperación: el diagnóstico explicado de forma sencilla, la fase en la que estoy, la previsión de vuelta, qué puedo y qué no puedo hacer, cómo volver a entrenar, cómo evoluciono y mi racha (los días que hago mis ejercicios). Mi historia clínica no se comparte. Puedo dejar de compartirlo cuando quiera desde la app.`;
 const eqEvo = F => { try { const v = JSON.parse(F['EVOLUCIÓN'] || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
 const eqEsc = s => String(s || '').replace(/\\/g, '').replace(/'/g, "\\'");
 function eqParte(r) { const F = r.fields || {}; return { id: r.id, pacienteId: F['PACIENTE'] || '', jugador: F['JUGADOR'] || '', club: F['CLUB'] || '', equipo: F['EQUIPO'] || '', activo: !!F['ACTIVO'], consentimiento: F['CONSENTIMIENTO'] || 'Pendiente', consFecha: F['CONS FECHA'] || '', consQuien: F['CONS QUIÉN'] || '', menor: !!F['MENOR'], semaforo: F['SEMÁFORO'] || '', fase: F['FASE'] || '', diagnostico: F['DIAGNÓSTICO'] || '', vuelta: F['VUELTA'] || '', puede: F['PUEDE'] || '', noPuede: F['NO PUEDE'] || '', pautas: F['PAUTAS'] || '', evolucion: eqEvo(F), actualizado: F['ACTUALIZADO'] || '', fisio: F['FISIO'] || '', creado: F['CREADO'] || r.createdTime || '' }; }
@@ -516,6 +516,16 @@ async function eqAvisarClub(club, datos, equipo) {
   const L = (await eqAccesosClub(club).catch(() => [])).filter(a => a.fields['ACTIVO'] && a.fields['PushSubscription'] && eqVeEquipo(a.fields, equipo));
   let n = 0; for (const a of L) { if (await avisar('equipo', a.id, datos).catch(() => false)) n++; }
   return n;
+}
+async function eqRachas(pids) {
+  const out = {}, L = [...new Set(pids)].filter(EQX.okId), desde = new Date(Date.now() - 400 * 864e5).toISOString().slice(0, 10);
+  for (let i = 0; i < L.length; i += 25) {
+    const f = `AND(OR(${L.slice(i, i + 25).map(id => `{PacienteId}='${id}'`).join(',')}),IS_AFTER({Fecha},'${desde}'))`;
+    const recs = await capTodos('tblIXYE5ToRNY7MN4', `filterByFormula=${encodeURIComponent(f)}&fields[]=PacienteId&fields[]=Fecha`).catch(() => []);
+    recs.forEach(r => { const p = r.fields['PacienteId'], d = String(r.fields['Fecha'] || '').slice(0, 10); if (p && d) (out[p] = out[p] || new Set()).add(d); });
+  }
+  Object.keys(out).forEach(k => { out[k] = [...out[k]].sort(); });
+  return out;
 }
 async function eqNombresClubs(ids) {
   const out = {};
@@ -6856,7 +6866,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       for (const a of accs) { const cid = a.fields['CLUB']; if (!nom[cid] || clubs.some(c => c.id === cid)) continue;
         const suyos = accs.filter(x => x.fields['CLUB'] === cid), ve = equipo => suyos.some(x => eqVeEquipo(x.fields, equipo));
         const pars = (await eqPartes(`AND({CLUB}='${cid}',{ACTIVO},{CONSENTIMIENTO}='Aceptado')`)).filter(r => ve(r.fields['EQUIPO']));
-        clubs.push({ id: cid, nombre: nom[cid].nombre, deporte: nom[cid].deporte, rol: a.fields['ROL'] || '', equipos: suyos.some(x => !eqEquiposAcc(x.fields).length) ? [] : eqUnicos(suyos.flatMap(x => eqEquiposAcc(x.fields))), jugadores: pars.map(eqParteClub).sort((x, y) => (orden[x.semaforo] ?? 3) - (orden[y.semaforo] ?? 3) || x.jugador.localeCompare(y.jugador, 'es')) }); }
+        const rachas = await eqRachas(pars.map(r => r.fields['PACIENTE']));
+        clubs.push({ id: cid, nombre: nom[cid].nombre, deporte: nom[cid].deporte, rol: a.fields['ROL'] || '', equipos: suyos.some(x => !eqEquiposAcc(x.fields).length) ? [] : eqUnicos(suyos.flatMap(x => eqEquiposAcc(x.fields))), jugadores: pars.map(r => Object.assign(eqParteClub(r), { racha: rachas[r.fields['PACIENTE']] || [] })).sort((x, y) => (orden[x.semaforo] ?? 3) - (orden[y.semaforo] ?? 3) || x.jugador.localeCompare(y.jugador, 'es')) }); }
       const ahoraI = new Date().toISOString();
       for (const a of accs) if (!a.fields['ÚLTIMO ACCESO'] || Date.now() - Date.parse(a.fields['ÚLTIMO ACCESO']) > 30 * 60e3) await at(`${EQ.acc}/${a.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ÚLTIMO ACCESO': ahoraI } }) }).catch(() => {});
       return res.status(200).json({ ok: true, nombre: accs[0].fields['NOMBRE'] || '', clubs, semaforos: EQ_SEM });

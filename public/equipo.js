@@ -125,6 +125,14 @@
     }
     S.equipo = d; dibuja();
   }
+  // Racha actual (días seguidos con ejercicios, contando hasta ayer si hoy aún no los ha hecho)
+  function rachaHoy(L) {
+    const S2 = new Set((L || []).map(x => String(x).slice(0, 10))), k = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const d = new Date(); d.setHours(12, 0, 0, 0); if (!S2.has(k(d))) d.setDate(d.getDate() - 1);
+    let n = 0; while (S2.has(k(d))) { n++; d.setDate(d.getDate() - 1); } return n;
+  }
+  const llama = '<svg viewBox="0 0 24 24"><path d="M12 3c1.5 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.5 1 2.5 2 3 0-3 .5-5.5 1-7.5z"/></svg>';
+  const rachaChip = L => { const n = rachaHoy(L); return `<em class="eq-rch${n ? '' : ' off'}">${llama}<span>${n ? (n === 1 ? '1 día de racha' : n + ' días de racha') : 'Sin racha'}</span></em>`; };
   // Varios equipos en un club: separados por equipo (si solo hay uno, sin títulos)
   function porEquipo(L) {
     const m = new Map(); L.forEach(x => { const k = String(x.equipo || '').trim(); if (!m.has(k)) m.set(k, []); m.get(k).push(x); });
@@ -138,7 +146,9 @@
     if (j) {
       box.innerHTML = `<button type="button" class="eq-back">${IC.atras}<span>Mi equipo</span></button>
         <div class="eq-card"><div class="eq-ch"><span class="eq-dot ${esc(j.semaforo)}"></span><div><b class="no-tr">${esc(j.jugador)}</b><small class="no-tr">${esc([j.equipo, d.clubs.length > 1 ? j.club : ''].filter(Boolean).join(' · '))}</small></div></div>
-        ${verParte(j, '')}</div>`;
+        ${verParte(j, '')}</div>
+        <div class="eq-pt eq-rt">Racha de ejercicios</div><div class="eq-racha"></div>`;
+      try { window.FisioRacha && FisioRacha.pintar(box.querySelector('.eq-racha'), j.racha || [], { quien: 'fisio', nombre: j.jugador }); } catch (e) {}
       box.querySelector('.eq-back').onclick = () => { S.jug = null; dibuja(); window.scrollTo(0, 0); };
       return;
     }
@@ -146,7 +156,7 @@
     const cuenta = k => todos.filter(x => x.semaforo === k).length;
     box.innerHTML = `${avisosCard()}<div class="eq-res">${Object.keys(SEM).map(k => `<div class="eq-rk ${k}"><b>${cuenta(k)}</b><span>${SEM[k]}</span></div>`).join('')}</div>` +
       d.clubs.map(c => `<div class="eq-club"><div class="eq-cn"><b class="no-tr">${esc(c.nombre)}</b>${c.deporte ? `<small class="no-tr">${esc(c.deporte)}</small>` : ''}</div>
-        ${c.jugadores.length ? porEquipo(c.jugadores).map(([eqn, L]) => `${eqn !== null ? `<div class="eq-tn no-tr">${esc(eqn || 'Sin equipo')}</div>` : ''}${L.map(x => `<button type="button" class="eq-ju" data-id="${x.id}"><span class="eq-dot ${esc(x.semaforo)}"></span><div><b class="no-tr">${esc(x.jugador)}</b><small>${junta([x.semaforo ? SEM[x.semaforo] : 'Sin parte todavía', x.vuelta ? 'vuelta prevista el ' + fe(x.vuelta) : ''])}</small>${x.equipo && eqn === null ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}</div>${IC.flecha}</button>`).join('')}`).join('')
+        ${c.jugadores.length ? porEquipo(c.jugadores).map(([eqn, L]) => `${eqn !== null ? `<div class="eq-tn no-tr">${esc(eqn || 'Sin equipo')}</div>` : ''}${L.map(x => `<button type="button" class="eq-ju" data-id="${x.id}"><span class="eq-dot ${esc(x.semaforo)}"></span><div><b class="no-tr">${esc(x.jugador)}</b><small>${junta([x.semaforo ? SEM[x.semaforo] : 'Sin parte todavía', x.vuelta ? 'vuelta prevista el ' + fe(x.vuelta) : ''])}</small>${x.equipo && eqn === null ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}${rachaChip(x.racha)}</div>${IC.flecha}</button>`).join('')}`).join('')
         : '<div class="eq-vac">Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.</div>'}</div>`).join('');
     box.querySelectorAll('.eq-ju').forEach(b => b.onclick = () => { S.jug = b.dataset.id; dibuja(); window.scrollTo(0, 0); });
     const av = box.querySelector('.eq-avb'); if (av) av.onclick = activarAvisos;
@@ -174,6 +184,7 @@
         ${ben(ic.sem, 'Con quién cuentas', 'Quién puede jugar, quién entrena con limitaciones y quién no')}
         ${ben(ic.cal, 'Cuándo vuelve cada uno', 'La previsión de vuelta de tus lesionados')}
         ${ben(ic.ok, 'Cómo volver sin recaídas', 'Qué pueden hacer y cómo empezar a entrenar')}
+        ${ben('<svg viewBox="0 0 24 24"><path d="M12 3c1.5 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.5 1 2.5 2 3 0-3 .5-5.5 1-7.5z"/></svg>', 'Si hace sus ejercicios', 'Su racha: los días que hacen sus ejercicios en casa')}
         ${ben(ic.bell, 'Avisos al momento', 'Cada vez que actualizamos el parte de un jugador')}
       </div>
       <button type="button" class="eqh-cta">${ic.wa}<span>Quiero colaborar</span></button>
