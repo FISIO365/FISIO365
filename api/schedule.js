@@ -5076,7 +5076,6 @@ module.exports = async function handler(req, res) {
           if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return res.status(400).json({ ok: false, error: prueba ? 'Revisa el email de la prueba' : 'Este club no tiene un email válido' });
           if (!prueba) {
             if (F['BAJA EMAIL']) return res.status(200).json({ ok: false, error: 'Pidió no recibir más correos nuestros' });
-            if (!F['PERMISO EMAIL']) return res.status(200).json({ ok: false, error: 'Primero apunta que os han dado permiso para escribirles' });
           }
           try { await clubEnviarPresentacion(q.id, F, to, String(q.quien || '')); } catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
           if (prueba) return res.status(200).json({ ok: true, prueba: true });
