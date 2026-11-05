@@ -511,7 +511,7 @@ async function clubEnviarPresentacion(id, F, to, quien) {
   const esc = x => String(x || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nom = String(F['CONTACTO'] || '').trim().split(/[\s,]+/)[0];
   const baja = `https://app.fisioterapia365.com/api/schedule?action=club-baja&id=${id}&t=${clubFirmaBaja(id)}`;
-  const html = require('./_email_clubs.js').replace('{{NOMBRE}}', nom ? ' ' + esc(nom) : '').replace('{{PERMISO}}', esc(F['PERMISO EMAIL'] ? clubPermisoTxt(F['PERMISO EMAIL']) : 'nos pedisteis información')).replace('{{BAJA}}', baja);
+  const html = require('./_email_clubs.js').replace('{{NOMBRE}}', nom ? ' ' + esc(nom) : '').replace('{{PERMISO}}', esc(F['PERMISO EMAIL'] ? clubPermisoTxt(F['PERMISO EMAIL']) : 'sois un club o entidad deportiva cerca de nuestra clínica')).replace('{{BAJA}}', baja);
   const club = String(F['NOMBRE'] || '').trim();
   const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ sender: { name: 'Ramiro · FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com', name: 'Ramiro · FISIO365' }, to: [{ email: to, name: club || undefined }],
@@ -5021,6 +5021,21 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, hoy: hoyF, espera: esp.filter(e => e.estado === 'ESPERANDO'), libres, negocios: neg.map(r => ({ id: r.id, nombre: r.fields['NOMBRE'] || '', proxima: r.fields['PRÓXIMA VISITA'] || '', tel: r.fields['TELF'] || '', contacto: r.fields['CONTACTO'] || '' })) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'seg-cap-clubs-difusion') { // envío a varios clubs a la vez (hasta 10 por llamada; el panel va llamando por tandas)
+          const ids = (Array.isArray(q.ids) ? q.ids : []).filter(okId).slice(0, 10), out = [];
+          for (const id of ids) {
+            try {
+              const r = await at(`${CAP.club}/${id}`); const F = (r && r.fields) || {}, to = String(F['EMAIL'] || '').trim().toLowerCase();
+              if (F['BAJA EMAIL']) { out.push({ id, ok: false, error: 'baja' }); continue; }
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) { out.push({ id, ok: false, error: 'sin email' }); continue; }
+              await clubEnviarPresentacion(id, F, to, String(q.quien || ''));
+              const lin = `${hoyF.split('-').reverse().join('/')} · Email: presentación enviada a ${to} (difusión)${q.quien ? ' · ' + String(q.quien).split(' ')[0] : ''}`;
+              await at(`${CAP.club}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'EMAIL ENVIADO': hoyF, HISTORIAL: [String(F['HISTORIAL'] || '').trim(), lin].filter(Boolean).join('\n') } }) });
+              out.push({ id, ok: true });
+            } catch (e) { out.push({ id, ok: false, error: e.message }); }
+          }
+          return res.status(200).json({ ok: true, enviados: out.filter(x => x.ok).length, res: out, hoy: hoyF });
+        }
         if (action === 'seg-cap-club-enviar') { // la presentación por email (o una prueba a nosotros)
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const r = await at(`${CAP.club}/${q.id}`); if (!r || r.error) return res.status(404).json({ ok: false, error: 'Club no encontrado' });
