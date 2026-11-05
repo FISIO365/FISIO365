@@ -872,8 +872,10 @@ const OTROS_G = 'tblvdXDRDmLrThdWZ'; // ⚙ APP · OTROS GASTOS (efectivo, otras
 let _aj = { t: 0, v: null };
 async function ajustes() {
   if (_aj.v && Date.now() - _aj.t < 60e3) return _aj.v;
-  const d = await at(`${AJ_T}?pageSize=100`); if (d.error) throw new Error(d.error.message);
-  const v = {}; (d.records || []).forEach(r => { try { v[r.fields.CLAVE] = { id: r.id, v: JSON.parse(r.fields.VALOR || 'null') }; } catch (e) {} });
+  // Todas las páginas: con más de 100 ajustes, los nuevos (p. ej. cumpleaños felicitados) se quedaban fuera
+  const recs = []; let off = '';
+  for (let i = 0; i < 20; i++) { const d = await at(`${AJ_T}?pageSize=100${off ? '&offset=' + encodeURIComponent(off) : ''}`); if (d.error) throw new Error(d.error.message); recs.push(...(d.records || [])); if (!d.offset) break; off = d.offset; }
+  const v = {}; recs.sort((a, b) => String(a.createdTime || '').localeCompare(String(b.createdTime || ''))).forEach(r => { try { v[r.fields.CLAVE] = { id: r.id, v: JSON.parse(r.fields.VALOR || 'null') }; } catch (e) {} });
   _aj = { t: Date.now(), v }; return v;
 }
 async function ajuste(clave, def) { try { const a = (await ajustes())[clave]; return a && a.v != null ? a.v : def; } catch (e) { return def; } }
