@@ -13,11 +13,21 @@ module.exports = async function handler(req, res) {
   if (!body || typeof body === 'string') {
     try { body = JSON.parse(req.body || '{}'); } catch(e) { body = {}; }
   }
-  const { patientId, fisioId, pwd, subscription, borrar } = body;
+  const { patientId, fisioId, pwd, subscription, borrar, equipo } = body;
   // borrar: true → desactivar avisos (se vacía la suscripción guardada)
   if (!borrar && (!subscription || !subscription.endpoint)) return res.status(400).json({ ok: false });
 
   let tabla, id;
+  // Entrenadores de «Mi equipo»: cada acceso con su firma (equipo = [{id, tok}]); se guarda en todos sus accesos
+  if (Array.isArray(equipo) && equipo.length) {
+    const { okTok } = require('./_equipo');
+    const ok = equipo.slice(0, 10).filter(e => e && okTok(e.id, e.tok));
+    if (!ok.length) return res.status(401).json({ ok: false });
+    try {
+      for (const e of ok) await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLAS.equipo}/${e.id}`, { method: 'PATCH', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { PushSubscription: borrar ? '' : JSON.stringify(subscription) } }) });
+      if (!patientId) return res.status(200).json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false }); }
+  }
   if (fisioId) {
     if (String(pwd || '').trim() !== FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false });
     tabla = TABLAS.fisio; id = fisioId;

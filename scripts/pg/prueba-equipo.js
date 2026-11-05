@@ -1,0 +1,77 @@
+// Prueba de «Mi equipo» (accesos de club, consentimiento del jugador, parte y lo que ve el entrenador) contra PGlite.
+// NODE_PATH=… FISIO_PASSWORD=x SIN_ENVIOS=1 VAPID_PUBLIC_KEY=… VAPID_PRIVATE_KEY=… node scripts/pg/prueba-equipo.js
+(async () => {
+  const db = await require('./pglite')(); global.__PG_TEST__ = db;
+  const PG = require('../../api/_pg.js');
+  for (const s of PG.SQL_INIT.split(';').map(x => x.trim()).filter(Boolean)) await db.query(s);
+  const ins = (tb, id, f) => db.query('insert into registros (tabla,id,fields,creado,modificado) values ($1,$2,$3,now(),now())', [tb, id, JSON.stringify(f)]);
+  const PAC = 'recPacPrueba00001', PAC2 = 'recPacPrueba00002', CLUB = 'recClubPrueba0001';
+  await ins('tbldBVgClS4HY2mOJ', PAC, { 'FULL NAME': 'Marc Puig Soler', EMAIL: 'marc@ejemplo.com', PIN: '1111' });
+  await ins('tbldBVgClS4HY2mOJ', PAC2, { 'FULL NAME': 'Laura Vidal', EMAIL: 'jordi@club.com', PIN: '2222' });
+  await ins('tblClubsDeporti01', CLUB, { NOMBRE: 'CF Sant Andreu Prueba', DEPORTE: 'Fútbol', ESTADO: 'COLABORANDO' });
+  const llamar = (mod, q, metodo = 'GET') => new Promise(ok => {
+    let st = 200, h = {};
+    const res = { setHeader(k, v) { h[k] = v; }, getHeader: k => h[k], status(c) { st = c; return res; }, json(j) { ok({ st, j }); }, send(b) { ok({ st, j: b }); }, end() { ok({ st, j: '' }); }, on() {} };
+    const req = { method: metodo, query: metodo === 'GET' ? q : { action: q.action }, body: metodo === 'POST' ? q : undefined, headers: { host: 'localhost', 'x-forwarded-for': '1.2.3.4', 'user-agent': 'prueba' }, url: '/api/x' };
+    Promise.resolve(mod(req, res)).catch(e => ok({ st: 'EXC', j: e.message }));
+  });
+  const S = require('../../api/schedule.js'), L = require('../../api/login.js'), pwd = process.env.FISIO_PASSWORD;
+  let fallos = 0; const ver = (n, c, x) => { console.log(`${c ? 'OK ' : '!! '}${n}${c ? '' : '  ' + JSON.stringify(x).slice(0, 300)}`); if (!c) fallos++; };
+
+  let r = await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB, quien: 'Ramiro', campos: { nombre: 'Jordi Mas', email: 'Jordi@club.com', rol: 'Entrenador' } }, 'POST');
+  ver('dar acceso al entrenador', r.j.ok && /^\d{4}$/.test(r.j.acceso.pin), r.j); const acc = r.j.acceso;
+  r = await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB, campos: { nombre: 'Jordi', email: 'jordi@club.com' } }, 'POST');
+  ver('no se duplica el acceso', !r.j.ok, r.j);
+  r = await llamar(S, { action: 'seg-cap', pwd });
+  ver('Captación cuenta los accesos del club', r.j.ok && (r.j.clubs.find(c => c.id === CLUB) || {}).eq === 1, (r.j.clubs || []).find(c => c.id === CLUB) || r.j);
+  r = await llamar(L, { email: 'jordi@club.com', pin: '0000' });
+  ver('clave mala', !r.j.ok, r.j);
+  r = await llamar(L, { email: 'otro@club.com', pin: acc.pin });
+  ver('email que no existe', !r.j.ok, r.j);
+  // jordi@club.com también es el email de una paciente (Laura): entra como paciente con su PIN y ve «Mi equipo»
+  r = await llamar(L, { email: 'jordi@club.com', pin: '2222' });
+  ver('paciente con el mismo email ve también Mi equipo', r.j.ok && !r.j.patient.soloEquipo && r.j.patient.equipo.length === 1, r.j);
+  r = await llamar(L, { email: 'jordi@club.com', pin: acc.pin });
+  ver('entrenador entra con su clave (solo Mi equipo)', r.j.ok && r.j.patient.soloEquipo && r.j.patient.equipo[0].clubNombre === 'CF Sant Andreu Prueba', r.j);
+  const E = r.j.patient.equipo, qa = { a: E.map(e => e.id).join(','), t: E.map(e => e.tok).join(',') };
+  r = await llamar(S, { action: 'eq-equipo', a: qa.a, t: 'x'.repeat(16) });
+  ver('firma falsa', r.st === 401, r);
+  r = await llamar(S, { action: 'seg-eq-vincular', pwd, pac: PAC, club: CLUB, equipo: 'Juvenil A', quien: 'Sara' }, 'POST');
+  ver('vincular jugador', r.j.ok && r.j.parte.consentimiento === 'Pendiente', r.j); const parte = r.j.parte;
+  r = await llamar(S, { action: 'seg-eq-vincular', pwd, pac: PAC, club: CLUB }, 'POST');
+  ver('no se vincula dos veces', !r.j.ok, r.j);
+  r = await llamar(S, { action: 'seg-eq-parte', pwd, id: parte.id, quien: 'Sara Arcusa', campos: { semaforo: 'rojo', fase: 'Tratamiento', diagnostico: 'Esguince de tobillo derecho, grado 2', vuelta: '2026-12-01', puede: 'Bici estática', noPuede: 'Correr, saltar', pautas: 'Empezar con carrera continua suave la semana 3', nota: 'Primera sesión, mucha inflamación' } }, 'POST');
+  ver('guardar parte (sin compartir aún)', r.j.ok && !r.j.compartido && r.j.parte.evolucion.length === 1, r.j);
+  r = await llamar(S, { action: 'eq-equipo', ...qa });
+  ver('el entrenador aún no ve nada', r.j.ok && r.j.clubs[0].jugadores.length === 0, r.j);
+  r = await llamar(S, { action: 'eq-mio', patientId: PAC });
+  ver('el jugador ve la petición de su club', r.j.ok && r.j.partes.length === 1 && r.j.partes[0].consentimiento === 'Pendiente' && /CF Sant Andreu Prueba/.test(r.j.partes[0].texto), r.j);
+  r = await llamar(S, { action: 'eq-consent', patientId: PAC2, id: parte.id, acepta: true }, 'POST');
+  ver('otro paciente no puede aceptarlo', r.st === 403, r);
+  r = await llamar(S, { action: 'eq-consent', patientId: PAC, id: parte.id, acepta: true, quien: 'tutor', tutor: '' }, 'POST');
+  ver('tutor sin nombre', !r.j.ok, r.j);
+  r = await llamar(S, { action: 'eq-consent', patientId: PAC, id: parte.id, acepta: true, quien: 'yo' }, 'POST');
+  ver('el jugador acepta', r.j.ok && r.j.parte.consentimiento === 'Aceptado', r.j);
+  r = await llamar(S, { action: 'eq-equipo', ...qa });
+  const j0 = r.j.ok && r.j.clubs[0].jugadores[0];
+  ver('el entrenador ve el parte', j0 && j0.semaforo === 'rojo' && j0.diagnostico.includes('Esguince') && j0.evolucion.length === 1, r.j);
+  ver('el entrenador no ve datos del consentimiento ni ids', j0 && !('pacienteId' in j0) && !('consQuien' in j0) && !JSON.stringify(r.j).includes(PAC), j0);
+  r = await llamar(S, { action: 'seg-eq-parte', pwd, id: parte.id, quien: 'Sara Arcusa', campos: { semaforo: 'amarillo', fase: 'Readaptación', nota: 'Ya corre sin dolor' } }, 'POST');
+  ver('actualizar parte (compartido)', r.j.ok && r.j.compartido && r.j.parte.evolucion.length === 2, r.j);
+  r = await llamar(S, { action: 'seg-eq-club', pwd, club: CLUB });
+  ver('panel: accesos y jugadores del club', r.j.ok && r.j.accesos.length === 1 && r.j.jugadores.length === 1, r.j);
+  r = await llamar(S, { action: 'seg-eq-ficha', pwd, id: PAC });
+  ver('panel: pestaña Club de la ficha', r.j.ok && r.j.partes.length === 1 && r.j.clubs.length === 1, r.j);
+  r = await llamar(S, { action: 'eq-consent', patientId: PAC, id: parte.id, acepta: false }, 'POST');
+  ver('el jugador deja de compartir', r.j.ok && r.j.parte.consentimiento === 'Retirado', r.j);
+  r = await llamar(S, { action: 'eq-equipo', ...qa });
+  ver('el entrenador ya no lo ve', r.j.ok && r.j.clubs[0].jugadores.length === 0, r.j);
+  r = await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB, id: acc.id, campos: { nombre: 'Jordi Mas', email: 'jordi@club.com', activo: false } }, 'POST');
+  ver('quitar el acceso', r.j.ok && !r.j.acceso.activo, r.j);
+  r = await llamar(S, { action: 'eq-equipo', ...qa });
+  ver('acceso quitado: ya no entra', !r.j.ok && r.j.inactivo, r.j);
+  r = await llamar(L, { email: 'jordi@club.com', pin: acc.pin });
+  ver('acceso quitado: login', !r.j.ok, r.j);
+  console.log(fallos ? `\n${fallos} FALLOS` : '\nTodo bien');
+  process.exit(fallos ? 1 : 0);
+})().catch(e => { console.error('FALLO', e.message, String(e.stack).split('\n').slice(1, 4).join(' | ')); process.exit(1); });
