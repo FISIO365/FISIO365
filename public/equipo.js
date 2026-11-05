@@ -184,7 +184,7 @@
   async function descargarPDF(j, club) {
     let J; try { J = await jsPDFlib(); } catch (e) { window.toast && toast('No se ha podido preparar el PDF. Mira tu conexión.', false); return; }
     const doc = new J({ unit: 'mm', format: 'a4' }), W = 210, M = 18, CO = [194, 85, 46], NE = [30, 30, 30], GR = [125, 112, 104];
-    const COL = { rojo: [214, 69, 69], amarillo: [232, 163, 58], verde: [58, 157, 93] };
+    const COL = { rojo: [194, 85, 46], amarillo: [233, 160, 127], verde: [30, 30, 30] };
     let y = 20;
     const CL = window.CLINICA || {}, marca = CL.marca || 'FISIO365';
     doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...NE);
@@ -194,10 +194,10 @@
     doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(...NE); doc.text(j.jugador || '', M, y); y += 6.5;
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.setTextColor(...GR); doc.text([j.equipo, club].filter(Boolean).join(' · '), M, y); y += 10;
     if (j.semaforo) {
-      const c = COL[j.semaforo] || GR; doc.setFillColor(...c.map(x => Math.round(x + (255 - x) * .88))); doc.roundedRect(M, y, W - 2 * M, 16, 3, 3, 'F');
+      const c = COL[j.semaforo] || GR; doc.setFillColor(250, 247, 244); doc.roundedRect(M, y, W - 2 * M, 16, 3, 3, 'F');
       doc.setFillColor(...c); doc.circle(M + 7, y + 8, 2.2, 'F');
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(...c.map(x => Math.round(x * .75))); doc.text(SEM[j.semaforo] || '', M + 13, y + 9.6);
-      if (j.fase) { doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.setTextColor(...GR); doc.text('Fase: ' + j.fase, W - M - 6, y + 9.6, { align: 'right' }); }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(...NE); doc.text(SEM[j.semaforo] || '', M + 13, y + 9.6);
+      if (j.fase) { doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...CO); doc.text('Fase: ' + j.fase, W - M - 6, y + 9.6, { align: 'right' }); }
       y += 23;
     }
     const v = vuelta(j);

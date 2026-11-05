@@ -739,6 +739,21 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .eqp-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:16px}.eqp-2 .eqp-b{margin:0;border-radius:14px;padding:11px 12px}.eqp-b.si{background:#f2f9f4}.eqp-b.si svg{stroke:#2f8a50}.eqp-b.no{background:#fdf3f3}.eqp-b.no svg{stroke:#c43c3c}.eqp-2 p{font-size:13.5px}
 .eqp .eq-parte{border-top:none;padding-top:0}.eqp .eq-bl>span{font-size:11px}
 .eqp-acc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid #f1ede9}.eqp-acc button{display:flex;align-items:center;justify-content:center;gap:7px;height:46px;font-family:var(--font);font-size:13.5px;font-weight:700;border-radius:99px;cursor:pointer}.eqp-acc svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.eqp-sh{background:#fff;border:1.5px solid var(--border);color:#1a1a1a}.eqp-pdf{background:#1a1a1a;border:none;color:#f5f2ee}.eqp-acc button:disabled{opacity:.6}
+/* Mi equipo con los colores de la marca: negro = disponible, coral claro = con limitaciones, coral = baja */
+#vistaMiequipo,#vistaMiclub{--eqv:#1a1a1a;--eqa:#e9a07f;--eqr:#c2552e}
+.eqd-h>span{color:#1a1a1a}.eqd-bar{background:#f4efea}.eqd-bar i.verde,.eqd-k.verde::before{background:var(--eqv)}.eqd-bar i.amarillo,.eqd-k.amarillo::before{background:var(--eqa)}.eqd-bar i.rojo,.eqd-k.rojo::before{background:var(--eqr)}
+.eqd-k{background:#faf7f4}.eqd-k.on{border-color:#c2552e;background:#fff}
+.eqd-eqs button.on{background:#c2552e;border-color:#c2552e;color:#fff}
+.eqp-av,.eqp-av.rojo,.eqp-av.amarillo,.eqp-av.verde{position:relative;background:#f4efea;color:#5c4f47;box-shadow:none}
+.eqp-av::after{content:'';position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;border:2.5px solid #fff;background:#e6ddd5}.eqp-av.verde::after{background:var(--eqv)}.eqp-av.amarillo::after{background:var(--eqa)}.eqp-av.rojo::after{background:var(--eqr)}
+.eqp-top .eqp-av::after{width:14px;height:14px}
+.eqj-st.rojo,.eqj-st.amarillo,.eqj-st.verde{color:#5c4f47!important;font-weight:500}.eqj-cd{color:#c2552e}.eqj-cd.tarde{color:#c2552e}
+.eqp-st,.eqp-st.rojo,.eqp-st.amarillo,.eqp-st.verde{background:#faf7f4;color:#1a1a1a}.eqp-st>span{background:#fff;color:#c2552e;border:1px solid #f0dfd5}
+.eqp-st.verde>i{background:var(--eqv);box-shadow:0 0 0 4px #ece7e2}.eqp-st.amarillo>i{background:var(--eqa);box-shadow:0 0 0 4px #fbeee7}.eqp-st.rojo>i{background:var(--eqr);box-shadow:0 0 0 4px #f6dccf}
+.eqp-cd.ok .eqp-cdh{background:#f4efea;color:#1a1a1a}.eqp-cd.tarde{border-color:#f0d3c4}.eqp-cd.tarde small{color:#c2552e}
+.eqp-b.si,.eqp-b.no{background:#faf7f4}.eqp-b.si svg,.eqp-b.no svg{stroke:#c2552e}
+.eq-ev i.verde{background:var(--eqv)}.eq-ev i.amarillo{background:var(--eqa)}.eq-ev i.rojo{background:var(--eqr)}
+.eq-ejc{background:#f4efea;color:#5c4f47}
 body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head span{display:none!important}body.solo-equipo .nm-head{pointer-events:none}body.solo-equipo .nav-menu-inner .nav-item:not(#navMiEquipo){display:none!important}
 </style>
 <script src="/i18n.js?v=2"></script>
@@ -1714,7 +1729,7 @@ async function loadPuntos(){
 <script src="/avisos.js"></script>
 <script src="/chat-ui.js?v=2"></script>
 <script src="/racha-ui.js"></script>
-<script src="/equipo.js?v=3"></script>
+<script src="/equipo.js?v=4"></script>
 
 <div id="reservaSheet">
  <div class="rv-top"><button onclick="cerrarReserva()" aria-label="Cerrar">‹</button><b>Reservar cita</b></div>
