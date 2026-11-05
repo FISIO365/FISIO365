@@ -4,6 +4,18 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Con vídeo, para que también los hagan en los entrenos": [
+"Amb vídeo, perquè també els facin als entrenaments",
+"With video, so they can also do them at training"
+],
+"1 ejercicio": [
+"1 exercici",
+"1 exercise"
+],
+"{} ejercicios": [
+"{} exercicis",
+"{} exercises"
+],
 "Sus ejercicios": [
 "Els seus exercicis",
 "Their exercises"

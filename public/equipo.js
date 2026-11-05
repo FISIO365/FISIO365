@@ -168,7 +168,7 @@
     const cuenta = k => todos.filter(x => x.semaforo === k).length;
     box.innerHTML = `${P() && (P().vista || P().demo) ? '' : avisosCard()}<div class="eq-res">${Object.keys(SEM).map(k => `<div class="eq-rk ${k}"><b>${cuenta(k)}</b><span>${SEM[k]}</span></div>`).join('')}</div>` +
       d.clubs.map(c => `<div class="eq-club"><div class="eq-cn"><b class="no-tr">${esc(c.nombre)}</b>${c.deporte ? `<small class="no-tr">${esc(c.deporte)}</small>` : ''}</div>
-        ${c.jugadores.length ? porEquipo(c.jugadores).map(([eqn, L]) => `${eqn !== null ? `<div class="eq-tn no-tr">${esc(eqn || 'Sin equipo')}</div>` : ''}${L.map(x => `<button type="button" class="eq-ju" data-id="${x.id}"><span class="eq-dot ${esc(x.semaforo)}"></span><div><b class="no-tr">${esc(x.jugador)}</b><small>${junta([x.semaforo ? SEM[x.semaforo] : 'Sin parte todavía', x.vuelta ? 'vuelta prevista el ' + fe(x.vuelta) : ''])}</small>${x.equipo && eqn === null ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}${rachaChip(x.racha)}</div>${IC.flecha}</button>`).join('')}`).join('')
+        ${c.jugadores.length ? porEquipo(c.jugadores).map(([eqn, L]) => `${eqn !== null ? `<div class="eq-tn no-tr">${esc(eqn || 'Sin equipo')}</div>` : ''}${L.map(x => `<button type="button" class="eq-ju" data-id="${x.id}"><span class="eq-dot ${esc(x.semaforo)}"></span><div><b class="no-tr">${esc(x.jugador)}</b><small>${junta([x.semaforo ? SEM[x.semaforo] : 'Sin parte todavía', x.vuelta ? 'vuelta prevista el ' + fe(x.vuelta) : ''])}</small>${x.equipo && eqn === null ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}<span class="eq-tags">${rachaChip(x.racha)}${Array.isArray(x.ejercicios) && x.ejercicios.length ? `<em class="eq-rch eq-ejc"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>${x.ejercicios.length === 1 ? '1 ejercicio' : x.ejercicios.length + ' ejercicios'}</span></em>` : ''}</span></div>${IC.flecha}</button>`).join('')}`).join('')
         : '<div class="eq-vac">Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.</div>'}</div>`).join('');
     box.querySelectorAll('.eq-ju').forEach(b => b.onclick = () => { S.jug = b.dataset.id; dibuja(); window.scrollTo(0, 0); });
     const av = box.querySelector('.eq-avb'); if (av) av.onclick = activarAvisos;
@@ -197,6 +197,7 @@
         ${ben(ic.cal, 'Cuándo vuelve cada uno', 'La previsión de vuelta de tus lesionados')}
         ${ben(ic.ok, 'Cómo volver sin recaídas', 'Qué pueden hacer y cómo empezar a entrenar')}
         ${ben('<svg viewBox="0 0 24 24"><path d="M12 3c1.5 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.5 1 2.5 2 3 0-3 .5-5.5 1-7.5z"/></svg>', 'Si hace sus ejercicios', 'Su racha: los días que hacen sus ejercicios en casa')}
+        ${ben('<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4-2.5z"/></svg>', 'Sus ejercicios', 'Con vídeo, para que también los hagan en los entrenos')}
         ${ben(ic.bell, 'Avisos al momento', 'Cada vez que actualizamos el parte de un jugador')}
       </div>
       <button type="button" class="eqh-cta">${ic.wa}<span>Quiero colaborar</span></button>
@@ -269,9 +270,11 @@
         [{ f: d(-2) + 'T19:00:00', fisio: 'Jonathan', sem: 'amarillo', fase: 'Readaptación', txt: 'Ya corre sin molestias. Le queda recuperar la velocidad.' }, { f: d(-9) + 'T19:00:00', fisio: 'Jonathan', sem: 'rojo', fase: 'Tratamiento', txt: 'Dolor al estirar y al acelerar.' }], dias(1, 14, [6, 10]),
         [{ name: 'Puente de glúteo a una pierna', series: 3, reps: 12 }, { name: 'Nordic hamstring', series: 3, reps: 6, desc: 'Bajada lenta, con un compañero sujetando los tobillos.' }]),
       j('d3', 'Nil Serra', 'Infantil B', 'verde', 'Alta', 'Dolor de rodilla por crecimiento (Osgood-Schlatter), ya controlado.', '', 'Todo.', '', 'Seguir con los ejercicios de fuerza 2 días por semana.',
-        [{ f: d(-3) + 'T18:00:00', fisio: 'Sara', sem: 'verde', fase: 'Alta', txt: 'Alta deportiva. Sin dolor en los últimos entrenos.' }], dias(0, 2)),
+        [{ f: d(-3) + 'T18:00:00', fisio: 'Sara', sem: 'verde', fase: 'Alta', txt: 'Alta deportiva. Sin dolor en los últimos entrenos.' }], dias(0, 2),
+        [{ name: 'Sentadilla isométrica en pared', series: 3, dur: 30, desc: 'Antes de entrenar. Sin dolor en la rodilla.' }, { name: 'Estiramiento de cuádriceps', series: 2, dur: 30 }]),
       j('d4', 'Aleix Ferrer', 'Infantil B', 'amarillo', 'Vuelta progresiva', 'Contractura en el gemelo izquierdo.', d(2), 'Entrenar al 70 %.', 'Partido completo.', 'Estiramientos antes y después de entrenar.',
-        [{ f: d(-1) + 'T17:30:00', fisio: 'Juan', sem: 'amarillo', fase: 'Vuelta progresiva', txt: 'Mucho mejor. Puede entrenar con el grupo, sin forzar.' }], dias(4, 8))
+        [{ f: d(-1) + 'T17:30:00', fisio: 'Juan', sem: 'amarillo', fase: 'Vuelta progresiva', txt: 'Mucho mejor. Puede entrenar con el grupo, sin forzar.' }], dias(4, 8),
+        [{ name: 'Elevación de talones excéntrica', series: 3, reps: 12, desc: 'Sube con las dos piernas y baja despacio solo con la izquierda.' }, { name: 'Estiramiento de gemelo en pared', series: 2, dur: 30 }])
     ] }] };
   }
   // Vista previa desde el panel (?vista=…): la app como la ve un coordinador del club, sin tocar la sesión guardada
