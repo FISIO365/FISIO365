@@ -5040,6 +5040,29 @@ module.exports = async function handler(req, res) {
             espera: esp, negocios, libres,
             clubs: await (async () => { const nAcc = {}; (await eqAccP).forEach(x => { const c = x.fields['CLUB']; if (c) nAcc[c] = (nAcc[c] || 0) + 1; }); return (await clubsP).map(r => { const F = r.fields; return { id: r.id, eq: nAcc[r.id] || 0, nombre: F['NOMBRE'] || '', deporte: F['DEPORTE'] || '', tipo: F['TIPO'] || '', barrio: F['BARRIO'] || '', direccion: F['DIRECCIÓN'] || '', tel: F['TELF'] || '', email: F['EMAIL'] || '', web: F['WEB'] || '', instagram: F['INSTAGRAM'] || '', contacto: F['CONTACTO'] || '', estado: F['ESTADO'] || 'POR CONTACTAR', proximo: F['PRÓXIMO CONTACTO'] || '', ultimo: F['ÚLTIMO CONTACTO'] || '', historial: F['HISTORIAL'] || '', notas: F['NOTAS'] || '', permiso: F['PERMISO EMAIL'] || '', enviado: F['EMAIL ENVIADO'] || '', baja: !!F['BAJA EMAIL'] }; }); })() });
         }
+        if (action === 'seg-cap-clubs-email') { // qué ha pasado con los correos a los clubs (Brevo): entregado, abierto o email no válido
+          if (!process.env.BREVO_API_KEY) return res.status(200).json({ ok: true, emails: {} });
+          const C = global._clubsEm || (global._clubsEm = { t: 0, d: null });
+          if (C.d && Date.now() - C.t < 3 * 60e3) return res.status(200).json({ ok: true, emails: C.d });
+          const E = {};
+          // Brevo no filtra bien por etiqueta: se leen los eventos de los últimos 30 días y se quedan los de los clubs
+          const evs = [];
+          for (let off = 0; off < 25000; off += 2500) {
+            const r = await fetch(`https://api.brevo.com/v3/smtp/statistics/events?days=30&limit=2500&offset=${off}`, { headers: { 'api-key': process.env.BREVO_API_KEY, accept: 'application/json' } }).then(x => x.json()).catch(() => ({}));
+            const L = r.events || []; evs.push(...L.filter(e => /^clubs-/.test(String(e.tag || '')))); if (L.length < 2500) break;
+          }
+          {
+            for (const e of evs) {
+              const m = String(e.email || '').toLowerCase(); if (!m) continue; const x = E[m] || (E[m] = { entregado: '', abierto: '', mal: '', motivo: '' });
+              const f = String(e.date || '').slice(0, 10);
+              if (e.event === 'delivered') x.entregado = x.entregado || f;
+              else if (e.event === 'opened' || e.event === 'clicks') x.abierto = x.abierto || f;
+              else if (['hardBounces', 'invalid', 'blocked', 'error'].includes(e.event)) { x.mal = f; x.motivo = e.reason || e.event; }
+            }
+          }
+          C.d = E; C.t = Date.now();
+          return res.status(200).json({ ok: true, emails: E });
+        }
         if (action === 'seg-cap-contactos') { // «Sin cita» en Pacientes: quien preguntó y aún no se citó (ni está archivado)
           const desde = new Date(Date.now() - 180 * 864e5).toISOString().slice(0, 10);
           const con = await capTodos(CAP.contacto, `filterByFormula=${encodeURIComponent(`AND({CITADO}!='SÍ',NOT({ARCHIVADO}),IS_AFTER({FECHA},'${desde}'))`)}&sort[0][field]=FECHA&sort[0][direction]=desc`);
