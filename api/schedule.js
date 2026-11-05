@@ -498,6 +498,27 @@ async function clubsEmails(semilla) {
   for (let i = 0; i < cambios.length; i += 10) { const d = await at(CAP.club, { method: 'PATCH', body: JSON.stringify({ records: cambios.slice(i, i + 10) }) }); if (d.error) throw new Error(d.error.message || 'No se han podido poner los emails'); }
   await guardarAjuste('clubs_emails_v', CLUBS_EMAILS_V, 'Lista inicial');
 }
+// Presentación por email a un club que nos ha dado permiso (LSSI: nada de publicidad sin permiso; cada envío queda en su historial)
+const clubFirmaBaja = id => require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('baja-club:' + id).digest('hex').slice(0, 20);
+const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+function clubPermisoTxt(p) { // «2026-11-05 · Llamada · con Jordi · Ramiro» → «nos disteis permiso por teléfono el 5 de noviembre de 2026»
+  const L = String(p || '').split(' · '), f = /^\d{4}-\d{2}-\d{2}$/.test(L[0]) ? L[0] : '', m = L[1] || '';
+  const como = { Llamada: ' por teléfono', WhatsApp: ' por WhatsApp', Visita: ' en persona', Email: ' por email', Instagram: ' por Instagram' }[m] || '';
+  return `nos disteis permiso${como}${f ? ` el ${+f.slice(8)} de ${MESES_ES[+f.slice(5, 7) - 1]} de ${f.slice(0, 4)}` : ''}`;
+}
+async function clubEnviarPresentacion(id, F, to, quien) {
+  if (!process.env.BREVO_API_KEY) throw new Error('Los emails no están conectados');
+  const esc = x => String(x || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const nom = String(F['CONTACTO'] || '').trim().split(/[\s,]+/)[0];
+  const baja = `https://app.fisioterapia365.com/api/schedule?action=club-baja&id=${id}&t=${clubFirmaBaja(id)}`;
+  const html = require('./_email_clubs.js').replace('{{NOMBRE}}', nom ? ' ' + esc(nom) : '').replace('{{PERMISO}}', esc(F['PERMISO EMAIL'] ? clubPermisoTxt(F['PERMISO EMAIL']) : 'nos pedisteis información')).replace('{{BAJA}}', baja);
+  const club = String(F['NOMBRE'] || '').trim();
+  const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender: { name: 'Ramiro · FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com', name: 'Ramiro · FISIO365' }, to: [{ email: to, name: club || undefined }],
+      subject: `FISIO365${club ? ' × ' + club : ''}: seamos el fisio de vuestro equipo`, htmlContent: html, tags: ['clubs-presentacion'] }) });
+  if (!r.ok) { const t = await r.text().catch(() => ''); console.log('club mail', r.status, t.slice(0, 200)); throw new Error('No se ha podido enviar el email'); }
+  return true;
+}
 async function clubsSemilla() {
   let semilla = []; try { semilla = require('./_clubs.json'); } catch (_) { return; }
   const ya = new Set(await ajuste('clubs_semilla', [])), nuevos = semilla.filter(c => c && c.nombre && !ya.has(clubClave(c.nombre)));
@@ -4984,7 +5005,7 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, hoy: hoyF,
             contactos: con.map(r => { const F = r.fields; return { id: r.id, fecha: F['FECHA'] || r.createdTime, nombre: F['NOMBRE'] || '', medio: cNm(F['MEDIO']), mensaje: F['MENSAJE'] || '', citado: cNm(F['CITADO']), motivo: F['MOTIVO'] || '', motivoTipo: cNm(F['MOTIVO TIPO']), tel: F['TELF'] || '', por: F['REGISTRADO POR'] || '', archivado: !!F['ARCHIVADO'] }; }),
             espera: esp, negocios, libres,
-            clubs: await (async () => { const nAcc = {}; (await eqAccP).forEach(x => { const c = x.fields['CLUB']; if (c) nAcc[c] = (nAcc[c] || 0) + 1; }); return (await clubsP).map(r => { const F = r.fields; return { id: r.id, eq: nAcc[r.id] || 0, nombre: F['NOMBRE'] || '', deporte: F['DEPORTE'] || '', tipo: F['TIPO'] || '', barrio: F['BARRIO'] || '', direccion: F['DIRECCIÓN'] || '', tel: F['TELF'] || '', email: F['EMAIL'] || '', web: F['WEB'] || '', instagram: F['INSTAGRAM'] || '', contacto: F['CONTACTO'] || '', estado: F['ESTADO'] || 'POR CONTACTAR', proximo: F['PRÓXIMO CONTACTO'] || '', ultimo: F['ÚLTIMO CONTACTO'] || '', historial: F['HISTORIAL'] || '', notas: F['NOTAS'] || '' }; }); })() });
+            clubs: await (async () => { const nAcc = {}; (await eqAccP).forEach(x => { const c = x.fields['CLUB']; if (c) nAcc[c] = (nAcc[c] || 0) + 1; }); return (await clubsP).map(r => { const F = r.fields; return { id: r.id, eq: nAcc[r.id] || 0, nombre: F['NOMBRE'] || '', deporte: F['DEPORTE'] || '', tipo: F['TIPO'] || '', barrio: F['BARRIO'] || '', direccion: F['DIRECCIÓN'] || '', tel: F['TELF'] || '', email: F['EMAIL'] || '', web: F['WEB'] || '', instagram: F['INSTAGRAM'] || '', contacto: F['CONTACTO'] || '', estado: F['ESTADO'] || 'POR CONTACTAR', proximo: F['PRÓXIMO CONTACTO'] || '', ultimo: F['ÚLTIMO CONTACTO'] || '', historial: F['HISTORIAL'] || '', notas: F['NOTAS'] || '', permiso: F['PERMISO EMAIL'] || '', enviado: F['EMAIL ENVIADO'] || '', baja: !!F['BAJA EMAIL'] }; }); })() });
         }
         if (action === 'seg-cap-contactos') { // «Sin cita» en Pacientes: quien preguntó y aún no se citó (ni está archivado)
           const desde = new Date(Date.now() - 180 * 864e5).toISOString().slice(0, 10);
@@ -5000,6 +5021,21 @@ module.exports = async function handler(req, res) {
           return res.status(200).json({ ok: true, hoy: hoyF, espera: esp.filter(e => e.estado === 'ESPERANDO'), libres, negocios: neg.map(r => ({ id: r.id, nombre: r.fields['NOMBRE'] || '', proxima: r.fields['PRÓXIMA VISITA'] || '', tel: r.fields['TELF'] || '', contacto: r.fields['CONTACTO'] || '' })) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'seg-cap-club-enviar') { // la presentación por email (o una prueba a nosotros)
+          if (!okId(q.id)) return res.status(400).json({ ok: false });
+          const r = await at(`${CAP.club}/${q.id}`); if (!r || r.error) return res.status(404).json({ ok: false, error: 'Club no encontrado' });
+          const F = r.fields || {}, prueba = String(q.prueba || '').trim().toLowerCase(), to = prueba || String(F['EMAIL'] || '').trim().toLowerCase();
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return res.status(400).json({ ok: false, error: prueba ? 'Revisa el email de la prueba' : 'Este club no tiene un email válido' });
+          if (!prueba) {
+            if (F['BAJA EMAIL']) return res.status(200).json({ ok: false, error: 'Pidió no recibir más correos nuestros' });
+            if (!F['PERMISO EMAIL']) return res.status(200).json({ ok: false, error: 'Primero apunta que os han dado permiso para escribirles' });
+          }
+          try { await clubEnviarPresentacion(q.id, F, to, String(q.quien || '')); } catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
+          if (prueba) return res.status(200).json({ ok: true, prueba: true });
+          const lin = `${hoyF.split('-').reverse().join('/')} · Email: presentación enviada a ${to}${q.quien ? ' · ' + String(q.quien).split(' ')[0] : ''}`;
+          const d = await at(`${CAP.club}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'EMAIL ENVIADO': hoyF, HISTORIAL: [String(F['HISTORIAL'] || '').trim(), lin].filter(Boolean).join('\n') } }) });
+          return res.status(200).json({ ok: true, enviado: hoyF, historial: ((d && d.fields) || {})['HISTORIAL'] || '' });
+        }
         const T = { contacto: CAP.contacto, esperaP: CAP.esperaP, esperaN: CAP.esperaN, negocio: CAP.negocio, club: CAP.club }[q.tabla];
         if (!T) return res.status(400).json({ ok: false, error: 'Tabla' });
         if (action === 'seg-cap-borrar') { if (!okId(q.id)) return res.status(400).json({ ok: false }); const d = await at(`${T}/${q.id}`, { method: 'DELETE' }); if (T !== CAP.contacto && T !== CAP.negocio) _espera.t = 0; return res.status(200).json({ ok: !d.error }); }
@@ -5013,7 +5049,7 @@ module.exports = async function handler(req, res) {
             if (c.tel !== undefined) f['TELF'] = String(c.tel || '').slice(0, 30); if (c.archivado !== undefined) f['ARCHIVADO'] = !!c.archivado;
             if (!q.id && !f['FECHA']) f['FECHA'] = new Date().toISOString();
           } else if (q.tabla === 'club') {
-            txt('NOMBRE', c.nombre, 150); txt('DEPORTE', c.deporte, 80); txt('TIPO', c.tipo, 40); txt('BARRIO', c.barrio, 80); txt('DIRECCIÓN', c.direccion, 200); txt('TELF', c.tel, 60); txt('EMAIL', c.email, 120); txt('WEB', c.web, 300); txt('INSTAGRAM', c.instagram, 120); txt('CONTACTO', c.contacto, 150); txt('ESTADO', c.estado, 40); txt('NOTAS', c.notas, 5000); txt('HISTORIAL', c.historial, 30000);
+            txt('PERMISO EMAIL', c.permiso, 300); txt('NOMBRE', c.nombre, 150); txt('DEPORTE', c.deporte, 80); txt('TIPO', c.tipo, 40); txt('BARRIO', c.barrio, 80); txt('DIRECCIÓN', c.direccion, 200); txt('TELF', c.tel, 60); txt('EMAIL', c.email, 120); txt('WEB', c.web, 300); txt('INSTAGRAM', c.instagram, 120); txt('CONTACTO', c.contacto, 150); txt('ESTADO', c.estado, 40); txt('NOTAS', c.notas, 5000); txt('HISTORIAL', c.historial, 30000);
             if (c.proximo !== undefined) f['PRÓXIMO CONTACTO'] = okF(c.proximo) ? c.proximo : null; if (c.ultimo !== undefined) f['ÚLTIMO CONTACTO'] = okF(c.ultimo) ? c.ultimo : null;
             if (c.nombre !== undefined) f['CLAVE'] = clubClave(c.nombre);
           } else if (q.tabla === 'negocio') {
@@ -7011,6 +7047,18 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const nom = await eqNombresClubs(accs.map(a => a.fields['CLUB']));
       return res.status(200).json({ ok: true, equipo: accs.filter(a => nom[a.fields['CLUB']]).map(a => ({ id: a.id, tok: EQX.firmaEq(a.id, a.fields['PIN']), club: a.fields['CLUB'], clubNombre: nom[a.fields['CLUB']].nombre, rol: a.fields['ROL'] || '' })) });
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
+  }
+  if (action === 'club-baja') { // enlace del correo a los clubs: no volver a escribirles
+    const id = String(req.query.id || ''), t = String(req.query.t || '');
+    const pag = (tit, txt) => res.status(200).setHeader('Content-Type', 'text/html; charset=utf-8').send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FISIO365</title><body style="margin:0;background:#f5f2ee;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;display:flex;min-height:100vh;align-items:center;justify-content:center"><div style="max-width:420px;margin:24px;background:#fff;border:1px solid #ece4dd;border-radius:22px;padding:28px;text-align:center"><div style="font-weight:800;font-size:22px;letter-spacing:-.6px">FISIO<span style="color:#c2552e">365</span></div><h1 style="font-size:20px;margin:18px 0 8px">${tit}</h1><p style="font-size:15px;line-height:1.55;color:#5c4f47;margin:0">${txt}</p></div></body>`);
+    let ok = false; try { ok = /^rec[A-Za-z0-9]{14}$/.test(id) && require('crypto').timingSafeEqual(Buffer.from(t), Buffer.from(clubFirmaBaja(id))); } catch (e) {}
+    if (!ok) return pag('Enlace no válido', 'Escríbenos a info@fisioterapia365.com y no os enviaremos más correos.');
+    try {
+      const r = await at(`${CAP.club}/${id}`); const F = (r && r.fields) || {};
+      const lin = `${new Date().toISOString().slice(0, 10).split('-').reverse().join('/')} · Email: pide no recibir más correos (enlace de baja)`;
+      if (!F['BAJA EMAIL']) await at(`${CAP.club}/${id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'BAJA EMAIL': true, HISTORIAL: [String(F['HISTORIAL'] || '').trim(), lin].filter(Boolean).join('\n') } }) });
+    } catch (e) { return pag('Algo ha fallado', 'Escríbenos a info@fisioterapia365.com y no os enviaremos más correos.'); }
+    return pag('Hecho', 'No os enviaremos más correos. Si algún día queréis hablar, estamos en el 672 89 39 49.');
   }
   if (action === 'eq-chat') { // el entrenador habla con el fisio de un jugador (el jugador no lo ve)
     const b = req.method === 'POST' ? (req.body || {}) : req.query, pid = String(b.id || '');
