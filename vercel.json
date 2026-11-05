@@ -114,6 +114,14 @@
       "dest": "/api/schedule.js?action=cdoc&id=$1&s=$2"
     },
     {
+      "src": "/cumple/(rec[A-Za-z0-9]{14})-([01])-([a-f0-9]{10})\\.png",
+      "dest": "/api/schedule.js?action=cumple-og&id=$1&r=$2&s=$3"
+    },
+    {
+      "src": "/cumple/(rec[A-Za-z0-9]{14})-([01])-([a-f0-9]{10})",
+      "dest": "/api/schedule.js?action=cumple-pagina&id=$1&r=$2&s=$3"
+    },
+    {
       "src": "/premio/(\\d{4}-\\d{2})-(azar|creativa)-([a-f0-9]{10})\\.png",
       "dest": "/api/schedule.js?action=premio-og&m=$1&t=$2&s=$3"
     },

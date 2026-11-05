@@ -1138,6 +1138,82 @@ function ogPremioSvg({ pila, tipo, mesTxt }) {
 }
 function firmaPremio(m, t, pid) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('premio:' + m + ':' + t + ':' + pid).digest('hex').slice(0, 10); }
 const enlacePremio = (m, t, pid) => `${APPU()}/premio/${m}-${t}-${firmaPremio(m, t, pid)}`;
+// ── CUMPLEAÑOS: tarjeta animada para mandar por WhatsApp (/cumple/recID-R-firma; R=1 lleva el regalo del 10 % del mes) ──
+function firmaCumple(pid, r) { return require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('cumple:' + pid + ':' + (r ? 1 : 0)).digest('hex').slice(0, 10); }
+const enlaceCumple = (pid, r) => `${APPU()}/cumple/${pid}-${r ? 1 : 0}-${firmaCumple(pid, r)}`;
+// La tarta, en línea fina (la misma en la página y en la vista previa)
+function tartaSvg(k) {
+  const ola = (x0, x1, y, n) => { const w = (x1 - x0) / n; let d = `M${x0} ${y}`; for (let i = 0; i < n; i++) d += `c${(w / 2).toFixed(1)} 0 ${(w / 2).toFixed(1)} ${i % 2 ? -7 : 7} ${w.toFixed(1)} ${i % 2 ? -7 : 7}`; return d; };
+  const V = [82, 100, 118];
+  return `<g class="ln" fill="none" stroke="#c2552e" stroke-width="${k ? 4.4 : 2.6}" stroke-linecap="round" stroke-linejoin="round">`
+    + `<path pathLength="1" d="M26 170h148"/><path pathLength="1" d="M44 168v-42a8 8 0 0 1 8-8h96a8 8 0 0 1 8 8v42"/><path pathLength="1" d="${ola(44, 156, 128, 8)}"/>`
+    + `<path pathLength="1" d="M62 118V92a7 7 0 0 1 7-7h62a7 7 0 0 1 7 7v26"/><path pathLength="1" d="${ola(62, 138, 96, 6)}"/>`
+    + V.map(x => `<path pathLength="1" d="M${x - 3} 85V64a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v21"/>`).join('')
+    + `<path pathLength="1" d="M64 150h.01M82 156h.01M100 148h.01M118 156h.01M136 150h.01" stroke-width="${k ? 8 : 4}"/></g>`
+    + `<g class="hu" fill="none" stroke="#b9aca2" stroke-width="${k ? 4 : 2}" stroke-linecap="round">${V.map(x => `<path pathLength="1" d="M${x} 56c-4-5 4-9 0-14s4-9 0-14"/>`).join('')}</g>`
+    + `<g class="fls">${V.map((x, i) => `<path class="fl" d="M${x} 42c-6 7-7 13 0 15 7-2 6-8 0-15z" fill="#e9a23b"/>`).join('')}</g>`;
+}
+function ogCumpleSvg({ pila, regalo }) {
+  const O = ogTipos(), t2 = pila ? pila + '!' : '', sz = t2.length > 14 ? Math.max(26, Math.round(38 * 14 / t2.length)) : 38;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#f6f1eb"/><rect x="60" y="60" width="480" height="480" rx="44" fill="#fff"/>`
+    + `<g transform="translate(180 92) scale(1.2)">${tartaSvg(1).replace(/<g class="hu"[\s\S]*?<\/g>/, '').replace(/ class="[^"]*"| style="[^"]*"| pathLength="1"/g, '')}</g>`
+    + ogTexto(O.b, pila ? '¡Feliz cumpleaños,' : '¡Feliz cumpleaños!', 34, 300, 366, 0, '#c2552e')
+    + (pila ? ogTexto(O.b, t2, sz, 300, 412, 0, '#2b2420') : '')
+    + ogTexto(O.m, regalo ? 'Te hemos preparado un regalo' : 'Te hemos preparado algo', 21, 300, pila ? 456 : 414, 0, '#8a7d74') + `</svg>`;
+}
+function paginaCumple(D) {
+  const e = escHtml, MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][D.mes];
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>¡Feliz cumpleaños${D.pila ? ', ' + e(D.pila) : ''}!</title>
+<meta property="og:title" content="¡Feliz cumpleaños${D.pila ? ', ' + e(D.pila) : ''}!"><meta property="og:description" content="${D.regalo ? 'Ábrela: dentro hay un regalo para ti.' : 'Ábrela, que tiene sorpresa.'}"><meta property="og:image" content="${e(D.og)}"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600"><meta property="og:type" content="website">
+<link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px;-webkit-tap-highlight-color:transparent}
+.ta{display:block;overflow:visible}.ta .ln *{stroke-dasharray:1;stroke-dashoffset:1;animation:dr 1.1s cubic-bezier(.5,0,.3,1) forwards}.ta .ln *:nth-child(2){animation-delay:.15s}.ta .ln *:nth-child(3){animation-delay:.5s}.ta .ln *:nth-child(4){animation-delay:.35s}.ta .ln *:nth-child(5){animation-delay:.7s}.ta .ln *:nth-child(n+6){animation-delay:.9s}.ta .ln *:last-child{stroke-dasharray:none;opacity:0;animation:fi0 .5s 1.3s forwards}
+@keyframes dr{to{stroke-dashoffset:0}}
+.fl{transform-box:fill-box;transform-origin:50% 100%;opacity:0;animation:enc .4s 1.6s cubic-bezier(.3,1.6,.5,1) forwards,fk 1.1s 2s ease-in-out infinite}.fls .fl:nth-child(2){animation-delay:1.75s,2.15s}.fls .fl:nth-child(3){animation-delay:1.9s,2.3s}
+@keyframes enc{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:none}}@keyframes fk{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.07,.92) rotate(3deg)}}
+.hu *{stroke-dasharray:1;stroke-dashoffset:1;opacity:0}.so .fl{animation:apaga .35s forwards!important}.so .hu *{animation:humo 1.6s .2s ease-out forwards}
+@keyframes apaga{to{opacity:0;transform:scale(.1,.4)}}@keyframes humo{0%{opacity:.9;stroke-dashoffset:1}60%{opacity:.7}100%{opacity:0;stroke-dashoffset:0;transform:translateY(-10px)}}
+.glo{position:absolute;left:50%;top:22%;width:150px;height:110px;margin-left:-75px;border-radius:50%;background:radial-gradient(closest-side,rgba(233,162,59,.28),rgba(233,162,59,0));opacity:0;animation:fi0 .8s 1.8s forwards,lat 2.4s 2.6s ease-in-out infinite;pointer-events:none}.so .glo{animation:fo .5s forwards}
+@keyframes fi0{to{opacity:1}}@keyframes fo{to{opacity:0}}@keyframes lat{0%,100%{opacity:1}50%{opacity:.6}}
+#ov{position:fixed;inset:0;z-index:5;background:#f6f1eb;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;transition:opacity .7s,transform .7s;cursor:pointer}#ov.fu{opacity:0;transform:scale(1.04);pointer-events:none}
+#ov .cw{position:relative;width:min(260px,66vw)}#ov small{font-size:12px;font-weight:700;letter-spacing:.2em;color:#c2552e;opacity:0;animation:sube .6s .3s forwards}
+#ov h2{margin:18px 0 4px;font-size:26px;font-weight:700;color:#2b2420;opacity:0;animation:sube .6s 2.1s forwards}#ov p{margin:0;font-size:14.5px;color:#5c4f47;opacity:0;animation:sube .6s 2.4s forwards}
+#ov button{margin-top:22px;font:600 15px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:99px;padding:13px 26px;cursor:pointer;opacity:0;animation:sube .6s 2.8s forwards,resp 2.4s 3.4s ease-in-out infinite}
+.so h2,.so p,.so button{transition:opacity .3s}.so button{opacity:0!important;pointer-events:none}
+@keyframes sube{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes resp{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}50%{box-shadow:0 0 0 8px rgba(194,85,46,.14)}}
+.c{background:#fff;border-radius:26px;padding:28px 22px 24px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start;text-align:center}
+.c .ta{width:92px;margin:0 auto}.c .fl{display:none}.c .ln *{animation:none!important;stroke-dashoffset:0;opacity:1!important}
+.k{display:block;font-size:11.5px;font-weight:700;letter-spacing:.2em;color:#c2552e;margin-top:10px}h1{font-size:25px;font-weight:700;margin:6px 0 10px;line-height:1.2;color:#2b2420}
+.sub{font-size:14.5px;color:#5c4f47;margin:0;line-height:1.6}.fir{margin:12px 0 0;font-size:13.5px;color:#7d6a60;font-style:italic}
+.tk{position:relative;margin:22px auto 0;background:#fdf1ea;border-radius:22px;padding:20px 18px 18px;overflow:hidden}.tk:before,.tk:after{content:'';position:absolute;top:50%;width:26px;height:26px;margin-top:-13px;border-radius:50%;background:#fff}.tk:before{left:-13px}.tk:after{right:-13px}
+.tk small{display:block;font-size:11px;font-weight:700;letter-spacing:.18em;color:#c2552e}.tk b{display:block;font-size:54px;line-height:1.05;color:#c2552e;margin:6px 0 2px}.tk span{display:block;font-size:14px;color:#2b2420;font-weight:500}
+.tk hr{border:none;border-top:2px dashed #f1d9cc;margin:14px 6px 10px}.tk em{display:block;font-style:normal;font-size:13px;color:#7d6a60}
+.bt{display:flex;align-items:center;justify-content:center;width:100%;margin-top:16px;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border-radius:14px;padding:15px;text-decoration:none}
+.ot{display:inline-block;margin-top:14px;font:600 13px Poppins,sans-serif;color:#c2552e;background:none;border:none;cursor:pointer;padding:6px}
+.pie{margin-top:14px;font-size:12.5px;color:#7d6a60}
+.vi .fi{opacity:0;transform:translateY(10px);animation:sube .6s forwards}.vi .tk{animation:pop .7s 1s cubic-bezier(.3,1.5,.5,1) both}@keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+.cf{position:fixed;top:-14px;width:8px;height:12px;border-radius:2px;z-index:6;pointer-events:none;animation:cae linear forwards}.cf.r{width:9px;height:9px;border-radius:50%}@keyframes cae{to{transform:translateY(112vh) rotate(720deg)}}
+.cb{position:fixed;width:7px;height:10px;border-radius:2px;z-index:6;pointer-events:none;animation:boom 1.3s cubic-bezier(.15,.7,.3,1) forwards}@keyframes boom{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}</style></head>
+<body>
+<div id="ov" role="button" aria-label="Soplar las velas"><small>FELIZ CUMPLEAÑOS</small><div class="cw"><i class="glo"></i><svg class="ta" viewBox="0 0 200 180" aria-hidden="true">${tartaSvg(0)}</svg></div>
+<h2>Pide un deseo${D.pila ? ', ' + e(D.pila) : ''}</h2><p>…y sopla las velas</p><button type="button">Soplar las velas</button></div>
+<div class="c" id="c"><svg class="ta" viewBox="0 0 200 180" aria-hidden="true">${tartaSvg(0)}</svg>
+<small class="k fi" style="animation-delay:.2s">FELIZ CUMPLEAÑOS</small><h1 class="fi" style="animation-delay:.35s">¡Felicidades${D.pila ? ', ' + e(D.pila) : ''}!</h1>
+<p class="sub fi" style="animation-delay:.5s">Es tu día y queríamos estar ahí. Que este año venga lleno de cosas buenas, de planes y de moverte a gusto.</p>
+<p class="fir fi" style="animation-delay:.65s">Un abrazo de todo el equipo de ${e(D.marca)}</p>
+${D.regalo ? `<div class="tk"><small>TU REGALO DE CUMPLEAÑOS</small><b>10%</b><span>de descuento en cualquier sesión o pack</span><hr><em>Durante todo ${MES}</em><em>Solo tienes que decírnoslo cuando vengas</em></div>
+<a class="bt fi" style="animation-delay:1.5s" href="${e(D.reservar)}">Reservar mi sesión</a>` : ''}
+<button type="button" class="ot fi" id="otra" style="animation-delay:${D.regalo ? 1.7 : 0.9}s">Volver a soplar las velas</button>
+<p class="pie">${e(D.marca)}${D.dir ? ' · ' + e(D.dir) : ''}</p></div>
+<script>(function(){var b=document.body,ov=document.getElementById('ov'),c=document.getElementById('c'),rd=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches,ya=0,C=['#c2552e','#e9a23b','#f3c9b1','#2b2420','#e7b8a2'];
+function lluvia(){for(var i=0;i<80;i++){var d=document.createElement('i');d.className='cf'+(i%3?'':' r');d.style.left=Math.random()*100+'vw';d.style.background=C[i%C.length];d.style.animationDuration=(2.4+Math.random()*2)+'s';d.style.animationDelay=Math.random()*.8+'s';b.appendChild(d);setTimeout(function(x){return function(){x.remove();};}(d),5600);}}
+function boom(){var r=ov.querySelector('.cw').getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height*.3;for(var i=0;i<46;i++){var d=document.createElement('i'),a=Math.random()*Math.PI*2,v=90+Math.random()*170;d.className='cb';d.style.left=cx+'px';d.style.top=cy+'px';d.style.background=C[i%C.length];d.style.setProperty('--x',Math.cos(a)*v+'px');d.style.setProperty('--y',(Math.sin(a)*v-40)+'px');b.appendChild(d);setTimeout(function(x){return function(){x.remove();};}(d),1400);}}
+function soplar(){if(ya)return;ya=1;ov.classList.add('so');if(navigator.vibrate)try{navigator.vibrate(30);}catch(e){}if(!rd){boom();setTimeout(lluvia,250);}setTimeout(function(){ov.classList.add('fu');c.classList.add('vi');b.classList.add('vi');setTimeout(function(){ov.style.display='none';},700);},rd?50:1500);}
+ov.onclick=soplar;
+document.getElementById('otra').onclick=function(){var n=ov.cloneNode(true);n.className='';n.style.display='';ov.parentNode.replaceChild(n,ov);ov=n;ya=0;c.classList.remove('vi');b.classList.remove('vi');void c.offsetWidth;ov.onclick=soplar;window.scrollTo(0,0);};
+})();</script></body></html>`;
+}
 // ── VALES REGALO: se compran en /regalo (sustituye al formulario de Tally), se pagan con tarjeta, transferencia o en el centro ──
 // La tarjeta es una página con su enlace firmado (/vale/rec…-firma), en castellano, catalán o inglés, con vista previa cuadrada y versión para imprimir.
 const VALES = 'tblTCNp81M8vBFe7q';
@@ -3838,6 +3914,20 @@ module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).send(paginaVale(F, id, req.query.p === '1', req.query.c === '1'));
   }
+  if (action === 'cumple-pagina' || action === 'cumple-og') { // tarjeta de cumpleaños animada: /cumple/recID-R-firma
+    const pid = String(req.query.id || ''), r = req.query.r === '1' ? 1 : 0, sg = String(req.query.s || '');
+    if (!/^rec[A-Za-z0-9]{14}$/.test(pid) || firmaCumple(pid, r) !== sg) return res.status(404).send('Tarjeta no encontrada');
+    const pr = await at(`${PACIENTES}/${pid}`).catch(() => ({})), P = pr.fields || {};
+    let pila = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
+    if (action === 'cumple-og') {
+      try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogCumpleSvg({ pila, regalo: r }), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
+      catch (e) { return res.redirect(302, APPU() + '/icons/icon-512.png'); }
+    }
+    const cu = String(P['CUMPLE'] || ''), hoyM = +new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', month: '2-digit' }).format(new Date()) - 1;
+    const C0 = (await conf().catch(() => CONF_DEF)).clinica || CONF_DEF.clinica;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('X-Robots-Tag', 'noindex');
+    return res.status(200).send(MARCA.marcar(paginaCumple({ pila, regalo: r, mes: /^\d{4}-\d{2}/.test(cu) ? +cu.slice(5, 7) - 1 : hoyM, og: `${APPU()}/cumple/${pid}-${r}-${sg}.png`, reservar: huecosSiempre(30), marca: CLI.marca || 'FISIO365', dir: C0.direccion || '' }), CLI));
+  }
   if (action === 'premio-pagina' || action === 'premio-og') { // premio del sorteo de reseñas: /premio/AAAA-MM-tipo-firma
     const m = String(req.query.m || ''), t = req.query.t === 'creativa' ? 'creativa' : 'azar', sg = String(req.query.s || '');
     if (!/^\d{4}-\d{2}$/.test(m)) return res.status(404).end();
@@ -5481,7 +5571,7 @@ module.exports = async function handler(req, res) {
               const ya = !!(fel[p.id] && fel[p.id].f === f);
               if (n < 0 && !ya) { /* sin felicitar: sigue saliendo unos días */ } else if (n < 0) break;
               const edad = +f.slice(0, 4) - +c.slice(0, 4);
-              out.push({ pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', fecha: f, dif: n, edad: edad > 0 && edad < 110 ? edad : 0, felicitado: ya });
+              out.push({ pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', fecha: f, dif: n, edad: edad > 0 && edad < 110 ? edad : 0, felicitado: ya, enlace: enlaceCumple(p.id, 0), enlaceR: enlaceCumple(p.id, 1) });
               break;
             }
           });
@@ -5694,7 +5784,7 @@ module.exports = async function handler(req, res) {
             if (faltan.length) await porLotes(PACIENTES, faltan, 'FULL NAME', nomP); revisar = await revisarCitas(todas, [q.fecha], id => nomP[id]); } catch (e) { revisar = []; } }
           // Cumpleaños (solo en la vista de un día): hoy (dif 0) o en los 3 días de antes o después
           // regalo: le felicitamos con el regalo de cumpleaños y la cita es de ese mismo mes (para acordarse del descuento)
-          const cumples = {}; if (okF(q.fecha)) { const f0 = new Date(q.fecha + 'T12:00:00'), fel = (await ajuste('cumples_felicitados', {})) || {}; pids.forEach(id => { const c = cumP[id], fe = fel[id] && typeof fel[id] === 'object' ? fel[id] : null, rg = !!(fe && fe.r && String(fe.f || '').slice(0, 7) === q.fecha.slice(0, 7)); if (!/^\d{4}-\d{2}-\d{2}$/.test(c || '')) return; for (let n = -3; n <= 3; n++) { const d = new Date(f0); d.setDate(d.getDate() + n); const f = d.toISOString().slice(0, 10), md = c.slice(5) === '02-29' && +f.slice(0, 4) % 4 ? '02-28' : c.slice(5); if (f.slice(5) === md) { const e = +f.slice(0, 4) - +c.slice(0, 4); cumples[id] = { dif: n, fecha: f, edad: e > 0 && e < 110 ? e : 0, felicitado: !!(fe && fe.f === f), regalo: rg }; break; } } if (!cumples[id] && rg) cumples[id] = { dif: null, fecha: fe.f, regalo: true, felicitado: true }; }); }
+          const cumples = {}; if (okF(q.fecha)) { const f0 = new Date(q.fecha + 'T12:00:00'), fel = (await ajuste('cumples_felicitados', {})) || {}; pids.forEach(id => { const c = cumP[id], fe = fel[id] && typeof fel[id] === 'object' ? fel[id] : null, rg = !!(fe && fe.r && String(fe.f || '').slice(0, 7) === q.fecha.slice(0, 7)); if (!/^\d{4}-\d{2}-\d{2}$/.test(c || '')) return; for (let n = -3; n <= 3; n++) { const d = new Date(f0); d.setDate(d.getDate() + n); const f = d.toISOString().slice(0, 10), md = c.slice(5) === '02-29' && +f.slice(0, 4) % 4 ? '02-28' : c.slice(5); if (f.slice(5) === md) { const e = +f.slice(0, 4) - +c.slice(0, 4); cumples[id] = { dif: n, fecha: f, edad: e > 0 && e < 110 ? e : 0, felicitado: !!(fe && fe.f === f), regalo: rg, enlace: enlaceCumple(id, 0), enlaceR: enlaceCumple(id, 1) }; break; } } if (!cumples[id] && rg) cumples[id] = { dif: null, fecha: fe.f, regalo: true, felicitado: true }; }); }
           return res.status(200).json({ ok: true, hoy: hoyF, limitado, debenPagar, cumples, ausencias: ausDia, alertas: alertasDia, salud: Object.fromEntries(pids.filter(id => _saludTodo[id]).map(id => [id, _saludTodo[id]])), sinConsent, conConsent: consL ? pids.filter(id => conCons.has(id)) : [], espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, pago: nmA(F['PAGO ESTADO']) ? { estado: nmA(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])), dadaPor: F['DADA POR'] || '', dadaEl: F['DADA EL'] || F['RESERVADA EL'] || '' }; }), revisar });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
