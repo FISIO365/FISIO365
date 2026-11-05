@@ -4,6 +4,30 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Para entrenadores y coordinadores de clubs que trabajan con nosotros: ven si sus jugadores pueden entrenar, cuándo vuelven y qué pueden hacer. Solo de los jugadores que lo aceptan.": [
+"Per a entrenadors i coordinadors de clubs que treballen amb nosaltres: veuen si els seus jugadors poden entrenar, quan tornen i què poden fer. Només dels jugadors que ho accepten.",
+"For coaches and coordinators of clubs that work with us: see whether their players can train, when they're back and what they can do. Only for players who agree."
+],
+"¿Qué quieres hacer?": [
+"Què vols fer?",
+"What would you like to do?"
+],
+"Tengo una clave": [
+"Tinc una clau",
+"I have a code"
+],
+"Mi club ya trabaja con vosotros": [
+"El meu club ja treballa amb vosaltres",
+"My club already works with you"
+],
+"Que seáis el fisio de mi equipo": [
+"Que sigueu el fisio del meu equip",
+"For you to be my team's physio"
+],
+"Entrar": [
+"Entra",
+"Enter"
+],
 "¿Quieres que seamos el fisio de tu equipo?": [
 "Vols que siguem el fisio del teu equip?",
 "Would you like us to be your team's physio?"
