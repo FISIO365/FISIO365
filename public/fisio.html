@@ -7247,7 +7247,10 @@ function agRevCitaHtml(c){const L=((AG.dia&&AG.dia.revisar)||[]).filter(x=>(x.id
 // En la ficha: su cumpleaños (hoy, estos días de atrás sin felicitar o los próximos), con «Felicitar»
 function fpCumpleInfo(P){const c=String(P.cumple||'').slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(c))return null;const h=agHoyIso();
  for(let n=-3;n<=7;n++){const f=agMover(h,n),md=c.slice(5)==='02-29'&&+f.slice(0,4)%4?'02-28':c.slice(5);if(f.slice(5)===md){const e=+f.slice(0,4)-+c.slice(0,4);return {dif:n,fecha:f,edad:e>0&&e<110?e:0};}}return null;}
-function fpCumpleHtml(P){const k=fpCumpleInfo(P);if(!k)return '';const fel=P.cumpleFel&&P.cumpleFel.f===k.fecha,dn=REC_DIAS[new Date(k.fecha+'T12:00:00').getDay()];
+function fpCumpleHtml(P){const fe=P.cumpleFel,h=agHoyIso(),hasta=fe&&fe.r&&/^\d{4}-\d{2}-\d{2}$/.test(fe.f||'')?agMover(fe.f,30):'';
+ const rg=hasta&&h>=fe.f&&h<=hasta?`<span class="fp-cum"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v7.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V12M12 8v12.5"/><path d="M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z"/></svg><span>Regalo 10% hasta el ${+hasta.slice(8)}/${+hasta.slice(5,7)}</span></span>`:'';
+ return fpCumpleHtml0(P)+rg;}
+function fpCumpleHtml0(P){const k=fpCumpleInfo(P);if(!k)return '';const fel=P.cumpleFel&&P.cumpleFel.f===k.fecha,dn=REC_DIAS[new Date(k.fecha+'T12:00:00').getDay()];
  const t=k.dif===0?(k.edad?`Cumple ${k.edad} hoy`:'Hoy es su cumple'):k.dif<0?`Su cumple fue ${k.dif===-1?'ayer':'el '+dn}`:`Cumple${k.edad?' '+k.edad:''} ${k.dif===1?'mañana':'el '+dn}`;
  const b=k.dif<=0&&fel?'<i title="Ya le hemos felicitado">✓</i>':'';
  return `<span class="fp-cum">${CUM_ICO}<span>${escH(t)}</span>${b}</span>`;}
@@ -7403,7 +7406,7 @@ function agNuevaCitaPac(p,onDone){
    if(r.bomba){b.disabled=false;b.textContent='Dar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
    if(r.cerca){b.disabled=false;b.textContent='Dar cita';if(await agAvisoCerca(m,r))enviar(b,forzar);return;}
    if(r.conflicto){b.disabled=false;b.textContent='Dar cita';pregunta(r.error+'. ¿Darla igualmente?',{si:'Darla igualmente'}).then(ok=>{if(ok)enviar(b,true);});return;}
-   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada: ${segFecha(fecha)} a las ${hora}`+(pacInfo?' · '+pacInfo:''),true);m.remove();if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:p.id,paciente:p.nombre},r.debePagar);try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
+   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada: ${segFecha(fecha)} a las ${hora}`+(pacInfo?' · '+pacInfo:'')+(r.regaloCumple?' · 🎂 tiene su regalo de cumple (10%), apuntado en la cita':''),true);m.remove();if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:p.id,paciente:p.nombre},r.debePagar);try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();}
   catch(err){b.disabled=false;b.textContent='Dar cita';toast(err.message,false);}};
  m.querySelector('.hz-ok').onclick=e=>enviar(e.target,false);
 }
@@ -7644,7 +7647,7 @@ function agDarCita({fecha,hora,fisio,hueco},onDone){
    if(r.bomba){b.disabled=false;b.textContent='Dar cita';if(await agAvisoBomba(r))enviar(b,forzar);return;}
    if(r.cerca){b.disabled=false;b.textContent='Dar cita';if(await agAvisoCerca(m,r))enviar(b,forzar);return;}
    if(r.conflicto){b.disabled=false;b.textContent='Dar cita';pregunta(r.error+'. ¿Darla igualmente?',{si:'Darla igualmente'}).then(ok=>{if(ok)enviar(b,true);});return;}
-   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`+(pacInfo?' · '+pacInfo:'')+(r.reprogramadas?' · su cita «Por reagendar» pasa a Reprogramada':'')+(r.noCitados?' · sale de «Sin cita»':'')+(r.seguimiento?(r.seguimiento.quitado?' · sale de «Por llamar»':'')+' · ahora está Activo':''),true);if(r.seguimiento&&r.seguimiento.estados){try{const pp=(pacs||[]).find(x=>x.id===pac.id);if(pp)pp.estados=r.seguimiento.estados;}catch(_){}}m.remove();if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:pac.id,paciente:pac.nombre},r.debePagar);try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();
+   if(!r.ok)throw new Error(r.error||'No se ha podido dar la cita');toast(`Cita dada a ${pac.nombre}`+(pacInfo?' · '+pacInfo:'')+(r.regaloCumple?' · 🎂 tiene su regalo de cumple (10%), apuntado en la cita':'')+(r.reprogramadas?' · su cita «Por reagendar» pasa a Reprogramada':'')+(r.noCitados?' · sale de «Sin cita»':'')+(r.seguimiento?(r.seguimiento.quitado?' · sale de «Por llamar»':'')+' · ahora está Activo':''),true);if(r.seguimiento&&r.seguimiento.estados){try{const pp=(pacs||[]).find(x=>x.id===pac.id);if(pp)pp.estados=r.seguimiento.estados;}catch(_){}}m.remove();if(r.debePagar&&r.id)agPagoTrasDar({id:r.id,fecha,hora,fisio,pacienteId:pac.id,paciente:pac.nombre},r.debePagar);try{_dtC.d=null;_dtC.t=0;}catch(_){}onDone&&onDone();
    // Venía con un pack de antes sin apuntar: se marca ahora con esta cita (sesión X de N)
    if(quierePack&&packSel&&r.id){const {n,ses}=packSel.get();
     fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:pac.id,bonoPack:{n,sesion:ses,citaId:r.id}})}).then(x=>x.json()).then(k=>{if(!k.ok)throw 0;toast(`Pack apuntado: sesión ${ses} de ${n}`,true);onDone&&onDone();}).catch(()=>toast('La cita está dada, pero no se ha podido apuntar el pack. Hazlo desde la cita',false));}}

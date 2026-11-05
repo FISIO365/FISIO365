@@ -875,7 +875,9 @@ async function ajustes() {
   // Todas las páginas: con más de 100 ajustes, los nuevos (p. ej. cumpleaños felicitados) se quedaban fuera
   const recs = []; let off = '';
   for (let i = 0; i < 20; i++) { const d = await at(`${AJ_T}?pageSize=100${off ? '&offset=' + encodeURIComponent(off) : ''}`); if (d.error) throw new Error(d.error.message); recs.push(...(d.records || [])); if (!d.offset) break; off = d.offset; }
-  const v = {}; recs.sort((a, b) => String(a.createdTime || '').localeCompare(String(b.createdTime || ''))).forEach(r => { try { v[r.fields.CLAVE] = { id: r.id, v: JSON.parse(r.fields.VALOR || 'null') }; } catch (e) {} });
+  // Si una clave está repetida (se creaba otra fila cuando no se encontraba la primera) y son objetos, se juntan: el más nuevo manda y se escribe en él
+  const v = {}, obj = x => x && typeof x === 'object' && !Array.isArray(x);
+  recs.sort((a, b) => String(a.createdTime || '').localeCompare(String(b.createdTime || ''))).forEach(r => { try { const k = r.fields.CLAVE, val = JSON.parse(r.fields.VALOR || 'null'); v[k] = { id: r.id, v: v[k] && obj(v[k].v) && obj(val) ? Object.assign({}, v[k].v, val) : val }; } catch (e) {} });
   _aj = { t: Date.now(), v }; return v;
 }
 async function ajuste(clave, def) { try { const a = (await ajustes())[clave]; return a && a.v != null ? a.v : def; } catch (e) { return def; } }
@@ -5354,6 +5356,9 @@ module.exports = async function handler(req, res) {
             Object.values(b).forEach(L => { if (L.length > 2) add('bomba', L[0].f, L.map(x => x.id), `A las ${L[0].h} hay ${L.length} pacientes con bomba y es para dos: ${L.map(x => n1(x.pid)).join(', ')}`, { hora: L[0].h }); }); }
           return out.sort((a, b) => (a.fecha + (a.hora || '')).localeCompare(b.fecha + (b.hora || '')));
         };
+        // Regalo de cumpleaños (10 %) vigente para ese paciente en esa fecha: 30 días desde su cumple, si le felicitamos con regalo
+        const regaloCumple = async (pid, fecha) => { const fe = ((await ajuste('cumples_felicitados', {})) || {})[pid]; if (!fe || typeof fe !== 'object' || !fe.r || !okF(fe.f)) return null; const hasta = masDias(fe.f, 30); return fecha >= fe.f && fecha <= hasta ? { desde: fe.f, hasta } : null; };
+        const notaRegalo = h => `🎂 Regalo de cumpleaños: 10 % en esta sesión o en un pack (vale hasta el ${+h.slice(8)}/${+h.slice(5, 7)})`;
         const quienDa = q => ({ 'DADA POR': String(q.quien || '').trim().slice(0, 60) || 'Panel', 'DADA EL': new Date().toISOString() });
         const tiposDe = async (names) => { // nombres → ids de TIPO DE CITA (se crean si no existen)
           const out = []; for (const n0 of (names || []).map(x => String(x).trim()).filter(Boolean).slice(0, 6)) {
@@ -5790,6 +5795,11 @@ module.exports = async function handler(req, res) {
           // Cumpleaños (solo en la vista de un día): hoy (dif 0) o en los 3 días de antes o después
           // regalo: le felicitamos con el regalo de cumpleaños y la cita es de ese mismo mes (para acordarse del descuento)
           const cumples = {}; if (okF(q.fecha)) { const f0 = new Date(q.fecha + 'T12:00:00'), fel = (await ajuste('cumples_felicitados', {})) || {}; pids.forEach(id => { const c = cumP[id], fe = fel[id] && typeof fel[id] === 'object' ? fel[id] : null, rg = !!(fe && fe.r && /^\d{4}-\d{2}-\d{2}$/.test(fe.f || '') && q.fecha >= fe.f && q.fecha <= masDias(fe.f, 30)); if (!/^\d{4}-\d{2}-\d{2}$/.test(c || '')) return; for (let n = -3; n <= 3; n++) { const d = new Date(f0); d.setDate(d.getDate() + n); const f = d.toISOString().slice(0, 10), md = c.slice(5) === '02-29' && +f.slice(0, 4) % 4 ? '02-28' : c.slice(5); if (f.slice(5) === md) { const e = +f.slice(0, 4) - +c.slice(0, 4); cumples[id] = { dif: n, fecha: f, edad: e > 0 && e < 110 ? e : 0, felicitado: !!(fe && fe.f === f), regalo: rg, enlace: enlaceCumple(id, 0), enlaceR: enlaceCumple(id, 1) }; break; } } if (!cumples[id] && rg) cumples[id] = { dif: null, fecha: fe.f, regalo: true, felicitado: true }; }); }
+          // Citas de quien tiene el regalo de cumpleaños vigente que aún no lo llevan apuntado en las notas (dadas antes de que se apuntara solo)
+          { const conR = Object.entries(cumples).filter(([, x]) => x.regalo).map(([id]) => id); if (conR.length) { const fel = (await ajuste('cumples_felicitados', {})) || {};
+            for (const r of rows.filter(r => conR.includes((r.fields['RELACIÓN - CITA'] || [])[0]) && /PENDIENTE|DUDOSA/.test(String(nmA(r.fields.ESTADO))) && !/Regalo de cumpleaños/.test(r.fields.NOTAS || '')).slice(0, 10)) {
+              const fe = fel[(r.fields['RELACIÓN - CITA'] || [])[0]]; if (!fe || !okF(fe.f)) continue; const n = (String(r.fields.NOTAS || '').trim() + (String(r.fields.NOTAS || '').trim() ? '\n' : '') + notaRegalo(masDias(fe.f, 30))).slice(0, 2000);
+              await patch(r.id, { NOTAS: n }).catch(() => {}); r.fields.NOTAS = n; } } }
           return res.status(200).json({ ok: true, hoy: hoyF, limitado, debenPagar, cumples, ausencias: ausDia, alertas: alertasDia, salud: Object.fromEntries(pids.filter(id => _saludTodo[id]).map(id => [id, _saludTodo[id]])), sinConsent, conConsent: consL ? pids.filter(id => conCons.has(id)) : [], espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, pago: nmA(F['PAGO ESTADO']) ? { estado: nmA(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])), dadaPor: F['DADA POR'] || '', dadaEl: F['DADA EL'] || F['RESERVADA EL'] || '' }; }), revisar });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -5807,6 +5817,10 @@ module.exports = async function handler(req, res) {
           const fel = (await ajuste('cumples_felicitados', {})) || {};
           if (q.enviado === false) delete fel[q.pacienteId]; else fel[q.pacienteId] = { f: q.fecha, r: q.regalo ? 1 : 0, quien: String(q.quien || '').slice(0, 60), cuando: new Date().toISOString() };
           await guardarAjuste('cumples_felicitados', fel, String(q.quien || '').slice(0, 60));
+          if (q.regalo && q.enviado !== false) { try { const hasta = masDias(q.fecha, 30), nota = notaRegalo(hasta);
+            const cs = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(FIND('${q.pacienteId}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.fecha}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${hasta}','YYYY-MM-DD'))))`)}&fields[]=ESTADO&fields[]=NOTAS&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`);
+            for (const c of cs.filter(c => (c.fields['RELACIÓN - CITA'] || []).includes(q.pacienteId) && /PENDIENTE|DUDOSA/.test(String(nmA(c.fields.ESTADO))) && !/Regalo de cumpleaños/.test(c.fields.NOTAS || '')).slice(0, 10))
+              await patch(c.id, { NOTAS: (String(c.fields.NOTAS || '').trim() + (String(c.fields.NOTAS || '').trim() ? '\n' : '') + nota).slice(0, 2000) }).catch(() => {}); } catch (e) {} }
           return res.status(200).json({ ok: true });
         }
         if (action === 'seg-agenda-resena') { // apuntar que se le ha pedido la reseña en Google
@@ -5878,6 +5892,8 @@ module.exports = async function handler(req, res) {
           if (!q.sinBomba && !q.forzarBomba) { const bl = await bombaLlena(q.fecha, q.hora, null); if (bl) return res.status(200).json(bl); }
           if (!q.forzarDias) { const L = await citasCerca(q.pacienteId, q.fecha, null).catch(() => []); if (L.length) return res.status(200).json(avisoCerca(L, q.fecha)); }
           Object.assign(campos, quienDa(q));
+          const rgC = await regaloCumple(q.pacienteId, q.fecha).catch(() => null);
+          if (rgC) campos.NOTAS = ((campos.NOTAS ? campos.NOTAS + '\n' : '') + notaRegalo(rgC.hasta)).slice(0, 2000);
           const r = await ocupar(q.fecha, q.hora, q.fisio, campos, !!q.forzar);
           if (r.conflicto) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${r.con || 'otro paciente'}` });
           const rep = await revisarPorReagendar(true).catch(() => 0);
@@ -5885,7 +5901,7 @@ module.exports = async function handler(req, res) {
           const et = await ponerEtapa(q.pacienteId, 'cita').catch(() => null); if (seg && et) seg.estados = et.estados;
           const [esp, noCit] = await Promise.all([salirDeEspera(q.pacienteId, q.fecha, q.hora).catch(() => 0), salirDeNoCitados(q.pacienteId, q.fecha, q.hora).catch(() => 0)]);
           const pf = await at(`${PACIENTES}/${q.pacienteId}`).catch(() => ({})), debePagar = (pf.fields || {})['PAGO ADELANTADO'] ? (pf.fields['PAGO ADELANTADO MOTIVO'] || 'Tiene que pagar por adelantado') : '';
-          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg, etapa: et && et.etapa, espera: esp, noCitados: noCit, debePagar });
+          return res.status(200).json({ ok: true, id: r.id, reprogramadas: rep, seguimiento: seg, etapa: et && et.etapa, espera: esp, noCitados: noCit, debePagar, regaloCumple: rgC ? rgC.hasta : '' });
         }
         if (action === 'seg-agenda-huecos') { // abrir varias horas de golpe (libres o bloqueadas), sin pisar lo que ya hay
           const fechas = (q.fechas || []).filter(okF).slice(0, 60), horas = (q.horas || []).map(hh).filter(okH).slice(0, 24);
