@@ -60,6 +60,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/equipo.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "public/avisos.js",
       "use": "@vercel/static"
     },
@@ -279,6 +283,10 @@
     {
       "src": "/racha-ui.js",
       "dest": "/public/racha-ui.js"
+    },
+    {
+      "src": "/equipo.js",
+      "dest": "/public/equipo.js"
     },
     {
       "src": "/avisos.js",

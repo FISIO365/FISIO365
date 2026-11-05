@@ -1,0 +1,180 @@
+// FISIO365 · «Mi club» (el jugador decide si su club ve su parte) y «Mi equipo» (el entrenador ve a sus jugadores)
+// Lo usa public/index.html. Datos: /api/schedule?action=eq-mio | eq-consent | eq-equipo (ver api/schedule.js, MI EQUIPO).
+(function () {
+  const SEM = { rojo: 'No entrena', amarillo: 'Entrena con limitaciones', verde: 'Puede jugar' };
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const fe = f => { if (!f) return ''; const d = new Date(String(f).length === 10 ? f + 'T12:00:00' : f); return isNaN(d) ? '' : `${d.getDate()} de ${MES[d.getMonth()]}`; };
+  const IC = {
+    club: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+    eq: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6M17.6 13.5A5.5 5.5 0 0 1 20.5 19"/></svg>',
+    flecha: '<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>',
+    atras: '<svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>'
+  };
+  const S = { partes: [], equipo: null, cargado: false, jug: null };
+  const get = (a, q) => fetch(`/api/schedule?action=${a}&${new URLSearchParams(q)}`).then(r => r.json());
+  const post = (a, b) => fetch(`/api/schedule?action=${a}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }).then(r => r.json());
+  const junta = L => L.filter(Boolean).map(x => `<span>${esc(x)}</span>`).join(' · ');
+  const P = () => window.patient || (typeof patient !== 'undefined' ? patient : null);
+  const misAccesos = () => { const p = P(); return (p && Array.isArray(p.equipo) ? p.equipo : []).filter(e => e && e.id && e.tok); };
+  const guardaPaciente = () => { try { localStorage.setItem('fisio365_patient', JSON.stringify(P())); } catch (e) {} };
+  const el = id => document.getElementById(id);
+
+  // ── Al entrar (paciente): sus clubs y, si es entrenador con el mismo email, su acceso a «Mi equipo» ──
+  async function cargar() {
+    const p = P(); if (!p || p.soloEquipo) return;
+    try {
+      const d = await get('eq-mio', { patientId: p.id }); if (!d || !d.ok) return;
+      S.partes = d.partes || []; S.cargado = true;
+      p.equipo = d.equipo || []; guardaPaciente();
+      menu(); banner();
+    } catch (e) {}
+  }
+  function menu() {
+    const c = el('navMiClub'), e = el('navMiEquipo');
+    if (c) c.style.display = S.partes.length ? 'flex' : 'none';
+    if (e) e.style.display = misAccesos().length ? 'flex' : 'none';
+  }
+  function banner() {
+    const b = el('eqBanner'); if (!b) return;
+    const pend = S.partes.find(x => x.consentimiento === 'Pendiente');
+    if (!pend) { b.classList.remove('on'); return; }
+    b.innerHTML = `<div class="av-ic eq-bic">${IC.club}</div><div><b class="no-tr">${esc(pend.club)}</b><span>Tu club quiere ver cómo va tu recuperación. Tú decides.</span></div><button class="ib">Ver</button>`;
+    b.onclick = () => window.showSection('miclub');
+    b.classList.add('on');
+  }
+
+  // ── Mi club (el jugador) ──
+  function pintarClub() {
+    const box = el('miClubBox'); if (!box) return;
+    if (!S.cargado) { box.innerHTML = '<div class="eq-vac">Cargando…</div>'; cargar().then(pintarClub); return; }
+    if (!S.partes.length) { box.innerHTML = '<div class="eq-vac">No estás en ningún club con «Mi equipo».</div>'; return; }
+    box.innerHTML = S.partes.map(x => {
+      const ok = x.consentimiento === 'Aceptado';
+      return `<div class="eq-card" data-id="${x.id}">
+        <div class="eq-ch"><div class="eq-cic">${IC.club}</div><div><b class="no-tr">${esc(x.club)}</b>${x.equipo ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}</div>
+          <span class="eq-st ${ok ? 'ok' : x.consentimiento === 'Retirado' ? 'no' : 'pe'}">${ok ? 'Lo compartes' : x.consentimiento === 'Retirado' ? 'No lo compartes' : 'Pendiente'}</span></div>
+        ${ok ? `<p class="eq-p">Tu club ve el parte de tu recuperación desde el ${esc(fe(x.consFecha))}. Tu historia clínica no la ve nadie más que tu fisio.</p>
+          ${verParte(x.parte, 'Esto es lo que ve tu club')}
+          <button type="button" class="eq-sec eq-ret">Dejar de compartir</button>`
+        : `<p class="eq-p">Tu entrenador quiere ver cómo va tu recuperación: qué tienes, cuándo se prevé que vuelvas y qué puedes hacer mientras tanto. Solo lo verá si lo aceptas.</p>
+          <div class="eq-txt">${esc(x.texto)}</div>
+          <div class="eq-quien">
+            <label class="eq-op"><input type="radio" name="q_${x.id}" value="yo" ${x.menor ? 'disabled' : 'checked'}><span>Soy yo, el jugador${x.menor ? ' (tiene que ser su padre, madre o tutor)' : ''}</span></label>
+            <label class="eq-op"><input type="radio" name="q_${x.id}" value="tutor" ${x.menor ? 'checked' : ''}><span>Soy su padre, su madre o su tutor</span></label>
+            <input type="text" class="eq-tut" placeholder="Nombre y apellidos del padre, la madre o el tutor" ${x.menor ? '' : 'style="display:none"'}>
+          </div>
+          <div class="eq-err"></div>
+          <button type="button" class="eq-ok eq-acep">Aceptar y compartir</button>`}
+      </div>`;
+    }).join('');
+    box.querySelectorAll('.eq-card').forEach(c => {
+      const x = S.partes.find(p => p.id === c.dataset.id);
+      const tut = c.querySelector('.eq-tut');
+      c.querySelectorAll('input[type=radio]').forEach(r => r.onchange = () => { if (tut) tut.style.display = r.value === 'tutor' && r.checked ? '' : 'none'; });
+      const ac = c.querySelector('.eq-acep');
+      if (ac) ac.onclick = async () => {
+        const q = (c.querySelector('input[type=radio]:checked') || {}).value || '', err = c.querySelector('.eq-err');
+        err.textContent = '';
+        if (!q) { err.textContent = 'Elige quién lo acepta'; return; }
+        ac.disabled = true;
+        const r = await post('eq-consent', { patientId: P().id, id: x.id, acepta: true, quien: q, tutor: tut ? tut.value : '' }).catch(() => null);
+        ac.disabled = false;
+        if (!r || !r.ok) { err.textContent = (r && r.error) || 'No se ha podido guardar'; return; }
+        Object.assign(x, r.parte); window.toast && toast('Hecho: tu club ya puede ver tu parte'); pintarClub(); banner();
+      };
+      const rt = c.querySelector('.eq-ret');
+      if (rt) { let arm = false; rt.onclick = async () => {
+        if (!arm) { arm = true; rt.textContent = '¿Seguro? Toca otra vez'; setTimeout(() => { arm = false; if (rt.isConnected) rt.textContent = 'Dejar de compartir'; }, 4000); return; }
+        rt.disabled = true;
+        const r = await post('eq-consent', { patientId: P().id, id: x.id, acepta: false }).catch(() => null);
+        if (!r || !r.ok) { rt.disabled = false; window.toast && toast('No se ha podido guardar', false); return; }
+        Object.assign(x, r.parte); window.toast && toast('Hecho: tu club ya no ve tu parte'); pintarClub(); banner();
+      }; }
+    });
+  }
+
+  // El parte tal como lo ve el club
+  function verParte(p, titulo) {
+    if (!p) return '';
+    const bloque = (t, v) => v ? `<div class="eq-bl"><span>${t}</span><p class="no-tr">${esc(v)}</p></div>` : '';
+    const vacio = !p.semaforo && !p.diagnostico && !p.puede && !p.noPuede && !p.pautas;
+    return `<div class="eq-parte">${titulo ? `<div class="eq-pt">${titulo}</div>` : ''}
+      ${vacio ? '<div class="eq-vac">Tu fisio todavía no ha escrito el parte.</div>' : `
+      ${p.semaforo ? `<div class="eq-sm ${esc(p.semaforo)}"><i></i><b>${esc(SEM[p.semaforo] || '')}</b>${p.fase ? `<span>${esc(p.fase)}</span>` : ''}</div>` : ''}
+      ${p.vuelta ? `<div class="eq-vu"><span>Vuelta prevista</span><b>${esc(fe(p.vuelta))}</b></div>` : ''}
+      ${bloque('Qué le pasa', p.diagnostico)}${bloque('Qué puede hacer', p.puede)}${bloque('Qué no puede hacer', p.noPuede)}${bloque('Cómo empezar a entrenar', p.pautas)}
+      ${(p.evolucion || []).length ? `<div class="eq-bl"><span>Evolución</span><div class="eq-evo">${p.evolucion.map(e => `<div class="eq-ev"><i class="${esc(e.sem || '')}"></i><b>${esc(fe(e.f))}${e.fisio ? ' · <span class="no-tr">' + esc(e.fisio) + '</span>' : ''}</b>${[SEM[e.sem], e.fase].filter(Boolean).length ? `<small>${junta([SEM[e.sem], e.fase])}</small>` : ''}${e.txt ? `<p class="no-tr">${esc(e.txt)}</p>` : ''}</div>`).join('')}</div></div>` : ''}
+      ${p.actualizado ? `<div class="eq-act">Actualizado el ${esc(fe(p.actualizado))}${p.fisio ? ' por ' + esc(p.fisio) : ''}</div>` : ''}`}
+    </div>`;
+  }
+
+  // ── Mi equipo (el entrenador) ──
+  async function pintarEquipo(abrir) {
+    const box = el('miEquipoBox'); if (!box) return;
+    const acc = misAccesos();
+    if (!acc.length) { box.innerHTML = '<div class="eq-vac">No tienes acceso a ningún club.</div>'; return; }
+    if (abrir) S.jug = abrir;
+    if (!S.equipo) box.innerHTML = '<div class="eq-vac">Cargando…</div>'; else dibuja();
+    const d = await get('eq-equipo', { a: acc.map(x => x.id).join(','), t: acc.map(x => x.tok).join(',') }).catch(() => null);
+    if (!d || !d.ok) {
+      if (d && d.inactivo && P() && P().soloEquipo) { box.innerHTML = `<div class="eq-vac">${esc(d.error)}</div><button type="button" class="eq-ok" onclick="cerrarSesion()">Salir</button>`; return; }
+      if (!S.equipo) box.innerHTML = `<div class="eq-vac">${esc((d && d.error) || 'No se ha podido cargar. Mira tu conexión.')}</div>`;
+      return;
+    }
+    S.equipo = d; dibuja();
+  }
+  function dibuja() {
+    const box = el('miEquipoBox'), d = S.equipo; if (!box || !d) return;
+    const todos = d.clubs.flatMap(c => c.jugadores.map(j => Object.assign({ club: c.nombre }, j)));
+    const j = S.jug && todos.find(x => x.id === S.jug);
+    if (j) {
+      box.innerHTML = `<button type="button" class="eq-back">${IC.atras}<span>Mi equipo</span></button>
+        <div class="eq-card"><div class="eq-ch"><span class="eq-dot ${esc(j.semaforo)}"></span><div><b class="no-tr">${esc(j.jugador)}</b><small class="no-tr">${esc([j.equipo, d.clubs.length > 1 ? j.club : ''].filter(Boolean).join(' · '))}</small></div></div>
+        ${verParte(j, '')}</div>`;
+      box.querySelector('.eq-back').onclick = () => { S.jug = null; dibuja(); window.scrollTo(0, 0); };
+      return;
+    }
+    S.jug = null;
+    const cuenta = k => todos.filter(x => x.semaforo === k).length;
+    box.innerHTML = `${avisosCard()}<div class="eq-res">${Object.keys(SEM).map(k => `<div class="eq-rk ${k}"><b>${cuenta(k)}</b><span>${SEM[k]}</span></div>`).join('')}</div>` +
+      d.clubs.map(c => `<div class="eq-club"><div class="eq-cn"><b class="no-tr">${esc(c.nombre)}</b>${c.deporte ? `<small class="no-tr">${esc(c.deporte)}</small>` : ''}</div>
+        ${c.jugadores.length ? c.jugadores.map(x => `<button type="button" class="eq-ju" data-id="${x.id}"><span class="eq-dot ${esc(x.semaforo)}"></span><div><b class="no-tr">${esc(x.jugador)}</b><small>${junta([x.semaforo ? SEM[x.semaforo] : 'Sin parte todavía', x.vuelta ? 'vuelta prevista el ' + fe(x.vuelta) : ''])}</small>${x.equipo ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}</div>${IC.flecha}</button>`).join('')
+        : '<div class="eq-vac">Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.</div>'}</div>`).join('');
+    box.querySelectorAll('.eq-ju').forEach(b => b.onclick = () => { S.jug = b.dataset.id; dibuja(); window.scrollTo(0, 0); });
+    const av = box.querySelector('.eq-avb'); if (av) av.onclick = activarAvisos;
+  }
+  // Avisos para el entrenador: cuando se actualiza un parte
+  const avisosOk = () => ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+  function avisosCard() {
+    if (!avisosOk() || Notification.permission === 'granted' || Notification.permission === 'denied') { if (avisosOk() && Notification.permission === 'granted') suscribir().catch(() => {}); return ''; }
+    return `<div class="in-banner on eq-avb"><div class="av-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div><b>Activa los avisos</b><span>Te avisamos cuando actualicemos el parte de un jugador</span></div><button class="ib">Activar</button></div>`;
+  }
+  async function suscribir() {
+    const reg = await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: window.urlBase64ToUint8Array(VAPID_PUBLIC) });
+    await fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ equipo: misAccesos().map(x => ({ id: x.id, tok: x.tok })), subscription: sub }) });
+  }
+  async function activarAvisos() {
+    try { const r = await Notification.requestPermission(); if (r === 'granted') { await suscribir(); window.toast && toast('¡Avisos activados!'); } } catch (e) {}
+    dibuja();
+  }
+
+  // ── Solo entrenador (no es paciente): la app se abre solo con «Mi equipo» ──
+  function iniciarSoloEquipo() {
+    document.body.classList.add('solo-equipo', 'dentro');
+    try { el('nmNom').textContent = P().nombre || ''; window.pintarAvatar && pintarAvatar(); } catch (e) {}
+    el('loginScreen').style.display = 'none';
+    const app = el('appScreen'); app.style.display = 'block'; app.style.opacity = '1';
+    el('hamburgerBtn').style.display = 'flex';
+    { const n = el('navMiEquipo'); if (n) n.style.display = 'flex'; }
+    try { window.applyTranslations && applyTranslations(); } catch (e) {}
+    const u = new URL(location.href), p0 = u.searchParams.get('p');
+    if (p0) { S.jug = p0; history.replaceState(null, '', location.pathname); }
+    window.showSection('miequipo');
+  }
+  function salir() { document.body.classList.remove('solo-equipo'); S.partes = []; S.equipo = null; S.cargado = false; S.jug = null; menu(); const b = el('eqBanner'); if (b) b.classList.remove('on'); }
+
+  window.EQA = { cargar, pintarClub, pintarEquipo, iniciarSoloEquipo, salir, abrirJugador: id => { S.jug = id; } };
+})();

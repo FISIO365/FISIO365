@@ -654,6 +654,35 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .cod-dig{gap:7px;margin-bottom:18px}.cod-dig .pin-d{height:54px;font-size:20px;text-align:center}
 .login-alt.peq{font-size:12.5px;font-weight:500;color:var(--muted);margin-top:8px}.login-err:empty{min-height:0;margin:0}
 .login-alt{display:block;width:100%;margin-top:14px;border:none;background:none;font-family:inherit;font-size:13.5px;font-weight:600;color:#c2552e;cursor:pointer;padding:6px;line-height:1.4}.login-ok{font-size:13px;color:#6b5f57;text-align:center;margin-top:10px;line-height:1.45}#codBox[hidden]{display:none}#codBox .btn-primary{margin-top:14px}
+
+/* «Mi club» y «Mi equipo» (public/equipo.js) */
+.eq-bic,#eqBanner .av-ic{flex:0 0 48px;width:48px;height:48px;border-radius:14px;background:#fbeee7;display:flex;align-items:center;justify-content:center}.eq-bic svg,.eq-avb .av-ic svg,.eq-cic svg{width:24px;height:24px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.eq-avb .av-ic{flex:0 0 48px;width:48px;height:48px;border-radius:14px;background:#fbeee7;display:flex;align-items:center;justify-content:center}
+.eq-card{background:#fff;border:1px solid var(--border);border-radius:22px;padding:16px;margin:0 0 14px;box-shadow:var(--sombra)}
+.eq-ch{display:flex;align-items:center;gap:12px;margin-bottom:12px}.eq-ch>div{flex:1;min-width:0}.eq-ch b{display:block;font-size:16px;font-weight:700}.eq-ch small{display:block;font-size:12.5px;color:var(--muted)}
+.eq-ch>.eq-cic{flex:none;width:44px;height:44px;border-radius:50%;background:var(--lila-light);display:flex;align-items:center;justify-content:center}
+.eq-st{flex:none;font-size:11.5px;font-weight:700;border-radius:99px;padding:4px 10px}.eq-st.ok{background:#e8f5ec;color:#16803c}.eq-st.pe{background:#fff4e5;color:#b45309}.eq-st.no{background:#f1ede9;color:#8a7d74}
+.eq-p{font-size:13.5px;line-height:1.55;color:#5c4f47;margin:0 0 12px}
+.eq-txt{font-size:12.5px;line-height:1.55;color:#5c4f47;background:#f7f3ef;border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.eq-quien{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}.eq-op{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.4;border:1.5px solid var(--border);border-radius:14px;padding:11px 12px;cursor:pointer;background:#fff}.eq-op input{margin:2px 0 0;width:18px;height:18px;accent-color:#c2552e;flex:none}.eq-op:has(input:checked){border-color:#c2552e;background:#fdf6f2}.eq-op:has(input:disabled){opacity:.5}
+.eq-tut{width:100%;box-sizing:border-box;font-family:var(--font);font-size:14px;padding:12px 14px;border:1.5px solid var(--border);border-radius:14px;background:#fff}
+.eq-err{color:#b42318;font-size:13px;min-height:2px;margin-bottom:6px}
+.eq-ok{width:100%;height:50px;border:none;border-radius:99px;background:#1a1a1a;color:#f5f2ee;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer}.eq-ok:disabled{opacity:.6}
+.eq-sec{width:100%;margin-top:12px;height:44px;border:1.5px solid var(--border);border-radius:99px;background:#fff;color:#7d6a60;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+.eq-vac{font-size:13.5px;line-height:1.5;color:var(--muted);background:#fff;border:1px dashed rgba(26,26,26,.14);border-radius:18px;padding:16px;text-align:center;margin-bottom:14px}
+.eq-parte{border-top:1px solid #f1ede9;padding-top:12px}.eq-card>.eq-parte:first-child{border-top:none;padding-top:0}.eq-pt{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9a8d84;margin-bottom:10px}
+.eq-sm{display:flex;align-items:center;gap:10px;border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#f7f3ef}.eq-sm i{flex:none;width:12px;height:12px;border-radius:50%;background:#bbb}.eq-sm b{font-size:14px}.eq-sm span{margin-left:auto;font-size:12.5px;font-weight:600;color:#7d6a60}
+.eq-sm.rojo{background:#fdf0f0}.eq-sm.rojo i{background:#d64545}.eq-sm.rojo b{color:#a32f2f}.eq-sm.amarillo{background:#fdf6ea}.eq-sm.amarillo i{background:#e8a33a}.eq-sm.amarillo b{color:#9a5d0c}.eq-sm.verde{background:#eef8f1}.eq-sm.verde i{background:#3a9d5d}.eq-sm.verde b{color:#226b3d}
+.eq-vu{display:flex;align-items:center;justify-content:space-between;border:1.5px solid var(--border);border-radius:14px;padding:11px 14px;margin-bottom:10px}.eq-vu span{font-size:12.5px;color:var(--muted)}.eq-vu b{font-size:14px}
+.eq-bl{margin:12px 0 0}.eq-bl>span{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9a8d84;margin-bottom:4px}.eq-bl p{margin:0;font-size:14px;line-height:1.55;white-space:pre-wrap}
+.eq-evo{position:relative;padding-left:20px;margin-top:6px}.eq-evo::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:1.5px;background:#efe4da}.eq-ev{position:relative;padding-bottom:12px}.eq-ev i{position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;background:#e6ddd5;border:2px solid #fff}.eq-ev i.rojo{background:#d64545}.eq-ev i.amarillo{background:#e8a33a}.eq-ev i.verde{background:#3a9d5d}.eq-ev b{display:block;font-size:13px}.eq-ev small{display:block;font-size:12px;color:var(--muted)}.eq-ev p{margin:3px 0 0;font-size:13.5px;line-height:1.5;white-space:pre-wrap}
+.eq-act{font-size:12px;color:var(--muted);margin-top:10px}
+.eq-res{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}.eq-rk{background:#fff;border:1px solid var(--border);border-radius:18px;padding:12px 10px;text-align:center;box-shadow:var(--sombra)}.eq-rk b{display:block;font-size:22px;font-weight:800}.eq-rk span{display:block;font-size:11.5px;line-height:1.3;color:var(--muted);margin-top:2px}.eq-rk.rojo b{color:#c43c3c}.eq-rk.amarillo b{color:#c9861f}.eq-rk.verde b{color:#2f8a50}
+.eq-club{margin-bottom:18px}.eq-cn{display:flex;align-items:baseline;gap:8px;margin:0 4px 8px}.eq-cn b{font-size:15px;font-weight:700}.eq-cn small{font-size:12.5px;color:var(--muted)}
+.eq-ju{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:var(--font);background:#fff;border:1px solid var(--border);border-radius:18px;padding:13px 14px;margin-bottom:8px;cursor:pointer;box-shadow:var(--sombra);color:inherit}.eq-ju>div{flex:1;min-width:0}.eq-ju b{display:block;font-size:14.5px}.eq-ju small{display:block;font-size:12.5px;color:var(--muted);line-height:1.4}.eq-ju svg{width:18px;height:18px;fill:none;stroke:#c9bfb6;stroke-width:2;flex:none}
+.eq-dot{flex:none;width:14px;height:14px;border-radius:50%;background:#e6ddd5;box-shadow:0 0 0 4px #f4efea}.eq-dot.rojo{background:#d64545;box-shadow:0 0 0 4px #fbe3e3}.eq-dot.amarillo{background:#e8a33a;box-shadow:0 0 0 4px #fbefd9}.eq-dot.verde{background:#3a9d5d;box-shadow:0 0 0 4px #ddf1e4}
+.eq-back{display:inline-flex;align-items:center;gap:4px;font-family:var(--font);font-size:13.5px;font-weight:600;color:#7d6a60;background:none;border:none;padding:4px 0;margin-bottom:10px;cursor:pointer}.eq-back svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
+body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head span{display:none!important}body.solo-equipo .nm-head{pointer-events:none}body.solo-equipo .nav-menu-inner .nav-item:not(#navMiEquipo){display:none!important}
 </style>
 <script src="/i18n.js?v=1"></script>
 <script src="/visor.js?v=1"></script>
@@ -712,6 +741,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 
  </div>
  <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;display:flex;flex-direction:column;gap:2px;">
+ <button class="nav-item" id="navMiEquipo" onclick="showSection('miequipo');cerrarMenu()" style="display:none;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6M17.6 13.5A5.5 5.5 0 0 1 20.5 19"/></svg>Mi equipo</button>
+ <button class="nav-item" id="navMiClub" onclick="showSection('miclub');cerrarMenu()" style="display:none;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Mi club</button>
  <button class="nav-item" id="navInformesM" onclick="showSection('informes');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Mis documentos</button>
  <button class="nav-item" id="navAvisos" onclick="showSection('notificaciones');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones</button>
  <button class="nav-item" id="navInstalar" onclick="cerrarMenu();mostrarInstall()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>Instalar app</button>
@@ -740,6 +771,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  </div>
  <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icons/icon-512.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
  <div id="avisosCard" class="in-banner" onclick="activarAvisos()"><div class="av-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div><b>Activa los avisos</b><span>Te avisamos de tus citas y de los mensajes de tu fisio</span></div><button class="ib">Activar</button><button class="ix" onclick="event.stopPropagation();ahoraNoAvisos()" aria-label="Ahora no">✕</button></div>
+ <div id="eqBanner" class="in-banner"></div>
  <div id="fisioCard" class="fisio-card" style="display:none;">
  <div class="fisio-av" id="fisioAv"></div>
  <div><div class="fisio-nombre" id="fisioNombre"></div><div class="fisio-col" id="fisioColegiado"></div></div>
@@ -859,6 +891,16 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
  </div>
  </div>
 
+ <div id="vistaMiclub" style="display:none;">
+ <div class="sg-top"><div class="sg-top-ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div><div><div class="sg-top-t">Mi club</div><div class="sg-top-s">Tú decides qué ve tu club</div></div></div>
+ <div id="miClubBox"></div>
+ </div>
+
+ <div id="vistaMiequipo" style="display:none;">
+ <div class="sg-top"><div class="sg-top-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6M17.6 13.5A5.5 5.5 0 0 1 20.5 19"/></svg></div><div><div class="sg-top-t">Mi equipo</div><div class="sg-top-s">Cómo va la recuperación de tus jugadores</div></div></div>
+ <div id="miEquipoBox"></div>
+ </div>
+
  <div id="vistaGuia" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Guía de la app</div><div class="date-sub">Todo lo que puedes hacer</div></div>
  <div class="gu-inst" id="guInst" onclick="mostrarInstall()"><img src="/icons/icon-512.png" alt=""><div><b>Instala la app en tu móvil</b><span>Te enseñamos cómo, paso a paso</span></div><button class="ib">Ver cómo</button></div>
@@ -951,7 +993,7 @@ async function doLogin(){
 }
 
 try{if(/^android-app:\/\//.test(document.referrer||''))sessionStorage.setItem('f365_twa','1');}catch(e){}
-function initApp(){try{const n=(patient&&patient.nombre)||'';document.getElementById('nmNom').textContent=n;pintarAvatar();}catch(e){}
+function initApp(){if(patient&&patient.soloEquipo){EQA.iniciarSoloEquipo();return;}try{const n=(patient&&patient.nombre)||'';document.getElementById('nmNom').textContent=n;pintarAvatar();}catch(e){}
   try{const k='f365_visto_'+patient.id,ki='f365_inst_'+patient.id,inst=!!((window.matchMedia&&(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches))||navigator.standalone===true||/^android-app:\/\//.test(document.referrer||'')||sessionStorage.getItem('f365_twa')==='1'),avIn=inst&&!localStorage.getItem(ki),ya=localStorage.getItem(k)===TODAY&&!avIn;fetch('/api/schedule?action='+(ya?'mi-cuenta':'app-visto')+'&patientId='+encodeURIComponent(patient.id)+(inst?'&inst=1':'')).then(r=>r.json()).then(d=>{if(d&&d.ok){if(!ya)localStorage.setItem(k,TODAY);if(avIn)localStorage.setItem(ki,'1');patient.foto=d.foto||'';pintarAvatar();}}).catch(()=>{});}catch(e){}
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
@@ -969,7 +1011,7 @@ function initApp(){try{const n=(patient&&patient.nombre)||'';document.getElement
   document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;document.getElementById('hoyHeroSub').textContent=`Hola, ${(patient.nombre||'').split(' ')[0]}. Tus ejercicios de hoy, pensados para ti.`;
   loadEjercicios();
   checkMensajesNoLeidos();
-  try{pintarCitaHoy();}catch(e){}try{abrirDesdeAviso(location.href);}catch(e){}try{mirarBannerInstall();}catch(e){}try{pintarPromos();}catch(e){}setTimeout(pedirCitas,1200);
+  try{pintarCitaHoy();}catch(e){}try{abrirDesdeAviso(location.href);}catch(e){}try{mirarBannerInstall();}catch(e){}try{pintarPromos();}catch(e){}setTimeout(pedirCitas,1200);setTimeout(()=>{try{EQA.cargar();}catch(e){}},900);
   // Sincronizar puntos desde Airtable al arrancar (Airtable manda)
   fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id))
     .then(r=>r.json()).then(d=>{
@@ -1024,9 +1066,9 @@ async function compartirRecomendacion(){
   },2000);
 }
 function showSection(section){
-  ['hoy','notificaciones','citas','progreso','informes','facturas','mensajes','guia','sorteo','promos','cuenta','sugerencias'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
-  ['navHoy','navProgreso','navInformes','navFacturas','navCitas','navMensajes','navGuia','navSugerencias'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
-  const navMap={hoy:'navHoy',progreso:'navProgreso',informes:'navInformes',facturas:'navFacturas',citas:'navCitas',mensajes:'navMensajes',guia:'navGuia',sugerencias:'navSugerencias'};
+  ['hoy','notificaciones','citas','progreso','informes','facturas','mensajes','guia','sorteo','promos','cuenta','sugerencias','miclub','miequipo'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
+  ['navHoy','navProgreso','navInformes','navFacturas','navCitas','navMensajes','navGuia','navSugerencias','navMiClub','navMiEquipo'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
+  const navMap={hoy:'navHoy',progreso:'navProgreso',informes:'navInformes',facturas:'navFacturas',citas:'navCitas',mensajes:'navMensajes',guia:'navGuia',sugerencias:'navSugerencias',miclub:'navMiClub',miequipo:'navMiEquipo'};
   if(section==='facturas')section='informes';
   if(navMap[section]){const el=document.getElementById(navMap[section]);if(el)el.classList.add('active');}
   if(section==='progreso'){initVAS();loadAdherencia('adherenciaSection');}
@@ -1037,6 +1079,8 @@ function showSection(section){
   if(section==='sugerencias')sgCuenta();
   if(section==='sorteo')loadPuntos();
   if(section==='mensajes')abrirChat();
+  if(section==='miclub')EQA.pintarClub();
+  if(section==='miequipo')EQA.pintarEquipo();
   document.body.classList.toggle('en-chat',section==='mensajes');
   document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.s===section));
   window.scrollTo(0,0);
@@ -1435,7 +1479,7 @@ const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bod
 const avisosPosibles=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
 // Al abrir la app se quita el puntito rojo del icono (lo pone un aviso; ya lo está viendo)
 (function(){const q=()=>{try{navigator.clearAppBadge&&navigator.clearAppBadge().catch(()=>{});navigator.serviceWorker&&navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});}catch(e){}};q();document.addEventListener('visibilitychange',()=>{if(!document.hidden)q();});})();
-async function suscribirAvisos(){const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,subscription:sub})});}
+async function suscribirAvisos(){const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,subscription:sub,equipo:(patient.equipo||[]).map(e=>({id:e.id,tok:e.tok}))})});}
 // Si ya dio permiso, se renueva en silencio; si no, se enseña la tarjeta «Activa los avisos»
 function mirarAvisos(){setTimeout(checkNotifBadge,600);const c=document.getElementById('avisosCard');if(!avisosPosibles()){if(c)c.classList.remove('on');return;}
  if(F365Avisos.apagados('f365_avisos')){if(c)c.classList.remove('on');return;}
@@ -1478,7 +1522,7 @@ function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'
 
 
 // Abrir la sección que indica el aviso (?s=mensajes|citas|hoy…)
-function abrirDesdeAviso(url){try{const u=new URL(url,location.origin);const sec=u.searchParams.get('s');if(!sec||!patient)return;const m={mensajes:'mensajes',chat:'mensajes',citas:'citas',hoy:'hoy',racha:'progreso',informes:'informes'}[sec];if(m)showSection(m);if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});history.replaceState(null,'',location.pathname);}catch(e){}}
+function abrirDesdeAviso(url){try{const u=new URL(url,location.origin);const sec=u.searchParams.get('s');if(!sec||!patient)return;const m={mensajes:'mensajes',chat:'mensajes',citas:'citas',hoy:'hoy',racha:'progreso',informes:'informes',miclub:'miclub',miequipo:'miequipo'}[sec];if(sec==='miequipo'&&u.searchParams.get('p'))EQA.abrirJugador(u.searchParams.get('p'));if(m)showSection(m);if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});history.replaceState(null,'',location.pathname);}catch(e){}}
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='ABRIR')abrirDesdeAviso(e.data.url);});
 // ── Promociones ───────────────────────────────────────────────
 // Para añadir una promo: copia un bloque, cambia los textos y sube los cambios.
@@ -1587,7 +1631,7 @@ function mirarBannerInstall(){const b=document.getElementById('inBanner'),m=docu
 function formatMensaje(texto){if(!texto)return '';let t=texto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');t=t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');t=t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--black);text-decoration:underline;word-break:break-all;">$1</a>');t=t.replace(/\n/g,'<br>');return t;}
 function toggleNotaFisio(){const card=document.getElementById('mensajeFisioCard');const btn=document.querySelector('#notaFisioBtn button');const open=card.style.display==='block';card.style.display=open?'none':'block';if(open)btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ver nota de tu fisio';else btn.innerHTML='<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#aaa" stroke-width="1.2"/><path d="M6.5 5.5v3M6.5 4.5v.01" stroke="#aaa" stroke-width="1.2" stroke-linecap="round"/></svg> Ocultar nota';}
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(ok?'ok':'err');t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
-function cerrarSesion(){document.body.classList.remove('dentro','en-chat');try{Object.keys(localStorage).forEach(k=>{if(k.startsWith('f365_citas_'))localStorage.removeItem(k);});}catch(e){}if(chatCtl){chatCtl.parar();chatCtl=null;document.getElementById('chatBox').innerHTML='';}chatsCache=[];document.body.classList.remove('en-conv');localStorage.removeItem('fisio365_patient');patient=null;window._informesPac=[];document.getElementById('appScreen').style.display='none';document.getElementById('hamburgerBtn').style.display='none';try{document.getElementById('notifBtn').style.display='none';}catch(e){}cerrarMenu();const login=document.getElementById('loginScreen');login.style.display='flex';login.style.opacity='1';login.style.visibility='visible';try{document.getElementById('emailInput').value='';}catch(e){}['p1','p2','p3','p4'].forEach(id=>{try{document.getElementById(id).value='';}catch(e){}});window.scrollTo(0,0);}
+function cerrarSesion(){document.body.classList.remove('dentro','en-chat');try{EQA.salir();}catch(e){}try{Object.keys(localStorage).forEach(k=>{if(k.startsWith('f365_citas_'))localStorage.removeItem(k);});}catch(e){}if(chatCtl){chatCtl.parar();chatCtl=null;document.getElementById('chatBox').innerHTML='';}chatsCache=[];document.body.classList.remove('en-conv');localStorage.removeItem('fisio365_patient');patient=null;window._informesPac=[];document.getElementById('appScreen').style.display='none';document.getElementById('hamburgerBtn').style.display='none';try{document.getElementById('notifBtn').style.display='none';}catch(e){}cerrarMenu();const login=document.getElementById('loginScreen');login.style.display='flex';login.style.opacity='1';login.style.visibility='visible';try{document.getElementById('emailInput').value='';}catch(e){}['p1','p2','p3','p4'].forEach(id=>{try{document.getElementById(id).value='';}catch(e){}});window.scrollTo(0,0);}
 function clearBadge(){}
 
 async function loadPuntos(){
@@ -1612,6 +1656,7 @@ async function loadPuntos(){
 <script src="/avisos.js"></script>
 <script src="/chat-ui.js?v=2"></script>
 <script src="/racha-ui.js"></script>
+<script src="/equipo.js?v=1"></script>
 
 <div id="reservaSheet">
  <div class="rv-top"><button onclick="cerrarReserva()" aria-label="Cerrar">‹</button><b>Reservar cita</b></div>

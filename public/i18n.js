@@ -4,6 +4,206 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Mi club": [
+"El meu club",
+"My club"
+],
+"Mi equipo": [
+"El meu equip",
+"My team"
+],
+"Tú decides qué ve tu club": [
+"Tu decideixes què veu el teu club",
+"You decide what your club sees"
+],
+"Cómo va la recuperación de tus jugadores": [
+"Com va la recuperació dels teus jugadors",
+"How your players' recovery is going"
+],
+"Tu club quiere ver cómo va tu recuperación. Tú decides.": [
+"El teu club vol veure com va la teva recuperació. Tu decideixes.",
+"Your club would like to see how your recovery is going. It's up to you."
+],
+"Ver": [
+"Veure",
+"View"
+],
+"No estás en ningún club con «Mi equipo».": [
+"No ets a cap club amb «El meu equip».",
+"You're not in any club using «My team»."
+],
+"Lo compartes": [
+"Ho comparteixes",
+"You're sharing it"
+],
+"No lo compartes": [
+"No ho comparteixes",
+"You're not sharing it"
+],
+"Tu club ve el parte de tu recuperación desde el {}. Tu historia clínica no la ve nadie más que tu fisio.": [
+"El teu club veu el parte de la teva recuperació des del {}. La teva història clínica no la veu ningú més que el teu fisio.",
+"Your club has been able to see your recovery report since {}. Nobody but your physio sees your medical record."
+],
+"Esto es lo que ve tu club": [
+"Això és el que veu el teu club",
+"This is what your club sees"
+],
+"Dejar de compartir": [
+"Deixa de compartir",
+"Stop sharing"
+],
+"¿Seguro? Toca otra vez": [
+"Segur? Toca un altre cop",
+"Sure? Tap again"
+],
+"Tu entrenador quiere ver cómo va tu recuperación: qué tienes, cuándo se prevé que vuelvas y qué puedes hacer mientras tanto. Solo lo verá si lo aceptas.": [
+"El teu entrenador vol veure com va la teva recuperació: què tens, quan es preveu que tornis i què pots fer mentrestant. Només ho veurà si ho acceptes.",
+"Your coach would like to see how your recovery is going: what's wrong, when you're expected back and what you can do in the meantime. They'll only see it if you agree."
+],
+"Acepto que FISIO365 comparta con {} (sus entrenadores y coordinadores con acceso a «Mi equipo») el parte de mi recuperación: el diagnóstico explicado de forma sencilla, la fase en la que estoy, la previsión de vuelta, qué puedo y qué no puedo hacer, cómo volver a entrenar y cómo evoluciono. Mi historia clínica no se comparte. Puedo dejar de compartirlo cuando quiera desde la app.": [
+"Accepto que FISIO365 comparteixi amb {} (els seus entrenadors i coordinadors amb accés a «El meu equip») el parte de la meva recuperació: el diagnòstic explicat de manera senzilla, la fase en què soc, la previsió de tornada, què puc i què no puc fer, com tornar a entrenar i com evoluciono. La meva història clínica no es comparteix. Puc deixar de compartir-ho quan vulgui des de l'app.",
+"I agree that FISIO365 may share with {} (its coaches and coordinators with access to «My team») my recovery report: the diagnosis explained in plain words, the stage I'm at, the expected return date, what I can and can't do, how to get back to training and how I'm progressing. My medical record is not shared. I can stop sharing it whenever I want from the app."
+],
+"Soy yo, el jugador": [
+"Soc jo, el jugador",
+"It's me, the player"
+],
+"Soy yo, el jugador (tiene que ser su padre, madre o tutor)": [
+"Soc jo, el jugador (ho ha de fer el pare, la mare o el tutor)",
+"It's me, the player (a parent or guardian has to do it)"
+],
+"Soy su padre, su madre o su tutor": [
+"Soc el pare, la mare o el tutor",
+"I'm the parent or guardian"
+],
+"Nombre y apellidos del padre, la madre o el tutor": [
+"Nom i cognoms del pare, la mare o el tutor",
+"Full name of the parent or guardian"
+],
+"Elige quién lo acepta": [
+"Tria qui ho accepta",
+"Choose who is agreeing"
+],
+"Aceptar y compartir": [
+"Accepta i comparteix",
+"Agree and share"
+],
+"Hecho: tu club ya puede ver tu parte": [
+"Fet: el teu club ja pot veure el teu parte",
+"Done: your club can now see your report"
+],
+"Hecho: tu club ya no ve tu parte": [
+"Fet: el teu club ja no veu el teu parte",
+"Done: your club can no longer see your report"
+],
+"Como tiene menos de 14 años, lo tiene que aceptar su padre, su madre o su tutor": [
+"Com que té menys de 14 anys, ho ha d'acceptar el pare, la mare o el tutor",
+"As they're under 14, a parent or guardian has to agree"
+],
+"Escribe el nombre del padre, la madre o el tutor": [
+"Escriu el nom del pare, la mare o el tutor",
+"Enter the parent's or guardian's name"
+],
+"Tu fisio todavía no ha escrito el parte.": [
+"El teu fisio encara no ha escrit el parte.",
+"Your physio hasn't written the report yet."
+],
+"No entrena": [
+"No entrena",
+"Not training"
+],
+"Entrena con limitaciones": [
+"Entrena amb limitacions",
+"Training with limits"
+],
+"Puede jugar": [
+"Pot jugar",
+"Can play"
+],
+"Tratamiento": [
+"Tractament",
+"Treatment"
+],
+"Readaptación": [
+"Readaptació",
+"Return to training"
+],
+"Vuelta progresiva": [
+"Tornada progressiva",
+"Gradual return"
+],
+"Alta": [
+"Alta",
+"Discharged"
+],
+"Vuelta prevista": [
+"Tornada prevista",
+"Expected return"
+],
+"vuelta prevista el {}": [
+"tornada prevista el {}",
+"expected back {}"
+],
+"Qué le pasa": [
+"Què li passa",
+"What's wrong"
+],
+"Qué puede hacer": [
+"Què pot fer",
+"What they can do"
+],
+"Qué no puede hacer": [
+"Què no pot fer",
+"What they can't do"
+],
+"Cómo empezar a entrenar": [
+"Com començar a entrenar",
+"How to get back to training"
+],
+"Evolución": [
+"Evolució",
+"Progress"
+],
+"Actualizado el {} por {}": [
+"Actualitzat el {} per {}",
+"Updated on {} by {}"
+],
+"Actualizado el {}": [
+"Actualitzat el {}",
+"Updated on {}"
+],
+"Sin parte todavía": [
+"Encara sense parte",
+"No report yet"
+],
+"Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.": [
+"Encara no hi ha jugadors. Apareixeran aquí quan un jugador que es tracti amb nosaltres accepti compartir el seu parte amb el club.",
+"No players yet. They'll appear here when a player being treated with us agrees to share their report with the club."
+],
+"No tienes acceso a ningún club.": [
+"No tens accés a cap club.",
+"You don't have access to any club."
+],
+"No se ha podido cargar. Mira tu conexión.": [
+"No s'ha pogut carregar. Mira la teva connexió.",
+"Couldn't load. Check your connection."
+],
+"Tu acceso a «Mi equipo» ya no está activo. Habla con la clínica.": [
+"El teu accés a «El meu equip» ja no està actiu. Parla amb la clínica.",
+"Your access to «My team» is no longer active. Please contact the clinic."
+],
+"Te avisamos cuando actualicemos el parte de un jugador": [
+"T'avisem quan actualitzem el parte d'un jugador",
+"We'll let you know when we update a player's report"
+],
+"Clave incorrecta. Pídela a la clínica.": [
+"Clau incorrecta. Demana-la a la clínica.",
+"Wrong code. Ask the clinic for it."
+],
+"Tu acceso no está activo. Habla con la clínica.": [
+"El teu accés no està actiu. Parla amb la clínica.",
+"Your access isn't active. Please contact the clinic."
+],
 "% respecto a ayer. ¡Vas por muy buen camino!": [
 "% respecte d'ahir. Vas per molt bon camí!",
 "% since yesterday. You're doing really well!"
