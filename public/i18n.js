@@ -4,6 +4,18 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Ejemplo: así lo ve el entrenador": [
+"Exemple: així ho veu l'entrenador",
+"Example: this is what the coach sees"
+],
+"Ver un ejemplo": [
+"Veure un exemple",
+"See an example"
+],
+"Club de ejemplo": [
+"Club d'exemple",
+"Example club"
+],
 "Vista previa: así lo ve el entrenador": [
 "Vista prèvia: així ho veu l'entrenador",
 "Preview: this is what the coach sees"

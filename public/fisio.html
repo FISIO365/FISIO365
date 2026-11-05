@@ -405,7 +405,8 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .eq-evo{position:relative;margin:4px 0 0;padding-left:18px}.eq-evo::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:1.5px;background:#efe4da}.eq-ev{position:relative;padding:0 0 12px}.eq-ev .eq-dot{position:absolute;left:-18px;top:3px}.eq-ev b{display:block;font-size:12.5px;color:#1e2a38}.eq-ev small{font-size:11.5px;color:#9a8d84}.eq-ev p{margin:3px 0 0;font-size:13px;line-height:1.5;color:#2b2420;white-space:pre-wrap}
 .ea-ok{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:8px 0 4px}.ea-okic{width:52px;height:52px;border-radius:50%;background:#eef8f1;display:flex;align-items:center;justify-content:center;margin-bottom:6px}.ea-okic svg{width:26px;height:26px;fill:none;stroke:#2f8a50;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ea-ok b{font-size:16px;color:#1e2a38}.ea-ok span{font-size:12.5px;color:#8a7d74}.ea-pin2{font-size:34px;font-weight:700;letter-spacing:8px;color:#c2552e;margin:2px 0 4px}
 .ea-env{display:flex;flex-direction:column;gap:8px;margin-top:8px}.ea-b{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;font-family:var(--font);font-size:14px;font-weight:600;color:#1e2a38;background:#fff;border:1.5px solid #efe4da;border-radius:99px;cursor:pointer}.ea-b.on{background:#c2552e;border-color:#c2552e;color:#fff}.ea-env svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ea-env .ea-fin{align-self:center}
-.eq-ver{margin:0 0 4px}.eq-ver svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7}
+.eq-vbs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.eq-vbs .ea-b{flex:1 1 180px;width:auto;height:44px;font-size:13px}.ev-cls{max-height:240px;overflow-y:auto}
+.eq-ver{margin:0}.eq-ver svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7}
 .eq-eqs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.eq-tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#1e2a38;background:#fff;border:1.5px solid #efe4da;border-radius:99px;padding:6px 12px}.eq-tag button{border:none;background:none;color:#9a8d84;cursor:pointer;font-size:12px;padding:0}.eq-neq{margin-bottom:6px}
 .eq-otro{display:flex;gap:6px;margin-top:2px}.eq-otro input{flex:1;min-width:0;box-sizing:border-box;font-family:var(--font);font-size:13.5px;padding:8px 12px;border:1.5px solid var(--border);border-radius:10px}.eq-otro .fp-btn{flex:none}
 .eq-pie{display:flex;justify-content:flex-end;margin-top:6px}.eq-quitar{font-family:var(--font);font-size:12.5px;color:#9a8d84;background:none;border:none;cursor:pointer;padding:6px 0}
@@ -10221,6 +10222,8 @@ function eqTextoAcceso(a,club){const n=String(a.nombre||'').split(' ')[0];
  return `Hola${n?' '+n:''}, ya tienes acceso a «Mi equipo» de FISIO365 para ${club}.\n\nAhí verás cómo va la recuperación de tus jugadores: qué tienen, cuándo se prevé que vuelvan y qué pueden hacer mientras tanto (solo de los que acepten compartirlo).\n\nEntra en ${APP_URL}\nUsuario: ${a.email||a.telf}\nClave: ${a.pin}\n\nTe llegará un aviso cada vez que actualicemos un parte. Cualquier duda, nos dices.`;}
 // Abre la app de pacientes tal como la ve un coordinador del club (enlace de 1 hora)
 async function eqVerComoEntrenador(club){const w=window.open('about:blank','_blank');try{const r=await eqGet('seg-eq-vista',{club});const u=location.origin+r.url;if(w)w.location.href=u;else window.open(u,'_blank');}catch(e){if(w)w.close();toast(e.message,false);}}
+// Ejemplo con un equipo inventado: la pantalla del entrenador tal cual, sin datos reales
+function eqEjemplo(){window.open(location.origin+'/?demo=1','_blank');}
 async function eqClubModal(c,alCambiar){
  const m=hzModal(`<div class="hz-top"><div><small>Mi equipo</small><b>${escH(c.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="eq-body"><div class="fac-vacio">Cargando…</div></div>`);
  m.classList.add('eq-m');m.querySelector('.hz-x').onclick=()=>m.remove();
@@ -10228,7 +10231,7 @@ async function eqClubModal(c,alCambiar){
  const carga=async()=>{D=await eqGet('seg-eq-club',{club:c.id});alCambiar&&alCambiar(D.accesos.filter(a=>a.activo).length);};
  const pinta=()=>{const act=D.accesos.filter(a=>a.activo).length;
   box.innerHTML=`<p class="eq-ex">Quien tenga acceso entra en la app de pacientes con su email y su clave, y ve el parte de los jugadores que lo hayan aceptado. Nunca ve la historia clínica.</p>
-   <button type="button" class="ea-b eq-ver">${IC_EQ}<span>Ver como el entrenador</span></button>
+   <div class="eq-vbs"><button type="button" class="ea-b eq-ver">${IC_EQ}<span>Ver como el entrenador</span></button><button type="button" class="ea-b eq-dem">Ver un ejemplo</button></div>
    <div class="eq-sec"><h4>Equipos${D.equipos.length?' · '+D.equipos.length:''}</h4></div>
    <div class="eq-eqs">${D.equipos.map(t=>`<span class="eq-tag">${escH(t)}${(D.enUso||[]).includes(t)?'':`<button type="button" data-t="${escH(t)}" aria-label="Quitar">✕</button>`}</span>`).join('')}</div>
    <div class="eq-otro eq-neq"><input type="text" placeholder="Nuevo equipo (ej.: Infantil B, Sénior femenino)"><button type="button" class="fp-btn">Crear</button></div>
@@ -10237,7 +10240,7 @@ async function eqClubModal(c,alCambiar){
     <div class="cap-a">${a.activo&&segTel(a.telf)?`<button type="button" class="cap-ic wa eq-wa" title="Enviarle el acceso por WhatsApp">${IC_WA}</button>`:''}${a.activo&&a.email?`<button type="button" class="cap-ic eq-em" title="Enviarle el acceso por email">${IC_MAIL}</button>`:''}<button type="button" class="cap-ic eq-ed" title="Cambiar">${IC_ED}</button></div></div>`).join(''):'<div class="eq-vac">Nadie del club tiene acceso todavía. Dale acceso al entrenador o al coordinador para activar «Mi equipo» en este club.</div>'}
    <div class="eq-sec"><h4>Jugadores${D.jugadores.length?' · '+D.jugadores.length:''}</h4></div>
    ${D.jugadores.length?D.jugadores.map(j=>`<button type="button" class="eq-it eq-jug" data-p="${j.pacienteId}"><span class="eq-dot ${escH(j.semaforo)}"></span><div class="eq-im"><b>${escH(j.jugador)}${j.equipo?' · '+escH(j.equipo):''}</b><small>${j.semaforo?escH(EQ_SEM[j.semaforo]):'Sin parte todavía'}${j.fase?' · '+escH(j.fase):''}${j.vuelta?' · vuelta prevista '+escH(eqFe(j.vuelta)):''}</small>${eqCon(j.consentimiento)}</div><svg class="fp-cch" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>`).join(''):'<div class="eq-vac">Se añaden desde la ficha de cada paciente: Más › Club.</div>'}`;
-  box.querySelector('.eq-ver').onclick=()=>eqVerComoEntrenador(c.id);
+  box.querySelector('.eq-ver').onclick=()=>eqVerComoEntrenador(c.id);box.querySelector('.eq-dem').onclick=eqEjemplo;
   const guardaEq=async L=>{try{const r=await eqPost('seg-eq-equipos',{club:c.id,equipos:L});D.equipos=[...new Set([...r.equipos,...(D.enUso||[])])].sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));pinta();}catch(e){toast(e.message,false);}};
   const propios=()=>D.equipos.filter(t=>t);
   {const ni=box.querySelector('.eq-neq input'),nb=box.querySelector('.eq-neq .fp-btn'),crea=()=>{const v=ni.value.trim();if(!v)return;if(D.equipos.some(t=>t.toLowerCase()===v.toLowerCase())){toast('Ese equipo ya está',false);return;}guardaEq([...propios(),v]);};nb.onclick=crea;ni.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();crea();}};}
@@ -10284,7 +10287,7 @@ async function fpTabClub(pid,cont,P,tok){
  if(cont.dataset.token!==tok)return;
  const recarga=()=>fpTabClub(pid,cont,P,tok);
  const nom1=String(P.nombre||'').split(' ')[0];
- const libres=D.clubs.filter(c=>c.activo&&!D.partes.some(p=>p.club===c.id));
+ const libres=D.clubs.filter(c=>!D.partes.some(p=>p.club===c.id));
  const estado=x=>x.consentimiento==='Aceptado'?`<div class="eq-est ok"><span>Lo comparte con el club desde el ${escH(eqFe(x.consFecha))}${x.consQuien&&x.consQuien!=='El propio jugador'?' · '+escH(x.consQuien):''}. Al guardar, les llega un aviso.</span></div>`
   :x.consentimiento==='Retirado'?`<div class="eq-est"><span>Ha dejado de compartirlo (${escH(eqFe(x.consFecha))}). El club no ve nada; puede volver a aceptarlo desde su app.</span></div>`
   :`<div class="eq-est pe"><span>Pendiente de que lo acepte en su app${x.menor?' (por ser menor de 14, su padre, madre o tutor)':''}. Hasta entonces el club no ve nada.</span><button type="button" class="fp-btn eq-rec">Recordárselo</button></div>`;
@@ -10292,7 +10295,7 @@ async function fpTabClub(pid,cont,P,tok){
  const ta=(k,lbl,ph,v)=>`<label class="eq-f"><span>${lbl}</span><textarea class="fp-ta" data-k="${k}" rows="2" placeholder="${escH(ph)}">${escH(v||'')}</textarea></label>`;
  const club=x=>D.clubs.find(c=>c.id===x.club)||{nombre:'Club'};
  cont.innerHTML=D.partes.map(x=>`<div class="fp-blk eq-parte" data-id="${x.id}"><div class="fp-bt"><h3>${escH(club(x).nombre)}${x.equipo?' · '+escH(x.equipo):''}</h3></div>
-   ${estado(x)}<button type="button" class="fp-btn eq-vce" style="margin:-4px 0 12px">Ver como el entrenador</button>
+   ${estado(x)}${club(x).activo?'':'<div class="eq-est"><span>Este club aún no tiene a nadie con acceso. Dáselo al entrenador en Captación › Clubs (icono de las personas).</span></div>'}<div class="eq-vbs"><button type="button" class="fp-btn eq-vce">Ver como el entrenador</button><button type="button" class="fp-btn eq-dem">Ver un ejemplo</button></div>
    <div class="eq-f"><span>Equipo</span><div class="eq-eqp"></div></div>
    <div class="eq-f"><span>¿Puede entrenar?</span><div class="eq-sem">${Object.entries(EQ_SEM).map(([k,t])=>`<button type="button" data-s="${k}" class="${k}${x.semaforo===k?' on':''}"><span class="eq-dot ${k}"></span>${t}</button>`).join('')}</div></div>
    <div class="eq-f"><span>Fase</span><div class="seg-rap eq-fase"></div></div>
@@ -10305,29 +10308,29 @@ async function fpTabClub(pid,cont,P,tok){
    <div class="hz-bts" style="margin-top:4px"><button type="button" class="hz-ok eq-guardar">Guardar parte</button></div>
    ${evo(x)}
    <div class="eq-pie"><button type="button" class="eq-quitar">Ya no juega en este club</button></div></div>`).join('')+
-  `<div class="fp-blk"><div class="fp-bt"><h3>${D.partes.length?'Otro club':'Club'}</h3></div>${
-   libres.length?`<p class="fp-mu" style="margin:0 0 10px;font-size:13px">${D.partes.length?'':'Si juega en un club con «Mi equipo», su entrenador puede ver cómo va su recuperación (solo si '+escH(nom1||'el paciente')+' lo acepta en su app).'}</p><button type="button" class="fp-btn lila eq-vin">+ Añadir a su club</button>`
-   :`<p class="fp-mu" style="margin:0;font-size:13px">${D.clubs.length?'Ya está en todos los clubs que tienen «Mi equipo».':'Ningún club tiene todavía «Mi equipo». Se activa dando acceso a alguien del club en Captación › Clubs.'}</p>`}</div>`;
+  `<div class="fp-blk"><div class="fp-bt"><h3>${D.partes.length?'Otro club':'Club'}</h3></div>${D.partes.length?'':`<p class="fp-mu" style="margin:0 0 12px;font-size:13px">Si juega en un club, añádele y rellena su parte: su entrenador lo verá en la app (solo si ${escH(nom1||'el paciente')} lo acepta) y él o sus padres lo verán siempre.</p>`}
+   <div class="eq-vbs">${libres.length?'<button type="button" class="fp-btn lila eq-vin">+ Añadir a su club</button>':''}<button type="button" class="fp-btn eq-dem2">Ver un ejemplo de lo que ve el entrenador</button></div>${libres.length?'':'<p class="fp-mu" style="margin:10px 0 0;font-size:12.5px">No hay más clubs en Captación › Clubs.</p>'}</div>`;
  cont.querySelectorAll('.eq-parte').forEach(blk=>{const x=D.partes.find(p=>p.id===blk.dataset.id);let sem=x.semaforo;
   blk.querySelectorAll('.eq-sem button').forEach(b=>b.onclick=()=>{sem=sem===b.dataset.s?'':b.dataset.s;blk.querySelectorAll('.eq-sem button').forEach(z=>z.classList.toggle('on',z.dataset.s===sem));});
   const gF=capChips(blk.querySelector('.eq-fase'),EQ_FASES,x.fase||'',false,Object.fromEntries(EQ_FASES.map(f=>[f,f])));
   const gE=eqEquipoSel(blk.querySelector('.eq-eqp'),club(x).equipos||[],x.equipo||'',false);
   {const r=blk.querySelector('.eq-rec');if(r)r.onclick=()=>waAbrir(P.whatsapp||P.telf||P.tel,`Hola ${nom1}, ${club(x).nombre} quiere ver cómo va tu recuperación (qué tienes, cuándo se prevé que vuelvas y qué puedes hacer mientras tanto). Tú decides: entra en tu app, ${APP_URL} , y en «Mi club» acepta o no. Tu historia clínica no se comparte.`);}
-  blk.querySelector('.eq-vce').onclick=()=>eqVerComoEntrenador(x.club);
+  blk.querySelector('.eq-vce').onclick=()=>eqVerComoEntrenador(x.club);blk.querySelector('.eq-dem').onclick=eqEjemplo;
   blk.querySelector('.eq-guardar').onclick=async e=>{const b=e.target,v=k=>blk.querySelector(`[data-k="${k}"]`).value;
    const campos={equipo:gE()||'',semaforo:sem,fase:gF(),diagnostico:v('diagnostico'),vuelta:v('vuelta'),puede:v('puede'),noPuede:v('noPuede'),pautas:v('pautas'),nota:v('nota')};
    b.disabled=true;b.textContent='Guardando…';
    try{const r=await eqPost('seg-eq-parte',{id:x.id,campos});toast(r.compartido?(r.avisados?'Guardado · avisado al club':'Guardado · el club ya lo ve'):'Guardado · el club lo verá cuando lo acepte',true);recarga();}catch(err){b.disabled=false;b.textContent='Guardar parte';toast(err.message,false);}};
   capConf(blk.querySelector('.eq-quitar'),'¿Seguro? El club dejará de verlo · toca otra vez',async()=>{await eqPost('seg-eq-quitar',{id:x.id});toast('Quitado del club',true);recarga();});});
+ {const bd=cont.querySelector('.eq-dem2');if(bd)bd.onclick=eqEjemplo;}
  {const bv=cont.querySelector('.eq-vin');if(bv)bv.onclick=()=>{
   const m=hzModal(`<div class="hz-top"><div><small>Añadir a su club</small><b>${escH(P.nombre||'')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-   <div class="hz-lab">Club</div><div class="seg-rap ev-cl"></div>
+   <div class="hz-lab">Club <span>(✓ = ya tiene Mi equipo)</span></div><div class="seg-rap ev-cl ev-cls"></div>
    <div class="hz-lab">Equipo</div><div class="ev-eqs"><p class="fp-mu" style="font-size:12.5px;margin:0">Elige primero el club</p></div>
    <button type="button" class="pe-sp ev-men" style="margin-top:12px"><i></i><span><b>Tiene menos de 14 años</b><small>Lo tendrá que aceptar su padre, su madre o su tutor</small></span></button>
    <p class="eq-ex" style="margin-top:10px">Le llegará un aviso para que acepte en su app compartir su parte con el club. Hasta que lo acepte, el club no ve nada.</p>
    <div class="hz-bts"><button type="button" class="hz-ok">Añadir</button></div>`);
   m.querySelector('.hz-x').onclick=()=>m.remove();
-  const L=Object.fromEntries(libres.map(c=>[c.id,c.nombre+(c.deporte?' · '+c.deporte:'')]));
+  const L=Object.fromEntries(libres.map(c=>[c.id,c.nombre+(c.activo?' ✓':'')]));
   const gC=capChips(m.querySelector('.ev-cl'),libres.map(c=>c.id),libres.length===1?libres[0].id:'',false,L);
   let gEq=()=>'';const pEq=()=>{const cl=libres.find(c=>c.id===gC());const box=m.querySelector('.ev-eqs');if(!cl){box.innerHTML='<p class="fp-mu" style="font-size:12.5px;margin:0">Elige primero el club</p>';gEq=()=>'';return;}gEq=eqEquipoSel(box,cl.equipos||[],'',false);};
   pEq();m.querySelector('.ev-cl').addEventListener('cambio',pEq);

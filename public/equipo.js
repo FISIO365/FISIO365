@@ -113,6 +113,7 @@
   async function pintarEquipo(abrir) {
     const box = el('miEquipoBox'); if (!box) return;
     const acc = misAccesos(), vista = P() && P().vista;
+    if (P() && P().demo) { { const v = el('vistaMiequipo'); if (v) v.classList.remove('sin-acc'); } if (abrir) S.jug = abrir; S.equipo = demoDatos(); dibuja(); return; }
     { const v = el('vistaMiequipo'); if (v) v.classList.toggle('sin-acc', !acc.length && !vista); }
     if (!acc.length && !vista) { explicar(box); return; }
     if (abrir) S.jug = abrir;
@@ -155,7 +156,7 @@
     }
     S.jug = null;
     const cuenta = k => todos.filter(x => x.semaforo === k).length;
-    box.innerHTML = `${P() && P().vista ? '' : avisosCard()}<div class="eq-res">${Object.keys(SEM).map(k => `<div class="eq-rk ${k}"><b>${cuenta(k)}</b><span>${SEM[k]}</span></div>`).join('')}</div>` +
+    box.innerHTML = `${P() && (P().vista || P().demo) ? '' : avisosCard()}<div class="eq-res">${Object.keys(SEM).map(k => `<div class="eq-rk ${k}"><b>${cuenta(k)}</b><span>${SEM[k]}</span></div>`).join('')}</div>` +
       d.clubs.map(c => `<div class="eq-club"><div class="eq-cn"><b class="no-tr">${esc(c.nombre)}</b>${c.deporte ? `<small class="no-tr">${esc(c.deporte)}</small>` : ''}</div>
         ${c.jugadores.length ? porEquipo(c.jugadores).map(([eqn, L]) => `${eqn !== null ? `<div class="eq-tn no-tr">${esc(eqn || 'Sin equipo')}</div>` : ''}${L.map(x => `<button type="button" class="eq-ju" data-id="${x.id}"><span class="eq-dot ${esc(x.semaforo)}"></span><div><b class="no-tr">${esc(x.jugador)}</b><small>${junta([x.semaforo ? SEM[x.semaforo] : 'Sin parte todavía', x.vuelta ? 'vuelta prevista el ' + fe(x.vuelta) : ''])}</small>${x.equipo && eqn === null ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}${rachaChip(x.racha)}</div>${IC.flecha}</button>`).join('')}`).join('')
         : '<div class="eq-vac">Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.</div>'}</div>`).join('');
@@ -189,9 +190,11 @@
         ${ben(ic.bell, 'Avisos al momento', 'Cada vez que actualizamos el parte de un jugador')}
       </div>
       <button type="button" class="eqh-cta">${ic.wa}<span>Quiero colaborar</span></button>
+      <button type="button" class="eqh-ej">Ver un ejemplo</button>
       <p class="eqh-nota">Te abrimos WhatsApp con el mensaje ya escrito. Solo verás el parte de los jugadores que lo acepten; su historia clínica no se comparte.</p>
       <div class="eqh-clave"><button type="button" class="eqh-cl">¿Tu club ya trabaja con nosotros y te hemos dado una clave? <u>Actívala aquí</u></button>
         <div class="eq-ob"><div class="eq-cl"><input type="tel" inputmode="numeric" maxlength="4" class="eq-tut eq-clv" placeholder="Clave de 4 números"><button type="button" class="eq-ok eq-act">Activar</button></div><div class="eq-err"></div></div></div>`;
+    box.querySelector('.eqh-ej').onclick = () => { location.href = '/?demo=1'; };
     const cw = box.querySelector('.eqh-clave');
     cw.querySelector('.eqh-cl').onclick = () => { cw.classList.toggle('on'); if (cw.classList.contains('on')) setTimeout(() => box.querySelector('.eq-clv').focus(), 50); };
     box.querySelector('.eqh-cta').onclick = () => {
@@ -243,14 +246,30 @@
     const acc = misAccesos(); if (acc.length) fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ equipo: acc.map(x => ({ id: x.id, tok: x.tok })), borrar: true }), keepalive: true }).catch(() => {});
     document.body.classList.remove('solo-equipo'); S.partes = []; S.equipo = null; S.cargado = false; S.jug = null; menu(); const b = el('eqBanner'); if (b) b.classList.remove('on'); }
 
+  // Ejemplo (?demo=1): un equipo inventado para enseñar cómo se ve, sin datos reales
+  function demoDatos() {
+    const d = n => { const x = new Date(); x.setDate(x.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+    const dias = (desde, hasta, salto) => { const L = []; for (let i = desde; i <= hasta; i++) if (!salto || !salto.includes(i)) L.push(d(-i)); return L; };
+    const j = (id, jugador, equipo, semaforo, fase, diagnostico, vuelta, puede, noPuede, pautas, evolucion, racha) => ({ id, jugador, equipo, semaforo, fase, diagnostico, vuelta, puede, noPuede, pautas, evolucion, racha, actualizado: evolucion[0].f, fisio: 'Sara' });
+    return { ok: true, demo: true, nombre: 'Ejemplo', semaforos: SEM, clubs: [{ id: 'demo', nombre: 'Club de ejemplo', deporte: 'Fútbol', jugadores: [
+      j('d1', 'Marc García', 'Juvenil A', 'rojo', 'Tratamiento', 'Esguince de tobillo derecho, de grado medio.', d(21), 'Bici estática y trabajo de tren superior.', 'Correr, saltar y cambios de dirección.', 'Semana 1: bici 20 minutos.\nSemana 2: carrera continua suave.\nVuelta al grupo cuando lo confirmemos.',
+        [{ f: d(-1) + 'T18:30:00', fisio: 'Sara', sem: 'rojo', fase: 'Tratamiento', txt: 'Baja la inflamación y ya apoya sin dolor. Empezamos ejercicios de equilibrio.' }, { f: d(-6) + 'T17:00:00', fisio: 'Sara', sem: 'rojo', fase: 'Valoración', txt: 'Primera sesión: inflamación moderada, le cuesta apoyar.' }], dias(0, 5)),
+      j('d2', 'Pol Ruiz', 'Juvenil A', 'amarillo', 'Readaptación', 'Sobrecarga en los isquiotibiales.', d(4), 'Entrenar con el grupo, sin sprints.', 'Sprints y disparos a puerta.', 'Esta semana, intensidad progresiva. El sábado puede jugar unos minutos si no tiene molestias.',
+        [{ f: d(-2) + 'T19:00:00', fisio: 'Jonathan', sem: 'amarillo', fase: 'Readaptación', txt: 'Ya corre sin molestias. Le queda recuperar la velocidad.' }, { f: d(-9) + 'T19:00:00', fisio: 'Jonathan', sem: 'rojo', fase: 'Tratamiento', txt: 'Dolor al estirar y al acelerar.' }], dias(1, 14, [6, 10])),
+      j('d3', 'Nil Serra', 'Infantil B', 'verde', 'Alta', 'Dolor de rodilla por crecimiento (Osgood-Schlatter), ya controlado.', '', 'Todo.', '', 'Seguir con los ejercicios de fuerza 2 días por semana.',
+        [{ f: d(-3) + 'T18:00:00', fisio: 'Sara', sem: 'verde', fase: 'Alta', txt: 'Alta deportiva. Sin dolor en los últimos entrenos.' }], dias(0, 2)),
+      j('d4', 'Aleix Ferrer', 'Infantil B', 'amarillo', 'Vuelta progresiva', 'Contractura en el gemelo izquierdo.', d(2), 'Entrenar al 70 %.', 'Partido completo.', 'Estiramientos antes y después de entrenar.',
+        [{ f: d(-1) + 'T17:30:00', fisio: 'Juan', sem: 'amarillo', fase: 'Vuelta progresiva', txt: 'Mucho mejor. Puede entrenar con el grupo, sin forzar.' }], dias(4, 8))
+    ] }] };
+  }
   // Vista previa desde el panel (?vista=…): la app como la ve un coordinador del club, sin tocar la sesión guardada
   function vistaPrevia() {
-    const v = new URL(location.href).searchParams.get('vista');
-    if (!v || !/^rec[A-Za-z0-9]{14}\.\d+\.[a-f0-9]{20}$/.test(v)) return false;
-    window.patient = undefined;
-    try { patient = { id: 'vista', nombre: 'Vista previa', soloEquipo: true, vista: v, equipo: [] }; } catch (e) {}
+    const q = new URL(location.href).searchParams, v = q.get('vista'), demo = q.get('demo') === '1';
+    if (!demo && (!v || !/^rec[A-Za-z0-9]{14}\.\d+\.[a-f0-9]{20}$/.test(v))) return false;
+    try { patient = { id: 'vista', nombre: demo ? 'Ejemplo' : 'Vista previa', soloEquipo: true, vista: demo ? '' : v, demo, equipo: [] }; } catch (e) {}
     document.body.classList.add('eq-vista');
-    const b = document.createElement('div'); b.className = 'eq-vbar'; b.innerHTML = '<span>Vista previa: así lo ve el entrenador</span>'; document.body.appendChild(b);
+    const b = document.createElement('div'); b.className = 'eq-vbar'; b.innerHTML = `<span>${demo ? 'Ejemplo: así lo ve el entrenador' : 'Vista previa: así lo ve el entrenador'}</span><button type="button">✕</button>`; document.body.appendChild(b);
+    b.querySelector('button').onclick = () => { if (window.opener) window.close(); location.href = '/'; };
     iniciarSoloEquipo(); return true;
   }
   window.EQA = { vistaPrevia, cargar, pintarClub, pintarEquipo, iniciarSoloEquipo, salir, abrirJugador: id => { S.jug = id; } };

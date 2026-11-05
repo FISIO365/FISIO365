@@ -4724,7 +4724,8 @@ module.exports = async function handler(req, res) {
           const [pars, accs, cls, todas] = await Promise.all([eqPartes(`AND({PACIENTE}='${q.id}',{ACTIVO})`), capTodos(EQ.acc, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPOS`), capTodos(CAP.club, 'fields[]=NOMBRE&fields[]=DEPORTE&fields[]=EQUIPOS'), capTodos(EQ.par, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPO`)]);
           const conAcc = new Set(accs.map(a => a.fields['CLUB']).filter(Boolean)), mios = new Set(pars.map(p => p.fields['CLUB']));
           const eqDe = cid => eqUnicos([...eqEquiposAcc((cls.find(c => c.id === cid) || {}).fields), ...todas.filter(r => r.fields['CLUB'] === cid).map(r => r.fields['EQUIPO']), ...accs.filter(a => a.fields['CLUB'] === cid).flatMap(a => eqEquiposAcc(a.fields))]);
-          const clubs = cls.filter(c => conAcc.has(c.id) || mios.has(c.id)).map(c => ({ id: c.id, nombre: c.fields['NOMBRE'] || '', deporte: c.fields['DEPORTE'] || '', activo: conAcc.has(c.id), equipos: eqDe(c.id) })).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+          // Todos los clubs de Captación (primero los que ya tienen Mi equipo): se puede añadir al jugador aunque el club aún no tenga accesos
+          const clubs = cls.map(c => ({ id: c.id, nombre: c.fields['NOMBRE'] || '', deporte: c.fields['DEPORTE'] || '', activo: conAcc.has(c.id), equipos: eqDe(c.id) })).sort((a, b) => (b.activo - a.activo) || a.nombre.localeCompare(b.nombre, 'es'));
           return res.status(200).json({ ok: true, partes: pars.map(eqParte), clubs, semaforos: EQ_SEM, fases: EQ_FASES });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });

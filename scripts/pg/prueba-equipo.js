@@ -63,7 +63,7 @@
   r = await llamar(S, { action: 'seg-eq-club', pwd, club: CLUB });
   ver('panel: accesos y jugadores del club', r.j.ok && r.j.accesos.length === 1 && r.j.jugadores.length === 1, r.j);
   r = await llamar(S, { action: 'seg-eq-ficha', pwd, id: PAC });
-  ver('panel: pestaña Club de la ficha', r.j.ok && r.j.partes.length === 1 && r.j.clubs.length === 1, r.j);
+  ver('panel: pestaña Club de la ficha (todos los clubs, primero los activos)', r.j.ok && r.j.partes.length === 1 && r.j.clubs[0].id === CLUB && r.j.clubs[0].activo, r.j.clubs && r.j.clubs.slice(0, 2));
   r = await llamar(S, { action: 'eq-consent', patientId: PAC, id: parte.id, acepta: false }, 'POST');
   ver('el jugador deja de compartir', r.j.ok && r.j.parte.consentimiento === 'Retirado', r.j);
   r = await llamar(S, { action: 'eq-equipo', ...qa });
