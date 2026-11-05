@@ -13,4 +13,10 @@ function okTok(id, t, pin) {
   if (!okFormato(id, t)) return false;
   try { return crypto.timingSafeEqual(Buffer.from(t), Buffer.from(firmaEq(id, pin))); } catch (e) { return false; }
 }
-module.exports = { EQ, firmaEq, okTok, okFormato, okId };
+// Vista previa para el equipo de la clínica («Ver como el entrenador»): enlace de 1 hora a un club, firmado
+function firmaVista(club, exp) { return crypto.createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('vista:' + club + ':' + exp).digest('hex').slice(0, 20); }
+function okVista(v) {
+  const m = /^(rec[A-Za-z0-9]{14})\.(\d{10,13})\.([a-f0-9]{20})$/.exec(String(v || '')); if (!m || +m[2] < Date.now()) return null;
+  try { return crypto.timingSafeEqual(Buffer.from(m[3]), Buffer.from(firmaVista(m[1], m[2]))) ? m[1] : null; } catch (e) { return null; }
+}
+module.exports = { EQ, firmaEq, okTok, okFormato, okId, firmaVista, okVista };

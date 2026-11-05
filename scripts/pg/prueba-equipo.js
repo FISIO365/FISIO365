@@ -128,6 +128,12 @@
   ver('el club lista sus equipos', r.j.equipos.includes('Alevín A') && r.j.enUso.includes('Infantil B') && !r.j.enUso.includes('Alevín A'), r.j);
   r = await llamar(S, { action: 'seg-eq-ficha', pwd, id: 'recPacPrueba00001' });
   ver('ficha: equipos del club para elegir', r.j.clubs.find(c => c.id === CLUB2).equipos.includes('Alevín A'), r.j.clubs);
+  r = await llamar(S, { action: 'seg-eq-vista', pwd, club: CLUB2 });
+  const vq = new URLSearchParams(r.j.url.split('?')[1]).get('vista');
+  r = await llamar(S, { action: 'eq-equipo', vista: vq });
+  ver('vista previa: como un coordinador', r.j.ok && r.j.clubs[0].jugadores.length === 2, r.j);
+  r = await llamar(S, { action: 'eq-equipo', vista: vq.replace(/.$/, c => c === 'a' ? 'b' : 'a') });
+  ver('vista previa con firma mala', !r.j.ok, r.j);
   console.log(fallos ? `\n${fallos} FALLOS` : '\nTodo bien');
   process.exit(fallos ? 1 : 0);
 })().catch(e => { console.error('FALLO', e.message, String(e.stack).split('\n').slice(1, 4).join(' | ')); process.exit(1); });

@@ -4714,6 +4714,11 @@ module.exports = async function handler(req, res) {
           const delClub = eqEquiposAcc(clR && clR.fields), enUso = eqUnicos([...pars.map(r => r.fields['EQUIPO']), ...accs.flatMap(a => eqEquiposAcc(a.fields))]);
           return res.status(200).json({ ok: true, accesos: accs.map(eqAcc).sort((a, b) => (b.activo - a.activo) || a.nombre.localeCompare(b.nombre, 'es')), jugadores: pars.map(eqParte).sort((a, b) => a.equipo.localeCompare(b.equipo, 'es', { numeric: true }) || a.jugador.localeCompare(b.jugador, 'es')), equipos: eqUnicos([...delClub, ...enUso]), enUso, semaforos: EQ_SEM });
         }
+        if (action === 'seg-eq-vista') { // «Ver como el entrenador»: enlace de 1 hora a la app, como un coordinador del club
+          if (!okId(q.club)) return res.status(400).json({ ok: false });
+          const exp = Date.now() + 3600e3;
+          return res.status(200).json({ ok: true, url: `/?vista=${q.club}.${exp}.${EQX.firmaVista(q.club, exp)}` });
+        }
         if (action === 'seg-eq-ficha') {
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const [pars, accs, cls, todas] = await Promise.all([eqPartes(`AND({PACIENTE}='${q.id}',{ACTIVO})`), capTodos(EQ.acc, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPOS`), capTodos(CAP.club, 'fields[]=NOMBRE&fields[]=DEPORTE&fields[]=EQUIPOS'), capTodos(EQ.par, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPO`)]);
@@ -6853,6 +6858,14 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
   }
   if (action === 'eq-equipo') { // lo que ve el entrenador: sus clubs y los partes de quien lo comparte
+    if (req.query.vista) { // vista previa del panel: lo mismo que vería un coordinador del club
+      const cid = EQX.okVista(req.query.vista); if (!cid) return res.status(200).json({ ok: false, inactivo: true, error: 'Esta vista previa ha caducado. Vuelve a abrirla desde el panel.' });
+      try {
+        const nom = await eqNombresClubs([cid]); if (!nom[cid]) return res.status(404).json({ ok: false });
+        const orden = { rojo: 0, amarillo: 1, verde: 2, '': 3 }, pars = await eqPartes(`AND({CLUB}='${cid}',{ACTIVO},{CONSENTIMIENTO}='Aceptado')`), rachas = await eqRachas(pars.map(r => r.fields['PACIENTE']));
+        return res.status(200).json({ ok: true, vista: true, nombre: 'Vista previa', clubs: [{ id: cid, nombre: nom[cid].nombre, deporte: nom[cid].deporte, rol: 'Coordinador', equipos: [], jugadores: pars.map(r => Object.assign(eqParteClub(r), { racha: rachas[r.fields['PACIENTE']] || [] })).sort((x, y) => (orden[x.semaforo] ?? 3) - (orden[y.semaforo] ?? 3) || x.jugador.localeCompare(y.jugador, 'es')) }], semaforos: EQ_SEM });
+      } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
+    }
     const ids = String(req.query.a || '').split(',').slice(0, 10), toks = String(req.query.t || '').split(',');
     const mios = ids.map((id, i) => ({ id, tok: toks[i] })).filter(x => EQX.okFormato(x.id, x.tok));
     if (!mios.length) return res.status(401).json({ ok: false, error: 'No autorizado' });

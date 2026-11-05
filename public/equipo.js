@@ -112,13 +112,14 @@
   // ── Mi equipo (el entrenador) ──
   async function pintarEquipo(abrir) {
     const box = el('miEquipoBox'); if (!box) return;
-    const acc = misAccesos();
-    { const v = el('vistaMiequipo'); if (v) v.classList.toggle('sin-acc', !acc.length); }
-    if (!acc.length) { explicar(box); return; }
+    const acc = misAccesos(), vista = P() && P().vista;
+    { const v = el('vistaMiequipo'); if (v) v.classList.toggle('sin-acc', !acc.length && !vista); }
+    if (!acc.length && !vista) { explicar(box); return; }
     if (abrir) S.jug = abrir;
     if (!S.equipo) box.innerHTML = '<div class="eq-vac">Cargando…</div>'; else dibuja();
-    const d = await get('eq-equipo', { a: acc.map(x => x.id).join(','), t: acc.map(x => x.tok).join(',') }).catch(() => null);
+    const d = await get('eq-equipo', vista ? { vista } : { a: acc.map(x => x.id).join(','), t: acc.map(x => x.tok).join(',') }).catch(() => null);
     if (!d || !d.ok) {
+      if (d && d.inactivo && vista) { box.innerHTML = `<div class="eq-vac">${esc(d.error)}</div>`; return; }
       if (d && d.inactivo && P() && P().soloEquipo) { box.innerHTML = `<div class="eq-vac">${esc(d.error)}</div><button type="button" class="eq-ok" onclick="cerrarSesion()">Salir</button>`; return; }
       if (!S.equipo) box.innerHTML = `<div class="eq-vac">${esc((d && d.error) || 'No se ha podido cargar. Mira tu conexión.')}</div>`;
       return;
@@ -154,7 +155,7 @@
     }
     S.jug = null;
     const cuenta = k => todos.filter(x => x.semaforo === k).length;
-    box.innerHTML = `${avisosCard()}<div class="eq-res">${Object.keys(SEM).map(k => `<div class="eq-rk ${k}"><b>${cuenta(k)}</b><span>${SEM[k]}</span></div>`).join('')}</div>` +
+    box.innerHTML = `${P() && P().vista ? '' : avisosCard()}<div class="eq-res">${Object.keys(SEM).map(k => `<div class="eq-rk ${k}"><b>${cuenta(k)}</b><span>${SEM[k]}</span></div>`).join('')}</div>` +
       d.clubs.map(c => `<div class="eq-club"><div class="eq-cn"><b class="no-tr">${esc(c.nombre)}</b>${c.deporte ? `<small class="no-tr">${esc(c.deporte)}</small>` : ''}</div>
         ${c.jugadores.length ? porEquipo(c.jugadores).map(([eqn, L]) => `${eqn !== null ? `<div class="eq-tn no-tr">${esc(eqn || 'Sin equipo')}</div>` : ''}${L.map(x => `<button type="button" class="eq-ju" data-id="${x.id}"><span class="eq-dot ${esc(x.semaforo)}"></span><div><b class="no-tr">${esc(x.jugador)}</b><small>${junta([x.semaforo ? SEM[x.semaforo] : 'Sin parte todavía', x.vuelta ? 'vuelta prevista el ' + fe(x.vuelta) : ''])}</small>${x.equipo && eqn === null ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}${rachaChip(x.racha)}</div>${IC.flecha}</button>`).join('')}`).join('')
         : '<div class="eq-vac">Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.</div>'}</div>`).join('');
@@ -242,5 +243,15 @@
     const acc = misAccesos(); if (acc.length) fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ equipo: acc.map(x => ({ id: x.id, tok: x.tok })), borrar: true }), keepalive: true }).catch(() => {});
     document.body.classList.remove('solo-equipo'); S.partes = []; S.equipo = null; S.cargado = false; S.jug = null; menu(); const b = el('eqBanner'); if (b) b.classList.remove('on'); }
 
-  window.EQA = { cargar, pintarClub, pintarEquipo, iniciarSoloEquipo, salir, abrirJugador: id => { S.jug = id; } };
+  // Vista previa desde el panel (?vista=…): la app como la ve un coordinador del club, sin tocar la sesión guardada
+  function vistaPrevia() {
+    const v = new URL(location.href).searchParams.get('vista');
+    if (!v || !/^rec[A-Za-z0-9]{14}\.\d+\.[a-f0-9]{20}$/.test(v)) return false;
+    window.patient = undefined;
+    try { patient = { id: 'vista', nombre: 'Vista previa', soloEquipo: true, vista: v, equipo: [] }; } catch (e) {}
+    document.body.classList.add('eq-vista');
+    const b = document.createElement('div'); b.className = 'eq-vbar'; b.innerHTML = '<span>Vista previa: así lo ve el entrenador</span>'; document.body.appendChild(b);
+    iniciarSoloEquipo(); return true;
+  }
+  window.EQA = { vistaPrevia, cargar, pintarClub, pintarEquipo, iniciarSoloEquipo, salir, abrirJugador: id => { S.jug = id; } };
 })();

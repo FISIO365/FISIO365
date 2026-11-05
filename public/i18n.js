@@ -4,6 +4,14 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Vista previa: así lo ve el entrenador": [
+"Vista prèvia: així ho veu l'entrenador",
+"Preview: this is what the coach sees"
+],
+"Esta vista previa ha caducado. Vuelve a abrirla desde el panel.": [
+"Aquesta vista prèvia ha caducat. Torna-la a obrir des del panell.",
+"This preview has expired. Open it again from the panel."
+],
 "Racha de ejercicios": [
 "Ratxa d'exercicis",
 "Exercise streak"
