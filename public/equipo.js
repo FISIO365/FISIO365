@@ -154,15 +154,20 @@
   function explicar(box) {
     const it = (ic, t, s2) => `<div class="eq-xi"><div class="eq-cic">${ic}</div><div><b>${t}</b><span>${s2}</span></div></div>`;
     box.innerHTML = `<div class="eq-card eq-x"><div class="eq-pt">Para entrenadores y coordinadores</div>
-      <p class="eq-p">Si entrenas o coordinas un club que colabora con nosotros, aquí ves cómo va la recuperación de tus jugadores.</p>
+      <h3 class="eq-xt">¿Quieres que seamos el fisio de tu equipo?</h3>
+      <p class="eq-p">Si entrenas o coordinas un equipo, podemos ser su centro de fisioterapia de referencia. Y desde aquí verás cómo va la recuperación de tus jugadores:</p>
       ${it('<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>', 'Si pueden entrenar', 'No entrena, con limitaciones o puede jugar')}
       ${it('<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>', 'Cuándo vuelven', 'La previsión de vuelta de cada jugador')}
       ${it('<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>', 'Qué pueden hacer', 'Y cómo volver a entrenar sin recaídas')}
       <p class="eq-p eq-psep">Solo ves el parte de los jugadores que lo aceptan. Su historia clínica no se comparte nunca.</p>
-      <button type="button" class="eq-ok eq-pedir">Pedirlo por el chat</button></div>
+      <button type="button" class="eq-ok eq-pedir">Quiero colaborar</button><p class="eq-xs">Te abrimos WhatsApp con el mensaje escrito: solo dinos tu club y tu equipo.</p></div>
       <div class="eq-card"><div class="eq-pt">¿Ya tienes tu clave?</div>
       <div class="eq-cl"><input type="tel" inputmode="numeric" maxlength="4" class="eq-tut eq-clv" placeholder="Clave de 4 números"><button type="button" class="eq-ok eq-act">Activar</button></div><div class="eq-err"></div></div>`;
-    box.querySelector('.eq-pedir').onclick = () => window.showSection('mensajes');
+    box.querySelector('.eq-pedir').onclick = () => {
+      const K = window.CLINICA || {}, nom = (P() && P().nombre) || '';
+      const msg = `Hola, soy ${nom || 'un paciente'}. Entreno/coordino un equipo y me gustaría colaborar con ${K.marca || 'FISIO365'} para que seáis el fisio de referencia del equipo. Mi club es: ___ · Mi equipo: ___`;
+      window.open('https://wa.me/' + (K.wa || '34672893949') + '?text=' + encodeURIComponent(msg), '_blank');
+    };
     const b = box.querySelector('.eq-act'), inp = box.querySelector('.eq-clv'), err = box.querySelector('.eq-err');
     b.onclick = async () => {
       err.textContent = ''; const v = inp.value.replace(/\D/g, '');
