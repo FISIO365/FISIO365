@@ -113,6 +113,7 @@
   async function pintarEquipo(abrir) {
     const box = el('miEquipoBox'); if (!box) return;
     const acc = misAccesos();
+    { const v = el('vistaMiequipo'); if (v) v.classList.toggle('sin-acc', !acc.length); }
     if (!acc.length) { explicar(box); return; }
     if (abrir) S.jug = abrir;
     if (!S.equipo) box.innerHTML = '<div class="eq-vac">Cargando…</div>'; else dibuja();
@@ -152,15 +153,36 @@
   }
   // Sin acceso: para qué es «Mi equipo», pedirlo por el chat o activarlo con la clave
   function explicar(box) {
-    const ic = { llave: '<svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg>', chat: '<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>' };
-    box.innerHTML = `<p class="eq-xp">Para entrenadores y coordinadores de clubs que trabajan con nosotros: ven si sus jugadores pueden entrenar, cuándo vuelven y qué pueden hacer. Solo de los jugadores que lo aceptan.</p>
-      <div class="eq-pt eq-xq">¿Qué quieres hacer?</div>
-      <div class="eq-opc" data-o="clave"><button type="button" class="eq-oh"><div class="eq-cic">${ic.llave}</div><div><b>Tengo una clave</b><span>Mi club ya trabaja con vosotros</span></div>${IC.flecha}</button>
-        <div class="eq-ob"><div class="eq-cl"><input type="tel" inputmode="numeric" maxlength="4" class="eq-tut eq-clv" placeholder="Clave de 4 números"><button type="button" class="eq-ok eq-act">Entrar</button></div><div class="eq-err"></div></div></div>
-      <div class="eq-opc" data-o="colab"><button type="button" class="eq-oh eq-pedir"><div class="eq-cic">${ic.chat}</div><div><b>Quiero colaborar</b><span>Que seáis el fisio de mi equipo</span></div>${IC.flecha}</button></div>`;
-    const op = box.querySelector('[data-o="clave"]');
-    op.querySelector('.eq-oh').onclick = () => { op.classList.toggle('on'); if (op.classList.contains('on')) setTimeout(() => box.querySelector('.eq-clv').focus(), 50); };
-    box.querySelector('.eq-pedir').onclick = () => {
+    const ic = {
+      cal: '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>',
+      sem: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>',
+      ok: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+      bell: '<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+      wa: '<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>'
+    };
+    const fila = (sem, n, t) => `<div class="eqh-j"><i class="${sem}"></i><b>${n}</b><span>${t}</span></div>`;
+    const ben = (i, t, s2) => `<div class="eqh-b"><div class="eq-cic">${i}</div><div><b>${t}</b><span>${s2}</span></div></div>`;
+    box.innerHTML = `<div class="eqh">
+        <div class="eqh-k">Para entrenadores y coordinadores</div>
+        <h3>Seamos el fisio de tu equipo</h3>
+        <p>Tus jugadores se recuperan antes y tú sabes en todo momento cómo van.</p>
+        <div class="eqh-demo" aria-hidden="true">
+          ${fila('verde', 'Marc', 'Puede jugar')}${fila('amarillo', 'Pol', 'Con limitaciones · vuelve el sábado')}${fila('rojo', 'Nil', 'No entrena · vuelve en 3 semanas')}
+        </div>
+      </div>
+      <div class="eqh-bens">
+        ${ben(ic.sem, 'Con quién cuentas', 'Quién puede jugar, quién entrena con limitaciones y quién no')}
+        ${ben(ic.cal, 'Cuándo vuelve cada uno', 'La previsión de vuelta de tus lesionados')}
+        ${ben(ic.ok, 'Cómo volver sin recaídas', 'Qué pueden hacer y cómo empezar a entrenar')}
+        ${ben(ic.bell, 'Avisos al momento', 'Cada vez que actualizamos el parte de un jugador')}
+      </div>
+      <button type="button" class="eqh-cta">${ic.wa}<span>Quiero colaborar</span></button>
+      <p class="eqh-nota">Te abrimos WhatsApp con el mensaje ya escrito. Solo verás el parte de los jugadores que lo acepten; su historia clínica no se comparte.</p>
+      <div class="eqh-clave"><button type="button" class="eqh-cl">¿Tu club ya trabaja con nosotros y te hemos dado una clave? <u>Actívala aquí</u></button>
+        <div class="eq-ob"><div class="eq-cl"><input type="tel" inputmode="numeric" maxlength="4" class="eq-tut eq-clv" placeholder="Clave de 4 números"><button type="button" class="eq-ok eq-act">Activar</button></div><div class="eq-err"></div></div></div>`;
+    const cw = box.querySelector('.eqh-clave');
+    cw.querySelector('.eqh-cl').onclick = () => { cw.classList.toggle('on'); if (cw.classList.contains('on')) setTimeout(() => box.querySelector('.eq-clv').focus(), 50); };
+    box.querySelector('.eqh-cta').onclick = () => {
       const K = window.CLINICA || {}, nom = (P() && P().nombre) || '';
       const msg = `Hola, soy ${nom || 'un paciente'}. Entreno/coordino un equipo y me gustaría colaborar con ${K.marca || 'FISIO365'} para que seáis el fisio de referencia del equipo. Mi club es: ___ · Mi equipo: ___`;
       window.open('https://wa.me/' + (K.wa || '34672893949') + '?text=' + encodeURIComponent(msg), '_blank');

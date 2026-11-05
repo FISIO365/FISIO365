@@ -4,6 +4,66 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Seamos el fisio de tu equipo": [
+"Siguem el fisio del teu equip",
+"Let us be your team's physio"
+],
+"Tus jugadores se recuperan antes y tú sabes en todo momento cómo van.": [
+"Els teus jugadors es recuperen abans i tu saps en tot moment com van.",
+"Your players recover sooner and you always know how they're doing."
+],
+"Con limitaciones · vuelve el sábado": [
+"Amb limitacions · torna dissabte",
+"With limits · back on Saturday"
+],
+"No entrena · vuelve en 3 semanas": [
+"No entrena · torna d'aquí a 3 setmanes",
+"Not training · back in 3 weeks"
+],
+"Con quién cuentas": [
+"Amb qui comptes",
+"Who you can count on"
+],
+"Quién puede jugar, quién entrena con limitaciones y quién no": [
+"Qui pot jugar, qui entrena amb limitacions i qui no",
+"Who can play, who's training with limits and who isn't"
+],
+"Cuándo vuelve cada uno": [
+"Quan torna cadascú",
+"When each one is back"
+],
+"La previsión de vuelta de tus lesionados": [
+"La previsió de tornada dels teus lesionats",
+"The expected return of your injured players"
+],
+"Cómo volver sin recaídas": [
+"Com tornar sense recaigudes",
+"How to come back without setbacks"
+],
+"Qué pueden hacer y cómo empezar a entrenar": [
+"Què poden fer i com començar a entrenar",
+"What they can do and how to start training"
+],
+"Avisos al momento": [
+"Avisos al moment",
+"Instant notifications"
+],
+"Cada vez que actualizamos el parte de un jugador": [
+"Cada vegada que actualitzem el parte d'un jugador",
+"Every time we update a player's report"
+],
+"Te abrimos WhatsApp con el mensaje ya escrito. Solo verás el parte de los jugadores que lo acepten; su historia clínica no se comparte.": [
+"T'obrim WhatsApp amb el missatge ja escrit. Només veuràs el parte dels jugadors que ho acceptin; la seva història clínica no es comparteix.",
+"We'll open WhatsApp with the message ready. You'll only see the report of players who agree; their medical record is never shared."
+],
+"¿Tu club ya trabaja con nosotros y te hemos dado una clave?": [
+"El teu club ja treballa amb nosaltres i t'hem donat una clau?",
+"Does your club already work with us and we've given you a code?"
+],
+"Actívala aquí": [
+"Activa-la aquí",
+"Activate it here"
+],
 "Para entrenadores y coordinadores de clubs que trabajan con nosotros: ven si sus jugadores pueden entrenar, cuándo vuelven y qué pueden hacer. Solo de los jugadores que lo aceptan.": [
 "Per a entrenadors i coordinadors de clubs que treballen amb nosaltres: veuen si els seus jugadors poden entrenar, quan tornen i què poden fer. Només dels jugadors que ho accepten.",
 "For coaches and coordinators of clubs that work with us: see whether their players can train, when they're back and what they can do. Only for players who agree."
