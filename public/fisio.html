@@ -9533,7 +9533,9 @@ async function renderCaptacion(wrap){
 
  // ── Clubs deportivos de la zona: llamar o escribir, apuntar qué se dijo y en qué se quedó ──
  function pClubs(body){
-  if(!window._clubEm){window._clubEm={};eqGet('seg-cap-clubs-email',{}).then(r=>{window._clubEm=r.emails||{};if(body.isConnected)pClubs(body);}).catch(()=>{});}
+  // Estado de los correos (Brevo): se vuelve a mirar cada 3 minutos mientras la lista está abierta
+  if(!window._clubEm||Date.now()-(window._clubEmT||0)>180000){window._clubEm=window._clubEm||{};window._clubEmT=Date.now();eqGet('seg-cap-clubs-email',{}).then(r=>{window._clubEm=r.emails||{};if(body.isConnected&&!document.querySelector('.hz-modal')){const y=window.scrollY;pClubs(body);window.scrollTo(0,y);}}).catch(()=>{});}
+  clearTimeout(window._clubEmTm);window._clubEmTm=setTimeout(()=>{if(body.isConnected&&!document.querySelector('.hz-modal')&&!(document.activeElement&&document.activeElement.classList.contains('club-q'))){const y=window.scrollY;pClubs(body);window.scrollTo(0,y);}},181000);
   const em=c=>window._clubEm[String(c.email||'').trim().toLowerCase()]||null,malEm=c=>{const x=em(c);return !!(x&&x.mal&&!x.entregado);};
   const L0=D.clubs||[],q=clubF.q.trim().toLowerCase(),nq=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
   const grupo=c=>CLUB_GR.find(g=>g.est.includes(c.estado))||CLUB_GR[0];
