@@ -4,6 +4,98 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Disponibilidad": [
+"Disponibilitat",
+"Availability"
+],
+"Disponibles": [
+"Disponibles",
+"Available"
+],
+"Con limitaciones": [
+"Amb limitacions",
+"With limitations"
+],
+"Bajas": [
+"Baixes",
+"Injured"
+],
+"Estado": [
+"Estat",
+"Status"
+],
+"día": [
+"dia",
+"day"
+],
+"días": [
+"dies",
+"days"
+],
+"Fecha de vuelta superada": [
+"Data de tornada superada",
+"Return date passed"
+],
+"Desde el {}": [
+"Des del {}",
+"Since {}"
+],
+"Disponible": [
+"Disponible",
+"Available"
+],
+"Puede jugar con normalidad": [
+"Pot jugar amb normalitat",
+"Can play normally"
+],
+"Sin fecha todavía": [
+"Encara sense data",
+"No date yet"
+],
+"Fase": [
+"Fase",
+"Phase"
+],
+"Puede hacer": [
+"Pot fer",
+"Can do"
+],
+"No puede hacer": [
+"No pot fer",
+"Can't do"
+],
+"Plan de vuelta": [
+"Pla de tornada",
+"Return plan"
+],
+"Vuelve en {} días": [
+"Torna en {} dies",
+"Back in {} days"
+],
+"Vuelve mañana": [
+"Torna demà",
+"Back tomorrow"
+],
+"Vuelve hoy": [
+"Torna avui",
+"Back today"
+],
+"Nadie con este filtro.": [
+"Ningú amb aquest filtre.",
+"No one matches this filter."
+],
+"Copiado: pégalo donde quieras": [
+"Copiat: enganxa'l on vulguis",
+"Copied: paste it anywhere"
+],
+"No se ha podido copiar": [
+"No s'ha pogut copiar",
+"Couldn't copy"
+],
+"No se ha podido preparar el PDF. Mira tu conexión.": [
+"No s'ha pogut preparar el PDF. Mira la connexió.",
+"Couldn't prepare the PDF. Check your connection."
+],
 "Con vídeo, para que también los hagan en los entrenos": [
 "Amb vídeo, perquè també els facin als entrenaments",
 "With video, so they can also do them at training"

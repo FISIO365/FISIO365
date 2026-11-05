@@ -11,7 +11,7 @@
     flecha: '<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>',
     atras: '<svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>'
   };
-  const S = { partes: [], equipo: null, cargado: false, jug: null };
+  const S = { partes: [], equipo: null, cargado: false, jug: null, feq: '', fsem: '' };
   const get = (a, q) => fetch(`/api/schedule?action=${a}&${new URLSearchParams(q)}`).then(r => r.json());
   const post = (a, b) => fetch(`/api/schedule?action=${a}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }).then(r => r.json());
   const junta = L => L.filter(Boolean).map(x => `<span>${esc(x)}</span>`).join(' · ');
@@ -98,25 +98,129 @@
   function verEjercicios(L) {
     const t = n => n >= 60 && n % 60 === 0 ? `${n / 60} min` : `${n} s`;
     const dosis = e => e.series > 1 && e.reps ? `${e.series} series × ${e.reps}` : e.series > 1 && e.dur ? `${e.series} series × ${t(e.dur)}` : e.dur ? t(e.dur) : e.reps ? `× ${e.reps}` : '';
-    return `<div class="eq-bl"><span>Sus ejercicios</span><p class="eq-ejn">Su fisio ha compartido su programa para que lo pueda hacer también en los entrenos.</p><div class="eq-ejs">${L.map(e => {
+    return `<div class="eqp-b">${tit(ICP.ej, 'Sus ejercicios')}<p class="eq-ejn">Su fisio ha compartido su programa para que lo pueda hacer también en los entrenos.</p><div class="eq-ejs">${L.map(e => {
       const img = e.ytId ? `https://img.youtube.com/vi/${encodeURIComponent(e.ytId)}/mqdefault.jpg` : e.imagen;
       return `<div class="eq-ej">${img ? `<div class="eq-ejim" style="background-image:url('${esc(img)}')">${e.ytId ? `<a href="https://www.youtube.com/watch?v=${encodeURIComponent(e.ytId)}" target="_blank" rel="noopener" aria-label="Ver vídeo"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></a>` : ''}</div>` : ''}
         <div class="eq-ejt"><b class="no-tr">${esc(e.name)}</b>${dosis(e) ? `<small>${esc(dosis(e))}</small>` : ''}${e.desc ? `<p class="no-tr">${esc(e.desc)}</p>` : ''}</div></div>`; }).join('')}</div></div>`;
   }
+  // ── Piezas del parte (las usan «Mi club» y «Mi equipo») ──
+  const FASES = ['Valoración', 'Tratamiento', 'Readaptación', 'Vuelta progresiva', 'Alta'];
+  const ORDEN = { rojo: 0, amarillo: 1, verde: 2 };
+  const hoyK = () => { const x = new Date(); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+  const diasEntre = (a, b) => Math.round((Date.parse(String(b).slice(0, 10) + 'T12:00:00Z') - Date.parse(String(a).slice(0, 10) + 'T12:00:00Z')) / 864e5);
+  const iniciales = n => String(n || '').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
+  // Desde cuándo está de baja: la primera vez que se apuntó en su evolución (si no, la última actualización)
+  const inicio = p => { const L = (p.evolucion || []).map(e => String(e.f || '').slice(0, 10)).filter(Boolean).sort(); return L[0] || String(p.actualizado || '').slice(0, 10); };
+  // Cuenta atrás hasta la vuelta prevista: { n: días, pct: 0-100 del camino hecho }
+  function vuelta(p) {
+    if (!p.vuelta || p.semaforo === 'verde') return null;
+    const n = diasEntre(hoyK(), p.vuelta), ini = inicio(p), tot = ini ? diasEntre(ini, p.vuelta) : 0;
+    const pct = tot > 0 ? Math.max(4, Math.min(100, Math.round(diasEntre(ini, hoyK()) / tot * 100))) : (n <= 0 ? 100 : 10);
+    return { n, pct, ini };
+  }
+  const textoVuelta = v => v.n > 1 ? `Vuelve en ${v.n} días` : v.n === 1 ? 'Vuelve mañana' : v.n === 0 ? 'Vuelve hoy' : 'Fecha de vuelta superada';
+  const ICP = {
+    que: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+    si: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/></svg>',
+    no: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m9.5 9.5 5 5M14.5 9.5l-5 5"/></svg>',
+    plan: '<svg viewBox="0 0 24 24"><path d="M5 19c3-1 3-5 7-6s4-5 7-6"/><circle cx="5" cy="19" r="1.6"/><circle cx="19" cy="7" r="1.6"/></svg>',
+    evo: '<svg viewBox="0 0 24 24"><path d="M4 18l5-5 4 3 7-8"/><path d="M15 8h5v5"/></svg>',
+    cal: '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>',
+    share: '<svg viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>',
+    pdf: '<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>',
+    ok: '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.2L19 7"/></svg>',
+    ej: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4-2.5z"/></svg>'
+  };
+  const tit = (ic, t) => `<div class="eqp-h">${ic}<span>${t}</span></div>`;
+  // Las fases como pasos: hechas, la de ahora y las que quedan
+  function pasos(fase) {
+    const k = FASES.indexOf(fase); if (k < 0) return '';
+    return `<div class="eqp-fw"><div class="eqp-fs">${FASES.map((f, i) => `<div class="eqp-f ${i < k ? 'hecha' : i === k ? 'ahora' : ''}"><i>${i < k ? ICP.ok : ''}</i></div>`).join('')}</div><div class="eqp-fl"><span>Fase</span> <b>${esc(fase)}</b><em>${k + 1}/${FASES.length}</em></div></div>`;
+  }
   // El parte tal como lo ve el club
-  function verParte(p, titulo) {
+  function verParte(p, titulo, acciones) {
     if (!p) return '';
-    const bloque = (t, v) => v ? `<div class="eq-bl"><span>${t}</span><p class="no-tr">${esc(v)}</p></div>` : '';
     const vacio = !p.semaforo && !p.diagnostico && !p.puede && !p.noPuede && !p.pautas;
+    const v = vuelta(p);
+    const bloque = (ic, t, val, cls) => val ? `<div class="eqp-b ${cls || ''}">${tit(ic, t)}<p class="no-tr">${esc(val)}</p></div>` : '';
     return `<div class="eq-parte">${titulo ? `<div class="eq-pt">${titulo}</div>` : ''}
       ${vacio ? '<div class="eq-vac">Tu fisio todavía no ha escrito el parte.</div>' : `
-      ${p.semaforo ? `<div class="eq-sm ${esc(p.semaforo)}"><i></i><b>${esc(SEM[p.semaforo] || '')}</b>${p.fase ? `<span>${esc(p.fase)}</span>` : ''}</div>` : ''}
-      ${p.vuelta ? `<div class="eq-vu"><span>Vuelta prevista</span><b>${esc(fe(p.vuelta))}</b></div>` : ''}
-      ${bloque('Qué le pasa', p.diagnostico)}${bloque('Qué puede hacer', p.puede)}${bloque('Qué no puede hacer', p.noPuede)}${bloque('Cómo empezar a entrenar', p.pautas)}
-      ${(p.evolucion || []).length ? `<div class="eq-bl"><span>Evolución</span><div class="eq-evo">${p.evolucion.map(e => `<div class="eq-ev"><i class="${esc(e.sem || '')}"></i><b>${esc(fe(e.f))}${e.fisio ? ' · <span class="no-tr">' + esc(e.fisio) + '</span>' : ''}</b>${[SEM[e.sem], e.fase].filter(Boolean).length ? `<small>${junta([SEM[e.sem], e.fase])}</small>` : ''}${e.txt ? `<p class="no-tr">${esc(e.txt)}</p>` : ''}</div>`).join('')}</div></div>` : ''}
+      ${p.semaforo ? `<div class="eqp-st ${esc(p.semaforo)}"><i></i><div><small>Estado</small><b>${esc(SEM[p.semaforo] || '')}</b></div>${p.fase ? `<span>${esc(p.fase)}</span>` : ''}</div>` : ''}
+      ${v ? `<div class="eqp-cd${v.n < 0 ? ' tarde' : ''}"><div class="eqp-cdt">${v.n > 0 ? `<b>${v.n}</b><span>${v.n === 1 ? 'día' : 'días'}</span>` : `<b class="eqp-cdh">${v.n === 0 ? 'Hoy' : '—'}</b>`}<div><small>${v.n < 0 ? 'Fecha de vuelta superada' : 'Vuelta prevista'}</small><em>${esc(fe(p.vuelta))}</em></div></div>
+        <div class="eqp-bar"><i style="width:${v.pct}%"></i></div>${v.ini ? `<div class="eqp-bl"><span>Desde el ${esc(fe(v.ini))}</span><span>${esc(fe(p.vuelta))}</span></div>` : ''}</div>`
+        : p.semaforo === 'verde' ? `<div class="eqp-cd ok"><div class="eqp-cdt"><b class="eqp-cdh">${ICP.ok}</b><div><small>Disponible</small><em>Puede jugar con normalidad</em></div></div></div>`
+        : p.semaforo ? `<div class="eqp-cd sin"><div class="eqp-cdt"><b class="eqp-cdh">${ICP.cal}</b><div><small>Vuelta prevista</small><em>Sin fecha todavía</em></div></div></div>` : ''}
+      ${pasos(p.fase)}
+      ${bloque(ICP.que, 'Qué le pasa', p.diagnostico)}
+      ${p.puede || p.noPuede ? `<div class="eqp-2">${bloque(ICP.si, 'Puede hacer', p.puede, 'si')}${bloque(ICP.no, 'No puede hacer', p.noPuede, 'no')}</div>` : ''}
+      ${bloque(ICP.plan, 'Plan de vuelta', p.pautas)}
       ${Array.isArray(p.ejercicios) && p.ejercicios.length ? verEjercicios(p.ejercicios) : ''}
-      ${p.actualizado ? `<div class="eq-act">Actualizado el ${esc(fe(p.actualizado))}${p.fisio ? ' por ' + esc(p.fisio) : ''}</div>` : ''}`}
+      ${(p.evolucion || []).length ? `<div class="eqp-b">${tit(ICP.evo, 'Evolución')}<div class="eq-evo">${p.evolucion.map(e => `<div class="eq-ev"><i class="${esc(e.sem || '')}"></i><b>${esc(fe(e.f))}${e.fisio ? ' · <span class="no-tr">' + esc(e.fisio) + '</span>' : ''}</b>${[SEM[e.sem], e.fase].filter(Boolean).length ? `<small>${junta([SEM[e.sem], e.fase])}</small>` : ''}${e.txt ? `<p class="no-tr">${esc(e.txt)}</p>` : ''}</div>`).join('')}</div></div>` : ''}
+      ${p.actualizado ? `<div class="eq-act">Actualizado el ${esc(fe(p.actualizado))}${p.fisio ? ' por <span class="no-tr">' + esc(p.fisio) + '</span>' : ''}</div>` : ''}
+      ${acciones ? `<div class="eqp-acc"><button type="button" class="eqp-sh">${ICP.share}<span>Compartir</span></button><button type="button" class="eqp-pdf">${ICP.pdf}<span>Descargar PDF</span></button></div>` : ''}`}
     </div>`;
+  }
+  // Texto para compartir (WhatsApp, cuerpo técnico…)
+  function textoParte(j) {
+    const v = vuelta(j), L = [`${j.jugador}${j.equipo ? ' · ' + j.equipo : ''}`, [SEM[j.semaforo], j.fase].filter(Boolean).join(' · ')];
+    if (v) L.push(`Vuelta prevista: ${fe(j.vuelta)} (${textoVuelta(v).toLowerCase()})`);
+    if (j.diagnostico) L.push('', 'Qué le pasa: ' + j.diagnostico);
+    if (j.puede) L.push('Puede hacer: ' + j.puede);
+    if (j.noPuede) L.push('No puede hacer: ' + j.noPuede);
+    if (j.pautas) L.push('Plan de vuelta: ' + j.pautas);
+    L.push('', `Parte de ${(window.CLINICA && window.CLINICA.marca) || 'FISIO365'}${j.actualizado ? ', actualizado el ' + fe(j.actualizado) : ''}`);
+    return L.filter(x => x != null).join('\n');
+  }
+  async function compartir(j) {
+    const t = textoParte(j);
+    try { if (navigator.share) { await navigator.share({ title: 'Parte de ' + j.jugador, text: t }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(t); window.toast && toast('Copiado: pégalo donde quieras'); } catch (e) { window.toast && toast('No se ha podido copiar', false); }
+  }
+  // PDF del parte, limpio y con la marca (jsPDF bajo demanda)
+  function jsPDFlib() {
+    if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+    return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; s.onload = () => window.jspdf ? ok(window.jspdf.jsPDF) : ko(); s.onerror = ko; document.head.appendChild(s); });
+  }
+  async function descargarPDF(j, club) {
+    let J; try { J = await jsPDFlib(); } catch (e) { window.toast && toast('No se ha podido preparar el PDF. Mira tu conexión.', false); return; }
+    const doc = new J({ unit: 'mm', format: 'a4' }), W = 210, M = 18, CO = [194, 85, 46], NE = [30, 30, 30], GR = [125, 112, 104];
+    const COL = { rojo: [214, 69, 69], amarillo: [232, 163, 58], verde: [58, 157, 93] };
+    let y = 20;
+    const CL = window.CLINICA || {}, marca = CL.marca || 'FISIO365';
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...NE);
+    if (marca === 'FISIO365') { doc.text('FISIO', M, y); doc.setTextColor(...CO); doc.text('365', M + doc.getTextWidth('FISIO'), y); } else doc.text(marca, M, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...GR); doc.text('Parte de recuperación para el club', W - M, y, { align: 'right' });
+    y += 5; doc.setDrawColor(234, 223, 214); doc.setLineWidth(.4); doc.line(M, y, W - M, y); y += 12;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(...NE); doc.text(j.jugador || '', M, y); y += 6.5;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.setTextColor(...GR); doc.text([j.equipo, club].filter(Boolean).join(' · '), M, y); y += 10;
+    if (j.semaforo) {
+      const c = COL[j.semaforo] || GR; doc.setFillColor(...c.map(x => Math.round(x + (255 - x) * .88))); doc.roundedRect(M, y, W - 2 * M, 16, 3, 3, 'F');
+      doc.setFillColor(...c); doc.circle(M + 7, y + 8, 2.2, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(...c.map(x => Math.round(x * .75))); doc.text(SEM[j.semaforo] || '', M + 13, y + 9.6);
+      if (j.fase) { doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.setTextColor(...GR); doc.text('Fase: ' + j.fase, W - M - 6, y + 9.6, { align: 'right' }); }
+      y += 23;
+    }
+    const v = vuelta(j);
+    if (j.vuelta || v) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...GR); doc.text('VUELTA PREVISTA', M, y); y += 5.5;
+      doc.setFontSize(13); doc.setTextColor(...NE); doc.text(fe(j.vuelta) + (v ? '  ·  ' + textoVuelta(v).toLowerCase() : ''), M, y); y += 4;
+      if (v) { doc.setFillColor(241, 235, 230); doc.roundedRect(M, y, W - 2 * M, 2.6, 1.3, 1.3, 'F'); doc.setFillColor(...CO); doc.roundedRect(M, y, Math.max(3, (W - 2 * M) * v.pct / 100), 2.6, 1.3, 1.3, 'F'); y += 6; }
+      y += 6;
+    }
+    const sec = (t, val) => { if (!val) return; if (y > 265) { doc.addPage(); y = 20; }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...CO); doc.text(t.toUpperCase(), M, y); y += 5.5;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(...NE);
+      doc.splitTextToSize(String(val), W - 2 * M).forEach(l => { if (y > 280) { doc.addPage(); y = 20; } doc.text(l, M, y); y += 5.4; }); y += 5; };
+    sec('Qué le pasa', j.diagnostico); sec('Puede hacer', j.puede); sec('No puede hacer', j.noPuede); sec('Plan de vuelta', j.pautas);
+    if (Array.isArray(j.ejercicios) && j.ejercicios.length) sec('Sus ejercicios', j.ejercicios.map(e => '• ' + e.name + (e.series > 1 && e.reps ? ` (${e.series} × ${e.reps})` : e.series > 1 && e.dur ? ` (${e.series} × ${e.dur} s)` : '')).join('\n'));
+    const ev = (j.evolucion || []).slice(0, 6);
+    if (ev.length) sec('Evolución', ev.map(e => `${fe(e.f)}${e.fisio ? ' · ' + e.fisio : ''} — ${[SEM[e.sem], e.fase].filter(Boolean).join(' · ')}${e.txt ? '\n' + e.txt : ''}`).join('\n\n'));
+    const pie = [`Actualizado el ${fe(j.actualizado)}${j.fisio ? ' por ' + j.fisio : ''}`, marca, CL.direccion || (marca === 'FISIO365' ? 'Gran de Sant Andreu 163, Barcelona' : ''), CL.tel || (marca === 'FISIO365' ? '672 89 39 49' : '')].filter(Boolean).join(' · ');
+    const n = doc.getNumberOfPages(); for (let k = 1; k <= n; k++) { doc.setPage(k); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...GR); doc.text(pie, W / 2, 288, { align: 'center' }); doc.text('Solo el parte deportivo: la historia clínica no se comparte.', W / 2, 292, { align: 'center' }); }
+    const nom = 'Parte ' + String(j.jugador || '').replace(/[^\p{L}\p{N} ]/gu, '').trim() + '.pdf';
+    const blob = doc.output('blob');
+    try { const f = new File([blob], nom, { type: 'application/pdf' }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Parte de ' + j.jugador }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nom; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
   }
 
   // ── Mi equipo (el entrenador) ──
@@ -157,21 +261,46 @@
     const j = S.jug && todos.find(x => x.id === S.jug);
     if (j) {
       box.innerHTML = `<button type="button" class="eq-back">${IC.atras}<span>Mi equipo</span></button>
-        <div class="eq-card"><div class="eq-ch"><span class="eq-dot ${esc(j.semaforo)}"></span><div><b class="no-tr">${esc(j.jugador)}</b><small class="no-tr">${esc([j.equipo, d.clubs.length > 1 ? j.club : ''].filter(Boolean).join(' · '))}</small></div></div>
-        ${verParte(j, '')}</div>
+        <div class="eq-card eqp"><div class="eqp-top"><div class="eqp-av ${esc(j.semaforo)}">${esc(iniciales(j.jugador))}</div><div><b class="no-tr">${esc(j.jugador)}</b><small class="no-tr">${esc([j.equipo, d.clubs.length > 1 ? j.club : ''].filter(Boolean).join(' · '))}</small></div></div>
+        ${verParte(j, '', true)}</div>
         <div class="eq-pt eq-rt">Racha de ejercicios</div><div class="eq-racha"></div>`;
       try { window.FisioRacha && FisioRacha.pintar(box.querySelector('.eq-racha'), j.racha || [], { quien: 'fisio', nombre: j.jugador }); } catch (e) {}
       box.querySelector('.eq-back').onclick = () => { S.jug = null; dibuja(); window.scrollTo(0, 0); };
+      { const b = box.querySelector('.eqp-sh'); if (b) b.onclick = () => compartir(j); }
+      { const b = box.querySelector('.eqp-pdf'); if (b) b.onclick = async () => { b.disabled = true; await descargarPDF(j, j.club); b.disabled = false; }; }
       return;
     }
     S.jug = null;
-    const cuenta = k => todos.filter(x => x.semaforo === k).length;
-    box.innerHTML = `${P() && (P().vista || P().demo) ? '' : avisosCard()}<div class="eq-res">${Object.keys(SEM).map(k => `<div class="eq-rk ${k}"><b>${cuenta(k)}</b><span>${SEM[k]}</span></div>`).join('')}</div>` +
-      d.clubs.map(c => `<div class="eq-club"><div class="eq-cn"><b class="no-tr">${esc(c.nombre)}</b>${c.deporte ? `<small class="no-tr">${esc(c.deporte)}</small>` : ''}</div>
-        ${c.jugadores.length ? porEquipo(c.jugadores).map(([eqn, L]) => `${eqn !== null ? `<div class="eq-tn no-tr">${esc(eqn || 'Sin equipo')}</div>` : ''}${L.map(x => `<button type="button" class="eq-ju" data-id="${x.id}"><span class="eq-dot ${esc(x.semaforo)}"></span><div><b class="no-tr">${esc(x.jugador)}</b><small>${junta([x.semaforo ? SEM[x.semaforo] : 'Sin parte todavía', x.vuelta ? 'vuelta prevista el ' + fe(x.vuelta) : ''])}</small>${x.equipo && eqn === null ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}<span class="eq-tags">${rachaChip(x.racha)}${Array.isArray(x.ejercicios) && x.ejercicios.length ? `<em class="eq-rch eq-ejc"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>${x.ejercicios.length === 1 ? '1 ejercicio' : x.ejercicios.length + ' ejercicios'}</span></em>` : ''}</span></div>${IC.flecha}</button>`).join('')}`).join('')
-        : '<div class="eq-vac">Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.</div>'}</div>`).join('');
+    // Filtros: equipo y estado
+    const equipos = [...new Set(todos.map(x => String(x.equipo || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+    if (S.feq && !equipos.includes(S.feq)) S.feq = '';
+    const enEq = todos.filter(x => !S.feq || String(x.equipo || '').trim() === S.feq);
+    const cuenta = k => enEq.filter(x => x.semaforo === k).length, tot = enEq.filter(x => x.semaforo).length;
+    const tile = (k, t) => `<button type="button" class="eqd-k ${k}${S.fsem === k ? ' on' : ''}" data-k="${k}"><b>${cuenta(k)}</b><span>${t}</span></button>`;
+    const disp = `<div class="eqd"><div class="eqd-h"><div><small>Hoy</small><b>Disponibilidad</b></div>${tot ? `<span>${cuenta('verde')}<em>/${tot}</em></span>` : ''}</div>
+      <div class="eqd-bar">${tot ? ['verde', 'amarillo', 'rojo'].map(k => cuenta(k) ? `<i class="${k}" style="flex:${cuenta(k)}"></i>` : '').join('') : '<i></i>'}</div>
+      <div class="eqd-ks">${tile('verde', 'Disponibles')}${tile('amarillo', 'Con limitaciones')}${tile('rojo', 'Bajas')}</div></div>`;
+    const chips = equipos.length > 1 ? `<div class="eqd-eqs">${['', ...equipos].map(e => `<button type="button" data-e="${esc(e)}" class="${(S.feq || '') === e ? 'on' : ''}${e ? ' no-tr' : ''}">${e ? esc(e) : 'Todos'}</button>`).join('')}</div>` : '';
+    const ve = x => (!S.feq || String(x.equipo || '').trim() === S.feq) && (!S.fsem || x.semaforo === S.fsem);
+    const orden = L => L.slice().sort((a, b) => ((ORDEN[a.semaforo] ?? 3) - (ORDEN[b.semaforo] ?? 3)) || String(a.vuelta || '9').localeCompare(String(b.vuelta || '9')) || a.jugador.localeCompare(b.jugador, 'es'));
+    const fila = (x, eqn) => { const v = vuelta(x);
+      return `<button type="button" class="eq-ju" data-id="${x.id}"><div class="eqp-av ${esc(x.semaforo)}">${esc(iniciales(x.jugador))}</div><div>
+        <div class="eqj-1"><b class="no-tr">${esc(x.jugador)}</b>${v ? `<em class="eqj-cd${v.n < 0 ? ' tarde' : ''}">${esc(textoVuelta(v))}</em>` : ''}</div>
+        <small class="eqj-st ${esc(x.semaforo)}">${x.semaforo ? esc(SEM[x.semaforo]) : 'Sin parte todavía'}${x.fase ? ' · ' + esc(x.fase) : ''}</small>
+        ${x.equipo && eqn === null && equipos.length > 1 ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}
+        ${v ? `<div class="eqj-bar"><i style="width:${v.pct}%"></i></div>` : ''}
+        <span class="eq-tags">${rachaChip(x.racha)}${Array.isArray(x.ejercicios) && x.ejercicios.length ? `<em class="eq-rch eq-ejc"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>${x.ejercicios.length === 1 ? '1 ejercicio' : x.ejercicios.length + ' ejercicios'}</span></em>` : ''}</span></div>${IC.flecha}</button>`; };
+    const lista = d.clubs.map(c => { const L = orden(c.jugadores.filter(ve));
+      return `<div class="eq-club"><div class="eq-cn"><b class="no-tr">${esc(c.nombre)}</b>${c.deporte ? `<small class="no-tr">${esc(c.deporte)}</small>` : ''}</div>
+        ${!c.jugadores.length ? '<div class="eq-vac">Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.</div>'
+          : !L.length ? '<div class="eq-vac">Nadie con este filtro.</div>'
+          : porEquipo(L).map(([eqn, G]) => `${eqn !== null && !S.feq ? `<div class="eq-tn no-tr">${esc(eqn || 'Sin equipo')}</div>` : ''}${G.map(x => fila(x, S.feq ? '' : eqn)).join('')}`).join('')}</div>`; }).join('');
+    box.innerHTML = `${P() && (P().vista || P().demo) ? '' : avisosCard()}${disp}${chips}${lista}`;
     box.querySelectorAll('.eq-ju').forEach(b => b.onclick = () => { S.jug = b.dataset.id; dibuja(); window.scrollTo(0, 0); });
+    box.querySelectorAll('.eqd-k').forEach(b => b.onclick = () => { S.fsem = S.fsem === b.dataset.k ? '' : b.dataset.k; dibuja(); });
+    box.querySelectorAll('.eqd-eqs button').forEach(b => b.onclick = () => { S.feq = b.dataset.e; dibuja(); });
     const av = box.querySelector('.eq-avb'); if (av) av.onclick = activarAvisos;
+    try { window.applyTranslations && applyTranslations(); } catch (e) {}
   }
   // Sin acceso: para qué es «Mi equipo», pedirlo por el chat o activarlo con la clave
   function explicar(box) {
@@ -273,8 +402,11 @@
         [{ f: d(-3) + 'T18:00:00', fisio: 'Sara', sem: 'verde', fase: 'Alta', txt: 'Alta deportiva. Sin dolor en los últimos entrenos.' }], dias(0, 2),
         [{ name: 'Sentadilla isométrica en pared', series: 3, dur: 30, desc: 'Antes de entrenar. Sin dolor en la rodilla.' }, { name: 'Estiramiento de cuádriceps', series: 2, dur: 30 }]),
       j('d4', 'Aleix Ferrer', 'Infantil B', 'amarillo', 'Vuelta progresiva', 'Contractura en el gemelo izquierdo.', d(2), 'Entrenar al 70 %.', 'Partido completo.', 'Estiramientos antes y después de entrenar.',
-        [{ f: d(-1) + 'T17:30:00', fisio: 'Juan', sem: 'amarillo', fase: 'Vuelta progresiva', txt: 'Mucho mejor. Puede entrenar con el grupo, sin forzar.' }], dias(4, 8),
-        [{ name: 'Elevación de talones excéntrica', series: 3, reps: 12, desc: 'Sube con las dos piernas y baja despacio solo con la izquierda.' }, { name: 'Estiramiento de gemelo en pared', series: 2, dur: 30 }])
+        [{ f: d(-1) + 'T17:30:00', fisio: 'Juan', sem: 'amarillo', fase: 'Vuelta progresiva', txt: 'Mucho mejor. Puede entrenar con el grupo, sin forzar.' }, { f: d(-8) + 'T17:30:00', fisio: 'Juan', sem: 'rojo', fase: 'Tratamiento', txt: 'Contractura en el gemelo. Descanso de carrera unos días.' }], dias(4, 8),
+        [{ name: 'Elevación de talones excéntrica', series: 3, reps: 12, desc: 'Sube con las dos piernas y baja despacio solo con la izquierda.' }, { name: 'Estiramiento de gemelo en pared', series: 2, dur: 30 }]),
+      j('d5', 'Hugo Martín', 'Infantil B', 'rojo', 'Valoración', 'Golpe en la rodilla izquierda. Estamos esperando la resonancia para saber el alcance.', '', 'Bici suave y trabajo de tren superior.', 'Correr, saltar y contacto.', 'Cuando tengamos la resonancia, os pasamos el plan y la fecha de vuelta.',
+        [{ f: d(-2) + 'T18:00:00', fisio: 'Sara', sem: 'rojo', fase: 'Valoración', txt: 'Valoración inicial. Rodilla estable, algo de derrame. Pedimos resonancia.' }], dias(0, 1),
+        [{ name: 'Activación de cuádriceps', series: 3, reps: 15, desc: 'Tumbado, apretando la rodilla contra una toalla.' }])
     ] }] };
   }
   // Vista previa desde el panel (?vista=…): la app como la ve un coordinador del club, sin tocar la sesión guardada
