@@ -11,7 +11,7 @@
     flecha: '<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>',
     atras: '<svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>'
   };
-  const S = { partes: [], equipo: null, cargado: false, jug: null, feq: '', fsem: '' };
+  const S = { partes: [], equipo: null, cargado: false, jug: null, feq: '', fsem: '', chat: null, msgs: null, poll: 0 };
   const get = (a, q) => fetch(`/api/schedule?action=${a}&${new URLSearchParams(q)}`).then(r => r.json());
   const post = (a, b) => fetch(`/api/schedule?action=${a}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }).then(r => r.json());
   const junta = L => L.filter(Boolean).map(x => `<span>${esc(x)}</span>`).join(' · ');
@@ -259,14 +259,19 @@
     const box = el('miEquipoBox'), d = S.equipo; if (!box || !d) return;
     const todos = d.clubs.flatMap(c => c.jugadores.map(j => Object.assign({ club: c.nombre }, j)));
     const j = S.jug && todos.find(x => x.id === S.jug);
+    clearInterval(S.poll);
+    if (j && S.chat === j.id) { dibujaChat(box, j); return; }
+    S.chat = null;
     if (j) {
       box.innerHTML = `<button type="button" class="eq-back">${IC.atras}<span>Mi equipo</span></button>
         <div class="eq-card eqp"><div class="eqp-top"><div class="eqp-av ${esc(j.semaforo)}">${esc(iniciales(j.jugador))}</div><div><b class="no-tr">${esc(j.jugador)}</b><small class="no-tr">${esc([j.equipo, d.clubs.length > 1 ? j.club : ''].filter(Boolean).join(' · '))}</small></div></div>
         ${verParte(j, '', true)}</div>
+        ${P() && P().vista ? '' : `<button type="button" class="eqc-card"><div class="eqp-av">${esc(iniciales(j.fisio || 'F'))}</div><div><b>Habla con su fisio</b><small>Dudas sobre su vuelta, cargas, partidos…</small></div>${j.sinLeer ? `<em>${j.sinLeer}</em>` : IC.flecha}</button>`}
         <div class="eq-pt eq-rt">Racha de ejercicios</div><div class="eq-racha"></div>`;
       try { window.FisioRacha && FisioRacha.pintar(box.querySelector('.eq-racha'), j.racha || [], { quien: 'fisio', nombre: j.jugador }); } catch (e) {}
       box.querySelector('.eq-back').onclick = () => { S.jug = null; dibuja(); window.scrollTo(0, 0); };
       { const b = box.querySelector('.eqp-sh'); if (b) b.onclick = () => compartir(j); }
+      { const b = box.querySelector('.eqc-card'); if (b) b.onclick = () => { S.chat = j.id; S.msgs = null; dibuja(); window.scrollTo(0, 0); }; }
       { const b = box.querySelector('.eqp-pdf'); if (b) b.onclick = async () => { b.disabled = true; await descargarPDF(j, j.club); b.disabled = false; }; }
       return;
     }
@@ -289,7 +294,7 @@
         <small class="eqj-st ${esc(x.semaforo)}">${x.semaforo ? esc(SEM[x.semaforo]) : 'Sin parte todavía'}${x.fase ? ' · ' + esc(x.fase) : ''}</small>
         ${x.equipo && eqn === null && equipos.length > 1 ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}
         ${v ? `<div class="eqj-bar"><i style="width:${v.pct}%"></i></div>` : ''}
-        <span class="eq-tags">${rachaChip(x.racha)}${Array.isArray(x.ejercicios) && x.ejercicios.length ? `<em class="eq-rch eq-ejc"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>${x.ejercicios.length === 1 ? '1 ejercicio' : x.ejercicios.length + ' ejercicios'}</span></em>` : ''}</span></div>${IC.flecha}</button>`; };
+        <span class="eq-tags">${x.sinLeer ? `<em class="eq-rch eqc-new"><svg viewBox="0 0 24 24"><path d="M4.5 5h15v10.5H10L5.5 19.5V15.5h-1z"/></svg><span>${x.sinLeer === 1 ? 'Mensaje de su fisio' : x.sinLeer + ' mensajes de su fisio'}</span></em>` : ''}${rachaChip(x.racha)}${Array.isArray(x.ejercicios) && x.ejercicios.length ? `<em class="eq-rch eq-ejc"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>${x.ejercicios.length === 1 ? '1 ejercicio' : x.ejercicios.length + ' ejercicios'}</span></em>` : ''}</span></div>${IC.flecha}</button>`; };
     const lista = d.clubs.map(c => { const L = orden(c.jugadores.filter(ve));
       return `<div class="eq-club"><div class="eq-cn"><b class="no-tr">${esc(c.nombre)}</b>${c.deporte ? `<small class="no-tr">${esc(c.deporte)}</small>` : ''}</div>
         ${!c.jugadores.length ? '<div class="eq-vac">Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.</div>'
@@ -300,6 +305,39 @@
     box.querySelectorAll('.eqd-k').forEach(b => b.onclick = () => { S.fsem = S.fsem === b.dataset.k ? '' : b.dataset.k; dibuja(); });
     box.querySelectorAll('.eqd-eqs button').forEach(b => b.onclick = () => { S.feq = b.dataset.e; dibuja(); });
     const av = box.querySelector('.eq-avb'); if (av) av.onclick = activarAvisos;
+    try { window.applyTranslations && applyTranslations(); } catch (e) {}
+  }
+  // ── Chat del entrenador con el fisio del jugador (el jugador no lo ve) ──
+  const hora = f => { const d = new Date(f); return isNaN(d) ? '' : `${fe(f)} · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  async function cargaChat(j, txt) {
+    if (P() && P().demo) { // ejemplo: conversación inventada, no se manda nada
+      if (!S.msgs) S.msgs = [{ f: new Date(Date.now() - 864e5).toISOString(), de: 'club', quien: 'Jordi', txt: '¿Puede jugar unos minutos el sábado?' }, { f: new Date(Date.now() - 8e7).toISOString(), de: 'fisio', quien: j.fisio || 'Sara', txt: 'Mejor que no: esta semana aún sin carrera. Si el jueves va bien, el siguiente partido ya podría jugar la segunda parte.' }];
+      if (txt) S.msgs.push({ f: new Date().toISOString(), de: 'club', quien: 'Tú', txt });
+      return true;
+    }
+    const acc = misAccesos(); if (!acc.length) return false;
+    const q = { id: j.id, a: acc.map(x => x.id).join(','), t: acc.map(x => x.tok).join(',') };
+    const d = await (txt ? post('eq-chat', Object.assign(q, { txt })) : get('eq-chat', q)).catch(() => null);
+    if (!d || !d.ok) { window.toast && toast((d && d.error) || 'No se ha podido cargar. Mira tu conexión.', false); return false; }
+    S.msgs = d.mensajes; j.sinLeer = 0; return true;
+  }
+  function dibujaChat(box, j) {
+    const pinta = () => {
+      const L = S.msgs || [], l = box.querySelector('.eqc-l'); if (!l) return;
+      l.innerHTML = S.msgs === null ? '<div class="eqc-v">Cargando…</div>' : L.length ? L.map(m => `<div class="eqc-m ${m.de === 'club' ? 'yo' : ''}"><p class="no-tr">${esc(m.txt)}</p><small><span class="no-tr">${esc(m.de === 'club' ? m.quien : (m.quien || j.fisio || ''))}</span> · ${esc(hora(m.f))}</small></div>`).join('') : '<div class="eqc-v">Escribe lo que necesites saber: si puede jugar el fin de semana, qué cargas puede hacer, cómo lo ves en los entrenos…</div>';
+      l.scrollTop = l.scrollHeight;
+    };
+    box.innerHTML = `<button type="button" class="eq-back">${IC.atras}<span class="no-tr">${esc(j.jugador)}</span></button>
+      <div class="eq-card eqc"><div class="eqc-h"><div class="eqp-av">${esc(iniciales(j.fisio || 'F'))}</div><div><b>${j.fisio ? `<span class="no-tr">${esc(j.fisio)}</span>` : 'Su fisio'}</b><small>Lleva su recuperación</small></div></div>
+      <div class="eqc-nota">Solo lo veis su fisio y el club: el jugador no. Habla de su recuperación y de la vuelta; la historia clínica no se comparte.</div>
+      <div class="eqc-l"></div>
+      <div class="eqc-in"><textarea rows="1" placeholder="Escribe un mensaje…"></textarea><button type="button" aria-label="Enviar"><svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button></div></div>`;
+    box.querySelector('.eq-back').onclick = () => { S.chat = null; dibuja(); window.scrollTo(0, 0); };
+    const t = box.querySelector('.eqc-in textarea'), b = box.querySelector('.eqc-in button');
+    t.oninput = () => { t.style.height = 'auto'; t.style.height = Math.min(120, t.scrollHeight) + 'px'; };
+    b.onclick = async () => { const v = t.value.trim(); if (!v) return; b.disabled = true; if (await cargaChat(j, v)) { t.value = ''; t.style.height = ''; pinta(); } b.disabled = false; };
+    pinta(); cargaChat(j).then(pinta);
+    if (!(P() && P().demo)) S.poll = setInterval(() => { if (!box.querySelector('.eqc-l') || document.hidden) return; cargaChat(j).then(pinta); }, 15000);
     try { window.applyTranslations && applyTranslations(); } catch (e) {}
   }
   // Sin acceso: para qué es «Mi equipo», pedirlo por el chat o activarlo con la clave
@@ -378,7 +416,7 @@
     { const n = el('navMiEquipo'); if (n) n.style.display = 'flex'; }
     try { window.applyTranslations && applyTranslations(); } catch (e) {}
     const u = new URL(location.href), p0 = u.searchParams.get('p');
-    if (p0) { S.jug = p0; history.replaceState(null, '', location.pathname); }
+    if (p0) { S.jug = p0; S.chat = u.searchParams.get('chat') === '1' ? p0 : null; history.replaceState(null, '', location.pathname); }
     window.showSection('miequipo');
   }
   function salir() {
@@ -419,5 +457,5 @@
     b.querySelector('button').onclick = () => { if (window.opener) window.close(); location.href = '/'; };
     iniciarSoloEquipo(); return true;
   }
-  window.EQA = { vistaPrevia, cargar, pintarClub, pintarEquipo, iniciarSoloEquipo, salir, abrirJugador: id => { S.jug = id; } };
+  window.EQA = { vistaPrevia, cargar, pintarClub, pintarEquipo, iniciarSoloEquipo, salir, abrirJugador: (id, chat) => { S.jug = id; S.chat = chat ? id : null; S.msgs = null; } };
 })();

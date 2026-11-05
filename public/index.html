@@ -754,9 +754,15 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .eqp-b.si,.eqp-b.no{background:#faf7f4}.eqp-b.si svg,.eqp-b.no svg{stroke:#c2552e}
 .eq-ev i.verde{background:var(--eqv)}.eq-ev i.amarillo{background:var(--eqa)}.eq-ev i.rojo{background:var(--eqr)}
 .eq-ejc{background:#f4efea;color:#5c4f47}
+.eqc-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:var(--font);background:#fff;border:1.5px solid #f0dfd5;border-radius:20px;padding:14px;margin:0 0 14px;cursor:pointer;color:inherit;box-shadow:var(--sombra)}.eqc-card>div:not(.eqp-av){flex:1;min-width:0}.eqc-card b{display:block;font-size:15px}.eqc-card small{display:block;font-size:12.5px;color:var(--muted);line-height:1.4}.eqc-card>svg{width:18px;height:18px;fill:none;stroke:#c9bfb6;stroke-width:2;flex:none}.eqc-card em{flex:none;font-style:normal;font-size:12px;font-weight:700;color:#fff;background:#c2552e;border-radius:99px;min-width:22px;text-align:center;padding:3px 7px}.eqc-card .eqp-av::after,.eqc .eqp-av::after{display:none}.eqc-card .eqp-av,.eqc .eqp-av{background:#fbeee7;color:#c2552e}
+.eqc{display:flex;flex-direction:column;min-height:calc(100vh - 260px)}.eqc-h{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid #f1ede9}.eqc-h b{display:block;font-size:16px}.eqc-h small{display:block;font-size:12.5px;color:var(--muted)}
+.eqc-nota{font-size:11.5px;line-height:1.45;color:#9a8d84;background:#faf7f4;border-radius:12px;padding:8px 10px;margin:12px 0}
+.eqc-l{flex:1;display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:52vh;padding:2px 0 10px}.eqc-m{align-self:flex-start;max-width:85%;background:#f4efea;border-radius:16px 16px 16px 4px;padding:9px 12px}.eqc-m.yo{align-self:flex-end;background:#c2552e;color:#fff;border-radius:16px 16px 4px 16px}.eqc-m p{margin:0;font-size:14px;line-height:1.45;white-space:pre-wrap}.eqc-m small{display:block;font-size:10.5px;opacity:.65;margin-top:3px}.eqc-v{font-size:13px;line-height:1.5;color:var(--muted);text-align:center;padding:24px 10px}
+.eqc-in{display:flex;gap:8px;align-items:flex-end;border-top:1px solid #f1ede9;padding-top:10px}.eqc-in textarea{flex:1;min-width:0;box-sizing:border-box;font-family:var(--font);font-size:14px;line-height:1.4;padding:11px 14px;border:1.5px solid var(--border);border-radius:22px;resize:none;background:#fff;min-height:44px}.eqc-in textarea:focus{outline:none;border-color:#c2552e}.eqc-in button{flex:none;width:44px;height:44px;border-radius:50%;border:none;background:#c2552e;display:flex;align-items:center;justify-content:center;cursor:pointer}.eqc-in button svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.eqc-in button:disabled{opacity:.6}
+.eqc-new{background:#c2552e!important;color:#fff!important}.eqc-new svg{fill:none;stroke:currentColor}
 body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head span{display:none!important}body.solo-equipo .nm-head{pointer-events:none}body.solo-equipo .nav-menu-inner .nav-item:not(#navMiEquipo){display:none!important}
 </style>
-<script src="/i18n.js?v=2"></script>
+<script src="/i18n.js?v=3"></script>
 <script src="/visor.js?v=1"></script>
 </head>
 <body>
@@ -1595,7 +1601,7 @@ function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'
 
 
 // Abrir la sección que indica el aviso (?s=mensajes|citas|hoy…)
-function abrirDesdeAviso(url){try{const u=new URL(url,location.origin);const sec=u.searchParams.get('s');if(!sec||!patient)return;const m={mensajes:'mensajes',chat:'mensajes',citas:'citas',hoy:'hoy',racha:'progreso',informes:'informes',miclub:'miclub',miequipo:'miequipo'}[sec];if(sec==='miequipo'&&u.searchParams.get('p'))EQA.abrirJugador(u.searchParams.get('p'));if(m)showSection(m);if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});history.replaceState(null,'',location.pathname);}catch(e){}}
+function abrirDesdeAviso(url){try{const u=new URL(url,location.origin);const sec=u.searchParams.get('s');if(!sec||!patient)return;const m={mensajes:'mensajes',chat:'mensajes',citas:'citas',hoy:'hoy',racha:'progreso',informes:'informes',miclub:'miclub',miequipo:'miequipo'}[sec];if(sec==='miequipo'&&u.searchParams.get('p'))EQA.abrirJugador(u.searchParams.get('p'),u.searchParams.get('chat')==='1');if(m)showSection(m);if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});history.replaceState(null,'',location.pathname);}catch(e){}}
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='ABRIR')abrirDesdeAviso(e.data.url);});
 // ── Promociones ───────────────────────────────────────────────
 // Para añadir una promo: copia un bloque, cambia los textos y sube los cambios.
@@ -1729,7 +1735,7 @@ async function loadPuntos(){
 <script src="/avisos.js"></script>
 <script src="/chat-ui.js?v=2"></script>
 <script src="/racha-ui.js"></script>
-<script src="/equipo.js?v=4"></script>
+<script src="/equipo.js?v=5"></script>
 
 <div id="reservaSheet">
  <div class="rv-top"><button onclick="cerrarReserva()" aria-label="Cerrar">‹</button><b>Reservar cita</b></div>

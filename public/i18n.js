@@ -4,6 +4,38 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Habla con su fisio": [
+"Parla amb el seu fisio",
+"Talk to their physio"
+],
+"Dudas sobre su vuelta, cargas, partidos…": [
+"Dubtes sobre la tornada, càrregues, partits…",
+"Questions about their return, training load, matches…"
+],
+"Su fisio": [
+"El seu fisio",
+"Their physio"
+],
+"Lleva su recuperación": [
+"Porta la seva recuperació",
+"Handles their recovery"
+],
+"Solo lo veis su fisio y el club: el jugador no. Habla de su recuperación y de la vuelta; la historia clínica no se comparte.": [
+"Només ho veieu el seu fisio i el club: el jugador no. Parla de la recuperació i de la tornada; la història clínica no es comparteix.",
+"Only their physio and the club see this, not the player. Talk about recovery and return; the medical record is not shared."
+],
+"Escribe lo que necesites saber: si puede jugar el fin de semana, qué cargas puede hacer, cómo lo ves en los entrenos…": [
+"Escriu el que necessitis saber: si pot jugar el cap de setmana, quines càrregues pot fer, com el veus als entrenaments…",
+"Write whatever you need to know: whether they can play at the weekend, what load they can take, how they look in training…"
+],
+"Mensaje de su fisio": [
+"Missatge del seu fisio",
+"Message from their physio"
+],
+"{} mensajes de su fisio": [
+"{} missatges del seu fisio",
+"{} messages from their physio"
+],
 "Disponibilidad": [
 "Disponibilitat",
 "Availability"

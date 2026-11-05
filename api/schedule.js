@@ -500,9 +500,13 @@ const EQ_FASES = ['Valoración', 'Tratamiento', 'Readaptación', 'Vuelta progres
 const eqTexto = club => `Acepto que FISIO365 comparta con ${club || 'mi club'} (sus entrenadores y coordinadores con acceso a «Mi equipo») el parte de mi recuperación: el diagnóstico explicado de forma sencilla, la fase en la que estoy, la previsión de vuelta, qué puedo y qué no puedo hacer, cómo volver a entrenar, cómo evoluciono, mi racha (los días que hago mis ejercicios) y, si mi fisio lo activa, mis ejercicios. Mi historia clínica no se comparte. Puedo dejar de compartirlo cuando quiera desde la app.`;
 const eqEvo = F => { try { const v = JSON.parse(F['EVOLUCIÓN'] || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
 const eqEsc = s => String(s || '').replace(/\\/g, '').replace(/'/g, "\\'");
-function eqParte(r) { const F = r.fields || {}; return { id: r.id, pacienteId: F['PACIENTE'] || '', jugador: F['JUGADOR'] || '', club: F['CLUB'] || '', equipo: F['EQUIPO'] || '', activo: !!F['ACTIVO'], consentimiento: F['CONSENTIMIENTO'] || 'Pendiente', consFecha: F['CONS FECHA'] || '', consQuien: F['CONS QUIÉN'] || '', menor: !!F['MENOR'], semaforo: F['SEMÁFORO'] || '', fase: F['FASE'] || '', diagnostico: F['DIAGNÓSTICO'] || '', vuelta: F['VUELTA'] || '', puede: F['PUEDE'] || '', noPuede: F['NO PUEDE'] || '', pautas: F['PAUTAS'] || '', evolucion: eqEvo(F), actualizado: F['ACTUALIZADO'] || '', fisio: F['FISIO'] || '', ejercicios: !!F['EJERCICIOS'], creado: F['CREADO'] || r.createdTime || '' }; }
+function eqParte(r) { const F = r.fields || {}; return { id: r.id, pacienteId: F['PACIENTE'] || '', jugador: F['JUGADOR'] || '', club: F['CLUB'] || '', equipo: F['EQUIPO'] || '', activo: !!F['ACTIVO'], consentimiento: F['CONSENTIMIENTO'] || 'Pendiente', consFecha: F['CONS FECHA'] || '', consQuien: F['CONS QUIÉN'] || '', menor: !!F['MENOR'], semaforo: F['SEMÁFORO'] || '', fase: F['FASE'] || '', diagnostico: F['DIAGNÓSTICO'] || '', vuelta: F['VUELTA'] || '', puede: F['PUEDE'] || '', noPuede: F['NO PUEDE'] || '', pautas: F['PAUTAS'] || '', evolucion: eqEvo(F), actualizado: F['ACTUALIZADO'] || '', fisio: F['FISIO'] || '', ejercicios: !!F['EJERCICIOS'], creado: F['CREADO'] || r.createdTime || '', mensajes: eqMsgs(F), sinLeer: eqMsgs(F).filter(m => m.de === 'club' && m.f > (F['LEÍDO FISIO'] || '')).length }; }
+// Mensajes entre el entrenador y el fisio del jugador (el jugador no los ve): [{ f, de: 'club'|'fisio', quien, txt }]
+function eqMsgs(F) { try { const L = JSON.parse(F['MENSAJES'] || '[]'); return Array.isArray(L) ? L : []; } catch (e) { return []; } }
 // Lo que ve el entrenador: solo el parte (sin datos del consentimiento ni ids de la clínica)
-const eqParteClub = r => { const p = eqParte(r); return { compEj: p.ejercicios, id: p.id, jugador: p.jugador, equipo: p.equipo, semaforo: p.semaforo, fase: p.fase, diagnostico: p.diagnostico, vuelta: p.vuelta, puede: p.puede, noPuede: p.noPuede, pautas: p.pautas, evolucion: p.evolucion.map(e => ({ f: e.f, fisio: String(e.fisio || '').split(' ')[0], txt: e.txt || '', sem: e.sem || '', fase: e.fase || '' })), actualizado: p.actualizado, fisio: String(p.fisio || '').split(' ')[0] }; };
+const eqParteClub = r => { const p = eqParte(r); return { compEj: p.ejercicios, id: p.id, jugador: p.jugador, equipo: p.equipo, semaforo: p.semaforo, fase: p.fase, diagnostico: p.diagnostico, vuelta: p.vuelta, puede: p.puede, noPuede: p.noPuede, pautas: p.pautas, evolucion: p.evolucion.map(e => ({ f: e.f, fisio: String(e.fisio || '').split(' ')[0], txt: e.txt || '', sem: e.sem || '', fase: e.fase || '' })), actualizado: p.actualizado, fisio: String(p.fisio || '').split(' ')[0], mensajes: p.mensajes.map(m => ({ f: m.f, de: m.de, quien: String(m.quien || '').split(' ')[0], txt: m.txt })), sinLeer: p.mensajes.filter(m => m.de === 'fisio' && m.f > ((r.fields || {})['LEÍDO CLUB'] || '')).length }; };
+// Lo que ve el propio jugador en «Mi club»: lo mismo que el club, sin los mensajes entre el entrenador y el fisio
+const eqParteJugador = r => { const p = eqParteClub(r); delete p.mensajes; delete p.sinLeer; return p; };
 // Equipos de un club: cada acceso puede ver solo sus equipos (EQUIPOS, uno por línea); vacío = todo el club (coordinador)
 const eqNorm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 const eqEquiposAcc = F => String((F || {})['EQUIPOS'] || '').split('\n').map(x => x.trim()).filter(Boolean);
@@ -511,6 +515,15 @@ const eqUnicos = L => { const m = new Map(); L.map(x => String(x || '').trim()).
 function eqAcc(r) { const F = r.fields || {}; return { id: r.id, nombre: F['NOMBRE'] || '', email: F['EMAIL'] || '', telf: F['TELF'] || '', pin: F['PIN'] || '', club: F['CLUB'] || '', rol: F['ROL'] || '', equipos: eqEquiposAcc(F), activo: !!F['ACTIVO'], ultimo: F['ÚLTIMO ACCESO'] || '', creado: F['CREADO'] || r.createdTime || '', avisos: !!F['PushSubscription'] }; }
 const eqAccesosClub = club => capTodos(EQ.acc, `filterByFormula=${encodeURIComponent(`{CLUB}='${eqEsc(club)}'`)}`);
 const eqPartes = f => capTodos(EQ.par, `filterByFormula=${encodeURIComponent(f)}`);
+// Aviso al fisio que lleva el parte (el último que lo ha actualizado); si no hay, a dirección
+async function eqAvisarFisio(F, datos) {
+  const { avisar } = require('./_push');
+  const fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}`).catch(() => ({})), recs = fl.records || [];
+  const n1 = x => String(x || '').trim().split(/\s+/)[0].toLowerCase(), suyo = n1(F['FISIO']);
+  let ids = suyo ? recs.filter(x => n1(x.fields.Name) === suyo).map(x => x.id) : [];
+  if (!ids.length) ids = recs.filter(x => !!x.fields['DIRECCIÓN']).map(x => x.id);
+  await Promise.all(ids.map(id => avisar('fisio', id, datos).catch(() => false)));
+}
 async function eqAvisarClub(club, datos, equipo) {
   const { avisar } = require('./_push');
   const L = (await eqAccesosClub(club).catch(() => [])).filter(a => a.fields['ACTIVO'] && a.fields['PushSubscription'] && eqVeEquipo(a.fields, equipo));
@@ -4809,6 +4822,13 @@ module.exports = async function handler(req, res) {
           const exp = Date.now() + 3600e3;
           return res.status(200).json({ ok: true, url: `/?vista=${q.club}.${exp}.${EQX.firmaVista(q.club, exp)}` });
         }
+        if (action === 'seg-eq-sinleer') { // jugadores con mensajes del club sin leer
+          const pars = (await eqPartes('{ACTIVO}').catch(() => [])).filter(r => r.fields['MENSAJES']);
+          const L = pars.map(eqParte).filter(p => p.sinLeer).map(p => ({ id: p.id, pacienteId: p.pacienteId, jugador: p.jugador, sinLeer: p.sinLeer, ultimo: p.mensajes[p.mensajes.length - 1] || null }));
+          const cl = await eqNombresClubs([...new Set(pars.map(r => r.fields['CLUB']))]).catch(() => ({}));
+          L.forEach(x => { const r = pars.find(z => z.id === x.id); x.club = ((cl[r.fields['CLUB']] || {}).nombre) || ''; });
+          return res.status(200).json({ ok: true, items: L });
+        }
         if (action === 'seg-eq-ficha') {
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const [pars, accs, cls, todas] = await Promise.all([eqPartes(`AND({PACIENTE}='${q.id}',{ACTIVO})`), capTodos(EQ.acc, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPOS`), capTodos(CAP.club, 'fields[]=NOMBRE&fields[]=DEPORTE&fields[]=EQUIPOS'), capTodos(EQ.par, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPO`)]);
@@ -4896,6 +4916,21 @@ module.exports = async function handler(req, res) {
           if (q.si) NJ[q.id] = new Date().toISOString().slice(0, 10); else delete NJ[q.id];
           await guardarAjuste('eq-no-juega', NJ, '');
           return res.status(200).json({ ok: true });
+        }
+        if (action === 'seg-eq-msg' || action === 'seg-eq-leido') { // el fisio contesta al entrenador / lo ha leído
+          if (!okId(q.id)) return res.status(400).json({ ok: false });
+          const r = await at(`${EQ.par}/${q.id}`); if (!r || r.error) return res.status(404).json({ ok: false, error: 'No encontrado' });
+          const F = r.fields || {}, f = { 'LEÍDO FISIO': ahoraI };
+          const txt = String(q.txt || '').trim().slice(0, 1500);
+          if (action === 'seg-eq-msg') {
+            if (!txt) return res.status(400).json({ ok: false, error: 'Escribe el mensaje' });
+            if (F['CONSENTIMIENTO'] !== 'Aceptado' || !F['ACTIVO']) return res.status(200).json({ ok: false, error: 'El jugador ya no comparte su parte con el club' });
+            const L = eqMsgs(F); L.push({ f: ahoraI, de: 'fisio', quien, txt }); f['MENSAJES'] = JSON.stringify(L.slice(-300));
+          }
+          const d = await at(`${EQ.par}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
+          if (!d || d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
+          if (action === 'seg-eq-msg') await eqAvisarClub(F['CLUB'], { title: `${String(quien).split(' ')[0] || 'Su fisio'} · ${String(F['JUGADOR'] || '').trim().split(/\s+/)[0]}`, body: txt.slice(0, 140), url: `/?s=miequipo&p=${q.id}&chat=1`, tag: 'eqc-' + q.id }, F['EQUIPO'] || '').catch(() => 0);
+          return res.status(200).json({ ok: true, parte: eqParte(d) });
         }
         if (action === 'seg-eq-quitar') { // ya no juega en ese club (o se vinculó por error): deja de verse en el club
           if (!okId(q.id)) return res.status(400).json({ ok: false });
@@ -6919,7 +6954,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const pars = await eqPartes(`AND({PACIENTE}='${pid}',{ACTIVO})`);
         const nom = await eqNombresClubs(pars.map(r => r.fields['CLUB']));
         return res.status(200).json({ ok: true,
-          partes: pars.filter(r => nom[r.fields['CLUB']]).map(r => { const x = eqParte(r), cn = nom[x.club].nombre; return { id: x.id, club: cn, equipo: x.equipo, consentimiento: x.consentimiento, consFecha: x.consFecha, consQuien: x.consQuien, menor: x.menor, texto: eqTexto(cn), parte: eqParteClub(r) }; }) });
+          partes: pars.filter(r => nom[r.fields['CLUB']]).map(r => { const x = eqParte(r), cn = nom[x.club].nombre; return { id: x.id, club: cn, equipo: x.equipo, consentimiento: x.consentimiento, consFecha: x.consFecha, consQuien: x.consQuien, menor: x.menor, texto: eqTexto(cn), parte: eqParteJugador(r) }; }) });
       }
       if (req.method !== 'POST' || !EQX.okId(b.id)) return res.status(400).json({ ok: false });
       const r = await at(`${EQ.par}/${b.id}`); const F = (r && r.fields) || {};
@@ -6936,7 +6971,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (!d || d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
       if (acepta && F['CONSENTIMIENTO'] !== 'Aceptado') await eqAvisarClub(F['CLUB'], { title: cn, body: `${String(F['JUGADOR'] || '').trim().split(/\s+/)[0] || 'Un jugador'} ya comparte su parte contigo`, url: `/?s=miequipo&p=${b.id}`, tag: 'eqp-' + b.id }, F['EQUIPO']).catch(() => 0);
       const x = eqParte(d);
-      return res.status(200).json({ ok: true, parte: { id: x.id, club: cn, equipo: x.equipo, consentimiento: x.consentimiento, consFecha: x.consFecha, consQuien: x.consQuien, menor: x.menor, texto: eqTexto(cn), parte: eqParteClub(d) } });
+      return res.status(200).json({ ok: true, parte: { id: x.id, club: cn, equipo: x.equipo, consentimiento: x.consentimiento, consFecha: x.consFecha, consQuien: x.consQuien, menor: x.menor, texto: eqTexto(cn), parte: eqParteJugador(d) } });
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
   }
   // Un paciente que también es entrenador activa «Mi equipo» en su cuenta con la clave que le dio la clínica
@@ -6955,6 +6990,26 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (!accs.length) { INT[pid] = { t: (INT[pid] || {}).t || ahora, n: ((INT[pid] || {}).n || 0) + 1 }; await guardarAjuste('eq-clave-intentos', INT, ''); return res.status(200).json({ ok: false, error: 'Esa clave no es correcta. Comprueba que en la clínica tienen tu mismo email o móvil.' }); }
       const nom = await eqNombresClubs(accs.map(a => a.fields['CLUB']));
       return res.status(200).json({ ok: true, equipo: accs.filter(a => nom[a.fields['CLUB']]).map(a => ({ id: a.id, tok: EQX.firmaEq(a.id, a.fields['PIN']), club: a.fields['CLUB'], clubNombre: nom[a.fields['CLUB']].nombre, rol: a.fields['ROL'] || '' })) });
+    } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
+  }
+  if (action === 'eq-chat') { // el entrenador habla con el fisio de un jugador (el jugador no lo ve)
+    const b = req.method === 'POST' ? (req.body || {}) : req.query, pid = String(b.id || '');
+    const ids = String(b.a || '').split(',').slice(0, 10), toks = String(b.t || '').split(',');
+    const mios = ids.map((id, i) => ({ id, tok: toks[i] })).filter(x => EQX.okFormato(x.id, x.tok));
+    if (!EQX.okId(pid) || !mios.length) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    try {
+      const accs = (await Promise.all(mios.map(x => at(`${EQ.acc}/${x.id}`).then(a => a && a.fields && a.fields['ACTIVO'] && EQX.okTok(x.id, x.tok, a.fields['PIN']) ? a : null).catch(() => null)))).filter(Boolean);
+      const r = await at(`${EQ.par}/${pid}`); if (!r || r.error) return res.status(404).json({ ok: false });
+      const F = r.fields || {}, acc = accs.find(a => a.fields['CLUB'] === F['CLUB'] && eqVeEquipo(a.fields, F['EQUIPO']));
+      if (!acc || !F['ACTIVO'] || F['CONSENTIMIENTO'] !== 'Aceptado') return res.status(403).json({ ok: false, error: 'Ya no puedes ver a este jugador' });
+      const ahoraI = new Date().toISOString(), f = { 'LEÍDO CLUB': ahoraI }, L = eqMsgs(F);
+      if (req.method === 'POST') {
+        const txt = String(b.txt || '').trim().slice(0, 1500); if (!txt) return res.status(400).json({ ok: false, error: 'Escribe el mensaje' });
+        L.push({ f: ahoraI, de: 'club', quien: String(acc.fields['NOMBRE'] || 'Entrenador').trim(), txt }); f['MENSAJES'] = JSON.stringify(L.slice(-300));
+      }
+      await at(`${EQ.par}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
+      if (req.method === 'POST') { const jug = String(F['JUGADOR'] || '').trim(); await eqAvisarFisio(F, { title: `💬 ${String(acc.fields['NOMBRE'] || 'Su entrenador').trim().split(/\s+/)[0]} (entrenador de ${jug.split(/\s+/)[0]})`, body: String(b.txt || '').trim().slice(0, 140), url: `/fisio?s=eqchat&p=${F['PACIENTE'] || ''}`, tag: 'eqcf-' + pid }).catch(() => {}); }
+      return res.status(200).json({ ok: true, fisio: String(F['FISIO'] || '').trim().split(/\s+/)[0], mensajes: L.map(m => ({ f: m.f, de: m.de, quien: String(m.quien || '').split(' ')[0], txt: m.txt })) });
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
   }
   if (action === 'eq-equipo') { // lo que ve el entrenador: sus clubs y los partes de quien lo comparte

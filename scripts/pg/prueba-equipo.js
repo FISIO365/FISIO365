@@ -60,6 +60,22 @@
   ver('el entrenador no ve datos del consentimiento ni ids', j0 && !('pacienteId' in j0) && !('consQuien' in j0) && !JSON.stringify(r.j).includes(PAC), j0);
   r = await llamar(S, { action: 'seg-eq-parte', pwd, id: parte.id, quien: 'Sara Arcusa', campos: { semaforo: 'amarillo', fase: 'Readaptación', nota: 'Ya corre sin dolor' } }, 'POST');
   ver('actualizar parte (compartido)', r.j.ok && r.j.compartido && r.j.parte.evolucion.length === 2, r.j);
+  // Chat entrenador ↔ fisio (el jugador no lo ve)
+  r = await llamar(S, { action: 'eq-chat', id: parte.id, ...qa, txt: '¿Puede jugar el sábado?' }, 'POST');
+  ver('el entrenador escribe al fisio', r.j.ok && r.j.mensajes.length === 1 && r.j.mensajes[0].de === 'club' && r.j.fisio === 'Sara', r.j);
+  r = await llamar(S, { action: 'eq-chat', id: parte.id, a: qa.a, t: 'x'.repeat(16), txt: 'hola' }, 'POST');
+  ver('chat con firma falsa', r.st === 401 || !r.j.ok, r);
+  r = await llamar(S, { action: 'seg-eq-sinleer', pwd });
+  ver('panel: mensaje sin leer', r.j.ok && r.j.items.length === 1 && r.j.items[0].sinLeer === 1 && r.j.items[0].pacienteId === PAC, r.j);
+  r = await llamar(S, { action: 'seg-eq-msg', pwd, id: parte.id, quien: 'Sara Arcusa', txt: 'Mejor la semana que viene' }, 'POST');
+  ver('el fisio contesta (y queda leído)', r.j.ok && r.j.parte.mensajes.length === 2 && r.j.parte.sinLeer === 0, r.j);
+  r = await llamar(S, { action: 'eq-equipo', ...qa });
+  ver('el entrenador ve el mensaje nuevo', r.j.ok && r.j.clubs[0].jugadores[0].sinLeer === 1 && r.j.clubs[0].jugadores[0].mensajes[1].quien === 'Sara', r.j.clubs && r.j.clubs[0].jugadores[0]);
+  r = await llamar(S, { action: 'eq-chat', id: parte.id, ...qa });
+  r = await llamar(S, { action: 'eq-equipo', ...qa });
+  ver('al abrir el chat queda leído', r.j.ok && r.j.clubs[0].jugadores[0].sinLeer === 0, r.j.clubs && r.j.clubs[0].jugadores[0]);
+  r = await llamar(S, { action: 'eq-mio', patientId: PAC });
+  ver('el jugador no ve los mensajes', r.j.ok && !JSON.stringify(r.j).includes('sábado'), r.j);
   r = await llamar(S, { action: 'seg-eq-club', pwd, club: CLUB });
   ver('panel: accesos y jugadores del club', r.j.ok && r.j.accesos.length === 1 && r.j.jugadores.length === 1, r.j);
   r = await llamar(S, { action: 'seg-eq-ficha', pwd, id: PAC });
