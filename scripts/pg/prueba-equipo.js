@@ -107,6 +107,18 @@
   ver('lista de equipos del club', r.j.ok && r.j.equipos.join('|') === 'Infantil B|Juvenil A', r.j.equipos);
   r = await llamar(S, { action: 'eq-mio', patientId: 'recPacPrueba00001' });
   ver('el jugador ve su parte aunque no lo comparta', r.j.ok && r.j.partes[0].consentimiento === 'Retirado' && r.j.partes[0].parte.diagnostico.includes('Esguince'), r.j);
+  // Paciente que también es entrenador: activa Mi equipo con la clave (mismo email)
+  await ins('tbldBVgClS4HY2mOJ', 'recPacPrueba00006', { 'FULL NAME': 'Ent A Paciente', PIN: '6666', EMAIL: 'enta@c.com' });
+  r = await llamar(S, { action: 'eq-clave', patientId: 'recPacPrueba00006', clave: '0000' }, 'POST');
+  ver('clave mala', !r.j.ok, r.j);
+  r = await llamar(S, { action: 'eq-clave', patientId: 'recPacPrueba00006', clave: ent.pin }, 'POST');
+  ver('activa Mi equipo con su clave', r.j.ok && r.j.equipo.length === 1, r.j);
+  r = await llamar(S, { action: 'eq-clave', patientId: 'recPacPrueba00005', clave: ent.pin }, 'POST');
+  ver('otro paciente con la misma clave no', !r.j.ok, r.j);
+  // Editar solo el email: el móvil se queda
+  const t1 = (await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB2, campos: { nombre: 'Tel', telf: '611000111' } }, 'POST')).j.acceso;
+  r = await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB2, id: t1.id, campos: { nombre: 'Tel', email: 'tel@c.com' } }, 'POST');
+  ver('editar email conserva el móvil', r.j.ok && r.j.acceso.telf === '611000111' && r.j.acceso.email === 'tel@c.com', r.j);
   console.log(fallos ? `\n${fallos} FALLOS` : '\nTodo bien');
   process.exit(fallos ? 1 : 0);
 })().catch(e => { console.error('FALLO', e.message, String(e.stack).split('\n').slice(1, 4).join(' | ')); process.exit(1); });

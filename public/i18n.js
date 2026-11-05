@@ -4,6 +4,74 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Para entrenadores y coordinadores": [
+"Per a entrenadors i coordinadors",
+"For coaches and coordinators"
+],
+"Si entrenas o coordinas un club que colabora con nosotros, aquí ves cómo va la recuperación de tus jugadores.": [
+"Si entrenes o coordines un club que col·labora amb nosaltres, aquí veus com va la recuperació dels teus jugadors.",
+"If you coach or coordinate a club that works with us, here you can see how your players' recovery is going."
+],
+"Si pueden entrenar": [
+"Si poden entrenar",
+"Whether they can train"
+],
+"No entrena, con limitaciones o puede jugar": [
+"No entrena, amb limitacions o pot jugar",
+"Not training, with limits or can play"
+],
+"Cuándo vuelven": [
+"Quan tornen",
+"When they're back"
+],
+"La previsión de vuelta de cada jugador": [
+"La previsió de tornada de cada jugador",
+"Each player's expected return"
+],
+"Qué pueden hacer": [
+"Què poden fer",
+"What they can do"
+],
+"Y cómo volver a entrenar sin recaídas": [
+"I com tornar a entrenar sense recaigudes",
+"And how to get back to training without setbacks"
+],
+"Solo ves el parte de los jugadores que lo aceptan. Su historia clínica no se comparte nunca.": [
+"Només veus el parte dels jugadors que ho accepten. La seva història clínica no es comparteix mai.",
+"You only see the report of players who agree. Their medical record is never shared."
+],
+"Pedirlo por el chat": [
+"Demana-ho pel xat",
+"Ask for it in the chat"
+],
+"¿Ya tienes tu clave?": [
+"Ja tens la teva clau?",
+"Already have your code?"
+],
+"Clave de 4 números": [
+"Clau de 4 números",
+"4-digit code"
+],
+"Escribe los 4 números de tu clave": [
+"Escriu els 4 números de la teva clau",
+"Enter the 4 digits of your code"
+],
+"¡Listo! Ya tienes Mi equipo": [
+"Fet! Ja tens El meu equip",
+"Done! You now have My team"
+],
+"Esa clave no es correcta. Comprueba que en la clínica tienen tu mismo email o móvil.": [
+"Aquesta clau no és correcta. Comprova que a la clínica tenen el teu mateix email o mòbil.",
+"That code isn't right. Check the clinic has your same email or phone."
+],
+"Demasiados intentos. Prueba dentro de una hora o escríbenos.": [
+"Massa intents. Prova-ho d'aquí a una hora o escriu-nos.",
+"Too many attempts. Try again in an hour or write to us."
+],
+"No se ha podido comprobar. Mira tu conexión.": [
+"No s'ha pogut comprovar. Mira la teva connexió.",
+"Couldn't check it. Check your connection."
+],
 "Así va tu recuperación": [
 "Així va la teva recuperació",
 "How your recovery is going"

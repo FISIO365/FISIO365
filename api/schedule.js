@@ -4715,11 +4715,14 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-eq-acceso') { // dar o cambiar el acceso de alguien del club (dirección)
           const c = q.campos || {}, club = q.club;
           if (!okId(club)) return res.status(400).json({ ok: false, error: 'Falta el club' });
-          const email = String(c.email || '').trim().toLowerCase(), telf = String(c.telf || '').trim(), nombre = String(c.nombre || '').trim().slice(0, 120);
+          // Solo se cambia lo que llega: el panel manda el email O el móvil (un solo campo)
+          const prev = EQX.okId(q.id) ? ((await at(`${EQ.acc}/${q.id}`).catch(() => ({}))).fields || {}) : {};
+          const email = String(c.email !== undefined ? c.email : (prev['EMAIL'] || '')).trim().toLowerCase(), telf = String(c.telf !== undefined ? c.telf : (prev['TELF'] || '')).trim(), nombre = String(c.nombre || '').trim().slice(0, 120);
           if (!nombre) return res.status(200).json({ ok: false, error: 'Pon su nombre' });
           if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(200).json({ ok: false, error: 'El email no parece correcto' });
           if (!email && String(telf).replace(/\D/g, '').length < 9) return res.status(200).json({ ok: false, error: 'Pon su email o su móvil: es con lo que entrará' });
-          const f = { NOMBRE: nombre, EMAIL: email, TELF: telf.slice(0, 30), ROL: String(c.rol || '').trim().slice(0, 60), CLUB: club };
+          const f = { NOMBRE: nombre, EMAIL: email, TELF: telf.slice(0, 30), CLUB: club };
+          if (c.rol !== undefined) f['ROL'] = String(c.rol || '').trim().slice(0, 60);
           if (c.activo !== undefined) f['ACTIVO'] = !!c.activo;
           if (c.equipos !== undefined) f['EQUIPOS'] = eqUnicos(Array.isArray(c.equipos) ? c.equipos.map(x => String(x).slice(0, 80)) : []).slice(0, 30).join('\n');
           const mismos = email ? await capTodos(EQ.acc, `filterByFormula=${encodeURIComponent(`LOWER(TRIM({EMAIL}&''))='${eqEsc(email)}'`)}`) : [];
@@ -6812,6 +6815,24 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (acepta && F['CONSENTIMIENTO'] !== 'Aceptado') await eqAvisarClub(F['CLUB'], { title: cn, body: `${String(F['JUGADOR'] || '').trim().split(/\s+/)[0] || 'Un jugador'} ya comparte su parte contigo`, url: `/?s=miequipo&p=${b.id}`, tag: 'eqp-' + b.id }, F['EQUIPO']).catch(() => 0);
       const x = eqParte(d);
       return res.status(200).json({ ok: true, parte: { id: x.id, club: cn, equipo: x.equipo, consentimiento: x.consentimiento, consFecha: x.consFecha, consQuien: x.consQuien, menor: x.menor, texto: eqTexto(cn), parte: eqParteClub(d) } });
+    } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
+  }
+  // Un paciente que también es entrenador activa «Mi equipo» en su cuenta con la clave que le dio la clínica
+  // (tiene que coincidir su email o su móvil con los del acceso). Máximo 5 intentos fallidos por hora.
+  if (action === 'eq-clave') {
+    const b = req.body || {}, pid = b.patientId, clave = String(b.clave || '').replace(/\D/g, '');
+    if (req.method !== 'POST' || !EQX.okId(pid)) return res.status(400).json({ ok: false });
+    try {
+      _aj = { t: 0, v: null };
+      const INT = (await ajuste('eq-clave-intentos', {})) || {}, ahora = Date.now();
+      Object.keys(INT).forEach(k => { if (!INT[k] || ahora - INT[k].t > 3600e3) delete INT[k]; });
+      if (INT[pid] && INT[pid].n >= 5) return res.status(200).json({ ok: false, error: 'Demasiados intentos. Prueba dentro de una hora o escríbenos.' });
+      const p = await at(`${PACIENTES}/${pid}`); if (!p || p.error) return res.status(404).json({ ok: false });
+      const F = p.fields || {}, email = String(F['EMAIL'] || '').trim().toLowerCase(), tels = [F['TELF'], F['WHATSAPP']].map(t => String(t || '').replace(/\D/g, '').slice(-9)).filter(t => t.length === 9);
+      const accs = clave.length === 4 ? (await capTodos(EQ.acc, `filterByFormula=${encodeURIComponent('{ACTIVO}')}`)).filter(a => String(a.fields['PIN'] || '').trim() === clave && ((email && String(a.fields['EMAIL'] || '').trim().toLowerCase() === email) || tels.includes(String(a.fields['TELF'] || '').replace(/\D/g, '').slice(-9)))) : [];
+      if (!accs.length) { INT[pid] = { t: (INT[pid] || {}).t || ahora, n: ((INT[pid] || {}).n || 0) + 1 }; await guardarAjuste('eq-clave-intentos', INT, ''); return res.status(200).json({ ok: false, error: 'Esa clave no es correcta. Comprueba que en la clínica tienen tu mismo email o móvil.' }); }
+      const nom = await eqNombresClubs(accs.map(a => a.fields['CLUB']));
+      return res.status(200).json({ ok: true, equipo: accs.filter(a => nom[a.fields['CLUB']]).map(a => ({ id: a.id, tok: EQX.firmaEq(a.id, a.fields['PIN']), club: a.fields['CLUB'], clubNombre: nom[a.fields['CLUB']].nombre, rol: a.fields['ROL'] || '' })) });
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
   }
   if (action === 'eq-equipo') { // lo que ve el entrenador: sus clubs y los partes de quien lo comparte

@@ -32,7 +32,7 @@
   function menu() {
     const c = el('navMiClub'), e = el('navMiEquipo');
     if (c) c.style.display = S.partes.length ? 'flex' : 'none';
-    if (e) e.style.display = misAccesos().length ? 'flex' : 'none';
+    if (e) e.style.display = 'flex'; // siempre: sin acceso, explica para qué es
   }
   function banner() {
     const b = el('eqBanner'); if (!b) return;
@@ -113,7 +113,7 @@
   async function pintarEquipo(abrir) {
     const box = el('miEquipoBox'); if (!box) return;
     const acc = misAccesos();
-    if (!acc.length) { box.innerHTML = '<div class="eq-vac">No tienes acceso a ningún club.</div>'; return; }
+    if (!acc.length) { explicar(box); return; }
     if (abrir) S.jug = abrir;
     if (!S.equipo) box.innerHTML = '<div class="eq-vac">Cargando…</div>'; else dibuja();
     const d = await get('eq-equipo', { a: acc.map(x => x.id).join(','), t: acc.map(x => x.tok).join(',') }).catch(() => null);
@@ -149,6 +149,28 @@
         : '<div class="eq-vac">Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.</div>'}</div>`).join('');
     box.querySelectorAll('.eq-ju').forEach(b => b.onclick = () => { S.jug = b.dataset.id; dibuja(); window.scrollTo(0, 0); });
     const av = box.querySelector('.eq-avb'); if (av) av.onclick = activarAvisos;
+  }
+  // Sin acceso: para qué es «Mi equipo», pedirlo por el chat o activarlo con la clave
+  function explicar(box) {
+    const it = (ic, t, s2) => `<div class="eq-xi"><div class="eq-cic">${ic}</div><div><b>${t}</b><span>${s2}</span></div></div>`;
+    box.innerHTML = `<div class="eq-card eq-x"><div class="eq-pt">Para entrenadores y coordinadores</div>
+      <p class="eq-p">Si entrenas o coordinas un club que colabora con nosotros, aquí ves cómo va la recuperación de tus jugadores.</p>
+      ${it('<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>', 'Si pueden entrenar', 'No entrena, con limitaciones o puede jugar')}
+      ${it('<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>', 'Cuándo vuelven', 'La previsión de vuelta de cada jugador')}
+      ${it('<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>', 'Qué pueden hacer', 'Y cómo volver a entrenar sin recaídas')}
+      <p class="eq-p eq-psep">Solo ves el parte de los jugadores que lo aceptan. Su historia clínica no se comparte nunca.</p>
+      <button type="button" class="eq-ok eq-pedir">Pedirlo por el chat</button></div>
+      <div class="eq-card"><div class="eq-pt">¿Ya tienes tu clave?</div>
+      <div class="eq-cl"><input type="tel" inputmode="numeric" maxlength="4" class="eq-tut eq-clv" placeholder="Clave de 4 números"><button type="button" class="eq-ok eq-act">Activar</button></div><div class="eq-err"></div></div>`;
+    box.querySelector('.eq-pedir').onclick = () => window.showSection('mensajes');
+    const b = box.querySelector('.eq-act'), inp = box.querySelector('.eq-clv'), err = box.querySelector('.eq-err');
+    b.onclick = async () => {
+      err.textContent = ''; const v = inp.value.replace(/\D/g, '');
+      if (v.length !== 4) { err.textContent = 'Escribe los 4 números de tu clave'; return; }
+      b.disabled = true; const r = await post('eq-clave', { patientId: P().id, clave: v }).catch(() => null); b.disabled = false;
+      if (!r || !r.ok || !(r.equipo || []).length) { err.textContent = (r && r.error) || 'No se ha podido comprobar. Mira tu conexión.'; return; }
+      P().equipo = r.equipo; guardaPaciente(); window.toast && toast('¡Listo! Ya tienes Mi equipo'); pintarEquipo();
+    };
   }
   // Avisos para el entrenador: cuando se actualiza un parte
   const avisosOk = () => ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
