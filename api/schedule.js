@@ -549,6 +549,22 @@ async function clubsDedup() {
   if (borrados) console.log('clubs dedup: borrados', borrados);
   return borrados;
 }
+// Qué enlace del correo han tocado
+function clubEnlace(u) { u = String(u || ''); return /wa\.me|whatsapp/i.test(u) ? 'Quiero colaborar (WhatsApp)' : /demo=1/.test(u) ? 'Ver un ejemplo de Mi equipo' : /club-baja/.test(u) ? 'Darse de baja' : /^tel:/.test(u) ? 'Llamar' : /fisioterapia365\.com/.test(u) ? 'La web' : (u.replace(/^https?:\/\//, '').slice(0, 40) || 'Un enlace'); }
+const clubFirmaHook = () => require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('brevo-clubs').digest('hex').slice(0, 24);
+// Brevo avisa (webhook) cuando un club abre el correo o toca un enlace; se da de alta una vez
+async function clubsWebhook() {
+  if (global._clubsHook) return; global._clubsHook = 1;
+  if (await ajuste('clubs_webhook', '')) return;
+  const url = `https://app.fisioterapia365.com/api/schedule?action=brevo-clubs&t=${clubFirmaHook()}`;
+  const H = { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' };
+  const L = await fetch('https://api.brevo.com/v3/webhooks?type=transactional', { headers: H }).then(r => r.json()).catch(() => ({}));
+  if (!(L.webhooks || []).some(w => String(w.url || '').includes('action=brevo-clubs'))) {
+    const r = await fetch('https://api.brevo.com/v3/webhooks', { method: 'POST', headers: H, body: JSON.stringify({ url, description: 'FISIO365 · clubs (aperturas y clics)', events: ['uniqueOpened', 'click', 'hardBounce'], type: 'transactional' }) });
+    if (!r.ok) { global._clubsHook = 0; throw new Error('Brevo webhook ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 150)); }
+  }
+  await guardarAjuste('clubs_webhook', url, 'Sistema');
+}
 async function clubsSemilla() {
   let semilla = []; try { semilla = require('./_clubs.json'); } catch (_) { return; }
   const ya = new Set(await ajuste('clubs_semilla', [])); let nuevos = semilla.filter(c => c && c.nombre && !ya.has(clubClave(c.nombre)));
@@ -5040,25 +5056,28 @@ module.exports = async function handler(req, res) {
             espera: esp, negocios, libres,
             clubs: await (async () => { const nAcc = {}; (await eqAccP).forEach(x => { const c = x.fields['CLUB']; if (c) nAcc[c] = (nAcc[c] || 0) + 1; }); return (await clubsP).map(r => { const F = r.fields; return { id: r.id, eq: nAcc[r.id] || 0, nombre: F['NOMBRE'] || '', deporte: F['DEPORTE'] || '', tipo: F['TIPO'] || '', barrio: F['BARRIO'] || '', direccion: F['DIRECCIÓN'] || '', tel: F['TELF'] || '', email: F['EMAIL'] || '', web: F['WEB'] || '', instagram: F['INSTAGRAM'] || '', contacto: F['CONTACTO'] || '', estado: F['ESTADO'] || 'POR CONTACTAR', proximo: F['PRÓXIMO CONTACTO'] || '', ultimo: F['ÚLTIMO CONTACTO'] || '', historial: F['HISTORIAL'] || '', notas: F['NOTAS'] || '', permiso: F['PERMISO EMAIL'] || '', enviado: F['EMAIL ENVIADO'] || '', baja: !!F['BAJA EMAIL'] }; }); })() });
         }
-        if (action === 'seg-cap-clubs-email') { // qué ha pasado con los correos a los clubs (Brevo): entregado, abierto o email no válido
+        if (action === 'seg-cap-clubs-email') { // seguimiento de los correos a los clubs (Brevo): enviado, entregado, aperturas, clics, rebotes
           if (!process.env.BREVO_API_KEY) return res.status(200).json({ ok: true, emails: {} });
+          clubsWebhook().catch(e => console.log('clubs webhook', e.message)); // avisos al móvil al abrir o tocar un enlace
           const C = global._clubsEm || (global._clubsEm = { t: 0, d: null });
-          if (C.d && Date.now() - C.t < 3 * 60e3) return res.status(200).json({ ok: true, emails: C.d });
-          const E = {};
-          // Brevo no filtra bien por etiqueta: se leen los eventos de los últimos 30 días y se quedan los de los clubs
+          if (C.d && Date.now() - C.t < 2 * 60e3 && !q.ya) return res.status(200).json({ ok: true, emails: C.d });
           const evs = [];
           for (let off = 0; off < 25000; off += 2500) {
-            const r = await fetch(`https://api.brevo.com/v3/smtp/statistics/events?days=30&limit=2500&offset=${off}`, { headers: { 'api-key': process.env.BREVO_API_KEY, accept: 'application/json' } }).then(x => x.json()).catch(() => ({}));
+            const r = await fetch(`https://api.brevo.com/v3/smtp/statistics/events?days=60&limit=2500&offset=${off}`, { headers: { 'api-key': process.env.BREVO_API_KEY, accept: 'application/json' } }).then(x => x.json()).catch(() => ({}));
             const L = r.events || []; evs.push(...L.filter(e => /^clubs-/.test(String(e.tag || '')))); if (L.length < 2500) break;
           }
-          {
-            for (const e of evs) {
-              const m = String(e.email || '').toLowerCase(); if (!m) continue; const x = E[m] || (E[m] = { entregado: '', abierto: '', mal: '', motivo: '' });
-              const f = String(e.date || '').slice(0, 10);
-              if (e.event === 'delivered') x.entregado = x.entregado || f;
-              else if (e.event === 'opened' || e.event === 'clicks') x.abierto = x.abierto || f;
-              else if (['hardBounces', 'invalid', 'blocked', 'error'].includes(e.event)) { x.mal = f; x.motivo = e.reason || e.event; }
-            }
+          const E = {};
+          evs.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+          for (const e of evs) {
+            const m = String(e.email || '').toLowerCase(); if (!m) continue;
+            const x = E[m] || (E[m] = { enviado: '', entregado: '', abierto: '', ultimo: '', aperturas: 0, clics: [], mal: '', motivo: '', espera: '' });
+            const f = String(e.date || '');
+            if (e.event === 'requests') x.enviado = x.enviado || f;
+            else if (e.event === 'delivered') { x.entregado = x.entregado || f; x.espera = ''; }
+            else if (e.event === 'opened') { x.aperturas++; x.abierto = x.abierto || f; x.ultimo = f; }
+            else if (e.event === 'clicks') { const l = clubEnlace(e.link); if (!x.clics.some(c => c.l === l)) x.clics.push({ l, f }); if (!x.abierto) x.abierto = f; x.ultimo = f > x.ultimo ? f : x.ultimo; }
+            else if (['hardBounces', 'invalid', 'blocked', 'error'].includes(e.event)) { x.mal = f; x.motivo = e.reason || e.event; }
+            else if (['softBounces', 'deferred'].includes(e.event) && !x.entregado) x.espera = f;
           }
           C.d = E; C.t = Date.now();
           return res.status(200).json({ ok: true, emails: E });
@@ -7137,6 +7156,25 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const nom = await eqNombresClubs(accs.map(a => a.fields['CLUB']));
       return res.status(200).json({ ok: true, equipo: accs.filter(a => nom[a.fields['CLUB']]).map(a => ({ id: a.id, tok: EQX.firmaEq(a.id, a.fields['PIN']), club: a.fields['CLUB'], clubNombre: nom[a.fields['CLUB']].nombre, rol: a.fields['ROL'] || '' })) });
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
+  }
+  if (action === 'brevo-clubs') { // Brevo: un club ha abierto el correo o ha tocado un enlace → aviso al móvil de dirección
+    let ok = false; try { ok = require('crypto').timingSafeEqual(Buffer.from(String(req.query.t || '')), Buffer.from(clubFirmaHook())); } catch (e) {}
+    if (!ok) return res.status(401).json({ ok: false });
+    const b = req.body || {}, tags = [].concat(b.tags || [], b.tag || []).map(String);
+    if (!tags.some(t => /^clubs-/.test(t))) return res.status(200).json({ ok: true });
+    try {
+      const email = String(b.email || '').toLowerCase(), ev = String(b.event || ''), club = String(b.subject || '').replace(/^FISIO365 × /, '').replace(/: seamos.*$/, '');
+      const A = (await ajuste('clubs_avisos', {})) || {}, k = email + '|' + (ev === 'click' ? clubEnlace(b.link) : ev);
+      if (A[k]) return res.status(200).json({ ok: true }); A[k] = new Date().toISOString().slice(0, 10); await guardarAjuste('clubs_avisos', A, 'Sistema');
+      const tit = ev === 'click' ? `👀 ${club}: «${clubEnlace(b.link)}»` : ev === 'hard_bounce' || ev === 'hardBounce' ? `✉️ ${club}: email no válido` : `📬 ${club} ha abierto tu correo`;
+      const body = ev === 'click' ? 'Ha tocado un enlace del correo. Buen momento para llamarles.' : ev === 'hard_bounce' || ev === 'hardBounce' ? 'Su email no existe: toca llamarles.' : 'Llámales mañana: lo tienen fresco.';
+      if (global._clubsEm) global._clubsEm.t = 0;
+      const { avisar } = require('./_push');
+      const fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}`).catch(() => ({}));
+      const ids = (fl.records || []).filter(x => !!x.fields['DIRECCIÓN']).map(x => x.id);
+      await Promise.all(ids.map(id => avisar('fisio', id, { title: tit, body, url: '/fisio?s=clubs', tag: 'clubm-' + email }).catch(() => false)));
+    } catch (e) { console.log('brevo-clubs', e.message); }
+    return res.status(200).json({ ok: true });
   }
   if (action === 'club-baja') { // enlace del correo a los clubs: no volver a escribirles
     const id = String(req.query.id || ''), t = String(req.query.t || '');
