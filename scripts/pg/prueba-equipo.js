@@ -119,6 +119,12 @@
   const t1 = (await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB2, campos: { nombre: 'Tel', telf: '611000111' } }, 'POST')).j.acceso;
   r = await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB2, id: t1.id, campos: { nombre: 'Tel', email: 'tel@c.com' } }, 'POST');
   ver('editar email conserva el móvil', r.j.ok && r.j.acceso.telf === '611000111' && r.j.acceso.email === 'tel@c.com', r.j);
+  r = await llamar(S, { action: 'seg-eq-equipos', pwd, club: CLUB2, equipos: ['Alevín A', 'Juvenil A'] }, 'POST');
+  ver('crear equipos del club', r.j.ok && r.j.equipos.length === 2, r.j);
+  r = await llamar(S, { action: 'seg-eq-club', pwd, club: CLUB2 });
+  ver('el club lista sus equipos', r.j.equipos.includes('Alevín A') && r.j.enUso.includes('Infantil B') && !r.j.enUso.includes('Alevín A'), r.j);
+  r = await llamar(S, { action: 'seg-eq-ficha', pwd, id: 'recPacPrueba00001' });
+  ver('ficha: equipos del club para elegir', r.j.clubs.find(c => c.id === CLUB2).equipos.includes('Alevín A'), r.j.clubs);
   console.log(fallos ? `\n${fallos} FALLOS` : '\nTodo bien');
   process.exit(fallos ? 1 : 0);
 })().catch(e => { console.error('FALLO', e.message, String(e.stack).split('\n').slice(1, 4).join(' | ')); process.exit(1); });

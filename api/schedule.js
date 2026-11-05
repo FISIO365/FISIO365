@@ -4700,14 +4700,15 @@ module.exports = async function handler(req, res) {
         const okId = EQX.okId, ahoraI = new Date().toISOString(), quien = String(q.quien || '').trim().slice(0, 80);
         if (action === 'seg-eq-club') {
           if (!okId(q.club)) return res.status(400).json({ ok: false });
-          const [accs, pars] = await Promise.all([eqAccesosClub(q.club), eqPartes(`AND({CLUB}='${q.club}',{ACTIVO})`)]);
-          return res.status(200).json({ ok: true, accesos: accs.map(eqAcc).sort((a, b) => (b.activo - a.activo) || a.nombre.localeCompare(b.nombre, 'es')), jugadores: pars.map(eqParte).sort((a, b) => a.equipo.localeCompare(b.equipo, 'es', { numeric: true }) || a.jugador.localeCompare(b.jugador, 'es')), equipos: eqUnicos([...pars.map(r => r.fields['EQUIPO']), ...accs.flatMap(a => eqEquiposAcc(a.fields))]), semaforos: EQ_SEM });
+          const [accs, pars, clR] = await Promise.all([eqAccesosClub(q.club), eqPartes(`AND({CLUB}='${q.club}',{ACTIVO})`), at(`${CAP.club}/${q.club}`).catch(() => ({}))]);
+          const delClub = eqEquiposAcc(clR && clR.fields), enUso = eqUnicos([...pars.map(r => r.fields['EQUIPO']), ...accs.flatMap(a => eqEquiposAcc(a.fields))]);
+          return res.status(200).json({ ok: true, accesos: accs.map(eqAcc).sort((a, b) => (b.activo - a.activo) || a.nombre.localeCompare(b.nombre, 'es')), jugadores: pars.map(eqParte).sort((a, b) => a.equipo.localeCompare(b.equipo, 'es', { numeric: true }) || a.jugador.localeCompare(b.jugador, 'es')), equipos: eqUnicos([...delClub, ...enUso]), enUso, semaforos: EQ_SEM });
         }
         if (action === 'seg-eq-ficha') {
           if (!okId(q.id)) return res.status(400).json({ ok: false });
-          const [pars, accs, cls, todas] = await Promise.all([eqPartes(`AND({PACIENTE}='${q.id}',{ACTIVO})`), capTodos(EQ.acc, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPOS`), capTodos(CAP.club, 'fields[]=NOMBRE&fields[]=DEPORTE'), capTodos(EQ.par, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPO`)]);
+          const [pars, accs, cls, todas] = await Promise.all([eqPartes(`AND({PACIENTE}='${q.id}',{ACTIVO})`), capTodos(EQ.acc, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPOS`), capTodos(CAP.club, 'fields[]=NOMBRE&fields[]=DEPORTE&fields[]=EQUIPOS'), capTodos(EQ.par, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPO`)]);
           const conAcc = new Set(accs.map(a => a.fields['CLUB']).filter(Boolean)), mios = new Set(pars.map(p => p.fields['CLUB']));
-          const eqDe = cid => eqUnicos([...todas.filter(r => r.fields['CLUB'] === cid).map(r => r.fields['EQUIPO']), ...accs.filter(a => a.fields['CLUB'] === cid).flatMap(a => eqEquiposAcc(a.fields))]);
+          const eqDe = cid => eqUnicos([...eqEquiposAcc((cls.find(c => c.id === cid) || {}).fields), ...todas.filter(r => r.fields['CLUB'] === cid).map(r => r.fields['EQUIPO']), ...accs.filter(a => a.fields['CLUB'] === cid).flatMap(a => eqEquiposAcc(a.fields))]);
           const clubs = cls.filter(c => conAcc.has(c.id) || mios.has(c.id)).map(c => ({ id: c.id, nombre: c.fields['NOMBRE'] || '', deporte: c.fields['DEPORTE'] || '', activo: conAcc.has(c.id), equipos: eqDe(c.id) })).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
           return res.status(200).json({ ok: true, partes: pars.map(eqParte), clubs, semaforos: EQ_SEM, fases: EQ_FASES });
         }
@@ -4740,6 +4741,12 @@ module.exports = async function handler(req, res) {
           }
           if (!d || d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
           return res.status(200).json({ ok: true, acceso: eqAcc(d) });
+        }
+        if (action === 'seg-eq-equipos') { // la lista de equipos del club (Captación › Clubs › Mi equipo › Equipos)
+          if (!okId(q.club)) return res.status(400).json({ ok: false });
+          const L = eqUnicos(Array.isArray(q.equipos) ? q.equipos.map(x => String(x).slice(0, 80)) : []).slice(0, 60);
+          const d = await at(`${CAP.club}/${q.club}`, { method: 'PATCH', body: JSON.stringify({ fields: { EQUIPOS: L.join('\n') } }) });
+          return res.status(200).json({ ok: !d.error, equipos: L });
         }
         if (action === 'seg-eq-vincular') { // el jugador juega en ese club: queda pendiente de que lo acepte en su app
           if (!okId(q.pac) || !okId(q.club)) return res.status(400).json({ ok: false });
