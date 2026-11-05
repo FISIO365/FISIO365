@@ -1641,6 +1641,11 @@ button.fp-chip{border:none;font-family:var(--font);cursor:pointer}
 .res-bx{flex:none;width:30px;height:30px;border:none;border-radius:50%;background:#fff;color:#7d6a60;font-size:12px;cursor:pointer}
 .cum-av{display:flex;align-items:center;gap:11px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:11px 13px;border:1px solid #f0d9cc;background:#fdf3ed;border-radius:14px;font-family:var(--font);text-align:left;cursor:pointer;color:#3d3530}.cum-av svg{width:26px;height:26px;flex:none;fill:none;stroke:#c2552e;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.cum-av span{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.cum-av b{font-size:13.5px;font-weight:600}.cum-av small{font-size:12px;color:#7d6a60;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cum-av i{font-style:normal;font-size:12.5px;font-weight:600;color:#c2552e;white-space:nowrap}
 .cum-ver{display:block;margin:8px 0 0;font:600 12.5px var(--font);color:#c2552e;background:none;border:none;padding:4px 0;cursor:pointer;text-decoration:underline}
+.fac-pe{margin:0 0 10px}.fac-pe-it{display:flex;align-items:center;gap:10px;background:#fdf3ed;border:1px solid #f3dfd3;border-radius:12px;padding:10px 12px}.fac-pe-it svg,.ag-pe svg{width:18px;height:18px;flex:none;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.fac-pe-it div{flex:1;min-width:0}.fac-pe-it b{display:block;font-size:13px;color:#a8461f}.fac-pe-it span{display:block;font-size:12.5px;color:#5c4f47;line-height:1.4}.fac-pe-it button{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fff;border:1px solid #f0d9cc;border-radius:99px;padding:6px 12px;cursor:pointer}
+.fl-pe{font-size:12px;font-weight:600;color:#a8461f;margin-top:6px}
+.ag-pe{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#5c4f47;background:#fdf3ed;border:1px solid #f3dfd3;border-radius:12px;padding:8px 12px;margin:0 0 8px}.ag-pe b{color:#a8461f}
+.pe-it{border:1px solid #ece4dc;border-radius:14px;padding:10px;margin-bottom:8px}.pe-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}.pe-row .fac-chips{flex:1 1 100%}.pe-p{display:flex;align-items:center;gap:6px}.pe-p input{width:90px;font-family:var(--font);font-size:15px;font-weight:600;border:1.5px solid #e6dfd8;border-radius:10px;padding:8px 10px;text-align:right}.pe-p em{font-style:normal;color:#7d6a60}.pe-x{margin-left:auto;border:none;background:#f5f0eb;border-radius:50%;width:30px;height:30px;cursor:pointer;color:#7d6a60}
+.pe-mot{margin-bottom:8px}.pe-bt{display:flex;gap:8px;margin-top:12px;align-items:center}.pe-bt .hz-ok{flex:1;margin:0}.pe-bt .sec{flex:none}
 .fp-chr{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.fp-chr .fp-estb{display:inline-flex;width:auto}
 .fp-cum{display:inline-flex;align-items:center;gap:5px;font-family:var(--font);font-size:12px;font-weight:600;line-height:1.3;color:#a8461f;background:#fdf3ed;border:1px solid #f3dfd3;border-radius:99px;padding:4px 10px 4px 8px;cursor:pointer;white-space:nowrap}.fp-cum[disabled]{cursor:default}.fp-cum svg{width:14px;height:14px;flex:none;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.fp-cum i{font-style:normal;color:#a8461f;font-weight:500}
 .cum-d{font-size:12px;color:#7d6a60;white-space:nowrap}
@@ -7006,7 +7011,7 @@ function renderAgenda(wrap){
   let url=`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}`;
   if(V==='dia')url+=`&fecha=${AG.fecha}`;else{if(d1)url+=`&desde=${d1}`;if(d2)url+=`&hasta=${d2}`;if(V==='lista'&&AG.pac)url+=`&pacienteId=${AG.pac.id}`;if(V==='lista'&&AG.fisio)url+=`&fisio=${encodeURIComponent(AG.fisio)}`;}
   if(V==='lista'&&!d1&&!d2&&!AG.pac&&!AG.fisio){grid.innerHTML='<div class="fac-vacio">Para ver «Todo» elige un paciente o un fisio, o un periodo más corto.</div>';$c('.ag-res').textContent='';AG.dia=null;fs.innerHTML='';opcionesFisio([]);return;}
-  try{const d=await (await fetch(url)).json();if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,revisar:V==='dia'?(d.revisar||[]):[],cumples:d.cumples||{},debenPagar:d.debenPagar||{},aus:d.ausencias||[],citas:d.citas||[],limitado:d.limitado,alertas:d.alertas||{},salud:d.salud||{},sinConsent:new Set(d.sinConsent||[]),conConsent:new Set(d.conConsent||[]),hoy:d.hoy,espera:d.espera||[],clave,num:(AG.dia&&AG.dia.clave===clave&&AG.dia.num)||{},pago:(AG.dia&&AG.dia.clave===clave&&AG.dia.pago)||{}};capAplicarLocal(AG.dia.espera);pintar();agRevPinta(card,V,cargar);
+  try{const d=await (await fetch(url)).json();if(t!==tok)return;if(!d.ok)throw new Error(d.error||'Error');AG.dia={fecha:AG.fecha,precioEsp:d.precioEsp||{},revisar:V==='dia'?(d.revisar||[]):[],cumples:d.cumples||{},debenPagar:d.debenPagar||{},aus:d.ausencias||[],citas:d.citas||[],limitado:d.limitado,alertas:d.alertas||{},salud:d.salud||{},sinConsent:new Set(d.sinConsent||[]),conConsent:new Set(d.conConsent||[]),hoy:d.hoy,espera:d.espera||[],clave,num:(AG.dia&&AG.dia.clave===clave&&AG.dia.num)||{},pago:(AG.dia&&AG.dia.clave===clave&&AG.dia.pago)||{}};capAplicarLocal(AG.dia.espera);pintar();agRevPinta(card,V,cargar);
    // Precarga en segundo plano del día anterior y siguiente (o semana): al cambiar de día sale al momento
    if(V!=='lista')setTimeout(()=>{if(t!==tok)return;const P=encodeURIComponent(apiPwd);[-1,1].forEach(k=>{const n=V==='dia'?agMover(AG.fecha,k):agMover(lunes(AG.fecha),7*k),a=n,b=V==='dia'?n:agMover(n,6);
     fetch(V==='dia'?`/api/schedule?action=seg-agenda-dia&pwd=${P}&fecha=${n}`:`/api/schedule?action=seg-agenda-dia&pwd=${P}&desde=${a}&hasta=${b}`).catch(()=>{});
@@ -7244,6 +7249,35 @@ function agRevModal(dia,otros,recargar){const fd=f=>{const t=new Date(f+'T12:00:
 // En la cita: qué hay que revisar de ella
 function agRevCitaHtml(c){const L=((AG.dia&&AG.dia.revisar)||[]).filter(x=>(x.ids||[]).includes(c.id));if(!L.length)return '';
  return `<div class="ag-sal-al ag-rvc">${AG_REV_ICO}<span>${L.map(x=>escH(x.txt)).join('<br>')}</span></div>`;}
+// ── PRECIO ESPECIAL: pacientes antiguos o que mantienen el precio del pack que cogieron ──
+const PE_MOT={antiguo:'Paciente antiguo',pack:'Mantiene el precio de su pack',otro:'Otro motivo'};
+const peCorto=c=>String(c||'').replace(/^Sesión de /,'').replace(/^./,x=>x.toUpperCase());
+// Precio especial para un concepto: n=0 sesión suelta, n=N pack de N sesiones
+function pePrecio(pe,c,n){if(!pe||!pe.l)return null;const r=pe.l.find(x=>x.c===c&&(+x.n||0)===(+n||0));return r?r.p:null;}
+function peResumen(pe){if(!pe||!pe.l)return '';return pe.l.map(x=>`${peCorto(x.c)}${x.n?' · pack de '+x.n:''}: ${String(x.p).replace('.',',')} €`).join(' · ');}
+const PE_ICO='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12.5 12 21l-8.5-8.5V4h8.5z"/><circle cx="8" cy="8.5" r="1.4"/></svg>';
+function peEditar(pacId,nombre,pe,onSave){let L=(pe&&pe.l||[]).map(x=>({...x})),mot=(pe&&pe.m)||'antiguo';if(!L.length)L=[{c:FAC_CONCEPTOS.find(c=>/^Sesi/i.test(c))||'',n:0,p:''}];
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(capTit(nombre||''))}</small><b>Precio especial</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <p class="fp-mu" style="font-size:13px;margin:0 0 12px">Al cobrarle, el panel pone este precio en vez del normal.</p><div class="pe-ls"></div>
+  <button type="button" class="fac-pc-add pe-add">+ Otro precio</button>
+  <div class="hz-lab">Por qué</div><div class="sev-ch c3 pe-mot">${Object.entries(PE_MOT).map(([k,t])=>`<button type="button" data-v="${k}" class="${mot===k?'on':''}">${t}</button>`).join('')}</div>
+  <textarea class="seg-n pe-nota" rows="2" placeholder="Nota (opcional): p. ej. «Pack de 10 de 2024 a 450 €»">${escH((pe&&pe.nota)||'')}</textarea>
+  <div class="pe-bt">${pe?'<button type="button" class="sec pe-del">Quitar el precio especial</button>':''}<button type="button" class="hz-ok pe-ok">Guardar</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();const ls=m.querySelector('.pe-ls');
+ const pinta=()=>{ls.innerHTML=L.map((x,i)=>`<div class="pe-it" data-i="${i}"><div class="fac-chips pe-c">${FAC_CONCEPTOS.filter(c=>/^Sesi/i.test(c)).map(c=>`<button type="button" data-v="${escH(c)}" class="${x.c===c?'on':''}">${escH(peCorto(c))}</button>`).join('')}</div>
+   <div class="pe-row"><div class="fac-chips pe-n"><button type="button" data-n="0" class="${!x.n?'on':''}">Sesión suelta</button>${[5,10,20].map(n=>`<button type="button" data-n="${n}" class="${+x.n===n?'on':''}">Pack de ${n}</button>`).join('')}</div>
+   <label class="pe-p"><input inputmode="decimal" value="${x.p!==''&&x.p!=null?String(x.p).replace('.',','):''}" placeholder="${(()=>{const pr=x.n?'':FAC_PRECIO[x.c];return pr!=null&&pr!==''?String(pr).replace('.',','):'0'})()}"><em>€</em></label>${L.length>1?'<button type="button" class="pe-x" aria-label="Quitar">✕</button>':''}</div></div>`).join('');
+  ls.querySelectorAll('.pe-it').forEach(it=>{const x=L[+it.dataset.i];
+   it.querySelectorAll('.pe-c button').forEach(b=>b.onclick=()=>{x.c=b.dataset.v;pinta();});
+   it.querySelectorAll('.pe-n button').forEach(b=>b.onclick=()=>{x.n=+b.dataset.n;pinta();});
+   it.querySelector('.pe-p input').oninput=e=>{x.p=e.target.value;};
+   const del=it.querySelector('.pe-x');if(del)del.onclick=()=>{L.splice(+it.dataset.i,1);pinta();};});};
+ pinta();
+ m.querySelector('.pe-add').onclick=()=>{L.push({c:L[L.length-1].c,n:10,p:''});pinta();};
+ m.querySelectorAll('.pe-mot button').forEach(b=>b.onclick=()=>{mot=b.dataset.v;m.querySelectorAll('.pe-mot button').forEach(y=>y.classList.toggle('on',y===b));});
+ const guardar=async(val,b)=>{b.disabled=true;try{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:pacId,precioEsp:val})})).json();if(!r.ok)throw 0;m.remove();toast(r.precioEsp?'Precio especial guardado':'Precio especial quitado',true);onSave&&onSave(r.precioEsp||null);}catch(e){b.disabled=false;toast('No se ha podido guardar',false);}};
+ m.querySelector('.pe-ok').onclick=e=>{const l=L.map(x=>({c:x.c,n:+x.n||0,p:+String(x.p||'').replace(',','.')||0})).filter(x=>x.c&&x.p>0);if(!l.length){toast('Pon al menos un precio',false);return;}guardar({l,m:mot,nota:m.querySelector('.pe-nota').value,quien:miNombreCorto()},e.currentTarget);};
+ const d=m.querySelector('.pe-del');if(d)d.onclick=async e=>{if(!await pregunta('¿Quitamos su precio especial? Se le cobrará el precio normal.',{si:'Quitar',no:'Cancelar'}))return;guardar(null,e.currentTarget);};}
 // En la ficha: su cumpleaños (hoy, estos días de atrás sin felicitar o los próximos), con «Felicitar»
 function fpCumpleInfo(P){const c=String(P.cumple||'').slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(c))return null;const h=agHoyIso();
  for(let n=-3;n<=7;n++){const f=agMover(h,n),md=c.slice(5)==='02-29'&&+f.slice(0,4)%4?'02-28':c.slice(5);if(f.slice(5)===md){const e=+f.slice(0,4)-+c.slice(0,4);return {dif:n,fecha:f,edad:e>0&&e<110?e:0};}}return null;}
@@ -7285,7 +7319,8 @@ function agAbrirCita(c,onDone){
    const est=!pg?'':pg.t==='sin'?(sin?'<b>Sesión sin factura</b><small>No tiene ninguna factura ni pack que la cubra</small>':'<b>Sin pagar todavía</b><small>No tiene factura ni pack para esta sesión</small>'):pg.t==='pack'?(pg.ps?`<b>✓ Pack · sesión ${pg.i} de ${pg.n}</b><small>${pg.i<=pg.psF?'Factura de esta sesión hecha':'Factura por sesión · falta la de esta sesión'}</small>`:`<b>✓ Pack · sesión ${pg.i} de ${pg.n}</b>`):pg.t==='previo'?(pg.vale?`<b>✓ Vale regalo · sesión ${pg.i} de ${pg.n}</b>`:`<b>✓ Pack pagado fuera del panel · ${pg.i} de ${pg.n}</b>`):'<b>✓ Sesión suelta facturada</b>';
    // Si la sesión ya está cubierta (pack facturado, suelta pagada o pack de fuera) no salen los botones: solo «Corregir» en el pack de fuera
    const cub=pg&&pg.t!=='sin';
-   return `<div class="ag-sinfac${sin?'':cub?' ok':' neu'}"><span>${est||'<b>Cobro</b>'}</span>${!cub?'<span class="ag-sfb"><button type="button" class="ag-sf-pk">Tiene pack</button><button type="button" class="ag-sf-vr">Vale regalo</button><button type="button" class="ag-sf-co">Facturar</button></span>':pg.t==='previo'?'<button type="button" class="ag-sf-pk ag-sf-corr">Corregir</button>':pg.t==='pack'&&pg.ps&&pg.i>pg.psF?`<button type="button" class="ag-sf-co ag-sf-ps" data-g="${pg.ps}">Emitir factura de esta sesión</button>`:pg.t!=='sin'?'<button type="button" class="ag-sf-pk ag-sf-corr" title="Si esta sesión era de un pack pagado antes (fuera del panel)">Era de otro pack</button>':''}</div>`;})()}
+   const pe=((AG.dia&&AG.dia.precioEsp)||{})[c.pacienteId];
+   return `${pe?`<div class="ag-pe">${PE_ICO}<span><b>Precio especial</b> · ${escH(peResumen(pe))}</span></div>`:''}<div class="ag-sinfac${sin?'':cub?' ok':' neu'}"><span>${est||'<b>Cobro</b>'}</span>${!cub?'<span class="ag-sfb"><button type="button" class="ag-sf-pk">Tiene pack</button><button type="button" class="ag-sf-vr">Vale regalo</button><button type="button" class="ag-sf-co">Facturar</button></span>':pg.t==='previo'?'<button type="button" class="ag-sf-pk ag-sf-corr">Corregir</button>':pg.t==='pack'&&pg.ps&&pg.i>pg.psF?`<button type="button" class="ag-sf-co ag-sf-ps" data-g="${pg.ps}">Emitir factura de esta sesión</button>`:pg.t!=='sin'?'<button type="button" class="ag-sf-pk ag-sf-corr" title="Si esta sesión era de un pack pagado antes (fuera del panel)">Era de otro pack</button>':''}</div>`;})()}
   ${agRevCitaHtml(c)}${agCumpleHtml(c,FD)}
   ${agSaludHtml(c,FD)}
   <button type="button" class="exp-seg ag-conf"><i></i>Confirmada</button>
@@ -10587,7 +10622,7 @@ async function abrirFichaPaciente(id,nombre,pBase){
  const MAS=[['racha','Racha'],['informes','Informes y justificantes'],['facturas','Facturas'],['acceso','Acceso a la app']];
  function cabecera(){const tel=segTel(P.whatsapp||P.tel||P.telf||'');
   return `<div class="fp-hero"><div class="fp-hero-in"><div class="fp-av">${P.foto?`<img src="${escH(P.foto)}" alt="">`:escH(iniciales(P.nombre))}</div><div class="fp-hn"><h2>${escH(P.nombre)}</h2>
-    <div class="fp-chr"><button type="button" class="fp-estb" aria-label="Cambiar estado">${estadoChips(P.estados)||'<span class="est">+ Estado</span>'}<span class="fp-edit-ic">✎</span></button>${fpCumpleHtml(P)}</div></div></div>
+    <div class="fp-chr"><button type="button" class="fp-estb" aria-label="Cambiar estado">${estadoChips(P.estados)||'<span class="est">+ Estado</span>'}<span class="fp-edit-ic">✎</span></button>${fpCumpleHtml(P)}${P.precioEsp?`<button type="button" class="fp-cum fp-pe" title="${escH(peResumen(P.precioEsp))}">${PE_ICO}<span>Precio especial</span></button>`:''}</div></div></div>
    <div class="fp-acts">${tel?`<a class="fp-ic" href="tel:+${tel}">${ICO.tel}<span>Llamar</span></a><button type="button" class="fp-ic fp-wab">${ICO.wa}<span>WhatsApp</span></button>`:''}<button type="button" class="fp-ic fp-appb ${P.appInstalada?'on':''}" title="${P.appInstalada?'Tiene la app instalada':P.appUsada?'Ha entrado, pero no la tiene instalada':'Todavía no ha entrado en la app'}"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg><span>${P.appInstalada?'App ✓':'Enviar app'}</span></button><button type="button" class="fp-ic fp-segb ${segAct()?'on':''}">${segAct()?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>':ICO.seg}<span>Seguimiento</span></button><button type="button" class="fp-ic fp-cobb fp-cobb-ic"><svg viewBox="0 0 24 24"><path d="M17.5 6.5A7 7 0 1 0 17.5 17.5"/><path d="M4 10.5h9M4 13.5h9"/></svg><span>Cobrar</span></button></div><button type="button" class="fp-cobb fp-cobb-mov"><svg viewBox="0 0 24 24"><path d="M17.5 6.5A7 7 0 1 0 17.5 17.5"/><path d="M4 10.5h9M4 13.5h9"/></svg>Cobrar y facturar</button></div>
    <div class="fp-tabs"><div class="fp-seg">${TABS.map(([k,t])=>`<button type="button" data-t="${k}" class="${tab===k?'on':''}">${t}</button>`).join('')}<button type="button" class="fp-mas ${MAS.some(x=>x[0]===tab)?'on':''}" aria-haspopup="true"><span>${MAS.some(x=>x[0]===tab)?escH(MAS.find(x=>x[0]===tab)[1].split(' ')[0]):'Más'}</span><svg class="fp-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div></div>`;}
  const telIgual=(a,b)=>{const n=x=>String(x||'').replace(/\D/g,'').slice(-9);return !n(a)||!n(b)||n(a)===n(b);};
@@ -10851,6 +10886,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   body.querySelectorAll('.fp-cobb').forEach(bc=>bc.onclick=()=>{tab='facturas';pintar();let n=0;const t=setInterval(()=>{const b=body.querySelector('.fac-nueva');if(b||++n>40){clearInterval(t);if(b&&b.style.display!=='none'){b.click();setTimeout(()=>{const fm=body.querySelector('.fac-form');if(fm)fm.scrollIntoView({behavior:'smooth',block:'start'});},50);}}},150);});
   {const bw=body.querySelector('.fp-wab');if(bw)bw.onclick=waFicha;}
   // El cumpleaños en la ficha es solo un aviso: la felicitación se manda desde Mensajes › Cumples
+  {const bpe=body.querySelector('.fp-pe');if(bpe)bpe.onclick=()=>peEditar(P.id||id,P.nombre,P.precioEsp,v=>{P.precioEsp=v;pintar();});}
   body.querySelector('.fp-segb').onclick=()=>{const sp=segAct();if(sp){verSeg(sp);return;}abrirNuevoSeg({pacienteId:id,nombre:P.nombre,motivo:P.porQue||'',onSave:recargarSeg});};
   cont.querySelectorAll('.fp-segit').forEach(x=>x.onclick=()=>{const sp=(d.seguimiento||[]).find(s=>s.id===x.dataset.id);if(sp)verSeg(sp);});
   const tok='fp_'+Date.now();cont.dataset.token=tok;
@@ -11940,6 +11976,10 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
      ok.onclick=async()=>{ok.disabled=true;const r2=await agPost('seg-agenda-pack-compartir',{titular:pacId,con,total:tn,usadas:un}).catch(()=>({ok:false}));if(!r2.ok){ok.disabled=false;toast(r2.error||'No se ha podido compartir',false);return;}listo();};});};};
   body.appendChild(pcb);}
  else{const b=ce('div','fac-saldo');b.innerHTML='<b>Saldo de sesiones</b><span>Empezará a contar con la primera factura emitida desde el panel (cuando conectemos Holded).</span>';body.appendChild(b);}
+ // Precio especial: se ve aquí y se usa solo al cobrar
+ {const pe=d.precioEsp,pb=ce('div','fac-pe');
+  pb.innerHTML=pe?`<div class="fac-pe-it">${PE_ICO}<div><b>Precio especial · ${escH(PE_MOT[pe.m]||'')}</b><span>${escH(peResumen(pe))}${pe.nota?' · '+escH(pe.nota):''}</span></div><button type="button">Cambiar</button></div>`:'<button type="button" class="fac-pc-add">+ Precio especial para este paciente</button>';
+  pb.querySelector('button').onclick=()=>peEditar(pacId,pacNombre,pe,()=>fpTabFacturas(pacId,body,pacNombre,body.dataset.token));body.appendChild(pb);}
  const nueva=ce('button','fac-nueva');nueva.type='button';nueva.textContent='+ Cobrar y facturar';
  body.appendChild(nueva);
  const formBox=ce('div','');body.appendChild(formBox);
@@ -12010,9 +12050,10 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
     <div class="fac-campo"><label>Paga ahora (€)</label><input class="fac-pkim" inputmode="decimal" placeholder="150"></div><div class="fac-pkres"></div>`;
    const keep={};['fac-pkt2','fac-pkan','fac-pkim'].forEach(k=>{const e=pkb.querySelector('.'+k);if(e&&pintaPk._v&&pintaPk._v[k]!=null)e.value=pintaPk._v[k];});
    pkb.querySelectorAll('.fac-pka').forEach(b=>b.onclick=()=>{guardaPk();pkSel=b.dataset.g;if(pkSel!=='nuevo'){const a=A.find(x=>x.grupo===pkSel);pintaPk._v={'fac-pkim':String(a.falta).replace('.',',')};}pintaPk();});
-   pkb.querySelectorAll('.fac-pkc button').forEach(b=>b.onclick=()=>{guardaPk();pkCon=b.dataset.v;pintaPk();});
+   const pkEsp=()=>{const pr=pePrecio(d.precioEsp,pkCon,pkN);if(pr!=null){pintaPk._v=pintaPk._v||{};pintaPk._v['fac-pkt2']=String(pr).replace('.',',');}};
+   pkb.querySelectorAll('.fac-pkc button').forEach(b=>b.onclick=()=>{guardaPk();pkCon=b.dataset.v;pkEsp();pintaPk();});
    pkb.querySelectorAll('.fac-abs button').forEach(b=>b.onclick=()=>{const L=pintaPk._abs=pintaPk._abs||[],i=L.indexOf(b.dataset.a);if(i>=0)L.splice(i,1);else L.push(b.dataset.a);b.classList.toggle('on',i<0);resPk();total();});
-   pkb.querySelectorAll('.fac-pkn button').forEach(b=>b.onclick=()=>{guardaPk();pkN=+b.dataset.n;pintaPk();});
+   pkb.querySelectorAll('.fac-pkn button').forEach(b=>b.onclick=()=>{guardaPk();pkN=+b.dataset.n;pkEsp();pintaPk();});
    const no=pkb.querySelector('.fac-pkno');if(no)no.oninput=()=>{pkN=parseInt(no.value,10)||0;pkb.querySelectorAll('.fac-pkn button').forEach(x=>x.classList.remove('on'));resPk();};
    pkb.querySelectorAll('input:not(.fac-pkno)').forEach(i=>i.oninput=()=>{resPk();total();});resPk();total();};
   const guardaPk=()=>{pintaPk._v={};['fac-pkt2','fac-pkan','fac-pkim'].forEach(k=>{const e=pkb.querySelector('.'+k);if(e)pintaPk._v[k]=e.value;});};
@@ -12028,7 +12069,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
    if(enPack){if(pkSel!=='nuevo'&&!pintaPk._v){const a=(d.aMedias||[])[0];pintaPk._v={'fac-pkim':String(a.falta).replace('.',',')};}pintaPk();}total();};}
   // Pack cobrado entero que se factura sesión a sesión
   const psx=f.querySelector('.fac-psx');
-  const psPrecio=()=>{try{const sv=((CONF&&CONF.app&&CONF.app.servicios)||[]).find(x=>psCon&&x.nombre&&psCon.toLowerCase().replace(/^sesión de /,'')===String(x.nombre).toLowerCase());const pk=sv&&(sv.packs||[]).find(q=>+q[0]===psN);return pk?pk[1]:'';}catch(e){return '';}};
+  const psPrecio=()=>{const esp=pePrecio(d.precioEsp,psCon,psN);if(esp!=null)return esp;try{const sv=((CONF&&CONF.app&&CONF.app.servicios)||[]).find(x=>psCon&&x.nombre&&psCon.toLowerCase().replace(/^sesión de /,'')===String(x.nombre).toLowerCase());const pk=sv&&(sv.packs||[]).find(q=>+q[0]===psN);return pk?pk[1]:'';}catch(e){return '';}};
   const pintaPs=()=>{const v=psx.querySelector('.fac-pst');const val=v?v.value:'';
    psx.innerHTML=`<div class="fac-campo"><label>Tipo de sesión</label><div class="fac-chips fac-psc">${FAC_CONCEPTOS.filter(c=>/^Sesi/i.test(c)).map(c=>`<button type="button" data-v="${escH(c)}" class="${psCon===c?'on':''}">${escH(c.replace(/^Sesión de /,'').replace(/^./,x=>x.toUpperCase()))}</button>`).join('')}</div></div>
     <div class="fac-campo"><label>Pack de</label><div class="fac-chips fac-psn">${[5,10,20].map(n=>`<button type="button" data-n="${n}" class="${psN===n?'on':''}">${n} sesiones</button>`).join('')}</div></div>
@@ -12063,7 +12104,8 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
     <div class="fl-row"><div class="fac-campo"><label>Nº sesiones</label><div class="fl-step"><button type="button" class="fl-m">−</button><input class="fl-n" type="number" min="1" value="1" inputmode="numeric"><button type="button" class="fl-p2">+</button></div></div>
     <div class="fac-campo"><label>Precio por sesión (€)</label><input class="fl-p" inputmode="decimal" placeholder="60"></div></div>`;
    l.querySelectorAll('.fl-c button').forEach(b=>b.onclick=()=>{l.querySelectorAll('.fl-c button').forEach(x=>x.classList.toggle('on',x===b));l.dataset.c=b.dataset.v;
-    const pi=l.querySelector('.fl-p'),pr=FAC_PRECIO[b.dataset.v];if(pr!=null&&pr!==''&&(!pi.value||pi.dataset.auto)){pi.value=String(pr).replace('.',',');pi.dataset.auto='1';total();}});
+    const pi=l.querySelector('.fl-p'),esp=pePrecio(d.precioEsp,b.dataset.v,0),pr=esp!=null?esp:FAC_PRECIO[b.dataset.v];if(pr!=null&&pr!==''&&(!pi.value||pi.dataset.auto)){pi.value=String(pr).replace('.',',');pi.dataset.auto='1';total();}
+    {let h=l.querySelector('.fl-pe');if(esp!=null){if(!h){h=ce('div','fl-pe');l.appendChild(h);}const nor=FAC_PRECIO[b.dataset.v];h.textContent=`Precio especial${nor!=null&&nor!==''?' (el normal es '+String(nor).replace('.',',')+' €)':''}`;}else if(h)h.remove();}});
    l.querySelector('.fl-p').addEventListener('input',e=>{delete e.target.dataset.auto;});
    const n=l.querySelector('.fl-n');l.querySelector('.fl-m').onclick=()=>{n.value=Math.max(1,(+n.value||1)-1);total();};l.querySelector('.fl-p2').onclick=()=>{n.value=(+n.value||0)+1;total();};
    l.querySelectorAll('input').forEach(i=>i.oninput=total);
