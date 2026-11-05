@@ -53,7 +53,7 @@
       return `<div class="eq-card" data-id="${x.id}">
         <div class="eq-ch"><div class="eq-cic">${IC.club}</div><div><b class="no-tr">${esc(x.club)}</b>${x.equipo ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}</div>
           <span class="eq-st ${ok ? 'ok' : x.consentimiento === 'Retirado' ? 'no' : 'pe'}">${ok ? 'Lo compartes' : x.consentimiento === 'Retirado' ? 'No lo compartes' : 'Pendiente'}</span></div>
-        ${ok ? `<p class="eq-p">Tu club ve el parte de tu recuperación desde el ${esc(fe(x.consFecha))}. Tu historia clínica no la ve nadie más que tu fisio.</p>
+        ${ok ? `<p class="eq-p">Tu club ve el parte de tu recuperación desde el ${esc(fe(x.consFecha))}. Tu historia clínica no la ve nadie más que tu fisio.</p>${x.parte && x.parte.compEj ? '<p class="eq-p">Tu club también ve tus ejercicios.</p>' : ''}
           ${verParte(x.parte, 'Esto es lo que ve tu club')}
           <button type="button" class="eq-sec eq-ret">Dejar de compartir</button>`
         : `${verParte(x.parte, 'Así va tu recuperación')}
@@ -94,6 +94,15 @@
     });
   }
 
+  // Ejercicios compartidos (los mismos que tiene el jugador en su app)
+  function verEjercicios(L) {
+    const t = n => n >= 60 && n % 60 === 0 ? `${n / 60} min` : `${n} s`;
+    const dosis = e => e.series > 1 && e.reps ? `${e.series} series × ${e.reps}` : e.series > 1 && e.dur ? `${e.series} series × ${t(e.dur)}` : e.dur ? t(e.dur) : e.reps ? `× ${e.reps}` : '';
+    return `<div class="eq-bl"><span>Sus ejercicios</span><p class="eq-ejn">Su fisio ha compartido su programa para que lo pueda hacer también en los entrenos.</p><div class="eq-ejs">${L.map(e => {
+      const img = e.ytId ? `https://img.youtube.com/vi/${encodeURIComponent(e.ytId)}/mqdefault.jpg` : e.imagen;
+      return `<div class="eq-ej">${img ? `<div class="eq-ejim" style="background-image:url('${esc(img)}')">${e.ytId ? `<a href="https://www.youtube.com/watch?v=${encodeURIComponent(e.ytId)}" target="_blank" rel="noopener" aria-label="Ver vídeo"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></a>` : ''}</div>` : ''}
+        <div class="eq-ejt"><b class="no-tr">${esc(e.name)}</b>${dosis(e) ? `<small>${esc(dosis(e))}</small>` : ''}${e.desc ? `<p class="no-tr">${esc(e.desc)}</p>` : ''}</div></div>`; }).join('')}</div></div>`;
+  }
   // El parte tal como lo ve el club
   function verParte(p, titulo) {
     if (!p) return '';
@@ -105,6 +114,7 @@
       ${p.vuelta ? `<div class="eq-vu"><span>Vuelta prevista</span><b>${esc(fe(p.vuelta))}</b></div>` : ''}
       ${bloque('Qué le pasa', p.diagnostico)}${bloque('Qué puede hacer', p.puede)}${bloque('Qué no puede hacer', p.noPuede)}${bloque('Cómo empezar a entrenar', p.pautas)}
       ${(p.evolucion || []).length ? `<div class="eq-bl"><span>Evolución</span><div class="eq-evo">${p.evolucion.map(e => `<div class="eq-ev"><i class="${esc(e.sem || '')}"></i><b>${esc(fe(e.f))}${e.fisio ? ' · <span class="no-tr">' + esc(e.fisio) + '</span>' : ''}</b>${[SEM[e.sem], e.fase].filter(Boolean).length ? `<small>${junta([SEM[e.sem], e.fase])}</small>` : ''}${e.txt ? `<p class="no-tr">${esc(e.txt)}</p>` : ''}</div>`).join('')}</div></div>` : ''}
+      ${Array.isArray(p.ejercicios) && p.ejercicios.length ? verEjercicios(p.ejercicios) : ''}
       ${p.actualizado ? `<div class="eq-act">Actualizado el ${esc(fe(p.actualizado))}${p.fisio ? ' por ' + esc(p.fisio) : ''}</div>` : ''}`}
     </div>`;
   }
@@ -250,12 +260,14 @@
   function demoDatos() {
     const d = n => { const x = new Date(); x.setDate(x.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
     const dias = (desde, hasta, salto) => { const L = []; for (let i = desde; i <= hasta; i++) if (!salto || !salto.includes(i)) L.push(d(-i)); return L; };
-    const j = (id, jugador, equipo, semaforo, fase, diagnostico, vuelta, puede, noPuede, pautas, evolucion, racha) => ({ id, jugador, equipo, semaforo, fase, diagnostico, vuelta, puede, noPuede, pautas, evolucion, racha, actualizado: evolucion[0].f, fisio: 'Sara' });
+    const j = (id, jugador, equipo, semaforo, fase, diagnostico, vuelta, puede, noPuede, pautas, evolucion, racha, ejercicios) => ({ id, jugador, equipo, semaforo, fase, diagnostico, vuelta, puede, noPuede, pautas, evolucion, racha, ejercicios, actualizado: evolucion[0].f, fisio: 'Sara' });
     return { ok: true, demo: true, nombre: 'Ejemplo', semaforos: SEM, clubs: [{ id: 'demo', nombre: 'Club de ejemplo', deporte: 'Fútbol', jugadores: [
       j('d1', 'Marc García', 'Juvenil A', 'rojo', 'Tratamiento', 'Esguince de tobillo derecho, de grado medio.', d(21), 'Bici estática y trabajo de tren superior.', 'Correr, saltar y cambios de dirección.', 'Semana 1: bici 20 minutos.\nSemana 2: carrera continua suave.\nVuelta al grupo cuando lo confirmemos.',
-        [{ f: d(-1) + 'T18:30:00', fisio: 'Sara', sem: 'rojo', fase: 'Tratamiento', txt: 'Baja la inflamación y ya apoya sin dolor. Empezamos ejercicios de equilibrio.' }, { f: d(-6) + 'T17:00:00', fisio: 'Sara', sem: 'rojo', fase: 'Valoración', txt: 'Primera sesión: inflamación moderada, le cuesta apoyar.' }], dias(0, 5)),
+        [{ f: d(-1) + 'T18:30:00', fisio: 'Sara', sem: 'rojo', fase: 'Tratamiento', txt: 'Baja la inflamación y ya apoya sin dolor. Empezamos ejercicios de equilibrio.' }, { f: d(-6) + 'T17:00:00', fisio: 'Sara', sem: 'rojo', fase: 'Valoración', txt: 'Primera sesión: inflamación moderada, le cuesta apoyar.' }], dias(0, 5),
+        [{ name: 'Equilibrio a una pierna', series: 3, dur: 30, desc: 'Sobre la pierna lesionada, rodilla un poco flexionada.' }, { name: 'Elevación de talones', series: 3, reps: 15, desc: 'Despacio, subiendo y bajando en 3 segundos.' }, { name: 'Bicicleta estática', series: 1, dur: 1200, desc: 'Ritmo suave, sin dolor.' }]),
       j('d2', 'Pol Ruiz', 'Juvenil A', 'amarillo', 'Readaptación', 'Sobrecarga en los isquiotibiales.', d(4), 'Entrenar con el grupo, sin sprints.', 'Sprints y disparos a puerta.', 'Esta semana, intensidad progresiva. El sábado puede jugar unos minutos si no tiene molestias.',
-        [{ f: d(-2) + 'T19:00:00', fisio: 'Jonathan', sem: 'amarillo', fase: 'Readaptación', txt: 'Ya corre sin molestias. Le queda recuperar la velocidad.' }, { f: d(-9) + 'T19:00:00', fisio: 'Jonathan', sem: 'rojo', fase: 'Tratamiento', txt: 'Dolor al estirar y al acelerar.' }], dias(1, 14, [6, 10])),
+        [{ f: d(-2) + 'T19:00:00', fisio: 'Jonathan', sem: 'amarillo', fase: 'Readaptación', txt: 'Ya corre sin molestias. Le queda recuperar la velocidad.' }, { f: d(-9) + 'T19:00:00', fisio: 'Jonathan', sem: 'rojo', fase: 'Tratamiento', txt: 'Dolor al estirar y al acelerar.' }], dias(1, 14, [6, 10]),
+        [{ name: 'Puente de glúteo a una pierna', series: 3, reps: 12 }, { name: 'Nordic hamstring', series: 3, reps: 6, desc: 'Bajada lenta, con un compañero sujetando los tobillos.' }]),
       j('d3', 'Nil Serra', 'Infantil B', 'verde', 'Alta', 'Dolor de rodilla por crecimiento (Osgood-Schlatter), ya controlado.', '', 'Todo.', '', 'Seguir con los ejercicios de fuerza 2 días por semana.',
         [{ f: d(-3) + 'T18:00:00', fisio: 'Sara', sem: 'verde', fase: 'Alta', txt: 'Alta deportiva. Sin dolor en los últimos entrenos.' }], dias(0, 2)),
       j('d4', 'Aleix Ferrer', 'Infantil B', 'amarillo', 'Vuelta progresiva', 'Contractura en el gemelo izquierdo.', d(2), 'Entrenar al 70 %.', 'Partido completo.', 'Estiramientos antes y después de entrenar.',

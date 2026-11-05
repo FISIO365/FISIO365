@@ -497,12 +497,12 @@ const capTodos = async (t, q2) => { let recs = [], off = ''; do { const d = awai
 const EQX = require('./_equipo'), EQ = EQX.EQ;
 const EQ_SEM = { rojo: 'No entrena', amarillo: 'Entrena con limitaciones', verde: 'Puede jugar' };
 const EQ_FASES = ['Valoración', 'Tratamiento', 'Readaptación', 'Vuelta progresiva', 'Alta'];
-const eqTexto = club => `Acepto que FISIO365 comparta con ${club || 'mi club'} (sus entrenadores y coordinadores con acceso a «Mi equipo») el parte de mi recuperación: el diagnóstico explicado de forma sencilla, la fase en la que estoy, la previsión de vuelta, qué puedo y qué no puedo hacer, cómo volver a entrenar, cómo evoluciono y mi racha (los días que hago mis ejercicios). Mi historia clínica no se comparte. Puedo dejar de compartirlo cuando quiera desde la app.`;
+const eqTexto = club => `Acepto que FISIO365 comparta con ${club || 'mi club'} (sus entrenadores y coordinadores con acceso a «Mi equipo») el parte de mi recuperación: el diagnóstico explicado de forma sencilla, la fase en la que estoy, la previsión de vuelta, qué puedo y qué no puedo hacer, cómo volver a entrenar, cómo evoluciono, mi racha (los días que hago mis ejercicios) y, si mi fisio lo activa, mis ejercicios. Mi historia clínica no se comparte. Puedo dejar de compartirlo cuando quiera desde la app.`;
 const eqEvo = F => { try { const v = JSON.parse(F['EVOLUCIÓN'] || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
 const eqEsc = s => String(s || '').replace(/\\/g, '').replace(/'/g, "\\'");
-function eqParte(r) { const F = r.fields || {}; return { id: r.id, pacienteId: F['PACIENTE'] || '', jugador: F['JUGADOR'] || '', club: F['CLUB'] || '', equipo: F['EQUIPO'] || '', activo: !!F['ACTIVO'], consentimiento: F['CONSENTIMIENTO'] || 'Pendiente', consFecha: F['CONS FECHA'] || '', consQuien: F['CONS QUIÉN'] || '', menor: !!F['MENOR'], semaforo: F['SEMÁFORO'] || '', fase: F['FASE'] || '', diagnostico: F['DIAGNÓSTICO'] || '', vuelta: F['VUELTA'] || '', puede: F['PUEDE'] || '', noPuede: F['NO PUEDE'] || '', pautas: F['PAUTAS'] || '', evolucion: eqEvo(F), actualizado: F['ACTUALIZADO'] || '', fisio: F['FISIO'] || '', creado: F['CREADO'] || r.createdTime || '' }; }
+function eqParte(r) { const F = r.fields || {}; return { id: r.id, pacienteId: F['PACIENTE'] || '', jugador: F['JUGADOR'] || '', club: F['CLUB'] || '', equipo: F['EQUIPO'] || '', activo: !!F['ACTIVO'], consentimiento: F['CONSENTIMIENTO'] || 'Pendiente', consFecha: F['CONS FECHA'] || '', consQuien: F['CONS QUIÉN'] || '', menor: !!F['MENOR'], semaforo: F['SEMÁFORO'] || '', fase: F['FASE'] || '', diagnostico: F['DIAGNÓSTICO'] || '', vuelta: F['VUELTA'] || '', puede: F['PUEDE'] || '', noPuede: F['NO PUEDE'] || '', pautas: F['PAUTAS'] || '', evolucion: eqEvo(F), actualizado: F['ACTUALIZADO'] || '', fisio: F['FISIO'] || '', ejercicios: !!F['EJERCICIOS'], creado: F['CREADO'] || r.createdTime || '' }; }
 // Lo que ve el entrenador: solo el parte (sin datos del consentimiento ni ids de la clínica)
-const eqParteClub = r => { const p = eqParte(r); return { id: p.id, jugador: p.jugador, equipo: p.equipo, semaforo: p.semaforo, fase: p.fase, diagnostico: p.diagnostico, vuelta: p.vuelta, puede: p.puede, noPuede: p.noPuede, pautas: p.pautas, evolucion: p.evolucion.map(e => ({ f: e.f, fisio: String(e.fisio || '').split(' ')[0], txt: e.txt || '', sem: e.sem || '', fase: e.fase || '' })), actualizado: p.actualizado, fisio: String(p.fisio || '').split(' ')[0] }; };
+const eqParteClub = r => { const p = eqParte(r); return { compEj: p.ejercicios, id: p.id, jugador: p.jugador, equipo: p.equipo, semaforo: p.semaforo, fase: p.fase, diagnostico: p.diagnostico, vuelta: p.vuelta, puede: p.puede, noPuede: p.noPuede, pautas: p.pautas, evolucion: p.evolucion.map(e => ({ f: e.f, fisio: String(e.fisio || '').split(' ')[0], txt: e.txt || '', sem: e.sem || '', fase: e.fase || '' })), actualizado: p.actualizado, fisio: String(p.fisio || '').split(' ')[0] }; };
 // Equipos de un club: cada acceso puede ver solo sus equipos (EQUIPOS, uno por línea); vacío = todo el club (coordinador)
 const eqNorm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 const eqEquiposAcc = F => String((F || {})['EQUIPOS'] || '').split('\n').map(x => x.trim()).filter(Boolean);
@@ -526,6 +526,13 @@ async function eqRachas(pids) {
   }
   Object.keys(out).forEach(k => { out[k] = [...out[k]].sort(); });
   return out;
+}
+// Ejercicios del programa (solo de los partes en que el fisio activó «Compartir sus ejercicios con el club»)
+async function eqEjercicios(pid) {
+  try { const pr = await programaApp(pid); return (pr.ejercicios || []).map(e => ({ name: e.name, series: e.series, reps: e.reps, dur: e.dur, descanso: e.descanso, desc: e.desc, explica: e.explica || '', ytId: e.ytId || '', imagen: e.imagen || '' })); } catch (e) { return []; }
+}
+async function eqConEjercicios(pars, base) {
+  return Promise.all(pars.map(async r => { const x = base(r); if (r.fields['EJERCICIOS']) x.ejercicios = await eqEjercicios(r.fields['PACIENTE']); else delete x.ejercicios; return x; }));
 }
 async function eqNombresClubs(ids) {
   const out = {};
@@ -2831,6 +2838,89 @@ async function porQueAlHist(pid, nuevo, fisio, hoy) {
   } catch (e) { console.error('porque-hist', e.message); }
 }
 const _memo = new Map(), _pacB = { t: 0, v: null, p: null }; // _pacB: nombres y teléfonos de todos los pacientes (5 min)
+// Programa de ejercicios de un paciente tal como lo ve en su app (lo usan la app y «Mi equipo»)
+async function programaApp(patientId) {
+    const planUrl = `https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula={PacienteID}="${patientId}"&sort[0][field]=FechaAsignacion&sort[0][direction]=desc&maxRecords=1`;
+  const planRes = await fetch(planUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+  const planData = await planRes.json();
+  if (!planData.records?.length) return { ejercicios: [], fisio: null, mensajeFisio: '', ultimaSession: '' };
+  const plan = planData.records[0].fields;
+  let ejercicios = [];
+  try { ejercicios = JSON.parse(plan['Ejercicios'] || '[]'); } catch(e) { ejercicios = []; }
+  ejercicios = ejercicios.map((ej, i) => {
+    let ytId = '';
+    try {
+      const ytUrl = (ej.youtubeUrl || '').trim();
+      const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/|shorts\/)\s*([\w-]{6,})/);
+      if (ytMatch) ytId = ytMatch[1].trim();
+    } catch(e) { ytId = ''; }
+    return {
+      id: `ej_${i}`,
+      name: ej.nombre || '',
+      zona: ej.zona || '',
+      series: parseInt(ej.series) || 0,
+      reps: parseInt(ej.reps) || 0,
+      dur: parseInt(ej.duracion) || 0,
+      descanso: ej.v2 ? (parseInt(ej.descanso) || 0) : 0, // los programas antiguos traían 30 s puestos solos
+      desc: ej.descripcion || '',
+      sp: ej.sp ? 1 : 0,
+      ytId,
+      imagen: ej.imagen || '',
+    };
+  });
+
+  // Desde la biblioteca: la explicación de cada ejercicio, y vídeo/imagen en los que no lo traen
+  {
+    try {
+      const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+      const F_NOMBRE = 'flda62z2UH2gXmmky', F_IMG = 'fldXYCWY9gPOh657M', F_YT = 'fldfB2hp9Ndjr0xAP', F_DESC = 'fld59uaaRP043hTUK', F_DESC_SP = 'fldDescSuPelv01Ab';
+      let biblio = global._biblioApp && Date.now() - global._biblioApp.t < 10 * 60e3 ? global._biblioApp.v : null;
+      let offset = null;
+      if (!biblio) { biblio = {}; do {
+        const u = `https://api.airtable.com/v0/${BASE_ID}/${BIBLIO_TABLE}?returnFieldsByFieldId=true&fields[]=${F_NOMBRE}&fields[]=${F_IMG}&fields[]=${F_YT}&fields[]=${F_DESC}&fields[]=${F_DESC_SP}&pageSize=100${offset ? '&offset=' + offset : ''}`;
+        const br = await fetch(u, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+        const bd = await br.json();
+        (bd.records || []).forEach(rec => {
+          const f = rec.fields || {};
+          const k = norm(f[F_NOMBRE]);
+          if (k) biblio[k] = { yt: f[F_YT] || '', img: f[F_IMG]?.[0]?.url || '', explica: String(f[F_DESC] || '').trim(), explicaSP: String(f[F_DESC_SP] || '').trim() };
+        });
+        offset = bd.offset || null;
+      } while (offset); global._biblioApp = { t: Date.now(), v: biblio }; }
+      ejercicios = ejercicios.map(ej => {
+        const b = biblio[norm(ej.name)];
+        if (!b) return ej;
+        // Ejercicio general usado en suelo pélvico: si el fisio lo marcó en el programa, sale su explicación propia
+        const ex = (ej.sp && b.explicaSP) ? b.explicaSP : b.explica;
+        if (ex && ex !== ej.desc) ej = { ...ej, explica: ex };
+        if (ej.ytId) return ej;
+        const m = (b.yt || '').trim().match(/(?:v=|youtu\.be\/|shorts\/)\s*([\w-]{6,})/);
+        return { ...ej, ytId: m ? m[1].trim() : '', imagen: ej.imagen || b.img };
+      });
+    } catch(e) {}
+  }
+
+  let fisio = null;
+  try {
+    const fisioId = plan['FisioID'];
+    if (fisioId) {
+      const fisioRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}/${fisioId}`, {
+        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+      });
+      if (fisioRes.ok) {
+        const fd = await fisioRes.json();
+        fisio = {
+          id: fisioId,
+          nombre: fd.fields['Name'] || '',
+          colegiado: fd.fields['NºColegiado'] || '',
+          foto: fd.fields['Foto']?.[0]?.url || ''
+        };
+      }
+    }
+  } catch(e) { fisio = null; }
+  return { ejercicios, fisio, mensajeFisio: plan['MensajeFisio'] || '', ultimaSession: plan['UltimaSession'] || '' };
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -4784,6 +4874,7 @@ module.exports = async function handler(req, res) {
           if (c.semaforo !== undefined) f['SEMÁFORO'] = EQ_SEM[c.semaforo] ? c.semaforo : '';
           txt('FASE', c.fase, 60); txt('DIAGNÓSTICO', c.diagnostico); txt('PUEDE', c.puede); txt('NO PUEDE', c.noPuede); txt('PAUTAS', c.pautas); txt('EQUIPO', c.equipo, 80);
           if (c.vuelta !== undefined) f['VUELTA'] = /^\d{4}-\d{2}-\d{2}$/.test(c.vuelta || '') ? c.vuelta : null;
+          if (c.ejercicios !== undefined) f['EJERCICIOS'] = !!c.ejercicios;
           if (c.menor !== undefined) { f['MENOR'] = !!c.menor; if (c.menor && F['CONSENTIMIENTO'] === 'Aceptado' && !/tutor/i.test(F['CONS QUIÉN'] || '')) f['CONSENTIMIENTO'] = 'Pendiente'; }
           const nota = String(c.nota || '').trim().slice(0, 2000), evo = eqEvo(F);
           const sem = f['SEMÁFORO'] !== undefined ? f['SEMÁFORO'] : (F['SEMÁFORO'] || ''), fase = f['FASE'] !== undefined ? f['FASE'] : (F['FASE'] || '');
@@ -6864,7 +6955,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       try {
         const nom = await eqNombresClubs([cid]); if (!nom[cid]) return res.status(404).json({ ok: false });
         const orden = { rojo: 0, amarillo: 1, verde: 2, '': 3 }, pars = await eqPartes(`AND({CLUB}='${cid}',{ACTIVO},{CONSENTIMIENTO}='Aceptado')`), rachas = await eqRachas(pars.map(r => r.fields['PACIENTE']));
-        return res.status(200).json({ ok: true, vista: true, nombre: 'Vista previa', clubs: [{ id: cid, nombre: nom[cid].nombre, deporte: nom[cid].deporte, rol: 'Coordinador', equipos: [], jugadores: pars.map(r => Object.assign(eqParteClub(r), { racha: rachas[r.fields['PACIENTE']] || [] })).sort((x, y) => (orden[x.semaforo] ?? 3) - (orden[y.semaforo] ?? 3) || x.jugador.localeCompare(y.jugador, 'es')) }], semaforos: EQ_SEM });
+        return res.status(200).json({ ok: true, vista: true, nombre: 'Vista previa', clubs: [{ id: cid, nombre: nom[cid].nombre, deporte: nom[cid].deporte, rol: 'Coordinador', equipos: [], jugadores: (await eqConEjercicios(pars, r => Object.assign(eqParteClub(r), { racha: rachas[r.fields['PACIENTE']] || [] }))).sort((x, y) => (orden[x.semaforo] ?? 3) - (orden[y.semaforo] ?? 3) || x.jugador.localeCompare(y.jugador, 'es')) }], semaforos: EQ_SEM });
       } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
     }
     const ids = String(req.query.a || '').split(',').slice(0, 10), toks = String(req.query.t || '').split(',');
@@ -6881,7 +6972,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const suyos = accs.filter(x => x.fields['CLUB'] === cid), ve = equipo => suyos.some(x => eqVeEquipo(x.fields, equipo));
         const pars = (await eqPartes(`AND({CLUB}='${cid}',{ACTIVO},{CONSENTIMIENTO}='Aceptado')`)).filter(r => ve(r.fields['EQUIPO']));
         const rachas = await eqRachas(pars.map(r => r.fields['PACIENTE']));
-        clubs.push({ id: cid, nombre: nom[cid].nombre, deporte: nom[cid].deporte, rol: a.fields['ROL'] || '', equipos: suyos.some(x => !eqEquiposAcc(x.fields).length) ? [] : eqUnicos(suyos.flatMap(x => eqEquiposAcc(x.fields))), jugadores: pars.map(r => Object.assign(eqParteClub(r), { racha: rachas[r.fields['PACIENTE']] || [] })).sort((x, y) => (orden[x.semaforo] ?? 3) - (orden[y.semaforo] ?? 3) || x.jugador.localeCompare(y.jugador, 'es')) }); }
+        clubs.push({ id: cid, nombre: nom[cid].nombre, deporte: nom[cid].deporte, rol: a.fields['ROL'] || '', equipos: suyos.some(x => !eqEquiposAcc(x.fields).length) ? [] : eqUnicos(suyos.flatMap(x => eqEquiposAcc(x.fields))), jugadores: (await eqConEjercicios(pars, r => Object.assign(eqParteClub(r), { racha: rachas[r.fields['PACIENTE']] || [] }))).sort((x, y) => (orden[x.semaforo] ?? 3) - (orden[y.semaforo] ?? 3) || x.jugador.localeCompare(y.jugador, 'es')) }); }
       const ahoraI = new Date().toISOString();
       for (const a of accs) if (!a.fields['ÚLTIMO ACCESO'] || Date.now() - Date.parse(a.fields['ÚLTIMO ACCESO']) > 30 * 60e3) await at(`${EQ.acc}/${a.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ÚLTIMO ACCESO': ahoraI } }) }).catch(() => {});
       return res.status(200).json({ ok: true, nombre: accs[0].fields['NOMBRE'] || '', clubs, semaforos: EQ_SEM });
@@ -7008,90 +7099,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
 
   // ── GET PROGRAMA ─────────────────────────────────────────────────────────
   try {
-    const planUrl = `https://api.airtable.com/v0/${BASE_ID}/${PLAN_TABLE}?filterByFormula={PacienteID}="${patientId}"&sort[0][field]=FechaAsignacion&sort[0][direction]=desc&maxRecords=1`;
-    const planRes = await fetch(planUrl, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-    const planData = await planRes.json();
-    if (!planData.records?.length) return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '', ultimaSession: '' });
-    const plan = planData.records[0].fields;
-    let ejercicios = [];
-    try { ejercicios = JSON.parse(plan['Ejercicios'] || '[]'); } catch(e) { ejercicios = []; }
-    ejercicios = ejercicios.map((ej, i) => {
-      let ytId = '';
-      try {
-        const ytUrl = (ej.youtubeUrl || '').trim();
-        const ytMatch = ytUrl.match(/(?:v=|youtu\.be\/|shorts\/)\s*([\w-]{6,})/);
-        if (ytMatch) ytId = ytMatch[1].trim();
-      } catch(e) { ytId = ''; }
-      return {
-        id: `ej_${i}`,
-        name: ej.nombre || '',
-        zona: ej.zona || '',
-        series: parseInt(ej.series) || 0,
-        reps: parseInt(ej.reps) || 0,
-        dur: parseInt(ej.duracion) || 0,
-        descanso: ej.v2 ? (parseInt(ej.descanso) || 0) : 0, // los programas antiguos traían 30 s puestos solos
-        desc: ej.descripcion || '',
-        sp: ej.sp ? 1 : 0,
-        ytId,
-        imagen: ej.imagen || '',
-      };
-    });
-
-    // Desde la biblioteca: la explicación de cada ejercicio, y vídeo/imagen en los que no lo traen
-    {
-      try {
-        const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
-        const F_NOMBRE = 'flda62z2UH2gXmmky', F_IMG = 'fldXYCWY9gPOh657M', F_YT = 'fldfB2hp9Ndjr0xAP', F_DESC = 'fld59uaaRP043hTUK', F_DESC_SP = 'fldDescSuPelv01Ab';
-        let biblio = global._biblioApp && Date.now() - global._biblioApp.t < 10 * 60e3 ? global._biblioApp.v : null;
-        let offset = null;
-        if (!biblio) { biblio = {}; do {
-          const u = `https://api.airtable.com/v0/${BASE_ID}/${BIBLIO_TABLE}?returnFieldsByFieldId=true&fields[]=${F_NOMBRE}&fields[]=${F_IMG}&fields[]=${F_YT}&fields[]=${F_DESC}&fields[]=${F_DESC_SP}&pageSize=100${offset ? '&offset=' + offset : ''}`;
-          const br = await fetch(u, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
-          const bd = await br.json();
-          (bd.records || []).forEach(rec => {
-            const f = rec.fields || {};
-            const k = norm(f[F_NOMBRE]);
-            if (k) biblio[k] = { yt: f[F_YT] || '', img: f[F_IMG]?.[0]?.url || '', explica: String(f[F_DESC] || '').trim(), explicaSP: String(f[F_DESC_SP] || '').trim() };
-          });
-          offset = bd.offset || null;
-        } while (offset); global._biblioApp = { t: Date.now(), v: biblio }; }
-        ejercicios = ejercicios.map(ej => {
-          const b = biblio[norm(ej.name)];
-          if (!b) return ej;
-          // Ejercicio general usado en suelo pélvico: si el fisio lo marcó en el programa, sale su explicación propia
-          const ex = (ej.sp && b.explicaSP) ? b.explicaSP : b.explica;
-          if (ex && ex !== ej.desc) ej = { ...ej, explica: ex };
-          if (ej.ytId) return ej;
-          const m = (b.yt || '').trim().match(/(?:v=|youtu\.be\/|shorts\/)\s*([\w-]{6,})/);
-          return { ...ej, ytId: m ? m[1].trim() : '', imagen: ej.imagen || b.img };
-        });
-      } catch(e) {}
-    }
-
-    let fisio = null;
-    try {
-      const fisioId = plan['FisioID'];
-      if (fisioId) {
-        const fisioRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${FISIOS_TABLE}/${fisioId}`, {
-          headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-        });
-        if (fisioRes.ok) {
-          const fd = await fisioRes.json();
-          fisio = {
-            id: fisioId,
-            nombre: fd.fields['Name'] || '',
-            colegiado: fd.fields['NºColegiado'] || '',
-            foto: fd.fields['Foto']?.[0]?.url || ''
-          };
-        }
-      }
-    } catch(e) { fisio = null; }
-    return res.status(200).json({
-      ejercicios,
-      fisio,
-      mensajeFisio: plan['MensajeFisio'] || '',
-      ultimaSession: plan['UltimaSession'] || ''
-    });
+    return res.status(200).json(await programaApp(patientId));
   } catch(e) {
     return res.status(200).json({ ejercicios: [], fisio: null, mensajeFisio: '', ultimaSession: '' });
   }

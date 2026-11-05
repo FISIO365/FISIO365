@@ -4,6 +4,26 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Sus ejercicios": [
+"Els seus exercicis",
+"Their exercises"
+],
+"Su fisio ha compartido su programa para que lo pueda hacer también en los entrenos.": [
+"El seu fisio ha compartit el programa perquè el pugui fer també als entrenaments.",
+"Their physio has shared the programme so they can also do it at training."
+],
+"Tu club también ve tus ejercicios.": [
+"El teu club també veu els teus exercicis.",
+"Your club can also see your exercises."
+],
+"{} series × {}": [
+"{} sèries × {}",
+"{} sets × {}"
+],
+"{} series × {} s": [
+"{} sèries × {} s",
+"{} sets × {} s"
+],
 "Ejemplo: así lo ve el entrenador": [
 "Exemple: així ho veu l'entrenador",
 "Example: this is what the coach sees"
@@ -288,9 +308,9 @@
 "El teu entrenador vol veure com va la teva recuperació: què tens, quan es preveu que tornis i què pots fer mentrestant. Només ho veurà si ho acceptes.",
 "Your coach would like to see how your recovery is going: what's wrong, when you're expected back and what you can do in the meantime. They'll only see it if you agree."
 ],
-"Acepto que FISIO365 comparta con {} (sus entrenadores y coordinadores con acceso a «Mi equipo») el parte de mi recuperación: el diagnóstico explicado de forma sencilla, la fase en la que estoy, la previsión de vuelta, qué puedo y qué no puedo hacer, cómo volver a entrenar, cómo evoluciono y mi racha (los días que hago mis ejercicios). Mi historia clínica no se comparte. Puedo dejar de compartirlo cuando quiera desde la app.": [
-"Accepto que FISIO365 comparteixi amb {} (els seus entrenadors i coordinadors amb accés a «El meu equip») el parte de la meva recuperació: el diagnòstic explicat de manera senzilla, la fase en què soc, la previsió de tornada, què puc i què no puc fer, com tornar a entrenar, com evoluciono i la meva ratxa (els dies que faig els exercicis). La meva història clínica no es comparteix. Puc deixar de compartir-ho quan vulgui des de l'app.",
-"I agree that FISIO365 may share with {} (its coaches and coordinators with access to «My team») my recovery report: the diagnosis explained in plain words, the stage I'm at, the expected return date, what I can and can't do, how to get back to training, how I'm progressing and my streak (the days I do my exercises). My medical record is not shared. I can stop sharing it whenever I want from the app."
+"Acepto que FISIO365 comparta con {} (sus entrenadores y coordinadores con acceso a «Mi equipo») el parte de mi recuperación: el diagnóstico explicado de forma sencilla, la fase en la que estoy, la previsión de vuelta, qué puedo y qué no puedo hacer, cómo volver a entrenar, cómo evoluciono, mi racha (los días que hago mis ejercicios) y, si mi fisio lo activa, mis ejercicios. Mi historia clínica no se comparte. Puedo dejar de compartirlo cuando quiera desde la app.": [
+"Accepto que FISIO365 comparteixi amb {} (els seus entrenadors i coordinadors amb accés a «El meu equip») el parte de la meva recuperació: el diagnòstic explicat de manera senzilla, la fase en què soc, la previsió de tornada, què puc i què no puc fer, com tornar a entrenar, com evoluciono, la meva ratxa (els dies que faig els exercicis) i, si el meu fisio ho activa, els meus exercicis. La meva història clínica no es comparteix. Puc deixar de compartir-ho quan vulgui des de l'app.",
+"I agree that FISIO365 may share with {} (its coaches and coordinators with access to «My team») my recovery report: the diagnosis explained in plain words, the stage I'm at, the expected return date, what I can and can't do, how to get back to training, how I'm progressing, my streak (the days I do my exercises) and, if my physio turns it on, my exercises. My medical record is not shared. I can stop sharing it whenever I want from the app."
 ],
 "Soy yo, el jugador": [
 "Soc jo, el jugador",
