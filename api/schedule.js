@@ -503,12 +503,17 @@ const eqEsc = s => String(s || '').replace(/\\/g, '').replace(/'/g, "\\'");
 function eqParte(r) { const F = r.fields || {}; return { id: r.id, pacienteId: F['PACIENTE'] || '', jugador: F['JUGADOR'] || '', club: F['CLUB'] || '', equipo: F['EQUIPO'] || '', activo: !!F['ACTIVO'], consentimiento: F['CONSENTIMIENTO'] || 'Pendiente', consFecha: F['CONS FECHA'] || '', consQuien: F['CONS QUIÉN'] || '', menor: !!F['MENOR'], semaforo: F['SEMÁFORO'] || '', fase: F['FASE'] || '', diagnostico: F['DIAGNÓSTICO'] || '', vuelta: F['VUELTA'] || '', puede: F['PUEDE'] || '', noPuede: F['NO PUEDE'] || '', pautas: F['PAUTAS'] || '', evolucion: eqEvo(F), actualizado: F['ACTUALIZADO'] || '', fisio: F['FISIO'] || '', creado: F['CREADO'] || r.createdTime || '' }; }
 // Lo que ve el entrenador: solo el parte (sin datos del consentimiento ni ids de la clínica)
 const eqParteClub = r => { const p = eqParte(r); return { id: p.id, jugador: p.jugador, equipo: p.equipo, semaforo: p.semaforo, fase: p.fase, diagnostico: p.diagnostico, vuelta: p.vuelta, puede: p.puede, noPuede: p.noPuede, pautas: p.pautas, evolucion: p.evolucion.map(e => ({ f: e.f, fisio: String(e.fisio || '').split(' ')[0], txt: e.txt || '', sem: e.sem || '', fase: e.fase || '' })), actualizado: p.actualizado, fisio: String(p.fisio || '').split(' ')[0] }; };
-function eqAcc(r) { const F = r.fields || {}; return { id: r.id, nombre: F['NOMBRE'] || '', email: F['EMAIL'] || '', telf: F['TELF'] || '', pin: F['PIN'] || '', club: F['CLUB'] || '', rol: F['ROL'] || '', activo: !!F['ACTIVO'], ultimo: F['ÚLTIMO ACCESO'] || '', creado: F['CREADO'] || r.createdTime || '', avisos: !!F['PushSubscription'] }; }
+// Equipos de un club: cada acceso puede ver solo sus equipos (EQUIPOS, uno por línea); vacío = todo el club (coordinador)
+const eqNorm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+const eqEquiposAcc = F => String((F || {})['EQUIPOS'] || '').split('\n').map(x => x.trim()).filter(Boolean);
+const eqVeEquipo = (F, equipo) => { const L = eqEquiposAcc(F); return !L.length || L.some(t => eqNorm(t) === eqNorm(equipo)); };
+const eqUnicos = L => { const m = new Map(); L.map(x => String(x || '').trim()).filter(Boolean).forEach(x => { if (!m.has(eqNorm(x))) m.set(eqNorm(x), x); }); return [...m.values()].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })); };
+function eqAcc(r) { const F = r.fields || {}; return { id: r.id, nombre: F['NOMBRE'] || '', email: F['EMAIL'] || '', telf: F['TELF'] || '', pin: F['PIN'] || '', club: F['CLUB'] || '', rol: F['ROL'] || '', equipos: eqEquiposAcc(F), activo: !!F['ACTIVO'], ultimo: F['ÚLTIMO ACCESO'] || '', creado: F['CREADO'] || r.createdTime || '', avisos: !!F['PushSubscription'] }; }
 const eqAccesosClub = club => capTodos(EQ.acc, `filterByFormula=${encodeURIComponent(`{CLUB}='${eqEsc(club)}'`)}`);
 const eqPartes = f => capTodos(EQ.par, `filterByFormula=${encodeURIComponent(f)}`);
-async function eqAvisarClub(club, datos) {
+async function eqAvisarClub(club, datos, equipo) {
   const { avisar } = require('./_push');
-  const L = (await eqAccesosClub(club).catch(() => [])).filter(a => a.fields['ACTIVO'] && a.fields['PushSubscription']);
+  const L = (await eqAccesosClub(club).catch(() => [])).filter(a => a.fields['ACTIVO'] && a.fields['PushSubscription'] && eqVeEquipo(a.fields, equipo));
   let n = 0; for (const a of L) { if (await avisar('equipo', a.id, datos).catch(() => false)) n++; }
   return n;
 }
@@ -4696,13 +4701,14 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-eq-club') {
           if (!okId(q.club)) return res.status(400).json({ ok: false });
           const [accs, pars] = await Promise.all([eqAccesosClub(q.club), eqPartes(`AND({CLUB}='${q.club}',{ACTIVO})`)]);
-          return res.status(200).json({ ok: true, accesos: accs.map(eqAcc).sort((a, b) => (b.activo - a.activo) || a.nombre.localeCompare(b.nombre, 'es')), jugadores: pars.map(eqParte).sort((a, b) => a.jugador.localeCompare(b.jugador, 'es')), semaforos: EQ_SEM });
+          return res.status(200).json({ ok: true, accesos: accs.map(eqAcc).sort((a, b) => (b.activo - a.activo) || a.nombre.localeCompare(b.nombre, 'es')), jugadores: pars.map(eqParte).sort((a, b) => a.equipo.localeCompare(b.equipo, 'es', { numeric: true }) || a.jugador.localeCompare(b.jugador, 'es')), equipos: eqUnicos([...pars.map(r => r.fields['EQUIPO']), ...accs.flatMap(a => eqEquiposAcc(a.fields))]), semaforos: EQ_SEM });
         }
         if (action === 'seg-eq-ficha') {
           if (!okId(q.id)) return res.status(400).json({ ok: false });
-          const [pars, accs, cls] = await Promise.all([eqPartes(`AND({PACIENTE}='${q.id}',{ACTIVO})`), capTodos(EQ.acc, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB`), capTodos(CAP.club, 'fields[]=NOMBRE&fields[]=DEPORTE')]);
+          const [pars, accs, cls, todas] = await Promise.all([eqPartes(`AND({PACIENTE}='${q.id}',{ACTIVO})`), capTodos(EQ.acc, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPOS`), capTodos(CAP.club, 'fields[]=NOMBRE&fields[]=DEPORTE'), capTodos(EQ.par, `filterByFormula=${encodeURIComponent('{ACTIVO}')}&fields[]=CLUB&fields[]=EQUIPO`)]);
           const conAcc = new Set(accs.map(a => a.fields['CLUB']).filter(Boolean)), mios = new Set(pars.map(p => p.fields['CLUB']));
-          const clubs = cls.filter(c => conAcc.has(c.id) || mios.has(c.id)).map(c => ({ id: c.id, nombre: c.fields['NOMBRE'] || '', deporte: c.fields['DEPORTE'] || '', activo: conAcc.has(c.id) })).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+          const eqDe = cid => eqUnicos([...todas.filter(r => r.fields['CLUB'] === cid).map(r => r.fields['EQUIPO']), ...accs.filter(a => a.fields['CLUB'] === cid).flatMap(a => eqEquiposAcc(a.fields))]);
+          const clubs = cls.filter(c => conAcc.has(c.id) || mios.has(c.id)).map(c => ({ id: c.id, nombre: c.fields['NOMBRE'] || '', deporte: c.fields['DEPORTE'] || '', activo: conAcc.has(c.id), equipos: eqDe(c.id) })).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
           return res.status(200).json({ ok: true, partes: pars.map(eqParte), clubs, semaforos: EQ_SEM, fases: EQ_FASES });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -4715,6 +4721,7 @@ module.exports = async function handler(req, res) {
           if (!email && String(telf).replace(/\D/g, '').length < 9) return res.status(200).json({ ok: false, error: 'Pon su email o su móvil: es con lo que entrará' });
           const f = { NOMBRE: nombre, EMAIL: email, TELF: telf.slice(0, 30), ROL: String(c.rol || '').trim().slice(0, 60), CLUB: club };
           if (c.activo !== undefined) f['ACTIVO'] = !!c.activo;
+          if (c.equipos !== undefined) f['EQUIPOS'] = eqUnicos(Array.isArray(c.equipos) ? c.equipos.map(x => String(x).slice(0, 80)) : []).slice(0, 30).join('\n');
           const mismos = email ? await capTodos(EQ.acc, `filterByFormula=${encodeURIComponent(`LOWER(TRIM({EMAIL}&''))='${eqEsc(email)}'`)}`) : [];
           let d;
           if (!okId(q.id)) {
@@ -4759,8 +4766,10 @@ module.exports = async function handler(req, res) {
           f['ACTUALIZADO'] = ahoraI; f['FISIO'] = quien;
           const d = await at(`${EQ.par}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
           if (!d || d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
-          const comp = (f['CONSENTIMIENTO'] || F['CONSENTIMIENTO']) === 'Aceptado' && !!F['ACTIVO'];
-          const avisados = comp && (nota || cambio) ? await eqAvisarClub(F['CLUB'], { title: `Parte de ${String(F['JUGADOR'] || '').trim().split(/\s+/)[0] || 'tu jugador'}`, body: [EQ_SEM[sem], fase].filter(Boolean).join(' · ') || 'Hay novedades en su parte', url: `/?s=miequipo&p=${q.id}`, tag: 'eqp-' + q.id }).catch(() => 0) : 0;
+          const comp = (f['CONSENTIMIENTO'] || F['CONSENTIMIENTO']) === 'Aceptado' && !!F['ACTIVO'], equipo = f['EQUIPO'] !== undefined ? f['EQUIPO'] : (F['EQUIPO'] || '');
+          const avisados = comp && (nota || cambio) ? await eqAvisarClub(F['CLUB'], { title: `Parte de ${String(F['JUGADOR'] || '').trim().split(/\s+/)[0] || 'tu jugador'}`, body: [EQ_SEM[sem], fase].filter(Boolean).join(' · ') || 'Hay novedades en su parte', url: `/?s=miequipo&p=${q.id}`, tag: 'eqp-' + q.id }, equipo).catch(() => 0) : 0;
+          // El jugador (o sus padres, si la cuenta es suya) también recibe el aviso: el parte lo ve siempre en «Mi club»
+          if (nota || cambio) { try { const { avisar } = require('./_push'); await avisar('paciente', F['PACIENTE'], { title: 'Tu parte de recuperación', body: [EQ_SEM[sem], fase].filter(Boolean).join(' · ') || 'Tu fisio lo ha actualizado', url: '/?s=miclub', tag: 'eqj-' + q.id }); } catch (e) {} }
           return res.status(200).json({ ok: true, parte: eqParte(d), compartido: comp, avisados });
         }
         if (action === 'seg-eq-quitar') { // ya no juega en ese club (o se vinculó por error): deja de verse en el club
@@ -6800,7 +6809,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const linea = `${ahoraI} · ${acepta ? 'ACEPTA' : 'RETIRA'} · ${qTxt} · IP ${ip || '—'} · ${nav}${acepta ? ` · Leído en ${idioma} · Texto (original en castellano): ` + eqTexto(cn) : ''}`;
       const d = await at(`${EQ.par}/${b.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { CONSENTIMIENTO: acepta ? 'Aceptado' : 'Retirado', 'CONS FECHA': ahoraI, 'CONS QUIÉN': qTxt, 'CONS DATOS': [String(F['CONS DATOS'] || '').trim(), linea].filter(Boolean).join('\n').slice(-20000) } }) });
       if (!d || d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
-      if (acepta && F['CONSENTIMIENTO'] !== 'Aceptado') await eqAvisarClub(F['CLUB'], { title: cn, body: `${String(F['JUGADOR'] || '').trim().split(/\s+/)[0] || 'Un jugador'} ya comparte su parte contigo`, url: `/?s=miequipo&p=${b.id}`, tag: 'eqp-' + b.id }).catch(() => 0);
+      if (acepta && F['CONSENTIMIENTO'] !== 'Aceptado') await eqAvisarClub(F['CLUB'], { title: cn, body: `${String(F['JUGADOR'] || '').trim().split(/\s+/)[0] || 'Un jugador'} ya comparte su parte contigo`, url: `/?s=miequipo&p=${b.id}`, tag: 'eqp-' + b.id }, F['EQUIPO']).catch(() => 0);
       const x = eqParte(d);
       return res.status(200).json({ ok: true, parte: { id: x.id, club: cn, equipo: x.equipo, consentimiento: x.consentimiento, consFecha: x.consFecha, consQuien: x.consQuien, menor: x.menor, texto: eqTexto(cn), parte: eqParteClub(d) } });
     } catch (e) { return res.status(500).json({ ok: false, error: 'Error' }); }
@@ -6817,8 +6826,9 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const nom = await eqNombresClubs(accs.map(a => a.fields['CLUB'])), orden = { rojo: 0, amarillo: 1, verde: 2, '': 3 };
       const clubs = [];
       for (const a of accs) { const cid = a.fields['CLUB']; if (!nom[cid] || clubs.some(c => c.id === cid)) continue;
-        const pars = await eqPartes(`AND({CLUB}='${cid}',{ACTIVO},{CONSENTIMIENTO}='Aceptado')`);
-        clubs.push({ id: cid, nombre: nom[cid].nombre, deporte: nom[cid].deporte, rol: a.fields['ROL'] || '', jugadores: pars.map(eqParteClub).sort((x, y) => (orden[x.semaforo] ?? 3) - (orden[y.semaforo] ?? 3) || x.jugador.localeCompare(y.jugador, 'es')) }); }
+        const suyos = accs.filter(x => x.fields['CLUB'] === cid), ve = equipo => suyos.some(x => eqVeEquipo(x.fields, equipo));
+        const pars = (await eqPartes(`AND({CLUB}='${cid}',{ACTIVO},{CONSENTIMIENTO}='Aceptado')`)).filter(r => ve(r.fields['EQUIPO']));
+        clubs.push({ id: cid, nombre: nom[cid].nombre, deporte: nom[cid].deporte, rol: a.fields['ROL'] || '', equipos: suyos.some(x => !eqEquiposAcc(x.fields).length) ? [] : eqUnicos(suyos.flatMap(x => eqEquiposAcc(x.fields))), jugadores: pars.map(eqParteClub).sort((x, y) => (orden[x.semaforo] ?? 3) - (orden[y.semaforo] ?? 3) || x.jugador.localeCompare(y.jugador, 'es')) }); }
       const ahoraI = new Date().toISOString();
       for (const a of accs) if (!a.fields['ÚLTIMO ACCESO'] || Date.now() - Date.parse(a.fields['ÚLTIMO ACCESO']) > 30 * 60e3) await at(`${EQ.acc}/${a.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'ÚLTIMO ACCESO': ahoraI } }) }).catch(() => {});
       return res.status(200).json({ ok: true, nombre: accs[0].fields['NOMBRE'] || '', clubs, semaforos: EQ_SEM });

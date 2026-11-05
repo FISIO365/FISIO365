@@ -56,7 +56,8 @@
         ${ok ? `<p class="eq-p">Tu club ve el parte de tu recuperación desde el ${esc(fe(x.consFecha))}. Tu historia clínica no la ve nadie más que tu fisio.</p>
           ${verParte(x.parte, 'Esto es lo que ve tu club')}
           <button type="button" class="eq-sec eq-ret">Dejar de compartir</button>`
-        : `<p class="eq-p">Tu entrenador quiere ver cómo va tu recuperación: qué tienes, cuándo se prevé que vuelvas y qué puedes hacer mientras tanto. Solo lo verá si lo aceptas.</p>
+        : `${verParte(x.parte, 'Así va tu recuperación')}
+          <p class="eq-p eq-psep">Tu entrenador quiere ver cómo va tu recuperación: qué tienes, cuándo se prevé que vuelvas y qué puedes hacer mientras tanto. Solo lo verá si lo aceptas.</p>
           <div class="eq-txt">${esc(x.texto)}</div>
           <div class="eq-quien">
             <label class="eq-op"><input type="radio" name="q_${x.id}" value="yo" ${x.menor ? 'disabled' : 'checked'}><span>Soy yo, el jugador${x.menor ? ' (tiene que ser su padre, madre o tutor)' : ''}</span></label>
@@ -123,6 +124,12 @@
     }
     S.equipo = d; dibuja();
   }
+  // Varios equipos en un club: separados por equipo (si solo hay uno, sin títulos)
+  function porEquipo(L) {
+    const m = new Map(); L.forEach(x => { const k = String(x.equipo || '').trim(); if (!m.has(k)) m.set(k, []); m.get(k).push(x); });
+    const g = [...m.entries()].sort((a, b) => (a[0] === '') - (b[0] === '') || a[0].localeCompare(b[0], 'es', { numeric: true }));
+    return g.length > 1 ? g : [[null, L]];
+  }
   function dibuja() {
     const box = el('miEquipoBox'), d = S.equipo; if (!box || !d) return;
     const todos = d.clubs.flatMap(c => c.jugadores.map(j => Object.assign({ club: c.nombre }, j)));
@@ -138,7 +145,7 @@
     const cuenta = k => todos.filter(x => x.semaforo === k).length;
     box.innerHTML = `${avisosCard()}<div class="eq-res">${Object.keys(SEM).map(k => `<div class="eq-rk ${k}"><b>${cuenta(k)}</b><span>${SEM[k]}</span></div>`).join('')}</div>` +
       d.clubs.map(c => `<div class="eq-club"><div class="eq-cn"><b class="no-tr">${esc(c.nombre)}</b>${c.deporte ? `<small class="no-tr">${esc(c.deporte)}</small>` : ''}</div>
-        ${c.jugadores.length ? c.jugadores.map(x => `<button type="button" class="eq-ju" data-id="${x.id}"><span class="eq-dot ${esc(x.semaforo)}"></span><div><b class="no-tr">${esc(x.jugador)}</b><small>${junta([x.semaforo ? SEM[x.semaforo] : 'Sin parte todavía', x.vuelta ? 'vuelta prevista el ' + fe(x.vuelta) : ''])}</small>${x.equipo ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}</div>${IC.flecha}</button>`).join('')
+        ${c.jugadores.length ? porEquipo(c.jugadores).map(([eqn, L]) => `${eqn !== null ? `<div class="eq-tn no-tr">${esc(eqn || 'Sin equipo')}</div>` : ''}${L.map(x => `<button type="button" class="eq-ju" data-id="${x.id}"><span class="eq-dot ${esc(x.semaforo)}"></span><div><b class="no-tr">${esc(x.jugador)}</b><small>${junta([x.semaforo ? SEM[x.semaforo] : 'Sin parte todavía', x.vuelta ? 'vuelta prevista el ' + fe(x.vuelta) : ''])}</small>${x.equipo && eqn === null ? `<small class="no-tr">${esc(x.equipo)}</small>` : ''}</div>${IC.flecha}</button>`).join('')}`).join('')
         : '<div class="eq-vac">Todavía no hay jugadores. Aparecerán aquí cuando un jugador que se trate con nosotros acepte compartir su parte con el club.</div>'}</div>`).join('');
     box.querySelectorAll('.eq-ju').forEach(b => b.onclick = () => { S.jug = b.dataset.id; dibuja(); window.scrollTo(0, 0); });
     const av = box.querySelector('.eq-avb'); if (av) av.onclick = activarAvisos;

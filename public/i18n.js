@@ -4,6 +4,22 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Así va tu recuperación": [
+"Així va la teva recuperació",
+"How your recovery is going"
+],
+"Sin equipo": [
+"Sense equip",
+"No team"
+],
+"Tu parte de recuperación": [
+"El teu parte de recuperació",
+"Your recovery report"
+],
+"Tu fisio lo ha actualizado": [
+"El teu fisio l'ha actualitzat",
+"Your physio has updated it"
+],
 "Mi club": [
 "El meu club",
 "My club"

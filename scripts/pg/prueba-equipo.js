@@ -87,6 +87,26 @@
   ver('menor: no lo puede aceptar él', !r.j.ok, r.j);
   r = await llamar(S, { action: 'eq-consent', patientId: 'recPacPrueba00003', id: pm, acepta: true, quien: 'tutor', tutor: 'Anna Petit', lang: 'cat' }, 'POST');
   ver('menor: lo acepta su tutora', r.j.ok && r.j.parte.consentimiento === 'Aceptado' && /Anna Petit/.test(r.j.parte.consQuien), r.j);
+  // Equipos: el entrenador del Juvenil A solo ve el Juvenil A; el coordinador (sin equipos) ve todo el club
+  const CLUB2 = 'recClubPrueba0002';
+  await ins('tblClubsDeporti01', CLUB2, { NOMBRE: 'Club Dos', DEPORTE: 'Básquet' });
+  await ins('tbldBVgClS4HY2mOJ', 'recPacPrueba00004', { 'FULL NAME': 'Uno Juvenil', PIN: '4444', EMAIL: 'uno@e.com' });
+  await ins('tbldBVgClS4HY2mOJ', 'recPacPrueba00005', { 'FULL NAME': 'Dos Infantil', PIN: '5555', EMAIL: 'dos@e.com' });
+  const ent = (await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB2, campos: { nombre: 'Ent A', email: 'enta@c.com', equipos: ['Juvenil A'] } }, 'POST')).j.acceso;
+  const coo = (await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB2, campos: { nombre: 'Coord', email: 'coord@c.com' } }, 'POST')).j.acceso;
+  ver('acceso con equipos', ent.equipos.length === 1 && coo.equipos.length === 0, [ent, coo]);
+  for (const [pid, eqn] of [['recPacPrueba00004', 'Juvenil A'], ['recPacPrueba00005', 'Infantil B']]) {
+    const pr = (await llamar(S, { action: 'seg-eq-vincular', pwd, pac: pid, club: CLUB2, equipo: eqn }, 'POST')).j.parte;
+    await llamar(S, { action: 'eq-consent', patientId: pid, id: pr.id, acepta: true, quien: 'yo' }, 'POST');
+    await llamar(S, { action: 'seg-eq-parte', pwd, id: pr.id, quien: 'Sara', campos: { semaforo: 'verde', nota: 'ok' } }, 'POST');
+  }
+  const verEq = async a => { const l = (await llamar(L, { email: a.email, pin: a.pin })).j.patient.equipo; return (await llamar(S, { action: 'eq-equipo', a: l.map(x => x.id).join(','), t: l.map(x => x.tok).join(',') })).j; };
+  let ve = await verEq(ent); ver('entrenador del Juvenil A: solo su equipo', ve.ok && ve.clubs[0].jugadores.length === 1 && ve.clubs[0].jugadores[0].equipo === 'Juvenil A', ve);
+  ve = await verEq(coo); ver('coordinador: todo el club', ve.ok && ve.clubs[0].jugadores.length === 2, ve);
+  r = await llamar(S, { action: 'seg-eq-club', pwd, club: CLUB2 });
+  ver('lista de equipos del club', r.j.ok && r.j.equipos.join('|') === 'Infantil B|Juvenil A', r.j.equipos);
+  r = await llamar(S, { action: 'eq-mio', patientId: 'recPacPrueba00001' });
+  ver('el jugador ve su parte aunque no lo comparta', r.j.ok && r.j.partes[0].consentimiento === 'Retirado' && r.j.partes[0].parte.diagnostico.includes('Esguince'), r.j);
   console.log(fallos ? `\n${fallos} FALLOS` : '\nTodo bien');
   process.exit(fallos ? 1 : 0);
 })().catch(e => { console.error('FALLO', e.message, String(e.stack).split('\n').slice(1, 4).join(' | ')); process.exit(1); });
