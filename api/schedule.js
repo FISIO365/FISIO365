@@ -5069,6 +5069,26 @@ module.exports = async function handler(req, res) {
           }
           return res.status(200).json({ ok: true, enviados: out.filter(x => x.ok).length, res: out, hoy: hoyF });
         }
+        if (action === 'seg-cap-club-email') { // un email escrito a mano a un club, desde info@ (por Brevo)
+          if (!okId(q.id)) return res.status(400).json({ ok: false });
+          const r = await at(`${CAP.club}/${q.id}`); if (!r || r.error) return res.status(404).json({ ok: false, error: 'Club no encontrado' });
+          const F = r.fields || {}, to = String(F['EMAIL'] || '').trim().toLowerCase(), asunto = String(q.asunto || '').trim().slice(0, 200), texto = String(q.texto || '').trim().slice(0, 8000);
+          if (F['BAJA EMAIL']) return res.status(200).json({ ok: false, error: 'Pidió no recibir más correos nuestros' });
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return res.status(400).json({ ok: false, error: 'Este club no tiene un email válido' });
+          if (!asunto || !texto) return res.status(400).json({ ok: false, error: 'Escribe el asunto y el mensaje' });
+          if (!process.env.BREVO_API_KEY) return res.status(200).json({ ok: false, error: 'Los emails no están conectados' });
+          const esc = x => String(x || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+          const cuerpo = esc(texto).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#c2552e">$1</a>').replace(/\n/g, '<br>');
+          const baja = `https://app.fisioterapia365.com/api/schedule?action=club-baja&id=${q.id}&t=${clubFirmaBaja(q.id)}`;
+          const html = `<!doctype html><html><body style="margin:0;background:#ffffff"><div style="max-width:600px;margin:0 auto;padding:24px 20px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a">${cuerpo}<p style="margin:28px 0 0;font-size:11.5px;line-height:1.5;color:#9a8d84;border-top:1px solid #eee;padding-top:12px">FISIO365 · Fourth Dynamic, S.L. · NIF B56503592 · Gran de Sant Andreu 163, 08030 Barcelona · info@fisioterapia365.com<br>Si no queréis recibir más correos nuestros, <a href="${baja}" style="color:#9a8d84">decídnoslo aquí</a>.</p></div></body></html>`;
+          const yo = String(q.quien || '').trim().split(/\s+/)[0];
+          const b = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sender: { name: (yo ? yo + ' · ' : '') + 'FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com', name: 'FISIO365' }, to: [{ email: to, name: String(F['NOMBRE'] || '').trim() || undefined }], subject: asunto, htmlContent: html, textContent: texto, tags: ['clubs-email'] }) }).catch(() => null);
+          if (!b || !b.ok) { if (b) console.log('club email', b.status, (await b.text().catch(() => '')).slice(0, 200)); return res.status(200).json({ ok: false, error: 'No se ha podido enviar el email' }); }
+          const lin = `${hoyF.split('-').reverse().join('/')} · Email a ${to}: «${asunto}»${yo ? ' · ' + yo : ''}`;
+          const d = await at(`${CAP.club}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HISTORIAL: [String(F['HISTORIAL'] || '').trim(), lin].filter(Boolean).join('\n') } }) });
+          return res.status(200).json({ ok: true, historial: ((d && d.fields) || {})['HISTORIAL'] || '' });
+        }
         if (action === 'seg-cap-club-enviar') { // la presentación por email (o una prueba a nosotros)
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const r = await at(`${CAP.club}/${q.id}`); if (!r || r.error) return res.status(404).json({ ok: false, error: 'Club no encontrado' });

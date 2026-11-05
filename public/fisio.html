@@ -9611,6 +9611,19 @@ async function renderCaptacion(wrap){
     try{const r=await agPost('seg-cap-clubs-difusion',{ids:tanda.map(c=>c.id),quien:miNombreCorto()});(r.res||[]).forEach(x=>{const c=pend.find(z=>z.id===x.id);if(x.ok){bien++;if(c)c.enviado=r.hoy;}else if(c)mal.push(c.nombre);});}catch(err){tanda.forEach(c=>mal.push(c.nombre));}
     hechos+=tanda.length;bar.style.width=Math.round(hechos/pend.length*100)+'%';tx.textContent=`Enviados ${bien} de ${pend.length}…`;}
    enMarcha=false;tx.textContent=mal.length?`Enviados ${bien}. No se ha podido con: ${mal.join(', ')}`:`¡Hecho! Enviada a ${bien} clubs.`;ok.textContent='Cerrar';ok.disabled=false;ok.onclick=cerrar;toast(`Presentación enviada a ${bien} clubs`,true);};}
+ // Un email escrito a mano, que sale desde info@ (no desde el correo del móvil)
+ function clubEscribir(c,alAcabar){
+  const m=hzModal(`<div class="hz-top"><div><small>Email a</small><b>${escH(c.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   <div class="ce-to">${IC_MAIL}<div><small>Para</small><b>${escH(c.email)}</b></div></div>
+   <div class="ce-to ce-de"><svg viewBox="0 0 24 24"><path d="M4 12h12M11 6l6 6-6 6"/><path d="M20 4v16"/></svg><div><small>Desde</small><b>info@fisioterapia365.com</b></div></div>
+   <div class="hz-lab">Asunto</div>${capIn('cw-as','Asunto','Colaboración con '+c.nombre+' · FISIO365')}
+   <div class="hz-lab">Mensaje</div><textarea class="seg-n cw-tx" rows="12">${escH(clubTexto(c,1))}</textarea>
+   <div class="hz-bts"><button type="button" class="hz-ok">Enviar desde info@</button></div>`);
+  const cerrar=()=>{m.remove();alAcabar&&alAcabar();};m.querySelector('.hz-x').onclick=cerrar;
+  m.querySelector('.hz-ok').onclick=async e=>{const b=e.target,asunto=m.querySelector('.cw-as').value.trim(),texto=m.querySelector('.cw-tx').value.trim();
+   if(!asunto||!texto){toast('Escribe el asunto y el mensaje',false);return;}
+   b.disabled=true;b.textContent='Enviando…';
+   try{const r=await agPost('seg-cap-club-email',{id:c.id,asunto,texto,quien:miNombreCorto()});if(!r.ok)throw new Error(r.error||'No se ha podido enviar');c.historial=r.historial;toast('Enviado a '+c.email,true);cerrar();}catch(err){b.disabled=false;b.textContent='Enviar desde info@';toast(err.message,false);}};}
  function clubEnviarModal(c,alAcabar){
   const yo=String((fisioActual&&(fisioActual.email||fisioActual.EMAIL))||'');
   const m=hzModal(`<div class="hz-top"><div><small>Enviar la presentación</small><b>${escH(c.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
@@ -9621,7 +9634,7 @@ async function renderCaptacion(wrap){
    <div class="ce-pr"><span>¿Quieres verlo antes?</span><div><input type="email" class="ce-pe" placeholder="Tu email" value="${escH(yo)}"><button type="button" class="ce-pb">Mandarme una prueba</button></div></div>
    <div class="hz-bts"><button type="button" class="hz-re ce-nor">Escribir otro email</button><button type="button" class="hz-ok">${c.enviado?'Enviar otra vez':'Enviar ahora'}</button></div>`);
   const cerrar=()=>{m.remove();alAcabar&&alAcabar();};m.querySelector('.hz-x').onclick=cerrar;
-  m.querySelector('.ce-nor').onclick=()=>{location.href=`mailto:${c.email}?subject=${encodeURIComponent('Colaboración con '+c.nombre+' · FISIO365')}&body=${encodeURIComponent(clubTexto(c,1))}`;};
+  m.querySelector('.ce-nor').onclick=()=>{m.remove();clubEscribir(c,alAcabar);};
   m.querySelector('.ce-pb').onclick=async e=>{const b=e.target,to=m.querySelector('.ce-pe').value.trim();if(!to){toast('Pon tu email',false);return;}
    b.disabled=true;try{const r=await agPost('seg-cap-club-enviar',{id:c.id,prueba:to,quien:miNombreCorto()});if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast('Prueba enviada a '+to,true);}catch(err){toast(err.message,false);}b.disabled=false;};
   m.querySelector('.hz-ok').onclick=async e=>{const b=e.target;b.disabled=true;b.textContent='Enviando…';
