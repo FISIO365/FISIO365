@@ -519,11 +519,44 @@ async function clubEnviarPresentacion(id, F, to, quien) {
   if (!r.ok) { const t = await r.text().catch(() => ''); console.log('club mail', r.status, t.slice(0, 200)); throw new Error('No se ha podido enviar el email'); }
   return true;
 }
+// Clubs repetidos (mismo nombre): se queda uno, con todo lo apuntado en los demás, y se borran los otros.
+// Nunca se borra uno que use Mi equipo (accesos o jugadores); si hay dos así, se dejan los dos.
+async function clubsDedup() {
+  const recs = await capTodos(CAP.club, '');
+  const grupos = new Map(); recs.forEach(r => { const k = clubClave(r.fields['NOMBRE']); if (!k) return; if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(r); });
+  const rep = [...grupos.values()].filter(g => g.length > 1); if (!rep.length) return 0;
+  const [accs, pars] = await Promise.all([capTodos(EQ.acc, 'fields[]=CLUB').catch(() => []), capTodos(EQ.par, 'fields[]=CLUB').catch(() => [])]);
+  const usado = new Set([...accs, ...pars].map(r => r.fields['CLUB']).filter(Boolean));
+  const llenos = F => Object.values(F || {}).filter(v => v !== '' && v != null && v !== false).length;
+  const nota = F => (F['HISTORIAL'] ? 4 : 0) + (F['ESTADO'] && F['ESTADO'] !== 'POR CONTACTAR' ? 3 : 0) + (F['EMAIL ENVIADO'] ? 2 : 0) + (F['PERMISO EMAIL'] ? 2 : 0) + (F['EQUIPOS'] ? 2 : 0);
+  let borrados = 0;
+  for (const g of rep) {
+    if (g.filter(r => usado.has(r.id)).length > 1) continue;
+    const orden = g.slice().sort((a, b) => (usado.has(b.id) - usado.has(a.id)) || (nota(b.fields) - nota(a.fields)) || (llenos(b.fields) - llenos(a.fields)) || String(a.createdTime || '').localeCompare(String(b.createdTime || '')));
+    const k = orden[0], K = k.fields || {}, f = {};
+    for (const o of orden.slice(1)) {
+      const O = o.fields || {};
+      for (const c of ['DEPORTE', 'TIPO', 'BARRIO', 'DIRECCIÓN', 'TELF', 'EMAIL', 'WEB', 'INSTAGRAM', 'CONTACTO', 'NOTAS', 'FUENTE', 'EQUIPOS', 'PERMISO EMAIL', 'PRÓXIMO CONTACTO', 'ÚLTIMO CONTACTO']) if (!K[c] && !f[c] && O[c]) f[c] = O[c];
+      if (O['EMAIL ENVIADO'] && String(O['EMAIL ENVIADO']) > String(f['EMAIL ENVIADO'] || K['EMAIL ENVIADO'] || '')) f['EMAIL ENVIADO'] = O['EMAIL ENVIADO'];
+      if (O['BAJA EMAIL'] && !K['BAJA EMAIL']) f['BAJA EMAIL'] = true;
+      if ((!K['ESTADO'] || K['ESTADO'] === 'POR CONTACTAR') && O['ESTADO'] && O['ESTADO'] !== 'POR CONTACTAR' && !f['ESTADO']) f['ESTADO'] = O['ESTADO'];
+      const h = String(O['HISTORIAL'] || '').split('\n').map(x => x.trim()).filter(Boolean), hk = String(f['HISTORIAL'] != null ? f['HISTORIAL'] : (K['HISTORIAL'] || '')).split('\n').map(x => x.trim()).filter(Boolean);
+      const nuevas = h.filter(x => !hk.includes(x)); if (nuevas.length) f['HISTORIAL'] = hk.concat(nuevas).join('\n');
+    }
+    if (Object.keys(f).length) { const d = await at(`${CAP.club}/${k.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) }); if (d.error) continue; }
+    for (const o of orden.slice(1)) { if (usado.has(o.id)) continue; const d = await at(`${CAP.club}/${o.id}`, { method: 'DELETE' }); if (!d.error) borrados++; }
+  }
+  if (borrados) console.log('clubs dedup: borrados', borrados);
+  return borrados;
+}
 async function clubsSemilla() {
   let semilla = []; try { semilla = require('./_clubs.json'); } catch (_) { return; }
-  const ya = new Set(await ajuste('clubs_semilla', [])), nuevos = semilla.filter(c => c && c.nombre && !ya.has(clubClave(c.nombre)));
+  const ya = new Set(await ajuste('clubs_semilla', [])); let nuevos = semilla.filter(c => c && c.nombre && !ya.has(clubClave(c.nombre)));
   await clubsEmails(semilla).catch(e => console.error('clubs emails', e.message));
+  await clubsDedup().catch(e => console.error('clubs dedup', e.message));
   if (!nuevos.length) return;
+  // Si otro panel los ha añadido a la vez, no se repiten: se mira lo que ya hay en la tabla justo antes de añadir
+  { const hay = new Set((await capTodos(CAP.club, 'fields[]=NOMBRE')).map(r => clubClave(r.fields['NOMBRE']))); const ya2 = nuevos.filter(c => hay.has(clubClave(c.nombre))); if (ya2.length) { ya2.forEach(c => ya.add(clubClave(c.nombre))); await guardarAjuste('clubs_semilla', [...ya], 'Lista inicial'); } nuevos = nuevos.filter(c => !hay.has(clubClave(c.nombre))); if (!nuevos.length) return; }
   for (let i = 0; i < nuevos.length; i += 10) {
     const d = await at(CAP.club, { method: 'POST', body: JSON.stringify({ typecast: true, records: nuevos.slice(i, i + 10).map(c => ({ fields: { NOMBRE: c.nombre, DEPORTE: c.deporte || '', TIPO: c.tipo || 'Club', BARRIO: c.barrio || '', 'DIRECCIÓN': c.direccion || '', TELF: c.tel || '', EMAIL: c.email || '', WEB: c.web || '', INSTAGRAM: c.instagram || '', CONTACTO: c.contacto || '', ESTADO: 'POR CONTACTAR', NOTAS: c.notas || '', FUENTE: c.fuente || '', CLAVE: clubClave(c.nombre) } })) }) });
     if (d.error) throw new Error(d.error.message || 'No se han podido añadir los clubs');
