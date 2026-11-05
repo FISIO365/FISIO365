@@ -5407,6 +5407,26 @@ module.exports = async function handler(req, res) {
           const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'FIN QUITADA': q.volver ? null : new Date().toISOString() } }) });
           return res.status(200).json({ ok: !d.error });
         }
+        if (action === 'seg-agenda-cumples') {
+          // Cumpleaños para felicitar por WhatsApp: los de hoy, los que se quedaron sin felicitar (3 días atrás) y los próximos 7
+          const hoyD = new Date(hoyF + 'T12:00:00'), dd = n => { const d = new Date(hoyD); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+          const fel = (await ajuste('cumples_felicitados', {})) || {}, out = [];
+          (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('{CUMPLE}')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=CUMPLE`)).forEach(p => {
+            const F = p.fields, c = String(F['CUMPLE'] || '').slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(c)) return;
+            for (let n = -3; n <= 7; n++) {
+              const f = dd(n), bis = +f.slice(0, 4) % 4 === 0;
+              const md = c.slice(5) === '02-29' && !bis ? '02-28' : c.slice(5);
+              if (f.slice(5) !== md) continue;
+              const ya = !!(fel[p.id] && fel[p.id].f === f);
+              if (n < 0 && !ya) { /* sin felicitar: sigue saliendo unos días */ } else if (n < 0) break;
+              const edad = +f.slice(0, 4) - +c.slice(0, 4);
+              out.push({ pacienteId: p.id, nombre: F['FULL NAME'] || '', pila: F['NOMBRE'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', fecha: f, dif: n, edad: edad > 0 && edad < 110 ? edad : 0, felicitado: ya });
+              break;
+            }
+          });
+          out.sort((a, b) => a.dif - b.dif || a.nombre.localeCompare(b.nombre));
+          return res.status(200).json({ ok: true, hoy: hoyF, cumples: out });
+        }
         if (action === 'seg-agenda-resenas') {
           // Pedir reseña en Google: pacientes con sesión realizada los últimos 7 días (o los ids pedidos), con si ya se les pidió / ya la dejaron
           const extra = String(q.ids || '').split(',').filter(okId).slice(0, 20);
@@ -5598,8 +5618,8 @@ module.exports = async function handler(req, res) {
           }
           const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], tids = [...new Set(rows.flatMap(r => r.fields['TIPO DE CITA'] || []))];
           const nomP = {}, nomT = {};
-          const altaP = {};
-          const porLotes = async (tabla, ids, campo, dest) => { const lotes = []; for (let i = 0; i < ids.length; i += 50) lotes.push(ids.slice(i, i + 50)); for (let k = 0; k < lotes.length; k += 4) await Promise.all(lotes.slice(k, k + 4).map(async t => { const rs = await todosT(tabla, `filterByFormula=${encodeURIComponent('OR(' + t.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent(campo)}`); rs.forEach(r => { dest[r.id] = r.fields[campo] || ''; if (tabla === PACIENTES) altaP[r.id] = String(r.createdTime || '').slice(0, 10); }); })); };
+          const altaP = {}, cumP = {};
+          const porLotes = async (tabla, ids, campo, dest) => { const lotes = []; for (let i = 0; i < ids.length; i += 50) lotes.push(ids.slice(i, i + 50)); for (let k = 0; k < lotes.length; k += 4) await Promise.all(lotes.slice(k, k + 4).map(async t => { const rs = await todosT(tabla, `filterByFormula=${encodeURIComponent('OR(' + t.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent(campo)}${tabla === PACIENTES ? '&fields[]=CUMPLE' : ''}`); rs.forEach(r => { dest[r.id] = r.fields[campo] || ''; if (tabla === PACIENTES) { altaP[r.id] = String(r.createdTime || '').slice(0, 10); cumP[r.id] = String(r.fields['CUMPLE'] || '').slice(0, 10); } }); })); };
           const [, , alertas, esperaTodos, consL] = await Promise.all([porLotes(PACIENTES, pids, 'FULL NAME', nomP), porLotes(TIP, tids, 'Name', nomT), alertasSalud().catch(() => ({})), esperaLista().catch(() => []), consTodos().catch(() => null)]);
           const alertasDia = {}; pids.forEach(id => { if (alertas[id]) alertasDia[id] = alertas[id]; });
           // Pacientes sin ningún consentimiento enlazado (de después del formulario digital) para marcarlos en la agenda
@@ -5607,7 +5627,10 @@ module.exports = async function handler(req, res) {
           const ausDia = okF(q.fecha) ? await ausenciasEn(q.fecha, q.fecha).catch(() => []) : [];
           const debenPagar = {}; if (pids.length) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('{PAGO ADELANTADO}')}&fields[]=${encodeURIComponent('PAGO ADELANTADO MOTIVO')}`).catch(() => [])).forEach(p => { if (pids.includes(p.id)) debenPagar[p.id] = p.fields['PAGO ADELANTADO MOTIVO'] || 'Paga por adelantado'; });
 
-          return res.status(200).json({ ok: true, hoy: hoyF, limitado, debenPagar, ausencias: ausDia, alertas: alertasDia, salud: Object.fromEntries(pids.filter(id => _saludTodo[id]).map(id => [id, _saludTodo[id]])), sinConsent, conConsent: consL ? pids.filter(id => conCons.has(id)) : [], espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, pago: nmA(F['PAGO ESTADO']) ? { estado: nmA(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
+          // Cumpleaños (solo en la vista de un día): hoy (dif 0) o en los 3 días de antes o después
+          // regalo: le felicitamos con el regalo de cumpleaños y la cita es de ese mismo mes (para acordarse del descuento)
+          const cumples = {}; if (okF(q.fecha)) { const f0 = new Date(q.fecha + 'T12:00:00'), fel = (await ajuste('cumples_felicitados', {})) || {}; pids.forEach(id => { const c = cumP[id], fe = fel[id] && typeof fel[id] === 'object' ? fel[id] : null, rg = !!(fe && fe.r && String(fe.f || '').slice(0, 7) === q.fecha.slice(0, 7)); if (!/^\d{4}-\d{2}-\d{2}$/.test(c || '')) return; for (let n = -3; n <= 3; n++) { const d = new Date(f0); d.setDate(d.getDate() + n); const f = d.toISOString().slice(0, 10), md = c.slice(5) === '02-29' && +f.slice(0, 4) % 4 ? '02-28' : c.slice(5); if (f.slice(5) === md) { const e = +f.slice(0, 4) - +c.slice(0, 4); cumples[id] = { dif: n, fecha: f, edad: e > 0 && e < 110 ? e : 0, felicitado: !!(fe && fe.f === f), regalo: rg }; break; } } if (!cumples[id] && rg) cumples[id] = { dif: null, fecha: fe.f, regalo: true, felicitado: true }; }); }
+          return res.status(200).json({ ok: true, hoy: hoyF, limitado, debenPagar, cumples, ausencias: ausDia, alertas: alertasDia, salud: Object.fromEntries(pids.filter(id => _saludTodo[id]).map(id => [id, _saludTodo[id]])), sinConsent, conConsent: consL ? pids.filter(id => conCons.has(id)) : [], espera: (esperaTodos || []).filter(e => e.estado === 'ESPERANDO').map(e => ({ id: e.id, tabla: e.tabla, nombre: e.nombre, tel: e.tel, dias: e.dias, franja: e.franja, horario: e.horario || '', nopuede: e.nopuede || '', ofrecido: e.ofrecido || '', fisio: e.fisio, disp: e.disp, nota: e.nota, fecha: e.fecha, pacienteId: e.pacienteId, aviso: e.aviso || '' })), citas: rows.map(r => { const F = r.fields; const pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, pago: nmA(F['PAGO ESTADO']) ? { estado: nmA(F['PAGO ESTADO']), importe: F['PAGO IMPORTE'] || 0, limite: F['PAGO LÍMITE'] || '', link: enlacePago(r.id) } : null, fecha: String(F['FECHA'] || '').slice(0, 10), hora: hh(F['HORA']), estado: String(nmA(F['ESTADO'])).trim(), fisio: nmA(F['PREF.']), pacienteId: pid, paciente: pid ? (nomP[pid] || '') : '', tipos: (F['TIPO DE CITA'] || []).map(t => nomT[t]).filter(Boolean), sesion: nmA(F['TIPO DE SESIÓN']) || sesionDeEtiquetas((F['TIPO DE CITA'] || []).map(t => nomT[t])), notas: F['NOTAS'] || '', confirmada: (F['CONFIR'] || []).some(x => /CONFIRMADA/.test(nmA(x))), app: /APP/.test(nmA(F['RESERVA'])), web: /WEB/.test(nmA(F['RESERVA'])) }; }) });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'seg-agenda-res-enlace') { // historia clínica: «está mejor» → enlace a la reseña (con preview) y se apunta como pedida
@@ -5618,6 +5641,13 @@ module.exports = async function handler(req, res) {
           if (q.mejora) Object.assign(fm, { 'MEJORA FECHA': new Date().toISOString(), 'MEJORA FISIO': String(q.fisio || '').slice(0, 40), 'MEJORA ABIERTA': null, 'MEJORA GOOGLE': null });
           await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: fm }) }).catch(() => {});
           return res.status(200).json({ ok: true, link: enlaceRes(q.pacienteId), tel: tel.length === 9 ? '34' + tel : tel, pila: p0 ? p0.charAt(0).toUpperCase() + p0.slice(1).toLowerCase() : '' });
+        }
+        if (action === 'seg-agenda-cumple') { // apuntar que ya se le ha felicitado (q.fecha = el día de su cumple)
+          if (!okId(q.pacienteId) || !okF(q.fecha)) return res.status(400).json({ ok: false });
+          const fel = (await ajuste('cumples_felicitados', {})) || {};
+          if (q.enviado === false) delete fel[q.pacienteId]; else fel[q.pacienteId] = { f: q.fecha, r: q.regalo ? 1 : 0, quien: String(q.quien || '').slice(0, 60), cuando: new Date().toISOString() };
+          await guardarAjuste('cumples_felicitados', fel, String(q.quien || '').slice(0, 60));
+          return res.status(200).json({ ok: true });
         }
         if (action === 'seg-agenda-resena') { // apuntar que se le ha pedido la reseña en Google
           if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
