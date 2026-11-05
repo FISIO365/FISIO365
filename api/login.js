@@ -1,6 +1,7 @@
 // api/login.js - Login por email + PIN
 // También entran aquí los entrenadores y coordinadores de «Mi equipo» (tabla ACCESOS, ver api/_equipo.js):
-// con su email (o teléfono) y su clave. Si además son pacientes, entran como paciente y ven también «Mi equipo».
+// con su email (o teléfono) y SU clave. El mismo email o teléfono no basta (en una familia se comparten): con el PIN de
+// paciente se entra como paciente; con la clave del club, a «Mi equipo»; si coinciden las dos, a las dos cosas.
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const { BASE_ID } = require('./_base');
 require('./_pg'); // con DB_URL, los datos salen de Postgres en vez de Airtable (api/_pg.js)
@@ -41,8 +42,7 @@ module.exports = async function handler(req, res) {
     const [data, accs] = await Promise.all([fetch(url, { headers: H() }).then(r => r.json()), accesosDe(emailClean, tel)]);
     const recs = data.records || [];
     const patient = recs.find(rec => String(rec.fields['PIN'] || '').trim() === String(pin).trim());
-    // Entrenador: su clave; si ya ha entrado como paciente con ese mismo email, no hace falta la otra clave
-    const mios = accs.filter(a => patient || String(a.fields['PIN'] || '').trim() === String(pin).trim());
+    const mios = accs.filter(a => String(a.fields['PIN'] || '').trim() === String(pin).trim());
     if (!patient && !mios.length) {
       if (!recs.length && !accs.length) return res.status(200).json({ ok: false, error: (tel ? 'Teléfono' : 'Email') + ' no encontrado. Contacta con tu fisioterapeuta.' });
       return res.status(200).json({ ok: false, error: accs.length && !recs.length ? 'Clave incorrecta. Pídela a la clínica.' : 'PIN incorrecto. Contacta con tu fisioterapeuta.' });
@@ -50,7 +50,7 @@ module.exports = async function handler(req, res) {
     let equipo = [];
     if (mios.length) {
       const nom = await nombresClubs(mios.map(a => a.fields['CLUB']).filter(Boolean));
-      equipo = mios.filter(a => nom[a.fields['CLUB']] !== undefined).map(a => ({ id: a.id, tok: firmaEq(a.id), club: a.fields['CLUB'], clubNombre: nom[a.fields['CLUB']] || 'Mi club', rol: a.fields['ROL'] || '' }));
+      equipo = mios.filter(a => nom[a.fields['CLUB']] !== undefined).map(a => ({ id: a.id, tok: firmaEq(a.id, a.fields['PIN']), club: a.fields['CLUB'], clubNombre: nom[a.fields['CLUB']] || 'Mi club', rol: a.fields['ROL'] || '' }));
       for (const a of mios) await fetch(`https://api.airtable.com/v0/${BASE_ID}/${EQ.acc}/${a.id}`, { method: 'PATCH', headers: H(), body: JSON.stringify({ fields: { 'ÚLTIMO ACCESO': ahora() } }) }).catch(() => {});
     }
     if (patient) {

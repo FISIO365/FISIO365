@@ -26,7 +26,6 @@
     try {
       const d = await get('eq-mio', { patientId: p.id }); if (!d || !d.ok) return;
       S.partes = d.partes || []; S.cargado = true;
-      p.equipo = d.equipo || []; guardaPaciente();
       menu(); banner();
     } catch (e) {}
   }
@@ -78,7 +77,7 @@
         err.textContent = '';
         if (!q) { err.textContent = 'Elige quién lo acepta'; return; }
         ac.disabled = true;
-        const r = await post('eq-consent', { patientId: P().id, id: x.id, acepta: true, quien: q, tutor: tut ? tut.value : '' }).catch(() => null);
+        const r = await post('eq-consent', { patientId: P().id, id: x.id, acepta: true, quien: q, tutor: tut ? tut.value : '', lang: (window.T365 && T365.lang && T365.lang()) || 'es' }).catch(() => null);
         ac.disabled = false;
         if (!r || !r.ok) { err.textContent = (r && r.error) || 'No se ha podido guardar'; return; }
         Object.assign(x, r.parte); window.toast && toast('Hecho: tu club ya puede ver tu parte'); pintarClub(); banner();
@@ -174,7 +173,10 @@
     if (p0) { S.jug = p0; history.replaceState(null, '', location.pathname); }
     window.showSection('miequipo');
   }
-  function salir() { document.body.classList.remove('solo-equipo'); S.partes = []; S.equipo = null; S.cargado = false; S.jug = null; menu(); const b = el('eqBanner'); if (b) b.classList.remove('on'); }
+  function salir() {
+    // Al salir, este móvil deja de recibir los avisos de los partes
+    const acc = misAccesos(); if (acc.length) fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ equipo: acc.map(x => ({ id: x.id, tok: x.tok })), borrar: true }), keepalive: true }).catch(() => {});
+    document.body.classList.remove('solo-equipo'); S.partes = []; S.equipo = null; S.cargado = false; S.jug = null; menu(); const b = el('eqBanner'); if (b) b.classList.remove('on'); }
 
   window.EQA = { cargar, pintarClub, pintarEquipo, iniciarSoloEquipo, salir, abrirJugador: id => { S.jug = id; } };
 })();

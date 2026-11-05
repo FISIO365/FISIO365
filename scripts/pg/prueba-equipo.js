@@ -28,9 +28,11 @@
   ver('clave mala', !r.j.ok, r.j);
   r = await llamar(L, { email: 'otro@club.com', pin: acc.pin });
   ver('email que no existe', !r.j.ok, r.j);
-  // jordi@club.com también es el email de una paciente (Laura): entra como paciente con su PIN y ve «Mi equipo»
+  // jordi@club.com también es el email de una paciente (Laura, p. ej. su hija): con SU PIN entra como paciente y NO ve «Mi equipo»
   r = await llamar(L, { email: 'jordi@club.com', pin: '2222' });
-  ver('paciente con el mismo email ve también Mi equipo', r.j.ok && !r.j.patient.soloEquipo && r.j.patient.equipo.length === 1, r.j);
+  ver('mismo email que el entrenador: con su PIN no ve Mi equipo', r.j.ok && !r.j.patient.soloEquipo && r.j.patient.equipo.length === 0, r.j);
+  r = await llamar(S, { action: 'eq-mio', patientId: PAC2 });
+  ver('eq-mio no da accesos de entrenador', r.j.ok && !('equipo' in r.j), r.j);
   r = await llamar(L, { email: 'jordi@club.com', pin: acc.pin });
   ver('entrenador entra con su clave (solo Mi equipo)', r.j.ok && r.j.patient.soloEquipo && r.j.patient.equipo[0].clubNombre === 'CF Sant Andreu Prueba', r.j);
   const E = r.j.patient.equipo, qa = { a: E.map(e => e.id).join(','), t: E.map(e => e.tok).join(',') };
@@ -66,12 +68,25 @@
   ver('el jugador deja de compartir', r.j.ok && r.j.parte.consentimiento === 'Retirado', r.j);
   r = await llamar(S, { action: 'eq-equipo', ...qa });
   ver('el entrenador ya no lo ve', r.j.ok && r.j.clubs[0].jugadores.length === 0, r.j);
+  r = await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB, id: acc.id, campos: { nombre: 'Jordi Mas', email: 'jordi@club.com', nuevaClave: true } }, 'POST');
+  ver('cambiar la clave', r.j.ok && r.j.acceso.pin !== acc.pin, r.j);
+  r = await llamar(S, { action: 'eq-equipo', ...qa });
+  ver('con la clave cambiada, la sesión vieja ya no vale', !r.j.ok && r.j.inactivo, r.j);
   r = await llamar(S, { action: 'seg-eq-acceso', pwd, club: CLUB, id: acc.id, campos: { nombre: 'Jordi Mas', email: 'jordi@club.com', activo: false } }, 'POST');
   ver('quitar el acceso', r.j.ok && !r.j.acceso.activo, r.j);
   r = await llamar(S, { action: 'eq-equipo', ...qa });
   ver('acceso quitado: ya no entra', !r.j.ok && r.j.inactivo, r.j);
   r = await llamar(L, { email: 'jordi@club.com', pin: acc.pin });
   ver('acceso quitado: login', !r.j.ok, r.j);
+  // Menor de 14 por la fecha de nacimiento: tiene que aceptarlo el tutor
+  await ins('tbldBVgClS4HY2mOJ', 'recPacPrueba00003', { 'FULL NAME': 'Nil Petit', EMAIL: 'nil@ejemplo.com', PIN: '3333', CUMPLE: '2016-03-01' });
+  r = await llamar(S, { action: 'seg-eq-vincular', pwd, pac: 'recPacPrueba00003', club: CLUB }, 'POST');
+  ver('menor por fecha de nacimiento', r.j.ok && r.j.parte.menor, r.j);
+  const pm = r.j.parte && r.j.parte.id;
+  r = await llamar(S, { action: 'eq-consent', patientId: 'recPacPrueba00003', id: pm, acepta: true, quien: 'yo' }, 'POST');
+  ver('menor: no lo puede aceptar él', !r.j.ok, r.j);
+  r = await llamar(S, { action: 'eq-consent', patientId: 'recPacPrueba00003', id: pm, acepta: true, quien: 'tutor', tutor: 'Anna Petit', lang: 'cat' }, 'POST');
+  ver('menor: lo acepta su tutora', r.j.ok && r.j.parte.consentimiento === 'Aceptado' && /Anna Petit/.test(r.j.parte.consQuien), r.j);
   console.log(fallos ? `\n${fallos} FALLOS` : '\nTodo bien');
   process.exit(fallos ? 1 : 0);
 })().catch(e => { console.error('FALLO', e.message, String(e.stack).split('\n').slice(1, 4).join(' | ')); process.exit(1); });

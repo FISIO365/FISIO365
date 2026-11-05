@@ -20,8 +20,12 @@ module.exports = async function handler(req, res) {
   let tabla, id;
   // Entrenadores de «Mi equipo»: cada acceso con su firma (equipo = [{id, tok}]); se guarda en todos sus accesos
   if (Array.isArray(equipo) && equipo.length) {
-    const { okTok } = require('./_equipo');
-    const ok = equipo.slice(0, 10).filter(e => e && okTok(e.id, e.tok));
+    const { okTok, okFormato } = require('./_equipo');
+    const H = { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
+    const ok = [];
+    for (const e of equipo.slice(0, 10)) { if (!e || !okFormato(e.id, e.tok)) continue;
+      const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLAS.equipo}/${e.id}`, { headers: H }).then(x => x.json()).catch(() => null);
+      if (r && r.fields && (borrar || r.fields['ACTIVO']) && okTok(e.id, e.tok, r.fields['PIN'])) ok.push(e); }
     if (!ok.length) return res.status(401).json({ ok: false });
     try {
       for (const e of ok) await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLAS.equipo}/${e.id}`, { method: 'PATCH', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { PushSubscription: borrar ? '' : JSON.stringify(subscription) } }) });
