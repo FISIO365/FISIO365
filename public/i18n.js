@@ -4,6 +4,54 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Clubs deportivos": [
+"Clubs esportius",
+"Sports clubs"
+],
+"¿Juegas en un club?": [
+"Jugues en un club?",
+"Do you play for a club?"
+],
+"Para deportistas que se tratan con nosotros": [
+"Per a esportistes que es tracten amb nosaltres",
+"For athletes who are treated with us"
+],
+"Si juegas en un club o en un equipo, tu fisio puede compartir con tu entrenador un resumen de tu recuperación: qué tienes, cuándo se prevé que vuelvas y qué puedes hacer mientras tanto. Así sabe cómo cuidarte en los entrenos.": [
+"Si jugues en un club o en un equip, el teu fisio pot compartir amb el teu entrenador un resum de la teva recuperació: què tens, quan es preveu que tornis i què pots fer mentrestant. Així sap com cuidar-te als entrenaments.",
+"If you play for a club or team, your physio can share a summary of your recovery with your coach: what's wrong, when you're expected back and what you can do in the meantime. That way they know how to look after you in training."
+],
+"Solo si tú lo aceptas": [
+"Només si tu ho acceptes",
+"Only if you agree"
+],
+"Si tienes menos de 14 años, lo aceptan tus padres": [
+"Si tens menys de 14 anys, ho accepten els teus pares",
+"If you're under 14, your parents agree"
+],
+"Tu historia clínica no se comparte": [
+"La teva història clínica no es comparteix",
+"Your medical record is not shared"
+],
+"Solo el parte: cómo vas y cuándo vuelves": [
+"Només el part: com vas i quan tornes",
+"Only the report: how you're doing and when you'll be back"
+],
+"Lo dejas de compartir cuando quieras": [
+"Ho deixes de compartir quan vulguis",
+"Stop sharing whenever you want"
+],
+"Desde aquí, con un botón": [
+"Des d'aquí, amb un botó",
+"From here, with one tap"
+],
+"Díselo a tu fisio": [
+"Digues-ho al teu fisio",
+"Tell your physio"
+],
+"Si tu fisio te añade a tu club, aquí verás tu parte y podrás decidir si lo compartes.": [
+"Si el teu fisio t'afegeix al teu club, aquí veuràs el teu part i podràs decidir si el comparteixes.",
+"If your physio adds you to your club, you'll see your report here and decide whether to share it."
+],
 "Habla con su fisio": [
 "Parla amb el seu fisio",
 "Talk to their physio"

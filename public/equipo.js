@@ -31,7 +31,7 @@
   }
   function menu() {
     const c = el('navMiClub'), e = el('navMiEquipo');
-    if (c) c.style.display = S.partes.length ? 'flex' : 'none';
+    if (c) c.style.display = 'flex'; // siempre: si no juega en ningún club, explica para qué es
     if (e) e.style.display = 'flex'; // siempre: sin acceso, explica para qué es
   }
   function banner() {
@@ -47,7 +47,17 @@
   function pintarClub() {
     const box = el('miClubBox'); if (!box) return;
     if (!S.cargado) { box.innerHTML = '<div class="eq-vac">Cargando…</div>'; cargar().then(pintarClub); return; }
-    if (!S.partes.length) { box.innerHTML = '<div class="eq-vac">No estás en ningún club con «Mi equipo».</div>'; return; }
+    if (!S.partes.length) {
+      const pt = (ic, t) => `<div class="eqh-b"><div class="eq-cic">${ic}</div><div><b>${t[0]}</b><span>${t[1]}</span></div></div>`;
+      box.innerHTML = `<div class="eq-card"><div class="eq-ch"><div class="eq-cic">${IC.club}</div><div><b>¿Juegas en un club?</b><small>Para deportistas que se tratan con nosotros</small></div></div>
+        <p class="eq-p">Si juegas en un club o en un equipo, tu fisio puede compartir con tu entrenador un resumen de tu recuperación: qué tienes, cuándo se prevé que vuelvas y qué puedes hacer mientras tanto. Así sabe cómo cuidarte en los entrenos.</p>
+        <div class="eqh-bens eq-mcb">${pt(ICP.ok, ['Solo si tú lo aceptas', 'Si tienes menos de 14 años, lo aceptan tus padres'])}${pt(ICP.no, ['Tu historia clínica no se comparte', 'Solo el parte: cómo vas y cuándo vuelves'])}${pt(ICP.evo, ['Lo dejas de compartir cuando quieras', 'Desde aquí, con un botón'])}</div>
+        <button type="button" class="eq-ok eq-mcf">Díselo a tu fisio</button>
+        <p class="eqh-nota" style="margin-bottom:0">Si tu fisio te añade a tu club, aquí verás tu parte y podrás decidir si lo compartes.</p></div>`;
+      box.querySelector('.eq-mcf').onclick = () => window.showSection('mensajes');
+      try { window.applyTranslations && applyTranslations(); } catch (e) {}
+      return;
+    }
     box.innerHTML = S.partes.map(x => {
       const ok = x.consentimiento === 'Aceptado';
       return `<div class="eq-card" data-id="${x.id}">
