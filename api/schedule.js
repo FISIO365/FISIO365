@@ -4816,7 +4816,8 @@ module.exports = async function handler(req, res) {
           const eqDe = cid => eqUnicos([...eqEquiposAcc((cls.find(c => c.id === cid) || {}).fields), ...todas.filter(r => r.fields['CLUB'] === cid).map(r => r.fields['EQUIPO']), ...accs.filter(a => a.fields['CLUB'] === cid).flatMap(a => eqEquiposAcc(a.fields))]);
           // Todos los clubs de Captación (primero los que ya tienen Mi equipo): se puede añadir al jugador aunque el club aún no tenga accesos
           const clubs = cls.map(c => ({ id: c.id, nombre: c.fields['NOMBRE'] || '', deporte: c.fields['DEPORTE'] || '', activo: conAcc.has(c.id), equipos: eqDe(c.id) })).sort((a, b) => (b.activo - a.activo) || a.nombre.localeCompare(b.nombre, 'es'));
-          return res.status(200).json({ ok: true, partes: pars.map(eqParte), clubs, semaforos: EQ_SEM, fases: EQ_FASES });
+          const noJuega = !pars.length && !!((await ajuste('eq-no-juega', {})) || {})[q.id];
+          return res.status(200).json({ ok: true, partes: pars.map(eqParte), clubs, semaforos: EQ_SEM, fases: EQ_FASES, noJuega });
         }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'seg-eq-acceso') { // dar o cambiar el acceso de alguien del club (dirección)
@@ -4888,6 +4889,13 @@ module.exports = async function handler(req, res) {
           // El jugador (o sus padres, si la cuenta es suya) también recibe el aviso: el parte lo ve siempre en «Mi club»
           if (nota || cambio) { try { const { avisar } = require('./_push'); await avisar('paciente', F['PACIENTE'], { title: 'Tu parte de recuperación', body: [EQ_SEM[sem], fase].filter(Boolean).join(' · ') || 'Tu fisio lo ha actualizado', url: '/?s=miclub', tag: 'eqj-' + q.id }); } catch (e) {} }
           return res.status(200).json({ ok: true, parte: eqParte(d), compartido: comp, avisados });
+        }
+        if (action === 'seg-eq-nojuega') { // «No juega en ningún club»: la ficha deja de preguntarlo
+          if (!okId(q.id)) return res.status(400).json({ ok: false });
+          const NJ = (await ajuste('eq-no-juega', {})) || {};
+          if (q.si) NJ[q.id] = new Date().toISOString().slice(0, 10); else delete NJ[q.id];
+          await guardarAjuste('eq-no-juega', NJ, '');
+          return res.status(200).json({ ok: true });
         }
         if (action === 'seg-eq-quitar') { // ya no juega en ese club (o se vinculó por error): deja de verse en el club
           if (!okId(q.id)) return res.status(400).json({ ok: false });
