@@ -3927,14 +3927,59 @@ module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).send(paginaVale(F, id, req.query.p === '1', req.query.c === '1'));
   }
+  if (action === 'taller-datos') { // datos de las personas apuntadas a un taller (tras pagar)
+    const q = req.body || {}, id = String(q.t || ''), sid = String(q.s || '');
+    if (!/^[a-z0-9-]{3,40}$/.test(id) || !/^cs_[A-Za-z0-9_]+$/.test(sid) || !Array.isArray(q.personas)) return res.status(400).json({ ok: false });
+    const ses = await stripeApi('checkout/sessions/' + sid).catch(() => null);
+    if (!ses || ses.payment_status !== 'paid' || (ses.metadata || {}).taller !== id) return res.status(400).json({ ok: false });
+    const KI = 'taller_insc_' + id, I = (await ajuste(KI, {})) || {}, x = I[sid] || { n: q.personas.length, cuando: new Date().toISOString() };
+    const t = (v, m) => String(v || '').trim().slice(0, m);
+    x.personas = q.personas.slice(0, 10).map(p => ({ nombre: t(p.nombre, 120), tel: t(p.tel, 30), nac: /^\d{4}-\d{2}-\d{2}$/.test(p.nac || '') ? p.nac : '', nota: t(p.nota, 500) }));
+    I[sid] = x; await guardarAjuste(KI, I, 'taller');
+    // Aviso al equipo: email a info@ con los datos y aviso al móvil a Sara y a dirección
+    const k = require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('taller-lista:' + id).digest('hex').slice(0, 16), lista = `${APPU()}/taller/${id}-lista-${k}`;
+    const tot = Object.values(I).reduce((a, y) => a + (y.n || 0), 0), e = escHtml;
+    try { if (process.env.BREVO_API_KEY) await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: [{ email: 'info@fisioterapia365.com' }], subject: `Taller: ${x.n} plaza${x.n > 1 ? 's' : ''} nueva${x.n > 1 ? 's' : ''} (${tot} en total)`,
+      htmlContent: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#222"><p><b>${e(id)}</b> · ${x.n} plaza${x.n > 1 ? 's' : ''} pagada${x.n > 1 ? 's' : ''} por ${e(x.pagador || x.email || '')}${x.tel ? ' (' + e(x.tel) + ')' : ''}. Llevamos ${tot}.</p>${x.personas.map((p, i) => `<p>${i + 1}. <b>${e(p.nombre)}</b> · ${e(p.tel)} · nacimiento ${e(p.nac)}${p.nota ? '<br>A tener en cuenta: ' + e(p.nota) : ''}</p>`).join('')}<p><a href="${lista}">Ver todos los apuntados</a></p></div>`, tags: ['taller'] }) }); } catch (er) {}
+    try { const { avisar } = require('./_push'); const fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}`).catch(() => ({})), ids = (fl.records || []).filter(r => r.fields['DIRECCIÓN'] || /^sara\b/i.test(String(r.fields.Name || ''))).map(r => r.id);
+      await Promise.all(ids.map(fid => avisar('fisio', fid, { title: `🧘 Taller: ${x.n} plaza${x.n > 1 ? 's' : ''} nueva${x.n > 1 ? 's' : ''}`, body: `${x.personas.map(p => p.nombre).join(', ')} · ${tot} de 5`, url: lista, tag: 'taller-' + id }).catch(() => false))); } catch (er) {}
+    return res.status(200).json({ ok: true });
+  }
   if (action === 'taller-pagar') { // /taller/<id>: pago de plazas de un taller (cada uno elige cuántas, hasta llenar el aforo)
     const TALLERES = { 'hipopresivos': { nombre: 'Taller de hipopresivos desde cero', cuando: 'jueves 3 de diciembre de 2026, de 19:30 a 20:30', fin: '2026-12-03', precio: 1500, plazas: 5, desde: '2026-11-06' } };
-    const t0 = String(req.query.t || ''), okPag = /-ok$/.test(t0) || req.query.ok === '1', id = t0.replace(/-ok$/, ''), T = TALLERES[id];
+    const t0 = String(req.query.t || ''), mOk = t0.match(/^([a-z0-9-]+?)-ok(?:-(cs_[A-Za-z0-9_]+))?$/), mLi = t0.match(/^([a-z0-9-]+?)-lista-([a-f0-9]{16})$/);
+    const id = mOk ? mOk[1] : mLi ? mLi[1] : t0, T = TALLERES[id], sid = mOk && mOk[2] ? mOk[2] : '', okPag = !!mOk;
+    const firmaT = x => require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('taller-lista:' + x).digest('hex').slice(0, 16);
+    const KI = 'taller_insc_' + id;
     const pagina = (tit, txt, bt) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${tit}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"><style>body{margin:0;font-family:Poppins,sans-serif;background:#f6f1eb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}.c{background:#fff;border-radius:24px;padding:30px 24px;max-width:420px;text-align:center}h1{font-size:22px;margin:0 0 10px;color:#1a1a1a}p{color:#5c4f47;line-height:1.6;font-size:15px}a{display:inline-block;margin-top:14px;background:#c2552e;color:#fff;text-decoration:none;font-weight:600;border-radius:99px;padding:13px 24px}</style></head><body><div class="c"><h1>${tit}</h1><p>${txt}</p>${bt || ''}</div></body></html>`;
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     if (!T) return res.status(404).send(pagina('Taller no encontrado', 'Este enlace no es de ningún taller.'));
     const waL = t => `<a href="https://wa.me/34672893949?text=${encodeURIComponent(t)}">`;
-    if (okPag) return res.status(200).send(pagina('¡Plaza reservada!', `Te esperamos el ${T.cuando} en FISIO365 (Gran de Sant Andreu 163, Barcelona). Trae ropa cómoda y una esterilla. Te llegará el recibo por email. Cualquier duda: 672 89 39 49.`));
+    // Lista para el equipo (enlace firmado que va en el email de cada inscripción)
+    if (mLi) { if (mLi[2] !== firmaT(id)) return res.status(404).send(pagina('No encontrado', ''));
+      const I = (await ajuste(KI, {})) || {}, L = Object.values(I).sort((a, b) => String(a.cuando).localeCompare(String(b.cuando))), tot = L.reduce((a, x) => a + (x.n || 0), 0);
+      return res.status(200).send(pagina(`${T.nombre} · ${tot} de ${T.plazas} plazas`, `${T.cuando}<br><br>` + (L.length ? L.map(x => `<b>Pagó ${escHtml(x.pagador || x.email || '')}</b> (${x.n} plaza${x.n > 1 ? 's' : ''}${x.tel ? ' · ' + escHtml(x.tel) : ''})<br>` + (x.personas || []).map((q, k) => `${k + 1}. ${escHtml(q.nombre || '—')} · ${escHtml(q.tel || '')} · ${escHtml(q.nac || '')}${q.nota ? '<br><i>' + escHtml(q.nota) + '</i>' : ''}`).join('<br>') + (x.personas && x.personas.length ? '' : '<i>Aún no ha rellenado los datos</i>')).join('<br><br>') : 'Aún no hay nadie apuntado.')));
+    }
+    // Tras pagar: datos de cada persona (nombre, teléfono, fecha de nacimiento y si hay algo a tener en cuenta)
+    if (okPag) {
+      let ses = null; if (sid) ses = await stripeApi('checkout/sessions/' + sid).catch(() => null);
+      if (!ses || ses.payment_status !== 'paid' || (ses.metadata || {}).taller !== id) return res.status(200).send(pagina('¡Plaza reservada!', `Te esperamos el ${T.cuando} en FISIO365 (Gran de Sant Andreu 163, Barcelona). Trae ropa cómoda y una esterilla. Cualquier duda: 672 89 39 49.`));
+      const n = Math.max(1, Math.round((ses.amount_total || 0) / T.precio)), I = (await ajuste(KI, {})) || {}, ya = I[sid];
+      const cf = (ses.custom_fields || []).find(x => x.key === 'nombre'), pag = (cf && cf.text && cf.text.value) || (ses.customer_details || {}).name || '', tel = (ses.customer_details || {}).phone || '';
+      if (!ya) { I[sid] = { n, pagador: pag, email: (ses.customer_details || {}).email || '', tel, cuando: new Date().toISOString(), personas: [] }; await guardarAjuste(KI, I, 'taller'); }
+      const P = (ya && ya.personas && ya.personas.length ? ya.personas : []);
+      const e = escHtml, campo = (k, q) => `<div class="p"><b>${n > 1 ? 'Persona ' + (k + 1) + (k === 0 ? ' (tú)' : '') : 'Tus datos'}</b>
+        <label>Nombre y apellidos<input name="nombre" required value="${e((q && q.nombre) || (k === 0 ? pag : ''))}"></label>
+        <label>Teléfono<input name="tel" type="tel" required value="${e((q && q.tel) || (k === 0 ? tel : ''))}"></label>
+        <label>Fecha de nacimiento<input name="nac" type="date" required value="${e((q && q.nac) || '')}"></label>
+        <label>¿Algo a tener en cuenta?<textarea name="nota" rows="2" placeholder="Embarazo, tensión alta, una lesión, una operación reciente… o «nada»">${e((q && q.nota) || '')}</textarea></label></div>`;
+      return res.status(200).send(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>¡Plaza reservada!</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box}body{margin:0;font-family:Poppins,sans-serif;background:#f6f1eb;padding:24px 16px;color:#1a1a1a}.c{background:#fff;border-radius:24px;padding:26px 20px;max-width:460px;margin:0 auto}h1{font-size:22px;margin:0 0 6px;text-align:center}.s{color:#5c4f47;font-size:14.5px;line-height:1.55;text-align:center;margin:0 0 18px}.p{border:1px solid #efd9cc;background:#fbf6f1;border-radius:16px;padding:14px;margin-bottom:12px}.p b{display:block;color:#c2552e;font-size:14px;margin-bottom:8px}label{display:block;font-size:12.5px;color:#7d6a60;margin-top:8px}input,textarea{display:block;width:100%;margin-top:4px;font:15px Poppins,sans-serif;border:1.5px solid #e6dfd8;border-radius:12px;padding:10px 12px;background:#fff;color:#1a1a1a;outline:none}input:focus,textarea:focus{border-color:#c2552e}button{display:block;width:100%;margin-top:8px;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border:none;border-radius:99px;padding:14px;cursor:pointer}.ok{display:none;text-align:center}.ok p{color:#5c4f47;line-height:1.6}small{display:block;font-size:12px;color:#8a7d74;text-align:center;margin-top:12px;line-height:1.5}</style></head><body><div class="c">
+        <form id="f"><h1>¡Plaza${n > 1 ? 's' : ''} reservada${n > 1 ? 's' : ''}!</h1><p class="s">${e(T.nombre)} · ${e(T.cuando)}.<br>Ahora, ${n > 1 ? 'los datos de cada persona' : 'tus datos'} para que Sara lo tenga todo preparado.</p>
+        ${Array.from({ length: n }, (_, k) => campo(k, P[k])).join('')}<p id="er" style="display:none;color:#b42318;font-size:13px;text-align:center;margin:8px 0 0">No se ha podido enviar. Prueba otra vez o escríbenos al 672 89 39 49.</p><button type="submit">Enviar</button><small>Solo los usa el equipo de FISIO365 para organizar el taller.</small></form>
+        <div class="ok" id="ok"><h1>¡Listo!</h1><p>Te esperamos el ${e(T.cuando)} en FISIO365 (Gran de Sant Andreu 163). Trae ropa cómoda y una esterilla.<br>Cualquier duda: 672 89 39 49.</p></div></div>
+        <script>document.getElementById('f').onsubmit=async function(ev){ev.preventDefault();var b=this.querySelector('button');b.disabled=true;b.textContent='Enviando…';var ps=[].map.call(document.querySelectorAll('.p'),function(p){var g=function(n){return p.querySelector('[name='+n+']').value.trim();};return {nombre:g('nombre'),tel:g('tel'),nac:g('nac'),nota:g('nota')};});
+        try{var r=await (await fetch('/api/schedule?action=taller-datos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:${JSON.stringify(id)},s:${JSON.stringify(sid)},personas:ps})})).json();if(!r.ok)throw 0;this.style.display='none';document.getElementById('ok').style.display='block';window.scrollTo(0,0);}catch(e){b.disabled=false;b.textContent='Enviar';var m=document.getElementById('er');m.style.display='block';}};</script></body></html>`);
+    }
     const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
     if (hoy > T.fin) return res.status(200).send(pagina('Este taller ya se hizo', '¡Gracias por el interés! Escríbenos y te avisamos del próximo.', waL('Hola, avisadme del próximo ' + T.nombre) + 'Avisadme del próximo</a>'));
     try {
@@ -3953,7 +3998,7 @@ module.exports = async function handler(req, res) {
         'line_items[0][adjustable_quantity][enabled]': 'true', 'line_items[0][adjustable_quantity][minimum]': '1', 'line_items[0][adjustable_quantity][maximum]': String(quedan),
         'phone_number_collection[enabled]': 'true', 'custom_fields[0][key]': 'nombre', 'custom_fields[0][label][type]': 'custom', 'custom_fields[0][label][custom]': 'Nombre y apellidos', 'custom_fields[0][type]': 'text',
         locale: 'es', 'metadata[taller]': id, 'payment_intent_data[description]': T.nombre, 'payment_intent_data[metadata][taller]': id,
-        success_url: base + '-ok', cancel_url: 'https://fisioterapia365.com/', expires_at: String(Math.floor(Date.now() / 1000) + 35 * 60) };
+        success_url: base + '-ok-{CHECKOUT_SESSION_ID}', cancel_url: 'https://fisioterapia365.com/', expires_at: String(Math.floor(Date.now() / 1000) + 35 * 60) };
       const ses = await stripeApi('checkout/sessions', f);
       return res.redirect(303, ses.url);
     } catch (e) { console.log('taller', e.message); return res.status(200).send(pagina('Ahora no podemos abrir el pago', 'Escríbenos por WhatsApp y te reservamos la plaza.', waL('Hola, quiero reservar plaza en el ' + T.nombre) + 'Escribir por WhatsApp</a>')); }

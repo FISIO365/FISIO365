@@ -114,7 +114,7 @@
       "dest": "/api/schedule.js?action=cdoc&id=$1&s=$2"
     },
     {
-      "src": "/taller/([a-z0-9-]{3,40})",
+      "src": "/taller/([A-Za-z0-9_-]{3,200})",
       "dest": "/api/schedule.js?action=taller-pagar&t=$1"
     },
     {
