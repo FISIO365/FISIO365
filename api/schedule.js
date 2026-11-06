@@ -5431,8 +5431,9 @@ module.exports = async function handler(req, res) {
           const x = L[0], cu = x.fecha === fecha ? 'ese mismo día' : x.fecha < fecha ? 'el día antes (' + dn(x.fecha) + ')' : 'el día después (' + dn(x.fecha) + ')';
           return { ok: false, cerca: true, citas: L, error: `Ya tiene cita ${cu} a las ${x.hora}${x.fisio ? ' con ' + String(x.fisio).split(' ')[0] : ''}${L.length > 1 ? ` (y ${L.length - 1} más esos días)` : ''}` }; };
         // Dejar una hora libre solo si no hay ya otro hueco libre ni un paciente a esa hora con ese fisio (si no, salen huecos repetidos)
-        const libreSiHace = async (fecha, hora, fisio, estado) => {
-          const ya = enHora(await delDia(fecha), hora, fisio).filter(r => LIBRE(nmA(r.fields['ESTADO'])) || ((r.fields['RELACIÓN - CITA'] || []).length && ACTIVA(String(nmA(r.fields['ESTADO'])))));
+        // excluir: la cita que se cancela o se mueve (aún puede figurar como PENDIENTE y no debe contar como «ocupada»)
+        const libreSiHace = async (fecha, hora, fisio, estado, excluir) => {
+          const ya = enHora(await delDia(fecha), hora, fisio).filter(r => r.id !== excluir).filter(r => LIBRE(nmA(r.fields['ESTADO'])) || ((r.fields['RELACIÓN - CITA'] || []).length && ACTIVA(String(nmA(r.fields['ESTADO'])))));
           if (ya.length) return null; return nueva(fecha, hora, fisio, { ESTADO: estado || 'CITA LIBRE' });
         };
         // ── Revisar la agenda: fallos que se cuelan (dos pacientes en la misma hora, huecos repetidos, citas seguidas…) ──
@@ -6077,7 +6078,7 @@ module.exports = async function handler(req, res) {
           if (Array.isArray(q.tipos)) f['TIPO DE CITA'] = await tiposDe(q.tipos);
           if (q.sesion !== undefined) f['TIPO DE SESIÓN'] = String(q.sesion || '').trim().slice(0, 60) || null;
           if (q.liberar) { // el paciente queda en su fila (cancelada…) y se crea un hueco libre en esa hora
-            const c = cur.fields; await libreSiHace(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']));
+            const c = cur.fields; await libreSiHace(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), undefined, q.id);
           }
           if (Object.keys(f).length) await patch(q.id, f);
           { const pidE = (cur.fields['RELACIÓN - CITA'] || [])[0]; if (pidE && /^(REALIZADA|NO ASISTIÓ)$/.test(q.estado || '')) await ponerEtapa(pidE, q.estado === 'REALIZADA' ? 'realizada' : 'noasistio').catch(() => null); }
@@ -6114,7 +6115,7 @@ module.exports = async function handler(req, res) {
                 if (!pk || pk.t !== 'pack') { debePagar = `Cambió la cita con menos de ${hPol} h el ${cF.split('-').reverse().slice(0, 2).join('/')}`; await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PAGO ADELANTADO': true, 'PAGO ADELANTADO MOTIVO': debePagar } }) }).catch(() => {}); } }
             } }
           await patch(q.id, Object.assign({ ESTADO: q.perdida ? 'CITA PERDIDA' : 'REPROGRAMADA' }, fOrig));
-          if (q.liberar) await libreSiHace(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']));
+          if (q.liberar) await libreSiHace(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), undefined, q.id);
           return res.status(200).json({ ok: true, id: r.id, debePagar });
         }
         if (action === 'seg-agenda-fisio') { global._sesPac = {}; // pasar la cita a otro fisio, mismo día y hora (sin reprogramar). Si el otro tenía esa hora libre, el hueco pasa al fisio de antes
