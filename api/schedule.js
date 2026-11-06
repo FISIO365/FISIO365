@@ -1149,6 +1149,24 @@ function precioEspLimpio(x) {
   const l = x.l.map(r => ({ c: String(r.c || '').trim().slice(0, 80), n: Math.max(0, Math.min(100, Math.round(Number(r.n) || 0))), p: Math.round((Number(String(r.p).replace(',', '.')) || 0) * 100) / 100 })).filter(r => r.c && r.p > 0).slice(0, 10);
   return l.length ? { l, m: ['antiguo', 'pack', 'otro'].includes(x.m) ? x.m : 'otro', nota: String(x.nota || '').trim().slice(0, 200), quien: String(x.quien || '').slice(0, 60), cuando: new Date().toISOString().slice(0, 10) } : null;
 }
+// ── TALLERES Y CURSOS: se crean en el panel (Talleres) y salen en la app del paciente; la plaza se paga con Stripe en /taller/<id> ──
+const TALLER_SEMILLA = [{ id: 'hipopresivos', tipo: 'taller', titulo: 'Hipopresivos desde cero', sub: 'Aprende las bases de la técnica en un grupo reducido y con supervisión de una fisioterapeuta de suelo pélvico.', fecha: '2026-12-03', hora: '19:30', fin: '20:30', precio: 15, plazas: 5, fisio: 'Sara Arcusa', practica: ['Respiración costal y espiración', 'Postura y autoelongación', 'La técnica, paso a paso', 'De pie, a 4 apoyos y sentada', 'Corrección individual durante la práctica'], llevar: 'Ropa cómoda y esterilla', activo: true, desde: '2026-11-06' }];
+async function talleresTodos() { const L = await ajuste('talleres', null); return Array.isArray(L) ? L : TALLER_SEMILLA; }
+const tallerCuando = T => { const d = new Date(T.fecha + 'T12:00:00'), D = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][d.getDay()], M = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][d.getMonth()]; return `${D} ${d.getDate()} de ${M} de ${d.getFullYear()}${T.hora ? ', ' + (T.fin ? 'de ' + T.hora + ' a ' + T.fin : 'a las ' + T.hora) : ''}`; };
+// Apuntados: pagos de Stripe de ese taller + los datos que rellenaron después
+const _tallerCache = {};
+async function tallerInscritos(T, fresco) {
+  const c = _tallerCache[T.id]; if (!fresco && c && Date.now() - c.t < 60e3) return c.v;
+  const I = (await ajuste('taller_insc_' + T.id, {})) || {}, cents = Math.round(Number(T.precio) * 100) || 1, L = {};
+  let after = ''; const desde = Math.floor(new Date((T.desde || '2026-11-01') + 'T00:00:00Z') / 1000);
+  for (let k = 0; k < 10; k++) { const d = await stripeApi(`checkout/sessions?limit=100&created[gte]=${desde}${after ? '&starting_after=' + after : ''}`).catch(() => ({ data: [] }));
+    (d.data || []).forEach(x => { if ((x.metadata || {}).taller !== T.id || x.payment_status !== 'paid') return; const cf = (x.custom_fields || []).find(f => f.key === 'nombre');
+      L[x.id] = { sid: x.id, n: Number((x.metadata || {}).n) || Math.max(1, Math.round((x.amount_total || 0) / cents)), pagador: (cf && cf.text && cf.text.value) || (x.customer_details || {}).name || '', email: (x.customer_details || {}).email || '', tel: (x.customer_details || {}).phone || '', cuando: new Date((x.created || 0) * 1000).toISOString(), personas: [] }; });
+    if (!d.has_more || !(d.data || []).length) break; after = d.data[d.data.length - 1].id; }
+  Object.entries(I).forEach(([sid, x]) => { L[sid] = Object.assign({}, L[sid] || {}, x, { sid }); });
+  const lista = Object.values(L).sort((a, b) => String(a.cuando).localeCompare(String(b.cuando))), total = lista.reduce((a, x) => a + (x.n || 0), 0);
+  const v = { total, lista }; _tallerCache[T.id] = { t: Date.now(), v }; return v;
+}
 // Mi equipo: con menos de 16 años el parte para el club lo acepta su padre, su madre o su tutor
 const menorDe16 = c => { c = String(c || '').slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(c)) return false; const h = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); return (+h.slice(0, 4) - +c.slice(0, 4) - (h.slice(5) < c.slice(5) ? 1 : 0)) < 16; };
 // ── CUMPLEAÑOS: tarjeta animada para mandar por WhatsApp (/cumple/recID-R-firma; R=1 lleva el regalo del 10 % del mes) ──
@@ -3927,6 +3945,12 @@ module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).send(paginaVale(F, id, req.query.p === '1', req.query.c === '1'));
   }
+  if (action === 'talleres-app') { // «Talleres y cursos» en la app del paciente: los próximos, con plazas libres
+    const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+    const L = (await talleresTodos()).filter(T => T.activo !== false && T.fecha >= hoy).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+    const out = []; for (const T of L) { const ins = await tallerInscritos(T).catch(() => ({ total: 0 })); out.push({ id: T.id, tipo: T.tipo || 'taller', titulo: T.titulo, sub: T.sub || '', fecha: T.fecha, hora: T.hora || '', fin: T.fin || '', precio: Number(T.precio) || 0, plazas: Number(T.plazas) || 0, quedan: Math.max(0, (Number(T.plazas) || 0) - ins.total), fisio: T.fisio || '', practica: T.practica || [], llevar: T.llevar || '', url: `${APPU()}/taller/${T.id}` }); }
+    res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ ok: true, talleres: out });
+  }
   if (action === 'taller-datos') { // datos de las personas apuntadas a un taller (tras pagar)
     const q = req.body || {}, id = String(q.t || ''), sid = String(q.s || '');
     if (!/^[a-z0-9-]{3,40}$/.test(id) || !/^cs_[A-Za-z0-9_]+$/.test(sid) || !Array.isArray(q.personas)) return res.status(400).json({ ok: false });
@@ -3935,18 +3959,18 @@ module.exports = async function handler(req, res) {
     const KI = 'taller_insc_' + id, I = (await ajuste(KI, {})) || {}, x = I[sid] || { n: q.personas.length, cuando: new Date().toISOString() };
     const t = (v, m) => String(v || '').trim().slice(0, m);
     x.personas = q.personas.slice(0, 10).map(p => ({ nombre: t(p.nombre, 120), tel: t(p.tel, 30), nac: /^\d{4}-\d{2}-\d{2}$/.test(p.nac || '') ? p.nac : '', exp: t(p.exp, 40), nota: t(p.nota, 500) }));
-    I[sid] = x; await guardarAjuste(KI, I, 'taller');
+    I[sid] = x; await guardarAjuste(KI, I, 'taller'); delete _tallerCache[id];
     // Aviso al equipo: email a info@ con los datos y aviso al móvil a Sara y a dirección
     const k = require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('taller-lista:' + id).digest('hex').slice(0, 16), lista = `${APPU()}/taller/${id}-lista-${k}`;
-    const tot = Object.values(I).reduce((a, y) => a + (y.n || 0), 0), e = escHtml, edad = f => { if (!f) return ''; const h = new Date(), d = new Date(f + 'T12:00:00'); let a = h.getFullYear() - d.getFullYear(); if (h.getMonth() < d.getMonth() || (h.getMonth() === d.getMonth() && h.getDate() < d.getDate())) a--; return a > 0 && a < 110 ? a + ' años' : ''; };
+    const T0 = (await talleresTodos()).find(y => y.id === id), tot = T0 ? (await tallerInscritos(T0, true)).total : Object.values(I).reduce((a, y) => a + (y.n || 0), 0), pl = T0 ? Number(T0.plazas) : 5, e = escHtml, edad = f => { if (!f) return ''; const h = new Date(), d = new Date(f + 'T12:00:00'); let a = h.getFullYear() - d.getFullYear(); if (h.getMonth() < d.getMonth() || (h.getMonth() === d.getMonth() && h.getDate() < d.getDate())) a--; return a > 0 && a < 110 ? a + ' años' : ''; };
     try { if (process.env.BREVO_API_KEY) await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: [{ email: 'info@fisioterapia365.com' }], subject: `Taller: ${x.n} plaza${x.n > 1 ? 's' : ''} nueva${x.n > 1 ? 's' : ''} (${tot} en total)`,
       htmlContent: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#222"><p><b>${e(id)}</b> · ${x.n} plaza${x.n > 1 ? 's' : ''} pagada${x.n > 1 ? 's' : ''} por ${e(x.pagador || x.email || '')}${x.tel ? ' (' + e(x.tel) + ')' : ''}. Llevamos ${tot}.</p>${x.personas.map((p, i) => `<p>${i + 1}. <b>${e(p.nombre)}</b> · ${e(p.tel)} · ${e(edad(p.nac) || p.nac)}${p.exp ? '<br>Hipopresivos: ' + e(p.exp) : ''}${p.nota ? '<br>A tener en cuenta: ' + e(p.nota) : ''}</p>`).join('')}<p><a href="${lista}">Ver todos los apuntados</a></p></div>`, tags: ['taller'] }) }); } catch (er) {}
     try { const { avisar } = require('./_push'); const fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}`).catch(() => ({})), ids = (fl.records || []).filter(r => r.fields['DIRECCIÓN'] || /^sara\b/i.test(String(r.fields.Name || ''))).map(r => r.id);
-      await Promise.all(ids.map(fid => avisar('fisio', fid, { title: `🧘 Taller: ${x.n} plaza${x.n > 1 ? 's' : ''} nueva${x.n > 1 ? 's' : ''}`, body: `${x.personas.map(p => p.nombre).join(', ')} · ${tot} de 5`, url: lista, tag: 'taller-' + id }).catch(() => false))); } catch (er) {}
+      await Promise.all(ids.map(fid => avisar('fisio', fid, { title: `🧘 Taller: ${x.n} plaza${x.n > 1 ? 's' : ''} nueva${x.n > 1 ? 's' : ''}`, body: `${x.personas.map(p => p.nombre).join(', ')} · ${tot} de ${pl}`, url: '/fisio?s=talleres', tag: 'taller-' + id }).catch(() => false))); } catch (er) {}
     return res.status(200).json({ ok: true });
   }
   if (action === 'taller-pagar') { // /taller/<id>: pago de plazas de un taller (cada uno elige cuántas, hasta llenar el aforo)
-    const TALLERES = { 'hipopresivos': { nombre: 'Taller de hipopresivos desde cero', cuando: 'jueves 3 de diciembre de 2026, de 19:30 a 20:30', fin: '2026-12-03', precio: 1500, plazas: 5, desde: '2026-11-06' } };
+    const TALLERES = {}; (await talleresTodos()).forEach(x => { TALLERES[x.id] = { id: x.id, nombre: (x.tipo === 'curso' ? 'Curso: ' : 'Taller: ') + x.titulo, cuando: tallerCuando(x), fin: x.fecha, precio: Math.round(Number(x.precio) * 100), plazas: Number(x.plazas) || 1, desde: x.desde || '2026-11-01', activo: x.activo !== false, raw: x }; });
     const t0 = String(req.query.t || ''), mOk = t0.match(/^([a-z0-9-]+?)-ok(?:-(cs_[A-Za-z0-9_]+))?$/), mLi = t0.match(/^([a-z0-9-]+?)-lista-([a-f0-9]{16})$/);
     const id = mOk ? mOk[1] : mLi ? mLi[1] : t0, T = TALLERES[id], sid = mOk && mOk[2] ? mOk[2] : '', okPag = !!mOk;
     const firmaT = x => require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('taller-lista:' + x).digest('hex').slice(0, 16);
@@ -3957,7 +3981,7 @@ module.exports = async function handler(req, res) {
     const waL = t => `<a href="https://wa.me/34672893949?text=${encodeURIComponent(t)}">`;
     // Lista para el equipo (enlace firmado que va en el email de cada inscripción)
     if (mLi) { if (mLi[2] !== firmaT(id)) return res.status(404).send(pagina('No encontrado', ''));
-      const I = (await ajuste(KI, {})) || {}, L = Object.values(I).sort((a, b) => String(a.cuando).localeCompare(String(b.cuando))), tot = L.reduce((a, x) => a + (x.n || 0), 0);
+      const { lista: L, total: tot } = await tallerInscritos(T.raw, true);
       return res.status(200).send(pagina(`${T.nombre} · ${tot} de ${T.plazas} plazas`, `${T.cuando}<br><br>` + (L.length ? L.map(x => `<b>Pagó ${escHtml(x.pagador || x.email || '')}</b> (${x.n} plaza${x.n > 1 ? 's' : ''}${x.tel ? ' · ' + escHtml(x.tel) : ''})<br>` + (x.personas || []).map((q, k) => `${k + 1}. <b>${escHtml(q.nombre || '—')}</b> · ${escHtml(q.tel || '')} · ${escHtml(q.nac ? q.nac.split('-').reverse().join('/') : '')}${q.exp ? '<br>' + escHtml(q.exp) : ''}${q.nota ? '<br><i>' + escHtml(q.nota) + '</i>' : ''}`).join('<br>') + (x.personas && x.personas.length ? '' : '<i>Aún no ha rellenado los datos</i>')).join('<br><br>') : 'Aún no hay nadie apuntado.')));
     }
     // Tras pagar: datos de cada persona (nombre, teléfono, fecha de nacimiento y si hay algo a tener en cuenta)
@@ -3987,11 +4011,8 @@ module.exports = async function handler(req, res) {
       // El primer enlace (10 €, plaza única) ya no se usa
       { const L0 = await ajuste('taller_' + id, null); if (L0 && L0.id && !L0.off) { await stripeApi('payment_links/' + L0.id, { active: 'false' }).catch(() => {}); await guardarAjuste('taller_' + id, Object.assign({}, L0, { off: 1 }), 'taller'); } }
       // Plazas ya pagadas (o con el pago abierto ahora mismo) de este taller
-      let pagadas = 0, after = '';
-      for (let k = 0; k < 10; k++) { const d = await stripeApi(`checkout/sessions?limit=100&created[gte]=${Math.floor(new Date(T.desde + 'T00:00:00Z') / 1000)}${after ? '&starting_after=' + after : ''}`);
-        (d.data || []).forEach(x => { if ((x.metadata || {}).taller !== id) return; const n = Number((x.metadata || {}).n) || Math.round((x.amount_total || 0) / T.precio) || 1; if (x.payment_status === 'paid') pagadas += n; });
-        if (!d.has_more || !d.data.length) break; after = d.data[d.data.length - 1].id; }
-      const quedan = T.plazas - pagadas;
+      if (!T.activo) return res.status(200).send(pagina('Inscripciones cerradas', 'Ahora mismo no se puede reservar. Escríbenos y te contamos.', waL('Hola, quiero información del ' + T.nombre) + 'Escribir por WhatsApp</a>'));
+      const quedan = T.plazas - (await tallerInscritos(T.raw, true)).total;
       if (quedan <= 0) return res.status(200).send(pagina('Plazas agotadas', `El ${T.nombre.toLowerCase()} ya está completo. Si se libera alguna plaza o hacemos otro, te avisamos.`, waL('Hola, quiero apuntarme a la lista de espera del ' + T.nombre) + 'Apúntame a la lista de espera</a>'));
       const base = `${APPU()}/taller/${id}`;
       const f = { mode: 'payment', 'line_items[0][quantity]': '1', 'line_items[0][price_data][currency]': 'eur', 'line_items[0][price_data][unit_amount]': String(T.precio),
@@ -5656,6 +5677,11 @@ module.exports = async function handler(req, res) {
           await guardarAjuste('agenda_revisado', M, String(q.quien || '').slice(0, 60));
           return res.status(200).json({ ok: true });
         }
+        if (action === 'seg-agenda-talleres') { // Talleres y cursos con quién se ha apuntado
+          const L = (await talleresTodos()).slice().sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+          const out = []; for (const T of L) { const ins = await tallerInscritos(T, true).catch(() => ({ total: 0, lista: [] })); out.push(Object.assign({}, T, { url: `${APPU()}/taller/${T.id}`, inscritos: ins.lista, total: ins.total })); }
+          return res.status(200).json({ ok: true, hoy: hoyF, talleres: out });
+        }
         if (action === 'seg-agenda-cumples') {
           // Cumpleaños para felicitar por WhatsApp: los de hoy, los que se quedaron sin felicitar (3 días atrás) y los próximos 7
           const hoyD = new Date(hoyF + 'T12:00:00'), dd = n => { const d = new Date(hoyD); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
@@ -5899,6 +5925,18 @@ module.exports = async function handler(req, res) {
           if (q.mejora) Object.assign(fm, { 'MEJORA FECHA': new Date().toISOString(), 'MEJORA FISIO': String(q.fisio || '').slice(0, 40), 'MEJORA ABIERTA': null, 'MEJORA GOOGLE': null });
           await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: fm }) }).catch(() => {});
           return res.status(200).json({ ok: true, link: enlaceRes(q.pacienteId), tel: tel.length === 9 ? '34' + tel : tel, pila: p0 ? p0.charAt(0).toUpperCase() + p0.slice(1).toLowerCase() : '' });
+        }
+        if (action === 'seg-agenda-taller-guardar') { // crear, cambiar o quitar un taller o curso
+          let L = (await talleresTodos()).slice(); const t = (v, m) => String(v || '').trim().slice(0, m);
+          if (q.borrar) { L = L.filter(x => x.id !== q.borrar); await guardarAjuste('talleres', L, t(q.quien, 60)); return res.status(200).json({ ok: true }); }
+          const x = q.taller || {}; if (!t(x.titulo, 120) || !okF(x.fecha)) return res.status(400).json({ ok: false, error: 'Falta el título o la fecha' });
+          const slug = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+          let id = x.id && L.some(y => y.id === x.id) ? x.id : ''; if (!id) { id = slug(x.titulo) || 'taller'; if (L.some(y => y.id === id)) id = (id + '-' + x.fecha.slice(5).replace('-', '')).slice(0, 38); let k = 2; const b = id; while (L.some(y => y.id === id)) id = b + '-' + k++; }
+          const prev = L.find(y => y.id === id) || {};
+          const T = { id, tipo: x.tipo === 'curso' ? 'curso' : 'taller', titulo: t(x.titulo, 120), sub: t(x.sub, 400), fecha: x.fecha, hora: /^\d{2}:\d{2}$/.test(x.hora || '') ? x.hora : '', fin: /^\d{2}:\d{2}$/.test(x.fin || '') ? x.fin : '', precio: Math.max(0, Math.round((Number(String(x.precio).replace(',', '.')) || 0) * 100) / 100), plazas: Math.max(1, Math.min(200, Math.round(Number(x.plazas) || 1))), fisio: t(x.fisio, 60), practica: (Array.isArray(x.practica) ? x.practica : String(x.practica || '').split('\n')).map(v => t(v, 120)).filter(Boolean).slice(0, 10), llevar: t(x.llevar, 200), activo: x.activo !== false, desde: prev.desde || hoyF };
+          if (prev.id) L = L.map(y => y.id === id ? T : y); else L.push(T);
+          await guardarAjuste('talleres', L, t(q.quien, 60)); delete _tallerCache[id];
+          return res.status(200).json({ ok: true, taller: T });
         }
         if (action === 'seg-agenda-cumple') { // apuntar que ya se le ha felicitado (q.fecha = el día de su cumple)
           if (!okId(q.pacienteId) || !okF(q.fecha)) return res.status(400).json({ ok: false });

@@ -776,8 +776,14 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
 .mcl-no{margin-top:6px;padding-top:9px;border-top:1px dashed #efe6df;color:#8a7d74}.mcl-no svg{stroke:#8a7d74}.mcl-ga{padding:2px 4px 14px;color:#5c4f47}
 @keyframes mclIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes mclPop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}@keyframes mclBar{to{width:62%}}
 @media (prefers-reduced-motion:reduce){.mcl *{animation-duration:.01s!important;animation-delay:0s!important}}
+.tl-c{background:#fff;border-radius:24px;padding:18px 18px 16px;margin:0 0 14px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}.tl-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.tl-tp{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a8461f;background:#fdf1ea;border-radius:99px;padding:3px 9px}.tl-pr{font-size:17px;font-weight:700;color:#c2552e}
+.tl-t{font-size:19px;font-weight:700;color:#1a1a1a;line-height:1.25}.tl-f{font-size:13.5px;color:#5c4f47;margin-top:4px}.tl-f:first-letter{text-transform:uppercase}.tl-con{font-size:13px;color:#8a7d74;margin-top:2px}.tl-s{font-size:14px;color:#3d3530;line-height:1.55;margin:10px 0 0}.tl-h{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9a8b80;margin:14px 0 6px}
+.tl-l{list-style:none;margin:0;padding:0}.tl-l li{position:relative;padding:3px 0 3px 18px;font-size:14px;color:#3d3530}.tl-l li:before{content:'';position:absolute;left:3px;top:11px;width:7px;height:7px;border-radius:50%;border:1.5px solid #c2552e}
+.tl-pl{display:flex;align-items:center;gap:10px;margin:16px 0 12px}.tl-bar{flex:1;height:7px;border-radius:99px;background:#f3ece6;overflow:hidden}.tl-bar i{display:block;height:100%;background:#c2552e;border-radius:99px}.tl-pl span{font-size:12.5px;font-weight:600;color:#a8461f;white-space:nowrap}
+.tl-bt{display:block;text-align:center;text-decoration:none;font-size:15px;font-weight:700;color:#fff;background:#c2552e;border-radius:99px;padding:13px}.tl-bt.sec{background:#fff;color:#c2552e;border:1.5px solid #c2552e}.tl-nt{font-size:12px;color:#8a7d74;text-align:center;margin-top:8px}
+.tl-hoy{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #f3dfd3;border-radius:22px;padding:12px 12px 12px 14px;margin:0 0 14px;cursor:pointer}.tl-hic{flex:none;width:40px;height:40px;border-radius:50%;background:#fdf1ea;display:flex;align-items:center;justify-content:center}.tl-hic svg{width:20px;height:20px;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.tl-hm{flex:1;min-width:0}.tl-hm b{display:block;font-size:14px;color:#1a1a1a}.tl-hm span{display:block;font-size:12.5px;color:#8a7d74}.tl-hm span:first-letter{text-transform:uppercase}.tl-hx{flex:none;border:none;background:#f5f0eb;width:28px;height:28px;border-radius:50%;color:#8a7d74;cursor:pointer;font-size:12px}
 </style>
-<script src="/i18n.js?v=5"></script>
+<script src="/i18n.js?v=6"></script>
 <script src="/visor.js?v=1"></script>
 </head>
 <body>
@@ -838,6 +844,7 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
  <button class="nav-item" id="navAvisos" onclick="showSection('notificaciones');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificaciones</button>
  <button class="nav-item" id="navInstalar" onclick="cerrarMenu();mostrarInstall()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>Instalar app</button>
  <button class="nav-item" onclick="cerrarMenu();abrirReserva()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#c2552e;font-size:14px;font-weight:700;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>Reservar cita</button>
+ <button class="nav-item" id="navTalleres" onclick="showSection('talleres');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="7.5" r="2.5"/><circle cx="16" cy="7.5" r="2.5"/><path d="M3.5 18.5c0-2.8 2-4.8 4.5-4.8s4.5 2 4.5 4.8M11.5 18.5c0-2.8 2-4.8 4.5-4.8s4.5 2 4.5 4.8"/></svg><span>Talleres y cursos</span></button>
  <button class="nav-item" onclick="cerrarMenu();showSection('promos');pintarPromos()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.5"/></svg>Promociones</button>
  <button class="nav-item" id="navSugerencias" onclick="showSection('sugerencias');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Sugerencias</button>
  <button class="nav-item" id="navGuia" onclick="showSection('guia');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:14px;font-weight:600;padding:10px 16px;background:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Guía</button>
@@ -864,7 +871,7 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
  <div class="date-today" id="dateToday">Tu programa de hoy</div>
  <div class="hoy-hero-sub" id="hoyHeroSub">Tus ejercicios, pensados para ti.</div>
  </div>
- <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icons/icon-512.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
+ <div id="talHoy"></div><div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icons/icon-512.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
  <div id="avisosCard" class="in-banner" onclick="activarAvisos()"><div class="av-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div><b>Activa los avisos</b><span>Te avisamos de tus citas y de los mensajes de tu fisio</span></div><button class="ib">Activar</button><button class="ix" onclick="event.stopPropagation();ahoraNoAvisos()" aria-label="Ahora no">✕</button></div>
  <div id="eqBanner" class="in-banner"></div>
  <div id="fisioCard" class="fisio-card" style="display:none;">
@@ -950,6 +957,10 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
  <div id="avisosAjustes"></div>
  </div>
 
+ <div id="vistaTalleres" style="display:none;">
+ <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Talleres y cursos</div><div class="date-sub">En grupos pequeños y con tu fisio</div></div>
+ <div id="talLista"></div>
+ </div>
  <div id="vistaPromos" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Promociones</div><div class="date-sub">Ofertas para pacientes de FISIO365</div></div>
  <div id="promosLista" class="pr-lista"></div>
@@ -1107,7 +1118,7 @@ function initApp(){if(patient&&patient.soloEquipo){EQA.iniciarSoloEquipo();retur
   document.getElementById('dateSub').textContent=`${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]}`;document.getElementById('hoyHeroSub').textContent=`Hola, ${(patient.nombre||'').split(' ')[0]}. Tus ejercicios de hoy, pensados para ti.`;
   loadEjercicios();
   checkMensajesNoLeidos();
-  try{pintarCitaHoy();}catch(e){}try{abrirDesdeAviso(location.href);}catch(e){}try{mirarBannerInstall();}catch(e){}try{pintarPromos();}catch(e){}setTimeout(pedirCitas,1200);setTimeout(()=>{try{EQA.cargar();}catch(e){}},900);
+  try{pintarCitaHoy();}catch(e){}try{abrirDesdeAviso(location.href);}catch(e){}try{mirarBannerInstall();}catch(e){}try{pintarPromos();}catch(e){}setTimeout(()=>{try{pintarTalHoy();}catch(e){}},900);setTimeout(pedirCitas,1200);setTimeout(()=>{try{EQA.cargar();}catch(e){}},900);
   // Sincronizar puntos desde Airtable al arrancar (Airtable manda)
   fetch('/api/pacientes?action=get-puntos&pacienteId='+encodeURIComponent(patient.id))
     .then(r=>r.json()).then(d=>{
@@ -1162,9 +1173,9 @@ async function compartirRecomendacion(){
   },2000);
 }
 function showSection(section){
-  ['hoy','notificaciones','citas','progreso','informes','facturas','mensajes','guia','sorteo','promos','cuenta','sugerencias','miclub','miequipo'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
-  ['navHoy','navProgreso','navInformes','navFacturas','navCitas','navMensajes','navGuia','navSugerencias','navMiClub','navMiEquipo'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
-  const navMap={hoy:'navHoy',progreso:'navProgreso',informes:'navInformes',facturas:'navFacturas',citas:'navCitas',mensajes:'navMensajes',guia:'navGuia',sugerencias:'navSugerencias',miclub:'navMiClub',miequipo:'navMiEquipo'};
+  ['hoy','notificaciones','citas','progreso','informes','facturas','mensajes','guia','sorteo','promos','talleres','cuenta','sugerencias','miclub','miequipo'].forEach(s=>{const el=document.getElementById('vista'+s.charAt(0).toUpperCase()+s.slice(1));if(el)el.style.display=s===section?'block':'none';});
+  ['navHoy','navProgreso','navInformes','navFacturas','navCitas','navMensajes','navGuia','navSugerencias','navMiClub','navMiEquipo','navTalleres'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
+  const navMap={hoy:'navHoy',progreso:'navProgreso',informes:'navInformes',facturas:'navFacturas',citas:'navCitas',mensajes:'navMensajes',guia:'navGuia',sugerencias:'navSugerencias',miclub:'navMiClub',miequipo:'navMiEquipo',talleres:'navTalleres'};
   if(section==='facturas')section='informes';
   if(navMap[section]){const el=document.getElementById(navMap[section]);if(el)el.classList.add('active');}
   if(section==='progreso'){initVAS();loadAdherencia('adherenciaSection');}
@@ -1176,6 +1187,7 @@ function showSection(section){
   if(section==='sorteo')loadPuntos();
   if(section==='mensajes')abrirChat();
   if(section==='miclub')EQA.pintarClub();
+  if(section==='talleres')pintarTalleres();
   if(section==='miequipo')EQA.pintarEquipo();
   document.body.classList.toggle('en-chat',section==='mensajes');
   document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.s===section));
@@ -1618,7 +1630,7 @@ function showOS(os){document.getElementById('pasosIOS').style.display=os==='ios'
 
 
 // Abrir la sección que indica el aviso (?s=mensajes|citas|hoy…)
-function abrirDesdeAviso(url){try{const u=new URL(url,location.origin);const sec=u.searchParams.get('s');if(!sec||!patient)return;const m={mensajes:'mensajes',chat:'mensajes',citas:'citas',hoy:'hoy',racha:'progreso',informes:'informes',miclub:'miclub',miequipo:'miequipo'}[sec];if(sec==='miequipo'&&u.searchParams.get('p'))EQA.abrirJugador(u.searchParams.get('p'),u.searchParams.get('chat')==='1');if(m)showSection(m);if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});history.replaceState(null,'',location.pathname);}catch(e){}}
+function abrirDesdeAviso(url){try{const u=new URL(url,location.origin);const sec=u.searchParams.get('s');if(!sec||!patient)return;const m={mensajes:'mensajes',chat:'mensajes',citas:'citas',hoy:'hoy',racha:'progreso',informes:'informes',miclub:'miclub',talleres:'talleres',miequipo:'miequipo'}[sec];if(sec==='miequipo'&&u.searchParams.get('p'))EQA.abrirJugador(u.searchParams.get('p'),u.searchParams.get('chat')==='1');if(m)showSection(m);if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage({type:'CLEAR_BADGE'});history.replaceState(null,'',location.pathname);}catch(e){}}
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='ABRIR')abrirDesdeAviso(e.data.url);});
 // ── Promociones ───────────────────────────────────────────────
 // Para añadir una promo: copia un bloque, cambia los textos y sube los cambios.
@@ -1652,6 +1664,25 @@ function htmlRegaloHoy(p,i){const o=regaloOcHoy(),T=RG_TXT[o]||RG_TXT.clasico,ti
 function promosActivas(){const h=new Date().toISOString().slice(0,10);return PROMOS.filter(p=>(!p.desde||p.desde<=h)&&(!p.hasta||p.hasta>=h));}
 function htmlPromo(p,i,solo){p=promoRegalo(p);const b=p.boton?`<div class="pr-b"><button onclick="accionPromo(${i})">${escF(p.boton)}</button></div>`:'';return `<div class="pr ${p.color==='Negro'?'Negro':'Naranja'}${solo?' solo':''}">${p.etiqueta?`<div class="pr-et">${escF(p.etiqueta)}</div>`:''}<h4>${escF(p.titulo)}</h4>${p.texto?`<p>${escF(p.texto)}</p>`:''}${b}</div>`;}
 function accionPromo(i){const p=promoRegalo(PROMOS[i]);if(!p)return;if(p.accion==='reservar')return abrirReserva();if(p.accion==='chat')return showSection('mensajes');if(p.accion==='packs')return abrirPacks();if(/^(https?:|\/)/.test(p.accion||''))window.open(p.accion,'_blank');}
+// ── Talleres y cursos (los crea la clínica en el panel; se reserva y paga en /taller/<id>) ──
+let TALLERES=null;
+async function cargarTalleres(){try{const r=await (await fetch('/api/schedule?action=talleres-app&t='+Date.now())).json();TALLERES=r.ok?(r.talleres||[]):[];}catch(e){TALLERES=TALLERES||[];}return TALLERES;}
+function talFechaApp(T){const D=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],d=new Date(T.fecha+'T12:00:00');return `${D[d.getDay()]} ${d.getDate()} de ${M[d.getMonth()]}${T.hora?' · '+T.hora+(T.fin?'–'+T.fin:''):''}`;}
+const talEsc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function htmlTaller(T){const pct=T.plazas?Math.round((T.plazas-T.quedan)*100/T.plazas):0,eur=String(T.precio).replace('.',',');
+ return `<div class="tl-c"><div class="tl-top"><span class="tl-tp">${T.tipo==='curso'?'Curso':'Taller'}</span><span class="tl-pr">${eur} €</span></div>
+  <div class="tl-t">${talEsc(T.titulo)}</div><div class="tl-f">${talEsc(talFechaApp(T))}</div>${T.fisio?`<div class="tl-con"><span>Con</span> ${talEsc(T.fisio)}</div>`:''}
+  ${T.sub?`<p class="tl-s">${talEsc(T.sub)}</p>`:''}
+  ${T.practica&&T.practica.length?`<div class="tl-h">Qué vas a practicar</div><ul class="tl-l">${T.practica.map(x=>`<li>${talEsc(x)}</li>`).join('')}</ul>`:''}
+  ${T.llevar?`<div class="tl-h">Qué traer</div><p class="tl-s">${talEsc(T.llevar)}</p>`:''}
+  <div class="tl-pl"><div class="tl-bar"><i style="width:${pct}%"></i></div><span>${T.quedan>0?(T.quedan===1?'Queda 1 plaza':`Quedan ${T.quedan} plazas`):'Completo'}</span></div>
+  ${T.quedan>0?`<a class="tl-bt" href="${talEsc(T.url)}" target="_blank" rel="noopener">Reservar plaza</a><div class="tl-nt">Puedes venir con quien quieras: al reservar eliges cuántas plazas.</div>`:`<a class="tl-bt sec" href="https://wa.me/34672893949?text=${encodeURIComponent('Hola, quiero apuntarme a la lista de espera de: '+T.titulo)}" target="_blank" rel="noopener">Apúntame a la lista de espera</a>`}</div>`;}
+async function pintarTalleres(){const L=document.getElementById('talLista');if(!L)return;if(!TALLERES)L.innerHTML='<div class="pr-vacio">Cargando…</div>';
+ const T=await cargarTalleres();L.innerHTML=T.length?T.map(htmlTaller).join(''):'<div class="pr-vacio">Ahora mismo no hay ninguno programado. ¡Vuelve pronto!</div>';}
+// En Hoy: el próximo con plazas libres (se puede cerrar)
+async function pintarTalHoy(){const H=document.getElementById('talHoy');if(!H)return;const T=(await cargarTalleres()).filter(x=>x.quedan>0)[0];let k='';try{k=localStorage.getItem('f365_talx')||'';}catch(e){}
+ if(!T||k===T.id){H.innerHTML='';return;}
+ H.innerHTML=`<div class="tl-hoy" onclick="showSection('talleres')"><div class="tl-hic"><svg viewBox="0 0 24 24"><circle cx="8" cy="7.5" r="2.5"/><circle cx="16" cy="7.5" r="2.5"/><path d="M3.5 18.5c0-2.8 2-4.8 4.5-4.8s4.5 2 4.5 4.8M11.5 18.5c0-2.8 2-4.8 4.5-4.8s4.5 2 4.5 4.8"/></svg></div><div class="tl-hm"><b>${talEsc(T.titulo)}</b><span>${talEsc(talFechaApp(T))}</span></div><button type="button" class="tl-hx" aria-label="Cerrar" onclick="event.stopPropagation();try{localStorage.setItem('f365_talx','${talEsc(T.id)}')}catch(e){};this.closest('.tl-hoy').remove()">✕</button></div>`;}
 function pintarPromos(){const act=promosActivas();const H=document.getElementById('promosHoy'),L=document.getElementById('promosLista');
  // En Hoy solo sale la tarjeta regalo (bonita); los packs y el resto de promociones están en el menú › Promociones
  if(H){const rg=act.filter(p=>esRegalo(p.accion));H.innerHTML=rg.length?htmlRegaloHoy(rg[0],PROMOS.indexOf(rg[0])):'';}

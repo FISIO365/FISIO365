@@ -4,6 +4,62 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Talleres y cursos": [
+"Tallers i cursos",
+"Workshops and courses"
+],
+"En grupos pequeños y con tu fisio": [
+"En grups petits i amb el teu fisio",
+"In small groups, with your physio"
+],
+"Taller": [
+"Taller",
+"Workshop"
+],
+"Curso": [
+"Curs",
+"Course"
+],
+"Con": [
+"Amb",
+"With"
+],
+"Qué vas a practicar": [
+"Què practicaràs",
+"What you'll practise"
+],
+"Qué traer": [
+"Què has de portar",
+"What to bring"
+],
+"Queda 1 plaza": [
+"Queda 1 plaça",
+"1 place left"
+],
+"Quedan {} plazas": [
+"Queden {} places",
+"{} places left"
+],
+"Completo": [
+"Complet",
+"Full"
+],
+"Reservar plaza": [
+"Reservar plaça",
+"Book a place"
+],
+"Puedes venir con quien quieras: al reservar eliges cuántas plazas.": [
+"Pots venir amb qui vulguis: en reservar tries quantes places.",
+"You can bring whoever you like: choose how many places when booking."
+],
+"Apúntame a la lista de espera": [
+"Apunta'm a la llista d'espera",
+"Put me on the waiting list"
+],
+"Ahora mismo no hay ninguno programado. ¡Vuelve pronto!": [
+"Ara mateix no n'hi ha cap de programat. Torna aviat!",
+"There's nothing scheduled right now. Check back soon!"
+],
 "Tu entrenador, al día": [
 "El teu entrenador, al dia",
 "Your coach, up to date"
