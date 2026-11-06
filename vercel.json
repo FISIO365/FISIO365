@@ -114,6 +114,10 @@
       "dest": "/api/schedule.js?action=cdoc&id=$1&s=$2"
     },
     {
+      "src": "/taller/([a-z0-9-]{3,40})",
+      "dest": "/api/schedule.js?action=taller-pagar&t=$1"
+    },
+    {
       "src": "/cumple/(rec[A-Za-z0-9]{14})-([01])-([a-f0-9]{10})\\.png",
       "dest": "/api/schedule.js?action=cumple-og&id=$1&r=$2&s=$3"
     },
