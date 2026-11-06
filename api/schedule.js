@@ -3927,30 +3927,36 @@ module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).send(paginaVale(F, id, req.query.p === '1', req.query.c === '1'));
   }
-  if (action === 'taller-pagar') { // /taller/<id>: pago de la plaza de un taller (enlace de pago de Stripe que se cierra solo al llenarse)
-    const TALLERES = { 'hipopresivos': { nombre: 'Taller de hipopresivos desde cero', cuando: 'jueves 3 de diciembre de 2026, 19:30 (1 hora)', fin: '2026-12-03', precio: 1000, plazas: 5, con: 'Sara Arcusa, fisioterapeuta de suelo pélvico' } };
-    const id = String(req.query.t || ''), T = TALLERES[id];
+  if (action === 'taller-pagar') { // /taller/<id>: pago de plazas de un taller (cada uno elige cuántas, hasta llenar el aforo)
+    const TALLERES = { 'hipopresivos': { nombre: 'Taller de hipopresivos desde cero', cuando: 'jueves 3 de diciembre de 2026, de 19:30 a 20:30', fin: '2026-12-03', precio: 1500, plazas: 5, desde: '2026-11-06' } };
+    const t0 = String(req.query.t || ''), okPag = /-ok$/.test(t0) || req.query.ok === '1', id = t0.replace(/-ok$/, ''), T = TALLERES[id];
     const pagina = (tit, txt, bt) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${tit}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"><style>body{margin:0;font-family:Poppins,sans-serif;background:#f6f1eb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}.c{background:#fff;border-radius:24px;padding:30px 24px;max-width:420px;text-align:center}h1{font-size:22px;margin:0 0 10px;color:#1a1a1a}p{color:#5c4f47;line-height:1.6;font-size:15px}a{display:inline-block;margin-top:14px;background:#c2552e;color:#fff;text-decoration:none;font-weight:600;border-radius:99px;padding:13px 24px}</style></head><body><div class="c"><h1>${tit}</h1><p>${txt}</p>${bt || ''}</div></body></html>`;
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     if (!T) return res.status(404).send(pagina('Taller no encontrado', 'Este enlace no es de ningún taller.'));
-    const wa = `<a href="https://wa.me/34672893949?text=${encodeURIComponent('Hola, quiero apuntarme a la lista de espera del ' + T.nombre)}">Apúntame a la lista de espera</a>`;
+    const waL = t => `<a href="https://wa.me/34672893949?text=${encodeURIComponent(t)}">`;
+    if (okPag) return res.status(200).send(pagina('¡Plaza reservada!', `Te esperamos el ${T.cuando} en FISIO365 (Gran de Sant Andreu 163, Barcelona). Trae ropa cómoda y una esterilla. Te llegará el recibo por email. Cualquier duda: 672 89 39 49.`));
     const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
-    if (hoy > T.fin) return res.status(200).send(pagina('Este taller ya se hizo', '¡Gracias por el interés! Escríbenos y te avisamos del próximo.', wa.replace('lista de espera', 'próximo taller').replace('Apúntame a la', 'Avisadme del')));
-    const K = 'taller_' + id;
+    if (hoy > T.fin) return res.status(200).send(pagina('Este taller ya se hizo', '¡Gracias por el interés! Escríbenos y te avisamos del próximo.', waL('Hola, avisadme del próximo ' + T.nombre) + 'Avisadme del próximo</a>'));
     try {
-      let L = await ajuste(K, null);
-      if (!L || !L.url) {
-        const pr = await stripeApi('prices', { currency: 'eur', unit_amount: String(T.precio), 'product_data[name]': `${T.nombre} · ${T.cuando}` });
-        const pl = await stripeApi('payment_links', { 'line_items[0][price]': pr.id, 'line_items[0][quantity]': '1', 'restrictions[completed_sessions][limit]': String(T.plazas), 'phone_number_collection[enabled]': 'true',
-          'custom_fields[0][key]': 'nombre', 'custom_fields[0][label][type]': 'custom', 'custom_fields[0][label][custom]': 'Nombre y apellidos', 'custom_fields[0][type]': 'text',
-          'after_completion[type]': 'hosted_confirmation', 'after_completion[hosted_confirmation][custom_message]': `¡Plaza reservada! Te esperamos el ${T.cuando} en FISIO365 (Gran de Sant Andreu 163, Barcelona). Trae ropa cómoda y una esterilla. Cualquier duda: 672 89 39 49.`,
-          'metadata[taller]': id, 'payment_intent_data[description]': T.nombre, 'payment_intent_data[metadata][taller]': id });
-        L = { id: pl.id, url: pl.url, price: pr.id, creado: new Date().toISOString() }; await guardarAjuste(K, L, 'taller');
-      }
-      const pl = await stripeApi('payment_links/' + L.id).catch(() => null);
-      if (pl && pl.active === false) return res.status(200).send(pagina('Plazas agotadas', `El ${T.nombre.toLowerCase()} ya está completo. Si se libera alguna plaza o hacemos otro, te avisamos.`, wa));
-      return res.redirect(302, L.url);
-    } catch (e) { console.log('taller', e.message); return res.status(200).send(pagina('Ahora no podemos abrir el pago', 'Escríbenos por WhatsApp y te reservamos la plaza.', wa.replace('Apúntame a la lista de espera', 'Escribir por WhatsApp'))); }
+      // El primer enlace (10 €, plaza única) ya no se usa
+      { const L0 = await ajuste('taller_' + id, null); if (L0 && L0.id && !L0.off) { await stripeApi('payment_links/' + L0.id, { active: 'false' }).catch(() => {}); await guardarAjuste('taller_' + id, Object.assign({}, L0, { off: 1 }), 'taller'); } }
+      // Plazas ya pagadas (o con el pago abierto ahora mismo) de este taller
+      let pagadas = 0, after = '';
+      for (let k = 0; k < 10; k++) { const d = await stripeApi(`checkout/sessions?limit=100&created[gte]=${Math.floor(new Date(T.desde + 'T00:00:00Z') / 1000)}${after ? '&starting_after=' + after : ''}`);
+        (d.data || []).forEach(x => { if ((x.metadata || {}).taller !== id) return; const n = Number((x.metadata || {}).n) || Math.round((x.amount_total || 0) / T.precio) || 1; if (x.payment_status === 'paid') pagadas += n; });
+        if (!d.has_more || !d.data.length) break; after = d.data[d.data.length - 1].id; }
+      const quedan = T.plazas - pagadas;
+      if (quedan <= 0) return res.status(200).send(pagina('Plazas agotadas', `El ${T.nombre.toLowerCase()} ya está completo. Si se libera alguna plaza o hacemos otro, te avisamos.`, waL('Hola, quiero apuntarme a la lista de espera del ' + T.nombre) + 'Apúntame a la lista de espera</a>'));
+      const base = `${APPU()}/taller/${id}`;
+      const f = { mode: 'payment', 'line_items[0][quantity]': '1', 'line_items[0][price_data][currency]': 'eur', 'line_items[0][price_data][unit_amount]': String(T.precio),
+        'line_items[0][price_data][product_data][name]': `${T.nombre} · ${T.cuando}`, 'line_items[0][price_data][product_data][description]': 'Precio por persona. Elige cuántas plazas quieres: puedes venir con quien quieras.',
+        'line_items[0][adjustable_quantity][enabled]': 'true', 'line_items[0][adjustable_quantity][minimum]': '1', 'line_items[0][adjustable_quantity][maximum]': String(quedan),
+        'phone_number_collection[enabled]': 'true', 'custom_fields[0][key]': 'nombre', 'custom_fields[0][label][type]': 'custom', 'custom_fields[0][label][custom]': 'Nombre y apellidos', 'custom_fields[0][type]': 'text',
+        locale: 'es', 'metadata[taller]': id, 'payment_intent_data[description]': T.nombre, 'payment_intent_data[metadata][taller]': id,
+        success_url: base + '-ok', cancel_url: 'https://fisioterapia365.com/', expires_at: String(Math.floor(Date.now() / 1000) + 35 * 60) };
+      const ses = await stripeApi('checkout/sessions', f);
+      return res.redirect(303, ses.url);
+    } catch (e) { console.log('taller', e.message); return res.status(200).send(pagina('Ahora no podemos abrir el pago', 'Escríbenos por WhatsApp y te reservamos la plaza.', waL('Hola, quiero reservar plaza en el ' + T.nombre) + 'Escribir por WhatsApp</a>')); }
   }
   if (action === 'cumple-pagina' || action === 'cumple-og') { // tarjeta de cumpleaños animada: /cumple/recID-R-firma
     const pid = String(req.query.id || ''), r = req.query.r === '1' ? 1 : 0, sg = String(req.query.s || '');
