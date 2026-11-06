@@ -5391,7 +5391,8 @@ module.exports = async function handler(req, res) {
         const TIP = 'tbltoikmBZwHYQcpD', nmA = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
         const okF = f => /^\d{4}-\d{2}-\d{2}$/.test(f || ''), okH = h => /^\d{1,2}:\d{2}$/.test(h || ''), okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
         const hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : String(h || ''); };
-        const ACTIVA = e => /PENDIENTE|REALIZADA|DUDOSA|POR REAGENDAR/i.test(e || '');
+        // Ocupa la hora: «Por reagendar» no (no viene ese día; su hora puede darse a otro paciente)
+        const ACTIVA = e => /PENDIENTE|REALIZADA|DUDOSA/i.test(e || '');
         const LIBRE = e => /^(CITA LIBRE|LIBRE - SIN BOMBA)$/.test(String(e || '').trim());
         const CAMPOS_C = ['FECHA', 'HORA', 'ESTADO', 'PREF.', 'RELACIÓN - CITA', 'TIPO DE CITA', 'TIPO DE SESIÓN', 'NOTAS', 'CONFIR', 'RESERVA', 'PAGO ESTADO', 'PAGO IMPORTE', 'PAGO LÍMITE', 'DADA POR', 'DADA EL', 'RESERVADA EL'].map(f => 'fields[]=' + encodeURIComponent(f)).join('&');
         const delDia = async (fecha) => todosT(CIT, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}'`)}&${CAMPOS_C}`);
