@@ -6515,7 +6515,7 @@ function cumTexto(c,regalo){const p=String(c.pila||c.nombre||'').trim().split(/\
  return plantilla('cumple',def,{nombre:n,regalo:rg,enlace:enl});}
 // Abre WhatsApp y lo apunta (el día de su cumple, con o sin regalo)
 async function cumFelicitar(c,regalo){abrirWA(segTel(c.tel),cumTexto(c,regalo));const ant=c.felicitado;c.felicitado=true;
- try{const r=await agPost('seg-agenda-cumple',{pacienteId:c.pacienteId,fecha:c.fecha,regalo:!!regalo,quien:String((fisioActual&&fisioActual.nombre)||'')});if(!r.ok)throw 0;return true;}catch(e){c.felicitado=ant;toast('No se ha podido apuntar',false);return false;}}
+ try{const job=()=>agPost('seg-agenda-cumple',{pacienteId:c.pacienteId,fecha:c.fecha,regalo:!!regalo,quien:String((fisioActual&&fisioActual.nombre)||'')});const pr=(window._cumQ||Promise.resolve()).catch(()=>{}).then(job);window._cumQ=pr;const r=await pr;if(!r||!r.ok)throw 0;return true;}catch(e){c.felicitado=ant;toast('No se ha podido apuntar',false);return false;}}
 const CUM_ICO='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20.5h16M5.5 20.5v-6.5h13v6.5"/><path d="M7.5 14v-3.5h9V14"/><path d="M5.5 17c1.1 0 1.1.8 2.2.8s1.1-.8 2.2-.8 1.1.8 2.1.8 1.1-.8 2.2-.8 1.1.8 2.2.8 1.1-.8 2.1-.8"/><path d="M12 10.5V8"/><path d="M12 4c-.9 1.1-.9 2.2 0 2.6.9-.4.9-1.5 0-2.6z"/></svg>';
 const RESENA_GOOGLE='https://search.google.com/local/writereview?placeid=ChIJCadKnf2G6AIRcmUzdzMr4nk';
 const REC_DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];

@@ -5687,6 +5687,7 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-agenda-cumples') {
           // Cumpleaños para felicitar por WhatsApp: los de hoy, los que se quedaron sin felicitar (3 días atrás) y los próximos 7
           const hoyD = new Date(hoyF + 'T12:00:00'), dd = n => { const d = new Date(hoyD); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+          _aj = { t: 0, v: null }; // sin caché: si no, un felicitado de hace un momento podía salir aún sin felicitar
           const fel = (await ajuste('cumples_felicitados', {})) || {}, out = [];
           (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('{CUMPLE}')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF&fields[]=CUMPLE`)).forEach(p => {
             const F = p.fields, c = String(F['CUMPLE'] || '').slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(c)) return;
@@ -5942,9 +5943,20 @@ module.exports = async function handler(req, res) {
         }
         if (action === 'seg-agenda-cumple') { // apuntar que ya se le ha felicitado (q.fecha = el día de su cumple)
           if (!okId(q.pacienteId) || !okF(q.fecha)) return res.status(400).json({ ok: false });
-          const fel = (await ajuste('cumples_felicitados', {})) || {};
-          if (q.enviado === false) delete fel[q.pacienteId]; else fel[q.pacienteId] = { f: q.fecha, r: q.regalo ? 1 : 0, quien: String(q.quien || '').slice(0, 60), cuando: new Date().toISOString() };
-          await guardarAjuste('cumples_felicitados', fel, String(q.quien || '').slice(0, 60));
+          // Todos los felicitados van en un mismo ajuste: se lee sin caché justo antes de escribir y se comprueba después
+          // (si dos felicitaciones se apuntaban a la vez, o desde otro servidor con la lista de hace un minuto, una borraba la otra)
+          const yo = q.enviado === false ? null : { f: q.fecha, r: q.regalo ? 1 : 0, quien: String(q.quien || '').slice(0, 60), cuando: new Date().toISOString() };
+          let okC = false;
+          for (let i = 0; i < 5 && !okC; i++) {
+            if (i) await new Promise(r => setTimeout(r, 300 + Math.random() * 700));
+            _aj = { t: 0, v: null }; const fel = Object.assign({}, (await ajuste('cumples_felicitados', {})) || {});
+            if (yo) fel[q.pacienteId] = yo; else delete fel[q.pacienteId];
+            await guardarAjuste('cumples_felicitados', fel, String(q.quien || '').slice(0, 60));
+            await new Promise(r => setTimeout(r, 500));
+            _aj = { t: 0, v: null }; const v = ((await ajuste('cumples_felicitados', {})) || {})[q.pacienteId];
+            okC = yo ? !!(v && v.cuando === yo.cuando) : !v;
+          }
+          if (!okC) return res.status(200).json({ ok: false, error: 'No se ha podido apuntar' });
           if (q.regalo && q.enviado !== false) { try { const hasta = masDias(q.fecha, 30), nota = notaRegalo(hasta);
             const cs = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(FIND('${q.pacienteId}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.fecha}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${hasta}','YYYY-MM-DD'))))`)}&fields[]=ESTADO&fields[]=NOTAS&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`);
             for (const c of cs.filter(c => (c.fields['RELACIÓN - CITA'] || []).includes(q.pacienteId) && /PENDIENTE|DUDOSA/.test(String(nmA(c.fields.ESTADO))) && !/Regalo de cumpleaños/.test(c.fields.NOTAS || '')).slice(0, 10))
