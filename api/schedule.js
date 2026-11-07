@@ -3621,6 +3621,10 @@ module.exports = async function handler(req, res) {
         if (c.error || !c.records) return res.status(200).json({ ok: false, error: 'No se ha podido reservar. Llámanos y te la apuntamos.' });
         pac = c.records[0]; nuevo = true;
       } else { const pf = pac.fields || {}, fx = {}; if (!String(pf['MOTIVO DE VISITA'] || '').trim()) fx['MOTIVO DE VISITA'] = motivo; if (email && !String(pf.EMAIL || '').trim()) fx.EMAIL = email; if (!pinApp) { pinApp = nuevoPin(); fx.PIN = pinApp; } if (Object.keys(fx).length) await at(`${PACIENTES}/${pac.id}`, { method: 'PATCH', body: JSON.stringify({ fields: fx }) }).catch(() => {}); }
+      // Una sola cita por día
+      if (!nuevo) { const ys = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${h.fecha}',FIND('${pac.id}',ARRAYJOIN({PacienteRec})))`)}&fields[]=HORA&fields[]=ESTADO`).catch(() => ({}));
+        const ya = (ys.records || []).find(x => x.id !== id && /PENDIENTE|DUDOSA|REALIZADA/i.test(String(nmA(x.fields.ESTADO) || '')));
+        if (ya) return res.status(200).json({ ok: false, error: `Ya tienes una cita ese día a las ${String(ya.fields.HORA || '').slice(0, 5)}. Si necesitas otra, escríbenos o llámanos.` }); }
       const nota = `Reserva por enlace de huecos${nuevo ? ' (paciente nuevo)' : ''} · Motivo: ${motivo}${P.v ? ` · 🎁 Tarjeta regalo ${String(P.v).slice(0, 20)}` : ''}`;
       const fR = { ESTADO: 'PENDIENTE ', 'RELACIÓN - CITA': [pac.id], RESERVA: 'RESERVADA POR LA WEB', 'RESERVADA EL': new Date().toISOString(), NOTAS: [r.fields.NOTAS, nota].filter(Boolean).join('\n') };
       if (P.p > 0) { const lim = pagoLimite(h.fecha, h.hora); Object.assign(fR, { 'PAGO ESTADO': 'PENDIENTE DE PAGO', 'PAGO IMPORTE': P.p, 'PAGO LÍMITE': lim, 'PAGO REGISTRO': `${pagoAhora()} · Reserva por enlace de huecos con pago por adelantado (${P.p.toFixed(2).replace('.', ',')} €)` }); }

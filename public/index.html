@@ -578,6 +578,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .rv-h b{display:block;font-size:15px;font-weight:700;color:#1a1a1a}
 .rv-h span{display:block;font-size:11.5px;color:#c2552e;font-weight:600;margin-top:1px}
 .rv-h:active{transform:scale(.97)}
+.rv-ya{font-size:13px;color:#8a837b;background:#f6f1ea;border-radius:12px;padding:10px 14px}
+.rv-aviso{margin:14px 0 2px;text-align:left;background:#fdf1e8;border:1px solid #f0c9ad;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.45;color:#5a4a3f}.rv-aviso b{display:block;color:#c2552e;font-weight:600;margin-bottom:2px}.rv-aviso span{display:block;font-weight:500}.rv-aviso small{display:block;margin-top:6px;color:#8a837b;font-size:12.5px}
 .rv-vacio{text-align:center;color:#8a837b;font-size:14px;padding:40px 20px;line-height:1.5}
 .rv-modal{position:fixed;inset:0;z-index:560;background:rgba(17,17,17,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:24px}
 .rv-modal.on{display:flex}
@@ -1352,12 +1354,17 @@ function pintarCitaHoy(lista){const el=document.getElementById('citaHoy');if(!el
  else{el.innerHTML=`<div class="ch-fecha"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><div class="ch-tx"><small>Citas</small><b>Reserva tu cita</b><span>Elige día, hora y fisio</span></div><button class="ch-btn" onclick="event.stopPropagation();abrirReserva()">Reservar</button>`;el.onclick=()=>abrirReserva();}
  el.classList.add('on');}
 // ── Reservar cita ─────────────────────────────────────────────
-let rvHuecos=[],rvFisio='',rvSel=null,rvCardHTML='';
+let rvHuecos=[],rvFisio='',rvSel=null,rvCardHTML='',rvNuevas=[];
+// Sus citas activas (para no dejar dos el mismo día y avisar si son días seguidos)
+function rvMias(){if(!patient)return rvNuevas;let l=null;try{l=JSON.parse(localStorage.getItem('f365_citas_'+patient.id)||'null');}catch(e){}
+ const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ return (l||[]).filter(c=>/PENDIENTE|DUDOSA/i.test(String(c.estado||''))).map(c=>{const d=parseFecha(c.fecha);return d?{f:iso(d),hora:String(c.hora||'').slice(0,5)}:null;}).filter(Boolean).concat(rvNuevas);}
+function rvMasDias(f,n){const d=new Date(f+'T12:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 const rvDias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],rvMeses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function rvFechaTxt(f){const d=new Date(f+'T12:00:00');const t=`${rvDias[d.getDay()]} ${d.getDate()} de ${rvMeses[d.getMonth()]}`;return t.charAt(0).toUpperCase()+t.slice(1);}
 async function abrirReserva(){document.getElementById('reservaSheet').classList.add('on');document.body.style.overflow='hidden';
  const L=document.getElementById('rvLista');L.innerHTML='<div style="text-align:center;padding:30px"><div class="spinner"></div></div>';document.getElementById('rvChips').innerHTML='';
- try{const d=await (await fetch('/api/reservar')).json();if(!d.ok)throw 0;rvHuecos=d.huecos||[];}catch(e){L.innerHTML='<div class="rv-vacio">No hemos podido cargar los huecos. Inténtalo de nuevo en un momento.</div>';return;}
+ try{let hayC=false;try{hayC=!!localStorage.getItem('f365_citas_'+patient.id);}catch(e){}if(!hayC&&patient)await Promise.race([(_citasPromesa||pedirCitas()).catch(()=>0),new Promise(r=>setTimeout(r,4000))]);const d=await (await fetch('/api/reservar')).json();if(!d.ok)throw 0;rvHuecos=d.huecos||[];}catch(e){L.innerHTML='<div class="rv-vacio">No hemos podido cargar los huecos. Inténtalo de nuevo en un momento.</div>';return;}
  rvFisio='';pintarReserva();}
 function cerrarReserva(){document.getElementById('reservaSheet').classList.remove('on');document.body.style.overflow='';}
 function pintarReserva(){const fisios=[...new Set(rvHuecos.map(h=>h.fisio))].sort();
@@ -1365,16 +1372,20 @@ function pintarReserva(){const fisios=[...new Set(rvHuecos.map(h=>h.fisio))].sor
  const lista=rvHuecos.filter(h=>!rvFisio||h.fisio===rvFisio);const L=document.getElementById('rvLista');
  if(!lista.length){L.innerHTML='<div class="rv-vacio">Ahora mismo no hay huecos libres'+(rvFisio?' con '+rvFisio:'')+'.<br>Escríbenos por el chat y te buscamos uno.</div>';return;}
  const porDia={};lista.forEach(h=>{(porDia[h.fecha]=porDia[h.fecha]||[]).push(h);});
- L.innerHTML=Object.keys(porDia).sort().map(f=>`<div class="rv-dia"><div class="rv-dia-t">${rvFechaTxt(f)}</div><div class="rv-horas">${porDia[f].map(h=>`<button class="rv-h" onclick="elegirHueco('${h.id}')"><b>${h.hora}</b><span>${h.fisio}</span></button>`).join('')}</div></div>`).join('');}
+ const mias=rvMias();
+ L.innerHTML=Object.keys(porDia).sort().map(f=>{const ya=mias.find(c=>c.f===f);return ya?`<div class="rv-dia"><div class="rv-dia-t">${rvFechaTxt(f)}</div><div class="rv-ya">Ya tienes cita este día a las ${ya.hora}</div></div>`:`<div class="rv-dia"><div class="rv-dia-t">${rvFechaTxt(f)}</div><div class="rv-horas">${porDia[f].map(h=>`<button class="rv-h" onclick="elegirHueco('${h.id}')"><b>${h.hora}</b><span>${h.fisio}</span></button>`).join('')}</div></div>`;}).join('');}
 function elegirHueco(id){const c=document.querySelector('#rvModal .rv-card');if(!rvCardHTML)rvCardHTML=c.innerHTML;else c.innerHTML=rvCardHTML;rvSel=rvHuecos.find(h=>h.id===id);if(!rvSel)return;
  document.getElementById('rvRes').innerHTML=`<div class="d">${rvFechaTxt(rvSel.fecha)}</div><div class="h">${rvSel.hora}</div><div class="f">con <b>${rvSel.fisio}</b></div><div class="l">FISIO365 · Gran de Sant Andreu 163</div>`;
+ // Días seguidos: puede ser lo que quiere, pero por si es un error se lo recordamos
+ {const mias=rvMias(),ant=mias.find(c=>c.f===rvMasDias(rvSel.fecha,-1)),sig=mias.find(c=>c.f===rvMasDias(rvSel.fecha,1)),x=ant||sig;
+  if(x)document.getElementById('rvRes').insertAdjacentHTML('beforeend',`<div class="rv-aviso"><b>${ant?'Ojo: el día anterior también tienes cita':'Ojo: el día siguiente también tienes cita'}</b><span>${rvFechaTxt(x.f)} · ${x.hora}</span><small>Si quieres venir los dos días, adelante. Si no, elige otro día.</small></div>`);}
  const e=document.getElementById('rvErr');e.style.display='none';const b=document.getElementById('rvOk');b.disabled=false;b.textContent='Reservar';
  document.getElementById('rvModal').classList.add('on');}
 function cerrarConfirmar(){document.getElementById('rvModal').classList.remove('on');}
 async function confirmarReserva(){if(!rvSel||!patient)return;const b=document.getElementById('rvOk'),e=document.getElementById('rvErr');b.disabled=true;b.textContent='Reservando…';e.style.display='none';
  try{const r=await fetch('/api/reservar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,huecoId:rvSel.id})});const d=await r.json();
-  if(!d.ok){e.textContent=d.error||'No se ha podido reservar.';e.style.display='block';b.disabled=false;b.textContent='Reservar';if(d.ocupado){rvHuecos=rvHuecos.filter(h=>h.id!==rvSel.id);pintarReserva();b.style.display='none';setTimeout(()=>{b.style.display='';cerrarConfirmar();},1800);}return;}
-  rvHuecos=rvHuecos.filter(h=>h.id!==rvSel.id);
+  if(!d.ok){e.textContent=d.error||'No se ha podido reservar.';e.style.display='block';b.disabled=false;b.textContent='Reservar';if(d.mismoDia){b.style.display='none';setTimeout(()=>{b.style.display='';cerrarConfirmar();},3500);}if(d.ocupado){rvHuecos=rvHuecos.filter(h=>h.id!==rvSel.id);pintarReserva();b.style.display='none';setTimeout(()=>{b.style.display='';cerrarConfirmar();},1800);}return;}
+  rvHuecos=rvHuecos.filter(h=>h.id!==rvSel.id);rvNuevas.push({f:rvSel.fecha,hora:rvSel.hora});
   document.querySelector('#rvModal .rv-card').innerHTML=`<div class="rv-ico ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h3>¡Cita reservada!</h3><div class="rv-res"><div class="d">${rvFechaTxt(rvSel.fecha)}</div><div class="h">${rvSel.hora}</div><div class="f">con <b>${rvSel.fisio}</b></div></div><div style="font-size:13px;color:#8a837b;margin:-6px 4px 16px;line-height:1.5">Si necesitas cambiarla o anularla, escríbenos por el chat o al 672 89 39 49.</div><button class="rv-btn" onclick="reservaHecha()">Perfecto</button>`;
   try{localStorage.removeItem('f365_citas_'+patient.id);}catch(x){}
  }catch(x){e.textContent='Sin conexión. Inténtalo de nuevo.';e.style.display='block';b.disabled=false;b.textContent='Reservar';}}

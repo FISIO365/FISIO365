@@ -89,6 +89,12 @@ export default async function handler(req) {
       if (!hr.ok || !h.fields) return json({ ok: false, error: 'Ese hueco ya no existe' }, 404);
       if (!reservable(h.fields)) return json({ ok: false, ocupado: true, error: 'Vaya, alguien acaba de coger este hueco. Elige otro.' }, 409);
 
+      // Una sola cita por día: si ya tiene una ese día (pendiente o por confirmar), no se deja coger otra
+      { const fH = fechaISO(h.fields['FECHA']);
+        const yr = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${CITAS}?filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fH}',FIND('${patientId}',ARRAYJOIN({PacienteRec})))`)}&fields[]=HORA&fields[]=ESTADO`, { headers: AT });
+        const yd = await yr.json(); const ya = (yd.records || []).find(r => r.id !== huecoId && /PENDIENTE|DUDOSA|REALIZADA/i.test(String(r.fields['ESTADO'] || '')));
+        if (ya) return json({ ok: false, mismoDia: true, error: `Ya tienes una cita ese día a las ${String(ya.fields['HORA'] || '').slice(0, 5)}. Si necesitas otra, escríbenos por el chat.` }, 409); }
+
       // Reservar: pasa a PENDIENTE y se enlaza al paciente
       const ur = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${CITAS}/${huecoId}`, {
         method: 'PATCH', headers: AT,

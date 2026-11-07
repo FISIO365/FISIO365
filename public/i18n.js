@@ -36,6 +36,26 @@
 "Queda 1 plaça",
 "1 place left"
 ],
+"Ya tienes cita este día a las {}": [
+"Ja tens cita aquest dia a les {}",
+"You already have an appointment this day at {}"
+],
+"Ojo: el día anterior también tienes cita": [
+"Compte: el dia abans també tens cita",
+"Heads up: you also have an appointment the day before"
+],
+"Ojo: el día siguiente también tienes cita": [
+"Compte: l'endemà també tens cita",
+"Heads up: you also have an appointment the next day"
+],
+"Si quieres venir los dos días, adelante. Si no, elige otro día.": [
+"Si vols venir els dos dies, endavant. Si no, tria un altre dia.",
+"If you want to come both days, go ahead. If not, pick another day."
+],
+"Ya tienes una cita ese día a las {}. Si necesitas otra, escríbenos por el chat.": [
+"Ja tens una cita aquell dia a les {}. Si en necessites una altra, escriu-nos pel xat.",
+"You already have an appointment that day at {}. If you need another one, message us in the chat."
+],
 "Quedan {} plazas": [
 "Queden {} places",
 "{} places left"
