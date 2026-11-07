@@ -64,6 +64,10 @@
 "Xat amb administració",
 "Chat with the front desk"
 ],
+"Ya tienes cita a las {}": [
+"Ja tens cita a les {}",
+"You already have an appointment at {}"
+],
 "Quedan {} plazas": [
 "Queden {} places",
 "{} places left"
