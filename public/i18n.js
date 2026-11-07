@@ -68,6 +68,10 @@
 "Ja tens cita a les {}",
 "You already have an appointment at {}"
 ],
+"Curso online": ["Curs en línia","Online course"],
+"Próximamente": ["Properament","Coming soon"],
+"Atlas · Hernia discal lumbar": ["Atlas · Hèrnia discal lumbar","Atlas · Lumbar disc herniation"],
+"El curso online de nuestro equipo para tu espalda: un test inicial que personaliza tu plan, vídeos de cada ejercicio y tu fisio contigo por chat.": ["El curs en línia del nostre equip per a la teva esquena: un test inicial que personalitza el teu pla, vídeos de cada exercici i el teu fisio amb tu per xat.","Our team's online course for your back: an initial test that personalises your plan, videos of every exercise and your physio with you by chat."],
 "Quedan {} plazas": [
 "Queden {} places",
 "{} places left"
