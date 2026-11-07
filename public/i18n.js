@@ -56,6 +56,14 @@
 "Ja tens una cita aquell dia a les {}. Si en necessites una altra, escriu-nos pel xat.",
 "You already have an appointment that day at {}. If you need another one, message us in the chat."
 ],
+"Si quieres cambiarla de hora, escribe a administración.": [
+"Si la vols canviar d'hora, escriu a administració.",
+"If you want to change the time, message the front desk."
+],
+"Chat con administración": [
+"Xat amb administració",
+"Chat with the front desk"
+],
 "Quedan {} plazas": [
 "Queden {} places",
 "{} places left"

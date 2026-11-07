@@ -578,7 +578,8 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .rv-h b{display:block;font-size:15px;font-weight:700;color:#1a1a1a}
 .rv-h span{display:block;font-size:11.5px;color:#c2552e;font-weight:600;margin-top:1px}
 .rv-h:active{transform:scale(.97)}
-.rv-ya{font-size:13px;color:#8a837b;background:#f6f1ea;border-radius:12px;padding:10px 14px}
+.rv-ya{font-size:13px;line-height:1.45;color:#8a837b;background:#f6f1ea;border-radius:14px;padding:12px 14px;margin-bottom:10px}.rv-ya b{display:block;color:#3a332d;font-weight:600}.rv-ya button{margin-top:10px;font:inherit;font-weight:600;font-size:13px;color:#c2552e;background:#fff;border:1.5px solid #c2552e;border-radius:99px;padding:7px 16px;cursor:pointer}
+.rv-h.off{opacity:.38;pointer-events:none;filter:grayscale(.6)}
 .rv-aviso{margin:14px 0 2px;text-align:left;background:#fdf1e8;border:1px solid #f0c9ad;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.45;color:#5a4a3f}.rv-aviso b{display:block;color:#c2552e;font-weight:600;margin-bottom:2px}.rv-aviso span{display:block;font-weight:500}.rv-aviso small{display:block;margin-top:6px;color:#8a837b;font-size:12.5px}
 .rv-vacio{text-align:center;color:#8a837b;font-size:14px;padding:40px 20px;line-height:1.5}
 .rv-modal{position:fixed;inset:0;z-index:560;background:rgba(17,17,17,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:24px}
@@ -1373,7 +1374,9 @@ function pintarReserva(){const fisios=[...new Set(rvHuecos.map(h=>h.fisio))].sor
  if(!lista.length){L.innerHTML='<div class="rv-vacio">Ahora mismo no hay huecos libres'+(rvFisio?' con '+rvFisio:'')+'.<br>Escríbenos por el chat y te buscamos uno.</div>';return;}
  const porDia={};lista.forEach(h=>{(porDia[h.fecha]=porDia[h.fecha]||[]).push(h);});
  const mias=rvMias();
- L.innerHTML=Object.keys(porDia).sort().map(f=>{const ya=mias.find(c=>c.f===f);return ya?`<div class="rv-dia"><div class="rv-dia-t">${rvFechaTxt(f)}</div><div class="rv-ya">Ya tienes cita este día a las ${ya.hora}</div></div>`:`<div class="rv-dia"><div class="rv-dia-t">${rvFechaTxt(f)}</div><div class="rv-horas">${porDia[f].map(h=>`<button class="rv-h" onclick="elegirHueco('${h.id}')"><b>${h.hora}</b><span>${h.fisio}</span></button>`).join('')}</div></div>`;}).join('');}
+ L.innerHTML=Object.keys(porDia).sort().map(f=>{const ya=mias.find(c=>c.f===f);const hs=porDia[f].map(h=>ya?`<button class="rv-h off" disabled><b>${h.hora}</b><span>${h.fisio}</span></button>`:`<button class="rv-h" onclick="elegirHueco('${h.id}')"><b>${h.hora}</b><span>${h.fisio}</span></button>`).join('');
+ return `<div class="rv-dia"><div class="rv-dia-t">${rvFechaTxt(f)}</div>${ya?`<div class="rv-ya"><b>Ya tienes cita este día a las ${ya.hora}</b><span>Si quieres cambiarla de hora, escribe a administración.</span><button type="button" onclick="rvChatAdmin()">Chat con administración</button></div>`:''}<div class="rv-horas">${hs}</div></div>`;}).join('');}
+async function rvChatAdmin(){cerrarReserva();showSection('mensajes');try{await volverChats();const c=chatsCache.find(x=>x.admin);if(c)abrirConv(c);}catch(e){}}
 function elegirHueco(id){const c=document.querySelector('#rvModal .rv-card');if(!rvCardHTML)rvCardHTML=c.innerHTML;else c.innerHTML=rvCardHTML;rvSel=rvHuecos.find(h=>h.id===id);if(!rvSel)return;
  document.getElementById('rvRes').innerHTML=`<div class="d">${rvFechaTxt(rvSel.fecha)}</div><div class="h">${rvSel.hora}</div><div class="f">con <b>${rvSel.fisio}</b></div><div class="l">FISIO365 · Gran de Sant Andreu 163</div>`;
  // Días seguidos: puede ser lo que quiere, pero por si es un error se lo recordamos
