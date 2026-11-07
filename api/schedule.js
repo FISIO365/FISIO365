@@ -3949,6 +3949,22 @@ module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).send(paginaVale(F, id, req.query.p === '1', req.query.c === '1'));
   }
+  if (action === 'atlas-interes') { // App del paciente: «Avisadme cuando salga» en la tarjeta de Atlas (curso online)
+    const q = req.method === 'POST' ? (req.body || {}) : req.query, pid = String(q.patientId || '');
+    if (!/^rec[A-Za-z0-9]{14}$/.test(pid)) return res.status(400).json({ ok: false });
+    const p = await at(`${PACIENTES}/${pid}`); if (p.error || !p.fields) return res.status(404).json({ ok: false });
+    const f = p.fields, yo = { n: String(f['FULL NAME'] || '').trim().slice(0, 80), tel: String(f.WHATSAPP || f.TELF || '').replace(/[^\d+]/g, '').slice(0, 20), cuando: new Date().toISOString() };
+    let ok = false; // un solo ajuste para todos: se lee sin caché y se comprueba después (como los cumples)
+    for (let i = 0; i < 5 && !ok; i++) {
+      if (i) await new Promise(r => setTimeout(r, 300 + Math.random() * 700));
+      _aj = { t: 0, v: null }; const M = Object.assign({}, (await ajuste('atlas_interesados', {})) || {});
+      if (M[pid]) return res.status(200).json({ ok: true, ya: true });
+      M[pid] = yo; await guardarAjuste('atlas_interesados', M, 'app');
+      await new Promise(r => setTimeout(r, 400)); _aj = { t: 0, v: null };
+      ok = !!(((await ajuste('atlas_interesados', {})) || {})[pid]);
+    }
+    return res.status(200).json({ ok });
+  }
   if (action === 'talleres-app') { // «Talleres y cursos» en la app del paciente: los próximos, con plazas libres
     const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
     const L = (await talleresTodos()).filter(T => T.activo !== false && T.fecha >= hoy).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
@@ -5686,7 +5702,9 @@ module.exports = async function handler(req, res) {
         if (action === 'seg-agenda-talleres') { // Talleres y cursos con quién se ha apuntado
           const L = (await talleresTodos()).slice().sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
           const out = []; for (const T of L) { const ins = await tallerInscritos(T, true).catch(() => ({ total: 0, lista: [] })); out.push(Object.assign({}, T, { url: `${APPU()}/taller/${T.id}`, inscritos: ins.lista, total: ins.total })); }
-          return res.status(200).json({ ok: true, hoy: hoyF, talleres: out });
+          _aj = { t: 0, v: null }; const AI = (await ajuste('atlas_interesados', {})) || {};
+          const atlas = Object.keys(AI).map(id => Object.assign({ id }, AI[id])).sort((a, b) => String(b.cuando).localeCompare(String(a.cuando)));
+          return res.status(200).json({ ok: true, hoy: hoyF, talleres: out, atlas });
         }
         if (action === 'seg-agenda-cumples') {
           // Cumpleaños para felicitar por WhatsApp: los de hoy, los que se quedaron sin felicitar (3 días atrás) y los próximos 7

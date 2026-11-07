@@ -782,7 +782,9 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
 .mcl-no{margin-top:6px;padding-top:9px;border-top:1px dashed #efe6df;color:#8a7d74}.mcl-no svg{stroke:#8a7d74}.mcl-ga{padding:2px 4px 14px;color:#5c4f47}
 @keyframes mclIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes mclPop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}@keyframes mclBar{to{width:62%}}
 @media (prefers-reduced-motion:reduce){.mcl *{animation-duration:.01s!important;animation-delay:0s!important}}
-.tl-pronto{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1e2a38;background:#f39a55;border-radius:99px;padding:4px 10px}.tl-vid{display:block;width:100%;aspect-ratio:16/9;border-radius:16px;background:#1e2a38;margin-top:12px;object-fit:cover}
+.tl-pronto{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1e2a38;background:#f39a55;border-radius:99px;padding:4px 10px}.tl-ok{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 14px;border-radius:14px;background:#eef6f0;color:#2f7a4c;font-size:13.5px;font-weight:600}.tl-ok svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tl-atlas .tl-bt{width:100%;border:0;margin-top:14px;font-family:inherit;cursor:pointer}
+.tl-vid{display:block;width:100%;aspect-ratio:16/9;border-radius:16px;background:#1e2a38;margin-top:12px;object-fit:cover}
 .tl-c{background:#fff;border-radius:24px;padding:18px 18px 16px;margin:0 0 14px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}.tl-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.tl-tp{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a8461f;background:#fdf1ea;border-radius:99px;padding:3px 9px}.tl-pr{font-size:17px;font-weight:700;color:#c2552e}
 .tl-t{font-size:19px;font-weight:700;color:#1a1a1a;line-height:1.25}.tl-f{font-size:13.5px;color:#5c4f47;margin-top:4px}.tl-f:first-letter{text-transform:uppercase}.tl-con{font-size:13px;color:#8a7d74;margin-top:2px}.tl-s{font-size:14px;color:#3d3530;line-height:1.55;margin:10px 0 0}.tl-h{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9a8b80;margin:14px 0 6px}
 .tl-l{list-style:none;margin:0;padding:0}.tl-l li{position:relative;padding:3px 0 3px 18px;font-size:14px;color:#3d3530}.tl-l li:before{content:'';position:absolute;left:3px;top:11px;width:7px;height:7px;border-radius:50%;border:1.5px solid #c2552e}
@@ -970,6 +972,7 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
   <div class="tl-t">Atlas · Hernia discal lumbar</div>
   <p class="tl-s">El curso online de nuestro equipo para tu espalda: un test inicial que personaliza tu plan, vídeos de cada ejercicio y tu fisio contigo por chat.</p>
   <video class="tl-vid" src="/img/atlas/proximamente.mp4" poster="/img/atlas/proximamente.jpg" controls playsinline preload="none"></video>
+  <div id="atlasAv"></div>
  </div>
  <div id="talLista"></div>
  </div>
@@ -1700,7 +1703,14 @@ function htmlTaller(T){const pct=T.plazas?Math.round((T.plazas-T.quedan)*100/T.p
   ${T.llevar?`<div class="tl-h">Qué traer</div><p class="tl-s">${talEsc(T.llevar)}</p>`:''}
   <div class="tl-pl"><div class="tl-bar"><i style="width:${pct}%"></i></div><span>${T.quedan>0?(T.quedan===1?'Queda 1 plaza':`Quedan ${T.quedan} plazas`):'Completo'}</span></div>
   ${T.quedan>0?`<a class="tl-bt" href="${talEsc(T.url)}" target="_blank" rel="noopener">Reservar plaza</a><div class="tl-nt">Puedes venir con quien quieras: al reservar eliges cuántas plazas.</div>`:`<a class="tl-bt sec" href="https://wa.me/34672893949?text=${encodeURIComponent('Hola, quiero apuntarme a la lista de espera de: '+T.titulo)}" target="_blank" rel="noopener">Apúntame a la lista de espera</a>`}</div>`;}
-async function pintarTalleres(){const L=document.getElementById('talLista');if(!L)return;if(!TALLERES)L.innerHTML='<div class="pr-vacio">Cargando…</div>';
+// Atlas: «Avisadme cuando salga» (queda en el panel, en Talleres y cursos)
+function pintarAtlasAv(){const el=document.getElementById('atlasAv');if(!el)return;let ya=false;try{ya=!!localStorage.getItem('f365_atlas_av_'+(patient&&patient.id));}catch(e){}
+ el.innerHTML=ya?'<div class="tl-ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>¡Apuntado! Te avisaremos en cuanto salga.</span></div>':'<button type="button" class="tl-bt" onclick="atlasAvisame(this)">Avisadme cuando salga</button>';}
+async function atlasAvisame(b){if(!patient)return;b.disabled=true;b.textContent='Apuntando…';
+ try{const r=await (await fetch('/api/schedule?action=atlas-interes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id})})).json();if(!r.ok)throw 0;
+  try{localStorage.setItem('f365_atlas_av_'+patient.id,'1');}catch(e){}pintarAtlasAv();}
+ catch(e){b.disabled=false;b.textContent='Avisadme cuando salga';toast('No se ha podido apuntar. Inténtalo de nuevo.',false);}}
+async function pintarTalleres(){pintarAtlasAv();const L=document.getElementById('talLista');if(!L)return;if(!TALLERES)L.innerHTML='<div class="pr-vacio">Cargando…</div>';
  const T=await cargarTalleres();L.innerHTML=T.length?T.map(htmlTaller).join(''):'<div class="pr-vacio">Ahora mismo no hay ninguno programado. ¡Vuelve pronto!</div>';}
 // En Hoy: el próximo con plazas libres (se puede cerrar)
 async function pintarTalHoy(){const H=document.getElementById('talHoy');if(!H)return;const T=(await cargarTalleres()).filter(x=>x.quedan>0)[0];let k='';try{k=localStorage.getItem('f365_talx')||'';}catch(e){}
