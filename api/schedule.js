@@ -6307,12 +6307,16 @@ module.exports = async function handler(req, res) {
           const pf = {}; EQUIPO.forEach(k => { const de = c => String(c.fisio).toLowerCase() === k, rk = real.filter(de);
             // Por fisio también: pacientes distintos que atendió, faltas (no vino / cita perdida) y cancelaciones de sus citas
             pf[k] = { ses: rk.length, ocup: 0, cap: 0, extra: 0, aten: new Set(rk.map(c => c.pid).filter(Boolean)).size, nov: enS.filter(c => de(c) && c.pid && /NO ASIST|PERDIDA/.test(c.e)).length, can: enS.filter(c => de(c) && c.pid && /CANCELADA/.test(c.e)).length }; });
-          let cap = 0, ocup = 0; for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay(); EQUIPO.forEach(k => {
-            const n = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k && hecha(c)).length;
-            if (!n) return; // sin sesiones hechas ese día: no cuenta (no estaba trabajando)
-            // Si hace más sesiones que su horario, ese día trabajó esas horas: cuentan todas (ese día = 100 %) y lo de más se apunta como horas extra
-            const h = horasDe(k, f, (horario[k] && horario[k][dw]) || 0), cd = Math.max(h, n), ex = Math.max(0, n - h);
-            cap += cd; ocup += n; pf[k].cap += cd; pf[k].ocup += n; pf[k].extra += ex; }); }
+          // Se cuenta por SEMANA, no por día: si un día se va antes y otro día lo recupera, la semana sale completa.
+          // Horas posibles = su horario de los días en que hizo al menos una sesión. Si en la semana hace más sesiones que esas horas,
+          // la semana sale al 100 % y lo de más son horas extra.
+          let cap = 0, ocup = 0; EQUIPO.forEach(k => { let hs = 0, ns = 0;
+            for (let d = 0; d < 7; d++) { const f = mv(a, d), dw = new Date(f + 'T12:00:00Z').getUTCDay();
+              const n = C.filter(c => c.f === f && String(c.fisio).toLowerCase() === k && hecha(c)).length;
+              if (!n) continue; // sin sesiones hechas ese día: no cuenta (no estaba trabajando)
+              hs += horasDe(k, f, (horario[k] && horario[k][dw]) || 0); ns += n; }
+            if (!ns) return; const cd = Math.max(hs, ns), ex = Math.max(0, ns - hs);
+            cap += cd; ocup += ns; pf[k].cap += cd; pf[k].ocup += ns; pf[k].extra += ex; });
           const ll = llam.filter(r => { const x = r.fields.FECHA; if (!x) return false; const d = String(x).includes('T') ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : String(x).slice(0, 10); return en(d); });
           const m = man.find(r => String(r.fields.SEMANA || '').slice(0, 10) === a);
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
