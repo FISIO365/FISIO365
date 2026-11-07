@@ -164,36 +164,91 @@ async function ultimoDiaConCitas() {
   for (let n = 1; n <= 7; n++) { const f = madrid(-n).fecha; const c = await todos(CITAS_TABLE, `filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f}',TRIM({ESTADO})='REALIZADA')`)}&fields[]=FECHA&maxRecords=1`); if (c.length) return f; }
   return madrid(-1).fecha;
 }
-async function resumenFacturacion(ayer) {
-  const { sf, rendDia, rendSemana, est, hechas, sinMarcar, facs, canceladas, caja, rep, envs, borradores, fuera, total } = await datosDia(ayer);
-  const fila = (a, b, c) => `<tr><td style="padding:8px 0;border-bottom:1px solid #eee">${a}</td><td style="padding:8px 0;border-bottom:1px solid #eee;color:#7d6a60">${b}</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;font-weight:600">${c}</td></tr>`;
+// Email del Daily report: lo mismo y en el mismo orden que la sección del panel (arriba lo que falta para cerrar el día)
+const capT = t => String(t || '').toLowerCase().replace(/(^|[\s\-'])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
+const pila = f => String(f || '').trim().split(/\s+/)[0] || '';
+function htmlReporte(R, fechaTxt) {
+  const URL = 'https://app.fisioterapia365.com/fisio?s=rdia';
+  const C = { coral: '#c2552e', tx: '#1f1a17', mu: '#7d6a60', ln: '#efe7e0', crema: '#faf6f2', ok: '#16803c', okBg: '#eef8f0', mal: '#b42318', malBg: '#fdf0ee', amb: '#b45309', ambBg: '#fdf6e7' };
+  const pl = (n, a, b) => n + ' ' + (n === 1 ? a : b);
+  const SF = R.sinFacturar || [], nSF = SF.reduce((t, x) => t + x.n, 0), cSin = R.canceladas.filter(c => c.pacienteId && !c.proxima && !c.enLlamar && !c.alta);
+  const noEnv = R.fisios.filter(f => !f.enviado), conPend = R.fisios.filter(f => f.noMarcados.length || f.pendiente.length), atViejo = (R.atrasado || []).filter(g => g.maxDias > 3);
+  const FALTA = [
+    nSF && ['Cobros', pl(nSF, 'sesión sin facturar', 'sesiones sin facturar'), SF.map(x => capT(x.nombre)).slice(0, 4).join(', ') + (SF.length > 4 ? '…' : ''), 'mal'],
+    R.fuera.length && ['Cobros', pl(R.fuera.length, 'ticket hecho fuera del panel', 'tickets hechos fuera del panel'), 'Revisa que estén bien', 'mal'],
+    R.sinMarcar.length && ['Agenda', pl(R.sinMarcar.length, 'cita sin marcar', 'citas sin marcar'), '¿Vino o no vino?', 'amb'],
+    cSin.length && ['Agenda', pl(cSin.length, 'cancelación sin próxima cita', 'cancelaciones sin próxima cita'), cSin.map(c => capT(c.nombre)).slice(0, 4).join(', '), 'amb'],
+    noEnv.length && ['Equipo', pl(noEnv.length, 'check-list sin enviar', 'check-lists sin enviar'), noEnv.map(f => pila(f.fisio)).join(', '), 'mal'],
+    conPend.length && ['Equipo', pl(conPend.length, 'fisio con cosas por hacer', 'fisios con cosas por hacer'), conPend.map(f => pila(f.fisio)).join(', '), 'amb'],
+    atViejo.length && ['Atrasos', 'Tareas o llamadas atrasadas más de 3 días', atViejo.map(g => /^sin asignar$/i.test(g.fisio) ? 'sin asignar' : pila(g.fisio)).join(', '), 'amb'],
+    R.borradores.length && ['Cobros', pl(R.borradores.length, 'ticket en borrador por aprobar', 'tickets en borrador por aprobar'), 'En Holded', 'amb']].filter(Boolean);
+  const box = (inner, bg, bd) => `<div style="background:${bg || '#fff'};border:1px solid ${bd || C.ln};border-radius:14px;padding:14px 16px;margin:0 0 12px">${inner}</div>`;
+  const h3 = (t, col) => `<div style="margin:26px 0 10px;font-size:15px;font-weight:700;color:${col || C.tx}">${t}</div>`;
+  const chip = (t, k) => `<span style="display:inline-block;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;background:${C[k + 'Bg'] || C.crema};color:${C[k] || C.mu};white-space:nowrap">${t}</span>`;
+  const row = (a, b, c) => `<tr><td style="padding:9px 0;border-top:1px solid ${C.ln};font-size:14px;vertical-align:top">${a}${b ? `<div style="font-size:12px;color:${C.mu};margin-top:2px">${b}</div>` : ''}</td><td style="padding:9px 0 9px 10px;border-top:1px solid ${C.ln};text-align:right;vertical-align:top;font-size:13px;white-space:nowrap">${c || ''}</td></tr>`;
+  const tabla = filas => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${filas.map((f, i) => i ? f : f.replace(/border-top:1px solid [^;]+;/g, 'border-top:0;')).join('')}</table>`;
+  // Lo que falta
+  const estado = FALTA.length
+    ? box(`<div style="font-size:16px;font-weight:700;margin-bottom:2px">Faltan ${FALTA.length} ${FALTA.length === 1 ? 'cosa' : 'cosas'} para cerrar el día</div><div style="font-size:12.5px;color:${C.mu};margin-bottom:10px">Ábrelo en el panel para arreglarlas o mandarlas como tarea.</div>
+      ${FALTA.map(([ic, t, sub, k]) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;margin-top:8px"><tr><td style="background:${C[k + 'Bg']};border-left:3px solid ${C[k]};border-radius:10px;padding:10px 12px"><div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:${C[k]};text-transform:uppercase">${ic}</div><div style="font-size:14px;font-weight:600;margin-top:1px">${escH(t)}</div>${sub ? `<div style="font-size:12.5px;color:${C.mu};margin-top:1px">${escH(sub)}</div>` : ''}</td></tr></table>`).join('')}`, '#fff', C.ln)
+    : box(`<div style="font-size:16px;font-weight:700;color:${C.ok}">✓ Todo hecho. El día está cerrado al 100%.</div><div style="font-size:12.5px;color:${C.mu};margin-top:2px">Cobros, citas, check-lists y seguimientos, en orden.</div>`, C.okBg, '#cfe9d6');
+  // Números
+  const env = R.fisios.filter(f => f.enviado).length, nf = R.fisios.length;
+  const kpi = (n, t, k) => `<td width="50%" style="padding:4px"><div style="background:${k ? C[k + 'Bg'] : C.crema};border-radius:12px;padding:12px 12px 10px"><div style="font-size:20px;font-weight:700;color:${k ? C[k] : C.tx}">${n}</div><div style="font-size:12px;color:${C.mu}">${t}</div></div></td>`;
+  const caja = Object.entries(R.caja || {});
+  const numeros = `${h3('Números del día')}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 -4px"><tr>${kpi(R.hechas, 'sesiones hechas')}${kpi(R.nFacturas, 'facturas emitidas')}</tr><tr>${kpi(eur(R.total), 'facturado')}${kpi(nf ? env + '/' + nf : '—', 'check-lists enviados', nf && env < nf ? 'mal' : '')}</tr></table>
+    ${caja.length ? `<div style="margin-top:8px;font-size:13px;color:${C.mu}">${caja.map(([m, t]) => `<span style="display:inline-block;margin:4px 6px 0 0;padding:4px 10px;border:1px solid ${C.ln};border-radius:99px">${escH(m)} <b style="color:${C.tx}">${eur(t)}</b></span>`).join('')}</div>` : ''}`;
+  // Check-list de cada fisio
+  const fisios = nf ? h3('Check-list de los fisios') + R.fisios.map(f => box(
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="vertical-align:top"><div style="font-size:14.5px;font-weight:700">${escH(f.fisio)}</div><div style="font-size:12px;color:${C.mu}">${pl(f.hechas, 'sesión hecha', 'sesiones hechas')}</div></td><td style="text-align:right;vertical-align:top">${f.enviado ? chip('✓ Enviado ' + escH(f.enviado), 'ok') : chip('✗ No enviado', 'mal')}</td></tr></table>
+    ${f.enviado ? (f.noMarcados.length ? `<div style="margin-top:8px;font-size:13px;color:${C.amb}"><b>Sin marcar:</b> ${f.noMarcados.map(escH).join(' · ')}</div>` : `<div style="margin-top:8px;font-size:13px;color:${C.ok}">Todo marcado</div>`) : ''}
+    ${f.pendiente.length ? `<div style="margin-top:10px;padding-top:8px;border-top:1px dashed ${C.ln}"><div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:${C.mal};text-transform:uppercase;margin-bottom:4px">Le falta</div>${f.pendiente.map(c => `<div style="font-size:13px;margin-top:5px"><b>${escH(c.t)}</b> <span style="color:${C.mu}">(${c.items.length})</span><div style="color:${C.mu};font-size:12.5px;margin-top:1px">${c.items.map(i => escH(capT(i.nombre)) + (i.extra ? ' <i>' + escH(i.extra) + '</i>' : '')).join(' · ')}</div></div>`).join('')}</div>` : ''}
+    ${f.nota ? `<div style="margin-top:8px;font-size:13px;color:${C.mu}"><b style="color:${C.tx}">Nota:</b> «${escH(f.nota)}»</div>` : ''}`, f.enviado ? '#fff' : C.malBg, f.enviado ? C.ln : '#f3d3cd')).join('') : '';
+  // Atrasado
+  const at = R.atrasado && R.atrasado.length ? h3('Atrasado por fisio <span style="font-weight:400;font-size:12px;color:' + C.mu + '">· tareas y llamadas sin hacer de días anteriores</span>', R.atrasado.some(g => g.maxDias > 3) ? C.mal : '') + R.atrasado.map(g => box(
+    `<div style="font-size:14px"><b>${/^sin asignar$/i.test(g.fisio) ? 'Sin asignar' : escH(pila(g.fisio))}</b> <span style="color:${C.mu};font-size:12.5px">· ${[g.tareas ? pl(g.tareas, 'tarea', 'tareas') : '', g.llamadas ? pl(g.llamadas, 'llamada', 'llamadas') : ''].filter(Boolean).join(' · ')} · la más antigua hace ${pl(g.maxDias, 'día', 'días')}</span></div>
+    ${tabla(g.items.slice(0, 6).map(it => row((it.tipo === 'tarea' ? escH(it.texto) : '📞 Llamada de seguimiento') + (it.paciente ? ' · ' + escH(capT(it.paciente)) : ''), '', `<span style="color:${it.dias > 3 ? C.mal : C.mu}">hace ${pl(it.dias, 'día', 'días')}</span>`)))}${g.items.length > 6 ? `<div style="font-size:12px;color:${C.mu};margin-top:6px">y ${g.items.length - 6} más</div>` : ''}`, g.maxDias > 3 ? C.malBg : '#fff', g.maxDias > 3 ? '#f3d3cd' : C.ln)).join('')
+    : R.atrasado ? box(`<div style="font-size:13.5px;color:${C.ok};font-weight:600">✓ Atrasado por fisio: nada. Todo lo de días anteriores está hecho.</div>`, C.okBg, '#cfe9d6') : '';
+  const sec = (t, k, filas) => filas.length ? h3(t, C[k]) + box(tabla(filas)) : '';
+  const sinFac = R.sinFacturar ? (SF.length ? sec(`Sesiones sin facturar ahora mismo (${nSF})`, 'mal', SF.map(x => row(escH(capT(x.nombre)), escH(x.fisio), `<b>${x.n}</b>`))) : box(`<div style="font-size:13.5px;color:${C.ok};font-weight:600">✓ No hay sesiones sin facturar</div>`, C.okBg, '#cfe9d6')) : '';
+  const sinMar = sec(`Citas sin marcar (siguen en «Pendiente»): ${R.sinMarcar.length}`, 'amb', R.sinMarcar.map(c => row(escH(capT(c.nombre)), escH(c.fisio), escH(c.hora))));
+  const fuera = sec(`Tickets hechos en Holded fuera del panel: ${R.fuera.length}`, 'mal', R.fuera.map(d => row(escH(d.nombre), '', eur(d.total))));
+  const borr = sec(`Tickets en borrador por aprobar en Holded: ${R.borradores.length}`, 'amb', R.borradores.slice(0, 12).map(d => row(escH(d.nombre), '', escH(d.fecha.split('-').reverse().join('/')))));
+  const canc = sec(`Canceladas o no vinieron: ${R.canceladas.length}`, cSin.length ? 'amb' : '', R.canceladas.map(c => row(escH(capT(c.nombre || 'Paciente')), escH(c.fisio) + ' · ' + escH(String(c.estado).toLowerCase()) + ' · ' + escH(c.hora),
+    c.proxima ? chip('✓ Cita el ' + c.proxima.slice(8) + '/' + c.proxima.slice(5, 7), 'ok') : c.enLlamar ? chip('En «Por llamar»', '') : c.alta ? chip(escH(c.alta), '') : c.pacienteId ? chip(c.nuncaVino ? '1ª visita · nunca vino' : 'Sin próxima cita', 'amb') : '')));
+  const rend = (L, t) => { if (!L || !L.length) return '';
+    const th = x => `<td style="padding:0 4px 6px 0;font-size:11px;color:${C.mu};font-weight:600">${x}</td>`, td = (x, b) => `<td style="padding:7px 4px 7px 0;border-top:1px solid ${C.ln};font-size:13px;${b ? 'font-weight:600' : ''}">${x}</td>`;
+    const noR = L.filter(x => x.lista && x.lista.length).map(x => `<div style="font-size:12.5px;margin-top:8px"><b>${escH(pila(x.fisio))}</b> <span style="color:${C.mu}">· no han reagendado:</span> ${x.lista.map(p => escH(capT(p.nombre)) + (p.situacion ? ` <span style="color:${C.ok}">(${escH(p.situacion.toLowerCase())})</span>` : '')).join(', ')}</div>`).join('');
+    return box(`<div style="font-size:13px;font-weight:700;margin-bottom:8px">${t}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr>${th('Fisio')}${th('Hechas')}${th('Ocup.')}${th('Reagendan')}${th('Faltas')}</tr>${L.map(x => `<tr>${td(escH(pila(x.fisio)), 1)}${td(x.realizadas + (x.sinHoras ? '' : '/' + x.huecos))}${td(x.sinHoras ? '—' : pct(x.realizadas, x.huecos))}${td(pct(x.reagendan, x.atendidos))}${td((x.noAsistio || 0) + (x.perdidas || 0))}</tr>`).join('')}</table>${noR}`); };
+  const facs = sec('Facturas emitidas', '', R.facturas.map(f => row(escH(f.num), escH(f.concepto) + (f.pago ? ' · ' + escH(f.pago) : ''), `<b>${eur(f.total)}</b>`)));
+  const btn = t => `<a href="${URL}" style="display:inline-block;background:${C.coral};color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 20px;border-radius:99px">${t}</a>`;
+  return `<div style="font-family:Poppins,Arial,Helvetica,sans-serif;background:#f7f1eb;padding:20px 12px;color:${C.tx}"><div style="max-width:560px;margin:0 auto">
+  <div style="background:#fff;border:1px solid ${C.ln};border-radius:18px;padding:20px 18px;margin-bottom:12px">
+   <div style="font-size:11.5px;color:${C.coral};font-weight:700;letter-spacing:1.2px">DAILY REPORT</div>
+   <div style="font-size:22px;font-weight:700;margin:4px 0 14px;text-transform:capitalize">${escH(fechaTxt)}</div>
+   ${estado}
+   <div style="text-align:center;margin-top:4px">${btn('Abrir en el panel')}</div>
+  </div>
+  <div style="background:#fff;border:1px solid ${C.ln};border-radius:18px;padding:4px 18px 18px">
+   ${numeros}${fisios}${at}${sinFac ? (SF.length ? sinFac : '<div style="height:14px"></div>' + sinFac) : ''}${sinMar}${fuera}${borr}${canc}
+   ${R.rendDia && R.rendDia.length ? h3('Rendimiento') : ''}${rend(R.rendDia, 'Del día')}${rend(R.rendSemana, 'De la semana')}
+   ${R.rendDia && R.rendDia.length ? `<div style="font-size:11px;color:#9b8f86;margin-top:-4px">Reagendan = de los atendidos, cuántos tienen otra cita apuntada · Faltas = no asistió o cita perdida</div>` : ''}
+   ${facs}
+   <div style="text-align:center;margin-top:22px">${btn('Abrir el Daily report')}</div>
+  </div>
+  <div style="text-align:center;font-size:11px;color:#9b8f86;margin-top:12px">FISIO365 · Te llega cada mañana con el día anterior</div>
+ </div></div>`;
+}
+async function resumenFacturacion(ayer, soloA) {
+  const R = await reporteDia(ayer.fecha);
   const fechaTxt = `${DIAS[ayer.dia]} ${+ayer.fecha.slice(8)}/${+ayer.fecha.slice(5, 7)}`;
-  const html = `<div style="font-family:Arial,sans-serif;background:#f7f3ef;padding:24px"><div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;color:#1a1a1a">
-  <div style="font-size:12px;color:#c2552e;font-weight:700;letter-spacing:1px">RESUMEN DIARIO</div>
-  <h2 style="margin:6px 0 18px;font-size:20px">${fechaTxt}</h2>
-  <p style="margin:0 0 4px">Sesiones hechas: <b>${hechas}</b> · Facturas emitidas: <b>${facs.length}</b> (${eur(total)})</p>
-  ${Object.keys(caja).length ? `<p style="margin:6px 0 0;font-size:13.5px;color:#5c4f47">Caja: ${Object.entries(caja).map(([m, t]) => `${escH(m)} <b>${eur(t)}</b>`).join(' · ')}</p>` : ''}
-  ${(() => { const fs = Object.entries(rep); if (!fs.length) return '';
-    return `<h3 style="margin:22px 0 6px;font-size:15px">Check-list de los fisios</h3><table style="width:100%;border-collapse:collapse;font-size:13.5px">${fs.map(([f, x]) => { const e = envs[String(f).split(' ')[0].toLowerCase()];
-      const noMarc = e ? String(e.marcados || '').split('\n').filter(l => l.startsWith('✗')).map(l => l.slice(2)) : [];
-      const vistos = x.checks.filter(c => !c.aviso && c.items.length).map(c => `${escH(c.t)}: ${c.items.map(i => escH(i.nombre) + (i.extra ? ' (' + escH(i.extra) + ')' : '')).join(', ')}`);
-      const estado = e ? `<b style="color:#16803c">✓ Enviado ${new Date(e.enviado).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' })}</b>` : `<b style="color:#b42318">✗ No ha enviado el check-list</b>`;
-      return `<tr><td style="padding:10px 0;border-bottom:1px solid #eee;vertical-align:top"><b>${escH(f)}</b><br><span style="color:#7d6a60;font-size:12px">${x.hechas} ${x.hechas === 1 ? 'sesión hecha' : 'sesiones hechas'}</span></td><td style="padding:10px 0 10px 10px;border-bottom:1px solid #eee">${estado}${noMarc.length ? `<br><span style="color:#b45309">Sin marcar: ${noMarc.map(escH).join(' · ')}</span>` : e ? '<br><span style="color:#16803c">Todo marcado</span>' : ''}${vistos.length ? `<br><span style="color:#b42318">El panel ve pendiente → ${vistos.join(' · ')}</span>` : ''}${e && e.nota ? `<br><span style="color:#5c4f47">Nota: «${escH(e.nota)}»</span>` : ''}</td></tr>`; }).join('')}</table>`; })()}
-  ${tablaRendimiento(rendDia, 'Rendimiento del día', true)}
-  ${rendSemana ? tablaRendimiento(rendSemana, 'Rendimiento de la semana pasada', true) : ''}
-  <p style="margin:8px 0 0;font-size:11px;color:#9b8f86">Reagendan = de los pacientes atendidos, cuántos tienen otra cita apuntada después · Faltas = no asistió o cita perdida</p>
-  ${!sf.activo ? '' : sf.lista.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b42318">⚠️ Sesiones sin facturar (${sf.lista.reduce((t, x) => t - x.saldo, 0)})</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${sf.lista.map(x => fila(escH(x.nombre), escH(x.fisio), (-x.saldo) + ' sin facturar')).join('')}</table>` : `<p style="margin:18px 0 0;color:#16803c;font-weight:600">✓ No hay sesiones sin facturar</p>`}
-  ${sinMarcar.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b45309">Citas de ayer sin marcar (siguen en «Pendiente»): ${sinMarcar.length}</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${sinMarcar.map(c => fila(escH(c.fields['your-name'] || ''), escH(fisioDe(c.fields['PREF.'])), escH(String(c.fields['HORA'] || '').slice(0, 5)))).join('')}</table>` : ''}
-  ${fuera.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b42318">⚠️ Tickets de ayer hechos en Holded fuera del panel: ${fuera.length}</h3><p style="margin:0;font-size:13px;color:#5c4f47">No cuentan en el saldo de sesiones: ${fuera.map(d => escH((d.contact_name || '—') + ' ' + ((SCH.importeDoc ? SCH.importeDoc(d) : Number(d.total || 0)) ? (SCH.importeDoc ? SCH.importeDoc(d) : Number(d.total)).toFixed(2) + ' €' : ''))).join(' · ')}</p>` : ''}
-  ${borradores.length ? `<h3 style="margin:22px 0 6px;font-size:15px;color:#b45309">Tickets en borrador por aprobar en Holded: ${borradores.length}</h3><p style="margin:0;font-size:13px;color:#5c4f47">${borradores.slice(0, 30).map(d => escH((d.contact_name || '—') + ' · ' + String(d.date || '').slice(0, 10).split('-').reverse().join('/'))).join(' · ')}</p>` : ''}
-  ${canceladas.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Citas de ayer canceladas o que no vinieron: ${canceladas.length}</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${canceladas.map(c => fila(escH(c.fields['your-name'] || ''), escH(fisioDe(c.fields['PREF.'])) + ' · ' + escH(est(c).toLowerCase()), escH(String(c.fields['HORA'] || '').slice(0, 5)))).join('')}</table>` : ''}
-  ${facs.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Facturas emitidas</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${facs.map(r => fila(escH(r.fields['Nº FACTURA'] || ''), escH([r.fields['CONCEPTO 1'], r.fields['CONCEPTO 2']].filter(Boolean).join(' + ')) + (r.fields['MODO DE PAGO'] ? ' · ' + escH(r.fields['MODO DE PAGO']) : ''), eur(r.fields['TOTAL']))).join('')}</table>` : ''}
-  </div></div>`;
-  // Por email (además, el panel lo enseña en «Reporte diario»)
+  const html = htmlReporte(R, fechaTxt);
+  const SF = R.sinFacturar || [], noEnv = R.fisios.some(f => !f.enviado);
+  const to = soloA ? [soloA] : await (SCH.emailsResumen ? SCH.emailsResumen() : Promise.resolve(String(process.env.RESUMEN_EMAIL || 'fisio365gestion@gmail.com').split(/[,;\s]+/).filter(Boolean)));
+  // Por email (además, el panel lo enseña en «Daily report»)
   const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: (await (SCH.emailsResumen ? SCH.emailsResumen() : Promise.resolve(String(process.env.RESUMEN_EMAIL || 'fisio365gestion@gmail.com').split(/[,;\s]+/).filter(Boolean)))).map(email => ({ email })), subject: `Resumen ${fechaTxt}${Object.keys(rep).some(f => !envs[String(f).split(' ')[0].toLowerCase()]) ? ' · ✗ falta algún check-list' : ''}${sf.lista.length ? ' · ⚠️ ' + sf.lista.length + ' pacientes sin facturar' : ''}${rendSemana ? ' · + semana' : ''}`, htmlContent: html }) });
-  const email = r.ok ? 'enviado' : 'error brevo ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 300);
-  return email;
+    body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, to: to.map(email => ({ email })), subject: `Daily report · ${fechaTxt}${noEnv ? ' · ✗ falta algún check-list' : ''}${SF.length ? ' · ⚠️ ' + SF.length + ' sin facturar' : ''}${R.rendSemana ? ' · + semana' : ''}`, htmlContent: html }) });
+  return r.ok ? 'enviado' : 'error brevo ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 300);
 }
 
 module.exports = async function handler(req, res) {
@@ -295,4 +350,5 @@ module.exports = async function handler(req, res) {
 };
 
 module.exports.reporteDia = reporteDia;
+module.exports.htmlReporte = htmlReporte;
 module.exports.ultimoDiaConCitas = ultimoDiaConCitas;
