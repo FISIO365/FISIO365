@@ -1,5 +1,6 @@
 # FISIO365 · panel y app del paciente
 
+- Vercel: el proyecto `clinica-demo` (demo de la marca blanca) usa este mismo repo pero **solo se publica si el mensaje del commit lleva `[demo]`** (para no pagar dos publicaciones por cada cambio).
 - Panel del equipo: `public/fisio.html`. App del paciente: `public/index.html`. Backend: `api/` (Vercel, `vercel.json` con builds + routes: un archivo estático nuevo necesita las dos entradas).
 - Datos: Airtable (base por clínica, ids traducidos en `api/_base.js`). Marca de cada clínica: `api/_marca.js` + `public/marca.js`. Montar otra clínica: `docs/NUEVA_CLINICA.md`.
 - Permisos por ROL, nunca por nombre: dirección = el rango en la empresa, marca «DIRECCIÓN» de su ficha (aprueba vacaciones e incidencias, borra fichas, recibe los avisos de dirección); administración = el puesto (recepción: cobros, consentimientos, lista de espera, tarjetas regalo), Puesto «Administración» (Role admin). Nada de comprobar «Nora» o «Ramiro».
