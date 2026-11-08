@@ -3194,7 +3194,6 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, ...r });
     } catch (e) { return res.status(200).json({ ok: false, error: String(e && e.message || e) }); }
   }
-  if (action === 'entorno-cf') return require('./_entorno-cf')(req, res); // mudanza a Cloudflare (ver el archivo)
   if (action === 'pg-probar') { // escrituras de prueba (solo en la versión de prueba: SIN_ENVIOS)
     const PG = require('./_pg'), K = String(process.env.MIGRAR_KEY || ''), k = String(req.query.k || '');
     if (!PG.ACTIVO || !process.env.SIN_ENVIOS || K.length < 24 || k.length !== K.length || !require('crypto').timingSafeEqual(Buffer.from(k), Buffer.from(K))) return res.status(404).end();
