@@ -784,6 +784,10 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
 @media (prefers-reduced-motion:reduce){.mcl *{animation-duration:.01s!important;animation-delay:0s!important}}
 .tl-pronto{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1e2a38;background:#f39a55;border-radius:99px;padding:4px 10px}.tl-ok{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 14px;border-radius:14px;background:#eef6f0;color:#2f7a4c;font-size:13.5px;font-weight:600}.tl-ok svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .tl-atlas .tl-bt{width:100%;border:0;margin-top:14px;font-family:inherit;cursor:pointer}
+.tl-ad-t{margin:16px 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8a837b}
+.tl-ads{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.tl-ads button{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-width:0}
+.tl-ad-im{position:relative;display:block;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#f6f1ea;border:1.5px solid #efe7de;transition:border-color .2s}.tl-ads button.on .tl-ad-im{border-color:#f39a55}
+.tl-ad-im img{width:100%;height:100%;object-fit:cover;display:block}.tl-ads small{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:#8a837b}.tl-ads small i{position:relative;width:18px;height:18px;border-radius:50%;background:#1e2a38;flex:none}.tl-ads small i:after{content:'';position:absolute;left:7px;top:5px;border-left:6px solid #fff;border-top:4px solid transparent;border-bottom:4px solid transparent}.tl-ads button.on small{color:#c2552e}
 .tl-vid{display:block;width:100%;aspect-ratio:16/9;border-radius:16px;background:#1e2a38;margin-top:12px;object-fit:cover}
 .tl-c{background:#fff;border-radius:24px;padding:18px 18px 16px;margin:0 0 14px;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}.tl-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.tl-tp{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a8461f;background:#fdf1ea;border-radius:99px;padding:3px 9px}.tl-pr{font-size:17px;font-weight:700;color:#c2552e}
 .tl-t{font-size:19px;font-weight:700;color:#1a1a1a;line-height:1.25}.tl-f{font-size:13.5px;color:#5c4f47;margin-top:4px}.tl-f:first-letter{text-transform:uppercase}.tl-con{font-size:13px;color:#8a7d74;margin-top:2px}.tl-s{font-size:14px;color:#3d3530;line-height:1.55;margin:10px 0 0}.tl-h{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9a8b80;margin:14px 0 6px}
@@ -971,7 +975,13 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
  <div class="tl-c tl-atlas"><div class="tl-top"><span class="tl-tp">Curso online</span><span class="tl-pronto">Próximamente</span></div>
   <div class="tl-t">Atlas · Hernia discal lumbar</div>
   <p class="tl-s">El curso online de nuestro equipo para tu espalda: un test inicial que personaliza tu plan, vídeos de cada ejercicio y tu fisio contigo por chat.</p>
-  <video class="tl-vid" src="/img/atlas/proximamente.mp4" poster="/img/atlas/proximamente.jpg" controls playsinline preload="none"></video>
+  <video class="tl-vid" id="atlasVid" src="/img/atlas/proximamente.mp4" poster="/img/atlas/proximamente.jpg" controls playsinline preload="none"></video>
+  <div class="tl-ad-t">Adelantos del curso</div>
+  <div class="tl-ads">
+   <button type="button" onclick="verAdelanto(this,1)"><span class="tl-ad-im"><img src="/img/atlas/adelanto1t.jpg" alt="Qué es una hernia" loading="lazy"></span><small><i></i>1:03</small></button>
+   <button type="button" onclick="verAdelanto(this,2)"><span class="tl-ad-im"><img src="/img/atlas/adelanto2t.jpg" alt="Por qué duele" loading="lazy"></span><small><i></i>0:51</small></button>
+   <button type="button" onclick="verAdelanto(this,3)"><span class="tl-ad-im"><img src="/img/atlas/adelanto3t.jpg" alt="Moverte es seguro" loading="lazy"></span><small><i></i>0:46</small></button>
+  </div>
   <div id="atlasAv"></div>
  </div>
  <div id="talLista"></div>
@@ -1703,6 +1713,9 @@ function htmlTaller(T){const pct=T.plazas?Math.round((T.plazas-T.quedan)*100/T.p
   ${T.llevar?`<div class="tl-h">Qué traer</div><p class="tl-s">${talEsc(T.llevar)}</p>`:''}
   <div class="tl-pl"><div class="tl-bar"><i style="width:${pct}%"></i></div><span>${T.quedan>0?(T.quedan===1?'Queda 1 plaza':`Quedan ${T.quedan} plazas`):'Completo'}</span></div>
   ${T.quedan>0?`<a class="tl-bt" href="${talEsc(T.url)}" target="_blank" rel="noopener">Reservar plaza</a><div class="tl-nt">Puedes venir con quien quieras: al reservar eliges cuántas plazas.</div>`:`<a class="tl-bt sec" href="https://wa.me/34672893949?text=${encodeURIComponent('Hola, quiero apuntarme a la lista de espera de: '+T.titulo)}" target="_blank" rel="noopener">Apúntame a la lista de espera</a>`}</div>`;}
+// Atlas: adelantos del curso (se ven en el mismo reproductor de arriba)
+function verAdelanto(b,n){const v=document.getElementById('atlasVid');if(!v)return;document.querySelectorAll('.tl-ads button').forEach(x=>x.classList.toggle('on',x===b));
+ v.poster='/img/atlas/adelanto'+n+'.jpg';v.src='/img/atlas/adelanto'+n+'.mp4';v.scrollIntoView({behavior:'smooth',block:'center'});const p=v.play();if(p&&p.catch)p.catch(()=>{});}
 // Atlas: «Avisadme cuando salga» (queda en el panel, en Talleres y cursos)
 function pintarAtlasAv(){const el=document.getElementById('atlasAv');if(!el)return;let ya=false;try{ya=!!localStorage.getItem('f365_atlas_av_'+(patient&&patient.id));}catch(e){}
  el.innerHTML=ya?'<div class="tl-ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>¡Apuntado! Te avisaremos en cuanto salga.</span></div>':'<button type="button" class="tl-bt" onclick="atlasAvisame(this)">Avisadme cuando salga</button>';}

@@ -76,6 +76,7 @@
 "¡Apuntado! Te avisaremos en cuanto salga.": ["Apuntat! T'avisarem quan surti.","You're on the list! We'll let you know when it's out."],
 "Apuntando…": ["Apuntant…","Signing you up…"],
 "No se ha podido apuntar. Inténtalo de nuevo.": ["No s'ha pogut apuntar. Torna-ho a provar.","Couldn't sign you up. Please try again."],
+"Adelantos del curso": ["Avançaments del curs","Course previews"],
 "Quedan {} plazas": [
 "Queden {} places",
 "{} places left"
