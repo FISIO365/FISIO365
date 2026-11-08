@@ -17,7 +17,7 @@ No hace falta para arreglos internos que nadie nota.
 - Tarea diaria: el mismo cron crea una comunicación (DE «School», MODO hacer, límite hoy, `DATOS.school={k,curso,i}`) para los fisios; al terminar el módulo, el panel llama a `seg-com-school` y se marca HECHO sola (no se puede marcar a mano). Dirección ve el seguimiento. Cada módulo hecho se guarda en /api/progreso como `wiki_<curso>_m<i>`.
 - Aviso al móvil a las 8:30 (todos los fisios, también los de dirección; administración no): `api/cron.js?serie=1` (cron de lunes a viernes 7:30 UTC) con los títulos de `api/_serie.json`.
 - Si se añaden, quitan o reordenan módulos: actualizar `SERIE.cursos` (número de módulos), `MODS_EQUIPO_TIT`/`MODS_CLIENTE_TIT` y `api/_serie.json`. Un módulo nuevo va al final de la serie para no mover los días ya anunciados.
-- Capturas de la app del paciente para School: `public/img/school/` (datos de prueba). Si cambia una pantalla de la app del paciente, se rehace la captura.
+- Capturas de la app del paciente para School: `public/img/school/` (datos de prueba). Si cambia una pantalla de la app del paciente, se rehace la captura con `node scripts/capturas-school.mjs [app-02-hoy …]` (sirve `public/` en local con datos inventados; si añades una pantalla, añade su captura al script).
 
 ## Idiomas de la app del paciente
 - La app del paciente (`public/index.html` y sus .js) se escribe en castellano y `public/i18n.js` la traduce en pantalla a catalán e inglés.
