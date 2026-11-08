@@ -2421,7 +2421,8 @@ async function doLogin(silencioso){
  window.scrollTo({top:0,behavior:'instant'});
  await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso(),loadEstados(),loadConf(),loadClinica()]);
  checkMensajesBadge();
- setInterval(checkMensajesBadge, 60000); // revisar cada minuto
+ setInterval(()=>{if(!document.hidden)checkMensajesBadge();}, 120000); // cada 2 min, solo con el panel a la vista (ahorra llamadas al servidor)
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){try{checkMensajesBadge();}catch(e){}}});
  const tickPagos=()=>fetch('/api/schedule?action=pagos-tick').catch(()=>{});tickPagos();setInterval(tickPagos,5*60e3); // citas de quien no pagó a tiempo
  aplicarRole();
  iniciarAutoUpdate();
@@ -13556,8 +13557,9 @@ function iniciarAutoUpdate(){
  lastAccesos = null;
  checkDeploy();
  checkPermisos();
- setInterval(checkDeploy, 2 * 60 * 1000); // cada 2 min
- setInterval(checkPermisos, 5 * 60 * 1000); // cada 5 min
+ setInterval(()=>{if(!document.hidden)checkDeploy();}, 10 * 60 * 1000); // cada 10 min, solo a la vista
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){try{checkDeploy();}catch(e){}}});
+ setInterval(()=>{if(!document.hidden)checkPermisos();}, 5 * 60 * 1000); // cada 5 min, solo a la vista
 }
 
 

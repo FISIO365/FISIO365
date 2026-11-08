@@ -1159,7 +1159,7 @@ function initApp(){if(patient&&patient.soloEquipo){EQA.iniciarSoloEquipo();retur
         localStorage.setItem('fisio365_patient',JSON.stringify(patient));
       }
     }).catch(()=>{});
-  setInterval(checkMensajesNoLeidos,2*60*1000);
+  setInterval(()=>{if(!document.hidden)checkMensajesNoLeidos();},2*60*1000);
   clearBadge();setTimeout(()=>clearBadge(),1500);setTimeout(()=>clearBadge(),4000);
   // ★ NUEVO: mostrar banner si tiene premio pendiente
   if(patient.premio_pendiente){document.getElementById('premioBanner').style.display='flex';}

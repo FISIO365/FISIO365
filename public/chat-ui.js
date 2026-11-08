@@ -227,7 +227,7 @@
     });
 
     cargar(true);
-    timer = setInterval(() => { if (document.body.contains(el)) cargar(false); else clearInterval(timer); }, 12000);
+    timer = setInterval(() => { if (!document.body.contains(el)) { clearInterval(timer); return; } if (!document.hidden) cargar(false); }, 12000);
     return { parar: () => clearInterval(timer), recargar: () => cargar(true) };
   }
 
