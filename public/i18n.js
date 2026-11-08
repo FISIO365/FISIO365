@@ -77,6 +77,9 @@
 "Apuntando…": ["Apuntant…","Signing you up…"],
 "No se ha podido apuntar. Inténtalo de nuevo.": ["No s'ha pogut apuntar. Torna-ho a provar.","Couldn't sign you up. Please try again."],
 "Adelantos del curso": ["Avançaments del curs","Course previews"],
+"Progreso": ["Progrés","Progress"],
+"Para ti": ["Per a tu","For you"],
+"Mañana": ["Demà","Tomorrow"],
 "Quedan {} plazas": [
 "Queden {} places",
 "{} places left"

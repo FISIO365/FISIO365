@@ -461,6 +461,9 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 /* Banner en Hoy */
 .in-banner{display:none;align-items:center;gap:14px;background:#fff;border-radius:24px;padding:14px 14px 14px 16px;margin:0 0 14px;cursor:pointer;box-shadow:0 1px 2px rgba(26,26,26,.04),0 8px 24px rgba(26,26,26,.05)}
 .in-banner.on{display:flex}
+#paraTi{margin-top:28px}.ch-hoy{font-style:normal;color:#c2552e}
+#paraTi .pt-h{display:none;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#a39c94;margin:0 4px 10px}#paraTi.hay .pt-h{display:block}
+#paraTi .pt-off{display:none!important}
 .in-banner img{width:48px;height:48px;border-radius:14px;flex:none}
 .in-banner div{flex:1;min-width:0}
 .in-banner b{display:block;font-size:15px}
@@ -844,7 +847,7 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
  <section class="idi-pill idi-menu no-tr" role="group" aria-label="Idioma"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><button type="button" class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button><button type="button" class="lang-btn" data-lang="cat" onclick="setLang('cat')">CAT</button><button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button></section>
  <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:12px;">
  <button class="nav-item active" id="navHoy" onclick="showSection('hoy');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Mis ejercicios</button>
- <button class="nav-item" id="navProgreso" onclick="showSection('progreso');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H3V5h3M18 9h3V5h-3"/><path d="M6 5h12v7a6 6 0 0 1-12 0V5z"/><path d="M12 17v4M8 21h8"/></svg>Mi racha</button>
+ <button class="nav-item" id="navProgreso" onclick="showSection('progreso');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H3V5h3M18 9h3V5h-3"/><path d="M6 5h12v7a6 6 0 0 1-12 0V5z"/><path d="M12 17v4M8 21h8"/></svg>Mi progreso</button>
  <button class="nav-item" id="navCitas" onclick="showSection('citas');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Mis citas</button>
  <button class="nav-item" id="navInformes" onclick="showSection('informes');cerrarMenu()" style="display:flex;align-items:center;gap:14px;font-family:inherit;text-align:left;width:100%;cursor:pointer;border:none;border-radius:10px;color:#111;font-size:15px;font-weight:600;padding:12px 16px;background:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>Mis documentos</button>
  </div>
@@ -872,7 +875,7 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
 
  <nav class="tabbar" id="tabbar" aria-label="Secciones">
   <button data-s="hoy" onclick="showSection('hoy')" class="on"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>Hoy</button>
-  <button data-s="progreso" onclick="showSection('progreso')"><svg viewBox="0 0 24 24"><path d="M12 3c1.5 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.5 1 2.5 2 3 0-3 .5-5.5 1-7.5z"/></svg>Racha</button>
+  <button data-s="progreso" onclick="showSection('progreso')"><svg viewBox="0 0 24 24"><path d="M12 3c1.5 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.5 1 2.5 2 3 0-3 .5-5.5 1-7.5z"/></svg>Progreso</button>
   <button data-s="citas" onclick="showSection('citas')"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>Citas</button>
   <button data-s="mensajes" onclick="showSection('mensajes')"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>Chat<i class="tab-dot" id="tabChatDot"></i></button>
  </nav>
@@ -884,9 +887,6 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
  <div class="date-today" id="dateToday">Tu programa de hoy</div>
  <div class="hoy-hero-sub" id="hoyHeroSub">Tus ejercicios, pensados para ti.</div>
  </div>
- <div id="talHoy"></div><div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icons/icon-512.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
- <div id="avisosCard" class="in-banner" onclick="activarAvisos()"><div class="av-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div><b>Activa los avisos</b><span>Te avisamos de tus citas y de los mensajes de tu fisio</span></div><button class="ib">Activar</button><button class="ix" onclick="event.stopPropagation();ahoraNoAvisos()" aria-label="Ahora no">✕</button></div>
- <div id="eqBanner" class="in-banner"></div>
  <div id="fisioCard" class="fisio-card" style="display:none;">
  <div class="fisio-av" id="fisioAv"></div>
  <div><div class="fisio-nombre" id="fisioNombre"></div><div class="fisio-col" id="fisioColegiado"></div></div>
@@ -898,14 +898,6 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
  <div id="mensajeFisioCard" class="mensaje-fisio" style="display:none;">
  <div class="mensaje-fisio-label" id="mensajeFisioLabel">Nota de tu fisio</div>
  <div class="mensaje-fisio-texto" id="mensajeFisioTexto"></div>
- </div>
- <!-- ★ NUEVO: BANNER PREMIO -->
- <div id="premioBanner" class="premio-banner" style="display:none;">
-   <div class="premio-banner-icon">🎁</div>
-   <div>
-     <div class="premio-banner-titulo">¡Has ganado un premio!</div>
-     <div class="premio-banner-sub"><span class="cf-tj">-10€</span> en tu próxima sesión por recomendar FISIO365</div>
-   </div>
  </div>
  <div id="vistaEjercicios">
  <div class="prog-wrap" id="progWrap" style="display:none !important;">
@@ -925,12 +917,27 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
  <div class="completado-card"><p>Cada día que te mueves es un paso hacia tu recuperación. ¡Vuelve mañana!</p></div>
  </div>
  </div>
+ <!-- «Para ti»: de todo esto sale UNA cosa cada vez (la más importante); ordenarParaTi() decide -->
+ <div id="paraTi"><div class="pt-h">Para ti</div>
+ <div id="eqBanner" class="in-banner"></div>
+ <div id="avisosCard" class="in-banner" onclick="activarAvisos()"><div class="av-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div><b>Activa los avisos</b><span>Te avisamos de tus citas y de los mensajes de tu fisio</span></div><button class="ib">Activar</button><button class="ix" onclick="event.stopPropagation();ahoraNoAvisos()" aria-label="Ahora no">✕</button></div>
+ <div id="inBanner" class="in-banner" onclick="mostrarInstall()"><img src="/icons/icon-512.png" alt=""><div><b>Instala la app</b><span>Tenla en tu móvil, a un toque</span></div><button class="ib">Instalar</button><button class="ix" onclick="event.stopPropagation();ocultarBannerInstall()" aria-label="Ahora no">✕</button></div>
+ <!-- ★ NUEVO: BANNER PREMIO -->
+ <div id="premioBanner" class="premio-banner" style="display:none;">
+   <div class="premio-banner-icon">🎁</div>
+   <div>
+     <div class="premio-banner-titulo">¡Has ganado un premio!</div>
+     <div class="premio-banner-sub"><span class="cf-tj">-10€</span> en tu próxima sesión por recomendar FISIO365</div>
+   </div>
+ </div>
+ <div id="talHoy"></div>
  <div id="promosHoy"></div>
+ </div>
 
  </div>
 
  <div id="vistaProgreso" style="display:none;">
- <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mi racha</div><div class="date-sub">Cada día que haces tus ejercicios suma</div></div>
+ <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Mi progreso</div><div class="date-sub">Cada día que haces tus ejercicios suma</div></div>
  <div id="adherenciaSection" style="margin-bottom:20px;"></div>
  <div class="vas-card" style="display:none;">
  <div class="vas-question">¿Cuánto dolor tienes hoy?</div>
@@ -1035,7 +1042,7 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
  <div id="vistaGuia" style="display:none;">
  <div class="date-h" style="margin-top:4px;"><div class="date-today" style="font-size:20px;">Guía de la app</div><div class="date-sub">Todo lo que puedes hacer</div></div>
  <div class="gu-inst" id="guInst" onclick="mostrarInstall()"><img src="/icons/icon-512.png" alt=""><div><b>Instala la app en tu móvil</b><span>Te enseñamos cómo, paso a paso</span></div><button class="ib">Ver cómo</button></div>
- <div class="gu-lista"><div class="gu-it"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></div><div class="gu-tx"><b>Hoy · tus ejercicios</b><span>Cada día tienes tus ejercicios con vídeo. Toca el vídeo para verlo en grande, usa el temporizador si es por tiempo y marca cada uno al hacerlo. Al acabar, pulsa <b>«He terminado por hoy»</b>.</span></div></div><div class="gu-it" onclick="abrirReserva()"><div class="gu-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg></div><div class="gu-tx"><b>Reservar cita</b><span>Elige día, hora y fisio entre los huecos libres. Queda reservada al momento. Para cambiarla o anularla, escríbenos.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('citas')"><div class="gu-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><div class="gu-tx"><b>Mis citas</b><span>Tu calendario con las próximas citas y las que ya has hecho.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('progreso')"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M12 3c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-2 1-3 1-3s.5 2 2 2c0-3-1-5 1-7.5z"/></svg></div><div class="gu-tx"><b>Racha</b><span>Cada día que haces tus ejercicios suma. Mira tu mes y tu mejor racha. La constancia es lo que más ayuda.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('informes')"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div><div class="gu-tx"><b>Mis documentos</b><span>Tus informes, facturas y formularios firmados, para descargarlos.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('mensajes')"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div><div class="gu-tx"><b>Chat con tu fisio</b><span>Escríbele a tu fisio cuando quieras. Puedes enviar fotos y PDFs (una prueba, un informe…).</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="window.open('/regalo'+(regaloOcHoy()!=='clasico'?'?o='+regaloOcHoy():''),'_blank')"><div class="gu-ic"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-1.5-3-5.5-4-6-1.5S9 8 12 8zM12 8c1.5-3 5.5-4 6-1.5S15 8 12 8z"/></svg></div><div class="gu-tx"><b>Regalar</b><span>Regala sesiones de fisioterapia con una tarjeta regalo. La preparas en 2 minutos.</span></div><div class=gu-go>›</div></div></div>
+ <div class="gu-lista"><div class="gu-it"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></div><div class="gu-tx"><b>Hoy · tus ejercicios</b><span>Cada día tienes tus ejercicios con vídeo. Toca el vídeo para verlo en grande, usa el temporizador si es por tiempo y marca cada uno al hacerlo. Al acabar, pulsa <b>«He terminado por hoy»</b>.</span></div></div><div class="gu-it" onclick="abrirReserva()"><div class="gu-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg></div><div class="gu-tx"><b>Reservar cita</b><span>Elige día, hora y fisio entre los huecos libres. Queda reservada al momento. Para cambiarla o anularla, escríbenos.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('citas')"><div class="gu-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><div class="gu-tx"><b>Mis citas</b><span>Tu calendario con las próximas citas y las que ya has hecho.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('progreso')"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M12 3c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-2 1-3 1-3s.5 2 2 2c0-3-1-5 1-7.5z"/></svg></div><div class="gu-tx"><b>Progreso</b><span>Cada día que haces tus ejercicios suma. Mira tu mes y tu mejor racha. La constancia es lo que más ayuda.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('informes')"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div><div class="gu-tx"><b>Mis documentos</b><span>Tus informes, facturas y formularios firmados, para descargarlos.</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="showSection('mensajes')"><div class="gu-ic"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div><div class="gu-tx"><b>Chat con tu fisio</b><span>Escríbele a tu fisio cuando quieras. Puedes enviar fotos y PDFs (una prueba, un informe…).</span></div><div class=gu-go>›</div></div><div class="gu-it" onclick="window.open('/regalo'+(regaloOcHoy()!=='clasico'?'?o='+regaloOcHoy():''),'_blank')"><div class="gu-ic"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-1.5-3-5.5-4-6-1.5S9 8 12 8zM12 8c1.5-3 5.5-4 6-1.5S15 8 12 8z"/></svg></div><div class="gu-tx"><b>Regalar</b><span>Regala sesiones de fisioterapia con una tarjeta regalo. La preparas en 2 minutos.</span></div><div class=gu-go>›</div></div></div>
  <div class="gu-ayuda">¿Dudas? Escríbenos por el chat o al <b>672 89 39 49</b>.</div>
  </div>
  </div>
@@ -1224,7 +1231,9 @@ async function loadEjercicios(){
     const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();ejercicios=data.ejercicios||[];
     if(data.fisio){window.fisioPlan=data.fisio;const f=data.fisio;const av=document.getElementById('fisioAv');if(f.foto)av.innerHTML=`<img src="${f.foto}" alt="${f.nombre}">`;else av.textContent=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();document.getElementById('fisioNombre').textContent=`Tu fisio: ${f.nombre}`;document.getElementById('fisioColegiado').textContent=f.colegiado?`Nº Colegiado: ${f.colegiado}`:'';document.getElementById('fisioCard').style.display='flex';}
     mensajeFisio=data.mensajeFisio||'';
-    if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';if(data.fisio)document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];}
+    if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';
+     {const kN='f365_nota_'+patient.id,hN=String(mensajeFisio.length)+':'+mensajeFisio.slice(0,40);let vis='';try{vis=localStorage.getItem(kN)||'';}catch(e){}
+      if(vis!==hN&&document.getElementById('mensajeFisioCard').style.display!=='block'){toggleNotaFisio();try{localStorage.setItem(kN,hN);}catch(e){}}}if(data.fisio)document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];}
     if(data.ultimaSession===TODAY){mostrarCompletado();return;}
     lastFechaAsignacion=(data.ejercicios?.length||0)+'_'+(data.mensajeFisio||'');startPolling();
     const localKey=`hechos_${patient.id}_${TODAY}`;const local=localStorage.getItem(localKey);hechos=new Set(local?JSON.parse(local):[]);renderEjercicios();
@@ -1373,7 +1382,7 @@ function pintarCitaHoy(lista){const el=document.getElementById('citaHoy');if(!el
  if(!lista){try{lista=JSON.parse(localStorage.getItem('f365_citas_'+patient.id)||'null');}catch(e){}}
  const ahora=new Date();const prox=(lista||[]).filter(c=>String(c.estado||'').trim()==='PENDIENTE').map(c=>{const d=parseFecha(c.fecha);if(!d)return null;const m=String(c.hora||'').match(/(\d{1,2}):(\d{2})/);if(m)d.setHours(+m[1],+m[2]);else d.setHours(23,59);return {c,d};}).filter(x=>x&&x.d>=ahora).sort((a,b)=>a.d-b.d)[0];
  const ms=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],ds=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
- if(prox){const d=prox.d;el.innerHTML=`<div class="ch-fecha"><b>${d.getDate()}</b><span>${ms[d.getMonth()]}</span></div><div class="ch-tx"><small>Tu próxima cita</small><b>${ds[d.getDay()].charAt(0).toUpperCase()+ds[d.getDay()].slice(1)} · ${prox.c.hora||''}</b><span>con ${prox.c.fisio||'tu fisio'}</span></div><button class="ch-btn sec" onclick="event.stopPropagation();abrirReserva()">Reservar otra</button>`;el.onclick=()=>showSection('citas');}
+ if(prox){const d=prox.d;el.innerHTML=`<div class="ch-fecha"><b>${d.getDate()}</b><span>${ms[d.getMonth()]}</span></div><div class="ch-tx"><small>Tu próxima cita</small><b>${(()=>{const h=new Date();h.setHours(0,0,0,0);const dd=new Date(d);dd.setHours(0,0,0,0);const n=Math.round((dd-h)/864e5);return n===0?'<em class="ch-hoy">Hoy</em>':n===1?'<em class="ch-hoy man">Mañana</em>':ds[d.getDay()].charAt(0).toUpperCase()+ds[d.getDay()].slice(1);})()} · ${prox.c.hora||''}</b><span>con ${prox.c.fisio||'tu fisio'}</span></div><button class="ch-btn sec" onclick="event.stopPropagation();abrirReserva()">Reservar otra</button>`;el.onclick=()=>showSection('citas');}
  else{el.innerHTML=`<div class="ch-fecha"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><div class="ch-tx"><small>Citas</small><b>Reserva tu cita</b><span>Elige día, hora y fisio</span></div><button class="ch-btn" onclick="event.stopPropagation();abrirReserva()">Reservar</button>`;el.onclick=()=>abrirReserva();}
  el.classList.add('on');}
 // ── Reservar cita ─────────────────────────────────────────────
@@ -1713,6 +1722,13 @@ function htmlTaller(T){const pct=T.plazas?Math.round((T.plazas-T.quedan)*100/T.p
   ${T.llevar?`<div class="tl-h">Qué traer</div><p class="tl-s">${talEsc(T.llevar)}</p>`:''}
   <div class="tl-pl"><div class="tl-bar"><i style="width:${pct}%"></i></div><span>${T.quedan>0?(T.quedan===1?'Queda 1 plaza':`Quedan ${T.quedan} plazas`):'Completo'}</span></div>
   ${T.quedan>0?`<a class="tl-bt" href="${talEsc(T.url)}" target="_blank" rel="noopener">Reservar plaza</a><div class="tl-nt">Puedes venir con quien quieras: al reservar eliges cuántas plazas.</div>`:`<a class="tl-bt sec" href="https://wa.me/34672893949?text=${encodeURIComponent('Hola, quiero apuntarme a la lista de espera de: '+T.titulo)}" target="_blank" rel="noopener">Apúntame a la lista de espera</a>`}</div>`;}
+// «Para ti» (Hoy): de los avisos y banners sale solo UNO, el más importante; si lo cierra, otro día sale el siguiente
+const PT_ORDEN=['eqBanner','avisosCard','inBanner','premioBanner','talHoy','promosHoy'];
+function ptQuiere(el){if(!el)return false;if(el.classList.contains('in-banner'))return el.classList.contains('on');if(el.id==='premioBanner')return el.style.display&&el.style.display!=='none';return !!el.innerHTML.trim();}
+function ordenarParaTi(){const box=document.getElementById('paraTi');if(!box)return;let uno=null;
+ PT_ORDEN.forEach(id=>{const el=document.getElementById(id);if(!el)return;const si=!uno&&ptQuiere(el);if(si)uno=el;if(el.classList.contains('pt-off')===si)el.classList.toggle('pt-off',!si);});
+ box.classList.toggle('hay',!!uno);}
+(function(){const box=document.getElementById('paraTi');if(!box||!window.MutationObserver)return;let t=0;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(ordenarParaTi,30);}).observe(box,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});setTimeout(ordenarParaTi,0);})();
 // Atlas: adelantos del curso (se ven en el mismo reproductor de arriba)
 function verAdelanto(b,n){const v=document.getElementById('atlasVid');if(!v)return;document.querySelectorAll('.tl-ads button').forEach(x=>x.classList.toggle('on',x===b));
  v.poster='/img/atlas/adelanto'+n+'.jpg';v.src='/img/atlas/adelanto'+n+'.mp4';v.scrollIntoView({behavior:'smooth',block:'center'});const p=v.play();if(p&&p.catch)p.catch(()=>{});}
