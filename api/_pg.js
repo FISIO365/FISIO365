@@ -32,12 +32,18 @@ const CALC = new Set(['formula', 'multipleLookupValues', 'rollup', 'count', 'cre
 
 // ── Conexión ──
 let _db = null;
+function crearDb() {
+  const { Pool } = require('pg');
+  const pool = new Pool({ connectionString: DB_URL, max: +process.env.PG_MAX || 3, idleTimeoutMillis: 10000, ssl: /localhost|127\.0\.0\.1/.test(DB_URL) ? false : { rejectUnauthorized: false } });
+  return { query: (q, p) => pool.query(q, p), tx: async fn => { const c = await pool.connect(); try { await c.query('BEGIN'); const r = await fn(c); await c.query('COMMIT'); return r; } catch (e) { try { await c.query('ROLLBACK'); } catch (_) {} throw e; } finally { c.release(); } }, cerrar: () => pool.end() };
+}
 function db() {
+  // En Cloudflare (cloudflare/entry.js) cada petición abre y cierra su propia conexión
+  const als = global.__PG_ALS__, st = als && als.getStore();
+  if (st && !global.__PG_TEST__) { if (!st.db) st.db = crearDb(); return st.db; }
   if (_db) return _db;
   if (global.__PG_TEST__) { _db = global.__PG_TEST__; return _db; } // PGlite en las pruebas
-  const { Pool } = require('pg');
-  const pool = new Pool({ connectionString: DB_URL, max: 3, idleTimeoutMillis: 10000, ssl: /localhost|127\.0\.0\.1/.test(DB_URL) ? false : { rejectUnauthorized: false } });
-  _db = { query: (q, p) => pool.query(q, p), tx: async fn => { const c = await pool.connect(); try { await c.query('BEGIN'); const r = await fn(c); await c.query('COMMIT'); return r; } catch (e) { try { await c.query('ROLLBACK'); } catch (_) {} throw e; } finally { c.release(); } } };
+  _db = crearDb();
   return _db;
 }
 const SQL_INIT = `

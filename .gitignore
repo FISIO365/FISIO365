@@ -1,0 +1,4 @@
+
+# Montaje para Cloudflare (se genera con cloudflare/build.mjs)
+build-cf/
+build-cf-out/
