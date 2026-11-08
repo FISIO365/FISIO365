@@ -34,7 +34,9 @@ const CALC = new Set(['formula', 'multipleLookupValues', 'rollup', 'count', 'cre
 let _db = null;
 function crearDb() {
   const { Pool } = require('pg');
-  const pool = new Pool({ connectionString: DB_URL, max: +process.env.PG_MAX || 3, idleTimeoutMillis: 10000, ssl: /localhost|127\.0\.0\.1/.test(DB_URL) ? false : { rejectUnauthorized: false } });
+  // En Cloudflare se entra por Hyperdrive (DB_URL_HD, lo pone cloudflare/entry.js): conexión local sin TLS. En Vercel no existe.
+  const HD = process.env.DB_URL_HD || '';
+  const pool = new Pool({ connectionString: HD || DB_URL, max: +process.env.PG_MAX || 3, idleTimeoutMillis: 10000, ssl: HD || /localhost|127\.0\.0\.1/.test(DB_URL) ? false : { rejectUnauthorized: false } });
   return { query: (q, p) => pool.query(q, p), tx: async fn => { const c = await pool.connect(); try { await c.query('BEGIN'); const r = await fn(c); await c.query('COMMIT'); return r; } catch (e) { try { await c.query('ROLLBACK'); } catch (_) {} throw e; } finally { c.release(); } }, cerrar: () => pool.end() };
 }
 function db() {

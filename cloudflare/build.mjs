@@ -48,5 +48,5 @@ for (const f of fs.readdirSync(path.join(RAIZ, 'api'))) {
 for (const f of ['entry.js', 'resvg.js', 'webpush.js', 'package.json']) cp(path.join(AQUI, f), path.join(OUT, f === 'package.json' ? f : 'cf/' + f));
 fs.mkdirSync(path.join(OUT, 'functions'), { recursive: true });
 fs.writeFileSync(path.join(OUT, 'functions/[[path]].js'), "export { onRequest } from '../cf/entry.js';\n");
-fs.writeFileSync(path.join(OUT, 'wrangler.toml'), `name = "${proyecto}"\npages_build_output_dir = "dist"\ncompatibility_date = "2025-09-01"\ncompatibility_flags = ["nodejs_compat"]\n`);
+fs.writeFileSync(path.join(OUT, 'wrangler.toml'), `name = "${proyecto}"\npages_build_output_dir = "dist"\ncompatibility_date = "2025-09-01"\ncompatibility_flags = ["nodejs_compat"]\n` + (process.env.HD_ID ? `\n[[hyperdrive]]\nbinding = "HYPERDRIVE"\nid = "${process.env.HD_ID}"\n` : ''));
 console.log(`build-cf listo para ${proyecto}: ${n} archivos estáticos, ${RUTAS.length} rutas, _routes con ${incl.size} reglas`);

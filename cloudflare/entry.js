@@ -117,6 +117,7 @@ function enrutar(url) {
 
 export async function onRequest(context) {
   const { request, env } = context;
+  if (env.HYPERDRIVE && env.HYPERDRIVE.connectionString) process.env.DB_URL_HD = env.HYPERDRIVE.connectionString; // base de datos por Hyperdrive
   const url = new URL(request.url);
   const d = enrutar(url);
   if (!d) return env.ASSETS.fetch(request);
