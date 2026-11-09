@@ -7,7 +7,7 @@ const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 const BIBLIO_TABLE = 'tbloqn3ts872ueJSE';
 
 const HOLDED_KEY = process.env.HOLDED_API_KEY;
-const { saldoPaciente, rendimiento, inicioControl, sinFacturar, compartidos, repartoCompartido, citasDeMiembros, pcLeer } = require('./_push').saldo;
+const { saldoPaciente, rendimiento, inicioControl, sinFacturar, compartidos, repartoCompartido, citasDeMiembros, pcLeer, citasFuera, olvidarCitasFuera } = require('./_push').saldo;
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const HOLDED_URL = 'https://api.holded.com/api/v2'; // API nueva de Holded (clave «Bearer»)
 // Marca de la clínica (nombre, dirección, teléfono, reseñas…): ver api/_marca.js
@@ -5595,14 +5595,16 @@ ${R.llevar ? `<h2>Qué traer</h2><p class="p">${e(R.llevar)}</p>` : ''}
                   shares.forEach(x => { (quitarLote[x.t] = quitarLote[x.t] || []).push(x.f); });
                 }
               } catch (e) { console.log('agenda-compartido', e.message); }
+              const FUERA = await citasFuera().catch(() => ({}));
               rows.forEach(r => { const pid = (r.fields['RELACIÓN - CITA'] || [])[0]; if (!pid || !C[pid]) return; const e = String(nmA(r.fields['ESTADO'])).trim().toUpperCase();
                 if (/CANCELADA|REPROGRAMADA|NO ASIST/.test(e)) return; const k = String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA);
                 const V = C[pid].v; numSes[r.id] = V.citas.filter(x => x.k < k && x.e !== 'CITA PERDIDA').length + 1;
                 if (!inicio || k.slice(0, 10) < inicio) return; // antes de empezar a cobrar desde el panel no se sabe
+                if (FUERA[r.id]) { pago[r.id] = { t: 'fuera', nota: String(FUERA[r.id].nota || '') }; return; } // facturada fuera del panel
                 // Se gastan los pagos por orden (primero el más antiguo) con las citas desde el inicio del control, en orden
                 if (cubre.has(r.id)) { const x = cubre.get(r.id); pago[r.id] = { t: 'pack', i: (x.off || 0) + x.orden.indexOf(r.id) + 1, n: x.tot || x.n, comp: true }; return; }
                 const QL = quitarLote[pid] || [], LO = V.lotes.filter(l => !QL.some(f => f === 'previo' ? l.previo : l.fid === f));
-                const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio && !cubre.has(x.id)), rep = repartirLotes(gastan.map(x => x.k), LO), j = gastan.findIndex(x => x.id === r.id);
+                const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio && !cubre.has(x.id) && !FUERA[x.id]), rep = repartirLotes(gastan.map(x => x.k), LO), j = gastan.findIndex(x => x.id === r.id);
                 if (j >= 0) { const a = rep[j], lo = a && a.lo;
                   pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: lo.desde ? a.i : a.i + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : lo.n > 1 ? Object.assign({ t: 'pack', i: a.i, n: lo.n, v: Math.round(lo.precio * 100) / 100 }, lo.psF != null ? { ps: lo.fid, psF: lo.psF } : {}) : { t: 'suelta', v: lo.precio }; }
               });
@@ -5622,7 +5624,8 @@ ${R.llevar ? `<h2>Qué traer</h2><p class="p">${e(R.llevar)}</p>` : ''}
           if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true, vale: !!P['BONO PREVIO VALE'], desde: String(P['BONO PREVIO DESDE'] || '') });
           fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => {
             (r.fields['EN PACK'] ? [] : [[r.fields['CONCEPTO 1'], r.fields['Nº SESIONES 1']], [r.fields['CONCEPTO 2'], r.fields['Nº SESIONES 2']]]).forEach(([c, n]) => { if (/^Sesi/i.test(nmA(c) || '') && Number(n) > 0) lotes.push({ n: Number(n), fid: r.id }); }); });
-          let claves = rs.map(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA)).filter(k => k !== clave);
+          const FU = await citasFuera().catch(() => ({}));
+          let claves = rs.filter(c => !FU[c.id]).map(c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hh(c.fields.HORA)).filter(k => k !== clave);
           // Pack compartido: primero se gasta el pack común (citas de todos por orden de fecha); lo que no cubre va a lo suyo
           const shares = await compartidos(pid).catch(() => []);
           if (shares.length) {
@@ -5640,6 +5643,17 @@ ${R.llevar ? `<h2>Qué traer</h2><p class="p">${e(R.llevar)}</p>` : ''}
           const total = lotes.reduce((t, l) => t + l.n, 0);
           return { activo: true, ...out, quedan: Math.max(0, total - claves.length) };
         };
+        if (action === 'seg-agenda-fuera') { // marcar (o desmarcar) una sesión como facturada fuera del panel
+          const cid = String(q.citaId || ''); if (!okId(cid)) return res.status(400).json({ ok: false, error: 'Falta la cita' });
+          const quien = String(q.quien || '').slice(0, 60), nota = String(q.nota || '').trim().slice(0, 140);
+          for (let i = 0; i < 3; i++) { // leer fresco, cambiar y guardar (por si dos personas lo tocan a la vez)
+            _aj = { t: 0, v: null }; const M = Object.assign({}, (await ajuste('citas_fuera', {})) || {});
+            if (q.quitar) delete M[cid]; else M[cid] = { quien, nota, cuando: new Date().toISOString() };
+            try { await guardarAjuste('citas_fuera', M, quien || 'panel'); break; } catch (e) { if (i === 2) return res.status(500).json({ ok: false, error: 'No se ha podido guardar' }); }
+          }
+          olvidarCitasFuera(); try { global._sesPac = {}; } catch (e) {}
+          return res.status(200).json({ ok: true });
+        }
         if (action === 'seg-agenda-pack-compartir') { // compartir el pack de un paciente (titular) con otro · op: quitar para dejar de compartir
           if (!okId(q.titular) || !okId(q.con) || q.titular === q.con) return res.status(400).json({ ok: false, error: 'Elige otro paciente' });
           const pc = await at(`${PACIENTES}/${q.con}`); if (pc.error) return res.status(404).json({ ok: false, error: 'Paciente no encontrado' });

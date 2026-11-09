@@ -75,10 +75,20 @@ async function inicioControl() {
   const fechas = r.map(x => fechaCobro(x.fields)).filter(Boolean).sort();
   return fechas[0] || '';
 }
+// Sesiones facturadas fuera del panel (marcadas desde la cita): no gastan de ningún pack ni cuentan como «sin factura».
+// Se guardan en el ajuste «citas_fuera»: { idCita: { quien, cuando, nota } }
+let _cf = { t: 0, v: null };
+async function citasFuera() {
+  if (_cf.v && Date.now() - _cf.t < 20e3) return _cf.v;
+  try { const d = await todosAT('tblMxPEXHLmnaBnYb', `filterByFormula=${encodeURIComponent("{CLAVE}='citas_fuera'")}`); const v = {};
+    d.forEach(r => { try { Object.assign(v, JSON.parse(r.fields.VALOR || '{}') || {}); } catch (e) {} }); _cf = { t: Date.now(), v }; return v; } catch (e) { return _cf.v || {}; }
+}
+function olvidarCitasFuera() { _cf = { t: 0, v: null }; }
 async function citasGastadas(inicio, pacId) {
   const conds = [`OR(${GASTA.map(e => `TRIM({ESTADO})='${e}'`).join(',')})`, `IS_AFTER({FECHA},DATEADD('${inicio}',-1,'days'))`];
   if (pacId) conds.push(`FIND('${pacId}',ARRAYJOIN({PacienteRec}))`);
-  return todosAT(CITAS, `filterByFormula=${encodeURIComponent('AND(' + conds.join(',') + ')')}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA`);
+  const [L, FU] = await Promise.all([todosAT(CITAS, `filterByFormula=${encodeURIComponent('AND(' + conds.join(',') + ')')}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PREF.&fields[]=RELACIÓN - CITA`), citasFuera()]);
+  return L.filter(c => !FU[c.id]);
 }
 
 // ── Pack compartido ──
@@ -115,7 +125,8 @@ async function _citasDeMiembros(miembros, estados, desde) {
 }
 // Las citas que un miembro tiene cubiertas por su propio pack de fuera marcado desde una cita («Era de otro pack») no gastan del pack compartido
 async function citasDeMiembros(miembros, estados, desde) {
-  const L = await _citasDeMiembros(miembros, estados, desde);
+  const FU = await citasFuera();
+  const L = (await _citasDeMiembros(miembros, estados, desde)).filter(c => !FU[c.id]);
   try {
     const ps = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('AND({BONO PREVIO DESDE}!=\'\',OR(' + miembros.map(m => `RECORD_ID()='${m}'`).join(',') + '))')}&fields[]=SESIONES BONO PREVIO&fields[]=BONO PREVIO YA USADAS&fields[]=BONO PREVIO DESDE`);
     const fuera = new Set();
