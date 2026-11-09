@@ -1767,7 +1767,7 @@ function htmlAtlas(){const ads=[[1,'Qué es una hernia','1:03'],[2,'Por qué due
   titulo:'Atlas · Hernia discal lumbar',meta:['Online · a tu ritmo','Con el equipo de FISIO365'],
   texto:'Un plan para tu espalda, paso a paso: test inicial, vídeos de cada ejercicio y tu fisio por chat.',
   boton:'<div id="atlasAv"></div>',
-  mas:[{txt:'Curiosea la app',ico:'app',href:'https://atlas-health-academy.pages.dev/app.html?demo=1&visita=1'},{txt:'Adelantos',ico:'play',panel:`<div class="tl-ads">${ads}</div>`}]});}
+  mas:[{txt:'Curiosea la app',ico:'app',href:'https://atlas-health-academy.vercel.app/app.html?demo=1&visita=1'},{txt:'Adelantos',ico:'play',panel:`<div class="tl-ads">${ads}</div>`}]});}
 // «Para ti» (Hoy): de los avisos y banners sale solo UNO, el más importante; si lo cierra, otro día sale el siguiente
 const PT_ORDEN=['eqBanner','avisosCard','inBanner','premioBanner','talHoy','promosHoy'];
 function ptQuiere(el){if(!el)return false;if(el.classList.contains('in-banner'))return el.classList.contains('on');if(el.id==='premioBanner')return el.style.display&&el.style.display!=='none';return !!el.innerHTML.trim();}
