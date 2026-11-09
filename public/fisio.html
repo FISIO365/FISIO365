@@ -1361,6 +1361,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .st-man{margin-top:10px}.st-man .st-bt{align-items:center}
 
 .st-per{display:flex;justify-content:center;margin-top:8px}
+.st-rng{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 8px;margin-top:8px;font-size:13px;color:#6b5f57}.st-rng .ag-sel{min-width:0}.st-rx{font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .st-k{cursor:pointer;position:relative}.st-kh{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}.st-kh>span{min-width:0;line-height:1.3;padding-top:2px}.st-kh .fp-i{flex:none}.st-kh .fp-ipop{position:absolute;left:6px;right:6px;top:34px;z-index:6;margin:0!important;font-size:12.5px!important;font-weight:400;color:#5f554e;background:#fff!important;box-shadow:0 8px 24px rgba(0,0,0,.14);width:auto!important}
 .st-ch{position:relative;width:100%;height:200px}.st-svg{width:100%;height:200px;display:block;overflow:visible}
 .st-line{fill:none;stroke:#c2552e;stroke-width:2.5;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}.st-area{fill:#c2552e;opacity:.08}
@@ -8375,7 +8376,11 @@ const stEquipo=()=>{const K=new Set();((ST.d&&ST.d.semanas)||[]).slice(-26).forE
 function stFisio(S){const k=ST.fis,p=(S.prod||{})[k]||{},e=Object.entries(S.porFisio||{}).find(([f])=>String(f).trim().split(/\s+/)[0].toLowerCase()===k),pf=e?e[1]:{vinieron:0,reagendaron:0,pac:[]};
  return Object.assign({},S,{sesiones:p.ses||0,ocupacion:p.cap?Math.round(p.ocup*100/p.cap):null,atendidos:p.aten==null?null:p.aten,noVino:p.nov==null?null:p.nov,canceladas:p.can==null?null:p.can,
   vinieron:pf.vinieron||0,reagendaron:pf.reagendaron||0,porFisio:e?{[e[0]]:pf}:{}});}
-const stNec=()=>ST.vista==='sem'?ST.n:104;
+const stNec=()=>ST.vista==='sem'&&!stRango()?ST.n:104;
+// Rango de meses elegido (Desde / Hasta): 'AAAA-MM' o '' (sin límite). Cada semana cuenta en el mes de su jueves, como en «Mes»
+const stRango=()=>!!(ST.desde||ST.hasta);
+const stMesDe=sem=>{const j=new Date(sem+'T12:00:00Z');j.setUTCDate(j.getUTCDate()+3);return j.toISOString().slice(0,7);};
+const stSemRango=()=>{const W=ST.d.semanas;if(!stRango())return W;return W.filter(w=>{const m=stMesDe(w.semana);return (!ST.desde||m>=ST.desde)&&(!ST.hasta||m<=ST.hasta);});};
 const ST_MET=[
  ['sesiones','Sesiones hechas',s=>s.sesiones,'n',false,'Citas con paciente marcadas como «Realizada» en la semana (todos los fisios).'],
  ['ocup','Ocupación',s=>s.ocupacion,'%',false,'Sesiones hechas entre las horas de su horario (Dirección), contando solo los días en que hizo al menos una sesión. Los cambios puntuales de horario apuntados en Administración › Vacaciones y horarios se tienen en cuenta. Se cuenta por semana: si un día se va antes y otro día lo recupera, la semana sale completa. Si en la semana hace más sesiones que horas de horario, sale al 100 % y lo de más se apunta como horas extra.'],
@@ -8386,7 +8391,7 @@ const stFmt=(v,t)=>v==null?'—':t==='€'?Math.round(v).toLocaleString('es-ES')
 const stSemTxt=f=>{const a=new Date(f+'T12:00:00'),b=new Date(f+'T12:00:00');b.setDate(b.getDate()+6);const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return `${a.getDate()}${a.getMonth()!==b.getMonth()?' '+M[a.getMonth()]:''} – ${b.getDate()} ${M[b.getMonth()]}`;};
 // Agrupa las semanas en meses, trimestres, semestres o años (cada semana cuenta en el periodo de su jueves)
 const ST_VIS=[['sem','Semana'],['mes','Mes'],['tri','Trimestre'],['sms','Semestre'],['ano','Año']];
-function stPeriodos(){const W=ST.d.semanas;if(ST.vista==='sem')return W.slice(-ST.n);
+function stPeriodos(){const W=stSemRango();if(ST.vista==='sem')return stRango()?W:W.slice(-ST.n);
  const MM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
  const clave=w=>{const j=new Date(w.semana+'T12:00:00Z');j.setUTCDate(j.getUTCDate()+3);const y=j.getUTCFullYear(),m=j.getUTCMonth();
   return ST.vista==='mes'?[y+'-'+m,MM[m]+' '+y,MM[m].slice(0,3).toLowerCase()]:ST.vista==='tri'?[y+'-T'+(Math.floor(m/3)+1),(Math.floor(m/3)+1)+'º trimestre '+y,'T'+(Math.floor(m/3)+1)+' '+String(y).slice(2)]:ST.vista==='sms'?[y+'-S'+(m<6?1:2),(m<6?'1er':'2º')+' semestre '+y,'S'+(m<6?1:2)+' '+String(y).slice(2)]:[String(y),'Año '+y,String(y)];};
@@ -9074,18 +9079,33 @@ function renderStats(wrap){
  const card=ce('div','st');
  card.innerHTML=`<div class="ag-bar"><button type="button" class="ag-nv" data-n="-1" aria-label="Semana anterior">‹</button><div class="ag-fe"><b class="st-t"></b><small class="st-s"></small></div><button type="button" class="ag-nv" data-n="1" aria-label="Semana siguiente">›</button></div>
   <div class="st-vis">${ST_VIS.map(([k,t])=>`<button type="button" data-v="${k}">${t}</button>`).join('')}</div><div class="st-per"><label class="ag-sel"><span class="st-pt"></span><select class="st-ps"><option value="12">Últimas 12 semanas</option><option value="26">Últimos 6 meses</option><option value="52">Último año</option></select></label></div>
+  <div class="st-rng"><span>Desde</span><label class="ag-sel"><span class="st-dt"></span><select class="st-ds"></select></label><span>hasta</span><label class="ag-sel"><span class="st-ht"></span><select class="st-hs"></select></label><button type="button" class="st-rx" hidden>Quitar</button></div>
   <div class="st-fis"></div><div class="st-g"><div class="fac-vacio">Calculando estadísticas…</div></div>`;
  wrap.appendChild(card);
  const g=card.querySelector('.st-g');
  ST.n=ST.n||12;const ps=card.querySelector('.st-ps');ps.value=ST.n;card.querySelector('.st-pt').textContent=ps.selectedOptions[0].textContent;
  ps.onchange=()=>{ST.n=+ps.value;card.querySelector('.st-pt').textContent=ps.selectedOptions[0].textContent;if(ST.d&&ST.dN>=ST.n){ST.sem=null;cargarYa();return;}g.innerHTML='<div class="fac-vacio">Calculando estadísticas…'+(ST.n>12?' (con más semanas tarda un poco)':'')+'</div>';cargar();};
  // Ver por semana, mes, trimestre, semestre o año (los periodos largos cargan 2 años de semanas)
- const visP=()=>{card.querySelectorAll('.st-vis button').forEach(b=>b.classList.toggle('on',b.dataset.v===ST.vista));card.querySelector('.st-per').style.display=ST.vista==='sem'?'':'none';};visP();
+ const visP=()=>{card.querySelectorAll('.st-vis button').forEach(b=>b.classList.toggle('on',b.dataset.v===ST.vista));card.querySelector('.st-per').style.display=ST.vista==='sem'&&!stRango()?'':'none';};visP();
+ // Desde / Hasta: elegir los meses que se ven (con cualquier vista)
+ const MMc=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],mesTxt=m=>m?MMc[+m.slice(5,7)-1]+' '+m.slice(0,4):'';
+ const rangoUI=()=>{const ds=card.querySelector('.st-ds'),hs=card.querySelector('.st-hs');if(!ST.d)return;
+  const meses=[...new Set(ST.d.semanas.map(w=>stMesDe(w.semana)))].sort();
+  ds.innerHTML='<option value="">El principio</option>'+meses.map(m=>`<option value="${m}"${m===ST.desde?' selected':''}>${mesTxt(m)}</option>`).join('');
+  hs.innerHTML='<option value="">Hoy</option>'+meses.slice().reverse().map(m=>`<option value="${m}"${m===ST.hasta?' selected':''}>${mesTxt(m)}</option>`).join('');
+  ds.value=ST.desde||'';hs.value=ST.hasta||'';card.querySelector('.st-dt').textContent=ST.desde?mesTxt(ST.desde):'El principio';card.querySelector('.st-ht').textContent=ST.hasta?mesTxt(ST.hasta):'Hoy';
+  card.querySelector('.st-rx').hidden=!stRango();};
+ const cambiaRango=()=>{const ds=card.querySelector('.st-ds'),hs=card.querySelector('.st-hs');let d=ds.value,h=hs.value;if(d&&h&&d>h){const t=d;d=h;h=t;}ST.desde=d;ST.hasta=h;ST.sem=null;
+  try{sessionStorage.setItem('f365_st_rng',JSON.stringify([d,h]));}catch(e){}visP();rangoUI();
+  if(ST.d&&ST.dN>=stNec()){cargarYa();return;}g.innerHTML='<div class="fac-vacio">Calculando estadísticas… (los periodos largos tardan un poco)</div>';cargar();};
+ card.querySelector('.st-ds').onchange=cambiaRango;card.querySelector('.st-hs').onchange=cambiaRango;
+ card.querySelector('.st-rx').onclick=()=>{card.querySelector('.st-ds').value='';card.querySelector('.st-hs').value='';cambiaRango();};
+ if(ST.desde===undefined){try{const r=JSON.parse(sessionStorage.getItem('f365_st_rng')||'null');if(r){ST.desde=r[0]||'';ST.hasta=r[1]||'';}}catch(e){}visP();}
  card.querySelectorAll('.st-vis button').forEach(b=>b.onclick=()=>{if(ST.vista===b.dataset.v)return;ST.vista=b.dataset.v;ST.sem=null;visP();if(ST.d&&ST.dN>=stNec()){cargarYa();return;}const nec=ST.vista==='sem'?ST.n:ST.vista==='mes'?52:104;
   if(ST.d&&ST.dN>=stNec()){pintar();return;}
   g.innerHTML='<div class="fac-vacio">Calculando estadísticas… (los periodos largos tardan un poco)</div>';cargar();});
  card.querySelectorAll('.ag-nv').forEach(b=>b.onclick=()=>{if(!ST.d)return;const L=stPeriodos();let i=L.findIndex(s=>s.semana===ST.sem)+(+b.dataset.n);i=Math.max(0,Math.min(L.length-1,i));ST.sem=L[i].semana;pintar();});
- function cargarYa(){const LP=stPeriodos();if(!ST.sem||!LP.some(x=>x.semana===ST.sem))ST.sem=LP[LP.length-1].semana;pintar();}
+ function cargarYa(){const LP=stPeriodos();if(LP.length&&(!ST.sem||!LP.some(x=>x.semana===ST.sem)))ST.sem=LP[LP.length-1].semana;pintar();}
  // Primero lo que hace falta para ver la pantalla; luego, por detrás, 2 años enteros: así cambiar a mes, trimestre, semestre o año es al momento
  const pideN=async(n,fresco)=>{const d=await (await fetch(`/api/schedule?action=seg-estadisticas&pwd=${encodeURIComponent(apiPwd)}&semanas=${n}${fresco?'&fresco=1':''}`)).json();if(!d.ok)throw new Error(d.error||'Error');return d;};
  // Los 2 años se guardan en este navegador: al entrar se ven al instante y se actualizan por detrás
@@ -9095,16 +9115,17 @@ function renderStats(wrap){
  async function cargar(fresco){
   if(ST.d&&ST.dN>=104){cargaFondo(true,fresco);if(!g.querySelector('.st-ks'))cargarYa();return;} // ya están los 2 años: se actualiza por detrás
   try{const nS=stNec();if(fondo&&nS>ST.dN){await fondo;if(ST.dN>=nS){cargarYa();return;}}const d=await pideN(nS,fresco);
-   ST.d=d;ST.dN=nS;const LP=stPeriodos();if(!ST.sem||!LP.some(s=>s.semana===ST.sem))ST.sem=LP[LP.length-1].semana;pintar();setTimeout(cargaFondo,300);}
+   ST.d=d;ST.dN=nS;const LP=stPeriodos();if(LP.length&&(!ST.sem||!LP.some(s=>s.semana===ST.sem)))ST.sem=LP[LP.length-1].semana;pintar();setTimeout(cargaFondo,300);}
   catch(e){g.innerHTML=`<div class="fac-vacio">No se han podido calcular. <button type="button" class="ag-reint">Reintentar</button></div>`;g.querySelector('.ag-reint').onclick=()=>cargar(true);}
  }
  function pintar(){
+  rangoUI();
   const EQ=stEquipo();if(ST.fis&&!EQ.includes(ST.fis))ST.fis='';
   {const fb=card.querySelector('.st-fis');fb.innerHTML=EQ.length?[['','Todo el centro'],...EQ.map(k=>[k,k.charAt(0).toUpperCase()+k.slice(1)])].map(([k,t])=>`<button type="button" data-f="${escH(k)}" class="${ST.fis===k?'on':''}">${escH(t)}</button>`).join(''):'';
    fb.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(ST.fis===b.dataset.f)return;ST.fis=b.dataset.f;try{sessionStorage.setItem('f365_st_fis',ST.fis);}catch(e){}if(!stMets().some(m=>m[0]===ST.met))ST.met='sesiones';pintar();});}
   if(!stMets().some(m=>m[0]===ST.met))ST.met='sesiones';
-  const L=stPeriodos().map(x=>ST.fis?stFisio(x):x);let i=L.findIndex(s=>s.semana===ST.sem);if(i<0){i=L.length-1;ST.sem=L[i].semana;}const S=L[i],P=L[i-1],agr=ST.vista!=='sem';
-  card.querySelector('.st-t').textContent=agr?S.txt:stSemTxt(S.semana);card.querySelector('.st-s').textContent=i===L.length-1?(agr?'En curso':'Semana en curso'):(agr?S.nSem+' semanas':'');
+  const L=stPeriodos().map(x=>ST.fis?stFisio(x):x);if(!L.length){g.innerHTML='<div class="fac-vacio">No hay datos en esos meses. Cambia «Desde» o «Hasta».</div>';return;}let i=L.findIndex(s=>s.semana===ST.sem);if(i<0){i=L.length-1;ST.sem=L[i].semana;}const S=L[i],P=L[i-1],agr=ST.vista!=='sem';
+  card.querySelector('.st-t').textContent=agr?S.txt:stSemTxt(S.semana);card.querySelector('.st-s').textContent=i===L.length-1&&!ST.hasta?(agr?'En curso':'Semana en curso'):(agr?S.nSem+' semanas':'');
   card.querySelectorAll('.ag-nv')[0].style.visibility=i>0?'':'hidden';card.querySelectorAll('.ag-nv')[1].style.visibility=i<L.length-1?'':'hidden';
   const kpis=stMets().map(([k,t,fn,ty,malSiSube,info])=>{const v=fn(S),pv=P?fn(P):null;let dlt='';
    if(v!=null&&pv!=null&&v!==pv){const up=v>pv,bien=malSiSube?!up:up;const diff=ty==='%'?Math.abs(v-pv)+' pts':ty==='€'?Math.round(Math.abs(v-pv)).toLocaleString('es-ES')+' €':Math.abs(v-pv);dlt=`<em class="${bien?'ok':'mal'}">${up?'▲':'▼'} ${diff}</em>`;}
@@ -13158,6 +13179,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-09',dir:1,ver:{sec:'stats',pasos:[{el:'.st-rng',txt:'Aquí eliges desde qué mes y hasta cuál.'}]},t:'Estadísticas: nuevo «Desde … hasta …» para ver solo los meses que quieras (con cualquier vista: semana, mes, trimestre…). «Quitar» vuelve a verlo todo.'},
 {f:'2026-11-09',aviso:1,t:'Agenda › cita › recuadro del cobro: nuevo botón «Fuera del panel» para las sesiones que se han cobrado y facturado fuera (Holded a mano, mutua, empresa…). Ya no salen como «sin factura» ni gastan sesiones del pack. Se puede deshacer.'},
 {f:'2026-11-09',t:'App del paciente › Talleres y cursos: todos los anuncios (Atlas y cada taller) tienen ahora el mismo formato: vídeo arriba, tipo y precio, título, día y quién lo da, botón principal y dos botones pequeños (en los talleres, «Qué harás» y «Cómo llegar»). Arriba «Curso online» y debajo «Talleres en el centro».'},
 {f:'2026-11-09',t:'App del paciente › Talleres y cursos: en la tarjeta de Atlas, «Entra y curiosea la app» abre la app de Atlas para trastear (capítulos 0 y 1 abiertos, el resto con candado y enlace al curso).'},
@@ -15666,7 +15688,7 @@ function renderFormacion(wrap, ruta){
  {ti:'Cada mañana: el Daily report',shot:'/img/school/panel-c-rdia.jpg',body:`<b>Cuándo:</b> a primera hora, para repasar el día anterior.<br><br><b>Qué ves:</b> sesiones, facturas, caja por forma de pago, la lista de la compra y el <b>check-list de cada fisio</b>: si lo envió, qué no marcó y qué ve pendiente el panel.<br><br>Si falta algo, <b>Avisar a…</b>`,ver:{sec:'rdia',pasos:[{el:'.rd-ks',txt:'El resumen del día.'},{el:'.rd-fis',txt:'El check-list de cada fisio.'}]}},
  {ti:'Lo que hay que arreglar',shot:'/img/school/panel-c-rdia2.jpg',body:`Debajo: <b>atrasado por fisio</b> (tareas y llamadas sin hacer), <b>sesiones sin facturar</b> (con <b>Cobrar</b>), <b>citas sin marcar</b> (márcalas ahí mismo), tickets hechos fuera del panel o en borrador y canceladas.<br><br>Con ‹ › ves otros días; también en PDF.`,ver:{sec:'rdia',pasos:[{el:'.rd-sec',txt:'Lo que queda por arreglar.'}]}},
  {ti:'Me he equivocado: Últimos cambios',body:`En <b>Más › Últimos cambios</b> ves lo que se ha tocado en las últimas 48 horas: qué cita, de qué estado a cuál y a qué hora.<br><br>Si algo se hizo por error, <b>Deshacer</b> lo deja como estaba. Lo que se creó se borra; lo borrado no se puede recuperar desde aquí.`,ver:{sec:'camb',pasos:[{el:'.cb-l',txt:'Aquí, con Deshacer en cada cambio.'}]}},
- {ti:'Las cifras del centro',body:`En <b>Estadísticas</b>, por semana, mes, trimestre, semestre o año: sesiones, ocupación, pacientes nuevos, conversión, ingresos, primeras visitas por fisio y cómo nos conocen.<br><br>Arriba eliges <b>Todo el centro</b> o un fisio: con un fisio ves sus sesiones, ocupación, pacientes atendidos, conversión y faltas, con su evolución.`,ver:{sec:'stats',pasos:[{el:'.st-vis || #mainWrap .card',txt:'Elige el periodo.'}]}},
+ {ti:'Las cifras del centro',body:`En <b>Estadísticas</b>, por semana, mes, trimestre, semestre o año: sesiones, ocupación, pacientes nuevos, conversión, ingresos, primeras visitas por fisio y cómo nos conocen.<br><br>Con <b>Desde … hasta …</b> eliges los meses que quieres ver (por ejemplo, de enero a junio); <b>Quitar</b> vuelve a todo.<br><br>Arriba eliges <b>Todo el centro</b> o un fisio: con un fisio ves sus sesiones, ocupación, pacientes atendidos, conversión y faltas, con su evolución.`,ver:{sec:'stats',pasos:[{el:'.st-vis || #mainWrap .card',txt:'Elige el periodo.'}]}},
  {ti:'El email de cada mañana',body:`A primera hora llega el resumen del día anterior. El asunto avisa si falta algún check-list o hay sesiones sin facturar.<br><br>Además, los pacientes activos que llevan 3 semanas sin cita pasan solos a «pendiente de continuar».`},
  {ti:'Quién ha hecho los cursos',body:`En <b>School</b> ves quién ha terminado cada curso obligatorio y cuándo. Y en Comunicaciones, el seguimiento del módulo de cada día.`}
  ],
