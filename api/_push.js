@@ -380,5 +380,5 @@ async function valorSesiones(citasRango, hasta, precios, opts) {
   return { lista, ref };
 }
 
-const saldo = { compartidos, repartoCompartido, citasDeMiembros, pcLeer, saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl };
+const saldo = { compartidos, repartoCompartido, citasDeMiembros, pcLeer, saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl, citasFuera, olvidarCitasFuera };
 module.exports = { leerSub, enviar, avisar, idValido, TABLAS, BASE_ID, saldo };
