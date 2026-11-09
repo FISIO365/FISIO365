@@ -78,6 +78,8 @@
 "No se ha podido apuntar. Inténtalo de nuevo.": ["No s'ha pogut apuntar. Torna-ho a provar.","Couldn't sign you up. Please try again."],
 "Adelantos del curso": ["Avançaments del curs","Course previews"],
 "Adelantos en vídeo": ["Avançaments en vídeo","Video previews"],
+"Entra y curiosea la app": ["Entra i xafardeja l'app","Go in and explore the app"],
+"Los capítulos 0 y 1 están abiertos enteros": ["Els capítols 0 i 1 estan oberts sencers","Chapters 0 and 1 are fully open"],
 "Así es por dentro": ["Així és per dins","A look inside"],
 "Mira cómo será tu curso": ["Mira com serà el teu curs","See what your course looks like"],
 "Desliza": ["Llisca","Swipe"],
