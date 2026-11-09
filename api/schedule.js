@@ -5963,6 +5963,33 @@ module.exports = async function handler(req, res) {
           await guardarAjuste('talleres', L, t(q.quien, 60)); delete _tallerCache[id];
           return res.status(200).json({ ok: true, taller: T });
         }
+        if (action === 'seg-agenda-taller-apuntar') { // apuntar a alguien en el centro (paga allí o lo debe), quitarlo o marcar que ya pagó
+          const T = (await talleresTodos()).find(x => x.id === q.id); if (!T) return res.status(404).json({ ok: false, error: 'No existe ese taller' });
+          const KI = 'taller_insc_' + T.id, t = (v, m) => String(v || '').trim().slice(0, m), PAGOS = ['efectivo', 'tarjeta', 'bizum', 'transferencia', 'pendiente', 'regalo'];
+          for (let i = 0; i < 5; i++) {     // se lee sin caché justo antes de escribir y se comprueba después (dos a la vez no se pisan)
+            if (i) await new Promise(r => setTimeout(r, 300 + Math.random() * 600));
+            _aj = { t: 0, v: null }; const I = Object.assign({}, (await ajuste(KI, {})) || {});
+            let clave = '';
+            if (q.quitar) { if (!/^cen_\d+$/.test(q.quitar) || !I[q.quitar]) return res.status(400).json({ ok: false, error: 'Esa reserva no se puede quitar desde aquí' }); delete I[q.quitar]; }
+            else if (q.pagado) { const x = I[q.pagado]; if (!x || !x.centro) return res.status(400).json({ ok: false }); I[q.pagado] = Object.assign({}, x, { centro: Object.assign({}, x.centro, { pago: PAGOS.includes(q.pago) && q.pago !== 'pendiente' ? q.pago : 'efectivo', pagadoEl: hoyF, pagadoPor: t(q.quien, 60) }) }); }
+            else {
+              const r = q.reserva || {}, n = Math.max(1, Math.min(20, Math.round(Number(r.n) || 1))), nombre = t(r.nombre, 80);
+              if (!nombre) return res.status(400).json({ ok: false, error: 'Falta el nombre' });
+              delete _tallerCache[T.id]; const ya = (await tallerInscritos(T, true)).total;
+              if (ya + n > (Number(T.plazas) || 1) && !q.forzar) return res.status(200).json({ ok: false, lleno: true, quedan: Math.max(0, (Number(T.plazas) || 1) - ya), error: 'No quedan plazas suficientes' });
+              clave = 'cen_' + Date.now();
+              I[clave] = { n, pagador: nombre, tel: t(r.tel, 30), email: t(r.email, 120), cuando: new Date().toISOString(),
+                personas: [{ nombre, tel: t(r.tel, 30), nota: t(r.nota, 300) }].concat((Array.isArray(r.otros) ? r.otros : []).map(v => t(v, 80)).filter(Boolean).slice(0, n - 1).map(v => ({ nombre: v }))),
+                centro: { pago: PAGOS.includes(r.pago) ? r.pago : 'pendiente', quien: t(q.quien, 60), pacienteId: /^rec[A-Za-z0-9]{14}$/.test(r.pacienteId || '') ? r.pacienteId : '' } };
+            }
+            await guardarAjuste(KI, I, t(q.quien, 60));
+            await new Promise(r => setTimeout(r, 400));
+            _aj = { t: 0, v: null }; const V = (await ajuste(KI, {})) || {};
+            const ok = q.quitar ? !V[q.quitar] : q.pagado ? !!(V[q.pagado] && V[q.pagado].centro && V[q.pagado].centro.pagadoEl) : !!V[clave];
+            if (ok) { delete _tallerCache[T.id]; return res.status(200).json({ ok: true }); }
+          }
+          return res.status(200).json({ ok: false, error: 'No se ha podido guardar, prueba otra vez' });
+        }
         if (action === 'seg-agenda-cumple') { // apuntar que ya se le ha felicitado (q.fecha = el día de su cumple)
           if (!okId(q.pacienteId) || !okF(q.fecha)) return res.status(400).json({ ok: false });
           // Todos los felicitados van en un mismo ajuste: se lee sin caché justo antes de escribir y se comprueba después
