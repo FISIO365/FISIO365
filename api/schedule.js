@@ -6059,6 +6059,20 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           return res.status(200).json({ ok: true, link: enlaceRes(q.pacienteId), tel: tel.length === 9 ? '34' + tel : tel, pila: p0 ? p0.charAt(0).toUpperCase() + p0.slice(1).toLowerCase() : '' });
         }
         if (action === 'seg-agenda-taller-interes') { // «Para el próximo taller»: quitar a alguien de la lista o marcar que ya se le avisó
+          if (q.nuevo) { // apuntar (o cambiar) a alguien a mano desde el panel
+            const x = q.nuevo || {}, L = (v, m) => String(v || '').trim().slice(0, m), t = /^[a-z0-9-]{3,40}$/.test(String(x.t || '')) ? String(x.t) : '';
+            const T = t ? (await talleresTodos()).find(y => y.id === t) : null;
+            const DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'], FR = ['mañana', 'mediodía', 'tarde'];
+            const yo = { t: T ? t : '', titulo: L(T ? T.titulo : x.titulo, 120), n: L(x.nombre, 80), tel: L(x.tel, 30).replace(/[^\d+ ]/g, ''), email: L(x.email, 120), dias: (Array.isArray(x.dias) ? x.dias : []).filter(d => DIAS.includes(d)), franjas: (Array.isArray(x.franjas) ? x.franjas : []).filter(f => FR.includes(f)), nota: L(x.nota, 300), cuando: new Date().toISOString(), desde: 'panel', por: L(q.quien, 40) };
+            if (/^rec[A-Za-z0-9]{14}$/.test(String(x.pacienteId || ''))) yo.pid = x.pacienteId;
+            if (!yo.n) return res.status(400).json({ ok: false, error: 'Pon el nombre' });
+            const viejo = String(q.id || '').slice(0, 200), key = viejo || ((yo.pid || yo.tel.replace(/\D/g, '') || yo.email.toLowerCase() || 'p' + Date.now()) + '|' + (yo.t || 'libre'));
+            for (let i = 0; i < 4; i++) { if (i) await new Promise(r => setTimeout(r, 300 + Math.random() * 600)); _aj = { t: 0, v: null }; const M = Object.assign({}, (await ajuste('taller_interesados', {})) || {});
+              if (viejo && M[viejo]) Object.assign(yo, { cuando: M[viejo].cuando || yo.cuando, desde: M[viejo].desde || 'panel', avisado: M[viejo].avisado || null, avisadoPor: M[viejo].avisadoPor || '' });
+              M[key] = yo; try { await guardarAjuste('taller_interesados', M, yo.por || 'panel'); } catch (e) { continue; }
+              _aj = { t: 0, v: null }; if (((await ajuste('taller_interesados', {})) || {})[key]) return res.status(200).json({ ok: true, id: key }); }
+            return res.status(500).json({ ok: false, error: 'No se ha podido guardar' });
+          }
           const id = String(q.id || ''); if (!id || id.length > 200) return res.status(400).json({ ok: false });
           for (let i = 0; i < 3; i++) { _aj = { t: 0, v: null }; const M = Object.assign({}, (await ajuste('taller_interesados', {})) || {}); if (!M[id]) return res.status(200).json({ ok: true });
             if (q.quitar) delete M[id]; else M[id] = Object.assign({}, M[id], { avisado: q.avisado ? new Date().toISOString() : null, avisadoPor: String(q.quien || '').slice(0, 40) });
