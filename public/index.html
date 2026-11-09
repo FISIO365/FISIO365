@@ -819,6 +819,10 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
 .an .tl-pl{margin-top:14px}
 .an-mas{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.an-mas a,.an-mas button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 8px;border-radius:99px;border:1.5px solid #efe2d8;font-size:13px;font-weight:600;color:#3d3530;white-space:nowrap}
 .an-mas svg{width:17px;height:17px;flex:none;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.an-mas button.on{border-color:#c2552e;color:#c2552e}
+.an-mas>:last-child:nth-child(odd){grid-column:1/-1}
+.ot-ch{display:flex;flex-wrap:wrap;gap:7px}.ot-ch button{all:unset;cursor:pointer;font-size:13px;font-weight:500;border:1.5px solid #efe2d8;border-radius:99px;padding:7px 13px;color:#3d3530}.ot-ch button.on{border-color:#c2552e;background:#fbe7dc;color:#a8461f;font-weight:600}
+.ot-nt{display:block;width:100%;box-sizing:border-box;margin:12px 0;font:inherit;font-size:14px;border:1.5px solid #efe2d8;border-radius:14px;padding:10px 12px;resize:none;outline:none;background:#fff;color:#3d3530}.ot-nt:focus{border-color:#c2552e}.ot .tl-bt{width:100%}
+.ot-ok{font-size:14px;color:#2f6b45;background:#e8f6ec;border-radius:14px;padding:12px 14px;line-height:1.5}
 .an-pan{display:none;margin-top:12px}.an-pan.on{display:block}.an-pan .tl-h:first-child{margin-top:0}
 .tl-ad-t{margin:16px 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8a837b}
 .tl-ads{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.tl-ads button{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -1740,7 +1744,7 @@ function talFechaApp(T){const D=['domingo','lunes','martes','miércoles','jueves
 const talEsc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 // ── Anuncios de «Talleres y cursos»: un solo molde para todos (cursos, talleres y los que vengan) ──
 // A = { id, video:{src,poster}, tipo, etiqueta, destaca, titulo, meta:[líneas], texto, barra:{pct,txt}, boton (html), nota, mas:[{txt, ico, href} | {txt, ico, panel(html)}] }
-const AN_ICO={app:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',play:'<circle cx="12" cy="12" r="9"/><path d="M10.5 9v6l4.5-3z"/>',lista:'<path d="M9 7h11M9 12h11M9 17h11"/><circle cx="4.5" cy="7" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="17" r="1"/>',mapa:'<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/>'};
+const AN_ICO={cal:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',app:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',play:'<circle cx="12" cy="12" r="9"/><path d="M10.5 9v6l4.5-3z"/>',lista:'<path d="M9 7h11M9 12h11M9 17h11"/><circle cx="4.5" cy="7" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="17" r="1"/>',mapa:'<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/>'};
 function htmlAnuncio(A){const k=talEsc(A.id);
  const media=A.video?`<div class="an-media"><video id="${A.videoId||'anv_'+k}" src="${talEsc(A.video.src)}" ${A.video.poster?`poster="${talEsc(A.video.poster)}"`:''} autoplay muted loop playsinline preload="auto" onerror="this.parentNode.remove()"></video></div>`:'';
  const mas=(A.mas||[]).map((m,i)=>m.href?`<a href="${talEsc(m.href)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24">${AN_ICO[m.ico]||''}</svg>${talEsc(m.txt)}</a>`:`<button type="button" onclick="anPanel(this,'${k}_${i}')"><svg viewBox="0 0 24 24">${AN_ICO[m.ico]||''}</svg>${talEsc(m.txt)}</button>`).join('');
@@ -1760,7 +1764,22 @@ function htmlTaller(T){const pct=T.plazas?Math.round((T.plazas-T.quedan)*100/T.p
   barra:{pct,txt:T.quedan>0?(T.quedan===1?'Queda 1 plaza':`Quedan ${T.quedan} plazas`):'Completo'},
   boton:T.quedan>0?`<a class="tl-bt" href="${talEsc(T.url)}" target="_blank" rel="noopener">Reservar plaza</a>`:`<a class="tl-bt sec" href="https://wa.me/34672893949?text=${encodeURIComponent('Hola, quiero apuntarme a la lista de espera de: '+T.titulo)}" target="_blank" rel="noopener">Apúntame a la lista de espera</a>`,
   nota:T.quedan>0?'Puedes venir con quien quieras: al reservar eliges cuántas plazas.':'',
-  mas:[det?{txt:'Qué harás',ico:'lista',panel:det}:null,{txt:'Cómo llegar',ico:'mapa',href:'https://maps.google.com/?q=FISIO365+Gran+de+Sant+Andreu+163+Barcelona'}].filter(Boolean)});}
+  mas:[det?{txt:'Qué harás',ico:'lista',panel:det}:null,{txt:'Cómo llegar',ico:'mapa',href:'https://maps.google.com/?q=FISIO365+Gran+de+Sant+Andreu+163+Barcelona'},{txt:'¿No puedes ese día?',ico:'cal',panel:htmlOtroDia(T)}].filter(Boolean)});}
+// «No puedo ese día»: se apunta a la lista para el próximo taller (le sale al equipo en el panel, en Talleres y cursos)
+function htmlOtroDia(T){const k=talEsc(T.id);let ya=false;try{ya=!!localStorage.getItem('f365_tal_int_'+T.id+'_'+(patient&&patient.id));}catch(e){}
+ if(ya)return `<div class="ot-ok">Ya estás en la lista. Te avisaremos cuando haya fecha para el próximo.</div>`;
+ const ch=(g,L)=>`<div class="ot-ch" data-g="${g}">${L.map(([v,t])=>`<button type="button" data-v="${v}" onclick="this.classList.toggle('on')">${t}</button>`).join('')}</div>`;
+ return `<div class="ot" id="ot_${k}"><p class="tl-s">Dinos cuándo te iría bien y te avisamos cuando organicemos el próximo.</p>
+  <div class="tl-h">Qué días te van mejor</div>${ch('dias',[['lunes','Lunes'],['martes','Martes'],['miércoles','Miércoles'],['jueves','Jueves'],['viernes','Viernes'],['sábado','Sábado']])}
+  <div class="tl-h">A qué hora</div>${ch('franjas',[['mañana','Por la mañana'],['mediodía','A mediodía'],['tarde','Por la tarde']])}
+  <textarea class="ot-nt" rows="2" maxlength="300" placeholder="Algo más (opcional)"></textarea>
+  <button type="button" class="tl-bt sec" onclick="enviarOtroDia(this,'${k}')">Avisadme del próximo</button></div>`;}
+async function enviarOtroDia(b,id){const box=document.getElementById('ot_'+id);if(!box||!patient)return;
+ const sel=g=>[...box.querySelectorAll(`[data-g="${g}"] .on`)].map(x=>x.dataset.v);const d={t:id,patientId:patient.id,app:1,dias:sel('dias'),franjas:sel('franjas'),nota:box.querySelector('.ot-nt').value};
+ if(!d.dias.length&&!d.franjas.length&&!d.nota.trim()){toast('Marca qué días o a qué hora te va bien',false);return;}
+ b.disabled=true;try{const r=await (await fetch('/api/schedule?action=taller-interes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})).json();if(!r.ok)throw new Error(r.error||'');
+  try{localStorage.setItem('f365_tal_int_'+id+'_'+patient.id,'1');}catch(e){}box.outerHTML='<div class="ot-ok">¡Hecho! Te avisaremos cuando haya fecha para el próximo.</div>';}
+ catch(e){b.disabled=false;toast(e.message||'No se ha podido guardar',false);}}
 // Atlas (curso online, próximamente) con el mismo molde
 function htmlAtlas(){const ads=[[1,'Qué es una hernia','1:03'],[2,'Por qué duele','0:51'],[3,'Moverte es seguro','0:46']].map(([n,t,d])=>`<button type="button" onclick="verAdelanto(this,${n})"><span class="tl-ad-im"><img src="/img/atlas/adelanto${n}t.jpg" alt="${t}" loading="lazy"></span><small><i></i>${d}</small></button>`).join('');
  return htmlAnuncio({id:'atlas',videoId:'atlasVid',video:{src:'/img/atlas/presentacion.mp4',poster:'/img/atlas/presentacion.jpg'},tipo:'Curso online',etiqueta:'Próximamente',destaca:1,

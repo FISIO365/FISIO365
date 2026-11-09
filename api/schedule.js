@@ -3949,6 +3949,29 @@ module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).send(paginaVale(F, id, req.query.p === '1', req.query.c === '1'));
   }
+  if (action === 'taller-interes') { // «¿No puedes ese día?»: quiere que le avisemos del próximo taller y nos dice cuándo le va bien (página del taller o app)
+    const q = req.method === 'POST' ? (req.body || {}) : {}, t = String(q.t || '');
+    if (req.method !== 'POST' || !/^[a-z0-9-]{3,40}$/.test(t)) return res.status(400).json({ ok: false });
+    const T = (await talleresTodos()).find(x => x.id === t); if (!T) return res.status(404).json({ ok: false, error: 'Taller no encontrado' });
+    const L = (v, m) => String(v || '').trim().slice(0, m);
+    const DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'], FR = ['mañana', 'mediodía', 'tarde'];
+    const yo = { t, titulo: L(T.titulo, 120), n: L(q.nombre, 80), tel: L(q.tel, 30).replace(/[^\d+ ]/g, ''), email: L(q.email, 120), dias: (Array.isArray(q.dias) ? q.dias : []).filter(d => DIAS.includes(d)), franjas: (Array.isArray(q.franjas) ? q.franjas : []).filter(f => FR.includes(f)), nota: L(q.nota, 300), cuando: new Date().toISOString(), desde: q.app ? 'app' : 'web' };
+    if (/^rec[A-Za-z0-9]{14}$/.test(String(q.patientId || ''))) { const p = await at(`${PACIENTES}/${q.patientId}`).catch(() => ({})); if (p && p.fields) { yo.pid = q.patientId; yo.n = yo.n || L(p.fields['FULL NAME'], 80); yo.tel = yo.tel || L(p.fields.WHATSAPP || p.fields.TELF, 30); yo.email = yo.email || L(p.fields.EMAIL, 120); } }
+    if (!yo.n || (!yo.tel && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(yo.email))) return res.status(400).json({ ok: false, error: 'Pon tu nombre y un teléfono o email' });
+    const key = (yo.pid || yo.tel.replace(/\D/g, '') || yo.email.toLowerCase()) + '|' + t;
+    let ok = false;
+    for (let i = 0; i < 5 && !ok; i++) {
+      if (i) await new Promise(r => setTimeout(r, 300 + Math.random() * 700));
+      _aj = { t: 0, v: null }; const M = Object.assign({}, (await ajuste('taller_interesados', {})) || {});
+      if (Object.keys(M).length > 800) return res.status(429).json({ ok: false, error: 'Ahora mismo no podemos apuntarte. Escríbenos por WhatsApp.' });
+      M[key] = yo; try { await guardarAjuste('taller_interesados', M, 'taller'); } catch (e) { continue; }
+      _aj = { t: 0, v: null }; ok = !!(((await ajuste('taller_interesados', {})) || {})[key]);
+    }
+    if (!ok) return res.status(500).json({ ok: false, error: 'No se ha podido guardar. Inténtalo de nuevo.' });
+    try { const { avisar } = require('./_push'); const fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}`).catch(() => ({})), ids = (fl.records || []).filter(r => r.fields['DIRECCIÓN']).map(r => r.id);
+      await Promise.all(ids.map(fid => avisar('fisio', fid, { title: '🗓️ Para el próximo taller', body: `${yo.n} quiere venir al próximo «${yo.titulo}»`, url: '/fisio?s=talleres', tag: 'taller-int' }).catch(() => false))); } catch (e) {}
+    return res.status(200).json({ ok: true });
+  }
   if (action === 'atlas-interes') { // App del paciente: «Avisadme cuando salga» en la tarjeta de Atlas (curso online)
     const q = req.method === 'POST' ? (req.body || {}) : req.query, pid = String(q.patientId || '');
     if (!/^rec[A-Za-z0-9]{14}$/.test(pid)) return res.status(400).json({ ok: false });
@@ -4057,6 +4080,12 @@ ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}li{display:flex;gap:
 .bar>div{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:14px}
 .bar .pr{flex:none}.bar .pr b{display:block;font-size:24px;line-height:1;color:var(--c)}.bar .pr span{font-size:12px;color:var(--g)}
 .bt{flex:1;display:block;text-align:center;background:var(--c);color:#fff;text-decoration:none;font-weight:600;font-size:16px;border-radius:99px;padding:15px 18px}.bt.off{background:#d9cbc1;pointer-events:none}
+.ot{margin-top:30px;background:#fff;border:1.5px solid var(--l);border-radius:22px;padding:20px 18px}.ot h3{margin:0;font-size:18px;font-weight:700}.ot>p{margin:6px 0 0;font-size:14px;color:var(--g);line-height:1.55}
+.ot label{display:block;margin:14px 0 6px;font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--g)}
+.ot input,.ot textarea{width:100%;font:inherit;font-size:15px;border:1.5px solid var(--l);border-radius:14px;padding:12px 14px;background:#fff;color:var(--t);outline:none}.ot input:focus,.ot textarea:focus{border-color:var(--c)}
+.ch{display:flex;flex-wrap:wrap;gap:8px}.ch button{font:inherit;font-size:14px;font-weight:500;border:1.5px solid var(--l);background:#fff;color:var(--t);border-radius:99px;padding:8px 14px;cursor:pointer}.ch button.on{border-color:var(--c);background:#fbe7dc;color:var(--cd);font-weight:600}
+.ot .env{margin-top:16px;width:100%;font:inherit;font-size:15.5px;font-weight:600;border:1.5px solid var(--c);background:#fff;color:var(--c);border-radius:99px;padding:13px;cursor:pointer}.ot .ok{margin-top:12px;font-size:14.5px;color:#2f6b45;background:#e8f6ec;border-radius:14px;padding:12px 14px}.ot .er{margin-top:10px;font-size:13.5px;color:#b42318}
+.ot .abr{margin-top:14px;font:inherit;font-size:15px;font-weight:600;border:0;background:none;color:var(--c);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
 </style></head><body><div class="w">
 <svg class="ond" viewBox="0 0 420 420"><circle cx="210" cy="210" r="80" opacity=".45"/><circle cx="210" cy="210" r="125" opacity=".28"/><circle cx="210" cy="210" r="170" opacity=".15"/><circle cx="210" cy="210" r="205" opacity=".08"/></svg>
 <div class="m">FISIO365</div>
@@ -4068,7 +4097,26 @@ ${lleno ? '' : `<div class="q"><i></i>${quedan <= 2 ? (quedan === 1 ? '¡Queda 1
 ${(R.practica || []).length ? `<h2>Qué practicaremos</h2><ul>${R.practica.map(x => `<li>${e(x)}</li>`).join('')}</ul>` : ''}
 ${R.llevar ? `<h2>Qué traer</h2><p class="p">${e(R.llevar)}</p>` : ''}
 <h2>Cómo reservar</h2><p class="p">Pulsa «Reservar mi plaza», elige cuántas plazas quieres (puedes venir con quien quieras) y paga con tarjeta. Al momento te llega la confirmación. ¿Dudas? Escríbenos por <a href="https://wa.me/34672893949?text=${encodeURIComponent('Hola, tengo una duda sobre el ' + T.nombre.toLowerCase())}">WhatsApp</a> o llama al 672 89 39 49.</p>
-</div><div class="bar"><div><div class="pr"><b>${pr}</b><span>por persona</span></div>${lleno ? `<a class="bt" href="https://wa.me/34672893949?text=${encodeURIComponent('Hola, quiero apuntarme a la lista de espera del ' + T.nombre)}">${hoy > T.fin ? 'Avisadme del próximo' : 'Lista de espera'}</a>` : `<a class="bt" href="${base}-pagar">Reservar mi plaza</a>`}</div></div></body></html>`);
+
+<div class="ot" id="otro"><h3>¿No puedes ese día?</h3><p>Dinos cuándo te iría bien y te avisamos cuando organicemos el próximo.</p>
+<button type="button" class="abr" id="otA">Avisadme del próximo</button>
+<form id="otF" hidden><label>Tu nombre</label><input name="nombre" maxlength="80" autocomplete="name" required>
+<label>Teléfono</label><input name="tel" type="tel" maxlength="30" autocomplete="tel" placeholder="Para avisarte por WhatsApp">
+<label>Qué días te van mejor</label><div class="ch" data-k="dias"><button type="button" data-v="lunes">Lunes</button><button type="button" data-v="martes">Martes</button><button type="button" data-v="miércoles">Miércoles</button><button type="button" data-v="jueves">Jueves</button><button type="button" data-v="viernes">Viernes</button><button type="button" data-v="sábado">Sábado</button></div>
+<label>A qué hora</label><div class="ch" data-k="franjas"><button type="button" data-v="mañana">Por la mañana</button><button type="button" data-v="mediodía">A mediodía</button><button type="button" data-v="tarde">Por la tarde</button></div>
+<label>Algo más (opcional)</label><textarea name="nota" rows="2" maxlength="300" placeholder="Por ejemplo: a partir de enero"></textarea>
+<button type="submit" class="env">Avisadme del próximo</button><div class="er" hidden></div></form></div>
+<script>(function(){var f=document.getElementById('otF'),a=document.getElementById('otA');a.onclick=function(){a.hidden=true;f.hidden=false;f.nombre.focus();};
+if(location.hash==='#otro'){a.click();}
+f.querySelectorAll('.ch button').forEach(function(b){b.onclick=function(){b.classList.toggle('on');};});
+f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.querySelector('.env');er.hidden=true;
+ var sel=function(k){return [].map.call(f.querySelectorAll('[data-k="'+k+'"] .on'),function(b){return b.dataset.v;});};
+ var d={t:"${id}",nombre:f.nombre.value,tel:f.tel.value,dias:sel('dias'),franjas:sel('franjas'),nota:f.nota.value};
+ if(!d.nombre.trim()||!d.tel.trim()){er.textContent='Pon tu nombre y tu teléfono.';er.hidden=false;return;}
+ bt.disabled=true;bt.textContent='Un momento…';
+ fetch('/api/schedule?action=taller-interes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(function(r){return r.json();}).then(function(r){if(!r.ok)throw new Error(r.error||'');
+  f.outerHTML='<div class="ok">¡Hecho! Te avisaremos cuando haya fecha para el próximo.</div>';}).catch(function(e){bt.disabled=false;bt.textContent='Avisadme del próximo';er.textContent=e.message||'No se ha podido guardar. Inténtalo de nuevo.';er.hidden=false;});};})();</script>
+</div><div class="bar"><div><div class="pr"><b>${pr}</b><span>por persona</span></div>${lleno ? `<a class="bt" href="${hoy > T.fin ? '#otro' : 'https://wa.me/34672893949?text=' + encodeURIComponent('Hola, quiero apuntarme a la lista de espera del ' + T.nombre)}"${hoy > T.fin ? ' onclick="var a=document.getElementById(\'otA\');a&&!a.hidden&&a.click()"' : ''}>${hoy > T.fin ? 'Avisadme del próximo' : 'Lista de espera'}</a>` : `<a class="bt" href="${base}-pagar">Reservar mi plaza</a>`}</div></div></body></html>`);
     }
     try {
       // El primer enlace (10 €, plaza única) ya no se usa
@@ -5761,7 +5809,9 @@ ${R.llevar ? `<h2>Qué traer</h2><p class="p">${e(R.llevar)}</p>` : ''}
           const out = []; for (const T of L) { const ins = await tallerInscritos(T, true).catch(() => ({ total: 0, lista: [] })); out.push(Object.assign({}, T, { url: `${APPU()}/taller/${T.id}`, inscritos: ins.lista, total: ins.total })); }
           _aj = { t: 0, v: null }; const AI = (await ajuste('atlas_interesados', {})) || {};
           const atlas = Object.keys(AI).map(id => Object.assign({ id }, AI[id])).sort((a, b) => String(b.cuando).localeCompare(String(a.cuando)));
-          return res.status(200).json({ ok: true, hoy: hoyF, talleres: out, atlas });
+          const TI = (await ajuste('taller_interesados', {})) || {};
+          const interes = Object.keys(TI).map(id => Object.assign({ id }, TI[id])).sort((a, b) => String(b.cuando).localeCompare(String(a.cuando)));
+          return res.status(200).json({ ok: true, hoy: hoyF, talleres: out, atlas, interes });
         }
         if (action === 'seg-agenda-cumples') {
           // Cumpleaños para felicitar por WhatsApp: los de hoy, los que se quedaron sin felicitar (3 días atrás) y los próximos 7
@@ -6007,6 +6057,13 @@ ${R.llevar ? `<h2>Qué traer</h2><p class="p">${e(R.llevar)}</p>` : ''}
           if (q.mejora) Object.assign(fm, { 'MEJORA FECHA': new Date().toISOString(), 'MEJORA FISIO': String(q.fisio || '').slice(0, 40), 'MEJORA ABIERTA': null, 'MEJORA GOOGLE': null });
           await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: fm }) }).catch(() => {});
           return res.status(200).json({ ok: true, link: enlaceRes(q.pacienteId), tel: tel.length === 9 ? '34' + tel : tel, pila: p0 ? p0.charAt(0).toUpperCase() + p0.slice(1).toLowerCase() : '' });
+        }
+        if (action === 'seg-agenda-taller-interes') { // «Para el próximo taller»: quitar a alguien de la lista o marcar que ya se le avisó
+          const id = String(q.id || ''); if (!id || id.length > 200) return res.status(400).json({ ok: false });
+          for (let i = 0; i < 3; i++) { _aj = { t: 0, v: null }; const M = Object.assign({}, (await ajuste('taller_interesados', {})) || {}); if (!M[id]) return res.status(200).json({ ok: true });
+            if (q.quitar) delete M[id]; else M[id] = Object.assign({}, M[id], { avisado: q.avisado ? new Date().toISOString() : null, avisadoPor: String(q.quien || '').slice(0, 40) });
+            try { await guardarAjuste('taller_interesados', M, String(q.quien || 'panel')); return res.status(200).json({ ok: true }); } catch (e) {} }
+          return res.status(500).json({ ok: false, error: 'No se ha podido guardar' });
         }
         if (action === 'seg-agenda-taller-guardar') { // crear, cambiar o quitar un taller o curso
           let L = (await talleresTodos()).slice(); const t = (v, m) => String(v || '').trim().slice(0, m);
