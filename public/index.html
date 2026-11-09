@@ -787,6 +787,21 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
 @media (prefers-reduced-motion:reduce){.mcl *{animation-duration:.01s!important;animation-delay:0s!important}}
 .tl-pronto{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1e2a38;background:#f39a55;border-radius:99px;padding:4px 10px}.tl-ok{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 14px;border-radius:14px;background:#eef6f0;color:#2f7a4c;font-size:13.5px;font-weight:600}.tl-ok svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .tl-atlas .tl-bt{width:100%;border:0;margin-top:14px;font-family:inherit;cursor:pointer}
+.tl-pv{margin:18px -18px 0;padding:18px 0 18px;background:radial-gradient(120% 90% at 85% 0%,rgba(243,154,85,.32),rgba(243,154,85,0) 60%),#1e2a38;color:#f4f2ed;overflow:hidden}
+.tl-pv-h{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:0 18px 14px}.tl-pv-h span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#f39a55}.tl-pv-h b{display:block;margin-top:3px;font-size:18px;font-weight:700;letter-spacing:-.01em}
+.tl-pv-h em{flex:none;display:flex;align-items:center;gap:6px;font-style:normal;font-size:11.5px;font-weight:600;color:rgba(244,242,237,.7)}.tl-pv-h em i{width:16px;height:2px;background:#f39a55;border-radius:2px;position:relative;animation:tlPvF 1.6s ease-in-out infinite}.tl-pv-h em i:after{content:'';position:absolute;right:-1px;top:-3px;border-left:5px solid #f39a55;border-top:4px solid transparent;border-bottom:4px solid transparent}
+@keyframes tlPvF{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+.tl-pv-s{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 18px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.tl-pv-s::-webkit-scrollbar{display:none}
+.tl-pv-i{all:unset;cursor:pointer;flex:none;width:138px;scroll-snap-align:start;scroll-margin-left:18px;display:flex;flex-direction:column}
+.tl-pv-ph{display:block;aspect-ratio:540/1169;border-radius:20px;padding:4px;background:#0f1720;box-shadow:0 0 0 1.5px rgba(244,242,237,.14),0 14px 26px rgba(0,0,0,.35);transition:transform .25s}.tl-pv-i:active .tl-pv-ph{transform:scale(.97)}
+.tl-pv-ph img{display:block;width:100%;height:100%;object-fit:cover;border-radius:16px;background:#f4f2ed}
+.tl-pv-i b{margin-top:10px;font-size:13.5px;font-weight:700}.tl-pv-i small{margin-top:2px;font-size:11.5px;line-height:1.35;color:rgba(244,242,237,.68)}
+.tl-lb{position:fixed;inset:0;z-index:9999;background:rgba(15,23,32,.96);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s}.tl-lb.on{opacity:1;pointer-events:auto}
+.tl-lb-s{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.tl-lb-s::-webkit-scrollbar{display:none}
+.tl-lb-p{flex:none;width:100%;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:64px 24px calc(30px + env(safe-area-inset-bottom));color:#f4f2ed;text-align:center}
+.tl-lb-p img{max-height:calc(100% - 70px);max-width:100%;aspect-ratio:540/1169;object-fit:contain;border-radius:22px;border:4px solid #0f1720;box-shadow:0 0 0 1.5px rgba(244,242,237,.16)}
+.tl-lb-p b{font-size:17px}.tl-lb-p small{display:block;margin-top:2px;font-size:13px;color:rgba(244,242,237,.7)}
+.tl-lb-x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(244,242,237,.12);color:#f4f2ed;font-size:20px;cursor:pointer}
 .tl-ad-t{margin:16px 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8a837b}
 .tl-ads{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.tl-ads button{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-width:0}
 .tl-ad-im{position:relative;display:block;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#f6f1ea;border:1.5px solid #efe7de;transition:border-color .2s}.tl-ads button.on .tl-ad-im{border-color:#f39a55}
@@ -983,7 +998,9 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
   <div class="tl-t">Atlas · Hernia discal lumbar</div>
   <p class="tl-s">El curso online de nuestro equipo para tu espalda: un test inicial que personaliza tu plan, vídeos de cada ejercicio y tu fisio contigo por chat.</p>
   <video class="tl-vid" id="atlasVid" src="/img/atlas/presentacion.mp4" poster="/img/atlas/presentacion.jpg" autoplay muted loop playsinline preload="auto"></video>
-  <div class="tl-ad-t">Adelantos del curso</div>
+  <div class="tl-pv"><div class="tl-pv-h"><div><span>Así es por dentro</span><b>Mira cómo será tu curso</b></div><em>Desliza<i></i></em></div>
+   <div class="tl-pv-s"><button type="button" class="tl-pv-i" onclick="atlasPv(0)"><span class="tl-pv-ph"><img src="/img/atlas/p-camino.jpg" alt="" loading="lazy"></span><b>Tu camino</b><small>Un mapa con cada paso hasta la meta.</small></button><button type="button" class="tl-pv-i" onclick="atlasPv(1)"><span class="tl-pv-ph"><img src="/img/atlas/p-hoy.jpg" alt="" loading="lazy"></span><b>Hoy</b><small>Lo que te toca cada día, sin pensar.</small></button><button type="button" class="tl-pv-i" onclick="atlasPv(2)"><span class="tl-pv-ph"><img src="/img/atlas/p-sesion.jpg" alt="" loading="lazy"></span><b>Tus sesiones</b><small>Ejercicios en orden, con vídeo de cada uno.</small></button><button type="button" class="tl-pv-i" onclick="atlasPv(3)"><span class="tl-pv-ph"><img src="/img/atlas/p-teoria.jpg" alt="" loading="lazy"></span><b>Lecciones</b><small>Vídeo y apuntes para entender tu espalda.</small></button><button type="button" class="tl-pv-i" onclick="atlasPv(4)"><span class="tl-pv-ph"><img src="/img/atlas/p-progreso.jpg" alt="" loading="lazy"></span><b>Tu progreso</b><small>Ves cómo avanzas, fase a fase.</small></button><button type="button" class="tl-pv-i" onclick="atlasPv(5)"><span class="tl-pv-ph"><img src="/img/atlas/p-test.jpg" alt="" loading="lazy"></span><b>Test inicial</b><small>Tu plan, hecho a tu medida desde el día 1.</small></button></div></div>
+  <div class="tl-ad-t">Adelantos en vídeo</div>
   <div class="tl-ads">
    <button type="button" onclick="verAdelanto(this,1)"><span class="tl-ad-im"><img src="/img/atlas/adelanto1t.jpg" alt="Qué es una hernia" loading="lazy"></span><small><i></i>1:03</small></button>
    <button type="button" onclick="verAdelanto(this,2)"><span class="tl-ad-im"><img src="/img/atlas/adelanto2t.jpg" alt="Por qué duele" loading="lazy"></span><small><i></i>0:51</small></button>
@@ -1732,6 +1749,12 @@ function ordenarParaTi(){const box=document.getElementById('paraTi');if(!box)ret
 // Atlas: adelantos del curso (se ven en el mismo reproductor de arriba)
 function verAdelanto(b,n){const v=document.getElementById('atlasVid');if(!v)return;document.querySelectorAll('.tl-ads button').forEach(x=>x.classList.toggle('on',x===b));
  v.loop=false;v.muted=false;v.controls=true;v.poster='/img/atlas/adelanto'+n+'.jpg';v.src='/img/atlas/adelanto'+n+'.mp4';v.scrollIntoView({behavior:'smooth',block:'center'});const p=v.play();if(p&&p.catch)p.catch(()=>{});}
+// Atlas: pantallas del curso a pantalla completa (se pasan deslizando)
+function atlasPv(i){let L=document.getElementById('tlLb');
+ if(!L){const its=[...document.querySelectorAll('.tl-pv-i')];L=document.createElement('div');L.id='tlLb';L.className='tl-lb';
+  L.innerHTML='<div class="tl-lb-s">'+its.map(b=>`<div class="tl-lb-p"><img src="${b.querySelector('img').getAttribute('src')}" alt=""><div><b>${b.querySelector('b').textContent}</b><small>${b.querySelector('small').textContent}</small></div></div>`).join('')+'</div><button type="button" class="tl-lb-x" aria-label="Cerrar">✕</button>';
+  L.querySelector('.tl-lb-x').onclick=()=>{L.classList.remove('on');document.body.style.overflow='';};document.body.appendChild(L);}
+ L.classList.add('on');document.body.style.overflow='hidden';const S=L.querySelector('.tl-lb-s');requestAnimationFrame(()=>{S.scrollLeft=S.clientWidth*i;});}
 // Atlas: «Avisadme cuando salga» (queda en el panel, en Talleres y cursos)
 function pintarAtlasAv(){const el=document.getElementById('atlasAv');if(!el)return;let ya=false;try{ya=!!localStorage.getItem('f365_atlas_av_'+(patient&&patient.id));}catch(e){}
  el.innerHTML=ya?'<div class="tl-ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>¡Apuntado! Te avisaremos en cuanto salga.</span></div>':'<button type="button" class="tl-bt" onclick="atlasAvisame(this)">Avisadme cuando salga</button>';}
