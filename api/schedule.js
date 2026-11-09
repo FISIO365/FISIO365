@@ -4044,7 +4044,7 @@ module.exports = async function handler(req, res) {
 .ond{position:absolute;right:-150px;top:-150px;width:420px;height:420px;pointer-events:none}.ond circle{fill:none;stroke:var(--c);stroke-width:1.5}
 .m{font-weight:700;letter-spacing:.06em;color:var(--c);font-size:17px}
 .k{display:inline-flex;align-items:center;gap:10px;margin-top:38px;font-size:12.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--c)}.k i{width:26px;height:1.5px;background:var(--c)}
-h1{font-size:44px;line-height:1.02;letter-spacing:-.025em;margin:12px 0 0;font-weight:700}h1 em{font-style:normal;color:var(--c)}
+h1{font-size:44px;line-height:1.18;letter-spacing:-.025em;margin:12px 0 0;font-weight:700}h1 em{font-style:normal;color:var(--c)}
 .s{color:var(--g);font-size:16px;line-height:1.55;margin:14px 0 0}
 .q{display:inline-flex;align-items:center;gap:8px;margin-top:18px;font-size:13px;font-weight:600;color:var(--cd);background:#fbe7dc;border-radius:99px;padding:6px 12px}.q i{width:7px;height:7px;border-radius:50%;background:var(--c)}
 .d{margin-top:24px;background:#fff;border:1.5px solid var(--l);border-radius:22px}
@@ -4061,7 +4061,7 @@ ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}li{display:flex;gap:
 <svg class="ond" viewBox="0 0 420 420"><circle cx="210" cy="210" r="80" opacity=".45"/><circle cx="210" cy="210" r="125" opacity=".28"/><circle cx="210" cy="210" r="170" opacity=".15"/><circle cx="210" cy="210" r="205" opacity=".08"/></svg>
 <div class="m">FISIO365</div>
 <div class="k"><i></i>${tipo}${/hipopres|suelo/i.test(R.titulo + ' ' + (R.sub || '')) ? ' · Suelo pélvico' : ''}</div>
-<h1>${e(R.titulo).replace(/^(.*?)(\s+\S+\s+\S+)$/, '$1<br><em>$2</em>')}</h1>
+<h1>${e(R.titulo).replace(/^(.*?)\s+(\S+\s+\S+)$/, '$1<br><em>$2</em>')}</h1>
 ${R.sub ? `<p class="s">${e(R.sub)}</p>` : ''}
 ${lleno ? '' : `<div class="q"><i></i>${quedan <= 2 ? (quedan === 1 ? '¡Queda 1 plaza!' : `¡Quedan ${quedan} plazas!`) : `Quedan ${quedan} de ${T.plazas} plazas`}</div>`}
 <div class="d">${fila('cal', e(tallerCuando(Object.assign({}, R, { hora: '' })).replace(/ de \d{4}$/, '').replace(/^./, c => c.toUpperCase())), R.hora ? (R.fin ? 'De ' + R.hora + ' a ' + R.fin : 'A las ' + R.hora) : '')}${fila('pin', 'FISIO365', 'Gran de Sant Andreu 163, Barcelona', 'https://maps.google.com/?q=FISIO365+Gran+de+Sant+Andreu+163+Barcelona')}${R.fisio ? fila('per', 'Con ' + e(R.fisio), /hipopres|suelo/i.test(R.titulo) ? 'Fisioterapeuta de suelo pélvico' : 'Fisioterapeuta de FISIO365') : ''}${fila('eur', pr + ' por persona', 'Grupo reducido · solo ' + T.plazas + ' plazas')}</div>
