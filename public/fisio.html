@@ -1730,6 +1730,7 @@ input.tal-i{display:block;width:100%;box-sizing:border-box;min-width:0;font-fami
 .cb-it{display:flex;align-items:center;gap:12px;border-top:1px solid #f3eee9;padding:11px 0}.cb-sec+.cb-it,.cb-nota+.cb-it,.cb-l>.cb-it:first-child{border-top:none}.cb-it.off{opacity:.55}
 .cb-h{flex:none;width:58px;font-size:12px;color:#a0928a;font-variant-numeric:tabular-nums}.cb-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.cb-tx>b{font-size:14px;font-weight:600;color:#1a1a1a}.cb-tx small{font-size:12.5px;color:#7d6a60;line-height:1.4}.cb-tx small b{color:#1a1a1a;font-weight:600}
 .cb-un{flex:none;font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;background:#fdeee4;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}.cb-ok{flex:none;font-style:normal;font-size:12px;font-weight:600;color:#16803c}
+.ag-sgr .ag-otb{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-start!important;gap:10px!important;text-align:left;white-space:normal!important;padding:10px 12px!important}.ag-sgr .ag-otb svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.ag-sgr .ag-otb span{display:flex;flex-direction:column;line-height:1.25}.ag-sgr .ag-otb small{font-weight:500;opacity:.75;font-size:12px}.ag-sgr.tres .ag-otb{flex-direction:row}.rv-sb{border-color:#c2552e!important;color:#c2552e!important}
 .ag-sgr.tres{grid-template-columns:repeat(3,1fr)}.ag-sgr.tres button{flex-direction:column;white-space:normal!important;line-height:1.2;text-align:center;gap:5px!important;padding:10px 6px!important;font-size:12.5px!important}.ag-pkb{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font);font-size:13px;font-weight:600;padding:11px 6px;border-radius:12px;border:1.5px dashed var(--border);background:#fff;color:#3d3530;cursor:pointer}.ag-pkb[hidden]{display:none}.ag-pkb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ag-pkn{margin:-2px 0 8px}.ag-pkn .nh-txt{margin-top:6px}.ag-pkx{display:block;font-size:12px;color:#7d6a60;margin-top:6px}
 .ag-noh{margin:-2px 0 8px}.nh .nh-txt{margin-top:8px}.nh.falta{animation:agFalta .45s}.nh.falta .nh-mot button:not(.on),.nh.falta .nh-txt{border-color:#b42318!important}
@@ -7444,9 +7445,12 @@ function agRevModal(dia,otros,recargar){const fd=f=>{const t=new Date(f+'T12:00:
  m.querySelector('.hz-x').onclick=()=>m.remove();const box=m.querySelector('.rv-l');
  const pinta=()=>{const L=[...dia,...otros];if(!L.length){box.innerHTML='<div class="fac-vacio">Todo en orden ✓</div>';return;}
   const fechas=[...new Set(L.map(x=>x.fecha))];
-  box.innerHTML=fechas.map(f=>`<div class="rv-g">${escH(fd(f))}</div>`+L.filter(x=>x.fecha===f).map(x=>`<div class="rv-it" data-k="${escH(x.k)}"><p>${escH(x.txt)}</p><div class="rv-b"><button type="button" class="rv-ver">${AG.vista==='dia'&&AG.fecha===f?'Ver en la agenda':'Ir a ese día'}</button><button type="button" class="rv-ok">Está bien así</button></div></div>`).join('')).join('')+'<small class="fp-mu" style="display:block;font-size:12px;margin-top:4px">«Está bien así» si es a propósito (por ejemplo, dos sesiones seguidas que tocan): deja de salir.</small>';
+  box.innerHTML=fechas.map(f=>`<div class="rv-g">${escH(fd(f))}</div>`+L.filter(x=>x.fecha===f).map(x=>`<div class="rv-it" data-k="${escH(x.k)}"><p>${escH(x.txt)}</p><div class="rv-b">${x.tipo==='bombalibre'?'<button type="button" class="rv-sb">Pasar a sin bomba</button>':''}<button type="button" class="rv-ver">${AG.vista==='dia'&&AG.fecha===f?'Ver en la agenda':'Ir a ese día'}</button><button type="button" class="rv-ok">Está bien así</button></div></div>`).join('')).join('')+'<small class="fp-mu" style="display:block;font-size:12px;margin-top:4px">«Está bien así» si es a propósito (por ejemplo, dos sesiones seguidas que tocan): deja de salir.</small>';
   box.querySelectorAll('.rv-it').forEach(it=>{const x=L.find(y=>y.k===it.dataset.k);
    it.querySelector('.rv-ver').onclick=()=>{m.remove();if(AG.vista!=='dia'||AG.fecha!==x.fecha){AG.vista='dia';AG.fecha=x.fecha;recargar&&recargar();}else{const c=document.querySelector(`.ag-c[data-id="${x.ids[0]}"]`);if(c)c.scrollIntoView({block:'center',behavior:'smooth'});}};
+   {const sbb=it.querySelector('.rv-sb');if(sbb)sbb.onclick=async()=>{sbb.disabled=true;try{const r=await agPost('seg-agenda-bomba',{fecha:x.fecha});if(!r.ok)throw 0;
+     [dia,otros].forEach(A=>{const i=A.indexOf(x);if(i>=0)A.splice(i,1);});if(AG_REV.L)AG_REV.L=AG_REV.L.filter(y=>y.k!==x.k);if(AG.dia&&AG.dia.revisar)AG.dia.revisar=AG.dia.revisar.filter(y=>y.k!==x.k);
+     toast('Hueco pasado a «libre sin bomba»: ya no sale en la app',true);pinta();recargar&&recargar();}catch(_){sbb.disabled=false;toast('No se ha podido cambiar',false);}};}
    it.querySelector('.rv-ok').onclick=async e=>{const bt=e.currentTarget;bt.disabled=true;
     try{const r=await agPost('seg-agenda-revisado',{k:x.k,quien:miNombreCorto()});if(!r.ok)throw 0;
      [dia,otros].forEach(A=>{const i=A.indexOf(x);if(i>=0)A.splice(i,1);});if(AG_REV.L)AG_REV.L=AG_REV.L.filter(y=>y.k!==x.k);if(AG.dia&&AG.dia.revisar)AG.dia.revisar=AG.dia.revisar.filter(y=>y.k!==x.k);
@@ -7535,7 +7539,7 @@ function agAbrirCita(c,onDone){
   <div class="hz-lab">Tipo de sesión</div><div class="ag-ses"></div>
   <div class="hz-lab">Notas</div><textarea class="seg-n ag-not2" rows="2">${escH(c.notas||'')}</textarea>
   <div class="ag-decl" hidden>¿Y ahora? <span>Elige una para poder guardar</span></div>
-  <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No hace falta</button><button type="button" class="ag-pkb" hidden><svg viewBox="0 0 24 24"><rect x="3.5" y="7" width="17" height="12.5" rx="2.5"/><path d="M8.5 7V5.5a1.5 1.5 0 0 1 1.5-1.5h4a1.5 1.5 0 0 1 1.5 1.5V7"/></svg>Avisará · tiene pack</button></div>
+  <div class="ag-sgr"><button type="button" class="ag-segb"></button><button type="button" class="ag-altab"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No hace falta</button><button type="button" class="ag-pkb" hidden><svg viewBox="0 0 24 24"><rect x="3.5" y="7" width="17" height="12.5" rx="2.5"/><path d="M8.5 7V5.5a1.5 1.5 0 0 1 1.5-1.5h4a1.5 1.5 0 0 1 1.5 1.5V7"/></svg>Avisará · tiene pack</button><button type="button" class="ag-otb" hidden></button></div>
   <div class="ag-noh" hidden>${nohHtml(true)}</div>
   <div class="ag-sgo nh" hidden><div class="hz-lab">¿Cuándo hay que llamar?</div><div class="seg-rap sgo-d">${[['Mañana',1],['En 1 semana',7],['En 2 semanas',14],['En 1 mes',30]].map(([t,d])=>`<button type="button" data-d="${d}">${t}</button>`).join('')}</div><input type="date" class="seg-f sgo-f" value="${segIso(7)}" min="${segIso(0)}">
    <div class="hz-lab">¿Quién le contacta?</div><div class="seg-rap sgo-q"></div><div class="hz-lab">Nota</div><textarea class="seg-n sgo-n" rows="2" placeholder="Ej.: llamar para ver qué tal está y darle otra cita"></textarea></div>
@@ -7559,6 +7563,13 @@ function agAbrirCita(c,onDone){
   m.querySelectorAll('.ag-est button').forEach(b=>b.classList.toggle('on',b.dataset.v===est));lib.hidden=!(/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(est)&&!/CANCELADA|NO ASIST|REPROGRAMADA|POR REAGENDAR/.test(c.estado));};pe();
  // Seguimiento: para los que cancelan, no vienen o hay que reagendar (se puede desde cualquier cita)
  const sb=m.querySelector('.ag-segb'),ab=m.querySelector('.ag-altab'),sgr=m.querySelector('.ag-sgr'),decl=m.querySelector('.ag-decl');
+ // Si ya tiene otra cita más adelante, se puede elegir «No hace falta: ya tiene otra cita» con un toque (sin tener que explicarlo)
+ const otb=m.querySelector('.ag-otb');let otra=null;
+ const otTxt=x=>{const d=fechaCita(x.fecha,x.hora);return d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})+(x.hora?' a las '+String(x.hora).slice(0,5):'')+(x.fisio?' con '+capTit(String(x.fisio).split(' ')[0]):'');};
+ const pOt=()=>{const ob=!!c.pacienteId&&est!==est0&&/^(CANCELADA|NO ASISTIÓ|POR REAGENDAR)$/.test(est)&&!SEG_PAC[c.pacienteId];if(!otb)return;otb.hidden=!(ob&&otra);if(!ob&&dec==='otra')dec='';
+  if(otra)otb.innerHTML=`<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m9.5 15 2 2 3.5-3.5"/></svg><span>No hace falta: ya tiene otra cita<small>${escH(otTxt(otra))}</small></span>`;otb.classList.toggle('on',dec==='otra');};
+ if(c.pacienteId)fetch(`/api/citas?patientId=${encodeURIComponent(c.pacienteId)}`).then(x=>x.json()).then(d=>{const hoy=new Date(new Date().toDateString());
+  otra=(d.citas||[]).map(x=>({...x,_d:fechaCita(x.fecha,x.hora),_e:String(x.estado||'').trim().toLowerCase()})).filter(x=>x.id!==c.id&&x._e==='pendiente'&&x._d>=hoy).sort((a,b)=>a._d-b._d)[0]||null;if(m.isConnected)pSeg();}).catch(()=>{});
  // Al cancelar o dejar «Por reagendar» hay que elegir Seguimiento o No hace falta (ninguna marcada de entrada): así no se pasa nadie
  let dec='';const hayQueElegir=()=>!!c.pacienteId&&est!==est0&&/^(CANCELADA|NO ASISTIÓ|POR REAGENDAR)$/.test(est)&&!SEG_PAC[c.pacienteId];
  const noh=m.querySelector('.ag-noh'),nohLee=nohAtar(noh),pkb=m.querySelector('.ag-pkb'),pkn=m.querySelector('.ag-pkn');
@@ -7570,7 +7581,7 @@ function agAbrirCita(c,onDone){
   sb.classList.toggle('ya',ya);sb.classList.toggle('sug',!ya&&sug);decl.hidden=!ob;sgr.classList.toggle('elige',ob);if(!ob)sgr.classList.remove('falta');
   const conPk=ob&&/^(CANCELADA|POR REAGENDAR)$/.test(est);if(!conPk&&dec==='pack')dec='';pkb.hidden=!conPk;sgr.classList.toggle('tres',conPk);
   sb.classList.toggle('on',ob&&dec==='seg');ab.classList.toggle('on',ob&&dec==='no');pkb.classList.toggle('on',dec==='pack');noh.hidden=!(ob&&dec==='no');pkn.hidden=dec!=='pack';sgo.hidden=!(ob&&dec==='seg');if(!sgo.hidden&&!sgnTocada)sgn.value=segNota();
-  sb.innerHTML=ya?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>En seguimiento':'<svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Seguimiento';};
+  sb.innerHTML=ya?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>En seguimiento':'<svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Seguimiento';pOt();};
  const segNota=()=>{const qe=est==='CANCELADA'?'Canceló':est==='NO ASISTIÓ'?'No vino a':est==='POR REAGENDAR'?'Hay que reagendar':'';const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);return qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'';};
  sb.onclick=()=>{if(hayQueElegir()){dec=dec==='seg'?'':'seg';sgr.classList.remove('falta');pSeg();return;}
   if(SEG_PAC[c.pacienteId]){toast(segYaTxt(c.pacienteId),true);return;}
@@ -7578,6 +7589,7 @@ function agAbrirCita(c,onDone){
   const fC=+FD.slice(8)+'/'+ +FD.slice(5,7);
   abrirNuevoSeg({pacienteId:c.pacienteId,nombre:c.paciente,nota:qe?`${qe} la cita del ${fC} a las ${c.hora}. `:'',onSave:()=>{SEG_PAC[c.pacienteId]=SEG_PAC[c.pacienteId]||{fecha:'',quien:''};pSeg();try{_dtC.d=null;_dtC.t=0;_dtC.fresco=true;contarTareas();}catch(_){}}});};
  // Alta desde la cita: si has cambiado el estado (p. ej. Cancelada), primero se guarda la cita y luego se da el alta
+ if(otb)otb.onclick=()=>{dec=dec==='otra'?'':'otra';sgr.classList.remove('falta');pSeg();};
  pkb.onclick=()=>{dec=dec==='pack'?'':'pack';sgr.classList.remove('falta');pSeg();if(dec==='pack')setTimeout(()=>pkn.querySelector('textarea').focus(),50);};
  m.querySelector('.ag-altab').onclick=async e=>{const b=e.currentTarget;
   if(hayQueElegir()){dec=dec==='no'?'':'no';sgr.classList.remove('falta');pSeg();return;}
@@ -7614,6 +7626,7 @@ function agAbrirCita(c,onDone){
   const pkTxt=dec0==='pack'?pkn.querySelector('textarea').value.trim():'';
   if(dec0==='pack'&&pkTxt.length<3){pkn.classList.remove('falta');void pkn.offsetWidth;pkn.classList.add('falta');pkn.querySelector('textarea').focus();toast('Explica por qué no puede venir',false);return;}
   if(dec0==='pack'){const ta=m.querySelector('.ag-not2');ta.value=[ta.value.trim(),'Avisará cuando pueda (tiene pack): '+pkTxt].filter(Boolean).join('\n');}
+  if(dec0==='otra'&&otra){const ta=m.querySelector('.ag-not2');ta.value=[ta.value.trim(),'No hace falta seguimiento: ya tiene otra cita el '+otTxt(otra)+'.'].filter(Boolean).join('\n');}
   if(nv&&nv.mot==='otra'){const ta=m.querySelector('.ag-not2');ta.value=[ta.value.trim(),'No hace falta seguimiento: ya tiene otra cita. '+nv.txt].filter(Boolean).join('\n');}
   const sgV=dec0==='seg'?{fecha:sgf.value,nota:sgn.value.trim(),responsable:sgQ()}:null;
   if(sgV&&!sgV.fecha){toast('Elige cuándo hay que llamar',false);return;}
@@ -13216,6 +13229,8 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-10',aviso:1,t:'Al cancelar una cita (o «No asistió» / «Por reagendar»), si el paciente ya tiene otra cita más adelante sale un botón «No hace falta: ya tiene otra cita» con la fecha. Un toque y listo, sin tener que explicarlo.'},
+{f:'2026-11-10',t:'Bomba: si a una hora ya hay 2 pacientes con bomba, los huecos libres de esa hora pasan solos a «libre sin bomba» (y no salen en la app). Si se libera la bomba, vuelven solos a libres normales.'},
 {f:'2026-11-09',aviso:1,ver:{sec:'tall',pasos:[{el:'.tal-int',txt:'Aquí sale quién quiere venir al próximo y cuándo le va bien.'}]},t:'Talleres y cursos: nueva tarjeta «Para el próximo taller». Quien no puede venir ese día se apunta (desde la página del taller o desde su app) y dice qué días y a qué hora le va bien. También puedes añadir tú a quien te lo diga en persona o por teléfono («+ Añadir a alguien»). Al poner fecha al siguiente, avísales por WhatsApp desde la tarjeta y márcalos como avisados.'},
 {f:'2026-11-09',dir:1,ver:{sec:'stats',pasos:[{el:'.st-rng',txt:'Aquí eliges desde qué mes y hasta cuál.'}]},t:'Estadísticas: nuevo «Desde … hasta …» para ver solo los meses que quieras (con cualquier vista: semana, mes, trimestre…). «Quitar» vuelve a verlo todo.'},
 {f:'2026-11-09',aviso:1,t:'Agenda › cita › recuadro del cobro: nuevo botón «Fuera del panel» para las sesiones que se han cobrado y facturado fuera (Holded a mano, mutua, empresa…). Ya no salen como «sin factura» ni gastan sesiones del pack. Se puede deshacer.'},

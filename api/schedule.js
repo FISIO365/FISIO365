@@ -781,6 +781,7 @@ async function _procesarWeb() {
         const u = await at(`${CIT_T}/${libre.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f, typecast: true }) });
         if (u.error) throw new Error(u.error.message);
         await at(`${CIT_T}/${r.id}`, { method: 'DELETE' });
+        await ajustarBombaDia(fecha).catch(() => 0);
       } else {
         const u = await at(`${CIT_T}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: Object.assign({}, base, { NOTAS: [F.NOTAS, nota].filter(Boolean).join('\n') }), typecast: true }) });
         if (u.error) throw new Error(u.error.message);
@@ -2405,7 +2406,7 @@ async function caducarPagos() {
     const fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || ''), fis = (F['PREF.'] && F['PREF.'].name) || F['PREF.'] || '';
     const u = await at(`tblTPlcuiSjQngkaD/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'CANCELADA', 'PAGO ESTADO': 'CADUCADO', NOTAS: (String(F['NOTAS'] || '') + '\nCancelada sola: no pagó en el plazo.').trim(), 'PAGO REGISTRO': (String(F['PAGO REGISTRO'] || '') + `\n${pagoAhora()} · Caducado: no pagó en el plazo`).trim() }, typecast: true }) });
     if (u.error) continue; n++;
-    if (fecha >= new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date())) await at('tblTPlcuiSjQngkaD', { method: 'POST', body: JSON.stringify({ records: [{ fields: { FECHA: fecha, HORA: hora, 'PREF.': fis, ESTADO: 'CITA LIBRE' } }], typecast: true }) }).catch(() => {});
+    if (fecha >= new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date())) { await at('tblTPlcuiSjQngkaD', { method: 'POST', body: JSON.stringify({ records: [{ fields: { FECHA: fecha, HORA: hora, 'PREF.': fis, ESTADO: 'CITA LIBRE' } }], typecast: true }) }).catch(() => {}); await ajustarBombaDia(fecha).catch(() => 0); }
     const pac = await pagoPaciente(F);
     await pagoAvisar('', `⏰ ${pac.pila || 'Un paciente'} no ha pagado a tiempo: cita cancelada`, `${fecha.split('-').reverse().join('/')} a las ${hora}${fis ? ' con ' + fis : ''}. El hueco vuelve a estar libre.`, 'pago-' + r.id);
   }
@@ -3010,6 +3011,26 @@ async function listarFacturas(ids, conBorradores) {
 // Leer todos los registros de una tabla (paginado). Las funciones que tienen la suya la siguen usando; esta es para el resto (p. ej. entrar con código)
 const todosT = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
 
+// Bomba diamagnética: una máquina para 2 pacientes. Si a una hora ya hay 2 con bomba, los huecos libres de esa hora (de cualquier fisio)
+// pasan solos a «LIBRE - SIN BOMBA» (y no salen en la app). Si deja de estar llena, los que se pasaron solos vuelven a «CITA LIBRE».
+const SB_AUTO = 'Sin bomba automático: a esta hora ya hay 2 pacientes con bomba';
+async function ajustarBombaDia(fecha) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha || '') || (CLI.opciones && CLI.opciones.bomba === false)) return 0;
+  const CITt = 'tblTPlcuiSjQngkaD', nm = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || ''), hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
+  const tp = await at(`tbltoikmBZwHYQcpD?filterByFormula=${encodeURIComponent("{Name}='NO BOMBA'")}&pageSize=1&fields[]=Name`).catch(() => ({})), nb = ((tp.records || [])[0] || {}).id || '';
+  const rows = await todosT(CITt, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}'`)}&fields[]=HORA&fields[]=ESTADO&fields[]=NOTAS&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('TIPO DE CITA')}`);
+  const porH = {}; rows.forEach(r => { const h = hh(r.fields.HORA); if (h) (porH[h] = porH[h] || []).push(r); });
+  const cambios = [];
+  Object.values(porH).forEach(L => {
+    const n = L.filter(r => (r.fields['RELACIÓN - CITA'] || []).length && /PENDIENTE|REALIZADA|DUDOSA/i.test(String(nm(r.fields.ESTADO))) && !(nb && (r.fields['TIPO DE CITA'] || []).includes(nb))).length;
+    L.filter(r => !(r.fields['RELACIÓN - CITA'] || []).length).forEach(r => { const e = String(nm(r.fields.ESTADO)).trim(), auto = String(r.fields.NOTAS || '').trim() === SB_AUTO;
+      if (n >= 2 && e === 'CITA LIBRE') cambios.push({ id: r.id, fields: { ESTADO: 'LIBRE - SIN BOMBA', NOTAS: SB_AUTO } });
+      else if (n < 2 && e === 'LIBRE - SIN BOMBA' && auto) cambios.push({ id: r.id, fields: { ESTADO: 'CITA LIBRE', NOTAS: '' } }); });
+  });
+  for (let i = 0; i < cambios.length; i += 10) await at(CITt, { method: 'PATCH', body: JSON.stringify({ records: cambios.slice(i, i + 10), typecast: true }) });
+  return cambios.length;
+}
+
 // «No reagenda»: guarda en POR QUÉ HISTORIAL el motivo actual (y el nuevo, si lo hay) antes de cambiarlo o borrarlo
 // Al dar cita (panel, enlace de huecos o app): si estaba en «Por llamar» sale de la lista (cita recuperada) y su etiqueta pasa a ACTIVO
 async function salirDeSeguimiento(pid, quienTxt, fecha, hora, origen) {
@@ -3302,7 +3323,7 @@ module.exports = async function handler(req, res) {
     const c = await at(`tblTPlcuiSjQngkaD/${id}`).catch(() => ({})), F = c.fields || {}, pid = (F['RELACIÓN - CITA'] || [])[0], fecha = String(F['FECHA'] || '').slice(0, 10), hora = String(F['HORA'] || '');
     const hoyM = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
     if (!pid || String(F['ESTADO'] || '').trim() !== 'PENDIENTE' || fecha < hoyM) return res.status(200).json({ ok: false });
-    await Promise.all([revisarPorReagendar(true).catch(() => 0), salirDeEspera(pid, fecha, hora).catch(() => 0), salirDeNoCitados(pid, fecha, hora).catch(() => 0), salirDeSeguimiento(pid, '', fecha, hora, 'Reservó desde la app').catch(() => null)]);
+    await Promise.all([revisarPorReagendar(true).catch(() => 0), salirDeEspera(pid, fecha, hora).catch(() => 0), salirDeNoCitados(pid, fecha, hora).catch(() => 0), salirDeSeguimiento(pid, '', fecha, hora, 'Reservó desde la app').catch(() => null), ajustarBombaDia(fecha).catch(() => 0)]);
     return res.status(200).json({ ok: true });
   }
   if (action === 'ver') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ v: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 12) }); } // versión publicada: el panel se actualiza solo al volver
@@ -4941,7 +4962,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           if (tipo && !q.noAbrir) { const cond = [`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f}'`, `TRIM({ESTADO}&'')='CITA BLOQUEADA'`, `{NOTAS}='${String(tipo).replace(/'/g, '')}'`]; if (F.FISIO !== 'Toda la clínica') cond.push(`{PREF.}='${String(F.FISIO).replace(/'/g, '')}'`);
             const bl = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(${cond.join(',')})`)}&fields[]=ESTADO`).catch(() => []);
             for (let i = 0; i < bl.length; i += 10) await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: bl.slice(i, i + 10).map(x => ({ id: x.id, fields: { ESTADO: 'CITA LIBRE', NOTAS: '' } })), typecast: true }) });
-            abiertos = bl.length; }
+            abiertos = bl.length; if (bl.length) await ajustarBombaDia(f).catch(() => 0); }
           return res.status(200).json({ ok: true, abiertos, ausencias: await ausencias().catch(() => []) });
         }
         if (action === 'seg-adm-ausencia-borrar') {
@@ -5575,6 +5596,8 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
             if (a) add('ausencia', x.f, [x.id], `${n1(x.pid)} tiene cita a las ${x.h} con ${fN(x.fi)}, pero ${a.fisio === 'Toda la clínica' ? 'la clínica está cerrada' : fN(x.fi) + ' no está'}${a.tipo ? ' (' + String(a.tipo).toLowerCase() + ')' : ''}`, { hora: x.h, fisio: x.fi }); });
           // Bomba: es para dos
           if (nbId != null) { const b = {}; R.filter(x => act(x) && !x.tp.includes(nbId)).forEach(x => { const k = x.f + '|' + x.h; (b[k] = b[k] || []).push(x); });
+            const libB = {}; R.filter(x => lib(x) && x.e === 'CITA LIBRE').forEach(x => { const k = x.f + '|' + x.h; (libB[k] = libB[k] || []).push(x); });
+            Object.entries(libB).forEach(([k, H]) => { const L = b[k] || []; if (L.length >= 2) add('bombalibre', H[0].f, [...L, ...H].map(x => x.id), `A las ${H[0].h} la bomba ya está llena (${L.map(x => n1(x.pid)).join(' y ')}) y ${H.map(x => fN(x.fi)).join(', ')} tiene un hueco libre con bomba: si alguien lo reserva no tendrá bomba`, { hora: H[0].h }); });
             Object.values(b).forEach(L => { if (L.length > 2) add('bomba', L[0].f, L.map(x => x.id), `A las ${L[0].h} hay ${L.length} pacientes con bomba y es para dos: ${L.map(x => n1(x.pid)).join(', ')}`, { hora: L[0].h }); }); }
           return out.sort((a, b) => (a.fecha + (a.hora || '')).localeCompare(b.fecha + (b.hora || '')));
         };
@@ -6213,6 +6236,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           if (rgC) campos.NOTAS = ((campos.NOTAS ? campos.NOTAS + '\n' : '') + notaRegalo(rgC.hasta)).slice(0, 2000);
           const r = await ocupar(q.fecha, q.hora, q.fisio, campos, !!q.forzar);
           if (r.conflicto) return res.status(200).json({ ok: false, conflicto: true, error: `A esa hora ${q.fisio} ya tiene a ${r.con || 'otro paciente'}` });
+          await ajustarBombaDia(q.fecha).catch(() => 0);
           const rep = await revisarPorReagendar(true).catch(() => 0);
           const seg = await salirDeSeguimiento(q.pacienteId, q.quien, q.fecha, q.hora).catch(() => null);
           const et = await ponerEtapa(q.pacienteId, 'cita').catch(() => null); if (seg && et) seg.estados = et.estados;
@@ -6237,13 +6261,16 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
             }
           }
           for (let i = 0; i < nuevos.length; i += 10) { const d = await at(CIT, { method: 'POST', body: JSON.stringify({ records: nuevos.slice(i, i + 10), typecast: true }) }); if (d.error) throw new Error(d.error.message || 'No se han podido crear'); }
+          if (q.estado === 'CITA LIBRE') for (const f of [...new Set(nuevos.map(x => x.fields.FECHA))]) await ajustarBombaDia(f).catch(() => 0);
           return res.status(200).json({ ok: true, creadas: nuevos.length, saltadas, ausentes });
         }
         if (action === 'seg-agenda-hueco') { // dejar una hora libre (para la app), bloqueada, etc.
           if (!okF(q.fecha) || !okH(q.hora) || !q.fisio || !/^(CITA LIBRE|LIBRE - SIN BOMBA|CITA BLOQUEADA|FRANJA BLOQUEADA|DIA BLOQUEADO|CALL-IN|COMIDA|VIDEOS)$/.test(q.estado || '')) return res.status(400).json({ ok: false, error: 'Datos no válidos' });
           if (LIBRE(q.estado)) { const ya = enHora(await delDia(q.fecha), q.hora, q.fisio).find(r => LIBRE(nmA(r.fields['ESTADO'])) || ((r.fields['RELACIÓN - CITA'] || []).length && ACTIVA(String(nmA(r.fields['ESTADO'])))));
             if (ya) return res.status(200).json({ ok: false, error: LIBRE(nmA(ya.fields['ESTADO'])) ? `A las ${hh(q.hora)} ya hay un hueco libre de ${String(q.fisio).split(' ')[0]}` : `A las ${hh(q.hora)} ${String(q.fisio).split(' ')[0]} ya tiene un paciente` }); }
-          const r = await nueva(q.fecha, q.hora, q.fisio, { ESTADO: q.estado === 'COMIDA' ? await estadoComida() : q.estado, ...(q.notas ? { NOTAS: String(q.notas) } : {}) }); return res.status(200).json({ ok: true, id: r.id });
+          const r = await nueva(q.fecha, q.hora, q.fisio, { ESTADO: q.estado === 'COMIDA' ? await estadoComida() : q.estado, ...(q.notas ? { NOTAS: String(q.notas) } : {}) });
+          const sb = q.estado === 'CITA LIBRE' ? await ajustarBombaDia(q.fecha).catch(() => 0) : 0;
+          return res.status(200).json({ ok: true, id: r.id, sinBomba: sb > 0 });
         }
         if (action === 'seg-agenda-editar') { global._sesPac = {}; // estado, confirmada, notas, etiquetas; opcional dejar el hueco libre
           if (!okId(q.id)) return res.status(400).json({ ok: false });
@@ -6271,6 +6298,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
             const c = cur.fields; await libreSiHace(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), undefined, q.id);
           }
           if (Object.keys(f).length) await patch(q.id, f);
+          if (q.liberar || f.ESTADO || f['TIPO DE CITA']) await ajustarBombaDia(String(cur.fields.FECHA || '').slice(0, 10)).catch(() => 0);
           { const pidE = (cur.fields['RELACIÓN - CITA'] || [])[0]; if (pidE && /^(REALIZADA|NO ASISTIÓ)$/.test(q.estado || '')) await ponerEtapa(pidE, q.estado === 'REALIZADA' ? 'realizada' : 'noasistio').catch(() => null); }
           // Sin pack: si no vino o canceló con menos de 24 h, su próxima cita se paga por adelantado
           let debePagar = '';
@@ -6306,6 +6334,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
             } }
           await patch(q.id, Object.assign({ ESTADO: q.perdida ? 'CITA PERDIDA' : 'REPROGRAMADA' }, fOrig));
           if (q.liberar) await libreSiHace(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), undefined, q.id);
+          for (const f0 of [...new Set([String(c.FECHA).slice(0, 10), q.fecha])]) await ajustarBombaDia(f0).catch(() => 0);
           return res.status(200).json({ ok: true, id: r.id, debePagar });
         }
         if (action === 'seg-agenda-fisio') { global._sesPac = {}; // pasar la cita a otro fisio, mismo día y hora (sin reprogramar). Si el otro tenía esa hora libre, el hueco pasa al fisio de antes
@@ -6321,15 +6350,18 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           await patch(q.id, { 'PREF.': q.fisio });
           const lib = rows.find(r => !(r.fields['RELACIÓN - CITA'] || []).length && LIBRE(nmA(r.fields['ESTADO'])));
           if (lib && antes) await patch(lib.id, { 'PREF.': antes });
-          else if (q.liberar && antes) await libreSiHace(fecha, hora, antes);
+          else if (q.liberar && antes) { await libreSiHace(fecha, hora, antes); await ajustarBombaDia(fecha).catch(() => 0); }
           return res.status(200).json({ ok: true, hueco: !!lib });
+        }
+        if (action === 'seg-agenda-bomba') { // revisar la bomba de un día: los huecos libres de horas con la bomba llena pasan a «sin bomba»
+          if (!okF(q.fecha)) return res.status(400).json({ ok: false }); const n = await ajustarBombaDia(q.fecha); return res.status(200).json({ ok: true, cambiados: n });
         }
         if (action === 'seg-agenda-borrar') { // solo huecos (libres/bloqueados), nunca citas con paciente
           if (!okId(q.id)) return res.status(400).json({ ok: false });
           const cur = await at(`${CIT}/${q.id}`); if (cur.error) return res.status(404).json({ ok: false });
           if ((cur.fields['RELACIÓN - CITA'] || []).length && !q.conPaciente) return res.status(400).json({ ok: false, error: 'Esta cita tiene paciente' });
           if (q.liberar) { const c = cur.fields; await nueva(String(c.FECHA).slice(0, 10), hh(c.HORA), nmA(c['PREF.']), { ESTADO: 'CITA LIBRE' }); }
-          const d = await at(`${CIT}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error });
+          const d = await at(`${CIT}/${q.id}`, { method: 'DELETE' }); await ajustarBombaDia(String(cur.fields.FECHA || '').slice(0, 10)).catch(() => 0); return res.status(200).json({ ok: !d.error });
         }
         return res.status(400).json({ ok: false, error: 'Acción no válida' });
       }
