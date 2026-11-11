@@ -3286,7 +3286,8 @@ module.exports = async function handler(req, res) {
         facturas: fs.map(r => ({ id: r.id, ...Object.fromEntries(Object.entries(r.fields || {}).filter(([k]) => /ESTADO|FECHA|CONCEPTO|SESIONES|TOTAL|N[ÚU]MERO|PACK|POR SESION|MODO|HOLDED|ANULA/i.test(k))) })),
         nCitas: citas.length, citas: citas.slice(-25), saldo: await saldoPaciente(p.id).catch(e => ({ error: e.message })) });
     }
-    return res.status(200).json({ ok: true, inicio: await inicioControl().catch(() => ''), out });
+    let holded = null; try { if (ps[0]) { const ids = await contactosDelPaciente(ps[0].id); holded = { ids, docs: await listarFacturas(ids, true) }; } } catch (e) { holded = { error: e.message }; }
+    return res.status(200).json({ ok: true, inicio: await inicioControl().catch(() => ''), holded, out });
   }
   if (action === 'panel-codigo' || action === 'panel-codigo-ok') {
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
