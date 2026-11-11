@@ -9,7 +9,7 @@
   .fc{display:flex;flex-direction:column;min-height:0;height:100%;font-family:'Poppins',sans-serif;color:#1a1a1a}
   .fc-hilo{flex:1;overflow-y:auto;padding:14px 4px 10px;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch}
   .fc-dia{align-self:center;font-size:11.5px;font-weight:500;color:#8a857e;background:rgba(255,255,255,.75);border-radius:99px;padding:4px 12px;margin:10px 0 4px;}
-  .fc-b{max-width:80%;padding:10px 14px 7px;border-radius:20px;font-size:14.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;position:relative}
+  .fc-b{max-width:80%;padding:10px 14px 7px;border-radius:20px;font-size:14.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere;min-width:0;position:relative}
   .fc-b.ellos{align-self:flex-start;background:#fff;border-bottom-left-radius:6px;box-shadow:0 1px 2px rgba(26,26,26,.05)}
   .fc-b.yo{align-self:flex-end;background:#1a1a1a;color:#f5f2ee;border-bottom-right-radius:6px}
   .fc-b small{display:block;font-size:10.5px;margin-top:3px;opacity:.55;text-align:right}
