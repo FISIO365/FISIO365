@@ -7,7 +7,7 @@ const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 const BIBLIO_TABLE = 'tbloqn3ts872ueJSE';
 
 const HOLDED_KEY = process.env.HOLDED_API_KEY;
-const { saldoPaciente, rendimiento, inicioControl, sinFacturar, compartidos, repartoCompartido, citasDeMiembros, pcLeer, citasFuera, olvidarCitasFuera } = require('./_push').saldo;
+const { previoAntes, desdePack, saldoPaciente, rendimiento, inicioControl, sinFacturar, compartidos, repartoCompartido, citasDeMiembros, pcLeer, citasFuera, olvidarCitasFuera } = require('./_push').saldo;
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const HOLDED_URL = 'https://api.holded.com/api/v2'; // API nueva de Holded (clave «Bearer»)
 // Marca de la clínica (nombre, dirección, teléfono, reseñas…): ver api/_marca.js
@@ -5659,7 +5659,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
               if (inicio) try {
                 const comp = await todosT(PACIENTES, `filterByFormula=${encodeURIComponent("{PACK COMPARTE}!=''")}&fields[]=${encodeURIComponent('PACK COMPARTE')}`);
                 const S = {}; comp.forEach(p => pcLeer(p.fields['PACK COMPARTE']).forEach(x => { const k = x.t + '|' + x.f; (S[k] = S[k] || { t: x.t, f: x.f, n: Number(x.n) || 0, tot: Number(x.tot) || 0, off: Number(x.off) || 0, d: x.d || '', miembros: [x.t] }).miembros.push(p.id); }));
-                const shares = Object.values(S).filter(x => x.n > 0 && x.miembros.some(m => pv.includes(m)));
+                const shares = await desdePack(Object.values(S).filter(x => x.n > 0 && x.miembros.some(m => pv.includes(m))));
                 if (shares.length) {
                   const todas = await citasDeMiembros([...new Set(shares.flatMap(x => x.miembros))], ['REALIZADA', 'PENDIENTE', 'CITA PERDIDA'], shares.map(x => x.d || '').sort()[0] || '');
                   cubre = repartoCompartido(shares, todas);
@@ -5675,7 +5675,10 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
                 // Se gastan los pagos por orden (primero el más antiguo) con las citas desde el inicio del control, en orden
                 if (cubre.has(r.id)) { const x = cubre.get(r.id); pago[r.id] = { t: 'pack', i: (x.off || 0) + x.orden.indexOf(r.id) + 1, n: x.tot || x.n, comp: true }; return; }
                 const QL = quitarLote[pid] || [], LO = V.lotes.filter(l => !QL.some(f => f === 'previo' ? l.previo : l.fid === f));
-                const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio && !cubre.has(x.id) && !FUERA[x.id]), rep = repartirLotes(gastan.map(x => x.k), LO), j = gastan.findIndex(x => x.id === r.id);
+                // Pack de fuera marcado desde una cita: las sesiones suyas de antes de esa cita ya estaban hechas con él
+                const pre = V.lotes.find(l => l.previo && l.desde), ant = pre ? previoAntes(V.citas.filter(x => x.k.slice(0, 10) >= inicio && !cubre.has(x.id) && !FUERA[x.id] && x.e !== 'CITA PERDIDA'), pre.desde, pre.off) : [];
+                if (ant.includes(r.id)) { pago[r.id] = { t: 'previo', i: (pre.off || 0) - ant.indexOf(r.id), n: pre.tot || pre.n, vale: !!pre.vale }; return; }
+                const gastan = V.citas.filter(x => x.k.slice(0, 10) >= inicio && !cubre.has(x.id) && !FUERA[x.id] && !ant.includes(x.id)), rep = repartirLotes(gastan.map(x => x.k), LO), j = gastan.findIndex(x => x.id === r.id);
                 if (j >= 0) { const a = rep[j], lo = a && a.lo;
                   pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: lo.desde ? a.i : a.i + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : lo.n > 1 ? Object.assign({ t: 'pack', i: a.i, n: lo.n, v: Math.round(lo.precio * 100) / 100 }, lo.psF != null ? { ps: lo.fid, psF: lo.psF } : {}) : { t: 'suelta', v: lo.precio }; }
               });
@@ -5708,6 +5711,10 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
             claves = claves.filter(k => !tapadas.has(k));
             shares.filter(x => x.t === pid).forEach(x => { const i = lotes.findIndex(l => x.f === 'previo' ? l.previo : l.fid === x.f); if (i >= 0) lotes.splice(i, 1); });
           }
+          { const pre = lotes.find(l => l.previo && l.desde); // sesiones del pack de fuera hechas antes de marcarlo: ya contadas en «ya usadas»
+            if (pre) { const ant = previoAntes([...claves, clave].map(k => ({ id: k, k })), pre.desde, pre.off);
+              if (ant.includes(clave)) return { activo: true, t: 'pack', i: (pre.off || 0) - ant.indexOf(clave), n: pre.tot || pre.n, vale: !!pre.vale, quedan: Math.max(0, lotes.reduce((t, l) => t + l.n, 0) - claves.filter(k => !ant.includes(k)).length) };
+              claves = claves.filter(k => !ant.includes(k)); } }
           claves.push(clave); claves.sort();
           let out = { t: 'sin' }; { const rep = repartirLotes(claves, lotes), a = rep[claves.indexOf(clave)], lo = a && a.lo;
             out = !lo ? { t: 'sin' } : lo.n > 1 || lo.previo ? { t: 'pack', i: lo.previo && lo.desde ? a.i : a.i + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : { t: 'suelta' }; }

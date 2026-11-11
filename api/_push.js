@@ -91,6 +91,26 @@ async function citasGastadas(inicio, pacId) {
   return L.filter(c => !FU[c.id]);
 }
 
+// Pack de fuera marcado desde una cita («esta cita es la sesión k de N»): las k−1 sesiones anteriores ya eran de ese pack.
+// Si alguna cae dentro del periodo de control, no gasta de nada (no se cuenta dos veces). citas: [{id, k: 'YYYY-MM-DD HH:MM'}] de ese paciente
+function previoAntes(citas, desde, usadas) {
+  const u = Number(usadas) || 0; if (!desde || u <= 0) return [];
+  return citas.filter(c => c.k < desde).sort((a, b) => b.k.localeCompare(a.k)).slice(0, u).map(c => c.id);
+}
+const hhK = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : '00:00'; };
+const claveCita = c => String(c.fields.FECHA || '').slice(0, 10) + ' ' + hhK(c.fields.HORA);
+// Un pack que se cobró juntando sesiones ya pagadas antes («EN PACK» con su PACK GRUPO) empieza en la primera de ellas, no el día del cobro
+async function desdePack(shares) {
+  const fs = [...new Set(shares.map(x => x.f).filter(f => /^rec/.test(f || '')))];
+  if (!fs.length) return shares;
+  try {
+    const r = await todosAT(FACTURAS, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',OR(${fs.map(f => `{PACK GRUPO}='${f}'`).join(',')}))`)}&fields[]=PACK GRUPO&fields[]=FECHA DE COBRO&fields[]=FECHA`);
+    const m = {}; r.forEach(x => { const g = x.fields['PACK GRUPO'], d = String(fechaCobro(x.fields)).slice(0, 10); if (g && d && (!m[g] || d < m[g])) m[g] = d; });
+    shares.forEach(x => { if (m[x.f] && (!x.d || m[x.f] < x.d)) x.d = m[x.f]; });
+  } catch (e) {}
+  return shares;
+}
+
 // ── Pack compartido ──
 // Quien usa el pack de otro lleva en «PACK COMPARTE» una lista [{t: paciente que pagó, f: id de la factura del pack o 'previo', n: sesiones, d: desde (YYYY-MM-DD)}].
 // Las citas de todos (el que pagó y con quien lo comparte), por orden de fecha y desde «d», gastan primero ese pack; al acabarse, cada uno vuelve a lo suyo.
@@ -103,6 +123,7 @@ async function compartidos(pid) {
   recs.forEach(p => pcLeer(p.fields['PACK COMPARTE']).forEach(x => { if (!Ts.includes(x.t)) return; const k = x.t + '|' + x.f; (S[k] = S[k] || { t: x.t, f: x.f, n: Number(x.n) || 0, tot: Number(x.tot) || 0, off: Number(x.off) || 0, d: x.d || '', miembros: new Set([x.t]) }).miembros.add(p.id); }));
   const lista = Object.values(S).filter(x => x.miembros.has(pid) && x.n > 0).map(x => ({ ...x, miembros: [...x.miembros] }));
   if (!lista.length) return [];
+  await desdePack(lista);
   const ids = [...new Set(lista.flatMap(x => x.miembros))], nom = {};
   (await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + ids.map(i => `RECORD_ID()='${i}'`).join(',') + ')')}&fields[]=FULL NAME`).catch(() => [])).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; });
   lista.forEach(x => { x.nombres = nom; });
@@ -131,7 +152,8 @@ async function citasDeMiembros(miembros, estados, desde) {
     const ps = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('AND({BONO PREVIO DESDE}!=\'\',OR(' + miembros.map(m => `RECORD_ID()='${m}'`).join(',') + '))')}&fields[]=SESIONES BONO PREVIO&fields[]=BONO PREVIO YA USADAS&fields[]=BONO PREVIO DESDE`);
     const fuera = new Set();
     ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0) - Number(p.fields['BONO PREVIO YA USADAS'] || 0), d0 = String(p.fields['BONO PREVIO DESDE'] || ''); if (n <= 0 || !d0) return;
-      L.filter(c => c.pid === p.id && c.k >= d0).sort((a, b) => a.k.localeCompare(b.k)).slice(0, n).forEach(c => fuera.add(c.id)); });
+      L.filter(c => c.pid === p.id && c.k >= d0).sort((a, b) => a.k.localeCompare(b.k)).slice(0, n).forEach(c => fuera.add(c.id));
+      previoAntes(L.filter(c => c.pid === p.id), d0, p.fields['BONO PREVIO YA USADAS']).forEach(id => fuera.add(id)); });
     return fuera.size ? L.filter(c => !fuera.has(c.id)) : L;
   } catch (e) { return L; }
 }
@@ -140,12 +162,16 @@ const pcResumen = (x, pid) => ({ titular: x.t, yoPague: x.t === pid, con: x.miem
 async function saldoPaciente(pacId) {
   const inicio = await inicioControl();
   if (!inicio) return { activo: false };
-  const [facs, citas, pac] = await Promise.all([
+  let [facs, citas, pac] = await Promise.all([
     facturasEmitidas(pacId), citasGastadas(inicio, pacId),
     fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_T}/${pacId}`, { headers: { Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}` } }).then(r => r.json())
   ]);
   // Pack pagado fuera del panel: cuenta lo que le quedaba cuando el panel empezó a contar (total − ya usadas antes)
-  const previo = Math.max(0, Number((pac.fields || {})['SESIONES BONO PREVIO'] || 0) - Number((pac.fields || {})['BONO PREVIO YA USADAS'] || 0));
+  const PF = pac.fields || {}, nPrev = Number(PF['SESIONES BONO PREVIO'] || 0), uPrev = nPrev > 0 ? Math.min(nPrev, Number(PF['BONO PREVIO YA USADAS'] || 0)) : 0;
+  const previo = Math.max(0, nPrev - uPrev);
+  // Las sesiones de ese pack hechas antes de marcarlo ya están en «ya usadas»: no gastan otra vez
+  const antes = new Set(previoAntes(citas.map(c => ({ id: c.id, k: claveCita(c) })), String(PF['BONO PREVIO DESDE'] || ''), uPrev));
+  if (antes.size) citas = citas.filter(c => !antes.has(c.id));
   const pagadas = facs.reduce((t, r) => t + sesionesDe(r.fields), 0) + previo;
   let gastadas = citas.length, pag = pagadas, extra = 0, compartido = [];
   const shares = await compartidos(pacId).catch(() => []);
@@ -157,20 +183,22 @@ async function saldoPaciente(pacId) {
     gastadas -= citas.filter(c => cubre.has(c.id)).length;
     compartido = shares.map(x => pcResumen(x, pacId));
   }
-  return { activo: true, inicio, pagadas: pag + shares.reduce((t, x) => t + x.n, 0), gastadas: gastadas + shares.reduce((t, x) => t + (x.usadas || 0), 0), saldo: pag - gastadas + extra, compartido };
+  return { activo: true, inicio, pagadas: pag + uPrev + shares.reduce((t, x) => t + x.n, 0), gastadas: gastadas + uPrev + shares.reduce((t, x) => t + (x.usadas || 0), 0), saldo: pag - gastadas + extra, compartido };
 }
 
 // Todos los pacientes con saldo negativo (sesiones hechas sin facturar)
 async function sinFacturar() {
   const inicio = await inicioControl();
   if (!inicio) return { activo: false, lista: [] };
-  const [facs, citas, previos] = await Promise.all([
+  let [facs, citas, previos] = await Promise.all([
     facturasEmitidas(''), citasGastadas(inicio, ''),
-    todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('{SESIONES BONO PREVIO}>0')}&fields[]=SESIONES BONO PREVIO&fields[]=BONO PREVIO YA USADAS`)
+    todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('{SESIONES BONO PREVIO}>0')}&fields[]=SESIONES BONO PREVIO&fields[]=BONO PREVIO YA USADAS&fields[]=BONO PREVIO DESDE`)
   ]);
   const s = {};
   const de = id => (s[id] = s[id] || { pagadas: 0, gastadas: 0, nombre: '', fisio: '', ultima: '' });
   previos.forEach(p => { de(p.id).pagadas += Math.max(0, Number(p.fields['SESIONES BONO PREVIO'] || 0) - Number(p.fields['BONO PREVIO YA USADAS'] || 0)); });
+  const antes = new Set(); previos.forEach(p => previoAntes(citas.filter(c => (c.fields['RELACIÓN - CITA'] || [])[0] === p.id).map(c => ({ id: c.id, k: claveCita(c) })), String(p.fields['BONO PREVIO DESDE'] || ''), p.fields['BONO PREVIO YA USADAS']).forEach(id => antes.add(id)));
+  if (antes.size) citas = citas.filter(c => !antes.has(c.id));
   facs.forEach(r => { const id = r.fields['PacienteId']; if (id) de(id).pagadas += sesionesDe(r.fields); });
   citas.forEach(c => {
     const id = (c.fields['RELACIÓN - CITA'] || [])[0]; if (!id) return;
@@ -182,7 +210,7 @@ async function sinFacturar() {
   try {
     const comp = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent("{PACK COMPARTE}!=''")}&fields[]=PACK COMPARTE`);
     const S = {}; comp.forEach(p => pcLeer(p.fields['PACK COMPARTE']).forEach(x => { const k = x.t + '|' + x.f; (S[k] = S[k] || { t: x.t, f: x.f, n: Number(x.n) || 0, d: x.d || '', miembros: [x.t] }).miembros.push(p.id); }));
-    const shares = Object.values(S).filter(x => x.n > 0);
+    const shares = await desdePack(Object.values(S).filter(x => x.n > 0));
     if (shares.length) {
       const hh = h => { const m = String(h || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : '00:00'; };
       const cs = citas.map(c => ({ id: c.id, pid: (c.fields['RELACIÓN - CITA'] || [])[0] || '', k: String(c.fields['FECHA'] || '').slice(0, 10) + ' ' + hh(c.fields['HORA']) }));
@@ -380,5 +408,5 @@ async function valorSesiones(citasRango, hasta, precios, opts) {
   return { lista, ref };
 }
 
-const saldo = { compartidos, repartoCompartido, citasDeMiembros, pcLeer, saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl, citasFuera, olvidarCitasFuera };
+const saldo = { previoAntes, desdePack, compartidos, repartoCompartido, citasDeMiembros, pcLeer, saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl, citasFuera, olvidarCitasFuera };
 module.exports = { leerSub, enviar, avisar, idValido, TABLAS, BASE_ID, saldo };
