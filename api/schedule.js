@@ -3286,6 +3286,7 @@ module.exports = async function handler(req, res) {
         facturas: fs.map(r => ({ id: r.id, ...Object.fromEntries(Object.entries(r.fields || {}).filter(([k]) => /ESTADO|FECHA|CONCEPTO|SESIONES|TOTAL|N[ÚU]MERO|PACK|POR SESION|MODO|HOLDED|ANULA/i.test(k))) })),
         nCitas: citas.length, citas: citas.slice(-25), saldo: await saldoPaciente(p.id).catch(e => ({ error: e.message })) });
     }
+    if (req.query.anular === 'recrONUb3KDyNQwDd') { const r = await at(`${FACTURAS_TABLE}/recrONUb3KDyNQwDd`, { method: 'PATCH', body: JSON.stringify({ typecast: true, fields: { ESTADO: 'Anulada' } }) }); global._sesPac = {}; return res.status(200).json({ ok: !r.error, r }); }
     let holded = null; try { if (ps[0]) { const ids = await contactosDelPaciente(ps[0].id); holded = { ids, docs: await listarFacturas(ids, true) }; } } catch (e) { holded = { error: e.message }; }
     return res.status(200).json({ ok: true, inicio: await inicioControl().catch(() => ''), holded, out });
   }
