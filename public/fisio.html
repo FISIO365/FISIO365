@@ -12350,7 +12350,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
   {const tj=f.querySelector('.fac-tj');if(tj)tj.onclick=()=>{usarTj=!usarTj;tj.classList.toggle('on',usarTj);total();};}
   f.querySelectorAll('.fac-dtoc button').forEach(b=>b.onclick=()=>{dtoK=b.dataset.k;f.querySelectorAll('.fac-dtoc button').forEach(x=>x.classList.toggle('on',x===b));f.querySelector('.fac-dtox').hidden=dtoK!=='otro';if(dtoK==='otro')f.querySelector('.fac-dtov').focus();total();});
   f.querySelectorAll('.fac-dtou button').forEach(b=>b.onclick=()=>{dtoU=b.dataset.u;f.querySelectorAll('.fac-dtou button').forEach(x=>x.classList.toggle('on',x===b));total();});
-  f.querySelectorAll('.fac-dtov,.fac-dtom').forEach(i=>i.oninput=total);
+  f.querySelectorAll('.fac-dtov,.fac-dtom').forEach(i=>i.oninput=()=>total());
   f.querySelectorAll('.fac-fisio button').forEach(b=>b.onclick=()=>{f.querySelectorAll('.fac-fisio button').forEach(x=>x.classList.toggle('on',x===b));fisioSel=b.dataset.v;});
   const subL=()=>{let t=0;lineasBox.querySelectorAll('.fac-linea').forEach(l=>{t+=(+l.querySelector('.fl-n').value||0)*(+String(l.querySelector('.fl-p').value).replace(',','.')||0);});return t;};
   // Descuento (cumpleaños 10 % u otro, en % o €): solo al cobrar por líneas; va como línea en negativo en la factura
