@@ -7607,7 +7607,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const D = q.desglose.map(x => ({ m: String(x.m || '').trim().slice(0, 30), v: r2(String(x.v || '').replace(',', '.')) })).filter(x => x.m && x.v > 0);
       const totL = r2(lineas.reduce((t, l) => t + Number(l.uds || 0) * Number(l.precio || 0), 0));
       if (D.length < 2) return res.status(400).json({ ok: false, error: 'Pon al menos dos formas de pago con su importe' });
-      if (Math.abs(r2(D.reduce((t, x) => t + x.v, 0)) - totL) > 0.01 && !q.tarjetaId) return res.status(200).json({ ok: false, error: `Las formas de pago suman ${r2(D.reduce((t, x) => t + x.v, 0))} € y el total es ${totL} €` });
+      if (Math.abs(r2(D.reduce((t, x) => t + x.v, 0)) - totL) > 0.01 && !q.tarjetaId && !q.descuento) return res.status(200).json({ ok: false, error: `Las formas de pago suman ${r2(D.reduce((t, x) => t + x.v, 0))} € y el total es ${totL} €` });
       desglose = D.map(x => `${x.m}: ${x.v}`).join(' · '); q.modoPago = 'Varias';
     }
     if (q.dni && normDni(q.dni).length >= 8) await at(`${PACIENTES}/${pac}`, { method: 'PATCH', body: JSON.stringify({ fields: { DNI: String(q.dni).trim().toUpperCase() } }) });
@@ -7619,6 +7619,12 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const impT = Number((await conf().catch(() => CONF_DEF)).tarjeta.importe) || 10;
       if (lineas.reduce((t, l) => t + Number(l.uds || 0) * Number(l.precio || 0), 0) < impT) return res.status(200).json({ ok: false, error: `El cobro tiene que ser de más de ${impT} € para descontar la tarjeta.` });
       descuento = { importe: impT, texto: 'Tarjeta regalo por recomendar' + (tarjeta.por ? ' a ' + tarjeta.por.split(' ')[0] : '') };
+    }
+    // Descuento a mano (cumpleaños 10 %, otro % o €): una línea en negativo en la factura
+    if (q.descuento && !q.pack && !q.gratis) {
+      const imp = r2(String(q.descuento.importe || '').replace(',', '.')), totL = r2(lineas.reduce((t, l) => t + Number(l.uds || 0) * Number(l.precio || 0), 0)), txt = String(q.descuento.texto || 'Descuento').trim().slice(0, 80) || 'Descuento';
+      if (imp > 0) { if (imp > totL + 0.001) return res.status(200).json({ ok: false, error: 'El descuento es mayor que el total.' });
+        descuento = descuento ? { importe: r2(descuento.importe + imp), texto: descuento.texto + ' · ' + txt } : { importe: imp, texto: txt }; }
     }
     const fa = q.facturarA || {};
     const campos = { [FF.paciente]: [pac], 'fldpruhLn03x1x6zI': pac, [FF.notas]: String(q.notas || ''), [FF.estado]: 'Pendiente' };
