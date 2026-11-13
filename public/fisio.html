@@ -6751,6 +6751,8 @@ const encSinCom=x=>x.tipo!=='mejora'&&x.valoracion&&x.valoracion!=='Excelente'&&
 async function renderValoraciones(wrap){
  const card=ce('div','card');card.innerHTML='<div class="fac-vacio">Cargando…</div>';wrap.appendChild(card);
  try{await encCarga();}catch(e){card.innerHTML='<div class="fac-vacio">No se han podido cargar las valoraciones.</div>';return;}
+ // si mientras cargaba se ha cambiado de pantalla (p. ej. a Agenda), no pintar nada en la otra
+ if(!card.isConnected||wrap.dataset.sec!=='val')return;
  const v=encVisto(),dir=esDireccion(),fn=n=>capTit(String(n||'—').split(' ').slice(0,2).join(' '));
  const cls=x=>/Excelente|Muy buena|Está mejor/.test(x)?'ok':x==='Normal'?'med':'mal',fd=f=>{if(!f)return '';const d=new Date(f+'T12:00:00');return d.getDate()+'/'+(d.getMonth()+1);};
  const L=ENC_UL,E=L.filter(x=>x.tipo!=='mejora'),ok=E.filter(x=>/Excelente|Muy buena/.test(x.valoracion)).length,go=L.filter(x=>x.resena).length,mj=L.filter(x=>x.tipo==='mejora').length;
