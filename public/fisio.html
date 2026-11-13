@@ -6771,10 +6771,10 @@ async function renderValoraciones(wrap){
    ENC_UL=ENC_UL.filter(y=>y!==x);it.remove();toast('Quitado de la lista',true);}
   catch(e){it.style.opacity='';b.disabled=false;toast('No se ha podido quitar',false);}});
  const m=L.reduce((a,x)=>encT(x)>a?encT(x):a,'');if(m)try{localStorage.setItem(encK(),m);}catch(e){}encBadge(0);
- if(CLINICA.opciones&&CLINICA.opciones.sorteo!==false)valSorteo(wrap,dir);
+ valSorteo(wrap,dir);
  if(dir)valPorFisio(wrap);
 }
-// Sorteo mensual: 2 sesiones entre los que han ido a dejar su reseña desde nuestros enlaces (una al azar y otra a la más original)
+// Reseñas del mes: quién ha ido a Google desde nuestros enlaces y si la dejó de verdad (el sorteo de sesiones se quitó en nov 2026; el código de ganadores queda por si se vuelve)
 async function valSorteo(wrap,dir){const card=ce('div','card val-so');wrap.appendChild(card);let mes=new Date().toISOString().slice(0,7),D=null,verTodos=false;
  const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
  const quien=String((fisioActual&&fisioActual.nombre)||'').split(' ')[0];
@@ -6791,15 +6791,15 @@ async function valSorteo(wrap,dir){const card=ce('div','card val-so');wrap.appen
     <div class="so-bts"><button type="button" class="so-b pri so-av" data-t="${t}">Avisarle</button>${dir?`<button type="button" class="so-b so-q" data-t="${t}">${t==='azar'?'Repetir':'Cambiar'}</button>`:''}</div>${dir?`<button type="button" class="so-del" data-t="${t}">Era de prueba: quitar ganador</button>`:''}`
    :dir?`<div class="so-bts"><button type="button" class="so-b pri so-go" data-t="${t}"${L.length?'':' disabled'}>${t==='azar'?'Sortear':'Elegir ganador'}</button></div>`:'<div class="so-w"><small>Aún sin ganador</small></div>'}</div>`;};
   const ord=LT.slice().sort((a,b)=>(a.resena?1:0)-(b.resena?1:0)),vis=verTodos?ord:ord.slice(0,8),nPend=LT.filter(x=>!x.resena).length;
-  card.innerHTML=`<div class="val-pfh"><div><b>Sorteo del mes</b><small>${D?`${L.length} ${L.length===1?'participa':'participan'} (reseña comprobada) · ${LT.length} ${LT.length===1?'fue':'fueron'} a Google`:'Cargando…'}</small></div><div class="val-pfm"><button type="button" data-n="-1" aria-label="Mes anterior">‹</button><span>${tit.charAt(0).toUpperCase()+tit.slice(1)}</span><button type="button" data-n="1" aria-label="Mes siguiente"${act?' disabled':''}>›</button></div></div>
-   ${D?`<div class="so-gs">${hueco('azar')}${hueco('creativa')}</div>
-   ${nPend?`<div class="so-pend">Hay ${nPend} ${nPend===1?'persona que fue':'personas que fueron'} a Google sin comprobar. Mirad en Google si dejaron la reseña y marcadlo: solo entra en el sorteo quien la puso.<a class="so-gl" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((typeof CLINICA!=='undefined'&&CLINICA.marca)||'')}&query_place_id=${encodeURIComponent(String((typeof CLINICA!=='undefined'&&CLINICA.resena)||'').split('placeid=')[1]||'')}" target="_blank" rel="noopener">Ver las reseñas en Google ›</a></div>`:''}
+  card.innerHTML=`<div class="val-pfh"><div><b>Reseñas del mes</b><small>${D?`${L.length} ${L.length===1?'reseña comprobada':'reseñas comprobadas'} · ${LT.length} ${LT.length===1?'fue':'fueron'} a Google`:'Cargando…'}</small></div><div class="val-pfm"><button type="button" data-n="-1" aria-label="Mes anterior">‹</button><span>${tit.charAt(0).toUpperCase()+tit.slice(1)}</span><button type="button" data-n="1" aria-label="Mes siguiente"${act?' disabled':''}>›</button></div></div>
+   ${D?`
+   ${nPend?`<div class="so-pend">Hay ${nPend} ${nPend===1?'persona que fue':'personas que fueron'} a Google sin comprobar. Mirad en Google si dejaron la reseña y marcadlo: solo cuentan las comprobadas.<a class="so-gl" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((typeof CLINICA!=='undefined'&&CLINICA.marca)||'')}&query_place_id=${encodeURIComponent(String((typeof CLINICA!=='undefined'&&CLINICA.resena)||'').split('placeid=')[1]||'')}" target="_blank" rel="noopener">Ver las reseñas en Google ›</a></div>`:''}
    ${LT.length?`<div class="so-l">${vis.map(x=>`<div class="so-p ${x.resena==='no'?'so-no':''}"><span>${escH(fn(x.nombre))}<small> · ${x.manual?'por su cuenta':fd(x.fecha)}</small></span>${x.resena==='si'?`<em class="so-ok">✓ Reseña puesta</em><button type="button" class="so-vx" data-p="${x.pacienteId}" aria-label="Deshacer">↺</button>`:x.resena==='no'?`<em class="so-nok">No la puso</em><button type="button" class="so-vx" data-p="${x.pacienteId}" aria-label="Deshacer">↺</button>`:`<span class="so-vb"><button type="button" class="so-v si" data-p="${x.pacienteId}" data-v="1">✓ La puso</button><button type="button" class="so-v" data-p="${x.pacienteId}" data-v="0">No</button></span>`}</div>`).join('')}</div>${LT.length>8?`<button type="button" class="so-mas">${verTodos?'Ver menos':'Ver los '+LT.length}</button>`:''}`:'<div class="fac-vacio">Todavía no ha ido nadie a Google este mes</div>'}
    ${D?'<button type="button" class="so-add">+ Añadir a alguien que ha dejado reseña por su cuenta</button>':''}
-   <div class="val-nota">Entra en el sorteo quien pulsa «Dejar mi reseña en Google» desde la encuesta o desde «Está mejor» <b>y la deja de verdad</b>: comprobadlo en Google y marcad «La puso». La sesión gratis se la apuntáis al reservarla.</div>`:'<div class="fac-vacio">Cargando…</div>'}`;
+   <div class="val-nota">Aquí sale quien pulsa «Escribir mi reseña en Google» desde la encuesta o desde «Está mejor». Comprobad en Google si la dejó de verdad y marcad «La puso»: así cuenta en las reseñas de cada fisio.</div>`:'<div class="fac-vacio">Cargando…</div>'}`;
   card.querySelectorAll('.val-pfm button').forEach(b=>b.onclick=()=>{const d=new Date(mes+'-15T12:00:00');d.setMonth(d.getMonth()+(+b.dataset.n));mes=d.toISOString().slice(0,7);carga();});
   const mas=card.querySelector('.so-mas');if(mas)mas.onclick=()=>{verTodos=!verTodos;pinta();};
-  {const ad=card.querySelector('.so-add');if(ad)ad.onclick=()=>comElegirPaciente(async p=>{try{await op({op:'anadir',pacienteId:p.id});toast(`✓ ${capTit(p.nombre)} entra en el sorteo`,true);}catch(e){toast(e.message,false);}},'Sorteo · ha dejado reseña');}
+  {const ad=card.querySelector('.so-add');if(ad)ad.onclick=()=>comElegirPaciente(async p=>{try{await op({op:'anadir',pacienteId:p.id});toast(`✓ ${capTit(p.nombre)} añadido a las reseñas`,true);}catch(e){toast(e.message,false);}},'Ha dejado reseña');}
   card.querySelectorAll('.so-v,.so-vx').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await op({op:'verificar',pacienteId:b.dataset.p,v:b.classList.contains('so-vx')?null:b.dataset.v==='1'});}catch(e){b.disabled=false;toast(e.message,false);}});
   card.querySelectorAll('.so-av').forEach(b=>b.onclick=()=>{const g=G[b.dataset.t],tl=segTel(g.tel||'');if(tl.length<9){toast('No tiene teléfono en su ficha',false);return;}abrirWA(tl,msg(b.dataset.t,g));});
   card.querySelectorAll('.so-go,.so-q').forEach(b=>b.onclick=()=>{const t=b.dataset.t;if(t==='azar')sortear(b);else elegir();})
@@ -6827,7 +6827,7 @@ async function valSorteo(wrap,dir){const card=ce('div','card val-so');wrap.appen
   const fr=m.querySelector('.so-fr'),ok=m.querySelector('.so-frok');
   m.querySelectorAll('.so-el button').forEach(b=>b.onclick=()=>{sel=+b.dataset.i;m.querySelectorAll('.so-el button').forEach(x=>x.classList.toggle('on',x===b));fr.hidden=false;ok.textContent='Elegir a '+fn(L[sel].nombre);fr.scrollIntoView({block:'nearest'});});
   ok.onclick=async()=>{if(sel<0)return;ok.disabled=true;try{await op({op:'elegir',tipo:'creativa',pacienteId:L[sel].pacienteId,frase:fr.querySelector('textarea').value});m.remove();show('creativa',L);}catch(e){ok.disabled=false;toast(e.message,false);}};};
- const carga=async()=>{D=null;pinta();try{const r=await (await fetch(`/api/schedule?action=seg-agenda-sorteo&pwd=${encodeURIComponent(apiPwd)}&mes=${mes}`)).json();if(!r.ok)throw 0;D=r;pinta();}catch(e){card.innerHTML='<div class="fac-vacio">No se ha podido cargar el sorteo</div>';}};
+ const carga=async()=>{D=null;pinta();try{const r=await (await fetch(`/api/schedule?action=seg-agenda-sorteo&pwd=${encodeURIComponent(apiPwd)}&mes=${mes}`)).json();if(!r.ok)throw 0;D=r;pinta();}catch(e){card.innerHTML='<div class="fac-vacio">No se han podido cargar las reseñas</div>';}};
  carga();}
 // Solo dirección: resumen por fisio del mes (encuestas, cuántas excelentes, quejas, a Google y «está mejor» marcados)
 async function valPorFisio(wrap){const card=ce('div','card val-pf');wrap.appendChild(card);let mes=new Date().toISOString().slice(0,7);const MESN=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];let R=[],FF=[];const quien=String((fisioActual&&fisioActual.nombre)||'').split(' ')[0];
@@ -8974,7 +8974,7 @@ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule
     ['horario','Horario de la clínica','Desde qué hora hasta qué hora sale la agenda.',null,['ajustes','Horario de la clínica']],
     ['tiposes','Tipos de sesión','Las sesiones que ofrecéis (convencional, suelo pélvico, readaptación…).',null,['listas','Tipos de sesión']],
     ['cancelacion','Política de cancelación','Las horas de aviso y el texto que ven los pacientes.',null,['ajustes','Política de cancelación']],
-    ['opciones','Opciones de la clínica','Sorteo de sesiones por reseña y bomba diamagnética: actívalas solo si las usáis.',null,['ajustes','Datos de la clínica']],
+    ['opciones','Opciones de la clínica','Bomba diamagnética: actívala solo si la usáis.',null,['ajustes','Datos de la clínica']],
     ['estados','Estados del paciente','Las etiquetas de la ficha (Activo, Alta…).',null,['listas','Estados del paciente'],1]]],
    ['Cobros y precios','Lo que cobráis y cómo.',[
     ['precios','Conceptos y precios al cobrar','Lo que sale al cobrar una sesión o un pack.',null,['listas','Conceptos y precios al cobrar']],
@@ -9038,7 +9038,6 @@ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule
      <div class="mk-hex"><span class="mk-dot" style="background:${escH(K.color||'#c2552e')}"></span><input class="ag-in k-col" value="${escH(K.color||'#c2552e')}" maxlength="7" spellcheck="false"></div></div>
     <div class="mk-prev"><button type="button" class="mk-pb">Así se ve un botón</button><span class="mk-pt">Etiqueta</span></div>
     <div class="hz-lab" style="margin-top:6px">Opciones</div>
-    <label class="adm-sw"><input type="checkbox" class="k-os" ${K.opciones.sorteo!==false?'checked':''}><span><b>Sorteo mensual de sesiones por reseña</b><small>La cajita del regalo en las páginas de reseña y la tarjeta «Sorteo del mes» en Valoraciones.</small></span></label>
     <label class="adm-sw"><input type="checkbox" class="k-ob" ${K.opciones.bomba!==false?'checked':''}><span><b>La clínica trabaja con bomba diamagnética</b><small>Huecos «libre sin bomba» y avisos de bomba en la agenda.</small></span></label>
     <div class="hz-bts"><button type="button" class="hz-ok k-g">Guardar</button></div></div>
    <div class="adm-card"><div class="adm-h"><b>Horario de la clínica</b><small>La primera y la última hora que salen en la agenda y en las horas para dar cita.</small></div>
@@ -9090,7 +9089,7 @@ async function admConf(){if(!ADM.conf){const r=await (await fetch(`/api/schedule
   subeIcono('.mk-ifile','.mk-iup',0);subeIcono('.mk-pfile','.mk-pup',1);
   [['.mk-idel',0],['.mk-pdel',1]].forEach(([c,panel])=>{const idl=$b(c);if(idl)idl.onclick=async()=>{idl.disabled=true;const r=await admPost('seg-adm-icono',{quitar:1,panel:panel?1:0});if(r.ok){toast('Icono quitado',true);ADM.conf=r.conf||ADM.conf;await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}mantenScroll(pintaAjustes);}else{idl.disabled=false;toast('No se ha podido quitar',false);}};});
   const dl=$b('.mk-del');if(dl)dl.onclick=async()=>{dl.disabled=true;const r=await admPost('seg-adm-logo',{quitar:1});if(r.ok){toast('Logo quitado',true);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}pintaAjustes();}else{dl.disabled=false;toast('No se ha podido quitar',false);}};
-  $b('.k-g').onclick=async e=>{const v=q=>$b(q).value.trim();await guardarConf('clinica',{marca:v('.k-m'),web:v('.k-w'),razon:v('.k-r'),nif:v('.k-n'),direccion:v('.k-d'),dirCorta:v('.k-dc'),zona:v('.k-z'),ciudad:v('.k-ci'),email:v('.k-e'),tel:v('.k-t'),wa:v('.k-wa'),googlePlace:v('.k-g2'),iban:v('.k-ib'),opciones:{sorteo:$b('.k-os').checked,bomba:$b('.k-ob').checked},color:(()=>{let c=v('.k-col');if(c&&c[0]!=='#')c='#'+c;return colOk(c)?c.toLowerCase():'';})()},e.target);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}toast('Para ver el color nuevo en todo el panel, recarga la página',true);};
+  $b('.k-g').onclick=async e=>{const v=q=>$b(q).value.trim();await guardarConf('clinica',{marca:v('.k-m'),web:v('.k-w'),razon:v('.k-r'),nif:v('.k-n'),direccion:v('.k-d'),dirCorta:v('.k-dc'),zona:v('.k-z'),ciudad:v('.k-ci'),email:v('.k-e'),tel:v('.k-t'),wa:v('.k-wa'),googlePlace:v('.k-g2'),iban:v('.k-ib'),opciones:{sorteo:false,bomba:$b('.k-ob').checked},color:(()=>{let c=v('.k-col');if(c&&c[0]!=='#')c='#'+c;return colOk(c)?c.toLowerCase():'';})()},e.target);await loadClinica();try{localStorage.removeItem('f365_marca');}catch(_){}toast('Para ver el color nuevo en todo el panel, recarga la página',true);};
   $b('.a-hg').onclick=e=>guardarConf('agenda',{desde:parseInt($b('.a-de').value,10),hasta:parseInt($b('.a-ha').value,10)},e.target);
   $b('.x-g').onclick=e=>guardarConf('cancelacion',{horas:$b('.x-h').value,texto:$b('.x-t').value},e.target);
   wrEditor($b('.wr-card'),C);
@@ -13242,6 +13241,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-13',aviso:1,ver:{sec:'val',pasos:[{el:'.val-so',txt:'Ahora es «Reseñas del mes»: solo comprobar quién la puso.'}]},t:'Quitamos el sorteo de sesiones gratis por reseña: las encuestas siguen llevando a Google a quien pone Excelente, pero ya no hablan de premios. En Valoraciones, la tarjeta pasa a ser «Reseñas del mes» (seguid marcando «La puso»). Las sesiones gratis que ya se ganaron se siguen descontando en la ficha.'},
 {f:'2026-11-12',aviso:1,t:'Cobrar y facturar: ahora puedes poner un descuento. «Cumpleaños · 10 %» de un toque, u «Otro» en % o €, con su motivo. Sale en la factura como una línea en negativo.'},
 {f:'2026-11-10',aviso:1,t:'Al cancelar una cita (o «No asistió» / «Por reagendar»), si el paciente ya tiene otra cita más adelante sale un botón «No hace falta: ya tiene otra cita» con la fecha. Un toque y listo, sin tener que explicarlo.'},
 {f:'2026-11-10',t:'Bomba: si a una hora ya hay 2 pacientes con bomba, los huecos libres de esa hora pasan solos a «libre sin bomba» (y no salen en la app). Si se libera la bomba, vuelven solos a libres normales.'},
@@ -15686,12 +15686,12 @@ function renderFormacion(wrap, ruta){
  {ti:'Qué opinan tus pacientes',shot:'/img/school/panel-c-val.jpg',body:`En <b>Valoraciones</b> (Más) salen los <b>últimos 14 días</b>: encuestas de 1ª visita y de alta, y los pacientes marcados como «Está mejor».<br><br>Arriba: cuántas encuestas, % de contentos, cuántos fueron a Google y cuántos están mejor.`,ver:{sec:'val',pasos:[{el:'.vr',txt:'El resumen.'}]}},
  {ti:'Contesta: Escribirle',body:`<b>Cuándo:</b> sobre todo si alguien no ha quedado contento.<br><br><b>Qué haces:</b> <b>Escribirle</b>. Te propone un mensaje según lo que contestó y lo abre en WhatsApp.<br><br>Si puso Excelente y aún no fue a Google, el mensaje lleva el enlace para la reseña.`,ver:{sec:'val',pasos:[{el:'.val-wa',txt:'Escribirle.'}]}},
  {ti:'Algo que no toca',body:`Con la <b>✕</b> quitas de la lista una valoración que no toca (por ejemplo, un «Está mejor» marcado por error).`,ver:{sec:'val',pasos:[{el:'.val-qx',txt:'Quitar de la lista.'}]}},
- {ti:'El sorteo del mes',body:`Cada mes se sortean <b>2 sesiones gratis</b> entre quienes dejan reseña en Google desde nuestros enlaces: una al azar y otra a la más original.<br><br>Cuéntaselo a tus pacientes: es un buen motivo para que la dejen.<br><br><b>Ojo:</b> ir a Google no basta. Comprobad en Google que la ha dejado y marcad <b>«La puso»</b>: solo entran en el sorteo las comprobadas.`,ver:{sec:'val',pasos:[{el:'.val-so',txt:'El sorteo del mes.'}]}}
+ {ti:'Reseñas del mes',body:`En <b>Reseñas del mes</b> sale quien ha ido a dejar su reseña en Google desde nuestros enlaces (encuesta de 1ª visita, de alta o «Está mejor»).<br><br><b>Ojo:</b> ir a Google no basta. Comprobad en Google que la ha dejado y marcad <b>«La puso»</b>: solo cuentan las comprobadas, y cuentan para el fisio que le atendió.<br><br>Si alguien la deja por su cuenta, añadidlo con «+ Añadir a alguien».`,ver:{sec:'val',pasos:[{el:'.val-so',txt:'Las reseñas del mes.'}]}}
  ],
  qs:[
  {q:'Un paciente contesta la encuesta con «Normal» y una queja. ¿Qué haces?',opts:['Nada','Escribirle y responderle','Pedirle una reseña'],ok:1,fb:['Es cuando más importa contestar.','¡Eso es!','No es el momento.']},
  {q:'Una paciente pone «Excelente» pero no ha ido a Google. ¿Qué haces?',opts:['Escribirle: el mensaje le lleva el enlace de la reseña','Nada','La quito de la lista'],ok:0,fb:['¡Bien!','Es la mejor ocasión para pedirla.','No hace falta.']},
- {q:'¿Quién entra en el sorteo del mes?',opts:['Todos los pacientes','Quien deja reseña en Google desde nuestros enlaces','Los que tienen pack'],ok:1,fb:['No.','¡Correcto!','No.']},
+ {q:'Un paciente fue a Google desde la encuesta. ¿Ya cuenta como reseña?',opts:['Sí, solo por ir','Cuando comprobáis en Google que la dejó y marcáis «La puso»','Nunca cuenta'],ok:1,fb:['Ir no basta.','¡Correcto!','Sí cuenta, si la deja.']},
  {q:'Marcaste «Está mejor» a un paciente por error. ¿Cómo lo quitas?',opts:['Con la ✕ en Valoraciones','No se puede','Borrando al paciente'],ok:0,fb:['¡Eso es!','Sí se puede.','¡No!'],ver:{sec:'val',pasos:[{el:'.val-qx',txt:'Esta ✕.'}]}}
  ]},
 
@@ -15727,7 +15727,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Cambiar el check-list',body:`En <b>Dirección › Check-list</b> editas los puntos del check-list del equipo (con sub-puntos), los ordenas o los ocultas.<br><br>¿Te has liado? <b>Volver a la original</b>.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="chk"] || .adm-tabs',txt:'Check-list.'}]}},
  {ti:'Cambia un precio o un concepto',body:`En <b>Listas</b>: los <b>conceptos y precios</b> al cobrar, formas de pago, estados del paciente, tipos de cita y de sesión, motivos de no citarse, tipos de negocio y zonas de ejercicios.<br><br>Puedes renombrar, juntar o borrar.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="listas"] || .adm-tabs',txt:'Listas.'}]}},
- {ti:'Lo de la clínica y los pacientes',body:`En <b>Ajustes</b>: datos de la clínica (logo, color, reseñas, IBAN), tarjeta regalo, facturación, opciones (sorteo, bomba), <b>política de cancelación</b>, la <b>app del paciente</b> (servicios, packs, promociones), <b>textos legales</b> y <b>mensajes a pacientes</b>.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="ajustes"] || .adm-tabs',txt:'Ajustes.'}]}},
+ {ti:'Lo de la clínica y los pacientes',body:`En <b>Ajustes</b>: datos de la clínica (logo, color, reseñas, IBAN), tarjeta regalo, facturación, opciones (bomba), <b>política de cancelación</b>, la <b>app del paciente</b> (servicios, packs, promociones), <b>textos legales</b> y <b>mensajes a pacientes</b>.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="ajustes"] || .adm-tabs',txt:'Ajustes.'}]}},
  {ti:'El email de cada mañana',body:`En <b>Emails</b> eliges quién recibe el <b>resumen diario</b> por email.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="mail"] || .adm-tabs',txt:'Emails.'}]}}
  ],
  qs:[
