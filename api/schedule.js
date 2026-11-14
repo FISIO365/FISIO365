@@ -111,12 +111,14 @@ async function ingresosHoldedDias(desde, hasta) {
 }
 // Packs «con factura por sesión»: ids de Holded de los tickets de cada sesión y los cobros del pack (día y total)
 async function packsPorSesion(desde, hasta) {
-  const L = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({POR SESION},{ESTADO}='Emitida')`)}`);
+  const T0 = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`{POR SESION}`)}`);
+  const L = T0.filter(r => nmA((r.fields || {})['ESTADO']) === 'Emitida');
   const tickets = new Set(), cobros = [];
   L.forEach(r => { const F = r.fields || {};
     if (F['EN PACK']) { if (F['HOLDED ID']) tickets.add(String(F['HOLDED ID'])); return; }
     const f = String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10), v = Number(F['PACK TOTAL'] || F['TOTAL'] || 0);
     if (f >= desde && f <= hasta && v > 0) cobros.push({ f, v, pac: F['PacienteId'] || '', id: r.id }); });
+  console.log('packs-por-sesion', desde, hasta, 'filas', T0.length, 'emitidas', L.length, 'tickets', tickets.size, JSON.stringify(L.filter(r => !(r.fields || {})['EN PACK']).map(r => ({ id: r.id, f: (r.fields || {})['FECHA DE COBRO'] || (r.fields || {})['FECHA'], t: (r.fields || {})['PACK TOTAL'], tot: (r.fields || {})['TOTAL'] }))));
   return { tickets, cobros };
 }
 // Tickets de Holded (hechos fuera del panel) → sesiones pagadas por paciente, para el valor de cada sesión del informe de horas
