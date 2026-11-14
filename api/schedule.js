@@ -101,8 +101,23 @@ async function ingresosHoldedDias(desde, hasta) {
   const suma = (L, sg) => L.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id);
     const f = String(d.date || '').slice(0, 10); if (f < desde || f > hasta || /\btest\b|prueba/i.test(d.contact_name || '')) return;
     dias[f] = Math.round(((dias[f] || 0) + sg * importeAbs(d)) * 100) / 100; });
+  // Packs cobrados enteros «con factura por sesión»: cuenta el dinero que entra de verdad, el pack entero el día que se paga;
+  // los tickets de cada sesión no son dinero nuevo y no se suman
+  const PS = await packsPorSesion(desde, hasta).catch(e => { console.error('packs por sesión', e.message); return { tickets: new Set(), cobros: [] }; });
+  PS.tickets.forEach(id => vistos.add(id));
   suma(tk, 1); suma(rn, -1);
+  PS.cobros.forEach(c => { dias[c.f] = Math.round(((dias[c.f] || 0) + c.v) * 100) / 100; });
   _ingH = { t: Date.now(), k, v: dias }; return dias;
+}
+// Packs «con factura por sesión»: ids de Holded de los tickets de cada sesión y los cobros del pack (día y total)
+async function packsPorSesion(desde, hasta) {
+  const L = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({POR SESION},{ESTADO}='Emitida')`)}`);
+  const tickets = new Set(), cobros = [];
+  L.forEach(r => { const F = r.fields || {};
+    if (F['EN PACK']) { if (F['HOLDED ID']) tickets.add(String(F['HOLDED ID'])); return; }
+    const f = String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10), v = Number(F['PACK TOTAL'] || F['TOTAL'] || 0);
+    if (f >= desde && f <= hasta && v > 0) cobros.push({ f, v, pac: F['PacienteId'] || '', id: r.id }); });
+  return { tickets, cobros };
 }
 // Tickets de Holded (hechos fuera del panel) → sesiones pagadas por paciente, para el valor de cada sesión del informe de horas
 let _hCont = { t: 0, v: null };
@@ -6389,8 +6404,13 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const vistos = new Set(), L = [];
         const mete = (lista, rect) => lista.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id); const f = String(d.date || '').slice(0, 10); if (f < desde || f > q.hasta) return;
           const motivo = /\btest\b|prueba/i.test(d.contact_name || '') ? 'Paciente de prueba' : '';
-          L.push({ f, num: d.document_number || d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: (rect ? -1 : 1) * importeAbs(d), estado: String(d.status || ''), rect, borrador: !rect && !(d.document_number || d.docNumber || d.doc_number || d.number), cuenta: !motivo, motivo }); });
+          L.push({ f, hid: String(d.id), num: d.document_number || d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: (rect ? -1 : 1) * importeAbs(d), estado: String(d.status || ''), rect, borrador: !rect && !(d.document_number || d.docNumber || d.doc_number || d.number), cuenta: !motivo, motivo }); });
+        // Packs cobrados enteros «con factura por sesión»: cuenta el pack entero el día que se pagó; los tickets de sus sesiones no
+        const PS = await packsPorSesion(desde, q.hasta).catch(() => ({ tickets: new Set(), cobros: [] }));
         mete(tk, false); mete(rn, true);
+        L.forEach(x => { if (x.hid && PS.tickets.has(x.hid) && x.cuenta) { x.cuenta = false; x.motivo = 'Sesión de un pack · el pack cuenta el día que se pagó'; } });
+        const nomP = {}; await Promise.all([...new Set(PS.cobros.map(c => c.pac).filter(Boolean))].map(id => at(`${PACIENTES}/${id}`).then(d => { nomP[id] = (d.fields || {})['FULL NAME'] || ''; }).catch(() => {})));
+        PS.cobros.forEach(c => L.push({ f: c.f, num: '', pac: nomP[c.pac] || '', imp: c.v, estado: 'paid', rect: false, borrador: false, cuenta: true, motivo: 'Pack cobrado entero', pack: true }));
         L.sort((a, b) => a.f.localeCompare(b.f));
         const tot = L.filter(x => x.cuenta).reduce((a, x) => a + x.imp, 0);
         return res.status(200).json({ ok: true, desde, hasta: q.hasta, total: Math.round(tot * 100) / 100, tickets: L, antesHolded: q.desde < HOLDED_DESDE });
@@ -6534,7 +6554,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const calcM = async (a, b, f, n) => { const k = `${a}|${b}|${n}`, m = global._estTrozos[k]; if (!q.fresco && m && Date.now() - m.t < 15 * 60e3) return m.d; const d = await calc(a, b, f, n); global._estTrozos[k] = { t: Date.now(), d }; return d; };
         let data;
         {
-          const CH = 13, EPOCH = '2024-01-01', ECT = 'tblLIcIro0ko9VG6G', VER = 'v2'; // v2: por fisio también atendidos, faltas y cancelaciones
+          const CH = 13, EPOCH = '2024-01-01', ECT = 'tblLIcIro0ko9VG6G', VER = 'v3'; // v2: por fisio también atendidos, faltas y cancelaciones · v3: packs por sesión cuentan enteros el día del cobro
           const semK = k => mv(EPOCH, 7 * k), idx = f => Math.round((Date.parse(f + 'T12:00:00Z') - Date.parse(EPOCH + 'T12:00:00Z')) / (7 * 864e5));
           // Trimestres terminados hace más de 3 semanas: guardados. Si son de los últimos 3 meses se refrescan cada semana (la conversión aún puede subir)
           const i0 = idx(desde), iL = idx(lun0), limiteViejo = mv(lun0, -7 * 3), reciente = mv(lun0, -7 * 13);
