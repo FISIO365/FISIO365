@@ -4340,23 +4340,6 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
   }
 
   // ── PANEL: SEGUIMIENTO (lista de pacientes a llamar) y LLAMADAS ──
-  // TEMPORAL (revisión de un paciente, solo lectura): se quita en cuanto se termine
-  if (action === 'revisa-pac' && process.env.REVISA_KEY && String(req.query.k || '') === process.env.REVISA_KEY) {
-    try {
-      const q0 = String(req.query.n || '').toUpperCase().replace(/'/g, '');
-      const ps = await at(`${PACIENTES}?filterByFormula=${encodeURIComponent(`FIND('${q0}',UPPER({FULL NAME}&''))`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}&fields[]=${encodeURIComponent('BONO PREVIO DESDE')}&fields[]=${encodeURIComponent('PACK COMPARTE')}&maxRecords=3`);
-      const out = { inicio: await inicioControl().catch(() => ''), pacientes: [] };
-      for (const p of (ps.records || [])) {
-        const cit = await capTodos('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`FIND('${p.id}',ARRAYJOIN({PacienteRec}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=${encodeURIComponent('PREF.')}`).catch(e => [{ error: e.message }]);
-        const fac = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`{PacienteId}='${p.id}'`)}`).catch(e => [{ error: e.message }]);
-        const FU = await citasFuera().catch(() => ({}));
-        out.pacientes.push({ id: p.id, f: p.fields, citas: cit.map(r => ({ id: r.id, fecha: String((r.fields || {}).FECHA || '').slice(0, 10), hora: (r.fields || {}).HORA, estado: nmA((r.fields || {}).ESTADO), fisio: nmA((r.fields || {})['PREF.']), fuera: !!(FU && FU[r.id]) })).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora)),
-          facturas: fac.map(r => { const F = r.fields || {}; return { id: r.id, estado: nmA(F.ESTADO), fechaCobro: F['FECHA DE COBRO'], fecha: F.FECHA, creada: r.createdTime, c1: nmA(F['CONCEPTO 1']), n1: F['Nº SESIONES 1'], p1: F['PRECIO SESIÓN 1'], c2: nmA(F['CONCEPTO 2']), n2: F['Nº SESIONES 2'], total: F.TOTAL, num: F['Nº FACTURA'], enPack: F['EN PACK'], grupo: F['PACK GRUPO'], packTotal: F['PACK TOTAL'], packAntes: F['PACK ANTES'], porSesion: F['POR SESION'], modo: nmA(F['MODO DE PAGO']), notas: F.NOTAS }; }),
-          saldo: await saldoPaciente(p.id).catch(e => ({ error: e.message })) });
-      }
-      return res.status(200).json(out);
-    } catch (e) { return res.status(200).json({ error: e.message }); }
-  }
   if (action && action.startsWith('seg-')) {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
