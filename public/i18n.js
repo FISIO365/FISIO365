@@ -4,6 +4,42 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Ya tienes otra cita": [
+"Ja tens una altra cita",
+"You already have another appointment"
+],
+"Ya tienes otras citas": [
+"Ja tens altres cites",
+"You already have other appointments"
+],
+"Esta nueva se suma a la que ya tienes: no la cambia ni la anula. Si lo que quieres es cambiar de día, escríbenos y te la movemos.": [
+"Aquesta nova se suma a la que ja tens: no la canvia ni l'anul·la. Si el que vols és canviar de dia, escriu-nos i te la movem.",
+"This new one is added to the one you already have: it doesn't change or cancel it. If you want to change the day, message us and we'll move it for you."
+],
+"Esta nueva se suma a las que ya tienes: no las cambia ni las anula. Si lo que quieres es cambiar de día, escríbenos y te la movemos.": [
+"Aquesta nova se suma a les que ja tens: no les canvia ni les anul·la. Si el que vols és canviar de dia, escriu-nos i te la movem.",
+"This new one is added to the ones you already have: it doesn't change or cancel them. If you want to change the day, message us and we'll move it for you."
+],
+"Y si al final no puedes venir a alguna, avísanos con 24 h de antelación y no pasa nada. Con menos tiempo se aplica la política de cancelaciones.": [
+"I si al final no pots venir a alguna, avisa'ns amb 24 h d'antelació i no passa res. Amb menys temps s'aplica la política de cancel·lacions.",
+"And if in the end you can't make one, just let us know 24 hours in advance and it's no problem. With less notice, our cancellation policy applies."
+],
+"Prefiero cambiar la que tengo": [
+"Prefereixo canviar la que tinc",
+"I'd rather change the one I have"
+],
+"Tu entreno tiene {} días. Elige cuál haces hoy": [
+"El teu entrenament té {} dies. Tria quin fas avui",
+"Your training has {} days. Choose which one you'll do today"
+],
+"Día {}": [
+"Dia {}",
+"Day {}"
+],
+"Tu sesión · Día {}": [
+"La teva sessió · Dia {}",
+"Your session · Day {}"
+],
 "Talleres y cursos": [
 "Tallers i cursos",
 "Workshops and courses"
@@ -388,6 +424,10 @@
 "1 ejercicio": [
 "1 exercici",
 "1 exercise"
+],
+"{} ejercicio": [
+"{} exercici",
+"{} exercise"
 ],
 "{} ejercicios": [
 "{} exercicis",

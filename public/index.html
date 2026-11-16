@@ -366,6 +366,11 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .hoy-hero-sub{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .hero-go{display:inline-flex;align-items:center;gap:8px;border:none;background:var(--lila);color:#1a1a1a;font-family:var(--font);font-size:14px;font-weight:700;border-radius:99px;padding:11px 18px;cursor:pointer;margin-top:12px;width:100%;justify-content:center}
 .hero-go svg{width:16px;height:16px;fill:#1a1a1a}
+.dias-e{margin:14px 0 4px}.dias-t{font-size:13px;color:var(--muted);margin:0 4px 8px}
+.dias-b{display:flex;gap:8px;overflow-x:auto;padding:2px}
+.dias-b button{flex:1;min-width:92px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:11px 14px;border-radius:14px;border:1.5px solid #ecdcd1;background:#fff;font-family:inherit;cursor:pointer;text-align:left}
+.dias-b button b{font-size:15px;color:#1a1a1a}.dias-b button span{font-size:12px;color:var(--muted)}
+.dias-b button.on{border-color:var(--lila-d);background:var(--lila-light)}.dias-b button.on b{color:var(--lila-d)}
 .pl-tit{font-size:13px;font-weight:700;color:var(--muted);margin:18px 4px 8px;text-transform:uppercase;letter-spacing:.08em}
 .pl{background:#fff;border-radius:24px;box-shadow:var(--sombra);overflow:hidden}
 .pl-row{display:flex;align-items:center;gap:14px;padding:12px 14px;position:relative}
@@ -586,7 +591,7 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .rv-ya-tx{flex:1;min-width:0}.rv-ya-tx b{display:block;font-size:14px;font-weight:600;color:#2b2520;line-height:1.3}.rv-ya-tx span{display:block;font-size:12.5px;color:#8a837b;line-height:1.45;margin-top:3px}
 .rv-ya-tx button{display:inline-flex;align-items:center;gap:7px;margin-top:10px;font:inherit;font-weight:600;font-size:13px;color:#fff;background:#c2552e;border:0;border-radius:99px;padding:8px 15px;cursor:pointer}.rv-ya-tx button svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .rv-h.off{pointer-events:none;background:#f6f3ef;border-color:#ece7e1;box-shadow:none}.rv-h.off b{color:#c9c2ba}.rv-h.off span{color:#cfc8c0}
-.rv-aviso{margin:14px 0 2px;text-align:left;background:#fdf1e8;border:1px solid #f0c9ad;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.45;color:#5a4a3f}.rv-aviso b{display:block;color:#c2552e;font-weight:600;margin-bottom:2px}.rv-aviso span{display:block;font-weight:500}.rv-aviso small{display:block;margin-top:6px;color:#8a837b;font-size:12.5px}
+.rv-aviso{margin:14px 0 2px;text-align:left;background:#fdf1e8;border:1px solid #f0c9ad;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.45;color:#5a4a3f}.rv-aviso b{display:block;color:#c2552e;font-weight:600;margin-bottom:2px}.rv-aviso span{display:block;font-weight:500}.rv-aviso small{display:block;margin-top:6px;color:#8a837b;font-size:12.5px}.rv-aviso span+small{margin-top:8px}.rv-av-b{margin-top:10px;border:none;background:#fff;color:#c2552e;font-family:inherit;font-weight:600;font-size:13px;border-radius:99px;padding:8px 14px;cursor:pointer;box-shadow:0 0 0 1px #f0c9ad}
 .rv-vacio{text-align:center;color:#8a837b;font-size:14px;padding:40px 20px;line-height:1.5}
 .rv-modal{position:fixed;inset:0;z-index:560;background:rgba(17,17,17,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:24px}
 .rv-modal.on{display:flex}
@@ -1104,6 +1109,16 @@ body.solo-equipo #tabbar,body.solo-equipo #notifBtn,body.solo-equipo .nm-head sp
 <div class="toast" id="toast"></div>
 <script>
 let patient=null,ejercicios=[],hechos=new Set(),mensajeFisio='';
+// Días de entreno (A, B…): ejTodos es el programa entero; «ejercicios» es lo que toca hoy
+let ejTodos=[],diaHoy='';
+function diasProg(){return [...new Set(ejTodos.map(e=>e.dia).filter(Boolean))].sort();}
+function aplicaDia(){const D=diasProg();if(D.length<2){diaHoy='';ejercicios=ejTodos;return;}
+ let g='',u='';try{g=localStorage.getItem(`f365_dia_${patient.id}_${TODAY}`)||'';u=localStorage.getItem(`f365_ultdia_${patient.id}`)||'';}catch(e){}
+ diaHoy=D.includes(g)?g:(D.includes(u)?D[(D.indexOf(u)+1)%D.length]:D[0]);
+ ejercicios=ejTodos.filter(e=>e.dia===diaHoy);}
+function cambiaDia(d){diaHoy=d;try{localStorage.setItem(`f365_dia_${patient.id}_${TODAY}`,d);}catch(e){}ejercicios=ejTodos.filter(e=>e.dia===d);renderEjercicios();}
+function diasHTML(){const D=diasProg();if(D.length<2)return '';
+ return `<div class="dias-e"><div class="dias-t">Tu entreno tiene ${D.length} días. Elige cuál haces hoy</div><div class="dias-b">${D.map(d=>{const L=ejTodos.filter(e=>e.dia===d);return `<button class="${d===diaHoy?'on':''}" onclick="cambiaDia('${d}')"><b>Día ${d}</b><span>${L.length} ${L.length===1?'ejercicio':'ejercicios'}</span></button>`;}).join('')}</div></div>`;}
 let lang=localStorage.getItem('fisio365_lang')||'es';
 let modalTipo=null,modalTexto='',fisiosCache=null;
 const i18n={es:{entrar:"Entrar",entrando:"Entrando...",instalarApp:"¿Cómo instalo la app?",errorEmail:"Introduce tu email",errorPin:"Introduce los 4 dígitos del PIN",errorConexion:"Error de conexión",programaHoy:"Tu programa de ejercicios",progresoHoy:"Progreso de hoy",sesionCompletada:"¡Sesión completada!",sesionSub:"Has terminado tu programa de hoy.",sesionMsg:"Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana!",miProgreso:"Mi progreso",cuantoDolor:"¿Cuánto dolor tienes hoy?",sinDolor:"Sin dolor",dolorMaximo:"Dolor máximo",guardar:"Guardar",salir:"Salir",sinPrograma:"Sin programa asignado",sinProgramaDesc:"Tu fisioterapeuta todavía no ha asignado ejercicios.",dolorBajo:function(pct){return "Tu dolor ha bajado un "+pct+"% respecto a ayer. ¡Vas por muy buen camino!";},dolorEstable:"Tu dolor se mantiene estable. ¡Sigue con tus ejercicios!",dolorSubio:"No te preocupes, los altibajos son normales. ¿Has cambiado algo en tu rutina?",dolorRegistrado:"Dolor registrado ✓"},cat:{entrar:"Entrar",entrando:"Entrant...",instalarApp:"Com instal·lo l'app?",errorEmail:"Introdueix el teu email",errorPin:"Introdueix els 4 dígits del PIN",errorConexion:"Error de connexió",programaHoy:"El teu programa d'exercicis",progresoHoy:"Progrés d'avui",sesionCompletada:"Sessió completada!",sesionSub:"Has acabat el teu programa d'avui.",sesionMsg:"Cada dia que entrenes és un pas cap a la teva recuperació. Torna demà!",miProgreso:"El meu progrés",cuantoDolor:"Quant dolor tens avui?",sinDolor:"Sense dolor",dolorMaximo:"Dolor màxim",guardar:"Guardar",salir:"Sortir",sinPrograma:"Sense programa assignat",sinProgramaDesc:"El teu fisioterapeuta encara no ha assignat exercicis.",dolorBajo:function(pct){return "El teu dolor ha baixat un "+pct+"% respecte a ahir.";},dolorEstable:"El teu dolor es manté estable. Segueix!",dolorSubio:"No et preocupis, els alts i baixos són normals.",dolorRegistrado:"Dolor registrat ✓"},en:{entrar:"Log in",entrando:"Logging in...",instalarApp:"How do I install the app?",errorEmail:"Please enter your email",errorPin:"Please enter all 4 PIN digits",errorConexion:"Connection error",programaHoy:"Your exercise program",progresoHoy:"Today's progress",sesionCompletada:"Session completed!",sesionSub:"You finished today's program.",sesionMsg:"Every day you train is a step towards your recovery. Come back tomorrow!",miProgreso:"My progress",cuantoDolor:"How much pain do you have today?",sinDolor:"No pain",dolorMaximo:"Maximum pain",guardar:"Save",salir:"Log out",sinPrograma:"No program assigned",sinProgramaDesc:"Your physiotherapist has not yet assigned any exercises.",dolorBajo:function(pct){return "Your pain decreased "+pct+"% since yesterday!";},dolorEstable:"Your pain is stable. Keep going!",dolorSubio:"Don't worry, ups and downs are normal.",dolorRegistrado:"Pain recorded ✓"}};
@@ -1256,7 +1271,7 @@ function showSection(section){
 
 async function loadEjercicios(){
   try{
-    const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();ejercicios=data.ejercicios||[];
+    const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();ejTodos=data.ejercicios||[];aplicaDia();
     if(data.fisio){window.fisioPlan=data.fisio;const f=data.fisio;const av=document.getElementById('fisioAv');if(f.foto)av.innerHTML=`<img src="${f.foto}" alt="${f.nombre}">`;else av.textContent=f.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();document.getElementById('fisioNombre').textContent=`Tu fisio: ${f.nombre}`;document.getElementById('fisioColegiado').textContent=f.colegiado?`Nº Colegiado: ${f.colegiado}`:'';document.getElementById('fisioCard').style.display='flex';}
     mensajeFisio=data.mensajeFisio||'';
     if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';
@@ -1301,7 +1316,7 @@ function renderEjercicios(){
   const n=ejercicios.length,h=ejHechos();
   const sub=document.getElementById('hoyHeroSub');
   if(sub)sub.textContent=`${n} ${n===1?'ejercicio':'ejercicios'} · ${h===n?'¡todo hecho!':h?`${h} de ${n} hechos`:'pensados para ti'}`;
-  lista.innerHTML=`<div class="pl-tit">Tu sesión</div><div class="pl">`+ejercicios.map((ej,i)=>{
+  lista.innerHTML=diasHTML()+`<div class="pl-tit">${diaHoy?'Tu sesión · Día '+diaHoy:'Tu sesión'}</div><div class="pl">`+ejercicios.map((ej,i)=>{
     const ok=hechos.has(ejKey(ej,i));
     return `<div class="pl-row${ok?' ok':''}">
       <div class="pl-th"${ej.ytId?` onclick="event.stopPropagation();verVideoGrande('${ej.ytId}')"`:''}>${ej.ytId?`<img src="https://i.ytimg.com/vi/${ej.ytId}/mqdefault.jpg" alt="" loading="lazy"><b class="pl-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></b>`:`<span>${i+1}</span>`}${ok?'<em><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>':''}</div>
@@ -1379,6 +1394,7 @@ async function modalRespuestaSi(){
 }
 
 function marcarHecho(){
+  if(diaHoy)try{localStorage.setItem(`f365_ultdia_${patient.id}`,diaHoy);}catch(e){}
   const btn=document.getElementById('btnDiario');btn.disabled=true;btn.textContent='Guardando...';
   fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guardar-tarea',pacienteId:patient.id,pacienteNombre:patient.nombre,fecha:TODAY,nota:''})})
   .then(()=>{localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));mostrarCompletado();})
@@ -1438,9 +1454,10 @@ function pintarReserva(){const fisios=[...new Set(rvHuecos.map(h=>h.fisio))].sor
 async function rvChatAdmin(){cerrarReserva();showSection('mensajes');try{await volverChats();const c=chatsCache.find(x=>x.admin);if(c)abrirConv(c);}catch(e){}}
 function elegirHueco(id){const c=document.querySelector('#rvModal .rv-card');if(!rvCardHTML)rvCardHTML=c.innerHTML;else c.innerHTML=rvCardHTML;rvSel=rvHuecos.find(h=>h.id===id);if(!rvSel)return;
  document.getElementById('rvRes').innerHTML=`<div class="d">${rvFechaTxt(rvSel.fecha)}</div><div class="h">${rvSel.hora}</div><div class="f">con <b>${rvSel.fisio}</b></div><div class="l">FISIO365 · Gran de Sant Andreu 163</div>`;
- // Días seguidos: puede ser lo que quiere, pero por si es un error se lo recordamos
- {const mias=rvMias(),ant=mias.find(c=>c.f===rvMasDias(rvSel.fecha,-1)),sig=mias.find(c=>c.f===rvMasDias(rvSel.fecha,1)),x=ant||sig;
-  if(x)document.getElementById('rvRes').insertAdjacentHTML('beforeend',`<div class="rv-aviso"><b>${ant?'Ojo: el día anterior también tienes cita':'Ojo: el día siguiente también tienes cita'}</b><span>${rvFechaTxt(x.f)} · ${x.hora}</span><small>Si quieres venir los dos días, adelante. Si no, elige otro día.</small></div>`);}
+ // Si ya tiene otras citas, se lo recordamos: hay quien cree que al reservar otra se anula la que tenía
+ {const hoyI=rvMasDias(TODAY,0),otras=rvMias().filter(c=>c.f>=hoyI&&c.f!==rvSel.fecha).sort((a,b)=>(a.f+a.hora).localeCompare(b.f+b.hora));
+  if(otras.length){const pegada=c=>c.f===rvMasDias(rvSel.fecha,-1)?' · el día anterior':c.f===rvMasDias(rvSel.fecha,1)?' · el día siguiente':'';
+   document.getElementById('rvRes').insertAdjacentHTML('beforeend',`<div class="rv-aviso"><b>${otras.length===1?'Ya tienes otra cita':'Ya tienes otras citas'}</b>${otras.slice(0,3).map(c=>`<span>${rvFechaTxt(c.f)} · ${c.hora}${pegada(c)}</span>`).join('')}<small>Esta nueva se suma a ${otras.length===1?'la que ya tienes: no la cambia ni la anula':'las que ya tienes: no las cambia ni las anula'}. Si lo que quieres es cambiar de día, escríbenos y te la movemos.</small><small>Y si al final no puedes venir a alguna, avísanos con 24 h de antelación y no pasa nada. Con menos tiempo se aplica la política de cancelaciones.</small><button type="button" class="rv-av-b" onclick="cerrarConfirmar();rvChatAdmin()">Prefiero cambiar la que tengo</button></div>`);}}
  const e=document.getElementById('rvErr');e.style.display='none';const b=document.getElementById('rvOk');b.disabled=false;b.textContent='Reservar';
  document.getElementById('rvModal').classList.add('on');}
 function cerrarConfirmar(){document.getElementById('rvModal').classList.remove('on');}
@@ -1680,7 +1697,7 @@ function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64S
 
 // POLLING
 let lastFechaAsignacion=null,pollingInterval=null;
-function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejercicios=data.ejercicios||[];mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';if(data.fisio)document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];}if(data.ultimaSession!==TODAY){hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
+function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejTodos=data.ejercicios||[];aplicaDia();mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';if(data.fisio)document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];}if(data.ultimaSession!==TODAY){hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
 
 // MENÚ
 function toggleMenu(){const menu=document.getElementById('navMenu');const overlay=document.getElementById('navOverlay');menu.classList.contains('open')?cerrarMenu():(menu.classList.add('open'),overlay.classList.add('open'));}

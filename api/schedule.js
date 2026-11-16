@@ -648,7 +648,7 @@ async function eqRachas(pids) {
 }
 // Ejercicios del programa (solo de los partes en que el fisio activó «Compartir sus ejercicios con el club»)
 async function eqEjercicios(pid) {
-  try { const pr = await programaApp(pid); return (pr.ejercicios || []).map(e => ({ name: e.name, series: e.series, reps: e.reps, dur: e.dur, descanso: e.descanso, desc: e.desc, explica: e.explica || '', ytId: e.ytId || '', imagen: e.imagen || '' })); } catch (e) { return []; }
+  try { const pr = await programaApp(pid); return (pr.ejercicios || []).map(e => ({ name: e.name, series: e.series, reps: e.reps, dur: e.dur, descanso: e.descanso, desc: e.desc, explica: e.explica || '', ytId: e.ytId || '', imagen: e.imagen || '', dia: e.dia || '' })); } catch (e) { return []; }
 }
 async function eqConEjercicios(pars, base) {
   return Promise.all(pars.map(async r => { const x = base(r); if (r.fields['EJERCICIOS']) x.ejercicios = await eqEjercicios(r.fields['PACIENTE']); else delete x.ejercicios; return x; }));
@@ -1414,6 +1414,30 @@ async function valeVerificarStripe(id, F, sid) {
   return true;
 }
 // Lo llama el resumen diario (cron): los vales que hay que mandar hoy a quien los recibe
+// ── «Acuérdate de reservar»: el fisio programa un aviso al paciente para un día (p. ej. la semana que viene) ──
+// Se guarda en el ajuste «avisos_reservar» (lista). El cron de la mañana lo manda: aviso a la app, notificación y, si tiene, email.
+// Si cuando toca ya tiene una cita pendiente, no se le manda nada.
+async function avisosReservarDelDia() {
+  const L = await ajuste('avisos_reservar', []).catch(() => []); if (!Array.isArray(L) || !L.length) return 0;
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const { avisar } = require('./_push'); let n = 0, cambio = false;
+  for (const x of L) {
+    if (x.env || !x.fecha || x.fecha > hoy || !/^rec[A-Za-z0-9]{14}$/.test(x.pid || '')) continue;
+    try {
+      const c = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(FIND('${x.pid}',ARRAYJOIN({PacienteRec})),IS_AFTER({FECHA},'${hoy}'),OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA'))`)}&maxRecords=1&fields[]=FECHA`);
+      if ((c.records || []).length) { x.env = hoy; x.res = 'ya tenía cita'; cambio = true; continue; }
+      const pr = await at(`${PACIENTES}/${x.pid}`), F = pr.fields || {}, pila0 = (String(F['NOMBRE'] || '').trim() || String(F['FULL NAME'] || '').trim()).split(/\s+/)[0] || '', pila = pila0 ? pila0.charAt(0).toUpperCase() + pila0.slice(1).toLowerCase() : '';
+      const tit = '¿Reservamos tu próxima cita?', txt = x.nota ? String(x.nota) : 'Nos dijiste que mirarías tu agenda para reservar. Cuando quieras, elige día y hora en la app en un momento.';
+      const vias = [];
+      if (await avisar('paciente', x.pid, { title: tit, body: txt.slice(0, 160), url: '/?s=citas', tag: 'reservar' }).catch(() => false)) vias.push('app');
+      await at('tblgexkXJ4S36faPa', { method: 'POST', body: JSON.stringify({ fields: { PacienteId: x.pid, Titulo: tit, Texto: txt, Fecha: new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }), Leida: false, Tipo: 'cita' } }) }).catch(() => 0);
+      if (F.EMAIL && await valeMail(F.EMAIL, tit, `Hola${pila ? ' ' + escHtml(pila) : ''},`, `${escHtml(txt)}<br><br>Desde la app eliges día, hora y fisio, y queda reservada al momento.`, 'Reservar mi cita', 'https://app.fisioterapia365.com/?s=citas').catch(() => false)) vias.push('email');
+      x.env = hoy; x.res = vias.length ? 'enviado por ' + vias.join(' y ') : 'sin app ni email: hay que escribirle'; cambio = true; n++;
+    } catch (e) { console.log('aviso reservar', x.pid, e.message); }
+  }
+  if (cambio) { const lim = new Date(Date.now() - 45 * 864e5).toISOString().slice(0, 10); await guardarAjuste('avisos_reservar', L.filter(x => !x.env || x.env >= lim), 'cron').catch(() => 0); }
+  return n;
+}
 async function valesDelDia() {
   try { const c0 = await conf(); CLI = MARCA.datos(c0.clinica); } catch (e) {}
   const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
@@ -1790,6 +1814,7 @@ function paginaHuecos(D) {
 <link rel="icon" href="https://app.fisioterapia365.com/icons/favicon-48.png"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#efebe5;color:#141414;min-height:100vh;display:flex;justify-content:center;padding:20px 16px}
 .c{background:#fff;border-radius:26px;padding:28px 20px 22px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(20,20,20,.06);align-self:flex-start}
+.otr{margin:18px 0 0;background:#fdf1ea;border-radius:16px;padding:14px 15px;font-size:13.5px;line-height:1.5;color:#5c4f47;text-align:left}.otr b{display:block;color:#a3441f;font-size:14.5px;margin-bottom:4px}.otr span{display:block;font-weight:600;color:#141414}.otr p{margin:8px 0 0}
 .pgn{background:#fdf1ea;color:#7d4a35;border-radius:14px;padding:11px 13px;font-size:13px;line-height:1.5;margin:4px 0 8px;text-align:left}.pgn b{color:#a3441f}
 .cab{text-align:center}.fc{display:block;margin:0 auto}.fc circle,.fc path{stroke:#c2552e;fill:none;stroke-width:3;stroke-linecap:round}
 .fc .o{stroke-dasharray:202;stroke-dashoffset:202;animation:dr .9s cubic-bezier(.6,0,.2,1) forwards}.fc .m{stroke-dasharray:44;stroke-dashoffset:44;animation:dr .45s .7s ease-out forwards}
@@ -1988,12 +2013,12 @@ function abrir(h){var f=document.createElement('div');f.className='fondo';f.inne
   var b=this;b.disabled=true;b.textContent='Reservando…';er.textContent='';
   fetch(D.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:h.id,nombre:d.n1,apellidos:d.n2,tel:d.tl,email:d.em,motivo:d.mo})}).then(function(r){return r.json();}).then(function(r){
    if(r.ok&&r.pago){b.textContent='Vamos al pago…';if(EMB){try{window.top.location.href=r.pago;}catch(e){location.href=r.pago;}}else location.href=r.pago;return;}
-   if(r.ok){f.remove();C.style.display='';hecho(h,d.n1,r.conf,d.em);if(EMB){arriba();setTimeout(alto,50);}return;}
+   if(r.ok){f.remove();C.style.display='';hecho(h,d.n1,r.conf,d.em,r.otras);if(EMB){arriba();setTimeout(alto,50);}return;}
    if(r.ocupado){D.huecos=D.huecos.filter(function(x){return x.id!==h.id;});f.remove();C.style.display='';lista();setTimeout(function(){alertar(r.error);},50);return;}
    throw new Error(r.error||'');}).catch(function(e){b.disabled=false;b.textContent=D.pago?'Reservar y pagar':'Reservar mi cita';er.textContent=e.message||'No se ha podido reservar. Inténtalo de nuevo.';});};}
 function alertar(t){var p=document.createElement('p');p.className='err';p.style.textAlign='center';p.textContent=t;C.insertBefore(p,C.children[1]);}
-function hecho(h,n,cf,em){C.innerHTML='<div class="ok"><svg class="fc" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="fi" style="animation-delay:.9s" d="M25 35 Q30 29 35 35"/><path class="fi" style="animation-delay:.9s" d="M45 35 Q50 29 55 35"/><path class="m" d="M26 45 Q40 62 54 45"/></svg>'
- +'<h1 class="fi" style="animation-delay:1s">¡Reservada, '+esc(n.charAt(0).toUpperCase()+n.slice(1))+'!</h1><p class="sub fi" style="animation-delay:1.15s">Te esperamos el '+fl(h.fecha)+' a las '+h.hora+(ELEG?' con '+esc(h.nombre):'')+'.</p>'+tile(h.fecha)+'<p class="okh fi" style="animation-delay:1.6s">Te guardamos el sitio</p></div>'+(cf?'<div class="fi" style="animation-delay:1.8s;text-align:center"><a class="bt" style="display:block;text-decoration:none;margin-top:18px;animation:none" target="_top" href="'+esc(cf)+'">Confirmar mi cita</a>'+(em?'<p class="sub" style="font-size:12.5px;margin-top:10px">También te lo hemos enviado a <b>'+esc(em)+'</b></p>':'')+'</div>':'')+dudas+pie;window.scrollTo(0,0);}
+function hecho(h,n,cf,em,ot){ot=(ot||[]).filter(function(x){return x&&x.f;});var otB=ot.length?'<div class="otr fi" style="animation-delay:1.7s"><b>'+(ot.length===1?'Ya tenías otra cita':'Ya tenías otras citas')+'</b>'+ot.map(function(x){return '<span>'+fl(x.f)+(x.h?' a las '+x.h:'')+'</span>';}).join('')+'<p>Esta nueva se suma a '+(ot.length===1?'la que ya tenías: no la cambia ni la anula':'las que ya tenías: no las cambia ni las anula')+'. Si lo que querías era cambiar de día, escríbenos y lo arreglamos.</p><p>Y si al final no puedes venir a alguna, avísanos con 24 h de antelación y no pasa nada. Con menos tiempo se aplica la política de cancelaciones.</p></div>':'';C.innerHTML='<div class="ok"><svg class="fc" width="88" height="88" viewBox="0 0 80 80" aria-hidden="true"><circle class="o" cx="40" cy="40" r="32" transform="rotate(-90 40 40)"/><path class="fi" style="animation-delay:.9s" d="M25 35 Q30 29 35 35"/><path class="fi" style="animation-delay:.9s" d="M45 35 Q50 29 55 35"/><path class="m" d="M26 45 Q40 62 54 45"/></svg>'
+ +'<h1 class="fi" style="animation-delay:1s">¡Reservada, '+esc(n.charAt(0).toUpperCase()+n.slice(1))+'!</h1><p class="sub fi" style="animation-delay:1.15s">Te esperamos el '+fl(h.fecha)+' a las '+h.hora+(ELEG?' con '+esc(h.nombre):'')+'.</p>'+tile(h.fecha)+'<p class="okh fi" style="animation-delay:1.6s">Te guardamos el sitio</p></div>'+otB+(cf?'<div class="fi" style="animation-delay:1.8s;text-align:center"><a class="bt" style="display:block;text-decoration:none;margin-top:18px;animation:none" target="_top" href="'+esc(cf)+'">Confirmar mi cita</a>'+(em?'<p class="sub" style="font-size:12.5px;margin-top:10px">También te lo hemos enviado a <b>'+esc(em)+'</b></p>':'')+'</div>':'')+dudas+pie;window.scrollTo(0,0);}
 lista();})();<\/script></body></html>`;
 }
 
@@ -2903,6 +2928,17 @@ async function packAMedias(pac) {
     .filter(x => x && x.falta > 0.009).sort((a, b) => b.fecha.localeCompare(a.fecha));
 }
 // Pack cobrado entero que se factura sesión a sesión: emite el ticket de la siguiente sesión (precio del pack ÷ sesiones; la última ajusta los céntimos)
+// Facturas con sesiones de un paciente en un día (emitidas o haciéndose). Para no facturar dos veces la misma sesión.
+// No cuentan los cobros de pack «con factura por sesión» (son el pago, sin ticket): sí cada factura de sesión de ese pack.
+async function facturasSesionDia(pac, fecha) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha || '')) return [];
+  const f = `AND({PacienteId}='${pac}',OR({ESTADO}='Emitida',{ESTADO}='Pendiente'),OR(DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${fecha}',AND({FECHA DE COBRO}='',DATETIME_FORMAT(CREATED_TIME(),'YYYY-MM-DD')='${fecha}')))`;
+  const rows = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(f)}`).catch(() => []);
+  return rows.filter(r => { const F = r.fields || {}; if (F['POR SESION'] && !F['EN PACK']) return false; if (nmA(F['MODO DE PAGO']) === 'Gratis') return false;
+    return [[F['CONCEPTO 1'], F['Nº SESIONES 1']], [F['CONCEPTO 2'], F['Nº SESIONES 2']]].some(([c, n]) => /^Sesi/i.test(nmA(c) || '') && Number(n) > 0); })
+    .map(r => { const F = r.fields || {}; return { id: r.id, num: F['Nº FACTURA'] || '', total: Number(F['TOTAL'] || 0) || Number(F['PRECIO 1'] || 0), concepto: nmA(F['CONCEPTO 1']) || '', quien: String(F['COBRADO POR'] || F['CREADA POR'] || '').trim() }; });
+}
+const fechaTxtCorta = f => { const d = new Date(f + 'T12:00:00Z'); return ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][d.getUTCDay()] + ' ' + d.getUTCDate() + '/' + (d.getUTCMonth() + 1); };
 async function facturarSesionPack(pac, grupo, fecha, quien, fisioSel) {
   const H = await at(`${FACTURAS_TABLE}/${grupo}`), F = H.fields || {};
   if (H.error || !F['POR SESION'] || F['PacienteId'] !== pac || nmA(F['ESTADO']) !== 'Emitida') throw new Error('No encuentro ese pack');
@@ -3109,6 +3145,7 @@ async function programaApp(patientId) {
       descanso: ej.v2 ? (parseInt(ej.descanso) || 0) : 0, // los programas antiguos traían 30 s puestos solos
       desc: ej.descripcion || '',
       sp: ej.sp ? 1 : 0,
+      dia: /^[A-E]$/.test(ej.dia || '') ? ej.dia : '',
       ytId,
       imagen: ej.imagen || '',
     };
@@ -3672,7 +3709,13 @@ module.exports = async function handler(req, res) {
       // Con pago por adelantado: email con el enlace de pago, por si no paga en ese momento
       if (email && P.p > 0) { try { const MSX = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], DSX = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'], dx = new Date(h.fecha + 'T12:00:00Z'), cuando = `${DSX[dx.getUTCDay()]} ${dx.getUTCDate()} de ${MSX[dx.getUTCMonth()]} a las ${h.hora}`, imp = P.p.toFixed(2).replace('.', ',').replace(',00', '');
         await valeMail(email, `Te guardamos tu hora: ${cuando}`, `Hola ${escHtml(n1)},`, `Te hemos guardado la hora del <b>${cuando}</b>.<br><br>Para dejarla reservada, solo falta el pago (<b>${imp} €</b>), con tarjeta o transferencia. Te la guardamos <b>hasta el ${pagoLimTxt(fR['PAGO LÍMITE'])}</b>; si para entonces no se ha completado el pago, la hora vuelve a quedar libre.<br><br>📍 ${escHtml(C.direccion || 'C/ Gran de Sant Andreu, 163 · Barcelona')}<br>¿Dudas? Escríbenos por WhatsApp al ${escHtml(C.tel || '672 89 39 49')}.`, `Pagar y reservar (${imp} €)`, enlacePago(id)); } catch (e) { console.log('mail pago', e.message); } }
-      return res.status(200).json({ ok: true, pago: P.p > 0 ? enlacePago(id) : '', conf: P.p > 0 ? '' : enlaceConfirmar(id) + '?a=1' });
+      // Otras citas que ya tenía (hay quien cree que al reservar otra se anula la primera): se le avisa en la pantalla final
+      let otras = [];
+      if (!nuevo) { try { const hoyI = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+        const os = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(FIND('${pac.id}',ARRAYJOIN({PacienteRec})),IS_AFTER({FECHA},'${hoyI}'))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO`);
+        otras = (os.records || []).filter(x => x.id !== id && /PENDIENTE|DUDOSA/i.test(String(nmA(x.fields.ESTADO) || ''))).map(x => ({ f: String(x.fields.FECHA || '').slice(0, 10), h: String(x.fields.HORA || '').slice(0, 5) })).filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x.f)).sort((a, b) => (a.f + a.h).localeCompare(b.f + b.h)).slice(0, 3);
+      } catch (e) { otras = []; } }
+      return res.status(200).json({ ok: true, pago: P.p > 0 ? enlacePago(id) : '', conf: P.p > 0 ? '' : enlaceConfirmar(id) + '?a=1', otras });
     }
     await caducarPagos().catch(() => 0); // libera antes los huecos de quien no pagó
     const huecos = await huecosLibres(P).catch(() => []);
@@ -6864,6 +6907,17 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const d = await at(SEG, { method: 'POST', body: JSON.stringify({ records: [{ fields: fc }], typecast: true }) });
         return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
       }
+      if (action === 'seg-avr' || action === 'seg-avr-guardar' || action === 'seg-avr-borrar') {
+        const pid = String(q.pacienteId || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(pid)) return res.status(400).json({ ok: false, error: 'Falta el paciente' });
+        let L = await ajuste('avisos_reservar', []).catch(() => []); if (!Array.isArray(L)) L = [];
+        if (action === 'seg-avr-guardar') {
+          const f = String(q.fecha || ''); if (!/^\d{4}-\d{2}-\d{2}$/.test(f) || f <= hoyF) return res.status(400).json({ ok: false, error: 'Elige un día a partir de mañana' });
+          L = L.filter(x => !(x.pid === pid && !x.env)); L.push({ pid, nombre: String(q.nombre || '').slice(0, 80), fecha: f, nota: String(q.nota || '').trim().slice(0, 300), quien: String(q.quien || '').slice(0, 40), creado: hoyF });
+          await guardarAjuste('avisos_reservar', L, String(q.quien || 'panel'));
+        } else if (action === 'seg-avr-borrar') { L = L.filter(x => !(x.pid === pid && !x.env)); await guardarAjuste('avisos_reservar', L, String(q.quien || 'panel')); }
+        const pend = L.find(x => x.pid === pid && !x.env) || null, ult = L.filter(x => x.pid === pid && x.env).sort((a, b) => String(b.env).localeCompare(String(a.env)))[0] || null;
+        return res.status(200).json({ ok: true, aviso: pend, ultimo: ult });
+      }
       if (action === 'seg-ficha-guardar') {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
         // Pack pagado fuera del panel: «bonoPrevio» fija el nº de sesiones; «bonoSumar» le suma un pack nuevo
@@ -7568,6 +7622,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     if (action === 'facturar-sesion-pack') { // emite la factura de una sesión de un pack cobrado entero «con factura por sesión»
       if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado.' });
       if (!/^rec[A-Za-z0-9]{14}$/.test(q.grupo || '')) return res.status(400).json({ ok: false });
+      if (!q.dobleOk) { const fD = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); const prev = await facturasSesionDia(pac, fD).catch(() => []);
+        if (prev.length) return res.status(200).json({ ok: false, doble: true, previas: prev, fechaTxt: fechaTxtCorta(fD), error: 'Ya hay una factura con sesiones de ese día' }); }
       try { const x = await facturarSesionPack(pac, q.grupo, q.fecha, q.quien, q.fisioElegido ? String(q.fisio || '') : undefined); return res.status(200).json({ ok: true, ...x }); }
       catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
     }
@@ -7644,6 +7700,12 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const imp = r2(String(q.descuento.importe || '').replace(',', '.')), totL = r2(lineas.reduce((t, l) => t + Number(l.uds || 0) * Number(l.precio || 0), 0)), txt = String(q.descuento.texto || 'Descuento').trim().slice(0, 80) || 'Descuento';
       if (imp > 0) { if (imp > totL + 0.001) return res.status(200).json({ ok: false, error: 'El descuento es mayor que el total.' });
         descuento = descuento ? { importe: r2(descuento.importe + imp), texto: descuento.texto + ' · ' + txt } : { importe: imp, texto: txt }; }
+    }
+    // ¿Ya hay una factura con sesiones de este paciente ese día? (pasó con un paciente: la misma sesión facturada dos veces). Se pregunta en el panel.
+    if (!q.dobleOk && !q.pack && !q.gratis && lineas.some(l => /^Sesi/i.test(String(l.concepto || '')))) {
+      const fD = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+      const prev = await facturasSesionDia(pac, fD).catch(() => []);
+      if (prev.length) return res.status(200).json({ ok: false, doble: true, previas: prev, fechaTxt: fechaTxtCorta(fD), error: 'Ya hay una factura con sesiones de ese día' });
     }
     const fa = q.facturarA || {};
     const campos = { [FF.paciente]: [pac], 'fldpruhLn03x1x6zI': pac, [FF.notas]: String(q.notas || ''), [FF.estado]: 'Pendiente' };
@@ -7950,6 +8012,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
 }
 module.exports.cierreDia = cierreDia;
 module.exports.valesDelDia = valesDelDia;
+module.exports.avisosReservarDelDia = avisosReservarDelDia;
 module.exports.emailsResumen = emailsResumen;
 module.exports.repasoEtapas = repasoEtapas;
 module.exports.importeDoc = d => importeDoc(d);
