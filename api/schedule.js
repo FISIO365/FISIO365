@@ -4342,16 +4342,6 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
   }
 
   // ── PANEL: SEGUIMIENTO (lista de pacientes a llamar) y LLAMADAS ──
-  // TEMPORAL (recuento de sesiones de un fisio, solo lectura): se quita en cuanto se termine
-  if (action === 'revisa-fisio' && process.env.REVISA_KEY && String(req.query.k || '') === process.env.REVISA_KEY) {
-    try {
-      const rs = await capTodos('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent("TRIM({ESTADO}&'')='REALIZADA'")}&fields[]=FECHA&fields[]=${encodeURIComponent('PREF.')}`);
-      const out = {};
-      for (const r of rs) { const F = r.fields || {}, f = nmA(F['PREF.']) || '(sin fisio)', m = String(F.FECHA || '').slice(0, 7);
-        out[f] = out[f] || {}; out[f][m] = (out[f][m] || 0) + 1; }
-      return res.status(200).json({ total: rs.length, porFisio: out });
-    } catch (e) { return res.status(200).json({ error: e.message }); }
-  }
   if (action && action.startsWith('seg-')) {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
