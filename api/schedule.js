@@ -4238,7 +4238,9 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
     if (action === 'tarjeta-img' && !a) return res.redirect(302, 'https://app.fisioterapia365.com/icons/icon-512.png');
     if (action === 'tarjeta-img') { const im = await fetch(a.url); res.setHeader('Content-Type', a.type || 'image/jpeg'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(Buffer.from(await im.arrayBuffer())); }
     const CF = await conf().catch(() => CONF_DEF), impP = Number(CF.tarjeta.importe) || 10, cad = String(r.fields['CADUCA'] || '').split('-').reverse().join('/');
-    let pila = String(r.fields['Nombre de quien recomendó'] || '').trim().split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
+    // El nombre de la persona a quien va (la enlazada); el texto del formulario puede traer a varias («Alejandro y Óscar»)
+    const rid = (r.fields['RECOMENDÓ'] || [])[0], rp = rid ? await at(`${PACIENTES}/${rid}`).catch(() => ({})) : null;
+    let pila = String(((rp && rp.fields) || {})['FULL NAME'] || r.fields['Nombre de quien recomendó'] || '').trim().split(/\s+/)[0] || ''; pila = pila ? pila.charAt(0).toUpperCase() + pila.slice(1).toLowerCase() : '';
     if (action === 'tarjeta-og') {
       try { const { Resvg } = require('@resvg/resvg-js'); const png = new Resvg(MARCA.marcar(ogTarjetaSvg({ imp: impP, pila }), CLI), { font: { loadSystemFonts: false } }).render().asPng(); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).send(png); }
       catch (e) { return res.redirect(302, `https://app.fisioterapia365.com/api/schedule?action=tarjeta-img&id=${id}`); }
@@ -5067,11 +5069,12 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
             if (pid) { const u = await at(`${REF}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { PACIENTE: [pid] } }) }); if (!u.error) F['PACIENTE'] = [pid]; } }
           // 2) Quién recomendó: si su nombre (2 palabras o más) cuadra con un único paciente, se enlaza solo; si no, se proponen
           const sug = {};
-          for (const r of rs) { const F = r.fields; if ((F['RECOMENDÓ'] || []).length) continue;
+          // (también para las ya enlazadas: así se puede cambiar a quién va, p. ej. si le recomendaron dos personas)
+          for (const r of rs) { const F = r.fields, ya = (F['RECOMENDÓ'] || []).length;
             const tk = nomToks(String(F['Nombre de quien recomendó'] || '').replace(/\(.*?\)/g, ' ')); if (!tk.length) { sug[r.id] = []; continue; }
             const nuevo = (F['PACIENTE'] || [])[0];
             const m = tokP.filter(p => p.id !== nuevo && tk.every(t => p.t.includes(t)));
-            if (tk.length >= 2 && m.length === 1) { const u = await at(`${REF}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECOMENDÓ': [m[0].id] } }) }); if (!u.error) { F['RECOMENDÓ'] = [m[0].id]; continue; } }
+            if (!ya && tk.length >= 2 && m.length === 1) { const u = await at(`${REF}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECOMENDÓ': [m[0].id] } }) }); if (!u.error) { F['RECOMENDÓ'] = [m[0].id]; continue; } }
             const parc = tokP.filter(p => p.id !== nuevo && tk.some(t => p.t.includes(t))).map(p => ({ p, n: tk.filter(t => p.t.includes(t)).length })).sort((a, b) => b.n - a.n).slice(0, 6);
             sug[r.id] = (m.length ? m.slice(0, 6) : parc.map(x => x.p)).map(p => ({ id: p.id, nombre: nomP(p.id) })); }
           // 3) ¿Ha venido ya el recomendado? (primera sesión realizada)
@@ -5103,7 +5106,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) }); return res.status(200).json({ ok: !d.error });
         }
         if (action === 'seg-referido-recomendo') { if (!okId(q.pacienteId)) return res.status(400).json({ ok: false });
-          const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECOMENDÓ': [q.pacienteId] } }) }); return res.status(200).json({ ok: !d.error }); }
+          const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'RECOMENDÓ': [q.pacienteId], 'TARJETA IMG': [] } }) }); return res.status(200).json({ ok: !d.error }); } // la imagen llevaba el nombre de antes
         if (action === 'seg-referido-ignorar') { const d = await at(`${REF}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { IGNORAR: true } }) }); return res.status(200).json({ ok: !d.error }); }
         if (action === 'seg-referido-tarjeta') {
           const r0 = await at(`${REF}/${q.id}`); if (r0.error) return res.status(404).json({ ok: false });
