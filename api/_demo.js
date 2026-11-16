@@ -81,9 +81,9 @@ async function demo({ at, db, op, guardarAjuste }) {
     { RESUMEN: 'Saber qué pacientes aún no tienen la app', TEXTO: 'Estaría genial tener una lista de los pacientes que aún no tienen la app instalada, para acordarnos de enseñársela en la próxima sesión.', ORIGEN: 'Equipo', APARTADO: 'App', TIPO: 'Mejora', DE: 'Marc', ESTADO: 'Hecha', NOTA: '¡Hecho! Ya lo tenéis en Tareas › «Sin la app». Gracias por la idea 🙌', 'CAMBIADO POR': 'Creadores de la app', 'RESPUESTA VISTA': true, FECHA: ahora(-6) },
     { RESUMEN: 'Comprar otra camilla eléctrica', TEXTO: 'La camilla de la sala 2 empieza a fallar al subir. ¿Podríamos mirar una nueva?', ORIGEN: 'Equipo', APARTADO: 'Clínica', DE: 'Ana', ESTADO: 'Nueva', FECHA: ahora(-1) }]);
   // 7. Datos de la clínica (otro color, para ver que la marca cambia)
-  const IC = require('./_demo_iconos.json'); // iconos de la demo (hoja de arce): la app en verde y el panel en claro, a juego
-  await guardarAjuste('clinica-icono', { data: IC.app }, 'Demo'); await guardarAjuste('clinica-icono-panel', { data: IC.panel }, 'Demo');
-  await guardarAjuste('config', { clinica: { iconoV: 1, iconoPV: 1, marca: 'Clínica Arce', razon: 'Clínica Arce Fisioterapia, S.L.', nif: 'B00000000', direccion: 'C/ de Ejemplo, 10 · 08001 Barcelona', dirCorta: 'C/ de Ejemplo, 10 · Barcelona', zona: 'Ciutat Vella', ciudad: 'Barcelona', tel: '600 000 000', email: 'hola@clinicaarce.es', web: 'clinicaarce.es', color: '#2e6e6a' } }, 'Demo');
+  const IC = require('./_demo_iconos.json'); // marca de la demo (Clínica Xanara): icono de la app, del panel y logo
+  await guardarAjuste('clinica-icono', { data: IC.app }, 'Demo'); await guardarAjuste('clinica-icono-panel', { data: IC.panel }, 'Demo'); await guardarAjuste('clinica-logo', { data: IC.logo }, 'Demo');
+  await guardarAjuste('config', { clinica: { iconoV: 2, iconoPV: 2, logoV: 2, marca: 'Clínica Xanara', razon: 'Clínica Xanara, S.L.', nif: 'B00000000', direccion: 'C/ de Ejemplo, 10 · 08001 Barcelona', dirCorta: 'C/ de Ejemplo, 10 · Barcelona', zona: 'Ciutat Vella', ciudad: 'Barcelona', tel: '600 000 000', email: 'hola@clinicaxanara.es', web: 'clinicaxanara.es', color: '#885498' } }, 'Demo');
   return { ok: true, fisios: 4, pacientes: pids.length, citas: citas.length, ejercicios: EJ.length, mensajes: msgs.length };
 }
 module.exports = { demo };
