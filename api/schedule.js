@@ -6924,6 +6924,22 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const d = await at(SEG, { method: 'POST', body: JSON.stringify({ records: [{ fields: fc }], typecast: true }) });
         return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
       }
+      if (action === 'seg-avr-hoy' || action === 'seg-avr-wa') {
+        // Mensajes › Avisos: los «Recordarle que reserve» de hoy (y de la última semana sin mandar) para mandarles también un WhatsApp
+        let L = await ajuste('avisos_reservar', []).catch(() => []); if (!Array.isArray(L)) L = [];
+        if (action === 'seg-avr-wa') { const pid = String(q.pacienteId || ''), f = String(q.fecha || ''); let n = 0;
+          L.forEach(x => { if (x.pid === pid && x.fecha === f) { if (q.quitar) delete x.wa; else x.wa = { t: new Date().toISOString(), por: String(q.por || '').slice(0, 40) }; n++; } });
+          if (n) await guardarAjuste('avisos_reservar', L, String(q.por || 'panel')); return res.status(200).json({ ok: !!n }); }
+        const d7 = new Date(hoyF + 'T12:00:00Z'); d7.setUTCDate(d7.getUTCDate() - 7); const desde = d7.toISOString().slice(0, 10);
+        const H = L.filter(x => x.fecha && x.fecha <= hoyF && x.fecha >= desde && x.res !== 'ya tenía cita' && /^rec[A-Za-z0-9]{14}$/.test(x.pid || ''));
+        const pids = [...new Set(H.map(x => x.pid))], conCita = new Set(), pac = {};
+        for (let i = 0; i < pids.length; i += 40) { const l = pids.slice(i, i + 40);
+          (await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(IS_AFTER({FECHA},'${hoyF}'),OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA'),OR(${l.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => [])).forEach(r => (r.fields['RELACIÓN - CITA'] || []).forEach(id => conCita.add(id)));
+          (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + l.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`).catch(() => [])).forEach(p => { const F = p.fields || {}, nom = String(F['FULL NAME'] || '').trim(); pac[p.id] = { nombre: nom, pila: String(F['NOMBRE'] || nom).trim().split(/\s+/)[0] || '', tel: String(F['WHATSAPP'] || F['TELF'] || '') }; }); }
+        const lista = H.filter(x => !conCita.has(x.pid)).map(x => ({ pacienteId: x.pid, fecha: x.fecha, nota: x.nota || '', quien: x.quien || '', creado: x.creado || '', env: x.res || '', wa: (x.wa || {}).t || '', porWa: (x.wa || {}).por || '', ...(pac[x.pid] || { nombre: x.nombre || '', pila: '', tel: '' }) }))
+          .sort((a, b) => (!!a.wa - !!b.wa) || a.fecha.localeCompare(b.fecha));
+        return res.status(200).json({ ok: true, lista });
+      }
       if (action === 'seg-avr' || action === 'seg-avr-guardar' || action === 'seg-avr-borrar') {
         const pid = String(q.pacienteId || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(pid)) return res.status(400).json({ ok: false, error: 'Falta el paciente' });
         let L = await ajuste('avisos_reservar', []).catch(() => []); if (!Array.isArray(L)) L = [];
