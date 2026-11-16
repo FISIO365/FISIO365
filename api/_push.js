@@ -84,6 +84,8 @@ async function citasFuera() {
     d.forEach(r => { try { Object.assign(v, JSON.parse(r.fields.VALOR || '{}') || {}); } catch (e) {} }); _cf = { t: Date.now(), v }; return v; } catch (e) { return _cf.v || {}; }
 }
 function olvidarCitasFuera() { _cf = { t: 0, v: null }; }
+// Fecha desde la que cuentan las sesiones de un paciente: la del panel, o antes si su pack ya había empezado
+const cuentaDesde = (inicio, d) => /^\d{4}-\d{2}-\d{2}$/.test(String(d || '')) && String(d) < inicio ? String(d) : inicio;
 async function citasGastadas(inicio, pacId) {
   const conds = [`OR(${GASTA.map(e => `TRIM({ESTADO})='${e}'`).join(',')})`, `IS_AFTER({FECHA},DATEADD('${inicio}',-1,'days'))`];
   if (pacId) conds.push(`FIND('${pacId}',ARRAYJOIN({PacienteRec}))`);
@@ -162,10 +164,13 @@ const pcResumen = (x, pid) => ({ titular: x.t, yoPague: x.t === pid, con: x.miem
 async function saldoPaciente(pacId) {
   const inicio = await inicioControl();
   if (!inicio) return { activo: false };
-  let [facs, citas, pac] = await Promise.all([
-    facturasEmitidas(pacId), citasGastadas(inicio, pacId),
+  let [facs, pac] = await Promise.all([
+    facturasEmitidas(pacId),
     fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES_T}/${pacId}`, { headers: { Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}` } }).then(r => r.json())
   ]);
+  // Su pack empezó antes de que el panel contara: sus sesiones cuentan desde «CUENTA DESDE»
+  const desde = cuentaDesde(inicio, (pac.fields || {})['CUENTA DESDE']);
+  let citas = await citasGastadas(desde, pacId);
   // Pack pagado fuera del panel: cuenta lo que le quedaba cuando el panel empezó a contar (total − ya usadas antes)
   const PF = pac.fields || {}, nPrev = Number(PF['SESIONES BONO PREVIO'] || 0), uPrev = nPrev > 0 ? Math.min(nPrev, Number(PF['BONO PREVIO YA USADAS'] || 0)) : 0;
   const previo = Math.max(0, nPrev - uPrev);
@@ -183,7 +188,7 @@ async function saldoPaciente(pacId) {
     gastadas -= citas.filter(c => cubre.has(c.id)).length;
     compartido = shares.map(x => pcResumen(x, pacId));
   }
-  return { activo: true, inicio, pagadas: pag + uPrev + shares.reduce((t, x) => t + x.n, 0), gastadas: gastadas + uPrev + shares.reduce((t, x) => t + (x.usadas || 0), 0), saldo: pag - gastadas + extra, compartido };
+  return { activo: true, inicio, desde, pagadas: pag + uPrev + shares.reduce((t, x) => t + x.n, 0), gastadas: gastadas + uPrev + shares.reduce((t, x) => t + (x.usadas || 0), 0), saldo: pag - gastadas + extra, compartido };
 }
 
 // Todos los pacientes con saldo negativo (sesiones hechas sin facturar)
@@ -194,6 +199,10 @@ async function sinFacturar() {
     facturasEmitidas(''), citasGastadas(inicio, ''),
     todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('{SESIONES BONO PREVIO}>0')}&fields[]=SESIONES BONO PREVIO&fields[]=BONO PREVIO YA USADAS&fields[]=BONO PREVIO DESDE`)
   ]);
+  try { // pacientes cuyo pack empezó antes de que el panel contara: también sus sesiones de antes
+    const cd = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent("{CUENTA DESDE}!=''")}&fields[]=CUENTA DESDE`);
+    for (const p of cd) { const d = cuentaDesde(inicio, p.fields['CUENTA DESDE']); if (d < inicio) citas = citas.concat((await citasGastadas(d, p.id)).filter(c => String(c.fields.FECHA || '').slice(0, 10) < inicio)); }
+  } catch (e) {}
   const s = {};
   const de = id => (s[id] = s[id] || { pagadas: 0, gastadas: 0, nombre: '', fisio: '', ultima: '' });
   previos.forEach(p => { de(p.id).pagadas += Math.max(0, Number(p.fields['SESIONES BONO PREVIO'] || 0) - Number(p.fields['BONO PREVIO YA USADAS'] || 0)); });
@@ -408,5 +417,5 @@ async function valorSesiones(citasRango, hasta, precios, opts) {
   return { lista, ref };
 }
 
-const saldo = { previoAntes, desdePack, compartidos, repartoCompartido, citasDeMiembros, pcLeer, saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl, citasFuera, olvidarCitasFuera };
+const saldo = { cuentaDesde, previoAntes, desdePack, compartidos, repartoCompartido, citasDeMiembros, pcLeer, saldoPaciente, sinFacturar, facturasEmitidas, sesionesDe, fechaCobro, rendimiento, inicioControl, citasFuera, olvidarCitasFuera };
 module.exports = { leerSub, enviar, avisar, idValido, TABLAS, BASE_ID, saldo };

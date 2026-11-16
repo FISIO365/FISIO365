@@ -7,7 +7,7 @@ const INFORMES_TABLE = 'tblwvWQxXNJPdR0Iv';
 const BIBLIO_TABLE = 'tbloqn3ts872ueJSE';
 
 const HOLDED_KEY = process.env.HOLDED_API_KEY;
-const { previoAntes, desdePack, saldoPaciente, rendimiento, inicioControl, sinFacturar, compartidos, repartoCompartido, citasDeMiembros, pcLeer, citasFuera, olvidarCitasFuera } = require('./_push').saldo;
+const { cuentaDesde, previoAntes, desdePack, saldoPaciente, rendimiento, inicioControl, sinFacturar, compartidos, repartoCompartido, citasDeMiembros, pcLeer, citasFuera, olvidarCitasFuera } = require('./_push').saldo;
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
 const HOLDED_URL = 'https://api.holded.com/api/v2'; // API nueva de Holded (clave «Bearer»)
 // Marca de la clínica (nombre, dirección, teléfono, reseñas…): ver api/_marca.js
@@ -5688,10 +5688,11 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
                 const [rs, fs, ps] = await Promise.all([
                   todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),OR(${g.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=PacienteRec`),
                   inicio ? todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',OR(${g.map(id => `{PacienteId}='${id}'`).join(',')}))`)}`).catch(() => []) : Promise.resolve([]),
-                  conPago ? todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}&fields[]=${encodeURIComponent('BONO PREVIO VALE')}&fields[]=${encodeURIComponent('BONO PREVIO DESDE')}`).catch(() => []) : Promise.resolve([])
+                  conPago ? todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + g.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=${encodeURIComponent('SESIONES BONO PREVIO')}&fields[]=${encodeURIComponent('BONO PREVIO YA USADAS')}&fields[]=${encodeURIComponent('BONO PREVIO VALE')}&fields[]=${encodeURIComponent('BONO PREVIO DESDE')}&fields[]=${encodeURIComponent('CUENTA DESDE')}`).catch(() => []) : Promise.resolve([])
                 ]);
                 const L = {}; g.forEach(id => L[id] = { citas: [], lotes: [] });
                 rs.forEach(r => (r.fields['PacienteRec'] || []).forEach(id => { if (L[id]) L[id].citas.push({ id: r.id, k: String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA), e: String(nmA(r.fields.ESTADO)).trim().toUpperCase() }); }));
+                ps.forEach(p => { if (L[p.id]) L[p.id].desde = cuentaDesde(inicio, p.fields['CUENTA DESDE']); });
                 ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0), u = Math.min(n, Number(p.fields['BONO PREVIO YA USADAS'] || 0)); if (L[p.id] && n - u > 0) L[p.id].lotes.push({ f: '', n: n - u, tot: n, off: u, precio: 0, previo: true, vale: !!p.fields['BONO PREVIO VALE'], desde: String(p.fields['BONO PREVIO DESDE'] || '') }); });
                 fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => { const id = r.fields['PacienteId']; if (!L[id]) return;
                   const psF = r.fields['POR SESION'] && !r.fields['EN PACK'] ? fs.filter(x => x.id !== r.id && x.fields['PACK GRUPO'] === r.id).length : null;
@@ -5709,10 +5710,11 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
                   shares.forEach(x => { (quitarLote[x.t] = quitarLote[x.t] || []).push(x.f); });
                 }
               } catch (e) { console.log('agenda-compartido', e.message); }
-              const FUERA = await citasFuera().catch(() => ({}));
+              const FUERA = await citasFuera().catch(() => ({})), inicio0 = inicio;
               rows.forEach(r => { const pid = (r.fields['RELACIÓN - CITA'] || [])[0]; if (!pid || !C[pid]) return; const e = String(nmA(r.fields['ESTADO'])).trim().toUpperCase();
                 if (/CANCELADA|REPROGRAMADA|NO ASIST/.test(e)) return; const k = String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA);
                 const V = C[pid].v; numSes[r.id] = V.citas.filter(x => x.k < k && x.e !== 'CITA PERDIDA').length + 1;
+                const inicio = V.desde && inicio0 && V.desde < inicio0 ? V.desde : inicio0; // su pack pudo empezar antes
                 if (!inicio || k.slice(0, 10) < inicio) return; // antes de empezar a cobrar desde el panel no se sabe
                 if (FUERA[r.id]) { pago[r.id] = { t: 'fuera', nota: String(FUERA[r.id].nota || '') }; return; } // facturada fuera del panel
                 // Se gastan los pagos por orden (primero el más antiguo) con las citas desde el inicio del control, en orden
@@ -5732,10 +5734,10 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           const inicio = await inicioControl().catch(() => '');
           if (!inicio) return { activo: false };
           const hora = okH(hora0) ? hh(hora0) : '23:59', clave = fecha + ' ' + hora;
-          const [rs, fs, pr] = await Promise.all([
-            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),FIND('${pid}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${inicio}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA`),
-            todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pid}')`)}`).catch(() => []),
-            at(`${PACIENTES}/${pid}`).catch(() => ({}))
+          const pr = await at(`${PACIENTES}/${pid}`).catch(() => ({})), ini = cuentaDesde(inicio, (pr.fields || {})['CUENTA DESDE']);
+          const [rs, fs] = await Promise.all([
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE',TRIM({ESTADO}&'')='CITA PERDIDA'),FIND('${pid}',ARRAYJOIN({PacienteRec})),NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${ini}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=HORA`),
+            todosT(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pid}')`)}`).catch(() => [])
           ]);
           const lotes = [], P = pr.fields || {}, nP = Number(P['SESIONES BONO PREVIO'] || 0), uP = Math.min(nP, Number(P['BONO PREVIO YA USADAS'] || 0));
           if (nP - uP > 0) lotes.push({ n: nP - uP, tot: nP, off: uP, previo: true, vale: !!P['BONO PREVIO VALE'], desde: String(P['BONO PREVIO DESDE'] || '') });
@@ -6972,6 +6974,13 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
       }
       if (action === 'seg-ficha-guardar') {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+        // Su pack empezó antes de que el panel contara: sus sesiones cuentan desde esa fecha ('' = como todos)
+        if (q.cuentaDesde != null) {
+          const v = String(q.cuentaDesde || ''); if (v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) return res.status(400).json({ ok: false, error: 'Fecha no válida' });
+          const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'CUENTA DESDE': v || null } }) });
+          global._sesPac = {};
+          return res.status(200).json({ ok: !d.error, error: d.error && (d.error.message || d.error.type) });
+        }
         // Pack pagado fuera del panel: «bonoPrevio» fija el nº de sesiones; «bonoSumar» le suma un pack nuevo
         // «Tiene pack» desde una cita: pack de n sesiones y esta cita es la nº «sesion» del pack.
         // Las sesiones del pack anteriores que el panel no cuenta (de antes de empezar a facturar aquí) se apuntan como «ya usadas».
@@ -7641,6 +7650,11 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const saldo = await saldoPaciente(pac).catch(() => ({ activo: false }));
       const bonoPrevio = Number((pr.fields || {})['SESIONES BONO PREVIO'] || 0);
       const aMedias = await packAMedias(pac).catch(() => []);
+      // Sesiones hechas antes de que el panel empezara a contar: si eran de su pack, se puede decir desde cuándo cuentan
+      let antes = [];
+      if (saldo.activo) antes = (await capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='CITA PERDIDA'),FIND('${pac}',ARRAYJOIN({PacienteRec})),IS_BEFORE({FECHA},DATETIME_PARSE('${saldo.inicio}','YYYY-MM-DD')))`)}&fields[]=FECHA`).catch(() => []))
+        .map(r => String((r.fields || {}).FECHA || '').slice(0, 10)).filter(Boolean).sort().reverse().slice(0, 12);
+      const cuentaD = String((pr.fields || {})['CUENTA DESDE'] || '');
       const filasP = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}')`)}`).catch(() => []);
       const sesFila = F => [[F['CONCEPTO 1'], F['Nº SESIONES 1']], [F['CONCEPTO 2'], F['Nº SESIONES 2']]].reduce((t2, [c, n]) => t2 + (/^Sesi/i.test(nmA(c) || '') ? Number(n) || 0 : 0), 0);
       const facPanel = {}, sueltos = [];
@@ -7654,7 +7668,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       // Sesiones gratis (no van a Holded): se ven en la ficha junto a las facturas
       const gratis = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{MODO DE PAGO}='Gratis')`)}`).catch(() => [])).map(r => { const f = r.fields;
         return { id: r.id, fecha: String(f['FECHA DE COBRO'] || f['FECHA'] || String(r.createdTime).slice(0, 10)).slice(0, 10), lineas: [[f['CONCEPTO 1'], f['Nº SESIONES 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2']]].filter(([c]) => c).map(([c, n]) => ({ c: (c && c.name) || c, n: Number(n) || 1 })), nota: f['NOTAS'] || '' }; }).sort((a, b) => b.fecha.localeCompare(a.fecha));
-      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, precioEsp: precioEspDe(pr.fields), saldo, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [] });
+      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, precioEsp: precioEspDe(pr.fields), saldo, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [] });
       try {
         const ids = await contactosDelPaciente(pac); const facturas = await listarFacturas(ids, true);
         // Tickets borrados en Holded → su fila de FACTURAS pasa a «Anulada» y deja de contar en el saldo
@@ -7666,9 +7680,9 @@ Devuelve solo el texto del mensaje, sin comillas.`;
           for (let i = 0; i < muertas.length; i += 10) await at(FACTURAS_TABLE, { method: 'PATCH', body: JSON.stringify({ typecast: true, records: muertas.slice(i, i + 10).map(r => ({ id: r.id, fields: { [FF.estado]: 'Anulada' } })) }) });
           if (muertas.length) saldo2 = await saldoPaciente(pac).catch(() => saldo);
         } catch (e) {}
-        return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo: saldo2, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, enHolded: ids.length, facturas });
+        return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo: saldo2, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, enHolded: ids.length, facturas });
       }
-      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (action === 'facturar-sesion-pack') { // emite la factura de una sesión de un pack cobrado entero «con factura por sesión»
