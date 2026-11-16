@@ -31,6 +31,12 @@ video{display:block;width:100%;max-width:100%;aspect-ratio:16/9;border-radius:20
 .fila:last-child{border-bottom:0}
 .fila span{color:var(--mut)}.fila b{font-weight:500}
 .fila code{font-family:inherit;font-weight:600;background:var(--lila2);border-radius:8px;padding:1px 10px;margin-left:8px}
+.inst{border-top:1px solid var(--linea);padding-top:28px;display:flex;flex-direction:column;gap:20px}
+.inst h3{font-size:17px;margin:0;font-weight:600}.inst>p{color:var(--mut);margin:-12px 0 0;font-size:15px}
+.ol{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:n}
+.ol li{counter-increment:n;display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--mut)}
+.ol li::before{content:counter(n);flex:none;width:24px;height:24px;border-radius:50%;background:var(--lila);color:#fff;font-size:12px;font-weight:600;display:grid;place-items:center;margin-top:1px}
+.ol b{color:var(--fg);font-weight:600}
 footer{color:var(--suave);font-size:14px;text-align:center}
 </style>
 </head><body><div class="w">
@@ -51,7 +57,7 @@ footer{color:var(--suave);font-size:14px;text-align:center}
 <div class="cols"><div><h3>Panel de la clínica</h3><a href="https://demo-clinica-panel.vercel.app/fisio">demo-clinica-panel.vercel.app/fisio</a>
 <div style="margin-top:10px"><div class="fila"><span>Dirección</span><b>Laura<code>1234</code></b></div><div class="fila"><span>Fisioterapeuta</span><b>Marc<code>2345</code></b></div><div class="fila"><span>Recepción</span><b>Recepción<code>4567</code></b></div></div></div>
 <div><h3>App del paciente</h3><a href="https://demo-clinica-panel.vercel.app">demo-clinica-panel.vercel.app</a>
-<div style="margin-top:10px"><div class="fila"><span>Lucía</span><b>lucia@ejemplo.com<code>1000</code></b></div><div class="fila"><span>Javier</span><b>javier@ejemplo.com<code>1037</code></b></div></div></div></div></section>
+<div style="margin-top:10px"><div class="fila"><span>Lucía</span><b>lucia@ejemplo.com<code>1000</code></b></div><div class="fila"><span>Javier</span><b>javier@ejemplo.com<code>1037</code></b></div></div></div></div><div class="inst"><h3>Cómo instalarlas</h3><p>Sin tienda de apps: se instalan desde el navegador y quedan con su icono, como cualquier app.</p><div class="cols"><div><h3>App del paciente, en el móvil</h3><p style="color:var(--mut);font-size:14px;margin:4px 0 0">iPhone</p><ol class="ol"><li><span>Abre <b>demo-clinica-panel.vercel.app</b> en <b>Safari</b></span></li><li><span>Toca <b>Compartir</b> (el cuadrado con la flecha)</span></li><li><span><b>Añadir a pantalla de inicio</b></span></li></ol><p style="color:var(--mut);font-size:14px;margin:16px 0 0">Android</p><ol class="ol"><li><span>Ábrela en <b>Chrome</b></span></li><li><span>Toca el menú <b>⋮</b></span></li><li><span><b>Instalar app</b></span></li></ol></div><div><h3>Panel de la clínica, en el ordenador</h3><p style="color:var(--mut);font-size:14px;margin:4px 0 0">Chrome o Edge</p><ol class="ol"><li><span>Abre <b>demo-clinica-panel.vercel.app/fisio</b></span></li><li><span>En la barra de direcciones, toca el icono de <b>instalar</b> (la pantalla con la flecha)</span></li><li><span><b>Instalar</b>: queda en el escritorio y se abre en su ventana</span></li></ol><p style="color:var(--mut);font-size:14px;margin:16px 0 0">También en el móvil o la tablet</p><p style="color:var(--mut);font-size:15px;margin:8px 0 0">Igual que la app del paciente, pero con el enlace del panel.</p></div></div></div></section>
 <footer>Preparado por FISIO365 para Clínica Xanara</footer>
 </div>
 </body></html>
