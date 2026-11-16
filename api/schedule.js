@@ -4566,7 +4566,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           if (h.noLeido || !h.leido[yo]) await marcar(root, 'LEÍDO');
           // Las respuestas solo las ve quien envió la comunicación: cada destinatario ve las suyas y las de quien la envió, no las de los compañeros
           const de0 = String(root.fields['DE'] || '').trim();
-          h = vistaHilo(root, de0 === yo ? resp : resp.filter(r => [de0, yo].includes(String(r.fields['DE'] || '').trim())));
+          h = vistaHilo(root, de0 === yo ? resp : resp.filter(r => [de0, yo].includes(String(r.fields['DE'] || '').trim()) || listaPara(r.fields['PARA']).includes(yo))); // y las que van dirigidas a mí (en solicitudes, las del resto de dirección)
           return res.status(200).json({ ok: true, yo, hilo: h });
         }
         if (action === 'seg-com-enviar' && q.tipo === 'Ausencia') {
@@ -4702,7 +4702,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           const modoR = ['leer', 'hacer', 'responder'].includes(F.MODO) ? F.MODO : '';
           if (cuerpo && de !== yo && modoR !== 'responder' && !['Ausencia', 'Incidencia', 'Ayuda', 'Tareas'].includes(nmC(F.TIPO))) return res.status(400).json({ ok: false, error: 'En esta comunicación no se pide respuesta escrita' });
           // Respuestas escritas: la de un destinatario solo le llega a quien la envió; un comentario de quien la envió, a todos
-          if (cuerpo) { const otros = de === yo ? para0.filter(p => p && p !== yo) : [de];
+          if (cuerpo) { const otros = de === yo ? para0.filter(p => p && p !== yo) : nmC(F.TIPO) === 'Ausencia' ? [de, ...para0.filter(p => p && p !== yo && p !== de)] : [de]; // solicitud: lo ven quien la pidió y el resto de dirección
             const d = await at(COM, { method: 'POST', body: JSON.stringify({ records: [{ fields: { ASUNTO: 'RE: ' + (F.ASUNTO || ''), HILO: root.id, DE: yo, PARA: otros.join(', '), CUERPO: cuerpo, FECHA: ahora } }] }) });
             if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido enviar' }); q._respId = d.records[0].id; }
           await marcar(root, 'LEÍDO');
