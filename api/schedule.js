@@ -4344,6 +4344,24 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
   }
 
   // ── PANEL: SEGUIMIENTO (lista de pacientes a llamar) y LLAMADAS ──
+  // TEMPORAL (cifras agregadas de la clínica, solo lectura, sin datos personales): se quita en cuanto se termine
+  if (action === 'revisa-stats' && process.env.REVISA_KEY && String(req.query.k || '') === process.env.REVISA_KEY) {
+    try {
+      const cit = await capTodos('tblTPlcuiSjQngkaD', `fields[]=FECHA&fields[]=ESTADO&fields[]=RESERVA&fields[]=${encodeURIComponent('ENCUESTA VALORACIÓN')}&fields[]=${encodeURIComponent('RECORDATORIO ENVIADO')}&fields[]=${encodeURIComponent('DADA POR')}&fields[]=PacienteRec`);
+      const M = {}, res = {}, dada = {}, prim = {};
+      for (const r of cit) { const F = r.fields || {}, m = String(F.FECHA || '').slice(0, 7), e = nmA(F.ESTADO).trim(); if (!m) continue;
+        const o = M[m] = M[m] || { hechas: 0, perdidas: 0, canceladas: 0, rec: 0, val: 0, nval: 0, app: 0, total: 0 };
+        o.total++; if (e === 'REALIZADA') o.hechas++; else if (e === 'CITA PERDIDA') o.perdidas++; else if (/CANCEL/.test(e)) o.canceladas++;
+        if (F['RECORDATORIO ENVIADO']) o.rec++; const v = Number(F['ENCUESTA VALORACIÓN']); if (v > 0) { o.val += v; o.nval++; }
+        const rs = nmA(F.RESERVA); res[rs] = (res[rs] || 0) + 1; const dp = nmA(F['DADA POR']); dada[dp] = (dada[dp] || 0) + 1;
+        if (/app|paciente/i.test(rs + ' ' + dp)) o.app++;
+        const pid = (F.PacienteRec || [])[0]; if (pid && e === 'REALIZADA') { const f = String(F.FECHA).slice(0, 10); if (!prim[pid] || f < prim[pid]) prim[pid] = f; } }
+      const nuevos = {}; Object.values(prim).forEach(f => { const m = f.slice(0, 7); nuevos[m] = (nuevos[m] || 0) + 1; });
+      const tar = await capTodos('tblIXYE5ToRNY7MN4', 'fields[]=Fecha').catch(() => []); const T = {}; tar.forEach(r => { const m = String((r.fields || {}).Fecha || '').slice(0, 7); if (m) T[m] = (T[m] || 0) + 1; });
+      const pac = await capTodos(PACIENTES, 'fields[]=PIN').catch(() => []);
+      return res.status(200).json({ meses: M, nuevos, diasEjercicios: T, reserva: res, dadaPor: dada, pacientes: pac.length });
+    } catch (e) { return res.status(200).json({ error: e.message }); }
+  }
   if (action && action.startsWith('seg-')) {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
