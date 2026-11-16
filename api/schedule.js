@@ -3426,6 +3426,8 @@ module.exports = async function handler(req, res) {
     if (!m) { res.setHeader('Location', '/informe/logo.png'); return res.status(302).end(); }
     res.setHeader('Content-Type', m[1]); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.status(200).end(Buffer.from(m[3], 'base64'));
   }
+  // Nombre bajo el icono (máx. ~12 letras): «Clínica Xanara» → «Xanara», sin cortar a medias
+  const nomCorto = m => { m = String(m || '').trim(); if (m.length <= 12) return m; const s2 = m.replace(/^(cl[ií]nica|centro( de)?( fisioterapia)?|fisioterapia|fisio)\s+/i, ''); return (s2.length <= 12 ? s2 : s2.slice(0, 12)).trim(); };
   if (action === 'manifest') { // manifest de la app instalada (paciente o panel): nombre, color e icono de la clínica
     const C = CLI, panel = req.query.app === 'panel', prop = MARCA.iconoPropio(C);
     const ic = prop && panel ? [{ src: MARCA.iconoUrl(C, 192, 0, 1), sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: MARCA.iconoUrl(C, 512, 0, 1), sizes: '512x512', type: 'image/png', purpose: 'any' }]
@@ -3433,8 +3435,8 @@ module.exports = async function handler(req, res) {
       : panel ? [{ src: '/icons/panel-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icons/panel-512.png', sizes: '512x512', type: 'image/png' }]
       : [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }];
     const M = panel
-      ? { name: C.marca + ' Panel', short_name: C.marca === 'FISIO365' ? 'Panel Fisio' : C.marca.slice(0, 12).trim(), description: 'Panel del fisioterapeuta', start_url: '/fisio', display: 'standalone', background_color: '#000000', theme_color: '#000000', icons: ic }
-      : { name: C.marca, short_name: C.marca.slice(0, 12).trim(), description: `Tus ejercicios, tus citas y el chat con tu fisio de ${C.marca}.`, start_url: '/', display: 'standalone', background_color: C.color || '#c2552e', theme_color: '#000000', icons: ic, id: '/', lang: 'es', dir: 'ltr', scope: '/', orientation: 'portrait', categories: ['health', 'medical', 'fitness'] };
+      ? { name: C.marca + ' Panel', short_name: C.marca === 'FISIO365' ? 'Panel Fisio' : nomCorto(C.marca), description: 'Panel del fisioterapeuta', start_url: '/fisio', display: 'standalone', background_color: '#000000', theme_color: '#000000', icons: ic }
+      : { name: C.marca, short_name: nomCorto(C.marca), description: `Tus ejercicios, tus citas y el chat con tu fisio de ${C.marca}.`, start_url: '/', display: 'standalone', background_color: C.color || '#c2552e', theme_color: '#000000', icons: ic, id: '/', lang: 'es', dir: 'ltr', scope: '/', orientation: 'portrait', categories: ['health', 'medical', 'fitness'] };
     res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=300');
     return res.status(200).send(JSON.stringify(M));
   }
